@@ -72,7 +72,7 @@ onUnmounted(() => {
   >
     <div class="combat-exit-confirm__actions">
       <GameButton variant="system" size="sm" @click="cancelExit">{{ t('combat.overlay.exitConfirm.stay') }}</GameButton>
-      <GameButton variant="system" accent-var="var(--sys-danger)" size="sm" @click="confirmExit">{{ t('combat.overlay.exitConfirm.exit') }}</GameButton>
+      <GameButton variant="system" accent-var="var(--sys-danger, #ff5470)" size="sm" @click="confirmExit">{{ t('combat.overlay.exitConfirm.exit') }}</GameButton>
     </div>
   </SysModalBase>
 </template>

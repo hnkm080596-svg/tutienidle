@@ -476,7 +476,7 @@ function activate(slot: CommandWheelSlot) {
     linear-gradient(180deg, rgba(56, 225, 255, .05), transparent 46%),
     var(--sys-grain, var(--paper-grain)) 0 0 / 100px 100px repeat,
     linear-gradient(175deg, var(--sys-bg-0, var(--paper-50)) 0%, var(--sys-bg-1, var(--paper-200)) 100%);
-  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.4));
+  box-shadow: inset 0 -8px 14px -10px rgba(0, 0, 0, 0.45);
   color: var(--sys-text, var(--paper-text));
   font-family: var(--sys-font-body, var(--font-body));
   font-size: var(--text-xs);
@@ -517,7 +517,7 @@ function activate(slot: CommandWheelSlot) {
 
 .command-wheel__slot:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sys-accent, var(--cinnabar)) 55%, transparent);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--sys-accent, var(--cinnabar)) 55%, transparent);
 }
 
 /* Bản Mệnh Pháp Bảo (2026-08-27) — slot render được nhưng tạm chưa bấm

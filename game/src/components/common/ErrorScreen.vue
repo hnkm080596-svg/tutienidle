@@ -32,7 +32,7 @@ function reloadPage() {
         <div class="error-screen__actions">
           <GameButton variant="system" @click="dismiss">Đóng</GameButton>
 
-          <GameButton variant="system" accent-var="var(--sys-text-dim)" @click="reloadPage">Tải Lại Trang</GameButton>
+          <GameButton variant="system" accent-var="var(--sys-text-dim, #4e6d8f)" @click="reloadPage">Tải Lại Trang</GameButton>
         </div>
       </div>
     </SysPanel>

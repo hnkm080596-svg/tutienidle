@@ -104,7 +104,7 @@ function handleImport(event: Event) {
           <input type="file" accept="application/json" @change="handleImport" />
         </label>
 
-        <GameButton variant="system" accent-var="var(--sys-danger)" @click="handleReset">Xoá & Bắt Đầu Mới</GameButton>
+        <GameButton variant="system" accent-var="var(--sys-danger, #ff5470)" @click="handleReset">Xoá & Bắt Đầu Mới</GameButton>
       </div>
     </SysPanel>
 

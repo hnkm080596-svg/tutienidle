@@ -170,7 +170,7 @@ function handleReset() {
         <input type="file" accept="application/json" @change="handleImportFile" />
       </label>
 
-      <GameButton class="settings-panel__danger" variant="system" accent-var="var(--sys-danger)" @click="handleReset">
+      <GameButton class="settings-panel__danger" variant="system" accent-var="var(--sys-danger, #ff5470)" @click="handleReset">
         {{ t('panels.settings.actions.reset') }}
       </GameButton>
     </div>

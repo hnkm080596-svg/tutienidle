@@ -65,7 +65,7 @@ function next() {
     <p :id="bodyId" class="tutorial-overlay__body">{{ currentStep.body }}</p>
 
     <div class="tutorial-overlay__actions">
-      <GameButton variant="system" accent-var="var(--sys-text-dim)" @click="finish">Bỏ Qua</GameButton>
+      <GameButton variant="system" accent-var="var(--sys-text-dim, #4e6d8f)" @click="finish">Bỏ Qua</GameButton>
 
       <GameButton variant="system" @click="next">
         {{ isLastStep ? 'Bắt Đầu' : 'Tiếp Theo' }}

@@ -158,7 +158,7 @@ function entryText(entry: ActionFeedbackEntry): string {
 
 .feedback-log__entry.is-latest {
   opacity: 1;
-  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.45));
+  box-shadow: inset 0 0 14px color-mix(in srgb, var(--sys-accent, var(--jade)) 12%, transparent);
 }
 
 .feedback-log__count {

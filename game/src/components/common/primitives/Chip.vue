@@ -66,12 +66,12 @@ const isTab = computed(() => attrs.role === 'tab')
   border-color: var(--sys-accent, var(--mineral-gold));
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--sys-accent, var(--mineral-gold)) 35%, transparent),
-    0 2px 6px rgba(20, 16, 8, 0.14);
+    inset 0 -6px 12px -8px rgba(20, 16, 8, 0.25);
 }
 
 .chip:focus-visible {
   outline: 2px solid var(--sys-focus, rgba(217, 212, 199, 0.85));
-  outline-offset: 1px;
+  outline-offset: -2px;
 }
 
 .chip:disabled {

@@ -69,7 +69,8 @@
     var(--sys-surface-solid);
   backdrop-filter: blur(10px);
   border: 1px solid var(--sys-line);
-  box-shadow: var(--sys-shadow);
+  /* Chamfer clip-path cuts outer shadows - depth comes from inset shade. */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), inset 0 -14px 28px -18px rgba(0,0,0,.4);
   color: var(--sys-text);
 }
 
@@ -181,7 +182,7 @@
 
 /* Hover bloom - transition only. */
 .sys-bloom { transition: box-shadow .18s ease, filter .18s ease; }
-.sys-bloom:hover { box-shadow: var(--sys-shadow), var(--sys-glow-bloom); }
+.sys-bloom:hover { box-shadow: inset 0 0 26px color-mix(in srgb, var(--sys-accent) 12%, transparent); }
 
 /* Bracketed eyebrow. Brackets are CSS glyphs so locale text stays clean. */
 .sys-eyebrow {
@@ -252,7 +253,7 @@
 
 /* SysPanel variants - surface variants share the .sys-surface recipe. */
 .sys-panel--flat { /* flat: recipe only, no rim/bloom */ }
-.sys-panel--primary { box-shadow: var(--sys-shadow), var(--sys-glow-md); }
+.sys-panel--primary { box-shadow: inset 0 1px 0 rgba(255,255,255,.06), inset 0 -16px 30px -18px rgba(0,0,0,.45), inset 0 0 32px color-mix(in srgb, var(--sys-accent) 5%, transparent); }
 
 /* SysModalBase chrome - modal geometry + scrim fallback live in the
    component's scoped style (R41 revert invariant: teleported modals stay
@@ -336,7 +337,7 @@ aside.character-detail.sys-surface {
   backdrop-filter: blur(10px);
   border-color: var(--sys-line);
   border-radius: 0;
-  box-shadow: var(--sys-shadow), var(--sys-glow-sm);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), inset 0 -14px 28px -18px rgba(0,0,0,.4);
   color: var(--sys-text);
 }
 
@@ -438,7 +439,7 @@ aside.character-detail.sys-surface {
     var(--sys-bg-1);
   border: 1px solid var(--sys-line);
   border-left: 2px solid var(--sys-accent);
-  box-shadow: var(--sys-shadow);
+  box-shadow: inset 0 -10px 20px -14px rgba(0,0,0,.45);
   color: var(--sys-text);
   clip-path: polygon(var(--sys-cut) 0, 100% 0, 100% 100%, 0 100%, 0 var(--sys-cut));
 }
@@ -585,7 +586,7 @@ aside.character-detail.sys-surface {
   clip-path: polygon(var(--sys-cut) 0, 100% 0,
     100% calc(100% - var(--sys-cut)), calc(100% - var(--sys-cut)) 100%,
     0 100%, 0 var(--sys-cut));
-  box-shadow: var(--sys-shadow);
+  box-shadow: inset 0 -10px 20px -14px rgba(0,0,0,.45);
   color: var(--sys-text);
 }
 
@@ -593,8 +594,10 @@ aside.character-detail.sys-surface {
 .sys-surface :is(button, [role='button'], a, input, select, [tabindex]):focus-visible,
 .sys-modal :is(button, [role='button'], a, input, select, [tabindex]):focus-visible,
 .overlay-panel__card--system :is(button, [role='button'], a, input, select, [tabindex]):focus-visible {
+  /* Inner ring: clip-path on chamfered controls clips positive-offset
+     outlines and glow shadows - a -2px offset keeps the ring visible. */
   outline: 2px solid var(--sys-focus);
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
 
 /* Reduced motion (spec 4.2) + manual low-fx hatch (spec 4.1.4) - identical

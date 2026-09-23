@@ -287,9 +287,14 @@ test.describe('system UI skin - v2 surface contract', () => {
         btn.focus()
         if (!btn.matches(':focus-visible')) return 'no-visible-match:' + btn.tagName
         const cs = getComputedStyle(btn)
-        const has = (cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0)
-          || (cs.boxShadow && cs.boxShadow !== 'none')
-        return has ? 'focus:' + btn.tagName : 'no-ring:' + btn.tagName
+        const clipped = cs.clipPath && cs.clipPath !== 'none'
+        const outlineSet = cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0
+        // clip-path cuts positive-offset outlines and outer shadows - a
+        // ring on a clipped control must sit inside (offset <= 0 / inset).
+        const ringVisible = clipped
+          ? (outlineSet && parseFloat(cs.outlineOffset) <= 0) || /inset/.test(cs.boxShadow)
+          : outlineSet || (cs.boxShadow && cs.boxShadow !== 'none')
+        return ringVisible ? 'focus:' + btn.tagName : 'no-ring:' + btn.tagName
       })()`,
     )
     expect(ring).toContain('focus:')

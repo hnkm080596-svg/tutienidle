@@ -219,6 +219,9 @@ function hideBrokenImage(event: Event) {
   padding: 12px 14px; overflow: hidden auto;
   border: 0; border-radius: 0;
   background: transparent;
+  /* Parent-level drop-shadow follows the clipped child silhouette; a
+     same-element shadow/filter would be cut by the clip-path. */
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, .5));
   box-shadow: none; color: var(--sys-text, var(--paper-text, #211f1a)); font: var(--text-xs) var(--sys-font-body, var(--font-body)); pointer-events: none; isolation: isolate;
 }
 /* M-UI-OVERHAUL ephemeral surface: chamfered dark card + hairline,
@@ -232,7 +235,6 @@ function hideBrokenImage(event: Event) {
     var(--sys-bg-1, var(--surface-700, #141820));
   border: 1px solid var(--sys-line-soft, rgba(255, 255, 255, .14));
   clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
-  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, .5));
 }
 .tooltip--element .tooltip__sys-surface { display: none; }
 

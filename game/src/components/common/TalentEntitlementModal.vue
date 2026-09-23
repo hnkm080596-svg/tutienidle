@@ -199,7 +199,7 @@ function decide(decision: TalentEntitlementDecision): void {
 .talent-card:focus-visible,
 .upgrade-card:focus-visible {
   outline: 2px solid var(--sys-focus, rgba(217, 212, 199, .65));
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
 
 .talent-card__rarity {

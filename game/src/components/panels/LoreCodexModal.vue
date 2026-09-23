@@ -6,6 +6,7 @@
 // chuột như Tooltip. Style nhất quán NavMenuOverlay.vue.
 // M-UI-OVERHAUL: renders on SysModalBase (system console + focus trap +
 // scrim-click/Escape close).
+import { computed, ref, watch } from 'vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
@@ -18,18 +19,24 @@ const props = defineProps<{
 const emit = defineEmits<{ close: [] }>()
 
 const { t } = useI18n()
+
+// Content nulled on close would blank the title mid-leave - keep the
+// last shown entry until the modal is fully gone.
+const lastContent = ref(props.content)
+watch(() => props.content, (c) => { if (c) lastContent.value = c })
+const shown = computed(() => props.content ?? lastContent.value)
 </script>
 
 <template>
   <SysModalBase
     :open="props.content !== null"
-    :title="props.content?.title ?? ''"
+    :title="shown?.title ?? ''"
     width="min(480px, 92vw)"
     :layer="OVERLAY_LAYERS.modal"
     card-class="lore-modal"
     @close="emit('close')"
   >
-    <p class="lore-modal__description">{{ props.content?.description }}</p>
+    <p class="lore-modal__description">{{ shown?.description }}</p>
 
     <GameButton class="lore-modal__close" variant="system" size="sm" @click="emit('close')">{{ t('panels.common.close') }}</GameButton>
   </SysModalBase>

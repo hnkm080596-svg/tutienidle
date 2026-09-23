@@ -254,7 +254,7 @@ onBeforeUnmount(() => {
   border: 1px solid color-mix(in srgb, var(--sys-accent, var(--gold-500)) 55%, var(--sys-line, var(--frame-outer)));
   clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
   background: var(--sys-bg-0, var(--paper-50));
-  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.4));
+  box-shadow: inset 0 -6px 12px -8px rgba(0, 0, 0, 0.4);
   color: var(--sys-text, var(--paper-text));
   font: 600 var(--text-xs) var(--sys-font-body, var(--font-body));
   line-height: var(--lh-tight);

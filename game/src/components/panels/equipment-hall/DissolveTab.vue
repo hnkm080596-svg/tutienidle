@@ -347,7 +347,7 @@ function doDissolve() {
 
     <GameButton
       size="lg"
-      variant="system" accent-var="var(--sys-danger)"
+      variant="system" accent-var="var(--sys-danger, #ff5470)"
       class="qi-hall__primary-action"
       :disabled="dissolveSelected.size === 0"
       @click="doDissolve"

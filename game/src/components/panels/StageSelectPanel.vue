@@ -304,7 +304,7 @@ function start() {
         <section class="stage-select__detail sys-chamfer">
         <div v-if="armedFarmStage" class="stage-select__autofarm">
           <span>{{ t('autoFarm.running', { stage: armedFarmStage.name }) }}</span>
-          <GameButton variant="system" accent-var="var(--sys-danger)" size="sm" data-testid="autofarm-stop" @click="stopAutoFarm">
+          <GameButton variant="system" accent-var="var(--sys-danger, #ff5470)" size="sm" data-testid="autofarm-stop" @click="stopAutoFarm">
             {{ t('autoFarm.stop') }}
           </GameButton>
         </div>

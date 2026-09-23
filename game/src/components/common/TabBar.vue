@@ -86,9 +86,15 @@ onMounted(() => {
     observer = new ResizeObserver(measureInk)
     if (navEl.value) observer.observe(navEl.value)
   }
+  // A late webfont swap changes tab widths without a nav resize.
+  document.fonts?.addEventListener?.('loadingdone', measureInk)
+  document.fonts?.ready.then(measureInk)
 })
 watch(() => props.modelValue, () => measureInk(), { flush: 'post' })
-onBeforeUnmount(() => observer?.disconnect())
+onBeforeUnmount(() => {
+  observer?.disconnect()
+  document.fonts?.removeEventListener?.('loadingdone', measureInk)
+})
 </script>
 
 <template>

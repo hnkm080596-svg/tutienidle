@@ -211,13 +211,15 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
 .game-button--system:not(:disabled):hover,
 .game-button--system:not(:disabled):focus-visible {
   color: var(--sys-text, #d8ecff);
-  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--btn-accent) 55%, transparent));
+  /* clip-path clips outer filters/shadows - hover glow lives inside. */
+  box-shadow: inset 0 0 14px color-mix(in srgb, var(--btn-accent) 24%, transparent);
 }
 
-/* System focus ring - 2px non-glow accent (spec 7.2). */
+/* System focus ring - inner ring: the chamfer clip-path cuts any
+   positive-offset outline (spec 7.2). */
 .game-button--system:focus-visible {
   outline: 2px solid var(--sys-focus, #8fe9ff);
-  outline-offset: 2px;
+  outline-offset: -2px;
   box-shadow: none;
 }
 

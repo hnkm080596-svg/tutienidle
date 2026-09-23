@@ -131,7 +131,7 @@ function switchTab(target: 'login' | 'register') {
       </form>
 
       <div class="auth-divider"><span>{{ t('onboarding.auth.divider') }}</span></div>
-      <GameButton class="guest-action" variant="system" accent-var="var(--sys-text-dim)" size="lg" :disabled="submitting" data-testid="auth-guest-button" @click="authenticate('guest')">
+      <GameButton class="guest-action" variant="system" accent-var="var(--sys-text-dim, #4e6d8f)" size="lg" :disabled="submitting" data-testid="auth-guest-button" @click="authenticate('guest')">
         {{ t('onboarding.auth.guest.button') }}
         <small>{{ t('onboarding.auth.guest.note') }}</small>
       </GameButton>

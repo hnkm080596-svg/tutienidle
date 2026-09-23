@@ -115,7 +115,7 @@ function describe(entry: BattleLogEntry): string {
 
 .battle-log-panel__toggle:focus-visible {
   outline: 2px solid var(--sys-focus, var(--jade));
-  outline-offset: 1px;
+  outline-offset: -2px;
 }
 
 .battle-log-panel__entries {
