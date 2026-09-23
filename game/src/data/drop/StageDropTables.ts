@@ -1,4 +1,5 @@
 import type { StageDropTable } from '../../core/drop/DropTable'
+import { PHYSIQUE_ESSENCE_BAND_DROPS } from '../realm/PhysiqueEssence'
 
 /**
  * Stage layer (spec E2): decides WHICH items exist at this point of
@@ -8,6 +9,11 @@ import type { StageDropTable } from '../../core/drop/DropTable'
  * One band per realm to start with. Splitting a band later is a data change,
  * not a code change - but every new band is another cell the economy guard
  * has to balance, so do not split without a reason.
+ *
+ * Physique essence arrives ONLY through the band authority: each banded
+ * realm's guaranteed list carries its PHYSIQUE_ESSENCE_BAND_DROPS entry by
+ * reference (QI-D4b band map, M-QI-10). Signature drops are exempt by spec
+ * (the huyet_mong pham x12 catch-up valve lives on the enemy, not here).
  *
  * Currency ranges replace the three hand-copied reward tables that used to
  * live on each enemy. Numbers are a shipping starting point, tuned by
@@ -27,11 +33,10 @@ export const STAGE_DROP_TABLES: StageDropTable[] = [
     realmId: 'mortal',
     floors: { min: 1, max: 10 },
     currency: { spiritStone: { min: 1, max: 2 }, techniqueMastery: { min: 5, max: 8 } },
-    guaranteed: [
-      // Was rollMortalEssenceAmount(isBoss) hardcoded in BattleLootSystem;
-      // the boss branch is gone - a boss simply draws more often.
-      { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: { min: 1, max: 3 }, chance: 0.7 },
-    ],
+    // Was rollMortalEssenceAmount(isBoss) hardcoded in BattleLootSystem;
+    // the boss branch is gone - a boss simply draws more often. The entry
+    // itself now resolves through the band authority (pham band, M-QI-10).
+    guaranteed: [PHYSIQUE_ESSENCE_BAND_DROPS.mortal],
     pool: [
       // base_kiem is the only equipment id every mortal-realm enemy family
       // (bandit, boar, dog, tiger, lynx, ox, fox, crocodile, wolf) actually
@@ -45,7 +50,9 @@ export const STAGE_DROP_TABLES: StageDropTable[] = [
     realmId: 'qi_refining',
     floors: { min: 1, max: 10 },
     currency: { spiritStone: { min: 8, max: 12 }, techniqueMastery: { min: 35, max: 45 } },
-    guaranteed: [],
+    // Bao-grade essence per the QI-D4b band map (M-QI-10): a stranded
+    // pham-chapter player completes through the M-QI-09 substitution seam.
+    guaranteed: [PHYSIQUE_ESSENCE_BAND_DROPS.qi_refining],
     pool: [
       // Ore is the qi_refining realm's general-purpose crafting material,
       // dropped by 8 of the realm's families (bandit, earthworm,
@@ -60,7 +67,8 @@ export const STAGE_DROP_TABLES: StageDropTable[] = [
     realmId: 'foundation_establishment',
     floors: { min: 1, max: 10 },
     currency: { spiritStone: { min: 25, max: 35 }, techniqueMastery: { min: 90, max: 120 } },
-    guaranteed: [],
+    // Phap-grade essence per the QI-D4b band map (M-QI-10).
+    guaranteed: [PHYSIQUE_ESSENCE_BAND_DROPS.foundation_establishment],
     pool: [
       // Doan Bao Thach used to be gated by an explicit realm check. The
       // gate is now simply which tables list it: it appears here and in no

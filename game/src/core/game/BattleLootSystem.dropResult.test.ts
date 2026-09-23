@@ -155,7 +155,11 @@ describe('BattleLootSystem — DropResult consumer', () => {
         call[0] === 'reward_particle' &&
         (call[1].kind === 'essence' || call[1].kind === 'item'),
     )
+    // M-QI-10: the qi_refining band guaranteed line is live - rng 0
+    // passes its 0.7 chance, so the kill emits the band's bao essence
+    // AND the synthetic signature drop. Both route to 'essence'.
     expect(materialParticles).toEqual([
+      ['reward_particle', expect.objectContaining({ kind: 'essence' })],
       ['reward_particle', expect.objectContaining({ kind: 'essence' })],
     ])
   })
