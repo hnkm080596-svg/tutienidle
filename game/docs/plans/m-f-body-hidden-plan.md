@@ -107,11 +107,18 @@ gates pass.
    substitution on scripted rng; non-LQ band never substitutes; kill
    resets only the killed channel's counter; `huyet_mong` template
    resolves. Fixture channels — two channels same band: authored order
-   decides; second-channel kills don't count for first; killing A's
-   beast increments B's counter; `guaranteedSpawnAfterKills` forces
+   decides; **SYMMETRIC kill semantics (C2C r89-M1): killing channel
+   A's beast resets A's counter AND increments B's; killing B's beast
+   resets B's AND increments A's — each channel's own beast is its
+   only reset, every other banded enemy (including the other channel's
+   beast) is an ordinary increment**; `guaranteedSpawnAfterKills` forces
    substitution at the bound without a roll; beyond-ceiling `bandRealmId`
    fixture never substitutes (`isRealmAvailable` dormancy); channel
-   enemy resolving to undefined is skipped safely.
+   enemy resolving to undefined is skipped safely. **Idle/active
+   invariants (r89-M2): idle/auto-farm kills advance the matching
+   channel's counter (the kill hook fires for idle kills); the idle
+   spawn path NEVER invokes `maybeReplaceSpawn`; the ACTIVE stage
+   path still can.**
 3. `core/production/ProductionSystem.test.ts` (extend): grotto channel
    fixture — emission at scripted-rng hit appends the material to the
    cycle's grants and pushes a `pendingEvents` entry; `detail` tag
@@ -146,8 +153,9 @@ gates pass.
 6. `services/save` tests (extend `SaveRoundTrip.test.ts`):
    `hiddenBeastKills` map round-trips; `hiddenChannelCycles` inside
    `productionSites` round-trips; malformed map values reject; missing
-   `hiddenBeastKills` rejects; prior-version payload rejected (pin the
-   bumped number at implementation start); `luyenKhiKillsSinceBeast`
+   `hiddenBeastKills` rejects; prior-version payload rejected (the test
+   DERIVES the bumped version from the implementation-start base —
+   `CURRENT+1` at write time, never a literal pin); `luyenKhiKillsSinceBeast`
    key in a stale payload is tolerated out (whitelist convention).
 7. `GameManager.stageLease.test.ts` / `HiddenBeastDrops.test.ts` /
    `battleLootTestSetup.ts` — harness updates only:
@@ -167,10 +175,17 @@ gates pass.
   union, `HiddenBeastChannel`/`GrottoChannel` interfaces,
   `HIDDEN_MATERIAL_CHANNELS` (migrated `huyet_mong` entry verbatim),
   `hiddenBeastChannels`/`hiddenGrottoChannels` typed filters,
-  `GROTTO_CHANNEL_SEED_TAG` pinned constant,
-  `validateHiddenMaterialChannels` + `assertHiddenMaterialChannels`
-  (module-load assert on the canonical constant; shape checks only —
-  no catalog imports per `data/` purity convention).
+  `channelEmittedMaterialIds` (production export — emits the
+  material-id set a channel can produce, oracle-injected signature-drop
+  enumeration for `hidden_beast`, `materialId` direct for `grotto`),
+  `VISIBLE_GRANT_SOURCES` (production census export — typed
+  `{materialId, kind: 'quest'|'building', grantId}` rows; the
+  cross-catalog completeness/census arms live in the integrity test
+  which owns the quest/building catalog resolution), `GROTTO_CHANNEL_SEED_TAG`
+  pinned constant, `validateHiddenMaterialChannels` +
+  `assertHiddenMaterialChannels` (module-load assert on the canonical
+  constant; shape checks only — no catalog imports per `data/` purity
+  convention).
 
 ## Step 3 — hidden_beast mechanism + player counter
 
@@ -227,9 +242,11 @@ gates pass.
   → P5 sequential ≥3 passes with per-pass evidence blocks → commit +
   push + PR base `p7/truc-co`.
 - P13 runtime: drive an LQ stage from the implementation worktree —
-  `huyet_mong` substitution still fires (or counter advances) through the
-  real spawn path; grotto cycles settle with zero drift; no console
-  errors.
+  an actual substituted `huyet_mong` SPAWN → kill → signature-drop
+  observation through the real stage path (deterministic setup may
+  force the counter/window/RNG, but must ride the real stage loop —
+  counter advancement alone proves only the trigger side, no escape
+  hatch); grotto cycles settle with zero drift; no console errors.
 - P15 ASCII scan on new comments; no i18n keys needed (no UI).
 - Report to coordinator: branch, files, per-gate evidence, limitations.
 
