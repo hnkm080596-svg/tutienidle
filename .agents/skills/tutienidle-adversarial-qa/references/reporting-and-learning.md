@@ -49,7 +49,7 @@ The report is operational: replace each schema field with the review's actual sc
 
 ## Verdicts and Minimum Evidence
 
-Only `PASS WITH EVIDENCE`, `PASS WITH GAPS`, `FAIL`, and `BLOCKED` are allowed. Bare `PASS` is forbidden.
+Only `PASS WITH EVIDENCE`, `PASS WITH GAPS`, `FAIL`, and `BLOCKED` are allowed. Bare `PASS` is forbidden. These are per-operation evidence labels recorded in the protocol ledger — not run verdicts; the run outcome comes only from the Internal Fixed-Point QA Protocol's terminal predicate (`game/docs/qa/protocol/README.md`).
 
 - `PASS WITH EVIDENCE`: The completed invariant ledger identifies the material hypotheses; conclusive, recorded checks resolve every high-risk hypothesis in scope; no `Confirmed` finding remains; and no unresolved `Coverage gap`, `Flaky`, or `Not verified` evidence materially weakens the conclusion.
 - `PASS WITH GAPS`: No `Confirmed` finding remains, and recorded evidence resolves the material high-risk hypotheses, but bounded residual risk remains from `Suspected` findings, non-material `Coverage gap` items, `Flaky` evidence, or `Not verified` tooling. State every gap and why it does not block this limited verdict.

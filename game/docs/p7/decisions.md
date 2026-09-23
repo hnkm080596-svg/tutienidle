@@ -1,5 +1,7 @@
 # P7 — Locked Design Decisions
 
+> **QA disposition (2026-09-23, M-QA-INTERNAL):** the "SPEC → ChatGPT review until pass → PLAN → ... → external review until pass" pipeline and `[C2C] NOTICE` transport references in this file — and in every `missions/*.spec|plan|notes` file below — are **historical and non-binding**. External/ChatGPT-Web verdicts are no longer a completion criterion; QA decisions follow the Internal Fixed-Point QA Protocol (`game/docs/qa/protocol/README.md`) with isolated internal reviewers. Locked product/design rulings remain binding; only the external-review transport steps are retired.
+
 Human-approved resolutions to the six blocking notices (2026-09-21). This document is the authority; where `system-inventory.md`/`terminology.md`/`ui-inventory.md`/`naming-migration.md` mark a question open, this file supersedes.
 
 ## D1 — Technique progression model: Hybrid (rank auto, grade transacted)

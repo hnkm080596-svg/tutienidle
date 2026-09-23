@@ -1,5 +1,7 @@
 # P7 — Mission Dependency Graph
 
+> **QA disposition (2026-09-23, M-QA-INTERNAL):** the "SPEC → ChatGPT review until pass → PLAN → ... → external review until pass" pipeline and `[C2C] NOTICE` transport references in this file — and in every `missions/*.spec|plan|notes` file below — are **historical and non-binding**. External/ChatGPT-Web verdicts are no longer a completion criterion; QA decisions follow the Internal Fixed-Point QA Protocol (`game/docs/qa/protocol/README.md`) with isolated internal reviewers. Locked product/design rulings remain binding; only the external-review transport steps are retired.
+
 Refined from the user's M1–M8 guideline. Each mission = one coherent authority boundary, independently spec'd/planned/implemented/reviewed/gated/committed. Ordering is dependency-driven: later missions build on committed earlier state.
 
 ## Dependency analysis

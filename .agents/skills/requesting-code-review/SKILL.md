@@ -9,6 +9,8 @@ Dispatch a code reviewer subagent to catch issues before they cascade. The revie
 
 **Core principle:** Review early, review often.
 
+**Protocol adapter (2026-09-23):** a dispatched reviewer counts as an independent internal reviewer only when it runs in a fresh context that cannot see prior findings/verdicts and its result is sealed before reconciliation (see `game/docs/qa/protocol/agent-instructions.md` §C/§E). Its verdict is evidence into the QA ledger — not standalone completion. Same-context role-play is self-review.
+
 ## When to Request Review
 
 **Mandatory:**

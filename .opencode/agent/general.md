@@ -28,6 +28,13 @@ Read [architecture-worker-workflow.md](../../game/docs/architecture/architecture
 
 Use [architecture-worker-exercises.md](../../game/docs/architecture/architecture-worker-exercises.md) for qualification scenarios, not as a substitute for production tests. This is the operational entry point for A1-A12/E7/E13, not authorization for unrelated repair. Mission 0 remains a historical audit; verify current roadmap and production consumers. Existing P1-P18 gates and permissions still apply.
 
+
+## Internal QA authority
+
+The primary agent owns QA completion through `game/docs/qa/protocol/README.md` — the sole QA decision law. Read it (with its taxonomy, ledger schema, learning policy, agent instructions and qualification rules) at the start of nontrivial feature/fix, integration, release or QA-system work.
+
+Key consequences for this agent: every protection gate below (P3 verify, P18 OCR, P13/P14 runtime, P4 adversarial QA, P5 sequential review) produces evidence INTO the protocol's shared ledger — none emits a competing verdict. No ChatGPT Web, C2C external verdict, external reviewer or third-party review bot is required or permitted as a completion criterion. Independent review means fresh isolated agent sessions (e.g. Devin child sessions) with sealed findings; same-context role-play is self-review only. Outcomes are `QA_FIXED_POINT_REACHED` / `QA_FINDINGS_OPEN` / `QA_UNVERIFIED` / `QA_BLOCKED_SCOPE` / `QA_ACCEPTED_WITH_EXCEPTIONS`, emitted only by the coordinator via the protocol's terminal predicate.
+
 ## Protection Rules (must enforce on every turn)
 
 ### P1. Worktree Boundary + Safe Deletion
@@ -64,6 +71,8 @@ Use [architecture-worker-exercises.md](../../game/docs/architecture/architecture
   - `FAIL WITH REASON` — QA gate satisfied **if** the reason is specific and legitimate (e.g. "system is in development, requires later phases", "out of scope, needs new authorization", "blocked on external dependency, needs user input"). Generic reasons do not count.
   - `PASS WITH GAPS` and `BLOCKED` — non-completion. Return to dev workflow, fix, re-run QA.
 
+  **Decision authority:** P4 verdict labels are evidence inputs to the Internal Fixed-Point QA Protocol ledger — the protocol owns completion, not this gate alone.
+
 ### P5. Post-Task Gate — Sequential Multi-Pass Review
 
 - Non-trivial = roughly 5+ lines of production code changed OR any new file OR any touched file that is not a pure rename / comment / whitespace. A task is NOT complete because tests are green, OCR is clean, or one review pass succeeded.
@@ -75,6 +84,8 @@ Use [architecture-worker-exercises.md](../../game/docs/architecture/architecture
   - **Pass 3 — Adversarial Integration:** a fresh adversarial review of the newest code after Pass 2 fixes — assume it may still be wrong and try to break its assumptions. Inspect beyond modified files: callers, consumers, event chains, upstream invariants, downstream behavior, hidden coupling, prior-mission compatibility, repeated execution, re-entry, duplicate init, unexpected call ordering, cleanup after failure, retry behavior, runtime edge cases, cross-feature regressions, integration boundaries, stale assumptions, coverage adequacy (behavior-not-implementation assertions), coverage gaps that could hide regressions, assembled-app-only failures. For UI/interaction/Phaser/lifecycle/browser-sensitive work, this pass requires real runtime/Playwright evidence — source inspection alone is insufficient. Then: findings → validate → fix → reverify.
 - **Severity:** every finding gets Critical / High / Medium / Low / Nit. Medium = meaningful correctness or regression risk, incomplete migration, broken or ambiguous contract, architecture violation with real consequences, meaningful missing coverage, or a user/runtime flow that can behave incorrectly.
 - **Gate (all required):** ≥3 sequential passes actually ran; Pass 2 reviewed code after Pass 1 fixes; Pass 3 reviewed code after Pass 2 fixes; 0 unresolved confirmed Critical/High/Medium within the changed or reasonably affected surface; affected verification re-ran after each fix. A Medium-or-higher fix on the last scheduled pass forces ANOTHER pass over the resulting state (recursively) — the fixed state has not been independently reviewed; never recheck only the fixed line.
+
+- **Decision authority:** the ≥3 sequential passes are the protocol's minimum review cycle over resulting states; findings feed the shared ledger and completion is judged by the protocol's terminal predicate, not pass count alone. All actionable findings (including Low) must close or be explicitly excepted before an unqualified fixed-point claim.
 - **Evidence:** chronological per-pass blocks in the final report — `Reviewed state / Findings / Fixes / Verification`, with `Reviewed state after Pass N-1 fixes: YES` for Pass 2+. A "reviewed from three perspectives" report proves one combined review — it fails this gate.
 - Low/Nit findings may be deferred but stay in the final report with location, severity, and deferral reason — they never silently disappear between passes. Invalid findings may be rejected only with a recorded reason. Pre-existing unrelated problems are recorded separately with evidence, not blockers. The user may explicitly waive a finding — record the waiver.
 - Skip for 1-line typo fixes, comment-only edits, pure formatting.

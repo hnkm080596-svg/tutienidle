@@ -171,7 +171,7 @@ Stop implementation when the task card's coherent outcome is met. Remaining auth
 
 ## 8. G4 — Verification and review
 
-Follow existing P3-P5/P13/P14/P18 gates, not a replacement scoring system. Gate order: simplify → verify → OCR gate → runtime/browser checks → adversarial QA → sequential review passes (≥3) → done.
+Follow existing P3-P5/P13/P14/P18 gates, not a replacement scoring system. Gate order: simplify → verify → OCR gate → runtime/browser checks → adversarial QA → sequential review passes (≥3) → done. All G4 outputs feed the Internal Fixed-Point QA Protocol ledger (`game/docs/qa/protocol/README.md`) — one coordinator verdict comes from that protocol, not from any single gate.
 
 - Simplify with E3 when triggered, preserving behavior.
 - Select P3 quick or full by actual triggers; record exact commands, exit results and relevant test counts. Stop at first failure and classify/fix under P12.
@@ -203,7 +203,7 @@ Retained debt / Notes-Suggestions:
 
 Coordinator reads the aggregate diff and evidence, including interactions between worker slices. A worker's assertion is not independent proof. Reject or return only the concrete unresolved responsibility; do not dispatch an open-ended “improve everything” follow-up.
 
-These architecture questions do not replace P4 verdicts. Preserve the exact P4 verdict and legitimate reason, including its existing completion rules. A known unimplemented requirement cannot be labeled implemented. Keep any runtime gap or environment blocker visible in the final outcome. No commit/merge/integration/push/deploy authorization is implied by acceptance.
+These architecture questions do not replace P4 verdicts. Preserve the exact P4 verdict and legitimate reason, including its existing completion rules. Coordinator acceptance records into the Internal Fixed-Point QA Protocol ledger — the protocol owns the run outcome; a G5 acceptance is evidence, not a separate verdict authority. A known unimplemented requirement cannot be labeled implemented. Keep any runtime gap or environment blocker visible in the final outcome. No commit/merge/integration/push/deploy authorization is implied by acceptance.
 
 ## 10. Ready-to-use worker assignment
 
