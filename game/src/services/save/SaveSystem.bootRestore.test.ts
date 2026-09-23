@@ -90,6 +90,11 @@ describe('App save restore coordinator', () => {
       (save: GameSave) => { save.player.mortalBasicSkillId = 'hoa_cau_thuat' },
       'Invalid mortalBasicSkillId in save: hoa_cau_thuat',
     ],
+    [
+      'missing mortalBasicSkillId on a mortal save',
+      (save: GameSave) => { delete save.player.mortalBasicSkillId },
+      'mortal save missing required mortalBasicSkillId (creation pick)',
+    ],
   ] as const)(
     'rejects %s before Pinia or any manager owner mutates and returns a handled result',
     (_case, corrupt, expectedMessage) => {
