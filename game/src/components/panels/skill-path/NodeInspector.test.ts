@@ -52,7 +52,11 @@ function mockGameManager(): Partial<GameManager> {
   }
 }
 
-function mountInspector(node: ProgressionNode, techniqueProgress?: { rank: number; grade: number }) {
+function mountInspector(
+  node: ProgressionNode,
+  techniqueProgress?: { rank: number; grade: number },
+  realmId = 'mortal',
+) {
   const container = document.createElement('div')
   document.body.appendChild(container)
 
@@ -69,6 +73,9 @@ function mountInspector(node: ProgressionNode, techniqueProgress?: { rank: numbe
 
   const player = usePlayerStore(pinia)
   player.$state.techniqueProgress = techniqueProgress
+  // M-F-TECHNIQUE (F5) - techniqueRank reads the effective rank: the
+  // mirror's grade must equal the realm index to contribute its rank.
+  player.$state.realmId = realmId
   // Afford the fixture node so cost never enters the reasons list.
   player.$state.skillInsight = 100
 
@@ -127,7 +134,7 @@ describe('NodeInspector - technique prerequisite lock reasons (P7-M6)', () => {
         { kind: 'realm', realmId: 'nascent_soul' },
       ],
     })
-    const view = mountInspector(node, { rank: 10, grade: 2 })
+    const view = mountInspector(node, { rank: 10, grade: 2 }, 'foundation_establishment')
 
     await nextTick()
 
@@ -144,7 +151,11 @@ describe('NodeInspector - technique prerequisite lock reasons (P7-M6)', () => {
 // authored max by an unsatisfied levelGate shows the BINDING gate's
 // reason (including frozen-surplus levels above the binding gate),
 // never renders a null upgrade cost.
-function mountOwnedInspector(node: ProgressionNode, techniqueProgress?: { rank: number; grade: number }) {
+function mountOwnedInspector(
+  node: ProgressionNode,
+  techniqueProgress?: { rank: number; grade: number },
+  realmId = 'mortal',
+) {
   const container = document.createElement('div')
   document.body.appendChild(container)
 
@@ -188,6 +199,7 @@ function mountOwnedInspector(node: ProgressionNode, techniqueProgress?: { rank: 
 
   const player = usePlayerStore(pinia)
   player.$state.techniqueProgress = techniqueProgress
+  player.$state.realmId = realmId
   player.$state.skillInsight = 500
   player.$state.nodeLevels[node.id] = 1
   player.$state.purchasedNodeIds.push(node.id)
@@ -260,7 +272,7 @@ describe('NodeInspector - technique level-gate reasons (M-QI-06)', () => {
 
   it('satisfying the gate re-enables the upgrade and clears the reasons', async () => {
     const node = gated()
-    const view = mountOwnedInspector(node, { rank: 3, grade: 1 })
+    const view = mountOwnedInspector(node, { rank: 3, grade: 1 }, 'qi_refining')
     view.player.$state.nodeLevels[node.id] = 5
 
     await nextTick()
@@ -277,7 +289,7 @@ describe('NodeInspector - technique level-gate reasons (M-QI-06)', () => {
 
   it('a satisfied first gate still blocks at the later gate (no forecast, binding only)', async () => {
     const node = gated()
-    const view = mountOwnedInspector(node, { rank: 3, grade: 1 })
+    const view = mountOwnedInspector(node, { rank: 3, grade: 1 }, 'qi_refining')
     view.player.$state.nodeLevels[node.id] = 8
 
     await nextTick()

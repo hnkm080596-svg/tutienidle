@@ -194,7 +194,15 @@ export class BattleLootSystem {
       return
     }
 
-    const { gained } = this.deps.techniqueSystem.gainMastery(amount)
+    // M-F-TECHNIQUE - realm context enters at the settle seam: the
+    // realm-scaled ceiling (min(18, realmLevel) in-band; 0 while
+    // lagging) clamps accrual inside TechniqueSystem. No session
+    // player -> 'mortal'/0 fails closed (nothing trains).
+    const { gained } = this.deps.techniqueSystem.gainMastery(
+      amount,
+      this.player?.realmId ?? 'mortal',
+      this.player?.realmLevel ?? 0,
+    )
     this.summary.techniqueMastery += gained
 
     if (gained > 0 && sourceId) {

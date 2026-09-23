@@ -195,6 +195,13 @@ export class TribulationOutcomeService {
       }
     }
 
+    // M-F-TECHNIQUE (F4) - the live technique cycle seals BEFORE the
+    // realm write: the departing realmLevel is the freeze-time ceiling
+    // its dai_thanh outcome evaluates against (post-write realmLevel
+    // is already 1). No-op for qi_refining (early return above) and
+    // for in-band live grades.
+    gameManager.realmAdvanceOps.applyTechniqueRealmTransition(player, facts.targetRealmId)
+
     // Order preserved from the Vue path (rework P5, Task 17): realm write
     // FIRST, then unequip-all + modifier sync (avoids stuck gear from the
     // new realm's grade gate), then passive syncs, then path reward.

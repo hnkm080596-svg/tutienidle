@@ -1,7 +1,11 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
+import { usePlayerStore } from '@/stores/player'
+import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useTribulation } from '@/composables/useTribulation'
+import { projectTechniqueCompletion } from '@/core/technique/TechniqueProgression'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import GameButton from '@/components/common/GameButton.vue'
 
@@ -9,7 +13,28 @@ import GameButton from '@/components/common/GameButton.vue'
 // khi độ kiếp" + 2 nút. Auto-unequip do triggerBreakthrough() lo.
 const { t } = useI18n()
 const store = useBreakthroughRequirementStore()
+const player = usePlayerStore()
+const gameManager = useGameManager()
+const { stateVersion } = useStateVersion()
 const { triggerBreakthrough } = useTribulation()
+
+// M-F-TECHNIQUE (F-BREAK-CONFIRM) - unperfected warning: fires iff the
+// live cycle's projected seal is below vien_man (the FIELD is compared
+// - projectTechniqueCompletion returns an outcome object). Pure copy -
+// the player may still breakthrough; sealed live-grade records return
+// verbatim, in-band cycles project from the current rank + realmLevel.
+const techniqueCompletionWarning = computed(() => {
+  stateVersion.value
+
+  const technique = gameManager.techniqueManager.getActive()
+  if (!technique) return undefined
+
+  const outcome = projectTechniqueCompletion(technique, player.$state.realmLevel)
+
+  return outcome.completionState !== 'vien_man'
+    ? { grade: technique.grade, state: outcome.completionState }
+    : undefined
+})
 
 function onConfirm() {
   store.close()
@@ -30,6 +55,15 @@ function onCancel() {
   >
     <div class="breakthrough-confirm">
       <p class="breakthrough-confirm__warning">{{ t('tribulation.stillEquipped.subtitle') }}</p>
+
+      <p v-if="techniqueCompletionWarning" class="breakthrough-confirm__warning">
+        {{
+          t('tribulation.unperfectedTechnique.warning', {
+            grade: techniqueCompletionWarning.grade,
+            state: t(`tribulation.unperfectedTechnique.state.${techniqueCompletionWarning.state}`),
+          })
+        }}
+      </p>
 
       <div class="breakthrough-confirm__actions">
         <GameButton variant="ghost" size="sm" @click="onCancel">{{ t('tribulation.stillEquipped.cancel') }}</GameButton>

@@ -105,6 +105,7 @@ const LIVE_TECHNIQUE: Technique = {
   rank: 0,
   mastery: 0,
   quality: 'hoang',
+  gradeHistory: {},
 }
 
 // P7-M3 (v70) - the holder contract is way-owned: a save carrying a
@@ -131,6 +132,7 @@ const SAVED_TECHNIQUE: Technique = {
   rank: 2,
   mastery: 100,
   quality: 'huyen',
+  gradeHistory: {},
 }
 
 const TEST_QUEST: Quest = {
@@ -853,7 +855,7 @@ describe('v70 technique holder preflight', () => {
     ['grade 0', { grade: 0 }],
     ['grade above the realm ceiling', { grade: 99 }],
     ['negative rank', { rank: -1 }],
-    ['rank above cap', { rank: 11 }],
+    ['rank above cap', { rank: 19 }],
     ['negative mastery', { mastery: -1 }],
     ['mastery >= rank cost', { mastery: 300 }],
     ['invalid quality', { quality: 'mythic' }],
@@ -866,13 +868,119 @@ describe('v70 technique holder preflight', () => {
     expect(manager.techniqueManager.getActive()).toBeUndefined()
   })
 
-  it('rejects rank 10 with nonzero mastery', () => {
+  // M-F-TECHNIQUE - the at-cap mastery invariant moved with the cap:
+  // rank 18 (not 10) is now the mastery-zero boundary.
+  it('rejects rank 18 with nonzero mastery', () => {
     const manager = makeManager()
-    const bad = { ...structuredClone(SAVED_TECHNIQUE), rank: 10, mastery: 5 } as Technique
+    const bad = { ...structuredClone(SAVED_TECHNIQUE), rank: 18, mastery: 5 } as Technique
     const save = baseSave(swordCommittedPlayer(), { techniques: [bad] })
 
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/Invalid technique/i)
     expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+})
+
+// M-F-TECHNIQUE (v75) - gradeHistory coherence preflight: the field is
+// required, every record shape-checks, and the canonical key set is
+// {1..grade-1} sealed plus {grade} iff the live grade lags the realm
+// (grade < realmIndex). An in-band live cycle never carries a record.
+describe('v75 technique gradeHistory coherence preflight', () => {
+  it('rejects a technique carrying no gradeHistory field', () => {
+    const manager = makeManager()
+    const bad = structuredClone(SAVED_TECHNIQUE)
+    Reflect.deleteProperty(bad, 'gradeHistory')
+    const save = baseSave(swordCommittedPlayer(), { techniques: [bad] })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/Invalid technique/i)
+    expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+
+  it.each([
+    ['bad completionState', { 1: { finalRank: 12, completionState: 'hoan_thanh' } }],
+    ['finalRank above cap', { 1: { finalRank: 19, completionState: 'vien_man' } }],
+    ['non-integer finalRank', { 1: { finalRank: 3.5, completionState: 'partial' } }],
+    ['key above live grade', { 3: { finalRank: 0, completionState: 'partial' } }],
+    ['non-object record', { 1: 'broken' }],
+  ])('rejects malformed gradeHistory records: %s', (_label, gradeHistory) => {
+    const manager = makeManager()
+    const bad = {
+      ...structuredClone(SAVED_TECHNIQUE),
+      gradeHistory: gradeHistory as Technique['gradeHistory'],
+    }
+    const save = baseSave(swordCommittedPlayer(), { techniques: [bad] })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/Invalid technique/i)
+    expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+
+  it('rejects a sealed record on an in-band live grade', () => {
+    const manager = makeManager()
+    const bad = structuredClone(SAVED_TECHNIQUE)
+    bad.gradeHistory = { 1: { finalRank: 12, completionState: 'dai_thanh' } }
+    const save = baseSave(swordCommittedPlayer(), { techniques: [bad] })
+
+    // SAVED_TECHNIQUE is grade 1 at qi_refining (index 1): in-band -
+    // a live-grade record must never coexist.
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/Invalid technique/i)
+    expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+
+  it('rejects a lagging holder missing a sealed lower-grade record', () => {
+    const manager = makeManager()
+    const bad = structuredClone(SAVED_TECHNIQUE)
+    bad.grade = 2
+    bad.gradeHistory = { 2: { finalRank: 0, completionState: 'partial' } }
+    const player = swordCommittedPlayer()
+    player.realmId = 'golden_core' // index 3 -> grade 2 lags
+    const save = baseSave(player, { techniques: [bad] })
+
+    // grade 2 lagging requires {1} sealed AND {2} - the {1} key is
+    // missing here.
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/Invalid technique/i)
+    expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+
+  it('restores the canonical frozen-at-exit state (grade 1 lagging inside foundation_establishment)', () => {
+    const manager = makeManager()
+    const sealed = structuredClone(SAVED_TECHNIQUE)
+    sealed.rank = 12
+    sealed.gradeHistory = { 1: { finalRank: 12, completionState: 'dai_thanh' } }
+    const player = swordCommittedPlayer()
+    player.realmId = 'foundation_establishment'
+    player.realmLevel = 1
+    const save = baseSave(player, { techniques: [sealed] })
+
+    manager.saveOps.restoreFromSave(save)
+
+    const restored = manager.techniqueManager.getActive()!
+    expect(restored.grade).toBe(1)
+    expect(restored.rank).toBe(12)
+    expect(restored.gradeHistory).toEqual({ 1: { finalRank: 12, completionState: 'dai_thanh' } })
+  })
+
+  it('restores a mid-catch-up lagging holder (grade 2 inside golden_core with both records)', () => {
+    const manager = makeManager()
+    const catchingUp = structuredClone(SAVED_TECHNIQUE)
+    catchingUp.grade = 2
+    catchingUp.quality = 'thien'
+    catchingUp.rank = 0
+    catchingUp.gradeHistory = {
+      1: { finalRank: 18, completionState: 'vien_man' },
+      2: { finalRank: 0, completionState: 'partial' },
+    }
+    const player = swordCommittedPlayer()
+    player.realmId = 'golden_core'
+    player.realmLevel = 4
+    const save = baseSave(player, { techniques: [catchingUp] })
+
+    manager.saveOps.restoreFromSave(save)
+
+    const restored = manager.techniqueManager.getActive()!
+    expect(restored.grade).toBe(2)
+    expect(restored.gradeHistory).toEqual({
+      1: { finalRank: 18, completionState: 'vien_man' },
+      2: { finalRank: 0, completionState: 'partial' },
+    })
   })
 })
 

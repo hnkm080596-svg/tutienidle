@@ -46,6 +46,12 @@ export type NodePrerequisite =
   // closed for any positive requirement. M-QI-06 authors the first
   // techniqueRank gates (unlock + levelGates); techniqueGrade remains
   // a supported but unauthored variant until a later content mission.
+  // M-F-TECHNIQUE (F5) - techniqueRank evaluates the EFFECTIVE rank:
+  // 0 whenever the live grade lags the realm (a sealed cycle's rank
+  // dies at freeze); owned node levels above the gate stay legal
+  // frozen surplus (purchase/upgrade gates never de-level).
+  // techniqueGrade reads the live grade, monotonic nondecreasing
+  // across catch-up.
   | { kind: 'techniqueRank'; rank: number }
   | { kind: 'techniqueGrade'; grade: number }
 

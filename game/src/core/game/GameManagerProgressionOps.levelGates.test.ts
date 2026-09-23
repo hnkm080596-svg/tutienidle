@@ -39,6 +39,9 @@ function setup() {
 
   const player = createDefaultPlayer()
   player.skillInsight = 500
+  // M-F-TECHNIQUE (F5) - grade 1 is in-band at qi_refining so the
+  // mirror's rank contributes to the effective technique rank.
+  player.realmId = 'qi_refining'
 
   return { gameManager, player }
 }

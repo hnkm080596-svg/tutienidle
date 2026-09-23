@@ -130,8 +130,14 @@ describe('prerequisite skillCastCount', () => {
 // TechniqueSystem's progress sink republishes the pair - same mirror
 // contract as skillCastCounts for `skillCastCount`).
 describe('prerequisite techniqueRank / techniqueGrade (P7-M6)', () => {
+  // M-F-TECHNIQUE (F5) - techniqueRank reads the EFFECTIVE rank: the
+  // live grade must equal the realm index, so fixtures set an in-band
+  // realmId (a lagging holder contributes rank 0).
   it('techniqueRank - passes at/above mirror rank, fails below, fails closed without a technique', () => {
-    const player = playerWith({ techniqueProgress: { rank: 5, grade: 2 } })
+    const player = playerWith({
+      realmId: 'foundation_establishment',
+      techniqueProgress: { rank: 5, grade: 2 },
+    })
 
     expect(hasPrerequisite(player, { kind: 'techniqueRank', rank: 5 })).toBe(true)
     expect(hasPrerequisite(player, { kind: 'techniqueRank', rank: 6 })).toBe(false)
@@ -153,7 +159,11 @@ describe('prerequisite techniqueRank / techniqueGrade (P7-M6)', () => {
   })
 
   it('techniqueRank gate blocks purchase below threshold without deducting insight', () => {
-    const player = playerWith({ skillInsight: 5, techniqueProgress: { rank: 2, grade: 1 } })
+    const player = playerWith({
+      realmId: 'qi_refining',
+      skillInsight: 5,
+      techniqueProgress: { rank: 2, grade: 1 },
+    })
 
     const node = minorNode({
       insightCost: 3,

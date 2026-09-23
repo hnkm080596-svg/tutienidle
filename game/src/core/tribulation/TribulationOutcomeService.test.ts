@@ -149,6 +149,74 @@ describe('TribulationOutcomeService — victory parity', () => {
 
     expect(result.questRealmTransitionMarked).toBe(true)
   })
+
+  // M-F-TECHNIQUE (F4) - the freeze seam fires BEFORE the realm write:
+  // the departing realmLevel (12) is the freeze-time ceiling that makes
+  // rank 12 seal as dai_thanh, while the live holder keeps its literal
+  // rank/grade until the catch-up transaction.
+  it('realm-exit victory seals the live technique cycle into gradeHistory', () => {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerPills(pills)
+    const player = usePlayerStore()
+    player.realmId = 'qi_refining'
+    player.realmLevel = 12
+    player.bodyProgression.meridian.openedIds = MERIDIANS.map((m: { id: string }) => m.id)
+    gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
+    player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
+
+    gameManager.techniqueSystem.grant({ ...TECHNIQUES[0]! }, 'qi_refining')
+    const held = gameManager.techniqueManager.getActive()!
+    held.rank = 12
+
+    expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
+    driveToCompletion(gameManager)
+
+    const service = new TribulationOutcomeService()
+    const result = service.resolveVictory(player, gameManager, gameManager.tribulationDirector.getState()!)
+
+    expect(result.realmEntered).toBe('foundation_establishment')
+    expect(player.realmId).toBe('foundation_establishment')
+    expect(player.realmLevel).toBe(1)
+
+    // Sealed at the DEPARTING realmLevel 12 -> dai_thanh; the live
+    // holder keeps its literal rank/grade until catch-up.
+    expect(held.gradeHistory[1]).toEqual({ finalRank: 12, completionState: 'dai_thanh' })
+    expect(held.rank).toBe(12)
+    expect(held.grade).toBe(1)
+  })
+
+  it('an in-band cycle on a later exit does not double-seal', () => {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerPills(pills)
+    const player = usePlayerStore()
+    player.realmId = 'qi_refining'
+    player.realmLevel = 12
+    player.bodyProgression.meridian.openedIds = MERIDIANS.map((m: { id: string }) => m.id)
+    gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
+    player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
+
+    gameManager.techniqueSystem.grant({ ...TECHNIQUES[0]! }, 'qi_refining')
+    const held = gameManager.techniqueManager.getActive()!
+    held.rank = 12
+
+    expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
+    driveToCompletion(gameManager)
+    new TribulationOutcomeService().resolveVictory(player, gameManager, gameManager.tribulationDirector.getState()!)
+
+    // Catch up to grade 2 (in-band at realm index 2), train the new
+    // cycle, then exit into golden_core (index 3): the grade-2 cycle
+    // seals at the departing realmLevel while the grade-1 record
+    // stands verbatim (write-if-absent).
+    gameManager.techniqueSystem.advanceTechniqueGrade('foundation_establishment')
+    expect(held.grade).toBe(2)
+    expect(held.gradeHistory[2]).toBeUndefined() // in-band live grade carries no record
+
+    player.realmLevel = 12
+    held.rank = 5
+    gameManager.realmAdvanceOps.applyTechniqueRealmTransition(player, 'golden_core')
+    expect(held.gradeHistory[1]).toEqual({ finalRank: 12, completionState: 'dai_thanh' })
+    expect(held.gradeHistory[2]).toEqual({ finalRank: 5, completionState: 'partial' })
+  })
 })
 
 describe('TribulationOutcomeService — defeat parity', () => {

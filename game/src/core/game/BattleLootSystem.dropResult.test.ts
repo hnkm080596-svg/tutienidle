@@ -36,7 +36,7 @@ describe('BattleLootSystem — DropResult consumer', () => {
     expect(giveReward).toHaveBeenCalledTimes(1)
     expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 1 })
     loot.settleTechniqueMastery()
-    expect(gainMastery).toHaveBeenCalledWith(5)
+    expect(gainMastery).toHaveBeenCalledWith(5, 'mortal', 1)
   })
 
   it('equipment_any draws a template through the equipment registry', () => {

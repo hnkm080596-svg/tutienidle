@@ -17,7 +17,9 @@ import type { ProgressionNode } from './ProgressionNode'
 // completion ceiling.
 
 function playerWith(overrides: Partial<ReturnType<typeof createDefaultPlayer>> = {}) {
-  return { ...createDefaultPlayer(), ...overrides }
+  // M-F-TECHNIQUE (F5) - techniqueRank reads the effective rank, so the
+  // default realm is qi_refining: grade-1 fixtures stay in-band.
+  return { ...createDefaultPlayer(), realmId: 'qi_refining', ...overrides }
 }
 
 function gatedNode(overrides: Partial<ProgressionNode> = {}): ProgressionNode {

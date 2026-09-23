@@ -112,4 +112,10 @@
 // the authored physique-advancement chain) is enforced by the
 // BodyProgression integrity preflight. Save v73 is rejected (dev phase,
 // no migration, no compat translator).
-export const CURRENT_SAVE_VERSION = 74 as const
+// v75 (2026-09-23, M-F-TECHNIQUE frozen-cycle model): Technique gains
+// required `gradeHistory` (per-grade sealed cycle outcomes {finalRank,
+// completionState}); the rank ladder is 0..18 with a realm-level-scaled
+// ceiling; restore preflight enforces canonical key-set coherence
+// ({1..grade-1} sealed, {grade} iff the live grade lags the realm).
+// Save v74 is rejected (dev phase, no migration, no compat translator).
+export const CURRENT_SAVE_VERSION = 75 as const
