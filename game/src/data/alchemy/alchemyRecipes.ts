@@ -53,6 +53,9 @@ export const SPECIAL_ALCHEMY_RECIPES: AlchemyRecipe[] = [
     id: 'alchemy_truc_co_dan',
     pillId: 'truc_co_dan',
     realmId: 'qi_refining',
+    // M-F-CEILING - the recipe is the acquisition route for the Truc Co
+    // breakthrough input; tagged so release policy gates the craft.
+    breakthroughRealmId: 'foundation_establishment',
     herbVariants: grottoVariants('tu_linh_thao_qi_refining'),
     herbAmount: 4,
     fuelWoodRealmId: 'qi_refining',

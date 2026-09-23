@@ -1107,6 +1107,7 @@
     "gradeUnknown": "Unknown",
     "reason": {
       "not_found": "Recipe not found",
+      "realm_unavailable": "This recipe belongs to a realm not available in this release",
       "retired": "This recipe is retired — no new brews",
       "room_not_built": "Build the Pill Room first",
       "job_slots_full": "The furnace is busy",

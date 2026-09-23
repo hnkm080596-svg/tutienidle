@@ -11,6 +11,7 @@ import type { FormationLoadout, PlayerData } from '../player/Player'
 import { DEFAULT_PARTY_FORMATION, type PartyFormationSlot } from './PartyFormation'
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
 import { getRealmIndex } from '../realm/realmSystem'
+import { isRealmAvailable } from '../realm/ReleasePolicy'
 
 // Formation unlock (P7-M9, decisions D3 + M9-F1) - D3 rules Tran Phap
 // is not usable Mortal progression and gates it independently; M9-F1
@@ -19,7 +20,9 @@ import { getRealmIndex } from '../realm/realmSystem'
 export const FORMATION_UNLOCK_REALM_ID = 'foundation_establishment'
 
 export function isFormationUnlocked(realmId: string): boolean {
-  return getRealmIndex(realmId) >= getRealmIndex(FORMATION_UNLOCK_REALM_ID)
+  // M-F-CEILING - composed with release policy: the domain also stays
+  // closed if the ceiling ever sits below FORMATION_UNLOCK_REALM_ID.
+  return isRealmAvailable(FORMATION_UNLOCK_REALM_ID) && getRealmIndex(realmId) >= getRealmIndex(FORMATION_UNLOCK_REALM_ID)
 }
 
 // Converts a local standing-slot index (0..STANDING_SLOT_COUNT-1 on each

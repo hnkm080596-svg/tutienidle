@@ -4,6 +4,7 @@ import type { QuestManager } from './QuestManager'
 import type { QuestProgress } from './QuestProgress'
 import type { PlayerData } from '../player/Player'
 import { getRealmIndex } from '../realm/realmSystem'
+import { isBreakthroughAcquisitionEnabled } from '../realm/ReleasePolicy'
 import type { RewardReceiver, RewardSystem } from '../reward/RewardSystem'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { MaterialBag } from '../material/MaterialBag'
@@ -182,6 +183,13 @@ export class QuestSystem {
       if (drop.kind === 'material' && bags.materialRegistry.has(drop.itemId)) {
         // 9.8 — tràn túi: quest chỉ tính delivered; push toast khi có sink.
         const template: Material = bags.materialRegistry.get(drop.itemId)
+
+        // M-F-CEILING - a breakthrough-scoped reward stays dormant while
+        // release policy closes the transition into its tagged realm.
+        if (!isBreakthroughAcquisitionEnabled(template.breakthroughRealmId)) {
+          continue
+        }
+
         const overflow = bags.materialBag.add(template, amount)
 
         const delivered = amount - overflow
@@ -212,6 +220,13 @@ export class QuestSystem {
         // R9 (AR-34) - pill drops surface the delivery receipt too: quest
         // rewards must not silently lose pills to a full bag.
         const pillTemplate = bags.pillRegistry.get(drop.itemId)
+
+        // M-F-CEILING - same release-policy suppression as the material
+        // branch above.
+        if (!isBreakthroughAcquisitionEnabled(pillTemplate.breakthroughRealmId)) {
+          continue
+        }
+
         const pillOverflow = bags.pillBag.add(pillTemplate, amount)
 
         if (pillOverflow > 0 && bags.notifications) {

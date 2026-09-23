@@ -17,6 +17,7 @@ import {
   type PathWayRead,
 } from './CultivationPathKit'
 import { registerDomainDeltaDeriver, type StatModifier } from '../stats/StatCalculator'
+import { isRealmAvailable } from '../realm/ReleasePolicy'
 import { type StatDomain } from '../stats/StatDomain'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { Stats } from '../stats/StatBlock'
@@ -364,6 +365,13 @@ export function grantCultivationPathRealmReward(
   realmId: string,
 ): boolean {
   if (!player.cultivationPath) {
+    return false
+  }
+
+  // M-F-CEILING - realm-entry rewards for unreleased realms stay dormant
+  // (authored records such as the canonical golden_core+ passive ladder
+  // are kept; the release policy suppresses the grant itself).
+  if (!isRealmAvailable(realmId)) {
     return false
   }
 

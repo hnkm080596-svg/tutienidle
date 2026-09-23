@@ -21,7 +21,8 @@ import {
 } from '../realm/body/BodyChapter'
 import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
-import { CORE_REALM_LEVEL, QI_REFINING_BREAKTHROUGH_STAGE_ID, getCurrentRealm } from '../realm/realmSystem'
+import { CORE_REALM_LEVEL, QI_REFINING_BREAKTHROUGH_STAGE_ID, getCurrentRealm, getNextRealm } from '../realm/realmSystem'
+import { isRealmTransitionEnabled } from '../realm/ReleasePolicy'
 import type { Skill } from '../skill/Skill'
 import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
@@ -491,6 +492,13 @@ export class GameManagerRealmAdvanceOps {
    * mortal: [level]; qi_refining: [level, chapterClear]; others: [].
    */
   getBreakthroughRequirements(player: PlayerData): BreakthroughRequirementRow[] {
+    // M-F-CEILING - release policy decides whether the next transition may
+    // be attempted at all; a closed transition reports no requirement rows
+    // (TC -> KD stays authored but disabled in the Beta window).
+    const nextRealmId = getNextRealm(player.realmId)?.id
+    if (nextRealmId === undefined || !isRealmTransitionEnabled(player.realmId, nextRealmId)) {
+      return []
+    }
     if (player.realmId === 'mortal') {
       return [{ key: 'level', met: player.realmLevel >= CORE_REALM_LEVEL }]
     }
@@ -519,8 +527,9 @@ export class GameManagerRealmAdvanceOps {
    * transition is the initiation ritual, chooseCultivationPath).
    *
    * PRODUCT SCOPE: the game is currently designed up to Truc Co tier 18.
-   * Placeholder realms (Kim Dan+) return false until their content pass
-   * lands.
+   * Transitions into unreleased realms (Kim Dan+) are closed by the
+   * release-policy authority (ReleasePolicy.progressionCeilingRealmId) -
+   * their content stays authored/dormant.
    */
   canTriggerBreakthrough(player: PlayerData): boolean {
     const requirements = this.getBreakthroughRequirements(player)

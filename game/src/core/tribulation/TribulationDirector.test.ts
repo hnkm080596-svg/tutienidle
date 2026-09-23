@@ -12,7 +12,10 @@ function makeDirector() {
 
 function readyPlayer(): PlayerData {
   const player = createDefaultPlayer()
-  player.realmId = 'qi_refining'
+  // Quan Khi runs start from a maxed mortal - the transition direction is
+  // now enforced by release policy, so the fixture must sit at the
+  // source realm, not the target one.
+  player.realmId = 'mortal'
   player.realmLevel = 12
   return player
 }

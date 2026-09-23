@@ -16,8 +16,8 @@ import {
   type CommandWheelSlot,
 } from '@/data/ui/commandWheelCatalog'
 import { getCommandWheelOrbitDirection } from '@/data/ui/commandWheelOrbit'
-import { getRealmIndex } from '@/core/realm/realmSystem'
 import { resolveExpectedArtifactId } from '@/core/artifact/Artifact'
+import { isArtifactDomainUnlocked } from '@/core/artifact/ArtifactProgression'
 import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
 import { isFormationUnlocked } from '@/core/game/FormationPlacement'
 import NotificationBadge from '@/components/common/NotificationBadge.vue'
@@ -35,7 +35,7 @@ const navigation = useBuildingNavigation()
 // phải catalog) — xem ghi chú "catalog thuần data" trong
 // commandWheelCatalog.ts.
 const disabledContext = computed<CommandWheelDisabledContext>(() => ({
-  hasFoundationRealm: getRealmIndex(player.realmId) >= getRealmIndex('foundation_establishment'),
+  artifactDomainUnlocked: isArtifactDomainUnlocked(player.realmId),
   hasArtifactDefinition: Boolean(resolveExpectedArtifactId(player)),
   // P7-M9: the M9 slots consume the authoritative domain predicates so
   // the wheel never drifts from ops/commit gates when a threshold moves.

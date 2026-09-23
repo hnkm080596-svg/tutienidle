@@ -58,4 +58,11 @@ export interface Material {
   // chung. Linh Thạch đặt MAX_SAFE_INTEGER vì chi phí Đột Phá scale tới
   // hàng tỷ; MaterialBag.add() đọc field này lúc clamp.
   stackLimit?: number
+
+  // M-F-CEILING - realm this material's breakthrough prepares for (e.g.
+  // the Truc Co gate inputs tag 'foundation_establishment'). Breakthrough-
+  // scoped acquisition routes consult isBreakthroughAcquisitionEnabled()
+  // from ReleasePolicy; untagged materials are never release-suppressed.
+  // Optional, so save/legacy material without the field loads unchanged.
+  breakthroughRealmId?: string
 }

@@ -64,7 +64,7 @@ export interface LootTestSetupOptions {
   /** Material ids registered into a real MaterialRegistry. */
   materialIds?: string[]
   equipmentTemplates?: { id: string; name: string }[]
-  pillTemplates?: { id: string; name: string; grade: string; icon?: string }[]
+  pillTemplates?: { id: string; name: string; grade: string; icon?: string; breakthroughRealmId?: string }[]
 }
 
 export function createLootTestSetup(options: LootTestSetupOptions = {}) {

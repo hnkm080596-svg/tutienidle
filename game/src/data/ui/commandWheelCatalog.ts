@@ -42,12 +42,14 @@ export interface CommandWheelSlot {
 
 /** Context runtime tối thiểu cho disabledReason() — mở rộng dần khi có slot mới cần. */
 export interface CommandWheelDisabledContext {
-  hasFoundationRealm: boolean
+  // P7-M9 + M-F-CEILING: per-domain unlock booleans resolved in
+  // DongFuCommandWheel.vue from the AUTHORITATIVE domain predicates
+  // (isArtifactDomainUnlocked / isCompanionDomainUnlocked /
+  // isFormationUnlocked) - the slots must not key off raw realm presence
+  // or the wheel drifts from the domain gate when a threshold (or the
+  // release ceiling) moves.
+  artifactDomainUnlocked: boolean
   hasArtifactDefinition: boolean
-  // P7-M9: per-domain unlock booleans resolved in DongFuCommandWheel.vue
-  // from the AUTHORITATIVE predicates (isCompanionDomainUnlocked /
-  // isFormationUnlocked) - the slots must not key off hasFoundationRealm
-  // or the wheel drifts from the domain gate when a threshold moves.
   companionDomainUnlocked: boolean
   formationUnlocked: boolean
 }
@@ -110,7 +112,7 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
     target: { kind: 'standalone', panel: 'artifact' },
     available: ALWAYS_AVAILABLE,
     disabledReason: (context) => {
-      if (!context.hasFoundationRealm) {
+      if (!context.artifactDomainUnlocked) {
         return 'Cần đạt Trúc Cơ'
       }
 

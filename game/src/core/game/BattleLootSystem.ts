@@ -29,6 +29,7 @@ import { getProfessionGradeForRealm } from '../profession/ProfessionGrade'
 import { itemQualityRank, professionGradeRank } from '../profession/slotRank'
 import { gradeLabel } from '../presentation/labels'
 import { physiqueEssenceGradeOf } from '../../data/realm/PhysiqueEssence'
+import { isBreakthroughAcquisitionEnabled } from '../realm/ReleasePolicy'
 import type { PlayerData } from '../player/Player'
 
 /** Purple of the Tinh Hoa family stream (2026-08-30, M-QI-08) - flies back to the player. */
@@ -526,6 +527,14 @@ export class BattleLootSystem {
         case 'material':
           if (drop.itemId && this.deps.materialRegistry.has(drop.itemId)) {
             const material = this.deps.materialRegistry.get(drop.itemId)
+
+            // M-F-CEILING - breakthrough-scoped material stays dormant
+            // while release policy closes the transition into its tagged
+            // realm (post-resolve filter; rng order untouched).
+            if (!isBreakthroughAcquisitionEnabled(material.breakthroughRealmId)) {
+              break
+            }
+
             const amount = drop.amount
 
             const materialOverflow = this.deps.materialBag.add(material, amount)
@@ -579,6 +588,13 @@ export class BattleLootSystem {
         case 'pill':
           if (drop.itemId && this.deps.pillRegistry.has(drop.itemId)) {
             const pill = this.deps.pillRegistry.get(drop.itemId)
+
+            // M-F-CEILING - breakthrough-scoped pill stays dormant while
+            // release policy closes the transition into its tagged realm.
+            if (!isBreakthroughAcquisitionEnabled(pill.breakthroughRealmId)) {
+              break
+            }
+
             const amount = drop.amount
 
             const pillOverflow = this.deps.pillBag.add(pill, amount)

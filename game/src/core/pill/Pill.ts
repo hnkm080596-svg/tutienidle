@@ -30,6 +30,13 @@ export interface Pill {
   // giữ hành vi cũ.
   realmId?: string
 
+  // M-F-CEILING - realm this pill's breakthrough prepares for (e.g. Truc
+  // Co Dan tags 'foundation_establishment'). Breakthrough-scoped
+  // acquisition routes consult isBreakthroughAcquisitionEnabled() from
+  // ReleasePolicy; `realmId` above stays the usage gate, and untagged
+  // pills are never release-suppressed.
+  breakthroughRealmId?: string
+
   professionGrade?: ProfessionGrade
 
   effects: PillEffect[]
