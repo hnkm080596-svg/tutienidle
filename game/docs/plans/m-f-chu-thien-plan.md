@@ -26,6 +26,12 @@ gates pass.
 - `core/realm/body/BodyProgressionSystem.ts`: `investBodyChapterState`
   (:131-152) gains the sequential gate before the physique gate; new
   exported `isBodyChapterUnlocked(player, chapterId)` read.
+- `core/realm/body/MeridianChapter.ts`: definition gains
+  `unlocksAfterChapters: ['body_refinement']` (C2C-59 HIGH — chain is
+  system-wide). EXPECTED TEST CHURN: existing meridian invest tests /
+  fixtures that never completed body_refinement now hit the gate —
+  update fixtures to satisfy the prereq (tests only, never weaken the
+  assertions).
   `applyAllBodyModifiers` (:158), `collectBodyBaseStatDeltas` (:170),
   `assertBodyProgressionIntegrity` (:222-271),
   `validateBodyProgressionPersistedState` are registry-generic — no
@@ -41,8 +47,9 @@ gates pass.
   pattern, :102 invest call) + `BodyRefinementSection.vue` (summary +
   bar + Eyebrow) are the row templates; `RealmPanel.vue` mounts a
   third `.realm-panel__body` col.
-- `services/save/saveVersion.ts`: `CURRENT_SAVE_VERSION 76 → 77` +
-  changelog comment. `saveShapeValidation.ts:729` delegates to
+- `services/save/saveVersion.ts`: `CURRENT_SAVE_VERSION` +1 above
+  the merged-base value at impl start (C2C-59 rule) + changelog
+  comment. `saveShapeValidation.ts:729` delegates to
   `validateBodyProgressionPersistedState` — auto-covered.
   `GameManagerSaveRestore.ts:291` `assertBodyProgressionIntegrity`
   preflight — auto-covered.
@@ -69,19 +76,20 @@ gates pass.
    `progress()` shape; `collectBaseStatDeltas` `{}`;
    `scrubLegacyModifiers` removes only `zhou-tian:` ids.
 3. `BodyProgressionSystem.test.ts` (extend or adjacent suite):
-   sequential gate — invest returns 0 while an authored prereq is
-   incomplete on the real registry (body_refinement incomplete → 0;
-   meridian incomplete → 0; both complete → invests);
-   `isBodyChapterUnlocked` mirrors; prereq list evaluated before the
-   physique gate ordering is irrelevant to outcome (assert net
-   behavior only).
+   sequential gate on the REAL registry — BOTH rejections pinned
+   (C2C-59): meridian invest returns 0 while body_refinement
+   incomplete; zhou_tian invest returns 0 while meridian incomplete;
+   full chain satisfied → invests; `isBodyChapterUnlocked` mirrors;
+   assert net behavior, not gate ordering.
 4. `GameManager.bodyChapter.test.ts` /
    `GameManager.essenceSubstitution.test.ts` (extend — the ops seam
-   surface): on the REAL chapter — exact Pháp debit on success
-   (coverage 0: no substitution even when lower bands are owned);
-   under-owned → consumes owned amount only, `circulation += owned`;
-   zero owned → 0 and no debit; locked-by-sequence → 0 and no debit;
-   integrity preflight failure path unchanged.
+   surface): SEAM-CONTRACT test on the real chapter — exercises
+   whichever currency `ZHOU_TIAN_CURRENCY_MATERIAL_ID` declares
+   (C2C-59: read the constant, never a literal; mechanism is the
+   mission). With the current Pháp assignment: exact debit
+   (coverage 0, no substitution even when lower bands owned);
+   under-owned → consumes owned only; zero owned → 0 + no debit;
+   locked → 0 + no debit; preflight path unchanged.
 5. `RealmBodySections.test.ts` (extend — jsdom mountSection harness):
    sequential-locked render names the incomplete prerequisite;
    realm-locked render pre-TC; active render shows capacity bar +
@@ -90,27 +98,32 @@ gates pass.
    disabled states (locked / full / no essence owned).
 6. Save-boundary pin (the BodyChapter.test.ts persisted suite or
    `saveShapeValidation.test.ts`, matching where meridian's is):
-   v76-shaped payload missing `zhou_tian` rejects at
-   `player.bodyProgression.zhou_tian`.
+   a payload shaped for the pre-mission version (missing
+   `zhou_tian`) rejects at `player.bodyProgression.zhou_tian`.
 
 ## Step 2 — authored data + contract/registry edits
 
-- `data/realm/ZhouTian.ts` (new): the five constants per spec sec.2.
+- `data/realm/ZhouTian.ts` (new): the constants per spec sec.2 —
+  `ZHOU_TIAN_CURRENCY_MATERIAL_ID` marked DEFERRED placeholder
+  (QI-D8 comment convention).
 - `BodyChapter.ts`: id union, `EXPECTED_BODY_CHAPTER_KIND` pin,
   `unlocksAfterChapters` optional field (docstring: backward-only,
   canonical order is the authority), `BodyProgressionState` + default
   slice, `BODY_CHAPTERS` append, `validateBodyChapterRegistry` prereq
   validation, `BODY_CHAPTER_BY_ID`.
-- No contract-shape change for existing chapters (field optional;
-  refinement/meridian leave it absent).
+- `MeridianChapter.ts`: gains `unlocksAfterChapters:
+  ['body_refinement']` — the only existing chapter whose authored
+  behavior changes (coordinator-pinned).
 
 ## Step 3 — chapter definition + system gate
 
 - `ZhouTianChapter.ts` (new): `ZhouTianChapterState`,
   `getZhouTianCapacity`, `isTieuChuThienReached`,
   `isDaiChuThienReached`, the `BaseStatBodyChapter` definition —
-  `id/chapterKind 'zhou_tian'`, currency = Pháp material id,
-  `unlocksAfterChapters: ['body_refinement', 'meridian']`, invest
+  `id/chapterKind 'zhou_tian'`, currency =
+  `ZHOU_TIAN_CURRENCY_MATERIAL_ID`,
+  `unlocksAfterChapters: ['meridian']` (C2C-59 — immediate
+  predecessor; transitivity covers body_refinement), invest
   (clamped), `collectBaseStatDeltas → {}`, `legacyModifierPrefix
   'zhou-tian:'`, progress/isComplete/persisted validation/integrity.
 - `BodyProgressionSystem.ts`: sequential gate in
@@ -130,7 +143,9 @@ gates pass.
 
 ## Step 5 — save contract
 
-- `saveVersion.ts` → 77 + changelog comment per convention.
+- `saveVersion.ts` → CURRENT value on merged base + 1 (C2C-59: rule
+  not literal — 77 today, 78+ if a parallel bump lands first);
+  changelog comment states rejected version + new slice.
 - Confirm no `saveShapeValidation.ts` edit needed (delegated
   validator covers the slice — verify in the pin test, not by
   editing).
@@ -160,8 +175,8 @@ gates pass.
 | Delta | Spec § | Plan step | Acceptance test |
 |---|---|---|---|
 | 1 — zhou_tian kind + capacity + milestones + 360 completion | §2, §3 | 2, 3 | A2, A5 |
-| 2 — sequential unlock | §4 | 3 | A3 |
-| 3 — Pháp currency seam | §5 | 3 | A4 |
+| 2 — sequential unlock (system-wide chain, C2C-59) | §4 | 2, 3 | A3 |
+| 3 — currency seam (DEFERRED constant, C2C-59) | §5 | 2, 3 | A4 |
 | 4 — state slice + definition + invest/apply + UI row + tests | §2, §6, §7 | 1-5 | A1, A6, A8 |
 | 5 — chapterKind pin | §6 | 2 | A1 |
-| save boundary (m-f-essence assignment) | §8 | 5 | A7 |
+| save boundary (m-f-essence assignment; +1 rule, C2C-59) | §8 | 5 | A7 |

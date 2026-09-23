@@ -40,21 +40,29 @@ unlock when realm permits).
 - **Sequential unlock is an authored contract, not a positional
   assumption**: `BodyChapterShared` gains an optional
   `unlocksAfterChapters: readonly BodyChapterId[]` field — chapter is
-  locked for invest while any listed chapter is incomplete. zhou_tian
-  authors `['body_refinement', 'meridian']` — ALL chapters earlier in
-  the canonical registry order (Body progression is sequential by
-  design; the ruling's A→B chain is read as the full earlier set). (C2C
-  flag: a narrower reading — only the immediate predecessor
-  `['meridian']`, or none since LQ meridian today gates on nothing —
-  is mechanically identical; the authored list is the only difference.)
-- Currency: **candidate** `tinh_hoa_phap_the` (Pháp essence, bag
-  `material`) per §38 — wired through the existing
-  `BodyChapterCurrency` typed seam so `investBodyChapter`'s M-QI-09
-  substitution path (`planEssenceSubstitution`) works unchanged. Pháp
-  has coverage 0 in the triangle (top rung) → exact debit only, no
-  substitution fill and no change-back; the seam proves it on a real
-  chapter. Currency CHOICE is content/balance and deferred — the
-  mechanism is the mission.
+  locked for invest while any listed chapter is incomplete. The chain
+  is enforced SYSTEM-WIDE, not just at the new chapter (C2C-59 HIGH):
+  **meridian** — which today gates on nothing — is authored
+  `unlocksAfterChapters: ['body_refinement']`, and **zhou_tian**
+  authors `['meridian']` (its immediate predecessor; transitivity
+  through meridian's own gate covers body_refinement — each chapter
+  declares only its direct predecessor, keeping the authored chain
+  `body_refinement → meridian → zhou_tian` explicit and
+  non-duplicated). This is a deliberate behavior change to the
+  existing meridian chapter, coordinator-pinned; existing saves are
+  rejected by the version bump anyway.
+- Currency: the chapter's `currency` field is authored in
+  `ZhouTian.ts` as a named constant marked **DEFERRED placeholder**
+  (QI-D8 convention — `PillFamilies.ts:29`,
+  `BreakthroughTalentPools.ts:13`): currently assigned
+  `tinh_hoa_phap_the` per the §38 candidate, swappable by a later
+  content pass in one line. The CHAPTER reads the constant, never a
+  literal; the SEAM is the mission — `bodyChapterEssenceGrade` +
+  `investBodyChapter`'s M-QI-09 substitution path
+  (`planEssenceSubstitution`) execute whichever authored currency the
+  registry declares. With the current Pháp assignment the seam
+  resolves coverage 0 (top rung) → exact debit only, no substitution
+  fill, no change-back.
 - Invest is capacity-bounded and idempotent: `consumed = min(available,
   capacity − circulation)`; `circulation += consumed`. No per-invest
   amount, cost curve, or batching (balance deferred — mechanism only).
@@ -88,7 +96,9 @@ export const ZHOU_TIAN_REALM_ID = 'foundation_establishment'
 export const ZHOU_TIAN_CAPACITY_PER_REALM_LEVEL = 20
 export const ZHOU_TIAN_TIEU_CIRCULATION = 180   // Tiểu Chu Thiên (Lv9)
 export const ZHOU_TIAN_DAI_CIRCULATION = 360    // Đại Chu Thiên (Lv18) = normal completion
-export const TINH_HOA_PHAP_THE_MATERIAL_ID = 'tinh_hoa_phap_the'
+// DEFERRED (content pass): placeholder per §38 candidate; the chapter
+// currency reads this constant so a later swap is a one-line change.
+export const ZHOU_TIAN_CURRENCY_MATERIAL_ID = 'tinh_hoa_phap_the'
 ```
 
 `bodyProgression.zhou_tian` slice (persisted):
@@ -136,8 +146,8 @@ isDaiChuThienReached(player): boolean    // circulation >= 360 (== isComplete)
 Contract + enforcement:
 
 - `BodyChapterShared` gains `unlocksAfterChapters?: readonly
-  BodyChapterId[]` — absent = no sequential gate (refinement, meridian
-  stay unchanged).
+  BodyChapterId[]` — absent = no sequential gate (body_refinement
+  stays unchanged; meridian and zhou_tian gain authored lists).
 - `investBodyChapterState` (BodyProgressionSystem) checks it BEFORE
   the physique source-grade gate: while any listed chapter's
   `isComplete(player)` is false, invest returns 0 (same silent
@@ -150,12 +160,17 @@ Contract + enforcement:
   catalog order (backward-only) — no self, no forward refs, no unknown
   ids; cycles impossible by construction, and canonical order stays
   the sequencing authority.
-- zhou_tian authors `['body_refinement', 'meridian']`.
+- **meridian authors `['body_refinement']`; zhou_tian authors
+  `['meridian']`** (C2C-59): invest on meridian returns 0 while
+  body_refinement is incomplete; invest on zhou_tian returns 0 while
+  meridian is incomplete (and transitively while body_refinement is
+  incomplete, via meridian's gate).
 
 ## 5. Currency + invest path
 
-- `currency: { bag: 'material', id: 'tinh_hoa_phap_the' }`. No
-  `auxCurrency`.
+- `currency: { bag: 'material', id: ZHOU_TIAN_CURRENCY_MATERIAL_ID }`
+  — the authored constant in `ZhouTian.ts` (marked DEFERRED
+  placeholder, currently `'tinh_hoa_phap_the'`). No `auxCurrency`.
 - `investBodyChapter` (GameManagerRealmAdvanceOps:518-598) needs ZERO
   changes: `bodyChapterEssenceGrade` resolves 'phap'; top-rung
   coverage 0 → `planEssenceSubstitution` returns the exact-Pháp debit;
@@ -213,11 +228,15 @@ sections use. i18n keys under `panels.realm.zhouTian.*` in en + vi
 
 ## 8. Save contract
 
-- `CURRENT_SAVE_VERSION 76 → 77` — dev-phase convention: bump = reject,
-  no translator (QI-S). Changelog comment in `saveVersion.ts` per the
-  v65-v76 pattern.
-- A v76-shaped payload (no `zhou_tian` slice) is rejected by the
-  delegated persisted-state validator at
+- `CURRENT_SAVE_VERSION` bumps by exactly +1 above the value on the
+  merged base at implementation start (C2C-59: pin the RULE, not a
+  literal — expected 77 today, or 78+ if a parallel mission lands a
+  bump first); rejects the immediately previous version. Dev-phase
+  convention: bump = reject, no translator (QI-S). Changelog comment
+  in `saveVersion.ts` per convention, stating both the rejected
+  version and the new slice.
+- A payload shaped for the pre-mission version (no `zhou_tian`
+  slice) is rejected by the delegated persisted-state validator at
   `player.bodyProgression.zhou_tian` — the slice is required-present
   like every chapter slice.
 - No registry-reference preflight changes needed (delegate path
@@ -245,7 +264,7 @@ sections use. i18n keys under `panels.realm.zhouTian.*` in en + vi
 - Currency choice finalization beyond the §38 candidate mechanism.
 - `physiqueAdvancement` coupling, tick auto-invest wiring.
 - Content beyond the chapter itself; UI redesign / M-UI-SYSTEM theme.
-- Save migration (v77 rejects v76).
+- Save migration (the new version rejects the previous one).
 
 ## 11. Acceptance
 
@@ -253,9 +272,9 @@ sections use. i18n keys under `panels.realm.zhouTian.*` in en + vi
 |---|---|
 | A1 | `BodyChapterId`/`BODY_CHAPTERS`/`BODY_CHAPTER_BY_ID` carry `zhou_tian`; `EXPECTED_BODY_CHAPTER_KIND.zhou_tian === 'zhou_tian'`; defaults + slice validation cover `bodyProgression.zhou_tian`. |
 | A2 | Capacity = 0 pre-TC, `20 × realmLevel` in TC, 360 post-TC; invest consumes `min(available, capacity − circulation)` and never exceeds 360; `isComplete` iff 360. |
-| A3 | `unlocksAfterChapters` field enforced at `investBodyChapterState` + `isBodyChapterUnlocked` read; zhou_tian locked until body_refinement + meridian complete; registry validation rejects self/forward/unknown refs. |
-| A4 | Pháp essence path through the real chapter: exact `tinh_hoa_phap_the` debit (coverage 0, no substitution fill, no change-back); under-owned → partial invest of owned amount only; bag consumed only on success. |
+| A3 | `unlocksAfterChapters` enforced at `investBodyChapterState` + `isBodyChapterUnlocked`; BOTH rejections pinned on the real registry: meridian invest returns 0 while body_refinement incomplete, zhou_tian invest returns 0 while meridian incomplete; registry validation rejects self/forward/unknown refs. |
+| A4 | Seam-contract path through the real chapter: the ops seam exercises whichever currency the DEFERRED constant declares — with the current Pháp assignment, exact `tinh_hoa_phap_the` debit (coverage 0, no substitution fill, no change-back); under-owned → partial invest of owned amount only; bag consumed only on success. |
 | A5 | Tiểu/Đại derived reads at 180/360; `progress()` = `{circulation, 360}`; `collectBaseStatDeltas` returns `{}`; no physique advancement declared. |
 | A6 | UI row renders locked (sequential + realm) / active / complete states; invest button + owned label wired through the ops seam; i18n keys en + vi. |
-| A7 | Save v77; v76 payloads rejected; persisted-shape validation covers the slice (missing/non-object/non-number circulation all reject); `circulation > 360` or `> capacity` = corrupt. |
+| A7 | Save version = base-at-impl + 1, rejecting the immediately previous version; persisted-shape validation covers the slice (missing/non-object/non-number circulation all reject); `circulation > 360` or `> capacity` = corrupt. |
 | A8 | Idempotency: invest at capacity or complete returns 0 and debits nothing; repeated `validatePersistedState`/integrity runs never throw on legal states. |
