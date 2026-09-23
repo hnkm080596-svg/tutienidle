@@ -618,8 +618,8 @@ export class GameManager {
       materialBag: this.materialBag,
       notifications: this.notifications,
       // Deferred closure - questOps is assigned later in this constructor.
-      notifyQuestMaterialGained: (materialId, amount) =>
-        this.questOps.notifyQuestMaterialGained(materialId, amount),
+      notifyMaterialGained: (materialId, amount) =>
+        this.questOps.notifyMaterialGained(materialId, amount),
     })
 
     // P7-M4 — ONE override-aware path-runtime binding shared by combat
@@ -676,6 +676,11 @@ export class GameManager {
       getTurnBattle: () => this.turnBattleOps.getTurnBattle(),
       // Deferred closure - tickOps is assigned later in this constructor.
       markQuestRealmTransition: () => this.tickOps.markQuestRealmTransition(),
+      // Deferred closures - questOps is assigned later in this
+      // constructor (same pattern as the other funnel subscribers).
+      notifyMaterialGained: (materialId, amount) =>
+        this.questOps.notifyMaterialGained(materialId, amount),
+      notifications: this.notifications,
     })
 
     this.effectOps = new GameManagerPersistentEffectOps({
@@ -695,8 +700,8 @@ export class GameManager {
       materialBag: this.materialBag,
       // Deferred closures - alchemyOps/questOps assigned later.
       getAlchemyRecipes: () => this.alchemyOps.getAlchemyRecipes(),
-      notifyQuestMaterialGained: (materialId, amount) =>
-        this.questOps.notifyQuestMaterialGained(materialId, amount),
+      notifyMaterialGained: (materialId, amount) =>
+        this.questOps.notifyMaterialGained(materialId, amount),
     })
 
     this.pillOps = new GameManagerPillOps({
@@ -731,6 +736,9 @@ export class GameManager {
       questSystem: this.questSystem,
       questRegistry: this.questRegistry,
       questManager: this.questManager,
+      // Deferred closure - questOps is assigned later in this constructor.
+      notifyMaterialGained: (materialId, amount) =>
+        this.questOps.notifyMaterialGained(materialId, amount),
       hiddenBeast: this.hiddenBeastSystem,
     })
 
@@ -764,8 +772,8 @@ export class GameManager {
       buildingRegistry: this.buildingRegistry,
       buildingSystem: this.buildingSystem,
       notifications: this.notifications,
-      notifyQuestMaterialGained: (materialId, amount) =>
-        this.questOps.notifyQuestMaterialGained(materialId, amount),
+      notifyMaterialGained: (materialId, amount) =>
+        this.questOps.notifyMaterialGained(materialId, amount),
       getActivePlayer: () => this.activePlayer,
     })
 
@@ -779,8 +787,8 @@ export class GameManager {
       materialRegistry: this.materialRegistry,
       notifications: this.notifications,
       getActivePlayer: () => this.activePlayer,
-      notifyQuestMaterialGained: (materialId, amount) =>
-        this.questOps.notifyQuestMaterialGained(materialId, amount),
+      notifyMaterialGained: (materialId, amount) =>
+        this.questOps.notifyMaterialGained(materialId, amount),
     })
 
     this.alchemyOps = new GameManagerAlchemyOps({
@@ -812,6 +820,8 @@ export class GameManager {
       materialRegistry: this.materialRegistry,
       notifications: this.notifications,
       getActivePlayer: () => this.activePlayer,
+      notifyMaterialGained: (materialId, amount) =>
+        this.questOps.notifyMaterialGained(materialId, amount),
     })
 
     this.saveOps = new GameManagerSaveRestore({
@@ -917,8 +927,8 @@ export class GameManager {
       questSystem: this.questSystem,
       questRegistry: this.questRegistry,
       questManager: this.questManager,
-      notifyQuestMaterialGained: (materialId, amount) =>
-        this.questOps.notifyQuestMaterialGained(materialId, amount),
+      notifyMaterialGained: (materialId, amount) =>
+        this.questOps.notifyMaterialGained(materialId, amount),
       notifications: this.notifications,
       productionSystem: this.productionSystem,
       materialBag: this.materialBag,

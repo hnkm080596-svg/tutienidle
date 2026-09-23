@@ -531,6 +531,13 @@
         "pageLocked": "Mở khóa ở {realm}",
         "invest": "Mở Mạch",
         "owned": "sở hữu {count}"
+      },
+      "bodyPerfection": {
+        "title": "Thể Phách Hoàn Thiện",
+        "statePerfected": "Đã hoàn thiện",
+        "statePending": "Chưa hoàn thiện",
+        "owned": "sở hữu {count}",
+        "perfect": "Hoàn Thiện"
       }
     },
     "settings": {

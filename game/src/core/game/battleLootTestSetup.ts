@@ -148,6 +148,7 @@ export function createLootTestSetup(options: LootTestSetupOptions = {}) {
     questSystem: { onEnemyDefeated: vi.fn(), onMaterialCollected: vi.fn() },
     questRegistry: {},
     questManager: {},
+    notifyMaterialGained: vi.fn(),
     hiddenBeast: { onEnemyDefeated: vi.fn() },
   } as unknown as BattleLootSystemDeps
 

@@ -8,11 +8,13 @@ import Eyebrow from '@/components/common/primitives/Eyebrow.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import BodyRefinementSection from '@/components/panels/realm/BodyRefinementSection.vue'
 import MeridianSection from '@/components/panels/realm/MeridianSection.vue'
+import BodyPerfectionSection from '@/components/panels/realm/BodyPerfectionSection.vue'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
 import { CORE_REALM_LEVEL, getCurrentRealm, getNextRealm } from '@/core/realm/realmSystem'
+import { isBodyPerfectionRevealed } from '@/core/realm/body/BodyPerfection'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
 import { REALM_PASSIVE_NODES } from '@/data/realm/RealmPassiveNodes'
 import { useRealmStatPassives } from '@/composables/useRealmStatPassives'
@@ -28,6 +30,10 @@ const requirement = useBreakthroughRequirementStore()
 const { realmStatPassiveRows } = useRealmStatPassives()
 
 const currentTier = computed(() => getRealmTier(player.realmId))
+// M-F-BODY-PERFECTION (spec S6) - the whole col stays ABSENT until
+// the first authored perfection material is discovered; player.$state
+// is Pinia-reactive so this computed re-evaluates on the first write.
+const bodyPerfectionRevealed = computed(() => isBodyPerfectionRevealed(player.$state))
 const canBreakthrough = computed(() => gameManager.realmAdvanceOps.canTriggerBreakthrough(player.$state))
 // M-QI-03 - normal Truc Co read-model: the visible requirement block is
 // scoped to qi_refining (the domain rows also drive the gate itself;
@@ -128,6 +134,13 @@ function majorBreakthrough() {
         <div class="realm-panel__body-col">
           <Eyebrow>{{ t('panels.realm.meridian.title') }}</Eyebrow>
           <MeridianSection />
+        </div>
+        <!-- M-F-BODY-PERFECTION - hidden col: v-if on the COLUMN, not
+             inside the section, so no empty eyebrow renders before
+             first discovery. -->
+        <div v-if="bodyPerfectionRevealed" class="realm-panel__body-col">
+          <Eyebrow>{{ t('panels.realm.bodyPerfection.title') }}</Eyebrow>
+          <BodyPerfectionSection />
         </div>
       </div>
     </div>

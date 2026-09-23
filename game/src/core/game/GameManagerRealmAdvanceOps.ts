@@ -26,6 +26,12 @@ import {
   planEssenceSubstitution,
 } from '../realm/body/BodyChapterEssenceSubstitution'
 import {
+  applyBodyPerfection,
+  canPerfectBodyRealm,
+} from '../realm/body/BodyPerfection'
+import { bodyPerfectionMaterialIds } from '../../data/realm/BodyPerfection'
+import type { NotificationQueue } from './NotificationQueue'
+import {
   physiqueEssenceMaterialId,
 } from '../../data/realm/PhysiqueEssence'
 import type { PhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
@@ -102,6 +108,11 @@ export class GameManagerRealmAdvanceOps {
       progressionOps: GameManagerProgressionOps
       getTurnBattle: () => TurnBattle | null
       markQuestRealmTransition: () => void
+      // M-F-BODY-PERFECTION - material-landing funnel (the essence
+      // change credit is a live landing) + the shared toast sink for
+      // the perfection transaction's commit notification.
+      notifyMaterialGained: (materialId: string, amount: number) => void
+      notifications: NotificationQueue
     },
   ) {
     this.techniqueManager = deps.techniqueManager
@@ -593,12 +604,68 @@ export class GameManagerRealmAdvanceOps {
     if (plan.change !== undefined) {
       const changeMaterial = this.deps.materialRegistry.get(plan.change.materialId)
       this.deps.materialBag.add(changeMaterial, plan.change.amount)
+      // M-F-BODY-PERFECTION - the essence change credit is a live
+      // material landing; capacity was preflighted so delivered is
+      // the full amount.
+      this.deps.notifyMaterialGained(plan.change.materialId, plan.change.amount)
     }
     return investBodyChapterState(player, chapterId, effectiveAvailable, auxOwned)
   }
 
   private bodyChapterBag(currency: BodyChapterCurrency): { getAmount(id: string): number; has(id: string, amount: number): boolean; remove(id: string, amount: number): boolean } {
     return currency.bag === 'pill' ? this.deps.pillBag : this.deps.materialBag
+  }
+
+  /**
+   * M-F-BODY-PERFECTION (spec S4) - the ONE Body-perfection
+   * transaction: validate -> probe -> consume -> mark -> stack ->
+   * rebuild. Atomic: every gate arm + a JSON-probe pass runs before
+   * ANY mutation, so a failure leaves zero state change. Idempotent:
+   * an already-perfected realm short-circuits inside
+   * canPerfectBodyRealm. The "stack + rebuild" steps need no explicit
+   * call: getBodyPerfectionMultiplier derives live from
+   * perfectedRealmIds inside the Body base-stat channel, and the UI
+   * re-resolves stats on the next state bump.
+   */
+  perfectBodyRealm(player: PlayerData, realmId: string): boolean {
+    const ownedOf = (materialId: string): number =>
+      this.deps.materialBag.getAmount(materialId)
+
+    if (!canPerfectBodyRealm(player, realmId, ownedOf)) {
+      return false
+    }
+
+    const required = bodyPerfectionMaterialIds(realmId)
+
+    if (!required || required.length === 0) {
+      return false
+    }
+
+    // Same Pinia-safe probe convention as investBodyChapter: JSON
+    // round-trip (never structuredClone - proxies throw DataCloneError),
+    // then the mark step dry-runs on the detached copy. Consumption
+    // cannot legitimately fail past the gate, but the probe keeps the
+    // atomic convention uniform.
+    const probe = JSON.parse(JSON.stringify(player)) as PlayerData
+
+    if (!canPerfectBodyRealm(probe, realmId, ownedOf)) {
+      return false
+    }
+
+    applyBodyPerfection(probe, realmId)
+
+    for (const materialId of required) {
+      this.deps.materialBag.remove(materialId, 1)
+    }
+
+    applyBodyPerfection(player, realmId)
+
+    this.deps.notifications.push({
+      kind: 'loot',
+      message: `Thể Phách Hoàn Thiện: ${getCurrentRealm(realmId).name}`,
+    })
+
+    return true
   }
 
   /**

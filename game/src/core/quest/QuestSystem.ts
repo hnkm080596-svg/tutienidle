@@ -26,6 +26,13 @@ export interface QuestBagDeps {
   // 9.8 (optional) — caller có notification sink thì push toast khi
   // reward material tràn túi; không có thì bỏ qua (test/mock path).
   notifications?: { push: (event: NotificationEvent) => void }
+
+  // M-F-BODY-PERFECTION (optional) - the ONE material-landing funnel.
+  // When supplied, claim() routes reward-material deliveries through it
+  // instead of calling onMaterialCollected directly, so quest progress
+  // AND canonical discovery share exactly-once semantics. Absent
+  // (test/mock path) falls back to the legacy direct call.
+  onMaterialGained?: (materialId: string, delivered: number) => void
 }
 
 function isUnlocked(quest: Quest, player: PlayerData): boolean {
@@ -194,10 +201,15 @@ export class QuestSystem {
 
         const delivered = amount - overflow
 
-        // Item turn-in của quest này cũng là material thu thập — tính
-        // progress cho collect-quest khác đang active (cùng hook với
-        // mọi đường material vào túi).
-        this.onMaterialCollected(registry, manager, drop.itemId, delivered)
+        // Item turn-in of this quest also counts as collected material -
+        // progress for other active collect-quests (same hook as every
+        // material-into-bag path). M-F-BODY-PERFECTION: prefer the
+        // caller's funnel so discovery counts the same landing once.
+        if (bags.onMaterialGained) {
+          bags.onMaterialGained(drop.itemId, delivered)
+        } else {
+          this.onMaterialCollected(registry, manager, drop.itemId, delivered)
+        }
 
         if (overflow > 0 && bags.notifications) {
           // Event dựng inline (fallback message vi — convention core):

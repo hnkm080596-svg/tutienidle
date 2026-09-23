@@ -18,7 +18,7 @@ export class GameManagerEconomyOps {
       materialRegistry: MaterialRegistry
       materialBag: MaterialBag
       getAlchemyRecipes: () => AlchemyRecipe[]
-      notifyQuestMaterialGained: (materialId: string, amount: number) => void
+      notifyMaterialGained: (materialId: string, amount: number) => void
     },
   ) {}
 
@@ -39,7 +39,7 @@ export class GameManagerEconomyOps {
     const result = vendorSystem.sellMaterial(this.deps.materialBag, materialId, amount, player.realmId)
 
     if (result.ok && result.gained) {
-      this.deps.notifyQuestMaterialGained(
+      this.deps.notifyMaterialGained(
         getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId)),
         result.gained,
       )

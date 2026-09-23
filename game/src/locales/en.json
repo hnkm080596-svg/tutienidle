@@ -531,6 +531,13 @@
         "pageLocked": "Unlocks at {realm}",
         "invest": "Open Meridian",
         "owned": "owned {count}"
+      },
+      "bodyPerfection": {
+        "title": "Body Perfection",
+        "statePerfected": "Perfected",
+        "statePending": "Not perfected",
+        "owned": "owned {count}",
+        "perfect": "Perfect"
       }
     },
     "settings": {

@@ -1,6 +1,6 @@
 import { calculateStats, resolveAttributeTotals, type StatModifier } from '../stats/StatCalculator'
 import { collectActiveWayStatModifiers } from './CultivationPathSystem'
-import { collectBodyBaseStatDeltas, statDeltaEntries } from '../realm/body/BodyProgressionSystem'
+import { collectEffectiveBodyBaseStatDeltas, statDeltaEntries } from '../realm/body/BodyProgressionSystem'
 import { asBaseStats, createBaseStats, type BaseStats, type Stats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { CENTER_LANE_INDEX } from '../battle/BattleLane'
@@ -22,6 +22,10 @@ import {
   createDefaultBodyProgression,
   type BodyProgressionState,
 } from '../realm/body/BodyChapter'
+import {
+  createDefaultBodyPerfection,
+  type BodyPerfectionState,
+} from '../realm/body/BodyPerfection'
 import type { PhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
 import type { TalentEntitlement } from '../talent/TalentEntitlement'
 
@@ -232,6 +236,15 @@ export interface PlayerData {
   // through it, never the slices directly.
   bodyProgression: BodyProgressionState
 
+  // M-F-BODY-PERFECTION - canonical Body-perfection slice (TOP-LEVEL,
+  // not inside bodyProgression: that record is pinned 1:1 to the
+  // chapter registry). discoveredMaterials = write-once set of authored
+  // perfection-material ids ever received (persistent, NOT
+  // inventory-derived); perfectedRealmIds = realms whose perfection
+  // transaction committed. Owned by core/realm/body/BodyPerfection;
+  // the hidden UI reads the read-model, never the slice directly.
+  bodyPerfection: BodyPerfectionState
+
   // M-QI-07 (QI-D4) - the persisted physique (The Phach) grade on the
   // Pham -> Bao -> ... -> Tien ladder (data/realm/PhysiqueLadder.ts).
   // Advanced EXACTLY ONE rung per completed physique-advancement body
@@ -440,6 +453,7 @@ export function createDefaultPlayer(): PlayerData {
     nodeFreePurchaseRecord: {},
 
     bodyProgression: createDefaultBodyProgression(),
+    bodyPerfection: createDefaultBodyPerfection(),
     physiqueGrade: 'pham',
     breakthroughGrade: 6,
     grantedRealmPassiveIds: [],
@@ -496,7 +510,7 @@ export function resolvePlayerStatAssembly(
   // mutated, so saves, mortal perfection's persisted-base read, and
   // restore rehydration are unaffected.
   const assembledBase = { ...player.baseStats }
-  for (const [stat, delta] of statDeltaEntries(collectBodyBaseStatDeltas(player))) {
+  for (const [stat, delta] of statDeltaEntries(collectEffectiveBodyBaseStatDeltas(player))) {
     assembledBase[stat] += delta
   }
   const pipelineBase = asBaseStats(assembledBase)

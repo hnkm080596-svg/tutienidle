@@ -25,7 +25,7 @@ export class GameManagerRewardOps {
       materialRegistry: MaterialRegistry
       materialBag: MaterialBag
       notifications: NotificationQueue
-      notifyQuestMaterialGained: (materialId: string, amount: number) => void
+      notifyMaterialGained: (materialId: string, amount: number) => void
     },
   ) {}
 
@@ -53,7 +53,7 @@ export class GameManagerRewardOps {
           // 9.8 - bag overflow: quests count only delivered + toast.
           const overflow = this.deps.materialBag.add(this.deps.materialRegistry.get(spiritStoneId), amount)
 
-          this.deps.notifyQuestMaterialGained(spiritStoneId, amount - overflow)
+          this.deps.notifyMaterialGained(spiritStoneId, amount - overflow)
 
           if (overflow > 0) {
             this.deps.notifications.push(

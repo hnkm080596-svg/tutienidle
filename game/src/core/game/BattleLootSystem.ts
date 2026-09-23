@@ -104,6 +104,10 @@ export interface BattleLootSystemDeps {
   questSystem: QuestSystem
   questRegistry: QuestRegistry
   questManager: QuestManager
+  // M-F-BODY-PERFECTION - material landings route through the ONE
+  // funnel (collect-quest + canonical discovery) instead of calling
+  // onMaterialCollected directly; quest deps stay for the kill hook.
+  notifyMaterialGained: (materialId: string, amount: number) => void
   // Quai an (spec dot-pha-loi-kiep S4.1c) - dem kill Luyen Khi/reset
   // khi giet quai an.
   hiddenBeast: HiddenBeastSystem
@@ -551,14 +555,9 @@ export class BattleLootSystem {
 
             const materialOverflow = this.deps.materialBag.add(material, amount)
 
-            // Collect-quest hook (review 2026-08-28) - chi tinh luong that
-            // su vao tui (tru overflow).
-            this.deps.questSystem.onMaterialCollected(
-              this.deps.questRegistry,
-              this.deps.questManager,
-              drop.itemId,
-              amount - materialOverflow,
-            )
+            // Collect-quest + perfection-discovery hook - chi tinh
+            // luong that su vao tui (tru overflow).
+            this.deps.notifyMaterialGained(drop.itemId, amount - materialOverflow)
 
             if (materialOverflow > 0) {
               overflowParts.push(`${materialOverflow} ${material.name}`)
@@ -721,15 +720,10 @@ export class BattleLootSystem {
         continue
       }
 
-      // 9.8 - tran tui: quest chi tinh delivered + toast bag.overflow.
+      // 9.8 - tran tui: funnel chi tinh delivered + toast bag.overflow.
       const overflow = this.deps.materialBag.add(this.deps.materialRegistry.get(reward.materialId), reward.amount)
 
-      this.deps.questSystem.onMaterialCollected(
-        this.deps.questRegistry,
-        this.deps.questManager,
-        reward.materialId,
-        reward.amount - overflow,
-      )
+      this.deps.notifyMaterialGained(reward.materialId, reward.amount - overflow)
 
       if (overflow > 0) {
         this.deps.notifications.push(
