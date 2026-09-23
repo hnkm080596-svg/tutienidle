@@ -14,6 +14,7 @@ export function useDialogFocus(
 ): void {
   let lastTrigger: HTMLElement | null = null
   let keydownHandler: ((event: KeyboardEvent) => void) | null = null
+  let mousedownHandler: ((event: MouseEvent) => void) | null = null
 
   function focusables(): HTMLElement[] {
     const el = toValue(cardRef)
@@ -59,9 +60,27 @@ export function useDialogFocus(
         }
       }
       toValue(cardRef)?.addEventListener('keydown', keydownHandler)
+      // M-UI-SYSTEM QA - pointer containment, sibling to the Tab cycle:
+      // a mousedown on unfocusable space outside the open card lets the
+      // browser move focus to a BACKGROUND focusable ancestor (a parent
+      // overlay card is tabindex=-1), so the blocked surface answers
+      // Escape through the blocking dialog. Cancelling the default
+      // mousedown action keeps focus inside the card; click handlers
+      // (e.g. scrim close) still fire because click is a separate event.
+      mousedownHandler = (event: MouseEvent) => {
+        const card = toValue(cardRef)
+        if (card && !(event.target instanceof Node && card.contains(event.target))) {
+          event.preventDefault()
+        }
+      }
+      document.addEventListener('mousedown', mousedownHandler)
     } else {
       if (keydownHandler) toValue(cardRef)?.removeEventListener('keydown', keydownHandler)
       keydownHandler = null
+      if (mousedownHandler) {
+        document.removeEventListener('mousedown', mousedownHandler)
+        mousedownHandler = null
+      }
       if (lastTrigger && document.contains(lastTrigger)) lastTrigger.focus()
       lastTrigger = null
     }
@@ -70,6 +89,10 @@ export function useDialogFocus(
   onBeforeUnmount(() => {
     stopWatch()
     if (keydownHandler) toValue(cardRef)?.removeEventListener('keydown', keydownHandler)
+    if (mousedownHandler) {
+      document.removeEventListener('mousedown', mousedownHandler)
+      mousedownHandler = null
+    }
     if (lastTrigger && document.contains(lastTrigger)) lastTrigger.focus()
   })
 }
