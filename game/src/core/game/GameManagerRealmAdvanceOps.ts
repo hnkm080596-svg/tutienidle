@@ -511,7 +511,11 @@ export class GameManagerRealmAdvanceOps {
     const coverage = essenceSubstitutionCoverage(chapter.currency, ownedOf)
     const effectiveAvailable = available + coverage
 
-    const probe = structuredClone(player)
+    // JSON round-trip, NOT structuredClone: the live callers hand in a
+    // Pinia store's reactive $state, and structuredClone throws
+    // DataCloneError on any nested Proxy (SaveSystem's detachSaveValue
+    // ruling). JSON stringify/parse reads through proxies at any depth.
+    const probe = JSON.parse(JSON.stringify(player)) as PlayerData
     const consumed = investBodyChapterState(probe, chapterId, effectiveAvailable, auxOwned)
     if (consumed <= 0) {
       return 0

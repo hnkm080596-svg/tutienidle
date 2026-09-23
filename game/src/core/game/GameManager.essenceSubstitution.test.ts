@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 
 import { materials } from '../../data/materials/materials'
 import { pills } from '../../data/pill/pills'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
 import { createDefaultPlayer } from '../player/Player'
+import { usePlayerStore } from '../../stores/player'
 import { GameManager } from './GameManager'
 
 const PHAM = TINH_HOA_PHAM_THE_MATERIAL_ID
@@ -183,6 +185,29 @@ describe('investBodyChapter essence substitution (M-QI-09)', () => {
     expect(manager.materialBag.getAmount(PHAP)).toBe(13)
     expect(manager.materialBag.getAmount(PHAM)).toBe(0)
     expect(player.bodyProgression.body_refinement.currentTierProgress).toBe(0)
+  })
+
+  it('runs the probe against a reactive Pinia $state without DataCloneError (C2C r24#1)', () => {
+    // The live seam (MeridianSection, store callers) hands in a
+    // reactive $state proxy - structuredClone would throw on the
+    // first nested Proxy; the JSON probe must read through it.
+    setActivePinia(createPinia())
+    const playerStore = usePlayerStore()
+    playerStore.realmId = 'qi_refining'
+    const manager = managerWithCatalogs()
+    manager.setActivePlayer(playerStore.$state)
+    manager.materialBag.add(manager.materialRegistry.get(PHAM), 10)
+    manager.materialBag.add(manager.materialRegistry.get(BAO), 25)
+
+    const consumed = manager.realmAdvanceOps.investBodyChapter(
+      playerStore.$state,
+      'body_refinement',
+    )
+
+    expect(consumed).toBe(50)
+    expect(manager.materialBag.getAmount(PHAM)).toBe(0)
+    expect(manager.materialBag.getAmount(BAO)).toBe(5)
+    expect(playerStore.bodyProgression.body_refinement.completedTiers).toBe(1)
   })
 
   it('the update() auto-invest tick resolves substitution through the same seam', () => {
