@@ -21,7 +21,7 @@ Protocol:
    was interrupted — skip the staleness check and finish it under the same
    verdict output rules.
 2. Write your verdict IN THIS CHAT as your reply, in exactly this shape:
-   - first line: `[C2C] STATE <DONE|BLOCKED|FINDINGS|NOTICE> · ROUND <id>`
+   - first line: `[C2C] STATE <DONE|BLOCKED|FINDINGS|NOTICE|STALE> · ROUND <id>`
      echoing the ROUND id from the task header (omit ROUND if it has none)
    - last line: `[C2C] END`
    - between them: findings with file references and severity

@@ -20,8 +20,12 @@ transport replaced:
 - `outbox-<name>.md` — task record Devin writes (kept for audit/resume;
   `<name>` = short round name, e.g. `mdsim-r3`; no name → `outbox.md`).
 - `inbox-<name>.md` — the validated verdict materialized from the chat.
-- `.c2c/state.json` — current round state for resume after pause:
-  `{"name","round","sentAt","status":"sent|done"}`.
+- `.c2c/state.json` — round state for resume after pause:
+  `{"nextRound": <int>, "open": {"name","round","sentAt","status"}}`.
+  **ROUND numbers are globally unique and monotonically increasing across
+  ALL names** (`nextRound` increments once per send, never per-name) — the
+  chat is a single shared channel, so a stale verdict from another round can
+  only collide when round numbers repeat. `--expect-round` is the guard.
 - `.c2c/chat-url.txt` — URL of the dedicated C2C conversation
   (`https://chatgpt.com/c/<id>`). Requires a logged-in browser profile —
   anonymous mode has no persistent chat URLs.
@@ -43,7 +47,8 @@ transport replaced:
    `[C2C] STATE REVIEW_READY · ROUND <n> · TASK <name>`, then the task body
    + target (PR URL or workspace pointer). Keep it audit-sized — the same
    content goes in the chat message, since ChatGPT has no file access.
-3. Update `state.json`: `{"name","round",sentAt,"status":"sent"}`.
+3. Update `state.json`: take `n = nextRound`, increment it, set `open` to
+   `{"name","round":n,sentAt,"status":"sent"}`.
 4. Doorbell — send the task, never wait inline:
 
    ```
@@ -72,16 +77,17 @@ transport replaced:
    instruction) · `4` = page/site failure (login expired, Cloudflare wall).
 6. Valid verdict → `state.json` status `done` → parse
    `<DONE|BLOCKED|FINDINGS|NOTICE|STALE>` → handle per project rules → next
-   round: ROUND+1, new outbox, new `go`.
+   round: new round number (nextRound++), new outbox, new `go`.
    `STATE STALE` = duplicate `go` (target unchanged since ChatGPT's last
    read). Interrupted previous round → resend `continue <name>`; want a NEW
-   review on the same name → ROUND+1 + new outbox + new `go`.
+   review on the same name → next round number + new outbox + new `go`.
 
 ## Timeout / stuck handling (in order)
 
-- Timeout (exit 3) before a matching round arrives → resend `go <name>` at
-  most twice → still nothing → tell the user (chat dead, quota exhausted,
-  or login expired — check the browser via the Desktop tab).
+- Timeout (exit 3) before a matching round arrives → resend `continue
+  <name>` (same round — `go` re-sends trip the STALE guard) at most twice →
+  still nothing → tell the user (chat dead, quota exhausted, or login
+  expired — check the browser via the Desktop tab).
 - Marker failure (exit 5) → ChatGPT answered without protocol format →
   resend `continue <name>` once; repeat failure → re-paste the standing
   instruction into the chat, then `continue` again.
@@ -91,9 +97,9 @@ transport replaced:
 
 ## Resume after pause
 
-Read `state.json` first: status `sent` → run the `--read` poll for that
-name/round; a verdict may already be waiting — process it instead of
-resending.
+Read `state.json` first: open round with status `sent` → run the `--read`
+poll for that name/round; a verdict may already be waiting — process it
+instead of resending.
 
 ## Trust rules
 

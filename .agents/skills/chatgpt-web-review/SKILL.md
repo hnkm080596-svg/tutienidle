@@ -80,9 +80,10 @@ node game/scripts/chatgpt-web-review.mjs \
 - Completion detection is baseline-aware: it requires a NEW assistant turn
   (count grew / tail changed since the send) with its own Copy-response button,
   so earlier completed turns in a long C2C chat do not false-trigger.
-- Update `.c2c/state.json` per round (`status: sent|done`); on resume, poll
-  first — a verdict may already be waiting. Never resend before confirming
-  stuck.
+- Update `.c2c/state.json` per round: `nextRound` is a GLOBAL counter —
+  every send takes a fresh number so a stale verdict can never collide on
+  round id; `open` tracks the in-flight round. On resume, poll first — a
+  verdict may already be waiting. Never resend before confirming stuck.
 
 ## Failure modes / limitations
 

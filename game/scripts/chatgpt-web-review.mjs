@@ -54,6 +54,7 @@ const outFile = argValue('--out')
 const timeoutSec = Number(argValue('--timeout') ?? 420)
 const expectState = hasFlag('--expect-state')
 const expectRound = argValue('--expect-round')
+const printChatUrl = hasFlag('--print-chat-url')
 
 function log(msg) {
   console.error(`[chatgpt-web-review] ${msg}`)
@@ -68,45 +69,70 @@ if (!readMode) {
   }
 }
 
-// Last-assistant-turn state for completion detection. The "Copy response"
-// button only renders once a turn finishes streaming, and it lives inside that
-// turn's <li> — so a prior completed turn in a long C2C chat does not produce
-// a false positive: we require a NEW assistant turn (count grew or its tail
-// text changed vs the pre-send baseline) that has its own Copy button.
-async function assistantState(page) {
-  return await page.evaluate(() => {
+// Assistant turns differ between modes: logged-in chats mark turns with
+// [data-message-author-role="assistant"] wrapped in
+// section[data-testid^="conversation-turn"] (which also holds the action row);
+// anonymous chats expose ol[aria-label="Conversation"] > li whose heading
+// reads "ChatGPT said:". Resolve both; the "Copy response" button only
+// renders once a turn finishes streaming. NOTE: this string is injected into
+// page.evaluate calls — the helper must exist browser-side.
+const TURNS_FN = `function __turns() {
+  // All turns in DOM order (both modes).
+  let all = Array.from(document.querySelectorAll('[data-message-author-role]'))
+  let mode = 'role'
+  if (!all.length) {
     const items = Array.from(document.querySelectorAll('ol[aria-label="Conversation"] > li'))
-    const assistant = items.filter((li) => /ChatGPT said/i.test(li.innerText))
-    const last = assistant[assistant.length - 1]
+    all = items
+    mode = 'ol'
+  }
+  const assistants = mode === 'role'
+    ? all.filter((el) => el.getAttribute('data-message-author-role') === 'assistant')
+    : all.filter((li) => /ChatGPT said/i.test(li.innerText))
+  const lastEl = all[all.length - 1]
+  const lastIsAssistant = lastEl
+    ? (mode === 'role' ? lastEl.getAttribute('data-message-author-role') === 'assistant' : /ChatGPT said/i.test(lastEl.innerText))
+    : false
+  return { assistants, lastIsAssistant }
+}`
+
+async function assistantState(page) {
+  return await page.evaluate(`(() => { ${TURNS_FN}
+    const { assistants, lastIsAssistant } = __turns()
+    const last = assistants[assistants.length - 1]
     const stop = document.querySelector('button[aria-label*="Stop"], button[data-testid="stop-button"]')
     const err = document.querySelector('[data-testid="toast"], .text-token-text-error')
-    if (!last) return { count: assistant.length, complete: false, streaming: !!stop, error: !!err, tail: '' }
-    const copy = last.querySelector('button[aria-label="Copy response"], button[aria-label="Copy"]')
+    if (!last) return { count: assistants.length, complete: false, streaming: !!stop, error: !!err, tail: '' }
+    const section = last.closest('section[data-testid^="conversation-turn"]') ?? last
+    const copy = section.querySelector('button[aria-label="Copy response"], button[aria-label="Copy"]')
     return {
-      count: assistant.length,
+      count: assistants.length,
+      lastIsAssistant,
       complete: !!copy && !stop,
       streaming: !!stop,
       error: !!err,
       tail: (last.innerText || '').slice(-200),
     }
-  })
+  })()`)
 }
 
 async function extractLastAssistant(page) {
-  return await page.evaluate(() => {
-    const items = Array.from(document.querySelectorAll('ol[aria-label="Conversation"] > li'))
-    const assistant = items.filter((li) => /ChatGPT said/i.test(li.innerText))
-    const last = assistant[assistant.length - 1] ?? items[items.length - 1]
+  return await page.evaluate(`(() => { ${TURNS_FN}
+    const { assistants } = __turns()
+    let last = assistants[assistants.length - 1]
+    if (!last) {
+      const items = Array.from(document.querySelectorAll('ol[aria-label="Conversation"] > li'))
+      last = items[items.length - 1]
+    }
     if (!last) return ''
     const clone = last.cloneNode(true)
     clone.querySelectorAll('button, [aria-label="Response actions"], h4').forEach((n) => n.remove())
     return clone.innerText.trim()
-  })
+  })()`)
 }
 
 function validateMarkers(text) {
   const lines = text.split('\n').map((l) => l.trim()).filter(Boolean)
-  const m = lines[0]?.match(/^\[C2C\] STATE ([A-Z]+)(?:\s*·\s*ROUND\s+(\d+))?/)
+  const m = lines[0]?.match(/^\[C2C\] STATE (DONE|BLOCKED|FINDINGS|NOTICE|STALE)(?:\s*·\s*ROUND\s+(\d+))?\s*$/)
   const endOk = lines[lines.length - 1] === '[C2C] END'
   if (!m || !endOk) return { ok: false, state: m?.[1] ?? null, round: m?.[2] ?? null }
   if (expectRound != null && m[2] !== String(expectRound)) {
@@ -123,7 +149,14 @@ async function waitForNewTurn(page, baseline) {
       log('ChatGPT reported an error (toast visible)')
       process.exit(4)
     }
-    const newTurn = s.count > baseline.count || (s.tail && s.tail !== baseline.tail)
+    // Correlation anchor: a verdict is the LAST turn element being an
+    // assistant turn. If the latest element is the user message we sent (or
+    // polled behind), a prior assistant verdict — even one with matching
+    // markers — must not satisfy the wait. count/tail checks additionally
+    // cover send+wait mode where the baseline was captured pre-send.
+    const newTurn = s.lastIsAssistant
+      && (baseline.acceptExisting || baseline.lastWasUser
+        || s.count > baseline.count || (s.tail && s.tail !== baseline.tail))
     if (newTurn && s.complete && !s.streaming) return true
     await page.waitForTimeout(2000)
   }
@@ -147,34 +180,69 @@ async function main() {
     const baseline = await assistantState(page).catch(() => ({ count: 0, tail: '' }))
 
     if (!readMode) {
-      // Absence of the textarea within 20s means a real block (Cloudflare
-      // check, login wall, dead chat URL), not just slow load.
-      const textarea = page.locator('textarea#prompt-textarea, textarea[name="prompt"]')
+      // Absence of the composer within 20s means a real block (Cloudflare
+      // check, login wall, dead chat URL), not just slow load. The composer
+      // is a ProseMirror div#prompt-textarea[contenteditable] when logged in
+      // and a plain <textarea> in anonymous mode — the id selector covers both.
+      const composer = page.locator('#prompt-textarea, textarea[name="prompt"], .ProseMirror[contenteditable]')
       try {
-        await textarea.first().waitFor({ state: 'visible', timeout: 20_000 })
+        await composer.first().waitFor({ state: 'visible', timeout: 20_000 })
       } catch {
-        log(`no prompt textarea (url: ${page.url()}) — possible Cloudflare check or login wall`)
+        log(`no prompt composer (url: ${page.url()}) — possible Cloudflare check or login wall`)
         process.exit(4)
       }
 
-      // Fill via the native setter so React's controlled textarea registers it.
-      await textarea.first().evaluate((el, text) => {
-        const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set
-        setter.call(el, text)
-        el.dispatchEvent(new Event('input', { bubbles: true }))
-      }, prompt)
+      const compEl = composer.first()
+      const isTextarea = await compEl.evaluate((el) => el.tagName === 'TEXTAREA')
+      if (isTextarea) {
+        // Native setter so React's controlled textarea registers the input.
+        await compEl.evaluate((el, text) => {
+          const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set
+          setter.call(el, text)
+          el.dispatchEvent(new Event('input', { bubbles: true }))
+        }, prompt)
+      } else {
+        // ProseMirror: focus, clear any leftover draft, then insertText —
+        // real input events, handles multiline and long prompts without
+        // per-key latency.
+        await compEl.click()
+        await page.keyboard.press('ControlOrMeta+A')
+        await page.keyboard.press('Delete')
+        await page.keyboard.insertText(prompt)
+      }
 
       const send = page.locator('button[aria-label="Send message"], button[data-testid="send-button"]')
       await send.first().click()
       log('sent — ' + (sendOnly ? 'send-only mode, exiting' : 'waiting for response'))
+
+      // Bootstrap aid: after the first send into a project page or fresh chat,
+      // ChatGPT navigates to the new conversation URL (/c/<id> or
+      // /g/g-p-*/project/c/<id>). Capture it for .c2c/chat-url.txt.
+      if (printChatUrl) {
+        const urlDeadline = Date.now() + 15_000
+        while (Date.now() < urlDeadline) {
+          const u = page.url()
+          if (/\/c\/[0-9a-f-]{8,}/i.test(u)) {
+            process.stdout.write(u + '\n')
+            break
+          }
+          await page.waitForTimeout(500)
+        }
+      }
     } else {
       log('read mode — waiting for the last assistant turn to finish')
     }
 
     if (sendOnly && !readMode) process.exit(0)
 
-    // In read mode the "new turn" is the last one regardless of baseline.
-    const base = readMode ? { count: baseline.count - 1, tail: '' } : baseline
+    // Read mode correlation: if the last turn element is a user message, a
+    // reply is pending — wait for a NEW assistant turn. If it is already an
+    // assistant turn, a verdict is sitting there — accept it immediately
+    // (protocol resume rule); stale collisions are guarded by --expect-round
+    // on globally-unique round numbers, not by refusing existing turns.
+    const base = readMode
+      ? { count: baseline.count, tail: baseline.tail, lastWasUser: !baseline.lastIsAssistant, acceptExisting: baseline.lastIsAssistant }
+      : { count: baseline.count, tail: baseline.tail, lastWasUser: false, acceptExisting: false }
     const done = await waitForNewTurn(page, base)
     if (!done) {
       log(`response not complete after ${timeoutSec}s`)
@@ -182,17 +250,21 @@ async function main() {
     }
 
     const text = await extractLastAssistant(page)
-    if (outFile) writeFileSync(outFile, text + '\n', 'utf8')
     process.stdout.write(text + '\n')
 
     if (expectState) {
       const v = validateMarkers(text)
       if (!v.ok) {
-        log(`marker validation failed (state=${v.state}, round=${v.round}, want round=${expectRound ?? 'any'})`)
+        // Never overwrite the authoritative inbox with an invalid verdict —
+        // write it to a sidecar diag file instead.
+        const diag = outFile ? outFile + '.invalid' : undefined
+        if (diag) writeFileSync(diag, text + '\n', 'utf8')
+        log(`marker validation failed (state=${v.state}, round=${v.round}, want round=${expectRound ?? 'any'})${diag ? ` — raw text saved to ${diag}` : ''}`)
         process.exit(5)
       }
       log(`verdict OK: STATE ${v.state}${v.round ? ` · ROUND ${v.round}` : ''}`)
     }
+    if (outFile) writeFileSync(outFile, text + '\n', 'utf8')
   } finally {
     await page.close().catch(() => {})
     await browser.close().catch(() => {})
