@@ -868,6 +868,10 @@ describe('TrucCoJourney - ordered journey', () => {
       }
       expect(VISIBLE_GRANT_SOURCES).toEqual([])
       expect(s.player.hiddenBeastKills).toEqual({})
+      // v81's second persisted slice (per-site grotto settle counters)
+      // is untouched too - the TC journey runs no grotto channel, so
+      // no site carries a recorded cycle.
+      expect(s.snapshot().hiddenChannelCycles).toEqual([])
 
       vi.useRealTimers()
     },
@@ -1042,11 +1046,16 @@ describe('TrucCoJourney - integration sweep census', () => {
     hiddenBeastChannels().map((c) => c.enemyId),
   )
 
-  const nonChannelSignatureMaterialIds = (): Set<string> => {
+  // The leak oracle is wider than the emitted-set oracle: a perfection
+  // material id under ANY drop kind on a non-channel route is a
+  // bypass (a kind-mismatched row would still leak the id).
+  const nonChannelSignatureItemIds = (): Set<string> => {
     const ids = new Set<string>()
     for (const enemy of ENEMIES) {
       if (channelEnemyIds.has(enemy.id)) continue
-      for (const id of signatureMaterialIdsOf(enemy.id)) ids.add(id)
+      for (const drop of enemy.signatureDrops ?? []) {
+        if (drop.itemId !== undefined) ids.add(drop.itemId)
+      }
     }
     return ids
   }
@@ -1064,11 +1073,11 @@ describe('TrucCoJourney - integration sweep census', () => {
     return ids
   }
 
-  const tableMaterialIds = (): Set<string> => {
+  const tableItemIds = (): Set<string> => {
     const ids = new Set<string>()
     for (const table of [...STAGE_DROP_TABLES, ...FAMILY_DROP_TABLES]) {
       for (const entry of [...table.guaranteed, ...table.pool]) {
-        if (entry.kind === 'material' && entry.itemId !== undefined) {
+        if (entry.itemId !== undefined) {
           ids.add(entry.itemId)
         }
       }
@@ -1080,8 +1089,8 @@ describe('TrucCoJourney - integration sweep census', () => {
     const authored = Object.values(BODY_PERFECTION_REALM_MATERIALS).flat()
     const emitted = channelEmittedIds()
     const granted = new Set(VISIBLE_GRANT_SOURCES.map((g) => g.materialId))
-    const signature = nonChannelSignatureMaterialIds()
-    const tables = tableMaterialIds()
+    const signature = nonChannelSignatureItemIds()
+    const tables = tableItemIds()
 
     // Route-less requirements: authored but unreachable via channel or
     // visible grant.
@@ -1089,9 +1098,21 @@ describe('TrucCoJourney - integration sweep census', () => {
       (id) => !emitted.has(id) && !granted.has(id),
     )
     // Duplicate authorities: reachable through both a channel AND a
-    // visible grant.
+    // visible grant, or emitted by TWO hidden channels (beast/grotto
+    // each count as an acquisition authority of their own).
+    const channelEmissionCount = new Map<string, number>()
+    for (const channel of HIDDEN_MATERIAL_CHANNELS) {
+      for (const id of channelEmittedMaterialIds(
+        channel,
+        signatureMaterialIdsOf,
+      )) {
+        channelEmissionCount.set(id, (channelEmissionCount.get(id) ?? 0) + 1)
+      }
+    }
     const duplicated = authored.filter(
-      (id) => emitted.has(id) && granted.has(id),
+      (id) =>
+        (emitted.has(id) && granted.has(id)) ||
+        (channelEmissionCount.get(id) ?? 0) > 1,
     )
     // Loot bypasses: a perfection material on a normal stage/family
     // table or a NON-channel enemy's signatureDrops (incl.
@@ -1102,9 +1123,15 @@ describe('TrucCoJourney - integration sweep census', () => {
 
     // The registry is empty on this wave -> the census reports clean;
     // the enumeration still ran over every landed channel + table.
+    // Guard the enumeration itself: an empty input set would let the
+    // three result asserts pass vacuously (a table/channel refactor
+    // reading nothing reports a false-clean census).
+    expect(tables.size).toBeGreaterThan(0)
+    expect(emitted.size).toBeGreaterThan(0)
+    expect(signature.size).toBeGreaterThan(0)
+
     expect(routeLess).toEqual([])
     expect(duplicated).toEqual([])
     expect(bypass).toEqual([])
-    expect(emitted.size).toBeGreaterThan(0) // census reached the channel
   })
 })

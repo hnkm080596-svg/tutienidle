@@ -159,6 +159,7 @@ export interface EarlyGameSnapshot {
   autoFarmStageId: string | null
   bodyPerfection: { discoveredMaterials: string[]; perfectedRealmIds: string[] }
   hiddenBeastKills: Record<string, number>
+  hiddenChannelCycles: Array<{ siteId: string; cycles: Record<string, number> }>
 }
 
 const MAX_DRIVE_STEPS = 4000
@@ -455,6 +456,7 @@ export class EarlyGameSession {
     )
     const totals = this.simRunTotals
     if (
+      chapterId === 'body_refinement' &&
       totals.bodyCompletedAtSeconds == null &&
       getBodyRefinementCompletedTiers(this.player) >= BODY_REFINEMENT_TIERS.length
     ) {
@@ -624,7 +626,14 @@ export class EarlyGameSession {
           : {
               grade: active.grade,
               rank: active.rank,
-              gradeHistory: { ...active.gradeHistory },
+              // Inner records copied too - a mutating consumer must not
+              // alias live technique state through the snapshot.
+              gradeHistory: Object.fromEntries(
+                Object.entries(active.gradeHistory).map(([key, value]) => [
+                  key,
+                  { ...value },
+                ]),
+              ),
             }
       })(),
       artifact:
@@ -649,6 +658,18 @@ export class EarlyGameSession {
         perfectedRealmIds: [...p.bodyPerfection.perfectedRealmIds],
       },
       hiddenBeastKills: { ...p.hiddenBeastKills },
+      // Restore seeds every site state; a live session's are lazy, so
+      // the SITE LIST is session-history noise - only sites carrying a
+      // recorded cycle count are parity content (empty == []).
+      hiddenChannelCycles: this.gameManager.productionSystem
+        .getAllStates()
+        .filter(
+          (state) => Object.keys(state.hiddenChannelCycles ?? {}).length > 0,
+        )
+        .map((state) => ({
+          siteId: state.siteId,
+          cycles: { ...(state.hiddenChannelCycles ?? {}) },
+        })),
     }
   }
 }

@@ -93,7 +93,7 @@ describe('EarlyGameSession', () => {
 // owner construction, the two-phase settle/drain contract, and the
 // bag/chapter-invest fixture seams. Journey-level coverage lives in
 // TrucCoJourney.test.ts; these pin the seams' own contracts.
-describe('EarlyGameSession — M-F-JOURNEY seam pins', () => {
+describe('EarlyGameSession - M-F-JOURNEY seam pins', () => {
   it('playerOwner construction makes the session player the owner $state', () => {
     const owner = usePlayerStore()
     const s = new EarlyGameSession({ seed: 11, profile: PINNED, playerOwner: owner })
