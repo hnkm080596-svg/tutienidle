@@ -100,10 +100,27 @@ gates pass.
    Tiểu/Đại markers; complete render at 360; invest click → ops seam
    → `bumpState` (mirror MeridianSection's pinned interaction);
    disabled states (locked / full / no essence owned).
-6. Save-boundary pin (the BodyChapter.test.ts persisted suite or
-   `saveShapeValidation.test.ts`, matching where meridian's is):
-   a payload shaped for the pre-mission version (missing
-   `zhou_tian`) rejects at `player.bodyProgression.zhou_tian`.
+6. Save-boundary pins (C2C-70), three surfaces:
+   a. Shape pin (the BodyChapter.test.ts persisted suite or
+      `saveShapeValidation.test.ts`, matching where meridian's is):
+      a payload shaped for the pre-mission version (missing
+      `zhou_tian`) rejects at `player.bodyProgression.zhou_tian`.
+   b. Version gate (`SaveSystem.test.ts` / `SaveMigration.test.ts` —
+      the `inspectLocalSave`/`loadGame` surface, SaveSystem.ts:475):
+      a payload at the IMMEDIATELY previous version
+      (`CURRENT_SAVE_VERSION - 1` derived, never a literal — the
+      value depends on landing order), otherwise valid →
+      `status: 'incompatible'`; live state untouched.
+   c. Restore boundary (`GameManagerSaveRestore.boundary.test.ts` —
+      real GameManager + `baseSave` harness): snapshot live
+      player/body state (structuredClone/JSON), attempt
+      `restoreFromSave` of an inconsistent CURRENT-version payload —
+      {meridian complete + refinement incomplete} and
+      {zhou_tian progressed + meridian incomplete} — assert the
+      preflight `assertBodyProgressionIntegrity`
+      (GameManagerSaveRestore.ts:291) throws AND live state is
+      byte-equivalent unchanged (JSON compare). The direct integrity
+      tests in item 3 stay; this pins the boundary.
 
 ## Step 2 — authored data + contract/registry edits
 
