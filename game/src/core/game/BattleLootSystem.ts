@@ -36,6 +36,7 @@ import { physiqueEssenceGradeOf } from '../../data/realm/PhysiqueEssence'
 import {
   isBreakthroughAcquisitionEnabled,
   isCompanionPullTokenSourceSuppressed,
+  isDomainScopedAcquisitionEnabled,
 } from '../realm/ReleasePolicy'
 import type { PlayerData } from '../player/Player'
 
@@ -558,6 +559,16 @@ export class BattleLootSystem {
             // dormant while the pull pool is closed; sibling lines still
             // land (post-resolve filter; rng order untouched).
             if (isCompanionPullTokenSourceSuppressed(drop.itemId)) {
+              break
+            }
+
+            // M-F-ARTIFACT-DEFER - domain-scoped material (doan_bao_thach
+            // today) additionally composes the window+reach rule keyed to
+            // the PLAYER's realm, so the retained authored row delivers
+            // only once the player unlocks the domain.
+            if (
+              !isDomainScopedAcquisitionEnabled(material.domainUnlockRealmId, this.player?.realmId)
+            ) {
               break
             }
 

@@ -95,7 +95,11 @@ describe('BreakthroughOutcomeService — minor-realm breakthrough parity', () =>
     expect(syncStatPassive).toHaveBeenCalledTimes(1)
   })
 
-  it('banked artifact tier advances on every success when an artifact exists (not on failure)', () => {
+  // M-F-ARTIFACT-DEFER: the tier advance is additionally gated by
+  // isArtifactDomainUnlocked(player.realmId) - a persisted dormant
+  // artifact is never advanced while the domain is closed. The
+  // open-window positive lives in ReleasePolicy.artifactDeferred.test.ts.
+  it('banked artifact tier advance is skipped while the artifact domain is deferred (still no-op on failure)', () => {
     const gameManager = new GameManager()
     const player = usePlayerStore()
     player.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
@@ -108,16 +112,15 @@ describe('BreakthroughOutcomeService — minor-realm breakthrough parity', () =>
     expect(failed.kind).toBe('failure')
     expect(player.artifact.realmLevel).toBe(1)
 
-    // Success: the artifact realm-level advance runs (doc SS5.1 banked release).
+    // Success: the artifact realm-level advance is SKIPPED - the domain
+    // is deferred to Kim Dan+, so the player breakthrough cannot touch
+    // a dormant artifact (no banked release while closed).
     addCultivation(player.$state, player.cultivationRequired)
     const success = service.breakthrough(player, gameManager.realmAdvanceOps)
     expect(success.kind).toBe('success')
     if (success.kind !== 'success') throw new Error('unreachable')
-    // advanceArtifactRealmLevel releases banked tiers as the player levels;
-    // the exact delta depends on the progression table, so pin the contract:
-    // realmLevel never DECREASES and the service reported the artifact touch.
-    expect(player.artifact.realmLevel).toBeGreaterThanOrEqual(1)
-    expect(success.artifactTouched).toBe(true)
+    expect(player.artifact.realmLevel).toBe(1)
+    expect(success.artifactTouched).toBe(false)
   })
 
   it('documented-dead major-realm branch emits the announcement descriptor (pinned via stubbed breakthrough)', () => {
@@ -129,6 +132,13 @@ describe('BreakthroughOutcomeService — minor-realm breakthrough parity', () =>
       player.realmId = 'golden_core'
       return true
     }
+
+    // M-F-ARTIFACT-DEFER: give the player a spell way so the
+    // artifact-awakening branch is in principle reachable at the
+    // golden_core key - the domain gate must still suppress it under
+    // the real release window.
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
 
     const service = new BreakthroughOutcomeService()
     const result = service.breakthrough(player, gameManager.realmAdvanceOps)
@@ -145,5 +155,8 @@ describe('BreakthroughOutcomeService — minor-realm breakthrough parity', () =>
       .toBe('KIM ĐAN')
     expect(i18n.global.t(result.announcement!.bodyKey))
       .toBe('Đạo hữu đã đột phá đại cảnh giới, tu vi tăng vọt.')
+    // The unlock realm matched but the domain is release-hidden: no
+    // artifact may materialize.
+    expect(player.artifact).toBeUndefined()
   })
 })

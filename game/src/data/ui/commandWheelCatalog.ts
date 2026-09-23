@@ -49,6 +49,12 @@ export interface CommandWheelDisabledContext {
   // or the wheel drifts from the domain gate when a threshold (or the
   // release ceiling) moves.
   artifactDomainUnlocked: boolean
+  // M-F-ARTIFACT-DEFER: isRealmAvailable(ARTIFACT_UNLOCK_REALM_ID) - the
+  // domain's unlock realm sits inside the release window. Distinguishes
+  // the two below-unlock locks once the domain defers past the ceiling:
+  // unlock realm outside the window -> release-hidden; inside the window
+  // but not yet reached -> the progression lock names Kim Dan.
+  artifactUnlockRealmAvailable: boolean
   hasArtifactDefinition: boolean
   companionDomainUnlocked: boolean
   formationUnlocked: boolean
@@ -64,8 +70,9 @@ const ALWAYS_AVAILABLE = () => true
 
 // M-F-CEILING (C2C-12): tooltip for a domain hidden by the release
 // ceiling (save realm unavailable), distinct from the progression lock
-// "requires Truc Co".
-const RELEASE_UNAVAILABLE_REASON = 'Chưa mở trong bản hiện tại'
+// "requires Truc Co". Exported for the deferred-domain boundary suite
+// (ReleasePolicy.artifactDeferred.test.ts).
+export const RELEASE_UNAVAILABLE_REASON = 'Chưa mở trong bản hiện tại'
 
 /**
  * Bố cục 4 vòng (plan "Kiến trúc UI đích"):
@@ -120,9 +127,16 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
     label: 'Pháp Bảo',
     target: { kind: 'standalone', panel: 'artifact' },
     available: ALWAYS_AVAILABLE,
+    // M-F-ARTIFACT-DEFER: the domain is deferred to Kim Dan+, which is
+    // outside the release window - a below-unlock player reads
+    // release-hidden while the unlock realm is out of window, and the
+    // progression lock once Kim Dan ships (artifactUnlockRealmAvailable
+    // is fed by isRealmAvailable(ARTIFACT_UNLOCK_REALM_ID)).
     disabledReason: (context) => {
       if (!context.artifactDomainUnlocked) {
-        return context.realmReleaseUnavailable ? RELEASE_UNAVAILABLE_REASON : 'Cần đạt Trúc Cơ'
+        return context.realmReleaseUnavailable || !context.artifactUnlockRealmAvailable
+          ? RELEASE_UNAVAILABLE_REASON
+          : 'Cần đạt Kim Đan'
       }
 
       if (!context.hasArtifactDefinition) {

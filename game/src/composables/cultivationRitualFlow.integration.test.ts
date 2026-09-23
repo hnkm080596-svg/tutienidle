@@ -84,7 +84,9 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
 
     expect(player.realmId).toBe('foundation_establishment')
     expect(player.realmLevel).toBe(1)
-    expect(player.artifact?.artifactId).toBe('ngu_hanh_chau')
+    // M-F-ARTIFACT-DEFER: the artifact domain defers to Kim Dan+ - a
+    // Truc Co tribulation grants no artifact.
+    expect(player.artifact).toBeUndefined()
     // P7-M3 - the Truc Co variant folded into gradeEffects[2]: the
     // holder keeps five_elements_art and advances grade via Nang Canh.
     expect(gameManager.techniqueManager.getActive()?.id).toBe('five_elements_art')

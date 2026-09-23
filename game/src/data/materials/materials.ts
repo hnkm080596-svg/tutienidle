@@ -11,6 +11,7 @@ import { REALM_TIERS } from '@/core/realm/RealmTierMap'
 import { REALMS } from '@/data/realms/realm'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 import type { HerbAge } from '@/core/production/ProductionTypes'
+import { ARTIFACT_UNLOCK_REALM_ID } from '@/core/artifact/ArtifactDomain'
 
 // sourceType (MASTER SPEC Mục II-V) — nhãn nguồn CHÍNH, không ràng
 // buộc cứng. Nhóm nguyên liệu tự nhiên age-tiered (Linh Thảo/Linh Mộc/
@@ -97,12 +98,19 @@ const legacyMaterials: Material[] = [
   // ban_menh_phap_bao (2026-08-27, foundation-artifact-system-plan.md
   // sec.6) - grade-upgrading stone, drops from Foundation+ enemies via
   // the weighted path in StageDropTables (no lower table lists it).
+  // M-F-ARTIFACT-DEFER: its only live purpose is artifact upgrade, which
+  // is deferred to Kim Dan+ - the record is domain-scoped through the
+  // SHARED unlock declaration (never a realm literal) so delivery is
+  // suppressed by the canonical domain rule until the artifact domain
+  // is unlocked for the player. The TC drop-table row stays authored;
+  // acquisition resumes for a Kim Dan+ player once the window opens.
   {
     id: 'doan_bao_thach',
     name: 'Đoán Bảo Thạch',
     category: 'other',
     sourceType: 'monster',
     description: 'Đá dị chất kết tinh từ khí tức yêu thú Trúc Cơ trở lên, dùng để nâng phẩm bản mệnh pháp bảo.',
+    domainUnlockRealmId: ARTIFACT_UNLOCK_REALM_ID,
   },
 
   // Đột Phá Trúc Cơ (Phase 6) — loot "vô thưởng vô phạt" (mục 14 spec

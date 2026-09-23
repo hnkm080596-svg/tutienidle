@@ -75,13 +75,18 @@ export interface ArtifactDefinition {
 }
 
 // The artifact a player's path entitles them to is WAY-owned content:
-// spell_pathway grants ngu_hanh_chau at foundation_establishment via
-// realmRewards while hidden_spell_pathway — same base path id — deliberately has
+// spell_pathway grants ngu_hanh_chau at the artifact-domain unlock
+// realm (ARTIFACT_UNLOCK_REALM_ID = Kim Dan after M-F-ARTIFACT-DEFER's
+// ruling: Truc Co artifact scope is superseded) via realmRewards while
+// hidden_spell_pathway - same base path id - deliberately has
 // none. Deriving from the active way's realmRewards keeps the way
 // definition the single authority; a corrupt/way-less pair resolves
 // no artifact (fail-closed), and Kiếm Tu/Thể Tu keep no placeholder
 // (doc §10.1). Mọi call site phải đi qua resolver này thay vì
-// hardcode 'spell'.
+// hardcode 'spell'. The resolver itself stays domain-gate-agnostic
+// (CEILING seam): it resolves what the way ENTITLES, never whether the
+// domain is live - access gating is ReleasePolicy's and
+// isArtifactDomainUnlocked's job.
 export function resolveExpectedArtifactId(player: PathWayRead): ArtifactId | undefined {
   const way = getActiveWayDefinition(player)
 
@@ -99,11 +104,14 @@ export function resolveExpectedArtifactId(player: PathWayRead): ArtifactId | und
 }
 
 /**
- * State cấp player — KHÔNG dùng array inventory vì mỗi nhân vật chỉ
- * có một bản mệnh (doc §10.2). Scope MVP dừng ở Trúc Cơ tầng 18 nên
- * `realmId` hiện luôn là 'foundation_establishment'; field vẫn giữ
- * dạng string (không literal) để mở path lên Kim Đan sau này không
- * phải đổi shape.
+ * Player-side state - no inventory array because each character owns
+ * exactly one artifact (doc S10.2). `realmId` tracks the artifact's OWN
+ * progression band - initialized to 'foundation_establishment' at
+ * creation (TC ladder design, doc S5.x) regardless of the player's
+ * unlock realm; field stays `string` (no literal) so the Kim Dan
+ * surface needs no shape change. The P7-era claim 'Scope MVP dung o
+ * Truc Co tang 18' is SUPERSEDED by M-F-ARTIFACT-DEFER: the artifact
+ * domain defers to ARTIFACT_UNLOCK_REALM_ID (Kim Dan+).
  */
 export interface ArtifactProgress {
   artifactId: ArtifactId

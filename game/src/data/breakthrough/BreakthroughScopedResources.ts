@@ -17,3 +17,17 @@ export const BREAKTHROUGH_SCOPED_MATERIAL_IDS = ['great_dao_seed'] as const
 export const BREAKTHROUGH_SCOPED_PILL_IDS = [TRUC_CO_DAN_PILL_ID] as const
 
 export const BREAKTHROUGH_SCOPED_RECIPE_IDS = ['alchemy_truc_co_dan'] as const
+
+// M-F-ARTIFACT-DEFER - the DOMAIN-scoped census (distinct family from
+// breakthroughRealmId above): resources whose acquisition exists ONLY to
+// feed a domain gated by a shared unlock declaration (the artifact
+// domain today). Delivery composes window + player reach via
+// isDomainScopedAcquisitionEnabled - a below-unlock player gets nothing
+// even once the unlock realm ships, which is why this family is NOT
+// breakthrough-scoped (that gate only checks the window).
+//
+// INVARIANT: every id listed here must carry domainUnlockRealmId equal
+// to the domain's shared unlock declaration (ARTIFACT_UNLOCK_REALM_ID),
+// and every material record carrying the tag must be listed here - the
+// integrity test asserts both directions plus the cross-field pin.
+export const DOMAIN_SCOPED_MATERIAL_IDS = ['doan_bao_thach'] as const

@@ -137,8 +137,15 @@
 // meridian) are authored on the chapter registry and pinned as a
 // restore-preflight coherence invariant. Save v77 is rejected
 // (dev phase, no migration, no compat translator).
-// v79 (2026-09-23, ARTIFACT-DEFER, lands on p7/truc-co via PR #15
-// before this slice - version number owned by that mission).
+// v79 (2026-09-23, M-F-ARTIFACT-DEFER artifact domain deferred to Kim
+// Dan+, coordinator-mandated bump - spec A8 originally specified no
+// bump, superseded by the Phase-2 directive; the parallel v77
+// COMPANION-GIFT and v78 CHU-THIEN bumps landed first, so this takes
+// the next): the artifact domain's unlock gate retargets to
+// ARTIFACT_UNLOCK_REALM_ID ('golden_core'); a persisted artifact below
+// the gate is preserved (never stripped) but saves written under the
+// Truc Co-era grant model must not load under the deferred model.
+// Save v78 is rejected (dev phase, no migration, no compat translator).
 // v80 (2026-09-23, M-F-BODY-PERFECTION hidden Body perfection):
 // PlayerData gains required `bodyPerfection` slice ({discoveredMaterials,
 // perfectedRealmIds} - canonical discovery + committed realms; discovery

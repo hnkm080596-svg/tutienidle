@@ -41,6 +41,7 @@ import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
 import { CORE_REALM_LEVEL, QI_REFINING_BREAKTHROUGH_STAGE_ID, getCurrentRealm, getNextRealm } from '../realm/realmSystem'
 import { isRealmTransitionEnabled } from '../realm/ReleasePolicy'
+import { isArtifactDomainUnlocked } from '../artifact/ArtifactProgression'
 import type { Skill } from '../skill/Skill'
 import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
@@ -405,6 +406,14 @@ export class GameManagerRealmAdvanceOps {
    * QuanKhiPanel.vue (that choice is irreversible, this one is not).
    */
   setArtifactPath(player: PlayerData, path: ArtifactPath): boolean {
+    // M-F-ARTIFACT-DEFER: outermost guard - path selection is domain
+    // ACCESS, so a persisted dormant artifact can never be pathed while
+    // the domain is deferred (even a beyond-ceiling save reaching KD
+    // keeps the gate closed until the window opens).
+    if (!isArtifactDomainUnlocked(player.realmId)) {
+      return false
+    }
+
     if (!player.artifact) {
       return false
     }
@@ -427,6 +436,13 @@ export class GameManagerRealmAdvanceOps {
    * just in the UI).
    */
   tryUpgradeArtifactGrade(player: PlayerData): boolean {
+    // M-F-ARTIFACT-DEFER: outermost guard, same reasoning as
+    // setArtifactPath - grade upgrade is domain ACCESS, so a persisted
+    // dormant artifact cannot consume Doan Bao Thach while deferred.
+    if (!isArtifactDomainUnlocked(player.realmId)) {
+      return false
+    }
+
     if (!player.artifact) {
       return false
     }

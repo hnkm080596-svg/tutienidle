@@ -79,7 +79,7 @@ Hệ Ngũ Hành nằm trong `src/core/element/`; node Pháp Tu hiện hành nằ
 
 Chương 3 gồm 10 stage authored riêng `foundation_floor_1..10` (`src/data/stage/Stages.ts`) với 20 quái prefix `foundation_` (`src/data/enemy/Enemies.ts`) — không còn clone enemy pool Luyện Khí. Quy luật Ngũ Hành Tương Sinh theo cặp tầng Mộc(1-2)→Hỏa(3-4)→Thổ(5-6)→Kim(7-8)→Thủy(9-10); tầng chẵn dùng bản "Hung " mạnh hơn cùng loài. Boss `foundation_ferocious_flood_dragon_whelp` (Hung Giao Sủng, Màn 3.10) là boss Trúc Cơ đầu tiên dùng cơ chế 2 phase theo ngưỡng HP (0.5/0.25) + enrage sau 60 giây. Có 5 quest Trúc Cơ gate `requiredRealmId: 'foundation_establishment'` (`src/data/quest/quests.ts`) — phần thưởng tài nguyên; `QuestItemReward` chưa hỗ trợ equipment nên thưởng trang bị qua quest dời sau.
 
-**Giới hạn scope progression hiện tại**: nội dung dừng ở Trúc Cơ tầng 18. Kim Đan (gate đột phá, realm passive, node mới, vật liệu realm 4, stage chương 4) chưa mở trong version này — giữ cho version sau.
+**Giới hạn scope progression hiện tại**: nội dung dừng ở Trúc Cơ tầng 18. Kim Đan (gate đột phá, realm passive, node mới, vật liệu realm 4, stage chương 4) chưa mở trong version này — giữ cho version sau. Riêng domain Bản Mệnh Pháp Bảo dời lên **Kim Đan+** theo ruling M-F-ARTIFACT-DEFER (§2/§52) — scope Trúc Cơ trước đây của artifact bị thay thế: không grant/EXP/nâng phẩm/lấy Đoán Bảo Thạch cho tới khi domain mở ([systems/artifact.md](./systems/artifact.md)).
 
 ## Skill Node Tree
 
