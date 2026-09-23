@@ -684,6 +684,8 @@ export class GameManagerRealmAdvanceOps {
     this.deps.notifications.push({
       kind: 'loot',
       message: `Thể Phách Hoàn Thiện: ${getCurrentRealm(realmId).name}`,
+      messageKey: 'notifications.bodyRealmPerfected',
+      messageParams: { realm: getCurrentRealm(realmId).name },
     })
 
     return true

@@ -373,6 +373,17 @@ describe('perfectBodyRealm transaction (plan 5.4)', () => {
 
     expect(manager.materialBag.getAmount(PHAM)).toBe(2)
     expect(player.bodyPerfection.perfectedRealmIds).toEqual(['mortal'])
+
+    // The toast carries the i18n key + params, not only raw text (r76-#4).
+    const toasts = manager.drainNotifications()
+    expect(toasts).toHaveLength(1)
+    expect(toasts[0]).toEqual(
+      expect.objectContaining({
+        kind: 'loot',
+        messageKey: 'notifications.bodyRealmPerfected',
+        messageParams: { realm: 'Phàm Nhân' },
+      }),
+    )
   })
 
   it('multi-material realm consumes one of EACH authored id', () => {

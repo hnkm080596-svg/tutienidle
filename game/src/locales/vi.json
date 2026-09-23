@@ -1246,7 +1246,8 @@
   },
   "notifications": {
     "skillLevelUp": "{name} đạt cấp {level}",
-    "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}"
+    "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}",
+    "bodyRealmPerfected": "Thể Phách Hoàn Thiện: {realm}"
   },
   "save": {
     "conflict": "Save đã thay đổi ở một phiên khác.",
