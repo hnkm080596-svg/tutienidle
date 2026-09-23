@@ -10,7 +10,8 @@
   <div class="loading-screen">
     <p class="loading-screen__title">TIÊN HIỆP IDLE</p>
 
-    <div class="loading-screen__pulse" />
+    <!-- M-UI-OVERHAUL: boot pulse -> rotating marker diamond (transform-only). -->
+    <div class="loading-screen__pulse sys-marker" />
   </div>
 </template>
 
@@ -22,35 +23,37 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  background: var(--ink-950);
+  gap: 26px;
+  background: var(--sys-bg-0, var(--ink-950));
 }
 
 .loading-screen__title {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--sys-font-display, var(--font-display));
   font-size: var(--text-display);
-  letter-spacing: 0.12em;
-  color: var(--gold-300);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--sys-accent, var(--gold-300));
+  text-shadow: 0 0 18px color-mix(in srgb, var(--sys-accent, #ffd54f) 45%, transparent);
 }
 
 .loading-screen__pulse {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 2px solid var(--mineral-gold);
-  opacity: 0.7;
+  width: 14px;
+  height: 14px;
+  background: var(--sys-accent, var(--mineral-gold));
+  transform: rotate(45deg);
+  opacity: 0.8;
   animation: loading-pulse 1.1s ease-in-out infinite;
 }
 
 @keyframes loading-pulse {
   0%,
   100% {
-    transform: scale(0.8);
+    transform: rotate(45deg) scale(0.8);
     opacity: 0.4;
   }
   50% {
-    transform: scale(1.1);
+    transform: rotate(45deg) scale(1.15);
     opacity: 1;
   }
 }

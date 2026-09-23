@@ -65,10 +65,13 @@ describe('InkWashBackdrop', () => {
     expect(defeatSource).toContain('<InkWashBackdrop left-mountain bottom-mist')
   })
 
-  it('keeps onboarding controls legible on white paper', () => {
-    expect(authSource).toContain('.auth-tabs button.active { color: var(--paper-text')
-    expect(authSource).toContain('border-bottom: 2px solid var(--cinnabar')
-    expect(creationSource).toContain('background: color-mix(in srgb, var(--paper-50')
-    expect(creationSource).toContain('.stepper i.active { color: var(--cinnabar')
+  it('keeps onboarding controls legible over the painted backdrop', () => {
+    // M-UI-OVERHAUL: legibility now comes from the dark sys console on top
+    // of the ink wash (accented controls on --sys-bg-0 surfaces).
+    expect(authSource).toContain('SysPanel')
+    expect(authSource).toContain('sys-tabs__tab')
+    expect(creationSource).toContain('SysPanel')
+    expect(creationSource).toContain('sys-seg__cell')
+    expect(creationSource).toContain('var(--sys-bg-0')
   })
 })

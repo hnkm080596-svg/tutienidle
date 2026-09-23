@@ -212,17 +212,17 @@ defineExpose({
       v-if="(phase === 'loading' || phase === 'activating' || phase === 'awaiting-ready') && !error"
       class="transition-overlay__loading"
     >
-      <div class="transition-overlay__spinner" />
+      <div class="transition-overlay__spinner sys-marker" />
       <span class="transition-overlay__loading-text">{{ t('loading') }}</span>
     </div>
 
-    <!-- Error shell (reachable while locked) -->
+    <!-- Error shell (reachable while locked) - T2 sys console, danger domain. -->
     <div
       v-if="error || phase === 'failed'"
       ref="errorCardRef"
       class="transition-overlay__error"
     >
-      <div class="transition-overlay__error-card">
+      <div class="transition-overlay__error-card sys-surface sys-chamfer sys-corners sys-domain--danger">
         <h3 class="transition-overlay__error-title">{{ t('errorTitle') }}</h3>
         <p class="transition-overlay__error-message">{{ error?.message ?? '' }}</p>
         <div class="transition-overlay__error-actions">
@@ -269,9 +269,31 @@ defineExpose({
   top: 0;
   bottom: 0;
   width: 50%;
-  background: var(--ink-950, #0a0c10);
+  background: var(--sys-bg-0, var(--ink-950, #0a0c10));
   transition: transform 0.4s ease-in-out;
   will-change: transform;
+}
+
+/* M-UI-OVERHAUL: the closing edges carry a lit hairline + faint scanlines so
+   the covered screen reads as a system veil, not a black wipe. Transform-only
+   motion (the .4s transform transition above is the sole animated property). */
+.curtain-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease-in-out;
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.028) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, transparent, color-mix(in srgb, var(--sys-cyan, #57d8ff) 5%, transparent) 55%, transparent);
+}
+
+.curtain-panel--left::after { border-right: 1px solid color-mix(in srgb, var(--sys-cyan, #57d8ff) 55%, transparent); }
+.curtain-panel--right::after { border-left: 1px solid color-mix(in srgb, var(--sys-cyan, #57d8ff) 55%, transparent); }
+
+.curtain-panel.is-closing::after,
+.curtain-panel.is-closed::after {
+  opacity: 1;
 }
 
 .curtain-panel--left {
@@ -317,18 +339,16 @@ defineExpose({
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 22px;
   z-index: 10;
-  color: var(--chrome-100, #e2e8f0);
+  color: var(--sys-text-muted, var(--chrome-100, #e2e8f0));
 }
 
 .transition-overlay__spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgba(255, 255, 255, 0.15);
-  border-top-color: var(--gold-300, #ffd54f);
-  border-radius: 50%;
-  animation: transition-spin 0.8s linear infinite;
+  width: 14px;
+  height: 14px;
+  background: var(--sys-accent, var(--gold-300, #ffd54f));
+  animation: transition-spin 0.9s cubic-bezier(.6,.05,.4,.95) infinite;
 }
 
 @keyframes transition-spin {
@@ -338,9 +358,10 @@ defineExpose({
 }
 
 .transition-overlay__loading-text {
-  font-family: var(--font-body, serif);
+  font-family: var(--sys-font-display, var(--font-body, serif));
   font-size: var(--text-sm, 14px);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
 }
 
 .transition-overlay__error {
@@ -350,29 +371,29 @@ defineExpose({
   align-items: center;
   justify-content: center;
   z-index: 20;
-  background: rgba(0, 0, 0, 0.65);
+  background: var(--sys-veil, rgba(0, 0, 0, 0.65));
 }
 
 .transition-overlay__error-card {
   box-sizing: border-box;
   padding: 24px 32px;
-  background: var(--ink-900, #141820);
-  border: 1px solid var(--crimson, #c94b4b);
-  border-radius: 8px;
   max-width: min(400px, 90vw);
   text-align: center;
+  color: var(--sys-text, var(--text-secondary, #cbd5e1));
 }
 
 .transition-overlay__error-title {
   margin: 0 0 10px;
-  color: var(--crimson, #ff6b6b);
-  font-family: var(--font-display, serif);
+  color: var(--sys-accent, var(--crimson, #ff6b6b));
+  font-family: var(--sys-font-display, var(--font-display, serif));
   font-size: var(--text-md, 18px);
+  letter-spacing: .1em;
+  text-transform: uppercase;
 }
 
 .transition-overlay__error-message {
   margin: 0 0 18px;
-  color: var(--text-secondary, #cbd5e1);
+  color: var(--sys-text-muted, var(--text-secondary, #cbd5e1));
   font-size: var(--text-sm, 14px);
   word-break: break-word;
 }
@@ -385,20 +406,24 @@ defineExpose({
 
 .transition-overlay__btn {
   padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 0;
   font-size: var(--text-sm, 14px);
+  font-family: var(--sys-font-display, var(--font-body));
+  letter-spacing: .08em;
+  text-transform: uppercase;
   cursor: pointer;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
 }
 
 .transition-overlay__btn--primary {
-  background: var(--gold-400, #d4a72c);
-  color: #000;
-  border: none;
+  background: color-mix(in srgb, var(--sys-accent, var(--gold-400, #d4a72c)) 22%, transparent);
+  color: var(--sys-text, #fff);
+  border: 1px solid var(--sys-accent, var(--gold-400, #d4a72c));
 }
 
 .transition-overlay__btn--secondary {
   background: transparent;
-  color: var(--text-secondary, #cbd5e1);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: var(--sys-text-muted, var(--text-secondary, #cbd5e1));
+  border: 1px solid var(--sys-line-soft, rgba(255, 255, 255, 0.25));
 }
 </style>
