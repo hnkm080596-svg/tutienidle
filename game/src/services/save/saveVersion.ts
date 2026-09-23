@@ -146,4 +146,11 @@
 // the gate is preserved (never stripped) but saves written under the
 // Truc Co-era grant model must not load under the deferred model.
 // Save v78 is rejected (dev phase, no migration, no compat translator).
-export const CURRENT_SAVE_VERSION = 79 as const
+// v80 (2026-09-23, M-F-BODY-PERFECTION hidden Body perfection):
+// PlayerData gains required `bodyPerfection` slice ({discoveredMaterials,
+// perfectedRealmIds} - canonical discovery + committed realms; discovery
+// is persistent state, NOT inventory-derived). Restore preflight runs
+// assertBodyPerfectionIntegrity (authored-family, subset + realm-cap
+// rules). Save v79 is rejected (dev phase, no migration, no compat
+// translator).
+export const CURRENT_SAVE_VERSION = 80 as const

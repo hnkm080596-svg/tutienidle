@@ -33,10 +33,10 @@ export interface EquipmentOpsSystemDeps {
   buildingRegistry: BuildingRegistry
   buildingSystem: BuildingSystem
   notifications: NotificationQueue
-  // Collect-quest hook (xem GameManager.notifyQuestMaterialGained) - GameManager
+  // Collect-quest + perfection-discovery hook (xem GameManager.notifyMaterialGained) - GameManager
   // cung cap closure vi hook that can questSystem/questRegistry/questManager,
   // nhung state khong thuoc pham vi trang bi.
-  notifyQuestMaterialGained: (materialId: string, amount: number) => void
+  notifyMaterialGained: (materialId: string, amount: number) => void
   // Talent policy reads the active player per call (same pattern as
   // GameManagerBuildingOps) - enhance guarantee follows the CURRENT
   // selectedTalentIds, not a snapshot.
@@ -119,7 +119,7 @@ export class EquipmentOpsSystem {
         // 9.8 - tran tui: quest chi tinh delivered + toast bag.overflow.
         const overflow = this.deps.materialBag.add(this.deps.materialRegistry.get(reward.materialId), reward.amount)
 
-        this.deps.notifyQuestMaterialGained(reward.materialId, reward.amount - overflow)
+        this.deps.notifyMaterialGained(reward.materialId, reward.amount - overflow)
 
         if (overflow > 0) {
           this.deps.notifications.push(
@@ -388,7 +388,7 @@ export class EquipmentOpsSystem {
           // result.rewards GIU NGUYEN - tong Tinh Hoa phan giai).
           const overflow = this.deps.materialBag.add(this.deps.materialRegistry.get(reward.materialId), reward.amount)
 
-          this.deps.notifyQuestMaterialGained(reward.materialId, reward.amount - overflow)
+          this.deps.notifyMaterialGained(reward.materialId, reward.amount - overflow)
 
           if (overflow > 0) {
             this.deps.notifications.push(

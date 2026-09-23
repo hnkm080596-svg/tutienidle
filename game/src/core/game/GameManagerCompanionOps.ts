@@ -83,6 +83,10 @@ export interface GameManagerCompanionOpsDeps {
   // AFTER construction, so ops read it through this closure (same
   // deferred pattern as GameManagerQuestOps/GameManagerBuildingOps).
   getActivePlayer: () => PlayerData | undefined
+  // Material-landing funnel (M-F-BODY-PERFECTION) - the token refund
+  // inside pullCompanion's rollback is a genuine material landing and
+  // rides the same collect-quest + discovery path.
+  notifyMaterialGained: (materialId: string, amount: number) => void
 }
 
 export class GameManagerCompanionOps {
@@ -136,6 +140,7 @@ export class GameManagerCompanionOps {
       // cannot legitimately throw - refund anyway to keep the op atomic.
       if (tokenMaterial) {
         this.deps.materialBag.add(tokenMaterial, 1)
+        this.deps.notifyMaterialGained(COMPANION_PULL_TOKEN_ID, 1)
       }
 
       throw error

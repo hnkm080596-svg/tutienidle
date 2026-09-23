@@ -45,7 +45,7 @@ export class GameManagerTickOps {
       questSystem: QuestSystem
       questRegistry: QuestRegistry
       questManager: QuestManager
-      notifyQuestMaterialGained: (materialId: string, amount: number) => void
+      notifyMaterialGained: (materialId: string, amount: number) => void
       notifications: NotificationQueue
       productionSystem: ProductionSystem
       materialBag: MaterialBag
@@ -179,7 +179,7 @@ export class GameManagerTickOps {
         // Collect-quest hook (review 2026-08-28) - production settle la
         // nguon material chinh cua collect-quest. Chi tinh luong that su
         // vao tui (tru overflow).
-        this.deps.notifyQuestMaterialGained(event.materialId, delivered)
+        this.deps.notifyMaterialGained(event.materialId, delivered)
 
         if (delivered > 0) {
           this.deps.notifications.push({
@@ -281,7 +281,15 @@ export class GameManagerTickOps {
 
     const delivered = entry.amount - overflow
 
+    // M-F-BODY-PERFECTION - decompose output rides the SAME funnel as
+    // every other material landing (collect-quest + perfection
+    // discovery). The offline-restore settle replays through this path
+    // deliberately: pending output delivered then IS a new landing. A
+    // full-overflow delivery (delivered === 0) is not a landing - the
+    // funnel is not invoked at all (C2C r76-f1).
     if (delivered > 0) {
+      this.deps.notifyMaterialGained(entry.materialId, delivered)
+
       this.deps.notifications.push({
         kind: 'craft',
         message: `Phân Giải +${delivered} ${tinhHoa.name}`,

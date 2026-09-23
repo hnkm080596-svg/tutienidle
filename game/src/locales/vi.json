@@ -548,6 +548,13 @@
         "invest": "Vận Chu Thiên",
         "owned": "Tinh Hoa Pháp Thể sở hữu {count}",
         "complete": "Đại Chu Thiên đã viên mãn."
+      },
+      "bodyPerfection": {
+        "title": "Thể Phách Hoàn Thiện",
+        "statePerfected": "Đã hoàn thiện",
+        "statePending": "Chưa hoàn thiện",
+        "owned": "sở hữu {count}",
+        "perfect": "Hoàn Thiện"
       }
     },
     "settings": {
@@ -1256,7 +1263,8 @@
   },
   "notifications": {
     "skillLevelUp": "{name} đạt cấp {level}",
-    "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}"
+    "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}",
+    "bodyRealmPerfected": "Thể Phách Hoàn Thiện: {realm}"
   },
   "save": {
     "conflict": "Save đã thay đổi ở một phiên khác.",

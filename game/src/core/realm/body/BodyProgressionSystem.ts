@@ -20,6 +20,7 @@ import {
   isPhysiqueGradeId,
   type PhysiqueGradeId,
 } from '../../../data/realm/PhysiqueLadder'
+import { getBodyPerfectionMultiplier } from './BodyPerfection'
 
 // P7-M-F (D1) - the post-invest "rebuild" is kind-aware: modifier
 // chapters re-emit their StatModifier slice; base-stat chapters own no
@@ -207,6 +208,31 @@ export function collectBodyBaseStatDeltas(
   }
 
   return deltas
+}
+
+// M-F-BODY-PERFECTION (spec S5) - the EFFECTIVE body channel: raw
+// chapter deltas scaled by the per-realm perfection multiplier
+// (1 + 0.10 x perfectedCount), applied inside THIS channel so the
+// bonus reaches every Body-derived base-stat contribution and leaks
+// to nothing else. Sole consumer: resolvePlayerStatAssembly's merge.
+// Factor 1 (nothing perfected) returns the raw contract unchanged.
+export function collectEffectiveBodyBaseStatDeltas(
+  player: PlayerData,
+): Partial<Record<StatType, number>> {
+  const raw = collectBodyBaseStatDeltas(player)
+  const multiplier = getBodyPerfectionMultiplier(player)
+
+  if (multiplier === 1) {
+    return raw
+  }
+
+  const scaled: Partial<Record<StatType, number>> = {}
+
+  for (const [stat, delta] of statDeltaEntries(raw)) {
+    scaled[stat] = delta * multiplier
+  }
+
+  return scaled
 }
 
 // Typed iteration seam for Partial<Record<StatType, number>> - the

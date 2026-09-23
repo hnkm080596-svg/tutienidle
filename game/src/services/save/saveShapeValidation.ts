@@ -21,6 +21,7 @@ import { COMBAT_AI_STRATEGIES } from '../../core/battle/CombatAiStrategy'
 import { FOUNDATION_LABELS } from '../../core/breakthrough/FoundationType'
 import { isArtifactGrade, isArtifactPath } from '../../core/artifact/Artifact'
 import { validateBodyProgressionPersistedState } from '../../core/realm/body/BodyProgressionSystem'
+import { validateBodyPerfectionPersistedState } from '../../core/realm/body/BodyPerfection'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { SKILLS } from '../../data/skill/Skills'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
@@ -727,6 +728,12 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   // The retired flat fields (bodyRefinementCompletedTiers /
   // bodyRefinementCurrentTierProgress / openedMeridianIds) are gone.
   validateBodyProgressionPersistedState(player, (issue) => issues.push(issue))
+
+  // M-F-BODY-PERFECTION (v77) - the perfection slice is module-owned
+  // too: presence + discoveredMaterials/perfectedRealmIds string-array
+  // shape validated inside the delegated validator; semantic integrity
+  // (family membership, subset, realm cap) runs at restore preflight.
+  validateBodyPerfectionPersistedState(player, (issue) => issues.push(issue))
 
   // Talent v4 M2 (v61) - 5 field moi: ngan tu vi tran (Hai Nap), tang
   // Loi Kiep, ledger mua node mien phi (Van Dao), tang Pha Giap mang
