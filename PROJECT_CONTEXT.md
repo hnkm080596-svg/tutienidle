@@ -51,3 +51,6 @@ Prefer targeted tests during implementation and the full verification gate befor
 - Mission gate order (mandatory, per user workflow): SPEC → C2C review until approved → PLAN → C2C review until approved → implement per internal workflow (P3/P18/P13/P14/P4/P5) → C2C external review of the diff → merge-ready. The coordinator runs every C2C round; a child session writes spec+plan to its branch and STOPS for the coordinator's spec/plan review before implementing. User-authored mission briefs still pass through the spec-review round — "user wrote it" is not an exemption.
 - The reviewer path still applies for a completed task branch: rerun the verification gate and merge only with a clean primary worktree and no unresolved findings.
 - Treat this file as orientation, then read only task-relevant code and diffs.
+
+## Integration-branch model (coordinator ruling, 2026-09-23)
+Mission PRs integrate on shared branch `p7/truc-co`, not master. The platform blocks merges into the default branch only — sub-branch merges are coordinator-executable, so missions land on `p7/truc-co` continuously and the user merges ONE integration PR (p7/truc-co → master) per wave. New missions branch from `origin/p7/truc-co` and open PRs with base `p7/truc-co`.
