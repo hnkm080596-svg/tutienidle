@@ -144,6 +144,11 @@ uses for `TribulationChapters`).
    `pillTemplates`) — required for step 5.
 7. `BreakthroughOutcomeService` tests (extend): tier advance skips
    while domain closed; awaken branch requires the domain gate.
+   Positive KD-open case (C2C-67 — lands in the item-9 mocked-
+   policy boundary file, not in the real-policy suite): under the
+   open window, an existing artifact's `advanceArtifactRealmLevel`
+   advances realm-tier exactly as before — the guard gates the
+   closed window without changing open-window behavior.
 8. `components/game/DongFuCommandWheel.test.ts` (extend): slot
    disabled at TC; disabledReason === `RELEASE_UNAVAILABLE_REASON`;
    below-TC same.
@@ -172,7 +177,9 @@ uses for `TribulationChapters`).
     domain-tagged materials (listed ⇔ tagged, mirroring the
     breakthrough census invariant); every listed artifact-domain
     material satisfies `domainUnlockRealmId ===
-    ARTIFACT_UNLOCK_REALM_ID`.
+    ARTIFACT_UNLOCK_REALM_ID`; `NguHanhChau.unlockRealmId ===
+    ARTIFACT_UNLOCK_REALM_ID` (C2C-67 — the third shared-constant
+    surface gets the same no-drift pin).
 11. `tests/e2e/cultivation-path-ritual.spec.ts` (extend): TC seeded
     save → no `player.artifact`, slot aria-disabled with the
     release-unavailable reason; hidden_spell_pathway unchanged.
