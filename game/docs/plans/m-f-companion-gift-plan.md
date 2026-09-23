@@ -1,7 +1,7 @@
 # M-F-COMPANION-GIFT — Beta companion acquisition via authored gifts — plan
 
-Spec: `game/docs/specs/m-f-companion-gift-spec.md` (v2 — C2C round-49
-findings applied; pending C2C plan review). Implements F13 (ruling §42–45): no active pull pool in
+Spec: `game/docs/specs/m-f-companion-gift-spec.md` (v3 — C2C round-49
++ round-53 findings applied; pending C2C plan review). Implements F13 (ruling §42–45): no active pull pool in
 Beta — Thần Nông/Khai Minh arrive via authored gift moments (claimable
 records + idempotent claim); pull/exchange architecture kept behind
 `isCompanionPullPoolEnabled` with the empty pool as an explicit valid
@@ -115,9 +115,10 @@ gates pass.
    second identical fire is a pure no-op (idempotent); different
    trigger kinds don't cross-fire; a moment whose `definitionId` is not
    in `BETA_COMPANION_GIFT_IDS` is skipped (injected fixture); moment-
-   list integrity — unique ids, every `definitionId` ∈
-   `BETA_COMPANION_GIFT_IDS`, `realm_entered` refs in `REALMS`,
-   `stage_completed` refs in `STAGES`.
+   list integrity — unique ids, every `definitionId` satisfies
+   `isBetaCompanionGift`, `BETA_COMPANION_GIFT_IDS ⊆ COMPANIONS`,
+   `realm_entered` refs in `REALMS`, `stage_completed` refs in
+   `STAGES`.
 3. `GameManagerCompanionOps` tests (extend — pull/exchange scopes):
    pull with tokens on hand rejects `pool_unavailable` and the bag is
    untouched; exchange rejects `pool_unavailable` before

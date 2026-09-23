@@ -1,7 +1,7 @@
 # M-F-COMPANION-GIFT — Beta companion acquisition via authored gifts — Spec
 
-Status: v2 — draft (worker-authored; C2C round-49 findings applied,
-pending C2C spec re-review)
+Status: v3 — draft (worker-authored; C2C round-49 + round-53 findings
+applied, pending C2C spec re-review)
 Depends on: P7-M9 (companion domain unlock at Truc Cơ —
 `isCompanionDomainUnlocked`), P7-M-G (`BETA_COMPANIONS` Beta pool split
 from the full catalog), M-F-CEILING (ReleasePolicy release-window
@@ -127,8 +127,18 @@ export const BETA_COMPANION_GIFT_IDS: readonly string[] = [
   'khai_minh',
 ]
 
+// The authority requires BOTH conjuncts (C2C round-53): list
+// membership AND catalog resolution. A typo'd/retired/nonexistent id
+// in the list is itself not giftable — it can never be issued,
+// claimed, or persisted into a dead unclaimable record. The data
+// integrity test asserts the subset direction
+// `BETA_COMPANION_GIFT_IDS ⊆ COMPANIONS` so a bad list entry also
+// fails loud at authoring.
 export function isBetaCompanionGift(definitionId: string): boolean {
-  return BETA_COMPANION_GIFT_IDS.includes(definitionId)
+  return (
+    BETA_COMPANION_GIFT_IDS.includes(definitionId) &&
+    COMPANIONS.some((d) => d.id === definitionId)
+  )
 }
 ```
 
@@ -136,8 +146,9 @@ Enforced at four points so the gift channel can never widen the Beta
 acquisition surface while the pull pool is closed:
 
 1. **Authored registry (integrity test):** every
-   `COMPANION_GIFT_MOMENTS.definitionId` must be in
-   `BETA_COMPANION_GIFT_IDS` — fails loud at authoring.
+   `COMPANION_GIFT_MOMENTS.definitionId` must satisfy
+   `isBetaCompanionGift`, and `BETA_COMPANION_GIFT_IDS ⊆ COMPANIONS`
+   — fails loud at authoring on either direction.
 2. **Issue fire (defensive):** `issueCompanionGifts` skips a moment
    whose `definitionId` is not giftable — a non-giftable record could
    never be claimed, so issuing it would only lodge a permanently
@@ -293,8 +304,8 @@ anyway):
 
 `GameManagerCompanionOps.claimCompanionGift(giftId)` — companion
 acquisition authority, same DI/deps as the sibling ops (resolves
-`definition` via the full `COMPANIONS` catalog — gifts may grant any
-authored companion, not only Beta):
+`definition` via the full `COMPANIONS` catalog, then requires
+`isBetaCompanionGift` — only the Beta gift catalog may be claimed):
 
 ```ts
 export type ClaimCompanionGiftResult =
@@ -438,7 +449,7 @@ slice, never re-derive grants.
 |---|---|
 | A1 | `pullCompanion`/`exchangeCompanion` reject `{ok:false,reason:'pool_unavailable'}` BEFORE any currency check/debit while the flag is off; banked tokens, duyenPhan, pity untouched; pull architecture intact. |
 | A2 | Empty pool is an explicit valid state: ops never reach `rollCompanionPull`/`pickDefinitionOfGrade` with an empty pool (flag-off and empty-authored-pool share the path); both gacha tabs render the release-style unavailable reason instead of dead controls. |
-| A3 | `issueCompanionGifts` appends pending records for matching moments only, write-if-absent — repeated fires with the same trigger are pure no-ops; the moment registry validates (unique ids, definitionId ∈ `BETA_COMPANION_GIFT_IDS`, stage/realm refs resolve); a non-giftable injected moment is skipped, never issued. |
+| A3 | `issueCompanionGifts` appends pending records for matching moments only, write-if-absent — repeated fires with the same trigger are pure no-ops; the moment registry validates (unique ids, `definitionId` satisfies `isBetaCompanionGift`, `BETA_COMPANION_GIFT_IDS ⊆ COMPANIONS`, stage/realm refs resolve); a non-giftable injected moment is skipped, never issued. |
 | A4 | Claim grants per the pull duplicate rule (new → fresh instance; owned → constellation_up; maxed → +5 duyenPhan), marks `claimed`, notifies; double-claim returns `alreadyClaimed` with zero balance/state deltas; unknown/non-giftable/realm/no-player reject without mutation. |
 | A5 | `realm_entered` seam fires at the tribulation advance (post realmId write) and at the initiation promotion; `stage_completed` seam fires inside the first-completion once-guard only. |
 | A6 | Token-only `daily_chieu_hien_lenh` never activates (quest unlock consult), a stale active deactivates on reconcile, claim-item filter drops token lines, floor-10 boss signatureDrop token line suppressed at settle — non-token rewards on shared sources unaffected; a mixed-reward quest stays active minus its token lines. |
