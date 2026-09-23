@@ -100,10 +100,11 @@ describe('dialog focus management (Task 9.3, QA-003)', () => {
     const onCancel = vi.fn()
     const onConfirm = vi.fn()
     const open = ref(true)
-    const container = mountConfirmModal(open, { onCancel, onConfirm })
+    mountConfirmModal(open, { onCancel, onConfirm })
     await nextTick()
 
-    container.querySelector('[role="alertdialog"]')!
+    // SysModalBase teleports to body - query the document, not the container.
+    document.querySelector('[role="alertdialog"]')!
       .dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
 
     expect(onCancel).toHaveBeenCalledTimes(1)
