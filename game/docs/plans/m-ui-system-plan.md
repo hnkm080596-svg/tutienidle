@@ -35,8 +35,9 @@ worktree from `origin/p7/truc-co`; the spec/plan docs themselves were authored o
 - Every selector in `system-theme.css` anchored to `.sys-*` / `*-variant--system` classes.
 - Opt-in only: `.sys-surface`, `Sys*` components, `variant="system"` props. Base classes stay;
   system styles are additive overrides living only in `system-theme.css`.
-- Revert invariant: deleting `import './assets/system-theme.css'` restores byte-identical
-  visuals.
+- Revert invariant (spec §2.3): deleting `import './assets/system-theme.css'` leaves every
+  surface functional/legible; prior appearance returns when the opt-in markup/variant diff is
+  reverted.
 - Perf: at most one `.sys-rim--live` per screen; ≤ 2 concurrent sweeps; `.sys-fx-low` hatch.
 - A11y: opaque floor ≥ .88 composite alpha; non-glow `focus-visible` ≥ 2px; no hue-only
   meaning; scanlines under text.
@@ -254,9 +255,12 @@ withDefaults(defineProps<{
   scanlines?: boolean
 }>(), { variant: 'flat', corners: true, scanlines: false })
 // root: <section class="sys-panel sys-surface sys-corners" :class="{
-//   'sys-rim sys-rim--live': variant === 'primary',
+//   'sys-rim': variant === 'primary',
 //   'sys-bloom': variant === 'interactive',
 //   'sys-scanlines': scanlines }"> + <slot />
+// variant === 'primary' also registers the panel with useSystemRimAuthority() on mount /
+// unregisters on unmount; 'sys-rim--live' is applied only while this panel is the stack's
+// topmost entry (spec 4.1.1) — the one-rim contract is owned there, not by callers.
 
 // SysBar.vue — same aria contract as primitives/Bar.vue
 withDefaults(defineProps<{
@@ -295,7 +299,8 @@ withDefaults(defineProps<{
 const emit = defineEmits<{ close: [] }>()
 // reuse useDialogFocus(cardRef, open, { onEscape: close }); heading useId + aria-labelledby;
 // outer root emits class 'sys-modal' (matches the :focus-visible rule in system-theme.css);
-// card = <SysPanel variant="primary"> — the ONE permitted live rim when open (spec 4.1.1)
+// card = <SysPanel variant="primary"> — registers with the rim authority; holds the live
+// rim while topmost (spec 4.1.1)
 ```
 
 - [ ] **Step 1:** scaffold all five SFCs with the contracts above; component `<style scoped>`
@@ -331,9 +336,9 @@ const emit = defineEmits<{ close: [] }>()
 `system-theme.css` (drawer overrides), `src/assets/ink-wash-ui-slices.json` — NOT touched.
 
 **Interfaces:** Consumes SysPanel/SysStat/SysTag/SysBar from T2. LeftPanel's drawer is the
-home-primary surface (`.sys-rim--live` only when no modal open — the modifier lives on the
-modal card while one is open; coordinate via the shared rule "modal trumps drawer" implemented
-by gating the drawer modifier on `!ui.standalonePanel`).
+home-primary surface — it registers `variant="primary"` with `useSystemRimAuthority`; any
+opened system modal pushes above it on the stack and takes the live rim automatically
+("modal trumps drawer" is a consequence of stack order — spec 4.1.1).
 
 - [ ] **Step 1:** `class="left-panel ink-drawer sys-surface sys-corners sys-scanlines"` (same
   for RightPanel minus the primary rim; CharacterDetailCard gets `.sys-surface`). In
@@ -396,7 +401,9 @@ exist, list them in the worklog before migrating.
 `tests/e2e/system-ui.spec.ts` (new), `docs/ui-components.md` (system-layer section).
 
 - [ ] **Step 1:** boundary test per spec §2.4 (single `--sys-*` definition site; forbidden-LHS
-  scan; `.sys-`/`--system` selector anchor scan; import-order check). Reference regex style:
+  scan; `.sys-`/`--system` selector anchor scan scoped to ordinary style rules with the
+  at-rule allowlist — `:root`/`@property`/`@keyframes`/`@font-face`/`@import`/`@media`/
+  `@supports`; import-order check). Reference regex style:
   `tests/architecture/inkDrawerSurface.test.ts`.
 - [ ] **Step 2:** e2e spec: open character drawer → assert `.sys-surface` present; open a
   system modal → assert `document.querySelectorAll('.sys-rim--live').length === 1`; Escape
@@ -428,7 +435,7 @@ In-flight PR branch `devin/1790128721-m-f-respec` touches `NodeTreePanel.vue` (+
 |---|---|
 | P3 | `npm run verify` final; per-task `type-check` + scoped vitest |
 | Boundary | `systemThemeBoundary.test.ts` green |
-| Revert | manual: delete the `system-theme.css` import → pre-change visuals, then restore |
+| Revert | manual: delete the `system-theme.css` import → every surface functional/legible (safe degrade); reverting the opt-in markup/variant diff restores prior appearance |
 | P13/P14 | `tests/e2e/system-ui.spec.ts` + dense-screen Playwright evidence per spec §10 (one live rim, focus ring, reduced-motion, Vietnamese diacritics, blocked-font fallback, brightest-scene contrast) |
 | P18 | `ocr` delegation pass on the aggregate diff |
 | P4 | `tutienidle-adversarial-qa` quick |

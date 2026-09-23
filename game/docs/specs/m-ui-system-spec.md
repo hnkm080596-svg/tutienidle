@@ -61,24 +61,31 @@ Phaser canvas / scene art         (never painted inside canvas)
 5. Per-surface re-tinting happens only by overriding `--sys-*` values **inside** an opted-in
    `.sys-*` subtree — never by writing to non-sys tokens.
 
-### 2.3 Revert invariant (review finding M-2)
+### 2.3 Revert invariant (review findings M-2, R15-1 — scoped guarantee)
 
-**Deleting the single `import './assets/system-theme.css'` line in `main.ts` restores
-byte-identical pre-change visuals.**
+The achievable invariant is a **safe degrade**, not a byte-identical restore — once opt-in
+markup exists, removing the stylesheet alone cannot reproduce the old pixel output. The pinned
+guarantee:
+
+**Deleting the single `import './assets/system-theme.css'` line in `main.ts` leaves every
+surface functional and legible — nothing breaks.** Exact pre-change appearance is restored by
+reverting the opt-in markup/variant additions, which are a small, enumerable diff (listed in
+the plan's file map).
 
 Consequences:
 
 - Opt-in is *additive*: `.sys-surface` is applied **alongside** the base class
   (`class="left-panel ink-drawer sys-surface"`). The owning SFC keeps its ink base styles; every
-  system override lives in `system-theme.css`. With the import removed, only the base styles
-  remain.
+  system override lives in `system-theme.css`. On these surfaces, removing the import does
+  restore the prior appearance — only the base styles remain.
 - `variant` props default to `'ink'`; the `'system'` branch emits a class
   (e.g. `bar--system`, `overlay-panel__card--system`) whose styles exist only in
   `system-theme.css`. With the import removed the class resolves to nothing and the default
-  branch renders exactly as before.
-- `Sys*` components render their own base markup; their look is fully contained in
-  `system-theme.css` + scoped fallbacks that degrade to a legible unstyled panel if the import
-  is absent (acceptable: Sys* usage is itself opt-in and ships in the same wave).
+  branch renders as before.
+- `Sys*` components render their own base markup; their look lives in `system-theme.css` plus
+  minimal scoped fallbacks (box + border + readable text colors), so without the import they
+  degrade to legible unstyled containers — acceptable because `Sys*` usage is itself opt-in
+  and ships in the same wave as the stylesheet.
 
 ### 2.4 Guard test
 
@@ -89,7 +96,12 @@ Consequences:
 2. `system-theme.css` contains no left-hand definition of any non-sys token
    (`--ink-`, `--gold-`, `--paper-`, `--surface-`, `--chrome-`, `--frame-`, `--fx-`,
    `--scrim`, `--text-`, `--rank-`, `--grade-`, `--el-`, `--bar-`).
-3. Every selector in `system-theme.css` contains a `.sys-` or `--system` anchor.
+3. Every **ordinary style-rule selector** in `system-theme.css` contains a `.sys-` or
+   `--system` anchor. At-rules are exempt by allowlist (review finding R15-3): `:root` —
+   restricted to `--sys-*` custom-property definitions only, already covered by rule 2's LHS
+   scan — plus `@property`, `@keyframes`, `@font-face`, `@import`, `@media`, `@supports`.
+   Selectors nested inside `@media`/`@supports` are still ordinary rules and must carry the
+   anchor.
 4. `main.ts` still imports `theme.css` before `system-theme.css` (order check on the file text).
 
 ## 3. Design tokens — `--sys-*`
@@ -191,12 +203,17 @@ All effects animate only `transform`, `opacity`, `background-position`, or a reg
 
 The rotating rim repaints its gradient **every frame** — it is not compositor-only. Therefore:
 
-1. **At most ONE live rim per screen.** Only the focused/primary surface carries
-   `.sys-rim--live` (the element whose animation runs). Wave-1 grants the live rim to: the open
-   system modal (`SysModalBase` card) or, absent a modal, the primary open drawer
-   (`LeftPanel`). A surface exposes `variant="primary"` to request it; `SysPanel` implementation
-   must guarantee only one `.sys-rim--live` is mounted per screen — enforce by only ever applying
-   the modifier in the two named places, and pin it in code comments + the boundary test.
+1. **At most ONE live rim per screen — enforced by a single ownership authority**
+   (review finding R15-2). Arbitration lives in one place: a module-scoped registration
+   stack exposed by `useSystemRimAuthority()` (composable, `composables/`). A rim-eligible
+   surface registers on mount and unregisters on unmount; **only the stack's topmost entry
+   applies `.sys-rim--live`**. `SysPanel variant="primary"` is what registers a surface —
+   non-`primary` surfaces never register. Wave-1 eligible set: system modal cards
+   (`SysModalBase`, `OverlayPanel variant="system"`) and the `LeftPanel` drawer. This yields
+   the intended behavior deterministically: the lone drawer owns the rim at home; any opened
+   system modal pushes above it and takes the rim; stacked modals hand it to the topmost;
+   closing pops back down. The e2e live-rim-count assertion (§10) is the regression check of
+   this contract.
 2. Secondary surfaces use a **static** light-line border (same gradient, frozen angle) or, at
    most, a slow `opacity` pulse (≥ 3.6s period) on the rim layer — never the conic spin.
 3. **Sweep cap:** at most 2 `.sys-sweep` animations may run simultaneously on a screen; sweeps
@@ -227,11 +244,11 @@ CSS vars overridable by consumers (`style="--sys-accent: var(--sys-violet)"`).
 
 | Component | Contract |
 |---|---|
-| `SysPanel` | Slot container. Props: `variant?: 'primary' \| 'interactive' \| 'flat'` (default `'flat'`); `corners?: boolean` (default `true`). Emits the `.sys-surface` recipe + `.sys-corners`; `primary` adds `.sys-rim--live`, `interactive` adds `.sys-bloom` hover. |
+| `SysPanel` | Slot container. Props: `variant?: 'primary' \| 'interactive' \| 'flat'` (default `'flat'`); `corners?: boolean` (default `true`); `scanlines?: boolean`. Emits the `.sys-surface` recipe + `.sys-corners`; `primary` registers the panel with `useSystemRimAuthority` (live rim only while topmost — §4.1.1), `interactive` adds `.sys-bloom` hover. |
 | `SysBar` | System-readout progress bar. Props: `value: number`, `max: number`, `height?: number` (default 10), `tone?: 'cyan' \| 'hp' \| 'mp' \| 'exp' \| 'warn'` (mapped to `--sys-bar-from/--sys-bar-to`), `label?: string`. Segmented look via gradient stops + shimmer; `role="progressbar"` with aria values — same contract as `primitives/Bar.vue`. Label text (not color) carries meaning (§7.3). |
 | `SysTag` | Status/rarity chip. Props: `tone?: 'cyan' \| 'violet' \| 'warn' \| 'danger' \| 'success' \| 'muted'`, `icon?: string`. Renders bracketed uppercase label + a left glyph — meaning is never hue-only (§7.3). |
 | `SysStat` | Stat readout row. Props: `label: string`, `tone?: 'default' \| 'positive' \| 'negative' \| 'warn' \| 'muted'`, `bordered?: boolean`. Label `--sys-text-muted`, value `tabular-nums` in `--sys-font-display`. |
-| `SysModalBase` | Modal chrome: `--sys-scrim` scrim + `SysPanel variant="primary"` card (the one allowed live rim). Owns the dialog contract: `role="dialog"`, `aria-modal`, `aria-labelledby` via `useId`, `useDialogFocus` focus trap + Escape — the same contract `OverlayPanel` holds today. Props: `open`, `title`, `width?`, `height?`, `layer?`; emits `close`. |
+| `SysModalBase` | Modal chrome: `--sys-scrim` scrim + `SysPanel variant="primary"` card (the one allowed live rim). Owns the dialog contract: `role="dialog"`, `aria-modal`, `aria-labelledby` via `useId`, `useDialogFocus` focus trap + Escape — the same contract `OverlayPanel` holds today. Props: `open`, `title`, `width?`, `height?`, `layer?`; emits `close`. Root emits `.sys-modal`; card registers with the rim authority via `variant="primary"`. |
 
 Shared-component variants (§2.2 rule 4):
 
@@ -326,5 +343,6 @@ tooltips/toasts as system chrome; combat HUD system pass.
   presence, and the one-live-rim invariant.
 - **Gates:** P18 OCR on the diff → P4 adversarial QA (quick) → P5 sequential review (≥3
   passes). UI-skin surface = the full opt-in set plus the two shared-component variants.
-- **Acceptance:** all wave-1 surfaces render the system skin with revert invariant intact;
-  zero confirmed Medium+ findings at final pass.
+- **Acceptance:** all wave-1 surfaces render the system skin; the §2.3 safe-degrade
+  guarantee holds (import removed → everything functional/legible; opt-in diff reverted →
+  prior appearance); zero confirmed Medium+ findings at final pass.
