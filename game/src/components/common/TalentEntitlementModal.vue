@@ -10,13 +10,14 @@
 // persisted record is what re-presents the modal after a mid-decision
 // reload; the tribulation drain (useTribulation's
 // checkTribulationOutcomeAction) waits on the same record.
-import { computed, ref, useId } from 'vue'
+import { computed, ref, useId, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 import { TALENT_RARITY_LABELS, type TalentDefinition } from '@/core/talent/Talent'
 import {
   getTalentLevel,
   getUpgradeableTalentIds,
+  reconcileTalentEntitlement,
   type TalentEntitlementDecision,
 } from '@/core/talent/TalentEntitlement'
 import { getTalentDefinition } from '@/data/talent/Talents'
@@ -31,6 +32,14 @@ const { t } = useI18n()
 
 const entitlement = computed(() => player.pendingTalentEntitlement)
 const open = computed(() => entitlement.value !== undefined)
+
+// A record that rots while mounted (every offered card granted by a
+// later path, realm pool release-suppressed, no legal upgrade left)
+// holds an uncancellable dialog with nothing to decide - reconcile it
+// away rather than lock the player. A valid record is untouched.
+watchEffect(() => {
+  reconcileTalentEntitlement(player)
+})
 
 // NEW branch: the 3 cards bound at origination (deduped, realm-pooled,
 // no reroll - offeredTalentIds is the persisted draw, never re-rolled

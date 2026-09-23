@@ -1695,13 +1695,30 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
   })
 
   it('chấp nhận talentLevels rỗng và thưa', () => {
-    for (const value of [{}, { tc_dia_can: 2, lk_linh_mach: 3 }]) {
-      const save = validSave()
+    const save = validSave()
 
-      playerOf(save).talentLevels = value
+    playerOf(save).talentLevels = {}
+    expect(validateGameSaveShape(save).ok).toBe(true)
 
-      expect(validateGameSaveShape(save).ok).toBe(true)
-    }
+    const owned = validSave()
+
+    playerOf(owned).selectedTalentIds = ['tc_dia_can', 'lk_linh_mach']
+    playerOf(owned).talentLevels = { tc_dia_can: 2, lk_linh_mach: 3 }
+    expect(validateGameSaveShape(owned).ok).toBe(true)
+  })
+
+  it('từ chối talentLevels của talent save không sở hữu (latent level bypass)', () => {
+    const save = validSave()
+
+    // NEW ownership grants level 1 by contract - a stored level for an
+    // unowned id can only come from a shaped save and would bypass the
+    // level ladder on first grant. Fail loud.
+    playerOf(save).talentLevels = { lk_bac_hai: 2 }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.talentLevels.lk_bac_hai')
   })
 
   it.each([
@@ -1723,9 +1740,12 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
     expect(pathsOf(result)).toContain(expectedPath)
   })
 
-  it('chấp nhận talentLevels của talent không còn trong catalog (retired - tolerated)', () => {
+  it('chấp nhận talentLevels của talent retired nhưng vẫn sở hữu (tolerated)', () => {
     const save = validSave()
 
+    // A retired-but-owned talent keeps its level entry: the id stays in
+    // selectedTalentIds so consumers can skip it without losing data.
+    playerOf(save).selectedTalentIds = ['retired_talent_id']
     playerOf(save).talentLevels = { retired_talent_id: 9 }
 
     expect(validateGameSaveShape(save).ok).toBe(true)
@@ -1795,6 +1815,23 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
     player.selectedTalentIds = ['retired_talent_id', 'pham_cot']
     player.talentLevels = {}
     player.pendingTalentEntitlement = { realmId: 'qi_refining', offeredTalentIds: [] }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.pendingTalentEntitlement')
+  })
+
+  it('từ chối entitlement mà mọi offer đã sở hữu + không talent nâng được (all-owned offers)', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    // Every offered card is already owned at maxLevel, and the owner
+    // has no legal upgrade left - every NEW decision would be rejected
+    // and the uncancellable modal would lock forever. Fail loud.
+    player.selectedTalentIds = ['lk_bac_hai']
+    player.talentLevels = { lk_bac_hai: 3 }
+    player.pendingTalentEntitlement = { realmId: 'qi_refining', offeredTalentIds: ['lk_bac_hai'] }
 
     const result = validateGameSaveShape(save)
 

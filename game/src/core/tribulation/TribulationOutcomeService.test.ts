@@ -39,7 +39,7 @@ function resolveAnnouncement(a: OutcomeAnnouncement): { title: string; body: str
 function makeActive(
   state: 'victory' | 'defeat',
   targetRealmId: string,
-  grade: 'thien_dao' | 'great_dao' = 'thien_dao',
+  grade: 'heaven' | 'great_dao' = 'heaven',
 ): ActiveTribulationState {
   return {
     targetRealmId,
@@ -153,19 +153,56 @@ describe('TribulationOutcomeService — victory parity', () => {
     expect(player.selectedTalentIds).toContain('pham_nhan_chi_cot')
     expect(player.selectedTalentIds).not.toContain('pham_cot')
 
-    // M-F-TALENT - the foundation breakthrough writes its entitlement on
-    // the same seam; pham_cot conversion stays the explicit special case
-    // (the converted pham_nhan_chi_cot is owned, not offered).
-    const entitlement = player.pendingTalentEntitlement
-    expect(entitlement?.realmId).toBe('foundation_establishment')
-    expect(entitlement?.offeredTalentIds).toHaveLength(3)
-    expect(entitlement?.offeredTalentIds).not.toContain('pham_nhan_chi_cot')
+    // M-F-TALENT - a Dai Dao breakthrough's ONE result is the pham_cot
+    // evolution (the explicit special case): the generic UPGRADE/NEW
+    // entitlement is suppressed so the transaction yields one result,
+    // never two.
+    expect(player.pendingTalentEntitlement).toBeUndefined()
     expect(result.announcement).toEqual({
       titleKey: 'announce.tribulation.foundation.title',
       titleParams: { label: 'ĐẠI ĐẠO' },
       bodyKey: 'announce.tribulation.foundation.body',
     })
     expect(resolveAnnouncement(result.announcement).title).toBe('★ ĐẠI ĐẠO TRÚC CƠ ★')
+  })
+
+  // C2C round 42 - one breakthrough yields exactly ONE result: the
+  // pham_cot -> pham_nhan_chi_cot evolution IS the Dai Dao result, so
+  // the generic entitlement is suppressed on that path alone.
+  it('great_dao breakthrough suppresses the generic entitlement - the evolution is the one result', () => {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerPills(pills)
+    const player = usePlayerStore()
+    player.selectedTalentIds = ['pham_cot']
+    const service = new TribulationOutcomeService()
+
+    const result = service.resolveVictory(
+      player,
+      gameManager,
+      makeActive('victory', 'foundation_establishment', 'great_dao'),
+    )
+
+    expect(result.talentConverted).toBe(true)
+    expect(player.selectedTalentIds).toContain('pham_nhan_chi_cot')
+    expect(player.selectedTalentIds).not.toContain('pham_cot')
+    expect(player.pendingTalentEntitlement).toBeUndefined()
+  })
+
+  it('non-great_dao foundation breakthrough still mints the realm-pool entitlement', () => {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerPills(pills)
+    const player = usePlayerStore()
+    const service = new TribulationOutcomeService()
+
+    const result = service.resolveVictory(
+      player,
+      gameManager,
+      makeActive('victory', 'foundation_establishment', 'heaven'),
+    )
+
+    expect(result.talentConverted).toBe(false)
+    expect(player.pendingTalentEntitlement?.realmId).toBe('foundation_establishment')
+    expect(player.pendingTalentEntitlement?.offeredTalentIds.length).toBeGreaterThan(0)
   })
 
   it('quest realm-transition flag is marked on realm entry', () => {
@@ -234,7 +271,7 @@ describe('TribulationOutcomeService — defeat parity', () => {
     const gameManager = new GameManager()
     const player = usePlayerStore()
     player.realmId = 'qi_refining'
-    const active = makeActive('defeat', 'foundation_establishment', 'thien_dao')
+    const active = makeActive('defeat', 'foundation_establishment', 'heaven')
 
     const service = new TribulationOutcomeService()
     const result = service.resolveDefeat(player, gameManager, active)
@@ -275,7 +312,7 @@ describe('TribulationOutcomeService — announcement descriptors resolve to the 
 
     // Generic defeat
     const defeat = service.resolveDefeat(
-      player, gameManager, makeActive('defeat', 'foundation_establishment', 'thien_dao'),
+      player, gameManager, makeActive('defeat', 'foundation_establishment', 'heaven'),
     )
     expect(resolveAnnouncement(defeat.announcement)).toEqual({
       title: 'Độ Kiếp Thất Bại',
@@ -302,7 +339,7 @@ describe('TribulationOutcomeService — announcement descriptors resolve to the 
         player, gameManager, makeActive('defeat', 'foundation_establishment', 'great_dao'),
       ).announcement,
       service.resolveDefeat(
-        player, gameManager, makeActive('defeat', 'foundation_establishment', 'thien_dao'),
+        player, gameManager, makeActive('defeat', 'foundation_establishment', 'heaven'),
       ).announcement,
     ]
 

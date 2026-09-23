@@ -193,7 +193,16 @@ export class TribulationOutcomeService {
     // Idempotent by construction: a pending record is never overwritten,
     // and a re-settle of the same committed outcome returns its receipt
     // without re-running this apply at all (settleOutcome dedup).
-    createTalentEntitlement(player, facts.targetRealmId)
+    //
+    // Special case (ruling): a Dai Dao foundation breakthrough's ONE
+    // result is the pham_cot -> pham_nhan_chi_cot evolution below, not a
+    // UPGRADE/NEW decision - the generic entitlement is suppressed so
+    // the transaction yields exactly one result, never two.
+    const isGreatDaoBreakthrough =
+      facts.targetRealmId === 'foundation_establishment' && facts.grade === 'great_dao'
+    if (!isGreatDaoBreakthrough) {
+      createTalentEntitlement(player, facts.targetRealmId)
+    }
 
     // Quan Khi victory: pure announcement + path-choice navigation.
     // No realm/talent/foundation writes (spec dot-pha-loi-kiep SS5.1) -
@@ -254,10 +263,11 @@ export class TribulationOutcomeService {
     // Spec SS4.3/SS4.4: Great Dao victory converts the penalty talent into
     // the permanent reward talent.
     let talentConverted = false
-    if (facts.targetRealmId === 'foundation_establishment' && facts.grade === 'great_dao') {
+    if (isGreatDaoBreakthrough) {
       const index = player.selectedTalentIds.indexOf('pham_cot')
       if (index >= 0) {
         player.selectedTalentIds.splice(index, 1)
+        delete player.talentLevels['pham_cot']
       }
       if (!player.selectedTalentIds.includes('pham_nhan_chi_cot')) {
         player.selectedTalentIds.push('pham_nhan_chi_cot')

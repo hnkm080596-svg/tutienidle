@@ -169,6 +169,10 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     expect(player.selectedTalentIds).not.toContain('pham_cot')
     expect(player.selectedTalentIds).toContain('pham_nhan_chi_cot')
     expect(player.realmId).toBe('foundation_establishment')
+    // M-F-TALENT - the Dai Dao path's ONE result is the evolution: no
+    // generic entitlement is minted and the drain is never held.
+    expect(player.pendingTalentEntitlement).toBeUndefined()
+    expect(gameManager.tribulationDirector.getCommittedOutcome()).toBeNull()
   })
 
   it('thua kiếp Đại Đạo: greatDaoOpportunityLost vĩnh viễn + KHÔNG đổi talent; lần xét sau cap Thiên', () => {

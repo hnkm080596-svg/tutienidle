@@ -29,7 +29,7 @@ import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
 import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
 import { getTalentDefinition } from '../../data/talent/Talents'
-import { getTalentMaxLevel, getUpgradeableTalentIds } from '../../core/talent/TalentEntitlement'
+import { getTalentMaxLevel, isTalentEntitlementActionable } from '../../core/talent/TalentEntitlement'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
 import { isPhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
 
@@ -297,6 +297,17 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
           message: 'vượt maxLevel của talent',
         })
       }
+
+      // A level entry for a talent the save does NOT own is latent
+      // corruption: NEW ownership grants level 1 by contract, so a
+      // stored >1 for an unowned id can only arrive via a shaped save
+      // and would bypass the level ladder on first grant. Fail loud.
+      if (selectedTalentIds !== undefined && !selectedTalentIds.includes(talentId)) {
+        issues.push({
+          path: `player.talentLevels.${talentId}`,
+          message: 'level của talent chưa sở hữu',
+        })
+      }
     }
   }
 
@@ -352,36 +363,55 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
         }
       }
 
-      // Degenerate-record guard: a persisted entitlement whose offers
-      // are all consumed/absent AND whose owner holds no upgradeable
-      // talent presents ZERO legal decisions - the uncancellable modal
-      // would render empty and lock the transition forever. The live
-      // seam can never author this (createTalentEntitlement returns
-      // undefined), so it can only arrive via corruption: fail loud.
-      // Sanitize-then-delegate: the legality rule lives in the domain
-      // (getUpgradeableTalentIds); the validator only bridges unknown ->
-      // typed shapes it has already checked.
-      const sanitizedIds = (selectedTalentIds ?? []).filter(
-        (talentId): talentId is string => typeof talentId === 'string',
-      )
-      const sanitizedLevels: Record<string, number> = {}
+      // Degenerate-record guard: a persisted entitlement that presents
+      // ZERO legal decisions locks the transition forever behind an
+      // uncancellable modal - offered cards all owned/unknown/outside
+      // the realm pool, realm pool release-suppressed, and no legal
+      // upgrade left. The live seam can never author this
+      // (createTalentEntitlement returns undefined and resolution
+      // enforces the same pool/policy authority), so it can only
+      // arrive via corruption: fail loud. Sanitize-then-delegate: the
+      // legality rule lives in the domain (isTalentEntitlementActionable);
+      // the validator only bridges unknown -> typed shapes it has
+      // already checked.
+      if (
+        typeof entitlement.realmId === 'string' &&
+        entitlement.realmId.length > 0 &&
+        offered !== undefined
+      ) {
+        const sanitizedOffers = offered.filter(
+          (talentId): talentId is string => typeof talentId === 'string',
+        )
+        const sanitizedIds = (selectedTalentIds ?? []).filter(
+          (talentId): talentId is string => typeof talentId === 'string',
+        )
+        const sanitizedLevels: Record<string, number> = {}
 
-      if (isObject(player.talentLevels)) {
-        for (const [talentId, level] of Object.entries(player.talentLevels)) {
-          if (isNonNegativeFiniteNumber(level) && Number.isInteger(level)) {
-            sanitizedLevels[talentId] = level
+        if (isObject(player.talentLevels)) {
+          for (const [talentId, level] of Object.entries(player.talentLevels)) {
+            if (isNonNegativeFiniteNumber(level) && Number.isInteger(level)) {
+              sanitizedLevels[talentId] = level
+            }
           }
         }
-      }
 
-      const hasUpgradeable =
-        getUpgradeableTalentIds({ selectedTalentIds: sanitizedIds, talentLevels: sanitizedLevels }).length > 0
+        const actionable =
+          sanitizedOffers.length === offered.length &&
+          isTalentEntitlementActionable({
+            selectedTalentIds: sanitizedIds,
+            talentLevels: sanitizedLevels,
+            pendingTalentEntitlement: {
+              realmId: entitlement.realmId,
+              offeredTalentIds: sanitizedOffers,
+            },
+          })
 
-      if (offered !== undefined && offered.length === 0 && !hasUpgradeable) {
-        issues.push({
-          path: 'player.pendingTalentEntitlement',
-          message: 'bản ghi không còn quyết định hợp lệ nào (offers rỗng, không talent nâng được)',
-        })
+        if (!actionable) {
+          issues.push({
+            path: 'player.pendingTalentEntitlement',
+            message: 'bản ghi không còn quyết định hợp lệ nào',
+          })
+        }
       }
     }
   }

@@ -14,6 +14,8 @@ import {
   getTalentLevel,
   getTalentMaxLevel,
   getUpgradeableTalentIds,
+  isTalentEntitlementActionable,
+  reconcileTalentEntitlement,
   resolveTalentEntitlement,
 } from './TalentEntitlement'
 
@@ -212,5 +214,96 @@ describe('level model — getTalentLevel / getTalentMaxLevel / getUpgradeableTal
     // At max -> drops out of the upgradeable list.
     player.talentLevels = { [leveled]: getTalentMaxLevel(getTalentDefinition(leveled)!) }
     expect(getUpgradeableTalentIds(player)).toEqual([])
+  })
+})
+
+// C2C round 42 - resolution must enforce the same pool/policy authority
+// as origination (a persisted record is never trusted), and the drain
+// lock must never hold on a record that presents zero legal decisions.
+describe('resolveTalentEntitlement — persisted-record authority (C2C-42)', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it('NEW: rejects an offered id that is not a member of the record realm pool', () => {
+    const player = usePlayerStore()
+    // A shaped record can carry any catalog id - tc_* is valid but not
+    // a member of the qi_refining pool, so it is not a legal offer.
+    player.pendingTalentEntitlement = { realmId: 'qi_refining', offeredTalentIds: ['tc_dia_can'] }
+
+    expect(resolveTalentEntitlement(player, { kind: 'new', talentId: 'tc_dia_can' })).toBe(false)
+
+    expect(player.selectedTalentIds).not.toContain('tc_dia_can')
+    expect(player.pendingTalentEntitlement).toBeDefined()
+  })
+
+  it('NEW: rejects when the record realm pool is release-suppressed', () => {
+    const player = usePlayerStore()
+    const dormant = poolIds('golden_core')[0]!
+    player.pendingTalentEntitlement = { realmId: 'golden_core', offeredTalentIds: [dormant] }
+
+    expect(resolveTalentEntitlement(player, { kind: 'new', talentId: dormant })).toBe(false)
+
+    expect(player.selectedTalentIds).not.toContain(dormant)
+    expect(player.pendingTalentEntitlement).toBeDefined()
+  })
+
+  it('NEW: latent talentLevels for the unowned id normalize to level 1 on grant', () => {
+    const player = usePlayerStore()
+    const offered = poolIds('qi_refining')[0]!
+    player.talentLevels = { [offered]: 3 } // shaped save: level without ownership
+    player.pendingTalentEntitlement = { realmId: 'qi_refining', offeredTalentIds: [offered] }
+
+    expect(resolveTalentEntitlement(player, { kind: 'new', talentId: offered })).toBe(true)
+
+    expect(player.selectedTalentIds).toContain(offered)
+    expect(getTalentLevel(player, offered)).toBe(1)
+  })
+
+  it('a record whose offers are all already owned + no upgradeables clears on reconcile', () => {
+    const player = usePlayerStore()
+    const ownedMaxed = upgradeablePoolId('qi_refining')
+    player.selectedTalentIds = [ownedMaxed, 'pham_cot']
+    player.talentLevels = { [ownedMaxed]: getTalentMaxLevel(getTalentDefinition(ownedMaxed)!) }
+    player.pendingTalentEntitlement = { realmId: 'qi_refining', offeredTalentIds: [ownedMaxed] }
+
+    expect(isTalentEntitlementActionable(player)).toBe(false)
+
+    reconcileTalentEntitlement(player)
+
+    expect(player.pendingTalentEntitlement).toBeUndefined()
+  })
+
+  it('a record on a release-suppressed realm pool clears on reconcile', () => {
+    const player = usePlayerStore()
+    player.pendingTalentEntitlement = {
+      realmId: 'golden_core',
+      offeredTalentIds: [poolIds('golden_core')[0]!],
+    }
+
+    expect(isTalentEntitlementActionable(player)).toBe(false)
+
+    reconcileTalentEntitlement(player)
+
+    expect(player.pendingTalentEntitlement).toBeUndefined()
+  })
+
+  it('a record with one legal decision is actionable and survives reconcile', () => {
+    const player = usePlayerStore()
+    const record = { realmId: 'qi_refining', offeredTalentIds: [poolIds('qi_refining')[0]!] }
+    player.pendingTalentEntitlement = record
+
+    expect(isTalentEntitlementActionable(player)).toBe(true)
+
+    reconcileTalentEntitlement(player)
+
+    expect(player.pendingTalentEntitlement).toEqual(record)
+  })
+
+  it('empty offers + one legal UPGRADE stays actionable on the upgrade branch alone', () => {
+    const player = usePlayerStore()
+    const target = upgradeablePoolId('qi_refining')
+    player.selectedTalentIds = [target]
+    player.pendingTalentEntitlement = { realmId: 'qi_refining', offeredTalentIds: [] }
+
+    expect(isTalentEntitlementActionable(player)).toBe(true)
   })
 })

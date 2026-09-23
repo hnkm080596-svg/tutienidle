@@ -146,9 +146,60 @@ export function createTalentEntitlement(
 }
 
 /**
+ * Whether a pending record still offers one legal decision - the drain
+ * lock and the modal both trust it. A record is actionable when its
+ * realm pool is release-enabled AND (at least one offered card is an
+ * unowned, resolvable pool member OR an owned talent has a legal next
+ * level). A persisted record can rot without any save drift: offers
+ * bound at origination may all be granted by a later path before the
+ * decision resolves.
+ */
+export function isTalentEntitlementActionable(
+  player: Pick<PlayerData, 'selectedTalentIds' | 'talentLevels' | 'pendingTalentEntitlement'>,
+): boolean {
+  const entitlement = player.pendingTalentEntitlement
+
+  if (entitlement === undefined) {
+    return true
+  }
+
+  if (!isBreakthroughAcquisitionEnabled(entitlement.realmId)) {
+    return false
+  }
+
+  const poolIds = new Set((BREAKTHROUGH_TALENT_POOLS[entitlement.realmId] ?? []).map((t) => t.id))
+  const hasLegalNewOffer = entitlement.offeredTalentIds.some(
+    (talentId) =>
+      poolIds.has(talentId) &&
+      !player.selectedTalentIds.includes(talentId) &&
+      getTalentDefinition(talentId) !== undefined,
+  )
+
+  return hasLegalNewOffer || getUpgradeableTalentIds(player).length > 0
+}
+
+/**
+ * Clear a pending record that no longer holds one legal decision. Called
+ * on the drain seam before the lock check - a stale, unreleased, or
+ * fully-consumed record must never hold the uncancellable modal open
+ * with nothing to decide (the soft-lock the load-time validator guards
+ * against can also arise post-load). A valid record is untouched.
+ */
+export function reconcileTalentEntitlement(
+  player: Pick<PlayerData, 'selectedTalentIds' | 'talentLevels' | 'pendingTalentEntitlement'>,
+): void {
+  if (player.pendingTalentEntitlement !== undefined && !isTalentEntitlementActionable(player)) {
+    player.pendingTalentEntitlement = undefined
+  }
+}
+
+/**
  * Resolve the pending entitlement into its ONE granted result. Validates
- * BEFORE mutating: NEW requires an offered, unowned, resolvable id;
- * UPGRADE requires an owned talent below maxLevel. On success the grant
+ * BEFORE mutating: NEW requires an offered, unowned, resolvable id that
+ * belongs to the record's realm pool under a release-enabled policy;
+ * UPGRADE requires an owned talent below maxLevel. The same pool/policy
+ * authority as origination is re-enforced here - a persisted record is
+ * never trusted to carry catalog-legal offers. On success the grant
  * applies and the record clears in the same call - a rejected decision
  * leaves the record (and the lock) untouched, never a partial grant.
  */
@@ -166,6 +217,13 @@ export function resolveTalentEntitlement(
     if (!entitlement.offeredTalentIds.includes(decision.talentId)) {
       return false
     }
+    if (!isBreakthroughAcquisitionEnabled(entitlement.realmId)) {
+      return false
+    }
+    const poolIds = new Set((BREAKTHROUGH_TALENT_POOLS[entitlement.realmId] ?? []).map((t) => t.id))
+    if (!poolIds.has(decision.talentId)) {
+      return false
+    }
     if (player.selectedTalentIds.includes(decision.talentId)) {
       return false
     }
@@ -174,6 +232,10 @@ export function resolveTalentEntitlement(
     }
 
     player.selectedTalentIds.push(decision.talentId)
+    // NEW grants level 1 by contract: overwrite any latent level-map
+    // entry for the (previously unowned) id so a shaped save cannot
+    // activate a higher level on first ownership.
+    player.talentLevels[decision.talentId] = 1
   } else {
     if (!player.selectedTalentIds.includes(decision.talentId)) {
       return false

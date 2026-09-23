@@ -5,6 +5,7 @@ import { GAME_PRESENTATION_KEY } from '@/presentation/PresentationContracts'
 import type { GamePresentation } from '@/presentation/createGamePresentation'
 import type { GameManager } from '../core/game/GameManager'
 import { TribulationOutcomeService, type TribulationOutcomeResult, type TribulationPlayerWriter } from '../core/tribulation/TribulationOutcomeService'
+import { reconcileTalentEntitlement } from '../core/talent/TalentEntitlement'
 import { useWorldAnnouncementStore } from '../stores/worldAnnouncement'
 import { useUiStore } from '../stores/ui'
 import { isBattleInProgress } from '../core/battle/BattleTypes'
@@ -166,6 +167,11 @@ export function checkTribulationOutcomeAction(
     // same tick consumes the receipt and drains normally. Returning true
     // preserves the caller's same-tick auto-refight suppression (a
     // pending decision is still a committed victory).
+    // A record that no longer holds one legal decision (offers fully
+    // consumed by a later path, realm pool release-suppressed) is
+    // reconciled away first - it must never hold the uncancellable
+    // modal open with nothing to decide.
+    reconcileTalentEntitlement(player)
     if (player.pendingTalentEntitlement !== undefined) {
       return true
     }
