@@ -170,18 +170,24 @@ mission BLOCKED pending coordinator-owned repair (reported with
 evidence, never weakened into a passing characterization).
 
 **Required census row — multi-channel perfection-material census
-(C2C-r94-1):** one explicit sweep row (backed by a testable census —
-e.g. a spec-level enumeration test or an audited table) covering EVERY
-authored perfection material against the full acquisition-channel
-lattice: `BODY_PERFECTION_REALM_MATERIALS` registry entries → the
-hidden-beast / grotto emitted sets → visible-grant exemptions →
-exclusion from normal stage/family/non-signature channels. The row
-must REPORT, even when clean: route-less requirements (a registry
-entry reachable via no authored channel), duplicate acquisition
-authorities (the same material grantable by two independent paths),
-and normal-loot bypasses (a channel-only material leaking into
-stage/family tables). Leg L's A13 resolution does not substitute for
-this authority-level census — it is required regardless of whether
+(C2C-r94-1/r95):** one explicit sweep row (backed by a testable
+census — e.g. a spec-level enumeration test or an audited table)
+covering EVERY authored perfection material against the full
+acquisition-channel lattice: `BODY_PERFECTION_REALM_MATERIALS`
+registry entries → the hidden-beast / grotto emitted sets →
+visible-grant exemptions → exclusion from every non-channel loot
+route — at minimum `STAGE_DROP_TABLES`, `FAMILY_DROP_TABLES`, AND
+`signatureDrops` on every NON-channel enemy (a regular enemy's
+signatureDrops is itself an independent loot route — a perfection
+material leaking there would bypass a stage/family-only census;
+guaranteed/pool equivalents under those authorities count the same).
+The row must REPORT, even when clean: route-less requirements (a
+registry entry reachable via no authored channel), duplicate
+acquisition authorities (the same material grantable by two
+independent paths), and loot-route bypasses (a channel-only material
+leaking into stage tables, family tables, or non-channel
+signatureDrops). Leg L's A13 resolution does not substitute for this
+authority-level census — it is required regardless of whether
 BODY-HIDDEN lands authored materials this wave.
 
 ## Step 4 — docs sync + save-version decision
