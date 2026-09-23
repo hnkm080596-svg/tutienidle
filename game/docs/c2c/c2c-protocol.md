@@ -12,8 +12,16 @@ transport replaced:
   validates the `[C2C] STATE … · ROUND <n>` first line + `[C2C] END` last
   line, and materializes it into `inbox-<name>.md`. Downstream handling is
   identical to the local protocol.
-- **Review target:** the repo is public — ChatGPT reads the PR directly
-  (Files changed view) instead of an MCP workspace.
+- **Review content travels INLINE.** Measured on the live account
+  (probe-r5): external URL fetch is disabled in the C2C runtime
+  (`DisabledError / Invalid URL` on github.com + raw.githubusercontent.com
+  even though `web.run` exists) and the configured MCP connectors
+  (`mcp__Tutienidle__*`, `mcp__awehitch__*`) point at the offline local
+  stack and fail. So ChatGPT cannot browse the PR — every `go`/`continue`
+  message must embed the review material itself. Rules of thumb: small PRs
+  inline the full `git diff`; bigger ones inline `git diff --stat` + the
+  hunks under review (or split one file per message); the outbox file
+  keeps the same content for audit/resume.
 
 ## Mailbox: `.c2c/mailbox/` (repo root, gitignored)
 
@@ -49,13 +57,17 @@ transport replaced:
    content goes in the chat message, since ChatGPT has no file access.
 3. Update `state.json`: take `n = nextRound`, increment it, set `open` to
    `{"name","round":n,sentAt,"status":"sent"}`.
-4. Doorbell — send the task, never wait inline:
+4. Doorbell — send the task with the review material INLINE, never wait:
 
    ```
    node game/scripts/chatgpt-web-review.mjs \
-     --send "[C2C] go <name> · ROUND <n> — <task summary> · <PR url>" \
+     --prompt-file .c2c/mailbox/go-<name>.md \
      --send-only --chat-url "$(cat .c2c/chat-url.txt)"
    ```
+
+   where `go-<name>.md` starts with the control line
+   `[C2C] go <name> · ROUND <n> — <task summary>` then carries the diff /
+   context verbatim (ChatGPT cannot fetch URLs — see transport notes).
 
    Send failure (exit 4) → tell the user to type `go <name>` in the C2C
    chat themselves. `go <name>` = NEW task; `continue <name>` = resume an

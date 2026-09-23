@@ -55,10 +55,13 @@ dedicated conversation URL in `.c2c/chat-url.txt` (requires a logged-in profile
 — anonymous chats have no persistent URLs).
 
 ```bash
-# Doorbell — send the control line, never wait inline (exit right after send)
+# Doorbell — control line + INLINE review material, never wait inline.
+# ChatGPT in this runtime CANNOT fetch URLs (probe-r5: DisabledError) —
+# embed the diff/context in the message, never just a PR link.
 node game/scripts/chatgpt-web-review.mjs \
-  --send "[C2C] go <name> · ROUND <n> — <task summary> · <PR url>" \
+  --prompt-file .c2c/mailbox/go-<name>.md \
   --send-only --chat-url "$(cat .c2c/chat-url.txt)"
+# go-<name>.md = "[C2C] go <name> · ROUND <n> — <summary>" + diff verbatim
 
 # Poll — wait for the reply, validate STATE/END markers, materialize inbox
 node game/scripts/chatgpt-web-review.mjs \
