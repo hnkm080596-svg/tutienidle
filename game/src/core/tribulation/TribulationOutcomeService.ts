@@ -267,6 +267,10 @@ export class TribulationOutcomeService {
     // idempotent and owned by GameManager; the service only sequences.
     gameManager.realmAdvanceOps.grantCultivationPathRealmReward(player, player.realmId)
 
+    // M-F-COMPANION-GIFT - companion gift moments authored against the
+    // realm just entered fire here (write-if-absent; idempotent).
+    gameManager.realmAdvanceOps.applyCompanionGiftRealmTransition(player)
+
     // Spec SS4.3/SS4.4: Great Dao victory converts the penalty talent into
     // the permanent reward talent.
     let talentConverted = false

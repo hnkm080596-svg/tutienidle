@@ -10,7 +10,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useNotificationStore } from '@/stores/notification'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import GameButton from '@/components/common/GameButton.vue'
-import { BETA_COMPANIONS } from '@/data/companion/Companions'
+import { companionAcquirablePool } from '@/core/companion/CompanionAvailability'
 import type { CompanionDefinition } from '@/data/companion/Companions'
 import { EXCHANGE_COST } from '@/core/game/GameManagerCompanionOps'
 import type { ExchangeCompanionResult } from '@/core/game/GameManagerCompanionOps'
@@ -65,6 +65,12 @@ function buildRow(definition: CompanionDefinition): ExchangeRow {
   }
 }
 
+// M-F-COMPANION-GIFT - an empty acquirable pool (closed flag or an
+// authored-empty future pool) is an explicit valid state: the surface
+// says WHY instead of rendering zero exchange rows, and points at the
+// gift tab where Beta companions actually arrive.
+const poolEnabled = computed(() => companionAcquirablePool().length > 0)
+
 const groups = computed<GradeGroup[]>(() => {
   stateVersion.value
 
@@ -73,7 +79,9 @@ const groups = computed<GradeGroup[]>(() => {
       grade,
       // P7-M-G: rows mirror the Beta-acquirable pool - offering an
       // exchange row for a non-acquirable def would be a UI lie.
-      rows: BETA_COMPANIONS.filter((definition) => definition.grade === grade).map(buildRow),
+      rows: companionAcquirablePool()
+        .filter((definition) => definition.grade === grade)
+        .map(buildRow),
     }))
     .filter((group) => group.rows.length > 0)
 })
@@ -94,6 +102,8 @@ function exchangeErrorMessage(reason: Extract<ExchangeCompanionResult, { ok: fal
       return t('duyenPhan.errors.constellationMaxed', { max: MAX_CONSTELLATION_RANK })
     case 'insufficient_duyen_phan':
       return t('duyenPhan.errors.insufficientDuyenPhan')
+    case 'pool_unavailable':
+      return t('duyenPhan.errors.poolUnavailable')
     case 'realm_locked':
       return t('duyenPhan.errors.realmLocked')
     case 'no_active_player':
@@ -118,6 +128,10 @@ function onExchange(definitionId: string) {
   <section class="duyen-phan">
     <p class="duyen-phan__balance">
       {{ t('duyenPhan.balance', { count: formatNumber(duyenPhan) }) }}
+    </p>
+
+    <p v-if="!poolEnabled" class="duyen-phan__unavailable">
+      {{ t('duyenPhan.unavailable') }}
     </p>
 
     <div v-for="group in groups" :key="group.grade" class="duyen-phan__group">
@@ -157,7 +171,7 @@ function onExchange(definitionId: string) {
       </div>
     </div>
 
-    <p v-if="groups.length === 0" class="duyen-phan__empty">{{ t('duyenPhan.empty') }}</p>
+    <p v-if="poolEnabled && groups.length === 0" class="duyen-phan__empty">{{ t('duyenPhan.empty') }}</p>
   </section>
 </template>
 
@@ -173,6 +187,15 @@ function onExchange(definitionId: string) {
   font-size: var(--text-sm);
   color: var(--mineral-gold);
   font-weight: 700;
+}
+
+.duyen-phan__unavailable {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px dashed color-mix(in srgb, var(--mineral-gold) 45%, var(--paper-line));
+  border-radius: var(--radius-md);
+  color: var(--paper-text-soft);
+  font-size: var(--text-sm);
 }
 
 .duyen-phan__group {

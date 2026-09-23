@@ -17,11 +17,31 @@ import WorkerLodgePanel from './WorkerLodgePanel.vue'
 import { GameManager } from '@/core/game/GameManager'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
+import { useNotificationStore } from '@/stores/notification'
 import { buildings } from '@/data/building/buildings'
 import { materials } from '@/data/materials/materials'
 import { BETA_COMPANIONS } from '@/data/companion/Companions'
+import type { CompanionDefinition } from '@/data/companion/Companions'
 import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
+
+// M-F-COMPANION-GIFT: the Beta pull pool is closed - inject
+// companionAcquirablePool() so the live-pull success paths stay
+// exercisable (architecture kept) and the closed-pool surfaces are the
+// default (null override = real pool = [] under the Beta flag).
+let acquirablePoolOverride: readonly CompanionDefinition[] | null = null
+vi.mock('@/core/companion/CompanionAvailability', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@/core/companion/CompanionAvailability')>()
+  return {
+    ...actual,
+    companionAcquirablePool: () =>
+      acquirablePoolOverride ?? actual.companionAcquirablePool(),
+  }
+})
+function openPullPool(): void {
+  acquirablePoolOverride = BETA_COMPANIONS
+}
 
 const WOOD = { id: 'test_wood', name: 'Linh Mộc Test', category: 'wood' as const, sourceType: 'building' as const }
 
@@ -52,6 +72,7 @@ function makeDeps(panel: unknown) {
 afterEach(() => {
   document.body.innerHTML = ''
   vi.restoreAllMocks()
+  acquirablePoolOverride = null
 })
 
 describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
@@ -273,7 +294,7 @@ describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
       deps.container.querySelectorAll<HTMLButtonElement>('.worker-lodge-panel__tabs button'),
     ).map((tab) => tab.textContent?.trim())
 
-    expect(tabs).toEqual(['Nhân Công', 'Chiêu Mộ', 'Đổi Duyên Phận'])
+    expect(tabs).toEqual(['Nhân Công', 'Quà Tặng', 'Chiêu Mộ', 'Đổi Duyên Phận'])
 
     const text = deps.container.textContent ?? ''
 
@@ -298,10 +319,31 @@ describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
     deps.app.unmount()
   })
 
-  it('chieu_mo tab: pull button disabled without a Chieu Hien Lenh token', async () => {
+  // M-F-COMPANION-GIFT: with the pool closed the pull surface shows the
+  // release-reason unavailable block (and the Qua Tang pointer); the
+  // button stays disabled regardless of the token balance.
+  it('chieu_mo tab: closed pool renders the unavailable block and disables pull', async () => {
     const deps = mountWorkerLodge()
 
-    await openTab(deps.container, 1)
+    await openTab(deps.container, 2)
+
+    const button = pullButton(deps.container)
+    expect(button).not.toBeNull()
+    expect(button!.disabled).toBe(true)
+
+    const unavailable = deps.container.querySelector('.chieu-mo__unavailable')
+    expect(unavailable).not.toBeNull()
+    expect(unavailable!.textContent ?? '').toContain('Chưa mở trong bản hiện tại')
+    expect(unavailable!.textContent ?? '').toContain('Quà Tặng')
+
+    deps.app.unmount()
+  })
+
+  it('chieu_mo tab: pull button disabled without a Chieu Hien Lenh token (open pool)', async () => {
+    openPullPool()
+    const deps = mountWorkerLodge()
+
+    await openTab(deps.container, 2)
 
     const button = pullButton(deps.container)
 
@@ -316,7 +358,7 @@ describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
 
     deps.player.companionPullsSinceRare = 12
 
-    await openTab(deps.container, 1)
+    await openTab(deps.container, 2)
 
     expect(deps.container.textContent ?? '').toContain('12/30')
 
@@ -324,6 +366,7 @@ describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
   })
 
   it('chieu_mo tab: duplicate pull renders reveal card with constellationRankAfter', async () => {
+    openPullPool()
     const deps = mountWorkerLodge()
 
     // Owning every acquirable definition (P7-M-G: the Beta pool) makes
@@ -339,11 +382,11 @@ describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
     }))
 
     deps.gameManager.materialBag.add(PULL_TOKEN, 1)
-    // Beta pool is {huyen, dia} — pin the roll to huyen (than_nong) so the
+    // Beta pool is {huyen, dia} - pin the roll to huyen (than_nong) so the
     // pity counter deterministically keeps counting (a dia roll resets).
     vi.spyOn(Math, 'random').mockReturnValue(0.1)
 
-    await openTab(deps.container, 1)
+    await openTab(deps.container, 2)
 
     const button = pullButton(deps.container)!
 
@@ -367,11 +410,12 @@ describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
   })
 
   it('duyen_phan tab: exchange button disabled when Duyen Phan is short', async () => {
+    openPullPool()
     const deps = mountWorkerLodge()
 
     deps.player.duyenPhan = 0
 
-    await openTab(deps.container, 2)
+    await openTab(deps.container, 3)
 
     const buttons = exchangeButtons(deps.container)
 
@@ -383,6 +427,7 @@ describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
   })
 
   it('duyen_phan tab: constellation-maxed companion stays disabled even with enough points', async () => {
+    openPullPool()
     const deps = mountWorkerLodge()
 
     deps.player.duyenPhan = 1000
@@ -397,7 +442,7 @@ describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
       },
     ]
 
-    await openTab(deps.container, 2)
+    await openTab(deps.container, 3)
 
     const rows = Array.from(deps.container.querySelectorAll<HTMLElement>('.duyen-phan__row'))
 
@@ -419,12 +464,13 @@ describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
   })
 
   it('duyen_phan tab: exchange spends Duyen Phan and grants the companion', async () => {
+    openPullPool()
     const deps = mountWorkerLodge()
 
-    // Beta pool row 0 = than_nong (huyen) — costs EXCHANGE_COST.huyen = 30.
+    // Beta pool row 0 = than_nong (huyen) - costs EXCHANGE_COST.huyen = 30.
     deps.player.duyenPhan = 30
 
-    await openTab(deps.container, 2)
+    await openTab(deps.container, 3)
 
     const button = exchangeButtons(deps.container)[0]!
 
@@ -437,6 +483,104 @@ describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
     expect(
       deps.player.companions.some((instance) => instance.definitionId === BETA_COMPANIONS[0]!.id),
     ).toBe(true)
+
+    deps.app.unmount()
+  })
+
+  // M-F-COMPANION-GIFT: closed pool replaces the exchange rows with the
+  // unavailable copy - the surface must say WHY, not render zero rows.
+  it('duyen_phan tab: closed pool replaces rows with the unavailable block', async () => {
+    const deps = mountWorkerLodge()
+
+    deps.player.duyenPhan = 1000
+
+    await openTab(deps.container, 3)
+
+    expect(deps.container.querySelectorAll('.duyen-phan__row')).toHaveLength(0)
+    const unavailable = deps.container.querySelector('.duyen-phan__unavailable')
+    expect(unavailable).not.toBeNull()
+    expect(unavailable!.textContent ?? '').toContain('Chưa mở trong bản hiện tại')
+    expect(unavailable!.textContent ?? '').toContain('Quà Tặng')
+
+    deps.app.unmount()
+  })
+})
+
+// M-F-COMPANION-GIFT - the Qua Tang mail/gift surface: pending records
+// claim through the ops transaction; the ops `kind:'loot'` push is the
+// SINGLE success-notification owner (the UI only warns on failure).
+describe('qua_tang gift tab (M-F-COMPANION-GIFT)', () => {
+  it('renders the pending gift and an enabled claim button', async () => {
+    const deps = mountWorkerLodge()
+    deps.player.companionGifts.push({
+      id: 'gift_than_nong_foundation_entry',
+      definitionId: 'than_nong',
+      claimed: false,
+    })
+
+    await openTab(deps.container, 1)
+
+    const button = deps.container.querySelector<HTMLButtonElement>('.qua-tang__claim')
+    expect(button).not.toBeNull()
+    expect(button!.disabled).toBe(false)
+    expect(deps.container.textContent ?? '').toContain('Thần Nông')
+
+    deps.app.unmount()
+  })
+
+  it('claim grants the companion once, marks claimed, and pushes exactly one loot toast', async () => {
+    const deps = mountWorkerLodge()
+    deps.player.companionGifts.push({
+      id: 'gift_than_nong_foundation_entry',
+      definitionId: 'than_nong',
+      claimed: false,
+    })
+
+    await openTab(deps.container, 1)
+
+    deps.container.querySelector<HTMLButtonElement>('.qua-tang__claim')!.click()
+    await nextTick()
+
+    expect(deps.player.companions.map((instance) => instance.definitionId)).toEqual([
+      'than_nong',
+    ])
+    expect(deps.player.companionGifts[0]!.claimed).toBe(true)
+
+    // Single-owner: exactly ONE success notification - the ops loot
+    // event on the manager queue; the notification store gets nothing.
+    const notifications = deps.gameManager.drainNotifications()
+    expect(notifications).toHaveLength(1)
+    expect(notifications[0]!.kind).toBe('loot')
+    expect(notifications[0]!.message).toContain('Thần Nông')
+    expect(useNotificationStore(deps.pinia).toasts).toHaveLength(0)
+
+    deps.app.unmount()
+  })
+
+  it('a claimed record renders in history and re-claim is a silent no-op', async () => {
+    const deps = mountWorkerLodge()
+    deps.player.companionGifts.push({
+      id: 'gift_than_nong_foundation_entry',
+      definitionId: 'than_nong',
+      claimed: true,
+    })
+
+    await openTab(deps.container, 1)
+
+    // Claimed record sits in the history list - no live claim button.
+    expect(deps.container.querySelector('.qua-tang__claim')).toBeNull()
+    expect(deps.container.querySelector('.qua-tang__claimed')).not.toBeNull()
+    expect(deps.gameManager.drainNotifications()).toHaveLength(0)
+
+    deps.app.unmount()
+  })
+
+  it('empty state renders when no gifts exist', async () => {
+    const deps = mountWorkerLodge()
+
+    await openTab(deps.container, 1)
+
+    expect(deps.container.querySelector('.qua-tang__empty')).not.toBeNull()
 
     deps.app.unmount()
   })

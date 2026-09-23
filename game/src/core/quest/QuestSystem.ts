@@ -4,7 +4,10 @@ import type { QuestManager } from './QuestManager'
 import type { QuestProgress } from './QuestProgress'
 import type { PlayerData } from '../player/Player'
 import { getRealmIndex } from '../realm/realmSystem'
-import { isBreakthroughAcquisitionEnabled } from '../realm/ReleasePolicy'
+import {
+  isBreakthroughAcquisitionEnabled,
+  isCompanionPullTokenSourceSuppressed,
+} from '../realm/ReleasePolicy'
 import type { RewardReceiver, RewardSystem } from '../reward/RewardSystem'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { MaterialBag } from '../material/MaterialBag'
@@ -29,7 +32,28 @@ export interface QuestBagDeps {
 }
 
 function isUnlocked(quest: Quest, player: PlayerData): boolean {
-  return !quest.requiredRealmId || getRealmIndex(player.realmId) >= getRealmIndex(quest.requiredRealmId)
+  return (
+    (!quest.requiredRealmId ||
+      getRealmIndex(player.realmId) >= getRealmIndex(quest.requiredRealmId)) &&
+    !questIsTokenOnlySource(quest)
+  )
+}
+
+// M-F-COMPANION-GIFT - a quest whose ENTIRE reward set is censused
+// pull-token material lines is a pure token faucet; while the pull pool
+// is closed it never activates (the recurring source is suppressed at
+// origination). Mixed-reward quests stay unlocked - only their token
+// lines are filtered at claim below.
+function questIsTokenOnlySource(quest: Quest): boolean {
+  const itemDrops = quest.reward.itemDrops ?? []
+  return (
+    itemDrops.length > 0 &&
+    quest.reward.reward === undefined &&
+    itemDrops.every(
+      (drop) =>
+        drop.kind === 'material' && isCompanionPullTokenSourceSuppressed(drop.itemId),
+    )
+  )
 }
 
 function dayBucket(ms: number): number {
@@ -187,6 +211,12 @@ export class QuestSystem {
         // M-F-CEILING - a breakthrough-scoped reward stays dormant while
         // release policy closes the transition into its tagged realm.
         if (!isBreakthroughAcquisitionEnabled(template.breakthroughRealmId)) {
+          continue
+        }
+
+        // M-F-COMPANION-GIFT - censused pull-token reward lines stay
+        // dormant while the pull pool is closed; sibling lines still land.
+        if (isCompanionPullTokenSourceSuppressed(drop.itemId)) {
           continue
         }
 

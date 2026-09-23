@@ -124,4 +124,10 @@
 // offeredTalentIds} - the persisted mandatory UPGRADE/NEW decision that
 // locks a settled breakthrough until resolved). Save v75 is rejected
 // (dev phase, no migration, no compat translator).
-export const CURRENT_SAVE_VERSION = 76 as const
+// v77 (2026-09-23, M-F-COMPANION-GIFT mail/gift acquisition): PlayerData
+// gains required companionGifts (CompanionGiftRecord[] - authored
+// claimable-gift records {id, definitionId, claimed}; written by
+// issueCompanionGifts on authored trigger moments, claimed through
+// claimCompanionGift). Save v76 is rejected (dev phase, no migration,
+// no compat translator).
+export const CURRENT_SAVE_VERSION = 77 as const
