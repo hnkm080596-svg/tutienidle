@@ -44,7 +44,7 @@ Prefer targeted tests during implementation and the full verification gate befor
 ## Context policy
 
 - Start a new agent session for each new task so stale decisions do not leak across work.
-- The implementing agent leaves a verified commit on its task branch and does not merge it.
-- The user directly assigns Codex or Claude Code to review and merge a completed task branch.
-- The reviewer reruns the verification gate and merges only with a clean primary worktree and no unresolved findings.
+- The implementing agent leaves a verified commit on its task branch and opens a PR.
+- Merge policy (cloud workflow): the agent may merge once all test gates pass — P3 verification, P18 OCR, P4 adversarial QA, P5 sequential review, and the C2C external review (via `chatgpt-web-review` skill) — with no unresolved Medium-or-higher findings. No per-PR merge approval is required; escalate only on gate failures or conflicts.
+- The reviewer path still applies for a completed task branch: rerun the verification gate and merge only with a clean primary worktree and no unresolved findings.
 - Treat this file as orientation, then read only task-relevant code and diffs.
