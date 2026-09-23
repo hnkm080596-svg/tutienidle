@@ -17,14 +17,39 @@
 // via collectBaseStatDeltas - assembled into the pipeline base by
 // resolvePlayerStatAssembly, never persisted into player.baseStats and
 // never emitted as modifiers.
+//
+// M-F-BODY-CORE - chapter KIND is first-class: `chapterKind` is the
+// authored game-design classification (refinement | meridian |
+// zhou_tian), orthogonal to the emission `kind` discriminant. A future
+// Chu Thien chapter declares chapterKind 'zhou_tian' and reuses the
+// shared contract + registry without touching dispatch; per-kind
+// contract extensions attach beside this field as they are authored.
 import type { PlayerData } from '../../player/Player'
 import type { StatType } from '../../stats/StatTypes'
-import type { PhysiqueGradeId } from '../../../data/realm/PhysiqueLadder'
+import {
+  getPhysiqueGradeIndex,
+  isPhysiqueGradeId,
+  PHYSIQUE_GRADES,
+  type PhysiqueGradeId,
+} from '../../../data/realm/PhysiqueLadder'
 import { physiqueEssenceGradeOf } from '../../../data/realm/PhysiqueEssence'
 import { bodyRefinementChapter } from './BodyRefinementChapter'
 import { meridianChapter } from './MeridianChapter'
 
 export type BodyChapterId = 'body_refinement' | 'meridian'
+
+// M-F-BODY-CORE - the chapter-kind vocabulary. 'zhou_tian' is declared
+// now so the seam exists before M-F-CHU-THIEN authors the chapter that
+// uses it; declaring the rung early does not add a chapter.
+export const BODY_CHAPTER_KINDS = ['refinement', 'meridian', 'zhou_tian'] as const
+
+export type BodyChapterKind = (typeof BODY_CHAPTER_KINDS)[number]
+
+const BODY_CHAPTER_KIND_SET: ReadonlySet<string> = new Set(BODY_CHAPTER_KINDS)
+
+export function isBodyChapterKind(value: unknown): value is BodyChapterKind {
+  return typeof value === 'string' && BODY_CHAPTER_KIND_SET.has(value)
+}
 
 // M-QI-07 (QI-D4) - a chapter may declare ONE physique advancement:
 // completing it moves player.physiqueGrade exactly from -> to (one
@@ -80,11 +105,25 @@ export interface BodyProgressionIssue {
 // are identical for both emission kinds.
 interface BodyChapterShared {
   readonly id: BodyChapterId
+  // M-F-BODY-CORE - authored chapter classification; drives nothing yet
+  // beyond classification + registry validation (per-kind contracts
+  // extend beside it as later missions author them).
+  readonly chapterKind: BodyChapterKind
   readonly currency: BodyChapterCurrency
   readonly auxCurrency?: BodyChapterCurrency
   // M-QI-07 - absent on chapters that never transform the physique
   // (meridian declares none; only body_refinement binds pham -> bao).
   readonly physiqueAdvancement?: PhysiqueAdvancement
+  // M-F-BODY-CORE - the body-owned base-stat channel: ANY chapter kind
+  // may contribute flat base-stat deltas into assembledBase via
+  // collectBodyBaseStatDeltas. Optional capability on the shared
+  // contract so later missions (BODY-PERFECTION +10pp, CHU-THIEN values)
+  // ride it without a new emission kind; 'baseStat' chapters re-declare
+  // it required. Magnitudes stay deferred to the balance phase - this
+  // owns only the contribution path.
+  readonly collectBaseStatDeltas?: (
+    player: PlayerData,
+  ) => Partial<Record<StatType, number>>
   // Applies available currency units to the chapter state, returns the
   // amount actually consumed. Does NOT rebuild stat effects - the system
   // dispatch owns the exactly-once rebuild after a successful mutation.
@@ -117,7 +156,9 @@ export interface ModifierBodyChapter extends BodyChapterShared {
 // never written into player.baseStats. `scrubLegacyModifiers` removes
 // stale prefix-owned slices left by the retired percent model so the
 // "chapter state is the only authority" invariant still holds at
-// invest/restore.
+// invest/restore. `collectBaseStatDeltas` is REQUIRED here (a baseStat
+// chapter's whole emission IS the delta channel); other kinds may
+// additionally opt in via the shared optional slot.
 export interface BaseStatBodyChapter extends BodyChapterShared {
   readonly kind: 'baseStat'
   readonly legacyModifierPrefix: string
@@ -144,6 +185,158 @@ export const BODY_CHAPTERS: readonly BodyChapterDefinition[] = [
   meridianChapter,
 ]
 
+// M-F-BODY-CORE - registry validation: the chapter catalog is authored
+// data, so malformed structure fails closed (duplicates, undeclared
+// kinds, emission-contract gaps, a chapterKind outside the vocabulary,
+// a persisted-state slice with no chapter or a chapter with no slice,
+// a non-contiguous physiqueAdvancement chain). Tests exercise the
+// validator with synthetic catalogs; assertBodyChapterRegistry runs it
+// over the real registry once at module load - corrupt authoring throws
+// at import instead of silently reaching invest/restore.
+export function validateBodyChapterRegistry(
+  chapters: readonly BodyChapterDefinition[],
+): BodyProgressionIssue[] {
+  const issues: BodyProgressionIssue[] = []
+  const seenIds = new Set<string>()
+  const froms = new Set<PhysiqueGradeId>()
+
+  for (const chapter of chapters) {
+    const path = `bodyChapters.${chapter.id}`
+
+    if (seenIds.has(chapter.id)) {
+      issues.push({ path, message: `duplicate chapter id '${chapter.id}'` })
+    }
+    seenIds.add(chapter.id)
+
+    if (!isBodyChapterKind(chapter.chapterKind)) {
+      issues.push({
+        path: `${path}.chapterKind`,
+        message: `unknown chapter kind '${String(chapter.chapterKind)}'`,
+      })
+    }
+
+    // Runtime twin of the emission-kind discriminant: a modifier
+    // chapter must emit modifiers, a baseStat chapter must implement
+    // both halves of its channel.
+    if (chapter.kind === 'modifier') {
+      if (typeof chapter.applyModifiers !== 'function') {
+        issues.push({ path: `${path}.applyModifiers`, message: 'modifier chapter must implement applyModifiers' })
+      }
+    } else if (chapter.kind === 'baseStat') {
+      if (typeof chapter.collectBaseStatDeltas !== 'function') {
+        issues.push({ path: `${path}.collectBaseStatDeltas`, message: 'baseStat chapter must implement collectBaseStatDeltas' })
+      }
+      if (typeof chapter.scrubLegacyModifiers !== 'function') {
+        issues.push({ path: `${path}.scrubLegacyModifiers`, message: 'baseStat chapter must implement scrubLegacyModifiers' })
+      }
+    } else {
+      issues.push({
+        path: `${path}.kind`,
+        message: `unknown emission kind '${String((chapter as { kind: unknown }).kind)}'`,
+      })
+    }
+
+    const advancement = chapter.physiqueAdvancement
+
+    if (advancement !== undefined) {
+      // INV-9 (M-QI-07, enforced as registry validation): one chapter
+      // owns one transition; a transition spans exactly one rung.
+      if (froms.has(advancement.from)) {
+        issues.push({
+          path: `${path}.physiqueAdvancement`,
+          message: `advancement source '${advancement.from}' already owned by another chapter`,
+        })
+      }
+      froms.add(advancement.from)
+
+      if (!isPhysiqueGradeId(advancement.from) || !isPhysiqueGradeId(advancement.to)) {
+        issues.push({
+          path: `${path}.physiqueAdvancement`,
+          message: 'advancement rungs must be physique ladder members',
+        })
+      } else if (getPhysiqueGradeIndex(advancement.to) !== getPhysiqueGradeIndex(advancement.from) + 1) {
+        issues.push({
+          path: `${path}.physiqueAdvancement`,
+          message: 'advancement must span exactly one ladder rung',
+        })
+      }
+    }
+  }
+
+  // INV-9 contiguity: the 'from' set must be exactly the first N ladder
+  // rungs - a chain that skips a rung or does not start at 'pham' is
+  // dead authored data (derivePhysiqueGrade could never walk past the
+  // gap, so it also stays unreached at runtime).
+  const sortedFroms = [...froms].sort(
+    (a, b) => getPhysiqueGradeIndex(a) - getPhysiqueGradeIndex(b),
+  )
+  const expectedFroms = PHYSIQUE_GRADES.slice(0, sortedFroms.length).map(def => def.id)
+
+  if (sortedFroms.some((from, index) => from !== expectedFroms[index])) {
+    issues.push({
+      path: 'bodyChapters.physiqueAdvancement',
+      message: 'advancement sources must form a contiguous prefix from pham',
+    })
+  }
+
+  // State-record coherence: every registered chapter owns exactly one
+  // persisted slice and no orphan slice exists (dispatch, defaults,
+  // persisted validation and integrity all assume the 1:1 keying).
+  const defaultKeys = new Set<string>(Object.keys(createDefaultBodyProgression()))
+
+  for (const chapter of chapters) {
+    if (!defaultKeys.has(chapter.id)) {
+      issues.push({
+        path: `bodyProgression.${chapter.id}`,
+        message: 'registered chapter has no default state slice',
+      })
+    }
+  }
+
+  for (const key of defaultKeys) {
+    if (!chapters.some(chapter => chapter.id === key)) {
+      issues.push({
+        path: `bodyProgression.${key}`,
+        message: `default state slice '${key}' has no registered chapter`,
+      })
+    }
+  }
+
+  return issues
+}
+
+export function assertBodyChapterRegistry(): void {
+  const issues = validateBodyChapterRegistry(BODY_CHAPTERS)
+
+  // The by-id map is hand-authored beside the list - it must resolve
+  // every chapter and hold nothing else.
+  for (const chapter of BODY_CHAPTERS) {
+    if (BODY_CHAPTER_BY_ID[chapter.id] !== chapter) {
+      issues.push({
+        path: `bodyChapters.${chapter.id}`,
+        message: 'BODY_CHAPTER_BY_ID does not resolve to the registered chapter',
+      })
+    }
+  }
+
+  const listedIds = new Set<string>(BODY_CHAPTERS.map(chapter => chapter.id))
+
+  for (const key of Object.keys(BODY_CHAPTER_BY_ID)) {
+    if (!listedIds.has(key)) {
+      issues.push({
+        path: `bodyChapters.${key}`,
+        message: 'BODY_CHAPTER_BY_ID holds an unregistered chapter',
+      })
+    }
+  }
+
+  if (issues.length > 0) {
+    throw new Error(
+      `BodyProgression registry violation: ${issues.map(issue => `${issue.path}: ${issue.message}`).join('; ')}`,
+    )
+  }
+}
+
 export const BODY_CHAPTER_BY_ID: Readonly<Record<BodyChapterId, BodyChapterDefinition>> = {
   body_refinement: bodyRefinementChapter,
   meridian: meridianChapter,
@@ -158,6 +351,11 @@ export function getBodyChapterDefinition(id: BodyChapterId): BodyChapterDefiniti
 
   return chapter
 }
+
+// Module-load registry gate (fail-closed authored-data rule): runs once
+// at import - corrupt authoring throws here, never silently at
+// invest/restore.
+assertBodyChapterRegistry()
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
