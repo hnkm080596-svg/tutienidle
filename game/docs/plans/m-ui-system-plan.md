@@ -29,9 +29,12 @@ worktree from `origin/p7/truc-co`; the spec/plan docs themselves were authored o
 (Copied verbatim from the spec — every task implicitly includes them.)
 
 - CSS-only FX; no JS animation libs, no canvas, no new runtime deps.
-- `--sys-*` tokens defined once, in `system-theme.css`; never redefine `--ink-*`, `--gold-*`,
-  `--paper-*`, `--surface-*`, `--chrome-*`, `--frame-*`, `--fx-*`, `--scrim*`, `--text-*`,
-  `--rank-*`, `--grade-*`, `--el-*`, `--bar-*`.
+- Canonical `:root` `--sys-*` definitions exactly once, in `system-theme.css`; scoped
+  `--sys-*` assignments are permitted under the approved system boundary (`.sys-`/
+  `variant--system`-anchored selectors or inline styles on opted-in surfaces — Task 4 uses
+  panel-internal remaps). Never redefine `--ink-*`, `--gold-*`, `--paper-*`, `--surface-*`,
+  `--chrome-*`, `--frame-*`, `--fx-*`, `--scrim*`, `--text-*`, `--rank-*`, `--grade-*`,
+  `--el-*`, `--bar-*`.
 - Every selector in `system-theme.css` anchored to `.sys-*` / `*-variant--system` classes.
 - Opt-in only: `.sys-surface`, `Sys*` components, `variant="system"` props. Base classes stay;
   system styles are additive overrides living only in `system-theme.css`.
@@ -50,6 +53,8 @@ worktree from `origin/p7/truc-co`; the spec/plan docs themselves were authored o
 | File | Action | Responsibility |
 |---|---|---|
 | `src/assets/system-theme.css` | Create | All `--sys-*` tokens, `.sys-surface` recipe, `.sys-*` effect utilities, `variant--system` override styles, Chakra Petch `@import`, reduced-motion + `.sys-fx-low` blocks |
+| `src/composables/useSystemRimAuthority.ts` | Create | Ordered active-claimant rim authority: `useSystemRimAuthority(id, active)` → `{ isTop }` (claim/promote on activate, release on deactivate/unmount) |
+| `src/composables/useSystemRimAuthority.test.ts` | Create | Authority unit tests: order, promote, release, unmount, mounted-but-hidden no-claim |
 | `src/main.ts` | Modify | Add `import './assets/system-theme.css'` after `theme.css` |
 | `src/components/common/system/SysPanel.vue` | Create | Surface container: corners, rim tiers, bloom |
 | `src/components/common/system/SysBar.vue` | Create | System progress readout |
@@ -111,10 +116,14 @@ Tasks are ordered so every task leaves the app consistent and revert-clean. T1�
 
 /* Surface recipe — opaque floor UNDER translucent tint (a11y spec 7.1). */
 .sys-surface {
+  /* Layer order per spec 3.3: grain -> top tint -> translucent body gradient
+     -> opaque floor LAST (a raw color layer is only valid as the final
+     background layer — do not hoist var(--sys-surface) above this line or
+     the whole declaration drops). */
   background:
     var(--sys-grain) 0 0 / 160px 160px repeat,
     linear-gradient(180deg, rgba(56, 225, 255, .04), transparent 30%),
-    var(--sys-surface),
+    linear-gradient(180deg, var(--sys-surface), var(--sys-surface)),
     var(--sys-surface-solid);
   backdrop-filter: blur(10px);
   border: 1px solid var(--sys-line);
@@ -241,13 +250,26 @@ import './assets/system-theme.css'
 
 - [ ] **Step 4: commit** `feat(ui): M-UI-SYSTEM system-theme.css token + effect layer`.
 
-### Task 2 — Sys* primitives (inert until consumed)
+### Task 2 — Rim authority + Sys* primitives (inert until consumed)
 
-**Files:** Create the five components under `src/components/common/system/`.
+**Files:** Create `src/composables/useSystemRimAuthority.ts` and its test, then the five
+components under `src/components/common/system/`.
 
-**Interfaces (exact contracts — consumers in T4-T7 rely on these):**
+**Interfaces (exact contracts — consumers in T3-T7 rely on these):**
 
 ```ts
+// useSystemRimAuthority.ts — module-scoped ordered set of ACTIVE claimants.
+// ONE public seam used by SysPanel AND by non-SysPanel surfaces (LeftPanel drawer).
+import type { ComputedRef, MaybeRefOrGetter } from 'vue'
+export function useSystemRimAuthority(
+  id: string,
+  active: MaybeRefOrGetter<boolean>,
+): { isTop: ComputedRef<boolean> }
+// - active -> true : claim(id) = insert/move id to TOP (promotion on every activation)
+// - active -> false: release(id) = remove id from the set (mounted-but-hidden holds none)
+// - unmount        : release(id)
+// - isTop          : this id is the current topmost ACTIVE claimant
+
 // SysPanel.vue
 withDefaults(defineProps<{
   variant?: 'primary' | 'interactive' | 'flat'
@@ -262,7 +284,8 @@ withDefaults(defineProps<{
 // variant === 'primary' marks the panel rim-ELIGIBLE; the claim itself is driven only by
 // rimActive via useSystemRimAuthority(): claim+promote when rimActive flips true, release
 // when false or on unmount — mounted-but-hidden overlays hold no claim (spec 4.1.1).
-// 'sys-rim--live' applies only while this panel is the authority's topmost active claimant.
+// 'sys-rim--live' applies only while this panel is the authority's topmost active claimant;
+// internally: useSystemRimAuthority(panelId, () => props.variant === 'primary' && props.rimActive)
 
 // SysBar.vue — same aria contract as primitives/Bar.vue
 withDefaults(defineProps<{
@@ -305,12 +328,19 @@ const emit = defineEmits<{ close: [] }>()
 // on close; holds the live rim while the authority's topmost active claimant (spec 4.1.1)
 ```
 
-- [ ] **Step 1:** scaffold all five SFCs with the contracts above; component `<style scoped>`
+- [ ] **Step 1:** write the failing authority test — `useSystemRimAuthority.test.ts` covers:
+  single claimant isTop; second claim promotes; release pops to previous; re-activation
+  promotes; deactivation while mounted releases (no claim); unmount releases.
+- [ ] **Step 2:** run it — `npx vitest run src/composables/useSystemRimAuthority.test.ts` →
+  FAIL (module missing).
+- [ ] **Step 3:** implement `useSystemRimAuthority.ts` minimal → same command → PASS.
+- [ ] **Step 4:** scaffold the five SFCs with the contracts above; component `<style scoped>`
   holds only layout/structure — every color/glow/border value references `--sys-*` (or lands
-  in `system-theme.css` if it must override base tokens).
-- [ ] **Step 2:** `npm run type-check` + `npx vitest run tests/architecture` (guards unaffected:
-  no consumer yet).
-- [ ] **Step 3:** commit `feat(ui): M-UI-SYSTEM Sys* primitives`.
+  in `system-theme.css` if it must override base tokens). SysPanel binds `isTop` to
+  `sys-rim--live`.
+- [ ] **Step 5:** `npm run type-check` + `npx vitest run tests/architecture src/composables`
+  (guards unaffected: no surface consumer yet).
+- [ ] **Step 6:** commit `feat(ui): M-UI-SYSTEM rim authority + Sys* primitives`.
 
 ### Task 3 — Shared-component variants (additive)
 
@@ -337,11 +367,13 @@ const emit = defineEmits<{ close: [] }>()
 `components/panels/CharacterDetailCard.vue`, `components/panels/CharacterPanel.vue`,
 `system-theme.css` (drawer overrides), `src/assets/ink-wash-ui-slices.json` — NOT touched.
 
-**Interfaces:** Consumes SysPanel/SysStat/SysTag/SysBar from T2. LeftPanel's drawer is the
-home-primary surface — `variant="primary"` with `rim-active="ui.characterOverlayOpen"`
-feeds the claim while the drawer is actually visible; any opened system modal promotes
-above it and takes the live rim, closing pops back to the drawer (active-claimant order —
-spec 4.1.1).
+**Interfaces:** Consumes SysStat/SysTag/SysBar + `useSystemRimAuthority` from T2. **Pinned
+LeftPanel approach:** the drawer element is a plain `<div>` (not SysPanel) — it drives the
+authority DIRECTLY: `const { isTop } = useSystemRimAuthority('hud-left', () => ui.characterOverlayOpen)`
+in `<script setup>`, binding `sys-rim--live` from `isTop` on the existing drawer root. No
+SysPanel wrapper (avoids a nested surface); the claim still reflects actual visibility via
+`characterOverlayOpen`. Any opened system modal promotes above it and takes the live rim;
+closing pops back to the drawer (active-claimant order — spec 4.1.1).
 
 - [ ] **Step 1:** `class="left-panel ink-drawer sys-surface sys-corners sys-scanlines"` (same
   for RightPanel minus the primary rim; CharacterDetailCard gets `.sys-surface`). In
@@ -447,6 +479,14 @@ In-flight PR branch `devin/1790128721-m-f-respec` touches `NodeTreePanel.vue` (+
 
 ## Revert procedure
 
-Single-step: remove `import './assets/system-theme.css'` from `src/main.ts`. All opt-in
-classes become inert; all `variant="system"` branches render their `ink` default; `Sys*`
-components degrade to unstyled-but-legible containers (only reachable where opted in).
+Two layers, matching spec §2.3:
+
+1. **Safe degrade (import removal):** remove `import './assets/system-theme.css'` from
+   `src/main.ts`. Every `.sys-*` / `variant--system` class becomes inert — surfaces stay
+   functional and legible: opt-in classes fall back to their base styles (drawers/panels
+   look ink again because base styles remain), `variant="system"` branches keep their
+   markup path (e.g. OverlayPanel still skips `InkNineSlice`) but render unstyled-yet-usable
+   chrome, `Sys*` components degrade to legible bare containers. Nothing breaks.
+2. **Exact prior appearance:** revert the opt-in markup/variant diff (the enumerable file
+   map above) — restores `variant` defaults and base classes, i.e. the pre-change markup
+   paths and their ink styling.
