@@ -150,6 +150,12 @@ export interface FormationStackSave {
 // core/player/CultivationPathKit.ts). M7 (v66): `cultivationPath` thu
 // còn union 3 base id, các id '_an' thành way. Save v64 trở xuống bị
 // từ chối — cùng convention mọi version trước.
+// version 81 (2026-09-23, M-F-BODY-HIDDEN): `luyenKhiKillsSinceBeast`
+// (scalar, v54) becomes `hiddenBeastKills: Record<channelId, number>` -
+// per-channel counter for the channel registry; ProductionSiteState
+// gains OPTIONAL `hiddenChannelCycles` (grotto per-channel cycle
+// counters). Save v80 and below is rejected - same convention as every
+// prior version.
 export interface GameSave {
   version: typeof CURRENT_SAVE_VERSION
 

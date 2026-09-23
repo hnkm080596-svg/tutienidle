@@ -32,7 +32,7 @@ Khi enemy chết trong turn engine:
 4. `getRealmRewardMultiplier` scale theo realm.
 5. Artifact EXP: `applyArtifactExperience` + `getArtifactExperienceReward`.
 6. Signature drop → loot notification với `nameSegments`/`accentColorVar` (tím cho Tinh Hoa Phàm Thể bay về người chơi).
-7. `HiddenBeastSystem.onEnemyDefeated` đếm kill Luyện Khí / reset khi giết `huyet_mong` ([enemies-stages.md](./enemies-stages.md)).
+7. `HiddenBeastSystem.onEnemyDefeated` — symmetric per-channel: giết quái ẩn của channel reset channel đó, quái khác cùng band chỉ +1 ([enemies-stages.md](./enemies-stages.md)).
 8. Boss kill → `player.bossKillCount++` (nuôi tầng Kiếm Ý — [cultivation-paths.md](./cultivation-paths.md)).
 9. Quest progress (`kind: 'kill'`) qua QuestSystem ([quests.md](./quests.md)).
 10. Battle reward summary `BattleRewardSummary` gom items cho màn hình kết quả.
@@ -40,6 +40,15 @@ Khi enemy chết trong turn engine:
 ## Notification
 
 Mỗi item → `NotificationEvent` kind `loot` (icon, nameSegments, amountLabel, accent) → NotificationQueue → toast.
+
+## Kênh nguyên liệu ẩn — `HIDDEN_MATERIAL_CHANNELS`
+
+`data/drop/HiddenMaterialChannels.ts` là registry duy nhất cho các đường kiếm nguyên liệu hoàn mỹ ẩn (spec m-f-body-hidden) — **không** nằm trên stage/family table (ba lớp trên vẫn sạch). Hai kind:
+
+- `hidden_beast` — quái ẩn trà pool spawn active theo band ([enemies-stages.md](./enemies-stages.md) §Quái ẩn); nguyên liệu đến tay qua signature drop `chance: 1` trên template quái ẩn (không `requiresModifier`), nên bound spawn = bound kiếm được.
+- `grotto` — roll ở `ProductionSystem.grantCycleRewards` khi cycle Động Thiên settle (trực tiếp hoặc offline đều vậy), trên stream `mulberry32(rollSeed ^ GROTTO_CHANNEL_SEED_TAG)` riêng nên table thường không drift. `bandRealmId` của channel so với `cycle.collectionRealmId` (đếm được ở band thấp hơn). `hiddenChannelCycles` trên site state đếm per channel, reset chỉ khi phát; khi `isBreakthroughAcquisitionEnabled` đang khóa (band mới chưa mở acquire), counter vẫn tích mà không phát — lần settle đầu sau khi mở nổ ngay đợt đã prime.
+
+Anti-frustration: mọi channel perfection BẮT BUỘC bound (`guaranteedSpawnAfterKills`/`guaranteedAfterCycles`) — luôn có worst-case hữu hạn (theo kill/spawn eligible, không phải latency). Integrity test bắt cả hai chiều: mọi id channel phát ra phải là nguyên liệu hoàn mỹ authored, và mọi id trong `BODY_PERFECTION_REALM_MATERIALS` phải có ≥1 route — qua channel, hoặc qua `VISIBLE_GRANT_SOURCES` census (quest/building grant được kiểm thật sự deliver). Không spoil vị trí: channel không xuất hiện ở stage list/hint nào.
 
 ## Liên quan
 

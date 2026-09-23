@@ -159,10 +159,11 @@ export interface PlayerData {
   // tang khong giam - counter thong ke/dieu kien chung.
   bossKillCount: number
 
-  // Quai an (spec dot-pha-loi-kiep sec.4.1c) - dem kill quai Luyen Khi tu
-  // lan giet quai an gan nhat; du 1000 mo cua so quai an tra tron pool
-  // spawn (giet quai an reset ve 0).
-  luyenKhiKillsSinceBeast: number
+  // Quai an (spec m-f-body-hidden sec.3) - per-channel kill counters
+  // keyed by channel id in HIDDEN_MATERIAL_CHANNELS: kills in a
+  // channel's band increment it, killing that channel's own beast resets
+  // only it (save v81 - replaces the scalar luyenKhiKillsSinceBeast).
+  hiddenBeastKills: Record<string, number>
 
   // Dai Dao Truc Co (spec sec.4.2/sec.4.3) - snapshot "hoan hao Pham Nhan"
   // (5/5 main stat 10/10 + Luyen Th the 6/6) chot luc bam Quan Khi,
@@ -449,7 +450,7 @@ export function createDefaultPlayer(): PlayerData {
 
     totalCultivationGained: 0,
     bossKillCount: 0,
-    luyenKhiKillsSinceBeast: 0,
+    hiddenBeastKills: {},
     mortalPerfectionAchieved: false,
     greatDaoOpportunityLost: false,
     skillInsight: 0,

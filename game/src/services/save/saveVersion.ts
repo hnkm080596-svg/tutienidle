@@ -153,4 +153,11 @@
 // assertBodyPerfectionIntegrity (authored-family, subset + realm-cap
 // rules). Save v79 is rejected (dev phase, no migration, no compat
 // translator).
-export const CURRENT_SAVE_VERSION = 80 as const
+// v81 (2026-09-23, M-F-BODY-HIDDEN hidden acquisition channels): player
+// `luyenKhiKillsSinceBeast` (scalar, v54) is replaced by
+// `hiddenBeastKills: Record<channelId, number>` - per-channel counters
+// for the generalized channel registry - and ProductionSiteState gains
+// optional `hiddenChannelCycles: Record<channelId, number>` (grotto
+// settle-cycle emission counters). Save v80 is rejected (dev phase, no
+// migration, no compat translator).
+export const CURRENT_SAVE_VERSION = 81 as const

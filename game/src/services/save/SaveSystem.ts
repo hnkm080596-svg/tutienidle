@@ -371,6 +371,9 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
       // Mission A2 — manual allocation must persist; runtime-only
       // activeWorkerSlots stays derived from live capacity (not saved).
       assignedWorkers: state.assignedWorkers,
+
+      // M-F-BODY-HIDDEN (v81) - grotto hidden-channel settle counters.
+      hiddenChannelCycles: state.hiddenChannelCycles,
     }))),
 
     alchemyJobs: detachSaveValue(gameManager.alchemySystem.getJobs()),

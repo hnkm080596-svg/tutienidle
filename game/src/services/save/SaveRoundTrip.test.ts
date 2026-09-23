@@ -79,7 +79,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
   })
 
   // Spec dot-pha-loi-kiep sec.6.1 - the v54 fields (meridian opened
-  // ids inside bodyProgression since v72, luyenKhiKillsSinceBeast,
+  // ids inside bodyProgression since v72, hiddenBeastKills since v81,
   // mortalPerfectionAchieved, greatDaoOpportunityLost) must survive
   // the JSON round-trip.
   it('save v54 với 4 fields đột phá mới round-trip nguyên vẹn', () => {
@@ -87,7 +87,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     const player = createDefaultPlayer()
 
     player.bodyProgression.meridian.openedIds = ['nham_mach', 'doi_mach']
-    player.luyenKhiKillsSinceBeast = 500
+    player.hiddenBeastKills = { huyet_mong: 500 }
     player.mortalPerfectionAchieved = true
     player.greatDaoOpportunityLost = false
 
@@ -103,9 +103,105 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     const playerData = (roundTripped as { player: typeof player }).player
 
     expect(playerData.bodyProgression.meridian.openedIds).toEqual(['nham_mach', 'doi_mach'])
-    expect(playerData.luyenKhiKillsSinceBeast).toBe(500)
+    expect(playerData.hiddenBeastKills).toEqual({ huyet_mong: 500 })
     expect(playerData.mortalPerfectionAchieved).toBe(true)
     expect(playerData.greatDaoOpportunityLost).toBe(false)
+  })
+
+  // M-F-BODY-HIDDEN (v81) - the two channel-counter maps ride the same
+  // detach->JSON->validate pipeline: player.hiddenBeastKills is required,
+  // productionSites[].hiddenChannelCycles is optional and whitelisted
+  // through the production-sites serializer + restoreStates copy.
+  it('hiddenBeastKills + hiddenChannelCycles round-trip nguyên vẹn (v81)', () => {
+    const gameManager = createBootedGameManager()
+    const player = createDefaultPlayer()
+
+    player.hiddenBeastKills = { huyet_mong: 750, fixture_beast: 12 }
+
+    const grottoSite = gameManager.productionSystem
+      .getSiteDefinitions()
+      .find((site) => site.kind === 'grotto')
+
+    expect(grottoSite).toBeDefined()
+
+    const siteState = gameManager.productionSystem.ensureSiteState(grottoSite!.siteId)
+    siteState.hiddenChannelCycles = { fixture_channel: 3 }
+
+    const save = buildGameSave(player, gameManager)
+    const roundTripped: unknown = JSON.parse(JSON.stringify(save))
+
+    expect(validateGameSaveShape(roundTripped)).toMatchObject({
+      ok: true,
+      issues: [],
+      discardedEquipmentCount: 0,
+    })
+
+    const restored = roundTripped as {
+      player: { hiddenBeastKills: Record<string, number> }
+      productionSites: Array<{ siteId: string; hiddenChannelCycles?: Record<string, number> }>
+    }
+
+    expect(restored.player.hiddenBeastKills).toEqual({ huyet_mong: 750, fixture_beast: 12 })
+
+    const restoredSite = restored.productionSites.find((site) => site.siteId === grottoSite!.siteId)
+    expect(restoredSite?.hiddenChannelCycles).toEqual({ fixture_channel: 3 })
+  })
+
+  it('hiddenBeastKills sai shape (non-object / non-int value) bị từ chối', () => {
+    const gameManager = createBootedGameManager()
+    const player = createDefaultPlayer()
+
+    const save = buildGameSave(player, gameManager)
+    const roundTripped = JSON.parse(JSON.stringify(save)) as {
+      player: Record<string, unknown>
+    }
+
+    roundTripped.player.hiddenBeastKills = 42
+    expect(validateGameSaveShape(roundTripped).ok).toBe(false)
+
+    roundTripped.player.hiddenBeastKills = { huyet_mong: 1.5 }
+    expect(validateGameSaveShape(roundTripped).ok).toBe(false)
+  })
+
+  it('hiddenBeastKills thiếu bị từ chối; luyenKhiKillsSinceBeast cũ chỉ bị whitelist ra', () => {
+    const gameManager = createBootedGameManager()
+    const player = createDefaultPlayer()
+
+    const save = buildGameSave(player, gameManager)
+    const roundTripped = JSON.parse(JSON.stringify(save)) as {
+      player: Record<string, unknown>
+    }
+
+    delete roundTripped.player.hiddenBeastKills
+    expect(validateGameSaveShape(roundTripped).ok).toBe(false)
+
+    // A stale v54-era scalar key in an otherwise-current payload is
+    // tolerated out by the key whitelist (dev phase, no migration).
+    roundTripped.player.hiddenBeastKills = {}
+    roundTripped.player.luyenKhiKillsSinceBeast = 500
+    expect(validateGameSaveShape(roundTripped).ok).toBe(true)
+  })
+
+  it('hiddenChannelCycles sai shape bị từ chối khi có mặt', () => {
+    const gameManager = createBootedGameManager()
+    const player = createDefaultPlayer()
+
+    const siteDef = gameManager.productionSystem.getSiteDefinitions()[0]
+    gameManager.productionSystem.ensureSiteState(siteDef!.siteId)
+
+    const save = buildGameSave(player, gameManager)
+    const roundTripped = JSON.parse(JSON.stringify(save)) as {
+      productionSites: Array<Record<string, unknown>>
+    }
+
+    const site = roundTripped.productionSites[0]
+    expect(site).toBeDefined()
+
+    site!.hiddenChannelCycles = { fixture_channel: -1 }
+    expect(validateGameSaveShape(roundTripped).ok).toBe(false)
+
+    site!.hiddenChannelCycles = 'not-a-map'
+    expect(validateGameSaveShape(roundTripped).ok).toBe(false)
   })
 
   // P7-M5 (v72) - the chapter-keyed bodyProgression record round-trips
