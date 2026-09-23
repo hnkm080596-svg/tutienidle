@@ -201,9 +201,13 @@
 .sys-tag--danger { --sys-tag-ink: var(--sys-danger); --sys-tag-line: var(--sys-danger); }
 .sys-tag--success { --sys-tag-ink: var(--sys-success); --sys-tag-line: var(--sys-success); }
 .sys-tag--muted { --sys-tag-ink: var(--sys-text-muted); }
+/* One distinct glyph shape per tone (spec 7.3): cyan circle, violet hex,
+   warn diamond, danger triangle, success square, muted hollow circle. */
 .sys-tag--warn .sys-tag__glyph { border-radius: 0; transform: rotate(45deg); }
 .sys-tag--danger .sys-tag__glyph { border-radius: 0; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
 .sys-tag--violet .sys-tag__glyph { clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); border-radius: 0; }
+.sys-tag--success .sys-tag__glyph { border-radius: 0; }
+.sys-tag--muted .sys-tag__glyph { background: transparent; border: 1px solid currentColor; }
 .sys-tag__icon { font-family: var(--sys-font-body); text-transform: none; letter-spacing: 0; }
 
 /* SysStat row - label muted, value tabular-nums display font. */
@@ -283,6 +287,28 @@ div.overlay-panel.overlay-panel--system {
   font-family: var(--sys-font-display);
   letter-spacing: .1em;
   text-transform: uppercase;
+  color: var(--sys-text);
+}
+
+/* Task 4 - ink-drawer surfaces opted into the sys recipe. .sys-surface already
+   outranks the global .ink-drawer on source order; this pins the ink frame
+   image off explicitly. The --paper-* remap stays authoritative for drawer
+   descendants (plan Task 4 constraint - interiors restyle via .sys-* only). */
+.sys-surface.ink-drawer { border-image: none; }
+
+/* CharacterDetailCard opted into sys-surface: its scoped card rules are
+   (0,2,0), so this anchor carries the element for (0,2,1) to re-assert the
+   recipe where the scoped class competes (background/border/shadow/color). */
+aside.character-detail.sys-surface {
+  background:
+    var(--sys-grain) 0 0 / 160px 160px repeat,
+    linear-gradient(180deg, rgba(56, 225, 255, .04), transparent 30%),
+    linear-gradient(180deg, var(--sys-surface), var(--sys-surface)),
+    var(--sys-surface-solid);
+  backdrop-filter: blur(10px);
+  border-color: var(--sys-line);
+  border-radius: 0;
+  box-shadow: var(--sys-shadow), var(--sys-glow-sm);
   color: var(--sys-text);
 }
 

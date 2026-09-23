@@ -12,8 +12,8 @@ withDefaults(defineProps<{
 </script>
 
 <template>
-  <li class="sys-stat" :class="[{ 'sys-stat--bordered': bordered }, `sys-stat--${tone}`]">
+  <div class="sys-stat" :class="[{ 'sys-stat--bordered': bordered }, `sys-stat--${tone}`]">
     <span class="sys-stat__label">{{ label }}</span>
     <span class="sys-stat__value"><slot /></span>
-  </li>
+  </div>
 </template>
