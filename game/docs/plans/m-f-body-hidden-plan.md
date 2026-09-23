@@ -1,26 +1,25 @@
 # M-F-BODY-HIDDEN — Hidden perfection-material acquisition channels — plan
 
-Spec: `game/docs/specs/m-f-body-hidden-spec.md` (v1 — pending C2C spec
-review). Implements the acquisition/discovery surface layer for per-realm
-body perfection materials: the `HIDDEN_MATERIAL_CHANNELS` registry, the
-generalized `hidden_beast` spawn-substitution mechanism (migrating the
-`huyet_mong` precedent 1:1), the `grotto` settle-cycle emission mechanism
-inside `grantCycleRewards`, and the two persisted progress counters — all
-riding the canonical `materialBag.add` + `notifyMaterialGained` funnel so
-BP's discovery writer stays the only discovery authority. Scope limits
-per spec: no authored perfection entries/channels (fixture registries in
-tests only), no `thien_dia_chi_kieu` change (NB-1), no UI, no hint layer,
-no migration (QI-S — version rejection).
+Spec: `game/docs/specs/m-f-body-hidden-spec.md` (v3 — C2C spec gate
+PASSED at r87). Implements the acquisition/discovery surface layer for
+per-realm body perfection materials: the `HIDDEN_MATERIAL_CHANNELS`
+registry (+ `channelEmittedMaterialIds` emission lookup + the
+`VISIBLE_GRANT_SOURCES` grant census), the generalized `hidden_beast`
+spawn-substitution mechanism (migrating the `huyet_mong` precedent 1:1),
+the `grotto` settle-cycle emission mechanism inside `grantCycleRewards`
+(with the `bandRealmId` eligibility axis), and the two persisted
+progress counters — all riding the canonical `materialBag.add` +
+`notifyMaterialGained` funnel so BP's discovery writer stays the only
+discovery authority. Scope limits per spec: no authored perfection
+entries/channels (fixture registries in tests only), no
+`thien_dia_chi_kieu` change (NB-1), no UI, no hint layer, no migration
+(QI-S — version rejection).
 
-Dependency note (spec preamble): `isBodyPerfectionMaterial` /
+Dependency note: BP (M-F-BODY-PERFECTION) is MERGED on `p7/truc-co`
+(`f9fc4ee4`, save v80) — `isBodyPerfectionMaterial` /
 `bodyPerfectionRealmOf` / `recordBodyPerfectionMaterialDiscovery` /
-`notifyMaterialGained` are the BP seam. If PR #14 has landed on
-`p7/truc-co` when Phase 2 opens, implement against it after rebase;
-if not, implement the channel registry + systems + save shape against
-the non-BP names (`notifyQuestMaterialGained`, drop-path funnel) and mark
-the two BP-touchpoints (`isBodyPerfectionMaterial` references in the
-integrity test, funnel rename) as BP-conditional — the coordinator owns
-the merge-order call.
+`notifyMaterialGained` are live code; implement against them directly
+after phase-2 rebase.
 
 Phase 1 delivered docs only; Phase 2 begins after C2C spec + plan
 gates pass.
@@ -46,29 +45,37 @@ gates pass.
   `hiddenGrottoChannels?: readonly GrottoChannel[]` (default
   `hiddenGrottoChannels()`); `grantCycleRewards` (:457) gains the
   post-table channel block: grotto site → per-channel counter++ on the
-  site state → bound/roll on a dedicated `mulberry32(cycle.rollSeed ^
-  GROTTO_CHANNEL_SEED_TAG)` stream → `isBreakthroughAcquisitionEnabled(
-  material.breakthroughRealmId)` gate → append `{materialId, amount: 1,
-  detail: 'hidden_channel'}` riding the existing `bag.add`/`pendingEvents`
-  loop → reset counter on emission only. `restoreStates` (:127) whitelist
-  + `snapshotState` (:141) copy carry the field.
+  site state for channels ELIGIBLE on the cycle
+  (`getRealmIndex(cycle.collectionRealmId) >=
+  getRealmIndex(channel.bandRealmId)` — reach-based, channels never
+  expire; unknown ids fail closed) → bound/roll on a dedicated
+  `mulberry32(cycle.rollSeed ^ GROTTO_CHANNEL_SEED_TAG)` stream →
+  `isBreakthroughAcquisitionEnabled(material.breakthroughRealmId)`
+  gate → append `{materialId, amount: 1, detail: 'hidden_channel'}`
+  riding the existing `bag.add`/`pendingEvents` loop → reset counter
+  on emission only. `restoreStates` (:127) whitelist + `snapshotState`
+  (:141) copy carry the field.
 - `data/drop/HiddenMaterialChannels.ts` (new) — kind union, canonical
   `HIDDEN_MATERIAL_CHANNELS` (one migrated `huyet_mong` entry), typed
-  filters, `validate`/`assert` pair, `GROTTO_CHANNEL_SEED_TAG`.
+  filters, `channelEmittedMaterialIds` (oracle-injected signature-drop
+  enumeration), `VISIBLE_GRANT_SOURCES` census (`{materialId,
+  kind: 'quest'|'building', grantId}`), `validate`/`assert` pair,
+  `GROTTO_CHANNEL_SEED_TAG`.
 - `core/game/GameManager.ts` — `productionSystem` deps (:406-412) gain
   the grotto-channel view; `hiddenBeastSystem` deps (:709-711) gain the
   channel list.
 - `services/save/saveVersion.ts` — `CURRENT → CURRENT+1` on the merged
-  base at implementation start (base reads 78 at spec time; verify then)
-  + changelog comment.
+  base at implementation start (base reads 80 at `f9fc4ee4` — this
+  mission expects **v81**; re-read at phase-2 rebase) + changelog
+  comment.
 - `services/save/saveShapeValidation.ts` — `luyenKhiKillsSinceBeast`
   require (:756) → `hiddenBeastKills` object+nonneg-int values;
   `validateProductionSitesSave` (:1274-1333) gains optional
   `hiddenChannelCycles` check beside `assignedWorkers`.
 - `services/save/saveTypes.ts:143` — comment names the new field.
 - `GameManagerTickOps.ts:166-182` — no change: `drainSettlementEvents`
-  already funnels every settle event through `notifyQuestMaterialGained`
-  (→ `notifyMaterialGained` post-BP); channel emissions ride it.
+  already funnels every settle event through `notifyMaterialGained`
+  (merged BP funnel); channel emissions ride it.
 - Docs: `docs/systems/enemies-stages.md` §Quái ẩn +
   `docs/systems/drops-loot.md` §7 reference the generalized channel
   registry (mechanism description only — still no location spoil).
@@ -85,10 +92,16 @@ gates pass.
    `REALMS`, `enemyId` ∉ `ENEMIES`, `materialId` ∉ materials catalog;
    channel enemy `realmId !== bandRealmId`; a perfection channel fixture
    WITHOUT a bound rejects; a perfection `signatureDrops` line at
-   `chance < 1` rejects; `bodyPerfectionRealmOf(m) !== bandRealmId`
+   `chance < 1` rejects OR carrying `requiresModifier` rejects
+   (unconditional-route arm); `bodyPerfectionRealmOf(m) !== bandRealmId`
    rejects; `breakthroughRealmId` mismatch rejects; grotto channel on a
-   non-perfection material rejects. (BP-conditional arms run when the BP
-   seam is present; see dependency note.)
+   non-perfection material rejects. **Inverse reachability arms:** a
+   fixture realm-materials table id absent from every channel's emitted
+   set AND `VISIBLE_GRANT_SOURCES` fails; a `VISIBLE_GRANT_SOURCES` row
+   whose `materialId` is not in the table fails; a row whose `grantId`
+   doesn't resolve (`quest`/`building`) or doesn't deliver the material
+   fails; a channel-emitted id appearing in `VISIBLE_GRANT_SOURCES`
+   fails.
 2. `core/game/HiddenBeastSystem.test.ts` (rewrite around channels):
    shipped-registry parity — window closed below 1000/open at 1000; 5%
    substitution on scripted rng; non-LQ band never substitutes; kill
@@ -104,14 +117,20 @@ gates pass.
    cycle's grants and pushes a `pendingEvents` entry; `detail` tag
    `'hidden_channel'`; `guaranteedAfterCycles` emits unconditionally at
    the bound cycle (no roll consumed); emission resets the counter;
-   chance-miss increments; a `breakthroughRealmId` beyond the ceiling
-   suppresses the emission AND leaves the counter at the bound (retry
-   next cycle); empty channels consume zero channel draws — a fixed-seed
-   cycle rolls identical table rewards with and without a fixture
-   channel attached (stream isolation); `rollRewards` output itself is
-   unchanged (table-only contract); `restoreStates`/`getAllStates`
-   round-trip `hiddenChannelCycles`; offline `settleProductionOffline`
-   emits identically (same `grantCycleRewards` seam).
+   chance-miss increments; **eligibility — a cycle whose
+   `collectionRealmId` has not reached the channel `bandRealmId`
+   advances no counter and consumes no channel draw, a reached-band
+   cycle does (reach semantics, channels never expire)**; a
+   `breakthroughRealmId` beyond the ceiling suppresses the emission AND
+   leaves the counter at the bound (retry next cycle); empty channels
+   consume zero channel draws — a fixed-seed cycle rolls identical
+   table rewards with and without a fixture channel attached (stream
+   isolation); `rollRewards` output itself is unchanged (table-only
+   contract); `restoreStates`/`getAllStates` round-trip
+   `hiddenChannelCycles`; **restore-split arms — `restoreStates`
+   performs NO rolls/emission (pendingEvents stays empty), while
+   `settleProductionOffline` emits identically into `pendingEvents`
+   drained by the next tick (same `grantCycleRewards` seam).**
 4. `BattleLootSystem` drop tests (extend): unchanged expectations —
    signature-drop landings still funnel via `onMaterialCollected`/the
    BP funnel; post-resolve `isBreakthroughAcquisitionEnabled` filter
@@ -120,9 +139,9 @@ gates pass.
 5. `GameManager` integration (extend or new
    `HiddenChannels.integration.test.ts`): `tickWorkers` settling a
    fixture grotto channel emits → `drainSettlementEvents` →
-   `notifyQuestMaterialGained` spy receives `(materialId, 1)`; a
+   `notifyMaterialGained` spy receives `(materialId, 1)`; a
    delivered perfection-material fixture records
-   `discoveredMaterials` via the funnel (post-BP arm) — second identical
+   `discoveredMaterials` via the funnel — second identical
    emission delivers again with no duplicate discovery.
 6. `services/save` tests (extend `SaveRoundTrip.test.ts`):
    `hiddenBeastKills` map round-trips; `hiddenChannelCycles` inside
@@ -140,7 +159,7 @@ gates pass.
    `EnemyDropSinkInvariant.test.ts`): no `signatureDrops`/pool/guaranteed
    line on an enemy that is NOT a `hidden_beast` channel's `enemyId`
    carries a `isBodyPerfectionMaterial` id — hidden means unreachable
-   via normal loot (BP-conditional arm).
+   via normal loot.
 
 ## Step 2 — channel registry data module
 
@@ -179,7 +198,8 @@ gates pass.
 
 ## Step 5 — save contract
 
-- `saveVersion.ts`: base+1 at implementation start + changelog comment.
+- `saveVersion.ts`: base+1 at implementation start (expects v81 on
+  `f9fc4ee4`; re-read at rebase) + changelog comment.
 - `saveShapeValidation.ts`: `hiddenBeastKills` shape (object, values
   finite non-negative) replacing the scalar check; `hiddenChannelCycles`
   optional map check inside `validateProductionSitesSave`.
