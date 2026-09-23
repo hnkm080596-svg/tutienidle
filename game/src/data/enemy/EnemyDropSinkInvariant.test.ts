@@ -4,6 +4,8 @@ import { STAGE_DROP_TABLES } from '../drop/StageDropTables'
 import { FAMILY_DROP_TABLES } from '../drop/FamilyDropTables'
 import { QUESTS } from '../quest/quests'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../realm/BodyRefinement'
+import { PHYSIQUE_ESSENCES } from '../realm/PhysiqueEssence'
+import { essenceSubstitutionYield } from '../../core/realm/body/BodyChapterEssenceSubstitution'
 import { DOAN_BAO_THACH_MATERIAL_ID } from '../../core/artifact/ArtifactProgression'
 import { createDefaultEquipmentOperationCostCatalog } from '../../core/equipment/EquipmentOperationCostCatalog'
 import { SUPPORTED_PROFESSION_REALMS } from '../../core/profession/ProfessionMaterial'
@@ -65,8 +67,16 @@ function collectSinkMaterialIds(): Set<string> {
     }
   }
 
-  // Luyện Thể — đầu tư Tinh Hoa Phàm Thể.
-  sinks.add(TINH_HOA_PHAM_THE_MATERIAL_ID)
+  // Luyen The - pham essence is invested directly, and every higher
+  // essence drains through the M-QI-09 substitution seam
+  // (planEssenceSubstitution debits the bag at investBodyChapter). A
+  // grade only counts as a sink when its chain down to pham is
+  // unbroken (yield > 0).
+  for (const def of PHYSIQUE_ESSENCES) {
+    if (essenceSubstitutionYield('pham', def.grade) > 0) {
+      sinks.add(def.materialId)
+    }
+  }
 
   // Pháp bảo — Đoán Bảo Thạch.
   sinks.add(DOAN_BAO_THACH_MATERIAL_ID)

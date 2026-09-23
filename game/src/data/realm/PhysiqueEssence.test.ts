@@ -18,12 +18,14 @@ import {
   type BodyChapterCurrency,
 } from '../../core/realm/body/BodyChapter'
 import { materials } from '../materials/materials'
+import { FAMILY_DROP_TABLES } from '../drop/FamilyDropTables'
 import { STAGE_DROP_TABLES } from '../drop/StageDropTables'
 
 // M-QI-08 (QI-D4b/D4c) - the Tinh Hoa <Grade> family registry: exactly
 // the three authored rungs (Pham/Bao/Phap), the pinned realm->grade
-// band map, sparse lookups, and the authored-but-unwired band drop
-// entries. No live table, cost value, or persisted shape changes.
+// band map, sparse lookups, and the per-band drop entries that M-QI-10
+// wires live into STAGE_DROP_TABLES. No cost value or persisted shape
+// changes in either mission.
 describe('PhysiqueEssence registry (M-QI-08)', () => {
   it('authors exactly pham/bao/phap in ladder order', () => {
     expect(PHYSIQUE_ESSENCES.map(def => def.grade)).toEqual(['pham', 'bao', 'phap'])
@@ -104,24 +106,43 @@ describe('PhysiqueEssence registry (M-QI-08)', () => {
     expect(physiqueEssenceBandDrop('unknown_realm')).toBeUndefined()
   })
 
-  it('keeps the authored mortal band entry equal to the live mortal stage line (drift sentinel until M-QI-10)', () => {
-    const mortalTable = STAGE_DROP_TABLES.find(table => table.realmId === 'mortal')
-    const liveEssenceLine = mortalTable?.guaranteed.find(
-      entry => entry.kind === 'material' && entry.itemId === 'tinh_hoa_pham_the',
-    )
-    expect(liveEssenceLine).toBeDefined()
-    expect(PHYSIQUE_ESSENCE_BAND_DROPS.mortal).toEqual(liveEssenceLine)
+  it('wires every banded realm\'s live stage guaranteed line to the authored band entry (M-QI-10)', () => {
+    for (const realm of Object.keys(PHYSIQUE_ESSENCE_BAND) as PhysiqueEssenceBandRealm[]) {
+      const table = STAGE_DROP_TABLES.find(entry => entry.realmId === realm)
+      expect(table, `no stage table for banded realm ${realm}`).toBeDefined()
+      // Identity, not equality: the live line IS the authored map
+      // entry - consumed by reference, never a re-authored literal
+      // (M-QI-10 spec sec.2). The mortal line flows through the same
+      // authority, which subsumes the old production-vs-authored
+      // drift sentinel (values are still pinned above at line ~96).
+      expect(
+        table!.guaranteed.includes(physiqueEssenceBandDrop(realm)!),
+        `${realm} guaranteed must carry PHYSIQUE_ESSENCE_BAND_DROPS.${realm} itself`,
+      ).toBe(true)
+    }
   })
 
-  it('leaves the live LQ and TC bands emitting no physique essence (premature wiring fails loudly)', () => {
+  it('keeps the band authority the only stage/family essence lane (M-QI-10)', () => {
     const familyIds = new Set<string>(PHYSIQUE_ESSENCES.map(def => def.materialId))
-    for (const realm of ['qi_refining', 'foundation_establishment'] as const) {
-      const table = STAGE_DROP_TABLES.find(entry => entry.realmId === realm)
-      const lines = [...(table?.guaranteed ?? []), ...(table?.pool ?? [])]
-      expect(
-        lines.filter(entry => entry.itemId !== undefined && familyIds.has(entry.itemId)),
-        `${realm} band must not emit physique essence before M-QI-10`,
-      ).toEqual([])
+    for (const table of STAGE_DROP_TABLES) {
+      const bandDrop = physiqueEssenceBandDrop(table.realmId)
+      for (const entry of [...table.guaranteed, ...table.pool]) {
+        if (entry.itemId === undefined || !familyIds.has(entry.itemId)) continue
+        // Any essence-family line in a stage table must be exactly the
+        // authored band entry object; non-banded realms emit none.
+        expect(
+          bandDrop !== undefined && entry === bandDrop,
+          `stray essence line in ${table.realmId} stage table - must be the authored band entry`,
+        ).toBe(true)
+      }
+    }
+    for (const table of FAMILY_DROP_TABLES) {
+      for (const entry of [...table.guaranteed, ...table.pool]) {
+        expect(
+          entry.itemId === undefined || !familyIds.has(entry.itemId),
+          `family table ${table.familyId} emits physique essence outside the band authority`,
+        ).toBe(true)
+      }
     }
   })
 })
