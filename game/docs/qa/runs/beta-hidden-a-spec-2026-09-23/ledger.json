@@ -10,7 +10,7 @@
     "nonGoals": [
       "production code changes",
       "implementation correctness (separate impl run)",
-      "balance values (design §18 deferred)",
+      "balance values (design \u00a718 deferred)",
       "merge/push"
     ],
     "checkout": "devin/1790198940-beta-hidden-a @ 1c48e00c (spec/plan review target)",
@@ -50,6 +50,15 @@
       "summary": "Fresh sealed reviewer sessions for spec/plan review could not be dispatched yet: org free-SWE-2 promotion caps concurrent SWE-2 sessions at 5 and all slots are held (sibling missions); children of SWE-2 sessions must run SWE-2 (no mode override). Reviewer dispatch is pending a free slot; run proceeds to implementation while awaiting dispatch. Independence evidence will be recorded when reviewers settle.",
       "files": [
         "docs/specs/2026-09-23-hidden-perfection-lineage-master-spec.md"
+      ]
+    },
+    {
+      "id": "ev-internal-spec-falsification",
+      "kind_": "review",
+      "summary": "Internal spec falsification pass (independence gap: sealed reviewers undispatchable - SWE-2 5-slot cap saturated, children-of-SWE-2 cannot run normal mode; coordinator amended to normal-mode spawn 2026-09-23 but API rejects non-SWE-2 children of a free SWE-2 session). Same-context checks across contract/authority/integration lenses; flagged as self-review, NOT independent review.",
+      "files": [
+        "docs/specs/2026-09-23-hidden-perfection-lineage-master-spec.md",
+        "docs/design/2026-09-23-hidden-perfection-lineage.md"
       ]
     }
   ],
@@ -109,6 +118,22 @@
       "payloadPath": "events/0003.json",
       "payloadHash": "7da9f95eceecc2995891d67b337c00d530baa991a573db6aa85e7492db604175",
       "eventHash": "852ab6723d194410c0b3abb001a4d0e6967bd7a80e8ebcf6967a9bcf4ccc8528"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-23T23:50:51.198612Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-9958",
+      "state": {
+        "productStateId": "481fc9ced66b52634f1cedaffa5d7b8443f9f4fd5be232f72aed3d8586bfc060",
+        "contractId": "2b7908f1736dbdb7d82a3db0cf1af734f77af0183f981789a021d82372d8d779",
+        "attackModelId": "1fd6eec4942822ae5cc8dea37ef1fda5dbaa6e8b7d20e70e440baa1aa9206b02",
+        "environmentId": "5fb90dc583b9a3986899b888add299f3a76322c109a7fcf1f11d7f88e9d276e5"
+      },
+      "previousEventHash": "852ab6723d194410c0b3abb001a4d0e6967bd7a80e8ebcf6967a9bcf4ccc8528",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "437156ff2a14d74ed3cf081fc5fab3ea3315ae6b5b106ecfd06aa1a260808dcc",
+      "eventHash": "8ed1f94176fa905c72793c0d7cb63221f2b02f4bd0aa9722ef2b73d5895ac952"
     }
   ]
 }

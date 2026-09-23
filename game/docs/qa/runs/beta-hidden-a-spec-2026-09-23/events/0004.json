@@ -1,0 +1,69 @@
+{
+ "kind": "EVIDENCE",
+ "summary": "Internal spec falsification pass (independence gap: sealed reviewers undispatchable - SWE-2 5-slot cap saturated, children-of-SWE-2 cannot run normal mode; coordinator amended to normal-mode spawn 2026-09-23 but API rejects non-SWE-2 children of a free SWE-2 session). Same-context checks across contract/authority/integration lenses; flagged as self-review, NOT independent review.",
+ "checks": [
+  {
+   "lens": "contract",
+   "claim": "exactly two breakthrough types, resolve-at-commit, failure keeps lineage open",
+   "method": "grep closeHiddenLineage call sites",
+   "result": "only resolveVictory normal path (TribulationOutcomeService:250) + mortal ritual (GameManagerRealmAdvanceOps:362); resolveDefeat never closes",
+   "verdict": "holds"
+  },
+  {
+   "lens": "contract",
+   "claim": "Lv12 normal / Lv18 hidden gates",
+   "method": "grep realmLevel literals",
+   "result": "12s are ritual/tribulation normal gates; 18s confined to HiddenLineage hidden eligibility",
+   "verdict": "holds"
+  },
+  {
+   "lens": "contract",
+   "claim": "\u00a74 no-leak (mechanic implies discovered; absence-only UI)",
+   "method": "grep discovered in components + validator rules",
+   "result": "no hidden rendering outside gates; validator enforces mechanic=>discovered, frontier reach",
+   "verdict": "holds"
+  },
+  {
+   "lens": "contract",
+   "claim": "RQ-1 hidden-eligible resolves hidden (no commit-time opt-out in design)",
+   "result": "interpretation recorded as ruling RQ-1 in spec; design has no choice surface",
+   "verdict": "holds (interpretation flagged)"
+  },
+  {
+   "lens": "authority",
+   "claim": "census row 7: great_dao arm retired, pham_nhan_chi_cot conversion survives",
+   "method": "grep great_dao_seed/pham_nhan_chi_cot/mortalPerfectionAchieved/greatDaoOpportunityLost",
+   "result": "material+drop retired (comments only); conversion fires at OutcomeService:309 on great_dao grade; legacy flags comment-only",
+   "verdict": "holds"
+  },
+  {
+   "lens": "authority",
+   "claim": "hiddenBeastKills/channels infra survives minus material line",
+   "method": "grep hiddenBeastKills consumers",
+   "result": "HiddenBeastSystem live (generic channel infra per census row 12)",
+   "verdict": "holds"
+  },
+  {
+   "lens": "authority",
+   "claim": "sims model normal perfection only",
+   "method": "grep hiddenPerfection in core/simulation",
+   "result": "EarlyGameSession deep-clones snapshot; no sim drives hidden bodies",
+   "verdict": "holds"
+  },
+  {
+   "lens": "integration",
+   "claim": "mechanic-kind seam for B/C",
+   "method": "inspect HiddenBodyRealms registry + HIDDEN_MECHANIC_STATE_VALIDATORS",
+   "result": "3 authored entries (mortal/ancient_beast_trial, qi/quan_the, foundation/nghich_chu_tian); validator seam empty, order-asserted",
+   "verdict": "holds"
+  },
+  {
+   "lens": "integration",
+   "claim": "effective-cap reaches all main-stat channels",
+   "method": "grep getMainStatCap consumers",
+   "result": "allocation, pill candidate filters (x2), CharacterPanel display all on getEffectiveMainStatCap after P5 pass-1 fix",
+   "verdict": "holds (defect found+fixed during impl P5)"
+  }
+ ],
+ "verdict": "no spec-internal contradiction or census error found; no spec edit required. Independence evidence still missing - run remains open on that axis."
+}

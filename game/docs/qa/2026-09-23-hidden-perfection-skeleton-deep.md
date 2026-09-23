@@ -40,8 +40,11 @@
 ### Fixed during this cycle (implementation side, reverified)
 
 - **[Medium] `assertHiddenPerfectionIntegrity` rejected legitimate current-realm entry** — `enteredIndex >= playerIndex` rejected a save captured immediately after a hidden commit (`['qi_refining']` at realm qi_refining). Spec invariant is `index <= player's`. Fixed to `>`, plus the spec's second invariant (departing realm's hidden body must be completed) which was missing. Pins added. Repro of the exact failure now green in `GameManager.hiddenLineageRestore.qa.test.ts`.
+- **[High] effective-cap consumers left on raw `getMainStatCap`** — `allocateAttributePoint`, both `PillSystem` `random_main_stat` candidate filters, and `CharacterPanel`'s cap display clamped at the realm-base cap, making the +10pp raise unreachable through the two canonical stat-gain channels (spec sec.3 census rows). Fixed to `getEffectiveMainStatCap` at all three sites + the panel; regression pin added (`GameManager.hiddenLineageRestore.qa.test.ts` — allocation into raised cap allowed, stops at effective cap, pill candidates roll).
+- **[Medium] no realm-residency gate on hidden-body progress** — `canProgressHiddenBody` allowed `completeHiddenBody`/`discoverHiddenRealm` on a realm the player had already left (retroactive cap headroom). Residency check added; incoherent test fixtures that composed non-resident state were corrected.
+- **[Low] `realms` map lacked frontier coherence** — `discovered`/`mechanic`/`frozen` entries beyond the completed-prefix frontier, `mechanic` without `discovered`, and `frozen` without `mechanic` were not validator-rejected (tamper-only, §4 no-leak surface). All three rules added + pins.
 - **[Low] `EarlyGameSession` shallow-copied `mechanic` payload** — slice would share nested reference with `PlayerData`; deep-cloned via `JSON.parse(JSON.stringify(...))`.
-- **[Low] eslint on changed files** — `_`-prefix convention applied to unused enhanced-builder params.
+- **[Low] eslint on changed files** — `_`-prefix convention applied to unused enhanced-builder params; dead `SPELL_KIT_IDS` import removed.
 
 ### Open findings
 
