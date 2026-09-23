@@ -21,6 +21,7 @@ import { useNotificationStore } from '@/stores/notification'
 import { buildings } from '@/data/building/buildings'
 import { materials } from '@/data/materials/materials'
 import { BETA_COMPANIONS } from '@/data/companion/Companions'
+import { ITEM_GRADE_LABELS } from '@/core/item/ItemGrade'
 import type { CompanionDefinition } from '@/data/companion/Companions'
 import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
@@ -524,6 +525,10 @@ describe('qua_tang gift tab (M-F-COMPANION-GIFT)', () => {
     expect(button).not.toBeNull()
     expect(button!.disabled).toBe(false)
     expect(deps.container.textContent ?? '').toContain('Thần Nông')
+    // Row contract: name + grade label + claim button (plan).
+    expect(deps.container.querySelector('.qua-tang__grade')?.textContent).toBe(
+      ITEM_GRADE_LABELS.huyen,
+    )
 
     deps.app.unmount()
   })

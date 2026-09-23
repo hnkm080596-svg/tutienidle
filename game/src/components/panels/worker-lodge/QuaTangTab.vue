@@ -12,6 +12,7 @@ import { useNotificationStore } from '@/stores/notification'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import GameButton from '@/components/common/GameButton.vue'
 import { COMPANIONS } from '@/data/companion/Companions'
+import { ITEM_GRADE_LABELS, type ItemGrade } from '@/core/item/ItemGrade'
 import type { ClaimCompanionGiftResult } from '@/core/game/GameManagerCompanionOps'
 
 const { t } = useI18n()
@@ -25,6 +26,7 @@ const { stateVersion, bumpState } = useStateVersion()
 interface GiftRow {
   id: string
   name: string
+  grade: ItemGrade | undefined
   claimed: boolean
 }
 
@@ -36,11 +38,15 @@ interface GiftRow {
 const gifts = computed<GiftRow[]>(() => {
   stateVersion.value
 
-  return player.companionGifts.map((record) => ({
-    id: record.id,
-    name: COMPANIONS.find((definition) => definition.id === record.definitionId)?.name ?? record.definitionId,
-    claimed: record.claimed,
-  }))
+  return player.companionGifts.map((record) => {
+    const definition = COMPANIONS.find((d) => d.id === record.definitionId)
+    return {
+      id: record.id,
+      name: definition?.name ?? record.definitionId,
+      grade: definition?.grade,
+      claimed: record.claimed,
+    }
+  })
 })
 
 const pending = computed(() => gifts.value.filter((gift) => !gift.claimed))
@@ -76,7 +82,12 @@ function onClaim(giftId: string) {
     <p class="qua-tang__hint">{{ t('quaTang.hint') }}</p>
 
     <div v-for="gift in pending" :key="gift.id" class="qua-tang__row">
-      <span class="qua-tang__name">{{ gift.name }}</span>
+      <span class="qua-tang__identity">
+        <span class="qua-tang__name">{{ gift.name }}</span>
+        <span v-if="gift.grade" class="qua-tang__grade" :style="{ color: `var(--grade-${gift.grade})` }">
+          {{ ITEM_GRADE_LABELS[gift.grade] }}
+        </span>
+      </span>
       <GameButton class="qua-tang__claim" size="sm" @click="onClaim(gift.id)">
         {{ t('quaTang.claim') }}
       </GameButton>
@@ -85,7 +96,12 @@ function onClaim(giftId: string) {
     <div v-if="claimed.length > 0" class="qua-tang__history">
       <h4 class="qua-tang__history-title">{{ t('quaTang.claimed') }}</h4>
       <div v-for="gift in claimed" :key="gift.id" class="qua-tang__claimed">
-        <span class="qua-tang__name">{{ gift.name }}</span>
+        <span class="qua-tang__identity">
+          <span class="qua-tang__name">{{ gift.name }}</span>
+          <span v-if="gift.grade" class="qua-tang__grade" :style="{ color: `var(--grade-${gift.grade})` }">
+            {{ ITEM_GRADE_LABELS[gift.grade] }}
+          </span>
+        </span>
         <span class="qua-tang__badge">{{ t('quaTang.claimedBadge') }}</span>
       </div>
     </div>
@@ -118,9 +134,21 @@ function onClaim(giftId: string) {
   background: color-mix(in srgb, var(--jade) 10%, var(--paper-50));
 }
 
+.qua-tang__identity {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
 .qua-tang__name {
   font-weight: 700;
   font-size: var(--text-sm);
+}
+
+.qua-tang__grade {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .qua-tang__history {

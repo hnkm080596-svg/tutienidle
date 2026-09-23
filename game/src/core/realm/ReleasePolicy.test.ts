@@ -628,6 +628,14 @@ describe('ReleasePolicy - pull-token census integrity (M-F-COMPANION-GIFT)', () 
     expect(COMPANION_PULL_TOKEN_MATERIAL_IDS).toContain(COMPANION_PULL_TOKEN_ID)
   })
 
+  // Exact-set pin (C2C-74): one-way containment alone lets a second valid
+  // material id join the census silently - isCompanionPullTokenSourceSuppressed
+  // would then suppress it across quest + battle-loot origination with every
+  // other test still green. The suppressed set must be exactly {chieu_hien_lenh}.
+  it('the census is exactly the live pull-token set (no silently suppressed extras)', () => {
+    expect([...COMPANION_PULL_TOKEN_MATERIAL_IDS].sort()).toEqual([COMPANION_PULL_TOKEN_ID])
+  })
+
   it('combat drop delivery suppresses the pull-token line while sibling lines still land', () => {
     const { killEnemy, materialBag, materialRegistry } = createLootTestSetup({
       realmId: 'mortal',

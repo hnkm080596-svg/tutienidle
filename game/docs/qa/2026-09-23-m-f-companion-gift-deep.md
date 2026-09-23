@@ -36,7 +36,9 @@ Gift channel = new acquisition transaction crossing persistence (companionGifts 
 | npm run test:e2e (parallel, workers=2) | 28 pass / 5 fail | combat-idle-motion, standing-slot-panel, technique-frozen-warning, cultivation-path-ritual x2. Serial rerun still fails 3; combat-idle + standing-slot verified identical on untouched base (detached worktree, serial). technique-frozen + ritual failures are the same command-wheel/game-root stall class; tribulation-flow.spec (the P13 oracle covering the same post-outcome route) passed |
 | Save round-trip chain (issue->buildGameSave->JSON->validate) | pass | New QA test in SaveRoundTrip.test.ts proves records ride the pipeline with values intact |
 | Restore whitelist | code-observed | createDefaultPlayer includes companionGifts -> allowedPlayerKeys admits it -> Object.assign restores it |
-| UI claim/claim-persistence browser check | delegated | testing-agent P14 run in progress; not yet returned at report time |
+| UI claim/claim-persistence browser check | PASS | delegated testing-agent P14 run: all 9 checks green (tab order/gating, pending->claimed flow, single loot toast, constellation rank-up, closed-pool copy, reload persistence, empty state); evidence posted on PR #12 |
+
+**P14-driven fix (post-report, declared per C2C-74):** the run surfaced a Medium outside the mission census - `OVERLAY_LAYERS.toast=1500` sat below `panel=1800`, so ops `kind:'loot'` success toasts rendered behind every full-screen panel (claim/pull/exchange feedback structurally invisible). Fixed in `414b6ac4` (`toast: 1870`, above panel+announcement, below modal) and re-verified live (elementFromPoint hits `.toast-item`, container z-index 1870). Contract pinned by `src/core/presentation/OverlayLayers.test.ts`. Pre-existing finding recorded on the PR, not fixed in scope: build-popover 'Xay dung' button lacks z-index (invisible but clickable).
 
 ## Findings
 
@@ -53,11 +55,12 @@ No Confirmed defects. No Suspected findings surviving inspection:
 ## New or Changed QA Tests
 
 - src/services/save/SaveRoundTrip.test.ts: 'issued companion gift records round-trip' - proves both pending and claimed records survive detach->JSON->validate with values intact (cross-system chain oracle).
+- src/core/presentation/OverlayLayers.test.ts: pins the stacking contract the P14 fix encodes (toast above panel+announcement, blocking surfaces above toast, curtain topmost).
 
 ## Gaps and Residual Risk
 
 - 5 e2e failures are environmental/pre-existing (2 verified identical on base serially; remainder same stall class). Not evidence against the task.
-- No Playwright spec drives the qua_tang tab; browser evidence arrives via the delegated P14 run (testing-agent) - if it surfaces a defect this verdict revises.
+- No Playwright spec drives the qua_tang tab; browser evidence came from the delegated P14 run (testing-agent) - all checks green plus the declared toast-layer fix above. A durable e2e spec for the claim flow remains a coverage gap.
 - ImageMagick absent: 2 dongFu asset tests Not verified everywhere (env limitation, unrelated).
 
 ## Pre-existing Failures
