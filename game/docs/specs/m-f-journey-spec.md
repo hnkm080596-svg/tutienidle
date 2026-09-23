@@ -101,14 +101,17 @@ talentIds:['hap_linh'], attributes:{strength:2,vitality:3}}` — the M-C
 PINNED profile; grade-leg fixtures use the committed seeded-state
 pattern instead).
 
-**Leg order (explicit — C2C-P2):** A → B → **D.1 + D.2 at TC L1**
-(body_refinement completion + meridian 9/9 run FIRST — post-LQ pace
-gates are lifted so no level gating blocks them) → **C** (the
-interleaved realm-level + zhou_tian ladder — zhou_tian only becomes
-investable once D's prerequisites complete, and its capacity coupling
-is observable only through leveling) → E → F → G → H → I → J → K → L.
-D.3 names only the prerequisite rejection contract (exercised before
-D.2 completes); it owns no circulation asserts of its own.
+**Leg order (explicit — C2C-P2/M1):** A → B → **E.1** (floor-1 first
+clear at TC L1 — E owns ALL first-clear/unlock observations) → **D.1
++ D.2** (body_refinement completion + meridian 9/9 at TC L1 — post-LQ
+pace gates lifted, no level gating blocks them) → **C** (interleaved
+realm-level + zhou_tian ladder — investable only once D's
+prerequisites complete; honest Pháp farming rides the ALREADY-cleared
+floor_1, C owns no stage-clear asserts) with **E.2** floors 2→10
+interleaved at each level gate → F → G → H → I → J → K → L.
+D.3 is a coverage pointer only — the prerequisite rejections are
+asserted in Leg H (at TC L1 between D.1 and D.2, and pre-TC at the
+seeded state); it asserts nothing itself.
 
 **Leg A — LQ-side state to admission (documented fixture, NOT a
 replay):** the committed fixtures prove honest LQ completion is not
@@ -171,7 +174,10 @@ the **L17→L18 boundary** (340→360 — Đại read `circulation >= 360` /
 chapter complete at L18). Exact Pháp debit only (proved by holding
 only lower-band essence and asserting 0 invested — no substitution
 fill on the top rung); `collectBaseStatDeltas {}` recorded as an
-authored content blank (report, not fill).
+authored content blank (report, not fill). C's honest Pháp farming
+rides the ALREADY-cleared `foundation_floor_1` — E.1 owns every
+first-clear/unlock observation (C2C-M1); C asserts capacity and
+circulation only, no stage-clear records.
 
 **Leg D — Body chapters through real invest seams** (chain order
 authored; prerequisites complete at TC L1 so zhou_tian can ride Leg
@@ -195,18 +201,30 @@ C's ladder):
    `requiredRealmLevel` block post-LQ) while `unlocksAfterChapters`
    still refuses invest before body_refinement is complete (assert 0
    + no debit).
-3. `zhou_tian` — ordering contract asserted HERE: invest before
-   meridian complete → 0, no debit; pre-TC capacity 0 → 0. The
-   capacity/circulation coverage rides Leg C's interleaved ladder
-   (asserting it only at L18 makes capacity growth unobservable).
+3. `zhou_tian` — coverage pointer only (asserts nothing itself):
+   the prerequisite rejection contract is asserted in Leg H —
+   `investBodyChapter('zhou_tian')` → 0 + no debit while meridian is
+   incomplete (exercised at TC L1 between D.1 and D.2) and → 0 at the
+   seeded pre-TC state (capacity 0 + chain lock; capacity status
+   reads 0). All circulation/investment coverage rides Leg C's
+   interleaved ladder (asserting it only at L18 makes capacity growth
+   unobservable).
 
-**Leg E — stage progression + clears:** `runStage` on
-`foundation_floor_1` → victory → sequential unlock observed →
-level-gated refusals asserted (`locked` on floor N+1 below realmLevel
-N) → driven to `foundation_floor_10` boss victory →
-`completedStageIds` covers all 10 ids in order. Difficulty recovery
-uses the loop's real growth cycle (farm cleared floor → equipAll →
-allocate → invest) — no debug stat grants mid-leg.
+**Leg E — stage progression + clears (first-clear ownership explicit
+— C2C-M1):**
+- **E.1 — floor-1 first clear, BEFORE Leg C:** at TC L1
+  `runStage('foundation_floor_1')` → victory → assert the sequential
+  unlock (floor_2 now gated only on `requiredRealmLevel`) +
+  `completedStageIds` ordering — E.1 owns ALL first-clear/unlock
+  observations; Leg C's honest Pháp farming reuses this
+  already-cleared floor and owns no stage-clear asserts.
+- **E.2 — floors 2→10, interleaved with the ladder:** level-gated
+  refusals (`locked` on floor N+1 below realmLevel N) asserted at
+  each level gate → floor N cleared as realmLevel reaches N →
+  `foundation_floor_10` boss victory → `completedStageIds` covers
+  all 10 ids in order. Difficulty recovery uses the loop's real
+  growth cycle (farm cleared floor → equipAll → allocate → invest) —
+  no debug stat grants mid-leg.
 
 **Leg F — breakthrough gates + ceiling boundary:** at TC,
 `getBreakthroughRequirements()` returns `[]`,
@@ -250,7 +268,10 @@ asserted state-unchanged):
   transition — same leg as F's seam asserts).
 - `investBodyChapter('meridian')` before body_refinement complete →
   0, bags unchanged; `investBodyChapter('zhou_tian')` before meridian
-  complete → 0.
+  complete → 0 (exercised at TC L1 between D.1 and D.2 — the D.3
+  rejection contract).
+- `investBodyChapter('zhou_tian')` at the seeded pre-TC state → 0
+  (capacity 0 + chain lock; capacity status read asserts 0).
 - `runStage` on a level-gated floor → `'locked'`.
 - `resolveTalentEntitlement` with an off-pool/illegal decision →
   `false`, record retained (uncancellable by construction).
@@ -461,7 +482,7 @@ Open items for C2C:
 | A1 | `TrucCoJourney.test.ts` committed on the harness; every leg rides production seams (no store imports in the harness file, no mock substituting a shipped contract); seeded-input list enumerated in-file. |
 | A2 | Leg B asserts the full initiation bundle (realm write, cultivation 0, grade record, unequip+modifier resync, passive learn, gift issue+claim, technique seal when applicable) through `settleOutcome` + real ops — not direct field pokes — AND the two-phase settle/drain contract: repeated pre-resolution settle is idempotent with no drain, entitlement resolution unblocks the drain, `director.clear()` executes only post-resolution. |
 | A3 | Body chapters complete in authored order through `investBodyChapter`: sequential rejections asserted first (0 + no debit); refinement deltas asserted on the assembly/collector channel with intrinsic `baseStats` proven unchanged; meridian strict-prefix to 9/9 with `bat-mach:*` emission on the modifier channel only; zhou_tian capacity coupling observed through the level ladder with pinned boundary observations (≥1 below-cap clamp, Tiểu 180 at L9, Đại 360 at L18) and exact Pháp debit; physique transform pham→bao at 6/6. |
-| A4 | Stage legs: floor-1 → floor-10 sequential clears via `runStage` on the real zone chain; level-gate `locked` asserts; `completedStageIds` ordered coverage; perfect-clear record + `startAutoFarm` unlock on at least one floor. |
+| A4 | Stage legs: floor-1 first clear + unlock observation owned by E.1 before the ladder (C farms the already-cleared floor, no first-clear conflict); floors 2→10 sequential clears via `runStage` on the real zone chain; level-gate `locked` asserts; `completedStageIds` ordered coverage; perfect-clear record + `startAutoFarm` unlock on at least one floor. |
 | A5 | Ceiling boundary: at TC, `getBreakthroughRequirements` `[]`, `canTriggerBreakthrough` false, `runTribulation('golden_core')` `'refused'`; companion pull pool closed; state byte-untouched post-refusal. |
 | A6 | Checkpoint leg: `buildGameSave`→`restoreGameSession` round-trip through `restoreCheckpoint` on a fresh session+owner; persisted-field parity on all journey fields INCLUDING the pending siblings' landed persisted fields (`bodyPerfection.*`, artifact, hidden-material — resolved per A13); transient tribulation excluded per documented contract; post-restore manager-backed action succeeds; incoherent zhou_tian/meridian save rejected at preflight. |
 | A7 | Determinism: two same-seed runs → identical normalized snapshots (extended surface). |
