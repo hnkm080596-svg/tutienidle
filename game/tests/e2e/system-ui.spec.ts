@@ -201,7 +201,7 @@ test.describe('system UI skin - v2 surface contract', () => {
         const scrim = document.querySelector('.overlay-panel')
         if (!scrim) return 'MISSING:.overlay-panel'
         const cs = getComputedStyle(scrim)
-        const title = scrim.querySelector('.overlay-panel__title, [class*=title]')
+        const title = scrim.querySelector('.overlay-panel__heading h3, [class*=title]')
         return [
           'backdrop=' + (cs.backdropFilter || cs.webkitBackdropFilter || 'none'),
           'bg=' + cs.backgroundColor,
@@ -272,24 +272,26 @@ test.describe('system UI skin - v2 surface contract', () => {
     const drawer = page.locator(DRAWER)
     await expect(drawer).toBeVisible({ timeout: 10_000 })
 
-    // Tab through the drawer until a focusable control inside it holds
-    // focus, then require a visible focus indicator (outline or ring
-    // shadow - the sys layer paints at least one).
-    let ring = 'none'
-    for (let i = 0; i < 14 && ring === 'none'; i++) {
-      await page.keyboard.press('Tab')
-      ring = await page.evaluate<string>(
-        `(() => {
-          const el = document.activeElement
-          const drawer = document.querySelector('${DRAWER}')
-          if (!el || !drawer || !drawer.contains(el)) return 'none'
-          const cs = getComputedStyle(el)
-          const has = (cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0)
-            || (cs.boxShadow && cs.boxShadow !== 'none')
-          return has ? 'focus:' + el.tagName : 'none'
-        })()`,
-      )
-    }
+    // Keyboard-modality first (a real Tab press establishes
+    // :focus-visible matching for the scripted focus below), then focus a
+    // control inside the drawer and require a visible ring (outline or
+    // ring shadow - the sys layer paints at least one).
+    await page.keyboard.press('Tab') // opens wheel; closes via second Tab
+    await page.keyboard.press('Tab')
+    const ring = await page.evaluate<string>(
+      `(() => {
+        const drawer = document.querySelector('${DRAWER}')
+        if (!drawer) return 'none'
+        const btn = drawer.querySelector('button:not([disabled]), a[href], input, select, [tabindex="0"]')
+        if (!btn) return 'none'
+        btn.focus()
+        if (!btn.matches(':focus-visible')) return 'no-visible-match:' + btn.tagName
+        const cs = getComputedStyle(btn)
+        const has = (cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0)
+          || (cs.boxShadow && cs.boxShadow !== 'none')
+        return has ? 'focus:' + btn.tagName : 'no-ring:' + btn.tagName
+      })()`,
+    )
     expect(ring).toContain('focus:')
   })
 
@@ -306,7 +308,7 @@ test.describe('system UI skin - v2 surface contract', () => {
 
     const fonts = await page.evaluate<string>(
       `(() => {
-        const el = document.querySelector('${REALM_MODAL} h1, ${REALM_MODAL} h2, ${REALM_MODAL} [class*=title]')
+        const el = document.querySelector('${REALM_MODAL} .overlay-panel__heading h3, ${REALM_MODAL} h1, ${REALM_MODAL} [class*=title]')
         if (!el) return 'MISSING:title'
         const cs = getComputedStyle(el)
         return cs.fontFamily + '|' + cs.color + '|' + (el.textContent || '').trim().slice(0, 40)
