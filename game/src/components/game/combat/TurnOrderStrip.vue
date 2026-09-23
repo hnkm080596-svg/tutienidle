@@ -204,15 +204,17 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
   position: relative;
   overflow: hidden;
   padding: 2px 8px 5px;
-  border: 1px solid var(--ink-800, #333);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--ink-950, #111) 70%, transparent);
-  color: var(--text-primary, #eee);
+  border: 1px solid var(--sys-line-soft, var(--ink-800, #333));
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  background:
+    linear-gradient(180deg, rgba(56, 225, 255, .04), transparent 55%),
+    color-mix(in srgb, var(--sys-bg-0, var(--ink-950, #111)) 70%, transparent);
+  color: var(--sys-text, var(--text-primary, #eee));
   white-space: nowrap;
 }
 
 .turn-order-strip__member-hp {
-  color: var(--jade, #4caf50);
+  color: var(--sys-success, var(--jade, #4caf50));
 }
 
 .turn-order-strip__member.is-dead {
@@ -226,13 +228,13 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
 /* Phase A6 — buff duration badges (buff = jade, debuff = danger). */
 .turn-order-strip__buff {
   padding: 1px 4px;
-  border-radius: 3px;
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
   font-size: var(--text-2xs, 10px);
 }
 
 .turn-order-strip__buff.is-buff {
-  background: color-mix(in srgb, var(--jade, #4caf50) 25%, transparent);
-  color: var(--jade, #4caf50);
+  background: color-mix(in srgb, var(--sys-success, var(--jade, #4caf50)) 25%, transparent);
+  color: var(--sys-success, var(--jade, #4caf50));
 }
 
 .turn-order-strip__buff.is-debuff {
@@ -247,7 +249,7 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
 }
 
 .turn-order-strip__title {
-  color: var(--text-muted, #999);
+  color: var(--sys-text-dim, var(--text-muted, #999));
 }
 
 .turn-order-strip__list {
@@ -262,16 +264,19 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
   position: relative;
   overflow: hidden;
   padding: 2px 8px 5px;
-  border: 1px solid var(--ink-800, #333);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--ink-950, #111) 70%, transparent);
-  color: var(--text-primary, #eee);
+  border: 1px solid var(--sys-line-soft, var(--ink-800, #333));
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  background:
+    linear-gradient(180deg, rgba(56, 225, 255, .04), transparent 55%),
+    color-mix(in srgb, var(--sys-bg-0, var(--ink-950, #111)) 70%, transparent);
+  color: var(--sys-text, var(--text-primary, #eee));
   white-space: nowrap;
 }
 
 .turn-order-strip__item.is-current {
-  border-color: var(--jade, #4caf50);
-  color: var(--jade, #4caf50);
+  border-color: var(--sys-success, var(--jade, #4caf50));
+  color: var(--sys-success, var(--jade, #4caf50));
+  text-shadow: 0 0 8px color-mix(in srgb, var(--sys-success, var(--jade, #4caf50)) 60%, transparent);
 }
 
 /* Combat speed gauge (2026-09-12) — thin ATB fill along the bottom edge of
@@ -283,18 +288,18 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
   right: 0;
   bottom: 0;
   height: 3px;
-  background: color-mix(in srgb, var(--ink-800, #333) 60%, transparent);
+  background: color-mix(in srgb, var(--sys-bg-0, var(--ink-800, #333)) 60%, transparent);
 }
 
 .turn-order-strip__gauge-fill {
   display: block;
   height: 100%;
-  background: var(--jade, #4caf50);
+  background: var(--sys-success, var(--jade, #4caf50));
   transition: width 120ms linear;
 }
 
 .turn-order-strip__gauge-fill.is-ready {
-  background: var(--gold, #ffd75e);
+  background: var(--sys-accent, var(--gold, #ffd75e));
 }
 
 .turn-order-strip__item.is-enemy .turn-order-strip__gauge-fill {
@@ -305,10 +310,13 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
    limit when the launching stage has one). is-over = window missed. */
 .turn-order-strip__round {
   padding: 2px 8px;
-  border: 1px solid var(--ink-800, #333);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--ink-950, #111) 70%, transparent);
-  color: var(--gold, #ffd75e);
+  border: 1px solid var(--sys-line-soft, var(--ink-800, #333));
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  background:
+    linear-gradient(180deg, rgba(56, 225, 255, .04), transparent 55%),
+    color-mix(in srgb, var(--sys-bg-0, var(--ink-950, #111)) 70%, transparent);
+  color: var(--sys-accent, var(--gold, #ffd75e));
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 

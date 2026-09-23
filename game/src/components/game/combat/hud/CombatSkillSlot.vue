@@ -176,8 +176,9 @@ const tooltip = computed<TooltipContent | undefined>(() => {
 }
 
 .combat-skill-slot.is-tappable:hover {
-  outline: 2px solid var(--jade);
+  outline: 2px solid var(--sys-accent, var(--jade));
   outline-offset: 1px;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--sys-accent, var(--jade)) 50%, transparent));
 }
 
 .combat-skill-slot__mask {
@@ -186,7 +187,7 @@ const tooltip = computed<TooltipContent | undefined>(() => {
   top: auto;
   bottom: 0;
   width: 100%;
-  background: color-mix(in srgb, var(--ink-950) 72%, transparent);
+  background: color-mix(in srgb, var(--sys-bg-0, var(--ink-950)) 72%, transparent);
   pointer-events: none;
   z-index: 8;
   transition: height 0.1s linear;
@@ -199,10 +200,10 @@ const tooltip = computed<TooltipContent | undefined>(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-display);
+  font-family: var(--sys-font-display, var(--font-display));
   font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--sys-text, var(--text-primary));
   text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
   pointer-events: none;
 }
@@ -215,9 +216,9 @@ const tooltip = computed<TooltipContent | undefined>(() => {
   width: auto;
   border-radius: 2px;
   z-index: 9;
-  --bar-track: var(--ink-900);
-  --bar-from: var(--jade);
-  --bar-to: var(--jade);
+  --bar-track: var(--sys-bg-1, var(--ink-900));
+  --bar-from: var(--sys-success, var(--jade));
+  --bar-to: var(--sys-success, var(--jade));
 }
 
 .combat-skill-slot__cast-bar :deep(.bar__fill) {
@@ -230,9 +231,9 @@ const tooltip = computed<TooltipContent | undefined>(() => {
   left: 3px;
   z-index: 7;
   padding: 0 3px;
-  border-radius: 3px;
-  background: color-mix(in srgb, var(--ink-950) 75%, transparent);
-  color: var(--jade);
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+  background: color-mix(in srgb, var(--sys-bg-0, var(--ink-950)) 75%, transparent);
+  color: var(--sys-success, var(--jade));
   font-size: var(--text-xs);
   line-height: 1.4;
   pointer-events: none;
@@ -247,8 +248,8 @@ const tooltip = computed<TooltipContent | undefined>(() => {
   justify-content: center;
   text-align: center;
   font-size: var(--text-xs);
-  color: var(--text-muted);
-  background: color-mix(in srgb, var(--ink-950) 60%, transparent);
+  color: var(--sys-text-dim, var(--text-muted));
+  background: color-mix(in srgb, var(--sys-bg-0, var(--ink-950)) 60%, transparent);
   pointer-events: none;
 }
 

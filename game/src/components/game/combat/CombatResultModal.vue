@@ -45,7 +45,7 @@ const outcome = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--scrim);
+  background: var(--sys-scrim, var(--scrim));
   pointer-events: auto;
 }
 </style>

@@ -69,8 +69,9 @@ onBeforeUnmount(() => {
   gap: var(--space-3, 12px);
   padding: var(--space-3, 12px);
   overflow: hidden;
-  border-left: 1px solid var(--frame-outer);
-  box-shadow: var(--surface-shadow-deep);
+  border-left: 1px solid var(--sys-line, var(--frame-outer));
+  background: color-mix(in srgb, var(--sys-bg-0, var(--ink-950)) 55%, transparent);
+  box-shadow: var(--sys-shadow, var(--surface-shadow-deep));
   pointer-events: auto;
   z-index: 12;
 }

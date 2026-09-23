@@ -73,17 +73,17 @@ const zoneStageLabel = computed(() => {
 }
 
 .combat-intro-overlay__label {
-  font-family: var(--font-display);
+  font-family: var(--sys-font-display, var(--font-display));
   font-size: var(--text-hero);
   font-weight: 700;
-  color: var(--gold-300);
-  text-shadow: 0 0 24px color-mix(in srgb, var(--gold-500) 60%, transparent), 0 2px 8px rgba(0, 0, 0, 0.8);
+  color: var(--sys-accent, var(--gold-300));
+  text-shadow: 0 0 24px color-mix(in srgb, var(--sys-accent, var(--gold-500)) 60%, transparent), 0 2px 8px rgba(0, 0, 0, 0.8);
 }
 
 .combat-intro-overlay__zone-stage {
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
   font-size: var(--text-body);
-  color: var(--chrome-100);
+  color: var(--sys-text, var(--chrome-100));
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
 }
 

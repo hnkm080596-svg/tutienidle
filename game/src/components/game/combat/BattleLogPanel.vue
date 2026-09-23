@@ -99,22 +99,22 @@ function describe(entry: BattleLogEntry): string {
   gap: 2px;
   pointer-events: auto;
   font-size: var(--text-xs, 12px);
-  color: var(--text-muted, #aaa);
+  color: var(--sys-text-dim, var(--text-muted, #aaa));
 }
 
 .battle-log-panel__toggle {
   align-self: flex-end;
   padding: 2px 8px;
-  border: 1px solid var(--surface-line, #333);
-  border-radius: var(--radius-sm, 4px);
-  background: color-mix(in srgb, var(--ink-950) 70%, transparent);
-  color: var(--text-muted, #aaa);
+  border: 1px solid var(--sys-line-soft, var(--surface-line, #333));
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+  background: color-mix(in srgb, var(--sys-bg-0, var(--ink-950)) 70%, transparent);
+  color: var(--sys-text-dim, var(--text-muted, #aaa));
   font-size: var(--text-xs, 12px);
   cursor: pointer;
 }
 
 .battle-log-panel__toggle:focus-visible {
-  outline: 2px solid var(--jade);
+  outline: 2px solid var(--sys-focus, var(--jade));
   outline-offset: 1px;
 }
 

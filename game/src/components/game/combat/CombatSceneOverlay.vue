@@ -139,7 +139,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   pointer-events: none;
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .combat-scene-overlay__top-bar {

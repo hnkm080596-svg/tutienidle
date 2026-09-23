@@ -47,11 +47,11 @@ const { t } = useI18n()
   justify-content: space-between;
   margin: 0;
   font-size: var(--text-body);
-  color: var(--paper-text-soft, #5e5a50);
+  color: var(--sys-text-muted, var(--paper-text-soft, #5e5a50));
 }
 
 .reward-list__value {
-  color: var(--jade);
+  color: var(--sys-success, var(--jade));
   font-weight: 700;
 }
 </style>
