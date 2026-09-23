@@ -694,7 +694,9 @@ export class EarlyGameSession {
               ...state,
               ...(state.mechanic === undefined
                 ? {}
-                : { mechanic: { ...state.mechanic } }),
+                : // deep clone - mechanism payloads (B/C-owned) may nest
+                  // arrays/objects a snapshot must not share live refs to
+                  { mechanic: JSON.parse(JSON.stringify(state.mechanic)) }),
             },
           ]),
         ),

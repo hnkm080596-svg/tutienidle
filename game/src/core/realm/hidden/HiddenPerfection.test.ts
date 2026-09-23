@@ -151,19 +151,51 @@ describe('assertHiddenPerfectionIntegrity (restore preflight, fail-closed)', () 
     )
   })
 
-  it('throw khi hiddenBreakthroughRealmIds chua mortal hoac realm hien tai', () => {
+  it('throw khi hiddenBreakthroughRealmIds chua mortal hoac realm chua toi', () => {
     const withMortal = createDefaultHiddenPerfection()
     withMortal.hiddenBreakthroughRealmIds = ['mortal']
     expect(integrityIssue({ hiddenPerfection: withMortal, realmId: 'mortal' })).toMatch(
       /integrity violation/,
     )
 
+    // the CURRENT realm is legal (save right after the commit) -
+    // the DEPARTING realm's hidden body is the precondition
     const selfRef = createDefaultHiddenPerfection()
+    selfRef.completedHiddenBodyRealmIds = ['mortal']
+    selfRef.realms = { mortal: { bodyCompleted: true } }
     selfRef.hiddenBreakthroughRealmIds = ['qi_refining']
-    // entered realm must sit strictly behind current realm
-    expect(integrityIssue({ hiddenPerfection: selfRef, realmId: 'qi_refining' })).toMatch(
+    expect(
+      integrityIssue({ hiddenPerfection: selfRef, realmId: 'qi_refining' }),
+    ).toBeUndefined()
+
+    // a FUTURE realm is impossible
+    const future = createDefaultHiddenPerfection()
+    future.completedHiddenBodyRealmIds = ['mortal']
+    future.hiddenBreakthroughRealmIds = ['foundation_establishment']
+    expect(integrityIssue({ hiddenPerfection: future, realmId: 'qi_refining' })).toMatch(
       /integrity violation/,
     )
+  })
+
+  it('throw khi entered realm thieu hidden body cua realm roi di', () => {
+    // entry into foundation requires the qi_refining hidden body;
+    // mortal body alone cannot unlock it
+    const state = createDefaultHiddenPerfection()
+    state.completedHiddenBodyRealmIds = ['mortal']
+    state.realms = { mortal: { bodyCompleted: true } }
+    state.hiddenBreakthroughRealmIds = ['qi_refining', 'foundation_establishment']
+    expect(
+      integrityIssue({ hiddenPerfection: state, realmId: 'foundation_establishment' }),
+    ).toMatch(/integrity violation/)
+
+    state.completedHiddenBodyRealmIds = ['mortal', 'qi_refining']
+    state.realms = {
+      mortal: { bodyCompleted: true },
+      qi_refining: { bodyCompleted: true },
+    }
+    expect(
+      integrityIssue({ hiddenPerfection: state, realmId: 'foundation_establishment' }),
+    ).toBeUndefined()
   })
 
   it('throw khi mechanic kind khong khop authored tag', () => {

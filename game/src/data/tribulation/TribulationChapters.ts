@@ -1,4 +1,3 @@
-import type { FoundationType } from '../../core/breakthrough/FoundationType'
 import type { ResolvableKienCoGrade } from '../breakthrough/BreakthroughGrades'
 
 // He Loi Kiep moi (spec dot-pha-loi-kiep sec.5) - chuong kiep theo realm,

@@ -23,6 +23,7 @@ import {
   isAuthoredHiddenRealm,
 } from '../../../data/realm/HiddenBodyRealms'
 import { getRealmIndex } from '../realmSystem'
+import { REALMS } from '../../../data/realms/realm'
 
 /**
  * Mechanism-owned persisted payload (sibling missions B/C). The `kind`
@@ -258,7 +259,8 @@ export function assertHiddenPerfectionIntegrity(player: {
   // hiddenBreakthroughRealmIds: every element names a real realm that
   // is NOT 'mortal' (the lineage root is never entered); duplicates are
   // impossible because realmId never decreases; and every entered realm
-  // must sit strictly behind the player's current realm index.
+  // must sit at or behind the player's current realm index, with the
+  // DEPARTING realm's hidden body completed.
   const playerIndex = getRealmIndex(player.realmId)
   const seen = new Set<string>()
   for (const realmId of state.hiddenBreakthroughRealmIds ?? []) {
@@ -275,9 +277,19 @@ export function assertHiddenPerfectionIntegrity(player: {
     seen.add(realmId)
 
     const enteredIndex = getRealmIndex(realmId)
-    if (enteredIndex !== -1 && playerIndex !== -1 && enteredIndex >= playerIndex) {
+    // the entered realm may BE the current realm (a save taken right
+    // after the commit) but never a FUTURE one
+    if (enteredIndex !== -1 && playerIndex !== -1 && enteredIndex > playerIndex) {
       issues.push(
         `hiddenBreakthroughRealmIds chứa '${realmId}' không nằm sau realm hiện tại '${player.realmId}'`,
+      )
+    }
+
+    // hidden entry into realm i is only possible when the DEPARTING
+    // realm (i-1) completed its hidden body
+    if (enteredIndex > 0 && !completed.includes(REALMS[enteredIndex - 1]!.id)) {
+      issues.push(
+        `hiddenBreakthroughRealmIds chứa '${realmId}' nhưng hidden body của realm trước '${REALMS[enteredIndex - 1]!.id}' chưa hoàn thành`,
       )
     }
   }

@@ -101,7 +101,7 @@ function buildKienCoModifiers(player: PlayerData): StatModifier[] {
 // final number; do not tune here.
 const KIEN_CO_ENHANCED_MAIN_STAT_PERCENT = 0.2 // NON-CANONICAL (sec.18)
 
-function buildEnhancedNhapDaoModifiers(player: PlayerData): StatModifier[] {
+function buildEnhancedNhapDaoModifiers(_player: PlayerData): StatModifier[] {
   const universalStats: StatModifier['stat'][] = ['maxHp', 'hpRegenPerTurn']
   const spellPathStats: StatModifier['stat'][] = ['maxMp', 'manaRegenPerTurn']
 
@@ -124,7 +124,7 @@ function buildEnhancedNhapDaoModifiers(player: PlayerData): StatModifier[] {
   ]
 }
 
-function buildEnhancedKienCoModifiers(player: PlayerData): StatModifier[] {
+function buildEnhancedKienCoModifiers(_player: PlayerData): StatModifier[] {
   // The enhanced variant ignores highestFoundationAchieved - the
   // hidden breakthrough IS the enhanced record (a hidden entry's
   // foundation always lands as the authored enhanced passive).
