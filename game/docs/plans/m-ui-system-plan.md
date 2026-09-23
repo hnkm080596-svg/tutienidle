@@ -253,15 +253,16 @@ withDefaults(defineProps<{
   variant?: 'primary' | 'interactive' | 'flat'
   corners?: boolean
   scanlines?: boolean
-}>(), { variant: 'flat', corners: true, scanlines: false })
+  rimActive?: boolean   // sole claim input — parent feeds its visible-primary signal
+}>(), { variant: 'flat', corners: true, scanlines: false, rimActive: false })
 // root: <section class="sys-panel sys-surface sys-corners" :class="{
 //   'sys-rim': variant === 'primary',
 //   'sys-bloom': variant === 'interactive',
 //   'sys-scanlines': scanlines }"> + <slot />
-// variant === 'primary' also makes the panel a rim claimant via useSystemRimAuthority():
-// claim when the host becomes visibly primary, release on hide/destroy, promote on each
-// activation — mounted-but-hidden overlays hold no claim (spec 4.1.1). 'sys-rim--live'
-// applies only while this panel is the authority's topmost active claimant.
+// variant === 'primary' marks the panel rim-ELIGIBLE; the claim itself is driven only by
+// rimActive via useSystemRimAuthority(): claim+promote when rimActive flips true, release
+// when false or on unmount — mounted-but-hidden overlays hold no claim (spec 4.1.1).
+// 'sys-rim--live' applies only while this panel is the authority's topmost active claimant.
 
 // SysBar.vue — same aria contract as primitives/Bar.vue
 withDefaults(defineProps<{
@@ -300,8 +301,8 @@ withDefaults(defineProps<{
 const emit = defineEmits<{ close: [] }>()
 // reuse useDialogFocus(cardRef, open, { onEscape: close }); heading useId + aria-labelledby;
 // outer root emits class 'sys-modal' (matches the :focus-visible rule in system-theme.css);
-// card = <SysPanel variant="primary"> — claims the rim on open / releases on close;
-// holds the live rim while the authority's topmost active claimant (spec 4.1.1)
+// card = <SysPanel variant="primary" :rim-active="open"> — claims while open, releases
+// on close; holds the live rim while the authority's topmost active claimant (spec 4.1.1)
 ```
 
 - [ ] **Step 1:** scaffold all five SFCs with the contracts above; component `<style scoped>`
@@ -321,8 +322,8 @@ const emit = defineEmits<{ close: [] }>()
   the root — its styles live ONLY in `system-theme.css` (spec §5).
 - `OverlayPanel` gains `variant?: 'ink' | 'system'` (default `'ink'`); `'system'` skips both
   `InkNineSlice` layers and adds `overlay-panel__card--system` + `.sys-rim` on the card,
-  claiming `useSystemRimAuthority` while `open` (its live rim follows claimant order —
-  spec 4.1.1). Same props/slots/aria/focus contract.
+  passing `rimActive=open` through to its internal SysPanel (its live rim follows claimant
+  order — spec 4.1.1). Same props/slots/aria/focus contract.
 
 - [ ] **Step 1:** add props + class bindings; keep every default identical.
 - [ ] **Step 2:** add `bar--system` / `overlay-panel__card--system` rules to
@@ -337,9 +338,10 @@ const emit = defineEmits<{ close: [] }>()
 `system-theme.css` (drawer overrides), `src/assets/ink-wash-ui-slices.json` — NOT touched.
 
 **Interfaces:** Consumes SysPanel/SysStat/SysTag/SysBar from T2. LeftPanel's drawer is the
-home-primary surface — `variant="primary"` claims the rim while `ui.characterOverlayOpen`
-makes the drawer actually visible; any opened system modal promotes above it and takes the
-live rim, closing pops back to the drawer (active-claimant order — spec 4.1.1).
+home-primary surface — `variant="primary"` with `rim-active="ui.characterOverlayOpen"`
+feeds the claim while the drawer is actually visible; any opened system modal promotes
+above it and takes the live rim, closing pops back to the drawer (active-claimant order —
+spec 4.1.1).
 
 - [ ] **Step 1:** `class="left-panel ink-drawer sys-surface sys-corners sys-scanlines"` (same
   for RightPanel minus the primary rim; CharacterDetailCard gets `.sys-surface`). In

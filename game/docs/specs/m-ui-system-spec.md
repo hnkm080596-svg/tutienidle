@@ -219,11 +219,13 @@ The rotating rim repaints its gradient **every frame** — it is not compositor-
      overlay holds no claim; the modal open state is part of the authority input.
    - **promote(id):** every activation re-orders the claimant to the top, so an
      already-mounted modal that re-opens correctly takes the rim back.
-   Only the current top claimant applies `.sys-rim--live`. `SysPanel variant="primary"` is the
-   sole claimant type — non-`primary` surfaces never claim. Wave-1 eligible set: system modal
-   cards (`SysModalBase`, `OverlayPanel variant="system"` — claim tied to the `open` prop)
-   and the `LeftPanel` drawer (claim tied to `ui.characterOverlayOpen` — drawer eligibility
-   reflects actual visibility). Result: the lone drawer owns the rim at home; an opening
+   Only the current top claimant applies `.sys-rim--live`. Claims enter through ONE seam
+   (review finding R19-1): `SysPanel`'s `rimActive` prop — the parent surface computes its
+   own visible-primary state and passes it in; `SysPanel` watches it and performs
+   claim/release/promote. `variant="primary"` alone never claims. Wave-1 eligible set:
+   system modal cards (`SysModalBase`, `OverlayPanel variant="system"` — `rimActive` tied
+   to the `open` prop) and the `LeftPanel` drawer (`rimActive` tied to
+   `ui.characterOverlayOpen` — drawer eligibility reflects actual visibility). Result: the lone drawer owns the rim at home; an opening
    modal promotes above it; stacked modals promote the newest; closing pops back down to the
    drawer. The e2e assertions (§10) — including the closed-but-mounted → open → close
    handoff — are the regression check of this contract.
@@ -257,11 +259,11 @@ CSS vars overridable by consumers (`style="--sys-accent: var(--sys-violet)"`).
 
 | Component | Contract |
 |---|---|
-| `SysPanel` | Slot container. Props: `variant?: 'primary' \| 'interactive' \| 'flat'` (default `'flat'`); `corners?: boolean` (default `true`); `scanlines?: boolean`. Emits the `.sys-surface` recipe + `.sys-corners`; `primary` registers the panel with `useSystemRimAuthority` (live rim only while topmost — §4.1.1), `interactive` adds `.sys-bloom` hover. |
+| `SysPanel` | Slot container. Props: `variant?: 'primary' \| 'interactive' \| 'flat'` (default `'flat'`); `corners?: boolean` (default `true`); `scanlines?: boolean`; `rimActive?: boolean` (default `false`). Emits the `.sys-surface` recipe + `.sys-corners`; `interactive` adds `.sys-bloom` hover. `variant="primary"` marks the panel rim-eligible, but the claim is driven solely by `rimActive` — the parent feeds its visible-primary signal (`open`, `characterOverlayOpen`); the panel claims/promotes while `rimActive` is true and releases when it goes false or the panel unmounts (§4.1.1). |
 | `SysBar` | System-readout progress bar. Props: `value: number`, `max: number`, `height?: number` (default 10), `tone?: 'cyan' \| 'hp' \| 'mp' \| 'exp' \| 'warn'` (mapped to `--sys-bar-from/--sys-bar-to`), `label?: string`. Segmented look via gradient stops + shimmer; `role="progressbar"` with aria values — same contract as `primitives/Bar.vue`. Label text (not color) carries meaning (§7.3). |
 | `SysTag` | Status/rarity chip. Props: `tone?: 'cyan' \| 'violet' \| 'warn' \| 'danger' \| 'success' \| 'muted'`, `icon?: string`. Renders bracketed uppercase label + a left glyph — meaning is never hue-only (§7.3). |
 | `SysStat` | Stat readout row. Props: `label: string`, `tone?: 'default' \| 'positive' \| 'negative' \| 'warn' \| 'muted'`, `bordered?: boolean`. Label `--sys-text-muted`, value `tabular-nums` in `--sys-font-display`. |
-| `SysModalBase` | Modal chrome: `--sys-scrim` scrim + `SysPanel variant="primary"` card (the one allowed live rim). Owns the dialog contract: `role="dialog"`, `aria-modal`, `aria-labelledby` via `useId`, `useDialogFocus` focus trap + Escape — the same contract `OverlayPanel` holds today. Props: `open`, `title`, `width?`, `height?`, `layer?`; emits `close`. Root emits `.sys-modal`; card registers with the rim authority via `variant="primary"`. |
+| `SysModalBase` | Modal chrome: `--sys-scrim` scrim + `SysPanel variant="primary"` card. Owns the dialog contract: `role="dialog"`, `aria-modal`, `aria-labelledby` via `useId`, `useDialogFocus` focus trap + Escape — the same contract `OverlayPanel` holds today. Props: `open`, `title`, `width?`, `height?`, `layer?`; emits `close`. Root emits `.sys-modal`; the card passes `:rim-active="open"` to its SysPanel — claims while open, releases on close. |
 
 Shared-component variants (§2.2 rule 4):
 
@@ -277,7 +279,7 @@ Shared-component variants (§2.2 rule 4):
 
 | Surface | File(s) | Skin move |
 |---|---|---|
-| Home HUD drawers | `components/layout/LeftPanel.vue`, `components/layout/RightPanel.vue`, docked `components/panels/CharacterDetailCard.vue` | add `.sys-surface` next to `.ink-drawer`; system CSS hides border-image/art and applies the panel recipe; `LeftPanel` may carry `variant="primary"` when no modal is open |
+| Home HUD drawers | `components/layout/LeftPanel.vue`, `components/layout/RightPanel.vue`, docked `components/panels/CharacterDetailCard.vue` | add `.sys-surface` next to `.ink-drawer`; system CSS hides border-image/art and applies the panel recipe; `LeftPanel` is `variant="primary"` with `rimActive` tied to `ui.characterOverlayOpen` |
 | CharacterPanel | `components/panels/CharacterPanel.vue` | section titles → bracketed `.sys-eyebrow`; stat readouts → `SysStat`; talent tags → `SysTag`; figure/wheel art kept (world art, not skin) |
 | RealmPanel | `components/panels/RealmPanel.vue` | `OverlayPanel variant="system"`; cultivation `Bar variant="system"`; requirement rows adopt `SysStat`-style readout; realm nodes keep shield shape, re-tinted via `--sys-*` overrides inside the opted-in subtree |
 | NodeTreePanel | `components/panels/skill-path/NodeTreePanel.vue` | node cards → `.sys-surface` node recipe (1px line + corner accent); route tags → `SysTag`; insight counter → numeral readout; zoom/route controls keep behavior, system skin only. **Sequenced last — RESPEC conflict, see plan.** |
@@ -332,7 +334,9 @@ tooltips/toasts as system chrome; combat HUD system pass.
 
 - CSS-only FX; no JS animation libs, no canvas for UI, no new runtime deps.
 - Comments ASCII English (P15); Vietnamese only in localized strings/docs.
-- One `--sys-*` definition site (`system-theme.css`), one `.sys-*` class owner per pattern.
+- One canonical `:root` definition site for `--sys-*` tokens (`system-theme.css`); scoped
+  re-assignments on opted-in system selectors stay permitted (§2.4 rule 1). One `.sys-*`
+  class owner per pattern.
 - Perf policy §4.1 (one live rim, sweep cap, low-fx hatch) and boundary contract §2.2 are
   enforced by `systemThemeBoundary.test.ts`.
 - Revert invariant §2.3 holds after every task — checked in the plan's verification steps.
