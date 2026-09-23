@@ -53,7 +53,7 @@ function onUpgrade() {
         <GameButton
           v-if="!isMaxLevel"
           class="native-core-detail__upgrade"
-          variant="ghost"
+          variant="system"
           size="sm"
           :disabled="!entry.canUpgrade"
           @click="onUpgrade"

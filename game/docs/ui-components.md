@@ -901,3 +901,24 @@ Spec đã được thực hiện qua branch `ui-fit-refactor` (merged 2026-08-29
 - **Drawer**: floor 260px dưới 900px, full-width < 620px.
 - **theme.css**: utility `.scrollfade` (mask fade-edge cho vùng wheel-scroll ẩn thanh).
 - Composable mới: `src/composables/usePanelPagination.ts`.
+
+---
+
+## 16. M-UI-OVERHAUL — Hệ Thống v2 full-interface skin (2026-09)
+
+Mission `M-UI-OVERHAUL` (spec `docs/specs/m-ui-overhaul-spec.md`, plan `docs/plans/m-ui-overhaul-plan.md`) mở rộng skin "xuyên không hệ thống" (M-UI-SYSTEM §14) phủ toàn bộ DOM UI. Tài liệu trần giữ nguyên — phần này chỉ ghi thức ngữ v2 và luật mới.
+
+### Thức ngữ v2 (system-theme.css)
+
+- **Hình học**: `clip-path` chamfer/vát góc + `filter: drop-shadow(...)` (box-shadow bị clip-path cắt — mọi glow trên phần tử có clip-path phải dùng drop-shadow).
+- **Utility classes** (có guard test): `.sys-chamfer(+--sm/--hard)`, `.sys-boot`, `.sys-trace`, `.sys-rail`, `.sys-energy`, `.sys-snap`, `.sys-widget`, `.sys-ephemeral`, `.sys-btn`, `.sys-tabs`, `.sys-seg`, `.sys-marker`, `.sys-veil`, `.sys-pop`, `.sys-domain--{azure,jade,violet,danger,success,warn}`.
+- **Accent per-domain**: `.sys-domain--*` remap `--sys-accent` trong phạm vi panel (realm=azure, alchemy=jade, artifact=violet, combat=danger).
+- **Kill-switch hiệu ứng**: `.sys-fx-low` trên `documentElement`, localStorage `tien-hiep-idle-sys-fx-low`, `initSysFxLow()` chạy trước `app.mount()`.
+
+### Luật mới (đều có guard)
+
+- **GameButton default = `system`**: nút bare trong mọi bề mặt sys tự nhiễu hiệu ứng; nút trong nghi lễ mực (thắng/bại trận) ghi rõ `variant="primary"|"danger"|"secondary"`; nút nguy hiểm trên bề mặt sys dùng `variant="system"` + `accent-var="var(--sys-danger)"`.
+- **OverlayPanel**: mọi mount phải `variant="system"` (guard quét `<OverlayPanel>` thiếu variant).
+- **InkNineSlice** chỉ còn trong nghi lễ mực + nhánh fallback ngủ đông: CombatVictoryPanel, CombatDefeatPanel, OverlayPanel(variant=ink), GameButton(non-system) — file mới import là vi phạm guard.
+- **De-ink đã xong**: Tooltip, NotificationBadge, Chip, EquipmentHallPanel, `components/menu/*` đã xoá.
+- Phần tử T5 (toast, nameplate, wheel slot, popover) dùng `.sys-ephemeral`/`.sys-widget` + chamfer + drop-shadow.

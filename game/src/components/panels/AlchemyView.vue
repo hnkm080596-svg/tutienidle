@@ -369,7 +369,7 @@ function cancelJob(jobId: string) {
 
           <Bar class="alchemy-job__progress" :value="job.progress" :max="1" :height="6" />
 
-          <GameButton class="alchemy-job__cancel" variant="ghost" size="sm" @click="cancelJob(job.jobId)">
+          <GameButton class="alchemy-job__cancel" variant="system" size="sm" @click="cancelJob(job.jobId)">
             {{ t('alchemy.cancelJob') }}
           </GameButton>
         </div>

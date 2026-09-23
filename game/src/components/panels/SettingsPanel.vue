@@ -159,18 +159,18 @@ function handleReset() {
     </p>
 
     <div class="settings-panel__actions">
-      <GameButton variant="secondary" data-testid="settings-save-button" @click="handleSave">{{ t('panels.settings.actions.save') }}</GameButton>
+      <GameButton variant="system" data-testid="settings-save-button" @click="handleSave">{{ t('panels.settings.actions.save') }}</GameButton>
 
-      <GameButton variant="secondary" @click="handleLoad">{{ t('panels.settings.actions.reload') }}</GameButton>
+      <GameButton variant="system" @click="handleLoad">{{ t('panels.settings.actions.reload') }}</GameButton>
 
-      <GameButton variant="secondary" @click="handleExport">{{ t('panels.settings.actions.export') }}</GameButton>
+      <GameButton variant="system" @click="handleExport">{{ t('panels.settings.actions.export') }}</GameButton>
 
       <label class="settings-panel__import">
         {{ t('panels.settings.actions.import') }}
         <input type="file" accept="application/json" @change="handleImportFile" />
       </label>
 
-      <GameButton class="settings-panel__danger" variant="danger" @click="handleReset">
+      <GameButton class="settings-panel__danger" variant="system" accent-var="var(--sys-danger)" @click="handleReset">
         {{ t('panels.settings.actions.reset') }}
       </GameButton>
     </div>

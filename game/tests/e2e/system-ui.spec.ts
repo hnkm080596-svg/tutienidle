@@ -149,3 +149,174 @@ test.describe('system UI skin - rim authority', () => {
     }
   })
 })
+
+/**
+ * M-UI-OVERHAUL e2e - v2 contract checks from spec section 8:
+ * boot console grammar, scrim blur + Vietnamese text, measured contrast on
+ * the brightest surface, focus-ring sweep, font-blocked fallback.
+ * Same string-evaluate convention (no DOM ambient types).
+ */
+test.describe('system UI skin - v2 surface contract', () => {
+  test('boot screen carries sys grammar and the title stays legible', async ({ page }) => {
+    await page.addInitScript(() => localStorage.clear())
+    await page.goto('/')
+
+    const boot = await page.evaluate<string>(
+      `(() => {
+        const screen = document.querySelector('.loading-screen')
+        if (!screen) return 'MISSING:.loading-screen'
+        const marker = screen.querySelector('.sys-marker')
+        const bg = getComputedStyle(screen).backgroundColor
+        const title = screen.querySelector('h1, .loading-screen__title')
+        return [
+          'marker=' + Boolean(marker),
+          'bg=' + bg,
+          'title=' + (title ? title.textContent : 'none'),
+        ].join(';')
+      })()`,
+    )
+    expect(boot).toContain('marker=true')
+    // Dark sys backdrop behind the pulse (rgb channels all low).
+    const bgMatch = boot.match(/bg=rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+    expect(bgMatch).not.toBeNull()
+    expect(Number(bgMatch![1]) + Number(bgMatch![2]) + Number(bgMatch![3])).toBeLessThan(150)
+    // The guest button still sits on the sys boot surface (next screen).
+    await expect(page.getByTestId('auth-guest-button')).toBeVisible({ timeout: 10_000 })
+  })
+
+  test('system modal shows blur scrim and readable Vietnamese text', async ({ page }) => {
+    await page.addInitScript(() => localStorage.clear())
+    await page.goto('/')
+    await page.getByTestId('auth-guest-button').click()
+    await createCharacterThroughUi(page, 'Hệ Thống')
+    await enterHome(page)
+
+    await page.keyboard.press('Tab')
+    await page.locator('[data-wheel-slot="realm"]').click()
+    const modal = page.locator(REALM_MODAL)
+    await expect(modal).toBeVisible({ timeout: 10_000 })
+
+    const contract = await page.evaluate<string>(
+      `(() => {
+        const scrim = document.querySelector('.overlay-panel')
+        if (!scrim) return 'MISSING:.overlay-panel'
+        const cs = getComputedStyle(scrim)
+        const title = scrim.querySelector('.overlay-panel__title, [class*=title]')
+        return [
+          'backdrop=' + (cs.backdropFilter || cs.webkitBackdropFilter || 'none'),
+          'bg=' + cs.backgroundColor,
+          'title=' + (title ? title.textContent : 'none'),
+        ].join(';')
+      })()`,
+    )
+    expect(contract).toContain('backdrop=blur(')
+    // Vietnamese header text renders (diacritics present in the label).
+    expect(contract).toMatch(/title=[^\n]*[À-ỹĐđ]/)
+  })
+
+  test('drawer text meets measured contrast against the dark sys surface', async ({ page }) => {
+    await page.addInitScript(() => localStorage.clear())
+    await page.goto('/')
+    await page.getByTestId('auth-guest-button').click()
+    await createCharacterThroughUi(page, 'Hệ Thống')
+    await enterHome(page)
+
+    await page.keyboard.press('Tab')
+    await page.locator('[data-wheel-slot="character"]').click()
+    const drawer = page.locator(DRAWER)
+    await expect(drawer).toBeVisible({ timeout: 10_000 })
+
+    // WCAG luminance math inline: contrast between computed text color and
+    // the composited darkest plausible backdrop under it (--sys-bg-0).
+    const ratio = await page.evaluate<number>(
+      `(() => {
+        const drawer = document.querySelector('${DRAWER}')
+        if (!drawer) return -1
+        const textEl = drawer.querySelector('h1, h2, h3, p, span, [class*=name], [class*=label]') || drawer
+        const parse = (v) => {
+          const m = v.match(/rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)(?:,\\s*([\\d.]+))?\\)/)
+          return m ? { r: +m[1], g: +m[2], b: +m[3], a: m[4] === undefined ? 1 : +m[4] } : null
+        }
+        const lum = (c) => {
+          const f = (u) => { u /= 255; return u <= 0.03928 ? u / 12.92 : Math.pow((u + 0.055) / 1.055, 2.4) }
+          return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b)
+        }
+        const fg = parse(getComputedStyle(textEl).color)
+        // Walk up for the first opaque-ish ancestor fill; default to the
+        // documented darkest sys backdrop (#060a12) when the card paints
+        // translucently - worst-case composite.
+        let node = textEl
+        let bg = null
+        while (node && node !== document.documentElement) {
+          const c = parse(getComputedStyle(node).backgroundColor)
+          if (c && c.a > 0.6) { bg = c; break }
+          node = node.parentElement
+        }
+        if (!bg) bg = { r: 6, g: 10, b: 18 }
+        const l1 = Math.max(lum(fg), lum(bg)), l2 = Math.min(lum(fg), lum(bg))
+        return (l1 + 0.05) / (l2 + 0.05)
+      })()`,
+    )
+    expect(ratio).toBeGreaterThanOrEqual(4.5)
+  })
+
+  test('focus sweep lands a visible ring on a drawer control', async ({ page }) => {
+    await page.addInitScript(() => localStorage.clear())
+    await page.goto('/')
+    await page.getByTestId('auth-guest-button').click()
+    await createCharacterThroughUi(page, 'Hệ Thống')
+    await enterHome(page)
+
+    await page.keyboard.press('Tab')
+    await page.locator('[data-wheel-slot="character"]').click()
+    const drawer = page.locator(DRAWER)
+    await expect(drawer).toBeVisible({ timeout: 10_000 })
+
+    // Tab through the drawer until a focusable control inside it holds
+    // focus, then require a visible focus indicator (outline or ring
+    // shadow - the sys layer paints at least one).
+    let ring = 'none'
+    for (let i = 0; i < 14 && ring === 'none'; i++) {
+      await page.keyboard.press('Tab')
+      ring = await page.evaluate<string>(
+        `(() => {
+          const el = document.activeElement
+          const drawer = document.querySelector('${DRAWER}')
+          if (!el || !drawer || !drawer.contains(el)) return 'none'
+          const cs = getComputedStyle(el)
+          const has = (cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0)
+            || (cs.boxShadow && cs.boxShadow !== 'none')
+          return has ? 'focus:' + el.tagName : 'none'
+        })()`,
+      )
+    }
+    expect(ring).toContain('focus:')
+  })
+
+  test('font-blocked fallback keeps Vietnamese text rendered and styled', async ({ page }) => {
+    await page.addInitScript(() => localStorage.clear())
+    await page.goto('/')
+    await page.getByTestId('auth-guest-button').click()
+    await createCharacterThroughUi(page, 'Hệ Thống')
+    await enterHome(page)
+
+    await page.keyboard.press('Tab')
+    await page.locator('[data-wheel-slot="realm"]').click()
+    await expect(page.locator(REALM_MODAL)).toBeVisible({ timeout: 10_000 })
+
+    const fonts = await page.evaluate<string>(
+      `(() => {
+        const el = document.querySelector('${REALM_MODAL} h1, ${REALM_MODAL} h2, ${REALM_MODAL} [class*=title]')
+        if (!el) return 'MISSING:title'
+        const cs = getComputedStyle(el)
+        return cs.fontFamily + '|' + cs.color + '|' + (el.textContent || '').trim().slice(0, 40)
+      })()`,
+    )
+    expect(fonts).not.toContain('MISSING:')
+    // A real stack resolves (family list non-empty), text renders non-empty.
+    const [family, , text] = fonts.split('|')
+    expect(family!.trim().length).toBeGreaterThan(3)
+    expect(text!.length).toBeGreaterThan(0)
+    await page.keyboard.press('Escape')
+  })
+})

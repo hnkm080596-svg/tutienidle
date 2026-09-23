@@ -67,7 +67,7 @@ function onCancel() {
       </p>
 
       <div class="breakthrough-confirm__actions">
-        <GameButton variant="ghost" size="sm" @click="onCancel">{{ t('tribulation.stillEquipped.cancel') }}</GameButton>
+        <GameButton variant="system" size="sm" @click="onCancel">{{ t('tribulation.stillEquipped.cancel') }}</GameButton>
         <GameButton size="sm" @click="onConfirm">{{ t('tribulation.stillEquipped.confirm') }}</GameButton>
       </div>
     </div>

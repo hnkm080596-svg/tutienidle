@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, useAttrs } from 'vue'
-import InkNineSlice from './InkNineSlice.vue'
 // Primitive pill chọn được — atom cho TabBar và mọi filter/mode switcher.
 // Công thức chuẩn: idle paper-200 (đủ tối để phân biệt trang giấy phía
 // sau, không còn khối mực đen); active nổi bật hẳn bằng viền đồng
@@ -30,11 +29,6 @@ const isTab = computed(() => attrs.role === 'tab')
     :disabled="disabled"
     :aria-pressed="isTab ? undefined : active"
   >
-    <InkNineSlice
-      asset-id="frame-xs-ink-line"
-      layer="frame"
-      :tint-var="active ? '--mineral-gold' : undefined"
-    />
     <span class="chip__content"><slot /></span>
   </button>
 </template>
@@ -49,7 +43,7 @@ const isTab = computed(() => attrs.role === 'tab')
   background: linear-gradient(160deg, var(--sys-bg-1, var(--paper-200)), var(--sys-bg-1, var(--paper-100)));
   color: var(--sys-text-muted, var(--paper-text-soft));
   border: 1px solid var(--sys-line-soft, var(--paper-line-soft));
-  border-radius: var(--radius-sm);
+  clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
   font-family: var(--sys-font-body, var(--font-body));
   font-weight: 600;
   font-size: var(--text-xs);
@@ -76,8 +70,8 @@ const isTab = computed(() => attrs.role === 'tab')
 }
 
 .chip:focus-visible {
-  outline: none;
-  box-shadow: var(--sys-focus, var(--focus-ring-chrome));
+  outline: 2px solid var(--sys-focus, rgba(217, 212, 199, 0.85));
+  outline-offset: 1px;
 }
 
 .chip:disabled {

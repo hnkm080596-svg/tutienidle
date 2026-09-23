@@ -457,7 +457,7 @@ function collectLinMach() {
 
             <GameButton
               class="site-card__upgrade-button"
-              variant="ghost"
+              variant="system"
               size="sm"
               :disabled="!canUpgrade(row.siteId, row.level)"
               @click="upgrade(row.siteId)"

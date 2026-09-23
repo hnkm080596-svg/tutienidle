@@ -241,7 +241,7 @@ function removeOrbAt(index: number) {
             <p class="quan-khi-panel__hidden-warning">{{ t('panels.quanKhi.sections.hiddenPath.warning') }}</p>
             <GameButton
               class="quan-khi-panel__choice"
-              variant="danger"
+              variant="system" accent-var="var(--sys-danger)"
               size="sm"
               :disabled="cooldownSeconds > 0"
               @click="choosePath(kit.pathId, kit.wayId)"
@@ -253,7 +253,7 @@ function removeOrbAt(index: number) {
           <GameButton
             v-else
             class="quan-khi-panel__choice"
-            variant="danger"
+            variant="system" accent-var="var(--sys-danger)"
             size="sm"
             :disabled="cooldownSeconds > 0"
             @click="choosePath(kit.pathId, kit.wayId)"

@@ -351,7 +351,7 @@ function onUpgrade() {
               v-for="route in SPELL_PATH_ROUTE_IDS"
               :key="route"
               class="route-pick__option"
-              variant="ghost"
+              variant="system"
               @click="onRoutePick(route)"
             >
               <span class="route-pick__option-name">{{ t(`panels.nodeTree.routes.${route}`) }}</span>

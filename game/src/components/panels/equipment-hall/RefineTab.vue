@@ -323,11 +323,11 @@ const refineRenAfter = computed(() =>
           {{ t('panels.equipmentHall.buttons.refinePreview') }}
         </GameButton>
 
-        <GameButton v-if="pendingRefineValues" size="lg" variant="secondary" @click="doRefineKeep">
+        <GameButton v-if="pendingRefineValues" size="lg" variant="system" @click="doRefineKeep">
           {{ t('panels.equipmentHall.buttons.keep') }}
         </GameButton>
 
-        <GameButton v-if="pendingRefineValues" size="lg" variant="secondary" @click="doRefineDiscard">
+        <GameButton v-if="pendingRefineValues" size="lg" variant="system" @click="doRefineDiscard">
           {{ t('panels.equipmentHall.buttons.discard') }}
         </GameButton>
       </div>

@@ -298,7 +298,7 @@ const washRenAfter = computed(() =>
           {{ t('panels.equipmentHall.buttons.washPreview') }}
         </GameButton>
 
-        <GameButton v-if="pendingWashTicket" size="lg" variant="secondary" @click="doWashKeep">
+        <GameButton v-if="pendingWashTicket" size="lg" variant="system" @click="doWashKeep">
           {{ t('panels.equipmentHall.buttons.keep') }}
         </GameButton>
       </div>

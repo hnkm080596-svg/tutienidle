@@ -130,6 +130,7 @@ onMounted(() => {
     <div class="combat-victory-panel__actions">
       <GameButton
         class="combat-victory-panel__retry"
+        variant="primary"
         :class="{ 'is-disabled': ui.battleRunMode !== 'manual' }"
         :disabled="ui.battleRunMode !== 'manual'"
         @click="retryNow"

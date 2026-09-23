@@ -330,9 +330,9 @@ function doDissolve() {
     </div>
 
     <div v-if="dissolveTotalPages > 1" class="dissolve-pagination">
-      <GameButton variant="ghost" size="sm" :disabled="dissolvePage === 0" @click="dissolveGoTo(dissolvePage - 1)">‹</GameButton>
+      <GameButton variant="system" size="sm" :disabled="dissolvePage === 0" @click="dissolveGoTo(dissolvePage - 1)">‹</GameButton>
       <span class="dissolve-pagination__label">{{ dissolvePage + 1 }} / {{ dissolveTotalPages }}</span>
-      <GameButton variant="ghost" size="sm" :disabled="dissolvePage >= dissolveTotalPages - 1" @click="dissolveGoTo(dissolvePage + 1)">›</GameButton>
+      <GameButton variant="system" size="sm" :disabled="dissolvePage >= dissolveTotalPages - 1" @click="dissolveGoTo(dissolvePage + 1)">›</GameButton>
     </div>
 
     <div v-if="dissolvePreview.length > 0" class="dissolve-preview">
@@ -347,7 +347,7 @@ function doDissolve() {
 
     <GameButton
       size="lg"
-      variant="danger"
+      variant="system" accent-var="var(--sys-danger)"
       class="qi-hall__primary-action"
       :disabled="dissolveSelected.size === 0"
       @click="doDissolve"

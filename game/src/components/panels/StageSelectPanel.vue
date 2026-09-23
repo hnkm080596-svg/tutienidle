@@ -304,7 +304,7 @@ function start() {
         <section class="stage-select__detail sys-chamfer">
         <div v-if="armedFarmStage" class="stage-select__autofarm">
           <span>{{ t('autoFarm.running', { stage: armedFarmStage.name }) }}</span>
-          <GameButton variant="danger" size="sm" data-testid="autofarm-stop" @click="stopAutoFarm">
+          <GameButton variant="system" accent-var="var(--sys-danger)" size="sm" data-testid="autofarm-stop" @click="stopAutoFarm">
             {{ t('autoFarm.stop') }}
           </GameButton>
         </div>
@@ -349,7 +349,7 @@ function start() {
         </p>
 
         <div class="stage-select__start-row">
-          <GameButton class="stage-select__build" variant="secondary" size="sm" @click="openBuild">{{ t('panels.stageSelect.actions.editBuild') }}</GameButton>
+          <GameButton class="stage-select__build" variant="system" size="sm" @click="openBuild">{{ t('panels.stageSelect.actions.editBuild') }}</GameButton>
 
           <GameButton class="stage-select__start" size="sm" :disabled="!canStart" data-testid="stage-start-button" @click="start">
             {{ t('panels.stageSelect.actions.start') }}

@@ -18,7 +18,7 @@ const props = withDefaults(defineProps<{
   /** When false (default true), the button does NOT play uiClick on click. */
   sound?: boolean
 }>(), {
-  variant: 'primary',
+  variant: 'system',
   size: 'md',
   shape: 'rect',
   accentVar: undefined,

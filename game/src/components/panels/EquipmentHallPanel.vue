@@ -11,7 +11,6 @@
 import { ref, provide } from 'vue'
 import { useI18n } from 'vue-i18n'
 import TabBar from '@/components/common/TabBar.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import EnhanceTab from './equipment-hall/EnhanceTab.vue'
 import WashTab from './equipment-hall/WashTab.vue'
 import RefineTab from './equipment-hall/RefineTab.vue'
@@ -72,8 +71,6 @@ provide(HALL_SELECTION_KEY, { selectedInstanceId, selectEquipped, clearSelection
 
 <template>
   <div class="qi-hall">
-    <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
-    <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
 
     <!-- Header "Điểm Rèn món đang chọn" cũ đã BỎ (2026-08-30, bug report:
          thông tin không cần thiết) — số Điểm Rèn chỉ liên quan Tẩy/Tinh
@@ -114,7 +111,7 @@ provide(HALL_SELECTION_KEY, { selectedInstanceId, selectEquipped, clearSelection
   font-family: var(--sys-font-body, var(--font-body));
 }
 
-.qi-hall > :not(.ink-nine-slice) {
+.qi-hall > * {
   position: relative;
   z-index: 3;
 }

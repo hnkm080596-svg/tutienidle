@@ -133,7 +133,7 @@ function onUpgrade() {
         <GameButton
           v-else-if="!isMaxLevel"
           class="skill-detail__upgrade"
-          variant="ghost"
+          variant="system"
           size="sm"
           :disabled="!canUpgrade"
           @click="onUpgrade"
