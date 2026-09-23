@@ -51,18 +51,19 @@ unlock when realm permits).
   non-duplicated). This is a deliberate behavior change to the
   existing meridian chapter, coordinator-pinned; existing saves are
   rejected by the version bump anyway.
-- Currency: the chapter's `currency` field is authored in
-  `ZhouTian.ts` as a named constant marked **DEFERRED placeholder**
-  (QI-D8 convention — `PillFamilies.ts:29`,
-  `BreakthroughTalentPools.ts:13`): currently assigned
-  `tinh_hoa_phap_the` per the §38 candidate, swappable by a later
-  content pass in one line. The CHAPTER reads the constant, never a
-  literal; the SEAM is the mission — `bodyChapterEssenceGrade` +
-  `investBodyChapter`'s M-QI-09 substitution path
-  (`planEssenceSubstitution`) execute whichever authored currency the
-  registry declares. With the current Pháp assignment the seam
-  resolves coverage 0 (top rung) → exact debit only, no substitution
-  fill, no change-back.
+- Currency: **AUTHORED `tinh_hoa_phap_the`** (Pháp essence, bag
+  `material`) — promoted to the mission's explicit authored
+  mechanism decision (C2C-64 ruling: §38 names it the designed
+  candidate, M-QI-10 already made Pháp the live TC-band currency,
+  and a chapter with no currency ships dead). Only the per-action
+  COST values remain content-deferred. The choice lives in
+  `ZhouTian.ts` as the named constant
+  `ZHOU_TIAN_CURRENCY_MATERIAL_ID` — the single source the chapter
+  reads, not a "deferred" marker. The SEAM still proves itself:
+  `bodyChapterEssenceGrade` + `investBodyChapter`'s M-QI-09
+  substitution path (`planEssenceSubstitution`) execute through it;
+  Pháp resolves coverage 0 (top rung) → exact debit only, no
+  substitution fill, no change-back.
 - Invest is capacity-bounded and idempotent: `consumed = min(available,
   capacity − circulation)`; `circulation += consumed`. No per-invest
   amount, cost curve, or batching (balance deferred — mechanism only).
@@ -96,8 +97,9 @@ export const ZHOU_TIAN_REALM_ID = 'foundation_establishment'
 export const ZHOU_TIAN_CAPACITY_PER_REALM_LEVEL = 20
 export const ZHOU_TIAN_TIEU_CIRCULATION = 180   // Tiểu Chu Thiên (Lv9)
 export const ZHOU_TIAN_DAI_CIRCULATION = 360    // Đại Chu Thiên (Lv18) = normal completion
-// DEFERRED (content pass): placeholder per §38 candidate; the chapter
-// currency reads this constant so a later swap is a one-line change.
+// Authored currency (C2C-64 - §38's designed candidate, promoted to
+// the mechanism decision; per-action cost values remain deferred).
+// Named constant = single source the chapter definition reads.
 export const ZHOU_TIAN_CURRENCY_MATERIAL_ID = 'tinh_hoa_phap_the'
 ```
 
@@ -166,11 +168,27 @@ Contract + enforcement:
   meridian is incomplete (and transitively while body_refinement is
   incomplete, via meridian's gate).
 
+Persisted-state coherence (C2C-64): the chain is also a RESTORE-time
+invariant, not only an invest-time gate. `assertBodyProgressionIntegrity`
+gains a cross-chapter rule: for every chapter with any progress
+(`progress().completed > 0` or `isComplete(player)`), every id in its
+`unlocksAfterChapters` must be `isComplete(player)` — evaluated only
+over slices that passed the presence check (a missing slice already
+flags corrupt; coherence eval must not TypeError on the way to the
+thrown error, same `derivationBlocked` convention). Applied across the
+registry it transitivizes: progressed zhou_tian ⇒ meridian complete ⇒
+refinement complete. A crafted current-version save {meridian
+complete, refinement incomplete} is therefore REJECTED at the restore
+preflight (GameManagerSaveRestore:291) and before any owner mutation —
+the incoherent state never goes live. Alternative considered:
+recursive `isBodyChapterUnlocked` alone — rejected; it merely keeps
+zhou_tian locked while the incoherent save still restores.
+
 ## 5. Currency + invest path
 
 - `currency: { bag: 'material', id: ZHOU_TIAN_CURRENCY_MATERIAL_ID }`
-  — the authored constant in `ZhouTian.ts` (marked DEFERRED
-  placeholder, currently `'tinh_hoa_phap_the'`). No `auxCurrency`.
+  — the authored constant in `ZhouTian.ts` (C2C-64: authored
+  mechanism decision, not deferred). No `auxCurrency`.
 - `investBodyChapter` (GameManagerRealmAdvanceOps:518-598) needs ZERO
   changes: `bodyChapterEssenceGrade` resolves 'phap'; top-rung
   coverage 0 → `planEssenceSubstitution` returns the exact-Pháp debit;
@@ -255,13 +273,17 @@ sections use. i18n keys under `panels.realm.zhouTian.*` in en + vi
 - `player.bodyProgression` key set = exactly the registry ids (now
   three) — enforced by `expectedBodyProgressionCompleteness` +
   `assertBodyProgressionIntegrity`.
+- Cross-chapter coherence (C2C-64): progressed/completed chapter ⇒
+  all authored predecessors complete — enforced in
+  `assertBodyProgressionIntegrity` (restore preflight + pre-mutation).
 - No persisted milestone/lock/capacity state anywhere.
 
 ## 10. Out of scope (restated)
 
 - Invest cost curve, per-invest amounts, batch size (balance pass).
 - `collectBaseStatDeltas` magnitudes / any stat values (balance pass).
-- Currency choice finalization beyond the §38 candidate mechanism.
+- Per-action invest cost values / batch amounts (currency KIND is
+  authored per C2C-64; cost curve stays balance-deferred).
 - `physiqueAdvancement` coupling, tick auto-invest wiring.
 - Content beyond the chapter itself; UI redesign / M-UI-SYSTEM theme.
 - Save migration (the new version rejects the previous one).
@@ -273,8 +295,9 @@ sections use. i18n keys under `panels.realm.zhouTian.*` in en + vi
 | A1 | `BodyChapterId`/`BODY_CHAPTERS`/`BODY_CHAPTER_BY_ID` carry `zhou_tian`; `EXPECTED_BODY_CHAPTER_KIND.zhou_tian === 'zhou_tian'`; defaults + slice validation cover `bodyProgression.zhou_tian`. |
 | A2 | Capacity = 0 pre-TC, `20 × realmLevel` in TC, 360 post-TC; invest consumes `min(available, capacity − circulation)` and never exceeds 360; `isComplete` iff 360. |
 | A3 | `unlocksAfterChapters` enforced at `investBodyChapterState` + `isBodyChapterUnlocked`; BOTH rejections pinned on the real registry: meridian invest returns 0 while body_refinement incomplete, zhou_tian invest returns 0 while meridian incomplete; registry validation rejects self/forward/unknown refs. |
-| A4 | Seam-contract path through the real chapter: the ops seam exercises whichever currency the DEFERRED constant declares — with the current Pháp assignment, exact `tinh_hoa_phap_the` debit (coverage 0, no substitution fill, no change-back); under-owned → partial invest of owned amount only; bag consumed only on success. |
+| A4 | Authored currency contract through the real chapter: `ZHOU_TIAN_CURRENCY_MATERIAL_ID === 'tinh_hoa_phap_the'` pinned; exact Pháp debit (coverage 0, no substitution fill, no change-back); under-owned → partial invest of owned amount only; bag consumed only on success. |
 | A5 | Tiểu/Đại derived reads at 180/360; `progress()` = `{circulation, 360}`; `collectBaseStatDeltas` returns `{}`; no physique advancement declared. |
 | A6 | UI row renders locked (sequential + realm) / active / complete states; invest button + owned label wired through the ops seam; i18n keys en + vi. |
 | A7 | Save version = base-at-impl + 1, rejecting the immediately previous version; persisted-shape validation covers the slice (missing/non-object/non-number circulation all reject); `circulation > 360` or `> capacity` = corrupt. |
 | A8 | Idempotency: invest at capacity or complete returns 0 and debits nothing; repeated `validatePersistedState`/integrity runs never throw on legal states. |
+| A9 | Restored-inconsistent-state rejection: `assertBodyProgressionIntegrity` flags {meridian complete + refinement incomplete} and {zhou_tian progressed + meridian incomplete}; consistent chain passes; crafted saves never go live. |

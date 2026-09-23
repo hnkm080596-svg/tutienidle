@@ -81,12 +81,16 @@ gates pass.
    incomplete; zhou_tian invest returns 0 while meridian incomplete;
    full chain satisfied → invests; `isBodyChapterUnlocked` mirrors;
    assert net behavior, not gate ordering.
+   Persisted coherence (C2C-64): `assertBodyProgressionIntegrity`
+   throws on {meridian complete + refinement incomplete} and on
+   {zhou_tian progressed + meridian incomplete}; consistent chain
+   (all complete, or none progressed) passes; missing-slice state
+   still fails on the presence check without TypeError in eval.
 4. `GameManager.bodyChapter.test.ts` /
    `GameManager.essenceSubstitution.test.ts` (extend — the ops seam
-   surface): SEAM-CONTRACT test on the real chapter — exercises
-   whichever currency `ZHOU_TIAN_CURRENCY_MATERIAL_ID` declares
-   (C2C-59: read the constant, never a literal; mechanism is the
-   mission). With the current Pháp assignment: exact debit
+   surface): AUTHORED-CONTRACT test on the real chapter (C2C-64) —
+   pin `ZHOU_TIAN_CURRENCY_MATERIAL_ID === 'tinh_hoa_phap_the'` and
+   drive the seam through the constant: exact Pháp debit
    (coverage 0, no substitution even when lower bands owned);
    under-owned → consumes owned only; zero owned → 0 + no debit;
    locked → 0 + no debit; preflight path unchanged.
@@ -104,8 +108,9 @@ gates pass.
 ## Step 2 — authored data + contract/registry edits
 
 - `data/realm/ZhouTian.ts` (new): the constants per spec sec.2 —
-  `ZHOU_TIAN_CURRENCY_MATERIAL_ID` marked DEFERRED placeholder
-  (QI-D8 comment convention).
+  `ZHOU_TIAN_CURRENCY_MATERIAL_ID` is the AUTHORED currency
+  constant (C2C-64: mechanism decision, single source; only cost
+  values stay deferred).
 - `BodyChapter.ts`: id union, `EXPECTED_BODY_CHAPTER_KIND` pin,
   `unlocksAfterChapters` optional field (docstring: backward-only,
   canonical order is the authority), `BodyProgressionState` + default
@@ -127,7 +132,12 @@ gates pass.
   (clamped), `collectBaseStatDeltas → {}`, `legacyModifierPrefix
   'zhou-tian:'`, progress/isComplete/persisted validation/integrity.
 - `BodyProgressionSystem.ts`: sequential gate in
-  `investBodyChapterState` + exported `isBodyChapterUnlocked`.
+  `investBodyChapterState` + exported `isBodyChapterUnlocked`
+  (direct eval — incoherent states can't exist at runtime since
+  restore rejects them); `assertBodyProgressionIntegrity` gains the
+  cross-chapter coherence rule (C2C-64) — progressed/completed
+  chapter ⇒ all authored predecessors complete, evaluated only over
+  present slices.
 
 ## Step 4 — UI section + i18n
 
@@ -176,7 +186,8 @@ gates pass.
 |---|---|---|---|
 | 1 — zhou_tian kind + capacity + milestones + 360 completion | §2, §3 | 2, 3 | A2, A5 |
 | 2 — sequential unlock (system-wide chain, C2C-59) | §4 | 2, 3 | A3 |
-| 3 — currency seam (DEFERRED constant, C2C-59) | §5 | 2, 3 | A4 |
+| 3 — currency seam (authored Pháp, C2C-64) | §5 | 2, 3 | A4 |
 | 4 — state slice + definition + invest/apply + UI row + tests | §2, §6, §7 | 1-5 | A1, A6, A8 |
 | 5 — chapterKind pin | §6 | 2 | A1 |
 | save boundary (m-f-essence assignment; +1 rule, C2C-59) | §8 | 5 | A7 |
+| persisted coherence (C2C-64) | §4 | 3 | A9 |
