@@ -398,7 +398,7 @@ function collectLinMach() {
       </div>
 
       <div class="production-panel__grid">
-        <article v-for="row in rows" :key="row.siteId" class="site-card">
+        <article v-for="row in rows" :key="row.siteId" class="site-card sys-chamfer">
           <div class="site-card__art" :data-kind="row.kind" aria-hidden="true">
             <span>{{ row.sigil }}</span>
           </div>
@@ -480,17 +480,17 @@ function collectLinMach() {
   min-height: 0;
   padding: 12px;
   overflow-y: auto;
-  color: var(--paper-text);
-  font-family: var(--font-body);
+  color: var(--sys-text, var(--paper-text));
+  font-family: var(--sys-font-body, var(--font-body));
   background:
-    var(--paper-grain) 0 0 / 160px 160px repeat,
-    radial-gradient(circle at 50% 0, color-mix(in srgb, var(--jade) 8%, transparent), transparent 40%),
-    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 60%, var(--paper-200) 100%);
+    var(--sys-grain, var(--paper-grain)) 0 0 / 160px 160px repeat,
+    radial-gradient(circle at 50% 0, color-mix(in srgb, var(--sys-success, var(--jade)) 8%, transparent), transparent 40%),
+    linear-gradient(175deg, var(--sys-bg-0, var(--paper-50)) 0%, var(--sys-bg-1, var(--paper-100)) 60%, var(--sys-bg-1, var(--paper-200)) 100%);
 }
 
 .production-panel__summary {
   margin: 0;
-  color: var(--paper-eyebrow);
+  color: var(--sys-accent, var(--paper-eyebrow));
   font-size: var(--text-sm);
 }
 
@@ -499,9 +499,9 @@ function collectLinMach() {
   display: grid;
   gap: 8px;
   padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--jade) 35%, var(--paper-line));
+  border: 1px solid color-mix(in srgb, var(--sys-success, var(--jade)) 35%, var(--sys-line-soft, var(--paper-line)));
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--jade) 6%, var(--paper-50));
+  background: color-mix(in srgb, var(--sys-success, var(--jade)) 6%, var(--sys-bg-0, var(--paper-50)));
 }
 
 .worker-allocation__header {
@@ -541,57 +541,57 @@ function collectLinMach() {
 .worker-allocation__count {
   min-width: 2ch;
   text-align: right;
-  color: var(--jade);
+  color: var(--sys-success, var(--jade));
 }
 
 .worker-allocation__auto-hint {
   margin: 0;
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-size: var(--text-xs);
 }
 
 .worker-allocation__reserved {
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-size: var(--text-xs);
 }
 
 /* Linh mạch Khai Vật Đường */
 .lin-mach__title {
   margin: 0;
-  color: var(--paper-text-soft);
-  font: 700 var(--text-sm) var(--font-display);
+  color: var(--sys-text-muted, var(--paper-text-soft));
+  font: 700 var(--text-sm) var(--sys-font-display, var(--font-display));
 }
 
 .lin-mach__card {
   display: grid;
   gap: 8px;
   padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--scene-water-accent) 40%, var(--paper-line));
+  border: 1px solid color-mix(in srgb, var(--sys-azure, var(--scene-water-accent)) 40%, var(--sys-line-soft, var(--paper-line)));
   border-radius: var(--radius-md);
-  background: linear-gradient(110deg, color-mix(in srgb, var(--scene-water-accent) 12%, var(--paper-50)), color-mix(in srgb, var(--scene-water-accent) 5%, var(--paper-100)));
+  background: linear-gradient(110deg, color-mix(in srgb, var(--sys-azure, var(--scene-water-accent)) 12%, var(--sys-bg-0, var(--paper-50))), color-mix(in srgb, var(--sys-azure, var(--scene-water-accent)) 5%, var(--sys-bg-1, var(--paper-100))));
 }
 
 .lin-mach__rate {
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-size: var(--text-xs);
 }
 
 .lin-mach__collect {
   justify-self: start;
   padding: 6px 12px;
-  background: var(--scene-water-accent);
+  background: var(--sys-azure, var(--scene-water-accent));
   border: 0;
-  color: var(--ink-950);
+  color: var(--sys-bg-0, var(--ink-950));
 }
 
 .lin-mach__collect:disabled {
-  background: var(--paper-200);
-  color: var(--paper-text-muted);
+  background: var(--sys-bg-1, var(--paper-200));
+  color: var(--sys-text-dim, var(--paper-text-muted));
 }
 
 .lin-mach__progress {
-  --bar-from: var(--scene-water-accent);
-  --bar-to: var(--jade);
+  --bar-from: var(--sys-azure, var(--scene-water-accent));
+  --bar-to: var(--sys-success, var(--jade));
 }
 
 .production-panel__grid {
@@ -605,8 +605,8 @@ function collectLinMach() {
   flex-direction: column;
   gap: 8px;
   padding: 12px;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--scene-forest-accent) 10%, var(--paper-50)), color-mix(in srgb, var(--scene-forest-accent) 4%, var(--paper-100)));
-  border: 1px solid color-mix(in srgb, var(--scene-forest-accent) 32%, var(--paper-line));
+  background: linear-gradient(145deg, color-mix(in srgb, var(--sys-success, var(--scene-forest-accent)) 10%, var(--sys-bg-0, var(--paper-50))), color-mix(in srgb, var(--sys-success, var(--scene-forest-accent)) 4%, var(--sys-bg-1, var(--paper-100))));
+  border: 1px solid color-mix(in srgb, var(--sys-success, var(--scene-forest-accent)) 32%, var(--sys-line-soft, var(--paper-line)));
   border-radius: var(--radius-md);
 }
 
@@ -619,23 +619,23 @@ function collectLinMach() {
   margin: -12px -12px 2px;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
   background:
-    radial-gradient(circle, color-mix(in srgb, var(--scene-forest-accent) 25%, transparent), transparent 48%),
-    linear-gradient(130deg, var(--scene-forest-deep), var(--scene-forest-deep-2));
+    radial-gradient(circle, color-mix(in srgb, var(--sys-success, var(--scene-forest-accent)) 25%, transparent), transparent 48%),
+    linear-gradient(130deg, var(--sys-bg-0, var(--scene-forest-deep)), var(--sys-bg-0, var(--scene-forest-deep-2)));
 }
 
-.site-card__art[data-kind='mine'] { background: radial-gradient(circle, color-mix(in srgb, var(--scene-mine-accent) 24%, transparent), transparent 48%), linear-gradient(130deg, var(--scene-mine-deep), var(--scene-mine-deep-2)); }
-.site-card__art[data-kind='grotto'] { background: radial-gradient(circle, color-mix(in srgb, var(--scene-grotto-accent) 25%, transparent), transparent 48%), linear-gradient(130deg, var(--scene-grotto-deep), var(--scene-grotto-deep-2)); }
+.site-card__art[data-kind='mine'] { background: radial-gradient(circle, color-mix(in srgb, var(--sys-warn, var(--scene-mine-accent)) 24%, transparent), transparent 48%), linear-gradient(130deg, var(--sys-bg-0, var(--scene-mine-deep)), var(--sys-bg-0, var(--scene-mine-deep-2))); }
+.site-card__art[data-kind='grotto'] { background: radial-gradient(circle, color-mix(in srgb, var(--sys-azure, var(--scene-grotto-accent)) 25%, transparent), transparent 48%), linear-gradient(130deg, var(--sys-bg-0, var(--scene-grotto-deep)), var(--sys-bg-0, var(--scene-grotto-deep-2))); }
 .site-card__art span {
   display: grid;
   width: 56px;
   height: 56px;
   place-items: center;
-  color: color-mix(in srgb, var(--scene-forest-accent) 40%, var(--text-primary));
-  font: 700 var(--text-display) var(--font-display);
-  border: 1px solid color-mix(in srgb, var(--scene-forest-accent) 38%, transparent);
+  color: color-mix(in srgb, var(--sys-success, var(--scene-forest-accent)) 40%, var(--sys-text, var(--text-primary)));
+  font: 700 var(--text-display) var(--sys-font-display, var(--font-display));
+  border: 1px solid color-mix(in srgb, var(--sys-success, var(--scene-forest-accent)) 38%, transparent);
   border-radius: 50%;
-  background: color-mix(in srgb, var(--scene-forest-deep-2) 58%, transparent);
-  box-shadow: 0 0 24px color-mix(in srgb, var(--scene-forest-accent) 20%, transparent), inset 0 0 16px color-mix(in srgb, var(--scene-forest-accent) 8%, transparent);
+  background: color-mix(in srgb, var(--sys-bg-0, var(--scene-forest-deep-2)) 58%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--sys-success, var(--scene-forest-accent)) 20%, transparent), inset 0 0 16px color-mix(in srgb, var(--sys-success, var(--scene-forest-accent)) 8%, transparent);
 }
 
 .site-card__header {
@@ -647,22 +647,22 @@ function collectLinMach() {
 
 .site-card__name {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--sys-font-display, var(--font-display));
   font-size: var(--text-lg);
 }
 
 .site-card__kind {
   padding: 1px 8px;
   border-radius: 999px;
-  background: var(--ink-700);
+  background: var(--sys-bg-1, var(--ink-700));
   font-size: var(--text-xs);
-  color: var(--chrome-500);
+  color: var(--sys-line, var(--chrome-500));
 }
 
 .site-card__description {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .site-card__stats {
@@ -670,13 +670,13 @@ function collectLinMach() {
   flex-wrap: wrap;
   gap: 8px;
   font-size: var(--text-xs);
-  color: var(--jade);
+  color: var(--sys-success, var(--jade));
 }
 
 .site-card__reward {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .site-card__progress {
@@ -690,7 +690,7 @@ function collectLinMach() {
 .site-card__status {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .site-card__auto {
@@ -698,7 +698,7 @@ function collectLinMach() {
   align-items: center;
   gap: 6px;
   font-size: var(--text-xs);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   cursor: pointer;
 }
 
@@ -713,7 +713,7 @@ function collectLinMach() {
 }
 
 .site-card__upgrade li.is-missing {
-  color: var(--crimson);
+  color: var(--sys-danger, var(--crimson));
 }
 
 .site-card__upgrade-button {
@@ -721,7 +721,7 @@ function collectLinMach() {
 }
 
 .site-card__upgrade-button:disabled {
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
   cursor: not-allowed;
 }
 

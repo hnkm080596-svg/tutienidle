@@ -134,7 +134,7 @@ function onExchange(definitionId: string) {
       {{ t('duyenPhan.unavailable') }}
     </p>
 
-    <div v-for="group in groups" :key="group.grade" class="duyen-phan__group">
+    <div v-for="group in groups" :key="group.grade" class="duyen-phan__group sys-chamfer">
       <h4
         class="duyen-phan__grade"
         :style="{ color: `var(--grade-${group.grade})` }"
@@ -185,16 +185,16 @@ function onExchange(definitionId: string) {
 .duyen-phan__balance {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--mineral-gold);
+  color: var(--sys-accent, var(--mineral-gold));
   font-weight: 700;
 }
 
 .duyen-phan__unavailable {
   margin: 0;
   padding: 12px 14px;
-  border: 1px dashed color-mix(in srgb, var(--mineral-gold) 45%, var(--paper-line));
+  border: 1px dashed color-mix(in srgb, var(--sys-accent, var(--mineral-gold)) 45%, var(--sys-line-soft, var(--paper-line)));
   border-radius: var(--radius-md);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-size: var(--text-sm);
 }
 
@@ -205,7 +205,7 @@ function onExchange(definitionId: string) {
 
 .duyen-phan__grade {
   margin: 0;
-  font: 700 var(--text-sm) var(--font-display);
+  font: 700 var(--text-sm) var(--sys-font-display, var(--font-display));
 }
 
 .duyen-phan__row {
@@ -213,17 +213,17 @@ function onExchange(definitionId: string) {
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
-  border: 1px solid var(--paper-line);
+  border: 1px solid var(--sys-line-soft, var(--paper-line));
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--mineral-gold) 6%, var(--paper-100));
+  background: color-mix(in srgb, var(--sys-accent, var(--mineral-gold)) 6%, var(--sys-bg-1, var(--paper-100)));
   font-size: var(--text-xs);
 }
 
 /* Owned rows get the same jade tint convention as selected roster cards
    (CompanionPanel) - "already claimed" without looking disabled. */
 .duyen-phan__row--owned {
-  border-color: color-mix(in srgb, var(--jade) 45%, var(--paper-line));
-  background: color-mix(in srgb, var(--jade) 8%, var(--paper-100));
+  border-color: color-mix(in srgb, var(--sys-success, var(--jade)) 45%, var(--sys-line-soft, var(--paper-line)));
+  background: color-mix(in srgb, var(--sys-success, var(--jade)) 8%, var(--sys-bg-1, var(--paper-100)));
 }
 
 .duyen-phan__name {
@@ -233,24 +233,24 @@ function onExchange(definitionId: string) {
 .duyen-phan__rank {
   padding: 1px 6px;
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--jade) 18%, var(--paper-100));
-  color: var(--jade);
+  background: color-mix(in srgb, var(--sys-success, var(--jade)) 18%, var(--sys-bg-1, var(--paper-100)));
+  color: var(--sys-success, var(--jade));
   font-weight: 700;
 }
 
 .duyen-phan__cost {
   margin-left: auto;
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .duyen-phan__reason {
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
   font-size: var(--text-xs);
 }
 
 .duyen-phan__empty {
   margin: 0;
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-size: var(--text-xs);
   font-style: italic;
 }

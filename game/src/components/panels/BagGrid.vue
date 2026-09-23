@@ -70,8 +70,8 @@ const bagTabs = computed(() => [
   padding: 8px;
   gap: 8px;
   box-sizing: border-box;
-  font-family: var(--font-body);
-  color: var(--paper-text);
+  font-family: var(--sys-font-body, var(--font-body));
+  color: var(--sys-text, var(--paper-text));
 }
 
 .bag-grid__header {
@@ -82,15 +82,15 @@ const bagTabs = computed(() => [
 }
 
 .bag-grid__title {
-  font-family: var(--font-display);
+  font-family: var(--sys-font-display, var(--font-display));
   font-size: var(--text-title);
   font-weight: 700;
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
 }
 
 .bag-grid__count {
   font-size: var(--text-sm);
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
 }
 
 .bag-grid__body {

@@ -271,7 +271,7 @@ function start() {
       </nav>
 
       <div class="stage-select__workspace">
-        <section class="stage-select__map-panel scrollfade">
+        <section class="stage-select__map-panel scrollfade sys-chamfer">
           <h4 class="stage-select__title">{{ t('panels.stageSelect.sections.selectFloor') }}</h4>
 
           <EmptyState v-if="visibleStages.length === 0" size="sm">{{ t('panels.stageSelect.empty.noStages') }}</EmptyState>
@@ -281,7 +281,7 @@ function start() {
               v-for="node in stageNodes"
               :key="node.stage.id"
               type="button"
-              class="stage-map__node"
+              class="stage-map__node sys-chamfer"
               :data-testid="`stage-node-${node.stage.id}`"
               :class="{
                 'is-selected': node.stage.id === selectedStageId,
@@ -301,7 +301,7 @@ function start() {
           </div>
         </section>
 
-        <section class="stage-select__detail">
+        <section class="stage-select__detail sys-chamfer">
         <div v-if="armedFarmStage" class="stage-select__autofarm">
           <span>{{ t('autoFarm.running', { stage: armedFarmStage.name }) }}</span>
           <GameButton variant="danger" size="sm" data-testid="autofarm-stop" @click="stopAutoFarm">
@@ -372,9 +372,9 @@ function start() {
   height: 100%;
   min-height: 0;
   background:
-    var(--paper-grain) 0 0 / 160px 160px repeat,
-    radial-gradient(circle at 70% 0, color-mix(in srgb, var(--scene-portal-glow) 10%, transparent), transparent 40%),
-    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 60%, var(--paper-200) 100%);
+    var(--sys-grain, var(--paper-grain)) 0 0 / 160px 160px repeat,
+    radial-gradient(circle at 70% 0, color-mix(in srgb, var(--sys-violet, var(--scene-portal-glow)) 10%, transparent), transparent 40%),
+    linear-gradient(175deg, var(--sys-bg-0, var(--paper-50)) 0%, var(--sys-bg-1, var(--paper-100)) 60%, var(--sys-bg-1, var(--paper-200)) 100%);
 }
 
 .stage-select {
@@ -382,8 +382,8 @@ function start() {
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  font-family: var(--font-body);
-  color: var(--paper-text);
+  font-family: var(--sys-font-body, var(--font-body));
+  color: var(--sys-text, var(--paper-text));
 }
 
 .stage-select__filters {
@@ -392,8 +392,8 @@ function start() {
   align-items: center;
   gap: 18px;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--paper-line);
-  background: color-mix(in srgb, var(--scene-portal-glow) 6%, var(--paper-100));
+  border-bottom: 1px solid var(--sys-line-soft, var(--paper-line));
+  background: color-mix(in srgb, var(--sys-violet, var(--scene-portal-glow)) 6%, var(--sys-bg-1, var(--paper-100)));
 }
 
 .stage-select__filter-group {
@@ -404,7 +404,7 @@ function start() {
 
 .stage-select__filter-group small {
   margin-right: 3px;
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: .08em;
@@ -415,12 +415,12 @@ function start() {
   font-weight: 600;
   /* Filter Địa Giới dùng palette portal teal — đè công thức chrome chuẩn
      của Chip bằng CSS var local. */
-  --chip-active-bg: color-mix(in srgb, var(--scene-portal-glow) 20%, var(--paper-50));
+  --chip-active-bg: color-mix(in srgb, var(--sys-violet, var(--scene-portal-glow)) 20%, var(--sys-bg-0, var(--paper-50)));
 }
 
 .stage-select__filter-chip.is-active {
-  border-color: var(--scene-portal-accent);
-  color: color-mix(in srgb, var(--scene-portal-accent) 55%, var(--brush-950) 45%);
+  border-color: var(--sys-violet, var(--scene-portal-accent));
+  color: color-mix(in srgb, var(--sys-violet, var(--scene-portal-accent)) 55%, var(--sys-text, var(--brush-950)) 45%);
 }
 
 .stage-select__filter-chip.is-locked {
@@ -442,7 +442,7 @@ function start() {
 }
 
 .stage-select__map-panel {
-  border-right: 1px solid var(--paper-line);
+  border-right: 1px solid var(--sys-line-soft, var(--paper-line));
   overflow-y: auto;
 }
 
@@ -454,13 +454,13 @@ function start() {
 
 .stage-select__title {
   margin: 0 0 8px;
-  font-family: var(--font-display);
-  color: var(--paper-text);
+  font-family: var(--sys-font-display, var(--font-display));
+  color: var(--sys-text, var(--paper-text));
   font-size: var(--text-body);
 }
 
 .stage-select .empty-state {
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
   font-size: var(--text-xs);
 }
 
@@ -483,9 +483,9 @@ function start() {
   gap: 4px;
   padding: 7px 5px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(105deg, color-mix(in srgb, var(--scene-portal-glow) 8%, var(--paper-50)), color-mix(in srgb, var(--scene-portal-glow) 4%, var(--paper-100)));
-  border: 1px solid color-mix(in srgb, var(--scene-portal-glow) 30%, var(--paper-line));
-  color: var(--paper-text);
+  background: linear-gradient(105deg, color-mix(in srgb, var(--sys-violet, var(--scene-portal-glow)) 8%, var(--sys-bg-0, var(--paper-50))), color-mix(in srgb, var(--sys-violet, var(--scene-portal-glow)) 4%, var(--sys-bg-1, var(--paper-100))));
+  border: 1px solid color-mix(in srgb, var(--sys-violet, var(--scene-portal-glow)) 30%, var(--sys-line-soft, var(--paper-line)));
+  color: var(--sys-text, var(--paper-text));
   cursor: pointer;
   text-align: center;
 }
@@ -495,31 +495,31 @@ function start() {
   width: 34px;
   height: 34px;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--scene-portal-accent) 50%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sys-violet, var(--scene-portal-accent)) 50%, transparent);
   border-radius: 50%;
-  color: color-mix(in srgb, var(--scene-portal-accent) 55%, var(--brush-950) 45%);
-  font: 700 var(--text-sm) var(--font-display);
+  color: color-mix(in srgb, var(--sys-violet, var(--scene-portal-accent)) 55%, var(--sys-text, var(--brush-950)) 45%);
+  font: 700 var(--text-sm) var(--sys-font-display, var(--font-display));
 }
 .stage-map__copy { width: 100%; min-width: 0; display: flex; flex-direction: column; }
 .stage-map__copy strong { font-size: var(--text-sm); }
-.stage-map__copy small { overflow: hidden; color: var(--paper-text-muted); font-size: var(--text-xs); text-overflow: ellipsis; white-space: nowrap; }
+.stage-map__copy small { overflow: hidden; color: var(--sys-text-dim, var(--paper-text-muted)); font-size: var(--text-xs); text-overflow: ellipsis; white-space: nowrap; }
 .stage-map__boss {
   position: absolute;
   top: 4px;
   right: 4px;
-  color: var(--crimson);
+  color: var(--sys-danger, var(--crimson));
   font-size: var(--text-xs);
   font-weight: 800;
 }
 
 .stage-map__node:hover {
-  border-color: var(--scene-portal-glow);
+  border-color: var(--sys-violet, var(--scene-portal-glow));
 }
 
 .stage-map__node.is-selected {
-  border-color: var(--scene-portal-glow);
-  background: color-mix(in srgb, var(--scene-portal-glow) 18%, var(--paper-50));
-  box-shadow: 0 0 10px -2px var(--scene-portal-glow);
+  border-color: var(--sys-violet, var(--scene-portal-glow));
+  background: color-mix(in srgb, var(--sys-violet, var(--scene-portal-glow)) 18%, var(--sys-bg-0, var(--paper-50)));
+  box-shadow: 0 0 10px -2px var(--sys-violet, var(--scene-portal-glow));
 }
 
 .stage-map__node.is-locked {
@@ -528,14 +528,14 @@ function start() {
 }
 
 .stage-map__node.is-final:not(.is-selected) {
-  border-color: var(--crimson);
+  border-color: var(--sys-danger, var(--crimson));
 }
 
 .stage-select__description,
 .stage-select__meta {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .stage-select__encounter-summary {
@@ -545,22 +545,22 @@ function start() {
 }
 .stage-select__encounter-summary span {
   padding: 3px 7px;
-  border: 1px solid color-mix(in srgb, var(--scene-portal-glow) 28%, var(--paper-line));
+  border: 1px solid color-mix(in srgb, var(--sys-violet, var(--scene-portal-glow)) 28%, var(--sys-line-soft, var(--paper-line)));
   border-radius: 999px;
-  background: color-mix(in srgb, var(--scene-portal-glow) 8%, var(--paper-100));
-  color: var(--paper-text-soft);
+  background: color-mix(in srgb, var(--sys-violet, var(--scene-portal-glow)) 8%, var(--sys-bg-1, var(--paper-100)));
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-size: var(--text-xs);
 }
-.stage-select__encounter-summary .is-boss { border-color: color-mix(in srgb, var(--crimson) 45%, transparent); color: var(--crimson); }
+.stage-select__encounter-summary .is-boss { border-color: color-mix(in srgb, var(--sys-danger, var(--crimson)) 45%, transparent); color: var(--sys-danger, var(--crimson)); }
 .stage-select__enemy-list { display: flex; flex-direction: column; gap: 5px; }
 .stage-select__enemy {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 7px;
-  border: 1px solid var(--paper-line);
+  border: 1px solid var(--sys-line-soft, var(--paper-line));
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--scene-portal-glow) 5%, var(--paper-100));
+  background: color-mix(in srgb, var(--sys-violet, var(--scene-portal-glow)) 5%, var(--sys-bg-1, var(--paper-100)));
 }
 .stage-select__enemy-sigil {
   display: grid;
@@ -568,13 +568,13 @@ function start() {
   height: 30px;
   place-items: center;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--scene-portal-glow) 20%, var(--paper-50));
-  color: color-mix(in srgb, var(--scene-portal-accent) 55%, var(--brush-950) 45%);
-  font-family: var(--font-display);
+  background: color-mix(in srgb, var(--sys-violet, var(--scene-portal-glow)) 20%, var(--sys-bg-0, var(--paper-50)));
+  color: color-mix(in srgb, var(--sys-violet, var(--scene-portal-accent)) 55%, var(--sys-text, var(--brush-950)) 45%);
+  font-family: var(--sys-font-display, var(--font-display));
 }
 .stage-select__enemy > span:last-child { min-width: 0; display: flex; flex-direction: column; }
 .stage-select__enemy strong { font-size: var(--text-sm); }
-.stage-select__enemy small { color: var(--paper-text-muted); font-size: var(--text-xs); }
+.stage-select__enemy small { color: var(--sys-text-dim, var(--paper-text-muted)); font-size: var(--text-xs); }
 
 .stage-select__autofarm {
   display: flex;
@@ -583,7 +583,7 @@ function start() {
   gap: var(--space-2);
   margin-bottom: var(--space-2);
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
 }
 
 .stage-select__mode {
@@ -601,7 +601,7 @@ function start() {
 .stage-select__mode-hint {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
 }
 
 .stage-select__auto {
@@ -609,7 +609,7 @@ function start() {
   align-items: center;
   gap: 6px;
   font-size: var(--text-sm);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   cursor: pointer;
 }
 
@@ -629,8 +629,8 @@ function start() {
 }
 
 .stage-select__start:disabled {
-  background: var(--paper-200);
-  color: var(--paper-text-muted);
+  background: var(--sys-bg-1, var(--paper-200));
+  color: var(--sys-text-dim, var(--paper-text-muted));
 }
 
 /* Fit-refactor đợt 2 — đo theo CARD (overlay-panel container), không còn
@@ -639,7 +639,7 @@ function start() {
   .stage-select__filters { align-items: flex-start; flex-direction: column; gap: 6px; }
   .stage-select__filter-group { width: 100%; }
   .stage-select__workspace { display: flex; flex-direction: column; }
-  .stage-select__map-panel { border-right: none; border-bottom: 1px solid var(--ink-line-soft); }
+  .stage-select__map-panel { border-right: none; border-bottom: 1px solid var(--sys-line-soft, var(--ink-line-soft)); }
   .stage-map { grid-template-columns: repeat(5, minmax(72px, 1fr)); }
   .stage-select__detail { min-height: 360px; }
 }

@@ -202,7 +202,7 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
     <div v-for="entry in SLOT_LAYOUT" :key="entry.slot" class="paperdoll__cell">
       <div class="paperdoll__slot-wrap">
         <SlotView
-          class="paperdoll__slot"
+          class="paperdoll__slot sys-chamfer"
           variant="equipment"
           :item="equippedBySlot[entry.slot] ?? null"
           :label="equippedBySlot[entry.slot] ? itemName(equippedBySlot[entry.slot]!) : t(`panels.bag.paperdoll.slots.${entry.slot}`)"
@@ -234,7 +234,7 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
   height: 100%;
   padding: 6px;
   box-sizing: border-box;
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .paperdoll__cell {

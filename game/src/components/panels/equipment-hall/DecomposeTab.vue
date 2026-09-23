@@ -159,12 +159,12 @@ function onWorkersInput(event: Event) {
   flex-direction: column;
   gap: 4px;
   font-size: var(--text-body);
-  color: var(--text-primary);
+  color: var(--sys-text, var(--text-primary));
 }
 
 .decompose-tab__estimate {
   margin: 0;
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
   font-size: var(--text-body);
 }
 </style>

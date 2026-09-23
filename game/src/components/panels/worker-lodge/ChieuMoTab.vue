@@ -109,7 +109,7 @@ function onPull() {
       </span>
     </div>
 
-    <p v-if="!poolEnabled" class="chieu-mo__unavailable">
+    <p v-if="!poolEnabled" class="chieu-mo__unavailable sys-chamfer">
       {{ t('chieuMo.unavailable') }}
     </p>
 
@@ -117,7 +117,7 @@ function onPull() {
       {{ t('chieuMo.pull', { token: tokenName }) }}
     </GameButton>
 
-    <div v-if="lastResult?.ok" class="chieu-mo__result">
+    <div v-if="lastResult?.ok" class="chieu-mo__result sys-chamfer">
       <strong
         class="chieu-mo__result-name"
         :style="{ color: `var(--grade-${lastResult.outcome.grade})` }"
@@ -160,23 +160,23 @@ function onPull() {
 
 .chieu-mo__status-item {
   padding: 4px 10px;
-  border: 1px solid var(--paper-line);
+  border: 1px solid var(--sys-line-soft, var(--paper-line));
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--jade) 8%, var(--paper-50));
+  background: color-mix(in srgb, var(--sys-success, var(--jade)) 8%, var(--sys-bg-0, var(--paper-50)));
   font-size: var(--text-xs);
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
 }
 
 .chieu-mo__status-item--pity {
-  border-color: color-mix(in srgb, var(--mineral-gold) 45%, var(--paper-line));
+  border-color: color-mix(in srgb, var(--sys-accent, var(--mineral-gold)) 45%, var(--sys-line-soft, var(--paper-line)));
 }
 
 .chieu-mo__unavailable {
   margin: 0;
   padding: 12px 14px;
-  border: 1px dashed color-mix(in srgb, var(--jade) 45%, var(--paper-line));
+  border: 1px dashed color-mix(in srgb, var(--sys-success, var(--jade)) 45%, var(--sys-line-soft, var(--paper-line)));
   border-radius: var(--radius-md);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-size: var(--text-sm);
 }
 
@@ -188,13 +188,13 @@ function onPull() {
   display: grid;
   gap: 4px;
   padding: 14px 16px;
-  border: 1px solid color-mix(in srgb, var(--jade) 40%, var(--paper-line));
+  border: 1px solid color-mix(in srgb, var(--sys-success, var(--jade)) 40%, var(--sys-line-soft, var(--paper-line)));
   border-radius: var(--radius-md);
-  background: linear-gradient(110deg, color-mix(in srgb, var(--jade) 14%, var(--paper-50)), color-mix(in srgb, var(--jade) 6%, var(--paper-100)));
+  background: linear-gradient(110deg, color-mix(in srgb, var(--sys-success, var(--jade)) 14%, var(--sys-bg-0, var(--paper-50))), color-mix(in srgb, var(--sys-success, var(--jade)) 6%, var(--sys-bg-1, var(--paper-100))));
 }
 
 .chieu-mo__result-name {
-  font: 700 var(--text-lg) var(--font-display);
+  font: 700 var(--text-lg) var(--sys-font-display, var(--font-display));
 }
 
 .chieu-mo__result-grade {
@@ -203,12 +203,12 @@ function onPull() {
 }
 
 .chieu-mo__result-note {
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-size: var(--text-sm);
 }
 
 .chieu-mo__result-pity {
-  color: var(--mineral-gold);
+  color: var(--sys-accent, var(--mineral-gold));
   font-size: var(--text-xs);
   font-weight: 700;
 }

@@ -36,7 +36,7 @@ const statGroups = computed(() =>
 </script>
 
 <template>
-  <aside class="character-detail sys-surface" data-testid="character-detail-card" role="complementary">
+  <aside class="character-detail sys-surface sys-chamfer" data-testid="character-detail-card" role="complementary">
     <div class="character-detail__head">
       <h4 class="character-detail__title">{{ t('panels.character.labels.detailsTitle') }}</h4>
       <button
@@ -71,14 +71,14 @@ const statGroups = computed(() =>
   max-height: calc(100% - 24px);
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--paper-line);
+  border: 1px solid var(--sys-line-soft, var(--paper-line));
   border-radius: var(--radius-md);
   background:
-    var(--paper-grain) 0 0 / 140px 140px repeat,
-    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 100%);
-  box-shadow: var(--surface-shadow-deep, 0 12px 32px rgba(0, 0, 0, 0.5));
-  color: var(--paper-text);
-  font-family: var(--font-body);
+    var(--sys-grain, var(--paper-grain)) 0 0 / 140px 140px repeat,
+    linear-gradient(175deg, var(--sys-bg-0, var(--paper-50)) 0%, var(--sys-bg-1, var(--paper-100)) 100%);
+  box-shadow: var(--sys-shadow, var(--surface-shadow-deep, 0 12px 32px rgba(0, 0, 0, 0.5)));
+  color: var(--sys-text, var(--paper-text));
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .character-detail__head {
@@ -87,14 +87,14 @@ const statGroups = computed(() =>
   align-items: center;
   justify-content: space-between;
   padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--paper-line);
+  border-bottom: 1px solid var(--sys-line-soft, var(--paper-line));
 }
 
 .character-detail__title {
   margin: 0;
-  font: 700 var(--text-md) var(--font-display);
+  font: 700 var(--text-md) var(--sys-font-display, var(--font-display));
   letter-spacing: 0.03em;
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
 }
 
 .character-detail__close {
@@ -103,18 +103,18 @@ const statGroups = computed(() =>
   width: 22px;
   height: 22px;
   padding: 0;
-  border: 1px solid var(--paper-line);
+  border: 1px solid var(--sys-line-soft, var(--paper-line));
   border-radius: var(--radius-sm);
-  background: var(--paper-100);
-  color: var(--paper-text-soft);
+  background: var(--sys-bg-1, var(--paper-100));
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-size: var(--text-xs);
   line-height: 1;
   cursor: pointer;
 }
 
 .character-detail__close:hover {
-  color: var(--mineral-gold);
-  border-color: var(--mineral-gold);
+  color: var(--sys-accent, var(--mineral-gold));
+  border-color: var(--sys-accent, var(--mineral-gold));
 }
 
 .character-detail__body {
@@ -134,10 +134,10 @@ const statGroups = computed(() =>
 .character-detail__group-title {
   margin: 0 0 4px;
   padding-left: 8px;
-  border-left: 3px solid var(--paper-eyebrow);
-  font: 700 var(--text-sm) var(--font-display);
+  border-left: 3px solid var(--sys-accent, var(--paper-eyebrow));
+  font: 700 var(--text-sm) var(--sys-font-display, var(--font-display));
   letter-spacing: 0.03em;
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
 }
 
 .character-detail__list {
@@ -152,18 +152,18 @@ const statGroups = computed(() =>
   align-items: center;
   gap: var(--space-2);
   padding: 5px 0;
-  border-bottom: 1px solid var(--paper-line);
+  border-bottom: 1px solid var(--sys-line-soft, var(--paper-line));
   font-size: var(--text-sm);
 }
 
 .character-detail__list li > span:first-child {
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .character-detail__list li > span:last-child {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
 }
 
 /* Narrow viewport - LeftPanel switches the card to an in-drawer overlay

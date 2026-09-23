@@ -93,7 +93,7 @@ function build() {
 
 <template>
   <div class="construction-gate">
-    <div v-if="!instance" class="construction-gate__locked">
+    <div v-if="!instance" class="construction-gate__locked sys-chamfer">
       <div class="construction-gate__icon">{{ template.name.charAt(0) }}</div>
 
       <h3 class="construction-gate__name">{{ template.name }}</h3>
@@ -143,33 +143,33 @@ function build() {
   gap: 8px;
   padding: 24px;
   text-align: center;
-  color: var(--paper-text);
-  font-family: var(--font-body);
+  color: var(--sys-text, var(--paper-text));
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .construction-gate__icon {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: 1px solid var(--chrome-500);
+  border: 1px solid var(--sys-line, var(--chrome-500));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-display);
-  color: var(--paper-text);
+  font-family: var(--sys-font-display, var(--font-display));
+  color: var(--sys-text, var(--paper-text));
   font-size: var(--text-title);
 }
 
 .construction-gate__name {
   margin: 4px 0 0;
-  font-family: var(--font-display);
-  color: var(--paper-text);
+  font-family: var(--sys-font-display, var(--font-display));
+  color: var(--sys-text, var(--paper-text));
   font-size: var(--text-lg);
 }
 
 .construction-gate__description {
   margin: 0;
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-size: var(--text-sm);
   max-width: 280px;
 }
@@ -177,7 +177,7 @@ function build() {
 .construction-gate__cost {
   margin: 4px 0 0;
   font-size: var(--text-xs);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .construction-gate__build {

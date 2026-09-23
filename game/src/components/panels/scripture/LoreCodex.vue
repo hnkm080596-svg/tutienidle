@@ -84,7 +84,7 @@ const pagedLoreItems = computed(() => loreItems.value.slice(loreRange.value.star
   display: flex;
   flex-direction: column;
   gap: 8px;
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .lore-codex .empty-state {
@@ -113,17 +113,17 @@ const pagedLoreItems = computed(() => loreItems.value.slice(loreRange.value.star
   justify-content: center;
   gap: 10px;
   font-size: var(--text-sm);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-variant-numeric: tabular-nums;
 }
 
 .lore-codex__pagination button {
   min-width: var(--tap-min);
   min-height: var(--tap-min);
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
+  background: var(--sys-bg-0, var(--ink-800));
+  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
   border-radius: var(--radius-sm);
-  color: var(--text-secondary);
+  color: var(--sys-text-muted, var(--text-secondary));
   cursor: pointer;
 }
 

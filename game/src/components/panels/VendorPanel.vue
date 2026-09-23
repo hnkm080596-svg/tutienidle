@@ -69,7 +69,7 @@ function sellAll(materialId: string, owned: number) {
   <section class="vendor-panel scrollfade">
     <p class="vendor-panel__description">{{ template?.description }}</p>
 
-    <div class="vendor-panel__card">
+    <div class="vendor-panel__card sys-chamfer">
       <h3>{{ t('panels.vendor.sell.title') }}</h3>
 
       <small class="resource-card__rate">{{ t('panels.vendor.sell.rate') }}</small>
@@ -101,27 +101,27 @@ function sellAll(materialId: string, owned: number) {
   min-height: 0;
   padding: 12px;
   overflow-y: auto;
-  color: var(--paper-text);
-  font-family: var(--font-body);
+  color: var(--sys-text, var(--paper-text));
+  font-family: var(--sys-font-body, var(--font-body));
   background:
-    var(--paper-grain) 0 0 / 160px 160px repeat,
-    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 60%, var(--paper-200) 100%);
+    var(--sys-grain, var(--paper-grain)) 0 0 / 160px 160px repeat,
+    linear-gradient(175deg, var(--sys-bg-0, var(--paper-50)) 0%, var(--sys-bg-1, var(--paper-100)) 60%, var(--sys-bg-1, var(--paper-200)) 100%);
 }
 
 .vendor-panel__description {
   margin: 0;
-  color: var(--paper-eyebrow);
+  color: var(--sys-accent, var(--paper-eyebrow));
   font-size: var(--text-sm);
 }
 
 .resource-card__rate {
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-size: var(--text-xs);
 }
 
 .resource-card__empty {
   margin: 0;
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-size: var(--text-xs);
   font-style: italic;
 }
@@ -138,29 +138,29 @@ function sellAll(materialId: string, owned: number) {
   justify-content: space-between;
   gap: 8px;
   padding: 6px 8px;
-  border: 1px solid var(--paper-line);
+  border: 1px solid var(--sys-line-soft, var(--paper-line));
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--mineral-gold) 6%, var(--paper-100));
+  background: color-mix(in srgb, var(--sys-accent, var(--mineral-gold)) 6%, var(--sys-bg-1, var(--paper-100)));
   font-size: var(--text-xs);
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
 }
 
 .resource-card__row strong {
-  color: var(--jade);
+  color: var(--sys-success, var(--jade));
 }
 
 .vendor-panel__card {
   display: grid;
   gap: 10px;
   padding: 12px;
-  border: 1px solid var(--paper-line);
+  border: 1px solid var(--sys-line-soft, var(--paper-line));
   border-radius: var(--radius-md);
-  background: linear-gradient(110deg, color-mix(in srgb, var(--mineral-gold) 12%, var(--paper-50)), color-mix(in srgb, var(--mineral-gold) 5%, var(--paper-100)));
+  background: linear-gradient(110deg, color-mix(in srgb, var(--sys-accent, var(--mineral-gold)) 12%, var(--sys-bg-0, var(--paper-50))), color-mix(in srgb, var(--sys-accent, var(--mineral-gold)) 5%, var(--sys-bg-1, var(--paper-100))));
 }
 
 .vendor-panel__card h3 {
   margin: 0;
-  color: var(--mineral-gold);
-  font: 700 var(--text-lg) var(--font-display);
+  color: var(--sys-accent, var(--mineral-gold));
+  font: 700 var(--text-lg) var(--sys-font-display, var(--font-display));
 }
 </style>

@@ -479,22 +479,22 @@ watch([searchQuery, activeGroup], () => resetPage())
   min-width: 0;
   min-height: var(--tap-min);
   padding: 0 var(--space-2);
-  background: var(--ink-800);
-  color: var(--text-primary);
-  border: 1px solid var(--ink-line-soft);
+  background: var(--sys-bg-0, var(--ink-800));
+  color: var(--sys-text, var(--text-primary));
+  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
   border-radius: var(--radius-sm);
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
   font-size: var(--text-xs);
 }
 
 .bag-section__search::placeholder {
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
 }
 
 .bag-section__search:focus-visible {
   outline: none;
-  border-color: var(--chrome-300);
-  box-shadow: var(--focus-ring-chrome);
+  border-color: var(--sys-text, var(--chrome-300));
+  box-shadow: var(--sys-focus, var(--focus-ring-chrome));
 }
 
 .bag-section__chips {
@@ -505,7 +505,7 @@ watch([searchQuery, activeGroup], () => resetPage())
 }
 
 .bag-section__count {
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
   font-size: var(--text-xs);
   white-space: nowrap;
 }

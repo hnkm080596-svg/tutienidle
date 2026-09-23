@@ -589,6 +589,8 @@
       "sections": {
         "uiScaleAria": "Interface font size",
         "uiScale": "Interface Font Size",
+        "effectsAria": "Reduce interface effects",
+        "effects": "Reduce Effects",
         "audioAria": "Audio",
         "audio": "Audio"
       },
