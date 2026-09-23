@@ -1,6 +1,7 @@
 # M-F-BODY-HIDDEN — Hidden perfection-material acquisition channels — Spec
 
-Status: v1 — draft (pending C2C spec review)
+Status: v2 — draft, amended after C2C spec review r82 (findings
+H1/H2/M1/M2 resolved inline; pending re-review)
 Depends on: M-F-BODY-PERFECTION (BP) — its spec/plan live on branch
 `devin/1790147578-m-f-body-perfection` (`game/docs/specs/m-f-body-perfection-spec.md`,
 `game/docs/plans/m-f-body-perfection-plan.md`) and are consumed here as
@@ -80,9 +81,10 @@ export interface HiddenBeastChannel {
 export interface GrottoChannel {
   kind: 'grotto'
   id: string
+  bandRealmId: string             // eligibility band: cycles whose collectionRealmId has reached this realm
   materialId: string              // emitted directly into the bag
-  chancePerCycle: number          // emission chance per settled grotto cycle
-  guaranteedAfterCycles?: number  // hard bound: unconditional emission at >= this
+  chancePerCycle: number          // emission chance per eligible settled grotto cycle
+  guaranteedAfterCycles?: number  // hard bound: unconditional emission at >= this eligible cycles
 }
 
 export type HiddenMaterialChannel = HiddenBeastChannel | GrottoChannel
@@ -103,6 +105,20 @@ export const HIDDEN_MATERIAL_CHANNELS = [
 
 export function hiddenBeastChannels(c = HIDDEN_MATERIAL_CHANNELS): readonly HiddenBeastChannel[]
 export function hiddenGrottoChannels(c = HIDDEN_MATERIAL_CHANNELS): readonly GrottoChannel[]
+
+// A channel's emitted material set — the reverse lookup the
+// reachability invariant composes. `signatureMaterialIdsOf` is injected
+// (data/drop stays catalog-pure; the test wires ENEMIES.signatureDrops).
+export function channelEmittedMaterialIds(
+  channel: HiddenMaterialChannel,
+  signatureMaterialIdsOf: (enemyId: string) => readonly string[],
+): readonly string[]
+
+// Perfection material ids intentionally reachable ONLY via visible
+// authored grants (quests/gifts/claims) — the explicit exemption the
+// completeness invariant checks instead of an unverifiable prose
+// exception. Ships []; content fills it.
+export const VISIBLE_GRANT_EXEMPT: readonly string[] = []
 ```
 
 Registry validation is the validate+assert PAIR convention (BP spec §2.2,
@@ -127,7 +143,8 @@ imports — `data/drop` stays catalog-pure like `data/realm`):
   `guaranteedSpawnAfterKills`, when present, int ≥ `killThreshold`
   (equality = unconditional substitution the moment the window opens — a
   legal authored choice);
-- `grotto`: `chancePerCycle ∈ (0,1]`; `guaranteedAfterCycles`, when
+- `grotto`: `bandRealmId` non-empty string (resolution is an integrity
+  arm); `chancePerCycle ∈ (0,1]`; `guaranteedAfterCycles`, when
   present, int > 0;
 - one `hidden_beast` channel per `(bandRealmId, enemyId)` pair (a shared
   enemy would make kill-reset ambiguous).
@@ -136,27 +153,39 @@ Cross-catalog checks are pinned in the registry integrity TEST (the
 `PhysiqueEssence.test.ts` convention — production data files do not
 import other catalogs):
 
-- every `bandRealmId` resolves in `REALMS`; every `enemyId` resolves in
-  `ENEMIES`; every `grotto.materialId` resolves in the materials catalog;
+- every `bandRealmId` resolves in `REALMS` (both kinds carry it); every
+  `enemyId` resolves in `ENEMIES`; every `grotto.materialId` resolves in
+  the materials catalog;
 - `hidden_beast` channel enemy's `realmId === bandRealmId` (else its kill
   can never reset the counter — the kill hook keys on `enemy.realmId`);
+- band-material coherence: every channel-emitted perfection material
+  satisfies `bodyPerfectionRealmOf(materialId) === channel.bandRealmId`
+  (both kinds — the release-policy band gate then covers the material's
+  realm too);
 - **anti-frustration arm (needs the BP seam):** for every channel that
   emits a perfection material — for `grotto`, `materialId`; for
   `hidden_beast`, each `signatureDrops` line on `enemyId` whose
   `isBodyPerfectionMaterial(itemId)` — a hard bound MUST be authored
   (`guaranteedSpawnAfterKills`/`guaranteedAfterCycles`), AND every such
   `hidden_beast` signature line must be authored `chance: 1` (the
-  deterministic bound lives in the spawn mechanism — §6), AND
-  `bodyPerfectionRealmOf(materialId) === channel.bandRealmId` (band-material
-  coherence — the release-policy band gate then covers the material's
-  realm too);
+  deterministic bound lives in the spawn mechanism — §6);
 - `grotto` channels additionally REQUIRE `isBodyPerfectionMaterial(
   materialId)` — the grotto lane exists solely for perfection materials
   (C2C flag F3 if arbitrary hidden materials should be allowed);
 - tag completeness (the `BreakthroughScopedResources` census pattern):
   every perfection material emitted by any channel carries
   `material.breakthroughRealmId === bodyPerfectionRealmOf(materialId)` so
-  the origination-time release gate can't drift from the registry.
+  the origination-time release gate can't drift from the registry;
+- **inverse reachability (completeness, C2C r82-H1):** the suite
+  composes `channelEmittedMaterialIds` over every channel and asserts
+  every material id authored in `BODY_PERFECTION_REALM_MATERIALS`
+  appears in ≥1 channel's emitted set OR in `VISIBLE_GRANT_EXEMPT` — a
+  required material with no acquisition route can never satisfy
+  `canPerfectBodyRealm`, so "quests may grant it" is an authored,
+  validated list, not prose. Both directions checked:
+  `VISIBLE_GRANT_EXEMPT` ⊆ the perfection table ids (no stale exempts),
+  and no emitted id appears in `VISIBLE_GRANT_EXEMPT` (a channel-
+  covered material needs no exemption).
 
 ## 3. Channel kind `hidden_beast` — generalized spawn substitution
 
@@ -225,8 +254,19 @@ reached by online `tickWorkers`/`advanceWorkerLanes` AND offline
   channel last emitted; carried by `restoreStates`' whitelist and
   `snapshotState`'s copy like `assignedWorkers`/`workerCycles`
   (`:127-135`, `:141-146`).
+- **Eligibility axis (C2C r82-H2):** a grotto channel applies to every
+  `grotto` site of the bound territory, but evaluates ONLY on cycles
+  whose snapshot collection realm has reached its band —
+  `getRealmIndex(cycle.collectionRealmId) >=
+  getRealmIndex(channel.bandRealmId)` (reach-based, not exact-match:
+  channels never expire as the player advances, so late perfection
+  stays farmable from later realms — BP's late-perfection ruling;
+  unknown realm ids fail closed on both sides). A Mortal/LQ cycle never
+  advances a TC/KD channel's counter, and counters are per-site (the
+  map lives on `ProductionSiteState`) — a second territory later can
+  add a `territoryId` selector if content needs site-scoped channels.
 - In `grantCycleRewards`, AFTER the existing table-reward loop, when
-  `definition.kind === 'grotto'`: for each authored grotto channel —
+  `definition.kind === 'grotto'`: for each ELIGIBLE grotto channel —
   `cycles[id] = (cycles[id] ?? 0) + 1`; emission when
   `guaranteedAfterCycles !== undefined && cycles[id] >=
   guaranteedAfterCycles` OR `rollChance(chancePerCycle)` on the CHANNEL
@@ -294,18 +334,24 @@ reached by online `tickWorkers`/`advanceWorkerLanes` AND offline
 
 ## 6. Anti-frustration contract — minimum discoverability, no spoil
 
-- **Hard bound required for perfection channels:** every channel emitting
-  a perfection material authors `guaranteedSpawnAfterKills` /
-  `guaranteedAfterCycles` — a finite deterministic worst case on first
-  acquisition (enforced by the integrity test, §2). Geometric chance
-  alone is not a guarantee. Values are authored by the content pass.
+- **Hard bound required for perfection channels (C2C r82-M1 — precise
+  semantics):** every channel emitting a perfection material authors
+  `guaranteedSpawnAfterKills` / `guaranteedAfterCycles` — a finite
+  deterministic bound MEASURED IN THE CHANNEL'S OWN UNITS (enforced by
+  the integrity test, §2): for `hidden_beast`, in banded kills —
+  reaching the bound makes the NEXT ELIGIBLE ACTIVE SPAWN substitute
+  unconditionally (substitution is active-stage-only, so idle kills
+  advance the counter without producing spawns; the bound is in
+  kill-count units, not elapsed time or real acquisition latency); for
+  `grotto`, in eligible settled cycles. Geometric chance alone is not a
+  guarantee. Values are authored by the content pass.
 - **Hidden-beast perfection channels must make the bound cover the drop
   layer:** every perfection-material `signatureDrops` line on a channel
   enemy is authored `chance: 1`, so the spawn bound IS the acquisition
-  bound — `guaranteedSpawnAfterKills` banded kills guarantees the beast,
-  `chance:1` guarantees the drop on its defeat (C2C flag F4 — a
-  probabilistic drop layer would reduce the guarantee to an expected
-  value, not a bound).
+  bound — `guaranteedSpawnAfterKills` banded kills guarantees the beast
+  at its next eligible active spawn, `chance:1` guarantees the drop on
+  its defeat (C2C flag F4 — a probabilistic drop layer would reduce
+  the guarantee to an expected value, not a bound).
 - **No spoil:** zero UI surface for channels, counters, windows, or
   locations — the `enemies-stages.md` §Quái ẩn convention ("Không spoil
   vị trí") applies to every channel; no hint system, no telemetry, no
@@ -366,9 +412,16 @@ reached by online `tickWorkers`/`advanceWorkerLanes` AND offline
   `signatureDrops`/`pool`/`guaranteed` line on a NON-channel enemy
   carries a `isBodyPerfectionMaterial` id — "hidden" means unreachable
   via normal loot.
-- Counters persist through save/load and offline settle; restore fires
-  no rolls, no emission, no discovery — persisted progress is
-  authoritative (S1/S2).
+- Counters persist through save/load and offline settle; persisted
+  progress is authoritative (S1/S2). `restoreStates()` / state
+  rehydration performs NO rolls, no emission, no counter writes, no
+  discovery — pure value replacement. `settleProductionOffline` (the
+  elapsed-offline catch-up `GameManagerSaveRestore` runs afterwards) is
+  reward ORIGINATION, not restore: it MAY roll and emit through the
+  normal `grantCycleRewards` path, and any discovery it produces rides
+  `pendingEvents` to the next `drainSettlementEvents` tick — identical
+  to online settle. Tests assert these as two separate operations
+  (C2C r82-M2).
 
 ## 9. Out of scope
 
@@ -410,12 +463,21 @@ reached by online `tickWorkers`/`advanceWorkerLanes` AND offline
   unchanged); multi-channel ordering (authored order, per-channel
   counters, A-reset doesn't touch B); guaranteed substitution at bound;
   `isRealmAvailable` dormancy on a beyond-ceiling band channel; grotto
-  emission (chance via scripted rng, guaranteed at bound, reset on
-  emission, suppressed-by-release-policy leaves counter primed, emission
-  rides pendingEvents → funnel → discovery set-add); counter persistence
-  + save round-trip + old-version rejection; restore fires no rolls;
-  `rollRewards` stream parity with and without fixture channels;
-  re-acquisition delivers without re-discovery (funnel no-ops).
+  emission (eligibility — a cycle whose collectionRealmId has not
+  reached the channel band never advances its counter; chance via
+  scripted rng, guaranteed at bound, reset on emission,
+  suppressed-by-release-policy leaves counter primed, emission rides
+  pendingEvents → funnel → discovery set-add); bound semantics —
+  reaching `guaranteedSpawnAfterKills` guarantees the next eligible
+  ACTIVE spawn (counter keeps advancing through idle kills, no spawn
+  produced until an active one rolls); inverse reachability — a
+  required material absent from every channel AND `VISIBLE_GRANT_EXEMPT`
+  fails; counter persistence + save round-trip + old-version rejection;
+  `restoreStates` performs no rolls/emission/discovery while
+  `settleProductionOffline` emits into `pendingEvents` drained by the
+  next tick; `rollRewards` stream parity with and without fixture
+  channels; re-acquisition delivers without re-discovery (funnel
+  no-ops).
 - Negative-path-only for the shipped all-empty grotto registry — the
   positive grotto emission suite runs on injected fixture channels
   (BP C2C r65-f1 convention).
@@ -440,11 +502,12 @@ reached by online `tickWorkers`/`advanceWorkerLanes` AND offline
   channel enemies (makes the spawn bound the acquisition bound). A
   probabilistic drop layer would need its own bound machinery —
   rejected as speculative scope unless content asks.
-- **F5** — band-material coherence for hidden_beast channels
-  (`bodyPerfectionRealmOf(m) === bandRealmId`) — keeps the
-  `isRealmAvailable(band)` gate equivalent to the material-realm gate.
-  Relax if content wants cross-band drops (the material's own
-  `breakthroughRealmId` gate still applies at the drop filter).
+- **F5** — band-material coherence for channel-emitted perfection
+  materials (`bodyPerfectionRealmOf(m) === channel.bandRealmId`, both
+  kinds) — keeps the band gate equivalent to the material-realm gate.
+  Relax if content wants cross-band emission (the material's own
+  `breakthroughRealmId` gate still applies at the drop/emission
+  filter).
 - **F6** — counter resets on emission, not delivery (precedent
   semantics; overflow loss behaves like any lost loot).
 - **F7** — no hint/telemetry layer: the no-spoil convention is read as
@@ -454,3 +517,10 @@ reached by online `tickWorkers`/`advanceWorkerLanes` AND offline
   (unchanged posture: idle kills count the counter, idle spawns never
   substitute, `chance<1` signature drops never land idle). Flag if
   auto-farm should see hidden spawns.
+- **F9** — grotto eligibility is reach-based (`collectionRealmId >=
+  bandRealmId`), not exact-match: channels never expire, so a TC
+  player keeps farming mortal/LQ channels for late perfection (BP's
+  late-perfection ruling makes exact-match hostile). A
+  site/territory selector was the alternative axis — not taken: the
+  bound territory owns one grotto site and counters are per-site;
+  `territoryId` remains a later extension point if content needs it.
