@@ -258,9 +258,10 @@ withDefaults(defineProps<{
 //   'sys-rim': variant === 'primary',
 //   'sys-bloom': variant === 'interactive',
 //   'sys-scanlines': scanlines }"> + <slot />
-// variant === 'primary' also registers the panel with useSystemRimAuthority() on mount /
-// unregisters on unmount; 'sys-rim--live' is applied only while this panel is the stack's
-// topmost entry (spec 4.1.1) — the one-rim contract is owned there, not by callers.
+// variant === 'primary' also makes the panel a rim claimant via useSystemRimAuthority():
+// claim when the host becomes visibly primary, release on hide/destroy, promote on each
+// activation — mounted-but-hidden overlays hold no claim (spec 4.1.1). 'sys-rim--live'
+// applies only while this panel is the authority's topmost active claimant.
 
 // SysBar.vue — same aria contract as primitives/Bar.vue
 withDefaults(defineProps<{
@@ -299,8 +300,8 @@ withDefaults(defineProps<{
 const emit = defineEmits<{ close: [] }>()
 // reuse useDialogFocus(cardRef, open, { onEscape: close }); heading useId + aria-labelledby;
 // outer root emits class 'sys-modal' (matches the :focus-visible rule in system-theme.css);
-// card = <SysPanel variant="primary"> — registers with the rim authority; holds the live
-// rim while topmost (spec 4.1.1)
+// card = <SysPanel variant="primary"> — claims the rim on open / releases on close;
+// holds the live rim while the authority's topmost active claimant (spec 4.1.1)
 ```
 
 - [ ] **Step 1:** scaffold all five SFCs with the contracts above; component `<style scoped>`
@@ -319,9 +320,9 @@ const emit = defineEmits<{ close: [] }>()
 - `Bar` gains `variant?: 'ink' | 'system'` (default `'ink'`); `'system'` adds `bar--system` on
   the root — its styles live ONLY in `system-theme.css` (spec §5).
 - `OverlayPanel` gains `variant?: 'ink' | 'system'` (default `'ink'`); `'system'` skips both
-  `InkNineSlice` layers and adds `overlay-panel__card--system` + `.sys-rim sys-rim--live` on
-  the card (it is the modal's live rim while `SysModalBase` adoption is still partial — see
-  §RESPEC note on T6). Same props/slots/aria/focus contract.
+  `InkNineSlice` layers and adds `overlay-panel__card--system` + `.sys-rim` on the card,
+  claiming `useSystemRimAuthority` while `open` (its live rim follows claimant order —
+  spec 4.1.1). Same props/slots/aria/focus contract.
 
 - [ ] **Step 1:** add props + class bindings; keep every default identical.
 - [ ] **Step 2:** add `bar--system` / `overlay-panel__card--system` rules to
@@ -336,9 +337,9 @@ const emit = defineEmits<{ close: [] }>()
 `system-theme.css` (drawer overrides), `src/assets/ink-wash-ui-slices.json` — NOT touched.
 
 **Interfaces:** Consumes SysPanel/SysStat/SysTag/SysBar from T2. LeftPanel's drawer is the
-home-primary surface — it registers `variant="primary"` with `useSystemRimAuthority`; any
-opened system modal pushes above it on the stack and takes the live rim automatically
-("modal trumps drawer" is a consequence of stack order — spec 4.1.1).
+home-primary surface — `variant="primary"` claims the rim while `ui.characterOverlayOpen`
+makes the drawer actually visible; any opened system modal promotes above it and takes the
+live rim, closing pops back to the drawer (active-claimant order — spec 4.1.1).
 
 - [ ] **Step 1:** `class="left-panel ink-drawer sys-surface sys-corners sys-scanlines"` (same
   for RightPanel minus the primary rim; CharacterDetailCard gets `.sys-surface`). In
@@ -405,10 +406,11 @@ exist, list them in the worklog before migrating.
   at-rule allowlist — `:root`/`@property`/`@keyframes`/`@font-face`/`@import`/`@media`/
   `@supports`; import-order check). Reference regex style:
   `tests/architecture/inkDrawerSurface.test.ts`.
-- [ ] **Step 2:** e2e spec: open character drawer → assert `.sys-surface` present; open a
-  system modal → assert `document.querySelectorAll('.sys-rim--live').length === 1`; Escape
-  closes; reduced-motion emulation → no `animation-name` on sys layers (or
-  `getComputedStyle(...)animationName === 'none'`).
+- [ ] **Step 2:** e2e spec: open character drawer → `.sys-surface` present + sole
+  `.sys-rim--live` on the drawer; open a system modal → sole rim on the modal; close it →
+  rim returns to the drawer; re-open the already-mounted modal → rim promoted back; a
+  mounted-but-closed modal holds no claim; Escape closes; reduced-motion emulation →
+  `getComputedStyle(...).animationName === 'none'` on sys layers.
 - [ ] **Step 3:** `npm run verify` (full — new files + main.ts + broad surface).
 - [ ] **Step 4:** P14 dense-screen run (spec §10 checklist, including the respec-button state
   actually merged at that point).

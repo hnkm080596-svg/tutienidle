@@ -92,7 +92,11 @@ Consequences:
 `tests/architecture/systemThemeBoundary.test.ts` (new, same source-scanning convention as
 `tests/architecture/inkDrawerSurface.test.ts`) polices §2.2/§2.3 mechanically:
 
-1. Each `--sys-*` token is defined exactly once, in `system-theme.css`.
+1. Canonical `--sys-*` declarations live at `:root` in `system-theme.css`, each token defined
+   exactly once, and no other file may declare a canonical `--sys-*` token (review finding
+   R18-2). Scoped re-assignment of a `--sys-*` token inside a `.sys-`/`--system`-anchored
+   selector — or as an inline `style` override on an opted-in element — is a permitted
+   re-tint (§2.2-5), not a redefinition, and is allowed outside `system-theme.css`.
 2. `system-theme.css` contains no left-hand definition of any non-sys token
    (`--ink-`, `--gold-`, `--paper-`, `--surface-`, `--chrome-`, `--frame-`, `--fx-`,
    `--scrim`, `--text-`, `--rank-`, `--grade-`, `--el-`, `--bar-`).
@@ -204,16 +208,25 @@ All effects animate only `transform`, `opacity`, `background-position`, or a reg
 The rotating rim repaints its gradient **every frame** — it is not compositor-only. Therefore:
 
 1. **At most ONE live rim per screen — enforced by a single ownership authority**
-   (review finding R15-2). Arbitration lives in one place: a module-scoped registration
-   stack exposed by `useSystemRimAuthority()` (composable, `composables/`). A rim-eligible
-   surface registers on mount and unregisters on unmount; **only the stack's topmost entry
-   applies `.sys-rim--live`**. `SysPanel variant="primary"` is what registers a surface —
-   non-`primary` surfaces never register. Wave-1 eligible set: system modal cards
-   (`SysModalBase`, `OverlayPanel variant="system"`) and the `LeftPanel` drawer. This yields
-   the intended behavior deterministically: the lone drawer owns the rim at home; any opened
-   system modal pushes above it and takes the rim; stacked modals hand it to the topmost;
-   closing pops back down. The e2e live-rim-count assertion (§10) is the regression check of
-   this contract.
+   (review findings R15-2, R18-1). Arbitration lives in one place: `useSystemRimAuthority()`
+   (composable, `composables/`), an ordered set of **currently active claimants** — NOT a
+   mount registry, because overlay components stay mounted while `v-if`-hidden and must not
+   hold claims then. Contract:
+   - **claim(id):** a rim-eligible surface claims when it becomes visibly primary — for
+     modals, `open` flipping true; for the drawer, actual visibility
+     (`ui.characterOverlayOpen`).
+   - **release(id):** the surface releases when hidden or destroyed — a closed-but-mounted
+     overlay holds no claim; the modal open state is part of the authority input.
+   - **promote(id):** every activation re-orders the claimant to the top, so an
+     already-mounted modal that re-opens correctly takes the rim back.
+   Only the current top claimant applies `.sys-rim--live`. `SysPanel variant="primary"` is the
+   sole claimant type — non-`primary` surfaces never claim. Wave-1 eligible set: system modal
+   cards (`SysModalBase`, `OverlayPanel variant="system"` — claim tied to the `open` prop)
+   and the `LeftPanel` drawer (claim tied to `ui.characterOverlayOpen` — drawer eligibility
+   reflects actual visibility). Result: the lone drawer owns the rim at home; an opening
+   modal promotes above it; stacked modals promote the newest; closing pops back down to the
+   drawer. The e2e assertions (§10) — including the closed-but-mounted → open → close
+   handoff — are the regression check of this contract.
 2. Secondary surfaces use a **static** light-line border (same gradient, frozen angle) or, at
    most, a slow `opacity` pulse (≥ 3.6s period) on the rim layer — never the conic spin.
 3. **Sweep cap:** at most 2 `.sys-sweep` animations may run simultaneously on a screen; sweeps
@@ -333,14 +346,18 @@ tooltips/toasts as system chrome; combat HUD system pass.
   all wave-1 surfaces visible simultaneously where the UI allows (HUD drawers + CharacterPanel
   open; a system modal over scene art; NodeTreePanel populated):
   - screenshot proof of the dense screen;
-  - exactly one `.sys-rim--live` element mounted (`document.querySelectorAll` count = 1);
+  - exactly one `.sys-rim--live` element mounted (`document.querySelectorAll` count = 1),
+    including the claimant handoff: drawer visible → rim on drawer; open modal → sole rim on
+    the modal; close it → rim returns to the drawer; re-open the already-mounted modal → rim
+    promoted back to it; a mounted-but-closed modal holds no claim;
   - `:focus-visible` ring visible on tab through interactive controls;
   - `prefers-reduced-motion` emulation: no flicker/sweep/shimmer/rim motion;
   - Vietnamese diacritics correct in headers + stat rows; font-fallback check with font request
     blocked — no layout breakage;
   - contrast spot-check on the brightest scene (measured, not eyeballed).
-- **E2E:** new `tests/e2e/system-ui.spec.ts` covering open/close of a system modal, drawer skin
-  presence, and the one-live-rim invariant.
+- **E2E:** new `tests/e2e/system-ui.spec.ts` covering open/close of a system modal, drawer
+  skin presence, and the rim-authority contract: one `.sys-rim--live` at all times, the
+  drawer ↔ modal handoff in both directions, and re-open promotion of a mounted modal.
 - **Gates:** P18 OCR on the diff → P4 adversarial QA (quick) → P5 sequential review (≥3
   passes). UI-skin surface = the full opt-in set plus the two shared-component variants.
 - **Acceptance:** all wave-1 surfaces render the system skin; the §2.3 safe-degrade
