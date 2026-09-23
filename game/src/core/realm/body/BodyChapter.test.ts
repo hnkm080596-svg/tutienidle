@@ -19,6 +19,7 @@ describe('BodyChapter - canonical zero state', () => {
     expect(createDefaultBodyProgression()).toEqual({
       body_refinement: { completedTiers: 0, currentTierProgress: 0 },
       meridian: { openedIds: [] },
+      zhou_tian: { circulation: 0 },
     })
   })
 
@@ -27,25 +28,30 @@ describe('BodyChapter - canonical zero state', () => {
     const b = createDefaultBodyProgression()
     expect(a.body_refinement).not.toBe(b.body_refinement)
     expect(a.meridian.openedIds).not.toBe(b.meridian.openedIds)
+    expect(a.zhou_tian).not.toBe(b.zhou_tian)
   })
 
-  it('createDefaultPlayer seeds bodyProgression with both zero-state slices', () => {
+  it('createDefaultPlayer seeds bodyProgression with all zero-state slices', () => {
     const player = createDefaultPlayer()
     expect(player.bodyProgression).toEqual({
       body_refinement: { completedTiers: 0, currentTierProgress: 0 },
       meridian: { openedIds: [] },
+      zhou_tian: { circulation: 0 },
     })
   })
 })
 
 describe('BodyChapter - registry', () => {
-  it('BODY_CHAPTERS holds exactly the two canonical chapters in order', () => {
-    expect(BODY_CHAPTERS.map(c => c.id)).toEqual(['body_refinement', 'meridian'])
+  it('BODY_CHAPTERS holds exactly the three canonical chapters in sequential order', () => {
+    // Canonical order IS the sequential chain (M-F-CHU-THIEN): each
+    // chapter may only name prerequisites listed before it.
+    expect(BODY_CHAPTERS.map(c => c.id)).toEqual(['body_refinement', 'meridian', 'zhou_tian'])
   })
 
-  it('chapter kinds: body_refinement is baseStat (D1), meridian is modifier', () => {
+  it('chapter kinds: body_refinement + zhou_tian are baseStat (D1), meridian is modifier', () => {
     expect(BODY_CHAPTER_BY_ID.body_refinement.kind).toBe('baseStat')
     expect(BODY_CHAPTER_BY_ID.meridian.kind).toBe('modifier')
+    expect(BODY_CHAPTER_BY_ID.zhou_tian.kind).toBe('baseStat')
   })
 
   it('BODY_CHAPTER_BY_ID + getBodyChapterDefinition resolve every registered chapter', () => {
@@ -73,9 +79,16 @@ describe('BodyChapter - chapter kind (M-F-BODY-CORE)', () => {
     expect(isBodyChapterKind(undefined)).toBe(false)
   })
 
-  it('each authored chapter declares its game-design kind', () => {
+  it('each authored chapter declares its game-design kind (EXPECTED pin)', () => {
     expect(BODY_CHAPTER_BY_ID.body_refinement.chapterKind).toBe('refinement')
     expect(BODY_CHAPTER_BY_ID.meridian.chapterKind).toBe('meridian')
+    expect(BODY_CHAPTER_BY_ID.zhou_tian.chapterKind).toBe('zhou_tian')
+  })
+
+  it('the authored sequential chain is declared on the chapters themselves (M-F-CHU-THIEN)', () => {
+    expect(BODY_CHAPTER_BY_ID.body_refinement.unlocksAfterChapters).toBeUndefined()
+    expect(BODY_CHAPTER_BY_ID.meridian.unlocksAfterChapters).toEqual(['body_refinement'])
+    expect(BODY_CHAPTER_BY_ID.zhou_tian.unlocksAfterChapters).toEqual(['meridian'])
   })
 })
 
@@ -180,11 +193,60 @@ describe('BodyChapter - validateBodyChapterRegistry (M-F-BODY-CORE)', () => {
   })
 
   it('rejects a chapter with no persisted-state slice and an orphan slice', () => {
-    const fake = fakeMeridianChapter({ id: 'zhou_tian' as never, chapterKind: 'zhou_tian' })
+    const fake = fakeMeridianChapter({ id: 'other_chapter' as never, chapterKind: 'zhou_tian' })
     const issues = validateBodyChapterRegistry([refinement, fake])
 
-    expect(issues.some(i => i.path === 'bodyProgression.zhou_tian')).toBe(true)
+    expect(issues.some(i => i.path === 'bodyProgression.other_chapter')).toBe(true)
     expect(issues.some(i => i.path === 'bodyProgression.meridian')).toBe(true)
+    expect(issues.some(i => i.path === 'bodyProgression.zhou_tian')).toBe(true)
+  })
+
+  it('validates unlocksAfterChapters as backward-only refs (M-F-CHU-THIEN)', () => {
+    const refinementDef = BODY_CHAPTER_BY_ID.body_refinement
+    const meridianDef = BODY_CHAPTER_BY_ID.meridian
+    const zhouTianDef = BODY_CHAPTER_BY_ID.zhou_tian
+
+    // The real chain passes: meridian -> body_refinement, zhou_tian -> meridian.
+    expect(
+      validateBodyChapterRegistry([refinementDef, meridianDef, zhouTianDef])
+        .filter(i => i.path.endsWith('.unlocksAfterChapters')),
+    ).toEqual([])
+
+    // Unknown prerequisite id.
+    const unknownRef = fakeMeridianChapter({
+      id: 'other_chapter' as never,
+      unlocksAfterChapters: ['not_a_chapter'] as never,
+    })
+    expect(
+      validateBodyChapterRegistry([refinementDef, meridianDef, unknownRef]).some(
+        i => i.path === 'bodyChapters.other_chapter.unlocksAfterChapters'
+          && i.message.includes("unknown prerequisite chapter 'not_a_chapter'"),
+      ),
+    ).toBe(true)
+
+    // Forward reference (zhou_tian listed AFTER the dependent chapter).
+    const forwardRef = fakeMeridianChapter({
+      id: 'meridian' as never,
+      unlocksAfterChapters: ['zhou_tian'],
+    })
+    expect(
+      validateBodyChapterRegistry([refinementDef, forwardRef, zhouTianDef]).some(
+        i => i.path === 'bodyChapters.meridian.unlocksAfterChapters'
+          && i.message.includes("must precede 'meridian'"),
+      ),
+    ).toBe(true)
+
+    // Self reference.
+    const selfRef = fakeMeridianChapter({
+      id: 'meridian' as never,
+      unlocksAfterChapters: ['meridian'],
+    })
+    expect(
+      validateBodyChapterRegistry([refinementDef, selfRef, zhouTianDef]).some(
+        i => i.path === 'bodyChapters.meridian.unlocksAfterChapters'
+          && i.message.includes("must precede 'meridian'"),
+      ),
+    ).toBe(true)
   })
 
   it('rejects an advancement owned by two chapters / spanning skips / gapped chain', () => {

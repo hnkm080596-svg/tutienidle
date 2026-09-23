@@ -1,8 +1,9 @@
 // P7-M5 - Unified BodyProgression authority: the canonical contract for
-// body progression chapters (Luyen The tiers + Bat Mach one-shot openings
-// today; future body chapters join the same registry). One PlayerData
-// field, `bodyProgression`, is the single persisted record - the retired
-// flat fields (bodyRefinementCompletedTiers /
+// body progression chapters (Luyen The tiers, Bat Mach one-shot openings,
+// and the M-F-CHU-THIEN Chu Thien circulation; future body chapters join
+// the same registry). One PlayerData field, `bodyProgression`, is the
+// single persisted record - the retired flat fields
+// (bodyRefinementCompletedTiers /
 // bodyRefinementCurrentTierProgress / openedMeridianIds) are gone at v72.
 //
 // A BodyChapterDefinition is the chapter-local contract: the chapter owns
@@ -20,10 +21,10 @@
 //
 // M-F-BODY-CORE - chapter KIND is first-class: `chapterKind` is the
 // authored game-design classification (refinement | meridian |
-// zhou_tian), orthogonal to the emission `kind` discriminant. A future
-// Chu Thien chapter declares chapterKind 'zhou_tian' and reuses the
-// shared contract + registry without touching dispatch; per-kind
-// contract extensions attach beside this field as they are authored.
+// zhou_tian), orthogonal to the emission `kind` discriminant. The Chu
+// Thien chapter (M-F-CHU-THIEN) declares chapterKind 'zhou_tian' and
+// reuses the shared contract + registry without touching dispatch;
+// per-kind contract extensions attach beside this field as authored.
 import type { PlayerData } from '../../player/Player'
 import type { StatType } from '../../stats/StatTypes'
 import {
@@ -35,12 +36,12 @@ import {
 import { physiqueEssenceGradeOf } from '../../../data/realm/PhysiqueEssence'
 import { bodyRefinementChapter } from './BodyRefinementChapter'
 import { meridianChapter } from './MeridianChapter'
+import { zhouTianChapter } from './ZhouTianChapter'
 
-export type BodyChapterId = 'body_refinement' | 'meridian'
+export type BodyChapterId = 'body_refinement' | 'meridian' | 'zhou_tian'
 
-// M-F-BODY-CORE - the chapter-kind vocabulary. 'zhou_tian' is declared
-// now so the seam exists before M-F-CHU-THIEN authors the chapter that
-// uses it; declaring the rung early does not add a chapter.
+// M-F-BODY-CORE - the chapter-kind vocabulary. 'zhou_tian' was declared
+// ahead of M-F-CHU-THIEN; the Chu Thien chapter now owns that rung.
 export const BODY_CHAPTER_KINDS = ['refinement', 'meridian', 'zhou_tian'] as const
 
 export type BodyChapterKind = (typeof BODY_CHAPTER_KINDS)[number]
@@ -53,14 +54,14 @@ export function isBodyChapterKind(value: unknown): value is BodyChapterKind {
 
 // M-F-BODY-CORE - expected classification per authored chapter id.
 // Registry validation pins every listed id to this kind (a mis-tagged
-// chapter fails authoring validation); ids absent from the map (e.g. a
-// future zhou_tian chapter) are unpinned until authored with their own
-// expected kind.
+// chapter fails authoring validation); ids absent from the map are
+// unpinned until authored with their own expected kind.
 export const EXPECTED_BODY_CHAPTER_KIND: Readonly<
   Partial<Record<string, BodyChapterKind>>
 > = {
   body_refinement: 'refinement',
   meridian: 'meridian',
+  zhou_tian: 'zhou_tian',
 }
 
 // M-QI-07 (QI-D4) - a chapter may declare ONE physique advancement:
@@ -82,9 +83,14 @@ export interface MeridianChapterState {
   openedIds: string[]
 }
 
+export interface ZhouTianChapterState {
+  circulation: number
+}
+
 export interface BodyProgressionState {
   body_refinement: BodyRefinementChapterState
   meridian: MeridianChapterState
+  zhou_tian: ZhouTianChapterState
 }
 
 // Currency channel descriptor - which bag a chapter's invest currency
@@ -123,6 +129,13 @@ interface BodyChapterShared {
   readonly chapterKind: BodyChapterKind
   readonly currency: BodyChapterCurrency
   readonly auxCurrency?: BodyChapterCurrency
+  // M-F-CHU-THIEN (C2C-59) - authored sequential prerequisites: chapter
+  // ids that must be COMPLETE before this chapter may be invested.
+  // Registry validation pins every entry to a strictly-earlier chapter
+  // (backward-only refs); the system dispatch gates invest on them and
+  // restore-preflight pins the persisted coherence invariant. Absent on
+  // chapters with no authored predecessor (body_refinement).
+  readonly unlocksAfterChapters?: readonly BodyChapterId[]
   // M-QI-07 - absent on chapters that never transform the physique
   // (meridian declares none; only body_refinement binds pham -> bao).
   readonly physiqueAdvancement?: PhysiqueAdvancement
@@ -186,15 +199,19 @@ export function createDefaultBodyProgression(): BodyProgressionState {
   return {
     body_refinement: { completedTiers: 0, currentTierProgress: 0 },
     meridian: { openedIds: [] },
+    zhou_tian: { circulation: 0 },
   }
 }
 
-// Canonical registry - iteration order IS the canonical chapter order.
-// A future body chapter appends here (and to BodyChapterId + the state
-// record) - nothing else needs to learn about it.
+// Canonical registry - iteration order IS the canonical chapter order
+// AND the sequential progression chain (each chapter may only name
+// predecessors listed before it). A future body chapter appends here
+// (and to BodyChapterId + the state record) - nothing else needs to
+// learn about it.
 export const BODY_CHAPTERS: readonly BodyChapterDefinition[] = [
   bodyRefinementChapter,
   meridianChapter,
+  zhouTianChapter,
 ]
 
 // M-F-BODY-CORE - registry validation: the chapter catalog is authored
@@ -318,6 +335,30 @@ export function validateBodyChapterRegistry(
     }
   }
 
+  // M-F-CHU-THIEN - sequential-prereq validation: every declared
+  // unlocksAfterChapters entry must name a chapter STRICTLY EARLIER in
+  // canonical order - the chain only ever points backward (no self-,
+  // forward-, or unknown references).
+  chapters.forEach((chapter, selfIndex) => {
+    const path = `bodyChapters.${chapter.id}`
+
+    for (const prereq of chapter.unlocksAfterChapters ?? []) {
+      const prereqIndex = chapters.findIndex(candidate => candidate.id === prereq)
+
+      if (prereqIndex === -1) {
+        issues.push({
+          path: `${path}.unlocksAfterChapters`,
+          message: `unknown prerequisite chapter '${prereq}'`,
+        })
+      } else if (prereqIndex >= selfIndex) {
+        issues.push({
+          path: `${path}.unlocksAfterChapters`,
+          message: `prerequisite '${prereq}' must precede '${chapter.id}' in canonical order`,
+        })
+      }
+    }
+  })
+
   for (const key of defaultKeys) {
     if (!chapters.some(chapter => chapter.id === key)) {
       issues.push({
@@ -365,6 +406,7 @@ export function assertBodyChapterRegistry(): void {
 export const BODY_CHAPTER_BY_ID: Readonly<Record<BodyChapterId, BodyChapterDefinition>> = {
   body_refinement: bodyRefinementChapter,
   meridian: meridianChapter,
+  zhou_tian: zhouTianChapter,
 }
 
 export function getBodyChapterDefinition(id: BodyChapterId): BodyChapterDefinition {

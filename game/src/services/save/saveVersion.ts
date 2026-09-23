@@ -130,4 +130,11 @@
 // issueCompanionGifts on authored trigger moments, claimed through
 // claimCompanionGift). Save v76 is rejected (dev phase, no migration,
 // no compat translator).
-export const CURRENT_SAVE_VERSION = 77 as const
+// v78 (2026-09-23, M-F-CHU-THIEN Truc Co Chu Thien chapter):
+// player.bodyProgression gains the zhou_tian slice ({circulation} -
+// the Truc Co normal-Body track, Tieu 180 / Dai 360). Sequential
+// chapter prerequisites (meridian -> body_refinement, zhou_tian ->
+// meridian) are authored on the chapter registry and pinned as a
+// restore-preflight coherence invariant. Save v77 is rejected
+// (dev phase, no migration, no compat translator).
+export const CURRENT_SAVE_VERSION = 78 as const

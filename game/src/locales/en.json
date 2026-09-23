@@ -530,7 +530,24 @@
         "auxGate": "requires Heaven-Earth Bridge",
         "pageLocked": "Unlocks at {realm}",
         "invest": "Open Meridian",
-        "owned": "owned {count}"
+        "owned": "owned {count}",
+        "seqGate": "requires Body Refinement complete"
+      },
+      "zhouTian": {
+        "title": "Chu Thien Circulation",
+        "summary": "Circulation: {completed}/{total}",
+        "stateLocked": "Sealed",
+        "stateRealmLocked": "Realm locked",
+        "stateActive": "Circulating",
+        "stateComplete": "Great Circuit",
+        "locked": "Complete the Eight Extraordinary Meridians chapter first",
+        "realmLocked": "Unlocks at {realm}",
+        "capacity": "Current capacity: {capacity}",
+        "tieuLabel": "Tieu Chu Thien · 180",
+        "daiLabel": "Dai Chu Thien · 360",
+        "invest": "Circulate",
+        "owned": "Dharma Physique Essence owned {count}",
+        "complete": "Dai Chu Thien circulation complete."
       }
     },
     "settings": {
