@@ -70,7 +70,8 @@ evidence, not a fix (P12/coordinator rule).
 | Concern | Today | File |
 |---|---|---|
 | Session harness | `EarlyGameSession` — one `GameManager`+one `PlayerData`, SeededCombatRng battle RNG + separate loot RNG (`seed ^ 0x9e3779b9`), `ManualClockSource`, full production catalog registration matching `App.vue`. Seams: `cultivate`, `breakthroughIfReady`, `materialAmount`, `runStage` (`driveTurnBattleToTerminal`), `runTribulation` (`canTriggerBreakthrough` precheck + `startTribulation` + `tickOps.update(1)` + scripted correct answers), `performRitual`, `purchaseNode`, `allocateAttribute`, `investRefinement` (hardwired to `'body_refinement'`), `equipAll`, `restoreCheckpoint(save, playerOwner)` wrapping the real `restoreGameSession`, normalized `snapshot()`. | `core/simulation/earlygame/EarlyGameSession.ts` |
-| Settlement gap | `runTribulation` returns the committed outcome but never SETTLES it — in production `checkTribulationOutcomeAction` (`useTribulation.ts:131`) runs `TribulationOutcomeService.settleOutcome` each tick. For mortal→LQ that was a no-op (qi_refining early-return); at LQ→TC settlement is where realm/level/cultivation, `highestFoundationAchieved`, passive syncs, technique seal, sword merge, gift issue, unequip-all, and `pendingTalentEntitlement` all write. **Harness seam needed.** | `core/tribulation/TribulationOutcomeService.ts`, `composables/useTribulation.ts:145-208` |
+| Settlement gap | `runTribulation` returns the committed outcome but never SETTLES it — in production `checkTribulationOutcomeAction` (`useTribulation.ts:131`) runs `TribulationOutcomeService.settleOutcome` each tick. For mortal→LQ that was a no-op (qi_refining early-return); at LQ→TC settlement is where realm/level/cultivation, `highestFoundationAchieved`, passive syncs, technique seal, sword merge, gift issue, unequip-all, and `pendingTalentEntitlement` all write. **Harness seams needed — two, split at the resolve boundary (state machine below).** | `core/tribulation/TribulationOutcomeService.ts`, `composables/useTribulation.ts:145-208` |
+| Settle/drain state machine | Production order (`checkTribulationOutcomeAction` domain half): committed outcome → `settleOutcome` binds + applies ONCE via `CommittedTribulationOutcome.receipt` (repeated calls are idempotent — same receipt, zero re-application) → `reconcileTalentEntitlement(player)` prunes dead records → while `pendingTalentEntitlement` stays UNRESOLVED the drain is DEFERRED: committed outcome retained, NO `director.clear()` → only after resolution does the drain run (present + `director.clear()`). A harness seam that clears before resolution no longer mirrors production and can erase the committed outcome the deferred-drain/idempotency path needs — the seam split is pinned at the resolve boundary. | `composables/useTribulation.ts:145-208`, `core/tribulation/TribulationOutcomeService.ts` |
 | Writer shape | `settleOutcome` and `resolveTalentEntitlement` require the Pinia-store writer (`setEquipmentModifiers` exists only on `stores/player.ts:214`). M-C's convention: the TEST owns a real `usePlayerStore` and passes it in (`restoreCheckpoint(save, owner)`); the harness file stays stores-free. | `stores/player.ts`, `core/simulation/earlygame/MortalChapterJourney.test.ts` (leg D) |
 | LQ→TC admission | `canTriggerBreakthrough` = `[{level≥12},{chapterClear qi_refining_abyssal_pool}]` both met; rows come from `getBreakthroughRequirements` (M-QI-02/03). | `core/game/GameManagerRealmAdvanceOps.ts:625-670` |
 | LQ→TC tribulation | `startTribulation` guard order: cooldown/active → **`isRealmTransitionEnabled`** (M-F-CEILING) → authored chapters → `resolveKienCoGrade` snapshot. Chapters: mind (4 questions) → body tank (20s, 2s interval, 10% maxHp) → lightning (18s, 1.5s interval, 13% + 30% final strike). `GRADE_DIFFICULTY_MULTIPLIER` 1/1.15/1.3/1.85 scales strike interval AND damage. Survival depends on REAL `maxHp`/`defense`/`hpRegenPerTurn`. | `core/tribulation/TribulationDirector.ts`, `data/tribulation/TribulationChapters.ts` |
@@ -117,50 +118,78 @@ contract itself runs real: `getBreakthroughRequirements` rows,
 fields are enumerated in the suite header (auditability); the honest
 reachability gap is itself recorded as a sweep finding (§5).
 
-**Leg B — breakthrough → TC initiation:** `runTribulation
-('foundation_establishment')` drives the real director (4 mind
-questions answered correctly via the session seam, then both tank
-chapters on real stats) → `getCommittedOutcome()` stamps victory →
-**new seam** `settleTribulationOutcome(playerOwner)` (mirrors the
-domain half of `checkTribulationOutcomeAction`: `settleOutcome` then
-`director.clear()`) → assert the initiation bundle on real state:
-`realmId='foundation_establishment'`, `realmLevel=1`,
+**Leg B — breakthrough → TC initiation (two-phase settle/drain
+contract):** `runTribulation('foundation_establishment')` drives the
+real director (4 mind questions answered correctly via the session
+seam, then both tank chapters on real stats) → `getCommittedOutcome()`
+stamps victory → **phase (a) — pre-resolution settlement:**
+`settleTribulationOutcome(playerOwner)` binds + applies ONCE and
+returns the bound receipt — assert the initiation bundle on real
+state: `realmId='foundation_establishment'`, `realmLevel=1`,
 `cultivation=0`, `highestFoundationAchieved` = the run's committed
 grade, equipment unequipped + modifiers resynced, realm passive
-`passive_truc_co_y_chi` learned, `pendingTalentEntitlement` present
-(non-great_dao run) → `resolveTalentEntitlement(playerOwner,
-decision)` grants exactly one result and clears the record →
-`companionGifts` carries the realm_entered record → `claimCompanionGift`
-through `companionOps`. Technique `gradeHistory` seal asserted when the
-pre-TC technique lags the realm (M-F-TECHNIQUE frozen cycle).
-Idempotency pinned: a second `settleOutcome` returns the bound receipt
-with no double-apply (committed-suite contract).
+`passive_truc_co_y_chi` learned, technique `gradeHistory` seal when
+the pre-TC technique lags the realm (M-F-TECHNIQUE frozen cycle),
+`companionGifts` carries the realm_entered record,
+`pendingTalentEntitlement` present (non-great_dao run). Idempotency
+pinned: a REPEATED `settleTribulationOutcome()` before resolution
+returns the SAME bound receipt with zero re-application (no second
+entitlement, no second gift, no re-pour, no re-seal); and the drain
+seam `drainTribulationOutcome()` HOLDS while the entitlement stays
+unresolved — `reconcileTalentEntitlement` runs, committed outcome
+retained, `director.active` NOT cleared (production's deferred-drain
+rule). **Phase (b) — post-resolution drain:**
+`resolveTalentEntitlement(playerOwner, decision)` grants exactly one
+result and clears the record → `drainTribulationOutcome()` now
+executes the drain (`director.clear()`; a subsequent `start()` reaches
+its own guards instead of refusing on the stale committed run) →
+`claimCompanionGift` through `companionOps`.
 
-**Leg C — TC realm levels:** `cultivate` + `breakthroughIfReady`
-ladder on the real realm data (baseCultivationMinutes 64, cap 18,
-attributeCap 100). Asserts the level-attribute-point feed, the
-zhou_tian capacity growth coupling (`20 × realmLevel`), and floor
-gates rising with level (`foundation_floor_N` locked below N).
+**Leg C — TC realm levels INTERLEAVED with zhou_tian circulation:**
+`cultivate` + `breakthroughIfReady` ladder on the real realm data
+(baseCultivationMinutes 64, cap 18, attributeCap 100). Asserts: the
+level attribute-point feed; floor gates rising with level
+(`foundation_floor_N` locked below N); AND the zhou_tian capacity
+coupling observed THROUGH the ladder — investment exercised at each
+capacity step, not once at terminal level. With Leg D's prerequisites
+completed at L1, capacity reads `20 × realmLevel` after every
+breakthrough and circulation resumes to the new cap. Pinned
+observations: **≥1 below-cap clamp** (an invest attempt past current
+capacity leaves circulation AT the cap with excess essence not
+debited — exercised at L1 vs capacity 20); the **L8→L9 boundary**
+(capacity 160→180 — Tiểu read `circulation >= 180` first true at L9);
+the **L17→L18 boundary** (340→360 — Đại read `circulation >= 360` /
+chapter complete at L18). Exact Pháp debit only (proved by holding
+only lower-band essence and asserting 0 invested — no substitution
+fill on the top rung); `collectBaseStatDeltas {}` recorded as an
+authored content blank (report, not fill).
 
-**Leg D — Body chapters through real invest seams** (ordering =
-authored chain):
+**Leg D — Body chapters through real invest seams** (chain order
+authored; prerequisites complete at TC L1 so zhou_tian can ride Leg
+C's ladder):
 1. `body_refinement` — finish incomplete tiers with seeded pham-equiv
-   coverage (§4), assert the tier sequence + `bat-mach`-style baseStat
-   deltas on `baseStats` + `physiqueGrade` pham→bao flip at 6/6
-   (M-QI-07's idempotent transform), plus substitution coverage when
-   only higher-band essence is held (phap→bao→pham through the real
+   coverage (§4). Authority split pinned: tier completion contributes
+   authored flat deltas through the assembly/collector channel —
+   assert the `collectBaseStatDeltas` output / effective assembled
+   stat result rising by the authored `baseGains` — while intrinsic
+   `player.baseStats` is proven byte-unchanged (refinement NEVER
+   mutates intrinsic stats; `bat-mach:*` is the meridian channel and
+   is asserted only in D.2). `physiqueGrade` pham→bao flip at 6/6
+   (M-QI-07's idempotent transform). Substitution coverage when only
+   higher-band essence is held (phap→bao→pham through the real
    `investBodyChapter` probe/commit — M-QI-09 in journey form).
 2. `meridian` — invest opens `openedIds` in strict prefix order
-   (nham_mach first; ky_kinh last, gated on `thien_dia_chi_kieu` aux),
-   `bat-mach:*` modifiers emitted, 9/9 → chapter complete; pace gate
-   proven lifted (no `requiredRealmLevel` block post-LQ) while
-   `unlocksAfterChapters` still refuses invest before
-   body_refinement is complete (assert 0 + no debit).
-3. `zhou_tian` — capacity clamps invest at `20 × realmLevel` at each
-   asserted level; Tiểu read at ≥180 (post-L9), Đại at 360 post-L18;
-   exact Pháp debit only (no substitution fill on the top rung);
-   `collectBaseStatDeltas {}` recorded as an authored content blank
-   (report, not fill).
+   (nham_mach first; ky_kinh last, gated on `thien_dia_chi_kieu` aux);
+   `bat-mach:*` emissions asserted ONLY on the meridian
+   percent-modifier channel (never intrinsic stats — same authority
+   split); 9/9 → chapter complete; pace gate proven lifted (no
+   `requiredRealmLevel` block post-LQ) while `unlocksAfterChapters`
+   still refuses invest before body_refinement is complete (assert 0
+   + no debit).
+3. `zhou_tian` — ordering contract asserted HERE: invest before
+   meridian complete → 0, no debit; pre-TC capacity 0 → 0. The
+   capacity/circulation coverage rides Leg C's interleaved ladder
+   (asserting it only at L18 makes capacity growth unobservable).
 
 **Leg E — stage progression + clears:** `runStage` on
 `foundation_floor_1` → victory → sequential unlock observed →
@@ -190,8 +219,14 @@ parity: every journey-visible persisted field equals the checkpoint —
 `bodyProgression` (tiers + `openedIds` + `circulation`), `artifact`,
 `companionGifts`, `pendingTalentEntitlement` (undefined after resolve),
 `technique.gradeHistory`/`grade`/`rank`, `physiqueGrade`,
-`highestFoundationAchieved`, `perfectClearStageIds` — transient
-`tribulationState` excluded per the documented M-C exclusion →
+`highestFoundationAchieved`, `perfectClearStageIds` — **plus every
+persisted field landed by the pending siblings at rebase time**: at
+minimum `bodyPerfection.discoveredMaterials`,
+`bodyPerfection.perfectedRealmIds`, the artifact fields from
+M-F-ARTIFACT-DEFER's landed shape, and the hidden-material fields
+from M-F-BODY-HIDDEN's landed shape (each resolved per expansion
+gate A13) — transient `tribulationState` excluded per the documented
+M-C exclusion →
 post-restore continuation runs a MANAGER-BACKED action
 (`runStage` victory + resumed `investBodyChapter`), not only a raw
 tick. Boundary case: a save carrying `{zhou_tian progressed, meridian
@@ -235,6 +270,25 @@ asserted state-unchanged):
 driver produce identical normalized snapshots (extended for TC
 fields — §4).
 
+**Leg K — Body-Perfection (mandatory):** M-F-BODY-PERFECTION's landed
+surface exercised end-to-end through real seams — authored material
+discovery (records into `bodyPerfection.discoveredMaterials` via the
+landed discovery path), perfection commit (`perfectedRealmIds`
+marking via the landed op), then persisted parity through a
+checkpoint restore (Leg G's machinery). The leg itself is NOT
+deferrable — the sibling is required-merged before phase 2; only its
+internal assertion details re-derive against the landed shape per
+expansion gate A13, and any piece that lands as an authored blank
+becomes a named expected-deferral row, never a silent absence.
+
+**Leg L — BODY-HIDDEN surface (conditional→mandatory):** keyed on
+M-F-BODY-HIDDEN's landed shape: any landed persisted or interactive
+TC surface (hidden-material fields, a hidden-way TC body surface)
+gets a leg asserting discovery → progression → persisted parity
+through real seams; if the landed mission exposes no TC-visible
+surface, the conditional resolves to a named expected-deferral row in
+the notes — never silently dropped (A13).
+
 ## 4. Session-seam additions (EarlyGameSession only — the M-C carve-out)
 
 The harness gains the seams the TC surface needs; every addition
@@ -243,13 +297,14 @@ mirrors a real entry contract and stays stores-free:
 | Seam | Shape | Mirrors |
 |---|---|---|
 | `playerOwner` option | `EarlyGameSessionOptions.playerOwner?: GameSessionPlayerOwner` — when present, the session's player IS `owner.$state` from construction (profile + bootstrap write into it). `restoreCheckpoint` unchanged. | production: the live player IS a Pinia store; settle/entitlement writers require the store shape |
-| `settleTribulationOutcome()` | requires `playerOwner`; calls `new TribulationOutcomeService().settleOutcome(playerOwner, gm, director)`, asserts the entitlement drain rule (`reconcileTalentEntitlement` + `pendingTalentEntitlement` retained = unresolved), then `director.clear()`. Returns the bound receipt. | `checkTribulationOutcomeAction` (domain half only — curtain/presentation sequencing stays presentation scope) |
+| `settleTribulationOutcome()` | requires `playerOwner`; calls `new TribulationOutcomeService().settleOutcome(playerOwner, gm, director)` and returns the bound receipt. Contains NO drain — repeated calls before entitlement resolution must be idempotent (same receipt, zero re-application), mirroring the once-only committed-settle contract. | `settleOutcome` inside `checkTribulationOutcomeAction` |
+| `drainTribulationOutcome()` | mirrors the post-settle half: `reconcileTalentEntitlement(player)` → if `pendingTalentEntitlement` still unresolved, HOLDS (no drain — production defers); once resolved → `director.clear()`. Returns whether the drain executed. | reconcile + deferral + `director.clear()` inside `checkTribulationOutcomeAction` (curtain/presentation sequencing stays presentation scope) |
 | `resolveTalentEntitlement(decision)` | delegates `realmAdvanceOps.resolveTalentEntitlement(playerOwner, decision)` | the modal's commit seam |
 | `investChapter(chapterId)` | generalizes `investRefinement` to `realmAdvanceOps.investBodyChapter(player, chapterId)`; `investRefinement` stays as the body_refinement shorthand (existing callers unchanged) | `MeridianSection`/`ZhouTianSection` invest buttons |
 | `pillAmount(id)` / `holdPill(id, n)` / `holdMaterial(id, n)` | `pillBag`/`materialBag` typed reads + bag writes over the registered catalogs | `pillBag.add`/`materialBag.add` — the committed fixture seam (TribulationOutcomeSettlement.test.ts:64) |
 | `giftRecords()` / `claimGift(id)` | read `player.companionGifts`; `companionOps.claimCompanionGift(id)` | the mail-claim UI seam |
 | `perfectClearOf(stageId)` / `startAutoFarm(stageId)` | reads + `turnBattleOps.autoFarmOps.startAutoFarm` | stage auto-farm unlock |
-| `snapshot()` extension | adds normalized TC fields: `bodyProgression` summary, `physiqueGrade`, `highestFoundationAchieved`, `artifact` presence/level/grade, `companionGifts` id set, `pendingTalentEntitlement` presence, `technique` grade/rank/history keys | existing normalized-snapshot contract (volatile fields excluded per M0 census) |
+| `snapshot()` extension | adds normalized TC fields: `bodyProgression` summary, `physiqueGrade`, `highestFoundationAchieved`, `artifact` presence/level/grade, `companionGifts` id set, `pendingTalentEntitlement` presence, `technique` grade/rank/history keys — extended at impl start with the pending siblings' persisted fields (`bodyPerfection.discoveredMaterials`/`perfectedRealmIds`, artifact + hidden-material fields per landed shapes) | existing normalized-snapshot contract (volatile fields excluded per M0 census) |
 
 **Seeded-input decision (flag for C2C):** inputs whose authored
 acquisition is paced in days — `thong_mach_dan` ×133, `truc_co_dan`,
@@ -334,6 +389,11 @@ coverage. M8's decision block is the format.
 - **No P13/P14 trigger** — headless suite + docs; no
   wiring/browser-facing surface. If the sweep uncovers a wiring defect
   needing runtime evidence, it goes to the report, not a fix.
+- **Stop condition** — a PRE-EXISTING production defect that blocks
+  any A1–A7 contract makes M-F-JOURNEY BLOCKED pending
+  coordinator-owned repair: the defect is reported with evidence; it
+  must NOT be weakened into a passing characterization, encoded as
+  expected behavior, or fixed inside this mission (P12 boundary).
 - **P15** — new comments ASCII English.
 
 ## 9. Resolved at spec time / open items for C2C
@@ -345,10 +405,12 @@ Resolved:
   alchemy/beast economies are day-paced. The fixture pattern is the
   committed-suite convention; reachability gaps are reported as sweep
   findings, not worked around.
-- **Settlement seam** — `settleTribulationOutcome(playerOwner)` +
-  `playerOwner` construction option; the harness stays stores-free
-  (the test owns the Pinia store, same convention as leg-D
-  `restoreCheckpoint`).
+- **Settlement seams** — split at the resolve boundary:
+  `settleTribulationOutcome(playerOwner)` (settle once/idempotent, no
+  drain) + `drainTribulationOutcome()` (reconcile → deferred drain →
+  clear only post-resolution), plus the `playerOwner` construction
+  option; the harness stays stores-free (the test owns the Pinia
+  store, same convention as leg-D `restoreCheckpoint`).
 - **Seeded inputs** — §4's two-class split; all seeded fields named.
 - **TC→KD closed** — asserted as the boundary leg (F); the authored
   golden_core chapters stay dormant data.
@@ -367,9 +429,10 @@ Open items for C2C:
   pin the resolver contract at a fraction of runtime. C2C may choose
   either.
 - **Pending-sibling conditionals** — ARTIFACT-DEFER (artifact
-  unlock realm may move off TC), BODY-PERFECTION, BODY-HIDDEN
-  (chapter 4/5? hidden-way TC body surface): their assertions are
-  re-derived at implementation start against the landed shape.
+  unlock realm may move off TC), BODY-PERFECTION (leg K mandatory),
+  BODY-HIDDEN (leg L conditional→mandatory): every `(conditional)`
+  resolves at implementation start per expansion gate A13 — concrete
+  assertion or named expected-deferral row, zero bare conditionals.
 - **Auto-farm cycle assertion depth** — whether leg I also asserts
   completed auto-farm cycles (wall-clock `lastCheckedMs` driven) or
   stops at the unlock contract.
@@ -379,14 +442,17 @@ Open items for C2C:
 | # | Acceptance |
 |---|---|
 | A1 | `TrucCoJourney.test.ts` committed on the harness; every leg rides production seams (no store imports in the harness file, no mock substituting a shipped contract); seeded-input list enumerated in-file. |
-| A2 | Leg B asserts the full initiation bundle (realm write, cultivation 0, grade record, unequip+modifier resync, passive learn, talent entitlement resolve, gift issue+claim, technique seal when applicable) through `settleOutcome` + real ops — not direct field pokes. |
-| A3 | Body chapters complete in authored order through `investBodyChapter`: sequential rejections asserted first (0 + no debit), then meridian strict-prefix to 9/9 with `bat-mach:*` emission, then zhou_tian capacity-clamped invest to Đại (360) with exact Pháp debit; physique transform pham→bao at 6/6. |
+| A2 | Leg B asserts the full initiation bundle (realm write, cultivation 0, grade record, unequip+modifier resync, passive learn, gift issue+claim, technique seal when applicable) through `settleOutcome` + real ops — not direct field pokes — AND the two-phase settle/drain contract: repeated pre-resolution settle is idempotent with no drain, entitlement resolution unblocks the drain, `director.clear()` executes only post-resolution. |
+| A3 | Body chapters complete in authored order through `investBodyChapter`: sequential rejections asserted first (0 + no debit); refinement deltas asserted on the assembly/collector channel with intrinsic `baseStats` proven unchanged; meridian strict-prefix to 9/9 with `bat-mach:*` emission on the modifier channel only; zhou_tian capacity coupling observed through the level ladder with pinned boundary observations (≥1 below-cap clamp, Tiểu 180 at L9, Đại 360 at L18) and exact Pháp debit; physique transform pham→bao at 6/6. |
 | A4 | Stage legs: floor-1 → floor-10 sequential clears via `runStage` on the real zone chain; level-gate `locked` asserts; `completedStageIds` ordered coverage; perfect-clear record + `startAutoFarm` unlock on at least one floor. |
 | A5 | Ceiling boundary: at TC, `getBreakthroughRequirements` `[]`, `canTriggerBreakthrough` false, `runTribulation('golden_core')` `'refused'`; companion pull pool closed; state byte-untouched post-refusal. |
-| A6 | Checkpoint leg: `buildGameSave`→`restoreGameSession` round-trip through `restoreCheckpoint` on a fresh session+owner; persisted-field parity on all journey fields (transient tribulation excluded per documented contract); post-restore manager-backed action succeeds; incoherent zhou_tian/meridian save rejected at preflight. |
+| A6 | Checkpoint leg: `buildGameSave`→`restoreGameSession` round-trip through `restoreCheckpoint` on a fresh session+owner; persisted-field parity on all journey fields INCLUDING the pending siblings' landed persisted fields (`bodyPerfection.*`, artifact, hidden-material — resolved per A13); transient tribulation excluded per documented contract; post-restore manager-backed action succeeds; incoherent zhou_tian/meridian save rejected at preflight. |
 | A7 | Determinism: two same-seed runs → identical normalized snapshots (extended surface). |
 | A8 | Sweep notes doc committed with the full audit table (dead authority / orphan seams / duplicated authorities / naming-doc drift / persisted drift), every finding classified (in-mission fix vs pre-existing report vs authored blank). |
 | A9 | Docs synced: roadmap M-QI + M-F wave ledgers, mission-graph rows updated incl. M-QI-12 disposition, naming-conventions amended iff warranted. |
 | A10 | Save-version decision recorded M8-style with the rule, the CURRENT value on the merged base at implementation start, and the per-bump evidence table. |
 | A11 | Gates: `npm run verify` green on the final state; OCR delegation run; P4 QA report committed under `docs/qa/`; P5 sequential evidence blocks; external review routed through coordinator. |
 | A12 | Zero production behavior change — the only non-test edits are `EarlyGameSession` seams + docs/notes; every pre-existing defect found is in the report with evidence, never silently fixed. |
+| A13 | Expansion gate: at implementation start (post-rebase) every `(conditional)` marker resolves into a concrete assertion or an explicit expected-deferral row naming the deferred surface — zero bare conditionals remain; resolutions recorded in the notes doc. |
+| A14 | Leg K (Body-Perfection) is mandatory once the sibling merges: discovery → perfection commit → persisted parity through real seams; leg L (BODY-HIDDEN) is conditional→mandatory keyed on the landed surface — expected-deferral only as a named row, never silent. |
+| A15 | Stop condition honored: a pre-existing production defect blocking any A1–A7 contract → mission reported BLOCKED pending coordinator-owned repair; never weakened to a passing characterization, encoded as expected, or fixed in-mission. |
