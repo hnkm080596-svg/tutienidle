@@ -288,7 +288,7 @@ const branches = computed(() => {
   })
 })
 
-// M-F-RESPEC (ruling §14) — FREE Beta respec: whole-tree node reset at
+// M-F-RESPEC (ruling 14) - FREE Beta respec: whole-tree node reset at
 // 100% actually-paid Insight, out of combat only (the op rejects during
 // battle; the button mirrors the route options' disabled state). The
 // preview goes through the ops layer so commit-marker exemptions
@@ -617,7 +617,7 @@ onBeforeUnmount(() => {
         </button>
       </div>
 
-      <!-- M-F-RESPEC (§14) — whole-tree respec entry: FREE Beta reset,
+      <!-- M-F-RESPEC (14) - whole-tree respec entry: FREE Beta reset,
            confirm dialog shows the exact refund + reset count first. -->
       <button
         type="button"
@@ -710,7 +710,7 @@ onBeforeUnmount(() => {
       @cancel="cancelRouteSwitch"
     />
 
-    <!-- M-F-RESPEC confirm — the ops preview reports the exact Insight
+    <!-- M-F-RESPEC confirm - the ops preview reports the exact Insight
          refund and how many nodes (targets + cascade) reset to 0. -->
     <ConfirmModal
       v-if="pendingRespec && respecPreview !== null"

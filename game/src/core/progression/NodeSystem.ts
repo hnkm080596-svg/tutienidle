@@ -632,7 +632,7 @@ function subtreeDescendants(
 }
 
 /**
- * Scope of a player respec (M-F-RESPEC, ruling §14). `rootId` scopes the
+ * Scope of a player respec (M-F-RESPEC, ruling 14). `rootId` scopes the
  * reset to the subtree rooted at that node - the node itself plus every
  * descendant orphaned by its removal; omitting it resets the whole
  * NodeTree (the branch defaults to the whole NodeTree root). `preserveIds`
@@ -649,7 +649,7 @@ export interface NodeRespecScope {
 }
 
 /**
- * M-F-RESPEC (ruling §14) - player-facing FREE Beta respec: revokes
+ * M-F-RESPEC (ruling 14) - player-facing FREE Beta respec: revokes
  * ownership of every node inside `scope` and refunds 100% of the Insight
  * ACTUALLY paid (same paidForNodeLevels + nodeFreePurchaseRecord
  * accounting as devResetBranch), then cascade-revokes orphaned
