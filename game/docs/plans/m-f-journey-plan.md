@@ -1,52 +1,58 @@
 # M-F-JOURNEY — Trúc Cơ End-to-End Journey + Integration Sweep — Plan
 
-Spec: `game/docs/specs/m-f-journey-spec.md` (v1 — pending C2C spec
-review). Delivers the committed headless journey suite
-(`TrucCoJourney.test.ts`), the integration-sweep notes doc, the
+Spec: `game/docs/specs/m-f-journey-spec.md` — **v-final** (C2C spec
+verify r92: PASSED — legs A–L, two-phase settle/drain seams, explicit
+leg order, expansion gate). Delivers the committed headless journey
+suite (`TrucCoJourney.test.ts`), the integration-sweep notes doc, the
 roadmap/mission-graph docs sync, and the final save-version decision.
 Scope limits per mandate: test/docs-only; session seams inside
 `EarlyGameSession.ts` are the only permitted non-doc edits; zero
 production behavior change.
 
-Phase 1 delivered docs only. Phase 2 begins only after BOTH
-coordinator gates: (a) C2C spec + plan reviews pass, (b) coordinator
-confirms ALL sibling M-F missions merged (ARTIFACT-DEFER,
-BODY-PERFECTION, BODY-HIDDEN pending at spec time). Phase 2 opens
-with a rebase onto fresh `origin/p7/truc-co`; the spec's conditional
-assertions (artifact unlock realm, any landed body-perfection /
-hidden-body surface) are re-derived against the post-merge state
-before any test is written — the rebase diff against this plan's seam
-census is itself a checkpoint: if a sibling moved a seam the spec
-named, the plan is amended first.
+Phase 2 begins only after BOTH coordinator gates: (a) this plan's C2C
+review passes, (b) coordinator confirms ALL sibling M-F missions
+merged — at plan time only **M-F-BODY-HIDDEN** remains outstanding
+(spec legs K/L key on landed shapes: K's negative/structural leg is
+mandatory regardless; L resolves per expansion gate A13). Phase 2
+opens with a rebase onto fresh `origin/p7/truc-co`, then **Step 0b —
+conditional expansion** (spec A13): every `(conditional)` marker
+resolves into a concrete assertion or a named expected-deferral row
+BEFORE any test is written — zero bare conditionals remain; the
+rebase diff against this plan's seam census is itself a checkpoint:
+if a sibling moved a seam the spec named, the plan is amended first.
 
-## Step 0 — seam census (done during spec)
+## Step 0 — seam census (done during spec + r-series amendments)
 
 - `core/simulation/earlygame/EarlyGameSession.ts` — harness gains:
   `playerOwner` constructor option (`this.player = owner.$state` —
   the suite owns a real `usePlayerStore`; the harness file keeps its
-  no-`stores/*` rule), `settleTribulationOutcome()` (settleOutcome →
-  entitlement-drain check → `director.clear()`), generalized
-  `investChapter(chapterId)` (existing `investRefinement` delegates,
+  no-`stores/*` rule), `settleTribulationOutcome()` (settleOutcome
+  only — binds/applies ONCE, returns the bound receipt, NO drain;
+  repeated pre-resolution calls are idempotent),
+  `drainTribulationOutcome()` (mirrors the reconcile→deferred-drain
+  half: `reconcileTalentEntitlement` → hold while
+  `pendingTalentEntitlement` unresolved → `director.clear()` only
+  post-resolution), `resolveTalentEntitlement(decision)`, generalized
+  `investChapter(chapterId)` (existing `investRefinement` delegates —
   signature unchanged for current callers), `pillAmount`/`holdPill`/
-  `holdMaterial` bag seams, `giftRecords`/`claimGift`, `perfectClearOf`/
-  `startAutoFarm`, and a `snapshot()` extension covering the TC fields
-  (bodyProgression summary, physiqueGrade, highestFoundationAchieved,
-  artifact, companionGifts, pendingTalentEntitlement, technique
-  grade/rank/history keys). `runTribulation` unchanged — its
-  `canTriggerBreakthrough` precheck already mirrors the production
-  entry (`triggerBreakthroughAction`).
-- `core/simulation/earlygame/TrucCoJourney.test.ts` (new) — legs A–J
-  per spec §3. Reuses the M-C suite's conventions: pinned creation
-  profile, `grindToLevel`-style helpers (local or factored — decided
-  at impl, no shared-test-lib refactor), `vi.useFakeTimers` +
-  `setSystemTime` for the checkpoint leg, seeded-fixture convention
-  from `TribulationOutcomeSettlement.test.ts` for Leg A / grade legs.
+  `holdMaterial` bag seams, `giftRecords`/`claimGift`,
+  `perfectClearOf`/`startAutoFarm`, and a `snapshot()` extension
+  covering the TC fields + pending-sibling persisted fields
+  (`bodyPerfection.*`, artifact, hidden-material per landed shapes).
+  `runTribulation` unchanged — its `canTriggerBreakthrough` precheck
+  already mirrors the production entry (`triggerBreakthroughAction`).
+- `core/simulation/earlygame/TrucCoJourney.test.ts` (new) — legs A–L
+  per spec §3 in the pinned order: A → B → E.1 → D.1+D.2 → C+E.2
+  interleaved (G's checkpoint inside at TC L9 / circulation 180 /
+  floors 1–9, journey continues on the restored session) → F → I →
+  J → K → L; D.3 + H are aggregation sections (H's rejections execute
+  inline where each precondition exists — no separate pass).
 - `docs/p7/missions/mf-journey.notes.md` (new) — M8-format notes:
   task card, save-version decision block, dead-authority table, docs
   sync list, gates.
 - `docs/roadmap.md` — append post-P7 wave ledgers (M-QI + M-F).
 - `docs/p7/mission-graph.md` — M-QI-11/12 status rows + M-F wave
-  ledger section.
+  ledger section (M-QI-12 row carries the coordinator's disposition).
 - `docs/naming-conventions.md`, `docs/p7/naming-migration.md` —
   amended only if the sweep confirms a family gap.
 - No production file is edited. If implementation finds the harness
@@ -57,43 +63,78 @@ named, the plan is amended first.
 
 1. Extend `EarlyGameSession.test.ts` (or a focused harness test beside
    it) with seam pins before building the journey: `playerOwner`
-   construction (player identity is the owner state from creation),
+   construction (player identity is the owner state from creation);
    `settleTribulationOutcome` on a committed mortal→LQ victory is a
-   settled no-op shape (`qi_refining` early-return) — proves the seam
-   before TC exercises it — plus `holdPill`/`holdMaterial`/`investChapter`
-   unit pins.
+   settled no-op shape (`qi_refining` early-return) AND the drain seam
+   holds correctly; `holdPill`/`holdMaterial`/`investChapter` unit
+   pins.
 2. Implement the seams per spec §4 — mirrors only; every seam's
-   docstring names the production site it mirrors.
+   docstring names the production site it mirrors. The settle/drain
+   split follows `checkTribulationOutcomeAction`'s domain half
+   exactly: settle binds once; reconcile+defer; clear only after the
+   entitlement resolves.
 
-## Step 2 — journey suite legs
+## Step 2 — journey suite legs (spec-ordered)
 
-Order the suite build bottom-up so each leg's helpers exist before
-the legs that need them:
+Build bottom-up so each leg's helpers exist before the legs that need
+them; the RUN order is the spec's pinned order.
 
 1. **Leg A fixtures + admission**: seeded LQ-side state builder
    (enumerated fields: realmId/realmLevel/completedStageIds chain/
-   baseStats; plus optional carryover: technique, nodes, refinement
-   tiers per leg need); admission asserts
-   (`getBreakthroughRequirements` rows flip met/locked correctly).
+   baseStats; optional carryover: technique, nodes, refinement tiers
+   per leg need); admission asserts (`getBreakthroughRequirements`
+   rows flip met/locked correctly; pre-met `runTribulation` refuses —
+   H-map item); pre-TC zhou_tian capacity-0 rejection asserted here.
 2. **Leg B tribulation + initiation**: `runTribulation` victory →
-   committed-outcome asserts → `settleTribulationOutcome` → post-state
-   bundle → `resolveTalentEntitlement` → gift claim. Assert
-   double-settle idempotency.
-3. **Leg C realm ladder** to L18 (or the level each leg needs —
-   Tiểu needs ≥9; the suite climbs once and asserts gates along the
-   way).
-4. **Leg D body chapters** in authored order with seeded/farmed input
-   mix per spec §4.
-5. **Leg E stage chain** — floor-1 victory → locked-floor assert →
-   growth-cycle recovery → floor-10 boss victory.
-6. **Leg F ceiling boundary**.
-7. **Leg G checkpoint restore** — mid-TC `buildGameSave` → fresh
-   session + fresh owner → parity sweep + post-restore `runStage` +
-   the coherence-rejection boundary case.
-8. **Leg H adversarial rejects** — all state-unchanged.
-9. **Leg I perfection surfaces** — perfect-clear + auto-farm unlock +
-   grade-ladder fixture legs.
-10. **Leg J determinism** — two seeded runs → identical snapshots.
+   committed-outcome asserts → **phase (a)** repeated
+   `settleTribulationOutcome` idempotent + `drainTribulationOutcome`
+   HOLDS + illegal-entitlement reject (H-map item) → **phase (b)**
+   legal `resolveTalentEntitlement` → drain executes → gift claim →
+   full initiation bundle asserts.
+3. **Leg E.1**: floor-1 first clear at TC L1 + unlock observation —
+   E owns all first-clear asserts.
+4. **Legs D.1 + D.2** at TC L1: body_refinement completion (authority
+   split — collector-channel deltas asserted, intrinsic `baseStats`
+   byte-unchanged) → physique flip → meridian strict-prefix 9/9 with
+   `bat-mach:*` on the modifier channel only; D.3's rejections execute
+   INLINE at the D.1→D.2 boundary (ownership-mapped in H).
+5. **Legs C + E.2 interleaved**: the level/zhou_tian ladder — per-level
+   capacity assert + circulation resume to new cap; pinned
+   observations: ≥1 below-cap clamp (L1 vs 20), L8→L9 Tiểu (180),
+   L17→L18 Đại (360); exact-Pháp-debit proof; floors 2→N clear as
+   realmLevel reaches N with `locked` asserts ahead of each gate;
+   honest Pháp farming rides the already-cleared floor_1.
+6. **Leg G checkpoint INSIDE the interleave**: at TC L9 / circulation
+   180 / floors 1–9 cleared / gift claimed / entitlement resolved →
+   `buildGameSave` → restore onto a SECOND session + fresh owner via
+   `restoreCheckpoint` → persisted-field parity sweep (journey fields
+   + pending-sibling fields per A13) → **ordered journey CONTINUES on
+   the restored session**: L10 → floor_10 boss → ladder to L18 →
+   circulation 360/Đại. Boundary case: incoherent save
+   (`{zhou_tian progressed, meridian incomplete}`) rejected at
+   preflight.
+7. **Leg F ceiling boundary**: `getBreakthroughRequirements` `[]`,
+   `canTriggerBreakthrough` false, `runTribulation('golden_core')`
+   `'refused'`, companion pull pool closed, artifact-unlock constant
+   read (per landed shape).
+8. **Leg I perfection surfaces**: perfect-clear record +
+   `startAutoFarm` unlock + `autoFarmStage` persists through restore;
+   grade-ladder fixture legs (seeded per grade tier per committed
+   convention; §9-flagged for C2C); `highestFoundationAchieved` at
+   initiation + surviving restore.
+9. **Leg J determinism**: two same-seed runs → identical normalized
+   snapshots (extended surface).
+10. **Leg K body-perfection (mandatory, negative/structural)**: empty
+    `BODY_PERFECTION_REALM_MATERIALS` registry → no spurious
+    `discoveredMaterials`/`perfectedRealmIds`, `canPerfectBodyRealm`
+    false ∀realm, persisted-slice parity through save/restore.
+    Positive flow = named expected-deferral row (spec §3 leg K).
+11. **Leg L body-hidden**: resolved per A13 against the landed shape
+    (assertion or named deferral — never silent).
+12. **Leg H**: NOT a pass — the suite header maps each rejection to
+    its inline execution point (A seeded state, B phase-a, D.1→D.2
+    boundary, E.2 gates, F, E/I) so the aggregation is auditable
+    without a temporally-impossible second pass.
 
 Timing watch: LQ→TC tribulation drives ~40 simulated seconds of tank
 chapters at `tickOps.update(1)` granularity plus battle drives at
@@ -106,7 +147,10 @@ Run the spec §5 audit program over the merged base; record the
 results table in `mf-journey.notes.md`. For every row: verdict
 (clean / expected-deferral / finding), evidence (grep/test/log ref),
 classification (in-mission fix vs pre-existing report vs authored
-blank). **No fixes beyond in-mission defects.**
+blank). **No fixes beyond in-mission defects** — and per A15, a
+pre-existing defect blocking any mandatory acceptance item makes the
+mission BLOCKED pending coordinator-owned repair (reported with
+evidence, never weakened into a passing characterization).
 
 ## Step 4 — docs sync + save-version decision
 
@@ -148,28 +192,33 @@ blank). **No fixes beyond in-mission defects.**
 - **Fixture honesty creep**: the seeded-input list is a boundary —
   anything found mid-impl that needs seeding BEYOND it goes to the
   spec/C2C, not quietly into the fixture.
-- **Pending-sibling drift**: rebase may move seams this plan names
-  (artifact realm, body chapters 4-5 surfaces, respec cost shape).
-  Re-derive conditional legs first; amend the plan if the census
-  changed.
+- **Pending-sibling drift**: only BODY-HIDDEN remains; rebase may move
+  its landed surface (leg L resolves per A13). The seam census is the
+  rebase checkpoint — any moved seam → amend plan first.
 - **Suite runtime**: full TC floor chain + tribulation + grind in one
   file — keep legs independent sessions where they don't share
   narrative (grade ladder already is); watch vitest wall-clock.
 - **Snapshot parity scope**: `snapshot()` extension must stay
   normalized-deterministic (no timestamps/ids) — extend the field
   list, not the volatility.
+- **Two-phase settle fidelity**: the drain seam must hold while the
+  entitlement is unresolved — a seam that drains early no longer
+  mirrors production and can erase the committed outcome (C2C-H1).
 
 ## Per-delta acceptance map
 
 | Delta | Spec § | Plan step | Acceptance |
 |---|---|---|---|
-| Harness seams (owner, settle, invest, bags, gifts, farm, snapshot) | §4 | 1 | A1, A2, A6 |
-| Legs A–B (admission → breakthrough → initiation) | §3 A-B | 2.1-2.2 | A2, A5(partial) |
-| Legs C–D (realm levels, body chapters) | §3 C-D | 2.3-2.4 | A3 |
-| Legs E–F (stage chain, ceiling) | §3 E-F | 2.5-2.6 | A4, A5 |
-| Leg G (save/restore) | §3 G | 2.7 | A6 |
-| Legs H–J (rejects, perfection, determinism) | §3 H-J | 2.8-2.10 | A4, A7 |
-| Integration sweep notes | §5 | 3 | A8, A12 |
+| Harness seams (owner, settle+drain split, invest, bags, gifts, farm, snapshot) | §4 | 1 | A1, A2, A6 |
+| Legs A–B (admission → breakthrough → two-phase initiation) | §3 A-B | 2.1-2.2 | A2, A5(partial) |
+| Legs E.1 + D (floor-1 first clear; body prerequisites at L1) | §3 D, E.1 | 2.3-2.4 | A3, A4(partial) |
+| Legs C+E.2 interleaved (level/zhou_tian ladder + floors 2→10) | §3 C, E.2 | 2.5 | A3, A4 |
+| Leg G (mid-interleave checkpoint, journey continues on restore) | §3 G | 2.6 | A6 |
+| Leg F (ceiling boundary) | §3 F | 2.7 | A5 |
+| Legs I–J (perfection surfaces, determinism) | §3 I-J | 2.8-2.9 | A4, A7 |
+| Legs K–L (body-perfection negative leg; body-hidden resolved) | §3 K-L | 2.10-2.11 | A13, A14 |
+| Leg H (ownership map — inline executions) | §3 H | 2.12 | A1 |
+| Integration sweep notes | §5 | 3 | A8, A12, A15 |
 | Docs sync | §6 | 4 | A9 |
 | Save-version decision | §7 | 4 | A10 |
 | Gates | §8 | 5 | A11 |
