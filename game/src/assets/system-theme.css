@@ -49,6 +49,11 @@
   /* Reads the existing noise token. Cyan-tinted variant may replace it
      later without touching consumers. */
   --sys-grain: var(--surface-grain);
+
+  /* v2 grammar (M-UI-OVERHAUL spec 2). */
+  --sys-cut: 12px;               /* chamfer arm length */
+  --sys-accent: var(--sys-cyan); /* per-domain accent; scoped remaps legal */
+  --sys-veil: rgba(3, 7, 14, .62); /* scrim dim under consoles */
 }
 
 /* Surface recipe - opaque floor UNDER translucent tint (a11y spec 7.1). */
@@ -335,6 +340,241 @@ aside.character-detail.sys-surface {
   color: var(--sys-text);
 }
 
+/* ------------------------------------------------------------------ */
+/* M-UI-OVERHAUL v2 grammar (spec 2).                                  */
+/* ------------------------------------------------------------------ */
+
+/* Chamfered console geometry - corners cut instead of rounded rects
+   (spec 2.1). Pair with a glow on a PARENT wrapper via drop-shadow
+   (filter follows the clipped shape; box-shadow would draw a rect). */
+.sys-chamfer {
+  clip-path: polygon(var(--sys-cut) 0, 100% 0,
+    100% calc(100% - var(--sys-cut)), calc(100% - var(--sys-cut)) 100%,
+    0 100%, 0 var(--sys-cut));
+}
+.sys-chamfer--hard { --sys-cut: 18px; }
+.sys-chamfer--sm { --sys-cut: 7px; }
+/* Glow layer that follows a chamfered shape - put on the element itself
+   (filter clips with clip-path on the same box). */
+.sys-chamfer-glow { filter: drop-shadow(0 0 14px color-mix(in srgb, var(--sys-accent) 26%, transparent)); }
+
+/* Boot build - surface materializes via clip-path wipe + settle
+   (spec 2.3). One-shot per open; compositor-friendly in Chromium for
+   inset() shapes, bounded ~.4s elsewhere (paint-bound fallback). */
+.sys-boot { animation: sys-boot-in .38s cubic-bezier(.2, .9, .25, 1) both; }
+@keyframes sys-boot-in {
+  from { clip-path: inset(0 0 92% 0); opacity: 0; transform: translateY(-6px); }
+  to   { clip-path: inset(0 0 0 0); opacity: 1; transform: none; }
+}
+
+/* Edge trace - one bright band sweeps the top edge once on open
+   (transform only). */
+.sys-trace { position: relative; }
+.sys-trace::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--sys-line-hot), transparent);
+  transform: translateX(-110%);
+  pointer-events: none;
+  z-index: 3;
+}
+.sys-trace--run::before { animation: sys-trace 1.1s ease-out 1; }
+@keyframes sys-trace { to { transform: translateX(110%); } }
+
+/* Header rail - hairline rule + drifting energy line under it (spec 2.4).
+   .sys-rail on the header row; .sys-energy is the 1px line element. */
+.sys-rail {
+  border-bottom: 1px solid var(--sys-line-soft);
+  padding-bottom: var(--space-2);
+}
+.sys-energy {
+  height: 1px;
+  background: linear-gradient(90deg, var(--sys-accent), var(--sys-azure) 60%, transparent);
+  background-size: 200% 100%;
+  animation: sys-energy-drift 6s linear infinite;
+  contain: paint;
+}
+@keyframes sys-energy-drift { to { background-position: -200% 0; } }
+
+/* Corner snap - brackets ease outward on hover/focus of a .sys-corners
+   element (spec 2.3; transition-only). */
+.sys-snap::before, .sys-snap::after { transition: transform .16s ease; }
+.sys-snap:hover::before, .sys-snap:focus-visible::before { transform: translate(-2px, -2px); }
+.sys-snap:hover::after,  .sys-snap:focus-visible::after  { transform: translate( 2px,  2px); }
+
+/* T4 readout widget - inset, hairline, quiet (spec 2.1). */
+.sys-widget {
+  background:
+    linear-gradient(180deg, rgba(56, 225, 255, .03), transparent 40%),
+    var(--sys-bg-1);
+  border: 1px solid var(--sys-line-soft);
+  color: var(--sys-text);
+}
+.sys-widget--accent { border-color: color-mix(in srgb, var(--sys-accent) 55%, transparent); }
+
+/* T5 ephemeral - sharpest tier: small chamfered card, single accent edge,
+   no scanlines (spec 2.1). Root for tooltips/toasts/banners/log rows. */
+.sys-ephemeral {
+  --sys-cut: 7px; /* smaller cut on small cards (scoped remap - legal) */
+  background:
+    linear-gradient(180deg, rgba(56, 225, 255, .05), transparent 45%),
+    var(--sys-bg-1);
+  border: 1px solid var(--sys-line);
+  border-left: 2px solid var(--sys-accent);
+  box-shadow: var(--sys-shadow);
+  color: var(--sys-text);
+  clip-path: polygon(var(--sys-cut) 0, 100% 0, 100% 100%, 0 100%, 0 var(--sys-cut));
+}
+.sys-ephemeral--warn { --sys-accent: var(--sys-warn); }
+.sys-ephemeral--danger { --sys-accent: var(--sys-danger); }
+.sys-ephemeral--success { --sys-accent: var(--sys-success); }
+.sys-ephemeral--violet { --sys-accent: var(--sys-violet); }
+
+/* System button - chamfered, hairline, corner snap on hover (spec 2.4).
+   Consumed by GameButton variant="system". */
+.sys-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font: 600 var(--text-sm) / var(--lh-tight) var(--sys-font-display);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--sys-accent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--sys-accent) 13%, transparent),
+      color-mix(in srgb, var(--sys-accent) 4%, transparent)),
+    var(--sys-bg-0);
+  border: 1px solid color-mix(in srgb, var(--sys-accent) 55%, transparent);
+  clip-path: polygon(var(--sys-cut) 0, 100% 0,
+    100% calc(100% - var(--sys-cut)), calc(100% - var(--sys-cut)) 100%,
+    0 100%, 0 var(--sys-cut));
+  transition: filter .18s ease, background .18s ease, color .18s ease;
+}
+.sys-btn:hover:not(:disabled), .sys-btn:focus-visible:not(:disabled) {
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--sys-accent) 55%, transparent));
+  color: var(--sys-text);
+}
+.sys-btn:disabled {
+  color: var(--sys-text-dim);
+  border-color: var(--sys-line-soft);
+  filter: none;
+}
+.sys-btn--primary {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--sys-accent) 32%, transparent),
+      color-mix(in srgb, var(--sys-accent) 14%, transparent)),
+    var(--sys-bg-1);
+  color: var(--sys-text);
+  border-color: var(--sys-accent);
+}
+.sys-btn--danger { --sys-accent: var(--sys-danger); }
+.sys-btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--sys-text-muted);
+}
+.sys-btn--ghost:hover:not(:disabled), .sys-btn--ghost:focus-visible:not(:disabled) {
+  color: var(--sys-text);
+  border-color: var(--sys-line);
+}
+
+/* System tab rail - hairline rail + sliding underline indicator
+   (spec 2.4). The host renders one .sys-tabs__ink element positioned by
+   the active tab; indicator slides via transform (compositor). */
+.sys-tabs {
+  display: flex;
+  gap: 2px;
+  position: relative;
+  border-bottom: 1px solid var(--sys-line-soft);
+}
+.sys-tabs__tab {
+  font: 600 var(--text-sm) / var(--lh-tight) var(--sys-font-display);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--sys-text-muted);
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: 0;
+}
+.sys-tabs__tab:hover { color: var(--sys-text); }
+.sys-tabs__tab.is-active { color: var(--sys-accent); }
+.sys-tabs__ink {
+  position: absolute;
+  bottom: -1px;
+  height: 2px;
+  background: var(--sys-accent);
+  box-shadow: 0 0 8px var(--sys-accent);
+  transition: transform .22s ease, width .22s ease;
+}
+
+/* Segmented step rail - creation stepper / tutorial progress (spec 2.4). */
+.sys-seg {
+  display: flex;
+  gap: 6px;
+}
+.sys-seg__cell {
+  height: 6px;
+  flex: 1 1 0;
+  background: var(--sys-bg-0);
+  border: 1px solid var(--sys-line-soft);
+  transform: skewX(-18deg);
+}
+.sys-seg__cell.is-on {
+  background: linear-gradient(90deg, var(--sys-accent), var(--sys-azure));
+  border-color: transparent;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--sys-accent) 45%, transparent);
+}
+
+/* Domain accent modifiers - scoped --sys-accent re-tints, legal under
+   boundary rule 3.3-5 (the selector itself is .sys-anchored). */
+.sys-domain--azure { --sys-accent: var(--sys-azure); }
+.sys-domain--jade { --sys-accent: var(--sys-success); }
+.sys-domain--violet { --sys-accent: var(--sys-violet); }
+.sys-domain--danger { --sys-accent: var(--sys-danger); }
+
+/* Scrim veil - dim + blur behind consoles so the covered page stays
+   legible beneath (spec 2.1 T1; Arknights layering). */
+.sys-veil {
+  background:
+    linear-gradient(180deg, var(--sys-veil), var(--sys-veil));
+  backdrop-filter: blur(6px);
+}
+
+/* Scan marker - hotspot ring for DOM-over-scene elements (spec 6.6).
+   A rotating dashed ring reads as a targeting reticle over world art. */
+.sys-marker { position: relative; }
+.sys-marker::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border: 1px dashed color-mix(in srgb, var(--sys-accent) 60%, transparent);
+  border-radius: 50%;
+  animation: sys-marker-spin 9s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+@keyframes sys-marker-spin { to { transform: rotate(1turn); } }
+
+/* Popover - small sys card for scene-adjacent detail (BuildingDetailPopover). */
+.sys-pop {
+  background:
+    var(--sys-grain) 0 0 / 160px 160px repeat,
+    linear-gradient(180deg, rgba(56, 225, 255, .04), transparent 30%),
+    linear-gradient(180deg, var(--sys-surface), var(--sys-surface)),
+    var(--sys-surface-solid);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--sys-line);
+  clip-path: polygon(var(--sys-cut) 0, 100% 0,
+    100% calc(100% - var(--sys-cut)), calc(100% - var(--sys-cut)) 100%,
+    0 100%, 0 var(--sys-cut));
+  box-shadow: var(--sys-shadow);
+  color: var(--sys-text);
+}
+
 /* Focus - non-glow, >= 2px, on every interactive sys control (spec 7.2). */
 .sys-surface :is(button, [role='button'], a, input, select, [tabindex]):focus-visible,
 .sys-modal :is(button, [role='button'], a, input, select, [tabindex]):focus-visible,
@@ -344,17 +584,26 @@ aside.character-detail.sys-surface {
 }
 
 /* Reduced motion (spec 4.2) + manual low-fx hatch (spec 4.1.4) - identical
-   outcome: no flicker/sweep/shimmer/rim; static corners + border + glow kept. */
+   outcome: no flicker/sweep/shimmer/rim; static corners + border + glow kept.
+   v2 additions (boot, trace, energy, marker spin) land in the same kill-set. */
 @media (prefers-reduced-motion: reduce) {
   .sys-rim--live::before,
   .sys-sweep--run::after,
   .sys-scanlines::before,
   .sys-bar__fill,
-  .bar--system .bar__fill { animation: none; will-change: auto; }
+  .bar--system .bar__fill,
+  .sys-boot,
+  .sys-trace--run::before,
+  .sys-energy,
+  .sys-marker::before { animation: none; will-change: auto; }
 }
 .sys-fx-low .sys-rim--live::before,
 .sys-fx-low .sys-sweep--run::after,
 .sys-fx-low .sys-scanlines::before,
 .sys-fx-low .sys-bar__fill,
 .sys-fx-low.bar--system .bar__fill,
-.sys-fx-low .bar--system .bar__fill { animation: none; will-change: auto; }
+.sys-fx-low .bar--system .bar__fill,
+.sys-fx-low .sys-boot,
+.sys-fx-low .sys-trace--run::before,
+.sys-fx-low .sys-energy,
+.sys-fx-low .sys-marker::before { animation: none; will-change: auto; }
