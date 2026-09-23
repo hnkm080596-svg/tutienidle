@@ -24,9 +24,10 @@ test.describe('Boot fresh (no saved state)', () => {
     const creation = page.getByTestId('character-creation-screen')
     await expect(creation).toBeVisible({ timeout: 15_000 })
 
-    // Step 1 is the name step — verify its real Vietnamese copy from the template.
+    // BETA-CREATION - one unified screen, no stepper: name + talent +
+    // starting-skill sections all visible at once.
     await expect(creation.getByText('Đạo danh', { exact: false })).toBeVisible()
     await expect(page.getByTestId('creation-name-input')).toBeVisible()
-    await expect(creation.getByText('Bước 1 / 3')).toBeVisible()
+    await expect(page.getByTestId('creation-skill-tram')).toBeVisible()
   })
 })
