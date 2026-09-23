@@ -32,6 +32,10 @@ export const HIDDEN_BEASTS: Enemy[] = [
     signatureDrops: [
       // Thiên Địa Chi Kiều 5% — nguyên liệu Kỳ Kinh (đường 9 Bát Mạch).
       { kind: 'material', itemId: 'thien_dia_chi_kieu', amount: { min: 1, max: 1 }, chance: 0.05 },
+      // M-QI-08 documented exception (spec sec.3.5): hand-placed Pham
+      // catch-up bonus OUTSIDE the band authority - the band map
+      // governs stage tables, not signature drops. Stays pham even
+      // though huyet_mong sits in the qi_refining band.
       { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: { min: 12, max: 12 }, chance: 1 },
     ],
   }),

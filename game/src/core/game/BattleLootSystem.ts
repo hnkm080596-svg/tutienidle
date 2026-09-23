@@ -28,10 +28,10 @@ import { composeEquipmentDisplayName } from '../equipment/EquipmentNaming'
 import { getProfessionGradeForRealm } from '../profession/ProfessionGrade'
 import { itemQualityRank, professionGradeRank } from '../profession/slotRank'
 import { gradeLabel } from '../presentation/labels'
-import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
+import { physiqueEssenceGradeOf } from '../../data/realm/PhysiqueEssence'
 import type { PlayerData } from '../player/Player'
 
-/** Màu tím chuỗi Tinh Hoa Phàm Thể (2026-08-30) — bay về người chơi. */
+/** Purple of the Tinh Hoa family stream (2026-08-30, M-QI-08) - flies back to the player. */
 const ESSENCE_PARTICLE_COLOR = 0xc792ea
 
 // ItemGrade and ItemQuality are the same 5-member union - one table.
@@ -543,11 +543,14 @@ export class BattleLootSystem {
               overflowParts.push(`${materialOverflow} ${material.name}`)
             }
 
-            // Tinh Hoa Phàm Thể (2026-08-30) — kind 'essence' riêng: stream
-            // tím bay VỀ NGƯỜI CHƠI (combat-essence-stream.ts), mote cuối
-            // chạm player mới nạp tiến độ Luyện Thể (App.vue drain). Loot
-            // đã vào bag ở trên nên presentation bị bỏ qua không mất gì.
-            if (drop.itemId === TINH_HOA_PHAM_THE_MATERIAL_ID) {
+            // Tinh Hoa family (2026-08-30, M-QI-08) - kind 'essence'
+            // riêng: stream tím bay VỀ NGƯỜI CHƠI (combat-essence-stream.ts),
+            // mote cuối chạm player mới nạp tiến độ Luyện Thể (App.vue
+            // drain). Loot đã vào bag ở trên nên presentation bị bỏ qua
+            // không mất gì. Family membership comes from the canonical
+            // PhysiqueEssence reverse lookup - presentation only, never
+            // progression authority.
+            if (physiqueEssenceGradeOf(drop.itemId) !== undefined) {
               this.emitRewardParticle(sourceId, 'essence', ESSENCE_PARTICLE_COLOR)
             } else {
               this.emitRewardParticle(sourceId, 'item', 0x6fbf73)

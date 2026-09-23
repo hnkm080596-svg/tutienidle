@@ -135,4 +135,50 @@ describe('BattleLootSystem — DropResult consumer', () => {
 
     expect(second.materialBag.getAmount('sig_mat')).toBe(1)
   })
+
+  // M-QI-08 - the essence particle stream is family-wide: any authored
+  // Tinh Hoa <Grade> material routes to 'essence', not by literal id.
+  it('routes every physique-essence family member to the essence particle stream', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const { killEnemy, eventBus } = createLootTestSetup({
+      realmId: 'qi_refining',
+      signatureDrops: [
+        { kind: 'material', itemId: 'tinh_hoa_bao_the', chance: 1, amount: { min: 1, max: 1 } },
+      ],
+      materialIds: ['tinh_hoa_bao_the'],
+    })
+
+    killEnemy()
+
+    const materialParticles = eventBus.emit.mock.calls.filter(
+      (call) =>
+        call[0] === 'reward_particle' &&
+        (call[1].kind === 'essence' || call[1].kind === 'item'),
+    )
+    expect(materialParticles).toEqual([
+      ['reward_particle', expect.objectContaining({ kind: 'essence' })],
+    ])
+  })
+
+  it('keeps non-family materials on the item particle path', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const { killEnemy, eventBus } = createLootTestSetup({
+      realmId: 'qi_refining',
+      signatureDrops: [
+        { kind: 'material', itemId: 'sig_mat', chance: 1, amount: { min: 1, max: 1 } },
+      ],
+      materialIds: ['sig_mat'],
+    })
+
+    killEnemy()
+
+    const materialParticles = eventBus.emit.mock.calls.filter(
+      (call) =>
+        call[0] === 'reward_particle' &&
+        (call[1].kind === 'essence' || call[1].kind === 'item'),
+    )
+    expect(materialParticles).toEqual([
+      ['reward_particle', expect.objectContaining({ kind: 'item' })],
+    ])
+  })
 })
