@@ -16,9 +16,11 @@ gates pass.
 **Phase-2 override (coordinator directive, ROUND-71 gate message):**
 bump `CURRENT_SAVE_VERSION` to base+1 on the merged base — actual
 base verified **76** (M-F-TALENT; ESSENCE landed without a bump) →
-this branch writes **77** with the standard dated v77 comment
-block. Spec A8's "no save-version bump" is superseded and carries
-the override note; `saveShapeValidation` stays untouched.
+this branch writes **79** with the standard dated v79 comment
+block (the parallel v77 COMPANION-GIFT and v78 CHU-THIEN bumps
+landed first, per the directive's "take the next" clause). Spec
+A8's "no save-version bump" is superseded and carries the
+override note; `saveShapeValidation` stays untouched.
 
 ## G0 task card (proportional — carried for Phase 2)
 

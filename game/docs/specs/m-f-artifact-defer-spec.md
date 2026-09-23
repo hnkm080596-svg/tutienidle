@@ -95,10 +95,12 @@ every artifact action evaluates. Under the ruling the unlock realm
 moves `foundation_establishment → golden_core`. No new persisted
 state, no strip pass. **Save-version note (impl-time override):**
 the Phase-2 coordinator directive mandates `CURRENT_SAVE_VERSION
-76 → 77` on this branch — spec A8's "no save-version bump" is
-superseded by that directive (saves written under the Trúc Cơ-era
-grant model must not load under the deferred model; no migration,
-no compat translator).
++1` on the merged base — spec A8's "no save-version bump" is
+superseded by that directive. The parallel v77 COMPANION-GIFT and
+v78 CHU-THIEN bumps landed first, so this mission takes **79**
+(saves written under the
+Trúc Cơ-era grant model must not load under the deferred model; no
+migration, no compat translator).
 
 - **Window closed (all live builds today)**: the unlock realm is
   beyond `progressionCeilingRealmId` → `isArtifactDomainUnlocked`
@@ -128,7 +130,7 @@ Bind from M-F-CEILING:
   matches survive normalize dormant; no strip pass, no migration —
   persisted shape is unchanged
   (`saveShapeValidation` artifact block untouched; the coordinator-
-  mandated 76 → 77 version bump rejects pre-deferral saves outright,
+  mandated 76 → 79 version bump rejects pre-deferral saves outright,
   it does not transform them).
 - Acquisition suppression lives at the tag+policy authority
   (`breakthroughRealmId` + `isBreakthroughAcquisitionEnabled`),
@@ -423,9 +425,11 @@ unwired), quest/alchemy/shop channels (stone has none — census).
 Artifact content rebalancing (level curve `20 × level^1.35`,
 `ARTIFACT_GRADE_MULTIPLIER`, milestone copy), UI redesign of panel
 or wheel, the future Kim Đan surface design, quest/alchemy
-material routing, save migration or version bump, removing the
-unreachable awaken branch, Kiếm Tu/Thể Tu definitions, the parked
-combat runtime, removal of the TC drop-table row.
+material routing, removing the unreachable awaken branch, Kiếm Tu/
+Thể Tu definitions, the parked combat runtime, removal of the TC
+drop-table row. Save migration stays out of scope — the mandated
+version bump (v79) DID land and rejects pre-deferral saves outright
+rather than migrating them (see the A8 override note).
 
 ## 9. Acceptance
 
@@ -438,4 +442,4 @@ combat runtime, removal of the TC drop-table row.
 | A5 | `phap_bao` slot disabled with `RELEASE_UNAVAILABLE_REASON` at/below TC while the unlock realm is outside the window; mocked-open + below-KD shows `'Cần đạt Kim Đan'`; enabled at KD+ for Pháp Tu; `hasArtifactDefinition` rule unchanged. |
 | A6 | `docs/systems/artifact.md`, `docs/game-guide.md`, and `Artifact.ts` docs record the artifact domain as deferred to `golden_core`; the superseded "Trúc Cơ tầng 18" scope claim appears nowhere as live scope. |
 | A7 | KD boundary positive suite (mocked open window) proves the live path end to end: grant on KD entry, normalize awaken at KD, EXP accrual, path set, grade upgrade via stone, stone delivered through the REAL `foundation_establishment` row to a KD player while a TC player on that row gets none, slot enabled. |
-| A8 | No persisted-shape change, no strip or migration code — `saveShapeValidation` untouched. ~~No save-version bump~~ — superseded by the Phase-2 coordinator mandate (76 → 77; recorded in the v77 comment block and the final report). |
+| A8 | No persisted-shape change, no strip or migration code — `saveShapeValidation` untouched. ~~No save-version bump~~ — superseded by the Phase-2 coordinator mandate (base+1 → 79 after the parallel v77 COMPANION-GIFT and v78 CHU-THIEN bumps landed first; recorded in the v79 comment block and the final report). |
