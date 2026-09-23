@@ -1,7 +1,10 @@
 import type { ElementType } from '../element/ElementType'
 import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import type { OrbId } from '../kiem-tu/KiemTuState'
-import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
+import {
+  createDefaultArtifactProgress,
+  isArtifactDomainUnlocked,
+} from '../artifact/ArtifactProgression'
 import type { PlayerData } from './Player'
 import {
   CULTIVATION_PATH_MODULES,
@@ -381,7 +384,16 @@ export function grantCultivationPathRealmReward(
     return false
   }
 
-  if (reward.artifactId && !player.artifact) {
+  // M-F-ARTIFACT-DEFER - the release check above alone would let any
+  // caller passing 'golden_core' awaken the domain on a below-unlock
+  // player once the window opens; the artifact leg also requires the
+  // player to have REACHED the unlock realm (reach+window, same seam
+  // every other artifact action composes).
+  if (
+    reward.artifactId &&
+    !player.artifact &&
+    isArtifactDomainUnlocked(player.realmId)
+  ) {
     player.artifact = createDefaultArtifactProgress(reward.artifactId)
   }
 

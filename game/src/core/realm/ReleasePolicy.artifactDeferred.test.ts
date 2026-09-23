@@ -196,6 +196,17 @@ describe('artifact domain under an open Kim Dan window (mocked release policy)',
     expect(player.artifact).toBeUndefined()
   })
 
+  it('grantCultivationPathRealmReward never awakens the domain on a below-unlock player (non-entry call)', () => {
+    // Devin Review round-77 contract-hardening: under the OPEN window a
+    // non-entry caller passing 'golden_core' on a Truc Co player must NOT
+    // deliver the artifact - the leg requires player reach, not only the
+    // record's realm being released.
+    const player = spellPlayerAt('foundation_establishment')
+
+    expect(grantCultivationPathRealmReward(player, 'golden_core')).toBe(true)
+    expect(player.artifact).toBeUndefined()
+  })
+
   it('combat EXP accrues once the domain is open', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.999) // isolate EXP from the material roll
 
