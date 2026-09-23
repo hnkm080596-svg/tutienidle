@@ -88,6 +88,33 @@ test.describe('system UI skin - rim authority', () => {
     await page.keyboard.press('Escape')
   })
 
+  test('a nested system modal answers Escape, not the background card', async ({ page }) => {
+    await page.addInitScript(() => localStorage.clear())
+    await page.goto('/')
+    await page.getByTestId('auth-guest-button').click()
+    await createCharacterThroughUi(page, 'Hệ Thống')
+    await enterHome(page)
+
+    // Settings (ink OverlayPanel) -> reload opens a nested SysModalBase
+    // confirm inside the settings card subtree. Clicking the modal scrim
+    // must not move focus to the background card: Escape then closes only
+    // the confirm, and the settings overlay stays open (QA regression -
+    // useDialogFocus pointer containment).
+    await page.keyboard.press('Tab')
+    await page.locator('[data-wheel-slot="settings"]').click()
+    const settingsCard = page.locator('.overlay-panel__card').first()
+    await expect(settingsCard).toBeVisible({ timeout: 10_000 })
+    await page.getByRole('button', { name: /Tải Lại|reload/i }).first().click()
+    const confirmModal = page.locator('.sys-modal')
+    await expect(confirmModal).toBeVisible({ timeout: 10_000 })
+
+    await page.mouse.click(40, 400)
+    await page.keyboard.press('Escape')
+    await expect(confirmModal).toBeHidden({ timeout: 10_000 })
+    await expect(settingsCard).toBeVisible({ timeout: 10_000 })
+    await page.keyboard.press('Escape')
+  })
+
   test('reduced-motion emulation stills all sys layer animation', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.addInitScript(() => localStorage.clear())

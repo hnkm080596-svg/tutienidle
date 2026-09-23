@@ -46,6 +46,13 @@ const headingId = useId()
 </script>
 
 <template>
+  <!-- Teleport to body: a modal must escape its caller's containing block
+       and overflow clipping (backdrop-filter/transform/overflow:hidden on
+       an ancestor would otherwise bound position:fixed to that box, so the
+       scrim would not cover the viewport and scrim clicks would land on
+       whatever overlay renders behind it). Same convention as Tooltip/
+       ToastContainer. -->
+  <Teleport to="body">
   <Transition name="sys-fade">
     <div v-if="open" class="sys-modal" :style="{ zIndex: layer }" @click.self="closeOnScrim && emit('close')">
       <SysPanel
@@ -73,6 +80,7 @@ const headingId = useId()
       </SysPanel>
     </div>
   </Transition>
+  </Teleport>
 </template>
 
 <style scoped>
