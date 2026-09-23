@@ -18,7 +18,15 @@ Create evidence-backed QA findings without repairing production code. Default to
 - **Quick:** Read the [quick workflow](references/quick-review.md), only the matching [domain packs](references/domains/), [test and evidence rules](references/test-authoring-and-evidence.md), [reporting rules](references/reporting-and-learning.md), and matching entries in the [learned-defect ledger](../../../game/docs/qa/learned-defects.md).
 - **Deep:** Read the [deep workflow](references/deep-audit.md), every [domain pack](references/domains/), [test and evidence rules](references/test-authoring-and-evidence.md), [reporting rules](references/reporting-and-learning.md), and the full [learned-defect ledger](../../../game/docs/qa/learned-defects.md).
 
-Follow mandatory escalation in the quick workflow instead of issuing a quick verdict when it applies.
+Quick/deep selects attack breadth and routing only — neither mode weakens completion semantics, and neither produces the run verdict. Follow mandatory escalation in the quick workflow instead of issuing a quick verdict when it applies.
+
+## Protocol adapter (installed 2026-09-23)
+
+This skill is an evidence producer (Ops A/D) inside the Internal Fixed-Point QA Protocol (`game/docs/qa/protocol/README.md`) — the sole QA decision law. Its per-operation labels map onto the unified model:
+
+- `Confirmed` → ledger `REAL_DEFECT` with the recorded evidence kind (failing repro = EXECUTED_*, direct runtime observation = EXECUTED_RUNTIME). `Suspected` → `COVERAGE_GAP`/`INFERRED`-kind hypothesis, never silently dropped. `Coverage gap` → `COVERAGE_GAP`.
+- `PASS WITH EVIDENCE` / `PASS WITH GAPS` / `FAIL` / `BLOCKED` are per-operation evidence labels recorded in the ledger, NOT run verdicts. The run outcome (`QA_FIXED_POINT_REACHED` / `QA_FINDINGS_OPEN` / `QA_UNVERIFIED` / `QA_BLOCKED_SCOPE` / `QA_ACCEPTED_WITH_EXCEPTIONS`) is emitted only by the coordinator through the protocol's terminal predicate — never by this skill alone.
+- A discovered issue transitions to REPAIR under the protocol (writer lease, sibling hunt, pin) — it is never fixed invisibly inside QA.
 
 ## Hard QA write boundary
 
@@ -33,6 +41,6 @@ Never edit production code, configuration, dependencies, assets, snapshots, or s
 
 ## Evidence and outcome
 
-Treat a defect as `Confirmed` only with an intended failing reproduction test or direct runtime evidence. Never report a `Confirmed` defect from static inspection alone. Otherwise classify it as `Suspected` or `Coverage gap`; existing green tests alone do not prove safety.
+Treat a defect as `Confirmed` only with an intended failing reproduction test or direct runtime evidence; an explicit SOURCE_PROOF static proof may establish a `REAL_DEFECT` under the protocol when the violation is directly provable — label the evidence kind honestly, never claim runtime confirmation from source. Otherwise classify it as `Suspected` or `Coverage gap`; existing green tests alone do not prove safety.
 
 Use only `PASS WITH EVIDENCE`, `PASS WITH GAPS`, `FAIL`, or `BLOCKED`—never bare `PASS`. Write each report to `game/docs/qa/YYYY-MM-DD-<scope>-<mode>.md` using the [reporting rules](references/reporting-and-learning.md).

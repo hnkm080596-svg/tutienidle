@@ -85,6 +85,8 @@ IF conflicts with your human partner's prior decisions:
 
 **your human partner's rule:** "External feedback - be skeptical, but check carefully"
 
+**Protocol note (2026-09-23):** external feedback (human reviewers, bots, other tools) is evidence to validate — never a binding verdict. No external reviewer is a QA completion criterion; the Internal Fixed-Point QA Protocol owns run outcomes.
+
 ## YAGNI Check for "Professional" Features
 
 ```

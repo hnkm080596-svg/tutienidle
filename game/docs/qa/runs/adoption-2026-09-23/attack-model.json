@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "docs/qa/protocol/defect-taxonomy.md (02) + 06 orchestrator attack suite",
+  "families": [
+    "TRN transaction/atomicity", "STT lifecycle/reset", "PSV persistence/schema",
+    "ECO replay/reentrancy", "ACT authority/ownership", "CNT cardinality",
+    "CFG config/environment", "OBS observability/counter", "RVW review integrity",
+    "LRN learning/promotion", "RUN journal/recovery", "MSG coordination/ordering"
+  ],
+  "orchestratorAttacks": [
+    "QF-01 wrong tree", "QF-02 hidden untracked source", "QF-03 wrong request stale result",
+    "QF-04 duplicate result", "QF-05 ID/payload collision", "QF-06 exit-zero findings",
+    "QF-07 missing required tool", "QF-08 dirty-after-clean", "QF-09 Low defect",
+    "QF-10 false actionability", "QF-11 cyclic siblings", "QF-12 wrong scope",
+    "QF-13 fake independence", "QF-14 incomplete material", "QF-15 weak oracle",
+    "QF-16 invalid mutation kill", "QF-17 surviving mutant", "QF-18 reviewer timeout",
+    "QF-19 environment conflation", "QF-20 fresh seeds", "QF-21 novelty epoch",
+    "QF-22 learning poisoning", "QF-23 lesson routing", "QF-24 incident-vs-policy",
+    "QF-25 destructive drift", "QF-26 crash/restart", "QF-27 concurrent coordinator",
+    "QF-28 false-positive learning", "QF-29 missing coverage cell", "QF-30 final-suite failure",
+    "QF-31 forged counts", "QF-32 no-external-review valid scenario"
+  ],
+  "invariants": [
+    "I-LEDGER-IDENTITY verdict binds exact manifest+contract+attack+environment",
+    "I-LEDGER-JOURNAL append-only hash-chained CAS journal with exclusive lease",
+    "I-LEDGER-INVALIDATION state change transitively stales derived truth",
+    "I-REVIEW-INDEPENDENCE isolated sealed contexts; no self-grading",
+    "I-LEARNING-GATE promotion requires kill+controls+sibling-hunt+independent qualification"
+  ]
+}

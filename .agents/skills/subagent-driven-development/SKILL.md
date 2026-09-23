@@ -310,6 +310,8 @@ rush it into implementation.
 Per-task reviews are task-scoped gates. The broad review happens once, at the
 final whole-branch review. Never skip the task review, and never accept a
 report missing either verdict — spec compliance AND task quality are both
+
+**Protocol adapter (2026-09-23):** task/re-review verdicts are reviewer evidence recorded into the Internal Fixed-Point QA Protocol ledger (`game/docs/qa/protocol/README.md`) — the coordinator's terminal predicate owns completion; reviewer ❌/✅ labels alone neither approve nor block the run.
 required. Implementer self-review never replaces the task review; both are
 needed.
 

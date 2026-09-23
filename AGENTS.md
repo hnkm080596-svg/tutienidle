@@ -4,8 +4,9 @@ Root: `game/`. Stack: Vue 3, TypeScript, Vite, Vitest, Pinia, Phaser.
 
 **This file = rules (how to work). `game/docs/roadmap.md` = current architecture state** (which system owns what right now, which R-mission is done/in-progress/parked). Read the relevant roadmap phase before touching combat, save/restore, inventory, production, or quest code — do not assume an architecture rule below describes what's *currently* implemented; roadmap.md does. Don't duplicate roadmap content here.
 
-4 parts:
+QA authority + 4 parts:
 
+- **Internal QA authority** — one decision law (`game/docs/qa/protocol/README.md`); all gates below feed it.
 1. **Protection Rules (P1-P18)** — hard rules, do not bypass. Critical ones are mirrored into `.opencode/agent/<name>.md`.
 2. **Architecture Constitution (A1-A13)** — project-wide laws. New code follows them; fix existing violations only within your authorized scope.
 3. **Effectiveness Guidelines (E1-E17)** — workflow guidance, skip with a stated reason.
@@ -16,6 +17,27 @@ Root: `game/`. Stack: Vue 3, TypeScript, Vite, Vitest, Pinia, Phaser.
 **Project intent:** headlessly testable game, stable primitives, one authority per rule/state. Repair the smallest coherent responsibility and migrate its real consumers. Don't optimize for file/line count or a green suite alone. Preserve gameplay intent — don't silently redesign it.
 
 **Architecture worker workflow (required):** Before planning, dispatching, or making non-trivial production changes, use [architecture-worker-workflow.md](game/docs/architecture/architecture-worker-workflow.md). Complete G0/G1 before production edits; carry the task card, Q1-Q12 evidence and triggered domain checks through G2-G5. Read-only planning/research and docs-only work use its proportional scope rules. Workers must return the G5 evidence report; coordinators check the aggregate diff against it. Use [architecture-worker-exercises.md](game/docs/architecture/architecture-worker-exercises.md) for workflow qualification, not as a substitute for production tests. This operationalizes A1-A12/E7/E13; it does not change P1-P18, authorize unrelated repairs, or turn the historical Mission 0 audit into current requirements.
+
+---
+
+## Internal QA authority
+
+The primary agent owns QA completion through `game/docs/qa/protocol/README.md`.
+Read that protocol at the start of nontrivial feature/fix, integration, release or QA-system work, together with its taxonomy, schemas and learning policy. Current user instructions and protection rules still control scope and destructive/external actions.
+
+Use one internal fixed-point loop over the CURRENT AGGREGATE REPOSITORY STATE. The task diff discovers impact; it is not the object of approval. Preserve deterministic tests/build, OCR delegation, actual runtime/visual checks, architecture/consumer census, adversarial attacks, sequential resulting-state reviews and fresh internal falsification. Their evidence feeds one ledger and one coordinator decision.
+
+No ChatGPT Web, C2C external verdict, browser login, external reviewer or third-party review bot is required for completion. Useful findings from any source remain evidence to validate. Transport availability is never an approval criterion.
+
+Every fix triggers root-cause/class analysis, repository-wide sibling search, regression protection, impacted re-verification, evidence invalidation and renewed aggregate attacks. All actionable defects, including Low, block unqualified fixed-point completion. Never treat an arbitrary number of passes, green test count, budget expiry or DONE message as convergence.
+
+The primary agent performs its own full reasoning and may dispatch isolated internal reviewers. Same-context role switching is self-review, not independent review. If native isolated contexts are unavailable, continue useful internal checks and explicitly report the missing independence evidence; do not route back to ChatGPT Web or forge independence.
+
+Every meaningful failure must enter `game/docs/qa/protocol/learning.md`: incident -> root class + detector escape reason -> pin/attack proposal -> independent qualification -> automatic promotion -> use in later runs. Product rules and required detection strength cannot be relaxed automatically. Governing learning policy is versioned separately from incident logs.
+
+Only the protocol's terminal predicate permits QA_FIXED_POINT_REACHED. Required unavailable evidence is QA_UNVERIFIED; known unresolved defects are QA_FINDINGS_OPEN; out-of-authority repairs are QA_BLOCKED_SCOPE; human-accepted deviations are QA_ACCEPTED_WITH_EXCEPTIONS. None of those outcomes authorize commit/merge/push/deploy.
+
+P3/P13/P14/P18 remain technical evidence requirements. P4 operators and P5 chronological responsibilities are scheduled inside this protocol, not separate competing approval systems. Generic skill round caps/minor deferral rules cannot override this completion contract. Quick checks are repair-loop operations, never a shortcut to aggregate completion.
 
 ---
 
@@ -32,6 +54,8 @@ Root: `game/`. Stack: Vue 3, TypeScript, Vite, Vitest, Pinia, Phaser.
 Stop on first failure, fix, rerun same mode. Don't re-verify unchanged code. Fix task-caused failures before declaring done. P3 is one gate in the P5 completion sequence — a green P3 alone is never completion.
 
 **P4. Adversarial QA gate.** After a feature/fix, run `tutienidle-adversarial-qa` (quick) before claiming done — positioned after P3 verification, the P18 OCR gate, and any triggered P13/P14 runtime checks, before the P5 sequential review passes. Deep mode: when asked, before milestone/release, or when quick QA surfaces broad risk (save/cloud, time/offline, economy/progression, Vue/Pinia/Phaser lifecycle). QA-pass writes are restricted to `**/*.test.ts`, `tests/e2e/**`, `docs/qa/**` — no production edits during QA. A defect needs deterministic repro / failing test / runtime evidence. Verdicts: `PASS WITH EVIDENCE` (QA gate passed — the P5 sequential review still runs) / `FAIL WITH REASON` (QA satisfied only if the reason is legitimate) / `PASS WITH GAPS` / `BLOCKED` (not done). A QA-driven production fix is a normal implementation change: reverify and feed it through the P5 loop like any other fix.
+
+**Decision authority:** the P4 verdict labels are evidence inputs to the Internal Fixed-Point QA Protocol ledger — the protocol (not this gate alone) owns completion. See the Internal QA authority section.
 
 **P5. Post-task gate — Sequential Multi-Pass Review.** A non-trivial change (≥5 changed production lines, any new production file, any touched file beyond rename/comment/whitespace) is NOT complete merely because tests are green, OCR is clean, or one review pass succeeded. Completion sequence:
 
@@ -72,6 +96,8 @@ Sequential Review Pass 3
 ```
 
 Add Pass 4+ blocks whenever a pass produced Medium-or-higher fixes. A report of the form "reviewed from three perspectives: correctness / architecture / integration" proves one combined single-snapshot review — it fails this gate.
+
+**Decision authority:** the ≥3 sequential passes are the protocol's minimum review cycle over resulting states; their evidence and findings feed the shared ledger, and completion is judged by the protocol's terminal predicate — not by pass count alone. All actionable findings (including Low) must close or be explicitly excepted before an unqualified fixed-point claim.
 
 **P6. Multi-agent coordination.** `git status` before editing (including before delegating) — stop and notify the user if someone else's uncommitted work overlaps. Delegated agents report: worktree path, branch, files changed, verification evidence, remaining limitations. Coordinator owns aggregate diff reasoning + final verification, including the P5 sequential review over the aggregate diff. Use Subagent-Driven Development where Agent/Task-style dispatch exists; otherwise Inline Execution/`executing-plans` — capability decides, not habit.
 

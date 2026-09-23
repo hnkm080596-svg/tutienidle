@@ -1,0 +1,22 @@
+{
+  "applied": [
+    "evidence:EV-ADJ-RECON",
+    "evidence:EV-REV-A-SEAL",
+    "evidence:EV-REV-B-SEAL",
+    "review:REV-A-CORRECTNESS",
+    "review:REV-B-AUTHORITY",
+    "finding:F-A-1",
+    "finding:F-A-2",
+    "finding:F-A-3",
+    "finding:F-A-4",
+    "finding:F-A-5",
+    "finding:F-A-6",
+    "finding:F-A-7",
+    "finding:F-A-8",
+    "lesson:L-MFJ-2",
+    "lesson:L-MFJ-3",
+    "lesson:L-MFJ-4",
+    "lesson:L-MFJ-5",
+    "lesson:L-MFJ-6"
+  ]
+}

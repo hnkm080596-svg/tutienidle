@@ -23,7 +23,8 @@
     "assets:ink-ui": "node scripts/build-ink-wash-assets.mjs",
     "assets:ink-ui:check": "node scripts/build-ink-wash-assets.mjs --check",
     "electron:dev": "cross-env ELECTRON=1 vite",
-    "dist:win": "cross-env ELECTRON=1 npm run build && electron-builder --win"
+    "dist:win": "cross-env ELECTRON=1 npm run build && electron-builder --win",
+    "qa:internal": "node scripts/qa/cli.mjs"
   },
   "dependencies": {
     "@floating-ui/vue": "^2.0.1",
@@ -40,6 +41,8 @@
     "@vitejs/plugin-vue": "^6.0.8",
     "@vue/eslint-config-typescript": "^14.9.0",
     "@vue/tsconfig": "^0.9.1",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
     "canvas": "^3.2.3",
     "cross-env": "^10.1.0",
     "electron": "^43.4.1",

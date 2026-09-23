@@ -1,0 +1,1635 @@
+{
+  "schemaVersion": 1,
+  "run": {
+    "id": "mf-journey-2026-09-23",
+    "createdAt": "2026-09-23T15:08:05.061Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [],
+    "nonGoals": [
+      "gameplay",
+      "economy",
+      "save-policy",
+      "production code changes",
+      "merge/push"
+    ],
+    "checkout": "origin/p7/truc-co base + devin/1790160949-m-f-journey @ 873635bd (PR #19)",
+    "branch": "devin/1790160949-m-f-journey",
+    "base": "origin/p7/truc-co",
+    "head": "873635bd502921a6164eff368cb470af8c735915",
+    "state": {
+      "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+      "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+      "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+      "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "manifestPath": "manifest.json",
+    "environmentPath": "environment.json",
+    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "consumedLessonIds": [],
+    "aggregateParents": [],
+    "requiredDomains": [
+      "src/core/simulation/earlygame",
+      "docs/p7",
+      "docs/qa"
+    ],
+    "exclusions": [],
+    "phase": "DECIDE",
+    "cleanRoundA": null,
+    "cleanRoundB": null,
+    "finalEvidenceIds": [],
+    "outcome": "QA_BLOCKED_SCOPE"
+  },
+  "invariants": [],
+  "census": [
+    {
+      "id": "CEN-EGS",
+      "invariantIds": [],
+      "location": {
+        "path": "src/core/simulation/earlygame/EarlyGameSession.ts",
+        "symbolOrSection": "EarlyGameSession",
+        "revision": "873635bd",
+        "basis": "SOURCE"
+      },
+      "classification": "TEST_ONLY",
+      "reads": [
+        "GameManager",
+        "PlayerData"
+      ],
+      "writes": [
+        "player",
+        "snapshot"
+      ],
+      "eventsIn": [
+        "seam calls"
+      ],
+      "eventsOut": [
+        "snapshot"
+      ],
+      "consumerIds": [
+        "TrucCoJourney.test.ts",
+        "EarlyGameSession.test.ts",
+        "EarlyGameBootstrap",
+        "BattleDriver"
+      ],
+      "searchEvidenceIds": [
+        "EV-CENSUS"
+      ],
+      "disposition": "in-scope: additive seams, no production behavior change"
+    },
+    {
+      "id": "CEN-TCJ",
+      "invariantIds": [],
+      "location": {
+        "path": "src/core/simulation/earlygame/TrucCoJourney.test.ts",
+        "symbolOrSection": "suite",
+        "revision": "873635bd",
+        "basis": "SOURCE"
+      },
+      "classification": "TEST_ONLY",
+      "reads": [
+        "EarlyGameSession"
+      ],
+      "writes": [],
+      "eventsIn": [
+        "vitest"
+      ],
+      "eventsOut": [
+        "assertions"
+      ],
+      "consumerIds": [
+        "vitest"
+      ],
+      "searchEvidenceIds": [
+        "EV-CENSUS"
+      ],
+      "disposition": "in-scope: ordered-leg E2E"
+    },
+    {
+      "id": "CEN-DOCS-P7",
+      "invariantIds": [],
+      "location": {
+        "path": "docs/p7",
+        "symbolOrSection": "roadmap+mission-graph+notes",
+        "revision": "873635bd",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [
+        "agents"
+      ],
+      "searchEvidenceIds": [
+        "EV-CENSUS"
+      ],
+      "disposition": "in-scope: mission ledger sync"
+    },
+    {
+      "id": "CEN-DOCS-QA",
+      "invariantIds": [],
+      "location": {
+        "path": "docs/qa/2026-09-23-m-f-journey-quick.md",
+        "symbolOrSection": "quick QA report",
+        "revision": "873635bd",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [
+        "agents"
+      ],
+      "searchEvidenceIds": [
+        "EV-CENSUS"
+      ],
+      "disposition": "in-scope: QA evidence doc"
+    }
+  ],
+  "findings": [
+    {
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-CENSUS"
+      ],
+      "locations": [
+        {
+          "path": "docs/p7/missions/mf-journey.notes.md",
+          "symbolOrSection": "claim",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator",
+      "counterexample": "n/a — static adjudication",
+      "expected": "claim scoped to behavior (file has production-path importers)",
+      "actual": "EarlyGameSession.ts is shipped src/core code; changes additive-only so claim holds for behavior, not letter",
+      "rootCause": "claim wording omitted the behavior qualifier",
+      "rootClass": "RECORD_PRECISION",
+      "subsystem": "qa-harness",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": "accurate-in-spirit: every seam is opt-in (playerOwner) or additive; verified no existing-caller path changes",
+      "exception": null,
+      "id": "F-C-1",
+      "title": "\"ZERO production edits\" claim is imprecise",
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "status": "REJECTED_WITH_PROOF"
+    },
+    {
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-CENSUS"
+      ],
+      "locations": [
+        {
+          "path": "src/core/simulation/earlygame/EarlyGameSession.ts",
+          "symbolOrSection": "drainTribulationOutcome",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator",
+      "counterexample": "n/a — static adjudication",
+      "expected": "seam mirrors both drain branches of checkTribulationOutcomeAction",
+      "actual": "failure drain (presentSettlementError + director.clear) unmodeled; journey never fails a settle so unreachable in scope",
+      "rootCause": "seam scoped to victory path only",
+      "rootClass": "RECORD_PRECISION",
+      "subsystem": "qa-harness",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": "out-of-journey-scope hypothesis; recorded for corpus, not a defect",
+      "exception": null,
+      "id": "F-C-2",
+      "title": "drain seam does not model settlementError branch",
+      "severity": "Low",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "HYPOTHETICAL",
+      "status": "REJECTED_WITH_PROOF"
+    },
+    {
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-CENSUS"
+      ],
+      "locations": [
+        {
+          "path": "docs/naming-conventions.md",
+          "symbolOrSection": "amended 2026-09-23",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/data",
+          "symbolOrSection": "zhou_tian/gift_*/bat-mach:",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator",
+      "counterexample": "n/a — static adjudication",
+      "expected": "consistent naming per amended convention",
+      "actual": "3 pre-existing ids drift (recorded debt); rename = save-format change",
+      "rootCause": "ids landed before the mechanic-family amendment",
+      "rootClass": "RECORD_PRECISION",
+      "subsystem": "qa-harness",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": "consistently applied, persisted in save format; recorded-not-fixed is the required behavior under the no-retrofit hard rules",
+      "exception": null,
+      "id": "F-C-3",
+      "title": "naming drift items are honest records, not defects",
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "status": "REJECTED_WITH_PROOF"
+    },
+    {
+      "id": "F-A-1",
+      "title": "Leg J determinism assert flaky by construction — Math.random entitlement draw feeds compared snapshot fields",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "High",
+      "classification": "TEST_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "src/core/simulation/earlygame/TrucCoJourney.test.ts",
+          "symbolOrSection": "leg J :882-916 (assert :915, resolve offered[0] :897-900)",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/talent/TalentEntitlement.ts",
+          "symbolOrSection": "offeredTalentIds Math.random draw ~:106",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/data/talent/BreakthroughTalentPools.ts",
+          "symbolOrSection": "tc_linh_giac :149-160 insight_gain",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/simulation/earlygame/EarlyGameSession.ts",
+          "symbolOrSection": "snapshot fields skillInsight/totalSkillInsightGained :594-595",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "reviewer-b (devin-9e4abadb76a04d838916f1628f33faeb)",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-REV-B-SEAL",
+        "EV-ADJ-RECON",
+        "EV-VITEST-JOURNEY"
+      ],
+      "counterexample": "reviewer-executed: 2/4 vitest runs of leg J failed; skillInsight 1937 vs 2514 (~x1.3) between same-seed runs",
+      "expected": "same-seed runs snapshot identically under volatile normalization",
+      "actual": "resolving offered[0] can grant tc_linh_giac insight_gain -> feeds skillInsight/totalSkillInsightGained into compared fields; volatile normalization strips the offer record (pendingTalentEntitlement.realmId only) but not its resolved consequence; ~11% flake/invocation",
+      "rootCause": "determinism oracle compares fields downstream of an unseeded Math.random draw; no rng seam exposed in harness",
+      "rootClass": "UNSEALED_NONDETERMINISM",
+      "subsystem": "qa-harness/journey-leg-J",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-A-2"
+      ],
+      "repair": "proposed: inject deterministic rng (spyOn Math.random or rng seam) or resolve a fixed-identity talent decision in leg J; not authorized in this review-only run",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-A-2",
+      "title": "Snapshot/checkpoint parity oracle blind spot — omits journey-mutated persisted fields incl. modifiers",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Medium",
+      "classification": "TEST_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "src/core/simulation/earlygame/EarlyGameSession.ts",
+          "symbolOrSection": "snapshot() :586-671 field set",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "reviewer-a + reviewer-c (convergent)",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-REV-A-SEAL",
+        "EV-REV-C-SEAL",
+        "EV-ADJ-RECON"
+      ],
+      "counterexample": "reviewer-executed: same-seed runs granting different talents produce equal snapshots; checkpoint parity omits persisted player.modifiers so restore's deliberate bat-mach:* rebuild is unverified in the assembled path",
+      "expected": "snapshot/checkpoint equality detects drift in journey-mutated persisted state",
+      "actual": "selectedTalentIds/talentLevels/companions/bag contents/baseStats/modifiers are mutated by journey legs but absent from the snapshot; the modifiers omission additionally hides whether restore's bat-mach:* rebuild round-trips correctly",
+      "rootCause": "snapshot field selection covers derived fields while omitting primary mutated fields; PR claims 'all landed v73-v81 persisted fields' — over-claimed",
+      "rootClass": "ORACLE_FIELD_SELECTION",
+      "subsystem": "qa-harness/snapshot-oracle",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-A-1"
+      ],
+      "repair": "proposed: add the omitted persisted fields (or an explicit excluded-list with rationale); modifiers need a normalization rule covering the deliberate bat-mach:* rebuild",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-A-3",
+      "title": "Census oracle under-covers writer paths; Set collapses double-registered grants",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Medium",
+      "classification": "COVERAGE_GAP",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "src/core/simulation/earlygame/TrucCoJourney.test.ts",
+          "symbolOrSection": "census leg :1066-1135 (granted Set :1091, channelEmissionCount :1103-1109, duplicated :1112-1134)",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "reviewer-b + reviewer-a (convergent independent discovery)",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-REV-B-SEAL",
+        "EV-REV-A-SEAL",
+        "EV-ADJ-RECON"
+      ],
+      "counterexample": "static: an unregistered second authority for an authorized material via quest itemDrops/building produces/equipment dissolve/companion tokens/reward-ops/essence-substitution evades `duplicated`; a material double-registered in VISIBLE_GRANT_SOURCES collapses in the Set",
+      "expected": "census enumerates every acquisition authority for census-covered materials",
+      "actual": "only VISIBLE_GRANT_SOURCES + channel emissions + authored drop/signature tables are enumerated; non-loot writer paths unexamined; Set collapses multiplicity",
+      "rootCause": "oracle enumerates drop surfaces, not writer surfaces",
+      "rootClass": "ORACLE_COVERAGE",
+      "subsystem": "qa-harness/census-oracle",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "proposed: derive granted-list from all production writer paths and keep multiset semantics for double-registration detection",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-A-4",
+      "title": "runTribulation skips startTribulationPrepared pre-start unequip + modifier sync (equipped-through-tribulation is fixture-only state)",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "TEST_DEFECT",
+      "actionable": true,
+      "reachability": "FIXTURE_INJECTED",
+      "locations": [
+        {
+          "path": "src/core/simulation/earlygame/EarlyGameSession.ts",
+          "symbolOrSection": "runTribulation :356-377",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/tribulation/TribulationOutcomeService.ts",
+          "symbolOrSection": "startTribulationPrepared :420-432",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "reviewer-a + reviewer-c (convergent independent discovery; severities Low/Medium — adjudicated Low: currently masked, no journey leg equips before tribulation)",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-REV-A-SEAL",
+        "EV-REV-C-SEAL",
+        "EV-ADJ-RECON"
+      ],
+      "counterexample": "equip an item, then runTribulation: the ARCH-002 ghost snapshot inside startTribulation captures a modifier profile production never produces (production unequips + resyncs first)",
+      "expected": "harness start seam mirrors production prep ordering (unequip-all + setEquipmentModifiers before startTribulation)",
+      "actual": "runTribulation calls gameManager.startTribulation directly; the ghost snapshot can capture a stat profile with live equipment modifiers",
+      "rootCause": "seam re-implemented start without delegating to startTribulationPrepared",
+      "rootClass": "SEAM_FIDELITY",
+      "subsystem": "qa-harness/tribulation-seam",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-A-5"
+      ],
+      "repair": "proposed: delegate to startTribulationPrepared or replicate the prep ordering explicitly",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-A-5",
+      "title": "drainTribulationOutcome returns true on empty director — no settle-ordering guard; settle/drain nil asymmetry",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "TEST_DEFECT",
+      "actionable": true,
+      "reachability": "FIXTURE_INJECTED",
+      "locations": [
+        {
+          "path": "src/core/simulation/earlygame/EarlyGameSession.ts",
+          "symbolOrSection": "drainTribulationOutcome :406-414 vs settleTribulationOutcome :388-397",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "reviewer-a + reviewer-b + reviewer-c (triple convergent independent discovery)",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-REV-A-SEAL",
+        "EV-REV-B-SEAL",
+        "EV-REV-C-SEAL",
+        "EV-ADJ-RECON"
+      ],
+      "counterexample": "call drainTribulationOutcome() before any settle/committed outcome: returns true via director.clear() on an empty director; settle throws (playerOwner guard) while drain vacuously succeeds — asymmetric nil handling",
+      "expected": "drain reports 'committed outcome drained' and enforces settle-before-drain ordering as production checkTribulationOutcomeAction does",
+      "actual": "returns true on an empty director — 'cleared-or-deferred' semantics; enables drain-before-settle order production cannot reach",
+      "rootCause": "seam models clear() but not the committed-outcome precondition; nil-handling asymmetric with settle",
+      "rootClass": "SEAM_FIDELITY",
+      "subsystem": "qa-harness/tribulation-seam",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-A-4"
+      ],
+      "repair": "proposed: require committed outcome (or post-settle receipt) before clearing; align nil handling with settle",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-A-6",
+      "title": "hiddenChannelCycles persisted per site but undeclared on ProductionSiteStateSave (pre-existing)",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/services/save/SaveSystem.ts",
+          "symbolOrSection": "site serialize :376",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/services/save/saveTypes.ts",
+          "symbolOrSection": "ProductionSiteStateSave :267-283",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "reviewer-b (devin-9e4abadb76a04d838916f1628f33faeb)",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-REV-B-SEAL",
+        "EV-ADJ-RECON"
+      ],
+      "counterexample": "static: serializer writes a field the declared save type lacks",
+      "expected": "every persisted site field declared on ProductionSiteStateSave",
+      "actual": "hiddenChannelCycles round-trips at runtime (plain JSON) but is invisible to the save schema — writer/schema drift; PRE-EXISTING on origin/p7/truc-co, not introduced by this diff",
+      "rootCause": "field added to runtime state + serializer without save-type declaration",
+      "rootClass": "SCHEMA_DRIFT",
+      "subsystem": "save",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "proposed (outside this run's scope): declare hiddenChannelCycles on ProductionSiteStateSave; pre-existing base-branch defect — does not gate this diff",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-A-7",
+      "title": "isWriterOwner probes 3 data fields, omits setEquipmentModifiers — mid-apply throw on misclassified owner",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "TEST_DEFECT",
+      "actionable": true,
+      "reachability": "FIXTURE_INJECTED",
+      "locations": [
+        {
+          "path": "src/core/simulation/earlygame/EarlyGameSession.ts",
+          "symbolOrSection": "isWriterOwner :580-584 (docstring :577-579 names setEquipmentModifiers)",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "reviewer-b (devin-9e4abadb76a04d838916f1628f33faeb)",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-REV-B-SEAL",
+        "EV-ADJ-RECON"
+      ],
+      "counterexample": "owner with realmId/baseStats/selectedTalentIds but no setEquipmentModifiers passes the probe, then throws mid-apply in drainTribulationOutcome",
+      "expected": "guard probes the full writer contract it documents",
+      "actual": "probe omits setEquipmentModifiers — misclassification defers failure into the drain call",
+      "rootCause": "structural probe drifted from the documented contract",
+      "rootClass": "CONTRACT_PROBE_GAP",
+      "subsystem": "qa-harness/writer-guard",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "proposed: add 'setEquipmentModifiers' in owner check",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-A-8",
+      "title": "vi.setSystemTime(Date.now()) no-op under fake timers at 3 sites",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "TEST_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "src/core/simulation/earlygame/TrucCoJourney.test.ts",
+          "symbolOrSection": ":648 :808 :1013",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "reviewer-a (devin-5d5be1282a47450f8e514ec259faf959)",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-REV-A-SEAL",
+        "EV-ADJ-RECON"
+      ],
+      "counterexample": "static: under vi.useFakeTimers() Date.now() already returns the fake clock; setSystemTime to it is a no-op",
+      "expected": "either a real time anchor or removal",
+      "actual": "dead/confusing calls; readers may assume a clock reset that never happens",
+      "rootCause": "leftover clock-reset idiom copied under fake timers",
+      "rootClass": "DEAD_TEST_CODE",
+      "subsystem": "qa-harness/journey",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "proposed: remove or replace with explicit fixed anchor",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-A-9",
+      "title": "Per-tick auto-invest during tribulation couples leg-A essence surplus to leg-D exact-tier preconditions",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "TEST_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "src/core/game/GameManagerTickOps.ts",
+          "symbolOrSection": "auto-invest per tick :42-44 (P7-M5)",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/simulation/earlygame/EarlyGameSession.ts",
+          "symbolOrSection": "runTribulation tick loop :363-371",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/simulation/earlygame/TrucCoJourney.test.ts",
+          "symbolOrSection": "leg D exact-tier asserts",
+          "revision": "873635bd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "reviewer-c (devin-f9c6b0463f594468954bcbcae47fc7e7)",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-REV-C-SEAL",
+        "EV-ADJ-RECON"
+      ],
+      "counterexample": "static+source-verified: every tribulation tick auto-invests surplus essence into body_refinement, so leg D's exact-tier assertions depend on leg-A's leftover essence minus tribulation duration — coupling via hidden per-tick side effect",
+      "expected": "ordered legs' exact-value preconditions are seeded directly or declared as coupling",
+      "actual": "leg D's precision silently relies on the leg-A surplus surviving the tribulation tick loop",
+      "rootCause": "production per-tick auto-invest is invisible to the leg-level assertions",
+      "rootClass": "LEG_COUPLING",
+      "subsystem": "qa-harness/journey-legs",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "proposed: pin essence explicitly at leg D's precondition, or assert the tick-consumption delta",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    }
+  ],
+  "evidence": [
+    {
+      "id": "EV-VITEST-JOURNEY",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coordinator",
+      "startedAt": "2026-09-23T15:10:49Z",
+      "finishedAt": "2026-09-23T15:10:53Z",
+      "commandOrMethod": "npx vitest run src/core/simulation/earlygame/TrucCoJourney.test.ts src/core/simulation/earlygame/EarlyGameSession.test.ts",
+      "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/mf-journey-target/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/coordinator-census.md",
+      "artifactHash": "9834e8f9a5f46704fc8f8696a71c70ac5bb755513a718a8046f70d47a5c69835",
+      "inputPaths": [
+        "src/core/simulation/earlygame/TrucCoJourney.test.ts"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "journey+harness suites green on pinned tree"
+      ],
+      "limitations": [
+        "unit-scope only; no full vitest run"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-CENSUS",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "coordinator",
+      "startedAt": "2026-09-23T15:00:00Z",
+      "finishedAt": "2026-09-23T15:12:00Z",
+      "commandOrMethod": "git diff --stat + targeted file reads on target worktree",
+      "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/mf-journey-target",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/coordinator-census.md",
+      "artifactHash": "9834e8f9a5f46704fc8f8696a71c70ac5bb755513a718a8046f70d47a5c69835",
+      "inputPaths": [
+        "src/core/simulation/earlygame/EarlyGameSession.ts",
+        "docs/naming-conventions.md",
+        "src/data/realm/BodyPerfection.ts",
+        "src/composables/useTribulation.ts"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "seam fidelity to production halves",
+        "deferral honesty",
+        "drift items are honest records"
+      ],
+      "limitations": [
+        "static review; no executed oracle on naming"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-VITEST-FULL",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coordinator",
+      "startedAt": "2026-09-23T15:20:00Z",
+      "finishedAt": "2026-09-23T15:29:00Z",
+      "commandOrMethod": "npx vitest run (full suite)",
+      "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/mf-journey-target/game",
+      "exitCode": 1,
+      "result": "FAIL",
+      "artifactPath": "evidence/coordinator-census.md",
+      "artifactHash": "9834e8f9a5f46704fc8f8696a71c70ac5bb755513a718a8046f70d47a5c69835",
+      "inputPaths": [
+        "src/assets/dongFuBackgroundAssets.test.ts",
+        "src/assets/dongFuBuildingPipeline.test.ts",
+        "src/components/panels/SettingsPanel.test.ts"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "7188/7195 pass"
+      ],
+      "limitations": [
+        "3 failures all pre-existing: 2x magick ENOENT (env lacks ImageMagick, identical to base/master records), 1x SettingsPanel confirm-modal null (deterministic on pristine base, unrelated to diff)"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-ADJ-RECON",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "coordinator",
+      "startedAt": "2026-09-23T15:55:00Z",
+      "finishedAt": "2026-09-23T16:10:00Z",
+      "commandOrMethod": "source re-verification of every reviewer finding claim against @873635bd (TalentEntitlement Math.random, BreakthroughTalentPools tc_linh_giac insight_gain, snapshot field set :586-671, startTribulationPrepared :420-432 vs runTribulation :356-377, drainTribulationOutcome :406-414, SaveSystem.ts:376 vs saveTypes.ts:267-283, isWriterOwner :580-584, setSystemTime sites :648/808/1013, census leg :1088-1135)",
+      "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/mf-journey-target/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/reconciliation-adjudication.md",
+      "artifactHash": "e4f383e1a30aa694a62476bdbccfb39f335e8e0c202ca8cbd9b94f196b9e0a36",
+      "inputPaths": [
+        "evidence/reconciliation-adjudication.md",
+        "evidence/coordinator-census.md"
+      ],
+      "inputEvidenceIds": [
+        "EV-CENSUS"
+      ],
+      "invariantIds": [],
+      "claims": [
+        "all 8 deduped reviewer findings re-verified against source",
+        "convergent discoveries F-A-3/F-A-5 confirmed in both sealed reviews"
+      ],
+      "limitations": [
+        "reviewer-executed evidence is attested in sealed reviews, not re-executed by coordinator except mechanism-level source verification"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-REV-A-SEAL",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "reviewer-a (devin-5d5be1282a47450f8e514ec259faf959)",
+      "startedAt": "2026-09-23T15:08:48Z",
+      "finishedAt": "2026-09-23T15:34:57Z",
+      "commandOrMethod": "reviewer-attested: vitest run on the two touched files (17/17 pass) + same-seed counterexample run (different granted talents, equal snapshots)",
+      "cwd": "reviewer isolated checkout @873635bd",
+      "exitCode": 0,
+      "result": "FAIL",
+      "artifactPath": "reviews/round-a-reviewer-a.md",
+      "artifactHash": "761c43b4115ae953db33f491ad991973ac0f1483ad270e9f1d0b4ec6ab644f83",
+      "inputPaths": [
+        "reviews/round-a-reviewer-a.md"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "snapshot oracle blind spot demonstrated: same-seed different-talent runs produce equal snapshots",
+        "settle/drain seams verified vs useTribulation.ts:131-236 production twin"
+      ],
+      "limitations": [
+        "attested by sealed reviewer; coordinator verified mechanism via EV-ADJ-RECON, did not re-execute the counterexample"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-REV-B-SEAL",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "reviewer-b (devin-9e4abadb76a04d838916f1628f33faeb)",
+      "startedAt": "2026-09-23T15:08:48Z",
+      "finishedAt": "2026-09-23T15:35:06Z",
+      "commandOrMethod": "reviewer-attested: vitest leg-J determinism run x4, failed 2/4; observed skillInsight 1937 vs 2514 (~x1.3) between same-seed runs",
+      "cwd": "reviewer isolated checkout @873635bd",
+      "exitCode": 1,
+      "result": "FAIL",
+      "artifactPath": "reviews/round-a-reviewer-b.md",
+      "artifactHash": "b4f67221575fd007372f9b1e05c3972f22e219dcaf06d6f1dd22e30c9b8c0a92",
+      "inputPaths": [
+        "reviews/round-a-reviewer-b.md"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "leg J determinism assert is flaky by construction: ~11% flake/invocation",
+        "Math.random talent draw flows resolved insight_gain into compared snapshot fields"
+      ],
+      "limitations": [
+        "attested by sealed reviewer; mechanism source-verified by coordinator (EV-ADJ-RECON): TalentEntitlement Math.random + tc_linh_giac insight_gain + EarlyGameSession.ts:594-595 compared fields"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-REV-C-SEAL",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "reviewer-c (devin-f9c6b0463f594468954bcbcae47fc7e7)",
+      "startedAt": "2026-09-23T15:44:24Z",
+      "finishedAt": "2026-09-23T16:12:03Z",
+      "commandOrMethod": "reviewer-attested: npx vitest run on both touched test files -> 17/17 pass (~2.6s)",
+      "cwd": "reviewer isolated checkout @873635bd",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "reviews/round-a-reviewer-c.md",
+      "artifactHash": "91963caa47b91afb5a5dcc2780d36e7af233bd0ce708df3821fddec73faf41e3",
+      "inputPaths": [
+        "reviews/round-a-reviewer-c.md"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "touched suites green under reviewer execution",
+        "seal includes convergent findings for runTribulation prep skip / modifiers-omission / drain nil-asymmetry / setSystemTime dead calls plus leg A->D essence coupling"
+      ],
+      "limitations": [
+        "headless seam only (reviewer-declared); full suite not re-run by reviewer"
+      ],
+      "status": "CURRENT"
+    }
+  ],
+  "coverage": [],
+  "attacks": [],
+  "reviews": [
+    {
+      "id": "REV-A-CORRECTNESS",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 1,
+      "phase": "CORRECTNESS",
+      "reviewerId": "reviewer-a",
+      "contextId": "devin-5d5be1282a47450f8e514ec259faf959",
+      "model": "swe-2-max",
+      "role": "sealed falsification reviewer — correctness lens",
+      "inputBundleHash": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-23T15:08:48Z",
+      "sealedAt": "2026-09-23T15:34:57Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": false,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-REV-A-SEAL"
+      ],
+      "findingIds": [
+        "F-A-2",
+        "F-A-3",
+        "F-A-4",
+        "F-A-5",
+        "F-A-8"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-B-AUTHORITY",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 1,
+      "phase": "AUTHORITY",
+      "reviewerId": "reviewer-b",
+      "contextId": "devin-9e4abadb76a04d838916f1628f33faeb",
+      "model": "swe-2-max",
+      "role": "sealed falsification reviewer — authority/persistence lens",
+      "inputBundleHash": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-23T15:08:48Z",
+      "sealedAt": "2026-09-23T15:35:06Z",
+      "previousPhaseReviewId": "REV-A-CORRECTNESS",
+      "reviewedAfterPreviousFixes": false,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-REV-B-SEAL"
+      ],
+      "findingIds": [
+        "F-A-1",
+        "F-A-3",
+        "F-A-5",
+        "F-A-6",
+        "F-A-7"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-C-INTEGRATION",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 1,
+      "phase": "INTEGRATION",
+      "reviewerId": "reviewer-c",
+      "contextId": "devin-f9c6b0463f594468954bcbcae47fc7e7",
+      "model": "swe-2-max",
+      "role": "sealed falsification reviewer — integration lens",
+      "inputBundleHash": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "headless seam only; full suite not re-run beyond the two touched files"
+      ],
+      "startedAt": "2026-09-23T15:44:24Z",
+      "sealedAt": "2026-09-23T16:12:03Z",
+      "previousPhaseReviewId": "REV-B-AUTHORITY",
+      "reviewedAfterPreviousFixes": false,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-REV-C-SEAL"
+      ],
+      "findingIds": [
+        "F-A-2",
+        "F-A-4",
+        "F-A-5",
+        "F-A-8",
+        "F-A-9"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    }
+  ],
+  "cycles": [
+    {
+      "id": "CYC-RA-1",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "reviewIds": [
+        "REV-A-CORRECTNESS",
+        "REV-B-AUTHORITY",
+        "REV-C-INTEGRATION"
+      ],
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-REV-A-SEAL",
+        "EV-REV-B-SEAL",
+        "EV-REV-C-SEAL",
+        "EV-ADJ-RECON"
+      ],
+      "noveltyEvidenceIds": [],
+      "startedAt": "2026-09-23T15:08:48Z",
+      "finishedAt": "2026-09-23T16:12:03Z",
+      "status": "FINDINGS"
+    }
+  ],
+  "mutations": [],
+  "corpus": [],
+  "lessons": [
+    {
+      "id": "L-MFJ-1",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "SPEC",
+      "findingIds": [
+        "F-C-1",
+        "F-C-2",
+        "F-C-3"
+      ],
+      "incidentEvidenceIds": [
+        "EV-CENSUS"
+      ],
+      "originatingRun": "mf-journey-2026-09-23",
+      "rootClass": "RECORD_PRECISION",
+      "missedInvariantIds": [],
+      "escapeReason": "n/a — coordinator-adjudicated records, not escaped defects",
+      "applicability": [
+        "QA claim wording",
+        "seam fidelity notes",
+        "drift-debt adjudication"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "claim wording always qualifies behavior vs letter",
+        "seam fidelity notes enter corpus even when non-actionable"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "records discipline",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-MFJ-2",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "FLAKE",
+      "findingIds": [
+        "F-A-1",
+        "F-A-2"
+      ],
+      "incidentEvidenceIds": [
+        "EV-REV-B-SEAL",
+        "EV-REV-A-SEAL",
+        "EV-REV-C-SEAL",
+        "EV-ADJ-RECON"
+      ],
+      "originatingRun": "mf-journey-2026-09-23",
+      "rootClass": "UNSEALED_NONDETERMINISM",
+      "missedInvariantIds": [],
+      "escapeReason": "determinism oracle compared fields downstream of an unseeded Math.random draw while omitting the primary mutated fields (incl. persisted modifiers whose restore-rebuild is unverified) — the oracle failed in both directions",
+      "applicability": [
+        "determinism/snapshot oracles",
+        "seeded harness sessions",
+        "checkpoint parity"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "determinism legs must inject deterministic rng or fix decision identity before comparing snapshots",
+        "snapshot oracles must enumerate the persisted fields they claim to cover (incl. restore-rebuilt fields like bat-mach:* modifiers)"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "nondeterminism must be sealed or excluded before equality oracles; parity oracles must cover rebuilt fields",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-MFJ-3",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "TEST",
+      "findingIds": [
+        "F-A-3"
+      ],
+      "incidentEvidenceIds": [
+        "EV-REV-B-SEAL",
+        "EV-REV-A-SEAL",
+        "EV-ADJ-RECON"
+      ],
+      "originatingRun": "mf-journey-2026-09-23",
+      "rootClass": "ORACLE_COVERAGE",
+      "missedInvariantIds": [],
+      "escapeReason": "census oracle enumerated drop surfaces only; writer paths outside loot channels unexamined; Set semantics collapsed multiplicity",
+      "applicability": [
+        "census/authority oracles",
+        "acquisition-path enumeration"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "authority census derives from every production writer path, not registered grant lists alone",
+        "duplicate-authority detection keeps multiset semantics"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "oracle enumeration must cover non-obvious writer classes",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-MFJ-4",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "TEST",
+      "findingIds": [
+        "F-A-4",
+        "F-A-5"
+      ],
+      "incidentEvidenceIds": [
+        "EV-REV-A-SEAL",
+        "EV-REV-B-SEAL",
+        "EV-REV-C-SEAL",
+        "EV-ADJ-RECON"
+      ],
+      "originatingRun": "mf-journey-2026-09-23",
+      "rootClass": "SEAM_FIDELITY",
+      "missedInvariantIds": [],
+      "escapeReason": "harness seams re-implemented production flows without their ordering/precondition guards (prep-before-start, settle-before-drain, symmetric nil handling) — triple-convergent discovery",
+      "applicability": [
+        "harness seam design",
+        "fixture-vs-production parity"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "seams delegate to the production flow they model, or enumerate the guard set they skip",
+        "ordering guards assertable in tests, not just observed"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "seam fidelity requires precondition parity, not just endpoint parity",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-MFJ-5",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-A-6"
+      ],
+      "incidentEvidenceIds": [
+        "EV-REV-B-SEAL",
+        "EV-ADJ-RECON"
+      ],
+      "originatingRun": "mf-journey-2026-09-23",
+      "rootClass": "SCHEMA_DRIFT",
+      "missedInvariantIds": [],
+      "escapeReason": "runtime field added to serializer without save-type declaration — drift pre-existing on base, surfaced by persistence lens",
+      "applicability": [
+        "save schema maintenance",
+        "persisted-field additions"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "save-type declarations audited against serializer writes"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "serializer/schema parity check",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-MFJ-6",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "TEST",
+      "findingIds": [
+        "F-A-7",
+        "F-A-8"
+      ],
+      "incidentEvidenceIds": [
+        "EV-REV-B-SEAL",
+        "EV-REV-A-SEAL",
+        "EV-REV-C-SEAL",
+        "EV-ADJ-RECON"
+      ],
+      "originatingRun": "mf-journey-2026-09-23",
+      "rootClass": "CONTRACT_PROBE_GAP",
+      "missedInvariantIds": [],
+      "escapeReason": "structural guard probed a subset of the contract it documented; dead timer ops persisted as test clutter (convergent A+C)",
+      "applicability": [
+        "type guards",
+        "test hygiene"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "guard probes enumerate the full documented contract",
+        "fake-timer contexts remove real-clock anchors"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "guard completeness",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-MFJ-7",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "TEST",
+      "findingIds": [
+        "F-A-9"
+      ],
+      "incidentEvidenceIds": [
+        "EV-REV-C-SEAL",
+        "EV-ADJ-RECON"
+      ],
+      "originatingRun": "mf-journey-2026-09-23",
+      "rootClass": "LEG_COUPLING",
+      "missedInvariantIds": [],
+      "escapeReason": "ordered-leg suite relied on accumulated state where a hidden per-tick production side effect (auto-invest) participates",
+      "applicability": [
+        "ordered journey suites",
+        "leg precondition seeding"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "exact-value preconditions seeded directly or the coupling declared in the leg doc"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "per-tick side effects are leg coupling",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": []
+    }
+  ],
+  "messages": [
+    {
+      "id": "assign-a",
+      "runId": "mf-journey-2026-09-23",
+      "requestId": "req-roundA-correctness",
+      "parentRequestId": null,
+      "sender": "coordinator",
+      "recipient": "devin-5d5be1282a47450f8e514ec259faf959",
+      "kind": "ASSIGN",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "phase": "ROUND_A",
+      "bundleHash": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+      "payloadPath": "messages/assign-a.json",
+      "payloadHash": "51e46581d11f95237fe51a31fd3dfc1b9b43a07a08573d01a0715b205f7737f7",
+      "createdAt": "2026-09-23T15:15:00.520Z",
+      "leaseId": "coordinator"
+    },
+    {
+      "id": "assign-b",
+      "runId": "mf-journey-2026-09-23",
+      "requestId": "req-roundA-authority",
+      "parentRequestId": null,
+      "sender": "coordinator",
+      "recipient": "devin-9e4abadb76a04d838916f1628f33faeb",
+      "kind": "ASSIGN",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "phase": "ROUND_A",
+      "bundleHash": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+      "payloadPath": "messages/assign-b.json",
+      "payloadHash": "8b4309478933d3c52373338f3cd3066e1702e266f65ec3cc278130dfbce482f3",
+      "createdAt": "2026-09-23T15:15:00.521Z",
+      "leaseId": "coordinator"
+    }
+  ],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-09-23T15:08:05.062Z",
+      "kind": "PHASE",
+      "actor": "coordinator-3500",
+      "state": {
+        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "b5b8fdb1d4dd4c7c26d6bdb26d300d2f45d87fa9d4154cbfa7ae0a59ebe137ed",
+      "eventHash": "e1b8f92495a5b08280180db044e9e3cdad0af42aa50a7057768e68b675b65800"
+    },
+    {
+      "seq": 2,
+      "at": "2026-09-23T15:08:05.722Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-3500",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "e1b8f92495a5b08280180db044e9e3cdad0af42aa50a7057768e68b675b65800",
+      "payloadPath": "events/0002.json",
+      "payloadHash": "46f3c1ef72eea258abd5a9e08d96cacca22071d57b6d4acd4f18ff79cc0c8b9d",
+      "eventHash": "411becf8344d4dfe5e07f5f6686fe56b43f60a8752b69d2dd1eeceb544ce4d9a"
+    },
+    {
+      "seq": 3,
+      "at": "2026-09-23T15:12:08.786Z",
+      "kind": "PHASE",
+      "actor": "coordinator-3500",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "411becf8344d4dfe5e07f5f6686fe56b43f60a8752b69d2dd1eeceb544ce4d9a",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "3956ddc072b6756505dcf538216c80bc425d31d87aa56faf48256853b63bf987",
+      "eventHash": "5c8b96f363a63a9b1bcfd31139c073718cb2dfaba118c761dc1ca14ffc936d72"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-23T15:12:45.959Z",
+      "kind": "PHASE",
+      "actor": "coordinator-3500",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "5c8b96f363a63a9b1bcfd31139c073718cb2dfaba118c761dc1ca14ffc936d72",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "a084037f1835fd1dae38dcf20153a516a2de88e94d4f75f192ee7a536160632d",
+      "eventHash": "22f2f1ecd0028e8f3f37983d0edc606d627428387c16e0512a757816713aed25"
+    },
+    {
+      "seq": 5,
+      "at": "2026-09-23T15:13:15.427Z",
+      "kind": "PHASE",
+      "actor": "coordinator-3500",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "22f2f1ecd0028e8f3f37983d0edc606d627428387c16e0512a757816713aed25",
+      "payloadPath": "events/0005.json",
+      "payloadHash": "f617b8981da004562a10d4200dc92d6129d759503c715b19ea26deb0b841cb5d",
+      "eventHash": "7e9ab3064f00cc22e591feb409887193bea1d28d749dfaaed92b910e4d0bf84b"
+    },
+    {
+      "seq": 6,
+      "at": "2026-09-23T15:13:31.837Z",
+      "kind": "PHASE",
+      "actor": "coordinator",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "7e9ab3064f00cc22e591feb409887193bea1d28d749dfaaed92b910e4d0bf84b",
+      "payloadPath": "events/0006.json",
+      "payloadHash": "a42863a509d2f3fed973e6708e03ce2bca922b899535e53e472e9d0f8d2a7924",
+      "eventHash": "8e8828ef4dd4e6aa9fbd04642b6f24a71c35f5c5f4df270e7c4dcc83abc68d2e"
+    },
+    {
+      "seq": 7,
+      "at": "2026-09-23T15:14:07.962Z",
+      "kind": "FINDING",
+      "actor": "coordinator-3500",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "8e8828ef4dd4e6aa9fbd04642b6f24a71c35f5c5f4df270e7c4dcc83abc68d2e",
+      "payloadPath": "events/0007.json",
+      "payloadHash": "1bc9dca01e4e5a5c4b75065a5c6e9b85d6c4c0cfd4ecda00952397804db3fb0c",
+      "eventHash": "ce9a1e85e26face61fec9152476db27e73bc48abcdc9d7813ac8ca578f3a1a1a"
+    },
+    {
+      "seq": 8,
+      "at": "2026-09-23T15:14:25.890Z",
+      "kind": "FINDING",
+      "actor": "coordinator-3500",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "ce9a1e85e26face61fec9152476db27e73bc48abcdc9d7813ac8ca578f3a1a1a",
+      "payloadPath": "events/0008.json",
+      "payloadHash": "5b69f115ab7165f4e6fb347a6ded2d35b6207b889795e1df4a0fef4657ad7d86",
+      "eventHash": "1dc842cdec628b92cdcb0c559adb76459cc0fd1e20ee21e0f603fc0ccaa7844a"
+    },
+    {
+      "seq": 9,
+      "at": "2026-09-23T15:14:37.305Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-3500",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "1dc842cdec628b92cdcb0c559adb76459cc0fd1e20ee21e0f603fc0ccaa7844a",
+      "payloadPath": "events/0009.json",
+      "payloadHash": "95e4fbbdb798dd70b54a132e80160ec26d837e8532b24c11a98e2e5f7aa0d5e0",
+      "eventHash": "fd0d512deca46b063ddc3499d328c0fa4e82e1fed98ac8b336ae8730ee06cb70"
+    },
+    {
+      "seq": 10,
+      "at": "2026-09-23T15:15:00.521Z",
+      "kind": "PHASE",
+      "actor": "coordinator",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "fd0d512deca46b063ddc3499d328c0fa4e82e1fed98ac8b336ae8730ee06cb70",
+      "payloadPath": "events/0010.json",
+      "payloadHash": "c5388568e65542072d8afdb9e8de98946dacd80572671a69d7c5e8e6bde72ad8",
+      "eventHash": "2cdca37ff88b62fb721099b45d9abbd2a0d9c041770e6421e7570cbbfdcbe796"
+    },
+    {
+      "seq": 11,
+      "at": "2026-09-23T15:29:44.341Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-3500",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "2cdca37ff88b62fb721099b45d9abbd2a0d9c041770e6421e7570cbbfdcbe796",
+      "payloadPath": "events/0011.json",
+      "payloadHash": "0d8a42178cd6bb157fbae67694de41491e50ba7fc8beda780d4e89952449e3cd",
+      "eventHash": "022b40f53cdadf969a078693c4f7956dfdc73edf3e29a303815c488bc3278b29"
+    },
+    {
+      "seq": 12,
+      "at": "2026-09-23T15:52:30.964Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-3500",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "022b40f53cdadf969a078693c4f7956dfdc73edf3e29a303815c488bc3278b29",
+      "payloadPath": "events/0012.json",
+      "payloadHash": "f2b98c4391bcc014c9bf01dc23cde77c0607eb32226ca30e5dbb021e7d3d6ef0",
+      "eventHash": "ec3d0b21d7bf3747477bda55233b0b5065568a4fb5a6af15218ab68d0d57723c"
+    },
+    {
+      "seq": 13,
+      "at": "2026-09-23T16:18:16.814Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-3500",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "ec3d0b21d7bf3747477bda55233b0b5065568a4fb5a6af15218ab68d0d57723c",
+      "payloadPath": "events/0013.json",
+      "payloadHash": "2473a02397f9ec8f48f35e764819b182e484edbfde5ec1e0796f16ad6e28fc68",
+      "eventHash": "f1e8154f0a1b90ee9ce796a6cd360d53fca34935c09ffbcd2b0d1eefbc539a61"
+    },
+    {
+      "seq": 14,
+      "at": "2026-09-23T16:18:20.989Z",
+      "kind": "DECISION",
+      "actor": "coordinator-3500",
+      "state": {
+        "productStateId": "cba106e9f87bc762bc274768c550e30bd5b67e5d153b5fc658e24447f4e5e60f",
+        "contractId": "10e600629d7c9c2a18c26e24956bd76b8e50a7cfc1b0eff3889767ed8257c5e2",
+        "attackModelId": "f92c6956da6a6991738c7254ef50bd00dd4d820ad764a507c111ce6492f3f05e",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "f1e8154f0a1b90ee9ce796a6cd360d53fca34935c09ffbcd2b0d1eefbc539a61",
+      "payloadPath": "events/0014.json",
+      "payloadHash": "fb879a889df9c62f3535de0e70ecf3cd73b3c597d99d1c4be729517f370c1632",
+      "eventHash": "631d985b77f6a5752d535356ef997252e8665475a526dd37fb6a621078126bff"
+    }
+  ]
+}

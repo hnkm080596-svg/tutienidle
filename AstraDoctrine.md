@@ -17,9 +17,10 @@ If this file and `AGENTS.md` appear to conflict, follow the stricter interpretat
 Before substantial work:
 
 1. read the current root `AGENTS.md`;
-2. read maintained architecture/domain references relevant to the task;
-3. inspect the CURRENT implementation;
-4. inspect tests and runtime consumers.
+2. read the Internal Fixed-Point QA Protocol (`game/docs/qa/protocol/README.md`) — the sole QA decision law; every doctrine audit/review below produces evidence into it;
+3. read maintained architecture/domain references relevant to the task;
+4. inspect the CURRENT implementation;
+5. inspect tests and runtime consumers.
 
 Never use deleted TASK files, historical worklogs or obsolete plans as current requirements.
 
