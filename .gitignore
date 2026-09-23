@@ -48,6 +48,9 @@ Thumbs.db
 # Isolated agent worktrees
 .agent-worktrees/
 
+# C2C mailbox runtime state (outbox/inbox/state/chat-url) — never commit
+.c2c/
+
 # =========================
 # Personal tooling / scratch — not project code, never commit
 # =========================

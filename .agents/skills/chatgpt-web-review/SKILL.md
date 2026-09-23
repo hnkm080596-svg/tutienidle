@@ -1,6 +1,6 @@
 ---
 name: chatgpt-web-review
-description: Run an external code review by driving ChatGPT web (chatgpt.com) in the Devin browser via CDP — paste a diff + review prompt, wait for the response, extract it. Use as the external-review step after local gates (P3/P18/P13/P14/P4/P5) when the workflow calls for a second-opinion reviewer before merge.
+description: Run an external code review or C2C protocol round by driving ChatGPT web (chatgpt.com) in the Devin browser via CDP — send prompts/control lines, wait for responses, validate [C2C] verdict markers, extract replies. Use as the external-review step after local gates (P3/P18/P13/P14/P4/P5), or for named C2C review/debug rounds against a dedicated ChatGPT conversation.
 ---
 
 # ChatGPT Web Review — external review automation
@@ -46,6 +46,43 @@ Plain text only — no interactive elements.
 ```
 
 Map findings onto the P5 severity ladder; validate each Medium-or-higher against the real code before fixing (same evidence standard as P18 findings — reject false positives only with a recorded reason).
+
+## C2C mode — named rounds on a dedicated chat
+
+Full protocol: `game/docs/c2c/c2c-protocol.md`; ChatGPT-side instruction:
+`game/docs/c2c/standing-instruction.md`. Mailbox: `.c2c/mailbox/` (gitignored);
+dedicated conversation URL in `.c2c/chat-url.txt` (requires a logged-in profile
+— anonymous chats have no persistent URLs).
+
+```bash
+# Doorbell — send the control line, never wait inline (exit right after send)
+node game/scripts/chatgpt-web-review.mjs \
+  --send "[C2C] go <name> · ROUND <n> — <task summary> · <PR url>" \
+  --send-only --chat-url "$(cat .c2c/chat-url.txt)"
+
+# Poll — wait for the reply, validate STATE/END markers, materialize inbox
+node game/scripts/chatgpt-web-review.mjs \
+  --read --expect-state --expect-round <n> --timeout 600 \
+  --chat-url "$(cat .c2c/chat-url.txt)" \
+  --out .c2c/mailbox/inbox-<name>.md
+```
+
+- `--send "<text>"` / `--prompt-file`: what to send; `--send-only` exits after
+  the click (pure doorbell).
+- `--read`: sends nothing; waits for the last assistant turn to finish and
+  extracts it. Round-correlation is enforced by `--expect-round <n>` — a stale
+  earlier verdict exits 5, not a false accept.
+- `--expect-state`: first line must be `[C2C] STATE <S> [ · ROUND <n>]`, last
+  non-empty line `[C2C] END`. Exit `5` on violation — the text still prints.
+- `go <name>` = new task; `continue <name>` = resume an interrupted round
+  (BLOCKED/timeout). Never repeat `go` on an interrupted round — the STALE
+  guard fires.
+- Completion detection is baseline-aware: it requires a NEW assistant turn
+  (count grew / tail changed since the send) with its own Copy-response button,
+  so earlier completed turns in a long C2C chat do not false-trigger.
+- Update `.c2c/state.json` per round (`status: sent|done`); on resume, poll
+  first — a verdict may already be waiting. Never resend before confirming
+  stuck.
 
 ## Failure modes / limitations
 
