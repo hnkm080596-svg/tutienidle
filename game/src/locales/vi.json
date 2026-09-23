@@ -113,6 +113,12 @@
         "body": "Chuyển sang hướng {route}? Node hướng cũ về 0 — lấy lại {regain} Cảm Ngộ, mất {lose}.",
         "confirm": "Đổi Hướng"
       },
+      "respec": {
+        "button": "Đặt Lại",
+        "title": "Đặt Lại Cây Node",
+        "body": "Đặt lại toàn bộ đầu tư node? Lấy lại {regain} Cảm Ngộ — {count} node về 0. Miễn phí trong thời gian Beta.",
+        "confirm": "Đặt Lại"
+      },
       "branchLabels": {
         "theTu": "Thể Tu Hiện",
         "theTuAn": "Thể Tu Ẩn"

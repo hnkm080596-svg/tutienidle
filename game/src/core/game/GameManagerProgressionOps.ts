@@ -11,9 +11,12 @@ import {
   getNodeMaxLevel as getNodeMaxLevelSystem,
   getEffectiveNodeMaxLevel as getEffectiveNodeMaxLevelSystem,
   purchaseNode as purchaseNodeSystem,
+  previewNodeRespec as previewNodeRespecSystem,
+  respecNodeTree as respecNodeTreeSystem,
   switchRoute as switchRouteSystem,
   upgradeNode as upgradeNodeSystem,
   grantSkillCore,
+  type NodeRespecPreview,
 } from '../progression/NodeSystem'
 import { getSkillCoreLevel, skillCoreNodeId } from '../progression/SkillCoreLevel'
 import { CAST_LEVELING_THRESHOLDS } from '../skill/CastLeveling'
@@ -57,6 +60,15 @@ import type { TemplateRegistry } from './TemplateRegistry'
  *
  * Public access: `gameManager.progressionOps.*` (no GameManager facade).
  */
+
+// M-F-RESPEC (ruling §14) - commit-marker nodes exempt from every respec
+// scope: Phap Tu element roots are only ever obtained through the atomic
+// selectSpellPathElement commit (purchaseNode rejects them), so a reset
+// that removed one could never be re-invested - the committed element
+// would be stranded. The preserve list lives here with the purchase
+// rejection that creates the obligation.
+const RESPEC_PRESERVED_NODE_IDS: readonly string[] = Object.values(PHAP_TU_ELEMENT_ROOT_IDS)
+
 export class GameManagerProgressionOps {
   constructor(
     private readonly deps: {
@@ -451,6 +463,38 @@ export class GameManagerProgressionOps {
    */
   devResetBranch(branchTag: string, player: PlayerData): number {
     return devResetBranchSystem(player, this.deps.nodeRegistry, branchTag)
+  }
+
+  /**
+   * M-F-RESPEC (ruling §14) - read-only respec projection for the
+   * confirm dialog. Phap Tu element roots ride along as preserveIds -
+   * the same layer that rejects their public purchase (they commit
+   * via selectSpellPathElement only) exempts them from the reset, so a
+   * respec can never strand a committed element without its root.
+   */
+  previewNodeRespec(player: PlayerData, scope?: { rootId?: string }): NodeRespecPreview {
+    return previewNodeRespecSystem(player, this.deps.nodeRegistry, {
+      ...scope,
+      preserveIds: RESPEC_PRESERVED_NODE_IDS,
+    })
+  }
+
+  /**
+   * M-F-RESPEC (ruling §14) - player-facing FREE Beta respec: revoke
+   * node investment and refund 100% of actually-paid Insight. Out of
+   * combat ONLY (same guard as switchRoute). scope.rootId scopes the
+   * reset to that subtree root; omitted = the whole NodeTree. Returns
+   * the refunded Insight, or null when rejected in battle.
+   */
+  respecNodeTree(player: PlayerData, scope?: { rootId?: string }): number | null {
+    if (this.deps.isTurnBattleInProgress()) {
+      return null
+    }
+
+    return respecNodeTreeSystem(player, this.deps.nodeRegistry, {
+      ...scope,
+      preserveIds: RESPEC_PRESERVED_NODE_IDS,
+    })
   }
 
   /**

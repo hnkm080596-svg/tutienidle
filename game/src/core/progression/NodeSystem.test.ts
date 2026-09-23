@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { reactive } from 'vue'
 import {
   aggregateNodeStatModifiers,
   canPurchaseNode,
@@ -7,10 +8,14 @@ import {
   getNodeLevel,
   getNodeMaxLevel,
   getNextLevelCost,
+  grantSkillCore,
   hasPrerequisite,
+  previewNodeRespec,
   purchaseNode,
+  respecNodeTree,
   upgradeNode,
 } from './NodeSystem'
+import { skillCoreNodeId } from './SkillCoreLevel'
 import { NodeRegistry } from './NodeRegistry'
 import { createDefaultPlayer } from '../player/Player'
 import type { ProgressionNode } from './ProgressionNode'
@@ -502,6 +507,335 @@ describe('devResetBranch (plan §6.10)', () => {
 
     expect(refund2).toBe(1 + 1)
     expect(getNodeLevel(player, 'branch_child')).toBe(0)
+  })
+})
+
+// M-F-RESPEC (ruling §14) — player-facing FREE Beta respec: 100% actual
+// Insight refund, cascade-reset invalid descendants, atomic/deterministic/
+// idempotent/save-safe. Same command for whole-tree and branch scope —
+// scope.rootId scopes to the subtree rooted at that node; omitted scope
+// resets the whole NodeTree.
+describe('respecNodeTree', () => {
+  function respecRegistry() {
+    const root = minorNode({ id: 'respec_root', insightCost: 0, effect: {} })
+
+    const power = powerNode({ prerequisites: [{ kind: 'node', nodeId: 'respec_root' }] })
+
+    const child = minorNode({
+      id: 'respec_child',
+      maxLevel: 5,
+      upgradeCost: { base: 1, perLevel: 2 },
+      prerequisites: [{ kind: 'node', nodeId: 'test_power' }],
+      effect: {},
+    })
+
+    const otherRoot = minorNode({ id: 'other_root', insightCost: 3, effect: {} })
+
+    const registry = new NodeRegistry()
+
+    for (const node of [root, power, child, otherRoot]) {
+      registry.register(node)
+    }
+
+    return { registry, root, power, child, otherRoot }
+  }
+
+  // Spend: power L4 = 1+1+1+2 = 5; child L2 = 1+1 = 2; otherRoot L1 = 3.
+  // Total actually paid = 10.
+  function invest(
+    player: ReturnType<typeof playerWith>,
+    nodes: { root: ProgressionNode; power: ProgressionNode; child: ProgressionNode; otherRoot: ProgressionNode },
+  ) {
+    expect(purchaseNode(player, nodes.root)).toBe(true)
+    expect(purchaseNode(player, nodes.power)).toBe(true)
+
+    for (let i = 0; i < 3; i++) {
+      expect(upgradeNode(player, nodes.power)).toBe(true)
+    }
+
+    expect(purchaseNode(player, nodes.child)).toBe(true)
+    expect(upgradeNode(player, nodes.child)).toBe(true)
+    expect(purchaseNode(player, nodes.otherRoot)).toBe(true)
+  }
+
+  it('whole-tree scope (omitted) — refunds 100% actually-paid and resets every owned node', () => {
+    const { registry, ...nodes } = respecRegistry()
+    const player = playerWith({ skillInsight: 100 })
+
+    invest(player, nodes)
+    const before = player.skillInsight
+
+    const refund = respecNodeTree(player, registry)
+
+    expect(refund).toBe(10)
+    expect(player.skillInsight).toBe(before + 10)
+    expect(player.nodeLevels).toEqual({})
+    expect(player.purchasedNodeIds).toEqual([])
+    expect(player.nodeFreePurchaseRecord).toEqual({})
+  })
+
+  it('repeat respec is idempotent — second call refunds 0 and changes nothing', () => {
+    const { registry, ...nodes } = respecRegistry()
+    const player = playerWith({ skillInsight: 100 })
+
+    invest(player, nodes)
+    respecNodeTree(player, registry)
+
+    const snapshot = structuredClone(player)
+    const refund = respecNodeTree(player, registry)
+
+    expect(refund).toBe(0)
+    expect(player.nodeLevels).toEqual(snapshot.nodeLevels)
+    expect(player.purchasedNodeIds).toEqual(snapshot.purchasedNodeIds)
+    expect(player.skillInsight).toBe(snapshot.skillInsight)
+  })
+
+  it('no double refund — free-purchase record nets out of the refund and is cleared', () => {
+    const { registry, ...nodes } = respecRegistry()
+    const player = playerWith({ skillInsight: 100 })
+
+    invest(player, nodes)
+    player.nodeFreePurchaseRecord = { test_power: 2 }
+
+    const before = player.skillInsight
+    const refund = respecNodeTree(player, registry)
+
+    // 10 paid - 2 recorded free = 8, written once.
+    expect(refund).toBe(8)
+    expect(player.skillInsight).toBe(before + 8)
+    expect(player.nodeFreePurchaseRecord).toEqual({})
+  })
+
+  it('cascade revokes M-QI-05 granted cores; un-granted skill cores are not respec targets', () => {
+    const granter = minorNode({ id: 'granter', effect: { grantsSkillCoreIds: ['test_skill'] } })
+    const grantedCore = minorNode({
+      id: skillCoreNodeId('test_skill'),
+      levelsSkillId: 'test_skill',
+      insightCost: 0,
+      maxLevel: 10,
+      upgradeCost: { base: 5, perLevel: 3 },
+    })
+    const ungrantedCore = minorNode({
+      id: skillCoreNodeId('free_skill'),
+      levelsSkillId: 'free_skill',
+      insightCost: 0,
+      maxLevel: 10,
+      upgradeCost: { base: 5, perLevel: 3 },
+    })
+
+    const registry = new NodeRegistry()
+
+    for (const node of [granter, grantedCore, ungrantedCore]) {
+      registry.register(node)
+    }
+
+    const player = playerWith({ skillInsight: 100 })
+
+    expect(purchaseNode(player, granter)).toBe(true)
+    grantSkillCore(player, grantedCore)
+
+    // Core upgrades repaid Insight (curve 5 + 3x(L-1)): L3 = 5 + 8 = 13.
+    for (let i = 0; i < 2; i++) {
+      expect(upgradeNode(player, grantedCore)).toBe(true)
+    }
+
+    // The un-granted core is skill-axis investment, not node-tree content.
+    player.nodeLevels[ungrantedCore.id] = 3
+
+    const before = player.skillInsight
+    const refund = respecNodeTree(player, registry)
+
+    // granter 1 + core spend 13 = 14; the free core stays levelled.
+    expect(refund).toBe(14)
+    expect(player.skillInsight).toBe(before + 14)
+    expect(getNodeLevel(player, 'granter')).toBe(0)
+    expect(getNodeLevel(player, grantedCore.id)).toBe(0)
+    expect(getNodeLevel(player, ungrantedCore.id)).toBe(3)
+  })
+
+  it('save-safe — a JSON restore after respec keeps the outcome, no double refund', () => {
+    const { registry, ...nodes } = respecRegistry()
+    const player = playerWith({ skillInsight: 100 })
+
+    invest(player, nodes)
+    respecNodeTree(player, registry)
+
+    // The save payload IS a JSON encoding — round-trip it like the real
+    // restore transaction does, then prove a second respec can find no
+    // refund residue.
+    const restored = JSON.parse(JSON.stringify(player)) as typeof player
+    const refund = respecNodeTree(restored, registry)
+
+    expect(refund).toBe(0)
+    expect(restored.nodeLevels).toEqual({})
+    expect(restored.skillInsight).toBe(player.skillInsight)
+  })
+
+  it('re-purchase after respec costs normally; a later respec refunds only the new spend', () => {
+    const { registry, ...nodes } = respecRegistry()
+    const player = playerWith({ skillInsight: 100 })
+
+    invest(player, nodes)
+    respecNodeTree(player, registry)
+
+    // Re-invest in the power node only: its respec_root prereq must be
+    // re-bought first, then L2 = 1+1 = 2.
+    expect(purchaseNode(player, nodes.root)).toBe(true)
+    expect(purchaseNode(player, nodes.power)).toBe(true)
+    expect(upgradeNode(player, nodes.power)).toBe(true)
+
+    const before = player.skillInsight
+    const refund = respecNodeTree(player, registry)
+
+    expect(refund).toBe(2)
+    expect(player.skillInsight).toBe(before + 2)
+  })
+
+  it('branch scope at the tree root is equivalent to whole-tree scope', () => {
+    const { registry, root, power, child } = respecRegistry()
+    const singleRoot = new NodeRegistry()
+
+    for (const node of [root, power, child]) {
+      singleRoot.register(node)
+    }
+
+    const scoped = playerWith({ skillInsight: 100 })
+    const whole = playerWith({ skillInsight: 100 })
+
+    invest(scoped, { root, power, child, otherRoot: minorNode({ id: 'ghost' }) })
+    invest(whole, { root, power, child, otherRoot: minorNode({ id: 'ghost' }) })
+
+    // otherRoot is not registered here; invest() purchases it against the
+    // real node object so both players end with identical tree state.
+    const scopedRefund = respecNodeTree(scoped, singleRoot, { rootId: 'respec_root' })
+    const wholeRefund = respecNodeTree(whole, singleRoot)
+
+    expect(scopedRefund).toBe(7)
+    expect(wholeRefund).toBe(7)
+    expect(scoped.nodeLevels).toEqual(whole.nodeLevels)
+    expect(scoped.purchasedNodeIds).toEqual(whole.purchasedNodeIds)
+    expect(scoped.skillInsight).toBe(whole.skillInsight)
+  })
+
+  it('branch scope on a subtree root resets that subtree and keeps siblings', () => {
+    const { registry, ...nodes } = respecRegistry()
+    const player = playerWith({ skillInsight: 100 })
+
+    invest(player, nodes)
+    const before = player.skillInsight
+
+    const refund = respecNodeTree(player, registry, { rootId: 'test_power' })
+
+    // power L4 (5) + orphaned child L2 (2) = 7; root and otherRoot kept.
+    expect(refund).toBe(7)
+    expect(player.skillInsight).toBe(before + 7)
+    expect(getNodeLevel(player, 'test_power')).toBe(0)
+    expect(getNodeLevel(player, 'respec_child')).toBe(0)
+    expect(getNodeLevel(player, 'respec_root')).toBe(1)
+    expect(getNodeLevel(player, 'other_root')).toBe(1)
+  })
+
+  it('preserveIds exempts commit-marker nodes from whole-tree and scoped resets', () => {
+    const { registry, ...nodes } = respecRegistry()
+    const player = playerWith({ skillInsight: 100 })
+
+    invest(player, nodes)
+
+    const refund = respecNodeTree(player, registry, { preserveIds: ['respec_root', 'other_root'] })
+
+    // Only power + child reset; both roots survive as preserved markers.
+    expect(refund).toBe(7)
+    expect(getNodeLevel(player, 'respec_root')).toBe(1)
+    expect(getNodeLevel(player, 'other_root')).toBe(1)
+    expect(getNodeLevel(player, 'test_power')).toBe(0)
+    expect(getNodeLevel(player, 'respec_child')).toBe(0)
+
+    // A scoped reset aimed AT a preserved node is a no-op.
+    expect(respecNodeTree(player, registry, { rootId: 'respec_root', preserveIds: ['respec_root'] })).toBe(0)
+    expect(getNodeLevel(player, 'respec_root')).toBe(1)
+  })
+
+  it('scoped respec on an unregistered root is a no-op', () => {
+    const { registry, ...nodes } = respecRegistry()
+    const player = playerWith({ skillInsight: 100 })
+
+    invest(player, nodes)
+    const before = player.skillInsight
+
+    expect(respecNodeTree(player, registry, { rootId: 'node_that_does_not_exist' })).toBe(0)
+    expect(player.skillInsight).toBe(before)
+    expect(getNodeLevel(player, 'test_power')).toBe(4)
+  })
+})
+
+describe('previewNodeRespec', () => {
+  it('reports the same refund and reset set the commit produces, without mutating', () => {
+    const root = minorNode({ id: 'respec_root', insightCost: 0, effect: {} })
+    const power = powerNode({ prerequisites: [{ kind: 'node', nodeId: 'respec_root' }] })
+    const child = minorNode({
+      id: 'respec_child',
+      maxLevel: 5,
+      upgradeCost: { base: 1, perLevel: 2 },
+      prerequisites: [{ kind: 'node', nodeId: 'test_power' }],
+      effect: {},
+    })
+
+    const registry = new NodeRegistry()
+
+    for (const node of [root, power, child]) {
+      registry.register(node)
+    }
+
+    const player = playerWith({ skillInsight: 100 })
+
+    expect(purchaseNode(player, root)).toBe(true)
+    expect(purchaseNode(player, power)).toBe(true)
+
+    for (let i = 0; i < 3; i++) {
+      expect(upgradeNode(player, power)).toBe(true)
+    }
+
+    expect(purchaseNode(player, child)).toBe(true)
+    expect(upgradeNode(player, child)).toBe(true)
+
+    const before = structuredClone(player)
+    const preview = previewNodeRespec(player, registry)
+
+    expect(preview.refund).toBe(7)
+    expect(preview.resetNodeIds.sort()).toEqual(['respec_child', 'respec_root', 'test_power'].sort())
+    expect(preview.resetCount).toBe(3)
+
+    // Preview is observational: live state is untouched.
+    expect(player).toEqual(before)
+
+    // The commit produces exactly what the preview reported.
+    const refund = respecNodeTree(player, registry)
+
+    expect(refund).toBe(preview.refund)
+  })
+
+  it('accepts a reactive (proxied) player — the UI path hands in Pinia state', () => {
+    const root = minorNode({ id: 'respec_root', insightCost: 0, effect: {} })
+    const power = powerNode({ prerequisites: [{ kind: 'node', nodeId: 'respec_root' }] })
+
+    const registry = new NodeRegistry()
+
+    for (const node of [root, power]) {
+      registry.register(node)
+    }
+
+    // Pinia's store.$state is a reactive proxy; structuredClone would
+    // refuse it — the preview must clone through the proxy instead.
+    const player = reactive(playerWith({ skillInsight: 50 }))
+
+    purchaseNode(player, root)
+    purchaseNode(player, power)
+
+    const preview = previewNodeRespec(player, registry)
+
+    expect(preview.refund).toBe(power.insightCost)
+    expect(preview.resetCount).toBe(2)
+    expect(getNodeLevel(player, 'test_power')).toBe(1)
   })
 })
 

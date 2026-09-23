@@ -57,7 +57,7 @@ const { t } = useI18n()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
-const { switchSpellPathRoute } = useProgressionActions()
+const { switchSpellPathRoute, respecNodeTree } = useProgressionActions()
 
 function branchLabel(branchTag: string | undefined): string {
   if (!branchTag) {
@@ -287,6 +287,51 @@ const branches = computed(() => {
     }
   })
 })
+
+// M-F-RESPEC (ruling §14) — FREE Beta respec: whole-tree node reset at
+// 100% actually-paid Insight, out of combat only (the op rejects during
+// battle; the button mirrors the route options' disabled state). The
+// preview goes through the ops layer so commit-marker exemptions
+// (Phap Tu element roots) match the real transaction exactly.
+const pendingRespec = ref(false)
+
+const respecPreview = computed(() => {
+  stateVersion.value
+
+  if (!pendingRespec.value) {
+    return null
+  }
+
+  return gameManager.progressionOps.previewNodeRespec(player.$state)
+})
+
+// Any purchased node in the rendered view makes respec meaningful; the
+// branch computation already resolved ownership per entry.
+const hasOwnedNodes = computed(() => {
+  stateVersion.value
+
+  return branches.value.some(branch =>
+    branch.entries.some(entry => entry.purchased),
+  )
+})
+
+function onRespecClick() {
+  if (inBattle.value || !hasOwnedNodes.value) {
+    return
+  }
+
+  pendingRespec.value = true
+}
+
+function confirmRespec() {
+  pendingRespec.value = false
+
+  respecNodeTree()
+}
+
+function cancelRespec() {
+  pendingRespec.value = false
+}
 
 function onClick(node: ProgressionNode, purchased: boolean, purchasable: boolean) {
   emit('select', node, purchased, purchasable)
@@ -572,6 +617,17 @@ onBeforeUnmount(() => {
         </button>
       </div>
 
+      <!-- M-F-RESPEC (§14) — whole-tree respec entry: FREE Beta reset,
+           confirm dialog shows the exact refund + reset count first. -->
+      <button
+        type="button"
+        class="node-tree__respec"
+        :disabled="inBattle || !hasOwnedNodes"
+        @click="onRespecClick"
+      >
+        {{ t('panels.nodeTree.respec.button') }}
+      </button>
+
       <div class="node-tree__zoom" role="group" :aria-label="t('panels.nodeTree.aria.zoomGroup')">
         <button type="button" :disabled="zoom <= ZOOM_MIN" @click="zoomOut">−</button>
         <button type="button" class="node-tree__zoom-value" :title="t('panels.nodeTree.tooltips.zoomToFit')" @click="zoomToFit">{{ Math.round(zoom * 100) }}%</button>
@@ -653,6 +709,22 @@ onBeforeUnmount(() => {
       @confirm="confirmRouteSwitch"
       @cancel="cancelRouteSwitch"
     />
+
+    <!-- M-F-RESPEC confirm — the ops preview reports the exact Insight
+         refund and how many nodes (targets + cascade) reset to 0. -->
+    <ConfirmModal
+      v-if="pendingRespec && respecPreview !== null"
+      :open="true"
+      :title="t('panels.nodeTree.respec.title')"
+      :message="t('panels.nodeTree.respec.body', {
+        regain: respecPreview.refund,
+        count: respecPreview.resetCount,
+      })"
+      :confirm-label="t('panels.nodeTree.respec.confirm')"
+      danger
+      @confirm="confirmRespec"
+      @cancel="cancelRespec"
+    />
   </div>
 </template>
 
@@ -700,6 +772,29 @@ onBeforeUnmount(() => {
 }
 
 .node-tree__route-option:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.node-tree__respec {
+  min-height: 22px;
+  padding: 1px 10px;
+  background: var(--ink-800);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.node-tree__respec:hover:not(:disabled) {
+  border-color: var(--gold-700);
+  color: var(--gold-700);
+}
+
+.node-tree__respec:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }

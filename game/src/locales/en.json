@@ -113,6 +113,12 @@
         "body": "Switch to the {route} stance? Old stance nodes reset to 0 — regain {regain} Insight, lose {lose}.",
         "confirm": "Switch Stance"
       },
+      "respec": {
+        "button": "Respec",
+        "title": "Respec Node Tree",
+        "body": "Reset all node investment? Regain {regain} Insight — {count} nodes reset to 0. Free while in Beta.",
+        "confirm": "Respec"
+      },
       "branchLabels": {
         "theTu": "Body Cultivation",
         "theTuAn": "Hidden Body"
