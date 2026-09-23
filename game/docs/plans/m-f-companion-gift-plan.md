@@ -1,15 +1,15 @@
 # M-F-COMPANION-GIFT — Beta companion acquisition via authored gifts — plan
 
-Spec: `game/docs/specs/m-f-companion-gift-spec.md` (v1 — pending C2C
-spec review). Implements F13 (ruling §42–45): no active pull pool in
+Spec: `game/docs/specs/m-f-companion-gift-spec.md` (v2 — C2C round-49
+findings applied; pending C2C plan review). Implements F13 (ruling §42–45): no active pull pool in
 Beta — Thần Nông/Khai Minh arrive via authored gift moments (claimable
 records + idempotent claim); pull/exchange architecture kept behind
 `isCompanionPullPoolEnabled` with the empty pool as an explicit valid
 state; recurring `chieu_hien_lenh` sources suppressed at origination via
 ReleasePolicy. Scope limits per ruling: no authored moment placement
 beyond the DEFERRED-marked provisional list (content pass), no
-coefficient changes, no UI redesign, no migration (v76 rejects old
-saves).
+coefficient changes, no UI redesign, no migration (v76-and-below
+rejected on the merged base).
 
 Phase 1 delivered docs only; Phase 2 begins after C2C spec + plan
 gates pass.
@@ -31,16 +31,20 @@ gates pass.
   explicit rejection and `pickDefinitionOfGrade` stays unreachable.
   `exchangeCompanion` gains the same `pool_unavailable` gate before the
   catalog lookup. New `claimCompanionGift(giftId)` — player →
-  `isCompanionDomainUnlocked` → record lookup → `alreadyClaimed` no-op →
-  pull-parity grant (new instance / `applyConstellationRank` write-back /
-  maxed → `+DUPLICATE_MAXED_DUYEN_PHAN`) → `claimed = true` last →
+  `isCompanionDomainUnlocked` → record lookup (absent, `definitionId`
+  unresolvable in `COMPANIONS`, or `!isBetaCompanionGift` →
+  `unknown_gift`) → `alreadyClaimed` no-op → pull-parity grant (new
+  instance / `applyConstellationRank` write-back / maxed →
+  `+DUPLICATE_MAXED_DUYEN_PHAN`) → `claimed = true` last →
   `kind:'loot'` notification. `COMPANIONS` (full catalog) resolves gift
   definitions.
 - `core/companion/CompanionGifts.ts` (new): `issueCompanionGifts(
   player, trigger, moments = COMPANION_GIFT_MOMENTS)` — pure,
   write-if-absent append of `{id: moment.id, definitionId,
-  claimed:false}`, returns appended records (empty = no-op). Moments
-  injected like `pullCompanion`'s pool.
+  claimed:false}`, returns appended records (empty = no-op); skips
+  moments whose `definitionId` fails `isBetaCompanionGift` (defensive
+  — an unclaimable record must never be issued). Moments injected like
+  `pullCompanion`'s pool.
 - `data/companion/CompanionGiftMoments.ts` (new):
   `CompanionGiftTrigger` union (`realm_entered`/`stage_completed`),
   `CompanionGiftMoment`, `COMPANION_GIFT_MOMENTS` with the two
@@ -48,7 +52,10 @@ gates pass.
   foundation_establishment; khai_minh @ stage_completed
   `foundation_floor_10` — the ex-token-drop boss stage).
 - `data/companion/Companions.ts`: `CompanionGiftRecord` type beside
-  `CompanionInstance` (shared persisted shape, multi-consumer).
+  `CompanionInstance` (shared persisted shape, multi-consumer);
+  `BETA_COMPANION_GIFT_IDS` + `isBetaCompanionGift` — the Beta
+  gift-acquisition authority (C2C round-49 HIGH: enforced at registry
+  integrity, issue-fire skip, claim reject, save preflight).
 - `core/player/Player.ts`: `PlayerData.companionGifts` required field
   beside `companions`; `createDefaultPlayer` initializes `[]`.
 - `core/game/GameManagerRealmAdvanceOps.ts`:
@@ -67,11 +74,15 @@ gates pass.
   `issueCompanionGifts(playerData, {kind:'stage_completed', stageId:
   stage.id})`.
 - `core/quest/QuestSystem.ts:L31` `isUnlocked`: `&&
-  !questRewardsSuppressedPullToken(quest)` (reward-driven detection:
-  any `itemDrops` material id that is a suppressed token source);
-  covers activation candidates, the R8.1 deactivation inverse pass, and
-  the daily-list query. `claim` material `itemDrops` branch gains the
-  same `continue` filter beside `isBreakthroughAcquisitionEnabled`.
+  !questIsTokenOnlySource(quest)` — quest suppressed ONLY when its
+  entire granted reward set is suppressed pull-token lines (`itemDrops
+  non-empty` + `reward.reward === undefined` + every itemDrop is a
+  censused material token): `daily_chieu_hien_lenh` is token-only on
+  base → suppressed; a mixed-reward quest stays unlocked minus its
+  token lines (A6 consistency, C2C round-49). Covers activation
+  candidates, the R8.1 deactivation inverse pass, and the daily-list
+  query. `claim` material `itemDrops` branch gains the same `continue`
+  filter beside `isBreakthroughAcquisitionEnabled`.
 - `core/game/BattleLootSystem.ts:~546` material branch: `if
   (isCompanionPullTokenSourceSuppressed(drop.itemId)) break` beside the
   breakthrough check (post-resolve, rng order untouched).
@@ -85,8 +96,12 @@ gates pass.
 - `locales/en.json` + `locales/vi.json`: `workerLodge.tabs.quaTang`,
   `chieuMo.unavailable`/`errors.poolUnavailable`,
   `duyenPhan.unavailable`/`errors.poolUnavailable`, `quaTang.*`.
-- `services/save/saveVersion.ts`: 75 → 76 + changelog comment;
-  `saveShapeValidation.ts` `requireArray` + `validateCompanionGiftEntries`.
+- `services/save/saveVersion.ts`: `CURRENT → CURRENT+1` on the merged
+  base at implementation start (expect 76→77 once M-F-TALENT lands;
+  verify at phase-2 start) + changelog comment;
+  `saveShapeValidation.ts` `requireArray` + `validateCompanionGiftEntries`
+  (`definitionId ∈ BETA_COMPANION_GIFT_IDS` — fail loud on persisted
+  future-realm gifts).
 
 ## Step 1 — TDD failing tests first
 
@@ -98,9 +113,11 @@ gates pass.
 2. `core/companion/CompanionGifts.test.ts` (new): matching trigger
    appends pending records; non-matching trigger appends nothing;
    second identical fire is a pure no-op (idempotent); different
-   trigger kinds don't cross-fire; moment-list integrity — unique ids,
-   every `definitionId` in `COMPANIONS`, `realm_entered` refs in
-   `REALMS`, `stage_completed` refs in `STAGES`.
+   trigger kinds don't cross-fire; a moment whose `definitionId` is not
+   in `BETA_COMPANION_GIFT_IDS` is skipped (injected fixture); moment-
+   list integrity — unique ids, every `definitionId` ∈
+   `BETA_COMPANION_GIFT_IDS`, `realm_entered` refs in `REALMS`,
+   `stage_completed` refs in `STAGES`.
 3. `GameManagerCompanionOps` tests (extend — pull/exchange scopes):
    pull with tokens on hand rejects `pool_unavailable` and the bag is
    untouched; exchange rejects `pool_unavailable` before
@@ -110,13 +127,18 @@ gates pass.
    `DUPLICATE_MAXED_DUYEN_PHAN`; claimed record set once; second claim
    returns `alreadyClaimed` with companions/duyenPhan snapshots
    unchanged; `unknown_gift`/`realm_locked`/`no_active_player` reject
-   without mutation.
+   without mutation; a record whose `definitionId` is catalog-valid
+   but outside `BETA_COMPANION_GIFT_IDS` rejects `unknown_gift`
+   (defense path — gift channel cannot widen the Beta acquisition
+   surface).
 4. `core/quest/QuestSystem.test.ts` (extend): `daily_chieu_hien_lenh`
    absent from activation candidates and the daily list at TC; a
    pre-activated stale progress deactivates on
    `reconcileActiveQuests`; forced `claim` on a completed copy drops
    the token item while other rewards land; non-token daily quests
-   unaffected.
+   unaffected; a mixed-reward fixture quest (token line + cultivation
+   reward) stays UNLOCKED and its claim drops only the token line
+   (A6 consistency).
 5. `BattleLootSystem` drop tests (extend): floor-10 boss
    `signatureDrop` material line never lands `chieu_hien_lenh` in the
    bag (post-resolve suppression); sibling material drops on the same
@@ -137,16 +159,19 @@ gates pass.
    notification; claimed renders dimmed; unavailable blocks render on
    both gacha tabs with the release-reason copy and the pull button
    disabled.
-9. `GameManagerSaveRestore`/save-shape tests (extend): v76 round-trips
-   `companionGifts`; malformed records reject (missing id, duplicate
-   id, unknown definitionId, non-boolean claimed); record with id not
-   in `COMPANION_GIFT_MOMENTS` still validates (drift tolerance); v75
-   payload rejected.
+9. `GameManagerSaveRestore`/save-shape tests (extend): CURRENT+1
+   round-trips `companionGifts`; malformed records reject (missing id,
+   duplicate id, unknown definitionId, definitionId outside
+   `BETA_COMPANION_GIFT_IDS`, non-boolean claimed); record with id not
+   in `COMPANION_GIFT_MOMENTS` still validates (drift tolerance);
+   prior-version payload rejected (expect v76 when M-F-TALENT lands —
+   pin the bumped number at implementation start).
 
 ## Step 2 — data + policy + state
 
 - `data/companion/Companions.ts`: `CompanionGiftRecord` beside
-  `CompanionInstance`.
+  `CompanionInstance`; `BETA_COMPANION_GIFT_IDS` +
+  `isBetaCompanionGift` (Beta gift-acquisition authority).
 - `data/companion/CompanionGiftMoments.ts`: trigger/moment types +
   `COMPANION_GIFT_MOMENTS` (DEFERRED-marked provisional list).
 - `core/player/Player.ts`: `companionGifts` field + `createDefaultPlayer`.
@@ -167,8 +192,10 @@ gates pass.
 
 ## Step 4 — suppression + fire seams
 
-- `QuestSystem.ts`: `questRewardsSuppressedPullToken` helper +
-  `isUnlocked` consult + `claim` material-branch `continue`.
+- `QuestSystem.ts`: `questIsTokenOnlySource` helper (itemDrops
+  non-empty + `reward.reward === undefined` + every itemDrop a
+  censused material token) + `isUnlocked` consult + `claim`
+  material-branch `continue` on suppressed lines.
 - `BattleLootSystem.ts`: material-branch `break` beside the
   breakthrough check.
 - `CompanionGifts` wiring: `realmAdvanceOps.applyCompanionGiftRealmTransition`
@@ -193,11 +220,13 @@ gates pass.
 
 ## Step 6 — save contract
 
-- `saveVersion.ts` → 76 + changelog comment per convention.
+- `saveVersion.ts` → `CURRENT_SAVE_VERSION + 1` on the merged base at
+  implementation start (expect 76 → 77 once M-F-TALENT lands; verify
+  at phase-2 start) + changelog comment per convention.
 - `saveShapeValidation.ts`: `requireArray(player, 'companionGifts')` +
   `validateCompanionGiftEntries` (unique nonempty ids;
-  `definitionId ∈ COMPANIONS`; `claimed` boolean; no moment-id
-  validation — drift tolerance).
+  `definitionId ∈ BETA_COMPANION_GIFT_IDS`; `claimed` boolean; no
+  moment-id validation — drift tolerance).
 - Confirm restore needs no field work (player blob replace).
 
 ## Step 7 — gates
@@ -226,7 +255,8 @@ gates pass.
 | 1 — pool flag + empty-pool contract | §3 | 2, 3 | A1, A2 |
 | 2 — gift primitive (slice + claim + UI) | §2, §6, §7 | 2, 3, 5 | A4 |
 | 3 — authored grant moments + seams | §2, §5 | 2, 4 | A3, A5 |
+| 3a — gift-acquisition boundary | §2, §6, §8 | 2, 3, 6 | A9 |
 | 4 — token-source suppression | §4 | 4 | A6 |
 | 5 — save bump + validation | §8 | 6 | A7 |
 | coefficients unchanged | §9 | diff-scoped | A8 |
-| tests | §12 | 1 | A1–A8 |
+| tests | §12 | 1 | A1–A9 |

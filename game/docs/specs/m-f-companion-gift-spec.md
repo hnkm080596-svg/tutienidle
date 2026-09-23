@@ -1,6 +1,7 @@
 # M-F-COMPANION-GIFT — Beta companion acquisition via authored gifts — Spec
 
-Status: v1 — draft (worker-authored, pending C2C spec review)
+Status: v2 — draft (worker-authored; C2C round-49 findings applied,
+pending C2C spec re-review)
 Depends on: P7-M9 (companion domain unlock at Truc Cơ —
 `isCompanionDomainUnlocked`), P7-M-G (`BETA_COMPANIONS` Beta pool split
 from the full catalog), M-F-CEILING (ReleasePolicy release-window
@@ -45,11 +46,16 @@ Three linked rulings:
   `claimCompanionGift` (idempotent ops transaction) + a `qua_tang` tab
   beside the gacha tabs.
 - **Token income suppressed at origination only.** The recurring
-  `chieu_hien_lenh` sources — the `daily_chieu_hien_lenh` quest and the
-  chapter-3 floor-10 boss `signatureDrop` — consult
-  `isCompanionPullTokenSourceSuppressed` (ReleasePolicy) at reward
-  origination. Banked tokens / Duyên Phận / pity are untouched and never
-  re-checked at restore, per the M-F-CEILING single-check invariant.
+  `chieu_hien_lenh` sources — the token-only `daily_chieu_hien_lenh`
+  quest and the chapter-3 floor-10 boss `signatureDrop` token line —
+  consult `isCompanionPullTokenSourceSuppressed` (ReleasePolicy) at
+  reward origination. Banked tokens / Duyên Phận / pity are untouched
+  and never re-checked at restore, per the M-F-CEILING single-check
+  invariant.
+- **The gift channel is itself a closed acquisition boundary.** Only
+  the Beta-authored gift catalog (`BETA_COMPANION_GIFT_IDS`) may be
+  issued or claimed — a persisted or authored future-realm companion
+  fails loud instead of bypassing the closed pool (C2C round-49).
 
 ## 2. Canonical state
 
@@ -106,6 +112,43 @@ export const COMPANION_GIFT_MOMENTS: readonly CompanionGiftMoment[] = [
 - `record.id === moment.id` folds provenance into the dedupe key
   (C2C flag F6: alternative is a separate `sourceMomentId` field if
   one moment ever needs to issue >1 gift record).
+
+### Gift-acquisition boundary (C2C round-49 — HIGH)
+
+`data/companion/Companions.ts` gains the Beta gift-acquisition
+authority — the single catalog of companions the gift channel may
+issue or claim in Beta. Same members as `BETA_COMPANION_IDS` but a
+different axis: pull-pool content vs gift-grant authority (a future
+pool companion need not be giftable, and vice versa).
+
+```ts
+export const BETA_COMPANION_GIFT_IDS: readonly string[] = [
+  'than_nong',
+  'khai_minh',
+]
+
+export function isBetaCompanionGift(definitionId: string): boolean {
+  return BETA_COMPANION_GIFT_IDS.includes(definitionId)
+}
+```
+
+Enforced at four points so the gift channel can never widen the Beta
+acquisition surface while the pull pool is closed:
+
+1. **Authored registry (integrity test):** every
+   `COMPANION_GIFT_MOMENTS.definitionId` must be in
+   `BETA_COMPANION_GIFT_IDS` — fails loud at authoring.
+2. **Issue fire (defensive):** `issueCompanionGifts` skips a moment
+   whose `definitionId` is not giftable — a non-giftable record could
+   never be claimed, so issuing it would only lodge a permanently
+   stuck pending record.
+3. **Claim (defensive):** `claimCompanionGift` rejects `unknown_gift`
+   on a non-giftable `definitionId` — the gift authority does not
+   know that id.
+4. **Save preflight:** `validateCompanionGiftEntries` requires
+   `definitionId ∈ BETA_COMPANION_GIFT_IDS` — a persisted
+   future-realm gift fails loud at load instead of restoring a
+   bypass.
 
 ## 3. Pull-pool flag + empty-pool contract
 
@@ -166,18 +209,32 @@ Two recurring token sources exist; both consult
 M-F-CEILING breakthrough suppression:
 
 - **Quest** (`core/quest/QuestSystem.ts`): `isUnlocked(quest, player)`
-  gains `&& !questRewardsSuppressedPullToken(quest)` where
-  `questRewardsSuppressedPullToken` = `quest.reward.itemDrops?.some(d =>
-  d.kind === 'material' && isCompanionPullTokenSourceSuppressed(d.itemId))`.
-  Detection is reward-driven (a quest "is a token source" iff it grants
-  a censused token material), so `daily_chieu_hien_lenh` never
-  activates, the R8.1 inverse pass deactivates any stale active, and
-  the daily-quest list query (L275) excludes it — one consult covers
-  all three readers. Belt-and-suspenders inside `claim`: the material
-  `itemDrops` branch gains `if
-  (isCompanionPullTokenSourceSuppressed(drop.itemId)) continue` beside
-  the existing `isBreakthroughAcquisitionEnabled` filter (covers a
-  completed-not-yet-claimed quest in the window before reconcile).
+  gains `&& !questIsTokenOnlySource(quest)` where
+  `questIsTokenOnlySource` = the quest's ENTIRE granted reward set
+  consists of suppressed pull-token lines (a pure recurring faucet —
+  nothing else to grant):
+
+  ```ts
+  const itemDrops = quest.reward.itemDrops ?? []
+  itemDrops.length > 0 &&
+    quest.reward.reward === undefined &&
+    itemDrops.every((d) => d.kind === 'material' &&
+      isCompanionPullTokenSourceSuppressed(d.itemId))
+  ```
+
+  Verified on base: `daily_chieu_hien_lenh` IS token-only (a single
+  1× `chieu_hien_lenh` material line, no `reward.reward`) → suppressed
+  as a whole; it never activates, the R8.1 inverse pass deactivates a
+  stale active, and the daily-quest list query (L275) excludes it —
+  one consult covers all three readers. The `.every` + scalar-reward
+  conjuncts are the A6 consistency fix (C2C round-49): a mixed-reward
+  quest that happens to also grant a token line stays unlocked —
+  whole-quest suppression can never strip a non-token reward.
+  Belt-and-suspenders inside `claim`: the material `itemDrops` branch
+  gains `if (isCompanionPullTokenSourceSuppressed(drop.itemId))
+  continue` beside the existing `isBreakthroughAcquisitionEnabled`
+  filter — covers mixed quests' token lines AND a completed-but-
+  unclaimed token quest in the window before reconcile.
 - **Boss drop** (`core/game/BattleLootSystem.ts` material branch,
   ~:546): `if (isCompanionPullTokenSourceSuppressed(drop.itemId)) break`
   beside the breakthrough check — post-resolve suppression, rng order
@@ -252,9 +309,10 @@ Order:
 
 1. `no_active_player` → `realm_locked` (`isCompanionDomainUnlocked` —
    same domain gate as siblings).
-2. Record lookup by `giftId`; absent, or `definitionId` unresolvable in
-   `COMPANIONS` → `unknown_gift` (defensive — save validation already
-   rejects unresolvable ids).
+2. Record lookup by `giftId`; absent, `definitionId` unresolvable in
+   `COMPANIONS`, or `definitionId ∉ BETA_COMPANION_GIFT_IDS` →
+   `unknown_gift` (defensive — a non-giftable definition is unknown
+   to the gift authority; save validation rejects it anyway).
 3. `record.claimed === true` → `{ok:true, alreadyClaimed:true,
    definition}` — pure read: NO grant, NO duyenPhan, NO state writes
    (re-claim returns prior state — the idempotency contract).
@@ -315,16 +373,19 @@ slice, never re-derive grants.
 
 ## 8. Save contract
 
-- `CURRENT_SAVE_VERSION 75 → 76` + changelog comment per convention;
-  old saves rejected (no migration, no translator).
+- `CURRENT_SAVE_VERSION → CURRENT_SAVE_VERSION + 1` on the merged base
+  at implementation start (expect 76 → 77 once M-F-TALENT lands —
+  verify at phase-2 start; v76 and below rejected per the dev-phase
+  no-migration convention, no translator).
 - `createDefaultPlayer()` gains `companionGifts: []`.
 - `saveShapeValidation.ts`: `requireArray(player, 'companionGifts',
   'player', issues)` + new `validateCompanionGiftEntries` beside
   `validateCompanionEntries`: `id` nonempty + unique,
-  `definitionId` resolvable in `COMPANIONS` (fail loud like companion
-  entries — an unresolvable record is dead state), `claimed` via
-  `requireBoolean`. Record `id` is NOT validated against
-  `COMPANION_GIFT_MOMENTS` (records outlive authored moments).
+  `definitionId ∈ BETA_COMPANION_GIFT_IDS` (the gift-acquisition
+  authority — fail loud on a persisted future-realm companion gift,
+  not merely any catalog member), `claimed` via `requireBoolean`.
+  Record `id` is NOT validated against `COMPANION_GIFT_MOMENTS`
+  (records outlive authored moments).
 - Restore needs no field-level work — `player` restores as a blob; the
   slice rides with it.
 
@@ -338,10 +399,16 @@ slice, never re-derive grants.
   re-claim returns `alreadyClaimed` with zero state deltas.
 - `player.companions` keeps 1-instance-per-definition; gift grants obey
   the same duplicate rule as pull/exchange grants.
+- The gift channel never grants outside `BETA_COMPANION_GIFT_IDS` —
+  four enforcement points (registry integrity, fire-skip, claim
+  reject, save preflight); a persisted or authored future-realm
+  companion gift fails loud instead of bypassing the closed pool.
 - Ops never debit `chieu_hien_lenh`/`duyenPhan` when the pool is
   unavailable; `rollCompanionPull` is unreachable with an empty pool.
 - Recurring token origination is fully suppressed while the flag is
-  off; banked tokens/duyenPhan/pity persist (nothing strips them).
+  off; non-token rewards on shared sources are unaffected (a
+  mixed-reward quest keeps every non-token line); banked
+  tokens/duyenPhan/pity persist (nothing strips them).
 - Companion coefficients unchanged: `COMPANIONS`, `BETA_COMPANION_IDS`,
   `COMPANION_BASE_RATES`, `PITY_*`, `DUPLICATE_MAXED_DUYEN_PHAN`,
   `EXCHANGE_COST`, exp/feed curves — all untouched (diff-scoped).
@@ -371,9 +438,10 @@ slice, never re-derive grants.
 |---|---|
 | A1 | `pullCompanion`/`exchangeCompanion` reject `{ok:false,reason:'pool_unavailable'}` BEFORE any currency check/debit while the flag is off; banked tokens, duyenPhan, pity untouched; pull architecture intact. |
 | A2 | Empty pool is an explicit valid state: ops never reach `rollCompanionPull`/`pickDefinitionOfGrade` with an empty pool (flag-off and empty-authored-pool share the path); both gacha tabs render the release-style unavailable reason instead of dead controls. |
-| A3 | `issueCompanionGifts` appends pending records for matching moments only, write-if-absent — repeated fires with the same trigger are pure no-ops; the moment registry validates (unique ids, definitionId ∈ COMPANIONS, stage/realm refs resolve). |
-| A4 | Claim grants per the pull duplicate rule (new → fresh instance; owned → constellation_up; maxed → +5 duyenPhan), marks `claimed`, notifies; double-claim returns `alreadyClaimed` with zero balance/state deltas; unknown/realm/no-player reject without mutation. |
+| A3 | `issueCompanionGifts` appends pending records for matching moments only, write-if-absent — repeated fires with the same trigger are pure no-ops; the moment registry validates (unique ids, definitionId ∈ `BETA_COMPANION_GIFT_IDS`, stage/realm refs resolve); a non-giftable injected moment is skipped, never issued. |
+| A4 | Claim grants per the pull duplicate rule (new → fresh instance; owned → constellation_up; maxed → +5 duyenPhan), marks `claimed`, notifies; double-claim returns `alreadyClaimed` with zero balance/state deltas; unknown/non-giftable/realm/no-player reject without mutation. |
 | A5 | `realm_entered` seam fires at the tribulation advance (post realmId write) and at the initiation promotion; `stage_completed` seam fires inside the first-completion once-guard only. |
-| A6 | `daily_chieu_hien_lenh` never activates (quest unlock consult), a stale active deactivates on reconcile, claim-item filter drops the token, floor-10 boss signatureDrop suppressed at settle — non-token rewards on the same sources unaffected. |
-| A7 | Save 75→76; v75 payloads rejected; `companionGifts` shape/unique/catalog-ref validated; records round-trip; moment-id drift tolerated. |
+| A6 | Token-only `daily_chieu_hien_lenh` never activates (quest unlock consult), a stale active deactivates on reconcile, claim-item filter drops token lines, floor-10 boss signatureDrop token line suppressed at settle — non-token rewards on shared sources unaffected; a mixed-reward quest stays active minus its token lines. |
+| A7 | Save `CURRENT → CURRENT+1` on the merged base (expect 76→77 post-M-F-TALENT; verify at phase-2 start); v76-and-below payloads rejected; `companionGifts` shape/unique/giftable-catalog-ref validated; records round-trip; moment-id drift tolerated. |
 | A8 | Companion coefficients unchanged — catalog, Beta ids, rates, pity, exchange costs, constellation value all untouched. |
+| A9 | Gift channel never grants outside `BETA_COMPANION_GIFT_IDS` — a persisted or authored future-realm companion gift fails loud at preflight and can never be issued or claimed while the pool is closed. |
