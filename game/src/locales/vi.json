@@ -589,6 +589,8 @@
       "sections": {
         "uiScaleAria": "Cỡ chữ giao diện",
         "uiScale": "Cỡ Chữ Giao Diện",
+        "effectsAria": "Giảm hiệu ứng giao diện",
+        "effects": "Giảm Hiệu Ứng",
         "audioAria": "Âm thanh",
         "audio": "Âm Thanh"
       },

@@ -74,9 +74,10 @@ function mountModal(gm: MockGameManager, origin: 'stage' | 'tribulation' | null 
   return {
     container,
     ui,
-    query: () => container.querySelector('.combat-exit-confirm'),
+    // SysModalBase teleports to body - query the document, not the container.
+    query: () => document.body.querySelector('.combat-exit-confirm'),
     clickButton: async (label: string) => {
-      const buttons = Array.from(container.querySelectorAll('button'))
+      const buttons = Array.from(document.body.querySelectorAll('button'))
       const target = buttons.find((b) => b.textContent?.includes(label))
 
       if (!target) {
@@ -84,7 +85,11 @@ function mountModal(gm: MockGameManager, origin: 'stage' | 'tribulation' | null 
       }
 
       target.click()
-      await nextTick()
+      // jsdom resolves a 0s sys-fade duration; the leave still drains via
+      // rAF frames (~50ms real time) before the element is removed.
+      await vi.waitFor(() => {
+        expect(document.body.querySelector('.sys-modal')).toBeNull()
+      })
     },
     unmount: () => {
       app.unmount()

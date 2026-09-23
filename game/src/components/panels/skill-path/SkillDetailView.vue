@@ -133,7 +133,7 @@ function onUpgrade() {
         <GameButton
           v-else-if="!isMaxLevel"
           class="skill-detail__upgrade"
-          variant="ghost"
+          variant="system"
           size="sm"
           :disabled="!canUpgrade"
           @click="onUpgrade"
@@ -176,20 +176,20 @@ function onUpgrade() {
   margin: 0 0 6px;
   font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
 }
 
 .skill-detail__desc {
   margin: 0 0 10px;
   font-size: var(--text-sm);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .skill-detail__mechanics {
   margin: 0 0 10px;
   padding-left: 18px;
   font-size: var(--text-sm);
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
 }
 
 .skill-detail__level {
@@ -203,20 +203,20 @@ function onUpgrade() {
 .skill-detail__level-label {
   flex: 0 0 auto;
   font-size: var(--text-sm);
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
 }
 
 .skill-detail__cast-progress {
   flex: 0 0 auto;
   font-size: var(--text-xs);
-  color: var(--gold-700);
+  color: var(--sys-warn, var(--gold-700));
 }
 
 .skill-detail__upgrade {
   flex: 0 0 auto;
   border-radius: 4px;
-  color: var(--gold-700);
-  border-color: var(--chrome-500);
+  color: var(--sys-warn, var(--gold-700));
+  border-color: var(--sys-line, var(--chrome-500));
 }
 
 .skill-detail__upgrade:disabled {

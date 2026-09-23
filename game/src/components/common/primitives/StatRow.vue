@@ -33,21 +33,21 @@ export default { name: 'StatRow' }
 }
 
 .stat-row--bordered {
-  border-bottom: 1px solid var(--paper-line-soft);
+  border-bottom: 1px solid var(--sys-line-soft, var(--paper-line-soft));
 }
 
 .stat-row__label {
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .stat-row__value {
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
 
-.stat-row--positive .stat-row__value { color: var(--jade); }
-.stat-row--negative .stat-row__value { color: var(--crimson); }
-.stat-row--warning .stat-row__value { color: var(--gold-700); }
-.stat-row--muted .stat-row__value { color: var(--paper-text-muted); }
+.stat-row--positive .stat-row__value { color: var(--sys-success, var(--jade)); }
+.stat-row--negative .stat-row__value { color: var(--sys-danger, var(--crimson)); }
+.stat-row--warning .stat-row__value { color: var(--sys-warn, var(--gold-700)); }
+.stat-row--muted .stat-row__value { color: var(--sys-text-dim, var(--paper-text-muted)); }
 </style>

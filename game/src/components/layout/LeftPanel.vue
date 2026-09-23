@@ -58,7 +58,7 @@ const { isTop } = useSystemRimAuthority('hud-left', () => ui.characterOverlayOpe
      browser ignored bottom) making the panel spill to full 100vh and
      over the bottom bar. The frame ring is now owned by .ink-drawer
      (border-image) - do NOT declare a separate border here. */
-  box-shadow: var(--surface-shadow-deep);
+  box-shadow: var(--sys-shadow, var(--surface-shadow-deep));
   display: flex;
   flex-direction: column;
   /* overflow: visible - the detail card docked at the right edge
@@ -110,7 +110,7 @@ const { isTop } = useSystemRimAuthority('hud-left', () => ui.characterOverlayOpe
 .left-panel__equipment {
   flex: 0 0 30%;
   min-height: 0;
-  border-bottom: 1px solid var(--ink-line);
+  border-bottom: 1px solid var(--sys-line, var(--ink-line));
 }
 
 .left-panel__content {

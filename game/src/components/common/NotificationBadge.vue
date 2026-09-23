@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import InkNineSlice from './primitives/InkNineSlice.vue'
 // Shared chrome primitive (UI/UX rework Giai đoạn A/C) — idle-game
 // convention còn thiếu hoàn toàn trước đợt này (đã grep xác nhận không
 // có pattern "unseen/new" nào trong src). variant="dot" cho trạng thái
@@ -21,7 +20,6 @@ const isVisible = () => props.variant === 'dot' || (props.count ?? 0) > 0
 
 <template>
   <span v-if="isVisible()" class="notification-badge" :class="`notification-badge--${variant}`">
-    <InkNineSlice asset-id="frame-xs-ink-line" layer="frame" />
     <span v-if="variant === 'count'" class="notification-badge__count">{{ displayCount() }}</span>
   </span>
 </template>
@@ -33,27 +31,29 @@ const isVisible = () => props.variant === 'dot' || (props.count ?? 0) > 0
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--crimson);
+  background: var(--sys-danger, var(--crimson));
   border: 0;
-  border-radius: 999px;
+  border-radius: 2px;
   color: #fff;
-  font-family: var(--font-body);
+  font-family: var(--sys-font-display, var(--font-body));
   font-size: var(--text-xs);
   font-weight: 700;
   line-height: 1;
-  box-shadow: none;
+  box-shadow: inset 0 0 8px color-mix(in srgb, var(--sys-danger, var(--crimson)) 45%, transparent);
 }
 
 .notification-badge--dot {
-  width: 9px;
-  height: 9px;
+  width: 8px;
+  height: 8px;
   padding: 0;
+  transform: rotate(45deg);
 }
 
 .notification-badge--count {
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
 }
 
 .notification-badge__count {

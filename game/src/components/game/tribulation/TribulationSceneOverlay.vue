@@ -79,19 +79,19 @@ function answer(index: number) {
    player ở 0.62h — DOM dùng calc(% + px) thay hằng số px cứng. */
 .tribulation-ui { position:absolute; inset:0; z-index:15; pointer-events:none; color:var(--scene-tribulation-text); text-align:center; }
 .tribulation-ui__header { position:absolute; top:calc(10% + 12px); left:50%; transform:translateX(-50%); display:flex; flex-direction:column; gap:2px; }
-.tribulation-ui__chapter { font-family:var(--font-display); font-size:var(--text-display-md); font-weight:800; text-shadow:0 0 14px var(--scene-tribulation-glow); }
+.tribulation-ui__chapter { font-family:var(--sys-font-display, var(--font-display)); font-size:var(--text-display-md); font-weight:800; text-shadow:0 0 14px var(--scene-tribulation-glow); }
 .tribulation-ui__progress { font-size:var(--text-xs); color:var(--scene-tribulation-text-soft); }
 .tribulation-ui__hp-cluster { position:absolute; top:calc(62% + 84px); left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; width:min(340px, 80vw); }
-.tribulation-ui__hp-track { width:100%; border:1px solid var(--scene-tribulation-line); border-radius:8px; --bar-track: var(--scene-tribulation-deep); --bar-from: var(--scene-tribulation-hp); --bar-to: var(--scene-tribulation-hp); }
+.tribulation-ui__hp-track { width:100%; border:1px solid var(--scene-tribulation-line); clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); --bar-track: var(--scene-tribulation-deep); --bar-from: var(--scene-tribulation-hp); --bar-to: var(--scene-tribulation-hp); }
 .tribulation-ui__hp, .tribulation-ui__hint, .tribulation-ui__strikes { margin-top:6px; font-size:var(--text-xs); text-shadow:0 1px 3px #000; }
 .tribulation-ui__hint, .tribulation-ui__strikes { color:var(--scene-tribulation-text-soft); }
-.tribulation-ui__mind { position:absolute; top:16%; left:50%; transform:translateX(-50%); width:min(520px, 92vw); display:flex; flex-direction:column; gap:10px; pointer-events:auto; background:color-mix(in srgb, var(--ink-950) 72%, transparent); border:1px solid var(--scene-tribulation-line); border-radius:var(--radius-md); padding:16px 18px; }
-.tribulation-ui__question { margin:0; font-size:var(--text-body-lg); font-weight:700; color:var(--chrome-100); }
+.tribulation-ui__mind { position:absolute; top:16%; left:50%; transform:translateX(-50%); width:min(520px, 92vw); display:flex; flex-direction:column; gap:10px; pointer-events:auto; background:color-mix(in srgb, var(--sys-bg-0, var(--ink-950)) 72%, transparent); border:1px solid var(--scene-tribulation-line); clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px); padding:16px 18px; }
+.tribulation-ui__question { margin:0; font-size:var(--text-body-lg); font-weight:700; color:var(--sys-text, var(--chrome-100)); }
 .tribulation-ui__answers { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.tribulation-ui__time-track { border:1px solid var(--scene-tribulation-line); border-radius:8px; --bar-track: var(--scene-tribulation-deep); --bar-from: var(--scene-tribulation-time); --bar-to: color-mix(in srgb, var(--scene-tribulation-line) 80%, white); }
+.tribulation-ui__time-track { border:1px solid var(--scene-tribulation-line); clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); --bar-track: var(--scene-tribulation-deep); --bar-from: var(--scene-tribulation-time); --bar-to: color-mix(in srgb, var(--scene-tribulation-line) 80%, white); }
 .tribulation-ui__timer { font-size:var(--text-sm); font-weight:700; }
 .tribulation-ui__result { position:absolute; top:40%; left:50%; transform:translate(-50%, -50%); display:flex; flex-direction:column; gap:8px; }
-.tribulation-ui__result-title { font-family:var(--font-display); font-size:var(--text-display-lg); font-weight:800; text-shadow:0 0 18px var(--scene-tribulation-glow); }
+.tribulation-ui__result-title { font-family:var(--sys-font-display, var(--font-display)); font-size:var(--text-display-lg); font-weight:800; text-shadow:0 0 18px var(--scene-tribulation-glow); }
 .tribulation-ui__result-text { font-size:var(--text-sm); color:var(--scene-tribulation-text-soft); }
 .tribulation-ui :deep(.bar__fill) { transition:width .15s linear; }
 </style>

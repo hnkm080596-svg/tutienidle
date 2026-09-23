@@ -19,7 +19,7 @@ import LoreCodex from './scripture/LoreCodex.vue'
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .scripture-pavilion__body {

@@ -6,13 +6,18 @@
 // combat_scene_exit) - now runs inside the closed curtain via
 // useBattleActions.exitCombatToHome. Gate: Stage only (Tribulation has
 // its own flow).
+//
+// M-UI-OVERHAUL: renders on SysModalBase. Teleport-to-body replaces the
+// old pointer-events:auto workaround - the modal no longer lives inside
+// the pointer-events:none combat overlay at all.
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { useGameManager } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
-import { useDialogFocus } from '@/composables/useDialogFocus'
+import SysModalBase from '@/components/common/system/SysModalBase.vue'
 import GameButton from '@/components/common/GameButton.vue'
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 
 const { t } = useI18n()
 const ui = useUiStore()
@@ -20,15 +25,6 @@ const gameManager = useGameManager()
 const { exitCombatToHome } = useBattleActions()
 
 const visible = ref(false)
-const cardRef = ref<HTMLElement | null>(null)
-
-// Deferred follow-up (2026-09-03) — focus trap dùng chung (QA-003):
-// Escape = HỦY thoát (Ở LẠI trận), KHÔNG BAO GIỜ exit qua Escape.
-useDialogFocus(cardRef, visible, {
-  onEscape: () => {
-    visible.value = false
-  },
-})
 
 function onExitRequest() {
   // Scene chỉ request; Stage gate giữ tại render (v-if) để Tribulation
@@ -48,6 +44,13 @@ function confirmExit() {
   visible.value = false
 }
 
+// Deferred follow-up (2026-09-03) — focus trap dùng chung (QA-003):
+// Escape = HỦY thoát (Ở LẠI trận), KHÔNG BAO GIỜ exit qua Escape.
+// (M-UI-OVERHAUL: scrim click is also cancel via SysModalBase @close.)
+function cancelExit() {
+  visible.value = false
+}
+
 onMounted(() => {
   gameManager.eventBus.on('combat_exit_request', onExitRequest)
 })
@@ -58,53 +61,23 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div
-    v-if="visible"
-    class="combat-exit-confirm__overlay"
-    @click.self="visible = false"
+  <SysModalBase
+    :open="visible"
+    :title="t('combat.overlay.exitConfirm.message')"
+    width="min(360px, calc(100vw - 48px))"
+    :layer="OVERLAY_LAYERS.modal"
+    role="alertdialog"
+    card-class="combat-exit-confirm"
+    @close="cancelExit"
   >
-    <div ref="cardRef" class="combat-exit-confirm">
-      <p class="combat-exit-confirm__text">{{ t('combat.overlay.exitConfirm.message') }}</p>
-
-      <div class="combat-exit-confirm__actions">
-        <GameButton variant="secondary" size="sm" @click="visible = false">{{ t('combat.overlay.exitConfirm.stay') }}</GameButton>
-        <GameButton variant="danger" size="sm" @click="confirmExit">{{ t('combat.overlay.exitConfirm.exit') }}</GameButton>
-      </div>
+    <div class="combat-exit-confirm__actions">
+      <GameButton variant="system" size="sm" @click="cancelExit">{{ t('combat.overlay.exitConfirm.stay') }}</GameButton>
+      <GameButton variant="system" accent-var="var(--sys-danger, #ff5470)" size="sm" @click="confirmExit">{{ t('combat.overlay.exitConfirm.exit') }}</GameButton>
     </div>
-  </div>
+  </SysModalBase>
 </template>
 
 <style scoped>
-.combat-exit-confirm__overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* The parent .combat-scene-overlay is pointer-events:none - without
-     this re-enable the confirm/cancel buttons were unclickable (P3 E2E
-     finding: Playwright hit-test showed canvas intercepting every
-     click). */
-  pointer-events: auto;
-  background: color-mix(in srgb, var(--ink-950) 70%, transparent);
-}
-
-.combat-exit-confirm {
-  box-sizing: border-box;
-  padding: 24px 28px;
-  background: var(--ink-900);
-  border: 1px solid var(--frame-outer);
-  border-radius: 10px;
-  max-width: min(360px, calc(100vw - 48px));
-}
-
-.combat-exit-confirm__text {
-  margin: 0 0 18px;
-  color: var(--text-primary);
-  font-size: var(--text-body);
-}
-
 .combat-exit-confirm__actions {
   display: flex;
   gap: 10px;

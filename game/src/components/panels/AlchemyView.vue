@@ -273,7 +273,7 @@ function cancelJob(jobId: string) {
 </script>
 
 <template>
-  <div class="alchemy-view">
+  <div class="alchemy-view sys-domain--jade">
     <div class="alchemy-view__recipes scrollfade">
       <section class="alchemy-group">
         <p class="alchemy-group__eyebrow">{{ t('alchemy.currentCauldron') }}</p>
@@ -283,7 +283,7 @@ function cancelJob(jobId: string) {
           v-for="(recipe, index) in recipes"
           :key="recipe.id"
           type="button"
-          class="alchemy-row"
+          class="alchemy-row sys-chamfer"
           :class="{ 'is-selected': recipe.id === selectedRecipeId }"
           @click="selectRecipe(recipe)"
         >
@@ -301,7 +301,7 @@ function cancelJob(jobId: string) {
       </section>
     </div>
 
-    <div v-if="selectedRecipe" class="alchemy-detail scrollfade">
+    <div v-if="selectedRecipe" class="alchemy-detail scrollfade sys-chamfer">
       <header class="alchemy-detail__header">
         <span>{{ t('alchemy.recipe') }}</span>
         <h3>{{ gameManager.pillRegistry.get(selectedRecipe.pillId).name }}</h3>
@@ -369,7 +369,7 @@ function cancelJob(jobId: string) {
 
           <Bar class="alchemy-job__progress" :value="job.progress" :max="1" :height="6" />
 
-          <GameButton class="alchemy-job__cancel" variant="ghost" size="sm" @click="cancelJob(job.jobId)">
+          <GameButton class="alchemy-job__cancel" variant="system" size="sm" @click="cancelJob(job.jobId)">
             {{ t('alchemy.cancelJob') }}
           </GameButton>
         </div>
@@ -384,32 +384,32 @@ function cancelJob(jobId: string) {
   display: flex;
   height: 100%;
   min-height: 0;
-  color: var(--paper-text);
-  font-family: var(--font-body);
+  color: var(--sys-text, var(--paper-text));
+  font-family: var(--sys-font-body, var(--font-body));
   overflow: hidden;
   background:
-    var(--paper-grain) 0 0 / 160px 160px repeat,
-    radial-gradient(circle at 23% 0%, color-mix(in srgb, var(--scene-fire-glow) 10%, transparent), transparent 40%),
-    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 60%, var(--paper-200) 100%);
+    var(--sys-grain, var(--paper-grain)) 0 0 / 160px 160px repeat,
+    radial-gradient(circle at 23% 0%, color-mix(in srgb, var(--sys-danger, var(--scene-fire-glow)) 10%, transparent), transparent 40%),
+    linear-gradient(175deg, var(--sys-bg-0, var(--paper-50)) 0%, var(--sys-bg-1, var(--paper-100)) 60%, var(--sys-bg-1, var(--paper-200)) 100%);
 }
 
 .alchemy-view__recipes {
   flex: 0 0 min(39%, 420px);
   overflow-y: auto;
   padding: 14px;
-  border-right: 1px solid color-mix(in srgb, var(--scene-fire-accent) 35%, var(--paper-line));
+  border-right: 1px solid color-mix(in srgb, var(--sys-danger, var(--scene-fire-accent)) 35%, var(--sys-line-soft, var(--paper-line)));
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.alchemy-group__eyebrow { margin: 0; color: var(--cinnabar); font-size: var(--text-xs); letter-spacing: .18em; }
-.alchemy-group > small { display: block; margin-bottom: 9px; color: var(--paper-text-muted); }
+.alchemy-group__eyebrow { margin: 0; color: var(--sys-accent, var(--cinnabar)); font-size: var(--text-xs); letter-spacing: .18em; }
+.alchemy-group > small { display: block; margin-bottom: 9px; color: var(--sys-text-dim, var(--paper-text-muted)); }
 
 .alchemy-group__title {
   margin: 2px 0;
-  color: var(--paper-text);
-  font: 700 var(--text-lg) var(--font-display);
+  color: var(--sys-text, var(--paper-text));
+  font: 700 var(--text-lg) var(--sys-font-display, var(--font-display));
 }
 
 .alchemy-row {
@@ -420,25 +420,25 @@ function cancelJob(jobId: string) {
   gap: 6px;
   margin-bottom: 4px;
   padding: 9px 10px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--scene-fire-accent) 10%, var(--paper-50)), color-mix(in srgb, var(--scene-fire-accent) 4%, var(--paper-100)));
-  border: 1px solid color-mix(in srgb, var(--scene-fire-accent) 30%, var(--paper-line));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--sys-danger, var(--scene-fire-accent)) 10%, var(--sys-bg-0, var(--paper-50))), color-mix(in srgb, var(--sys-danger, var(--scene-fire-accent)) 4%, var(--sys-bg-1, var(--paper-100))));
+  border: 1px solid color-mix(in srgb, var(--sys-danger, var(--scene-fire-accent)) 30%, var(--sys-line-soft, var(--paper-line)));
   border-radius: var(--radius-sm);
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
   cursor: pointer;
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .alchemy-row.is-selected {
-  border-color: var(--scene-fire-glow);
-  box-shadow: inset 3px 0 var(--scene-fire-glow), 0 0 14px color-mix(in srgb, var(--scene-fire-glow) 18%, transparent);
+  border-color: var(--sys-danger, var(--scene-fire-glow));
+  box-shadow: inset 3px 0 var(--sys-danger, var(--scene-fire-glow)), 0 0 14px color-mix(in srgb, var(--sys-danger, var(--scene-fire-glow)) 18%, transparent);
 }
 
 .alchemy-row__pill { display: flex; align-items: center; gap: 8px; }
-.alchemy-row__pill b { color: var(--cinnabar); font-size: var(--text-xs); }
+.alchemy-row__pill b { color: var(--sys-accent, var(--cinnabar)); font-size: var(--text-xs); }
 
 .alchemy-row__herb {
   font-size: var(--text-xs);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .alchemy-detail {
@@ -453,32 +453,32 @@ function cancelJob(jobId: string) {
 
 .alchemy-detail__header {
   padding: 14px 16px;
-  border: 1px solid color-mix(in srgb, var(--scene-fire-accent) 32%, var(--paper-line));
+  border: 1px solid color-mix(in srgb, var(--sys-danger, var(--scene-fire-accent)) 32%, var(--sys-line-soft, var(--paper-line)));
   border-radius: var(--radius-md);
-  background: linear-gradient(110deg, color-mix(in srgb, var(--scene-fire-accent) 12%, var(--paper-50)), color-mix(in srgb, var(--scene-fire-accent) 4%, var(--paper-100)));
+  background: linear-gradient(110deg, color-mix(in srgb, var(--sys-danger, var(--scene-fire-accent)) 12%, var(--sys-bg-0, var(--paper-50))), color-mix(in srgb, var(--sys-danger, var(--scene-fire-accent)) 4%, var(--sys-bg-1, var(--paper-100))));
 }
-.alchemy-detail__header span { color: var(--cinnabar); font-size: var(--text-xs); letter-spacing: .18em; }
-.alchemy-detail__header h3 { margin: 3px 0; color: var(--paper-text); font: 700 var(--text-panel-title) var(--font-display); }
-.alchemy-detail__header small { color: var(--paper-text-soft); }
+.alchemy-detail__header span { color: var(--sys-accent, var(--cinnabar)); font-size: var(--text-xs); letter-spacing: .18em; }
+.alchemy-detail__header h3 { margin: 3px 0; color: var(--sys-text, var(--paper-text)); font: 700 var(--text-panel-title) var(--sys-font-display, var(--font-display)); }
+.alchemy-detail__header small { color: var(--sys-text-muted, var(--paper-text-soft)); }
 
 .alchemy-detail__block h4 {
   margin: 0 0 6px;
   font-size: var(--text-xs);
   text-transform: uppercase;
-  color: var(--cinnabar);
+  color: var(--sys-accent, var(--cinnabar));
 }
 
 .alchemy-detail__outcome {
   margin: 0 0 4px;
   font-size: var(--text-sm);
-  color: var(--jade);
+  color: var(--sys-success, var(--jade));
   font-weight: 700;
 }
 
 .alchemy-detail__duration {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .alchemy-variant {
@@ -491,12 +491,12 @@ function cancelJob(jobId: string) {
 }
 
 .alchemy-variant:not(.is-enough) {
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
 }
 
 .alchemy-variant__owned {
   margin-left: auto;
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .alchemy-costs {
@@ -519,7 +519,7 @@ function cancelJob(jobId: string) {
    thay vì % cứng. */
 @container overlay-panel (max-width: 900px) {
   .alchemy-view { flex-direction: column; }
-  .alchemy-view__recipes { flex: 0 0 auto; border-right: 0; border-bottom: 1px solid color-mix(in srgb, var(--scene-fire-accent) 30%, transparent); }
+  .alchemy-view__recipes { flex: 0 0 auto; border-right: 0; border-bottom: 1px solid color-mix(in srgb, var(--sys-danger, var(--scene-fire-accent)) 30%, transparent); }
 }
 
 .alchemy-job {
@@ -541,7 +541,7 @@ function cancelJob(jobId: string) {
 
 .alchemy-job__cancel {
   align-self: flex-end;
-  color: var(--crimson);
+  color: var(--sys-danger, var(--crimson));
   font-size: var(--text-xs);
 }
 </style>

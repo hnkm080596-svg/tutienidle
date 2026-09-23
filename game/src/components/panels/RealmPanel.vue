@@ -61,7 +61,7 @@ function majorBreakthrough() {
 
 <template>
   <OverlayPanel :open="ui.standalonePanel === 'realm'" :title="t('panels.realm.title')" width="min(1120px, 94vw)" height="min(760px, 90vh)" variant="system" @close="close">
-    <div class="realm-panel">
+    <div class="realm-panel sys-domain--azure">
       <div class="realm-panel__cultivator">
         <div class="realm-panel__aura" />
         <PlayerPortrait variant="cultivate" :height="150" animated />
@@ -155,8 +155,8 @@ function majorBreakthrough() {
 
 <style scoped>
 .realm-panel { height: 100%; min-height: 0; display: flex; flex-direction: column; gap: 18px; padding: 20px; overflow-y: auto; }
-.realm-panel__cultivator { position: relative; display: flex; flex-direction: column; align-items: center; color: var(--paper-text-soft); }
-.realm-panel__cultivator strong { color: var(--paper-text); font-family: var(--font-display); }
+.realm-panel__cultivator { position: relative; display: flex; flex-direction: column; align-items: center; color: var(--sys-text-muted, var(--paper-text-soft)); }
+.realm-panel__cultivator strong { color: var(--sys-text, var(--paper-text)); font-family: var(--sys-font-display, var(--font-display)); }
 
 /* M-UI-SYSTEM: inside system modal chrome the paper family remaps to sys
    values - same family-remap mechanism .ink-drawer owns for drawers (the
@@ -173,16 +173,16 @@ function majorBreakthrough() {
    frontend-design pass: dòng nhận diện quan trọng nhất panel lại nhỏ
    nhất) — nâng lên đúng cỡ CharacterPanel's identity block dùng. */
 .realm-panel__name { font-size: var(--text-title); }
-.realm-panel__realm-line { font-size: var(--text-body); font-weight: 600; color: var(--jade); }
+.realm-panel__realm-line { font-size: var(--text-body); font-weight: 600; color: var(--sys-success, var(--jade)); }
 .realm-panel__cultivation-label { font-size: var(--text-md); font-weight: 700; }
-.realm-panel__aura { position: absolute; width: 190px; height: 190px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--chrome-500) 25%, transparent), transparent 68%); animation: realm-breathe 3s ease-in-out infinite; }
+.realm-panel__aura { position: absolute; width: 190px; height: 190px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--sys-line, var(--chrome-500)) 25%, transparent), transparent 68%); animation: realm-breathe 3s ease-in-out infinite; }
 .realm-panel__actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; }
 .realm-panel__actions :deep(button:disabled) { opacity: .38; filter: grayscale(1); }
-.realm-panel__actions label { color: var(--text-secondary); }
+.realm-panel__actions label { color: var(--sys-text-muted, var(--text-secondary)); }
 /* M-QI-03 - normal Truc Co requirement lines (unmet muted / met jade). */
 .realm-requirements { flex: 0 0 100%; display: flex; flex-direction: column; gap: 4px; align-items: center; margin: 0; padding: 0; list-style: none; }
-.realm-requirement { display: flex; align-items: center; gap: 6px; font-size: var(--text-sm); color: var(--text-muted); }
-.realm-requirement--met { color: var(--jade); }
+.realm-requirement { display: flex; align-items: center; gap: 6px; font-size: var(--text-sm); color: var(--sys-text-dim, var(--text-muted)); }
+.realm-requirement--met { color: var(--sys-success, var(--jade)); }
 .realm-requirement__marker { font-weight: 700; width: 1em; text-align: center; }
 .realm-panel__cultivation { width: min(560px, 90%); margin: 0 auto; }
 .realm-panel__cultivation-bar { --bar-track: var(--sys-bg-0, var(--ink-950)); border: 1px solid var(--sys-line-soft, var(--ink-line)); }
@@ -190,19 +190,19 @@ function majorBreakthrough() {
    rộng, tự xuống 5/3 cột khi hẹp (bỏ dead zone 901–957px của media query
    viewport cũ). Node khiên tròn giữ nguyên shape qua flex min-width. */
 .realm-panel__nodes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(108px, 100%), 1fr)); gap: 8px; position: relative; }
-.realm-node { position: relative; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; color: var(--text-muted); background: var(--ink-800); border: 1px solid var(--ink-line); border-radius: 50% 50% 12px 12px; }
-.realm-node:not(:last-child)::after { content: ''; position: absolute; left: 100%; top: 48%; width: 9px; height: 2px; background: var(--ink-line); }
-.realm-node.is-complete { border-color: var(--jade); color: var(--jade); }
-.realm-node.is-current { border-color: var(--chrome-300); color: var(--chrome-100); box-shadow: var(--shadow-glow-chrome); }
+.realm-node { position: relative; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; color: var(--sys-text-dim, var(--text-muted)); background: var(--sys-bg-0, var(--ink-800)); border: 1px solid var(--sys-line, var(--ink-line)); border-radius: 50% 50% 12px 12px; }
+.realm-node:not(:last-child)::after { content: ''; position: absolute; left: 100%; top: 48%; width: 9px; height: 2px; background: var(--sys-line, var(--ink-line)); }
+.realm-node.is-complete { border-color: var(--sys-success, var(--jade)); color: var(--sys-success, var(--jade)); }
+.realm-node.is-current { border-color: var(--sys-text, var(--chrome-300)); color: var(--sys-text, var(--chrome-100)); box-shadow: var(--shadow-glow-chrome); }
 .realm-node.is-locked { filter: grayscale(1); opacity: .48; }
-.realm-node__index { font: 700 var(--text-lg) var(--font-display); }
+.realm-node__index { font: 700 var(--text-lg) var(--sys-font-display, var(--font-display)); }
 .realm-node small { font-size: var(--text-xs); }
 .realm-panel__passives { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
-.realm-panel__passives article { display: flex; flex-direction: column; gap: 3px; padding: 10px; background: var(--ink-800); border: 1px solid var(--ink-line-soft); border-radius: var(--radius-sm); }
+.realm-panel__passives article { display: flex; flex-direction: column; gap: 3px; padding: 10px; background: var(--sys-bg-0, var(--ink-800)); border: 1px solid var(--sys-line-soft, var(--ink-line-soft)); border-radius: var(--radius-sm); }
 /* Tên passive trước đây không có cỡ chữ riêng — bằng hệt description,
    không phân biệt được tiêu đề/nội dung (2026-08-30 frontend-design pass). */
-.realm-panel__passives article strong { font-size: var(--text-md); color: var(--text-primary); }
-.realm-panel__passives article span { color: var(--text-muted); font-size: var(--text-sm); }
+.realm-panel__passives article strong { font-size: var(--text-md); color: var(--sys-text, var(--text-primary)); }
+.realm-panel__passives article span { color: var(--sys-text-dim, var(--text-muted)); font-size: var(--text-sm); }
 /* P7-M7 - body chapter subviews side by side on wide cards, stacked
    on narrow (same container-query convention as the realm nodes). */
 .realm-panel__body { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 16px; }

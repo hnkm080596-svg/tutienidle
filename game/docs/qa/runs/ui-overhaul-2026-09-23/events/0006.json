@@ -1,0 +1,12 @@
+{
+  "applied": [
+    "review:rev-roundB-correctness",
+    "finding:F-B1",
+    "finding:F-B2",
+    "finding:F-B3",
+    "finding:F-B4",
+    "finding:F-B5",
+    "finding:F-B6",
+    "evidence:ev-repair-r2"
+  ]
+}

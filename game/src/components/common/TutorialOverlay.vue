@@ -1,24 +1,20 @@
 <script setup lang="ts">
 import { ref, computed, useId } from 'vue'
 import GameButton from '@/components/common/GameButton.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import SysModalBase from '@/components/common/system/SysModalBase.vue'
 import { usePlayerStore } from '@/stores/player'
-import { useDialogFocus } from '@/composables/useDialogFocus'
 import { TUTORIAL_STEPS } from '@/data/tutorial/tutorialSteps'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 
 // UI-005 (Task 3, 2026-09-07) — tutorial là modal blocking: role="dialog"
-// + aria-modal + focus trap qua useDialogFocus (cùng primitive ConfirmModal/
-// OverlayPanel đang dùng, không tự dựng overlay behavior riêng nữa).
-const player = usePlayerStore()
-
-const panelRef = ref<HTMLElement | null>(null)
-const isOpen = computed(() => !player.hasSeenTutorial)
+// + aria-modal + focus trap (SysModalBase owns all three now).
 // Escape = bỏ qua tutorial (cùng action với nút "Bỏ Qua" — behavior hợp lý
 // cho dialog hướng dẫn, không mất dữ liệu gì).
-useDialogFocus(panelRef, isOpen, { onEscape: finish })
+// M-UI-OVERHAUL: system console + segmented progress rail (spec 2.4).
+const player = usePlayerStore()
 
-const titleId = useId()
+const isOpen = computed(() => !player.hasSeenTutorial)
+
 const bodyId = useId()
 
 const currentIndex = ref(0)
@@ -42,82 +38,68 @@ function next() {
 </script>
 
 <template>
-  <div v-if="!player.hasSeenTutorial" class="tutorial-overlay" :style="{ zIndex: OVERLAY_LAYERS.modal }">
-    <div
-      ref="panelRef"
-      class="tutorial-overlay__panel"
-      role="dialog"
-      aria-modal="true"
-      :aria-labelledby="titleId"
-      :aria-describedby="bodyId"
-    >
-      <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
-      <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
-
-      <p class="tutorial-overlay__progress">{{ currentIndex + 1 }} / {{ TUTORIAL_STEPS.length }}</p>
-
-      <h3 :id="titleId" class="tutorial-overlay__title">{{ currentStep.title }}</h3>
-
-      <p :id="bodyId" class="tutorial-overlay__body">{{ currentStep.body }}</p>
-
-      <div class="tutorial-overlay__actions">
-        <GameButton variant="ghost" @click="finish">Bỏ Qua</GameButton>
-
-        <GameButton variant="primary" @click="next">
-          {{ isLastStep ? 'Bắt Đầu' : 'Tiếp Theo' }}
-        </GameButton>
+  <SysModalBase
+    :open="isOpen"
+    :title="currentStep.title"
+    width="min(420px, 92vw)"
+    :layer="OVERLAY_LAYERS.modal"
+    :described-by="bodyId"
+    :close-on-scrim="false"
+    card-class="tutorial-overlay"
+    @close="finish"
+  >
+    <div class="tutorial-overlay__rail">
+      <!-- Segmented rail = the step indicator; the count stays as the
+           accessible text (never a hue-only signal). -->
+      <div class="sys-seg" aria-hidden="true">
+        <span
+          v-for="(step, i) in TUTORIAL_STEPS"
+          :key="step.title"
+          class="sys-seg__cell"
+          :class="{ 'is-on': i <= currentIndex }"
+        />
       </div>
+      <p class="tutorial-overlay__progress">{{ currentIndex + 1 }} / {{ TUTORIAL_STEPS.length }}</p>
     </div>
-  </div>
+
+    <p :id="bodyId" class="tutorial-overlay__body">{{ currentStep.body }}</p>
+
+    <div class="tutorial-overlay__actions">
+      <GameButton variant="system" accent-var="var(--sys-text-dim, #4e6d8f)" @click="finish">Bỏ Qua</GameButton>
+
+      <GameButton variant="system" @click="next">
+        {{ isLastStep ? 'Bắt Đầu' : 'Tiếp Theo' }}
+      </GameButton>
+    </div>
+  </SysModalBase>
 </template>
 
 <style scoped>
-.tutorial-overlay {
-  position: absolute;
-  inset: 0;
-  /* z-index via OVERLAY_LAYERS.modal (inline style). */
+.tutorial-overlay__rail {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: var(--scrim);
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
-.tutorial-overlay__panel {
-  position: relative;
-  isolation: isolate;
-  width: min(420px, 92vw);
-  padding: 28px 32px;
-  color: var(--paper-text);
-  box-shadow: var(--shadow-panel);
-  font-family: var(--font-body);
-}
-
-.tutorial-overlay__panel > :not(.ink-nine-slice) {
-  position: relative;
-  z-index: 3;
+.tutorial-overlay__rail .sys-seg {
+  flex: 1;
 }
 
 .tutorial-overlay__progress {
-  margin: 0 0 8px;
+  margin: 0;
+  font-family: var(--sys-font-display, var(--font-body));
   font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
   letter-spacing: 0.05em;
-  color: var(--paper-eyebrow);
-  text-align: right;
-}
-
-.tutorial-overlay__title {
-  margin: 0 0 10px;
-  font-family: var(--font-display);
-  font-size: var(--text-title);
-  font-weight: 700;
-  color: var(--paper-text);
+  color: var(--sys-text-muted, var(--paper-eyebrow));
 }
 
 .tutorial-overlay__body {
   margin: 0 0 20px;
   font-size: var(--text-body);
   line-height: 1.55;
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .tutorial-overlay__actions {

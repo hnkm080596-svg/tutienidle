@@ -7,7 +7,8 @@ import { AudioManager } from '@/core/audio/AudioManager'
 // buttons (each panel declaring its own background/color/border) with one
 // component reusing the --gold/--jade/--crimson/--tap-* tokens in theme.css.
 const props = withDefaults(defineProps<{
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
+  // 'system' = M-UI-OVERHAUL chrome (chamfer + hairline + accent glow).
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'system'
   size?: 'sm' | 'md' | 'lg'
   shape?: 'rect' | 'circle'
   accentVar?: string
@@ -17,7 +18,7 @@ const props = withDefaults(defineProps<{
   /** When false (default true), the button does NOT play uiClick on click. */
   sound?: boolean
 }>(), {
-  variant: 'primary',
+  variant: 'system',
   size: 'md',
   shape: 'rect',
   accentVar: undefined,
@@ -50,6 +51,8 @@ const sliceAsset = computed<InkWashUiAssetId | undefined>(() => {
   // border-image (InkNineSlice) does not follow border-radius — circle
   // buttons use a plain CSS border (.game-button--circle) instead.
   if (props.shape === 'circle') return undefined
+  // 'system' variant paints with CSS only (no nine-slice art).
+  if (props.variant === 'system') return undefined
   switch (props.variant) {
     case 'secondary': return 'button-s-ink'
     case 'danger': return 'button-s-seal'
@@ -91,7 +94,7 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
   gap: var(--space-2);
   border: 0;
   border-radius: var(--radius-sm);
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
   font-weight: 700;
   cursor: pointer;
   background: transparent;
@@ -123,35 +126,35 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
 
 /* DARK MODE (2026-08-31) — nút trên nền tối */
 .game-button--primary {
-  color: var(--surface-text);
+  color: var(--sys-text, var(--surface-text));
 }
 
 .game-button--primary:not(:disabled):hover {
-  color: var(--chrome-100);
+  color: var(--sys-text, var(--chrome-100));
 }
 
 .game-button--secondary {
-  color: var(--chrome-300);
+  color: var(--sys-text, var(--chrome-300));
 }
 
 .game-button--secondary:not(:disabled):hover {
-  color: var(--chrome-100);
+  color: var(--sys-text, var(--chrome-100));
 }
 
 .game-button--danger {
-  color: var(--chrome-100);
+  color: var(--sys-text, var(--chrome-100));
 }
 
 .game-button--danger:not(:disabled):hover {
-  color: var(--chrome-300);
+  color: var(--sys-text, var(--chrome-300));
 }
 
 .game-button--ghost {
-  color: var(--surface-text-soft);
+  color: var(--sys-text-muted, var(--surface-text-soft));
 }
 
 .game-button--ghost:not(:disabled):hover {
-  color: var(--surface-text);
+  color: var(--sys-text, var(--surface-text));
 }
 
 .game-button:focus-visible {
@@ -162,7 +165,9 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
   outline-offset: 2px;
   outline-color: transparent;
   outline-style: solid;
-  box-shadow: var(--focus-ring-chrome, 0 0 0 2px rgba(217, 212, 199, 0.65));
+  /* --sys-focus is a color token - build the ring around it so the
+     declaration stays valid in both theme layers. */
+  box-shadow: 0 0 0 2px var(--sys-focus, rgba(217, 212, 199, 0.65));
 }
 
 /* M-UI-SYSTEM: scoped-attribute specificity (0,3,0) beats the global sys
@@ -175,17 +180,60 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
   box-shadow: none;
 }
 
+/* M-UI-OVERHAUL: system-variant button - chamfered hairline console button.
+   Scoped here (not in system-theme.css) so it composes with .game-button
+   base sizing; reads --sys-* tokens, degrades to a bordered box without
+   the sheet (fallback hexes mirror --sys-cyan/--sys-text). */
+.game-button--system {
+  /* Local token (not --sys-*): the boundary contract only allows --sys-*
+     re-assignments under .sys-anchored selectors. */
+  --btn-accent: var(--sys-accent, #38e1ff);
+}
+.game-button--system.has-accent {
+  /* accentVar holds a color expression (e.g. "var(--sys-danger)"). */
+  --btn-accent: var(--button-accent);
+}
+.game-button--system {
+  border-radius: 0;
+  font-family: var(--sys-font-display, var(--font-body));
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--btn-accent);
+  border: 1px solid color-mix(in srgb, var(--btn-accent) 55%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--btn-accent) 13%, transparent),
+      color-mix(in srgb, var(--btn-accent) 4%, transparent)),
+    var(--sys-bg-0, #050a12);
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+
+.game-button--system:not(:disabled):hover,
+.game-button--system:not(:disabled):focus-visible {
+  color: var(--sys-text, #d8ecff);
+  /* clip-path clips outer filters/shadows - hover glow lives inside. */
+  box-shadow: inset 0 0 14px color-mix(in srgb, var(--btn-accent) 24%, transparent);
+}
+
+/* System focus ring - inner ring: the chamfer clip-path cuts any
+   positive-offset outline (spec 7.2). */
+.game-button--system:focus-visible {
+  outline: 2px solid var(--sys-focus, #8fe9ff);
+  outline-offset: -2px;
+  box-shadow: none;
+}
+
 /* Dạng tròn — nút icon (+/−). */
 .game-button--circle {
   min-width: var(--tap-min);
   min-height: var(--tap-min);
   padding: 0;
-  border: 1px solid var(--surface-line);
+  border: 1px solid var(--sys-line-soft, var(--surface-line));
   border-radius: 50%;
 }
 
 .game-button--circle:not(:disabled):hover {
-  border-color: var(--chrome-500);
+  border-color: var(--sys-line, var(--chrome-500));
 }
 
 .game-button:not(:disabled):active {

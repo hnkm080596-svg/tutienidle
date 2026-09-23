@@ -73,18 +73,19 @@ function select(strategy: CombatAiStrategy) {
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--ink-line);
-  border-radius: var(--radius-md);
-  background: var(--scrim);
+  border: 1px solid var(--sys-line, var(--ink-line));
+  border-radius: 0;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  background: var(--sys-scrim, var(--scrim));
   backdrop-filter: blur(2px);
   font-size: var(--text-xs, 0.75rem);
-  color: var(--text-primary);
+  color: var(--sys-text, var(--text-primary));
   user-select: none;
 }
 
 .combat-ai-panel__title {
-  font-family: var(--font-display);
-  color: var(--chrome-100);
+  font-family: var(--sys-font-display, var(--font-display));
+  color: var(--sys-text, var(--chrome-100));
   letter-spacing: 0.04em;
 }
 
@@ -98,6 +99,6 @@ function select(strategy: CombatAiStrategy) {
 }
 
 .combat-ai-panel__option input {
-  accent-color: var(--chrome-300);
+  accent-color: var(--sys-text, var(--chrome-300));
 }
 </style>

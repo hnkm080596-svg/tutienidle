@@ -7,6 +7,7 @@ import { useGameManager } from '@/composables/useGameState'
 import { useNotificationStore } from '@/stores/notification'
 import { exportSaveToFile, getRawSave, importSaveRaw, SAVE_RESET_REQUEST_EVENT } from '@/services/save/SaveSystem'
 import { UI_SCALE_OPTIONS, loadUiScale, saveUiScale } from '@/composables/uiScale'
+import { loadSysFxLow, saveSysFxLow } from '@/composables/sysFxMode'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import Chip from '@/components/common/primitives/Chip.vue'
@@ -41,6 +42,14 @@ const uiScale = ref<number>(loadUiScale())
 function handleUiScale(scale: number) {
   uiScale.value = scale
   saveUiScale(scale)
+}
+
+// M-UI-OVERHAUL - low-effects toggle (documentElement.sys-fx-low).
+const fxLow = ref<boolean>(loadSysFxLow())
+
+function handleFxLow(low: boolean) {
+  fxLow.value = low
+  saveSysFxLow(low)
 }
 
 const lastSavedLabel = ref('')
@@ -150,18 +159,18 @@ function handleReset() {
     </p>
 
     <div class="settings-panel__actions">
-      <GameButton variant="secondary" data-testid="settings-save-button" @click="handleSave">{{ t('panels.settings.actions.save') }}</GameButton>
+      <GameButton variant="system" data-testid="settings-save-button" @click="handleSave">{{ t('panels.settings.actions.save') }}</GameButton>
 
-      <GameButton variant="secondary" @click="handleLoad">{{ t('panels.settings.actions.reload') }}</GameButton>
+      <GameButton variant="system" @click="handleLoad">{{ t('panels.settings.actions.reload') }}</GameButton>
 
-      <GameButton variant="secondary" @click="handleExport">{{ t('panels.settings.actions.export') }}</GameButton>
+      <GameButton variant="system" @click="handleExport">{{ t('panels.settings.actions.export') }}</GameButton>
 
       <label class="settings-panel__import">
         {{ t('panels.settings.actions.import') }}
         <input type="file" accept="application/json" @change="handleImportFile" />
       </label>
 
-      <GameButton class="settings-panel__danger" variant="danger" @click="handleReset">
+      <GameButton class="settings-panel__danger" variant="system" accent-var="var(--sys-danger, #ff5470)" @click="handleReset">
         {{ t('panels.settings.actions.reset') }}
       </GameButton>
     </div>
@@ -182,6 +191,20 @@ function handleReset() {
           {{ Math.round(option * 100) }}%
         </Chip>
       </div>
+    </section>
+
+    <!-- M-UI-OVERHAUL - system effects on/off (rim sweeps, scanlines, boot wipes). -->
+    <section class="settings-panel__fx" :aria-label="t('panels.settings.sections.effectsAria')">
+      <h4>{{ t('panels.settings.sections.effects') }}</h4>
+      <Chip
+        class="settings-panel__fx-toggle"
+        :active="fxLow"
+        :aria-pressed="fxLow"
+        data-testid="settings-fx-low-toggle"
+        @click="handleFxLow(!fxLow)"
+      >
+        {{ fxLow ? t('panels.settings.audio.on') : t('panels.settings.audio.off') }}
+      </Chip>
     </section>
 
     <!-- Audio — on/off + master volume (0-100%). Persisted via useAudioStore. -->
@@ -231,14 +254,14 @@ function handleReset() {
 <style scoped>
 .settings-panel {
   padding: 12px;
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
   font-size: var(--text-body);
 }
 
 .settings-panel__warning {
-  color: var(--paper-text-soft);
-  border: 1px solid var(--paper-line);
-  background: color-mix(in srgb, var(--paper-100) 45%, transparent);
+  color: var(--sys-text-muted, var(--paper-text-soft));
+  border: 1px solid var(--sys-line-soft, var(--paper-line));
+  background: color-mix(in srgb, var(--sys-bg-1, var(--paper-100)) 45%, transparent);
   border-radius: 2px;
   padding: 8px;
   margin: 0 0 12px;
@@ -251,9 +274,9 @@ function handleReset() {
   gap: 10px;
   max-width: 360px;
   padding: 14px;
-  border: 1px solid var(--paper-line);
+  border: 1px solid var(--sys-line-soft, var(--paper-line));
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--paper-100) 35%, transparent);
+  background: color-mix(in srgb, var(--sys-bg-1, var(--paper-100)) 35%, transparent);
 }
 
 .settings-panel__actions > .game-button,
@@ -270,11 +293,11 @@ function handleReset() {
   padding: 8px 14px;
   overflow: hidden;
   text-align: center;
-  border: 1px solid var(--ink-line);
+  border: 1px solid var(--sys-line, var(--ink-line));
   border-radius: var(--radius-sm);
   cursor: pointer;
-  background: var(--ink-800);
-  color: var(--text-primary);
+  background: var(--sys-bg-0, var(--ink-800));
+  color: var(--sys-text, var(--text-primary));
 }
 
 .settings-panel__import input {
@@ -285,7 +308,7 @@ function handleReset() {
 }
 
 .settings-panel__hint {
-  color: var(--jade);
+  color: var(--sys-success, var(--jade));
   margin: 8px 0 0;
 }
 
@@ -293,7 +316,7 @@ function handleReset() {
 .settings-panel__ui-scale {
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid var(--paper-line);
+  border-top: 1px solid var(--sys-line-soft, var(--paper-line));
 }
 
 .settings-panel__ui-scale h4 {
@@ -307,26 +330,45 @@ function handleReset() {
 
 .settings-panel__ui-scale-option {
   padding: 0 var(--space-4);
-  border-color: var(--paper-line);
-  color: var(--paper-text);
+  border-color: var(--sys-line-soft, var(--paper-line));
+  color: var(--sys-text, var(--paper-text));
   font-size: var(--text-sm);
-  --chip-active-bg: color-mix(in srgb, var(--chrome-300) 12%, transparent);
+  --chip-active-bg: color-mix(in srgb, var(--sys-text, var(--chrome-300)) 12%, transparent);
 }
 
 .settings-panel__ui-scale-option:hover {
-  border-color: var(--chrome-500);
+  border-color: var(--sys-line, var(--chrome-500));
+}
+
+/* M-UI-OVERHAUL - low-effects toggle mirrors the ui-scale/audio sections. */
+.settings-panel__fx {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--sys-line-soft, var(--paper-line));
+}
+
+.settings-panel__fx h4 {
+  margin: 0 0 8px;
+}
+
+.settings-panel__fx-toggle {
+  padding: 0 var(--space-4);
+  border-color: var(--sys-line-soft, var(--paper-line));
+  color: var(--sys-text, var(--paper-text));
+  font-size: var(--text-sm);
+  --chip-active-bg: color-mix(in srgb, var(--sys-accent, var(--mineral-gold)) 16%, transparent);
 }
 
 /* Audio — on/off + master volume. */
 .settings-panel__audio {
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid var(--paper-line);
+  border-top: 1px solid var(--sys-line-soft, var(--paper-line));
 }
 
 .settings-panel__audio h4 {
   margin: 0 0 8px;
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
 }
 
 .settings-panel__audio-row {
@@ -338,10 +380,10 @@ function handleReset() {
 
 .settings-panel__audio-toggle {
   padding: 0 var(--space-4);
-  border-color: var(--paper-line);
-  color: var(--paper-text);
+  border-color: var(--sys-line-soft, var(--paper-line));
+  color: var(--sys-text, var(--paper-text));
   font-size: var(--text-sm);
-  --chip-active-bg: color-mix(in srgb, var(--chrome-300) 12%, transparent);
+  --chip-active-bg: color-mix(in srgb, var(--sys-text, var(--chrome-300)) 12%, transparent);
 }
 
 .settings-panel__audio-volume {
@@ -349,17 +391,17 @@ function handleReset() {
   align-items: center;
   gap: var(--space-2);
   font-size: var(--text-sm);
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
 }
 
 .settings-panel__audio-volume input[type='range'] {
   width: 140px;
-  accent-color: var(--gold);
+  accent-color: var(--sys-accent, var(--gold));
 }
 
 .settings-panel__audio-volume-value {
   min-width: 3ch;
   text-align: right;
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 </style>

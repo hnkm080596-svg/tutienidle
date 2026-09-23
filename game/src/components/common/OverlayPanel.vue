@@ -55,7 +55,7 @@ const headingId = useId()
       >
         <InkNineSlice v-if="variant === 'ink'" asset-id="surface-xl-paper-scroll" layer="surface" />
         <InkNineSlice v-if="variant === 'ink'" asset-id="frame-xl-ceremony" layer="frame" />
-        <header class="overlay-panel__header">
+        <header class="overlay-panel__header" :class="{ 'sys-rail': variant === 'system' }">
           <div class="overlay-panel__heading">
             <slot name="heading">
               <h3 :id="headingId">{{ title }}</h3>
@@ -64,6 +64,8 @@ const headingId = useId()
           </div>
           <slot name="header-actions" />
         </header>
+        <!-- v2 energy line: drifting accent under the header rail (system). -->
+        <div v-if="variant === 'system'" class="sys-energy" aria-hidden="true" />
         <div class="overlay-panel__body"><slot /></div>
       </component>
     </div>
@@ -71,11 +73,11 @@ const headingId = useId()
 </template>
 
 <style scoped>
-.overlay-panel { position: absolute; inset: 0; display: grid; place-items: center; padding: 3vh 3vw; background: var(--scrim-heavy); backdrop-filter: blur(6px); }
-.overlay-panel__card { position: relative; isolation: isolate; max-width: 100%; max-height: 94vh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; container-type: inline-size; container-name: overlay-panel; color: var(--surface-text); font-family: var(--font-body); background: transparent; border: 0; border-radius: 0; box-shadow: none; }
-.overlay-panel__header { position: relative; z-index: 3; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: clamp(32px, 4vw, 48px) clamp(30px, 4vw, 48px) 14px; border-bottom: 1px solid var(--surface-line); }
+.overlay-panel { position: absolute; inset: 0; display: grid; place-items: center; padding: 3vh 3vw; background: var(--sys-veil, var(--scrim-heavy)); backdrop-filter: blur(6px); }
+.overlay-panel__card { position: relative; isolation: isolate; max-width: 100%; max-height: 94vh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; container-type: inline-size; container-name: overlay-panel; color: var(--sys-text, var(--surface-text)); font-family: var(--sys-font-body, var(--font-body)); background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+.overlay-panel__header { position: relative; z-index: 3; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: clamp(32px, 4vw, 48px) clamp(30px, 4vw, 48px) 14px; border-bottom: 1px solid var(--sys-line-soft, var(--surface-line)); }
 .overlay-panel__heading { min-width: 0; margin-right: auto; }
-.overlay-panel__heading h3 { margin: 0; color: var(--surface-text); font: 700 var(--text-title) var(--font-display); letter-spacing: .06em; }
+.overlay-panel__heading h3 { margin: 0; color: var(--sys-text, var(--surface-text)); font: 700 var(--text-title) var(--sys-font-display, var(--font-display)); letter-spacing: .06em; }
 /* Fit-engine (2026-08-29) — body là ngân sách flex cho nội dung: con chiếm
    flex thay vì scroll. Con tự paginate khi vượt ngân sách (pattern BagGrid).
    overflow hidden là rào chặn cuối — panel con KHÔNG được dựa vào nó. */

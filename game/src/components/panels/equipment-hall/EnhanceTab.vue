@@ -262,7 +262,7 @@ const enhancePreviewRows = computed<EnhancePreviewRow[] | null>(() => {
            lặp lại). Header bảng dùng "Trước/Sau" y hệt Tẩy/Tinh Luyện
            thay vì hiện số cấp thô màu eyebrow khó đọc — cấp đổi dời
            xuống 1 dòng chú thích màu chữ thường, dễ đọc. -->
-      <div class="qi-hall__preview-card">
+      <div class="qi-hall__preview-card sys-chamfer">
         <p v-if="enhancePreviewRows && selectedEnhanceRow.enhanceLevel < selectedEnhanceRow.maxLevel" class="qi-hall__col-title">
           {{ t('panels.equipmentHall.labels.levelPrefix') }} +{{ selectedEnhanceRow.enhanceLevel }}/{{ selectedEnhanceRow.maxLevel }}
           {{ t('panels.equipmentHall.labels.levelArrow') }} +{{ selectedEnhanceRow.enhanceLevel + 1 }}/{{ selectedEnhanceRow.maxLevel }}
@@ -339,10 +339,10 @@ const enhancePreviewRows = computed<EnhancePreviewRow[] | null>(() => {
   flex-wrap: wrap;
   gap: 10px;
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  color: var(--sys-text-muted, var(--text-secondary));
 }
 
 .enhance-row__costs li.is-missing {
-  color: var(--crimson);
+  color: var(--sys-danger, var(--crimson));
 }
 </style>

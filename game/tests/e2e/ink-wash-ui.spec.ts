@@ -25,6 +25,10 @@ async function expectInsideViewport(locator: Locator, page: Page): Promise<void>
   expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height)
 }
 
+// M-UI-OVERHAUL: onboarding + overlays moved from ink chrome to the sys
+// console (SysPanel/variant=system). The smoke contract is preserved -
+// shell usable, inside viewport, no horizontal overflow - but the pinned
+// chrome is the sys card, and the settings palette check asserts sys tokens.
 test.describe('ink-wash UI visual smoke', () => {
   for (const viewport of VIEWPORTS) {
     test(`${viewport.name}: painting shell stays usable and inside the viewport`, async ({ page }, testInfo) => {
@@ -42,7 +46,7 @@ test.describe('ink-wash UI visual smoke', () => {
       expect(actionBox!.width).toBeGreaterThanOrEqual(40)
       expect(actionBox!.height).toBeGreaterThanOrEqual(40)
 
-      const authFrame = auth.locator('[data-ink-slice="frame-xl-ceremony"]').first()
+      const authFrame = auth.locator('.auth-card.sys-panel')
       await expect(authFrame).toBeVisible()
       await expectInsideViewport(authFrame, page)
       await page.screenshot({
@@ -70,7 +74,9 @@ test.describe('ink-wash UI visual smoke', () => {
 
       const panel = page.locator('.overlay-panel__card').first()
       await expect(panel).toBeVisible()
-      await expect(panel.locator('[data-ink-slice="frame-xl-ceremony"]').first()).toBeVisible()
+      // variant=system renders the SysPanel card - no ink slice anywhere.
+      await expect(page.locator('.overlay-panel--system').first()).toBeVisible()
+      expect(await panel.locator('[data-ink-slice]').count()).toBe(0)
 
       // Flake fix (2026-09-01): overlay-fade enter transition chạy
       // transform .22s sau khi visible — boundingBox đọc ngay làm
@@ -112,7 +118,9 @@ test.describe('ink-wash UI visual smoke', () => {
           heading: getComputedStyle(document.querySelector('.settings-panel__ui-scale h4')).color,
         })`,
       )
-      expect(settingsColors).toEqual({ warning: 'rgb(94, 90, 80)', heading: 'rgb(33, 31, 26)' })
+      // sys palette on the dark console: warning = --sys-text-muted,
+      // heading = --sys-text (both light, high contrast on sys-bg).
+      expect(settingsColors).toEqual({ warning: 'rgb(126, 162, 196)', heading: 'rgb(216, 236, 255)' })
       await page.screenshot({
         path: testInfo.outputPath(`ink-wash-home-${viewport.name}.png`),
         animations: 'disabled',

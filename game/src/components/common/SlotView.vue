@@ -333,9 +333,9 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
      the `variant` prop (SlotTypes.ts), not consumer CSS overrides. */
   background:
     var(--slot-bg-image, url('/assets/ui/Slot/inv-slot-backdrop.png')) center / cover no-repeat,
-    var(--surface-900);
-  color: var(--text-primary);
-  font-family: var(--font-body);
+    var(--sys-bg-0, var(--surface-900));
+  color: var(--sys-text, var(--text-primary));
+  font-family: var(--sys-font-body, var(--font-body));
   font-size: var(--text-sm);
   cursor: pointer;
   overflow: hidden;
@@ -350,8 +350,8 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 .slot-view--filled {
   background:
     var(--slot-bg-image, url('/assets/ui/Slot/inv-slot-backdrop.png')) center / cover no-repeat,
-    var(--surface-900);
-  border-color: var(--slot-rarity-color, var(--ink-line));
+    var(--sys-bg-0, var(--surface-900));
+  border-color: var(--slot-rarity-color, var(--sys-line, var(--ink-line)));
   box-shadow: var(--slot-shadow), 0 0 8px var(--slot-rarity-color, transparent);
 }
 
@@ -412,9 +412,9 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   width: 62%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: var(--ink-700);
-  color: var(--slot-rarity-color, var(--text-secondary));
-  font-family: var(--font-display);
+  background: var(--sys-bg-1, var(--ink-700));
+  color: var(--slot-rarity-color, var(--sys-text-muted, var(--text-secondary)));
+  font-family: var(--sys-font-display, var(--font-display));
   font-weight: 600;
   font-size: var(--text-title);
 }
@@ -450,13 +450,13 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 
 .slot-view--validation-valid .slot-view__validation-glyph {
   background: var(--slot-valid);
-  color: var(--ink-950);
+  color: var(--sys-bg-0, var(--ink-950));
 }
 
 .slot-view--validation-invalid .slot-view__validation-glyph,
 .slot-view--validation-missing .slot-view__validation-glyph {
   background: var(--slot-invalid);
-  color: var(--text-primary);
+  color: var(--sys-text, var(--text-primary));
 }
 
 /* ============================================================
@@ -564,7 +564,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
      (#950100) so the thin strokes stay legible on the dark tile. */
   color: #d13a24;
   font-family: 'Kaiti SC', 'KaiTi', 'STKaiti', 'TW-Kai', 'DFKai-SB',
-    'AR PL KaitiM GB', 'Noto Serif CJK SC', var(--font-display);
+    'AR PL KaitiM GB', 'Noto Serif CJK SC', var(--sys-font-display, var(--font-display));
   font-weight: 700;
   font-size: 15cqw;
   line-height: 1;
@@ -619,8 +619,8 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 }
 
 .slot-view__marker--new {
-  background: var(--crimson);
-  color: var(--text-primary);
+  background: var(--sys-danger, var(--crimson));
+  color: var(--sys-text, var(--text-primary));
   letter-spacing: 0.02em;
 }
 
@@ -649,7 +649,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   padding: 0 4px;
   border-radius: 3px;
   background: var(--slot-caption-bg-strong);
-  color: var(--text-primary);
+  color: var(--sys-text, var(--text-primary));
   font-size: var(--text-xs);
   font-weight: 700;
   line-height: 1.4;
@@ -660,8 +660,8 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 .slot-view__badge--enhance {
   bottom: 34px;
   right: 3px;
-  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
-  color: var(--ink-950);
+  background: linear-gradient(180deg, var(--sys-text, var(--chrome-100)), var(--sys-line, var(--chrome-500)));
+  color: var(--sys-bg-0, var(--ink-950));
 }
 
 .slot-view__badge--positive {
@@ -683,7 +683,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   padding: 0 4px;
   border-radius: 3px;
   background: var(--slot-caption-bg);
-  color: var(--text-secondary);
+  color: var(--sys-text-muted, var(--text-secondary));
   font-size: var(--text-xs);
   line-height: 1.4;
   z-index: 6;
@@ -699,7 +699,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   flex: 0 0 auto;
   padding: 2px 3px;
   background: var(--slot-caption-bg);
-  color: var(--text-primary);
+  color: var(--sys-text, var(--text-primary));
   font-size: var(--text-xs);
   line-height: 1.15;
   text-align: center;
@@ -744,22 +744,22 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 }
 
 .slot-view--veil-processing .slot-view__veil {
-  background: color-mix(in srgb, var(--ink-950) 35%, transparent);
+  background: color-mix(in srgb, var(--sys-bg-0, var(--ink-950)) 35%, transparent);
 }
 
 .slot-view__spinner {
   width: 40%;
   aspect-ratio: 1;
   border-radius: 50%;
-  border: 2px solid var(--ink-line);
-  border-top-color: var(--chrome-300);
+  border: 2px solid var(--sys-line, var(--ink-line));
+  border-top-color: var(--sys-text, var(--chrome-300));
   animation: slot-spin 0.8s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .slot-view__spinner {
     animation: none;
-    border-top-color: var(--ink-line);
+    border-top-color: var(--sys-line, var(--ink-line));
     opacity: 0.7;
   }
 }

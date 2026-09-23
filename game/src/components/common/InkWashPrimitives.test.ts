@@ -68,10 +68,11 @@ describe('ink-wash shared primitives', () => {
     const chip = mount(Chip, { active: true })
     const badge = mount(NotificationBadge, { count: 3 })
 
-    expect(chip.querySelector('[data-ink-slice="frame-xs-ink-line"]')).not.toBeNull()
+    // M-UI-OVERHAUL: chip + badge are chamfered sys widgets - no ink frame.
+    expect(chip.querySelector('[data-ink-slice]')).toBeNull()
     expect(chip.querySelector('button')?.classList.contains('is-active')).toBe(true)
-    expect(badge.querySelector('[data-ink-slice="frame-xs-ink-line"]')).not.toBeNull()
-    expect(badge.textContent).toContain('3')
+    expect(badge.querySelector('[data-ink-slice]')).toBeNull()
+    expect(badge.querySelector('.notification-badge__count')?.textContent).toBe('3')
   })
 
   // SlotView KHÔNG dùng ink-wash frame — lặp lại trên lưới dày đặc (Kho

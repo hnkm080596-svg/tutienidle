@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import GameButton from '@/components/common/GameButton.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import SysPanel from '@/components/common/system/SysPanel.vue'
 import { useSaveIssueStore } from '@/stores/saveIssue'
 import { useNotificationStore } from '@/stores/notification'
 import { exportSaveToFile, deleteSave, importSaveRaw } from '@/services/save/SaveSystem'
@@ -80,10 +80,9 @@ function handleImport(event: Event) {
 
 <template>
   <div class="save-incompatible" :style="{ zIndex: OVERLAY_LAYERS.saveGate }">
-    <div class="save-incompatible__panel">
-      <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
-      <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
-
+    <!-- M-UI-OVERHAUL: full-screen gate -> T2 system console, danger domain
+         accent (the save itself is the blocked resource). -->
+    <SysPanel variant="primary" :rim-active="true" class="save-incompatible__panel sys-domain--danger">
       <h2 class="save-incompatible__title">Save không tương thích với phiên bản hiện tại</h2>
 
       <p v-if="saveIssue.status === 'incompatible'" class="save-incompatible__message">
@@ -98,16 +97,16 @@ function handleImport(event: Event) {
       </p>
 
       <div class="save-incompatible__actions">
-        <GameButton variant="secondary" @click="handleExport">Tải Về Save (.json)</GameButton>
+        <GameButton variant="system" @click="handleExport">Tải Về Save (.json)</GameButton>
 
         <label class="save-incompatible__import">
           Nhập Save Khác
           <input type="file" accept="application/json" @change="handleImport" />
         </label>
 
-        <GameButton variant="danger" @click="handleReset">Xoá & Bắt Đầu Mới</GameButton>
+        <GameButton variant="system" accent-var="var(--sys-danger, #ff5470)" @click="handleReset">Xoá & Bắt Đầu Mới</GameButton>
       </div>
-    </div>
+    </SysPanel>
 
     <ConfirmModal
       :open="pendingConfirm !== null"
@@ -130,40 +129,38 @@ function handleImport(event: Event) {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--ink-950);
+  background: var(--sys-bg-0, var(--ink-950));
 }
 
 .save-incompatible__panel {
   /* margin:auto — vẫn căn giữa khi vừa màn hình, nhưng khi overflow
      thì panel dạt lên trên để cuộn tới được toàn bộ nội dung. */
-  position: relative;
-  isolation: isolate;
   margin: auto;
   max-width: 460px;
   padding: 28px 32px;
-  box-shadow: var(--shadow-panel);
   text-align: center;
-  font-family: var(--font-body);
-}
-
-.save-incompatible__panel > :not(.ink-nine-slice) {
-  position: relative;
-  z-index: 3;
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .save-incompatible__title {
   margin: 0 0 12px;
-  font-family: var(--font-display);
-  color: var(--paper-text);
+  font-family: var(--sys-font-display, var(--font-display));
+  color: var(--sys-accent, var(--paper-text));
   font-size: var(--text-title);
   font-weight: 700;
+  letter-spacing: .08em;
 }
 
 .save-incompatible__message {
   margin: 0 0 20px;
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-size: var(--text-sm);
   line-height: 1.5;
+}
+
+.save-incompatible__message strong {
+  color: var(--sys-text, inherit);
+  font-variant-numeric: tabular-nums;
 }
 
 .save-incompatible__actions {
@@ -180,14 +177,17 @@ function handleImport(event: Event) {
   justify-content: center;
   min-height: var(--tap-comfortable);
   padding: var(--space-2) var(--space-4);
-  background: var(--ink-800);
-  color: var(--text-primary);
-  border: 1px solid var(--ink-line);
-  border-radius: var(--radius-sm);
+  background: var(--sys-bg-0, var(--ink-800));
+  color: var(--sys-text-muted, var(--text-primary));
+  border: 1px solid var(--sys-line-soft, var(--ink-line));
+  border-radius: 0;
   cursor: pointer;
-  font-family: var(--font-body);
+  font-family: var(--sys-font-display, var(--font-body));
   font-size: var(--text-sm);
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
 }
 
 .save-incompatible__import input {
@@ -198,7 +198,7 @@ function handleImport(event: Event) {
 }
 
 .save-incompatible__import:hover {
-  border-color: var(--chrome-300);
-  color: var(--chrome-100);
+  border-color: var(--sys-accent, var(--chrome-300));
+  color: var(--sys-text, var(--chrome-100));
 }
 </style>

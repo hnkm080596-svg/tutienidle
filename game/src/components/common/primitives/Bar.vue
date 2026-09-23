@@ -51,7 +51,7 @@ const percent = computed(() => {
   width: 100%;
   height: var(--bar-height, 8px);
   overflow: hidden;
-  background: var(--bar-track, var(--ink-700));
+  background: var(--bar-track, var(--sys-bg-1, var(--ink-700)));
 }
 
 .bar--pill {
@@ -60,7 +60,7 @@ const percent = computed(() => {
 
 .bar__fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--bar-from, var(--jade)), var(--bar-to, var(--chrome-300)));
+  background: linear-gradient(90deg, var(--bar-from, var(--sys-success, var(--jade))), var(--bar-to, var(--sys-text, var(--chrome-300))));
   transition: width 200ms ease;
 }
 
@@ -85,7 +85,7 @@ const percent = computed(() => {
   display: grid;
   height: 100%;
   place-items: center;
-  color: var(--text-primary);
+  color: var(--sys-text, var(--text-primary));
   font-size: var(--text-xs);
   line-height: 1;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);

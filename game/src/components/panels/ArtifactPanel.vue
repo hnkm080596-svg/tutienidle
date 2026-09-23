@@ -136,7 +136,7 @@ function close() {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'artifact'" :title="t('panels.artifact.title')" width="min(560px, 92vw)" height="min(720px, 88vh)" @close="close">
+  <OverlayPanel :open="ui.standalonePanel === 'artifact'" :title="t('panels.artifact.title')" width="min(560px, 92vw)" height="min(720px, 88vh)" variant="system" @close="close">
     <EmptyState v-if="!definition" size="lg">
       {{ t('panels.artifact.emptyNoDefinition', { path: cultivationPathLabel }) }}
     </EmptyState>
@@ -145,7 +145,7 @@ function close() {
       {{ t('panels.artifact.emptyNotAwakened', { name: definition.name }) }}
     </EmptyState>
 
-    <div v-else class="artifact-panel">
+    <div v-else class="artifact-panel sys-domain--violet">
       <ArtifactOverview
         :name="definition.name"
         :cultivation-path-label="cultivationPathLabel"
@@ -191,6 +191,6 @@ function close() {
 
 .artifact-panel .empty-state {
   padding: var(--space-6);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 </style>

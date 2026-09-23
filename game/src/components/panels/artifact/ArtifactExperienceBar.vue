@@ -50,27 +50,27 @@ const statusMessage = computed(() => {
 <style scoped>
 .artifact-exp-bar {
   padding: var(--space-3);
-  border-bottom: 1px solid var(--ink-line);
+  border-bottom: 1px solid var(--sys-line, var(--ink-line));
 }
 
 .artifact-exp-bar__head {
   display: flex;
   justify-content: space-between;
   margin-bottom: var(--space-1);
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
   font-size: var(--text-body);
 }
 
 .artifact-exp-bar__track {
   border-radius: 4px;
-  --bar-track: var(--ink-950);
-  --bar-from: var(--chrome-300);
-  --bar-to: var(--chrome-300);
+  --bar-track: var(--sys-bg-0, var(--ink-950));
+  --bar-from: var(--sys-text, var(--chrome-300));
+  --bar-to: var(--sys-text, var(--chrome-300));
 }
 
 .artifact-exp-bar--content_ceiling .artifact-exp-bar__track {
-  --bar-from: var(--jade);
-  --bar-to: var(--jade);
+  --bar-from: var(--sys-success, var(--jade));
+  --bar-to: var(--sys-success, var(--jade));
 }
 
 .artifact-exp-bar--capped_by_player .artifact-exp-bar__track {
@@ -81,6 +81,6 @@ const statusMessage = computed(() => {
 .artifact-exp-bar__status {
   margin: var(--space-1) 0 0;
   font-size: var(--text-xs);
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
 }
 </style>

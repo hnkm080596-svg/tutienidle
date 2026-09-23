@@ -249,7 +249,7 @@ const washRenAfter = computed(() =>
       <!-- Card duy nhất (2026-08-30 spec, khớp đúng Cường Hóa đã duyệt)
            — Điểm Rèn làm dòng chú thích, mỗi dòng phụ 1 hàng thật
            trong bảng, không còn 2 cột flex + bảng meta tách rời. -->
-      <div class="qi-hall__preview-card">
+      <div class="qi-hall__preview-card sys-chamfer">
         <p v-if="itemRenState" class="qi-hall__col-title">
           {{ t('panels.equipmentHall.labels.forgePoints') }} {{ itemRenState.points }}/{{ itemRenState.max }} {{ t('panels.equipmentHall.labels.levelArrow') }} {{ washRenAfter }}/{{ itemRenState.max }}
         </p>
@@ -298,7 +298,7 @@ const washRenAfter = computed(() =>
           {{ t('panels.equipmentHall.buttons.washPreview') }}
         </GameButton>
 
-        <GameButton v-if="pendingWashTicket" size="lg" variant="secondary" @click="doWashKeep">
+        <GameButton v-if="pendingWashTicket" size="lg" variant="system" @click="doWashKeep">
           {{ t('panels.equipmentHall.buttons.keep') }}
         </GameButton>
       </div>

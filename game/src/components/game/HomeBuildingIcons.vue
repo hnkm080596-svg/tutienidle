@@ -215,7 +215,7 @@ onBeforeUnmount(() => {
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
   pointer-events: none;
   -webkit-tap-highlight-color: transparent;
 }
@@ -232,7 +232,7 @@ onBeforeUnmount(() => {
 
 .building-hotspot:focus-visible { outline: none; }
 .building-hotspot:focus-visible .building-hotspot__hitbox {
-  outline: 2px solid var(--gold-500);
+  outline: 2px solid var(--sys-accent, var(--gold-500));
   outline-offset: 3px;
   border-radius: 42%;
 }
@@ -251,19 +251,19 @@ onBeforeUnmount(() => {
   min-width: max-content;
   max-width: 220%;
   padding: 3px 10px;
-  border: 1px solid color-mix(in srgb, var(--gold-500) 55%, var(--frame-outer));
-  border-radius: 999px;
-  background: var(--paper-50);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
-  color: var(--paper-text);
-  font: 600 var(--text-xs) var(--font-body);
+  border: 1px solid color-mix(in srgb, var(--sys-accent, var(--gold-500)) 55%, var(--sys-line, var(--frame-outer)));
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  background: var(--sys-bg-0, var(--paper-50));
+  box-shadow: inset 0 -6px 12px -8px rgba(0, 0, 0, 0.4);
+  color: var(--sys-text, var(--paper-text));
+  font: 600 var(--text-xs) var(--sys-font-body, var(--font-body));
   line-height: var(--lh-tight);
   transform: translateX(-50%);
   pointer-events: none;
 }
 
 .building-nameplate__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.building-nameplate__level { color: var(--paper-text-muted); font-size: var(--text-xs); font-weight: 400; }
+.building-nameplate__level { color: var(--sys-text-dim, var(--paper-text-muted)); font-size: var(--text-xs); font-weight: 400; }
 .building-nameplate__lock {
   position: relative;
   flex: 0 0 auto;
@@ -288,18 +288,18 @@ onBeforeUnmount(() => {
 .building-nameplate__active,
 .building-nameplate__upgradeable {
   flex: 0 0 auto;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
+  width: 6px;
+  height: 6px;
+  transform: rotate(45deg);
 }
-.building-nameplate--locked { color: var(--paper-text-muted); opacity: 0.85; }
-.building-nameplate--locked .building-nameplate__lock { border-color: var(--paper-text-muted); }
-.building-nameplate--ready { color: var(--jade-on-paper, var(--jade)); }
-.building-nameplate--ready .building-nameplate__ready { background: var(--jade); box-shadow: 0 0 6px var(--jade); }
+.building-nameplate--locked { color: var(--sys-text-dim, var(--paper-text-muted)); opacity: 0.85; }
+.building-nameplate--locked .building-nameplate__lock { border-color: var(--sys-text-dim, var(--paper-text-muted)); }
+.building-nameplate--ready { color: var(--jade-on-paper, var(--sys-success, var(--jade))); }
+.building-nameplate--ready .building-nameplate__ready { background: var(--sys-success, var(--jade)); box-shadow: 0 0 6px var(--sys-success, var(--jade)); }
 .building-nameplate--active { color: var(--el-fire); }
 .building-nameplate--active .building-nameplate__active { background: var(--el-fire); box-shadow: 0 0 6px var(--el-fire); }
-.building-nameplate--upgradeable { color: var(--gold-700-on-paper, var(--mineral-gold)); }
-.building-nameplate--upgradeable .building-nameplate__upgradeable { background: var(--gold-500); box-shadow: 0 0 6px var(--gold-500); }
+.building-nameplate--upgradeable { color: var(--gold-700-on-paper, var(--sys-accent, var(--mineral-gold))); }
+.building-nameplate--upgradeable .building-nameplate__upgradeable { background: var(--sys-accent, var(--gold-500)); box-shadow: 0 0 6px var(--sys-accent, var(--gold-500)); }
 
 .home-building-hotspots__season-overlay {
   position: absolute;

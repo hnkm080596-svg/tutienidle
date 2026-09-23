@@ -7,10 +7,14 @@ import App from './App.vue'
 import { vTooltip } from './directives/tooltip'
 import { useErrorStore } from './stores/error'
 import { initUiScale } from './composables/uiScale'
+import { initSysFxLow } from './composables/sysFxMode'
 import { i18n } from './i18n'
 
 // WS8 — áp UI scale người chơi chọn TRƯỚC mount để không nhấp nháy font.
 initUiScale()
+
+// M-UI-OVERHAUL - low-effects class also lands before mount.
+initSysFxLow()
 
 const app = createApp(App)
 const pinia = createPinia()

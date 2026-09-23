@@ -89,6 +89,7 @@ const nextCapacity = computed(() => {
 
     <TabBar
       class="worker-lodge-panel__tabs"
+      variant="system"
       :tabs="visibleTabs.map((tab) => ({ id: tab.id, label: tab.label }))"
       :model-value="activeTab"
       @update:model-value="switchTab($event as TabId)"
@@ -125,16 +126,16 @@ const nextCapacity = computed(() => {
   min-height: 0;
   overflow-y: auto;
   padding: 18px;
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
   background:
-    var(--paper-grain) 0 0 / 160px 160px repeat,
-    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--jade) 8%, transparent), transparent 40%),
-    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 60%, var(--paper-200) 100%);
+    var(--sys-grain, var(--paper-grain)) 0 0 / 160px 160px repeat,
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--sys-success, var(--jade)) 8%, transparent), transparent 40%),
+    linear-gradient(175deg, var(--sys-bg-0, var(--paper-50)) 0%, var(--sys-bg-1, var(--paper-100)) 60%, var(--sys-bg-1, var(--paper-200)) 100%);
 }
 
 .worker-lodge-panel__description {
   margin: 0 0 16px;
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   line-height: var(--lh-relaxed);
 }
 
@@ -146,15 +147,15 @@ const nextCapacity = computed(() => {
   display: grid;
   gap: 10px;
   padding: 16px;
-  border: 1px solid color-mix(in srgb, var(--jade) 40%, var(--paper-line));
+  border: 1px solid color-mix(in srgb, var(--sys-success, var(--jade)) 40%, var(--sys-line-soft, var(--paper-line)));
   border-radius: var(--radius-md);
-  background: linear-gradient(110deg, color-mix(in srgb, var(--jade) 12%, var(--paper-50)), color-mix(in srgb, var(--jade) 5%, var(--paper-100)));
+  background: linear-gradient(110deg, color-mix(in srgb, var(--sys-success, var(--jade)) 12%, var(--sys-bg-0, var(--paper-50))), color-mix(in srgb, var(--sys-success, var(--jade)) 5%, var(--sys-bg-1, var(--paper-100))));
 }
 
 .worker-lodge-panel__card h3 {
   margin: 0;
-  color: var(--jade);
-  font: 700 var(--text-lg) var(--font-display);
+  color: var(--sys-success, var(--jade));
+  font: 700 var(--text-lg) var(--sys-font-display, var(--font-display));
 }
 
 .worker-lodge-panel__capacity {
@@ -163,13 +164,13 @@ const nextCapacity = computed(() => {
 }
 
 .worker-lodge-panel__next {
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-size: var(--text-xs);
 }
 
 .worker-lodge-panel__hint {
   margin: 0;
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
   font-size: var(--text-sm);
 }
 </style>

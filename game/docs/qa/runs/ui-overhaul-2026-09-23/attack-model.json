@@ -1,0 +1,34 @@
+{
+  "runId": "ui-overhaul-2026-09-23",
+  "scope": "CSS/DOM-only visual overhaul. Logic/state/persistence semantics must be IDENTICAL to base; visual-fidelity and regression evidence weighted over logic depth.",
+  "lenses": [
+    {"id": "correctness", "attacks": [
+      "modal Escape/scrim semantic parity vs base (offline, talent, tutorial, lore, combat-exit, pause)",
+      "CSS token-value validity: every var(--sys-*) used in a property accepting that token TYPE (color vs shadow vs font vs gradient/image); every read carries a fallback (revert-invariant)",
+      "clip-path/box-shadow interplay: clipped surfaces use drop-shadow/outline, not box-shadow",
+      "Vue props/attrs correctness: SysPanel chamfer/boot, SysModalBase cardClass/$attrs->scrim, TabBar variant+measure lifecycle",
+      "focus-visible/a11y: visible focus ring on every interactive sys control; Escape/keyboard parity"
+    ]},
+    {"id": "authority", "attacks": [
+      "canonical --sys-* ownership: LHS only in system-theme.css; no canonical LHS elsewhere; .sys-* reassignments anchored",
+      "GameButton default flip: no bare GameButton left in an ink/ceremony context; pinned variants intact",
+      "boundary guard completeness vs spec §6.4 legit-keep families (rank/grade/el/text/space/radius/scene-tribulation)",
+      "InkNineSlice consumer allowlist exact; menu/* deletion has zero dangling refs",
+      "OverlayPanel consumers all request variant=system; i18n keys added-only; scoped [data-v] overrides anchored (0,2,1)"
+    ]},
+    {"id": "integration", "attacks": [
+      "assembled app: boot screen sys grammar, login/auth card, creation stepper, dense screens render without overlap/illegibility at P14 evidence quality",
+      "overlay stacking: teleported SysModalBase vs combat/scene overlays per OVERLAY_LAYERS; pointer-events none on decorative layers",
+      "fx-low + prefers-reduced-motion: kill-switch actually stops rim/sweep/scanline/shimmer; persisted + applied before mount",
+      "Vietnamese text renders (diacritics) + font-blocked fallback legible; WCAG-ish contrast on dark sys palette",
+      "screen-vs-screen rim authority: at most one live rim; dense-screen perf budget (transform/opacity animations)"
+    ]}
+  ],
+  "implReportedItems": [
+    {"id": "focus-ring box-shadow x4", "class": "FIXED_IN_MISSION", "fix": "2de3584d"},
+    {"id": "TabBar font-load remeasure", "class": "DEFERRED_LOW"},
+    {"id": "sys-bar-shimmer repaint", "class": "DOCUMENTED_R41"},
+    {"id": "dongFuBuildingPipeline powershell", "class": "ENV_BLOCKED_PREEXISTING"}
+  ],
+  "notes": "priorFindingsVisible=NO for all reviewers: do not open docs/qa/** (my quick-mode report lives in the diff); attest exposure."
+}

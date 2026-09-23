@@ -52,7 +52,7 @@ const canAfford = computed(() =>
 <style scoped>
 .artifact-grade {
   padding: var(--space-3);
-  border-bottom: 1px solid var(--ink-line);
+  border-bottom: 1px solid var(--sys-line, var(--ink-line));
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -66,25 +66,25 @@ const canAfford = computed(() =>
 }
 
 .artifact-grade .stat-row__value {
-  color: var(--gold-700);
+  color: var(--sys-warn, var(--gold-700));
   font-weight: 600;
 }
 
 .artifact-grade__upgrade {
   margin-top: var(--space-2);
   padding: 10px 14px;
-  border: 1px solid var(--chrome-500);
+  border: 1px solid var(--sys-line, var(--chrome-500));
 }
 
 .artifact-grade__upgrade:disabled {
   opacity: 0.4;
   background: transparent;
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
 }
 
 .artifact-grade__hint {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
 }
 </style>

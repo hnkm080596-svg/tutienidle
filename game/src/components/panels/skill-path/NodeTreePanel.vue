@@ -85,7 +85,7 @@ function branchColor(branchTag: string | undefined): string {
     return ELEMENT_COLOR_VARS.metal
   }
 
-  return ELEMENT_COLOR_VARS[branchTag as ElementType] ?? 'var(--paper-text)'
+  return ELEMENT_COLOR_VARS[branchTag as ElementType] ?? 'var(--sys-text, var(--paper-text))'
 }
 
 // Phap Tu Reimagined (Task 16) — route respec toggle (P3). A route is a
@@ -754,7 +754,7 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: baseline;
   gap: 10px;
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .node-tree__route {
@@ -824,7 +824,7 @@ onBeforeUnmount(() => {
   border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
   border-radius: var(--radius-sm);
   color: var(--sys-text, var(--text-primary));
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
   font-size: var(--text-xs);
   line-height: 1;
   cursor: pointer;
@@ -908,22 +908,22 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-sm);
   cursor: pointer;
   text-align: left;
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
   color: var(--sys-text, var(--text-primary));
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .node-tree__node.is-major {
-  border-color: var(--sys-line-hot, var(--branch-color, var(--ink-line)));
+  border-color: var(--sys-line-hot, var(--branch-color, var(--sys-line, var(--ink-line))));
 }
 
 .node-tree__node:hover {
-  border-color: var(--sys-line-hot, var(--branch-color, var(--ink-line)));
+  border-color: var(--sys-line-hot, var(--branch-color, var(--sys-line, var(--ink-line))));
 }
 
 .node-tree__node.is-purchased {
-  background: color-mix(in srgb, var(--sys-success, var(--branch-color, var(--chrome-300))) 14%, var(--sys-bg-0, var(--ink-800)));
-  border-color: color-mix(in srgb, var(--sys-success, var(--branch-color, var(--chrome-300))) 55%, transparent);
+  background: color-mix(in srgb, var(--sys-success, var(--branch-color, var(--sys-text, var(--chrome-300)))) 14%, var(--sys-bg-0, var(--ink-800)));
+  border-color: color-mix(in srgb, var(--sys-success, var(--branch-color, var(--sys-text, var(--chrome-300)))) 55%, transparent);
 }
 
 /* Locked node vẫn CLICK ĐƯỢC (để xem điều kiện ở NodeInspector.vue,
@@ -998,17 +998,17 @@ onBeforeUnmount(() => {
 .node-tree__node-level {
   padding: 0 4px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--branch-color, var(--chrome-300)) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--branch-color, var(--sys-text, var(--chrome-300))) 55%, transparent);
   font-size: var(--text-xs);
   line-height: 1.4;
-  color: var(--chrome-100);
+  color: var(--sys-text, var(--chrome-100));
 }
 
 /* Route badge - node routeTag (Phap Tu Reimagined Task 16). M-UI-SYSTEM:
    the chip is a SysTag; the .sys-tag anchor re-maps its border line so it
    stays quiet on the node card. */
 .node-tree__node-route.sys-tag {
-  --sys-tag-line: var(--sys-line-soft, color-mix(in srgb, var(--gold-700) 60%, transparent));
+  --sys-tag-line: var(--sys-line-soft, color-mix(in srgb, var(--sys-warn, var(--gold-700)) 60%, transparent));
   font-size: var(--text-xs);
 }
 

@@ -11,7 +11,6 @@
 import { ref, provide } from 'vue'
 import { useI18n } from 'vue-i18n'
 import TabBar from '@/components/common/TabBar.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import EnhanceTab from './equipment-hall/EnhanceTab.vue'
 import WashTab from './equipment-hall/WashTab.vue'
 import RefineTab from './equipment-hall/RefineTab.vue'
@@ -72,8 +71,6 @@ provide(HALL_SELECTION_KEY, { selectedInstanceId, selectEquipped, clearSelection
 
 <template>
   <div class="qi-hall">
-    <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
-    <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
 
     <!-- Header "Điểm Rèn món đang chọn" cũ đã BỎ (2026-08-30, bug report:
          thông tin không cần thiết) — số Điểm Rèn chỉ liên quan Tẩy/Tinh
@@ -84,6 +81,7 @@ provide(HALL_SELECTION_KEY, { selectedInstanceId, selectEquipped, clearSelection
          bug report) — bỏ hẳn header "Chọn một trang bị..." cũ. -->
     <TabBar
       class="qi-hall__tabs"
+      variant="system"
       :tabs="TABS.map((tab) => ({ id: tab.id, label: tab.label }))"
       :model-value="activeTab"
       @update:model-value="switchTab($event as TabId)"
@@ -109,11 +107,11 @@ provide(HALL_SELECTION_KEY, { selectedInstanceId, selectEquipped, clearSelection
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  color: var(--text-primary);
-  font-family: var(--font-body);
+  color: var(--sys-text, var(--text-primary));
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
-.qi-hall > :not(.ink-nine-slice) {
+.qi-hall > * {
   position: relative;
   z-index: 3;
 }
@@ -126,7 +124,7 @@ provide(HALL_SELECTION_KEY, { selectedInstanceId, selectEquipped, clearSelection
   grid-template-columns: repeat(var(--tab-columns, 4), 1fr);
   gap: 4px;
   padding: 10px 12px;
-  border-bottom: 1px solid var(--paper-line);
+  border-bottom: 1px solid var(--sys-line-soft, var(--paper-line));
   background: transparent;
 }
 

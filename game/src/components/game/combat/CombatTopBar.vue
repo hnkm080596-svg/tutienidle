@@ -47,23 +47,39 @@ const progress = computed(() => {
      combat-overlay-layout e2e cả 3 viewport. Border-box đưa tổng về đúng
      token, dock và TopBar khớp mép tuyệt đối. */
   box-sizing: border-box;
+  position: relative;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
-  background: color-mix(in srgb, var(--ink-950) 70%, transparent);
+  background:
+    linear-gradient(90deg, rgba(56, 225, 255, .05), transparent 30%, transparent 70%, rgba(56, 225, 255, .05)),
+    color-mix(in srgb, var(--sys-bg-0, var(--ink-950)) 78%, transparent);
   backdrop-filter: blur(6px);
-  border-bottom: 1px solid color-mix(in srgb, var(--frame-outer) 55%, transparent);
-  font-family: var(--font-body);
+  border-bottom: 1px solid color-mix(in srgb, var(--sys-line, var(--frame-outer)) 55%, transparent);
+  font-family: var(--sys-font-body, var(--font-body));
   pointer-events: auto;
 }
 
+/* M-UI-OVERHAUL: energy hairline under the combat rail. */
+.combat-top-bar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--sys-accent, var(--chrome-300)) 24%, var(--sys-accent, var(--chrome-300)) 76%, transparent);
+  opacity: .5;
+  pointer-events: none;
+}
+
 .combat-top-bar__title {
-  font-family: var(--font-display);
+  font-family: var(--sys-font-display, var(--font-display));
   font-weight: 700;
   font-size: var(--text-body);
-  color: var(--chrome-100);
+  color: var(--sys-text, var(--chrome-100));
   letter-spacing: 0.02em;
   white-space: nowrap;
   overflow: hidden;
@@ -73,6 +89,7 @@ const progress = computed(() => {
 
 .combat-top-bar__progress {
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  color: var(--sys-text-muted, var(--text-secondary));
 }
 </style>

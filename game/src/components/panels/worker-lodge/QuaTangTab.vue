@@ -81,7 +81,7 @@ function onClaim(giftId: string) {
   <section class="qua-tang">
     <p class="qua-tang__hint">{{ t('quaTang.hint') }}</p>
 
-    <div v-for="gift in pending" :key="gift.id" class="qua-tang__row">
+    <div v-for="gift in pending" :key="gift.id" class="qua-tang__row sys-chamfer">
       <span class="qua-tang__identity">
         <span class="qua-tang__name">{{ gift.name }}</span>
         <span v-if="gift.grade" class="qua-tang__grade" :style="{ color: `var(--grade-${gift.grade})` }">
@@ -119,7 +119,7 @@ function onClaim(giftId: string) {
 
 .qua-tang__hint {
   margin: 0;
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
   font-size: var(--text-sm);
 }
 
@@ -129,9 +129,9 @@ function onClaim(giftId: string) {
   justify-content: space-between;
   gap: 8px;
   padding: 8px 12px;
-  border: 1px solid color-mix(in srgb, var(--jade) 40%, var(--paper-line));
+  border: 1px solid color-mix(in srgb, var(--sys-success, var(--jade)) 40%, var(--sys-line-soft, var(--paper-line)));
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--jade) 10%, var(--paper-50));
+  background: color-mix(in srgb, var(--sys-success, var(--jade)) 10%, var(--sys-bg-0, var(--paper-50)));
 }
 
 .qua-tang__identity {
@@ -158,8 +158,8 @@ function onClaim(giftId: string) {
 
 .qua-tang__history-title {
   margin: 0;
-  font: 700 var(--text-sm) var(--font-display);
-  color: var(--paper-text-soft);
+  font: 700 var(--text-sm) var(--sys-font-display, var(--font-display));
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .qua-tang__claimed {
@@ -168,21 +168,21 @@ function onClaim(giftId: string) {
   justify-content: space-between;
   gap: 8px;
   padding: 6px 12px;
-  border: 1px solid var(--paper-line);
+  border: 1px solid var(--sys-line-soft, var(--paper-line));
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--paper-100) 70%, transparent);
-  color: var(--paper-text-soft);
+  background: color-mix(in srgb, var(--sys-bg-1, var(--paper-100)) 70%, transparent);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-size: var(--text-xs);
 }
 
 .qua-tang__badge {
-  color: var(--jade);
+  color: var(--sys-success, var(--jade));
   font-size: var(--text-xs);
 }
 
 .qua-tang__empty {
   margin: 0;
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
   font-size: var(--text-sm);
 }
 </style>

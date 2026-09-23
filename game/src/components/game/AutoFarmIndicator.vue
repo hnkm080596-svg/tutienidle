@@ -28,11 +28,11 @@ function stopAutoFarm() {
 </script>
 
 <template>
-  <div v-if="armedStageName" class="auto-farm-indicator">
+  <div v-if="armedStageName" class="auto-farm-indicator sys-ephemeral">
     <span class="auto-farm-indicator__label">
       {{ t('autoFarm.running', { stage: armedStageName }) }}
     </span>
-    <GameButton variant="danger" size="sm" data-testid="autofarm-stop" @click="stopAutoFarm">
+    <GameButton variant="system" size="sm" accent-var="var(--sys-danger, var(--crimson))" data-testid="autofarm-stop" @click="stopAutoFarm">
       {{ t('autoFarm.stop') }}
     </GameButton>
   </div>
@@ -48,10 +48,7 @@ function stopAutoFarm() {
   align-items: center;
   gap: var(--space-2);
   padding: 6px 10px;
-  background: color-mix(in srgb, var(--ink-950) 80%, transparent);
-  border: 1px solid var(--paper-line);
-  border-radius: var(--radius-sm);
   font-size: var(--text-sm);
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
 }
 </style>

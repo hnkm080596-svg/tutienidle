@@ -51,6 +51,7 @@ function onCancel() {
     :open="store.isOpen"
     :title="t('tribulation.stillEquipped.title')"
     width="min(420px, 94vw)"
+    variant="system"
     @close="onCancel"
   >
     <div class="breakthrough-confirm">
@@ -66,7 +67,7 @@ function onCancel() {
       </p>
 
       <div class="breakthrough-confirm__actions">
-        <GameButton variant="ghost" size="sm" @click="onCancel">{{ t('tribulation.stillEquipped.cancel') }}</GameButton>
+        <GameButton variant="system" size="sm" @click="onCancel">{{ t('tribulation.stillEquipped.cancel') }}</GameButton>
         <GameButton size="sm" @click="onConfirm">{{ t('tribulation.stillEquipped.confirm') }}</GameButton>
       </div>
     </div>

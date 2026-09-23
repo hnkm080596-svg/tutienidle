@@ -130,6 +130,7 @@ onMounted(() => {
     <div class="combat-victory-panel__actions">
       <GameButton
         class="combat-victory-panel__retry"
+        variant="primary"
         :class="{ 'is-disabled': ui.battleRunMode !== 'manual' }"
         :disabled="ui.battleRunMode !== 'manual'"
         @click="retryNow"
@@ -156,7 +157,7 @@ onMounted(() => {
   border-radius: 0;
   box-shadow: none;
   text-align: center;
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .combat-victory-panel > :not(.ink-nine-slice):not(.ink-wash-backdrop) {
@@ -166,8 +167,8 @@ onMounted(() => {
 
 .combat-victory-panel__title {
   margin: 0 0 16px;
-  font-family: var(--font-display);
-  color: var(--paper-text, #211f1a);
+  font-family: var(--sys-font-display, var(--font-display));
+  color: var(--sys-text, var(--paper-text, #211f1a));
   font-size: var(--text-panel-title);
 }
 
@@ -186,7 +187,7 @@ onMounted(() => {
 }
 
 .combat-victory-panel__retry.is-disabled {
-  background: var(--ink-700);
-  color: var(--text-muted);
+  background: var(--sys-bg-1, var(--ink-700));
+  color: var(--sys-text-dim, var(--text-muted));
 }
 </style>

@@ -25,6 +25,6 @@ import PhaserCanvas from './PhaserCanvas.vue'
 .main-scene {
   position: absolute;
   inset: 0;
-  background: var(--ink-950);
+  background: var(--sys-bg-0, var(--ink-950));
 }
 </style>

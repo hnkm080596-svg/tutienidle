@@ -330,9 +330,9 @@ function doDissolve() {
     </div>
 
     <div v-if="dissolveTotalPages > 1" class="dissolve-pagination">
-      <GameButton variant="ghost" size="sm" :disabled="dissolvePage === 0" @click="dissolveGoTo(dissolvePage - 1)">‹</GameButton>
+      <GameButton variant="system" size="sm" :disabled="dissolvePage === 0" @click="dissolveGoTo(dissolvePage - 1)">‹</GameButton>
       <span class="dissolve-pagination__label">{{ dissolvePage + 1 }} / {{ dissolveTotalPages }}</span>
-      <GameButton variant="ghost" size="sm" :disabled="dissolvePage >= dissolveTotalPages - 1" @click="dissolveGoTo(dissolvePage + 1)">›</GameButton>
+      <GameButton variant="system" size="sm" :disabled="dissolvePage >= dissolveTotalPages - 1" @click="dissolveGoTo(dissolvePage + 1)">›</GameButton>
     </div>
 
     <div v-if="dissolvePreview.length > 0" class="dissolve-preview">
@@ -347,7 +347,7 @@ function doDissolve() {
 
     <GameButton
       size="lg"
-      variant="danger"
+      variant="system" accent-var="var(--sys-danger, #ff5470)"
       class="qi-hall__primary-action"
       :disabled="dissolveSelected.size === 0"
       @click="doDissolve"
@@ -367,23 +367,23 @@ function doDissolve() {
 }
 
 .dissolve-filters select {
-  background: var(--ink-800);
-  color: var(--text-primary);
-  border: 1px solid var(--ink-line-soft);
+  background: var(--sys-bg-0, var(--ink-800));
+  color: var(--sys-text, var(--text-primary));
+  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
   border-radius: var(--radius-sm);
   padding: 4px;
   min-height: var(--tap-min);
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .dissolve-filters__bulk {
-  background: var(--ink-800);
-  color: var(--text-primary);
-  border: 1px solid var(--ink-line-soft);
+  background: var(--sys-bg-0, var(--ink-800));
+  color: var(--sys-text, var(--text-primary));
+  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
   border-radius: var(--radius-sm);
   padding: 4px 10px;
   min-height: var(--tap-min);
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
   font-size: var(--text-xs);
   cursor: pointer;
 }
@@ -430,11 +430,11 @@ function doDissolve() {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--jade);
-  color: var(--paper-50);
+  background: var(--sys-success, var(--jade));
+  color: var(--sys-bg-0, var(--paper-50));
   font-size: 11px;
   font-weight: 700;
-  box-shadow: 0 0 0 2px var(--paper-50), var(--surface-shadow-soft);
+  box-shadow: 0 0 0 2px var(--sys-bg-0, var(--paper-50)), var(--sys-shadow, var(--surface-shadow-soft));
 }
 
 .dissolve-pagination {
@@ -447,7 +447,7 @@ function doDissolve() {
 
 .dissolve-pagination__label {
   font-size: var(--text-sm);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-variant-numeric: tabular-nums;
 }
 
@@ -458,12 +458,12 @@ function doDissolve() {
 .dissolve-preview h4 {
   margin: 0 0 4px;
   font-size: var(--text-sm);
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
 }
 
 .dissolve-preview p {
   margin: 0 0 3px;
   font-size: var(--text-xs);
-  color: var(--jade);
+  color: var(--sys-success, var(--jade));
 }
 </style>

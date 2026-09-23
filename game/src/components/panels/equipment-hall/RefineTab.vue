@@ -268,7 +268,7 @@ const refineRenAfter = computed(() =>
       <!-- Card duy nhất (2026-08-30 spec, khớp đúng Cường Hóa đã duyệt)
            — cột "Khóa" gộp thẳng vào bảng thay vì tách 2 cột flex
            riêng, Điểm Rèn làm dòng chú thích. -->
-      <div class="qi-hall__preview-card">
+      <div class="qi-hall__preview-card sys-chamfer">
         <p v-if="itemRenState" class="qi-hall__col-title">
           {{ t('panels.equipmentHall.labels.forgePoints') }} {{ itemRenState.points }}/{{ itemRenState.max }} {{ t('panels.equipmentHall.labels.levelArrow') }} {{ refineRenAfter }}/{{ itemRenState.max }}
           · {{ t('panels.equipmentHall.labels.maxLockPrefix') }} {{ Math.min(3, Math.max(0, selectedAffixes.length - 1)) }} {{ t('panels.equipmentHall.labels.maxLockSuffix') }}
@@ -323,11 +323,11 @@ const refineRenAfter = computed(() =>
           {{ t('panels.equipmentHall.buttons.refinePreview') }}
         </GameButton>
 
-        <GameButton v-if="pendingRefineValues" size="lg" variant="secondary" @click="doRefineKeep">
+        <GameButton v-if="pendingRefineValues" size="lg" variant="system" @click="doRefineKeep">
           {{ t('panels.equipmentHall.buttons.keep') }}
         </GameButton>
 
-        <GameButton v-if="pendingRefineValues" size="lg" variant="secondary" @click="doRefineDiscard">
+        <GameButton v-if="pendingRefineValues" size="lg" variant="system" @click="doRefineDiscard">
           {{ t('panels.equipmentHall.buttons.discard') }}
         </GameButton>
       </div>

@@ -120,13 +120,13 @@ function perfect(realmId: string): void {
   flex-direction: column;
   gap: 4px;
   padding: 8px 10px;
-  border: 1px solid var(--ink-line-soft, rgba(120, 140, 160, 0.25));
+  border: 1px solid var(--sys-line-soft, var(--ink-line-soft, rgba(120, 140, 160, 0.25)));
   border-radius: var(--radius-sm, 6px);
-  background: var(--ink-800, rgba(20, 28, 38, 0.6));
+  background: var(--sys-bg-0, var(--ink-800, rgba(20, 28, 38, 0.6)));
 }
 
 .body-perfection-section__row--perfected {
-  border-color: var(--jade, #6fbf73);
+  border-color: var(--sys-success, var(--jade, #6fbf73));
 }
 
 .body-perfection-section__row-head {
@@ -139,16 +139,16 @@ function perfect(realmId: string): void {
 .body-perfection-section__row-name {
   font-size: var(--text-md, 0.95rem);
   font-weight: 600;
-  color: var(--text-primary, #e8ecf1);
+  color: var(--sys-text, var(--text-primary, #e8ecf1));
 }
 
 .body-perfection-section__row-state {
   font-size: var(--text-xs, 0.75rem);
-  color: var(--text-muted, #8b96a5);
+  color: var(--sys-text-dim, var(--text-muted, #8b96a5));
 }
 
 .body-perfection-section__row--perfected .body-perfection-section__row-state {
-  color: var(--jade, #6fbf73);
+  color: var(--sys-success, var(--jade, #6fbf73));
 }
 
 .body-perfection-section__row-materials {
@@ -157,7 +157,7 @@ function perfect(realmId: string): void {
   gap: 4px 10px;
   margin: 0;
   font-size: var(--text-sm, 0.85rem);
-  color: var(--text-muted, #8b96a5);
+  color: var(--sys-text-dim, var(--text-muted, #8b96a5));
 }
 
 .body-perfection-section__row-perfect {

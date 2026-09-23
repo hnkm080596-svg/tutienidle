@@ -165,26 +165,26 @@ function invest(): void {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font: 700 var(--text-lg) var(--font-display);
-  color: var(--paper-text);
+  font: 700 var(--text-lg) var(--sys-font-display, var(--font-display));
+  color: var(--sys-text, var(--paper-text));
 }
 
 .zhou-tian-section__state {
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
 }
 
 .zhou-tian-section__row--complete .zhou-tian-section__state,
 .zhou-tian-section__milestone--reached {
-  color: var(--jade);
+  color: var(--sys-success, var(--jade));
 }
 
 .zhou-tian-section__row {
   padding: 8px 10px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
+  background: var(--sys-bg-0, var(--ink-800));
+  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
   border-radius: var(--radius-sm);
   display: flex;
   flex-direction: column;
@@ -194,12 +194,12 @@ function invest(): void {
 
 .zhou-tian-section__row--active {
   opacity: 1;
-  border-color: var(--chrome-300);
+  border-color: var(--sys-text, var(--chrome-300));
 }
 
 .zhou-tian-section__row--complete {
   opacity: 1;
-  border-color: var(--jade);
+  border-color: var(--sys-success, var(--jade));
 }
 
 .zhou-tian-section__bar {
@@ -210,25 +210,25 @@ function invest(): void {
   display: flex;
   justify-content: space-between;
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
 }
 
 .zhou-tian-section__gate {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--crimson);
+  color: var(--sys-danger, var(--crimson));
 }
 
 .zhou-tian-section__complete {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--jade);
+  color: var(--sys-success, var(--jade));
 }
 
 .zhou-tian-section__capacity {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
 }
 
 .zhou-tian-section__invest {
@@ -240,6 +240,6 @@ function invest(): void {
 
 .zhou-tian-section__owned {
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
 }
 </style>

@@ -221,18 +221,18 @@ onBeforeUnmount(() => {
   min-height: var(--tap-min);
   padding: 0;
   font-size: var(--text-sm);
-  background: var(--ink-800);
-  color: var(--text-secondary);
-  border: 1px solid var(--ink-line-soft);
+  background: var(--sys-bg-0, var(--ink-800));
+  color: var(--sys-text-muted, var(--text-secondary));
+  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .bag-pagination__pages button.is-active {
-  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
-  color: var(--ink-950);
-  border-color: var(--chrome-500);
+  background: linear-gradient(180deg, var(--sys-text, var(--chrome-100)), var(--sys-line, var(--chrome-500)));
+  color: var(--sys-bg-0, var(--ink-950));
+  border-color: var(--sys-line, var(--chrome-500));
 }
 
 /* ================= Sort control — sát phải ========================== */
@@ -253,8 +253,8 @@ onBeforeUnmount(() => {
 }
 
 .bag-pagination__sort-btn.is-active {
-  border-color: var(--chrome-300);
-  color: var(--chrome-100);
+  border-color: var(--sys-text, var(--chrome-300));
+  color: var(--sys-text, var(--chrome-100));
 }
 
 .bag-pagination__menu {
@@ -266,10 +266,10 @@ onBeforeUnmount(() => {
   flex-direction: column;
   min-width: 168px;
   padding: 4px;
-  background: var(--ink-900);
-  border: 1px solid var(--chrome-500);
+  background: var(--sys-bg-1, var(--ink-900));
+  border: 1px solid var(--sys-line, var(--chrome-500));
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-panel);
+  box-shadow: var(--sys-shadow, var(--shadow-panel));
 }
 
 .bag-pagination__menu button {
@@ -281,18 +281,18 @@ onBeforeUnmount(() => {
 }
 
 .bag-pagination__menu button:hover {
-  border-color: var(--ink-line);
-  color: var(--chrome-100);
+  border-color: var(--sys-line, var(--ink-line));
+  color: var(--sys-text, var(--chrome-100));
 }
 
 .bag-pagination__menu button.is-active {
-  color: var(--chrome-100);
-  border-color: var(--ink-line);
+  color: var(--sys-text, var(--chrome-100));
+  border-color: var(--sys-line, var(--ink-line));
 }
 
 .bag-pagination__menu-direction {
   margin-top: 2px;
-  border-top: 1px solid var(--ink-line-soft) !important;
+  border-top: 1px solid var(--sys-line-soft, var(--ink-line-soft)) !important;
   border-radius: 0 !important;
 }
 

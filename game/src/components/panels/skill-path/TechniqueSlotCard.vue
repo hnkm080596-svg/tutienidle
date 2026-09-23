@@ -18,7 +18,6 @@
 import { computed } from 'vue'
 import SlotView from '../../common/SlotView.vue'
 import Bar from '../../common/primitives/Bar.vue'
-import InkNineSlice from '../../common/primitives/InkNineSlice.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import type { TechniqueTooltipContent } from '@/composables/useTooltip'
 import { buildTechniqueSections } from '@/composables/useTechniqueSections'
@@ -114,8 +113,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 </script>
 
 <template>
-  <div class="technique-card" :class="{ 'technique-card--hero': size === 'hero' }" v-tooltip="tooltipContent">
-    <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" />
+  <div class="technique-card sys-widget sys-chamfer" :class="{ 'technique-card--hero': size === 'hero' }" v-tooltip="tooltipContent">
     <SlotView
       class="technique-card__icon"
       :item="technique ?? null"
@@ -154,8 +152,8 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
   border: 0;
   border-radius: 0;
   text-align: left;
-  font-family: var(--font-body);
-  color: var(--paper-text);
+  font-family: var(--sys-font-body, var(--font-body));
+  color: var(--sys-text, var(--paper-text));
   width: 100%;
   box-sizing: border-box;
 }
@@ -190,7 +188,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 
 .technique-card__empty {
   font-size: var(--text-xs);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .technique-card__tier {
@@ -198,7 +196,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
   padding: 1px 5px;
   font-size: var(--text-xs);
   font-weight: 700;
-  color: var(--mineral-gold);
+  color: var(--sys-accent, var(--mineral-gold));
   border: 1px solid currentColor;
   border-radius: 999px;
   white-space: nowrap;
@@ -211,7 +209,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 
 .technique-card__tier-label {
   font-size: var(--text-xs);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 /* Biến thể hero (spec mục 15 "Tâm pháp hiện tại lớn") — layout dọc,
@@ -237,7 +235,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 }
 
 .technique-card--hero .technique-card__name {
-  font-family: var(--font-display);
+  font-family: var(--sys-font-display, var(--font-display));
   font-size: var(--text-title);
   white-space: normal;
 }
@@ -256,8 +254,8 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
   font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: var(--jade);
-  border: 1px solid var(--jade);
+  color: var(--sys-success, var(--jade));
+  border: 1px solid var(--sys-success, var(--jade));
   border-radius: 999px;
 }
 </style>

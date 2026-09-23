@@ -203,6 +203,18 @@ describe('system theme boundary (M-UI-SYSTEM)', () => {
     expect(offenders).toEqual([])
   }, SCAN_TIMEOUT)
 
+  it('no plain .css file outside system-theme.css defines a --sys-* token', () => {
+    // Invariant-2 gap closed: the :root-only check + .vue-only remap scan left
+    // non-:root --sys-* definitions in plain .css files unpoliced.
+    const offenders: string[] = []
+    for (const file of listCss(SRC_DIR)) {
+      if (file === SYS_THEME) continue
+      const text = stripComments(readFileSync(file, 'utf8'))
+      if (SYS_LHS_ONCE.test(text)) offenders.push(file)
+    }
+    expect(offenders).toEqual([])
+  }, SCAN_TIMEOUT)
+
   it('system-theme.css defines no non-sys token (LHS scan)', () => {
     const hits: string[] = []
     for (const rule of cssRules(css)) {
@@ -242,6 +254,85 @@ describe('system theme boundary (M-UI-SYSTEM)', () => {
     }
     expect(offenders).toEqual([])
   }, SCAN_TIMEOUT)
+
+  // M-UI-OVERHAUL Task 2 Step 1 — the v2 grammar contract: every utility the
+  // plan wires into primitives/shared chrome must exist as a real rule in
+  // system-theme.css (existence), and the generic anchor test above already
+  // guarantees each is .sys-anchored (no unanchored leakage possible).
+  it('v2 grammar utilities exist as anchored rules', () => {
+    const V2_UTILITIES = [
+      '.sys-chamfer',
+      '.sys-boot',
+      '.sys-trace',
+      '.sys-rail',
+      '.sys-energy',
+      '.sys-snap',
+      '.sys-widget',
+      '.sys-ephemeral',
+      '.sys-btn',
+      '.sys-tabs',
+      '.sys-seg',
+      '.sys-marker',
+      '.sys-veil',
+      '.sys-pop',
+      '.sys-domain--azure',
+      '.sys-domain--jade',
+      '.sys-domain--violet',
+      '.sys-domain--danger',
+    ]
+    const selectors = [...ordinarySelectors(css)]
+    const missing = V2_UTILITIES.filter(
+      (util) => !selectors.some((sel) => splitSelectorList(sel).some((s) => s.includes(util))),
+    )
+    expect(missing).toEqual([])
+  })
+
+  // M-UI-OVERHAUL Task 10 - surface-contract guards added by the overhaul.
+  it('InkNineSlice is only consumed by ink-ceremony and dormant-fallback paths', () => {
+    // Every remaining consumer is either the still-painted victory/defeat
+    // ceremony or an intentionally dormant ink variant/fallback branch
+    // (OverlayPanel variant="ink", GameButton non-system variants). Any new
+    // consumer outside this list means a surface re-adopted ink chrome.
+    const ALLOWLIST = new Set([
+      'components/game/combat/CombatVictoryPanel.vue',
+      'components/game/combat/CombatDefeatPanel.vue',
+      'components/common/OverlayPanel.vue',
+      'components/common/GameButton.vue',
+      'components/common/primitives/InkNineSlice.vue',
+    ])
+    const offenders: string[] = []
+    for (const file of srcCorpus(SRC_DIR)) {
+      if (!file.fromSrc.endsWith('.vue')) continue
+      if (ALLOWLIST.has(file.fromSrc)) continue
+      // Actual consumption = import or template tag; comments don't count.
+      if (/import\s+InkNineSlice|<InkNineSlice\b/.test(file.text)) offenders.push(file.fromSrc)
+    }
+    expect(offenders).toEqual([])
+  }, SCAN_TIMEOUT)
+
+  it('every OverlayPanel mount requests the system variant', () => {
+    const offenders: string[] = []
+    for (const file of srcCorpus(SRC_DIR)) {
+      if (!file.fromSrc.endsWith('.vue')) continue
+      if (file.fromSrc === 'components/common/OverlayPanel.vue') continue
+      // Scan each <OverlayPanel ...> opening tag for the system opt-in.
+      for (const m of file.text.matchAll(/<OverlayPanel\b[\s\S]*?>/g)) {
+        if (!/variant\s*=\s*["']\s*'?system/.test(m[0])) {
+          offenders.push(`${file.fromSrc} :: ${m[0].slice(0, 80)}`)
+        }
+      }
+    }
+    expect(offenders).toEqual([])
+  }, SCAN_TIMEOUT)
+
+  it('low-fx kill-switch exists and is wired before mount', () => {
+    expect([...ordinarySelectors(css)].some((sel) => sel.includes('sys-fx-low'))).toBe(true)
+    const main = readFileSync(MAIN_TS, 'utf8')
+    expect(main).toContain('initSysFxLow')
+    // The initializer must run before app.mount so first paint already
+    // carries the reduced-effects class.
+    expect(main.indexOf('initSysFxLow()')).toBeLessThan(main.indexOf('.mount('))
+  })
 
   it('main.ts imports theme.css before system-theme.css', () => {
     const main = readFileSync(MAIN_TS, 'utf8')

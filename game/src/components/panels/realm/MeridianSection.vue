@@ -121,7 +121,7 @@ function invest(): void {
     <div
       v-for="page in pageViews"
       :key="page.pageRealmId"
-      class="meridian-section__page"
+      class="meridian-section__page sys-chamfer"
       :class="{ 'meridian-section__page--locked': !page.unlocked }"
     >
       <div class="meridian-section__page-head">
@@ -185,8 +185,8 @@ function invest(): void {
 .meridian-section__summary {
   display: flex;
   justify-content: space-between;
-  font: 700 var(--text-lg) var(--font-display);
-  color: var(--paper-text);
+  font: 700 var(--text-lg) var(--sys-font-display, var(--font-display));
+  color: var(--sys-text, var(--paper-text));
 }
 
 .meridian-section__page {
@@ -203,7 +203,7 @@ function invest(): void {
 
 .meridian-section__page-name {
   font-weight: 600;
-  color: var(--chrome-300);
+  color: var(--sys-text, var(--chrome-300));
   font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -211,7 +211,7 @@ function invest(): void {
 
 .meridian-section__page-lock {
   font-size: var(--text-xs);
-  color: var(--crimson);
+  color: var(--sys-danger, var(--crimson));
 }
 
 .meridian-section__page--locked .meridian-section__rows {
@@ -226,20 +226,20 @@ function invest(): void {
 
 .meridian-section__row {
   padding: 8px 10px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
+  background: var(--sys-bg-0, var(--ink-800));
+  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
   border-radius: var(--radius-sm);
   opacity: 0.55;
 }
 
 .meridian-section__row--opened {
   opacity: 1;
-  border-color: var(--jade);
+  border-color: var(--sys-success, var(--jade));
 }
 
 .meridian-section__row--next {
   opacity: 0.9;
-  border-color: var(--chrome-300);
+  border-color: var(--sys-text, var(--chrome-300));
 }
 
 .meridian-section__row-head {
@@ -250,7 +250,7 @@ function invest(): void {
 
 .meridian-section__row-name {
   font-weight: 600;
-  color: var(--chrome-100);
+  color: var(--sys-text, var(--chrome-100));
   font-size: var(--text-md);
 }
 
@@ -258,29 +258,29 @@ function invest(): void {
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
 }
 
 .meridian-section__row--opened .meridian-section__row-state {
-  color: var(--jade);
+  color: var(--sys-success, var(--jade));
 }
 
 .meridian-section__row-desc {
   margin: 2px 0 4px;
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
 }
 
 .meridian-section__row-stats {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  color: var(--sys-text-muted, var(--text-secondary));
 }
 
 .meridian-section__row-gate {
   margin: 4px 0 0;
   font-size: var(--text-sm);
-  color: var(--crimson);
+  color: var(--sys-danger, var(--crimson));
 }
 
 .meridian-section__row-invest {
@@ -292,6 +292,6 @@ function invest(): void {
 
 .meridian-section__row-owned {
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
 }
 </style>

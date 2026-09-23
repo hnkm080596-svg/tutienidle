@@ -4,69 +4,49 @@
 // Kinh Các's Lore tab (Phase 7): người chơi bấm vào 1 lore item, đọc
 // trọn mô tả, tự đóng khi bấm ra ngoài/nút đóng, KHÔNG tự ẩn theo
 // chuột như Tooltip. Style nhất quán NavMenuOverlay.vue.
+// M-UI-OVERHAUL: renders on SysModalBase (system console + focus trap +
+// scrim-click/Escape close).
+import { computed, ref, watch } from 'vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
+import SysModalBase from '@/components/common/system/SysModalBase.vue'
 
-defineProps<{
+const props = defineProps<{
   content: { title: string; description: string } | null
 }>()
 
 const emit = defineEmits<{ close: [] }>()
 
 const { t } = useI18n()
+
+// Content nulled on close would blank the title mid-leave - keep the
+// last shown entry until the modal is fully gone.
+const lastContent = ref(props.content)
+watch(() => props.content, (c) => { if (c) lastContent.value = c })
+const shown = computed(() => props.content ?? lastContent.value)
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition name="lore-modal-fade">
-      <div v-if="content" class="lore-modal" :style="{ zIndex: OVERLAY_LAYERS.modal }" @click.self="emit('close')">
-        <div class="lore-modal__panel scrollfade">
-          <h3 class="lore-modal__title">{{ content.title }}</h3>
+  <SysModalBase
+    :open="props.content !== null"
+    :title="shown?.title ?? ''"
+    width="min(480px, 92vw)"
+    :layer="OVERLAY_LAYERS.modal"
+    card-class="lore-modal"
+    @close="emit('close')"
+  >
+    <p class="lore-modal__description">{{ shown?.description }}</p>
 
-          <p class="lore-modal__description">{{ content.description }}</p>
-
-          <GameButton class="lore-modal__close" variant="secondary" size="sm" @click="emit('close')">{{ t('panels.common.close') }}</GameButton>
-        </div>
-      </div>
-    </Transition>
-  </Teleport>
+    <GameButton class="lore-modal__close" variant="system" size="sm" @click="emit('close')">{{ t('panels.common.close') }}</GameButton>
+  </SysModalBase>
 </template>
 
 <style scoped>
-.lore-modal {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--scrim);
-}
-
-.lore-modal__panel {
-  background: var(--ink-900);
-  border: 1px solid var(--chrome-500);
-  box-shadow: var(--shadow-panel);
-  border-radius: var(--radius-md);
-  padding: 24px 28px;
-  min-width: min(340px, 92vw);
-  max-width: 480px;
-  max-height: 84vh;
-  overflow-y: auto;
-}
-
-.lore-modal__title {
-  margin: 0 0 12px;
-  font-family: var(--font-display);
-  font-size: var(--text-title);
-  color: var(--chrome-100);
-  text-align: center;
-}
-
 .lore-modal__description {
   margin: 0 0 20px;
-  color: var(--text-primary);
-  font-family: var(--font-body);
+  color: var(--sys-text, var(--text-primary));
+  font-family: var(--sys-font-body, var(--font-body));
   font-size: var(--text-body);
   line-height: 1.5;
   white-space: pre-line;
@@ -76,20 +56,5 @@ const { t } = useI18n()
   display: block;
   margin: 0 auto;
   padding: 6px 24px;
-}
-
-.lore-modal__close:hover {
-  border-color: var(--chrome-300);
-  color: var(--chrome-100);
-}
-
-.lore-modal-fade-enter-active,
-.lore-modal-fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.lore-modal-fade-enter-from,
-.lore-modal-fade-leave-to {
-  opacity: 0;
 }
 </style>

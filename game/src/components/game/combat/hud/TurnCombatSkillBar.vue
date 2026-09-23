@@ -235,7 +235,7 @@ function tapSlot(role: TurnSkillSlotRole): void {
 }
 
 .turn-combat-skill-bar__slot-button.is-tappable {
-  outline: 2px solid var(--jade, #4caf50);
+  outline: 2px solid var(--sys-success, var(--jade, #4caf50));
   outline-offset: 2px;
 }
 
@@ -250,16 +250,17 @@ function tapSlot(role: TurnSkillSlotRole): void {
   min-width: 56px;
   min-height: 56px;
   padding: 4px 6px;
-  border: 1px solid var(--gold-700, #d4a72c);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--gold-700, #d4a72c) 14%, transparent);
+  border: 1px solid var(--sys-warn, var(--gold-700, #d4a72c));
+  border-radius: 0;
+  clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
+  background: color-mix(in srgb, var(--sys-warn, var(--gold-700, #d4a72c)) 14%, transparent);
   text-align: center;
 }
 
 .turn-combat-skill-bar__emblem-name {
   font-size: var(--text-xs, 11px);
   font-weight: 600;
-  color: var(--gold-700, #d4a72c);
+  color: var(--sys-warn, var(--gold-700, #d4a72c));
   line-height: 1.2;
 }
 
@@ -267,7 +268,7 @@ function tapSlot(role: TurnSkillSlotRole): void {
   font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-muted, #999);
+  color: var(--sys-text-dim, var(--text-muted, #999));
 }
 
 .turn-combat-skill-bar__mode-toggle {
@@ -275,12 +276,12 @@ function tapSlot(role: TurnSkillSlotRole): void {
   align-items: center;
   gap: 4px;
   font-size: var(--text-xs, 12px);
-  color: var(--text-muted, #999);
+  color: var(--sys-text-dim, var(--text-muted, #999));
   cursor: pointer;
 }
 
 .turn-combat-skill-bar__awaiting {
   font-size: var(--text-xs, 12px);
-  color: var(--jade, #4caf50);
+  color: var(--sys-success, var(--jade, #4caf50));
 }
 </style>

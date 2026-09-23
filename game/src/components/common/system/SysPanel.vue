@@ -7,16 +7,23 @@ import { useSystemRimAuthority } from '@/composables/useSystemRimAuthority'
 // its visible-primary signal (open, characterOverlayOpen). The panel claims /
 // promotes while rimActive is true and releases when it flips false or the
 // panel unmounts - mounted-but-hidden overlays hold no claim (spec 4.1.1).
+//
+// M-UI-OVERHAUL v2: chamfer (default on) cuts TL+BR corners; boot (default on
+// for 'primary') plays the one-shot materialize wipe when the panel mounts.
 const props = withDefaults(defineProps<{
   variant?: 'primary' | 'interactive' | 'flat'
   corners?: boolean
   scanlines?: boolean
   rimActive?: boolean
+  chamfer?: boolean
+  boot?: boolean
 }>(), {
   variant: 'flat',
   corners: true,
   scanlines: false,
   rimActive: false,
+  chamfer: true,
+  boot: true,
 })
 
 // Claimant id captured once per instance; authored string ids ('hud-left')
@@ -33,6 +40,8 @@ const { isTop } = useSystemRimAuthority(
     class="sys-panel sys-surface"
     :class="{
       'sys-corners': corners,
+      'sys-chamfer': chamfer,
+      'sys-boot': boot && variant === 'primary',
       'sys-rim': variant === 'primary',
       'sys-rim--live': isTop,
       'sys-bloom': variant === 'interactive',
@@ -50,7 +59,10 @@ const { isTop } = useSystemRimAuthority(
    reads as a legible bordered box; every visual token read stays --sys-*. */
 .sys-panel {
   position: relative;
-  border: 1px solid var(--sys-line, transparent);
-  color: var(--sys-text, inherit);
+  background-color: var(--sys-surface-solid, var(--paper-50, #f5f0e4));
+  border: 1px solid var(--sys-line, rgba(42, 41, 36, .35));
+  color: var(--sys-text, var(--paper-text, #211f1a));
 }
+/* Safe degrade: clip-path disappears with the sheet, borders stay. */
+.sys-panel.sys-chamfer { border-radius: 0; }
 </style>

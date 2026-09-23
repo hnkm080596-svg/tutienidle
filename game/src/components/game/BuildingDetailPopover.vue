@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
 import StatRow from '@/components/common/primitives/StatRow.vue'
 import Eyebrow from '@/components/common/primitives/Eyebrow.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore, type LeftPanelMode } from '@/stores/ui'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -85,10 +84,8 @@ async function build() {
 </script>
 
 <template>
-  <div v-if="template && !instance" class="building-popover">
-    <InkNineSlice asset-id="surface-m-paper" layer="surface" />
-    <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" />
-
+  <!-- M-UI-OVERHAUL T5 ephemeral readout over the world canvas. -->
+  <div v-if="template && !instance" class="building-popover sys-ephemeral">
     <div class="building-popover__scroll scrollfade">
       <div class="building-popover__header">
         <div>
@@ -117,7 +114,7 @@ async function build() {
     <!-- Nút hành động cố định NGOÀI vùng scroll (2026-08-30, bug report:
          popup nhiều chi phí đẩy nút "Xây dựng" xuống dưới, phải cuộn mới
          bấm được) — luôn hiện dù nội dung chi phí dài cỡ nào. -->
-    <GameButton class="building-popover__action" variant="primary" :disabled="!canBuild" @click="build">{{ t('panels.buildingPopover.build') }}</GameButton>
+    <GameButton class="building-popover__action" variant="system" :disabled="!canBuild" @click="build">{{ t('panels.buildingPopover.build') }}</GameButton>
   </div>
 </template>
 
@@ -127,11 +124,8 @@ async function build() {
   display: flex;
   flex-direction: column;
   padding: 14px;
-  background: transparent;
-  border-radius: 0;
-  box-shadow: none;
-  color: var(--paper-text);
-  font-family: var(--font-body);
+  color: var(--sys-text, var(--paper-text));
+  font-family: var(--sys-font-body, var(--font-body));
   min-width: 260px;
   max-width: 320px;
   max-height: calc(100vh - 48px);
@@ -156,15 +150,15 @@ async function build() {
 
 .building-popover__title {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--sys-font-display, var(--font-display));
   font-size: var(--text-lg);
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
 }
 
 .building-popover__description {
   margin: 4px 0 0;
   font-size: var(--text-xs);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .building-popover__section h4 {

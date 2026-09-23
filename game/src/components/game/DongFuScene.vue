@@ -268,13 +268,13 @@ onBeforeUnmount(() => {
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  background: var(--ink-950);
+  background: var(--sys-bg-0, var(--ink-950));
 }
 
 .home-scene__sky {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, var(--ink-950) 0%, var(--ink-900) 38%, var(--ink-800) 62%, var(--ink-800) 100%);
+  background: linear-gradient(180deg, var(--sys-bg-0, var(--ink-950)) 0%, var(--sys-bg-1, var(--ink-900)) 38%, var(--sys-bg-0, var(--ink-800)) 62%, var(--sys-bg-0, var(--ink-800)) 100%);
 }
 
 .home-scene__mountains {
@@ -283,7 +283,7 @@ onBeforeUnmount(() => {
   right: 0;
   top: 28%;
   height: 32%;
-  background-color: var(--ink-900);
+  background-color: var(--sys-bg-1, var(--ink-900));
   opacity: 0.9;
   clip-path: polygon(0% 100%, 0% 62%, 9% 40%, 18% 58%, 27% 30%, 38% 52%, 48% 22%, 60% 50%, 71% 34%, 82% 56%, 91% 38%, 100% 60%, 100% 100%);
 }
@@ -291,7 +291,7 @@ onBeforeUnmount(() => {
 .home-scene__mountains--far {
   top: 32%;
   height: 30%;
-  background-color: var(--ink-900);
+  background-color: var(--sys-bg-1, var(--ink-900));
   opacity: 0.75;
   clip-path: polygon(0% 100%, 0% 74%, 12% 56%, 24% 70%, 36% 48%, 50% 66%, 63% 46%, 76% 68%, 88% 52%, 100% 72%, 100% 100%);
 }
@@ -302,8 +302,8 @@ onBeforeUnmount(() => {
   right: 0;
   bottom: 0;
   top: 64%;
-  background: linear-gradient(180deg, var(--ink-900) 0%, var(--ink-900) 55%, var(--ink-950) 100%);
-  border-top: 1px solid color-mix(in srgb, var(--text-primary) 4%, transparent);
+  background: linear-gradient(180deg, var(--sys-bg-1, var(--ink-900)) 0%, var(--sys-bg-1, var(--ink-900)) 55%, var(--sys-bg-0, var(--ink-950)) 100%);
+  border-top: 1px solid color-mix(in srgb, var(--sys-text, var(--text-primary)) 4%, transparent);
 }
 
 /* Bốn texture 1672×941 dùng cùng cover geometry để luôn khớp hình khi dịch
@@ -387,7 +387,7 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: -30%;
   border-radius: 50%;
-  background: radial-gradient(ellipse, color-mix(in srgb, var(--chrome-500) 14%, transparent), color-mix(in srgb, var(--azure) 7%, transparent) 55%, transparent 75%);
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--sys-line, var(--chrome-500)) 14%, transparent), color-mix(in srgb, var(--azure) 7%, transparent) 55%, transparent 75%);
   filter: blur(6px);
 }
 
@@ -396,7 +396,7 @@ onBeforeUnmount(() => {
   left: 50%;
   top: 50%;
   border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--chrome-500) 30%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sys-line, var(--chrome-500)) 30%, transparent);
   transform: translate(-50%, -50%) perspective(320px) rotateX(64deg);
 }
 
@@ -410,13 +410,13 @@ onBeforeUnmount(() => {
 .home-linhnhan__ring--mid {
   width: 74%;
   height: 220%;
-  border-color: color-mix(in srgb, var(--chrome-500) 32%, transparent);
+  border-color: color-mix(in srgb, var(--sys-line, var(--chrome-500)) 32%, transparent);
 }
 
 .home-linhnhan__ring--inner {
   width: 46%;
   height: 140%;
-  border-color: color-mix(in srgb, var(--chrome-500) 48%, transparent);
+  border-color: color-mix(in srgb, var(--sys-line, var(--chrome-500)) 48%, transparent);
   animation: home-pulse 3.2s ease-in-out infinite reverse;
 }
 
@@ -436,8 +436,8 @@ onBeforeUnmount(() => {
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background: var(--chrome-100);
-  box-shadow: 0 0 6px 2px var(--chrome-100);
+  background: var(--sys-text, var(--chrome-100));
+  box-shadow: 0 0 6px 2px var(--sys-text, var(--chrome-100));
   animation: home-mote 7s ease-in-out infinite;
 }
 
@@ -473,7 +473,7 @@ onBeforeUnmount(() => {
 }
 
 .home-player__trigger:focus-visible {
-  outline: 2px solid var(--chrome-300);
+  outline: 2px solid var(--sys-text, var(--chrome-300));
   outline-offset: 4px;
   border-radius: var(--radius-md);
 }

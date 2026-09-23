@@ -33,12 +33,12 @@ watch(
 // Khớp token màu có sẵn trong assets/theme.css — không thêm token
 // mới, tái dùng đúng bảng màu game đã có.
 const KIND_COLOR: Record<NotificationKind, string> = {
-  loot: 'var(--jade)',
-  craft: 'var(--mineral-gold)',
-  upgrade: 'var(--mineral-gold)',
+  loot: 'var(--sys-success, var(--jade))',
+  craft: 'var(--sys-accent, var(--mineral-gold))',
+  upgrade: 'var(--sys-accent, var(--mineral-gold))',
   save: 'var(--azure)',
-  warning: 'var(--gold-700)',
-  error: 'var(--crimson)',
+  warning: 'var(--sys-warn, var(--gold-700))',
+  error: 'var(--sys-danger, var(--crimson))',
 }
 
 // Số toast hiện đồng thời tuỳ chiều cao màn hình thật — Teleport to
@@ -148,13 +148,15 @@ function lastNameText(name: string): string {
   max-width: 160px;
   padding: 5px 7px;
   background:
-    var(--paper-grain) 0 0 / 100px 100px repeat,
-    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 100%);
-  border: 1px solid var(--toast-color, var(--frame-outer));
-  border-left: 3px solid var(--toast-color, var(--frame-outer));
-  border-radius: var(--radius-sm);
-  color: var(--paper-text);
-  font-family: var(--font-body);
+    linear-gradient(180deg, color-mix(in srgb, var(--toast-color, var(--sys-accent, var(--mineral-gold))) 9%, transparent) 0%, transparent 42%),
+    var(--sys-grain, var(--paper-grain)) 0 0 / 100px 100px repeat,
+    linear-gradient(175deg, var(--sys-bg-0, var(--paper-50)) 0%, var(--sys-bg-1, var(--paper-100)) 100%);
+  border: 1px solid var(--toast-color, var(--sys-line, var(--frame-outer)));
+  border-left: 3px solid var(--toast-color, var(--sys-line, var(--frame-outer)));
+  border-radius: 0;
+  clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
+  color: var(--sys-text, var(--paper-text));
+  font-family: var(--sys-font-body, var(--font-body));
   /* UI-006 (Task 4) — toast text dài (vi/en) tự xuống dòng, không tràn. */
   overflow-wrap: anywhere;
 }
@@ -171,20 +173,20 @@ function lastNameText(name: string): string {
   border: 0;
   border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--paper-text-soft);
-  font: 700 var(--text-sm) / 1 var(--font-body);
+  color: var(--sys-text-muted, var(--paper-text-soft));
+  font: 700 var(--text-sm) / 1 var(--sys-font-body, var(--font-body));
   cursor: pointer;
 }
 
 .toast-item__dismiss:focus-visible {
-  outline: 2px solid var(--jade);
+  outline: 2px solid var(--sys-success, var(--jade));
   outline-offset: 1px;
 }
 
 .toast-item {
   font-size: var(--text-xs);
   cursor: default;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  filter: drop-shadow(0 3px 12px rgba(0, 0, 0, 0.45));
 }
 
 .toast-item:has(.toast-item__content) {
@@ -201,9 +203,9 @@ function lastNameText(name: string): string {
   width: 20px;
   height: 20px;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--toast-color) 55%, var(--ink-line));
+  border: 1px solid color-mix(in srgb, var(--toast-color) 55%, var(--sys-line, var(--ink-line)));
   border-radius: var(--radius-sm);
-  background: linear-gradient(145deg, var(--ink-700), var(--ink-950));
+  background: linear-gradient(145deg, var(--sys-bg-1, var(--ink-700)), var(--sys-bg-0, var(--ink-950)));
 }
 
 .toast-item__icon,
@@ -217,12 +219,12 @@ function lastNameText(name: string): string {
   padding: 2px;
   box-sizing: border-box;
   object-fit: contain;
-  background: linear-gradient(145deg, var(--ink-700), var(--ink-950));
+  background: linear-gradient(145deg, var(--sys-bg-1, var(--ink-700)), var(--sys-bg-0, var(--ink-950)));
 }
 
 .toast-item__icon-fallback {
   color: var(--toast-color);
-  font: 700 var(--text-xs) var(--font-display);
+  font: 700 var(--text-xs) var(--sys-font-display, var(--font-display));
 }
 
 .toast-item__content {
@@ -233,7 +235,7 @@ function lastNameText(name: string): string {
 }
 
 .toast-item__eyebrow {
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
   font-size: var(--text-xs);
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -241,7 +243,7 @@ function lastNameText(name: string): string {
 
 .toast-item__name {
   overflow: hidden;
-  font-family: var(--font-display);
+  font-family: var(--sys-font-display, var(--font-display));
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -249,7 +251,7 @@ function lastNameText(name: string): string {
 
 /* Muted Pham suffix after the loot name (item-info-card spec section 2). */
 .toast-item__grade {
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
   font-weight: 400;
 }
 

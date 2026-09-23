@@ -340,7 +340,7 @@ watch([currentAssignments, () => player.visualProfileId], () => {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'tran_phap'" :title="t('panels.tranPhap.title')" width="min(1000px, 94vw)" height="min(680px, 88vh)" @close="close">
+  <OverlayPanel :open="ui.standalonePanel === 'tran_phap'" :title="t('panels.tranPhap.title')" width="min(1000px, 94vw)" height="min(680px, 88vh)" variant="system" @close="close">
     <div class="tran-phap-panel">
       <div class="tran-phap-panel__body">
         <div class="tran-phap-panel__grid-stack" :style="stackStyle">
@@ -391,7 +391,7 @@ watch([currentAssignments, () => player.visualProfileId], () => {
         <div
           v-for="card in combatantCards()"
           :key="card.combatantId"
-          class="tran-phap-panel__card queue-stand"
+          class="tran-phap-panel__card queue-stand sys-chamfer"
           role="button"
           :aria-label="card.label"
           draggable="true"
@@ -552,15 +552,15 @@ watch([currentAssignments, () => player.visualProfileId], () => {
 
 .tran-phap-panel__formation-button {
   padding: var(--space-2, 8px);
-  border: 1px solid var(--surface-line);
+  border: 1px solid var(--sys-line-soft, var(--surface-line));
   background: transparent;
-  color: var(--surface-text);
+  color: var(--sys-text, var(--surface-text));
   text-align: left;
   cursor: pointer;
 }
 
 .tran-phap-panel__formation-button.is-selected {
-  border-color: var(--jade, #4caf50);
+  border-color: var(--sys-success, var(--jade, #4caf50));
 }
 
 .tran-phap-panel__queue {
@@ -632,9 +632,9 @@ watch([currentAssignments, () => player.visualProfileId], () => {
   flex: 0 0 auto;
   align-self: flex-end;
   padding: var(--space-2, 8px) var(--space-4, 16px);
-  border: 1px solid var(--surface-line);
+  border: 1px solid var(--sys-line-soft, var(--surface-line));
   background: transparent;
-  color: var(--surface-text);
+  color: var(--sys-text, var(--surface-text));
   cursor: pointer;
 }
 

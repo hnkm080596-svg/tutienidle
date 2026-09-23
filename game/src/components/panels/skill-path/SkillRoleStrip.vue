@@ -216,16 +216,16 @@ function isPickedPrecursor(skillId: string): boolean {
   align-items: center;
   gap: 3px;
   padding: 4px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
+  background: var(--sys-bg-0, var(--ink-800));
+  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-family: var(--font-body);
-  color: var(--text-primary);
+  font-family: var(--sys-font-body, var(--font-body));
+  color: var(--sys-text, var(--text-primary));
 }
 
 .skill-role:hover:not(:disabled) {
-  border-color: var(--chrome-300);
+  border-color: var(--sys-text, var(--chrome-300));
 }
 
 .skill-role:disabled {
@@ -237,12 +237,12 @@ function isPickedPrecursor(skillId: string): boolean {
 }
 
 .skill-role.is-open {
-  border-color: var(--chrome-300);
+  border-color: var(--sys-text, var(--chrome-300));
 }
 
 .skill-role__label {
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
 }
 
 .skill-role__icon {
@@ -251,18 +251,18 @@ function isPickedPrecursor(skillId: string): boolean {
 
 .skill-role__level {
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
 }
 
 .skill-role__empty {
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
   padding: 10px 0;
 }
 
 .skill-role__dynamic {
   font-size: var(--text-xs);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   padding: 10px 0;
 }
 
@@ -275,10 +275,10 @@ function isPickedPrecursor(skillId: string): boolean {
 .role-specializations__btn {
   flex: 1 1 auto;
   padding: 3px 6px;
-  --chip-active-bg: var(--ink-700);
+  --chip-active-bg: var(--sys-bg-1, var(--ink-700));
 }
 
 .role-specializations__btn.is-active {
-  color: var(--paper-50);
+  color: var(--sys-bg-0, var(--paper-50));
 }
 </style>

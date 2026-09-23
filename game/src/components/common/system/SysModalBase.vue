@@ -9,6 +9,12 @@ import SysPanel from './SysPanel.vue'
 // aria-modal, aria-labelledby via useId, useDialogFocus focus trap + Escape).
 // The card passes :rim-active="open" - it claims the live rim while open and
 // releases on close (active-claimant order, spec 4.1.1).
+defineOptions({
+  // Teleport is the component root so automatic attr fallthrough cannot
+  // run; bind $attrs onto the scrim div explicitly instead.
+  inheritAttrs: false,
+})
+
 const props = withDefaults(defineProps<{
   open: boolean
   title: string
@@ -21,6 +27,9 @@ const props = withDefaults(defineProps<{
   describedBy?: string
   // scrim click emits close unless explicitly disabled (confirm dialogs).
   closeOnScrim?: boolean
+  // Extra class applied to the card (per-modal tweaks + stable e2e/test
+  // selectors that target the card, not the scrim).
+  cardClass?: string
 }>(), {
   width: 'min(900px, 94vw)',
   height: 'auto',
@@ -28,6 +37,7 @@ const props = withDefaults(defineProps<{
   role: 'dialog',
   describedBy: undefined,
   closeOnScrim: true,
+  cardClass: undefined,
 })
 
 const emit = defineEmits<{ close: [] }>()
@@ -54,12 +64,19 @@ const headingId = useId()
        ToastContainer. -->
   <Teleport to="body">
   <Transition name="sys-fade">
-    <div v-if="open" class="sys-modal" :style="{ zIndex: layer }" @click.self="closeOnScrim && emit('close')">
+    <div
+      v-if="open"
+      class="sys-modal"
+      v-bind="$attrs"
+      :style="{ zIndex: layer }"
+      @click.self="closeOnScrim && emit('close')"
+    >
       <SysPanel
         ref="cardRef"
         variant="primary"
         :rim-active="open"
         class="sys-modal__card"
+        :class="cardClass"
         :style="{ width, height }"
         tabindex="-1"
         :role="role"
@@ -95,6 +112,8 @@ const headingId = useId()
   align-items: center;
   justify-content: center;
   background: var(--sys-scrim, rgba(5, 10, 18, .82));
+  /* T1 veil: covered page stays legible beneath the console (spec 2.1). */
+  backdrop-filter: blur(6px);
 }
 .sys-modal__card {
   position: relative;
@@ -110,15 +129,15 @@ const headingId = useId()
   align-items: center;
   gap: var(--space-3, 12px);
   padding: var(--space-4, 16px) var(--space-4, 16px) var(--space-3, 12px);
-  border-bottom: 1px solid var(--sys-line-soft);
+  border-bottom: 1px solid var(--sys-line-soft, rgba(42, 41, 36, .3));
 }
 .sys-modal__heading { min-width: 0; margin-right: auto; }
 .sys-modal__heading h3 {
   margin: 0;
-  font: 700 var(--text-title, 18px) var(--sys-font-display);
+  font: 700 var(--text-title, 18px) var(--sys-font-display, var(--font-display));
   letter-spacing: .1em;
   text-transform: uppercase;
-  color: var(--sys-text);
+  color: var(--sys-text, var(--paper-text, #211f1a));
 }
 .sys-modal__body {
   flex: 1 1 auto;

@@ -169,7 +169,7 @@ onMounted(() => {
   border-radius: 0;
   box-shadow: none;
   text-align: center;
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .combat-defeat-panel > :not(.ink-nine-slice):not(.ink-wash-backdrop) {
@@ -179,8 +179,8 @@ onMounted(() => {
 
 .combat-defeat-panel__title {
   margin: 0 0 16px;
-  font-family: var(--font-display);
-  color: var(--crimson);
+  font-family: var(--sys-font-display, var(--font-display));
+  color: var(--sys-danger, var(--crimson));
   font-size: var(--text-panel-title);
 }
 
@@ -190,7 +190,7 @@ onMounted(() => {
 
 .combat-defeat-panel__hint {
   margin: 0 0 16px;
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
   font-size: var(--text-small);
   font-style: italic;
 }
@@ -206,12 +206,12 @@ onMounted(() => {
 }
 
 .combat-defeat-panel__retry.is-disabled {
-  background: var(--ink-700);
-  color: var(--text-muted);
+  background: var(--sys-bg-1, var(--ink-700));
+  color: var(--sys-text-dim, var(--text-muted));
 }
 
 .combat-defeat-panel__return:hover {
-  border-color: var(--crimson);
-  color: var(--crimson);
+  border-color: var(--sys-danger, var(--crimson));
+  color: var(--sys-danger, var(--crimson));
 }
 </style>

@@ -70,7 +70,7 @@ const TALENT_RARITY_TONE: Record<TalentRarity, 'muted' | 'success' | 'cyan' | 'v
 // CultivationPathKit.ts) — fallback vàng trung tính khi CHƯA chọn path
 // (còn ở Phàm Nhân) hoặc đã chọn Pháp Tu.
 const characterAuraColor = computed(() =>
-    chosenKit.value?.element ? ELEMENT_COLOR_VARS[chosenKit.value.element] : 'var(--chrome-500)',
+    chosenKit.value?.element ? ELEMENT_COLOR_VARS[chosenKit.value.element] : 'var(--sys-line, var(--chrome-500))',
 )
 
 // Chân dung tĩnh (2026-08-26, dong-fu plan Workstream A) — PNG mortal
@@ -393,8 +393,8 @@ const pillPermanentRows = computed(() => {
   flex-direction: column;
   /* Surface is owned by the drawer (.ink-drawer) — the panel itself
      stays transparent; --paper-* reads resolve to the dark remap. */
-  color: var(--paper-text);
-  font-family: var(--font-body);
+  color: var(--sys-text, var(--paper-text));
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .character-panel__header {
@@ -403,10 +403,10 @@ const pillPermanentRows = computed(() => {
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-3);
-  border-bottom: 1px solid var(--paper-line);
+  border-bottom: 1px solid var(--sys-line-soft, var(--paper-line));
   background:
-    var(--paper-grain) 0 0 / 140px 140px repeat,
-    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 100%);
+    var(--sys-grain, var(--paper-grain)) 0 0 / 140px 140px repeat,
+    linear-gradient(175deg, var(--sys-bg-0, var(--paper-50)) 0%, var(--sys-bg-1, var(--paper-100)) 100%);
 }
 
 /* WS3 vùng 1 — chân dung + tên/Cảnh Giới/chiến lực, nằm ngang thoải mái. */
@@ -455,10 +455,10 @@ const pillPermanentRows = computed(() => {
 
 .character-panel__name {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--sys-font-display, var(--font-display));
   font-size: var(--text-title);
   font-weight: 700;
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -467,10 +467,10 @@ const pillPermanentRows = computed(() => {
 
 .character-panel__realm-line {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--sys-font-display, var(--font-display));
   font-size: var(--text-body);
   font-weight: 600;
-  color: var(--jade);
+  color: var(--sys-success, var(--jade));
 }
 
 .character-panel__power {
@@ -497,7 +497,7 @@ const pillPermanentRows = computed(() => {
 
 .character-panel__power-label {
   font-size: var(--text-xs);
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -506,18 +506,18 @@ const pillPermanentRows = computed(() => {
   align-self: flex-start;
   margin-top: var(--space-1);
   padding: 3px 10px;
-  background: var(--paper-100);
-  color: var(--mineral-gold);
-  border: 1px solid var(--mineral-gold);
+  background: var(--sys-bg-1, var(--paper-100));
+  color: var(--sys-accent, var(--mineral-gold));
+  border: 1px solid var(--sys-accent, var(--mineral-gold));
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
   font-weight: 600;
   cursor: pointer;
 }
 
 .character-panel__quan-khi-btn:hover {
-  background: var(--paper-50);
+  background: var(--sys-bg-0, var(--paper-50));
 }
 
 /* Thiên Phú đã chọn (talent-direction-choice-plan §7) — khối nhỏ dưới
@@ -534,7 +534,7 @@ const pillPermanentRows = computed(() => {
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.13em;
-  color: var(--paper-eyebrow);
+  color: var(--sys-accent, var(--paper-eyebrow));
 }
 
 /* Talent card (user art pass) - the card IS the paper scroll art
@@ -557,7 +557,7 @@ const pillPermanentRows = computed(() => {
 
 .talent-block:hover {
   background-image: url('/assets/ui/talent-card-scroll-hover.png');
-  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--talent-tier-color, var(--mineral-gold)) 40%, transparent));
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--talent-tier-color, var(--sys-accent, var(--mineral-gold))) 40%, transparent));
 }
 
 .talent-block__content {
@@ -582,24 +582,24 @@ const pillPermanentRows = computed(() => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.13em;
-  color: color-mix(in srgb, var(--talent-tier-color, var(--mineral-gold)) 55%, var(--ink-900));
-  --sys-tag-line: color-mix(in srgb, var(--talent-tier-color, var(--mineral-gold)) 60%, var(--ink-900));
+  color: color-mix(in srgb, var(--talent-tier-color, var(--sys-accent, var(--mineral-gold))) 55%, var(--sys-bg-1, var(--ink-900)));
+  --sys-tag-line: color-mix(in srgb, var(--talent-tier-color, var(--sys-accent, var(--mineral-gold))) 60%, var(--sys-bg-1, var(--ink-900)));
 }
 
 .talent-block__name {
   display: block;
   margin: 4px 0 3px;
-  font-family: var(--font-display);
+  font-family: var(--sys-font-display, var(--font-display));
   font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--ink-700);
+  color: var(--sys-bg-1, var(--ink-700));
 }
 
 .talent-block__description {
   /* No line-clamp — the content box already fills the paper, so the
      full description flows over the faint wash instead of cutting
      mid-sentence. */
-  color: color-mix(in srgb, var(--ink-700) 82%, transparent);
+  color: color-mix(in srgb, var(--sys-bg-1, var(--ink-700)) 82%, transparent);
   font-size: var(--text-xs);
   line-height: 1.5;
 }
@@ -617,19 +617,19 @@ const pillPermanentRows = computed(() => {
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
 }
 
 .character-panel__cultivation-path {
   flex: 0 0 auto;
   padding: 6px 10px;
-  border-bottom: 1px solid var(--ink-line);
+  border-bottom: 1px solid var(--sys-line, var(--ink-line));
 }
 
 .character-panel__path-hint {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
 }
 
 .character-panel__body {
@@ -650,9 +650,9 @@ const pillPermanentRows = computed(() => {
 .stat-group {
   margin-bottom: var(--space-3);
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--paper-line);
+  border: 1px solid var(--sys-line-soft, var(--paper-line));
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--paper-50) 65%, transparent);
+  background: color-mix(in srgb, var(--sys-bg-0, var(--paper-50)) 65%, transparent);
 }
 
 /* Tiêu đề nhóm — vạch cinnabar bên trái + cỡ chữ lớn hơn CHÍNH các dòng
@@ -665,10 +665,10 @@ const pillPermanentRows = computed(() => {
   width: 100%;
   margin: 0 0 var(--space-2);
   padding-left: 9px;
-  border-left: 3px solid var(--paper-eyebrow);
-  font: 700 var(--text-md) var(--font-display);
+  border-left: 3px solid var(--sys-accent, var(--paper-eyebrow));
+  font: 700 var(--text-md) var(--sys-font-display, var(--font-display));
   letter-spacing: 0.02em;
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
   cursor: default;
 }
 
@@ -676,26 +676,26 @@ const pillPermanentRows = computed(() => {
 .character-panel__details-btn {
   flex: 0 0 auto;
   padding: 2px 10px;
-  border: 1px solid var(--paper-line);
+  border: 1px solid var(--sys-line-soft, var(--paper-line));
   border-radius: var(--radius-sm);
-  background: var(--paper-100);
-  color: var(--paper-text-soft);
+  background: var(--sys-bg-1, var(--paper-100));
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-size: var(--text-xs);
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
   font-weight: 600;
   letter-spacing: 0.06em;
   cursor: pointer;
 }
 
 .character-panel__details-btn:hover {
-  color: var(--mineral-gold);
-  border-color: var(--mineral-gold);
+  color: var(--sys-accent, var(--mineral-gold));
+  border-color: var(--sys-accent, var(--mineral-gold));
 }
 
 .character-panel__details-btn--open {
-  color: var(--mineral-gold);
-  border-color: var(--mineral-gold);
-  background: color-mix(in srgb, var(--mineral-gold) 12%, var(--paper-100));
+  color: var(--sys-accent, var(--mineral-gold));
+  border-color: var(--sys-accent, var(--mineral-gold));
+  background: color-mix(in srgb, var(--sys-accent, var(--mineral-gold)) 12%, var(--sys-bg-1, var(--paper-100)));
 }
 
 .stat-list {
@@ -710,18 +710,18 @@ const pillPermanentRows = computed(() => {
   align-items: center;
   gap: var(--space-2);
   padding: 7px 0;
-  border-bottom: 1px solid var(--paper-line);
+  border-bottom: 1px solid var(--sys-line-soft, var(--paper-line));
   font-size: var(--text-md);
 }
 
 .stat-list li > span:first-child {
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .stat-list li > span:last-child {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
 }
 
 /* ============================================================
@@ -788,7 +788,7 @@ const pillPermanentRows = computed(() => {
   border-radius: 50%;
   background: var(--sys-cyan, var(--mineral-gold));
   box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--ink-950) 55%, transparent),
+    0 0 0 2px color-mix(in srgb, var(--sys-bg-0, var(--ink-950)) 55%, transparent),
     0 0 7px var(--sys-cyan, var(--mineral-gold));
 }
 
@@ -904,7 +904,7 @@ const pillPermanentRows = computed(() => {
 
 .element-wheel__star-line {
   fill: none;
-  stroke: var(--mineral-gold, #b79653);
+  stroke: var(--sys-accent, var(--mineral-gold, #b79653));
   stroke-width: 0.55;
   opacity: 0.45;
 }
@@ -950,10 +950,10 @@ const pillPermanentRows = computed(() => {
   top: 50%;
   transform: translate(-50%, -50%);
   padding: 0 7px;
-  border: 1px solid color-mix(in srgb, var(--mineral-gold, #b79653) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sys-accent, var(--mineral-gold, #b79653)) 60%, transparent);
   border-radius: 999px;
   background: rgba(16, 14, 10, 0.78);
-  color: var(--gold-300, #ffd54f);
+  color: var(--sys-accent, var(--gold-300, #ffd54f));
   font-size: var(--text-xs);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -973,7 +973,7 @@ const pillPermanentRows = computed(() => {
   padding: 1px 6px;
   border: 1px solid var(--sys-line-soft, var(--paper-line));
   border-radius: 3px;
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   white-space: nowrap;
 }
 </style>
