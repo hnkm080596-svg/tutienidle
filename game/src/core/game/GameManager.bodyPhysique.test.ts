@@ -92,8 +92,6 @@ describe('GameManager.saveOps.restoreFromSave - physique restore contract', () =
 
   it('a completed chapter + persisted advanced grade restores unchanged', () => {
     const manager = managerWithCatalogs()
-    const live = createDefaultPlayer()
-    manager.setActivePlayer(live)
 
     const saved = createDefaultPlayer()
     saved.realmId = 'qi_refining'
@@ -101,10 +99,17 @@ describe('GameManager.saveOps.restoreFromSave - physique restore contract', () =
     saved.bodyProgression.body_refinement.completedTiers = 6
     const save = baseSave(saved)
 
+    // Real session-load order (SaveSystem): the restored player becomes
+    // the LIVE player BEFORE saveOps.restoreFromSave runs preflight +
+    // the body modifier rebuild on it.
+    manager.setActivePlayer(save.player)
     expect(() => manager.saveOps.restoreFromSave(save)).not.toThrow()
-    // The persisted grade is restored as-is - never re-derived or
-    // re-applied by the restore path.
+
+    // The authoritative post-restore player keeps the persisted grade
+    // AND the completed chapter - never re-derived or re-applied by the
+    // restore path (the rebuild ran on this very player object).
     expect(save.player.physiqueGrade).toBe('bao')
+    expect(save.player.bodyProgression.body_refinement.completedTiers).toBe(6)
   })
 
   it('a completed chapter + behind-grade save is rejected before any owner mutation', () => {
@@ -119,9 +124,17 @@ describe('GameManager.saveOps.restoreFromSave - physique restore contract', () =
     // physiqueGrade stays 'pham' - torn: no recompute on restore.
     const save = baseSave(saved)
 
+    // Snapshot the live owner state across the rejected restore.
+    const gradeBefore = live.physiqueGrade
+    const progressionBefore = structuredClone(live.bodyProgression)
+
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/physique/i)
-    // Rejection heals nothing: the payload is not auto-advanced and the
-    // live state is untouched (preflight runs before any mutation).
+
+    // Rejection heals nothing and touches nothing: the live player's
+    // physique + body-progression state and the live bag are untouched
+    // (preflight throws before any owner mutation).
+    expect(live.physiqueGrade).toBe(gradeBefore)
+    expect(live.bodyProgression).toEqual(progressionBefore)
     expect(save.player.physiqueGrade).toBe('pham')
     expect(manager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(5)
   })
