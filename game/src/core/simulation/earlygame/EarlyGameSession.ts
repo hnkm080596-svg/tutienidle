@@ -561,6 +561,14 @@ export class EarlyGameSession {
         equipped++
       }
     }
+    // Mirror the real equip flow end-to-end: in the app the store
+    // resyncs the equipment-derived slice of player.modifiers after
+    // equip ops (the ops layer itself never writes it); skipping the
+    // resync here would leave the live player stale vs. the state a
+    // restore recomputes (restoreGameSession resyncs it).
+    this.playerOwner?.setEquipmentModifiers(
+      this.gameManager.equipmentOps.getEquipmentModifiers(),
+    )
     return equipped
   }
 
@@ -593,7 +601,12 @@ export class EarlyGameSession {
   private isWriterOwner(
     owner: GameSessionPlayerOwner,
   ): owner is GameSessionPlayerOwner & TribulationPlayerWriter {
-    return 'realmId' in owner && 'baseStats' in owner && 'selectedTalentIds' in owner
+    return (
+      'realmId' in owner &&
+      'baseStats' in owner &&
+      'selectedTalentIds' in owner &&
+      'setEquipmentModifiers' in owner
+    )
   }
 
   snapshot(): EarlyGameSnapshot {

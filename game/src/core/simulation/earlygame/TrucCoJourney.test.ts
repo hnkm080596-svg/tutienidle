@@ -69,6 +69,15 @@ import {
   channelEmittedMaterialIds,
   hiddenBeastChannels,
 } from '../../../data/drop/HiddenMaterialChannels'
+import { QUESTS } from '../../../data/quest/quests'
+import { buildings } from '../../../data/building/buildings'
+import { LUYEN_KHI_TINH_HOA_ID } from '../../equipment/TinhHoaMaterial'
+import { COMPANION_PULL_TOKEN_ID } from '../../game/GameManagerCompanionOps'
+import {
+  SPIRIT_STONE_MATERIAL_ID,
+  SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID,
+  SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
+} from '../../material/SpiritStoneMaterial'
 import {
   MERIDIANS,
   THIEN_DIA_CHI_KIEU_MATERIAL_ID,
@@ -77,6 +86,7 @@ import {
 import { ZHOU_TIAN_CURRENCY_MATERIAL_ID } from '../../../data/realm/ZhouTian'
 import { asBaseStats } from '../../stats/StatBlock'
 import { buildGameSave } from '../../../services/save/SaveSystem'
+import type { GameSave } from '../../../services/save/saveTypes'
 import {
   canPerfectBodyRealm,
   getBodyPerfectionMultiplier,
@@ -103,10 +113,7 @@ import {
   isDaiChuThienReached,
   isTieuChuThienReached,
 } from '../../realm/body/ZhouTianChapter'
-import {
-  EarlyGameSession,
-  type EarlyGameSnapshot,
-} from './EarlyGameSession'
+import { EarlyGameSession } from './EarlyGameSession'
 
 const PINNED_PROFILE = {
   name: 'journey',
@@ -129,7 +136,6 @@ const FIXTURE_LQ_STATS = {
   might: 20_000,
   speed: 200,
   maxMp: 5_000,
-  mpRegenPerTurn: 500,
   accuracyRating: 100,
 } as const
 
@@ -203,11 +209,88 @@ function feedRefinementTo(s: EarlyGameSession, tiers: number): void {
   expect(getBodyRefinementCompletedTiers(s.player)).toBe(tiers)
 }
 
-function stripTribulationState(
-  snapshot: EarlyGameSnapshot,
-): Omit<EarlyGameSnapshot, 'tribulationState'> {
-  const { tribulationState: _excluded, ...rest } = snapshot
-  return rest
+/** Volatile or restore-derived save fields legitimately differ across
+ * two identical drives or across a save -> restore -> save boundary;
+ * normalize them so byte-compares cover persisted authority only:
+ * - player.lastSavedAt + quests.lastDailyResetAtMs: wall-clock stamps.
+ * - every uuid substring (equipment instanceIds and the modifier ids/
+ *   sourceIds that embed them): crypto.randomUUID identity tokens.
+ *   Item CONTENT still byte-compares.
+ * - StatModifier.stacks: battle accumulators. Restore re-derives
+ *   skill.passiveModifiers/specializations/level/effects from the
+ *   authored template (GameManagerSaveRestore rehydration - persisted
+ *   copies are deliberately not trusted), so stack counts reset.
+ * - player.modifiers ORDER: the persisted list is a union of sources
+ *   appended per resync (equipment slice reassembled at restore), so
+ *   array order is an implementation detail - sorted canonically; the
+ *   modifier SET still byte-compares. */
+function normalizeVolatileSaveFields(save: GameSave): GameSave {
+  save.player.lastSavedAt = 0
+  if (save.quests) {
+    save.quests.lastDailyResetAtMs = 0
+  }
+  const UUID_RE =
+    /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g
+  const scrub = (value: unknown): void => {
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        scrub(item)
+      }
+      return
+    }
+    if (value === null || typeof value !== 'object') {
+      return
+    }
+    const record = value as Record<string, unknown>
+    for (const [key, child] of Object.entries(record)) {
+      if (typeof child === 'string') {
+        record[key] = child.replace(UUID_RE, 'UUID')
+        continue
+      }
+      if (key === 'stacks' && 'sourceType' in record) {
+        delete record.stacks
+        continue
+      }
+      scrub(child)
+    }
+  }
+  scrub(save)
+  save.player.modifiers.sort((a, b) =>
+    JSON.stringify(a).localeCompare(JSON.stringify(b)),
+  )
+  return save
+}
+
+/** Leg G parity contract: save -> restore -> re-save must preserve
+ * every persisted authority field. Restore legitimately MATERIALIZES
+ * derived state the live session had not (ensureSiteState seeds a
+ * default row per site definition; quest reconcile activates newly
+ * unlocked realm quests), so those two slices are subset-compared -
+ * every persisted row must round-trip byte-identically while extra
+ * defaulted rows are allowed. Everything else must be byte-equal
+ * after volatile normalization. */
+function assertRestoredSaveParity(before: GameSave, after: GameSave): void {
+  const expected = normalizeVolatileSaveFields(before)
+  const actual = normalizeVolatileSaveFields(after)
+  if (expected.productionSites !== undefined || actual.productionSites !== undefined) {
+    expect(actual.productionSites ?? []).toEqual(
+      expect.arrayContaining(
+        (expected.productionSites ?? []).map((site) =>
+          expect.objectContaining(site),
+        ),
+      ),
+    )
+    actual.productionSites = expected.productionSites
+  }
+  if (expected.quests !== undefined && actual.quests !== undefined) {
+    expect(actual.quests.active).toEqual(
+      expect.arrayContaining(
+        expected.quests.active.map((quest) => expect.objectContaining(quest)),
+      ),
+    )
+    actual.quests.active = expected.quests.active
+  }
+  expect(actual).toEqual(expected)
 }
 
 const MORTAL_STAGE_IDS = Array.from(
@@ -432,6 +515,14 @@ describe('TrucCoJourney - ordered journey', () => {
         s.player.companions.some((c) => c.definitionId === 'than_nong'),
       ).toBe(true)
 
+      // Leg boundary pin (coupling made explicit): tribulation's tick
+      // loop ran production auto-invest (tickOps.update ->
+      // investBodyChapter per tick) - the leg-A essence residue is
+      // drained to 0 while refinement stands at exactly tier 3. Leg D's
+      // exact-tier asserts start from THIS observed precondition.
+      expect(getBodyRefinementCompletedTiers(s.player)).toBe(3)
+      expect(s.materialAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(0)
+
       // ===== Leg E.1 - floor_1 first clear at TC L1 =====
       expect(s.player.realmLevel).toBe(1)
       // floor_2's remaining gate at L1 is requiredRealmLevel (the
@@ -598,12 +689,8 @@ describe('TrucCoJourney - ordered journey', () => {
       expect(s.player.bodyProgression.zhou_tian.circulation).toBe(20)
 
       let resumed: EarlyGameSession | undefined
-      let parityBefore:
-        | Omit<EarlyGameSnapshot, 'tribulationState'>
-        | undefined
-      let parityAfter:
-        | Omit<EarlyGameSnapshot, 'tribulationState'>
-        | undefined
+      let parityBefore: GameSave | undefined
+      let parityAfter: GameSave | undefined
 
       for (let level = 1; level < 18; level++) {
         const pointsBefore = s.player.attributePoints
@@ -661,9 +748,10 @@ describe('TrucCoJourney - ordered journey', () => {
             expect(s.player.completedStageIds).toContain(floorId)
           }
 
-          parityBefore = stripTribulationState(s.snapshot())
-          vi.setSystemTime(Date.now())
           const save = buildGameSave(s.player, s.gameManager)
+          // A second build keeps the parity oracle independent of
+          // whatever restore may do to its input payload.
+          parityBefore = buildGameSave(s.player, s.gameManager)
           // Restore onto an independent store - the app-store-after-
           // reload model, not the live journey's store.
           setActivePinia(createPinia())
@@ -674,14 +762,18 @@ describe('TrucCoJourney - ordered journey', () => {
           const owner = usePlayerStore()
           expect(resumed.restoreCheckpoint(save, owner).status).toBe('ok')
           expect(resumed.player).toBe(owner.$state)
-          parityAfter = stripTribulationState(resumed.snapshot())
+          parityAfter = buildGameSave(resumed.player, resumed.gameManager)
         }
       }
 
-      // Parity: pre/post-checkpoint snapshots agree modulo the
-      // documented tribulationState exclusion.
+      // Parity: the save built before the checkpoint equals the save
+      // rebuilt after restore - the FULL persisted byte surface (bags,
+      // equipment, companions, stats, talents, sites), modulo the
+      // volatile and restore-derived surfaces normalized inside
+      // assertRestoredSaveParity.
       expect(parityBefore).toBeDefined()
-      expect(parityBefore).toEqual(parityAfter)
+      expect(parityAfter).toBeDefined()
+      assertRestoredSaveParity(parityBefore!, parityAfter!)
 
       // The ordered journey CONTINUES on the restored session.
       expect(resumed).toBeDefined()
@@ -844,11 +936,13 @@ describe('TrucCoJourney - ordered journey', () => {
       expect(s.startAutoFarm('mortal_dong_5')).toBe(false)
       expect(s.player.autoFarmStage?.stageId).toBe('foundation_floor_1')
 
-      // autoFarmStage persists through a second checkpoint restore.
+      // autoFarmStage persists through a second checkpoint restore -
+      // same full-save parity as leg G.
       {
-        const beforeSecond = stripTribulationState(s.snapshot())
-        vi.setSystemTime(Date.now())
         const save2 = buildGameSave(s.player, s.gameManager)
+        // A second build keeps the parity oracle independent of
+        // whatever restore may do to its input payload.
+        const save2Parity = buildGameSave(s.player, s.gameManager)
         setActivePinia(createPinia())
         const resumed2 = new EarlyGameSession({
           seed: 99,
@@ -856,9 +950,10 @@ describe('TrucCoJourney - ordered journey', () => {
         })
         const owner2 = usePlayerStore()
         expect(resumed2.restoreCheckpoint(save2, owner2).status).toBe('ok')
-        expect(
-          stripTribulationState(resumed2.snapshot()),
-        ).toEqual(beforeSecond)
+        assertRestoredSaveParity(
+          save2Parity,
+          buildGameSave(resumed2.player, resumed2.gameManager),
+        )
         expect(resumed2.player.autoFarmStage?.stageId).toBe(
           'foundation_floor_1',
         )
@@ -922,36 +1017,48 @@ describe('TrucCoJourney - ordered journey', () => {
 
 // ===== Leg J - determinism =====
 describe('TrucCoJourney - determinism', () => {
-  const driveJourneyCore = (): Omit<
-    EarlyGameSnapshot,
-    'tribulationState'
-  > => {
+  const driveJourneyCore = (): GameSave => {
     vi.useFakeTimers()
     // Each run owns an independent store - otherwise run two's seeded
     // driver would inherit run one's persisted state.
     setActivePinia(createPinia())
     const s = makeJourneySession()
-    seedLqSideState(s)
+    // Deterministic draws for the WHOLE drive: the entitlement offer
+    // draw (the F-A-1 flake - an insight-carrying pick like
+    // tc_linh_giac must be IDENTICAL across runs, never normalized),
+    // equipment loot rolls, and combat/hidden-beast draws all read
+    // Math.random at different call sites. Pinning one deterministic
+    // sequence makes same-seed runs produce identical persisted state.
+    const draws = { n: 0 }
+    const randomSpy = vi
+      .spyOn(Math, 'random')
+      .mockImplementation(() => (draws.n++ * 0.6180339887498949) % 1)
+    try {
+      seedLqSideState(s)
 
-    expect(s.runTribulation('foundation_establishment')).toBe('victory')
-    const receipt = s.settleTribulationOutcome()
-    expect(receipt?.kind).toBe('victory')
-    const offered = s.player.pendingTalentEntitlement!.offeredTalentIds
-    expect(
-      s.resolveTalentEntitlement({ kind: 'new', talentId: offered[0]! }),
-    ).toBe(true)
-    expect(s.drainTribulationOutcome()).toBe(true)
-    expect(s.runStage('foundation_floor_1')).toBe('victory')
-    feedRefinementTo(s, 6)
-    for (const meridian of MERIDIANS.slice(0, 3)) {
-      expect(s.investChapter('meridian')).toBe(meridian.thongMachDanCost)
+      expect(s.runTribulation('foundation_establishment')).toBe('victory')
+      const receipt = s.settleTribulationOutcome()
+      expect(receipt?.kind).toBe('victory')
+      const offered = s.player.pendingTalentEntitlement!.offeredTalentIds
+      expect(
+        s.resolveTalentEntitlement({ kind: 'new', talentId: offered[0]! }),
+      ).toBe(true)
+      expect(s.drainTribulationOutcome()).toBe(true)
+      expect(s.runStage('foundation_floor_1')).toBe('victory')
+      feedRefinementTo(s, 6)
+      for (const meridian of MERIDIANS.slice(0, 3)) {
+        expect(s.investChapter('meridian')).toBe(meridian.thongMachDanCost)
+      }
+    } finally {
+      randomSpy.mockRestore()
+      vi.useRealTimers()
     }
-    const snapshot = stripTribulationState(s.snapshot())
-    vi.useRealTimers()
-    return snapshot
+    return normalizeVolatileSaveFields(
+      buildGameSave(s.player, s.gameManager),
+    )
   }
 
-  it('same-seed runs snapshot identically under volatile normalization', () => {
+  it('same-seed runs persist identically under volatile normalization', () => {
     const first = driveJourneyCore()
     const second = driveJourneyCore()
     expect(second).toEqual(first)
@@ -1061,7 +1168,6 @@ describe('TrucCoJourney - save integrity', () => {
   it('rejects a save whose zhou_tian progressed past the meridian gate', () => {
     vi.useFakeTimers()
     const s = makeJourneySession()
-    vi.setSystemTime(Date.now())
     const save = buildGameSave(s.player, s.gameManager)
     save.player.realmId = 'foundation_establishment'
     save.player.bodyProgression.zhou_tian.circulation = 50
@@ -1182,17 +1288,76 @@ describe('TrucCoJourney - integration sweep census', () => {
       (id) => tables.has(id) || signature.has(id),
     )
 
+    // EVERY other material-producing grant surface a writer can reach
+    // (verified materialBag.add sites): quest reward.itemDrops,
+    // building producesMaterialId, equipment dissolve output,
+    // companion pull token, reward-ops spirit stones. A perfection
+    // material delivered by one WITHOUT a matching VISIBLE_GRANT_SOURCES
+    // row (kind+grantId+materialId) is an UNDECLARED acquisition
+    // authority - the registry is the declaration point, not a hint.
+    const declaredGrantKeys = new Set(
+      VISIBLE_GRANT_SOURCES.map(
+        (g) => `${g.kind}:${g.grantId}:${g.materialId}`,
+      ),
+    )
+    const questGrantRows = QUESTS.flatMap((quest) =>
+      (quest.reward.itemDrops ?? [])
+        .filter((drop) => drop.kind === 'material')
+        .map((drop) => ({
+          materialId: drop.itemId!,
+          grantKey: `quest:${quest.id}:${drop.itemId}`,
+        })),
+    )
+    const buildingGrantRows = buildings
+      .filter((b) => b.producesMaterialId !== undefined)
+      .map((b) => ({
+        materialId: b.producesMaterialId!,
+        grantKey: `building:${b.id}:${b.producesMaterialId}`,
+      }))
+    const grantRows = [...questGrantRows, ...buildingGrantRows]
+    // Fixed-output surfaces with no registrable kind today.
+    const fixedSurfaceIds = new Set([
+      LUYEN_KHI_TINH_HOA_ID,
+      COMPANION_PULL_TOKEN_ID,
+      SPIRIT_STONE_MATERIAL_ID,
+      SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
+      SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID,
+    ])
+    const undeclared = authored.filter(
+      (id) =>
+        fixedSurfaceIds.has(id) ||
+        grantRows.some(
+          (row) =>
+            row.materialId === id && !declaredGrantKeys.has(row.grantKey),
+        ),
+    )
+    // Registry hygiene: every declared row must resolve to a real
+    // grant that actually delivers the material (the registry's own
+    // contract - quest itemDrops contains it / building produces it).
+    const unresolvedGrants = VISIBLE_GRANT_SOURCES.filter((row) => {
+      if (row.kind === 'quest') {
+        const quest = QUESTS.find((q) => q.id === row.grantId)
+        return !(quest?.reward.itemDrops ?? []).some(
+          (drop) => drop.kind === 'material' && drop.itemId === row.materialId,
+        )
+      }
+      const building = buildings.find((b) => b.id === row.grantId)
+      return building?.producesMaterialId !== row.materialId
+    })
+
     // The registry is empty on this wave -> the census reports clean;
-    // the enumeration still ran over every landed channel + table.
-    // Guard the enumeration itself: an empty input set would let the
-    // three result asserts pass vacuously (a table/channel refactor
-    // reading nothing reports a false-clean census).
+    // the enumeration still ran over every landed channel + table +
+    // grant surface. Guard the enumeration itself: an empty input set
+    // would let the result asserts pass vacuously.
     expect(tables.size).toBeGreaterThan(0)
     expect(emitted.size).toBeGreaterThan(0)
     expect(signature.size).toBeGreaterThan(0)
+    expect(grantRows.length).toBeGreaterThan(0)
 
     expect(routeLess).toEqual([])
     expect(duplicated).toEqual([])
     expect(bypass).toEqual([])
+    expect(undeclared).toEqual([])
+    expect(unresolvedGrants).toEqual([])
   })
 })

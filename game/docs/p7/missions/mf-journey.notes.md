@@ -23,7 +23,7 @@
 | Leg F artifact asserts | `ARTIFACT_UNLOCK_REALM_ID = 'golden_core'`; `player.artifact` undefined at TC | Concrete: unlock-realm constant pin + `artifact === undefined` + `isArtifactDomainUnlocked → false` + `isCompanionPullPoolEnabled → false` (deferral arm holds at TC ceiling) |
 | Leg K body-perfection | `BODY_PERFECTION_REALM_MATERIALS` all-empty `[]` per realm | Mandatory NEGATIVE/structural leg (r83 ruling): `canPerfectBodyRealm`/`perfectBodyRealm` false ∀realm, `isBodyPerfectionRevealed` false, `discoveredMaterials`/`perfectedRealmIds` empty, multiplier 1 — plus persisted-slice parity through checkpoint 2. Positive flow = expected-deferral pending ≥1 authored material via ≥1 channel |
 | Leg L hidden channels | `HIDDEN_MATERIAL_CHANNELS` = single huyết-mông `hidden_beast` channel (`bandRealmId 'qi_refining'`, `killThreshold 1000`, `spawnChancePerSpawn 0.05`); `VISIBLE_GRANT_SOURCES = []` | Concrete channel-shape pins + no-TC-band-channel assertion + persisted `hiddenBeastKills`/`hiddenChannelCycles` counters untouched by the TC journey |
-| Snapshot parity extension | `bodyPerfection.discoveredMaterials`/`perfectedRealmIds`, artifact fields, `hiddenBeastKills`/`hiddenChannelCycles` landed | Extended `EarlyGameSnapshot` + parity list covers all v72–v81 persisted slices |
+| Save parity extension | `bodyPerfection.discoveredMaterials`/`perfectedRealmIds`, artifact fields, `hiddenBeastKills`/`hiddenChannelCycles` landed | Checkpoints compare detached `buildGameSave` — the FULL persisted byte surface (bags, equipment, companions, stats, talents, sites, quests, auto-farm), modulo the documented volatile/restore-derived normalization set in `normalizeVolatileSaveFields` |
 
 ## Save-version decision — NO bump (v81 stands)
 
@@ -60,8 +60,11 @@ translators.
 | Naming drift | `zhou_tian` chapter id inside the English `body_refinement`/`meridian` family | REPORTED (pre-existing, landed authored choice) — family-map amendment records it; not fixed in-mission |
 | Naming drift | `gift_*` ids (`gift_than_nong_foundation_entry`…) mix English prefix + VN content inside one id | REPORTED (pre-existing) — landed under M-F-COMPANION-GIFT; recorded in the family-map amendment |
 | Naming drift | `bat-mach:` modifier prefix (VN) in the mechanic family | REPORTED (pre-existing) — landed under M5/TC meridian wave; recorded |
-| Persisted drift | v72–v81 slices: `nodeLevels`, `physiqueGrade`, technique frozen-cycle fields, `pendingTalentEntitlement`, `companionGifts`, `bodyProgression.zhou_tian`, `artifact`, `bodyPerfection`, `hiddenBeastKills`/`hiddenChannelCycles` | CLEAN — every slice in `saveShapeValidation` + `buildGameSave` round-trip; the journey's two checkpoint restores assert full-snapshot parity over all of them |
+| Persisted drift | v72–v81 slices: `nodeLevels`, `physiqueGrade`, technique frozen-cycle fields, `pendingTalentEntitlement`, `companionGifts`, `bodyProgression.zhou_tian`, `artifact`, `bodyPerfection`, `hiddenBeastKills`/`hiddenChannelCycles` | CLEAN — every slice in `saveShapeValidation` + `buildGameSave` round-trip; the journey's two checkpoint restores assert full persisted-save byte parity over all of them |
 | Boundary honesty | `EarlyGameSession.ts` imports | CLEAN — zero `stores/*` imports (only the comment recording the carve-out); journey rides real seams (`playerOwner`, `settleTribulationOutcome`, `drainTribulationOutcome`, `resolveTalentEntitlement`, `investChapter`, bag/gift/farm seams) — no mock bypasses shipped contracts |
+| Restore-derived surfaces | `player.modifiers` equipment slice, `skill.passiveModifiers.stacks`, `productionSites`, `quests.active` | CLEAN/DESIGNED — equipment slice + `bat-mach:` slice rehydrated at restore (`GameManagerSaveRestore.ts:629-638`, store `setEquipmentModifiers`); passive `stacks` re-derived from authored template (`:404-408`, designed, battle accumulators); `productionSites` eager-seeded per definition (`:550-553` `ensureSiteState`); `quests.active` extended by reconcile activation. Subset-compared or normalized in `assertRestoredSaveParity`, documented in the test |
+| Harness gap (fixed) | `equipAll` left `player.modifiers` equipment slice stale | FIXED — `equipAll` now resyncs `playerOwner.setEquipmentModifiers` after the equip loop, mirroring the real store-level equip flow (ops never write the modifier list) |
+| Save-schema drift (pre-existing) | `hiddenChannelCycles` written onto `ProductionSiteStateSave` (`SaveSystem.ts:376`) but undeclared on the interface | REPORTED (pre-existing, coordinator-owned) — BH-landing schema drift; not fixed in-mission |
 | Perfection-material census | Every authored perfection material vs `BODY_PERFECTION_REALM_MATERIALS` → hidden-beast/grotto emitted sets → `VISIBLE_GRANT_SOURCES` exemptions → `STAGE_DROP_TABLES` + `FAMILY_DROP_TABLES` + `signatureDrops` on every non-channel enemy (incl. guaranteed/pool equivalents) | CLEAN — route-less requirements `[]`, duplicate acquisition authorities `[]`, normal-loot bypasses `[]` (suite: `TrucCoJourney.test.ts` census `it`). Vacuous for perfection materials until the content pass authors ≥1; structural pins (channel shape, emitted-set completeness, `VISIBLE_GRANT_SOURCES=[]`) hold |
 
 ## Journey coverage delivered
@@ -75,8 +78,12 @@ translators.
   capped-heaven (`greatDaoOpportunityLost`) via real settle; great_dao
   arms all five inputs honestly (`pham_cot` talent, 9/9 meridians, 6/6
   refinement, mortalPerfection, L18, every main stat at cap).
-- Determinism — same-seed driver runs produce identical snapshots
-  (volatile `offeredTalentIds`/`perfectClearSeconds` normalized out).
+- Determinism — same-seed driver runs produce identical persisted
+  `buildGameSave` payloads: a deterministic `Math.random` sequence is
+  pinned across the whole drive (covers the talent-offer draw -
+  F-A-1 - plus equipment loot rolls and combat/hidden-beast draws).
+  Normalization is limited to wall-clock stamps and crypto-minted
+  instanceIds/embedded uuids; offer binding is never normalized.
 - Save integrity — incoherent-progression save (zhou_tian circulation
   without complete meridian) rejected at `restoreCheckpoint` preflight.
 - Seam pins — `EarlyGameSession.test.ts` +4 tests (owner identity,
