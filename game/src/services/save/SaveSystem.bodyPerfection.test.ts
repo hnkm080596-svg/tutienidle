@@ -37,7 +37,7 @@ vi.mock('../../data/realm/BodyPerfection', async (importOriginal) => {
   return {
     ...actual,
     BODY_PERFECTION_REALM_MATERIALS: FIXTURE,
-    bodyPerfectionMaterialIds: (realmId: string) => byRealm.get(realmId),
+    bodyPerfectionMaterialIds: (realmId: string) => byRealm.get(realmId) ?? [],
     bodyPerfectionRealmOf: (materialId: string) => realmOf.get(materialId),
     isBodyPerfectionMaterial: (materialId: string) => realmOf.has(materialId),
   }
@@ -254,6 +254,34 @@ describe('bodyPerfection save round-trip (C2C r68)', () => {
 
     expect(restored.status).toBe('ok')
     expect(freshPlayer.$state.bodyPerfection.discoveredMaterials).toEqual(['great_dao_seed'])
+  })
+
+  it('restore exclusion: a bag-held perfection material with empty discovery stays undiscovered (C2C r76-f3)', () => {
+    const manager = registeredManager()
+    const player = createDefaultPlayer()
+    player.realmId = 'mortal'
+    manager.setActivePlayer(player)
+    manager.materialBag.add(manager.materialRegistry.get('tinh_hoa_pham_the'), 2)
+
+    const save = buildGameSave(player, manager)
+    // Inventory holds the fixture perfection material while the
+    // discovery slice is empty - restore must never derive discovery
+    // from bag contents, and no funnel subscriber may fire.
+    expect(save.materials.some((slot) => slot.materialId === 'tinh_hoa_pham_the')).toBe(true)
+    expect(save.player.bodyPerfection.discoveredMaterials).toEqual([])
+
+    const freshPlayer = usePlayerStore()
+    const freshManager = registeredManager()
+    const funnelSpy = vi.spyOn(freshManager.questOps, 'notifyMaterialGained')
+    const questSpy = vi.spyOn(freshManager.questSystem, 'onMaterialCollected')
+
+    const restored = restoreGameSession(freshPlayer, freshManager, save)
+
+    expect(restored.status).toBe('ok')
+    expect(freshManager.materialBag.getAmount('tinh_hoa_pham_the')).toBe(2)
+    expect(freshPlayer.$state.bodyPerfection.discoveredMaterials).toEqual([])
+    expect(funnelSpy).not.toHaveBeenCalled()
+    expect(questSpy).not.toHaveBeenCalled()
   })
 
   it('restore preflight rejects perfected state missing its discoveries', () => {

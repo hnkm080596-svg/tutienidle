@@ -284,10 +284,12 @@ export class GameManagerTickOps {
     // M-F-BODY-PERFECTION - decompose output rides the SAME funnel as
     // every other material landing (collect-quest + perfection
     // discovery). The offline-restore settle replays through this path
-    // deliberately: pending output delivered then IS a new landing.
-    this.deps.notifyMaterialGained(entry.materialId, delivered)
-
+    // deliberately: pending output delivered then IS a new landing. A
+    // full-overflow delivery (delivered === 0) is not a landing - the
+    // funnel is not invoked at all (C2C r76-f1).
     if (delivered > 0) {
+      this.deps.notifyMaterialGained(entry.materialId, delivered)
+
       this.deps.notifications.push({
         kind: 'craft',
         message: `Phân Giải +${delivered} ${tinhHoa.name}`,

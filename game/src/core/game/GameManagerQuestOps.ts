@@ -49,13 +49,18 @@ export class GameManagerQuestOps {
    * notifyQuestMaterialGained) - call EVERY time a material lands in
    * the player bag. Fans out to TWO canonical consumers: collect-quest
    * progress (questSystem.onMaterialCollected) and perfection-material
-   * discovery (recordBodyPerfectionMaterialDiscovery, only when
-   * delivered > 0). NEVER call during save restore (double-count).
+   * discovery (recordBodyPerfectionMaterialDiscovery). A zero/negative
+   * delivered amount is not a landing: no subscriber fires at all.
+   * NEVER call during save restore (double-count).
    * BattleLootSystem and every GameManager material-granting path
    * (production settle, building claim, Hoa Luyen, Linh Thach reward,
    * refund, change credit...) route through this helper.
    */
   notifyMaterialGained(materialId: string, amount: number): void {
+    if (amount <= 0) {
+      return
+    }
+
     this.deps.questSystem.onMaterialCollected(
       this.deps.questRegistry,
       this.deps.questManager,
@@ -63,12 +68,10 @@ export class GameManagerQuestOps {
       amount,
     )
 
-    if (amount > 0) {
-      const player = this.deps.getActivePlayer()
+    const player = this.deps.getActivePlayer()
 
-      if (player) {
-        recordBodyPerfectionMaterialDiscovery(player, materialId)
-      }
+    if (player) {
+      recordBodyPerfectionMaterialDiscovery(player, materialId)
     }
   }
 

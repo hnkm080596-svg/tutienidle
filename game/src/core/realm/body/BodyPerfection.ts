@@ -90,7 +90,7 @@ export function canPerfectBodyRealm(
 ): boolean {
   const required = bodyPerfectionMaterialIds(realmId)
 
-  if (!required || required.length === 0) {
+  if (required.length === 0) {
     return false
   }
 
@@ -238,7 +238,7 @@ export function assertBodyPerfectionIntegrity(player: PlayerData): void {
   for (const realmId of perfectedRealmIds) {
     const required = bodyPerfectionMaterialIds(realmId)
 
-    if (!required || required.length === 0) {
+    if (required.length === 0) {
       issues.push(`perfected realm '${realmId}' khong co material duoc author`)
       continue
     }

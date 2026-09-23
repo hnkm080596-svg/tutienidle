@@ -38,7 +38,7 @@ vi.mock('../../../data/realm/BodyPerfection', async (importOriginal) => {
   return {
     ...actual,
     BODY_PERFECTION_REALM_MATERIALS: FIXTURE,
-    bodyPerfectionMaterialIds: (realmId: string) => byRealm.get(realmId),
+    bodyPerfectionMaterialIds: (realmId: string) => byRealm.get(realmId) ?? [],
     bodyPerfectionRealmOf: (materialId: string) => realmOf.get(materialId),
     isBodyPerfectionMaterial: (materialId: string) => realmOf.has(materialId),
   }

@@ -35,7 +35,7 @@ vi.mock('../../data/realm/BodyPerfection', async (importOriginal) => {
   return {
     ...actual,
     BODY_PERFECTION_REALM_MATERIALS: FIXTURE,
-    bodyPerfectionMaterialIds: (realmId: string) => byRealm.get(realmId),
+    bodyPerfectionMaterialIds: (realmId: string) => byRealm.get(realmId) ?? [],
     bodyPerfectionRealmOf: (materialId: string) => realmOf.get(materialId),
     isBodyPerfectionMaterial: (materialId: string) => realmOf.has(materialId),
   }
@@ -118,12 +118,14 @@ describe('material-landing funnel (plan 5.3)', () => {
     expect(player.bodyPerfection.discoveredMaterials).toEqual([PHAM])
   })
 
-  it('zero-amount landing never writes discovery', () => {
+  it('zero-amount landing dispatches to NO subscriber (C2C r76-f1)', () => {
     const player = freshPlayer()
     const manager = freshManager(player)
+    const questSpy = vi.spyOn(manager.questSystem, 'onMaterialCollected')
 
     manager.questOps.notifyMaterialGained(PHAM, 0)
 
+    expect(questSpy).not.toHaveBeenCalled()
     expect(player.bodyPerfection.discoveredMaterials).toEqual([])
   })
 
@@ -140,9 +142,11 @@ describe('material-landing funnel (plan 5.3)', () => {
     expect(player.bodyPerfection.discoveredMaterials).toEqual([PHAM])
   })
 
-  it('decompose output with full overflow never writes discovery', () => {
+  it('decompose output with full overflow makes no funnel call at all (C2C r76-f1)', () => {
     const player = freshPlayer()
     const manager = freshManager(player)
+    const funnelSpy = vi.spyOn(manager.questOps, 'notifyMaterialGained')
+    const questSpy = vi.spyOn(manager.questSystem, 'onMaterialCollected')
 
     const template = manager.materialRegistry.get(PHAM)
     const cap = template.stackLimit ?? Number.MAX_SAFE_INTEGER
@@ -150,6 +154,8 @@ describe('material-landing funnel (plan 5.3)', () => {
 
     manager.tickOps.deliverDecomposeOutput({ materialId: PHAM, amount: 5 })
 
+    expect(funnelSpy).not.toHaveBeenCalled()
+    expect(questSpy).not.toHaveBeenCalled()
     expect(player.bodyPerfection.discoveredMaterials).toEqual([])
   })
 
@@ -403,6 +409,22 @@ describe('perfectBodyRealm transaction (plan 5.4)', () => {
     expect(manager.materialBag.getAmount(PHAM)).toBe(2)
     expect(player.bodyPerfection.perfectedRealmIds).toEqual([])
     expect(player.bodyPerfection.discoveredMaterials).toEqual([])
+  })
+
+  it('probe failure returns false with zero mutation (C2C r76-f2)', () => {
+    const player = freshPlayer()
+    player.bodyPerfection.discoveredMaterials.push(PHAM)
+    const manager = freshManager(player)
+    add(manager, PHAM, 2)
+
+    vi.spyOn(JSON, 'stringify').mockImplementationOnce(() => {
+      throw new Error('intentional probe serialization failure')
+    })
+
+    expect(manager.realmAdvanceOps.perfectBodyRealm(player, 'mortal')).toBe(false)
+
+    expect(manager.materialBag.getAmount(PHAM)).toBe(2)
+    expect(player.bodyPerfection.perfectedRealmIds).toEqual([])
   })
 
   it('rejects a future realm with zero mutation', () => {

@@ -28,7 +28,7 @@ test.describe('Body perfection hidden surface (production)', () => {
     await createCharacterThroughUi(page, 'E2E Thể Phách')
     await enterHome(page)
 
-    // Open the Cảnh Giới (realm) panel via the command wheel.
+    // Open the realm panel via the command wheel.
     await page.keyboard.press('Tab')
     const realmSlot = page.locator('[data-wheel-slot="realm"]')
     await expect(realmSlot).toBeVisible({ timeout: 10_000 })
@@ -37,8 +37,8 @@ test.describe('Body perfection hidden surface (production)', () => {
     const realmDialog = page.getByRole('dialog', { name: 'Cảnh Giới' })
     await expect(realmDialog).toBeVisible({ timeout: 15_000 })
 
-    // Exactly the two standing cols (Luyện Thể + Mạch) - the hidden
-    // perfection col must not exist at all, not merely be invisible.
+    // Exactly the two standing cols (body refinement + meridian) - the
+    // hidden perfection col must not exist at all, not merely invisible.
     await expect(realmDialog.locator('.realm-panel__body-col')).toHaveCount(2)
     await expect(realmDialog.locator('.body-perfection-section')).toHaveCount(0)
     await expect(realmDialog).not.toContainText('Thể Phách Hoàn Thiện')

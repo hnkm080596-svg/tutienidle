@@ -44,9 +44,9 @@ for (const [realmId, materialIds] of MATERIALS_BY_REALM) {
   }
 }
 
-/** Authored perfection-material list for one realm (undefined = not a registry key). */
-export function bodyPerfectionMaterialIds(realmId: string): readonly string[] | undefined {
-  return MATERIALS_BY_REALM.get(realmId)
+/** Authored perfection-material list for one realm ([] = unauthored or unknown realm id). */
+export function bodyPerfectionMaterialIds(realmId: string): readonly string[] {
+  return MATERIALS_BY_REALM.get(realmId) ?? []
 }
 
 /** The realm an authored perfection material belongs to (undefined = not in the family). */

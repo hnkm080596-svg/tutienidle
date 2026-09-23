@@ -44,6 +44,8 @@ Escalation decision (mapper said `deepAuditCandidate: true`): NOT escalated — 
 
 None — no `Confirmed` defect. Two implementation-phase defects were found and repaired before this QA pass (missing `?.`-tolerance in `assertBodyPerfectionIntegrity` for absent-slice legacy payloads — exposed by `GameManager.legacySkillRestore.test.ts` and fixed; second BattleLootSystem grant site unpinned — test added, green). Both are recorded here for the trail; they are not open findings.
 
+Post-report addendum (C2C impl review r76): three Medium + one Low review findings were fixed after this report — zero-delivery now gates before subscriber dispatch (`notifyMaterialGained` head-return + `deliverDecomposeOutput` calls the funnel only when `delivered > 0`; pinned both call counts), `perfectBodyRealm`'s probe is a fail-closed `try/catch` boolean boundary (probe-failure zero-mutation test added), restore exclusion is pinned (bag-held fixture material + empty `discoveredMaterials` restores undiscovered, no funnel/subscriber call), and `bodyPerfectionMaterialIds` now returns `[]` for unknown realms per the spec contract.
+
 ## New or Changed QA Tests
 
 - `game/tests/e2e/body-perfection-hidden.spec.ts` — production runtime evidence: structurally absent perfection col on fresh boot and after save+reload (the only runtime state the all-empty production registry can express).

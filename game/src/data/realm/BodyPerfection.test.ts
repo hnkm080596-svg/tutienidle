@@ -52,7 +52,7 @@ describe('BODY_PERFECTION_REALM_MATERIALS (shipped constant)', () => {
     for (const realmId of REALM_IDS) {
       expect(bodyPerfectionMaterialIds(realmId)).toEqual([])
     }
-    expect(bodyPerfectionMaterialIds('unknown_realm')).toBeUndefined()
+    expect(bodyPerfectionMaterialIds('unknown_realm')).toEqual([])
     expect(bodyPerfectionRealmOf('tinh_hoa_pham_the')).toBeUndefined()
     expect(isBodyPerfectionMaterial('tinh_hoa_pham_the')).toBe(false)
     expect(isBodyPerfectionMaterial('')).toBe(false)

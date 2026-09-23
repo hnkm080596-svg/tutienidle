@@ -637,7 +637,7 @@ export class GameManagerRealmAdvanceOps {
 
     const required = bodyPerfectionMaterialIds(realmId)
 
-    if (!required || required.length === 0) {
+    if (required.length === 0) {
       return false
     }
 
@@ -645,14 +645,19 @@ export class GameManagerRealmAdvanceOps {
     // round-trip (never structuredClone - proxies throw DataCloneError),
     // then the mark step dry-runs on the detached copy. Consumption
     // cannot legitimately fail past the gate, but the probe keeps the
-    // atomic convention uniform.
-    const probe = JSON.parse(JSON.stringify(player)) as PlayerData
+    // atomic convention uniform - and stays fail-closed: any
+    // serialization or probe exception returns false with zero mutation.
+    try {
+      const probe = JSON.parse(JSON.stringify(player)) as PlayerData
 
-    if (!canPerfectBodyRealm(probe, realmId, ownedOf)) {
+      if (!canPerfectBodyRealm(probe, realmId, ownedOf)) {
+        return false
+      }
+
+      applyBodyPerfection(probe, realmId)
+    } catch {
       return false
     }
-
-    applyBodyPerfection(probe, realmId)
 
     for (const materialId of required) {
       this.deps.materialBag.remove(materialId, 1)
