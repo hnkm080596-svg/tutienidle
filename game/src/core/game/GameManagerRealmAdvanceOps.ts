@@ -2,6 +2,7 @@ import type { ArtifactPath } from '../artifact/Artifact'
 import { tryUpgradeArtifactGrade } from '../artifact/ArtifactProgression'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import type { MaterialBag } from '../material/MaterialBag'
+import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { PillBag } from '../pill/PillBag'
 import type { PlayerData } from '../player/Player'
 import type { CultivationPathId, CultivationWayId } from '../player/CultivationPathKit'
@@ -15,10 +16,20 @@ import {
   investBodyChapterState,
 } from '../realm/body/BodyProgressionSystem'
 import {
+  bodyChapterEssenceGrade,
   getBodyChapterDefinition,
   type BodyChapterCurrency,
   type BodyChapterId,
 } from '../realm/body/BodyChapter'
+import {
+  essenceSubstitutionCoverage,
+  planEssenceSubstitution,
+} from '../realm/body/BodyChapterEssenceSubstitution'
+import {
+  physiqueEssenceMaterialId,
+} from '../../data/realm/PhysiqueEssence'
+import type { PhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
+import { MAX_STACK_AMOUNT } from '../inventory/StackLimits'
 import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
 import { CORE_REALM_LEVEL, QI_REFINING_BREAKTHROUGH_STAGE_ID, getCurrentRealm, getNextRealm } from '../realm/realmSystem'
@@ -81,6 +92,7 @@ export class GameManagerRealmAdvanceOps {
       skillTemplates: TemplateRegistry<Skill>
       nodeRegistry: NodeRegistry
       materialBag: MaterialBag
+      materialRegistry: MaterialRegistry
       pillBag: PillBag
       breakthroughOutcomeService: BreakthroughOutcomeService
       progressionOps: GameManagerProgressionOps
@@ -472,16 +484,81 @@ export class GameManagerRealmAdvanceOps {
       ? this.bodyChapterBag(chapter.auxCurrency).getAmount(chapter.auxCurrency.id)
       : 0
 
-    const consumed = investBodyChapterState(player, chapterId, available, auxOwned)
-
-    if (consumed > 0) {
-      bag.remove(chapter.currency.id, consumed)
+    // M-QI-09 (QI-D4c) - downward-only essence substitution resolved at
+    // this cost check, no exchange UI: a material-bag physique-essence
+    // requirement counts higher-grade stacks at the locked adjacent
+    // ratio. C2C r10#3 + r17#1 - validate -> consume -> apply: the
+    // progression mutation is computed on a cloned probe FIRST, the
+    // debit plan is validated (every debit satisfiable AND the change
+    // credit committable) while the real player is untouched, bags
+    // commit, and only then does the real state apply. Any failure
+    // returns 0 with zero state change. The resolver owns the
+    // namespace gate (C2C 6) - a non-essence currency takes the
+    // legacy path where the single-currency debit cannot fail.
+    if (bodyChapterEssenceGrade(chapter.currency) === undefined) {
+      const consumed = investBodyChapterState(player, chapterId, available, auxOwned)
+      if (consumed > 0) {
+        bag.remove(chapter.currency.id, consumed)
+      }
+      return consumed
     }
 
-    return consumed
+    const ownedOf = (grade: PhysiqueGradeId): number => {
+      const materialId = physiqueEssenceMaterialId(grade)
+      return materialId === undefined
+        ? 0
+        : this.deps.materialBag.getAmount(materialId)
+    }
+    const coverage = essenceSubstitutionCoverage(chapter.currency, ownedOf)
+    const effectiveAvailable = available + coverage
+
+    // JSON round-trip, NOT structuredClone: the live callers hand in a
+    // Pinia store's reactive $state, and structuredClone throws
+    // DataCloneError on any nested Proxy (SaveSystem's detachSaveValue
+    // ruling). JSON stringify/parse reads through proxies at any depth.
+    const probe = JSON.parse(JSON.stringify(player)) as PlayerData
+    const consumed = investBodyChapterState(probe, chapterId, effectiveAvailable, auxOwned)
+    if (consumed <= 0) {
+      return 0
+    }
+
+    const plan = planEssenceSubstitution(consumed, chapter.currency, ownedOf)
+    if (plan === undefined) {
+      return 0 // fail-closed: unreachable for an essence currency
+    }
+    const allSatisfiable = plan.debits.every((debit) =>
+      bag.has(debit.materialId, debit.amount),
+    )
+    // C2C r17#2 - the whole change credit must land or the invest
+    // fails closed: capacity is checked against the post-debit
+    // required balance before anything commits.
+    let changeCommittable = true
+    if (plan.change !== undefined) {
+      const changeMaterial = this.deps.materialRegistry.get(plan.change.materialId)
+      const requiredDebit = plan.debits.find(
+        (debit) => debit.materialId === plan.change?.materialId,
+      )
+      const postDebitBalance =
+        bag.getAmount(plan.change.materialId) - (requiredDebit?.amount ?? 0)
+      changeCommittable =
+        postDebitBalance + plan.change.amount <=
+        (changeMaterial.stackLimit ?? MAX_STACK_AMOUNT)
+    }
+    if (!allSatisfiable || !changeCommittable) {
+      return 0
+    }
+
+    for (const debit of plan.debits) {
+      bag.remove(debit.materialId, debit.amount)
+    }
+    if (plan.change !== undefined) {
+      const changeMaterial = this.deps.materialRegistry.get(plan.change.materialId)
+      this.deps.materialBag.add(changeMaterial, plan.change.amount)
+    }
+    return investBodyChapterState(player, chapterId, effectiveAvailable, auxOwned)
   }
 
-  private bodyChapterBag(currency: BodyChapterCurrency): { getAmount(id: string): number; remove(id: string, amount: number): boolean } {
+  private bodyChapterBag(currency: BodyChapterCurrency): { getAmount(id: string): number; has(id: string, amount: number): boolean; remove(id: string, amount: number): boolean } {
     return currency.bag === 'pill' ? this.deps.pillBag : this.deps.materialBag
   }
 
