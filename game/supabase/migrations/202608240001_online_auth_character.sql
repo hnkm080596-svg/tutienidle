@@ -141,6 +141,11 @@ begin
 end;
 $$;
 
+-- BETA-CREATION - the v81 signature (..., p_attributes jsonb, ...) is a
+-- different overload; drop it so the attribute-distribution path cannot
+-- survive a re-apply of this migration on an already-migrated database.
+drop function if exists public.create_character(uuid,uuid,text,text[],jsonb,jsonb,integer);
+
 create or replace function public.create_character(
   p_session_id uuid,
   p_roll_id uuid,
