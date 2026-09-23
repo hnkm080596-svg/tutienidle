@@ -17,6 +17,7 @@ import { TALENT_RARITY_LABELS, type TalentDefinition } from '@/core/talent/Talen
 import {
   getTalentLevel,
   getUpgradeableTalentIds,
+  isLegalBreakthroughOffer,
   reconcileTalentEntitlement,
   type TalentEntitlementDecision,
 } from '@/core/talent/TalentEntitlement'
@@ -43,12 +44,23 @@ watchEffect(() => {
 
 // NEW branch: the 3 cards bound at origination (deduped, realm-pooled,
 // no reroll - offeredTalentIds is the persisted draw, never re-rolled
-// here). Unknown ids (a pool def retired after the save) drop out like
-// every consumer of the catalog.
+// here). Rendered cards must still be live decisions: an id that is no
+// longer a legal offer (foreign id, zero-weight member, retired def) or
+// was granted by a later path is a dead card - never render a choice
+// the resolver would reject.
 const offeredTalents = computed<TalentDefinition[]>(() => {
-  const ids = entitlement.value?.offeredTalentIds ?? []
+  const record = entitlement.value
 
-  return ids
+  if (record === undefined) {
+    return []
+  }
+
+  return record.offeredTalentIds
+    .filter(
+      (id) =>
+        isLegalBreakthroughOffer(record.realmId, id) &&
+        !player.selectedTalentIds.includes(id),
+    )
     .map((id) => getTalentDefinition(id))
     .filter((talent): talent is TalentDefinition => talent !== undefined)
 })

@@ -33,6 +33,26 @@ export type TalentEntitlementDecision =
 /** NEW draws at most this many cards (ruling: 3). */
 export const BREAKTHROUGH_TALENT_OFFER_COUNT = 3
 
+/**
+ * The ONE structural legality rule for a NEW-branch offer, shared by
+ * origination, actionability, resolution, and save preflight: the id is
+ * a catalog-resolvable member of the realm's authored pool with a live
+ * draw weight. Ownership is deliberately NOT part of this predicate -
+ * callers check it where decision-time ownership matters. The release
+ * gate stays separate too (acquisition policy vs structural legality).
+ */
+export function isLegalBreakthroughOffer(realmId: string, talentId: string): boolean {
+  const poolEntry = (BREAKTHROUGH_TALENT_POOLS[realmId] ?? []).find(
+    (entry) => entry.id === talentId,
+  )
+
+  return (
+    poolEntry !== undefined &&
+    poolEntry.weight > 0 &&
+    getTalentDefinition(talentId) !== undefined
+  )
+}
+
 /** Current level of an owned talent - absent talentLevels entry reads as 1. */
 export function getTalentLevel(
   player: Pick<PlayerData, 'talentLevels'>,
@@ -89,8 +109,14 @@ export function drawBreakthroughTalentOffers(
     return []
   }
 
+  // Same offer-legality rule as actionability/resolution/preflight
+  // (isLegalBreakthroughOffer: pool member + live weight + catalog-
+  // resolvable); ownership stays a caller-side filter - the draw is the
+  // one place binding offers against decision-time ownership.
   const remaining = (BREAKTHROUGH_TALENT_POOLS[realmId] ?? []).filter(
-    (talent) => talent.weight > 0 && !player.selectedTalentIds.includes(talent.id),
+    (talent) =>
+      isLegalBreakthroughOffer(realmId, talent.id) &&
+      !player.selectedTalentIds.includes(talent.id),
   )
 
   const offers: string[] = []
@@ -167,12 +193,10 @@ export function isTalentEntitlementActionable(
     return false
   }
 
-  const poolIds = new Set((BREAKTHROUGH_TALENT_POOLS[entitlement.realmId] ?? []).map((t) => t.id))
   const hasLegalNewOffer = entitlement.offeredTalentIds.some(
     (talentId) =>
-      poolIds.has(talentId) &&
-      !player.selectedTalentIds.includes(talentId) &&
-      getTalentDefinition(talentId) !== undefined,
+      isLegalBreakthroughOffer(entitlement.realmId, talentId) &&
+      !player.selectedTalentIds.includes(talentId),
   )
 
   return hasLegalNewOffer || getUpgradeableTalentIds(player).length > 0
@@ -220,14 +244,10 @@ export function resolveTalentEntitlement(
     if (!isBreakthroughAcquisitionEnabled(entitlement.realmId)) {
       return false
     }
-    const poolIds = new Set((BREAKTHROUGH_TALENT_POOLS[entitlement.realmId] ?? []).map((t) => t.id))
-    if (!poolIds.has(decision.talentId)) {
+    if (!isLegalBreakthroughOffer(entitlement.realmId, decision.talentId)) {
       return false
     }
     if (player.selectedTalentIds.includes(decision.talentId)) {
-      return false
-    }
-    if (getTalentDefinition(decision.talentId) === undefined) {
       return false
     }
 

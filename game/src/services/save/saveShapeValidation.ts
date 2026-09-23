@@ -29,7 +29,7 @@ import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
 import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
 import { getTalentDefinition } from '../../data/talent/Talents'
-import { getTalentMaxLevel, isTalentEntitlementActionable } from '../../core/talent/TalentEntitlement'
+import { getTalentMaxLevel, isLegalBreakthroughOffer, isTalentEntitlementActionable } from '../../core/talent/TalentEntitlement'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
 import { isPhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
 
@@ -268,7 +268,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     validateStringEntries(selectedTalentIds, 'player.selectedTalentIds', issues)
   }
 
-  // M-F-TALENT (v75) - talentLevels is required (sparse level map; empty
+  // M-F-TALENT (v76) - talentLevels is required (sparse level map; empty
   // object = every owned talent at level 1). Levels are positive
   // integers - a 0/NaN level reads as a corrupt upgrade result, fail
   // loud like nodeLevels.
@@ -311,7 +311,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     }
   }
 
-  // M-F-TALENT (v75) - pendingTalentEntitlement is optional; when
+  // M-F-TALENT (v76) - pendingTalentEntitlement is optional; when
   // present it is the in-flight mandatory breakthrough decision record:
   // realmId (pool key) + bound offeredTalentIds. A malformed record must
   // fail loud - silently dropping it would strand the transition lock.
@@ -348,6 +348,23 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
             issues.push({
               path: `player.pendingTalentEntitlement.offeredTalentIds[${index}]`,
               message: 'talent id không thuộc catalog',
+            })
+          }
+
+          // EVERY persisted offer must satisfy the same structural
+          // legality as the live draw (isLegalBreakthroughOffer):
+          // realm-pool member + weight > 0 + catalog-resolvable. A
+          // foreign or zero-weight id would survive into the decision
+          // UI as a dead card - fail loud, never let it render.
+          if (
+            typeof talentId === 'string' &&
+            typeof entitlement.realmId === 'string' &&
+            entitlement.realmId.length > 0 &&
+            !isLegalBreakthroughOffer(entitlement.realmId, talentId)
+          ) {
+            issues.push({
+              path: `player.pendingTalentEntitlement.offeredTalentIds[${index}]`,
+              message: 'không phải offer hợp lệ của pool realm (ngoài pool hoặc weight 0)',
             })
           }
 

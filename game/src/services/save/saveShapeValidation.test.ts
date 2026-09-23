@@ -1670,7 +1670,7 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
     expect(validateGameSaveShape(save).ok).toBe(true)
   })
 
-  // M-F-TALENT (v75) - talentLevels is the UPGRADE axis (sparse map,
+  // M-F-TALENT (v76) - talentLevels is the UPGRADE axis (sparse map,
   // absent id = tang 1): required object, integer values >= 1.
   it.each([Number.NaN, 0, -1, 1.5, 'x'])('từ chối talentLevels value = %j', (value) => {
     const save = validSave()
@@ -1683,7 +1683,7 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
     expect(pathsOf(result)).toContain('player.talentLevels.tc_dia_can')
   })
 
-  it('từ chối khi thiếu talentLevels (required v75)', () => {
+  it('từ chối khi thiếu talentLevels (required v76)', () => {
     const save = validSave()
 
     delete (save.player as Record<string, unknown>).talentLevels
@@ -1837,6 +1837,25 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
 
     expect(result.ok).toBe(false)
     expect(pathsOf(result)).toContain('player.pendingTalentEntitlement')
+  })
+
+  it('từ chối entitlement có MỘT offer ngoài pool giữa các offer hợp lệ (mixed set, C2C-47)', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    // lk_bac_hai is a live qi_refining member, but tc_dia_can is a
+    // catalog id from foundation_establishment's pool - a foreign offer.
+    // EVERY persisted id must satisfy isLegalBreakthroughOffer, not just
+    // SOME of them: a mixed set is corruption, fail loud at [1].
+    player.pendingTalentEntitlement = {
+      realmId: 'qi_refining',
+      offeredTalentIds: ['lk_bac_hai', 'tc_dia_can'],
+    }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.pendingTalentEntitlement.offeredTalentIds[1]')
   })
 
   it('chấp nhận entitlement offers rỗng KHI vẫn còn nhánh UPGRADE hợp lệ', () => {

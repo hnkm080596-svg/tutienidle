@@ -203,10 +203,10 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     expect('cultivationWay' in playerData).toBe(false)
   })
 
-  // M-F-TALENT (v75) - a save taken mid-decision (entitlement still
+  // M-F-TALENT (v76) - a save taken mid-decision (entitlement still
   // pending + an upgraded talent level) round-trips both records so the
   // reload re-presents the SAME bound offers - no reroll, no loss.
-  it('pendingTalentEntitlement + talentLevels round-trip nguyên vẹn (v75, reload mid-decision)', () => {
+  it('pendingTalentEntitlement + talentLevels round-trip nguyên vẹn (v76, reload mid-decision)', () => {
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()
 
