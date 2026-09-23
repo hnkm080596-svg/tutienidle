@@ -5,6 +5,7 @@ import {
   BODY_CHAPTER_KINDS,
   BODY_CHAPTERS,
   BODY_CHAPTER_BY_ID,
+  bodyChapterEssenceGrade,
   createDefaultBodyProgression,
   getBodyChapterDefinition,
   isBodyChapterKind,
@@ -111,6 +112,21 @@ describe('BodyChapter - validateBodyChapterRegistry (M-F-BODY-CORE)', () => {
     // slice would be authored with the chapter, so the slice issues it
     // reports here are expected noise, not a kind rejection).
     const fake = fakeMeridianChapter({ id: 'zhou_tian' as never, chapterKind: 'zhou_tian' })
+    const issues = validateBodyChapterRegistry([refinement, fake])
+    expect(issues.some(i => i.path === 'bodyChapters.zhou_tian.chapterKind')).toBe(false)
+  })
+
+  it('classifies a synthetic zhou_tian phap-material currency as essence (M-F-ESSENCE)', () => {
+    // The TC chapter's declared cost shape: a material-bag phap
+    // descriptor classifies at the namespace gate on bag+id alone -
+    // chapter id and chapterKind never enter it - and the same def
+    // draws no chapterKind issue from the registry validator.
+    const fake = fakeMeridianChapter({
+      id: 'zhou_tian' as never,
+      chapterKind: 'zhou_tian',
+      currency: { bag: 'material', id: 'tinh_hoa_phap_the' },
+    })
+    expect(bodyChapterEssenceGrade(fake.currency)).toBe('phap')
     const issues = validateBodyChapterRegistry([refinement, fake])
     expect(issues.some(i => i.path === 'bodyChapters.zhou_tian.chapterKind')).toBe(false)
   })

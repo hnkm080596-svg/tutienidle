@@ -169,6 +169,16 @@ describe('bodyChapterEssenceGrade (M-QI-08 namespace rule)', () => {
     expect(bodyChapterEssenceGrade(collidingPill)).toBeUndefined()
   })
 
+  // M-F-ESSENCE (F9 residual) - the cost shapes the TC-side chapters
+  // will declare: bao/phap material descriptors classify at the typed
+  // boundary with no chapter knowledge.
+  it('resolves the bao/phap material descriptors a TC chapter will declare', () => {
+    const phapCost: BodyChapterCurrency = { bag: 'material', id: 'tinh_hoa_phap_the' }
+    const baoCost: BodyChapterCurrency = { bag: 'material', id: 'tinh_hoa_bao_the' }
+    expect(bodyChapterEssenceGrade(phapCost)).toBe('phap')
+    expect(bodyChapterEssenceGrade(baoCost)).toBe('bao')
+  })
+
   it('every authored chapter currency stays self-consistent with the registry', () => {
     for (const chapter of BODY_CHAPTERS) {
       for (const currency of [chapter.currency, chapter.auxCurrency]) {
