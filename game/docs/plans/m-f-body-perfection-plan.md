@@ -181,7 +181,13 @@ Worktree per P2 (production edits); `.agent-worktrees/m-f-body-perfection`.
    unchanged; non-body sources (`baseStats`, `modifiers`, equipment,
    `externalModifiers`) byte-identical (multiplier isolation);
    `resolvePlayerStatAssembly` totals reflect scaled body deltas.
-6. Save — v(CURRENT+1) round-trip preserves both sets; malformed
+6. Save — **fixture-registry round-trip (C2C r68): injected
+   non-empty registry + legal state (`discoveredMaterials` ⊇ an
+   authored realm list, one `perfectedRealmIds` entry), serialized +
+   restored, assert both sets survive serialization end-to-end** —
+   proves persisted perfection state round-trips, not just that the
+   fields exist; production all-empty round-trip kept as a second
+   case (v(CURRENT+1) fields present, both sets `[]`); malformed
    payload emits; **immediately-previous-version save rejected (C2C
    r60-f5)**; integrity rejects a perfected future realm (C2C r60-f2)
    while allowing future-realm discovery; restore fires no
