@@ -47,6 +47,7 @@ const headingId = useId()
         ref="cardRef"
         class="overlay-panel__card"
         :class="{ 'overlay-panel__card--system': variant === 'system' }"
+        tabindex="-1"
         :style="{ width, height }"
         role="dialog"
         aria-modal="true"

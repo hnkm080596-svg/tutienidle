@@ -1005,9 +1005,9 @@ onBeforeUnmount(() => {
 }
 
 /* Route badge - node routeTag (Phap Tu Reimagined Task 16). M-UI-SYSTEM:
-   the chip is a SysTag; this scoped rule only re-maps its border line so
-   it stays quiet on the node card. */
-.node-tree__node-route {
+   the chip is a SysTag; the .sys-tag anchor re-maps its border line so it
+   stays quiet on the node card. */
+.node-tree__node-route.sys-tag {
   --sys-tag-line: var(--sys-line-soft, color-mix(in srgb, var(--gold-700) 60%, transparent));
   font-size: var(--text-xs);
 }

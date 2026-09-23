@@ -573,17 +573,16 @@ const pillPermanentRows = computed(() => {
   overflow: hidden;
 }
 
-/* Rarity label sits on the cream scroll — blend the tier color toward
-   ink so it keeps its hue but stays legible on the light art. */
-.talent-block__rarity {
+/* Rarity label sits on the cream scroll - blend the tier color toward
+   ink so it keeps its hue but stays legible on the light art.
+   M-UI-SYSTEM: the chip is a SysTag - the .sys-tag anchor re-tints its
+   neon border toward the tier blend (panel-internal --sys-* remap). */
+.talent-block__rarity.sys-tag {
   font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.13em;
   color: color-mix(in srgb, var(--talent-tier-color, var(--mineral-gold)) 55%, var(--ink-900));
-  /* M-UI-SYSTEM: the rarity chip is a SysTag resting on the light scroll
-     art - re-tint its neon border toward the tier blend so the frame
-     stays visible there (panel-internal --sys-* remap, plan Task 4). */
   --sys-tag-line: color-mix(in srgb, var(--talent-tier-color, var(--mineral-gold)) 60%, var(--ink-900));
 }
 

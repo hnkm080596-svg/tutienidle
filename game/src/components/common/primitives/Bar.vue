@@ -68,6 +68,16 @@ const percent = computed(() => {
   margin-left: auto;
 }
 
+/* M-UI-SYSTEM: tone remap for variant="system" - the same CSS-var
+   mechanism ink callers already use; ink fallbacks keep the bar legible
+   if the system layer is not imported (safe degrade, spec 2.3). Extras
+   (border/shimmer/label font) stay anchored in system-theme.css. */
+.bar--system {
+  --bar-track: var(--sys-bg-0, var(--ink-700));
+  --bar-from: var(--sys-cyan, var(--jade));
+  --bar-to: var(--sys-azure, var(--chrome-300));
+}
+
 .bar__label {
   position: absolute;
   inset: 0;

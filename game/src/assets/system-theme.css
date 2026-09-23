@@ -1,7 +1,7 @@
 /* system-theme.css - "xuyen khong he thong" SYSTEM window skin.
    PARALLEL theme: loaded after theme.css; only .sys-* anchored rules here.
    Boundary contract (spec 2.2): defines --sys-* tokens only; never redefines
-   --ink-*/--paper-*/--surface-*/etc. Revert = delete the import in main.ts. */
+   the ink/paper/surface token families. Revert = delete the import in main.ts. */
 
 @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap');
 
@@ -258,9 +258,6 @@
    --bar-from, --bar-to): only sys extras need real overrides, and those
    selectors carry the .bar prefix to outrank scoped [data-v] rules. */
 .bar.bar--system {
-  --bar-track: var(--sys-bg-0);
-  --bar-from: var(--sys-cyan);
-  --bar-to: var(--sys-azure);
   border: 1px solid var(--sys-line-soft);
   box-shadow: inset 0 0 6px rgba(0, 0, 0, .5);
 }

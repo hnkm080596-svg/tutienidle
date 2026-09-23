@@ -54,6 +54,7 @@ const headingId = useId()
         :rim-active="open"
         class="sys-modal__card"
         :style="{ width, height }"
+        tabindex="-1"
         :role="role"
         aria-modal="true"
         :aria-labelledby="headingId"

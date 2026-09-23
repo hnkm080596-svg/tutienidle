@@ -42,6 +42,41 @@ asset không chứa chữ/icon; decorative DOM luôn `aria-hidden` và
 `pointer-events: none`. `InkWashBackdrop` chỉ nối bố cục bằng núi, sương, trúc
 và ấn—không được che hoặc nhận input của nội dung.
 
+### Lớp system — M-UI-SYSTEM ("xuyên không hệ thống")
+
+Lớp giao diện **song song** với thủy mặc, opt-in hoàn toàn: thế giới/cảnh giữ
+ngôn ngữ mực-giấy, các bề mặt hệ thống (cửa sổ trạng thái) dùng skin SYSTEM —
+panel hologram tối, viền 1px + corner bracket, glow cyan/azure, số kiểu
+digital-display. Hiệu ứng chỉ là CSS (không thư viện animation, không canvas).
+
+- Token layer duy nhất: `src/assets/system-theme.css` (import sau `theme.css`
+  trong `main.ts`). Mọi token là `--sys-*`: nền `#050a12`, surface
+  `rgba(10,22,38,.72)` + blur, cyan `#38e1ff`, azure `#4f7fff`, violet
+  `#8b6cff`, warn `#ffb84f`, danger `#ff5470`, success `#37e6a3`, chữ
+  `#d8ecff` / muted `#7ea2c4`, font số/hiển thị "Chakra Petch".
+- Primitives: `common/system/` — `SysPanel` (container `.sys-surface`,
+  variant `primary`/`interactive`/`flat`), `SysBar`, `SysTag`, `SysStat`,
+  `SysModalBase` (scrim + focus trap + Escape qua `useDialogFocus`).
+- Opt-in cơ chế 2 lớp: (a) element tự mang class `.sys-surface`/`sys-corners`/
+  `sys-scanlines`... hoặc (b) component dùng chung nhận `variant="system"`
+  (`Bar`, `OverlayPanel` — mặc định `ink`, không đổi caller nào chưa chọn).
+- Ranh giới (`tests/architecture/systemThemeBoundary.test.ts` giám): định
+  nghĩa canonical `--sys-*` chỉ một lần tại `:root` trong system-theme.css;
+  mọi selector thường trong file đó phải anchor `.sys-`/`--system`; file đó
+  không được định nghĩa lại bất kỳ token thủy mặc nào; re-map `--sys-*` phạm
+  vi scoped chỉ hợp lệ dưới selector đã anchor.
+- Rim authority: `useSystemRimAuthority(id, active)` — tập claimant có thứ tự,
+  chỉ claimant trên cùng render `.sys-rim--live` (viền conic xoay). SysPanel
+  claim qua prop `rimActive`; LeftPanel tự lái bằng id `'hud-left'` gắn vào
+  `ui.characterOverlayOpen`. Tối đa một rim live mỗi màn hình.
+- Revert 2 lớp (spec §2.3): xóa import → mọi bề mặt vẫn functional/legible
+  (safe degrade nhờ fallback `var(--sys-*, var(--ink-*))`); revert diff
+  opt-in markup/variant → đúng nguyên trạng cũ.
+- A11y: scrim `--sys-scrim` opaque-floor dưới surface trong suốt;
+  `:focus-visible` 2px không-glow trên mọi control trong `.sys-*`;
+  trạng thái không chỉ dùng màu (glyph hình học trên `SysTag`);
+  `prefers-reduced-motion` và lớp `.sys-fx-low` tắt mọi motion.
+
 ## Mục lục
 
 1. [Hệ màu chuẩn — theme.css](#1-hệ-màu-chuẩn--themecss)
