@@ -88,7 +88,7 @@ onMounted(() => {
   }
   // A late webfont swap changes tab widths without a nav resize.
   document.fonts?.addEventListener?.('loadingdone', measureInk)
-  document.fonts?.ready.then(measureInk)
+  document.fonts?.ready?.then?.(measureInk)
 })
 watch(() => props.modelValue, () => measureInk(), { flush: 'post' })
 onBeforeUnmount(() => {
