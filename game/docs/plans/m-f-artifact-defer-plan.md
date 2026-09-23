@@ -165,7 +165,8 @@ uses for `TribulationChapters`).
   comment (envelope stays 18; domain deferred).
 - `PhapTuPath.ts`: move the `artifactId` override key to
   `golden_core`; refresh the kit comment (award at KD, not TC).
-- `NguHanhChau.ts`: `unlockRealmId: 'golden_core'` (dormant field —
+- `NguHanhChau.ts`: `unlockRealmId: ARTIFACT_UNLOCK_REALM_ID`
+  (constant reference, dormant field —
   authored truth; note in commit that it has no consumers).
 - `BreakthroughOutcomeService.ts`: awaken branch realm aligned to
   `ARTIFACT_UNLOCK_REALM_ID` + `isArtifactDomainUnlocked` guard;
@@ -181,16 +182,18 @@ uses for `TribulationChapters`).
   unknown → fail closed.
 - `Material.ts`: `domainUnlockRealmId?: string` field.
 - `materials.ts`: `doan_bao_thach` gains
-  `domainUnlockRealmId: 'golden_core'` (domain-scoped family — NOT
-  breakthroughRealmId, which is window-only and would deliver to
-  below-KD players once the window opens).
+  `domainUnlockRealmId: ARTIFACT_UNLOCK_REALM_ID` — constant
+  reference via import, NOT a repeated `'golden_core'` literal
+  (C2C-52: one authored realm value for the artifact domain).
+  `breakthroughRealmId` not used (window-only semantics).
 - `BattleLootSystem.ts` material arm: compose the new predicate
   beside the breakthrough check at the same post-resolve seam
   (`this.player.realmId` already read on the system).
 - `BreakthroughScopedResources.ts`: new
   `DOMAIN_SCOPED_MATERIAL_IDS = ['doan_bao_thach']` — same
-  two-direction census invariant; stone is NOT added to the
-  breakthrough list.
+  two-direction census invariant + cross-field pin
+  `domainUnlockRealmId === ARTIFACT_UNLOCK_REALM_ID` per listed
+  material; stone is NOT added to the breakthrough list.
 - `StageDropTables.ts`: no change — TC-floor row retained; the
   delivery rule is the gate (below-KD player gets nothing on that
   row under any window; KD player gets the stone once open).

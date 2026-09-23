@@ -1,8 +1,9 @@
 # M-F-ARTIFACT-DEFER — Artifact deferral to Kim Đan+ — Spec
 
-Status: v1.1 — draft (worker-authored, amended after C2C spec
-review round 48: D2 delivery rule = window+player reach; §5
-boundary suite pinned on the real TC row — pending re-review)
+Status: v1.2 — draft (worker-authored, amended after C2C spec
+review round 52: stone tag authored through
+ARTIFACT_UNLOCK_REALM_ID + cross-field integrity pin — pending
+re-review)
 Depends on: M-F-CEILING release-policy authority (merged on
 `p7/truc-co` — `core/realm/ReleasePolicy.ts` owns
 `progressionCeilingRealmId`, `isRealmAvailable`,
@@ -189,8 +190,9 @@ New:
   advance `advanceArtifactRealmLevel` guard gains the domain
   predicate so dormant artifacts stop tracking realmLevel.
 - `data/artifact/NguHanhChau.ts`: declared `unlockRealmId` →
-  `golden_core` — dormant field (zero consumers, verified), moved
-  for authored truth, not behavior.
+  `ARTIFACT_UNLOCK_REALM_ID` (constant reference, not a literal) —
+  dormant field (zero consumers, verified), moved for authored
+  truth and single-declaration consistency, not behavior.
 
 ### D2 — `doan_bao_thach` delivery rule (C2C-48 High — window
 AND player reach)
@@ -217,8 +219,14 @@ tag family beside the breakthrough one:
   `domainUnlockRealmId?: string` (same optional-tag convention as
   `breakthroughRealmId`).
 - `data/materials/materials.ts`: `doan_bao_thach` gains
-  `domainUnlockRealmId: 'golden_core'` — NOT `breakthroughRealmId`
-  (wrong semantics); the two tag families stay distinct.
+  `domainUnlockRealmId` authored THROUGH the shared domain
+  declaration — `domainUnlockRealmId: ARTIFACT_UNLOCK_REALM_ID`
+  (import from `core/artifact/ArtifactProgression.ts`), not a
+  repeated `'golden_core'` literal (C2C-52: one authored realm
+  value for the artifact domain — a duplicated literal could drift
+  from the domain unlock on a future retarget).
+  `breakthroughRealmId` is NOT used (wrong semantics); the two tag
+  families stay distinct.
 - `core/game/BattleLootSystem.ts`: the material arm composes the
   new predicate beside the breakthrough check at the same
   post-resolve seam —
@@ -230,8 +238,11 @@ tag family beside the breakthrough one:
   census list for the domain-scoped family (e.g.
   `DOMAIN_SCOPED_MATERIAL_IDS = ['doan_bao_thach']`) — same
   two-direction invariant as the breakthrough lists (listed ⇔
-  tagged). The stone is NOT added to
-  `BREAKTHROUGH_SCOPED_MATERIAL_IDS` (it is domain-scoped).
+  tagged), PLUS a cross-field pin: every domain-scoped material's
+  `domainUnlockRealmId === ARTIFACT_UNLOCK_REALM_ID` (the stone is
+  the artifact domain's resource — the census proves the tag
+  cannot drift from the domain unlock id). The stone is NOT added
+  to `BREAKTHROUGH_SCOPED_MATERIAL_IDS` (it is domain-scoped).
 - `data/drop/StageDropTables.ts`: the TC-floor row **stays** —
   authored TC-stage drop; the delivery rule, not the table, is the
   gate. Under an open KD window a below-KD player resolving that
@@ -386,8 +397,11 @@ unwired), quest/alchemy/shop channels (stone has none — census).
 - Wheel context fields stay display-only predicate feeds — no
   production mutation flows through them.
 - `ARTIFACT_UNLOCK_REALM_ID` is the single domain declaration —
-  no second realm literal is authored for the artifact gate
-  (`NguHanhChau.unlockRealmId` mirrors it as data, not authority).
+  no second realm literal is authored for the artifact domain:
+  `material('doan_bao_thach').domainUnlockRealmId` references the
+  constant (import, not literal) and the census test pins
+  `=== ARTIFACT_UNLOCK_REALM_ID`; `NguHanhChau.unlockRealmId`
+  likewise references the constant rather than a literal.
 
 ## 8. Out of scope (restated)
 
@@ -404,7 +418,7 @@ combat runtime, removal of the TC drop-table row.
 |---|---|
 | A1 | `spell_pathway` realmRewards declares `artifactId: 'ngu_hanh_chau'` only at `golden_core`; entering TC delivers no artifact (grant fails closed on realm availability); under an open window, KD entry delivers it. |
 | A2 | `isArtifactDomainUnlocked` returns false for `foundation_establishment` and below under real policy; normalize never creates an artifact at TC and never strips a persisted one. |
-| A3 | `doan_bao_thach` carries `domainUnlockRealmId: 'golden_core'` and is listed in the domain-scoped census; `isDomainScopedAcquisitionEnabled` composes window+reach — closed window OR below-KD player → no delivery on the real TC row; open-window KD player on that same row → delivered; the TC-floor table row is retained. |
+| A3 | `doan_bao_thach` carries `domainUnlockRealmId` referenced to `ARTIFACT_UNLOCK_REALM_ID` (integrity test pins `===`) and is listed in the domain-scoped census; `isDomainScopedAcquisitionEnabled` composes window+reach — closed window OR below-KD player → no delivery on the real TC row; open-window KD player on that same row → delivered; the TC-floor table row is retained. |
 | A4 | EXP feed, `advanceArtifactRealmLevel`, `setArtifactPath`, `tryUpgradeArtifactGrade` each evaluate `isArtifactDomainUnlocked(player.realmId)` — all no-op at TC under real policy, all functional at KD under an open window. |
 | A5 | `phap_bao` slot disabled with `RELEASE_UNAVAILABLE_REASON` at/below TC while the unlock realm is outside the window; mocked-open + below-KD shows `'Cần đạt Kim Đan'`; enabled at KD+ for Pháp Tu; `hasArtifactDefinition` rule unchanged. |
 | A6 | `docs/systems/artifact.md`, `docs/game-guide.md`, and `Artifact.ts` docs record the artifact domain as deferred to `golden_core`; the superseded "Trúc Cơ tầng 18" scope claim appears nowhere as live scope. |
