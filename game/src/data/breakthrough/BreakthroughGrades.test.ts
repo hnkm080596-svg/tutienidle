@@ -11,27 +11,17 @@ function createReadyPlayer(): PlayerData {
   return player
 }
 
-// Helper full mọi điều kiện Đại Đạo
-function createGreatDaoPlayer(): PlayerData {
-  const player = createReadyPlayer()
-  player.realmLevel = 18
-  player.selectedTalentIds = ['pham_cot']
-  player.bodyProgression.body_refinement.completedTiers = 6
-  player.physiqueGrade = 'bao'
-  player.mortalPerfectionAchieved = true
-  player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id) // 9/9 gồm Kỳ Kinh
-  // 5/5 main stat 30/30 (cap Luyện Khí — StatCap.ts)
-  player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
-  return player
-}
-
 describe('BodyRefinement caps cấp số nhân (spec §3.1)', () => {
   it('caps mới theo hệ số ×3.5 từ 50', () => {
     expect(BODY_REFINEMENT_TIERS.map((t) => t.cap)).toEqual([50, 175, 615, 2150, 7500, 26300])
   })
 })
 
-describe('resolveKienCoGrade — 4 bậc Kiến Cơ (spec §4.2)', () => {
+// Hidden Perfection Lineage (2026-09-23): the great_dao synthesis arm
+// retired - a hidden breakthrough records 'great_dao' through the
+// lineage channel (committed.breakthroughType), so this resolver only
+// grades the NORMAL track (human / earth / heaven).
+describe('resolveKienCoGrade — 3 bậc đột phá thường (spec §4.2)', () => {
   it('không đủ gì → Nhân Đạo (baseline)', () => {
     expect(resolveKienCoGrade(createReadyPlayer(), false)).toBe('human')
   })
@@ -40,9 +30,9 @@ describe('resolveKienCoGrade — 4 bậc Kiến Cơ (spec §4.2)', () => {
     const player = createReadyPlayer()
     player.bodyProgression.body_refinement.completedTiers = 3
     expect(resolveKienCoGrade(player, true)).toBe('earth')
-    // thiếu đan → rơi về Nhân
+    // thieu dan -> roi ve Nhan
     expect(resolveKienCoGrade(player, false)).toBe('human')
-    // chỉ 2 tầng → không đủ
+    // chi 2 tang -> khong du
     const thin = createReadyPlayer()
     thin.bodyProgression.body_refinement.completedTiers = 2
     expect(resolveKienCoGrade(thin, true)).toBe('human')
@@ -54,7 +44,7 @@ describe('resolveKienCoGrade — 4 bậc Kiến Cơ (spec §4.2)', () => {
     player.physiqueGrade = 'bao'
     player.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 6).map((m) => m.id)
     expect(resolveKienCoGrade(player, true)).toBe('heaven')
-    // chỉ 5 đường → Địa
+    // chi 5 duong -> Dia
     const thin = createReadyPlayer()
     thin.bodyProgression.body_refinement.completedTiers = 6
     thin.physiqueGrade = 'bao'
@@ -62,35 +52,13 @@ describe('resolveKienCoGrade — 4 bậc Kiến Cơ (spec §4.2)', () => {
     expect(resolveKienCoGrade(thin, true)).toBe('earth')
   })
 
-  it('Đại Đạo: đủ MỌI điều kiện (Kỳ Kinh 9/9 + Phàm Cốt + hoàn hảo Phàm Nhân + 30/30)', () => {
-    const player = createGreatDaoPlayer()
-    expect(resolveKienCoGrade(player, true)).toBe('great_dao')
-  })
-
-  it('Đại Đạo thiếu TỪNG điều kiện → rơi về Thiên', () => {
-    // thiếu Kỳ Kinh (8/9)
-    const noKyKinh = createGreatDaoPlayer()
-    noKyKinh.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 8).map((m) => m.id)
-    expect(resolveKienCoGrade(noKyKinh, true)).toBe('heaven')
-    // thiếu Phàm Cốt
-    const noTalent = createGreatDaoPlayer()
-    noTalent.selectedTalentIds = []
-    expect(resolveKienCoGrade(noTalent, true)).toBe('heaven')
-    // thiếu hoàn hảo Phàm Nhân
-    const noPerfect = createGreatDaoPlayer()
-    noPerfect.mortalPerfectionAchieved = false
-    expect(resolveKienCoGrade(noPerfect, true)).toBe('heaven')
-    // thiếu 30/30 (một stat 29)
-    const noStats = createGreatDaoPlayer()
-    noStats.baseStats = { ...noStats.baseStats, strength: 29 }
-    expect(resolveKienCoGrade(noStats, true)).toBe('heaven')
-    // thiếu đan → cả Địa không đủ (điều kiện lũy tiến) → human
-    expect(resolveKienCoGrade(createGreatDaoPlayer(), false)).toBe('human')
-  })
-
-  it('greatDaoOpportunityLost: cap Thiên Đạo mọi lần xét sau (vĩnh viễn, spec §4.3)', () => {
-    const player = createGreatDaoPlayer()
-    player.greatDaoOpportunityLost = true
+  it('max heaven: resolver KHÔNG bao giờ trả great_dao (arm đã nghỉ)', () => {
+    const player = createReadyPlayer()
+    player.realmLevel = 18
+    player.bodyProgression.body_refinement.completedTiers = 6
+    player.physiqueGrade = 'bao'
+    player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
+    player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
     expect(resolveKienCoGrade(player, true)).toBe('heaven')
   })
 })

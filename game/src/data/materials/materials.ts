@@ -13,14 +13,13 @@ import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 import type { HerbAge } from '@/core/production/ProductionTypes'
 import { ARTIFACT_UNLOCK_REALM_ID } from '@/core/artifact/ArtifactDomain'
 
-// sourceType (MASTER SPEC Mục II-V) — nhãn nguồn CHÍNH, không ràng
-// buộc cứng. Nhóm nguyên liệu tự nhiên age-tiered (Linh Thảo/Linh Mộc/
-// Linh Thiết) là nguồn thu chính; currency đặc thù (great_dao_seed +
-// 4 item Trúc Cơ ẩn) giữ NGUYÊN — không thuộc phạm vi đơn giản hoá
-// "nguyên liệu tự nhiên" của tài liệu.
+// sourceType (MASTER SPEC Muc II-V) - nhan nguon CHINH, khong rang
+// buoc cung. Nhom nguyen lieu tu nhien age-tiered (Linh Thao/Linh Moc/
+// Linh Thiet) la nguon thu chinh; currency dac thu giu NGUYEN - khong
+// thuoc pham vi don gian hoa "nguyen lieu tu nhien" cua tai lieu.
 const legacyMaterials: Material[] = [
-  // Realm Passive & Pressure System (2026-08-20) — currency Luyện Thể,
-  // CHỈ rơi từ 20 quái Phàm Nhân (data/enemy/Enemies.ts), đầu tư qua
+  // Realm Passive & Pressure System (2026-08-20) - currency Luyen The,
+  // CHI roi tu 20 quai Pham Nhan (data/enemy/Enemies.ts), dau tu qua
   // realmAdvanceOps.investBodyChapter() de lap day 6 tang (xem
   // data/realm/BodyRefinement.ts/core/realm/body/). id khop
   // TINH_HOA_PHAM_THE_MATERIAL_ID.
@@ -38,31 +37,19 @@ const legacyMaterials: Material[] = [
     category: 'essence',
     sourceType: 'building',
     description: 'Tinh hoa thu được từ phân giải trang bị, dùng cho các thao tác luyện khí.',
-    // Currency-like sink/source shared by every grade. Match Linh Thạch's
+    // Currency-like sink/source shared by every grade. Match Linh Thach's
     // effectively unbounded safe-integer convention so normal progression
     // cannot hit the former reachable 9,999 cap.
     stackLimit: Number.MAX_SAFE_INTEGER,
   },
 
-  // Đột Phá Trúc Cơ (Phase 3) — điều kiện ẩn của Đại Đạo (mục 8/15
-  // spec `breakthrough`), rơi 0.01% từ Boss "Đại Vương Sơn Tặc" (xem
-  // data/enemy/Enemies.ts's bandit.bossRewards). Description CỐ Ý
-  // không tiết lộ công dụng — verbatim đúng spec, KHÔNG được sửa.
-  {
-    id: 'great_dao_seed',
-    name: 'Đại Đạo Chi Cơ',
-    category: 'other',
-    sourceType: 'boss',
-    description: 'Một vật phẩm kỳ dị, không thể xác định công dụng.',
-    // M-F-CEILING - hidden input of the Truc Co breakthrough (Dai Dao
-    // grade); tagged so release policy gates its acquisition.
-    breakthroughRealmId: 'foundation_establishment',
-  },
+  // 2026-09-23 hidden-perfection-lineage sec.19 - great_dao_seed retired:
+  // Dai Dao belongs to the lineage channel (hidden breakthrough), never
+  // to a material the old resolver could read.
 
-  // Đoán Bảo Thạch + spec dot-pha-loi-kiep §4.1b/c — 2 nguyên liệu
-  // của gate Trúc Cơ: Yêu Đan (boss Luyện Khí tầng 10, nguyên liệu
-  // chính Thông Mạch Đan/Trúc Cơ Đan) + Thiên Địa Chi Kiều (5% từ
-  // quái ẩn Huyết Mông, nguyên liệu Kỳ Kinh).
+  // Doan Bao Thach + spec dot-pha-loi-kiep sec.4.1b - Yeu Dan (boss Luyen
+  // Khi tang 10, nguyen lieu chinh Thong Mach Dan/Truc Co Dan).
+  // 2026-09-23: Thien Dia Chi Kieu retired with the 9th meridian.
   {
     id: 'yeu_dan_hung_giao',
     name: 'Yêu Đan',
@@ -71,15 +58,6 @@ const legacyMaterials: Material[] = [
     description: 'Đan hạch ngưng tụ trong thân Hung Giao Xà — nguyên liệu chính luyện Thông Mạch Đan.',
     stackLimit: 100,
   },
-  {
-    id: 'thien_dia_chi_kieu',
-    name: 'Thiên Địa Chi Kiều',
-    category: 'other',
-    sourceType: 'monster',
-    description: 'Một vật phẩm kỳ dị, không thể xác định công dụng.',
-    stackLimit: 10,
-  },
-
   // Companion gacha (2026-09-12, companion-gacha plan Task 6) - pull
   // token for Chieu Hien Quan. Sources (Tru Co+ only, P7-M9/D4):
   // foundation floor-10 boss signatureDrops x3 (requiresModifier 'boss',
@@ -113,10 +91,10 @@ const legacyMaterials: Material[] = [
     domainUnlockRealmId: ARTIFACT_UNLOCK_REALM_ID,
   },
 
-  // Đột Phá Trúc Cơ (Phase 6) — loot "vô thưởng vô phạt" (mục 14 spec
-  // `breakthrough`): KHÔNG stat/effect, KHÔNG mở quest, KHÔNG dùng
-  // crafting — chỉ tạo manh mối qua description, verbatim đúng spec,
-  // KHÔNG được sửa/diễn giải thêm.
+  // Dot Pha Truc Co (Phase 6) - loot "vo thuong vo phat" (muc 14 spec
+  // `breakthrough`): KHONG stat/effect, KHONG mo quest, KHONG dung
+  // crafting - chi tao manh moi qua description, verbatim dung spec,
+  // KHONG duoc sua/dien giai them.
   {
     id: 'broken_foundation_scroll',
     name: 'Tàn Quyển Trúc Cơ',
@@ -151,23 +129,23 @@ const legacyMaterials: Material[] = [
 ]
 
 // ============================================================
-// NGUYÊN LIỆU NGHỀ MỚI (2026-08-25, resource-professions-rework plan
-// §5/§6): KHÔNG còn cặp raw|processed (plan §2). Ba nhóm trực tiếp:
-// - Lâm: gỗ `<realm>_wood_<age>` — xây/nâng công trình + nhiên liệu
-//   đan lò (gp123 6E C2: plain `<realm>_wood` đã bị XÓA).
-// - Quáng: `<realm>_ore_<age>` — sink Khí Đường (Cường Hóa/Tẩy Luyện).
-// - Động Thiên: mỗi đan phương một thảo riêng × 5 niên đại
-//   `<herbBase>_<age>` — sink Đan Phòng.
-// Tất cả sinh bằng generator để tránh author tay entry lệch chuẩn;
-// tên hiển thị đặt TRẦN ở đây (không parse từ id).
+// NGUYEN LIEU NGHE MOI (2026-08-25, resource-professions-rework plan
+// sec.5/sec.6): KHONG con cap raw|processed (plan sec.2). Ba nhom truc tiep:
+// - Lam: go `<realm>_wood_<age>` - xay/nang cong trinh + nhien lieu
+//   dan lo (gp123 6E C2: plain `<realm>_wood` da bi XOA).
+// - Quang: `<realm>_ore_<age>` - sink Khi Duong (Cuong Hoa/Tay Luyen).
+// - Dong Thien: moi dan phuong mot thao rieng x 5 nien dai
+//   `<herbBase>_<age>` - sink Dan Phong.
+// Tat ca sinh bang generator de tranh author tay entry lech chuan;
+// ten hien thi dat TRAN o day (khong parse tu id).
 // ============================================================
 
-// Nhãn "chất" thống nhất theo hệ TUỔI (2026-08-30, spec
+// Nhan "chat" thong nhat theo he TUOI (2026-08-30, spec
 // 2026-08-30-unify-material-quality-names-design.md + gp123 6E task C2):
-// Gỗ/Khoáng dùng CÙNG trục tuổi với Linh Thảo — id `<realm>_wood_<age>` /
-// `<realm>_ore_<age>` (age decade..thuong_co). Bảng này là NGUỒN SỰ
-// THẬT DUY NHẤT của nhãn 5 bậc tuổi, dùng chung cho thảo/gỗ/khoáng.
-// Bảng phẩm cũ ORE_QUALITY_LABELS (hoang..tien) đã bị xóa cùng id phẩm cũ.
+// Go/Khoang dung CUNG truc tuoi voi Linh Thao - id `<realm>_wood_<age>` /
+// `<realm>_ore_<age>` (age decade..thuong_co). Bang nay la NGUON SU
+// THAT DUY NHAT cua nhan 5 bac tuoi, dung chung cho thao/go/khoang.
+// Bang pham cu ORE_QUALITY_LABELS (hoang..tien) da bi xoa cung id pham cu.
 export const MATERIAL_AGE_LABELS: Record<HerbAge, string> = {
   decade: 'Thập Niên',
   century: 'Bách Niên',
@@ -184,7 +162,7 @@ const HERB_AGE_YEARS: Record<string, number> = {
   thuong_co: 100000,
 }
 
-/** Nhãn realm (Phàm Nhân..Độ Kiếp) — tên material ghép nhãn tuổi + realm. */
+/** Nhan realm (Pham Nhan..Do Kiep) - ten material ghep nhan tuoi + realm. */
 const REALM_LABEL_BY_ID: Readonly<Record<string, string>> = Object.fromEntries(
   REALMS.map((realm) => [realm.id, realm.name]),
 )
@@ -192,14 +170,14 @@ const REALM_LABEL_BY_ID: Readonly<Record<string, string>> = Object.fromEntries(
 function buildProfessionMaterials(): Material[] {
   const list: Material[] = []
 
-  // gp123 6E (task C2): trục tuổi thống nhất 5 bậc cho thảo/gỗ/khoáng —
-  // id `<realm>_wood_<age>` / `<realm>_ore_<age>`, plain wood XÓA hẳn.
-  // Tên hiển thị = "<Tuổi> Linh Mộc/Khoáng <Realm>" (đủ info khi tìm kiếm).
+  // gp123 6E (task C2): truc tuoi thong nhat 5 bac cho thao/go/khoang -
+  // id `<realm>_wood_<age>` / `<realm>_ore_<age>`, plain wood XOA han.
+  // Ten hien thi = "<Tuoi> Linh Moc/Khoang <Realm>" (du info khi tim kiem).
   const ages = ['decade', 'century', 'millennium', 'myriad_year', 'thuong_co'] as const
 
-  // ---- Lâm: gỗ 9 realm × 5 tuổi ----
-  // Các tier Kim Đan+ là data placeholder để building level 4-9 có cost
-  // hợp lệ trong registry.
+  // ---- Lam: go 9 realm x 5 tuoi ----
+  // Cac tier Kim Dan+ la data placeholder de building level 4-9 co cost
+  // hop le trong registry.
   for (const realmId of REALM_TIERS) {
     for (const age of ages) {
       list.push({
@@ -215,7 +193,7 @@ function buildProfessionMaterials(): Material[] {
     }
   }
 
-  // ---- Quáng: khoáng 9 realm × 5 tuổi ----
+  // ---- Quang: khoang 9 realm x 5 tuoi ----
   for (const realmId of REALM_TIERS) {
     for (const age of ages) {
       list.push({
@@ -235,11 +213,11 @@ function buildProfessionMaterials(): Material[] {
 }
 
 function buildReworkPillHerbs(): Material[] {
-  // gp123 6E (task C1): trục tuổi 5 bậc — thuong_co mở bậc "Thượng Cổ".
+  // gp123 6E (task C1): truc tuoi 5 bac - thuong_co mo bac "Thuong Co".
   const ages = ['decade', 'century', 'millennium', 'myriad_year', 'thuong_co'] as const
 
-  // Nhãn tuổi thảo — dùng chung MATERIAL_AGE_LABELS (gp123 6E C2: bảng
-  // nhãn 5 bậc duy nhất cho thảo/gỗ/khoáng).
+  // Nhan tuoi thao - dung chung MATERIAL_AGE_LABELS (gp123 6E C2: bang
+  // nhan 5 bac duy nhat cho thao/go/khoang).
   const HERB_AGE_LABELS = MATERIAL_AGE_LABELS
 
   return REALM_TIERS.flatMap((realmId) =>
@@ -303,13 +281,13 @@ const physiqueEssenceMaterials: Material[] = [
 ]
 
 export const materials: Material[] = [
-  // Linh Thạch — MATERIAL thật (plan Workstream F), tham gia mọi sort
-  // trong tab Nguyên Liệu như material bình thường; KHÔNG còn currency
-  // state trên PlayerData.
+  // Linh Thach - MATERIAL that (plan Workstream F), tham gia moi sort
+  // trong tab Nguyen Lieu nhu material binh thuong; KHONG con currency
+  // state tren PlayerData.
   ...SPIRIT_STONE_MATERIALS,
 
-  // Linh thảo legacy (Linh Chi/Quế/Cúc Hoa/Linh Thảo Chủng) đã bị xoá
-  // hẳn khỏi legacyMaterials — Đan Phòng chỉ dùng 8 họ thảo mới bên dưới.
+  // Linh thao legacy (Linh Chi/Que/Cuc Hoa/Linh Thao Chung) da bi xoa
+  // han khoi legacyMaterials - Dan Phong chi dung 8 ho thao moi ben duoi.
   ...legacyMaterials,
 
   ...physiqueEssenceMaterials,

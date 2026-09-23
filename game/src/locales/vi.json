@@ -527,7 +527,6 @@
         "stateLocked": "Chưa mở",
         "cost": "{count} Thông Mạch Đan",
         "realmGate": "{realm} tầng {level}",
-        "auxGate": "cần Thiên Địa Chi Kiều",
         "pageLocked": "Mở khóa ở {realm}",
         "invest": "Mở Mạch",
         "owned": "sở hữu {count}",
@@ -548,13 +547,6 @@
         "invest": "Vận Chu Thiên",
         "owned": "Tinh Hoa Pháp Thể sở hữu {count}",
         "complete": "Đại Chu Thiên đã viên mãn."
-      },
-      "bodyPerfection": {
-        "title": "Thể Phách Hoàn Thiện",
-        "statePerfected": "Đã hoàn thiện",
-        "statePending": "Chưa hoàn thiện",
-        "owned": "sở hữu {count}",
-        "perfect": "Hoàn Thiện"
       }
     },
     "settings": {
@@ -1047,10 +1039,6 @@
         "title": "★ {realm} ★",
         "body": "Đạo hữu đã vượt qua Độ Kiếp, chính thức bước vào {realm}."
       },
-      "defeatGreatDao": {
-        "title": "Đại Đạo Đoạn Tuyệt",
-        "body": "Nghịch thiên bất thành — cơ duyên Đại Đạo Chi Cơ đã vĩnh viễn đóng lại. Lần tới tối đa là Thiên Đạo."
-      },
       "defeat": {
         "title": "Độ Kiếp Thất Bại",
         "body": "Kiếp Thương còn vương lại — hãy dưỡng thương rồi thử lại."
@@ -1263,8 +1251,7 @@
   },
   "notifications": {
     "skillLevelUp": "{name} đạt cấp {level}",
-    "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}",
-    "bodyRealmPerfected": "Thể Phách Hoàn Thiện: {realm}"
+    "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}"
   },
   "save": {
     "conflict": "Save đã thay đổi ở một phiên khác.",

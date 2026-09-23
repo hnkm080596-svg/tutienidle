@@ -12,7 +12,10 @@
 /** Pill the Truc Co breakthrough gate consumes (hasTrucCoDan check). */
 export const TRUC_CO_DAN_PILL_ID = 'truc_co_dan'
 
-export const BREAKTHROUGH_SCOPED_MATERIAL_IDS = ['great_dao_seed'] as const
+// 2026-09-23 hidden-perfection-lineage sec.19 - great_dao_seed retired
+// (Dai Dao is a lineage channel now, never a breakthrough-scoped
+// material). The list stays empty until another material qualifies.
+export const BREAKTHROUGH_SCOPED_MATERIAL_IDS: readonly string[] = []
 
 export const BREAKTHROUGH_SCOPED_PILL_IDS = [TRUC_CO_DAN_PILL_ID] as const
 

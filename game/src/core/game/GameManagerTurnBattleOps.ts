@@ -46,6 +46,10 @@ import { BuffSystemCapabilityQuery } from '../battle/runtime/capability/BuffSyst
 import { CANONICAL_REACTIONS } from '../../data/reaction/ReactionDefinitions'
 import { VAN_PHAP_THAN_HOA_ID } from '../../data/buff/ReactionStatusBuffs'
 import { createDamageProfileCatalog } from '../combat/DamageProfiles'
+import {
+  resolveHiddenBattleReplacement,
+  runHiddenBattleReplacement,
+} from '../realm/hidden/HiddenBattleReplacement'
 import { createDefaultCapabilityValidators } from '../battle/runtime/capability/DefaultCapabilityValidators'
 import type { TurnCombatRuntime } from '../battle/turn/TurnBattleSystem'
 import type { BuffDefinition } from '../buff2/BuffDefinition'
@@ -2047,6 +2051,19 @@ export class GameManagerTurnBattleOps {
     }
     let started = false
     try {
+      // Hidden Perfection Lineage (2026-09-23, master spec sec.4.5.3):
+      // the authored replacement seam for hidden-body encounters
+      // (HIDDEN-B's Ancient Beast trial, later mechanisms). A
+      // registered resolver returns a plan; its runner owns the
+      // entire encounter launch - a successful run returns true and
+      // startStage hands back without touching stage-wave state or
+      // the post-start extras (the runner is the authority). An
+      // unregistered path or a declined run falls through to the
+      // normal stage launch.
+      const hiddenPlan = resolveHiddenBattleReplacement(player, stage)
+      if (hiddenPlan !== undefined && runHiddenBattleReplacement({ player, stage, plan: hiddenPlan })) {
+        return true
+      }
       started = this.deps.stageWaves.start(player, stage, repeatContinuously, {
         rng: mintOnUse,
       })

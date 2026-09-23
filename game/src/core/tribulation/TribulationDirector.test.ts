@@ -4,6 +4,7 @@ import { createDefaultPlayer, type PlayerData } from '../player/Player'
 import { createBaseStats, type Stats } from '../stats/StatBlock'
 import { EventBus } from '../events/EventBus'
 import { MERIDIANS } from '../../data/realm/Meridians'
+import { completeHiddenBody } from '../realm/hidden/HiddenLineage'
 
 function makeDirector() {
   const eventBus = new EventBus()
@@ -20,17 +21,30 @@ function readyPlayer(): PlayerData {
   return player
 }
 
-// Player đủ mọi điều kiện Đại Đạo Trúc Cơ (gate foundation_establishment)
-function createGreatDaoReadyPlayer(): PlayerData {
+// Player dau tu toi da cho grade heaven (6/6 tiers + 8 mach + dan)
+// NHUNG chua du dieu kien AN - chi body mortal hoan thien, body
+// qi_refining chua. Viet hidden-body qua mutator lineage (mechanism
+// that do HIDDEN-B/C so huu).
+function createHeavenInvestedPlayer(): PlayerData {
   const player = createDefaultPlayer()
   player.realmId = 'qi_refining'
   player.realmLevel = 18
   player.selectedTalentIds = ['pham_cot']
+  player.completedStageIds = ['qi_refining_abyssal_pool']
   player.bodyProgression.body_refinement.completedTiers = 6
   player.physiqueGrade = 'bao'
-  player.mortalPerfectionAchieved = true
+  completeHiddenBody(player, 'mortal')
   player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
-  player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
+  player.baseStats = { ...player.baseStats, strength: 36, dexterity: 36, intelligence: 36, attunement: 36, vitality: 36 }
+  return player
+}
+
+// Player du dieu kien dot pha AN (gate foundation_establishment):
+// lineage mo + 2 body hoan thien + level 18 + all-5 >= effective cap
+// 36 + chapter cleared.
+function createHiddenEligiblePlayer(): PlayerData {
+  const player = createHeavenInvestedPlayer()
+  completeHiddenBody(player, 'qi_refining')
   return player
 }
 
@@ -60,7 +74,7 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
     for (let i = 0; i < 3; i++) {
       const q = director.getState()!.currentQuestion!
       expect(director.answerQuestion(q.correctAnswerIndex)).toBe(true)
-      director.update(3) // rest giữa câu
+      director.update(3) // rest giua cau
     }
     director.update(1)
     expect(director.getState()!.chapterIndex).toBe(1)
@@ -84,7 +98,7 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
         d.update(3)
       }
     }
-    // Sang chương lightning — đo damage sau cùng số giây
+    // Sang chuong lightning - do damage sau cung so giay
     const wrongBefore = snapshotHp(wrongDirector)
     const rightBefore = snapshotHp(rightDirector)
     wrongDirector.update(6)
@@ -99,11 +113,11 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
     director.start(readyPlayer(), testStats(), false, 'qi_refining')
     const active = director.getState()
     expect(active).not.toBeNull()
-    // Câu đầu của Tâm Ma Kiếp qi_refining: limit 12s
+    // Cau dau cua Tam Ma Kiep qi_refining: limit 12s
     expect(active!.questionSecondsRemaining).toBeGreaterThan(0)
     expect(active!.questionSecondsLimit).toBe(12)
     expect(active!.questionSecondsLimit).toBeGreaterThanOrEqual(active!.questionSecondsRemaining)
-    // Tick trôi 2s → remaining giảm, limit giữ nguyên (mẫu số timer bar)
+    // Tick troi 2s -> remaining giam, limit giu nguyen (mau so timer bar)
     director.update(2)
     const ticked = director.getState()!
     expect(ticked.questionSecondsRemaining).toBe(10)
@@ -169,9 +183,9 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
 
   it('HP về 0 giữa chương → defeat + cooldown', () => {
     const { director } = makeDirector()
-    // Kiếp Trúc Cơ (3 chương): KHÔNG trả lời câu nào (hết giờ = sai →
-    // stack debuff +20% taken) → body 10 strikes × 10% × 1.2 = 120%
-    // maxHp → chết giữa chương body.
+    // Kiep Truc Co (3 chuong): KHONG tra loi cau nao (het gio = sai ->
+    // stack debuff +20% taken) -> body 10 strikes x 10% x 1.2 = 120%
+    // maxHp -> chet giua chuong body.
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
     player.realmLevel = 12
@@ -245,19 +259,24 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
     expect(snapshotHp(director)).toBe(5000)
   })
 
-  it('grade Đại Đạo (đủ điều kiện + đan): damage nhận nhiều hơn human cùng thời gian', () => {
-    const humanDirector = makeDirector().director
-    const greatDaoDirector = makeDirector().director
-    // C2C-12 adjacency: the human run must start from qi_refining, the
-    // canonical TC source - the policy now rejects mortal -> TC skips.
-    const humanReady = readyPlayer()
-    humanReady.realmId = 'qi_refining'
-    humanDirector.start(humanReady, testStats(), true, 'foundation_establishment')
-    greatDaoDirector.start(createGreatDaoReadyPlayer(), testStats(), true, 'foundation_establishment')
-    expect(humanDirector.getState()!.grade).toBe('human')
-    expect(greatDaoDirector.getState()!.grade).toBe('great_dao')
-    // qua chương mind bằng trả lời đúng
-    for (const d of [humanDirector, greatDaoDirector]) {
+  it('đột phá ẨN: breakthroughType=hidden, grade theo đầu tư (heaven), damage = heaven normal', () => {
+    // Design 2026-09-23 sec.4.5: cung mot kiep cho ca hai kieu dot pha -
+    // hidden KHONG co profile kho rieng. Mot player hidden-eligible voi
+    // dau tu max resolves grade 'heaven' + type 'hidden', va damage
+    // nhan dung he so heaven cua mot run normal cung dau tu.
+    const normalDirector = makeDirector().director
+    const hiddenDirector = makeDirector().director
+
+    normalDirector.start(createHeavenInvestedPlayer(), testStats(), true, 'foundation_establishment')
+    hiddenDirector.start(createHiddenEligiblePlayer(), testStats(), true, 'foundation_establishment')
+
+    expect(normalDirector.getState()!.grade).toBe('heaven')
+    expect(normalDirector.getState()!.breakthroughType).toBe('normal')
+    expect(hiddenDirector.getState()!.grade).toBe('heaven')
+    expect(hiddenDirector.getState()!.breakthroughType).toBe('hidden')
+
+    // qua chuong mind bang tra loi dung
+    for (const d of [normalDirector, hiddenDirector]) {
       let guard = 0
       while (d.getState()!.chapterIndex === 0 && guard++ < 100) {
         const q = d.getState()!.currentQuestion!
@@ -265,14 +284,14 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
         d.update(3)
       }
     }
-    // đo damage chương body cùng số giây
-    const humanBefore = snapshotHp(humanDirector)
-    const greatDaoBefore = snapshotHp(greatDaoDirector)
-    humanDirector.update(10)
-    greatDaoDirector.update(10)
-    const humanDamage = humanBefore - snapshotHp(humanDirector)
-    const greatDaoDamage = greatDaoBefore - snapshotHp(greatDaoDirector)
-    expect(greatDaoDamage).toBeGreaterThan(humanDamage)
+    // do damage chuong body cung so giay: hidden == normal heaven
+    const normalBefore = snapshotHp(normalDirector)
+    const hiddenBefore = snapshotHp(hiddenDirector)
+    normalDirector.update(10)
+    hiddenDirector.update(10)
+    const normalDamage = normalBefore - snapshotHp(normalDirector)
+    const hiddenDamage = hiddenBefore - snapshotHp(hiddenDirector)
+    expect(hiddenDamage).toBe(normalDamage)
   })
 
   it('unknown realm → start false (framework guard)', () => {
@@ -286,18 +305,18 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
     expect(director.start(readyPlayer(), testStats(), false, 'qi_refining')).toBe(false)
     director.clear()
     expect(director.getState()).toBeNull()
-    // clear KHÔNG xoá cooldown (giữ nguyên pattern TribulationSystem cũ)
+    // clear KHONG xoa cooldown (giu nguyen pattern TribulationSystem cu)
   })
 
   it('hết giờ 1 câu = sai (stack debuff) — không cần answerQuestion', () => {
     const { director } = makeDirector()
     director.start(readyPlayer(), testStats(), false, 'qi_refining')
-    // để trôi qua hết 3 câu + lightning mà không trả lời gì
+    // de troi qua het 3 cau + lightning ma khong tra loi gi
     let guard = 0
     while (director.getState()!.state === 'ongoing' && guard++ < 2000) {
       director.update(1)
     }
-    // phải kết thúc (thắng hoặc thua — HP 5000 có thể sống qua kiếp Nhân Đạo)
+    // phai ket thuc (thang hoac thua - HP 5000 co the song qua kiep Nhan Dao)
     expect(['victory', 'defeat']).toContain(director.getState()!.state)
   })
 
@@ -323,8 +342,8 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
     const lowDamage = lowBefore - snapshotHp(lowDefDirector)
     const highDamage = highBefore - snapshotHp(highDefDirector)
     expect(lowDamage).toBeGreaterThan(0)
-    // cùng số strike trong 6s: high def damage ~ low/10 (chấp nhận sai số
-    // biên strike do interval đều)
+    // cung so strike trong 6s: high def damage ~ low/10 (chap nhan sai so
+    // bien strike do interval deu)
     expect(highDamage * 5).toBeLessThan(lowDamage)
   })
 })

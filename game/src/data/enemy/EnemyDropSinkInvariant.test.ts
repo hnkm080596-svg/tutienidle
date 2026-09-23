@@ -10,14 +10,12 @@ import { DOAN_BAO_THACH_MATERIAL_ID } from '../../core/artifact/ArtifactProgress
 import { createDefaultEquipmentOperationCostCatalog } from '../../core/equipment/EquipmentOperationCostCatalog'
 import { SUPPORTED_PROFESSION_REALMS } from '../../core/profession/ProfessionMaterial'
 import { alchemyRecipes } from '../alchemy/alchemyRecipes'
-import { THIEN_DIA_CHI_KIEU_MATERIAL_ID } from '../realm/Meridians'
 import { COMPANION_PULL_TOKEN_ID } from '../../core/game/GameManagerCompanionOps'
 
-// Item lore / manh mối Đột Phá Trúc Cơ — CỐ Ý không có sink chức năng
-// (description ẩn công dụng, xem data/materials/materials.ts). Chúng được
-// phép rơi mà không cần nơi tiêu thụ.
+// Item lore / manh moi Dot Pha Truc Co - CO Y khong co sink chuc nang
+// (description an cong dung, xem data/materials/materials.ts). Chung duoc
+// phep roi ma khong can noi tieu thu.
 const LORE_ALLOWLIST = new Set([
-  'great_dao_seed',
   'broken_foundation_scroll',
   'old_jade_slip',
   'cultivator_diary',
@@ -27,7 +25,7 @@ const LORE_ALLOWLIST = new Set([
 function collectDroppedMaterialIds(): Set<string> {
   const ids = new Set<string>()
 
-  // Drop-system (2026-09-12): materials drop from THREE sources now —
+  // Drop-system (2026-09-12): materials drop from THREE sources now -
   // stage tables, family tables, and per-enemy signatureDrops. The old
   // rewards/eliteRewards/bossRewards fields are being retired; missing
   // any one source here would leave this invariant green while the rule
@@ -60,7 +58,7 @@ function collectDroppedMaterialIds(): Set<string> {
 function collectSinkMaterialIds(): Set<string> {
   const sinks = new Set<string>()
 
-  // Quest nộp vật phẩm (collect).
+  // Quest nop vat pham (collect).
   for (const quest of QUESTS) {
     if (quest.condition.kind === 'collect') {
       sinks.add(quest.condition.materialId)
@@ -78,10 +76,10 @@ function collectSinkMaterialIds(): Set<string> {
     }
   }
 
-  // Pháp bảo — Đoán Bảo Thạch.
+  // Phap bao - Doan Bao Thach.
   sinks.add(DOAN_BAO_THACH_MATERIAL_ID)
 
-  // Khí Đường Cường Hóa — quặng cùng cảnh giới.
+  // Khi Duong Cuong Hoa - quang cung canh gioi.
   const catalog = createDefaultEquipmentOperationCostCatalog()
   for (const realmId of SUPPORTED_PROFESSION_REALMS) {
     for (const material of catalog.resolve('enhance', realmId)?.materials ?? []) {
@@ -89,16 +87,13 @@ function collectSinkMaterialIds(): Set<string> {
     }
   }
 
-  // Đan phương đặc biệt (spec dot-pha-loi-kiep §4.1b) — Yêu Đan là
-  // nguyên liệu chính Thông Mạch Đan/Trúc Cơ Đan.
+  // Dan phuong dac biet (spec dot-pha-loi-kiep sec.4.1b) - Yeu Dan la
+  // nguyen lieu chinh Thong Mach Dan/Truc Co Dan.
   for (const recipe of alchemyRecipes) {
     for (const special of recipe.specialIngredients ?? []) {
       sinks.add(special.materialId)
     }
   }
-
-  // Bát Mạch — Kỳ Kinh Thiên Địa Chi Kiều (đường 9) cần nguyên liệu ẩn.
-  sinks.add(THIEN_DIA_CHI_KIEU_MATERIAL_ID)
 
   // Chieu Hien Quan (companion gacha Task 6) - Chieu Hien Lenh is spent
   // by GameManagerCompanionOps.pullCompanion() via materialBag.remove.

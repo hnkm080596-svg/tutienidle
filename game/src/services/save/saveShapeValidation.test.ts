@@ -2214,7 +2214,6 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
         openedIds: [
           'nham_mach', 'doi_mach', 'am_kieu_mach', 'am_duy_mach',
           'duong_duy_mach', 'duong_kieu_mach', 'xung_mach', 'doc_mach',
-          'ky_kinh_thien_dia_chi_kieu',
         ],
       },
       zhou_tian: { circulation: 0 },

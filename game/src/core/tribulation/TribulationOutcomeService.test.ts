@@ -16,6 +16,11 @@ import { SKILLS } from '../../data/skill/Skills'
 import { MERIDIANS } from '../../data/realm/Meridians'
 import type { ActiveTribulationState } from './TribulationDirector'
 import type { OutcomeAnnouncement } from '../presentation/OutcomeAnnouncement'
+import {
+  completeHiddenBody,
+  type BreakthroughType,
+} from '../realm/hidden/HiddenLineage'
+import type { ResolvableKienCoGrade } from '../../data/breakthrough/BreakthroughGrades'
 import { i18n } from '../../i18n'
 import enMessages from '../../locales/en.json'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
@@ -39,10 +44,12 @@ function resolveAnnouncement(a: OutcomeAnnouncement): { title: string; body: str
 function makeActive(
   state: 'victory' | 'defeat',
   targetRealmId: string,
-  grade: 'heaven' | 'great_dao' = 'heaven',
+  breakthroughType: BreakthroughType = 'normal',
+  grade: ResolvableKienCoGrade = 'heaven',
 ): ActiveTribulationState {
   return {
     targetRealmId,
+    breakthroughType,
     grade,
     chapterIndex: 0,
     chaptersTotal: 1,
@@ -122,14 +129,21 @@ describe('TribulationOutcomeService — victory parity', () => {
     gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = usePlayerStore()
     player.selectedTalentIds = ['pham_cot']
-    player.realmLevel = 12
     player.bodyProgression.body_refinement.completedTiers = 6
     player.physiqueGrade = 'bao'
-    player.mortalPerfectionAchieved = true
-    player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
+    // The mortal exit must itself commit hidden or the ritual closes the
+    // lineage: mortal body complete + Lv18 + all-5 at the mortal
+    // effective cap (floor(10 x 1.1) = 11) BEFORE the ritual.
+    player.realmLevel = 18
+    player.baseStats = { ...player.baseStats, strength: 11, dexterity: 11, intelligence: 11, attunement: 11, vitality: 11 }
+    completeHiddenBody(player.$state, 'mortal')
     gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
     player.realmLevel = 18
-    player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
+    // Hidden-eligible surface: strict-prefix bodies + effective cap 36
+    // + chapter cleared - resolves breakthroughType 'hidden'.
+    completeHiddenBody(player.$state, 'qi_refining')
+    player.completedStageIds = ['qi_refining_abyssal_pool']
+    player.baseStats = { ...player.baseStats, strength: 36, dexterity: 36, intelligence: 36, attunement: 36, vitality: 36 }
     player.bodyProgression.meridian.openedIds = MERIDIANS.map((m: { id: string }) => m.id)
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
 
@@ -179,7 +193,7 @@ describe('TribulationOutcomeService — victory parity', () => {
     const result = service.resolveVictory(
       player,
       gameManager,
-      makeActive('victory', 'foundation_establishment', 'great_dao'),
+      makeActive('victory', 'foundation_establishment', 'hidden'),
     )
 
     expect(result.talentConverted).toBe(true)
@@ -188,7 +202,7 @@ describe('TribulationOutcomeService — victory parity', () => {
     expect(player.pendingTalentEntitlement).toBeUndefined()
   })
 
-  it('non-great_dao foundation breakthrough still mints the realm-pool entitlement', () => {
+  it('non-hidden foundation breakthrough still mints the realm-pool entitlement', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
@@ -197,7 +211,7 @@ describe('TribulationOutcomeService — victory parity', () => {
     const result = service.resolveVictory(
       player,
       gameManager,
-      makeActive('victory', 'foundation_establishment', 'heaven'),
+      makeActive('victory', 'foundation_establishment'),
     )
 
     expect(result.talentConverted).toBe(false)
@@ -314,37 +328,37 @@ describe('TribulationOutcomeService — defeat parity', () => {
     expect(result.spiritStonesLost).toBeGreaterThanOrEqual(0)
   })
 
-  it('great_dao defeat sets greatDaoOpportunityLost permanently, talent untouched', () => {
+  it('hidden-path defeat does NOT close the lineage - generic defeat result (design §3.3)', () => {
     const gameManager = new GameManager()
     const player = usePlayerStore()
     player.selectedTalentIds = ['pham_cot']
     player.realmId = 'qi_refining'
-    const active = makeActive('defeat', 'foundation_establishment', 'great_dao')
+    const active = makeActive('defeat', 'foundation_establishment', 'hidden')
 
     const service = new TribulationOutcomeService()
     const result = service.resolveDefeat(player, gameManager, active)
 
-    expect(player.greatDaoOpportunityLost).toBe(true)
-    expect(result.greatDaoOpportunityLost).toBe(true)
+    // Defeat never touches the lineage - it stays open regardless of
+    // the attempted type, and the talent is untouched.
+    expect(player.hiddenPerfection.lineageActive).toBe(true)
     expect(player.selectedTalentIds).toContain('pham_cot')
     // M-F-TALENT - defeat writes NO entitlement: the mandatory
     // transaction exists only on a breakthrough victory.
     expect(player.pendingTalentEntitlement).toBeUndefined()
-    expect(result.announcement.titleKey).toBe('announce.tribulation.defeatGreatDao.title')
-    expect(result.announcement.bodyKey).toBe('announce.tribulation.defeatGreatDao.body')
-    expect(resolveAnnouncement(result.announcement).title).toBe('Đại Đạo Đoạn Tuyệt')
+    expect(result.announcement.titleKey).toBe('announce.tribulation.defeat.title')
+    expect(result.announcement.bodyKey).toBe('announce.tribulation.defeat.body')
+    expect(resolveAnnouncement(result.announcement).title).toBe('Độ Kiếp Thất Bại')
   })
 
-  it('non-great-dao defeat announces Kiep Thuong message, opportunity NOT lost', () => {
+  it('normal defeat announces the Kiep Thuong message', () => {
     const gameManager = new GameManager()
     const player = usePlayerStore()
     player.realmId = 'qi_refining'
-    const active = makeActive('defeat', 'foundation_establishment', 'heaven')
+    const active = makeActive('defeat', 'foundation_establishment')
 
     const service = new TribulationOutcomeService()
     const result = service.resolveDefeat(player, gameManager, active)
 
-    expect(result.greatDaoOpportunityLost).toBe(false)
     expect(result.announcement.titleKey).toBe('announce.tribulation.defeat.title')
     expect(resolveAnnouncement(result.announcement).title).toBe('Độ Kiếp Thất Bại')
   })
@@ -369,18 +383,10 @@ describe('TribulationOutcomeService — announcement descriptors resolve to the 
       body: 'Đạo hữu đã vượt lôi kiếp — hãy chọn con đường tu luyện để bước vào Luyện Khí kỳ.',
     })
 
-    // Great Dao defeat
-    const daoDefeat = service.resolveDefeat(
-      player, gameManager, makeActive('defeat', 'foundation_establishment', 'great_dao'),
-    )
-    expect(resolveAnnouncement(daoDefeat.announcement)).toEqual({
-      title: 'Đại Đạo Đoạn Tuyệt',
-      body: 'Nghịch thiên bất thành — cơ duyên Đại Đạo Chi Cơ đã vĩnh viễn đóng lại. Lần tới tối đa là Thiên Đạo.',
-    })
-
-    // Generic defeat
+    // Generic defeat (the defeatGreatDao variant retired 2026-09-23 -
+    // every defeat takes the generic result now)
     const defeat = service.resolveDefeat(
-      player, gameManager, makeActive('defeat', 'foundation_establishment', 'heaven'),
+      player, gameManager, makeActive('defeat', 'foundation_establishment'),
     )
     expect(resolveAnnouncement(defeat.announcement)).toEqual({
       title: 'Độ Kiếp Thất Bại',
@@ -404,10 +410,10 @@ describe('TribulationOutcomeService — announcement descriptors resolve to the 
       service.resolveVictory(player, gameManager, makeActive('victory', 'qi_refining')).announcement,
       service.resolveVictory(player, gameManager, makeActive('victory', 'golden_core')).announcement,
       service.resolveDefeat(
-        player, gameManager, makeActive('defeat', 'foundation_establishment', 'great_dao'),
+        player, gameManager, makeActive('defeat', 'foundation_establishment'),
       ).announcement,
       service.resolveDefeat(
-        player, gameManager, makeActive('defeat', 'foundation_establishment', 'heaven'),
+        player, gameManager, makeActive('defeat', 'foundation_establishment', 'hidden'),
       ).announcement,
     ]
 

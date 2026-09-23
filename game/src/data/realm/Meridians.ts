@@ -1,11 +1,14 @@
 import type { StatType } from '../../core/stats/StatTypes'
 
-// Kỳ Kinh Bát Mạch (spec dot-pha-loi-kiep §4.1a) — hệ song song Luyện
-// Thể, độc quyền Luyện Khí. 8 đường mở mỗi 2 tầng (2/4/.../16), Kỳ
-// Kinh Thiên Địa Chi Kiều mở tầng 18. Passive KHÔNG chạm mana (mana
-// chỉ thuộc Pháp Tu — Global Constraint spec).
+// Ky Kinh Bat Mach (spec dot-pha-loi-kiep sec.4.1a) - he song song Luyen
+// The, doc quyen Luyen Khi. 8 duong mo moi 2 tang (2/4/.../16).
+// 2026-09-23 hidden-perfection-lineage sec.19: duong thu 9 'ky_kinh_thien_
+// dia_chi_kieu' (Thien Dia Chi Kieu gate) da bi RETIRE - material-
+// gated 9th meridian was a legacy authority the lineage model replaces;
+// HIDDEN-B owns the Quan The/Thien Dia Chi Kieu design in its own
+// mechanism. Passive KHONG cham mana (mana chi thuoc Phap Tu - Global
+// Constraint spec).
 export const THONG_MACH_DAN_MATERIAL_ID = 'thong_mach_dan'
-export const THIEN_DIA_CHI_KIEU_MATERIAL_ID = 'thien_dia_chi_kieu'
 
 export interface MeridianDefinition {
   id: string
@@ -17,7 +20,6 @@ export interface MeridianDefinition {
   pageRealmId: string
   requiredRealmLevel: number
   thongMachDanCost: number
-  requiresThienDiaChiKieu?: boolean
   stats: StatType[]
   percentAtFullTier: number
 }
@@ -33,5 +35,4 @@ export const MERIDIANS: readonly MeridianDefinition[] = [
   { id: 'duong_kieu_mach', name: 'Dương Kiều Mạch', description: 'Kiều đạo phía dương, táo bạo uy lực tiến công.', pageRealmId: QI_PAGE, requiredRealmLevel: 12, thongMachDanCost: 16, stats: ['criticalRate'], percentAtFullTier: 0.04 },
   { id: 'xung_mach', name: 'Xung Mạch', description: 'Hải huyết chi mạch — kho huyết lớn của thân.', pageRealmId: QI_PAGE, requiredRealmLevel: 14, thongMachDanCost: 22, stats: ['maxHp'], percentAtFullTier: 0.08 },
   { id: 'doc_mach', name: 'Đốc Mạch', description: 'Kinh mạch chính phía sau, trụ cột của đạo.', pageRealmId: QI_PAGE, requiredRealmLevel: 16, thongMachDanCost: 30, stats: ['strength', 'dexterity', 'intelligence', 'attunement', 'vitality'], percentAtFullTier: 0.05 },
-  { id: 'ky_kinh_thien_dia_chi_kieu', name: 'Kỳ Kinh — Thiên Địa Chi Kiều', description: 'Cửa kiều nối trời đất, đỉnh của bát mạch.', pageRealmId: QI_PAGE, requiredRealmLevel: 18, thongMachDanCost: 40, requiresThienDiaChiKieu: true, stats: ['maxHp', 'hpRegenPerTurn'], percentAtFullTier: 0.1 },
 ]

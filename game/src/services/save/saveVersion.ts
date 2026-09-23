@@ -160,4 +160,11 @@
 // optional `hiddenChannelCycles: Record<channelId, number>` (grotto
 // settle-cycle emission counters). Save v80 is rejected (dev phase, no
 // migration, no compat translator).
-export const CURRENT_SAVE_VERSION = 81 as const
+// v82 (2026-09-23, hidden-perfection-lineage BETA-HIDDEN-A): PlayerData
+// gains required `hiddenPerfection` slice (lineage active/closedBy,
+// completedHiddenBodyRealmIds, hiddenBreakthroughRealmIds, per-realm
+// hidden state with discovered/bodyCompleted/frozen/mechanic). RETIRED:
+// `bodyPerfection` slice (replaced), `mortalPerfectionAchieved` +
+// `greatDaoOpportunityLost` (lineage owns both meanings now). Save v81
+// is rejected (dev phase, no migration, no compat translator).
+export const CURRENT_SAVE_VERSION = 82 as const

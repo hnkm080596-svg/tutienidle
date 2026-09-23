@@ -3,10 +3,10 @@ import type { StatModifier } from '../../core/stats/StatCalculator'
 import { MAIN_STAT_KEYS } from '../../core/stats/StatTypes'
 import type { FoundationType } from '../../core/breakthrough/FoundationType'
 
-// Realm Passive & Pressure System (2026-08-20) — buff VĨNH VIỄN cấp
-// lúc bước vào 1 đại cảnh giới mới (id = realmId ĐÍCH), xem
-// core/realm/RealmPassiveSystem.ts. Thêm cảnh giới mới (Kim Đan+) chỉ
-// cần thêm entry vào mảng này, không đụng gì tới hệ thống gọi.
+// Realm Passive & Pressure System (2026-08-20) - buff VINH VIEN cap
+// luc buoc vao 1 dai canh gioi moi (id = realmId DICH), xem
+// core/realm/RealmPassiveSystem.ts. Them canh gioi moi (Kim Dan+) chi
+// can them entry vao mang nay, khong dung gi toi he thong goi.
 export interface RealmPassiveDefinition {
   id: string
 
@@ -15,15 +15,28 @@ export interface RealmPassiveDefinition {
   description: string
 
   buildModifiers: (player: PlayerData) => StatModifier[]
+
+  // Hidden Perfection Lineage (2026-09-23, master spec sec.4.4): when the
+  // player ENTERED this passive's realm via a hidden breakthrough
+  // (hiddenBreakthroughRealmIds contains this id), grantRealmPassive
+  // calls this builder INSTEAD of buildModifiers. The enhanced
+  // variant is authored per realm - never a universal multiplier.
+  // A realm without one simply grants the normal variant.
+  buildEnhancedModifiers?: (player: PlayerData) => StatModifier[]
 }
 
-// Nhập Đạo (mục XI tài liệu) — Phàm Nhân -> Luyện Khí. Hiệu ứng nền
-// scale THẲNG theo breakthroughGrade (1-6, chốt lúc Lễ Nhập Môn, xem
+// Nhap Dao (muc XI tai lieu) - Pham Nhan -> Luyen Khi. Hieu ung nen
+// scale THANG theo breakthroughGrade (1-6, chot luc Le Nhap Mon, xem
 // core/realm/body/BodyProgressionSystem.ts) - KHONG tu chua Realm Pressure
-// (×2.00/×0.50), Combat System tự đọc breakthroughGrade để tính Pressure
-// riêng (xem core/combat/RealmPressure.ts) — 2 hệ thống tách biệt đúng
-// architecture mục XI.
+// (x2.00/x0.50), Combat System tu doc breakthroughGrade de tinh Pressure
+// rieng (xem core/combat/RealmPressure.ts) - 2 he thong tach biet dung
+// architecture muc XI.
 const NHAP_DAO_PERCENT_PER_GRADE = 0.03
+
+// sec.18 BALANCE-deferred placeholder - NON-CANONICAL. The enhanced
+// (hidden-breakthrough) Nhap Dao percent models the conceptual 'Bac 7'
+// tier (7 x NHAP_DAO_PERCENT_PER_GRADE). BALANCE owns the final number.
+const NHAP_DAO_ENHANCED_PERCENT = 0.21 // NON-CANONICAL (sec.18)
 
 function buildNhapDaoModifiers(player: PlayerData): StatModifier[] {
   const percent = player.breakthroughGrade * NHAP_DAO_PERCENT_PER_GRADE
@@ -53,11 +66,11 @@ function buildNhapDaoModifiers(player: PlayerData): StatModifier[] {
   ]
 }
 
-// Kiến Cơ (mục XII-XIV tài liệu) — Luyện Khí -> Trúc Cơ, khuếch đại
-// Main Stat theo "Loại Trúc Cơ". Thiết kế 2026-08-27: mốc 12 = Nhân Đạo
-// baseline; 4 mức Kiến Cơ ẩn khác sẽ được thiết kế sau. TÁCH BIỆT hoàn
-// toàn với breakthroughGrade/Realm Pressure (mục XIV — "2 hệ thống không
-// chồng chéo"). Số liệu first pass, tinh chỉnh sau.
+// Kien Co (muc XII-XIV tai lieu) - Luyen Khi -> Truc Co, khuech dai
+// Main Stat theo "Loai Truc Co". Thiet ke 2026-08-27: moc 12 = Nhan Dao
+// baseline; 4 muc Kien Co an khac se duoc thiet ke sau. TACH BIET hoan
+// toan voi breakthroughGrade/Realm Pressure (muc XIV - "2 he thong khong
+// chong cheo"). So lieu first pass, tinh chinh sau.
 const KIEN_CO_MAIN_STAT_PERCENT: Record<FoundationType, number> = {
   human: 0,
   earth: 0.05,
@@ -83,6 +96,47 @@ function buildKienCoModifiers(player: PlayerData): StatModifier[] {
   }))
 }
 
+// sec.18 BALANCE-deferred placeholder - NON-CANONICAL. The enhanced
+// Kien Co (hidden-breakthrough) Main Stat percent. BALANCE owns the
+// final number; do not tune here.
+const KIEN_CO_ENHANCED_MAIN_STAT_PERCENT = 0.2 // NON-CANONICAL (sec.18)
+
+function buildEnhancedNhapDaoModifiers(player: PlayerData): StatModifier[] {
+  const universalStats: StatModifier['stat'][] = ['maxHp', 'hpRegenPerTurn']
+  const spellPathStats: StatModifier['stat'][] = ['maxMp', 'manaRegenPerTurn']
+
+  return [
+    ...universalStats.map((stat) => ({
+      id: `realm-passive:nhap_dao:${stat}`,
+      sourceId: 'nhap_dao',
+      sourceType: 'realm' as const,
+      stat,
+      percent: NHAP_DAO_ENHANCED_PERCENT,
+    })),
+    ...spellPathStats.map((stat) => ({
+      id: `realm-passive:nhap_dao:${stat}`,
+      sourceId: 'nhap_dao',
+      sourceType: 'realm' as const,
+      stat,
+      percent: NHAP_DAO_ENHANCED_PERCENT,
+      domain: 'spell' as const,
+    })),
+  ]
+}
+
+function buildEnhancedKienCoModifiers(player: PlayerData): StatModifier[] {
+  // The enhanced variant ignores highestFoundationAchieved - the
+  // hidden breakthrough IS the enhanced record (a hidden entry's
+  // foundation always lands as the authored enhanced passive).
+  return MAIN_STAT_KEYS.map((stat) => ({
+    id: `realm-passive:kien_co:${stat}`,
+    sourceId: 'kien_co',
+    sourceType: 'realm',
+    stat,
+    percent: KIEN_CO_ENHANCED_MAIN_STAT_PERCENT,
+  }))
+}
+
 export const REALM_PASSIVES: RealmPassiveDefinition[] = [
   {
     id: 'qi_refining',
@@ -90,11 +144,13 @@ export const REALM_PASSIVES: RealmPassiveDefinition[] = [
     description:
       'Xây dựng sinh mệnh nền và mở đường tu luyện — hiệu lực theo Bậc Nhập Đạo đạt được lúc Lễ Nhập Môn.',
     buildModifiers: buildNhapDaoModifiers,
+    buildEnhancedModifiers: buildEnhancedNhapDaoModifiers,
   },
   {
     id: 'foundation_establishment',
     name: 'Kiến Cơ',
     description: 'Xây dựng căn cơ, khuếch đại Main Stat — hiệu lực theo Loại Trúc Cơ đã đạt.',
     buildModifiers: buildKienCoModifiers,
+    buildEnhancedModifiers: buildEnhancedKienCoModifiers,
   },
 ]

@@ -23,7 +23,6 @@ import { REALMS } from '@/data/realms/realm'
 import { statLabel } from '@/core/stats/StatLabels'
 import GameButton from '@/components/common/GameButton.vue'
 import {
-  THIEN_DIA_CHI_KIEU_MATERIAL_ID,
   THONG_MACH_DAN_MATERIAL_ID,
 } from '@/data/realm/Meridians'
 
@@ -47,7 +46,6 @@ const pageViews = computed(() => {
 
   const completed = chapterProgress.value.completed
   const ownedPills = gameManager.pillBag.getAmount(THONG_MACH_DAN_MATERIAL_ID)
-  const ownedAux = gameManager.materialBag.getAmount(THIEN_DIA_CHI_KIEU_MATERIAL_ID)
   // M-F-CHU-THIEN (C2C-59) - sequential mirror: meridian invest stays
   // gated until body_refinement completes; the dispatch gate is the
   // authority, the button only mirrors it.
@@ -76,7 +74,6 @@ const pageViews = computed(() => {
       const canInvest = unlocked && seqUnlocked && status === 'next'
         && ownedPills >= meridian.thongMachDanCost
         && paced
-        && (!meridian.requiresThienDiaChiKieu || ownedAux >= 1)
 
       return {
         id: meridian.id,
@@ -92,7 +89,6 @@ const pageViews = computed(() => {
         requiredRealmLevel: unlocked && inPageRealm && status === 'next'
           ? meridian.requiredRealmLevel
           : null,
-        requiresAux: unlocked && status === 'next' && meridian.requiresThienDiaChiKieu === true,
         requiresSeq: unlocked && !seqUnlocked && status === 'next',
         canInvest,
         ownedPills,
@@ -153,7 +149,6 @@ function invest(): void {
             <template v-if="row.requiredRealmLevel !== null">
               · {{ t('panels.realm.meridian.realmGate', { realm: page.realmName, level: row.requiredRealmLevel }) }}
             </template>
-            <template v-if="row.requiresAux">· {{ t('panels.realm.meridian.auxGate') }}</template>
             <template v-if="row.requiresSeq">· {{ t('panels.realm.meridian.seqGate') }}</template>
           </p>
 

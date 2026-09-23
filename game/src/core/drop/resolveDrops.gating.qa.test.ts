@@ -4,8 +4,8 @@ import { stageDropTableFor } from '../../data/drop/StageDropTables'
 import { familyDropTableFor } from '../../data/drop/FamilyDropTables'
 import { ENEMIES } from '../../data/enemy/Enemies'
 
-// Kiem Tu Reimagined Task 12 (spec 2026-09-15 §7): van_kiem_quyet was
-// repurposed as the Ngu Kiem Dao signature technique — granted by the
+// Kiem Tu Reimagined Task 12 (spec 2026-09-15 sec.7): van_kiem_quyet was
+// repurposed as the Ngu Kiem Dao signature technique - granted by the
 // ngu way ritual (M6; formerly the kiem_tu_an conversion node), NEVER
 // lootable. The old elite/boss
 // signatureDrops lines on the qi_refining bandit were removed in the
@@ -51,7 +51,10 @@ describe('drop QA — van_kiem_quyet is never lootable', () => {
     // P7-M3 - the 'technique' DropKind is retired entirely; the old
     // tu_linh_quyet signature line can never resolve.
     expect(result.items.some((item) => item.itemId === 'tu_linh_quyet')).toBe(false)
-    // The boss keeps its other signature line (great_dao_seed).
-    expect(result.items.some((item) => item.itemId === 'great_dao_seed')).toBe(true)
+    // The boss signature table is empty (van_kiem_quyet torn down
+    // 2026-09-15; great_dao_seed retired with the material 2026-09-23,
+    // hidden-perfection-lineage sec.19) - no signature item resolves.
+    expect(bandit.signatureDrops ?? []).toHaveLength(0)
+    expect(result.items.some((item) => item.itemId === 'great_dao_seed')).toBe(false)
   })
 })

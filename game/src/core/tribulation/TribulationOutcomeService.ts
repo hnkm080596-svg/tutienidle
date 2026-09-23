@@ -25,6 +25,7 @@
  * structural typing; no store import.
  */
 import type { FoundationType } from '../breakthrough/FoundationType'
+import type { ResolvableKienCoGrade } from '../../data/breakthrough/BreakthroughGrades'
 import type { PlayerData } from '../player/Player'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { GameManager } from '../game/GameManager'
@@ -37,6 +38,11 @@ import { getTribulationVictoryStatPercent } from '../talent/TalentEffects'
 import { createTalentEntitlement } from '../talent/TalentEntitlement'
 import { getRealmTier } from '../realm/RealmTierMap'
 import { FOUNDATION_LABELS } from '../breakthrough/FoundationType'
+import {
+  closeHiddenLineage,
+  recordHiddenBreakthrough,
+  type BreakthroughType,
+} from '../realm/hidden/HiddenLineage'
 import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
 import { KIEP_THUONG_DEBUFF } from '../../data/buff/buffs'
 import {
@@ -72,7 +78,6 @@ export interface TribulationDefeatResult {
   cultivationLossPercent: number
   spiritStoneId: string
   spiritStonesLost: number
-  greatDaoOpportunityLost: boolean
   /** i18n descriptor - the adapter resolves keys via t() (P16). */
   announcement: OutcomeAnnouncement
 }
@@ -87,7 +92,9 @@ export type TribulationOutcomeResult = TribulationVictoryResult | TribulationDef
  */
 export interface TribulationOutcomeFacts {
   readonly targetRealmId: string
-  readonly grade: FoundationType
+  readonly grade: ResolvableKienCoGrade
+  /** Breakthrough TYPE resolved at start() (2026-09-23 lineage). */
+  readonly breakthroughType: BreakthroughType
 }
 
 /**
@@ -111,7 +118,6 @@ export interface TribulationPlayerWriter extends PlayerData {
   talentLevels: Record<string, number>
   pendingTalentEntitlement?: TalentEntitlement
   highestFoundationAchieved?: FoundationType
-  greatDaoOpportunityLost: boolean
   /** Store-level modifier sync after the unequip-all (rework P5 Task 17). */
   setEquipmentModifiers(modifiers: StatModifier[]): void
 }
@@ -194,12 +200,18 @@ export class TribulationOutcomeService {
     // and a re-settle of the same committed outcome returns its receipt
     // without re-running this apply at all (settleOutcome dedup).
     //
+    // Hidden Perfection Lineage (2026-09-23): a HIDDEN breakthrough
+    // into foundation IS the Dai Dao entry - the quality grade recorded
+    // at commit stays on facts.grade for difficulty accounting; the
+    // outcome-facing grade becomes 'great_dao'.
+    const isGreatDaoBreakthrough =
+      facts.targetRealmId === 'foundation_establishment' && facts.breakthroughType === 'hidden'
+    const outcomeGrade: FoundationType = isGreatDaoBreakthrough ? 'great_dao' : facts.grade
+
     // Special case (ruling): a Dai Dao foundation breakthrough's ONE
     // result is the pham_cot -> pham_nhan_chi_cot evolution below, not a
     // UPGRADE/NEW decision - the generic entitlement is suppressed so
     // the transaction yields exactly one result, never two.
-    const isGreatDaoBreakthrough =
-      facts.targetRealmId === 'foundation_establishment' && facts.grade === 'great_dao'
     if (!isGreatDaoBreakthrough) {
       createTalentEntitlement(player, facts.targetRealmId)
     }
@@ -230,12 +242,26 @@ export class TribulationOutcomeService {
     // for in-band live grades.
     gameManager.realmAdvanceOps.applyTechniqueRealmTransition(player, facts.targetRealmId)
 
+    // Hidden Perfection Lineage (design 2026-09-23 sec.3.3): a NORMAL
+    // breakthrough SUCCESS closes the lineage permanently (failure
+    // does not) - player.realmId still names the DEPARTING realm here,
+    // so the close is stamped before the realm write below.
+    if (facts.breakthroughType === 'normal') {
+      closeHiddenLineage(player, player.realmId)
+    }
+
     // Order preserved from the Vue path (rework P5, Task 17): realm write
     // FIRST, then unequip-all + modifier sync (avoids stuck gear from the
     // new realm's grade gate), then passive syncs, then path reward.
     player.realmId = facts.targetRealmId
     player.realmLevel = 1
     player.cultivation = 0
+
+    // A hidden breakthrough records the ENTERED realm; the entry
+    // passive's enhanced variant selects on this record below.
+    if (facts.breakthroughType === 'hidden') {
+      recordHiddenBreakthrough(player, facts.targetRealmId)
+    }
 
     // Hai Nap (M2): banked overflow follows into the new realm's level
     // 1 - same owner helper as the minor-tier breakthrough pour.
@@ -252,7 +278,7 @@ export class TribulationOutcomeService {
     // Spec dot-pha-loi-kiep SS4.2/SS4.4: foundation grade recorded on
     // entry; highestFoundationAchieved feeds the foundation passive.
     if (facts.targetRealmId === 'foundation_establishment') {
-      player.highestFoundationAchieved = facts.grade
+      player.highestFoundationAchieved = outcomeGrade
     }
 
     gameManager.realmAdvanceOps.syncRealmPassive(player)
@@ -291,7 +317,7 @@ export class TribulationOutcomeService {
       facts.targetRealmId === 'foundation_establishment'
         ? {
             titleKey: 'announce.tribulation.foundation.title',
-            titleParams: { label: FOUNDATION_LABELS[facts.grade].toUpperCase() },
+            titleParams: { label: FOUNDATION_LABELS[outcomeGrade].toUpperCase() },
             bodyKey: 'announce.tribulation.foundation.body',
           }
         : {
@@ -305,7 +331,7 @@ export class TribulationOutcomeService {
       kind: 'victory',
       realmEntered: facts.targetRealmId,
       realmName: realm.name,
-      foundationGrade: facts.targetRealmId === 'foundation_establishment' ? facts.grade : undefined,
+      foundationGrade: facts.targetRealmId === 'foundation_establishment' ? outcomeGrade : undefined,
       talentConverted,
       questRealmTransitionMarked: true,
       announcement,
@@ -381,29 +407,15 @@ export class TribulationOutcomeService {
     // call carries the def only.
     gameManager.effectOps.applyPersistentBuff(KIEP_THUONG_DEBUFF)
 
-    // Spec SS4.3: losing a Great Dao attempt closes the opportunity
-    // FOREVER; later grade rolls cap at Thien Dao (BreakthroughGrades).
-    if (facts.targetRealmId === 'foundation_establishment' && facts.grade === 'great_dao') {
-      player.greatDaoOpportunityLost = true
-      return {
-        kind: 'defeat',
-        cultivationLossPercent: lossPercent,
-        spiritStoneId,
-        spiritStonesLost: Math.min(owned, stoneLoss),
-        greatDaoOpportunityLost: true,
-        announcement: {
-          titleKey: 'announce.tribulation.defeatGreatDao.title',
-          bodyKey: 'announce.tribulation.defeatGreatDao.body',
-        },
-      }
-    }
-
+    // 2026-09-23 hidden-perfection-lineage sec.19: the defeat arm for a
+    // great_dao-grade attempt is RETIRED with greatDaoOpportunityLost -
+    // a failed hidden breakthrough simply does not close the lineage
+    // (failure never does); every defeat takes the generic result.
     return {
       kind: 'defeat',
       cultivationLossPercent: lossPercent,
       spiritStoneId,
       spiritStonesLost: Math.min(owned, stoneLoss),
-      greatDaoOpportunityLost: false,
       announcement: {
         titleKey: 'announce.tribulation.defeat.title',
         bodyKey: 'announce.tribulation.defeat.body',

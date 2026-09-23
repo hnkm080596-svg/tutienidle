@@ -5,8 +5,10 @@ import { GameManager } from '../game/GameManager'
 import { TribulationOutcomeService } from './TribulationOutcomeService'
 
 import type { ActiveTribulationState } from './TribulationDirector'
+import type { BreakthroughType } from '../realm/hidden/HiddenLineage'
+import type { ResolvableKienCoGrade } from '../../data/breakthrough/BreakthroughGrades'
 
-// Talent v4 M2 — Loi Kiep victory reward (spec §4.3 row 17): every
+// Talent v4 M2 - Loi Kiep victory reward (spec sec.4.3 row 17): every
 // successful tribulation grants a permanent +10% on all five attributes
 // via player.modifiers (sourceType 'talent', sourceId 'loi_kiep') and
 // bumps tribulationBonusStacks. Stacks persist across realm entries and
@@ -14,10 +16,12 @@ import type { ActiveTribulationState } from './TribulationDirector'
 function makeActive(
   state: 'victory' | 'defeat',
   targetRealmId: string,
-  grade: 'thien_dao' | 'great_dao' = 'thien_dao',
+  breakthroughType: BreakthroughType = 'normal',
+  grade: ResolvableKienCoGrade = 'heaven',
 ): ActiveTribulationState {
   return {
     targetRealmId,
+    breakthroughType,
     grade,
     chapterIndex: 0,
     chaptersTotal: 1,

@@ -1,63 +1,50 @@
 import type { PlayerData } from '../../core/player/Player'
 import type { FoundationType } from '../../core/breakthrough/FoundationType'
-import { MERIDIANS } from '../realm/Meridians'
-import { MAIN_STAT_KEYS } from '../../core/stats/StatTypes'
-import { getMainStatCap } from '../../core/stats/StatCap'
 import { BODY_REFINEMENT_TIERS } from '../realm/BodyRefinement'
 import {
   getBodyRefinementCompletedTiers,
   getOpenedMeridianCount,
 } from '../../core/realm/body/BodyProgressionSystem'
 
-// 4 bậc Kiến Cơ (spec dot-pha-loi-kiep §4.2) — điều kiện ẨN, KHÔNG
-// hiển thị trước; công bố SAU khi đạt. great_dao chỉ người chơi hội tụ
-// đủ mọi điều kiện (kể cả thiên phú Phàm Cốt) mới được xét — UI gate
-// công khai chỉ bậc 'human' (tầng 12 + Linh Thạch).
+// Bac Kien Co (spec dot-pha-loi-kiep sec.4.2, retired great_dao arm per
+// 2026-09-23 hidden-perfection-lineage sec.19 census item 4) - dieu kien
+// AN, KHONG hien thi truoc; cong bo SAU khi dat. 'great_dao' remains a
+// legal KienCoGrade value: a hidden breakthrough into foundation now
+// records it via the lineage channel (committed.breakthroughType), so
+// the resolver no longer synthesizes it from pre-commit state. UI gate
+// cong khai chi bac 'human' (tang 12 + Linh Thach).
 export type KienCoGrade = FoundationType
 
-// Số đường tối thiểu từng bậc — Thiên cần 6/8 (KHÔNG gồm Kỳ Kinh, spec
-// ghi chú điều kiện), Đại Đạo cần 9/9.
+/**
+ * The grades resolveKienCoGrade can actually return: 'great_dao' is
+ * unreachable here - a hidden breakthrough records it via the lineage
+ * channel (committed.breakthroughType), never through pre-commit
+ * investment. Difficulty tables key on this narrower set.
+ */
+export type ResolvableKienCoGrade = Exclude<KienCoGrade, 'great_dao'>
+
+// So duong toi thieu tung bac - Thien can 6/8 (Ky Kinh no longer
+// exists - the 9th meridian retired; cua so con lai la 8 duong Bat Mach).
 const HEAVEN_MERIDIAN_COUNT = 6
-const GREAT_DAO_MERIDIAN_COUNT = MERIDIANS.length // 9
 
 const EARTH_BODY_TIERS = 3
 const HEAVEN_BODY_TIERS = BODY_REFINEMENT_TIERS.length // 6
 
-function hasEveryMainStatAtCap(player: PlayerData): boolean {
-  const cap = getMainStatCap(player.realmId)
-
-  return MAIN_STAT_KEYS.every((stat) => player.baseStats[stat] >= cap)
-}
-
 /**
- * Xét bậc Kiến Cơ lúc bấm đột phá (spec §2.1 — chỉ từ đầu tư TRƯỚC
- * kiếp, trận kiếp không cộng/trừ bậc). `hasTrucCoDan` = Trúc Cơ Đan
- * có trong túi đồ lúc bấm (bậc Địa trở lên cần, KHÔNG tiêu — vật chứng).
- * Điều kiện lũy tiến: bậc cao chỉ xét khi đủ bậc thấp.
+ * Xet bac Kien Co luc bam dot pha (spec sec.2.1 - chi tu dau tu TRUOC
+ * kiep, tran kiep khong cong/tru bac). `hasTrucCoDan` = Truc Co Dan
+ * co trong tui do luc bam (bac Dia tro len can, KHONG tieu - vat chung).
+ * Dieu kien luy tien: bac cao chi xet khi du bac thap.
  */
-export function resolveKienCoGrade(player: PlayerData, hasTrucCoDan: boolean): KienCoGrade {
-  // Vĩnh viễn: thua kiếp Đại Đạo → cap Thiên (spec §4.3)
-  const greatDaoBlocked = player.greatDaoOpportunityLost
-
+export function resolveKienCoGrade(
+  player: PlayerData,
+  hasTrucCoDan: boolean,
+): ResolvableKienCoGrade {
   const earthReady = hasTrucCoDan && getBodyRefinementCompletedTiers(player) >= EARTH_BODY_TIERS
   const heavenReady =
     earthReady &&
     getBodyRefinementCompletedTiers(player) >= HEAVEN_BODY_TIERS &&
     getOpenedMeridianCount(player) >= HEAVEN_MERIDIAN_COUNT
-
-  if (!greatDaoBlocked && heavenReady && getOpenedMeridianCount(player) >= GREAT_DAO_MERIDIAN_COUNT) {
-    const hasPhamCot = player.selectedTalentIds.includes('pham_cot')
-
-    if (
-      hasPhamCot &&
-      player.mortalPerfectionAchieved &&
-      player.realmId === 'qi_refining' &&
-      player.realmLevel >= MERIDIANS[MERIDIANS.length - 1]!.requiredRealmLevel &&
-      hasEveryMainStatAtCap(player)
-    ) {
-      return 'great_dao'
-    }
-  }
 
   if (heavenReady) {
     return 'heaven'

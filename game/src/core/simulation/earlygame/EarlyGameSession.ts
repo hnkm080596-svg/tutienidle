@@ -23,6 +23,7 @@ import { canBreakthrough, breakthrough } from '../../cultivation/CultivationSyst
 import { cultivateTick } from '../../cultivation/CultivationTick'
 import { driveTurnBattleToTerminal } from '../BattleDriver'
 import { getBodyRefinementCompletedTiers } from '../../realm/body/BodyProgressionSystem'
+import type { HiddenPerfectionState } from '../../realm/hidden/HiddenPerfection'
 import {
   BODY_REFINEMENT_TIERS,
   TINH_HOA_PHAM_THE_MATERIAL_ID,
@@ -157,7 +158,7 @@ export interface EarlyGameSnapshot {
   companionGifts: Array<{ id: string; definitionId: string; claimed: boolean }>
   perfectClearStageIds: string[]
   autoFarmStageId: string | null
-  bodyPerfection: { discoveredMaterials: string[]; perfectedRealmIds: string[] }
+  hiddenPerfection: HiddenPerfectionState
   hiddenBeastKills: Record<string, number>
   hiddenChannelCycles: Array<{ siteId: string; cycles: Record<string, number> }>
 }
@@ -679,9 +680,24 @@ export class EarlyGameSession {
       })),
       perfectClearStageIds: [...p.perfectClearStageIds].sort(),
       autoFarmStageId: p.autoFarmStage?.stageId ?? null,
-      bodyPerfection: {
-        discoveredMaterials: [...p.bodyPerfection.discoveredMaterials],
-        perfectedRealmIds: [...p.bodyPerfection.perfectedRealmIds],
+      hiddenPerfection: {
+        lineageActive: p.hiddenPerfection.lineageActive,
+        ...(p.hiddenPerfection.lineageClosedByRealmId === undefined
+          ? {}
+          : { lineageClosedByRealmId: p.hiddenPerfection.lineageClosedByRealmId }),
+        completedHiddenBodyRealmIds: [...p.hiddenPerfection.completedHiddenBodyRealmIds],
+        hiddenBreakthroughRealmIds: [...p.hiddenPerfection.hiddenBreakthroughRealmIds],
+        realms: Object.fromEntries(
+          Object.entries(p.hiddenPerfection.realms).map(([realmId, state]) => [
+            realmId,
+            {
+              ...state,
+              ...(state.mechanic === undefined
+                ? {}
+                : { mechanic: { ...state.mechanic } }),
+            },
+          ]),
+        ),
       },
       hiddenBeastKills: { ...p.hiddenBeastKills },
       // Restore seeds every site state; a live session's are lazy, so

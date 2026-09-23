@@ -18,7 +18,16 @@ export function grantRealmPassive(player: PlayerData, realmId: string) {
     return
   }
 
-  const modifiers = definition.buildModifiers(player)
+  // Hidden Perfection Lineage (design 2026-09-23): the realm's entry
+  // breakthrough type selects the modifier variant - the persisted
+  // hiddenBreakthroughRealmIds record is the sole authority (the
+  // commit sites write it BEFORE the passive syncs).
+  const hidden = player.hiddenPerfection?.hiddenBreakthroughRealmIds.includes(realmId) === true
+  const build = hidden && definition.buildEnhancedModifiers !== undefined
+    ? definition.buildEnhancedModifiers
+    : definition.buildModifiers
+
+  const modifiers = build(player)
 
   if (modifiers.length === 0) {
     return
