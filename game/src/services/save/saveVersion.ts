@@ -137,11 +137,13 @@
 // meridian) are authored on the chapter registry and pinned as a
 // restore-preflight coherence invariant. Save v77 is rejected
 // (dev phase, no migration, no compat translator).
-// v79 (2026-09-23, M-F-BODY-PERFECTION hidden Body perfection):
+// v79 (2026-09-23, ARTIFACT-DEFER, lands on p7/truc-co via PR #15
+// before this slice - version number owned by that mission).
+// v80 (2026-09-23, M-F-BODY-PERFECTION hidden Body perfection):
 // PlayerData gains required `bodyPerfection` slice ({discoveredMaterials,
 // perfectedRealmIds} - canonical discovery + committed realms; discovery
 // is persistent state, NOT inventory-derived). Restore preflight runs
 // assertBodyPerfectionIntegrity (authored-family, subset + realm-cap
-// rules). Save v78 is rejected (dev phase, no migration, no compat
+// rules). Save v79 is rejected (dev phase, no migration, no compat
 // translator).
-export const CURRENT_SAVE_VERSION = 79 as const
+export const CURRENT_SAVE_VERSION = 80 as const
