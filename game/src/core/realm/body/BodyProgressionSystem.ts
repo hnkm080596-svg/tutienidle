@@ -119,10 +119,30 @@ export function applyPhysiqueAdvancement(
   }
 }
 
+// M-F-CHU-THIEN (C2C-59) - the sequential-unlock read: a chapter is
+// unlocked iff every authored unlocksAfterChapters prerequisite is
+// complete on this player. Direct (non-recursive) evaluation -
+// prerequisites sit strictly earlier in canonical order, so
+// transitiveness is a property of the authored chain plus the persisted
+// coherence invariant, not of this read. The invest dispatch gates on
+// it before any other gate; the UI mirrors the same read.
+export function isBodyChapterUnlocked(
+  player: PlayerData,
+  chapterId: BodyChapterId,
+): boolean {
+  const chapter = getBodyChapterDefinition(chapterId)
+  return (chapter.unlocksAfterChapters ?? []).every(
+    prereq => getBodyChapterDefinition(prereq).isComplete(player),
+  )
+}
+
 // Unified invest: chapter-owned mutation, then the chapter's stat-effect
 // rebuild exactly once - and ONLY on a successful mutation (consumed > 0)
 // per spec sec.3.5. Returns the currency units actually consumed so the
 // calling op can debit the right bag.
+//
+// M-F-CHU-THIEN (C2C-59) - the SEQUENTIAL gate runs first: a chapter
+// locked behind incomplete predecessors consumes nothing.
 //
 // M-QI-07 adds the physique transaction: the source-grade gate runs
 // BEFORE any mutation (a player below 'from' cannot invest at all -
@@ -137,6 +157,10 @@ export function investBodyChapterState(
 ): number {
   const chapter = getBodyChapterDefinition(chapterId)
   const advancement = chapter.physiqueAdvancement
+
+  if (!isBodyChapterUnlocked(player, chapterId)) {
+    return 0
+  }
 
   if (advancement !== undefined && !canProgressPhysiqueChapter(player, advancement)) {
     return 0
@@ -270,6 +294,33 @@ export function assertBodyProgressionIntegrity(player: PlayerData): void {
         }
       } else {
         issues.push(...chapter.integrityIssues(player))
+
+        // M-F-CHU-THIEN (C2C-64) - persisted sequential coherence: a
+        // progressed or completed chapter requires every authored
+        // prerequisite COMPLETE (meridian progressed -> refinement
+        // complete; zhou_tian progressed -> meridian complete). The
+        // rule transitivizes across the registry and is evaluated only
+        // over present slices - a missing prereq slice already reports
+        // above, and calling isComplete on it would TypeError (same
+        // convention as derivationBlocked).
+        const progressed =
+          chapter.progress(player).completed > 0 || chapter.isComplete(player)
+
+        if (progressed) {
+          for (const prereq of chapter.unlocksAfterChapters ?? []) {
+            const prereqSlice = (record as Record<string, unknown>)[prereq]
+
+            if (
+              typeof prereqSlice === 'object' &&
+              prereqSlice !== null &&
+              !getBodyChapterDefinition(prereq).isComplete(player)
+            ) {
+              issues.push(
+                `${chapter.id} progressed/completed while prerequisite '${prereq}' is incomplete`,
+              )
+            }
+          }
+        }
       }
     }
 

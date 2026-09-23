@@ -2164,6 +2164,7 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
     playerOf(save).bodyProgression = {
       body_refinement: { completedTiers: 'x', currentTierProgress: -1 },
       meridian: { openedIds: [] },
+      zhou_tian: { circulation: 0 },
     }
 
     const result = validateGameSaveShape(save)
@@ -2179,6 +2180,7 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
     playerOf(save).bodyProgression = {
       body_refinement: { completedTiers: 0, currentTierProgress: 0 },
       meridian: { openedIds: 'nope' },
+      zhou_tian: { circulation: 0 },
     }
     expect(validateGameSaveShape(save).ok).toBe(false)
 
@@ -2186,6 +2188,7 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
     playerOf(save2).bodyProgression = {
       body_refinement: { completedTiers: 0, currentTierProgress: 0 },
       meridian: { openedIds: ['nham_mach', 7] },
+      zhou_tian: { circulation: 0 },
     }
 
     const result = validateGameSaveShape(save2)
@@ -2200,6 +2203,7 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
     playerOf(save).bodyProgression = {
       body_refinement: { completedTiers: 3, currentTierProgress: 100 },
       meridian: { openedIds: ['nham_mach', 'doi_mach'] },
+      zhou_tian: { circulation: 0 },
     }
     expect(validateGameSaveShape(save).ok).toBe(true)
 
@@ -2213,8 +2217,42 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
           'ky_kinh_thien_dia_chi_kieu',
         ],
       },
+      zhou_tian: { circulation: 0 },
     }
     expect(validateGameSaveShape(save2).ok).toBe(true)
+  })
+
+  // M-F-CHU-THIEN (v77) - the zhou_tian slice is required in the
+  // persisted canonical set; a missing slice reports at its chapter path.
+  it('từ chối save thiếu zhou_tian slice tại player.bodyProgression.zhou_tian', () => {
+    const save = validSave()
+
+    playerOf(save).bodyProgression = {
+      body_refinement: { completedTiers: 0, currentTierProgress: 0 },
+      meridian: { openedIds: [] },
+    }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.bodyProgression.zhou_tian')
+  })
+
+  // C2C-79 - fractional circulation rejects through the shape layer at
+  // the persisted-state path (integrity would also catch it later).
+  it('từ chối zhou_tian circulation không nguyên tại player.bodyProgression.zhou_tian.circulation', () => {
+    const save = validSave()
+
+    playerOf(save).bodyProgression = {
+      body_refinement: { completedTiers: 0, currentTierProgress: 0 },
+      meridian: { openedIds: [] },
+      zhou_tian: { circulation: 1.5 },
+    }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.bodyProgression.zhou_tian.circulation')
   })
 })
 

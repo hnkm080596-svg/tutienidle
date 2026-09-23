@@ -9,6 +9,7 @@ import GameButton from '@/components/common/GameButton.vue'
 import BodyRefinementSection from '@/components/panels/realm/BodyRefinementSection.vue'
 import MeridianSection from '@/components/panels/realm/MeridianSection.vue'
 import BodyPerfectionSection from '@/components/panels/realm/BodyPerfectionSection.vue'
+import ZhouTianSection from '@/components/panels/realm/ZhouTianSection.vue'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
@@ -125,7 +126,8 @@ function majorBreakthrough() {
       </div>
 
       <!-- P7-M7 - unified body progression subviews (the retired
-           LuyenThePanel's tier block + the Bat Mach read-only list). -->
+           LuyenThePanel's tier block + the Bat Mach read-only list);
+           M-F-CHU-THIEN adds the Chu Thien circulation column. -->
       <div class="realm-panel__body">
         <div class="realm-panel__body-col">
           <Eyebrow>{{ t('panels.realm.bodyRefinement.title') }}</Eyebrow>
@@ -134,6 +136,10 @@ function majorBreakthrough() {
         <div class="realm-panel__body-col">
           <Eyebrow>{{ t('panels.realm.meridian.title') }}</Eyebrow>
           <MeridianSection />
+        </div>
+        <div class="realm-panel__body-col">
+          <Eyebrow>{{ t('panels.realm.zhouTian.title') }}</Eyebrow>
+          <ZhouTianSection />
         </div>
         <!-- M-F-BODY-PERFECTION - hidden col: v-if on the COLUMN, not
              inside the section, so no empty eyebrow renders before

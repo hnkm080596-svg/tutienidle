@@ -291,7 +291,7 @@ export class GameManagerSaveRestore {
     // hard-fail seam as the technique-holder contract above.
     assertBodyProgressionIntegrity(save.player)
 
-    // M-F-BODY-PERFECTION (v78) - the perfection slice's semantic
+    // M-F-BODY-PERFECTION (v79) - the perfection slice's semantic
     // integrity runs as the LAST preflight check too: authored-family
     // membership, perfected-realm keys, subset + realm-cap rules (see
     // core/realm/body/BodyPerfection). Same hard-fail seam - reject

@@ -37,9 +37,10 @@ test.describe('Body perfection hidden surface (production)', () => {
     const realmDialog = page.getByRole('dialog', { name: 'Cảnh Giới' })
     await expect(realmDialog).toBeVisible({ timeout: 15_000 })
 
-    // Exactly the two standing cols (body refinement + meridian) - the
-    // hidden perfection col must not exist at all, not merely invisible.
-    await expect(realmDialog.locator('.realm-panel__body-col')).toHaveCount(2)
+    // Exactly the three standing cols (refinement + meridian + chu-thien
+    // after the base merge) - the hidden perfection col must not exist
+    // at all, not merely invisible.
+    await expect(realmDialog.locator('.realm-panel__body-col')).toHaveCount(3)
     await expect(realmDialog.locator('.body-perfection-section')).toHaveCount(0)
     await expect(realmDialog).not.toContainText('Thể Phách Hoàn Thiện')
 
@@ -65,7 +66,7 @@ test.describe('Body perfection hidden surface (production)', () => {
     const realmDialog = page.getByRole('dialog', { name: 'Cảnh Giới' })
     await expect(realmDialog).toBeVisible({ timeout: 15_000 })
 
-    await expect(realmDialog.locator('.realm-panel__body-col')).toHaveCount(2)
+    await expect(realmDialog.locator('.realm-panel__body-col')).toHaveCount(3)
     await expect(realmDialog.locator('.body-perfection-section')).toHaveCount(0)
     await expect(realmDialog).not.toContainText('Thể Phách Hoàn Thiện')
 

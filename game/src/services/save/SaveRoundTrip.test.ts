@@ -116,6 +116,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
       state: {
         body_refinement: { completedTiers: 0, currentTierProgress: 0 },
         meridian: { openedIds: [] as string[] },
+        zhou_tian: { circulation: 0 },
       },
     },
     {
@@ -123,6 +124,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
       state: {
         body_refinement: { completedTiers: 3, currentTierProgress: 120 },
         meridian: { openedIds: ['nham_mach', 'doi_mach'] },
+        zhou_tian: { circulation: 0 },
       },
     },
     {
@@ -136,6 +138,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
             'ky_kinh_thien_dia_chi_kieu',
           ],
         },
+        zhou_tian: { circulation: 360 },
       },
     },
   ])('bodyProgression ($label) round-trip nguyen ven', ({ state }) => {

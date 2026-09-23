@@ -530,7 +530,24 @@
         "auxGate": "cần Thiên Địa Chi Kiều",
         "pageLocked": "Mở khóa ở {realm}",
         "invest": "Mở Mạch",
-        "owned": "sở hữu {count}"
+        "owned": "sở hữu {count}",
+        "seqGate": "cần hoàn thành Luyện Thể"
+      },
+      "zhouTian": {
+        "title": "Chu Thiên",
+        "summary": "Chu thiên: {completed}/{total}",
+        "stateLocked": "Phong ấn",
+        "stateRealmLocked": "Chưa tới cảnh giới",
+        "stateActive": "Đang vận chuyển",
+        "stateComplete": "Đại Chu Thiên",
+        "locked": "Hoàn thành Kỳ Kinh Bát Mạch trước",
+        "realmLocked": "Mở khóa ở {realm}",
+        "capacity": "Dung lượng hiện tại: {capacity}",
+        "tieuLabel": "Tiểu Chu Thiên · 180",
+        "daiLabel": "Đại Chu Thiên · 360",
+        "invest": "Vận Chu Thiên",
+        "owned": "Tinh Hoa Pháp Thể sở hữu {count}",
+        "complete": "Đại Chu Thiên đã viên mãn."
       },
       "bodyPerfection": {
         "title": "Thể Phách Hoàn Thiện",

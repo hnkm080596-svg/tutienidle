@@ -107,7 +107,7 @@ describe('hidden surface gate (spec S6)', () => {
     await nextTick()
 
     const cols = mounted.container.querySelectorAll('.realm-panel__body-col')
-    expect(cols.length).toBe(2) // body_refinement + meridian only
+    expect(cols.length).toBe(3) // refinement + meridian + chu-thien only
     expect(mounted.container.querySelector('.body-perfection-section')).toBeNull()
     expect(mounted.container.textContent).not.toContain(PERFECTION_TITLE)
 
@@ -120,7 +120,7 @@ describe('hidden surface gate (spec S6)', () => {
     await nextTick()
 
     const cols = mounted.container.querySelectorAll('.realm-panel__body-col')
-    expect(cols.length).toBe(3)
+    expect(cols.length).toBe(4)
     expect(mounted.container.querySelector('.body-perfection-section')).not.toBeNull()
     expect(mounted.container.textContent).toContain(PERFECTION_TITLE)
 
