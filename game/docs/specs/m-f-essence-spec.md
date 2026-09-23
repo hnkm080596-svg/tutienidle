@@ -88,11 +88,18 @@ Consequence: a `chapterKind: 'zhou_tian'` chapter declaring
 `currency: { bag: 'material', id: 'tinh_hoa_phap_the' }` receives the
 full M-QI-09 contract — coverage-aware availability, detached-probe
 validate→consume→apply, all-or-nothing debit — **unchanged, with zero
-production edits**. For a Pháp-required cost today the contract
-degrades deterministically: no rung above `phap` has an authored
-essence material, so coverage is 0, availability is the owned Pháp
-stack, and the plan is a required-only exact debit (never a `change`
-credit — coverage 0 ⇒ `consumed <= owned` ⇒ `covered === consumed`).
+production edits**. On the production `investBodyChapter` path a
+Pháp-required cost degrades deterministically: no rung above `phap`
+has an authored essence material, so coverage is 0 and
+`effectiveAvailable` (`GameManagerRealmAdvanceOps.ts:512-513`) is the
+owned Pháp stack alone. The probe's `consumed` is bounded by `owned`
+— the resolver's all-or-nothing precondition
+(`consumed <= owned + coverage`, `:25-26`, `:107-108`) is honoured by
+construction — so every issued plan is a required-only exact debit
+(`covered === consumed`, `change` undefined). An under-owned Pháp
+invest surfaces `consumed = 0` on the probe and the seam returns 0
+before `planEssenceSubstitution` runs — fail closed, no partial plan
+reachable in production.
 
 ## 3. Residual contract — the pin set (test-only)
 
@@ -121,10 +128,22 @@ file it lands in and what it asserts.
 - `essenceSubstitutionCoverage(PHAP_COST, ownedOf)` is `0` for every
   owned set — the top authored rung has no higher substitute. This is
   a pinned semantic (absence is the contract), not an error.
-- `planEssenceSubstitution(consumed, PHAP_COST, ownedOf)` debits
-  `tinh_hoa_phap_the` only: exact when owned covers, partial when it
-  does not, and `change` is ALWAYS `undefined` (structurally
-  unreachable while nothing above Pháp is authored).
+- `planEssenceSubstitution(consumed, PHAP_COST, ownedOf)` under the
+  documented all-or-nothing precondition
+  (`consumed <= owned + coverage`; for Pháp coverage is always 0, so
+  the in-contract bound is `consumed <= ownedOf('phap')`):
+  - `consumed <= ownedOf('phap')` → required-only exact debit
+    `[{ tinh_hoa_phap_the, consumed }]`, `covered === consumed`,
+    `change === undefined` (structurally unreachable while nothing
+    above Pháp is authored).
+  - `consumed > ownedOf('phap')` is OUT of the documented
+    precondition — not a pinnable contract state (a partial plan is
+    not a valid outcome; `undefined` remains the namespace refusal
+    only). Its production consequence is a seam-level fact, not a
+    resolver pin: `effectiveAvailable` bounds the probe's `consumed`,
+    so an under-owned Pháp invest surfaces `consumed = 0` ⇒
+    `investBodyChapter` returns 0 before planning — fail closed,
+    zero mutation (sec.2).
 - `planEssenceSubstitution` on `BAO_COST`: Pháp substitutes Bảo at
   `ratio[phap]` per unit — `ownedOf({ phap: 6 })` against `consumed =
   11` debits 6 Pháp covering 12 and credits 1 `tinh_hoa_bao_the`

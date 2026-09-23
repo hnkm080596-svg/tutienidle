@@ -64,10 +64,20 @@ gates pass.
    - `essenceSubstitutionCoverage(PHAP_COST, ownedOf)` === 0 for every
      owned set — top authored rung, no substitute (contract, not
      error);
-   - `planEssenceSubstitution` on `PHAP_COST` debits
-     `tinh_hoa_phap_the` only — exact when owned covers, partial when
-     under-owned; `change` always `undefined` (structurally
-     unreachable today);
+   - `planEssenceSubstitution(consumed, PHAP_COST, ownedOf)` with
+     `consumed <= ownedOf('phap')` — the only in-contract input for
+     Pháp (`consumed <= owned + coverage`, coverage === 0) — debits
+     `[{ tinh_hoa_phap_the, consumed }]` exactly,
+     `covered === consumed`, `change === undefined`;
+   - NO pin for `consumed > ownedOf('phap')` at the resolver — that
+     input violates the documented all-or-nothing precondition
+     (`BodyChapterEssenceSubstitution.ts:25-26,107-108`) and a partial
+     plan is not a contract outcome (`undefined` is the namespace
+     refusal only). The under-covered consequence is a production-seam
+     fact — probe `consumed = 0` → `investBodyChapter` returns 0
+     before planning (fail closed) — already exercised for essence
+     chapters by the M-QI-09 e2e refusal cases
+     (`GameManager.essenceSubstitution.test.ts`);
    - `planEssenceSubstitution` on `BAO_COST`: `ownedOf({ phap: 6 })`,
      `consumed = 11` → debits `[{ tinh_hoa_phap_the, 6 }]` covering 12,
      `change = { tinh_hoa_bao_the, 1 }`; mixed stacks order the Bảo
