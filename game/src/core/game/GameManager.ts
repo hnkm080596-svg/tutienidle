@@ -667,6 +667,7 @@ export class GameManager {
       skillTemplates: this.skillTemplates,
       nodeRegistry: this.nodeRegistry,
       materialBag: this.materialBag,
+      materialRegistry: this.materialRegistry,
       pillBag: this.pillBag,
       breakthroughOutcomeService: this.breakthroughOutcomeService,
       progressionOps: this.progressionOps,

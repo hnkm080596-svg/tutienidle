@@ -68,6 +68,31 @@ export function physiqueEssenceBand(realmId: string): PhysiqueGradeId | undefine
   return REALM_TO_GRADE.get(realmId)
 }
 
+// QI-D4c adjacent conversion ratios - sim-locked by M-QI-09 (spec
+// docs/p7/missions/mqi-09-essence-substitution.spec.md sec.3.4):
+// `ratio[g]` is the number of grade-(g-1) units one unit of grade g
+// substitutes for at a Body chapter cost check. Integer >= 2 (each
+// higher unit strictly more valuable, monotonic). Only adjacent hops
+// are authored; multi-hop yield is their product, so no conversion
+// path can beat the chain (no-arbitrage by construction - a future
+// skip edge would have to exceed the compound it replaces). Rungs
+// without an authored essence material are absent - absence is the
+// contract, not an error. The values are the sim lock, NOT a balance
+// guess: any retune of drops, tier caps, or arc length re-runs the sim
+// and re-locks them in the same change (spec sec.3.5).
+export const PHYSIQUE_ESSENCE_CONVERSION_RATIO: Readonly<
+  Partial<Record<PhysiqueGradeId, number>>
+> = {
+  bao: 2,
+  phap: 2,
+}
+
+export function physiqueEssenceConversionRatio(
+  grade: PhysiqueGradeId,
+): number | undefined {
+  return PHYSIQUE_ESSENCE_CONVERSION_RATIO[grade]
+}
+
 // Authored per-band guaranteed-drop entries, DERIVED band -> grade ->
 // materialId so an entry can never name a material of the wrong grade.
 // Numbers mirror the live mortal line (chance 0.7, amount 1-3) and are

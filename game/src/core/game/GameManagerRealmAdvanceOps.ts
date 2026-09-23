@@ -2,6 +2,7 @@ import type { ArtifactPath } from '../artifact/Artifact'
 import { tryUpgradeArtifactGrade } from '../artifact/ArtifactProgression'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import type { MaterialBag } from '../material/MaterialBag'
+import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { PillBag } from '../pill/PillBag'
 import type { PlayerData } from '../player/Player'
 import type { CultivationPathId, CultivationWayId } from '../player/CultivationPathKit'
@@ -19,6 +20,14 @@ import {
   type BodyChapterCurrency,
   type BodyChapterId,
 } from '../realm/body/BodyChapter'
+import {
+  essenceSubstitutionCoverage,
+  planEssenceSubstitution,
+} from '../realm/body/BodyChapterEssenceSubstitution'
+import {
+  physiqueEssenceMaterialId,
+} from '../../data/realm/PhysiqueEssence'
+import type { PhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
 import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
 import { CORE_REALM_LEVEL, QI_REFINING_BREAKTHROUGH_STAGE_ID, getCurrentRealm } from '../realm/realmSystem'
@@ -80,6 +89,7 @@ export class GameManagerRealmAdvanceOps {
       skillTemplates: TemplateRegistry<Skill>
       nodeRegistry: NodeRegistry
       materialBag: MaterialBag
+      materialRegistry: MaterialRegistry
       pillBag: PillBag
       breakthroughOutcomeService: BreakthroughOutcomeService
       progressionOps: GameManagerProgressionOps
@@ -471,7 +481,45 @@ export class GameManagerRealmAdvanceOps {
       ? this.bodyChapterBag(chapter.auxCurrency).getAmount(chapter.auxCurrency.id)
       : 0
 
-    const consumed = investBodyChapterState(player, chapterId, available, auxOwned)
+    // M-QI-09 (QI-D4c) - downward-only essence substitution resolved at
+    // this cost check, no exchange UI: a material-bag physique-essence
+    // requirement counts higher-grade stacks at the locked adjacent
+    // ratio. The resolver owns the namespace gate (C2C 6) - pill
+    // currencies and non-family material ids are refused inside the
+    // plan, which returns undefined here and falls back to the legacy
+    // single-currency path.
+    const ownedOf = (grade: PhysiqueGradeId): number => {
+      const materialId = physiqueEssenceMaterialId(grade)
+      return materialId === undefined
+        ? 0
+        : this.deps.materialBag.getAmount(materialId)
+    }
+    const coverage = essenceSubstitutionCoverage(chapter.currency, ownedOf)
+    const effectiveAvailable = available + coverage
+    const consumed = investBodyChapterState(player, chapterId, effectiveAvailable, auxOwned)
+    const plan =
+      consumed <= 0
+        ? undefined
+        : planEssenceSubstitution(consumed, chapter.currency, ownedOf)
+    if (plan !== undefined) {
+      // C2C 3 - preflight every debit before any bag mutation: the plan
+      // is scoped inside owned + coverage so all debits are satisfiable
+      // by construction; a shortfall means the commit stays all-or-
+      // nothing rather than partially debiting.
+      const allSatisfiable = plan.debits.every((debit) =>
+        bag.has(debit.materialId, debit.amount),
+      )
+      if (allSatisfiable) {
+        for (const debit of plan.debits) {
+          bag.remove(debit.materialId, debit.amount)
+        }
+        if (plan.change !== undefined) {
+          const changeMaterial = this.deps.materialRegistry.get(plan.change.materialId)
+          this.deps.materialBag.add(changeMaterial, plan.change.amount)
+        }
+      }
+      return consumed
+    }
 
     if (consumed > 0) {
       bag.remove(chapter.currency.id, consumed)
@@ -480,7 +528,7 @@ export class GameManagerRealmAdvanceOps {
     return consumed
   }
 
-  private bodyChapterBag(currency: BodyChapterCurrency): { getAmount(id: string): number; remove(id: string, amount: number): boolean } {
+  private bodyChapterBag(currency: BodyChapterCurrency): { getAmount(id: string): number; has(id: string, amount: number): boolean; remove(id: string, amount: number): boolean } {
     return currency.bag === 'pill' ? this.deps.pillBag : this.deps.materialBag
   }
 
