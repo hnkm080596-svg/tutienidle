@@ -4,6 +4,8 @@ import { materials } from '../../data/materials/materials'
 import { pills } from '../../data/pill/pills'
 import { BODY_REFINEMENT_TIERS, TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
 import { createDefaultPlayer } from '../player/Player'
+import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
+import type { GameSave } from '../../services/save/SaveSystem'
 import { GameManager } from './GameManager'
 
 // M-QI-07 (QI-D4) - the real production invest seam: GameManager's
@@ -53,5 +55,74 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter - physique transform', ()
     expect(manager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')).toBe(0)
     expect(manager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(bagBefore)
     expect(player.physiqueGrade).toBe('bao')
+  })
+})
+
+// M-F-BODY-CORE - the restore contract through the REAL session-load
+// entry point: GameManager.saveOps.restoreFromSave runs the body
+// preflight (assertBodyProgressionIntegrity) before any owner mutation.
+// The persisted physiqueGrade is authoritative: an advanced grade
+// restores unchanged; a behind-grade torn state is REJECTED and never
+// auto-advanced by the restore path.
+describe('GameManager.saveOps.restoreFromSave - physique restore contract', () => {
+  function managerWithCatalogs(): GameManager {
+    const manager = new GameManager()
+    manager.catalogOps.registerMaterials(materials)
+    manager.catalogOps.registerPills(pills)
+    return manager
+  }
+
+  function baseSave(player: ReturnType<typeof createDefaultPlayer>): GameSave {
+    return {
+      version: CURRENT_SAVE_VERSION,
+      player,
+      techniques: [],
+      skills: [],
+      materials: [],
+      equipment: [],
+      equipmentSlots: [],
+      pills: [],
+      talismans: [],
+      formations: [],
+      buildings: [],
+      quests: { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
+      productionSites: [],
+    }
+  }
+
+  it('a completed chapter + persisted advanced grade restores unchanged', () => {
+    const manager = managerWithCatalogs()
+    const live = createDefaultPlayer()
+    manager.setActivePlayer(live)
+
+    const saved = createDefaultPlayer()
+    saved.realmId = 'qi_refining'
+    saved.physiqueGrade = 'bao'
+    saved.bodyProgression.body_refinement.completedTiers = 6
+    const save = baseSave(saved)
+
+    expect(() => manager.saveOps.restoreFromSave(save)).not.toThrow()
+    // The persisted grade is restored as-is - never re-derived or
+    // re-applied by the restore path.
+    expect(save.player.physiqueGrade).toBe('bao')
+  })
+
+  it('a completed chapter + behind-grade save is rejected before any owner mutation', () => {
+    const manager = managerWithCatalogs()
+    const live = createDefaultPlayer()
+    manager.setActivePlayer(live)
+    manager.materialBag.add(manager.materialRegistry.get(TINH_HOA_PHAM_THE_MATERIAL_ID), 5)
+
+    const saved = createDefaultPlayer()
+    saved.realmId = 'qi_refining'
+    saved.bodyProgression.body_refinement.completedTiers = 6
+    // physiqueGrade stays 'pham' - torn: no recompute on restore.
+    const save = baseSave(saved)
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/physique/i)
+    // Rejection heals nothing: the payload is not auto-advanced and the
+    // live state is untouched (preflight runs before any mutation).
+    expect(save.player.physiqueGrade).toBe('pham')
+    expect(manager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(5)
   })
 })
