@@ -101,17 +101,22 @@ talentIds:['hap_linh'], attributes:{strength:2,vitality:3}}` — the M-C
 PINNED profile; grade-leg fixtures use the committed seeded-state
 pattern instead).
 
-**Leg order (explicit — C2C-P2/M1):** A → B → **E.1** (floor-1 first
-clear at TC L1 — E owns ALL first-clear/unlock observations) → **D.1
-+ D.2** (body_refinement completion + meridian 9/9 at TC L1 — post-LQ
-pace gates lifted, no level gating blocks them) → **C** (interleaved
-realm-level + zhou_tian ladder — investable only once D's
-prerequisites complete; honest Pháp farming rides the ALREADY-cleared
-floor_1, C owns no stage-clear asserts) with **E.2** floors 2→10
-interleaved at each level gate → F → G → H → I → J → K → L.
-D.3 is a coverage pointer only — the prerequisite rejections are
-asserted in Leg H (at TC L1 between D.1 and D.2, and pre-TC at the
-seeded state); it asserts nothing itself.
+**Leg order (explicit — C2C-P2/M1/r86):** A → B → **E.1** (floor-1
+first clear at TC L1 — E owns ALL first-clear/unlock observations) →
+**D.1 + D.2** (body_refinement completion + meridian 9/9 at TC L1 —
+post-LQ pace gates lifted, no level gating blocks them) → **C + E.2
+INTERLEAVED** (the level/zhou_tian ladder with floors 2→10 clearing
+at each level gate; honest Pháp farming rides the ALREADY-cleared
+floor_1 — C owns no stage-clear asserts) — **G's checkpoint executes
+INSIDE this interleave at the pinned midpoint (TC L9, circulation =
+180 exactly, floors 1–5 cleared, gift claimed, entitlement resolved)
+and the ordered journey CONTINUES on the restored session** → F → I
+→ J → K → L.
+Two aggregation sections assert nothing themselves: **D.3** (coverage
+pointer — prerequisite rejections execute inline at the D.1→D.2
+boundary and at Leg A's seeded state) and **H** (ownership map —
+each listed rejection executes INLINE at the point its precondition
+exists; there is no separate "H pass" against a terminal state).
 
 **Leg A — LQ-side state to admission (documented fixture, NOT a
 replay):** the committed fixtures prove honest LQ completion is not
@@ -202,13 +207,13 @@ C's ladder):
    still refuses invest before body_refinement is complete (assert 0
    + no debit).
 3. `zhou_tian` — coverage pointer only (asserts nothing itself):
-   the prerequisite rejection contract is asserted in Leg H —
-   `investBodyChapter('zhou_tian')` → 0 + no debit while meridian is
-   incomplete (exercised at TC L1 between D.1 and D.2) and → 0 at the
-   seeded pre-TC state (capacity 0 + chain lock; capacity status
-   reads 0). All circulation/investment coverage rides Leg C's
-   interleaved ladder (asserting it only at L18 makes capacity growth
-   unobservable).
+   the prerequisite rejections execute INLINE — `investBodyChapter
+   ('zhou_tian')` → 0 + no debit while meridian is incomplete (at
+   the D.1→D.2 boundary) and → 0 at the seeded pre-TC state (during
+   Leg A; capacity 0 + chain lock, capacity status reads 0) — both
+   ownership-mapped in Leg H. All circulation/investment coverage
+   rides Leg C's interleaved ladder (asserting it only at L18 makes
+   capacity growth unobservable).
 
 **Leg E — stage progression + clears (first-clear ownership explicit
 — C2C-M1):**
@@ -236,13 +241,15 @@ artifact-domain unlock state asserted against the value of
 `ARTIFACT_UNLOCK_REALM_ID` on the merged base (M-F-ARTIFACT-DEFER may
 move it; the leg reads the constant, not a literal).
 
-**Leg G — mid-chapter save/restore checkpoint:** mid-TC state
-(post-initiation, partial zhou_tian circulation, partial floor clears,
-gift claimed, entitlement resolved) → `buildGameSave` → restore via
-`restoreCheckpoint(save, freshOwner)` on a SECOND `EarlyGameSession`
-(fresh catalog-registered manager; real `restoreGameSession`;
-`vi.setSystemTime` pins `Date.now` so offline=0) → persisted-field
-parity: every journey-visible persisted field equals the checkpoint —
+**Leg G — mid-chapter save/restore checkpoint (pinned midpoint INSIDE
+the C/E.2 interleave — C2C-r86-M2):** the checkpoint is taken while
+the journey is genuinely mid-chapter — at **TC L9, circulation = 180
+exactly (Tiểu threshold reached, 180 remaining), floors 1–5 cleared
+(boss not yet attempted), gift claimed, entitlement resolved** —
+`buildGameSave` → restore via `restoreCheckpoint(save, freshOwner)`
+on a SECOND `EarlyGameSession` (fresh catalog-registered manager;
+real `restoreGameSession`; `vi.setSystemTime` pins `Date.now` so
+offline=0) → persisted-field parity: every journey-visible persisted field equals the checkpoint —
 `bodyProgression` (tiers + `openedIds` + `circulation`), `artifact`,
 `companionGifts`, `pendingTalentEntitlement` (undefined after resolve),
 `technique.gradeHistory`/`grade`/`rank`, `physiqueGrade`,
@@ -256,26 +263,39 @@ gate A13) — transient `tribulationState` excluded per the documented
 M-C exclusion →
 post-restore continuation runs a MANAGER-BACKED action
 (`runStage` victory + resumed `investBodyChapter`), not only a raw
-tick. Boundary case: a save carrying `{zhou_tian progressed, meridian
-incomplete}` is REJECTED at the restore preflight (C2C-64 coherence —
-real `assertBodyProgressionIntegrity` path, not a mock).
+tick. **The ordered journey then CONTINUES on the restored
+session** (L9→L18, floors 6→10, legs F/I/J ride the restored state —
+parity is proven before resumption, so the restore IS the journey,
+not a side artifact). Boundary case: a save carrying `{zhou_tian
+progressed, meridian incomplete}` is REJECTED at the restore preflight
+(C2C-64 coherence — real `assertBodyProgressionIntegrity` path, not
+a mock).
 
-**Leg H — boundary/adversarial rejects** (journey-narrative, all
-asserted state-unchanged):
+**Leg H — boundary/adversarial rejects (ownership map — C2C-r86-M1):
+NO separate pass exists; each rejection executes INLINE at the point
+its precondition exists on the ordered journey. This section is the
+ownership map — every item names WHERE it runs (all asserted
+state-unchanged):**
 - `runTribulation('foundation_establishment')` below L12 or without
-  the abyssal clear → `'refused'`, no committed outcome.
+  the abyssal clear → `'refused'`, no committed outcome — exercised
+  at Leg A's seeded state before the admission rows are met.
 - `runTribulation('golden_core')` at TC → `'refused'` (closed
-  transition — same leg as F's seam asserts).
+  transition — exercised during Leg F).
 - `investBodyChapter('meridian')` before body_refinement complete →
-  0, bags unchanged; `investBodyChapter('zhou_tian')` before meridian
-  complete → 0 (exercised at TC L1 between D.1 and D.2 — the D.3
-  rejection contract).
+  0, bags unchanged — exercised at TC L1 before D.1's final tier
+  completes.
+- `investBodyChapter('zhou_tian')` before meridian complete → 0 —
+  exercised at the D.1→D.2 boundary (the D.3 rejection contract).
 - `investBodyChapter('zhou_tian')` at the seeded pre-TC state → 0
-  (capacity 0 + chain lock; capacity status read asserts 0).
-- `runStage` on a level-gated floor → `'locked'`.
+  (capacity 0 + chain lock; capacity status read asserts 0) —
+  exercised during Leg A.
+- `runStage` on a level-gated floor → `'locked'` — exercised during
+  E.2's level gates.
 - `resolveTalentEntitlement` with an off-pool/illegal decision →
-  `false`, record retained (uncancellable by construction).
-- `startAutoFarm` on a non-perfect stage → `false`.
+  `false`, record retained (uncancellable by construction) —
+  exercised during Leg B phase (a) before the legal decision.
+- `startAutoFarm` on a non-perfect stage → `false` — exercised
+  during E/I.
 - Post-state validity: after every rejected leg the session still
   completes the happy-path leg (atomicity — a reject leaves no
   half-transition).
@@ -484,7 +504,7 @@ Open items for C2C:
 | A3 | Body chapters complete in authored order through `investBodyChapter`: sequential rejections asserted first (0 + no debit); refinement deltas asserted on the assembly/collector channel with intrinsic `baseStats` proven unchanged; meridian strict-prefix to 9/9 with `bat-mach:*` emission on the modifier channel only; zhou_tian capacity coupling observed through the level ladder with pinned boundary observations (≥1 below-cap clamp, Tiểu 180 at L9, Đại 360 at L18) and exact Pháp debit; physique transform pham→bao at 6/6. |
 | A4 | Stage legs: floor-1 first clear + unlock observation owned by E.1 before the ladder (C farms the already-cleared floor, no first-clear conflict); floors 2→10 sequential clears via `runStage` on the real zone chain; level-gate `locked` asserts; `completedStageIds` ordered coverage; perfect-clear record + `startAutoFarm` unlock on at least one floor. |
 | A5 | Ceiling boundary: at TC, `getBreakthroughRequirements` `[]`, `canTriggerBreakthrough` false, `runTribulation('golden_core')` `'refused'`; companion pull pool closed; state byte-untouched post-refusal. |
-| A6 | Checkpoint leg: `buildGameSave`→`restoreGameSession` round-trip through `restoreCheckpoint` on a fresh session+owner; persisted-field parity on all journey fields INCLUDING the pending siblings' landed persisted fields (`bodyPerfection.*`, artifact, hidden-material — resolved per A13); transient tribulation excluded per documented contract; post-restore manager-backed action succeeds; incoherent zhou_tian/meridian save rejected at preflight. |
+| A6 | Checkpoint leg: checkpoint taken at the pinned midpoint INSIDE the C/E.2 interleave (TC L9, circulation 180, floors 1–5 cleared) — genuinely mid-chapter; `buildGameSave`→`restoreGameSession` round-trip through `restoreCheckpoint` on a fresh session+owner; persisted-field parity on all journey fields INCLUDING the pending siblings' landed persisted fields (`bodyPerfection.*`, artifact, hidden-material — resolved per A13); transient tribulation excluded per documented contract; the ordered journey CONTINUES on the restored session (post-restore manager-backed actions); incoherent zhou_tian/meridian save rejected at preflight. |
 | A7 | Determinism: two same-seed runs → identical normalized snapshots (extended surface). |
 | A8 | Sweep notes doc committed with the full audit table (dead authority / orphan seams / duplicated authorities / naming-doc drift / persisted drift), every finding classified (in-mission fix vs pre-existing report vs authored blank). |
 | A9 | Docs synced: roadmap M-QI + M-F wave ledgers, mission-graph rows updated incl. M-QI-12 disposition, naming-conventions amended iff warranted. |
