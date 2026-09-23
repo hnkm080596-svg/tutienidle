@@ -109,9 +109,10 @@ INTERLEAVED** (the level/zhou_tian ladder with floors 2→10 clearing
 at each level gate; honest Pháp farming rides the ALREADY-cleared
 floor_1 — C owns no stage-clear asserts) — **G's checkpoint executes
 INSIDE this interleave at the pinned midpoint (TC L9, circulation =
-180 exactly, floors 1–5 cleared, gift claimed, entitlement resolved)
-and the ordered journey CONTINUES on the restored session** → F → I
-→ J → K → L.
+180 exactly, floors 1–9 cleared — everything L9's gates permit;
+floor_10 boss not yet attempted — gift claimed, entitlement
+resolved) and the ordered journey CONTINUES on the restored
+session** → F → I → J → K → L.
 Two aggregation sections assert nothing themselves: **D.3** (coverage
 pointer — prerequisite rejections execute inline at the D.1→D.2
 boundary and at Leg A's seeded state) and **H** (ownership map —
@@ -244,8 +245,10 @@ move it; the leg reads the constant, not a literal).
 **Leg G — mid-chapter save/restore checkpoint (pinned midpoint INSIDE
 the C/E.2 interleave — C2C-r86-M2):** the checkpoint is taken while
 the journey is genuinely mid-chapter — at **TC L9, circulation = 180
-exactly (Tiểu threshold reached, 180 remaining), floors 1–5 cleared
-(boss not yet attempted), gift claimed, entitlement resolved** —
+exactly (Tiểu threshold reached, 180 remaining), floors 1–9 cleared
+— the full prefix L9's level gates permit (floor_10 requires L18,
+so the boss is not yet attempted), gift claimed, entitlement
+resolved** —
 `buildGameSave` → restore via `restoreCheckpoint(save, freshOwner)`
 on a SECOND `EarlyGameSession` (fresh catalog-registered manager;
 real `restoreGameSession`; `vi.setSystemTime` pins `Date.now` so
@@ -264,7 +267,7 @@ M-C exclusion →
 post-restore continuation runs a MANAGER-BACKED action
 (`runStage` victory + resumed `investBodyChapter`), not only a raw
 tick. **The ordered journey then CONTINUES on the restored
-session** (L9→L18, floors 6→10, legs F/I/J ride the restored state —
+session** (L9→L18, floor_10 boss, legs F/I/J ride the restored state —
 parity is proven before resumption, so the restore IS the journey,
 not a side artifact). Boundary case: a save carrying `{zhou_tian
 progressed, meridian incomplete}` is REJECTED at the restore preflight
@@ -504,7 +507,7 @@ Open items for C2C:
 | A3 | Body chapters complete in authored order through `investBodyChapter`: sequential rejections asserted first (0 + no debit); refinement deltas asserted on the assembly/collector channel with intrinsic `baseStats` proven unchanged; meridian strict-prefix to 9/9 with `bat-mach:*` emission on the modifier channel only; zhou_tian capacity coupling observed through the level ladder with pinned boundary observations (≥1 below-cap clamp, Tiểu 180 at L9, Đại 360 at L18) and exact Pháp debit; physique transform pham→bao at 6/6. |
 | A4 | Stage legs: floor-1 first clear + unlock observation owned by E.1 before the ladder (C farms the already-cleared floor, no first-clear conflict); floors 2→10 sequential clears via `runStage` on the real zone chain; level-gate `locked` asserts; `completedStageIds` ordered coverage; perfect-clear record + `startAutoFarm` unlock on at least one floor. |
 | A5 | Ceiling boundary: at TC, `getBreakthroughRequirements` `[]`, `canTriggerBreakthrough` false, `runTribulation('golden_core')` `'refused'`; companion pull pool closed; state byte-untouched post-refusal. |
-| A6 | Checkpoint leg: checkpoint taken at the pinned midpoint INSIDE the C/E.2 interleave (TC L9, circulation 180, floors 1–5 cleared) — genuinely mid-chapter; `buildGameSave`→`restoreGameSession` round-trip through `restoreCheckpoint` on a fresh session+owner; persisted-field parity on all journey fields INCLUDING the pending siblings' landed persisted fields (`bodyPerfection.*`, artifact, hidden-material — resolved per A13); transient tribulation excluded per documented contract; the ordered journey CONTINUES on the restored session (post-restore manager-backed actions); incoherent zhou_tian/meridian save rejected at preflight. |
+| A6 | Checkpoint leg: checkpoint taken at the pinned midpoint INSIDE the C/E.2 interleave (TC L9, circulation 180, floors 1–9 cleared — the full prefix L9 permits, boss pending) — genuinely mid-chapter; `buildGameSave`→`restoreGameSession` round-trip through `restoreCheckpoint` on a fresh session+owner; persisted-field parity on all journey fields INCLUDING the pending siblings' landed persisted fields (`bodyPerfection.*`, artifact, hidden-material — resolved per A13); transient tribulation excluded per documented contract; the ordered journey CONTINUES on the restored session (post-restore manager-backed actions); incoherent zhou_tian/meridian save rejected at preflight. |
 | A7 | Determinism: two same-seed runs → identical normalized snapshots (extended surface). |
 | A8 | Sweep notes doc committed with the full audit table (dead authority / orphan seams / duplicated authorities / naming-doc drift / persisted drift), every finding classified (in-mission fix vs pre-existing report vs authored blank). |
 | A9 | Docs synced: roadmap M-QI + M-F wave ledgers, mission-graph rows updated incl. M-QI-12 disposition, naming-conventions amended iff warranted. |
