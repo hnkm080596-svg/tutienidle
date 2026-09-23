@@ -163,8 +163,12 @@ uses for `TribulationChapters`).
   refresh the header comment (resolves the self-referencing
   M-F-ARTIFACT-DEFER note) and the `ARTIFACT_MAX_DESIGNED_LEVEL`
   comment (envelope stays 18; domain deferred).
-- `PhapTuPath.ts`: move the `artifactId` override key to
-  `golden_core`; refresh the kit comment (award at KD, not TC).
+- `PhapTuPath.ts`: move the `artifactId` override to a computed
+  `[ARTIFACT_UNLOCK_REALM_ID]` key (C2C-56 — no second authored
+  realm literal for the artifact domain); refresh the kit comment
+  (award at the domain unlock realm, not TC). Census/integrity pin
+  asserts the unique artifact-bearing record is keyed by the
+  constant.
 - `NguHanhChau.ts`: `unlockRealmId: ARTIFACT_UNLOCK_REALM_ID`
   (constant reference, dormant field —
   authored truth; note in commit that it has no consumers).

@@ -1,9 +1,8 @@
 # M-F-ARTIFACT-DEFER — Artifact deferral to Kim Đan+ — Spec
 
-Status: v1.2 — draft (worker-authored, amended after C2C spec
-review round 52: stone tag authored through
-ARTIFACT_UNLOCK_REALM_ID + cross-field integrity pin — pending
-re-review)
+Status: v1.3 — draft (worker-authored, amended after C2C spec
+review round 56: spell_pathway reward override keyed by
+ARTIFACT_UNLOCK_REALM_ID (computed key) — pending re-review)
 Depends on: M-F-CEILING release-policy authority (merged on
 `p7/truc-co` — `core/realm/ReleasePolicy.ts` owns
 `progressionCeilingRealmId`, `isRealmAvailable`,
@@ -171,10 +170,16 @@ New:
 ### D1 — grant + awaken → KD+
 
 - `core/phap-tu/PhapTuPath.ts`: realmRewards override key moves to
-  `golden_core` (`{ artifactId: 'ngu_hanh_chau' }`); the merged
-  record shares the realm entry with the canonical
-  `passive_kim_dan_chi_quang` ladder passive. `ngo_dao` keeps its
-  empty override (no artifact authored).
+  the shared declaration — `[ARTIFACT_UNLOCK_REALM_ID]` computed
+  key carrying `{ artifactId: 'ngu_hanh_chau' }` (C2C-56: the
+  realm-entry grant authority must not re-author the realm
+  literal; a duplicated key could drift from the domain unlock on
+  a future retarget). The merged record shares the realm entry
+  with the canonical `passive_kim_dan_chi_quang` ladder passive.
+  `ngo_dao` keeps its empty override (no artifact authored).
+  Integrity pin in the census: the unique `spell_pathway` reward
+  record containing `artifactId` is keyed by
+  `ARTIFACT_UNLOCK_REALM_ID`.
 - `core/artifact/ArtifactProgression.ts`:
   `ARTIFACT_UNLOCK_REALM_ID = 'golden_core'` — single-constant move
   retargets the awaken gate, EXP feed, and wheel predicate; the
@@ -401,7 +406,10 @@ unwired), quest/alchemy/shop channels (stone has none — census).
   `material('doan_bao_thach').domainUnlockRealmId` references the
   constant (import, not literal) and the census test pins
   `=== ARTIFACT_UNLOCK_REALM_ID`; `NguHanhChau.unlockRealmId`
-  likewise references the constant rather than a literal.
+  likewise references the constant; the `spell_pathway`
+  realmRewards override carries the artifact record under a
+  computed `[ARTIFACT_UNLOCK_REALM_ID]` key with an integrity pin
+  asserting the unique artifact-bearing record sits at that key.
 
 ## 8. Out of scope (restated)
 
@@ -416,7 +424,7 @@ combat runtime, removal of the TC drop-table row.
 
 | # | Acceptance |
 |---|---|
-| A1 | `spell_pathway` realmRewards declares `artifactId: 'ngu_hanh_chau'` only at `golden_core`; entering TC delivers no artifact (grant fails closed on realm availability); under an open window, KD entry delivers it. |
+| A1 | `spell_pathway` realmRewards declares `artifactId: 'ngu_hanh_chau'` only under the `ARTIFACT_UNLOCK_REALM_ID` key (computed key + integrity pin asserting the RELATION, not the literal); entering TC delivers no artifact (grant fails closed on realm availability); under an open window, KD entry delivers it. |
 | A2 | `isArtifactDomainUnlocked` returns false for `foundation_establishment` and below under real policy; normalize never creates an artifact at TC and never strips a persisted one. |
 | A3 | `doan_bao_thach` carries `domainUnlockRealmId` referenced to `ARTIFACT_UNLOCK_REALM_ID` (integrity test pins `===`) and is listed in the domain-scoped census; `isDomainScopedAcquisitionEnabled` composes window+reach — closed window OR below-KD player → no delivery on the real TC row; open-window KD player on that same row → delivered; the TC-floor table row is retained. |
 | A4 | EXP feed, `advanceArtifactRealmLevel`, `setArtifactPath`, `tryUpgradeArtifactGrade` each evaluate `isArtifactDomainUnlocked(player.realmId)` — all no-op at TC under real policy, all functional at KD under an open window. |
