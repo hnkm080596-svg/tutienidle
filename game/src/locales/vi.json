@@ -116,7 +116,7 @@
       "respec": {
         "button": "Đặt Lại",
         "title": "Đặt Lại Cây Node",
-        "body": "Đặt lại toàn bộ đầu tư node? Lấy lại {regain} Cảm Ngộ — {count} node về 0. Miễn phí trong thời gian Beta.",
+        "body": "Đặt lại toàn bộ đầu tư node? Lấy lại {regain} Cảm Ngộ — {count} node và core về 0. Miễn phí trong thời gian Beta.",
         "confirm": "Đặt Lại"
       },
       "branchLabels": {

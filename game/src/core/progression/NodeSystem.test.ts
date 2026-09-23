@@ -691,6 +691,24 @@ describe('respecNodeTree', () => {
     expect(player.skillInsight).toBe(before + 2)
   })
 
+  it('scoped respec at a preserved root keeps the root but resets its descendants', () => {
+    const { registry, ...nodes } = respecRegistry()
+    const player = playerWith({ skillInsight: 100 })
+
+    invest(player, nodes)
+
+    const refund = respecNodeTree(player, registry, {
+      rootId: 'respec_root',
+      preserveIds: ['respec_root'],
+    })
+
+    // power (5) + child (2) reset; the preserved root and the unrelated
+    // otherRoot both survive.
+    expect(refund).toBe(7)
+    expect(player.nodeLevels).toEqual({ respec_root: 1, other_root: 1 })
+    expect(player.purchasedNodeIds).toEqual(['respec_root', 'other_root'])
+  })
+
   it('branch scope at the tree root is equivalent to whole-tree scope', () => {
     const { registry, root, power, child } = respecRegistry()
     const singleRoot = new NodeRegistry()
@@ -750,9 +768,55 @@ describe('respecNodeTree', () => {
     expect(getNodeLevel(player, 'test_power')).toBe(0)
     expect(getNodeLevel(player, 'respec_child')).toBe(0)
 
-    // A scoped reset aimed AT a preserved node is a no-op.
+    // A scoped reset at the preserved root refunds 0 - its descendants
+    // are already reset, and the marker itself is never revoked.
     expect(respecNodeTree(player, registry, { rootId: 'respec_root', preserveIds: ['respec_root'] })).toBe(0)
     expect(getNodeLevel(player, 'respec_root')).toBe(1)
+  })
+
+  it('atomic — a broken core tie fails closed with zero state change', () => {
+    const { registry: inner, ...nodes } = respecRegistry()
+
+    const granter = minorNode({
+      id: 'broken_granter',
+      effect: { grantsSkillCoreIds: ['ghost_skill'] },
+    })
+    const ghostCore = minorNode({
+      id: skillCoreNodeId('ghost_skill'),
+      levelsSkillId: 'ghost_skill',
+      insightCost: 0,
+    })
+
+    inner.register(granter)
+    inner.register(ghostCore)
+
+    // Corrupt tie: the core resolves in `has` but `get` throws. Without
+    // the clone preflight the revocation would delete granter's record
+    // and then die mid-transaction on the tied core.
+    const registry = {
+      getAll: () => inner.getAll(),
+      has: (id: string) => inner.has(id),
+      get: (id: string) => {
+        if (id === ghostCore.id) {
+          throw new Error('corrupt core entry')
+        }
+        return inner.get(id)
+      },
+    }
+
+    const player = playerWith({ skillInsight: 100 })
+
+    expect(purchaseNode(player, nodes.root)).toBe(true)
+    expect(purchaseNode(player, nodes.otherRoot)).toBe(true)
+    expect(purchaseNode(player, granter)).toBe(true)
+
+    // Simulate the granted core the tie would revoke.
+    player.nodeLevels[ghostCore.id] = 1
+
+    const before = structuredClone(player)
+
+    expect(() => respecNodeTree(player, registry)).toThrow('corrupt core entry')
+    expect(player).toEqual(before)
   })
 
   it('scoped respec on an unregistered root is a no-op', () => {
@@ -812,6 +876,39 @@ describe('previewNodeRespec', () => {
     const refund = respecNodeTree(player, registry)
 
     expect(refund).toBe(preview.refund)
+  })
+
+  it('count covers granted cores revoked by the cascade, not only purchased nodes', () => {
+    const granter = minorNode({
+      id: 'prev_granter',
+      effect: { grantsSkillCoreIds: ['prev_skill'] },
+    })
+    const core = minorNode({
+      id: skillCoreNodeId('prev_skill'),
+      levelsSkillId: 'prev_skill',
+      insightCost: 0,
+    })
+
+    const registry = new NodeRegistry()
+
+    for (const node of [granter, core]) {
+      registry.register(node)
+    }
+
+    const player = playerWith({ skillInsight: 50 })
+
+    expect(purchaseNode(player, granter)).toBe(true)
+    grantSkillCore(player, core)
+
+    const preview = previewNodeRespec(player, registry)
+
+    // C2C round-8 pin: the confirm count is ONE number over every
+    // ownership record reset - the purchased node AND its revoked
+    // granted core. Refund stays strictly actually-paid.
+    expect(preview.resetNodeIds.sort()).toEqual([core.id, granter.id].sort())
+    expect(preview.resetCount).toBe(2)
+    expect(preview.refund).toBe(getNextLevelCost(granter, 0))
+    expect(getNodeLevel(player, core.id)).toBe(1)
   })
 
   it('accepts a reactive (proxied) player — the UI path hands in Pinia state', () => {

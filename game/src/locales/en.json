@@ -116,7 +116,7 @@
       "respec": {
         "button": "Respec",
         "title": "Respec Node Tree",
-        "body": "Reset all node investment? Regain {regain} Insight — {count} nodes reset to 0. Free while in Beta.",
+        "body": "Reset all node investment? Regain {regain} Insight — {count} nodes and cores reset to 0. Free while in Beta.",
         "confirm": "Respec"
       },
       "branchLabels": {

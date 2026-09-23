@@ -146,6 +146,33 @@ describe('progressionOps.respecNodeTree', () => {
     expect(player.nodeLevels[growth.id]).toBeUndefined()
   })
 
+  it('branch scope at a preserved element root resets its descendants but keeps the root', () => {
+    const { gameManager, player } = setup(PHAP_TU_NODES)
+
+    const rootId = PHAP_TU_ELEMENT_ROOT_IDS.fire
+    const growth = PHAP_TU_NODES.find(
+      node =>
+        (node.maxLevel ?? 1) > 1 &&
+        (node.prerequisites ?? []).some(
+          prerequisite => prerequisite.kind === 'node' && prerequisite.nodeId === rootId,
+        ),
+    )!
+
+    player.spellPath.element = 'fire'
+    player.spellPath.route = 'dot'
+    own(player, { [rootId]: 1, [growth.id]: 2 })
+    player.skillInsight = 100
+
+    const refund = gameManager.progressionOps.respecNodeTree(player, { rootId })
+
+    // Preservation exempts the commit marker from revocation, not from
+    // seeding its subtree: the root stays, the investment below resets.
+    expect(refund).toBe(getNextLevelCost(growth, 0) + getNextLevelCost(growth, 1))
+    expect(player.nodeLevels[rootId]).toBe(1)
+    expect(player.purchasedNodeIds).toContain(rootId)
+    expect(player.nodeLevels[growth.id]).toBeUndefined()
+  })
+
   it('branch scope resets only the subtree rooted at scope.rootId', () => {
     const { gameManager, player } = setup()
 

@@ -596,13 +596,52 @@ function cascadeRevokeOrphanedNodes(
 }
 
 /**
+ * Nodes that sit under `rootId` through 'node'-kind prerequisites - the
+ * same set the orphan cascade would sweep if the root itself were
+ * revoked. Used when a preserved root still seeds a scoped reset.
+ */
+function subtreeDescendants(
+  rootId: string,
+  registry: { getAll(): ProgressionNode[]; get(id: string): ProgressionNode },
+): ProgressionNode[] {
+  const subtree = new Set([rootId])
+  let changed = true
+
+  while (changed) {
+    changed = false
+
+    for (const node of registry.getAll()) {
+      if (subtree.has(node.id)) {
+        continue
+      }
+
+      const descends = (node.prerequisites ?? []).some(
+        prerequisite => prerequisite.kind === 'node' && subtree.has(prerequisite.nodeId),
+      )
+
+      if (descends) {
+        subtree.add(node.id)
+        changed = true
+      }
+    }
+  }
+
+  subtree.delete(rootId)
+
+  return [...subtree].map(id => registry.get(id))
+}
+
+/**
  * Scope of a player respec (M-F-RESPEC, ruling §14). `rootId` scopes the
  * reset to the subtree rooted at that node - the node itself plus every
  * descendant orphaned by its removal; omitting it resets the whole
  * NodeTree (the branch defaults to the whole NodeTree root). `preserveIds`
  * exempts owned ids from any reset - commitment markers the player cannot
- * re-acquire (e.g. Phap Tu element roots) belong here; a scoped reset
- * aimed at a preserved id is a no-op.
+ * re-acquire (e.g. Phap Tu element roots) belong here. Preservation
+ * excludes a node from REVOCATION, not from seeding: a scoped reset
+ * aimed at a preserved root keeps the root but still resets its owned
+ * descendants - the un-rebuyable commit marker is an orchestration
+ * concern, while descendant investment stays ordinary tree state.
  */
 export interface NodeRespecScope {
   rootId?: string
@@ -617,8 +656,10 @@ export interface NodeRespecScope {
  * descendants. Whole-tree scope covers every non-core node - skill cores
  * (levelsSkillId) are not tree content and only revoke through
  * grantsSkillCoreIds ties, so a learned skill can never be stranded at
- * level 0. Deterministic, idempotent (a repeat call refunds 0) and
- * save-safe: only canonical node fields + skillInsight are written.
+ * level 0. A branch scope targets the subtree root plus whatever it
+ * orphans; when the root itself is preserved the reset still sweeps its
+ * owned descendants. Deterministic, idempotent (a repeat call refunds 0)
+ * and save-safe: only canonical node fields + skillInsight are written.
  */
 export function respecNodeTree(
   player: PlayerData,
@@ -632,8 +673,14 @@ export function respecNodeTree(
   let targets: ProgressionNode[] = []
 
   if (scope?.rootId !== undefined) {
-    if (registry.has(scope.rootId) && !preservedIds.has(scope.rootId)) {
-      targets = [registry.get(scope.rootId)]
+    if (registry.has(scope.rootId)) {
+      targets = preservedIds.has(scope.rootId)
+        ? // A preserved root is exempt from revocation but still seeds
+          // its subtree - reset the owned descendants below it instead.
+          subtreeDescendants(scope.rootId, registry).filter(
+            node => !preservedIds.has(node.id),
+          )
+        : [registry.get(scope.rootId)]
     }
   } else {
     targets = registry
@@ -645,6 +692,30 @@ export function respecNodeTree(
     return 0
   }
 
+  // Atomicity (C2C round-8 pin): the mutation body mutates `player`
+  // node by node, so the identical body is dry-run on a detached JSON
+  // clone first - any throw (broken dependency/core tie, corrupt record)
+  // fails closed here, BEFORE the first real mutation. The player object
+  // can never be left half-respecced.
+  respecApply(JSON.parse(JSON.stringify(player)) as PlayerData, targets, registry, preservedIds)
+
+  return respecApply(player, targets, registry, preservedIds)
+}
+
+/**
+ * The respec mutation body shared by the real call and its clone
+ * preflight: revoke every target, cascade-revoke orphans, then a single
+ * Insight write once every revocation has settled.
+ */
+function respecApply(
+  player: PlayerData,
+
+  targets: ProgressionNode[],
+
+  registry: { getAll(): ProgressionNode[]; has(id: string): boolean; get(id: string): ProgressionNode },
+
+  preservedIds: ReadonlySet<string>,
+): number {
   let refund = 0
 
   for (const node of targets) {
@@ -653,7 +724,6 @@ export function respecNodeTree(
 
   refund += cascadeRevokeOrphanedNodes(player, registry, preservedIds)
 
-  // Single Insight write, after every revocation settled (atomic).
   player.skillInsight += refund
 
   return refund
@@ -667,7 +737,9 @@ export function respecNodeTree(
 export interface NodeRespecPreview {
   /** Insight the commit would return (same actual-paid accounting). */
   refund: number
-  /** Node ids the reset would remove (targets + cascade + granted cores). */
+  /** Every ownership record the reset would remove: in-scope purchased
+   * nodes + cascade orphans + revoked granted cores (C2C round-8: the
+   * confirm dialog's count covers all of them as one number). */
   resetNodeIds: string[]
   resetCount: number
 }

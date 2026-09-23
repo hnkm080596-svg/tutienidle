@@ -11,11 +11,12 @@
 1. Refund == sum of actually-paid Insight for revoked levels (paidForNodeLevels − nodeFreePurchaseRecord); never exceeds, never double-counts.
 2. Idempotent: respec(respec(s)) ≡ respec(s); repeat call returns 0 with zero mutations.
 3. Save-safe: writes only canonical persisted fields (nodeLevels, purchasedNodeIds, nodeFreePurchaseRecord, skillInsight); a JSON serialize→restore finds no refund residue.
-4. Commit markers (Phap Tu element roots) are never revoked and never cascade-swept — a committed element can never be stranded un-rebuyable.
+4. Commit markers (Phap Tu element roots) are never revoked and never cascade-swept — a committed element can never be stranded un-rebuyable; preservation exempts a marker from revocation only, so a scoped reset at one still seeds its descendant subtree (C2C round-8 ownership boundary).
 5. Combat guard: rejected during an in-progress turn battle with no mutation (same invariant as switchRoute).
 6. Cascade: orphaned descendants revoked AND refunded; granted cores (M-QI-05) revoke only through grantsSkillCoreIds ties; non-grant cores and skill-axis investment untouched.
-7. Preview ≡ commit: the confirm dialog's refund/count is produced by the real transaction on a detached clone.
+7. Preview ≡ commit: the confirm dialog's refund/count is produced by the real transaction on a detached clone; the count is ONE number over every ownership record reset — purchased nodes + cascade orphans + revoked granted cores (C2C round-8 pin; the modal takes a single number, copy says "nodes and cores").
 8. Preview mutates nothing.
+9. Atomicity (C2C round-8 pin): the identical mutation body is dry-run end-to-end on a detached JSON clone before the first real mutation — any throw fails closed with zero state change.
 
 ## Attack operators applied
 
@@ -26,7 +27,7 @@
 - Combat race while dialog open: ops-layer null guard is authoritative; UI disable is advisory only — silent no-op on confirm is a degraded UX edge (Low), not a state defect.
 - Reactive-proxy inputs: structuredClone fails on Pinia proxies — found and fixed pre-QA (JSON round-trip; regression test added; live drive confirmed preview renders).
 - Persisted-state resurrection: all written fields are wholesale-replaced JSON scalars/maps — restore cannot resurrect deleted keys (R10 repeat-application machinery already covered by the save boundary suite; respec adds no persisted timer/counter slice).
-- Scoped respec aimed at a preserved/unregistered root: no-op, returns 0 — covered.
+- Scoped respec aimed at an unregistered root: no-op, returns 0 — covered. (Post-C2C: a preserved root is exempt from revocation but still seeds the reset of its owned descendants — `subtreeDescendants`; regression-tested at domain and ops level with a real Phap Tu element root.)
 - Scoped respec aimed at a core node id (API-only path, UI never passes rootId): revokes the core but refunds only upgrade levels (spentStart=1 treats level 1 as granted) — consistent with core semantics; UI unreachable (Low).
 
 ## Focused checks run
