@@ -270,11 +270,19 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
     expect(beyondCeiling.artifact).toBeUndefined()
     expect(isArtifactDomainUnlocked(beyondCeiling.realmId)).toBe(false)
 
+    // C2C-14: the OWNED beyond-ceiling case - a persisted artifact whose
+    // artifactId matches the path survives normalize with field-level
+    // clamps only (grade/level/exp never deleted or reset for being
+    // release-hidden).
     const persisted = spellPlayer('golden_core')
     persisted.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
+    persisted.artifact.grade = 'linh'
+    persisted.artifact.realmLevel = 4
     persisted.artifact.experience = 7
     normalizeArtifactProgress(persisted)
     expect(persisted.artifact?.artifactId).toBe('ngu_hanh_chau')
+    expect(persisted.artifact?.grade).toBe('linh')
+    expect(persisted.artifact?.realmLevel).toBe(4)
     expect(persisted.artifact?.experience).toBe(7)
   })
 
