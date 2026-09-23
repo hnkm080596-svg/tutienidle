@@ -261,7 +261,7 @@ defineExpose({ bootError })
 .phaser-canvas__boot-error {
   margin: 0;
   padding: 12px;
-  color: var(--paper-text-soft, #8a8a8a);
+  color: var(--sys-text-muted, var(--paper-text-soft, #8a8a8a));
   font-size: var(--text-sm, 0.85rem);
   text-align: center;
 }

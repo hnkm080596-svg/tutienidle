@@ -145,9 +145,9 @@ function reportAssetError(): void {
   right: 18%;
   top: 80%;
   bottom: 8%;
-  border: 2px solid color-mix(in srgb, var(--gold-500) 72%, transparent);
+  border: 2px solid color-mix(in srgb, var(--sys-accent, var(--gold-500)) 72%, transparent);
   border-radius: 50%;
-  box-shadow: 0 0 10px color-mix(in srgb, var(--gold-500) 35%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--sys-accent, var(--gold-500)) 35%, transparent);
   opacity: 0;
 }
 

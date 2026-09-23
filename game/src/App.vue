@@ -764,9 +764,9 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background: var(--paper-50);
-  font-family: var(--font-body);
-  color: var(--paper-text);
+  background: var(--sys-bg-0, var(--paper-50));
+  font-family: var(--sys-font-body, var(--font-body));
+  color: var(--sys-text, var(--paper-text));
 }
 
 .boot-error {
@@ -782,7 +782,7 @@ body {
   padding: 28px 32px;
   text-align: center;
   color: var(--sys-text, var(--paper-text));
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
 }
 .boot-error h1 {
   margin: 0 0 12px;
@@ -799,7 +799,7 @@ body {
   padding: 10px 16px;
   border: 1px solid var(--sys-accent, var(--paper-line));
   border-radius: 0;
-  background: color-mix(in srgb, var(--sys-accent, #b54432) 16%, var(--paper-100));
+  background: color-mix(in srgb, var(--sys-accent, #b54432) 16%, var(--sys-bg-1, var(--paper-100)));
   color: var(--sys-text, var(--paper-text));
   font-family: var(--sys-font-display, var(--font-body));
   letter-spacing: .06em;

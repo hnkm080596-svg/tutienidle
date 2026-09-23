@@ -333,7 +333,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
      the `variant` prop (SlotTypes.ts), not consumer CSS overrides. */
   background:
     var(--slot-bg-image, url('/assets/ui/Slot/inv-slot-backdrop.png')) center / cover no-repeat,
-    var(--surface-900);
+    var(--sys-bg-0, var(--surface-900));
   color: var(--sys-text, var(--text-primary));
   font-family: var(--sys-font-body, var(--font-body));
   font-size: var(--text-sm);
@@ -350,7 +350,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 .slot-view--filled {
   background:
     var(--slot-bg-image, url('/assets/ui/Slot/inv-slot-backdrop.png')) center / cover no-repeat,
-    var(--surface-900);
+    var(--sys-bg-0, var(--surface-900));
   border-color: var(--slot-rarity-color, var(--sys-line, var(--ink-line)));
   box-shadow: var(--slot-shadow), 0 0 8px var(--slot-rarity-color, transparent);
 }

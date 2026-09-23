@@ -96,7 +96,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--scrim-heavy);
+  background: var(--sys-veil, var(--scrim-heavy));
   cursor: pointer;
 }
 
@@ -108,20 +108,32 @@ onBeforeUnmount(() => {
 
 .world-announcement__title {
   margin: 0 0 16px;
-  font-family: var(--font-display);
+  font-family: var(--sys-font-display, var(--font-display));
   font-size: var(--text-display-lg);
   letter-spacing: 0.08em;
-  color: var(--gold-300);
-  text-shadow: 0 0 24px color-mix(in srgb, var(--gold-500) 50%, transparent);
+  color: var(--sys-accent, var(--gold-300));
+  text-shadow: 0 0 24px color-mix(in srgb, var(--sys-accent, var(--gold-500)) 50%, transparent);
+}
+
+/* M-UI-OVERHAUL: energy underline under the announcement title - the
+   'system transmission' marker line that fades at both ends. */
+.world-announcement__title::after {
+  content: '';
+  display: block;
+  width: min(320px, 60%);
+  height: 1px;
+  margin: 14px auto 0;
+  background: linear-gradient(90deg, transparent, var(--sys-accent, var(--gold-300)) 32%, var(--sys-accent, var(--gold-300)) 68%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--sys-accent, var(--gold-500)) 55%, transparent);
 }
 
 .world-announcement__body {
   margin: 0;
   min-height: 1.6em;
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
   font-size: var(--text-lg);
   line-height: 1.6;
-  color: var(--text-primary);
+  color: var(--sys-text, var(--text-primary));
   white-space: pre-line;
 }
 

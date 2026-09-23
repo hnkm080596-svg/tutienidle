@@ -89,6 +89,7 @@ const nextCapacity = computed(() => {
 
     <TabBar
       class="worker-lodge-panel__tabs"
+      variant="system"
       :tabs="visibleTabs.map((tab) => ({ id: tab.id, label: tab.label }))"
       :model-value="activeTab"
       @update:model-value="switchTab($event as TabId)"

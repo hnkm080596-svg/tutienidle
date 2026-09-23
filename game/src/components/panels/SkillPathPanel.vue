@@ -384,7 +384,7 @@ function close() {
 
 .skill-path-panel__points {
   font-size: var(--text-sm);
-  color: var(--gold-700);
+  color: var(--sys-warn, var(--gold-700));
 }
 
 .skill-path-panel__body {

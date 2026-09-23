@@ -66,7 +66,7 @@ const canAfford = computed(() =>
 }
 
 .artifact-grade .stat-row__value {
-  color: var(--gold-700);
+  color: var(--sys-warn, var(--gold-700));
   font-weight: 600;
 }
 

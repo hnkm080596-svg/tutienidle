@@ -182,7 +182,7 @@ function decide(decision: TalentEntitlementDecision): void {
   padding: 12px;
   border: 1px solid var(--sys-line-soft, rgba(42, 41, 36, 0.42));
   border-radius: 0;
-  background: var(--sys-bg-1, color-mix(in srgb, var(--paper-50, #f5f0e4) 88%, transparent));
+  background: var(--sys-bg-1, color-mix(in srgb, var(--sys-bg-0, var(--paper-50, #f5f0e4)) 88%, transparent));
   color: var(--sys-text, var(--paper-text, #211f1a));
   text-align: left;
   cursor: pointer;

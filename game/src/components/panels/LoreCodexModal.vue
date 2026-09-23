@@ -39,7 +39,7 @@ const { t } = useI18n()
 .lore-modal__description {
   margin: 0 0 20px;
   color: var(--sys-text, var(--text-primary));
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
   font-size: var(--text-body);
   line-height: 1.5;
   white-space: pre-line;

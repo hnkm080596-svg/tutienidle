@@ -487,12 +487,12 @@ const pillPermanentRows = computed(() => {
 .character-panel__power-value {
   /* M-UI-SYSTEM: display-font numerals + tabular; fallback keeps the
      ink font when system-theme.css is not loaded (safe degrade). */
-  font-family: var(--sys-font-display, var(--sys-font-display, var(--font-display)));
+  font-family: var(--sys-font-display, var(--font-display));
   font-variant-numeric: tabular-nums;
   font-size: var(--text-display);
   font-weight: 700;
-  color: var(--sys-text, var(--sys-text, var(--paper-text)));
-  text-shadow: 0 0 12px color-mix(in srgb, var(--sys-cyan, var(--sys-accent, var(--mineral-gold))) 35%, transparent);
+  color: var(--sys-text, var(--paper-text));
+  text-shadow: 0 0 12px color-mix(in srgb, var(--sys-cyan, var(--mineral-gold)) 35%, transparent);
 }
 
 .character-panel__power-label {
@@ -786,10 +786,10 @@ const pillPermanentRows = computed(() => {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: var(--sys-cyan, var(--sys-accent, var(--mineral-gold)));
+  background: var(--sys-cyan, var(--mineral-gold));
   box-shadow:
     0 0 0 2px color-mix(in srgb, var(--sys-bg-0, var(--ink-950)) 55%, transparent),
-    0 0 7px var(--sys-cyan, var(--sys-accent, var(--mineral-gold)));
+    0 0 7px var(--sys-cyan, var(--mineral-gold));
 }
 
 /* Compact vertical card (label over value+button) — ~80px wide so the
@@ -806,9 +806,9 @@ const pillPermanentRows = computed(() => {
   align-items: center;
   gap: 1px;
   padding: 3px 8px;
-  border: 1px solid var(--sys-line-soft, var(--sys-line-soft, var(--paper-line)));
+  border: 1px solid var(--sys-line-soft, var(--paper-line));
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--sys-surface-solid, var(--sys-bg-1, var(--paper-100))) 86%, transparent);
+  background: color-mix(in srgb, var(--sys-surface-solid, var(--paper-100)) 86%, transparent);
   white-space: nowrap;
 }
 
@@ -839,7 +839,7 @@ const pillPermanentRows = computed(() => {
 .meridian__node-label {
   font-size: var(--text-xs);
   letter-spacing: 0.04em;
-  color: var(--sys-text-muted, var(--sys-text-muted, var(--paper-text-soft)));
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .meridian__node-value-col {
@@ -850,11 +850,11 @@ const pillPermanentRows = computed(() => {
 }
 
 .meridian__node-value {
-  font-family: var(--sys-font-display, var(--sys-font-body, var(--font-body)));
+  font-family: var(--sys-font-display, var(--font-body));
   font-size: var(--text-md);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--sys-text, var(--sys-text, var(--paper-text)));
+  color: var(--sys-text, var(--paper-text));
 }
 
 .meridian__node-max {
@@ -953,7 +953,7 @@ const pillPermanentRows = computed(() => {
   border: 1px solid color-mix(in srgb, var(--sys-accent, var(--mineral-gold, #b79653)) 60%, transparent);
   border-radius: 999px;
   background: rgba(16, 14, 10, 0.78);
-  color: var(--gold-300, #ffd54f);
+  color: var(--sys-accent, var(--gold-300, #ffd54f));
   font-size: var(--text-xs);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -971,7 +971,7 @@ const pillPermanentRows = computed(() => {
 .pill-usage__item {
   flex: 0 0 auto;
   padding: 1px 6px;
-  border: 1px solid var(--sys-line-soft, var(--sys-line-soft, var(--paper-line)));
+  border: 1px solid var(--sys-line-soft, var(--paper-line));
   border-radius: 3px;
   color: var(--sys-text-muted, var(--paper-text-soft));
   white-space: nowrap;

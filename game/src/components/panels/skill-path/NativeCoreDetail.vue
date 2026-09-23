@@ -106,7 +106,7 @@ function onUpgrade() {
 .native-core-detail__upgrade {
   flex: 0 0 auto;
   border-radius: 4px;
-  color: var(--gold-700);
+  color: var(--sys-warn, var(--gold-700));
   border-color: var(--sys-line, var(--chrome-500));
 }
 

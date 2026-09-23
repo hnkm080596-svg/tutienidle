@@ -162,12 +162,12 @@ function majorBreakthrough() {
    values - same family-remap mechanism .ink-drawer owns for drawers (the
    scoped pattern; --paper-* never gets redefined at :root elsewhere). */
 .overlay-panel__card--system .realm-panel {
-  --paper-text: var(--sys-text, var(--sys-text, var(--text-primary)));
-  --paper-text-soft: var(--sys-text-muted, var(--sys-text-muted, var(--text-secondary)));
-  --paper-text-muted: var(--sys-text-dim, var(--sys-text-dim, var(--text-muted)));
-  --paper-eyebrow: var(--sys-cyan, var(--sys-text, var(--chrome-300)));
-  --paper-line: var(--sys-line, var(--sys-line, var(--ink-line)));
-  --paper-line-soft: var(--sys-line-soft, var(--sys-line-soft, var(--ink-line-soft)));
+  --paper-text: var(--sys-text, var(--text-primary));
+  --paper-text-soft: var(--sys-text-muted, var(--text-secondary));
+  --paper-text-muted: var(--sys-text-dim, var(--text-muted));
+  --paper-eyebrow: var(--sys-cyan, var(--chrome-300));
+  --paper-line: var(--sys-line, var(--ink-line));
+  --paper-line-soft: var(--sys-line-soft, var(--ink-line-soft));
 }
 /* Tên/cảnh giới không có cỡ chữ tường minh trước đây (2026-08-30
    frontend-design pass: dòng nhận diện quan trọng nhất panel lại nhỏ
@@ -185,7 +185,7 @@ function majorBreakthrough() {
 .realm-requirement--met { color: var(--sys-success, var(--jade)); }
 .realm-requirement__marker { font-weight: 700; width: 1em; text-align: center; }
 .realm-panel__cultivation { width: min(560px, 90%); margin: 0 auto; }
-.realm-panel__cultivation-bar { --bar-track: var(--sys-bg-0, var(--sys-bg-0, var(--ink-950))); border: 1px solid var(--sys-line-soft, var(--sys-line, var(--ink-line))); }
+.realm-panel__cultivation-bar { --bar-track: var(--sys-bg-0, var(--ink-950)); border: 1px solid var(--sys-line-soft, var(--ink-line)); }
 /* Fit-refactor đợt 3 — grid node cảnh giới auto-fit theo CARD: 9 cột khi
    rộng, tự xuống 5/3 cột khi hẹp (bỏ dead zone 901–957px của media query
    viewport cũ). Node khiên tròn giữ nguyên shape qua flex min-width. */

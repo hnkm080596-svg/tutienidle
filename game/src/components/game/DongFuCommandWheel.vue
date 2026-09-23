@@ -421,7 +421,7 @@ function activate(slot: CommandWheelSlot) {
 .command-wheel-layer__backdrop {
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, var(--ink-950) 42%, transparent);
+  background: color-mix(in srgb, var(--sys-bg-0, var(--ink-950)) 42%, transparent);
   cursor: pointer;
 }
 
@@ -445,7 +445,7 @@ function activate(slot: CommandWheelSlot) {
   top: 0;
   width: var(--orbit-diameter);
   height: var(--orbit-diameter);
-  border: 1px solid color-mix(in srgb, var(--mineral-gold) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sys-accent, var(--mineral-gold)) 40%, transparent);
   border-radius: 50%;
   pointer-events: none;
   opacity: 0;
@@ -470,15 +470,15 @@ function activate(slot: CommandWheelSlot) {
   max-width: 81px;
   min-height: 57px;
   padding: 6px 8px;
-  border: 1px solid var(--frame-outer);
-  border-radius: 999px;
+  border: 1px solid var(--sys-line, var(--frame-outer));
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
   background:
-    var(--paper-grain) 0 0 / 100px 100px repeat,
-    radial-gradient(120% 120% at 50% 20%, rgba(255, 255, 255, 0.35), transparent 60%),
-    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-200) 100%);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
-  color: var(--paper-text);
-  font-family: var(--font-body);
+    linear-gradient(180deg, rgba(56, 225, 255, .05), transparent 46%),
+    var(--sys-grain, var(--paper-grain)) 0 0 / 100px 100px repeat,
+    linear-gradient(175deg, var(--sys-bg-0, var(--paper-50)) 0%, var(--sys-bg-1, var(--paper-200)) 100%);
+  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.4));
+  color: var(--sys-text, var(--paper-text));
+  font-family: var(--sys-font-body, var(--font-body));
   font-size: var(--text-xs);
   line-height: var(--lh-tight);
   text-align: center;
@@ -511,13 +511,13 @@ function activate(slot: CommandWheelSlot) {
 
 .command-wheel__slot:hover,
 .command-wheel__slot:focus-visible {
-  border-color: var(--cinnabar);
-  color: var(--cinnabar);
+  border-color: var(--sys-accent, var(--cinnabar));
+  color: var(--sys-accent, var(--cinnabar));
 }
 
 .command-wheel__slot:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cinnabar) 55%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sys-accent, var(--cinnabar)) 55%, transparent);
 }
 
 /* Bản Mệnh Pháp Bảo (2026-08-27) — slot render được nhưng tạm chưa bấm
@@ -530,26 +530,26 @@ function activate(slot: CommandWheelSlot) {
 
 .command-wheel__slot.is-disabled:hover,
 .command-wheel__slot.is-disabled:focus-visible {
-  border-color: var(--frame-outer);
-  color: var(--paper-text);
+  border-color: var(--sys-line, var(--frame-outer));
+  color: var(--sys-text, var(--paper-text));
 }
 
 /* Active state suy ra từ uiStore (panel/popover đang mở). */
 .command-wheel__slot.is-active {
-  border-color: var(--mineral-gold);
-  box-shadow: inset 0 0 0 2px var(--mineral-gold);
-  color: var(--paper-text);
+  border-color: var(--sys-accent, var(--mineral-gold));
+  box-shadow: inset 0 0 0 2px var(--sys-accent, var(--mineral-gold));
+  color: var(--sys-text, var(--paper-text));
 }
 
 /* Ring màu nhận diện nhẹ theo tầng. */
 .command-wheel__slot--ring1 {
-  border-left: 3px solid var(--chrome-500);
+  border-left: 3px solid var(--sys-line, var(--chrome-500));
 }
 .command-wheel__slot--ring2 {
   border-left: 3px solid var(--azure);
 }
 .command-wheel__slot--ring3 {
-  border-left: 3px solid var(--jade);
+  border-left: 3px solid var(--sys-success, var(--jade));
 }
 .command-wheel__slot--ring4 {
   border-left: 3px solid var(--el-primordial);
@@ -558,12 +558,12 @@ function activate(slot: CommandWheelSlot) {
 /* Cùng indicator nâng cấp với hotspot (Workstream C). */
 .command-wheel__upgrade-dot {
   position: absolute;
-  right: 6px;
-  top: 6px;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--chrome-500);
+  right: 7px;
+  top: 7px;
+  width: 7px;
+  height: 7px;
+  transform: rotate(45deg);
+  background: var(--sys-line, var(--chrome-500));
 }
 
 .command-wheel__notification-badge {

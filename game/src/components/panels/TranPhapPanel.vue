@@ -552,9 +552,9 @@ watch([currentAssignments, () => player.visualProfileId], () => {
 
 .tran-phap-panel__formation-button {
   padding: var(--space-2, 8px);
-  border: 1px solid var(--surface-line);
+  border: 1px solid var(--sys-line-soft, var(--surface-line));
   background: transparent;
-  color: var(--surface-text);
+  color: var(--sys-text, var(--surface-text));
   text-align: left;
   cursor: pointer;
 }
@@ -632,9 +632,9 @@ watch([currentAssignments, () => player.visualProfileId], () => {
   flex: 0 0 auto;
   align-self: flex-end;
   padding: var(--space-2, 8px) var(--space-4, 16px);
-  border: 1px solid var(--surface-line);
+  border: 1px solid var(--sys-line-soft, var(--surface-line));
   background: transparent;
-  color: var(--surface-text);
+  color: var(--sys-text, var(--surface-text));
   cursor: pointer;
 }
 

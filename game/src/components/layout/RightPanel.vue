@@ -17,7 +17,7 @@ const ui = useUiStore()
 </template>
 
 <style scoped>
-.right-panel { position: absolute; z-index: 10; top: 0; right: 0; bottom: 0; width: clamp(340px, 27vw, 440px); display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--surface-shadow-deep); container-type: inline-size; container-name: right-panel;
+.right-panel { position: absolute; z-index: 10; top: 0; right: 0; bottom: 0; width: clamp(340px, 27vw, 440px); display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--sys-shadow, var(--surface-shadow-deep)); container-type: inline-size; container-name: right-panel;
   /* Panel-drawer-bg anchored right — the cloud bank + seal ornament
      edge of the art faces this drawer (left drawer gets the dragon). */
   --ink-drawer-bg-pos: right center; }

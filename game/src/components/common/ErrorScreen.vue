@@ -48,7 +48,7 @@ function reloadPage() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--scrim-heavy);
+  background: var(--sys-veil, var(--scrim-heavy));
 }
 
 .error-screen__panel {
@@ -58,7 +58,7 @@ function reloadPage() {
   max-height: 90vh;
   padding: 28px 32px;
   text-align: center;
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .error-screen__scroll {

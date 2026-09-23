@@ -46,6 +46,7 @@ const bagTabs = computed(() => [
     </div>
 
     <TabBar
+      variant="system"
       :tabs="bagTabs"
       :model-value="ui.activeBagTab"
       @update:model-value="ui.setActiveBagTab($event as BagTab)"

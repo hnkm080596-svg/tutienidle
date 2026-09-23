@@ -94,7 +94,7 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
   gap: var(--space-2);
   border: 0;
   border-radius: var(--radius-sm);
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
   font-weight: 700;
   cursor: pointer;
   background: transparent;
@@ -126,35 +126,35 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
 
 /* DARK MODE (2026-08-31) — nút trên nền tối */
 .game-button--primary {
-  color: var(--surface-text);
+  color: var(--sys-text, var(--surface-text));
 }
 
 .game-button--primary:not(:disabled):hover {
-  color: var(--chrome-100);
+  color: var(--sys-text, var(--chrome-100));
 }
 
 .game-button--secondary {
-  color: var(--chrome-300);
+  color: var(--sys-text, var(--chrome-300));
 }
 
 .game-button--secondary:not(:disabled):hover {
-  color: var(--chrome-100);
+  color: var(--sys-text, var(--chrome-100));
 }
 
 .game-button--danger {
-  color: var(--chrome-100);
+  color: var(--sys-text, var(--chrome-100));
 }
 
 .game-button--danger:not(:disabled):hover {
-  color: var(--chrome-300);
+  color: var(--sys-text, var(--chrome-300));
 }
 
 .game-button--ghost {
-  color: var(--surface-text-soft);
+  color: var(--sys-text-muted, var(--surface-text-soft));
 }
 
 .game-button--ghost:not(:disabled):hover {
-  color: var(--surface-text);
+  color: var(--sys-text, var(--surface-text));
 }
 
 .game-button:focus-visible {
@@ -165,7 +165,7 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
   outline-offset: 2px;
   outline-color: transparent;
   outline-style: solid;
-  box-shadow: var(--focus-ring-chrome, 0 0 0 2px rgba(217, 212, 199, 0.65));
+  box-shadow: var(--sys-focus, var(--focus-ring-chrome, 0 0 0 2px rgba(217, 212, 199, 0.65)));
 }
 
 /* M-UI-SYSTEM: scoped-attribute specificity (0,3,0) beats the global sys
@@ -224,12 +224,12 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
   min-width: var(--tap-min);
   min-height: var(--tap-min);
   padding: 0;
-  border: 1px solid var(--surface-line);
+  border: 1px solid var(--sys-line-soft, var(--surface-line));
   border-radius: 50%;
 }
 
 .game-button--circle:not(:disabled):hover {
-  border-color: var(--chrome-500);
+  border-color: var(--sys-line, var(--chrome-500));
 }
 
 .game-button:not(:disabled):active {

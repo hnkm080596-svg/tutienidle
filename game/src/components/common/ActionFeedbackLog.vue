@@ -15,9 +15,9 @@ const { t } = useI18n()
 const feedback = useActionFeedbackStore()
 
 const TONE_COLOR: Record<ActionFeedbackTone, string> = {
-  success: 'var(--jade)',
-  warning: 'var(--gold-700)',
-  error: 'var(--crimson)',
+  success: 'var(--sys-success, var(--jade))',
+  warning: 'var(--sys-warn, var(--gold-700))',
+  error: 'var(--sys-danger, var(--crimson))',
 }
 
 function entryText(entry: ActionFeedbackEntry): string {
@@ -102,13 +102,13 @@ function entryText(entry: ActionFeedbackEntry): string {
   align-items: center;
   justify-content: space-between;
   padding: 4px 8px;
-  border-radius: var(--radius-sm);
+  clip-path: polygon(7px 0, 100% 0, 100% 100%, 0 100%, 0 7px);
   background:
-    var(--paper-grain) 0 0 / 100px 100px repeat,
-    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 100%);
-  border: 1px solid var(--frame-outer);
-  color: var(--paper-text-soft);
-  font-family: var(--font-body);
+    var(--sys-grain, var(--paper-grain)) 0 0 / 100px 100px repeat,
+    linear-gradient(175deg, var(--sys-bg-0, var(--paper-50)) 0%, var(--sys-bg-1, var(--paper-100)) 100%);
+  border: 1px solid var(--sys-line, var(--frame-outer));
+  color: var(--sys-text-muted, var(--paper-text-soft));
+  font-family: var(--sys-font-body, var(--font-body));
   font-size: var(--text-xs);
   pointer-events: auto;
 }
@@ -121,13 +121,13 @@ function entryText(entry: ActionFeedbackEntry): string {
 .feedback-log__btn {
   border: none;
   background: none;
-  color: var(--paper-eyebrow);
+  color: var(--sys-accent, var(--paper-eyebrow));
   font-size: var(--text-xs);
   cursor: pointer;
 }
 
 .feedback-log__btn:hover {
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
 }
 
 .feedback-log__list {
@@ -142,14 +142,15 @@ function entryText(entry: ActionFeedbackEntry): string {
   justify-content: space-between;
   gap: 8px;
   padding: 6px 10px;
-  border: 1px solid var(--entry-color, var(--frame-outer));
-  border-left: 3px solid var(--entry-color, var(--frame-outer));
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--entry-color, var(--sys-line, var(--frame-outer)));
+  border-left: 3px solid var(--entry-color, var(--sys-line, var(--frame-outer)));
+  clip-path: polygon(7px 0, 100% 0, 100% 100%, 0 100%, 0 7px);
   background:
-    var(--paper-grain) 0 0 / 100px 100px repeat,
-    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 100%);
-  color: var(--paper-text);
-  font-family: var(--font-body);
+    linear-gradient(180deg, color-mix(in srgb, var(--entry-color, var(--sys-accent, var(--mineral-gold))) 8%, transparent) 0%, transparent 48%),
+    var(--sys-grain, var(--paper-grain)) 0 0 / 100px 100px repeat,
+    linear-gradient(175deg, var(--sys-bg-0, var(--paper-50)) 0%, var(--sys-bg-1, var(--paper-100)) 100%);
+  color: var(--sys-text, var(--paper-text));
+  font-family: var(--sys-font-body, var(--font-body));
   font-size: var(--text-xs);
   opacity: 0.85;
   pointer-events: auto;
@@ -157,7 +158,7 @@ function entryText(entry: ActionFeedbackEntry): string {
 
 .feedback-log__entry.is-latest {
   opacity: 1;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.45));
 }
 
 .feedback-log__count {

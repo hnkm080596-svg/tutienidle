@@ -176,7 +176,7 @@ function closeSidePanels() {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: var(--ink-950);
+  background: var(--sys-bg-0, var(--ink-950));
 }
 
 .game-root {
@@ -184,7 +184,7 @@ function closeSidePanels() {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: var(--ink-950);
+  background: var(--sys-bg-0, var(--ink-950));
 }
 
 .game-root__left-panel {

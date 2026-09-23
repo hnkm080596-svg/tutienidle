@@ -468,7 +468,7 @@ function removeOrbAt(index: number) {
   margin: 0;
   font-size: var(--text-sm);
   line-height: 1.5;
-  color: var(--gold-500);
+  color: var(--sys-accent, var(--gold-500));
 }
 
 /* Sealed hidden-path card (Task 16) — distinct frame so the ritual
@@ -479,7 +479,7 @@ function removeOrbAt(index: number) {
   gap: 8px;
   padding: 14px 16px;
   background: var(--sys-bg-0, var(--ink-800));
-  border: 1px solid var(--gold-700);
+  border: 1px solid var(--sys-warn, var(--gold-700));
   border-radius: var(--radius-md);
 }
 
@@ -487,7 +487,7 @@ function removeOrbAt(index: number) {
   margin: 0;
   font-size: var(--text-md);
   font-weight: 700;
-  color: var(--gold-700);
+  color: var(--sys-warn, var(--gold-700));
 }
 
 .quan-khi-panel__hidden-desc {

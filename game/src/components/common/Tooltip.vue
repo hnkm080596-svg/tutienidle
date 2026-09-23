@@ -2,7 +2,6 @@
 import { computed, ref } from 'vue'
 import { autoUpdate, flip, offset, shift, size, useFloating } from '@floating-ui/vue'
 import { useTooltip } from '@/composables/useTooltip'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import ItemCardBody from '@/components/common/ItemCardBody.vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import type { EquipmentTooltipContent, GradedItemTooltipContent, TechniqueTooltipContent } from '@/composables/useTooltip'
@@ -146,10 +145,9 @@ function hideBrokenImage(event: Event) {
         :style="{ ...floatingStyles, '--tooltip-accent': qualityAccentColor ?? itemAuraColor, '--tooltip-aura': itemAuraColor, zIndex: OVERLAY_LAYERS.tooltip }"
       >
         <img v-if="elementBannerUrl" class="tooltip__banner" :src="elementBannerUrl" alt="" aria-hidden="true" />
-        <template v-else>
-          <InkNineSlice asset-id="surface-m-paper" layer="surface" />
-          <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" />
-        </template>
+        <!-- M-UI-OVERHAUL: chamfered sys readout card replaces the paper
+             InkNineSlice frame; element tooltips keep their painted banner. -->
+        <div v-else class="tooltip__sys-surface" aria-hidden="true" />
         <div class="tooltip__content">
         <!-- Compare pair (spec section 4): equipped card LEFT, hovered card
              RIGHT; each is a role=group with its own aria-label so
@@ -216,25 +214,42 @@ function hideBrokenImage(event: Event) {
 
 <style scoped>
 .tooltip {
-  --tooltip-accent: var(--chrome-300);
+  --tooltip-accent: var(--sys-text, var(--chrome-300));
   position: fixed; width: max-content; max-width: min(240px, calc(100vw - 24px));
-  padding: 8px 10px; overflow: hidden auto;
+  padding: 12px 14px; overflow: hidden auto;
   border: 0; border-radius: 0;
   background: transparent;
-  box-shadow: none; color: var(--paper-text, #211f1a); font: var(--text-xs) var(--font-body); pointer-events: none; isolation: isolate;
+  box-shadow: none; color: var(--sys-text, var(--paper-text, #211f1a)); font: var(--text-xs) var(--sys-font-body, var(--font-body)); pointer-events: none; isolation: isolate;
 }
+/* M-UI-OVERHAUL ephemeral surface: chamfered dark card + hairline,
+   drawn under the content. Element tooltips hide it (painted banner). */
+.tooltip__sys-surface {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(180deg, rgba(56, 225, 255, .045), transparent 38%),
+    var(--sys-bg-1, var(--surface-700, #141820));
+  border: 1px solid var(--sys-line-soft, rgba(255, 255, 255, .14));
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, .5));
+}
+.tooltip--element .tooltip__sys-surface { display: none; }
+
 /* Paper family -> dark surface equivalents. The tooltip teleports to
    <body> so it never inherits the .ink-drawer remap, while its
    surface-m-paper layer is dark navy - without this, --paper-* light-
    paper inks render dark-on-dark (invisible stat values). Element
    banners keep the real paper inks: their art is cream. */
 .tooltip:not(.tooltip--element) {
-  --paper-text: var(--surface-text);
-  --paper-text-soft: var(--surface-text-soft);
-  --paper-text-muted: var(--surface-text-muted);
-  --paper-line: var(--surface-line);
+  --paper-text: var(--sys-text, var(--surface-text));
+  --paper-text-soft: var(--sys-text-muted, var(--surface-text-soft));
+  --paper-text-muted: var(--sys-text-dim, var(--surface-text-muted));
+  --paper-line: var(--sys-line-soft, var(--surface-line));
 }
 .tooltip::before { content: ''; position: absolute; z-index: 4; inset: 12px auto 12px 5px; width: 2px; background: var(--tooltip-accent); opacity: .72; }
+.tooltip::after { content: ''; position: absolute; z-index: 4; right: 12px; bottom: 5px; width: 8px; height: 8px; border-right: 1px solid var(--tooltip-accent); border-bottom: 1px solid var(--tooltip-accent); opacity: .55; }
+.tooltip--element::before, .tooltip--element::after { display: none; }
 /* Item aura - soft outer glow in the item's own rank color (bag item
    tooltips only, see itemAuraColor). color-mix keeps it translucent. */
 .tooltip--aura { box-shadow: 0 0 20px color-mix(in srgb, var(--tooltip-aura) 38%, transparent), 0 0 6px color-mix(in srgb, var(--tooltip-aura) 26%, transparent); }
@@ -242,27 +257,27 @@ function hideBrokenImage(event: Event) {
 .tooltip--rich { max-width: min(320px, calc(100vw - 24px)); padding: 12px 14px; }
 .tooltip--detailed { max-width: min(380px, calc(100vw - 24px)); }
 .tooltip__header { display: flex; align-items: center; gap: 10px; }
-.tooltip__icon-shell { flex: 0 0 54px; display: grid; place-items: center; width: 54px; height: 54px; border: 1px solid color-mix(in srgb, var(--tooltip-accent) 42%, var(--paper-line, rgba(42,41,36,.42))); border-radius: 2px; background: color-mix(in srgb, var(--paper-100, #ebe3d2) 82%, transparent); overflow: hidden; }
-.tooltip__icon, .tooltip__icon-fallback { grid-area: 1 / 1; } .tooltip__icon { width: 100%; height: 100%; padding: 5px; object-fit: contain; box-sizing: border-box; background: color-mix(in srgb, var(--paper-50, #f5f0e4) 84%, transparent); } .tooltip__icon-fallback { color: var(--tooltip-accent); font: 700 var(--text-panel-title) var(--font-display); }
+.tooltip__icon-shell { flex: 0 0 54px; display: grid; place-items: center; width: 54px; height: 54px; border: 1px solid color-mix(in srgb, var(--tooltip-accent) 42%, var(--sys-line-soft, var(--paper-line, rgba(42,41,36,.42)))); border-radius: 2px; background: color-mix(in srgb, var(--sys-bg-1, var(--paper-100, #ebe3d2)) 82%, transparent); overflow: hidden; }
+.tooltip__icon, .tooltip__icon-fallback { grid-area: 1 / 1; } .tooltip__icon { width: 100%; height: 100%; padding: 5px; object-fit: contain; box-sizing: border-box; background: color-mix(in srgb, var(--sys-bg-0, var(--paper-50, #f5f0e4)) 84%, transparent); } .tooltip__icon-fallback { color: var(--tooltip-accent); font: 700 var(--text-panel-title) var(--sys-font-display, var(--font-display)); }
 .tooltip__pair { display: flex; gap: 12px; }
 .tooltip__card { min-width: 0; flex: 1 1 0; }
 .tooltip__heading { min-width: 0; }
 /* Title trước đây thừa hưởng font-size 12px của .tooltip gốc — cùng cỡ
    với meta/description, chỉ khác weight/family (2026-08-30 frontend-
    design pass: tiêu đề tooltip cần tách bậc rõ khỏi nội dung). */
-.tooltip__title { margin: 0 0 3px; color: var(--paper-text, #211f1a); font-family: var(--font-display); font-size: var(--text-md); font-weight: 700; line-height: 1.25; }
-.tooltip__meta { margin: 0; color: var(--paper-text-muted, #8f897c); font-size: var(--text-xs); }
-.tooltip__description { margin: 3px 0 0; color: var(--paper-text-soft, #5e5a50); line-height: 1.45; } .tooltip__description--rich { margin-top: 9px; }
-.tooltip__section { margin-top: 10px; padding-top: 7px; border-top: 1px solid color-mix(in srgb, var(--tooltip-accent) 18%, var(--paper-line, rgba(42,41,36,.42))); }
-.tooltip__section-label { margin: 0 0 5px; color: color-mix(in srgb, var(--tooltip-accent) 76%, var(--paper-text, #211f1a)); font-size: var(--text-xs); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
-.tooltip__section-row { display: grid; grid-template-columns: minmax(0,1fr) auto; column-gap: 14px; align-items: baseline; color: var(--paper-text-soft, #5e5a50); line-height: 1.55; }
-.tooltip__row-value { color: var(--paper-text, #211f1a); font-variant-numeric: tabular-nums; text-align: right; } .tooltip__row-detail { grid-column: 1/-1; color: var(--paper-text-muted, #8f897c); }
-.tooltip__section-row--positive .tooltip__row-value { color: var(--jade); } .tooltip__section-row--negative .tooltip__row-value { color: var(--crimson); }
-.tooltip__section-row--warning .tooltip__row-value { color: var(--mineral-gold, #b79653); } .tooltip__section-row--muted { color: var(--paper-text-muted, #8f897c); } .tooltip__section-row--special .tooltip__row-value { color: var(--affix-exalted); }
+.tooltip__title { margin: 0 0 3px; color: var(--sys-text, var(--paper-text, #211f1a)); font-family: var(--sys-font-display, var(--font-display)); font-size: var(--text-md); font-weight: 700; line-height: 1.25; }
+.tooltip__meta { margin: 0; color: var(--sys-text-dim, var(--paper-text-muted, #8f897c)); font-size: var(--text-xs); }
+.tooltip__description { margin: 3px 0 0; color: var(--sys-text-muted, var(--paper-text-soft, #5e5a50)); line-height: 1.45; } .tooltip__description--rich { margin-top: 9px; }
+.tooltip__section { margin-top: 10px; padding-top: 7px; border-top: 1px solid color-mix(in srgb, var(--tooltip-accent) 18%, var(--sys-line-soft, var(--paper-line, rgba(42,41,36,.42)))); }
+.tooltip__section-label { margin: 0 0 5px; color: color-mix(in srgb, var(--tooltip-accent) 76%, var(--sys-text, var(--paper-text, #211f1a))); font-size: var(--text-xs); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.tooltip__section-row { display: grid; grid-template-columns: minmax(0,1fr) auto; column-gap: 14px; align-items: baseline; color: var(--sys-text-muted, var(--paper-text-soft, #5e5a50)); line-height: 1.55; }
+.tooltip__row-value { color: var(--sys-text, var(--paper-text, #211f1a)); font-variant-numeric: tabular-nums; text-align: right; } .tooltip__row-detail { grid-column: 1/-1; color: var(--sys-text-dim, var(--paper-text-muted, #8f897c)); }
+.tooltip__section-row--positive .tooltip__row-value { color: var(--sys-success, var(--jade)); } .tooltip__section-row--negative .tooltip__row-value { color: var(--sys-danger, var(--crimson)); }
+.tooltip__section-row--warning .tooltip__row-value { color: var(--sys-accent, var(--mineral-gold, #b79653)); } .tooltip__section-row--muted { color: var(--sys-text-dim, var(--paper-text-muted, #8f897c)); } .tooltip__section-row--special .tooltip__row-value { color: var(--affix-exalted); }
 .tooltip__section-row--tier-1 .tooltip__row-label { color: var(--affix-tier-1); } .tooltip__section-row--tier-2 .tooltip__row-label { color: var(--affix-tier-2); }
 .tooltip__section-row--tier-3 .tooltip__row-label { color: var(--affix-tier-3); } .tooltip__section-row--tier-4 .tooltip__row-label { color: var(--affix-tier-4); } .tooltip__section-row--tier-5 .tooltip__row-label { color: transparent; background: var(--rank-gradient-10); background-clip: text; -webkit-background-clip: text; font-weight: 700; }
-.tooltip__building-status { margin: 5px 0 0; color: var(--jade); font-size: var(--text-xs); }
-.tooltip__building-status--locked { color: var(--paper-text-muted, #8f897c); }
+.tooltip__building-status { margin: 5px 0 0; color: var(--sys-success, var(--jade)); font-size: var(--text-xs); }
+.tooltip__building-status--locked { color: var(--sys-text-dim, var(--paper-text-muted, #8f897c)); }
 
 /* Element banner tooltip (Ngu Hanh formation redesign) - the element's
    painted banner is the background layer; the stat line lives on a

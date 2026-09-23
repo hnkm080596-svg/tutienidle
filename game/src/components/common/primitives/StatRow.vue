@@ -48,6 +48,6 @@ export default { name: 'StatRow' }
 
 .stat-row--positive .stat-row__value { color: var(--sys-success, var(--jade)); }
 .stat-row--negative .stat-row__value { color: var(--sys-danger, var(--crimson)); }
-.stat-row--warning .stat-row__value { color: var(--gold-700); }
+.stat-row--warning .stat-row__value { color: var(--sys-warn, var(--gold-700)); }
 .stat-row--muted .stat-row__value { color: var(--sys-text-dim, var(--paper-text-muted)); }
 </style>

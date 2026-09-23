@@ -139,7 +139,7 @@ function handleImport(event: Event) {
   max-width: 460px;
   padding: 28px 32px;
   text-align: center;
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .save-incompatible__title {

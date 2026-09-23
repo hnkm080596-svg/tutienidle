@@ -507,7 +507,7 @@ function onUpgrade() {
 .route-pick__option-name {
   font-size: var(--text-md);
   font-weight: 700;
-  color: var(--gold-700);
+  color: var(--sys-warn, var(--gold-700));
 }
 
 .route-pick__option-desc {

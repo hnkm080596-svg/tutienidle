@@ -149,9 +149,9 @@ const portraitHeight = computed(() =>
   z-index: 1;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 50% 34%, var(--surface-600), var(--surface-800) 62%, var(--surface-950) 92%);
+    radial-gradient(circle at 50% 34%, var(--sys-bg-1, var(--surface-600)), var(--sys-bg-0, var(--surface-800)) 62%, var(--surface-950) 92%);
   box-shadow:
-    inset 0 0 0 1px var(--surface-line),
+    inset 0 0 0 1px var(--sys-line-soft, var(--surface-line)),
     0 0 14px rgba(0, 0, 0, 0.4);
 }
 
@@ -202,7 +202,7 @@ const portraitHeight = computed(() =>
   inset: -18% -30%;
   z-index: 1;
   border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--chrome-500) 22%, transparent), transparent 68%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--sys-line, var(--chrome-500)) 22%, transparent), transparent 68%);
   filter: blur(10px);
   animation: player-portrait-aura 5s ease-in-out infinite;
   pointer-events: none;
@@ -217,7 +217,7 @@ const portraitHeight = computed(() =>
   width: 58%;
   aspect-ratio: 3 / 1;
   border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--chrome-500) 42%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sys-line, var(--chrome-500)) 42%, transparent);
   transform: translateX(-50%);
   animation: player-portrait-ring 6s ease-out infinite;
   pointer-events: none;

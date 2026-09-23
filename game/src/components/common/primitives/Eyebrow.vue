@@ -28,15 +28,15 @@ export default { name: 'Eyebrow' }
   letter-spacing: var(--eyebrow-tracking, 0.04em);
   font-size: var(--text-sm);
   font-weight: 700;
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .eyebrow--chrome {
-  color: var(--paper-eyebrow);
+  color: var(--sys-accent, var(--paper-eyebrow));
 }
 
 .eyebrow--muted {
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
 }
 
 .eyebrow--inherit {
