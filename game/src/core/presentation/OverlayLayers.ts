@@ -21,14 +21,14 @@ export const OVERLAY_LAYERS = {
   combatPause: 900,
 /** ActionFeedbackLog - bottom-right action history. */
   feedback: 1200,
-  /** ToastContainer — transient notifications. */
-  toast: 1500,
   /** Full-screen panels (OverlayPanel default, ConfirmModal). */
   panel: 1800,
-  /** Blocking modals above panels (OfflineSummaryModal, LoreCodexModal, TutorialOverlay). */
-  modal: 1900,
   /** WorldAnnouncementOverlay - ambient/ephemeral banners; must never cover a blocking modal. */
   announcement: 1850,
+  /** ToastContainer — transient notifications; above panels so in-panel action feedback stays visible. */
+  toast: 1870,
+  /** Blocking modals above panels (OfflineSummaryModal, LoreCodexModal, TutorialOverlay). */
+  modal: 1900,
   /** Tooltip — floating contextual info. */
   tooltip: 2200,
   /** ErrorScreen — app-level error surface. */
