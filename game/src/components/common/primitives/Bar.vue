@@ -11,10 +11,14 @@ const props = withDefaults(defineProps<{
   height?: number
   pill?: boolean
   anchor?: 'left' | 'right'
+  // M-UI-SYSTEM: 'system' emits bar--system; its styles live only in
+  // system-theme.css (spec 2.2-4). Default 'ink' keeps every caller identical.
+  variant?: 'ink' | 'system'
 }>(), {
   height: 8,
   pill: false,
   anchor: 'left',
+  variant: 'ink',
 })
 
 const percent = computed(() => {
@@ -29,7 +33,7 @@ const percent = computed(() => {
 <template>
   <div
     class="bar"
-    :class="{ 'bar--pill': pill, 'bar--anchor-right': anchor === 'right' }"
+    :class="{ 'bar--pill': pill, 'bar--anchor-right': anchor === 'right', 'bar--system': variant === 'system' }"
     :style="{ '--bar-height': `${height}px` }"
     role="progressbar"
     :aria-valuenow="value"
