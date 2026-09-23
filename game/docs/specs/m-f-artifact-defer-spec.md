@@ -93,7 +93,12 @@ formation: it opens at the declared unlock realm
 single predicate `isArtifactDomainUnlocked(realmId)` is the one
 every artifact action evaluates. Under the ruling the unlock realm
 moves `foundation_establishment → golden_core`. No new persisted
-state, no save-version bump, no strip pass.
+state, no strip pass. **Save-version note (impl-time override):**
+the Phase-2 coordinator directive mandates `CURRENT_SAVE_VERSION
+76 → 77` on this branch — spec A8's "no save-version bump" is
+superseded by that directive (saves written under the Trúc Cơ-era
+grant model must not load under the deferred model; no migration,
+no compat translator).
 
 - **Window closed (all live builds today)**: the unlock realm is
   beyond `progressionCeilingRealmId` → `isArtifactDomainUnlocked`
@@ -120,9 +125,11 @@ Bind from M-F-CEILING:
   policy-agnostic way-declaration seam — this mission changes the
   declaration (the record's realm key), never the resolver.
 - Restore never strips ownership (C2C-12): persisted artifactId
-  matches survive normalize dormant; no strip pass, no migration,
-  no save bump — persisted shape is unchanged
-  (`saveShapeValidation` artifact block untouched).
+  matches survive normalize dormant; no strip pass, no migration —
+  persisted shape is unchanged
+  (`saveShapeValidation` artifact block untouched; the coordinator-
+  mandated 76 → 77 version bump rejects pre-deferral saves outright,
+  it does not transform them).
 - Acquisition suppression lives at the tag+policy authority
   (`breakthroughRealmId` + `isBreakthroughAcquisitionEnabled`),
   not per-call-site (INV-CEILING-3); owned stock is conserved
@@ -431,4 +438,4 @@ combat runtime, removal of the TC drop-table row.
 | A5 | `phap_bao` slot disabled with `RELEASE_UNAVAILABLE_REASON` at/below TC while the unlock realm is outside the window; mocked-open + below-KD shows `'Cần đạt Kim Đan'`; enabled at KD+ for Pháp Tu; `hasArtifactDefinition` rule unchanged. |
 | A6 | `docs/systems/artifact.md`, `docs/game-guide.md`, and `Artifact.ts` docs record the artifact domain as deferred to `golden_core`; the superseded "Trúc Cơ tầng 18" scope claim appears nowhere as live scope. |
 | A7 | KD boundary positive suite (mocked open window) proves the live path end to end: grant on KD entry, normalize awaken at KD, EXP accrual, path set, grade upgrade via stone, stone delivered through the REAL `foundation_establishment` row to a KD player while a TC player on that row gets none, slot enabled. |
-| A8 | No persisted-shape change, no save-version bump, no strip or migration code — `saveShapeValidation` untouched. |
+| A8 | No persisted-shape change, no strip or migration code — `saveShapeValidation` untouched. ~~No save-version bump~~ — superseded by the Phase-2 coordinator mandate (76 → 77; recorded in the v77 comment block and the final report). |
