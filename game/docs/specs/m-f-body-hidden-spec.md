@@ -1,15 +1,13 @@
 # M-F-BODY-HIDDEN — Hidden perfection-material acquisition channels — Spec
 
-Status: v2 — draft, amended after C2C spec review r82 (findings
-H1/H2/M1/M2 resolved inline; pending re-review)
-Depends on: M-F-BODY-PERFECTION (BP) — its spec/plan live on branch
-`devin/1790147578-m-f-body-perfection` (`game/docs/specs/m-f-body-perfection-spec.md`,
-`game/docs/plans/m-f-body-perfection-plan.md`) and are consumed here as
-the seam CONTRACT (canonical `{discoveredMaterials, perfectedRealmIds}`,
-`BODY_PERFECTION_REALM_MATERIALS`, `bodyPerfectionRealmOf`,
+Status: v3 — draft, amended after C2C spec review r84 (findings
+P1/P2 resolved inline; pending re-review)
+Depends on: M-F-BODY-PERFECTION (BP — MERGED onto `p7/truc-co` at
+`f9fc4ee4`, save v80; its contract is live code now:
+`data/realm/BodyPerfection.ts` ships `BODY_PERFECTION_REALM_MATERIALS`
+(all realm keys, all `[]`), `bodyPerfectionRealmOf`,
 `isBodyPerfectionMaterial`, `recordBodyPerfectionMaterialDiscovery`,
-the `notifyMaterialGained` funnel, `perfectBodyRealm`) — whether or not
-PR #14 has merged onto `p7/truc-co` at implementation start; M-F-ESSENCE
+the `notifyMaterialGained` funnel, `perfectBodyRealm`); M-F-ESSENCE
 (domain material delivery + essence family); M-F-CEILING (release
 policy, single-check invariant); dot-pha-loi-kiep §4.1c (hidden-beast
 precedent); QI-S save policy (`decisions.md` — version rejection, no
@@ -37,7 +35,10 @@ NOT on normal drop tables); hint/telemetry UI; save migration (QI-S).
 
 ## 1. Audit verdict — acquisition-surface census
 
-Verified file-by-file against `origin/p7/truc-co` (`fc78bc23`, save v78).
+Verified file-by-file against `origin/p7/truc-co` (`f9fc4ee4`, save
+v80 — M-F-BODY-PERFECTION and M-F-ARTIFACT-DEFER landed since the v1
+census at `fc78bc23`; the BP seam is merged code, not a pending
+contract).
 "Hidden" in this codebase means: not on `STAGE_DROP_TABLES`, not on
 `FAMILY_DROP_TABLES`, not surfaced in UI (the `enemies-stages.md` §Quái ẩn
 convention — "Không spoil vị trí", do not spoil the location).
@@ -56,7 +57,7 @@ convention — "Không spoil vị trí", do not spoil the location).
 | Building output claim | `GameManagerBuildingOps.ts:224-247` — `bag.add` + funnel | visible authored grant — funnel-native |
 | Decompose output | `GameManagerTickOps.deliverDecomposeOutput:280` — funnel call added by BP | visible authored surface — funnel-native |
 | Exploration / random encounter | none: `sourceType:'exploration'` is only a material classification label; `functionType:'exploration'` on Linh Tuyền is a building tag (`GameManagerBuildingOps`) — no roaming/encounter system exists | ABSENT — no channel kind exists for it |
-| Canonical discovery state | BP spec §2: `player.bodyPerfection.discoveredMaterials`, `recordBodyPerfectionMaterialDiscovery` set-add writer, `notifyMaterialGained` funnel, `isBodyPerfectionMaterial`/`bodyPerfectionRealmOf` registry reads | LANDED via BP (contract) — the destination this mission feeds |
+| Canonical discovery state | `player.bodyPerfection.discoveredMaterials`, `recordBodyPerfectionMaterialDiscovery` set-add writer, `notifyMaterialGained` funnel, `isBodyPerfectionMaterial`/`bodyPerfectionRealmOf` registry reads — merged at `f9fc4ee4` | LANDED — the destination this mission feeds |
 | Channel progress state | `luyenKhiKillsSinceBeast` exists but is single-channel-hardcoded; no production-side counter exists | ABSENT — this mission |
 
 ## 2. Channel registry — `HIDDEN_MATERIAL_CHANNELS`
@@ -114,11 +115,22 @@ export function channelEmittedMaterialIds(
   signatureMaterialIdsOf: (enemyId: string) => readonly string[],
 ): readonly string[]
 
-// Perfection material ids intentionally reachable ONLY via visible
-// authored grants (quests/gifts/claims) — the explicit exemption the
-// completeness invariant checks instead of an unverifiable prose
-// exception. Ships []; content fills it.
-export const VISIBLE_GRANT_EXEMPT: readonly string[] = []
+// Perfection materials intentionally reachable ONLY via visible
+// authored grants — a CENSUS (C2C r84-P1b), not a bare id list: each
+// row pairs the material to an authored grant source that integrity
+// proves exists AND delivers the material. Ships []; content fills it.
+export type VisibleGrantSourceKind = 'quest' | 'building'
+export interface VisibleGrantSource {
+  materialId: string
+  kind: VisibleGrantSourceKind
+  /** Resolved in the owning catalog: 'quest' → QUEST id whose
+      `reward.itemDrops` includes materialId; 'building' → building id
+      whose `producesMaterialId === materialId`. The union extends when
+      content needs another authored grant surface — every new kind
+      ships its per-kind resolution rule in the integrity test. */
+  grantId: string
+}
+export const VISIBLE_GRANT_SOURCES: readonly VisibleGrantSource[] = []
 ```
 
 Registry validation is the validate+assert PAIR convention (BP spec §2.2,
@@ -162,13 +174,21 @@ import other catalogs):
   satisfies `bodyPerfectionRealmOf(materialId) === channel.bandRealmId`
   (both kinds — the release-policy band gate then covers the material's
   realm too);
-- **anti-frustration arm (needs the BP seam):** for every channel that
+- **anti-frustration arm (BP seam, merged):** for every channel that
   emits a perfection material — for `grotto`, `materialId`; for
   `hidden_beast`, each `signatureDrops` line on `enemyId` whose
   `isBodyPerfectionMaterial(itemId)` — a hard bound MUST be authored
   (`guaranteedSpawnAfterKills`/`guaranteedAfterCycles`), AND every such
   `hidden_beast` signature line must be authored `chance: 1` (the
   deterministic bound lives in the spawn mechanism — §6);
+- **unconditional-route arm (C2C r84-P1a):** every perfection-material
+  `signatureDrops` line on a channel enemy must be authored
+  `requiresModifier === undefined` — a modifier-gated line counts
+  toward `channelEmittedMaterialIds` while `resolveDrops` can suppress
+  it at kill time, leaving the material unreachable. A
+  modifier-conditioned perfection route is only allowed once a
+  validated condition-source census exists to prove the condition is
+  reachable — none exists today, so the check fails closed;
 - `grotto` channels additionally REQUIRE `isBodyPerfectionMaterial(
   materialId)` — the grotto lane exists solely for perfection materials
   (C2C flag F3 if arbitrary hidden materials should be allowed);
@@ -176,16 +196,19 @@ import other catalogs):
   every perfection material emitted by any channel carries
   `material.breakthroughRealmId === bodyPerfectionRealmOf(materialId)` so
   the origination-time release gate can't drift from the registry;
-- **inverse reachability (completeness, C2C r82-H1):** the suite
-  composes `channelEmittedMaterialIds` over every channel and asserts
-  every material id authored in `BODY_PERFECTION_REALM_MATERIALS`
-  appears in ≥1 channel's emitted set OR in `VISIBLE_GRANT_EXEMPT` — a
-  required material with no acquisition route can never satisfy
-  `canPerfectBodyRealm`, so "quests may grant it" is an authored,
-  validated list, not prose. Both directions checked:
-  `VISIBLE_GRANT_EXEMPT` ⊆ the perfection table ids (no stale exempts),
-  and no emitted id appears in `VISIBLE_GRANT_EXEMPT` (a channel-
-  covered material needs no exemption).
+- **inverse reachability (completeness, C2C r82-H1 + r84-P1):** the
+  suite composes `channelEmittedMaterialIds` over every channel and
+  asserts every material id authored in `BODY_PERFECTION_REALM_MATERIALS`
+  appears in ≥1 channel's emitted set OR has ≥1 `VISIBLE_GRANT_SOURCES`
+  row — a required material with no acquisition route can never
+  satisfy `canPerfectBodyRealm`, so "quests may grant it" is a
+  censused, validated row, not prose. Every census row must VERIFY:
+  `materialId` is a perfection material present in the realm table
+  (no stale/orphan rows), the `grantId` resolves in its owning catalog
+  AND actually delivers `materialId` (`quest` → `reward.itemDrops`
+  contains it; `building` → `producesMaterialId` equals it), and no
+  channel-emitted id appears in `VISIBLE_GRANT_SOURCES` (a
+  channel-covered material needs no exemption).
 
 ## 3. Channel kind `hidden_beast` — generalized spawn substitution
 
@@ -377,10 +400,11 @@ reached by online `tickWorkers`/`advanceWorkerLanes` AND offline
   (object + non-negative-int values); serialized via `getAllStates`;
   whitelisted in `restoreStates`; copied in `snapshotState`.
 - `saveVersion.ts`: `CURRENT_SAVE_VERSION + 1` over the merged base AT
-  IMPLEMENTATION START (base is 78 at spec time; BP may land a bump
-  first — re-read, never pin a literal) + changelog comment. Old
-  versions rejected — version rejection is the mechanism (QI-S); no
-  translators, no recompute-on-load.
+  IMPLEMENTATION START — the base now reads **v80** (`f9fc4ee4`, BP
+  landed v80; ARTIFACT-DEFER took v79), so this mission expects **v81**
+  — re-read at phase-2 rebase, never pin a literal. Old versions
+  rejected — version rejection is the mechanism (QI-S); no translators,
+  no recompute-on-load.
 - `saveTypes.ts` doc comment updates (`:143` names the removed field).
 - No `preflightSaveRegistryReferences` addition needed: counters are
   uninterpreted numbers; a crafted high counter only opens a window —
@@ -406,12 +430,12 @@ reached by online `tickWorkers`/`advanceWorkerLanes` AND offline
 - `huyet_mong` unchanged as content: `thien_dia_chi_kieu` @5% active-only
   (NB-1), `tinh_hoa_pham_the` ×12 @100%, window 1000, chance 0.05,
   active-spawn-only, reset-on-kill.
-- Perfection materials reachable ONLY through channels (or authored
-  visible grants like quests): the `EnemyDropSinkInvariant` test and the
-  band tables continue to exclude them; the integrity test asserts no
-  `signatureDrops`/`pool`/`guaranteed` line on a NON-channel enemy
-  carries a `isBodyPerfectionMaterial` id — "hidden" means unreachable
-  via normal loot.
+- Perfection materials reachable ONLY through channels or censused
+  visible grants (`VISIBLE_GRANT_SOURCES`): the `EnemyDropSinkInvariant`
+  test and the band tables continue to exclude them; the integrity test
+  asserts no `signatureDrops`/`pool`/`guaranteed` line on a NON-channel
+  enemy carries a `isBodyPerfectionMaterial` id — "hidden" means
+  unreachable via normal loot.
 - Counters persist through save/load and offline settle; persisted
   progress is authoritative (S1/S2). `restoreStates()` / state
   rehydration performs NO rolls, no emission, no counter writes, no
@@ -471,8 +495,11 @@ reached by online `tickWorkers`/`advanceWorkerLanes` AND offline
   reaching `guaranteedSpawnAfterKills` guarantees the next eligible
   ACTIVE spawn (counter keeps advancing through idle kills, no spawn
   produced until an active one rolls); inverse reachability — a
-  required material absent from every channel AND `VISIBLE_GRANT_EXEMPT`
-  fails; counter persistence + save round-trip + old-version rejection;
+  required material absent from every channel AND from
+  `VISIBLE_GRANT_SOURCES` fails; a census row whose `grantId` doesn't
+  resolve or doesn't deliver the material fails; a modifier-gated
+  (`requiresModifier`) perfection signature line fails; counter
+  persistence + save round-trip + old-version rejection;
   `restoreStates` performs no rolls/emission/discovery while
   `settleProductionOffline` emits into `pendingEvents` drained by the
   next tick; `rollRewards` stream parity with and without fixture
@@ -524,3 +551,7 @@ reached by online `tickWorkers`/`advanceWorkerLanes` AND offline
   site/territory selector was the alternative axis — not taken: the
   bound territory owns one grotto site and counters are per-site;
   `territoryId` remains a later extension point if content needs it.
+- **F10** — `VISIBLE_GRANT_SOURCES` kinds are pinned to the two
+  VERIFIED grant catalogs (`quest.reward.itemDrops`, building
+  `producesMaterialId`); decompose/stage/realm-entry grant kinds extend
+  the union when content needs them — each ships its resolution rule.
