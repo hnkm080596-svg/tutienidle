@@ -4,6 +4,8 @@ import { materials } from '../../data/materials/materials'
 import { pills } from '../../data/pill/pills'
 import { BODY_REFINEMENT_TIERS, TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
 import { createDefaultPlayer } from '../player/Player'
+import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
+import type { GameSave } from '../../services/save/SaveSystem'
 import { GameManager } from './GameManager'
 
 // M-QI-07 (QI-D4) - the real production invest seam: GameManager's
@@ -53,5 +55,87 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter - physique transform', ()
     expect(manager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')).toBe(0)
     expect(manager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(bagBefore)
     expect(player.physiqueGrade).toBe('bao')
+  })
+})
+
+// M-F-BODY-CORE - the restore contract through the REAL session-load
+// entry point: GameManager.saveOps.restoreFromSave runs the body
+// preflight (assertBodyProgressionIntegrity) before any owner mutation.
+// The persisted physiqueGrade is authoritative: an advanced grade
+// restores unchanged; a behind-grade torn state is REJECTED and never
+// auto-advanced by the restore path.
+describe('GameManager.saveOps.restoreFromSave - physique restore contract', () => {
+  function managerWithCatalogs(): GameManager {
+    const manager = new GameManager()
+    manager.catalogOps.registerMaterials(materials)
+    manager.catalogOps.registerPills(pills)
+    return manager
+  }
+
+  function baseSave(player: ReturnType<typeof createDefaultPlayer>): GameSave {
+    return {
+      version: CURRENT_SAVE_VERSION,
+      player,
+      techniques: [],
+      skills: [],
+      materials: [],
+      equipment: [],
+      equipmentSlots: [],
+      pills: [],
+      talismans: [],
+      formations: [],
+      buildings: [],
+      quests: { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
+      productionSites: [],
+    }
+  }
+
+  it('a completed chapter + persisted advanced grade restores unchanged', () => {
+    const manager = managerWithCatalogs()
+
+    const saved = createDefaultPlayer()
+    saved.realmId = 'qi_refining'
+    saved.physiqueGrade = 'bao'
+    saved.bodyProgression.body_refinement.completedTiers = 6
+    const save = baseSave(saved)
+
+    // Real session-load order (SaveSystem): the restored player becomes
+    // the LIVE player BEFORE saveOps.restoreFromSave runs preflight +
+    // the body modifier rebuild on it.
+    manager.setActivePlayer(save.player)
+    expect(() => manager.saveOps.restoreFromSave(save)).not.toThrow()
+
+    // The authoritative post-restore player keeps the persisted grade
+    // AND the completed chapter - never re-derived or re-applied by the
+    // restore path (the rebuild ran on this very player object).
+    expect(save.player.physiqueGrade).toBe('bao')
+    expect(save.player.bodyProgression.body_refinement.completedTiers).toBe(6)
+  })
+
+  it('a completed chapter + behind-grade save is rejected before any owner mutation', () => {
+    const manager = managerWithCatalogs()
+    const live = createDefaultPlayer()
+    manager.setActivePlayer(live)
+    manager.materialBag.add(manager.materialRegistry.get(TINH_HOA_PHAM_THE_MATERIAL_ID), 5)
+
+    const saved = createDefaultPlayer()
+    saved.realmId = 'qi_refining'
+    saved.bodyProgression.body_refinement.completedTiers = 6
+    // physiqueGrade stays 'pham' - torn: no recompute on restore.
+    const save = baseSave(saved)
+
+    // Snapshot the live owner state across the rejected restore.
+    const gradeBefore = live.physiqueGrade
+    const progressionBefore = structuredClone(live.bodyProgression)
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/physique/i)
+
+    // Rejection heals nothing and touches nothing: the live player's
+    // physique + body-progression state and the live bag are untouched
+    // (preflight throws before any owner mutation).
+    expect(live.physiqueGrade).toBe(gradeBefore)
+    expect(live.bodyProgression).toEqual(progressionBefore)
+    expect(save.player.physiqueGrade).toBe('pham')
+    expect(manager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(5)
   })
 })

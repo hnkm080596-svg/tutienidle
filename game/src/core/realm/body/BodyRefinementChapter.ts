@@ -112,6 +112,9 @@ export function getRefinementCurrentTierProgress(player: PlayerData): number {
 
 export const bodyRefinementChapter: BaseStatBodyChapter = {
   kind: 'baseStat',
+  // M-F-BODY-CORE - the authored chapter classification (a tier-invest
+  // REFINEMENT chapter); orthogonal to the emission `kind`.
+  chapterKind: 'refinement',
   id: 'body_refinement',
   // M-QI-07 (QI-D4) - filling all 6 tiers transforms the physique
   // pham -> bao, once. The transform write itself lives in

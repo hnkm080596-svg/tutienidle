@@ -4,11 +4,14 @@ import { BODY_REFINEMENT_TIERS } from '../../../data/realm/BodyRefinement'
 import { MERIDIANS } from '../../../data/realm/Meridians'
 import { createDefaultPlayer } from '../../player/Player'
 import {
+  applyAllBodyModifiers,
+  applyPhysiqueAdvancement,
   assertBodyProgressionIntegrity,
   canProgressPhysiqueChapter,
   getPhysiqueGrade,
   investBodyChapterState,
 } from './BodyProgressionSystem'
+import { getBodyChapterDefinition, type BodyChapterDefinition } from './BodyChapter'
 
 // M-QI-07 (QI-D4) - physique transformation authority: the 6/6
 // body_refinement completion advances physiqueGrade pham -> bao
@@ -114,6 +117,113 @@ describe('canProgressPhysiqueChapter (INV-5 invest gate)', () => {
 
     const consumed = investBodyChapterState(player, 'body_refinement', 5, 0)
     expect(consumed).toBe(5)
+  })
+})
+
+// M-F-BODY-CORE - the completion-advance seam: applyPhysiqueAdvancement
+// is the hook any chapter-completion path calls (invest dispatch today,
+// a future zhou_tian path tomorrow). One completed NORMAL chapter = one
+// rung, once, idempotent - driven here without the invest path.
+describe('applyPhysiqueAdvancement (M-F-BODY-CORE completion seam)', () => {
+  const refinement = getBodyChapterDefinition('body_refinement')
+  const meridian = getBodyChapterDefinition('meridian')
+
+  it('advances a completed chapter exactly one rung without an invest', () => {
+    const player = createDefaultPlayer()
+    // A non-invest completion path lands chapter-complete state directly
+    // (as a future zhou_tian chapter would); the seam must still fire.
+    player.bodyProgression.body_refinement.completedTiers = 6
+
+    applyPhysiqueAdvancement(player, refinement)
+
+    expect(getPhysiqueGrade(player)).toBe('bao')
+  })
+
+  it('is idempotent - repeated evaluation of the same state is a no-op', () => {
+    const player = createDefaultPlayer()
+    player.bodyProgression.body_refinement.completedTiers = 6
+
+    applyPhysiqueAdvancement(player, refinement)
+    applyPhysiqueAdvancement(player, refinement)
+
+    expect(getPhysiqueGrade(player)).toBe('bao')
+  })
+
+  it('does not advance an incomplete chapter', () => {
+    const player = createDefaultPlayer()
+    player.bodyProgression.body_refinement.completedTiers = 5
+
+    applyPhysiqueAdvancement(player, refinement)
+
+    expect(getPhysiqueGrade(player)).toBe('pham')
+  })
+
+  it('does not rewrite a grade already past the source rung', () => {
+    const player = createDefaultPlayer()
+    player.physiqueGrade = 'phap'
+    player.bodyProgression.body_refinement.completedTiers = 6
+
+    applyPhysiqueAdvancement(player, refinement)
+
+    expect(getPhysiqueGrade(player)).toBe('phap')
+  })
+
+  it('is a no-op for a chapter that declares no advancement', () => {
+    const player = createDefaultPlayer()
+    player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+
+    applyPhysiqueAdvancement(player, meridian)
+
+    expect(getPhysiqueGrade(player)).toBe('pham')
+  })
+
+  it('drives a synthetic future advancement chain link (bao -> phap)', () => {
+    const player = createDefaultPlayer()
+    player.physiqueGrade = 'bao'
+
+    // A future chapter shape (e.g. zhou_tian) with its own transition -
+    // exercised without registering it, same pure-seam convention as
+    // canProgressPhysiqueChapter.
+    const futureChapter = {
+      ...getBodyChapterDefinition('body_refinement'),
+      physiqueAdvancement: { from: 'bao', to: 'phap' },
+      isComplete: () => true,
+    } as BodyChapterDefinition
+
+    applyPhysiqueAdvancement(player, futureChapter)
+
+    expect(getPhysiqueGrade(player)).toBe('phap')
+  })
+
+  it('restore does not re-derive or re-apply the transform (INV-2)', () => {
+    // Post-transform persisted state: complete chapter + 'bao'. The
+    // restore rebuild (applyAllBodyModifiers) must leave the persisted
+    // grade untouched - the transform is proven by the grade, never
+    // recomputed on load.
+    const player = createDefaultPlayer()
+    player.realmId = 'qi_refining'
+    player.physiqueGrade = 'bao'
+    player.bodyProgression.body_refinement.completedTiers = 6
+
+    applyAllBodyModifiers(player)
+
+    expect(getPhysiqueGrade(player)).toBe('bao')
+  })
+
+  it('a torn persisted state is never auto-advanced by the restore rebuild (INV-2/INV-8)', () => {
+    // Completed chapter + grade still 'pham': the persisted grade is
+    // authoritative, so restore/rebuild must NOT run the advancement
+    // seam - applyAllBodyModifiers leaves the grade untouched and the
+    // preflight (assertBodyProgressionIntegrity exact-equality) rejects
+    // the torn state as a hard error instead of healing it.
+    const player = createDefaultPlayer()
+    player.realmId = 'qi_refining'
+    player.bodyProgression.body_refinement.completedTiers = 6
+
+    applyAllBodyModifiers(player)
+
+    expect(getPhysiqueGrade(player)).toBe('pham')
+    expect(() => assertBodyProgressionIntegrity(player)).toThrow(/physique/i)
   })
 })
 
