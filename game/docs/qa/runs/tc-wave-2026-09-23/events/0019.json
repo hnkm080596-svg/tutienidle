@@ -1,0 +1,10 @@
+{
+  "applied": [
+    "census:CEN-CORE (updated)",
+    "census:CEN-DATA (updated)",
+    "census:CEN-SERVICES (updated)",
+    "census:CEN-COMPOSABLES (updated)",
+    "census:CEN-COMPONENTS (updated)",
+    "census:CEN-DOCS-P7 (updated)"
+  ]
+}

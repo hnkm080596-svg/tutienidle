@@ -1,0 +1,19 @@
+{
+  "runId": "tc-wave-2026-09-23",
+  "scope": "AGGREGATE_REPOSITORY (retro sweep)",
+  "target": "origin/master..origin/p7/truc-co @ b76cc97b — 16 merged missions",
+  "missions": ["M-QI-09","M-QI-10","REALM18","RESPEC","CEILING","BODY-CORE","TECHNIQUE","TALENT","ESSENCE","UI-SYSTEM","COMPANION-GIFT","ARTIFACT-DEFER","CHU-THIEN","BODY-PERFECTION","BODY-HIDDEN","JOURNEY"],
+  "stance": "report-only sweep over merged base; repairs belong to follow-up missions, not this run",
+  "lenses": [
+    {"id":"contract","target":"merged protocol + AGENTS law vs wave state; docs authority conflicts; naming-drift debt vs census"},
+    {"id":"correctness","target":"cross-mission state/transition invariants assembled at wave tip — tribulation outcome lifecycle, save/restore v81 chain, progression ceilings, essence/material flows across mission boundaries"},
+    {"id":"authority","target":"one-authority-per-state across the merged wave: persisted-field writer census (v73-v81), channel attribution vs modifier channels, duplicate rule ownership across mission-written modules; journal F-A-6 (hiddenChannelCycles schema drift, live on base)"},
+    {"id":"integration","target":"integration seams BETWEEN missions: tick-order coupling across systems written in different missions, restore path assembly, quest/production/body event chains, fixture-vs-production seam parity of the journey harness vs the whole merged surface"}
+  ],
+  "implReportedItems": [
+    "F-A-6 (Round A finding, still live): hiddenChannelCycles persisted per site but undeclared on ProductionSiteStateSave — journal as pre-existing REAL_DEFECT",
+    "3 naming-drift items recorded-not-fixed in docs (zhou_tian id, gift_* mixed ids, bat-mach: prefix) — honest records per Round A adjudication",
+    "Round A repairs landed at 824a57b9+ff4e3b6e before merge — verify repair efficacy inside the wave (deterministic draws, parity oracle, census widening, drain guard)"
+  ],
+  "classification": "each finding tagged INTEGRATION_SEAM (cross-mission, new) vs RESIDUAL (per-mission, deferred/pre-existing)"
+}

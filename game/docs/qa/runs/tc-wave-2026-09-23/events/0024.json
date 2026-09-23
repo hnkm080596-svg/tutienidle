@@ -1,0 +1,12 @@
+{
+  "applied": [
+    "lesson:LES-SCHEMA-DRIFT-1 (updated)",
+    "lesson:LES-RESPEC-CLAWBACK (updated)",
+    "lesson:LES-TRIB-LIFECYCLE (updated)",
+    "lesson:LES-TEST-DRIFT (updated)",
+    "lesson:LES-AUTHORITY-DUP (updated)",
+    "lesson:LES-DETERMINISM (updated)",
+    "lesson:LES-SAVE-VALIDATION (updated)",
+    "lesson:LES-DOC-SYNC (updated)"
+  ]
+}

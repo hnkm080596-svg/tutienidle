@@ -1,0 +1,46 @@
+{
+  "outcome": "QA_BLOCKED_SCOPE",
+  "detail": "repairs outside authorized scope: F-W-0,F-W-1,F-W-2,F-W-3,F-W-4,F-W-5,F-W-6,F-W-7,F-W-8,F-W-9,F-W-10,F-W-11,F-W-12,F-W-13,F-W-14,F-W-15,F-W-16,F-W-17,F-W-18,F-W-19,F-W-20",
+  "clauses": [
+    {
+      "id": "C1-identity",
+      "ok": true,
+      "reason": "all final evidence binds the declared state"
+    },
+    {
+      "id": "C2-census-coverage",
+      "ok": false,
+      "reason": "domain src/core uncovered; domain src/data uncovered; domain src/services uncovered; domain src/composables uncovered; domain src/components uncovered; domain docs/p7 uncovered"
+    },
+    {
+      "id": "C3-no-open",
+      "ok": false,
+      "reason": "open F-W-0; open F-W-1; open F-W-2; open F-W-3; open F-W-4; open F-W-5; open F-W-6; open F-W-7; open F-W-8; open F-W-9; open F-W-10; open F-W-11; open F-W-12; open F-W-13; open F-W-14; open F-W-15; open F-W-16; open F-W-17; open F-W-18; open F-W-19; open F-W-20"
+    },
+    {
+      "id": "C4-final-gates",
+      "ok": false,
+      "reason": "no final evidence recorded"
+    },
+    {
+      "id": "C5-sequential",
+      "ok": true,
+      "reason": "sequential phase reviews present"
+    },
+    {
+      "id": "C6-clean-pair",
+      "ok": false,
+      "reason": "Clean A missing/not CLEAN; Clean B missing/not CLEAN"
+    },
+    {
+      "id": "C7-mutation-corpus",
+      "ok": true,
+      "reason": "mutation + corpus satisfied"
+    },
+    {
+      "id": "C8-terminal-check",
+      "ok": false,
+      "reason": "no sealed independent TERMINAL_CHECK on the final state"
+    }
+  ]
+}
