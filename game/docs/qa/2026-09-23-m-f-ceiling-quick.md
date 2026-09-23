@@ -55,3 +55,10 @@ None added during this QA pass — the task's own `ReleasePolicy.test.ts` alread
 ## Pre-existing Failures
 
 None observed in scoped runs.
+
+## Addendum — C2C-9 pinned semantics (post-review findings 1-4)
+
+- Tag completeness: `src/data/breakthrough/BreakthroughScopedResources.ts` is the canonical census of breakthrough-scoped resources; the integrity tests assert census ids carry a valid `breakthroughRealmId` and every tagged record is declared (both directions). The live gate binds the census via `TRUC_CO_DAN_PILL_ID`.
+- Grandfathering removed (simple rule): domain predicates require `isRealmAvailable(playerRealmId)` — a persisted save beyond the ceiling hides companion/formation/artifact domains (normalize strips the artifact). Tests pin `golden_core` → hidden.
+- Single-check invariant documented in `ReleasePolicy.ts` header: policy consulted once at origination; restore/delivery never re-checks. Audit: `grantCultivationPathRealmReward` (the only originating settle path) is gated; `GameManagerBuildingOps`/`EquipmentOpsSystem`/`GameManagerRewardOps`/`GameManagerTickOps`/`GameManagerCompanionOps` authored rewards emit no tagged ids today (latent gap unchanged); alchemy job completion delivers an authorized product gated at job start.
+- Tribulation funnel enforced: `tests/architecture/tribulationAdmissionFunnel.test.ts` censuses director construction + `director.start` call sites to GameManager.ts and pins `startTribulationPrepared` as a delegation wrapper.

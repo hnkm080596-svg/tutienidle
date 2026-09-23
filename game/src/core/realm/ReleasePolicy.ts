@@ -11,7 +11,22 @@
 // ceiling from realm order or table presence. Domain unlock predicates
 // (isCompanionDomainUnlocked / isFormationUnlocked /
 // isArtifactDomainUnlocked) compose it as
-// `isRealmAvailable(unlockRealmId) && reached(unlockRealmId)`.
+// `isRealmAvailable(unlockRealmId) && isRealmAvailable(realmId) &&
+// reached(unlockRealmId)` - the SIMPLE rule (C2C-9): no grandfathering
+// beyond the ceiling, a persisted save whose realm is unavailable hides
+// the domain even though the unlock realm itself is in-window.
+//
+// Single-check invariant: the policy is consulted exactly once at reward
+// eligibility/origination (admission gates, authored acquisition routes,
+// realm-entry grants). Persistence restore and deterministic delivery of
+// an already-authorized reward (bag.add, save reload, alchemy job
+// completion) never re-check - stripping owned tagged resources on load
+// would be data loss.
+//
+// Tag completeness: breakthrough-scoped resources are census'd in
+// src/data/breakthrough/BreakthroughScopedResources.ts; every census id
+// must carry breakthroughRealmId and every tagged record must be in the
+// census (the integrity test asserts both directions).
 import { getRealmIndex } from './realmSystem'
 
 /** Highest realm a player may occupy in this release. Beta: Truc Co. */

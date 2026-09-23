@@ -157,14 +157,16 @@ export function advanceArtifactRealmLevel(progress: ArtifactProgress, playerReal
 
 // M-F-CEILING - the artifact domain's realm gate, composed with release
 // policy the same way CompanionAvailability/FormationPlacement compose
-// theirs: the domain opens at ARTIFACT_UNLOCK_REALM_ID provided that
-// realm is inside the release window. M-F-ARTIFACT-DEFER moves the
+// theirs (C2C-9 simple rule): NO grandfathering beyond the ceiling - a
+// persisted save whose realm is unavailable hides the domain even though
+// ARTIFACT_UNLOCK_REALM_ID sits in-window. M-F-ARTIFACT-DEFER moves the
 // constant to the artifact's deferred realm; no site re-derives the gate.
 export const ARTIFACT_UNLOCK_REALM_ID = 'foundation_establishment'
 
 export function isArtifactDomainUnlocked(realmId: string): boolean {
   return (
     isRealmAvailable(ARTIFACT_UNLOCK_REALM_ID) &&
+    isRealmAvailable(realmId) &&
     getRealmIndex(realmId) >= getRealmIndex(ARTIFACT_UNLOCK_REALM_ID)
   )
 }

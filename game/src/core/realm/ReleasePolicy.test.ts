@@ -20,7 +20,13 @@ import {
   type GameManagerAlchemyOpsDeps,
 } from '../game/GameManagerAlchemyOps'
 import type { AlchemyRecipe } from '../alchemy/AlchemySystem'
-import { SPECIAL_ALCHEMY_RECIPES } from '../../data/alchemy/alchemyRecipes'
+import { SPECIAL_ALCHEMY_RECIPES, alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
+import {
+  BREAKTHROUGH_SCOPED_MATERIAL_IDS,
+  BREAKTHROUGH_SCOPED_PILL_IDS,
+  BREAKTHROUGH_SCOPED_RECIPE_IDS,
+  TRUC_CO_DAN_PILL_ID,
+} from '../../data/breakthrough/BreakthroughScopedResources'
 import { COMMAND_WHEEL_SLOTS } from '../../data/ui/commandWheelCatalog'
 import { QuestSystem } from '../quest/QuestSystem'
 import { QuestRegistry } from '../quest/QuestRegistry'
@@ -32,7 +38,7 @@ import { PillRegistry } from '../pill/PillRegistry'
 import { PillBag } from '../pill/PillBag'
 import { RewardSystem, type RewardReceiver } from '../reward/RewardSystem'
 import { EventBus } from '../events/EventBus'
-import { QI_REFINING_BREAKTHROUGH_STAGE_ID } from './realmSystem'
+import { QI_REFINING_BREAKTHROUGH_STAGE_ID, getRealmIndex } from './realmSystem'
 import { createDefaultPlayer, type PlayerData } from '../player/Player'
 import { createBaseStats, type Stats } from '../stats/StatBlock'
 import { createLootTestSetup } from '../game/battleLootTestSetup'
@@ -205,19 +211,21 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
     expect(gameManager.startTribulation(qiRefining, 'foundation_establishment')).toBe(true)
   })
 
-  it('domain unlock predicates compose the authority with their realm threshold', () => {
+  it('domain unlock predicates compose the authority - persisted saves beyond the ceiling hide domains', () => {
     expect(isCompanionDomainUnlocked('qi_refining')).toBe(false)
     expect(isCompanionDomainUnlocked('foundation_establishment')).toBe(true)
-    // Grandfathered dev saves above the ceiling keep their domains open.
-    expect(isCompanionDomainUnlocked('golden_core')).toBe(true)
+    // C2C-9 simple rule: no grandfathering - a golden_core save is a save
+    // BEYOND the release ceiling, so every domain is hidden for it even
+    // though the unlock realm sits in-window.
+    expect(isCompanionDomainUnlocked('golden_core')).toBe(false)
 
     expect(isFormationUnlocked('qi_refining')).toBe(false)
     expect(isFormationUnlocked('foundation_establishment')).toBe(true)
-    expect(isFormationUnlocked('golden_core')).toBe(true)
+    expect(isFormationUnlocked('golden_core')).toBe(false)
 
     expect(isArtifactDomainUnlocked('qi_refining')).toBe(false)
     expect(isArtifactDomainUnlocked('foundation_establishment')).toBe(true)
-    expect(isArtifactDomainUnlocked('golden_core')).toBe(true)
+    expect(isArtifactDomainUnlocked('golden_core')).toBe(false)
   })
 
   it('normalizeArtifactProgress awakens only through the artifact domain gate', () => {
@@ -228,6 +236,12 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
     const awakened = spellPlayer('foundation_establishment')
     normalizeArtifactProgress(awakened)
     expect(awakened.artifact?.artifactId).toBe('ngu_hanh_chau')
+
+    // C2C-9: a persisted save beyond the ceiling loses the domain state
+    // on normalize - no grandfathered artifact survives the gate.
+    const beyondCeiling = spellPlayer('golden_core')
+    normalizeArtifactProgress(beyondCeiling)
+    expect(beyondCeiling.artifact).toBeUndefined()
   })
 
   it('grantCultivationPathRealmReward: authored rewards for unreleased realms stay dormant', () => {
@@ -419,5 +433,82 @@ describe('ReleasePolicy - authored breakthrough tags (Beta window)', () => {
       SPECIAL_ALCHEMY_RECIPES.find((r) => r.id === 'alchemy_truc_co_dan')
         ?.breakthroughRealmId,
     ).toBe('foundation_establishment')
+  })
+})
+
+describe('ReleasePolicy - breakthrough-scope census integrity (C2C-9)', () => {
+  // The tag is optional by shape, so completeness lives in the census:
+  // every id BreakthroughScopedResources declares must be tagged with a
+  // REAL realm, and every tagged registry record must be declared there.
+  // A future breakthrough-scoped resource added to the census without the
+  // tag - or tagged without the census - fails here.
+
+  it('every census id exists in its registry and carries a valid breakthroughRealmId', () => {
+    for (const id of BREAKTHROUGH_SCOPED_MATERIAL_IDS) {
+      const material = materials.find((m) => m.id === id)
+      expect(material, `census material '${id}' missing from materials registry`).toBeDefined()
+      expect(
+        material!.breakthroughRealmId,
+        `census material '${id}' lacks breakthroughRealmId - untagged breakthrough-scoped resources bypass the policy`,
+      ).toBeDefined()
+      expect(getRealmIndex(material!.breakthroughRealmId!)).toBeGreaterThanOrEqual(0)
+    }
+
+    for (const id of BREAKTHROUGH_SCOPED_PILL_IDS) {
+      const pill = pills.find((p) => p.id === id)
+      expect(pill, `census pill '${id}' missing from pills registry`).toBeDefined()
+      expect(
+        pill!.breakthroughRealmId,
+        `census pill '${id}' lacks breakthroughRealmId - untagged breakthrough-scoped resources bypass the policy`,
+      ).toBeDefined()
+      expect(getRealmIndex(pill!.breakthroughRealmId!)).toBeGreaterThanOrEqual(0)
+    }
+
+    for (const id of BREAKTHROUGH_SCOPED_RECIPE_IDS) {
+      const recipe = alchemyRecipes.find((r) => r.id === id)
+      expect(recipe, `census recipe '${id}' missing from alchemyRecipes`).toBeDefined()
+      expect(
+        recipe!.breakthroughRealmId,
+        `census recipe '${id}' lacks breakthroughRealmId - untagged breakthrough-scoped recipes bypass the policy`,
+      ).toBeDefined()
+      expect(getRealmIndex(recipe!.breakthroughRealmId!)).toBeGreaterThanOrEqual(0)
+    }
+  })
+
+  it('every tagged registry record is declared in the census (no stray tags)', () => {
+    const materialCensus = new Set<string>(BREAKTHROUGH_SCOPED_MATERIAL_IDS)
+    for (const material of materials) {
+      if (material.breakthroughRealmId !== undefined) {
+        expect(
+          materialCensus.has(material.id),
+          `material '${material.id}' carries breakthroughRealmId but is not in BREAKTHROUGH_SCOPED_MATERIAL_IDS`,
+        ).toBe(true)
+      }
+    }
+
+    const pillCensus = new Set<string>(BREAKTHROUGH_SCOPED_PILL_IDS)
+    for (const pill of pills) {
+      if (pill.breakthroughRealmId !== undefined) {
+        expect(
+          pillCensus.has(pill.id),
+          `pill '${pill.id}' carries breakthroughRealmId but is not in BREAKTHROUGH_SCOPED_PILL_IDS`,
+        ).toBe(true)
+      }
+    }
+
+    const recipeCensus = new Set<string>(BREAKTHROUGH_SCOPED_RECIPE_IDS)
+    for (const recipe of alchemyRecipes) {
+      if (recipe.breakthroughRealmId !== undefined) {
+        expect(
+          recipeCensus.has(recipe.id),
+          `recipe '${recipe.id}' carries breakthroughRealmId but is not in BREAKTHROUGH_SCOPED_RECIPE_IDS`,
+        ).toBe(true)
+      }
+    }
+  })
+
+  it('the live breakthrough gate binds the census (TRUC_CO_DAN_PILL_ID is tagged + declared)', () => {
+    expect(BREAKTHROUGH_SCOPED_PILL_IDS).toContain(TRUC_CO_DAN_PILL_ID)
+    expect(pills.find((p) => p.id === TRUC_CO_DAN_PILL_ID)?.breakthroughRealmId).toBeDefined()
   })
 })

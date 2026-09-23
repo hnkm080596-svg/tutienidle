@@ -20,9 +20,15 @@ import { isRealmAvailable } from '../realm/ReleasePolicy'
 export const FORMATION_UNLOCK_REALM_ID = 'foundation_establishment'
 
 export function isFormationUnlocked(realmId: string): boolean {
-  // M-F-CEILING - composed with release policy: the domain also stays
-  // closed if the ceiling ever sits below FORMATION_UNLOCK_REALM_ID.
-  return isRealmAvailable(FORMATION_UNLOCK_REALM_ID) && getRealmIndex(realmId) >= getRealmIndex(FORMATION_UNLOCK_REALM_ID)
+  // M-F-CEILING - composed with release policy (C2C-9 simple rule): NO
+  // grandfathering beyond the ceiling - a persisted save whose realm is
+  // unavailable hides the domain even though FORMATION_UNLOCK_REALM_ID
+  // sits in-window.
+  return (
+    isRealmAvailable(FORMATION_UNLOCK_REALM_ID) &&
+    isRealmAvailable(realmId) &&
+    getRealmIndex(realmId) >= getRealmIndex(FORMATION_UNLOCK_REALM_ID)
+  )
 }
 
 // Converts a local standing-slot index (0..STANDING_SLOT_COUNT-1 on each
