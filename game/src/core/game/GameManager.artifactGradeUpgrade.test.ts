@@ -10,6 +10,10 @@ import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
 // Bản Mệnh Pháp Bảo (doc §5.3) — GameManager.tryUpgradeArtifactGrade()
 // route qua materialBag thật + chặn giữa combat, ngoài combat mới cho
 // nâng phẩm.
+// M-F-ARTIFACT-DEFER: the artifact domain is deferred to Kim Dan+ - the
+// op is additionally gated by isArtifactDomainUnlocked(player.realmId),
+// so every real-policy case here (mortal/Truc Co) stays false. The
+// open-window positive lives in ReleasePolicy.artifactDeferred.test.ts.
 const MINIMAL_STATS_INPUT = {
   maxHp: 100,
   might: 0,
@@ -73,7 +77,7 @@ describe('GameManager.tryUpgradeArtifactGrade (doc §5.3)', () => {
     expect(gameManager.realmAdvanceOps.tryUpgradeArtifactGrade(player)).toBe(false)
   })
 
-  it('ngoài combat, đủ đá -> nâng phẩm thành công qua materialBag thật', () => {
+  it('ngoài combat, đủ đá nhưng domain deferred -> no-op false, không trừ đá (mortal)', () => {
     const gameManager = new GameManager()
 
     registerDoanBaoThach(gameManager)
@@ -82,9 +86,24 @@ describe('GameManager.tryUpgradeArtifactGrade (doc §5.3)', () => {
     player.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
     gameManager.materialBag.add(gameManager.materialRegistry.get('doan_bao_thach'), 10)
 
-    expect(gameManager.realmAdvanceOps.tryUpgradeArtifactGrade(player)).toBe(true)
-    expect(player.artifact.grade).toBe('linh')
-    expect(gameManager.materialBag.getAmount('doan_bao_thach')).toBe(0)
+    expect(gameManager.realmAdvanceOps.tryUpgradeArtifactGrade(player)).toBe(false)
+    expect(player.artifact.grade).toBe('pham')
+    expect(gameManager.materialBag.getAmount('doan_bao_thach')).toBe(10)
+  })
+
+  it('ngoài combat, đủ đá nhưng domain deferred -> no-op false, không trừ đá (Trúc Cơ)', () => {
+    const gameManager = new GameManager()
+
+    registerDoanBaoThach(gameManager)
+
+    const player = createDefaultPlayer()
+    player.realmId = 'foundation_establishment'
+    player.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
+    gameManager.materialBag.add(gameManager.materialRegistry.get('doan_bao_thach'), 10)
+
+    expect(gameManager.realmAdvanceOps.tryUpgradeArtifactGrade(player)).toBe(false)
+    expect(player.artifact.grade).toBe('pham')
+    expect(gameManager.materialBag.getAmount('doan_bao_thach')).toBe(10)
   })
 
   it('chặn nâng phẩm khi đang combat, không trừ đá', () => {

@@ -17,7 +17,10 @@ import {
 } from '@/data/ui/commandWheelCatalog'
 import { getCommandWheelOrbitDirection } from '@/data/ui/commandWheelOrbit'
 import { resolveExpectedArtifactId } from '@/core/artifact/Artifact'
-import { isArtifactDomainUnlocked } from '@/core/artifact/ArtifactProgression'
+import {
+  ARTIFACT_UNLOCK_REALM_ID,
+  isArtifactDomainUnlocked,
+} from '@/core/artifact/ArtifactProgression'
 import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
 import { isFormationUnlocked } from '@/core/game/FormationPlacement'
 import { isRealmAvailable } from '@/core/realm/ReleasePolicy'
@@ -37,6 +40,10 @@ const navigation = useBuildingNavigation()
 // commandWheelCatalog.ts.
 const disabledContext = computed<CommandWheelDisabledContext>(() => ({
   artifactDomainUnlocked: isArtifactDomainUnlocked(player.realmId),
+  // M-F-ARTIFACT-DEFER: whether the domain's unlock realm sits inside
+  // the release window - decides between the release-hidden reason and
+  // the "requires Kim Dan" progression lock in the slot tooltip.
+  artifactUnlockRealmAvailable: isRealmAvailable(ARTIFACT_UNLOCK_REALM_ID),
   hasArtifactDefinition: Boolean(resolveExpectedArtifactId(player)),
   // P7-M9: the M9 slots consume the authoritative domain predicates so
   // the wheel never drifts from ops/commit gates when a threshold moves.

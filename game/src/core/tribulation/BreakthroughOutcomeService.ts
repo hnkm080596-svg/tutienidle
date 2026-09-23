@@ -26,9 +26,13 @@
  * (probe evidence 2026-09-11). Core stays Pinia-free (structural typing).
  */
 import type { PlayerData } from '../player/Player'
-import { advanceArtifactRealmLevel } from '../artifact/ArtifactProgression'
+import {
+  advanceArtifactRealmLevel,
+  ARTIFACT_UNLOCK_REALM_ID,
+  createDefaultArtifactProgress,
+  isArtifactDomainUnlocked,
+} from '../artifact/ArtifactProgression'
 import { resolveExpectedArtifactId } from '../artifact/Artifact'
-import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
 import { getCurrentRealm } from '../realm/realmSystem'
 import type { OutcomeAnnouncement } from '../presentation/OutcomeAnnouncement'
 
@@ -90,7 +94,10 @@ export class BreakthroughOutcomeService {
     let artifactTouched = false
     // Banked artifact tier release on every success (doc SS5.1) — the
     // artifact exists only after a KC awakening (tribulation chain today).
-    if (player.artifact) {
+    // M-F-ARTIFACT-DEFER: the release additionally composes the domain
+    // gate - a persisted dormant artifact is never advanced while the
+    // domain is deferred (its realm may be unlocked already).
+    if (player.artifact && isArtifactDomainUnlocked(player.realmId)) {
       advanceArtifactRealmLevel(player.artifact, player.realmLevel)
       artifactTouched = true
     }
@@ -101,7 +108,9 @@ export class BreakthroughOutcomeService {
       // through the tribulation chain (Slice 1). Preserved verbatim from
       // useTribulation-era useBreakthrough.ts so removal is a separate,
       // evidence-based decision (A12).
-      if (player.realmId === 'foundation_establishment' && !player.artifact) {
+      // M-F-ARTIFACT-DEFER: the awakening key moved to the shared domain
+      // declaration (Kim Dan) AND composes the domain gate.
+      if (player.realmId === ARTIFACT_UNLOCK_REALM_ID && !player.artifact && isArtifactDomainUnlocked(player.realmId)) {
         const artifactId = resolveExpectedArtifactId(player)
 
         if (artifactId) {

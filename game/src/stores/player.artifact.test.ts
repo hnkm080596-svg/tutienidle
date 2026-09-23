@@ -43,14 +43,16 @@ describe('player store — artifact normalize on restore (doc §10.2)', () => {
     setActivePinia(createPinia())
   })
 
-  it('Pháp Tu đã Trúc Cơ nhưng save thiếu artifact -> tự tạo default lúc load', () => {
+  // M-F-ARTIFACT-DEFER: artifact domain deferred to Kim Dan+ - a Truc Co
+  // save missing the state stays empty after restore (no TC awakening).
+  it('Pháp Tu đã Trúc Cơ nhưng save thiếu artifact -> vẫn trống (domain deferred Kim Đan)', () => {
     const store = usePlayerStore()
 
     store.restoreFromSave(
       buildMinimalSave({ cultivationPath: 'spell', cultivationWay: 'spell_pathway', realmId: 'foundation_establishment', realmLevel: 3 }),
     )
 
-    expect(store.artifact).toEqual(createDefaultArtifactProgress('ngu_hanh_chau'))
+    expect(store.artifact).toBeUndefined()
   })
 
   it('Kiếm Tu (chưa có definition) -> artifact luôn undefined dù save có state cũ', () => {

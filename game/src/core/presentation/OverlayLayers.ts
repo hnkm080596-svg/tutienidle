@@ -25,7 +25,7 @@ export const OVERLAY_LAYERS = {
   panel: 1800,
   /** WorldAnnouncementOverlay - ambient/ephemeral banners; must never cover a blocking modal. */
   announcement: 1850,
-  /** ToastContainer — transient notifications; above panels so in-panel action feedback stays visible. */
+  /** ToastContainer - transient notifications; above panels so in-panel action feedback stays visible. */
   toast: 1870,
   /** Blocking modals above panels (OfflineSummaryModal, LoreCodexModal, TutorialOverlay). */
   modal: 1900,

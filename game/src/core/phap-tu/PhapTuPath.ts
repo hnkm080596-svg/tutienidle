@@ -10,6 +10,7 @@ import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
 import { SPELL_KIT_IDS, SPELL_ROUTE_SKILL_IDS } from '../../data/skill/Skills'
 import { VAN_PHAP_THAN_HOA_ID } from '../../data/buff/ReactionStatusBuffs'
 import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
+import { ARTIFACT_UNLOCK_REALM_ID } from '../artifact/ArtifactDomain'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
 
 // Cultivation Path Framework (spec 2026-09-16, M4) — the Phap Tu path
@@ -28,7 +29,8 @@ import { ELEMENT_ORDER } from '../element/ElementLabels'
 // emission is identical for spell_pathway and ngo_dao, so they share one
 // PathWayStatFacet instance below.
 //
-// Dependency direction: this file is a leaf — type-only imports only.
+// Dependency direction: this file stays acyclic - it imports only leaf
+// modules (RealmPassiveLadder, ArtifactDomain, data catalogs) plus types.
 // CultivationPathKit (catalog) and CultivationPathSystem (authority)
 // import FROM here; nothing here imports back, so domain code
 // (NodeSystem/PhapTuRoutes) can consume the way predicates without a
@@ -244,12 +246,16 @@ export const SPELL_PATHWAY: PathWayDefinition = {
   ],
   stats: SPELL_WAY_STATS,
   // P7-M2 - canonical realm-entry passive ladder composed with the
-  // way's own Truc Co kit reward (artifact merges into the same
-  // record; the canonical passive stands). P7-M3 - the retired
+  // way's own realm kit reward (the artifact record merges into the
+  // canonical passive record). P7-M3 - the retired
   // dai_ngu_hanh_quyet_truc_co technique swap folded into
   // five_elements_art.gradeEffects[2], so no techniqueId here.
+  // M-F-ARTIFACT-DEFER: the artifact grant is keyed by the shared
+  // domain declaration (Kim Dan+ deferred), never a realm literal - the
+  // integrity test pins the unique artifact-bearing record to
+  // ARTIFACT_UNLOCK_REALM_ID.
   realmRewards: composeRealmRewards({
-    foundation_establishment: {
+    [ARTIFACT_UNLOCK_REALM_ID]: {
       artifactId: 'ngu_hanh_chau',
     },
   }),

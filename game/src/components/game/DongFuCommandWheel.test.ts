@@ -204,7 +204,22 @@ describe('DongFuCommandWheel', () => {
   // Bản Mệnh Pháp Bảo (2026-08-27) — SHIPPED: slot render ngay (khác
   // talisman_slot vẫn future) nhưng disabled trước Trúc Cơ, xem
   // commandWheelCatalog.ts's phap_bao.disabledReason().
-  it('slot Pháp Bảo render nhưng disabled trước Trúc Cơ (Phàm Nhân mặc định)', async () => {
+  // M-F-ARTIFACT-DEFER: the domain is deferred to Kim Dan+, which sits
+  // outside the release window - the slot reads disabled for EVERY
+  // in-window realm (release-hidden reason), including Truc Co itself.
+  it('slot Pháp Bảo render nhưng disabled trước Kim Đan (Phàm Nhân mặc định)', async () => {
+    await mounted.open()
+
+    const slot = mounted.slot('phap_bao')
+
+    expect(slot).not.toBeNull()
+    expect(slot!.classList.contains('is-disabled')).toBe(true)
+    expect(slot!.getAttribute('aria-disabled')).toBe('true')
+  })
+
+  it('slot Pháp Bảo vẫn disabled ở Trúc Cơ (domain deferred Kim Đan)', async () => {
+    usePlayerStore().realmId = 'foundation_establishment'
+    await nextTick()
     await mounted.open()
 
     const slot = mounted.slot('phap_bao')

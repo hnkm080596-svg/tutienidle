@@ -1,8 +1,8 @@
 # Bản Mệnh Pháp Bảo (Artifact)
 
-**Trạng thái:** Live — chỉ Ngũ Hành Châu (Pháp Tu, unlock Trúc Cơ). Kiếm Tu/Thể Tu chưa có definition.
+**Trạng thái:** Deferred — domain dời lên **Kim Đan+** theo ruling M-F-ARTIFACT-DEFER (§2/§52): scope Trúc Cơ trước đây bị thay thế, `ARTIFACT_UNLOCK_REALM_ID = 'golden_core'` giờ là gate chung cho grant/awaken/EXP/ops/material (Đoán Bảo Thạch domain-scoped). Wheel slot ẩn (lý do 'Cần đạt Kim Đan' hoặc chính sách release). State persisted (nếu có) được bảo toàn — domain access bị gate, ownership không bị xoá. Chỉ Ngũ Hành Châu (Pháp Tu); Kiếm Tu/Thể Tu chưa có definition.
 
-Core: `core/artifact/Artifact.ts`, `ArtifactProgression.ts`, `ArtifactSystem.ts`, `ArtifactRuntime.ts`, `ArtifactCombatPresentation.ts`. Data: `data/artifact/{Artifacts,NguHanhChau}.ts`. UI: `ArtifactPanel.vue` (standalone `artifact`, mở từ Trúc Cơ qua command wheel).
+Core: `core/artifact/Artifact.ts`, `ArtifactProgression.ts`, `ArtifactSystem.ts`, `ArtifactRuntime.ts`, `ArtifactCombatPresentation.ts`. Data: `data/artifact/{Artifacts,NguHanhChau}.ts`. UI: `ArtifactPanel.vue` (standalone `artifact`, command wheel — ẩn cho tới Kim Đan+, xem trạng thái ở trên).
 
 ## Mô hình
 

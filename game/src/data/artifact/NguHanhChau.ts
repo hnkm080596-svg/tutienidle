@@ -3,12 +3,16 @@
 // (coefficient/chu kỳ/ICD...) nằm trong core/artifact/ArtifactSystem.ts,
 // không lặp lại ở đây để tránh 2 nguồn sự thật lệch nhau.
 import type { ArtifactDefinition } from '../../core/artifact/Artifact'
+import { ARTIFACT_UNLOCK_REALM_ID } from '../../core/artifact/ArtifactDomain'
 
 export const NGU_HANH_CHAU_DEFINITION: ArtifactDefinition = {
   id: 'ngu_hanh_chau',
   name: 'Ngũ Hành Châu',
   cultivationPathId: 'spell',
-  unlockRealmId: 'foundation_establishment',
+  // M-F-ARTIFACT-DEFER: declared via the shared domain constant - dormant
+  // (zero consumers read it today) but must never drift from the unlock
+  // authority on a future retarget.
+  unlockRealmId: ARTIFACT_UNLOCK_REALM_ID,
   // Milestone descriptions advertise combat effects; the combat presentation
   // chain was removed (Mission G) and the runtime is parked - the copy is
   // retained as design data until the reimagine, not rendered.
