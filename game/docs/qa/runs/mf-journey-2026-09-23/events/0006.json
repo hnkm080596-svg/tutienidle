@@ -1,0 +1,4 @@
+{
+  "phase": "CENSUS",
+  "note": "removed superseded CEN-DOCS (split into CEN-DOCS-P7/CEN-DOCS-QA); corrected requiredDomains to actual review scope"
+}

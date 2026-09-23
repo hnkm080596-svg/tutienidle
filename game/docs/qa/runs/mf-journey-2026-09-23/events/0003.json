@@ -1,0 +1,9 @@
+{
+  "applied": [
+    "census:CEN-EGS",
+    "census:CEN-TCJ",
+    "census:CEN-DOCS",
+    "evidence:EV-VITEST-JOURNEY",
+    "evidence:EV-CENSUS"
+  ]
+}

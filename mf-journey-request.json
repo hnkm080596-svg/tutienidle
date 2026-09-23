@@ -1,0 +1,16 @@
+{
+  "runId": "mf-journey-2026-09-23",
+  "productRoot": "/home/ubuntu/repos/tutienidle/.agent-worktrees/mf-journey-target/game",
+  "checkout": "origin/p7/truc-co base + devin/1790160949-m-f-journey @ 873635bd (PR #19)",
+  "branch": "devin/1790160949-m-f-journey",
+  "base": "origin/p7/truc-co",
+  "head": "873635bd502921a6164eff368cb470af8c735915",
+  "authorizedRepairs": [],
+  "nonGoals": ["gameplay", "economy", "save-policy", "production code changes", "merge/push"],
+  "requiredDomains": ["src/test", "docs/p7", "docs/qa"],
+  "contractPaths": ["../AGENTS.md", "../../internal-qa/game/docs/qa/protocol/README.md", "../../internal-qa/game/docs/qa/protocol/agent-instructions.md"],
+  "attackModelPath": "attack-model.json",
+  "environmentPath": "environment.json",
+  "extraExclude": ["docs/qa/runs/", "docs/qa/learning/history/"],
+  "notes": "First real internal run: review-only qualification of PR #19 (M-F-JOURNEY impl, test/docs-only diff, zero production edits). Coordinator run — no repairs authorized (review mission). productRoot = detached worktree of PR head so productStateId binds the exact reviewed tree; protocol contract lives on devin/1790167292-internal-qa (not yet merged) and is reached via ../ traversal."
+}

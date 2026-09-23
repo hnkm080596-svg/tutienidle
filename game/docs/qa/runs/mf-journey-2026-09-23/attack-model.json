@@ -1,0 +1,15 @@
+{
+  "runId": "mf-journey-2026-09-23",
+  "lenses": [
+    {"id": "contract", "attacks": ["test/assertion semantics vs declared contract", "honest-record vs real-defect drift on the 3 naming items"]},
+    {"id": "correctness", "attacks": ["ordered-leg state seams", "two-phase settle/drain exactly-once", "snapshot/restore parity", "fixture seam honesty (bag API vs real ops)"]},
+    {"id": "authority", "attacks": ["channel vs collector attribution", "bat-mach modifier split", "intrinsic baseStats byte-stability", "persisted-field drift"]},
+    {"id": "integration", "attacks": ["journey legs against real merged seams", "census oracle gaps (channel x channel, any-drop bypass)", "named expected-deferral consistency (Body-Perfection)"]}
+  ],
+  "implReportedItems": [
+    {"id": "zhou_tian id", "class": "NAMING_DRIFT"},
+    {"id": "gift_* mixed ids", "class": "NAMING_DRIFT"},
+    {"id": "bat-mach: prefix", "class": "NAMING_DRIFT"}
+  ],
+  "notes": "Review-only run. Naming-drift items are impl-reported honest records — reviewer judgment decides real defect vs record."
+}
