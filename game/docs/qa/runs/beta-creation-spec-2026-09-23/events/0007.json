@@ -1,0 +1,7 @@
+{
+  "applied": [
+    "census:CEN-SPEC-CLAIMS",
+    "census:CEN-SPEC-DOMAINS",
+    "evidence:EV-SPEC-CENSUS-EXEC"
+  ]
+}

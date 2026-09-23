@@ -792,6 +792,49 @@
         "EV-CENSUS-TESTS"
       ],
       "disposition": "completeness checkable by grep; reviewers verify"
+    },
+    {
+      "id": "CEN-SPEC-CLAIMS",
+      "state": {
+        "productStateId": "c7159ec34038343dc24a384f7de0f366c38deb16ae05760e8ca2e96c8abb1082",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "237c30174e68a16b0436dd5a8cfadea4a1b465cce8229c38080af7fee7581153",
+        "environmentId": "66eed09e77004bba554bf92d4d0c7c10ffab78c8ed7daf80771a40fa87d06054"
+      },
+      "domain": "docs/specs",
+      "cell": "census-claims-vs-code",
+      "producer": "coordinator",
+      "independence": "NON_INDEPENDENT",
+      "artifactPath": "evidence/coordinator-census-check.md",
+      "artifactHash": "1275ad4c5ba8dd5dc8582b1ae085e7ed92d5de0911afe6d935e4e9dbc1dcaad6",
+      "status": "CURRENT"
+    },
+    {
+      "id": "CEN-SPEC-DOMAINS",
+      "state": {
+        "productStateId": "c7159ec34038343dc24a384f7de0f366c38deb16ae05760e8ca2e96c8abb1082",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "237c30174e68a16b0436dd5a8cfadea4a1b465cce8229c38080af7fee7581153",
+        "environmentId": "66eed09e77004bba554bf92d4d0c7c10ffab78c8ed7daf80771a40fa87d06054"
+      },
+      "domain": "requiredDomains",
+      "cell": "domain-sweep",
+      "producer": "coordinator",
+      "independence": "NON_INDEPENDENT",
+      "artifactPath": "evidence/coordinator-census-check.md",
+      "artifactHash": "1275ad4c5ba8dd5dc8582b1ae085e7ed92d5de0911afe6d935e4e9dbc1dcaad6",
+      "claims": [
+        "src/services/character: allocation machinery + draft contract censused",
+        "src/core/game: boot seams + preflight sites censused",
+        "src/core/player: pick field + runtime default censused",
+        "src/core/skill: precursor ids/guard censused",
+        "src/services/save: version + shape + restore path censused",
+        "src/components/onboarding: screen + stepper censused",
+        "src/locales: creation i18n keys censused",
+        "tests: unit/boundary/e2e fixtures pinning old flow censused",
+        "docs/specs + docs/plans: both mission docs verified internally consistent with code"
+      ],
+      "status": "CURRENT"
     }
   ],
   "findings": [],
@@ -917,6 +960,33 @@
       ],
       "limitations": [
         "coordinator self-produced; independence supplied by sealed reviewers"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-SPEC-CENSUS-EXEC",
+      "state": {
+        "productStateId": "c7159ec34038343dc24a384f7de0f366c38deb16ae05760e8ca2e96c8abb1082",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "237c30174e68a16b0436dd5a8cfadea4a1b465cce8229c38080af7fee7581153",
+        "environmentId": "66eed09e77004bba554bf92d4d0c7c10ffab78c8ed7daf80771a40fa87d06054"
+      },
+      "kind_of_run": "EXECUTED_STATIC_CENSUS",
+      "producer": "coordinator",
+      "independence": "NON_INDEPENDENT",
+      "startedAt": "2026-09-23T21:15:00Z",
+      "finishedAt": "2026-09-23T21:18:00Z",
+      "commandOrMethod": "grep/rg claim-by-claim verification over detached checkout @44abadfb",
+      "cwd": "/home/ubuntu/repos/tutienidle/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/coordinator-census-check.md",
+      "artifactHash": "1275ad4c5ba8dd5dc8582b1ae085e7ed92d5de0911afe6d935e4e9dbc1dcaad6",
+      "claims": [
+        "all 13 load-bearing spec census claims verified verbatim at frozen commit"
+      ],
+      "limitations": [
+        "same-context verification; independence evidence pending sealed dispatch (SWE-2 org cap)"
       ],
       "status": "CURRENT"
     }
@@ -1312,6 +1382,22 @@
       "payloadPath": "events/0006.json",
       "payloadHash": "350ba85779ee8edad99762a342ba3866525824d1292a6bff7430ccd27b634e78",
       "eventHash": "79d12e60a44a7f30ecb7dd9049497ab1b09266e1af7a58c76513a694202f7f54"
+    },
+    {
+      "seq": 7,
+      "at": "2026-09-23T21:48:36.817Z",
+      "kind": "PHASE",
+      "actor": "coordinator-12667",
+      "state": {
+        "productStateId": "c7159ec34038343dc24a384f7de0f366c38deb16ae05760e8ca2e96c8abb1082",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "237c30174e68a16b0436dd5a8cfadea4a1b465cce8229c38080af7fee7581153",
+        "environmentId": "66eed09e77004bba554bf92d4d0c7c10ffab78c8ed7daf80771a40fa87d06054"
+      },
+      "previousEventHash": "79d12e60a44a7f30ecb7dd9049497ab1b09266e1af7a58c76513a694202f7f54",
+      "payloadPath": "events/0007.json",
+      "payloadHash": "691fd8ba3e37f6477b9e2f8d0af20314c2fded40ebb621d21c91f2647e1b6b98",
+      "eventHash": "db60778e0a3ecb16ee34f2bd55fb204941554637a8688a8d3d8f555052f01fda"
     }
   ]
 }

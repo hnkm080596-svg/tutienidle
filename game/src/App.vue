@@ -553,10 +553,12 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
       // initiation ritual. BETA-CREATION: the mortal basic pick arrives
       // from the creation screen via pendingCreationPick and is written
       // inside the shared bootstrap seam (never a silent tram default).
-      if (pendingCreationPick === undefined) {
+      const pick = pendingCreationPick
+      pendingCreationPick = undefined
+      if (pick === undefined) {
         throw new Error('onNewCharacter ran without a creation pick')
       }
-      bootstrapEarlyGamePlayer(gameManager, player.$state, pendingCreationPick)
+      bootstrapEarlyGamePlayer(gameManager, player.$state, pick)
 
       for (const buildingId of ['teleport_array', 'gathering_outpost']) {
         const instance = {

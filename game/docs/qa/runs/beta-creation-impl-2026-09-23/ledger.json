@@ -64,9 +64,186 @@
     "outcome": null
   },
   "invariants": [],
-  "census": [],
-  "findings": [],
-  "evidence": [],
+  "census": [
+    {
+      "id": "CEN-IMPL-DIFF",
+      "state": {
+        "productStateId": "3bc7ead8733fe5e0c96336dc6c2334afee53318cabe66efd611d41e17d6e4e1f",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "domain": "requiredDomains",
+      "cell": "aggregate-diff-census",
+      "producer": "coordinator",
+      "independence": "NON_INDEPENDENT",
+      "artifactPath": "evidence/coordinator-gates.md",
+      "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
+      "claims": [
+        "production surface enumerated: onboarding screen, creation services, EarlyGameBootstrap, SaveRestore preflight, Player.ts, saveVersion, fixture, TurnSkillDisplayMeta, locales, supabase migration, EarlyGameSession profiles",
+        "~20 fixture-swap test files pattern-verified",
+        "no residual allocation path: rg census across src/tests/supabase zero hits",
+        "all mortalBasicSkillId consumers enumerated: ProgressionOps:652 write, RealmAdvanceOps:315 ritual clear, CultivationPathRegistry:338 runtime resolve, preflight, PlayerData default"
+      ],
+      "status": "CURRENT"
+    }
+  ],
+  "findings": [
+    {
+      "id": "F-IMPL-1",
+      "title": "pendingCreationPick never cleared after consume (module-scoped stale window)",
+      "severity": "Low",
+      "state": {
+        "productStateId": "3bc7ead8733fe5e0c96336dc6c2334afee53318cabe66efd611d41e17d6e4e1f",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-IMPL-ADVERSARIAL"
+      ],
+      "locations": [
+        {
+          "path": "src/App.vue",
+          "symbolOrSection": "pendingCreationPick module let",
+          "revision": "e1161842",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "A second onNewCharacter firing without a preceding onCharacterCreated would reuse the previous pick.",
+      "expected": "either the pick is cleared on consume, or no path can invoke onNewCharacter without refreshing it",
+      "actual": "unreachable today: onNewCharacter runs only inside bootGame(true), which is only invoked from onCharacterCreated which always writes a fresh pick first; post-boot re-creation requires reload",
+      "rootCause": "module-scoped let kept as emit->callback bridge; no reset-on-consume guard",
+      "rootClass": "STALE_STATE_WINDOW",
+      "subsystem": "creation-boot-seam",
+      "reachability": "SUPPORTED_BOUNDARY",
+      "status": "OPEN_DEFERRED",
+      "actionable": true,
+      "repair": "clear pendingCreationPick inside onNewCharacter after read (one-line hardening)",
+      "siblingSearch": [
+        "searched for other module-scoped pending* bridges in App.vue/lifecycle - none"
+      ],
+      "siblingFindingIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    }
+  ],
+  "evidence": [
+    {
+      "id": "EV-IMPL-TYPECHECK",
+      "state": {
+        "productStateId": "3bc7ead8733fe5e0c96336dc6c2334afee53318cabe66efd611d41e17d6e4e1f",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind_of_run": "EXECUTED_TYPECHECK",
+      "producer": "coordinator",
+      "independence": "NON_INDEPENDENT",
+      "startedAt": "2026-09-23T20:00:00Z",
+      "finishedAt": "2026-09-23T20:02:00Z",
+      "commandOrMethod": "npm run type-check (vue-tsc --build)",
+      "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/coordinator-gates.md",
+      "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
+      "claims": [
+        "aggregate diff type-checks clean"
+      ],
+      "limitations": [
+        "coordinator-run; sealed re-verification pending"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-IMPL-VITEST",
+      "state": {
+        "productStateId": "3bc7ead8733fe5e0c96336dc6c2334afee53318cabe66efd611d41e17d6e4e1f",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind_of_run": "EXECUTED_UNIT_FULL",
+      "producer": "coordinator",
+      "independence": "NON_INDEPENDENT",
+      "startedAt": "2026-09-23T19:30:00Z",
+      "finishedAt": "2026-09-23T19:45:00Z",
+      "commandOrMethod": "npx vitest run (full suite)",
+      "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/coordinator-gates.md",
+      "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
+      "claims": [
+        "7195 tests pass; 3 failures pre-existing env issues identical on base 44abadfb"
+      ],
+      "limitations": [
+        "3 pre-existing env failures excluded by base-comparison proof"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-IMPL-E2E",
+      "state": {
+        "productStateId": "3bc7ead8733fe5e0c96336dc6c2334afee53318cabe66efd611d41e17d6e4e1f",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind_of_run": "EXECUTED_E2E",
+      "producer": "coordinator",
+      "independence": "NON_INDEPENDENT",
+      "startedAt": "2026-09-23T19:50:00Z",
+      "finishedAt": "2026-09-23T20:30:00Z",
+      "commandOrMethod": "npx playwright test over affected specs + rerun of surviving failures",
+      "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/coordinator-gates.md",
+      "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
+      "claims": [
+        "create-to-combat, accessibility keyboard flow, boot-fresh, save-reload, ritual flows all green on unified screen"
+      ],
+      "limitations": [
+        "3 pre-existing env e2e failures proven identical on base"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-IMPL-ADVERSARIAL",
+      "state": {
+        "productStateId": "3bc7ead8733fe5e0c96336dc6c2334afee53318cabe66efd611d41e17d6e4e1f",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind_of_run": "P4_ADVERSARIAL_QUICK",
+      "producer": "coordinator",
+      "independence": "NON_INDEPENDENT",
+      "startedAt": "2026-09-23T20:40:00Z",
+      "finishedAt": "2026-09-23T21:00:00Z",
+      "commandOrMethod": "tutienidle-adversarial-qa quick mode, invariant ledger, 8-hypothesis attack set",
+      "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/coordinator-gates.md",
+      "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
+      "claims": [
+        "PASS WITH EVIDENCE; every hypothesis resolved by executed test or static proof; 1 Low deferred"
+      ],
+      "limitations": [
+        "quick mode; deep escalation bounded by boundary-matrix + scheduled sealed review"
+      ],
+      "status": "CURRENT"
+    }
+  ],
   "coverage": [],
   "attacks": [],
   "reviews": [],
@@ -107,6 +284,38 @@
       "payloadPath": "events/0002.json",
       "payloadHash": "05ecd7731e7570dbdece29384182e19eae563afa7a1febeb0eaa3f2c073d4e98",
       "eventHash": "9be22e906149257cb3f807ebe107387ef2a3441ac222136edf94b5239fcf2bc3"
+    },
+    {
+      "seq": 3,
+      "at": "2026-09-23T21:49:23.634Z",
+      "kind": "PHASE",
+      "actor": "coordinator-59983",
+      "state": {
+        "productStateId": "3bc7ead8733fe5e0c96336dc6c2334afee53318cabe66efd611d41e17d6e4e1f",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "9be22e906149257cb3f807ebe107387ef2a3441ac222136edf94b5239fcf2bc3",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "3b1f7cd89be9aab01b55caca421a8ff6d88128b89f3d4a17e36b4e02b6da25c5",
+      "eventHash": "1d8516251e0e3a1f974e19cf131e3d155d9cba8cb7169389bdfd4c86af4082a6"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-23T21:49:46.872Z",
+      "kind": "FINDING",
+      "actor": "coordinator-59983",
+      "state": {
+        "productStateId": "3bc7ead8733fe5e0c96336dc6c2334afee53318cabe66efd611d41e17d6e4e1f",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "1d8516251e0e3a1f974e19cf131e3d155d9cba8cb7169389bdfd4c86af4082a6",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "74612d5720ebe5865ddbe3184ed85e61c2b4d05cf4c58bb6507b362ca0dfad8c",
+      "eventHash": "c8178aabb4d0518c15ea3e410793355470b4030a44613015e9b2a598d51e6c30"
     }
   ]
 }
