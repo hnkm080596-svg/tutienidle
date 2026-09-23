@@ -227,7 +227,7 @@ function cmdQualify() {
   let out = "";
   let code = 0;
   try {
-    out = execFileSync(process.execPath, ["--test", "--test-reporter=spec", testDir], { cwd: GAME_ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    out = execFileSync(process.execPath, ["--test", path.join(testDir, "*.test.mjs")], { cwd: GAME_ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
   } catch (e) {
     code = e.status ?? 1;
     out = (e.stdout ?? "") + (e.stderr ?? "");
@@ -242,7 +242,7 @@ function cmdQualify() {
   if (fs.existsSync(corpusIdx)) {
     const idx = readJson(corpusIdx);
     const counts = {};
-    for (const c of idx.cases ?? []) counts[c.status ?? "PENDING"] = (counts[c.status ?? "PENDING"] ?? 0) + 1;
+    for (const c of idx.entries ?? idx.cases ?? []) counts[c.status ?? "PENDING"] = (counts[c.status ?? "PENDING"] ?? 0) + 1;
     corpusLine = `corpus cases: ${JSON.stringify(counts)}`;
   }
   console.log(`\n${corpusLine}`);
@@ -250,7 +250,7 @@ function cmdQualify() {
   const gaps = [];
   if (failed !== 0) gaps.push(`orchestrator suite: ${failed} failing`);
   const sentinelDir = path.join(QA_ROOT, "runs", "adoption-2026-09-23", "reviews");
-  const sentinelOk = fs.existsSync(sentinelDir) && fs.readdirSync(sentinelDir).filter((f) => f.startsWith("sentinel-")).length >= 2;
+  const sentinelOk = fs.existsSync(sentinelDir) && fs.readdirSync(sentinelDir).filter((f) => /^sentinel-reviewer-[ab]/.test(f)).length >= 2;
   if (!sentinelOk) gaps.push("reviewer-isolation sentinel: <2 sealed isolated reviewer results recorded");
   if (gaps.length === 0) {
     console.log("\nPROTOCOL_ADOPTION_QUALIFIED");

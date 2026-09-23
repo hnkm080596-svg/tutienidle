@@ -1,0 +1,46 @@
+{
+  "phase": "INTAKE",
+  "request": {
+    "runId": "adoption-2026-09-23",
+    "productRoot": ".",
+    "checkout": "origin/master @ 7808caba + adoption branch devin/1790167292-internal-qa",
+    "branch": "devin/1790167292-internal-qa",
+    "base": "origin/master",
+    "head": "devin/1790167292-internal-qa",
+    "authorizedRepairs": [
+      "docs/qa/**",
+      "scripts/qa/**",
+      "AGENTS.md",
+      "AstraDoctrine.md",
+      "PROJECT_CONTEXT.md",
+      ".opencode/**",
+      ".agents/skills/**",
+      "package.json",
+      "package-lock.json"
+    ],
+    "nonGoals": [
+      "gameplay",
+      "economy",
+      "save-policy",
+      "architecture",
+      "release"
+    ],
+    "requiredDomains": [
+      "scripts/qa",
+      "docs/qa/protocol",
+      "agents/governance"
+    ],
+    "contractPaths": [
+      "../AGENTS.md",
+      "docs/qa/protocol/README.md",
+      "docs/qa/protocol/agent-instructions.md"
+    ],
+    "attackModelPath": "attack-model.json",
+    "environmentPath": "environment.json",
+    "extraExclude": [
+      "docs/qa/runs/",
+      "docs/qa/learning/history/"
+    ],
+    "notes": "Adoption run qualifies the Internal Fixed-Point QA Protocol itself (07 §Task 5). Census/attack docs cover what master contains; p7/truc-co mission code is out of scope (branch split recorded). PR #1 C2C transport marked non-binding; live external-review mandates neutralized in Task 2."
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "node": "v22.23.2",
+  "npm": "10.x",
+  "os": "linux (devin vm)",
+  "toolchain": "vitest + vue-tsc + vite + eslint",
+  "profile": "devin-worktree",
+  "seeds": "fixed fixture state; n/a random",
+  "notes": "protocol adoption run; coverage lives in node --test scripts/qa/tests"
+}
