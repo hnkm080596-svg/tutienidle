@@ -84,8 +84,18 @@ const headingId = useId()
 </template>
 
 <style scoped>
-/* Layout/structure only - all color/glow/border values come from --sys-* in
-   system-theme.css (single ownership, spec 2.4). */
+/* Structural fallback lives HERE (R41): the modal must stay functional and
+   legible if system-theme.css is not imported - the approved revert
+   invariant (spec 2.3) degrades to a plain centered dialog on a dim scrim.
+   Only the --sys-* visual treatment stays in system-theme.css. */
+.sys-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sys-scrim, rgba(5, 10, 18, .82));
+}
 .sys-modal__card {
   position: relative;
   max-width: 94vw;

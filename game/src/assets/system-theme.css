@@ -99,15 +99,18 @@
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask-composite: exclude;
+  contain: paint; /* bounds the repainting ring to its own box */
   pointer-events: none;
   z-index: 2;
 }
-.sys-rim--live::before { animation: sys-rim-spin 4s linear infinite; }
+/* will-change exists only while the rim is actually live (single claimant),
+   so no permanent layer cost is paid by static sys-rim surfaces. */
+.sys-rim--live::before { animation: sys-rim-spin 4s linear infinite; will-change: background; }
 @keyframes sys-rim-spin { to { --sys-rim-angle: 1turn; } }
 
 /* Scan sweep - sheen band translated across; compositor-only (transform).
    At most 2 concurrent per screen (spec 4.1.3) - stagger via animation-delay. */
-.sys-sweep { position: relative; overflow: hidden; }
+.sys-sweep { position: relative; overflow: hidden; contain: paint; }
 .sys-sweep::after {
   content: '';
   position: absolute; inset: 0;
@@ -116,7 +119,7 @@
   pointer-events: none;
   z-index: 1;
 }
-.sys-sweep--run::after { animation: sys-sweep 2.8s ease-in-out 1; }
+.sys-sweep--run::after { animation: sys-sweep 2.8s ease-in-out 1; will-change: transform; }
 @keyframes sys-sweep { to { transform: translateX(120%); } }
 
 /* Scanlines - overlay BELOW text layer (z-index 0 under content z-index >= 1),
@@ -127,6 +130,8 @@
   position: absolute; inset: 0;
   background: repeating-linear-gradient(0deg, rgba(56, 225, 255, .04) 0 1px, transparent 1px 4px);
   animation: sys-flicker 7s steps(12) infinite;
+  contain: paint; /* flicker repaints only this pseudo's box */
+  will-change: opacity; /* opacity anim compositors out; no per-frame repaint */
   pointer-events: none;
   z-index: 0;
 }
@@ -141,6 +146,13 @@
   border: 1px solid var(--sys-line-soft);
   box-shadow: inset 0 0 6px rgba(0, 0, 0, .5);
   overflow: hidden;
+  /* Dense-screen discipline (R41): shimmer is repaint-bound (background-
+     position cannot composite), so the paint boundary on every sys bar is
+     the containment mechanism - a dense screen pays one bounded repaint per
+     bar, not a document repaint. No permanent will-change: a repaint-bound
+     property gains no compositing and would only burn layers on dense
+     screens. */
+  contain: paint;
 }
 .sys-bar__label {
   position: absolute;
@@ -237,21 +249,9 @@
 .sys-panel--flat { /* flat: recipe only, no rim/bloom */ }
 .sys-panel--primary { box-shadow: var(--sys-shadow), var(--sys-glow-md); }
 
-/* SysModalBase chrome - scrim + centered card (z-index bound inline per instance). */
-.sys-modal {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--sys-scrim);
-}
-.sys-modal__card {
-  position: relative;
-  max-width: 94vw;
-  max-height: 92vh;
-  overflow: auto;
-}
+/* SysModalBase chrome - modal geometry + scrim fallback live in the
+   component's scoped style (R41 revert invariant: teleported modals stay
+   functional/legible without this import). Nothing sys-visual remains here. */
 
 /* variant="system" on primitives/Bar.vue - root emits .bar--system.
    Track/fill colors flow through the component's own CSS vars (--bar-track,
@@ -260,6 +260,7 @@
 .bar.bar--system {
   border: 1px solid var(--sys-line-soft);
   box-shadow: inset 0 0 6px rgba(0, 0, 0, .5);
+  contain: paint; /* same dense-screen repaint bound as .sys-bar */
 }
 .bar.bar--system .bar__fill {
   background-size: 200% 100%;
@@ -349,11 +350,11 @@ aside.character-detail.sys-surface {
   .sys-sweep--run::after,
   .sys-scanlines::before,
   .sys-bar__fill,
-  .bar--system .bar__fill { animation: none; }
+  .bar--system .bar__fill { animation: none; will-change: auto; }
 }
 .sys-fx-low .sys-rim--live::before,
 .sys-fx-low .sys-sweep--run::after,
 .sys-fx-low .sys-scanlines::before,
 .sys-fx-low .sys-bar__fill,
 .sys-fx-low.bar--system .bar__fill,
-.sys-fx-low .bar--system .bar__fill { animation: none; }
+.sys-fx-low .bar--system .bar__fill { animation: none; will-change: auto; }
