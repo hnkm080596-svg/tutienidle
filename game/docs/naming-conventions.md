@@ -30,6 +30,23 @@ Thuần Eng: realms (`mortal`, `qi_refining`, `foundation_establishment`…), bu
 Thuần VN pinyin: skills, materials flavor (thảo mộc/kim loại/xương), zones, leaf content ids under a Way (nodes, buffs, orb ids…).
 **Amended 2026-09-21 (P7-M1, decision D6):** path/way/technique identity = mechanic family → English: `CultivationPathId` = `sword|spell|body`; `CultivationWayId` = `*_pathway`; canonical technique ids (`five_elements_art`…) = English. VN grandfathering for `phap_tu/kiem_tu` rescinded — direct identity cut, no compat layer.
 
+**Amended 2026-09-23 (M-F-JOURNEY integration sweep — post-P7 wave families):**
+
+- Body chapter ids = mechanic family → English (`body_refinement`,
+  `meridian`). Landed exception: `zhou_tian` (VN) — recorded drift
+  debt from M-F-CHU-THIEN; new chapter ids stay English.
+- Essence/currency material ids = VN content flavor (`tinh_hoa_*`,
+  `thong_mach_dan`, `thien_dia_chi_kieu`, `truc_co_dan`) — consistent.
+- Gift ids (`gift_than_nong_foundation_entry`,
+  `gift_khai_minh_foundation_floor_10`) = English `gift_` prefix + VN
+  companion + English hook inside one id — landed under
+  M-F-COMPANION-GIFT; recorded as drift debt (N3 mixed-id); new ids
+  in the family keep the `gift_` prefix, single-language body.
+- Modifier id prefixes: mechanic family. `bat-mach:` (VN, landed under
+  the meridian wave) recorded; new prefixes stay English.
+- Talent ids = VN content flavor (`hap_linh`, `pham_cot`,
+  `tc_dia_can`…) — consistent.
+
 ## Save v41
 
 Đổi values/fields trong save ⇒ bump `CURRENT_SAVE_VERSION` = 41 (convention no-migration: save cũ bị từ chối, có màn cứu Export/Backup sẵn).
