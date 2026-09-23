@@ -123,3 +123,26 @@ ChatGPT then writes `inbox-<name>.md` itself and the chat carries only the
 random quick-tunnel URLs otherwise, which forces a connector edit each
 session) and enabling the connector once in the C2C chat. Until then the
 default chat-verdict path above is the supported flow.
+
+## Fan-out model — parallel missions
+
+When several missions are independent (no shared files expected, no
+dependency edge in the mission graph), dispatch them to parallel child
+sessions rather than running them serially in one session:
+
+- One child session per mission; each child gets its own VM and clone, so
+  there is no worktree contention — `.agent-worktrees/` is unnecessary on
+  cloud. Children branch from `origin/master`, implement, run the local
+  gates (P3/P18/P4/P5), push their branch, and open a PR — then stop.
+- Batch only dependency-free missions at once; launch dependent waves
+  after inspecting the previous wave's PRs.
+- The C2C channel is single-chat and verdicts are round-serial: the
+  coordinator session runs every external review itself, in PR order.
+  Children never drive ChatGPT (the login lives on the coordinator's
+  browser) and never merge.
+- Merge sequencing follows the mission graph's dependency order (e.g.
+  M-F-REALM18 lands before M-F-CEILING-derived missions rebase if they
+  collide on `src/data/realms/realm.ts`).
+- Local-agent handoffs arrive as pushed `p7/mqi-*` branches on origin or
+  as `[C2C] go <name>` on the dedicated chat; the coordinator picks them
+  up like any mission.
