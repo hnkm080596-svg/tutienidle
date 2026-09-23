@@ -100,7 +100,9 @@ gates pass.
    `computeTechniqueGradeInheritance` monotonic under the pinned order
    (`partial < dai_thanh < vien_man`, componentwise on
    (finalRank, state) — higher rank at equal state or better state at
-   equal rank never reduces output) and never grants rank;
+   equal rank never reduces output) and grants neither rank nor
+   mastery — the application proves the new cycle keeps
+   `rank == 0 && mastery == 0` after the payload applies;
    `getEffectiveTechniqueRank` = progress.rank in-band, 0 when
    lagging.
 2. `TechniqueSystem.test.ts` (extend): `gainMastery` clamps at
@@ -128,7 +130,9 @@ gates pass.
    a still-lagging grade immediately seals `{0/partial}` for it while
    landing in-band seals nothing.
 5. `BreakthroughRequirementPanel.test.ts` (extend): warning renders iff
-   a held technique projects `!= vien_man`; rank-18 renders none;
+   a held technique has `projected.completionState !== 'vien_man'`
+   (field comparison — the projection is a TechniqueCycleOutcome
+   object, not the enum); rank-18 vien_man renders none;
    already-sealed unperfected record warns; no technique = no warning.
 6. `GameManagerSaveRestore`/save-shape tests (extend): v75 round-trips
    `gradeHistory`; malformed records (key > grade, rank > 18, bad enum,
@@ -181,9 +185,11 @@ gates pass.
 ## Step 4 — breakthrough warning + F5 docstrings
 
 - `BreakthroughRequirementPanel.vue`: warning block keyed on
-  `projectTechniqueCompletion(...) !== 'vien_man'` when a technique is
-  held; en + vi i18n keys added beside `stillEquipped` entries; warn
-  copy names grade + projected outcome (P16 via `useI18n`).
+  `projectTechniqueCompletion(...).completionState !== 'vien_man'`
+  when a technique is held (field comparison on the outcome object —
+  comparing the object to the enum would warn at vien_man); en + vi
+  i18n keys added beside `stillEquipped` entries; warn copy names
+  grade + projected outcome (P16 via `useI18n`).
 - `ProgressionNode.ts`: `techniqueRank` docstring pins effective-rank
   semantics (rank 0 while live grade lags the realm; mirror stays
   literal); `techniqueGrade` pins live-grade monotonicity; both note
