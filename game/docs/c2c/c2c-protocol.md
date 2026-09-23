@@ -148,6 +148,11 @@ sessions rather than running them serially in one session:
   gates (P3/P18/P4/P5), push their branch, and open a PR — then stop.
 - Batch only dependency-free missions at once; launch dependent waves
   after inspecting the previous wave's PRs.
+- Mission gate order (mandatory): SPEC → C2C round until approved → PLAN
+  → C2C round until approved → implement per internal workflow → C2C
+  round on the diff → merge-ready. A child session writes spec+plan and
+  stops; the coordinator sends the review rounds and only then tells the
+  child to implement. User-authored briefs are not exempt.
 - The C2C channel is single-chat and verdicts are round-serial: the
   coordinator session runs every external review itself, in PR order.
   Children never drive ChatGPT (the login lives on the coordinator's
