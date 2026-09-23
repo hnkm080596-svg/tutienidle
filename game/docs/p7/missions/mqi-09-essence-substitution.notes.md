@@ -92,7 +92,10 @@ lock seeds).
 
 1. Transaction order hardened to validate -> consume -> apply:
    for essence currencies the state function now runs on a
-   `structuredClone` probe first; the debit plan is validated
+   detached plain-data probe first (JSON round-trip - r24:
+   structuredClone throws DataCloneError on the reactive Pinia
+   $state real callers pass; never use it here); the debit
+   plan is validated
    (all debits satisfiable + change credit committable) before
    any mutation; bags commit; only then does the real player
    apply. Failure anywhere returns 0 with zero state change.

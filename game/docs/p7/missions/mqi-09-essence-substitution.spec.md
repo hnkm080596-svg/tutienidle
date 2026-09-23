@@ -110,16 +110,21 @@ no bag/PlayerData access:
    material bag — and passes `effectiveAvailable = owned + coverage`
    into `investBodyChapterState` (non-essence currencies yield
    coverage 0, so availability is unchanged for them);
-2. for essence currencies, computes `consumed` on a
-   `structuredClone` probe FIRST (C2C r17#1 — validate -> consume
+2. for essence currencies, computes `consumed` on a DETACHED
+   plain-data probe FIRST (C2C r17#1 + r24 — validate -> consume
    -> apply in the strict sense: the real player is untouched
-   until every bag commit is proven), then asks the resolver for
-   the plan — `planEssenceSubstitution(consumed, chapter.currency,
-   ownedOf)`; a refusal (`undefined`) is fail-closed, while a
-   non-essence currency never reaches the plan at all — it takes
-   the legacy compute-then-debit path whose single-currency
-   `remove` is provably infallible, so the clone cost is paid only
-   on the essence branch;
+   until every bag commit is proven). The probe MUST be a
+   save-shaped/plain `PlayerData` — the JSON/detach strategy
+   (`JSON.parse(JSON.stringify(...))`, matching SaveSystem's
+   `detachSaveValue` ruling), NEVER `structuredClone`: live
+   callers pass a reactive Pinia `$state` and structuredClone
+   throws `DataCloneError` on any nested Proxy — then asks the
+   resolver for the plan — `planEssenceSubstitution(consumed,
+   chapter.currency, ownedOf)`; a refusal (`undefined`) is
+   fail-closed, while a non-essence currency never reaches the
+   plan at all — it takes the legacy compute-then-debit path
+   whose single-currency `remove` is provably infallible, so
+   the clone cost is paid only on the essence branch;
 3. preflights EVERY debit (`bag.has`) AND the change credit's
    post-debit stack capacity (C2C r17#2 — the whole surplus lands
    or the invest aborts) before any bag mutation, then commits:
