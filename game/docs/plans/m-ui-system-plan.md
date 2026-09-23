@@ -277,14 +277,20 @@ withDefaults(defineProps<{
   scanlines?: boolean
   rimActive?: boolean   // sole claim input — parent feeds its visible-primary signal
 }>(), { variant: 'flat', corners: true, scanlines: false, rimActive: false })
+// claimant id: const panelId = useId() — captured ONCE per instance in <script setup>;
+// generated ids are SysPanel's own (uniqueness guaranteed per instance). Authored string
+// ids like 'hud-left' are reserved for non-SysPanel surfaces that drive the authority
+// directly (LeftPanel — Task 4).
 // root: <section class="sys-panel sys-surface sys-corners" :class="{
 //   'sys-rim': variant === 'primary',
+//   'sys-rim--live': isTop,
 //   'sys-bloom': variant === 'interactive',
 //   'sys-scanlines': scanlines }"> + <slot />
 // variant === 'primary' marks the panel rim-ELIGIBLE; the claim itself is driven only by
 // rimActive via useSystemRimAuthority(): claim+promote when rimActive flips true, release
 // when false or on unmount — mounted-but-hidden overlays hold no claim (spec 4.1.1).
-// 'sys-rim--live' applies only while this panel is the authority's topmost active claimant;
+// .sys-rim renders the rim pseudo-element; 'sys-rim--live' (bound from isTop) only spins
+// it while this panel is the authority's topmost active claimant;
 // internally: useSystemRimAuthority(panelId, () => props.variant === 'primary' && props.rimActive)
 
 // SysBar.vue — same aria contract as primitives/Bar.vue
@@ -330,7 +336,9 @@ const emit = defineEmits<{ close: [] }>()
 
 - [ ] **Step 1:** write the failing authority test — `useSystemRimAuthority.test.ts` covers:
   single claimant isTop; second claim promotes; release pops to previous; re-activation
-  promotes; deactivation while mounted releases (no claim); unmount releases.
+  promotes; deactivation while mounted releases (no claim); unmount releases; two
+  independent claimants with distinct ids (as two `useId()`-backed SysPanels produce)
+  hold independent claims — neither isTop nor order collapses across instances.
 - [ ] **Step 2:** run it — `npx vitest run src/composables/useSystemRimAuthority.test.ts` →
   FAIL (module missing).
 - [ ] **Step 3:** implement `useSystemRimAuthority.ts` minimal → same command → PASS.
@@ -370,13 +378,16 @@ const emit = defineEmits<{ close: [] }>()
 **Interfaces:** Consumes SysStat/SysTag/SysBar + `useSystemRimAuthority` from T2. **Pinned
 LeftPanel approach:** the drawer element is a plain `<div>` (not SysPanel) — it drives the
 authority DIRECTLY: `const { isTop } = useSystemRimAuthority('hud-left', () => ui.characterOverlayOpen)`
-in `<script setup>`, binding `sys-rim--live` from `isTop` on the existing drawer root. No
-SysPanel wrapper (avoids a nested surface); the claim still reflects actual visibility via
+in `<script setup>`. The drawer root ALWAYS carries the base `.sys-rim` class (it renders
+the rim pseudo-element) and binds `.sys-rim--live` from `isTop` — `--live` only animates;
+without the base class a top claimant would show no rim at all. No SysPanel wrapper
+(avoids a nested surface); the claim still reflects actual visibility via
 `characterOverlayOpen`. Any opened system modal promotes above it and takes the live rim;
 closing pops back to the drawer (active-claimant order — spec 4.1.1).
 
-- [ ] **Step 1:** `class="left-panel ink-drawer sys-surface sys-corners sys-scanlines"` (same
-  for RightPanel minus the primary rim; CharacterDetailCard gets `.sys-surface`). In
+- [ ] **Step 1:** `class="left-panel ink-drawer sys-surface sys-corners sys-rim sys-scanlines"`
+  plus `:class="{ 'sys-rim--live': isTop }"` (RightPanel same minus `sys-rim`/`sys-rim--live`;
+  CharacterDetailCard gets `.sys-surface`). In
   `system-theme.css`, `.sys-surface.ink-drawer` overrides the shell: `border-image: none`,
   ink art background replaced by the sys recipe. **Constraint:** boundary rule §2.2-2 forbids
   remapping `--paper-*`/`--surface-*` inside the drawer subtree (`.ink-drawer` already does
@@ -435,10 +446,12 @@ exist, list them in the worklog before migrating.
 **Files:** `tests/architecture/systemThemeBoundary.test.ts` (new),
 `tests/e2e/system-ui.spec.ts` (new), `docs/ui-components.md` (system-layer section).
 
-- [ ] **Step 1:** boundary test per spec §2.4 (single `--sys-*` definition site; forbidden-LHS
-  scan; `.sys-`/`--system` selector anchor scan scoped to ordinary style rules with the
-  at-rule allowlist — `:root`/`@property`/`@keyframes`/`@font-face`/`@import`/`@media`/
-  `@supports`; import-order check). Reference regex style:
+- [ ] **Step 1:** boundary test per spec §2.4 (canonical `:root` `--sys-*` definitions
+  exactly once and only in `system-theme.css`; scoped `--sys-*` assignments under
+  `.sys-`/`variant--system`-anchored selectors permitted — the Task-4 remaps MUST NOT trip
+  it; forbidden-LHS scan; `.sys-`/`--system` selector anchor scan scoped to ordinary style
+  rules with the at-rule allowlist — `:root`/`@property`/`@keyframes`/`@font-face`/
+  `@import`/`@media`/`@supports`; import-order check). Reference regex style:
   `tests/architecture/inkDrawerSurface.test.ts`.
 - [ ] **Step 2:** e2e spec: open character drawer → `.sys-surface` present + sole
   `.sys-rim--live` on the drawer; open a system modal → sole rim on the modal; close it →
