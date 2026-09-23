@@ -1,6 +1,6 @@
 # M-F-ESSENCE — Essence Bands + Substitution Residual — Spec
 
-Status: v1 — draft (worker-authored, pending C2C spec review)
+Status: v1 — approved (C2C spec review r51; plan review r54)
 Depends on: M-QI-08 (essence family + authored band drops — `9343215e`),
 M-QI-09 (substitution contract + sim-locked ratios — `7916fbe9`),
 M-QI-10 (live drop-band swap — `d6eae631`), M-F-BODY-CORE (chapter-kind

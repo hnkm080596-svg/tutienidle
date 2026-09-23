@@ -1,15 +1,15 @@
 # M-F-ESSENCE — Essence Bands + Substitution Residual — plan
 
-Spec: `game/docs/specs/m-f-essence-spec.md` (v1 — pending C2C spec
-review). Records the F9 audit verdict — the TC-side essence
+Spec: `game/docs/specs/m-f-essence-spec.md` (v1 — approved, C2C spec
+review r51; plan approved r54). Records the F9 audit verdict — the TC-side essence
 consumption contract is already landed and chapter-agnostic by
 construction — and implements the residual pin set at the typed
 `BodyChapterCurrency` boundary the M-F-CHU-THIEN `zhou_tian` chapter
 will occupy. Test-only: zero production edits, no retune, no re-wire,
 no save change (QI-S).
 
-Phase 1 delivered docs only; Phase 2 begins after C2C spec + plan
-gates pass.
+Phase 1 delivered docs only; Phase 2 implements this pin set under
+C2C impl review.
 
 ## Step 0 — seam census (done during spec; all verified, none rewired)
 

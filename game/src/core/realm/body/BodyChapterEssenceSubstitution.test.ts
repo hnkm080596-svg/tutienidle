@@ -13,6 +13,8 @@ const R_BAO = PHYSIQUE_ESSENCE_CONVERSION_RATIO.bao ?? 0
 const R_PHAP = PHYSIQUE_ESSENCE_CONVERSION_RATIO.phap ?? 0
 
 const PHAM_COST: BodyChapterCurrency = { bag: 'material', id: 'tinh_hoa_pham_the' }
+const BAO_COST: BodyChapterCurrency = { bag: 'material', id: 'tinh_hoa_bao_the' }
+const PHAP_COST: BodyChapterCurrency = { bag: 'material', id: 'tinh_hoa_phap_the' }
 
 function ownedOf(owned: Partial<Record<PhysiqueGradeId, number>>) {
   return (grade: PhysiqueGradeId): number => owned[grade] ?? 0
@@ -147,5 +149,58 @@ describe('planEssenceSubstitution', () => {
     expect(planEssenceSubstitution(10, pill, ownedOf({ bao: 5 }))).toBeUndefined()
     expect(planEssenceSubstitution(10, collidingPill, ownedOf({ bao: 5 }))).toBeUndefined()
     expect(planEssenceSubstitution(10, foreign, ownedOf({ bao: 5 }))).toBeUndefined()
+  })
+})
+
+// M-F-ESSENCE (F9 residual) - the typed descriptor boundary exercised
+// at bao/phap required grades. Phap is the top authored rung: coverage
+// is always 0, so under the caller's all-or-nothing precondition
+// (consumed <= owned + coverage) every phap-required plan is a
+// required-only exact debit. A bao-required cost exercises the
+// phap -> bao hop with exact change-back.
+describe('M-F-ESSENCE - bao/phap required costs', () => {
+  it('reports zero coverage for a phap-required cost - top authored rung', () => {
+    expect(essenceSubstitutionCoverage(PHAP_COST, ownedOf({}))).toBe(0)
+    expect(essenceSubstitutionCoverage(PHAP_COST, ownedOf({ phap: 9 }))).toBe(0)
+    expect(essenceSubstitutionCoverage(PHAP_COST, ownedOf({ bao: 9, phap: 9 }))).toBe(0)
+  })
+
+  it('debits a phap-required cost exactly - required-only, never change', () => {
+    const plan = planEssenceSubstitution(12, PHAP_COST, ownedOf({ phap: 12, bao: 9 }))
+    expect(plan).toBeDefined()
+    expect(plan!.debits).toEqual([{ materialId: 'tinh_hoa_phap_the', amount: 12 }])
+    expect(plan!.covered).toBe(12)
+    expect(plan!.change).toBeUndefined()
+
+    const smaller = planEssenceSubstitution(7, PHAP_COST, ownedOf({ phap: 9 }))
+    expect(smaller!.debits).toEqual([{ materialId: 'tinh_hoa_phap_the', amount: 7 }])
+    expect(smaller!.covered).toBe(7)
+    expect(smaller!.change).toBeUndefined()
+  })
+
+  it('substitutes phap for a bao-required cost at the locked ratio with change-back', () => {
+    // consumed 11, bao 0: phap yield is 2 -> ceil(11/2) = 6 phap
+    // covering 12, the 1-unit overpay credited back as bao.
+    const plan = planEssenceSubstitution(11, BAO_COST, ownedOf({ phap: 6 }))
+    expect(plan!.debits).toEqual([{ materialId: 'tinh_hoa_phap_the', amount: 6 }])
+    expect(plan!.covered).toBe(12)
+    expect(plan!.change).toEqual({ materialId: 'tinh_hoa_bao_the', amount: 1 })
+  })
+
+  it('spends owned bao first, then the phap hop only for the shortfall', () => {
+    // consumed 11, bao 5: shortfall 6 -> ceil(6/2) = 3 phap exact.
+    const plan = planEssenceSubstitution(11, BAO_COST, ownedOf({ bao: 5, phap: 3 }))
+    expect(plan!.debits).toEqual([
+      { materialId: 'tinh_hoa_bao_the', amount: 5 },
+      { materialId: 'tinh_hoa_phap_the', amount: 3 },
+    ])
+    expect(plan!.covered).toBe(11)
+    expect(plan!.change).toBeUndefined()
+  })
+
+  it('sums phap coverage for a bao-required cost at the single-hop yield', () => {
+    expect(essenceSubstitutionCoverage(BAO_COST, ownedOf({}))).toBe(0)
+    expect(essenceSubstitutionCoverage(BAO_COST, ownedOf({ phap: 3 }))).toBe(3 * R_PHAP)
+    expect(essenceSubstitutionCoverage(BAO_COST, ownedOf({ phap: 3, bao: 7 }))).toBe(3 * R_PHAP)
   })
 })
