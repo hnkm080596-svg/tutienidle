@@ -1,7 +1,8 @@
 # M-F-COMPANION-GIFT — Beta companion acquisition via authored gifts — plan
 
-Spec: `game/docs/specs/m-f-companion-gift-spec.md` (v3 — C2C round-49
-+ round-53 findings applied; pending C2C plan review). Implements F13 (ruling §42–45): no active pull pool in
+Spec: `game/docs/specs/m-f-companion-gift-spec.md` (v3.1 — C2C
+round-49/53 applied + round-58 notification-owner alignment; pending
+C2C plan review). Implements F13 (ruling §42–45): no active pull pool in
 Beta — Thần Nông/Khai Minh arrive via authored gift moments (claimable
 records + idempotent claim); pull/exchange architecture kept behind
 `isCompanionPullPoolEnabled` with the empty pool as an explicit valid
@@ -120,18 +121,25 @@ gates pass.
    `realm_entered` refs in `REALMS`, `stage_completed` refs in
    `STAGES`.
 3. `GameManagerCompanionOps` tests (extend — pull/exchange scopes):
-   pull with tokens on hand rejects `pool_unavailable` and the bag is
-   untouched; exchange rejects `pool_unavailable` before
-   `unknown_definition`; `claimCompanionGift` full matrix — new grant
-   pushes a mortal/level-1 instance; owned grant writes
-   constellation_up; maxed grant credits exactly
-   `DUPLICATE_MAXED_DUYEN_PHAN`; claimed record set once; second claim
-   returns `alreadyClaimed` with companions/duyenPhan snapshots
-   unchanged; `unknown_gift`/`realm_locked`/`no_active_player` reject
-   without mutation; a record whose `definitionId` is catalog-valid
-   but outside `BETA_COMPANION_GIFT_IDS` rejects `unknown_gift`
-   (defense path — gift channel cannot widen the Beta acquisition
-   surface).
+   pull with tokens on hand rejects `pool_unavailable` and ALL THREE
+   preserved counters are snapshotted unchanged (token balance,
+   duyenPhan, companionPullsSinceRare); the same rejection holds with
+   an injected `companionAcquirablePool() === []` under pull ENABLED
+   — the ops gate, not the flag, owns the explicit state, and
+   `rollCompanionPull` stays unreached (empty-authored-pool arm of
+   A2, not just today's flag-off arm); exchange rejects
+   `pool_unavailable` before `unknown_definition`;
+   `claimCompanionGift` full matrix — new grant pushes a
+   mortal/level-1 instance; owned grant writes constellation_up;
+   maxed grant credits exactly `DUPLICATE_MAXED_DUYEN_PHAN`; claimed
+   record set once; exactly ONE `kind:'loot'` success notification
+   per successful claim (single-owner); second claim returns
+   `alreadyClaimed` with companions/duyenPhan snapshots unchanged AND
+   zero notifications; `unknown_gift`/`realm_locked`/
+   `no_active_player` reject without mutation; a record whose
+   `definitionId` is catalog-valid but outside
+   `BETA_COMPANION_GIFT_IDS` rejects `unknown_gift` (defense path —
+   gift channel cannot widen the Beta acquisition surface).
 4. `core/quest/QuestSystem.test.ts` (extend): `daily_chieu_hien_lenh`
    absent from activation candidates and the daily list at TC; a
    pre-activated stale progress deactivates on
@@ -157,9 +165,11 @@ gates pass.
 8. `WorkerLodgePanel`/`QuaTangTab`/`ChieuMoTab`/`DuyenPhanTab`
    component tests (extend/new): `qua_tang` tab listed at TC, hidden
    below; pending gift renders name+claim, claim drives ops +
-   notification; claimed renders dimmed; unavailable blocks render on
-   both gacha tabs with the release-reason copy and the pull button
-   disabled.
+   notifications; claimed renders dimmed; exactly one success
+   notification per claim (ops-owned — the tab pushes none, asserted
+   via the notification sink) and none on `alreadyClaimed`;
+   unavailable blocks render on both gacha tabs with the
+   release-reason copy and the pull button disabled.
 9. `GameManagerSaveRestore`/save-shape tests (extend): CURRENT+1
    round-trips `companionGifts`; malformed records reject (missing id,
    duplicate id, unknown definitionId, definitionId outside
@@ -208,8 +218,10 @@ gates pass.
 ## Step 5 — UI + i18n
 
 - `WorkerLodgePanel.vue`: `qua_tang` tab entry + render branch.
-- `QuaTangTab.vue`: pending/claimed lists, claim → ops → notify +
-  `bumpState`.
+- `QuaTangTab.vue`: pending/claimed lists, claim → ops → warning
+  notification on `{ok:false}` + `bumpState` (NO success
+  notification — the ops `kind:'loot'` push is the single success
+  owner).
 - `ChieuMoTab.vue`: `poolEnabled` disabled + unavailable block +
   error arm.
 - `DuyenPhanTab.vue`: pool-driven groups + unavailable block + error
@@ -254,7 +266,7 @@ gates pass.
 | Delta | Spec § | Plan step | Acceptance test |
 |---|---|---|---|
 | 1 — pool flag + empty-pool contract | §3 | 2, 3 | A1, A2 |
-| 2 — gift primitive (slice + claim + UI) | §2, §6, §7 | 2, 3, 5 | A4 |
+| 2 — gift primitive (slice + claim + UI, one notification owner) | §2, §6, §7 | 2, 3, 5 | A4 |
 | 3 — authored grant moments + seams | §2, §5 | 2, 4 | A3, A5 |
 | 3a — gift-acquisition boundary | §2, §6, §8 | 2, 3, 6 | A9 |
 | 4 — token-source suppression | §4 | 4 | A6 |

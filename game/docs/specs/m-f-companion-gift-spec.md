@@ -1,7 +1,7 @@
 # M-F-COMPANION-GIFT — Beta companion acquisition via authored gifts — Spec
 
-Status: v3 — draft (worker-authored; C2C round-49 + round-53 findings
-applied, pending C2C spec re-review)
+Status: v3.1 — draft (worker-authored; C2C round-49/53 applied +
+round-58 notification-owner alignment, pending C2C re-review)
 Depends on: P7-M9 (companion domain unlock at Truc Cơ —
 `isCompanionDomainUnlocked`), P7-M-G (`BETA_COMPANIONS` Beta pool split
 from the full catalog), M-F-CEILING (ReleasePolicy release-window
@@ -338,7 +338,10 @@ Order:
    constellation, it converts like a pull does.
 5. `record.claimed = true` written AFTER the grant decision — the
    consume mark lands only on a completed grant.
-6. `kind:'loot'` notification (`Quà tặng: <name>`); return ok.
+6. `kind:'loot'` notification (`Quà tặng: <name>`); return ok. The op
+   is the SINGLE success-notification owner (C2C round-58): the UI
+   pushes no success toast — exactly one success notification per
+   successful claim, none on `alreadyClaimed`.
 
 Decision-at-claim semantic (pinned): the grant resolves against owned
 state at claim time, not at issue time — a gift claimed after the
@@ -360,8 +363,9 @@ slice, never re-derive grants.
   claim `GameButton`), claimed list dimmed with `quaTang.claimed`
   marker, `quaTang.empty` empty state. Claim →
   `companionOps.claimCompanionGift(id)` → warning notification on
-  `{ok:false}` (errors map `quaTang.errors.*`) else success notification
-  reusing `chieuMo.result.*` outcome copy + `bumpState()`.
+  `{ok:false}` (errors map `quaTang.errors.*`) + `bumpState()` — the
+  UI pushes NO success notification (single-owner rule); on
+  `alreadyClaimed` no notification at all.
 - `ChieuMoTab.vue`: `poolEnabled` computed via
   `companionAcquirablePool().length > 0`; when off, the pull button is
   disabled AND a `.chieu-mo__unavailable` block renders
@@ -450,7 +454,7 @@ slice, never re-derive grants.
 | A1 | `pullCompanion`/`exchangeCompanion` reject `{ok:false,reason:'pool_unavailable'}` BEFORE any currency check/debit while the flag is off; banked tokens, duyenPhan, pity untouched; pull architecture intact. |
 | A2 | Empty pool is an explicit valid state: ops never reach `rollCompanionPull`/`pickDefinitionOfGrade` with an empty pool (flag-off and empty-authored-pool share the path); both gacha tabs render the release-style unavailable reason instead of dead controls. |
 | A3 | `issueCompanionGifts` appends pending records for matching moments only, write-if-absent — repeated fires with the same trigger are pure no-ops; the moment registry validates (unique ids, `definitionId` satisfies `isBetaCompanionGift`, `BETA_COMPANION_GIFT_IDS ⊆ COMPANIONS`, stage/realm refs resolve); a non-giftable injected moment is skipped, never issued. |
-| A4 | Claim grants per the pull duplicate rule (new → fresh instance; owned → constellation_up; maxed → +5 duyenPhan), marks `claimed`, notifies; double-claim returns `alreadyClaimed` with zero balance/state deltas; unknown/non-giftable/realm/no-player reject without mutation. |
+| A4 | Claim grants per the pull duplicate rule (new → fresh instance; owned → constellation_up; maxed → +5 duyenPhan), marks `claimed`, notifies once via the ops `kind:'loot'` owner (exactly one success notification; UI pushes none; `alreadyClaimed` → zero notifications); double-claim returns `alreadyClaimed` with zero balance/state deltas; unknown/non-giftable/realm/no-player reject without mutation. |
 | A5 | `realm_entered` seam fires at the tribulation advance (post realmId write) and at the initiation promotion; `stage_completed` seam fires inside the first-completion once-guard only. |
 | A6 | Token-only `daily_chieu_hien_lenh` never activates (quest unlock consult), a stale active deactivates on reconcile, claim-item filter drops token lines, floor-10 boss signatureDrop token line suppressed at settle — non-token rewards on shared sources unaffected; a mixed-reward quest stays active minus its token lines. |
 | A7 | Save `CURRENT → CURRENT+1` on the merged base (expect 76→77 post-M-F-TALENT; verify at phase-2 start); v76-and-below payloads rejected; `companionGifts` shape/unique/giftable-catalog-ref validated; records round-trip; moment-id drift tolerated. |
