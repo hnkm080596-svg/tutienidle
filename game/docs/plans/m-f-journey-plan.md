@@ -93,11 +93,22 @@ them; the RUN order is the spec's pinned order.
    full initiation bundle asserts.
 3. **Leg E.1**: floor-1 first clear at TC L1 + unlock observation —
    E owns all first-clear asserts.
-4. **Legs D.1 + D.2** at TC L1: body_refinement completion (authority
-   split — collector-channel deltas asserted, intrinsic `baseStats`
-   byte-unchanged) → physique flip → meridian strict-prefix 9/9 with
-   `bat-mach:*` on the modifier channel only; D.3's rejections execute
-   INLINE at the D.1→D.2 boundary (ownership-mapped in H).
+4. **Legs D.1 + D.2** at TC L1 — each reject owned by the state in
+   which its precondition exists (C2C-r93-M):
+   a. body_refinement completion (authority split — collector-channel
+      deltas asserted, intrinsic `baseStats` byte-unchanged) →
+      physique flip;
+   b. **immediately before the final refinement tier commits**:
+      `investBodyChapter('meridian')` → 0, no pill/material debit
+      (bags unchanged — the meridian reject's precondition exists
+      only while refinement is INcomplete);
+   c. **after refinement commits but before opening the first
+      meridian**: `investBodyChapter('zhou_tian')` → 0, no Pháp
+      essence debit (the zhou_tian reject's precondition exists only
+      while meridian is INcomplete);
+   d. then D.2: meridian strict-prefix 9/9 with `bat-mach:*` on the
+      modifier channel only.
+   Both rejects are ownership-mapped in H (see 2.12).
 5. **Legs C + E.2 interleaved**: the level/zhou_tian ladder — per-level
    capacity assert + circulation resume to new cap; pinned
    observations: ≥1 below-cap clamp (L1 vs 20), L8→L9 Tiểu (180),
@@ -132,8 +143,9 @@ them; the RUN order is the spec's pinned order.
 11. **Leg L body-hidden**: resolved per A13 against the landed shape
     (assertion or named deferral — never silent).
 12. **Leg H**: NOT a pass — the suite header maps each rejection to
-    its inline execution point (A seeded state, B phase-a, D.1→D.2
-    boundary, E.2 gates, F, E/I) so the aggregation is auditable
+    its inline execution point (A seeded state, B phase-a, D sequence
+    step b pre-final-tier for meridian / step c pre-first-meridian
+    for zhou_tian, E.2 gates, F, E/I) so the aggregation is auditable
     without a temporally-impossible second pass.
 
 Timing watch: LQ→TC tribulation drives ~40 simulated seconds of tank
