@@ -1,47 +1,94 @@
 import type { PlayerData } from '../player/Player'
 import type { Enemy } from '../enemy/Enemy'
 import { rollChance } from '../reward/DropRoll'
+import {
+  hiddenBeastChannels,
+  type HiddenBeastChannel,
+} from '../../data/drop/HiddenMaterialChannels'
+import { isRealmAvailable } from '../realm/ReleasePolicy'
 
-// Quái ẩn (spec dot-pha-loi-kiep §4.1c) — đếm kill quái Luyện Khí từ
-// lần giết quái ẩn gần nhất; đủ 1000 mở cửa sổ: quái ẩn có tỉ lệ trà
-// trộn mỗi lượt spawn; giết quái ẩn reset đếm về 0 (kể cả khi không
-// drop). Không spoil: quái ẩn không hiện danh sách stage/map nào.
-export const HIDDEN_BEAST_KILL_THRESHOLD = 1000
-export const HIDDEN_BEAST_SPAWN_CHANCE_PER_SPAWN = 0.05
-export const HIDDEN_BEAST_ENEMY_ID = 'huyet_mong'
-const HIDDEN_BEAST_REALM_ID = 'qi_refining'
-
+// Quai an (spec m-f-body-hidden sec.3) - generalized channel-driven
+// spawn substitution: each authored hidden_beast channel opens its own
+// window when the player's per-channel banded-kill counter reaches
+// killThreshold, then substitutes the channel enemy into spawns at
+// spawnChancePerSpawn (or unconditionally at guaranteedSpawnAfterKills).
+// Kills count per band symmetrically: for every channel whose
+// bandRealmId matches the defeated enemy's band, that channel's own
+// beast resets its counter while every OTHER banded enemy (including
+// another channel's beast) is an ordinary increment. Khong spoil: quai
+// an khong hien danh sach stage/map nao.
 export class HiddenBeastSystem {
-  constructor(private readonly deps: { getEnemyTemplate: (id: string) => Enemy | undefined }) {}
+  constructor(
+    private readonly deps: {
+      getEnemyTemplate: (id: string) => Enemy | undefined
+      channels?: readonly HiddenBeastChannel[]
+    },
+  ) {}
 
-  isWindowOpen(player: PlayerData): boolean {
-    return player.luyenKhiKillsSinceBeast >= HIDDEN_BEAST_KILL_THRESHOLD
+  private channels(): readonly HiddenBeastChannel[] {
+    return this.deps.channels ?? hiddenBeastChannels()
   }
 
-  /** Mỗi lượt spawn stage Luyện Khí: nếu window mở, roll 5% trả Huyết Mông thay quái pool. */
-  maybeReplaceSpawn(player: PlayerData, stageRealmId: string, rng: () => number = Math.random): Enemy | undefined {
-    if (stageRealmId !== HIDDEN_BEAST_REALM_ID || !this.isWindowOpen(player)) {
-      return undefined
-    }
-
-    if (!rollChance(HIDDEN_BEAST_SPAWN_CHANCE_PER_SPAWN, rng)) {
-      return undefined
-    }
-
-    return this.deps.getEnemyTemplate(HIDDEN_BEAST_ENEMY_ID)
+  isWindowOpen(player: PlayerData, channel: HiddenBeastChannel): boolean {
+    return (player.hiddenBeastKills[channel.id] ?? 0) >= channel.killThreshold
   }
 
-  /** Gọi từ BattleLootSystem khi 1 quái chết (chỉ đếm quái Luyện Khí). */
+  /**
+   * Moi luot spawn ACTIVE stage: iterate authored channels in order;
+   * the first channel whose band matches the stage realm, whose band is
+   * release-available, whose window is open, and whose bound-or-chance
+   * roll wins substitutes its enemy for the pool spawn. The
+   * guaranteedSpawnAfterKills bound substitutes without consuming a roll
+   * (spec sec.6 - the bound is the acquisition bound).
+   */
+  maybeReplaceSpawn(
+    player: PlayerData,
+    stageRealmId: string,
+    rng: () => number = Math.random,
+  ): Enemy | undefined {
+    for (const channel of this.channels()) {
+      if (channel.bandRealmId !== stageRealmId) {
+        continue
+      }
+
+      if (!isRealmAvailable(channel.bandRealmId) || !this.isWindowOpen(player, channel)) {
+        continue
+      }
+
+      const kills = player.hiddenBeastKills[channel.id] ?? 0
+      const bound = channel.guaranteedSpawnAfterKills
+
+      if (!(bound !== undefined && kills >= bound) && !rollChance(channel.spawnChancePerSpawn, rng)) {
+        continue
+      }
+
+      const template = this.deps.getEnemyTemplate(channel.enemyId)
+
+      if (template) {
+        return template
+      }
+    }
+
+    return undefined
+  }
+
+  /**
+   * Goi tu BattleLootSystem khi 1 quai chet (ke ca idle auto-farm).
+   * Symmetric per-channel semantics: for every channel in the defeated
+   * enemy's band, killing that channel's own beast resets it; every
+   * other banded enemy is an ordinary increment.
+   */
   onEnemyDefeated(player: PlayerData, enemyId: string, enemyRealmId: string): void {
-    if (enemyRealmId !== HIDDEN_BEAST_REALM_ID) {
-      return
-    }
+    for (const channel of this.channels()) {
+      if (channel.bandRealmId !== enemyRealmId) {
+        continue
+      }
 
-    if (enemyId === HIDDEN_BEAST_ENEMY_ID) {
-      player.luyenKhiKillsSinceBeast = 0
-      return
+      if (enemyId === channel.enemyId) {
+        player.hiddenBeastKills[channel.id] = 0
+      } else {
+        player.hiddenBeastKills[channel.id] = (player.hiddenBeastKills[channel.id] ?? 0) + 1
+      }
     }
-
-    player.luyenKhiKillsSinceBeast += 1
   }
 }

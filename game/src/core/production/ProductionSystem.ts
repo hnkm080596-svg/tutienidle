@@ -37,6 +37,13 @@ import {
   settleProductionOffline,
   type ProductionOfflineDeps,
 } from './ProductionOffline'
+import {
+  hiddenGrottoChannels,
+  GROTTO_CHANNEL_SEED_TAG,
+  type GrottoChannel,
+} from '../../data/drop/HiddenMaterialChannels'
+import { getRealmIndex } from '../realm/realmSystem'
+import { isBreakthroughAcquisitionEnabled } from '../realm/ReleasePolicy'
 
 /** Một giao dịch settle đã xảy ra — dùng cho notification UI (§9.1). */
 export interface ProductionSettlementEvent {
@@ -69,6 +76,11 @@ export interface ProductionSystemDeps {
   mineRewards: readonly MineRewardDefinition[]
 
   grottoHerbs: readonly GrottoHerbDefinition[]
+
+  /** M-F-BODY-HIDDEN (spec sec.4) - hidden grotto emission channels;
+      defaults to the canonical registry (empty today = zero channel
+      draws, behavior identical). */
+  hiddenGrottoChannels?: readonly GrottoChannel[]
 }
 
 
@@ -131,6 +143,9 @@ export class ProductionSystem {
         activeWorkerSlots: state.activeWorkerSlots ?? 0,
         assignedWorkers: state.assignedWorkers,
         workerCycles: (state.workerCycles ?? []).map((cycle) => ({ ...cycle })),
+        hiddenChannelCycles: state.hiddenChannelCycles
+          ? { ...state.hiddenChannelCycles }
+          : undefined,
       })
     }
   }
@@ -142,6 +157,9 @@ export class ProductionSystem {
     return {
       ...state,
       workerCycles: state.workerCycles?.map((cycle) => ({ ...cycle })),
+      hiddenChannelCycles: state.hiddenChannelCycles
+        ? { ...state.hiddenChannelCycles }
+        : undefined,
     }
   }
 
@@ -455,7 +473,11 @@ export class ProductionSystem {
 
   /** Cộng reward của một cycle vào Bag + ghi settle event (dùng chung mọi đường settle). */
   private grantCycleRewards(cycle: ProductionCycle, bag: MaterialBag, registry: MaterialRegistry): void {
-    for (const reward of this.rollRewards(cycle)) {
+    // M-F-BODY-HIDDEN (spec sec.4) - hidden-channel emission appends
+    // post-table rewards that RIDE this same bag.add/pendingEvents
+    // delivery loop; channel draws consume a dedicated stream
+    // (rollSeed ^ GROTTO_CHANNEL_SEED_TAG), never the table stream.
+    for (const reward of [...this.rollRewards(cycle), ...this.rollHiddenChannelRewards(cycle, registry)]) {
       if (!registry.has(reward.materialId) || reward.amount <= 0) {
         continue
       }
@@ -469,6 +491,72 @@ export class ProductionSystem {
         overflow: overflow > 0 ? overflow : undefined,
       })
     }
+  }
+
+  /**
+   * M-F-BODY-HIDDEN (spec sec.4) - hidden-channel settle-cycle emission.
+   * Grotto sites only: per-channel counter++ on THIS site (reach
+   * eligibility - cycle.collectionRealmId must have REACHED the channel
+   * band, so channels never expire), bound-or-chance on the dedicated
+   * stream, then the release-policy gate at origination
+   * (isBreakthroughAcquisitionEnabled - suppressed = no emission, the
+   * counter stays primed and retries next cycle). The counter resets
+   * ONLY on emission. Fires identically for online ticks and offline
+   * settle (both route through grantCycleRewards); restoreStates itself
+   * performs no rolls/emission - it rehydrates counters verbatim.
+   */
+  private rollHiddenChannelRewards(
+    cycle: ProductionCycle,
+    registry: MaterialRegistry,
+  ): ResolvedProductionReward[] {
+    const definition = this.getSiteDefinition(cycle.siteId)
+    const channels = this.deps.hiddenGrottoChannels ?? hiddenGrottoChannels()
+
+    if (!definition || definition.kind !== 'grotto' || channels.length === 0) {
+      return []
+    }
+
+    const state = this.states.get(cycle.siteId)
+
+    if (!state) {
+      return []
+    }
+
+    const emitted: ResolvedProductionReward[] = []
+    const channelRng = mulberry32(cycle.rollSeed ^ GROTTO_CHANNEL_SEED_TAG)
+    const counters = (state.hiddenChannelCycles ??= {})
+    const cycleTierIndex = getRealmIndex(cycle.collectionRealmId)
+
+    for (const channel of channels) {
+      const bandIndex = getRealmIndex(channel.bandRealmId)
+
+      // Reach eligibility: unknown ids fail closed; a cycle below the
+      // band advances no counter and consumes no channel draw.
+      if (cycleTierIndex < 0 || bandIndex < 0 || cycleTierIndex < bandIndex) {
+        continue
+      }
+
+      const count = (counters[channel.id] ?? 0) + 1
+      counters[channel.id] = count
+
+      const bound = channel.guaranteedAfterCycles
+      const boundReached = bound !== undefined && count >= bound
+
+      if (!boundReached && channelRng() >= channel.chancePerCycle) {
+        continue
+      }
+
+      const material = registry.get(channel.materialId)
+
+      if (!material || !isBreakthroughAcquisitionEnabled(material.breakthroughRealmId)) {
+        continue
+      }
+
+      emitted.push({ materialId: channel.materialId, amount: 1, detail: 'hidden_channel' })
+      counters[channel.id] = 0
+    }
+
+    return emitted
   }
 
   // =========================

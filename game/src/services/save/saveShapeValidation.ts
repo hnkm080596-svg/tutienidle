@@ -185,6 +185,27 @@ function requireNonNegativeNumber(
   }
 }
 
+// M-F-BODY-HIDDEN (save v81) - per-channel counter maps persist as
+// Record<channelId, int>=0>; required maps reject non-objects, optional
+// maps validate only when present.
+function validateNonNegativeIntMap(
+  value: unknown,
+  path: string,
+  issues: ShapeIssue[],
+): void {
+  if (!isObject(value)) {
+    issues.push({ path, message: 'phải là object map' })
+
+    return
+  }
+
+  for (const [key, entry] of Object.entries(value)) {
+    if (!Number.isInteger(entry) || (entry as number) < 0) {
+      issues.push({ path: `${path}.${key}`, message: 'phải là int không âm' })
+    }
+  }
+}
+
 function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   if (!isObject(player)) {
     issues.push({ path: 'player', message: 'phải là object' })
@@ -759,8 +780,10 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
 
   // Spec dot-pha-loi-kiep sec.6.1 - the v54 fields (hidden-beast window,
   // mortal-perfection snapshot, great-dao loss). Bat Mach moved into
-  // player.bodyProgression.meridian at v72 (delegated validator above).
-  requireNonNegativeNumber(player, 'luyenKhiKillsSinceBeast', 'player', issues)
+  // player.bodyProgression.meridian at v72 (delegated validator above);
+  // the scalar kill counter became a per-channel map at v81
+  // (M-F-BODY-HIDDEN).
+  validateNonNegativeIntMap(player.hiddenBeastKills, 'player.hiddenBeastKills', issues)
   if (typeof player.mortalPerfectionAchieved !== 'boolean') {
     issues.push({ path: 'player.mortalPerfectionAchieved', message: 'phải là boolean' })
   }
@@ -1304,6 +1327,16 @@ function validateProductionSitesSave(
       (!Number.isInteger(entry.assignedWorkers) || (entry.assignedWorkers as number) < 0)
     ) {
       issues.push({ path: `${entryPath}.assignedWorkers`, message: 'phải là int không âm' })
+    }
+
+    // M-F-BODY-HIDDEN (save v81): optional per-site grotto-channel
+    // settle-cycle counters - same map shape as the player field.
+    if (entry.hiddenChannelCycles !== undefined) {
+      validateNonNegativeIntMap(
+        entry.hiddenChannelCycles,
+        `${entryPath}.hiddenChannelCycles`,
+        issues,
+      )
     }
 
     // Mission D (spec D3): `activeCycle` was removed from the state

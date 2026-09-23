@@ -20,7 +20,7 @@ Biến thể:
 
 - **Elite** — `createEliteVariant`, spawn ngẫu nhiên theo `eliteChance` trong pool; `applyEliteMultiplier` buff stat vừa; drop đậm qua modifier `tinh_anh`.
 - **Boss** — `createBossVariant`, `applyBossMultiplier` buff lớn; đặt cố định qua `bossEnemyId`, luôn spawn cuối.
-- **Quái ẩn** — `HiddenBeastSystem` (`core/game/HiddenBeastSystem.ts`): đếm kill quái Luyện Khí từ lần giết quái ẩn gần nhất; đủ `HIDDEN_BEAST_KILL_THRESHOLD = 1000` mở window → mỗi spawn stage Luyện Khí roll 5% (`HIDDEN_BEAST_SPAWN_CHANCE_PER_SPAWN`) trà `huyet_mong` (Huyết Mông) thay quái pool; giết xong reset đếm. Không spoil vị trí.
+- **Quái ẩn** — `HiddenBeastSystem` (`core/game/HiddenBeastSystem.ts`) drive bởi các channel `hidden_beast` trong `HIDDEN_MATERIAL_CHANNELS` (`data/drop/HiddenMaterialChannels.ts`): mỗi channel khai `{bandRealmId, enemyId, killThreshold, spawnChancePerSpawn, guaranteedSpawnAfterKills?}`; `player.hiddenBeastKills[channel.id]` đếm kill quái cùng band (idle lẫn active). Đủ threshold mở window → mỗi spawn **active** stage cùng band roll chance trà quái ẩn thay quái pool (quá `guaranteedSpawnAfterKills` thay chắc chắn, không tốn roll). Symmetric: giết quái ẩn của channel reset đúng channel đó, mọi quái khác cùng band (kể cả quái ẩn channel khác) chỉ +1. Idle/auto-farm kill vẫn đếm nhưng idle spawn không bao giờ substitute. Ship hiện tại: `huyet_mong` (Huyết Mông) — 1000 kill Luyện Khí → 5%/spawn LK. Không spoil vị trí.
 
 ## Boss mechanics
 

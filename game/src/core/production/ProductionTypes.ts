@@ -79,6 +79,12 @@ export interface ProductionSiteState {
 
   /** Player-requested assignment; undefined = AUTO (round-robin share). */
   assignedWorkers?: number
+
+  /** M-F-BODY-HIDDEN (spec sec.4) - per-grotto-channel settle-cycle
+      counters on THIS site (channelId -> eligible cycles since the
+      last emission). Grotto sites only; production-side state because
+      ProductionSystem never sees PlayerData (A3). */
+  hiddenChannelCycles?: Record<string, number>
 }
 
 /** Một Lâm/Quáng/Động Thiên của Địa Giới (§3.1). */

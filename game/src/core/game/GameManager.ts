@@ -63,6 +63,10 @@ import {
   THANH_VAN_GROTTO_HERBS,
 } from '../production/ProductionCatalog'
 import {
+  hiddenBeastChannels,
+  hiddenGrottoChannels,
+} from '../../data/drop/HiddenMaterialChannels'
+import {
   AlchemySystem,
   type AlchemyRecipe,
 } from '../alchemy/AlchemySystem'
@@ -409,6 +413,7 @@ export class GameManager {
     forestRewards: THANH_VAN_FOREST_REWARDS,
     mineRewards: THANH_VAN_MINE_REWARDS,
     grottoHerbs: THANH_VAN_GROTTO_HERBS,
+    hiddenGrottoChannels: hiddenGrottoChannels(),
   })
 
   // Đan Phòng (plan §8) — job luyện đan với reserve atomic.
@@ -713,6 +718,7 @@ export class GameManager {
 
     this.hiddenBeastSystem = new HiddenBeastSystem({
       getEnemyTemplate: (id) => this.catalogOps.getEnemyTemplate(id),
+      channels: hiddenBeastChannels(),
     })
 
     this.battleLoot = new BattleLootSystem({
