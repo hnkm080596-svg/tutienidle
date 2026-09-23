@@ -118,6 +118,13 @@ uses for `TribulationChapters`).
    at TC produces no `player.artifact`; persisted id-match survives
    dormant; persisted mismatch cleared and not re-created;
    `grantCultivationPathRealmReward` at TC delivers no artifact.
+   `isDomainScopedAcquisitionEnabled` unit-pinned at its boundary
+   (C2C-66 — it sits in the generic material arm, so its untagged
+   pass protects every ordinary drop): undefined tag → `true`
+   (ordinary delivery unchanged); valid tag + player below unlock
+   → `false`; valid tag + player reached/open → `true`;
+   unlock realm unavailable → `false`; unknown unlock or
+   unknown player realm → fail closed.
 2. `ArtifactProgression.test.ts` (extend): awaken gate closed at
    TC; normalize idempotent no-op without artifact;
    `advanceArtifactRealmLevel` semantics unchanged below the gate.
@@ -153,7 +160,20 @@ uses for `TribulationChapters`).
    `foundation_establishment`-realm player on THE SAME row
    receives zero — both through the real `StageDropTables`
    row, never an invented KD-stage row.
-10. `tests/e2e/cultivation-path-ritual.spec.ts` (extend): TC seeded
+   Wheel terminal branch not shadowed (C2C-66): mocked-open KD+
+   case with `hasArtifactDefinition = false` asserts the existing
+   definition-pending reason — the deferred-window logic must not
+   shadow the unchanged terminal arm.
+10. **Authoring-integrity relations** (C2C-66 — the pins that
+    closed the spec findings get explicit failing-first tests):
+    the unique `spell_pathway` reward record containing
+    `artifactId` is keyed by `ARTIFACT_UNLOCK_REALM_ID`;
+    `DOMAIN_SCOPED_MATERIAL_IDS` is bidirectionally coherent with
+    domain-tagged materials (listed ⇔ tagged, mirroring the
+    breakthrough census invariant); every listed artifact-domain
+    material satisfies `domainUnlockRealmId ===
+    ARTIFACT_UNLOCK_REALM_ID`.
+11. `tests/e2e/cultivation-path-ritual.spec.ts` (extend): TC seeded
     save → no `player.artifact`, slot aria-disabled with the
     release-unavailable reason; hidden_spell_pathway unchanged.
 
