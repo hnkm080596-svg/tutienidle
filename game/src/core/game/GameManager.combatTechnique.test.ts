@@ -92,9 +92,9 @@ describe('GameManager — technique grade MP modifiers (spell domain)', () => {
       .getAggregatedModifiers(player)
       .filter((modifier) => modifier.sourceType === 'technique')
 
-    // Dai Thanh band (rank 3: 900 mastery at 300/rank) - each stat
+    // Dai Thanh band (rank 5: 1500 mastery at 300/rank) - each stat
     // keeps EXACTLY ONE modifier entry, only the value changes.
-    gameManager.techniqueSystem.gainMastery(900)
+    gameManager.techniqueSystem.gainMastery(1500, 'qi_refining', 18)
 
     const after = gameManager.effectOps
       .getAggregatedModifiers(player)

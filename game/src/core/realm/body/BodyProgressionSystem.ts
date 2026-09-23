@@ -85,6 +85,39 @@ export function getPhysiqueGrade(player: PlayerData): PhysiqueGradeId {
   return player.physiqueGrade
 }
 
+// M-F-BODY-CORE - the completion-advance hook, callable from ANY chapter
+// completion path (the invest dispatch calls it today; a future
+// zhou_tian chapter whose completion is not invest-driven calls the same
+// seam). One completed NORMAL chapter = exactly one rung, once: the
+// exact-'from' source guard is the idempotence key - an already
+// transformed or further-advanced grade is never rewritten, and a
+// chapter that declares no physiqueAdvancement (or is not complete) is
+// a no-op. Late completion is valid - the hook is unconditional on
+// realm.
+//
+// NORMATIVE (restore contract): this seam runs ONLY on live completion
+// paths (invest today, zhou_tian tomorrow) - NEVER on restore/rebuild
+// (applyAllBodyModifiers). The persisted physiqueGrade is authoritative
+// at load: a completed chapter whose grade was already written is
+// accepted as-is, and a torn state (completed chapter + behind grade)
+// is a hard error that assertBodyProgressionIntegrity rejects at
+// preflight via derivePhysiqueGrade exact-equality (INV-8). Restore
+// must reject the torn save, never silently re-fire this advancement.
+export function applyPhysiqueAdvancement(
+  player: PlayerData,
+  chapter: BodyChapterDefinition,
+): void {
+  const advancement = chapter.physiqueAdvancement
+
+  if (
+    advancement !== undefined &&
+    chapter.isComplete(player) &&
+    player.physiqueGrade === advancement.from
+  ) {
+    player.physiqueGrade = advancement.to
+  }
+}
+
 // Unified invest: chapter-owned mutation, then the chapter's stat-effect
 // rebuild exactly once - and ONLY on a successful mutation (consumed > 0)
 // per spec sec.3.5. Returns the currency units actually consumed so the
@@ -93,9 +126,8 @@ export function getPhysiqueGrade(player: PlayerData): PhysiqueGradeId {
 // M-QI-07 adds the physique transaction: the source-grade gate runs
 // BEFORE any mutation (a player below 'from' cannot invest at all -
 // returns 0, nothing consumed); the grade write runs only after a
-// successful consumption, only when the chapter just became complete
-// AND the current grade still equals 'from' (idempotent - an already
-// transformed player is never re-advanced or reverted).
+// successful consumption via applyPhysiqueAdvancement (idempotent - an
+// already transformed player is never re-advanced or reverted).
 export function investBodyChapterState(
   player: PlayerData,
   chapterId: BodyChapterId,
@@ -112,14 +144,7 @@ export function investBodyChapterState(
   const consumed = chapter.invest(player, available, auxOwned)
 
   if (consumed > 0) {
-    if (
-      advancement !== undefined &&
-      chapter.isComplete(player) &&
-      player.physiqueGrade === advancement.from
-    ) {
-      player.physiqueGrade = advancement.to
-    }
-
+    applyPhysiqueAdvancement(player, chapter)
     applyChapterEffect(player, chapter)
   }
 
@@ -136,16 +161,19 @@ export function applyAllBodyModifiers(player: PlayerData): void {
   }
 }
 
-// D1 - flat base-stat deltas from every base-stat chapter, summed per
-// stat. Consumed once by resolvePlayerStatAssembly to build the
-// ephemeral assembledBase; never persisted, never emitted as modifiers.
+// D1 / M-F-BODY-CORE - the body-owned base-stat channel: flat deltas
+// from every chapter that implements the collectBaseStatDeltas
+// capability (not gated on the emission discriminant - a later chapter
+// kind contributes the same way), summed per stat. Consumed once by
+// resolvePlayerStatAssembly to build the ephemeral assembledBase; never
+// persisted, never emitted as modifiers.
 export function collectBodyBaseStatDeltas(
   player: PlayerData,
 ): Partial<Record<StatType, number>> {
   const deltas: Partial<Record<StatType, number>> = {}
 
   for (const chapter of BODY_CHAPTERS) {
-    if (chapter.kind !== 'baseStat') {
+    if (chapter.collectBaseStatDeltas === undefined) {
       continue
     }
 

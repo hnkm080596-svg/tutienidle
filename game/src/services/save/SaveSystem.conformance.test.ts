@@ -41,6 +41,7 @@ const CONF_TECHNIQUE: Technique = {
   rank: 0,
   mastery: 0,
   quality: 'hoang',
+  gradeHistory: {},
   gradeEffects: {},
 }
 

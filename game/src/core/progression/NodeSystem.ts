@@ -4,6 +4,7 @@ import { hasStaticPathCapability } from '../player/CultivationPathSystem'
 
 import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import { getRealmIndex } from '../realm/realmSystem'
+import { getEffectiveTechniqueRank } from '../technique/TechniqueProgression'
 import { getNodeCostFreeChance } from '../talent/TalentEffects'
 import { kiemDaoCap } from '../kiem-tu/NguKiemDao'
 import { getSkillCoreLevel, getSkillCoreUpgradeCost, skillCoreNodeId } from './SkillCoreLevel'
@@ -112,12 +113,19 @@ export function hasPrerequisite(player: PlayerData, prerequisite: NodePrerequisi
       return state.kiemDaoCount < kiemDaoCap(realmIndex)
     }
 
-    // P7-M6 - technique gates read the mirror only; absent mirror fails
-    // closed for any positive requirement (a rank:0/grade:0 gate would
-    // pass - authored thresholds stay >= 1 by data discipline).
+    // P7-M6 + M-F-TECHNIQUE (F5) - technique gates read the live-cycle
+    // mirror only; absent mirror fails closed for any positive
+    // requirement (a rank:0/grade:0 gate would pass - authored
+    // thresholds stay >= 1 by data discipline). F5 effective rank:
+    // a lagging live grade contributes rank 0 - the sealed cycle's
+    // rank dies at freeze, frozen-before-grade-up window included.
+    // Owned node levels above the gate stay legal frozen surplus
+    // (purchase/upgrade gates never de-level).
     case 'techniqueRank':
-      return (player.techniqueProgress?.rank ?? 0) >= prerequisite.rank
+      return getEffectiveTechniqueRank(player.techniqueProgress, player.realmId) >= prerequisite.rank
 
+    // techniqueGrade reads the LIVE grade (monotonic nondecreasing
+    // across catch-up) - no effective-rank semantics apply.
     case 'techniqueGrade':
       return (player.techniqueProgress?.grade ?? 0) >= prerequisite.grade
   }

@@ -37,6 +37,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 export const meridianChapter: ModifierBodyChapter = {
   kind: 'modifier',
+  // M-F-BODY-CORE - the authored chapter classification (one-shot
+  // MERIDIAN openings); orthogonal to the emission `kind`.
+  chapterKind: 'meridian',
   id: 'meridian',
   modifierPrefix: MODIFIER_PREFIX,
   // thong_mach_dan is a type:'material' PILL (data/pill/pills.ts) -

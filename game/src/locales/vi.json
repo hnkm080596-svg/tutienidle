@@ -1040,6 +1040,13 @@
       "confirm": "Đã hiểu",
       "cancel": "Chờ đã"
     },
+    "unperfectedTechnique": {
+      "warning": "Tâm pháp cảnh {grade} chưa viên mãn ({state}) — đột phá lúc này sẽ đóng băng chu kỳ này vĩnh viễn",
+      "state": {
+        "partial": "dở dang",
+        "dai_thanh": "đại thành"
+      }
+    },
     "overlay": {
       "chapter": "Chương {progress}",
       "hp": "HP {hp} / {max}",

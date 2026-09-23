@@ -9,9 +9,9 @@ import { getNextLevelCost } from '../progression/NodeSystem'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 
-// M-F-RESPEC (ruling §14) — ops-level contract for the player respec:
+// M-F-RESPEC (ruling S14) - ops-level contract for the player respec:
 // FREE Beta respec of node investment, out-of-combat only, whole-tree or
-// branch scope. Phap Tu element roots are preserved commit markers — the
+// branch scope. Phap Tu element roots are preserved commit markers - the
 // ops layer that rejects their public purchase also exempts them here.
 
 function node(overrides: Partial<ProgressionNode> = {}): ProgressionNode {
@@ -44,7 +44,7 @@ function respecNodes() {
 }
 
 // Immortal + harmless: a battle against it stays 'fighting' until
-// abandoned — deterministic in-progress window for the combat guard.
+// abandoned - deterministic in-progress window for the combat guard.
 const PUNCHING_BAG = defineEnemy({
   id: 'respec_punching_bag',
   name: 'Punching Bag',

@@ -20,6 +20,16 @@ describe('Quái ẩn + Yêu Đan + Thiên Địa Chi Kiều (spec dot-pha-loi-ki
     expect(drop!.chance).toBe(0.05)
   })
 
+  // M-QI-10: the band map governs stage tables, not signature drops -
+  // the hand-placed Pham catch-up valve survives the drop-band swap.
+  it('Huyết Mông giữ signature Tinh Hoa Phàm Thể x12 (catch-up valve, M-QI-10 exception)', () => {
+    const beast = ENEMIES.find((e) => e.id === 'huyet_mong')!
+    const drop = beast.signatureDrops?.find((d) => d.itemId === 'tinh_hoa_pham_the')
+    expect(drop).toBeDefined()
+    expect(drop!.chance).toBe(1)
+    expect(drop!.amount).toEqual({ min: 12, max: 12 })
+  })
+
   it('mọi material mới khai báo trong MATERIALS (không mồ côi)', () => {
     const ids = new Set(MATERIALS.map((m) => m.id))
     expect(ids.has('yeu_dan_hung_giao')).toBe(true)

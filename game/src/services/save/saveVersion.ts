@@ -112,10 +112,16 @@
 // the authored physique-advancement chain) is enforced by the
 // BodyProgression integrity preflight. Save v73 is rejected (dev phase,
 // no migration, no compat translator).
-// v75 (2026-09-23, M-F-TALENT mandatory breakthrough talent transaction):
+// v75 (2026-09-23, M-F-TECHNIQUE frozen-cycle model): Technique gains
+// required `gradeHistory` (per-grade sealed cycle outcomes {finalRank,
+// completionState}); the rank ladder is 0..18 with a realm-level-scaled
+// ceiling; restore preflight enforces canonical key-set coherence
+// ({1..grade-1} sealed, {grade} iff the live grade lags the realm).
+// Save v74 is rejected (dev phase, no migration, no compat translator).
+// v76 (2026-09-23, M-F-TALENT mandatory breakthrough talent transaction):
 // PlayerData gains talentLevels (required sparse level map, {} = all
 // level 1) + optional pendingTalentEntitlement ({realmId,
 // offeredTalentIds} - the persisted mandatory UPGRADE/NEW decision that
-// locks a settled breakthrough until resolved). Save v74 is rejected
+// locks a settled breakthrough until resolved). Save v75 is rejected
 // (dev phase, no migration, no compat translator).
-export const CURRENT_SAVE_VERSION = 75 as const
+export const CURRENT_SAVE_VERSION = 76 as const

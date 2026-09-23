@@ -7,6 +7,11 @@ import {
   getTechniqueMasteryForNextRank,
   TECHNIQUE_RANK_CAP,
 } from '../technique/TechniqueProgression'
+import { getRealmIndex } from '../realm/realmSystem'
+import {
+  TECHNIQUE_COMPLETION_STATES,
+  type TechniqueCompletionState,
+} from '../technique/Technique'
 import { ITEM_QUALITY_ORDER } from '../item/ItemQuality'
 import { getActiveWayDefinition } from '../player/CultivationPathKit'
 import { isMortalPrecursorSkillId } from '../skill/MortalPrecursors'
@@ -185,6 +190,56 @@ export class GameManagerSaveRestore {
       const ceiling = getTechniqueGradeCeiling(save.player.realmId)
       const cost = getTechniqueMasteryForNextRank(entry.grade)
 
+      // M-F-TECHNIQUE (v75) - gradeHistory is REQUIRED canonical
+      // state: every record is {finalRank int 0..18,
+      // completionState 'partial'|'dai_thanh'|'vien_man'} and the
+      // key set must be canonical: {1..grade-1} all sealed plus
+      // {grade} iff the live grade lags the realm (sealed or
+      // born-dead skipped). An in-band trainable live grade never
+      // carries a record.
+      const history = entry.gradeHistory
+      const records =
+        typeof history === 'object' && history !== null && !Array.isArray(history)
+          ? (history as Record<string, unknown>)
+          : undefined
+      const recordShapeOk =
+        records !== undefined &&
+        Object.entries(records).every(([key, record]) => {
+          const g = Number(key)
+          // Canonical decimal spelling: Number() coerces "01"/"1.0"/
+          // "1e0" to a valid grade, but the writer only ever emits
+          // canonical digits - an alias spelling is a stray record.
+          if (!Number.isInteger(g) || g < 1 || g > entry.grade || String(g) !== key) {
+            return false
+          }
+          const r = record as Record<string, unknown> | null
+          return (
+            typeof r === 'object' &&
+            r !== null &&
+            Number.isInteger(r.finalRank) &&
+            (r.finalRank as number) >= 0 &&
+            (r.finalRank as number) <= TECHNIQUE_RANK_CAP &&
+            TECHNIQUE_COMPLETION_STATES.includes(
+              r.completionState as TechniqueCompletionState,
+            )
+          )
+        })
+
+      const realmIndex = getRealmIndex(save.player.realmId)
+      const laggingLiveGrade = entry.grade < realmIndex
+      const keySetOk =
+        recordShapeOk &&
+        // Short-circuit bounds the enumeration before Array(): a
+        // non-integer/huge grade must reject via the chain below, not
+        // RangeError or allocate.
+        Number.isInteger(entry.grade) &&
+        entry.grade >= 1 &&
+        entry.grade <= ceiling &&
+        [...Array(entry.grade - 1).keys()].every((g) =>
+          Object.prototype.hasOwnProperty.call(records, g + 1),
+        ) &&
+        Object.prototype.hasOwnProperty.call(records, entry.grade) === laggingLiveGrade
+
       if (
         !Number.isInteger(entry.grade) ||
         entry.grade < 1 ||
@@ -196,7 +251,9 @@ export class GameManagerSaveRestore {
         entry.mastery < 0 ||
         (entry.rank < TECHNIQUE_RANK_CAP && entry.mastery >= cost) ||
         (entry.rank >= TECHNIQUE_RANK_CAP && entry.mastery !== 0) ||
-        !ITEM_QUALITY_ORDER.includes(entry.quality)
+        !ITEM_QUALITY_ORDER.includes(entry.quality) ||
+        !recordShapeOk ||
+        !keySetOk
       ) {
         throw new Error(`Invalid technique progression state in save: ${entry.id}`)
       }

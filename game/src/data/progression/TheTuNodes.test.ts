@@ -116,6 +116,9 @@ describe('TheTuNodes — root mutex + realm gates (INV-2)', () => {
       })
       expect(canPurchaseNode(owner, gated), `${gated.id} must stay gated at qi_refining`).toBe(false)
       owner.realmId = 'foundation_establishment'
+      // M-F-TECHNIQUE (F5) - at realm index 2 the grade-1 cycle is
+      // sealed: the mirror shows the caught-up in-band grade-2 cycle.
+      owner.techniqueProgress = { rank: 5, grade: 2 }
       expect(canPurchaseNode(owner, gated), `${gated.id} opens at foundation_establishment`).toBe(true)
     }
   })
@@ -143,7 +146,11 @@ describe('TheTuNodes — node -> collector -> kit-def delivery', () => {
 
   it('Bất Tử duration node delivers durationOverride = base + bonus (manual and lethal share one channel)', () => {
     const registry = registryWithNodes()
-    const player = playerWith({ realmId: 'foundation_establishment' })
+    // In-band grade-2 mirror - effective rank 5 satisfies major gates.
+    const player = playerWith({
+      realmId: 'foundation_establishment',
+      techniqueProgress: { rank: 5, grade: 2 },
+    })
 
     purchaseNode(player, node('cuong_chien'))
     purchaseNode(player, node('major_bat_tu_tuc_menh'))
@@ -189,7 +196,10 @@ describe('TheTuNodes — node -> collector -> kit-def delivery', () => {
 
   it('taunt duration node delivers +1 enemy turns through the same override channel', () => {
     const registry = registryWithNodes()
-    const player = playerWith({ realmId: 'foundation_establishment' })
+    const player = playerWith({
+      realmId: 'foundation_establishment',
+      techniqueProgress: { rank: 5, grade: 2 },
+    })
 
     purchaseNode(player, node('tran_the'))
     purchaseNode(player, node('major_khiem_khich_dien'))
@@ -205,7 +215,10 @@ describe('TheTuNodes — node -> collector -> kit-def delivery', () => {
 
   it('son_nhac ward ratio node feeds the externalWardGrant channel', () => {
     const registry = registryWithNodes()
-    const player = playerWith({ realmId: 'foundation_establishment' })
+    const player = playerWith({
+      realmId: 'foundation_establishment',
+      techniqueProgress: { rank: 5, grade: 2 },
+    })
 
     purchaseNode(player, node('tran_the'))
     purchaseNode(player, node('major_son_nhac_bao_bi'))

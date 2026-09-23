@@ -130,8 +130,14 @@ describe('prerequisite skillCastCount', () => {
 // TechniqueSystem's progress sink republishes the pair - same mirror
 // contract as skillCastCounts for `skillCastCount`).
 describe('prerequisite techniqueRank / techniqueGrade (P7-M6)', () => {
+  // M-F-TECHNIQUE (F5) - techniqueRank reads the EFFECTIVE rank: the
+  // live grade must equal the realm index, so fixtures set an in-band
+  // realmId (a lagging holder contributes rank 0).
   it('techniqueRank - passes at/above mirror rank, fails below, fails closed without a technique', () => {
-    const player = playerWith({ techniqueProgress: { rank: 5, grade: 2 } })
+    const player = playerWith({
+      realmId: 'foundation_establishment',
+      techniqueProgress: { rank: 5, grade: 2 },
+    })
 
     expect(hasPrerequisite(player, { kind: 'techniqueRank', rank: 5 })).toBe(true)
     expect(hasPrerequisite(player, { kind: 'techniqueRank', rank: 6 })).toBe(false)
@@ -153,7 +159,11 @@ describe('prerequisite techniqueRank / techniqueGrade (P7-M6)', () => {
   })
 
   it('techniqueRank gate blocks purchase below threshold without deducting insight', () => {
-    const player = playerWith({ skillInsight: 5, techniqueProgress: { rank: 2, grade: 1 } })
+    const player = playerWith({
+      realmId: 'qi_refining',
+      skillInsight: 5,
+      techniqueProgress: { rank: 2, grade: 1 },
+    })
 
     const node = minorNode({
       insightCost: 3,
@@ -510,9 +520,9 @@ describe('devResetBranch (plan §6.10)', () => {
   })
 })
 
-// M-F-RESPEC (ruling §14) — player-facing FREE Beta respec: 100% actual
+// M-F-RESPEC (ruling S14) - player-facing FREE Beta respec: 100% actual
 // Insight refund, cascade-reset invalid descendants, atomic/deterministic/
-// idempotent/save-safe. Same command for whole-tree and branch scope —
+// idempotent/save-safe. Same command for whole-tree and branch scope -
 // scope.rootId scopes to the subtree rooted at that node; omitted scope
 // resets the whole NodeTree.
 describe('respecNodeTree', () => {
@@ -660,7 +670,7 @@ describe('respecNodeTree', () => {
     invest(player, nodes)
     respecNodeTree(player, registry)
 
-    // The save payload IS a JSON encoding — round-trip it like the real
+    // The save payload IS a JSON encoding - round-trip it like the real
     // restore transaction does, then prove a second respec can find no
     // refund residue.
     const restored = JSON.parse(JSON.stringify(player)) as typeof player
@@ -922,7 +932,7 @@ describe('previewNodeRespec', () => {
     }
 
     // Pinia's store.$state is a reactive proxy; structuredClone would
-    // refuse it — the preview must clone through the proxy instead.
+    // refuse it - the preview must clone through the proxy instead.
     const player = reactive(playerWith({ skillInsight: 50 }))
 
     purchaseNode(player, root)

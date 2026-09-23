@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { BODY_CHAPTERS } from '../../core/realm/body/BodyChapter'
+import { BODY_CHAPTERS, validateBodyChapterRegistry } from '../../core/realm/body/BodyChapter'
 import {
   getPhysiqueGradeIndex,
   isPhysiqueGradeId,
   PHYSIQUE_GRADES,
-  type PhysiqueGradeId,
 } from './PhysiqueLadder'
 
 // M-QI-07 (QI-D4) - the physique ladder is identity data only: rung
@@ -43,37 +42,14 @@ describe('PhysiqueLadder', () => {
 
 // INV-9 - authored advancement transitions must form a contiguous,
 // gapless prefix starting at 'pham': adjacent pairs, unique 'from',
-// no skipped source rung. A mis-authored binding fails HERE (data
-// guard), never silently reaches runtime.
+// no skipped source rung. Since M-F-BODY-CORE the chain rule lives in
+// validateBodyChapterRegistry (the registry's runtime validator, also
+// run at module load) - this block pins the authored data through it.
 describe('physique advancement authored integrity', () => {
-  it('declared advancements form a contiguous prefix from pham', () => {
-    const advancements = BODY_CHAPTERS
-      .map(chapter => chapter.physiqueAdvancement)
-      .filter((a): a is { from: PhysiqueGradeId; to: PhysiqueGradeId } => a !== undefined)
-
-    // At least the body_refinement binding exists.
-    expect(advancements.length).toBeGreaterThanOrEqual(1)
-
-    const fromSet = new Set(advancements.map(a => a.from))
-
-    // 'from' unique (a Set of N froms over N bindings).
-    expect(fromSet.size).toBe(advancements.length)
-
-    for (const a of advancements) {
-      // Adjacent only - no skipped rung, no regress.
-      expect(getPhysiqueGradeIndex(a.to)).toBe(getPhysiqueGradeIndex(a.from) + 1)
-    }
-
-    // Contiguous prefix: the 'from' set is exactly
-    // { ladder[0], ladder[1], ..., ladder[N-1] } starting at 'pham'.
-    const expectedFroms = PHYSIQUE_GRADES
-      .slice(0, advancements.length)
-      .map(def => def.id)
-
-    expect([...fromSet].sort(
-      (a, b) => getPhysiqueGradeIndex(a) - getPhysiqueGradeIndex(b),
-    )).toEqual(expectedFroms)
-    expect(advancements.some(a => a.from === 'pham')).toBe(true)
+  it('the authored advancement chain passes registry validation', () => {
+    // Covers: unique 'from' ownership, single-rung adjacency, and the
+    // contiguous-prefix-from-'pham' rule for every declared transition.
+    expect(validateBodyChapterRegistry(BODY_CHAPTERS)).toEqual([])
   })
 
   it('body_refinement binds exactly pham -> bao; meridian declares none', () => {
