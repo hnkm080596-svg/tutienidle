@@ -412,6 +412,11 @@ export class EarlyGameSession {
    * drain clears the director exactly once. Returns whether the drain
    * executed. */
   drainTribulationOutcome(): boolean {
+    // A missing committed outcome means nothing to drain - clearing
+    // anyway would false-positive vs production.
+    if (!this.gameManager.tribulationDirector.getCommittedOutcome()) {
+      return false
+    }
     const writer = this.writer()
     reconcileTalentEntitlement(writer)
     if (writer.pendingTalentEntitlement !== undefined) {

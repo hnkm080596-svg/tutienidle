@@ -417,6 +417,9 @@ describe('TrucCoJourney - ordered journey', () => {
         s.gameManager.tribulationDirector.getCommittedOutcome(),
       ).toBeNull()
       expect(s.gameManager.tribulationDirector.getState()).toBeNull()
+      // Post-resolution a second drain has nothing committed - the
+      // seam returns false instead of clearing an empty director.
+      expect(s.drainTribulationOutcome()).toBe(false)
 
       // The realm_entered gift claims through the real op.
       const entryClaim = s.claimGift('gift_than_nong_foundation_entry')
@@ -774,16 +777,19 @@ describe('TrucCoJourney - ordered journey', () => {
       expect(
         s.gameManager.realmAdvanceOps.canTriggerBreakthrough(s.player),
       ).toBe(false)
-      // Refusal oracle = the whole persisted surface byte-untouched
-      // (stripTribulationState pattern - the volatile director slot is
-      // the only normalized field; a rejected run may not mutate ANY
-      // other persisted field).
-      const ceilingSnapshot = stripTribulationState(s.snapshot())
+      // Refusal oracle = the WHOLE persisted surface byte-untouched:
+      // a detached buildGameSave (every persisted field - bags,
+      // equipment, companions, stats, talents, ...) captured before
+      // the refused run must equal the one after; only the volatile
+      // wall-clock stamp is normalized.
+      const saveBeforeRefuse = buildGameSave(s.player, s.gameManager)
       expect(s.runTribulation('golden_core')).toBe('refused')
       expect(
         s.gameManager.tribulationDirector.getCommittedOutcome(),
       ).toBeNull()
-      expect(stripTribulationState(s.snapshot())).toEqual(ceilingSnapshot)
+      const saveAfterRefuse = buildGameSave(s.player, s.gameManager)
+      saveAfterRefuse.player.lastSavedAt = saveBeforeRefuse.player.lastSavedAt
+      expect(saveAfterRefuse).toEqual(saveBeforeRefuse)
 
       // ARTIFACT-DEFER (landed shape): the artifact domain unlocks at
       // ARTIFACT_UNLOCK_REALM_ID ('golden_core'); spell way's reward is
@@ -1026,13 +1032,22 @@ describe('TrucCoJourney - grade ladder', () => {
     ).toBe('great_dao')
   })
 
-  it('capped grade: heaven inputs + lost great_dao opportunity -> heaven', () => {
+  it('capped grade: full great-dao inputs + lost opportunity -> heaven', () => {
     expect(
       runGradedTribulation((s) => {
+        // The POSITIVE Great Dao input set (mirrors the great_dao
+        // test above) - only the opportunity flag differs, so the
+        // cap is attributed to greatDaoOpportunityLost alone.
         s.holdPill(TRUC_CO_DAN_ID, 1)
-        openMeridians(s, 6)
+        openMeridians(s, 9)
+        s.player.mortalPerfectionAchieved = true
+        s.player.selectedTalentIds = ['pham_cot']
+        const cap = getMainStatCap('qi_refining')
+        for (const key of MAIN_STAT_KEYS) {
+          s.player.baseStats[key] = cap
+        }
         s.player.greatDaoOpportunityLost = true
-      }, 12),
+      }, 18),
     ).toBe('heaven')
   })
 })
