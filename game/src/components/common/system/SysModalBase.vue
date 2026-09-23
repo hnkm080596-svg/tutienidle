@@ -129,15 +129,15 @@ const headingId = useId()
   align-items: center;
   gap: var(--space-3, 12px);
   padding: var(--space-4, 16px) var(--space-4, 16px) var(--space-3, 12px);
-  border-bottom: 1px solid var(--sys-line-soft);
+  border-bottom: 1px solid var(--sys-line-soft, rgba(42, 41, 36, .3));
 }
 .sys-modal__heading { min-width: 0; margin-right: auto; }
 .sys-modal__heading h3 {
   margin: 0;
-  font: 700 var(--text-title, 18px) var(--sys-font-display);
+  font: 700 var(--text-title, 18px) var(--sys-font-display, var(--font-display));
   letter-spacing: .1em;
   text-transform: uppercase;
-  color: var(--sys-text);
+  color: var(--sys-text, var(--paper-text, #211f1a));
 }
 .sys-modal__body {
   flex: 1 1 auto;

@@ -301,6 +301,9 @@ test.describe('system UI skin - v2 surface contract', () => {
   })
 
   test('font-blocked fallback keeps Vietnamese text rendered and styled', async ({ page }) => {
+    // Genuinely deny the webfont - the fallback stack must carry the text.
+    await page.route('**fonts.googleapis.com**', (route) => route.abort())
+    await page.route('**fonts.gstatic.com**', (route) => route.abort())
     await page.addInitScript(() => localStorage.clear())
     await page.goto('/')
     await page.getByTestId('auth-guest-button').click()

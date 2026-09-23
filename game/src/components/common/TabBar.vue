@@ -91,6 +91,7 @@ onMounted(() => {
   document.fonts?.ready?.then?.(measureInk)
 })
 watch(() => props.modelValue, () => measureInk(), { flush: 'post' })
+watch(() => props.tabs, () => measureInk(), { flush: 'post', deep: true })
 onBeforeUnmount(() => {
   observer?.disconnect()
   document.fonts?.removeEventListener?.('loadingdone', measureInk)

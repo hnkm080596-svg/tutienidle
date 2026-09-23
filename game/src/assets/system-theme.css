@@ -590,6 +590,17 @@ aside.character-detail.sys-surface {
   color: var(--sys-text);
 }
 
+/* Combat pause: light dim - units must stay visible animating behind the
+   pause prompt (A7). Lives here because adopters' scoped styles cannot
+   reach the teleported .sys-modal/.sys-modal__card. */
+.combat-pause.sys-modal {
+  background: rgba(3, 7, 14, 0.45);
+  backdrop-filter: none;
+}
+.sys-modal__card.combat-pause__card {
+  text-align: center;
+}
+
 /* Focus - non-glow, >= 2px, on every interactive sys control (spec 7.2). */
 .sys-surface :is(button, [role='button'], a, input, select, [tabindex]):focus-visible,
 .sys-modal :is(button, [role='button'], a, input, select, [tabindex]):focus-visible,

@@ -45,7 +45,7 @@ const messageId = useId()
 
     <div class="confirm-modal__actions">
       <GameButton class="confirm-modal__cancel" variant="system" @click="emit('cancel')">{{ cancelLabel }}</GameButton>
-      <GameButton class="confirm-modal__confirm" variant="system" :accent-var="danger ? 'var(--sys-danger)' : undefined" @click="emit('confirm')">{{ confirmLabel }}</GameButton>
+      <GameButton class="confirm-modal__confirm" variant="system" :accent-var="danger ? 'var(--sys-danger, #ff5470)' : undefined" @click="emit('confirm')">{{ confirmLabel }}</GameButton>
     </div>
   </SysModalBase>
 </template>

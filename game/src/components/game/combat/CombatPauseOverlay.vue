@@ -54,17 +54,8 @@ const { t } = useI18n()
 </template>
 
 <style scoped>
-/* .sys-modal is SysModalBase's root; the double-class selector outranks its
-   scoped rule regardless of stylesheet order. Keeps A7's light dim - units
-   must stay visible animating behind the pause prompt. */
-.combat-pause.sys-modal {
-  background: rgba(3, 7, 14, 0.45);
-  backdrop-filter: none;
-}
-
-.combat-pause__card {
-  text-align: center;
-}
+/* Scrim/card tweaks live in system-theme.css: scoped styles never reach
+   SysModalBase's teleported elements (they carry its scope id, not ours). */
 
 .combat-pause__body {
   margin: 0 0 18px;

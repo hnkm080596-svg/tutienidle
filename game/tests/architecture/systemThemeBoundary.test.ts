@@ -203,6 +203,18 @@ describe('system theme boundary (M-UI-SYSTEM)', () => {
     expect(offenders).toEqual([])
   }, SCAN_TIMEOUT)
 
+  it('no plain .css file outside system-theme.css defines a --sys-* token', () => {
+    // Invariant-2 gap closed: the :root-only check + .vue-only remap scan left
+    // non-:root --sys-* definitions in plain .css files unpoliced.
+    const offenders: string[] = []
+    for (const file of listCss(SRC_DIR)) {
+      if (file === SYS_THEME) continue
+      const text = stripComments(readFileSync(file, 'utf8'))
+      if (SYS_LHS_ONCE.test(text)) offenders.push(file)
+    }
+    expect(offenders).toEqual([])
+  }, SCAN_TIMEOUT)
+
   it('system-theme.css defines no non-sys token (LHS scan)', () => {
     const hits: string[] = []
     for (const rule of cssRules(css)) {
@@ -305,7 +317,7 @@ describe('system theme boundary (M-UI-SYSTEM)', () => {
       if (file.fromSrc === 'components/common/OverlayPanel.vue') continue
       // Scan each <OverlayPanel ...> opening tag for the system opt-in.
       for (const m of file.text.matchAll(/<OverlayPanel\b[\s\S]*?>/g)) {
-        if (!m[0].includes('variant="system"')) {
+        if (!/variant\s*=\s*["']\s*'?system/.test(m[0])) {
           offenders.push(`${file.fromSrc} :: ${m[0].slice(0, 80)}`)
         }
       }
