@@ -217,23 +217,28 @@ async function main() {
       }
 
       const send = page.locator('button[aria-label="Send message"], button[data-testid="send-button"]')
-      const turnsBefore = await page.evaluate(() => document.querySelectorAll('[data-message-author-role]').length)
+      // Verify by content, not turn count: the conversation list is
+      // virtualized so element counts drift; a landed send leaves a user
+      // turn whose text starts with the prompt's head (or empties the
+      // composer while generation starts).
+      const marker = prompt.slice(0, 80)
       let landed = false
       for (let attempt = 0; attempt < 2 && !landed; attempt++) {
         await send.first().click()
-        // Verify the send actually landed: a silent no-op click leaves the
-        // composer populated and no new user turn. Wait for the turn count
-        // to grow before believing "sent".
         const deadline = Date.now() + 15_000
         while (Date.now() < deadline) {
-          landed = await page.evaluate((n) => document.querySelectorAll('[data-message-author-role]').length > n, turnsBefore)
+          landed = await page.evaluate((m) => {
+            const users = document.querySelectorAll('[data-message-author-role="user"]')
+            const last = users[users.length - 1]
+            return !!last && last.innerText.slice(0, m.length) === m
+          }, marker)
           if (landed) break
           await page.waitForTimeout(500)
         }
         if (!landed && attempt === 0) log('send click did not land a user turn -- retrying once')
       }
       if (!landed) {
-        log('send failed: no new user turn appeared after 2 attempts -- composer may be empty or the click was intercepted')
+        log('send failed: prompt head not found in last user turn after 2 attempts -- composer may be empty or the click was intercepted')
         process.exit(4)
       }
       log('sent -- ' + (sendOnly ? 'send-only mode, exiting' : 'waiting for response'))
