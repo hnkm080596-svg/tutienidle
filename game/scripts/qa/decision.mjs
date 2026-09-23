@@ -15,7 +15,11 @@ export function withinScope(ledger, finding) {
   const auth = ledger.run.authorizedRepairs;
   if (auth.includes("*")) return true;
   if (auth.length === 0) return false;
-  return finding.locations.some((loc) => auth.some((a) => loc.path.startsWith(a.replace(/\*$/, ""))));
+  return finding.locations.some((loc) => auth.some((a) => {
+    const prefix = a.replace(/\*$/, "");
+    // segment-boundary match: "src" authorizes src/x, never src-evil/x
+    return loc.path === prefix.replace(/\/$/, "") || loc.path.startsWith(prefix.endsWith("/") ? prefix : `${prefix}/`);
+  }));
 }
 
 export function evaluateTerminal(ledger) {
@@ -115,7 +119,7 @@ export function decide(ledger) {
   const open = openActionable(ledger);
   const exceptions = ledger.findings.filter((x) => x.status === "HUMAN_EXCEPTION");
 
-  if (allOk && ledger.findings.length >= 0) {
+  if (allOk) {
     return { outcome: "QA_FIXED_POINT_REACHED", clauses, detail: "terminal predicate satisfied" };
   }
   if (open.length) {

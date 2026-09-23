@@ -4,7 +4,8 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { evaluateTerminal, decide } from "../decision.mjs";
+import { evaluateTerminal, decide, withinScope } from "../decision.mjs";
+import { validateSemantics } from "../validate.mjs";
 import { acquireLease } from "../state.mjs";
 import { makeRunDir, mkHappyLedger, mkFinding, mkEvidence, GAME_ROOT } from "./helpers.mjs";
 
@@ -106,4 +107,32 @@ test("record dedupes persisted ledger entries by id (QF-04 shape)", () => {
   assert.match(out1, /evidence:EV-DUP/);
   const out2 = run(["record", "--run", dir, "--input", evPath]);
   assert.match(out2, /updated|duplicate/);
+});
+
+test("scope matching honors segment boundaries (src/ vs src-evil/)", () => {
+  const { ledger } = happy();
+  ledger.run.authorizedRepairs = ["src/"];
+  const inScope = mkFinding("F-IN", ledger.run.state, { status: "PROVEN", repair: null, pinEvidenceIds: [], verificationEvidenceIds: [], closureReviewIds: [] });
+  ledger.findings.push(inScope);
+  assert.equal(withinScope(ledger, inScope), true);
+  const evil = mkFinding("F-EVIL", ledger.run.state, { status: "PROVEN", repair: null, pinEvidenceIds: [], verificationEvidenceIds: [], closureReviewIds: [], locations: [{ path: "src-evil/x.mjs", symbolOrSection: null, revision: "x", basis: "SOURCE" }] });
+  ledger.findings.push(evil);
+  assert.equal(withinScope(ledger, evil), false);
+});
+
+test("required domain without coverage fails MC8 instead of crashing", () => {
+  const { dir, product } = makeRunDir();
+  const { ledger } = mkHappyLedger(dir, product);
+  ledger.run.requiredDomains = ["inventory", "definitely-not-covered"];
+  const res = validateSemantics(ledger);
+  assert.ok(res.some((x) => x.check === "MC8" && /definitely-not-covered/.test(x.reason)), JSON.stringify(res));
+});
+
+test("INDEPENDENT_REVIEW surface cannot be SATISFIED with no reviewers/evidence", () => {
+  const { dir, product } = makeRunDir();
+  const { ledger } = mkHappyLedger(dir, product);
+  const c3 = ledger.coverage.find((c) => c.id === "COV-3");
+  c3.reviewerIds = []; c3.evidenceIds = [];
+  const res = validateSemantics(ledger);
+  assert.ok(res.some((x) => x.check === "MC7" && /INDEPENDENT_REVIEW/.test(x.reason)), JSON.stringify(res));
 });

@@ -205,7 +205,7 @@ export function validateSemantics(ledger, { runDir = null, checkState = null } =
 
   // ---- MC3 state manifests recompute; stale/not-current marking consistent
   const cur = ledger.run.state;
-  const sameState = (a, b) => a.productStateId === b.productStateId && a.contractId === b.contractId && a.attackModelId === b.attackModelId && a.environmentId === b.environmentId;
+  const sameState = (a, b) => a && b && a.productStateId === b.productStateId && a.contractId === b.contractId && a.attackModelId === b.attackModelId && a.environmentId === b.environmentId;
   if (checkState?.manifestRoot) {
     const now = buildManifest(checkState.manifestRoot, checkState);
     if (now.productStateId !== cur.productStateId) {
@@ -301,6 +301,9 @@ export function validateSemantics(ledger, { runDir = null, checkState = null } =
           if (c.evidenceIds.length === 0 && c.surface !== "INDEPENDENT_REVIEW") {
             f("MC7", c.id, "SATISFIED with no evidence");
           }
+          if (c.surface === "INDEPENDENT_REVIEW" && c.reviewerIds.length === 0 && c.evidenceIds.length === 0) {
+            f("MC7", c.id, "INDEPENDENT_REVIEW SATISFIED with no reviewers or evidence");
+          }
           const allowed = EXECUTED_SURFACE_KIND[c.surface];
           if (allowed) {
             for (const eid of c.evidenceIds) {
@@ -321,7 +324,7 @@ export function validateSemantics(ledger, { runDir = null, checkState = null } =
     }
   }
   for (const d of ledger.run.requiredDomains) {
-    if (!ledger.invariants.some((i) => i.domain === d) && !ledger.census.some((c) => c.location.startsWith(d))) {
+    if (!ledger.invariants.some((i) => i.domain === d) && !ledger.census.some((c) => c.location?.path?.startsWith(d))) {
       f("MC8", "run.requiredDomains", `required domain ${d} has no invariant or census presence`);
     }
   }

@@ -43,11 +43,11 @@
       "agents/governance"
     ],
     "exclusions": [],
-    "phase": "SNAPSHOT",
+    "phase": "DECIDE",
     "cleanRoundA": null,
     "cleanRoundB": null,
     "finalEvidenceIds": [],
-    "outcome": null
+    "outcome": "QA_UNVERIFIED"
   },
   "invariants": [],
   "census": [],
@@ -93,6 +93,22 @@
       "payloadPath": "events/0002.json",
       "payloadHash": "164a9fe4b455bbc79655a6ea8c0ff2b34bd268a3400c6971d9d3f4cf58b4fbba",
       "eventHash": "6ca9ee08273c1429a30fb1174fb0007c48779e867455d5fda96bd51cc1ea3068"
+    },
+    {
+      "seq": 3,
+      "at": "2026-09-23T13:32:36.845Z",
+      "kind": "DECISION",
+      "actor": "coordinator-15564",
+      "state": {
+        "productStateId": "29794eb461eaf87f6df3730231120b180739169fdfb74ad497588891433f5257",
+        "contractId": "da385a984a42753d227531582ee94c3c41944dae484ddc870eb1bf9acf82c0dc",
+        "attackModelId": "7868acb7d23a915d80b53e0f80371553e910bd6d57250be3be2d4249858a9fa6",
+        "environmentId": "6956210fc2653c78e55ee03629be18a9b6af5a9123830c8c418f033b000b83e1"
+      },
+      "previousEventHash": "6ca9ee08273c1429a30fb1174fb0007c48779e867455d5fda96bd51cc1ea3068",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "75a0f34e3ac59af7c95a987d3e5a52146ddbfb4d9ebd186e374aa9dfcd9319d1",
+      "eventHash": "737f7b272fa46079ac8e4dbf829034317a9e18faf6111c00c5dd900c47701c8b"
     }
   ]
 }
