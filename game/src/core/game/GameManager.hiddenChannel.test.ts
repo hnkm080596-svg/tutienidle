@@ -17,7 +17,12 @@
 // write-once discovery, not merely that the writer was invoked.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-const FIXTURE_PERFECTION_ID = 'bp_gm_fixture_material'
+// Hoisted per repo convention (core/realm/body/BodyPerfection.test.ts):
+// vi.mock factories hoist above top-level consts - a plain const here
+// would hit TDZ when the factory evaluates.
+const { FIXTURE_PERFECTION_ID } = vi.hoisted(() => ({
+  FIXTURE_PERFECTION_ID: 'bp_gm_fixture_material',
+}))
 
 vi.mock('../../data/realm/BodyPerfection', async (importOriginal) => {
   const original =
