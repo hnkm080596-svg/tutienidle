@@ -1,0 +1,171 @@
+# M-F-BODY-PERFECTION — Hidden Body Perfection — plan
+
+Spec: `game/docs/specs/m-f-body-perfection-spec.md` (v1 — pending C2C
+spec review). Implements the canonical `{discoveredMaterials,
+perfectedRealmIds}` state, the acquisition-funnel discovery hook, the
+atomic/idempotent `perfectBodyRealm` transaction, the BODY-CORE channel
+multiplier `×(1 + 0.10 × perfectedCount)`, the hidden
+`BodyPerfectionSection`, and save v77 — all seams wired, all content
+deferred (registry lists authored `[]`).
+
+Phase 1 delivered docs only; Phase 2 implements under C2C impl review.
+Worktree per P2 (production edits); `.agent-worktrees/m-f-body-perfection`.
+
+## Step 0 — seam census (verified during spec; evidence in spec §1)
+
+- Raw channel `collectBodyBaseStatDeltas` —
+  `BodyProgressionSystem.ts:170-186`; sole consumer merge loop
+  `Player.ts:498-502`. Effective collector lands beside it; the merge
+  loop is the ONLY consumer swap.
+- Acquisition funnel `notifyQuestMaterialGained` —
+  `GameManagerQuestOps.ts:54-61`; deps fields
+  `GameManagerRewardOps.ts:28`, `GameManagerEconomyOps.ts:21`,
+  `EquipmentOpsSystem.ts:39`, `GameManagerBuildingOps.ts:32`,
+  `GameManagerTickOps.ts:48`; wiring `GameManager.ts:621-622,698-699,
+  767-768,782-783,920-921`. Direct `onMaterialCollected` callers to
+  re-route: `BattleLootSystem.ts:556,727`,
+  `QuestSystem.claim` `:193-200` (via optional `QuestBagDeps.
+  onMaterialGained`). Hookless live landings gaining the funnel:
+  `GameManagerTickOps.deliverDecomposeOutput` `:280-282`,
+  `GameManagerCompanionOps.ts:108`, essence change credit
+  `GameManagerRealmAdvanceOps.ts:593-596`.
+- Transaction template `investBodyChapter` —
+  `GameManagerRealmAdvanceOps.ts:518-598` (JSON probe `:554-558`,
+  `bag.has` preflights, all-or-nothing commit).
+- Registry template `assertBodyChapterRegistry` —
+  `BodyChapter.ts:333-363`; pure-registry template
+  `data/realm/PhysiqueEssence.ts`.
+- Save seams `saveShapeValidation.ts:729`, preflight
+  `GameManagerSaveRestore.ts:291`, `CURRENT_SAVE_VERSION = 76` → 77
+  (`saveVersion.ts:127`).
+- Restore exclusion recorded (`GameManagerSaveRestore.ts:466-471` —
+  restore is not acquisition).
+- `REALMS` id order + `getRealmIndex` (`realmSystem.ts:98`) for the
+  realm-reached gate.
+
+## Step 1 — state + registry + pure domain (`core/realm/body/BodyPerfection.ts`)
+
+- `BodyPerfectionState { discoveredMaterials: string[],
+  perfectedRealmIds: string[] }`; `createDefaultBodyPerfection()`;
+  `PlayerData.bodyPerfection` field + `createDefaultPlayer` init
+  (`Player.ts:442-443` convention).
+- `data/realm/BodyPerfection.ts`: `BODY_PERFECTION_REALM_MATERIALS`
+  (every `REALMS` id → `readonly string[]`, ALL `[]` — seam, not
+  content), `bodyPerfectionMaterialIds`, `bodyPerfectionRealmOf`,
+  `isBodyPerfectionMaterial`, `assertBodyPerfectionRegistry()` at
+  module load (real `REALMS` keys; a material id in ≤1 realm list —
+  the DISTINCT premise; intra-list uniqueness).
+- `recordBodyPerfectionMaterialDiscovery(player, materialId)` —
+  set-add via `bodyPerfectionRealmOf`; `BODY_PERFECTION_BONUS_PER_REALM
+  = 0.10`; `getBodyPerfectionMultiplier(player)`;
+  `isBodyPerfectionRevealed(player)`; `canPerfectBodyRealm(player,
+  realmId, ownedOf)` (non-empty authored list + realm-reached via
+  `getRealmIndex` + not-yet-perfected + `ownedOf(id) >= 1` ∀);
+  `applyBodyPerfection(player, realmId)` (write-if-absent push);
+  `getBodyPerfectionRealmProgress(player, realmId, ownedOf)` — the
+  observational read-model (Q9).
+
+## Step 2 — discovery funnel
+
+- `GameManagerQuestOps.notifyQuestMaterialGained` → rename
+  `notifyMaterialGained`; fans out to `questSystem.onMaterialCollected`
+  (unchanged) + `recordBodyPerfectionMaterialDiscovery(
+  getActivePlayer(), materialId)` when `amount > 0`.
+- Rename the deps field at the 5 files + rewire the 5 GameManager
+  closures (Step 0 census).
+- `BattleLootSystem`: add `deps.notifyMaterialGained`; switch both
+  grant sites (`:556`, `:727`) to it; drop no other deps
+  (`questSystem`/`questRegistry`/`questManager` stay for
+  `onEnemyDefeated :415-417`).
+- `QuestSystem.claim`: optional `QuestBagDeps.onMaterialGained` in
+  `QuestBagDeps`; `:193-200` prefers it over the bare
+  `onMaterialCollected` when provided; `GameManagerQuestOps.claimQuest`
+  supplies `(id, delivered) => this.notifyMaterialGained(id, delivered)`.
+- Add funnel calls at the three hookless live sites (Step 0) — additive
+  only; no amount/overflow changes. Restore sites stay unhooked.
+
+## Step 3 — transaction + multiplier + save
+
+- `GameManagerRealmAdvanceOps.perfectBodyRealm(player, realmId)` —
+  `canPerfectBodyRealm` → JSON-probe apply → per-material `bag.has` +
+  `remove(1)` → `applyBodyPerfection` → notify. `boolean` return;
+  idempotent short-circuit on `perfectedRealmIds.includes`.
+- `BodyProgressionSystem.collectEffectiveBodyBaseStatDeltas(player)` =
+  raw × `getBodyPerfectionMultiplier` (factor 1 short-circuits to raw).
+  `Player.ts:499` merges the effective collector — sole consumer swap;
+  raw contract unchanged.
+- `CURRENT_SAVE_VERSION` → 77; `validateBodyPerfectionPersistedState`
+  beside `saveShapeValidation.ts:729`; `assertBodyPerfectionIntegrity`
+  beside `GameManagerSaveRestore.ts:291` (discovered ⊆ authored family;
+  perfected ⊆ authored keys with non-empty lists; perfected's list ⊆
+  discovered — the append-only authoring constraint it creates is
+  recorded for the content pass).
+
+## Step 4 — hidden surface
+
+- `components/panels/realm/BodyPerfectionSection.vue` +
+  `RealmPanel.vue` mount beside `:126-130`. `v-if` on
+  `isBodyPerfectionRevealed`; per-realm rows only for realms with ≥1
+  discovered material; only discovered ids named; perfect button gated
+  on `canPerfect`; perfected realms marked complete. i18n keys
+  `panels.realm.bodyPerfection.*` via `useI18n` (P16; VN label
+  `Thể Phách Hoàn Thiện` — C2C flag); P15 ASCII comments; existing
+  primitives only.
+
+## Step 5 — pin tests (spec §10)
+
+1. `src/data/realm/BodyPerfection.test.ts` — registry load gate (dup
+   cross-realm id throws; unknown realm key throws), reverse lookups,
+   all-empty authored state.
+2. `src/core/realm/body/BodyPerfection.test.ts` — record-once/idempotent;
+   non-perfection id no-op; `canPerfect` arms (empty list fails closed,
+   unreached realm rejected, already-perfected rejected, missing
+   material rejected); `applyBodyPerfection` write-if-absent;
+   `getBodyPerfectionMultiplier` = 1 + 0.10n.
+3. Funnel — rename site tests + BattleLootSystem route test:
+   acquisition writes discovery; `delivered = 0` writes nothing;
+   restore path writes nothing.
+4. `GameManagerRealmAdvanceOps.perfectBodyRealm` — probe-failure zero
+   mutation (materials + state + notifications), `bag.has` shortfall
+   zero mutation, commit consumes exactly one of each listed id + marks
+   realm, re-transact returns `false` debiting nothing.
+5. Channel — `collectEffectiveBodyBaseStatDeltas` = raw when 0
+   perfected; ×1.1 / ×1.2 scaled; `collectBodyBaseStatDeltas` raw
+   unchanged; non-body sources (`baseStats`, `modifiers`, equipment,
+   `externalModifiers`) byte-identical (multiplier isolation);
+   `resolvePlayerStatAssembly` totals reflect scaled body deltas.
+6. Save — v77 round-trip preserves both sets; malformed payload emits;
+   old-version save rejected; restore fires no re-discovery/re-mark.
+7. Component — `BodyPerfectionSection` absent pre-discovery (not
+   rendered), present post-, partial reveal lists only discovered ids,
+   button gating follows `canPerfect`, perfected marker renders.
+8. Late perfection — perfect `mortal` while `realmId === 'golden_core'`
+   succeeds and scales.
+
+## Step 6 — gates
+
+- P3 **full** (`npm run verify`): Pinia root state + save schema bump
+  trigger full mode. Scoped loop during iteration: `npx vitest run
+  src/core/realm/body src/data/realm src/core/game src/services/save
+  src/components/panels`.
+- P18 OCR (`open-code-review`) on the diff → P4
+  `tutienidle-adversarial-qa` quick (P4 deep if quick flags
+  save/progression breadth — the S-save + L-progression triggers argue
+  for it) → P5 sequential ≥3 passes.
+- P13/P14 **triggered**: new UI surface + funnel wiring — Playwright
+  from the implementation worktree (drive: section absent → grant a
+  synthetic perfection material → section reveals → perfect → stats
+  update). Recorded evidence per the worktree rule.
+- P15 ASCII scan; P16 VN-key audit on the new section.
+- Commit + push `devin/1790147578-m-f-body-perfection`; PR base
+  `p7/truc-co`; STOP.
+
+## Acceptance criteria (per spec §10)
+
+- All §2–§7 seams land; zero pre-existing behavior drift outside the
+  enumerated funnel call sites; the diff carries no authored material
+  ids (registry lists stay `[]` — content is a later pass).
+- `npm run verify` green; OCR clean; P4 verdict recorded; P5 passes per
+  coordinator gate order.
+- Runtime evidence captures absent→revealed→partial→perfected.
+- Report records branch, files, per-gate evidence, limitations.
