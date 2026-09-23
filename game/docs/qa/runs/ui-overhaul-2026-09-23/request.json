@@ -1,0 +1,46 @@
+{
+  "runId": "ui-overhaul-2026-09-23",
+  "productRoot": "/home/ubuntu/repos/tutienidle/.agent-worktrees/m-ui-overhaul/game",
+  "checkout": "origin/p7/truc-co base + devin/1790183125-m-ui-overhaul @ 145a9705 (PR #20, draft/unmerged)",
+  "branch": "devin/1790183125-m-ui-overhaul",
+  "base": "origin/p7/truc-co",
+  "head": "145a9705da666273274ba3ca455bde8b8126bb4b",
+  "authorizedRepairs": [
+    "src/components/**",
+    "src/assets/system-theme.css",
+    "src/composables/sysFxMode.ts",
+    "src/main.ts",
+    "tests/**",
+    "docs/**",
+    "src/locales/**"
+  ],
+  "nonGoals": [
+    "gameplay logic",
+    "economy",
+    "save schema/policy",
+    "Phaser world/art",
+    "merge/push authorization",
+    "InkNineSlice asset removal"
+  ],
+  "requiredDomains": [
+    "src/assets/system-theme.css",
+    "src/components/**",
+    "src/composables/sysFxMode.ts",
+    "src/main.ts",
+    "tests/architecture/systemThemeBoundary.test.ts",
+    "tests/e2e",
+    "src/locales",
+    "docs"
+  ],
+  "contractPaths": [
+    "../AGENTS.md"
+  ],
+  "attackModelPath": "attack-model.json",
+  "environmentPath": "environment.json",
+  "extraExclude": [
+    "docs/qa/runs/",
+    "docs/qa/learning/history/",
+    "docs/qa/corpus/"
+  ],
+  "notes": "Impl-run on PR #20 (M-UI-OVERHAUL): CSS/DOM-only full-interface overhaul (~135 files). Coordinator mandate: 3 sealed reviewer lenses (correctness, consistency/authority, integration) with priorFindingsVisible=NO; reviewers weight visual-fidelity/regression evidence (P14 screenshots, boundary guard, reduced-motion) over logic. Protocol runner lives on main checkout (master); run dir executed there then journaled onto the branch. productRoot = impl worktree so productStateId binds the exact candidate. contractId hashes worktree AGENTS.md only; the protocol canon (game/docs/qa/protocol/*.md on master @80562012) is applied as runner-side law \u2014 paths recorded here for audit: game/docs/qa/protocol/README.md, agent-instructions.md, defect-taxonomy.md, ledger-schema.md."
+}

@@ -1,0 +1,63 @@
+[
+  {
+    "requestId": "req-roundA-correctness",
+    "lens": "CORRECTNESS",
+    "instruction": "sealed falsification review, priorFindingsVisible=NO required",
+    "contextId": "devin-ddb2250c5f934983840fa655571ad998",
+    "status": "SEALED (8 findings; state invalidated by repair snapshot)"
+  },
+  {
+    "requestId": "req-roundA-authority",
+    "lens": "CONSISTENCY/AUTHORITY",
+    "instruction": "sealed falsification review, priorFindingsVisible=NO required",
+    "contextId": "PENDING \u2014 SWE-2 pool 429, retrying",
+    "status": "SUPERSEDED \u2014 respawned as round-B on post-repair state"
+  },
+  {
+    "requestId": "req-roundA-integration",
+    "lens": "INTEGRATION",
+    "instruction": "sealed falsification review, priorFindingsVisible=NO required",
+    "contextId": "PENDING \u2014 SWE-2 pool 429, retrying",
+    "status": "SUPERSEDED \u2014 respawned as round-B on post-repair state"
+  },
+  {
+    "requestId": "req-roundB-correctness",
+    "lens": "CORRECTNESS",
+    "instruction": "sealed falsification review, priorFindingsVisible=NO required",
+    "contextId": "devin-7393e85e97ee4633ba7158695822bf14",
+    "status": "DISPATCHED @ ec5a7ead"
+  },
+  {
+    "requestId": "req-roundB-authority",
+    "lens": "CONSISTENCY/AUTHORITY",
+    "instruction": "sealed falsification review, priorFindingsVisible=NO required",
+    "contextId": "PENDING \u2014 SWE-2 org cap, spawn loop running"
+  },
+  {
+    "requestId": "req-roundB-integration",
+    "lens": "INTEGRATION",
+    "instruction": "sealed falsification review, priorFindingsVisible=NO required",
+    "contextId": "PENDING \u2014 SWE-2 org cap, spawn loop running"
+  },
+  {
+    "requestId": "req-roundC-correctness",
+    "lens": "CORRECTNESS",
+    "instruction": "sealed falsification review, priorFindingsVisible=NO required",
+    "contextId": "PENDING \u2014 SWE-2 org cap saturated ~80min, spawn loop retrying",
+    "status": "QUEUED @ d3b2b281"
+  },
+  {
+    "requestId": "req-roundC-authority",
+    "lens": "CONSISTENCY/AUTHORITY",
+    "instruction": "sealed falsification review, priorFindingsVisible=NO required",
+    "contextId": "PENDING \u2014 SWE-2 org cap",
+    "status": "QUEUED @ d3b2b281"
+  },
+  {
+    "requestId": "req-roundC-integration",
+    "lens": "INTEGRATION",
+    "instruction": "sealed falsification review, priorFindingsVisible=NO required",
+    "contextId": "PENDING \u2014 SWE-2 org cap",
+    "status": "QUEUED @ d3b2b281"
+  }
+]
