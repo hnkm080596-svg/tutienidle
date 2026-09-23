@@ -165,7 +165,9 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
   outline-offset: 2px;
   outline-color: transparent;
   outline-style: solid;
-  box-shadow: var(--sys-focus, var(--focus-ring-chrome, 0 0 0 2px rgba(217, 212, 199, 0.65)));
+  /* --sys-focus is a color token - build the ring around it so the
+     declaration stays valid in both theme layers. */
+  box-shadow: 0 0 0 2px var(--sys-focus, rgba(217, 212, 199, 0.65));
 }
 
 /* M-UI-SYSTEM: scoped-attribute specificity (0,3,0) beats the global sys

@@ -494,7 +494,7 @@ watch([searchQuery, activeGroup], () => resetPage())
 .bag-section__search:focus-visible {
   outline: none;
   border-color: var(--sys-text, var(--chrome-300));
-  box-shadow: var(--sys-focus, var(--focus-ring-chrome));
+  box-shadow: 0 0 0 2px var(--sys-focus, rgba(217, 212, 199, 0.65));
 }
 
 .bag-section__chips {
