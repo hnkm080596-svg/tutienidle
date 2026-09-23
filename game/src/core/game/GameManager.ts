@@ -175,6 +175,7 @@ import type { TokenState } from '../battle/turn/TurnToken'
 import type { ForcedTurnChoice } from '../battle/turn/TurnSkillAction'
 import type { TurnSkillPresentationEntry } from '../combat/CombatSkillPresentation'
 import { BUFF_REGISTRY, PERSISTENT_BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
+import { TRUC_CO_DAN_PILL_ID } from '../../data/breakthrough/BreakthroughScopedResources'
 
 
 /**
@@ -1335,7 +1336,9 @@ export class GameManager {
     player: PlayerData,
     targetRealmId: string,
   ): boolean {
-    const hasTrucCoDan = this.pillBag.has('truc_co_dan', 1)
+    // M-F-CEILING C2C-9 - the breakthrough-gate pill id comes from the
+    // census so the integrity test binds the live gate to the tag.
+    const hasTrucCoDan = this.pillBag.has(TRUC_CO_DAN_PILL_ID, 1)
 
     // ARCH-002 (M7) — same ordering contract as startBattleWithPlayer:
     // ephemeral passive stacks reset BEFORE the ghost snapshot is taken,

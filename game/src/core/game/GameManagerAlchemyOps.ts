@@ -13,6 +13,7 @@ import {
 import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
 import { getRealmTier } from '../realm/RealmTierMap'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
+import { isBreakthroughAcquisitionEnabled } from '../realm/ReleasePolicy'
 import type { PlayerData } from '../player/Player'
 
 export interface GameManagerAlchemyOpsDeps {
@@ -74,6 +75,13 @@ export class GameManagerAlchemyOps {
     // state so the caller sees the real reason, not a room-level miss.
     if (recipe.retired === true) {
       return { ok: false, reason: 'retired' }
+    }
+
+    // M-F-CEILING - a breakthrough-scoped recipe is suppressed by release
+    // policy while the transition into its tagged realm is closed (same
+    // real-reason-first ordering as 'retired').
+    if (!isBreakthroughAcquisitionEnabled(recipe.breakthroughRealmId)) {
+      return { ok: false, reason: 'realm_unavailable' }
     }
 
     const instance = this.deps.buildingManager.getByBuildingId('pill_room')

@@ -53,6 +53,9 @@ const legacyMaterials: Material[] = [
     category: 'other',
     sourceType: 'boss',
     description: 'Một vật phẩm kỳ dị, không thể xác định công dụng.',
+    // M-F-CEILING - hidden input of the Truc Co breakthrough (Dai Dao
+    // grade); tagged so release policy gates its acquisition.
+    breakthroughRealmId: 'foundation_establishment',
   },
 
   // Đoán Bảo Thạch + spec dot-pha-loi-kiep §4.1b/c — 2 nguyên liệu

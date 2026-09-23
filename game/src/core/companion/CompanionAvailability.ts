@@ -5,9 +5,18 @@
 // Grandfathered saves keep already-owned companions working in combat;
 // the gate only blocks NEW acquisition and UI entry (no migration).
 import { getRealmIndex } from '../realm/realmSystem'
+import { isRealmAvailable } from '../realm/ReleasePolicy'
 
 export const COMPANION_UNLOCK_REALM_ID = 'foundation_establishment'
 
 export function isCompanionDomainUnlocked(realmId: string): boolean {
-  return getRealmIndex(realmId) >= getRealmIndex(COMPANION_UNLOCK_REALM_ID)
+  // M-F-CEILING - composed with release policy (C2C-9 simple rule): NO
+  // grandfathering beyond the ceiling - a persisted save whose realm is
+  // unavailable hides the domain even though COMPANION_UNLOCK_REALM_ID
+  // sits in-window.
+  return (
+    isRealmAvailable(COMPANION_UNLOCK_REALM_ID) &&
+    isRealmAvailable(realmId) &&
+    getRealmIndex(realmId) >= getRealmIndex(COMPANION_UNLOCK_REALM_ID)
+  )
 }

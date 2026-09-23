@@ -8,7 +8,11 @@ import {
   getInsightGainMultiplier,
   getSpiritStoneGainMultiplier,
 } from '../talent/TalentEffects'
-import { applyArtifactExperience, getArtifactExperienceReward } from '../artifact/ArtifactProgression'
+import {
+  applyArtifactExperience,
+  getArtifactExperienceReward,
+  isArtifactDomainUnlocked,
+} from '../artifact/ArtifactProgression'
 import { applyCompanionExp, companionBattleExpPerKill } from '../companion/CompanionProgression'
 import { resolvePartyFormation } from './FormationPlacement'
 import { resolveDrops, type DropChannel, type ResolvedDropItem } from '../drop/resolveDrops'
@@ -29,6 +33,7 @@ import { getProfessionGradeForRealm } from '../profession/ProfessionGrade'
 import { itemQualityRank, professionGradeRank } from '../profession/slotRank'
 import { gradeLabel } from '../presentation/labels'
 import { physiqueEssenceGradeOf } from '../../data/realm/PhysiqueEssence'
+import { isBreakthroughAcquisitionEnabled } from '../realm/ReleasePolicy'
 import type { PlayerData } from '../player/Player'
 
 /** Purple of the Tinh Hoa family stream (2026-08-30, M-QI-08) - flies back to the player. */
@@ -526,6 +531,14 @@ export class BattleLootSystem {
         case 'material':
           if (drop.itemId && this.deps.materialRegistry.has(drop.itemId)) {
             const material = this.deps.materialRegistry.get(drop.itemId)
+
+            // M-F-CEILING - breakthrough-scoped material stays dormant
+            // while release policy closes the transition into its tagged
+            // realm (post-resolve filter; rng order untouched).
+            if (!isBreakthroughAcquisitionEnabled(material.breakthroughRealmId)) {
+              break
+            }
+
             const amount = drop.amount
 
             const materialOverflow = this.deps.materialBag.add(material, amount)
@@ -579,6 +592,13 @@ export class BattleLootSystem {
         case 'pill':
           if (drop.itemId && this.deps.pillRegistry.has(drop.itemId)) {
             const pill = this.deps.pillRegistry.get(drop.itemId)
+
+            // M-F-CEILING - breakthrough-scoped pill stays dormant while
+            // release policy closes the transition into its tagged realm.
+            if (!isBreakthroughAcquisitionEnabled(pill.breakthroughRealmId)) {
+              break
+            }
+
             const amount = drop.amount
 
             const pillOverflow = this.deps.pillBag.add(pill, amount)
@@ -647,7 +667,11 @@ export class BattleLootSystem {
    * trang bị/sở hữu gì khác để nhận, giống skillInsight).
    */
   private grantArtifactExperience(enemy: Enemy) {
-    if (!this.player?.artifact) {
+    // M-F-CEILING (C2C-12): the artifact domain is hidden for a
+    // beyond-ceiling save - EXP feed is domain ACCESS, so it stops here.
+    // The persisted artifact itself is untouched (restore never strips
+    // ownership; see normalizeArtifactProgress).
+    if (!this.player?.artifact || !isArtifactDomainUnlocked(this.player.realmId)) {
       return
     }
 

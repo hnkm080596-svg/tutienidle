@@ -129,6 +129,9 @@ describe('BattleLootSystem — EXP Bản Mệnh Pháp Bảo (doc §5.2)', () => 
       materialIds: ['doan_bao_thach'],
     })
     player.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
+    // M-F-CEILING: the fixture player defaults to mortal; the artifact
+    // domain only feeds EXP once it is unlocked (Truc Co, in-window).
+    player.realmId = 'foundation_establishment'
 
     killEnemy()
 

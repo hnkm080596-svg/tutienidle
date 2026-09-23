@@ -1113,6 +1113,7 @@
     "gradeUnknown": "Chưa xác định",
     "reason": {
       "not_found": "Không tìm thấy đan phương",
+      "realm_unavailable": "Đan phương thuộc cảnh giới chưa mở trong bản hiện tại",
       "retired": "Đan phương này đã ngừng lưu hành — không luyện thêm được",
       "room_not_built": "Cần xây Đan Phòng trước",
       "job_slots_full": "Lò đang bận",

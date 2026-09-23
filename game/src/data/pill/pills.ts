@@ -88,6 +88,9 @@ const SPECIAL_PILLS: Pill[] = [
     professionGrade: getProfessionGradeForRealm('qi_refining'),
     icon: '/assets/pills/truc_co_dan.png',
     effects: [],
+    // M-F-CEILING - held input of the Truc Co breakthrough gate; tagged
+    // so release policy gates its acquisition routes.
+    breakthroughRealmId: 'foundation_establishment',
   },
 ]
 

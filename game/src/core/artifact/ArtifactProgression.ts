@@ -8,6 +8,7 @@ import type { ArtifactGrade, ArtifactId, ArtifactProgress } from './Artifact'
 import { ARTIFACT_GRADE_ORDER, isArtifactGrade, isArtifactPath, resolveExpectedArtifactId } from './Artifact'
 import type { PlayerData } from '../player/Player'
 import { getRealmIndex } from '../realm/realmSystem'
+import { isRealmAvailable } from '../realm/ReleasePolicy'
 import type { MaterialBag } from '../material/MaterialBag'
 
 export const DOAN_BAO_THACH_MATERIAL_ID = 'doan_bao_thach'
@@ -154,6 +155,22 @@ export function advanceArtifactRealmLevel(progress: ArtifactProgress, playerReal
   applyArtifactExperience(progress, 0, playerRealmLevel)
 }
 
+// M-F-CEILING - the artifact domain's realm gate, composed with release
+// policy the same way CompanionAvailability/FormationPlacement compose
+// theirs (C2C-9 simple rule): NO grandfathering beyond the ceiling - a
+// persisted save whose realm is unavailable hides the domain even though
+// ARTIFACT_UNLOCK_REALM_ID sits in-window. M-F-ARTIFACT-DEFER moves the
+// constant to the artifact's deferred realm; no site re-derives the gate.
+export const ARTIFACT_UNLOCK_REALM_ID = 'foundation_establishment'
+
+export function isArtifactDomainUnlocked(realmId: string): boolean {
+  return (
+    isRealmAvailable(ARTIFACT_UNLOCK_REALM_ID) &&
+    isRealmAvailable(realmId) &&
+    getRealmIndex(realmId) >= getRealmIndex(ARTIFACT_UNLOCK_REALM_ID)
+  )
+}
+
 /**
  * Normalize invariant (doc §10.2) — gọi trong restoreFromSave() SAU
  * Object.assign() blind-copy. Không throw: mọi state sai đều tự sửa
@@ -171,7 +188,14 @@ export function advanceArtifactRealmLevel(progress: ArtifactProgress, playerReal
 export function normalizeArtifactProgress(player: PlayerData): void {
   const expectedArtifactId = resolveExpectedArtifactId(player)
 
-  const meetsAwakenGate = getRealmIndex(player.realmId) >= getRealmIndex('foundation_establishment')
+  // C2C-12 boundary: the domain gate controls AWAKENING only. A persisted
+  // artifact whose artifactId still matches the path is NEVER removed
+  // because its realm became release-unavailable - the single-check
+  // invariant forbids restore from destroying ownership data. Access is
+  // disabled at the domain seam instead: isArtifactDomainUnlocked gates
+  // the wheel slot, EXP feed (BattleLootSystem.grantArtifactExperience)
+  // and progression UI for a beyond-ceiling save.
+  const meetsAwakenGate = isArtifactDomainUnlocked(player.realmId)
 
   if (!expectedArtifactId) {
     player.artifact = undefined

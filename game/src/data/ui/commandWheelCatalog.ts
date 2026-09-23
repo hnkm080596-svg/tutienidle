@@ -42,19 +42,30 @@ export interface CommandWheelSlot {
 
 /** Context runtime tối thiểu cho disabledReason() — mở rộng dần khi có slot mới cần. */
 export interface CommandWheelDisabledContext {
-  hasFoundationRealm: boolean
+  // P7-M9 + M-F-CEILING: per-domain unlock booleans resolved in
+  // DongFuCommandWheel.vue from the AUTHORITATIVE domain predicates
+  // (isArtifactDomainUnlocked / isCompanionDomainUnlocked /
+  // isFormationUnlocked) - the slots must not key off raw realm presence
+  // or the wheel drifts from the domain gate when a threshold (or the
+  // release ceiling) moves.
+  artifactDomainUnlocked: boolean
   hasArtifactDefinition: boolean
-  // P7-M9: per-domain unlock booleans resolved in DongFuCommandWheel.vue
-  // from the AUTHORITATIVE predicates (isCompanionDomainUnlocked /
-  // isFormationUnlocked) - the slots must not key off hasFoundationRealm
-  // or the wheel drifts from the domain gate when a threshold moves.
   companionDomainUnlocked: boolean
   formationUnlocked: boolean
+  // M-F-CEILING (C2C-12): !isRealmAvailable(player.realmId) - the save
+  // sits beyond the release ceiling, so a locked slot is release-hidden,
+  // not "requires Truc Co". Lets the tooltip distinguish the two locks.
+  realmReleaseUnavailable: boolean
 }
 
 const NEVER_AVAILABLE = () => false
 
 const ALWAYS_AVAILABLE = () => true
+
+// M-F-CEILING (C2C-12): tooltip for a domain hidden by the release
+// ceiling (save realm unavailable), distinct from the progression lock
+// "requires Truc Co".
+const RELEASE_UNAVAILABLE_REASON = 'Chưa mở trong bản hiện tại'
 
 /**
  * Bố cục 4 vòng (plan "Kiến trúc UI đích"):
@@ -110,8 +121,8 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
     target: { kind: 'standalone', panel: 'artifact' },
     available: ALWAYS_AVAILABLE,
     disabledReason: (context) => {
-      if (!context.hasFoundationRealm) {
-        return 'Cần đạt Trúc Cơ'
+      if (!context.artifactDomainUnlocked) {
+        return context.realmReleaseUnavailable ? RELEASE_UNAVAILABLE_REASON : 'Cần đạt Trúc Cơ'
       }
 
       if (!context.hasArtifactDefinition) {
@@ -138,7 +149,13 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
     label: 'Trận',
     target: { kind: 'standalone', panel: 'tran_phap' },
     available: ALWAYS_AVAILABLE,
-    disabledReason: (context) => (context.formationUnlocked ? null : 'Cần đạt Trúc Cơ'),
+    disabledReason: (context) => {
+      if (context.formationUnlocked) {
+        return null
+      }
+
+      return context.realmReleaseUnavailable ? RELEASE_UNAVAILABLE_REASON : 'Cần đạt Trúc Cơ'
+    },
   },
   // Companion Roster (companion-gacha spec, 2026-09-12) - SHIPPED.
   // Opens CompanionPanel.vue (roster by grade, detail, feed control).
@@ -149,7 +166,13 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
     label: 'Đồng Đội',
     target: { kind: 'standalone', panel: 'companion' },
     available: ALWAYS_AVAILABLE,
-    disabledReason: (context) => (context.companionDomainUnlocked ? null : 'Cần đạt Trúc Cơ'),
+    disabledReason: (context) => {
+      if (context.companionDomainUnlocked) {
+        return null
+      }
+
+      return context.realmReleaseUnavailable ? RELEASE_UNAVAILABLE_REASON : 'Cần đạt Trúc Cơ'
+    },
   },
 
   // ---- Ring 3 — building thật (dual-entry với hotspot background) ----

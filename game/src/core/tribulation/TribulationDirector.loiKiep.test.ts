@@ -14,7 +14,9 @@ function makeDirector() {
 
 function readyPlayer(talentIds: string[] = []): PlayerData {
   const player = createDefaultPlayer()
-  player.realmId = 'qi_refining'
+  // Quan Khi tribulation starts from a maxed mortal (release policy now
+  // enforces the transition direction).
+  player.realmId = 'mortal'
   player.realmLevel = 12
   player.selectedTalentIds = talentIds
   return player

@@ -18,6 +18,7 @@ import {
   type TribulationChapterProfile,
 } from '../../data/tribulation/TribulationChapters'
 import { TRIBULATION_MIND_QUESTIONS, type MindQuestion } from '../../data/tribulation/TribulationMindQuestions'
+import { isRealmTransitionEnabled } from '../realm/ReleasePolicy'
 import { getTribulationIntensityMultiplier } from '../talent/TalentEffects'
 
 // TribulationDirector (spec dot-pha-loi-kiep §5) — runtime lôi kiếp
@@ -169,12 +170,21 @@ export class TribulationDirector {
   }
 
   /**
-   * Bắt đầu kiếp: resolve bậc từ đầu tư TRƯỚC kiếp (spec §2.1) + snapshot
-   * stats thật. Trả false nếu đang trong kiếp / cooldown / realm chưa có
-   * profile chương. `hasTrucCoDan` chỉ ý nghĩa với gate Trúc Cơ.
+   * Start the tribulation: resolve the grade from pre-run investment
+   * (spec SS2.1) and snapshot the real stats. Returns false while a run
+   * is active / on cooldown / when release policy closes the transition
+   * / when the realm has no chapter profile. `hasTrucCoDan` only matters
+   * for the Truc Co gate.
    */
   start(player: PlayerData, playerStats: Stats, hasTrucCoDan: boolean, targetRealmId: string): boolean {
     if (this.getCooldownSeconds() > 0 || this.active) {
+      return false
+    }
+
+    // M-F-CEILING - release policy owns whether the transition itself is
+    // open (Beta: TC -> KD closed); authored chapters can never open a
+    // closed transition on their own.
+    if (!isRealmTransitionEnabled(player.realmId, targetRealmId)) {
       return false
     }
 
