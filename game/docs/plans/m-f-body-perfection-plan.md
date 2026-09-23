@@ -53,14 +53,21 @@ Worktree per P2 (production edits); `.agent-worktrees/m-f-body-perfection`.
   (every `REALMS` id → `readonly string[]`, ALL `[]` — seam, not
   content), `bodyPerfectionMaterialIds`, `bodyPerfectionRealmOf`,
   `isBodyPerfectionMaterial`, `assertBodyPerfectionRegistry()` at
-  module load (real `REALMS` keys; a material id in ≤1 realm list —
-  the DISTINCT premise; intra-list uniqueness).
+  module load — realm-key set === canonical `REALMS` ids EXACTLY
+  (C2C r60-f3: a missing key silently disables a realm); a material
+  id in ≤1 realm list (DISTINCT premise); intra-list uniqueness.
+  Material-id resolution vs the `materials` catalog is pinned in the
+  integrity test (`PhysiqueEssence.test.ts:20` convention — data/realm
+  never imports data/materials in production).
 - `recordBodyPerfectionMaterialDiscovery(player, materialId)` —
   set-add via `bodyPerfectionRealmOf`; `BODY_PERFECTION_BONUS_PER_REALM
   = 0.10`; `getBodyPerfectionMultiplier(player)`;
   `isBodyPerfectionRevealed(player)`; `canPerfectBodyRealm(player,
   realmId, ownedOf)` (non-empty authored list + realm-reached via
-  `getRealmIndex` + not-yet-perfected + `ownedOf(id) >= 1` ∀);
+  `getRealmIndex` + not-yet-perfected + `ownedOf(id) >= 1` ∀ +
+  **`discoveredMaterials` ⊇ authored list ∀** — C2C r60-f1: inventory
+  ≠ canonical discovery, restore can't reconstruct it, and a commit
+  without this arm would instantly violate the integrity invariant);
   `applyBodyPerfection(player, realmId)` (write-if-absent push);
   `getBodyPerfectionRealmProgress(player, realmId, ownedOf)` — the
   observational read-model (Q9).
@@ -94,12 +101,16 @@ Worktree per P2 (production edits); `.agent-worktrees/m-f-body-perfection`.
   raw × `getBodyPerfectionMultiplier` (factor 1 short-circuits to raw).
   `Player.ts:499` merges the effective collector — sole consumer swap;
   raw contract unchanged.
-- `CURRENT_SAVE_VERSION` → 77; `validateBodyPerfectionPersistedState`
+- `CURRENT_SAVE_VERSION` +1 over the merged base AT IMPLEMENTATION
+  START (76 → 77 at spec time; re-read `saveVersion.ts:127` — C2C
+  r60-f5, never a literal); `validateBodyPerfectionPersistedState`
   beside `saveShapeValidation.ts:729`; `assertBodyPerfectionIntegrity`
   beside `GameManagerSaveRestore.ts:291` (discovered ⊆ authored family;
   perfected ⊆ authored keys with non-empty lists; perfected's list ⊆
-  discovered — the append-only authoring constraint it creates is
-  recorded for the content pass).
+  discovered; **`getRealmIndex(perfected) <= getRealmIndex(player.
+  realmId)` ∀ — C2C r60-f2, crafted-save smuggle; future-realm
+  DISCOVERY stays legal** — the append-only authoring constraint it
+  creates is recorded for the content pass).
 
 ## Step 4 — hidden surface
 
@@ -115,12 +126,15 @@ Worktree per P2 (production edits); `.agent-worktrees/m-f-body-perfection`.
 ## Step 5 — pin tests (spec §10)
 
 1. `src/data/realm/BodyPerfection.test.ts` — registry load gate (dup
-   cross-realm id throws; unknown realm key throws), reverse lookups,
-   all-empty authored state.
+   cross-realm id throws; unknown realm key throws; **key-set ===
+   REALMS ids exactly — C2C r60-f3; every authored id resolves in the
+   `materials` catalog — C2C r60-f3**), reverse lookups, all-empty
+   authored state.
 2. `src/core/realm/body/BodyPerfection.test.ts` — record-once/idempotent;
    non-perfection id no-op; `canPerfect` arms (empty list fails closed,
    unreached realm rejected, already-perfected rejected, missing
-   material rejected); `applyBodyPerfection` write-if-absent;
+   material rejected, **owned-but-undiscovered required material
+   rejected — C2C r60-f1**); `applyBodyPerfection` write-if-absent;
    `getBodyPerfectionMultiplier` = 1 + 0.10n.
 3. Funnel — rename site tests + BattleLootSystem route test:
    acquisition writes discovery; `delivered = 0` writes nothing;
@@ -134,11 +148,17 @@ Worktree per P2 (production edits); `.agent-worktrees/m-f-body-perfection`.
    unchanged; non-body sources (`baseStats`, `modifiers`, equipment,
    `externalModifiers`) byte-identical (multiplier isolation);
    `resolvePlayerStatAssembly` totals reflect scaled body deltas.
-6. Save — v77 round-trip preserves both sets; malformed payload emits;
-   old-version save rejected; restore fires no re-discovery/re-mark.
+6. Save — v(CURRENT+1) round-trip preserves both sets; malformed
+   payload emits; **immediately-previous-version save rejected (C2C
+   r60-f5)**; integrity rejects a perfected future realm (C2C r60-f2)
+   while allowing future-realm discovery; restore fires no
+   re-discovery/re-mark.
 7. Component — `BodyPerfectionSection` absent pre-discovery (not
    rendered), present post-, partial reveal lists only discovered ids,
-   button gating follows `canPerfect`, perfected marker renders.
+   button gating follows `canPerfect`, perfected marker renders —
+   driven on `vi.mock`-injected fixture registries + Pinia seeding
+   (C2C r60-f4: production lists ship `[]`, so no production injection
+   seam exists).
 8. Late perfection — perfect `mortal` while `realmId === 'golden_core'`
    succeeds and scales.
 
@@ -153,9 +173,12 @@ Worktree per P2 (production edits); `.agent-worktrees/m-f-body-perfection`.
   save/progression breadth — the S-save + L-progression triggers argue
   for it) → P5 sequential ≥3 passes.
 - P13/P14 **triggered**: new UI surface + funnel wiring — Playwright
-  from the implementation worktree (drive: section absent → grant a
-  synthetic perfection material → section reveals → perfect → stats
-  update). Recorded evidence per the worktree rule.
+  from the implementation worktree. Per C2C r60-f4 the production
+  runtime drive is HIDDEN-STATE ONLY (empty registry → section absent,
+  RealmPanel unchanged, no console errors); the
+  absent→revealed→partial→perfected chain is covered by the
+  fixture-injected component/unit tests in Step 5.7, not production
+  runtime. Recorded evidence per the worktree rule.
 - P15 ASCII scan; P16 VN-key audit on the new section.
 - Commit + push `devin/1790147578-m-f-body-perfection`; PR base
   `p7/truc-co`; STOP.
@@ -167,5 +190,7 @@ Worktree per P2 (production edits); `.agent-worktrees/m-f-body-perfection`.
   ids (registry lists stay `[]` — content is a later pass).
 - `npm run verify` green; OCR clean; P4 verdict recorded; P5 passes per
   coordinator gate order.
-- Runtime evidence captures absent→revealed→partial→perfected.
+- Runtime evidence captures the production hidden state; the
+  absent→revealed→partial→perfected chain is covered by
+  fixture-injected tests (C2C r60-f4).
 - Report records branch, files, per-gate evidence, limitations.

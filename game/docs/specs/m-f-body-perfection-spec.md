@@ -1,6 +1,7 @@
 # M-F-BODY-PERFECTION — Hidden Body Perfection — Spec
 
-Status: v1 — draft (worker-authored, pending C2C spec review)
+Status: v2 — draft, amended after C2C spec review r60 (findings
+f1–f5 resolved inline; pending re-review)
 Depends on: M-F-BODY-CORE (`chapterKind` vocabulary + physique completion
 seam + body-owned base-stat channel — merged on `p7/truc-co`), M-QI-07
 (physique transaction pattern), M-QI-08/09/10 (essence family + atomic
@@ -95,10 +96,19 @@ export function isBodyPerfectionMaterial(materialId): boolean
 
 `assertBodyPerfectionRegistry()` runs once at module load
 (`assertBodyChapterRegistry` convention, `BodyChapter.ts:333-363`):
-every key is a real `REALMS` id; a material id appears in at most one
-realm list (per-realm DISTINCT materials — the ruling's premise); ids
-unique within a list. Malformed authored data throws at import, never
-reaches the transaction.
+- **realm-key completeness (C2C r60-f3):** the key set equals the
+  canonical `REALMS` id set EXACTLY — a missing key silently disables
+  perfection for that realm, an extra key is unknown-realm corrupt;
+- a material id appears in at most one realm list (per-realm DISTINCT
+  materials — the ruling's premise); ids unique within a list.
+
+**Material-id resolution (C2C r60-f3):** every authored id must resolve
+in the `materials` catalog — a typo id is an impossible requirement.
+Following the `PhysiqueEssence.test.ts:20` convention (data/realm does
+NOT import data/materials in production code), this is pinned by the
+registry integrity TEST, which iterates authored ids against `materials`
+— not by the module-load gate. Malformed authored data otherwise throws
+at import, never reaches the transaction.
 
 ## 3. Discovery contract — the loot hook
 
@@ -178,8 +188,14 @@ Sequence (modeled on `investBodyChapter`'s C2C r10/r17 shape):
    there is nothing to perfect), `getRealmIndex(player.realmId) >=
    getRealmIndex(realmId)` (realm reached — past or current; **late
    perfection is the ruling**, future realms rejected — C2C flag),
-   `realmId` not already perfected, and `ownedOf(materialId) >= 1` for
-   every listed material.
+   `realmId` not already perfected, `ownedOf(materialId) >= 1` for
+   every listed material, **and every listed material id present in
+   `player.bodyPerfection.discoveredMaterials`** (C2C r60-f1 —
+   inventory is not canonical discovery: restore does not reconstruct
+   discovery, so a legal save can hold a required material with no
+   discovery bit; without this arm the commit would consume it, mark
+   the realm, and immediately violate the §7 integrity invariant
+   `perfected realm's list ⊆ discovered`).
 2. Probe — apply on a detached `JSON.parse(JSON.stringify(player))`
    clone FIRST (the Pinia-`$state` ruling; `GameManagerRealmAdvanceOps.ts:554-558`);
    a probe failure returns `false` with the real player untouched.
@@ -267,8 +283,12 @@ section inside `RealmPanel` beside `BodyRefinementSection` /
 
 ## 7. Save contract (QI-S)
 
-- `CURRENT_SAVE_VERSION` 76 → 77 (`saveVersion.ts:127`) — version
-  rejection is the mechanism; no translators, no recompute-on-load.
+- **Version rule (C2C r60-f5):** `CURRENT_SAVE_VERSION + 1` over the
+  value on the merged base AT IMPLEMENTATION START (76 → 77 at spec
+  time; re-read `saveVersion.ts:127` when Phase 2 opens — if the base
+  has moved, the new version is base+1, never a literal). The
+  immediately previous version is rejected — version rejection is the
+  mechanism; no translators, no recompute-on-load.
 - `validateBodyPerfectionPersistedState(playerPayload, emit)`
   beside the body-progression delegation (`saveShapeValidation.ts:729`):
   top-level record present+object; `discoveredMaterials`/`perfectedRealmIds`
@@ -279,10 +299,16 @@ section inside `RealmPanel` beside `BodyRefinementSection` /
   every discovered id resolves via `bodyPerfectionRealmOf` (authored
   family only); every perfected id is a `BODY_PERFECTION_REALM_MATERIALS`
   key with a non-empty authored list; every perfected realm's authored
-  ids ⊆ discoveredMaterials. Fail-closed, aggregate-issue style matching
-  the existing gate. (Authoring constraint this creates: lists are
-  append-only once a realm can be perfected — recorded for the content
-  pass.)
+  ids ⊆ discoveredMaterials; **and `getRealmIndex(perfectedRealmId) <=
+  getRealmIndex(player.realmId)` for every perfected realm (C2C r60-f2 —
+  runtime validation already rejects future realms, so without this arm
+  a crafted save could smuggle in an unreachable perfected realm and
+  `getBodyPerfectionMultiplier` would apply it immediately). Early
+  DISCOVERY of future-realm materials stays legal — only
+  `perfectedRealmIds` is realm-capped.** Fail-closed, aggregate-issue
+  style matching the existing gate. (Authoring constraint this creates:
+  lists are append-only once a realm can be perfected — recorded for
+  the content pass.)
 - Restore fires nothing: no re-discovery, no re-mark, no re-apply —
   persisted state is authoritative (S1/S2).
 
@@ -303,6 +329,11 @@ section inside `RealmPanel` beside `BodyRefinementSection` /
   `Material`/`MaterialBag`/`MaterialRegistry` contracts unchanged.
 - Discovery hook sites are additive calls — amounts, overflow, quest
   progress, and notification semantics unchanged at every touched site.
+- Discovery gates perfection, not just visibility (C2C r60-f1):
+  `canPerfectBodyRealm` requires `discoveredMaterials` ⊇ the target
+  realm's authored list, so the §7 invariant `perfected's list ⊆
+  discovered` can never be produced by a legal transaction — it holds
+  by construction at runtime and is re-verified at restore.
 
 ## 9. Out of scope
 
@@ -328,12 +359,20 @@ section inside `RealmPanel` beside `BodyRefinementSection` /
   Pinia root state / save schema → full).
 - P18 OCR clean; P4 adversarial QA quick verdict recorded; P5
   sequential passes per coordinator gate order.
-- Runtime evidence (P13/P14 trigger: new UI surface): the section is
-  absent pre-discovery, renders post-discovery, partial reveal shows
-  only found materials, and a live perfect transaction updates stats —
-  driven in the implementation worktree before merge-ready.
+- Runtime evidence (P13/P14 trigger: new UI surface) — split per
+  C2C r60-f4: production runtime evidence covers the
+  HIDDEN/WITHOUT-CONTENT state only (all authored lists ship `[]`, so
+  the reveal/perfect flows cannot occur on production data: the section
+  stays absent, RealmPanel renders normally). The
+  absent→discovered→partial-reveal→perfected flow is verified on
+  INJECTED FIXTURES — `vi.mock` on the registry module plus Pinia
+  state seeding in component/unit tests; no production injection seam
+  is added — driven in the implementation worktree before merge-ready.
 - Tests pin: discovery persists post-consumption; hidden-until-discovered;
   partial reveal; atomic zero-mutation failure; idempotent re-transact;
-  multiplier isolation (+10pp/×N, non-body sources untouched, count 0 =
-  factor 1); late perfection; save round-trip + rejected old versions;
-  restore fires no re-mark.
+  perfect REJECTS an owned-but-undiscovered required material
+  (C2C r60-f1); multiplier isolation (+10pp/×N, non-body sources
+  untouched, count 0 = factor 1); late perfection; save round-trip +
+  rejected old versions; integrity rejects a perfected future realm
+  (C2C r60-f2); registry completeness + authored material-id
+  resolution (C2C r60-f3); restore fires no re-mark.
