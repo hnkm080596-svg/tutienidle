@@ -156,6 +156,39 @@ describe('hidden lineage - save/restore chain (restoreGameSession)', () => {
     expect(freshPlayer.highestFoundationAchieved).toBe('great_dao')
   })
 
+  it('effective cap is honored by every main-stat gain channel: attribute point + profession pill', () => {
+    const gameManager = makeManager()
+    const player = usePlayerStore()
+    eligibleForHiddenMortal(player)
+
+    // Mortal base cap 10, effective 11 with 1 completed body. A stat at
+    // the RAW cap must still accept investment up to the EFFECTIVE cap.
+    player.baseStats.strength = 10
+    player.attributePoints = 2
+    expect(gameManager.progressionOps.allocateAttributePoint(player.$state, 'strength')).toBe(true)
+    expect(player.baseStats.strength).toBe(11)
+    // ...and stops at the effective cap, not the raw one.
+    expect(gameManager.progressionOps.allocateAttributePoint(player.$state, 'strength')).toBe(false)
+
+    // Profession pill headroom: a random_main_stat pill must still roll
+    // candidates when every stat sits at the raw cap but below effective.
+    player.baseStats = {
+      ...player.baseStats,
+      strength: 10,
+      dexterity: 10,
+      intelligence: 10,
+      attunement: 10,
+      vitality: 10,
+    }
+    const pill = {
+      id: 'qa_stat_pill',
+      name: 'qa',
+      realmId: 'mortal',
+      effects: [{ type: 'random_main_stat' as const }],
+    } as never
+    expect(gameManager.pillSystem.canUseProfessionPill(pill, player.$state)).toBe('ok')
+  })
+
   it('fail-closed: save whose hiddenBreakthroughRealmIds outrun the player realm is rejected by the boot seam', () => {
     const gameManager = makeManager()
     const player = usePlayerStore()

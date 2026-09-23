@@ -41,12 +41,11 @@ import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import { collectTalentEffects } from '../talent/TalentEffects'
 import { TALENT_PASSIVE_SKILLS } from '../../data/skill/TalentPassives'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
-import { SPELL_KIT_IDS } from '../../data/skill/Skills'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 import { getActiveElement, hasStaticPathCapability } from '../player/CultivationPathSystem'
 import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import { commitSpellPathElementRoute } from '../phap-tu/PhapTuState'
-import { getMainStatCap } from '../stats/StatCap'
+import { getEffectiveMainStatCap } from '../stats/StatCap'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { TemplateRegistry } from './TemplateRegistry'
 
@@ -611,15 +610,17 @@ export class GameManagerProgressionOps {
   /**
    * PLAN HOAN CHINH sec.2 - spend 1 attributePoint into EXACTLY 1 Main Stat.
    * No-op (returns false) when out of points or the stat hit the current
-   * major-realm cap (getMainStatCap()) - cap is per-stat, there is NO
-   * shared cap across all 5 (per the doc's "Nguyen tac" sec.2).
+   * major-realm cap (getEffectiveMainStatCap() - hidden-perfection
+   * completed bodies raise the cap, design 2026-09-23 sec.7) - cap is
+   * per-stat, there is NO shared cap across all 5 (per the doc's
+   * "Nguyen tac" sec.2).
    */
   allocateAttributePoint(player: PlayerData, stat: MainStatKey): boolean {
     if (player.attributePoints <= 0) {
       return false
     }
 
-    if (player.baseStats[stat] >= getMainStatCap(player.realmId)) {
+    if (player.baseStats[stat] >= getEffectiveMainStatCap(player)) {
       return false
     }
 

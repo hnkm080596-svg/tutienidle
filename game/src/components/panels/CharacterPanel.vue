@@ -13,7 +13,7 @@ import { ELEMENT_LABELS, ELEMENT_COLOR_VARS, ELEMENT_ORDER } from '@/core/elemen
 import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
 import { isActivePath } from '@/core/player/CultivationPathSystem'
 import { MAIN_STAT_KEYS, type MainStatKey } from '@/core/stats/StatTypes'
-import { getMainStatCap } from '@/core/stats/StatCap'
+import { getEffectiveMainStatCap } from '@/core/stats/StatCap'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { getTalentDefinition } from '@/data/talent/Talents'
 import { TALENT_RARITY_LABELS, type TalentDefinition, type TalentRarity } from '@/core/talent/Talent'
@@ -109,7 +109,7 @@ function isMainStat(key: string): key is MainStatKey {
 }
 
 function mainStatCap(): number {
-  return getMainStatCap(player.realmId)
+  return getEffectiveMainStatCap(player)
 }
 
 function isMainStatCapped(key: MainStatKey): boolean {

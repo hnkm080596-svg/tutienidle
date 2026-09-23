@@ -8,7 +8,10 @@ import {
   validateHiddenPerfectionPersistedState,
   type HiddenPerfectionState,
 } from './HiddenPerfection'
-import { HIDDEN_MECHANIC_QUAN_THE } from '../../../data/realm/HiddenBodyRealms'
+import {
+  HIDDEN_MECHANIC_ANCIENT_BEAST_TRIAL,
+  HIDDEN_MECHANIC_QUAN_THE,
+} from '../../../data/realm/HiddenBodyRealms'
 
 function issuesOf(player: { hiddenPerfection?: unknown }): string[] {
   const issues: { path: string; message: string }[] = []
@@ -232,8 +235,58 @@ describe('assertHiddenPerfectionIntegrity (restore preflight, fail-closed)', () 
     expect(integrityIssue({ hiddenPerfection: state, realmId: 'qi_refining' })).toMatch(
       /integrity violation/,
     )
-    // but frozen flag without mechanic payload is coherent
+    // frozen without a mechanism is incoherent too - nothing was ever
+    // frozen (closeHiddenLineage only freezes mechanic-bearing entries)
     state.realms = { qi_refining: { discovered: true, frozen: true } }
+    expect(integrityIssue({ hiddenPerfection: state, realmId: 'qi_refining' })).toMatch(
+      /integrity violation/,
+    )
+    // discovered-only (mechanism not yet producing state) IS coherent
+    // at the lineage frontier: mortal completed -> qi is next in line.
+    // Fully reachable fixture: hidden qi entry, then a NORMAL
+    // qi->foundation breakthrough closed the lineage - the frozen
+    // discovery stays behind.
+    state.lineageClosedByRealmId = 'qi_refining'
+    state.hiddenBreakthroughRealmIds = ['qi_refining']
+    state.completedHiddenBodyRealmIds = ['mortal']
+    state.realms = {
+      mortal: { discovered: true, bodyCompleted: true },
+      qi_refining: { discovered: true },
+    }
+    expect(
+      integrityIssue({ hiddenPerfection: state, realmId: 'foundation_establishment' }),
+    ).toBeUndefined()
+  })
+
+  it('throw khi realm state vuot qua prefix hoan thanh - sec.4 no-leak frontier', () => {
+    const state = createDefaultHiddenPerfection()
+    // completed list is empty -> authored index 0 (mortal) is the
+    // frontier; a foundation entry (authored index 2) is unreachable.
+    state.realms = { foundation_establishment: { discovered: true } }
+    expect(integrityIssue({ hiddenPerfection: state, realmId: 'mortal' })).toMatch(
+      /integrity violation/,
+    )
+    // qi_refining (index 1) at frontier 0 completed is also unreachable.
+    state.realms = { qi_refining: { discovered: true } }
+    expect(integrityIssue({ hiddenPerfection: state, realmId: 'mortal' })).toMatch(
+      /integrity violation/,
+    )
+    // with mortal completed, qi_refining becomes the frontier - legal.
+    state.completedHiddenBodyRealmIds = ['mortal']
+    state.realms = {
+      mortal: { discovered: true, bodyCompleted: true },
+      qi_refining: { discovered: true },
+    }
     expect(integrityIssue({ hiddenPerfection: state, realmId: 'qi_refining' })).toBeUndefined()
+  })
+
+  it('throw khi mechanic hien huu nhung chua discovered', () => {
+    const state = createDefaultHiddenPerfection()
+    state.realms = {
+      mortal: { mechanic: { kind: HIDDEN_MECHANIC_ANCIENT_BEAST_TRIAL } },
+    }
+    expect(integrityIssue({ hiddenPerfection: state, realmId: 'mortal' })).toMatch(
+      /integrity violation/,
+    )
   })
 })

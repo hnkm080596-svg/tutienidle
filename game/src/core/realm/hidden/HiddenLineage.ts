@@ -90,12 +90,14 @@ export function getRealmHiddenState(
 
 /**
  * Strict-prefix progression gate (design sec.7): the lineage must be open,
- * the realm must be authored, and it must be THE next uncompleted body
- * realm in registry order. Discovery, mechanism progress and body
- * completion all gate on this - a realm may never skip the queue.
+ * the realm must be authored, it must be THE next uncompleted body
+ * realm in registry order, and the player must be IN that realm -
+ * a hidden body can never progress retroactively after the player has
+ * left its realm. Discovery, mechanism progress and body completion
+ * all gate on this - a realm may never skip the queue.
  */
 export function canProgressHiddenBody(
-  player: Pick<HiddenLineagePlayer, 'hiddenPerfection'>,
+  player: Pick<HiddenLineagePlayer, 'hiddenPerfection' | 'realmId'>,
   realmId: string,
 ): boolean {
   const state = player.hiddenPerfection
@@ -104,6 +106,10 @@ export function canProgressHiddenBody(
   }
 
   if (!isAuthoredHiddenRealm(realmId)) {
+    return false
+  }
+
+  if (player.realmId !== realmId) {
     return false
   }
 

@@ -27,13 +27,16 @@ function readyPlayer(): PlayerData {
 // that do HIDDEN-B/C so huu).
 function createHeavenInvestedPlayer(): PlayerData {
   const player = createDefaultPlayer()
-  player.realmId = 'qi_refining'
+  player.realmId = 'mortal'
   player.realmLevel = 18
   player.selectedTalentIds = ['pham_cot']
   player.completedStageIds = ['qi_refining_abyssal_pool']
   player.bodyProgression.body_refinement.completedTiers = 6
   player.physiqueGrade = 'bao'
   completeHiddenBody(player, 'mortal')
+  // hidden body progress is realm-resident: mortal's body can only be
+  // completed while in mortal; qi_refining work happens after entry.
+  player.realmId = 'qi_refining'
   player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
   player.baseStats = { ...player.baseStats, strength: 36, dexterity: 36, intelligence: 36, attunement: 36, vitality: 36 }
   return player

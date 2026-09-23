@@ -63,10 +63,14 @@ describe('HiddenLineage strict prefix', () => {
 
     completeHiddenBody(player, 'mortal')
     expect(canProgressHiddenBody(player, 'mortal')).toBe(false)
+    // residency gate: the player must BE in a realm to progress it
+    expect(canProgressHiddenBody(player, 'qi_refining')).toBe(false)
+    player.realmId = 'qi_refining'
     expect(canProgressHiddenBody(player, 'qi_refining')).toBe(true)
     expect(canProgressHiddenBody(player, 'foundation_establishment')).toBe(false)
 
     completeHiddenBody(player, 'qi_refining')
+    player.realmId = 'foundation_establishment'
     expect(canProgressHiddenBody(player, 'foundation_establishment')).toBe(true)
   })
 
@@ -142,8 +146,9 @@ describe('HiddenLineage closure (sec.3.3 one-way latch)', () => {
   })
 
   it('freeze: mechanism finished + body chua complete -> frozen khi close', () => {
-    const player = makePlayer({ realmId: 'qi_refining' })
+    const player = makePlayer({ realmId: 'mortal' })
     completeHiddenBody(player, 'mortal')
+    player.realmId = 'qi_refining'
     const qiEntry = discoverHiddenRealm(player, 'qi_refining')
     qiEntry!.mechanic = { kind: HIDDEN_MECHANIC_QUAN_THE, diverted: true }
 
@@ -158,8 +163,9 @@ describe('HiddenLineage closure (sec.3.3 one-way latch)', () => {
   })
 
   it('freeze: mechanism chua finished -> khong frozen; khong reader -> khong frozen', () => {
-    const player = makePlayer({ realmId: 'qi_refining' })
+    const player = makePlayer({ realmId: 'mortal' })
     completeHiddenBody(player, 'mortal')
+    player.realmId = 'qi_refining'
     const qiEntry = discoverHiddenRealm(player, 'qi_refining')
     qiEntry!.mechanic = { kind: HIDDEN_MECHANIC_QUAN_THE, diverted: false }
 
@@ -171,8 +177,9 @@ describe('HiddenLineage closure (sec.3.3 one-way latch)', () => {
   })
 
   it('freeze: khong reader dang ky -> khong frozen (skeleton ships none)', () => {
-    const noReader = makePlayer({ realmId: 'qi_refining' })
+    const noReader = makePlayer({ realmId: 'mortal' })
     completeHiddenBody(noReader, 'mortal')
+    noReader.realmId = 'qi_refining'
     discoverHiddenRealm(noReader, 'qi_refining')!.mechanic = {
       kind: HIDDEN_MECHANIC_QUAN_THE,
       diverted: true,
@@ -182,8 +189,9 @@ describe('HiddenLineage closure (sec.3.3 one-way latch)', () => {
   })
 
   it('frozen progress khong the resume hay migrate sang realm sau', () => {
-    const player = makePlayer({ realmId: 'qi_refining' })
+    const player = makePlayer({ realmId: 'mortal' })
     completeHiddenBody(player, 'mortal')
+    player.realmId = 'qi_refining'
     discoverHiddenRealm(player, 'qi_refining')!.mechanic = {
       kind: HIDDEN_MECHANIC_QUAN_THE,
       diverted: true,

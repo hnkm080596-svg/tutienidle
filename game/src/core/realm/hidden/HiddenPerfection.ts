@@ -20,6 +20,7 @@
 
 import {
   HIDDEN_BODY_REALMS,
+  hiddenBodyRealmIndex,
   isAuthoredHiddenRealm,
 } from '../../../data/realm/HiddenBodyRealms'
 import { getRealmIndex } from '../realmSystem'
@@ -302,6 +303,25 @@ export function assertHiddenPerfectionIntegrity(player: {
       continue
     }
 
+    // Strict-reach rule (sec.4 no-leak): a realm may only carry hidden
+    // state (discovered/mechanic/frozen/bodyCompleted) while it is the
+    // next uncompleted body in lineage order or already completed -
+    // writes through discoverHiddenRealm/completeHiddenBody can never
+    // land past that frontier.
+    const authoredIndex = hiddenBodyRealmIndex(realmId)
+    if (authoredIndex !== -1 && authoredIndex > completed.length) {
+      issues.push(
+        `realms.${realmId}: mang trạng thái vượt quá prefix hoàn thành ` +
+          `(chỉ ${completed.length} body hoàn thành)`,
+      )
+    }
+
+    // Mechanic implies discovered: every mechanism writer runs after
+    // the realm's hidden surface was revealed (sec.4).
+    if (realmState.mechanic !== undefined && realmState.discovered !== true) {
+      issues.push(`realms.${realmId}: mechanic hiện hữu nhưng chưa discovered`)
+    }
+
     // Mechanism payload must carry the AUTHORED kind and pass its
     // registered validator (B/C register one per kind).
     if (realmState.mechanic !== undefined) {
@@ -326,9 +346,13 @@ export function assertHiddenPerfectionIntegrity(player: {
     }
 
     // frozen marks a mechanism that finished after the lineage closed -
-    // a completed body can never be frozen.
+    // a completed body can never be frozen, and frozen without a
+    // mechanism means nothing was ever frozen.
     if (realmState.frozen === true && realmState.bodyCompleted === true) {
       issues.push(`realms.${realmId}: frozen=true và bodyCompleted=true mâu thuẫn`)
+    }
+    if (realmState.frozen === true && realmState.mechanic === undefined) {
+      issues.push(`realms.${realmId}: frozen=true nhưng không có mechanic`)
     }
   }
 
