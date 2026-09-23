@@ -68,7 +68,7 @@ export function useProgressionActions() {
       return true
     },
 
-    // M-F-RESPEC (ruling §14) - FREE Beta respec: reset node dau tu,
+    // M-F-RESPEC (ruling S14) - FREE Beta respec: reset node dau tu,
     // hoan 100% Cam Ngo thuc tra. Ngoai combat only (op tu reject trong
     // tran); scope.rootId thu hep ve mot nhanh, bo trong = ca cay.
     // Tra ve so Cam Ngo hoan (0 = khong co gi de reset), false = tu choi.

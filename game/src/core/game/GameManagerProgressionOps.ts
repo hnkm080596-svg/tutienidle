@@ -61,7 +61,7 @@ import type { TemplateRegistry } from './TemplateRegistry'
  * Public access: `gameManager.progressionOps.*` (no GameManager facade).
  */
 
-// M-F-RESPEC (ruling §14) - commit-marker nodes exempt from every respec
+// M-F-RESPEC (ruling S14) - commit-marker nodes exempt from every respec
 // scope: Phap Tu element roots are only ever obtained through the atomic
 // selectSpellPathElement commit (purchaseNode rejects them), so a reset
 // that removed one could never be re-invested - the committed element
@@ -466,7 +466,7 @@ export class GameManagerProgressionOps {
   }
 
   /**
-   * M-F-RESPEC (ruling §14) - read-only respec projection for the
+   * M-F-RESPEC (ruling S14) - read-only respec projection for the
    * confirm dialog. Phap Tu element roots ride along as preserveIds -
    * the same layer that rejects their public purchase (they commit
    * via selectSpellPathElement only) exempts them from the reset, so a
@@ -480,7 +480,7 @@ export class GameManagerProgressionOps {
   }
 
   /**
-   * M-F-RESPEC (ruling §14) - player-facing FREE Beta respec: revoke
+   * M-F-RESPEC (ruling S14) - player-facing FREE Beta respec: revoke
    * node investment and refund 100% of actually-paid Insight. Out of
    * combat ONLY (same guard as switchRoute). scope.rootId scopes the
    * reset to that subtree root; omitted = the whole NodeTree. Returns

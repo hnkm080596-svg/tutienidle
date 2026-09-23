@@ -510,9 +510,9 @@ describe('devResetBranch (plan §6.10)', () => {
   })
 })
 
-// M-F-RESPEC (ruling §14) — player-facing FREE Beta respec: 100% actual
+// M-F-RESPEC (ruling S14) - player-facing FREE Beta respec: 100% actual
 // Insight refund, cascade-reset invalid descendants, atomic/deterministic/
-// idempotent/save-safe. Same command for whole-tree and branch scope —
+// idempotent/save-safe. Same command for whole-tree and branch scope -
 // scope.rootId scopes to the subtree rooted at that node; omitted scope
 // resets the whole NodeTree.
 describe('respecNodeTree', () => {
@@ -660,7 +660,7 @@ describe('respecNodeTree', () => {
     invest(player, nodes)
     respecNodeTree(player, registry)
 
-    // The save payload IS a JSON encoding — round-trip it like the real
+    // The save payload IS a JSON encoding - round-trip it like the real
     // restore transaction does, then prove a second respec can find no
     // refund residue.
     const restored = JSON.parse(JSON.stringify(player)) as typeof player
@@ -922,7 +922,7 @@ describe('previewNodeRespec', () => {
     }
 
     // Pinia's store.$state is a reactive proxy; structuredClone would
-    // refuse it — the preview must clone through the proxy instead.
+    // refuse it - the preview must clone through the proxy instead.
     const player = reactive(playerWith({ skillInsight: 50 }))
 
     purchaseNode(player, root)
