@@ -7,7 +7,8 @@ import { AudioManager } from '@/core/audio/AudioManager'
 // buttons (each panel declaring its own background/color/border) with one
 // component reusing the --gold/--jade/--crimson/--tap-* tokens in theme.css.
 const props = withDefaults(defineProps<{
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
+  // 'system' = M-UI-OVERHAUL chrome (chamfer + hairline + accent glow).
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'system'
   size?: 'sm' | 'md' | 'lg'
   shape?: 'rect' | 'circle'
   accentVar?: string
@@ -50,6 +51,8 @@ const sliceAsset = computed<InkWashUiAssetId | undefined>(() => {
   // border-image (InkNineSlice) does not follow border-radius — circle
   // buttons use a plain CSS border (.game-button--circle) instead.
   if (props.shape === 'circle') return undefined
+  // 'system' variant paints with CSS only (no nine-slice art).
+  if (props.variant === 'system') return undefined
   switch (props.variant) {
     case 'secondary': return 'button-s-ink'
     case 'danger': return 'button-s-seal'
@@ -172,6 +175,39 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
 .sys-modal .game-button:focus-visible,
 .overlay-panel__card--system .game-button:focus-visible {
   outline-color: var(--sys-focus, rgba(217, 212, 199, 0.65));
+  box-shadow: none;
+}
+
+/* M-UI-OVERHAUL: system-variant button - chamfered hairline console button.
+   Scoped here (not in system-theme.css) so it composes with .game-button
+   base sizing; reads --sys-* tokens, degrades to a bordered box without
+   the sheet (fallback hexes mirror --sys-cyan/--sys-text). */
+.game-button--system {
+  --sys-btn-accent: var(--sys-accent, #38e1ff);
+  border-radius: 0;
+  font-family: var(--sys-font-display, var(--font-body));
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--sys-btn-accent);
+  border: 1px solid color-mix(in srgb, var(--sys-btn-accent) 55%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--sys-btn-accent) 13%, transparent),
+      color-mix(in srgb, var(--sys-btn-accent) 4%, transparent)),
+    var(--sys-bg-0, #050a12);
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+
+.game-button--system:not(:disabled):hover,
+.game-button--system:not(:disabled):focus-visible {
+  color: var(--sys-text, #d8ecff);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--sys-btn-accent) 55%, transparent));
+}
+
+/* System focus ring - 2px non-glow accent (spec 7.2). */
+.game-button--system:focus-visible {
+  outline: 2px solid var(--sys-focus, #8fe9ff);
+  outline-offset: 2px;
   box-shadow: none;
 }
 

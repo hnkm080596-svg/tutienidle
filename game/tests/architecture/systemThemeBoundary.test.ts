@@ -243,6 +243,38 @@ describe('system theme boundary (M-UI-SYSTEM)', () => {
     expect(offenders).toEqual([])
   }, SCAN_TIMEOUT)
 
+  // M-UI-OVERHAUL Task 2 Step 1 — the v2 grammar contract: every utility the
+  // plan wires into primitives/shared chrome must exist as a real rule in
+  // system-theme.css (existence), and the generic anchor test above already
+  // guarantees each is .sys-anchored (no unanchored leakage possible).
+  it('v2 grammar utilities exist as anchored rules', () => {
+    const V2_UTILITIES = [
+      '.sys-chamfer',
+      '.sys-boot',
+      '.sys-trace',
+      '.sys-rail',
+      '.sys-energy',
+      '.sys-snap',
+      '.sys-widget',
+      '.sys-ephemeral',
+      '.sys-btn',
+      '.sys-tabs',
+      '.sys-seg',
+      '.sys-marker',
+      '.sys-veil',
+      '.sys-pop',
+      '.sys-domain--azure',
+      '.sys-domain--jade',
+      '.sys-domain--violet',
+      '.sys-domain--danger',
+    ]
+    const selectors = [...ordinarySelectors(css)]
+    const missing = V2_UTILITIES.filter(
+      (util) => !selectors.some((sel) => splitSelectorList(sel).some((s) => s.includes(util))),
+    )
+    expect(missing).toEqual([])
+  })
+
   it('main.ts imports theme.css before system-theme.css', () => {
     const main = readFileSync(MAIN_TS, 'utf8')
     const inkAt = main.indexOf("import './assets/theme.css'")

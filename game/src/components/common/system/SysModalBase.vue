@@ -95,6 +95,8 @@ const headingId = useId()
   align-items: center;
   justify-content: center;
   background: var(--sys-scrim, rgba(5, 10, 18, .82));
+  /* T1 veil: covered page stays legible beneath the console (spec 2.1). */
+  backdrop-filter: blur(6px);
 }
 .sys-modal__card {
   position: relative;

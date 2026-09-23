@@ -361,7 +361,7 @@ aside.character-detail.sys-surface {
 /* Boot build - surface materializes via clip-path wipe + settle
    (spec 2.3). One-shot per open; compositor-friendly in Chromium for
    inset() shapes, bounded ~.4s elsewhere (paint-bound fallback). */
-.sys-boot { animation: sys-boot-in .38s cubic-bezier(.2, .9, .25, 1) both; }
+.sys-boot { animation: sys-boot-in .38s cubic-bezier(.2, .9, .25, 1) backwards; }
 @keyframes sys-boot-in {
   from { clip-path: inset(0 0 92% 0); opacity: 0; transform: translateY(-6px); }
   to   { clip-path: inset(0 0 0 0); opacity: 1; transform: none; }
@@ -399,11 +399,25 @@ aside.character-detail.sys-surface {
 }
 @keyframes sys-energy-drift { to { background-position: -200% 0; } }
 
+/* Chamfered consoles cut TL+BR - the L-brackets relocate to the two square
+   corners (TR+BL) so they stay visible under clip-path. */
+.sys-chamfer.sys-corners::before {
+  top: 4px; right: 4px; left: auto;
+  border-width: var(--sys-corner-w) var(--sys-corner-w) 0 0;
+}
+.sys-chamfer.sys-corners::after {
+  bottom: 4px; left: 4px; right: auto;
+  border-width: 0 0 var(--sys-corner-w) var(--sys-corner-w);
+}
+
 /* Corner snap - brackets ease outward on hover/focus of a .sys-corners
    element (spec 2.3; transition-only). */
 .sys-snap::before, .sys-snap::after { transition: transform .16s ease; }
 .sys-snap:hover::before, .sys-snap:focus-visible::before { transform: translate(-2px, -2px); }
 .sys-snap:hover::after,  .sys-snap:focus-visible::after  { transform: translate( 2px,  2px); }
+/* Chamfered corner snap direction follows the relocated brackets (TR/BL). */
+.sys-chamfer.sys-snap:hover::before, .sys-chamfer.sys-snap:focus-visible::before { transform: translate( 2px, -2px); }
+.sys-chamfer.sys-snap:hover::after,  .sys-chamfer.sys-snap:focus-visible::after  { transform: translate(-2px,  2px); }
 
 /* T4 readout widget - inset, hairline, quiet (spec 2.1). */
 .sys-widget {

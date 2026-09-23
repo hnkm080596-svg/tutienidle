@@ -55,7 +55,7 @@ const headingId = useId()
       >
         <InkNineSlice v-if="variant === 'ink'" asset-id="surface-xl-paper-scroll" layer="surface" />
         <InkNineSlice v-if="variant === 'ink'" asset-id="frame-xl-ceremony" layer="frame" />
-        <header class="overlay-panel__header">
+        <header class="overlay-panel__header" :class="{ 'sys-rail': variant === 'system' }">
           <div class="overlay-panel__heading">
             <slot name="heading">
               <h3 :id="headingId">{{ title }}</h3>
@@ -64,6 +64,8 @@ const headingId = useId()
           </div>
           <slot name="header-actions" />
         </header>
+        <!-- v2 energy line: drifting accent under the header rail (system). -->
+        <div v-if="variant === 'system'" class="sys-energy" aria-hidden="true" />
         <div class="overlay-panel__body"><slot /></div>
       </component>
     </div>

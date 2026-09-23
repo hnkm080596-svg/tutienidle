@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import Chip from './primitives/Chip.vue'
 import NotificationBadge from './NotificationBadge.vue'
 
@@ -15,8 +16,13 @@ const props = withDefaults(defineProps<{
   modelValue: string
   columns?: number
   layout?: 'grid' | 'row'
+  // M-UI-OVERHAUL: 'system' renders the rail as .sys-tabs with a sliding
+  // accent underline (transform-only motion, spec 2.4). Default 'ink' keeps
+  // every caller identical.
+  variant?: 'ink' | 'system'
 }>(), {
   layout: 'grid',
+  variant: 'ink',
 })
 
 const emit = defineEmits<{ 'update:modelValue': [string] }>()
@@ -53,16 +59,50 @@ function onKeydown(event: KeyboardEvent) {
     }
   }
 }
+
+// System variant: measure the active tab's geometry and slide the .sys-tabs__ink
+// underline under it (left offset via transform, width via layout). Recomputed
+// on selection change + container resize.
+const navEl = ref<HTMLElement | null>(null)
+const inkBox = ref({ x: 0, w: 0 })
+
+function measureInk() {
+  const nav = navEl.value
+  if (!nav) return
+  const active = nav.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
+  inkBox.value = active ? { x: active.offsetLeft, w: active.offsetWidth } : { x: 0, w: 0 }
+}
+
+const inkStyle = computed(() => ({
+  transform: `translateX(${inkBox.value.x}px)`,
+  width: `${inkBox.value.w}px`,
+}))
+
+let observer: ResizeObserver | null = null
+onMounted(() => {
+  measureInk()
+  observer = new ResizeObserver(measureInk)
+  if (navEl.value) observer.observe(navEl.value)
+})
+watch(() => props.modelValue, () => measureInk(), { flush: 'post' })
+onBeforeUnmount(() => observer?.disconnect())
 </script>
 
 <template>
   <nav
+    ref="navEl"
     class="tab-bar"
-    :class="`tab-bar--${layout}`"
+    :class="[`tab-bar--${layout}`, { 'tab-bar--system': variant === 'system' }]"
     :style="{ '--tab-columns': columns ?? tabs.length }"
     role="tablist"
     @keydown="onKeydown"
   >
+    <span
+      v-if="variant === 'system'"
+      class="sys-tabs__ink"
+      :style="inkStyle"
+      aria-hidden="true"
+    />
     <Chip
       v-for="tab in tabs"
       :key="tab.id"
@@ -105,5 +145,48 @@ function onKeydown(event: KeyboardEvent) {
   position: absolute;
   top: -4px;
   right: -4px;
+}
+
+/* M-UI-OVERHAUL: system tab rail - hairline rail, quiet tabs, accent slide
+   (the sliding underline element is .sys-tabs__ink in system-theme.css).
+   Scoped overrides need :deep() to reach the Chip primitive's own chrome;
+   values fall back to plain tabs when system-theme.css is absent. */
+.tab-bar--system {
+  position: relative;
+  border-bottom: 1px solid var(--sys-line-soft, var(--paper-line-soft));
+  gap: 2px;
+}
+
+.tab-bar--system :deep(.chip) {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: var(--sys-text-muted, var(--paper-text-soft));
+  font-family: var(--sys-font-display, var(--font-body));
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  box-shadow: none;
+}
+
+.tab-bar--system :deep(.chip .ink-nine-slice) {
+  display: none;
+}
+
+.tab-bar--system :deep(.chip:not(.is-active):not(:disabled):hover) {
+  color: var(--sys-text, var(--paper-text));
+  border-color: transparent;
+}
+
+.tab-bar--system :deep(.chip.is-active) {
+  background: transparent;
+  color: var(--sys-accent, var(--mineral-gold));
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.tab-bar--system :deep(.chip:focus-visible) {
+  outline: 2px solid var(--sys-focus, rgba(217, 212, 199, .65));
+  outline-offset: -2px;
+  box-shadow: none;
 }
 </style>
