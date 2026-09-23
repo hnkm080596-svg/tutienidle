@@ -5,8 +5,8 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  newLedger, appendEvent, buildManifest, hashFileSet, computeEnvironmentId,
-  objectHash, sha256hex, utcNow,
+  newLedger, buildManifest, hashFileSet, computeEnvironmentId,
+  objectHash, sha256hex,
 } from "../state.mjs";
 
 export const T = path.dirname(fileURLToPath(import.meta.url));

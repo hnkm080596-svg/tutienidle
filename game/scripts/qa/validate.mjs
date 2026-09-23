@@ -16,7 +16,7 @@ export function validateStructure(ledger, scriptDir = path.dirname(fileURLToPath
   const ajv = new Ajv2020({ allErrors: true, strict: false });
   addFormats(ajv);
   const validate = ajv.compile(loadSchema(scriptDir));
-  const ok = validate(ledger);
+  validate(ledger);
   return (validate.errors ?? []).map((e) => ({
     check: "SCHEMA",
     recordId: e.instancePath || "/",
@@ -199,7 +199,7 @@ export function validateSemantics(ledger, { runDir = null, checkState = null } =
     if (e.seq !== i + 1) f("MC2", `event:${e.seq}`, `non-contiguous seq at index ${i}`);
     const prev = i === 0 ? null : ledger.events[i - 1].eventHash;
     if (e.previousEventHash !== prev) f("MC2", `event:${e.seq}`, "previousEventHash chain broken");
-    const { eventHash: _o, ...forHash } = e;
+    const forHash = { ...e }; delete forHash.eventHash;
     if (objectHash(forHash) !== e.eventHash) f("MC2", `event:${e.seq}`, "eventHash does not recompute");
   }
 

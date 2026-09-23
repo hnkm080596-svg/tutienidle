@@ -5,8 +5,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { validateStructure, validateSemantics } from "../validate.mjs";
-import { appendEvent, objectHash, sha256hex, utcNow } from "../state.mjs";
-import { makeRunDir, mkHappyLedger, mkEvidence, mkReview, mkFinding } from "./helpers.mjs";
+import { appendEvent, sha256hex } from "../state.mjs";
+import { makeRunDir, mkHappyLedger, mkFinding } from "./helpers.mjs";
 
 function happy() {
   const { dir, product } = makeRunDir();

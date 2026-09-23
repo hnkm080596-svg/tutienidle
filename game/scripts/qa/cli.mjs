@@ -1,4 +1,4 @@
-// Internal Fixed-Point QA Protocol — runner CLI.
+// Internal Fixed-Point QA Protocol - runner CLI.
 // Usage: npm run qa:internal -- <command> [flags]
 //   init      --request <file>          create runs/<runId>/ with request + lease + PHASE event
 //   snapshot  --run <id>                build manifest, set state identity, invalidate stale
@@ -14,10 +14,10 @@ import { execFileSync } from "node:child_process";
 import {
   newLedger, loadLedger, saveLedgerAtomic, acquireLease, checkLease, appendEvent,
   recordMessage, invalidateForNewState, buildManifest, hashFileSet, computeEnvironmentId,
-  objectHash, utcNow, runDir,
+  objectHash, runDir,
 } from "./state.mjs";
 import { validateLedger, validateStructure } from "./validate.mjs";
-import { decide, renderReport, evaluateTerminal } from "./decision.mjs";
+import { decide, renderReport } from "./decision.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const GAME_ROOT = path.resolve(SCRIPT_DIR, "..", "..");
@@ -145,7 +145,7 @@ function cmdRecord(args) {
     const kind = rec.kind;
     if (!RECORD_COLLECTION[kind]) throw new Error(`unknown record kind: ${kind}`);
     // {kind, body:{...}} or flat {kind, ...fields}; `kind` is the routing key, not a body field
-    const body = rec.body && typeof rec.body === "object" ? rec.body : (({ kind: _k, ...rest }) => rest)(rec);
+    const body = rec.body && typeof rec.body === "object" ? rec.body : Object.fromEntries(Object.entries(rec).filter(([k]) => k !== "kind"));
     if (kind === "message") {
       body.runId = ledger.run.id;
       const res = recordMessage(ledger, body);

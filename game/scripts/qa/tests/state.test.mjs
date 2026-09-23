@@ -6,7 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   buildManifest, appendEvent, acquireLease, checkLease, recordMessage,
-  newLedger, invalidateForNewState, objectHash, sha256hex, utcNow,
+  newLedger, invalidateForNewState, sha256hex, utcNow,
 } from "../state.mjs";
 import { makeRunDir, snapshotState, mkEvidence, mkHappyLedger } from "./helpers.mjs";
 
@@ -44,7 +44,7 @@ test("wrong-tree evidence cannot populate current coverage (QF-01)", () => {
   const { ledger, state } = mkHappyLedger2();
   const other = dummyState();
   ledger.evidence.push(mkEvidence("EV-WRONG", other));
-  const stale = invalidateForNewState(ledger, other === state ? state : { ...state, productStateId: sha256hex("newp") });
+  invalidateForNewState(ledger, { ...state, productStateId: sha256hex("newp") });
   const wrong = ledger.evidence.find((e) => e.id === "EV-WRONG");
   assert.equal(wrong.status, "STALE");
 });
@@ -104,7 +104,7 @@ test("stale message on old state is flagged, not advanced (QF-03)", () => {
 });
 
 test("append-only journal does not change product identity (QF-24)", () => {
-  const { product, dir } = makeRunDir({ productFiles: { "docs/qa/learning/history/lessons.jsonl": "" } });
+  const { product } = makeRunDir({ productFiles: { "docs/qa/learning/history/lessons.jsonl": "" } });
   const before = buildManifest(product).productStateId;
   const histDir = path.join(product, "docs", "qa", "learning", "history");
   fs.mkdirSync(histDir, { recursive: true });

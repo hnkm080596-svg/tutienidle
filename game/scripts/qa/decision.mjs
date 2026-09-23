@@ -1,5 +1,5 @@
 // Terminal predicate and outcome decision. Emits a run outcome only from
-// the ledger's declared state — never from exit codes or reviewer labels.
+// the ledger's declared state - never from exit codes or reviewer labels.
 import { TERMINAL_FINDING_STATUSES, EXECUTED_KINDS } from "./state.mjs";
 
 const OPEN = (x) => x.actionable && !TERMINAL_FINDING_STATUSES.has(x.status);

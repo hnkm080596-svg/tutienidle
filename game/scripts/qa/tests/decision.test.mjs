@@ -74,20 +74,20 @@ test("QF-08: clean rounds cleared on state change -> UNVERIFIED", () => {
 });
 
 test("CLI end-to-end: init -> snapshot -> record -> validate -> decide -> render", () => {
-  const { ledger, dir, product } = happy();
+  const { dir } = happy();
 
   const v = run(["validate", "--run", dir]);
   assert.match(v, /validate: clean/, v);
   const d = run(["decide", "--run", dir]);
   assert.match(d, /QA_FIXED_POINT_REACHED/, d);
-  const rep = run(["render", "--run", dir]);
+  run(["render", "--run", dir]);
   assert.ok(fs.existsSync(path.join(dir, "report.md")));
   const body = fs.readFileSync(path.join(dir, "report.md"), "utf8");
   assert.match(body, /QA_FIXED_POINT_REACHED/);
 });
 
 test("CLI validate --state detects product drift and refuses", () => {
-  const { ledger, dir, product } = happy();
+  const { dir, product } = happy();
   fs.writeFileSync(path.join(product, "src", "drift.mjs"), "export const drift = 1;\n");
   let threw = false;
   try { run(["validate", "--run", dir, "--state"]); } catch { threw = true; }

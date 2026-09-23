@@ -1,4 +1,4 @@
-// Internal Fixed-Point QA Protocol — run state, manifest identity, CAS journal, lease, messaging.
+// Internal Fixed-Point QA Protocol - run state, manifest identity, CAS journal, lease, messaging.
 // Sole ledger writer: the coordinator (this process, while holding the lease).
 import { createHash } from "node:crypto";
 import fs from "node:fs";
@@ -212,7 +212,7 @@ export function appendEvent(dir, ledger, { kind, actor, state, payload, expected
     payloadHash,
     eventHash: "",
   };
-  const { eventHash: _omit, ...forHash } = event;
+  const forHash = { ...event }; delete forHash.eventHash;
   event.eventHash = objectHash(forHash);
   ledger.events.push(event);
   fs.appendFileSync(path.join(dir, "journal.jsonl"), JSON.stringify(event) + "\n");
