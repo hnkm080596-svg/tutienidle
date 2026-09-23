@@ -80,8 +80,9 @@ gradeHistory: Record<number, TechniqueCycleOutcome>;  // grade -> sealed outcome
   `{rank, grade}` only).
 - Record keys are integer grades `>= 1` and `<= technique.grade` (a
   record for a grade above the live grade is corrupt). A record key
-  equal to the live grade means that cycle is already frozen and
-  awaiting catch-up. The exact key-set rule is pinned in §8.
+  equal to the live grade means that cycle is sealed and lagging —
+  frozen by realm exit, or born-dead (skipped) per §5 — awaiting
+  catch-up or supersession. The exact key-set rule is pinned in §8.
 - Sealed records are **immutable**: every seal site is write-if-absent
   and never overwrites an existing record.
 
@@ -155,21 +156,34 @@ resolveTechniqueCompletionState(finalRank, realmLevelAtFreeze):
      `dai_thanh` on an unrecoverable ceiling). Unreachable under v75;
      conservative by construction.
   2. `grade += 1`; `rank = 0`; `mastery = 0`.
-  3. Build preserved verbatim: `quality` (the only mutable build axis)
+  3. Skipped-entry seal (pinned): iff the newly entered grade still
+     lags the realm (`grade < getRealmIndex(realmId)`), the
+     transaction immediately seals it:
+     `gradeHistory[grade] = {finalRank: 0, completionState:
+     'partial'}`. The cycle is born-dead — permanently untrainable —
+     and every lagging live grade is therefore always covered by a
+     sealed record (§8). A later advance off that grade finds the
+     record already present and leaves it standing (write-if-absent).
+     Landing in-band (`grade == realmIndex`) seals nothing — the new
+     live cycle trains.
+  4. Build preserved verbatim: `quality` (the only mutable build axis)
      and template identity (`gradeEffects`, `combatModifiers`,
      way/slot binding) pass through untouched.
-  4. Inheritance scaffold: `computeGradeInheritance(outcome)` returns a
-     typed `TechniqueGradeInheritance` payload (currently zero-valued —
-     authored coefficients deferred) applied to the new cycle. Ordering
-     (pinned): `partial < dai_thanh < vien_man`; outcomes compare
-     componentwise on `(finalRank, completionState)` — a higher
-     finalRank at equal state, or a better state at equal rank, may
-     never reduce any inheritance output. Never grants rank or
-     mastery.
-  5. Mirror republished (`{rank 0, grade+1}`) via the existing sink.
+  5. Inheritance scaffold: `computeGradeInheritance(outcome)` reads the
+     OUTGOING cycle's sealed record (never the born-dead record just
+     written) and returns a typed `TechniqueGradeInheritance` payload
+     (currently zero-valued — authored coefficients deferred) applied
+     to the new cycle. Ordering (pinned): `partial < dai_thanh <
+     vien_man`; outcomes compare componentwise on `(finalRank,
+     completionState)` — a higher finalRank at equal state, or a
+     better state at equal rank, may never reduce any inheritance
+     output. Never grants rank or mastery.
+  6. Mirror republished (`{rank 0, grade+1}`) via the existing sink.
 - Catch-up through a skipped band: each advance seals the outgoing
-  cycle at its actual `finalRank` (0 for a never-trained cycle) — so
-  grade-2 skipped during a KD catch-up records `finalRank 0 / partial`.
+  cycle at its actual `finalRank`, and lands on a skipped grade it
+  immediately seals `finalRank 0 / partial` — so grade-2 skipped
+  during a KD catch-up records `finalRank 0 / partial` at the moment
+  of entry.
 - `canAdvanceTechniqueGrade` becomes the catch-up check
   `grade >= 1 && grade < getRealmIndex(realmId)` (grade ≥ ceiling side
   impossible by construction since ceiling = realm index; kept as a
@@ -270,7 +284,7 @@ proving set (thresholds 3/4/5/6 stay; re-tuning is M-F-CONTENT-TC):
 |---|---|
 | A1 | Rank ladder 0..18; in-band ceiling = min(18, realmLevel); mastery trains past old cap 10 and clamps at the effective ceiling. |
 | A2 | Realm exit seals `{finalRank, completionState}` into `gradeHistory`; post-exit `gainMastery` gains 0 while `grade < realmIndex`. |
-| A3 | Grade-up preserves history + quality, resets rank/mastery to 0, republishes mirror; catch-up 1→2→3 seals skipped cycle at `finalRank 0 / partial`; sealed cycles untrainable. |
+| A3 | Grade-up preserves history + quality, resets rank/mastery to 0, republishes mirror; a skipped grade entered below the realm seals `finalRank 0 / partial` at entry (lagging live grade always covered); sealed cycles untrainable. |
 | A4 | Inheritance scaffold: `computeGradeInheritance` monotonic in the outgoing record, applied result never raises rank/mastery. |
 | A5 | Breakthrough confirm renders unperfected warning iff projected ≠ vien_man; vien_man (rank 18) renders no warning. |
 | A6 | Gates read current cycle only: effective rank is 0 while the live grade lags the realm (frozen-before-grade-up window included); owned surplus stays owned. |

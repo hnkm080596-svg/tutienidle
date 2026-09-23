@@ -30,8 +30,11 @@ gates pass.
   `gainMastery(amount, realmId, realmLevel)` clamps cascade at the
   effective ceiling and discards overflow (existing convention);
   `advanceTechniqueGrade()` becomes the seal+advance transaction
-  (write-if-absent record, grade+1, rank/mastery 0, build preserved,
-  inheritance applied, mirror republished); new
+  (write-if-absent outgoing record; grade+1; skipped-entry seal — a
+  landing still below the realm immediately records `{finalRank: 0,
+  'partial'}` for the new grade, keeping every lagging live grade
+  covered per §8; rank/mastery 0; build preserved; inheritance on the
+  OUTGOING record; mirror republished); new
   `sealFrozenCycle(newRealmId, departedRealmLevel)` seals when
   `getRealmIndex(newRealmId) > grade` (departed level feeds
   `resolveTechniqueCompletionState`); `grant` initializes
@@ -106,9 +109,12 @@ gates pass.
    record write-if-absent and is idempotent on repeat calls and on
    already-caught-up grade; `advanceTechniqueGrade` seals outgoing
    cycle, preserves quality/template, resets rank/mastery, applies
-   inheritance, republishes mirror `{rank 0, grade+1}`; catch-up
-   1→2→3 seals skipped grade at `finalRank 0/partial`, skipped cycle
-   remains untrainable.
+   inheritance (reads the outgoing sealed record), republishes mirror
+   `{rank 0, grade+1}`; catch-up 1→2→3 seals each skipped grade AT
+   ENTRY (`finalRank 0/partial` written when the lagging grade is
+   entered — the lagging live grade is always record-covered, the
+   intermediate state validates under key-set coherence), skipped
+   cycle remains untrainable.
 3. `TribulationOutcomeService.test.ts` (extend): `resolveVictory` major
    breakthrough seals the live cycle into `gradeHistory` at the
    realm-write seam (assert record + post-exit `gainMastery` gains 0);
@@ -118,7 +124,9 @@ gates pass.
    at-parity, rejects in-combat, debits the authored cost, runs the
    full transaction; old `rank >= CAP` precondition is gone; defensive
    write-if-absent seal on a live record records partial (never
-   dai_thanh) — unreachable under v75, exercised directly.
+   dai_thanh) — unreachable under v75, exercised directly; landing on
+   a still-lagging grade immediately seals `{0/partial}` for it while
+   landing in-band seals nothing.
 5. `BreakthroughRequirementPanel.test.ts` (extend): warning renders iff
    a held technique projects `!= vien_man`; rank-18 renders none;
    already-sealed unperfected record warns; no technique = no warning.
@@ -157,9 +165,10 @@ gates pass.
 - `TechniqueSystem.ts`: `gainMastery(amount, realmId, realmLevel)`
   ceiling-aware cascade; `sealFrozenCycle(newRealmId,
   departedRealmLevel)` write-if-absent; `advanceTechniqueGrade()` =
-  defensive-seal (partial fallback) → grade+1 → rank/mastery 0 →
-  build preserved → inheritance applied → mirror republish;
-  `grant` initializes `gradeHistory`.
+  defensive-seal outgoing (partial fallback) → grade+1 →
+  skipped-entry seal iff still lagging `{0/partial}` → rank/mastery
+  0 → build preserved → inheritance on outgoing record → mirror
+  republish; `grant` initializes `gradeHistory`.
 - `GameManagerRealmAdvanceOps.ts`: `tryAdvanceTechniqueGrade`
   preconditions + transaction call; `applyTechniqueRealmTransition(
   player, targetRealmId)`.
