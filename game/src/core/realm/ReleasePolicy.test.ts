@@ -1,12 +1,19 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
+  COMPANION_PULL_TOKEN_MATERIAL_IDS,
   isBeyondReleaseCeiling,
   isBreakthroughAcquisitionEnabled,
+  isCompanionPullPoolEnabled,
+  isCompanionPullTokenSourceSuppressed,
   isRealmAvailable,
   isRealmTransitionEnabled,
   progressionCeilingRealmId,
 } from './ReleasePolicy'
-import { isCompanionDomainUnlocked } from '../companion/CompanionAvailability'
+import {
+  companionAcquirablePool,
+  isCompanionDomainUnlocked,
+} from '../companion/CompanionAvailability'
+import { COMPANION_PULL_TOKEN_ID } from '../game/GameManagerCompanionOps'
 import { isFormationUnlocked } from '../game/FormationPlacement'
 import {
   isArtifactDomainUnlocked,
@@ -585,5 +592,142 @@ describe('ReleasePolicy - breakthrough-scope census integrity (C2C-9)', () => {
   it('the live breakthrough gate binds the census (TRUC_CO_DAN_PILL_ID is tagged + declared)', () => {
     expect(BREAKTHROUGH_SCOPED_PILL_IDS).toContain(TRUC_CO_DAN_PILL_ID)
     expect(pills.find((p) => p.id === TRUC_CO_DAN_PILL_ID)?.breakthroughRealmId).toBeDefined()
+  })
+})
+
+describe('ReleasePolicy - companion pull pool flag (M-F-COMPANION-GIFT)', () => {
+  it('the companion pull pool is closed in the Beta build', () => {
+    expect(isCompanionPullPoolEnabled()).toBe(false)
+  })
+
+  it('companionAcquirablePool is the explicit empty pool while the flag is off', () => {
+    // Empty-pool is a VALID state, not a hidden dead button: ops and UI
+    // read this view and surface the closed pool explicitly.
+    expect(companionAcquirablePool()).toEqual([])
+  })
+
+  it('token-source suppression binds the pull-pool flag: census member suppressed, others not', () => {
+    expect(isCompanionPullTokenSourceSuppressed(COMPANION_PULL_TOKEN_ID)).toBe(true)
+    expect(isCompanionPullTokenSourceSuppressed('great_dao_seed')).toBe(false)
+    expect(isCompanionPullTokenSourceSuppressed('not_a_material')).toBe(false)
+  })
+})
+
+describe('ReleasePolicy - pull-token census integrity (M-F-COMPANION-GIFT)', () => {
+  // Same census-bind pattern as the breakthrough census above: the
+  // suppressible-source set lives in ONE list; every id must resolve in
+  // the materials registry, and the live pull-token id must be declared.
+  it('every census id resolves in the materials registry', () => {
+    for (const id of COMPANION_PULL_TOKEN_MATERIAL_IDS) {
+      const material = materials.find((m) => m.id === id)
+      expect(material, `census token material '${id}' missing from materials registry`).toBeDefined()
+    }
+  })
+
+  it('the live pull token is declared in the census', () => {
+    expect(COMPANION_PULL_TOKEN_MATERIAL_IDS).toContain(COMPANION_PULL_TOKEN_ID)
+  })
+
+  // Exact-set pin (C2C-74): one-way containment alone lets a second valid
+  // material id join the census silently - isCompanionPullTokenSourceSuppressed
+  // would then suppress it across quest + battle-loot origination with every
+  // other test still green. The suppressed set must be exactly {chieu_hien_lenh}.
+  it('the census is exactly the live pull-token set (no silently suppressed extras)', () => {
+    expect([...COMPANION_PULL_TOKEN_MATERIAL_IDS].sort()).toEqual([COMPANION_PULL_TOKEN_ID])
+  })
+
+  it('combat drop delivery suppresses the pull-token line while sibling lines still land', () => {
+    const { killEnemy, materialBag, materialRegistry } = createLootTestSetup({
+      realmId: 'mortal',
+      signatureDrops: [
+        { kind: 'material', itemId: COMPANION_PULL_TOKEN_ID, chance: 1, amount: { min: 1, max: 1 } },
+        { kind: 'material', itemId: 'untagged_mat', chance: 1, amount: { min: 1, max: 1 } },
+      ],
+    })
+
+    materialRegistry.register({
+      id: COMPANION_PULL_TOKEN_ID,
+      name: 'Pull Token',
+      category: 'other',
+      sourceType: 'boss',
+    })
+    materialRegistry.register({
+      id: 'untagged_mat',
+      name: 'Untagged Mat',
+      category: 'other',
+      sourceType: 'boss',
+    })
+
+    killEnemy()
+
+    expect(materialBag.getAmount(COMPANION_PULL_TOKEN_ID)).toBe(0)
+    expect(materialBag.getAmount('untagged_mat')).toBe(1)
+  })
+
+  it('quest itemDrops skip the pull-token line while sibling rewards land', () => {
+    const registry = new QuestRegistry()
+    const manager = new QuestManager()
+    const system = new QuestSystem()
+    const materialRegistry = new MaterialRegistry()
+    const materialBag = new MaterialBag()
+    const pillRegistry = new PillRegistry()
+    const pillBag = new PillBag()
+    const rewardSystem = new RewardSystem()
+
+    materialRegistry.register({
+      id: COMPANION_PULL_TOKEN_ID,
+      name: 'Pull Token',
+      category: 'other',
+      sourceType: 'boss',
+    })
+    materialRegistry.register({
+      id: 'untagged_mat',
+      name: 'Untagged Mat',
+      category: 'other',
+      sourceType: 'boss',
+    })
+
+    const quest: Quest = {
+      id: 'pull_token_mixed_test',
+      name: 'Pull token mixed test',
+      description: '',
+      condition: { kind: 'kill', enemyId: 'mob', amount: 1 },
+      reward: {
+        reward: { cultivation: 10 },
+        itemDrops: [
+          { kind: 'material', itemId: COMPANION_PULL_TOKEN_ID, amount: 1 },
+          { kind: 'material', itemId: 'untagged_mat', amount: 1 },
+        ],
+      },
+      cadence: 'once',
+    }
+    registry.register(quest)
+
+    const player = { realmId: 'foundation_establishment' } as unknown as PlayerData
+    system.reconcileActiveQuests(registry, manager, player)
+    manager.incrementProgress('pull_token_mixed_test', 1)
+
+    const receiver: RewardReceiver = {
+      addSkillInsight: () => {},
+      addCultivation: () => {},
+      addSpiritStone: () => {},
+    }
+
+    // Mixed-reward quest STAYS unlocked (not a token-only faucet) - it
+    // activated on reconcile above; the claim-side per-item filter
+    // drops only the suppressed token line.
+    expect(manager.getProgress('pull_token_mixed_test')).toBeDefined()
+    expect(
+      system.claim(
+        registry,
+        manager,
+        rewardSystem,
+        receiver,
+        { materialRegistry, materialBag, pillRegistry, pillBag },
+        'pull_token_mixed_test',
+      ),
+    ).toBe(true)
+    expect(materialBag.getAmount(COMPANION_PULL_TOKEN_ID)).toBe(0)
+    expect(materialBag.getAmount('untagged_mat')).toBe(1)
   })
 })

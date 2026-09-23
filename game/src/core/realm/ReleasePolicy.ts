@@ -101,3 +101,35 @@ export function isBreakthroughAcquisitionEnabled(targetRealmId?: string): boolea
     ? isRealmAvailable(targetRealmId)
     : isRealmTransitionEnabled(predecessorId, targetRealmId)
 }
+
+// M-F-COMPANION-GIFT: Beta rules that NO companion pull pool is active.
+// Companion acquisition in this build arrives only through the authored
+// mail/gift channel; the pull/exchange architecture stays in place,
+// flagged off rather than deleted, so a future build re-enables it by
+// flipping this one predicate.
+export function isCompanionPullPoolEnabled(): boolean {
+  return false
+}
+
+/**
+ * Material ids whose recurring sources exist only to feed the companion
+ * pull. The census is the authority - same bind pattern as the
+ * breakthrough census in BreakthroughScopedResources: suppression lives
+ * here, not spread across drop tables.
+ */
+export const COMPANION_PULL_TOKEN_MATERIAL_IDS = ['chieu_hien_lenh'] as const
+
+/**
+ * Whether recurring `itemId` sources are suppressed at origination while
+ * the pull pool is closed (quest unlock + claim item filter + loot
+ * delivery all consult this). Banked balances are never re-checked - a
+ * suppressed source is a faucet turned off, not a clawback, matching
+ * the same single-check invariant the breakthrough surface above
+ * follows. Sources of non-token items are unaffected.
+ */
+export function isCompanionPullTokenSourceSuppressed(itemId: string): boolean {
+  return (
+    !isCompanionPullPoolEnabled() &&
+    (COMPANION_PULL_TOKEN_MATERIAL_IDS as readonly string[]).includes(itemId)
+  )
+}

@@ -627,6 +627,7 @@
   "workerLodge": {
     "tabs": {
       "nhanCong": "Workers",
+      "quaTang": "Gifts",
       "chieuMo": "Recruit",
       "duyenPhan": "Duyen Phan Exchange"
     },
@@ -642,8 +643,10 @@
     "tokens": "{name}: {count}",
     "pity": "Pity: {count}/{max}",
     "pull": "Recruit (1 {token})",
+    "unavailable": "Not open in this build — new companions arrive via Gifts.",
     "errors": {
       "missingToken": "No {token} available.",
+      "poolUnavailable": "Not open in this build — new companions arrive via Gifts.",
       "realmLocked": "Requires Foundation Establishment.",
       "noActivePlayer": "No active player data."
     },
@@ -663,14 +666,28 @@
       "constellationMaxed": "Constellation already maxed (C{max})",
       "insufficientDuyenPhan": "Not enough Duyen Phan (need {cost})"
     },
+    "unavailable": "Not open in this build — new companions arrive via Gifts.",
     "errors": {
       "unknownDefinition": "Unknown companion.",
       "constellationMaxed": "Constellation already maxed.",
       "insufficientDuyenPhan": "Not enough Duyen Phan.",
+      "poolUnavailable": "Not open in this build — new companions arrive via Gifts.",
       "realmLocked": "Requires Foundation Establishment.",
       "noActivePlayer": "No active player data."
     },
     "empty": "No companions available to exchange."
+  },
+  "quaTang": {
+    "hint": "Companion gifts earned along the cultivation journey.",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "claimedBadge": "Claimed",
+    "empty": "No gifts yet.",
+    "errors": {
+      "unknownGift": "Invalid gift.",
+      "realmLocked": "Requires Foundation Establishment.",
+      "noActivePlayer": "No active player data."
+    }
   },
   "companion": {
     "title": "Companions",

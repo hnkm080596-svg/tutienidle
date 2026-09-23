@@ -17,11 +17,15 @@ import { PillBag } from '../../core/pill/PillBag'
 import { RewardSystem } from '../../core/reward/RewardSystem'
 import type { RewardReceiver } from '../../core/reward/RewardSystem'
 import type { PlayerData } from '../../core/player/Player'
+import { createLootTestSetup } from '../../core/game/battleLootTestSetup'
 
 // Companion gacha Task 6 - Chieu Hien Lenh token economy. P7-M9
 // (decision D4): the Companion domain begins at Tru Co, so the ONLY
 // drop source left is the foundation floor-10 boss; Mortal/Luyen Khi
 // enemies and the daily quest must not produce the token below Tru Co.
+// M-F-COMPANION-GIFT: with the Beta pull pool closed, every recurring
+// source is ALSO suppressed at origination (quest unlock + claim item
+// filter + loot delivery) - authored data stays, tokens never land.
 const BOSS_TOKEN_AMOUNTS: Readonly<Record<string, number>> = {
   foundation_ferocious_flood_dragon_whelp: 3,
 }
@@ -108,6 +112,26 @@ describe('Chieu Hien Lenh boss signatureDrops', () => {
     const token = result.items.find((item) => item.itemId === COMPANION_PULL_TOKEN_ID)
     expect(token).toBeDefined()
     expect(token!.amount).toBe(3)
+  })
+
+  // M-F-COMPANION-GIFT: resolveDrops still yields the authored line (rng
+  // and drop tables untouched) - the RELEASE-POLICY suppression lives at
+  // delivery, so the boss kill can never bank a token while the pool is
+  // closed. Banked tokens from before are untouched either way.
+  it('the floor-10 boss token line never lands while the pull pool is closed', () => {
+    const whelp = ENEMIES.find(
+      (entry) => entry.id === 'foundation_ferocious_flood_dragon_whelp',
+    )!
+
+    const { killEnemy, materialBag } = createLootTestSetup({
+      realmId: whelp.realmId,
+      signatureDrops: whelp.signatureDrops,
+      materialIds: [COMPANION_PULL_TOKEN_ID],
+    })
+
+    killEnemy()
+
+    expect(materialBag.getAmount(COMPANION_PULL_TOKEN_ID)).toBe(0)
   })
 })
 
@@ -200,8 +224,10 @@ describe('daily_chieu_hien_lenh quest', () => {
     const player = { realmId: 'foundation_establishment' } as unknown as PlayerData
 
     // Grandfathered state: the daily was activated while eligible (or
-    // restored from a pre-gate save) and already has progress.
-    system.reconcileActiveQuests(registry, manager, player)
+    // restored from a pre-gate save) and already has progress. Seed via
+    // ensureActive - reconcile no longer activates this quest while the
+    // pull pool is closed (token-only faucet), so it cannot seed here.
+    manager.ensureActive(QUESTS.find((q) => q.id === 'daily_chieu_hien_lenh')!)
     manager.incrementProgress('daily_chieu_hien_lenh', 7)
     expect(manager.getProgress('daily_chieu_hien_lenh')?.progress).toBe(7)
 
@@ -220,19 +246,40 @@ describe('daily_chieu_hien_lenh quest', () => {
     expect(system.canClaim(registry, manager, bags, 'daily_chieu_hien_lenh')).toBe(false)
   })
 
-  it('claims itemDrops into materialBag via the normal claim path at Tru Co', () => {
-    const { registry, manager, system, bags, rewardSystem, receiver, materialBag } = setup()
+  // M-F-COMPANION-GIFT: the quest is token-only on base (its entire
+  // reward set is pull-token itemDrops), so questIsTokenOnlySource
+  // suppresses the WHOLE quest while the pull pool is closed - it never
+  // activates at Tru Co at all. Non-token rewards are unaffected
+  // because there are none; the mixed-reward case is covered in
+  // ReleasePolicy.test.ts.
+  it('never activates at Truc Co while the pull pool is closed (token-only faucet)', () => {
+    const { registry, manager, system, bags } = setup()
     const player = { realmId: 'foundation_establishment' } as unknown as PlayerData
 
     system.reconcileActiveQuests(registry, manager, player)
 
-    // Kill-generic condition: any enemy id advances the counter.
     for (let index = 0; index < 20; index++) {
       system.onEnemyDefeated(registry, manager, 'wild_wolf', undefined)
     }
 
-    expect(system.canClaim(registry, manager, bags, 'daily_chieu_hien_lenh')).toBe(true)
-    expect(system.claim(registry, manager, rewardSystem, receiver, bags, 'daily_chieu_hien_lenh')).toBe(true)
-    expect(materialBag.getAmount(COMPANION_PULL_TOKEN_ID)).toBe(1)
+    expect(manager.getProgress('daily_chieu_hien_lenh')).toBeUndefined()
+    expect(system.canClaim(registry, manager, bags, 'daily_chieu_hien_lenh')).toBe(false)
+  })
+
+  it('reconciles away stale Truc Co progress while the pool is closed (grandfathered save)', () => {
+    const { registry, manager, system, bags } = setup()
+    const player = { realmId: 'foundation_establishment' } as unknown as PlayerData
+
+    // Grandfathered state: a save from before the suppression carried an
+    // active daily with progress. Reconcile removes it - the quest no
+    // longer counts as unlocked under the closed pool.
+    manager.ensureActive(QUESTS.find((q) => q.id === 'daily_chieu_hien_lenh')!)
+    manager.incrementProgress('daily_chieu_hien_lenh', 7)
+    expect(manager.getProgress('daily_chieu_hien_lenh')?.progress).toBe(7)
+
+    system.reconcileActiveQuests(registry, manager, player)
+
+    expect(manager.getProgress('daily_chieu_hien_lenh')).toBeUndefined()
+    expect(system.canClaim(registry, manager, bags, 'daily_chieu_hien_lenh')).toBe(false)
   })
 })

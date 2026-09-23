@@ -7,6 +7,7 @@ import type { PillBag } from '../pill/PillBag'
 import type { PlayerData } from '../player/Player'
 import type { CultivationPathId, CultivationWayId } from '../player/CultivationPathKit'
 import { applyBreakthroughMerge } from '../kiem-tu/NguKiemDao'
+import { issueCompanionGifts } from '../companion/CompanionGifts'
 import { CULTIVATION_PATH_MODULES, getActiveWayDefinition } from '../player/CultivationPathKit'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward, hasStaticPathCapability } from '../player/CultivationPathSystem'
@@ -145,6 +146,17 @@ export class GameManagerRealmAdvanceOps {
     if (player.swordPath && hasStaticPathCapability(player, 'sword.sword_riding')) {
       applyBreakthroughMerge(player.swordPath)
     }
+  }
+
+  /**
+   * M-F-COMPANION-GIFT - companion gift moments authored against the
+   * realm just entered. Call once per realm-entered write, AFTER
+   * `player.realmId` holds the new realm: issueCompanionGifts is
+   * write-if-absent, so repeat fires and realms with no authored moment
+   * are harmless no-ops. Naming mirrors applySwordPathRealmTransition.
+   */
+  applyCompanionGiftRealmTransition(player: PlayerData): void {
+    issueCompanionGifts(player, { kind: 'realm_entered', realmId: player.realmId })
   }
 
   /**
@@ -348,6 +360,10 @@ export class GameManagerRealmAdvanceOps {
       // R8.1 (AR-09) - realm transition may unlock quests; reconcile on
       // the next tick instead of waiting for a panel read.
       this.deps.markQuestRealmTransition()
+
+      // M-F-COMPANION-GIFT - companion gift moments authored against
+      // qi_refining entry fire here (write-if-absent; idempotent).
+      this.applyCompanionGiftRealmTransition(player)
 
       this.syncRealmPassive(player)
       this.syncRealmStatPassive(player)

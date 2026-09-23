@@ -2448,3 +2448,94 @@ describe('validateGameSaveShape — v73 core inverse ownership', () => {
     expect(pathsOf(result)).toContain('player.nodeLevels.core_cuong_quyen')
   })
 })
+
+// M-F-COMPANION-GIFT (v77) - player.companionGifts slice: required
+// array, unique nonempty ids, definitionId inside the Beta gift
+// authority (not merely the full catalog), claimed boolean. Record ids
+// are NOT validated against COMPANION_GIFT_MOMENTS - records outlive
+// authored moments (drift tolerance).
+describe('validateGameSaveShape - companion gifts (v77)', () => {
+  function playerOf(save: Record<string, unknown>): Record<string, unknown> {
+    return save.player as Record<string, unknown>
+  }
+
+  it('chấp nhận companionGifts hợp lệ (pending + claimed)', () => {
+    const save = validSave()
+
+    playerOf(save).companionGifts = [
+      { id: 'gift_than_nong_foundation_entry', definitionId: 'than_nong', claimed: false },
+      { id: 'gift_khai_minh_foundation_floor_10', definitionId: 'khai_minh', claimed: true },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('từ chối companionGifts vắng mặt / không phải array', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    delete player.companionGifts
+    expect(pathsOf(validateGameSaveShape(save))).toContain('player.companionGifts')
+
+    const save2 = validSave()
+    playerOf(save2).companionGifts = 'not-an-array'
+    expect(pathsOf(validateGameSaveShape(save2))).toContain('player.companionGifts')
+  })
+
+  it('từ chối record id rỗng hoặc trùng', () => {
+    const save = validSave()
+    playerOf(save).companionGifts = [
+      { id: '', definitionId: 'than_nong', claimed: false },
+    ]
+    expect(pathsOf(validateGameSaveShape(save))).toContain('player.companionGifts[0].id')
+
+    const dup = validSave()
+    playerOf(dup).companionGifts = [
+      { id: 'gift_a', definitionId: 'than_nong', claimed: false },
+      { id: 'gift_a', definitionId: 'khai_minh', claimed: true },
+    ]
+    expect(pathsOf(validateGameSaveShape(dup))).toContain('player.companionGifts[1].id')
+  })
+
+  it('từ chối definitionId ngoài gift authority - kể cả catalog member thật', () => {
+    const save = validSave()
+
+    // Real COMPANIONS member but NOT a Beta gift - the acquisition
+    // boundary fails loud on a persisted future-realm gift.
+    playerOf(save).companionGifts = [
+      { id: 'gift_x', definitionId: 'ho_ly_tinh', claimed: false },
+    ]
+
+    const result = validateGameSaveShape(save)
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companionGifts[0].definitionId')
+
+    const ghost = validSave()
+    playerOf(ghost).companionGifts = [
+      { id: 'gift_y', definitionId: 'no_such_companion', claimed: false },
+    ]
+    expect(pathsOf(validateGameSaveShape(ghost))).toContain('player.companionGifts[0].definitionId')
+  })
+
+  it('từ chối claimed không phải boolean', () => {
+    const save = validSave()
+
+    playerOf(save).companionGifts = [
+      { id: 'gift_x', definitionId: 'than_nong', claimed: 'yes' },
+    ]
+
+    expect(pathsOf(validateGameSaveShape(save))).toContain('player.companionGifts[0].claimed')
+  })
+
+  it('chấp nhận record id không thuộc COMPANION_GIFT_MOMENTS (drift tolerance)', () => {
+    const save = validSave()
+
+    // A save may carry records from moments since removed/renamed -
+    // they stay claimable, validation must not reject them.
+    playerOf(save).companionGifts = [
+      { id: 'gift_retired_moment', definitionId: 'than_nong', claimed: false },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
