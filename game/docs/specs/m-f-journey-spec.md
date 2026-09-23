@@ -1,6 +1,6 @@
 # M-F-JOURNEY — Trúc Cơ End-to-End Journey + Integration Sweep — Spec
 
-Status: v1 — draft (worker-authored, pending C2C spec review)
+Status: v-final — PASSED C2C spec review (r92, 2026-09-23)
 Depends on: every sibling M-F mission — merged on `p7/truc-co` at
 spec time: M-F-REALM18 (`365c804a`), M-F-RESPEC (`04364847`),
 M-F-CEILING (`4b8d8270`), M-F-BODY-CORE, M-F-TALENT (`c40e72cb`),

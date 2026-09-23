@@ -276,8 +276,15 @@ export class EarlyGameSession {
    * M-D parity lifecycle (spec sec.3.1, pinned ordering):
    *   pre-stage drain -> essenceBefore -> startStage/battle ->
    *   rewards settle -> essenceAfter/tinhHoaGained -> terminal counters
-   *   -> post-terminal drain. */
-  runStage(stageId: string): StageRunResult {
+   *   -> post-terminal drain.
+   * `options.onBattleAdvance` (M-F-JOURNEY Leg I): invoked per consumed
+   * combat step - the caller may advance wall clock (vi.setSystemTime)
+   * so wall-clock-measured records like perfectClearSeconds are
+   * produced by their real writer with a consumable value. */
+  runStage(
+    stageId: string,
+    options?: { onBattleAdvance?: (consumedSteps: number) => void },
+  ): StageRunResult {
     const stage = this.gameManager.catalogOps.getStage(stageId)
     if (!stage) return 'missing'
     if (!this.gameManager.catalogOps.isStageUnlocked(stageId, this.player)) {
@@ -307,6 +314,7 @@ export class EarlyGameSession {
         onMissingBattle: () => 'defeat',
         onAdvance: () => {
           advances++
+          options?.onBattleAdvance?.(advances)
           if (this.combatCultivationParity) {
             this.cultivate(COMBAT_STEP_SECONDS)
             this.breakthroughIfReady()

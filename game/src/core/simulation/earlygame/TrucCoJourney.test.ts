@@ -434,7 +434,14 @@ describe('TrucCoJourney - ordered journey', () => {
       // floor_2's remaining gate at L1 is requiredRealmLevel (the
       // sequential floor_1 gate is about to lift).
       expect(s.runStage('foundation_floor_2')).toBe('locked')
-      expect(s.runStage('foundation_floor_1')).toBe('victory')
+      // The first-clear drive advances wall clock per combat step so
+      // the REAL perfect-clear writer (Date.now delta from stage start
+      // to victory) produces a consumable record - no patched fields.
+      expect(
+        s.runStage('foundation_floor_1', {
+          onBattleAdvance: () => vi.setSystemTime(Date.now() + 1000),
+        }),
+      ).toBe('victory')
       expect(s.player.completedStageIds.at(-1)).toBe('foundation_floor_1')
 
       // ===== Legs D.1 + D.2 - body prerequisites at TC L1 =====
@@ -542,7 +549,14 @@ describe('TrucCoJourney - ordered journey', () => {
           s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID) < target &&
           guard++ < 200
         ) {
-          expect(s.runStage('foundation_floor_1')).toBe('victory')
+          // Wall clock advances honestly per combat step - whichever
+          // re-run first records the perfect clear writes a real
+          // cycleSeconds through its own writer (first-write wins, B4).
+          expect(
+            s.runStage('foundation_floor_1', {
+              onBattleAdvance: () => vi.setSystemTime(Date.now() + 1000),
+            }),
+          ).toBe('victory')
         }
         expect(
           s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID),
@@ -701,17 +715,18 @@ describe('TrucCoJourney - ordered journey', () => {
         }
       }
 
-      // L17->L18 boundary: capacity 340 -> 360, Dai completes at 360.
+      // L17->L18 boundary: capacity 340 -> 360.
       expect(s.player.realmLevel).toBe(18)
-      farmPhap(360)
-      investZhouToCapacity()
-      expect(s.player.bodyProgression.zhou_tian.circulation).toBe(360)
-      expect(isDaiChuThienReached(s.player)).toBe(true)
+      expect(s.player.bodyProgression.zhou_tian.circulation).toBe(340)
+      expect(getZhouTianCapacity(s.player)).toBe(360)
 
-      // Exact-Phap debit (spec leg C pin): holding ONLY the lower-band
-      // essence never fills the top rung - substitution is downward
-      // only, so pham cannot stand in for phap.
+      // Exact-Phap debit (spec leg C pin), run BELOW capacity so the
+      // arm is live: holding ONLY the lower-band essence commits
+      // nothing - substitution is downward only, pham cannot stand in
+      // for phap. Then supplying phap commits the remaining rungs with
+      // an exact debit (0-substitution, no surplus).
       {
+        // Isolate the arm: drain the phap stack, hold ONLY pham.
         const heldPhap = s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)
         if (heldPhap > 0) {
           s.gameManager.materialBag.remove(
@@ -719,10 +734,38 @@ describe('TrucCoJourney - ordered journey', () => {
             heldPhap,
           )
         }
-        s.holdMaterial(TINH_HOA_PHAM_THE_MATERIAL_ID, 1000)
+        const phamHeld = s.holdMaterial(TINH_HOA_PHAM_THE_MATERIAL_ID, 1000)
         expect(s.investChapter('zhou_tian')).toBe(0)
+        expect(s.materialAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(
+          phamHeld,
+        )
+        expect(s.player.bodyProgression.zhou_tian.circulation).toBe(340)
+
+        // Supplying phap commits the remaining rungs with an exact
+        // debit: debited == the op's reported consumed total (no
+        // surplus drawn, no substitution fill).
+        s.holdMaterial(ZHOU_TIAN_CURRENCY_MATERIAL_ID, 360)
+        const phapBefore = s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)
+        let totalInvested = 0
+        let zhouGuard = 0
+        while (
+          s.player.bodyProgression.zhou_tian.circulation < 360 &&
+          zhouGuard++ < 500
+        ) {
+          const consumed = s.investChapter('zhou_tian')
+          expect(consumed).toBeGreaterThan(0)
+          totalInvested += consumed
+        }
         expect(s.player.bodyProgression.zhou_tian.circulation).toBe(360)
+        expect(totalInvested).toBeGreaterThan(0)
+        expect(
+          phapBefore - s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID),
+        ).toBe(totalInvested)
+        expect(s.materialAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(
+          phamHeld,
+        )
       }
+      expect(isDaiChuThienReached(s.player)).toBe(true)
 
       // ===== Leg F - ceiling =====
       expect(
@@ -731,24 +774,16 @@ describe('TrucCoJourney - ordered journey', () => {
       expect(
         s.gameManager.realmAdvanceOps.canTriggerBreakthrough(s.player),
       ).toBe(false)
-      const ceilingState = {
-        realmId: s.player.realmId,
-        realmLevel: s.player.realmLevel,
-        cultivation: s.player.cultivation,
-        completedStageIds: [...s.player.completedStageIds],
-        giftCount: s.giftRecords().length,
-      }
+      // Refusal oracle = the whole persisted surface byte-untouched
+      // (stripTribulationState pattern - the volatile director slot is
+      // the only normalized field; a rejected run may not mutate ANY
+      // other persisted field).
+      const ceilingSnapshot = stripTribulationState(s.snapshot())
       expect(s.runTribulation('golden_core')).toBe('refused')
       expect(
         s.gameManager.tribulationDirector.getCommittedOutcome(),
       ).toBeNull()
-      expect(s.player.realmId).toBe(ceilingState.realmId)
-      expect(s.player.realmLevel).toBe(ceilingState.realmLevel)
-      expect(s.player.cultivation).toBe(ceilingState.cultivation)
-      expect([...s.player.completedStageIds]).toEqual(
-        ceilingState.completedStageIds,
-      )
-      expect(s.giftRecords().length).toBe(ceilingState.giftCount)
+      expect(stripTribulationState(s.snapshot())).toEqual(ceilingSnapshot)
 
       // ARTIFACT-DEFER (landed shape): the artifact domain unlocks at
       // ARTIFACT_UNLOCK_REALM_ID ('golden_core'); spell way's reward is
@@ -791,11 +826,12 @@ describe('TrucCoJourney - ordered journey', () => {
         ).length,
       ).toBe(1)
 
-      // perfectClearSeconds is a volatile wall-clock measurement -
-      // deterministic headless runs record 0 while the auto-farm gate
-      // (and restore reconcile) require a positive cycle time. Seed the
-      // measured value honestly; it is snapshot-normalized everywhere.
-      s.player.perfectClearSeconds['foundation_floor_1'] = 30
+      // perfectClearSeconds is writer-produced: the floor_1 drives
+      // carried the wall-clock hook, so the recorded value is a real
+      // Date.now delta - consumable by the auto-farm gate as-is (the
+      // >0 guard correctly rejects only the degenerate headless 0).
+      expect(perfect.cycleSeconds).toBeGreaterThan(0)
+      expect(Number.isFinite(perfect.cycleSeconds)).toBe(true)
       expect(s.startAutoFarm('foundation_floor_1')).toBe(true)
       expect(s.player.autoFarmStage?.stageId).toBe('foundation_floor_1')
       // Leg H (inline): a non-perfect stage refuses.
@@ -1098,8 +1134,10 @@ describe('TrucCoJourney - integration sweep census', () => {
       (id) => !emitted.has(id) && !granted.has(id),
     )
     // Duplicate authorities: reachable through both a channel AND a
-    // visible grant, or emitted by TWO hidden channels (beast/grotto
-    // each count as an acquisition authority of their own).
+    // visible grant, emitted by TWO hidden channels (beast/grotto each
+    // count as an acquisition authority of their own), or granted by
+    // TWO visible-grant ROWS (kind+grantId - a Set(materialId) would
+    // collapse quest+quest / quest+building duplicates).
     const channelEmissionCount = new Map<string, number>()
     for (const channel of HIDDEN_MATERIAL_CHANNELS) {
       for (const id of channelEmittedMaterialIds(
@@ -1109,10 +1147,18 @@ describe('TrucCoJourney - integration sweep census', () => {
         channelEmissionCount.set(id, (channelEmissionCount.get(id) ?? 0) + 1)
       }
     }
+    const visibleGrantCount = new Map<string, number>()
+    for (const row of VISIBLE_GRANT_SOURCES) {
+      visibleGrantCount.set(
+        row.materialId,
+        (visibleGrantCount.get(row.materialId) ?? 0) + 1,
+      )
+    }
     const duplicated = authored.filter(
       (id) =>
         (emitted.has(id) && granted.has(id)) ||
-        (channelEmissionCount.get(id) ?? 0) > 1,
+        (channelEmissionCount.get(id) ?? 0) > 1 ||
+        (visibleGrantCount.get(id) ?? 0) > 1,
     )
     // Loot bypasses: a perfection material on a normal stage/family
     // table or a NON-channel enemy's signatureDrops (incl.
