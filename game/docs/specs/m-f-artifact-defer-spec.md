@@ -1,6 +1,8 @@
 # M-F-ARTIFACT-DEFER — Artifact deferral to Kim Đan+ — Spec
 
-Status: v1 — draft (worker-authored, pending C2C spec review)
+Status: v1.1 — draft (worker-authored, amended after C2C spec
+review round 48: D2 delivery rule = window+player reach; §5
+boundary suite pinned on the real TC row — pending re-review)
 Depends on: M-F-CEILING release-policy authority (merged on
 `p7/truc-co` — `core/realm/ReleasePolicy.ts` owns
 `progressionCeilingRealmId`, `isRealmAvailable`,
@@ -63,12 +65,17 @@ are the live ones.
 - **Material**: `doan_bao_thach` is a weighted row in the
   `foundation_establishment` stage pool
   (`data/drop/StageDropTables.ts` — 1-3 @ w25) whose material
-  record (`data/materials/materials.ts`) carries no
-  `breakthroughRealmId`; the existing post-resolve policy filter
+  record (`data/materials/materials.ts`) carries no release
+  tag; the existing post-resolve policy filter
   (`BattleLootSystem` material arm →
   `isBreakthroughAcquisitionEnabled`) therefore never applies to
   it. Its only live consumer is `tryUpgradeArtifactGrade`
-  (artifact grade ladder).
+  (artifact grade ladder). Note: `breakthroughRealmId` alone
+  cannot express this ruling — it is a transition-window tag
+  (delivery iff the predecessor→target transition is open) and
+  would still deliver the stone to a below-KD player once the KD
+  window opens. The ruling requires window **and** player reach
+  (C2C spec round 48, High).
 - **Wheel**: `phap_bao` slot (`data/ui/commandWheelCatalog.ts`)
   enables while `artifactDomainUnlocked && hasArtifactDefinition`;
   `disabledReason` resolves `RELEASE_UNAVAILABLE_REASON`
@@ -135,11 +142,19 @@ New:
   at realmIndex < golden_core never materializes `player.artifact`:
   normalize never creates, grant never delivers, awaken never
   fires.
-- **AD-INV-3 — `doan_bao_thach` unobtainable while the domain is
-  closed.** Tagged `golden_core`-scoped; the post-resolve filter
-  drops it before bag credit. Census verified the material has no
-  quest `itemDrops`, alchemy, or shop route — the loot arm is the
-  only authored delivery channel.
+- **AD-INV-3 — `doan_bao_thach` delivers iff the artifact domain
+  is unlocked for the player.** One canonical delivery rule
+  composes release availability AND player reach —
+  `isRealmAvailable(domainUnlockRealmId) &&
+  isRealmAvailable(playerRealmId) && reached(domainUnlockRealmId)`,
+  the same three-leg composition the domain predicates use — not a
+  window-only check. On the retained TC row: a below-KD player
+  receives nothing under any window; a KD player receives the
+  stone once the window opens. The post-resolve filter drops it
+  before bag credit. Census verified the material has no quest
+  `itemDrops`, alchemy, or shop route — the loot arm is the only
+  authored delivery channel; the predicate lives in ReleasePolicy
+  so any future route composes the same rule.
 - **AD-INV-4 — `phap_bao` slot state machine.** Enabled iff
   `artifactDomainUnlocked && hasArtifactDefinition`. While the
   unlock realm is outside the release window and the domain is
@@ -177,19 +192,52 @@ New:
   `golden_core` — dormant field (zero consumers, verified), moved
   for authored truth, not behavior.
 
-### D2 — `doan_bao_thach` suppression
+### D2 — `doan_bao_thach` delivery rule (C2C-48 High — window
+AND player reach)
 
-- `data/materials/materials.ts`: record gains
-  `breakthroughRealmId: 'golden_core'`.
-- `data/breakthrough/BreakthroughScopedResources.ts`: id listed in
-  `BREAKTHROUGH_SCOPED_MATERIAL_IDS` — the census invariant test
-  asserts both directions.
-- `data/drop/StageDropTables.ts`: the TC-floor row **stays** — the
-  stone is an authored TC-stage drop whose delivery resumes when
-  the realm opens; suppression is delivery-side at the existing
-  post-resolve filter. A KD player farming TC floors post-release
-  keeps the authored drop. Removing the row would be a content
-  decision beyond this ruling.
+The stone belongs to the artifact domain, not to a breakthrough
+transition: `breakthroughRealmId` answers "is the transition into
+the tagged realm open" — under an open KD window it would deliver
+to a below-KD player, contradicting the ruling. The canonical
+rule is therefore a **domain-scoped acquisition tag**, a parallel
+tag family beside the breakthrough one:
+
+- `core/realm/ReleasePolicy.ts`: new canonical predicate —
+  `isDomainScopedAcquisitionEnabled(domainUnlockRealmId?,
+  playerRealmId)` composing
+  `isRealmAvailable(domainUnlockRealmId) &&
+  isRealmAvailable(playerRealmId) &&
+  getRealmIndex(playerRealmId) >=
+  getRealmIndex(domainUnlockRealmId)` — the same three-leg rule
+  `isArtifactDomainUnlocked` uses, generalized for resources so
+  AD-INV-1 holds for material delivery without artifact-specific
+  branching in generic code. Untagged → `true` (not
+  domain-scoped); unknown realm ids fail closed.
+- `core/material/Material.ts`: record type gains
+  `domainUnlockRealmId?: string` (same optional-tag convention as
+  `breakthroughRealmId`).
+- `data/materials/materials.ts`: `doan_bao_thach` gains
+  `domainUnlockRealmId: 'golden_core'` — NOT `breakthroughRealmId`
+  (wrong semantics); the two tag families stay distinct.
+- `core/game/BattleLootSystem.ts`: the material arm composes the
+  new predicate beside the breakthrough check at the same
+  post-resolve seam —
+  `!isDomainScopedAcquisitionEnabled(material.domainUnlockRealmId,
+  this.player.realmId) → skip` — delivery-side, policy-authority,
+  not per-call-site. `this.player.realmId` is already read by
+  `grantArtifactExperience` on the same system.
+- `data/breakthrough/BreakthroughScopedResources.ts`: parallel
+  census list for the domain-scoped family (e.g.
+  `DOMAIN_SCOPED_MATERIAL_IDS = ['doan_bao_thach']`) — same
+  two-direction invariant as the breakthrough lists (listed ⇔
+  tagged). The stone is NOT added to
+  `BREAKTHROUGH_SCOPED_MATERIAL_IDS` (it is domain-scoped).
+- `data/drop/StageDropTables.ts`: the TC-floor row **stays** —
+  authored TC-stage drop; the delivery rule, not the table, is the
+  gate. Under an open KD window a below-KD player resolving that
+  row still receives nothing (reach leg); a KD player resolving
+  the same row receives the stone (intended resume). Removing the
+  row would be a content decision beyond this ruling.
 - `core/reward/RealmRewardScale.ts`: comment citing the
   "doan_bao_thach drop-table gate" stays accurate (row remains
   TC-scoped); refreshed only if it implies removal.
@@ -255,10 +303,12 @@ Update suites (existing files):
   domain gate — TC/mortal upgrade returns false; positive cases
   move to the mocked-policy boundary file.
 - `core/game/BattleLootSystem.artifactDrop.test.ts`: stone rows at
-  TC now assert suppressed delivery (fixture registers the real
-  tag); EXP block at TC asserts 0 accrual; header comment refresh.
+  TC now assert suppressed delivery under real policy (fixture
+  registers the domain tag); EXP block at TC asserts 0 accrual;
+  header comment refresh (gate = domain tag + player reach, not
+  table data).
 - `core/game/battleLootTestSetup.ts`: `materialIds` gains a
-  per-record carrier for `breakthroughRealmId` (parallel to the
+  per-record carrier for `domainUnlockRealmId` (parallel to the
   existing `pillTemplates` option) — the fixture fabricates fresh
   registries, so the tag must be passed explicitly.
 - Grant suite covering `grantCultivationPathRealmReward`
@@ -281,8 +331,18 @@ New suites:
   would break its other suites): `isArtifactDomainUnlocked
   ('golden_core')` true; normalize awakens at KD; grant delivers
   the `golden_core` record on KD entry; EXP accrues at KD;
-  `setArtifactPath`/`tryUpgradeArtifactGrade` succeed; the tagged
-  stone row delivers at KD-stage; slot enabled for Pháp Tu.
+  `setArtifactPath`/`tryUpgradeArtifactGrade` succeed; slot
+  enabled for Pháp Tu.
+- **Stone delivery pinned on the REAL retained TC row** (C2C-48
+  Medium — no invented/mocked KD-stage row): under the mocked-open
+  window, a `golden_core`-realm player resolving the actual
+  `foundation_establishment` stage pool entry receives
+  `doan_bao_thach`; a `foundation_establishment`-realm player
+  resolving THE SAME row receives zero. Both outcomes run through
+  the real `StageDropTables.foundation_establishment` pool — the
+  fixture stage already resolves the real table (`fe_5` /
+  requiredRealm `foundation_establishment`); only the material
+  registry record is fabricated, carrying the domain tag.
 - **Policy-reason assertions** (inside the catalog/wheel test
   surface): slot disabledReason = `RELEASE_UNAVAILABLE_REASON`
   at/below TC while deferred; mocked-open + below-KD →
@@ -344,9 +404,9 @@ combat runtime, removal of the TC drop-table row.
 |---|---|
 | A1 | `spell_pathway` realmRewards declares `artifactId: 'ngu_hanh_chau'` only at `golden_core`; entering TC delivers no artifact (grant fails closed on realm availability); under an open window, KD entry delivers it. |
 | A2 | `isArtifactDomainUnlocked` returns false for `foundation_establishment` and below under real policy; normalize never creates an artifact at TC and never strips a persisted one. |
-| A3 | `doan_bao_thach` carries `breakthroughRealmId: 'golden_core'`, is listed in `BREAKTHROUGH_SCOPED_MATERIAL_IDS`, and no authored route delivers it while the domain is closed; the TC-floor table row is retained. |
+| A3 | `doan_bao_thach` carries `domainUnlockRealmId: 'golden_core'` and is listed in the domain-scoped census; `isDomainScopedAcquisitionEnabled` composes window+reach — closed window OR below-KD player → no delivery on the real TC row; open-window KD player on that same row → delivered; the TC-floor table row is retained. |
 | A4 | EXP feed, `advanceArtifactRealmLevel`, `setArtifactPath`, `tryUpgradeArtifactGrade` each evaluate `isArtifactDomainUnlocked(player.realmId)` — all no-op at TC under real policy, all functional at KD under an open window. |
 | A5 | `phap_bao` slot disabled with `RELEASE_UNAVAILABLE_REASON` at/below TC while the unlock realm is outside the window; mocked-open + below-KD shows `'Cần đạt Kim Đan'`; enabled at KD+ for Pháp Tu; `hasArtifactDefinition` rule unchanged. |
 | A6 | `docs/systems/artifact.md`, `docs/game-guide.md`, and `Artifact.ts` docs record the artifact domain as deferred to `golden_core`; the superseded "Trúc Cơ tầng 18" scope claim appears nowhere as live scope. |
-| A7 | KD boundary positive suite (mocked open window) proves the live path end to end: grant on KD entry, normalize awaken at KD, EXP accrual, path set, grade upgrade via stone, slot enabled. |
+| A7 | KD boundary positive suite (mocked open window) proves the live path end to end: grant on KD entry, normalize awaken at KD, EXP accrual, path set, grade upgrade via stone, stone delivered through the REAL `foundation_establishment` row to a KD player while a TC player on that row gets none, slot enabled. |
 | A8 | No persisted-shape change, no save-version bump, no strip or migration code — `saveShapeValidation` untouched. |
