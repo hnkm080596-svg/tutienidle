@@ -51,6 +51,7 @@ function onCancel() {
     :open="store.isOpen"
     :title="t('tribulation.stillEquipped.title')"
     width="min(420px, 94vw)"
+    variant="system"
     @close="onCancel"
   >
     <div class="breakthrough-confirm">

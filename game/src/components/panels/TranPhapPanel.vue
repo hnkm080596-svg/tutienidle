@@ -340,7 +340,7 @@ watch([currentAssignments, () => player.visualProfileId], () => {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'tran_phap'" :title="t('panels.tranPhap.title')" width="min(1000px, 94vw)" height="min(680px, 88vh)" @close="close">
+  <OverlayPanel :open="ui.standalonePanel === 'tran_phap'" :title="t('panels.tranPhap.title')" width="min(1000px, 94vw)" height="min(680px, 88vh)" variant="system" @close="close">
     <div class="tran-phap-panel">
       <div class="tran-phap-panel__body">
         <div class="tran-phap-panel__grid-stack" :style="stackStyle">

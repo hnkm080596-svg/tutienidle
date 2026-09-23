@@ -277,7 +277,7 @@ function close() {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'skill'" :title="t('panels.skillPath.title')" width="min(1400px, 94vw)" height="min(760px, 88vh)" @close="close">
+  <OverlayPanel :open="ui.standalonePanel === 'skill'" :title="t('panels.skillPath.title')" width="min(1400px, 94vw)" height="min(760px, 88vh)" variant="system" @close="close">
       <template #subtitle><span class="skill-path-panel__subtitle">{{ wayIdentity }}</span></template>
       <template #header-actions><span v-if="showTree" class="skill-path-panel__points">✦ {{ player.skillInsight }} {{ t('panels.nodeTree.labels.insight') }}</span></template>
       <div class="skill-path-panel">

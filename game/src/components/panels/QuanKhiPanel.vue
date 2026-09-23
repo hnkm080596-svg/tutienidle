@@ -223,7 +223,7 @@ function removeOrbAt(index: number) {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'quan_khi'" :title="t('panels.quanKhi.title')" width="min(480px, 90vw)" @close="close">
+  <OverlayPanel :open="ui.standalonePanel === 'quan_khi'" :title="t('panels.quanKhi.title')" width="min(480px, 90vw)" variant="system" @close="close">
     <div v-if="!player.cultivationPath" class="quan-khi-panel__card">
       <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.pathSelection.hint') }}</p>
 

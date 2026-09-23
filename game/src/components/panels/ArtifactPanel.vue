@@ -136,7 +136,7 @@ function close() {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'artifact'" :title="t('panels.artifact.title')" width="min(560px, 92vw)" height="min(720px, 88vh)" @close="close">
+  <OverlayPanel :open="ui.standalonePanel === 'artifact'" :title="t('panels.artifact.title')" width="min(560px, 92vw)" height="min(720px, 88vh)" variant="system" @close="close">
     <EmptyState v-if="!definition" size="lg">
       {{ t('panels.artifact.emptyNoDefinition', { path: cultivationPathLabel }) }}
     </EmptyState>

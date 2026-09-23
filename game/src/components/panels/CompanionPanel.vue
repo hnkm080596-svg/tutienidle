@@ -319,6 +319,7 @@ function close() {
     :title="t('companion.title')"
     width="min(980px, 94vw)"
     height="min(680px, 88vh)"
+    variant="system"
     @close="close"
   >
     <div class="companion-panel">

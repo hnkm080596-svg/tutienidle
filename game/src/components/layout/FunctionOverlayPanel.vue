@@ -60,6 +60,7 @@ function close() {
     :title="mode ? t(TITLE_KEYS[mode]) : ''"
     width="min(1120px, 94vw)"
     height="min(820px, 92vh)"
+    variant="system"
     data-testid="function-overlay-panel"
     @close="close"
   >

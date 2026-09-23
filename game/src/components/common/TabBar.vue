@@ -81,8 +81,11 @@ const inkStyle = computed(() => ({
 let observer: ResizeObserver | null = null
 onMounted(() => {
   measureInk()
-  observer = new ResizeObserver(measureInk)
-  if (navEl.value) observer.observe(navEl.value)
+  // jsdom has no ResizeObserver - guard so unit mounts stay alive.
+  if (typeof ResizeObserver !== 'undefined') {
+    observer = new ResizeObserver(measureInk)
+    if (navEl.value) observer.observe(navEl.value)
+  }
 })
 watch(() => props.modelValue, () => measureInk(), { flush: 'post' })
 onBeforeUnmount(() => observer?.disconnect())

@@ -35,7 +35,8 @@ describe('SettingsPanel reset save', () => {
 
     expect(requested).not.toHaveBeenCalled()
 
-    container.querySelector<HTMLButtonElement>('.confirm-modal__confirm')!.click()
+    // ConfirmModal renders on SysModalBase, which teleports to body.
+    document.body.querySelector<HTMLButtonElement>('.confirm-modal__confirm')!.click()
     await nextTick()
 
     expect(requested).toHaveBeenCalledOnce()

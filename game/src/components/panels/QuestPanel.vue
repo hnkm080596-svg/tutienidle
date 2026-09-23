@@ -66,7 +66,7 @@ function close() {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'quest'" :title="t('panels.quest.title')" width="min(760px, 94vw)" height="min(640px, 88vh)" @close="close">
+  <OverlayPanel :open="ui.standalonePanel === 'quest'" :title="t('panels.quest.title')" width="min(760px, 94vw)" height="min(640px, 88vh)" variant="system" @close="close">
     <div class="quest-panel">
       <section v-for="group in groups" v-show="group.rows.length" :key="group.title" class="quest-panel__section">
         <h4 class="quest-panel__section-title">{{ group.title }}</h4>
