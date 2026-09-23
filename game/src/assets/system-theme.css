@@ -1,6 +1,6 @@
-/* system-theme.css — "xuyen khong he thong" SYSTEM window skin.
+/* system-theme.css - "xuyen khong he thong" SYSTEM window skin.
    PARALLEL theme: loaded after theme.css; only .sys-* anchored rules here.
-   Boundary contract (spec §2.2): defines --sys-* tokens only; never redefines
+   Boundary contract (spec 2.2): defines --sys-* tokens only; never redefines
    --ink-*/--paper-*/--surface-*/etc. Revert = delete the import in main.ts. */
 
 @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap');
@@ -39,6 +39,8 @@
   --sys-glow-md: 0 0 18px rgba(56, 225, 255, .28), 0 0 42px rgba(79, 127, 255, .14);
   --sys-glow-bloom: 0 0 24px rgba(56, 225, 255, .42);
   --sys-shadow: 0 12px 40px rgba(0, 0, 0, .6);
+  /* Min-opaque scrim under translucent surfaces (a11y spec 7.1). */
+  --sys-scrim: linear-gradient(180deg, rgba(5, 10, 18, .78), rgba(5, 10, 18, .88));
 
   /* Typography (spec 3.4). Reads existing tokens (reads are allowed; only
      redefinitions are forbidden by boundary rule 2). */
@@ -49,11 +51,11 @@
   --sys-grain: var(--surface-grain);
 }
 
-/* Surface recipe — opaque floor UNDER translucent tint (a11y spec 7.1). */
+/* Surface recipe - opaque floor UNDER translucent tint (a11y spec 7.1). */
 .sys-surface {
   /* Layer order per spec 3.3: grain -> top tint -> translucent body gradient
      -> opaque floor LAST (a raw color layer is only valid as the final
-     background layer — do not hoist var(--sys-surface) above this line or
+     background layer - do not hoist var(--sys-surface) above this line or
      the whole declaration drops). */
   background:
     var(--sys-grain) 0 0 / 160px 160px repeat,
@@ -66,7 +68,7 @@
   color: var(--sys-text);
 }
 
-/* L-corner brackets — same pseudo-element pattern as .ornate-frame. */
+/* L-corner brackets - same pseudo-element pattern as .ornate-frame. */
 .sys-corners { position: relative; }
 .sys-corners::before,
 .sys-corners::after {
@@ -81,7 +83,7 @@
 .sys-corners::before { top: 4px; left: 4px; border-top-width: var(--sys-corner-w); border-left-width: var(--sys-corner-w); }
 .sys-corners::after { bottom: 4px; right: 4px; border-bottom-width: var(--sys-corner-w); border-right-width: var(--sys-corner-w); }
 
-/* Light-line rim — conic gradient on a mask-composite border ring (technique
+/* Light-line rim - conic gradient on a mask-composite border ring (technique
    identical to .fx-border-beam). The SPIN exists only under .sys-rim--live,
    and only one such element may exist per screen (spec 4.1). */
 .sys-rim { position: relative; }
@@ -103,8 +105,8 @@
 .sys-rim--live::before { animation: sys-rim-spin 4s linear infinite; }
 @keyframes sys-rim-spin { to { --sys-rim-angle: 1turn; } }
 
-/* Scan sweep — sheen band translated across; compositor-only (transform).
-   At most 2 concurrent per screen (spec 4.1.3) — stagger via animation-delay. */
+/* Scan sweep - sheen band translated across; compositor-only (transform).
+   At most 2 concurrent per screen (spec 4.1.3) - stagger via animation-delay. */
 .sys-sweep { position: relative; overflow: hidden; }
 .sys-sweep::after {
   content: '';
@@ -117,7 +119,7 @@
 .sys-sweep--run::after { animation: sys-sweep 2.8s ease-in-out 1; }
 @keyframes sys-sweep { to { transform: translateX(120%); } }
 
-/* Scanlines — overlay BELOW text layer (z-index 0 under content z-index >= 1),
+/* Scanlines - overlay BELOW text layer (z-index 0 under content z-index >= 1),
    alpha <= .04 so it can never cut text contrast (spec 7.4). */
 .sys-scanlines { position: relative; }
 .sys-scanlines::before {
@@ -131,13 +133,25 @@
 .sys-scanlines > * { position: relative; z-index: 1; }
 @keyframes sys-flicker { 50% { opacity: .55; } }
 
-/* Bar track/fill — .sys-bar emitted by SysBar, .bar--system by Bar variant. */
+/* Bar track/fill - .sys-bar emitted by SysBar, .bar--system by Bar variant. */
 .sys-bar {
+  position: relative;
   height: var(--sys-bar-h, 10px);
   background: var(--sys-bg-0);
   border: 1px solid var(--sys-line-soft);
   box-shadow: inset 0 0 6px rgba(0, 0, 0, .5);
   overflow: hidden;
+}
+.sys-bar__label {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  font: 600 var(--text-xs) / 1 var(--sys-font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--sys-text);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .6);
 }
 .sys-bar__fill {
   height: 100%;
@@ -148,7 +162,7 @@
 }
 @keyframes sys-bar-shimmer { to { background-position: -200% 0; } }
 
-/* Hover bloom — transition only. */
+/* Hover bloom - transition only. */
 .sys-bloom { transition: box-shadow .18s ease, filter .18s ease; }
 .sys-bloom:hover { box-shadow: var(--sys-shadow), var(--sys-glow-bloom); }
 
@@ -162,7 +176,7 @@
 .sys-eyebrow::before { content: '[ '; color: var(--sys-cyan); }
 .sys-eyebrow::after { content: ' ]'; color: var(--sys-cyan); }
 
-/* SysTag chip — glyph shape per tone so meaning is never hue-only (spec 7.3). */
+/* SysTag chip - glyph shape per tone so meaning is never hue-only (spec 7.3). */
 .sys-tag {
   display: inline-flex;
   align-items: center;
@@ -190,8 +204,9 @@
 .sys-tag--warn .sys-tag__glyph { border-radius: 0; transform: rotate(45deg); }
 .sys-tag--danger .sys-tag__glyph { border-radius: 0; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
 .sys-tag--violet .sys-tag__glyph { clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); border-radius: 0; }
+.sys-tag__icon { font-family: var(--sys-font-body); text-transform: none; letter-spacing: 0; }
 
-/* SysStat row — label muted, value tabular-nums display font. */
+/* SysStat row - label muted, value tabular-nums display font. */
 .sys-stat {
   display: flex;
   align-items: baseline;
@@ -214,19 +229,18 @@
 .sys-stat--warn { --sys-stat-ink: var(--sys-warn); }
 .sys-stat--muted { --sys-stat-ink: var(--sys-text-muted); }
 
-/* SysPanel variants — surface variants share the .sys-surface recipe. */
+/* SysPanel variants - surface variants share the .sys-surface recipe. */
 .sys-panel--flat { /* flat: recipe only, no rim/bloom */ }
 .sys-panel--primary { box-shadow: var(--sys-shadow), var(--sys-glow-md); }
 
-/* SysModalBase chrome — scrim + centered card. */
+/* SysModalBase chrome - scrim + centered card (z-index bound inline per instance). */
 .sys-modal {
   position: fixed;
   inset: 0;
-  z-index: var(--sys-layer, 60);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, rgba(5, 10, 18, .78), rgba(5, 10, 18, .88));
+  background: var(--sys-scrim);
 }
 .sys-modal__card {
   position: relative;
@@ -235,7 +249,7 @@
   overflow: auto;
 }
 
-/* variant="system" on primitives/Bar.vue — root emits .bar--system. */
+/* variant="system" on primitives/Bar.vue - root emits .bar--system. */
 .bar--system .bar__track {
   height: var(--sys-bar-h, 10px);
   background: var(--sys-bg-0);
@@ -254,9 +268,9 @@
   color: var(--sys-text-muted);
 }
 
-/* variant="system" on OverlayPanel — scrim + card re-skin. */
-.overlay-panel--system .overlay-panel__scrim {
-  background: linear-gradient(180deg, rgba(5, 10, 18, .78), rgba(5, 10, 18, .88));
+/* variant="system" on OverlayPanel - scrim + card re-skin. */
+.overlay-panel--system {
+  background: var(--sys-scrim);
   backdrop-filter: blur(4px);
 }
 .overlay-panel__card--system {
@@ -277,7 +291,7 @@
   color: var(--sys-text);
 }
 
-/* Focus — non-glow, >= 2px, on every interactive sys control (spec 7.2). */
+/* Focus - non-glow, >= 2px, on every interactive sys control (spec 7.2). */
 .sys-surface :is(button, [role='button'], a, input, select, [tabindex]):focus-visible,
 .sys-modal :is(button, [role='button'], a, input, select, [tabindex]):focus-visible,
 .overlay-panel__card--system :is(button, [role='button'], a, input, select, [tabindex]):focus-visible {
@@ -285,7 +299,7 @@
   outline-offset: 2px;
 }
 
-/* Reduced motion (spec 4.2) + manual low-fx hatch (spec 4.1.4) — identical
+/* Reduced motion (spec 4.2) + manual low-fx hatch (spec 4.1.4) - identical
    outcome: no flicker/sweep/shimmer/rim; static corners + border + glow kept. */
 @media (prefers-reduced-motion: reduce) {
   .sys-rim--live::before,
