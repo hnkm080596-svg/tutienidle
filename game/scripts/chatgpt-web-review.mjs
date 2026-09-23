@@ -217,7 +217,25 @@ async function main() {
       }
 
       const send = page.locator('button[aria-label="Send message"], button[data-testid="send-button"]')
-      await send.first().click()
+      const turnsBefore = await page.evaluate(() => document.querySelectorAll('[data-message-author-role]').length)
+      let landed = false
+      for (let attempt = 0; attempt < 2 && !landed; attempt++) {
+        await send.first().click()
+        // Verify the send actually landed: a silent no-op click leaves the
+        // composer populated and no new user turn. Wait for the turn count
+        // to grow before believing "sent".
+        const deadline = Date.now() + 15_000
+        while (Date.now() < deadline) {
+          landed = await page.evaluate((n) => document.querySelectorAll('[data-message-author-role]').length > n, turnsBefore)
+          if (landed) break
+          await page.waitForTimeout(500)
+        }
+        if (!landed && attempt === 0) log('send click did not land a user turn -- retrying once')
+      }
+      if (!landed) {
+        log('send failed: no new user turn appeared after 2 attempts -- composer may be empty or the click was intercepted')
+        process.exit(4)
+      }
       log('sent -- ' + (sendOnly ? 'send-only mode, exiting' : 'waiting for response'))
 
       // Bootstrap aid: after the first send into a project page or fresh chat,
