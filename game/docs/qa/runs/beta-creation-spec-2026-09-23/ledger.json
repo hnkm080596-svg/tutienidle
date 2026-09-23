@@ -42,11 +42,11 @@
       "tests"
     ],
     "exclusions": [],
-    "phase": "SNAPSHOT",
+    "phase": "DECIDE",
     "cleanRoundA": null,
     "cleanRoundB": null,
     "finalEvidenceIds": [],
-    "outcome": null
+    "outcome": "QA_UNVERIFIED"
   },
   "invariants": [
     {
@@ -2076,6 +2076,38 @@
       "payloadPath": "events/0011.json",
       "payloadHash": "afada500928aacd6c39930a2b16fde7292f9accb1de4c83e2784a553358736a5",
       "eventHash": "81dfcb1f4f454b89ceec11015c8863f59c967ee8e6b24a4e82c4c731c1df7170"
+    },
+    {
+      "seq": 12,
+      "at": "2026-09-23T22:17:42.609Z",
+      "kind": "DECISION",
+      "actor": "coordinator-12667",
+      "state": {
+        "productStateId": "c7159ec34038343dc24a384f7de0f366c38deb16ae05760e8ca2e96c8abb1082",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "237c30174e68a16b0436dd5a8cfadea4a1b465cce8229c38080af7fee7581153",
+        "environmentId": "66eed09e77004bba554bf92d4d0c7c10ffab78c8ed7daf80771a40fa87d06054"
+      },
+      "previousEventHash": "81dfcb1f4f454b89ceec11015c8863f59c967ee8e6b24a4e82c4c731c1df7170",
+      "payloadPath": "events/0012.json",
+      "payloadHash": "4525bd2afc9d00aef73c58a305bdcffe01db3386556722dfe1897af74c0dff9e",
+      "eventHash": "e13625cca9fe4a4f83df8ce48dc56892c7ff016e2ec31a11b7d203672453fd7d"
+    },
+    {
+      "seq": 13,
+      "at": "2026-09-23T22:17:48.730Z",
+      "kind": "DECISION",
+      "actor": "coordinator-12667",
+      "state": {
+        "productStateId": "c7159ec34038343dc24a384f7de0f366c38deb16ae05760e8ca2e96c8abb1082",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "237c30174e68a16b0436dd5a8cfadea4a1b465cce8229c38080af7fee7581153",
+        "environmentId": "66eed09e77004bba554bf92d4d0c7c10ffab78c8ed7daf80771a40fa87d06054"
+      },
+      "previousEventHash": "e13625cca9fe4a4f83df8ce48dc56892c7ff016e2ec31a11b7d203672453fd7d",
+      "payloadPath": "events/0013.json",
+      "payloadHash": "4525bd2afc9d00aef73c58a305bdcffe01db3386556722dfe1897af74c0dff9e",
+      "eventHash": "cc7517044b7847aee6afa1f353e7a3d1f782baa6b233ba2e5295f87bb157b66d"
     }
   ]
 }

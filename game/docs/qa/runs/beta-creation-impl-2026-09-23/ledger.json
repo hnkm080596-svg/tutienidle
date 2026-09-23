@@ -1,1024 +1,2614 @@
 {
-  "schemaVersion": 1,
-  "run": {
-    "id": "beta-creation-impl-2026-09-23",
-    "createdAt": "2026-09-23T20:54:34.679Z",
-    "scope": "AGGREGATE_REPOSITORY",
-    "authorizedRepairs": [
-      "src/App.vue",
-      "src/components/onboarding/CharacterCreationScreen.vue",
-      "src/core/game/EarlyGameBootstrap.ts",
-      "src/core/game/GameManagerSaveRestore.ts",
-      "src/core/player/Player.ts",
-      "src/services/character/",
-      "src/services/save/",
-      "src/data/skill/TurnSkillDisplayMeta.ts",
-      "src/locales/",
-      "src/core/simulation/earlygame/",
-      "tests/",
-      "supabase/migrations/",
-      "**/*.test.ts",
-      "docs/qa/"
-    ],
-    "nonGoals": [
-      "unrelated systems (combat balance, economy tuning, other UI)",
-      "gameplay redesign beyond the pinned BETA-CREATION ruling",
-      "merge/push to beta/rc or other branches",
-      "external review services"
-    ],
-    "checkout": "origin/beta/rc base 6d9af7a9 + devin/1790189100-beta-creation @ e1161842 (PR #21)",
-    "branch": "devin/1790189100-beta-creation",
-    "base": "origin/beta/rc",
-    "head": "9efa243c2818e1f20f1aa8980705af4844c45ab1",
-    "state": {
-      "productStateId": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322",
-      "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-      "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-      "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-    },
-    "manifestPath": "manifest.json",
-    "environmentPath": "environment.json",
-    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
-    "consumedLessonIds": [],
-    "aggregateParents": [],
-    "requiredDomains": [
-      "src/components/onboarding",
-      "src/services/character",
-      "src/core/game",
-      "src/core/player",
-      "src/core/skill",
-      "src/services/save",
-      "src/data/skill",
-      "src/locales",
-      "tests/e2e",
-      "supabase/migrations",
-      "docs/specs",
-      "docs/plans",
-      "docs/qa"
-    ],
-    "exclusions": [],
-    "phase": "SNAPSHOT",
-    "cleanRoundA": null,
-    "cleanRoundB": null,
-    "finalEvidenceIds": [],
-    "outcome": null
+ "schemaVersion": 1,
+ "run": {
+  "id": "beta-creation-impl-2026-09-23",
+  "createdAt": "2026-09-23T20:54:34.679Z",
+  "scope": "AGGREGATE_REPOSITORY",
+  "authorizedRepairs": [
+   "src/App.vue",
+   "src/components/onboarding/CharacterCreationScreen.vue",
+   "src/core/game/EarlyGameBootstrap.ts",
+   "src/core/game/GameManagerSaveRestore.ts",
+   "src/core/player/Player.ts",
+   "src/services/character/",
+   "src/services/save/",
+   "src/data/skill/TurnSkillDisplayMeta.ts",
+   "src/locales/",
+   "src/core/simulation/earlygame/",
+   "tests/",
+   "supabase/migrations/",
+   "**/*.test.ts",
+   "docs/qa/"
+  ],
+  "nonGoals": [
+   "unrelated systems (combat balance, economy tuning, other UI)",
+   "gameplay redesign beyond the pinned BETA-CREATION ruling",
+   "merge/push to beta/rc or other branches",
+   "external review services"
+  ],
+  "checkout": "origin/beta/rc base 6d9af7a9 + devin/1790189100-beta-creation @ e1161842 (PR #21)",
+  "branch": "devin/1790189100-beta-creation",
+  "base": "origin/beta/rc",
+  "head": "92b4ebaa3417b0c8d8de55a4a56140c65c684363",
+  "state": {
+   "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+   "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+   "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+   "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
   },
-  "invariants": [],
-  "census": [
-    {
-      "id": "CEN-I-ONBOARD",
-      "invariantIds": [],
-      "location": {
-        "path": "src/components/onboarding/CharacterCreationScreen.vue",
-        "symbolOrSection": "unified screen",
-        "revision": "f8bfc8df",
-        "basis": "SOURCE"
-      },
-      "classification": "LEGAL_WRITER",
-      "reads": [
-        "talent options",
-        "SKILLS",
-        "precursor list"
-      ],
-      "writes": [
-        "creation payload",
-        "selectedSkillId"
-      ],
-      "eventsIn": [
-        "user input",
-        "emit"
-      ],
-      "eventsOut": [
-        "payload {name,talentIds,mortalBasicSkillId}"
-      ],
-      "consumerIds": [
-        "App.vue",
-        "helpers.createCharacterThroughUi"
-      ],
-      "searchEvidenceIds": [
-        "EV-IMPL-VITEST"
-      ],
-      "disposition": "in-scope: rewritten single-screen flow; stepper+attributes removed"
-    },
-    {
-      "id": "CEN-I-SVCCHAR",
-      "invariantIds": [],
-      "location": {
-        "path": "src/services/character",
-        "symbolOrSection": "draft contract + validation + RPC client",
-        "revision": "f8bfc8df",
-        "basis": "SOURCE"
-      },
-      "classification": "LEGAL_WRITER",
-      "reads": [
-        "draft.mortalBasicSkillId",
-        "talentIds",
-        "name"
-      ],
-      "writes": [
-        "validation",
-        "RPC p_* params"
-      ],
-      "eventsIn": [
-        "screen submit"
-      ],
-      "eventsOut": [
-        "CharacterCreationResult"
-      ],
-      "consumerIds": [
-        "CharacterCreationScreen",
-        "Supabase"
-      ],
-      "searchEvidenceIds": [
-        "EV-IMPL-VITEST"
-      ],
-      "disposition": "in-scope: allocation->pick swap; isMortalPrecursorSkillId validation"
-    },
-    {
-      "id": "CEN-I-COREGAME",
-      "invariantIds": [],
-      "location": {
-        "path": "src/core/game",
-        "symbolOrSection": "EarlyGameBootstrap + SaveRestore preflight",
-        "revision": "f8bfc8df",
-        "basis": "SOURCE"
-      },
-      "classification": "LEGAL_WRITER",
-      "reads": [
-        "PlayerData",
-        "profile.mortalBasicSkillId",
-        "save.player"
-      ],
-      "writes": [
-        "learned skills",
-        "mortalBasicSkillId",
-        "preflight rejections"
-      ],
-      "eventsIn": [
-        "boot onNewCharacter",
-        "restoreFromSave"
-      ],
-      "eventsOut": [
-        "granted state",
-        "thrown contract violations"
-      ],
-      "consumerIds": [
-        "App.vue",
-        "EarlyGameSession",
-        "SaveSystem",
-        "boundary tests"
-      ],
-      "searchEvidenceIds": [
-        "EV-IMPL-VITEST"
-      ],
-      "disposition": "in-scope: post-learn pick write + v82 required-pick contract"
-    },
-    {
-      "id": "CEN-I-PLAYER",
-      "invariantIds": [],
-      "location": {
-        "path": "src/core/player/Player.ts",
-        "symbolOrSection": "PlayerData.mortalBasicSkillId",
-        "revision": "f8bfc8df",
-        "basis": "SOURCE"
-      },
-      "classification": "LEGAL_WRITER",
-      "reads": [],
-      "writes": [
-        "field comment"
-      ],
-      "eventsIn": [
-        "create",
-        "restore"
-      ],
-      "eventsOut": [
-        "pick field"
-      ],
-      "consumerIds": [
-        "bootstrap",
-        "ritual",
-        "preflight"
-      ],
-      "searchEvidenceIds": [
-        "EV-IMPL-VITEST"
-      ],
-      "disposition": "in-scope: comment clarified; field unchanged"
-    },
-    {
-      "id": "CEN-I-SKILL",
-      "invariantIds": [],
-      "location": {
-        "path": "src/core/skill/MortalPrecursors.ts",
-        "symbolOrSection": "precursor ids + guard",
-        "revision": "f8bfc8df",
-        "basis": "SOURCE"
-      },
-      "classification": "CANONICAL",
-      "reads": [
-        "MORTAL_PRECURSOR_SKILL_IDS"
-      ],
-      "writes": [],
-      "eventsIn": [],
-      "eventsOut": [
-        "membership"
-      ],
-      "consumerIds": [
-        "service",
-        "preflight",
-        "bootstrap",
-        "screen"
-      ],
-      "searchEvidenceIds": [
-        "EV-IMPL-VITEST"
-      ],
-      "disposition": "in-scope: unchanged oracle for the 3 choices"
-    },
-    {
-      "id": "CEN-I-SAVE",
-      "invariantIds": [],
-      "location": {
-        "path": "src/services/save",
-        "symbolOrSection": "saveVersion + GameSave.fixture",
-        "revision": "f8bfc8df",
-        "basis": "SOURCE"
-      },
-      "classification": "LEGAL_WRITER",
-      "reads": [
-        "GameSave",
-        "Skill",
-        "PlayerData"
-      ],
-      "writes": [
-        "version=82",
-        "pick-complete fixture saves"
-      ],
-      "eventsIn": [
-        "fixture calls",
-        "version classify"
-      ],
-      "eventsOut": [
-        "v82 saves",
-        "reject v81"
-      ],
-      "consumerIds": [
-        "~20 test fixtures",
-        "SaveSystem"
-      ],
-      "searchEvidenceIds": [
-        "EV-IMPL-VITEST"
-      ],
-      "disposition": "in-scope: v82 bump + shared fixture contract"
-    },
-    {
-      "id": "CEN-I-META",
-      "invariantIds": [],
-      "location": {
-        "path": "src/data/skill/TurnSkillDisplayMeta.ts",
-        "symbolOrSection": "huy_quyen display name",
-        "revision": "f8bfc8df",
-        "basis": "SOURCE"
-      },
-      "classification": "LEGAL_WRITER",
-      "reads": [
-        "SKILLS"
-      ],
-      "writes": [
-        "display meta huy_quyen"
-      ],
-      "eventsIn": [
-        "tooltip/log render"
-      ],
-      "eventsOut": [
-        "'Huy Quyen' string"
-      ],
-      "consumerIds": [
-        "SkillCoreNodes",
-        "battle log",
-        "codex"
-      ],
-      "searchEvidenceIds": [
-        "EV-IMPL-VITEST"
-      ],
-      "disposition": "in-scope: drift fix 'Hủy'->'Huy'; id-keyed, display-only"
-    },
-    {
-      "id": "CEN-I-LOCALES",
-      "invariantIds": [],
-      "location": {
-        "path": "src/locales",
-        "symbolOrSection": "vi.json + en.json",
-        "revision": "f8bfc8df",
-        "basis": "SOURCE"
-      },
-      "classification": "LEGAL_WRITER",
-      "reads": [],
-      "writes": [
-        "creation keys"
-      ],
-      "eventsIn": [
-        "t()"
-      ],
-      "eventsOut": [
-        "copy"
-      ],
-      "consumerIds": [
-        "creation screen"
-      ],
-      "searchEvidenceIds": [
-        "EV-IMPL-VITEST"
-      ],
-      "disposition": "in-scope: keys added/removed symmetrically"
-    },
-    {
-      "id": "CEN-I-E2E",
-      "invariantIds": [],
-      "location": {
-        "path": "tests/e2e",
-        "symbolOrSection": "helpers + boot-fresh + accessibility",
-        "revision": "f8bfc8df",
-        "basis": "SOURCE"
-      },
-      "classification": "TEST_ONLY",
-      "reads": [
-        "screen testids",
-        "pick contract"
-      ],
-      "writes": [],
-      "eventsIn": [
-        "playwright"
-      ],
-      "eventsOut": [
-        "assertions"
-      ],
-      "consumerIds": [
-        "playwright"
-      ],
-      "searchEvidenceIds": [
-        "EV-IMPL-VITEST"
-      ],
-      "disposition": "in-scope: helper drives real unified screen"
-    },
-    {
-      "id": "CEN-I-MIGRATION",
-      "invariantIds": [],
-      "location": {
-        "path": "supabase/migrations/202608240001_online_auth_character.sql",
-        "symbolOrSection": "create_character RPC",
-        "revision": "f8bfc8df",
-        "basis": "SOURCE"
-      },
-      "classification": "MIGRATION",
-      "reads": [
-        "p_mortal_basic_skill_id",
-        "p_talent_ids",
-        "p_initial_save",
-        "p_schema_version"
-      ],
-      "writes": [
-        "characters row",
-        "character_skills row"
-      ],
-      "eventsIn": [
-        "client rpc"
-      ],
-      "eventsOut": [
-        "characterId"
-      ],
-      "consumerIds": [
-        "SupabaseCharacterCreationService"
-      ],
-      "searchEvidenceIds": [
-        "EV-IMPL-VITEST"
-      ],
-      "disposition": "in-scope: signature swap + stale overload drop + pick column"
-    },
-    {
-      "id": "CEN-I-EARLYGAME",
-      "invariantIds": [],
-      "location": {
-        "path": "src/core/simulation/earlygame",
-        "symbolOrSection": "EarlyGameSession + economy profiles",
-        "revision": "f8bfc8df",
-        "basis": "SOURCE"
-      },
-      "classification": "TEST_ONLY",
-      "reads": [
-        "EarlyGameCreationProfile"
-      ],
-      "writes": [
-        "sim player"
-      ],
-      "eventsIn": [
-        "session boot"
-      ],
-      "eventsOut": [
-        "sim state"
-      ],
-      "consumerIds": [
-        "journey tests",
-        "probes"
-      ],
-      "searchEvidenceIds": [
-        "EV-IMPL-VITEST"
-      ],
-      "disposition": "in-scope: profile type gains required pick field; harness uses shared seams"
-    },
-    {
-      "id": "CEN-I-SPEC",
-      "invariantIds": [],
-      "location": {
-        "path": "docs/specs/beta-creation-spec.md",
-        "symbolOrSection": "spec",
-        "revision": "f8bfc8df",
-        "basis": "SOURCE"
-      },
-      "classification": "CANONICAL",
-      "reads": [
-        "ruling",
-        "census"
-      ],
-      "writes": [
-        "decisions Q-A..Q-E"
-      ],
-      "eventsIn": [
-        "author"
-      ],
-      "eventsOut": [
-        "plan",
-        "impl"
-      ],
-      "consumerIds": [
-        "implementer",
-        "reviewers"
-      ],
-      "searchEvidenceIds": [
-        "EV-IMPL-VITEST"
-      ],
-      "disposition": "in-scope: contract doc of the diff"
-    },
-    {
-      "id": "CEN-I-PLAN",
-      "invariantIds": [],
-      "location": {
-        "path": "docs/plans/beta-creation-plan.md",
-        "symbolOrSection": "plan",
-        "revision": "f8bfc8df",
-        "basis": "SOURCE"
-      },
-      "classification": "CANONICAL",
-      "reads": [
-        "spec"
-      ],
-      "writes": [
-        "steps"
-      ],
-      "eventsIn": [
-        "author"
-      ],
-      "eventsOut": [
-        "impl"
-      ],
-      "consumerIds": [
-        "implementer",
-        "reviewers"
-      ],
-      "searchEvidenceIds": [
-        "EV-IMPL-VITEST"
-      ],
-      "disposition": "in-scope: plan doc of the diff"
-    },
-    {
-      "id": "CEN-I-QA",
-      "invariantIds": [],
-      "location": {
-        "path": "docs/qa",
-        "symbolOrSection": "protocol + reports",
-        "revision": "f8bfc8df",
-        "basis": "SOURCE"
-      },
-      "classification": "CANONICAL",
-      "reads": [
-        "ledger schema"
-      ],
-      "writes": [
-        "qa artifacts"
-      ],
-      "eventsIn": [
-        "coordinator"
-      ],
-      "eventsOut": [
-        "journal"
-      ],
-      "consumerIds": [
-        "protocol"
-      ],
-      "searchEvidenceIds": [
-        "EV-IMPL-VITEST"
-      ],
-      "disposition": "in-scope: run journal + quick-review report"
-    }
+  "manifestPath": "manifest.json",
+  "environmentPath": "environment.json",
+  "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "consumedLessonIds": [],
+  "aggregateParents": [],
+  "requiredDomains": [
+   "src/components/onboarding",
+   "src/services/character",
+   "src/core/game",
+   "src/core/player",
+   "src/core/skill",
+   "src/services/save",
+   "src/data/skill",
+   "src/locales",
+   "tests/e2e",
+   "supabase/migrations",
+   "docs/specs",
+   "docs/plans",
+   "docs/qa"
   ],
-  "findings": [
+  "exclusions": [],
+  "phase": "SNAPSHOT",
+  "cleanRoundA": null,
+  "cleanRoundB": null,
+  "finalEvidenceIds": [],
+  "outcome": "QA_UNVERIFIED"
+ },
+ "invariants": [
+  {
+   "id": "I-IMPL-NO-ALLOC",
+   "statement": "No channel (UI/service/RPC/fixture) can distribute attribute points at creation; new characters carry the fixed 1/1/1/1/1 base.",
+   "domain": "src/services/character",
+   "risk": "HIGH",
+   "sources": [
     {
-      "id": "F-IMPL-1",
-      "title": "pendingCreationPick never cleared after consume (module-scoped stale window)",
-      "severity": "Low",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "status": "CLOSED",
-      "actionable": true,
-      "state": {
-        "productStateId": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322",
-        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-      },
-      "discoveredBy": "coordinator",
-      "invariantIds": [],
-      "evidenceIds": [
-        "EV-IMPL-ADVERSARIAL",
-        "EV-IMPL-FIMPL1-FIX",
-        "EV-IMPL-PIN-CONSUME-ONCE"
-      ],
-      "locations": [
-        {
-          "path": "src/App.vue",
-          "symbolOrSection": "pendingCreationPick module let",
-          "revision": "9efa243c",
-          "basis": "SOURCE"
-        }
-      ],
-      "counterexample": "A second onNewCharacter firing without a preceding onCharacterCreated would reuse the previous pick.",
-      "expected": "pick cleared on consume, or provably no path invokes onNewCharacter without refreshing it",
-      "actual": "FIXED at f8bfc8df + pin at 9efa243c: read->clear->use order enforced + pinned by App.wiring.test.ts",
-      "rootCause": "module-scoped let kept as emit->callback bridge; no reset-on-consume guard",
-      "rootClass": "STALE_STATE_WINDOW",
-      "subsystem": "creation-boot-seam",
-      "repair": "pendingCreationPick = undefined immediately after read in onNewCharacter",
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/App.vue",
-            "src/composables/useAppLifecycle.ts"
-          ],
-          "termsAndMethod": "rg 'let pending' + module-scope mutable review",
-          "evidenceIds": [
-            "EV-IMPL-ADVERSARIAL"
-          ],
-          "hitDispositions": [
-            "no other pending* bridges found"
-          ],
-          "coverageLimits": [
-            "single-file sweep of App.vue + composables"
-          ]
-        }
-      ],
-      "siblingFindingIds": [],
-      "pinEvidenceIds": [
-        "EV-IMPL-PIN-CONSUME-ONCE"
-      ],
-      "verificationEvidenceIds": [
-        "EV-IMPL-FIMPL1-FIX"
-      ],
-      "closureReviewIds": [
-        "REV-CLOSURE-FIMPL1"
-      ],
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null
+     "path": "src/services/character/CharacterCreationService.ts",
+     "symbolOrSection": "draft contract",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "supabase/migrations/202608240001_online_auth_character.sql",
+     "symbolOrSection": "create_character signature",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
     }
-  ],
-  "evidence": [
+   ],
+   "owner": {
+    "path": "src/services/character/CharacterCreationService.ts",
+    "symbolOrSection": "CharacterCreationDraft",
+    "revision": "92b4ebaa",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "fail closed: reject/crash rather than silently accept",
+   "atomicity": "creation pick + grants applied inside one boot transaction",
+   "inverseBehavior": "ritual clears pick at path select",
+   "persistence": "pick on PlayerData; v82 mortal saves require it",
+   "migration": "dev-phase: bump + reject",
+   "lifecycle": "creation -> mortal play -> ritual clear",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "see invariant statement + linked evidence"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "INDEPENDENT_REVIEW"
+   ],
+   "taxonomyIds": [],
+   "status": "ACTIVE"
+  },
+  {
+   "id": "I-IMPL-NO-SILENT-TRAM",
+   "statement": "No runtime path resolves a basic skill without an explicit persisted pick; absent pick never silently yields tram.",
+   "domain": "src/core/game",
+   "risk": "HIGH",
+   "sources": [
     {
-      "id": "EV-IMPL-TYPECHECK",
-      "state": {
-        "productStateId": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322",
-        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-      },
-      "kind": "EXECUTED_UNIT_STRUCTURAL",
-      "producer": "coordinator",
-      "startedAt": "2026-09-23T21:55:00Z",
-      "finishedAt": "2026-09-23T21:57:00Z",
-      "commandOrMethod": "npm run type-check (vue-tsc --build) @9efa243c",
-      "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
-      "exitCode": 0,
-      "result": "PASS",
-      "artifactPath": "evidence/coordinator-gates.md",
-      "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
-      "inputPaths": [],
-      "inputEvidenceIds": [],
-      "invariantIds": [],
-      "claims": [
-        "aggregate diff type-checks clean"
-      ],
-      "limitations": [
-        "coordinator-run"
-      ],
-      "status": "CURRENT"
+     "path": "src/core/game/EarlyGameBootstrap.ts",
+     "symbolOrSection": "bootstrapEarlyGamePlayer",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
     },
     {
-      "id": "EV-IMPL-VITEST",
-      "state": {
-        "productStateId": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322",
-        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-      },
-      "kind": "EXECUTED_UNIT_STRUCTURAL",
-      "producer": "coordinator",
-      "startedAt": "2026-09-23T21:55:00Z",
-      "finishedAt": "2026-09-23T21:57:00Z",
-      "commandOrMethod": "npx vitest run (full suite) @f8bfc8df + scoped re-run @9efa243c",
-      "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
-      "exitCode": 0,
-      "result": "PASS",
-      "artifactPath": "evidence/coordinator-gates.md",
-      "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
-      "inputPaths": [],
-      "inputEvidenceIds": [],
-      "invariantIds": [],
-      "claims": [
-        "7195 pass / 3 pre-existing env failures identical on base"
-      ],
-      "limitations": [
-        "full suite last run pre-pin; pin scoped-run covers delta"
-      ],
-      "status": "CURRENT"
-    },
-    {
-      "id": "EV-IMPL-E2E",
-      "state": {
-        "productStateId": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322",
-        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-      },
-      "kind": "EXECUTED_RUNTIME",
-      "producer": "coordinator",
-      "startedAt": "2026-09-23T21:55:00Z",
-      "finishedAt": "2026-09-23T21:57:00Z",
-      "commandOrMethod": "npx playwright test affected specs @f8bfc8df",
-      "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
-      "exitCode": 0,
-      "result": "PASS",
-      "artifactPath": "evidence/coordinator-gates.md",
-      "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
-      "inputPaths": [],
-      "inputEvidenceIds": [],
-      "invariantIds": [],
-      "claims": [
-        "creation/save-reload/ritual flows green"
-      ],
-      "limitations": [
-        "e2e predates consume-once pin; delta is a single-source-order hardening covered by the wiring pin"
-      ],
-      "status": "CURRENT"
-    },
-    {
-      "id": "EV-IMPL-ADVERSARIAL",
-      "state": {
-        "productStateId": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322",
-        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-      },
-      "kind": "SOURCE_PROOF",
-      "producer": "coordinator",
-      "startedAt": "2026-09-23T21:55:00Z",
-      "finishedAt": "2026-09-23T21:57:00Z",
-      "commandOrMethod": "tutienidle-adversarial-qa quick, 8-invariant ledger",
-      "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
-      "exitCode": 0,
-      "result": "PASS",
-      "artifactPath": "evidence/coordinator-gates.md",
-      "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
-      "inputPaths": [
-        "docs/qa/2026-09-23-beta-creation-quick.md",
-        "src/App.vue",
-        "src/core/game/GameManagerSaveRestore.ts"
-      ],
-      "inputEvidenceIds": [],
-      "invariantIds": [],
-      "claims": [
-        "PASS WITH EVIDENCE; docs/qa/2026-09-23-beta-creation-quick.md"
-      ],
-      "limitations": [
-        "quick mode"
-      ],
-      "status": "CURRENT"
-    },
-    {
-      "id": "EV-IMPL-FIMPL1-FIX",
-      "state": {
-        "productStateId": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322",
-        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-      },
-      "kind": "EXECUTED_UNIT_STRUCTURAL",
-      "producer": "coordinator",
-      "startedAt": "2026-09-23T21:55:00Z",
-      "finishedAt": "2026-09-23T21:57:00Z",
-      "commandOrMethod": "type-check + vitest mortalBasicSkill+bootRestore after consume-once fix",
-      "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
-      "exitCode": 0,
-      "result": "PASS",
-      "artifactPath": "evidence/coordinator-gates.md",
-      "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
-      "inputPaths": [
-        "src/App.vue"
-      ],
-      "inputEvidenceIds": [],
-      "invariantIds": [],
-      "claims": [
-        "18 tests green"
-      ],
-      "limitations": [],
-      "status": "CURRENT"
-    },
-    {
-      "id": "EV-IMPL-PIN-CONSUME-ONCE",
-      "state": {
-        "productStateId": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322",
-        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-      },
-      "kind": "EXECUTED_UNIT_STRUCTURAL",
-      "producer": "coordinator",
-      "startedAt": "2026-09-23T21:55:00Z",
-      "finishedAt": "2026-09-23T21:57:00Z",
-      "commandOrMethod": "npx vitest run src/App.wiring.test.ts (28 tests)",
-      "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
-      "exitCode": 0,
-      "result": "PASS",
-      "artifactPath": "evidence/coordinator-gates.md",
-      "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
-      "inputPaths": [
-        "src/App.wiring.test.ts",
-        "src/App.vue"
-      ],
-      "inputEvidenceIds": [],
-      "invariantIds": [],
-      "claims": [
-        "consume-once order pinned: read->clear->use inside onNewCharacter; regression = deleting the clear"
-      ],
-      "limitations": [],
-      "status": "CURRENT"
+     "path": "src/core/game/CultivationPathRegistry.ts",
+     "symbolOrSection": "createMortalRuntime fallback",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
     }
-  ],
-  "coverage": [],
-  "attacks": [],
-  "reviews": [
+   ],
+   "owner": {
+    "path": "src/core/game/EarlyGameBootstrap.ts",
+    "symbolOrSection": "post-learn pick write",
+    "revision": "92b4ebaa",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "fail closed: reject/crash rather than silently accept",
+   "atomicity": "creation pick + grants applied inside one boot transaction",
+   "inverseBehavior": "ritual clears pick at path select",
+   "persistence": "pick on PlayerData; v82 mortal saves require it",
+   "migration": "dev-phase: bump + reject",
+   "lifecycle": "creation -> mortal play -> ritual clear",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "see invariant statement + linked evidence"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "INDEPENDENT_REVIEW"
+   ],
+   "taxonomyIds": [],
+   "status": "ACTIVE"
+  },
+  {
+   "id": "I-IMPL-PICK-REQUIRED",
+   "statement": "A mortal v82 save lacking mortalBasicSkillId is rejected pre-mutation (fail closed).",
+   "domain": "src/core/player",
+   "risk": "HIGH",
+   "sources": [
     {
-      "id": "REV-CLOSURE-FIMPL1",
-      "state": {
-        "productStateId": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322",
-        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-      },
-      "round": 1,
-      "phase": "CLOSURE",
-      "reviewerId": "coordinator",
-      "contextId": "devin-84a5f4e0b65642f0981321876791f6bd",
-      "model": "swe-2-max",
-      "role": "CLOSURE",
-      "inputBundleHash": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322",
-      "priorFindingsVisible": true,
-      "accessLimitations": [],
-      "startedAt": "2026-09-23T21:56:00Z",
-      "sealedAt": "2026-09-23T21:57:30Z",
-      "previousPhaseReviewId": null,
-      "reviewedAfterPreviousFixes": true,
-      "coverageIds": [],
-      "evidenceIds": [
-        "EV-IMPL-FIMPL1-FIX",
-        "EV-IMPL-PIN-CONSUME-ONCE"
-      ],
-      "findingIds": [],
-      "novelAttackIds": [],
-      "status": "SEALED"
+     "path": "src/core/player/Player.ts",
+     "symbolOrSection": "mortalBasicSkillId field",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/game/GameManagerSaveRestore.ts",
+     "symbolOrSection": "preflight block",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
     }
-  ],
-  "cycles": [],
-  "mutations": [],
-  "corpus": [],
-  "lessons": [
+   ],
+   "owner": {
+    "path": "src/core/player/Player.ts",
+    "symbolOrSection": "PlayerData",
+    "revision": "92b4ebaa",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "fail closed: reject/crash rather than silently accept",
+   "atomicity": "creation pick + grants applied inside one boot transaction",
+   "inverseBehavior": "ritual clears pick at path select",
+   "persistence": "pick on PlayerData; v82 mortal saves require it",
+   "migration": "dev-phase: bump + reject",
+   "lifecycle": "creation -> mortal play -> ritual clear",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "see invariant statement + linked evidence"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "PERSISTENCE",
+    "INDEPENDENT_REVIEW"
+   ],
+   "taxonomyIds": [],
+   "status": "ACTIVE"
+  },
+  {
+   "id": "I-IMPL-SAVE-PREFLIGHT",
+   "statement": "All four v82 preflight rejections (invalid id, post-path presence, missing pick, unlearned pick) fire before any owner mutation.",
+   "domain": "src/services/save",
+   "risk": "HIGH",
+   "sources": [
     {
-      "id": "L-IMPL-1",
-      "version": 1,
-      "supersedes": null,
-      "triggerType": "DEFECT",
-      "findingIds": [
-        "F-IMPL-1"
-      ],
-      "incidentEvidenceIds": [
-        "EV-IMPL-ADVERSARIAL",
-        "EV-IMPL-PIN-CONSUME-ONCE"
-      ],
-      "originatingRun": "beta-creation-impl-2026-09-23",
-      "rootClass": "STALE_STATE_WINDOW",
-      "missedInvariantIds": [],
-      "escapeReason": "module-scoped bridging slot had no consume-once guard; no test asserted reset order",
-      "applicability": [
-        "emit->boot-callback bridging via module state"
-      ],
-      "exclusions": [],
-      "proposedProtection": [
-        "consume-once order pinned by App.wiring.test.ts AST check"
-      ],
-      "promotionEvidenceIds": [],
-      "qualifiedBy": [],
-      "capabilityDelta": "static guard for consume-once on module bridging slots",
-      "status": "CAPTURED",
-      "policyVersion": null,
-      "effectiveFromRun": null,
-      "recurrenceFindingIds": [],
-      "preventionEvidenceIds": [
-        "EV-IMPL-PIN-CONSUME-ONCE"
-      ]
+     "path": "src/core/game/GameManagerSaveRestore.ts",
+     "symbolOrSection": "preflight rejections",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/services/save/SaveSystem.bootRestore.test.ts",
+     "symbolOrSection": "rejection table",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
     }
-  ],
-  "messages": [],
-  "events": [
+   ],
+   "owner": {
+    "path": "src/core/game/GameManagerSaveRestore.ts",
+    "symbolOrSection": "restore preflight",
+    "revision": "92b4ebaa",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "fail closed: reject/crash rather than silently accept",
+   "atomicity": "creation pick + grants applied inside one boot transaction",
+   "inverseBehavior": "ritual clears pick at path select",
+   "persistence": "pick on PlayerData; v82 mortal saves require it",
+   "migration": "dev-phase: bump + reject",
+   "lifecycle": "creation -> mortal play -> ritual clear",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "see invariant statement + linked evidence"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "PERSISTENCE",
+    "INDEPENDENT_REVIEW"
+   ],
+   "taxonomyIds": [],
+   "status": "ACTIVE"
+  },
+  {
+   "id": "I-IMPL-SKILL-MAP",
+   "statement": "The creation pick maps to exactly MORTAL_PRECURSOR_SKILL_IDS {tram,linh_bao,huy_quyen} with ruling display names {Huy Ki\u1ebfm,Linh B\u1ea1o,Huy Quy\u1ec1n}.",
+   "domain": "src/core/skill",
+   "risk": "HIGH",
+   "sources": [
     {
-      "seq": 1,
-      "at": "2026-09-23T20:54:34.680Z",
-      "kind": "PHASE",
-      "actor": "coordinator-59983",
-      "state": {
-        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
-        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
-        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
-        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
-      },
-      "previousEventHash": null,
-      "payloadPath": "events/0001.json",
-      "payloadHash": "7816298e831cac1b49056d91bb5078a7df158b183c048447a718e0d2fb0fd39f",
-      "eventHash": "74fd4dc1378a63aec91e1af55fa77f26ae17bb8c3e7dc55dc3e9b99b22e822d6"
+     "path": "src/core/skill/MortalPrecursors.ts",
+     "symbolOrSection": "precursor set",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
     },
     {
-      "seq": 2,
-      "at": "2026-09-23T20:54:35.410Z",
-      "kind": "SNAPSHOT",
-      "actor": "coordinator-59983",
-      "state": {
-        "productStateId": "3bc7ead8733fe5e0c96336dc6c2334afee53318cabe66efd611d41e17d6e4e1f",
-        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-      },
-      "previousEventHash": "74fd4dc1378a63aec91e1af55fa77f26ae17bb8c3e7dc55dc3e9b99b22e822d6",
-      "payloadPath": "events/0002.json",
-      "payloadHash": "05ecd7731e7570dbdece29384182e19eae563afa7a1febeb0eaa3f2c073d4e98",
-      "eventHash": "9be22e906149257cb3f807ebe107387ef2a3441ac222136edf94b5239fcf2bc3"
-    },
-    {
-      "seq": 3,
-      "at": "2026-09-23T21:49:23.634Z",
-      "kind": "PHASE",
-      "actor": "coordinator-59983",
-      "state": {
-        "productStateId": "3bc7ead8733fe5e0c96336dc6c2334afee53318cabe66efd611d41e17d6e4e1f",
-        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-      },
-      "previousEventHash": "9be22e906149257cb3f807ebe107387ef2a3441ac222136edf94b5239fcf2bc3",
-      "payloadPath": "events/0003.json",
-      "payloadHash": "3b1f7cd89be9aab01b55caca421a8ff6d88128b89f3d4a17e36b4e02b6da25c5",
-      "eventHash": "1d8516251e0e3a1f974e19cf131e3d155d9cba8cb7169389bdfd4c86af4082a6"
-    },
-    {
-      "seq": 4,
-      "at": "2026-09-23T21:49:46.872Z",
-      "kind": "FINDING",
-      "actor": "coordinator-59983",
-      "state": {
-        "productStateId": "3bc7ead8733fe5e0c96336dc6c2334afee53318cabe66efd611d41e17d6e4e1f",
-        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-      },
-      "previousEventHash": "1d8516251e0e3a1f974e19cf131e3d155d9cba8cb7169389bdfd4c86af4082a6",
-      "payloadPath": "events/0004.json",
-      "payloadHash": "74612d5720ebe5865ddbe3184ed85e61c2b4d05cf4c58bb6507b362ca0dfad8c",
-      "eventHash": "c8178aabb4d0518c15ea3e410793355470b4030a44613015e9b2a598d51e6c30"
-    },
-    {
-      "seq": 5,
-      "at": "2026-09-23T21:50:43.790Z",
-      "kind": "SNAPSHOT",
-      "actor": "coordinator-59983",
-      "state": {
-        "productStateId": "fd4159d8b5a66b1f2172351b66c15917b4cf9a7893bb39f8a1a392d51cb6da1a",
-        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-      },
-      "previousEventHash": "c8178aabb4d0518c15ea3e410793355470b4030a44613015e9b2a598d51e6c30",
-      "payloadPath": "events/0005.json",
-      "payloadHash": "e80e33cf8fbe60aecd6e6946faccdd309cdb5d8e42c2ce1014ad30143acd7443",
-      "eventHash": "f36ca75455bed85d3a4771d693ea6698681b81bb736c28b72531646ffad3c2e5"
-    },
-    {
-      "seq": 6,
-      "at": "2026-09-23T21:51:21.886Z",
-      "kind": "PHASE",
-      "actor": "coordinator-59983",
-      "state": {
-        "productStateId": "fd4159d8b5a66b1f2172351b66c15917b4cf9a7893bb39f8a1a392d51cb6da1a",
-        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-      },
-      "previousEventHash": "f36ca75455bed85d3a4771d693ea6698681b81bb736c28b72531646ffad3c2e5",
-      "payloadPath": "events/0006.json",
-      "payloadHash": "4c58a11d3c8cf65b96ca0b27baf59c3b30473a7d514c171ed864334decab1cc4",
-      "eventHash": "8ca90c4bc2a612eee4b167d7a73fcd4ab53fe51959aff6560256a51b26a447c7"
-    },
-    {
-      "seq": 7,
-      "at": "2026-09-23T21:51:44.510Z",
-      "kind": "PHASE",
-      "actor": "coordinator-59983",
-      "state": {
-        "productStateId": "fd4159d8b5a66b1f2172351b66c15917b4cf9a7893bb39f8a1a392d51cb6da1a",
-        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-      },
-      "previousEventHash": "8ca90c4bc2a612eee4b167d7a73fcd4ab53fe51959aff6560256a51b26a447c7",
-      "payloadPath": "events/0007.json",
-      "payloadHash": "7a0d0c42747aee873f990970729f97f13519d46bbf5301a6b931ebc41d69e9dd",
-      "eventHash": "ee9a5adfbf960ee627f606f3a14ce61df793a37d16e5b8fad5060193297f0aae"
-    },
-    {
-      "seq": 8,
-      "at": "2026-09-23T21:54:19.340Z",
-      "kind": "PHASE",
-      "actor": "coordinator-59983",
-      "state": {
-        "productStateId": "fd4159d8b5a66b1f2172351b66c15917b4cf9a7893bb39f8a1a392d51cb6da1a",
-        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-      },
-      "previousEventHash": "ee9a5adfbf960ee627f606f3a14ce61df793a37d16e5b8fad5060193297f0aae",
-      "payloadPath": "events/0008.json",
-      "payloadHash": "a6d3e21eebb82d755da7a6f4fb19ecd683bca5aaa37e57b730c7ea98bcf656a2",
-      "eventHash": "ef300cc6780fb4177904ba515790745930dbf4ce4dfd0e419105b798830b26ca"
-    },
-    {
-      "seq": 9,
-      "at": "2026-09-23T21:56:12.840Z",
-      "kind": "SNAPSHOT",
-      "actor": "coordinator-59983",
-      "state": {
-        "productStateId": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322",
-        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-      },
-      "previousEventHash": "ef300cc6780fb4177904ba515790745930dbf4ce4dfd0e419105b798830b26ca",
-      "payloadPath": "events/0009.json",
-      "payloadHash": "48daa0009ede6c44b129c4530747104215d31c4bc85db07f1d2489b136691a9c",
-      "eventHash": "10f70780901b271956276950c25557f3113a5f6ebfd0c0ab7ff648dc44066946"
-    },
-    {
-      "seq": 10,
-      "at": "2026-09-23T21:56:45.732Z",
-      "kind": "EVIDENCE",
-      "actor": "coordinator-59983",
-      "state": {
-        "productStateId": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322",
-        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-      },
-      "previousEventHash": "10f70780901b271956276950c25557f3113a5f6ebfd0c0ab7ff648dc44066946",
-      "payloadPath": "events/0010.json",
-      "payloadHash": "db7d5d1c7e6a63ff96360139deb4d5dd74c26f6d627db76c644a8bb7b003fcc1",
-      "eventHash": "ff39188f46ffd5f0cc295a117049e6fa542e821ba80311c2f6a30f44630904eb"
-    },
-    {
-      "seq": 11,
-      "at": "2026-09-23T21:56:56.369Z",
-      "kind": "EVIDENCE",
-      "actor": "coordinator-59983",
-      "state": {
-        "productStateId": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322",
-        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
-        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
-        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
-      },
-      "previousEventHash": "ff39188f46ffd5f0cc295a117049e6fa542e821ba80311c2f6a30f44630904eb",
-      "payloadPath": "events/0011.json",
-      "payloadHash": "4c16b658bff8defc100a92e183050992c739b0b2e702e79cd374c484fd67ba9b",
-      "eventHash": "11c526e83611a15c1aa1272a41f117b2390c47393f77c73ae0d14f99106b929a"
+     "path": "src/data/skill/TurnSkillDisplayMeta.ts",
+     "symbolOrSection": "display names",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
     }
-  ]
+   ],
+   "owner": {
+    "path": "src/core/skill/MortalPrecursors.ts",
+    "symbolOrSection": "MORTAL_PRECURSOR_SKILL_IDS",
+    "revision": "92b4ebaa",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "fail closed: reject/crash rather than silently accept",
+   "atomicity": "creation pick + grants applied inside one boot transaction",
+   "inverseBehavior": "ritual clears pick at path select",
+   "persistence": "pick on PlayerData; v82 mortal saves require it",
+   "migration": "dev-phase: bump + reject",
+   "lifecycle": "creation -> mortal play -> ritual clear",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "see invariant statement + linked evidence"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "INDEPENDENT_REVIEW"
+   ],
+   "taxonomyIds": [],
+   "status": "ACTIVE"
+  },
+  {
+   "id": "I-IMPL-RPC",
+   "statement": "create_character client payload matches the migration signature exactly; the stale p_attributes overload is dropped.",
+   "domain": "supabase/migrations",
+   "risk": "HIGH",
+   "sources": [
+    {
+     "path": "src/services/character/SupabaseCharacterCreationService.ts",
+     "symbolOrSection": "create_character call",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "supabase/migrations/202608240001_online_auth_character.sql",
+     "symbolOrSection": "signature + drop",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
+    }
+   ],
+   "owner": {
+    "path": "supabase/migrations/202608240001_online_auth_character.sql",
+    "symbolOrSection": "create_character",
+    "revision": "92b4ebaa",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "fail closed: reject/crash rather than silently accept",
+   "atomicity": "creation pick + grants applied inside one boot transaction",
+   "inverseBehavior": "ritual clears pick at path select",
+   "persistence": "pick on PlayerData; v82 mortal saves require it",
+   "migration": "dev-phase: bump + reject",
+   "lifecycle": "creation -> mortal play -> ritual clear",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "see invariant statement + linked evidence"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "INDEPENDENT_REVIEW"
+   ],
+   "taxonomyIds": [],
+   "status": "ACTIVE"
+  },
+  {
+   "id": "I-IMPL-CONSUME-ONCE",
+   "statement": "pendingCreationPick is consumed exactly once: read -> clear -> use inside onNewCharacter.",
+   "domain": "src/components/onboarding",
+   "risk": "HIGH",
+   "sources": [
+    {
+     "path": "src/App.vue",
+     "symbolOrSection": "onNewCharacter",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/App.wiring.test.ts",
+     "symbolOrSection": "consume-once pin",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
+    }
+   ],
+   "owner": {
+    "path": "src/App.vue",
+    "symbolOrSection": "onNewCharacter",
+    "revision": "92b4ebaa",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "fail closed: reject/crash rather than silently accept",
+   "atomicity": "creation pick + grants applied inside one boot transaction",
+   "inverseBehavior": "ritual clears pick at path select",
+   "persistence": "pick on PlayerData; v82 mortal saves require it",
+   "migration": "dev-phase: bump + reject",
+   "lifecycle": "creation -> mortal play -> ritual clear",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "see invariant statement + linked evidence"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "INDEPENDENT_REVIEW"
+   ],
+   "taxonomyIds": [],
+   "status": "ACTIVE"
+  },
+  {
+   "id": "I-IMPL-UI-FLOW",
+   "statement": "Creation is one screen (name + talent + skill); no stepper or attribute-allocation UI remains.",
+   "domain": "src/components/onboarding",
+   "risk": "STANDARD",
+   "sources": [
+    {
+     "path": "src/components/onboarding/CharacterCreationScreen.vue",
+     "symbolOrSection": "unified screen",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
+    }
+   ],
+   "owner": {
+    "path": "src/components/onboarding/CharacterCreationScreen.vue",
+    "symbolOrSection": "template",
+    "revision": "92b4ebaa",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "fail closed: reject/crash rather than silently accept",
+   "atomicity": "creation pick + grants applied inside one boot transaction",
+   "inverseBehavior": "ritual clears pick at path select",
+   "persistence": "pick on PlayerData; v82 mortal saves require it",
+   "migration": "dev-phase: bump + reject",
+   "lifecycle": "creation -> mortal play -> ritual clear",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "see invariant statement + linked evidence"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC"
+   ],
+   "taxonomyIds": [],
+   "status": "ACTIVE"
+  },
+  {
+   "id": "I-IMPL-DISPLAY-NAMES",
+   "statement": "Skill display names use ruling spellings consistently across CoreSkills + TurnSkillDisplayMeta.",
+   "domain": "src/data/skill",
+   "risk": "STANDARD",
+   "sources": [
+    {
+     "path": "src/data/skill/TurnSkillDisplayMeta.ts",
+     "symbolOrSection": "names",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/skill/CoreSkills.ts",
+     "symbolOrSection": "names",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
+    }
+   ],
+   "owner": {
+    "path": "src/data/skill/TurnSkillDisplayMeta.ts",
+    "symbolOrSection": "meta table",
+    "revision": "92b4ebaa",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "fail closed: reject/crash rather than silently accept",
+   "atomicity": "creation pick + grants applied inside one boot transaction",
+   "inverseBehavior": "ritual clears pick at path select",
+   "persistence": "pick on PlayerData; v82 mortal saves require it",
+   "migration": "dev-phase: bump + reject",
+   "lifecycle": "creation -> mortal play -> ritual clear",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "see invariant statement + linked evidence"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC"
+   ],
+   "taxonomyIds": [],
+   "status": "ACTIVE"
+  },
+  {
+   "id": "I-IMPL-I18N",
+   "statement": "All new UI strings exist in vi.json + en.json; no hardcoded Vietnamese in templates (P16).",
+   "domain": "src/locales",
+   "risk": "STANDARD",
+   "sources": [
+    {
+     "path": "src/locales/vi.json",
+     "symbolOrSection": "onboarding.creation keys",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/locales/en.json",
+     "symbolOrSection": "onboarding.creation keys",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
+    }
+   ],
+   "owner": {
+    "path": "src/locales/vi.json",
+    "symbolOrSection": "creation namespace",
+    "revision": "92b4ebaa",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "fail closed: reject/crash rather than silently accept",
+   "atomicity": "creation pick + grants applied inside one boot transaction",
+   "inverseBehavior": "ritual clears pick at path select",
+   "persistence": "pick on PlayerData; v82 mortal saves require it",
+   "migration": "dev-phase: bump + reject",
+   "lifecycle": "creation -> mortal play -> ritual clear",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "see invariant statement + linked evidence"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC"
+   ],
+   "taxonomyIds": [],
+   "status": "ACTIVE"
+  },
+  {
+   "id": "I-IMPL-E2E-COV",
+   "statement": "Affected e2e specs (creation, save reload, ritual clear) pass on the PR head.",
+   "domain": "tests/e2e",
+   "risk": "STANDARD",
+   "sources": [
+    {
+     "path": "tests/e2e",
+     "symbolOrSection": "creation/pick specs",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
+    }
+   ],
+   "owner": {
+    "path": "tests/e2e",
+    "symbolOrSection": "spec files",
+    "revision": "92b4ebaa",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "fail closed: reject/crash rather than silently accept",
+   "atomicity": "creation pick + grants applied inside one boot transaction",
+   "inverseBehavior": "ritual clears pick at path select",
+   "persistence": "pick on PlayerData; v82 mortal saves require it",
+   "migration": "dev-phase: bump + reject",
+   "lifecycle": "creation -> mortal play -> ritual clear",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "see invariant statement + linked evidence"
+   ],
+   "requiredEvidenceSurfaces": [
+    "RUNTIME_E2E"
+   ],
+   "taxonomyIds": [],
+   "status": "ACTIVE"
+  },
+  {
+   "id": "I-IMPL-SPEC-TRACE",
+   "statement": "The implementation matches the spec contracts (unified flow, required pick, v82).",
+   "domain": "docs/specs",
+   "risk": "STANDARD",
+   "sources": [
+    {
+     "path": "docs/specs/beta-creation-spec.md",
+     "symbolOrSection": "contracts",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
+    }
+   ],
+   "owner": {
+    "path": "docs/specs/beta-creation-spec.md",
+    "symbolOrSection": "spec",
+    "revision": "92b4ebaa",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "fail closed: reject/crash rather than silently accept",
+   "atomicity": "creation pick + grants applied inside one boot transaction",
+   "inverseBehavior": "ritual clears pick at path select",
+   "persistence": "pick on PlayerData; v82 mortal saves require it",
+   "migration": "dev-phase: bump + reject",
+   "lifecycle": "creation -> mortal play -> ritual clear",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "see invariant statement + linked evidence"
+   ],
+   "requiredEvidenceSurfaces": [
+    "SPEC"
+   ],
+   "taxonomyIds": [],
+   "status": "ACTIVE"
+  },
+  {
+   "id": "I-IMPL-PLAN-EXEC",
+   "statement": "The plan steps were executed as written (service -> boot seam -> screen -> save -> fixtures -> RPC).",
+   "domain": "docs/plans",
+   "risk": "STANDARD",
+   "sources": [
+    {
+     "path": "docs/plans/beta-creation-plan.md",
+     "symbolOrSection": "steps",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
+    }
+   ],
+   "owner": {
+    "path": "docs/plans/beta-creation-plan.md",
+    "symbolOrSection": "plan",
+    "revision": "92b4ebaa",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "fail closed: reject/crash rather than silently accept",
+   "atomicity": "creation pick + grants applied inside one boot transaction",
+   "inverseBehavior": "ritual clears pick at path select",
+   "persistence": "pick on PlayerData; v82 mortal saves require it",
+   "migration": "dev-phase: bump + reject",
+   "lifecycle": "creation -> mortal play -> ritual clear",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "see invariant statement + linked evidence"
+   ],
+   "requiredEvidenceSurfaces": [
+    "SPEC"
+   ],
+   "taxonomyIds": [],
+   "status": "ACTIVE"
+  },
+  {
+   "id": "I-IMPL-QA-JOURNAL",
+   "statement": "QA artifacts for this run are journaled on the branch under docs/qa/runs/.",
+   "domain": "docs/qa",
+   "risk": "STANDARD",
+   "sources": [
+    {
+     "path": "docs/qa/runs/beta-creation-impl-2026-09-23",
+     "symbolOrSection": "run dir",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
+    }
+   ],
+   "owner": {
+    "path": "docs/qa/runs/beta-creation-impl-2026-09-23",
+    "symbolOrSection": "ledger",
+    "revision": "92b4ebaa",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "fail closed: reject/crash rather than silently accept",
+   "atomicity": "creation pick + grants applied inside one boot transaction",
+   "inverseBehavior": "ritual clears pick at path select",
+   "persistence": "pick on PlayerData; v82 mortal saves require it",
+   "migration": "dev-phase: bump + reject",
+   "lifecycle": "creation -> mortal play -> ritual clear",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "see invariant statement + linked evidence"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC"
+   ],
+   "taxonomyIds": [],
+   "status": "ACTIVE"
+  }
+ ],
+ "census": [
+  {
+   "id": "CEN-I-ONBOARD",
+   "invariantIds": [],
+   "location": {
+    "path": "src/components/onboarding/CharacterCreationScreen.vue",
+    "symbolOrSection": "unified screen",
+    "revision": "f8bfc8df",
+    "basis": "SOURCE"
+   },
+   "classification": "LEGAL_WRITER",
+   "reads": [
+    "talent options",
+    "SKILLS",
+    "precursor list"
+   ],
+   "writes": [
+    "creation payload",
+    "selectedSkillId"
+   ],
+   "eventsIn": [
+    "user input",
+    "emit"
+   ],
+   "eventsOut": [
+    "payload {name,talentIds,mortalBasicSkillId}"
+   ],
+   "consumerIds": [
+    "App.vue",
+    "helpers.createCharacterThroughUi"
+   ],
+   "searchEvidenceIds": [
+    "EV-IMPL-VITEST"
+   ],
+   "disposition": "in-scope: rewritten single-screen flow; stepper+attributes removed"
+  },
+  {
+   "id": "CEN-I-SVCCHAR",
+   "invariantIds": [],
+   "location": {
+    "path": "src/services/character",
+    "symbolOrSection": "draft contract + validation + RPC client",
+    "revision": "f8bfc8df",
+    "basis": "SOURCE"
+   },
+   "classification": "LEGAL_WRITER",
+   "reads": [
+    "draft.mortalBasicSkillId",
+    "talentIds",
+    "name"
+   ],
+   "writes": [
+    "validation",
+    "RPC p_* params"
+   ],
+   "eventsIn": [
+    "screen submit"
+   ],
+   "eventsOut": [
+    "CharacterCreationResult"
+   ],
+   "consumerIds": [
+    "CharacterCreationScreen",
+    "Supabase"
+   ],
+   "searchEvidenceIds": [
+    "EV-IMPL-VITEST"
+   ],
+   "disposition": "in-scope: allocation->pick swap; isMortalPrecursorSkillId validation"
+  },
+  {
+   "id": "CEN-I-COREGAME",
+   "invariantIds": [],
+   "location": {
+    "path": "src/core/game",
+    "symbolOrSection": "EarlyGameBootstrap + SaveRestore preflight",
+    "revision": "f8bfc8df",
+    "basis": "SOURCE"
+   },
+   "classification": "LEGAL_WRITER",
+   "reads": [
+    "PlayerData",
+    "profile.mortalBasicSkillId",
+    "save.player"
+   ],
+   "writes": [
+    "learned skills",
+    "mortalBasicSkillId",
+    "preflight rejections"
+   ],
+   "eventsIn": [
+    "boot onNewCharacter",
+    "restoreFromSave"
+   ],
+   "eventsOut": [
+    "granted state",
+    "thrown contract violations"
+   ],
+   "consumerIds": [
+    "App.vue",
+    "EarlyGameSession",
+    "SaveSystem",
+    "boundary tests"
+   ],
+   "searchEvidenceIds": [
+    "EV-IMPL-VITEST"
+   ],
+   "disposition": "in-scope: post-learn pick write + v82 required-pick contract"
+  },
+  {
+   "id": "CEN-I-PLAYER",
+   "invariantIds": [],
+   "location": {
+    "path": "src/core/player/Player.ts",
+    "symbolOrSection": "PlayerData.mortalBasicSkillId",
+    "revision": "f8bfc8df",
+    "basis": "SOURCE"
+   },
+   "classification": "LEGAL_WRITER",
+   "reads": [],
+   "writes": [
+    "field comment"
+   ],
+   "eventsIn": [
+    "create",
+    "restore"
+   ],
+   "eventsOut": [
+    "pick field"
+   ],
+   "consumerIds": [
+    "bootstrap",
+    "ritual",
+    "preflight"
+   ],
+   "searchEvidenceIds": [
+    "EV-IMPL-VITEST"
+   ],
+   "disposition": "in-scope: comment clarified; field unchanged"
+  },
+  {
+   "id": "CEN-I-SKILL",
+   "invariantIds": [],
+   "location": {
+    "path": "src/core/skill/MortalPrecursors.ts",
+    "symbolOrSection": "precursor ids + guard",
+    "revision": "f8bfc8df",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [
+    "MORTAL_PRECURSOR_SKILL_IDS"
+   ],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [
+    "membership"
+   ],
+   "consumerIds": [
+    "service",
+    "preflight",
+    "bootstrap",
+    "screen"
+   ],
+   "searchEvidenceIds": [
+    "EV-IMPL-VITEST"
+   ],
+   "disposition": "in-scope: unchanged oracle for the 3 choices"
+  },
+  {
+   "id": "CEN-I-SAVE",
+   "invariantIds": [],
+   "location": {
+    "path": "src/services/save",
+    "symbolOrSection": "saveVersion + GameSave.fixture",
+    "revision": "f8bfc8df",
+    "basis": "SOURCE"
+   },
+   "classification": "LEGAL_WRITER",
+   "reads": [
+    "GameSave",
+    "Skill",
+    "PlayerData"
+   ],
+   "writes": [
+    "version=82",
+    "pick-complete fixture saves"
+   ],
+   "eventsIn": [
+    "fixture calls",
+    "version classify"
+   ],
+   "eventsOut": [
+    "v82 saves",
+    "reject v81"
+   ],
+   "consumerIds": [
+    "~20 test fixtures",
+    "SaveSystem"
+   ],
+   "searchEvidenceIds": [
+    "EV-IMPL-VITEST"
+   ],
+   "disposition": "in-scope: v82 bump + shared fixture contract"
+  },
+  {
+   "id": "CEN-I-META",
+   "invariantIds": [],
+   "location": {
+    "path": "src/data/skill/TurnSkillDisplayMeta.ts",
+    "symbolOrSection": "huy_quyen display name",
+    "revision": "f8bfc8df",
+    "basis": "SOURCE"
+   },
+   "classification": "LEGAL_WRITER",
+   "reads": [
+    "SKILLS"
+   ],
+   "writes": [
+    "display meta huy_quyen"
+   ],
+   "eventsIn": [
+    "tooltip/log render"
+   ],
+   "eventsOut": [
+    "'Huy Quyen' string"
+   ],
+   "consumerIds": [
+    "SkillCoreNodes",
+    "battle log",
+    "codex"
+   ],
+   "searchEvidenceIds": [
+    "EV-IMPL-VITEST"
+   ],
+   "disposition": "in-scope: drift fix 'H\u1ee7y'->'Huy'; id-keyed, display-only"
+  },
+  {
+   "id": "CEN-I-LOCALES",
+   "invariantIds": [],
+   "location": {
+    "path": "src/locales",
+    "symbolOrSection": "vi.json + en.json",
+    "revision": "f8bfc8df",
+    "basis": "SOURCE"
+   },
+   "classification": "LEGAL_WRITER",
+   "reads": [],
+   "writes": [
+    "creation keys"
+   ],
+   "eventsIn": [
+    "t()"
+   ],
+   "eventsOut": [
+    "copy"
+   ],
+   "consumerIds": [
+    "creation screen"
+   ],
+   "searchEvidenceIds": [
+    "EV-IMPL-VITEST"
+   ],
+   "disposition": "in-scope: keys added/removed symmetrically"
+  },
+  {
+   "id": "CEN-I-E2E",
+   "invariantIds": [],
+   "location": {
+    "path": "tests/e2e",
+    "symbolOrSection": "helpers + boot-fresh + accessibility",
+    "revision": "f8bfc8df",
+    "basis": "SOURCE"
+   },
+   "classification": "TEST_ONLY",
+   "reads": [
+    "screen testids",
+    "pick contract"
+   ],
+   "writes": [],
+   "eventsIn": [
+    "playwright"
+   ],
+   "eventsOut": [
+    "assertions"
+   ],
+   "consumerIds": [
+    "playwright"
+   ],
+   "searchEvidenceIds": [
+    "EV-IMPL-VITEST"
+   ],
+   "disposition": "in-scope: helper drives real unified screen"
+  },
+  {
+   "id": "CEN-I-MIGRATION",
+   "invariantIds": [],
+   "location": {
+    "path": "supabase/migrations/202608240001_online_auth_character.sql",
+    "symbolOrSection": "create_character RPC",
+    "revision": "f8bfc8df",
+    "basis": "SOURCE"
+   },
+   "classification": "MIGRATION",
+   "reads": [
+    "p_mortal_basic_skill_id",
+    "p_talent_ids",
+    "p_initial_save",
+    "p_schema_version"
+   ],
+   "writes": [
+    "characters row",
+    "character_skills row"
+   ],
+   "eventsIn": [
+    "client rpc"
+   ],
+   "eventsOut": [
+    "characterId"
+   ],
+   "consumerIds": [
+    "SupabaseCharacterCreationService"
+   ],
+   "searchEvidenceIds": [
+    "EV-IMPL-VITEST"
+   ],
+   "disposition": "in-scope: signature swap + stale overload drop + pick column"
+  },
+  {
+   "id": "CEN-I-EARLYGAME",
+   "invariantIds": [],
+   "location": {
+    "path": "src/core/simulation/earlygame",
+    "symbolOrSection": "EarlyGameSession + economy profiles",
+    "revision": "f8bfc8df",
+    "basis": "SOURCE"
+   },
+   "classification": "TEST_ONLY",
+   "reads": [
+    "EarlyGameCreationProfile"
+   ],
+   "writes": [
+    "sim player"
+   ],
+   "eventsIn": [
+    "session boot"
+   ],
+   "eventsOut": [
+    "sim state"
+   ],
+   "consumerIds": [
+    "journey tests",
+    "probes"
+   ],
+   "searchEvidenceIds": [
+    "EV-IMPL-VITEST"
+   ],
+   "disposition": "in-scope: profile type gains required pick field; harness uses shared seams"
+  },
+  {
+   "id": "CEN-I-SPEC",
+   "invariantIds": [],
+   "location": {
+    "path": "docs/specs/beta-creation-spec.md",
+    "symbolOrSection": "spec",
+    "revision": "f8bfc8df",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [
+    "ruling",
+    "census"
+   ],
+   "writes": [
+    "decisions Q-A..Q-E"
+   ],
+   "eventsIn": [
+    "author"
+   ],
+   "eventsOut": [
+    "plan",
+    "impl"
+   ],
+   "consumerIds": [
+    "implementer",
+    "reviewers"
+   ],
+   "searchEvidenceIds": [
+    "EV-IMPL-VITEST"
+   ],
+   "disposition": "in-scope: contract doc of the diff"
+  },
+  {
+   "id": "CEN-I-PLAN",
+   "invariantIds": [],
+   "location": {
+    "path": "docs/plans/beta-creation-plan.md",
+    "symbolOrSection": "plan",
+    "revision": "f8bfc8df",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [
+    "spec"
+   ],
+   "writes": [
+    "steps"
+   ],
+   "eventsIn": [
+    "author"
+   ],
+   "eventsOut": [
+    "impl"
+   ],
+   "consumerIds": [
+    "implementer",
+    "reviewers"
+   ],
+   "searchEvidenceIds": [
+    "EV-IMPL-VITEST"
+   ],
+   "disposition": "in-scope: plan doc of the diff"
+  },
+  {
+   "id": "CEN-I-QA",
+   "invariantIds": [],
+   "location": {
+    "path": "docs/qa",
+    "symbolOrSection": "protocol + reports",
+    "revision": "f8bfc8df",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [
+    "ledger schema"
+   ],
+   "writes": [
+    "qa artifacts"
+   ],
+   "eventsIn": [
+    "coordinator"
+   ],
+   "eventsOut": [
+    "journal"
+   ],
+   "consumerIds": [
+    "protocol"
+   ],
+   "searchEvidenceIds": [
+    "EV-IMPL-VITEST"
+   ],
+   "disposition": "in-scope: run journal + quick-review report"
+  }
+ ],
+ "findings": [
+  {
+   "id": "F-IMPL-1",
+   "title": "pendingCreationPick never cleared after consume (module-scoped stale window)",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "status": "CLOSED",
+   "actionable": true,
+   "state": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "discoveredBy": "coordinator",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-IMPL-ADVERSARIAL",
+    "EV-IMPL-FIMPL1-FIX",
+    "EV-IMPL-PIN-CONSUME-ONCE"
+   ],
+   "locations": [
+    {
+     "path": "src/App.vue",
+     "symbolOrSection": "pendingCreationPick module let",
+     "revision": "9efa243c",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "A second onNewCharacter firing without a preceding onCharacterCreated would reuse the previous pick.",
+   "expected": "pick cleared on consume, or provably no path invokes onNewCharacter without refreshing it",
+   "actual": "FIXED at f8bfc8df + pin at 9efa243c: read->clear->use order enforced + pinned by App.wiring.test.ts",
+   "rootCause": "module-scoped let kept as emit->callback bridge; no reset-on-consume guard",
+   "rootClass": "STALE_STATE_WINDOW",
+   "subsystem": "creation-boot-seam",
+   "repair": "pendingCreationPick = undefined immediately after read in onNewCharacter",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/App.vue",
+      "src/composables/useAppLifecycle.ts"
+     ],
+     "termsAndMethod": "rg 'let pending' + module-scope mutable review",
+     "evidenceIds": [
+      "EV-IMPL-ADVERSARIAL"
+     ],
+     "hitDispositions": [
+      "no other pending* bridges found"
+     ],
+     "coverageLimits": [
+      "single-file sweep of App.vue + composables"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "pinEvidenceIds": [
+    "EV-IMPL-PIN-CONSUME-ONCE"
+   ],
+   "verificationEvidenceIds": [
+    "EV-IMPL-FIMPL1-FIX"
+   ],
+   "closureReviewIds": [
+    "REV-CLOSURE-FIMPL1"
+   ],
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-IMPL-2",
+   "title": "missing-pick preflight rejection had no test pin (M-IMPL-2 SURVIVED)",
+   "severity": "Medium",
+   "classification": "COVERAGE_GAP",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "status": "CLOSED",
+   "actionable": true,
+   "state": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "discoveredBy": "coordinator",
+   "invariantIds": [
+    "I-IMPL-PICK-REQUIRED",
+    "I-IMPL-SAVE-PREFLIGHT"
+   ],
+   "evidenceIds": [
+    "EV-IMPL-MUTATION-CORPUS",
+    "EV-IMPL-PIN-MISSING-PICK"
+   ],
+   "locations": [
+    {
+     "path": "src/services/save/SaveSystem.bootRestore.test.ts",
+     "symbolOrSection": "rejection it.each table",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/game/GameManagerSaveRestore.ts",
+     "symbolOrSection": "missing-pick throw :289-291",
+     "revision": "92b4ebaa",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "Deleting the missing-pick throw left the whole suite green (mutation survived).",
+   "expected": "every v82 preflight rejection has a boundary-table case",
+   "actual": "FIXED at 92b4ebaa: 'missing mortalBasicSkillId on a mortal save' case added; mutation re-run killed",
+   "rootCause": "rejection added in impl without a corresponding pin \u2014 detectable only by mutation",
+   "rootClass": "MISSING_DETECTOR",
+   "subsystem": "save-preflight",
+   "repair": "bootRestore rejection table += missing-pick case asserting exact message + no owner mutation",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/game/GameManagerSaveRestore.ts",
+      "src/services/save"
+     ],
+     "termsAndMethod": "enumerate all throw sites in preflight vs rejection-table coverage",
+     "evidenceIds": [
+      "EV-IMPL-MUTATION-CORPUS"
+     ],
+     "hitDispositions": [
+      "3 other rejections already pinned (invalid-id, post-path, unlearned); no further gaps"
+     ],
+     "coverageLimits": [
+      "preflight block only \u2014 deeper saveShape rejections covered by saveShapeValidation.test.ts"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "pinEvidenceIds": [
+    "EV-IMPL-PIN-MISSING-PICK"
+   ],
+   "verificationEvidenceIds": [
+    "EV-IMPL-PIN-MISSING-PICK",
+    "EV-IMPL-VITEST"
+   ],
+   "closureReviewIds": [
+    "REV-CLOSURE-FIMPL2"
+   ],
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  }
+ ],
+ "evidence": [
+  {
+   "id": "EV-IMPL-TYPECHECK",
+   "state": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-23T22:10:00Z",
+   "finishedAt": "2026-09-23T22:40:00Z",
+   "commandOrMethod": "npm run type-check (vue-tsc --build) @92b4ebaa",
+   "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/coordinator-gates.md",
+   "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "aggregate diff type-checks clean"
+   ],
+   "limitations": [
+    "coordinator-run"
+   ],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-IMPL-VITEST",
+   "state": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-23T22:10:00Z",
+   "finishedAt": "2026-09-23T22:40:00Z",
+   "commandOrMethod": "npx vitest run (full suite) @f8bfc8df + scoped re-runs @92b4ebaa (wiring/contract/bootRestore)",
+   "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/coordinator-gates.md",
+   "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "7195 pass / 3 pre-existing env failures identical on base"
+   ],
+   "limitations": [
+    "full suite last run @f8bfc8df; scoped runs cover every post-f8bfc8df delta"
+   ],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-IMPL-E2E",
+   "state": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_RUNTIME",
+   "producer": "coordinator",
+   "startedAt": "2026-09-23T22:10:00Z",
+   "finishedAt": "2026-09-23T22:40:00Z",
+   "commandOrMethod": "npx playwright test affected specs @f8bfc8df",
+   "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/coordinator-gates.md",
+   "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "creation/save-reload/ritual flows green"
+   ],
+   "limitations": [
+    "e2e predates pin/test additions; those are structural pins not behavioral changes"
+   ],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-IMPL-ADVERSARIAL",
+   "state": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "SOURCE_PROOF",
+   "producer": "coordinator",
+   "startedAt": "2026-09-23T22:10:00Z",
+   "finishedAt": "2026-09-23T22:40:00Z",
+   "commandOrMethod": "tutienidle-adversarial-qa quick, 8-invariant ledger",
+   "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/coordinator-gates.md",
+   "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
+   "inputPaths": [
+    "docs/qa/2026-09-23-beta-creation-quick.md",
+    "src/App.vue",
+    "src/core/game/GameManagerSaveRestore.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "PASS WITH EVIDENCE; docs/qa/2026-09-23-beta-creation-quick.md"
+   ],
+   "limitations": [
+    "quick mode"
+   ],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-IMPL-FIMPL1-FIX",
+   "state": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-23T22:10:00Z",
+   "finishedAt": "2026-09-23T22:40:00Z",
+   "commandOrMethod": "type-check + vitest mortalBasicSkill+bootRestore after consume-once fix",
+   "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/coordinator-gates.md",
+   "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
+   "inputPaths": [
+    "src/App.vue"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "18 tests green"
+   ],
+   "limitations": [],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-IMPL-PIN-CONSUME-ONCE",
+   "state": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-23T22:10:00Z",
+   "finishedAt": "2026-09-23T22:40:00Z",
+   "commandOrMethod": "npx vitest run src/App.wiring.test.ts (28 tests)",
+   "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/coordinator-gates.md",
+   "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
+   "inputPaths": [
+    "src/App.wiring.test.ts",
+    "src/App.vue"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [
+    "I-IMPL-CONSUME-ONCE"
+   ],
+   "claims": [
+    "consume-once order pinned read->clear->use"
+   ],
+   "limitations": [],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-IMPL-MUTATION-CORPUS",
+   "state": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_MUTATION",
+   "producer": "coordinator",
+   "startedAt": "2026-09-23T22:10:00Z",
+   "finishedAt": "2026-09-23T22:35:00Z",
+   "commandOrMethod": "7 in-place seed mutations on worktree + scoped detector runs (cp-backup/mutate/test/restore)",
+   "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/coordinator-mutations.md",
+   "artifactHash": "2e625c842b1bc82c08e19249bcca071182494c21deb8d0041d0a09e386fb7534",
+   "inputPaths": [
+    "src/core/game/EarlyGameBootstrap.ts",
+    "src/core/game/GameManagerSaveRestore.ts",
+    "src/core/skill/MortalPrecursors.ts",
+    "src/App.vue",
+    "src/services/character/CharacterCreationService.ts",
+    "src/services/character/SupabaseCharacterCreationService.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [
+    "I-IMPL-NO-SILENT-TRAM",
+    "I-IMPL-PICK-REQUIRED",
+    "I-IMPL-SAVE-PREFLIGHT",
+    "I-IMPL-SKILL-MAP",
+    "I-IMPL-CONSUME-ONCE",
+    "I-IMPL-NO-ALLOC",
+    "I-IMPL-RPC"
+   ],
+   "claims": [
+    "7/7 mutations killed on final state; M-IMPL-2 initially SURVIVED -> exposed missing-pick coverage gap (F-IMPL-2) -> pinned -> killed"
+   ],
+   "limitations": [
+    "coordinator-produced (NON_INDEPENDENT): proves declared detectors fire; not a substitute for sealed review"
+   ],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-IMPL-SOURCE-SWEEP",
+   "state": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "SOURCE_PROOF",
+   "producer": "coordinator",
+   "startedAt": "2026-09-23T22:36:00Z",
+   "finishedAt": "2026-09-23T22:40:00Z",
+   "commandOrMethod": "manual per-domain source sweep: rg attribute/allocate channels, i18n key check, display-name check, spec/plan trace, journal presence",
+   "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/coordinator-gates.md",
+   "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
+   "inputPaths": [
+    "src/services/character",
+    "src/components/onboarding",
+    "src/locales",
+    "src/data/skill",
+    "docs/specs/beta-creation-spec.md",
+    "docs/plans/beta-creation-plan.md",
+    "docs/qa"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [
+    "I-IMPL-NO-ALLOC",
+    "I-IMPL-UI-FLOW",
+    "I-IMPL-DISPLAY-NAMES",
+    "I-IMPL-I18N",
+    "I-IMPL-SPEC-TRACE",
+    "I-IMPL-PLAN-EXEC",
+    "I-IMPL-QA-JOURNAL"
+   ],
+   "claims": [
+    "0 allocation channels remain in creation path",
+    "single-screen flow: no stepper/attribute keys",
+    "TurnSkillDisplayMeta aligned to Huy Quy\u1ec1n",
+    "new strings in vi+en; no hardcoded VI in templates",
+    "impl matches spec contracts; plan steps followed",
+    "QA journal committed on branch"
+   ],
+   "limitations": [
+    "coordinator-produced (NON_INDEPENDENT)"
+   ],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-IMPL-RPC-CONTRACT",
+   "state": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-23T22:22:00Z",
+   "finishedAt": "2026-09-23T22:23:00Z",
+   "commandOrMethod": "npx vitest run src/services/character/SupabaseCharacterCreationService.contract.test.ts",
+   "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/coordinator-gates.md",
+   "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
+   "inputPaths": [
+    "src/services/character/SupabaseCharacterCreationService.contract.test.ts",
+    "supabase/migrations/202608240001_online_auth_character.sql"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [
+    "I-IMPL-RPC"
+   ],
+   "claims": [
+    "create_character request body = exact 7-param migration signature; no p_attributes; pick + schema_version asserted"
+   ],
+   "limitations": [
+    "coordinator-run"
+   ],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-IMPL-PIN-MISSING-PICK",
+   "state": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-23T22:24:00Z",
+   "finishedAt": "2026-09-23T22:25:00Z",
+   "commandOrMethod": "npx vitest run src/services/save/SaveSystem.bootRestore.test.ts (5 tests)",
+   "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/coordinator-gates.md",
+   "artifactHash": "2e82bb892286bd1c900790eff928af3f0a0fc75b1954ea66a78812fd642fdbee",
+   "inputPaths": [
+    "src/services/save/SaveSystem.bootRestore.test.ts",
+    "src/core/game/GameManagerSaveRestore.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [
+    "I-IMPL-PICK-REQUIRED",
+    "I-IMPL-SAVE-PREFLIGHT"
+   ],
+   "claims": [
+    "missing-pick mortal v82 save rejected pre-mutation (new table case)"
+   ],
+   "limitations": [
+    "coordinator-run"
+   ],
+   "status": "CURRENT"
+  }
+ ],
+ "coverage": [
+  {
+   "id": "COV-I-01",
+   "invariantId": "I-IMPL-NO-ALLOC",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-NO-ALLOC x STATIC_SEMANTIC",
+   "evidenceIds": [
+    "EV-IMPL-SOURCE-SWEEP",
+    "EV-IMPL-VITEST"
+   ],
+   "reviewerIds": [],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-02",
+   "invariantId": "I-IMPL-NO-ALLOC",
+   "surface": "INDEPENDENT_REVIEW",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-NO-ALLOC x INDEPENDENT_REVIEW",
+   "evidenceIds": [],
+   "reviewerIds": [],
+   "status": "PENDING",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-03",
+   "invariantId": "I-IMPL-NO-SILENT-TRAM",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-NO-SILENT-TRAM x STATIC_SEMANTIC",
+   "evidenceIds": [
+    "EV-IMPL-SOURCE-SWEEP",
+    "EV-IMPL-VITEST"
+   ],
+   "reviewerIds": [],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-04",
+   "invariantId": "I-IMPL-NO-SILENT-TRAM",
+   "surface": "INDEPENDENT_REVIEW",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-NO-SILENT-TRAM x INDEPENDENT_REVIEW",
+   "evidenceIds": [],
+   "reviewerIds": [],
+   "status": "PENDING",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-05",
+   "invariantId": "I-IMPL-PICK-REQUIRED",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-PICK-REQUIRED x STATIC_SEMANTIC",
+   "evidenceIds": [
+    "EV-IMPL-SOURCE-SWEEP",
+    "EV-IMPL-VITEST"
+   ],
+   "reviewerIds": [],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-06",
+   "invariantId": "I-IMPL-PICK-REQUIRED",
+   "surface": "PERSISTENCE",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-PICK-REQUIRED x PERSISTENCE",
+   "evidenceIds": [
+    "EV-IMPL-PIN-MISSING-PICK",
+    "EV-IMPL-VITEST",
+    "EV-IMPL-SOURCE-SWEEP"
+   ],
+   "reviewerIds": [],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-07",
+   "invariantId": "I-IMPL-PICK-REQUIRED",
+   "surface": "INDEPENDENT_REVIEW",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-PICK-REQUIRED x INDEPENDENT_REVIEW",
+   "evidenceIds": [],
+   "reviewerIds": [],
+   "status": "PENDING",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-08",
+   "invariantId": "I-IMPL-SAVE-PREFLIGHT",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-SAVE-PREFLIGHT x STATIC_SEMANTIC",
+   "evidenceIds": [
+    "EV-IMPL-SOURCE-SWEEP",
+    "EV-IMPL-VITEST"
+   ],
+   "reviewerIds": [],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-09",
+   "invariantId": "I-IMPL-SAVE-PREFLIGHT",
+   "surface": "PERSISTENCE",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-SAVE-PREFLIGHT x PERSISTENCE",
+   "evidenceIds": [
+    "EV-IMPL-PIN-MISSING-PICK",
+    "EV-IMPL-VITEST",
+    "EV-IMPL-SOURCE-SWEEP"
+   ],
+   "reviewerIds": [],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-10",
+   "invariantId": "I-IMPL-SAVE-PREFLIGHT",
+   "surface": "INDEPENDENT_REVIEW",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-SAVE-PREFLIGHT x INDEPENDENT_REVIEW",
+   "evidenceIds": [],
+   "reviewerIds": [],
+   "status": "PENDING",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-11",
+   "invariantId": "I-IMPL-SKILL-MAP",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-SKILL-MAP x STATIC_SEMANTIC",
+   "evidenceIds": [
+    "EV-IMPL-SOURCE-SWEEP",
+    "EV-IMPL-VITEST"
+   ],
+   "reviewerIds": [],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-12",
+   "invariantId": "I-IMPL-SKILL-MAP",
+   "surface": "INDEPENDENT_REVIEW",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-SKILL-MAP x INDEPENDENT_REVIEW",
+   "evidenceIds": [],
+   "reviewerIds": [],
+   "status": "PENDING",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-13",
+   "invariantId": "I-IMPL-RPC",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-RPC x STATIC_SEMANTIC",
+   "evidenceIds": [
+    "EV-IMPL-SOURCE-SWEEP",
+    "EV-IMPL-VITEST"
+   ],
+   "reviewerIds": [],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-14",
+   "invariantId": "I-IMPL-RPC",
+   "surface": "INDEPENDENT_REVIEW",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-RPC x INDEPENDENT_REVIEW",
+   "evidenceIds": [],
+   "reviewerIds": [],
+   "status": "PENDING",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-15",
+   "invariantId": "I-IMPL-CONSUME-ONCE",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-CONSUME-ONCE x STATIC_SEMANTIC",
+   "evidenceIds": [
+    "EV-IMPL-SOURCE-SWEEP",
+    "EV-IMPL-VITEST"
+   ],
+   "reviewerIds": [],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-16",
+   "invariantId": "I-IMPL-CONSUME-ONCE",
+   "surface": "INDEPENDENT_REVIEW",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-CONSUME-ONCE x INDEPENDENT_REVIEW",
+   "evidenceIds": [],
+   "reviewerIds": [],
+   "status": "PENDING",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-17",
+   "invariantId": "I-IMPL-UI-FLOW",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-UI-FLOW x STATIC_SEMANTIC",
+   "evidenceIds": [
+    "EV-IMPL-SOURCE-SWEEP",
+    "EV-IMPL-VITEST"
+   ],
+   "reviewerIds": [],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-18",
+   "invariantId": "I-IMPL-DISPLAY-NAMES",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-DISPLAY-NAMES x STATIC_SEMANTIC",
+   "evidenceIds": [
+    "EV-IMPL-SOURCE-SWEEP",
+    "EV-IMPL-VITEST"
+   ],
+   "reviewerIds": [],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-19",
+   "invariantId": "I-IMPL-I18N",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-I18N x STATIC_SEMANTIC",
+   "evidenceIds": [
+    "EV-IMPL-SOURCE-SWEEP",
+    "EV-IMPL-VITEST"
+   ],
+   "reviewerIds": [],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-20",
+   "invariantId": "I-IMPL-E2E-COV",
+   "surface": "RUNTIME_E2E",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-E2E-COV x RUNTIME_E2E",
+   "evidenceIds": [
+    "EV-IMPL-E2E"
+   ],
+   "reviewerIds": [],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-21",
+   "invariantId": "I-IMPL-SPEC-TRACE",
+   "surface": "SPEC",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-SPEC-TRACE x SPEC",
+   "evidenceIds": [
+    "EV-IMPL-SOURCE-SWEEP"
+   ],
+   "reviewerIds": [],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-22",
+   "invariantId": "I-IMPL-PLAN-EXEC",
+   "surface": "SPEC",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-PLAN-EXEC x SPEC",
+   "evidenceIds": [
+    "EV-IMPL-SOURCE-SWEEP"
+   ],
+   "reviewerIds": [],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "id": "COV-I-23",
+   "invariantId": "I-IMPL-QA-JOURNAL",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [],
+   "applicability": "REQUIRED",
+   "reason": "I-IMPL-QA-JOURNAL x STATIC_SEMANTIC",
+   "evidenceIds": [
+    "EV-IMPL-SOURCE-SWEEP",
+    "EV-IMPL-VITEST"
+   ],
+   "reviewerIds": [],
+   "status": "SATISFIED",
+   "weakProtection": false
+  }
+ ],
+ "attacks": [],
+ "reviews": [
+  {
+   "id": "REV-CLOSURE-FIMPL1",
+   "state": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 1,
+   "phase": "CLOSURE",
+   "reviewerId": "coordinator",
+   "contextId": "devin-84a5f4e0b65642f0981321876791f6bd",
+   "model": "swe-2-max",
+   "role": "CLOSURE",
+   "inputBundleHash": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-23T21:56:00Z",
+   "sealedAt": "2026-09-23T21:57:30Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-IMPL-FIMPL1-FIX",
+    "EV-IMPL-PIN-CONSUME-ONCE"
+   ],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-CLOSURE-FIMPL2",
+   "state": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 1,
+   "phase": "CLOSURE",
+   "reviewerId": "coordinator",
+   "contextId": "devin-84a5f4e0b65642f0981321876791f6bd",
+   "model": "swe-2-max",
+   "role": "CLOSURE",
+   "inputBundleHash": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-23T22:24:30Z",
+   "sealedAt": "2026-09-23T22:26:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-IMPL-PIN-MISSING-PICK",
+    "EV-IMPL-MUTATION-CORPUS"
+   ],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  }
+ ],
+ "cycles": [],
+ "mutations": [
+  {
+   "id": "M-IMPL-1",
+   "candidateState": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "invariantIds": [
+    "I-IMPL-NO-SILENT-TRAM"
+   ],
+   "rootClass": "CONTRACT_REGRESSION",
+   "operator": "SEED_CONTRACT_DRIFT",
+   "isolationPath": "/tmp/qa-mut-impl/M-IMPL-1.out",
+   "mutantHash": "1d2a0a69cab155492cbe945a7bbd8a043da1041793eae63e50602bf289bfa244",
+   "expectedDetector": "GameManager.mortalBasicSkill.test.ts (boot pick === linh_bao)",
+   "result": "KILLED_EXPECTED",
+   "evidenceIds": [
+    "EV-IMPL-MUTATION-CORPUS"
+   ],
+   "equivalenceReason": null,
+   "candidateUnchanged": true
+  },
+  {
+   "id": "M-IMPL-2",
+   "candidateState": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "invariantIds": [
+    "I-IMPL-PICK-REQUIRED"
+   ],
+   "rootClass": "CONTRACT_REGRESSION",
+   "operator": "SEED_CONTRACT_DRIFT",
+   "isolationPath": "/tmp/qa-mut-impl/M-IMPL-2.out",
+   "mutantHash": "bb10a8b64ffe185c910b9bf59ee723dc7eefe63f5c35552e90f8bc66ba83d654",
+   "expectedDetector": "SaveSystem.bootRestore.test.ts (missing-pick rejection case, added under F-IMPL-2)",
+   "result": "KILLED_EXPECTED",
+   "evidenceIds": [
+    "EV-IMPL-MUTATION-CORPUS"
+   ],
+   "equivalenceReason": null,
+   "candidateUnchanged": true
+  },
+  {
+   "id": "M-IMPL-3",
+   "candidateState": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "invariantIds": [
+    "I-IMPL-SAVE-PREFLIGHT"
+   ],
+   "rootClass": "CONTRACT_REGRESSION",
+   "operator": "SEED_CONTRACT_DRIFT",
+   "isolationPath": "/tmp/qa-mut-impl/M-IMPL-3.out",
+   "mutantHash": "e3cc02772eee849728d68330fade759314750ce4a09040cc0af3dba0ecc0b5e3",
+   "expectedDetector": "SaveSystem.bootRestore.test.ts (invalid-id rejection case)",
+   "result": "KILLED_EXPECTED",
+   "evidenceIds": [
+    "EV-IMPL-MUTATION-CORPUS"
+   ],
+   "equivalenceReason": null,
+   "candidateUnchanged": true
+  },
+  {
+   "id": "M-IMPL-4",
+   "candidateState": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "invariantIds": [
+    "I-IMPL-SKILL-MAP"
+   ],
+   "rootClass": "CONTRACT_REGRESSION",
+   "operator": "SEED_CONTRACT_DRIFT",
+   "isolationPath": "/tmp/qa-mut-impl/M-IMPL-4.out",
+   "mutantHash": "f181cc25d0357b16b1547eb383b2917d2a3202f1fa25a4792d05c386535dc3ab",
+   "expectedDetector": "MortalPrecursors.test.ts (precursor set + default id)",
+   "result": "KILLED_EXPECTED",
+   "evidenceIds": [
+    "EV-IMPL-MUTATION-CORPUS"
+   ],
+   "equivalenceReason": null,
+   "candidateUnchanged": true
+  },
+  {
+   "id": "M-IMPL-5",
+   "candidateState": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "invariantIds": [
+    "I-IMPL-CONSUME-ONCE"
+   ],
+   "rootClass": "CONTRACT_REGRESSION",
+   "operator": "SEED_CONTRACT_DRIFT",
+   "isolationPath": "/tmp/qa-mut-impl/M-IMPL-5.out",
+   "mutantHash": "52ef9d0ca657abba14248d7f2024c81a316793068b99607d24b4b756353b74fa",
+   "expectedDetector": "App.wiring.test.ts (consume-once AST order pin)",
+   "result": "KILLED_EXPECTED",
+   "evidenceIds": [
+    "EV-IMPL-MUTATION-CORPUS"
+   ],
+   "equivalenceReason": null,
+   "candidateUnchanged": true
+  },
+  {
+   "id": "M-IMPL-6",
+   "candidateState": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "invariantIds": [
+    "I-IMPL-NO-ALLOC"
+   ],
+   "rootClass": "CONTRACT_REGRESSION",
+   "operator": "SEED_CONTRACT_DRIFT",
+   "isolationPath": "/tmp/qa-mut-impl/M-IMPL-6.out",
+   "mutantHash": "b0f9a487668b55044aafa734f68665d813a8a79dce810b0a3cabf674661fd21c",
+   "expectedDetector": "rg allocation-write census over creation path (0 hits required)",
+   "result": "KILLED_EXPECTED",
+   "evidenceIds": [
+    "EV-IMPL-MUTATION-CORPUS"
+   ],
+   "equivalenceReason": null,
+   "candidateUnchanged": true
+  },
+  {
+   "id": "M-IMPL-7",
+   "candidateState": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "invariantIds": [
+    "I-IMPL-RPC"
+   ],
+   "rootClass": "CONTRACT_REGRESSION",
+   "operator": "SEED_CONTRACT_DRIFT",
+   "isolationPath": "/tmp/qa-mut-impl/M-IMPL-7.out",
+   "mutantHash": "8707f69640eeb9057fe89cfe4fac8bdfc20d367b987c52ca967c93b67af1026b",
+   "expectedDetector": "SupabaseCharacterCreationService.contract.test.ts (exact param set)",
+   "result": "KILLED_EXPECTED",
+   "evidenceIds": [
+    "EV-IMPL-MUTATION-CORPUS"
+   ],
+   "equivalenceReason": null,
+   "candidateUnchanged": true
+  }
+ ],
+ "corpus": [],
+ "lessons": [
+  {
+   "id": "L-IMPL-1",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-IMPL-1"
+   ],
+   "incidentEvidenceIds": [
+    "EV-IMPL-ADVERSARIAL",
+    "EV-IMPL-PIN-CONSUME-ONCE"
+   ],
+   "originatingRun": "beta-creation-impl-2026-09-23",
+   "rootClass": "STALE_STATE_WINDOW",
+   "missedInvariantIds": [],
+   "escapeReason": "module-scoped bridging slot had no consume-once guard; no test asserted reset order",
+   "applicability": [
+    "emit->boot-callback bridging via module state"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "consume-once order pinned by App.wiring.test.ts AST check"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "static guard for consume-once on module bridging slots",
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [
+    "EV-IMPL-PIN-CONSUME-ONCE"
+   ]
+  },
+  {
+   "id": "L-IMPL-2",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-IMPL-2"
+   ],
+   "incidentEvidenceIds": [
+    "EV-IMPL-MUTATION-CORPUS",
+    "EV-IMPL-PIN-MISSING-PICK"
+   ],
+   "originatingRun": "beta-creation-impl-2026-09-23",
+   "rootClass": "MISSING_DETECTOR",
+   "missedInvariantIds": [
+    "I-IMPL-PICK-REQUIRED",
+    "I-IMPL-SAVE-PREFLIGHT"
+   ],
+   "escapeReason": "rejection added without a regression pin; mutation corpus exposed it",
+   "applicability": [
+    "new fail-closed checks must land with a rejection-case pin"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "every preflight rejection gets a boundary-table case; mutation corpus re-runs it"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "mutation-first detection of unpinned rejections",
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [
+    "EV-IMPL-PIN-MISSING-PICK"
+   ]
+  }
+ ],
+ "messages": [],
+ "events": [
+  {
+   "seq": 1,
+   "at": "2026-09-23T20:54:34.680Z",
+   "kind": "PHASE",
+   "actor": "coordinator-59983",
+   "state": {
+    "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+    "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+    "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+    "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+   },
+   "previousEventHash": null,
+   "payloadPath": "events/0001.json",
+   "payloadHash": "7816298e831cac1b49056d91bb5078a7df158b183c048447a718e0d2fb0fd39f",
+   "eventHash": "74fd4dc1378a63aec91e1af55fa77f26ae17bb8c3e7dc55dc3e9b99b22e822d6"
+  },
+  {
+   "seq": 2,
+   "at": "2026-09-23T20:54:35.410Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-59983",
+   "state": {
+    "productStateId": "3bc7ead8733fe5e0c96336dc6c2334afee53318cabe66efd611d41e17d6e4e1f",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "74fd4dc1378a63aec91e1af55fa77f26ae17bb8c3e7dc55dc3e9b99b22e822d6",
+   "payloadPath": "events/0002.json",
+   "payloadHash": "05ecd7731e7570dbdece29384182e19eae563afa7a1febeb0eaa3f2c073d4e98",
+   "eventHash": "9be22e906149257cb3f807ebe107387ef2a3441ac222136edf94b5239fcf2bc3"
+  },
+  {
+   "seq": 3,
+   "at": "2026-09-23T21:49:23.634Z",
+   "kind": "PHASE",
+   "actor": "coordinator-59983",
+   "state": {
+    "productStateId": "3bc7ead8733fe5e0c96336dc6c2334afee53318cabe66efd611d41e17d6e4e1f",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "9be22e906149257cb3f807ebe107387ef2a3441ac222136edf94b5239fcf2bc3",
+   "payloadPath": "events/0003.json",
+   "payloadHash": "3b1f7cd89be9aab01b55caca421a8ff6d88128b89f3d4a17e36b4e02b6da25c5",
+   "eventHash": "1d8516251e0e3a1f974e19cf131e3d155d9cba8cb7169389bdfd4c86af4082a6"
+  },
+  {
+   "seq": 4,
+   "at": "2026-09-23T21:49:46.872Z",
+   "kind": "FINDING",
+   "actor": "coordinator-59983",
+   "state": {
+    "productStateId": "3bc7ead8733fe5e0c96336dc6c2334afee53318cabe66efd611d41e17d6e4e1f",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "1d8516251e0e3a1f974e19cf131e3d155d9cba8cb7169389bdfd4c86af4082a6",
+   "payloadPath": "events/0004.json",
+   "payloadHash": "74612d5720ebe5865ddbe3184ed85e61c2b4d05cf4c58bb6507b362ca0dfad8c",
+   "eventHash": "c8178aabb4d0518c15ea3e410793355470b4030a44613015e9b2a598d51e6c30"
+  },
+  {
+   "seq": 5,
+   "at": "2026-09-23T21:50:43.790Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-59983",
+   "state": {
+    "productStateId": "fd4159d8b5a66b1f2172351b66c15917b4cf9a7893bb39f8a1a392d51cb6da1a",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "c8178aabb4d0518c15ea3e410793355470b4030a44613015e9b2a598d51e6c30",
+   "payloadPath": "events/0005.json",
+   "payloadHash": "e80e33cf8fbe60aecd6e6946faccdd309cdb5d8e42c2ce1014ad30143acd7443",
+   "eventHash": "f36ca75455bed85d3a4771d693ea6698681b81bb736c28b72531646ffad3c2e5"
+  },
+  {
+   "seq": 6,
+   "at": "2026-09-23T21:51:21.886Z",
+   "kind": "PHASE",
+   "actor": "coordinator-59983",
+   "state": {
+    "productStateId": "fd4159d8b5a66b1f2172351b66c15917b4cf9a7893bb39f8a1a392d51cb6da1a",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "f36ca75455bed85d3a4771d693ea6698681b81bb736c28b72531646ffad3c2e5",
+   "payloadPath": "events/0006.json",
+   "payloadHash": "4c58a11d3c8cf65b96ca0b27baf59c3b30473a7d514c171ed864334decab1cc4",
+   "eventHash": "8ca90c4bc2a612eee4b167d7a73fcd4ab53fe51959aff6560256a51b26a447c7"
+  },
+  {
+   "seq": 7,
+   "at": "2026-09-23T21:51:44.510Z",
+   "kind": "PHASE",
+   "actor": "coordinator-59983",
+   "state": {
+    "productStateId": "fd4159d8b5a66b1f2172351b66c15917b4cf9a7893bb39f8a1a392d51cb6da1a",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "8ca90c4bc2a612eee4b167d7a73fcd4ab53fe51959aff6560256a51b26a447c7",
+   "payloadPath": "events/0007.json",
+   "payloadHash": "7a0d0c42747aee873f990970729f97f13519d46bbf5301a6b931ebc41d69e9dd",
+   "eventHash": "ee9a5adfbf960ee627f606f3a14ce61df793a37d16e5b8fad5060193297f0aae"
+  },
+  {
+   "seq": 8,
+   "at": "2026-09-23T21:54:19.340Z",
+   "kind": "PHASE",
+   "actor": "coordinator-59983",
+   "state": {
+    "productStateId": "fd4159d8b5a66b1f2172351b66c15917b4cf9a7893bb39f8a1a392d51cb6da1a",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "ee9a5adfbf960ee627f606f3a14ce61df793a37d16e5b8fad5060193297f0aae",
+   "payloadPath": "events/0008.json",
+   "payloadHash": "a6d3e21eebb82d755da7a6f4fb19ecd683bca5aaa37e57b730c7ea98bcf656a2",
+   "eventHash": "ef300cc6780fb4177904ba515790745930dbf4ce4dfd0e419105b798830b26ca"
+  },
+  {
+   "seq": 9,
+   "at": "2026-09-23T21:56:12.840Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-59983",
+   "state": {
+    "productStateId": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "ef300cc6780fb4177904ba515790745930dbf4ce4dfd0e419105b798830b26ca",
+   "payloadPath": "events/0009.json",
+   "payloadHash": "48daa0009ede6c44b129c4530747104215d31c4bc85db07f1d2489b136691a9c",
+   "eventHash": "10f70780901b271956276950c25557f3113a5f6ebfd0c0ab7ff648dc44066946"
+  },
+  {
+   "seq": 10,
+   "at": "2026-09-23T21:56:45.732Z",
+   "kind": "EVIDENCE",
+   "actor": "coordinator-59983",
+   "state": {
+    "productStateId": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "10f70780901b271956276950c25557f3113a5f6ebfd0c0ab7ff648dc44066946",
+   "payloadPath": "events/0010.json",
+   "payloadHash": "db7d5d1c7e6a63ff96360139deb4d5dd74c26f6d627db76c644a8bb7b003fcc1",
+   "eventHash": "ff39188f46ffd5f0cc295a117049e6fa542e821ba80311c2f6a30f44630904eb"
+  },
+  {
+   "seq": 11,
+   "at": "2026-09-23T21:56:56.369Z",
+   "kind": "EVIDENCE",
+   "actor": "coordinator-59983",
+   "state": {
+    "productStateId": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "ff39188f46ffd5f0cc295a117049e6fa542e821ba80311c2f6a30f44630904eb",
+   "payloadPath": "events/0011.json",
+   "payloadHash": "4c16b658bff8defc100a92e183050992c739b0b2e702e79cd374c484fd67ba9b",
+   "eventHash": "11c526e83611a15c1aa1272a41f117b2390c47393f77c73ae0d14f99106b929a"
+  },
+  {
+   "seq": 12,
+   "at": "2026-09-23T22:17:42.819Z",
+   "kind": "DECISION",
+   "actor": "coordinator-59983",
+   "state": {
+    "productStateId": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "11c526e83611a15c1aa1272a41f117b2390c47393f77c73ae0d14f99106b929a",
+   "payloadPath": "events/0012.json",
+   "payloadHash": "c8ac6559f5dae053a3899b9b15c3080d575251660f88b1b3c168fbb68b3787e1",
+   "eventHash": "1b9b6247cd936877cb050b84a89d02dc30684ae24aa557d8cff7536579765c68"
+  },
+  {
+   "seq": 13,
+   "at": "2026-09-23T22:22:13.494Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-59983",
+   "state": {
+    "productStateId": "bb430140cd5d57092a85fab9f821e28b5a3c32eccb025ea522811ef6c497df6b",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "1b9b6247cd936877cb050b84a89d02dc30684ae24aa557d8cff7536579765c68",
+   "payloadPath": "events/0013.json",
+   "payloadHash": "2a1510ccf4f94148a17201e5f47aaf0aa82c3a5b687814c7ef6590f25de2186b",
+   "eventHash": "68ba375fa91238e1474e83b9689657fb9bb04e2b4888444643cafc7758157fb8"
+  },
+  {
+   "seq": 14,
+   "at": "2026-09-23T22:24:48.958Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-59983",
+   "state": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "68ba375fa91238e1474e83b9689657fb9bb04e2b4888444643cafc7758157fb8",
+   "payloadPath": "events/0014.json",
+   "payloadHash": "8d5649bd344667bc586900a13bf801633c42f7ab814910dff186fcc1f44930c1",
+   "eventHash": "bb1316ac44d41a1b420d0fc6308183be34183c37517db5a6727a21a4b7386d71"
+  },
+  {
+   "seq": 15,
+   "at": "2026-09-23T22:29:47.519Z",
+   "kind": "EVIDENCE",
+   "actor": "coordinator-59983",
+   "state": {
+    "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c",
+    "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+    "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "bb1316ac44d41a1b420d0fc6308183be34183c37517db5a6727a21a4b7386d71",
+   "payloadPath": "events/0015.json",
+   "payloadHash": "c20bb74ed1b0863294bdb212f373a488566e5afb426ecbdb1e2245b4fdcc77a3",
+   "eventHash": "153318cd594dcc56b61234451b2748f02113eabe45ce31f25b260327cc22d26a"
+  }
+ ]
 }

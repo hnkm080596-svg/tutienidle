@@ -21897,6 +21897,12 @@
       "hash": "e297ca4cb106fdc8df12cc414e512f6aed43f29d81e8c3f8c80a3c3d986424c1"
     },
     {
+      "path": "src/services/character/SupabaseCharacterCreationService.contract.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "47e4d0daa57c5ab4f7b653d89d5282344431a4a583cfa07d27dadc28161d5116"
+    },
+    {
       "path": "src/services/character/SupabaseCharacterCreationService.ts",
       "kind": "file",
       "mode": 33188,
@@ -22014,7 +22020,7 @@
       "path": "src/services/save/SaveSystem.bootRestore.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8b83b562d59811f18ce362af47d6ac8bbbc37ddf3860aaacedb0639115367220"
+      "hash": "a779ac75f256aac6e85343637631720fdea24b19b5bf22bc710dcbf8c55e79e4"
     },
     {
       "path": "src/services/save/SaveSystem.conformance.test.ts",
@@ -22851,5 +22857,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322"
+  "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c"
 }
