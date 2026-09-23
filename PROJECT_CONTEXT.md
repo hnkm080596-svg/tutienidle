@@ -48,3 +48,14 @@ Prefer targeted tests during implementation and the full verification gate befor
 - The user directly assigns Codex or Claude Code to review and merge a completed task branch.
 - The reviewer reruns the verification gate and merges only with a clean primary worktree and no unresolved findings.
 - Treat this file as orientation, then read only task-relevant code and diffs.
+
+## Cloud review pipeline (ruling 2026-09-23)
+
+Mission workflow: spec → C2C review → plan → C2C review → implement (internal workflow + all gates) → external review → merge.
+
+- **C2C** = ChatGPT-web external review, coordinator-driven only (browser on the coordinator VM; children never call it). All material goes INLINE (external fetch is disabled in that runtime). 4 parallel lanes in one ChatGPT project; global ROUND counter dedupes verdicts.
+- **Devin Review** (`devin_review_manage`): automatic on every mission PR — it catches the i18n/API-contract bug class C2C misses. C2C still runs spec/plan gates and impl review on complex PRs (it catches state-invariant bugs Devin Review misses). Verified complementary on PRs #12/#14/#15.
+- Spec/plan docs live at `game/docs/specs/` + `game/docs/plans/`; children write them, stop at the gate, and implement only after the coordinator reports DONE verdicts.
+- Mission PRs base `p7/truc-co` (coordinator merges); user merges the final `p7/truc-co → master` PR.
+- Save-version rule: `CURRENT_SAVE_VERSION = merged-base CURRENT + 1` at implementation time; reject the immediately previous version. Never hardcode literals.
+- Dev-phase ruling: no backward compatibility / no migration — save-version rejection is the mechanism. Don't re-ask.
