@@ -131,6 +131,20 @@ describe('loadGame — phân biệt empty/ok/incompatible/corrupted (Phase 5, m�
     expect(loadGame()).toEqual({ status: 'incompatible', foundVersion: 7, raw })
   })
 
+  it('incompatible at the immediately previous version (M-F-CHU-THIEN - derived pin)', () => {
+    // The +1 bump contract rejects exactly the previous save version -
+    // derived from CURRENT_SAVE_VERSION so it stays correct across
+    // parallel version bumps.
+    const previous = CURRENT_SAVE_VERSION - 1
+    const save = validSave()
+    save.version = previous
+    const raw = JSON.stringify(save)
+
+    localStorage.setItem(SAVE_KEY, raw)
+
+    expect(loadGame()).toEqual({ status: 'incompatible', foundVersion: previous, raw })
+  })
+
   it('corrupted khi JSON không parse được', () => {
     localStorage.setItem(SAVE_KEY, '{not valid json')
 

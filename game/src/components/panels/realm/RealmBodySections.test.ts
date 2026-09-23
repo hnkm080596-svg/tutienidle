@@ -2,12 +2,14 @@
 // P7-M7 + M-QI-01 - RealmPanel's body chapter subviews: the Luyen The
 // tier block ported from the retired LuyenThePanel, and the Bat Mach
 // (meridian) list whose next row carries the live manual invest action
-// (QI-D1). Both read through chapter-scoped seams.
+// (QI-D1), and the Chu Thien (zhou_tian) circulation row (M-F-CHU-THIEN).
+// All read through chapter-scoped seams.
 import { describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import BodyRefinementSection from './BodyRefinementSection.vue'
 import MeridianSection from './MeridianSection.vue'
+import ZhouTianSection from './ZhouTianSection.vue'
 import { usePlayerStore } from '@/stores/player'
 import { STATE_VERSION_KEY, BUMP_STATE_KEY, GAME_MANAGER_KEY } from '@/composables/useGameState'
 import { i18n } from '@/i18n'
@@ -17,6 +19,7 @@ import { GameManager } from '@/core/game/GameManager'
 import { materials } from '@/data/materials/materials'
 import { pills } from '@/data/pill/pills'
 import { MERIDIANS } from '@/data/realm/Meridians'
+import { ZHOU_TIAN_CURRENCY_MATERIAL_ID } from '@/data/realm/ZhouTian'
 import type { Component } from 'vue'
 import type { BodyProgressionState } from '@/core/realm/body/BodyChapter'
 
@@ -317,7 +320,13 @@ describe('MeridianSection (P7-M7)', () => {
     ) {
       player.$state.realmId = 'qi_refining'
       player.$state.realmLevel = realmLevel
-      setBodyProgression(player, { meridian: { openedIds } })
+      // M-F-CHU-THIEN (C2C-59): meridian invest is sequentially gated
+      // on completed refinement - investable fixtures carry the chain.
+      player.$state.physiqueGrade = 'bao'
+      setBodyProgression(player, {
+        body_refinement: { completedTiers: 6, currentTierProgress: 0 },
+        meridian: { openedIds },
+      })
     }
 
     function nextRowButton(view: { container: HTMLElement }) {
@@ -392,7 +401,11 @@ describe('MeridianSection (P7-M7)', () => {
       const view = mountSection(MeridianSection, (player, manager) => {
         player.$state.realmId = 'foundation_establishment'
         player.$state.realmLevel = 1
-        setBodyProgression(player, { meridian: { openedIds: [] } })
+        player.$state.physiqueGrade = 'bao'
+        setBodyProgression(player, {
+          body_refinement: { completedTiers: 6, currentTierProgress: 0 },
+          meridian: { openedIds: [] },
+        })
         manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 5)
       })
 
@@ -472,5 +485,124 @@ describe('MeridianSection (P7-M7)', () => {
 
       view.unmount()
     })
+  })
+})
+
+// M-F-CHU-THIEN - the Chu Thien section: sequential lock on the
+// meridian chapter (C2C-59), realm capacity gating, milestone labels
+// (180 Tieu / 360 Dai), and the live invest action through
+// realmAdvanceOps.investBodyChapter(player, 'zhou_tian').
+describe('ZhouTianSection (M-F-CHU-THIEN)', () => {
+  function tcPlayer(
+    player: ReturnType<typeof usePlayerStore>,
+    realmLevel = 18,
+    circulation = 0,
+    { meridianComplete = true } = {},
+  ) {
+    player.$state.realmId = 'foundation_establishment'
+    player.$state.realmLevel = realmLevel
+    player.$state.physiqueGrade = 'bao'
+    setBodyProgression(player, {
+      body_refinement: { completedTiers: 6, currentTierProgress: 0 },
+      meridian: { openedIds: meridianComplete ? MERIDIANS.map(m => m.id) : [] },
+      zhou_tian: { circulation },
+    })
+  }
+
+  function investButton(view: { container: HTMLElement }) {
+    return view.container
+      .querySelector<HTMLButtonElement>('.zhou-tian-section__invest button') ?? null
+  }
+
+  it('locked: hidden behind the sequential gate until the meridian chapter completes', async () => {
+    const view = mountSection(ZhouTianSection, (player) => {
+      tcPlayer(player, 18, 0, { meridianComplete: false })
+    })
+
+    await nextTick()
+
+    expect(view.container.textContent).toContain('Phong ấn')
+    expect(investButton(view)).toBeNull()
+
+    view.unmount()
+  })
+
+  it('realm_locked: unlocked sequentially but zero capacity outside Truc Co', async () => {
+    const view = mountSection(ZhouTianSection, (player) => {
+      player.$state.realmId = 'mortal'
+      player.$state.realmLevel = 10
+      player.$state.physiqueGrade = 'bao'
+      setBodyProgression(player, {
+        body_refinement: { completedTiers: 6, currentTierProgress: 0 },
+        meridian: { openedIds: MERIDIANS.map(m => m.id) },
+        zhou_tian: { circulation: 0 },
+      })
+    })
+
+    await nextTick()
+
+    expect(view.container.textContent).toContain('Chưa tới cảnh giới')
+    expect(investButton(view)).toBeNull()
+
+    view.unmount()
+  })
+
+  it('active: shows capacity, milestones, and an enabled invest when essence is owned', async () => {
+    const view = mountSection(ZhouTianSection, (player, manager) => {
+      tcPlayer(player, 9, 179) // Tieu boundary minus one
+      manager.materialBag.add(manager.materialRegistry.get(ZHOU_TIAN_CURRENCY_MATERIAL_ID), 5)
+    })
+
+    await nextTick()
+
+    const text = view.container.textContent ?? ''
+    expect(text).toContain('Đang vận chuyển')
+    expect(text).toContain('Dung lượng hiện tại: 180')
+    const button = investButton(view)
+    expect(button).not.toBeNull()
+    expect(button!.disabled).toBe(false)
+
+    view.unmount()
+  })
+
+  it('complete: circulation 360 renders the Dai state and no invest control', async () => {
+    const view = mountSection(ZhouTianSection, (player) => {
+      tcPlayer(player, 18, 360)
+    })
+
+    await nextTick()
+
+    const text = view.container.textContent ?? ''
+    expect(text).toContain('Đại Chu Thiên')
+    expect(text).toContain('Đại Chu Thiên đã viên mãn')
+    expect(investButton(view)).toBeNull()
+
+    view.unmount()
+  })
+
+  it('invest click circulates up to capacity, debits essence, and fires bumpState', async () => {
+    let state!: ReturnType<typeof usePlayerStore>['$state']
+    const view = mountSection(ZhouTianSection, (player, manager) => {
+      state = player.$state
+      tcPlayer(player, 1, 15) // capacity 20, room 5
+      manager.materialBag.add(manager.materialRegistry.get(ZHOU_TIAN_CURRENCY_MATERIAL_ID), 10)
+    })
+
+    await nextTick()
+
+    const button = investButton(view)
+    expect(button!.disabled).toBe(false)
+
+    button!.click()
+    await nextTick()
+
+    expect(state.bodyProgression.zhou_tian.circulation).toBe(20)
+    expect(view.bumpState).toHaveBeenCalledTimes(1)
+    expect(view.manager.materialBag.getAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)).toBe(5)
+
+    // After filling to capacity the button is disabled.
+    expect(investButton(view)!.disabled).toBe(true)
+
+    view.unmount()
   })
 })

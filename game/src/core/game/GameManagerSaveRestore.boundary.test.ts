@@ -20,6 +20,7 @@ import { buildings } from '../../data/building/buildings'
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { makeInstance } from '../equipment/EquipmentInstance.fixture'
+import { MERIDIANS } from '../../data/realm/Meridians'
 import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 import type { Skill } from '../skill/Skill'
@@ -1107,9 +1108,12 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     const mid = createDefaultPlayer()
     // M-E (D2): meridian progress needs the qi_refining page unlocked -
     // a mortal + opened meridian is now an integrity violation.
+    // M-F-CHU-THIEN (C2C-64): opened meridians also need the completed
+    // refinement predecessor (+ the mirrored bao grade) to stay
+    // coherent; residue at 6/6 would itself be a violation.
     mid.realmId = 'qi_refining'
-    mid.bodyProgression.body_refinement.completedTiers = 3
-    mid.bodyProgression.body_refinement.currentTierProgress = 100
+    mid.physiqueGrade = 'bao'
+    mid.bodyProgression.body_refinement.completedTiers = 6
     mid.bodyProgression.meridian.openedIds = ['nham_mach', 'doi_mach']
     expect(() => manager.saveOps.restoreFromSave(baseSave(mid))).not.toThrow()
   })
@@ -1119,9 +1123,11 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     const player = createDefaultPlayer()
 
     // M-E (D2): the meridian progress below is only legit with the
-    // qi_refining page unlocked.
+    // qi_refining page unlocked. M-F-CHU-THIEN (C2C-64): it also needs
+    // the completed refinement predecessor + mirrored bao grade.
     player.realmId = 'qi_refining'
-    player.bodyProgression.body_refinement.completedTiers = 1
+    player.physiqueGrade = 'bao'
+    player.bodyProgression.body_refinement.completedTiers = 6
     player.bodyProgression.meridian.openedIds = ['nham_mach']
     // Stale persisted slices: a completed-tier id the state no longer
     // backs + a fabricated meridian entry. Chapter state wins.
@@ -1153,6 +1159,77 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     expect(ids.filter(id => id.startsWith('luyen-the:'))).toHaveLength(0)
     expect(ids).not.toContain('bat-mach:doc_mach:strength')
     expect(ids).toContain('bat-mach:nham_mach:maxHp')
+  })
+})
+
+// M-F-CHU-THIEN (C2C-64/70) - v77: the zhou_tian slice joins the
+// persisted canonical set, and the restore preflight enforces the
+// persisted sequential-coherence invariant: a progressed/completed
+// chapter requires every authored predecessor complete. Crafted
+// current-version payloads that violate the chain must be rejected
+// at the boundary with the live state untouched.
+describe('v77 zhou_tian slice + sequential coherence preflight', () => {
+  it('rejects a save missing the zhou_tian slice at player.bodyProgression.zhou_tian', () => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+    player.bodyProgression = {
+      body_refinement: { completedTiers: 0, currentTierProgress: 0 },
+      meridian: { openedIds: [] },
+    } as never
+
+    let thrown: unknown
+    try {
+      manager.saveOps.restoreFromSave(baseSave(player))
+    } catch (error) {
+      thrown = error
+    }
+
+    // The restore preflight rejects it at the integrity layer (the
+    // shape layer's player.bodyProgression.zhou_tian path is pinned in
+    // saveShapeValidation.test.ts).
+    expect(String(thrown)).toMatch(/zhou_tian missing/i)
+    expect(manager.skillManager.getAll()).toEqual([])
+  })
+
+  it.each([
+    ['meridian progressed while body_refinement incomplete', (p: PlayerData) => {
+      p.realmId = 'qi_refining'
+      p.bodyProgression.meridian.openedIds = ['nham_mach']
+    }],
+    ['zhou_tian progressed while meridian incomplete', (p: PlayerData) => {
+      p.realmId = 'foundation_establishment'
+      p.physiqueGrade = 'bao'
+      p.bodyProgression.body_refinement.completedTiers = 6
+      p.bodyProgression.zhou_tian.circulation = 5
+    }],
+    ['zhou_tian complete while meridian incomplete', (p: PlayerData) => {
+      p.realmId = 'foundation_establishment'
+      p.physiqueGrade = 'bao'
+      p.bodyProgression.body_refinement.completedTiers = 6
+      p.bodyProgression.zhou_tian.circulation = 360
+    }],
+    ['meridian complete while body_refinement incomplete', (p: PlayerData) => {
+      p.realmId = 'qi_refining'
+      p.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+    }],
+  ])('rejects %s and leaves live state byte-equivalent unchanged', (_label, corrupt) => {
+    const manager = makeManager()
+    const live = createDefaultPlayer()
+    live.realmId = 'mortal'
+    live.bodyProgression.body_refinement.currentTierProgress = 7
+    manager.setActivePlayer(live)
+    const liveBefore = structuredClone(live)
+
+    const crafted = createDefaultPlayer()
+    corrupt(crafted)
+    const save = baseSave(crafted, { skills: [structuredClone(SAVED_SKILL)] })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/BodyProgression integrity/i)
+
+    // Zero-mutation: the active player and every owner slice are
+    // untouched (skills preflight also precedes apply).
+    expect(live).toEqual(liveBefore)
+    expect(manager.skillManager.getAll()).toEqual([])
   })
 })
 

@@ -4,6 +4,7 @@ import { materials } from '../../data/materials/materials'
 import { pills } from '../../data/pill/pills'
 import { MERIDIANS } from '../../data/realm/Meridians'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
+import { ZHOU_TIAN_CURRENCY_MATERIAL_ID } from '../../data/realm/ZhouTian'
 import { createDefaultPlayer } from '../player/Player'
 import { GameManager } from './GameManager'
 
@@ -39,6 +40,10 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
     player.realmLevel = 18
+    // M-F-CHU-THIEN (C2C-59): meridian is sequentially gated on
+    // completed refinement - the fixture carries a coherent state.
+    player.physiqueGrade = 'bao'
+    player.bodyProgression.body_refinement.completedTiers = 6
     manager.setActivePlayer(player)
     manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 5)
 
@@ -55,6 +60,10 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
     player.realmLevel = 18
+    // Coherent prerequisite chain (C2C-59/64): 8 opened meridians
+    // requires completed refinement + the mirrored grade.
+    player.physiqueGrade = 'bao'
+    player.bodyProgression.body_refinement.completedTiers = 6
     manager.setActivePlayer(player)
     player.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 8).map(m => m.id)
     manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 40)
@@ -83,4 +92,65 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
     expect(manager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')).toBe(0)
     expect(manager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(10)
   })
+
+  it('material channel: zhou_tian consumes tinh_hoa_phap_the exactly (no substitution)', () => {
+    // M-F-CHU-THIEN (C2C-64) - the authored currency contract:
+    // ZHOU_TIAN_CURRENCY_MATERIAL_ID is the single source and IS the
+    // Phap essence; the ops seam debits it 1:1 against capacity.
+    expect(ZHOU_TIAN_CURRENCY_MATERIAL_ID).toBe('tinh_hoa_phap_the')
+
+    const manager = managerWithCatalogs()
+    const player = createDefaultPlayer()
+    player.realmId = 'foundation_establishment'
+    player.realmLevel = 1 // capacity 20
+    manager.setActivePlayer(player)
+    completeBodyPrerequisites(player) // meridian complete -> unlocked
+    manager.materialBag.add(manager.materialRegistry.get('tinh_hoa_phap_the'), 7)
+
+    const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')
+
+    expect(consumed).toBe(7)
+    expect(manager.materialBag.getAmount('tinh_hoa_phap_the')).toBe(0)
+    expect(player.bodyProgression.zhou_tian.circulation).toBe(7)
+  })
+
+  it('zhou_tian invest is capacity-clamped, no-debit when empty, and locked under the sequential gate', () => {
+    const manager = managerWithCatalogs()
+    const player = createDefaultPlayer()
+    player.realmId = 'foundation_establishment'
+    player.realmLevel = 1 // capacity 20
+    manager.setActivePlayer(player)
+    completeBodyPrerequisites(player)
+    player.bodyProgression.zhou_tian.circulation = 18
+    manager.materialBag.add(manager.materialRegistry.get('tinh_hoa_phap_the'), 50)
+
+    // Over-owned + remaining capacity 2 -> consumes exactly 2.
+    expect(manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')).toBe(2)
+    expect(manager.materialBag.getAmount('tinh_hoa_phap_the')).toBe(48)
+    expect(player.bodyProgression.zhou_tian.circulation).toBe(20)
+
+    // At capacity -> zero debit, idempotent.
+    expect(manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')).toBe(0)
+    expect(manager.materialBag.getAmount('tinh_hoa_phap_the')).toBe(48)
+
+    // Locked (meridian incomplete) -> zero debit even with essence owned.
+    const locked = createDefaultPlayer()
+    locked.realmId = 'foundation_establishment'
+    locked.realmLevel = 1
+    locked.physiqueGrade = 'bao'
+    locked.bodyProgression.body_refinement.completedTiers = 6
+    locked.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 8).map(m => m.id)
+    manager.setActivePlayer(locked)
+    expect(manager.realmAdvanceOps.investBodyChapter(locked, 'zhou_tian')).toBe(0)
+    expect(manager.materialBag.getAmount('tinh_hoa_phap_the')).toBe(48)
+    expect(locked.bodyProgression.zhou_tian.circulation).toBe(0)
+  })
 })
+
+// M-F-CHU-THIEN - a coherent post-refinement state: 6/6 refinement
+// (+ mirrored bao grade) and all nine meridians open.
+function completeBodyPrerequisites(player: ReturnType<typeof createDefaultPlayer>): void {
+  player.physiqueGrade = 'bao'
+  player.bodyProgression.body_refinement.completedTiers = 6
+  player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+}

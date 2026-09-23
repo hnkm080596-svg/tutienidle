@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import { materials } from '../../data/materials/materials'
 import { pills } from '../../data/pill/pills'
+import { MERIDIANS } from '../../data/realm/Meridians'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
 import { createDefaultPlayer } from '../player/Player'
 import { usePlayerStore } from '../../stores/player'
@@ -233,6 +234,11 @@ describe('investBodyChapter essence substitution (M-QI-09)', () => {
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
     player.realmLevel = 18
+    // M-F-CHU-THIEN (C2C-59): the fixture completes the authored
+    // prereq so only the namespace gate, not the sequential gate,
+    // is what this test pins.
+    player.physiqueGrade = 'bao'
+    player.bodyProgression.body_refinement.completedTiers = 6
     manager.setActivePlayer(player)
     manager.materialBag.add(manager.materialRegistry.get(BAO), 25)
 
@@ -243,5 +249,25 @@ describe('investBodyChapter essence substitution (M-QI-09)', () => {
     expect(consumed).toBe(0)
     expect(manager.materialBag.getAmount(BAO)).toBe(25)
     expect(player.bodyProgression.meridian.openedIds).toHaveLength(0)
+  })
+
+  it('zhou_tian spends its authored Phap essence exactly - the top rung substitutes nothing (M-F-CHU-THIEN)', () => {
+    const manager = managerWithCatalogs()
+    const player = createDefaultPlayer()
+    player.realmId = 'foundation_establishment'
+    player.realmLevel = 1 // capacity 20
+    player.physiqueGrade = 'bao'
+    player.bodyProgression.body_refinement.completedTiers = 6
+    player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+    manager.setActivePlayer(player)
+    // Phap is the highest rung - nothing sits above it to cover a
+    // shortfall, so the seam debits the owned amount 1:1 and only that.
+    manager.materialBag.add(manager.materialRegistry.get(PHAP), 7)
+
+    const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')
+
+    expect(consumed).toBe(7)
+    expect(manager.materialBag.getAmount(PHAP)).toBe(0)
+    expect(player.bodyProgression.zhou_tian.circulation).toBe(7)
   })
 })

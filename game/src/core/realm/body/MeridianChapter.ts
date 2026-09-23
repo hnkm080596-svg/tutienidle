@@ -46,6 +46,11 @@ export const meridianChapter: ModifierBodyChapter = {
   // lives in pillBag, not materialBag. thien_dia_chi_kieu is a material.
   currency: { bag: 'pill', id: THONG_MACH_DAN_MATERIAL_ID },
   auxCurrency: { bag: 'material', id: THIEN_DIA_CHI_KIEU_MATERIAL_ID },
+  // M-F-CHU-THIEN (C2C-59) - system-wide sequentiality: meridian only
+  // unlocks once body_refinement completes, so the canonical chain
+  // body_refinement -> meridian -> zhou_tian holds at the dispatch gate
+  // and as a persisted-state invariant.
+  unlocksAfterChapters: ['body_refinement'],
 
   // Dau tu Thong Mach Dan vao duong ke tiep. Tra ve so dan THAT SU da
   // tieu (0 neu khong du dieu kien/khong con duong). auxOwned chi co y

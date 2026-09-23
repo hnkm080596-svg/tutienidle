@@ -14,7 +14,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { getBodyChapterProgress } from '@/core/realm/body/BodyProgressionSystem'
+import { getBodyChapterProgress, isBodyChapterUnlocked } from '@/core/realm/body/BodyProgressionSystem'
 import {
   isMeridianPageUnlocked,
   listMeridianPages,
@@ -48,6 +48,10 @@ const pageViews = computed(() => {
   const completed = chapterProgress.value.completed
   const ownedPills = gameManager.pillBag.getAmount(THONG_MACH_DAN_MATERIAL_ID)
   const ownedAux = gameManager.materialBag.getAmount(THIEN_DIA_CHI_KIEU_MATERIAL_ID)
+  // M-F-CHU-THIEN (C2C-59) - sequential mirror: meridian invest stays
+  // gated until body_refinement completes; the dispatch gate is the
+  // authority, the button only mirrors it.
+  const seqUnlocked = isBodyChapterUnlocked(player.$state, 'meridian')
 
   return pages.map((page) => {
     const unlocked = isMeridianPageUnlocked(player.$state, page.pageRealmId)
@@ -69,7 +73,7 @@ const pageViews = computed(() => {
       // meridianChapter.invest re-validates all of them on click.
       const paced = player.$state.realmId !== meridian.pageRealmId
         || player.$state.realmLevel >= meridian.requiredRealmLevel
-      const canInvest = unlocked && status === 'next'
+      const canInvest = unlocked && seqUnlocked && status === 'next'
         && ownedPills >= meridian.thongMachDanCost
         && paced
         && (!meridian.requiresThienDiaChiKieu || ownedAux >= 1)
@@ -89,6 +93,7 @@ const pageViews = computed(() => {
           ? meridian.requiredRealmLevel
           : null,
         requiresAux: unlocked && status === 'next' && meridian.requiresThienDiaChiKieu === true,
+        requiresSeq: unlocked && !seqUnlocked && status === 'next',
         canInvest,
         ownedPills,
       }
@@ -149,6 +154,7 @@ function invest(): void {
               · {{ t('panels.realm.meridian.realmGate', { realm: page.realmName, level: row.requiredRealmLevel }) }}
             </template>
             <template v-if="row.requiresAux">· {{ t('panels.realm.meridian.auxGate') }}</template>
+            <template v-if="row.requiresSeq">· {{ t('panels.realm.meridian.seqGate') }}</template>
           </p>
 
           <div v-if="row.status === 'next'" class="meridian-section__row-invest">

@@ -83,13 +83,17 @@ describe('physique transformation (QI-D4)', () => {
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
     player.realmLevel = 18
+    // M-F-CHU-THIEN (C2C-59): meridian invest is sequentially gated on
+    // completed refinement; the coherent fixture carries bao already.
+    player.physiqueGrade = 'bao'
+    player.bodyProgression.body_refinement.completedTiers = 6
 
     for (let i = 0; i < MERIDIANS.length; i++) {
       investBodyChapterState(player, 'meridian', 999, 999)
     }
 
     expect(player.bodyProgression.meridian.openedIds).toHaveLength(MERIDIANS.length)
-    expect(getPhysiqueGrade(player)).toBe('pham')
+    expect(getPhysiqueGrade(player)).toBe('bao') // meridian advances nothing
   })
 })
 
