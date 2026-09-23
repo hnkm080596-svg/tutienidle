@@ -278,7 +278,7 @@ export function canUpgradeNode(player: PlayerData, node: ProgressionNode): boole
  * Returns true when the cost was waived (caller deducts nothing).
  */
 function rollVanDaoWaive(player: PlayerData, node: ProgressionNode, cost: number): boolean {
-  const chance = getNodeCostFreeChance(player.selectedTalentIds)
+  const chance = getNodeCostFreeChance(player.selectedTalentIds, player.talentLevels)
 
   if (chance <= 0 || cost <= 0) {
     return false

@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { collectTalentEffects, getTalentCombatPassiveSkillId, hasTalent } from './TalentEffects'
 import { TALENT_PASSIVE_SKILLS } from '@/data/skill/TalentPassives'
 
-// Talent v4 wiring (spec 2026-09-03-talent-catalog-v4-design.md §3.2,
-// §4.1) — khóa: (1) getter combat passive trỏ đúng skill, (2) siết đa
-// talent chỉ đọc id đầu (save edit không cộng dồn ngân sách), (3) mọi
-// passive trỏ buff tồn tại + có nhịp đúng spec.
+// Talent v4 wiring (spec 2026-09-03-talent-catalog-v4-design.md S3.2,
+// S4.1) - khoa: (1) getter combat passive tro dung skill, (2) da talent
+// so huu that (M-F-TALENT supersede clamp id-dau) cong don effect theo
+// level hien tai, (3) moi passive tro buff ton tai + co nhip dung spec.
 
-describe('TalentEffects v4 — combat passive wiring + siết đa talent', () => {
+describe('TalentEffects v4 — combat passive wiring + đa talent', () => {
   it('getTalentCombatPassiveSkillId — talent combat trả đúng id passive', () => {
     expect(getTalentCombatPassiveSkillId(['kiem_quang'])).toBe('talent_passive_kiem_quang')
     expect(getTalentCombatPassiveSkillId(['vo_anh'])).toBe('talent_passive_vo_anh')
@@ -21,26 +21,38 @@ describe('TalentEffects v4 — combat passive wiring + siết đa talent', () =>
     expect(getTalentCombatPassiveSkillId(['talent_khong_ton_tai'])).toBeUndefined()
   })
 
-  it('collectTalentEffects siết đa talent — chỉ id ĐẦU TIÊN được đọc (spec §3.2)', () => {
-    // Save edit chứa 2 id: chỉ kiem_quang (id đầu) có hiệu lực.
+  it('collectTalentEffects đa talent (M-F-TALENT supersede §3.2 clamp) — MỌI id được đọc, theo level', () => {
+    // Multi-ownership gio la hop le (NEW grants) - ca hai passive deu thu.
     const effects = collectTalentEffects(['kiem_quang', 'tat_phong'])
 
-    expect(effects).toEqual([{ kind: 'combat_passive', passiveSkillId: 'talent_passive_kiem_quang' }])
+    expect(effects).toEqual([
+      { kind: 'combat_passive', passiveSkillId: 'talent_passive_kiem_quang' },
+      { kind: 'combat_passive', passiveSkillId: 'talent_passive_tat_phong' },
+    ])
 
-    // Đảo thứ tự — tat_phong thắng.
+    // Thu tu so huu quyet dinh thu tu effect (on dinh, deterministic).
     const reversed = collectTalentEffects(['tat_phong', 'kiem_quang'])
 
-    expect(reversed).toEqual([{ kind: 'combat_passive', passiveSkillId: 'talent_passive_tat_phong' }])
+    expect(reversed).toEqual([
+      { kind: 'combat_passive', passiveSkillId: 'talent_passive_tat_phong' },
+      { kind: 'combat_passive', passiveSkillId: 'talent_passive_kiem_quang' },
+    ])
+
+    // talentLevels map doc effect theo level (mot breakthrough pool
+    // talent o level 2 doc bang levels[0], khong phai base effects).
+    const leveled = collectTalentEffects(['lk_dung_nap'], { lk_dung_nap: 2 })
+
+    expect(leveled).toEqual([{ kind: 'cultivation_speed', percent: 0.2 }])
   })
 
   it('collectTalentEffects — id retired ở đầu → effect rỗng (không cộng dồn v3)', () => {
-    // Save cũ chỉ còn retired id duy nhất: definition resolve được
-    // (hiển thị tên) nhưng effects là [] — không có hiệu lực nào.
+    // Save cu chi con retired id duy nhat: definition resolve duoc
+    // (hien thi ten) nhung effects la [] - khong co hieu luc nao.
     expect(collectTalentEffects(['tu_bao'])).toEqual([])
     expect(collectTalentEffects(['unknown_talent'])).toEqual([])
   })
 
-  it('Phàm Cốt giữ effect cultivation_speed −75% qua đường siết', () => {
+  it('Phàm Cốt giữ effect cultivation_speed −75%', () => {
     expect(collectTalentEffects(['pham_cot'])).toEqual([{ kind: 'cultivation_speed', percent: -0.75 }])
   })
 
@@ -88,7 +100,7 @@ describe('TalentPassives v4 — shape & nhịp engine của 11 passive', () => {
 
     expect(chinh.passiveCondition).toEqual({ kind: 'hpBelow', percent: 0.35 })
     expect(phan.passiveCondition).toBeUndefined()
-    // Phản passive cộng finalDamageReductionPercent ÂM (tức +5% nhận vào).
+    // Phan passive cong finalDamageReductionPercent AM (tuc +5% nhan vao).
     expect(phan.passiveModifiers![0]!.percent).toBeLessThan(0)
   })
 
@@ -139,8 +151,8 @@ describe('TalentPassives v4 — shape & nhịp engine của 11 passive', () => {
     expect(skill.passiveConvertsTo).toBeUndefined()
   })
 
-  // generic thorns stat retired (spec 2026-09-15 T12) — the stacking
-  // retaliation payload is wardBreakDamagePercent (Khiên Nổ).
+  // generic thorns stat retired (spec 2026-09-15 T12) - the stacking
+  // retaliation payload is wardBreakDamagePercent (Khien No).
   it('Thứ Phạt — trigger damage_taken, gai theo tầng Hận Thứ (decay thuộc consumer — không convert)', () => {
     const skill = passiveById.get('talent_passive_thu_phat')!
 

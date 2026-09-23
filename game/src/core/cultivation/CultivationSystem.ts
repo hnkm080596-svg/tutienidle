@@ -14,16 +14,16 @@ export function addCultivation(
     player.realmLevel,
   )
 
-  // Không tích lũy dư quá mức cần để đột phá — chặn ở "required" thay
-  // vì cộng thẳng rồi để tràn, tránh trường hợp AFK lâu tích được vài
-  // lần "required" rồi bấm đột phá một phát nhảy nhiều tầng. Đột phá
-  // xong vẫn tự reset cultivation = 0 như cũ (xem breakthrough()).
+  // Khong tich luy du qua muc can de dot pha - chan o "required" thay
+  // vi cong thang roi de tran, tranh truong hop AFK lau tich duoc vai
+  // lan "required" roi bam dot pha mot phat nhay nhieu tang. Dot pha
+  // xong van tu reset cultivation = 0 nhu cu (xem breakthrough()).
   //
-  // Talent v4 M2 — Hai Nap (spec §4.3): phần tràn không mất mà ngân vào
-  // cultivationOvercharge; breakthrough() rót ngân quỹ sang tầng mới.
+  // Talent v4 M2 - Hai Nap (spec S4.3): phan tran khong mat ma ngan vao
+  // cultivationOvercharge; breakthrough() rot ngan quy sang tang moi.
   const total = player.cultivation + amount
 
-  if (total > required && hasCultivationOverflowBank(player.selectedTalentIds)) {
+  if (total > required && hasCultivationOverflowBank(player.selectedTalentIds, player.talentLevels)) {
     player.cultivationOvercharge += total - required
     player.cultivation = required
     return
@@ -33,7 +33,7 @@ export function addCultivation(
 }
 
 /**
- * Hai Nap (M2) — pour the banked overflow into the current level, capped
+ * Hai Nap (M2) - pour the banked overflow into the current level, capped
  * at that level's required so one breakthrough never skips a second
  * tier; leftover stays banked for the next breakthrough. Shared by the
  * minor-tier breakthrough() below and the major-realm transition in
@@ -74,33 +74,33 @@ export function breakthrough(player: PlayerData): boolean {
     // Hai Nap (M2): the banked overflow pours into the new tier.
     pourCultivationOvercharge(player)
 
-    // skill-insight-and-auto-combat-hud-plan.md mục 1 — đột phá tiểu
-    // cảnh giới KHÔNG còn cấp điểm progression skill nữa (skillPoints
-    // cũ đã xoá hẳn khỏi PlayerData). Cảm ngộ Kỹ năng (skillInsight)
-    // giờ CHỈ đến từ chiến đấu, xem GameManager.grantBattleRewardIfNeeded().
+    // skill-insight-and-auto-combat-hud-plan.md muc 1 - dot pha tieu
+    // canh gioi KHONG con cap diem progression skill nua (skillPoints
+    // cu da xoa han khoi PlayerData). Cam ngo Ky nang (skillInsight)
+    // gio CHI den tu chien dau, xem GameManager.grantBattleRewardIfNeeded().
 
-    // 2026-08-20 (Realm Passive & Pressure follow-up) — đổi từ ramp
-    // "1-9 điểm tùy tiểu cảnh giới" (PLAN HOÀN CHỈNH mục 2 cũ) sang
-    // FLAT +1/tầng, cùng nhịp skillPoints ngay dưới — ramp cũ khiến số
-    // điểm CỘNG DỒN mỗi lần đột phá trùng luôn với realmLevel vừa đạt,
-    // dễ hiểu lầm là bug (yêu cầu người dùng: "mỗi tầng cho 1 điểm
-    // thuộc tính"). Cấp CÙNG lúc skillPoints (cùng 1 sự kiện đột phá),
-    // nhưng là 2 hồ điểm HOÀN TOÀN tách biệt (xem Player.ts's
+    // 2026-08-20 (Realm Passive & Pressure follow-up) - doi tu ramp
+    // "1-9 diem tuy tieu canh gioi" (PLAN HOAN CHINH muc 2 cu) sang
+    // FLAT +1/tang, cung nhip skillPoints ngay duoi - ramp cu khien so
+    // diem CONG DON moi lan dot pha trung luon voi realmLevel vua dat,
+    // de hieu lam la bug (yeu cau nguoi dung: "moi tang cho 1 diem
+    // thuoc tinh"). Cap CUNG luc skillPoints (cung 1 su kien dot pha),
+    // nhung la 2 ho diem HOAN TOAN tach biet (xem Player.ts's
     // attributePoints).
     player.attributePoints++
 
     return true
   }
 
-  // Đột Phá tổng quát (2026-08-16) — MỌI lượt chuyển đại cảnh giới giờ
-  // đều bắt buộc đi qua 1 nghi lễ riêng thay vì "Đột Phá" thường: chọn
-  // Pháp Tu/Kiếm Tu cho Phàm Nhân->Luyện Khí
-  // (GameManager.chooseCultivationPath()), hoặc Độ Kiếp cho mọi cảnh
-  // giới còn lại (GameManager.startTribulation(), panel vật phẩm yêu
-  // cầu — xem composables/useTribulation.ts). breakthrough() thường
-  // KHÔNG BAO GIỜ tự nhảy đại cảnh giới nữa, bất kể đang ở cảnh giới
-  // nào — không còn cần check riêng từng realmId như trước. Cultivation
-  // vẫn giữ nguyên ở mức required (đã chặn ở addCultivation), cho phép
-  // người chơi thử lại nghi lễ bất kỳ lúc nào mà không mất tu vi.
+  // Dot Pha tong quat (2026-08-16) - MOI luot chuyen dai canh gioi gio
+  // deu bat buoc di qua 1 nghi le rieng thay vi "Dot Pha" thuong: chon
+  // Phap Tu/Kiem Tu cho Pham Nhan->Luyen Khi
+  // (GameManager.chooseCultivationPath()), hoac Do Kiep cho moi canh
+  // gioi con lai (GameManager.startTribulation(), panel vat pham yeu
+  // cau - xem composables/useTribulation.ts). breakthrough() thuong
+  // KHONG BAO GIO tu nhay dai canh gioi nua, bat ke dang o canh gioi
+  // nao - khong con can check rieng tung realmId nhu truoc. Cultivation
+  // van giu nguyen o muc required (da chan o addCultivation), cho phep
+  // nguoi choi thu lai nghi le bat ky luc nao ma khong mat tu vi.
   return false
 }

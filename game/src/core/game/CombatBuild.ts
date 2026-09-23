@@ -118,6 +118,7 @@ export interface ResolvedCombatBuild {
   readonly entryBuffs: readonly ResolvedEntryBuff[]
   readonly survive: {
     readonly talentIds: readonly string[]
+    readonly talentLevels?: Readonly<Record<string, number>>
     readonly extraSources?: (
       participant: TurnBattleParticipant,
       hasActiveBuff: (definitionId: BuffDefinitionId) => boolean,
@@ -351,6 +352,7 @@ export function resolveCombatBuild(
     entryBuffs,
     survive: {
       talentIds: source.selectedTalentIds,
+      talentLevels: source.talentLevels,
       extraSources: runtime?.buildSurviveSources
         ? (participant, hasActiveBuff) => runtime.buildSurviveSources!(source, participant, hasActiveBuff)
         : undefined,

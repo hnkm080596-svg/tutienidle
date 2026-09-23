@@ -33,29 +33,29 @@ export interface EquipmentOpsSystemDeps {
   buildingRegistry: BuildingRegistry
   buildingSystem: BuildingSystem
   notifications: NotificationQueue
-  // Collect-quest hook (xem GameManager.notifyQuestMaterialGained) — GameManager
-  // cung cấp closure vì hook thật cần questSystem/questRegistry/questManager,
-  // những state không thuộc phạm vi trang bị.
+  // Collect-quest hook (xem GameManager.notifyQuestMaterialGained) - GameManager
+  // cung cap closure vi hook that can questSystem/questRegistry/questManager,
+  // nhung state khong thuoc pham vi trang bi.
   notifyQuestMaterialGained: (materialId: string, amount: number) => void
   // Talent policy reads the active player per call (same pattern as
-  // GameManagerBuildingOps) — enhance guarantee follows the CURRENT
+  // GameManagerBuildingOps) - enhance guarantee follows the CURRENT
   // selectedTalentIds, not a snapshot.
   getActivePlayer: () => PlayerData | undefined
 }
 
 /**
- * Tách khỏi GameManager (2026-09-02, task 1 — GameManager split) — toàn bộ
- * thao tác trang bị (equip/unequip, Cường Hóa, Tẩy Luyện, Tinh Luyện, Hóa
- * Luyện, obtain/roll, slot state query, breakthrough-unequip-guard). Cùng
- * pattern DI với BattleLootSystem/StageWaveSystem: constructor nhận
- * dependency tường minh qua object `deps`, KHÔNG tự import ngược GameManager.
+ * Tach khoi GameManager (2026-09-02, task 1 - GameManager split) - toan bo
+ * thao tac trang bi (equip/unequip, Cuong Hoa, Tay Luyen, Tinh Luyen, Hoa
+ * Luyen, obtain/roll, slot state query, breakthrough-unequip-guard). Cung
+ * pattern DI voi BattleLootSystem/StageWaveSystem: constructor nhan
+ * dependency tuong minh qua object `deps`, KHONG tu import nguoc GameManager.
  */
 export class EquipmentOpsSystem {
   constructor(private readonly deps: EquipmentOpsSystemDeps) {}
 
   /**
-   * W5 (2026-08-27) — level Khí Đường giảm chi phí Cường Hóa/Tẩy Luyện/
-   * Tinh Luyện. Đồng bộ discount vào EquipmentSystem trước mỗi query/spend.
+   * W5 (2026-08-27) - level Khi Duong giam chi phi Cuong Hoa/Tay Luyen/
+   * Tinh Luyen. Dong bo discount vao EquipmentSystem truoc moi query/spend.
    */
   private syncEquipmentCostDiscount() {
     const instance = this.deps.buildingManager.getByBuildingId('equipment_hall')
@@ -73,11 +73,12 @@ export class EquipmentOpsSystem {
   }
 
   /**
-   * M3 (spec §4.2) — Bach Luyen Thanh Khi: enhance policy (never fail +
+   * M3 (spec S4.2) - Bach Luyen Thanh Khi: enhance policy (never fail +
    * x3 cost) synced per call, same pattern as syncEquipmentCostDiscount.
    */
   private syncEnhancePolicy() {
-    const guarantee = getEnhanceGuarantee(this.deps.getActivePlayer()?.selectedTalentIds)
+    const player = this.deps.getActivePlayer()
+    const guarantee = getEnhanceGuarantee(player?.selectedTalentIds, player?.talentLevels)
 
     this.deps.equipmentSystem.setEnhancePolicy(
       guarantee
@@ -100,11 +101,11 @@ export class EquipmentOpsSystem {
   }
 
   /**
-   * Cap mềm túi trang bị (audit 2026-08-31) — EquipmentBag.add() tự Hóa
-   * Luyện item "rác" nhất khi vượt cap và TRẢ rewards Tinh Hoa cho caller
-   * cộng. Null-safe với mock tests (add trả undefined khi bị mock). Cộng
-   * qua materialBag + quest hook (mirror dissolveItems()), toast 1 lần
-   * mỗi batch qua NotificationQueue sẵn có.
+   * Cap mem tui trang bi (audit 2026-08-31) - EquipmentBag.add() tu Hoa
+   * Luyen item "rac" nhat khi vuot cap va TRA rewards Tinh Hoa cho caller
+   * cong. Null-safe voi mock tests (add tra undefined khi bi mock). Cong
+   * qua materialBag + quest hook (mirror dissolveItems()), toast 1 lan
+   * moi batch qua NotificationQueue san co.
    */
   private grantAutoDissolveRewards(rewards: AutoDissolveReward[] | undefined) {
     const autoDissolved = rewards ?? []
@@ -115,7 +116,7 @@ export class EquipmentOpsSystem {
 
     for (const reward of autoDissolved) {
       if (this.deps.materialRegistry.has(reward.materialId)) {
-        // 9.8 — tràn túi: quest chỉ tính delivered + toast bag.overflow.
+        // 9.8 - tran tui: quest chi tinh delivered + toast bag.overflow.
         const overflow = this.deps.materialBag.add(this.deps.materialRegistry.get(reward.materialId), reward.amount)
 
         this.deps.notifyQuestMaterialGained(reward.materialId, reward.amount - overflow)
@@ -149,7 +150,7 @@ export class EquipmentOpsSystem {
     return this.deps.equipmentSystem.unequip(instanceId, this.deps.equipmentBag)
   }
 
-  /** Cường Hóa gắn SLOT — slot trống vẫn nâng được (slot-level rework). */
+  /** Cuong Hoa gan SLOT - slot trong van nang duoc (slot-level rework). */
   enhanceSlot(slot: EquipmentSlot, player: PlayerData): { ok: boolean; reason?: string } {
     this.syncEquipmentCostDiscount()
     this.syncEnhancePolicy()
@@ -206,15 +207,15 @@ export class EquipmentOpsSystem {
   }
 
   /**
-   * Task 10 (rework P3) — slot-level enhance: trần là MAX_SLOT_ENHANCE_LEVEL
-   * (100 = 10 realm × 10 cấp), KHÔNG còn theo template. Giữ method cho API
-   * ổn định; tham số legacy bỏ qua.
+   * Task 10 (rework P3) - slot-level enhance: tran la MAX_SLOT_ENHANCE_LEVEL
+   * (100 = 10 realm x 10 cap), KHONG con theo template. Giu method cho API
+   * on dinh; tham so legacy bo qua.
    */
   getSlotMaxEnhanceLevel(_slot: EquipmentSlot, _realmId: string): number {
     return MAX_SLOT_ENHANCE_LEVEL
   }
 
-  /** Template tra an toàn — registry.get() ném lỗi với id lạ, UI cần undefined. */
+  /** Template tra an toan - registry.get() nem loi voi id la, UI can undefined. */
   getEquipmentTemplate(itemId: string): Equipment | undefined {
     try {
       return this.deps.equipmentRegistry.get(itemId)
@@ -251,8 +252,8 @@ export class EquipmentOpsSystem {
   }
 
   /**
-   * TINH LUYỆN (plan §7.4) — mỗi dòng eligible không khóa tăng 5–20%
-   * rồi clamp theo trần tier; tối đa khóa 3 dòng. Trả về reason lỗi cho UI.
+   * TINH LUYEN (plan S7.4) - moi dong eligible khong khoa tang 5-20%
+   * roi clamp theo tran tier; toi da khoa 3 dong. Tra ve reason loi cho UI.
    */
   refineItem(
     instanceId: string,
@@ -275,9 +276,9 @@ export class EquipmentOpsSystem {
   }
 
   /**
-   * Xem trước Tẩy Luyện (2026-08-30, UI "giữ/bỏ") — roll + trừ cost NGAY,
-   * KHÔNG ghi affixes mới vào instance. R9 (AR-21): trả một-use TICKET —
-   * affixes hiển thị đọc qua getWashPreviewAffixes(ticketId).
+   * Xem truoc Tay Luyen (2026-08-30, UI "giu/bo") - roll + tru cost NGAY,
+   * KHONG ghi affixes moi vao instance. R9 (AR-21): tra mot-use TICKET -
+   * affixes hien thi doc qua getWashPreviewAffixes(ticketId).
    */
   previewWashItem(instanceId: string): { ok: boolean; reason?: string; ticketId?: string } {
     this.syncEquipmentCostDiscount()
@@ -302,8 +303,8 @@ export class EquipmentOpsSystem {
   }
 
   /**
-   * Chốt kết quả đã preview (previewWashItem) — không trừ cost lần nữa.
-   * R9 (AR-21): commit nhận TICKET ID; affixes áp là bản domain-owned.
+   * Chot ket qua da preview (previewWashItem) - khong tru cost lan nua.
+   * R9 (AR-21): commit nhan TICKET ID; affixes ap la ban domain-owned.
    */
   commitWashItem(instanceId: string, ticketId: string): { ok: boolean; reason?: string } {
     return this.deps.equipmentSystem.commitWashAffixes(
@@ -316,7 +317,7 @@ export class EquipmentOpsSystem {
   }
 
   /**
-   * Xem trước Tinh Luyện (2026-08-30, UI "giữ/bỏ") — cùng cơ chế với
+   * Xem truoc Tinh Luyen (2026-08-30, UI "giu/bo") - cung co che voi
    * previewWashItem/commitWashItem.
    */
   previewRefineItem(
@@ -335,7 +336,7 @@ export class EquipmentOpsSystem {
     )
   }
 
-  /** Chốt values đã preview (previewRefineItem) — không trừ cost lần nữa. */
+  /** Chot values da preview (previewRefineItem) - khong tru cost lan nua. */
   commitRefineItem(instanceId: string, values: RefineValueEntry[]): { ok: boolean; reason?: string } {
     return this.deps.equipmentSystem.commitRefineValues(
       instanceId,
@@ -346,7 +347,7 @@ export class EquipmentOpsSystem {
     )
   }
 
-  /** Hủy Refine preview đã trả phí khi UI bỏ kết quả hoặc đổi context. */
+  /** Huy Refine preview da tra phi khi UI bo ket qua hoac doi context. */
   discardRefinePreview(instanceId?: string): void {
     this.deps.equipmentSystem.discardRefinePreview(instanceId)
   }
@@ -370,8 +371,8 @@ export class EquipmentOpsSystem {
   }
 
   /**
-   * HÓA LUYỆN (plan §7.5) — phân giải batch trang bị thành Tinh Hoa,
-   * all-or-nothing. Không tiêu hao Điểm Rèn.
+   * HOA LUYEN (plan S7.5) - phan giai batch trang bi thanh Tinh Hoa,
+   * all-or-nothing. Khong tieu hao Diem Ren.
    */
   dissolveItems(instanceIds: readonly string[]): {
     ok: boolean
@@ -383,8 +384,8 @@ export class EquipmentOpsSystem {
     if (result.ok && result.rewards) {
       for (const reward of result.rewards) {
         if (this.deps.materialRegistry.has(reward.materialId)) {
-          // 9.8 — tràn túi: quest chỉ tính delivered + toast (contract
-          // result.rewards GIỮ NGUYÊN — tổng Tinh Hoa phân giải).
+          // 9.8 - tran tui: quest chi tinh delivered + toast (contract
+          // result.rewards GIU NGUYEN - tong Tinh Hoa phan giai).
           const overflow = this.deps.materialBag.add(this.deps.materialRegistry.get(reward.materialId), reward.amount)
 
           this.deps.notifyQuestMaterialGained(reward.materialId, reward.amount - overflow)
@@ -416,9 +417,9 @@ export class EquipmentOpsSystem {
   }
 
   /**
-   * State cường hóa/formation/bonus affix slots của 1 slot cụ thể —
-   * dùng cho UI hiện thông tin NGAY CẢ KHI slot đang trống (MASTER
-   * SPEC Mục XVI, Phase 9).
+   * State cuong hoa/formation/bonus affix slots cua 1 slot cu the -
+   * dung cho UI hien thong tin NGAY CA KHI slot dang trong (MASTER
+   * SPEC Muc XVI, Phase 9).
    */
   getSlotState(slot: EquipmentSlot): EquipmentSlotState {
     return this.deps.equipmentSlotManager.get(slot)
@@ -429,24 +430,24 @@ export class EquipmentOpsSystem {
   }
 
   /**
-   * Modifier "tĩnh" từ equipment — xem ghi chú trong Player.ts và
-   * EquipmentSystem. Chỉ đổi khi equip/unequip/enhance, caller
-   * (player store) tự gán lại vào player.modifiers sau mỗi hành
-   * động, KHÔNG gọi mỗi tick như getAggregatedModifiers().
+   * Modifier "tinh" tu equipment - xem ghi chu trong Player.ts va
+   * EquipmentSystem. Chi doi khi equip/unequip/enhance, caller
+   * (player store) tu gan lai vao player.modifiers sau moi hanh
+   * dong, KHONG goi moi tick nhu getAggregatedModifiers().
    */
   getEquipmentModifiers(): StatModifier[] {
     return this.deps.equipmentSystem.getModifiers()
   }
 
   /**
-   * Task 17 (rework P5) — Đột Phá đại cảnh giới đổi player.realmId nên
-   * mọi item đang mặc có thể lệch phẩm mới (Task 16 gate canUseItemGrade
-   * chặn re-equip khi lệch, nhưng KHÔNG tự tháo đồ cũ) → tháo TOÀN BỘ
-   * trang bị đang mặc ngay sau khi breakthrough để tránh kẹt trạng thái
-   * "mặc đồ giờ lệch phẩm nhưng không thể equip lại nếu lỡ tháo tay".
-   * Slot state (enhanceLevel/enhanceFailStreak/Formation/Talisman) sống
-   * độc lập theo SLOT (MASTER SPEC Mục XVI) — KHÔNG đụng tới, chỉ đổi
-   * equipped flag + modifier trên từng EquipmentInstance.
+   * Task 17 (rework P5) - Dot Pha dai canh gioi doi player.realmId nen
+   * moi item dang mac co the lech pham moi (Task 16 gate canUseItemGrade
+   * chan re-equip khi lech, nhung KHONG tu thao do cu) -> thao TOAN BO
+   * trang bi dang mac ngay sau khi breakthrough de tranh ket trang thai
+   * "mac do gio lech pham nhung khong the equip lai neu lo thao tay".
+   * Slot state (enhanceLevel/enhanceFailStreak/Formation/Talisman) song
+   * doc lap theo SLOT (MASTER SPEC Muc XVI) - KHONG dung toi, chi doi
+   * equipped flag + modifier tren tung EquipmentInstance.
    */
   unequipAllEquipment(): void {
     for (const instance of this.deps.equipmentBag.getEquipped()) {

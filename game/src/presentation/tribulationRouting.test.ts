@@ -251,11 +251,21 @@ describe('Tribulation routing integration (Task 11)', () => {
     // resolves - a few microtasks, not synchronously.
     const firstCheck = checkTribulationOutcomeAction(playerStoreMock, gameManager, presentation)
     expect(firstCheck).toBe(true)
+
+    // M-F-TALENT: the mandatory decision record holds the drain while
+    // pending - settle already committed; resolving the entitlement lets
+    // the next tick consume the receipt and drain normally.
+    expect(gameManager.realmAdvanceOps.resolveTalentEntitlement(playerStoreMock, {
+      kind: 'new',
+      talentId: playerStoreMock.pendingTalentEntitlement.offeredTalentIds[0],
+    })).toBe(true)
+    expect(checkTribulationOutcomeAction(playerStoreMock, gameManager, presentation)).toBe(true)
+
     await vi.waitFor(() => {
       expect(gameManager.tribulationDirector.getState()).toBeNull()
     })
 
-    // Second check is safe no-op
+    // Third check is safe no-op
     const secondCheck = checkTribulationOutcomeAction(playerStoreMock, gameManager, presentation)
     expect(secondCheck).toBe(false)
   })
@@ -317,6 +327,14 @@ describe('Tribulation routing integration (Task 11)', () => {
     // 3-argument call site so the wiring cannot silently regress.
     const handled = checkTribulationOutcomeAction(playerStoreMock, gameManager, presentation)
     expect(handled).toBe(true)
+
+    // M-F-TALENT: the entitlement holds the drain until the decision
+    // resolves; the modal decision unlocks the same-tick consume.
+    expect(gameManager.realmAdvanceOps.resolveTalentEntitlement(playerStoreMock, {
+      kind: 'new',
+      talentId: playerStoreMock.pendingTalentEntitlement.offeredTalentIds[0],
+    })).toBe(true)
+    expect(checkTribulationOutcomeAction(playerStoreMock, gameManager, presentation)).toBe(true)
 
     // The outcome work runs inside the closed-curtain window (the
     // director clears on a microtask), then the home transition does the
@@ -499,12 +517,21 @@ describe('Tribulation outcome settlement vs curtain lifecycle (M6 / ARCH-006)', 
     // Tick 1: settlement commits SYNCHRONOUSLY (before/independent of any
     // curtain) but the home request collides with the in-flight entry and
     // is rejected - the committed record must stay pending, NOT drain.
+    // M-F-TALENT: the mandatory talent entitlement written by the same
+    // commit additionally locks the drain until the modal resolves it.
     expect(checkTribulationOutcomeAction(store, gameManager, presentation)).toBe(true)
     expect(store.tribulationBonusStacks).toBe(1)
     expect(gameManager.tribulationDirector.getCommittedOutcome()!.receipt).not.toBeNull()
     expect(gameManager.tribulationDirector.getState()).not.toBeNull()
     expect(coordinator.getSnapshot().phase).toBe('closing')
     expect(announcements).not.toHaveBeenCalled()
+
+    // The player resolves the mandatory decision - the record clears and
+    // the drain path re-opens for the next tick.
+    expect(gameManager.realmAdvanceOps.resolveTalentEntitlement(store, {
+      kind: 'new',
+      talentId: store.pendingTalentEntitlement.offeredTalentIds[0],
+    })).toBe(true)
 
     await completeTribulationEntry()
 
@@ -547,6 +574,14 @@ describe('Tribulation outcome settlement vs curtain lifecycle (M6 / ARCH-006)', 
     expect(curtainCloseMock.mock.calls.length).toBe(closeCallsAfterFirst)
     expect(store.tribulationBonusStacks).toBe(1)
     expect(gameManager.tribulationDirector.getCommittedOutcome()!.receipt).toBe(receipt)
+
+    // M-F-TALENT: resolve the pending talent decision so the exit
+    // transition can drain the run inside its curtain window.
+    expect(gameManager.realmAdvanceOps.resolveTalentEntitlement(store, {
+      kind: 'new',
+      talentId: store.pendingTalentEntitlement.offeredTalentIds[0],
+    })).toBe(true)
+    expect(checkTribulationOutcomeAction(store, gameManager, presentation)).toBe(true)
 
     await completeHomeExit()
 

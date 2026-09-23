@@ -67,18 +67,18 @@ export interface GameManagerSaveRestoreDeps {
   productionSystem: ProductionSystem
   alchemySystem: AlchemySystem
   notifications: NotificationQueue
-  // GameManager giữ activePlayer như field mutable (setActivePlayer) — đọc
-  // LIVE qua closure thay vì snapshot tại constructor time, giống
+  // GameManager giu activePlayer nhu field mutable (setActivePlayer) - doc
+  // LIVE qua closure thay vi snapshot tai constructor time, giong
   // GameManagerBuildingOps/GameManagerQuestOps.
   getActivePlayer: () => PlayerData | undefined
-  // Hai hook dưới thuộc BUILDING section (đã tách ở task 3) — restore chỉ
-  // gọi lại chúng, không sở hữu logic, nên nhận qua closure.
+  // Hai hook duoi thuoc BUILDING section (da tach o task 3) - restore chi
+  // goi lai chung, khong so huu logic, nen nhan qua closure.
   refreshAutoWorkerCapacity: (player: PlayerData, instance: BuildingInstance) => void
   getWorkerAssignments: () => Map<string, number>
-  // Auto-farm Task 5 (2026-09-04) — offline catch-up closure (logic sống
-  // trên GameManager, SaveRestore chỉ gọi lại — cùng pattern trên).
+  // Auto-farm Task 5 (2026-09-04) - offline catch-up closure (logic song
+  // tren GameManager, SaveRestore chi goi lai - cung pattern tren).
   settleAutoFarmOffline: (player: PlayerData, elapsedOfflineSeconds: number) => void
-  // Mission B audit — the persisted farm lease must also RE-ACQUIRE the
+  // Mission B audit - the persisted farm lease must also RE-ACQUIRE the
   // StageManager slot at restore; settle alone leaves the slot free while
   // persisted state stays armed.
   reconcileAutoFarmRuntime: (player: PlayerData) => void
@@ -92,23 +92,23 @@ export interface GameManagerSaveRestoreDeps {
 }
 
 /**
- * Tách khỏi GameManager (2026-09-03, task 5 — GameManager split) — phần
- * RESTORE save VÀO instance đang chạy (nạp lại registry/bag/manager/system
- * + offline settle). KHÔNG phải phần serialize-ra-JSON: chỗ đó là
- * `services/save/SaveSystem.ts`, ngoài phạm vi module này.
+ * Tach khoi GameManager (2026-09-03, task 5 - GameManager split) - phan
+ * RESTORE save VAO instance dang chay (nap lai registry/bag/manager/system
+ * + offline settle). KHONG phai phan serialize-ra-JSON: cho do la
+ * `services/save/SaveSystem.ts`, ngoai pham vi module nay.
  *
- * Cùng pattern DI với GameManagerQuestOps/BuildingOps/AlchemyOps:
- * constructor nhận dependency tường minh qua object `deps`, KHÔNG import
- * ngược GameManager.
+ * Cung pattern DI voi GameManagerQuestOps/BuildingOps/AlchemyOps:
+ * constructor nhan dependency tuong minh qua object `deps`, KHONG import
+ * nguoc GameManager.
  */
 export class GameManagerSaveRestore {
   constructor(private readonly deps: GameManagerSaveRestoreDeps) {}
 
-  // R10 (AR-12, S4) — once-only settle: the identical payload hash as the
+  // R10 (AR-12, S4) - once-only settle: the identical payload hash as the
   // last APPLIED restore (see computeRestoreIdentity) converges instead of
   // re-running the full restore + offline settlement a second time. Scoped
   // per GameManagerSaveRestore instance (one per GameManager/session),
-  // mirroring the store-level guard in stores/player.ts — same concept,
+  // mirroring the store-level guard in stores/player.ts - same concept,
   // separate tracker per restore owner.
   private lastAppliedPayloadHash: string | undefined
 
@@ -129,12 +129,12 @@ export class GameManagerSaveRestore {
       }
     }
 
-    // R10 (AR-12, S4) — materials/pills/buildings previously had no
+    // R10 (AR-12, S4) - materials/pills/buildings previously had no
     // preflight coverage at all: the restore loops silently dropped an
     // unknown ID via `if (registry.has(id)) ...` instead of rejecting.
     // Per the project's established registry-drift principle (learned-
     // defects QA-2026-09-01-013), silently filtering an owned current
-    // entry is data loss, not recovery — hard-fail before any owner
+    // entry is data loss, not recovery - hard-fail before any owner
     // mutation, same contract equipment already had. Skills/techniques
     // are intentionally NOT included here: an unknown template there
     // drops the entry at restore (see the restore loops below), not a
@@ -157,10 +157,10 @@ export class GameManagerSaveRestore {
       }
     }
 
-    // Mission A review (MA-R1-04) — an unknown siteId previously passed
+    // Mission A review (MA-R1-04) - an unknown siteId previously passed
     // preflight, then occupied worker allocation slots while producing
-    // nothing (no definition → cycleMs 0), permanently draining capacity
-    // from real sites. Registry-backed reference → hard-fail here.
+    // nothing (no definition -> cycleMs 0), permanently draining capacity
+    // from real sites. Registry-backed reference -> hard-fail here.
     for (const site of save.productionSites ?? []) {
       if (!this.deps.productionSystem.getSiteDefinition(site.siteId)) {
         throw new Error(`Unknown production site in save: ${site.siteId}`)
@@ -303,7 +303,7 @@ export class GameManagerSaveRestore {
   restoreFromSave(save: GameSave): StatModifier[] {
     this.preflightSaveRegistryReferences(save)
 
-    // R10 (AR-12, S4) — converge on a repeated identical payload (boot
+    // R10 (AR-12, S4) - converge on a repeated identical payload (boot
     // retry, reload race): skip re-applying and re-settling entirely,
     // return the already-current modifiers. A genuinely different payload
     // (even sharing lastSavedAt|cultivation) always runs the full restore.
@@ -313,14 +313,14 @@ export class GameManagerSaveRestore {
       return this.deps.equipmentSystem.getModifiers()
     }
 
-    // M1 (ARCH-001) — restore is REPLACEMENT for every slice: each owner
+    // M1 (ARCH-001) - restore is REPLACEMENT for every slice: each owner
     // below receives a detached copy of the payload and resets its live
     // set to exactly what the save declares (absent/empty = defaults).
-    // The identity hash commits at the END of this method — a mid-restore
+    // The identity hash commits at the END of this method - a mid-restore
     // throw must leave the payload uncommitted so a retry re-applies the
     // un-applied slices instead of being skipped by the guard above.
 
-    // Techniques/skills — full replace of the learned sets. The text/
+    // Techniques/skills - full replace of the learned sets. The text/
     // backfill refresh below runs on CLONES: the input save is a value
     // and must never be mutated by restore.
     const restoredTechniques = save.techniques.flatMap((savedTechnique) => {
@@ -362,14 +362,14 @@ export class GameManagerSaveRestore {
       const skill = structuredClone(savedSkill)
 
       // Execution policy rework + development-build no-migration (2026-
-      // 08-26): save của nhân vật CŨ lưu skill object nguyên trạng trước
-      // khi có field `execution` bắt buộc — scheduler thống nhất BỎ QUA
-      // mọi active thiếu execution ("không cast gì" dù tele/di chuyển
-      // vẫn chạy). Đối chiếu template đã đăng ký để hồi phục AUTHORED
-      // combat data (execution/targeting/AOE/VFX preset), giữ NGUYÊN
-      // progression state của instance (level/cooldown/specialization).
-      // Template thiếu thì entry bị drop (dev-stage
-      // rule: không migrate, không giữ object mồ côi).
+      // 08-26): save cua nhan vat CU luu skill object nguyen trang truoc
+      // khi co field `execution` bat buoc - scheduler thong nhat BO QUA
+      // moi active thieu execution ("khong cast gi" du tele/di chuyen
+      // van chay). Doi chieu template da dang ky de hoi phuc AUTHORED
+      // combat data (execution/targeting/AOE/VFX preset), giu NGUYEN
+      // progression state cua instance (level/cooldown/specialization).
+      // Template thieu thi entry bi drop (dev-stage
+      // rule: khong migrate, khong giu object mo coi).
       const template = this.deps.skillTemplates.get(skill.id)
 
       if (!template) {
@@ -419,7 +419,7 @@ export class GameManagerSaveRestore {
 
     this.deps.skillManager.restore(restoredSkills)
 
-    // R10 (AR-12, S3) — restore is REPLACEMENT, not additive: clear the
+    // R10 (AR-12, S3) - restore is REPLACEMENT, not additive: clear the
     // live bags before applying the save's materials/pills/equipment,
     // matching buildings/production sites/quests/decompose (already
     // replace, see R7/R8.1). Without this, a live-session restore into a
@@ -429,16 +429,16 @@ export class GameManagerSaveRestore {
     this.deps.pillBag.clear()
     this.deps.equipmentBag.clear()
 
-    // M1 (ARCH-001, hook for M2/ARCH-011) — pending paid-op tickets
+    // M1 (ARCH-001, hook for M2/ARCH-011) - pending paid-op tickets
     // (equipment wash/refine) were bound to pre-restore item objects and
     // must die WITH the old set: a ticket's instanceId string can silently
     // re-resolve to a restored object, so the invalidation runs adjacent
-    // to clear() — no window exists where a stale ticket observes a
+    // to clear() - no window exists where a stale ticket observes a
     // replaced (or half-replaced) bag.
     this.deps.equipmentSystem.invalidatePendingOperationTickets()
 
-    // 9.8 — add() tràn stack trả lượng bị mất; gom MỖI LOẠI material
-    // một event duy nhất (cả 2 loop materials + auto-dissolve rewards).
+    // 9.8 - add() tran stack tra luong bi mat; gom MOI LOAI material
+    // mot event duy nhat (ca 2 loop materials + auto-dissolve rewards).
     const restoreOverflows = new Map<string, number>()
 
     for (const entry of save.materials) {
@@ -460,19 +460,19 @@ export class GameManagerSaveRestore {
       }
     }
 
-    // Phù/Trận legacy (plan §10.1): save đã qua migration v44 có mảng
-    // rỗng — bỏ qua hoàn toàn, không còn bag để nạp.
+    // Phu/Tran legacy (plan S10.1): save da qua migration v44 co mang
+    // rong - bo qua hoan toan, khong con bag de nap.
 
-    // Cap mềm (audit 2026-08-31) — restore save quá cap: tự Hóa Luyện
-    // phần tràn, GOM rewards cả batch để cộng material + toast đúng 1
-    // LẦN cuối vòng (auto-dissolve chạy ngay trong từng add() nhưng
-    // người chơi không cần 500 toast). KHÔNG gọi quest hook tại đây —
-    // notifyQuestMaterialGained() phải bỏ qua restore (double-count,
-    // xem ghi chú tại hàm đó).
+    // Cap mem (audit 2026-08-31) - restore save qua cap: tu Hoa Luyen
+    // phan tran, GOM rewards ca batch de cong material + toast dung 1
+    // LAN cuoi vong (auto-dissolve chay ngay trong tung add() nhung
+    // nguoi choi khong can 500 toast). KHONG goi quest hook tai day -
+    // notifyQuestMaterialGained() phai bo qua restore (double-count,
+    // xem ghi chu tai ham do).
     let restoredAutoDissolved: AutoDissolveReward[] = []
 
     for (const savedInstance of save.equipment) {
-      // Detached copy — the bag owns live objects; the payload stays a
+      // Detached copy - the bag owns live objects; the payload stays a
       // value the caller may reuse/mutate without reaching live state.
       restoredAutoDissolved = [
         ...restoredAutoDissolved,
@@ -506,12 +506,12 @@ export class GameManagerSaveRestore {
       })
     }
 
-    // MASTER SPEC Mục XVI (Phase 9) — slot state (enhance) PHẢI nạp
-    // trước refreshModifiers() bên dưới.
+    // MASTER SPEC Muc XVI (Phase 9) - slot state (enhance) PHAI nap
+    // truoc refreshModifiers() ben duoi.
     this.deps.equipmentSlotManager.restore(save.equipmentSlots)
 
-    // ModifierSystem nội bộ của equipmentSystem không tự phục hồi
-    // theo EquipmentBag vừa nạp — phải build lại thủ công.
+    // ModifierSystem noi bo cua equipmentSystem khong tu phuc hoi
+    // theo EquipmentBag vua nap - phai build lai thu cong.
     this.deps.equipmentSystem.refreshModifiers(
       this.deps.equipmentBag,
       this.deps.equipmentSlotManager,
@@ -520,9 +520,9 @@ export class GameManagerSaveRestore {
 
     this.deps.buildingManager.restore(save.buildings)
 
-    // Chi Hien Quan (chi-hien-quan spec) — re-apply worker capacity từ
-    // instance CHQ trong save (autoWorkerCapacity trong save có thể stale
-    // — công thức là source of truth, không tin field đã lưu).
+    // Chi Hien Quan (chi-hien-quan spec) - re-apply worker capacity tu
+    // instance CHQ trong save (autoWorkerCapacity trong save co the stale
+    // - cong thuc la source of truth, khong tin field da luu).
     const chqPlayer = this.deps.getActivePlayer()
 
     if (chqPlayer) {
@@ -537,8 +537,8 @@ export class GameManagerSaveRestore {
       save.quests ?? { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
     )
 
-    // Production (plan §4.3) — restore state + offline settle tuần tự
-    // trong cap; MỖI auto-cycle một seed/roll riêng.
+    // Production (plan S4.3) - restore state + offline settle tuan tu
+    // trong cap; MOI auto-cycle mot seed/roll rieng.
     this.deps.productionSystem.restoreStates((save.productionSites ?? []) as ProductionSiteState[])
 
     for (const definition of this.deps.productionSystem.getSiteDefinitions()) {
@@ -562,9 +562,9 @@ export class GameManagerSaveRestore {
       )
 
       if (elapsedOfflineSeconds > 60) {
-        // T3 (economy-ecosystem-plan) — worker chạy offline như slot tay
-        // trong cap: truyền capacity + mốc bắt đầu vắng mặt để settle
-        // đúng cửa sổ.
+        // T3 (economy-ecosystem-plan) - worker chay offline nhu slot tay
+        // trong cap: truyen capacity + moc bat dau vang mat de settle
+        // dung cua so.
         this.deps.productionSystem.settleOffline(
           this.deps.materialBag,
           this.deps.materialRegistry,
@@ -589,13 +589,13 @@ export class GameManagerSaveRestore {
           this.deps.deliverDecomposeOutput(entry)
         }
 
-        // Auto-farm Task 5 (2026-09-04) — NGOẠI LỆ DUY NHẤT combat nhận
-        // reward offline: roll các chu kỳ auto-farm đã trôi trong cửa sổ
-        // offline (cùng gate >60s với Production catch-up).
+        // Auto-farm Task 5 (2026-09-04) - NGOAI LE DUY NHAT combat nhan
+        // reward offline: roll cac chu ky auto-farm da troi trong cua so
+        // offline (cung gate >60s voi Production catch-up).
         this.deps.settleAutoFarmOffline(offlinePlayer, elapsedOfflineSeconds)
       }
 
-      // Mission B audit — re-acquire the StageManager lease for a persisted
+      // Mission B audit - re-acquire the StageManager lease for a persisted
       // farm on EVERY restore, not only inside the >60s settle window: a
       // fast reload restores an armed farm too. Without this the slot reads
       // free while tickAutoFarm keeps paying on persisted state alone, and
@@ -604,7 +604,7 @@ export class GameManagerSaveRestore {
       this.deps.reconcileAutoFarmRuntime(offlinePlayer)
     }
 
-    // Đan Phòng offline settle (§8.2).
+    // Dan Phong offline settle (S8.2).
     this.deps.alchemySystem.restoreJobs((save.alchemyJobs ?? []) as ActiveAlchemyJob[])
 
     this.deps.alchemySystem.settleOffline(
@@ -613,8 +613,8 @@ export class GameManagerSaveRestore {
         this.deps.pillRegistry.has(pillId) ? this.deps.pillRegistry.get(pillId) : undefined,
       Date.now(),
       0,
-      // M3 — Hoa Hau Thong Than: x2 pill yield applies to offline settle too.
-      getAlchemyDoublePill(this.deps.getActivePlayer()?.selectedTalentIds)?.yieldMultiplier ?? 1,
+      // M3 - Hoa Hau Thong Than: x2 pill yield applies to offline settle too.
+      getAlchemyDoublePill(this.deps.getActivePlayer()?.selectedTalentIds, this.deps.getActivePlayer()?.talentLevels)?.yieldMultiplier ?? 1,
     )
 
     // P7-M5 (v72) - body modifier rehydration: chapter state is the
@@ -636,7 +636,7 @@ export class GameManagerSaveRestore {
     // final when unlock evaluation runs.
     this.deps.reconcileQuestLifecycle()
 
-    // M1 (ARCH-001) — commit the payload identity only AFTER every slice
+    // M1 (ARCH-001) - commit the payload identity only AFTER every slice
     // applied successfully: a mid-restore throw keeps the payload
     // uncommitted, so a retry of the same payload is not skipped.
     this.lastAppliedPayloadHash = payloadIdentity

@@ -5,6 +5,7 @@ import { GAME_PRESENTATION_KEY } from '@/presentation/PresentationContracts'
 import type { GamePresentation } from '@/presentation/createGamePresentation'
 import type { GameManager } from '../core/game/GameManager'
 import { TribulationOutcomeService, type TribulationOutcomeResult, type TribulationPlayerWriter } from '../core/tribulation/TribulationOutcomeService'
+import { reconcileTalentEntitlement } from '../core/talent/TalentEntitlement'
 import { useWorldAnnouncementStore } from '../stores/worldAnnouncement'
 import { useUiStore } from '../stores/ui'
 import { isBattleInProgress } from '../core/battle/BattleTypes'
@@ -23,12 +24,12 @@ import { i18n } from '@/i18n'
 // hu?ng "chua trang b? gA�" khA4ng cA2n x?y ra.
 
 /**
- * Bấm nút đột phá (Quán Khí / Trúc Cơ / Độ Kiếp sau Trúc Cơ). Tự
- * resolve target realm từ player.realmId hiện tại.
+ * Bam nut dot pha (Quan Khi / Truc Co / Do Kiep sau Truc Co). Tu
+ * resolve target realm tu player.realmId hien tai.
  *
- * Luôn auto-unequip TRƯỚC khi vào kiếp (idempotent — không có đồ thì
- * không tháo gì). Caller hiện panel xác nhận "Độ kiếp cũng là độ thân"
- * trước khi gọi hàm này.
+ * Luon auto-unequip TRUOC khi vao kiep (idempotent - khong co do thi
+ * khong thao gi). Caller hien panel xac nhan "Do kiep cung la do than"
+ * truoc khi goi ham nay.
  */
 export function triggerBreakthroughAction(
   player: ReturnType<typeof usePlayerStore>,
@@ -92,7 +93,7 @@ function presentOutcome(result: TribulationOutcomeResult): void {
   const { announcement } = result
 
   // P16: the domain returns i18n keys + params; the gateway resolves the
-  // display strings here (module-level function — i18n.global.t, not the
+  // display strings here (module-level function - i18n.global.t, not the
   // setup-scoped useI18n composable).
   announcements.show(
     i18n.global.t(announcement.titleKey, announcement.titleParams ?? {}),
@@ -119,13 +120,13 @@ function presentSettlementError(): void {
 }
 
 /**
- * Gọi mỗi tick từ App.vue, TRƯỚC nhánh Auto-refight Stage — battle
- * Tribulation không qua Stage nên GameManager chỉ tự set 'victory'/
- * 'defeat'. Domain (TribulationOutcomeService) áp kết quả lên player;
- * adapter này chỉ dọn session + điều phối hiển thị. Trả về true nếu VỪA
- * xử lý xong 1 kết quả trong tick này, để App.vue biết bỏ qua Auto-refight
- * Stage ngay tick đó (tránh startStage() đè mất battle Tribulation vừa
- * kết thúc trước khi kịp đọc).
+ * Goi moi tick tu App.vue, TRUOC nhanh Auto-refight Stage - battle
+ * Tribulation khong qua Stage nen GameManager chi tu set 'victory'/
+ * 'defeat'. Domain (TribulationOutcomeService) ap ket qua len player;
+ * adapter nay chi don session + dieu phoi hien thi. Tra ve true neu VUA
+ * xu ly xong 1 ket qua trong tick nay, de App.vue biet bo qua Auto-refight
+ * Stage ngay tick do (tranh startStage() de mat battle Tribulation vua
+ * ket thuc truoc khi kip doc).
  */
 export function checkTribulationOutcomeAction(
   player: ReturnType<typeof usePlayerStore>,
@@ -159,6 +160,22 @@ export function checkTribulationOutcomeAction(
   )
 
   if (result) {
+    // M-F-TALENT lock (ruling S15-18): while the mandatory talent
+    // entitlement is unresolved the transition is NOT finished - hold
+    // the committed outcome on the seam and defer the drain. Every tick
+    // re-checks the persisted record; once the modal resolves it, the
+    // same tick consumes the receipt and drains normally. Returning true
+    // preserves the caller's same-tick auto-refight suppression (a
+    // pending decision is still a committed victory).
+    // A record that no longer holds one legal decision (offers fully
+    // consumed by a later path, realm pool release-suppressed) is
+    // reconciled away first - it must never hold the uncancellable
+    // modal open with nothing to decide.
+    reconcileTalentEntitlement(player)
+    if (player.pendingTalentEntitlement !== undefined) {
+      return true
+    }
+
     // Presentation consumes the committed receipt. The visible effects
     // (announcement overlay, standalone panel, tribulation scene exit and
     // the run drain) stay behind the curtain per R12 sequencing - but they
@@ -219,9 +236,9 @@ export function checkTribulationOutcomeAction(
 }
 
 /**
- * Cầu nối Vue cho component CON (đọc player/gameManager qua injection
- * bình thường, xem useGameState.ts). App.vue tự gọi thẳng *Action() ở
- * trên thay vì composable này.
+ * Cau noi Vue cho component CON (doc player/gameManager qua injection
+ * binh thuong, xem useGameState.ts). App.vue tu goi thang *Action() o
+ * tren thay vi composable nay.
  */
 export function useTribulation() {
   const player = usePlayerStore()

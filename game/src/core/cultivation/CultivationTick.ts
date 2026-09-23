@@ -28,11 +28,11 @@ export function cultivateTick(
   // -> 0.25x) but never reaches 0/negative.
   player.cultivationPerSecond =
     BASE_CULTIVATION_PER_SECOND *
-    Math.max(0.01, getCultivationSpeedMultiplier(player.selectedTalentIds)) *
+    Math.max(0.01, getCultivationSpeedMultiplier(player.selectedTalentIds, player.talentLevels)) *
     // M2 - Hau Tich Bat Phat: per-realm-level ramp (neutral 1 when
     // absent). Multiplied into the saved rate so the offline grant
     // (cultivationPerSecond * elapsed) inherits the same curve.
-    getCultivationRampMultiplier(player.selectedTalentIds, player.realmLevel)
+    getCultivationRampMultiplier(player.selectedTalentIds, player.realmLevel, player.talentLevels)
 
   // Tu Linh Tran (economy-fixes-sinks-plan sec.3.2 B1, 2026-08-29) -
   // sums % from active tu_linh_tran effects. Read through the domain

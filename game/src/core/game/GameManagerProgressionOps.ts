@@ -115,12 +115,13 @@ export class GameManagerProgressionOps {
       }
     }
 
-    // Grant by FIRST talent (collectTalentEffects sorts by spec sec.3.2 id):
-    // each combat talent declares 1-2 combat_passive effects. M-QI-05 -
-    // the canonical learn funnel owns insertion (TALENT_PASSIVE_SKILLS
-    // are registered templates; learn()'s structuredClone covers the
+    // M-F-TALENT: every owned talent contributes (multi-ownership +
+    // per-level effects supersede the v4 first-id clamp) - a combat
+    // talent declares 1-2 combat_passive effects. M-QI-05 - the
+    // canonical learn funnel owns insertion (TALENT_PASSIVE_SKILLS are
+    // registered templates; learn()'s structuredClone covers the
     // per-battle passiveModifiers copy the old direct add needed).
-    for (const effect of collectTalentEffects(player.selectedTalentIds)) {
+    for (const effect of collectTalentEffects(player.selectedTalentIds, player.talentLevels)) {
       if (effect.kind === 'combat_passive') {
         this.learnSkill(effect.passiveSkillId, player)
       }

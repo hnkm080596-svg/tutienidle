@@ -1027,6 +1027,13 @@
     }
   },
   "tribulation": {
+    "entitlement": {
+      "title": "TRIBULATION TALENT",
+      "body": "The lightning trial is overcome — fortune opens one path only. Choose ONE: claim a new talent, or ascend an owned talent to its next tier.",
+      "newHeading": "New Talent",
+      "upgradeHeading": "Ascend Talent",
+      "levelArrow": "Tier {current} → {next}"
+    },
     "stillEquipped": {
       "title": "Tribulation is also a trial of the self — nothing can aid you",
       "subtitle": "Cannot wear equipment during tribulation",

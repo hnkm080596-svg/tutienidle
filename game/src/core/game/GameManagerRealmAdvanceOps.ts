@@ -52,6 +52,10 @@ import type {
   BreakthroughOutcomeResult,
   BreakthroughPlayerWriter,
 } from '../tribulation/BreakthroughOutcomeService'
+import {
+  resolveTalentEntitlement as resolveTalentEntitlementRecord,
+  type TalentEntitlementDecision,
+} from '../talent/TalentEntitlement'
 import type { GameManagerProgressionOps } from './GameManagerProgressionOps'
 import type { TemplateRegistry } from './TemplateRegistry'
 
@@ -106,6 +110,25 @@ export class GameManagerRealmAdvanceOps {
   /** Grants the major-realm reward of the cultivation path data kit (P7-M3: artifact-only). */
   grantCultivationPathRealmReward(player: PlayerData, realmId: string): boolean {
     return grantPathRealmReward(player, realmId)
+  }
+
+  /**
+   * M-F-TALENT - resolve the mandatory breakthrough talent transaction
+   * (ruling S15-18): ONE decision granting ONE result, clearing the
+   * persisted entitlement record that locks the transition's drain.
+   * Delegates all grant/legality rules to the domain module (A5); on
+   * success the combat-passive sync re-reads talent effects at the new
+   * ownership/level. `player` must be the Pinia store instance (same
+   * absent-key write semantics as TribulationOutcomeService).
+   */
+  resolveTalentEntitlement(player: PlayerData, decision: TalentEntitlementDecision): boolean {
+    const resolved = resolveTalentEntitlementRecord(player, decision)
+
+    if (resolved) {
+      this.deps.progressionOps.syncTalentCombatPassive(player)
+    }
+
+    return resolved
   }
 
   /**

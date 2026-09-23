@@ -189,6 +189,20 @@ test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
       })
       .toMatch(/victory|defeat|cleared/)
 
+    // M-F-TALENT: a victorious breakthrough mints a mandatory talent
+    // entitlement that LOCKS the transition until resolved - resolving it
+    // is now part of the oracle path (drain cannot fire while the record
+    // stands). Defeat mints nothing, so only resolve when it appears.
+    const entitlementModal = page.locator('[data-testid="talent-entitlement-modal"]')
+    const entitlementShown = await entitlementModal
+      .waitFor({ state: 'visible', timeout: 15_000 })
+      .then(() => true)
+      .catch(() => false)
+    if (entitlementShown) {
+      await entitlementModal.locator('button').first().click()
+      await expect(entitlementModal).toHaveCount(0)
+    }
+
     // F1 oracle: the outcome tick must issue request({ target: 'home' }).
     // .command-wheel-layer only renders while the committed route is neither
     // 'combat' nor 'tribulation' (GameRoot.vue isFullSceneActive), so its

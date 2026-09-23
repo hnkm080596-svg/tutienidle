@@ -18,9 +18,9 @@ import type { PlayerData } from '../player/Player'
 
 export interface GameManagerAlchemyOpsDeps {
   alchemySystem: AlchemySystem
-  // GameManager sở hữu map recipe (đăng ký qua registerAlchemyRecipes,
-  // nằm ngoài phạm vi ALCHEMY section) — cùng instance Map được share qua
-  // reference, KHÔNG snapshot, giống materialBag/buildingManager bên dưới.
+  // GameManager so huu map recipe (dang ky qua registerAlchemyRecipes,
+  // nam ngoai pham vi ALCHEMY section) - cung instance Map duoc share qua
+  // reference, KHONG snapshot, giong materialBag/buildingManager ben duoi.
   alchemyRecipesById: Map<string, AlchemyRecipe>
   buildingManager: BuildingManager
   buildingRegistry: BuildingRegistry
@@ -30,11 +30,11 @@ export interface GameManagerAlchemyOpsDeps {
 }
 
 /**
- * Tách khỏi GameManager (2026-09-03, task 3 — GameManager split) — toàn bộ
- * thao tác Đan Phòng (query recipe/room level/jobs, start/cancel job,
- * preview outcome). Cùng pattern DI với EquipmentOpsSystem/
- * GameManagerBuildingOps: constructor nhận dependency tường minh qua object
- * `deps`, KHÔNG tự import ngược GameManager.
+ * Tach khoi GameManager (2026-09-03, task 3 - GameManager split) - toan bo
+ * thao tac Dan Phong (query recipe/room level/jobs, start/cancel job,
+ * preview outcome). Cung pattern DI voi EquipmentOpsSystem/
+ * GameManagerBuildingOps: constructor nhan dependency tuong minh qua object
+ * `deps`, KHONG tu import nguoc GameManager.
  */
 export class GameManagerAlchemyOps {
   constructor(private readonly deps: GameManagerAlchemyOpsDeps) {}
@@ -47,7 +47,7 @@ export class GameManagerAlchemyOps {
     return this.deps.alchemyRecipesById.get(recipeId)
   }
 
-  /** Level Đan Phòng (pill_room) hiện hành — chưa xây = 0. */
+  /** Level Dan Phong (pill_room) hien hanh - chua xay = 0. */
   getAlchemyRoomLevel(): number {
     return this.deps.buildingManager.getByBuildingId('pill_room')?.level ?? 0
   }
@@ -57,8 +57,8 @@ export class GameManagerAlchemyOps {
   }
 
   /**
-   * Bắt đầu luyện đan — reserve nguyên liệu ATOMIC (§8.2); slot job theo
-   * concurrent_job_slots effect của pill_room (mặc định 1).
+   * Bat dau luyen dan - reserve nguyen lieu ATOMIC (S8.2); slot job theo
+   * concurrent_job_slots effect cua pill_room (mac dinh 1).
    */
   startAlchemyJob(
     recipeId: string,
@@ -71,7 +71,7 @@ export class GameManagerAlchemyOps {
       return { ok: false, reason: 'not_found' }
     }
 
-    // M10 (ARCH-008) — retired recipe reports 'retired' regardless of room
+    // M10 (ARCH-008) - retired recipe reports 'retired' regardless of room
     // state so the caller sees the real reason, not a room-level miss.
     if (recipe.retired === true) {
       return { ok: false, reason: 'retired' }
@@ -95,10 +95,10 @@ export class GameManagerAlchemyOps {
 
     const maxSlots = this.deps.buildingSystem.getCraftModifiers(instance, template).concurrentJobSlots
 
-    // M3 (spec §4.2) — Hoa Hau Thong Than counter-cost: x2 fuel wood +
+    // M3 (spec S4.2) - Hoa Hau Thong Than counter-cost: x2 fuel wood +
     // spirit stone per job. The multiplier is forwarded so the reserve
     // check inside startJob validates the scaled price.
-    const costMultiplier = getAlchemyDoublePill(player.selectedTalentIds)?.costMultiplier ?? 1
+    const costMultiplier = getAlchemyDoublePill(player.selectedTalentIds, player.talentLevels)?.costMultiplier ?? 1
 
     const started = this.deps.alchemySystem.startJob(
       recipe,
@@ -120,11 +120,11 @@ export class GameManagerAlchemyOps {
       costMultiplier,
     )
 
-    // Bugfix (review 2026-08-26) — Linh Thạch được CHECK ở startJob
-    // nhưng chưa từng được TRỪ: luyện đan miễn phí. Trừ sau khi reserve
-    // nguyên liệu thành công (all-or-nothing như mọi sink khác).
-    // Plan Workstream F — trừ trên MaterialBag. Trừ đúng số startJob đã
-    // validate (single formula — scaled cost trả về trong result).
+    // Bugfix (review 2026-08-26) - Linh Thach duoc CHECK o startJob
+    // nhung chua tung duoc TRU: luyen dan mien phi. Tru sau khi reserve
+    // nguyen lieu thanh cong (all-or-nothing nhu moi sink khac).
+    // Plan Workstream F - tru tren MaterialBag. Tru dung so startJob da
+    // validate (single formula - scaled cost tra ve trong result).
     if (started.ok && started.spiritStoneCost) {
       this.deps.materialBag.remove(spiritStoneId, started.spiritStoneCost)
     }
@@ -137,9 +137,9 @@ export class GameManagerAlchemyOps {
   }
 
   /**
-   * Preview tổng tỷ lệ thành + guaranteed + chance viên cộng thêm (§9.3).
-   * M3 — truyền `player` để preview phản ánh Hoa Hau Thong Than (cost x2,
-   * yield x2) giống hệt startJob/tick sẽ charge/pay (AR-23 parity).
+   * Preview tong ty le thanh + guaranteed + chance vien cong them (S9.3).
+   * M3 - truyen `player` de preview phan anh Hoa Hau Thong Than (cost x2,
+   * yield x2) giong het startJob/tick se charge/pay (AR-23 parity).
    */
   previewAlchemyOutcome(
     recipeId: string,
@@ -184,7 +184,7 @@ export class GameManagerAlchemyOps {
       recipe,
     )
 
-    const effect = player ? getAlchemyDoublePill(player.selectedTalentIds) : undefined
+    const effect = player ? getAlchemyDoublePill(player.selectedTalentIds, player.talentLevels) : undefined
 
     const yieldMultiplier = effect?.yieldMultiplier ?? 1
 
@@ -199,7 +199,7 @@ export class GameManagerAlchemyOps {
 
       extraPillChance: totalPercent % 100,
 
-      // So vien cong them khi roll trung — khop voi floor((g+1)*y)-floor(g*y).
+      // So vien cong them khi roll trung - khop voi floor((g+1)*y)-floor(g*y).
       extraPillYield:
         Math.floor((baseGuaranteed + 1) * yieldMultiplier) -
         Math.floor(baseGuaranteed * yieldMultiplier),

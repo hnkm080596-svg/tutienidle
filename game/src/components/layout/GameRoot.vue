@@ -28,6 +28,7 @@ import ToastContainer from '../common/ToastContainer.vue'
 import ActionFeedbackLog from '../common/ActionFeedbackLog.vue'
 import WorldAnnouncementOverlay from '../common/WorldAnnouncementOverlay.vue'
 import OfflineSummaryModal from '../common/OfflineSummaryModal.vue'
+import TalentEntitlementModal from '../common/TalentEntitlementModal.vue'
 import BreakthroughRequirementPanel from '../common/BreakthroughRequirementPanel.vue'
 import TutorialOverlay from '../common/TutorialOverlay.vue'
 import { useOfflineSummaryStore } from '@/stores/offlineSummary'
@@ -36,24 +37,24 @@ import { useCombatSceneActive } from '@/composables/useCombatSceneActive'
 
 const offlineSummary = useOfflineSummaryStore()
 
-// WS1 Responsive foundation (2026-08-24) — BỎ frame 2560x1440 +
-// transform:scale() toàn game. Command-wheel plan (2026-08-26) — bỏ
-// hẳn top/bottom action bar và NavMenuOverlay: Động Phủ dùng TOÀN BỘ
-// viewport khi không combat/Độ Kiếp; mọi entry chức năng đi qua command
-// wheel (trigger = nhân vật tu luyện giữa màn hình) hoặc hotspot
-// building. Canvas Phaser tự thích ứng theo container (ResizeObserver
-// trong PhaserCanvas.vue + các scene đã handle 'resize'); khoảng
-// reserved combat được đồng bộ qua presentation/geometry/combatInsets.ts.
+// WS1 Responsive foundation (2026-08-24) - BO frame 2560x1440 +
+// transform:scale() toan game. Command-wheel plan (2026-08-26) - bo
+// han top/bottom action bar va NavMenuOverlay: Dong Phu dung TOAN BO
+// viewport khi khong combat/Do Kiep; moi entry chuc nang di qua command
+// wheel (trigger = nhan vat tu luyen giua man hinh) hoac hotspot
+// building. Canvas Phaser tu thich ung theo container (ResizeObserver
+// trong PhaserCanvas.vue + cac scene da handle 'resize'); khoang
+// reserved combat duoc dong bo qua presentation/geometry/combatInsets.ts.
 const ui = useUiStore()
 
-// Combat UI Redesign — Combat Scene chiếm TOÀN màn hình, thay hẳn
-// chrome Động Phủ (LeftPanel/CommandWheel) — HomeBuildingIcons được render
-// trong DongFuScene để art công trình nằm đúng phía sau nhân vật.
-// MainScene (Phaser canvas) vẫn LUÔN mount (tự chuyển scene nội bộ,
-// xem MainScene.vue), chỉ DOM chrome xung quanh nó ẩn/hiện theo cờ này.
+// Combat UI Redesign - Combat Scene chiem TOAN man hinh, thay han
+// chrome Dong Phu (LeftPanel/CommandWheel) - HomeBuildingIcons duoc render
+// trong DongFuScene de art cong trinh nam dung phia sau nhan vat.
+// MainScene (Phaser canvas) van LUON mount (tu chuyen scene noi bo,
+// xem MainScene.vue), chi DOM chrome xung quanh no an/hien theo co nay.
 const routeAdapter = inject(VUE_ROUTE_ADAPTER_KEY, null)
 
-// Scene visibility follows the coordinator route — the single authority for
+// Scene visibility follows the coordinator route - the single authority for
 // which game screen is mounted (the ui-store fallback flags were retired
 // with the R12 cleanup).
 const isCombatSceneActive = useCombatSceneActive()
@@ -82,11 +83,11 @@ const mountedGameRoute = computed<'home' | 'combat' | 'tribulation'>(() => {
   return route === 'combat' || route === 'tribulation' ? route : 'home'
 })
 
-// Bấm khoảng trống giữa màn hình (MainScene — cảnh Phaser, không phải
-// panel/icon/popover nào) tự đóng panel chức năng đang mở. Gắn THẲNG
-// lên <MainScene> (không phải 1 lớp overlay riêng). Panel/popover vẫn là
-// sibling; building hotspot nằm trong MainScene và tự chặn bubble. Vì vậy
-// chỉ click trúng vùng cảnh trống mới kích hoạt handler này.
+// Bam khoang trong giua man hinh (MainScene - canh Phaser, khong phai
+// panel/icon/popover nao) tu dong panel chuc nang dang mo. Gan THANG
+// len <MainScene> (khong phai 1 lop overlay rieng). Panel/popover van la
+// sibling; building hotspot nam trong MainScene va tu chan bubble. Vi vay
+// chi click trung vung canh trong moi kich hoat handler nay.
 function closeSidePanels() {
   ui.closeHomeOverlays()
 }
@@ -98,9 +99,9 @@ function closeSidePanels() {
       <MainScene @click="closeSidePanels" />
 
       <template v-if="!isFullSceneActive">
-        <!-- Shared popover authority (plan Workstream C) — CHỈ MỘT
-             BuildingDetailPopover cho CẢ hotspot lẫn command wheel,
-             điều khiển qua ui.activeBuildingPopoverId. -->
+        <!-- Shared popover authority (plan Workstream C) - CHI MOT
+             BuildingDetailPopover cho CA hotspot lan command wheel,
+             dieu khien qua ui.activeBuildingPopoverId. -->
         <div v-if="ui.activeBuildingPopoverId" class="game-root__building-popover-layer">
           <BuildingDetailPopover :building-id="ui.activeBuildingPopoverId" />
         </div>
@@ -127,12 +128,12 @@ function closeSidePanels() {
 
         <CompanionPanel v-if="mountedStandalone.has('companion')" />
 
-        <!-- Command wheel nhiều tầng — trigger là nhân vật tu luyện
-             giữa Động Phủ (DongFuScene.vue). -->
+        <!-- Command wheel nhieu tang - trigger la nhan vat tu luyen
+             giua dong Phu (DongFuScene.vue). -->
         <DongFuCommandWheel />
 
         <!-- Armed auto-farm holds the single StageManager slot (no combat
-             can mount) — the indicator lives in home chrome, not the
+             can mount) - the indicator lives in home chrome, not the
              combat HUD, so the stop path is always reachable (T1-6). -->
         <AutoFarmIndicator />
       </template>
@@ -154,6 +155,12 @@ function closeSidePanels() {
         :cultivation="offlineSummary.data.cultivation"
         @close="offlineSummary.clear()"
       />
+
+      <!-- M-F-TALENT - the mandatory breakthrough talent decision. Lives
+           OUTSIDE the !isFullSceneActive block (it can be pending while
+           the tribulation scene still owns the route); reads the
+           persisted record and renders nothing when none is pending. -->
+      <TalentEntitlementModal />
 
       <BreakthroughRequirementPanel />
 
@@ -182,28 +189,28 @@ function closeSidePanels() {
 
 .game-root__left-panel {
   position: absolute;
-  /* Full-height overlay ở cạnh trái — không còn chừa top/bottom bar. */
+  /* Full-height overlay o canh trai - khong con chua top/bottom bar. */
   inset: 0 auto 0 0;
-  /* WS3 — drawer responsive thay vì % cứng của frame cũ: đủ rộng để
-     nội dung panel thở ở cửa sổ hẹp (1280px -> ~384px), không phình
-     vô hạn ở màn lớn (max 480px). */
+  /* WS3 - drawer responsive thay vi % cung cua frame cu: du rong de
+     noi dung panel tho o cua so hep (1280px -> ~384px), khong phinh
+     vo han o man lon (max 480px). */
   width: clamp(360px, 30vw, 480px);
-  /* Nổi trên hotspot (5)/command wheel (8) — panel chức năng mở thì
-     nội dung phải bấm được trọn vẹn. */
+  /* Noi tren hotspot (5)/command wheel (8) - panel chuc nang mo thi
+     noi dung phai bam duoc tron ven. */
   z-index: 10;
   container-type: inline-size;
   container-name: left-panel;
 }
 
-/* Workstream G (gameplay-ui-feedback-responsive-cleanup-plan.md §10) —
-   viewport rất hẹp (vd 800×600): clamp(360px,...) buộc panel chiếm gần
-   1 nửa màn hình. Chuyển sang drawer gần/full width thay vì giữ trần
-   360px cứng, vẫn chừa lối đóng (panel luôn có nút back/close riêng). */
+/* Workstream G (gameplay-ui-feedback-responsive-cleanup-plan.md S10) -
+   viewport rat hep (vd 800x600): clamp(360px,...) buoc panel chiem gan
+   1 nua man hinh. Chuyen sang drawer gan/full width thay vi giu tran
+   360px cung, van chua loi dong (panel luon co nut back/close rieng). */
 @media (max-width: 900px) {
   .game-root__left-panel {
-    /* Cả Left+Right cùng mở theo characterOverlayOpen - mỗi bên tối đa
-       44vw để tổng không vuợt viewport (tránh chồng panel). Floor 260px
-       (đợt 4 fit-refactor): dưới 620px drawer chiếm trọn màn hình. */
+    /* Ca Left+Right cung mo theo characterOverlayOpen - moi ben toi da
+       44vw de tong khong vuot viewport (tranh chong panel). Floor 260px
+       (Dot 4 fit-refactor): duoi 620px drawer chiem tron man hinh. */
     width: max(min(44vw, 400px), 260px);
   }
 }

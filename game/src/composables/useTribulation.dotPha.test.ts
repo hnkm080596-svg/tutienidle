@@ -14,8 +14,8 @@ import { makeInstance } from '../core/equipment/EquipmentInstance.fixture'
 import { PROFESSION_GRADE_BY_REALM } from '../core/profession/ProfessionGrade'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// Snapshot hoàn hảo Phàm Nhân + Phàm Nhân Chi Cốt (spec dot-pha-loi-kiep
-// §4.2/§4.4) — integration qua GameManager + useTribulation thật.
+// Snapshot hoan hao Pham Nhan + Pham Nhan Chi Cot (spec dot-pha-loi-kiep
+// S4.2/S4.4) - integration qua GameManager + useTribulation that.
 function tribulationTotalSeconds(targetRealmId: string): number {
   return getTribulationChapters(targetRealmId)!.reduce((total, chapter) => {
     if (chapter.mind) {
@@ -51,8 +51,8 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
   })
 
   it('thiếu 1 stat (9/10) → false; thiếu 1 tầng Luyện Th thể (5/6) → false', () => {
-    // usePlayerStore() trong cùng pinia trả CÙNG instance — reset path
-    // giữa 2 case (giữ nguyên realm mortal tầng 12).
+    // usePlayerStore() trong cung pinia tra CUNG instance - reset path
+    // giua 2 case (giu nguyen realm mortal tang 12).
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
@@ -66,8 +66,8 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
     expect(player.mortalPerfectionAchieved).toBe(false)
 
-    // Reset để chọn lại (case 2: đủ stat nhưng Luyện Th thể 5/6) —
-    // M2: path + way là 1 cặp ghi nguyên tử, reset phải xoá cả hai.
+    // Reset de chon lai (case 2: du stat nhung Luyen Th the 5/6) -
+    // M2: path + way la 1 cap ghi nguyen tu, reset phai xoa ca hai.
     // P7-M3: the technique holder is part of the ritual's atomic
     // contract too - a non-empty holder rejects the re-choice.
     player.cultivationPath = undefined
@@ -96,7 +96,7 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
     gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
     expect(player.mortalPerfectionAchieved).toBe(true)
 
-    // Sau khi vào Luyện Khí, "hoàn hảo" không đổi dù stat/luyện thể đổi
+    // Sau khi vao Luyen Khi, "hoan hao" khong doi du stat/luyen the doi
     player.bodyProgression.body_refinement.completedTiers = 0
     expect(player.mortalPerfectionAchieved).toBe(true)
   })
@@ -128,7 +128,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
-    // Dựng nhân vật đủ mọi điều kiện Đại Đạo
+    // Dung nhan vat du moi dieu kien Dai Dao
     player.selectedTalentIds = ['pham_cot']
     player.realmLevel = 12
     player.bodyProgression.body_refinement.completedTiers = 6
@@ -136,25 +136,25 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     player.mortalPerfectionAchieved = true
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
-    // Quán Khí trước (vào Luyện Khí)
+    // Quan Khi truoc (vao Luyen Khi)
     gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
     expect(player.realmId).toBe('qi_refining')
 
-    // Đầu tư tiếp để đủ điều kiện Đại Đạo ở Luyện Khí
+    // Dau tu tiep de du dieu kien Dai Dao o Luyen Khi
     player.realmLevel = 18
     player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
     player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
     const trucCoDan = gameManager.pillRegistry.get('truc_co_dan')!
     gameManager.pillBag.add(trucCoDan, 1)
 
-    // Stats đủ trụ kiếp Đại Đạo (×1.85 khó hơn) — ARCH-002 (M7): the
+    // Stats du tru kiep Dai Dao (x1.85 kho hon) - ARCH-002 (M7): the
     // snapshot resolves internally; patch the RAW base.
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
 
     expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
     expect(gameManager.tribulationDirector.getState()!.grade).toBe('great_dao')
 
-    // Trôi hết kiếp + trả lời đúng mọi câu
+    // Troi het kiep + tra loi dung moi cau
     let guard = 0
     while (gameManager.tribulationDirector.getState()?.state === 'ongoing' && guard++ < 5000) {
       gameManager.tickOps.update(1)
@@ -169,6 +169,10 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     expect(player.selectedTalentIds).not.toContain('pham_cot')
     expect(player.selectedTalentIds).toContain('pham_nhan_chi_cot')
     expect(player.realmId).toBe('foundation_establishment')
+    // M-F-TALENT - the Dai Dao path's ONE result is the evolution: no
+    // generic entitlement is minted and the drain is never held.
+    expect(player.pendingTalentEntitlement).toBeUndefined()
+    expect(gameManager.tribulationDirector.getCommittedOutcome()).toBeNull()
   })
 
   it('thua kiếp Đại Đạo: greatDaoOpportunityLost vĩnh viễn + KHÔNG đổi talent; lần xét sau cap Thiên', () => {
@@ -192,7 +196,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
 
-    // HP thấp → thua kiếp Đại Đạo
+    // HP thap -> thua kiep dai dao
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 1, defense: 0, hpRegenPerTurn: 0 })
 
     expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
@@ -209,11 +213,11 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     checkTribulationOutcomeAction(player, gameManager)
 
     expect(player.greatDaoOpportunityLost).toBe(true)
-    expect(player.selectedTalentIds).toContain('pham_cot') // KHÔNG đổi
-    expect(player.realmId).toBe('qi_refining') // KHÔNG lên Trúc Cơ
+    expect(player.selectedTalentIds).toContain('pham_cot') // KHONG doi
+    expect(player.realmId).toBe('qi_refining') // KHONG len Truc Co
 
-    // Lần xét sau: cap Thiên (resolver test đã khóa; ở đây kiểm qua
-    // Director). Bỏ qua cooldown 5 phút bằng cách đẩy system time.
+    // Lan xet sau: cap Thien (resolver test da khoa; o day kiem qua
+    // Director). Bo qua cooldown 5 phut bang cach day system time.
     vi.setSystemTime(Date.now() + 6 * 60 * 1000)
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
@@ -249,7 +253,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
     expect(player.realmId).toBe('qi_refining')
 
-    // Mặc 1 món đồ ĐÚNG phẩm hiện tại (qi_refining → bat_pham, Task 16 gate).
+    // Mac 1 mon do DUNG pham hien tai (qi_refining -> bat_pham, Task 16 gate).
     const weapon = makeInstance({
       instanceId: 'task17-victory-weapon',
       slot: 'weapon',
@@ -268,12 +272,12 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     player.setEquipmentModifiers(gameManager.equipmentOps.getEquipmentModifiers())
     expect(player.modifiers.some((m) => m.sourceType === 'equipment')).toBe(true)
 
-    // Đầu tư đủ điều kiện Trúc Cơ (nhánh heaven, không cần great_dao).
+    // Dau tu du dieu kien Truc Co (nhanh heaven, khong can great_dao).
     player.realmLevel = 18
     player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
     player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
 
-    // ARCH-002 (M7): startTribulation resolves internally — patch the
+    // ARCH-002 (M7): startTribulation resolves internally - patch the
     // RAW base so the tribulation ghost survives the strikes.
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
     expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
@@ -293,7 +297,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     expect(gameManager.equipmentBag.getEquipped()).toHaveLength(0)
     expect(player.modifiers.some((m) => m.sourceType === 'equipment')).toBe(false)
 
-    // Slot state (Cường Hóa) KHÔNG bị reset bởi unequip-all.
+    // Slot state (Cuong Hoa) KHONG bi reset boi unequip-all.
     const slotState = gameManager.equipmentSlotManager.get('weapon')
     expect(slotState.enhanceLevel).toBe(4)
     expect(slotState.enhanceFailStreak).toBe(2)
@@ -346,7 +350,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     expect(triggerBreakthroughAction(player, gameManager)).toBe(true)
     expect(weapon.equipped).toBe(false)
     expect(gameManager.equipmentBag.getEquipped()).toHaveLength(0)
-    // Modifier equipment đã sync rỗng NGAY lúc trigger (trước cả resolveVictory).
+    // Modifier equipment da sync rong NGAY luc trigger (truoc ca resolveVictory).
     expect(player.modifiers.some((m) => m.sourceType === 'equipment')).toBe(false)
     expect(gameManager.tribulationDirector.getState()).not.toBeNull()
   })
@@ -366,6 +370,47 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
 
     expect(triggerBreakthroughAction(player, gameManager)).toBe(true)
     expect(gameManager.tribulationDirector.getState()?.targetRealmId).toBe('qi_refining')
+  })
+
+  it('M-F-TALENT lock — entitlement pending giữ drain; resolve xong tick sau consume bình thường', () => {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+    gameManager.catalogOps.registerPills(pills)
+    const player = usePlayerStore()
+
+    player.realmId = 'mortal'
+    player.realmLevel = 12
+    player.baseStats.defense = 10_000
+    player.baseStats.maxHp = 500_000
+
+    expect(triggerBreakthroughAction(player, gameManager)).toBe(true)
+    gameManager.tickOps.update(tribulationTotalSeconds('qi_refining'))
+
+    // Victory settles on the seam AND writes the entitlement - the drain
+    // is held while the decision record is pending.
+    expect(checkTribulationOutcomeAction(player, gameManager)).toBe(true)
+    expect(player.pendingTalentEntitlement?.realmId).toBe('qi_refining')
+    expect(gameManager.tribulationDirector.getCommittedOutcome()).not.toBeNull()
+
+    // Repeat ticks while pending: still held, still idempotent - the
+    // same bound offers, no rebinding, no double-apply.
+    const bound = player.pendingTalentEntitlement!
+    expect(checkTribulationOutcomeAction(player, gameManager)).toBe(true)
+    expect(player.pendingTalentEntitlement).toEqual(bound)
+    expect(gameManager.tribulationDirector.getCommittedOutcome()).not.toBeNull()
+
+    // The mandatory decision resolves - same tick consumes the receipt
+    // and drains the run normally.
+    expect(gameManager.realmAdvanceOps.resolveTalentEntitlement(player, {
+      kind: 'new',
+      talentId: bound.offeredTalentIds[0]!,
+    })).toBe(true)
+    expect(player.selectedTalentIds).toContain(bound.offeredTalentIds[0]!)
+
+    expect(checkTribulationOutcomeAction(player, gameManager)).toBe(true)
+    expect(gameManager.tribulationDirector.getCommittedOutcome()).toBeNull()
   })
 
   it('foundation_establishment+ — canTriggerBreakthrough từ chối, action trả false', () => {

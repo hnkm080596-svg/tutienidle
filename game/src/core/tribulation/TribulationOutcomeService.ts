@@ -1,5 +1,5 @@
 /**
- * R8.2 — Domain owner of tribulation outcome consequences (AR-10).
+ * R8.2 - Domain owner of tribulation outcome consequences (AR-10).
  *
  * This service is the single authority that turns a finished tribulation
  * (TribulationDirector state 'victory' | 'defeat') into permanent
@@ -10,13 +10,13 @@
  * displays it and sequences presentation (A7).
  *
  * Migrated verbatim (2026-09-11) from useTribulation.ts resolveVictory /
- * resolveDefeat — behavior parity is pinned by
+ * resolveDefeat - behavior parity is pinned by
  * TribulationOutcomeService.test.ts and the pre-existing dotPha/artifact
  * characterization tests.
  *
  * Writer contract (A3/A6): the caller passes a STRUCTURAL writer for the
  * player-state fields this service owns. In production that is the Pinia
- * player store — it must be the store instance, NOT `store.$state`:
+ * player store - it must be the store instance, NOT `store.$state`:
  * writing an absent optional key (highestFoundationAchieved) on the raw
  * $state object does not reflect through the store proxy (probe evidence
  * 2026-09-11), while a write on the store proxy does. The same writer
@@ -29,10 +29,12 @@ import type { PlayerData } from '../player/Player'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { GameManager } from '../game/GameManager'
 import type { TribulationDirector } from './TribulationDirector'
+import type { TalentEntitlement } from '../talent/TalentEntitlement'
 import type { OutcomeAnnouncement } from '../presentation/OutcomeAnnouncement'
 import { getCurrentRealm } from '../realm/realmSystem'
 import { pourCultivationOvercharge } from '../cultivation/CultivationSystem'
 import { getTribulationVictoryStatPercent } from '../talent/TalentEffects'
+import { createTalentEntitlement } from '../talent/TalentEntitlement'
 import { getRealmTier } from '../realm/RealmTierMap'
 import { FOUNDATION_LABELS } from '../breakthrough/FoundationType'
 import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
@@ -60,7 +62,7 @@ export interface TribulationVictoryResult {
   standalonePanel?: 'quan_khi'
   /** R8.1 glue: quest lifecycle reconcile was requested for the tick. */
   questRealmTransitionMarked: boolean
-  /** i18n descriptor — the adapter resolves keys via t() (P16). */
+  /** i18n descriptor - the adapter resolves keys via t() (P16). */
   announcement: OutcomeAnnouncement
 }
 
@@ -71,7 +73,7 @@ export interface TribulationDefeatResult {
   spiritStoneId: string
   spiritStonesLost: number
   greatDaoOpportunityLost: boolean
-  /** i18n descriptor — the adapter resolves keys via t() (P16). */
+  /** i18n descriptor - the adapter resolves keys via t() (P16). */
   announcement: OutcomeAnnouncement
 }
 
@@ -91,7 +93,7 @@ export interface TribulationOutcomeFacts {
 /**
  * Writer over the player state this service owns. Extends PlayerData so
  * the SAME object flows into GameManager methods without casts. In
- * production the caller passes the Pinia player store INSTANCE — never
+ * production the caller passes the Pinia player store INSTANCE - never
  * `store.$state`: writing an absent optional key (highestFoundationAchieved)
  * on the raw $state object does not reflect through the store proxy
  * (probe evidence 2026-09-11), while a write on the store proxy does.
@@ -103,6 +105,11 @@ export interface TribulationPlayerWriter extends PlayerData {
   realmLevel: number
   cultivation: number
   selectedTalentIds: string[]
+  // M-F-TALENT - the breakthrough entitlement originates on this seam:
+  // the record persists on PlayerData and locks the transition's drain
+  // until its UPGRADE/NEW decision resolves (useTribulation waits on it).
+  talentLevels: Record<string, number>
+  pendingTalentEntitlement?: TalentEntitlement
   highestFoundationAchieved?: FoundationType
   greatDaoOpportunityLost: boolean
   /** Store-level modifier sync after the unequip-all (rework P5 Task 17). */
@@ -172,14 +179,35 @@ export class TribulationOutcomeService {
     gameManager: GameManager,
     facts: TribulationOutcomeFacts,
   ): TribulationVictoryResult {
-    // Loi Kiep (M2): every survived kiếp banks a permanent all-attribute
-    // stack — including the announcement-only Quan Khi ritual below.
+    // Loi Kiep (M2): every survived kiep banks a permanent all-attribute
+    // stack - including the announcement-only Quan Khi ritual below.
     this.applyLoiKiepVictoryBonus(player)
 
     const realm = getCurrentRealm(facts.targetRealmId)
 
+    // M-F-TALENT - one committed victory originates ONE entitlement
+    // record (ruling S15-18). Placed before the Quan Khi early-return
+    // and the realm writes below: the decision is keyed to the realm
+    // being ENTERED (facts.targetRealmId) - the Quan Khi ritual also
+    // enters Luyen Khi, so it creates a qi_refining-pool entitlement.
+    // Idempotent by construction: a pending record is never overwritten,
+    // and a re-settle of the same committed outcome returns its receipt
+    // without re-running this apply at all (settleOutcome dedup).
+    //
+    // Special case (ruling): a Dai Dao foundation breakthrough's ONE
+    // result is the pham_cot -> pham_nhan_chi_cot evolution below, not a
+    // UPGRADE/NEW decision - the generic entitlement is suppressed so
+    // the transaction yields exactly one result, never two.
+    const isGreatDaoBreakthrough =
+      facts.targetRealmId === 'foundation_establishment' && facts.grade === 'great_dao'
+    if (!isGreatDaoBreakthrough) {
+      createTalentEntitlement(player, facts.targetRealmId)
+    }
+
     // Quan Khi victory: pure announcement + path-choice navigation.
-    // No realm/talent/foundation writes (spec dot-pha-loi-kiep SS5.1).
+    // No realm/talent/foundation writes (spec dot-pha-loi-kiep SS5.1) -
+    // the entitlement record above is the transaction's state, not a
+    // realm write.
     if (facts.targetRealmId === 'qi_refining') {
       return {
         kind: 'victory',
@@ -210,7 +238,7 @@ export class TribulationOutcomeService {
     player.cultivation = 0
 
     // Hai Nap (M2): banked overflow follows into the new realm's level
-    // 1 — same owner helper as the minor-tier breakthrough pour.
+    // 1 - same owner helper as the minor-tier breakthrough pour.
     pourCultivationOvercharge(player)
 
     // R8.1 (AR-09): realm transition may unlock quests; tell the lifecycle
@@ -230,7 +258,7 @@ export class TribulationOutcomeService {
     gameManager.realmAdvanceOps.syncRealmPassive(player)
     gameManager.realmAdvanceOps.syncRealmStatPassive(player)
 
-    // Kiem Tu Reimagined (spec K15) — hidden_sword_pathway merge fires exactly once per
+    // Kiem Tu Reimagined (spec K15) - hidden_sword_pathway merge fires exactly once per
     // major-realm advance, after the realmId write (above) so the merge
     // snapshots the swords forged under the OLD realm's economy.
     gameManager.realmAdvanceOps.applySwordPathRealmTransition(player)
@@ -242,10 +270,11 @@ export class TribulationOutcomeService {
     // Spec SS4.3/SS4.4: Great Dao victory converts the penalty talent into
     // the permanent reward talent.
     let talentConverted = false
-    if (facts.targetRealmId === 'foundation_establishment' && facts.grade === 'great_dao') {
+    if (isGreatDaoBreakthrough) {
       const index = player.selectedTalentIds.indexOf('pham_cot')
       if (index >= 0) {
         player.selectedTalentIds.splice(index, 1)
+        delete player.talentLevels['pham_cot']
       }
       if (!player.selectedTalentIds.includes('pham_nhan_chi_cot')) {
         player.selectedTalentIds.push('pham_nhan_chi_cot')
@@ -285,7 +314,7 @@ export class TribulationOutcomeService {
    * modifiers array stays O(5) regardless of stack count.
    */
   private applyLoiKiepVictoryBonus(player: TribulationPlayerWriter): void {
-    const percent = getTribulationVictoryStatPercent(player.selectedTalentIds)
+    const percent = getTribulationVictoryStatPercent(player.selectedTalentIds, player.talentLevels)
 
     if (percent <= 0) {
       return
@@ -333,7 +362,7 @@ export class TribulationOutcomeService {
 
     player.cultivation = Math.floor(player.cultivation * (1 - lossPercent))
 
-    // Plan Workstream F: the penalty can exceed the balance — remove the
+    // Plan Workstream F: the penalty can exceed the balance - remove the
     // actually-owned amount (MaterialBag partial-delivery contract).
     const stoneLoss =
       TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM[facts.targetRealmId] ??
@@ -379,7 +408,7 @@ export class TribulationOutcomeService {
   }
 
   /**
-   * R8.2 Slice 3 — START-side prep, migrated from the Vue adapter's
+   * R8.2 Slice 3 - START-side prep, migrated from the Vue adapter's
    * admitted-start callback: unequip-all, store modifier sync, then the
    * domain startTribulation. Ordering preserved (prep BEFORE the session
    * opens). The presentation session read stays with the adapter (A7).
@@ -392,7 +421,7 @@ export class TribulationOutcomeService {
     gameManager.equipmentOps.unequipAllEquipment()
     player.setEquipmentModifiers(gameManager.equipmentOps.getEquipmentModifiers())
 
-    // ARCH-002 (M7) — the ghost snapshot resolves INSIDE
+    // ARCH-002 (M7) - the ghost snapshot resolves INSIDE
     // startTribulation, after its passive-stack reset; no caller-side
     // stats (same contract as startBattleWithPlayer).
     return gameManager.startTribulation(player as PlayerData, targetRealmId)

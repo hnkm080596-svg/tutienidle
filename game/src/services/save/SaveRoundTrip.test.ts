@@ -1,7 +1,7 @@
-// save-shape-validation-plan.md Task 3 — lưới an toàn round-trip:
-// buildGameSave() thật → JSON.stringify → JSON.parse → validateGameSaveShape()
-// phải luôn ok. Bất kỳ field bắt buộc mới nào thiếu trong save (hoặc
-// validator quá chặt với field thật) đều làm test này đỏ.
+// save-shape-validation-plan.md Task 3 - luoi an toan round-trip:
+// buildGameSave() that -> JSON.stringify -> JSON.parse -> validateGameSaveShape()
+// phai luon ok. Bat ky field bat buoc moi nao thieu trong save (hoac
+// validator qua chat voi field that) deu lam test nay do.
 import { describe, expect, it } from 'vitest'
 import { buildGameSave } from './SaveSystem'
 import { validateGameSaveShape } from './saveShapeValidation'
@@ -71,7 +71,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
 
     expect(result).toMatchObject({ ok: true, issues: [], discardedEquipmentCount: 0 })
 
-    // Material thật sự đi qua serialize đúng shape.
+    // Material that su di qua serialize dung shape.
     const materials = (roundTripped as { materials: Array<{ materialId: string; amount: number }> })
       .materials
 
@@ -164,7 +164,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     expect(playerData.bodyProgression).toEqual(state)
   })
 
-  // Cultivation Path Framework M2 (v65) — the way id persists beside the
+  // Cultivation Path Framework M2 (v65) - the way id persists beside the
   // legacy-effective path id; an unchosen player serializes with the key
   // absent (undefined drops out of JSON) and validates clean.
   it('cultivationPath + cultivationWay round-trip nguyên vẹn (v65)', () => {
@@ -201,6 +201,52 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
 
     const playerData = (roundTripped as { player: Record<string, unknown> }).player
     expect('cultivationWay' in playerData).toBe(false)
+  })
+
+  // M-F-TALENT (v76) - a save taken mid-decision (entitlement still
+  // pending + an upgraded talent level) round-trips both records so the
+  // reload re-presents the SAME bound offers - no reroll, no loss.
+  it('pendingTalentEntitlement + talentLevels round-trip nguyên vẹn (v76, reload mid-decision)', () => {
+    const gameManager = createBootedGameManager()
+    const player = createDefaultPlayer()
+
+    player.realmId = 'foundation_establishment'
+    player.selectedTalentIds = ['pham_nhan_chi_cot', 'lk_dung_nap']
+    player.talentLevels = { lk_dung_nap: 2 }
+    player.pendingTalentEntitlement = {
+      realmId: 'foundation_establishment',
+      offeredTalentIds: ['tc_dia_can', 'tc_kim_lan', 'tc_truc_hon'],
+    }
+
+    const save = buildGameSave(player, gameManager)
+    const roundTripped: unknown = JSON.parse(JSON.stringify(save))
+
+    expect(validateGameSaveShape(roundTripped)).toMatchObject({
+      ok: true,
+      issues: [],
+      discardedEquipmentCount: 0,
+    })
+
+    const playerData = (roundTripped as { player: typeof player }).player
+
+    expect(playerData.talentLevels).toEqual({ lk_dung_nap: 2 })
+    expect(playerData.pendingTalentEntitlement).toEqual({
+      realmId: 'foundation_establishment',
+      offeredTalentIds: ['tc_dia_can', 'tc_kim_lan', 'tc_truc_hon'],
+    })
+  })
+
+  it('pendingTalentEntitlement vắng mặt trên save đã resolve vẫn hợp lệ', () => {
+    const gameManager = createBootedGameManager()
+    const player = createDefaultPlayer()
+
+    const roundTripped: unknown = JSON.parse(JSON.stringify(buildGameSave(player, gameManager)))
+    const result = validateGameSaveShape(roundTripped)
+
+    expect(result).toMatchObject({ ok: true, issues: [] })
+
+    const playerData = (roundTripped as { player: Record<string, unknown> }).player
+    expect('pendingTalentEntitlement' in playerData).toBe(false)
   })
 
   it('save có equipment schema mới round-trip qua validator', () => {

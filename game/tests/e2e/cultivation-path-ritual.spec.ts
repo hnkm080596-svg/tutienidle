@@ -172,6 +172,18 @@ async function winQuanKhiAndOpenRitual(page: import('@playwright/test').Page): P
     })
     .toMatch(/victory|defeat|cleared/)
 
+  // M-F-TALENT: victory mints a mandatory talent entitlement that locks
+  // the transition until resolved - pick the first offer before drain.
+  const entitlementModal = page.locator('[data-testid="talent-entitlement-modal"]')
+  const entitlementShown = await entitlementModal
+    .waitFor({ state: 'visible', timeout: 15_000 })
+    .then(() => true)
+    .catch(() => false)
+  if (entitlementShown) {
+    await entitlementModal.locator('button').first().click()
+    await expect(entitlementModal).toHaveCount(0)
+  }
+
   // Route home + the outcome's standalonePanel commit.
   const wheelLayer = page.locator('.command-wheel-layer')
   await expect(wheelLayer).toBeAttached({ timeout: 30_000 })

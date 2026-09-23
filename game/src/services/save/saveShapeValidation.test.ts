@@ -383,7 +383,7 @@ describe('validateGameSaveShape — spellPath atomic (element ↔ route)', () =>
 
   it.each([
     ['sword', undefined],
-    // M4+M7: element ownership is way-gated — the ngo_dao way and a
+    // M4+M7: element ownership is way-gated - the ngo_dao way and a
     // way-less spell save both reject it.
     ['spell', 'hidden_spell_pathway'],
     ['spell', undefined],
@@ -510,8 +510,8 @@ describe('validateGameSaveShape — phần tử', () => {
     expect(pathsOf(result)).toContain('equipment[1].itemId')
   })
 
-  // Mission A1 — talismans/formations luôn rỗng trên serializer, nhưng
-  // element lệch shape vẫn phải bị chặn tại trust boundary.
+  // Mission A1 - talismans/formations luon rong tren serializer, nhung
+  // element lech shape van phai bi chan tai trust boundary.
   it('talismans/formations entry lệch shape bị từ chối', () => {
     const save = validSave()
 
@@ -920,7 +920,7 @@ describe('validateGameSaveShape — equipment & slot shape (chặn crash boot/Na
     }
   })
 
-  // Dev-stage rule (Mission G) — legacy stat keys are REJECTED at the
+  // Dev-stage rule (Mission G) - legacy stat keys are REJECTED at the
   // boundary, not remapped: a save carrying them fails validation.
   it('rejects a legacy mainStat.stat key', () => {
     const save = validSave()
@@ -1666,6 +1666,207 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
       might: 0,
       customStat: -5,
     }
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  // M-F-TALENT (v76) - talentLevels is the UPGRADE axis (sparse map,
+  // absent id = tang 1): required object, integer values >= 1.
+  it.each([Number.NaN, 0, -1, 1.5, 'x'])('từ chối talentLevels value = %j', (value) => {
+    const save = validSave()
+
+    playerOf(save).talentLevels = { tc_dia_can: value }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.talentLevels.tc_dia_can')
+  })
+
+  it('từ chối khi thiếu talentLevels (required v76)', () => {
+    const save = validSave()
+
+    delete (save.player as Record<string, unknown>).talentLevels
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.talentLevels')
+  })
+
+  it('chấp nhận talentLevels rỗng và thưa', () => {
+    const save = validSave()
+
+    playerOf(save).talentLevels = {}
+    expect(validateGameSaveShape(save).ok).toBe(true)
+
+    const owned = validSave()
+
+    playerOf(owned).selectedTalentIds = ['tc_dia_can', 'lk_linh_mach']
+    playerOf(owned).talentLevels = { tc_dia_can: 2, lk_linh_mach: 3 }
+    expect(validateGameSaveShape(owned).ok).toBe(true)
+  })
+
+  it('từ chối talentLevels của talent save không sở hữu (latent level bypass)', () => {
+    const save = validSave()
+
+    // NEW ownership grants level 1 by contract - a stored level for an
+    // unowned id can only come from a shaped save and would bypass the
+    // level ladder on first grant. Fail loud.
+    playerOf(save).talentLevels = { lk_bac_hai: 2 }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.talentLevels.lk_bac_hai')
+  })
+
+  it.each([
+    // Pool talents author levels to maxLevel 3 - a persisted 4+ cannot
+    // come from the domain (UPGRADE grants at most level+1 up to max).
+    [{ tc_dia_can: 99 }, 'player.talentLevels.tc_dia_can'],
+    [{ lk_bac_hai: 4 }, 'player.talentLevels.lk_bac_hai'],
+    // pham_cot has no levels table - maxLevel 1, any stored level is
+    // corruption (the domain never writes it).
+    [{ pham_cot: 2 }, 'player.talentLevels.pham_cot'],
+  ])('từ chối talentLevels vượt maxLevel = %j, path "%s"', (value, expectedPath) => {
+    const save = validSave()
+
+    playerOf(save).talentLevels = value
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain(expectedPath)
+  })
+
+  it('chấp nhận talentLevels của talent retired nhưng vẫn sở hữu (tolerated)', () => {
+    const save = validSave()
+
+    // A retired-but-owned talent keeps its level entry: the id stays in
+    // selectedTalentIds so consumers can skip it without losing data.
+    playerOf(save).selectedTalentIds = ['retired_talent_id']
+    playerOf(save).talentLevels = { retired_talent_id: 9 }
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  // pendingTalentEntitlement - the persisted breakthrough-decision
+  // record (optional; reload re-presents the same offers).
+  it.each([
+    [{ realmId: '', offeredTalentIds: [] }, 'player.pendingTalentEntitlement.realmId'],
+    [{ realmId: 7, offeredTalentIds: [] }, 'player.pendingTalentEntitlement.realmId'],
+    [{ realmId: 'qi_refining' }, 'player.pendingTalentEntitlement.offeredTalentIds'],
+    [{ realmId: 'qi_refining', offeredTalentIds: 'not-array' }, 'player.pendingTalentEntitlement.offeredTalentIds'],
+    [{ realmId: 'qi_refining', offeredTalentIds: ['ok', 5] }, 'player.pendingTalentEntitlement.offeredTalentIds[1]'],
+  ])('từ chối pendingTalentEntitlement = %j, path "%s"', (value, expectedPath) => {
+    const save = validSave()
+
+    playerOf(save).pendingTalentEntitlement = value
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain(expectedPath)
+  })
+
+  it('chấp nhận pendingTalentEntitlement hợp lệ / vắng mặt', () => {
+    const save = validSave()
+
+    playerOf(save).pendingTalentEntitlement = {
+      realmId: 'foundation_establishment',
+      offeredTalentIds: ['tc_dia_can', 'tc_kim_lan', 'tc_truc_hon'],
+    }
+    expect(validateGameSaveShape(save).ok).toBe(true)
+
+    delete (save.player as Record<string, unknown>).pendingTalentEntitlement
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  // QA-2026-09-23-MF-TALENT-1 - the persisted record drives a blocking
+  // uncancellable modal: a malformed one must fail at the boundary
+  // (registry-drift rule QA-2026-09-12-013), never restore into an
+  // empty decision surface that strands the transition lock forever.
+  it.each([
+    [{ realmId: 'not_a_realm', offeredTalentIds: ['tc_dia_can'] }, 'player.pendingTalentEntitlement.realmId'],
+    [{ realmId: 'qi_refining', offeredTalentIds: ['retired_talent_id'] }, 'player.pendingTalentEntitlement.offeredTalentIds[0]'],
+    [{ realmId: 'qi_refining', offeredTalentIds: [] }, 'player.pendingTalentEntitlement'],
+    [
+      { realmId: 'qi_refining', offeredTalentIds: ['lk_bac_hai', 'lk_bac_hai'] },
+      'player.pendingTalentEntitlement.offeredTalentIds[1]',
+    ],
+  ])('từ chối pendingTalentEntitlement lệch catalog = %j, path "%s"', (value, expectedPath) => {
+    const save = validSave()
+
+    playerOf(save).pendingTalentEntitlement = value
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain(expectedPath)
+  })
+
+  it('từ chối entitlement mà save không còn quyết định hợp lệ nào (empty offers + không talent nâng được)', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    // Offers empty AND every owned talent is unknown or already at
+    // maxLevel - the modal would render zero legal branches.
+    player.selectedTalentIds = ['retired_talent_id', 'pham_cot']
+    player.talentLevels = {}
+    player.pendingTalentEntitlement = { realmId: 'qi_refining', offeredTalentIds: [] }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.pendingTalentEntitlement')
+  })
+
+  it('từ chối entitlement mà mọi offer đã sở hữu + không talent nâng được (all-owned offers)', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    // Every offered card is already owned at maxLevel, and the owner
+    // has no legal upgrade left - every NEW decision would be rejected
+    // and the uncancellable modal would lock forever. Fail loud.
+    player.selectedTalentIds = ['lk_bac_hai']
+    player.talentLevels = { lk_bac_hai: 3 }
+    player.pendingTalentEntitlement = { realmId: 'qi_refining', offeredTalentIds: ['lk_bac_hai'] }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.pendingTalentEntitlement')
+  })
+
+  it('từ chối entitlement có MỘT offer ngoài pool giữa các offer hợp lệ (mixed set, C2C-47)', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    // lk_bac_hai is a live qi_refining member, but tc_dia_can is a
+    // catalog id from foundation_establishment's pool - a foreign offer.
+    // EVERY persisted id must satisfy isLegalBreakthroughOffer, not just
+    // SOME of them: a mixed set is corruption, fail loud at [1].
+    player.pendingTalentEntitlement = {
+      realmId: 'qi_refining',
+      offeredTalentIds: ['lk_bac_hai', 'tc_dia_can'],
+    }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.pendingTalentEntitlement.offeredTalentIds[1]')
+  })
+
+  it('chấp nhận entitlement offers rỗng KHI vẫn còn nhánh UPGRADE hợp lệ', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    // A drained pool legitimately produces offeredTalentIds: [] - the
+    // decision survives on the UPGRADE branch (owned, levels authored).
+    player.selectedTalentIds = ['lk_bac_hai']
+    player.talentLevels = { lk_bac_hai: 2 }
+    player.pendingTalentEntitlement = { realmId: 'qi_refining', offeredTalentIds: [] }
 
     expect(validateGameSaveShape(save).ok).toBe(true)
   })

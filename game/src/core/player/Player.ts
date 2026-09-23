@@ -23,6 +23,7 @@ import {
   type BodyProgressionState,
 } from '../realm/body/BodyChapter'
 import type { PhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
+import type { TalentEntitlement } from '../talent/TalentEntitlement'
 
 export interface PlayerData {
   name: string
@@ -56,9 +57,22 @@ export interface PlayerData {
   // Linh Thach KHONG con la currency tren PlayerData (plan Workstream
   // F) - so du duy nhat la materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID).
 
-  // Ba Thien Phu duoc chot khi tao nhan vat. Hieu ung gameplay se duoc
-  // noi vao stat/effect system theo talent-system-plan.md.
+  // Ba Thien Phu duoc chot khi tao nhan vat + cac talent M-F-TALENT
+  // granted qua breakthrough transaction (NEW branch appends here).
+  // Ownership record; per-talent level song song o talentLevels.
   selectedTalentIds: string[]
+
+  // M-F-TALENT - level map of owned talents (sparse: absent entry =
+  // level 1). Only the UPGRADE branch of a breakthrough entitlement
+  // writes here. The TalentDefinition.levels table bounds legal levels.
+  talentLevels: Record<string, number>
+
+  // M-F-TALENT - the mandatory breakthrough talent transaction. Present
+  // while a realm breakthrough's UPGRADE/NEW decision awaits resolution;
+  // the persisted record is what re-presents the decision surface after
+  // reload and what the tribulation drain waits on. Cleared ONLY by a
+  // successful resolution (cancel-safe: no dismiss path exists).
+  pendingTalentEntitlement?: TalentEntitlement
 
   // Dot Pha Truc Co (Phase 5) - Can Co CAO NHAT tung dat qua Do Kiep
   // thang loi (muc 16 spec `breakthrough` - "duoc reveal" sau khi
@@ -344,6 +358,16 @@ export function createDefaultPlayer(): PlayerData {
     externalModifiers: [],
 
     selectedTalentIds: [],
+    // PHAI khai bao tuong minh (rong, khong undefined) - cung ly do
+    // skillCastCounts o tren (toRefs() snapshot 1 lan luc init store):
+    // resolveTalentEntitlement's UPGRADE branch ghi field con
+    // (`talentLevels[id] = level + 1`) sau khi store da khoi tao, nen
+    // object chua PHAI ton tai san lam key reactive tu dau.
+    talentLevels: {},
+    // PHAI khai bao tuong minh (du `undefined`) - cung ly do
+    // cultivationPath o tren: TribulationOutcomeService's settle seam
+    // assigns this field through the writer proxy.
+    pendingTalentEntitlement: undefined,
     completedStageIds: [],
     perfectClearStageIds: [],
     perfectClearSeconds: {},
