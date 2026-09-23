@@ -280,6 +280,10 @@ export interface ProductionSiteStateSave {
   // the serializer until now; undefined = AUTO (round-robin) per
   // ProductionSiteState.
   assignedWorkers?: number
+
+  // M-F-BODY-HIDDEN (v81) — grotto per-channel settle-cycle counters;
+  // mirrors ProductionSiteState.hiddenChannelCycles.
+  hiddenChannelCycles?: Record<string, number>
 }
 
 /** Shape persist của ActiveAlchemyJob — khớp core/alchemy. */
