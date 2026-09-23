@@ -1,3 +1,4 @@
+import { withMortalCreationPick } from '../../services/save/GameSave.fixture'
 import { describe, expect, it } from 'vitest'
 
 import { materials } from '../../data/materials/materials'
@@ -73,7 +74,7 @@ describe('GameManager.saveOps.restoreFromSave - physique restore contract', () =
   }
 
   function baseSave(player: ReturnType<typeof createDefaultPlayer>): GameSave {
-    return {
+    return withMortalCreationPick({
       version: CURRENT_SAVE_VERSION,
       player,
       techniques: [],
@@ -87,7 +88,7 @@ describe('GameManager.saveOps.restoreFromSave - physique restore contract', () =
       buildings: [],
       quests: { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
       productionSites: [],
-    }
+    })
   }
 
   it('a completed chapter + persisted advanced grade restores unchanged', () => {

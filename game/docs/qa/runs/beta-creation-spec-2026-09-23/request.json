@@ -1,0 +1,44 @@
+{
+  "runId": "beta-creation-spec-2026-09-23",
+  "productRoot": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
+  "checkout": "origin/beta/rc base + devin/1790189100-beta-creation @ 44abadfb",
+  "branch": "devin/1790189100-beta-creation",
+  "base": "origin/beta/rc",
+  "head": "44abadfbd2f4bcc572bd4be2ebd5e75aa9106ee7",
+  "authorizedRepairs": [
+    "docs/specs/beta-creation-spec.md",
+    "docs/plans/beta-creation-plan.md"
+  ],
+  "nonGoals": [
+    "production code changes (implementation is the NEXT phase, not this run's object)",
+    "gameplay redesign",
+    "merge/push to beta/rc or other branches",
+    "external review services"
+  ],
+  "requiredDomains": [
+    "docs/specs",
+    "docs/plans",
+    "src/services/character",
+    "src/core/game",
+    "src/core/player",
+    "src/core/skill",
+    "src/services/save",
+    "src/components/onboarding",
+    "src/locales",
+    "tests"
+  ],
+  "contractPaths": [
+    "../AGENTS.md",
+    "docs/qa/protocol/README.md",
+    "docs/qa/protocol/agent-instructions.md",
+    "docs/specs/beta-creation-spec.md",
+    "docs/plans/beta-creation-plan.md"
+  ],
+  "attackModelPath": "attack-model.json",
+  "environmentPath": "environment.json",
+  "extraExclude": [
+    "docs/qa/runs/",
+    "docs/qa/learning/history/"
+  ],
+  "notes": "BETA-CREATION spec/plan review run (amended mission: coordinator self-runs spec QA before implementation). Review object = the two mission docs @44abadfb plus the code surfaces they census; NO implementation exists yet. authorizedRepairs covers the docs only. Reviewers are fresh sealed Devin child sessions, priorFindingsVisible=NO. Product under review relocated to implementation worktree (docs identical at frozen SHA)."
+}

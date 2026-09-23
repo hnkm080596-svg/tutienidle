@@ -125,10 +125,13 @@ export interface PlayerData {
 
   // P7-M4 - the mortal basic pick: which learned precursor the player
   // fights with before initiation ('tram' | 'linh_bao' | 'huy_quyen';
-  // absent -> 'tram'). Mortal-scoped: written only via
-  // progressionOps.setMortalBasicSkill() while cultivationPath is
-  // unset, and cleared by the ritual commit. A post-path save carrying
-  // it is corrupt (save-v71 preflight rejects).
+  // absent -> 'tram' as the defensive runtime fallback). BETA-CREATION
+  // (v82): creation now REQUIRES the pick - the unified screen collects
+  // it and the boot seam writes it post-learn; a mortal save without it
+  // is corrupt (restore preflight rejects, fail-closed). Mortal-scoped:
+  // written only via progressionOps.setMortalBasicSkill() while
+  // cultivationPath is unset, and cleared by the ritual commit. A
+  // post-path save carrying it is corrupt (save-v71 preflight rejects).
   mortalBasicSkillId?: string
 
   // Phap Tu Reimagined (spec 2026-09-14) - persistent path-choice

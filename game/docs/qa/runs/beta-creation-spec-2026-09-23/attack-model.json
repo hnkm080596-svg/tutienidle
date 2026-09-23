@@ -1,0 +1,42 @@
+{
+  "runId": "beta-creation-spec-2026-09-23",
+  "objectUnderReview": "spec + plan docs only (no implementation exists yet)",
+  "lenses": [
+    {"id": "contract", "attacks": [
+      "ruling clause -> contract mapping completeness (all 5 clauses mapped, none contradicted)",
+      "ambiguity/contradiction inside spec decisions D1-D9",
+      "undefined semantics: learn-all-three vs pick-only; 'single flow' interpretation; failure semantics for invalid/missing pick",
+      "spec-vs-ruling drift: does any decision silently redesign gameplay (hidden gates, precursor set, default basic)?"
+    ]},
+    {"id": "correctness", "attacks": [
+      "file:line census claims re-verified against @44abadfb source",
+      "write-ordering feasibility: setMortalBasicSkill requires learned; pick must be written inside boot seam post-learn",
+      "spec-vs-code drift: stale known-state claims (preferredBasicSkill vs mortalBasicSkillId)",
+      "plan step ordering: does any step reference a seam/field that does not exist?"
+    ]},
+    {"id": "authority", "attacks": [
+      "mortalBasicSkillId census completeness: writers/readers/validators/runtime consumers (resolveBasic, ritual commit, preflight, SkillRoleStrip, battle substitution)",
+      "allocation-path census completeness: CHARACTER_CREATION_ATTRIBUTE_POINTS, draft.attributes, attribute step UI, RPC p_attributes, e2e helper, sim fixtures",
+      "duplicate authority: EarlyGameBootstrap vs App.vue inline seams — does the plan actually converge them?",
+      "test inventory completeness: every test pinning the old flow enumerated"
+    ]},
+    {"id": "persistence", "attacks": [
+      "v82 bump + preflight fail-closed vs actual saveShapeValidation rejection mechanics",
+      "absent-pick-on-mortal-save rejection: does the spec distinguish mortal vs post-path saves correctly?",
+      "no-migration dev-phase policy consistency"
+    ]},
+    {"id": "ui-i18n", "attacks": [
+      "single-screen claim vs stepper/keys removal completeness",
+      "Vietnamese i18n coverage of new strings; en.json parity",
+      "a11y/stepper aria removal side effects"
+    ]}
+  ],
+  "rulingClauses": [
+    "R1 remove 5-point stat allocation entirely (no step/UI/service path)",
+    "R2 auto base stats 1/1/1/1/1",
+    "R3 starting-skill choice exactly {Linh Bao, Huy Quyen, Huy Kiem}",
+    "R4 ONE unified creation flow name+talent+skill",
+    "R5 bootstrap no longer silently decides tram"
+  ],
+  "notes": "Spec/plan review: findings classify as SPEC_DEFECT / DOCUMENTATION_DEFECT / COVERAGE_GAP (census misses) mostly; REAL_DEFECT only if spec mandates something that cannot be implemented as stated."
+}

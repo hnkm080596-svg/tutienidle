@@ -48,7 +48,7 @@ import { REALMS } from '../../../data/realms/realm'
 const MEASUREMENT_PROFILE: EarlyGameCreationProfile = {
   name: 'substitution-economy-measure',
   talentIds: ['hap_linh'],
-  attributes: { strength: 2, vitality: 3 },
+  mortalBasicSkillId: 'tram',
 }
 
 function makeSession(seed: number): EarlyGameSession {

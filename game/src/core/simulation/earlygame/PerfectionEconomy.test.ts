@@ -13,7 +13,6 @@ import { createBaseStats } from '../../stats/StatBlock'
 import { createDefaultPlayer } from '../../player/Player'
 import { getMainStatCap } from '../../stats/StatCap'
 import { REALMS } from '../../../data/realms/realm'
-import { CHARACTER_CREATION_ATTRIBUTE_POINTS } from '../../../services/character/CharacterCreationService'
 import { BODY_REFINEMENT_TIERS, TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../../data/realm/BodyRefinement'
 import {
   expectedEssencePerKill,
@@ -36,9 +35,9 @@ describe('mortalStatBudget — enumerated-source budget (spec §3.4)', () => {
     expect(budget.required).toBe(expectedRequired)
 
     const mortal = REALMS.find((r) => r.id === 'mortal')!
-    const expectedAvailable =
-      CHARACTER_CREATION_ATTRIBUTE_POINTS +
-      (mortal.maxLevel - createDefaultPlayer().realmLevel)
+    // Post-BETA-CREATION creation distributes no points - breakthrough
+    // is the only enumerated source.
+    const expectedAvailable = mortal.maxLevel - createDefaultPlayer().realmLevel
     expect(budget.available).toBe(expectedAvailable)
     expect(budget.shortfall).toBe(expectedRequired - expectedAvailable)
   })

@@ -49,7 +49,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
 
   // The Tu Reimagined (spec 2026-09-15 §2.3) — mortal cast-leveled
   // basic sibling of tram; Lv3 gates the ung_the way at the ritual.
-  huy_quyen: fromSkills('huy_quyen', { name: 'Hủy Quyền', description: 'Quyền pháp phàm nhân, không tốn tài nguyên.' }),
+  huy_quyen: fromSkills('huy_quyen', { name: 'Huy Quyền', description: 'Quyền pháp phàm nhân, không tốn tài nguyên.' }),
 
   // 5 Pháp Tu Thuần Hệ — đồng bộ từ Skills.ts.
   hoa_cau_thuat: fromSkills('hoa_cau_thuat', { name: 'Hỏa Cầu Thuật', description: 'Hỏa hệ công kích.' }),

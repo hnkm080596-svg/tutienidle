@@ -5,6 +5,7 @@
 // structuredClone(quests) tồn tại trong buildGameSave(): questManager.getState()
 // trả về tham chiếu sống — mutate SAU buildGameSave() không được phép rò
 // vào save đã build.
+import { primeMortalCreationPick } from './GameSave.fixture'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { GameManager } from '../../core/game/GameManager'
 import { createDefaultPlayer } from '../../core/player/Player'
@@ -79,6 +80,8 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     gameManager.questManager.incrementProgress(TEST_QUEST.id, 2)
     gameManager.questManager.markCompletedOnce('some_other_once_quest')
 
+    primeMortalCreationPick(player, gameManager.skillManager)
+
     const save = buildGameSave(player, gameManager)
 
     const writeResult = writeGameSave(save)
@@ -106,6 +109,8 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     const player = createDefaultPlayer()
 
     gameManager.questManager.ensureActive(TEST_QUEST)
+
+    primeMortalCreationPick(player, gameManager.skillManager)
 
     const save = buildGameSave(player, gameManager)
     const questsSnapshotBeforeMutation = structuredClone(save.quests)
@@ -142,6 +147,8 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     gameManager.decomposeSystem.updateCapacity(5)
     gameManager.decomposeSystem.setSetting({ workers: 3, ageFilter: 'decade' })
     gameManager.decomposeSystem.tick(Date.now()) // start the cycle timer
+
+    primeMortalCreationPick(player, gameManager.skillManager)
 
     const save = buildGameSave(player, gameManager)
     const decomposeSnapshot = structuredClone(save.decompose)
@@ -190,6 +197,8 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     const siteId = gameManager.productionSystem.getSiteDefinitions()[0]!.siteId
     gameManager.productionSystem.ensureSiteState(siteId)
     gameManager.buildingOps.assignWorkers(siteId, 2)
+
+    primeMortalCreationPick(player, gameManager.skillManager)
 
     const save = buildGameSave(player, gameManager)
 

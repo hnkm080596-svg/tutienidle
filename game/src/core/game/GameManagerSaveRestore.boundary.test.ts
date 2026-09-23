@@ -50,7 +50,7 @@ function makeManager(): GameManager {
 }
 
 function baseSave(player: PlayerData, overrides: Partial<GameSave> = {}): GameSave {
-  return {
+  const save: GameSave = {
     version: CURRENT_SAVE_VERSION,
     player: { ...player, lastSavedAt: Date.now() },
     techniques: [],
@@ -72,6 +72,25 @@ function baseSave(player: PlayerData, overrides: Partial<GameSave> = {}): GameSa
     },
     ...overrides,
   }
+
+  // BETA-CREATION (v82) - a mortal save must carry its creation pick and
+  // the picked precursor must be learned. Callers passing a mortal player
+  // get the boot seam's writes mirrored so fixtures stay legal saves;
+  // callers overriding the skills slice own including the pick entry.
+  if (save.player.cultivationPath === undefined) {
+    if (save.player.mortalBasicSkillId === undefined) {
+      save.player.mortalBasicSkillId = 'tram'
+    }
+    if (overrides.skills === undefined) {
+      save.skills = [precursorSkillEntry(save.player.mortalBasicSkillId)]
+    }
+  }
+
+  return save
+}
+
+function precursorSkillEntry(id: string): Skill {
+  return { ...structuredClone(SAVED_SKILL), id, name: id }
 }
 
 const LIVE_SKILL: Skill = {
@@ -187,13 +206,20 @@ afterEach(() => {
 describe('M1 (ARCH-001) — per-slice replacement / reset', () => {
   it('skills: an empty slice clears the live set; a saved set replaces it', () => {
     const manager = makeManager()
-    const player = createDefaultPlayer()
+    // v82 - a literal-empty skills slice is only legal on a way player
+    // (a mortal save always carries its learned pick), so the slice
+    // replace semantics are pinned on a committed player.
+    const player = swordCommittedPlayer()
     manager.skillManager.add(structuredClone(LIVE_SKILL))
 
-    manager.saveOps.restoreFromSave(baseSave(player, { skills: [] }))
+    manager.saveOps.restoreFromSave(
+      baseSave(player, { skills: [], techniques: [structuredClone(SAVED_TECHNIQUE)] }),
+    )
     expect(manager.skillManager.getAll()).toEqual([])
 
-    manager.saveOps.restoreFromSave(baseSave(player, { skills: [structuredClone(SAVED_SKILL)] }))
+    manager.saveOps.restoreFromSave(
+      baseSave(player, { skills: [structuredClone(SAVED_SKILL)], techniques: [structuredClone(SAVED_TECHNIQUE)] }),
+    )
     expect(manager.skillManager.getAll().map((skill) => skill.id)).toEqual(['saved_skill'])
     expect(manager.skillManager.has('live_only_skill')).toBe(false)
   })
@@ -624,6 +650,12 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
   it('a session restore clears a pending wash ticket — commit rejects no_pending_wash', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
+    // v82 - mirror the boot seam's RESULT (learn precedes pick): the
+    // skills payload comes from skillManager, the pick from player.
+    // Direct fixture writes - this manager registers no progression
+    // nodes, so the learn op cannot run here.
+    player.mortalBasicSkillId = 'tram'
+    manager.skillManager.add(precursorSkillEntry('tram'))
     const save = seedWashableItem(manager, player)
 
     const preview = manager.equipmentOps.previewWashItem('wash-boundary-item')
@@ -675,6 +707,8 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
   it('a session restore clears a pending refine preview — commit rejects invalid_refine_preview', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
+    player.mortalBasicSkillId = 'tram'
+    manager.skillManager.add(precursorSkillEntry('tram'))
     const save = seedWashableItem(manager, player)
 
     const preview = manager.equipmentOps.previewRefineItem('wash-boundary-item', [])
@@ -729,7 +763,7 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
     )
     ;(legacy.passiveModifiers![0] as { stat: string }).stat = 'attack'
 
-    manager.saveOps.restoreFromSave(baseSave(player, { skills: [legacy] }))
+    manager.saveOps.restoreFromSave(baseSave(player, { skills: [legacy, precursorSkillEntry('tram')] }))
 
     const restored = manager.skillManager.get('passive_linh_khi_cam_ung')!
     expect(restored.passiveModifiers![0]!.stat).toBe('might')
@@ -752,7 +786,7 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
     )
     stale.effects = []
 
-    manager.saveOps.restoreFromSave(baseSave(player, { skills: [stale] }))
+    manager.saveOps.restoreFromSave(baseSave(player, { skills: [stale, precursorSkillEntry('tram')] }))
 
     const restored = manager.skillManager.get('da_phap_lien_tuyen')!
     expect(restored.effects).toEqual(
@@ -782,7 +816,7 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
 
     manager.saveOps.restoreFromSave(
       baseSave(player, {
-        skills: [orphanSkill, validSkill],
+        skills: [orphanSkill, validSkill, precursorSkillEntry('tram')],
       }),
     )
 
@@ -1011,27 +1045,49 @@ describe('v75 technique gradeHistory coherence preflight', () => {
   })
 })
 
-// P7-M4 (v71) - mortalBasicSkillId preflight: absent = tram default;
-// present = a precursor member AND a still-mortal player (the ritual
-// clears the pick inside the commit block, so post-path presence is
-// corrupt). Every rejection happens BEFORE any owner mutation - the
-// same hard-fail seam as the technique-holder contract above.
-describe('v71 mortalBasicSkillId preflight', () => {
+// P7-M4 (v71) - mortalBasicSkillId preflight: present = a precursor
+// member AND a still-mortal player (the ritual clears the pick inside
+// the commit block, so post-path presence is corrupt). Every rejection
+// happens BEFORE any owner mutation - the same hard-fail seam as the
+// technique-holder contract above.
+//
+// BETA-CREATION (v82) - the pick is REQUIRED on mortal saves: absent is
+// no longer a runtime-defaultable state for a character (the creation
+// screen always writes it, so a mortal save missing the pick is a
+// contract violation - reject, never silently default to tram). The
+// pick must also be LEARNED (id membership in the skills payload).
+describe('v82 mortalBasicSkillId preflight', () => {
   it.each(['tram', 'linh_bao', 'huy_quyen'])(
-    'restores a mortal save carrying a valid pick (%s)',
+    'restores a mortal save carrying a learned, valid pick (%s)',
     (skillId) => {
       const manager = makeManager()
       const player = createDefaultPlayer()
       player.mortalBasicSkillId = skillId
+      const save = baseSave(player, {
+        skills: [{ ...structuredClone(SAVED_SKILL), id: skillId }],
+      })
 
-      expect(() => manager.saveOps.restoreFromSave(baseSave(player))).not.toThrow()
+      expect(() => manager.saveOps.restoreFromSave(save)).not.toThrow()
     },
   )
 
-  it('restores a mortal save carrying no pick (absent = tram default)', () => {
+  it('rejects a mortal save carrying no pick before any owner mutation', () => {
     const manager = makeManager()
+    const save = baseSave(createDefaultPlayer())
+    delete save.player.mortalBasicSkillId
 
-    expect(() => manager.saveOps.restoreFromSave(baseSave(createDefaultPlayer()))).not.toThrow()
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/mortalBasicSkillId/i)
+    expect(manager.skillManager.getAll()).toEqual([])
+  })
+
+  it('rejects a pick that is not learned in the skills payload', () => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+    player.mortalBasicSkillId = 'linh_bao'
+    const save = baseSave(player, { skills: [structuredClone(SAVED_SKILL)] })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/mortalBasicSkillId/i)
+    expect(manager.skillManager.getAll()).toEqual([])
   })
 
   it.each(['hoa_cau_thuat', 'khong_ton_tai', '', 7])(
@@ -1092,11 +1148,12 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
     corrupt(player)
-    const save = baseSave(player, { skills: [structuredClone(SAVED_SKILL)] })
+    const save = baseSave(player, { skills: [structuredClone(SAVED_SKILL), precursorSkillEntry('tram')] })
 
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/BodyProgression integrity/i)
     // Zero-mutation: preflight threw before the skills slice replaced
     // the live set (an applied restore would carry SAVED_SKILL).
+    expect(manager.skillManager.getAll()).toEqual([])
     expect(manager.skillManager.getAll()).toEqual([])
   })
 
@@ -1241,7 +1298,7 @@ describe('v77 zhou_tian slice + sequential coherence preflight', () => {
 
     const crafted = createDefaultPlayer()
     corrupt(crafted)
-    const save = baseSave(crafted, { skills: [structuredClone(SAVED_SKILL)] })
+    const save = baseSave(crafted, { skills: [structuredClone(SAVED_SKILL), precursorSkillEntry('tram')] })
 
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/BodyProgression integrity/i)
 

@@ -6,6 +6,7 @@
 // call with the identical save (boot retry, reload race — the same
 // scenario S2/S3 close for the player store and bag replacement) would
 // re-run the same offline settlement and grant the same rewards again.
+import { withMortalCreationPick } from '../../services/save/GameSave.fixture'
 import { describe, expect, it, vi } from 'vitest'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
@@ -15,7 +16,7 @@ import type { GameSave } from '../../services/save/SaveSystem'
 function baseSave(overrides: Partial<GameSave> = {}): GameSave {
   const player = createDefaultPlayer()
 
-  return {
+  return withMortalCreationPick({
     version: CURRENT_SAVE_VERSION,
     // Far enough in the past to clear the >60s offline-settle gate.
     player: { ...player, lastSavedAt: Date.now() - 10_000_000 },
@@ -31,7 +32,7 @@ function baseSave(overrides: Partial<GameSave> = {}): GameSave {
     quests: { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
     productionSites: [],
     ...overrides,
-  }
+  })
 }
 
 describe('GameManagerSaveRestore — once-only offline settle (R10, S4)', () => {

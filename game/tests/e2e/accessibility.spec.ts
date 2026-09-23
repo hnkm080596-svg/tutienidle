@@ -54,8 +54,6 @@ test.describe('Keyboard accessibility journey', () => {
     // Character creation: name input bằng keyboard, continue bằng Enter.
     await page.getByTestId('creation-name-input').fill('Keyboard Hero')
     await page.keyboard.press('Tab')
-    await expect(page.getByTestId('creation-continue-name')).toBeEnabled({ timeout: 5_000 })
-    await page.keyboard.press('Enter')
 
     await expect(page.locator('[data-testid^="creation-talent-"]').first()).toBeVisible({ timeout: 10_000 })
 
@@ -63,17 +61,11 @@ test.describe('Keyboard accessibility journey', () => {
     const talentCard = page.locator('[data-testid^="creation-talent-"]').first()
     await talentCard.focus()
     await page.keyboard.press('Enter')
-    await page.getByTestId('creation-confirm-talent').click()
 
-    // Attribute points: phân bổ đủ 5 điểm qua Space trên nút plus (button
-    // activation) — creation-finish disabled tới khi pointsLeft === 0.
-    const plusButtons = page.locator('[data-testid^="creation-attribute-plus-"]')
-    const count = await plusButtons.count()
-
-    for (let i = 0; i < Math.min(count, 5); i++) {
-      await plusButtons.nth(i).focus()
-      await page.keyboard.press('Space')
-    }
+    // Starting-skill pick (BETA-CREATION): select tram via keyboard.
+    const skillCard = page.getByTestId('creation-skill-tram')
+    await skillCard.focus()
+    await page.keyboard.press('Enter')
 
     await expect(page.getByTestId('creation-finish')).toBeEnabled({ timeout: 5_000 })
     await page.getByTestId('creation-finish').focus()

@@ -160,4 +160,13 @@
 // optional `hiddenChannelCycles: Record<channelId, number>` (grotto
 // settle-cycle emission counters). Save v80 is rejected (dev phase, no
 // migration, no compat translator).
-export const CURRENT_SAVE_VERSION = 81 as const
+// v82 (2026-09-23, BETA-CREATION unified character creation): the
+// 5-point creation allocation is removed entirely - new characters
+// start at the 1/1/1/1/1 base-stats default with no distributed
+// points. Creation now carries a starting-skill pick (one of the
+// three mortal precursors) written inside the boot seam, so on
+// MORTAL saves player.mortalBasicSkillId is REQUIRED and must be
+// learned - absence is rejected, never silently defaulted to tram.
+// Save v81 is rejected (dev phase, no migration, no compat
+// translator).
+export const CURRENT_SAVE_VERSION = 82 as const

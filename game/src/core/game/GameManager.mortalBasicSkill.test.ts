@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ManualClockSource } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
+import { applyCreationProfile, bootstrapEarlyGamePlayer } from './EarlyGameBootstrap'
 import { SKILLS } from '../../data/skill/Skills'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { TECHNIQUES } from '../../data/technique/Techniques'
@@ -31,6 +32,44 @@ const ENEMY = defineEnemy({
   lane: 'ground',
   statsInput: { maxHp: 1_000_000, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
   rewards: { techniqueMastery: 0, spiritStone: 0 },
+})
+
+// BETA-CREATION - creation writes the pick inside the post-learn boot
+// seam: the screen's choice becomes the persisted mortalBasicSkillId and
+// the runtime default is never silently chosen for a fresh character.
+describe('bootstrapEarlyGamePlayer — creation pick write', () => {
+  it('learns all three precursors and writes the chosen starting basic', () => {
+    const gameManager = setup()
+    const player = createDefaultPlayer()
+
+    bootstrapEarlyGamePlayer(gameManager, player, 'linh_bao')
+
+    for (const id of ['tram', 'linh_bao', 'huy_quyen']) {
+      expect(gameManager.skillManager.has(id)).toBe(true)
+    }
+    expect(player.mortalBasicSkillId).toBe('linh_bao')
+  })
+
+  it('throws on an invalid pick — post-learn a legal pick cannot fail', () => {
+    const gameManager = setup()
+    const player = createDefaultPlayer()
+
+    expect(() => bootstrapEarlyGamePlayer(gameManager, player, 'hoa_cau_thuat')).toThrow()
+    expect(player.mortalBasicSkillId).toBeUndefined()
+  })
+})
+
+describe('applyCreationProfile — name + talent only', () => {
+  it('writes name and talents; base stats stay the 1/1/1/1/1 default and the pick is untouched', () => {
+    const player = createDefaultPlayer()
+
+    applyCreationProfile(player, { name: 'Lạc Vân', talentIds: ['tc_a'], mortalBasicSkillId: 'huy_quyen' })
+
+    expect(player.name).toBe('Lạc Vân')
+    expect(player.selectedTalentIds).toEqual(['tc_a'])
+    expect(player.baseStats).toMatchObject({ strength: 1, dexterity: 1, intelligence: 1, attunement: 1, vitality: 1 })
+    expect(player.mortalBasicSkillId).toBeUndefined()
+  })
 })
 
 describe('setMortalBasicSkill — the only role write', () => {

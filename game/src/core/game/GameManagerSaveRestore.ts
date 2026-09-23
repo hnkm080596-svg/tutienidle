@@ -263,22 +263,36 @@ export class GameManagerSaveRestore {
     }
 
     // P7-M4 (v71) - mortalBasicSkillId is the MORTAL-ONLY basic pick:
-    // absent = the runtime's tram default; present = a precursor id the
-    // player could have learned. Post-path presence is corrupt (the
-    // ritual clears the pick inside the commit block - a way player can
-    // never carry one) - reject before any owner mutation, same
-    // hard-fail seam as the technique-holder contract above.
+    // present = a precursor id the player could have learned.
+    // Post-path presence is corrupt (the ritual clears the pick inside
+    // the commit block - a way player can never carry one) - reject
+    // before any owner mutation, same hard-fail seam as the
+    // technique-holder contract above.
+    //
+    // BETA-CREATION (v82) - on mortal saves the pick is REQUIRED and
+    // must be LEARNED (id membership in the skills payload): the
+    // creation flow always writes it, so a mortal save without one -
+    // or pointing at an unlearned skill - is a contract violation.
+    // Reject, never silently default to tram.
     const mortalPick = save.player.mortalBasicSkillId
 
-    if (mortalPick !== undefined) {
-      if (!isMortalPrecursorSkillId(mortalPick)) {
-        throw new Error(`Invalid mortalBasicSkillId in save: ${String(mortalPick)}`)
-      }
+    if (mortalPick !== undefined && !isMortalPrecursorSkillId(mortalPick)) {
+      throw new Error(`Invalid mortalBasicSkillId in save: ${String(mortalPick)}`)
+    }
 
-      if (save.player.cultivationPath !== undefined) {
+    if (save.player.cultivationPath !== undefined) {
+      if (mortalPick !== undefined) {
         throw new Error(
           `mortalBasicSkillId persisted post-path in save: '${mortalPick}' on path '${save.player.cultivationPath}'`,
         )
+      }
+    } else {
+      if (mortalPick === undefined) {
+        throw new Error('mortal save missing required mortalBasicSkillId (creation pick)')
+      }
+
+      if (!save.skills.some((entry) => entry.id === mortalPick)) {
+        throw new Error(`mortalBasicSkillId not learned in save: '${mortalPick}'`)
       }
     }
 

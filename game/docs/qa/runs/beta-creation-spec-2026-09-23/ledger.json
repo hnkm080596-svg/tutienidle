@@ -1,0 +1,1317 @@
+{
+  "schemaVersion": 1,
+  "run": {
+    "id": "beta-creation-spec-2026-09-23",
+    "createdAt": "2026-09-23T19:19:12.383Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [
+      "docs/specs/beta-creation-spec.md",
+      "docs/plans/beta-creation-plan.md"
+    ],
+    "nonGoals": [
+      "production code changes (implementation is the NEXT phase, not this run's object)",
+      "gameplay redesign",
+      "merge/push to beta/rc or other branches",
+      "external review services"
+    ],
+    "checkout": "origin/beta/rc base + devin/1790189100-beta-creation @ 44abadfb",
+    "branch": "devin/1790189100-beta-creation",
+    "base": "origin/beta/rc",
+    "head": "44abadfbd2f4bcc572bd4be2ebd5e75aa9106ee7",
+    "state": {
+      "productStateId": "c7159ec34038343dc24a384f7de0f366c38deb16ae05760e8ca2e96c8abb1082",
+      "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+      "attackModelId": "237c30174e68a16b0436dd5a8cfadea4a1b465cce8229c38080af7fee7581153",
+      "environmentId": "66eed09e77004bba554bf92d4d0c7c10ffab78c8ed7daf80771a40fa87d06054"
+    },
+    "manifestPath": "manifest.json",
+    "environmentPath": "environment.json",
+    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "consumedLessonIds": [],
+    "aggregateParents": [],
+    "requiredDomains": [
+      "docs/specs",
+      "docs/plans",
+      "src/services/character",
+      "src/core/game",
+      "src/core/player",
+      "src/core/skill",
+      "src/services/save",
+      "src/components/onboarding",
+      "src/locales",
+      "tests"
+    ],
+    "exclusions": [],
+    "phase": "SNAPSHOT",
+    "cleanRoundA": null,
+    "cleanRoundB": null,
+    "finalEvidenceIds": [],
+    "outcome": null
+  },
+  "invariants": [
+    {
+      "id": "I-SPEC-RULING-MAP",
+      "statement": "Every pinned ruling clause R1-R5 maps to at least one concrete contract in the spec; no spec decision contradicts a clause.",
+      "domain": "docs/specs",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "../prompts (mission)",
+          "symbolOrSection": "BETA-CREATION ruling R1-R5",
+          "revision": "44abadfb",
+          "basis": "USER"
+        },
+        {
+          "path": "docs/specs/beta-creation-spec.md",
+          "symbolOrSection": "S2 ruling->contract map",
+          "revision": "44abadfb",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "docs/specs/beta-creation-spec.md",
+        "symbolOrSection": "S2 mapping table",
+        "revision": "44abadfb",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "spec/plan must state failure semantics explicitly where it defines them",
+      "atomicity": "n/a (docs review)",
+      "inverseBehavior": "n/a (docs review)",
+      "persistence": "per spec claim under review",
+      "migration": "dev-phase: bump + reject, no migration",
+      "lifecycle": "spec/plan must be internally consistent through all referenced lifecycles",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "each R-clause has >=1 spec decision citing it; zero decisions conflict with R1-R5"
+      ],
+      "requiredEvidenceSurfaces": [
+        "SPEC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-PLAN-FEASIBLE",
+      "statement": "Every plan step references only existing seams or seams the spec newly defines; ordering satisfies learn-before-pick-write.",
+      "domain": "docs/plans",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/plans/beta-creation-plan.md",
+          "symbolOrSection": "steps 0-7",
+          "revision": "44abadfb",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "docs/plans/beta-creation-plan.md",
+        "symbolOrSection": "step ordering",
+        "revision": "44abadfb",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "spec/plan must state failure semantics explicitly where it defines them",
+      "atomicity": "n/a (docs review)",
+      "inverseBehavior": "n/a (docs review)",
+      "persistence": "per spec claim under review",
+      "migration": "dev-phase: bump + reject, no migration",
+      "lifecycle": "spec/plan must be internally consistent through all referenced lifecycles",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "no step references a nonexistent symbol; pick write occurs inside bootstrapEarlyGamePlayer post-learn per D2"
+      ],
+      "requiredEvidenceSurfaces": [
+        "SPEC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-CENSUS-ALLOC",
+      "statement": "Spec census enumerates every writer/reader/consumer of the 5-point allocation path (constant, draft.attributes, UI step, RPC p_attributes, tests/e2e/sim).",
+      "domain": "src/services/character",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "src/services/character/CharacterCreationService.ts",
+          "symbolOrSection": "CHARACTER_CREATION_ATTRIBUTE_POINTS/draft/invalid_attributes",
+          "revision": "44abadfb",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "docs/specs/beta-creation-spec.md",
+        "symbolOrSection": "S1 census tables",
+        "revision": "44abadfb",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "spec/plan must state failure semantics explicitly where it defines them",
+      "atomicity": "n/a (docs review)",
+      "inverseBehavior": "n/a (docs review)",
+      "persistence": "per spec claim under review",
+      "migration": "dev-phase: bump + reject, no migration",
+      "lifecycle": "spec/plan must be internally consistent through all referenced lifecycles",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "grep for attributes/allocation surfaces yields no consumer absent from spec tables"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-CENSUS-PICK",
+      "statement": "Spec census enumerates every consumer of mortalBasicSkillId: resolveBasic, ritual clear, save preflight, SkillRoleStrip, battle substitution, saves.",
+      "domain": "src/core/player",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "src/core/player/Player.ts",
+          "symbolOrSection": "mortalBasicSkillId :132",
+          "revision": "44abadfb",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/player/CultivationPathRegistry.ts",
+          "symbolOrSection": "createMortalRuntime.resolveBasic :336-346",
+          "revision": "44abadfb",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "docs/specs/beta-creation-spec.md",
+        "symbolOrSection": "S1 pick census",
+        "revision": "44abadfb",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "spec/plan must state failure semantics explicitly where it defines them",
+      "atomicity": "n/a (docs review)",
+      "inverseBehavior": "n/a (docs review)",
+      "persistence": "per spec claim under review",
+      "migration": "dev-phase: bump + reject, no migration",
+      "lifecycle": "spec/plan must be internally consistent through all referenced lifecycles",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "no reader/writer of mortalBasicSkillId absent from spec tables"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-SKILL-MAP",
+      "statement": "Ruling options {Linh Bao,Huy Quyen,Huy Kiem} map to exactly MORTAL_PRECURSOR_SKILL_IDS {linh_bao,huy_quyen,tram} with verified display names; hidden-gate consequences documented.",
+      "domain": "src/core/skill",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "src/core/skill/MortalPrecursors.ts",
+          "symbolOrSection": "MORTAL_PRECURSOR_SKILL_IDS",
+          "revision": "44abadfb",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/data/skill/CoreSkills.ts",
+          "symbolOrSection": "tram/linh_bao/huy_quyen display names",
+          "revision": "44abadfb",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "docs/specs/beta-creation-spec.md",
+        "symbolOrSection": "S3 decisions D9/Q-A",
+        "revision": "44abadfb",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "spec/plan must state failure semantics explicitly where it defines them",
+      "atomicity": "n/a (docs review)",
+      "inverseBehavior": "n/a (docs review)",
+      "persistence": "per spec claim under review",
+      "migration": "dev-phase: bump + reject, no migration",
+      "lifecycle": "spec/plan must be internally consistent through all referenced lifecycles",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "id->name mapping verified in CoreSkills; hidden pathway gates cited (hidden_sword/spell/body_pathway)"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-BOOT-SEAM",
+      "statement": "The spec's pick-write seam (bootstrapEarlyGamePlayer post-learn via setMortalBasicSkill) is the right authority and the App.vue/EarlyGameBootstrap duplication drift is captured.",
+      "domain": "src/core/game",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "src/core/game/EarlyGameBootstrap.ts",
+          "symbolOrSection": "bootstrapEarlyGamePlayer :44-59",
+          "revision": "44abadfb",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/App.vue",
+          "symbolOrSection": "onNewCharacter/onCharacterCreated inline seams :548-635",
+          "revision": "44abadfb",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "docs/specs/beta-creation-spec.md",
+        "symbolOrSection": "D2 seam decision",
+        "revision": "44abadfb",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "spec/plan must state failure semantics explicitly where it defines them",
+      "atomicity": "n/a (docs review)",
+      "inverseBehavior": "n/a (docs review)",
+      "persistence": "per spec claim under review",
+      "migration": "dev-phase: bump + reject, no migration",
+      "lifecycle": "spec/plan must be internally consistent through all referenced lifecycles",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "setMortalBasicSkill learned-check forces post-learn write; plan converges the two inline copies"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-SAVE-V82",
+      "statement": "v82 bump + mortal-pick-required preflight claim matches actual rejection mechanics (saveShapeValidation version check + GameManagerSaveRestore v71 preflight); mortal-vs-post-path discrimination implementable.",
+      "domain": "src/services/save",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "src/services/save/saveVersion.ts",
+          "symbolOrSection": "CURRENT_SAVE_VERSION=81 :163",
+          "revision": "44abadfb",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/game/GameManagerSaveRestore.ts",
+          "symbolOrSection": "v71 preflight :265-285",
+          "revision": "44abadfb",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/services/save/saveShapeValidation.ts",
+          "symbolOrSection": "version rejection :1653-1656",
+          "revision": "44abadfb",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "docs/specs/beta-creation-spec.md",
+        "symbolOrSection": "D4 save contract",
+        "revision": "44abadfb",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "spec/plan must state failure semantics explicitly where it defines them",
+      "atomicity": "n/a (docs review)",
+      "inverseBehavior": "n/a (docs review)",
+      "persistence": "per spec claim under review",
+      "migration": "dev-phase: bump + reject, no migration",
+      "lifecycle": "spec/plan must be internally consistent through all referenced lifecycles",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "preflight rejects post-path pick presence already; spec adds mortal-must-carry-pick rejection at v82"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW",
+        "PERSISTENCE"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-UI-UNIFIED",
+      "statement": "Single-screen claim is complete: every removed/renamed stepper+attribute key and step UI enumerated in spec.",
+      "domain": "src/components/onboarding",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "src/components/onboarding/CharacterCreationScreen.vue",
+          "symbolOrSection": "3-step stepper + attribute step :117-127",
+          "revision": "44abadfb",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/locales/vi.json",
+          "symbolOrSection": "onboarding.creation keys :894-936",
+          "revision": "44abadfb",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "docs/specs/beta-creation-spec.md",
+        "symbolOrSection": "D5 UI decision",
+        "revision": "44abadfb",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "spec/plan must state failure semantics explicitly where it defines them",
+      "atomicity": "n/a (docs review)",
+      "inverseBehavior": "n/a (docs review)",
+      "persistence": "per spec claim under review",
+      "migration": "dev-phase: bump + reject, no migration",
+      "lifecycle": "spec/plan must be internally consistent through all referenced lifecycles",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "removed keys (attributeStep/attributes/step/stepperAria) all enumerated; skillStep introduced"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-I18N-VI",
+      "statement": "All new UI strings have vi+en locale entries per P16; no hardcoded Vietnamese in templates.",
+      "domain": "src/locales",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "src/locales/vi.json",
+          "symbolOrSection": "onboarding.creation block",
+          "revision": "44abadfb",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/locales/en.json",
+          "symbolOrSection": "onboarding.creation block",
+          "revision": "44abadfb",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "docs/specs/beta-creation-spec.md",
+        "symbolOrSection": "D5 i18n keys",
+        "revision": "44abadfb",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "spec/plan must state failure semantics explicitly where it defines them",
+      "atomicity": "n/a (docs review)",
+      "inverseBehavior": "n/a (docs review)",
+      "persistence": "per spec claim under review",
+      "migration": "dev-phase: bump + reject, no migration",
+      "lifecycle": "spec/plan must be internally consistent through all referenced lifecycles",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "spec lists every locale key touched; vi naming uses ruling spellings (Linh Bao/Huy Quyen/Huy Kiem)"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-TEST-INV",
+      "statement": "Spec enumerates every test pinning the old flow (service/screen unit tests, e2e helper + consumers, sim PINNED fixtures, save-shape pins) with grep-verifiable completeness.",
+      "domain": "tests",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/specs/beta-creation-spec.md",
+          "symbolOrSection": "S1h test inventory",
+          "revision": "44abadfb",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "docs/specs/beta-creation-spec.md",
+        "symbolOrSection": "test inventory table",
+        "revision": "44abadfb",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "spec/plan must state failure semantics explicitly where it defines them",
+      "atomicity": "n/a (docs review)",
+      "inverseBehavior": "n/a (docs review)",
+      "persistence": "per spec claim under review",
+      "migration": "dev-phase: bump + reject, no migration",
+      "lifecycle": "spec/plan must be internally consistent through all referenced lifecycles",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "grep CHARACTER_CREATION_ATTRIBUTE_POINTS / attributes / createCharacterThroughUi finds no unlisted pin"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    }
+  ],
+  "census": [
+    {
+      "id": "CEN-PICK-1",
+      "invariantIds": [
+        "I-CENSUS-PICK"
+      ],
+      "location": {
+        "path": "src/core/player/Player.ts",
+        "symbolOrSection": "mortalBasicSkillId?: string :132",
+        "revision": "44abadfb",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [
+        "CultivationPathRegistry.createMortalRuntime.resolveBasic",
+        "GameManagerSaveRestore preflight",
+        "SkillRoleStrip isPickedPrecursor"
+      ],
+      "writes": [
+        "GameManagerProgressionOps.setMortalBasicSkill",
+        "GameManagerRealmAdvanceOps ritual clear"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [
+        "battle via mortalRuntime.resolveBasic"
+      ],
+      "searchEvidenceIds": [
+        "EV-CENSUS-BOOT",
+        "EV-CENSUS-PICK",
+        "EV-CENSUS-ALLOC",
+        "EV-CENSUS-TESTS"
+      ],
+      "disposition": "spec census claims this set; reviewer must falsify completeness"
+    },
+    {
+      "id": "CEN-PICK-2",
+      "invariantIds": [
+        "I-CENSUS-PICK"
+      ],
+      "location": {
+        "path": "src/core/skill/MortalPrecursors.ts",
+        "symbolOrSection": "MORTAL_PRECURSOR_SKILL_IDS / MORTAL_DEFAULT_BASIC_ID / isMortalPrecursorSkillId",
+        "revision": "44abadfb",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [
+        "GameManagerProgressionOps.setMortalBasicSkill",
+        "SkillRoleStrip",
+        "resolveBasic"
+      ],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [
+        "skill catalog consumers"
+      ],
+      "searchEvidenceIds": [
+        "EV-CENSUS-BOOT",
+        "EV-CENSUS-PICK",
+        "EV-CENSUS-ALLOC",
+        "EV-CENSUS-TESTS"
+      ],
+      "disposition": "precursor set is the pick universe"
+    },
+    {
+      "id": "CEN-ALLOC-1",
+      "invariantIds": [
+        "I-CENSUS-ALLOC"
+      ],
+      "location": {
+        "path": "src/services/character/CharacterCreationService.ts",
+        "symbolOrSection": "CHARACTER_CREATION_ATTRIBUTE_POINTS/draft.attributes/invalid_attributes :3-55",
+        "revision": "44abadfb",
+        "basis": "SOURCE"
+      },
+      "classification": "LEGACY",
+      "reads": [
+        "CharacterCreationScreen attribute step",
+        "SupabaseCharacterCreationService p_attributes :65",
+        "tests/e2e/helpers createCharacterThroughUi :36-65"
+      ],
+      "writes": [
+        "applyCreationProfile stats += loop EarlyGameBootstrap :37-41",
+        "App.vue onCharacterCreated :626-630"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [
+        "all allocation consumers"
+      ],
+      "searchEvidenceIds": [
+        "EV-CENSUS-BOOT",
+        "EV-CENSUS-PICK",
+        "EV-CENSUS-ALLOC",
+        "EV-CENSUS-TESTS"
+      ],
+      "disposition": "LEGACY pending removal per spec D3; disposition: removed by implementation"
+    },
+    {
+      "id": "CEN-BOOT-1",
+      "invariantIds": [
+        "I-BOOT-SEAM"
+      ],
+      "location": {
+        "path": "src/core/game/EarlyGameBootstrap.ts",
+        "symbolOrSection": "applyCreationProfile/bootstrapEarlyGamePlayer :19-59",
+        "revision": "44abadfb",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [
+        "App.vue onNewCharacter/onCharacterCreated (inline duplicates)"
+      ],
+      "writes": [
+        "skillManager.learn x3",
+        "buildings/materials/production seeds",
+        "setActivePlayer"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [
+        "creation flow"
+      ],
+      "searchEvidenceIds": [
+        "EV-CENSUS-BOOT",
+        "EV-CENSUS-PICK",
+        "EV-CENSUS-ALLOC",
+        "EV-CENSUS-TESTS"
+      ],
+      "disposition": "duplication drift: comment claims single path but App.vue inlines; spec D2 converges"
+    },
+    {
+      "id": "CEN-UI-1",
+      "invariantIds": [
+        "I-UI-UNIFIED",
+        "I-I18N-VI"
+      ],
+      "location": {
+        "path": "src/components/onboarding/CharacterCreationScreen.vue",
+        "symbolOrSection": "stepper :18 + attribute step :117-127",
+        "revision": "44abadfb",
+        "basis": "SOURCE"
+      },
+      "classification": "LEGAL_WRITER",
+      "reads": [
+        "locales onboarding.creation.*"
+      ],
+      "writes": [
+        "emits CharacterCreationPayload"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [
+        "creation UI"
+      ],
+      "searchEvidenceIds": [
+        "EV-CENSUS-BOOT",
+        "EV-CENSUS-PICK",
+        "EV-CENSUS-ALLOC",
+        "EV-CENSUS-TESTS"
+      ],
+      "disposition": "UI under rework per D5"
+    },
+    {
+      "id": "CEN-SAVE-1",
+      "invariantIds": [
+        "I-SAVE-V82"
+      ],
+      "location": {
+        "path": "src/services/save/saveVersion.ts",
+        "symbolOrSection": "CURRENT_SAVE_VERSION :163",
+        "revision": "44abadfb",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [
+        "saveShapeValidation version rejection :1653-1656"
+      ],
+      "writes": [
+        "all saves carry version"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [
+        "save pipeline"
+      ],
+      "searchEvidenceIds": [
+        "EV-CENSUS-BOOT",
+        "EV-CENSUS-PICK",
+        "EV-CENSUS-ALLOC",
+        "EV-CENSUS-TESTS"
+      ],
+      "disposition": "bump to 82 per D4"
+    },
+    {
+      "id": "CEN-TEST-1",
+      "invariantIds": [
+        "I-TEST-INV"
+      ],
+      "location": {
+        "path": "tests",
+        "symbolOrSection": "old-flow pin inventory",
+        "revision": "44abadfb",
+        "basis": "SOURCE"
+      },
+      "classification": "TEST_ONLY",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [
+        "vitest+e2e+sim fixtures listed in spec S1h"
+      ],
+      "searchEvidenceIds": [
+        "EV-CENSUS-BOOT",
+        "EV-CENSUS-PICK",
+        "EV-CENSUS-ALLOC",
+        "EV-CENSUS-TESTS"
+      ],
+      "disposition": "completeness checkable by grep; reviewers verify"
+    }
+  ],
+  "findings": [],
+  "evidence": [
+    {
+      "id": "EV-CENSUS-PICK",
+      "state": {
+        "productStateId": "c7159ec34038343dc24a384f7de0f366c38deb16ae05760e8ca2e96c8abb1082",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "237c30174e68a16b0436dd5a8cfadea4a1b465cce8229c38080af7fee7581153",
+        "environmentId": "66eed09e77004bba554bf92d4d0c7c10ffab78c8ed7daf80771a40fa87d06054"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "coordinator",
+      "startedAt": "2026-09-23T18:50:00Z",
+      "finishedAt": "2026-09-23T18:55:00Z",
+      "commandOrMethod": "rg mortalBasicSkillId|preferredBasicSkill|isMortalPrecursorSkillId|MORTAL_PRECURSOR|MORTAL_DEFAULT_BASIC -g '!docs/qa/**' across src+tests",
+      "cwd": "/home/ubuntu/repos/tutienidle/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/coordinator-census-pick.md",
+      "artifactHash": "6c80304a0cc9085e79b5e0b73330b4bcf37c47619dda2a44033f9d0a14ff1256",
+      "inputPaths": [
+        "evidence/coordinator-census-pick.md"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "every mortalBasicSkillId occurrence classified; spec tables cover them"
+      ],
+      "limitations": [
+        "coordinator self-produced; independence supplied by sealed reviewers"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-CENSUS-ALLOC",
+      "state": {
+        "productStateId": "c7159ec34038343dc24a384f7de0f366c38deb16ae05760e8ca2e96c8abb1082",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "237c30174e68a16b0436dd5a8cfadea4a1b465cce8229c38080af7fee7581153",
+        "environmentId": "66eed09e77004bba554bf92d4d0c7c10ffab78c8ed7daf80771a40fa87d06054"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "coordinator",
+      "startedAt": "2026-09-23T18:50:00Z",
+      "finishedAt": "2026-09-23T18:55:00Z",
+      "commandOrMethod": "rg CHARACTER_CREATION_ATTRIBUTE_POINTS|attributes|attributeStep|createCharacterThroughUi|p_attributes -g '!docs/qa/**' across src+tests+locales",
+      "cwd": "/home/ubuntu/repos/tutienidle/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/coordinator-census-alloc.md",
+      "artifactHash": "888fe74037db8a74d69035e7818f4d86ae22a8279274e0890c60f661488af019",
+      "inputPaths": [
+        "evidence/coordinator-census-alloc.md"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "every allocation-path consumer enumerated and dispositioned"
+      ],
+      "limitations": [
+        "coordinator self-produced; independence supplied by sealed reviewers"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-CENSUS-BOOT",
+      "state": {
+        "productStateId": "c7159ec34038343dc24a384f7de0f366c38deb16ae05760e8ca2e96c8abb1082",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "237c30174e68a16b0436dd5a8cfadea4a1b465cce8229c38080af7fee7581153",
+        "environmentId": "66eed09e77004bba554bf92d4d0c7c10ffab78c8ed7daf80771a40fa87d06054"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "coordinator",
+      "startedAt": "2026-09-23T18:50:00Z",
+      "finishedAt": "2026-09-23T18:55:00Z",
+      "commandOrMethod": "rg bootstrapEarlyGamePlayer|applyCreationProfile|onNewCharacter|onCharacterCreated|setActivePlayer across src",
+      "cwd": "/home/ubuntu/repos/tutienidle/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/coordinator-census-boot.md",
+      "artifactHash": "d53da6a54fd09364a1f1ea6aca42fc0bdc4f28874df11cbf98e00647db03dfe0",
+      "inputPaths": [
+        "evidence/coordinator-census-boot.md"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "boot seam duplication verified: EarlyGameBootstrap vs App.vue inline copies"
+      ],
+      "limitations": [
+        "coordinator self-produced; independence supplied by sealed reviewers"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-CENSUS-TESTS",
+      "state": {
+        "productStateId": "c7159ec34038343dc24a384f7de0f366c38deb16ae05760e8ca2e96c8abb1082",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "237c30174e68a16b0436dd5a8cfadea4a1b465cce8229c38080af7fee7581153",
+        "environmentId": "66eed09e77004bba554bf92d4d0c7c10ffab78c8ed7daf80771a40fa87d06054"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "coordinator",
+      "startedAt": "2026-09-23T18:50:00Z",
+      "finishedAt": "2026-09-23T18:55:00Z",
+      "commandOrMethod": "rg -l 'attributes|createCharacterThroughUi|mortalBasicSkillId|tram|linh_bao|huy_quyen' src tests --iglob '*.test.ts' --iglob '*.spec.ts' --iglob '*.ts'",
+      "cwd": "/home/ubuntu/repos/tutienidle/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/coordinator-census-tests.md",
+      "artifactHash": "87bf961ba2d2cdf6a15084b39a3bee1cecc2d6128c218854f205da2611c774cc",
+      "inputPaths": [
+        "evidence/coordinator-census-tests.md"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "test inventory in spec S1h complete"
+      ],
+      "limitations": [
+        "coordinator self-produced; independence supplied by sealed reviewers"
+      ],
+      "status": "CURRENT"
+    }
+  ],
+  "coverage": [
+    {
+      "id": "COV-01",
+      "invariantId": "I-SPEC-RULING-MAP",
+      "surface": "SPEC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-SPEC-RULING-MAP x SPEC: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-02",
+      "invariantId": "I-SPEC-RULING-MAP",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-SPEC-RULING-MAP x INDEPENDENT_REVIEW: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-03",
+      "invariantId": "I-PLAN-FEASIBLE",
+      "surface": "SPEC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-PLAN-FEASIBLE x SPEC: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-04",
+      "invariantId": "I-PLAN-FEASIBLE",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-PLAN-FEASIBLE x STATIC_SEMANTIC: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-05",
+      "invariantId": "I-PLAN-FEASIBLE",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-PLAN-FEASIBLE x INDEPENDENT_REVIEW: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-06",
+      "invariantId": "I-CENSUS-ALLOC",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-CENSUS-ALLOC x STATIC_SEMANTIC: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-07",
+      "invariantId": "I-CENSUS-ALLOC",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-CENSUS-ALLOC x INDEPENDENT_REVIEW: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-08",
+      "invariantId": "I-CENSUS-PICK",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-CENSUS-PICK x STATIC_SEMANTIC: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-09",
+      "invariantId": "I-CENSUS-PICK",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-CENSUS-PICK x INDEPENDENT_REVIEW: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-10",
+      "invariantId": "I-SKILL-MAP",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-SKILL-MAP x STATIC_SEMANTIC: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-11",
+      "invariantId": "I-SKILL-MAP",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-SKILL-MAP x INDEPENDENT_REVIEW: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-12",
+      "invariantId": "I-BOOT-SEAM",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-BOOT-SEAM x STATIC_SEMANTIC: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-13",
+      "invariantId": "I-BOOT-SEAM",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-BOOT-SEAM x INDEPENDENT_REVIEW: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-14",
+      "invariantId": "I-SAVE-V82",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-SAVE-V82 x STATIC_SEMANTIC: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-15",
+      "invariantId": "I-SAVE-V82",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-SAVE-V82 x INDEPENDENT_REVIEW: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-16",
+      "invariantId": "I-SAVE-V82",
+      "surface": "PERSISTENCE",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-SAVE-V82 x PERSISTENCE: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-17",
+      "invariantId": "I-UI-UNIFIED",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-UI-UNIFIED x STATIC_SEMANTIC: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-18",
+      "invariantId": "I-UI-UNIFIED",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-UI-UNIFIED x INDEPENDENT_REVIEW: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-19",
+      "invariantId": "I-I18N-VI",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-I18N-VI x STATIC_SEMANTIC: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-20",
+      "invariantId": "I-I18N-VI",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-I18N-VI x INDEPENDENT_REVIEW: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-21",
+      "invariantId": "I-TEST-INV",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-TEST-INV x STATIC_SEMANTIC: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-22",
+      "invariantId": "I-TEST-INV",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "I-TEST-INV x INDEPENDENT_REVIEW: reviewer + coordinator verification on frozen docs state",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    }
+  ],
+  "attacks": [],
+  "reviews": [],
+  "cycles": [],
+  "mutations": [],
+  "corpus": [],
+  "lessons": [],
+  "messages": [],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-09-23T19:19:12.384Z",
+      "kind": "PHASE",
+      "actor": "coordinator-12667",
+      "state": {
+        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "b21e9e4dbdbcdfaebea5f4df413bfc478784ddb53f746a8b8c7c651fa876c586",
+      "eventHash": "3377cb7a69c41c4f957692ae33dee58fc29e9ae10f403ab3a39d2faaac6d920d"
+    },
+    {
+      "seq": 2,
+      "at": "2026-09-23T19:19:41.375Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-12667",
+      "state": {
+        "productStateId": "bf93517266126385d589abed78692b9f18d2a995bff53048ba1e85dc11cbab0b",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "237c30174e68a16b0436dd5a8cfadea4a1b465cce8229c38080af7fee7581153",
+        "environmentId": "66eed09e77004bba554bf92d4d0c7c10ffab78c8ed7daf80771a40fa87d06054"
+      },
+      "previousEventHash": "3377cb7a69c41c4f957692ae33dee58fc29e9ae10f403ab3a39d2faaac6d920d",
+      "payloadPath": "events/0002.json",
+      "payloadHash": "4c22389c5034e5a3e90c101d277eb7f4ee4c6cb546a7a97b0afe959a525559c2",
+      "eventHash": "5c18078f998d93ec63d34201c019101abcb727245333f10bedbcc2725ad209e6"
+    },
+    {
+      "seq": 3,
+      "at": "2026-09-23T19:23:00.085Z",
+      "kind": "PHASE",
+      "actor": "coordinator-12667",
+      "state": {
+        "productStateId": "bf93517266126385d589abed78692b9f18d2a995bff53048ba1e85dc11cbab0b",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "237c30174e68a16b0436dd5a8cfadea4a1b465cce8229c38080af7fee7581153",
+        "environmentId": "66eed09e77004bba554bf92d4d0c7c10ffab78c8ed7daf80771a40fa87d06054"
+      },
+      "previousEventHash": "5c18078f998d93ec63d34201c019101abcb727245333f10bedbcc2725ad209e6",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "9722ef6504b96d920325cdd763822e8eb1732fef5908763045e1dfad9a85e317",
+      "eventHash": "1563b6232cbad374da987f378757ed73757007f13933fc1b502329d0c204d152"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-23T19:23:08.329Z",
+      "kind": "PHASE",
+      "actor": "coordinator-12667",
+      "state": {
+        "productStateId": "bf93517266126385d589abed78692b9f18d2a995bff53048ba1e85dc11cbab0b",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "237c30174e68a16b0436dd5a8cfadea4a1b465cce8229c38080af7fee7581153",
+        "environmentId": "66eed09e77004bba554bf92d4d0c7c10ffab78c8ed7daf80771a40fa87d06054"
+      },
+      "previousEventHash": "1563b6232cbad374da987f378757ed73757007f13933fc1b502329d0c204d152",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "f93ef757c427fd31f6372281a3b03ca9998241d72ed86b4affa6fbe5f7046be6",
+      "eventHash": "8b600b21e9b6901c058b40555bc1e1de4541f3829d9c3f408d22fb9e54217823"
+    },
+    {
+      "seq": 5,
+      "at": "2026-09-23T19:28:49.687Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-12667",
+      "state": {
+        "productStateId": "c7159ec34038343dc24a384f7de0f366c38deb16ae05760e8ca2e96c8abb1082",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "237c30174e68a16b0436dd5a8cfadea4a1b465cce8229c38080af7fee7581153",
+        "environmentId": "66eed09e77004bba554bf92d4d0c7c10ffab78c8ed7daf80771a40fa87d06054"
+      },
+      "previousEventHash": "8b600b21e9b6901c058b40555bc1e1de4541f3829d9c3f408d22fb9e54217823",
+      "payloadPath": "events/0005.json",
+      "payloadHash": "52573f08b929644ffa683584f8987c6ca1982ac4d66c668c29fdb0e8965fe94d",
+      "eventHash": "c58ae42212d60a645570bd79c03af78e48353df4c70e7237801411d24b04c808"
+    },
+    {
+      "seq": 6,
+      "at": "2026-09-23T19:29:09.319Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-12667",
+      "state": {
+        "productStateId": "c7159ec34038343dc24a384f7de0f366c38deb16ae05760e8ca2e96c8abb1082",
+        "contractId": "a137d8722f81277e8dec3a13abbfa8e3c5cb3a7f7007ca54e1f16721db5b3cb5",
+        "attackModelId": "237c30174e68a16b0436dd5a8cfadea4a1b465cce8229c38080af7fee7581153",
+        "environmentId": "66eed09e77004bba554bf92d4d0c7c10ffab78c8ed7daf80771a40fa87d06054"
+      },
+      "previousEventHash": "c58ae42212d60a645570bd79c03af78e48353df4c70e7237801411d24b04c808",
+      "payloadPath": "events/0006.json",
+      "payloadHash": "350ba85779ee8edad99762a342ba3866525824d1292a6bff7430ccd27b634e78",
+      "eventHash": "79d12e60a44a7f30ecb7dd9049497ab1b09266e1af7a58c76513a694202f7f54"
+    }
+  ]
+}

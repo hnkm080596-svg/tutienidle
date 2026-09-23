@@ -6,6 +6,7 @@
 // there instead of replacing it. Fresh boot starts empty so this was
 // invisible in the only production caller today; it is still a correctness
 // contract for future in-session restores (see plan self-review notes).
+import { withMortalCreationPick } from '../../services/save/GameSave.fixture'
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
@@ -47,7 +48,7 @@ function makeManager(): GameManager {
 }
 
 function baseSave(player: PlayerData, overrides: Partial<GameSave> = {}): GameSave {
-  return {
+  return withMortalCreationPick({
     version: CURRENT_SAVE_VERSION,
     player: { ...player },
     techniques: [],
@@ -62,7 +63,7 @@ function baseSave(player: PlayerData, overrides: Partial<GameSave> = {}): GameSa
     quests: { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
     productionSites: [],
     ...overrides,
-  }
+  })
 }
 
 describe('GameManagerSaveRestore — replacement semantics (R10, S3)', () => {

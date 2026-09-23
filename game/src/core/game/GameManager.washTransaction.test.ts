@@ -1,3 +1,4 @@
+import { primeMortalCreationPick } from '../../services/save/GameSave.fixture'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { affixes } from '../../data/equipment/affixes'
 import { equipment } from '../../data/equipment/equipment'
@@ -94,6 +95,7 @@ describe('GameManager wash transaction', () => {
         .sort(),
     ).toEqual(committedModifierIds)
 
+    primeMortalCreationPick(player, manager.skillManager)
     const roundTripped: unknown = JSON.parse(JSON.stringify(buildGameSave(player, manager)))
     const validated = validateGameSaveShape(roundTripped)
 

@@ -118,7 +118,7 @@ import { EarlyGameSession } from './EarlyGameSession'
 const PINNED_PROFILE = {
   name: 'journey',
   talentIds: ['hap_linh'],
-  attributes: { strength: 2, vitality: 3 },
+  mortalBasicSkillId: 'tram',
 }
 
 const FOUNDATION_STAGE_IDS = Array.from(

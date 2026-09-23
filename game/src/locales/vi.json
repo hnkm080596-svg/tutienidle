@@ -891,57 +891,29 @@
       "back": "← Trở lại",
       "headerKicker": "KHAI MỆNH",
       "headerTitle": "Tạo Nhân Vật",
-      "step": "Bước {step} / {total}",
-      "stepperAria": "Tiến trình tạo nhân vật",
       "nameStep": {
         "kicker": "ĐẠO DANH",
         "title": "Danh xưng theo suốt tiên đồ",
         "description": "Tên nhân vật sẽ là duy nhất và không thể đổi trong giai đoạn đầu.",
         "label": "Tên nhân vật",
         "placeholder": "Nhập đạo danh…",
-        "minLengthHint": "{length}/20 · Tối thiểu 2 ký tự",
-        "continue": "Tiếp tục"
+        "minLengthHint": "{length}/20 · Tối thiểu 2 ký tự"
       },
       "talentStep": {
         "kicker": "THIÊN MỆNH",
         "title": "Chọn một Thiên Phú",
         "selected": "Đã chọn {count} / 1",
         "rolling": "Đang quan sát thiên cơ…",
-        "reroll": "↻ Reroll toàn bộ",
-        "confirm": "Xác nhận thiên phú"
+        "reroll": "↻ Reroll toàn bộ"
       },
-      "attributeStep": {
-        "kicker": "CĂN CƠ",
-        "title": "Phân bổ điểm khởi đầu",
-        "pointsLeft": "Còn {count} điểm",
-        "summaryTalent": "1 Thiên Phú",
-        "summaryPoints": "5 Điểm Căn Cơ",
-        "rechooseTalent": "Chọn lại thiên phú",
-        "creating": "Đang lập mệnh…",
-        "finish": "Bước vào tiên đồ"
+      "skillStep": {
+        "kicker": "KHỞI THỦY",
+        "title": "Chọn chiêu thức khởi đầu",
+        "selected": "Đã chọn {count} / 1",
+        "description": "Cả ba chiêu đều được học — lựa chọn này quyết định chiêu đánh thường mở màn."
       },
-      "attributes": {
-        "strength": {
-          "name": "Căn Cốt",
-          "hint": "Sức mạnh thể phách"
-        },
-        "dexterity": {
-          "name": "Thân Pháp",
-          "hint": "Linh hoạt và né tránh"
-        },
-        "intelligence": {
-          "name": "Thần Thức",
-          "hint": "Uy lực kỹ năng"
-        },
-        "attunement": {
-          "name": "Linh Căn",
-          "hint": "Cộng hưởng nguyên tố"
-        },
-        "vitality": {
-          "name": "Thể Chất",
-          "hint": "Sinh lực và bền bỉ"
-        }
-      },
+      "finish": "Bước vào tiên đồ",
+      "creating": "Đang lập mệnh…",
       "errors": {
         "rollFailed": "Không thể quan sát thiên cơ. Vui lòng thử lại."
       }

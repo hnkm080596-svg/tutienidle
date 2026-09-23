@@ -3,6 +3,7 @@
 // notification 'bag.overflow' với lượng TRÀN bị mất, (3) quest hook chỉ
 // tính lượng THỰC SỰ vào túi (delivered = claimed − overflow). Restore
 // save quá cap phải gom đúng MỘT event mỗi loại material tràn.
+import { withMortalCreationPick } from '../../services/save/GameSave.fixture'
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
@@ -101,7 +102,7 @@ describe('GameManager — bag overflow surfacing (9.8)', () => {
 
     manager.setActivePlayer(player)
 
-    manager.saveOps.restoreFromSave({
+    manager.saveOps.restoreFromSave(withMortalCreationPick({
       version: CURRENT_SAVE_VERSION,
       player: { ...player },
       techniques: [],
@@ -115,7 +116,7 @@ describe('GameManager — bag overflow surfacing (9.8)', () => {
       buildings: [],
       quests: { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
       productionSites: [],
-    })
+    }))
 
     expect(manager.materialBag.getAmount('mat_overflow_test')).toBe(100)
 

@@ -4,6 +4,7 @@
 // production all-empty round-trip, malformed-payload emits, the
 // immediately-previous version rejected (C2C r60-f5), and the
 // future-realm-perfected integrity cap (C2C r60-f2).
+import { primeMortalCreationPick } from './GameSave.fixture'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
@@ -104,6 +105,8 @@ describe('bodyPerfection save round-trip (C2C r68)', () => {
     }
     manager.setActivePlayer(player)
 
+    primeMortalCreationPick(player, manager.skillManager)
+
     const save = buildGameSave(player, manager)
     const persisted = JSON.parse(JSON.stringify(save)) as unknown
 
@@ -131,6 +134,8 @@ describe('bodyPerfection save round-trip (C2C r68)', () => {
     const manager = registeredManager()
     const player = createDefaultPlayer()
     manager.setActivePlayer(player)
+
+    primeMortalCreationPick(player, manager.skillManager)
 
     const save = buildGameSave(player, manager)
     expect(save.version).toBe(CURRENT_SAVE_VERSION)
@@ -161,6 +166,7 @@ describe('bodyPerfection save round-trip (C2C r68)', () => {
     const manager = registeredManager()
     const player = createDefaultPlayer()
     manager.setActivePlayer(player)
+    primeMortalCreationPick(player, manager.skillManager)
     const save = buildGameSave(player, manager)
     const persisted = JSON.parse(JSON.stringify(save)) as Record<string, unknown>
 
@@ -223,6 +229,8 @@ describe('bodyPerfection save round-trip (C2C r68)', () => {
     }
     manager.setActivePlayer(player)
 
+    primeMortalCreationPick(player, manager.skillManager)
+
     const save = buildGameSave(player, manager)
 
     const freshPlayer = usePlayerStore()
@@ -246,6 +254,8 @@ describe('bodyPerfection save round-trip (C2C r68)', () => {
     }
     manager.setActivePlayer(player)
 
+    primeMortalCreationPick(player, manager.skillManager)
+
     const save = buildGameSave(player, manager)
 
     const freshPlayer = usePlayerStore()
@@ -262,6 +272,8 @@ describe('bodyPerfection save round-trip (C2C r68)', () => {
     player.realmId = 'mortal'
     manager.setActivePlayer(player)
     manager.materialBag.add(manager.materialRegistry.get('tinh_hoa_pham_the'), 2)
+
+    primeMortalCreationPick(player, manager.skillManager)
 
     const save = buildGameSave(player, manager)
     // Inventory holds the fixture perfection material while the
@@ -295,6 +307,8 @@ describe('bodyPerfection save round-trip (C2C r68)', () => {
       perfectedRealmIds: ['mortal'],
     }
     manager.setActivePlayer(player)
+
+    primeMortalCreationPick(player, manager.skillManager)
 
     const save = buildGameSave(player, manager)
 

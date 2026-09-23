@@ -1,6 +1,7 @@
 // QA (R9) - adversarial checks for the wash ticket + vendor atomicity +
 // receipt invariants. Written to PASS against correct behavior; failure
 // = confirmed defect with intended-reason evidence.
+import { primeMortalCreationPick } from '../../services/save/GameSave.fixture'
 import { describe, expect, it, vi } from 'vitest'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
@@ -51,7 +52,9 @@ describe('QA R9 - wash ticket save boundary', () => {
     const preview = manager.equipmentOps.previewWashItem(instance.instanceId)
     expect(preview.ok).toBe(true)
 
-    // Snapshot + restore into a FRESH manager (boot path).
+    // Snapshot + restore into a FRESH manager (boot path). v82 - the
+    // mortal save is only legal once it carries the boot-seam pick.
+    primeMortalCreationPick(player, manager.skillManager)
     const save = buildGameSave(player, manager)
 
     const fresh = new GameManager()

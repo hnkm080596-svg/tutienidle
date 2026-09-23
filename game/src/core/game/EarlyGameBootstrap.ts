@@ -13,18 +13,19 @@
 // App-only wiring (starter buildings/materials, production auto-restart,
 // setActivePlayer, autosave) stays in App.vue - it is not part of the
 // core bootstrap contract.
+//
+// BETA-CREATION - the creation pick is written here, not in
+// applyCreationProfile: setMortalBasicSkill requires the precursor
+// LEARNED, and precursors are learned inside this seam - so the pick is
+// written immediately after the learns, still inside the same boot
+// transaction (post-learn a valid pick cannot fail; false => throw).
 import type { GameManager } from './GameManager'
 import type { PlayerData } from '../player/Player'
 
 export interface EarlyGameCreationProfile {
   name: string
   talentIds: string[]
-  attributes: Partial<
-    Record<
-      'strength' | 'dexterity' | 'intelligence' | 'attunement' | 'vitality',
-      number
-    >
-  >
+  mortalBasicSkillId: string
 }
 
 export function applyCreationProfile(
@@ -33,27 +34,29 @@ export function applyCreationProfile(
 ): void {
   player.name = profile.name
   player.selectedTalentIds = [...profile.talentIds]
-
-  for (const [stat, amount] of Object.entries(profile.attributes) as Array<
-    [keyof EarlyGameCreationProfile['attributes'], number | undefined]
-  >) {
-    player.baseStats[stat] += amount ?? 0
-  }
 }
 
 export function bootstrapEarlyGamePlayer(
   gameManager: GameManager,
   player: PlayerData,
+  basicSkillId: string,
 ): void {
   // New character: pre-learned skills (onNewCharacter core subset).
   // P7-M3 - NO technique at boot: mortals hold no canonical technique
   // (tu_linh_quyet retired); the Way grants its own at initiation.
-  // P7-M4 - learn-only: the mortal runtime resolves an absent
-  // mortalBasicSkillId pick as tram; boot writes no slot/pick.
+  // BETA-CREATION - all three precursors stay learned; the creation
+  // pick only chooses the STARTING basic (hidden-way Lv3 gates all
+  // remain reachable).
   gameManager.progressionOps.learnSkill('tram', player)
   // Phap Tu Reimagined Task 2 - mortal-path actives.
   gameManager.progressionOps.learnSkill('linh_bao', player)
   // Huy Quyen - second mortal basic, learned; grinding it
   // to Lv3 (10.000 casts) is what reveals hidden_body_pathway at the ritual.
   gameManager.progressionOps.learnSkill('huy_quyen', player)
+
+  // The pick is a runtime-validated write through the ONE role-write op.
+  // A legal post-learn pick never returns false - treat false as drift.
+  if (!gameManager.progressionOps.setMortalBasicSkill(player, basicSkillId)) {
+    throw new Error(`bootstrap: starting-skill pick rejected: ${basicSkillId}`)
+  }
 }
