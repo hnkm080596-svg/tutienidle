@@ -103,7 +103,9 @@ describe('authored technique gate set (M-QI-06)', () => {
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
     player.spellPath.element = 'fire'
-    player.techniqueProgress = { rank: 4, grade: 1 }
+    // M-F-TECHNIQUE (F5) - gates read the EFFECTIVE rank: only an
+    // in-band live cycle (grade == realm index 3) contributes rank.
+    player.techniqueProgress = { rank: 4, grade: 3 }
     // Satisfy the node-chain prereq (linh_ngo_<special>) so only the
     // technique gate can fail.
     player.nodeLevels['linh_ngo_tam_muoi_chan_hoa'] = 1
@@ -113,7 +115,7 @@ describe('authored technique gate set (M-QI-06)', () => {
     // the decisive gate here is techniqueRank.
     expect(canPurchaseNode(player, godUlt)).toBe(false)
 
-    player.techniqueProgress = { rank: 5, grade: 1 }
+    player.techniqueProgress = { rank: 5, grade: 3 }
 
     expect(canPurchaseNode(player, godUlt)).toBe(true)
     expect(purchaseNode(player, godUlt)).toBe(true)
@@ -156,14 +158,16 @@ describe('authored technique gate set (M-QI-06)', () => {
     expect(canUpgradeNode(player, intensity)).toBe(false)
   })
 
-  it('frozen surplus: an owned L6 intensity stays owned after rank resets to 0', () => {
+  it('frozen surplus: an owned L6 intensity stays owned after the cycle freezes', () => {
     const intensity = byId('minor_fire_intensity')
     const player = createDefaultPlayer()
-    player.realmId = 'qi_refining'
+    player.realmId = 'foundation_establishment'
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
     player.spellPath.element = 'fire'
     player.skillInsight = 500
+    // In-band grade-2 cycle at realm index 2, rank 0: owned L6 stays
+    // legal surplus while the rank-3 gate blocks further upgrades.
     player.techniqueProgress = { rank: 0, grade: 2 }
     player.nodeLevels['hoa_linh_ngo'] = 1
     player.nodeLevels['minor_fire_intensity'] = 6
@@ -174,6 +178,30 @@ describe('authored technique gate set (M-QI-06)', () => {
 
     player.techniqueProgress = { rank: 3, grade: 2 }
 
+    expect(canUpgradeNode(player, intensity)).toBe(true)
+  })
+
+  it('M-F-TECHNIQUE (F5): a lagging live grade contributes rank 0 even when the mirror still shows the sealed rank', () => {
+    const intensity = byId('minor_fire_intensity')
+    const player = createDefaultPlayer()
+    player.realmId = 'foundation_establishment'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.spellPath.element = 'fire'
+    player.skillInsight = 500
+    player.nodeLevels['hoa_linh_ngo'] = 1
+    player.nodeLevels['minor_fire_intensity'] = 5
+    player.purchasedNodeIds.push('hoa_linh_ngo', 'minor_fire_intensity')
+
+    // Sealed grade-1 holder inside foundation_establishment (index 2):
+    // the mirror keeps its literal sealed rank for display but gates
+    // see effective rank 0.
+    player.techniqueProgress = { rank: 12, grade: 1 }
+    expect(canUpgradeNode(player, intensity)).toBe(false)
+
+    // After catch-up the live grade-2 cycle trains again - rank 3 in
+    // band satisfies the gate.
+    player.techniqueProgress = { rank: 3, grade: 2 }
     expect(canUpgradeNode(player, intensity)).toBe(true)
   })
 })

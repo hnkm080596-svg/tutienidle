@@ -15,6 +15,7 @@ const SWORD_ART: Technique = {
   rank: 0,
   mastery: 0,
   quality: 'hoang',
+  gradeHistory: {},
 }
 
 describe('player.techniqueProgress mirror (P7-M6)', () => {
@@ -35,14 +36,17 @@ describe('player.techniqueProgress mirror (P7-M6)', () => {
     expect(player.techniqueProgress).toEqual({ rank: 0, grade: 1 })
 
     // Mastery accrual without a rank-up does NOT republish (unmirrored).
-    manager.techniqueSystem.gainMastery(100)
+    manager.techniqueSystem.gainMastery(100, 'qi_refining', 18)
     expect(player.techniqueProgress).toEqual({ rank: 0, grade: 1 })
 
-    manager.techniqueSystem.gainMastery(200)
+    manager.techniqueSystem.gainMastery(200, 'qi_refining', 18)
     expect(player.techniqueProgress).toEqual({ rank: 1, grade: 1 })
 
-    manager.techniqueSystem.gainMastery(2700)
-    manager.techniqueSystem.advanceTechniqueGrade()
+    manager.techniqueSystem.gainMastery(2700, 'qi_refining', 18)
+    // M-F-TECHNIQUE: grade-up is catch-up-only - the grade-1 cycle
+    // seals (defensively, at the transaction) when advancing inside
+    // foundation_establishment (index 2).
+    manager.techniqueSystem.advanceTechniqueGrade('foundation_establishment')
     expect(player.techniqueProgress).toEqual({ rank: 0, grade: 2 })
   })
 
@@ -86,7 +90,7 @@ describe('player.techniqueProgress mirror (P7-M6)', () => {
     expect(playerB.techniqueProgress).toBeUndefined()
 
     // ...and the next publish targets the CURRENT bound player only.
-    manager.techniqueSystem.gainMastery(300)
+    manager.techniqueSystem.gainMastery(300, 'qi_refining', 18)
     expect(playerB.techniqueProgress).toEqual({ rank: 2, grade: 1 })
     expect(playerA.techniqueProgress).toEqual({ rank: 1, grade: 1 })
   })

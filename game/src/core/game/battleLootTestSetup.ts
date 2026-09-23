@@ -95,9 +95,10 @@ export function createLootTestSetup(options: LootTestSetupOptions = {}) {
   const createInstance = vi.fn<EquipmentSystem['createInstance']>(
     () => TEST_EQUIPMENT_INSTANCE as EquipmentInstance,
   )
-  // P7-M3 - the pending-mastery flush consumes through gainMastery;
-  // default the mock to "consumed everything" so summaries read honest.
-  const gainMastery = vi.fn((amount: number) => ({ gained: amount, rankUps: 0 }))
+  // P7-M3 + M-F-TECHNIQUE - the pending-mastery flush consumes through
+  // gainMastery(amount, realmId, realmLevel); default the mock to
+  // "consumed everything" so summaries read honest.
+  const gainMastery = vi.fn((_amount: number, _realmId?: string, _realmLevel?: number) => ({ gained: _amount, rankUps: 0 }))
   // Heal-on-kill talents are retired (v4 catalog) so the stub never heals;
   // it also must NOT write currentHp directly — this helper is a non-test
   // file and the R14 vitalsWriteAuthority guard scans it as production code.

@@ -181,7 +181,7 @@ describe('BattleLootSystem — talent v3 retired KHÔNG còn bonus (spec v4 §4.
     // P7-M3 - mastery buffers; verify the untouched 35 via the flush.
     expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 8 })
     loot.settleTechniqueMastery()
-    expect(gainMastery).toHaveBeenCalledWith(35)
+    expect(gainMastery).toHaveBeenCalledWith(35, 'mortal', 1)
     expect(player.skillInsight).toBe(21) // M2 baseline: round(35 * 0.6)
     expect(loot.getSummary().spiritStone).toBe(8)
   })

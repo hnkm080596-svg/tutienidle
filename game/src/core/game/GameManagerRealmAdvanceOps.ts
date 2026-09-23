@@ -391,10 +391,26 @@ export class GameManagerRealmAdvanceOps {
   }
 
   /**
-   * P7-M3 (D4) - canonical Technique grade-advance transaction: rank 10
-   * + below the realm ceiling + OUTSIDE combat + 100 x targetGrade
-   * current-tier spirit stones; resets rank/mastery for the new grade.
-   * The combat guard is enforced HERE, not just in the UI.
+   * M-F-TECHNIQUE (F4) - realm-exit freeze: call ONCE per major-realm
+   * advance BEFORE the realmId/realmLevel writes (the departing
+   * realmLevel is the freeze-time ceiling dai_thanh evaluates
+   * against; post-write realmLevel is already 1). Seals the live
+   * cycle when the new realm's index exceeds its grade; write-if-
+   * absent idempotent. Naming mirrors applySwordPathRealmTransition
+   * (the other per-transition hook).
+   */
+  applyTechniqueRealmTransition(player: PlayerData, targetRealmId: string): void {
+    this.deps.techniqueSystem.sealFrozenCycle(targetRealmId, player.realmLevel)
+  }
+
+  /**
+   * P7-M3 (D4) + M-F-TECHNIQUE - canonical Technique grade-advance
+   * CATCH-UP transaction: live grade below the realm band + OUTSIDE
+   * combat + 100 x targetGrade current-tier spirit stones. The
+   * transaction seals the outgoing cycle, resets rank/mastery for
+   * the new grade, preserves the build, applies monotonic
+   * inheritance. The combat guard is enforced HERE, not just in the
+   * UI.
    */
   tryAdvanceTechniqueGrade(player: PlayerData): boolean {
     const technique = this.deps.techniqueManager.getActive()
@@ -417,7 +433,7 @@ export class GameManagerRealmAdvanceOps {
 
     this.deps.materialBag.remove(cost.materialId, cost.amount)
 
-    return this.deps.techniqueSystem.advanceTechniqueGrade()
+    return this.deps.techniqueSystem.advanceTechniqueGrade(player.realmId)
   }
 
   /**

@@ -1033,6 +1033,13 @@
       "confirm": "I understand",
       "cancel": "Wait"
     },
+    "unperfectedTechnique": {
+      "warning": "Technique grade {grade} is unperfected ({state}) — breaking through now freezes this cycle forever",
+      "state": {
+        "partial": "incomplete",
+        "dai_thanh": "great accomplishment"
+      }
+    },
     "overlay": {
       "chapter": "Chapter {progress}",
       "hp": "HP {hp} / {max}",

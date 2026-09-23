@@ -50,6 +50,7 @@ export const TECHNIQUES: Technique[] = [
     rank: 0,
     mastery: 0,
     quality: 'hoang',
+    gradeHistory: {},
   },
 
   // hidden_spell_pathway (Phap Tu An) - Ngo Dao signature.
@@ -78,6 +79,7 @@ export const TECHNIQUES: Technique[] = [
     rank: 0,
     mastery: 0,
     quality: 'hoang',
+    gradeHistory: {},
   },
 
   // sword_pathway - Ngu Kiem signature (old ngu_kiem table).
@@ -108,6 +110,7 @@ export const TECHNIQUES: Technique[] = [
     rank: 0,
     mastery: 0,
     quality: 'hoang',
+    gradeHistory: {},
   },
 
   // hidden_sword_pathway - Ngu Kiem Dao signature (old van_kiem_quyet).
@@ -134,6 +137,7 @@ export const TECHNIQUES: Technique[] = [
     rank: 0,
     mastery: 0,
     quality: 'hoang',
+    gradeHistory: {},
   },
 
   // body_pathway - old kim_cang_bat_hoai_the table.
@@ -161,6 +165,7 @@ export const TECHNIQUES: Technique[] = [
     rank: 0,
     mastery: 0,
     quality: 'hoang',
+    gradeHistory: {},
   },
 
   // hidden_body_pathway - old ung_the_than_quyet table.
@@ -188,5 +193,6 @@ export const TECHNIQUES: Technique[] = [
     rank: 0,
     mastery: 0,
     quality: 'hoang',
+    gradeHistory: {},
   },
 ]

@@ -1,11 +1,14 @@
 import type { ItemQuality } from '../item/ItemQuality'
 import { ITEM_QUALITY_ORDER } from '../item/ItemQuality'
+import { getRealmIndex } from '../realm/realmSystem'
 import type { Technique } from './Technique'
 import { TechniqueManager } from './TechniqueManager'
 import {
+  computeTechniqueGradeInheritance,
   getTechniqueGradeCeiling,
   getTechniqueMasteryForNextRank,
-  TECHNIQUE_RANK_CAP,
+  getTechniqueRankCeiling,
+  resolveTechniqueCompletionState,
 } from './TechniqueProgression'
 
 // P7-M3 - canonical technique progression authority. The retired
@@ -67,6 +70,7 @@ export class TechniqueSystem {
       rank: 0,
       mastery: 0,
       quality: template.quality,
+      gradeHistory: {},
     }))
     this.publishProgress()
 
@@ -74,30 +78,38 @@ export class TechniqueSystem {
   }
 
   /**
-   * Accrue mastery into the active technique. Ranks cascade while
-   * mastery covers the per-rank cost (300 x grade). Only the amount
-   * needed to reach the rank cap is consumed - at rank 10 mastery is
-   * 0 and further input is discarded; `gained` reports the consumed
-   * amount so callers record honest reward summaries.
+   * M-F-TECHNIQUE - accrue mastery into the live cycle. Ranks
+   * cascade while mastery covers the per-rank cost (300 x grade) and
+   * the realm-scaled ceiling permits (min(18, realmLevel) while the
+   * live grade matches the realm band; a lagging/sealed cycle cannot
+   * train - ceiling 0). Only the amount needed to reach the ceiling
+   * is consumed - the rest is discarded, same convention as the
+   * retired at-cap discard; `gained` reports the consumed amount so
+   * callers record honest reward summaries.
    */
-  gainMastery(amount: number): { gained: number; rankUps: number } {
+  gainMastery(amount: number, realmId: string, realmLevel: number): { gained: number; rankUps: number } {
     const technique = this.manager.getActive()
-    if (!technique || technique.rank >= TECHNIQUE_RANK_CAP || amount <= 0) {
+    if (!technique || amount <= 0) {
+      return { gained: 0, rankUps: 0 }
+    }
+
+    const ceiling = getTechniqueRankCeiling(technique, realmId, realmLevel)
+    if (ceiling <= 0 || technique.rank >= ceiling) {
       return { gained: 0, rankUps: 0 }
     }
 
     const cost = getTechniqueMasteryForNextRank(technique.grade)
-    const needed = cost * (TECHNIQUE_RANK_CAP - technique.rank) - technique.mastery
+    const needed = cost * (ceiling - technique.rank) - technique.mastery
     const consumed = Math.min(amount, needed)
 
     technique.mastery += consumed
     let rankUps = 0
-    while (technique.mastery >= cost && technique.rank < TECHNIQUE_RANK_CAP) {
+    while (technique.mastery >= cost && technique.rank < ceiling) {
       technique.rank += 1
       technique.mastery -= cost
       rankUps += 1
     }
-    if (technique.rank >= TECHNIQUE_RANK_CAP) {
+    if (technique.rank >= ceiling) {
       technique.mastery = 0
     }
 
@@ -110,19 +122,75 @@ export class TechniqueSystem {
   }
 
   /**
-   * Grade-advance writer - preconditions (rank cap, realm ceiling,
-   * material spend) are checked by the orchestrator
-   * (GameManagerRealmAdvanceOps.tryAdvanceTechniqueGrade).
+   * M-F-TECHNIQUE (F4) - realm-exit freeze: seals the live cycle's
+   * outcome into gradeHistory when the NEW realm's index exceeds the
+   * live grade. Write-if-absent (sealed records are immutable; a
+   * repeat call after the grade caught up is a no-op).
+   * `departedRealmLevel` is the freeze-time ceiling dai_thanh
+   * evaluates against - callers pass the pre-write realmLevel.
    */
-  advanceTechniqueGrade(): boolean {
+  sealFrozenCycle(newRealmId: string, departedRealmLevel: number): boolean {
     const technique = this.manager.getActive()
-    if (!technique || technique.rank < TECHNIQUE_RANK_CAP) {
+    if (!technique || getRealmIndex(newRealmId) <= technique.grade) {
       return false
     }
 
+    if (technique.gradeHistory[technique.grade] === undefined) {
+      technique.gradeHistory[technique.grade] = {
+        finalRank: technique.rank,
+        completionState: resolveTechniqueCompletionState(technique.rank, departedRealmLevel),
+      }
+    }
+    return true
+  }
+
+  /**
+   * M-F-TECHNIQUE (F4) - grade-advance catch-up transaction. In
+   * order: seal the outgoing cycle write-if-absent (defensive - the
+   * realm-exit seam always sealed a lagging grade; a never-sealed
+   * record resolves via resolveTechniqueCompletionState(rank, 0),
+   * unreachable under v75 and never dai_thanh), grade+1, skipped-
+   * entry seal iff the NEW grade still lags the realm ({finalRank:0,
+   * 'partial'} at entry - every lagging live grade stays
+   * record-covered), rank/mastery 0, build preserved verbatim
+   * (quality + template identity), monotonic inheritance applied
+   * from the OUTGOING sealed record, mirror republished.
+   * Preconditions (catch-up check, combat guard, material spend)
+   * live on GameManagerRealmAdvanceOps.tryAdvanceTechniqueGrade.
+   */
+  advanceTechniqueGrade(realmId: string): boolean {
+    const technique = this.manager.getActive()
+    const realmIndex = getRealmIndex(realmId)
+    // grade < 1 mirrors canAdvanceTechniqueGrade: a forged grade-0
+    // holder must never seal a non-canonical key-0 record.
+    if (!technique || technique.grade < 1 || technique.grade >= realmIndex) {
+      return false
+    }
+
+    const outgoingRecord =
+      technique.gradeHistory[technique.grade] ??
+      { finalRank: technique.rank, completionState: resolveTechniqueCompletionState(technique.rank, 0) }
+    technique.gradeHistory[technique.grade] ??= outgoingRecord
+
     technique.grade += 1
+
+    // Skipped-entry seal (pinned order: immediately after the grade
+    // write, before the rank/mastery reset): a grade entered still
+    // below the band is born sealed {0,'partial'}.
+    if (technique.grade < realmIndex) {
+      technique.gradeHistory[technique.grade] ??= { finalRank: 0, completionState: 'partial' }
+    }
+
     technique.rank = 0
     technique.mastery = 0
+
+    // Inheritance scaffold: computed from the OUTGOING sealed record
+    // and applied here. The payload carries no fields yet (authored
+    // coefficients are a balance pass) and the pinned contract is
+    // that it never grants rank or mastery - the new cycle keeps
+    // rank == 0 && mastery == 0 after application.
+    const _inheritance = computeTechniqueGradeInheritance(outgoingRecord)
+
     this.publishProgress()
     return true
   }

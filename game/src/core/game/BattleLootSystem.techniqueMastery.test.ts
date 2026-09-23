@@ -33,6 +33,10 @@ describe('BattleLootSystem technique mastery', () => {
     const flushed = gainMastery.mock.calls[0]![0] as number
     expect(flushed).toBeGreaterThan(0)
     expect(loot.getSummary().techniqueMastery).toBe(flushed)
+
+    // M-F-TECHNIQUE - the session player's realm context rides the
+    // flush (the realm-scaled ceiling lives inside TechniqueSystem).
+    expect(gainMastery).toHaveBeenLastCalledWith(flushed, 'mortal', 1)
   })
 
   it('consumes pending exactly once — a second settle pays nothing', () => {
