@@ -290,6 +290,31 @@ div.overlay-panel.overlay-panel--system {
   color: var(--sys-text);
 }
 
+/* Task 5 - RealmPanel interior under the system modal chrome. Requirement
+   rows keep their check/cross text markers (never hue-only); realm nodes keep
+   the shield shape and the "locked" text label. Scoped panel rules are
+   (0,2,0): anchors carry the section element for (0,2,1). */
+section.overlay-panel__card--system .realm-requirement { color: var(--sys-text-dim); }
+section.overlay-panel__card--system .realm-requirement--met { color: var(--sys-success); }
+section.overlay-panel__card--system .realm-node {
+  background: var(--sys-bg-0);
+  border-color: var(--sys-line-soft);
+  color: var(--sys-text-muted);
+}
+section.overlay-panel__card--system .realm-node.is-complete {
+  border-color: var(--sys-success);
+  color: var(--sys-success);
+}
+section.overlay-panel__card--system .realm-node.is-current {
+  border-color: var(--sys-line-hot);
+  color: var(--sys-text);
+  box-shadow: var(--sys-glow-sm);
+}
+section.overlay-panel__card--system .realm-node__index {
+  font-family: var(--sys-font-display);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Task 4 - ink-drawer surfaces opted into the sys recipe. .sys-surface already
    outranks the global .ink-drawer on source order; this pins the ink frame
    image off explicitly. The --paper-* remap stays authoritative for drawer

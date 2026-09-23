@@ -53,7 +53,7 @@ function majorBreakthrough() {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'realm'" :title="t('panels.realm.title')" width="min(1120px, 94vw)" height="min(760px, 90vh)" @close="close">
+  <OverlayPanel :open="ui.standalonePanel === 'realm'" :title="t('panels.realm.title')" width="min(1120px, 94vw)" height="min(760px, 90vh)" variant="system" @close="close">
     <div class="realm-panel">
       <div class="realm-panel__cultivator">
         <div class="realm-panel__aura" />
@@ -68,6 +68,7 @@ function majorBreakthrough() {
           :max="player.cultivationRequired"
           :height="24"
           pill
+          variant="system"
           class="realm-panel__cultivation-bar"
         >
           <template #label><span class="realm-panel__cultivation-label">{{ Math.floor(player.cultivation) }} / {{ Math.floor(player.cultivationRequired) }} {{ t('panels.realm.cultivationUnit') }}</span></template>
@@ -153,7 +154,7 @@ function majorBreakthrough() {
 .realm-requirement--met { color: var(--jade); }
 .realm-requirement__marker { font-weight: 700; width: 1em; text-align: center; }
 .realm-panel__cultivation { width: min(560px, 90%); margin: 0 auto; }
-.realm-panel__cultivation-bar { --bar-track: var(--ink-950); border: 1px solid var(--ink-line); }
+.realm-panel__cultivation-bar { --bar-track: var(--sys-bg-0, var(--ink-950)); border: 1px solid var(--sys-line-soft, var(--ink-line)); }
 /* Fit-refactor đợt 3 — grid node cảnh giới auto-fit theo CARD: 9 cột khi
    rộng, tự xuống 5/3 cột khi hẹp (bỏ dead zone 901–957px của media query
    viewport cũ). Node khiên tròn giữ nguyên shape qua flex min-width. */
