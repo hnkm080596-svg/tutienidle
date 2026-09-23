@@ -170,7 +170,12 @@ async function main() {
     log('no browser context found on CDP endpoint')
     process.exit(4)
   }
-  const page = await context.newPage()
+  // Reuse an already-open chatgpt.com tab when one exists — repeated C2C
+  // rounds must not pile up tabs on the VM desktop. Fall back to a new page
+  // only when no ChatGPT tab is open.
+  const existing = context.pages().find((pg) => /^https:\/\/([^/]*\.)?chatgpt\.com\//.test(pg.url()))
+  const page = existing ?? (await context.newPage())
+  const ownPage = !existing
   try {
     const target = chatUrl ?? `${BASE}/`
     await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 60_000 })
@@ -266,7 +271,8 @@ async function main() {
     }
     if (outFile) writeFileSync(outFile, text + '\n', 'utf8')
   } finally {
-    await page.close().catch(() => {})
+    // Only close a tab this run created — never the user's reused C2C tab.
+    if (ownPage) await page.close().catch(() => {})
     await browser.close().catch(() => {})
   }
 }
