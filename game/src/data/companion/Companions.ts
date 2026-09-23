@@ -659,3 +659,33 @@ export const BETA_COMPANION_IDS: readonly string[] = ['than_nong', 'khai_minh']
 export const BETA_COMPANIONS: readonly CompanionDefinition[] = COMPANIONS.filter((definition) =>
   BETA_COMPANION_IDS.includes(definition.id),
 )
+
+// M-F-COMPANION-GIFT - persisted mail/gift record on PlayerData
+// (core/player/Player.ts). `id` doubles as the issuing moment's id -
+// dedupe key and provenance in one field; `claimed` is the one-way
+// consumed marker.
+export interface CompanionGiftRecord {
+  id: string
+  definitionId: string
+  claimed: boolean
+}
+
+// Beta gift-acquisition authority: ONLY these catalog members may be
+// issued or claimed through the mail/gift channel. Same members as
+// BETA_COMPANION_IDS but a distinct axis - pull-pool content vs
+// gift-grant authority (a future pool may reopen with a different set).
+export const BETA_COMPANION_GIFT_IDS = ['than_nong', 'khai_minh'] as const
+
+/**
+ * Two-conjunct predicate (C2C round-53): the id must be declared in the
+ * gift authority AND resolve in the real catalog. A typo'd or retired
+ * list entry is itself non-giftable, so no unclaimable record can be
+ * issued, claimed, or persisted - registry integrity is separately
+ * pinned by test (BETA_COMPANION_GIFT_IDS subset of COMPANIONS).
+ */
+export function isBetaCompanionGift(definitionId: string): boolean {
+  return (
+    (BETA_COMPANION_GIFT_IDS as readonly string[]).includes(definitionId) &&
+    COMPANIONS.some((definition) => definition.id === definitionId)
+  )
+}

@@ -109,6 +109,7 @@ const DEF_PRODUCER_FUNCTIONS: Record<string, string> = {
 const NON_DEF_FUNCTIONS: Record<string, string> = {
   '../../data/skill/KiemPhoOrbs.ts#unlockedOrbs': 'realm-gated orb-id list (returns OrbId[])',
   '../../data/skill/TurnSkillDisplayMeta.ts#turnSkillDisplayMetaOf': 'display metadata lookup',
+  '../../data/companion/Companions.ts#isBetaCompanionGift': 'gift-acquisition authority predicate (M-F-COMPANION-GIFT)',
 }
 
 // Authored combos whose pattern can never complete through the real
