@@ -117,7 +117,12 @@ them; the RUN order is the spec's pinned order.
    honest Pháp farming rides the already-cleared floor_1.
 6. **Leg G checkpoint INSIDE the interleave**: at TC L9 / circulation
    180 / floors 1–9 cleared / gift claimed / entitlement resolved →
-   `buildGameSave` → restore onto a SECOND session + fresh owner via
+   **wall-clock freeze pinned (C2C-r94-2): `Date.now` mocked/pinned
+   (`vi.setSystemTime`) BEFORE `buildGameSave` and kept frozen
+   through the restore + every parity assertion — an elapsed-offline
+   settlement window would make parity nondeterministic; the clock
+   is restored only after all asserts pass** → `buildGameSave` →
+   restore onto a SECOND session + fresh owner via
    `restoreCheckpoint` → persisted-field parity sweep (journey fields
    + pending-sibling fields per A13) → **ordered journey CONTINUES on
    the restored session**: L10 → floor_10 boss → ladder to L18 →
@@ -163,6 +168,21 @@ blank). **No fixes beyond in-mission defects** — and per A15, a
 pre-existing defect blocking any mandatory acceptance item makes the
 mission BLOCKED pending coordinator-owned repair (reported with
 evidence, never weakened into a passing characterization).
+
+**Required census row — multi-channel perfection-material census
+(C2C-r94-1):** one explicit sweep row (backed by a testable census —
+e.g. a spec-level enumeration test or an audited table) covering EVERY
+authored perfection material against the full acquisition-channel
+lattice: `BODY_PERFECTION_REALM_MATERIALS` registry entries → the
+hidden-beast / grotto emitted sets → visible-grant exemptions →
+exclusion from normal stage/family/non-signature channels. The row
+must REPORT, even when clean: route-less requirements (a registry
+entry reachable via no authored channel), duplicate acquisition
+authorities (the same material grantable by two independent paths),
+and normal-loot bypasses (a channel-only material leaking into
+stage/family tables). Leg L's A13 resolution does not substitute for
+this authority-level census — it is required regardless of whether
+BODY-HIDDEN lands authored materials this wave.
 
 ## Step 4 — docs sync + save-version decision
 
