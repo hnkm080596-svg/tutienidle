@@ -104,11 +104,11 @@ materials, no save change (QI-S).
 
 ## Step 4 — gates
 
-- P3 quick is the honest mode here (data-table edit + tests; no
-  build-pipeline/state-infra touch) — `npm run type-check` +
-  scoped vitest. Escalate to `npm run verify` (full) if the
-  characterization sweep shows the table change reaching shared
-  economy surfaces.
+- P3 full is mandatory: `npm run verify` (type-check + build + full
+  vitest) GREEN — the spec requires it unconditionally: the central
+  stage drop table is consumed broadly (BattleLootSystem,
+  resolveDrops, dropSampling, sims), so economy/progression blast
+  radius is not bounded by the diff's size.
 - E3 code-simplifier → P18 OCR (`open-code-review`) → P4
   `tutienidle-adversarial-qa` quick (economy lane touched; deep only
   if quick surfaces broad risk) → P5 sequential ≥ 3 passes.
@@ -125,7 +125,8 @@ materials, no save change (QI-S).
   band authority — LQ kills drop `tinh_hoa_bao_the`, TC kills drop
   `tinh_hoa_phap_the`, mortal still drops `tinh_hoa_pham_the`.
 - Pre-swap guard replaced by post-swap pins; no literal re-authored
-  essence line anywhere.
+  essence line in the stage-layer band wiring (signature drops —
+  `huyet_mong`'s Phàm ×12 — remain exempt per spec §3.3).
 - `huyet_mong` valve preserved and pinned.
 - M-QI-09 sim suite green unchanged; verification green; ledger row
   added.
