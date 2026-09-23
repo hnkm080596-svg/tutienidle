@@ -270,6 +270,27 @@ function attachSharedProfessionResourceIcon(material: Material): Material {
   }
 }
 
+// M-QI-08 - physique-essence family members above pham (the pham entry
+// stays in legacyMaterials with its original id). No live drop source
+// yet - M-QI-10 wires the band entries authored in
+// PHYSIQUE_ESSENCE_BAND_DROPS.
+const physiqueEssenceMaterials: Material[] = [
+  {
+    id: 'tinh_hoa_bao_the',
+    name: 'Tinh Hoa Bảo Thể',
+    category: 'essence',
+    sourceType: 'monster',
+    description: 'Tinh hoa ngưng tụ từ thể phách bảo thú, dùng để rèn luyện thân thể cấp Bảo.',
+  },
+  {
+    id: 'tinh_hoa_phap_the',
+    name: 'Tinh Hoa Pháp Thể',
+    category: 'essence',
+    sourceType: 'monster',
+    description: 'Tinh hoa ngưng tụ từ thể phách pháp thú, dùng để rèn luyện thân thể cấp Pháp.',
+  },
+]
+
 export const materials: Material[] = [
   // Linh Thạch — MATERIAL thật (plan Workstream F), tham gia mọi sort
   // trong tab Nguyên Liệu như material bình thường; KHÔNG còn currency
@@ -279,6 +300,8 @@ export const materials: Material[] = [
   // Linh thảo legacy (Linh Chi/Quế/Cúc Hoa/Linh Thảo Chủng) đã bị xoá
   // hẳn khỏi legacyMaterials — Đan Phòng chỉ dùng 8 họ thảo mới bên dưới.
   ...legacyMaterials,
+
+  ...physiqueEssenceMaterials,
 
   ...buildProfessionMaterials(),
   ...buildReworkPillHerbs(),

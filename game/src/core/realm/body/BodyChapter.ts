@@ -20,6 +20,7 @@
 import type { PlayerData } from '../../player/Player'
 import type { StatType } from '../../stats/StatTypes'
 import type { PhysiqueGradeId } from '../../../data/realm/PhysiqueLadder'
+import { physiqueEssenceGradeOf } from '../../../data/realm/PhysiqueEssence'
 import { bodyRefinementChapter } from './BodyRefinementChapter'
 import { meridianChapter } from './MeridianChapter'
 
@@ -55,6 +56,19 @@ export interface BodyProgressionState {
 export interface BodyChapterCurrency {
   bag: 'material' | 'pill'
   id: string
+}
+
+// M-QI-08 (QI-D4b) - namespace-aware physique-essence predicate. The
+// bag selects the bag namespace FIRST: only a 'material' currency can
+// be physique essence. A pill whose id coincidentally equals a family
+// material id must NOT classify - PhysiqueEssence is a material-id
+// registry and has no authority over pill-bag contents.
+export function bodyChapterEssenceGrade(
+  currency: BodyChapterCurrency,
+): PhysiqueGradeId | undefined {
+  return currency.bag === 'material'
+    ? physiqueEssenceGradeOf(currency.id)
+    : undefined
 }
 
 export interface BodyProgressionIssue {
