@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import GameButton from '@/components/common/GameButton.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import SysPanel from '@/components/common/system/SysPanel.vue'
 import { useErrorStore } from '@/stores/error'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 
@@ -22,22 +22,20 @@ function reloadPage() {
 
 <template>
   <div v-if="errorStore.current" class="error-screen" :style="{ zIndex: OVERLAY_LAYERS.appError }">
-    <div class="error-screen__panel">
-      <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
-      <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
-
+    <!-- M-UI-OVERHAUL: system console, danger domain accent. -->
+    <SysPanel variant="primary" :rim-active="true" class="error-screen__panel sys-domain--danger">
       <div class="error-screen__scroll">
         <h2 class="error-screen__title">Đã xảy ra lỗi</h2>
 
         <p class="error-screen__message">{{ errorStore.current }}</p>
 
         <div class="error-screen__actions">
-          <GameButton variant="primary" @click="dismiss">Đóng</GameButton>
+          <GameButton variant="system" @click="dismiss">Đóng</GameButton>
 
-          <GameButton variant="secondary" @click="reloadPage">Tải Lại Trang</GameButton>
+          <GameButton variant="system" accent-var="var(--sys-text-dim)" @click="reloadPage">Tải Lại Trang</GameButton>
         </div>
       </div>
-    </div>
+    </SysPanel>
   </div>
 </template>
 
@@ -54,21 +52,13 @@ function reloadPage() {
 }
 
 .error-screen__panel {
-  position: relative;
-  isolation: isolate;
   display: flex;
   flex-direction: column;
   max-width: 420px;
   max-height: 90vh;
   padding: 28px 32px;
-  box-shadow: var(--shadow-panel);
   text-align: center;
   font-family: var(--font-body);
-}
-
-.error-screen__panel > :not(.ink-nine-slice) {
-  position: relative;
-  z-index: 3;
 }
 
 .error-screen__scroll {
@@ -78,15 +68,17 @@ function reloadPage() {
 
 .error-screen__title {
   margin: 0 0 12px;
-  font-family: var(--font-display);
-  color: var(--crimson);
+  font-family: var(--sys-font-display, var(--font-display));
+  color: var(--sys-accent, var(--crimson));
   font-size: var(--text-title);
   font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
 
 .error-screen__message {
   margin: 0 0 20px;
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
   font-size: var(--text-sm);
   word-break: break-word;
 }

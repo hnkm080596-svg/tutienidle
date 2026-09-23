@@ -5,19 +5,18 @@
 // vi, không có material/tài nguyên nào khác để hiện thêm (mockup mục
 // XIV có "+ Tài nguyên/+ Progress" nhưng đó là ví dụ minh hoạ, không
 // phải data thật đang có).
+//
+// M-UI-OVERHAUL: renders on SysModalBase (system console chrome, focus
+// trap, Escape). Scrim-click stays disabled - the player must press
+// Continue explicitly (UI-015).
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { formatDuration } from '@/core/format/formatDuration'
 import { useI18n } from 'vue-i18n'
-import { ref, useId } from 'vue'
 import GameButton from './GameButton.vue'
 import StatRow from './primitives/StatRow.vue'
-import InkNineSlice from './primitives/InkNineSlice.vue'
-import { useDialogFocus } from '@/composables/useDialogFocus'
+import SysModalBase from './system/SysModalBase.vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 
-// UI-005 (Task 3, 2026-09-07) — Offline summary là blocking dialog thật:
-// role="dialog" + aria-modal + focus trap/restore qua useDialogFocus
-// (UI-015: người chơi phải chủ động Continue, background không bấm được).
 const props = defineProps<{
   elapsedSeconds: number
 
@@ -27,105 +26,53 @@ const props = defineProps<{
 const emit = defineEmits<{ close: [] }>()
 
 const { t } = useI18n()
-
-const panelRef = ref<HTMLElement | null>(null)
-useDialogFocus(panelRef, ref(true), { onEscape: () => emit('close') })
-
-const titleId = useId()
 </script>
 
 <template>
-  <div class="offline-summary" :style="{ zIndex: OVERLAY_LAYERS.modal }">
-    <section
-      ref="panelRef"
-      class="offline-summary__panel"
-      role="dialog"
-      aria-modal="true"
-      :aria-labelledby="titleId"
-    >
-      <InkNineSlice asset-id="surface-m-paper" layer="surface" />
-      <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" :thickness="18" />
+  <!-- Always-open while mounted: GameRoot gates the component itself on
+       offlineSummary.data. class + continue-button class are e2e anchors. -->
+  <SysModalBase
+    :open="true"
+    :title="t('combat.offline.title')"
+    width="min(420px, 92vw)"
+    :layer="OVERLAY_LAYERS.modal"
+    :close-on-scrim="false"
+    card-class="offline-summary"
+    @close="emit('close')"
+  >
+    <ul class="offline-summary__rows">
+      <StatRow :label="t('combat.offline.labels.duration')">{{ formatDuration(props.elapsedSeconds) }}</StatRow>
 
-      <h3 :id="titleId" class="offline-summary__title">{{ t('combat.offline.title') }}</h3>
+      <!-- Chỉ Thời gian + Tu vi — core/idle/OfflineProgressSystem.ts
+           CHỈ tính cultivationPerSecond * elapsedSeconds, không có
+           nguồn thu offline nào khác trong game logic hiện tại. Mở
+           rộng OfflineSummaryData (stores/offlineSummary.ts) + thêm
+           row tương ứng nếu sau này OfflineProgressSystem có nguồn
+           thu mới. -->
+      <StatRow :label="t('combat.offline.labels.cultivation')" tone="positive">{{ formatNumber(Math.floor(props.cultivation)) }}</StatRow>
+    </ul>
 
-      <ul class="offline-summary__rows">
-        <StatRow :label="t('combat.offline.labels.duration')">{{ formatDuration(props.elapsedSeconds) }}</StatRow>
-
-        <!-- Chỉ Thời gian + Tu vi — core/idle/OfflineProgressSystem.ts
-             CHỈ tính cultivationPerSecond * elapsedSeconds, không có
-             nguồn thu offline nào khác trong game logic hiện tại. Mở
-             rộng OfflineSummaryData (stores/offlineSummary.ts) + thêm
-             row tương ứng nếu sau này OfflineProgressSystem có nguồn
-             thu mới. -->
-        <StatRow :label="t('combat.offline.labels.cultivation')" tone="positive">{{ formatNumber(Math.floor(props.cultivation)) }}</StatRow>
-      </ul>
-
-      <GameButton class="offline-summary__continue" @click="emit('close')">{{ t('combat.offline.continue') }}</GameButton>
-    </section>
-  </div>
+    <GameButton class="offline-summary__continue" variant="system" @click="emit('close')">{{ t('combat.offline.continue') }}</GameButton>
+  </SysModalBase>
 </template>
 
 <style scoped>
-.offline-summary {
-  position: absolute;
-  inset: 0;
-  /* z-index via OVERLAY_LAYERS.modal (inline style) — single source for
-     the app-level overlay order; the curtain must cover this modal. */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--scrim);
-}
-
-/* M-tier InkNineSlice (surface-m-paper + frame-m-seal-corner) thay
-   cho GamePanel ornate (frame-xl-ceremony, slice 80px) — khung XL vẽ
-   đè lên nội dung ở card nhỏ 320px vì băng khung 80px mỗi bên không
-   còn chỗ cho padding hợp lý. thickness="18" (thay vì slice gốc 32px)
-   thu nhỏ mực vẽ lại — 32px nguyên bản quá dày với card 320-420px,
-   nuốt gần hết cạnh thành 1 dải đen. Padding nới thêm để chữ lùi hẳn
-   vào trong, không còn sát viền mực. */
-.offline-summary__panel {
-  position: relative;
-  isolation: isolate;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: min(320px, 92vw);
-  padding: 44px 40px;
-  color: var(--paper-text, #211f1a);
-  font-family: var(--font-body);
-}
-
-.offline-summary__panel > :not(.ink-nine-slice) {
-  position: relative;
-  z-index: 3;
-}
-
-.offline-summary__title {
-  margin: 0 0 6px;
-  font-family: var(--font-display);
-  font-size: var(--text-title);
-  letter-spacing: 0.06em;
-  color: var(--paper-text, #211f1a);
-  text-align: center;
-}
-
 .offline-summary__rows {
   list-style: none;
   margin: 0;
   padding: 0;
-  font-family: var(--font-body);
-  font-size: var(--text-body);
   display: flex;
   flex-direction: column;
   gap: 10px;
+  font-size: var(--text-body);
+  color: var(--sys-text, var(--paper-text, #211f1a));
 }
 
-.offline-summary__rows .stat-row__value {
+.offline-summary__rows :deep(.stat-row__value) {
   font-weight: 600;
 }
 
 .offline-summary__continue {
-  margin-top: 10px;
+  margin-top: 14px;
 }
 </style>

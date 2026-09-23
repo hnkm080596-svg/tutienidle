@@ -64,12 +64,13 @@ function mountModal(gm: MockGameManager) {
   return {
     container,
     ui,
-    queryCard: () => container.querySelector('.combat-exit-confirm'),
+    // SysModalBase teleports to body - query the document, not the container.
+    queryCard: () => document.body.querySelector('.combat-exit-confirm'),
     open: async () => {
       gm.capturedRequestHandler?.()
       await nextTick()
     },
-    buttons: () => Array.from(container.querySelectorAll<HTMLButtonElement>('.combat-exit-confirm button')),
+    buttons: () => Array.from(document.body.querySelectorAll<HTMLButtonElement>('.combat-exit-confirm button')),
     unmount: () => {
       app.unmount()
       container.remove()
@@ -107,7 +108,11 @@ describe('CombatExitConfirmModal — focus trap (deferred follow-up Task 2)', ()
     await modal.open()
 
     modal.queryCard()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
-    await nextTick()
+    // jsdom resolves a 0s sys-fade duration; the leave still drains via
+    // rAF frames before the element is removed.
+    await vi.waitFor(() => {
+      expect(modal.queryCard()).toBeNull()
+    })
 
     expect(modal.queryCard()).toBeNull()
     expect(gm.abandonBattle).not.toHaveBeenCalled()

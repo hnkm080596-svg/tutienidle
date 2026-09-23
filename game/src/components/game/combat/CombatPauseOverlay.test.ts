@@ -38,7 +38,8 @@ describe('CombatPauseOverlay', () => {
 
     mounted = mountOverlay(onContinue)
 
-    const button = mounted.container.querySelector('[data-testid="combat-pause-continue"]')
+    // SysModalBase teleports to body - query the document, not the container.
+    const button = document.body.querySelector('[data-testid="combat-pause-continue"]')
 
     expect(button).not.toBeNull()
 

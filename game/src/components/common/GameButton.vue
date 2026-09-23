@@ -183,17 +183,25 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
    base sizing; reads --sys-* tokens, degrades to a bordered box without
    the sheet (fallback hexes mirror --sys-cyan/--sys-text). */
 .game-button--system {
-  --sys-btn-accent: var(--sys-accent, #38e1ff);
+  /* Local token (not --sys-*): the boundary contract only allows --sys-*
+     re-assignments under .sys-anchored selectors. */
+  --btn-accent: var(--sys-accent, #38e1ff);
+}
+.game-button--system.has-accent {
+  /* accentVar holds a color expression (e.g. "var(--sys-danger)"). */
+  --btn-accent: var(--button-accent);
+}
+.game-button--system {
   border-radius: 0;
   font-family: var(--sys-font-display, var(--font-body));
   font-weight: 600;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: var(--sys-btn-accent);
-  border: 1px solid color-mix(in srgb, var(--sys-btn-accent) 55%, transparent);
+  color: var(--btn-accent);
+  border: 1px solid color-mix(in srgb, var(--btn-accent) 55%, transparent);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--sys-btn-accent) 13%, transparent),
-      color-mix(in srgb, var(--sys-btn-accent) 4%, transparent)),
+    linear-gradient(180deg, color-mix(in srgb, var(--btn-accent) 13%, transparent),
+      color-mix(in srgb, var(--btn-accent) 4%, transparent)),
     var(--sys-bg-0, #050a12);
   clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
 }
@@ -201,7 +209,7 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
 .game-button--system:not(:disabled):hover,
 .game-button--system:not(:disabled):focus-visible {
   color: var(--sys-text, #d8ecff);
-  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--sys-btn-accent) 55%, transparent));
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--btn-accent) 55%, transparent));
 }
 
 /* System focus ring - 2px non-glow accent (spec 7.2). */

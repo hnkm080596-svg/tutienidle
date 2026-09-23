@@ -14,82 +14,79 @@
  * scene.pause(), no anims.pauseAll()). The dim is light enough that a
  * paused battle still looks like a battle waiting, not a screenshot.
  */
+// M-UI-OVERHAUL: console card on SysModalBase (system chrome + focus
+// trap); the scrim keeps the LIGHT dim - the .sys-scrim default + blur
+// would hide the still-animating battlefield, which A7 forbids.
 import { useI18n } from 'vue-i18n'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+import SysModalBase from '@/components/common/system/SysModalBase.vue'
 
-defineEmits<{ continue: [] }>()
+const emit = defineEmits<{ continue: [] }>()
 
 const { t } = useI18n()
 </script>
 
 <template>
-  <div
+  <!-- :open=true - App.vue gates the component itself on isCombatPaused.
+       Scrim click stays dead (closeOnScrim=false); Escape resumes via
+       @close -> continue (standard pause-menu behavior). -->
+  <SysModalBase
+    :open="true"
+    :title="t('combat.overlay.pause.title')"
+    width="min(360px, 88vw)"
+    :layer="OVERLAY_LAYERS.combatPause"
+    :close-on-scrim="false"
     class="combat-pause"
-    :style="{ zIndex: OVERLAY_LAYERS.combatPause }"
+    card-class="combat-pause__card"
     data-testid="combat-pause-overlay"
-    role="dialog"
-    aria-modal="true"
+    @close="emit('continue')"
   >
-    <div class="combat-pause__card">
-      <h3 class="combat-pause__title">{{ t('combat.overlay.pause.title') }}</h3>
-      <p class="combat-pause__body">{{ t('combat.overlay.pause.body') }}</p>
-      <button
-        type="button"
-        class="combat-pause__action"
-        data-testid="combat-pause-continue"
-        @click="$emit('continue')"
-      >
-        {{ t('combat.overlay.pause.action') }}
-      </button>
-    </div>
-  </div>
+    <p class="combat-pause__body">{{ t('combat.overlay.pause.body') }}</p>
+    <button
+      type="button"
+      class="combat-pause__action"
+      data-testid="combat-pause-continue"
+      @click="emit('continue')"
+    >
+      {{ t('combat.overlay.pause.action') }}
+    </button>
+  </SysModalBase>
 </template>
 
 <style scoped>
-/* position:fixed (not absolute) — mounted at App.vue's template top level,
-   which has no positioned ancestor, same reasoning as the curtain's own
-   .transition-overlay rule. Layer is OVERLAY_LAYERS.combatPause (inline
-   style) — deliberately BELOW the curtain: the curtain must always be
-   able to cover this, never the reverse. */
-.combat-pause {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* Light dim on purpose (A7) — units must stay visible animating behind it. */
-  background: rgba(0, 0, 0, 0.45);
+/* .sys-modal is SysModalBase's root; the double-class selector outranks its
+   scoped rule regardless of stylesheet order. Keeps A7's light dim - units
+   must stay visible animating behind the pause prompt. */
+.combat-pause.sys-modal {
+  background: rgba(3, 7, 14, 0.45);
+  backdrop-filter: none;
 }
 
 .combat-pause__card {
-  padding: 24px 32px;
   text-align: center;
-  background: var(--ink-900, #141820);
-  border: 1px solid var(--gold-400, #d4a72c);
-  border-radius: 8px;
-  max-width: min(360px, 88vw);
-}
-
-.combat-pause__title {
-  margin: 0 0 10px;
-  color: var(--gold-300, #ffd54f);
-  font-family: var(--font-display, serif);
-  font-size: var(--text-md, 18px);
 }
 
 .combat-pause__body {
   margin: 0 0 18px;
-  color: var(--text-secondary, #cbd5e1);
+  color: var(--sys-text-muted, var(--text-secondary, #cbd5e1));
   font-size: var(--text-sm, 14px);
 }
 
 .combat-pause__action {
   padding: 8px 20px;
-  border: none;
-  border-radius: 4px;
-  background: var(--gold-400, #d4a72c);
-  color: #000;
+  border: 1px solid var(--sys-accent, var(--gold-400, #d4a72c));
+  border-radius: 0;
+  background: color-mix(in srgb, var(--sys-accent, #d4a72c) 16%, transparent);
+  color: var(--sys-text, #000);
+  font-family: var(--sys-font-display, var(--font-body));
   font-size: var(--text-sm, 14px);
+  letter-spacing: .08em;
+  text-transform: uppercase;
   cursor: pointer;
+}
+
+.combat-pause__action:focus-visible {
+  outline: 2px solid var(--sys-focus, rgba(217, 212, 199, .65));
+  outline-offset: 2px;
 }
 </style>

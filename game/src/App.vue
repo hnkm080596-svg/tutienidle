@@ -711,9 +711,12 @@ onUnmounted(() => {
     <SaveIncompatibleScreen v-if="saveIssue.status" />
 
     <main v-else class="boot-error">
-      <h1>Không thể khởi động</h1>
-      <p>{{ bootError }}</p>
-      <button type="button" @click="bootFlow.showAuth">Trở về đăng nhập</button>
+      <!-- M-UI-OVERHAUL: boot failure reads as a system fault console. -->
+      <section class="boot-error__panel sys-surface sys-chamfer sys-corners sys-domain--danger">
+        <h1>Không thể khởi động</h1>
+        <p>{{ bootError }}</p>
+        <button type="button" @click="bootFlow.showAuth">Trở về đăng nhập</button>
+      </section>
     </main>
   </RouteMount>
 
@@ -772,20 +775,36 @@ body {
   display: grid;
   place-content: center;
   justify-items: center;
-  background: var(--paper-50);
+  background: var(--sys-bg-0, var(--paper-50));
+}
+.boot-error__panel {
+  max-width: min(420px, 92vw);
+  padding: 28px 32px;
+  text-align: center;
+  color: var(--sys-text, var(--paper-text));
+  font-family: var(--font-body);
 }
 .boot-error h1 {
-  color: var(--crimson);
-  font-family: var(--font-display);
+  margin: 0 0 12px;
+  color: var(--sys-accent, var(--crimson));
+  font-family: var(--sys-font-display, var(--font-display));
+  font-size: var(--text-title, 20px);
+  letter-spacing: .1em;
+  text-transform: uppercase;
 }
 .boot-error p {
-  color: var(--text-secondary);
+  color: var(--sys-text-muted, var(--text-secondary));
 }
 .boot-error button {
   padding: 10px 16px;
-  border: 1px solid var(--paper-line);
-  background: var(--paper-100);
-  color: var(--paper-text);
+  border: 1px solid var(--sys-accent, var(--paper-line));
+  border-radius: 0;
+  background: color-mix(in srgb, var(--sys-accent, #b54432) 16%, var(--paper-100));
+  color: var(--sys-text, var(--paper-text));
+  font-family: var(--sys-font-display, var(--font-body));
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
   cursor: pointer;
 }
 

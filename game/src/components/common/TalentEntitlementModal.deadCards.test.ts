@@ -38,9 +38,10 @@ function mountModal(gameManager: GameManager) {
   app.mount(container)
 
   return {
-    card: (id: string) => container.querySelector(`[data-testid="entitlement-talent-${id}"]`),
-    upgrade: (id: string) => container.querySelector(`[data-testid="entitlement-upgrade-${id}"]`),
-    modal: () => container.querySelector('[data-testid="talent-entitlement-modal"]'),
+    // SysModalBase teleports to body - query the document, not the container.
+    card: (id: string) => document.body.querySelector(`[data-testid="entitlement-talent-${id}"]`),
+    upgrade: (id: string) => document.body.querySelector(`[data-testid="entitlement-upgrade-${id}"]`),
+    modal: () => document.body.querySelector('[data-testid="talent-entitlement-modal"]'),
     unmount: () => {
       app.unmount()
 
