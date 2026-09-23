@@ -16,7 +16,10 @@ import type { CultivationPathId, CultivationWayId } from './CultivationPathKit'
 import { createSpellPathState, type SpellPathState } from '../phap-tu/PhapTuState'
 import type { PersistentTimedEffect } from './PersistentTimedEffect'
 import type { ArtifactProgress } from '../artifact/Artifact'
-import type { CompanionInstance } from '../../data/companion/Companions'
+import type {
+  CompanionGiftRecord,
+  CompanionInstance,
+} from '../../data/companion/Companions'
 import type { SwordPathState } from '../kiem-tu/KiemTuState'
 import {
   createDefaultBodyProgression,
@@ -333,6 +336,12 @@ export interface PlayerData {
   // from duplicate pulls on constellation-maxed companions.
   duyenPhan: number
 
+  // M-F-COMPANION-GIFT - mail/gift claimable rewards. Written by
+  // issueCompanionGifts on authored trigger moments (realm entered,
+  // stage first-clear); consumed one-way by claimCompanionGift. The
+  // Beta companion acquisition channel while the pull pool is closed.
+  companionGifts: CompanionGiftRecord[]
+
   // Tran Phap (2026-09-05) - tran phap dang active + vi tri gan tung o.
   // null = nguoi choi chua tung cau hinh tran phap nao; buildTurnBattle()
   // se fallback ve DEFAULT_PARTY_FORMATION (Combat Art Pipeline spec sec.7).
@@ -469,6 +478,7 @@ export function createDefaultPlayer(): PlayerData {
     companions: [],
     companionPullsSinceRare: 0,
     duyenPhan: 0,
+    companionGifts: [],
 
     formationLoadout: null,
 

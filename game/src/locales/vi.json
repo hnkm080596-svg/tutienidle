@@ -617,6 +617,7 @@
   "workerLodge": {
     "tabs": {
       "nhanCong": "Nhân Công",
+      "quaTang": "Quà Tặng",
       "chieuMo": "Chiêu Mộ",
       "duyenPhan": "Đổi Duyên Phận"
     },
@@ -632,8 +633,10 @@
     "tokens": "{name}: {count}",
     "pity": "Bảo hiểm: {count}/{max}",
     "pull": "Chiêu Mộ (1 {token})",
+    "unavailable": "Chưa mở trong bản hiện tại — đồng đội mới đến qua Quà Tặng.",
     "errors": {
       "missingToken": "Không có {token}.",
+      "poolUnavailable": "Chưa mở trong bản hiện tại — đồng đội mới đến qua Quà Tặng.",
       "realmLocked": "Cần đạt Trúc Cơ.",
       "noActivePlayer": "Chưa có dữ liệu người chơi."
     },
@@ -653,14 +656,28 @@
       "constellationMaxed": "Cung Mệnh đã đạt tối đa (C{max})",
       "insufficientDuyenPhan": "Không đủ Duyên Phận (cần {cost})"
     },
+    "unavailable": "Chưa mở trong bản hiện tại — đồng đội mới đến qua Quà Tặng.",
     "errors": {
       "unknownDefinition": "Đồng đội không tồn tại.",
       "constellationMaxed": "Cung Mệnh đã đạt tối đa.",
       "insufficientDuyenPhan": "Không đủ Duyên Phận.",
+      "poolUnavailable": "Chưa mở trong bản hiện tại — đồng đội mới đến qua Quà Tặng.",
       "realmLocked": "Cần đạt Trúc Cơ.",
       "noActivePlayer": "Chưa có dữ liệu người chơi."
     },
     "empty": "Chưa có đồng đội nào để đổi."
+  },
+  "quaTang": {
+    "hint": "Quà tặng đồng đội nhận được từ hành trình tu luyện.",
+    "claim": "Nhận",
+    "claimed": "Đã nhận",
+    "claimedBadge": "Đã nhận",
+    "empty": "Chưa có quà tặng nào.",
+    "errors": {
+      "unknownGift": "Quà tặng không hợp lệ.",
+      "realmLocked": "Cần đạt Trúc Cơ.",
+      "noActivePlayer": "Chưa có dữ liệu người chơi."
+    }
   },
   "companion": {
     "title": "Đồng Đội",

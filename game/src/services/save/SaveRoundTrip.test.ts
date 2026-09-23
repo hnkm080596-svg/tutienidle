@@ -357,4 +357,48 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     expect(result.ok).toBe(false)
     expect(result.issues.map((issue) => issue.path)).toContain(`${collection}[0].slot`)
   })
+
+  // QA deep audit (M-F-COMPANION-GIFT): issued gift records must ride
+  // the same detach->JSON->validate pipeline as every other player
+  // slice - a dropped field here silently loses an issued gift.
+  it('issued companion gift records round-trip với shape hợp lệ', () => {
+    const gameManager = createBootedGameManager()
+    const player = createDefaultPlayer()
+    player.realmId = 'foundation_establishment'
+    player.companionGifts.push(
+      {
+        id: 'gift_than_nong_foundation_entry',
+        definitionId: 'than_nong',
+        claimed: false,
+      },
+      {
+        id: 'gift_khai_minh_foundation_floor_10',
+        definitionId: 'khai_minh',
+        claimed: true,
+      },
+    )
+
+    const roundTripped: unknown = JSON.parse(
+      JSON.stringify(buildGameSave(player, gameManager)),
+    )
+
+    const result = validateGameSaveShape(roundTripped)
+    expect(result).toMatchObject({ ok: true, issues: [] })
+
+    const restored = roundTripped as {
+      player: { companionGifts: Array<Record<string, unknown>> }
+    }
+    expect(restored.player.companionGifts).toEqual([
+      {
+        id: 'gift_than_nong_foundation_entry',
+        definitionId: 'than_nong',
+        claimed: false,
+      },
+      {
+        id: 'gift_khai_minh_foundation_floor_10',
+        definitionId: 'khai_minh',
+        claimed: true,
+      },
+    ])
+  })
 })

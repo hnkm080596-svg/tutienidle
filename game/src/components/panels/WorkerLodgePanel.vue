@@ -14,6 +14,7 @@ import { usePlayerStore } from '@/stores/player'
 import { getWorkerCapacityForLevel } from '@/core/production/WorkerCapacity'
 import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
 import TabBar from '@/components/common/TabBar.vue'
+import QuaTangTab from './worker-lodge/QuaTangTab.vue'
 import ChieuMoTab from './worker-lodge/ChieuMoTab.vue'
 import DuyenPhanTab from './worker-lodge/DuyenPhanTab.vue'
 
@@ -27,12 +28,13 @@ const player = usePlayerStore()
 
 const { stateVersion } = useStateVersion()
 
-// P7-M9 (decision D4): the two gacha tabs only exist once the Companion
+// P7-M9 (decision D4): the companion tabs only exist once the Companion
 // domain unlocks at Tru Co; nhan_cong (worker capacity) stays available
 // in every realm. The domain ops enforce the same gate - this is the
 // presentation mirror, not a second authority.
 const TABS = [
   { id: 'nhan_cong', label: t('workerLodge.tabs.nhanCong') },
+  { id: 'qua_tang', label: t('workerLodge.tabs.quaTang') },
   { id: 'chieu_mo', label: t('workerLodge.tabs.chieuMo') },
   { id: 'duyen_phan', label: t('workerLodge.tabs.duyenPhan') },
 ] as const
@@ -108,6 +110,8 @@ const nextCapacity = computed(() => {
         {{ t('workerLodge.nhanCong.hint') }}
       </p>
     </div>
+
+    <QuaTangTab v-else-if="activeTab === 'qua_tang'" />
 
     <ChieuMoTab v-else-if="activeTab === 'chieu_mo'" />
 

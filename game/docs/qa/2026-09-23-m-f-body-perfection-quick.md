@@ -8,7 +8,7 @@
 
 ## Scope and Risk Map
 
-Changed systems: new canonical `player.bodyPerfection` slice (discovery write-once + perfected realms); `notifyMaterialGained` funnel consolidation (rename + 3 newly hooked landings); `perfectBodyRealm` transaction in realmAdvanceOps; body-scoped effective-delta channel in `resolvePlayerStatAssembly`; hidden RealmPanel col; save v77 + delegated shape/integrity validators.
+Changed systems: new canonical `player.bodyPerfection` slice (discovery write-once + perfected realms); `notifyMaterialGained` funnel consolidation (rename + 3 newly hooked landings); `perfectBodyRealm` transaction in realmAdvanceOps; body-scoped effective-delta channel in `resolvePlayerStatAssembly`; hidden RealmPanel col; save v78 + delegated shape/integrity validators.
 
 One-hop consumers: `resolvePlayerStatAssembly` (sole consumer of the scaled channel), RealmPanel columns, preflight save validation, quest collect progress, all material-granting paths (loot drops, auto-dissolve rewards, decompose delivery, companion refund, essence change credit, building/economy/reward/tick landings).
 
@@ -26,7 +26,7 @@ Escalation decision (mapper said `deepAuditCandidate: true`): NOT escalated — 
 | INV-BP-6 | persisted slice (save boundary) | restore crafted/legal payloads | Recoverability + integrity (family, subset, realm cap) | value mutation, stale state | rejected vs ok status | vitest save seam | High |
 | INV-BP-7 | hidden surface (RealmPanel col) | discovery write → UI | Lifecycle/monotonicity — absent until first discovery, partial reveal only | interruption (reload), stale state | col count, rendered names | jsdom + Playwright | High (ruling: hidden until discovered) |
 | INV-BP-8 | restore path | replayed decompose settle | Exactly-once — no re-discovery / double funnel fire on re-restore | interruption, repeat | R7 no-double-award + write-once marker | vitest (structural: no funnel call site in restore) | Medium |
-| INV-BP-9 | save version | load v76 / v77 | Recoverability — previous version rejected, current accepted | value mutation | incompatible + foundVersion | vitest save | Medium (r60-f5) |
+| INV-BP-9 | save version | load v77 / v78 | Recoverability — previous version rejected, current accepted | value mutation | incompatible + foundVersion | vitest save | Medium (r60-f5) |
 | INV-BP-10 | realm cap | perfect/discover across realm boundary | Boundedness — future perfect rejected, future discovery legal | value mutation | integrity status | vitest unit+save | Medium (r60-f2) |
 
 ## Verification Evidence

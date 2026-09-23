@@ -9,7 +9,7 @@
 // validator doi, va nguoc lai).
 import { CURRENT_SAVE_VERSION } from './saveVersion'
 import { REALMS } from '../../data/realms/realm'
-import { COMPANIONS } from '../../data/companion/Companions'
+import { COMPANIONS, isBetaCompanionGift } from '../../data/companion/Companions'
 import { MAX_CONSTELLATION_RANK } from '../../core/companion/CompanionProgression'
 import { ITEM_QUALITY_ORDER, type ItemQuality } from '../../core/item/ItemQuality'
 import { isProfessionGrade } from '../../core/profession/ProfessionGrade'
@@ -785,6 +785,16 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     validateCompanionEntries(companions, 'player.companions', issues)
   }
 
+  // v77 companion gifts - authored mail/gift records. A persisted gift
+  // outside the Beta gift catalog is the persisted-bypass class the
+  // acquisition boundary exists to kill - fail loud like an unknown
+  // definitionId on an owned companion.
+  const companionGifts = requireArray(player, 'companionGifts', 'player', issues)
+
+  if (companionGifts) {
+    validateCompanionGiftEntries(companionGifts, 'player.companionGifts', issues)
+  }
+
   // C1 triage (2026-09-14) - 3 corrupt-save residuals closed save-side:
   // perfectClearSeconds feeds auto-farm cycleSeconds (a missing/non-object
   // field crashes the tick's index read; junk values are additionally
@@ -943,6 +953,56 @@ function validateCompanionEntries(
         path: `${entryPath}.constellationRank`,
         message: `phải là số nguyên 0..${MAX_CONSTELLATION_RANK}`,
       })
+    }
+  }
+}
+
+/**
+ * CompanionGiftRecord entries (v77 schema). `id` is the authored-moment
+ * identity (dedupe key); a retired moment id is tolerated because
+ * moments are content - only the definitionId authority gate is strict.
+ */
+function validateCompanionGiftEntries(
+  entries: unknown[],
+  path: string,
+  issues: ShapeIssue[],
+) {
+  const seenIds = new Set<string>()
+
+  for (let i = 0; i < entries.length; i += 1) {
+    const entry = entries[i]
+    const entryPath = `${path}[${i}]`
+
+    if (!isObject(entry)) {
+      issues.push({ path: entryPath, message: 'phải là object' })
+
+      continue
+    }
+
+    requireNonEmptyString(entry, 'id', entryPath, issues)
+    requireNonEmptyString(entry, 'definitionId', entryPath, issues)
+
+    if (typeof entry.id === 'string' && entry.id.trim().length > 0) {
+      if (seenIds.has(entry.id)) {
+        issues.push({ path: `${entryPath}.id`, message: 'bị trùng với gift entry khác' })
+      } else {
+        seenIds.add(entry.id)
+      }
+    }
+
+    if (
+      typeof entry.definitionId === 'string' &&
+      entry.definitionId.trim().length > 0 &&
+      !isBetaCompanionGift(entry.definitionId)
+    ) {
+      issues.push({
+        path: `${entryPath}.definitionId`,
+        message: 'không phải companion trong danh mục quà tặng Beta',
+      })
+    }
+
+    if (typeof entry.claimed !== 'boolean') {
+      issues.push({ path: `${entryPath}.claimed`, message: 'phải là boolean' })
     }
   }
 }

@@ -106,7 +106,14 @@ describe('GameManager quest lifecycle wiring (AR-09)', () => {
       .map((q) => q.id)
     expect(unlockedIds.length).toBeGreaterThan(0)
     for (const id of unlockedIds) {
-      expect(manager.questManager.getProgress(id)).toBeDefined()
+      // M-F-COMPANION-GIFT: the daily token faucet is a token-only source -
+      // whole-quest suppressed at origination, so it never activates. Every
+      // other foundation-locked quest unlocks on the transition.
+      if (id === 'daily_chieu_hien_lenh') {
+        expect(manager.questManager.getProgress(id)).toBeUndefined()
+      } else {
+        expect(manager.questManager.getProgress(id)).toBeDefined()
+      }
     }
   })
 })

@@ -54,6 +54,20 @@ vi.mock('../companion/CompanionGacha', async (importOriginal) => {
   }
 })
 
+// M-F-COMPANION-GIFT gate on companionAcquirablePool(): Beta's pull pool
+// is closed by flag, so the roll path is only reachable with an injected
+// open pool (same convention as GameManagerCompanionOps.test.ts).
+let acquirablePoolOverride: readonly CompanionDefinition[] | null = null
+vi.mock('../companion/CompanionAvailability', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('../companion/CompanionAvailability')>()
+  return {
+    ...actual,
+    companionAcquirablePool: () =>
+      acquirablePoolOverride ?? actual.companionAcquirablePool(),
+  }
+})
+
 import { GameManager } from './GameManager'
 import { createDefaultPlayer, type PlayerData } from '../player/Player'
 import { materials } from '../../data/materials/materials'
@@ -67,6 +81,7 @@ import { PillRegistry } from '../pill/PillRegistry'
 import { PillBag } from '../pill/PillBag'
 import { RewardSystem } from '../reward/RewardSystem'
 import { COMPANION_PULL_TOKEN_ID } from './GameManagerCompanionOps'
+import { BETA_COMPANIONS, type CompanionDefinition } from '../../data/companion/Companions'
 import type { Quest } from '../quest/Quest'
 
 const PHAM = 'tinh_hoa_pham_the'
@@ -90,6 +105,7 @@ const add = (manager: GameManager, materialId: string, amount: number) =>
 
 afterEach(() => {
   vi.restoreAllMocks()
+  acquirablePoolOverride = null
 })
 
 describe('material-landing funnel (plan 5.3)', () => {
@@ -160,6 +176,7 @@ describe('material-landing funnel (plan 5.3)', () => {
   })
 
   it('companion-pull refund routes the returned token through the funnel once', () => {
+    acquirablePoolOverride = BETA_COMPANIONS
     const player = freshPlayer('foundation_establishment')
     const manager = freshManager(player)
     const questSpy = vi.spyOn(manager.questSystem, 'onMaterialCollected')

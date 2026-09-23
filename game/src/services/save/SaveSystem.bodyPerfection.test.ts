@@ -127,7 +127,7 @@ describe('bodyPerfection save round-trip (C2C r68)', () => {
     expect(freshPlayer.$state.bodyPerfection.perfectedRealmIds).toContain('mortal')
   })
 
-  it('production all-empty round-trip keeps both sets [] (v77 fields present)', () => {
+  it('production all-empty round-trip keeps both sets [] (v78 fields present)', () => {
     const manager = registeredManager()
     const player = createDefaultPlayer()
     manager.setActivePlayer(player)

@@ -5,7 +5,7 @@ spec review). Implements the canonical `{discoveredMaterials,
 perfectedRealmIds}` state, the acquisition-funnel discovery hook, the
 atomic/idempotent `perfectBodyRealm` transaction, the BODY-CORE channel
 multiplier `×(1 + 0.10 × perfectedCount)`, the hidden
-`BodyPerfectionSection`, and save v77 — all seams wired, all content
+`BodyPerfectionSection`, and save v78 — all seams wired, all content
 deferred (registry lists authored `[]`).
 
 Phase 1 delivered docs only; Phase 2 implements under C2C impl review.
@@ -36,8 +36,9 @@ Worktree per P2 (production edits); `.agent-worktrees/m-f-body-perfection`.
   `BodyChapter.ts:333-363`; pure-registry template
   `data/realm/PhysiqueEssence.ts`.
 - Save seams `saveShapeValidation.ts:729`, preflight
-  `GameManagerSaveRestore.ts:291`, `CURRENT_SAVE_VERSION = 76` → 77
-  (`saveVersion.ts:127`).
+  `GameManagerSaveRestore.ts:291`, `CURRENT_SAVE_VERSION` +1 over the
+  merged base (76 → 78 on the impl branch: M-F-COMPANION-GIFT's
+  parallel bump took 77 first — same r60-f5 rule).
 - Restore exclusion recorded (`GameManagerSaveRestore.ts:466-471` —
   restore is not acquisition).
 - `REALMS` id order + `getRealmIndex` (`realmSystem.ts:98`) for the

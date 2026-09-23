@@ -33,7 +33,10 @@ import { getProfessionGradeForRealm } from '../profession/ProfessionGrade'
 import { itemQualityRank, professionGradeRank } from '../profession/slotRank'
 import { gradeLabel } from '../presentation/labels'
 import { physiqueEssenceGradeOf } from '../../data/realm/PhysiqueEssence'
-import { isBreakthroughAcquisitionEnabled } from '../realm/ReleasePolicy'
+import {
+  isBreakthroughAcquisitionEnabled,
+  isCompanionPullTokenSourceSuppressed,
+} from '../realm/ReleasePolicy'
 import type { PlayerData } from '../player/Player'
 
 /** Purple of the Tinh Hoa family stream (2026-08-30, M-QI-08) - flies back to the player. */
@@ -548,6 +551,13 @@ export class BattleLootSystem {
             // while release policy closes the transition into its tagged
             // realm (post-resolve filter; rng order untouched).
             if (!isBreakthroughAcquisitionEnabled(material.breakthroughRealmId)) {
+              break
+            }
+
+            // M-F-COMPANION-GIFT - censused pull-token drop lines stay
+            // dormant while the pull pool is closed; sibling lines still
+            // land (post-resolve filter; rng order untouched).
+            if (isCompanionPullTokenSourceSuppressed(drop.itemId)) {
               break
             }
 
