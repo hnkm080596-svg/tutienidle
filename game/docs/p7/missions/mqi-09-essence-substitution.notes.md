@@ -88,14 +88,38 @@ lock seeds).
   in; non-material bag or unrecognized id => refusal (coverage 0 /
   plan undefined), tested via colliding pill id + meridian seam.
 
+## C2C impl review round 17 - seam restructure
+
+1. Transaction order hardened to validate -> consume -> apply:
+   for essence currencies the state function now runs on a
+   `structuredClone` probe first; the debit plan is validated
+   (all debits satisfiable + change credit committable) before
+   any mutation; bags commit; only then does the real player
+   apply. Failure anywhere returns 0 with zero state change.
+   Non-essence currencies keep the legacy compute-then-debit
+   path - a single-currency `remove` cannot fail once
+   `consumed <= owned`, and cloning every meridian invest would
+   be pure cost.
+2. Change credit is fail-closed: the seam checks the
+   post-debit required balance + change <= stackLimit before
+   committing; an uncommittable credit aborts the whole invest
+   (previously `MaterialBag.add` would have clamped silently).
+   Tested with a stackLimit-1 fixture + a 2-unit Phap->Pham
+   overpay.
+3. Downstream-hop rule made explicit (spec 3.4): authored hops
+   carry the first-hop lock BY RULE until a band-specific arc
+   is driveable; the regression test pins `phap === lockedRatio`
+   (measured, not copied) and a `foundation_establishment`
+   stranded run exercises the Phap->Pham compound e2e.
+
 ## Known limitations / deferred
 
 - Seven unauthored ladder rungs contribute no substitution (no
   material id, no ratio) - by design.
-- Only the Pham-requiring chapter exists; Phap->Bao hop carries the
-  same locked value and re-locks if a Bao-demanding chapter lands.
-- `change` is credited via `MaterialBag.add`, which clamps at
-  stackLimit; bounded < last hop yield so a silent loss requires
-  the required bag already within `yield-1` of a full stack -
-  astronomically unlikely and bounded to at most yield-1 units.
+- Only the Pham-requiring chapter exists; Phap->Bao carries the
+  first-hop lock by explicit rule and re-locks if a
+  Bao-demanding chapter (or driveable TC arc) lands.
+- The probe clone runs on every essence-currency invest call
+  (incl. the auto-invest tick) - bounded to the essence branch
+  and the player payload, accepted for strict atomicity.
 - Bidirectional exchange stays out of scope (QI-D4c).

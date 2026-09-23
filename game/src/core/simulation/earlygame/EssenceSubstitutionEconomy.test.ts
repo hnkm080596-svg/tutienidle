@@ -64,6 +64,11 @@ describe('essence substitution economy sim (M-QI-09)', () => {
     expect(measurement.authoredRatio).toBe(PHYSIQUE_ESSENCE_CONVERSION_RATIO.bao)
     expect(measurement.authoredRatio).toBe(measurement.lockedRatio)
     expect(PHYSIQUE_ESSENCE_CONVERSION_RATIO.bao).toBe(measurement.lockedRatio)
+    // C2C r17#3 - downstream hops are NOT independent measurements:
+    // by explicit rule every authored adjacent hop carries the
+    // first-hop lock until a band-specific arc becomes driveable.
+    // The production value is pinned to that rule, not copied blind.
+    expect(PHYSIQUE_ESSENCE_CONVERSION_RATIO.phap).toBe(measurement.lockedRatio)
   })
 
   it('lockConversionRatio is the spec rule in pure form', () => {
@@ -90,6 +95,22 @@ describe('essence substitution economy sim (M-QI-09)', () => {
       expect(result.tiersCompleted).toBe(6)
       expect(result.requiredLeft).toBe(0)
     }
+  })
+
+  it('exercises the downstream hop end-to-end: a phap budget at the compound rate retires the chapter', { timeout: 900_000 }, () => {
+    // Phap -> Pham traverses BOTH authored hops at the product rate
+    // lockedRatio^2 - the downstream hop is exercised through the
+    // real seams even though no Bao-demanding chapter exists yet.
+    const residual = bodyChapterRequirement()
+    const locked = PHYSIQUE_ESSENCE_CONVERSION_RATIO.bao ?? 0
+    const compound = locked * (PHYSIQUE_ESSENCE_CONVERSION_RATIO.phap ?? 0)
+    const budget = Math.ceil(residual / compound)
+    const result = measureStrandedCompletion(11, 'foundation_establishment', budget)
+    expect(result.completed).toBe(true)
+    expect(result.tiersCompleted).toBe(6)
+    // The unit-rounded surplus returns as required-material change
+    // inside the transaction and is the only residue.
+    expect(result.requiredLeft).toBe(compound * budget - residual)
   })
 
   it('fails the full retirement one unit below the locked budget - the lock is tight', { timeout: 900_000 }, () => {

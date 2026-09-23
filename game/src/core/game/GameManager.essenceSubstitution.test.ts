@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { materials } from '../../data/materials/materials'
 import { pills } from '../../data/pill/pills'
@@ -137,6 +137,52 @@ describe('investBodyChapter essence substitution (M-QI-09)', () => {
 
     expect(consumed).toBe(0)
     expect(manager.materialBag.getAmount(BAO)).toBe(25)
+  })
+
+  it('an unsatisfiable debit aborts the whole invest - zero state change (C2C r17#1)', () => {
+    const manager = managerWithCatalogs()
+    const player = createDefaultPlayer()
+    player.realmId = 'qi_refining'
+    manager.setActivePlayer(player)
+    manager.materialBag.add(manager.materialRegistry.get(PHAM), 10)
+    manager.materialBag.add(manager.materialRegistry.get(BAO), 25)
+
+    // Sabotage the preflight oracle: the plan is built from truth
+    // (getAmount) but every satisfiability check fails.
+    vi.spyOn(manager.materialBag, 'has').mockReturnValue(false)
+
+    const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
+
+    expect(consumed).toBe(0)
+    expect(manager.materialBag.getAmount(PHAM)).toBe(10)
+    expect(manager.materialBag.getAmount(BAO)).toBe(25)
+    expect(player.bodyProgression.body_refinement.completedTiers).toBe(0)
+    expect(player.bodyProgression.body_refinement.currentTierProgress).toBe(0)
+  })
+
+  it('a change credit that cannot land aborts the invest atomically (C2C r17#2)', () => {
+    // Fixture: the required material can hold at most 1 unit - a
+    // multi-hop overpay of 2 pham can never be credited.
+    const capped = materials.map((material) =>
+      material.id === PHAM ? { ...material, stackLimit: 1 } : material,
+    )
+    // registerMaterials skips already-registered ids - the capped
+    // catalog must be the first registration on a fresh manager.
+    const manager = new GameManager()
+    manager.catalogOps.registerMaterials(capped)
+    manager.catalogOps.registerPills(pills)
+    const player = createDefaultPlayer()
+    player.realmId = 'qi_refining'
+    manager.setActivePlayer(player)
+    manager.materialBag.add(manager.materialRegistry.get(PHAP), 13)
+
+    // 13 phap covers 52; consumed would be 50 -> change 2 > headroom 1.
+    const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'body_refinement')
+
+    expect(consumed).toBe(0)
+    expect(manager.materialBag.getAmount(PHAP)).toBe(13)
+    expect(manager.materialBag.getAmount(PHAM)).toBe(0)
+    expect(player.bodyProgression.body_refinement.currentTierProgress).toBe(0)
   })
 
   it('the update() auto-invest tick resolves substitution through the same seam', () => {

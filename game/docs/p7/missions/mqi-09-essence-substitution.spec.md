@@ -110,23 +110,31 @@ no bag/PlayerData access:
    material bag — and passes `effectiveAvailable = owned + coverage`
    into `investBodyChapterState` (non-essence currencies yield
    coverage 0, so availability is unchanged for them);
-2. on `consumed > 0`, asks the resolver for the plan —
-   `planEssenceSubstitution(consumed, chapter.currency, ownedOf)`;
-   a refusal (`undefined`, non-material bag or non-family id) falls
-   back to the legacy single-currency debit untouched;
-3. preflights EVERY debit (`bag.has`) before any bag mutation
-   (C2C 3), then commits: required spend first, the cascade, then
-   the `change` credit in the required material. `consumed = 0` or
-   any unsatisfiable debit means zero mutations — validate -> consume
-   -> apply, all-or-nothing.
+2. for essence currencies, computes `consumed` on a
+   `structuredClone` probe FIRST (C2C r17#1 — validate -> consume
+   -> apply in the strict sense: the real player is untouched
+   until every bag commit is proven), then asks the resolver for
+   the plan — `planEssenceSubstitution(consumed, chapter.currency,
+   ownedOf)`; a refusal (`undefined`) is fail-closed, while a
+   non-essence currency never reaches the plan at all — it takes
+   the legacy compute-then-debit path whose single-currency
+   `remove` is provably infallible, so the clone cost is paid only
+   on the essence branch;
+3. preflights EVERY debit (`bag.has`) AND the change credit's
+   post-debit stack capacity (C2C r17#2 — the whole surplus lands
+   or the invest aborts) before any bag mutation, then commits:
+   required spend first, the cascade, then the `change` credit in
+   the required material, and only then applies the progression
+   mutation on the real player. `consumed = 0` or any uncommittable
+   step means zero state change — all-or-nothing.
 
 Apply-side rejection precedes every bag mutation: the chapter's own
 gates (tier lock, physique source grade, completion) run inside
-`investBodyChapterState` before it mutates and surface as
-`consumed = 0`, so a rejected apply debits nothing. Chapters whose
-currency is not material-bag essence (meridian's pill
-`thong_mach_dan`, aux `thien_dia_chi_kieu`) can never see
-substitution — the namespace gate holds inside the resolver.
+`investBodyChapterState` and surface as `consumed = 0` on the probe
+— no mutation, no debit. Chapters whose currency is not
+material-bag essence (meridian's pill `thong_mach_dan`, aux
+`thien_dia_chi_kieu`) can never see substitution — the namespace
+gate holds inside the resolver.
 
 ### 3.4 Sim-locked ratios — band-redemption invariant (authored parity)
 
@@ -151,9 +159,18 @@ full authored lower-chapter requirement.**
 - candidate selection (C2C 4): `ESSENCE_RATIO_CANDIDATES = [2..6]` are
   evaluated against `surplus * c >= residual`; every candidate passes
   at parity, so the spec's `>= 2` premium floor binds —
-  **`lockedRatio = 2`**, uniform across authored hops (only one
-  lower-grade chapter is authored; the Pháp→Bảo hop takes the same
-  locked value and re-locks if a Bảo-demanding chapter lands).
+  **`lockedRatio = 2`**, uniform across authored hops.
+
+- downstream-hop rule (C2C r17#3): the first measurable hop
+  (Bảo→Phàm) is the only hop the scripted arc can reach today — a
+  Bảo-demanding chapter does not yet exist. Ruling: every authored
+  adjacent hop carries the first-hop lock BY EXPLICIT RULE until a
+  band-specific arc becomes driveable; the regression test pins
+  `phap === lockedRatio` (the measured value, not a copied
+  constant) and a stranded run at `foundation_establishment`
+  exercises the Pháp→Phàm compound `lockedRatio²` end-to-end
+  through the real seams. The hop re-locks the moment a
+  Bảo-demanding chapter (or a driveable TC arc) exists.
 
 Symmetric-band proxy: the stranded band (qi_refining) is not
 scripted-driveable in the harness — a fresh LQ player's
