@@ -211,21 +211,26 @@ function checkChannelIntegrity(
     for (const materialId of channelEmittedMaterialIds(channel, signatureMaterialIdsOf)) {
       emittedUnion.add(materialId)
 
-      if (channel.kind === 'grotto') {
-        continue // emitted id === channel.materialId; perfection-only arm above.
-      }
-
       const perfectionRealm = perfectionRealmOf(materialId)
       if (perfectionRealm === undefined) continue
 
       // Bound-required arm (F4): a perfection route must certify a finite
       // worst case. Per kind: guaranteedSpawnAfterKills / guaranteedAfterCycles.
-      if (channel.kind === 'hidden_beast' && channel.guaranteedSpawnAfterKills === undefined) {
+      // Runs for BOTH kinds (r97): a grotto perfection channel without
+      // guaranteedAfterCycles is exactly the unbound route this arm exists
+      // to forbid.
+      if (
+        (channel.kind === 'hidden_beast' && channel.guaranteedSpawnAfterKills === undefined) ||
+        (channel.kind === 'grotto' && channel.guaranteedAfterCycles === undefined)
+      ) {
         issues.push(`${label} emits perfection material '${materialId}' without a bound`)
       }
 
       // Band-material coherence (F5): a channel's emitted perfection ids must
-      // belong to its own band realm.
+      // belong to its own band realm. Runs for BOTH kinds (r97): runtime
+      // eligibility keys on the channel band while the origination gate
+      // only covers the material's global transition, so a mismatched low
+      // band could originate a later-realm material early.
       if (perfectionRealm !== channel.bandRealmId) {
         issues.push(
           `${label} emits '${materialId}' which belongs to realm '${perfectionRealm}'`,
@@ -234,7 +239,7 @@ function checkChannelIntegrity(
 
       // Tag census: the emitted perfection material's breakthrough tag must
       // equal its perfection realm so the emission gate (r84-F3 /
-      // isBreakthroughAcquisitionEnabled) matches.
+      // isBreakthroughAcquisitionEnabled) matches. Runs for BOTH kinds.
       const material = materialById(materialId)
       if (material && material.breakthroughRealmId !== perfectionRealm) {
         issues.push(
@@ -245,7 +250,8 @@ function checkChannelIntegrity(
       // Unconditional-route arm (r84-P1a): a signature line that counts as a
       // perfection acquisition route must fire on every kill - chance 1 and
       // no requiresModifier gate (a validated condition-source census does
-      // not exist yet).
+      // not exist yet). hidden_beast only: the arm audits signature LINES,
+      // which only beast channels carry.
       if (channel.kind === 'hidden_beast') {
         for (const line of signatureOf(channel.enemyId)) {
           if (line.kind !== 'material' || line.itemId !== materialId) continue
@@ -504,6 +510,33 @@ describe('cross-catalog integrity arms (fixture worlds)', () => {
     expect(
       checkChannelIntegrity([channel], [], world()),
     ).toEqual([])
+  })
+
+  // r97-HIGH: the bound/coherence/tag arms run for BOTH kinds - grotto is
+  // not exempted by the emitted-id === materialId shortcut.
+  it('grotto perfection channel without guaranteedAfterCycles fails (r97 bound arm)', () => {
+    const channel = grottoChannel({ materialId: PERF, guaranteedAfterCycles: undefined })
+    const issues = checkChannelIntegrity([channel], [], world())
+    expect(issues.some((issue) => issue.includes('bound'))).toBe(true)
+  })
+
+  it('grotto perfection channel at a mismatched band fails (r97 coherence arm)', () => {
+    // Mortal-band grotto emitting a qi_refining perfection material: runtime
+    // eligibility keys on the band while the origination gate only covers
+    // the material's global transition - incoherent and now caught.
+    const channel = grottoChannel({ bandRealmId: 'mortal', materialId: PERF })
+    const issues = checkChannelIntegrity([channel], [], world())
+    expect(issues.some((issue) => issue.includes('belongs to realm'))).toBe(true)
+  })
+
+  it('grotto perfection channel emitting a mistagged material fails (r97 tag arm)', () => {
+    const mistagged = fixtureMaterial(PERF, 'foundation_establishment')
+    const issues = checkChannelIntegrity(
+      [grottoChannel({ materialId: PERF })],
+      [],
+      world({ materials: [mistagged] }),
+    )
+    expect(issues.some((issue) => issue.includes('breakthroughRealmId'))).toBe(true)
   })
 
   it('inverse reachability (r82-H1): a table material with no route fails', () => {
