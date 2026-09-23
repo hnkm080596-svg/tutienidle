@@ -16,15 +16,18 @@ import { getSurviveLethalUsesPerBattle } from './TalentEffects'
 export class SurviveLethalGuard {
   private remainingUses = 0
 
-  beginBattle(selectedTalentIds: readonly string[] | undefined): void {
-    this.remainingUses = getSurviveLethalUsesPerBattle(selectedTalentIds)
+  beginBattle(
+    selectedTalentIds: readonly string[] | undefined,
+    talentLevels?: Readonly<Record<string, number>>,
+  ): void {
+    this.remainingUses = getSurviveLethalUsesPerBattle(selectedTalentIds, talentLevels)
   }
 
   getRemainingUses(): number {
     return this.remainingUses
   }
 
-  /** Trừ 1 lượt nếu còn — true nếu đòn chí mạng lần này được sống sót. */
+  /** Tru 1 luot neu con - true neu don chi mang lan nay duoc song sot. */
   tryConsumeUse(): boolean {
     if (this.remainingUses <= 0) {
       return false

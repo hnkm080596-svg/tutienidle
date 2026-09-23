@@ -43,6 +43,17 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
     expect(triggerBreakthroughAction(player, gameManager)).toBe(true)
     gameManager.tickOps.update(tribulationTotalSeconds('qi_refining'))
     expect(checkTribulationOutcomeAction(player, gameManager)).toBe(true)
+    // M-F-TALENT - the victory commit wrote the qi_refining entitlement;
+    // the drain (standalonePanel + run clear) is held until the modal
+    // resolves it. Decide, then the next check drains normally.
+    const quanKhiEntitlement = player.pendingTalentEntitlement
+    expect(quanKhiEntitlement?.realmId).toBe('qi_refining')
+    expect(gameManager.realmAdvanceOps.resolveTalentEntitlement(player, {
+      kind: 'new',
+      talentId: quanKhiEntitlement!.offeredTalentIds[0]!,
+    })).toBe(true)
+    expect(player.pendingTalentEntitlement).toBeUndefined()
+    expect(checkTribulationOutcomeAction(player, gameManager)).toBe(true)
     expect(player.realmId).toBe('mortal')
     expect(useUiStore().standalonePanel).toBe('quan_khi')
 
@@ -59,6 +70,16 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
 
     expect(triggerBreakthroughAction(player, gameManager)).toBe(true)
     gameManager.tickOps.update(tribulationTotalSeconds('foundation_establishment'))
+    expect(checkTribulationOutcomeAction(player, gameManager)).toBe(true)
+    // Same mandatory decision at Truc Co - the chosen Quan Khi NEW
+    // talent may also appear in the upgrade list; take a NEW card again.
+    const trucCoEntitlement = player.pendingTalentEntitlement
+    expect(trucCoEntitlement?.realmId).toBe('foundation_establishment')
+    expect(gameManager.realmAdvanceOps.resolveTalentEntitlement(player, {
+      kind: 'new',
+      talentId: trucCoEntitlement!.offeredTalentIds[0]!,
+    })).toBe(true)
+    expect(player.pendingTalentEntitlement).toBeUndefined()
     expect(checkTribulationOutcomeAction(player, gameManager)).toBe(true)
 
     expect(player.realmId).toBe('foundation_establishment')

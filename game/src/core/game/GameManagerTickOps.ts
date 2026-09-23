@@ -99,9 +99,9 @@ export class GameManagerTickOps {
   }
 
   /**
-   * Gọi mỗi tick từ game loop (App.vue) với deltaSeconds đo được
-   * từ GameClock. GameManager chỉ forward xuống các system có
-   * trạng thái phụ thuộc thời gian — không tự tính thời gian.
+   * Goi moi tick tu game loop (App.vue) voi deltaSeconds do duoc
+   * tu GameClock. GameManager chi forward xuong cac system co
+   * trang thai phu thuoc thoi gian - khong tu tinh thoi gian.
    */
   update(deltaSeconds: number) {
     if (deltaSeconds <= 0) {
@@ -110,10 +110,10 @@ export class GameManagerTickOps {
 
     const activePlayer = this.deps.getActivePlayer()
 
-    // Timed effect theo thời gian thực — tick expiry ở MỌI update (cả
-    // khi pause battle) vì deadline là Date.now() tuyệt đối, không dùng
-    // game delta kéo dài buff (plan §5.4). Player reference do App.vue
-    // đăng ký qua setActivePlayer() sau boot/load.
+    // Timed effect theo thoi gian thuc - tick expiry o MOI update (ca
+    // khi pause battle) vi deadline la Date.now() tuyet doi, khong dung
+    // game delta keo dai buff (plan S5.4). Player reference do App.vue
+    // dang ky qua setActivePlayer() sau boot/load.
     if (activePlayer) {
       this.deps.tickTimedEffects(activePlayer)
       this.deps.investBodyChapter(activePlayer)
@@ -125,8 +125,8 @@ export class GameManagerTickOps {
         this.reconcileQuestLifecycle()
       }
 
-      // Quest daily reset (Quest System plan) — wall-clock day-bucket,
-      // check mỗi tick nên vẫn reset kể cả khi panel Nhiệm Vụ đang đóng.
+      // Quest daily reset (Quest System plan) - wall-clock day-bucket,
+      // check moi tick nen van reset ke ca khi panel Nhiem Vu dang dong.
       if (
         this.deps.questSystem.checkAndResetDaily(
           this.deps.questRegistry,
@@ -168,17 +168,17 @@ export class GameManagerTickOps {
           ? this.deps.materialRegistry.get(event.materialId)
           : undefined
 
-        // ARCH-012 (M12) — the settle event is a RECEIPT: `amount` is the
+        // ARCH-012 (M12) - the settle event is a RECEIPT: `amount` is the
         // rolled/request quantity, `overflow` is what the bag clamp lost.
         // The toast must show DELIVERED (amount - overflow), and the lost
-        // part surfaces through the shared bag.overflow notification —
+        // part surfaces through the shared bag.overflow notification -
         // never claim the full amount when the bag was full.
         const overflow = event.overflow ?? 0
         const delivered = event.amount - overflow
 
-        // Collect-quest hook (review 2026-08-28) — production settle là
-        // nguồn material chính của collect-quest. Chỉ tính lượng thật sự
-        // vào túi (trừ overflow).
+        // Collect-quest hook (review 2026-08-28) - production settle la
+        // nguon material chinh cua collect-quest. Chi tinh luong that su
+        // vao tui (tru overflow).
         this.deps.notifyQuestMaterialGained(event.materialId, delivered)
 
         if (delivered > 0) {
@@ -195,8 +195,8 @@ export class GameManagerTickOps {
         }
       }
 
-      // Đan Phòng settle (§8.3). M3 — Hoa Hau Thong Than: x2 pill yield
-      // per successful job — read from activePlayer each tick.
+      // Dan Phong settle (S8.3). M3 - Hoa Hau Thong Than: x2 pill yield
+      // per successful job - read from activePlayer each tick.
       this.deps.alchemySystem.tick(
         Date.now(),
         this.deps.pillBag,
@@ -204,7 +204,7 @@ export class GameManagerTickOps {
           this.deps.pillRegistry.has(pillId) ? this.deps.pillRegistry.get(pillId) : undefined,
         Math.random,
         0,
-        getAlchemyDoublePill(activePlayer.selectedTalentIds)?.yieldMultiplier ?? 1,
+        getAlchemyDoublePill(activePlayer.selectedTalentIds, activePlayer.talentLevels)?.yieldMultiplier ?? 1,
       )
 
       for (const event of this.deps.alchemySystem.drainSettlementEvents()) {
@@ -212,7 +212,7 @@ export class GameManagerTickOps {
           ? this.deps.pillRegistry.get(event.pillId)
           : undefined
 
-        // ARCH-012 (M12) — receipt fields: `pills` = generated, `delivered`
+        // ARCH-012 (M12) - receipt fields: `pills` = generated, `delivered`
         // = actually added to the PillBag, `overflow` = lost to the stack
         // clamp. Toast DELIVERED and surface the loss through bag.overflow;
         // a fully-overflowed success must not claim "x N" that never landed.
@@ -247,7 +247,7 @@ export class GameManagerTickOps {
       }
     }
 
-    // R4 (AR-19): Persistent out-of-battle buffs (e.g. Kiếp Thương debuff)
+    // R4 (AR-19): Persistent out-of-battle buffs (e.g. Kiep Thuong debuff)
     // decrement duration by deltaSeconds via updateTime().
     // buff2 M4 -- persistent pool lifetime clock (was buffSystem.updateTime).
     this.deps.persistentBuffs.onTimePassed(deltaSeconds)
@@ -265,7 +265,7 @@ export class GameManagerTickOps {
    * old inline tick block.
    */
   deliverDecomposeOutput(entry: DecomposeOutputEntry): void {
-    // Registry miss → typed fallback Material (decompose output is
+    // Registry miss -> typed fallback Material (decompose output is
     // produced by buildings; the id doubles as display name).
     const tinhHoa: Material =
       (this.deps.materialRegistry.has(entry.materialId)
@@ -296,23 +296,23 @@ export class GameManagerTickOps {
   }
 
   /**
-   * Chia deltaSeconds thành các bước cố định cho nhánh phụ thuộc
-   * timer-đếm-ngược-rồi-reset (đòn đánh, spawn quái, phần thưởng) - logic
+   * Chia deltaSeconds thanh cac buoc co dinh cho nhanh phu thuoc
+   * timer-dem-nguoc-roi-reset (don danh, spawn quai, phan thuong) - logic
    * moved into GameManagerTurnBattleOps.updateBattleFixedStep() (C2 split).
    *
-   * updateTribulation()/updateTribulationProgress() CHỦ Ý đứng NGOÀI
-   * vòng lặp bước nhỏ: updateTribulation() đã tự có vòng lặp catch-up
-   * riêng (while nextStrikeInSeconds <= 0) hoạt động đúng với deltaSeconds
-   * lớn dạng đóng (không tích luỹ theo bước), gọi 1 lần với deltaSeconds
-   * gốc là chính xác. Chia nhỏ nó thành hàng trăm bước 0.1s sẽ CỘNG DỒN
-   * sai số dấu phẩy động (0.1 không biểu diễn chẵn nhị phân) vào
-   * active.nextStrikeInSeconds, có thể làm lệch 1 lôi kích so với thật.
+   * updateTribulation()/updateTribulationProgress() CHU Y dung NGOAI
+   * vong lap buoc nho: updateTribulation() da tu co vong lap catch-up
+   * rieng (while nextStrikeInSeconds <= 0) hoat dong dung voi deltaSeconds
+   * lon dang dong (khong tich luy theo buoc), goi 1 lan voi deltaSeconds
+   * goc la chinh xac. Chia nho no thanh hang tram buoc 0.1s se CONG DON
+   * sai so dau phay dong (0.1 khong bieu dien chan nhi phan) vao
+   * active.nextStrikeInSeconds, co the lam lech 1 loi kich so voi that.
    */
   private updateBattleFixedStep(deltaSeconds: number) {
     this.deps.turnBattleOps.updateBattleFixedStep(deltaSeconds)
 
-    // Ngoài vòng fixed-step — TribulationDirector tự có catch-up dạng
-    // đóng (spec dot-pha-loi-kiep §5.6), chia nhỏ sẽ cộng dồn sai số float.
+    // Ngoai vong fixed-step - TribulationDirector tu co catch-up dang
+    // dong (spec dot-pha-loi-kiep S5.6), chia nho se cong don sai so float.
     this.deps.tribulationDirector.update(deltaSeconds)
   }
 }

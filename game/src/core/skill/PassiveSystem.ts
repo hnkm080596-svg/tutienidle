@@ -17,17 +17,17 @@ export interface CombatEventPayload {
 export const PLAYER_ID = 'player'
 
 /**
- * EventBus dùng tên event tự do (string), không phải PassiveTrigger.
- * CombatSystem.attack() emit 'damage' cho sự kiện "bị đánh trúng" —
- * map sang PassiveTrigger 'damage_taken' để khớp nghĩa; các tên còn
- * lại trùng thẳng với giá trị PassiveTrigger. 'cast' được
- * BattleSystem.castSkill() emit riêng (xem BattleSystem.ts). 'dodge'
- * giờ được CombatSystem.resolveDodge() emit thật (né đòn — xem
- * CombatSystem.ts), targetId là bên né được.
+ * EventBus dung ten event tu do (string), khong phai PassiveTrigger.
+ * CombatSystem.attack() emit 'damage' cho su kien "bi danh trung" -
+ * map sang PassiveTrigger 'damage_taken' de khop nghia; cac ten con
+ * lai trung thang voi gia tri PassiveTrigger. 'cast' duoc
+ * BattleSystem.castSkill() emit rieng (xem BattleSystem.ts). 'dodge'
+ * gio duoc CombatSystem.resolveDodge() emit that (ne don - xem
+ * CombatSystem.ts), targetId la ben ne duoc.
  *
- * Export để FormationSystem.ts (trận pháp khảm vũ khí, cùng cơ chế
- * trigger nhưng theo trang bị thay vì theo skill) dùng chung, tránh
- * lặp bảng map này ở 2 nơi.
+ * Export de FormationSystem.ts (tran phap kham vu khi, cung co che
+ * trigger nhung theo trang bi thay vi theo skill) dung chung, tranh
+ * lap bang map nay o 2 noi.
  */
 export const EVENT_TO_TRIGGER: Record<string, PassiveTrigger> = {
   attack: 'attack',
@@ -40,18 +40,18 @@ export const EVENT_TO_TRIGGER: Record<string, PassiveTrigger> = {
   block: 'block',
 }
 
-// 'damage_taken'/'dodge'/'block' xảy ra CHO player (player là target)
-// — còn lại xảy ra DO player gây ra (player là source). Export để
-// FormationSystem.ts dùng chung, tránh lệch logic giữa 2 nơi.
+// 'damage_taken'/'dodge'/'block' xay ra CHO player (player la target)
+// - con lai xay ra DO player gay ra (player la source). Export de
+// FormationSystem.ts dung chung, tranh lech logic giua 2 noi.
 export const TARGET_BASED_TRIGGERS: PassiveTrigger[] = ['damage_taken', 'dodge', 'block']
 
 /**
- * Tích stack cho skill.passiveModifiers — trước đây không nơi nào
- * làm việc này (comment cũ trong GameManager nhắc applySkillEvent()
- * nhưng hàm đó chưa từng viết). Mutate trực tiếp modifier trong
- * object Skill đang nằm ở SkillManager (giống Technique/Skill level
- * mutate tại chỗ), không dùng ModifierSystem riêng — nhờ vậy stack
- * tự động round-trip qua save/load cùng với Skill.
+ * Tich stack cho skill.passiveModifiers - truoc day khong noi nao
+ * lam viec nay (comment cu trong GameManager nhac applySkillEvent()
+ * nhung ham do chua tung viet). Mutate truc tiep modifier trong
+ * object Skill dang nam o SkillManager (giong Technique/Skill level
+ * mutate tai cho), khong dung ModifierSystem rieng - nho vay stack
+ * tu dong round-trip qua save/load cung voi Skill.
  */
 export class PassiveSystem {
   private readonly perSecondAccumulator = new Map<string, number>()
@@ -60,11 +60,11 @@ export class PassiveSystem {
     eventBus: EventBus,
     private readonly skillManager: SkillManager,
     private readonly skillSystem: SkillSystem,
-    // Talent v4 (spec 2026-09-03 §3.3 E2) — 2 closure do GameManager
-    // cung cấp, optional theo pattern CombatSystem (mọi call site hiện
-    // có compile không đổi): buffApplier áp buff "bùng nổ" lên player
-    // entity trong trận; hpReader trả HP ratio hiện tại của player
-    // (undefined ngoài trận → passiveCondition coi như thoả).
+    // Talent v4 (spec 2026-09-03 S3.3 E2) - 2 closure do GameManager
+    // cung cap, optional theo pattern CombatSystem (moi call site hien
+    // co compile khong doi): buffApplier ap buff "bung no" len player
+    // entity trong tran; hpReader tra HP ratio hien tai cua player
+    // (undefined ngoai tran -> passiveCondition coi nhu thoa).
     private readonly buffApplier?: (buffId: string) => void,
     private readonly hpReader?: () => number | undefined,
   ) {
@@ -73,9 +73,9 @@ export class PassiveSystem {
     }
   }
 
-  // Talent v4 E2 — passiveCondition chỉ có 1 kind hiện nay ('hpBelow'),
-  // để union mở được sau này mà không đổi call site. Vắng condition hoặc
-  // vắng reader → luôn true (không chặn passive cũ).
+  // Talent v4 E2 - passiveCondition chi co 1 kind hien nay ('hpBelow'),
+  // de union mo duoc sau nay ma khong doi call site. Vang condition hoac
+  // vang reader -> luon true (khong chan passive cu).
   private meetsCondition(condition: Skill['passiveCondition']): boolean {
     if (!condition || condition.kind !== 'hpBelow') {
       return true
@@ -86,9 +86,9 @@ export class PassiveSystem {
     return hpRatio === undefined ? true : hpRatio < condition.percent
   }
 
-  // Talent v4 E2 — modifier vừa tích chạm maxStacks: áp buff bùng nổ
-  // (nếu có applier) rồi reset stack về 0. Vắng passiveConvertsTo thì
-  // giữ hành vi cũ (stack kẹt ở trần).
+  // Talent v4 E2 - modifier vua tich cham maxStacks: ap buff bung no
+  // (neu co applier) roi reset stack ve 0. Vang passiveConvertsTo thi
+  // giu hanh vi cu (stack ket o tran).
   private tryConvertAtThreshold(
     modifier: StatModifier,
     convertsTo: Skill['passiveConvertsTo'],
@@ -113,8 +113,8 @@ export class PassiveSystem {
       return
     }
 
-    // Chỉ tích passive của player — enemy chưa có khái niệm passive
-    // riêng ở scope hiện tại.
+    // Chi tich passive cua player - enemy chua co khai niem passive
+    // rieng o scope hien tai.
     const relevant = TARGET_BASED_TRIGGERS.includes(trigger)
       ? event.targetId === PLAYER_ID
       : event.sourceId === PLAYER_ID
@@ -124,16 +124,16 @@ export class PassiveSystem {
     }
 
     for (const skill of this.skillManager.getPassiveSkills()) {
-      // Core Loop Foundation checklist (Mục SKILL) — đọc qua
-      // getEffectiveSkill() để tôn trọng Specialization đã chọn
-      // (có thể đổi hẳn passiveTrigger/passiveModifiers).
+      // Core Loop Foundation checklist (Muc SKILL) - doc qua
+      // getEffectiveSkill() de ton trong Specialization da chon
+      // (co the doi han passiveTrigger/passiveModifiers).
       const effective = this.skillSystem.getEffectiveSkill(skill)
 
       if (effective.passiveTrigger !== trigger) {
         continue
       }
 
-      // Talent v4 E2 — điều kiện HP chặn TRƯỚC khi tích stack.
+      // Talent v4 E2 - dieu kien HP chan TRUOC khi tich stack.
       if (!this.meetsCondition(effective.passiveCondition)) {
         continue
       }
@@ -147,11 +147,11 @@ export class PassiveSystem {
   }
 
   /**
-   * Đưa stack của mọi passive skill về 0 — gọi khi 1 trận MỚI bắt
-   * đầu (xem GameManager.startBattle()). Theo yêu cầu: các chỉ số
-   * tích lũy qua passive (vd Linh Khí Cảm Ứng +công kích/đòn trúng)
-   * là buff TRONG TRẬN, không tích lũy qua nhiều trận/save nữa —
-   * khác thiết kế permanent progression ban đầu.
+   * Dua stack cua moi passive skill ve 0 - goi khi 1 tran MOI bat
+   * dau (xem GameManager.startBattle()). Theo yeu cau: cac chi so
+   * tich luy qua passive (vd Linh Khi Cam Ung +cong kich/don trung)
+   * la buff TRONG TRAN, khong tich luy qua nhieu tran/save nua -
+   * khac thiet ke permanent progression ban dau.
    */
   resetStacks() {
     for (const skill of this.skillManager.getPassiveSkills()) {
@@ -166,15 +166,15 @@ export class PassiveSystem {
   }
 
   /**
-   * Talent v4 M2 — Pha Giap carry (spec §4.1 row 2 / §7): a fraction of
+   * Talent v4 M2 - Pha Giap carry (spec S4.1 row 2 / S7): a fraction of
    * the bound passive's stacks banks into player.phaGiapCarryStacks at
    * battle victory and re-seeds the next battle (call AFTER resetStacks).
-   * The bank decays when realmId changes — a new realm wipes the old
+   * The bank decays when realmId changes - a new realm wipes the old
    * blade marks. Banked stacks belong to the realm they were earned in;
    * both fields are persisted on PlayerData (save v61).
    */
   bankBattleCarryStacks(player: PlayerData): void {
-    const carry = getPassiveStackCarry(player.selectedTalentIds)
+    const carry = getPassiveStackCarry(player.selectedTalentIds, player.talentLevels)
 
     if (!carry) {
       return
@@ -197,12 +197,12 @@ export class PassiveSystem {
   }
 
   /**
-   * Re-seed the carried stacks onto the bound passive — call once per
+   * Re-seed the carried stacks onto the bound passive - call once per
    * battle AFTER resetStacks(). Realm change lazily decays the bank
    * (the bank records the realm it was earned in).
    */
   seedBattleCarryStacks(player: PlayerData): void {
-    const carry = getPassiveStackCarry(player.selectedTalentIds)
+    const carry = getPassiveStackCarry(player.selectedTalentIds, player.talentLevels)
 
     if (!carry) {
       return
@@ -249,9 +249,9 @@ export class PassiveSystem {
   }
 
   /**
-   * Passive có passiveTrigger === 'per_second' tích 1 stack mỗi
-   * giây đầy đủ trôi qua — accumulator riêng theo từng skill để
-   * không mất phần lẻ giữa các tick.
+   * Passive co passiveTrigger === 'per_second' tich 1 stack moi
+   * giay day du troi qua - accumulator rieng theo tung skill de
+   * khong mat phan le giua cac tick.
    */
   tick(deltaSeconds: number) {
     for (const skill of this.skillManager.getPassiveSkills()) {
@@ -271,8 +271,8 @@ export class PassiveSystem {
         continue
       }
 
-      // Talent v4 E2 — per_second chịu cùng passiveCondition như passive
-      // theo event (chặn trước khi tích, phần lẻ accumulator giữ nguyên).
+      // Talent v4 E2 - per_second chiu cung passiveCondition nhu passive
+      // theo event (chan truoc khi tich, phan le accumulator giu nguyen).
       if (!this.meetsCondition(effective.passiveCondition)) {
         this.perSecondAccumulator.set(skill.id, accumulated)
 

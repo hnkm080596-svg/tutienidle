@@ -15,12 +15,12 @@ import {
   getSurviveLethalUsesPerBattle,
 } from './TalentEffects'
 
-// Talent v4 (spec 2026-09-03) — các getter v3 vẫn còn cho kind được giữ
-// (survive_lethal của Bất Tử Th thể, cultivation_speed của Phàm Cốt +
-// Phàm Nhân Chi Cốt). Id v3 retired resolve được nhưng effects [] — mọi
-// getter kinh tế v3 giờ trả giá trị mặc định với id retired (chính là
-// hành vi "save cũ an toàn" của spec §4.4). Đa talent bị siết chỉ đọc id
-// đầu (spec §3.2 — test riêng ở TalentsV4Wiring.test.ts).
+// Talent v4 (spec 2026-09-03) - cac getter v3 van con cho kind duoc giu
+// (survive_lethal cua Bat Tu Th the, cultivation_speed cua Pham Cot +
+// Pham Nhan Chi Cot). Id v3 retired resolve duoc nhung effects [] - moi
+// getter kinh te v3 gio tra gia tri mac dinh voi id retired (chinh la
+// hanh vi "save cu an toan" cua spec S4.4). Da talent bi siet chi doc id
+// dau (spec S3.2 - test rieng o TalentsV4Wiring.test.ts).
 
 describe('collectTalentEffects', () => {
   it('gom effect từ thiên phú đã chọn', () => {
@@ -63,9 +63,13 @@ describe('M3 — production talent getters (spec 2026-09-03 §4.2)', () => {
     expect(getEnhanceGuarantee(['hoa_hau_thong_than'])).toBeUndefined()
   })
 
-  it('quy tắc 1 talent/nhân vật — id thứ hai trong save edit không kích hoạt', () => {
-    expect(getAlchemyDoublePill(['kiem_quang', 'hoa_hau_thong_than'])).toBeUndefined()
-    expect(getEnhanceGuarantee(['kiem_quang', 'bach_luyen_thanh_khi'])).toBeUndefined()
+  it('đa talent (M-F-TALENT supersede §3.2) — id thứ hai cũng kích hoạt', () => {
+    expect(getAlchemyDoublePill(['kiem_quang', 'hoa_hau_thong_than'])).toEqual({
+      yieldMultiplier: 2,
+      potencyMultiplier: 1.5,
+      costMultiplier: 2,
+    })
+    expect(getEnhanceGuarantee(['kiem_quang', 'bach_luyen_thanh_khi'])).toEqual({ costMultiplier: 3 })
   })
 })
 
@@ -101,8 +105,8 @@ describe('getter còn hiệu lực với kind v3 được giữ', () => {
   })
 
   it('Ngộ Đạo — kind insight_per_cultivation vẫn hoạt động cho M2 (id về pool M2)', () => {
-    // M1: ngo_dao chưa về pool nhưng definition vẫn trong catalog v4
-    // theo spec §4.3 — getter giữ nguyên hành vi 2000.
+    // M1: ngo_dao chua ve pool nhung definition van trong catalog v4
+    // theo spec S4.3 - getter giu nguyen hanh vi 2000.
     expect(getInsightPerCultivation([])).toBeUndefined()
     expect(getInsightPerCultivation(['kiem_quang'])).toBeUndefined()
   })

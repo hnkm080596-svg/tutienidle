@@ -1027,6 +1027,13 @@
     }
   },
   "tribulation": {
+    "entitlement": {
+      "title": "THIÊN PHÚ KIẾP QUẢ",
+      "body": "Lôi kiếp đã vượt — cơ duyên mở ra một lần duy nhất. Chọn MỘT: nhận một thiên phú mới, hoặc đột phá thiên phú đang có lên tầng cao hơn.",
+      "newHeading": "Thiên Phú Mới",
+      "upgradeHeading": "Đột Phá Thiên Phú",
+      "levelArrow": "Tầng {current} → {next}"
+    },
     "stillEquipped": {
       "title": "Độ kiếp cũng là độ thân, không gì có thể giúp được ngươi",
       "subtitle": "Không thể mặc trang bị khi độ kiếp",

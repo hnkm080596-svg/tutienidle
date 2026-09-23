@@ -61,7 +61,7 @@ import type { TemplateRegistry } from './TemplateRegistry'
  * Public access: `gameManager.progressionOps.*` (no GameManager facade).
  */
 
-// M-F-RESPEC (ruling §14) - commit-marker nodes exempt from every respec
+// M-F-RESPEC (ruling S14) - commit-marker nodes exempt from every respec
 // scope: Phap Tu element roots are only ever obtained through the atomic
 // selectSpellPathElement commit (purchaseNode rejects them), so a reset
 // that removed one could never be re-invested - the committed element
@@ -115,12 +115,13 @@ export class GameManagerProgressionOps {
       }
     }
 
-    // Grant by FIRST talent (collectTalentEffects sorts by spec sec.3.2 id):
-    // each combat talent declares 1-2 combat_passive effects. M-QI-05 -
-    // the canonical learn funnel owns insertion (TALENT_PASSIVE_SKILLS
-    // are registered templates; learn()'s structuredClone covers the
+    // M-F-TALENT: every owned talent contributes (multi-ownership +
+    // per-level effects supersede the v4 first-id clamp) - a combat
+    // talent declares 1-2 combat_passive effects. M-QI-05 - the
+    // canonical learn funnel owns insertion (TALENT_PASSIVE_SKILLS are
+    // registered templates; learn()'s structuredClone covers the
     // per-battle passiveModifiers copy the old direct add needed).
-    for (const effect of collectTalentEffects(player.selectedTalentIds)) {
+    for (const effect of collectTalentEffects(player.selectedTalentIds, player.talentLevels)) {
       if (effect.kind === 'combat_passive') {
         this.learnSkill(effect.passiveSkillId, player)
       }
@@ -466,7 +467,7 @@ export class GameManagerProgressionOps {
   }
 
   /**
-   * M-F-RESPEC (ruling §14) - read-only respec projection for the
+   * M-F-RESPEC (ruling S14) - read-only respec projection for the
    * confirm dialog. Phap Tu element roots ride along as preserveIds -
    * the same layer that rejects their public purchase (they commit
    * via selectSpellPathElement only) exempts them from the reset, so a
@@ -480,7 +481,7 @@ export class GameManagerProgressionOps {
   }
 
   /**
-   * M-F-RESPEC (ruling §14) - player-facing FREE Beta respec: revoke
+   * M-F-RESPEC (ruling S14) - player-facing FREE Beta respec: revoke
    * node investment and refund 100% of actually-paid Insight. Out of
    * combat ONLY (same guard as switchRoute). scope.rootId scopes the
    * reset to that subtree root; omitted = the whole NodeTree. Returns

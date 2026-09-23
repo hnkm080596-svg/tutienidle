@@ -1,19 +1,20 @@
 import type { TalentDefinition } from '@/core/talent/Talent'
+import { BREAKTHROUGH_TALENT_POOLS } from './BreakthroughTalentPools'
 
-// Catalog v4 (spec 2026-09-03-talent-catalog-v4-design.md, duyệt
-// 2026-09-03) — mỗi thiên phú là một hướng đạo, một "ngoại lệ của luật
-// chơi" dựng trên buff/trigger engine có sẵn. KHÔNG có talent cộng chỉ
-// số thuần. Roll 9 từ pool này, người chơi chọn đúng 1 — cả đời.
+// Catalog v4 (spec 2026-09-03-talent-catalog-v4-design.md, duyet
+// 2026-09-03) - moi thien phu la mot huong dao, mot "ngoai le cua luat
+// choi" dung tren buff/trigger engine co san. KHONG co talent cong chi
+// so thuan. Roll 9 tu pool nay, nguoi choi chon dung 1 - ca doi.
 //
-// M1 (plan 2026-09-03-talent-catalog-v4-m1-combat): 11 talent chiến đấu
-// (5 công + 5 thủ + Bất Tử Th thể) + Phàm Cốt easter egg. M2 thêm 5 tu
-// luyện. M3 thêm 2 sản xuất (Trận Tâm/Phù Văn vẫn PARKED — chờ rework
-// Trận/Phù nhận trigger/uses).
+// M1 (plan 2026-09-03-talent-catalog-v4-m1-combat): 11 talent chien dau
+// (5 cong + 5 thu + Bat Tu Th the) + Pham Cot easter egg. M2 them 5 tu
+// luyen. M3 them 2 san xuat (Tran Tam/Phu Van van PARKED - cho rework
+// Tran/Phu nhan trigger/uses).
 //
-// Mô tả theo template 3 phần (spec §9): câu hình ảnh / cơ chế bằng số /
-// chi phí đối trọng. Số liệu first-pass — chờ playtest (spec §5).
+// Mo ta theo template 3 phan (spec S9): cau hinh anh / co che bang so /
+// chi phi doi trong. So lieu first-pass - cho playtest (spec S5).
 export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
-  // ==================== CHIẾN ĐẤU — CÔNG (5) ====================
+  // ==================== CHIEN DAU - CONG (5) ====================
   {
     id: 'kiem_quang',
     name: 'Kiếm Quang',
@@ -32,7 +33,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
     tags: ['combat'],
     effects: [
       { kind: 'combat_passive', passiveSkillId: 'talent_passive_pha_giap' },
-      // M2 (spec §4.1 row 2): half the accumulated stacks persist into
+      // M2 (spec S4.1 row 2): half the accumulated stacks persist into
       // the next battle, banked via PlayerData.phaGiapCarryStacks.
       { kind: 'passive_stack_carry', passiveSkillId: 'talent_passive_pha_giap', fraction: 0.5 },
     ],
@@ -64,7 +65,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
     tags: ['combat', 'risk_reward'],
     effects: [{ kind: 'combat_passive', passiveSkillId: 'talent_passive_hap_linh' }],
   },
-  // ==================== CHIẾN ĐẤU — THỦ (5) ====================
+  // ==================== CHIEN DAU - THU (5) ====================
   {
     id: 'thach_giap',
     name: 'Thạch Giáp',
@@ -113,7 +114,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
     tags: ['defense'],
     effects: [{ kind: 'combat_passive', passiveSkillId: 'talent_passive_thu_phat' }],
   },
-  // ==================== CHIẾN ĐẤU — GIỮ TỪ v3 ====================
+  // ==================== CHIEN DAU - GIU TU v3 ====================
   {
     id: 'bat_tu_the',
     name: 'Bất Tử Thể',
@@ -126,13 +127,13 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
       { kind: 'combat_passive', passiveSkillId: 'talent_passive_bat_tu_the' },
     ],
   },
-  // ==================== EASTER EGG (giữ verbatim v3) ====================
+  // ==================== EASTER EGG (giu verbatim v3) ====================
   {
-    // EASTER EGG — description verbatim theo thiết kế của tác giả,
-    // KHÔNG được sửa (cùng convention mô tả item ẩn great_dao_seed trong
-    // data/materials/materials.ts). Effect duy nhất: −75% tốc độ tu luyện
-    // (10/s → 2.5/s). Là một gate của Đại Đạo Trúc Cơ — điều kiện gate do
-    // tác giả thiết kế sau, đọc qua PlayerData.selectedTalentIds chứa
+    // EASTER EGG - description verbatim theo thiet ke cua tac gia,
+    // KHONG duoc sua (cung convention mo ta item an great_dao_seed trong
+    // data/materials/materials.ts). Effect duy nhat: -75% toc do tu luyen
+    // (10/s -> 2.5/s). La mot gate cua dai dao Truc Co - dieu kien gate do
+    // tac gia thiet ke sau, doc qua PlayerData.selectedTalentIds chua
     // 'pham_cot' (xem core/breakthrough/FoundationResolver.ts).
     id: 'pham_cot',
     name: 'Phàm Cốt',
@@ -142,7 +143,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
     tags: ['mechanic', 'risk_reward'],
     effects: [{ kind: 'cultivation_speed', percent: -0.75 }],
   },
-  // ==================== M2 — TU LUYỆN (5, spec §4.3) ====================
+  // ==================== M2 - TU LUYEN (5, spec S4.3) ====================
   {
     id: 'ho_tich_bat_phat',
     name: 'Hậu Tích Bạt Phát',
@@ -191,7 +192,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
     tags: ['resource', 'mechanic'],
     effects: [{ kind: 'insight_per_cultivation', cultivationPerInsight: 2000 }],
   },
-  // ==================== M3 — SẢN XUẤT (2, spec §4.2) ====================
+  // ==================== M3 - SAN XUAT (2, spec S4.2) ====================
   {
     id: 'hoa_hau_thong_than',
     name: 'Hỏa Hầu Thông Thần',
@@ -219,9 +220,9 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
   },
 ]
 
-// PARKED (spec §4.2) — Trận Tâm/Phù Văn cần mở Trận/Phù
-// nhận trigger/uses (hiện là modifier-item tĩnh, xem data/formation/
-// formations.ts + core/talisman/Talisman.ts). weight 0 — không roll.
+// PARKED (spec S4.2) - Tran Tam/Phu Van can mo Tran/Phu
+// nhan trigger/uses (hien la modifier-item tinh, xem data/formation/
+// formations.ts + core/talisman/Talisman.ts). weight 0 - khong roll.
 export const PARKED_TALENTS: TalentDefinition[] = [
   {
     id: 'tran_tam',
@@ -243,15 +244,15 @@ export const PARKED_TALENTS: TalentDefinition[] = [
   },
 ]
 
-// RETIRED v4 (spec §4.4) — 13 id catalog v3 da go khoi catalog hoan
+// RETIRED v4 (spec S4.4) - 13 id catalog v3 da go khoi catalog hoan
 // toan: getTalentDefinition tra undefined -> save cu bo qua an toan
 // (collectTalentEffects doc effect rong, CharacterPanel filter
 // undefined). Khong migration (development phase).
 
-// Phần thưởng Đại Đạo Trúc Cơ (spec dot-pha-loi-kiep §4.4) — KHÔNG thuộc
-// pool roll (chỉ đạt được qua chuyển hóa từ pham_cot khi thắng kiếp
-// Đại Đạo). Effect: đảo dấu hình phạt -75% thành +75% tốc tu luyện;
-// hiệu ứng thêm playtest quyết định (spec §9).
+// Phan thuong Dai Dao Truc Co (spec dot-pha-loi-kiep S4.4) - KHONG thuoc
+// pool roll (chi dat duoc qua chuyen hoa tu pham_cot khi thang kiep
+// Dai Dao). Effect: dao dau hinh phat -75% thanh +75% toc tu luyen;
+// hieu ung them playtest quyet dinh (spec S9).
 export const GREAT_DAO_REWARD_TALENTS: TalentDefinition[] = [
   {
     id: 'pham_nhan_chi_cot',
@@ -264,14 +265,16 @@ export const GREAT_DAO_REWARD_TALENTS: TalentDefinition[] = [
   },
 ]
 
-// BY_ID phủ catalog + PARKED + GREAT_DAO_REWARD. Id retired (§4.4) KHÔNG
-// resolve — save cũ chứa id retired được bỏ qua an toàn tại mọi consumer
-// (collectTalentEffects đọc effect rỗng, UI filter undefined).
+// BY_ID phu catalog + PARKED + GREAT_DAO_REWARD + moi breakthrough pool
+// (M-F-TALENT). Id retired (S4.4) KHONG resolve - save cu chua id
+// retired duoc bo qua an toan tai moi consumer (collectTalentEffects
+// doc effect rong, UI filter undefined).
 const TALENTS_BY_ID = new Map(
   [
     ...CHARACTER_CREATION_TALENTS,
     ...PARKED_TALENTS,
     ...GREAT_DAO_REWARD_TALENTS,
+    ...Object.values(BREAKTHROUGH_TALENT_POOLS).flat(),
   ].map(talent => [talent.id, talent]),
 )
 

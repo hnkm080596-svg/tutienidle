@@ -3,7 +3,7 @@
 // Evidence (probe test, removed): writing an ABSENT optional key (e.g.
 // highestFoundationAchieved) on store.$state does not reflect through the
 // store proxy, while writes on the store do. The interface lives in core
-// (structural, no Pinia import — A6).
+// (structural, no Pinia import - A6).
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from '../../stores/player'
@@ -72,7 +72,7 @@ describe('TribulationOutcomeService — victory parity', () => {
   })
   afterEach(() => vi.useRealTimers())
 
-  it('qi_refining victory is a pure announcement outcome: realm NOT entered, no talent/foundation writes', () => {
+  it('qi_refining victory is a pure announcement outcome + a qi_refining-pool talent entitlement (M-F-TALENT)', () => {
     const gameManager = new GameManager()
     const player = usePlayerStore()
     const service = new TribulationOutcomeService()
@@ -85,6 +85,33 @@ describe('TribulationOutcomeService — victory parity', () => {
     expect(result.standalonePanel).toBe('quan_khi')
     expect(result.announcement.titleKey).toBe('announce.tribulation.quanKhi.title')
     expect(result.announcement.bodyKey).toBe('announce.tribulation.quanKhi.body')
+
+    // M-F-TALENT - the mandatory decision record is written on the same
+    // committed-outcome seam, keyed to the realm being ENTERED. The
+    // offer list is bound at creation: identical cards re-present after
+    // reload (no reroll). UPGRADE is exercisable immediately (pham_cot
+    // carries no levels; a fresh player has none either -> NEW-only).
+    const entitlement = player.pendingTalentEntitlement
+    expect(entitlement).toBeDefined()
+    expect(entitlement!.realmId).toBe('qi_refining')
+    expect(entitlement!.offeredTalentIds).toHaveLength(3)
+    expect(new Set(entitlement!.offeredTalentIds).size).toBe(3)
+  })
+
+  it('a still-pending entitlement is never overwritten by a later victory', () => {
+    const gameManager = new GameManager()
+    const player = usePlayerStore()
+    const service = new TribulationOutcomeService()
+
+    service.resolveVictory(player, gameManager, makeActive('victory', 'qi_refining'))
+    const bound = player.pendingTalentEntitlement
+    expect(bound?.realmId).toBe('qi_refining')
+
+    service.resolveVictory(player, gameManager, makeActive('victory', 'golden_core'))
+
+    // The first record binds - reload/repeat ticks can never rebind a
+    // different offer set onto the pending decision.
+    expect(player.pendingTalentEntitlement).toEqual(bound)
   })
 
   it('foundation_establishment victory: realm/level reset, unequip-all, foundation recorded, talent converted, passives synced', () => {
@@ -106,7 +133,7 @@ describe('TribulationOutcomeService — victory parity', () => {
     player.bodyProgression.meridian.openedIds = MERIDIANS.map((m: { id: string }) => m.id)
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
 
-    // ARCH-002 (M7): startTribulation resolves stats internally — patch
+    // ARCH-002 (M7): startTribulation resolves stats internally - patch
     // the RAW base so the tribulation ghost survives the strikes.
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
     expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
@@ -125,6 +152,14 @@ describe('TribulationOutcomeService — victory parity', () => {
     expect(result.talentConverted).toBe(true)
     expect(player.selectedTalentIds).toContain('pham_nhan_chi_cot')
     expect(player.selectedTalentIds).not.toContain('pham_cot')
+
+    // M-F-TALENT - the foundation breakthrough writes its entitlement on
+    // the same seam; pham_cot conversion stays the explicit special case
+    // (the converted pham_nhan_chi_cot is owned, not offered).
+    const entitlement = player.pendingTalentEntitlement
+    expect(entitlement?.realmId).toBe('foundation_establishment')
+    expect(entitlement?.offeredTalentIds).toHaveLength(3)
+    expect(entitlement?.offeredTalentIds).not.toContain('pham_nhan_chi_cot')
     expect(result.announcement).toEqual({
       titleKey: 'announce.tribulation.foundation.title',
       titleParams: { label: 'ĐẠI ĐẠO' },
@@ -187,6 +222,9 @@ describe('TribulationOutcomeService — defeat parity', () => {
     expect(player.greatDaoOpportunityLost).toBe(true)
     expect(result.greatDaoOpportunityLost).toBe(true)
     expect(player.selectedTalentIds).toContain('pham_cot')
+    // M-F-TALENT - defeat writes NO entitlement: the mandatory
+    // transaction exists only on a breakthrough victory.
+    expect(player.pendingTalentEntitlement).toBeUndefined()
     expect(result.announcement.titleKey).toBe('announce.tribulation.defeatGreatDao.title')
     expect(result.announcement.bodyKey).toBe('announce.tribulation.defeatGreatDao.body')
     expect(resolveAnnouncement(result.announcement).title).toBe('Đại Đạo Đoạn Tuyệt')
