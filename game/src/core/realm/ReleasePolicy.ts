@@ -30,7 +30,11 @@
 // Tag completeness: breakthrough-scoped resources are census'd in
 // src/data/breakthrough/BreakthroughScopedResources.ts; every census id
 // must carry breakthroughRealmId and every tagged record must be in the
-// census (the integrity test asserts both directions).
+// census (the integrity test asserts both directions). M-F-ARTIFACT-DEFER
+// adds the domain-scoped family (domainUnlockRealmId, censused via
+// DOMAIN_SCOPED_MATERIAL_IDS) gated by the domain-unlock composition
+// below - every domain-scoped material's tag must equal the domain's
+// shared unlock declaration (cross-field pin in the same test file).
 import { REALMS } from '../../data/realms/realm'
 import { getRealmIndex } from './realmSystem'
 
@@ -131,5 +135,33 @@ export function isCompanionPullTokenSourceSuppressed(itemId: string): boolean {
   return (
     !isCompanionPullPoolEnabled() &&
     (COMPANION_PULL_TOKEN_MATERIAL_IDS as readonly string[]).includes(itemId)
+  )
+}
+
+/**
+ * Whether acquisition scoped to a DOMAIN's unlock realm is live for
+ * this player - M-F-ARTIFACT-DEFER's canonical delivery rule for
+ * domain-scoped resources (doan_bao_thach today). Composes the SAME
+ * three legs as the domain predicates (C2C-9 simple rule):
+ * `isRealmAvailable(unlockRealmId) && isRealmAvailable(playerRealmId)
+ * && reached(unlockRealmId)`. A below-unlock player gets NOTHING once
+ * the window opens - delivery requires reaching the unlock realm, not
+ * merely its release. Untagged resources (undefined) are never
+ * suppressed; unknown realm ids fail closed via getRealmIndex.
+ * ReleasePolicy owns this so no call site re-derives the composition.
+ */
+export function isDomainScopedAcquisitionEnabled(
+  domainUnlockRealmId?: string,
+  playerRealmId?: string,
+): boolean {
+  if (domainUnlockRealmId === undefined) {
+    return true
+  }
+
+  return (
+    isRealmAvailable(domainUnlockRealmId) &&
+    playerRealmId !== undefined &&
+    isRealmAvailable(playerRealmId) &&
+    getRealmIndex(playerRealmId) >= getRealmIndex(domainUnlockRealmId)
   )
 }

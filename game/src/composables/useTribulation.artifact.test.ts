@@ -39,7 +39,7 @@ describe('useTribulation resolveVictory — Bản Mệnh Pháp Bảo thức tỉ
     setActivePinia(createPinia())
   })
 
-  it('Pháp Tu thắng Độ Kiếp Trúc Cơ -> nhận đúng 1 Ngũ Hành Châu tầng 1/EXP 0/Phàm phẩm', () => {
+  it('Pháp Tu thắng Độ Kiếp Trúc Cơ -> KHÔNG nhận artifact nào (deferred to Kim Dan, M-F-ARTIFACT-DEFER)', () => {
     const gameManager = new GameManager()
     const player = usePlayerStore()
     player.cultivationPath = 'spell'
@@ -50,7 +50,7 @@ describe('useTribulation resolveVictory — Bản Mệnh Pháp Bảo thức tỉ
     checkTribulationOutcomeAction(player, gameManager)
 
     expect(player.realmId).toBe('foundation_establishment')
-    expect(player.artifact).toEqual(createDefaultArtifactProgress('ngu_hanh_chau'))
+    expect(player.artifact).toBeUndefined()
   })
 
   it('Kiếm Tu thắng Độ Kiếp Trúc Cơ -> KHÔNG nhận artifact nào (chưa có definition)', () => {

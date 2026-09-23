@@ -92,7 +92,7 @@ describe('way definitions — authored content carried over from kits', () => {
     expect(way?.offerGate).toEqual({ requiresSkillLevel: { skillId: 'tram', level: 3 } })
   })
 
-  it('spell spell_pathway carries the base kit stats and the foundation_establishment reward', () => {
+  it('spell spell_pathway carries the base kit stats and the deferred golden_core artifact reward', () => {
     const way = CULTIVATION_PATH_MODULES.spell.ways.spell_pathway
 
     expect(way?.techniqueId).toBe('five_elements_art')
@@ -102,11 +102,15 @@ describe('way definitions — authored content carried over from kits', () => {
       'phap_tu_ho_the',
     ])
     // P7-M2/M3 - the way's own record composes over the canonical
-    // ladder: artifact merges in, the canonical passive stands (the
-    // Truc Co technique swap folded into five_elements_art.gradeEffects[2]).
+    // ladder: Truc Co stays passive-only (the technique swap folded
+    // into five_elements_art.gradeEffects[2]); M-F-ARTIFACT-DEFER keys
+    // the artifact record on the shared unlock declaration (Kim Dan).
     expect(way?.realmRewards?.foundation_establishment).toEqual({
-      artifactId: 'ngu_hanh_chau',
       passiveSkillId: 'passive_truc_co_y_chi',
+    })
+    expect(way?.realmRewards?.golden_core).toEqual({
+      artifactId: 'ngu_hanh_chau',
+      passiveSkillId: 'passive_kim_dan_chi_quang',
     })
   })
 

@@ -5,6 +5,7 @@ import {
   isBreakthroughAcquisitionEnabled,
   isCompanionPullPoolEnabled,
   isCompanionPullTokenSourceSuppressed,
+  isDomainScopedAcquisitionEnabled,
   isRealmAvailable,
   isRealmTransitionEnabled,
   progressionCeilingRealmId,
@@ -19,8 +20,11 @@ import {
   isArtifactDomainUnlocked,
   normalizeArtifactProgress,
   createDefaultArtifactProgress,
+  ARTIFACT_UNLOCK_REALM_ID,
 } from '../artifact/ArtifactProgression'
 import { grantCultivationPathRealmReward } from '../player/CultivationPathSystem'
+import { CULTIVATION_PATH_MODULES } from '../player/CultivationPathKit'
+import { NGU_HANH_CHAU_DEFINITION } from '../../data/artifact/NguHanhChau'
 import { TribulationDirector } from '../tribulation/TribulationDirector'
 import { GameManager } from '../game/GameManager'
 import {
@@ -33,6 +37,7 @@ import {
   BREAKTHROUGH_SCOPED_MATERIAL_IDS,
   BREAKTHROUGH_SCOPED_PILL_IDS,
   BREAKTHROUGH_SCOPED_RECIPE_IDS,
+  DOMAIN_SCOPED_MATERIAL_IDS,
   TRUC_CO_DAN_PILL_ID,
 } from '../../data/breakthrough/BreakthroughScopedResources'
 import {
@@ -255,7 +260,12 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
     expect(isFormationUnlocked('golden_core')).toBe(false)
 
     expect(isArtifactDomainUnlocked('qi_refining')).toBe(false)
-    expect(isArtifactDomainUnlocked('foundation_establishment')).toBe(true)
+    // M-F-ARTIFACT-DEFER: the domain is deferred to golden_core - under
+    // the real window (ceiling Truc Co) the unlock realm itself is
+    // unavailable, so EVERY realm reports locked here; the open-window
+    // positive lives in ReleasePolicy.artifactDeferred.test.ts (mocked).
+    expect(ARTIFACT_UNLOCK_REALM_ID).toBe('golden_core')
+    expect(isArtifactDomainUnlocked('foundation_establishment')).toBe(false)
     expect(isArtifactDomainUnlocked('golden_core')).toBe(false)
   })
 
@@ -264,9 +274,20 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
     normalizeArtifactProgress(notAwakened)
     expect(notAwakened.artifact).toBeUndefined()
 
-    const awakened = spellPlayer('foundation_establishment')
-    normalizeArtifactProgress(awakened)
-    expect(awakened.artifact?.artifactId).toBe('ngu_hanh_chau')
+    // M-F-ARTIFACT-DEFER: Truc Co no longer awakens - the domain is
+    // deferred to Kim Dan+, so a TC save missing the state stays empty.
+    const atCeiling = spellPlayer('foundation_establishment')
+    normalizeArtifactProgress(atCeiling)
+    expect(atCeiling.artifact).toBeUndefined()
+
+    // A persisted TC artifact (pre-deferral dev save) survives dormant -
+    // the id-match is kept untouched; access is gated elsewhere.
+    const dormant = spellPlayer('foundation_establishment')
+    dormant.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
+    dormant.artifact.experience = 9
+    normalizeArtifactProgress(dormant)
+    expect(dormant.artifact?.artifactId).toBe('ngu_hanh_chau')
+    expect(dormant.artifact?.experience).toBe(9)
 
     // C2C-12 boundary: a beyond-ceiling save does NOT awaken (the gate
     // hides the domain), but restore never destroys ownership - a
@@ -293,6 +314,15 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
     expect(persisted.artifact?.experience).toBe(7)
   })
 
+  it('normalizeArtifactProgress clears a mismatched persisted artifact and never re-creates it below the unlock realm', () => {
+    // M-F-ARTIFACT-DEFER: a mismatched artifactId is dropped as before,
+    // but the domain gate no longer re-awakens at Truc Co.
+    const mismatched = spellPlayer('foundation_establishment')
+    mismatched.artifact = { ...createDefaultArtifactProgress('ngu_hanh_chau'), artifactId: 'other' as never }
+    normalizeArtifactProgress(mismatched)
+    expect(mismatched.artifact).toBeUndefined()
+  })
+
   it('grantCultivationPathRealmReward: authored rewards for unreleased realms stay dormant', () => {
     // spell_pathway composes the canonical ladder - every canonical realm
     // (incl. golden_core+) already carries a passiveSkillId record, so a
@@ -300,15 +330,19 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
     const player = spellPlayer('golden_core')
     expect(grantCultivationPathRealmReward(player, 'golden_core')).toBe(false)
 
+    // M-F-ARTIFACT-DEFER: the artifactId record moved to golden_core -
+    // the Truc Co record is passive-only, so the grant reports true but
+    // delivers NO artifact.
     const atCeiling = spellPlayer('foundation_establishment')
     expect(grantCultivationPathRealmReward(atCeiling, 'foundation_establishment')).toBe(true)
-    expect(atCeiling.artifact?.artifactId).toBe('ngu_hanh_chau')
+    expect(atCeiling.artifact).toBeUndefined()
   })
 
   it('phap_bao wheel slot reads the artifact domain predicate, not raw realm presence', () => {
     const slot = COMMAND_WHEEL_SLOTS.find((entry) => entry.id === 'phap_bao')
     const context = (overrides: Partial<CommandWheelDisabledContext>) => ({
       artifactDomainUnlocked: false,
+      artifactUnlockRealmAvailable: false,
       hasArtifactDefinition: true,
       companionDomainUnlocked: false,
       formationUnlocked: false,
@@ -316,15 +350,24 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
       ...overrides,
     })
 
-    // Below-TC save: progression lock message.
-    expect(slot?.disabledReason?.(context({}))).toBe('Cần đạt Trúc Cơ')
+    // M-F-ARTIFACT-DEFER: while the unlock realm (Kim Dan) sits outside
+    // the release window, EVERY below-unlock realm reads as release-hidden
+    // - including a TC save (the old "requires Truc Co" lock is gone).
+    expect(slot?.disabledReason?.(context({}))).toBe('Chưa mở trong bản hiện tại')
 
-    // C2C-12: a beyond-ceiling save gets the release-hidden reason, not
-    // the "requires Truc Co" progression lock (the unlock realm is
-    // already passed - the domain is unavailable in this build).
+    // C2C-12: a beyond-ceiling save gets the release-hidden reason as
+    // before (the save's own realm is unavailable in this build).
     expect(
       slot?.disabledReason?.(context({ realmReleaseUnavailable: true })),
     ).toBe('Chưa mở trong bản hiện tại')
+
+    // The deferred-window arm (unlock realm authored+available but the
+    // player has not reached it) reads the progression lock for Kim Dan -
+    // exercised live by the mocked-open boundary file; pinned here at the
+    // context level.
+    expect(
+      slot?.disabledReason?.(context({ artifactUnlockRealmAvailable: true })),
+    ).toBe('Cần đạt Kim Đan')
 
     expect(
       slot?.disabledReason?.(context({ artifactDomainUnlocked: true })),
@@ -379,10 +422,13 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
     expect(pillBag.add).not.toHaveBeenCalled()
   })
 
-  it('artifact EXP feed stops for a beyond-ceiling save but the persisted artifact survives', () => {
-    // C2C-12 boundary: domain ACCESS is disabled (no EXP), ownership is
-    // not destroyed. The player realm is set on the session player, not
-    // the enemy - the enemy realm only scales reward magnitude.
+  it('artifact EXP feed stays off at every realm while the domain is deferred, but persisted artifacts survive', () => {
+    // M-F-ARTIFACT-DEFER + C2C-12 boundary: domain ACCESS is disabled
+    // (no EXP) for EVERY realm under the real window - the unlock realm
+    // is beyond the ceiling - while ownership is never destroyed. The
+    // open-window EXP positive lives in ReleasePolicy.artifactDeferred.
+    // The player realm is set on the session player, not the enemy -
+    // the enemy realm only scales reward magnitude.
     const atCeiling = createLootTestSetup({
       realmId: 'mortal',
       rewards: { techniqueMastery: 100, spiritStone: 0 },
@@ -390,7 +436,8 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
     atCeiling.player.realmId = 'foundation_establishment'
     atCeiling.player.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
     atCeiling.killEnemy()
-    expect(atCeiling.player.artifact.experience).toBeGreaterThan(0)
+    expect(atCeiling.player.artifact.experience).toBe(0)
+    expect(atCeiling.player.artifact.artifactId).toBe('ngu_hanh_chau')
 
     const beyondCeiling = createLootTestSetup({
       realmId: 'mortal',
@@ -729,5 +776,101 @@ describe('ReleasePolicy - pull-token census integrity (M-F-COMPANION-GIFT)', () 
     ).toBe(true)
     expect(materialBag.getAmount(COMPANION_PULL_TOKEN_ID)).toBe(0)
     expect(materialBag.getAmount('untagged_mat')).toBe(1)
+  })
+})
+
+describe('isDomainScopedAcquisitionEnabled (M-F-ARTIFACT-DEFER)', () => {
+  // The canonical domain-scoped delivery rule composes the SAME three
+  // legs as isArtifactDomainUnlocked: the unlock realm must be authored
+  // and release-available, the player realm must be release-available,
+  // and the player must have reached the unlock realm.
+  it('undefined tag -> ordinary delivery unchanged', () => {
+    expect(isDomainScopedAcquisitionEnabled(undefined, 'mortal')).toBe(true)
+    expect(isDomainScopedAcquisitionEnabled(undefined, 'foundation_establishment')).toBe(true)
+    expect(isDomainScopedAcquisitionEnabled(undefined, 'golden_core')).toBe(true)
+  })
+
+  it('valid tag + player below the unlock realm -> false even when the unlock realm is unavailable', () => {
+    // Under the real window golden_core is unreleased - the predicate is
+    // already false on the window leg, and must STAY false for a
+    // below-unlock player under any window (boundary file pins the
+    // open-window reach leg).
+    expect(isDomainScopedAcquisitionEnabled('golden_core', 'foundation_establishment')).toBe(false)
+    expect(isDomainScopedAcquisitionEnabled('golden_core', 'mortal')).toBe(false)
+  })
+
+  it('valid tag + player at the unlock realm but realm unreleased -> false', () => {
+    // Player realm itself is beyond the ceiling: window leg fails.
+    expect(isDomainScopedAcquisitionEnabled('golden_core', 'golden_core')).toBe(false)
+  })
+
+  it('valid tag inside the window + player reached -> true (the generic positive leg)', () => {
+    // The predicate is generic - a domain that IS released delivers once
+    // the player reaches its unlock realm. golden_core can never satisfy
+    // this under the real window, so pin the positive leg on an
+    // in-window tag (the boundary file pins it for golden_core mocked).
+    expect(isDomainScopedAcquisitionEnabled('qi_refining', 'qi_refining')).toBe(true)
+    expect(isDomainScopedAcquisitionEnabled('foundation_establishment', 'foundation_establishment')).toBe(true)
+    // Reach leg under the real window: in-window tag, below-unlock player.
+    expect(isDomainScopedAcquisitionEnabled('foundation_establishment', 'qi_refining')).toBe(false)
+  })
+
+  it('unknown realm ids fail closed', () => {
+    expect(isDomainScopedAcquisitionEnabled('not_a_realm', 'golden_core')).toBe(false)
+    expect(isDomainScopedAcquisitionEnabled('golden_core', 'not_a_realm')).toBe(false)
+  })
+})
+
+describe('artifact-domain authoring integrity (M-F-ARTIFACT-DEFER)', () => {
+  it('the unique artifact-bearing realmReward record is keyed by ARTIFACT_UNLOCK_REALM_ID', () => {
+    // Ways carrying NO artifact record are fine (hidden way, Kiem Tu/
+    // The Tu); the pin is the RELATION - exactly one artifact grant
+    // exists across all ways and its realm key is the shared constant,
+    // never a literal.
+    const artifactRealms: string[] = []
+    for (const module of Object.values(CULTIVATION_PATH_MODULES)) {
+      for (const way of Object.values(module.ways)) {
+        for (const [realmId, reward] of Object.entries(way.realmRewards ?? {})) {
+          if (reward.artifactId !== undefined) {
+            artifactRealms.push(`${way.id}:${realmId}`)
+          }
+        }
+      }
+    }
+    expect(artifactRealms).toEqual([`spell_pathway:${ARTIFACT_UNLOCK_REALM_ID}`])
+  })
+
+  it('every DOMAIN_SCOPED_MATERIAL_IDS entry is declared, exists, and tags ARTIFACT_UNLOCK_REALM_ID', () => {
+    const materialById = new Map(materials.map((m) => [m.id, m]))
+    for (const materialId of DOMAIN_SCOPED_MATERIAL_IDS) {
+      const material = materialById.get(materialId)
+      expect(material, `domain-scoped material '${materialId}' is not authored`).toBeDefined()
+      expect(
+        material!.domainUnlockRealmId,
+        `material '${materialId}' must tag the shared artifact-domain unlock constant`,
+      ).toBe(ARTIFACT_UNLOCK_REALM_ID)
+    }
+  })
+
+  it('every material carrying domainUnlockRealmId is declared in the census (no stray tags)', () => {
+    const census = new Set<string>(DOMAIN_SCOPED_MATERIAL_IDS)
+    for (const material of materials) {
+      if (material.domainUnlockRealmId !== undefined) {
+        expect(
+          census.has(material.id),
+          `material '${material.id}' carries domainUnlockRealmId but is not in DOMAIN_SCOPED_MATERIAL_IDS`,
+        ).toBe(true)
+      }
+    }
+  })
+
+  it('the authored stone tag is the shared constant, not a literal', () => {
+    expect(
+      materials.find((m) => m.id === 'doan_bao_thach')?.domainUnlockRealmId,
+    ).toBe(ARTIFACT_UNLOCK_REALM_ID)
+  })
+
+  it('NguHanhChau.unlockRealmId is the shared constant', () => {
+    expect(NGU_HANH_CHAU_DEFINITION.unlockRealmId).toBe(ARTIFACT_UNLOCK_REALM_ID)
   })
 })

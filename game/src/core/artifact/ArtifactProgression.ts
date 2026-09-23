@@ -10,6 +10,7 @@ import type { PlayerData } from '../player/Player'
 import { getRealmIndex } from '../realm/realmSystem'
 import { isRealmAvailable } from '../realm/ReleasePolicy'
 import type { MaterialBag } from '../material/MaterialBag'
+import { ARTIFACT_UNLOCK_REALM_ID } from './ArtifactDomain'
 
 export const DOAN_BAO_THACH_MATERIAL_ID = 'doan_bao_thach'
 
@@ -77,6 +78,10 @@ export function getArtifactExperienceReward(enemy: Pick<Enemy, 'rewards' | 'isEl
   return base
 }
 
+// M-F-ARTIFACT-DEFER: realmId here is the artifact's OWN progression
+// band (the TC ladder design), NOT the player's unlock realm - the
+// awakened record always starts on the authored TC band even though
+// the domain defers to Kim Dan+.
 export function createDefaultArtifactProgress(artifactId: ArtifactId): ArtifactProgress {
   return {
     artifactId,
@@ -159,9 +164,13 @@ export function advanceArtifactRealmLevel(progress: ArtifactProgress, playerReal
 // policy the same way CompanionAvailability/FormationPlacement compose
 // theirs (C2C-9 simple rule): NO grandfathering beyond the ceiling - a
 // persisted save whose realm is unavailable hides the domain even though
-// ARTIFACT_UNLOCK_REALM_ID sits in-window. M-F-ARTIFACT-DEFER moves the
-// constant to the artifact's deferred realm; no site re-derives the gate.
-export const ARTIFACT_UNLOCK_REALM_ID = 'foundation_establishment'
+// ARTIFACT_UNLOCK_REALM_ID sits in-window. M-F-ARTIFACT-DEFER (Ruling
+// sections 2/52): the domain defers to Kim Dan+ - the constant itself lives in
+// the leaf module ./ArtifactDomain (re-exported here so consumers keep
+// this import site); the deferral note and the cycle rationale sit there.
+// Under real policy the predicate is false for every realm; the
+// open-window positive lives in ReleasePolicy.artifactDeferred.test.ts.
+export { ARTIFACT_UNLOCK_REALM_ID } from './ArtifactDomain'
 
 export function isArtifactDomainUnlocked(realmId: string): boolean {
   return (
@@ -172,18 +181,20 @@ export function isArtifactDomainUnlocked(realmId: string): boolean {
 }
 
 /**
- * Normalize invariant (doc §10.2) — gọi trong restoreFromSave() SAU
- * Object.assign() blind-copy. Không throw: mọi state sai đều tự sửa
- * về giá trị hợp lệ gần nhất, không crash boot.
+ * Normalize invariant (doc S10.2) - called inside restoreFromSave()
+ * AFTER the Object.assign() blind-copy. Never throws: every invalid
+ * state self-heals to the nearest valid value, no boot crash.
  *
- * - `artifactId` phải khớp nghề hiện tại; sai thì bỏ (và tái thức
- *   tỉnh nếu đủ gate).
- * - Nghề chưa có definition (Kiếm Tu/Thể Tu, hoặc chưa chọn nghề) ->
- *   luôn `undefined`, không giữ state cũ nào.
- * - Đã đủ Trúc Cơ nhưng thiếu state -> tạo default (thức tỉnh lúc boot).
- * - Grade/path sai enum -> fallback 'pham'/undefined.
- * - Realm/tầng không vượt player; EXP hữu hạn, không âm, không vượt
- *   requirement kế (dùng getRealmIndex, KHÔNG string-compare).
+ * - `artifactId` must match the current path; on mismatch it is
+ *   dropped (and re-awakened when the gate is met).
+ * - Paths with no definition (Kiem Tu/The Tu, or none chosen) always
+ *   end `undefined`; no stale state is kept.
+ * - Gate met (Kim Dan+, M-F-ARTIFACT-DEFER) but state missing ->
+ *   create default (awaken at boot).
+ * - Grade/path off-enum -> fallback 'pham'/undefined.
+ * - Realm/tier never exceeds the player; EXP is finite, non-negative,
+ *   capped at the next requirement (getRealmIndex compare, never a
+ *   raw string compare).
  */
 export function normalizeArtifactProgress(player: PlayerData): void {
   const expectedArtifactId = resolveExpectedArtifactId(player)

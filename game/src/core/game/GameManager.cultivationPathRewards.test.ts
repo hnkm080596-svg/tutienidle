@@ -5,7 +5,7 @@ import { TECHNIQUES } from '../../data/technique/Techniques'
 import { GameManager } from './GameManager'
 
 describe('GameManager — cultivation path realm rewards', () => {
-  it('cấp trọn kit Trúc Cơ Pháp Tu từ data và gọi lại không ghi đè tiến trình đã nhận', () => {
+  it('kit Trúc Cơ Pháp Tu từ data: artifact deferred Kim Đan, gọi lại không đụng tiến trình cũ', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
 
@@ -18,16 +18,22 @@ describe('GameManager — cultivation path realm rewards', () => {
 
     player.realmId = 'foundation_establishment'
 
-    // P7-M3 - the Truc Co record grants the artifact only; the old
+    // P7-M3 - the Truc Co record used to grant the artifact; the old
     // technique swap folded into five_elements_art.gradeEffects[2]
     // (grade-advance transaction), so the holder keeps the SAME
     // canonical technique and its progression state.
+    // M-F-ARTIFACT-DEFER: the artifactId record moved to golden_core -
+    // the TC record is passive-only now, so the grant reports true but
+    // delivers NO artifact.
     expect(gameManager.realmAdvanceOps.grantCultivationPathRealmReward(player, player.realmId)).toBe(true)
     expect(gameManager.techniqueManager.getActive()?.id).toBe('five_elements_art')
     expect(gameManager.techniqueManager.getActive()?.mastery).toBe(42)
-    expect(player.artifact).toEqual(createDefaultArtifactProgress('ngu_hanh_chau'))
+    expect(player.artifact).toBeUndefined()
 
-    player.artifact!.experience = 99
+    // A persisted dormant artifact (pre-deferral dev save) is never
+    // disturbed by a repeated grant call.
+    player.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
+    player.artifact.experience = 99
 
     expect(gameManager.realmAdvanceOps.grantCultivationPathRealmReward(player, player.realmId)).toBe(true)
     expect(player.artifact!.experience).toBe(99)

@@ -63,6 +63,15 @@ export interface LootTestSetupOptions {
   stage?: LootTestStage
   /** Material ids registered into a real MaterialRegistry. */
   materialIds?: string[]
+  /** Tagged material records (M-F-ARTIFACT-DEFER) - carries
+   *  domainUnlockRealmId/breakthroughRealmId explicitly so the
+   *  fabricated registry matches the authored tag. */
+  materialTemplates?: {
+    id: string
+    name?: string
+    domainUnlockRealmId?: string
+    breakthroughRealmId?: string
+  }[]
   equipmentTemplates?: { id: string; name: string }[]
   pillTemplates?: { id: string; name: string; grade: string; icon?: string; breakthroughRealmId?: string }[]
 }
@@ -76,6 +85,17 @@ export function createLootTestSetup(options: LootTestSetupOptions = {}) {
       category: 'other',
       sourceType: 'monster',
       description: 'test fixture',
+    })
+  }
+  for (const template of options.materialTemplates ?? []) {
+    materialRegistry.register({
+      id: template.id,
+      name: template.name ?? template.id,
+      category: 'other',
+      sourceType: 'monster',
+      description: 'test fixture',
+      domainUnlockRealmId: template.domainUnlockRealmId,
+      breakthroughRealmId: template.breakthroughRealmId,
     })
   }
   const materialBag = new MaterialBag()

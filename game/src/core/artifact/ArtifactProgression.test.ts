@@ -206,7 +206,9 @@ describe('normalizeArtifactProgress (doc §10.2)', () => {
     expect(player.artifact).toBeUndefined()
   })
 
-  it('Pháp Tu đã Trúc Cơ nhưng thiếu state -> tự tạo default lúc boot', () => {
+  // M-F-ARTIFACT-DEFER: artifact domain is deferred to Kim Dan+ - a
+  // Truc Co save missing the state stays empty (no TC awakening).
+  it('Pháp Tu đã Trúc Cơ nhưng thiếu state -> vẫn trống (domain deferred Kim Đan)', () => {
     const player = createDefaultPlayer()
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
@@ -215,10 +217,10 @@ describe('normalizeArtifactProgress (doc §10.2)', () => {
 
     normalizeArtifactProgress(player)
 
-    expect(player.artifact).toEqual(createDefaultArtifactProgress('ngu_hanh_chau'))
+    expect(player.artifact).toBeUndefined()
   })
 
-  it('Pháp Tu chưa tới Trúc Cơ thì không tạo state dù thiếu', () => {
+  it('Pháp Tu chưa tới Kim Đan thì không tạo state dù thiếu', () => {
     const player = createDefaultPlayer()
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
@@ -229,7 +231,9 @@ describe('normalizeArtifactProgress (doc §10.2)', () => {
     expect(player.artifact).toBeUndefined()
   })
 
-  it('artifactId lệch cultivationPath -> bỏ và tái thức tỉnh nếu đủ gate', () => {
+  // M-F-ARTIFACT-DEFER: the mismatch is still dropped, but the domain
+  // gate no longer re-awakens at Truc Co.
+  it('artifactId lệch cultivationPath -> bỏ, không tái thức tỉnh (domain deferred Kim Đan)', () => {
     const player = createDefaultPlayer()
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
@@ -238,7 +242,7 @@ describe('normalizeArtifactProgress (doc §10.2)', () => {
 
     normalizeArtifactProgress(player)
 
-    expect(player.artifact).toEqual(createDefaultArtifactProgress('ngu_hanh_chau'))
+    expect(player.artifact).toBeUndefined()
   })
 
   it('grade/path sai enum -> fallback pham/undefined, không mất realm/level/exp hợp lệ', () => {
