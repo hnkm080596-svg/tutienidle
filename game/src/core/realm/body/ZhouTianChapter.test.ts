@@ -170,6 +170,9 @@ describe('ZhouTianChapter - persisted + integrity validation', () => {
       .toEqual(['player.bodyProgression.zhou_tian.circulation'])
     expect(collectIssues({ circulation: -1 }).map(i => i.path))
       .toEqual(['player.bodyProgression.zhou_tian.circulation'])
+    // C2C-79 - fractional circulation rejects at this layer too.
+    expect(collectIssues({ circulation: 1.5 }).map(i => i.path))
+      .toEqual(['player.bodyProgression.zhou_tian.circulation'])
     expect(collectIssues({ circulation: 42 })).toEqual([])
   })
 

@@ -129,6 +129,16 @@ export const zhouTianChapter: BaseStatBodyChapter = {
         path: `${basePath}.circulation`,
         message: 'circulation phai la so khong am',
       })
+      return
+    }
+
+    // C2C-79 - integer rejection also lives at this layer (integrity
+    // already fails closed later; the spec assigns it here too).
+    if (!Number.isInteger(slice.circulation)) {
+      emit({
+        path: `${basePath}.circulation`,
+        message: 'circulation phai la so nguyen',
+      })
     }
   },
 

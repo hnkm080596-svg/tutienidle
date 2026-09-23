@@ -2237,6 +2237,23 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
     expect(result.ok).toBe(false)
     expect(pathsOf(result)).toContain('player.bodyProgression.zhou_tian')
   })
+
+  // C2C-79 - fractional circulation rejects through the shape layer at
+  // the persisted-state path (integrity would also catch it later).
+  it('từ chối zhou_tian circulation không nguyên tại player.bodyProgression.zhou_tian.circulation', () => {
+    const save = validSave()
+
+    playerOf(save).bodyProgression = {
+      body_refinement: { completedTiers: 0, currentTierProgress: 0 },
+      meridian: { openedIds: [] },
+      zhou_tian: { circulation: 1.5 },
+    }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.bodyProgression.zhou_tian.circulation')
+  })
 })
 
 // P7-M4 (v71) - retired-key rejection lives at this shape layer; the

@@ -23,9 +23,11 @@ economy-and-progression + save-and-cloud + ui-input-lifecycle.
 5. UI mirror: rendered state equals chapter state; invest only active.
 
 ## Hypotheses run
-- Over-capacity crafted circulation (>capacity, <=360): passes
-  integrity (0..360); invest returns 0 (remaining<=0) -> cannot mint,
-  cannot progress. Crafted-only, Low.
+- Over-capacity crafted circulation (>capacity, <=360): rejected at
+  integrity post-C2C-75 (circulation > realm capacity is corrupt);
+  pinned at unit level (TC Lv1 + 21/360, pre-TC + any>0) and through
+  restore preflight with byte-equivalent live state. invest would also
+  return 0 (remaining<=0) — belt and suspenders, no mint path.
 - Essence path: probe->plan->debit guarded `consumed<=0 -> 0`; chapter
   `invest` clamps `min(available, remaining)`, rejects remaining<=0.
 - Direct chapter.invest callers: none — dispatch is the only caller
@@ -38,9 +40,11 @@ economy-and-progression + save-and-cloud + ui-input-lifecycle.
   essence 15->0, button disabled at 0 owned.
 
 ## Findings
-- Low (crafted-only): `integrityIssues` does not bound circulation by
-  the current capacity (<=360 only). Reachable only via a crafted save;
-  invest is a no-op in that state — no progression or currency effect.
+- RESOLVED (C2C-75): `integrityIssues` now bounds circulation by the
+  realm-derived capacity — crafted over-capacity saves reject at
+  preflight; capacity bar renders circulation/current-capacity.
+- RESOLVED (C2C-79): `validatePersistedState` also rejects fractional
+  circulation (integer check at the shape layer + integrity).
 - Low/Nit (UX mirror): `canInvest` counts only the exact Phap stack;
   a player holding zero Phap but substitution-covering higher-grade
   essences sees a disabled button although the dispatch would invest.
