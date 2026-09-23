@@ -20,13 +20,18 @@
 // eligibility/origination (admission gates, authored acquisition routes,
 // realm-entry grants). Persistence restore and deterministic delivery of
 // an already-authorized reward (bag.add, save reload, alchemy job
-// completion) never re-check - stripping owned tagged resources on load
-// would be data loss.
+// completion) never re-check AND never delete: restore normalization
+// preserves persisted ownership (e.g. normalizeArtifactProgress keeps a
+// matching artifact even when its domain is release-hidden) - stripping
+// owned state on load would be data loss. Access is disabled at the
+// domain/progression seam (isArtifactDomainUnlocked gates the wheel slot
+// and artifact EXP feed), never by mutating the save.
 //
 // Tag completeness: breakthrough-scoped resources are census'd in
 // src/data/breakthrough/BreakthroughScopedResources.ts; every census id
 // must carry breakthroughRealmId and every tagged record must be in the
 // census (the integrity test asserts both directions).
+import { REALMS } from '../../data/realms/realm'
 import { getRealmIndex } from './realmSystem'
 
 /** Highest realm a player may occupy in this release. Beta: Truc Co. */
@@ -58,14 +63,16 @@ export function isBeyondReleaseCeiling(realmId: string): boolean {
 
 /**
  * Whether the transition fromRealmId -> toRealmId may be attempted.
- * Only forward transitions into an available realm are enabled, so the
- * TC -> KD tribulation stays closed while its target realm data remains
- * authored. Unknown endpoints fail closed.
+ * ADJACENT-ONLY funnel contract (C2C-12): the target must be exactly the
+ * next realm AND available, so the TC -> KD tribulation stays closed
+ * while its target realm data remains authored, and malformed skip
+ * transitions (mortal -> Truc Co) are rejected at the single funnel
+ * instead of being admitted. Unknown endpoints fail closed.
  */
 export function isRealmTransitionEnabled(fromRealmId: string, toRealmId: string): boolean {
   return (
     getRealmIndex(fromRealmId) !== -1 &&
-    getRealmIndex(toRealmId) > getRealmIndex(fromRealmId) &&
+    getRealmIndex(toRealmId) === getRealmIndex(fromRealmId) + 1 &&
     isRealmAvailable(toRealmId)
   )
 }
@@ -73,10 +80,24 @@ export function isRealmTransitionEnabled(fromRealmId: string, toRealmId: string)
 /**
  * Whether acquisition scoped to the breakthrough INTO `targetRealmId`
  * is live - e.g. KD breakthrough-specific resources stay suppressed
- * while the TC -> KD transition is closed. Resources carrying no
- * breakthroughRealmId tag are not breakthrough-scoped and are never
- * suppressed (undefined -> true).
+ * while the TC -> KD transition is closed. Derived from the CANONICAL
+ * predecessor -> target transition so the resource gate can never drift
+ * from the tribulation gate (C2C-12): with adjacency pinned on
+ * isRealmTransitionEnabled this is provably equivalent to
+ * isRealmAvailable(targetRealmId) for any authored target, but binding
+ * it to the transition keeps the two gates structurally identical.
+ * A realm with no predecessor (index 0) has no breakthrough INTO it, so
+ * the gate degrades to availability; unknown ids fail closed the same
+ * way. Resources carrying no breakthroughRealmId tag are not
+ * breakthrough-scoped and are never suppressed (undefined -> true).
  */
 export function isBreakthroughAcquisitionEnabled(targetRealmId?: string): boolean {
-  return targetRealmId === undefined || isRealmAvailable(targetRealmId)
+  if (targetRealmId === undefined) {
+    return true
+  }
+
+  const predecessorId = REALMS[getRealmIndex(targetRealmId) - 1]?.id
+  return predecessorId === undefined
+    ? isRealmAvailable(targetRealmId)
+    : isRealmTransitionEnabled(predecessorId, targetRealmId)
 }

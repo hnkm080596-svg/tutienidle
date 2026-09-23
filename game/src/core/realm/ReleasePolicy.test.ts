@@ -11,6 +11,7 @@ import { isFormationUnlocked } from '../game/FormationPlacement'
 import {
   isArtifactDomainUnlocked,
   normalizeArtifactProgress,
+  createDefaultArtifactProgress,
 } from '../artifact/ArtifactProgression'
 import { grantCultivationPathRealmReward } from '../player/CultivationPathSystem'
 import { TribulationDirector } from '../tribulation/TribulationDirector'
@@ -27,7 +28,10 @@ import {
   BREAKTHROUGH_SCOPED_RECIPE_IDS,
   TRUC_CO_DAN_PILL_ID,
 } from '../../data/breakthrough/BreakthroughScopedResources'
-import { COMMAND_WHEEL_SLOTS } from '../../data/ui/commandWheelCatalog'
+import {
+  COMMAND_WHEEL_SLOTS,
+  type CommandWheelDisabledContext,
+} from '../../data/ui/commandWheelCatalog'
 import { QuestSystem } from '../quest/QuestSystem'
 import { QuestRegistry } from '../quest/QuestRegistry'
 import { QuestManager } from '../quest/QuestManager'
@@ -117,14 +121,18 @@ describe('ReleasePolicy - predicate matrix (Beta ceiling = Truc Co)', () => {
     expect(isBeyondReleaseCeiling('not_a_realm')).toBe(false)
   })
 
-  it('isRealmTransitionEnabled: forward into an available realm only', () => {
+  it('isRealmTransitionEnabled: adjacent forward into an available realm only', () => {
     expect(isRealmTransitionEnabled('mortal', 'qi_refining')).toBe(true)
     expect(isRealmTransitionEnabled('qi_refining', 'foundation_establishment')).toBe(true)
     // The ruled suppression: TC -> KD is closed while data stays authored.
     expect(isRealmTransitionEnabled('foundation_establishment', 'golden_core')).toBe(false)
     expect(isRealmTransitionEnabled('golden_core', 'nascent_soul')).toBe(false)
-    // Skip-ahead / backward / self / unknown endpoints are all rejected.
+    // C2C-12 adjacency: skip-ahead is rejected even when BOTH endpoints
+    // are in-window (mortal -> Truc Co can never be admitted at the
+    // funnel), plus backward / self / unknown endpoints as before.
+    expect(isRealmTransitionEnabled('mortal', 'foundation_establishment')).toBe(false)
     expect(isRealmTransitionEnabled('mortal', 'golden_core')).toBe(false)
+    expect(isRealmTransitionEnabled('qi_refining', 'golden_core')).toBe(false)
     expect(isRealmTransitionEnabled('qi_refining', 'mortal')).toBe(false)
     expect(isRealmTransitionEnabled('mortal', 'mortal')).toBe(false)
     expect(isRealmTransitionEnabled('not_a_realm', 'mortal')).toBe(false)
@@ -138,6 +146,22 @@ describe('ReleasePolicy - predicate matrix (Beta ceiling = Truc Co)', () => {
     expect(isBreakthroughAcquisitionEnabled('not_a_realm')).toBe(false)
     expect(isBreakthroughAcquisitionEnabled(undefined)).toBe(true)
     expect(isBreakthroughAcquisitionEnabled()).toBe(true)
+  })
+
+  it('C2C-12 drift guard: the acquisition gate IS the predecessor->target transition', () => {
+    // For every authored realm with a predecessor, the resource gate
+    // must equal the canonical adjacent transition into it - the two
+    // gates can never drift apart.
+    for (let i = 1; i < REALMS.length; i++) {
+      const target = REALMS[i]!
+      const predecessor = REALMS[i - 1]!
+      expect(
+        isBreakthroughAcquisitionEnabled(target.id),
+        `${predecessor.id} -> ${target.id}`,
+      ).toBe(isRealmTransitionEnabled(predecessor.id, target.id))
+    }
+    // Index-0 (mortal) has no breakthrough INTO it: degrades to availability.
+    expect(isBreakthroughAcquisitionEnabled('mortal')).toBe(isRealmAvailable('mortal'))
   })
 })
 
@@ -228,7 +252,7 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
     expect(isArtifactDomainUnlocked('golden_core')).toBe(false)
   })
 
-  it('normalizeArtifactProgress awakens only through the artifact domain gate', () => {
+  it('normalizeArtifactProgress gates AWAKENING but never strips persisted ownership', () => {
     const notAwakened = spellPlayer('qi_refining')
     normalizeArtifactProgress(notAwakened)
     expect(notAwakened.artifact).toBeUndefined()
@@ -237,11 +261,21 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
     normalizeArtifactProgress(awakened)
     expect(awakened.artifact?.artifactId).toBe('ngu_hanh_chau')
 
-    // C2C-9: a persisted save beyond the ceiling loses the domain state
-    // on normalize - no grandfathered artifact survives the gate.
+    // C2C-12 boundary: a beyond-ceiling save does NOT awaken (the gate
+    // hides the domain), but restore never destroys ownership - a
+    // persisted matching artifact survives normalize untouched while
+    // isArtifactDomainUnlocked stays false for that realm.
     const beyondCeiling = spellPlayer('golden_core')
     normalizeArtifactProgress(beyondCeiling)
     expect(beyondCeiling.artifact).toBeUndefined()
+    expect(isArtifactDomainUnlocked(beyondCeiling.realmId)).toBe(false)
+
+    const persisted = spellPlayer('golden_core')
+    persisted.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
+    persisted.artifact.experience = 7
+    normalizeArtifactProgress(persisted)
+    expect(persisted.artifact?.artifactId).toBe('ngu_hanh_chau')
+    expect(persisted.artifact?.experience).toBe(7)
   })
 
   it('grantCultivationPathRealmReward: authored rewards for unreleased realms stay dormant', () => {
@@ -258,19 +292,28 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
 
   it('phap_bao wheel slot reads the artifact domain predicate, not raw realm presence', () => {
     const slot = COMMAND_WHEEL_SLOTS.find((entry) => entry.id === 'phap_bao')
-    expect(slot?.disabledReason?.({
+    const context = (overrides: Partial<CommandWheelDisabledContext>) => ({
       artifactDomainUnlocked: false,
       hasArtifactDefinition: true,
       companionDomainUnlocked: false,
       formationUnlocked: false,
-    })).toBe('Cần đạt Trúc Cơ')
+      realmReleaseUnavailable: false,
+      ...overrides,
+    })
 
-    expect(slot?.disabledReason?.({
-      artifactDomainUnlocked: true,
-      hasArtifactDefinition: true,
-      companionDomainUnlocked: false,
-      formationUnlocked: false,
-    })).toBeNull()
+    // Below-TC save: progression lock message.
+    expect(slot?.disabledReason?.(context({}))).toBe('Cần đạt Trúc Cơ')
+
+    // C2C-12: a beyond-ceiling save gets the release-hidden reason, not
+    // the "requires Truc Co" progression lock (the unlock realm is
+    // already passed - the domain is unavailable in this build).
+    expect(
+      slot?.disabledReason?.(context({ realmReleaseUnavailable: true })),
+    ).toBe('Chưa mở trong bản hiện tại')
+
+    expect(
+      slot?.disabledReason?.(context({ artifactDomainUnlocked: true })),
+    ).toBeNull()
   })
 
   it('combat drop delivery suppresses breakthrough-scoped material/pill for a closed transition', () => {
@@ -319,6 +362,30 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
     expect(materialBag.getAmount('tc_scoped_mat')).toBe(1)
     expect(materialBag.getAmount('untagged_mat')).toBe(1)
     expect(pillBag.add).not.toHaveBeenCalled()
+  })
+
+  it('artifact EXP feed stops for a beyond-ceiling save but the persisted artifact survives', () => {
+    // C2C-12 boundary: domain ACCESS is disabled (no EXP), ownership is
+    // not destroyed. The player realm is set on the session player, not
+    // the enemy - the enemy realm only scales reward magnitude.
+    const atCeiling = createLootTestSetup({
+      realmId: 'mortal',
+      rewards: { techniqueMastery: 100, spiritStone: 0 },
+    })
+    atCeiling.player.realmId = 'foundation_establishment'
+    atCeiling.player.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
+    atCeiling.killEnemy()
+    expect(atCeiling.player.artifact.experience).toBeGreaterThan(0)
+
+    const beyondCeiling = createLootTestSetup({
+      realmId: 'mortal',
+      rewards: { techniqueMastery: 100, spiritStone: 0 },
+    })
+    beyondCeiling.player.realmId = 'golden_core'
+    beyondCeiling.player.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
+    beyondCeiling.killEnemy()
+    expect(beyondCeiling.player.artifact.experience).toBe(0)
+    expect(beyondCeiling.player.artifact.artifactId).toBe('ngu_hanh_chau')
   })
 
   it('quest itemDrops skip breakthrough-scoped rewards for a closed transition', () => {

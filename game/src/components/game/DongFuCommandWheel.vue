@@ -20,6 +20,7 @@ import { resolveExpectedArtifactId } from '@/core/artifact/Artifact'
 import { isArtifactDomainUnlocked } from '@/core/artifact/ArtifactProgression'
 import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
 import { isFormationUnlocked } from '@/core/game/FormationPlacement'
+import { isRealmAvailable } from '@/core/realm/ReleasePolicy'
 import NotificationBadge from '@/components/common/NotificationBadge.vue'
 
 const ui = useUiStore()
@@ -41,6 +42,9 @@ const disabledContext = computed<CommandWheelDisabledContext>(() => ({
   // the wheel never drifts from ops/commit gates when a threshold moves.
   companionDomainUnlocked: isCompanionDomainUnlocked(player.realmId),
   formationUnlocked: isFormationUnlocked(player.realmId),
+  // M-F-CEILING (C2C-12): distinguishes "locked until Truc Co" from
+  // "hidden by the release ceiling" in the slot tooltips.
+  realmReleaseUnavailable: !isRealmAvailable(player.realmId),
 }))
 
 function disabledReason(slot: CommandWheelSlot): string | null {

@@ -8,7 +8,11 @@ import {
   getInsightGainMultiplier,
   getSpiritStoneGainMultiplier,
 } from '../talent/TalentEffects'
-import { applyArtifactExperience, getArtifactExperienceReward } from '../artifact/ArtifactProgression'
+import {
+  applyArtifactExperience,
+  getArtifactExperienceReward,
+  isArtifactDomainUnlocked,
+} from '../artifact/ArtifactProgression'
 import { applyCompanionExp, companionBattleExpPerKill } from '../companion/CompanionProgression'
 import { resolvePartyFormation } from './FormationPlacement'
 import { resolveDrops, type DropChannel, type ResolvedDropItem } from '../drop/resolveDrops'
@@ -663,7 +667,11 @@ export class BattleLootSystem {
    * trang bị/sở hữu gì khác để nhận, giống skillInsight).
    */
   private grantArtifactExperience(enemy: Enemy) {
-    if (!this.player?.artifact) {
+    // M-F-CEILING (C2C-12): the artifact domain is hidden for a
+    // beyond-ceiling save - EXP feed is domain ACCESS, so it stops here.
+    // The persisted artifact itself is untouched (restore never strips
+    // ownership; see normalizeArtifactProgress).
+    if (!this.player?.artifact || !isArtifactDomainUnlocked(this.player.realmId)) {
       return
     }
 

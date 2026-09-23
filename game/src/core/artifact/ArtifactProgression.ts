@@ -188,6 +188,13 @@ export function isArtifactDomainUnlocked(realmId: string): boolean {
 export function normalizeArtifactProgress(player: PlayerData): void {
   const expectedArtifactId = resolveExpectedArtifactId(player)
 
+  // C2C-12 boundary: the domain gate controls AWAKENING only. A persisted
+  // artifact whose artifactId still matches the path is NEVER removed
+  // because its realm became release-unavailable - the single-check
+  // invariant forbids restore from destroying ownership data. Access is
+  // disabled at the domain seam instead: isArtifactDomainUnlocked gates
+  // the wheel slot, EXP feed (BattleLootSystem.grantArtifactExperience)
+  // and progression UI for a beyond-ceiling save.
   const meetsAwakenGate = isArtifactDomainUnlocked(player.realmId)
 
   if (!expectedArtifactId) {
