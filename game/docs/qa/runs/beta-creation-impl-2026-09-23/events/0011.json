@@ -1,0 +1,13 @@
+{
+  "applied": [
+    "evidence:EV-IMPL-TYPECHECK (updated)",
+    "evidence:EV-IMPL-VITEST (updated)",
+    "evidence:EV-IMPL-E2E (updated)",
+    "evidence:EV-IMPL-ADVERSARIAL (updated)",
+    "evidence:EV-IMPL-FIMPL1-FIX (updated)",
+    "evidence:EV-IMPL-PIN-CONSUME-ONCE (updated)",
+    "review:REV-CLOSURE-FIMPL1 (updated)",
+    "lesson:L-IMPL-1 (updated)",
+    "finding:F-IMPL-1 (updated)"
+  ]
+}

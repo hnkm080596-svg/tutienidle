@@ -1,0 +1,11 @@
+{
+  "applied": [
+    "census:CEN-IMPL-DIFF (updated)",
+    "evidence:EV-IMPL-TYPECHECK (updated)",
+    "evidence:EV-IMPL-VITEST (updated)",
+    "evidence:EV-IMPL-E2E (updated)",
+    "evidence:EV-IMPL-ADVERSARIAL (updated)",
+    "evidence:EV-IMPL-FIMPL1-FIX (updated)",
+    "finding:F-IMPL-1 (updated)"
+  ]
+}

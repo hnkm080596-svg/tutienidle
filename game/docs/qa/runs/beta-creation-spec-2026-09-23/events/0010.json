@@ -1,0 +1,27 @@
+{
+  "applied": [
+    "evidence:EV-SPEC-MUTATION-CORPUS",
+    "mutation:MUT-SPEC-RULING",
+    "mutation:MUT-PLAN-SEAM",
+    "mutation:MUT-CENSUS-ALLOC",
+    "mutation:MUT-CENSUS-PICK",
+    "mutation:MUT-BOOT-SEAM",
+    "mutation:MUT-SAVE-V82",
+    "mutation:MUT-TEST-INV",
+    "evidence:EV-SPEC-RULING-MAP",
+    "evidence:EV-SPEC-PLAN-FEASIBLE",
+    "evidence:EV-SPEC-PERSISTENCE-V82",
+    "coverage:COV-01 (updated)",
+    "coverage:COV-03 (updated)",
+    "coverage:COV-04 (updated)",
+    "coverage:COV-06 (updated)",
+    "coverage:COV-08 (updated)",
+    "coverage:COV-10 (updated)",
+    "coverage:COV-12 (updated)",
+    "coverage:COV-14 (updated)",
+    "coverage:COV-16 (updated)",
+    "coverage:COV-17 (updated)",
+    "coverage:COV-19 (updated)",
+    "coverage:COV-21 (updated)"
+  ]
+}

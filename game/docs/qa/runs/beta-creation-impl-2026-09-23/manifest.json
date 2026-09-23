@@ -13374,13 +13374,13 @@
       "path": "src/App.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "8a2394c900d99c924b62238307f06342fa6b916da5a03cadb89b2b2355843b9a"
+      "hash": "0ace309c621c70f62ce904367c0be22b0985a86783d8b63f53067ee6021d2390"
     },
     {
       "path": "src/App.wiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f78d000a6be0f80a4f09b66635493cd018b4e196ce0c8b9097274a2d45bb533e"
+      "hash": "349f6022df5bd2bff2f9a8a843a807f2e1df29cf184449b6a280fc8844cc5a5d"
     },
     {
       "path": "src/assets/dongFuBackgroundAssets.test.ts",
@@ -22851,5 +22851,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "3bc7ead8733fe5e0c96336dc6c2334afee53318cabe66efd611d41e17d6e4e1f"
+  "productStateId": "9b07bc2fda00d46c4464d6f946a26a6e5d5b8835894ceab36bf8f72e0498f322"
 }
