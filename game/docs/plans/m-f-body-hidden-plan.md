@@ -153,9 +153,10 @@ gates pass.
 6. `services/save` tests (extend `SaveRoundTrip.test.ts`):
    `hiddenBeastKills` map round-trips; `hiddenChannelCycles` inside
    `productionSites` round-trips; malformed map values reject; missing
-   `hiddenBeastKills` rejects; prior-version payload rejected (the test
-   DERIVES the bumped version from the implementation-start base —
-   `CURRENT+1` at write time, never a literal pin); `luyenKhiKillsSinceBeast`
+   `hiddenBeastKills` rejects; prior-version payload rejected (previous
+   = `CURRENT_SAVE_VERSION - 1` — the test derives the old version from
+   the implementation-start constant, never a literal pin);
+   `luyenKhiKillsSinceBeast`
    key in a stale payload is tolerated out (whitelist convention).
 7. `GameManager.stageLease.test.ts` / `HiddenBeastDrops.test.ts` /
    `battleLootTestSetup.ts` — harness updates only:
