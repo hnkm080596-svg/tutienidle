@@ -51,11 +51,10 @@ The technique progression model becomes a **per-grade rank cycle**
   cannot train.
 - **Inheritance scaffold is monotonic and never grants Rank**: the
   grade-up result is a function `computeGradeInheritance(outcome)` of
-  the sealed outgoing record, monotonic nondecreasing in
-  `(finalRank, completionState)`, whose application never raises
-  `rank`/`mastery` above 0 on the new cycle. Authored carry-over values
-  are deferred to a balance pass; the seam and its monotonicity
-  contract land now.
+  the sealed outgoing record, monotonic under the pinned outcome order
+  (§5), whose application never raises `rank`/`mastery` above 0 on the
+  new cycle. Authored carry-over values are deferred to a balance
+  pass; the seam and its monotonicity contract land now.
 - **The breakthrough confirm surface warns when the live cycle would
   freeze unperfected** (projected completionState ≠ vien_man).
 
@@ -82,7 +81,7 @@ gradeHistory: Record<number, TechniqueCycleOutcome>;  // grade -> sealed outcome
 - Record keys are integer grades `>= 1` and `<= technique.grade` (a
   record for a grade above the live grade is corrupt). A record key
   equal to the live grade means that cycle is already frozen and
-  awaiting catch-up.
+  awaiting catch-up. The exact key-set rule is pinned in §8.
 - Sealed records are **immutable**: every seal site is write-if-absent
   and never overwrites an existing record.
 
@@ -161,9 +160,12 @@ resolveTechniqueCompletionState(finalRank, realmLevelAtFreeze):
      way/slot binding) pass through untouched.
   4. Inheritance scaffold: `computeGradeInheritance(outcome)` returns a
      typed `TechniqueGradeInheritance` payload (currently zero-valued —
-     authored coefficients deferred) applied to the new cycle; contract:
-     monotonic nondecreasing in the outgoing record, never grants rank
-     or mastery.
+     authored coefficients deferred) applied to the new cycle. Ordering
+     (pinned): `partial < dai_thanh < vien_man`; outcomes compare
+     componentwise on `(finalRank, completionState)` — a higher
+     finalRank at equal state, or a better state at equal rank, may
+     never reduce any inheritance output. Never grants rank or
+     mastery.
   5. Mirror republished (`{rank 0, grade+1}`) via the existing sink.
 - Catch-up through a skipped band: each advance seals the outgoing
   cycle at its actual `finalRank` (0 for a never-trained cycle) — so
@@ -197,40 +199,56 @@ existing `stillEquipped` one:
 Semantics only — no new authored gates, no re-tuning of the M-QI-06
 proving set (thresholds 3/4/5/6 stay; re-tuning is M-F-CONTENT-TC):
 
-- `techniqueRank` / `techniqueGrade` prerequisites evaluate the **live
-  cycle's** mirror `player.techniqueProgress.{rank,grade}` — frozen
-  history is never a gate input. A past cycle's rank never satisfies a
-  gate.
-- `levelGates` evaluate at upgrade time against the current mirror.
-  After grade-up resets the live rank to 0, rank-gated upgrades
-  re-block until the new cycle trains back; owned levels above the
-  effective cap remain legal frozen surplus (M-QI-06 §5 contract
-  unchanged: aggregators keep counting owned levels; `purchaseNode`
-  unaffected).
-- `techniqueGrade` gates read the live grade, which is monotonic
-  nondecreasing across catch-up (grade never decreases).
-- The `NodePrerequisite` kind docstrings in `ProgressionNode.ts` are
-  updated to pin current-cycle semantics explicitly (doc/types delta).
+- `techniqueRank` / `techniqueGrade` prerequisites evaluate the
+  **current** cycle only: the `player.techniqueProgress` mirror plus
+  `player.realmId`. Frozen history is never a gate input.
+- **Effective-rank rule (pinned)**: gate evaluation uses
+  `getEffectiveTechniqueRank(progress, realmId) =
+   progress.grade == getRealmIndex(realmId) ? progress.rank : 0`.
+  The mirror stays literal (a lagging holder still stores its sealed
+  rank, honestly, for display), but gates see rank 0 whenever the live
+  grade lags the realm — a sealed cycle's rank dies at freeze, in the
+  frozen-before-grade-up window too. A sealed or superseded cycle's
+  rank never satisfies a gate.
+- `levelGates` evaluate at upgrade time against effective rank: at
+  realm exit rank-gated upgrades re-block immediately (before any
+  grade-up); owned levels above the effective cap remain legal frozen
+  surplus (M-QI-06 §5 contract unchanged: aggregators keep counting
+  owned levels; `purchaseNode` unaffected).
+- `techniqueGrade` gates read the live grade — monotonic
+  nondecreasing across catch-up, unaffected by the effective-rank
+  rule (grade never decreases).
+- `NodeSystem.hasPrerequisite`'s `techniqueRank` arm routes through
+  `getEffectiveTechniqueRank` (single authority for the band check);
+  `ProgressionNode.ts` kind docstrings pin the rule (doc/types
+  delta).
 
 ## 8. Save contract
 
 - `CURRENT_SAVE_VERSION 74 → 75`; old saves rejected per convention
   (dev phase — no migration, no compat translator).
 - Preflight (`preflightSaveRegistryReferences`) extended: `gradeHistory`
-  required; keys integer grades `1..live grade`; each record
-  `finalRank` integer `0..18`, `completionState` in the enum; `rank`
-  `0..18`; `grade` `1..getTechniqueGradeCeiling(realmId)` (unchanged);
-  mastery invariants unchanged in form (`mastery >= 0`, `rank == 18 →
-  mastery == 0`, `rank < 18 → mastery < cost(grade)`). History-vs-live
-  coherence beyond shape is deliberately unenforced (mirror precedent).
+  required; each record `finalRank` integer `0..18`, `completionState`
+  in the enum; `rank` `0..18`; `grade`
+  `1..getTechniqueGradeCeiling(realmId)` (unchanged); mastery invariants
+  unchanged in form (`mastery >= 0`, `rank == 18 → mastery == 0`,
+  `rank < 18 → mastery < cost(grade)`).
+- Canonical key-set coherence (pinned): the `gradeHistory` key set is
+  fully determined by `(grade, realmIndex)` — every grade in
+  `1..grade-1` carries a sealed record (each superseded cycle was
+  exited or advanced-out), `gradeHistory[grade]` exists IFF
+  `grade < realmIndex` (the live cycle is sealed/lagging), and an
+  in-band trainable live cycle never carries a live-grade record.
+  Missing, stray, or out-of-range keys reject.
 
 ## 9. Consistency invariants
 
 - A technique is held iff the player is in a major realm ≥ 1 and has
   initiated — `0-or-1` holder, way-bound (unchanged).
 - `0 <= rank <= 18`; `mastery >= 0`; `rank == 18 → mastery == 0`.
-- `gradeHistory` keys ≤ live grade; sealed records immutable
-  (write-if-absent everywhere).
+- `gradeHistory` key set = `{1..grade-1}` ∪ (`{grade}` iff lagging)
+  per §8 coherence; sealed records immutable (write-if-absent
+  everywhere).
 - Grade ≤ realm index; grade-up is the only grade mutation; rank/mastery
   reset only inside the grade-up transaction.
 - `player.techniqueProgress` mirror always equals the live
@@ -255,6 +273,6 @@ proving set (thresholds 3/4/5/6 stay; re-tuning is M-F-CONTENT-TC):
 | A3 | Grade-up preserves history + quality, resets rank/mastery to 0, republishes mirror; catch-up 1→2→3 seals skipped cycle at `finalRank 0 / partial`; sealed cycles untrainable. |
 | A4 | Inheritance scaffold: `computeGradeInheritance` monotonic in the outgoing record, applied result never raises rank/mastery. |
 | A5 | Breakthrough confirm renders unperfected warning iff projected ≠ vien_man; vien_man (rank 18) renders no warning. |
-| A6 | Gates read live cycle only: post-grade-up rank-0 re-blocks rank-gated upgrades; owned surplus stays owned. |
+| A6 | Gates read current cycle only: effective rank is 0 while the live grade lags the realm (frozen-before-grade-up window included); owned surplus stays owned. |
 | A7 | Save v74→75; v74 saves rejected; preflight validates `gradeHistory` shape + 18-cap invariants. |
 | A8 | Freeze + settle are idempotent: repeated realm-exit/advance calls never duplicate or overwrite records. |

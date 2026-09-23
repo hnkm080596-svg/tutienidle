@@ -63,18 +63,23 @@ gates pass.
 - `services/save/saveVersion.ts`: `CURRENT_SAVE_VERSION 74 → 75`
   (reject-old convention, no translator).
 - `core/game/GameManagerSaveRestore.ts:~165` preflight: `gradeHistory`
-  required + shape-validated (keys int `1..grade`, `finalRank` int
-  `0..18`, `completionState` enum); `rank 0..CAP` reads the new 18;
+  required; per-record shape (`finalRank` int `0..18`,
+  `completionState` enum) + canonical key-set coherence — keys exactly
+  `{1..grade-1}` ∪ (`{grade}` iff `grade < realmIndex`): every
+  superseded grade sealed, lagging live grade sealed, in-band live
+  grade carries no record; `rank 0..CAP` reads the new 18;
   `techniqueProgress` mirror block in `saveShapeValidation.ts`
   unchanged (live-cycle mirror only).
 - `components/common/BreakthroughRequirementPanel.vue`: gains the
   unperfected warning block beside `stillEquipped` — reads
   `projectTechniqueCompletion` via gameManager access; en + vi keys
   under the tribulation i18n namespace.
-- `core/progression/NodeSystem.ts` evaluators unchanged in code —
-  `techniqueRank`/`techniqueGrade` already read the live mirror; the
-  F5 delta is the docstring on `NodePrerequisite` kinds in
-  `ProgressionNode.ts` pinning current-cycle semantics + frozen-surplus
+- `core/progression/NodeSystem.ts`: `techniqueRank` evaluation routes
+  through `getEffectiveTechniqueRank(progress, realmId)` — effective
+  rank 0 while the live grade lags the realm (sealed-cycle rank never
+  gates, frozen-before-grade-up window included); `techniqueGrade`
+  reads live grade unchanged; `NodePrerequisite` kind docstrings in
+  `ProgressionNode.ts` pin the effective-rank rule + frozen-surplus
   legality (M-QI-06 §5 contract already designed for this).
 - No consumer of `gainMastery` exists outside BattleLootSystem and
   tests — signature widening is contained.
@@ -89,8 +94,12 @@ gates pass.
    realmLevel 12 with rank 12 → dai_thanh; rank < 12 → partial;
    vien_man only at rank 18); `projectTechniqueCompletion` returns the
    sealed record verbatim when present else projects live;
-   `computeTechniqueGradeInheritance` monotonic in
-   (finalRank, completionState) and never grants rank.
+   `computeTechniqueGradeInheritance` monotonic under the pinned order
+   (`partial < dai_thanh < vien_man`, componentwise on
+   (finalRank, state) — higher rank at equal state or better state at
+   equal rank never reduces output) and never grants rank;
+   `getEffectiveTechniqueRank` = progress.rank in-band, 0 when
+   lagging.
 2. `TechniqueSystem.test.ts` (extend): `gainMastery` clamps at
    realmLevel ceiling, gains past old cap 10, overflow discarded,
    off-band (grade < realmIndex) gains 0; `sealFrozenCycle` writes the
@@ -115,10 +124,15 @@ gates pass.
    already-sealed unperfected record warns; no technique = no warning.
 6. `GameManagerSaveRestore`/save-shape tests (extend): v75 round-trips
    `gradeHistory`; malformed records (key > grade, rank > 18, bad enum,
-   missing field) reject; v74 payload rejected.
-7. `TechniqueGateAuthored.test.ts` (extend): post-grade-up rank-0
-   re-blocks rank-gated upgrades; owned surplus levels stay owned and
-   aggregating (M-QI-06 contract under the new model).
+   missing field) reject; key-set coherence rejects (missing record
+   for grade < live grade, live-grade record while in-band, lagging
+   without live-grade record); v74 payload rejected.
+7. `TechniqueGateAuthored.test.ts` (extend): frozen/lagging window —
+   rank gates read effective rank 0 while grade < realmIndex (sealed
+   rank-9 cycle fails a rank-5 gate); post-grade-up rank-0 re-blocks
+   upgrades; grade gates read live grade unchanged; owned surplus
+   levels stay owned and aggregating (M-QI-06 contract under the new
+   model).
 8. `BattleLootSystem.techniqueMastery.test.ts` (extend): settle passes
    realm context; off-band settle discards and reports gained 0;
    pending flush unchanged.
@@ -130,9 +144,11 @@ gates pass.
 - `TechniqueProgression.ts`: cap 18; band rescale;
   `getTechniqueRankCeiling(technique, realmId, realmLevel)`;
   `resolveTechniqueCompletionState(finalRank, realmLevelAtFreeze)`;
-  `projectTechniqueCompletion(technique)`;
+  `projectTechniqueCompletion(technique, realmLevel)`;
   `computeTechniqueGradeInheritance(outcome)` (zero-valued payload now —
-  contract + monotonicity pinned, coefficients deferred);
+  pinned order `partial < dai_thanh < vien_man`, componentwise
+  monotonicity, coefficients deferred);
+  `getEffectiveTechniqueRank(progress, realmId)`;
   `canAdvanceTechniqueGrade` → `grade >= 1 && grade < getRealmIndex(realmId)`.
 - `Techniques.ts`: `gradeHistory: {}` on all templates.
 
@@ -159,16 +175,20 @@ gates pass.
   `projectTechniqueCompletion(...) !== 'vien_man'` when a technique is
   held; en + vi i18n keys added beside `stillEquipped` entries; warn
   copy names grade + projected outcome (P16 via `useI18n`).
-- `ProgressionNode.ts`: `techniqueRank`/`techniqueGrade` kind docstrings
-  pin live-cycle-only semantics + frozen-surplus legality + grade
-  monotonicity (ASCII comments, P15).
+- `ProgressionNode.ts`: `techniqueRank` docstring pins effective-rank
+  semantics (rank 0 while live grade lags the realm; mirror stays
+  literal); `techniqueGrade` pins live-grade monotonicity; both note
+  frozen-surplus legality (ASCII comments, P15).
+- `NodeSystem.ts`: `techniqueRank` arm routes through
+  `getEffectiveTechniqueRank(progress, realmId)`.
 
 ## Step 5 — save contract
 
 - `saveVersion.ts` → 75 + changelog comment per convention.
 - `GameManagerSaveRestore.preflightSaveRegistryReferences`:
-  `gradeHistory` shape validation per spec §8 (required field, key ≤
-  live grade, rank/enum ranges); CAP references read 18.
+  `gradeHistory` validation per spec §8 (required field, per-record
+  shape, canonical key-set coherence — `{1..grade-1}` sealed +
+  `{grade}` iff lagging); CAP references read 18.
 - Confirm `saveShapeValidation.ts` `techniqueProgress` mirror block
   needs no change (still `{rank, grade}`).
 
@@ -196,6 +216,6 @@ gates pass.
 | 2 — grade-up transaction | §5 | 3 | A3, A4 |
 | 3 — unperfected warning | §6 | 4 | A5 |
 | 4 — save bump | §8 | 5 | A7 |
-| 5 — F5 gate semantics | §7 | 4 | A6 |
+| 5 — F5 gate semantics | §7 | 2, 4 | A6 |
 | 6 — tests | §11 | 1 | A1-A8 |
 | freeze seam | §4 | 3 | A2, A8 |
