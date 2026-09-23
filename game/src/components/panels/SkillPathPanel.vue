@@ -379,7 +379,7 @@ function close() {
 
 .skill-path-panel__subtitle {
   font-size: var(--text-sm);
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
 }
 
 .skill-path-panel__points {
@@ -408,7 +408,7 @@ function close() {
    ép cột trái 70px. Cột trái thành accordion ngang bằng flex-wrap chips. */
 @container overlay-panel (max-width: 900px) {
   .skill-path-panel__body { flex-direction: column; }
-  .skill-path-panel__col { flex: 1 1 auto; overflow-y: visible; border-right: 0; border-left: 0; border-bottom: 1px solid var(--ink-line); }
+  .skill-path-panel__col { flex: 1 1 auto; overflow-y: visible; border-right: 0; border-left: 0; border-bottom: 1px solid var(--sys-line, var(--ink-line)); }
   .skill-path-panel__col--left { flex: 0 0 auto; max-height: 32%; }
   .skill-path-panel__col--right { flex: 0 0 auto; border-bottom: 0; }
 }
@@ -418,7 +418,7 @@ function close() {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border-right: 1px solid var(--ink-line);
+  border-right: 1px solid var(--sys-line, var(--ink-line));
 }
 
 /* Cây kỹ năng KHÔNG cuộn nữa (2026-08-30, bug report) — NodeTreePanel
@@ -443,22 +443,22 @@ function close() {
 
 .skill-path-panel__element-tab {
   padding: 4px 12px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
+  background: var(--sys-bg-0, var(--ink-800));
+  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
   border-radius: 999px;
-  color: var(--element-color, var(--text-secondary));
-  font-family: var(--font-body);
+  color: var(--element-color, var(--sys-text-muted, var(--text-secondary)));
+  font-family: var(--sys-font-body, var(--font-body));
   font-size: var(--text-sm);
   cursor: pointer;
 }
 
 .skill-path-panel__element-tab.is-selected {
-  border-color: var(--element-color, var(--chrome-300));
+  border-color: var(--element-color, var(--sys-text, var(--chrome-300)));
   font-weight: 600;
 }
 
 .skill-path-panel__element-tab.is-committed {
-  background: color-mix(in srgb, var(--element-color, var(--ink-800)) 22%, var(--ink-800));
+  background: color-mix(in srgb, var(--element-color, var(--sys-bg-0, var(--ink-800))) 22%, var(--sys-bg-0, var(--ink-800)));
 }
 
 /* M-QI-05 (D7) - center mode tabs; same chip family as element tabs. */
@@ -471,18 +471,18 @@ function close() {
 
 .skill-path-panel__mode-tab {
   padding: 4px 12px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
+  background: var(--sys-bg-0, var(--ink-800));
+  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
   border-radius: 999px;
-  color: var(--text-secondary);
-  font-family: var(--font-body);
+  color: var(--sys-text-muted, var(--text-secondary));
+  font-family: var(--sys-font-body, var(--font-body));
   font-size: var(--text-sm);
   cursor: pointer;
 }
 
 .skill-path-panel__mode-tab.is-selected {
-  border-color: var(--chrome-300);
-  color: var(--text-primary);
+  border-color: var(--sys-text, var(--chrome-300));
+  color: var(--sys-text, var(--text-primary));
   font-weight: 600;
 }
 
@@ -491,7 +491,7 @@ function close() {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border-left: 1px solid var(--ink-line);
+  border-left: 1px solid var(--sys-line, var(--ink-line));
 }
 
 .skill-path-panel__col-title {
@@ -499,6 +499,6 @@ function close() {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--paper-eyebrow);
+  color: var(--sys-accent, var(--paper-eyebrow));
 }
 </style>

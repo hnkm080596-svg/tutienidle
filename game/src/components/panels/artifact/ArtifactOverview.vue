@@ -30,7 +30,7 @@ defineProps<{
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3);
-  border-bottom: 1px solid var(--ink-line);
+  border-bottom: 1px solid var(--sys-line, var(--ink-line));
 }
 
 .artifact-overview__icon {
@@ -40,11 +40,11 @@ defineProps<{
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--chrome-500), var(--ink-900));
-  border: 1px solid var(--chrome-500);
-  color: var(--chrome-100);
+  background: radial-gradient(circle, var(--sys-line, var(--chrome-500)), var(--sys-bg-1, var(--ink-900)));
+  border: 1px solid var(--sys-line, var(--chrome-500));
+  color: var(--sys-text, var(--chrome-100));
   font-size: var(--text-display);
-  font-family: var(--font-display);
+  font-family: var(--sys-font-display, var(--font-display));
   box-shadow: var(--shadow-glow-chrome);
 }
 
@@ -54,15 +54,15 @@ defineProps<{
 
 .artifact-overview__name {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--sys-font-display, var(--font-display));
   font-size: var(--text-title);
   font-weight: 700;
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
 }
 
 .artifact-overview__meta {
   margin: 2px 0 0;
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
   font-size: var(--text-body);
 }
 </style>

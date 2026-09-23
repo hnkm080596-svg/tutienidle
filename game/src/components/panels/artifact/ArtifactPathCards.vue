@@ -7,9 +7,9 @@
 import type { ArtifactPath, ArtifactPathDefinition } from '@/core/artifact/Artifact'
 
 const PATH_COLOR_VAR: Record<ArtifactPath, string> = {
-  attack: 'var(--crimson)',
+  attack: 'var(--sys-danger, var(--crimson))',
   defense: 'var(--azure)',
-  control: 'var(--jade)',
+  control: 'var(--sys-success, var(--jade))',
 }
 
 defineProps<{
@@ -28,7 +28,7 @@ const emit = defineEmits<{ select: [path: ArtifactPath] }>()
       v-for="pathDef in paths"
       :key="pathDef.path"
       type="button"
-      class="artifact-path-cards__card"
+      class="artifact-path-cards__card sys-chamfer"
       :class="{ 'is-selected': pathDef.path === selectedPath }"
       :style="{ '--path-color': PATH_COLOR_VAR[pathDef.path] }"
       :disabled="!canChange && pathDef.path !== selectedPath"
@@ -67,13 +67,13 @@ const emit = defineEmits<{ select: [path: ArtifactPath] }>()
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-2);
-  border: 1px solid var(--ink-line-soft);
+  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
   border-radius: var(--radius-sm);
-  background: var(--ink-800);
-  color: var(--text-primary);
+  background: var(--sys-bg-0, var(--ink-800));
+  color: var(--sys-text, var(--text-primary));
   text-align: left;
   cursor: pointer;
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .artifact-path-cards__card:not(:disabled):hover {
@@ -82,7 +82,7 @@ const emit = defineEmits<{ select: [path: ArtifactPath] }>()
 
 .artifact-path-cards__card.is-selected {
   border-color: var(--path-color);
-  background: color-mix(in srgb, var(--path-color) 16%, var(--ink-800));
+  background: color-mix(in srgb, var(--path-color) 16%, var(--sys-bg-0, var(--ink-800)));
   box-shadow: 0 0 10px -3px var(--path-color);
 }
 
@@ -92,7 +92,7 @@ const emit = defineEmits<{ select: [path: ArtifactPath] }>()
 }
 
 .artifact-path-cards__name {
-  font-family: var(--font-display);
+  font-family: var(--sys-font-display, var(--font-display));
   font-weight: 700;
   color: var(--path-color);
 }
@@ -113,13 +113,13 @@ const emit = defineEmits<{ select: [path: ArtifactPath] }>()
   gap: 2px;
   padding: 4px 2px;
   border-radius: 3px;
-  background: var(--ink-950);
+  background: var(--sys-bg-0, var(--ink-950));
   opacity: 0.4;
 }
 
 .artifact-path-cards__milestones li.is-unlocked {
   opacity: 1;
-  background: color-mix(in srgb, var(--path-color) 22%, var(--ink-950));
+  background: color-mix(in srgb, var(--path-color) 22%, var(--sys-bg-0, var(--ink-950)));
 }
 
 .artifact-path-cards__milestone-level {
@@ -131,13 +131,13 @@ const emit = defineEmits<{ select: [path: ArtifactPath] }>()
 .artifact-path-cards__milestone-name {
   font-size: var(--text-xs);
   text-align: center;
-  color: var(--text-secondary);
+  color: var(--sys-text-muted, var(--text-secondary));
   line-height: 1.2;
 }
 
 .artifact-path-cards__warning {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--chrome-300);
+  color: var(--sys-text, var(--chrome-300));
 }
 </style>

@@ -80,13 +80,13 @@ function onUpgrade() {
   margin: 0 0 6px;
   font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
 }
 
 .native-core-detail__desc {
   margin: 0 0 10px;
   font-size: var(--text-sm);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .native-core-detail__level {
@@ -100,14 +100,14 @@ function onUpgrade() {
 .native-core-detail__level-label {
   flex: 0 0 auto;
   font-size: var(--text-sm);
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
 }
 
 .native-core-detail__upgrade {
   flex: 0 0 auto;
   border-radius: 4px;
   color: var(--gold-700);
-  border-color: var(--chrome-500);
+  border-color: var(--sys-line, var(--chrome-500));
 }
 
 .native-core-detail__upgrade:disabled {

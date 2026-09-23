@@ -129,20 +129,20 @@ const tierRows = computed(() => {
 .body-refinement__summary {
   display: flex;
   justify-content: space-between;
-  font: 700 var(--text-lg) var(--font-display);
-  color: var(--paper-text);
+  font: 700 var(--text-lg) var(--sys-font-display, var(--font-display));
+  color: var(--sys-text, var(--paper-text));
 }
 
 .body-refinement__physique {
   font-size: var(--text-md);
   font-weight: 600;
-  color: var(--jade);
+  color: var(--sys-success, var(--jade));
 }
 
 .body-refinement__note {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--jade);
+  color: var(--sys-success, var(--jade));
 }
 
 .body-refinement__tiers {
@@ -153,20 +153,20 @@ const tierRows = computed(() => {
 
 .body-refinement__tier {
   padding: 8px 10px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
+  background: var(--sys-bg-0, var(--ink-800));
+  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
   border-radius: var(--radius-sm);
   opacity: 0.55;
 }
 
 .body-refinement__tier--active {
   opacity: 1;
-  border-color: var(--chrome-300);
+  border-color: var(--sys-text, var(--chrome-300));
 }
 
 .body-refinement__tier--realm_locked {
   opacity: 0.8;
-  border-color: var(--ink-line-soft);
+  border-color: var(--sys-line-soft, var(--ink-line-soft));
 }
 
 .body-refinement__tier--done {
@@ -176,7 +176,7 @@ const tierRows = computed(() => {
 .body-refinement__tier-lock {
   margin: 2px 0 6px;
   font-size: var(--text-sm);
-  color: var(--crimson);
+  color: var(--sys-danger, var(--crimson));
 }
 
 .body-refinement__tier-head {
@@ -187,19 +187,19 @@ const tierRows = computed(() => {
 
 .body-refinement__tier-name {
   font-weight: 600;
-  color: var(--chrome-100);
+  color: var(--sys-text, var(--chrome-100));
   font-size: var(--text-md);
 }
 
 .body-refinement__tier-stat {
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
 }
 
 .body-refinement__tier-desc {
   margin: 2px 0 6px;
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
 }
 
 .body-refinement__tier-bar {
@@ -212,6 +212,6 @@ const tierRows = computed(() => {
   font-size: var(--text-md);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: var(--text-secondary);
+  color: var(--sys-text-muted, var(--text-secondary));
 }
 </style>

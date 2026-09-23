@@ -391,7 +391,7 @@ watch([currentAssignments, () => player.visualProfileId], () => {
         <div
           v-for="card in combatantCards()"
           :key="card.combatantId"
-          class="tran-phap-panel__card queue-stand"
+          class="tran-phap-panel__card queue-stand sys-chamfer"
           role="button"
           :aria-label="card.label"
           draggable="true"
@@ -560,7 +560,7 @@ watch([currentAssignments, () => player.visualProfileId], () => {
 }
 
 .tran-phap-panel__formation-button.is-selected {
-  border-color: var(--jade, #4caf50);
+  border-color: var(--sys-success, var(--jade, #4caf50));
 }
 
 .tran-phap-panel__queue {

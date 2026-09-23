@@ -59,12 +59,12 @@ const groups = computed(() => {
   gap: 6px;
 }
 
-.skill-path-list__group { display: flex; flex-direction: column; gap: 6px; padding-bottom: 8px; border-bottom: 1px solid var(--ink-line-soft); }
+.skill-path-list__group { display: flex; flex-direction: column; gap: 6px; padding-bottom: 8px; border-bottom: 1px solid var(--sys-line-soft, var(--ink-line-soft)); }
 
 .skill-path-list__title {
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--paper-eyebrow);
+  color: var(--sys-accent, var(--paper-eyebrow));
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -74,22 +74,22 @@ const groups = computed(() => {
   flex-direction: column;
   gap: 3px;
   padding: 8px 10px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
+  background: var(--sys-bg-0, var(--ink-800));
+  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
   border-radius: var(--radius-sm);
   cursor: pointer;
   text-align: left;
-  font-family: var(--font-body);
-  color: var(--text-primary);
+  font-family: var(--sys-font-body, var(--font-body));
+  color: var(--sys-text, var(--text-primary));
 }
 
 .skill-path-list__card:hover {
-  border-color: var(--chrome-300);
+  border-color: var(--sys-text, var(--chrome-300));
 }
 
 .skill-path-list__card.is-selected {
-  border-color: var(--chrome-300);
-  background: color-mix(in srgb, var(--chrome-300) 18%, var(--ink-800));
+  border-color: var(--sys-text, var(--chrome-300));
+  background: color-mix(in srgb, var(--sys-text, var(--chrome-300)) 18%, var(--sys-bg-0, var(--ink-800)));
 }
 
 /* Tên skill là thứ người chơi quét mắt tìm đầu tiên trong danh sách —
@@ -102,6 +102,6 @@ const groups = computed(() => {
 
 .skill-path-list__meta {
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
 }
 </style>

@@ -224,7 +224,7 @@ function removeOrbAt(index: number) {
 
 <template>
   <OverlayPanel :open="ui.standalonePanel === 'quan_khi'" :title="t('panels.quanKhi.title')" width="min(480px, 90vw)" variant="system" @close="close">
-    <div v-if="!player.cultivationPath" class="quan-khi-panel__card">
+    <div v-if="!player.cultivationPath" class="quan-khi-panel__card sys-chamfer">
       <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.pathSelection.hint') }}</p>
 
       <div class="quan-khi-panel__choices">
@@ -233,7 +233,7 @@ function removeOrbAt(index: number) {
                way declaring sealedOffer (today: hidden_spell_pathway); names the
                way, carries the permanent warning, no node-tree entry
                point. -->
-          <div v-if="kit.way.sealedOffer" class="quan-khi-panel__hidden-card">
+          <div v-if="kit.way.sealedOffer" class="quan-khi-panel__hidden-card sys-chamfer">
             <p class="quan-khi-panel__hidden-title">{{ kit.way.name }}</p>
             <p class="quan-khi-panel__hidden-desc">
               {{ t('panels.quanKhi.sections.hiddenPath.description', { kit: sealedKitSkillNames(kit.way).join(' · ') }) }}
@@ -267,8 +267,8 @@ function removeOrbAt(index: number) {
     <!-- Kiem Tu Reimagined (spec 2026-09-15) — shows the active
          specialization (Kiem Pho / Ngu Kiem Dao) read from
          player.cultivationWay. -->
-    <div v-if="isSwordPath" class="quan-khi-panel__card">
-      <div class="quan-khi-panel__route-card">
+    <div v-if="isSwordPath" class="quan-khi-panel__card sys-chamfer">
+      <div class="quan-khi-panel__route-card sys-chamfer">
         <p class="quan-khi-panel__hint">
           {{ t('panels.quanKhi.sections.kiemTuSpec.hintPrefix') }} <strong class="quan-khi-panel__route-name">{{ specNameDisplay }}</strong>{{ t('panels.quanKhi.sections.kiemTuSpec.hintSuffix') }}
         </p>
@@ -283,8 +283,8 @@ function removeOrbAt(index: number) {
     <!-- Kiem Pho preset editor — sword_pathway only (hidden_sword_pathway never reads preset).
          Strip = current persisted sequence, palette = realm-unlocked
          orbs; both write through setKiemPhoPreset(). -->
-    <div v-if="isSwordPath && swordPathWay === 'sword_pathway'" class="quan-khi-panel__card">
-      <div class="quan-khi-panel__route-card">
+    <div v-if="isSwordPath && swordPathWay === 'sword_pathway'" class="quan-khi-panel__card sys-chamfer">
+      <div class="quan-khi-panel__route-card sys-chamfer">
         <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.kiemPhoPreset.title') }}</p>
         <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.kiemPhoPreset.hint') }}</p>
         <p v-if="presetBattleLocked" class="quan-khi-panel__warning">
@@ -347,8 +347,8 @@ function removeOrbAt(index: number) {
   flex-direction: column;
   gap: 10px;
   padding: 20px 24px;
-  font-family: var(--font-body);
-  color: var(--paper-text);
+  font-family: var(--sys-font-body, var(--font-body));
+  color: var(--sys-text, var(--paper-text));
 }
 
 /* Câu duy nhất trước 1 quyết định vĩnh viễn — xứng đáng cỡ chữ lớn hơn
@@ -356,11 +356,11 @@ function removeOrbAt(index: number) {
 .quan-khi-panel__hint {
   margin: 0;
   font-size: var(--text-md);
-  color: var(--paper-text-muted);
+  color: var(--sys-text-dim, var(--paper-text-muted));
 }
 
 .quan-khi-panel__route-name {
-  color: var(--chrome-100);
+  color: var(--sys-text, var(--chrome-100));
 }
 
 /* Khối "đường đã chốt" — card thật thay vì văn bản trần (2026-08-30). */
@@ -369,8 +369,8 @@ function removeOrbAt(index: number) {
   flex-direction: column;
   gap: 8px;
   padding: 14px 16px;
-  background: var(--ink-800);
-  border: 1px solid var(--chrome-500);
+  background: var(--sys-bg-0, var(--ink-800));
+  border: 1px solid var(--sys-line, var(--chrome-500));
   border-radius: var(--radius-md);
 }
 
@@ -386,15 +386,15 @@ function removeOrbAt(index: number) {
   padding: 10px;
   /* Nghi thức chọn con đường vĩnh viễn — giữ crimson gradient chủ đích
      (signaling quyết định không hoàn tác), đè lên variant danger phẳng. */
-  background: linear-gradient(180deg, var(--crimson), var(--ink-800));
-  border: 1px solid var(--chrome-500);
-  color: var(--text-primary);
+  background: linear-gradient(180deg, var(--sys-danger, var(--crimson)), var(--sys-bg-0, var(--ink-800)));
+  border: 1px solid var(--sys-line, var(--chrome-500));
+  color: var(--sys-text, var(--text-primary));
 }
 
 .quan-khi-panel__choice.is-selected {
-  border-color: var(--jade);
-  background: linear-gradient(180deg, var(--jade), var(--ink-800));
-  box-shadow: 0 0 10px -3px var(--jade);
+  border-color: var(--sys-success, var(--jade));
+  background: linear-gradient(180deg, var(--sys-success, var(--jade)), var(--sys-bg-0, var(--ink-800)));
+  box-shadow: 0 0 10px -3px var(--sys-success, var(--jade));
 }
 
 .quan-khi-panel__choice:disabled {
@@ -416,10 +416,10 @@ function removeOrbAt(index: number) {
   justify-content: center;
   padding: 0;
   font-size: var(--text-xs);
-  background: var(--ink-700);
-  border: 1px solid var(--chrome-500);
+  background: var(--sys-bg-1, var(--ink-700));
+  border: 1px solid var(--sys-line, var(--chrome-500));
   border-radius: var(--radius-sm);
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
   cursor: pointer;
 }
 
@@ -443,15 +443,15 @@ function removeOrbAt(index: number) {
   flex: 1;
   padding: 8px 4px;
   font-size: var(--text-sm);
-  background: linear-gradient(180deg, var(--ink-700), var(--ink-800));
-  border: 1px solid var(--chrome-500);
+  background: linear-gradient(180deg, var(--sys-bg-1, var(--ink-700)), var(--sys-bg-0, var(--ink-800)));
+  border: 1px solid var(--sys-line, var(--chrome-500));
   border-radius: var(--radius-sm);
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
   cursor: pointer;
 }
 
 .quan-khi-panel__preset-orb:not(:disabled):hover {
-  border-color: var(--jade);
+  border-color: var(--sys-success, var(--jade));
 }
 
 .quan-khi-panel__preset-orb.is-locked {
@@ -478,7 +478,7 @@ function removeOrbAt(index: number) {
   flex-direction: column;
   gap: 8px;
   padding: 14px 16px;
-  background: var(--ink-800);
+  background: var(--sys-bg-0, var(--ink-800));
   border: 1px solid var(--gold-700);
   border-radius: var(--radius-md);
 }
@@ -494,13 +494,13 @@ function removeOrbAt(index: number) {
   margin: 0;
   font-size: var(--text-sm);
   line-height: 1.5;
-  color: var(--text-secondary);
+  color: var(--sys-text-muted, var(--text-secondary));
 }
 
 .quan-khi-panel__hidden-warning {
   margin: 0;
   font-size: var(--text-xs);
   line-height: 1.4;
-  color: var(--crimson);
+  color: var(--sys-danger, var(--crimson));
 }
 </style>

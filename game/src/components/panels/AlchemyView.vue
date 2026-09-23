@@ -273,7 +273,7 @@ function cancelJob(jobId: string) {
 </script>
 
 <template>
-  <div class="alchemy-view">
+  <div class="alchemy-view sys-domain--jade">
     <div class="alchemy-view__recipes scrollfade">
       <section class="alchemy-group">
         <p class="alchemy-group__eyebrow">{{ t('alchemy.currentCauldron') }}</p>

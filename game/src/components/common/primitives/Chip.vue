@@ -46,11 +46,11 @@ const isTab = computed(() => attrs.role === 'tab')
   min-height: var(--tap-min);
   padding: var(--space-1) var(--space-2);
   /* Tab "đóng" — giấy trầm hơn panel phía sau, không còn khối mực đen. */
-  background: linear-gradient(160deg, var(--paper-200), var(--paper-100));
-  color: var(--paper-text-soft);
-  border: 1px solid var(--paper-line-soft);
+  background: linear-gradient(160deg, var(--sys-bg-1, var(--paper-200)), var(--sys-bg-1, var(--paper-100)));
+  color: var(--sys-text-muted, var(--paper-text-soft));
+  border: 1px solid var(--sys-line-soft, var(--paper-line-soft));
   border-radius: var(--radius-sm);
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
   font-weight: 600;
   font-size: var(--text-xs);
   cursor: pointer;
@@ -58,8 +58,8 @@ const isTab = computed(() => attrs.role === 'tab')
 }
 
 .chip:not(.is-active):not(:disabled):hover {
-  color: var(--paper-text);
-  border-color: var(--paper-line);
+  color: var(--sys-text, var(--paper-text));
+  border-color: var(--sys-line-soft, var(--paper-line));
 }
 
 /* "Open" tab - brightest in the group + brass border, lifted clear off
@@ -67,17 +67,17 @@ const isTab = computed(() => attrs.role === 'tab')
    color-mix instead of hard hex + --paper-text keeps the chip correct
    when the drawer remaps paper -> surface (.ink-drawer). */
 .chip.is-active {
-  background: var(--chip-active-bg, linear-gradient(175deg, var(--paper-50), color-mix(in srgb, var(--paper-50) 82%, white)));
-  color: var(--paper-text);
-  border-color: var(--mineral-gold);
+  background: var(--chip-active-bg, linear-gradient(175deg, var(--sys-bg-0, var(--paper-50)), color-mix(in srgb, var(--sys-bg-0, var(--paper-50)) 82%, white)));
+  color: var(--sys-text, var(--paper-text));
+  border-color: var(--sys-accent, var(--mineral-gold));
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--mineral-gold) 35%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--sys-accent, var(--mineral-gold)) 35%, transparent),
     0 2px 6px rgba(20, 16, 8, 0.14);
 }
 
 .chip:focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring-chrome);
+  box-shadow: var(--sys-focus, var(--focus-ring-chrome));
 }
 
 .chip:disabled {

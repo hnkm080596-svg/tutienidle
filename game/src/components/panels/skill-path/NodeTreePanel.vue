@@ -85,7 +85,7 @@ function branchColor(branchTag: string | undefined): string {
     return ELEMENT_COLOR_VARS.metal
   }
 
-  return ELEMENT_COLOR_VARS[branchTag as ElementType] ?? 'var(--paper-text)'
+  return ELEMENT_COLOR_VARS[branchTag as ElementType] ?? 'var(--sys-text, var(--paper-text))'
 }
 
 // Phap Tu Reimagined (Task 16) — route respec toggle (P3). A route is a
@@ -754,7 +754,7 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: baseline;
   gap: 10px;
-  font-family: var(--font-body);
+  font-family: var(--sys-font-body, var(--font-body));
 }
 
 .node-tree__route {
@@ -766,11 +766,11 @@ onBeforeUnmount(() => {
 .node-tree__route-option {
   min-height: 22px;
   padding: 1px 10px;
-  background: var(--sys-bg-0, var(--ink-800));
-  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
+  background: var(--sys-bg-0, var(--sys-bg-0, var(--ink-800)));
+  border: 1px solid var(--sys-line-soft, var(--sys-line-soft, var(--ink-line-soft)));
   border-radius: 999px;
-  color: var(--sys-text-muted, var(--text-secondary));
-  font-family: var(--sys-font-display, var(--font-body));
+  color: var(--sys-text-muted, var(--sys-text-muted, var(--text-secondary)));
+  font-family: var(--sys-font-display, var(--sys-font-body, var(--font-body)));
   font-size: var(--text-xs);
   line-height: 1;
   cursor: pointer;
@@ -790,11 +790,11 @@ onBeforeUnmount(() => {
 .node-tree__respec {
   min-height: 22px;
   padding: 1px 10px;
-  background: var(--sys-bg-0, var(--ink-800));
-  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
+  background: var(--sys-bg-0, var(--sys-bg-0, var(--ink-800)));
+  border: 1px solid var(--sys-line-soft, var(--sys-line-soft, var(--ink-line-soft)));
   border-radius: 999px;
-  color: var(--sys-text-muted, var(--text-secondary));
-  font-family: var(--sys-font-display, var(--font-body));
+  color: var(--sys-text-muted, var(--sys-text-muted, var(--text-secondary)));
+  font-family: var(--sys-font-display, var(--sys-font-body, var(--font-body)));
   font-size: var(--text-xs);
   line-height: 1;
   cursor: pointer;
@@ -820,11 +820,11 @@ onBeforeUnmount(() => {
   min-width: 22px;
   min-height: 22px;
   padding: 0 4px;
-  background: var(--sys-bg-0, var(--ink-800));
-  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
+  background: var(--sys-bg-0, var(--sys-bg-0, var(--ink-800)));
+  border: 1px solid var(--sys-line-soft, var(--sys-line-soft, var(--ink-line-soft)));
   border-radius: var(--radius-sm);
-  color: var(--sys-text, var(--text-primary));
-  font-family: var(--font-body);
+  color: var(--sys-text, var(--sys-text, var(--text-primary)));
+  font-family: var(--sys-font-body, var(--font-body));
   font-size: var(--text-xs);
   line-height: 1;
   cursor: pointer;
@@ -855,15 +855,15 @@ onBeforeUnmount(() => {
 
 
 .node-tree__title {
-  font-family: var(--sys-font-display, var(--font-body));
+  font-family: var(--sys-font-display, var(--sys-font-body, var(--font-body)));
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--sys-text-muted, var(--paper-text));
+  color: var(--sys-text-muted, var(--sys-text, var(--paper-text)));
 }
 
 .node-tree__points {
   /* M-UI-SYSTEM: insight counter reads as a system numeral readout. */
-  font-family: var(--sys-font-display, var(--font-body));
+  font-family: var(--sys-font-display, var(--sys-font-body, var(--font-body)));
   font-variant-numeric: tabular-nums;
   font-size: var(--text-sm);
   color: var(--sys-cyan, var(--gold-700));
@@ -903,27 +903,27 @@ onBeforeUnmount(() => {
   gap: 2px;
   width: 140px;
   padding: 6px 8px;
-  background: var(--sys-bg-0, var(--ink-800));
-  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
+  background: var(--sys-bg-0, var(--sys-bg-0, var(--ink-800)));
+  border: 1px solid var(--sys-line-soft, var(--sys-line-soft, var(--ink-line-soft)));
   border-radius: var(--radius-sm);
   cursor: pointer;
   text-align: left;
-  font-family: var(--font-body);
-  color: var(--sys-text, var(--text-primary));
+  font-family: var(--sys-font-body, var(--font-body));
+  color: var(--sys-text, var(--sys-text, var(--text-primary)));
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .node-tree__node.is-major {
-  border-color: var(--sys-line-hot, var(--branch-color, var(--ink-line)));
+  border-color: var(--sys-line-hot, var(--branch-color, var(--sys-line, var(--ink-line))));
 }
 
 .node-tree__node:hover {
-  border-color: var(--sys-line-hot, var(--branch-color, var(--ink-line)));
+  border-color: var(--sys-line-hot, var(--branch-color, var(--sys-line, var(--ink-line))));
 }
 
 .node-tree__node.is-purchased {
-  background: color-mix(in srgb, var(--sys-success, var(--branch-color, var(--chrome-300))) 14%, var(--sys-bg-0, var(--ink-800)));
-  border-color: color-mix(in srgb, var(--sys-success, var(--branch-color, var(--chrome-300))) 55%, transparent);
+  background: color-mix(in srgb, var(--sys-success, var(--branch-color, var(--sys-text, var(--chrome-300)))) 14%, var(--sys-bg-0, var(--sys-bg-0, var(--ink-800))));
+  border-color: color-mix(in srgb, var(--sys-success, var(--branch-color, var(--sys-text, var(--chrome-300)))) 55%, transparent);
 }
 
 /* Locked node vẫn CLICK ĐƯỢC (để xem điều kiện ở NodeInspector.vue,
@@ -934,7 +934,7 @@ onBeforeUnmount(() => {
 }
 
 .node-tree__node.is-selected {
-  outline: 2px solid var(--sys-focus, var(--chrome-300));
+  outline: 2px solid var(--sys-focus, var(--sys-text, var(--chrome-300)));
   outline-offset: -2px;
 }
 
@@ -945,8 +945,8 @@ onBeforeUnmount(() => {
 .node-tree__node.is-unlocking {
   position: relative;
   animation: skill-node-pulse 500ms ease-out;
-  border-color: var(--sys-violet, var(--chrome-300));
-  box-shadow: 0 0 14px 2px color-mix(in srgb, var(--sys-violet, var(--chrome-300)) 55%, transparent);
+  border-color: var(--sys-violet, var(--sys-text, var(--chrome-300)));
+  box-shadow: 0 0 14px 2px color-mix(in srgb, var(--sys-violet, var(--sys-text, var(--chrome-300))) 55%, transparent);
 }
 
 .node-tree__node.is-unlocking::after {
@@ -954,7 +954,7 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: -6px;
   border-radius: inherit;
-  border: 1px solid var(--sys-violet, var(--chrome-300));
+  border: 1px solid var(--sys-violet, var(--sys-text, var(--chrome-300)));
   opacity: 0;
   animation: skill-node-ring 500ms ease-out;
   pointer-events: none;
@@ -998,10 +998,10 @@ onBeforeUnmount(() => {
 .node-tree__node-level {
   padding: 0 4px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--branch-color, var(--chrome-300)) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--branch-color, var(--sys-text, var(--chrome-300))) 55%, transparent);
   font-size: var(--text-xs);
   line-height: 1.4;
-  color: var(--chrome-100);
+  color: var(--sys-text, var(--chrome-100));
 }
 
 /* Route badge - node routeTag (Phap Tu Reimagined Task 16). M-UI-SYSTEM:
@@ -1014,12 +1014,12 @@ onBeforeUnmount(() => {
 
 .node-tree__node-desc {
   font-size: var(--text-xs);
-  color: var(--sys-text-dim, var(--text-muted));
+  color: var(--sys-text-dim, var(--sys-text-dim, var(--text-muted)));
 }
 
 .node-tree__node-cost {
   font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
-  color: var(--sys-text-muted, var(--chrome-100));
+  color: var(--sys-text-muted, var(--sys-text, var(--chrome-100)));
 }
 </style>

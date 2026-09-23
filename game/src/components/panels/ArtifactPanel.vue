@@ -145,7 +145,7 @@ function close() {
       {{ t('panels.artifact.emptyNotAwakened', { name: definition.name }) }}
     </EmptyState>
 
-    <div v-else class="artifact-panel">
+    <div v-else class="artifact-panel sys-domain--violet">
       <ArtifactOverview
         :name="definition.name"
         :cultivation-path-label="cultivationPathLabel"
@@ -191,6 +191,6 @@ function close() {
 
 .artifact-panel .empty-state {
   padding: var(--space-6);
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 </style>

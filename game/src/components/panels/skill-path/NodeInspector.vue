@@ -368,10 +368,10 @@ function onUpgrade() {
 .node-inspector {
   padding: 10px 14px;
   min-height: 64px;
-  background: var(--ink-800);
-  border-top: 1px solid var(--ink-line);
-  font-family: var(--font-body);
-  color: var(--text-primary);
+  background: var(--sys-bg-0, var(--ink-800));
+  border-top: 1px solid var(--sys-line, var(--ink-line));
+  font-family: var(--sys-font-body, var(--font-body));
+  color: var(--sys-text, var(--text-primary));
 }
 
 .node-inspector .empty-state {
@@ -390,42 +390,42 @@ function onUpgrade() {
 .node-inspector__name {
   font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--chrome-100);
+  color: var(--sys-text, var(--chrome-100));
 }
 
 /* Badge `Cấp x/max` — node nhiều cấp (plan §6.2). */
 .node-inspector__level {
   padding: 1px 8px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--chrome-300) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sys-text, var(--chrome-300)) 55%, transparent);
   font-size: var(--text-xs);
-  color: var(--chrome-100);
+  color: var(--sys-text, var(--chrome-100));
 }
 
 .node-inspector__state {
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
 }
 
 .node-inspector__state.is-purchased {
-  color: var(--jade);
+  color: var(--sys-success, var(--jade));
 }
 
 .node-inspector__state.is-purchasable {
-  color: var(--chrome-100);
+  color: var(--sys-text, var(--chrome-100));
 }
 
 .node-inspector__desc {
   margin: 4px 0;
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  color: var(--sys-text-muted, var(--text-secondary));
 }
 
 .node-inspector__reasons {
   margin: 4px 0;
   padding-left: 16px;
   font-size: var(--text-sm);
-  color: var(--crimson);
+  color: var(--sys-danger, var(--crimson));
 }
 
 .node-inspector__actions {
@@ -441,12 +441,12 @@ function onUpgrade() {
 .node-inspector__cost {
   font-size: var(--text-md);
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--sys-text-muted, var(--text-secondary));
 }
 
 .node-inspector__buy {
   padding: 6px 16px;
-  border: 1px solid var(--chrome-100);
+  border: 1px solid var(--sys-text, var(--chrome-100));
 }
 
 .node-inspector__buy:disabled {
@@ -472,8 +472,8 @@ function onUpgrade() {
   gap: 10px;
   width: min(420px, 88vw);
   padding: 20px 24px;
-  background: var(--ink-800);
-  border: 1px solid var(--chrome-500);
+  background: var(--sys-bg-0, var(--ink-800));
+  border: 1px solid var(--sys-line, var(--chrome-500));
   border-radius: var(--radius-md);
 }
 
@@ -481,13 +481,13 @@ function onUpgrade() {
   margin: 0;
   font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--chrome-100);
+  color: var(--sys-text, var(--chrome-100));
 }
 
 .route-pick__hint {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  color: var(--sys-text-muted, var(--text-secondary));
 }
 
 .route-pick__options {
@@ -512,7 +512,7 @@ function onUpgrade() {
 
 .route-pick__option-desc {
   font-size: var(--text-xs);
-  color: var(--text-secondary);
+  color: var(--sys-text-muted, var(--text-secondary));
   line-height: 1.4;
 }
 </style>
