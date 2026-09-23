@@ -71,13 +71,14 @@ gates pass.
      `covered === consumed`, `change === undefined`;
    - NO pin for `consumed > ownedOf('phap')` at the resolver — that
      input violates the documented all-or-nothing precondition
-     (`BodyChapterEssenceSubstitution.ts:25-26,107-108`) and a partial
-     plan is not a contract outcome (`undefined` is the namespace
-     refusal only). The under-covered consequence is a production-seam
-     fact — probe `consumed = 0` → `investBodyChapter` returns 0
-     before planning (fail closed) — already exercised for essence
-     chapters by the M-QI-09 e2e refusal cases
-     (`GameManager.essenceSubstitution.test.ts`);
+     (`BodyChapterEssenceSubstitution.ts:25-26,107-108`) and
+     `undefined` is the namespace refusal only. It is unreachable on
+     the production seam: `effectiveAvailable` bounds the probe's
+     `consumed` by `ownedPhap`, so the resolver only sees in-contract
+     requests. What an under-owned chapter's probe returns — 0 or a
+     smaller positive `consumed` — is chapter-owned (`chapter.invest`),
+     unspecified here; `zhou_tian`'s invest rule is M-F-CHU-THIEN
+     scope;
    - `planEssenceSubstitution` on `BAO_COST`: `ownedOf({ phap: 6 })`,
      `consumed = 11` → debits `[{ tinh_hoa_phap_the, 6 }]` covering 12,
      `change = { tinh_hoa_bao_the, 1 }`; mixed stacks order the Bảo

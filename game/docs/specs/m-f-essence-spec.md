@@ -92,14 +92,17 @@ production edits**. On the production `investBodyChapter` path a
 Pháp-required cost degrades deterministically: no rung above `phap`
 has an authored essence material, so coverage is 0 and
 `effectiveAvailable` (`GameManagerRealmAdvanceOps.ts:512-513`) is the
-owned Pháp stack alone. The probe's `consumed` is bounded by `owned`
-— the resolver's all-or-nothing precondition
-(`consumed <= owned + coverage`, `:25-26`, `:107-108`) is honoured by
-construction — so every issued plan is a required-only exact debit
-(`covered === consumed`, `change` undefined). An under-owned Pháp
-invest surfaces `consumed = 0` on the probe and the seam returns 0
-before `planEssenceSubstitution` runs — fail closed, no partial plan
-reachable in production.
+owned Pháp stack alone. Whatever `consumed` the chapter-owned probe
+legally returns is bounded by `ownedPhap` — the resolver's
+all-or-nothing precondition (`consumed <= owned + coverage`, `:25-26`,
+`:107-108`) is honoured by construction — so every issued plan is a
+required-only exact debit (`covered === consumed`, `change`
+undefined). A `consumed = 0` probe result ends the call before
+planning (`:521-523`); whether under-owned progression surfaces 0 or
+a smaller positive amount is the chapter's own `invest()` contract —
+chapter-owned, unspecified here (the partial-invest pattern exists:
+the pham e2e pins an under-covered invest consuming only what
+exists).
 
 ## 3. Residual contract — the pin set (test-only)
 
@@ -137,13 +140,14 @@ file it lands in and what it asserts.
     `change === undefined` (structurally unreachable while nothing
     above Pháp is authored).
   - `consumed > ownedOf('phap')` is OUT of the documented
-    precondition — not a pinnable contract state (a partial plan is
-    not a valid outcome; `undefined` remains the namespace refusal
-    only). Its production consequence is a seam-level fact, not a
-    resolver pin: `effectiveAvailable` bounds the probe's `consumed`,
-    so an under-owned Pháp invest surfaces `consumed = 0` ⇒
-    `investBodyChapter` returns 0 before planning — fail closed,
-    zero mutation (sec.2).
+    precondition — not a pinnable contract state (`undefined`
+    remains the namespace refusal only). It is also unreachable on
+    the production seam: `effectiveAvailable` bounds the probe's
+    `consumed` by `ownedPhap`, so the resolver only ever sees an
+    in-contract request for a Pháp cost. What an under-owned
+    chapter's probe returns — 0 or a smaller positive amount — is
+    chapter-owned (`chapter.invest`), unspecified here (sec.2;
+    `zhou_tian`'s invest rule is M-F-CHU-THIEN scope).
 - `planEssenceSubstitution` on `BAO_COST`: Pháp substitutes Bảo at
   `ratio[phap]` per unit — `ownedOf({ phap: 6 })` against `consumed =
   11` debits 6 Pháp covering 12 and credits 1 `tinh_hoa_bao_the`
