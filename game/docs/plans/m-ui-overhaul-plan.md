@@ -320,3 +320,30 @@ Two layers, matching spec §3.3-6:
 2. **Prior appearance:** revert the adoption diff (file map above) — restores `variant`
    defaults, pre-overhaul chrome, and (if InkNineSlice was removed) requires restoring that
    file from history.
+
+## Execution worklog — 2026-09-23
+
+All tasks T1–T10 landed on `devin/1790183125-m-ui-overhaul` (PR #20, draft, unmerged):
+
+- **T5–T9 waves committed per wave** (ab190273 → 4f0d6858); each passed P3 quick.
+- **Task 10 decisions:**
+  - *GameButton default flip (§9.1):* EXECUTED — `variant` default is now `'system'`; the 24 bare
+    buttons were censused and all sit inside adopted sys surfaces (incl. the sys-chamfered
+    tribulation mind-chapter card). Ceremony buttons keep explicit pinned variants.
+  - *menu/\* removed:* MenuLogo/MenuBackground/MenuButton(+test) deleted — zero dangling refs.
+  - *InkNineSlice:* NOT removed — still consumed by CombatVictoryPanel, CombatDefeatPanel,
+    OverlayPanel 'ink' variant, GameButton non-system variants (dormant ceremony paths).
+    **Named follow-up:** remove `InkNineSlice.vue` + its assets when those consumers migrate
+    or the ceremony path is retired.
+  - *Boundary guard extended:* +3 tests — InkNineSlice consumer allowlist, every OverlayPanel
+    mount requests `variant="system"`, fx-low kill-switch wired before mount.
+  - *e2e extension:* +5 v2 tests (boot grammar, scrim blur + Vietnamese, measured WCAG
+    contrast, focus-ring sweep, font-blocked fallback) + new `system-surfaces.spec.ts`
+    density census w/ 4 evidence PNGs under `test-results/evidence/`.
+  - *verify:* `npm run verify` green except pre-existing `dongFuBuildingPipeline.test.ts`
+    powershell.exe ENOENT (fails identically on base — env-blocked, recorded).
+  - *Gate chain:* P18 OCR (128/128 files, found+fixed 4 invalid `box-shadow` focus-ring
+    declarations → 2de3584d) → P4 quick QA PASS WITH EVIDENCE → P5 three sequential
+    passes, zero unresolved Medium+ (`docs/qa/2026-09-23-m-ui-overhaul-quick.md`).
+- **Deferred Low/Nit:** TabBar underline doesn't re-measure on webfont load (self-corrects);
+  `.game-button--system` split rule blocks; `sys-bar-shimmer` documented R41 repaint.
