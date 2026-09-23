@@ -43,7 +43,10 @@ describe('ink-wash large surfaces', () => {
   })
 
   it('adds ceremonial layers without removing modal and combat actions', () => {
-    for (const source of [confirmSource, victorySource, defeatSource]) {
+    // M-UI-SYSTEM: ConfirmModal migrated to SysModalBase (system chrome) -
+    // it intentionally no longer carries the XL ink layers, so only the
+    // combat victory/defeat panels stay in this ceremonial assertion.
+    for (const source of [victorySource, defeatSource]) {
       expect(source).toContain('asset-id="surface-xl-paper-scroll"')
       expect(source).toContain('asset-id="frame-xl-ceremony"')
     }

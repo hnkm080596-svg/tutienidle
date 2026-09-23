@@ -15,10 +15,19 @@ const props = withDefaults(defineProps<{
   width?: string
   height?: string
   layer?: number
+  // 'alertdialog' for confirm flows; defaults to plain 'dialog'.
+  role?: string
+  // aria-describedby target inside the slot body (confirm message etc).
+  describedBy?: string
+  // scrim click emits close unless explicitly disabled (confirm dialogs).
+  closeOnScrim?: boolean
 }>(), {
   width: 'min(900px, 94vw)',
   height: 'auto',
   layer: OVERLAY_LAYERS.panel,
+  role: 'dialog',
+  describedBy: undefined,
+  closeOnScrim: true,
 })
 
 const emit = defineEmits<{ close: [] }>()
@@ -38,16 +47,17 @@ const headingId = useId()
 
 <template>
   <Transition name="sys-fade">
-    <div v-if="open" class="sys-modal" :style="{ zIndex: layer }" @click.self="emit('close')">
+    <div v-if="open" class="sys-modal" :style="{ zIndex: layer }" @click.self="closeOnScrim && emit('close')">
       <SysPanel
         ref="cardRef"
         variant="primary"
         :rim-active="open"
         class="sys-modal__card"
         :style="{ width, height }"
-        role="dialog"
+        :role="role"
         aria-modal="true"
         :aria-labelledby="headingId"
+        :aria-describedby="describedBy"
       >
         <header class="sys-modal__header">
           <div class="sys-modal__heading">
