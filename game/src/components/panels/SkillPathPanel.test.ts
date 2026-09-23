@@ -26,6 +26,7 @@ function mockGameManager(overrides: {
       getAll: () => overrides.skills ?? [],
       get: (skillId: string) => (overrides.skills ?? []).find((skill) => skill.id === skillId),
     } as unknown as GameManager['skillManager'],
+    getTurnBattle: () => null,
     techniqueManager: {
       getActive: () => undefined,
     } as unknown as GameManager['techniqueManager'],

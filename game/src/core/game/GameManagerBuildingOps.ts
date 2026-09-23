@@ -26,10 +26,10 @@ export interface GameManagerBuildingOpsDeps {
   // GameManager giữ activePlayer như field mutable (setActivePlayer) — đọc
   // LIVE qua closure thay vì snapshot tại constructor time.
   getActivePlayer: () => PlayerData | undefined
-  // Collect-quest hook (xem GameManager.notifyQuestMaterialGained) — GameManager
-  // cung cấp closure vì hook thật cần questSystem/questRegistry/questManager,
-  // những state không thuộc phạm vi building/production.
-  notifyQuestMaterialGained: (materialId: string, amount: number) => void
+  // Collect-quest + perfection-discovery hook (see GameManager.notifyMaterialGained) -
+  // GameManager supplies a closure because the real hook needs
+  // questSystem/questRegistry/questManager, states outside building/production scope.
+  notifyMaterialGained: (materialId: string, amount: number) => void
 }
 
 /**
@@ -234,7 +234,7 @@ export class GameManagerBuildingOps {
       // đẩy toast thay vì mất lặng lẽ.
       const overflow = this.deps.materialBag.add(this.deps.materialRegistry.get(claimed.materialId), claimed.amount)
 
-      this.deps.notifyQuestMaterialGained(claimed.materialId, claimed.amount - overflow)
+      this.deps.notifyMaterialGained(claimed.materialId, claimed.amount - overflow)
 
       if (overflow > 0) {
         this.deps.notifications.push(

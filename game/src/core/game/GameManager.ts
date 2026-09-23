@@ -63,6 +63,10 @@ import {
   THANH_VAN_GROTTO_HERBS,
 } from '../production/ProductionCatalog'
 import {
+  hiddenBeastChannels,
+  hiddenGrottoChannels,
+} from '../../data/drop/HiddenMaterialChannels'
+import {
   AlchemySystem,
   type AlchemyRecipe,
 } from '../alchemy/AlchemySystem'
@@ -175,6 +179,7 @@ import type { TokenState } from '../battle/turn/TurnToken'
 import type { ForcedTurnChoice } from '../battle/turn/TurnSkillAction'
 import type { TurnSkillPresentationEntry } from '../combat/CombatSkillPresentation'
 import { BUFF_REGISTRY, PERSISTENT_BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
+import { TRUC_CO_DAN_PILL_ID } from '../../data/breakthrough/BreakthroughScopedResources'
 
 
 /**
@@ -408,6 +413,7 @@ export class GameManager {
     forestRewards: THANH_VAN_FOREST_REWARDS,
     mineRewards: THANH_VAN_MINE_REWARDS,
     grottoHerbs: THANH_VAN_GROTTO_HERBS,
+    hiddenGrottoChannels: hiddenGrottoChannels(),
   })
 
   // Đan Phòng (plan §8) — job luyện đan với reserve atomic.
@@ -617,8 +623,8 @@ export class GameManager {
       materialBag: this.materialBag,
       notifications: this.notifications,
       // Deferred closure - questOps is assigned later in this constructor.
-      notifyQuestMaterialGained: (materialId, amount) =>
-        this.questOps.notifyQuestMaterialGained(materialId, amount),
+      notifyMaterialGained: (materialId, amount) =>
+        this.questOps.notifyMaterialGained(materialId, amount),
     })
 
     // P7-M4 — ONE override-aware path-runtime binding shared by combat
@@ -667,6 +673,7 @@ export class GameManager {
       skillTemplates: this.skillTemplates,
       nodeRegistry: this.nodeRegistry,
       materialBag: this.materialBag,
+      materialRegistry: this.materialRegistry,
       pillBag: this.pillBag,
       breakthroughOutcomeService: this.breakthroughOutcomeService,
       progressionOps: this.progressionOps,
@@ -674,6 +681,11 @@ export class GameManager {
       getTurnBattle: () => this.turnBattleOps.getTurnBattle(),
       // Deferred closure - tickOps is assigned later in this constructor.
       markQuestRealmTransition: () => this.tickOps.markQuestRealmTransition(),
+      // Deferred closures - questOps is assigned later in this
+      // constructor (same pattern as the other funnel subscribers).
+      notifyMaterialGained: (materialId, amount) =>
+        this.questOps.notifyMaterialGained(materialId, amount),
+      notifications: this.notifications,
     })
 
     this.effectOps = new GameManagerPersistentEffectOps({
@@ -693,8 +705,8 @@ export class GameManager {
       materialBag: this.materialBag,
       // Deferred closures - alchemyOps/questOps assigned later.
       getAlchemyRecipes: () => this.alchemyOps.getAlchemyRecipes(),
-      notifyQuestMaterialGained: (materialId, amount) =>
-        this.questOps.notifyQuestMaterialGained(materialId, amount),
+      notifyMaterialGained: (materialId, amount) =>
+        this.questOps.notifyMaterialGained(materialId, amount),
     })
 
     this.pillOps = new GameManagerPillOps({
@@ -706,6 +718,7 @@ export class GameManager {
 
     this.hiddenBeastSystem = new HiddenBeastSystem({
       getEnemyTemplate: (id) => this.catalogOps.getEnemyTemplate(id),
+      channels: hiddenBeastChannels(),
     })
 
     this.battleLoot = new BattleLootSystem({
@@ -729,6 +742,9 @@ export class GameManager {
       questSystem: this.questSystem,
       questRegistry: this.questRegistry,
       questManager: this.questManager,
+      // Deferred closure - questOps is assigned later in this constructor.
+      notifyMaterialGained: (materialId, amount) =>
+        this.questOps.notifyMaterialGained(materialId, amount),
       hiddenBeast: this.hiddenBeastSystem,
     })
 
@@ -762,8 +778,8 @@ export class GameManager {
       buildingRegistry: this.buildingRegistry,
       buildingSystem: this.buildingSystem,
       notifications: this.notifications,
-      notifyQuestMaterialGained: (materialId, amount) =>
-        this.questOps.notifyQuestMaterialGained(materialId, amount),
+      notifyMaterialGained: (materialId, amount) =>
+        this.questOps.notifyMaterialGained(materialId, amount),
       getActivePlayer: () => this.activePlayer,
     })
 
@@ -777,8 +793,8 @@ export class GameManager {
       materialRegistry: this.materialRegistry,
       notifications: this.notifications,
       getActivePlayer: () => this.activePlayer,
-      notifyQuestMaterialGained: (materialId, amount) =>
-        this.questOps.notifyQuestMaterialGained(materialId, amount),
+      notifyMaterialGained: (materialId, amount) =>
+        this.questOps.notifyMaterialGained(materialId, amount),
     })
 
     this.alchemyOps = new GameManagerAlchemyOps({
@@ -810,6 +826,8 @@ export class GameManager {
       materialRegistry: this.materialRegistry,
       notifications: this.notifications,
       getActivePlayer: () => this.activePlayer,
+      notifyMaterialGained: (materialId, amount) =>
+        this.questOps.notifyMaterialGained(materialId, amount),
     })
 
     this.saveOps = new GameManagerSaveRestore({
@@ -915,8 +933,8 @@ export class GameManager {
       questSystem: this.questSystem,
       questRegistry: this.questRegistry,
       questManager: this.questManager,
-      notifyQuestMaterialGained: (materialId, amount) =>
-        this.questOps.notifyQuestMaterialGained(materialId, amount),
+      notifyMaterialGained: (materialId, amount) =>
+        this.questOps.notifyMaterialGained(materialId, amount),
       notifications: this.notifications,
       productionSystem: this.productionSystem,
       materialBag: this.materialBag,
@@ -1335,7 +1353,9 @@ export class GameManager {
     player: PlayerData,
     targetRealmId: string,
   ): boolean {
-    const hasTrucCoDan = this.pillBag.has('truc_co_dan', 1)
+    // M-F-CEILING C2C-9 - the breakthrough-gate pill id comes from the
+    // census so the integrity test binds the live gate to the tag.
+    const hasTrucCoDan = this.pillBag.has(TRUC_CO_DAN_PILL_ID, 1)
 
     // ARCH-002 (M7) — same ordering contract as startBattleWithPlayer:
     // ephemeral passive stacks reset BEFORE the ghost snapshot is taken,

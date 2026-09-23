@@ -24,7 +24,7 @@ export class GameManagerPillOps {
   ) {}
 
   /**
-   * Pill consumption (2026-08-24, plan §5.2) - ATOMIC: all validation +
+   * Pill consumption (2026-08-24, plan S5.2) - ATOMIC: all validation +
    * apply succeed before the pill is removed from PillBag. Profession
    * pills (with realmId): exact-realm gate + 4 MVP effects; legacy pills
    * (no realmId) keep the old behavior. `random` injects the main-stat
@@ -46,7 +46,7 @@ export class GameManagerPillOps {
 
     const pill = this.deps.pillRegistry.get(pillId)
 
-    // M10 (ARCH-008) — retired families (Hoi Xuan Dan) are unavailable:
+    // M10 (ARCH-008) - retired families (Hoi Xuan Dan) are unavailable:
     // explicit rejection, pill stays in the bag. Retired trumps every
     // other gate so the player sees the real reason.
     if (pill.retired === true) {
@@ -61,7 +61,7 @@ export class GameManagerPillOps {
       return { ok: false, reason: 'material_pill' }
     }
 
-    // Exact-realm gate for profession pills (plan §5.2).
+    // Exact-realm gate for profession pills (plan S5.2).
     if (pill.realmId && pill.realmId !== player.realmId) {
       return { ok: false, reason: 'wrong_realm' }
     }
@@ -85,8 +85,8 @@ export class GameManagerPillOps {
         pill,
         player,
         random,
-        // M3 — Hoa Hau Thong Than: +50% effectiveness on crafted pills.
-        getAlchemyDoublePill(player.selectedTalentIds)?.potencyMultiplier ?? 1,
+        // M3 - Hoa Hau Thong Than: +50% effectiveness on crafted pills.
+        getAlchemyDoublePill(player.selectedTalentIds, player.talentLevels)?.potencyMultiplier ?? 1,
       )
 
       if (result.timedEffect) {

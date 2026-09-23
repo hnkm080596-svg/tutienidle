@@ -68,6 +68,22 @@ export function useProgressionActions() {
       return true
     },
 
+    // M-F-RESPEC (ruling S14) - FREE Beta respec: reset node dau tu,
+    // hoan 100% Cam Ngo thuc tra. Ngoai combat only (op tu reject trong
+    // tran); scope.rootId thu hep ve mot nhanh, bo trong = ca cay.
+    // Tra ve so Cam Ngo hoan (0 = khong co gi de reset), false = tu choi.
+    respecNodeTree: (scope?: { rootId?: string }) => {
+      const refund = gameManager.progressionOps.respecNodeTree(player.$state, scope)
+
+      if (refund === null) {
+        return false
+      }
+
+      bumpState()
+
+      return refund
+    },
+
     // PLAN HOAN CHINH muc 2 - Main Stat allocation, ho diem rieng biet
     // hoan toan voi Skill Point/Node Tree o tren.
     allocateAttributePoint: (stat: MainStatKey) => withBump(gameManager.progressionOps.allocateAttributePoint(player.$state, stat)),

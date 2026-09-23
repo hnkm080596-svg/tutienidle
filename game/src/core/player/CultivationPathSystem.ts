@@ -1,7 +1,10 @@
 import type { ElementType } from '../element/ElementType'
 import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import type { OrbId } from '../kiem-tu/KiemTuState'
-import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
+import {
+  createDefaultArtifactProgress,
+  isArtifactDomainUnlocked,
+} from '../artifact/ArtifactProgression'
 import type { PlayerData } from './Player'
 import {
   CULTIVATION_PATH_MODULES,
@@ -17,6 +20,7 @@ import {
   type PathWayRead,
 } from './CultivationPathKit'
 import { registerDomainDeltaDeriver, type StatModifier } from '../stats/StatCalculator'
+import { isRealmAvailable } from '../realm/ReleasePolicy'
 import { type StatDomain } from '../stats/StatDomain'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { Stats } from '../stats/StatBlock'
@@ -367,13 +371,29 @@ export function grantCultivationPathRealmReward(
     return false
   }
 
+  // M-F-CEILING - realm-entry rewards for unreleased realms stay dormant
+  // (authored records such as the canonical golden_core+ passive ladder
+  // are kept; the release policy suppresses the grant itself).
+  if (!isRealmAvailable(realmId)) {
+    return false
+  }
+
   const reward = getActiveWayDefinition(player)?.realmRewards?.[realmId]
 
   if (!reward) {
     return false
   }
 
-  if (reward.artifactId && !player.artifact) {
+  // M-F-ARTIFACT-DEFER - the release check above alone would let any
+  // caller passing 'golden_core' awaken the domain on a below-unlock
+  // player once the window opens; the artifact leg also requires the
+  // player to have REACHED the unlock realm (reach+window, same seam
+  // every other artifact action composes).
+  if (
+    reward.artifactId &&
+    !player.artifact &&
+    isArtifactDomainUnlocked(player.realmId)
+  ) {
     player.artifact = createDefaultArtifactProgress(reward.artifactId)
   }
 

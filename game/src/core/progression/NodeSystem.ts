@@ -4,6 +4,7 @@ import { hasStaticPathCapability } from '../player/CultivationPathSystem'
 
 import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import { getRealmIndex } from '../realm/realmSystem'
+import { getEffectiveTechniqueRank } from '../technique/TechniqueProgression'
 import { getNodeCostFreeChance } from '../talent/TalentEffects'
 import { kiemDaoCap } from '../kiem-tu/NguKiemDao'
 import { getSkillCoreLevel, getSkillCoreUpgradeCost, skillCoreNodeId } from './SkillCoreLevel'
@@ -112,12 +113,19 @@ export function hasPrerequisite(player: PlayerData, prerequisite: NodePrerequisi
       return state.kiemDaoCount < kiemDaoCap(realmIndex)
     }
 
-    // P7-M6 - technique gates read the mirror only; absent mirror fails
-    // closed for any positive requirement (a rank:0/grade:0 gate would
-    // pass - authored thresholds stay >= 1 by data discipline).
+    // P7-M6 + M-F-TECHNIQUE (F5) - technique gates read the live-cycle
+    // mirror only; absent mirror fails closed for any positive
+    // requirement (a rank:0/grade:0 gate would pass - authored
+    // thresholds stay >= 1 by data discipline). F5 effective rank:
+    // a lagging live grade contributes rank 0 - the sealed cycle's
+    // rank dies at freeze, frozen-before-grade-up window included.
+    // Owned node levels above the gate stay legal frozen surplus
+    // (purchase/upgrade gates never de-level).
     case 'techniqueRank':
-      return (player.techniqueProgress?.rank ?? 0) >= prerequisite.rank
+      return getEffectiveTechniqueRank(player.techniqueProgress, player.realmId) >= prerequisite.rank
 
+    // techniqueGrade reads the LIVE grade (monotonic nondecreasing
+    // across catch-up) - no effective-rank semantics apply.
     case 'techniqueGrade':
       return (player.techniqueProgress?.grade ?? 0) >= prerequisite.grade
   }
@@ -270,7 +278,7 @@ export function canUpgradeNode(player: PlayerData, node: ProgressionNode): boole
  * Returns true when the cost was waived (caller deducts nothing).
  */
 function rollVanDaoWaive(player: PlayerData, node: ProgressionNode, cost: number): boolean {
-  const chance = getNodeCostFreeChance(player.selectedTalentIds)
+  const chance = getNodeCostFreeChance(player.selectedTalentIds, player.talentLevels)
 
   if (chance <= 0 || cost <= 0) {
     return false
@@ -544,9 +552,27 @@ export function devResetBranch(
     refund += revokeNodeOwnership(player, node, registry)
   }
 
-  // Orphan-child cascade removal: loop until stable - any node still levelled
-  // whose 'node' parent prereq drops to 0 gets removed too (refunding it as
-  // well, since its state is no longer valid).
+  refund += cascadeRevokeOrphanedNodes(player, registry)
+
+  // Refunds Insight to the player (sec.6.10).
+  player.skillInsight += refund
+
+  return refund
+}
+
+/**
+ * Orphan-child cascade removal shared by devResetBranch and
+ * respecNodeTree: loops until stable - any node still levelled whose
+ * 'node' parent prereq drops to 0 gets revoked too (refunding it as
+ * well, since its state is no longer valid). preservedIds exempts a node
+ * from the sweep entirely (commit markers are never respec targets).
+ */
+function cascadeRevokeOrphanedNodes(
+  player: PlayerData,
+  registry: { getAll(): ProgressionNode[]; has(id: string): boolean; get(id: string): ProgressionNode },
+  preservedIds?: ReadonlySet<string>,
+): number {
+  let refund = 0
   let changed = true
 
   while (changed) {
@@ -554,6 +580,10 @@ export function devResetBranch(
 
     for (const node of registry.getAll()) {
       if (getNodeLevel(player, node.id) < 1) {
+        continue
+      }
+
+      if (preservedIds?.has(node.id)) {
         continue
       }
 
@@ -570,10 +600,177 @@ export function devResetBranch(
     }
   }
 
-  // Refunds Insight to the player (sec.6.10).
+  return refund
+}
+
+/**
+ * Nodes that sit under `rootId` through 'node'-kind prerequisites - the
+ * same set the orphan cascade would sweep if the root itself were
+ * revoked. Used when a preserved root still seeds a scoped reset.
+ */
+function subtreeDescendants(
+  rootId: string,
+  registry: { getAll(): ProgressionNode[]; get(id: string): ProgressionNode },
+): ProgressionNode[] {
+  const subtree = new Set([rootId])
+  let changed = true
+
+  while (changed) {
+    changed = false
+
+    for (const node of registry.getAll()) {
+      if (subtree.has(node.id)) {
+        continue
+      }
+
+      const descends = (node.prerequisites ?? []).some(
+        prerequisite => prerequisite.kind === 'node' && subtree.has(prerequisite.nodeId),
+      )
+
+      if (descends) {
+        subtree.add(node.id)
+        changed = true
+      }
+    }
+  }
+
+  subtree.delete(rootId)
+
+  return [...subtree].map(id => registry.get(id))
+}
+
+/**
+ * Scope of a player respec (M-F-RESPEC, ruling S14). `rootId` scopes the
+ * reset to the subtree rooted at that node - the node itself plus every
+ * descendant orphaned by its removal; omitting it resets the whole
+ * NodeTree (the branch defaults to the whole NodeTree root). `preserveIds`
+ * exempts owned ids from any reset - commitment markers the player cannot
+ * re-acquire (e.g. Phap Tu element roots) belong here. Preservation
+ * excludes a node from REVOCATION, not from seeding: a scoped reset
+ * aimed at a preserved root keeps the root but still resets its owned
+ * descendants - the un-rebuyable commit marker is an orchestration
+ * concern, while descendant investment stays ordinary tree state.
+ */
+export interface NodeRespecScope {
+  rootId?: string
+  preserveIds?: readonly string[]
+}
+
+/**
+ * M-F-RESPEC (ruling S14) - player-facing FREE Beta respec: revokes
+ * ownership of every node inside `scope` and refunds 100% of the Insight
+ * ACTUALLY paid (same paidForNodeLevels + nodeFreePurchaseRecord
+ * accounting as devResetBranch), then cascade-revokes orphaned
+ * descendants. Whole-tree scope covers every non-core node - skill cores
+ * (levelsSkillId) are not tree content and only revoke through
+ * grantsSkillCoreIds ties, so a learned skill can never be stranded at
+ * level 0. A branch scope targets the subtree root plus whatever it
+ * orphans; when the root itself is preserved the reset still sweeps its
+ * owned descendants. Deterministic, idempotent (a repeat call refunds 0)
+ * and save-safe: only canonical node fields + skillInsight are written.
+ */
+export function respecNodeTree(
+  player: PlayerData,
+
+  registry: { getAll(): ProgressionNode[]; has(id: string): boolean; get(id: string): ProgressionNode },
+
+  scope?: NodeRespecScope,
+): number {
+  const preservedIds = new Set(scope?.preserveIds ?? [])
+
+  let targets: ProgressionNode[] = []
+
+  if (scope?.rootId !== undefined) {
+    if (registry.has(scope.rootId)) {
+      targets = preservedIds.has(scope.rootId)
+        ? // A preserved root is exempt from revocation but still seeds
+          // its subtree - reset the owned descendants below it instead.
+          subtreeDescendants(scope.rootId, registry).filter(
+            node => !preservedIds.has(node.id),
+          )
+        : [registry.get(scope.rootId)]
+    }
+  } else {
+    targets = registry
+      .getAll()
+      .filter(node => node.levelsSkillId === undefined && !preservedIds.has(node.id))
+  }
+
+  if (targets.length === 0) {
+    return 0
+  }
+
+  // Atomicity (C2C round-8 pin): the mutation body mutates `player`
+  // node by node, so the identical body is dry-run on a detached JSON
+  // clone first - any throw (broken dependency/core tie, corrupt record)
+  // fails closed here, BEFORE the first real mutation. The player object
+  // can never be left half-respecced.
+  respecApply(JSON.parse(JSON.stringify(player)) as PlayerData, targets, registry, preservedIds)
+
+  return respecApply(player, targets, registry, preservedIds)
+}
+
+/**
+ * The respec mutation body shared by the real call and its clone
+ * preflight: revoke every target, cascade-revoke orphans, then a single
+ * Insight write once every revocation has settled.
+ */
+function respecApply(
+  player: PlayerData,
+
+  targets: ProgressionNode[],
+
+  registry: { getAll(): ProgressionNode[]; has(id: string): boolean; get(id: string): ProgressionNode },
+
+  preservedIds: ReadonlySet<string>,
+): number {
+  let refund = 0
+
+  for (const node of targets) {
+    refund += revokeNodeOwnership(player, node, registry)
+  }
+
+  refund += cascadeRevokeOrphanedNodes(player, registry, preservedIds)
+
   player.skillInsight += refund
 
   return refund
+}
+
+/**
+ * Read-only projection of respecNodeTree for the confirm dialog - runs
+ * the real implementation against a structured clone so preview and
+ * commit can never diverge (the report IS the dry-run diff).
+ */
+export interface NodeRespecPreview {
+  /** Insight the commit would return (same actual-paid accounting). */
+  refund: number
+  /** Every ownership record the reset would remove: in-scope purchased
+   * nodes + cascade orphans + revoked granted cores (C2C round-8: the
+   * confirm dialog's count covers all of them as one number). */
+  resetNodeIds: string[]
+  resetCount: number
+}
+
+export function previewNodeRespec(
+  player: PlayerData,
+
+  registry: { getAll(): ProgressionNode[]; has(id: string): boolean; get(id: string): ProgressionNode },
+
+  scope?: NodeRespecScope,
+): NodeRespecPreview {
+  // JSON round-trip (not structuredClone): callers hand in the Pinia
+  // reactive state, which structuredClone refuses; PlayerData is what
+  // the save system serializes, so JSON round-trip is exact.
+  const sim = JSON.parse(JSON.stringify(player)) as PlayerData
+
+  const refund = respecNodeTree(sim, registry, scope)
+
+  const resetNodeIds = Object.keys(player.nodeLevels ?? {}).filter(
+    id => !(id in (sim.nodeLevels ?? {})),
+  )
+
+  return { refund, resetNodeIds, resetCount: resetNodeIds.length }
 }
 
 /**

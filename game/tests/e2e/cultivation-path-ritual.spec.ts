@@ -172,6 +172,18 @@ async function winQuanKhiAndOpenRitual(page: import('@playwright/test').Page): P
     })
     .toMatch(/victory|defeat|cleared/)
 
+  // M-F-TALENT: victory mints a mandatory talent entitlement that locks
+  // the transition until resolved - pick the first offer before drain.
+  const entitlementModal = page.locator('[data-testid="talent-entitlement-modal"]')
+  const entitlementShown = await entitlementModal
+    .waitFor({ state: 'visible', timeout: 15_000 })
+    .then(() => true)
+    .catch(() => false)
+  if (entitlementShown) {
+    await entitlementModal.locator('button').first().click()
+    await expect(entitlementModal).toHaveCount(0)
+  }
+
   // Route home + the outcome's standalonePanel commit.
   const wheelLayer = page.locator('.command-wheel-layer')
   await expect(wheelLayer).toBeAttached({ timeout: 30_000 })
@@ -406,7 +418,7 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
     assertNoBrowserErrors(collected)
   })
 
-  test('spell/spell_pathway: ritual -> element tree + artifact entitlement', async ({ page }) => {
+  test('spell/spell_pathway: ritual -> element tree + artifact deferred to Kim Dan', async ({ page }) => {
     test.setTimeout(240_000)
     const collected = collectBrowserErrors(page)
 
@@ -433,13 +445,23 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
     await expect(page.locator('.skill-path-panel')).toBeVisible({ timeout: 15_000 })
     await expect(page.locator('.skill-path-panel__element-tab')).toHaveCount(5)
 
-    // F1 oracle (positive): at foundation_establishment the way grants
-    // ngu_hanh_chau - the phap_bao wheel slot must be ENABLED and the
-    // artifact must materialize on restore.
+    // M-F-ARTIFACT-DEFER oracle: the artifact domain is deferred to
+    // Kim Dan+ (outside the release window) - at foundation_establishment
+    // the way no longer grants ngu_hanh_chau, restore must NOT
+    // materialize it, and the phap_bao wheel slot stays disabled with
+    // the release-hidden reason.
     const current = await readSave(page)
     const advanced = {
       ...current!,
       player: { ...current!.player, realmId: 'foundation_establishment', realmLevel: 1 },
+      // M-F-TECHNIQUE (v75) save integrity: the realm bump leaves the
+      // live grade lagging (grade 1 < realm index 2), so the seeded
+      // save must carry the born-sealed grade-1 record the realm-exit
+      // freeze seam would have written - without it restore rejects.
+      techniques: current!.techniques.map((technique) => ({
+        ...technique,
+        gradeHistory: { 1: { finalRank: 0, completionState: 'partial' } },
+      })),
     }
     await page.addInitScript(
       ({ key, payload }) => {
@@ -451,12 +473,12 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
     await reauthAndEnterHome(page)
 
     const restored = await saveAndRead(page)
-    expect(restored.player.artifact?.artifactId).toBe('ngu_hanh_chau')
+    expect(restored.player.artifact).toBeUndefined()
 
     await page.keyboard.press('Tab')
     const artifactSlot = page.locator('[data-wheel-slot="phap_bao"]')
     await expect(artifactSlot).toBeVisible({ timeout: 10_000 })
-    await expect(artifactSlot).not.toHaveAttribute('aria-disabled', 'true')
+    await expect(artifactSlot).toHaveAttribute('aria-disabled', 'true')
 
     assertNoBrowserErrors(collected)
   })
@@ -511,6 +533,14 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
     const advanced = {
       ...current!,
       player: { ...current!.player, realmId: 'foundation_establishment', realmLevel: 1 },
+      // M-F-TECHNIQUE (v75) save integrity: the realm bump leaves the
+      // live grade lagging (grade 1 < realm index 2), so the seeded
+      // save must carry the born-sealed grade-1 record the realm-exit
+      // freeze seam would have written - without it restore rejects.
+      techniques: current!.techniques.map((technique) => ({
+        ...technique,
+        gradeHistory: { 1: { finalRank: 0, completionState: 'partial' } },
+      })),
     }
     await page.addInitScript(
       ({ key, payload }) => {

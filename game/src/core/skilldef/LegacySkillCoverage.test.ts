@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { COMPANIONS, type CompanionInstance } from '../../data/companion/Companions'
+import { REALMS } from '../../data/realms/realm'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { KIEM_PHO_COMBOS } from '../../data/skill/KiemPhoCombos'
 import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
@@ -108,6 +109,7 @@ const DEF_PRODUCER_FUNCTIONS: Record<string, string> = {
 const NON_DEF_FUNCTIONS: Record<string, string> = {
   '../../data/skill/KiemPhoOrbs.ts#unlockedOrbs': 'realm-gated orb-id list (returns OrbId[])',
   '../../data/skill/TurnSkillDisplayMeta.ts#turnSkillDisplayMetaOf': 'display metadata lookup',
+  '../../data/companion/Companions.ts#isBetaCompanionGift': 'gift-acquisition authority predicate (M-F-COMPANION-GIFT)',
 }
 
 // Authored combos whose pattern can never complete through the real
@@ -639,7 +641,7 @@ function collectCastableDefs(): Census {
     instanceId: 'inst.census',
     definitionId: 'census',
     realmId: 'tribulation',
-    realmLevel: 9,
+    realmLevel: REALMS.find((realm) => realm.id === 'tribulation')!.maxLevel,
     exp: 0,
     constellationRank: 6,
   }

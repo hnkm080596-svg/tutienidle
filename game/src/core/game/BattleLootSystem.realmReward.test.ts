@@ -46,7 +46,7 @@ describe('BattleLootSystem — realm reward scaling', () => {
     // passes through RewardSystem.
     expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 8 })
     loot.settleTechniqueMastery()
-    expect(gainMastery).toHaveBeenCalledWith(35)
+    expect(gainMastery).toHaveBeenCalledWith(35, 'mortal', 1)
     expect(loot.getSummary().spiritStone).toBe(8)
   })
 
@@ -62,7 +62,7 @@ describe('BattleLootSystem — realm reward scaling', () => {
 
     expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 75 })
     loot.settleTechniqueMastery()
-    expect(gainMastery).toHaveBeenCalledWith(270)
+    expect(gainMastery).toHaveBeenCalledWith(270, 'mortal', 1)
     expect(loot.getSummary().spiritStone).toBe(75)
   })
 
@@ -79,7 +79,7 @@ describe('BattleLootSystem — realm reward scaling', () => {
     // Tụ Bảo retired — chỉ còn realm ×3, đúng hành vi "save cũ an toàn".
     expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 75 })
     loot.settleTechniqueMastery()
-    expect(gainMastery).toHaveBeenCalledWith(270)
+    expect(gainMastery).toHaveBeenCalledWith(270, 'mortal', 1)
     expect(loot.getSummary().spiritStone).toBe(75)
   })
 
@@ -110,7 +110,7 @@ describe('BattleLootSystem — realm reward scaling', () => {
 
     expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 90 })
     loot.settleTechniqueMastery()
-    expect(gainMastery).toHaveBeenCalledWith(315)
+    expect(gainMastery).toHaveBeenCalledWith(315, 'mortal', 1)
   })
 
   it('equipment rơi qua pool draw dùng quality cho particle và rank accent', () => {

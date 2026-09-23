@@ -20,6 +20,7 @@ import { buildings } from '../../data/building/buildings'
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { makeInstance } from '../equipment/EquipmentInstance.fixture'
+import { MERIDIANS } from '../../data/realm/Meridians'
 import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 import type { Skill } from '../skill/Skill'
@@ -105,6 +106,7 @@ const LIVE_TECHNIQUE: Technique = {
   rank: 0,
   mastery: 0,
   quality: 'hoang',
+  gradeHistory: {},
 }
 
 // P7-M3 (v70) - the holder contract is way-owned: a save carrying a
@@ -131,6 +133,7 @@ const SAVED_TECHNIQUE: Technique = {
   rank: 2,
   mastery: 100,
   quality: 'huyen',
+  gradeHistory: {},
 }
 
 const TEST_QUEST: Quest = {
@@ -853,7 +856,7 @@ describe('v70 technique holder preflight', () => {
     ['grade 0', { grade: 0 }],
     ['grade above the realm ceiling', { grade: 99 }],
     ['negative rank', { rank: -1 }],
-    ['rank above cap', { rank: 11 }],
+    ['rank above cap', { rank: 19 }],
     ['negative mastery', { mastery: -1 }],
     ['mastery >= rank cost', { mastery: 300 }],
     ['invalid quality', { quality: 'mythic' }],
@@ -866,13 +869,145 @@ describe('v70 technique holder preflight', () => {
     expect(manager.techniqueManager.getActive()).toBeUndefined()
   })
 
-  it('rejects rank 10 with nonzero mastery', () => {
+  // M-F-TECHNIQUE - the at-cap mastery invariant moved with the cap:
+  // rank 18 (not 10) is now the mastery-zero boundary.
+  it('rejects rank 18 with nonzero mastery', () => {
     const manager = makeManager()
-    const bad = { ...structuredClone(SAVED_TECHNIQUE), rank: 10, mastery: 5 } as Technique
+    const bad = { ...structuredClone(SAVED_TECHNIQUE), rank: 18, mastery: 5 } as Technique
     const save = baseSave(swordCommittedPlayer(), { techniques: [bad] })
 
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/Invalid technique/i)
     expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+})
+
+// M-F-TECHNIQUE (v75) - gradeHistory coherence preflight: the field is
+// required, every record shape-checks, and the canonical key set is
+// {1..grade-1} sealed plus {grade} iff the live grade lags the realm
+// (grade < realmIndex). An in-band live cycle never carries a record.
+describe('v75 technique gradeHistory coherence preflight', () => {
+  it('rejects a technique carrying no gradeHistory field', () => {
+    const manager = makeManager()
+    const bad = structuredClone(SAVED_TECHNIQUE)
+    Reflect.deleteProperty(bad, 'gradeHistory')
+    const save = baseSave(swordCommittedPlayer(), { techniques: [bad] })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/Invalid technique/i)
+    expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+
+  it.each([
+    ['bad completionState', { 1: { finalRank: 12, completionState: 'hoan_thanh' } }],
+    ['finalRank above cap', { 1: { finalRank: 19, completionState: 'vien_man' } }],
+    ['non-integer finalRank', { 1: { finalRank: 3.5, completionState: 'partial' } }],
+    ['key above live grade', { 3: { finalRank: 0, completionState: 'partial' } }],
+    ['non-object record', { 1: 'broken' }],
+    // C2C r43 - alias spellings coerce via Number() to a canonical
+    // grade but are stray records (writer emits canonical digits only).
+    ['alias key "01"', { '01': { finalRank: 12, completionState: 'dai_thanh' } }],
+    ['alias key "1.0"', { '1.0': { finalRank: 12, completionState: 'dai_thanh' } }],
+    ['alias key "1e0"', { '1e0': { finalRank: 12, completionState: 'dai_thanh' } }],
+    ['alias key " 1"', { ' 1': { finalRank: 12, completionState: 'dai_thanh' } }],
+    ['alias key "0x1"', { '0x1': { finalRank: 12, completionState: 'dai_thanh' } }],
+  ])('rejects malformed gradeHistory records: %s', (_label, gradeHistory) => {
+    const manager = makeManager()
+    const bad = {
+      ...structuredClone(SAVED_TECHNIQUE),
+      gradeHistory: gradeHistory as Technique['gradeHistory'],
+    }
+    const save = baseSave(swordCommittedPlayer(), { techniques: [bad] })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/Invalid technique/i)
+    expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+
+  it('rejects a sealed record on an in-band live grade', () => {
+    const manager = makeManager()
+    const bad = structuredClone(SAVED_TECHNIQUE)
+    bad.gradeHistory = { 1: { finalRank: 12, completionState: 'dai_thanh' } }
+    const save = baseSave(swordCommittedPlayer(), { techniques: [bad] })
+
+    // SAVED_TECHNIQUE is grade 1 at qi_refining (index 1): in-band -
+    // a live-grade record must never coexist.
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/Invalid technique/i)
+    expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+
+  it('rejects a canonical key plus an alias-stray on a lagging holder', () => {
+    const manager = makeManager()
+    const bad = structuredClone(SAVED_TECHNIQUE)
+    bad.grade = 2
+    bad.gradeHistory = {
+      1: { finalRank: 12, completionState: 'dai_thanh' },
+      '01': { finalRank: 12, completionState: 'dai_thanh' },
+      2: { finalRank: 0, completionState: 'partial' },
+    } as Technique['gradeHistory']
+    const player = swordCommittedPlayer()
+    player.realmId = 'golden_core' // index 3 -> grade 2 lags
+    const save = baseSave(player, { techniques: [bad] })
+
+    // {1} + {2} are canonical for a lagging grade 2, but '01' is a
+    // grade-1-equivalent stray - canonical key set admits no extras.
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/Invalid technique/i)
+    expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+
+  it('rejects a lagging holder missing a sealed lower-grade record', () => {
+    const manager = makeManager()
+    const bad = structuredClone(SAVED_TECHNIQUE)
+    bad.grade = 2
+    bad.gradeHistory = { 2: { finalRank: 0, completionState: 'partial' } }
+    const player = swordCommittedPlayer()
+    player.realmId = 'golden_core' // index 3 -> grade 2 lags
+    const save = baseSave(player, { techniques: [bad] })
+
+    // grade 2 lagging requires {1} sealed AND {2} - the {1} key is
+    // missing here.
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/Invalid technique/i)
+    expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+
+  it('restores the canonical frozen-at-exit state (grade 1 lagging inside foundation_establishment)', () => {
+    const manager = makeManager()
+    const sealed = structuredClone(SAVED_TECHNIQUE)
+    sealed.rank = 12
+    sealed.gradeHistory = { 1: { finalRank: 12, completionState: 'dai_thanh' } }
+    const player = swordCommittedPlayer()
+    player.realmId = 'foundation_establishment'
+    player.realmLevel = 1
+    const save = baseSave(player, { techniques: [sealed] })
+
+    manager.saveOps.restoreFromSave(save)
+
+    const restored = manager.techniqueManager.getActive()!
+    expect(restored.grade).toBe(1)
+    expect(restored.rank).toBe(12)
+    expect(restored.gradeHistory).toEqual({ 1: { finalRank: 12, completionState: 'dai_thanh' } })
+  })
+
+  it('restores a mid-catch-up lagging holder (grade 2 inside golden_core with both records)', () => {
+    const manager = makeManager()
+    const catchingUp = structuredClone(SAVED_TECHNIQUE)
+    catchingUp.grade = 2
+    catchingUp.quality = 'thien'
+    catchingUp.rank = 0
+    catchingUp.gradeHistory = {
+      1: { finalRank: 18, completionState: 'vien_man' },
+      2: { finalRank: 0, completionState: 'partial' },
+    }
+    const player = swordCommittedPlayer()
+    player.realmId = 'golden_core'
+    player.realmLevel = 4
+    const save = baseSave(player, { techniques: [catchingUp] })
+
+    manager.saveOps.restoreFromSave(save)
+
+    const restored = manager.techniqueManager.getActive()!
+    expect(restored.grade).toBe(2)
+    expect(restored.gradeHistory).toEqual({
+      1: { finalRank: 18, completionState: 'vien_man' },
+      2: { finalRank: 0, completionState: 'partial' },
+    })
   })
 })
 
@@ -973,9 +1108,12 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     const mid = createDefaultPlayer()
     // M-E (D2): meridian progress needs the qi_refining page unlocked -
     // a mortal + opened meridian is now an integrity violation.
+    // M-F-CHU-THIEN (C2C-64): opened meridians also need the completed
+    // refinement predecessor (+ the mirrored bao grade) to stay
+    // coherent; residue at 6/6 would itself be a violation.
     mid.realmId = 'qi_refining'
-    mid.bodyProgression.body_refinement.completedTiers = 3
-    mid.bodyProgression.body_refinement.currentTierProgress = 100
+    mid.physiqueGrade = 'bao'
+    mid.bodyProgression.body_refinement.completedTiers = 6
     mid.bodyProgression.meridian.openedIds = ['nham_mach', 'doi_mach']
     expect(() => manager.saveOps.restoreFromSave(baseSave(mid))).not.toThrow()
   })
@@ -985,9 +1123,11 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     const player = createDefaultPlayer()
 
     // M-E (D2): the meridian progress below is only legit with the
-    // qi_refining page unlocked.
+    // qi_refining page unlocked. M-F-CHU-THIEN (C2C-64): it also needs
+    // the completed refinement predecessor + mirrored bao grade.
     player.realmId = 'qi_refining'
-    player.bodyProgression.body_refinement.completedTiers = 1
+    player.physiqueGrade = 'bao'
+    player.bodyProgression.body_refinement.completedTiers = 6
     player.bodyProgression.meridian.openedIds = ['nham_mach']
     // Stale persisted slices: a completed-tier id the state no longer
     // backs + a fabricated meridian entry. Chapter state wins.
@@ -1019,6 +1159,96 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     expect(ids.filter(id => id.startsWith('luyen-the:'))).toHaveLength(0)
     expect(ids).not.toContain('bat-mach:doc_mach:strength')
     expect(ids).toContain('bat-mach:nham_mach:maxHp')
+  })
+})
+
+// M-F-CHU-THIEN (C2C-64/70) - v77: the zhou_tian slice joins the
+// persisted canonical set, and the restore preflight enforces the
+// persisted sequential-coherence invariant: a progressed/completed
+// chapter requires every authored predecessor complete. Crafted
+// current-version payloads that violate the chain must be rejected
+// at the boundary with the live state untouched.
+describe('v77 zhou_tian slice + sequential coherence preflight', () => {
+  it('rejects a save missing the zhou_tian slice at player.bodyProgression.zhou_tian', () => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+    player.bodyProgression = {
+      body_refinement: { completedTiers: 0, currentTierProgress: 0 },
+      meridian: { openedIds: [] },
+    } as never
+
+    let thrown: unknown
+    try {
+      manager.saveOps.restoreFromSave(baseSave(player))
+    } catch (error) {
+      thrown = error
+    }
+
+    // The restore preflight rejects it at the integrity layer (the
+    // shape layer's player.bodyProgression.zhou_tian path is pinned in
+    // saveShapeValidation.test.ts).
+    expect(String(thrown)).toMatch(/zhou_tian missing/i)
+    expect(manager.skillManager.getAll()).toEqual([])
+  })
+
+  it.each([
+    ['meridian progressed while body_refinement incomplete', (p: PlayerData) => {
+      p.realmId = 'qi_refining'
+      p.bodyProgression.meridian.openedIds = ['nham_mach']
+    }],
+    ['zhou_tian progressed while meridian incomplete', (p: PlayerData) => {
+      p.realmId = 'foundation_establishment'
+      p.physiqueGrade = 'bao'
+      p.bodyProgression.body_refinement.completedTiers = 6
+      p.bodyProgression.zhou_tian.circulation = 5
+    }],
+    ['zhou_tian complete while meridian incomplete', (p: PlayerData) => {
+      p.realmId = 'foundation_establishment'
+      p.physiqueGrade = 'bao'
+      p.bodyProgression.body_refinement.completedTiers = 6
+      p.bodyProgression.zhou_tian.circulation = 360
+    }],
+    ['meridian complete while body_refinement incomplete', (p: PlayerData) => {
+      p.realmId = 'qi_refining'
+      p.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+    }],
+    // C2C-75 - realm-capacity invariant at the boundary: coherent
+    // predecessors (refinement + full meridian) but circulation beyond
+    // the TC Lv1 cap of 20 - the chapter's own integrity rejects it.
+    ['zhou_tian circulation above realm capacity', (p: PlayerData) => {
+      p.realmId = 'foundation_establishment'
+      p.realmLevel = 1
+      p.physiqueGrade = 'bao'
+      p.bodyProgression.body_refinement.completedTiers = 6
+      p.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+      p.bodyProgression.zhou_tian.circulation = 21
+    }],
+    ['zhou_tian complete at pre-completion realm level', (p: PlayerData) => {
+      p.realmId = 'foundation_establishment'
+      p.realmLevel = 9
+      p.physiqueGrade = 'bao'
+      p.bodyProgression.body_refinement.completedTiers = 6
+      p.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+      p.bodyProgression.zhou_tian.circulation = 360
+    }],
+  ])('rejects %s and leaves live state byte-equivalent unchanged', (_label, corrupt) => {
+    const manager = makeManager()
+    const live = createDefaultPlayer()
+    live.realmId = 'mortal'
+    live.bodyProgression.body_refinement.currentTierProgress = 7
+    manager.setActivePlayer(live)
+    const liveBefore = structuredClone(live)
+
+    const crafted = createDefaultPlayer()
+    corrupt(crafted)
+    const save = baseSave(crafted, { skills: [structuredClone(SAVED_SKILL)] })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/BodyProgression integrity/i)
+
+    // Zero-mutation: the active player and every owner slice are
+    // untouched (skills preflight also precedes apply).
+    expect(live).toEqual(liveBefore)
+    expect(manager.skillManager.getAll()).toEqual([])
   })
 })
 

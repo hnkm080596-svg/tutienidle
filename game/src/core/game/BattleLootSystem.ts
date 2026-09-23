@@ -8,7 +8,11 @@ import {
   getInsightGainMultiplier,
   getSpiritStoneGainMultiplier,
 } from '../talent/TalentEffects'
-import { applyArtifactExperience, getArtifactExperienceReward } from '../artifact/ArtifactProgression'
+import {
+  applyArtifactExperience,
+  getArtifactExperienceReward,
+  isArtifactDomainUnlocked,
+} from '../artifact/ArtifactProgression'
 import { applyCompanionExp, companionBattleExpPerKill } from '../companion/CompanionProgression'
 import { resolvePartyFormation } from './FormationPlacement'
 import { resolveDrops, type DropChannel, type ResolvedDropItem } from '../drop/resolveDrops'
@@ -29,6 +33,11 @@ import { getProfessionGradeForRealm } from '../profession/ProfessionGrade'
 import { itemQualityRank, professionGradeRank } from '../profession/slotRank'
 import { gradeLabel } from '../presentation/labels'
 import { physiqueEssenceGradeOf } from '../../data/realm/PhysiqueEssence'
+import {
+  isBreakthroughAcquisitionEnabled,
+  isCompanionPullTokenSourceSuppressed,
+  isDomainScopedAcquisitionEnabled,
+} from '../realm/ReleasePolicy'
 import type { PlayerData } from '../player/Player'
 
 /** Purple of the Tinh Hoa family stream (2026-08-30, M-QI-08) - flies back to the player. */
@@ -99,8 +108,12 @@ export interface BattleLootSystemDeps {
   questSystem: QuestSystem
   questRegistry: QuestRegistry
   questManager: QuestManager
-  // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — đếm kill Luyện Khí/reset
-  // khi giết quái ẩn.
+  // M-F-BODY-PERFECTION - material landings route through the ONE
+  // funnel (collect-quest + canonical discovery) instead of calling
+  // onMaterialCollected directly; quest deps stay for the kill hook.
+  notifyMaterialGained: (materialId: string, amount: number) => void
+  // Quai an (spec dot-pha-loi-kiep S4.1c) - dem kill Luyen Khi/reset
+  // khi giet quai an.
   hiddenBeast: HiddenBeastSystem
 }
 
@@ -129,16 +142,16 @@ export interface BattleLootSystemDeps {
 export class BattleLootSystem {
   private summary: BattleRewardSummary = createEmptyBattleRewardSummary()
 
-  // Receiver để phát thưởng khi battle hiện tại kết thúc thắng —
+  // Receiver de phat thuong khi battle hien tai ket thuc thang -
  // xem setSessionReceiver() v- processDefeatedEnemies().
   private receiver: RewardReceiver | null = null
 
-  // PlayerData của trận đang diễn ra — cần cho việc roll equipment
-  // rớt ra (chỉ số chính scale theo cảnh giới người chơi).
+  // PlayerData cua tran dang dien ra - can cho viec roll equipment
+  // rot ra (chi so chinh scale theo canh gioi nguoi choi).
   private player: PlayerData | null = null
 
-  // Kênh drop hiện tại — 'active' mặc định; auto-farm idle bật 'idle'
-  // qua setChannel() rồi khôi phục sau mỗi cycle (Task 9 wiring).
+  // Kenh drop hien tai - 'active' mac dinh; auto-farm idle bat 'idle'
+  // qua setChannel() roi khoi phuc sau moi cycle (Task 9 wiring).
   private channel: DropChannel = 'active'
 
   // P7-M3 - technique mastery tich luy theo kill, flush MOT lan o
@@ -189,7 +202,15 @@ export class BattleLootSystem {
       return
     }
 
-    const { gained } = this.deps.techniqueSystem.gainMastery(amount)
+    // M-F-TECHNIQUE - realm context enters at the settle seam: the
+    // realm-scaled ceiling (min(18, realmLevel) in-band; 0 while
+    // lagging) clamps accrual inside TechniqueSystem. No session
+    // player -> 'mortal'/0 fails closed (nothing trains).
+    const { gained } = this.deps.techniqueSystem.gainMastery(
+      amount,
+      this.player?.realmId ?? 'mortal',
+      this.player?.realmLevel ?? 0,
+    )
     this.summary.techniqueMastery += gained
 
     if (gained > 0 && sourceId) {
@@ -197,7 +218,7 @@ export class BattleLootSystem {
     }
   }
 
-  // startBattleWithPlayer() gọi sau beginBattle().
+  // startBattleWithPlayer() goi sau beginBattle().
   setSession(receiver: RewardReceiver, player: PlayerData) {
     this.receiver = receiver
     this.player = player
@@ -208,12 +229,12 @@ export class BattleLootSystem {
   }
 
   /**
-   * Nhiều quái có thể chết cùng lúc/liên tục (wave) -- quét TOÀN BỘ
-   * `enemies` mỗi tick, cấp thưởng cho con nào vừa chết mà chưa
-   * xử lý (rewardGranted là cờ chống lặp thưởng), rồi dọn khỏi mảng
-   * in-place. Không còn gate theo battle.state === 'victory' như model
-   * 1v1 cũ -- quái chết giữa chừng lúc battle vẫn 'fighting' vẫn phải
-   * cấp thưởng ngay, không đợi cả trận kết thúc.
+   * Nhieu quai co the chet cung luc/lien tuc (wave) -- quet TOAN BO
+   * `enemies` moi tick, cap thuong cho con nao vua chet ma chua
+   * xu ly (rewardGranted la co chong lap thuong), roi don khoi mang
+   * in-place. Khong con gate theo battle.state === 'victory' nhu model
+   * 1v1 cu -- quai chet giua chung luc battle van 'fighting' van phai
+   * cap thuong ngay, khong doi ca tran ket thuc.
    *
    * `healTarget` (F3, 2026-09-13) is the entity heal-on-kill applies to:
    * a real battle passes its live player entity; the auto-farm idle
@@ -232,13 +253,13 @@ export class BattleLootSystem {
 
       battleEnemy.rewardGranted = true
 
-      // Thiên phú Huyết Chiến — diệt quái hồi % max HP (plan §6). Đặt
-      // ngoài nhánh receiver để kill nào cũng hồi, kể cả trận không loot.
-      // Đi qua combatSystem.applyHealing() để phát 'entity_vitals_changed'
-      // (HUD máu cập nhật), không mutate thẳng currentHp như trước.
+      // Thien phu Huyet Chien - diet quai hoi % max HP (plan S6). Dat
+      // ngoai nhanh receiver de kill nao cung hoi, ke ca tran khong loot.
+      // Di qua combatSystem.applyHealing() de phat 'entity_vitals_changed'
+      // (HUD mau cap nhat), khong mutate thang currentHp nhu truoc.
       // healTarget = null is a deliberate opt-out (auto-farm idle).
       const healOnKillPercent = this.player
-        ? getHealOnKillMaxHpPercent(this.player.selectedTalentIds)
+        ? getHealOnKillMaxHpPercent(this.player.selectedTalentIds, this.player.talentLevels)
         : 0
 
       if (healOnKillPercent > 0 && healTarget !== null && healTarget.currentHp > 0) {
@@ -279,18 +300,18 @@ export class BattleLootSystem {
             rng: () => this.lootRng(),
           })
 
-          // Thiên phú Tụ Bảo — nhân Linh Thạch TRƯỚC khi giveReward để
-          // lượng thật vào túi khớp summary (plan §6).
+          // Thien phu Tu Bao - nhan Linh Thach TRUOC khi giveReward de
+          // luong that vao tui khop summary (plan S6).
           const talentStoneMultiplier = this.player
-            ? getSpiritStoneGainMultiplier(this.player.selectedTalentIds)
+            ? getSpiritStoneGainMultiplier(this.player.selectedTalentIds, this.player.talentLevels)
             : 1
-          // Scale thưởng theo cảnh giới stage (Trúc Cơ ×3, xem
-          // RealmRewardScale) — Trúc Cơ tái sử dụng enemyPool Luyện Khí
-          // nên phải nhân thưởng để thu nhập không bị khựng. Nhân cả
+          // Scale thuong theo canh gioi stage (Truc Co x3, xem
+          // RealmRewardScale) - Truc Co tai su dung enemyPool Luyen Khi
+          // nen phai nhan thuong de thu nhap khong bi khung. Nhan ca
           // techniqueMastery (tac dung phu: artifact EXP + skill insight
-          // tăng theo ở Trúc Cơ, đã được duyệt 2026-08-28). Currency now
+          // tang theo o Truc Co, da duoc duyet 2026-08-28). Currency now
           // comes from the stage drop table (already multiplied by the
-          // modifier currency coefficient inside resolveDrops) — the
+          // modifier currency coefficient inside resolveDrops) - the
           // realm/talent multipliers keep their position AFTER it.
           const realmRewardMultiplier = getRealmRewardMultiplier(enemy.realmId)
           const stoneMultiplier = talentStoneMultiplier * realmRewardMultiplier
@@ -305,7 +326,7 @@ export class BattleLootSystem {
           // vut - khong tra.
           this.pendingTechniqueMastery += rewards.techniqueMastery
 
-          // Tu vi giờ CHỈ đến từ tu luyện (2026-08-20) — EnemyReward
+          // Tu vi gio CHI den tu tu luyen (2026-08-20) - EnemyReward
           // khong con field cultivation. Spirit stone di qua receiver
           // (MaterialBag); techniqueMastery KHONG di qua RewardSystem
           // (khong phai Reward field) va skillInsight co duong inline
@@ -313,14 +334,14 @@ export class BattleLootSystem {
           // collision qua receiver.
           this.giveReward(this.receiver, { spiritStone: rewards.spiritStone })
 
-          // Cảm ngộ Kỹ năng — LUÔN cấp thẳng vào player, KHÔNG cần
+          // Cam ngo Ky nang - LUON cap thang vao player, KHONG can
           // so huu tam phap (khac techniqueMastery o tren, xem
-          // skill-insight-and-auto-combat-hud-plan.md mục 3).
-          // Thiên phú Đại Trí Nhược Ngu/Nghịch Thiên nhân tại đây (plan §6).
+          // skill-insight-and-auto-combat-hud-plan.md muc 3).
+          // Thien phu Dai Tri Nhuoc Ngu/Nghich Thien nhan tai day (plan S6).
           const baseSkillInsight = getSkillInsightReward(rewards)
           const skillInsightGained =
             baseSkillInsight > 0 && this.player
-              ? Math.floor(baseSkillInsight * getInsightGainMultiplier(this.player.selectedTalentIds))
+              ? Math.floor(baseSkillInsight * getInsightGainMultiplier(this.player.selectedTalentIds, this.player.talentLevels))
               : 0
 
           if (skillInsightGained > 0 && this.player) {
@@ -420,8 +441,8 @@ export class BattleLootSystem {
             this.player.bossKillCount += 1
           }
 
-          // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — đếm kill Luyện Khí;
-          // giết Huyết Mông reset cửa sổ về 0.
+          // Quai an (spec dot-pha-loi-kiep S4.1c) - dem kill Luyen Khi;
+          // giet Huyet Mong reset cua so ve 0.
           if (this.player) {
             this.deps.hiddenBeast.onEnemyDefeated(
               this.player,
@@ -435,10 +456,10 @@ export class BattleLootSystem {
       this.deps.enemySystem.despawn(battleEnemy.entity.id)
     }
 
-    // Dọn quái đã chết + đã cấp thưởng khỏi mảng -- tránh phình vô hạn
-    // qua nhiều wave trong cùng 1 stage. In-place splice: the same
+    // Don quai da chet + da cap thuong khoi mang -- tranh phinh vo han
+    // qua nhieu wave trong cung 1 stage. In-place splice: the same
     // postcondition the old `battle.enemies = filter(alive)` gave -- sau
-    // bước này `enemies` chỉ còn quái đang sống, nên "còn quái không" =
+    // buoc nay `enemies` chi con quai dang song, nen "con quai khong" =
     // check .length.
     for (let i = enemies.length - 1; i >= 0; i--) {
       const entry = enemies[i]
@@ -453,12 +474,12 @@ export class BattleLootSystem {
   }
 
   /**
-   * Đồ rơi thẳng vào bag tương ứng ngay khi quái chết — consume phần
-   * `items` resolveDrops đã quyết định (KHÔNG roll thêm gì ở đây; chỉ
-   * 'equipment_any' còn 1 lần rút template từ registry vì resolver
-   * không biết registry). Mỗi lần cộng thành công đẩy 1 toast 'loot'
-   * vào NotificationQueue. Lượng tràn stack (túi đầy) được gom lại và
-   * báo MỘT toast duy nhất cuối đợt thay vì mất lặng lẽ.
+   * Do roi thang vao bag tuong ung ngay khi quai chet - consume phan
+   * `items` resolveDrops da quyet dinh (KHONG roll them gi o day; chi
+   * 'equipment_any' con 1 lan rut template tu registry vi resolver
+   * khong biet registry). Moi lan cong thanh cong day 1 toast 'loot'
+   * vao NotificationQueue. Luong tran stack (tui day) duoc gom lai va
+   * bao MOT toast duy nhat cuoi dot thay vi mat lang le.
    */
   private grantResolvedDrops(
     items: ResolvedDropItem[],
@@ -467,8 +488,8 @@ export class BattleLootSystem {
   ) {
     const overflowParts: string[] = []
 
-    // Địa Giới ghép động (2026-08-15) — Zone chứa Stage đang hoạt động
-    // lúc rớt đồ, xem ZoneRegistry.getZoneForStage()/EquipmentNaming.ts.
+    // Dia Gioi ghep dong (2026-08-15) - Zone chua Stage dang hoat dong
+    // luc rot do, xem ZoneRegistry.getZoneForStage()/EquipmentNaming.ts.
     const activeStageId = this.deps.stageManager.getActive()?.stageId
     const zoneId = activeStageId
       ? this.deps.zoneRegistry.getZoneForStage(activeStageId)?.id
@@ -513,8 +534,8 @@ export class BattleLootSystem {
         nameTone: instance.quality === 'tien' ? 'tien' : undefined,
         gradeLabel: gradeLabel(instance.grade),
         amountLabel: '+1',
-        // Fix 2 follow-up (final review, optional minor) — dùng
-        // --grade-${quality} thay vì tự tính lại rank-color-N (dup logic
+        // Fix 2 follow-up (final review, optional minor) - dung
+        // --grade-${quality} thay vi tu tinh lai rank-color-N (dup logic
         // ITEM_QUALITY_ORDER.indexOf).
         accentColorVar: `--grade-${instance.quality}`,
       })
@@ -526,28 +547,48 @@ export class BattleLootSystem {
         case 'material':
           if (drop.itemId && this.deps.materialRegistry.has(drop.itemId)) {
             const material = this.deps.materialRegistry.get(drop.itemId)
+
+            // M-F-CEILING - breakthrough-scoped material stays dormant
+            // while release policy closes the transition into its tagged
+            // realm (post-resolve filter; rng order untouched).
+            if (!isBreakthroughAcquisitionEnabled(material.breakthroughRealmId)) {
+              break
+            }
+
+            // M-F-COMPANION-GIFT - censused pull-token drop lines stay
+            // dormant while the pull pool is closed; sibling lines still
+            // land (post-resolve filter; rng order untouched).
+            if (isCompanionPullTokenSourceSuppressed(drop.itemId)) {
+              break
+            }
+
+            // M-F-ARTIFACT-DEFER - domain-scoped material (doan_bao_thach
+            // today) additionally composes the window+reach rule keyed to
+            // the PLAYER's realm, so the retained authored row delivers
+            // only once the player unlocks the domain.
+            if (
+              !isDomainScopedAcquisitionEnabled(material.domainUnlockRealmId, this.player?.realmId)
+            ) {
+              break
+            }
+
             const amount = drop.amount
 
             const materialOverflow = this.deps.materialBag.add(material, amount)
 
-            // Collect-quest hook (review 2026-08-28) — chỉ tính lượng thật
-            // sự vào túi (trừ overflow).
-            this.deps.questSystem.onMaterialCollected(
-              this.deps.questRegistry,
-              this.deps.questManager,
-              drop.itemId,
-              amount - materialOverflow,
-            )
+            // Collect-quest + perfection-discovery hook - chi tinh
+            // luong that su vao tui (tru overflow).
+            this.deps.notifyMaterialGained(drop.itemId, amount - materialOverflow)
 
             if (materialOverflow > 0) {
               overflowParts.push(`${materialOverflow} ${material.name}`)
             }
 
             // Tinh Hoa family (2026-08-30, M-QI-08) - kind 'essence'
-            // riêng: stream tím bay VỀ NGƯỜI CHƠI (combat-essence-stream.ts),
-            // mote cuối chạm player mới nạp tiến độ Luyện Thể (App.vue
-            // drain). Loot đã vào bag ở trên nên presentation bị bỏ qua
-            // không mất gì. Family membership comes from the canonical
+            // rieng: stream tim bay VE NGUOI CHOI (combat-essence-stream.ts),
+            // mote cuoi cham player moi nap tien do Luyen The (App.vue
+            // drain). Loot da vao bag o tren nen presentation bi bo qua
+            // khong mat gi. Family membership comes from the canonical
             // PhysiqueEssence reverse lookup - presentation only, never
             // progression authority.
             if (physiqueEssenceGradeOf(drop.itemId) !== undefined) {
@@ -579,6 +620,13 @@ export class BattleLootSystem {
         case 'pill':
           if (drop.itemId && this.deps.pillRegistry.has(drop.itemId)) {
             const pill = this.deps.pillRegistry.get(drop.itemId)
+
+            // M-F-CEILING - breakthrough-scoped pill stays dormant while
+            // release policy closes the transition into its tagged realm.
+            if (!isBreakthroughAcquisitionEnabled(pill.breakthroughRealmId)) {
+              break
+            }
+
             const amount = drop.amount
 
             const pillOverflow = this.deps.pillBag.add(pill, amount)
@@ -614,13 +662,13 @@ export class BattleLootSystem {
           grantEquipment(drop.itemId)
           break
 
-        // 'equipment_any' — resolver trả về không kèm itemId; rút ngẫu
-        // nhiên 1 template từ registry (đường "rơi đồ ngẫu nhiên" cũ).
+        // 'equipment_any' - resolver tra ve khong kem itemId; rut ngau
+        // nhien 1 template tu registry (duong "roi do ngau nhien" cu).
         case 'equipment_any':
           grantEquipment(undefined)
           break
 
-        // P7-M3 — learn-by-drop retired: DropKind has no 'technique'
+        // P7-M3 - learn-by-drop retired: DropKind has no 'technique'
         // member, canonical techniques come from the Way at initiation.
       }
     }
@@ -641,13 +689,17 @@ export class BattleLootSystem {
   }
 
   /**
-   * EXP Bản Mệnh Pháp Bảo (doc §5.2) — cùng nguồn/nhịp per-kill với
-   * skillInsight ở trên (cộng THẲNG vào player.artifact, KHÔNG qua
-   * RewardReceiver/RewardSystem — đây là hồ điểm riêng, không cần
-   * trang bị/sở hữu gì khác để nhận, giống skillInsight).
+   * EXP Ban Menh Phap Bao (doc S5.2) - cung nguon/nhip per-kill voi
+   * skillInsight o tren (cong THANG vao player.artifact, KHONG qua
+   * RewardReceiver/RewardSystem - day la ho diem rieng, khong can
+   * trang bi/so huu gi khac de nhan, giong skillInsight).
    */
   private grantArtifactExperience(enemy: Enemy) {
-    if (!this.player?.artifact) {
+    // M-F-CEILING (C2C-12): the artifact domain is hidden for a
+    // beyond-ceiling save - EXP feed is domain ACCESS, so it stops here.
+    // The persisted artifact itself is untouched (restore never strips
+    // ownership; see normalizeArtifactProgress).
+    if (!this.player?.artifact || !isArtifactDomainUnlocked(this.player.realmId)) {
       return
     }
 
@@ -671,11 +723,11 @@ export class BattleLootSystem {
   }
 
   /**
-   * Cap mềm túi trang bị (audit 2026-08-31) — EquipmentBag.add() tự Hóa
-   * Luyện item "rác" nhất khi vượt cap và TRẢ rewards Tinh Hoa cho
-   * caller cộng. Null-safe với mock tests (add trả undefined khi bị
-   * mock). Cộng qua materialBag + quest hook như nhánh 'material',
-   * toast 1 lần mỗi batch qua NotificationQueue sẵn có.
+   * Cap mem tui trang bi (audit 2026-08-31) - EquipmentBag.add() tu Hoa
+   * Luyen item "rac" nhat khi vuot cap va TRA rewards Tinh Hoa cho
+   * caller cong. Null-safe voi mock tests (add tra undefined khi bi
+   * mock). Cong qua materialBag + quest hook nhu nhanh 'material',
+   * toast 1 lan moi batch qua NotificationQueue san co.
    */
   private grantAutoDissolveRewards(rewards: AutoDissolveReward[] | undefined) {
     const autoDissolved = rewards ?? []
@@ -689,15 +741,10 @@ export class BattleLootSystem {
         continue
       }
 
-      // 9.8 — tràn túi: quest chỉ tính delivered + toast bag.overflow.
+      // 9.8 - tran tui: funnel chi tinh delivered + toast bag.overflow.
       const overflow = this.deps.materialBag.add(this.deps.materialRegistry.get(reward.materialId), reward.amount)
 
-      this.deps.questSystem.onMaterialCollected(
-        this.deps.questRegistry,
-        this.deps.questManager,
-        reward.materialId,
-        reward.amount - overflow,
-      )
+      this.deps.notifyMaterialGained(reward.materialId, reward.amount - overflow)
 
       if (overflow > 0) {
         this.deps.notifications.push(
@@ -721,9 +768,9 @@ export class BattleLootSystem {
     return RANK_PARTICLE_COLORS[quality]
   }
 
-  // Gộp theo itemId+kind (nhiều wave cùng trận có thể rớt trùng loại)
-  // thay vì đẩy 1 dòng riêng mỗi lần rớt — CombatVictoryPanel hiện
-  // "+N tên vật phẩm" gọn, không lặp dòng.
+  // Gop theo itemId+kind (nhieu wave cung tran co the rot trung loai)
+  // thay vi day 1 dong rieng moi lan rot - CombatVictoryPanel hien
+  // "+N ten vat pham" gon, khong lap dong.
   private addBattleRewardItem(
     kind: BattleRewardItemKind,
     itemId: string,

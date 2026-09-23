@@ -8,7 +8,7 @@ const ui = useUiStore()
 
 <template>
   <Transition name="panel-slide-right">
-    <aside v-if="ui.characterOverlayOpen" class="right-panel ink-drawer">
+    <aside v-if="ui.characterOverlayOpen" class="right-panel ink-drawer sys-surface sys-corners sys-scanlines">
       <div class="right-panel__equipment"><EquipmentPaperdoll /></div>
       <div class="ink-divider" aria-hidden="true" />
       <div class="right-panel__inventory"><InventoryPanel /></div>

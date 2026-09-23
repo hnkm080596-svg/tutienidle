@@ -33,12 +33,14 @@ afterEach(() => {
 describe('dialog labeling (Remediation Task 6)', () => {
   it('ConfirmModal: alertdialog có aria-labelledby → title element + aria-describedby → message element', async () => {
     const open = ref(true)
-    const container = mountToBody(() =>
+    mountToBody(() =>
       h(ConfirmModal, { open: open.value, title: 'Xác nhận', message: 'Chắc chắn?' }),
     )
     await nextTick()
 
-    const dialog = container.querySelector<HTMLElement>('[role="alertdialog"]')!
+    // SysModalBase teleports to body (M-UI-SYSTEM) - the dialog no longer
+    // lives inside the mount container; query the document.
+    const dialog = document.querySelector<HTMLElement>('[role="alertdialog"]')!
 
     expect(dialog).toBeDefined()
 
@@ -82,7 +84,7 @@ describe('dialog labeling (Remediation Task 6)', () => {
   it('2 ConfirmModal đồng thời → ID KHÔNG trùng (per-instance)', async () => {
     const openA = ref(true)
     const openB = ref(true)
-    const container = mountToBody(() =>
+    mountToBody(() =>
       h('div', [
         h(ConfirmModal, { open: openA.value, title: 'A', message: 'mA' }),
         h(ConfirmModal, { open: openB.value, title: 'B', message: 'mB' }),
@@ -90,7 +92,7 @@ describe('dialog labeling (Remediation Task 6)', () => {
     )
     await nextTick()
 
-    const dialogs = container.querySelectorAll<HTMLElement>('[role="alertdialog"]')
+    const dialogs = document.querySelectorAll<HTMLElement>('[role="alertdialog"]')
 
     expect(dialogs).toHaveLength(2)
 

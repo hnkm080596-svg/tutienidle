@@ -16,10 +16,14 @@ import {
   type CommandWheelSlot,
 } from '@/data/ui/commandWheelCatalog'
 import { getCommandWheelOrbitDirection } from '@/data/ui/commandWheelOrbit'
-import { getRealmIndex } from '@/core/realm/realmSystem'
 import { resolveExpectedArtifactId } from '@/core/artifact/Artifact'
+import {
+  ARTIFACT_UNLOCK_REALM_ID,
+  isArtifactDomainUnlocked,
+} from '@/core/artifact/ArtifactProgression'
 import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
 import { isFormationUnlocked } from '@/core/game/FormationPlacement'
+import { isRealmAvailable } from '@/core/realm/ReleasePolicy'
 import NotificationBadge from '@/components/common/NotificationBadge.vue'
 
 const ui = useUiStore()
@@ -35,12 +39,19 @@ const navigation = useBuildingNavigation()
 // phải catalog) — xem ghi chú "catalog thuần data" trong
 // commandWheelCatalog.ts.
 const disabledContext = computed<CommandWheelDisabledContext>(() => ({
-  hasFoundationRealm: getRealmIndex(player.realmId) >= getRealmIndex('foundation_establishment'),
+  artifactDomainUnlocked: isArtifactDomainUnlocked(player.realmId),
+  // M-F-ARTIFACT-DEFER: whether the domain's unlock realm sits inside
+  // the release window - decides between the release-hidden reason and
+  // the "requires Kim Dan" progression lock in the slot tooltip.
+  artifactUnlockRealmAvailable: isRealmAvailable(ARTIFACT_UNLOCK_REALM_ID),
   hasArtifactDefinition: Boolean(resolveExpectedArtifactId(player)),
   // P7-M9: the M9 slots consume the authoritative domain predicates so
   // the wheel never drifts from ops/commit gates when a threshold moves.
   companionDomainUnlocked: isCompanionDomainUnlocked(player.realmId),
   formationUnlocked: isFormationUnlocked(player.realmId),
+  // M-F-CEILING (C2C-12): distinguishes "locked until Truc Co" from
+  // "hidden by the release ceiling" in the slot tooltips.
+  realmReleaseUnavailable: !isRealmAvailable(player.realmId),
 }))
 
 function disabledReason(slot: CommandWheelSlot): string | null {

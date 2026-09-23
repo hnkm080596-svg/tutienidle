@@ -11,6 +11,7 @@ import { PillRegistry } from '../pill/PillRegistry'
 import { PillBag } from '../pill/PillBag'
 import { NotificationQueue } from './NotificationQueue'
 import type { PlayerData } from '../player/Player'
+import { recordBodyPerfectionMaterialDiscovery } from '../realm/body/BodyPerfection'
 
 export interface GameManagerQuestOpsDeps {
   questSystem: QuestSystem
@@ -44,20 +45,34 @@ export class GameManagerQuestOps {
   constructor(private readonly deps: GameManagerQuestOpsDeps) {}
 
   /**
-   * Collect-quest hook (review 2026-08-28 bug #3) — gọi MỖI KHI material
-   * vào túi người chơi để tăng progress collect-quest đang active. KHÔNG
-   * gọi khi restore từ save (double-count). BattleLootSystem tự gọi trực
-   * tiếp (có deps quest); các đường cộng material còn lại của GameManager
-   * (production settle, claim toà nhà, Hóa Luyện, Linh Thạch reward...)
-   * đi qua helper này.
+   * Material-landing funnel (M-F-BODY-PERFECTION, ex
+   * notifyQuestMaterialGained) - call EVERY time a material lands in
+   * the player bag. Fans out to TWO canonical consumers: collect-quest
+   * progress (questSystem.onMaterialCollected) and perfection-material
+   * discovery (recordBodyPerfectionMaterialDiscovery). A zero/negative
+   * delivered amount is not a landing: no subscriber fires at all.
+   * NEVER call during save restore (double-count).
+   * BattleLootSystem and every GameManager material-granting path
+   * (production settle, building claim, Hoa Luyen, Linh Thach reward,
+   * refund, change credit...) route through this helper.
    */
-  notifyQuestMaterialGained(materialId: string, amount: number): void {
+  notifyMaterialGained(materialId: string, amount: number): void {
+    if (amount <= 0) {
+      return
+    }
+
     this.deps.questSystem.onMaterialCollected(
       this.deps.questRegistry,
       this.deps.questManager,
       materialId,
       amount,
     )
+
+    const player = this.deps.getActivePlayer()
+
+    if (player) {
+      recordBodyPerfectionMaterialDiscovery(player, materialId)
+    }
   }
 
   getActiveQuests(): { quest: Quest; progress: QuestProgress }[] {
@@ -105,6 +120,11 @@ export class GameManagerQuestOps {
         pillBag: this.deps.pillBag,
         // 9.8 — quest reward material tràn túi → push toast qua sink.
         notifications: this.deps.notifications,
+        // M-F-BODY-PERFECTION - reward materials granted inside claim()
+        // route back through THIS funnel (quest + discovery), instead of
+        // the legacy direct onMaterialCollected call.
+        onMaterialGained: (materialId, delivered) =>
+          this.notifyMaterialGained(materialId, delivered),
       },
       questId,
     )

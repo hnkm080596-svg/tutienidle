@@ -12,6 +12,7 @@ import {
   getBodyRefinementCompletedTiers,
   getOpenedMeridianCount,
   investBodyChapterState,
+  isBodyChapterUnlocked,
 } from './BodyProgressionSystem'
 
 describe('BodyProgressionSystem - unified invest dispatch', () => {
@@ -54,12 +55,62 @@ describe('BodyProgressionSystem - unified invest dispatch', () => {
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
     player.realmLevel = 18
+    // M-F-CHU-THIEN (C2C-59) - meridian is sequentially gated on
+    // body_refinement completion; a coherent fixture completes it.
+    player.physiqueGrade = 'bao'
+    player.bodyProgression.body_refinement.completedTiers = 6
 
     const consumed = investBodyChapterState(player, 'meridian', 10, 0)
 
     expect(consumed).toBe(1)
     expect(player.bodyProgression.meridian.openedIds).toEqual(['nham_mach'])
     expect(player.modifiers.filter(m => m.id.startsWith('bat-mach:')).length).toBeGreaterThan(0)
+  })
+
+  it('sequential gate: meridian invest consumes nothing while body_refinement is incomplete (C2C-59)', () => {
+    const player = createDefaultPlayer()
+    player.realmId = 'qi_refining'
+    player.realmLevel = 18
+    player.bodyProgression.body_refinement.completedTiers = 5 // one tier short
+
+    expect(investBodyChapterState(player, 'meridian', 10, 0)).toBe(0)
+    expect(player.bodyProgression.meridian.openedIds).toEqual([])
+
+    player.bodyProgression.body_refinement.completedTiers = 6
+    player.physiqueGrade = 'bao'
+    expect(investBodyChapterState(player, 'meridian', 10, 0)).toBe(1)
+  })
+
+  it('sequential gate: zhou_tian invest consumes nothing while meridian is incomplete (C2C-59)', () => {
+    const player = createDefaultPlayer()
+    player.realmId = 'foundation_establishment'
+    player.realmLevel = 18
+    player.physiqueGrade = 'bao'
+    player.bodyProgression.body_refinement.completedTiers = 6
+    player.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 8).map(m => m.id)
+
+    expect(investBodyChapterState(player, 'zhou_tian', 50, 0)).toBe(0)
+    expect(player.bodyProgression.zhou_tian.circulation).toBe(0)
+
+    player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+    expect(investBodyChapterState(player, 'zhou_tian', 50, 0)).toBe(50)
+    expect(player.bodyProgression.zhou_tian.circulation).toBe(50)
+  })
+
+  it('isBodyChapterUnlocked mirrors the sequential gate exactly', () => {
+    const player = createDefaultPlayer()
+
+    // Chapters with no authored prereqs are always unlocked.
+    expect(isBodyChapterUnlocked(player, 'body_refinement')).toBe(true)
+    expect(isBodyChapterUnlocked(player, 'meridian')).toBe(false)
+    expect(isBodyChapterUnlocked(player, 'zhou_tian')).toBe(false)
+
+    player.bodyProgression.body_refinement.completedTiers = 6
+    expect(isBodyChapterUnlocked(player, 'meridian')).toBe(true)
+    expect(isBodyChapterUnlocked(player, 'zhou_tian')).toBe(false)
+
+    player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+    expect(isBodyChapterUnlocked(player, 'zhou_tian')).toBe(true)
   })
 })
 
@@ -142,9 +193,11 @@ describe('BodyProgressionSystem - integrity gate', () => {
     // M-E (D2): meridian progress requires the qi_refining page
     // unlocked - a mortal + opened meridian is now an integrity
     // violation, so legit progress fixtures carry the page realm.
+    // M-F-CHU-THIEN (C2C-64): meridian progress ALSO requires the
+    // completed refinement predecessor - the fixture is coherent.
     player.realmId = 'qi_refining'
-    player.bodyProgression.body_refinement.completedTiers = 2
-    player.bodyProgression.body_refinement.currentTierProgress = 5
+    player.physiqueGrade = 'bao'
+    player.bodyProgression.body_refinement.completedTiers = 6
     player.bodyProgression.meridian.openedIds = ['nham_mach']
     expect(() => assertBodyProgressionIntegrity(player)).not.toThrow()
   })
@@ -184,5 +237,36 @@ describe('BodyProgressionSystem - integrity gate', () => {
     player.bodyProgression.body_refinement.completedTiers = 6
     player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
     expect(() => assertBodyProgressionIntegrity(player)).not.toThrow()
+  })
+
+  it('persisted sequential coherence: progressed/completed chapters require complete predecessors (C2C-64)', () => {
+    // Crafted shape 1: meridian progressed while refinement incomplete.
+    const meridianAhead = createDefaultPlayer()
+    meridianAhead.realmId = 'qi_refining'
+    meridianAhead.bodyProgression.meridian.openedIds = ['nham_mach']
+    expect(() => assertBodyProgressionIntegrity(meridianAhead)).toThrow(/body_refinement/)
+
+    // Crafted shape 2: zhou_tian progressed while meridian incomplete
+    // (refinement complete + coherent grade, so ONLY the zhou_tian rule fires).
+    const zhouTianAhead = createDefaultPlayer()
+    zhouTianAhead.realmId = 'foundation_establishment'
+    zhouTianAhead.physiqueGrade = 'bao'
+    zhouTianAhead.bodyProgression.body_refinement.completedTiers = 6
+    zhouTianAhead.bodyProgression.zhou_tian.circulation = 5
+    expect(() => assertBodyProgressionIntegrity(zhouTianAhead)).toThrow(/meridian/)
+
+    // The same chapters at zero progress stay coherent (a chapter is
+    // only bound once it has progress or is complete).
+    const untouched = createDefaultPlayer()
+    expect(() => assertBodyProgressionIntegrity(untouched)).not.toThrow()
+
+    // A missing prereq slice reports as a slice violation - the
+    // coherence check never TypeErrors on it (derivationBlocked-style).
+    const missingRefinement = createDefaultPlayer()
+    missingRefinement.bodyProgression = {
+      meridian: { openedIds: ['nham_mach'] },
+      zhou_tian: { circulation: 0 },
+    } as never
+    expect(() => assertBodyProgressionIntegrity(missingRefinement)).toThrow(/body_refinement missing/)
   })
 })

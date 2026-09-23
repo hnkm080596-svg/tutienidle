@@ -4,6 +4,10 @@ import type { QuestManager } from './QuestManager'
 import type { QuestProgress } from './QuestProgress'
 import type { PlayerData } from '../player/Player'
 import { getRealmIndex } from '../realm/realmSystem'
+import {
+  isBreakthroughAcquisitionEnabled,
+  isCompanionPullTokenSourceSuppressed,
+} from '../realm/ReleasePolicy'
 import type { RewardReceiver, RewardSystem } from '../reward/RewardSystem'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { MaterialBag } from '../material/MaterialBag'
@@ -25,10 +29,38 @@ export interface QuestBagDeps {
   // 9.8 (optional) — caller có notification sink thì push toast khi
   // reward material tràn túi; không có thì bỏ qua (test/mock path).
   notifications?: { push: (event: NotificationEvent) => void }
+
+  // M-F-BODY-PERFECTION (optional) - the ONE material-landing funnel.
+  // When supplied, claim() routes reward-material deliveries through it
+  // instead of calling onMaterialCollected directly, so quest progress
+  // AND canonical discovery share exactly-once semantics. Absent
+  // (test/mock path) falls back to the legacy direct call.
+  onMaterialGained?: (materialId: string, delivered: number) => void
 }
 
 function isUnlocked(quest: Quest, player: PlayerData): boolean {
-  return !quest.requiredRealmId || getRealmIndex(player.realmId) >= getRealmIndex(quest.requiredRealmId)
+  return (
+    (!quest.requiredRealmId ||
+      getRealmIndex(player.realmId) >= getRealmIndex(quest.requiredRealmId)) &&
+    !questIsTokenOnlySource(quest)
+  )
+}
+
+// M-F-COMPANION-GIFT - a quest whose ENTIRE reward set is censused
+// pull-token material lines is a pure token faucet; while the pull pool
+// is closed it never activates (the recurring source is suppressed at
+// origination). Mixed-reward quests stay unlocked - only their token
+// lines are filtered at claim below.
+function questIsTokenOnlySource(quest: Quest): boolean {
+  const itemDrops = quest.reward.itemDrops ?? []
+  return (
+    itemDrops.length > 0 &&
+    quest.reward.reward === undefined &&
+    itemDrops.every(
+      (drop) =>
+        drop.kind === 'material' && isCompanionPullTokenSourceSuppressed(drop.itemId),
+    )
+  )
 }
 
 function dayBucket(ms: number): number {
@@ -182,14 +214,32 @@ export class QuestSystem {
       if (drop.kind === 'material' && bags.materialRegistry.has(drop.itemId)) {
         // 9.8 — tràn túi: quest chỉ tính delivered; push toast khi có sink.
         const template: Material = bags.materialRegistry.get(drop.itemId)
+
+        // M-F-CEILING - a breakthrough-scoped reward stays dormant while
+        // release policy closes the transition into its tagged realm.
+        if (!isBreakthroughAcquisitionEnabled(template.breakthroughRealmId)) {
+          continue
+        }
+
+        // M-F-COMPANION-GIFT - censused pull-token reward lines stay
+        // dormant while the pull pool is closed; sibling lines still land.
+        if (isCompanionPullTokenSourceSuppressed(drop.itemId)) {
+          continue
+        }
+
         const overflow = bags.materialBag.add(template, amount)
 
         const delivered = amount - overflow
 
-        // Item turn-in của quest này cũng là material thu thập — tính
-        // progress cho collect-quest khác đang active (cùng hook với
-        // mọi đường material vào túi).
-        this.onMaterialCollected(registry, manager, drop.itemId, delivered)
+        // Item turn-in of this quest also counts as collected material -
+        // progress for other active collect-quests (same hook as every
+        // material-into-bag path). M-F-BODY-PERFECTION: prefer the
+        // caller's funnel so discovery counts the same landing once.
+        if (bags.onMaterialGained) {
+          bags.onMaterialGained(drop.itemId, delivered)
+        } else {
+          this.onMaterialCollected(registry, manager, drop.itemId, delivered)
+        }
 
         if (overflow > 0 && bags.notifications) {
           // Event dựng inline (fallback message vi — convention core):
@@ -212,6 +262,13 @@ export class QuestSystem {
         // R9 (AR-34) - pill drops surface the delivery receipt too: quest
         // rewards must not silently lose pills to a full bag.
         const pillTemplate = bags.pillRegistry.get(drop.itemId)
+
+        // M-F-CEILING - same release-policy suppression as the material
+        // branch above.
+        if (!isBreakthroughAcquisitionEnabled(pillTemplate.breakthroughRealmId)) {
+          continue
+        }
+
         const pillOverflow = bags.pillBag.add(pillTemplate, amount)
 
         if (pillOverflow > 0 && bags.notifications) {

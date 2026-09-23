@@ -18,17 +18,18 @@ import {
   type TribulationChapterProfile,
 } from '../../data/tribulation/TribulationChapters'
 import { TRIBULATION_MIND_QUESTIONS, type MindQuestion } from '../../data/tribulation/TribulationMindQuestions'
+import { isRealmTransitionEnabled } from '../realm/ReleasePolicy'
 import { getTribulationIntensityMultiplier } from '../talent/TalentEffects'
 
-// TribulationDirector (spec dot-pha-loi-kiep §5) — runtime lôi kiếp
-// MỚI thay TribulationSystem: KHÔNG đi qua BattleSystem, không quái
-// Kiếp. Tự sở hữu snapshot CombatEntity (maxHp/def/hpRegen thật) + vòng
-// lặp chương riêng: Tâm Ma (minigame hỏi đáp) → Thân/Lôi (tank lôi
-// %maxHP theo interval, mitigation 100/(100+def) như cũ).
+// TribulationDirector (spec dot-pha-loi-kiep S5) - runtime loi kiep
+// MOI thay TribulationSystem: KHONG di qua BattleSystem, khong quai
+// Kiep. Tu so huu snapshot CombatEntity (maxHp/def/hpRegen that) + vong
+// lap chuong rieng: Tam Ma (minigame hoi dap) -> Than/Loi (tank loi
+// %maxHP theo interval, mitigation 100/(100+def) nhu cu).
 //
-// Vòng lặp catch-up lôi dùng dạng đóng (while nextStrikeInSeconds <= 0)
-// — CHỦ Ý đứng NGOÀI fixed-step 0.1s của App.vue (cùng lý do floating
-// point như TribulationSystem cũ, xem git history).
+// Vong lap catch-up loi dung dang dong (while nextStrikeInSeconds <= 0)
+// - CHU Y dung NGOAI fixed-step 0.1s cua App.vue (cung ly do floating
+// point nhu TribulationSystem cu, xem git history).
 
 export type TribulationOutcome = 'ongoing' | 'victory' | 'defeat'
 
@@ -63,34 +64,34 @@ export interface CommittedTribulationOutcome {
 
 export interface ActiveTribulationState {
   targetRealmId: string
-  /** Bậc Kiến Cơ đã chốt lúc bấm đột phá (chỉ từ đầu tư trước kiếp). */
+  /** Bac Kien Co da chot luc bam dot pha (chi tu dau tu truoc kiep). */
   grade: FoundationType
   chapterIndex: number
   chaptersTotal: number
   chapterName: string
   state: TribulationOutcome
-  /** Câu hỏi đang hiện (chỉ chương mind giữa 2 câu nghỉ). */
+  /** Cau hoi dang hien (chi chuong mind giua 2 cau nghi). */
   currentQuestion: MindQuestion | null
   questionSecondsRemaining: number
-  /** Tổng giây của câu hỏi hiện tại (đứng đầu) — mẫu số cho timer bar. */
+  /** Tong giay cua cau hoi hien tai (dung dau) - mau so cho timer bar. */
   questionSecondsLimit: number
-  /** Tổng thời gian còn lại của CHƯƠNG hiện tại. */
+  /** Tong thoi gian con lai cua CHUONG hien tai. */
   secondsRemaining: number
   lightningStrikesTaken: number
   hp: number
   maxHp: number
 }
 
-// Cooldown thử lại sau thất bại — giữ nguyên 5 phút của hệ cũ.
+// Cooldown thu lai sau that bai - giu nguyen 5 phut cua he cu.
 export const TRIBULATION_COOLDOWN_SECONDS = 5 * 60
 
-// Debuff sai câu (spec §5.3): mỗi lần sai +1 stack, hiệu lực đến hết
-// kiếp: +5% damage taken + -3% defense mỗi stack.
+// Debuff sai cau (spec S5.3): moi lan sai +1 stack, hieu luc den het
+// kiep: +5% damage taken + -3% defense moi stack.
 const MIND_FAIL_DAMAGE_TAKEN_PER_STACK = 0.05
 const MIND_FAIL_DEFENSE_REDUCTION_PER_STACK = 0.03
 
-// Buff đúng câu (spec §5.3 — tự động luân phiên gộp): hồi 8% maxHp +
-// giảm 5% damage lôi nhận trong chương tank.
+// Buff dung cau (spec S5.3 - tu dong luan phien gop): hoi 8% maxHp +
+// giam 5% damage loi nhan trong chuong tank.
 const MIND_CORRECT_HEAL_MAXHP_PERCENT = 0.08
 const MIND_CORRECT_LIGHTNING_DAMAGE_REDUCTION = 0.05
 
@@ -130,8 +131,8 @@ export class TribulationDirector {
   // bound to attemptId (the session id allocated at start()).
   private committedOutcome: CommittedTribulationOutcome | null = null
   private attemptId = 0
-  // Talent v4 M2 — Loi Kiep: snapshot of the player's tribulation
-  // intensity multiplier, captured at start() so the whole kiếp obeys
+  // Talent v4 M2 - Loi Kiep: snapshot of the player's tribulation
+  // intensity multiplier, captured at start() so the whole kiep obeys
   // the talent that was held when it began (neutral 1 otherwise).
   private lightningTalentMultiplier = 1
   private readonly presentationSession: PresentationSession
@@ -169,12 +170,21 @@ export class TribulationDirector {
   }
 
   /**
-   * Bắt đầu kiếp: resolve bậc từ đầu tư TRƯỚC kiếp (spec §2.1) + snapshot
-   * stats thật. Trả false nếu đang trong kiếp / cooldown / realm chưa có
-   * profile chương. `hasTrucCoDan` chỉ ý nghĩa với gate Trúc Cơ.
+   * Start the tribulation: resolve the grade from pre-run investment
+   * (spec SS2.1) and snapshot the real stats. Returns false while a run
+   * is active / on cooldown / when release policy closes the transition
+   * / when the realm has no chapter profile. `hasTrucCoDan` only matters
+   * for the Truc Co gate.
    */
   start(player: PlayerData, playerStats: Stats, hasTrucCoDan: boolean, targetRealmId: string): boolean {
     if (this.getCooldownSeconds() > 0 || this.active) {
+      return false
+    }
+
+    // M-F-CEILING - release policy owns whether the transition itself is
+    // open (Beta: TC -> KD closed); authored chapters can never open a
+    // closed transition on their own.
+    if (!isRealmTransitionEnabled(player.realmId, targetRealmId)) {
       return false
     }
 
@@ -191,7 +201,7 @@ export class TribulationDirector {
     this.snapshotMaxHp = maxHp
     this.snapshotHp = maxHp
     this.snapshotDefense = Math.max(0, playerStats.defense)
-    // Entity ma chỉ mang HP/def — vitals events shape chuẩn cho UI.
+    // Entity ma chi mang HP/def - vitals events shape chuan cho UI.
     this.ghost = {
       id: 'player',
       name: player.name,
@@ -210,6 +220,7 @@ export class TribulationDirector {
     this.committedOutcome = null
     this.lightningTalentMultiplier = getTribulationIntensityMultiplier(
       player.selectedTalentIds,
+      player.talentLevels,
     )
 
     this.active = {
@@ -251,9 +262,9 @@ export class TribulationDirector {
   }
 
   /**
-   * Tick thời gian (gọi từ App.vue mỗi frame/tick). Catch-up window:
-   * chỉ tiêu thụ phần delta thuộc chương hiện tại rồi xử lý mốc strike
-   * trong vòng lặp đóng — không chia nhỏ fixed-step (floating point).
+   * Tick thoi gian (goi tu App.vue moi frame/tick). Catch-up window:
+   * chi tieu thu phan delta thuoc chuong hien tai roi xu ly moc strike
+   * trong vong lap dong - khong chia nho fixed-step (floating point).
    */
   update(deltaSeconds: number) {
     if (this.presentationSession.isBlocking()) {
@@ -318,8 +329,8 @@ export class TribulationDirector {
     const active = this.active!
     const mind = this.mind!
 
-    // Đang nghỉ giữa 2 câu — lôi nền KHÔNG chạy trong chương mind
-    // (chương mind thuần hỏi đáp, buff/debuff áp từ chương tank).
+    // Dang nghi giua 2 cau - loi nen KHONG chay trong chuong mind
+    // (chuong mind thuan hoi dap, buff/debuff ap tu chuong tank).
     if (mind.restSecondsRemaining > 0) {
       mind.restSecondsRemaining = Math.max(0, mind.restSecondsRemaining - step)
       active.currentQuestion = null
@@ -331,7 +342,7 @@ export class TribulationDirector {
     active.questionSecondsRemaining = Math.max(0, mind.secondsRemaining)
 
     if (mind.secondsRemaining <= 0) {
-      // Hết giờ = SAI (spec §5.3)
+      // Het gio = SAI (spec S5.3)
       this.applyMindFailure()
       this.advanceQuestion()
     }
@@ -358,12 +369,12 @@ export class TribulationDirector {
     active.currentQuestion = null
 
     if (mind.currentIndex >= total) {
-      // Hết câu — chuyển chương kế
+      // Het cau - chuyen chuong ke
       this.enterChapter(active.chapterIndex + 1)
       return
     }
 
-    // Nội suy timer giữa câu đầu → câu cuối
+    // Noi suy timer giua cau dau -> cau cuoi
     const t = total <= 1 ? 0 : mind.currentIndex / (total - 1)
     const limit =
       profile.firstQuestionSeconds +
@@ -375,7 +386,7 @@ export class TribulationDirector {
     mind.restSecondsRemaining = profile.restSecondsBetweenQuestions
   }
 
-  /** Trả lời câu hiện tại — true nếu câu được xử lý (đúng/sai đều tính). */
+  /** Tra loi cau hien tai - true neu cau duoc xu ly (dung/sai deu tinh). */
   answerQuestion(answerIndex: number): boolean {
     if (this.presentationSession.isBlocking()) {
       return false
@@ -408,7 +419,7 @@ export class TribulationDirector {
   }
 
   private applyMindSuccess() {
-    // Buff tự động gộp (spec §5.3 — không chọn): hồi máu + kháng lôi
+    // Buff tu dong gop (spec S5.3 - khong chon): hoi mau + khang loi
     this.mindCorrectLightningReduction += MIND_CORRECT_LIGHTNING_DAMAGE_REDUCTION
     const healed = this.vitals.applyHealing(
       this.ghost!,
@@ -432,7 +443,7 @@ export class TribulationDirector {
     active.secondsRemaining = tank.secondsRemaining
     tank.nextStrikeInSeconds -= step
 
-    // Vòng strike catch-up đóng — interval > 0 guard chống vòng vô hạn
+    // Vong strike catch-up dong - interval > 0 guard chong vong vo han
     // Liveness = state 'ongoing': a lethal strike commits 'defeat' inside
     // the loop; exit immediately, no further strikes (M5 / ARCH-006).
     const interval = this.effectiveStrikeInterval(chapter)
@@ -449,7 +460,7 @@ export class TribulationDirector {
       return
     }
 
-    // Đại lôi cuối chương (chỉ lightning có finalStrike)
+    // Dai loi cuoi chuong (chi lightning co finalStrike)
     const profile = chapter.tank!
     if (
       profile.finalStrikeMaxHpDamagePercent !== undefined &&
@@ -470,7 +481,7 @@ export class TribulationDirector {
     }
   }
 
-  /** Interval chia cho hệ số bậc — bậc cao lôi dồn dập hơn (spec §5.5). */
+  /** Interval chia cho he so bac - bac cao loi don dap hon (spec S5.5). */
   private effectiveStrikeInterval(chapter: TribulationChapterProfile): number {
     const base = chapter.tank!.strikeIntervalSeconds
     const multiplier = GRADE_DIFFICULTY_MULTIPLIER[this.active!.grade] ?? 1
@@ -502,14 +513,14 @@ export class TribulationDirector {
 
     const multiplier = GRADE_DIFFICULTY_MULTIPLIER[active.grade] ?? 1
 
-    // Debuff sai câu: +% damage taken + -% defense (spec §5.3)
+    // Debuff sai cau: +% damage taken + -% defense (spec S5.3)
     const defense = Math.max(
       0,
       this.snapshotDefense * (1 - MIND_FAIL_DEFENSE_REDUCTION_PER_STACK * this.mindFailStacks),
     )
     const mitigation = 100 / (100 + defense)
     const takenMultiplier = 1 + MIND_FAIL_DAMAGE_TAKEN_PER_STACK * this.mindFailStacks
-    // Buff đúng câu: -% damage lôi (kháng lôi gộp, spec §5.3)
+    // Buff dung cau: -% damage loi (khang loi gop, spec S5.3)
     const reduction = Math.min(0.8, this.mindCorrectLightningReduction)
 
     const raw =
@@ -523,8 +534,8 @@ export class TribulationDirector {
 
     const applied = this.vitals.applyDamage(this.ghost!, raw, 'heavenly_tribulation', 'tribulation')
     this.snapshotHp = Math.max(0, this.snapshotHp - applied)
-    // Đồng bộ ghost.currentHp cho event/tick kế (vitals đã mutate ghost —
-    // ghost là kênh event, snapshot là nguồn sự thật của Director).
+    // Dong bo ghost.currentHp cho event/tick ke (vitals da mutate ghost -
+    // ghost la kenh event, snapshot la nguon su that cua Director).
     this.ghost!.currentHp = this.snapshotHp
     this.ghost!.alive = this.snapshotHp > 0
 
@@ -578,7 +589,7 @@ export class TribulationDirector {
       return
     }
 
-    // Hết chương cuối còn sống → victory
+    // Het chuong cuoi con song -> victory
     if (index >= this.chapters.length) {
       active.currentQuestion = null
       active.chapterName = ''
@@ -604,8 +615,8 @@ export class TribulationDirector {
       const profile = chapter.mind
       const pool = TRIBULATION_MIND_QUESTIONS.filter((q) => q.realmId === active.targetRealmId)
 
-      // Không đủ câu trong bank thì lặp pool (defensive — data test đã
-      // khóa bank đủ ≥ questionCount + 1).
+      // Khong du cau trong bank thi lap pool (defensive - data test da
+      // khoa bank du >= questionCount + 1).
       const questions: MindQuestion[] = []
       for (let i = 0; i < profile.questionCount; i++) {
         questions.push(pool[i % pool.length]!)

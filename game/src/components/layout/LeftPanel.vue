@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { useUiStore } from '@/stores/ui'
+import { useSystemRimAuthority } from '@/composables/useSystemRimAuthority'
 import CharacterPanel from '../panels/CharacterPanel.vue'
 import CharacterDetailCard from '../panels/CharacterDetailCard.vue'
 
 const ui = useUiStore()
+
+// M-UI-SYSTEM (spec 4.1.1): the drawer drives the rim authority directly -
+// base .sys-rim always renders the rim; .sys-rim--live animates only while
+// this drawer is the topmost ACTIVE claimant (a system modal promotes
+// above it, releasing on close hands the live rim back).
+const { isTop } = useSystemRimAuthority('hud-left', () => ui.characterOverlayOpen)
 
 // Equipment cố định 30% chỉ hiện cho Hành Trang — 'crafting' (Tứ
 // Nghệ cũ) đã xoá ở Home Hub Phase 8 (nội dung tab 'artifact' chuyển
@@ -16,7 +23,11 @@ const ui = useUiStore()
 
 <template>
   <Transition name="panel-slide-left">
-    <div v-if="ui.characterOverlayOpen" class="left-panel ink-drawer">
+    <div
+      v-if="ui.characterOverlayOpen"
+      class="left-panel ink-drawer sys-surface sys-corners sys-rim sys-scanlines"
+      :class="{ 'sys-rim--live': isTop }"
+    >
       <div class="left-panel__content left-panel__content--full">
         <div class="left-panel__view">
           <CharacterPanel />

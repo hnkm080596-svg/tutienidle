@@ -54,6 +54,16 @@ import { formations } from '../../../data/formation/formations'
 import { alchemyRecipes } from '../../../data/alchemy/alchemyRecipes'
 import { buildings } from '../../../data/building/buildings'
 import { QUESTS } from '../../../data/quest/quests'
+import {
+  TribulationOutcomeService,
+  type TribulationOutcomeResult,
+  type TribulationPlayerWriter,
+} from '../../tribulation/TribulationOutcomeService'
+import { reconcileTalentEntitlement } from '../../talent/TalentEntitlement'
+import type { TalentEntitlementDecision } from '../../talent/TalentEntitlement'
+import type { BodyChapterId } from '../../realm/body/BodyChapter'
+import type { CompanionGiftRecord } from '../../../data/companion/Companions'
+import type { ClaimCompanionGiftResult } from '../../game/GameManagerCompanionOps'
 
 export interface EarlyGameSessionOptions {
   seed: number
@@ -61,6 +71,12 @@ export interface EarlyGameSessionOptions {
   profile: EarlyGameCreationProfile
   /** Fixed session clock for wall-clock reads (timed effects). */
   nowMs?: number
+  /** M-F-JOURNEY - when set, the session player IS owner.$state from
+   * construction (the suite owns a real usePlayerStore; this file stays
+   * stores-free). Required by the settle/drain/entitlement seams:
+   * resolveVictory writes absent optional PlayerData keys, and those
+   * only reflect through a store-instance write (TribulationPlayerWriter). */
+  playerOwner?: GameSessionPlayerOwner & TribulationPlayerWriter
 }
 
 export type StageRunResult = 'victory' | 'defeat' | 'refused' | 'locked' | 'missing' | 'timeout'
@@ -114,6 +130,36 @@ export interface EarlyGameSnapshot {
   completedStageIds: string[]
   nodeLevels: Record<string, number>
   tribulationState: string | null
+  // M-F-JOURNEY - TC-era persisted surface. Wall-clock content stays
+  // normalized OUT (perfectClearSeconds, autoFarmStage.lastCheckedMs,
+  // entitlement offer draws) per the M0 census - volatile fields break
+  // same-seed replay.
+  bodyProgression: {
+    body_refinement: { completedTiers: number; currentTierProgress: number }
+    meridian: { openedIds: string[] }
+    zhou_tian: { circulation: number }
+  }
+  physiqueGrade: string
+  highestFoundationAchieved: string | null
+  pendingTalentEntitlement: { realmId: string } | null
+  technique: {
+    grade: number
+    rank: number
+    gradeHistory: Record<number, { finalRank: number; completionState: string }>
+  } | null
+  artifact: {
+    artifactId: string
+    realmId: string
+    realmLevel: number
+    experience: number
+    grade: string
+  } | null
+  companionGifts: Array<{ id: string; definitionId: string; claimed: boolean }>
+  perfectClearStageIds: string[]
+  autoFarmStageId: string | null
+  bodyPerfection: { discoveredMaterials: string[]; perfectedRealmIds: string[] }
+  hiddenBeastKills: Record<string, number>
+  hiddenChannelCycles: Array<{ siteId: string; cycles: Record<string, number> }>
 }
 
 const MAX_DRIVE_STEPS = 4000
@@ -149,6 +195,10 @@ export class EarlyGameSession {
   /** True while a runStage drive is in flight - distinguishes parity
    * cultivation (inside battleSeconds) from idle cultivation. */
   private inStageDrive = false
+  /** M-F-JOURNEY - the suite-supplied store owner (option). Held so the
+   * writer seams route absent-key writes through the store instance -
+   * the only shape that reflects them (TribulationPlayerWriter). */
+  private playerOwner: (GameSessionPlayerOwner & TribulationPlayerWriter) | undefined
 
   constructor(options: EarlyGameSessionOptions) {
     this.nowMs = options.nowMs ?? 1_700_000_000_000
@@ -189,7 +239,8 @@ export class EarlyGameSession {
     catalog.registerProgressionNodes(SKILL_CORE_NODES)
     catalog.registerQuests(QUESTS)
 
-    this.player = createDefaultPlayer()
+    this.playerOwner = options.playerOwner
+    this.player = options.playerOwner?.$state ?? createDefaultPlayer()
     applyCreationProfile(this.player, options.profile)
     bootstrapEarlyGamePlayer(this.gameManager, this.player)
     this.gameManager.setActivePlayer(this.player)
@@ -225,8 +276,15 @@ export class EarlyGameSession {
    * M-D parity lifecycle (spec sec.3.1, pinned ordering):
    *   pre-stage drain -> essenceBefore -> startStage/battle ->
    *   rewards settle -> essenceAfter/tinhHoaGained -> terminal counters
-   *   -> post-terminal drain. */
-  runStage(stageId: string): StageRunResult {
+   *   -> post-terminal drain.
+   * `options.onBattleAdvance` (M-F-JOURNEY Leg I): invoked per consumed
+   * combat step - the caller may advance wall clock (vi.setSystemTime)
+   * so wall-clock-measured records like perfectClearSeconds are
+   * produced by their real writer with a consumable value. */
+  runStage(
+    stageId: string,
+    options?: { onBattleAdvance?: (consumedSteps: number) => void },
+  ): StageRunResult {
     const stage = this.gameManager.catalogOps.getStage(stageId)
     if (!stage) return 'missing'
     if (!this.gameManager.catalogOps.isStageUnlocked(stageId, this.player)) {
@@ -256,6 +314,7 @@ export class EarlyGameSession {
         onMissingBattle: () => 'defeat',
         onAdvance: () => {
           advances++
+          options?.onBattleAdvance?.(advances)
           if (this.combatCultivationParity) {
             this.cultivate(COMBAT_STEP_SECONDS)
             this.breakthroughIfReady()
@@ -325,6 +384,65 @@ export class EarlyGameSession {
       : 'defeat'
   }
 
+  /** M-F-JOURNEY - the settle HALF of the production outcome contract
+   * (checkTribulationOutcomeAction's domain half; runTribulation never
+   * settles): binds + applies the committed outcome ONCE via the
+   * record's receipt slot. Repeated pre-resolution calls return the
+   * same bound receipt without re-applying (receipt dedup). Contains NO
+   * drain - production defers director.clear() until the entitlement
+   * resolves; pair with drainTribulationOutcome(). Requires a
+   * playerOwner-constructed session: resolveVictory's writer contract
+   * needs the store shape for absent-key writes. */
+  settleTribulationOutcome(): TribulationOutcomeResult | null {
+    if (this.playerOwner === undefined || this.player !== this.playerOwner.$state) {
+      throw new Error('settleTribulationOutcome requires construction with playerOwner')
+    }
+    return new TribulationOutcomeService().settleOutcome(
+      this.playerOwner,
+      this.gameManager,
+      this.gameManager.tribulationDirector,
+    )
+  }
+
+  /** M-F-JOURNEY - the post-settle drain half of
+   * checkTribulationOutcomeAction (useTribulation.ts): reconcile prunes
+   * a record holding no legal decision -> while pendingTalentEntitlement
+   * stays unresolved the drain is DEFERRED (the committed outcome is
+   * retained, director.clear() does NOT run) -> post-resolution the
+   * drain clears the director exactly once. Returns whether the drain
+   * executed. */
+  drainTribulationOutcome(): boolean {
+    // A missing committed outcome means nothing to drain - clearing
+    // anyway would false-positive vs production.
+    if (!this.gameManager.tribulationDirector.getCommittedOutcome()) {
+      return false
+    }
+    const writer = this.writer()
+    reconcileTalentEntitlement(writer)
+    if (writer.pendingTalentEntitlement !== undefined) {
+      return false
+    }
+    this.gameManager.tribulationDirector.clear()
+    return true
+  }
+
+  /** M-F-JOURNEY - the entitlement modal's commit seam: the op grants
+   * ONE result (a legal NEW offer or an UPGRADE) and clears the record.
+   * An off-pool/illegal decision returns false and the record stays
+   * pending - rejection is part of the contract (spec leg B phase-a). */
+  resolveTalentEntitlement(decision: TalentEntitlementDecision): boolean {
+    return this.gameManager.realmAdvanceOps.resolveTalentEntitlement(this.writer(), decision)
+  }
+
+  /** The settle/drain write target: the owner store while the session
+   * player IS its $state (absent-key write semantics), else the live
+   * PlayerData (a post-restore owner reassignment keeps parity). */
+  private writer(): TribulationPlayerWriter | PlayerData {
+    return this.playerOwner !== undefined && this.player === this.playerOwner.$state
+      ? this.playerOwner
+      : this.player
+  }
+
   performRitual(path: CultivationPathId, way: CultivationWayId): boolean {
     return this.gameManager.realmAdvanceOps.chooseCultivationPath(path, way, this.player)
   }
@@ -339,25 +457,88 @@ export class EarlyGameSession {
     return ok
   }
 
-  /** Invest held Tinh Hoa Pham The into body refinement - the
-   * material -> tier -> stats growth link, through the real op.
-   * M-D: the first call that completes all tiers records
-   * bodyCompletedAtSeconds at the CURRENT T_wall instant - covers
-   * parity drains AND explicit sim invests, so a tier completing in a
-   * pre-stage drain isn't timestamped late by the battle that follows. */
-  investRefinement(): number {
+  /** M-F-JOURNEY - generalized chapter invest: the op reads the
+   * chapter's currency + aux bags (material OR pill - thong_mach_dan
+   * lives in pillBag) and debits ONLY what the chapter consumed. A
+   * chapter-gate failure (locked chain link, pace gate, missing aux)
+   * returns a real 0, not a seam veto - rejections are assertable. */
+  investChapter(chapterId: BodyChapterId): number {
     const consumed = this.gameManager.realmAdvanceOps.investBodyChapter(
       this.player,
-      'body_refinement',
+      chapterId,
     )
     const totals = this.simRunTotals
     if (
+      chapterId === 'body_refinement' &&
       totals.bodyCompletedAtSeconds == null &&
       getBodyRefinementCompletedTiers(this.player) >= BODY_REFINEMENT_TIERS.length
     ) {
       totals.bodyCompletedAtSeconds = totals.battleSeconds + totals.idleCultivationSeconds
     }
     return consumed
+  }
+
+  /** Invest held Tinh Hoa Pham The into body refinement - shorthand
+   * for investChapter('body_refinement') (the M-D callers' idiom). */
+  investRefinement(): number {
+    return this.investChapter('body_refinement')
+  }
+
+  /** M-F-JOURNEY - typed pill-bag read/write over the registered
+   * catalog. holdPill is a FIXTURE seam (spec S4 seeded inputs -
+   * day-paced economies like thong_mach_dan cannot be acquired
+   * in-suite): it adds through the real bag API but does NOT ride the
+   * notifyMaterialGained landing funnel - a seed is setup, not an
+   * acquisition event. */
+  pillAmount(id: string): number {
+    return this.gameManager.pillBag.getAmount(id)
+  }
+
+  /** Returns the post-add held amount (the bags' own add() reports
+   * overflow, which fixture callers never need). */
+  holdPill(id: string, amount: number): number {
+    this.gameManager.pillBag.add(this.gameManager.pillRegistry.get(id), amount)
+    return this.pillAmount(id)
+  }
+
+  /** M-F-JOURNEY - same fixture seam for the material bag. Returns the
+   * amount actually held (stackLimit clamps - callers chunk large
+   * seeds through repeated hold+invest). */
+  holdMaterial(id: string, amount: number): number {
+    this.gameManager.materialBag.add(
+      this.gameManager.materialRegistry.get(id),
+      amount,
+    )
+    return this.materialAmount(id)
+  }
+
+  /** M-F-JOURNEY - gift-mail seams (SettlementGiftInbox): records read
+   * off the persisted slice; claim rides the real op gate (domain
+   * unlocked + record known + beta-claimable). */
+  giftRecords(): readonly CompanionGiftRecord[] {
+    return this.player.companionGifts
+  }
+
+  claimGift(id: string): ClaimCompanionGiftResult {
+    return this.gameManager.companionOps.claimCompanionGift(id)
+  }
+
+  /** M-F-JOURNEY - perfect-clear reads: the record is authored by
+   * recordPerfectClearIfEligible inside a real victory; cycleSeconds
+   * stays raw (a volatile wall-clock value - asserted for validity,
+   * not equality). */
+  perfectClearOf(stageId: string): { recorded: boolean; cycleSeconds?: number } {
+    return {
+      recorded: this.player.perfectClearStageIds.includes(stageId),
+      cycleSeconds: this.player.perfectClearSeconds[stageId],
+    }
+  }
+
+  /** M-F-JOURNEY - the auto-farm start button's domain half: gates on
+   * the recorded perfect clear + valid cycle seconds; sets the durable
+   * autoFarmStage lease on success. */
+  startAutoFarm(stageId: string): boolean {
+    return this.gameManager.turnBattleOps.autoFarmOps.startAutoFarm(this.player, stageId)
   }
 
   /** M-D: production auto-invest parity - GameManagerTickOps.update()
@@ -380,6 +561,14 @@ export class EarlyGameSession {
         equipped++
       }
     }
+    // Mirror the real equip flow end-to-end: in the app the store
+    // resyncs the equipment-derived slice of player.modifiers after
+    // equip ops (the ops layer itself never writes it); skipping the
+    // resync here would leave the live player stale vs. the state a
+    // restore recomputes (restoreGameSession resyncs it).
+    this.playerOwner?.setEquipmentModifiers(
+      this.gameManager.equipmentOps.getEquipmentModifiers(),
+    )
     return equipped
   }
 
@@ -398,8 +587,26 @@ export class EarlyGameSession {
     const result = restoreGameSession(playerOwner, this.gameManager, save)
     if (result.status === 'ok') {
       this.player = playerOwner.$state
+      // A restored owner that is a full store also satisfies the writer
+      // contract - keep writer seams (settle/drain/entitlement) usable
+      // post-restore on store-backed sessions.
+      this.playerOwner = this.isWriterOwner(playerOwner) ? playerOwner : undefined
     }
     return result
+  }
+
+  /** M-F-JOURNEY - structural check: a full store satisfies the writer
+   * contract (PlayerData fields + setEquipmentModifiers); a minimal
+   * GameSessionPlayerOwner does not. */
+  private isWriterOwner(
+    owner: GameSessionPlayerOwner,
+  ): owner is GameSessionPlayerOwner & TribulationPlayerWriter {
+    return (
+      'realmId' in owner &&
+      'baseStats' in owner &&
+      'selectedTalentIds' in owner &&
+      'setEquipmentModifiers' in owner
+    )
   }
 
   snapshot(): EarlyGameSnapshot {
@@ -422,6 +629,73 @@ export class EarlyGameSession {
         this.gameManager.tribulationDirector.getCommittedOutcome()?.outcome ??
         this.gameManager.tribulationDirector.getState()?.state ??
         null,
+      bodyProgression: {
+        body_refinement: {
+          completedTiers: p.bodyProgression.body_refinement.completedTiers,
+          currentTierProgress: p.bodyProgression.body_refinement.currentTierProgress,
+        },
+        meridian: { openedIds: [...p.bodyProgression.meridian.openedIds] },
+        zhou_tian: { circulation: p.bodyProgression.zhou_tian.circulation },
+      },
+      physiqueGrade: p.physiqueGrade,
+      highestFoundationAchieved: p.highestFoundationAchieved ?? null,
+      // Entitlement offers draw on Math.random by contract (volatility
+      // normalized out); realmId alone is deterministic.
+      pendingTalentEntitlement:
+        p.pendingTalentEntitlement === undefined
+          ? null
+          : { realmId: p.pendingTalentEntitlement.realmId },
+      technique: (() => {
+        const active = this.gameManager.techniqueManager.getActive()
+        return active === undefined
+          ? null
+          : {
+              grade: active.grade,
+              rank: active.rank,
+              // Inner records copied too - a mutating consumer must not
+              // alias live technique state through the snapshot.
+              gradeHistory: Object.fromEntries(
+                Object.entries(active.gradeHistory).map(([key, value]) => [
+                  key,
+                  { ...value },
+                ]),
+              ),
+            }
+      })(),
+      artifact:
+        p.artifact === undefined
+          ? null
+          : {
+              artifactId: p.artifact.artifactId,
+              realmId: p.artifact.realmId,
+              realmLevel: p.artifact.realmLevel,
+              experience: p.artifact.experience,
+              grade: p.artifact.grade,
+            },
+      companionGifts: p.companionGifts.map((gift) => ({
+        id: gift.id,
+        definitionId: gift.definitionId,
+        claimed: gift.claimed,
+      })),
+      perfectClearStageIds: [...p.perfectClearStageIds].sort(),
+      autoFarmStageId: p.autoFarmStage?.stageId ?? null,
+      bodyPerfection: {
+        discoveredMaterials: [...p.bodyPerfection.discoveredMaterials],
+        perfectedRealmIds: [...p.bodyPerfection.perfectedRealmIds],
+      },
+      hiddenBeastKills: { ...p.hiddenBeastKills },
+      // Restore seeds every site state; a live session's are lazy, so
+      // the SITE LIST is session-history noise - only sites carrying a
+      // recorded cycle count are parity content (empty == []).
+      hiddenChannelCycles: this.gameManager.productionSystem
+        .getAllStates()
+        .filter(
+          (state) => Object.keys(state.hiddenChannelCycles ?? {}).length > 0,
+        )
+        .map((state) => ({
+          siteId: state.siteId,
+          cycles: { ...(state.hiddenChannelCycles ?? {}) },
+        })),
     }
   }
 }

@@ -74,7 +74,7 @@ describe('GameManager current realm progression scope', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
     player.realmId = 'golden_core'
-    player.realmLevel = 9
+    player.realmLevel = 18
 
     expect(gameManager.realmAdvanceOps.canTriggerBreakthrough(player)).toBe(false)
   })

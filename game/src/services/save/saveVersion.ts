@@ -1,67 +1,67 @@
-// Nguồn sự thật duy nhất của version schema save — tách riêng để
-// saveShapeValidation.ts import được mà KHÔNG tạo vòng circular với
-// SaveSystem.ts (SaveSystem re-export lại cho mọi consumer cũ).
-// v54 (2026-08-29, dot-pha-loi-kiep spec): 4 field PlayerData mới —
-// openedMeridianIds (Bát Mạch đã thông), luyenKhiKillsSinceBeast (cửa
-// sổ quái ẩn 1000 kill), mortalPerfectionAchieved (snapshot hoàn hảo
-// Phàm Nhân chốt lúc Quán Khí), greatDaoOpportunityLost (thua kiếp Đại
-// Đạo mất vĩnh viễn). Gỡ Đột Phá Lệnh (token materials) + quái Kiếp +
-// TribulationSystem cũ (thay TribulationDirector chương kiếp).
-// v55 (2026-09-02, chi-hien-quan spec): XÓA building spirit_spring
-// (chức năng linh mạch chuyển vào gathering_outpost), THÊM building
-// chi_hien_quan (nguồn nhân công duy nhất, capacity 1+level×2), thêm
-// field productionSiteStates[].assignedWorkers (phân bổ nhân công
-// manual). Save v54 bị từ chối (dev phase, không migration).
+// Nguon su that duy nhat cua version schema save - tach rieng de
+// saveShapeValidation.ts import duoc ma KHONG tao vong circular voi
+// SaveSystem.ts (SaveSystem re-export lai cho moi consumer cu).
+// v54 (2026-08-29, dot-pha-loi-kiep spec): 4 field PlayerData moi -
+// openedMeridianIds (Bat Mach da thong), luyenKhiKillsSinceBeast (cua
+// so quai an 1000 kill), mortalPerfectionAchieved (snapshot hoan hao
+// Pham Nhan chot luc Quan Khi), greatDaoOpportunityLost (thua kiep Dai
+// Dao mat vinh vien). Go Dot Pha Lenh (token materials) + quai Kiep +
+// TribulationSystem cu (thay TribulationDirector chuong kiep).
+// v55 (2026-09-02, chi-hien-quan spec): XOA building spirit_spring
+// (chuc nang linh mach chuyen vao gathering_outpost), THEM building
+// chi_hien_quan (nguon nhan cong duy nhat, capacity 1+levelx2), them
+// field productionSiteStates[].assignedWorkers (phan bo nhan cong
+// manual). Save v54 bi tu choi (dev phase, khong migration).
 // (2026-09-16 correction: assignedWorkers was DECLARED at v55 but the
-// buildGameSave serializer never emitted it — the field only became
+// buildGameSave serializer never emitted it - the field only became
 // actually persisted by the Mission A2 fix; no version bump, the field
 // is optional and absent means AUTO.)
-// v56 (2026-09-04, stage-auto-farm spec): 3 field PlayerData mới —
-// perfectClearStageIds (stage đã đạt điều kiện Hoàn Mỹ),
-// perfectClearSeconds (wall-clock giây lần đạt đầu tiên, dùng làm cơ
-// sở cycleSeconds cho auto-farm), autoFarmStage (slot auto-farm đang
-// chạy, null nếu không có). Save v55 bị từ chối (dev phase, không
+// v56 (2026-09-04, stage-auto-farm spec): 3 field PlayerData moi -
+// perfectClearStageIds (stage da dat dieu kien Hoan My),
+// perfectClearSeconds (wall-clock giay lan dat dau tien, dung lam co
+// so cycleSeconds cho auto-farm), autoFarmStage (slot auto-farm dang
+// chay, null neu khong co). Save v55 bi tu choi (dev phase, khong
 // migration).
-// v57 (2026-09-05, companion-roster spec): 1 field mới — companions
-// (CompanionInstance[] sở hữu, definitionId/level/exp). Save v56 bị từ
-// chối (dev phase, không migration).
-// v58 (2026-09-05, tran-phap spec): 1 field mới — formationLoadout
-// (FormationLoadout | null, Trận Pháp đang active + vị trí từng
-// combatant). Save v57 bị từ chối (dev phase, không migration).
-// v59 (2026-09-06, gp123 6E task C2 — unification of the age axes):
-// material wood/ore đổi id sang trục tuổi thống nhất —
+// v57 (2026-09-05, companion-roster spec): 1 field moi - companions
+// (CompanionInstance[] so huu, definitionId/level/exp). Save v56 bi tu
+// choi (dev phase, khong migration).
+// v58 (2026-09-05, tran-phap spec): 1 field moi - formationLoadout
+// (FormationLoadout | null, Tran Phap dang active + vi tri tung
+// combatant). Save v57 bi tu choi (dev phase, khong migration).
+// v59 (2026-09-06, gp123 6E task C2 - unification of the age axes):
+// material wood/ore doi id sang truc tuoi thong nhat -
 // `<realm>_wood_<age>` / `<realm>_ore_<age>` (age decade..thuong_co);
-// plain `<realm>_wood` và hậu tố phẩm cũ hoang..tien KHÔNG TỒN TẠI nữa
-// (meta profession.quality → profession.age). Save v58 bị từ chối (dev
-// phase, không migration).
+// plain `<realm>_wood` va hau to pham cu hoang..tien KHONG TON TAI nua
+// (meta profession.quality -> profession.age). Save v58 bi tu choi (dev
+// phase, khong migration).
 // v60: companion gacha (instanceId/realmId/constellationRank, pity counter, duyenPhan)
 // v61 (2026-09-14, B4 talent v4 M2): cultivationOvercharge,
 // tribulationBonusStacks, nodeFreePurchaseRecord, phaGiapCarryStacks,
-// phaGiapCarryRealmId. Save v60 bị từ chối (dev phase, không migration).
-// v62 (phap-tu-reimagined): Phap Tu path/state/combat rework —
+// phaGiapCarryRealmId. Save v60 bi tu choi (dev phase, khong migration).
+// v62 (phap-tu-reimagined): Phap Tu path/state/combat rework -
 // PlayerData loses unlockedElements/equippedElements (element authority
 // is now player.spellPath.element), CombatEntity loses skillStats +
 // currentHoaThe/ThoThe/KimThe pools, reaction-path skills/buffs/nodes
-// retired. Save v61 bị từ chối (dev phase, không migration).
+// retired. Save v61 bi tu choi (dev phase, khong migration).
 // v63 (2026-09-15, kiem-tu-reimagined spec): PlayerData.swordPath replaces
 // swordPathRoute + the sword-intent ecosystem (canonical state model:
-// mode/preset/kiemY/kiemDaoCount/kiemDaoBase). Save v62 bị từ chối
-// (dev phase, không migration).
-// v64 (2026-09-15, the-tu-reimagined spec T1): CultivationPathId mở rộng
-// 'the_tu' + 'the_tu_an' — save cũ chứa path id lạ bị từ chối (dev phase,
-// không migration).
-// v65 (2026-09-16, cultivation-path-framework M2): PlayerData thêm field
-// TUỸ CHỌN `cultivationWay?: CultivationWayId` (way đã chọn trong path, ghi
-// bởi CultivationPathSystem.applyPathChoice trong Nghi Lễ Nhập Môn).
-// `cultivationPath` vẫn mang union 5 id legacy trong thời kỳ chuyển
-// tiếp — giờ được kiểm tra enum membership khi hiện diện. Save v64 bị
-// từ chối (dev phase, không migration).
+// mode/preset/kiemY/kiemDaoCount/kiemDaoBase). Save v62 bi tu choi
+// (dev phase, khong migration).
+// v64 (2026-09-15, the-tu-reimagined spec T1): CultivationPathId mo rong
+// 'the_tu' + 'the_tu_an' - save cu chua path id la bi tu choi (dev phase,
+// khong migration).
+// v65 (2026-09-16, cultivation-path-framework M2): PlayerData them field
+// TUY CHON `cultivationWay?: CultivationWayId` (way da chon trong path, ghi
+// boi CultivationPathSystem.applyPathChoice trong Nghi Le Nhap Mon).
+// `cultivationPath` van mang union 5 id legacy trong thoi ky chuyen
+// tiep - gio duoc kiem tra enum membership khi hien dien. Save v64 bi
+// tu choi (dev phase, khong migration).
 // v66 (2026-09-16, cultivation-path-framework M7): CultivationPathId
-// thu còn 3 base id ('kiem_tu' | 'phap_tu' | 'the_tu') — 'phap_tu_an' /
-// 'the_tu_an' trở thành WAYS trên cultivationWay, các adapter
-// LEGACY_PATH_TO_WAY / resolveBasePathId / getLegacyPathIdForWay bị
-// xoá. Save v65 (và save mang path id '_an') bị từ chối (dev phase,
-// không migration).
+// thu con 3 base id ('kiem_tu' | 'phap_tu' | 'the_tu') - 'phap_tu_an' /
+// 'the_tu_an' tro thanh WAYS tren cultivationWay, cac adapter
+// LEGACY_PATH_TO_WAY / resolveBasePathId / getLegacyPathIdForWay bi
+// xoa. Save v65 (va save mang path id '_an') bi tu choi (dev phase,
+// khong migration).
 // v67 (2026-09-17, worker-economy Mission D): ProductionSiteStateSave
 // lost `activeCycle` - workers-as-fuel (spec D3); workerCycles is the
 // only cycle kind. Save v66 is rejected (dev phase, no migration); a
@@ -112,4 +112,52 @@
 // the authored physique-advancement chain) is enforced by the
 // BodyProgression integrity preflight. Save v73 is rejected (dev phase,
 // no migration, no compat translator).
-export const CURRENT_SAVE_VERSION = 74 as const
+// v75 (2026-09-23, M-F-TECHNIQUE frozen-cycle model): Technique gains
+// required `gradeHistory` (per-grade sealed cycle outcomes {finalRank,
+// completionState}); the rank ladder is 0..18 with a realm-level-scaled
+// ceiling; restore preflight enforces canonical key-set coherence
+// ({1..grade-1} sealed, {grade} iff the live grade lags the realm).
+// Save v74 is rejected (dev phase, no migration, no compat translator).
+// v76 (2026-09-23, M-F-TALENT mandatory breakthrough talent transaction):
+// PlayerData gains talentLevels (required sparse level map, {} = all
+// level 1) + optional pendingTalentEntitlement ({realmId,
+// offeredTalentIds} - the persisted mandatory UPGRADE/NEW decision that
+// locks a settled breakthrough until resolved). Save v75 is rejected
+// (dev phase, no migration, no compat translator).
+// v77 (2026-09-23, M-F-COMPANION-GIFT mail/gift acquisition): PlayerData
+// gains required companionGifts (CompanionGiftRecord[] - authored
+// claimable-gift records {id, definitionId, claimed}; written by
+// issueCompanionGifts on authored trigger moments, claimed through
+// claimCompanionGift). Save v76 is rejected (dev phase, no migration,
+// no compat translator).
+// v78 (2026-09-23, M-F-CHU-THIEN Truc Co Chu Thien chapter):
+// player.bodyProgression gains the zhou_tian slice ({circulation} -
+// the Truc Co normal-Body track, Tieu 180 / Dai 360). Sequential
+// chapter prerequisites (meridian -> body_refinement, zhou_tian ->
+// meridian) are authored on the chapter registry and pinned as a
+// restore-preflight coherence invariant. Save v77 is rejected
+// (dev phase, no migration, no compat translator).
+// v79 (2026-09-23, M-F-ARTIFACT-DEFER artifact domain deferred to Kim
+// Dan+, coordinator-mandated bump - spec A8 originally specified no
+// bump, superseded by the Phase-2 directive; the parallel v77
+// COMPANION-GIFT and v78 CHU-THIEN bumps landed first, so this takes
+// the next): the artifact domain's unlock gate retargets to
+// ARTIFACT_UNLOCK_REALM_ID ('golden_core'); a persisted artifact below
+// the gate is preserved (never stripped) but saves written under the
+// Truc Co-era grant model must not load under the deferred model.
+// Save v78 is rejected (dev phase, no migration, no compat translator).
+// v80 (2026-09-23, M-F-BODY-PERFECTION hidden Body perfection):
+// PlayerData gains required `bodyPerfection` slice ({discoveredMaterials,
+// perfectedRealmIds} - canonical discovery + committed realms; discovery
+// is persistent state, NOT inventory-derived). Restore preflight runs
+// assertBodyPerfectionIntegrity (authored-family, subset + realm-cap
+// rules). Save v79 is rejected (dev phase, no migration, no compat
+// translator).
+// v81 (2026-09-23, M-F-BODY-HIDDEN hidden acquisition channels): player
+// `luyenKhiKillsSinceBeast` (scalar, v54) is replaced by
+// `hiddenBeastKills: Record<channelId, number>` - per-channel counters
+// for the generalized channel registry - and ProductionSiteState gains
+// optional `hiddenChannelCycles: Record<channelId, number>` (grotto
+// settle-cycle emission counters). Save v80 is rejected (dev phase, no
+// migration, no compat translator).
+export const CURRENT_SAVE_VERSION = 81 as const

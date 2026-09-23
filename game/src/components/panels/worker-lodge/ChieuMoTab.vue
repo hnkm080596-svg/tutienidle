@@ -10,6 +10,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useNotificationStore } from '@/stores/notification'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import GameButton from '@/components/common/GameButton.vue'
+import { companionAcquirablePool } from '@/core/companion/CompanionAvailability'
 import { COMPANION_PULL_TOKEN_ID } from '@/core/game/GameManagerCompanionOps'
 import type { PullCompanionResult } from '@/core/game/GameManagerCompanionOps'
 import { PITY_THRESHOLD } from '@/core/companion/CompanionGacha'
@@ -43,7 +44,15 @@ const duyenPhan = computed(() => player.duyenPhan)
 
 const pullInFlight = ref(false)
 
-const pullDisabled = computed(() => pullInFlight.value || tokenCount.value < 1)
+// M-F-COMPANION-GIFT - an empty acquirable pool (closed flag or an
+// authored-empty future pool) is an explicit valid state: the surface
+// says WHY instead of leaving a dead button, and points at the gift
+// tab where Beta companions actually arrive.
+const poolEnabled = computed(() => companionAcquirablePool().length > 0)
+
+const pullDisabled = computed(
+  () => pullInFlight.value || !poolEnabled.value || tokenCount.value < 1,
+)
 
 // The reveal card binds ONLY to the last result the ops layer returned.
 const lastResult = ref<PullCompanionResult | null>(null)
@@ -52,6 +61,8 @@ function pullErrorMessage(reason: Extract<PullCompanionResult, { ok: false }>['r
   switch (reason) {
     case 'missing_token':
       return t('chieuMo.errors.missingToken', { token: tokenName.value })
+    case 'pool_unavailable':
+      return t('chieuMo.errors.poolUnavailable')
     case 'realm_locked':
       return t('chieuMo.errors.realmLocked')
     case 'no_active_player':
@@ -97,6 +108,10 @@ function onPull() {
         {{ t('chieuMo.pity', { count: pullsSinceRare, max: PITY_THRESHOLD }) }}
       </span>
     </div>
+
+    <p v-if="!poolEnabled" class="chieu-mo__unavailable">
+      {{ t('chieuMo.unavailable') }}
+    </p>
 
     <GameButton class="chieu-mo__pull" :disabled="pullDisabled" @click="onPull">
       {{ t('chieuMo.pull', { token: tokenName }) }}
@@ -154,6 +169,15 @@ function onPull() {
 
 .chieu-mo__status-item--pity {
   border-color: color-mix(in srgb, var(--mineral-gold) 45%, var(--paper-line));
+}
+
+.chieu-mo__unavailable {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px dashed color-mix(in srgb, var(--jade) 45%, var(--paper-line));
+  border-radius: var(--radius-md);
+  color: var(--paper-text-soft);
+  font-size: var(--text-sm);
 }
 
 .chieu-mo__pull {

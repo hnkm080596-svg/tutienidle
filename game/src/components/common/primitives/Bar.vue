@@ -11,10 +11,14 @@ const props = withDefaults(defineProps<{
   height?: number
   pill?: boolean
   anchor?: 'left' | 'right'
+  // M-UI-SYSTEM: 'system' emits bar--system; its styles live only in
+  // system-theme.css (spec 2.2-4). Default 'ink' keeps every caller identical.
+  variant?: 'ink' | 'system'
 }>(), {
   height: 8,
   pill: false,
   anchor: 'left',
+  variant: 'ink',
 })
 
 const percent = computed(() => {
@@ -29,7 +33,7 @@ const percent = computed(() => {
 <template>
   <div
     class="bar"
-    :class="{ 'bar--pill': pill, 'bar--anchor-right': anchor === 'right' }"
+    :class="{ 'bar--pill': pill, 'bar--anchor-right': anchor === 'right', 'bar--system': variant === 'system' }"
     :style="{ '--bar-height': `${height}px` }"
     role="progressbar"
     :aria-valuenow="value"
@@ -62,6 +66,16 @@ const percent = computed(() => {
 
 .bar--anchor-right .bar__fill {
   margin-left: auto;
+}
+
+/* M-UI-SYSTEM: tone remap for variant="system" - the same CSS-var
+   mechanism ink callers already use; ink fallbacks keep the bar legible
+   if the system layer is not imported (safe degrade, spec 2.3). Extras
+   (border/shimmer/label font) stay anchored in system-theme.css. */
+.bar--system {
+  --bar-track: var(--sys-bg-0, var(--ink-700));
+  --bar-from: var(--sys-cyan, var(--jade));
+  --bar-to: var(--sys-azure, var(--chrome-300));
 }
 
 .bar__label {

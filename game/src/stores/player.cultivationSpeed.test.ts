@@ -64,15 +64,15 @@ describe('player store — tốc độ tu luyện theo thiên phú', () => {
     expect(store.cultivationPerSecond).toBeCloseTo(17.5)
   })
 
-  it('save edit nhiều id (v4 siết id đầu) — chỉ Phàm Cốt đầu được đọc, 2.5/s', () => {
+  it('save edit nhiều id (M-F-TALENT đa talent) — 4x Phàm Cốt cộng -300%, guard giữ sàn 0.1/s', () => {
     const store = usePlayerStore()
 
     store.selectedTalentIds = ['pham_cot', 'pham_cot', 'pham_cot', 'pham_cot']
     store.cultivate(1)
 
-    // v4 (spec §3.2): chỉ id ĐẦU được đọc — 4 lần pham_cot không cộng
-    // dồn thành −300% (kéo về 0), giữ đúng −75% của 1 talent.
-    expect(store.cultivationPerSecond).toBeCloseTo(2.5)
+    // M-F-TALENT supersedes v4 S3.2: EVERY id stacks - 4 x -75% = -300%
+    // floored at the 0.01 multiplier guard in getCultivationSpeedMultiplier.
+    expect(store.cultivationPerSecond).toBeCloseTo(0.1)
   })
 
   // Tụ Linh Trận (economy-fixes-sinks-plan §3.2 B1) — effect active nhân

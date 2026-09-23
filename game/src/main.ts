@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
 import './assets/theme.css'
+import './assets/system-theme.css'
 import App from './App.vue'
 import { vTooltip } from './directives/tooltip'
 import { useErrorStore } from './stores/error'

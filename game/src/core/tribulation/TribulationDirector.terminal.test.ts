@@ -40,6 +40,14 @@ function qiRefiningPlayer(): PlayerData {
   return player
 }
 
+// Quan Khi tribulation starts from a maxed mortal (release policy now
+// enforces the transition direction).
+function mortalPlayer(): PlayerData {
+  const player = createDefaultPlayer()
+  player.realmId = 'mortal'
+  return player
+}
+
 function statsWithDefense(defense: number): Stats {
   return createBaseStats({ maxHp: 5000, defense }) as Stats
 }
@@ -142,7 +150,7 @@ describe('TribulationDirector - unique terminal outcome (M5 / ARCH-006)', () => 
 
   it('victory path: extra ticks after the terminal emit no further outcome', () => {
     const rig = makeRig()
-    rig.director.start(qiRefiningPlayer(), statsWithDefense(900), false, 'qi_refining')
+    rig.director.start(mortalPlayer(), statsWithDefense(900), false, 'qi_refining')
 
     driveToTerminal(rig.director, true)
     expect(rig.outcomes).toEqual(['victory'])

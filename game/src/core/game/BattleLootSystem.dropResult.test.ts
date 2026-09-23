@@ -36,7 +36,7 @@ describe('BattleLootSystem — DropResult consumer', () => {
     expect(giveReward).toHaveBeenCalledTimes(1)
     expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 1 })
     loot.settleTechniqueMastery()
-    expect(gainMastery).toHaveBeenCalledWith(5)
+    expect(gainMastery).toHaveBeenCalledWith(5, 'mortal', 1)
   })
 
   it('equipment_any draws a template through the equipment registry', () => {
@@ -155,7 +155,11 @@ describe('BattleLootSystem — DropResult consumer', () => {
         call[0] === 'reward_particle' &&
         (call[1].kind === 'essence' || call[1].kind === 'item'),
     )
+    // M-QI-10: the qi_refining band guaranteed line is live - rng 0
+    // passes its 0.7 chance, so the kill emits the band's bao essence
+    // AND the synthetic signature drop. Both route to 'essence'.
     expect(materialParticles).toEqual([
+      ['reward_particle', expect.objectContaining({ kind: 'essence' })],
       ['reward_particle', expect.objectContaining({ kind: 'essence' })],
     ])
   })

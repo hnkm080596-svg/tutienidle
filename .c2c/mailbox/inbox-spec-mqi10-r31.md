@@ -1,0 +1,7 @@
+[C2C] STATE DONE · ROUND 31
+No unresolved findings.
+The spec cleanly preserves authority boundaries: PHYSIQUE_ESSENCE_BAND_DROPS remains the sole authored source for stage-layer physique-essence lines, and all three live band entries are required to reuse those exact objects rather than copy their values. The import direction is explicitly one-way, and the post-swap guards cover reference identity, absence of stray essence lines in stage/family pools, sparse/non-band behavior, and unchanged authored drop numbers.
+The M-QI-09 dependency is used correctly rather than duplicated: LQ Bảo income substitutes downward into Phàm at ×2, TC Pháp compounds through Pháp→Bảo→Phàm at ×4, with no new conversion path or UI introduced. The spec also correctly keeps huyet_mong's Phàm ×12 signature drop outside the band-table authority and pins it independently.
+The production scope is appropriately narrow: three STAGE_DROP_TABLES guaranteed-entry changes, no family/pool/signature mutation, no ratio/drop retune, and no save-shape/version change. Runtime acceptance additionally requires both LQ and TC emissions through the real drop-resolution seam, so the change cannot pass merely by placing data in the table.
+The replacement of the old “LQ/TC emit no essence” sentinel with positive post-swap invariants is coherent, and the unchanged M-QI-09 stranded-completion suite provides the required lower-chapter completability regression coverage.
+[C2C] END

@@ -3,7 +3,10 @@ import { describe, expect, it } from 'vitest'
 import { BODY_REFINEMENT_TIERS } from '../../../data/realm/BodyRefinement'
 import { BODY_VITALITY_ENDURANCE_THRESHOLD_PER_POINT } from '../../stats/TheTuStatChannels'
 import { createDefaultPlayer, resolvePlayerFinalStats, resolvePlayerStatAssembly } from '../../player/Player'
-import { investBodyChapterState } from './BodyProgressionSystem'
+import {
+  collectBodyBaseStatDeltas,
+  investBodyChapterState,
+} from './BodyProgressionSystem'
 
 // M-F (D1) - Body Refinement contributes BASE STATS: its deltas join
 // player.baseStats into an ephemeral assembledBase BEFORE derived stats
@@ -113,6 +116,21 @@ describe('Body base-stat assembly (D1)', () => {
 
     expect(player.baseStats).toEqual(baseBefore)
     expect(player.modifiers.filter(m => m.id.startsWith('luyen-the:'))).toHaveLength(0)
+  })
+
+  // M-F-BODY-CORE - the channel is a capability seam: collectBodyBaseStatDeltas
+  // gathers from any chapter implementing collectBaseStatDeltas, not only
+  // kind:'baseStat'. Today that is exactly body_refinement; a chapter
+  // without the capability (meridian - modifier-only) contributes
+  // nothing through it, whatever its progression state.
+  it('the base-stat channel skips chapters without the capability - opened meridians contribute no flat deltas', () => {
+    const player = createDefaultPlayer()
+
+    player.realmId = 'qi_refining'
+    player.realmLevel = 18
+    player.bodyProgression.meridian.openedIds = ['nham_mach', 'doc_mach']
+
+    expect(collectBodyBaseStatDeltas(player)).toEqual({})
   })
 
   it('meridian stays a modifier chapter - its gains still arrive via bat-mach:* modifiers', () => {

@@ -1,4 +1,4 @@
-import { nextTick, onBeforeUnmount, toValue, watch, type MaybeRefOrGetter, type Ref } from 'vue'
+import { nextTick, onBeforeUnmount, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
 const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
 
@@ -8,21 +8,23 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, se
  * Gắn 1 lần ở OverlayPanel/ConfirmModal — mọi consumer kế thừa.
  */
 export function useDialogFocus(
-  cardRef: Ref<HTMLElement | null>,
+  cardRef: MaybeRefOrGetter<HTMLElement | null>,
   open: MaybeRefOrGetter<boolean>,
   options: { onEscape: () => void },
 ): void {
   let lastTrigger: HTMLElement | null = null
   let keydownHandler: ((event: KeyboardEvent) => void) | null = null
+  let mousedownHandler: ((event: MouseEvent) => void) | null = null
 
   function focusables(): HTMLElement[] {
-    return cardRef.value ? Array.from(cardRef.value.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)) : []
+    const el = toValue(cardRef)
+    return el ? Array.from(el.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)) : []
   }
 
   const stopWatch = watch(() => toValue(open), async (isOpen) => {
     if (isOpen) {
       const activeElement = document.activeElement
-      const activeInCard = activeElement instanceof HTMLElement && cardRef.value?.contains(activeElement) === true
+      const activeInCard = activeElement instanceof HTMLElement && toValue(cardRef)?.contains(activeElement) === true
       // Re-open guard: focus đã nằm trong card (same-tick bounce) → giữ trigger gốc,
       // không ghi đè bằng phần tử trong dialog (restore sẽ bị skip vì contains guard).
       if (lastTrigger === null || !activeInCard) {
@@ -31,7 +33,7 @@ export function useDialogFocus(
       await nextTick()
       if (!toValue(open)) return
       const items = focusables()
-      ;(items[0] ?? cardRef.value)?.focus()
+      ;(items[0] ?? toValue(cardRef))?.focus()
       keydownHandler = (event: KeyboardEvent) => {
         if (event.key === 'Escape') {
           event.stopPropagation()
@@ -52,15 +54,33 @@ export function useDialogFocus(
         const last = list[list.length - 1]!
         const active = document.activeElement
         if (event.shiftKey) {
-          (active === first || !cardRef.value?.contains(active) ? last : list[Math.max(0, list.indexOf(active as HTMLElement) - 1)]!).focus()
+          (active === first || !toValue(cardRef)?.contains(active) ? last : list[Math.max(0, list.indexOf(active as HTMLElement) - 1)]!).focus()
         } else {
-          (active === last || !cardRef.value?.contains(active) ? first : list[Math.min(list.length - 1, list.indexOf(active as HTMLElement) + 1)]!).focus()
+          (active === last || !toValue(cardRef)?.contains(active) ? first : list[Math.min(list.length - 1, list.indexOf(active as HTMLElement) + 1)]!).focus()
         }
       }
-      cardRef.value?.addEventListener('keydown', keydownHandler)
+      toValue(cardRef)?.addEventListener('keydown', keydownHandler)
+      // M-UI-SYSTEM QA - pointer containment, sibling to the Tab cycle:
+      // a mousedown on unfocusable space outside the open card lets the
+      // browser move focus to a BACKGROUND focusable ancestor (a parent
+      // overlay card is tabindex=-1), so the blocked surface answers
+      // Escape through the blocking dialog. Cancelling the default
+      // mousedown action keeps focus inside the card; click handlers
+      // (e.g. scrim close) still fire because click is a separate event.
+      mousedownHandler = (event: MouseEvent) => {
+        const card = toValue(cardRef)
+        if (card && !(event.target instanceof Node && card.contains(event.target))) {
+          event.preventDefault()
+        }
+      }
+      document.addEventListener('mousedown', mousedownHandler)
     } else {
-      if (keydownHandler) cardRef.value?.removeEventListener('keydown', keydownHandler)
+      if (keydownHandler) toValue(cardRef)?.removeEventListener('keydown', keydownHandler)
       keydownHandler = null
+      if (mousedownHandler) {
+        document.removeEventListener('mousedown', mousedownHandler)
+        mousedownHandler = null
+      }
       if (lastTrigger && document.contains(lastTrigger)) lastTrigger.focus()
       lastTrigger = null
     }
@@ -68,7 +88,11 @@ export function useDialogFocus(
 
   onBeforeUnmount(() => {
     stopWatch()
-    if (keydownHandler) cardRef.value?.removeEventListener('keydown', keydownHandler)
+    if (keydownHandler) toValue(cardRef)?.removeEventListener('keydown', keydownHandler)
+    if (mousedownHandler) {
+      document.removeEventListener('mousedown', mousedownHandler)
+      mousedownHandler = null
+    }
     if (lastTrigger && document.contains(lastTrigger)) lastTrigger.focus()
   })
 }

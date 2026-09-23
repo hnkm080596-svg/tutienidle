@@ -112,6 +112,9 @@ export function getRefinementCurrentTierProgress(player: PlayerData): number {
 
 export const bodyRefinementChapter: BaseStatBodyChapter = {
   kind: 'baseStat',
+  // M-F-BODY-CORE - the authored chapter classification (a tier-invest
+  // REFINEMENT chapter); orthogonal to the emission `kind`.
+  chapterKind: 'refinement',
   id: 'body_refinement',
   // M-QI-07 (QI-D4) - filling all 6 tiers transforms the physique
   // pham -> bao, once. The transform write itself lives in
@@ -153,7 +156,7 @@ export const bodyRefinementChapter: BaseStatBodyChapter = {
     // tieu IT Tinh Hoa hon ma khong lang phi (progress clamp dung phan
     // con thieu); tra ve so Tinh Hoa THAT SU da tieu. Talent is retired
     // at catalog v4 (empty effect -> multiplier 1) - pipeline preserved.
-    const multiplier = getBodyRefinementProgressMultiplier(player.selectedTalentIds)
+    const multiplier = getBodyRefinementProgressMultiplier(player.selectedTalentIds, player.talentLevels)
     const needed = Math.ceil(remaining / multiplier)
     const consumed = Math.min(available, needed)
     const progress = Math.min(consumed * multiplier, remaining)

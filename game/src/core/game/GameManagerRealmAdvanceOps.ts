@@ -2,10 +2,12 @@ import type { ArtifactPath } from '../artifact/Artifact'
 import { tryUpgradeArtifactGrade } from '../artifact/ArtifactProgression'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import type { MaterialBag } from '../material/MaterialBag'
+import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { PillBag } from '../pill/PillBag'
 import type { PlayerData } from '../player/Player'
 import type { CultivationPathId, CultivationWayId } from '../player/CultivationPathKit'
 import { applyBreakthroughMerge } from '../kiem-tu/NguKiemDao'
+import { issueCompanionGifts } from '../companion/CompanionGifts'
 import { CULTIVATION_PATH_MODULES, getActiveWayDefinition } from '../player/CultivationPathKit'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward, hasStaticPathCapability } from '../player/CultivationPathSystem'
@@ -15,13 +17,31 @@ import {
   investBodyChapterState,
 } from '../realm/body/BodyProgressionSystem'
 import {
+  bodyChapterEssenceGrade,
   getBodyChapterDefinition,
   type BodyChapterCurrency,
   type BodyChapterId,
 } from '../realm/body/BodyChapter'
+import {
+  essenceSubstitutionCoverage,
+  planEssenceSubstitution,
+} from '../realm/body/BodyChapterEssenceSubstitution'
+import {
+  applyBodyPerfection,
+  canPerfectBodyRealm,
+} from '../realm/body/BodyPerfection'
+import { bodyPerfectionMaterialIds } from '../../data/realm/BodyPerfection'
+import type { NotificationQueue } from './NotificationQueue'
+import {
+  physiqueEssenceMaterialId,
+} from '../../data/realm/PhysiqueEssence'
+import type { PhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
+import { MAX_STACK_AMOUNT } from '../inventory/StackLimits'
 import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
-import { CORE_REALM_LEVEL, QI_REFINING_BREAKTHROUGH_STAGE_ID, getCurrentRealm } from '../realm/realmSystem'
+import { CORE_REALM_LEVEL, QI_REFINING_BREAKTHROUGH_STAGE_ID, getCurrentRealm, getNextRealm } from '../realm/realmSystem'
+import { isRealmTransitionEnabled } from '../realm/ReleasePolicy'
+import { isArtifactDomainUnlocked } from '../artifact/ArtifactProgression'
 import type { Skill } from '../skill/Skill'
 import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
@@ -40,6 +60,10 @@ import type {
   BreakthroughOutcomeResult,
   BreakthroughPlayerWriter,
 } from '../tribulation/BreakthroughOutcomeService'
+import {
+  resolveTalentEntitlement as resolveTalentEntitlementRecord,
+  type TalentEntitlementDecision,
+} from '../talent/TalentEntitlement'
 import type { GameManagerProgressionOps } from './GameManagerProgressionOps'
 import type { TemplateRegistry } from './TemplateRegistry'
 
@@ -80,11 +104,17 @@ export class GameManagerRealmAdvanceOps {
       skillTemplates: TemplateRegistry<Skill>
       nodeRegistry: NodeRegistry
       materialBag: MaterialBag
+      materialRegistry: MaterialRegistry
       pillBag: PillBag
       breakthroughOutcomeService: BreakthroughOutcomeService
       progressionOps: GameManagerProgressionOps
       getTurnBattle: () => TurnBattle | null
       markQuestRealmTransition: () => void
+      // M-F-BODY-PERFECTION - material-landing funnel (the essence
+      // change credit is a live landing) + the shared toast sink for
+      // the perfection transaction's commit notification.
+      notifyMaterialGained: (materialId: string, amount: number) => void
+      notifications: NotificationQueue
     },
   ) {
     this.techniqueManager = deps.techniqueManager
@@ -93,6 +123,25 @@ export class GameManagerRealmAdvanceOps {
   /** Grants the major-realm reward of the cultivation path data kit (P7-M3: artifact-only). */
   grantCultivationPathRealmReward(player: PlayerData, realmId: string): boolean {
     return grantPathRealmReward(player, realmId)
+  }
+
+  /**
+   * M-F-TALENT - resolve the mandatory breakthrough talent transaction
+   * (ruling S15-18): ONE decision granting ONE result, clearing the
+   * persisted entitlement record that locks the transition's drain.
+   * Delegates all grant/legality rules to the domain module (A5); on
+   * success the combat-passive sync re-reads talent effects at the new
+   * ownership/level. `player` must be the Pinia store instance (same
+   * absent-key write semantics as TribulationOutcomeService).
+   */
+  resolveTalentEntitlement(player: PlayerData, decision: TalentEntitlementDecision): boolean {
+    const resolved = resolveTalentEntitlementRecord(player, decision)
+
+    if (resolved) {
+      this.deps.progressionOps.syncTalentCombatPassive(player)
+    }
+
+    return resolved
   }
 
   /**
@@ -109,6 +158,17 @@ export class GameManagerRealmAdvanceOps {
     if (player.swordPath && hasStaticPathCapability(player, 'sword.sword_riding')) {
       applyBreakthroughMerge(player.swordPath)
     }
+  }
+
+  /**
+   * M-F-COMPANION-GIFT - companion gift moments authored against the
+   * realm just entered. Call once per realm-entered write, AFTER
+   * `player.realmId` holds the new realm: issueCompanionGifts is
+   * write-if-absent, so repeat fires and realms with no authored moment
+   * are harmless no-ops. Naming mirrors applySwordPathRealmTransition.
+   */
+  applyCompanionGiftRealmTransition(player: PlayerData): void {
+    issueCompanionGifts(player, { kind: 'realm_entered', realmId: player.realmId })
   }
 
   /**
@@ -313,6 +373,10 @@ export class GameManagerRealmAdvanceOps {
       // the next tick instead of waiting for a panel read.
       this.deps.markQuestRealmTransition()
 
+      // M-F-COMPANION-GIFT - companion gift moments authored against
+      // qi_refining entry fire here (write-if-absent; idempotent).
+      this.applyCompanionGiftRealmTransition(player)
+
       this.syncRealmPassive(player)
       this.syncRealmStatPassive(player)
       // M6 - NO applySwordPathRealmTransition here: hidden_sword_pathway can now be picked at
@@ -342,6 +406,14 @@ export class GameManagerRealmAdvanceOps {
    * QuanKhiPanel.vue (that choice is irreversible, this one is not).
    */
   setArtifactPath(player: PlayerData, path: ArtifactPath): boolean {
+    // M-F-ARTIFACT-DEFER: outermost guard - path selection is domain
+    // ACCESS, so a persisted dormant artifact can never be pathed while
+    // the domain is deferred (even a beyond-ceiling save reaching KD
+    // keeps the gate closed until the window opens).
+    if (!isArtifactDomainUnlocked(player.realmId)) {
+      return false
+    }
+
     if (!player.artifact) {
       return false
     }
@@ -364,6 +436,13 @@ export class GameManagerRealmAdvanceOps {
    * just in the UI).
    */
   tryUpgradeArtifactGrade(player: PlayerData): boolean {
+    // M-F-ARTIFACT-DEFER: outermost guard, same reasoning as
+    // setArtifactPath - grade upgrade is domain ACCESS, so a persisted
+    // dormant artifact cannot consume Doan Bao Thach while deferred.
+    if (!isArtifactDomainUnlocked(player.realmId)) {
+      return false
+    }
+
     if (!player.artifact) {
       return false
     }
@@ -378,10 +457,26 @@ export class GameManagerRealmAdvanceOps {
   }
 
   /**
-   * P7-M3 (D4) - canonical Technique grade-advance transaction: rank 10
-   * + below the realm ceiling + OUTSIDE combat + 100 x targetGrade
-   * current-tier spirit stones; resets rank/mastery for the new grade.
-   * The combat guard is enforced HERE, not just in the UI.
+   * M-F-TECHNIQUE (F4) - realm-exit freeze: call ONCE per major-realm
+   * advance BEFORE the realmId/realmLevel writes (the departing
+   * realmLevel is the freeze-time ceiling dai_thanh evaluates
+   * against; post-write realmLevel is already 1). Seals the live
+   * cycle when the new realm's index exceeds its grade; write-if-
+   * absent idempotent. Naming mirrors applySwordPathRealmTransition
+   * (the other per-transition hook).
+   */
+  applyTechniqueRealmTransition(player: PlayerData, targetRealmId: string): void {
+    this.deps.techniqueSystem.sealFrozenCycle(targetRealmId, player.realmLevel)
+  }
+
+  /**
+   * P7-M3 (D4) + M-F-TECHNIQUE - canonical Technique grade-advance
+   * CATCH-UP transaction: live grade below the realm band + OUTSIDE
+   * combat + 100 x targetGrade current-tier spirit stones. The
+   * transaction seals the outgoing cycle, resets rank/mastery for
+   * the new grade, preserves the build, applies monotonic
+   * inheritance. The combat guard is enforced HERE, not just in the
+   * UI.
    */
   tryAdvanceTechniqueGrade(player: PlayerData): boolean {
     const technique = this.deps.techniqueManager.getActive()
@@ -404,7 +499,7 @@ export class GameManagerRealmAdvanceOps {
 
     this.deps.materialBag.remove(cost.materialId, cost.amount)
 
-    return this.deps.techniqueSystem.advanceTechniqueGrade()
+    return this.deps.techniqueSystem.advanceTechniqueGrade(player.realmId)
   }
 
   /**
@@ -471,17 +566,145 @@ export class GameManagerRealmAdvanceOps {
       ? this.bodyChapterBag(chapter.auxCurrency).getAmount(chapter.auxCurrency.id)
       : 0
 
-    const consumed = investBodyChapterState(player, chapterId, available, auxOwned)
-
-    if (consumed > 0) {
-      bag.remove(chapter.currency.id, consumed)
+    // M-QI-09 (QI-D4c) - downward-only essence substitution resolved at
+    // this cost check, no exchange UI: a material-bag physique-essence
+    // requirement counts higher-grade stacks at the locked adjacent
+    // ratio. C2C r10#3 + r17#1 - validate -> consume -> apply: the
+    // progression mutation is computed on a cloned probe FIRST, the
+    // debit plan is validated (every debit satisfiable AND the change
+    // credit committable) while the real player is untouched, bags
+    // commit, and only then does the real state apply. Any failure
+    // returns 0 with zero state change. The resolver owns the
+    // namespace gate (C2C 6) - a non-essence currency takes the
+    // legacy path where the single-currency debit cannot fail.
+    if (bodyChapterEssenceGrade(chapter.currency) === undefined) {
+      const consumed = investBodyChapterState(player, chapterId, available, auxOwned)
+      if (consumed > 0) {
+        bag.remove(chapter.currency.id, consumed)
+      }
+      return consumed
     }
 
-    return consumed
+    const ownedOf = (grade: PhysiqueGradeId): number => {
+      const materialId = physiqueEssenceMaterialId(grade)
+      return materialId === undefined
+        ? 0
+        : this.deps.materialBag.getAmount(materialId)
+    }
+    const coverage = essenceSubstitutionCoverage(chapter.currency, ownedOf)
+    const effectiveAvailable = available + coverage
+
+    // JSON round-trip, NOT structuredClone: the live callers hand in a
+    // Pinia store's reactive $state, and structuredClone throws
+    // DataCloneError on any nested Proxy (SaveSystem's detachSaveValue
+    // ruling). JSON stringify/parse reads through proxies at any depth.
+    const probe = JSON.parse(JSON.stringify(player)) as PlayerData
+    const consumed = investBodyChapterState(probe, chapterId, effectiveAvailable, auxOwned)
+    if (consumed <= 0) {
+      return 0
+    }
+
+    const plan = planEssenceSubstitution(consumed, chapter.currency, ownedOf)
+    if (plan === undefined) {
+      return 0 // fail-closed: unreachable for an essence currency
+    }
+    const allSatisfiable = plan.debits.every((debit) =>
+      bag.has(debit.materialId, debit.amount),
+    )
+    // C2C r17#2 - the whole change credit must land or the invest
+    // fails closed: capacity is checked against the post-debit
+    // required balance before anything commits.
+    let changeCommittable = true
+    if (plan.change !== undefined) {
+      const changeMaterial = this.deps.materialRegistry.get(plan.change.materialId)
+      const requiredDebit = plan.debits.find(
+        (debit) => debit.materialId === plan.change?.materialId,
+      )
+      const postDebitBalance =
+        bag.getAmount(plan.change.materialId) - (requiredDebit?.amount ?? 0)
+      changeCommittable =
+        postDebitBalance + plan.change.amount <=
+        (changeMaterial.stackLimit ?? MAX_STACK_AMOUNT)
+    }
+    if (!allSatisfiable || !changeCommittable) {
+      return 0
+    }
+
+    for (const debit of plan.debits) {
+      bag.remove(debit.materialId, debit.amount)
+    }
+    if (plan.change !== undefined) {
+      const changeMaterial = this.deps.materialRegistry.get(plan.change.materialId)
+      this.deps.materialBag.add(changeMaterial, plan.change.amount)
+      // M-F-BODY-PERFECTION - the essence change credit is a live
+      // material landing; capacity was preflighted so delivered is
+      // the full amount.
+      this.deps.notifyMaterialGained(plan.change.materialId, plan.change.amount)
+    }
+    return investBodyChapterState(player, chapterId, effectiveAvailable, auxOwned)
   }
 
-  private bodyChapterBag(currency: BodyChapterCurrency): { getAmount(id: string): number; remove(id: string, amount: number): boolean } {
+  private bodyChapterBag(currency: BodyChapterCurrency): { getAmount(id: string): number; has(id: string, amount: number): boolean; remove(id: string, amount: number): boolean } {
     return currency.bag === 'pill' ? this.deps.pillBag : this.deps.materialBag
+  }
+
+  /**
+   * M-F-BODY-PERFECTION (spec S4) - the ONE Body-perfection
+   * transaction: validate -> probe -> consume -> mark -> stack ->
+   * rebuild. Atomic: every gate arm + a JSON-probe pass runs before
+   * ANY mutation, so a failure leaves zero state change. Idempotent:
+   * an already-perfected realm short-circuits inside
+   * canPerfectBodyRealm. The "stack + rebuild" steps need no explicit
+   * call: getBodyPerfectionMultiplier derives live from
+   * perfectedRealmIds inside the Body base-stat channel, and the UI
+   * re-resolves stats on the next state bump.
+   */
+  perfectBodyRealm(player: PlayerData, realmId: string): boolean {
+    const ownedOf = (materialId: string): number =>
+      this.deps.materialBag.getAmount(materialId)
+
+    if (!canPerfectBodyRealm(player, realmId, ownedOf)) {
+      return false
+    }
+
+    const required = bodyPerfectionMaterialIds(realmId)
+
+    if (required.length === 0) {
+      return false
+    }
+
+    // Same Pinia-safe probe convention as investBodyChapter: JSON
+    // round-trip (never structuredClone - proxies throw DataCloneError),
+    // then the mark step dry-runs on the detached copy. Consumption
+    // cannot legitimately fail past the gate, but the probe keeps the
+    // atomic convention uniform - and stays fail-closed: any
+    // serialization or probe exception returns false with zero mutation.
+    try {
+      const probe = JSON.parse(JSON.stringify(player)) as PlayerData
+
+      if (!canPerfectBodyRealm(probe, realmId, ownedOf)) {
+        return false
+      }
+
+      applyBodyPerfection(probe, realmId)
+    } catch {
+      return false
+    }
+
+    for (const materialId of required) {
+      this.deps.materialBag.remove(materialId, 1)
+    }
+
+    applyBodyPerfection(player, realmId)
+
+    this.deps.notifications.push({
+      kind: 'loot',
+      message: `Thể Phách Hoàn Thiện: ${getCurrentRealm(realmId).name}`,
+      messageKey: 'notifications.bodyRealmPerfected',
+      messageParams: { realm: getCurrentRealm(realmId).name },
+    })
+
+    return true
   }
 
   /**
@@ -491,6 +714,13 @@ export class GameManagerRealmAdvanceOps {
    * mortal: [level]; qi_refining: [level, chapterClear]; others: [].
    */
   getBreakthroughRequirements(player: PlayerData): BreakthroughRequirementRow[] {
+    // M-F-CEILING - release policy decides whether the next transition may
+    // be attempted at all; a closed transition reports no requirement rows
+    // (TC -> KD stays authored but disabled in the Beta window).
+    const nextRealmId = getNextRealm(player.realmId)?.id
+    if (nextRealmId === undefined || !isRealmTransitionEnabled(player.realmId, nextRealmId)) {
+      return []
+    }
     if (player.realmId === 'mortal') {
       return [{ key: 'level', met: player.realmLevel >= CORE_REALM_LEVEL }]
     }
@@ -519,8 +749,9 @@ export class GameManagerRealmAdvanceOps {
    * transition is the initiation ritual, chooseCultivationPath).
    *
    * PRODUCT SCOPE: the game is currently designed up to Truc Co tier 18.
-   * Placeholder realms (Kim Dan+) return false until their content pass
-   * lands.
+   * Transitions into unreleased realms (Kim Dan+) are closed by the
+   * release-policy authority (ReleasePolicy.progressionCeilingRealmId) -
+   * their content stays authored/dormant.
    */
   canTriggerBreakthrough(player: PlayerData): boolean {
     const requirements = this.getBreakthroughRequirements(player)

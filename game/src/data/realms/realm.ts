@@ -74,49 +74,49 @@ export const REALMS: RealmData[] = [
   {
     id: 'golden_core',
     name: 'Kim Đan',
-    maxLevel: 9,
+    maxLevel: 18,
     realmDurationMultiplier: 90,
   },
 
   {
     id: 'nascent_soul',
     name: 'Nguyên Anh',
-    maxLevel: 9,
+    maxLevel: 18,
     realmDurationMultiplier: 270,
   },
 
   {
     id: 'soul_transformation',
     name: 'Hóa Thần',
-    maxLevel: 9,
+    maxLevel: 18,
     realmDurationMultiplier: 810,
   },
 
   {
     id: 'void_refinement',
     name: 'Luyện Hư',
-    maxLevel: 9,
+    maxLevel: 18,
     realmDurationMultiplier: 2430,
   },
 
   {
     id: 'body_integration',
     name: 'Hợp Thể',
-    maxLevel: 9,
+    maxLevel: 18,
     realmDurationMultiplier: 7290,
   },
 
   {
     id: 'mahayana',
     name: 'Đại Thừa',
-    maxLevel: 9,
+    maxLevel: 18,
     realmDurationMultiplier: 21870,
   },
 
   {
     id: 'tribulation',
     name: 'Độ Kiếp',
-    maxLevel: 9,
+    maxLevel: 18,
     realmDurationMultiplier: 65610,
   },
 ]

@@ -63,8 +63,17 @@ export interface LootTestSetupOptions {
   stage?: LootTestStage
   /** Material ids registered into a real MaterialRegistry. */
   materialIds?: string[]
+  /** Tagged material records (M-F-ARTIFACT-DEFER) - carries
+   *  domainUnlockRealmId/breakthroughRealmId explicitly so the
+   *  fabricated registry matches the authored tag. */
+  materialTemplates?: {
+    id: string
+    name?: string
+    domainUnlockRealmId?: string
+    breakthroughRealmId?: string
+  }[]
   equipmentTemplates?: { id: string; name: string }[]
-  pillTemplates?: { id: string; name: string; grade: string; icon?: string }[]
+  pillTemplates?: { id: string; name: string; grade: string; icon?: string; breakthroughRealmId?: string }[]
 }
 
 export function createLootTestSetup(options: LootTestSetupOptions = {}) {
@@ -76,6 +85,17 @@ export function createLootTestSetup(options: LootTestSetupOptions = {}) {
       category: 'other',
       sourceType: 'monster',
       description: 'test fixture',
+    })
+  }
+  for (const template of options.materialTemplates ?? []) {
+    materialRegistry.register({
+      id: template.id,
+      name: template.name ?? template.id,
+      category: 'other',
+      sourceType: 'monster',
+      description: 'test fixture',
+      domainUnlockRealmId: template.domainUnlockRealmId,
+      breakthroughRealmId: template.breakthroughRealmId,
     })
   }
   const materialBag = new MaterialBag()
@@ -95,9 +115,10 @@ export function createLootTestSetup(options: LootTestSetupOptions = {}) {
   const createInstance = vi.fn<EquipmentSystem['createInstance']>(
     () => TEST_EQUIPMENT_INSTANCE as EquipmentInstance,
   )
-  // P7-M3 - the pending-mastery flush consumes through gainMastery;
-  // default the mock to "consumed everything" so summaries read honest.
-  const gainMastery = vi.fn((amount: number) => ({ gained: amount, rankUps: 0 }))
+  // P7-M3 + M-F-TECHNIQUE - the pending-mastery flush consumes through
+  // gainMastery(amount, realmId, realmLevel); default the mock to
+  // "consumed everything" so summaries read honest.
+  const gainMastery = vi.fn((_amount: number, _realmId?: string, _realmLevel?: number) => ({ gained: _amount, rankUps: 0 }))
   // Heal-on-kill talents are retired (v4 catalog) so the stub never heals;
   // it also must NOT write currentHp directly — this helper is a non-test
   // file and the R14 vitalsWriteAuthority guard scans it as production code.
@@ -147,6 +168,7 @@ export function createLootTestSetup(options: LootTestSetupOptions = {}) {
     questSystem: { onEnemyDefeated: vi.fn(), onMaterialCollected: vi.fn() },
     questRegistry: {},
     questManager: {},
+    notifyMaterialGained: vi.fn(),
     hiddenBeast: { onEnemyDefeated: vi.fn() },
   } as unknown as BattleLootSystemDeps
 

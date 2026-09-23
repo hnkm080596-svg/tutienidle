@@ -1,15 +1,15 @@
-// Shape validation cho save (save-shape-validation-plan.md, Phase 0) —
-// pure function, không dependency runtime, thu hẹp dần từ unknown,
-// KHÔNG dùng any. Chỉ kiểm tra SỰ HIỆN DIỆN và KIỂU của field bắt buộc;
-// KHÔNG kiểm tra giá trị gameplay (balance thuộc hệ thống load từng phần).
+// Shape validation cho save (save-shape-validation-plan.md, Phase 0) -
+// pure function, khong dependency runtime, thu hep dan tu unknown,
+// KHONG dung any. Chi kiem tra SU HIEN DIEN va KIEU cua field bat buoc;
+// KHONG kiem tra gia tri gameplay (balance thuoc he thong load tung phan).
 //
-// Quy ước: khi thêm field BẮT BUỘC mới vào GameSave/PlayerData, task thêm
-// field phải cập nhật validator này + SaveRoundTrip.test.ts trong cùng
-// thay đổi (round-trip test sẽ đỏ nếu buildGameSave() thiếu field mà
-// validator đòi, và ngược lại).
+// Quy uoc: khi them field BAT BUOC moi vao GameSave/PlayerData, task them
+// field phai cap nhat validator nay + SaveRoundTrip.test.ts trong cung
+// thay doi (round-trip test se do neu buildGameSave() thieu field ma
+// validator doi, va nguoc lai).
 import { CURRENT_SAVE_VERSION } from './saveVersion'
 import { REALMS } from '../../data/realms/realm'
-import { COMPANIONS } from '../../data/companion/Companions'
+import { COMPANIONS, isBetaCompanionGift } from '../../data/companion/Companions'
 import { MAX_CONSTELLATION_RANK } from '../../core/companion/CompanionProgression'
 import { ITEM_QUALITY_ORDER, type ItemQuality } from '../../core/item/ItemQuality'
 import { isProfessionGrade } from '../../core/profession/ProfessionGrade'
@@ -21,6 +21,7 @@ import { COMBAT_AI_STRATEGIES } from '../../core/battle/CombatAiStrategy'
 import { FOUNDATION_LABELS } from '../../core/breakthrough/FoundationType'
 import { isArtifactGrade, isArtifactPath } from '../../core/artifact/Artifact'
 import { validateBodyProgressionPersistedState } from '../../core/realm/body/BodyProgressionSystem'
+import { validateBodyPerfectionPersistedState } from '../../core/realm/body/BodyPerfection'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { SKILLS } from '../../data/skill/Skills'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
@@ -28,6 +29,8 @@ import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
 import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
+import { getTalentDefinition } from '../../data/talent/Talents'
+import { getTalentMaxLevel, isLegalBreakthroughOffer, isTalentEntitlementActionable } from '../../core/talent/TalentEntitlement'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
 import { isPhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
 
@@ -75,10 +78,10 @@ export type ShapeValidationResult =
 
       issues: []
 
-      /** Bản save đã bỏ equipment legacy và điền default optional an toàn. */
+      /** Ban save da bo equipment legacy va dien default optional an toan. */
       normalizedSave: unknown
 
-      /** Cầu nối cho UI báo số equipment legacy đã bỏ khi load. */
+      /** Cau noi cho UI bao so equipment legacy da bo khi load. */
       discardedEquipmentCount: number
     }
   | {
@@ -109,7 +112,7 @@ function isEquipmentSlot(value: unknown): boolean {
   return typeof value === 'string' && EQUIPMENT_SLOTS.some((slot) => slot === value)
 }
 
-/** Field bắt buộc kiểu array — trả về array nếu hợp lệ để kiểm tra phần tử. */
+/** Field bat buoc kieu array - tra ve array neu hop le de kiem tra phan tu. */
 function requireArray(
   target: Record<string, unknown>,
   key: string,
@@ -127,7 +130,7 @@ function requireArray(
   return value
 }
 
-/** Field optional — chỉ kiểm kiểu khi hiện diện (không bắt buộc có mặt). */
+/** Field optional - chi kiem kieu khi hien dien (khong bat buoc co mat). */
 function optionalArray(
   target: Record<string, unknown>,
   key: string,
@@ -182,6 +185,27 @@ function requireNonNegativeNumber(
   }
 }
 
+// M-F-BODY-HIDDEN (save v81) - per-channel counter maps persist as
+// Record<channelId, int>=0>; required maps reject non-objects, optional
+// maps validate only when present.
+function validateNonNegativeIntMap(
+  value: unknown,
+  path: string,
+  issues: ShapeIssue[],
+): void {
+  if (!isObject(value)) {
+    issues.push({ path, message: 'phải là object map' })
+
+    return
+  }
+
+  for (const [key, entry] of Object.entries(value)) {
+    if (!Number.isInteger(entry) || (entry as number) < 0) {
+      issues.push({ path: `${path}.${key}`, message: 'phải là int không âm' })
+    }
+  }
+}
+
 function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   if (!isObject(player)) {
     issues.push({ path: 'player', message: 'phải là object' })
@@ -192,8 +216,8 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   requireString(player, 'name', 'player', issues)
   requireString(player, 'realmId', 'player', issues)
 
-  // Audit fix 2026-08-31 — realmId rác từng pass shape check (chỉ kiểm
-  // string) rồi crash boot ở getCurrentRealm() throw (white-screen).
+  // Audit fix 2026-08-31 - realmId rac tung pass shape check (chi kiem
+  // string) roi crash boot o getCurrentRealm() throw (white-screen).
   if (
     typeof player.realmId === 'string' &&
     !REALMS.some((realm) => realm.id === player.realmId)
@@ -219,19 +243,19 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     })
   }
 
-  // realmLevel >= 1 — nền của mọi tính toán progression; NaN/âm ở đây
-  // lây sang cultivation curve.
+  // realmLevel >= 1 - nen cua moi tinh toan progression; NaN/am o day
+  // lay sang cultivation curve.
   if (!isFiniteNumber(player.realmLevel) || player.realmLevel < 1) {
     issues.push({ path: 'player.realmLevel', message: 'phải là number hữu hạn >= 1' })
   }
 
-  // cultivation/cultivationPerSecond — thiếu cultivationPerSecond từng gây
-  // NaN vĩnh viễn cho cultivation qua calculateOfflineProgress (review
+  // cultivation/cultivationPerSecond - thieu cultivationPerSecond tung gay
+  // NaN vinh vien cho cultivation qua calculateOfflineProgress (review
   // 2026-08-28 bug #2).
   requireNonNegativeNumber(player, 'cultivation', 'player', issues)
   requireNonNegativeNumber(player, 'cultivationPerSecond', 'player', issues)
 
-  // Mission A review — the player record/array fields below were
+  // Mission A review - the player record/array fields below were
   // container-only until now: baseStats.might = 'huge' passed the
   // boundary, slipped through the key whitelist (keys only, not
   // values), and spread NaN through every stat computation.
@@ -264,6 +288,171 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
 
   if (selectedTalentIds) {
     validateStringEntries(selectedTalentIds, 'player.selectedTalentIds', issues)
+  }
+
+  // M-F-TALENT (v76) - talentLevels is required (sparse level map; empty
+  // object = every owned talent at level 1). Levels are positive
+  // integers - a 0/NaN level reads as a corrupt upgrade result, fail
+  // loud like nodeLevels.
+  if (!isObject(player.talentLevels)) {
+    issues.push({ path: 'player.talentLevels', message: 'phải là object' })
+  } else {
+    for (const [talentId, level] of Object.entries(player.talentLevels)) {
+      if (!isNonNegativeFiniteNumber(level) || !Number.isInteger(level) || level < 1) {
+        issues.push({
+          path: `player.talentLevels.${talentId}`,
+          message: 'phải là số nguyên >= 1',
+        })
+
+        continue
+      }
+
+      // Levels above the authored range cannot be minted by the domain
+      // (UPGRADE grants at most level+1 up to maxLevel) - treat as
+      // corruption. Unknown ids stay tolerated like selectedTalentIds'
+      // retired entries: consumers already skip them.
+      const talent = getTalentDefinition(talentId)
+
+      if (talent !== undefined && level > getTalentMaxLevel(talent)) {
+        issues.push({
+          path: `player.talentLevels.${talentId}`,
+          message: 'vượt maxLevel của talent',
+        })
+      }
+
+      // A level entry for a talent the save does NOT own is latent
+      // corruption: NEW ownership grants level 1 by contract, so a
+      // stored >1 for an unowned id can only arrive via a shaped save
+      // and would bypass the level ladder on first grant. Fail loud.
+      if (selectedTalentIds !== undefined && !selectedTalentIds.includes(talentId)) {
+        issues.push({
+          path: `player.talentLevels.${talentId}`,
+          message: 'level của talent chưa sở hữu',
+        })
+      }
+    }
+  }
+
+  // M-F-TALENT (v76) - pendingTalentEntitlement is optional; when
+  // present it is the in-flight mandatory breakthrough decision record:
+  // realmId (pool key) + bound offeredTalentIds. A malformed record must
+  // fail loud - silently dropping it would strand the transition lock.
+  if (player.pendingTalentEntitlement !== undefined) {
+    if (!isObject(player.pendingTalentEntitlement)) {
+      issues.push({ path: 'player.pendingTalentEntitlement', message: 'phải là object hoặc vắng mặt' })
+    } else {
+      const entitlement = player.pendingTalentEntitlement
+
+      requireNonEmptyString(entitlement, 'realmId', 'player.pendingTalentEntitlement', issues)
+      const offered = requireArray(entitlement, 'offeredTalentIds', 'player.pendingTalentEntitlement', issues)
+
+      if (offered) {
+        validateStringEntries(offered, 'player.pendingTalentEntitlement.offeredTalentIds', issues)
+      }
+
+      // Registry-drift rule (QA-2026-09-12-013): the record drives a
+      // blocking uncancellable modal, so every catalog reference it
+      // carries must resolve - an unresolvable offer or realm key would
+      // silently strand the transition lock instead of failing loud.
+      if (
+        typeof entitlement.realmId === 'string' &&
+        entitlement.realmId.length > 0 &&
+        !REALMS.some((realm) => realm.id === entitlement.realmId)
+      ) {
+        issues.push({ path: 'player.pendingTalentEntitlement.realmId', message: 'realmId không thuộc danh mục REALMS' })
+      }
+
+      if (offered) {
+        const seenOfferIds = new Set<unknown>()
+
+        for (const [index, talentId] of offered.entries()) {
+          if (typeof talentId === 'string' && getTalentDefinition(talentId) === undefined) {
+            issues.push({
+              path: `player.pendingTalentEntitlement.offeredTalentIds[${index}]`,
+              message: 'talent id không thuộc catalog',
+            })
+          }
+
+          // EVERY persisted offer must satisfy the same structural
+          // legality as the live draw (isLegalBreakthroughOffer):
+          // realm-pool member + weight > 0 + catalog-resolvable. A
+          // foreign or zero-weight id would survive into the decision
+          // UI as a dead card - fail loud, never let it render.
+          if (
+            typeof talentId === 'string' &&
+            typeof entitlement.realmId === 'string' &&
+            entitlement.realmId.length > 0 &&
+            !isLegalBreakthroughOffer(entitlement.realmId, talentId)
+          ) {
+            issues.push({
+              path: `player.pendingTalentEntitlement.offeredTalentIds[${index}]`,
+              message: 'không phải offer hợp lệ của pool realm (ngoài pool hoặc weight 0)',
+            })
+          }
+
+          // Duplicate offers grant the same talent twice (double-counted
+          // effects) - the live draw is deduped, so a dup is corruption.
+          if (seenOfferIds.has(talentId)) {
+            issues.push({
+              path: `player.pendingTalentEntitlement.offeredTalentIds[${index}]`,
+              message: 'talent id trùng lặp',
+            })
+          }
+          seenOfferIds.add(talentId)
+        }
+      }
+
+      // Degenerate-record guard: a persisted entitlement that presents
+      // ZERO legal decisions locks the transition forever behind an
+      // uncancellable modal - offered cards all owned/unknown/outside
+      // the realm pool, realm pool release-suppressed, and no legal
+      // upgrade left. The live seam can never author this
+      // (createTalentEntitlement returns undefined and resolution
+      // enforces the same pool/policy authority), so it can only
+      // arrive via corruption: fail loud. Sanitize-then-delegate: the
+      // legality rule lives in the domain (isTalentEntitlementActionable);
+      // the validator only bridges unknown -> typed shapes it has
+      // already checked.
+      if (
+        typeof entitlement.realmId === 'string' &&
+        entitlement.realmId.length > 0 &&
+        offered !== undefined
+      ) {
+        const sanitizedOffers = offered.filter(
+          (talentId): talentId is string => typeof talentId === 'string',
+        )
+        const sanitizedIds = (selectedTalentIds ?? []).filter(
+          (talentId): talentId is string => typeof talentId === 'string',
+        )
+        const sanitizedLevels: Record<string, number> = {}
+
+        if (isObject(player.talentLevels)) {
+          for (const [talentId, level] of Object.entries(player.talentLevels)) {
+            if (isNonNegativeFiniteNumber(level) && Number.isInteger(level)) {
+              sanitizedLevels[talentId] = level
+            }
+          }
+        }
+
+        const actionable =
+          sanitizedOffers.length === offered.length &&
+          isTalentEntitlementActionable({
+            selectedTalentIds: sanitizedIds,
+            talentLevels: sanitizedLevels,
+            pendingTalentEntitlement: {
+              realmId: entitlement.realmId,
+              offeredTalentIds: sanitizedOffers,
+            },
+          })
+
+        if (!actionable) {
+          issues.push({
+            path: 'player.pendingTalentEntitlement',
+            message: 'bản ghi không còn quyết định hợp lệ nào',
+          })
+        }
+      }
+    }
   }
 
   requireBoolean(player, 'hasSeenTutorial', 'player', issues)
@@ -300,7 +489,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     validateStringEntries(grantedRealmPassiveIds, 'player.grantedRealmPassiveIds', issues)
   }
 
-  // persistentTimedEffects — expiresAtMs is the absolute authority
+  // persistentTimedEffects - expiresAtMs is the absolute authority
   // (see PersistentTimedEffect.ts): a NaN deadline never expires.
   const timedEffects = requireArray(player, 'persistentTimedEffects', 'player', issues)
 
@@ -357,7 +546,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     })
   }
 
-  // skillCastCounts is an optional record — NaN/negative
+  // skillCastCounts is an optional record - NaN/negative
   // values leak into cast gates the same way nodeLevels did.
   for (const recordKey of ['skillCastCounts'] as const) {
     const record = player[recordKey]
@@ -404,8 +593,8 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     }
   }
 
-  // artifact optional (ArtifactProgress) — a malformed grade/experience
-  // makes ArtifactPanel index ARTIFACT_GRADE_ORDER → -1 / NaN exp bar.
+  // artifact optional (ArtifactProgress) - a malformed grade/experience
+  // makes ArtifactPanel index ARTIFACT_GRADE_ORDER -> -1 / NaN exp bar.
   if (player.artifact !== undefined) {
     if (!isObject(player.artifact)) {
       issues.push({ path: 'player.artifact', message: 'phải là object hoặc vắng mặt' })
@@ -435,7 +624,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     }
   }
 
-  // nodeLevels — field từng gây crash boot v47 (SaveSystem.ts comment v47).
+  // nodeLevels - field tung gay crash boot v47 (SaveSystem.ts comment v47).
   if (!isObject(player.nodeLevels)) {
     issues.push({ path: 'player.nodeLevels', message: 'phải là object' })
   } else {
@@ -479,11 +668,11 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     }
   }
 
-  // Cultivation Path Framework (v66) — cultivationPath must be one of
+  // Cultivation Path Framework (v66) - cultivationPath must be one of
   // the 3 BASE ids (the CULTIVATION_PATH_MODULES keys). M7 removed the
   // legacy _an ids from the union, so a save carrying one fails this
-  // enum check and is rejected — dev-phase policy, no migration.
-  // cultivationWay is an optional CultivationWayId content string — shape-check
+  // enum check and is rejected - dev-phase policy, no migration.
+  // cultivationWay is an optional CultivationWayId content string - shape-check
   // the type only; catalog membership belongs to the path authority,
   // not the save boundary.
   if (
@@ -501,7 +690,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({ path: 'player.cultivationWay', message: 'phải là string hoặc vắng mặt' })
   }
 
-  // Pair coherence (review cycle, I1) — applyPathChoice writes the
+  // Pair coherence (review cycle, I1) - applyPathChoice writes the
   // (path, way) pair + path slice atomically and the ritual advances
   // realmId in the same commit, so the save boundary rejects every
   // incoherent shape instead of loading a permanently soft-locked
@@ -544,12 +733,12 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   // same hard-fail seam as the way technique-holder check), not here:
   // the shape layer stays structural for the player slice.
 
-  // P1-M6 — persisted path-state validation is MODULE-OWNED: the
+  // P1-M6 - persisted path-state validation is MODULE-OWNED: the
   // boundary keeps the identity-pair contract above (enum, atomic
   // pair, way membership, mortal gate) and iterates each module's
   // validatePersistedState hook generically for its own slices
   // (spell -> player.spellPath, sword -> player.swordPath; body owns
-  // no slice). A new path carries its own rules — no save-layer edit.
+  // no slice). A new path carries its own rules - no save-layer edit.
   for (const pathModule of Object.values(CULTIVATION_PATH_MODULES)) {
     pathModule.validatePersistedState?.(player, (issue) => issues.push(issue))
   }
@@ -561,9 +750,15 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   // bodyRefinementCurrentTierProgress / openedMeridianIds) are gone.
   validateBodyProgressionPersistedState(player, (issue) => issues.push(issue))
 
-  // Talent v4 M2 (v61) — 5 field mới: ngân tu vi tràn (Hải Nạp), tầng
-  // Lôi Kiếp, ledger mua node miễn phí (Vấn Đạo), tầng Phá Giáp mang
-  // sang trận sau + cảnh giới lúc bank.
+  // M-F-BODY-PERFECTION (v77) - the perfection slice is module-owned
+  // too: presence + discoveredMaterials/perfectedRealmIds string-array
+  // shape validated inside the delegated validator; semantic integrity
+  // (family membership, subset, realm cap) runs at restore preflight.
+  validateBodyPerfectionPersistedState(player, (issue) => issues.push(issue))
+
+  // Talent v4 M2 (v61) - 5 field moi: ngan tu vi tran (Hai Nap), tang
+  // Loi Kiep, ledger mua node mien phi (Van Dao), tang Pha Giap mang
+  // sang tran sau + canh gioi luc bank.
   requireNonNegativeNumber(player, 'cultivationOvercharge', 'player', issues)
   requireNonNegativeNumber(player, 'tribulationBonusStacks', 'player', issues)
   if (!isObject(player.nodeFreePurchaseRecord)) {
@@ -585,8 +780,10 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
 
   // Spec dot-pha-loi-kiep sec.6.1 - the v54 fields (hidden-beast window,
   // mortal-perfection snapshot, great-dao loss). Bat Mach moved into
-  // player.bodyProgression.meridian at v72 (delegated validator above).
-  requireNonNegativeNumber(player, 'luyenKhiKillsSinceBeast', 'player', issues)
+  // player.bodyProgression.meridian at v72 (delegated validator above);
+  // the scalar kill counter became a per-channel map at v81
+  // (M-F-BODY-HIDDEN).
+  validateNonNegativeIntMap(player.hiddenBeastKills, 'player.hiddenBeastKills', issues)
   if (typeof player.mortalPerfectionAchieved !== 'boolean') {
     issues.push({ path: 'player.mortalPerfectionAchieved', message: 'phải là boolean' })
   }
@@ -594,8 +791,8 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({ path: 'player.greatDaoOpportunityLost', message: 'phải là boolean' })
   }
 
-  // lastSavedAt — buildGameSave() LUÔN ghi; thiếu nó khiến offline time
-  // tính ra NaN (review 2026-08-28 bug #2). Save hiện hành bắt buộc có.
+  // lastSavedAt - buildGameSave() LUON ghi; thieu no khien offline time
+  // tinh ra NaN (review 2026-08-28 bug #2). Save hien hanh bat buoc co.
   if (!isFiniteNumber(player.lastSavedAt)) {
     issues.push({ path: 'player.lastSavedAt', message: 'phải là number hữu hạn' })
   }
@@ -611,7 +808,17 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     validateCompanionEntries(companions, 'player.companions', issues)
   }
 
-  // C1 triage (2026-09-14) — 3 corrupt-save residuals closed save-side:
+  // v77 companion gifts - authored mail/gift records. A persisted gift
+  // outside the Beta gift catalog is the persisted-bypass class the
+  // acquisition boundary exists to kill - fail loud like an unknown
+  // definitionId on an owned companion.
+  const companionGifts = requireArray(player, 'companionGifts', 'player', issues)
+
+  if (companionGifts) {
+    validateCompanionGiftEntries(companionGifts, 'player.companionGifts', issues)
+  }
+
+  // C1 triage (2026-09-14) - 3 corrupt-save residuals closed save-side:
   // perfectClearSeconds feeds auto-farm cycleSeconds (a missing/non-object
   // field crashes the tick's index read; junk values are additionally
   // guarded at consumption by isValidCycleSeconds).
@@ -630,7 +837,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
 
   // autoFarmStage: null | { stageId, lastCheckedMs }. A malformed entry
   // previously slipped through shape validation; lastCheckedMs is only
-  // shape-checked here — the unbounded catch-up a small-positive value
+  // shape-checked here - the unbounded catch-up a small-positive value
   // used to cause is bounded in tickAutoFarm's elapsed clamp instead.
   if (player.autoFarmStage !== null) {
     if (!isObject(player.autoFarmStage)) {
@@ -642,7 +849,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   }
 
   // formationLoadout: null | { formationId, assignments[] }. The write
-  // path validates content (commitFormationLoadout); here shape-only —
+  // path validates content (commitFormationLoadout); here shape-only -
   // resolvePartyFormation() maps .assignments blindly, so a malformed
   // object crashes battle construction.
   if (player.formationLoadout !== null) {
@@ -773,7 +980,57 @@ function validateCompanionEntries(
   }
 }
 
-/** Kiểm tra phần tử của stack save (materials/pills) — id string + amount number >= 0. */
+/**
+ * CompanionGiftRecord entries (v77 schema). `id` is the authored-moment
+ * identity (dedupe key); a retired moment id is tolerated because
+ * moments are content - only the definitionId authority gate is strict.
+ */
+function validateCompanionGiftEntries(
+  entries: unknown[],
+  path: string,
+  issues: ShapeIssue[],
+) {
+  const seenIds = new Set<string>()
+
+  for (let i = 0; i < entries.length; i += 1) {
+    const entry = entries[i]
+    const entryPath = `${path}[${i}]`
+
+    if (!isObject(entry)) {
+      issues.push({ path: entryPath, message: 'phải là object' })
+
+      continue
+    }
+
+    requireNonEmptyString(entry, 'id', entryPath, issues)
+    requireNonEmptyString(entry, 'definitionId', entryPath, issues)
+
+    if (typeof entry.id === 'string' && entry.id.trim().length > 0) {
+      if (seenIds.has(entry.id)) {
+        issues.push({ path: `${entryPath}.id`, message: 'bị trùng với gift entry khác' })
+      } else {
+        seenIds.add(entry.id)
+      }
+    }
+
+    if (
+      typeof entry.definitionId === 'string' &&
+      entry.definitionId.trim().length > 0 &&
+      !isBetaCompanionGift(entry.definitionId)
+    ) {
+      issues.push({
+        path: `${entryPath}.definitionId`,
+        message: 'không phải companion trong danh mục quà tặng Beta',
+      })
+    }
+
+    if (typeof entry.claimed !== 'boolean') {
+      issues.push({ path: `${entryPath}.claimed`, message: 'phải là boolean' })
+    }
+  }
+}
+
+/** Kiem tra phan tu cua stack save (materials/pills) - id string + amount number >= 0. */
 function validateStackEntries(
   entries: unknown[],
   idKey: string,
@@ -959,7 +1216,7 @@ function validateSkillCoreCoverage(
   }
 }
 
-// Mission A1 — deep per-slice validation. QuestManager.restore spreads
+// Mission A1 - deep per-slice validation. QuestManager.restore spreads
 // state.active blindly, so a malformed element must fail the boundary
 // instead of crashing restore (quest `active:"x"` -> TypeError).
 function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): void {
@@ -1000,7 +1257,7 @@ function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): 
   }
 }
 
-// Mission A1 — BuildingSystem reads level/lastCollectedAt directly for
+// Mission A1 - BuildingSystem reads level/lastCollectedAt directly for
 // stored-amount math; a non-numeric level used to pass the gate and
 // produce NaN rates. Shape-only: maxLevel bounds stay with the building
 // catalog (this file does not check gameplay values).
@@ -1021,7 +1278,7 @@ function validateBuildingsSave(entries: unknown[], path: string, issues: ShapeIs
   }
 }
 
-// Mission A1 — ProductionCycle: every timestamp/seed feeds settle/tick
+// Mission A1 - ProductionCycle: every timestamp/seed feeds settle/tick
 // math; a non-finite completesAtMs used to pass the gate and run one
 // cycle per tick forever.
 function validateProductionCycleSave(
@@ -1072,6 +1329,16 @@ function validateProductionSitesSave(
       issues.push({ path: `${entryPath}.assignedWorkers`, message: 'phải là int không âm' })
     }
 
+    // M-F-BODY-HIDDEN (save v81): optional per-site grotto-channel
+    // settle-cycle counters - same map shape as the player field.
+    if (entry.hiddenChannelCycles !== undefined) {
+      validateNonNegativeIntMap(
+        entry.hiddenChannelCycles,
+        `${entryPath}.hiddenChannelCycles`,
+        issues,
+      )
+    }
+
     // Mission D (spec D3): `activeCycle` was removed from the state
     // shape (workers-as-fuel; workerCycles is the only cycle kind).
     // A stale `activeCycle` key in an old-shaped payload is tolerated
@@ -1105,7 +1372,7 @@ function validateProductionSitesSave(
   }
 }
 
-// Mission A1 — AlchemySystem.restoreJobs feeds these into settle/tick;
+// Mission A1 - AlchemySystem.restoreJobs feeds these into settle/tick;
 // a missing id or non-finite deadline must fail the boundary.
 function validateAlchemyJobsSave(
   entries: unknown[],
@@ -1157,7 +1424,7 @@ function validateStringEntries(entries: unknown[], path: string, issues: ShapeIs
   }
 }
 
-// StatModifier element check — `stat` only needs to be a non-empty
+// StatModifier element check - `stat` only needs to be a non-empty
 // string, NOT a STAT_TYPES member: the boundary accepts the shape and
 // restore drops modifiers whose key is not a current StatType
 // (dev-stage rule: drop, never translate).
@@ -1204,10 +1471,10 @@ function validateEquipmentEntries(
       continue
     }
 
-    // Development build không migrate item schema cũ. Chỉ riêng entry
-    // legacy có realmId/rarity được bỏ có chủ đích; phần save
-    // còn lại vẫn nạp được. Kiểm tra marker TRƯỚC các field
-    // schema mới để entry cũ không bị biến thành lỗi toàn save.
+    // Development build khong migrate item schema cu. Chi rieng entry
+    // legacy co realmId/rarity duoc bo co chu dich; phan save
+    // con lai van nap duoc. Kiem tra marker TRUOC cac field
+    // schema moi de entry cu khong bi bien thanh loi toan save.
     if ('realmId' in entry || 'rarity' in entry) {
       discardedCount += 1
       continue
@@ -1215,15 +1482,15 @@ function validateEquipmentEntries(
 
     normalizedEntries.push(entry)
 
-    // instanceId trùng trong save là vector nhân bản trang bị + double
-    // stat modifier (review 2026-08-28 bug #1c) — id phải tồn tại để
-    // EquipmentBag dedupe được.
+    // instanceId trung trong save la vector nhan ban trang bi + double
+    // stat modifier (review 2026-08-28 bug #1c) - id phai ton tai de
+    // EquipmentBag dedupe duoc.
     requireString(entry, 'instanceId', `${path}[${i}]`, issues)
     requireString(entry, 'itemId', `${path}[${i}]`, issues)
 
-    // refreshModifiers (EquipmentSystem.applyModifiers) đọc trực tiếp các
-    // field này khi boot. Thiếu/sai shape sẽ gây TypeError hoặc NaN
-    // lan sang modifier, nên entry schema hiện hành phải fail toàn save.
+    // refreshModifiers (EquipmentSystem.applyModifiers) doc truc tiep cac
+    // field nay khi boot. Thieu/sai shape se gay TypeError hoac NaN
+    // lan sang modifier, nen entry schema hien hanh phai fail toan save.
     if (!isEquipmentSlot(entry.slot)) {
       issues.push({
         path: `${path}[${i}].slot`,
@@ -1330,9 +1597,9 @@ function validateEquipmentEntries(
 }
 
 /**
- * Phần tử equipmentSlots — EquipmentSlotManager.restore ghi đè mù quáng
- * theo entry.slot; thiếu enhanceLevel thì calculateEquipmentScale nhận
- * undefined → NaN lây sang mọi trang bị đang đeo ở slot đó.
+ * Phan tu equipmentSlots - EquipmentSlotManager.restore ghi de mu quang
+ * theo entry.slot; thieu enhanceLevel thi calculateEquipmentScale nhan
+ * undefined -> NaN lay sang moi trang bi dang deo o slot do.
  */
 function validateEquipmentSlotEntries(
   entries: unknown[],
@@ -1405,8 +1672,8 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
 
   const equipmentSlots = requireArray(parsed, 'equipmentSlots', '', issues)
 
-  // Field optional của GameSave — chỉ kiểm kiểu khi hiện diện, rồi
-  // deep-check từng phần tử (Mission A1).
+  // Field optional cua GameSave - chi kiem kieu khi hien dien, roi
+  // deep-check tung phan tu (Mission A1).
   const productionSites = optionalArray(parsed, 'productionSites', '', issues)
   const alchemyJobs = optionalArray(parsed, 'alchemyJobs', '', issues)
 
@@ -1418,7 +1685,7 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
     validateAlchemyJobsSave(alchemyJobs, 'alchemyJobs', issues)
   }
 
-  // Mission A1 — deep element checks: a present-but-malformed slice must
+  // Mission A1 - deep element checks: a present-but-malformed slice must
   // fail the boundary before restore trusts the declared TS shape.
   if (parsed.quests !== undefined) {
     validateQuestSave(parsed.quests, '.quests', issues)
@@ -1490,7 +1757,7 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
     validateStackEntries(pills, 'pillId', 'pills', issues)
   }
 
-  // Mission A1 — Phù/Trận bags are retired (serializer always emits []),
+  // Mission A1 - Phu/Tran bags are retired (serializer always emits []),
   // but a present malformed element must still fail the trust boundary.
   if (talismans) {
     validateStackEntries(talismans, 'talismanId', 'talismans', issues)

@@ -36,7 +36,7 @@ const statGroups = computed(() =>
 </script>
 
 <template>
-  <aside class="character-detail" data-testid="character-detail-card" role="complementary">
+  <aside class="character-detail sys-surface" data-testid="character-detail-card" role="complementary">
     <div class="character-detail__head">
       <h4 class="character-detail__title">{{ t('panels.character.labels.detailsTitle') }}</h4>
       <button

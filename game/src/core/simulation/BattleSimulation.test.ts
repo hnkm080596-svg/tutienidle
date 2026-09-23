@@ -206,6 +206,7 @@ describe('runBattle', () => {
         rank: 7,
         mastery: 0,
         quality: 'hoang',
+        gradeHistory: {},
       }]
 
       runBattle({ seed: 1, build: snapshot, encounter: { kind: 'enemy', enemy: WEAK_ENEMY } })

@@ -2,6 +2,7 @@ import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import type { EventBus } from '../events/EventBus'
 import type { PlayerData } from '../player/Player'
 import type { Stage } from '../stage/Stage'
+import { issueCompanionGifts } from '../companion/CompanionGifts'
 import type { BattleLootSystem } from './BattleLootSystem'
 import type { StageWaveSystem } from './StageWaveSystem'
 
@@ -166,6 +167,14 @@ export class GameManagerBattleRewardOps {
           !playerData.completedStageIds.includes(stage.id)
         ) {
           playerData.completedStageIds.push(stage.id)
+
+          // M-F-COMPANION-GIFT - companion gift moments authored
+          // against first stage completion fire here, inside the
+          // once-guard so auto-repeat refights stay silent.
+          issueCompanionGifts(playerData, {
+            kind: 'stage_completed',
+            stageId: stage.id,
+          })
         }
       }
     }

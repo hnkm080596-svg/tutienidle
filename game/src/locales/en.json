@@ -113,6 +113,12 @@
         "body": "Switch to the {route} stance? Old stance nodes reset to 0 — regain {regain} Insight, lose {lose}.",
         "confirm": "Switch Stance"
       },
+      "respec": {
+        "button": "Respec",
+        "title": "Respec Node Tree",
+        "body": "Reset all node investment? Regain {regain} Insight — {count} nodes and cores reset to 0. Free while in Beta.",
+        "confirm": "Respec"
+      },
       "branchLabels": {
         "theTu": "Body Cultivation",
         "theTuAn": "Hidden Body"
@@ -524,7 +530,31 @@
         "auxGate": "requires Heaven-Earth Bridge",
         "pageLocked": "Unlocks at {realm}",
         "invest": "Open Meridian",
-        "owned": "owned {count}"
+        "owned": "owned {count}",
+        "seqGate": "requires Body Refinement complete"
+      },
+      "zhouTian": {
+        "title": "Chu Thien Circulation",
+        "summary": "Circulation: {completed}/{total}",
+        "stateLocked": "Sealed",
+        "stateRealmLocked": "Realm locked",
+        "stateActive": "Circulating",
+        "stateComplete": "Great Circuit",
+        "locked": "Complete the Eight Extraordinary Meridians chapter first",
+        "realmLocked": "Unlocks at {realm}",
+        "capacity": "Current capacity: {capacity}",
+        "tieuLabel": "Tieu Chu Thien · 180",
+        "daiLabel": "Dai Chu Thien · 360",
+        "invest": "Circulate",
+        "owned": "Dharma Physique Essence owned {count}",
+        "complete": "Dai Chu Thien circulation complete."
+      },
+      "bodyPerfection": {
+        "title": "Body Perfection",
+        "statePerfected": "Perfected",
+        "statePending": "Not perfected",
+        "owned": "owned {count}",
+        "perfect": "Perfect"
       }
     },
     "settings": {
@@ -604,6 +634,7 @@
   "workerLodge": {
     "tabs": {
       "nhanCong": "Workers",
+      "quaTang": "Gifts",
       "chieuMo": "Recruit",
       "duyenPhan": "Duyen Phan Exchange"
     },
@@ -619,8 +650,10 @@
     "tokens": "{name}: {count}",
     "pity": "Pity: {count}/{max}",
     "pull": "Recruit (1 {token})",
+    "unavailable": "Not open in this build — new companions arrive via Gifts.",
     "errors": {
       "missingToken": "No {token} available.",
+      "poolUnavailable": "Not open in this build — new companions arrive via Gifts.",
       "realmLocked": "Requires Foundation Establishment.",
       "noActivePlayer": "No active player data."
     },
@@ -640,14 +673,28 @@
       "constellationMaxed": "Constellation already maxed (C{max})",
       "insufficientDuyenPhan": "Not enough Duyen Phan (need {cost})"
     },
+    "unavailable": "Not open in this build — new companions arrive via Gifts.",
     "errors": {
       "unknownDefinition": "Unknown companion.",
       "constellationMaxed": "Constellation already maxed.",
       "insufficientDuyenPhan": "Not enough Duyen Phan.",
+      "poolUnavailable": "Not open in this build — new companions arrive via Gifts.",
       "realmLocked": "Requires Foundation Establishment.",
       "noActivePlayer": "No active player data."
     },
     "empty": "No companions available to exchange."
+  },
+  "quaTang": {
+    "hint": "Companion gifts earned along the cultivation journey.",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "claimedBadge": "Claimed",
+    "empty": "No gifts yet.",
+    "errors": {
+      "unknownGift": "Invalid gift.",
+      "realmLocked": "Requires Foundation Establishment.",
+      "noActivePlayer": "No active player data."
+    }
   },
   "companion": {
     "title": "Companions",
@@ -1021,11 +1068,25 @@
     }
   },
   "tribulation": {
+    "entitlement": {
+      "title": "TRIBULATION TALENT",
+      "body": "The lightning trial is overcome — fortune opens one path only. Choose ONE: claim a new talent, or ascend an owned talent to its next tier.",
+      "newHeading": "New Talent",
+      "upgradeHeading": "Ascend Talent",
+      "levelArrow": "Tier {current} → {next}"
+    },
     "stillEquipped": {
       "title": "Tribulation is also a trial of the self — nothing can aid you",
       "subtitle": "Cannot wear equipment during tribulation",
       "confirm": "I understand",
       "cancel": "Wait"
+    },
+    "unperfectedTechnique": {
+      "warning": "Technique grade {grade} is unperfected ({state}) — breaking through now freezes this cycle forever",
+      "state": {
+        "partial": "incomplete",
+        "dai_thanh": "great accomplishment"
+      }
     },
     "overlay": {
       "chapter": "Chapter {progress}",
@@ -1107,6 +1168,7 @@
     "gradeUnknown": "Unknown",
     "reason": {
       "not_found": "Recipe not found",
+      "realm_unavailable": "This recipe belongs to a realm not available in this release",
       "retired": "This recipe is retired — no new brews",
       "room_not_built": "Build the Pill Room first",
       "job_slots_full": "The furnace is busy",
@@ -1201,7 +1263,8 @@
   },
   "notifications": {
     "skillLevelUp": "{name} reached level {level}",
-    "skillLevelUpMulti": "{name} gained {gained} levels, reaching level {level}"
+    "skillLevelUpMulti": "{name} gained {gained} levels, reaching level {level}",
+    "bodyRealmPerfected": "Body Perfection: {realm}"
   },
   "save": {
     "conflict": "Save was changed by another session.",

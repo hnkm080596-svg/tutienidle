@@ -22,6 +22,7 @@ function fixtureTechnique(overrides: Partial<Technique> = {}): Technique {
     rank: 0,
     mastery: 0,
     quality: 'hoang',
+    gradeHistory: {},
     gradeEffects: { 1: { so_nhap: { mightFlat: 5 } } },
     ...overrides,
   }
@@ -133,10 +134,11 @@ describe('TechniqueBand (P7-M7)', () => {
   })
 
   it('disables the grade button when the op precondition fails', async () => {
-    // rank 0 < TECHNIQUE_RANK_CAP -> canAdvanceTechniqueGrade false.
+    // M-F-TECHNIQUE - catch-up-only: an in-band holder (grade == realm
+    // index) has nothing to catch up to, so the precondition fails.
     const view = mountBand({
-      technique: fixtureTechnique({ rank: 0 }),
-      realmId: 'foundation_establishment',
+      technique: fixtureTechnique({ rank: 10 }),
+      realmId: 'qi_refining',
       materialAmount: 999,
     })
 

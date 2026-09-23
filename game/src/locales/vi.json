@@ -113,6 +113,12 @@
         "body": "Chuyển sang hướng {route}? Node hướng cũ về 0 — lấy lại {regain} Cảm Ngộ, mất {lose}.",
         "confirm": "Đổi Hướng"
       },
+      "respec": {
+        "button": "Đặt Lại",
+        "title": "Đặt Lại Cây Node",
+        "body": "Đặt lại toàn bộ đầu tư node? Lấy lại {regain} Cảm Ngộ — {count} node và core về 0. Miễn phí trong thời gian Beta.",
+        "confirm": "Đặt Lại"
+      },
       "branchLabels": {
         "theTu": "Thể Tu Hiện",
         "theTuAn": "Thể Tu Ẩn"
@@ -524,7 +530,31 @@
         "auxGate": "cần Thiên Địa Chi Kiều",
         "pageLocked": "Mở khóa ở {realm}",
         "invest": "Mở Mạch",
-        "owned": "sở hữu {count}"
+        "owned": "sở hữu {count}",
+        "seqGate": "cần hoàn thành Luyện Thể"
+      },
+      "zhouTian": {
+        "title": "Chu Thiên",
+        "summary": "Chu thiên: {completed}/{total}",
+        "stateLocked": "Phong ấn",
+        "stateRealmLocked": "Chưa tới cảnh giới",
+        "stateActive": "Đang vận chuyển",
+        "stateComplete": "Đại Chu Thiên",
+        "locked": "Hoàn thành Kỳ Kinh Bát Mạch trước",
+        "realmLocked": "Mở khóa ở {realm}",
+        "capacity": "Dung lượng hiện tại: {capacity}",
+        "tieuLabel": "Tiểu Chu Thiên · 180",
+        "daiLabel": "Đại Chu Thiên · 360",
+        "invest": "Vận Chu Thiên",
+        "owned": "Tinh Hoa Pháp Thể sở hữu {count}",
+        "complete": "Đại Chu Thiên đã viên mãn."
+      },
+      "bodyPerfection": {
+        "title": "Thể Phách Hoàn Thiện",
+        "statePerfected": "Đã hoàn thiện",
+        "statePending": "Chưa hoàn thiện",
+        "owned": "sở hữu {count}",
+        "perfect": "Hoàn Thiện"
       }
     },
     "settings": {
@@ -604,6 +634,7 @@
   "workerLodge": {
     "tabs": {
       "nhanCong": "Nhân Công",
+      "quaTang": "Quà Tặng",
       "chieuMo": "Chiêu Mộ",
       "duyenPhan": "Đổi Duyên Phận"
     },
@@ -619,8 +650,10 @@
     "tokens": "{name}: {count}",
     "pity": "Bảo hiểm: {count}/{max}",
     "pull": "Chiêu Mộ (1 {token})",
+    "unavailable": "Chưa mở trong bản hiện tại — đồng đội mới đến qua Quà Tặng.",
     "errors": {
       "missingToken": "Không có {token}.",
+      "poolUnavailable": "Chưa mở trong bản hiện tại — đồng đội mới đến qua Quà Tặng.",
       "realmLocked": "Cần đạt Trúc Cơ.",
       "noActivePlayer": "Chưa có dữ liệu người chơi."
     },
@@ -640,14 +673,28 @@
       "constellationMaxed": "Cung Mệnh đã đạt tối đa (C{max})",
       "insufficientDuyenPhan": "Không đủ Duyên Phận (cần {cost})"
     },
+    "unavailable": "Chưa mở trong bản hiện tại — đồng đội mới đến qua Quà Tặng.",
     "errors": {
       "unknownDefinition": "Đồng đội không tồn tại.",
       "constellationMaxed": "Cung Mệnh đã đạt tối đa.",
       "insufficientDuyenPhan": "Không đủ Duyên Phận.",
+      "poolUnavailable": "Chưa mở trong bản hiện tại — đồng đội mới đến qua Quà Tặng.",
       "realmLocked": "Cần đạt Trúc Cơ.",
       "noActivePlayer": "Chưa có dữ liệu người chơi."
     },
     "empty": "Chưa có đồng đội nào để đổi."
+  },
+  "quaTang": {
+    "hint": "Quà tặng đồng đội nhận được từ hành trình tu luyện.",
+    "claim": "Nhận",
+    "claimed": "Đã nhận",
+    "claimedBadge": "Đã nhận",
+    "empty": "Chưa có quà tặng nào.",
+    "errors": {
+      "unknownGift": "Quà tặng không hợp lệ.",
+      "realmLocked": "Cần đạt Trúc Cơ.",
+      "noActivePlayer": "Chưa có dữ liệu người chơi."
+    }
   },
   "companion": {
     "title": "Đồng Đội",
@@ -1021,11 +1068,25 @@
     }
   },
   "tribulation": {
+    "entitlement": {
+      "title": "THIÊN PHÚ KIẾP QUẢ",
+      "body": "Lôi kiếp đã vượt — cơ duyên mở ra một lần duy nhất. Chọn MỘT: nhận một thiên phú mới, hoặc đột phá thiên phú đang có lên tầng cao hơn.",
+      "newHeading": "Thiên Phú Mới",
+      "upgradeHeading": "Đột Phá Thiên Phú",
+      "levelArrow": "Tầng {current} → {next}"
+    },
     "stillEquipped": {
       "title": "Độ kiếp cũng là độ thân, không gì có thể giúp được ngươi",
       "subtitle": "Không thể mặc trang bị khi độ kiếp",
       "confirm": "Đã hiểu",
       "cancel": "Chờ đã"
+    },
+    "unperfectedTechnique": {
+      "warning": "Tâm pháp cảnh {grade} chưa viên mãn ({state}) — đột phá lúc này sẽ đóng băng chu kỳ này vĩnh viễn",
+      "state": {
+        "partial": "dở dang",
+        "dai_thanh": "đại thành"
+      }
     },
     "overlay": {
       "chapter": "Chương {progress}",
@@ -1107,6 +1168,7 @@
     "gradeUnknown": "Chưa xác định",
     "reason": {
       "not_found": "Không tìm thấy đan phương",
+      "realm_unavailable": "Đan phương thuộc cảnh giới chưa mở trong bản hiện tại",
       "retired": "Đan phương này đã ngừng lưu hành — không luyện thêm được",
       "room_not_built": "Cần xây Đan Phòng trước",
       "job_slots_full": "Lò đang bận",
@@ -1201,7 +1263,8 @@
   },
   "notifications": {
     "skillLevelUp": "{name} đạt cấp {level}",
-    "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}"
+    "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}",
+    "bodyRealmPerfected": "Thể Phách Hoàn Thiện: {realm}"
   },
   "save": {
     "conflict": "Save đã thay đổi ở một phiên khác.",

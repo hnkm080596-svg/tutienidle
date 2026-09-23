@@ -1724,7 +1724,7 @@ export class GameManagerTurnBattleOps {
       // player's talents, then attach the session for
       // combatSystem.killIfDead(). players[0] is the human player
       // (companions append after index 0 in buildTurnBattle).
-      this.deps.surviveLethalGuard.beginBattle(build.survive.talentIds)
+      this.deps.surviveLethalGuard.beginBattle(build.survive.talentIds, build.survive.talentLevels)
 
       // The Tu Reimagined - Cuong Chien's Bat Tu Ba The ultimate is the
       // FIRST line of survival; the talent guard is the extra life once

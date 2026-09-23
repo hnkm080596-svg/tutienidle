@@ -58,4 +58,20 @@ export interface Material {
   // chung. Linh Thạch đặt MAX_SAFE_INTEGER vì chi phí Đột Phá scale tới
   // hàng tỷ; MaterialBag.add() đọc field này lúc clamp.
   stackLimit?: number
+
+  // M-F-CEILING - realm this material's breakthrough prepares for (e.g.
+  // the Truc Co gate inputs tag 'foundation_establishment'). Breakthrough-
+  // scoped acquisition routes consult isBreakthroughAcquisitionEnabled()
+  // from ReleasePolicy; untagged materials are never release-suppressed.
+  // Optional, so save/legacy material without the field loads unchanged.
+  breakthroughRealmId?: string
+
+  // M-F-ARTIFACT-DEFER - the DOMAIN whose unlock realm gates delivery of
+  // this material (the artifact domain today). Authored via the shared
+  // domain declaration (ARTIFACT_UNLOCK_REALM_ID), never a realm literal;
+  // domain-scoped routes consult isDomainScopedAcquisitionEnabled() which
+  // composes window + player-reach, so a below-unlock player gets nothing
+  // even once the unlock realm ships. Untagged materials are never
+  // domain-suppressed. Optional, same save/load convention as above.
+  domainUnlockRealmId?: string
 }

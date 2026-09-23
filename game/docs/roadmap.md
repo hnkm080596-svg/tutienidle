@@ -1895,6 +1895,66 @@ passives, node-tree tag, stat facet. One authority per progression
 rule/state; saves ≤ v71 rejected (no translators, dev-phase
 convention).
 
+## Post-P7 — Luyện Khí reconciliation wave (M-QI)
+
+Spec → plan → gates → external review per mission; graph +
+ledger in `docs/p7/mission-graph.md`. Save bumps: v73 (M-QI-05),
+v74 (M-QI-07).
+
+- **M-QI-01** `69767cb6` — meridian invest wiring (UI → ops → chapter).
+- **M-QI-02** `df2b232d` — Trúc Cơ chapter gate: L12 +
+  `qi_refining_abyssal_pool` clear.
+- **M-QI-03** `f4ec23a8` — breakthrough requirement read-model;
+  `getBreakthroughRequirements` owns admission truth.
+- **M-QI-04** `2499e626` — `hoi_xuan_thao` deferred cleanup.
+- **M-QI-05** `040a6765` (v73) — canonical Core Node Level;
+  `skillLevels`/`Skill.level` retired.
+- **M-QI-06** `7c53410b` — technique-gated node prerequisites.
+- **M-QI-07** `146483c5` (v74) — `physiqueGrade` + 6/6-chapter
+  transformation transaction.
+- **M-QI-08** `9343215e` — grade-aware essence family
+  (Phàm/Bảo/Pháp authored).
+- **M-QI-09** `7916fbe9` — essence substitution contract +
+  sim-locked ratios (`bao:2`, `phap:2`).
+- **M-QI-10** `d6eae631` — essence drop-band production swap
+  (LQ→Bảo, TC→Pháp live).
+- **M-QI-11** — Kiem Pho authored combo payloads: LANDED via the
+  kiem-tu orbit work (`6a2e9985` 37-combo table + `34be05e0` hien
+  wiring + `8178c3e5` external-review fixes).
+- **M-QI-12** — LQ→TC E2E journey: **covered by M-F-JOURNEY** —
+  initiation → chapter-10 → L12 → breakthrough is legs A–B of
+  `TrucCoJourney.test.ts` (subsumption per m-f-journey spec §9).
+
+## Post-P7 — Trúc Cơ wave (M-F)
+
+Twelve-mission block on branch `p7/truc-co`; specs/plans under
+`docs/specs|plans/m-f-*`. Save bumps: v75 (TECHNIQUE), v76 (TALENT),
+v77 (COMPANION-GIFT), v78 (CHU-THIEN), v79 (ARTIFACT-DEFER),
+v80 (BODY-PERFECTION), v81 (BODY-HIDDEN).
+
+- **M-F-REALM18** `365c804a` — realm-18 normalization for Kim Đan+.
+- **M-F-RESPEC** `04364847` — player node respec.
+- **M-F-CEILING** `4b8d8270` — release-policy authority;
+  `progressionCeilingRealmId` pins the TC ceiling.
+- **M-F-BODY-CORE** `41580c17` — chapter-kind + physique seam +
+  base-stat collector channel.
+- **M-F-TECHNIQUE** `271df96d` (v75) — frozen-cycle technique model.
+- **M-F-TALENT** `c40e72cb` (v76) — mandatory breakthrough talent
+  transaction (`pendingTalentEntitlement`).
+- **M-F-ESSENCE** `3b5fbac5` — TC-side essence contract pins
+  (Pháp band `0.7` / `1–3`).
+- **M-F-COMPANION-GIFT** `f9489e7b` (v77) — beta companion gift mail.
+- **M-F-CHU-THIEN** `fc78bc23` (v78) — `zhou_tian` body chapter
+  (capacity `min(360, 20×level)`; Tiểu/Đại thresholds).
+- **M-F-ARTIFACT-DEFER** `859ebc01` (v79) — artifact domain deferred
+  to Kim Đan+ (`ARTIFACT_UNLOCK_REALM_ID = 'golden_core'`).
+- **M-F-BODY-PERFECTION** `f9fc4ee4` (v80) — hidden body-perfection
+  pipeline (registry empty until the content pass).
+- **M-F-BODY-HIDDEN** `0f88375a` (v81) — generalized hidden material
+  channels (`hiddenBeastKills`/`hiddenChannelCycles`).
+- **M-F-JOURNEY** — ordered TC journey + integration sweep
+  (this mission; notes `docs/p7/missions/mf-journey.notes.md`).
+
 ---
 
 

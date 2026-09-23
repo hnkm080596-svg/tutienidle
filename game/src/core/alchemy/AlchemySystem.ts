@@ -72,6 +72,15 @@ export interface AlchemyRecipe {
    * the craft list.
    */
   retired?: boolean
+
+  /**
+   * M-F-CEILING - realm this recipe's breakthrough prepares for (e.g.
+   * Truc Co Dan tags 'foundation_establishment'). Breakthrough-scoped
+   * recipes are suppressed by release policy
+   * (isBreakthroughAcquisitionEnabled) while the transition into that
+   * realm is closed; untagged recipes are never release-suppressed.
+   */
+  breakthroughRealmId?: string
 }
 
 export interface ActiveAlchemyJob {

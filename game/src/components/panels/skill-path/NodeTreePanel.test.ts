@@ -103,6 +103,9 @@ describe('NodeTreePanel - technique level-gate entry (M-QI-06)', () => {
   it('satisfying the gate restores the upgrade cost preview', async () => {
     const node = gatedNode()
     const view = mountTree([node])
+    // M-F-TECHNIQUE (F5) - grade 1 at qi_refining is in-band: the
+    // mirror's rank contributes to the effective rank again.
+    view.player.$state.realmId = 'qi_refining'
     view.player.$state.techniqueProgress = { rank: 3, grade: 1 }
     view.player.$state.nodeLevels[node.id] = 5
     view.player.$state.purchasedNodeIds.push(node.id)

@@ -1,6 +1,6 @@
 import { calculateStats, resolveAttributeTotals, type StatModifier } from '../stats/StatCalculator'
 import { collectActiveWayStatModifiers } from './CultivationPathSystem'
-import { collectBodyBaseStatDeltas, statDeltaEntries } from '../realm/body/BodyProgressionSystem'
+import { collectEffectiveBodyBaseStatDeltas, statDeltaEntries } from '../realm/body/BodyProgressionSystem'
 import { asBaseStats, createBaseStats, type BaseStats, type Stats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { CENTER_LANE_INDEX } from '../battle/BattleLane'
@@ -16,13 +16,21 @@ import type { CultivationPathId, CultivationWayId } from './CultivationPathKit'
 import { createSpellPathState, type SpellPathState } from '../phap-tu/PhapTuState'
 import type { PersistentTimedEffect } from './PersistentTimedEffect'
 import type { ArtifactProgress } from '../artifact/Artifact'
-import type { CompanionInstance } from '../../data/companion/Companions'
+import type {
+  CompanionGiftRecord,
+  CompanionInstance,
+} from '../../data/companion/Companions'
 import type { SwordPathState } from '../kiem-tu/KiemTuState'
 import {
   createDefaultBodyProgression,
   type BodyProgressionState,
 } from '../realm/body/BodyChapter'
+import {
+  createDefaultBodyPerfection,
+  type BodyPerfectionState,
+} from '../realm/body/BodyPerfection'
 import type { PhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
+import type { TalentEntitlement } from '../talent/TalentEntitlement'
 
 export interface PlayerData {
   name: string
@@ -56,9 +64,22 @@ export interface PlayerData {
   // Linh Thach KHONG con la currency tren PlayerData (plan Workstream
   // F) - so du duy nhat la materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID).
 
-  // Ba Thien Phu duoc chot khi tao nhan vat. Hieu ung gameplay se duoc
-  // noi vao stat/effect system theo talent-system-plan.md.
+  // Ba Thien Phu duoc chot khi tao nhan vat + cac talent M-F-TALENT
+  // granted qua breakthrough transaction (NEW branch appends here).
+  // Ownership record; per-talent level song song o talentLevels.
   selectedTalentIds: string[]
+
+  // M-F-TALENT - level map of owned talents (sparse: absent entry =
+  // level 1). Only the UPGRADE branch of a breakthrough entitlement
+  // writes here. The TalentDefinition.levels table bounds legal levels.
+  talentLevels: Record<string, number>
+
+  // M-F-TALENT - the mandatory breakthrough talent transaction. Present
+  // while a realm breakthrough's UPGRADE/NEW decision awaits resolution;
+  // the persisted record is what re-presents the decision surface after
+  // reload and what the tribulation drain waits on. Cleared ONLY by a
+  // successful resolution (cancel-safe: no dismiss path exists).
+  pendingTalentEntitlement?: TalentEntitlement
 
   // Dot Pha Truc Co (Phase 5) - Can Co CAO NHAT tung dat qua Do Kiep
   // thang loi (muc 16 spec `breakthrough` - "duoc reveal" sau khi
@@ -138,10 +159,11 @@ export interface PlayerData {
   // tang khong giam - counter thong ke/dieu kien chung.
   bossKillCount: number
 
-  // Quai an (spec dot-pha-loi-kiep sec.4.1c) - dem kill quai Luyen Khi tu
-  // lan giet quai an gan nhat; du 1000 mo cua so quai an tra tron pool
-  // spawn (giet quai an reset ve 0).
-  luyenKhiKillsSinceBeast: number
+  // Quai an (spec m-f-body-hidden sec.3) - per-channel kill counters
+  // keyed by channel id in HIDDEN_MATERIAL_CHANNELS: kills in a
+  // channel's band increment it, killing that channel's own beast resets
+  // only it (save v81 - replaces the scalar luyenKhiKillsSinceBeast).
+  hiddenBeastKills: Record<string, number>
 
   // Dai Dao Truc Co (spec sec.4.2/sec.4.3) - snapshot "hoan hao Pham Nhan"
   // (5/5 main stat 10/10 + Luyen Th the 6/6) chot luc bam Quan Khi,
@@ -217,6 +239,15 @@ export interface PlayerData {
   // core/realm/body/BodyProgressionSystem; consumers read derived facts
   // through it, never the slices directly.
   bodyProgression: BodyProgressionState
+
+  // M-F-BODY-PERFECTION - canonical Body-perfection slice (TOP-LEVEL,
+  // not inside bodyProgression: that record is pinned 1:1 to the
+  // chapter registry). discoveredMaterials = write-once set of authored
+  // perfection-material ids ever received (persistent, NOT
+  // inventory-derived); perfectedRealmIds = realms whose perfection
+  // transaction committed. Owned by core/realm/body/BodyPerfection;
+  // the hidden UI reads the read-model, never the slice directly.
+  bodyPerfection: BodyPerfectionState
 
   // M-QI-07 (QI-D4) - the persisted physique (The Phach) grade on the
   // Pham -> Bao -> ... -> Tien ladder (data/realm/PhysiqueLadder.ts).
@@ -306,6 +337,12 @@ export interface PlayerData {
   // from duplicate pulls on constellation-maxed companions.
   duyenPhan: number
 
+  // M-F-COMPANION-GIFT - mail/gift claimable rewards. Written by
+  // issueCompanionGifts on authored trigger moments (realm entered,
+  // stage first-clear); consumed one-way by claimCompanionGift. The
+  // Beta companion acquisition channel while the pull pool is closed.
+  companionGifts: CompanionGiftRecord[]
+
   // Tran Phap (2026-09-05) - tran phap dang active + vi tri gan tung o.
   // null = nguoi choi chua tung cau hinh tran phap nao; buildTurnBattle()
   // se fallback ve DEFAULT_PARTY_FORMATION (Combat Art Pipeline spec sec.7).
@@ -344,6 +381,16 @@ export function createDefaultPlayer(): PlayerData {
     externalModifiers: [],
 
     selectedTalentIds: [],
+    // PHAI khai bao tuong minh (rong, khong undefined) - cung ly do
+    // skillCastCounts o tren (toRefs() snapshot 1 lan luc init store):
+    // resolveTalentEntitlement's UPGRADE branch ghi field con
+    // (`talentLevels[id] = level + 1`) sau khi store da khoi tao, nen
+    // object chua PHAI ton tai san lam key reactive tu dau.
+    talentLevels: {},
+    // PHAI khai bao tuong minh (du `undefined`) - cung ly do
+    // cultivationPath o tren: TribulationOutcomeService's settle seam
+    // assigns this field through the writer proxy.
+    pendingTalentEntitlement: undefined,
     completedStageIds: [],
     perfectClearStageIds: [],
     perfectClearSeconds: {},
@@ -403,7 +450,7 @@ export function createDefaultPlayer(): PlayerData {
 
     totalCultivationGained: 0,
     bossKillCount: 0,
-    luyenKhiKillsSinceBeast: 0,
+    hiddenBeastKills: {},
     mortalPerfectionAchieved: false,
     greatDaoOpportunityLost: false,
     skillInsight: 0,
@@ -416,6 +463,7 @@ export function createDefaultPlayer(): PlayerData {
     nodeFreePurchaseRecord: {},
 
     bodyProgression: createDefaultBodyProgression(),
+    bodyPerfection: createDefaultBodyPerfection(),
     physiqueGrade: 'pham',
     breakthroughGrade: 6,
     grantedRealmPassiveIds: [],
@@ -431,6 +479,7 @@ export function createDefaultPlayer(): PlayerData {
     companions: [],
     companionPullsSinceRare: 0,
     duyenPhan: 0,
+    companionGifts: [],
 
     formationLoadout: null,
 
@@ -472,7 +521,7 @@ export function resolvePlayerStatAssembly(
   // mutated, so saves, mortal perfection's persisted-base read, and
   // restore rehydration are unaffected.
   const assembledBase = { ...player.baseStats }
-  for (const [stat, delta] of statDeltaEntries(collectBodyBaseStatDeltas(player))) {
+  for (const [stat, delta] of statDeltaEntries(collectEffectiveBodyBaseStatDeltas(player))) {
     assembledBase[stat] += delta
   }
   const pipelineBase = asBaseStats(assembledBase)

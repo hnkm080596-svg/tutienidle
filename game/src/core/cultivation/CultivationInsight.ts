@@ -9,7 +9,7 @@ import { getInsightPerCultivation } from '../talent/TalentEffects'
 // edit once made `accumulator -= 0` loop forever and froze the 100ms
 // tick. Non-positive thresholds are meaningless - skip the whole branch.
 export function accrueCultivationInsight(player: PlayerData, gained: number): void {
-  const threshold = getInsightPerCultivation(player.selectedTalentIds)
+  const threshold = getInsightPerCultivation(player.selectedTalentIds, player.talentLevels)
 
   if (threshold === undefined || threshold <= 0 || gained <= 0) {
     return

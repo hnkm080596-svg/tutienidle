@@ -12,7 +12,10 @@ function makeDirector() {
 
 function readyPlayer(): PlayerData {
   const player = createDefaultPlayer()
-  player.realmId = 'qi_refining'
+  // Quan Khi runs start from a maxed mortal - the transition direction is
+  // now enforced by release policy, so the fixture must sit at the
+  // source realm, not the target one.
+  player.realmId = 'mortal'
   player.realmLevel = 12
   return player
 }
@@ -245,7 +248,11 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
   it('grade Đại Đạo (đủ điều kiện + đan): damage nhận nhiều hơn human cùng thời gian', () => {
     const humanDirector = makeDirector().director
     const greatDaoDirector = makeDirector().director
-    humanDirector.start(readyPlayer(), testStats(), true, 'foundation_establishment')
+    // C2C-12 adjacency: the human run must start from qi_refining, the
+    // canonical TC source - the policy now rejects mortal -> TC skips.
+    const humanReady = readyPlayer()
+    humanReady.realmId = 'qi_refining'
+    humanDirector.start(humanReady, testStats(), true, 'foundation_establishment')
     greatDaoDirector.start(createGreatDaoReadyPlayer(), testStats(), true, 'foundation_establishment')
     expect(humanDirector.getState()!.grade).toBe('human')
     expect(greatDaoDirector.getState()!.grade).toBe('great_dao')

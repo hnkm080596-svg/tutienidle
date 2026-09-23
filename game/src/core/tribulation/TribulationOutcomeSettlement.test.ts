@@ -128,7 +128,9 @@ describe('CommittedTribulationOutcome — identity and lifecycle (M6)', () => {
     // Second attempt (defeat this time): new session id, fresh unsettled
     // record - the first run's bound receipt cannot leak into it. Defeat
     // needs the unanswered-questions path: mind fail stacks amplify the
-    // strikes enough to kill a maxHp-1 tank.
+    // strikes enough to kill a maxHp-1 tank. Release policy enforces the
+    // transition direction, so the run starts from qi_refining again.
+    player.realmId = 'qi_refining'
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 1, defense: 0, hpRegenPerTurn: 0 })
     expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
     driveToTerminal(gameManager, false)
@@ -265,7 +267,9 @@ describe('settleOutcome — once-only commit with exact consequences (M6)', () =
     const service = new TribulationOutcomeService()
 
     // Attempt 1: qi_refining victory (announcement-only outcome, still a
-    // banked loi_kiep stack).
+    // banked loi_kiep stack). Release policy enforces the transition
+    // direction, so the run starts from a mortal player.
+    player.realmId = 'mortal'
     expect(gameManager.startTribulation(player.$state, 'qi_refining')).toBe(true)
     driveToTerminal(gameManager)
     const firstCommitted = gameManager.tribulationDirector.getCommittedOutcome()!
@@ -275,6 +279,7 @@ describe('settleOutcome — once-only commit with exact consequences (M6)', () =
 
     // Attempt 2: another run, another victory -> its own once-only
     // settlement pushes the stack to 2 (once per attempt, by design).
+    player.realmId = 'mortal'
     expect(gameManager.startTribulation(player.$state, 'qi_refining')).toBe(true)
     driveToTerminal(gameManager)
     const secondCommitted = gameManager.tribulationDirector.getCommittedOutcome()!
