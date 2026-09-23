@@ -206,7 +206,12 @@ export class GameManagerSaveRestore {
         records !== undefined &&
         Object.entries(records).every(([key, record]) => {
           const g = Number(key)
-          if (!Number.isInteger(g) || g < 1 || g > entry.grade) return false
+          // Canonical decimal spelling: Number() coerces "01"/"1.0"/
+          // "1e0" to a valid grade, but the writer only ever emits
+          // canonical digits - an alias spelling is a stray record.
+          if (!Number.isInteger(g) || g < 1 || g > entry.grade || String(g) !== key) {
+            return false
+          }
           const r = record as Record<string, unknown> | null
           return (
             typeof r === 'object' &&

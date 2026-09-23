@@ -901,6 +901,13 @@ describe('v75 technique gradeHistory coherence preflight', () => {
     ['non-integer finalRank', { 1: { finalRank: 3.5, completionState: 'partial' } }],
     ['key above live grade', { 3: { finalRank: 0, completionState: 'partial' } }],
     ['non-object record', { 1: 'broken' }],
+    // C2C r43 - alias spellings coerce via Number() to a canonical
+    // grade but are stray records (writer emits canonical digits only).
+    ['alias key "01"', { '01': { finalRank: 12, completionState: 'dai_thanh' } }],
+    ['alias key "1.0"', { '1.0': { finalRank: 12, completionState: 'dai_thanh' } }],
+    ['alias key "1e0"', { '1e0': { finalRank: 12, completionState: 'dai_thanh' } }],
+    ['alias key " 1"', { ' 1': { finalRank: 12, completionState: 'dai_thanh' } }],
+    ['alias key "0x1"', { '0x1': { finalRank: 12, completionState: 'dai_thanh' } }],
   ])('rejects malformed gradeHistory records: %s', (_label, gradeHistory) => {
     const manager = makeManager()
     const bad = {
@@ -921,6 +928,25 @@ describe('v75 technique gradeHistory coherence preflight', () => {
 
     // SAVED_TECHNIQUE is grade 1 at qi_refining (index 1): in-band -
     // a live-grade record must never coexist.
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/Invalid technique/i)
+    expect(manager.techniqueManager.getActive()).toBeUndefined()
+  })
+
+  it('rejects a canonical key plus an alias-stray on a lagging holder', () => {
+    const manager = makeManager()
+    const bad = structuredClone(SAVED_TECHNIQUE)
+    bad.grade = 2
+    bad.gradeHistory = {
+      1: { finalRank: 12, completionState: 'dai_thanh' },
+      '01': { finalRank: 12, completionState: 'dai_thanh' },
+      2: { finalRank: 0, completionState: 'partial' },
+    } as Technique['gradeHistory']
+    const player = swordCommittedPlayer()
+    player.realmId = 'golden_core' // index 3 -> grade 2 lags
+    const save = baseSave(player, { techniques: [bad] })
+
+    // {1} + {2} are canonical for a lagging grade 2, but '01' is a
+    // grade-1-equivalent stray - canonical key set admits no extras.
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/Invalid technique/i)
     expect(manager.techniqueManager.getActive()).toBeUndefined()
   })
