@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { COMPANIONS, type CompanionInstance } from '../../data/companion/Companions'
+import { REALMS } from '../../data/realms/realm'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { KIEM_PHO_COMBOS } from '../../data/skill/KiemPhoCombos'
 import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
@@ -639,7 +640,7 @@ function collectCastableDefs(): Census {
     instanceId: 'inst.census',
     definitionId: 'census',
     realmId: 'tribulation',
-    realmLevel: 9,
+    realmLevel: REALMS.find((realm) => realm.id === 'tribulation')!.maxLevel,
     exp: 0,
     constellationRank: 6,
   }
