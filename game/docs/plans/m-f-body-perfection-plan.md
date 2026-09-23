@@ -52,13 +52,19 @@ Worktree per P2 (production edits); `.agent-worktrees/m-f-body-perfection`.
 - `data/realm/BodyPerfection.ts`: `BODY_PERFECTION_REALM_MATERIALS`
   (every `REALMS` id → `readonly string[]`, ALL `[]` — seam, not
   content), `bodyPerfectionMaterialIds`, `bodyPerfectionRealmOf`,
-  `isBodyPerfectionMaterial`, `assertBodyPerfectionRegistry()` at
-  module load — realm-key set === canonical `REALMS` ids EXACTLY
-  (C2C r60-f3: a missing key silently disables a realm); a material
-  id in ≤1 realm list (DISTINCT premise); intra-list uniqueness.
-  Material-id resolution vs the `materials` catalog is pinned in the
-  integrity test (`PhysiqueEssence.test.ts:20` convention — data/realm
-  never imports data/materials in production).
+  `isBodyPerfectionMaterial`, and the validate+assert PAIR
+  (C2C r65-f2, `BodyChapter.ts:333-363` convention):
+  `validateBodyPerfectionRegistry(registry, realmIds): string[]` pure
+  + `assertBodyPerfectionRegistry(registry =
+  BODY_PERFECTION_REALM_MATERIALS)` invoked once at module load over
+  the canonical constant — malformed fixtures inject into the
+  validator, never mutate the constant post-import. Pinned checks:
+  realm-key set === canonical `REALMS` ids EXACTLY (C2C r60-f3: a
+  missing key silently disables a realm); a material id in ≤1 realm
+  list (DISTINCT premise); intra-list uniqueness. Material-id
+  resolution vs the `materials` catalog is pinned in the integrity
+  test (`PhysiqueEssence.test.ts:20` convention — data/realm never
+  imports data/materials in production).
 - `recordBodyPerfectionMaterialDiscovery(player, materialId)` —
   set-add via `bodyPerfectionRealmOf`; `BODY_PERFECTION_BONUS_PER_REALM
   = 0.10`; `getBodyPerfectionMultiplier(player)`;
@@ -125,24 +131,51 @@ Worktree per P2 (production edits); `.agent-worktrees/m-f-body-perfection`.
 
 ## Step 5 — pin tests (spec §10)
 
-1. `src/data/realm/BodyPerfection.test.ts` — registry load gate (dup
-   cross-realm id throws; unknown realm key throws; **key-set ===
-   REALMS ids exactly — C2C r60-f3; every authored id resolves in the
-   `materials` catalog — C2C r60-f3**), reverse lookups, all-empty
-   authored state.
-2. `src/core/realm/body/BodyPerfection.test.ts` — record-once/idempotent;
-   non-perfection id no-op; `canPerfect` arms (empty list fails closed,
-   unreached realm rejected, already-perfected rejected, missing
-   material rejected, **owned-but-undiscovered required material
-   rejected — C2C r60-f1**); `applyBodyPerfection` write-if-absent;
-   `getBodyPerfectionMultiplier` = 1 + 0.10n.
-3. Funnel — rename site tests + BattleLootSystem route test:
-   acquisition writes discovery; `delivered = 0` writes nothing;
-   restore path writes nothing.
+1. `src/data/realm/BodyPerfection.test.ts` — registry gate on
+   INJECTED registries via `validateBodyPerfectionRegistry` /
+   `assertBodyPerfectionRegistry(reg)` (C2C r65-f2: dup cross-realm
+   id throws; unknown realm key throws; missing realm key throws;
+   **key-set === REALMS ids exactly — C2C r60-f3**); every authored
+   id in the shipped constant resolves in the `materials` catalog
+   (`materials` import — C2C r60-f3); reverse lookups; all-empty
+   authored state clean.
+2. `src/core/realm/body/BodyPerfection.test.ts` —
+   record-once/idempotent; non-perfection id no-op; `canPerfect` arms
+   (empty list fails closed, unreached realm rejected,
+   already-perfected rejected, missing material rejected,
+   **owned-but-undiscovered required material rejected — C2C r60-f1**);
+   `applyBodyPerfection` write-if-absent;
+   `getBodyPerfectionMultiplier` = 1 + 0.10n. **Non-empty arms run on
+   `vi.mock` fixture registries (C2C r65-f1)** — the shipped all-empty
+   registry only exercises the fail-closed arm.
+3. Funnel (C2C r65-f3 — each newly hooked landing pinned individually,
+   funnel called EXACTLY ONCE with the NET DELIVERED amount; existing
+   quest/overflow semantics preserved at every site):
+   - `GameManagerQuestOps.notifyMaterialGained` — rename-site test:
+     quest progress + `recordBodyPerfectionMaterialDiscovery`
+     both fire once;
+     `amount = 0` fires neither;
+   - `BattleLootSystem` — both grant sites route through
+     `deps.notifyMaterialGained` once per landed material (no dual
+     quest hook — `onMaterialCollected` not double-counted);
+   - `deliverDecomposeOutput` (`GameManagerTickOps:280-282`) — funnel
+     once with `amount - overflow` (full-overflow → no call);
+   - companion-token refund (`GameManagerCompanionOps:108`) — funnel
+     once with the refunded unit;
+   - essence change credit (`GameManagerRealmAdvanceOps:593-596`) —
+     funnel once with the credited amount, on success only;
+   - `QuestSystem.claim` callback route — `QuestBagDeps.onMaterialGained`
+     preferred when provided (no double `onMaterialCollected`),
+     bare-hook fallback preserved when absent;
+   - restore (`GameManagerSaveRestore:446,485`) — funnel never called;
+   - rename sweep — no `notifyQuestMaterialGained` reference survives
+     the diff outside migration comments.
 4. `GameManagerRealmAdvanceOps.perfectBodyRealm` — probe-failure zero
    mutation (materials + state + notifications), `bag.has` shortfall
    zero mutation, commit consumes exactly one of each listed id + marks
-   realm, re-transact returns `false` debiting nothing.
+   realm, re-transact returns `false` debiting nothing — **success
+   paths on `vi.mock` fixture registries (C2C r65-f1)**; the shipped
+   all-empty registry only exercises the fail-closed rejection.
 5. Channel — `collectEffectiveBodyBaseStatDeltas` = raw when 0
    perfected; ×1.1 / ×1.2 scaled; `collectBodyBaseStatDeltas` raw
    unchanged; non-body sources (`baseStats`, `modifiers`, equipment,
@@ -160,7 +193,7 @@ Worktree per P2 (production edits); `.agent-worktrees/m-f-body-perfection`.
    (C2C r60-f4: production lists ship `[]`, so no production injection
    seam exists).
 8. Late perfection — perfect `mortal` while `realmId === 'golden_core'`
-   succeeds and scales.
+   succeeds and scales (**fixture registry — C2C r65-f1**).
 
 ## Step 6 — gates
 

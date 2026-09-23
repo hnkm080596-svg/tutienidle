@@ -94,8 +94,25 @@ export function bodyPerfectionRealmOf(materialId): string | undefined  // revers
 export function isBodyPerfectionMaterial(materialId): boolean
 ```
 
-`assertBodyPerfectionRegistry()` runs once at module load
-(`assertBodyChapterRegistry` convention, `BodyChapter.ts:333-363`):
+Registry validation is the validate+assert PAIR
+(`validateBodyChapterRegistry`/`assertBodyChapterRegistry` convention,
+`BodyChapter.ts:333-363`) so malformed fixtures stay injectable in
+tests without mutating the canonical constant (C2C r65-f2):
+
+```ts
+export function validateBodyPerfectionRegistry(
+  registry: Readonly<Record<string, readonly string[]>>,
+  realmIds: readonly string[],
+): string[]                                    // issues; [] = clean
+export function assertBodyPerfectionRegistry(
+  registry = BODY_PERFECTION_REALM_MATERIALS,
+): void                                        // throws on issues
+```
+
+`assertBodyPerfectionRegistry()` runs once at module load over the
+canonical constant; tests inject malformed registries into
+`validateBodyPerfectionRegistry`/`assertBodyPerfectionRegistry(reg)`.
+Pinned checks:
 - **realm-key completeness (C2C r60-f3):** the key set equals the
   canonical `REALMS` id set EXACTLY — a missing key silently disables
   perfection for that realm, an extra key is unknown-realm corrupt;
@@ -375,4 +392,9 @@ section inside `RealmPanel` beside `BodyRefinementSection` /
   untouched, count 0 = factor 1); late perfection; save round-trip +
   rejected old versions; integrity rejects a perfected future realm
   (C2C r60-f2); registry completeness + authored material-id
-  resolution (C2C r60-f3); restore fires no re-mark.
+  resolution (C2C r60-f3); restore fires no re-mark. Positive-path
+  domain/ops/component suites (canPerfect, the committing transaction,
+  late perfection, the section) run on the same `vi.mock` fixture
+  registries + Pinia seeding as C2C r60-f4 — the shipped all-empty
+  registry is only exercised through the negative/fail-closed arms
+  (C2C r65-f1).
