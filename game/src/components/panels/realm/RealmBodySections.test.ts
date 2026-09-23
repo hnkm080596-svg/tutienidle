@@ -562,6 +562,13 @@ describe('ZhouTianSection (M-F-CHU-THIEN)', () => {
     expect(button).not.toBeNull()
     expect(button!.disabled).toBe(false)
 
+    // C2C-75 - the capacity bar fills against the CURRENT realm
+    // capacity (179/180 ~99%), never the absolute 360 ceiling.
+    const bar = view.container.querySelector('[role="progressbar"]')
+    expect(bar).not.toBeNull()
+    expect(bar!.getAttribute('aria-valuemax')).toBe('180')
+    expect(bar!.getAttribute('aria-valuenow')).toBe('179')
+
     view.unmount()
   })
 
@@ -602,6 +609,11 @@ describe('ZhouTianSection (M-F-CHU-THIEN)', () => {
 
     // After filling to capacity the button is disabled.
     expect(investButton(view)!.disabled).toBe(true)
+
+    // The bar max follows the same current capacity (20/20 = full).
+    const bar = view.container.querySelector('[role="progressbar"]')
+    expect(bar!.getAttribute('aria-valuemax')).toBe('20')
+    expect(bar!.getAttribute('aria-valuenow')).toBe('20')
 
     view.unmount()
   })

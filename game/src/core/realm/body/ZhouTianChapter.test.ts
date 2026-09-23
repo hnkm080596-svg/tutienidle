@@ -173,8 +173,10 @@ describe('ZhouTianChapter - persisted + integrity validation', () => {
     expect(collectIssues({ circulation: 42 })).toEqual([])
   })
 
-  it('integrityIssues flags non-integer / out-of-range circulation only', () => {
+  it('integrityIssues flags non-integer / out-of-range circulation', () => {
     const player = createDefaultPlayer()
+    player.realmId = 'foundation_establishment'
+    player.realmLevel = 18 // capacity 360 - the full range is legal
 
     expect(zhouTianChapter.integrityIssues(player)).toEqual([])
 
@@ -182,12 +184,34 @@ describe('ZhouTianChapter - persisted + integrity validation', () => {
     expect(zhouTianChapter.integrityIssues(player).length).toBe(1)
 
     player.bodyProgression.zhou_tian.circulation = 361 // beyond Dai - impossible
-    expect(zhouTianChapter.integrityIssues(player).length).toBe(1)
+    expect(zhouTianChapter.integrityIssues(player).length).toBe(2) // range + capacity
 
     player.bodyProgression.zhou_tian.circulation = -1
     expect(zhouTianChapter.integrityIssues(player).length).toBeGreaterThan(0)
 
     player.bodyProgression.zhou_tian.circulation = 360
     expect(zhouTianChapter.integrityIssues(player)).toEqual([])
+  })
+
+  // C2C-75 - the realm-capacity invariant: circulation over the
+  // realm-derived capacity is corrupt even inside the 0..360 range.
+  it('integrityIssues flags circulation above the realm capacity', () => {
+    const player = createDefaultPlayer()
+    player.realmId = 'foundation_establishment'
+    player.realmLevel = 1 // capacity 20
+
+    player.bodyProgression.zhou_tian.circulation = 20
+    expect(zhouTianChapter.integrityIssues(player)).toEqual([])
+
+    player.bodyProgression.zhou_tian.circulation = 21
+    expect(zhouTianChapter.integrityIssues(player)[0]).toMatch(/capacity/i)
+
+    player.bodyProgression.zhou_tian.circulation = 360
+    expect(zhouTianChapter.integrityIssues(player).length).toBeGreaterThan(0)
+
+    // Pre-Truc Co capacity is 0 - any circulation is corrupt there.
+    const mortal = createDefaultPlayer()
+    mortal.bodyProgression.zhou_tian.circulation = 1
+    expect(zhouTianChapter.integrityIssues(mortal).length).toBeGreaterThan(0)
   })
 })

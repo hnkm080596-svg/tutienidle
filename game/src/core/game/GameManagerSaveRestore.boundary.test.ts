@@ -1212,6 +1212,25 @@ describe('v77 zhou_tian slice + sequential coherence preflight', () => {
       p.realmId = 'qi_refining'
       p.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
     }],
+    // C2C-75 - realm-capacity invariant at the boundary: coherent
+    // predecessors (refinement + full meridian) but circulation beyond
+    // the TC Lv1 cap of 20 - the chapter's own integrity rejects it.
+    ['zhou_tian circulation above realm capacity', (p: PlayerData) => {
+      p.realmId = 'foundation_establishment'
+      p.realmLevel = 1
+      p.physiqueGrade = 'bao'
+      p.bodyProgression.body_refinement.completedTiers = 6
+      p.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+      p.bodyProgression.zhou_tian.circulation = 21
+    }],
+    ['zhou_tian complete at pre-completion realm level', (p: PlayerData) => {
+      p.realmId = 'foundation_establishment'
+      p.realmLevel = 9
+      p.physiqueGrade = 'bao'
+      p.bodyProgression.body_refinement.completedTiers = 6
+      p.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
+      p.bodyProgression.zhou_tian.circulation = 360
+    }],
   ])('rejects %s and leaves live state byte-equivalent unchanged', (_label, corrupt) => {
     const manager = makeManager()
     const live = createDefaultPlayer()

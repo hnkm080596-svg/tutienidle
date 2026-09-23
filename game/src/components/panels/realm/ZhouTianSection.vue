@@ -110,7 +110,7 @@ function invest(): void {
       <Bar
         class="zhou-tian-section__bar"
         :value="chapterProgress.completed"
-        :max="chapterProgress.total"
+        :max="capacity"
         :height="5"
       />
 

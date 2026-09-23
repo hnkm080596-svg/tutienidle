@@ -143,6 +143,16 @@ export const zhouTianChapter: BaseStatBodyChapter = {
       issues.push(`zhou_tian.circulation ngoai 0..${ZHOU_TIAN_DAI_CIRCULATION} (nhan ${state.circulation})`)
     }
 
+    // C2C-75 - realm-capacity invariant: circulation can never exceed
+    // the capacity derivable at the player's realm (TC Lv1 -> 20);
+    // a coherent-prerequisite save carrying more is still corrupt.
+    const capacity = getZhouTianCapacity(player)
+    if (state.circulation > capacity) {
+      issues.push(
+        `zhou_tian.circulation vuot capacity hien tai (nhan ${state.circulation}, capacity ${capacity})`,
+      )
+    }
+
     return issues
   },
 }
