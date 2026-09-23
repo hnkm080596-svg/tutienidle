@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, useId } from 'vue'
+import { computed, ref, useId, type ComponentPublicInstance } from 'vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import InkNineSlice from './primitives/InkNineSlice.vue'
+import SysPanel from './system/SysPanel.vue'
 
 const props = withDefaults(defineProps<{
   open: boolean
@@ -10,16 +11,27 @@ const props = withDefaults(defineProps<{
   width?: string
   height?: string
   layer?: number
+  // M-UI-SYSTEM: 'system' renders the card as SysPanel chrome (spec 5).
+  // Default 'ink' keeps every caller identical.
+  variant?: 'ink' | 'system'
 }>(), {
   width: 'min(900px, 94vw)',
   height: 'auto',
   layer: OVERLAY_LAYERS.panel,
+  variant: 'ink',
 })
 
 const emit = defineEmits<{ close: [] }>()
 
-const cardRef = ref<HTMLElement | null>(null)
-useDialogFocus(cardRef, computed(() => props.open), { onEscape: () => emit('close') })
+// ref on the dynamic card resolves to an element ('ink' section) or the
+// SysPanel instance ('system') - useDialogFocus needs a plain HTMLElement.
+const cardRef = ref<HTMLElement | ComponentPublicInstance | null>(null)
+const cardEl = computed<HTMLElement | null>(() => {
+  const v = cardRef.value
+  if (v instanceof HTMLElement) return v
+  return (v?.$el as HTMLElement | null | undefined) ?? null
+})
+useDialogFocus(cardEl, computed(() => props.open), { onEscape: () => emit('close') })
 
 // Remediation Task 6 (2026-09-05) — aria-labelledby tham chiếu heading
 // thật (per-instance useId) thay vì aria-label duplicate.
@@ -28,17 +40,21 @@ const headingId = useId()
 
 <template>
   <Transition name="overlay-fade">
-    <div v-if="open" class="overlay-panel" :style="{ zIndex: layer }" @click.self="emit('close')">
-      <section
+    <div v-if="open" class="overlay-panel" :class="`overlay-panel--${variant}`" :style="{ zIndex: layer }" @click.self="emit('close')">
+      <component
+        :is="variant === 'system' ? SysPanel : 'section'"
+        v-bind="variant === 'system' ? { variant: 'primary', rimActive: open } : {}"
         ref="cardRef"
         class="overlay-panel__card"
+        :class="{ 'overlay-panel__card--system': variant === 'system' }"
+        tabindex="-1"
         :style="{ width, height }"
         role="dialog"
         aria-modal="true"
         :aria-labelledby="headingId"
       >
-        <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
-        <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
+        <InkNineSlice v-if="variant === 'ink'" asset-id="surface-xl-paper-scroll" layer="surface" />
+        <InkNineSlice v-if="variant === 'ink'" asset-id="frame-xl-ceremony" layer="frame" />
         <header class="overlay-panel__header">
           <div class="overlay-panel__heading">
             <slot name="heading">
@@ -49,7 +65,7 @@ const headingId = useId()
           <slot name="header-actions" />
         </header>
         <div class="overlay-panel__body"><slot /></div>
-      </section>
+      </component>
     </div>
   </Transition>
 </template>

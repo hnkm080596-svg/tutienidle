@@ -35,6 +35,7 @@ import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import SkillConnections from './SkillConnections.vue'
 import type { SkillConnectionEntry, SkillConnectionRect } from './SkillConnections.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import SysTag from '@/components/common/system/SysTag.vue'
 import type { ElementType } from '@/core/element/ElementType'
 import type { SpellPathRoute } from '@/core/phap-tu/PhapTuState'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
@@ -91,6 +92,13 @@ function branchColor(branchTag: string | undefined): string {
 // stance, not a node: the toggle lives in the tree header and only
 // shows for normal Phap Tu once the atomic element+route commit exists.
 const SPELL_PATH_ROUTE_IDS: readonly SpellPathRoute[] = ['dot', 'no']
+
+// M-UI-SYSTEM - route tags become SysTag chips; glyph shape + label text
+// carry the route (hue only reinforces, spec 7.3).
+const NODE_ROUTE_TONE: Record<SpellPathRoute, 'warn' | 'violet'> = {
+  dot: 'warn',
+  no: 'violet',
+}
 
 const spellPathRoute = computed<SpellPathRoute | null>(() => {
   stateVersion.value
@@ -597,9 +605,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="node-tree">
+  <div class="node-tree sys-surface sys-corners">
     <div class="node-tree__header">
-      <span class="node-tree__title">{{ t('panels.nodeTree.title') }}</span>
+      <span class="node-tree__title sys-eyebrow">{{ t('panels.nodeTree.title') }}</span>
 
       <!-- Route respec toggle (P3) — Phap Tu only, once element+route
            committed; switching refunds 75% of old-route investment. -->
@@ -680,7 +688,7 @@ onBeforeUnmount(() => {
 
                   <!-- Badge hướng Dot/No — node routeTag chỉ mua/hiệu
                        lực khi route đang chọn khớp (query-time gate). -->
-                  <span v-if="entry.node.routeTag" class="node-tree__node-route">{{ t(`panels.nodeTree.routes.${entry.node.routeTag}`) }}</span>
+                  <SysTag v-if="entry.node.routeTag" :tone="NODE_ROUTE_TONE[entry.node.routeTag]" class="node-tree__node-route">{{ t(`panels.nodeTree.routes.${entry.node.routeTag}`) }}</SysTag>
                 </span>
                 <span v-if="entry.node.description" class="node-tree__node-desc">{{ entry.node.description }}</span>
                 <span class="node-tree__node-cost">
@@ -735,6 +743,9 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  /* M-UI-SYSTEM: root carries .sys-surface (holocham console inside the
+     modal); padding keeps content off the recipe's 1px edge. */
+  padding: 10px 12px;
 }
 
 .node-tree__header {
@@ -755,19 +766,19 @@ onBeforeUnmount(() => {
 .node-tree__route-option {
   min-height: 22px;
   padding: 1px 10px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
+  background: var(--sys-bg-0, var(--ink-800));
+  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
   border-radius: 999px;
-  color: var(--text-secondary);
-  font-family: var(--font-body);
+  color: var(--sys-text-muted, var(--text-secondary));
+  font-family: var(--sys-font-display, var(--font-body));
   font-size: var(--text-xs);
   line-height: 1;
   cursor: pointer;
 }
 
 .node-tree__route-option.is-active {
-  border-color: var(--gold-700);
-  color: var(--gold-700);
+  border-color: var(--sys-cyan, var(--gold-700));
+  color: var(--sys-cyan, var(--gold-700));
   font-weight: 600;
 }
 
@@ -779,19 +790,19 @@ onBeforeUnmount(() => {
 .node-tree__respec {
   min-height: 22px;
   padding: 1px 10px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
+  background: var(--sys-bg-0, var(--ink-800));
+  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
   border-radius: 999px;
-  color: var(--text-secondary);
-  font-family: var(--font-body);
+  color: var(--sys-text-muted, var(--text-secondary));
+  font-family: var(--sys-font-display, var(--font-body));
   font-size: var(--text-xs);
   line-height: 1;
   cursor: pointer;
 }
 
 .node-tree__respec:hover:not(:disabled) {
-  border-color: var(--gold-700);
-  color: var(--gold-700);
+  border-color: var(--sys-cyan, var(--gold-700));
+  color: var(--sys-cyan, var(--gold-700));
 }
 
 .node-tree__respec:disabled {
@@ -809,10 +820,10 @@ onBeforeUnmount(() => {
   min-width: 22px;
   min-height: 22px;
   padding: 0 4px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
+  background: var(--sys-bg-0, var(--ink-800));
+  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
   border-radius: var(--radius-sm);
-  color: var(--text-primary);
+  color: var(--sys-text, var(--text-primary));
   font-family: var(--font-body);
   font-size: var(--text-xs);
   line-height: 1;
@@ -844,14 +855,18 @@ onBeforeUnmount(() => {
 
 
 .node-tree__title {
+  font-family: var(--sys-font-display, var(--font-body));
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--paper-text);
+  color: var(--sys-text-muted, var(--paper-text));
 }
 
 .node-tree__points {
+  /* M-UI-SYSTEM: insight counter reads as a system numeral readout. */
+  font-family: var(--sys-font-display, var(--font-body));
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-sm);
-  color: var(--gold-700);
+  color: var(--sys-cyan, var(--gold-700));
 }
 
 .node-tree__branch-title {
@@ -888,26 +903,27 @@ onBeforeUnmount(() => {
   gap: 2px;
   width: 140px;
   padding: 6px 8px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
+  background: var(--sys-bg-0, var(--ink-800));
+  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
   border-radius: var(--radius-sm);
   cursor: pointer;
   text-align: left;
   font-family: var(--font-body);
-  color: var(--text-primary);
+  color: var(--sys-text, var(--text-primary));
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .node-tree__node.is-major {
-  border-color: var(--branch-color, var(--ink-line));
+  border-color: var(--sys-line-hot, var(--branch-color, var(--ink-line)));
 }
 
 .node-tree__node:hover {
-  border-color: var(--branch-color, var(--ink-line));
+  border-color: var(--sys-line-hot, var(--branch-color, var(--ink-line)));
 }
 
 .node-tree__node.is-purchased {
-  background: color-mix(in srgb, var(--branch-color, var(--chrome-300)) 18%, var(--ink-800));
+  background: color-mix(in srgb, var(--sys-success, var(--branch-color, var(--chrome-300))) 14%, var(--sys-bg-0, var(--ink-800)));
+  border-color: color-mix(in srgb, var(--sys-success, var(--branch-color, var(--chrome-300))) 55%, transparent);
 }
 
 /* Locked node vẫn CLICK ĐƯỢC (để xem điều kiện ở NodeInspector.vue,
@@ -918,7 +934,7 @@ onBeforeUnmount(() => {
 }
 
 .node-tree__node.is-selected {
-  outline: 2px solid var(--chrome-300);
+  outline: 2px solid var(--sys-focus, var(--chrome-300));
   outline-offset: -2px;
 }
 
@@ -929,8 +945,8 @@ onBeforeUnmount(() => {
 .node-tree__node.is-unlocking {
   position: relative;
   animation: skill-node-pulse 500ms ease-out;
-  border-color: var(--chrome-300);
-  box-shadow: 0 0 14px 2px color-mix(in srgb, var(--chrome-300) 55%, transparent);
+  border-color: var(--sys-violet, var(--chrome-300));
+  box-shadow: 0 0 14px 2px color-mix(in srgb, var(--sys-violet, var(--chrome-300)) 55%, transparent);
 }
 
 .node-tree__node.is-unlocking::after {
@@ -938,7 +954,7 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: -6px;
   border-radius: inherit;
-  border: 1px solid var(--chrome-300);
+  border: 1px solid var(--sys-violet, var(--chrome-300));
   opacity: 0;
   animation: skill-node-ring 500ms ease-out;
   pointer-events: none;
@@ -988,23 +1004,22 @@ onBeforeUnmount(() => {
   color: var(--chrome-100);
 }
 
-/* Badge hướng Đốt/Nộ — node routeTag (Phap Tu Reimagined Task 16). */
-.node-tree__node-route {
-  padding: 0 4px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--gold-700) 60%, transparent);
+/* Route badge - node routeTag (Phap Tu Reimagined Task 16). M-UI-SYSTEM:
+   the chip is a SysTag; the .sys-tag anchor re-maps its border line so it
+   stays quiet on the node card. */
+.node-tree__node-route.sys-tag {
+  --sys-tag-line: var(--sys-line-soft, color-mix(in srgb, var(--gold-700) 60%, transparent));
   font-size: var(--text-xs);
-  line-height: 1.4;
-  color: var(--gold-700);
 }
 
 .node-tree__node-desc {
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--sys-text-dim, var(--text-muted));
 }
 
 .node-tree__node-cost {
   font-size: var(--text-xs);
-  color: var(--chrome-100);
+  font-variant-numeric: tabular-nums;
+  color: var(--sys-text-muted, var(--chrome-100));
 }
 </style>

@@ -16,7 +16,9 @@ import { MAIN_STAT_KEYS, type MainStatKey } from '@/core/stats/StatTypes'
 import { getMainStatCap } from '@/core/stats/StatCap'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { getTalentDefinition } from '@/data/talent/Talents'
-import { TALENT_RARITY_LABELS, type TalentDefinition } from '@/core/talent/Talent'
+import { TALENT_RARITY_LABELS, type TalentDefinition, type TalentRarity } from '@/core/talent/Talent'
+import SysStat from '../common/system/SysStat.vue'
+import SysTag from '../common/system/SysTag.vue'
 
 const { t } = useI18n()
 const player = usePlayerStore()
@@ -51,6 +53,16 @@ const selectedTalents = computed(() =>
     .map((talentId) => getTalentDefinition(talentId))
     .filter((talent): talent is TalentDefinition => talent !== undefined),
 )
+
+// M-UI-SYSTEM - talent rarity tag -> SysTag tone: the tier is carried by
+// the glyph shape + label text (color only reinforces, spec 7.3).
+const TALENT_RARITY_TONE: Record<TalentRarity, 'muted' | 'success' | 'cyan' | 'violet' | 'warn'> = {
+  pham: 'muted',
+  linh: 'success',
+  dia: 'cyan',
+  thien: 'violet',
+  di: 'warn',
+}
 
 // UI redesign mục 11 (Character) — silhouette nhân vật ở cột giữa
 // header nhuộm màu theo hệ của path đã chọn (Kiếm Tu khai `element`
@@ -257,7 +269,7 @@ const pillPermanentRows = computed(() => {
            hướng Đạo duy nhất lúc tạo nhân vật, luôn hiển thị để người
            chơi nhớ mình đang đi đường nào. -->
       <div v-if="selectedTalents.length > 0" class="character-panel__talents">
-        <h4 class="character-panel__talents-title">{{ t('panels.character.sections.talents') }}</h4>
+        <h4 class="character-panel__talents-title"><span class="sys-eyebrow">{{ t('panels.character.sections.talents') }}</span></h4>
 
         <div
           v-for="talent in selectedTalents"
@@ -266,7 +278,7 @@ const pillPermanentRows = computed(() => {
           :class="`talent-tier-${talent.rarity}`"
         >
           <span class="talent-block__content">
-            <span class="talent-block__rarity">{{ TALENT_RARITY_LABELS[talent.rarity] }}</span>
+            <SysTag :tone="TALENT_RARITY_TONE[talent.rarity]" class="talent-block__rarity">{{ TALENT_RARITY_LABELS[talent.rarity] }}</SysTag>
             <span class="talent-block__name">{{ talent.name }}</span>
             <span class="talent-block__description">{{ talent.description }}</span>
           </span>
@@ -277,7 +289,7 @@ const pillPermanentRows = computed(() => {
     <div class="character-panel__body scrollfade">
         <div class="stat-group">
         <h4 class="stat-group__title stat-group__title--static">
-          <span>
+          <span class="sys-eyebrow">
             {{ t('panels.character.sections.attribute') }}
             <template v-if="player.attributePoints > 0">({{ t('panels.character.labels.attributePointsRemaining', { count: player.attributePoints }) }})</template>
           </span>
@@ -332,7 +344,7 @@ const pillPermanentRows = computed(() => {
         </div>
       </div>
       <div class="stat-group">
-        <h4 class="stat-group__title stat-group__title--static">{{ t('panels.character.sections.elements') }}</h4>
+        <h4 class="stat-group__title stat-group__title--static"><span class="sys-eyebrow">{{ t('panels.character.sections.elements') }}</span></h4>
 
         <div class="element-wheel">
           <img class="element-wheel__ring element-wheel__ring--orbs" :src="formationOrbsUrl" alt="" aria-hidden="true" />
@@ -365,9 +377,9 @@ const pillPermanentRows = computed(() => {
       </div>
 
       <div v-if="pillPermanentRows.length > 0" class="pill-usage">
-        <span v-for="row in pillPermanentRows" :key="row.stat" class="pill-usage__item">
-          {{ row.label }}: {{ row.value }}/{{ row.cap }}
-        </span>
+        <SysStat v-for="row in pillPermanentRows" :key="row.stat" class="pill-usage__item" :label="row.label">
+          {{ row.value }}/{{ row.cap }}
+        </SysStat>
       </div>
     </div>
   </section>
@@ -473,11 +485,14 @@ const pillPermanentRows = computed(() => {
    (frontend-design pass 2026-08-30: "the hero is a thesis") — phóng to
    hẳn so với các số khác thay vì cùng cỡ text-lg với tên thiên phú. */
 .character-panel__power-value {
-  font-family: var(--font-display);
+  /* M-UI-SYSTEM: display-font numerals + tabular; fallback keeps the
+     ink font when system-theme.css is not loaded (safe degrade). */
+  font-family: var(--sys-font-display, var(--font-display));
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-display);
   font-weight: 700;
-  color: var(--paper-text);
-  text-shadow: 0 0 12px color-mix(in srgb, var(--mineral-gold) 35%, transparent);
+  color: var(--sys-text, var(--paper-text));
+  text-shadow: 0 0 12px color-mix(in srgb, var(--sys-cyan, var(--mineral-gold)) 35%, transparent);
 }
 
 .character-panel__power-label {
@@ -558,14 +573,17 @@ const pillPermanentRows = computed(() => {
   overflow: hidden;
 }
 
-/* Rarity label sits on the cream scroll — blend the tier color toward
-   ink so it keeps its hue but stays legible on the light art. */
-.talent-block__rarity {
+/* Rarity label sits on the cream scroll - blend the tier color toward
+   ink so it keeps its hue but stays legible on the light art.
+   M-UI-SYSTEM: the chip is a SysTag - the .sys-tag anchor re-tints its
+   neon border toward the tier blend (panel-internal --sys-* remap). */
+.talent-block__rarity.sys-tag {
   font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.13em;
   color: color-mix(in srgb, var(--talent-tier-color, var(--mineral-gold)) 55%, var(--ink-900));
+  --sys-tag-line: color-mix(in srgb, var(--talent-tier-color, var(--mineral-gold)) 60%, var(--ink-900));
 }
 
 .talent-block__name {
@@ -768,10 +786,10 @@ const pillPermanentRows = computed(() => {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: var(--mineral-gold);
+  background: var(--sys-cyan, var(--mineral-gold));
   box-shadow:
     0 0 0 2px color-mix(in srgb, var(--ink-950) 55%, transparent),
-    0 0 7px var(--mineral-gold);
+    0 0 7px var(--sys-cyan, var(--mineral-gold));
 }
 
 /* Compact vertical card (label over value+button) — ~80px wide so the
@@ -788,9 +806,9 @@ const pillPermanentRows = computed(() => {
   align-items: center;
   gap: 1px;
   padding: 3px 8px;
-  border: 1px solid var(--paper-line);
+  border: 1px solid var(--sys-line-soft, var(--paper-line));
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--paper-100) 82%, transparent);
+  background: color-mix(in srgb, var(--sys-surface-solid, var(--paper-100)) 86%, transparent);
   white-space: nowrap;
 }
 
@@ -821,7 +839,7 @@ const pillPermanentRows = computed(() => {
 .meridian__node-label {
   font-size: var(--text-xs);
   letter-spacing: 0.04em;
-  color: var(--paper-text-soft);
+  color: var(--sys-text-muted, var(--paper-text-soft));
 }
 
 .meridian__node-value-col {
@@ -832,16 +850,17 @@ const pillPermanentRows = computed(() => {
 }
 
 .meridian__node-value {
+  font-family: var(--sys-font-display, var(--font-body));
   font-size: var(--text-md);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--paper-text);
+  color: var(--sys-text, var(--paper-text));
 }
 
 .meridian__node-max {
   font-size: var(--text-xs);
   font-weight: 700;
-  color: var(--gold-700);
+  color: var(--sys-warn, var(--gold-700));
 }
 
 /* Element wheel - the Ngu Hanh formation: a gilt formation ring as the
@@ -952,7 +971,7 @@ const pillPermanentRows = computed(() => {
 .pill-usage__item {
   flex: 0 0 auto;
   padding: 1px 6px;
-  border: 1px solid var(--paper-line);
+  border: 1px solid var(--sys-line-soft, var(--paper-line));
   border-radius: 3px;
   color: var(--paper-text-soft);
   white-space: nowrap;

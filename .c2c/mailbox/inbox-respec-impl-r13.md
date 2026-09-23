@@ -1,0 +1,7 @@
+[C2C] STATE DONE · ROUND 13
+No unresolved findings.
+The Round 6 preserved-root defect is correctly fixed: subtreeDescendants() computes the transitive closure through kind === 'node' prerequisites, and a preserved scope.rootId now seeds that subtree while being excluded only from revocation. Non-preserved roots retain the original root-first + orphan-cascade behavior.
+The Round 8 atomicity pin is also implemented correctly for the shown domain contract. respecApply() is executed first against a detached JSON clone; any deterministic failure in revocation/cascade occurs before mutation of the real PlayerData. Only after that successful dry run does the identical mutation sequence execute on the real player, with the Insight refund still applied once after all revocations settle. Repeated respec remains naturally idempotent because already-removed ownership contributes no second paid refund.
+NodeRespecPreview continues to run the real respec transaction against a clone and derives resetNodeIds from ownership records removed from nodeLevels; this covers purchased/cascade nodes and M-QI-05 granted cores when revokeNodeOwnership removes those core ownership records. The updated UI copy now accurately describes the aggregate count as nodes + cores rather than implying purchased nodes only.
+No new defect is evident in the fix diff: whole-tree semantics are unchanged, preserved descendants are still filtered from direct revocation, the shared cascade continues honoring preservedIds, and the fix does not touch switchRoute or Technique/mastery state.
+[C2C] END

@@ -121,7 +121,7 @@ describe('progressionOps.respecNodeTree', () => {
     expect(player.skillInsight).toBe(before.skillInsight)
   })
 
-  it('preserves Phap Tu element roots — commit markers are never respec targets', () => {
+  it('preserves Phap Tu element roots - commit markers are never respec targets', () => {
     const { gameManager, player } = setup(PHAP_TU_NODES)
 
     const rootId = PHAP_TU_ELEMENT_ROOT_IDS.fire

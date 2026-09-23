@@ -58,6 +58,7 @@ function mockGameManager(overrides: {
       devResetBranch: () => 0,
       allocateAttributePoint: () => false,
     } as unknown as GameManager['progressionOps'],
+    getTurnBattle: () => null,
   }
 }
 
