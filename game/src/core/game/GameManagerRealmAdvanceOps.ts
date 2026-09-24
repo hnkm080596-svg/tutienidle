@@ -404,6 +404,13 @@ export class GameManagerRealmAdvanceOps {
 
       this.syncRealmPassive(player)
       this.syncRealmStatPassive(player)
+
+      // Uniform funnel: every major-realm entry runs the way-authored
+      // realm-reward grant (qi_refining authors none today - no-op).
+      grantPathRealmReward(player, 'qi_refining', (nodeId) =>
+        this.deps.nodeRegistry.has(nodeId) ? this.deps.nodeRegistry.get(nodeId) : undefined,
+      )
+
       // M6 - NO applySwordPathRealmTransition here: hidden_sword_pathway can now be picked at
       // this very ritual, so the pre-M6 "hidden_sword_pathway cannot exist at mortal"
       // assumption is false. The slice was JUST created (kiemDaoCount 1 -

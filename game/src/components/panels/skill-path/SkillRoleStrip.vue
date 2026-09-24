@@ -150,6 +150,15 @@ function specTooltip(skill: Skill, spec: SkillSpecialization) {
   const node = claimingNodeForSpec(skill.id, spec.id)
 
   if (node !== undefined && getNodeLevel(player.$state, node.id) <= 0) {
+    const permanentlyExcluded = (node.prerequisites ?? []).some(
+      (prereq) =>
+        prereq.kind === 'excludesNode' && getNodeLevel(player.$state, prereq.nodeId) >= 1,
+    )
+
+    if (permanentlyExcluded) {
+      return { title: spec.name, description: 'Đã khóa vĩnh viễn - nhánh đối lập đã chọn.' }
+    }
+
     return { title: spec.name, description: `Mở qua node ${node.name} trong Skill Path.` }
   }
 
