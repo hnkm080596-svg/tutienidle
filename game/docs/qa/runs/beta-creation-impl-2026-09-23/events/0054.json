@@ -1,0 +1,11 @@
+{
+  "type": "CANDIDATE_AMENDMENT",
+  "note": "CYC-RA2-1 repair commit on devin/1790189100-beta-creation - shared save acceptance extraction + gate symmetry + contract self-containment + fixture/test repairs; 16 files, +574/-207",
+  "fixCommit": "0e8351bd",
+  "repairRefs": [
+    "game/src/services/save/saveAcceptance.ts",
+    "game/src/core/game/GameManagerSaveRestore.ts",
+    "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+    "game/src/services/save/SaveSystem.ts"
+  ]
+}

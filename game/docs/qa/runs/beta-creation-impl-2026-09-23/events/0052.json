@@ -1,0 +1,48 @@
+{
+  "type": "SEAL_RECEIPT",
+  "round": "clean-A-prime",
+  "lens": "INTEGRATION",
+  "reviewerSession": "c6cec6c3febf42ebbb837e3b40ee3e75",
+  "candidate": "0c434d43",
+  "verdict": "FINDINGS",
+  "priorFindingsVisible": false,
+  "evidenceExecuted": "vue-tsc --build; vitest isolation suite red repro (exit 1); PushAsymmetry.qa.test.ts (contract-bad local overwrote good remote); BetaCreation.qa.test.ts",
+  "findings": [
+    {
+      "id": "F-INT-01",
+      "severity": "High",
+      "title": "Committed suite fails: GameSave.fixture.ts breaks cultivationPathIsolation (2 tests)",
+      "disposition": "FIXED @0e8351bd - fixture registered in SEAM_ALLOWLIST_FILES + SLICE_READ_ALLOWLIST with justification comments; isolation suite green"
+    },
+    {
+      "id": "F-INT-02",
+      "severity": "Medium",
+      "title": "Push-side asymmetry: remote gate contract-checks reads but local push is ungated",
+      "disposition": "FIXED @0e8351bd - symmetric local gate via the shared predicate: a local payload boot would reject counts as no-local, so a usable remote pull-heals and poison never pushes upward"
+    },
+    {
+      "id": "F-INT-03",
+      "severity": "Medium",
+      "title": "importSaveRaw admits contract-bad current-version saves",
+      "disposition": "FIXED @0e8351bd - importSaveRaw applies isSaveAcceptable after shape.ok; pickless + unknown-material v82 pins committed"
+    },
+    {
+      "id": "F-INT-04",
+      "severity": "Medium",
+      "title": "Half-created server character -> permanent duplicate_character wedge (pre-existing, inside reviewed seam)",
+      "disposition": "DEFERRED - pre-existing v81 issue, not regressed by this diff; fix requires a server-side transaction-boundary decision (duplicate_character needs remote-delete or RPC retry semantics)"
+    },
+    {
+      "id": "F-INT-05",
+      "severity": "Low",
+      "title": "Latent: contract alone accepts realmId=mortal + cultivationPath when pick is absent",
+      "disposition": "FIXED @0e8351bd - contract now self-contained: mortal + cultivationPath is contradictory on its face"
+    },
+    {
+      "id": "F-INT-06",
+      "severity": "Low",
+      "title": "Latent: 'skipped' bootGame leaves the creation latch engaged forever",
+      "disposition": "DEFERRED - unreachable today (no second authenticated emit while latch held, confirmed by reviewer); an honest release needs a boot-outcome channel the emit contract does not carry - recorded for the UX pass"
+    }
+  ]
+}
