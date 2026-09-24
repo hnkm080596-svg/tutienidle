@@ -1,5 +1,6 @@
 import type { PlayerData } from '../player/Player'
 import { REALM_PASSIVES } from '../../data/realm/RealmPassives'
+import { wasHiddenBreakthrough } from './hidden/HiddenLineage'
 
 /**
  * Grants the Realm Passive (Nhap Dao/Kien Co/...) of realm `realmId`
@@ -22,7 +23,7 @@ export function grantRealmPassive(player: PlayerData, realmId: string) {
   // breakthrough type selects the modifier variant - the persisted
   // hiddenBreakthroughRealmIds record is the sole authority (the
   // commit sites write it BEFORE the passive syncs).
-  const hidden = player.hiddenPerfection?.hiddenBreakthroughRealmIds.includes(realmId) === true
+  const hidden = wasHiddenBreakthrough(player, realmId)
   const build = hidden && definition.buildEnhancedModifiers !== undefined
     ? definition.buildEnhancedModifiers
     : definition.buildModifiers

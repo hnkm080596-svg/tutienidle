@@ -9,7 +9,8 @@ import type { DecomposeSaveState } from '../../core/production/DecomposeSystem'
 import type { OfflineResult } from '../../core/idle/OfflineProgressSystem'
 import type { StatModifier } from '../../core/stats/StatCalculator'
 import { CURRENT_SAVE_VERSION } from './saveVersion'
-import type { FoundationType } from '../../core/breakthrough/FoundationType'
+import type { ResolvableKienCoGrade } from '../../data/breakthrough/BreakthroughGrades'
+import type { BreakthroughType } from '../../core/realm/hidden/HiddenLineage'
 import type { TribulationOutcomeResult } from '../../core/tribulation/TribulationOutcomeService'
 
 export interface MaterialStackSave {
@@ -219,7 +220,10 @@ export interface TribulationSaveSlice {
     attemptId: number
     outcome: 'victory' | 'defeat'
     targetRealmId: string
-    grade: FoundationType
+    // The ordinary grade keeps difficulty facts; 'great_dao' never lands
+    // here - a hidden breakthrough records it via breakthroughType.
+    grade: ResolvableKienCoGrade
+    breakthroughType: BreakthroughType
     receipt: TribulationOutcomeResult | null
     settlementError: boolean
   }

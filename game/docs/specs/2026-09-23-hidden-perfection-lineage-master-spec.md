@@ -122,7 +122,7 @@ names (`hiddenLineageActive`, `completedHiddenBodyCount`) map as
 the record)
 
 ```ts
-isHiddenLineageActive(player): boolean
+isHiddenLineageOpen(player): boolean
 getCompletedHiddenBodyCount(player): number        // realmIds.length
 isHiddenBodyCompleted(player, realmId): boolean
 isHiddenRealmDiscovered(player, realmId): boolean
@@ -144,7 +144,7 @@ closeHiddenLineage(player, closedByRealmId): void
 
 /**
  * Writes discovered=true for the realm record (creates it). Idempotent.
- * HARD GATE inside: isHiddenLineageActive && realmId === player.realmId
+ * HARD GATE inside: isHiddenLineageOpen && realmId === player.realmId
  * && !frozen && isAuthoredHiddenRealm(realmId). A gated call returns
  * false and writes nothing — discovery can never leak post-closure.
  */
@@ -152,7 +152,7 @@ discoverHiddenRealm(player, realmId): boolean
 
 /**
  * Commits the Hidden Body achievement for the CURRENT realm. HARD GATE:
- * isHiddenLineageActive && canProgressHiddenBody(realmId). Idempotent.
+ * isHiddenLineageOpen && canProgressHiddenBody(realmId). Idempotent.
  * Pushes realmId onto completedHiddenBodyRealmIds and sets bodyCompleted.
  * This is the ONLY function that may write bodyCompleted (§3.5 single
  * authority).
@@ -229,7 +229,7 @@ current value; nothing else in the spec needs a "cap enforcement sweep").
 | Consumer | File | Note |
 |---|---|---|
 | `allocateAttributePoint` | `GameManagerProgressionOps.ts` | primary stat investment |
-| pill clamp / random-stat candidates | `core/pill/PillSystem.ts` (`clampMainStatIncrease`, candidate filters) | pills gain headroom under raised cap — desired (cap is the rule everywhere it applies) |
+| pill clamp / random-stat candidates | `core/pill/PillSystem.ts` (`clampToRealmCap`, candidate filters) | pills gain headroom under raised cap — desired (cap is the rule everywhere it applies) |
 | hidden-eligibility all-5-at-cap check | `HiddenLineage.ts` (new) | reads effective cap |
 | `allFiveMainStatsAtCap`-style readers | `data/breakthrough/BreakthroughGrades.ts` | retires with §7 item 4 |
 
@@ -259,7 +259,7 @@ type BreakthroughType = 'normal' | 'hidden'
  * Resolved at the breakthrough COMMIT site (and snapshotted on the
  * committed outcome record, §4.3). Returns 'hidden' iff ALL of:
  *   realmLevel >= EXTENDED_REALM_LEVEL(18)
- *   isHiddenLineageActive(player)
+ *   isHiddenLineageOpen(player)
  *   isHiddenBodyCompleted(player, player.realmId)
  *   every MAIN_STAT_KEYS stat >= getEffectiveMainStatCap(player)
  *   canTriggerBreakthrough(player)  // ordinary requirements
@@ -482,14 +482,14 @@ HiddenPerfectionState, RealmHiddenState, createDefaultHiddenPerfection,
 validateHiddenPerfectionPersistedState, assertHiddenPerfectionIntegrity
 
 // src/core/realm/hidden/HiddenLineage.ts
-isHiddenLineageActive, closeHiddenLineage, getCompletedHiddenBodyCount,
+isHiddenLineageOpen, closeHiddenLineage, getCompletedHiddenBodyCount,
 isHiddenBodyCompleted, completeHiddenBody, canProgressHiddenBody,
 discoverHiddenRealm, isHiddenRealmDiscovered, isHiddenRealmFrozen,
 getRealmHiddenState, getHiddenBreakthroughRealmIds,
 resolveBreakthroughType, isHiddenBreakthroughEligible
 
 // src/data/realm/HiddenBodyRealms.ts
-HIDDEN_BODY_REALMS, isAuthoredHiddenRealm, hiddenBodyRealmOf (index helpers)
+HIDDEN_BODY_REALMS, isAuthoredHiddenRealm, hiddenBodyRealmIndex (index helpers)
 
 // src/core/stats/StatCap.ts
 getEffectiveMainStatCap, HIDDEN_BODY_CAP_BONUS_PER_REALM
@@ -600,7 +600,7 @@ version bumps on C's merge and the §19 zhou_tian remnants die there.
 | battle-cycle replacement seam | adds seam + no-op | fills | untouched |
 | `bodyProgression` registry | untouched | untouched | owns chu_tian edits |
 | PlayerData / save shape | hiddenPerfection + retires | mechanic payloads only | mechanic + chapter slice |
-| i18n keys | `hidden.*` namespace skeleton | `hidden.mortal.*`, `hidden.qi.*` | `hidden.foundation.*` |
+| i18n keys | none — no `hidden.*` keys authored yet | `hidden.mortal.*`, `hidden.qi.*` (B owns first keys) | `hidden.foundation.*` |
 | save version | A bumps on merge | B re-bumps if it merges later | same |
 
 Conflict surface is limited to the mechanic validator map and PlayerData

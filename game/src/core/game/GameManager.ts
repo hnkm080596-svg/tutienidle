@@ -114,8 +114,8 @@ import { QuestSystem } from '../quest/QuestSystem'
 
 
 
-// Re-export gi? tuong thi?12ch import cu (useTribulation.ts import
-// ActiveTribulation/TRIBULATION_COOLDOWN_SECONDS t? GameManager).
+// Re-export for legacy import compatibility (useTribulation.ts imports
+// ActiveTribulation/TRIBULATION_COOLDOWN_SECONDS from GameManager).
 export { TRIBULATION_COOLDOWN_SECONDS } from '../tribulation/TribulationDirector'
 export type { ActiveTribulationState } from '../tribulation/TribulationDirector'
 export type {
@@ -448,15 +448,15 @@ export class GameManager {
   // RUNTIME SERVICES (2026-08-24 tach khoi than class nay)
   // =========================
 
-  // Ba service du?i di?12y s? h?u business logic tr?n d?u dang di?n ra:
-  // - BattleLootSystem: loot/particle/toast/battle summary khi qui?12i ch?t.
-  // - StageWaveSystem: vi?12ng d?i wave c?a Mi?12n + boss summon.
-  // - TribulationDirector: runtime chuong ki?p m?i (ti?12m ma + tank li?12i,
-  //   spec dot-pha-loi-kiep i?125) + cooldown.
-  // Kh?i t?o trong constructor (KHi?12NG ph?i field initializer) vi?12 c?n
-  // tham chi?u t?i ci?12c field khai bi?12o SAU chi?12ng ? tri?12n (bags/registries/
-  // zoneRegistry/template registries) i?12 field initializer ch?y theo th?
-  // t? khai bi?12o ni?12n khi?12ng th?y du?c; ctor body ch?y sau ci?12ng, an toi?12n.
+  // The three services below own the business logic of a running fight:
+  // - BattleLootSystem: loot/particle/toast/battle summary on kill.
+  // - StageWaveSystem: awaits the stage's next wave + boss summon.
+  // - TribulationDirector: the new chapter runtime (mind quiz + tank
+  //   lightning, spec dot-pha-loi-kiep sec.5) + cooldown.
+  // Constructed in the constructor (NOT field initializers) because they
+  // reference fields declared LATER (bags/registries/zoneRegistry/
+  // template registries) - field initializers run in declaration order
+  // and cannot see them; the ctor body runs after all fields, safely.
 
   private readonly battleLoot: BattleLootSystem
   private readonly stageWaves: StageWaveSystem
@@ -505,7 +505,8 @@ export class GameManager {
   // Public: callers use gameManager.tickOps.* directly (no facade).
   readonly tickOps: GameManagerTickOps
 
-  // Qui?12i ?n (spec dot-pha-loi-kiep i?124.1c) i?12 c?a s? 1000 kill Luy?n Khi?12.
+  // Hidden beast (spec dot-pha-loi-kiep sec.4.1c) - the 1000-kill
+  // Qi Refining window.
   readonly hiddenBeastSystem: HiddenBeastSystem
 
   constructor() {
@@ -595,8 +596,9 @@ export class GameManager {
 
     this.skillSystem.setRouteProfileProvider(this.routeProfileProvider)
 
-    // Qui?12i ?n (spec dot-pha-loi-kiep i?124.1c) i?12 tra template qua registry
-    // chung (registerEnemyTemplates di?12 dang ki?12 Huy?t Mi?12ng qua ENEMIES).
+    // Hidden beast (spec dot-pha-loi-kiep sec.4.1c) resolves its
+    // template through the shared registry (registerEnemyTemplates
+    // already registered Huyet Mieu via ENEMIES).
     this.catalogOps = new GameManagerCatalogOps({
       materialRegistry: this.materialRegistry,
       buffRegistry: BUFF_REGISTRY,
@@ -1005,12 +1007,12 @@ export class GameManager {
   setActivePlayer(player: PlayerData) {
     this.activePlayer = player
 
-    // Load save: b? effect di?12 h?t h?n ngay (plan i?129).
+    // Save load: immediately drain expired timed effects (plan sec.9).
     this.effectOps.tickTimedEffects(player)
 
-    // Talent v4 (spec 2026-09-03 i?124.1) i?12 grant hidden passive c?a
-    // talent combat ngay khi active player d?i (load save / restore /
-    // sau L? Nh?p Mi?12n t?o nhi?12n v?t).
+    // Talent v4 (spec 2026-09-03 sec.4.1): grant the combat talent's
+    // hidden passive the moment the active player is set (save load /
+    // restore / post-creation ceremony).
     this.progressionOps.syncTalentCombatPassive(player)
   }
 
@@ -1043,7 +1045,7 @@ export class GameManager {
   // moved to src/core/player/CultivationPathRegistry.ts (the single
   // dispatch site); the ops consume the runtime via resolvePathRuntime.
 
-  /** Tr?ng thi?12i turn-based hi?n t?i i?12 consumer n?i b? flip d?n sang di?12y. */
+  /** Current turn-based state - internal consumers flip to this. */
   getTurnBattle(): TurnBattle | null {
     return this.turnBattleOps.getTurnBattle()
   }
@@ -1343,14 +1345,14 @@ export class GameManager {
   }
 
   /**
-
-    * i?12? Ki?p (spec dot-pha-loi-kiep i?125.1) i?12 delegate xu?ng
-    * TribulationDirector (runtime chuong ki?p m?i: ti?12m ma + tank li?12i,
-    * KHi?12NG qua BattleSystem, khi?12ng qui?12i Ki?p). hasTrucCoDan d?c t?
-    * PillBag (v?t ch?ng b?c i?12?a/Thii?12n, khi?12ng tii?12u). B?t T? Th? khi?12ng i?12p
-    * trong ki?p (nghi l? th?t i?12 gi? pattern cu): ki?p khi?12ng qua combat
-    * ni?12n khi?12ng ci?12 session ni?12o d? xoi?12.
-    */
+   * Loi Kiep (spec dot-pha-loi-kiep sec.5.1) delegates down to
+   * TribulationDirector (the new chapter runtime: mind quiz + tank
+   * lightning, NOT through BattleSystem, no Kiep monsters).
+   * hasTrucCoDan reads from PillBag (the Dia/Thien-grade admission
+   * token, never consumed). Tu Thu's prayer does not stack inside the
+   * kiep (the real ritual keeps the old pattern): the kiep runs outside
+   * combat so there is no session to apply it to.
+   */
 
   /**
    * ARCH-002 (M7) - resolved stat snapshot for non-turn-engine paths
@@ -1373,7 +1375,7 @@ export class GameManager {
   ): boolean {
     // One admission authority: the same predicate rows the UI and the
     // sim precheck (release policy + level/chapter) gate tribulation
-    // entry here too — fail-closed when nothing is attemptable.
+    // entry here too - fail-closed when nothing is attemptable.
     if (!this.realmAdvanceOps.canTriggerBreakthrough(player)) {
       return false
     }
@@ -1392,29 +1394,29 @@ export class GameManager {
   }
 
   /**
-   * Nguoi choi CHU DONG thoat tran giua chung (nut "Thoát Trận" o
-   * CombatControlBar.vue, co xac nhan truoc khi goi toi day) - TAI
-   * DUNG luong 'defeat' san co thay vi dung 1 BattleState/UI moi:
-   * chi set battle.state = 'defeat' roi publish 'battle_end' QUA
-   * rewardOps.emitAbandonEnd() - cung once-guard voi terminal tu
-   * nhien (victory/defeat) nen moi tran phat dung MOT lan
-   * (ARCH-014, M12; truoc do abandon tu emit, con natural defeat
-   * im lang khong toi audio/scene/cache).
-   * updateStageProgress() TU dung stageManager o tick ke tiep khi thay
-   * state 'defeat' (xem ghi chu o do) - khong can tu don gi them o
-   * day. Phan thuong da kiem duoc (grantBattleRewardIfNeeded() chay
-   * MOI TICK theo tung quai chet, khong doi toi cuoi tran) KHONG mat
-   * du thoat giua chung. Chi ap dung tran Stage - Tribulation (Dot
-   * Pha) co luong thang/thua RIENG (useTribulation.ts), nut "Thoát
-   * Tran" không hiện trong trận đó (xem CombatControlBar.vue).
+   * Player manually abandons the battle mid-fight (the "Thoat Tran"
+   * button in CombatControlBar.vue, confirmed before reaching here) -
+   * REUSES the existing 'defeat' flow instead of a new BattleState/UI:
+   * set battle.state = 'defeat' then publish 'battle_end' THROUGH
+   * rewardOps.emitAbandonEnd() - the same once-guard as natural
+   * terminal states (victory/defeat) so a fight fires exactly once
+   * (ARCH-014, M12; previously abandon emitted by itself while a
+   * natural defeat stayed silent for audio/scene/cache).
+   * updateStageProgress() STOPS the stageManager on the next tick when
+   * it sees 'defeat' (see its note) - nothing else to clean up here.
+   * Earned rewards (grantBattleRewardIfNeeded() runs EVERY tick per
+   * kill, not at fight end) are NOT lost by abandoning. Stage battles
+   * only - Tribulation has its own win/lose flow (useTribulation.ts);
+   * the "Thoat Tran" button is hidden there (see CombatControlBar.vue).
    */
   abandonBattle(): boolean {
     return this.turnBattleOps.abandonBattle()
   }
 
   /**
-   * Vue layer (App.vue's tick()) gọi mỗi tick để rút toast phát sinh
-   * TRONG core ke tu lan goi truoc - tra ve roi xoa hang doi.
+   * The Vue layer (App.vue's tick()) calls this each tick to drain
+   * toasts produced inside core since the last call - returns and
+   * clears the queue.
    */
   drainNotifications(): NotificationEvent[] {
     return this.notifications.drain()

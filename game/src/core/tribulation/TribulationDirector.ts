@@ -112,7 +112,10 @@ export interface TribulationRuntimeSave {
     attemptId: number
     outcome: 'victory' | 'defeat'
     targetRealmId: string
-    grade: FoundationType
+    // Ordinary grade only - 'great_dao' rides breakthroughType, never
+    // this slot (mirror of TribulationSaveSlice in saveTypes.ts).
+    grade: ResolvableKienCoGrade
+    breakthroughType: BreakthroughType
     receipt: TribulationOutcomeResult | null
     settlementError: boolean
   }
@@ -764,6 +767,7 @@ export class TribulationDirector {
         outcome: this.committedOutcome.outcome,
         targetRealmId: this.committedOutcome.targetRealmId,
         grade: this.committedOutcome.grade,
+        breakthroughType: this.committedOutcome.breakthroughType,
         receipt: this.committedOutcome.receipt,
         settlementError: this.committedOutcome.settlementError !== null,
       }
@@ -803,6 +807,7 @@ export class TribulationDirector {
         outcome: slice.committedOutcome.outcome,
         targetRealmId: slice.committedOutcome.targetRealmId,
         grade: slice.committedOutcome.grade,
+        breakthroughType: slice.committedOutcome.breakthroughType,
         receipt: slice.committedOutcome.receipt,
         settlementError: slice.committedOutcome.settlementError
           ? new Error('restored tribulation settlement error')

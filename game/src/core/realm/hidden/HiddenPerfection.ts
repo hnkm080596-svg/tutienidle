@@ -54,10 +54,9 @@ export interface RealmHiddenState {
   bodyCompleted?: boolean
 
   /**
-   * Frozen marker: written by closeHiddenLineage when the realm's
-   * mechanism had finished at lineage close while bodyCompleted stayed
-   * false - the exact frozen-completion condition downstream
-   * mechanics must read.
+   * Frozen marker: written by closeHiddenLineage on EVERY record whose
+   * bodyCompleted is false at lineage close (spec sec.2.3) - the
+   * record stays readable-but-inert; mutators no-op on frozen realms.
    */
   frozen?: boolean
 
@@ -345,14 +344,14 @@ export function assertHiddenPerfectionIntegrity(player: {
       }
     }
 
-    // frozen marks a mechanism that finished after the lineage closed -
-    // a completed body can never be frozen, and frozen without a
-    // mechanism means nothing was ever frozen.
+    // Spec sec.6.3: freeze can only be written by closure - a frozen
+    // record on an OPEN lineage is corruption; and a completed body
+    // never freezes (closeHiddenLineage skips bodyCompleted=true).
+    if (realmState.frozen === true && state.lineageActive === true) {
+      issues.push(`realms.${realmId}: frozen=true trong khi lineageActive=true (freeze chỉ ghi bởi closure)`)
+    }
     if (realmState.frozen === true && realmState.bodyCompleted === true) {
       issues.push(`realms.${realmId}: frozen=true và bodyCompleted=true mâu thuẫn`)
-    }
-    if (realmState.frozen === true && realmState.mechanic === undefined) {
-      issues.push(`realms.${realmId}: frozen=true nhưng không có mechanic`)
     }
   }
 

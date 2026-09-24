@@ -20,7 +20,7 @@ import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 
-const NHAP_DAO_ENHANCED_PERCENT = 0.21
+const NHAP_DAO_ENHANCED_PERCENT = 0.3 // spec sec.4.4 authored value
 
 function makeManager(): GameManager {
   const manager = new GameManager()
@@ -63,7 +63,7 @@ describe('hidden lineage - save/restore chain (restoreGameSession)', () => {
     expect(player.realmId).toBe('qi_refining')
     expect(player.hiddenPerfection.hiddenBreakthroughRealmIds).toEqual(['qi_refining'])
     expect(player.hiddenPerfection.lineageActive).toBe(true)
-    // A minimal-grade player on the ENHANCED variant: flat 0.21, not grade*0.03.
+    // A minimal-grade player on the ENHANCED variant: flat 0.3, not grade*0.03.
     const nhapDao = player.modifiers.filter((m) => m.id.startsWith('realm-passive:nhap_dao:'))
     expect(nhapDao.length).toBeGreaterThan(0)
     for (const m of nhapDao) {

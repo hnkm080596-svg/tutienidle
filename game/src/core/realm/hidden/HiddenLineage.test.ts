@@ -162,7 +162,7 @@ describe('HiddenLineage closure (sec.3.3 one-way latch)', () => {
     expect(getRealmHiddenState(player, 'mortal')?.frozen).not.toBe(true)
   })
 
-  it('freeze: mechanism chua finished -> khong frozen; khong reader -> khong frozen', () => {
+  it('freeze: mechanism chua finished van bi frozen (spec sec.2.3 freeze unconditional)', () => {
     const player = makePlayer({ realmId: 'mortal' })
     completeHiddenBody(player, 'mortal')
     player.realmId = 'qi_refining'
@@ -173,19 +173,16 @@ describe('HiddenLineage closure (sec.3.3 one-way latch)', () => {
       payload.diverted === true
 
     closeHiddenLineage(player, 'qi_refining')
-    expect(getRealmHiddenState(player, 'qi_refining')?.frozen).not.toBe(true)
+    expect(getRealmHiddenState(player, 'qi_refining')?.frozen).toBe(true)
   })
 
-  it('freeze: khong reader dang ky -> khong frozen (skeleton ships none)', () => {
+  it('freeze: record discovered-only (khong mechanism) van bi frozen', () => {
     const noReader = makePlayer({ realmId: 'mortal' })
     completeHiddenBody(noReader, 'mortal')
     noReader.realmId = 'qi_refining'
-    discoverHiddenRealm(noReader, 'qi_refining')!.mechanic = {
-      kind: HIDDEN_MECHANIC_QUAN_THE,
-      diverted: true,
-    }
+    discoverHiddenRealm(noReader, 'qi_refining')
     closeHiddenLineage(noReader, 'qi_refining')
-    expect(getRealmHiddenState(noReader, 'qi_refining')?.frozen).not.toBe(true)
+    expect(getRealmHiddenState(noReader, 'qi_refining')?.frozen).toBe(true)
   })
 
   it('frozen progress khong the resume hay migrate sang realm sau', () => {

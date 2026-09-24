@@ -41,7 +41,7 @@ const NHAP_DAO_PERCENT_PER_GRADE = 0.03
 // sec.18 BALANCE-deferred placeholder - NON-CANONICAL. The enhanced
 // (hidden-breakthrough) Nhap Dao percent models the conceptual 'Bac 7'
 // tier (7 x NHAP_DAO_PERCENT_PER_GRADE). BALANCE owns the final number.
-const NHAP_DAO_ENHANCED_PERCENT = 0.21 // NON-CANONICAL (sec.18)
+const NHAP_DAO_ENHANCED_PERCENT = 0.3 // spec sec.4.4 authored; NON-CANONICAL until the sec.18 balance pass
 
 function buildNhapDaoModifiers(player: PlayerData): StatModifier[] {
   const percent = player.breakthroughGrade * NHAP_DAO_PERCENT_PER_GRADE

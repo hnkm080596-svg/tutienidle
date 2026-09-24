@@ -1928,11 +1928,21 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
 
           if (
             typeof committed.grade !== 'string' ||
-            !Object.prototype.hasOwnProperty.call(FOUNDATION_LABELS, committed.grade)
+            !Object.prototype.hasOwnProperty.call(FOUNDATION_LABELS, committed.grade) ||
+            // 'great_dao' is never a persisted ordinary grade - a hidden
+            // breakthrough records it via breakthroughType instead.
+            committed.grade === 'great_dao'
           ) {
             issues.push({
               path: '.tribulation.committedOutcome.grade',
-              message: 'phải là FoundationType hợp lệ',
+              message: 'phải là ResolvableKienCoGrade hợp lệ',
+            })
+          }
+
+          if (committed.breakthroughType !== 'normal' && committed.breakthroughType !== 'hidden') {
+            issues.push({
+              path: '.tribulation.committedOutcome.breakthroughType',
+              message: "phải là 'normal' hoặc 'hidden'",
             })
           }
 

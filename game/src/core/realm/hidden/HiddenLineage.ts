@@ -81,6 +81,20 @@ export function isHiddenRealmDiscovered(
   return player.hiddenPerfection?.realms[realmId]?.discovered === true
 }
 
+/** Frozen by closeHiddenLineage - the record stays readable-but-inert. */
+export function isHiddenRealmFrozen(
+  player: Pick<HiddenLineagePlayer, 'hiddenPerfection'>,
+  realmId: string,
+): boolean {
+  return player.hiddenPerfection?.realms[realmId]?.frozen === true
+}
+
+export function getHiddenBreakthroughRealmIds(
+  player: Pick<HiddenLineagePlayer, 'hiddenPerfection'>,
+): readonly string[] {
+  return player.hiddenPerfection?.hiddenBreakthroughRealmIds ?? []
+}
+
 export function getRealmHiddenState(
   player: Pick<HiddenLineagePlayer, 'hiddenPerfection'>,
   realmId: string,
@@ -110,6 +124,13 @@ export function canProgressHiddenBody(
   }
 
   if (player.realmId !== realmId) {
+    return false
+  }
+
+  // Spec sec.2.3: a frozen record is inert - lineage closure froze it,
+  // and frozen while active is already an integrity violation at the
+  // preflight seam; this gate is the read-side fail-closed twin.
+  if (state.realms[realmId]?.frozen === true) {
     return false
   }
 
@@ -173,9 +194,10 @@ export function completeHiddenBody(
 /**
  * Frozen-completion reader registry (sibling missions B/C): keyed by
  * the mechanism kind in HIDDEN_BODY_REALMS[].mechanicKind. A reader
- * reports whether the mechanism's persisted payload means "finished"
- * - closeHiddenLineage freezes exactly the realms whose mechanism
- * finished while the body never completed.
+ * reports whether the mechanism's persisted payload means "finished".
+ * The freeze itself is unconditional per spec sec.2.3 (every non-
+ * completed record freezes at closure); B/C use this registry for
+ * mechanism-side reads, not for freeze selection.
  */
 export const HIDDEN_MECHANIC_FINISHED_READERS: Record<
   string,
@@ -186,8 +208,8 @@ export const HIDDEN_MECHANIC_FINISHED_READERS: Record<
  * The one-way latch (design sec.3.3): called by the breakthrough-commit
  * sites on ANY normal-breakthrough SUCCESS - never on failure, never
  * on a hidden commit. Sets the diagnostic closer id and freezes every
- * authored realm whose mechanism reports finished but whose body was
- * never completed. Idempotent: a closed lineage stays closed.
+ * existing realm record whose bodyCompleted is false (spec sec.2.3).
+ * Idempotent: a closed lineage stays closed.
  *
  * `closingRealmId` is the DEPARTING realm (the realm whose normal
  * breakthrough was committed), not the entered realm.
@@ -204,21 +226,13 @@ export function closeHiddenLineage(
   state.lineageActive = false
   state.lineageClosedByRealmId = closingRealmId
 
-  const completed = new Set(state.completedHiddenBodyRealmIds)
-  for (const realm of HIDDEN_BODY_REALMS) {
-    if (completed.has(realm.realmId)) {
-      continue
-    }
-
-    const entry = state.realms[realm.realmId]
-    const payload = entry?.mechanic
-    if (payload === undefined) {
-      continue
-    }
-
-    const isFinished = HIDDEN_MECHANIC_FINISHED_READERS[realm.mechanicKind]
-    if (isFinished !== undefined && isFinished(payload)) {
-      entry!.frozen = true
+  // Spec sec.2.3: freeze EVERY existing realm record whose bodyCompleted
+  // is false - discovered-only records freeze the same as mechanism-
+  // finished ones; completed records stay unfrozen (rewards granted).
+  for (const realmId of Object.keys(state.realms)) {
+    const entry = state.realms[realmId]!
+    if (entry.bodyCompleted !== true) {
+      entry.frozen = true
     }
   }
 }
