@@ -1955,6 +1955,27 @@ v80 (BODY-PERFECTION), v81 (BODY-HIDDEN).
 - **M-F-JOURNEY** — ordered TC journey + integration sweep
   (this mission; notes `docs/p7/missions/mf-journey.notes.md`).
 
+### Beta chain (branch `beta/rc`, 2026-09-24)
+
+- **BETA-SEAM-REPAIR** merged @1662ffcc (PR #23) — all 21 retro findings
+  fixed + save v82.
+- **BETA-CREATION** merged (PR #21) — creation contract per user spec.
+- **HIDDEN-A** merged @83a6e967 (PR #22) — hidden-perfection lineage
+  skeleton (spec `docs/specs/2026-09-23-hidden-perfection-lineage-master-spec.md`,
+  design `docs/design/2026-09-23-hidden-perfection-lineage.md`); the
+  `bodyPerfection` slice is RETIRED — design sec.14/15 forbids the
+  generic hidden-material perfection surface, so the m-f-body-perfection
+  content pass is moot (registry stays empty by design).
+- **HIDDEN-B** open (PR #24) — Ancient Beast trial (mortal) +
+  Quán Thể diversion (qi_refining).
+- **HIDDEN-C** open (PR #25, save v83) — zhou_tian reworked to discrete
+  `completed` 0..36 (authored `zhouTianStepCost`/`zhouTianStepReward`),
+  Nghịch Chu Thiên mechanic on foundation_establishment.
+- BODY-CONTENT collapsed: Chu Thiên rewards shipped in HIDDEN-C; the
+  perfection-materials surface retired by design; only the 6
+  `baseGains` placeholders remain — owned by the deferred
+  BETA-BALANCE phase (user ruling 2026-09-24).
+
 ---
 
 
