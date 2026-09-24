@@ -5,7 +5,6 @@ import { createDefaultPlayer, resolvePlayerFinalStats, type PlayerData } from '.
 import {
   collectActiveWayStatModifiers,
   hasPathCapability,
-  SPELL_ATTUNEMENT_MAX_MP_PER_POINT,
 } from '../player/CultivationPathSystem'
 import type { PathCapability } from '../player/CultivationPathKit'
 import {
