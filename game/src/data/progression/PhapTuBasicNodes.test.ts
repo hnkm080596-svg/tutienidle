@@ -18,14 +18,6 @@ const BASIC_CAPSTONE_IDS = PHAP_TU_NODES.filter(
   (n) => n.effect.selectsSpecialization !== undefined,
 ).map((n) => n.id)
 
-function basicLaneNodes(element: string) {
-  return PHAP_TU_NODES.filter((n) => n.id.startsWith(`${element}_basic_`) || CAPSTONE_LANE(n, element))
-}
-
-function CAPSTONE_LANE(n: { id: string }, _element: string) {
-  return false
-}
-
 const ELEMENTS = ['fire', 'water', 'wood', 'metal', 'earth'] as const
 
 const BASIC_LANE_IDS = PHAP_TU_NODES.filter((n) =>
@@ -143,5 +135,4 @@ describe('PhapTu basic lane — ruled contract', () => {
     }
   })
 
-  void basicLaneNodes
 })

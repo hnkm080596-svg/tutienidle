@@ -31,11 +31,11 @@ const MASTERY_RIDER: Record<ElementType, { stat: StatType; perLevel: number }> =
 }
 
 const ELEMENT_LABELS: Record<ElementType, string> = {
-  fire: 'Hoa',
-  water: 'Thuy',
-  wood: 'Moc',
+  fire: 'Hỏa',
+  water: 'Thủy',
+  wood: 'Mộc',
   metal: 'Kim',
-  earth: 'Tho',
+  earth: 'Thổ',
 }
 
 export const THE_THUC_TINH_NODE_ID = 'the_thuc_tinh'
@@ -60,8 +60,8 @@ function masteryNode(element: ElementType): ProgressionNode {
 
   return {
     id: TINH_THONG_NODE_IDS[element],
-    name: `Tinh Thong ${ELEMENT_LABELS[element]}`,
-    description: `Mastery ${ELEMENT_LABELS[element]} — rider cua basic ${ELEMENT_LABELS[element]} tang theo cap.`,
+    name: `Tinh Thông ${ELEMENT_LABELS[element]}`,
+    description: `Mastery ${ELEMENT_LABELS[element]} — rider của đòn cơ bản ${ELEMENT_LABELS[element]} tăng theo cấp.`,
     type: 'minor',
     role: 'growth',
     insightCost: 0,
@@ -87,8 +87,8 @@ function masteryNode(element: ElementType): ProgressionNode {
 function awakeningNode(): ProgressionNode {
   return {
     id: THE_THUC_TINH_NODE_ID,
-    name: 'Thuc Tinh Be The',
-    description: 'Be The thuc tinh — basic landed cast bat dau nap The, tran The tang theo cap (spend van khoa Kim Dan).',
+    name: 'Thức Tỉnh Bể Thế',
+    description: 'Bể Thế thức tỉnh — đòn cơ bản trúng bắt đầu nạp Thế, trần Thế tăng theo cấp (xài Thế vẫn khóa tới Kim Đan).',
     type: 'minor',
     role: 'growth',
     insightCost: 0,
