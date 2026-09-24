@@ -9,9 +9,9 @@
   "checkout": "/home/ubuntu/repos/tutienidle/.agent-worktrees/phap-tu-basic",
   "branch": "devin/1790260800-phap-tu-basic",
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
-  "head": "86dfb313ea811dcc3976587433918b6bc3fcddda",
+  "head": "f85c40a00a5fb400022b5ae02634bc43b4370a6a",
   "state": {
-   "productStateId": "04da55937245e3546b17af1899a4befc0e6a14746ab3a9e48d9e9838e22a6319",
+   "productStateId": "7cf5fc63eba97242075dae9f07fafca590217d510d47f72384cb9c37c9295e8f",
    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -3048,7 +3048,7 @@
     "EV-AUT-A-FIX"
    ],
    "counterexample": "no requiredWay -> both spell ways aggregate granted level",
-   "expected": "Th\u1ebf awakening sealed to spell_pathway",
+   "expected": "Thế awakening sealed to spell_pathway",
    "actual": "no requiredWay -> both spell ways aggregate granted level",
    "rootCause": "reward node carried no requiredWay",
    "rootClass": "missing-gate",
@@ -3860,9 +3860,9 @@
    "evidenceIds": [
     "EV-AUT-A-FIX"
    ],
-   "counterexample": "'M\u1edf qua node X' shown even when sibling capstone permanently excludes it",
+   "counterexample": "'Mở qua node X' shown even when sibling capstone permanently excludes it",
    "expected": "honest unlock text",
-   "actual": "'M\u1edf qua node X' shown even when sibling capstone permanently excludes it",
+   "actual": "'Mở qua node X' shown even when sibling capstone permanently excludes it",
    "rootCause": "tooltip lacked excludesNode check",
    "rootClass": "honesty-gap",
    "subsystem": "phap-tu-beta",
@@ -5309,6 +5309,466 @@
    "fixedInRevision": null,
    "closedAt": null,
    "closeReason": null
+  },
+  {
+   "id": "F-B5-C1",
+   "title": "tinh_thong_thuy / tinh_thong_tho aggregate +12% at L2 exceeding the +10% per-node bound",
+   "state": {
+    "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuRealmRewardNodes.ts",
+     "symbolOrSection": "MASTERY_RIDER water/earth",
+     "revision": "632556a6",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/phap-tu/PhapTuPath.ts",
+     "symbolOrSection": "HIDDEN_SPELL_PATHWAY masteryGrantRecord(2)",
+     "revision": "632556a6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA-r5 CORRECTNESS reviewer (devin-3ba342ed)",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-B6-FIX"
+   ],
+   "counterexample": "hidden-way Truc Co grant writes L2 => aggregate ailmentDurationPercent 0.12 (siblings 0.10)",
+   "expected": "every node tops at +10% of its direction at max level",
+   "actual": "perLevel 0.06 over maxLevel 2 => +12%, hidden-way only (normal way grants L1)",
+   "rootCause": "duration rider authored 0.06 vs potency/damage siblings 0.05",
+   "rootClass": "balance-bound breach",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/data/progression"
+     ],
+     "termsAndMethod": "bound-check over ALL_PROGRESSION_NODES",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "only these two nodes exceed 0.10"
+     ],
+     "coverageLimits": [
+      "reviewer script"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "MASTERY_RIDER water/earth perLevel 0.06 -> 0.05 (L2 = +10%)",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-B6-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "f85c40a0",
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-B5-C2",
+   "title": "same-direction stacking reaches +20-22% if +10%/direction is a per-direction-total cap (contract ambiguity)",
+   "state": {
+    "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuBasicNodes.ts",
+     "symbolOrSection": "fire/wood/earth same-stat node pairs",
+     "revision": "632556a6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA-r5 CORRECTNESS reviewer (devin-3ba342ed)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "sac_nhiet L5 + sac_huyet L4 => +20% skillDamagePercent on fire basic",
+   "expected": "ambiguous - per-direction-total cap reading would ban stacking",
+   "actual": "per-node bound holds (+10% each); direction totals exceed via stacking",
+   "rootCause": "contract-level ambiguity in '+10% per direction'",
+   "rootClass": "spec ambiguity",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "ruling #3 binds PER NODE ('Max node chi tang toi da 10% o mot huong') - per-node cap is the contract; stacking across distinct purchased nodes is intended design depth",
+   "exception": null,
+   "fixedInRevision": null,
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-B5-C3",
+   "title": "tho_cung_gioi uses finalDamagePercent - buffs every attack, not the skill (scope contract)",
+   "state": {
+    "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuBasicNodes.ts",
+     "symbolOrSection": "tho_cung_gioi",
+     "revision": "632556a6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA-r5 CORRECTNESS reviewer (devin-3ba342ed)",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-B6-FIX"
+   ],
+   "counterexample": "node levels must buff the SKILL, not the character (ruling #3)",
+   "expected": "skill-scoped stat",
+   "actual": "finalDamagePercent applies to all outgoing damage universally",
+   "rootCause": "wrong stat domain chosen for the node",
+   "rootClass": "scope-contract violation",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/data/progression/PhapTuBasicNodes.ts"
+     ],
+     "termsAndMethod": "stat census over all basic-lane nodes",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "tho_cung_gioi sole finalDamagePercent user"
+     ],
+     "coverageLimits": [
+      "data file"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "restat to skillDamagePercent + description rescoped to Tho Cau",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-B6-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "f85c40a0",
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-B5-C4",
+   "title": "basic lane authors 5-7 nodes per element vs scope estimate '~10-11'",
+   "state": {
+    "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuBasicNodes.ts",
+     "symbolOrSection": "buildFire/Water/Wood/Metal/Earth",
+     "revision": "632556a6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA-r5 CORRECTNESS reviewer (devin-3ba342ed)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "fire 7, water 6, wood 5, metal 6, earth 6 + roots",
+   "expected": "~10-11 per element per coordinator estimate",
+   "actual": "5-7 per element following the kanji glyph shapes",
+   "rootCause": "density governed by glyph shape (ruling #2), not the advisory count",
+   "rootClass": "spec estimate superseded",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "ruling #2 (tree shaped as the element kanji, asymmetric) overrides the advisory ~10-11 estimate; padding nodes to hit a count would violate the glyph contract",
+   "exception": null,
+   "fixedInRevision": null,
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-B5-C5",
+   "title": "precursors and direct An-kit casts resolve to generic arcane_impact preset",
+   "state": {
+    "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/CoreSkills.ts",
+     "symbolOrSection": "tram/linh_bao/huy_quyen",
+     "revision": "632556a6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA-r5 CORRECTNESS reviewer (devin-3ba342ed)",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-B6-FIX"
+   ],
+   "counterexample": "3 precursors lack vfxPresetId => vfxPresetForSkill falls to element generic",
+   "expected": "M2 scope: per-skill presets for reachable Phap Tu skills incl. precursors",
+   "actual": "only 5 basics carried authored presets",
+   "rootCause": "M2 pass stopped at element basics; precursors missed",
+   "rootClass": "incomplete scope coverage",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/data/skill"
+     ],
+     "termsAndMethod": "vfxPresetId grep over reachable skills",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "ngo_dao_hon_don is passive (no cast); An-kit composites inherit picked basic preset via resolvedSkill"
+     ],
+     "coverageLimits": [
+      "reachable skill set"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "tram_slash / linh_bao_burst / huy_quyen_strike presets authored and bound",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-B6-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "f85c40a0",
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-B5-C6",
+   "title": "spec-lock tooltip strings hardcoded Vietnamese, bypassing i18n (DUPLICATE of F-B5-A1)",
+   "state": {
+    "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/components/panels/skill-path/SkillRoleStrip.vue",
+     "symbolOrSection": "specTooltip",
+     "revision": "632556a6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA-r5 CORRECTNESS reviewer (devin-3ba342ed)",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-B6-FIX"
+   ],
+   "counterexample": "same surface as F-B5-A1 found by AUTHORITY lens",
+   "expected": "locale keys",
+   "actual": "hardcoded VI literals",
+   "rootCause": "same defect independently found by second lens",
+   "rootClass": "i18n bypass",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "fixed in 86dfb313 (same commit as F-B5-A1)",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-B6-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": "F-B5-A1",
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "86dfb313",
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-B5-C7",
+   "title": "devResetBranch cannot target the Phap Tu lane (no branchTag)",
+   "state": {
+    "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/progression/NodeSystem.ts",
+     "symbolOrSection": "devResetBranch",
+     "revision": "632556a6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA-r5 CORRECTNESS reviewer (devin-3ba342ed)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "branchTag is a Kiem Tu convention",
+   "expected": "n/a - dev tool convention",
+   "actual": "respecNodeTree covers the lane correctly (verified live incl. rewardOnly exemption + clawback)",
+   "rootCause": "pre-existing convention predating this diff",
+   "rootClass": "pre-existing-repo-behavior",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "pre-existing dev-tool convention; respec is the shipped reset path and works correctly",
+   "exception": null,
+   "fixedInRevision": null,
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-B5-C8",
+   "title": "owned maxLevel-1 nodes (10 capstones) render disabled upgrade button instead of maxed state",
+   "state": {
+    "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/components/panels/skill-path/NodeInspector.vue",
+     "symbolOrSection": "isMaxed",
+     "revision": "632556a6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA-r5 CORRECTNESS reviewer (devin-3ba342ed)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "isMaxed requires maxLevel>1",
+   "expected": "completed affordance on fully-owned 1-level node",
+   "actual": "disabled 'Nang Cap' button (cost line does show maxed)",
+   "rootCause": "pre-existing pattern for roots/keystones, widened by 10 new capstones",
+   "rootClass": "pre-existing-repo-behavior",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "pre-existing cosmetic pattern, deferred to BETA-POLISH (user-held)",
+   "exception": null,
+   "fixedInRevision": null,
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-B5-C9",
+   "title": "previewNodeRespec under-reports clawback; preserveIds lives at caller layer",
+   "state": {
+    "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "SUPPORTED_BOUNDARY",
+   "locations": [
+    {
+     "path": "src/core/progression/NodeSystem.ts",
+     "symbolOrSection": "respec/preview",
+     "revision": "632556a6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA-r5 CORRECTNESS reviewer (devin-3ba342ed)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "direct system call without preserveIds strands spellPath.element (scratch-verified, not reachable via shipped UI)",
+   "expected": "n/a - pre-existing semantics",
+   "actual": "preview counts nodeLevels only; op layer injects preserveIds correctly",
+   "rootCause": "pre-existing since 04364847",
+   "rootClass": "pre-existing-repo-behavior",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "pre-existing semantics predating this diff; unreachable via shipped UI paths",
+   "exception": null,
+   "fixedInRevision": null,
+   "closedAt": null,
+   "closeReason": null
   }
  ],
  "evidence": [
@@ -5806,7 +6266,34 @@
     "505/505 scoped tests + type-check clean on 86dfb313 post wave-5 fixes"
    ],
    "limitations": [],
-   "status": "CURRENT"
+   "status": "STALE"
+  },
+  {
+   "id": "EV-B6-FIX",
+   "state": {
+    "productStateId": "7cf5fc63eba97242075dae9f07fafca590217d510d47f72384cb9c37c9295e8f",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_INTEGRATION",
+   "producer": "coordinator",
+   "startedAt": "2026-09-24T22:51:00.000Z",
+   "finishedAt": "2026-09-24T22:53:00.000Z",
+   "commandOrMethod": "npm run type-check && npx vitest run src/data/progression/ src/data/skill/ src/data/vfx/ src/core/phap-tu/ src/core/progression/NodeSystem.test.ts src/core/battle/",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/fix-verify-f85c40a0.log",
+   "artifactHash": "2771c106a64d24aea844fdb7cf39afbaa6b70451bd58ee56f05688fefdd8fb59",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "1072/1072 scoped tests + type-check clean on f85c40a0 post COR-A fixes"
+   ],
+   "limitations": [],
+   "status": "SEALED"
   }
  ],
  "coverage": [
@@ -6588,7 +7075,7 @@
     "F-B5-A2"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-AUT-5",
@@ -6622,6 +7109,45 @@
     "F-B5-A4",
     "F-B5-A5",
     "F-B5-A6"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-COR-5",
+   "state": {
+    "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 5,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-3ba342ed558e4bd48c9cb00c3621306c",
+   "contextId": "sealed-child-devin-3ba342ed558e4bd48c9cb00c3621306c",
+   "model": "swe-2-max",
+   "role": "correctness",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-24T22:24:00.000Z",
+   "sealedAt": "2026-09-24T22:46:46.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "findingIds": [
+    "F-B5-C1",
+    "F-B5-C2",
+    "F-B5-C3",
+    "F-B5-C4",
+    "F-B5-C5",
+    "F-B5-C6",
+    "F-B5-C7",
+    "F-B5-C8",
+    "F-B5-C9"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -7860,6 +8386,156 @@
    "rootClass": "pre-existing",
    "escapeReason": "diff-scoped review boundaries respected",
    "capabilityDelta": "none - out-of-scope debt tracked separately"
+  },
+  {
+   "id": "L-PT-34",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-B5-C2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "spec ambiguity",
+   "missedInvariantIds": [],
+   "escapeReason": "ruling '+10% mot huong' read as per-direction total; intent is per-node",
+   "applicability": [
+    "node-tree balance bounds phrased max X per direction"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "phrase bounds explicitly per node vs per-direction total in spec docs"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "bounds wording convention",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-35",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-B5-C4"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "spec estimate superseded",
+   "missedInvariantIds": [],
+   "escapeReason": "advisory node-count estimate (10-11) conflicted with glyph-shape ruling; glyph wins",
+   "applicability": [
+    "advisory estimates vs structural rulings in design docs"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "label estimates advisory when a structural ruling can override"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "spec wording precision",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-36",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-B5-C7"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "pre-existing-repo-behavior",
+   "missedInvariantIds": [],
+   "escapeReason": "branchTag is Kiem Tu convention; Phap Tu lane tagless; respecNodeTree covers resets",
+   "applicability": [
+    "dev-tool affordances that are path-convention not universal"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "dev-tool reachability documented per lane"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "convention documentation",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-37",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-B5-C8"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "pre-existing-repo-behavior",
+   "missedInvariantIds": [],
+   "escapeReason": "isMaxed requires maxLevel>1 predates maxLevel-1 capstones; cosmetic, deferred to BETA-POLISH",
+   "applicability": [
+    "UI affordance predicates widened by new node shapes"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "maxed-state display predicate includes maxLevel==1 owned nodes"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "ui predicate fix queued",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-38",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-B5-C9"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "pre-existing-repo-behavior",
+   "missedInvariantIds": [],
+   "escapeReason": "preserveIds injection at op layer predates diff (04364847); shipped UI unreachable",
+   "applicability": [
+    "caller-layer invariants on public system APIs"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "system-level default preserveIds or API contract note"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "api contract clarity",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
   }
  ],
  "messages": [],
@@ -8391,6 +9067,54 @@
    "payloadPath": "events/0033.json",
    "payloadHash": "0cf987d5b59b4fe59510ce6e28da8baded566b84cca52cf8647c9f1a545b9549",
    "eventHash": "1efceada1c643d426f2fa1fdc710767c2a22e941030129b817bede8539d07c48"
+  },
+  {
+   "seq": 34,
+   "at": "2026-09-24T22:52:04.540Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "7cf5fc63eba97242075dae9f07fafca590217d510d47f72384cb9c37c9295e8f",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "1efceada1c643d426f2fa1fdc710767c2a22e941030129b817bede8539d07c48",
+   "payloadPath": "events/0034.json",
+   "payloadHash": "99057dfc20b9959d78cc3a60b6b4ee79d1e6a69b0913068a40c21a00ce266ec0",
+   "eventHash": "601bfe006b90665d1b18475caa54f28016affba098f33dc39693ffed59d43a8c"
+  },
+  {
+   "seq": 35,
+   "at": "2026-09-24T22:53:57.390Z",
+   "kind": "EVIDENCE",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "7cf5fc63eba97242075dae9f07fafca590217d510d47f72384cb9c37c9295e8f",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "601bfe006b90665d1b18475caa54f28016affba098f33dc39693ffed59d43a8c",
+   "payloadPath": "events/0035.json",
+   "payloadHash": "da6154c0a0c29c6c444a83381b14802f773e2b2f9b46de84a95f4d580dd2f12d",
+   "eventHash": "dce1dc8f7a38d1139c9598bea2bc2333c0dd20fa1761896d442640ea322fa8bb"
+  },
+  {
+   "seq": 36,
+   "at": "2026-09-24T22:54:35.423Z",
+   "kind": "EVIDENCE",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "7cf5fc63eba97242075dae9f07fafca590217d510d47f72384cb9c37c9295e8f",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "dce1dc8f7a38d1139c9598bea2bc2333c0dd20fa1761896d442640ea322fa8bb",
+   "payloadPath": "events/0036.json",
+   "payloadHash": "b3c47a0ec630c3b5b4c5602294faf365301fe8a0f42f4a223dd043363715b012",
+   "eventHash": "82ebf5f285213127252e27a90b6a1461ae7b18d4b5a3aa21a4a264e8593dfb24"
   }
  ]
 }

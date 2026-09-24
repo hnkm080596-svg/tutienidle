@@ -62,7 +62,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   // 5 Phap Tu Thuan He -- dong bo tu Skills.ts; iconKey moi he rieng
   // (three-path design 2026-09-25).
   hoa_cau_thuat: { ...fromSkills('hoa_cau_thuat', { name: 'Hỏa Cầu Thuật', description: 'Hỏa hệ công kích.' }), iconKey: 'hoa_cau_thuat' },
-  thuy_tien_thuat: { ...fromSkills('thuy_tien_thuat', { name: 'Thủy Tiên Thuật', description: 'Thủy hệ công kích.' }), iconKey: 'thuy_tien_thuat' },
+  thuy_tien_thuat: { ...fromSkills('thuy_tien_thuat', { name: 'Thủy Tiễn Thuật', description: 'Thủy hệ công kích.' }), iconKey: 'thuy_tien_thuat' },
   doc_chuong: { ...fromSkills('doc_chuong', { name: 'Độc Chương', description: 'Mộc hệ công kích.' }), iconKey: 'doc_chuong' },
   diem_kim_thuat: { ...fromSkills('diem_kim_thuat', { name: 'Điểm Kim Thuật', description: 'Kim hệ công kích.' }), iconKey: 'diem_kim_thuat' },
   tho_cau_thuat: { ...fromSkills('tho_cau_thuat', { name: 'Thổ Cầu Thuật', description: 'Thổ hệ công kích.' }), iconKey: 'tho_cau_thuat' },

@@ -691,6 +691,17 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
             message: 'core node đã grant phải nằm trong purchasedNodeIds',
           })
         }
+      } else {
+        const node = PROGRESSION_NODE_BY_ID.get(nodeId)
+        if (node !== undefined) {
+          const nodeMax = node.maxLevel ?? 1
+          if (!Number.isInteger(level) || level < 1 || level > nodeMax) {
+            issues.push({
+              path: `player.nodeLevels.${nodeId}`,
+              message: `phải là số nguyên trong [1, ${nodeMax}]`,
+            })
+          }
+        }
       }
     }
   }
