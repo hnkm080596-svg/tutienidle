@@ -8,7 +8,7 @@ ACCESS CHECK: git clone https://github.com/hnkm080596-svg/tutienidle && cd tutie
 
 FROZEN TARGET:
 - head: 2d5349a674de39738b7e23a6dcdd5c343ef7dc68 (PR #21)
-- requestId: req-terminal-check ; phase: TERMINAL_CHECK ; previousPhaseReviewId: REV-CB-INTEGRATION
+- requestId: req-terminal-check ; phase: TERMINAL_CHECK ; previousPhaseReviewId: REV-A-INTEGRATION
 
 REVIEW OBJECT: the aggregate diff `git diff 6d9af7a9..2d5349a674de39738b7e23a6dcdd5c343ef7dc68`.
 
