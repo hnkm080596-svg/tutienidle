@@ -8,9 +8,8 @@ import type { ActiveTribulationState } from './TribulationDirector'
 
 // Talent v4 M2 — Loi Kiep victory reward (spec §4.3 row 17): every
 // successful tribulation grants a permanent +10% on all five attributes
-// via player.modifiers (sourceType 'talent', sourceId 'loi_kiep') and
-// bumps tribulationBonusStacks. Stacks persist across realm entries and
-// are intentionally unbounded (in practice <= 9 realms).
+// via player.modifiers (sourceType 'talent', sourceId 'loi_kiep') -
+// intentionally unbounded across realm entries (in practice <= 9 realms).
 function makeActive(
   state: 'victory' | 'defeat',
   targetRealmId: string,
@@ -54,7 +53,7 @@ describe('TribulationOutcomeService — Loi Kiep victory stacks (M2)', () => {
 
     service.resolveVictory(player, gameManager, makeActive('victory', 'golden_core'))
 
-    expect(player.tribulationBonusStacks).toBe(1)
+    expect(loiKiepModifiers(player)).toHaveLength(5)
 
     const granted = loiKiepModifiers(player)
     expect(granted).toHaveLength(5)
@@ -75,7 +74,7 @@ describe('TribulationOutcomeService — Loi Kiep victory stacks (M2)', () => {
     service.resolveVictory(player, gameManager, makeActive('victory', 'golden_core'))
     service.resolveVictory(player, gameManager, makeActive('victory', 'nascent_soul'))
 
-    expect(player.tribulationBonusStacks).toBe(2)
+    expect(loiKiepModifiers(player).find((m) => m.stat === 'strength')!.percent).toBeCloseTo(0.2)
 
     const granted = loiKiepModifiers(player)
     expect(granted).toHaveLength(5)
@@ -90,21 +89,20 @@ describe('TribulationOutcomeService — Loi Kiep victory stacks (M2)', () => {
 
     service.resolveVictory(player, gameManager, makeActive('victory', 'qi_refining'))
 
-    expect(player.tribulationBonusStacks).toBe(1)
+    expect(loiKiepModifiers(player)).toHaveLength(5)
   })
 
-  it('khong co loi_kiep: victory khong them stack/modifier', () => {
+  it('khong co loi_kiep: victory khong them modifier', () => {
     const gameManager = new GameManager()
     const player = usePlayerStore()
     const service = new TribulationOutcomeService()
 
     service.resolveVictory(player, gameManager, makeActive('victory', 'golden_core'))
 
-    expect(player.tribulationBonusStacks).toBe(0)
     expect(loiKiepModifiers(player)).toHaveLength(0)
   })
 
-  it('defeat khong them stack ke ca khi co loi_kiep', () => {
+  it('defeat khong them modifier ke ca khi co loi_kiep', () => {
     const gameManager = new GameManager()
     const player = usePlayerStore()
     player.selectedTalentIds = ['loi_kiep']
@@ -116,7 +114,6 @@ describe('TribulationOutcomeService — Loi Kiep victory stacks (M2)', () => {
       makeActive('defeat', 'golden_core'),
     )
 
-    expect(player.tribulationBonusStacks).toBe(0)
     expect(loiKiepModifiers(player)).toHaveLength(0)
   })
 })

@@ -91,6 +91,35 @@ export function grantKiemDao(player: PlayerData, amount: number): void {
 }
 
 /**
+ * F-W-2 - debit phản chiếu của gainKiemY cho clawback: trừ kiemY (sàn 0);
+ * phần dư không trừ được quy về kiếm — mỗi forgeCost(realm) hiện tại một
+ * thanh (pool auto-forge nên kiếm rèn từ Y được grant chính là phần tiếp
+ * nối của món nợ). Dư vượt quá kiếm sống thì hấp thụ — kiếm đã merge vào
+ * kiemDaoBase không thể un-merge (applyBreakthroughMerge là vĩnh viễn).
+ */
+export function loseKiemY(player: PlayerData, amount: number): void {
+  const state = player.swordPath
+
+  if (!state || amount <= 0) {
+    return
+  }
+
+  const debited = Math.min(state.kiemY, amount)
+  state.kiemY -= debited
+
+  let residual = amount - debited
+
+  if (residual <= 0 || getRealmIndex(player.realmId) < 1) {
+    return
+  }
+
+  const cost = forgeCost(getRealmIndex(player.realmId))
+  const swordsToDebit = Math.min(state.kiemDaoCount, Math.ceil(residual / cost))
+  state.kiemDaoCount -= swordsToDebit
+  residual -= swordsToDebit * cost
+}
+
+/**
  * Breakthrough merge (K15): the swords forged this realm fold into the
  * permanent base multiplier, then the live count resets to 1. The
  * count snapshot MUST precede the reset — order is load-bearing.

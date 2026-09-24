@@ -217,6 +217,10 @@ export function checkTribulationOutcomeAction(
     const drainFailedRun = (): boolean => {
       presentSettlementError()
 
+      // A failed run may have left a talent entitlement pending from
+      // before the crash; it belongs to the dead run, not the next one.
+      player.pendingTalentEntitlement = undefined
+
       director.clear()
 
       return true

@@ -9,6 +9,8 @@ import type { DecomposeSaveState } from '../../core/production/DecomposeSystem'
 import type { OfflineResult } from '../../core/idle/OfflineProgressSystem'
 import type { StatModifier } from '../../core/stats/StatCalculator'
 import { CURRENT_SAVE_VERSION } from './saveVersion'
+import type { FoundationType } from '../../core/breakthrough/FoundationType'
+import type { TribulationOutcomeResult } from '../../core/tribulation/TribulationOutcomeService'
 
 export interface MaterialStackSave {
   materialId: string
@@ -156,6 +158,13 @@ export interface FormationStackSave {
 // gains OPTIONAL `hiddenChannelCycles` (grotto per-channel cycle
 // counters). Save v80 and below is rejected - same convention as every
 // prior version.
+// version 82 (2026-09-24, BETA-SEAM-REPAIR): player gains required
+// `nodeOneShotGrants` (F-W-2 clawback provenance); save gains optional
+// `tribulation` slice (F-W-5 - committed-but-undrained outcome +
+// cooldownUntil persist across reload; settled receipt re-presents via
+// the receipt-slot dedup, never double-applies);
+// player.tribulationBonusStacks dropped (F-W-15, write-only). Save v81
+// and below is rejected - same convention as every prior version.
 export interface GameSave {
   version: typeof CURRENT_SAVE_VERSION
 
@@ -193,6 +202,28 @@ export interface GameSave {
   /** R7 (AR-08): decompose settings + cycle timer. Optional - old
    * development saves lack the slice (E8: no migration needed). */
   decompose?: DecomposeSaveState
+
+  /** v82 (F-W-5): tribulation director runtime - committed outcome
+   * awaiting settle/drain + retry cooldown. An ONGOING run is not
+   * persisted: reload mid-run loses the run by design. Optional -
+   * absent when no outcome is pending and no cooldown is active. */
+  tribulation?: TribulationSaveSlice
+}
+
+/** v82 (F-W-5) - persisted mirror cua CommittedTribulationOutcome.
+ * `receipt` la JSON-safe (TribulationOutcomeResult chi chua primitives);
+ * `settlementError` persist nhu boolean marker - Error object khong
+ * serialize duoc, restore dung lai Error moi khi flag true. */
+export interface TribulationSaveSlice {
+  committedOutcome?: {
+    attemptId: number
+    outcome: 'victory' | 'defeat'
+    targetRealmId: string
+    grade: FoundationType
+    receipt: TribulationOutcomeResult | null
+    settlementError: boolean
+  }
+  cooldownUntil?: number
 }
 
 export interface GameSessionPlayerOwner {
@@ -242,6 +273,7 @@ export function computeRestoreIdentity(save: GameSave): string {
     save.alchemyJobs ?? null,
     save.quests ?? null,
     save.decompose ?? null,
+    save.tribulation ?? null,
   ])
 }
 
@@ -281,7 +313,7 @@ export interface ProductionSiteStateSave {
   // ProductionSiteState.
   assignedWorkers?: number
 
-  // M-F-BODY-HIDDEN (v81) — grotto per-channel settle-cycle counters;
+  // M-F-BODY-HIDDEN (v81) - grotto per-channel settle-cycle counters;
   // mirrors ProductionSiteState.hiddenChannelCycles.
   hiddenChannelCycles?: Record<string, number>
 }

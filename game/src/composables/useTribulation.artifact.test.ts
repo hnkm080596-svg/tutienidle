@@ -13,6 +13,7 @@ import { getTribulationChapters } from '../data/tribulation/TribulationChapters'
 function winFoundationTribulation(player: ReturnType<typeof usePlayerStore>, gameManager: GameManager) {
   player.realmId = 'qi_refining'
   player.realmLevel = 12
+  player.completedStageIds = ['qi_refining_abyssal_pool']
   player.baseStats.defense = 10_000 // mitigation gần tuyệt đối
   player.baseStats.maxHp = 500_000 // sống sót hết kiếp dù sai hết câu
 

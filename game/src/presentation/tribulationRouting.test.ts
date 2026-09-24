@@ -520,7 +520,7 @@ describe('Tribulation outcome settlement vs curtain lifecycle (M6 / ARCH-006)', 
     // M-F-TALENT: the mandatory talent entitlement written by the same
     // commit additionally locks the drain until the modal resolves it.
     expect(checkTribulationOutcomeAction(store, gameManager, presentation)).toBe(true)
-    expect(store.tribulationBonusStacks).toBe(1)
+    expect(store.modifiers.find((m: { id: string }) => m.id === 'talent_loi_kiep_strength')?.percent).toBe(0.1)
     expect(gameManager.tribulationDirector.getCommittedOutcome()!.receipt).not.toBeNull()
     expect(gameManager.tribulationDirector.getState()).not.toBeNull()
     expect(coordinator.getSnapshot().phase).toBe('closing')
@@ -538,14 +538,14 @@ describe('Tribulation outcome settlement vs curtain lifecycle (M6 / ARCH-006)', 
     // Tick 2 (the real app's next frame): the same receipt is re-presented
     // - nothing re-applies - and this time the request lands.
     expect(checkTribulationOutcomeAction(store, gameManager, presentation)).toBe(true)
-    expect(store.tribulationBonusStacks).toBe(1)
+    expect(store.modifiers.find((m: { id: string }) => m.id === 'talent_loi_kiep_strength')?.percent).toBe(0.1)
     expect(coordinator.getSnapshot().phase).toBe('closing')
 
     await completeHomeExit()
 
     expect(gameManager.tribulationDirector.getState()).toBeNull()
     expect(gameManager.tribulationDirector.getCommittedOutcome()).toBeNull()
-    expect(store.tribulationBonusStacks).toBe(1)
+    expect(store.modifiers.find((m: { id: string }) => m.id === 'talent_loi_kiep_strength')?.percent).toBe(0.1)
     expect(announcements).toHaveBeenCalledTimes(1)
   })
 
@@ -563,7 +563,7 @@ describe('Tribulation outcome settlement vs curtain lifecycle (M6 / ARCH-006)', 
     // at 'closing' (curtain still traveling).
     expect(checkTribulationOutcomeAction(store, gameManager, presentation)).toBe(true)
     const closeCallsAfterFirst = curtainCloseMock.mock.calls.length
-    expect(store.tribulationBonusStacks).toBe(1)
+    expect(store.modifiers.find((m: { id: string }) => m.id === 'talent_loi_kiep_strength')?.percent).toBe(0.1)
     const receipt = gameManager.tribulationDirector.getCommittedOutcome()!.receipt
     expect(receipt).not.toBeNull()
 
@@ -572,7 +572,7 @@ describe('Tribulation outcome settlement vs curtain lifecycle (M6 / ARCH-006)', 
     // curtain close, no second behindCurtain run.
     expect(checkTribulationOutcomeAction(store, gameManager, presentation)).toBe(true)
     expect(curtainCloseMock.mock.calls.length).toBe(closeCallsAfterFirst)
-    expect(store.tribulationBonusStacks).toBe(1)
+    expect(store.modifiers.find((m: { id: string }) => m.id === 'talent_loi_kiep_strength')?.percent).toBe(0.1)
     expect(gameManager.tribulationDirector.getCommittedOutcome()!.receipt).toBe(receipt)
 
     // M-F-TALENT: resolve the pending talent decision so the exit
@@ -586,7 +586,7 @@ describe('Tribulation outcome settlement vs curtain lifecycle (M6 / ARCH-006)', 
     await completeHomeExit()
 
     expect(gameManager.tribulationDirector.getState()).toBeNull()
-    expect(store.tribulationBonusStacks).toBe(1)
+    expect(store.modifiers.find((m: { id: string }) => m.id === 'talent_loi_kiep_strength')?.percent).toBe(0.1)
     expect(announcements).toHaveBeenCalledTimes(1)
   })
 
@@ -598,6 +598,7 @@ describe('Tribulation outcome settlement vs curtain lifecycle (M6 / ARCH-006)', 
     // questions left unanswered (mind fail stacks amplify the strikes) ->
     // real defeat through the director.
     player.realmId = 'qi_refining'
+    player.completedStageIds = ['qi_refining_abyssal_pool']
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 1, defense: 0, hpRegenPerTurn: 0 })
     player.cultivation = 1_000
     const stoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier('foundation_establishment'))
@@ -675,6 +676,7 @@ describe('Tribulation outcome settlement vs curtain lifecycle (M6 / ARCH-006)', 
       })
 
     player.realmId = 'qi_refining'
+    player.completedStageIds = ['qi_refining_abyssal_pool']
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 1, defense: 0, hpRegenPerTurn: 0 })
     player.cultivation = 1_000
     const stoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier('foundation_establishment'))

@@ -125,6 +125,7 @@ export class GameManagerQuestOps {
         // the legacy direct onMaterialCollected call.
         onMaterialGained: (materialId, delivered) =>
           this.notifyMaterialGained(materialId, delivered),
+        playerRealmId: player.realmId,
       },
       questId,
     )

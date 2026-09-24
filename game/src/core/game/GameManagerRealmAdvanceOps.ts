@@ -31,6 +31,7 @@ import {
   canPerfectBodyRealm,
 } from '../realm/body/BodyPerfection'
 import { bodyPerfectionMaterialIds } from '../../data/realm/BodyPerfection'
+import { pourCultivationOvercharge } from '../cultivation/CultivationSystem'
 import type { NotificationQueue } from './NotificationQueue'
 import {
   physiqueEssenceMaterialId,
@@ -368,6 +369,10 @@ export class GameManagerRealmAdvanceOps {
       player.realmId = 'qi_refining'
       player.realmLevel = 1
       player.cultivation = 0
+
+      // Hai Nap (M2) - banked overflow follows into the new realm's level
+      // 1 - same owner helper as the minor-tier breakthrough pour.
+      pourCultivationOvercharge(player)
 
       // R8.1 (AR-09) - realm transition may unlock quests; reconcile on
       // the next tick instead of waiting for a panel read.

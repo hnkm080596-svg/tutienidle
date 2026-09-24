@@ -31,6 +31,9 @@ export interface StageWaveSystemDeps {
   // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — roll trà trộn pool spawn
   // Luyện Khí khi cửa sổ 1000 kill mở.
   hiddenBeast: HiddenBeastSystem
+  // Session rng seam (F-W-7) - optional injectable stream so harnesses
+  // pin the hidden-substitution roll.
+  sessionRng?: () => number
 }
 
 /**
@@ -249,11 +252,13 @@ export class StageWaveSystem {
 
     // Quái ẩn trà trộn (spec dot-pha-loi-kiep §4.1c) — chỉ stage Luyện
     // Khí + cửa sổ 1000 kill mở; roll 5% thay thế quái pool bằng Huyết Mông.
+    // Stage khong khai bao requiredRealmId thi khong thuoc band nao -
+    // pass raw, khong ngam coi nhu Luyen Khi.
     if (this.activeStagePlayer) {
       const hidden = this.deps.hiddenBeast.maybeReplaceSpawn(
         this.activeStagePlayer,
-        stage.requiredRealmId ?? 'qi_refining',
-        options?.rng,
+        stage.requiredRealmId,
+        options?.rng ?? this.deps.sessionRng,
       )
       if (hidden) {
         return applyStageRealm(hidden)

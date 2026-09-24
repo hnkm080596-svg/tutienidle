@@ -152,6 +152,16 @@ export function createTalentEntitlement(
   realmId: string,
   rng: () => number = Math.random,
 ): TalentEntitlement | undefined {
+  // A pending record belongs to the breakthrough INTO its own realmId -
+  // a record bound to a different target is stale residue from a run that
+  // never drained (settlementError/reload), so it is superseded here.
+  if (
+    player.pendingTalentEntitlement !== undefined &&
+    player.pendingTalentEntitlement.realmId !== realmId
+  ) {
+    player.pendingTalentEntitlement = undefined
+  }
+
   if (player.pendingTalentEntitlement !== undefined) {
     return player.pendingTalentEntitlement
   }
