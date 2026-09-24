@@ -1,0 +1,14 @@
+{
+  "type": "ROUND_DISPATCH",
+  "cycle": "CYC-RC-1",
+  "round": "clean-C",
+  "candidate": "d8589a11",
+  "reason": "head moved through B-prime adjudication (0e8351bd -> 623b8b6f -> d8589a11); clean-pair rule requires fresh rounds on the final head",
+  "reviewers": {
+    "CORRECTNESS": "e6bb86fdf58b4cf5bbec250ee5bb5bd9",
+    "AUTHORITY": "8a301045766a44caa90e013d6930e5bc",
+    "INTEGRATION": "844b3de3839f41d986e4fa165ac5966e"
+  },
+  "priorFindingsVisible": false,
+  "challengeSet": "attack pull-marker channel ordering/binding, marker failure asymmetry, pre-load generation fence on create path, linh_bao coverage completeness, saveGateModal layering + prop drill, double-fence coherence; re-verify ALL prior seams on moved head"
+}
