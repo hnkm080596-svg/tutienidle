@@ -9,6 +9,10 @@ import type {
   RestoreGameSessionResult,
 } from './saveTypes'
 import { validateGameSaveShape } from './saveShapeValidation'
+import {
+  isSaveAcceptable,
+  staticSaveAcceptanceCatalogs,
+} from './saveAcceptance'
 import { CURRENT_SAVE_VERSION } from './saveVersion'
 import {
   resolveBackupKey,
@@ -419,7 +423,11 @@ export function writeGameSave(save: GameSave): SaveWriteResult {
 // biết vì sao — xem SaveIncompatibleScreen.vue.
 export type LoadOutcome =
   | { status: 'empty' }
-  | { status: 'ok'; save: GameSave; discardedEquipmentCount: number }
+  // `raw` rides along so a rejected-after-shape save can still be
+  // exported byte-identically (same contract as the incompatible/
+  // corrupted branches) - the normalized object silently drops
+  // shape-discarded entries and key order.
+  | { status: 'ok'; save: GameSave; discardedEquipmentCount: number; raw: string }
   | { status: 'incompatible'; foundVersion: number | undefined; raw: string }
   | { status: 'corrupted'; raw: string }
   // Mission A review (MA-R2-02) — storage access itself threw
@@ -581,6 +589,7 @@ export function loadGame(): LoadOutcome {
   return {
     status: 'ok',
     save: inspected.save,
+    raw,
     discardedEquipmentCount:
       inspected.shapeDiscardedEquipmentCount + importedDiscardedCount,
   }
@@ -723,6 +732,15 @@ export function importSaveRaw(raw: string): boolean {
       return false
     }
 
+    // Acceptance parity (F-INT-03): the third acceptance seam applies
+    // the SAME predicate as restore preflight + the remote gate - a
+    // file the boot restore would reject must not overwrite a healthy
+    // save slot (the old shape-only check let contract-bad imports
+    // poison local AND remote before the recovery surface appeared).
+    if (!isSaveAcceptable(shape.normalizedSave as GameSave, staticSaveAcceptanceCatalogs())) {
+      return false
+    }
+
     normalizedRaw = JSON.stringify(shape.normalizedSave)
     discardedEquipmentCount = shape.discardedEquipmentCount
   }
@@ -730,14 +748,35 @@ export function importSaveRaw(raw: string): boolean {
   // Chuẩn bị handoff TRƯỚC khi đụng backup/save chính. Nếu storage không
   // nhận được marker thì import thất bại nguyên vẹn thay vì thay save nhưng
   // làm mất counter. Exact normalizedRaw ràng buộc marker với đúng payload.
+  // Snapshot the prior marker first: a pending marker written by the
+  // other seam (remote pull writes it after its save) belongs to the
+  // CURRENT save, so a later abort must restore it.
+  const handoffKey = resolveImportHandoffKey()
+  let priorMarker: string | null = null
+  try {
+    priorMarker = localStorage.getItem(handoffKey)
+  } catch {
+    // getItem failure means the prep below fails too - abort intact.
+  }
+  const restorePriorMarker = (): void => {
+    try {
+      if (priorMarker === null) {
+        localStorage.removeItem(handoffKey)
+      } else {
+        localStorage.setItem(handoffKey, priorMarker)
+      }
+    } catch {
+      // Restore fail = same degraded channel a marker read failure produces.
+    }
+  }
   try {
     if (discardedEquipmentCount > 0) {
       localStorage.setItem(
-        resolveImportHandoffKey(),
+        handoffKey,
         JSON.stringify({ normalizedRaw, discardedEquipmentCount }),
       )
     } else {
-      localStorage.removeItem(resolveImportHandoffKey())
+      localStorage.removeItem(handoffKey)
     }
   } catch {
     return false
@@ -747,12 +786,14 @@ export function importSaveRaw(raw: string): boolean {
   // the only save without a written safety net is the unsafe outcome,
   // so a failed backup returns false with SAVE_KEY untouched.
   if (!backupCurrentSave()) {
+    restorePriorMarker()
     return false
   }
 
   try {
     localStorage.setItem(resolveSaveKey(), normalizedRaw)
   } catch {
+    restorePriorMarker()
     return false
   }
 

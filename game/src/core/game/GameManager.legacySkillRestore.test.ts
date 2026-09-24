@@ -24,8 +24,14 @@ function buildLegacySave(skills: Skill[]): GameSave {
       // M-QI-07 (v74) - the minimal legacy-skill fixture still declares
       // the required physique field at the current version.
       physiqueGrade: 'pham',
-      // sec.19/v82 - hiddenPerfection is a required persisted slice; a
-      // current-version fixture carries its default.
+      // v82 union - fixture carries every required current-version
+      // slice: mortal creation pick + learned entry + canonical core
+      // grant (three-channel write, CREATION) and the hiddenPerfection
+      // lineage slice (HIDDEN-A).
+      realmId: 'mortal',
+      mortalBasicSkillId: 'tram',
+      nodeLevels: { core_tram: 1 },
+      purchasedNodeIds: ['core_tram'],
       hiddenPerfection: createDefaultHiddenPerfection(),
     },
     techniques: [],

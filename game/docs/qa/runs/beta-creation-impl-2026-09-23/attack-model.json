@@ -1,0 +1,16 @@
+{
+  "runId": "beta-creation-impl-2026-09-23",
+  "lenses": [
+    {"id": "contract", "attacks": ["v82 preflight contract honesty: all 4 rejections enforced before owner mutation; legal pick+learned+core-node correspondence actually required end-to-end", "ruling conformance: zero allocation path remains (UI/service/RPC/fixture), unified single-screen flow, no silent tram write anywhere", "client RPC params vs migration signature parity; stale overload drop; revoke/grant correctness"]},
+    {"id": "correctness", "attacks": ["boot-seam ordering: learns precede pick write inside the same transaction; pick failure throws (fail-closed)", "pendingCreationPick lifecycle: stale/reuse/re-entry ordering between onCharacterCreated -> bootGame -> onNewCharacter", "restore preflight ordering vs shape layer: which check fires first, can an invalid pick slip through a shape-level hole", "fixture contract correctness: withMortalCreationPick/primeMortalCreationPick write all 3 channels coherently"]},
+    {"id": "authority", "attacks": ["single-write-op discipline: mortalBasicSkillId only via setMortalBasicSkill; no bypass in any path incl. restore", "seam convergence: App.vue and EarlyGameSession share applyCreationProfile/bootstrapEarlyGamePlayer; no second inlined grant path", "shape-layer vs preflight split: is the learned<->core correspondence check a duplicate authority or a clean structural/semantic split", "i18n ownership: new keys in both locales, orphaned keys fully removed"]},
+    {"id": "integration", "attacks": ["assembled-flow attacks reachable only in combination: create->save->reload->restore->combat with each pick; autosave mid-flow", "hidden-way Lv3 gates remain reachable given learn-all-three design (ritual reveal conditions unchanged)", "ritual commit clears pick -> post-path saves legal; save written between pick write and first autosave", "TurnSkillDisplayMeta rename blast radius: every consumer of the meta/name path", "e2e helper honesty: creation helper drives the real screen, not a bypass"]}
+  ],
+  "implReportedItems": [
+    {"id": "QA-2026-09-23-B1 pendingCreationPick never cleared after consume", "class": "DEFERRED_LOW", "note": "impl-reported: unreachable today (only entry point refreshes it); reviewer judges real defect vs honest record"},
+    {"id": "CultivationPathRegistry absent->tram runtime fallback kept", "class": "INTENTIONAL_RETAIN", "note": "defensive fallback for non-persisted states; unreachable for v82+ saves"},
+    {"id": "3 pre-existing unit failures (dongFu asset pipeline, SettingsPanel modal)", "class": "PRE_EXISTING"},
+    {"id": "3 pre-existing e2e failures (combat-idle-motion, standing-slot-panel, technique-frozen-warning)", "class": "PRE_EXISTING"}
+  ],
+  "notes": "Impl run. implReportedItems are impl/coordinator-reported honest records - reviewer judgment decides real defect vs record. priorFindingsVisible=NO for all reviewers."
+}

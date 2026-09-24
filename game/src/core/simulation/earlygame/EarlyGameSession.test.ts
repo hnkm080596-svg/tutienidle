@@ -16,7 +16,7 @@ import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../../data/realm/BodyRefinemen
 const PINNED = {
   name: 'probe',
   talentIds: ['hap_linh'], // combat passive - no cultivation/insight/economy subsidy
-  attributes: { strength: 2, vitality: 3 }, // exactly 5 points
+  mortalBasicSkillId: 'tram',
 }
 
 function grindToBreakthrough(s: EarlyGameSession) {
@@ -33,8 +33,10 @@ describe('EarlyGameSession', () => {
   it('bootstraps the pinned profile without subsidy', () => {
     const s = new EarlyGameSession({ seed: 11, profile: PINNED })
     expect(s.player.selectedTalentIds).toEqual(['hap_linh'])
-    expect(s.player.baseStats.strength).toBe(3) // 1 base + 2
-    expect(s.player.baseStats.vitality).toBe(4) // 1 base + 3
+    // BETA-CREATION - no creation allocation: base stats are the 1/1/1/1/1 default.
+    expect(s.player.baseStats.strength).toBe(1)
+    expect(s.player.baseStats.vitality).toBe(1)
+    expect(s.player.mortalBasicSkillId).toBe('tram')
     expect(s.player.cultivationPath).toBeUndefined()
     // hap_linh is a combat passive: no speed/ramp/insight subsidy.
     s.cultivate(1)

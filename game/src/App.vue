@@ -4,6 +4,7 @@ import { usePlayerStore } from './stores/player'
 import { useUiStore } from './stores/ui'
 import { GameClock, DEFAULT_MAX_OFFLINE_SECONDS } from './core/idle/GameClock'
 import { GameManager } from './core/game/GameManager'
+import { applyCreationProfile, bootstrapEarlyGamePlayer } from './core/game/EarlyGameBootstrap'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from './composables/useGameState'
 import {
   PHASER_SCENE_ADAPTER_KEY,
@@ -549,14 +550,15 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
       // Nhan vat moi: hoc san skill + grant khoi dau.
       // P7-M3 - KHONG con tam phap khoi dau: Pham Nhan khong giu
       // canonical technique (tu_linh_quyet da retire); Way cap tai
-      // initiation ritual. P7-M4: tram is the runtime default pick -
-      // a fresh mortal carries no mortalBasicSkillId.
-      gameManager.progressionOps.learnSkill('tram', player.$state)
-      // Phap Tu Reimagined Task 2 - mortal-path actives.
-      gameManager.progressionOps.learnSkill('linh_bao', player.$state)
-      // Huy Quyen - second mortal basic, learned; grinding it
-      // to Lv3 (10.000 casts) is what reveals hidden_body_pathway at the ritual.
-      gameManager.progressionOps.learnSkill('huy_quyen', player.$state)
+      // initiation ritual. BETA-CREATION: the mortal basic pick arrives
+      // from the creation screen via pendingCreationPick and is written
+      // inside the shared bootstrap seam (never a silent tram default).
+      const pick = pendingCreationPick
+      pendingCreationPick = undefined
+      if (pick === undefined) {
+        throw new Error('onNewCharacter ran without a creation pick')
+      }
+      bootstrapEarlyGamePlayer(gameManager, player.$state, pick)
 
       for (const buildingId of ['teleport_array', 'gathering_outpost']) {
         const instance = {
@@ -618,15 +620,13 @@ function onAuthenticated(session: AuthSession) {
   void bootGame(false)
 }
 
-async function onCharacterCreated(payload: CharacterCreationPayload) {
-  player.name = payload.name
-  player.selectedTalentIds = payload.talentIds
+// BETA-CREATION - the creation screen's skill pick is consumed by
+// onNewCharacter inside the boot transaction (learn precedes pick write).
+let pendingCreationPick: string | undefined
 
-  for (const [stat, amount] of Object.entries(payload.attributes) as Array<
-    [keyof CharacterCreationPayload['attributes'], number]
-  >) {
-    player.baseStats[stat] += amount
-  }
+async function onCharacterCreated(payload: CharacterCreationPayload) {
+  applyCreationProfile(player.$state, payload)
+  pendingCreationPick = payload.mortalBasicSkillId
 
   // The first durable save now lives inside the boot transaction
   // (useAppLifecycle.bootGame): 'entered' is only returned after the write

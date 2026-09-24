@@ -2,6 +2,7 @@
 // lifecycle points (restore, daily rollover tick, realm transition),
 // NOT on panel reads. These tests drive the REAL manager and never
 // open the quest UI.
+import { withMortalCreationPick } from '../../services/save/GameSave.fixture'
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { QUESTS } from '../../data/quest/quests'
@@ -63,7 +64,7 @@ describe('GameManager quest lifecycle wiring (AR-09)', () => {
 
   it('restore from save reconciles quests without UI', () => {
     const source = makeManager()
-    const save: GameSave = {
+    const save: GameSave = withMortalCreationPick({
       version: CURRENT_SAVE_VERSION,
       player: { ...source.player, lastSavedAt: Date.now() },
       techniques: [],
@@ -77,7 +78,7 @@ describe('GameManager quest lifecycle wiring (AR-09)', () => {
       buildings: [],
       quests: { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
       productionSites: [],
-    }
+    })
 
     const fresh = new GameManager()
     fresh.catalogOps.registerQuests(QUESTS)

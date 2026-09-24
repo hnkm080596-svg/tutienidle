@@ -160,17 +160,26 @@
 // optional `hiddenChannelCycles: Record<channelId, number>` (grotto
 // settle-cycle emission counters). Save v80 is rejected (dev phase, no
 // migration, no compat translator).
-// v82 (2026-09-24, BETA-SEAM-REPAIR + BETA-HIDDEN-A union): player gains
-// required `nodeOneShotGrants: Record<nodeId, NodeOneShotGrantRecord>`
-// (F-W-2 clawback provenance) AND required `hiddenPerfection` slice
-// (lineage active/closedBy, completedHiddenBodyRealmIds,
+// v82 (2026-09-24, union of BETA-SEAM-REPAIR + BETA-CREATION +
+// BETA-HIDDEN-A):
+// [SEAM-REPAIR] player gains required
+// `nodeOneShotGrants: Record<nodeId, NodeOneShotGrantRecord>` (F-W-2
+// clawback provenance); GameSave gains optional `tribulation` slice
+// ({committedOutcome?, cooldownUntil?} - committed-but-undrained outcome
+// + retry cooldown survive reload, F-W-5); player.tribulationBonusStacks
+// dropped (write-only counter, F-W-15).
+// [CREATION] the 5-point creation allocation is removed entirely - new
+// characters start at the 1/1/1/1/1 base-stats default with no
+// distributed points. Creation now carries a starting-skill pick (one
+// of the three mortal precursors) written inside the boot seam, so on
+// MORTAL saves player.mortalBasicSkillId is REQUIRED and must be
+// learned - absence is rejected, never silently defaulted to tram.
+// [HIDDEN-A] player gains required `hiddenPerfection` slice (lineage
+// active/closedBy, completedHiddenBodyRealmIds,
 // hiddenBreakthroughRealmIds, per-realm hidden state with
-// discovered/bodyCompleted/frozen/mechanic); GameSave gains optional
-// `tribulation` slice ({committedOutcome?, cooldownUntil?} -
-// committed-but-undrained outcome + retry cooldown survive reload,
-// F-W-5); player.tribulationBonusStacks dropped (write-only counter,
-// F-W-15). RETIRED: `bodyPerfection` slice (replaced by lineage),
-// `mortalPerfectionAchieved` + `greatDaoOpportunityLost` (lineage owns
-// both meanings now). Save v81 is rejected (dev phase, no migration,
-// no compat translator).
+// discovered/bodyCompleted/frozen/mechanic). RETIRED: `bodyPerfection`
+// slice (replaced by lineage), `mortalPerfectionAchieved` +
+// `greatDaoOpportunityLost` (lineage owns both meanings now).
+// Save v81 is rejected (dev phase, no migration, no compat
+// translator).
 export const CURRENT_SAVE_VERSION = 82 as const

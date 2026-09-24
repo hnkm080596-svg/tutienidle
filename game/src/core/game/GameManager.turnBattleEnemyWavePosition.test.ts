@@ -6,6 +6,7 @@ import { createDefaultPlayer } from '../player/Player'
 import { asBaseStats } from '../stats/StatBlock'
 import type { Stage } from '../stage/Stage'
 import { SKILLS } from '../../data/skill/Skills'
+import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { ENEMY_SIDE_REGION } from '../battle/BattlefieldRegions'
 
 // Bug fix (2026-09-06, user report "quái vẫn spawn góc trên bên trái thay
@@ -26,6 +27,7 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
     gameManager.setCombatClockSource(combatSource)
 
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
     const mob = defineEnemy({
       id: 'wave_position_mob',
@@ -63,7 +65,7 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
     const player = createDefaultPlayer()
     player.baseStats = asBaseStats({ ...player.baseStats, might: 999  })
 
-    expect(gameManager.skillSystem.learn(SKILLS[0]!)).toBe(true)
+    expect(gameManager.progressionOps.learnSkill('tram', player)).toBe(true)
     expect(gameManager.progressionOps.setMortalBasicSkill(player, 'tram')).toBe(true)
 
     expect(gameManager.turnBattleOps.startStage(player, stage)).toBe(true)

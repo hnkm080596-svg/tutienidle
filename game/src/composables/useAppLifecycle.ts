@@ -270,6 +270,14 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         }
       }
 
+      // ARCH-013 fence re-checked BEFORE the load: loadGame() itself has
+      // side effects (it consumes the one-shot import-handoff marker
+      // even on a byte mismatch), so a boot made stale mid-remoteSync
+      // must not pay for a disposed lifecycle.
+      if (bootGeneration !== lifecycleGeneration) {
+        return { status: 'skipped' }
+      }
+
       // Nhân vật mới reset revision về 0 khớp storage (deleteSave đã xoá
       // revision key) — tránh CAS-fail save đầu tiên.
       const loaded = createNewCharacter
@@ -313,7 +321,14 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         const restored = restoreGameSession(player, gameManager, loaded.save)
 
         if (restored.status === 'rejected') {
-          onError(restored.message ?? 'Restore failed')
+          // A save the boot path cannot consume must reach a recovery
+          // surface (export/delete) like incompatible/corrupted; routing
+          // 'rejected' to onError leaves the offending save wedged on
+          // every subsequent boot (QA F-INT-01). The precise rejection
+          // reason stays in the diagnostics channel; the recovery
+          // surface deliberately shows a generic corrupted state.
+          console.warn('[boot] save rejected by restore preflight:', restored.message)
+          saveIssue.report('corrupted', loaded.raw)
           boot.fail()
           return { status: 'failed' }
         }

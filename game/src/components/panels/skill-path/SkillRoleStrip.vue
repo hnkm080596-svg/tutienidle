@@ -40,8 +40,11 @@ const roles = computed(() => {
 })
 
 // The chooser is mortal-only - the write op rejects post-path anyway,
-// but the card shouldn't offer a dead affordance.
-const isMortal = computed(() => player.cultivationPath === undefined)
+// but the card shouldn't offer a dead affordance. Predicate parity with
+// the save contract: mortal = realmId 'mortal' AND pathless.
+const isMortal = computed(
+  () => player.realmId === 'mortal' && player.cultivationPath === undefined,
+)
 
 const mortalChoices = computed<Skill[]>(() => {
   stateVersion.value
@@ -119,7 +122,9 @@ const openedSkill = computed(() => {
 })
 
 function isPickedPrecursor(skillId: string): boolean {
-  // Absent pick = the runtime's default basic.
+  // Save v82 contract: a mortal save always carries the pick. An absent
+  // pick here means an in-memory/crafted player - the tram default below
+  // is the defensive runtime default, not a creation grant.
   return (player.mortalBasicSkillId ?? MORTAL_DEFAULT_BASIC_ID) === skillId
 }
 </script>

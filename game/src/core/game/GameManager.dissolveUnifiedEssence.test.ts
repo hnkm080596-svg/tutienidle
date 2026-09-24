@@ -1,3 +1,4 @@
+import { primeMortalCreationPick } from '../../services/save/GameSave.fixture'
 import { describe, expect, it } from 'vitest'
 import { makeInstance } from '../equipment/EquipmentInstance.fixture'
 import { EQUIPMENT_BAG_SOFT_CAP } from '../equipment/EquipmentBag'
@@ -62,8 +63,10 @@ describe('GameManager — unified essence dissolve persistence', () => {
     expect(gameManager.equipmentBag.get('dissolve-once')).toBeUndefined()
     expect(gameManager.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(reward.amount)
 
+    const savePlayer = createDefaultPlayer()
+    primeMortalCreationPick(savePlayer, gameManager.skillManager)
     const roundTripped: unknown = JSON.parse(
-      JSON.stringify(buildGameSave(createDefaultPlayer(), gameManager)),
+      JSON.stringify(buildGameSave(savePlayer, gameManager)),
     )
 
     expect(validateGameSaveShape(roundTripped)).toMatchObject({
@@ -96,8 +99,10 @@ describe('GameManager — unified essence dissolve persistence', () => {
       FORMER_ESSENCE_STACK_LIMIT + reward.amount,
     )
 
+    const savePlayer = createDefaultPlayer()
+    primeMortalCreationPick(savePlayer, gameManager.skillManager)
     const roundTripped: unknown = JSON.parse(
-      JSON.stringify(buildGameSave(createDefaultPlayer(), gameManager)),
+      JSON.stringify(buildGameSave(savePlayer, gameManager)),
     )
 
     expect(validateGameSaveShape(roundTripped)).toMatchObject({
@@ -134,8 +139,10 @@ describe('GameManager — unified essence dissolve persistence', () => {
 
   it('restore auto-dissolve credits essence after crossing the former 9,999 capacity', () => {
     const savedManager = new GameManager()
+    const savedPlayer = createDefaultPlayer()
+    primeMortalCreationPick(savedPlayer, savedManager.skillManager)
     const save = {
-      ...buildGameSave(createDefaultPlayer(), savedManager),
+      ...buildGameSave(savedPlayer, savedManager),
       materials: [
         { materialId: LUYEN_KHI_TINH_HOA_ID, amount: FORMER_ESSENCE_STACK_LIMIT },
       ],

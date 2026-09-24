@@ -40,9 +40,10 @@ Frontend dự kiến deploy trên Vercel. Backend, authentication và PostgreSQL
 - Không có avatar và không có xuất thân.
 - Tạo nhân vật gồm:
   1. Nhập tên.
-  2. Roll 9 thiên phú và chọn 3.
-  3. Phân bổ 5 điểm tự do vào Căn Cốt, Thân Pháp, Thần Thức, Linh Căn và Thể Chất.
-- Không giới hạn số điểm được dồn vào một chỉ số, nhưng tổng phải đúng 5 và mỗi giá trị phải là số nguyên không âm.
+  2. Roll 9 thiên phú và chọn 1.
+  3. Chọn chiêu thức khởi đầu (Linh Bạo / Huy Quyền / Huy Kiếm) — BETA-CREATION
+     (v82): bỏ phân bổ điểm, chỉ số cơ bản cố định 1/1/1/1/1; một màn hình duy
+     nhất gồm tên + thiên phú + chiêu thức.
 
 ### Save
 
@@ -204,13 +205,13 @@ Chỉ đưa save hiện tại lên database không đủ chống cheat vì logic
 
 - Kiểm tra và giữ chỗ tên unique.
 - Tích hợp roll/chọn thiên phú theo plan riêng.
-- Phân bổ 5 điểm chỉ số.
+- Chọn chiêu thức khởi đầu (p_mortal_basic_skill_id ∈ {tram, linh_bao, huy_quyen}); base_attributes cố định 1/1/1/1/1 phía server.
 - Tạo character và initial save trong một transaction.
 
 Trạng thái frontend prototype (2026-08-24):
 
-- Đã có intro 3 giây, Login/Register/Chơi ngay và wizard tạo nhân vật ba bước.
-- Đã có validation ID phía client, chọn đúng 3/9 thiên phú và phân đúng 5 điểm.
+- Đã có intro 3 giây, Login/Register/Chơi ngay và màn tạo nhân vật một trang (đạo danh + thiên phú + chiêu thức khởi đầu).
+- Đã có validation ID phía client, chọn đúng 1/9 thiên phú và chọn chiêu thức khởi đầu.
 - Đã nối kết quả tạo nhân vật vào local player/save để kiểm thử end-to-end UI.
 - Chưa hoàn thành backend auth, kiểm tra tên unique, server roll và transaction tạo nhân vật; các phần này vẫn thuộc Phase 2/4 phía server.
 

@@ -178,6 +178,8 @@ Contract review, correctness, authority/persistence and runtime/test-quality len
 
 If the harness lacks isolated contexts, the main agent continues all useful internal work and produces QA_UNVERIFIED with `independence_missing`; it does not reactivate ChatGPT Web or claim role-play independence. Devin adoption must qualify native isolated reviewers before advertising full fixed-point capability. A user can explicitly accept a weaker single-context result, labeled QA_ACCEPTED_WITH_EXCEPTIONS.
 
+Reviewer scheduling is governed by the just-in-time slot policy in `agent-instructions.md` section G: sealed reviewers are dispatched only when their frozen inputs are ready, end after `SEALED_RESULT`/`NEED_CONTEXT`, and are required at the decision-critical points (Clean A/B, Critical/High closure verification, lesson qualification). All other review work is the coordinator's own and never counts as independence evidence.
+
 ## 11. One executable control loop
 
 The runner `game/scripts/qa/cli.mjs` (`npm run qa:internal`) executes this orchestration contract: `init --request <file>` → `snapshot --run <id>` → `record --run <id> --input <file>` → `validate --run <id>` → `decide --run <id>` → `render --run <id>`; `qualify` runs the orchestrator attack suite + golden-bug benchmark.

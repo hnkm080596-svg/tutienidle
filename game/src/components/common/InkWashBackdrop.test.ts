@@ -69,6 +69,8 @@ describe('InkWashBackdrop', () => {
     expect(authSource).toContain('.auth-tabs button.active { color: var(--paper-text')
     expect(authSource).toContain('border-bottom: 2px solid var(--cinnabar')
     expect(creationSource).toContain('background: color-mix(in srgb, var(--paper-50')
-    expect(creationSource).toContain('.stepper i.active { color: var(--cinnabar')
+    // BETA-CREATION - the unified screen has no stepper; the selected
+    // skill/talent card is the legibility affordance now.
+    expect(creationSource).toContain('.skill-card.selected { border-color: var(--cinnabar')
   })
 })

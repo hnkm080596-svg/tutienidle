@@ -406,3 +406,71 @@ describe('onRestoreOk starter backfill — huy_quyen granted through one seam', 
     expect(count).toBe(1)
   })
 })
+
+// --- BETA-CREATION: the creation pick is consumed exactly once ---
+
+/**
+ * pendingCreationPick is a module-slot bridging the creation screen's emit
+ * to the boot transaction. If onNewCharacter reads it without clearing, a
+ * second callback invocation would silently reuse a stale pick. This guard
+ * pins the consume-once order inside onNewCharacter: read -> clear -> use.
+ */
+describe('onNewCharacter creation pick — consume-once', () => {
+  const { scriptSetup } = readAppVueBlocks()
+  const appSourceFile = parseScript(scriptSetup, 'App.vue.script-setup.ts')
+
+  function findOnNewCharacterBody(): ts.Node {
+    let found: ts.Node | undefined
+    const visit = (node: ts.Node): void => {
+      if (
+        ts.isPropertyAssignment(node)
+        && ts.isIdentifier(node.name)
+        && node.name.text === 'onNewCharacter'
+        && ts.isArrowFunction(node.initializer)
+      ) {
+        found = node.initializer.body
+        return
+      }
+      ts.forEachChild(node, visit)
+    }
+    visit(appSourceFile)
+    if (!found) throw new Error('onNewCharacter callback not found in App.vue — wiring changed?')
+    return found
+  }
+
+  it('clears the module slot after reading it and before the bootstrap call', () => {
+    const body = findOnNewCharacterBody()
+    let readPos = -1
+    let clearPos = -1
+    let usePos = -1
+    const visit = (node: ts.Node): void => {
+      // read: const <x> = pendingCreationPick
+      if (
+        ts.isVariableDeclaration(node)
+        && node.initializer
+        && ts.isIdentifier(node.initializer)
+        && node.initializer.text === 'pendingCreationPick'
+      ) readPos = node.getStart(appSourceFile)
+      // clear: pendingCreationPick = undefined
+      if (
+        ts.isBinaryExpression(node)
+        && ts.isIdentifier(node.left)
+        && node.left.text === 'pendingCreationPick'
+        && node.operatorToken.kind === ts.SyntaxKind.EqualsToken
+        && ts.isIdentifier(node.right)
+        && node.right.text === 'undefined'
+      ) clearPos = node.getStart(appSourceFile)
+      // use: bootstrapEarlyGamePlayer(gameManager, player.$state, pick)
+      if (
+        ts.isCallExpression(node)
+        && ts.isIdentifier(node.expression)
+        && node.expression.text === 'bootstrapEarlyGamePlayer'
+      ) usePos = node.getStart(appSourceFile)
+      ts.forEachChild(node, visit)
+    }
+    visit(body)
+    expect(readPos).toBeGreaterThanOrEqual(0)
+    expect(clearPos).toBeGreaterThan(readPos)
+    expect(usePos).toBeGreaterThan(clearPos)
+  })
+})

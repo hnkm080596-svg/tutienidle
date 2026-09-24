@@ -1,0 +1,62 @@
+{
+  "phase": "INTAKE",
+  "request": {
+    "runId": "beta-creation-impl-2026-09-23",
+    "productRoot": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-creation/game",
+    "checkout": "origin/beta/rc base 6d9af7a9 + devin/1790189100-beta-creation @ e1161842 (PR #21)",
+    "branch": "devin/1790189100-beta-creation",
+    "base": "origin/beta/rc",
+    "head": "e11618420cf145d328ffa5bdc06c899591686214",
+    "authorizedRepairs": [
+      "src/App.vue",
+      "src/components/onboarding/CharacterCreationScreen.vue",
+      "src/core/game/EarlyGameBootstrap.ts",
+      "src/core/game/GameManagerSaveRestore.ts",
+      "src/core/player/Player.ts",
+      "src/services/character/",
+      "src/services/save/",
+      "src/data/skill/TurnSkillDisplayMeta.ts",
+      "src/locales/",
+      "src/core/simulation/earlygame/",
+      "tests/",
+      "supabase/migrations/",
+      "**/*.test.ts",
+      "docs/qa/"
+    ],
+    "nonGoals": [
+      "unrelated systems (combat balance, economy tuning, other UI)",
+      "gameplay redesign beyond the pinned BETA-CREATION ruling",
+      "merge/push to beta/rc or other branches",
+      "external review services"
+    ],
+    "requiredDomains": [
+      "src/components/onboarding",
+      "src/services/character",
+      "src/core/game",
+      "src/core/player",
+      "src/core/skill",
+      "src/services/save",
+      "src/data/skill",
+      "src/locales",
+      "tests/e2e",
+      "supabase/migrations",
+      "docs/specs",
+      "docs/plans",
+      "docs/qa"
+    ],
+    "contractPaths": [
+      "../AGENTS.md",
+      "docs/qa/protocol/README.md",
+      "docs/qa/protocol/agent-instructions.md",
+      "docs/specs/beta-creation-spec.md",
+      "docs/plans/beta-creation-plan.md"
+    ],
+    "attackModelPath": "attack-model.json",
+    "environmentPath": "environment.json",
+    "extraExclude": [
+      "docs/qa/runs/",
+      "docs/qa/learning/history/"
+    ],
+    "notes": "BETA-CREATION impl review run (amended mission: coordinator self-runs impl QA). Review object = the aggregate diff origin/beta/rc (6d9af7a9) .. devin/1790189100-beta-creation (e1161842) implementing the pinned creation ruling: unified name+talent+skill screen, 5-point allocation removed, starting-skill pick among the 3 mortal precursors, save v82 with required mortalBasicSkillId, Supabase create_character RPC signature change. authorizedRepairs = the task's changed surface only. Reviewers are fresh sealed Devin child sessions, priorFindingsVisible=NO. Coordinator adjudicates and fixes."
+  }
+}

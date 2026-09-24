@@ -244,7 +244,7 @@ export class EarlyGameSession {
     this.playerOwner = options.playerOwner
     this.player = options.playerOwner?.$state ?? createDefaultPlayer()
     applyCreationProfile(this.player, options.profile)
-    bootstrapEarlyGamePlayer(this.gameManager, this.player)
+    bootstrapEarlyGamePlayer(this.gameManager, this.player, options.profile.mortalBasicSkillId)
     this.gameManager.setActivePlayer(this.player)
   }
 

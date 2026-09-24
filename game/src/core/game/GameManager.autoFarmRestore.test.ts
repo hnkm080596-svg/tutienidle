@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { withMortalCreationPick } from '../../services/save/GameSave.fixture'
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { GameManager } from './GameManager'
@@ -55,7 +56,7 @@ const FARM_STAGE_B: Stage = {
 }
 
 function baseSave(player: PlayerData): GameSave {
-  return {
+  return withMortalCreationPick({
     version: CURRENT_SAVE_VERSION,
     player: { ...player, lastSavedAt: Date.now() },
     techniques: [],
@@ -75,7 +76,7 @@ function baseSave(player: PlayerData): GameSave {
       nextCycleAt: 0,
       started: false,
     },
-  }
+  })
 }
 
 function harness() {

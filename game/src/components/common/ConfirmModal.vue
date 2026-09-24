@@ -14,6 +14,9 @@ const props = withDefaults(defineProps<{
   confirmLabel?: string
   cancelLabel?: string
   danger?: boolean
+  // Overlay-layer override for callers rendering over a high surface
+  // (e.g. the save gate at 4000) - defaults to OVERLAY_LAYERS.panel.
+  layer?: number
 }>(), {
   confirmLabel: 'Xác Nhận',
   cancelLabel: 'Hủy',
@@ -39,6 +42,7 @@ const messageId = useId()
     role="alertdialog"
     :described-by="messageId"
     :close-on-scrim="false"
+    :layer="props.layer"
     @close="emit('cancel')"
   >
     <p :id="messageId" class="confirm-modal__message">{{ message }}</p>

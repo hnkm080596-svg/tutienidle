@@ -754,10 +754,12 @@ export class GameManagerProgressionOps {
    * precursor the mortal player fights with. Mortal-scoped - once ANY
    * cultivation path is chosen the pick can never be written (the K3
    * precursor gate). SkillManager membership is the learned authority
-   * (spec sec.4.3a - a held entry IS learned).
+   * (spec sec.4.3a - a held entry IS learned). The realm term mirrors
+   * the v82 save preflight (mortal = realmId 'mortal' + pathless) so a
+   * write can never produce a state restore would reject.
    */
   setMortalBasicSkill(player: PlayerData, skillId: string): boolean {
-    if (player.cultivationPath !== undefined) {
+    if (player.realmId !== 'mortal' || player.cultivationPath !== undefined) {
       return false
     }
 
@@ -766,6 +768,13 @@ export class GameManagerProgressionOps {
     }
 
     if (!this.deps.skillManager.has(skillId)) {
+      return false
+    }
+
+    // learned=>core leg of the boundary contract - mirror it here so
+    // the write guard covers the full three-channel contract instead
+    // of relying on learnSkill's atomic grant staying invariant.
+    if (getSkillCoreLevel(player, skillId) < 1) {
       return false
     }
 

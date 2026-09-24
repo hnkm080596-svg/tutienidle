@@ -124,3 +124,26 @@ Keep domain packs, repro methods, Playwright guidance, OCR rule selection, debug
 When updating `tutienidle-adversarial-qa`, replace conflicting Confirmed-only/standalone verdict rules with the unified evidence/classification model. Keep the QA production-write restriction: a discovered issue transitions to REPAIR rather than being fixed invisibly inside QA. Automatic learning promotion similarly has a separate qualified policy-write phase. Quick/deep becomes attack breadth/routing, not weaker completion semantics.
 
 Skill prompts must not auto-commit or apply their generic five-round cutoff. User scope and project protection rules win. Reload/restart agent instructions after adoption so future sessions actually consume the new protocol.
+
+## G. Scheduling / agent-slot policy (just-in-time agents)
+
+Binding scheduling law (user-ratified 2026-09-24). The platform hard cap is **5 concurrent agents total, platform-independent**. Therefore:
+
+1. **Never allocate a standing watcher, review coordinator shell, or waiting reviewer.** An agent may be started only for a READY task with complete immutable inputs (frozen snapshot/bundle). `WAITING`/`BLOCKED` work lives in the ledger — it must not hold a live agent.
+2. **Reviewer lifecycle is single-purpose:** dispatch on a sealed request → `SEALED_RESULT` (or `NEED_CONTEXT` naming the missing input) → the reviewer session ENDS immediately, releasing its slot. A `NEED_CONTEXT` reply closes that reviewer's turn; the coordinator prepares the data and re-dispatches (new requestId or resumed tuple per section E).
+3. **Budget:** 1 primary coordinator + at most 4 real workers/reviewers active at once. The coordinator may invoke a wait only when NO coordinator-executable work remains (repair packages, verification, ledger upkeep, adjudication, next-batch staging). Idle waiting by any agent is a protocol violation.
+4. **Independent fresh-context reviewers are required only at decision-critical points:** Clean Round A, Clean Round B, closure verification of Critical/High findings, and new-lesson qualification before promotion. Every other review pass (intermediate correctness/architecture checks, P5 sequential passes) is performed BY THE COORDINATOR — coordinator self-review never counts as independence evidence for cells that require sealed review.
+5. **Phase budget:**
+
+   | Phase | Allocation |
+   |---|---|
+   | Initial audit/census | 1 coordinator + ≤4 auditors |
+   | Implementation | 1 coordinator + ≤4 independent tasks |
+   | Pipeline review | a finishing worker's slot is reused by the next dispatch — never pre-spawned to wait |
+   | Sequential (P5) passes | 1 reviewer for the CURRENT phase only; the next phase is never dispatched early |
+   | Clean Round A | 1 coordinator + ≤4 sealed reviewers |
+   | Repair of findings | ALL reviewers terminated first; freed slots go to repair workers |
+   | Clean Round B | 1 coordinator + fresh reviewers (Round-A contexts are never reused) |
+   | Final synthesis | coordinator alone; all reviewers ended |
+
+6. **No rule above weakens QA.** Only the *transport* changes: from agents-holding-slots to a state queue. Cells that require sealed independence evidence are unchanged — a missing reviewer still records `QA_UNVERIFIED`/`INDEPENDENCE` gap, never a silent waiver.

@@ -2,6 +2,7 @@
 // - build/upgrade chi_hien_quan → autoWorkerCapacity = 1 + level×2
 // - gathering_outpost KHÔNG còn cấp capacity (nguồn cũ gỡ)
 // - restore save có CHQ instance → capacity khôi phục đúng
+import { withMortalCreationPick } from '../../services/save/GameSave.fixture'
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
@@ -76,7 +77,7 @@ describe('GameManager — worker capacity nguồn CHQ duy nhất', () => {
     manager.setActivePlayer(player)
 
     // save.buildings chứa CHQ level 2 — restore phải re-apply capacity 5.
-    manager.saveOps.restoreFromSave({
+    manager.saveOps.restoreFromSave(withMortalCreationPick({
       version: CURRENT_SAVE_VERSION,
       player: { ...player, autoWorkerCapacity: 0 },
       techniques: [],
@@ -90,7 +91,7 @@ describe('GameManager — worker capacity nguồn CHQ duy nhất', () => {
       buildings: [buildInstance('chq_inst', 'chi_hien_quan', 2)],
       quests: { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
       productionSites: [],
-    })
+    }))
 
     expect(player.autoWorkerCapacity).toBe(5)
   })

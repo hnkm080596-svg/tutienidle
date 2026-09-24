@@ -9,6 +9,12 @@ export const GUEST_ACCOUNT_ID = 'guest'
 const SAVE_KEY_BASE = 'tien-hiep-idle-save'
 const BACKUP_KEY_BASE = 'tien-hiep-idle-save-backup'
 const REVISION_KEY_BASE = 'tien-hiep-idle-save-revision'
+// Shared handoff channel (two writers, one consumer): importSaveRaw and
+// the remote-pull seam both bind {normalizedRaw, discardedEquipmentCount}
+// to the save bytes they write; loadGame consumes it once on a byte-exact
+// match. The 'import' key base predates the pull writer - renaming the
+// stored key would orphan markers already written, so the name stays and
+// the contract lives here.
 const IMPORT_HANDOFF_KEY_BASE = 'tien-hiep-idle-import-discarded-equipment-count'
 
 // Bound at authenticate time (App.vue onAuthenticated). null = fall back to

@@ -6,7 +6,7 @@ import { getRequiredCultivation } from '../../realm/realmSystem'
 const PINNED = {
   name: 'probe',
   talentIds: ['hap_linh'],
-  attributes: { strength: 2, vitality: 3 },
+  mortalBasicSkillId: 'tram',
 }
 
 function run(seed: number) {

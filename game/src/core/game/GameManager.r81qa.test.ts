@@ -1,6 +1,7 @@
 // QA quick (R8.1) - adversarial checks around the quest activation
 // lifecycle at restore boundaries. Written to PASS against correct
 // behavior; failure = confirmed defect with intended-reason evidence.
+import { withMortalCreationPick } from '../../services/save/GameSave.fixture'
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { QUESTS } from '../../data/quest/quests'
@@ -18,7 +19,7 @@ function makeManager(player?: PlayerData): { manager: GameManager; player: Playe
 }
 
 function buildSave(player: PlayerData, quests: GameSave['quests']): GameSave {
-  return {
+  return withMortalCreationPick({
     version: CURRENT_SAVE_VERSION,
     player: { ...player, lastSavedAt: Date.now() },
     techniques: [],
@@ -32,7 +33,7 @@ function buildSave(player: PlayerData, quests: GameSave['quests']): GameSave {
     buildings: [],
     quests,
     productionSites: [],
-  }
+  })
 }
 
 const DAILY_ID = 'daily_kill_bandit_15'
