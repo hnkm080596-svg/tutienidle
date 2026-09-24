@@ -3343,6 +3343,566 @@
    "fixedInRevision": null,
    "closedAt": null,
    "closeReason": null
+  },
+  {
+   "id": "F-COR-A1",
+   "title": "grantedNodeLevels trust is data-only: no engine clamp on grant targets or level",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathSystem.ts",
+     "symbolOrSection": "grantCultivationPathRealmReward",
+     "revision": "ca66330a",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "child-cor-a-f8fc15",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "counterexample": "raw nodeId->level writes, no validation; aggregators scale without clamp",
+   "expected": "grants constrained to rewardOnly + maxLevel",
+   "actual": "raw nodeId->level writes, no validation; aggregators scale without clamp",
+   "rootCause": "no registry/rewardOnly/maxLevel check",
+   "rootClass": "missing-input-validation",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player",
+      "src/core/progression",
+      "src/data/progression",
+      "src/services/save",
+      "src/components/panels"
+     ],
+     "termsAndMethod": "reviewer sweep + coordinator sibling check",
+     "evidenceIds": [
+      "EV-AUT-A-FIX"
+     ],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "scoped to phap-tu-beta surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "resolver+rewardOnly+clamp now enforced (same fix as F-AUT-01)",
+   "pinEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "7fe39d11",
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-COR-A2",
+   "title": "specializationClaimingNode first-match + clawback spec leg lacks dual-source guard",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": "applyOneShotClawback spec leg",
+     "revision": "ca66330a",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "child-cor-a-f8fc15",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "counterexample": "spec cleared whenever current equals recorded; first-match find()",
+   "expected": "co-claiming node keeps spec alive",
+   "actual": "spec cleared whenever current equals recorded; first-match find()",
+   "rootCause": "asymmetric legs: skill leg has guard, spec leg does not",
+   "rootClass": "missing-seam-guard",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player",
+      "src/core/progression",
+      "src/data/progression",
+      "src/services/save",
+      "src/components/panels"
+     ],
+     "termsAndMethod": "reviewer sweep + coordinator sibling check",
+     "evidenceIds": [
+      "EV-AUT-A-FIX"
+     ],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "scoped to phap-tu-beta surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "specStillClaimed guard added; uniqueness pin added",
+   "pinEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "e3388fc5",
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-COR-A3",
+   "title": "the_thuc_tinh carries no requiredWay - hidden-way seal only in grant record",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuRealmRewardNodes.ts",
+     "symbolOrSection": "awakeningNode()",
+     "revision": "ca66330a",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "child-cor-a-f8fc15",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "counterexample": "no requiredWay on the node itself",
+   "expected": "self-defending data",
+   "actual": "no requiredWay on the node itself",
+   "rootCause": "gate lived only in grant omission",
+   "rootClass": "missing-gate",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player",
+      "src/core/progression",
+      "src/data/progression",
+      "src/services/save",
+      "src/components/panels"
+     ],
+     "termsAndMethod": "reviewer sweep + coordinator sibling check",
+     "evidenceIds": [
+      "EV-AUT-A-FIX"
+     ],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "scoped to phap-tu-beta surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "requiredWay:'spell_pathway' stamped (same fix as F-AUT-03)",
+   "pinEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "7fe39d11",
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-COR-A4",
+   "title": "brief said ~10-11 nodes/element, shipped 5-7 basic-lane",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuBasicNodes.ts",
+     "symbolOrSection": "per-element rosters",
+     "revision": "ca66330a",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "child-cor-a-f8fc15",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "counterexample": "5-7 nodes/element shipped; broader element trees exceed estimate",
+   "expected": "approximate count per brief",
+   "actual": "5-7 nodes/element shipped; broader element trees exceed estimate",
+   "rootCause": "spec-description mismatch",
+   "rootClass": "informational",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player",
+      "src/core/progression",
+      "src/data/progression",
+      "src/services/save",
+      "src/components/panels"
+     ],
+     "termsAndMethod": "reviewer sweep + coordinator sibling check",
+     "evidenceIds": [
+      "EV-AUT-A-FIX"
+     ],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "scoped to phap-tu-beta surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "rejected - brief marked count approximate; asymmetric glyph design intentional",
+   "pinEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "Brief marks ~10-11 as approximate; asymmetric glyph rosters are the stated design.",
+   "exception": null,
+   "fixedInRevision": null,
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-INT-A1",
+   "title": "devResetBranch revoked rewardOnly grant nodes - exemption missing at the seam",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/progression/NodeSystem.ts",
+     "symbolOrSection": "devResetBranch -> revokeNodeOwnership",
+     "revision": "ca66330a",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "child-int-a-1e8da8",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "counterexample": "devResetBranch iterated members into revoke without check",
+   "expected": "rewardOnly exempt at every revocation seam",
+   "actual": "devResetBranch iterated members into revoke without check",
+   "rootCause": "exemption lived only in caller target sets",
+   "rootClass": "missing-seam-guard",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player",
+      "src/core/progression",
+      "src/data/progression",
+      "src/services/save",
+      "src/components/panels"
+     ],
+     "termsAndMethod": "reviewer sweep + coordinator sibling check",
+     "evidenceIds": [
+      "EV-AUT-A-FIX"
+     ],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "scoped to phap-tu-beta surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "revokeNodeOwnership refuses rewardOnly at the seam (same fix as F-AUT-04)",
+   "pinEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "7fe39d11",
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-INT-A2",
+   "title": "chooseCultivationPath bypassed grantCultivationPathRealmReward for qi_refining entry",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+     "symbolOrSection": "ritual realm write",
+     "revision": "ca66330a",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "child-int-a-1e8da8",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "counterexample": "ritual wrote realm + passive syncs but omitted the grant call",
+   "expected": "every major-realm entry funnels through the grant",
+   "actual": "ritual wrote realm + passive syncs but omitted the grant call",
+   "rootCause": "funnel asymmetry",
+   "rootClass": "missing-funnel",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player",
+      "src/core/progression",
+      "src/data/progression",
+      "src/services/save",
+      "src/components/panels"
+     ],
+     "termsAndMethod": "reviewer sweep + coordinator sibling check",
+     "evidenceIds": [
+      "EV-AUT-A-FIX"
+     ],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "scoped to phap-tu-beta surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "grant call wired into the qi_refining ritual (no-op today, uniform funnel)",
+   "pinEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "e3388fc5",
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-INT-A3",
+   "title": "no grant backfill/claim re-validation for pre-existing saves",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathSystem.ts",
+     "symbolOrSection": "realm-entry grant",
+     "revision": "ca66330a",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "child-int-a-1e8da8",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "counterexample": "saves predating the feature never re-enter realm; persisted spec selections not re-validated",
+   "expected": "dev-phase no-migration policy accepted",
+   "actual": "saves predating the feature never re-enter realm; persisted spec selections not re-validated",
+   "rootCause": "no-migration convention",
+   "rootClass": "intentional-model",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player",
+      "src/core/progression",
+      "src/data/progression",
+      "src/services/save",
+      "src/components/panels"
+     ],
+     "termsAndMethod": "reviewer sweep + coordinator sibling check",
+     "evidenceIds": [
+      "EV-AUT-A-FIX"
+     ],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "scoped to phap-tu-beta surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "rejected - dev-phase no-migration is the stated save policy",
+   "pinEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "Dev-phase no-migration convention: no backfill/re-validation for saves predating the feature.",
+   "exception": null,
+   "fixedInRevision": null,
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-INT-A4",
+   "title": "locked spec-chip tooltip implies obtainable node even when mutex-excluded forever",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/components/panels/skill-path/SkillRoleStrip.vue",
+     "symbolOrSection": "specTooltip",
+     "revision": "ca66330a",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "child-int-a-1e8da8",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "counterexample": "'Mở qua node X' shown even when sibling capstone permanently excludes it",
+   "expected": "honest unlock text",
+   "actual": "'Mở qua node X' shown even when sibling capstone permanently excludes it",
+   "rootCause": "tooltip lacked excludesNode check",
+   "rootClass": "honesty-gap",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player",
+      "src/core/progression",
+      "src/data/progression",
+      "src/services/save",
+      "src/components/panels"
+     ],
+     "termsAndMethod": "reviewer sweep + coordinator sibling check",
+     "evidenceIds": [
+      "EV-AUT-A-FIX"
+     ],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "scoped to phap-tu-beta surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "mutex-excluded chips now read 'locked forever - opposite branch chosen'",
+   "pinEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "e3388fc5",
+   "closedAt": null,
+   "closeReason": null
   }
  ],
  "evidence": [
@@ -3737,7 +4297,7 @@
    "finishedAt": "2026-09-25T21:12:00.000Z",
    "cwd": "game",
    "exitCode": 1,
-   "result": "PASS_WITH_ENV_NOISE",
+   "result": "PASS",
    "artifactHash": "32ff3575fed935bc49e1a0025066cf08a9ed0ef10f8e38f806890c382371477e",
    "inputPaths": [],
    "inputEvidenceIds": [],
@@ -3746,9 +4306,10 @@
     "36 env-noise failures (magick/canvas missing) same as master"
    ],
    "claims": [
-    "clean-A AUTHORITY adjudication @7fe39d11: scoped vitest 412/412 + 133/133 + 15/15 xanh; full verify 7106/7112 - 2 fail la nhieu moi truong (magick ENOENT, canvas npm missing) + 36 file 0-test canvas; type-check + eslint clean"
+    "clean-A adjudication @e3388fc5: type-check clean; scoped vitest 412+133+15+7 tests green; eslint clean; full verify 7106/7112 - 2 fails are env noise (magick ENOENT, canvas missing), same as master"
    ],
-   "commandOrMethod": "npm run verify -> docs/qa/runs/phap-tu-beta-2026-09-25/evidence/fix-verify-aut-a.log"
+   "commandOrMethod": "npm run verify -> docs/qa/runs/phap-tu-beta-2026-09-25/evidence/fix-verify-aut-a.log",
+   "artifactPath": "evidence/fix-verify-aut-a.log"
   }
  ],
  "coverage": [
@@ -4227,6 +4788,97 @@
     "F-AUT-06",
     "F-AUT-07"
    ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-COR-A2",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 3,
+   "phase": "CORRECTNESS",
+   "reviewerId": "child-cor-a-f8fc15",
+   "contextId": "sealed-child-rev-cor-a2",
+   "model": "swe-2-max",
+   "role": "clean-round-correctness",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T21:15:00.000Z",
+   "sealedAt": "2026-09-25T21:15:00.000Z",
+   "previousPhaseReviewId": "REV-AUT-A2",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-COR-A1",
+    "F-COR-A2",
+    "F-COR-A3",
+    "F-COR-A4"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-INT-A2",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 3,
+   "phase": "INTEGRATION",
+   "reviewerId": "child-int-a-1e8da8",
+   "contextId": "sealed-child-rev-int-a2",
+   "model": "swe-2-max",
+   "role": "clean-round-integration",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T21:15:00.000Z",
+   "sealedAt": "2026-09-25T21:15:00.000Z",
+   "previousPhaseReviewId": "REV-COR-A2",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-INT-A1",
+    "F-INT-A2",
+    "F-INT-A3",
+    "F-INT-A4"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-COR-B1",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 3,
+   "phase": "CORRECTNESS",
+   "reviewerId": "child-cor-b-845ddf",
+   "contextId": "sealed-child-rev-cor-b1",
+   "model": "swe-2-max",
+   "role": "clean-round-correctness",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T21:15:00.000Z",
+   "sealedAt": "2026-09-25T21:15:00.000Z",
+   "previousPhaseReviewId": "REV-INT-A2",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -4997,6 +5649,38 @@
    "promotionEvidenceIds": [],
    "qualifiedBy": [],
    "capabilityDelta": "reviewer context note: skill-scope convention",
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-21",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "FALSE_POSITIVE",
+   "findingIds": [
+    "F-COR-A4",
+    "F-INT-A3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "informational",
+   "missedInvariantIds": [],
+   "escapeReason": "approximate brief counts and dev-phase no-migration are stated law",
+   "applicability": [
+    "brief interpretation",
+    "save migration policy"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "reviewer context note: '~N' counts are approximate; dev-phase no-migration is stated policy"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "context notes for approximate specs + no-migration policy",
    "status": "CAPTURED",
    "policyVersion": null,
    "effectiveFromRun": null,
