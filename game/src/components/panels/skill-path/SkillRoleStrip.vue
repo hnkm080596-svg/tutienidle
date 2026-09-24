@@ -11,6 +11,7 @@
 // label (Kiem Pho / Ngu Kiem Dao); special/ultimate that resolve to
 // nothing render muted.
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import SlotView from '../../common/SlotView.vue'
 import Chip from '../../common/primitives/Chip.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -25,6 +26,7 @@ const gameManager = useGameManager()
 const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
 const { selectSkillSpecialization, setMortalBasicSkill } = useProgressionActions()
+const { t } = useI18n()
 
 type RoleKey = 'basic' | 'special' | 'ultimate'
 
@@ -156,10 +158,10 @@ function specTooltip(skill: Skill, spec: SkillSpecialization) {
     )
 
     if (permanentlyExcluded) {
-      return { title: spec.name, description: 'Đang khóa - nhánh đối lập đã chọn (reset node để mở lại).' }
+      return { title: spec.name, description: t('panels.skillPath.roleStrip.lockedByRival') }
     }
 
-    return { title: spec.name, description: `Mở qua node ${node.name} trong Skill Path.` }
+    return { title: spec.name, description: t('panels.skillPath.roleStrip.unlockedByNode', { name: node.name }) }
   }
 
   return { title: spec.name, description: spec.description }

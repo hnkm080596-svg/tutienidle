@@ -173,6 +173,10 @@
           "techniqueGrade": "Requires technique grade {grade}",
           "skillUpgrade": "Upgrade the related skill"
         },
+        "roleStrip": {
+          "lockedByRival": "Locked - the rival branch is already chosen (reset the node to reopen).",
+          "unlockedByNode": "Unlock via the {name} node in Skill Path."
+        },
         "upgradeGateHeader": "Upgrade blocked:",
         "routePick": {
           "title": "Choose Your Pháp Tu Stance",

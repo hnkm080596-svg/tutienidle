@@ -13,7 +13,9 @@ import { SPELL_KIT_IDS } from '../skill/Skills'
 // special/ult/route lanes: every node here powers the element's SKILL
 // kit (skill stat keys: skillDamagePercent /
 // elementApplicationPercent / ailmentPotencyPercent / ailmentDurationPercent
-// / criticalRate / criticalDamage -- never character stats like
+// / criticalRate / criticalDamage / finalDamagePercent -- the last is a
+// broader all-hits multiplier reserved for the earth capstone, which
+// honestly discloses that scope; never character stats like
 // might/hp/armor). Stat scope is the spell domain: modifiers only
 // exist for a spell-path player, and inside the beta window (LQ/TC)
 // the basic is the only reachable spell skill, so the nodes' in-window

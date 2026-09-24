@@ -107,10 +107,11 @@ function awakeningNode(): ProgressionNode {
 }
 
 /**
- * Realm-reward grant nodes for the spell path. NOT spread into the
- * requiredWay 'spell_pathway' stamping map -- rewards must aggregate for
- * both spell ways (a hidden-way player is still cultivationPath 'spell'),
- * so they carry only requiredCultivationPath 'spell' and no requiredWay.
+ * Realm-reward grant nodes for the spell path. Mastery nodes carry no
+ * requiredWay -- they must aggregate for both spell ways (a hidden-way
+ * player is still cultivationPath 'spell'). The awakening node is the
+ * exception: it seals to 'spell_pathway' at the node level so a granted
+ * level stays inert on the The-less hidden way.
  */
 export function buildRealmRewardNodes(): ProgressionNode[] {
   const elements: ElementType[] = ['fire', 'water', 'wood', 'metal', 'earth']

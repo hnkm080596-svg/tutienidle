@@ -424,9 +424,13 @@ export function grantCultivationPathRealmReward(
 
       // core_ ids need the purchasedNodeIds mirror per save validation;
       // a grant writes nodeLevels only, so one would corrupt the save.
-      if (nodeId.startsWith('core_')) {
+      // grantsSkillCoreIds is the same save-corruption class: its cores
+      // fire at purchase time only, so a levels-only grant would leave
+      // the node owned while its declared cores are missing (D9d fails
+      // the next save load).
+      if (nodeId.startsWith('core_') || node.effect.grantsSkillCoreIds !== undefined) {
         console.warn(
-          `grantedNodeLevels entry '${nodeId}' targets a core_ id - grant skipped`,
+          `grantedNodeLevels entry '${nodeId}' needs purchase-time effects a levels-only grant cannot fire - grant skipped`,
         )
         continue
       }

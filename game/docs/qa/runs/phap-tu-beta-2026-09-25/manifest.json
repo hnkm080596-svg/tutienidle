@@ -13530,7 +13530,7 @@
       "path": "src/App.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "0ace309c621c70f62ce904367c0be22b0985a86783d8b63f53067ee6021d2390"
+      "hash": "ec2e7d0567588f1d2c8fe532dcd5df57a2782451d5f5f911a35d0487091837be"
     },
     {
       "path": "src/App.wiring.test.ts",
@@ -14694,7 +14694,7 @@
       "path": "src/components/panels/skill-path/SkillRoleStrip.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "72a98b1e872b63a0bacb350ac589999c008f1a4ea957b7401f2c8d55ebd74a52"
+      "hash": "a71897e1e90c95e1b311ca0a2a90ceaa29af484493d1d2cbbb4970300ba0bd3e"
     },
     {
       "path": "src/components/panels/skill-path/TechniqueBand.test.ts",
@@ -14976,7 +14976,7 @@
       "path": "src/composables/useProgressionActions.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "97c5d90d90e6150d09c5e8b160b4e48cb1782c552b111997034e918bfcaca53e"
+      "hash": "8ff29ed3ae9272b3cee448588c395b84fd0ad9cfcc95a321fbf76fa47dcfcd94"
     },
     {
       "path": "src/composables/useRealmStatPassives.ts",
@@ -18024,7 +18024,7 @@
       "path": "src/core/game/GameManagerProgressionOps.clawback.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8492dc7b5738fc10a461ae16da856ca6db778f20fb097847bd137a7404bd8622"
+      "hash": "3d28e660bc9cce5ce1fef54f1718769fe457d5a8afd3caa6c5c9da470fcf8933"
     },
     {
       "path": "src/core/game/GameManagerProgressionOps.levelGates.test.ts",
@@ -18042,7 +18042,7 @@
       "path": "src/core/game/GameManagerProgressionOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0b63dde287f10d55bd3075c831398b1d9d3244a09cb461434e2a0664b23d1251"
+      "hash": "807f7a0ea6c87ac8f8267f3847f22a75620d59b671193d56c26ce5151b12a69b"
     },
     {
       "path": "src/core/game/GameManagerQuestOps.ts",
@@ -18054,7 +18054,7 @@
       "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "fbfa7d4f52ec8fbeb0a64cbe15727c7df30e24dfc1aba6c7f6fe31a51e24f923"
+      "hash": "324850d97760053982fddc81cfb66814b86cc1cc03ba92b219fda39375bdda08"
     },
     {
       "path": "src/core/game/GameManagerRewardOps.ts",
@@ -18582,7 +18582,7 @@
       "path": "src/core/player/CultivationPathSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a51013dbe1b6dda2d57556cf3fb0f071a95f8dbfffb1e99c976034c822c5b5b6"
+      "hash": "e3036a2f24d4835ce131ed0a7d23028d0371a2eeacb3756e40f5c7195f129bba"
     },
     {
       "path": "src/core/player/PersistentTimedEffect.ts",
@@ -18942,7 +18942,7 @@
       "path": "src/core/progression/NodeSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "40562d71b2164bc81c4f8cf9ec24e4966c472b5107152794873f3cc039761074"
+      "hash": "d12e3fe2cfcf25c7b187588a2c511465d158209e787c2e2df27423d3edbf8c66"
     },
     {
       "path": "src/core/progression/NodeSystem.vanDao.test.ts",
@@ -19536,7 +19536,7 @@
       "path": "src/core/simulation/BattleSimulation.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c19998a20ea90b8fa81e71eaa0e796e0fc38d5225d76650940382a48b6810d8f"
+      "hash": "1130b38c10fb52f02268082d9eea618fa6c7979a8ce8b1be84b8429cb9e9d146"
     },
     {
       "path": "src/core/simulation/benchmark/BalanceBaselines.ts",
@@ -19584,7 +19584,7 @@
       "path": "src/core/simulation/earlygame/EarlyGameSession.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "34002e263b8e770c0ae5ea2c6603903dbb4062aac01ace4f8e0e7679bdf5fcb8"
+      "hash": "46bac4ca56abbe41ce0e16c7cba197ace9c8ad402ff2be1bf944a237083aa94c"
     },
     {
       "path": "src/core/simulation/earlygame/EssenceSubstitutionEconomy.test.ts",
@@ -20754,7 +20754,7 @@
       "path": "src/data/progression/PhapTuBasicNodes.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "26dcc653a6ad439fd787304f43b16910b854fc928cccbdffd5dc7d13bee6e951"
+      "hash": "a2327d1e5facc0bb66f2e84a5d37bd8af9377484156978aea0c76227a70478da"
     },
     {
       "path": "src/data/progression/PhapTuNodes.builders.ts",
@@ -20778,13 +20778,13 @@
       "path": "src/data/progression/PhapTuRealmRewardNodes.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "5f34983c9aa3bc23a5be660a639df8c2d26d98472cdee97ba7867fc53344d0f6"
+      "hash": "4026159c1f2007a130a0ce2efeeee865fc741911f25ea5bae45f0aa8f7032220"
     },
     {
       "path": "src/data/progression/PhapTuRealmRewardNodes.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "3d8e465a966ee99166de630f6b9afaa70b00565b4f7ae5887da32d6841d575a3"
+      "hash": "8e8582538a95d324d9ead4b3a96c99a508578837fb2b86c351a1fa76e5527067"
     },
     {
       "path": "src/data/progression/ProgressionNodeCatalog.ts",
@@ -23073,5 +23073,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "76865d0e7113e05e232f43c9786e959e67a404e3f433997f3f288cd8da25b6d8"
+  "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a"
 }
