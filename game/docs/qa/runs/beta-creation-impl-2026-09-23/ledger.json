@@ -27,7 +27,7 @@
    "merge/push to beta/rc or other branches",
    "external review services"
   ],
-  "checkout": "origin/beta/rc merge-base + devin/1790189100-beta-creation @ e9e5d103d9b5663b90ba8e7a510cfc17b1dda2d1 (post Clean-A repairs + beta/rc merge)",
+  "checkout": "origin/beta/rc merge-base + devin/1790189100-beta-creation @ 94f0e9f7 (amended candidate)",
   "branch": "devin/1790189100-beta-creation",
   "base": "origin/beta/rc",
   "head": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
