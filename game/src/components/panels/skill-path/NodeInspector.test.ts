@@ -138,9 +138,12 @@ describe('NodeInspector - technique prerequisite lock reasons (P7-M6)', () => {
 
     await nextTick()
 
-    // Only the realm gate remains unsatisfied.
+    // Only the realm gate remains unsatisfied -- the reason names the
+    // unlock realm (three-path design ruling #16C).
     expect(view.reasonTexts()).toEqual([
-      i18n.global.t('panels.skillPath.nodeInspector.lockedReasons.realm'),
+      i18n.global.t('panels.skillPath.nodeInspector.lockedReasons.realm', {
+        realm: 'Nguyên Anh',
+      }),
     ])
 
     view.unmount()

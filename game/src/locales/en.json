@@ -157,7 +157,7 @@
         "lockedReasons": {
           "cost": "Requires {cost} Insight (currently have {current} Insight)",
           "prerequisiteNode": "Enlighten first: {name}",
-          "realm": "Reach the required realm",
+          "realm": "Unlocks at {realm}",
           "element": "Unlock the related Element",
           "elementMismatch": "Belongs to the {element} element — another element is committed",
           "routeMismatch": "Enlightenable only in the {route} stance",

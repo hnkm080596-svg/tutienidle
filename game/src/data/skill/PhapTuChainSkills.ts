@@ -2,23 +2,23 @@ import type { Skill } from '../../core/skill/Skill'
 
 export const PHAP_TU_SKILLS: Skill[] = [
   // ==================================================================
-  // Pháp Tu Thuần Hệ (spec 2026-09-03 §2/§3, Task 10) — 20 skill chuỗi
-  // B/C/D/E + 5 Ultimate của 5 thần Sơn Hải Kinh, THAY 25 placeholder
-  // id cũ (chuc_dung_b...thanh_luy — tên/id/số liệu ĐÚNG bảng spec,
-  // N2b: không hậu tố _b/_c). A là root hiện có của từng hành
+  // Phap Tu Thuan He (spec 2026-09-03 2/3, Task 10) -- 20 skill chuoi
+  // B/C/D/E + 5 Ultimate cua 5 than Son Hai Kinh, THAY 25 placeholder
+  // id cu (chuc_dung_b...thanh_luy -- ten/id/so lieu DUNG bang spec,
+  // N2b: khong hau to _b/_c). A la root hien co cua tung hanh
   // (hoa_cau_thuat / thuy_tien_thuat / doc_chuong / diem_kim_thuat /
-  // tho_cau_thuat — giữ nguyên). Nhịp §1.2: B cd2/cast1.0, C cd3/1.2,
-  // D cd4/1.4, E cd6/1.8. Ngân sách dmg §1.3: B 1.1 · C 1.3 (0 nếu
-  // self-buff) · D 1.5 · E 2.4; mọi damage mang manaScalingRatio
-  // 0.001 + attributeScaling attunement 0.004 (như A). resourceType
-  // 'none' (§1.4); unlocked false, mở qua node chuỗi (Task 11, §1.7 —
-  // B–E KHÔNG requiredRealmId, realm gate ở node + bảng slot).
-  // Biến thể C/D = SkillSpecialization (effectsOverride/targetingOverride
-  // theo node selectsSpecialization E-8 — id specialization khớp
+  // tho_cau_thuat -- giu nguyen). Nhip 1.2: B cd2/cast1.0, C cd3/1.2,
+  // D cd4/1.4, E cd6/1.8. Ngan sach dmg 1.3: B 1.1 . C 1.3 (0 neu
+  // self-buff) . D 1.5 . E 2.4; moi damage mang manaScalingRatio
+  // 0.001 + attributeScaling attunement 0.004 (nhu A). resourceType
+  // 'none' (1.4); unlocked false, mo qua node chuoi (Task 11, 1.7 --
+  // B-E KHONG requiredRealmId, realm gate o node + bang slot).
+  // Bien the C/D = SkillSpecialization (effectsOverride/targetingOverride
+  // theo node selectsSpecialization E-8 -- id specialization khop
   // specializationId trong PhapTuNodes.ts Task 11).
   // ==================================================================
 
-  // ── Chuỗi CHÚC DUNG (Hỏa — bùng nổ dồn, §2.1): A/B/C chồng Thiêu
+  //  Chuoi CHUC DUNG (Hoa -- bung no don, 2.1): A/B/C chong Thieu
   // Dot (hoa_an stack -- N1), D detonates ALL hoa_an stacks, E nukes the whole row.
   {
     id: 'nam_minh_liet_hoa',
@@ -64,10 +64,10 @@ export const PHAP_TU_SKILLS: Skill[] = [
       },
       { type: 'debuff', buffId: 'hoa_an', ailmentChance: 1 },
     ],
-    // Biến thể C (§2.1) — mua node selectsSpecialization là ĐỔI HẲN
-    // hành vi (E-8). 'tam_muoi_tu_diem': single + đắp THÊM 1 tầng qua
-    // add_stack (E-3 — buff đã chạy mới cộng, chưa có = no-op; debuff
-    // apply phía dưới đảm bảo có ≥1 tầng khi roll trúng).
+    // Bien the C (2.1) -- mua node selectsSpecialization la DOI HAN
+    // hanh vi (E-8). 'tam_muoi_tu_diem': single + dap THEM 1 tang qua
+    // add_stack (E-3 -- buff da chay moi cong, chua co = no-op; debuff
+    // apply phia duoi dam bao co 1 tang khi roll trung).
     specializations: [
       {
         id: 'tam_muoi_tu_diem',
@@ -89,8 +89,8 @@ export const PHAP_TU_SKILLS: Skill[] = [
         id: 'tam_muoi_tan_diem',
         name: 'Tam Muội · Tán Diễm',
         description: 'Lửa tán thành vùng — Bỏng phủ mọi mục tiêu xung quanh.',
-        // Spec §2.1: Tán Diễm là AoE — base skill không khai targeting
-        // (single) nên specialization PHẢI tự mang vùng (laneRadius 1).
+        // Spec 2.1: Tan Diem la AoE -- base skill khong khai targeting
+        // (single) nen specialization PHAI tu mang vung (laneRadius 1).
         targeting: { shape: 'square', laneRadius: 1 },
         effectsOverride: [
           {
@@ -128,9 +128,9 @@ export const PHAP_TU_SKILLS: Skill[] = [
         damagePerStack: 35,
       },
     ],
-    // Biến thể D (§2.1): Liệt Bạo = damagePerStack 50 burst tối đa;
-    // Dư Hỏa = 30 + áp lại 1 tầng Bỏng SAU kích nổ (debuff effect chạy
-    // sau damage — applyAll reorder damage trước, debuff sau).
+    // Bien the D (2.1): Liet Bao = damagePerStack 50 burst toi da;
+    // Du Hoa = 30 + ap lai 1 tang Bong SAU kich no (debuff effect chay
+    // sau damage -- applyAll reorder damage truoc, debuff sau).
     specializations: [
       {
         id: 'dan_no_liet_bao',
@@ -193,8 +193,8 @@ export const PHAP_TU_SKILLS: Skill[] = [
     resourceType: 'none',
   },
 
-  // ── Chuỗi THIÊN NGÔ (Thủy — kiềm chế + hồi, §2.2): B Tê Cóng, C hồi
-  // Pháp Lực (self), D trói + tự buff hấp thụ, E sóng càn quét.
+  //  Chuoi THIEN NGO (Thuy -- kiem che + hoi, 2.2): B Te Cong, C hoi
+  // Phap Luc (self), D troi + tu buff hap thu, E song can quet.
   {
     id: 'bat_dau_tran_thuy',
     name: 'Bát Đầu Trấn Thủy',
@@ -272,8 +272,8 @@ export const PHAP_TU_SKILLS: Skill[] = [
       { type: 'debuff', buffId: 'troi_chan', ailmentChance: 0.7 },
       { type: 'buff', buffId: 'hoi_luu' },
     ],
-    // Biến thể D (§2.2): Cấm Túc = trói chắc 100%, bỏ hấp thụ; Hấp Lưu
-    // = trói 50% nhưng leech mạnh hơn, lâu hơn.
+    // Bien the D (2.2): Cam Tuc = troi chac 100%, bo hap thu; Hap Luu
+    // = troi 50% nhung leech manh hon, lau hon.
     specializations: [
       {
         id: 'thon_no_cam_tuc',
@@ -303,13 +303,13 @@ export const PHAP_TU_SKILLS: Skill[] = [
             attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
           },
           { type: 'debuff', buffId: 'troi_chan', ailmentChance: 0.5 },
-          // Spec §2.2: leech +35%, 5s — buff định nghĩa 0.20/tầng, 2
-          // tầng = 0.40 (over-tuned); thay bằng 1 tầng + duration 5s
-          // đúng số liệu spec (xem ghi chú report).
-          // Review round 1 (Finding 2) — coordinator ruling: GIỮ 0.20
-          // (hoi_luu = +0.20/stack refresh; +35% không biểu diễn được
-          // nếu không thêm buff mới — deviation có chủ đích, đã ghi
-          // chú report).
+          // Spec 2.2: leech +35%, 5s -- buff dinh nghia 0.20/tang, 2
+          // tang = 0.40 (over-tuned); thay bang 1 tang + duration 5s
+          // dung so lieu spec (xem ghi chu report).
+          // Review round 1 (Finding 2) -- coordinator ruling: GIU 0.20
+          // (hoi_luu = +0.20/stack refresh; +35% khong bieu dien duoc
+          // neu khong them buff moi -- deviation co chu dich, da ghi
+          // chu report).
           { type: 'buff', buffId: 'hoi_luu', duration: 5 },
         ],
       },
@@ -341,8 +341,8 @@ export const PHAP_TU_SKILLS: Skill[] = [
     resourceType: 'none',
   },
 
-  // ── Chuỗi CÂU MANG (Mộc — nhiễm độc lan, §2.3): B đắp Trúng Độc,
-  // C rễ cấm di chuyển, D LAN độc (E-1), E kích nổ + hút máu.
+  //  Chuoi CAU MANG (Moc -- nhiem doc lan, 2.3): B dap Trung Doc,
+  // C re cam di chuyen, D LAN doc (E-1), E kich no + hut mau.
   {
     id: 'xuan_sanh_doc_duc',
     name: 'Xuân Sanh Độc Dực',
@@ -388,8 +388,8 @@ export const PHAP_TU_SKILLS: Skill[] = [
       { type: 'debuff', buffId: 'troi_chan', ailmentChance: 0.8 },
       { type: 'debuff', buffId: 'doc_can', ailmentChance: 0.6 },
     ],
-    // Biến thể C (§2.3): Cấm Bộ = root BẢN DÀI (buff riêng cau_mang_can
-    // 4s, troi_chan 100%), bỏ độc; Thâm Độc = bỏ root, đắp +2 tầng độc.
+    // Bien the C (2.3): Cam Bo = root BAN DAI (buff rieng cau_mang_can
+    // 4s, troi_chan 100%), bo doc; Tham Doc = bo root, dap +2 tang doc.
     specializations: [
       {
         id: 'can_tri_cam_bo',
@@ -429,7 +429,10 @@ export const PHAP_TU_SKILLS: Skill[] = [
   {
     id: 'van_moc_lan_doc',
     name: 'Vạn Mộc Lan Độc',
-    description: 'Rừng cây lan độc — sao chép Trúng Độc từ mục tiêu chính sang mọi địch trong vùng.',
+    // Three-path design (2026-09-25, ruling R5) -- description no longer
+    // claims a Trung Doc spread mechanic that was never implemented; the
+    // skill hits a square zone and applies Trung Doc per target.
+    description: 'Rừng cây lan độc — quét một vùng rộng, gây Trúng Độc lên từng mục tiêu trong vùng.',
     type: 'active',
     level: 1,
     maxLevel: 10,
@@ -448,14 +451,14 @@ export const PHAP_TU_SKILLS: Skill[] = [
         scope: 'primary_target',
       },
     ],
-    // Biến thể D (§2.3): Quảng = all_lanes spread 50%; Thâm = area
+    // Bien the D (2.3): Quang = all_lanes spread 50%; Tham = area
     // spread 100% + refresh duration primary.
     specializations: [
       {
         id: 'lan_doc_quang',
         name: 'Lan Độc · Quảng',
         description: 'Độc theo gió bay khắp chiến trường.',
-        // Spec §2.3: Quảng = all_lanes columnRadius 1.
+        // Spec 2.3: Quang = all_lanes columnRadius 1.
         targeting: { shape: 'all_lanes', columnRadius: 1 },
         effectsOverride: [
           {
@@ -512,9 +515,9 @@ export const PHAP_TU_SKILLS: Skill[] = [
     resourceType: 'none',
   },
 
-  // ── Chuỗi NHỤC THU (Kim — nghiền nát kim loại, KHÔNG kiếm pháp,
-  // §2.4): B Kim Giáp tự buff, C Kim Lang bão vụn AoE, D Kim Chung
-  // khuếch đại Xuất Huyết (add_stack E-3), E Kim Luân kích nổ.
+  //  Chuoi NHUC THU (Kim -- nghien nat kim loai, KHONG kiem phap,
+  // 2.4): B Kim Giap tu buff, C Kim Lang bao vun AoE, D Kim Chung
+  // khuech dai Xuat Huyet (add_stack E-3), E Kim Luan kich no.
   {
     id: 'thu_giap_kim_than',
     name: 'Thu Giáp Kim Thân',
@@ -551,14 +554,14 @@ export const PHAP_TU_SKILLS: Skill[] = [
       },
       { type: 'debuff', buffId: 'liet_thuong', ailmentChance: 0.6 },
     ],
-    // Biến thể C (§2.4): Toàn Vực = AoE vuông rộng hơn dmg 1.0 bleed
-    // 50%; Xuyên Liệt = line dmg 1.4 bleed 80%.
+    // Bien the C (2.4): Toan Vuc = AoE vuong rong hon dmg 1.0 bleed
+    // 50%; Xuyen Liet = line dmg 1.4 bleed 80%.
     specializations: [
       {
         id: 'kim_lang_toan_vuc',
         name: 'Kim Lang · Toàn Vực',
         description: 'Vụn thép phủ trọn một vùng.',
-        // Spec §2.4: Toàn Vực = area laneRadius 1 columnRadius 1.
+        // Spec 2.4: Toan Vuc = area laneRadius 1 columnRadius 1.
         targeting: { shape: 'square', laneRadius: 1, columnRadius: 1 },
         effectsOverride: [
           {
@@ -575,7 +578,7 @@ export const PHAP_TU_SKILLS: Skill[] = [
         id: 'kim_lang_xuyen_liet',
         name: 'Kim Lang · Xuyên Liệt',
         description: 'Lưỡi bão xuyên thẳng một hàng.',
-        // Spec §2.4: Xuyên Liệt = line.
+        // Spec 2.4: Xuyen Liet = line.
         targeting: { shape: 'line' },
         effectsOverride: [
           {
@@ -610,12 +613,12 @@ export const PHAP_TU_SKILLS: Skill[] = [
         manaScalingRatio: 0.001,
         attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
       },
-      // add_stack chạy SAU damage (applyAll reorder) — buff đã chạy mới
-      // cộng (E-3), chưa có = no-op.
+      // add_stack chay SAU damage (applyAll reorder) -- buff da chay moi
+      // cong (E-3), chua co = no-op.
       { type: 'add_stack', buffId: 'liet_thuong', stacks: 2, refresh: true },
     ],
-    // Biến thể D (§2.4): Tích Huyết = +3 không choáng; Chấn Huyết = +1
-    // kèm 30% Choáng.
+    // Bien the D (2.4): Tich Huyet = +3 khong choang; Chan Huyet = +1
+    // kem 30% Choang.
     specializations: [
       {
         id: 'cong_huong_tich_huyet',
@@ -676,8 +679,8 @@ export const PHAP_TU_SKILLS: Skill[] = [
     resourceType: 'none',
   },
 
-  // ── Chuỗi HẬU THỔ (Thổ — phòng tuyến, §2.5): B Thạch Hóa + chấn,
-  // C cột đất đỡ đòn (self ward), D chấn địa AoE, E nhốt + nổ khiên.
+  //  Chuoi HAU THO (Tho -- phong tuyen, 2.5): B Thach Hoa + chan,
+  // C cot dat do don (self ward), D chan dia AoE, E nhot + no khien.
   {
     id: 'hau_tho_tran_ach',
     name: 'Hậu Thổ Trấn Ách',
@@ -714,11 +717,11 @@ export const PHAP_TU_SKILLS: Skill[] = [
     execution: { kind: 'cast_time', castTime: 1.2 },
     target: 'self',
     effects: [{ type: 'buff', buffId: 'dia_tru' }],
-    // Biến thể C (§2.5, review round 1): Bích = khiên THUẦN nuôi E nổ
-    // to (buff riêng dia_tru_bich +100 ward/+8 regen);
-    // Thứ = phản đòn (buff riêng dia_tru_thu +40 ward/+25% Khiên Nổ —
+    // Bien the C (2.5, review round 1): Bich = khien THUAN nuoi E no
+    // to (buff rieng dia_tru_bich +100 ward/+8 regen);
+    // Thu = phan don (buff rieng dia_tru_thu +40 ward/+25% Khien No --
     // generic thorns stat retired, spec 2026-09-15 T12).
-    // Không mượn bang_giap/kim_giap — sai số liệu + đụng tên đa hành.
+    // Khong muon bang_giap/kim_giap -- sai so lieu + dung ten da hanh.
     specializations: [
       {
         id: 'dia_tru_bich',
@@ -757,8 +760,8 @@ export const PHAP_TU_SKILLS: Skill[] = [
       },
       { type: 'debuff', buffId: 'choang', ailmentChance: 0.4 },
     ],
-    // Biến thể D (§2.5): Trấn = single dmg 1.7 choáng 70%; Quảng =
-    // area laneRadius 2 dmg 1.3 choáng 25%.
+    // Bien the D (2.5): Tran = single dmg 1.7 choang 70%; Quang =
+    // area laneRadius 2 dmg 1.3 choang 25%.
     specializations: [
       {
         id: 'chan_dia_tran',
@@ -779,7 +782,7 @@ export const PHAP_TU_SKILLS: Skill[] = [
         id: 'chan_dia_quang',
         name: 'Chấn Địa · Quảng',
         description: 'Động đất lan rộng — choáng nhẹ nhưng trúng nhiều.',
-        // Spec §2.5: Quảng = area laneRadius 2 columnRadius 1.
+        // Spec 2.5: Quang = area laneRadius 2 columnRadius 1.
         targeting: { shape: 'square', laneRadius: 2, columnRadius: 1 },
         effectsOverride: [
           {
@@ -821,11 +824,11 @@ export const PHAP_TU_SKILLS: Skill[] = [
     resourceType: 'none',
   },
 
-  // ── 5 ULTIMATE Thuần hệ (spec §3) — Thế đầy 100 (+bonus) → reset 0.
+  //  5 ULTIMATE Thuan he (spec 3) -- The day 100 (+bonus) -> reset 0.
   // buildTag 'ult' - presentation-only label; these 5 defs are empowerment
   // payload (god-ult identity), not a root role. cooldown 0, cast
-  // 1.5s, unlocked false (mở qua node ult — Task 11). Damage value
-  // 4.0 chuẩn; hiệu ứng đặc trưng per-element qua engine E-1..E-6.
+  // 1.5s, unlocked false (mo qua node ult -- Task 11). Damage value
+  // 4.0 chuan; hieu ung dac trung per-element qua engine E-1..E-6.
   {
     id: 'tat_phuong_giang_the',
     name: 'Tất Phương Giáng Thế',

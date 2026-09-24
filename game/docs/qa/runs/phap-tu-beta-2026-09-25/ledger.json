@@ -1,0 +1,697 @@
+{
+  "schemaVersion": 2,
+  "run": {
+    "id": "phap-tu-beta-2026-09-25",
+    "createdAt": "2026-09-24T16:37:49.448Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [],
+    "nonGoals": [],
+    "checkout": "/home/ubuntu/repos/tutienidle/.agent-worktrees/phap-tu-basic",
+    "branch": "devin/1790260800-phap-tu-basic",
+    "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
+    "head": "be1bdf8d5f3fa45cbe82318473980b7b03ec9227",
+    "state": {
+      "productStateId": "5dc6fbb8d9a50e38a49bbaec1fae7e03681b37993df3e8d40de3abd239951833",
+      "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+      "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+      "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "manifestPath": "manifest.json",
+    "environmentPath": "environment.json",
+    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "consumedLessonIds": [],
+    "aggregateParents": [],
+    "requiredDomains": [],
+    "exclusions": [],
+    "briefIds": [],
+    "capacityLimit": 5,
+    "requiredReadiness": true,
+    "phase": "SNAPSHOT",
+    "cleanRoundA": null,
+    "cleanRoundB": null,
+    "finalEvidenceIds": [],
+    "outcome": null
+  },
+  "briefs": [],
+  "assignments": [],
+  "consumptions": [],
+  "invariants": [
+    {
+      "id": "I-PT-REWARD-SEAL",
+      "statement": "rewardOnly nodes are grant-only: canPurchaseNode and canUpgradeNode reject them under all states, and NodeTreePanel never renders them.",
+      "domain": "src/core/progression",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "src/core/progression/ProgressionNode.ts",
+          "symbolOrSection": "rewardOnly",
+          "revision": "worktree",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/progression/NodeSystem.ts",
+          "symbolOrSection": "canPurchaseNode",
+          "revision": "worktree",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/core/progression/NodeSystem.ts",
+        "symbolOrSection": "purchase/upgrade early-outs",
+        "revision": "worktree",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "fail closed: unpurchasable/inactive rather than silent accept",
+      "atomicity": "grant leg applies max-write per node id inside grantCultivationPathRealmReward",
+      "inverseBehavior": "no downgrade: existing deeper level wins over a lower grant",
+      "persistence": "nodeLevels on PlayerData; save-version strict (84)",
+      "migration": "dev-phase: additive fields only; existing saves untouched",
+      "lifecycle": "authored node -> realm grant -> effect aggregation via standard gates",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "authored pin tests + linked evidence"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-PT-GRANT-MAXWRITE",
+      "statement": "grantedNodeLevels on a way realmRewards record writes Math.max(existing, grant) per node id inside grantCultivationPathRealmReward, gated by isRealmAvailable; never downgrades, never double-applies.",
+      "domain": "src/core/player",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "src/core/player/CultivationPathKit.ts",
+          "symbolOrSection": "grantedNodeLevels",
+          "revision": "worktree",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/player/CultivationPathSystem.ts",
+          "symbolOrSection": "grant leg",
+          "revision": "worktree",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/core/player/CultivationPathSystem.ts",
+        "symbolOrSection": "grantCultivationPathRealmReward",
+        "revision": "worktree",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "fail closed: unpurchasable/inactive rather than silent accept",
+      "atomicity": "grant leg applies max-write per node id inside grantCultivationPathRealmReward",
+      "inverseBehavior": "no downgrade: existing deeper level wins over a lower grant",
+      "persistence": "nodeLevels on PlayerData; save-version strict (84)",
+      "migration": "dev-phase: additive fields only; existing saves untouched",
+      "lifecycle": "authored node -> realm grant -> effect aggregation via standard gates",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "authored pin tests + linked evidence"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-PT-SKILL-SCOPE",
+      "statement": "Phap Tu basic-lane nodes boost the SKILL's stats (skill-level channels) only -- never player-wide character stats; each direction caps at +10% of the basic's base at max level.",
+      "domain": "src/data/progression",
+      "risk": "CRITICAL",
+      "sources": [
+        {
+          "path": "src/data/progression/PhapTuBasicNodes.ts",
+          "symbolOrSection": "branch builders",
+          "revision": "worktree",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/data/progression/PhapTuNodes.ts",
+          "symbolOrSection": "stamp map",
+          "revision": "worktree",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/data/progression/PhapTuBasicNodes.ts",
+        "symbolOrSection": "node factories",
+        "revision": "worktree",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "fail closed: unpurchasable/inactive rather than silent accept",
+      "atomicity": "grant leg applies max-write per node id inside grantCultivationPathRealmReward",
+      "inverseBehavior": "no downgrade: existing deeper level wins over a lower grant",
+      "persistence": "nodeLevels on PlayerData; save-version strict (84)",
+      "migration": "dev-phase: additive fields only; existing saves untouched",
+      "lifecycle": "authored node -> realm grant -> effect aggregation via standard gates",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "authored pin tests + linked evidence"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-PT-REALM-GATE",
+      "statement": "Realm decides which node ring opens (outer ring + The lanes + capstones + reward records all at foundation_establishment); the minor tier inside a realm decides the level cap via techniqueRank levelGates.",
+      "domain": "src/data/progression",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "src/data/progression/PhapTuBasicNodes.ts",
+          "symbolOrSection": "MINOR_TIER_GATES",
+          "revision": "worktree",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/data/progression/PhapTuNodes.builders.ts",
+          "symbolOrSection": "The lane gates",
+          "revision": "worktree",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/data/progression/PhapTuNodes.ts",
+        "symbolOrSection": "prereq composition",
+        "revision": "worktree",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "fail closed: unpurchasable/inactive rather than silent accept",
+      "atomicity": "grant leg applies max-write per node id inside grantCultivationPathRealmReward",
+      "inverseBehavior": "no downgrade: existing deeper level wins over a lower grant",
+      "persistence": "nodeLevels on PlayerData; save-version strict (84)",
+      "migration": "dev-phase: additive fields only; existing saves untouched",
+      "lifecycle": "authored node -> realm grant -> effect aggregation via standard gates",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "authored pin tests + linked evidence"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-PT-PRESENT-TRUTH",
+      "statement": "Presentation data must resolve: every iconKey maps to a file under public/assets/skills; every vfxPresetId exists in COMBAT_VFX_PRESETS and the CombatVfxPresetId union; a skill description may claim only implemented mechanics; a realm-locked node names the realm in its reason.",
+      "domain": "src/data + src/components",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "src/data/skill/SkillIconManifest.ts",
+          "symbolOrSection": "SKILL_ICON_MANIFEST",
+          "revision": "worktree",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/data/vfx/CombatVfxPresets.ts",
+          "symbolOrSection": "5 basic presets",
+          "revision": "worktree",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/components/panels/skill-path/NodeInspector.vue",
+          "symbolOrSection": "realm reason",
+          "revision": "worktree",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/data/skill/TurnSkillDisplayMeta.ts",
+        "symbolOrSection": "iconKey field",
+        "revision": "worktree",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "fail closed: unpurchasable/inactive rather than silent accept",
+      "atomicity": "grant leg applies max-write per node id inside grantCultivationPathRealmReward",
+      "inverseBehavior": "no downgrade: existing deeper level wins over a lower grant",
+      "persistence": "nodeLevels on PlayerData; save-version strict (84)",
+      "migration": "dev-phase: additive fields only; existing saves untouched",
+      "lifecycle": "authored node -> realm grant -> effect aggregation via standard gates",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "authored pin tests + linked evidence"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    }
+  ],
+  "census": [],
+  "findings": [],
+  "evidence": [
+    {
+      "id": "EV-COORD-GATES-01",
+      "state": {
+        "productStateId": "5dc6fbb8d9a50e38a49bbaec1fae7e03681b37993df3e8d40de3abd239951833",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coordinator",
+      "startedAt": "2026-09-25T16:30:00Z",
+      "finishedAt": "2026-09-25T16:55:00Z",
+      "commandOrMethod": "npm run type-check + scoped vitest + asciiComments + attack-model probes",
+      "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/phap-tu-basic/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/coordinator-gates.md",
+      "artifactHash": "9d20bdb98d1b9d9f4780461b7e632cab3007dc9926290b6291119e445bb2ca97",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "type-check clean on the icon thread and grant leg",
+        "all authored contract pins green (rewardOnly seal, idempotent grant, realm/element gates, capstone mutex, +10% cap)",
+        "P15 asciiComments green after comment pass",
+        "deadIds allowlist pin green after ruling-#8 extension"
+      ],
+      "limitations": [
+        "coordinator-run; full-suite re-run pending"
+      ],
+      "status": "CURRENT"
+    }
+  ],
+  "coverage": [
+    {
+      "id": "COV-I-PT-REWARD-SEAL-STATIC_SEMANTIC",
+      "invariantId": "I-PT-REWARD-SEAL",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "basic-lane scope gate",
+      "evidenceIds": [
+        "EV-COORD-GATES-01"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PT-REWARD-SEAL-INDEPENDENT_REVIEW",
+      "invariantId": "I-PT-REWARD-SEAL",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "basic-lane scope gate",
+      "evidenceIds": [
+        "EV-COORD-GATES-01"
+      ],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PT-GRANT-MAXWRITE-STATIC_SEMANTIC",
+      "invariantId": "I-PT-GRANT-MAXWRITE",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "basic-lane scope gate",
+      "evidenceIds": [
+        "EV-COORD-GATES-01"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PT-GRANT-MAXWRITE-INDEPENDENT_REVIEW",
+      "invariantId": "I-PT-GRANT-MAXWRITE",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "basic-lane scope gate",
+      "evidenceIds": [
+        "EV-COORD-GATES-01"
+      ],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PT-SKILL-SCOPE-STATIC_SEMANTIC",
+      "invariantId": "I-PT-SKILL-SCOPE",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "basic-lane scope gate",
+      "evidenceIds": [
+        "EV-COORD-GATES-01"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PT-SKILL-SCOPE-INDEPENDENT_REVIEW",
+      "invariantId": "I-PT-SKILL-SCOPE",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "basic-lane scope gate",
+      "evidenceIds": [
+        "EV-COORD-GATES-01"
+      ],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PT-REALM-GATE-STATIC_SEMANTIC",
+      "invariantId": "I-PT-REALM-GATE",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "basic-lane scope gate",
+      "evidenceIds": [
+        "EV-COORD-GATES-01"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PT-REALM-GATE-INDEPENDENT_REVIEW",
+      "invariantId": "I-PT-REALM-GATE",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "basic-lane scope gate",
+      "evidenceIds": [
+        "EV-COORD-GATES-01"
+      ],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PT-PRESENT-TRUTH-STATIC_SEMANTIC",
+      "invariantId": "I-PT-PRESENT-TRUTH",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "basic-lane scope gate",
+      "evidenceIds": [
+        "EV-COORD-GATES-01"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PT-PRESENT-TRUTH-INDEPENDENT_REVIEW",
+      "invariantId": "I-PT-PRESENT-TRUTH",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "basic-lane scope gate",
+      "evidenceIds": [
+        "EV-COORD-GATES-01"
+      ],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    }
+  ],
+  "attacks": [],
+  "reviews": [],
+  "cycles": [],
+  "mutations": [
+    {
+      "id": "MUT-1",
+      "candidateState": {
+        "productStateId": "5dc6fbb8d9a50e38a49bbaec1fae7e03681b37993df3e8d40de3abd239951833",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "invariantIds": [
+        "I-PT-REWARD-SEAL"
+      ],
+      "rootClass": "gate-removal/number-bump",
+      "operator": "delete `node.rewardOnly` early-out in canPurchaseNode",
+      "isolationPath": "worktree edit + revert",
+      "mutantHash": "ephemeral-in-place",
+      "expectedDetector": "PhapTuRealmRewardNodes.test.ts purchase-seal pin (1 failed)",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-COORD-GATES-01"
+      ],
+      "equivalenceReason": "",
+      "candidateUnchanged": true
+    },
+    {
+      "id": "MUT-2",
+      "candidateState": {
+        "productStateId": "5dc6fbb8d9a50e38a49bbaec1fae7e03681b37993df3e8d40de3abd239951833",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "invariantIds": [
+        "I-PT-GRANT-MAXWRITE"
+      ],
+      "rootClass": "gate-removal/number-bump",
+      "operator": "Math.max -> plain overwrite in grant leg",
+      "isolationPath": "worktree edit + revert",
+      "mutantHash": "ephemeral-in-place",
+      "expectedDetector": "PhapTuRealmRewardNodes.test.ts no-downgrade pin (1 failed)",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-COORD-GATES-01"
+      ],
+      "equivalenceReason": "",
+      "candidateUnchanged": true
+    },
+    {
+      "id": "MUT-3",
+      "candidateState": {
+        "productStateId": "5dc6fbb8d9a50e38a49bbaec1fae7e03681b37993df3e8d40de3abd239951833",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "invariantIds": [
+        "I-PT-SKILL-SCOPE"
+      ],
+      "rootClass": "gate-removal/number-bump",
+      "operator": "hoa_sac_nhiet 0.02 -> 0.04/lvl (+20% > cap)",
+      "isolationPath": "worktree edit + revert",
+      "mutantHash": "ephemeral-in-place",
+      "expectedDetector": "PhapTuBasicNodes.test.ts +10%/direction cap pin (1 failed)",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-COORD-GATES-01"
+      ],
+      "equivalenceReason": "",
+      "candidateUnchanged": true
+    },
+    {
+      "id": "MUT-4",
+      "candidateState": {
+        "productStateId": "5dc6fbb8d9a50e38a49bbaec1fae7e03681b37993df3e8d40de3abd239951833",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "invariantIds": [
+        "I-PT-REALM-GATE"
+      ],
+      "rootClass": "gate-removal/number-bump",
+      "operator": "drop FOUNDATION prereq from capstone",
+      "isolationPath": "worktree edit + revert",
+      "mutantHash": "ephemeral-in-place",
+      "expectedDetector": "PhapTuBasicNodes.test.ts realm-gate pin (1 failed)",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-COORD-GATES-01"
+      ],
+      "equivalenceReason": "",
+      "candidateUnchanged": true
+    }
+  ],
+  "corpus": [],
+  "lessons": [],
+  "messages": [],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-09-24T16:37:49.449Z",
+      "kind": "PHASE",
+      "actor": "coordinator-63023",
+      "state": {
+        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "414153108ed6b6bbeefbe3767884ffadda0a9af8f2c4d897efb08491a0c7248a",
+      "eventHash": "60bc515a21bd100f1ce1d33feac3289052b3b1ee9c6f8fa7591dc268395dbaf3"
+    },
+    {
+      "seq": 2,
+      "at": "2026-09-24T16:38:23.930Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-63023",
+      "state": {
+        "productStateId": "5dc6fbb8d9a50e38a49bbaec1fae7e03681b37993df3e8d40de3abd239951833",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "60bc515a21bd100f1ce1d33feac3289052b3b1ee9c6f8fa7591dc268395dbaf3",
+      "payloadPath": "events/0002.json",
+      "payloadHash": "dc3f0ddfce69acedd77b2f23eb3c9d039628c1a96e27198aa6bd5e217c9cd714",
+      "eventHash": "6d7de96ff1ab9060a9a05c12361cafc5ec986d41f5c6c640eb2ed8a8ffae06eb"
+    },
+    {
+      "seq": 3,
+      "at": "2026-09-24T16:51:08.460Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-63023",
+      "state": {
+        "productStateId": "5dc6fbb8d9a50e38a49bbaec1fae7e03681b37993df3e8d40de3abd239951833",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "6d7de96ff1ab9060a9a05c12361cafc5ec986d41f5c6c640eb2ed8a8ffae06eb",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "45bb3f6fdd426fe0b4ef50f2857b15f2e1fff9c11477ec882c7eaaa279dd8705",
+      "eventHash": "65f903d25896fc0e88c4b49a573566658c9541fae27f9920194d633a29b65393"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-24T16:51:39.030Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-63023",
+      "state": {
+        "productStateId": "5dc6fbb8d9a50e38a49bbaec1fae7e03681b37993df3e8d40de3abd239951833",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "65f903d25896fc0e88c4b49a573566658c9541fae27f9920194d633a29b65393",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "b8ebaf32bff2bef2e4ba67d7a303660d63d8a6bca676aa6c8aa9a6d496969327",
+      "eventHash": "e783aba2a3347a898ed2ae39e4c5a5dea2a3ebffe891c6f06c3e2c40468875d9"
+    },
+    {
+      "seq": 5,
+      "at": "2026-09-24T16:53:50.875Z",
+      "kind": "PHASE",
+      "actor": "coordinator-63023",
+      "state": {
+        "productStateId": "5dc6fbb8d9a50e38a49bbaec1fae7e03681b37993df3e8d40de3abd239951833",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "e783aba2a3347a898ed2ae39e4c5a5dea2a3ebffe891c6f06c3e2c40468875d9",
+      "payloadPath": "events/0005.json",
+      "payloadHash": "c486582188c477dbb5f5b177685321424b2cb818362db683765120179014c3da",
+      "eventHash": "6907227e0dbde941e2484930b2413b5aef8eafbdab6d64d9e4a85fb47b01f0aa"
+    },
+    {
+      "seq": 6,
+      "at": "2026-09-24T16:55:26.061Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-63023",
+      "state": {
+        "productStateId": "5dc6fbb8d9a50e38a49bbaec1fae7e03681b37993df3e8d40de3abd239951833",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "6907227e0dbde941e2484930b2413b5aef8eafbdab6d64d9e4a85fb47b01f0aa",
+      "payloadPath": "events/0006.json",
+      "payloadHash": "3fd48f42fa3377d70a000b0f6e907471d05768ec14c6f748a87ee9122a351254",
+      "eventHash": "7f68cf2b57678c6e0518e548e2ba94f80492baa30c56388f8393060e9439acbb"
+    }
+  ]
+}

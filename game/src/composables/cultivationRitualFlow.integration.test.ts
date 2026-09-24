@@ -90,8 +90,13 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
     // P7-M3 - the Truc Co variant folded into gradeEffects[2]: the
     // holder keeps five_elements_art and advances grade via Nang Canh.
     expect(gameManager.techniqueManager.getActive()?.id).toBe('five_elements_art')
+    // Three-path design (2026-09-25, sec.4-b): the Truc Co realm reward
+    // also grants the five tinh_thong_<e> mastery nodes. This fixture
+    // never commits an element (spellPath.element === null), so all five
+    // masteries report active -- the element gate resolves live at commit
+    // and then only the committed element's grant stays on.
     expect(gameManager.effectOps.getAggregatedModifiers(player.$state).filter(
       modifier => modifier.sourceId === 'spell',
-    )).toHaveLength(3)
+    )).toHaveLength(8)
   })
 })

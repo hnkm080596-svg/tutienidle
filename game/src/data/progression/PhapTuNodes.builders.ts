@@ -223,7 +223,13 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
       insightCost: 1,
       maxLevel: 5,
       upgradeCost: { base: 1, perLevel: 2 },
-      prerequisites: [{ kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS[element] }],
+      // Three-path design ruling #5 (2026-09-25) — The nodes open at
+      // Truc Co (the pool awakens there; spend stays Kim Dan-gated), so
+      // buying Thế gain before that realm was a dead purchase.
+      prerequisites: [
+        { kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS[element] },
+        { kind: 'realm', realmId: 'foundation_establishment' },
+      ],
       elementTag: element,
       effect: {
         turnSkillResourceModifiers: [
@@ -243,7 +249,10 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
       insightCost: 1,
       maxLevel: 5,
       upgradeCost: { base: 1, perLevel: 2 },
-      prerequisites: [{ kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS[element] }],
+      prerequisites: [
+        { kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS[element] },
+        { kind: 'realm', realmId: 'foundation_establishment' },
+      ],
       elementTag: element,
       routeTag: 'no',
       effect: { theCapPerLevel: TRUONG_THE_CAP_PER_LEVEL },

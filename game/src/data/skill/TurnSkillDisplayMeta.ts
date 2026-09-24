@@ -1,24 +1,28 @@
 import type { Skill } from '../../core/skill/Skill'
 import { SKILLS } from './Skills'
 
-// Bảng 9.5 #5 (2026-09-07) — mapping skillId → display metadata cho HUD
-// turn (TurnCombatSkillBar/CombatSkillSlot). TurnSkillDefinition cố ý
-// KHÔNG mang name/description (Slice 2 spec §3 — shape gameplay thuần);
-// lớp display metadata này tách riêng để content pass skill sau này chỉ
-// cần bổ sung 1 entry ở đây.
+// Bang 9.5 #5 (2026-09-07) -- mapping skillId -> display metadata cho HUD
+// turn (TurnCombatSkillBar/CombatSkillSlot). TurnSkillDefinition co y
+// KHONG mang name/description (Slice 2 spec 3 -- shape gameplay thuan);
+// lop display metadata nay tach rieng de content pass skill sau nay chi
+// can bo sung 1 entry o day.
 //
-// Nguồn dữ liệu:
-// - id trùng SKILLS (Skills.ts) → ĐỒNG BỘ name/description từ bảng Skill
-//   thật (SKILLS_BY_ID lookup lúc khởi tạo — không hardcode 2 nơi).
-// - id authored riêng cho turn engine (generic_physical, ngu_kiem_thuat,
-//   orb_* / kiem_combo_*, water_surge, reaction path) → author trực tiếp
-//   tại đây, kèm số liệu đối chiếu file authored tương ứng.
+// Nguon du lieu:
+// - id trung SKILLS (Skills.ts) -> DONG BO name/description tu bang Skill
+//   that (SKILLS_BY_ID lookup luc khoi tao -- khong hardcode 2 noi).
+// - id authored rieng cho turn engine (generic_physical, ngu_kiem_thuat,
+//   orb_* / kiem_combo_*, water_surge, reaction path) -> author truc tiep
+//   tai day, kem so lieu doi chieu file authored tuong ung.
 
-/** Display metadata hiển thị cho 1 TurnSkillDefinition trong HUD. */
+/** Display metadata hien thi cho 1 TurnSkillDefinition trong HUD. */
 export interface TurnSkillDisplayMeta {
   name: string
 
   description: string
+
+  /** Key vao SKILL_ICON_MANIFEST -> /assets/skills/<key>.png (user draws
+   * real art over the placeholders; undefined = monogram fallback). */
+  iconKey?: string
 }
 
 const SKILLS_BY_ID = new Map<string, Skill>()
@@ -27,7 +31,7 @@ for (const skill of SKILLS) {
   SKILLS_BY_ID.set(skill.id, skill)
 }
 
-/** Đồng bộ từ SKILLS: name/description lấy đúng bảng skill thật. */
+/** Dong bo tu SKILLS: name/description lay dung bang skill that. */
 function fromSkills(id: string, fallback: TurnSkillDisplayMeta): TurnSkillDisplayMeta {
   const live = SKILLS_BY_ID.get(id)
 
@@ -39,43 +43,44 @@ function fromSkills(id: string, fallback: TurnSkillDisplayMeta): TurnSkillDispla
 }
 
 /**
- * Metadata cho mọi TurnSkillDefinition production id. Lookup qua
- * turnSkillDisplayMetaOf() — id lạ trả undefined để caller fallback
- * nhãn role (không crash, không hiển thị raw id).
+ * Metadata cho moi TurnSkillDefinition production id. Lookup qua
+ * turnSkillDisplayMetaOf() -- id la tra undefined de caller fallback
+ * nhan role (khong crash, khong hien thi raw id).
  */
 export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
-  // Kiếm Tu basic — 'Trảm'/"Huy Kiếm" (giữ nguyên theo chốt 9.4).
-  tram: fromSkills('tram', { name: 'Huy Kiếm', description: 'Một chiêu thức cơ bản, không tốn tài nguyên.' }),
+  // Kiem Tu basic -- 'Tram'/"Huy Kiem" (giu nguyen theo chot 9.4).
+  tram: { ...fromSkills('tram', { name: 'Huy Kiếm', description: 'Một chiêu thức cơ bản, không tốn tài nguyên.' }), iconKey: 'tram' },
 
-  // The Tu Reimagined (spec 2026-09-15 §2.3) — mortal cast-leveled
+  // The Tu Reimagined (spec 2026-09-15 2.3) -- mortal cast-leveled
   // basic sibling of tram; Lv3 gates the ung_the way at the ritual.
-  huy_quyen: fromSkills('huy_quyen', { name: 'Huy Quyền', description: 'Quyền pháp phàm nhân, không tốn tài nguyên.' }),
+  huy_quyen: { ...fromSkills('huy_quyen', { name: 'Huy Quyền', description: 'Quyền pháp phàm nhân, không tốn tài nguyên.' }), iconKey: 'huy_quyen' },
 
   // Phap Tu Reimagined Task 2 - mortal cast-leveled precursor sibling;
   // Lv3 gates the ngo_dao way at the ritual.
-  linh_bao: fromSkills('linh_bao', { name: 'Linh Bạo', description: 'Linh khí bùng nổ, bỏ qua phòng thủ.' }),
+  linh_bao: { ...fromSkills('linh_bao', { name: 'Linh Bạo', description: 'Linh khí bùng nổ, bỏ qua phòng thủ.' }), iconKey: 'linh_bao' },
 
-  // 5 Pháp Tu Thuần Hệ — đồng bộ từ Skills.ts.
-  hoa_cau_thuat: fromSkills('hoa_cau_thuat', { name: 'Hỏa Cầu Thuật', description: 'Hỏa hệ công kích.' }),
-  thuy_tien_thuat: fromSkills('thuy_tien_thuat', { name: 'Thủy Tiên Thuật', description: 'Thủy hệ công kích.' }),
-  doc_chuong: fromSkills('doc_chuong', { name: 'Độc Chương', description: 'Mộc hệ công kích.' }),
-  diem_kim_thuat: fromSkills('diem_kim_thuat', { name: 'Điểm Kim Thuật', description: 'Kim hệ công kích.' }),
-  tho_cau_thuat: fromSkills('tho_cau_thuat', { name: 'Thổ Cầu Thuật', description: 'Thổ hệ công kích.' }),
+  // 5 Phap Tu Thuan He -- dong bo tu Skills.ts; iconKey moi he rieng
+  // (three-path design 2026-09-25).
+  hoa_cau_thuat: { ...fromSkills('hoa_cau_thuat', { name: 'Hỏa Cầu Thuật', description: 'Hỏa hệ công kích.' }), iconKey: 'hoa_cau_thuat' },
+  thuy_tien_thuat: { ...fromSkills('thuy_tien_thuat', { name: 'Thủy Tiên Thuật', description: 'Thủy hệ công kích.' }), iconKey: 'thuy_tien_thuat' },
+  doc_chuong: { ...fromSkills('doc_chuong', { name: 'Độc Chương', description: 'Mộc hệ công kích.' }), iconKey: 'doc_chuong' },
+  diem_kim_thuat: { ...fromSkills('diem_kim_thuat', { name: 'Điểm Kim Thuật', description: 'Kim hệ công kích.' }), iconKey: 'diem_kim_thuat' },
+  tho_cau_thuat: { ...fromSkills('tho_cau_thuat', { name: 'Thổ Cầu Thuật', description: 'Thổ hệ công kích.' }), iconKey: 'tho_cau_thuat' },
 
-  // Thể Tu + Phàm Nhân — generic melee (không dùng Skill object).
+  // The Tu + Pham Nhan -- generic melee (khong dung Skill object).
   generic_physical: {
     name: 'Vật Công',
     description: 'Tấn công vật lý cơ bản bằng sức mạnh thân thể.',
   },
 
-  // Enemy special — Thủy Giáp Long "Nuốt Sáng" (TurnBasicAttacks.ts:
-  // everyNth 4, damage ×2.5).
+  // Enemy special -- Thuy Giap Long "Nuot Sang" (TurnBasicAttacks.ts:
+  // everyNth 4, damage x2.5).
   water_surge: {
     name: 'Nuốt Sáng',
     description: 'Đòn đặc biệt của Thủy Giáp Long — sóng nước dâng quét ngang, mỗi 4 lượt.',
   },
 
-  // The Tu Reimagined (spec 2026-09-15 section 5, BodySkills.ts) —
+  // The Tu Reimagined (spec 2026-09-15 section 5, BodySkills.ts) --
   // Hien kits: Cuong Chien (missing-HP berserker) + Tran The (tank).
   cuong_quyen: {
     name: 'Cuồng Quyền',
@@ -102,7 +107,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     description: 'Thân như núi lớn: hộ thể cho đồng đội, khiêu khích kẻ địch, giảm sát thương bản thân. Hồi 6 lượt.',
   },
 
-  // The Tu Reimagined (spec 2026-09-15 section 6, BodySkills.ts) —
+  // The Tu Reimagined (spec 2026-09-15 section 6, BodySkills.ts) --
   // An kit (fixed at path choice) + reactive payload defs.
   tham_the: {
     name: 'Thám Thế',
@@ -287,25 +292,25 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     description: 'Ấn Côn Lôn che chở — mỗi đồng đội nhận một lớp giáp ngoài hấp thụ sát thương.',
   },
 
-  // Phap Tu An kit (Task 16) — dong bo tu Skills.ts; ngo_dao_hon_don's
+  // Phap Tu An kit (Task 16) -- dong bo tu Skills.ts; ngo_dao_hon_don's
   // description must carry the basic-slot-only multicast clause because
   // its HUD emblem tooltip is the only place the rule surfaces.
-  van_phap_tuy_tam: fromSkills('van_phap_tuy_tam', {
+  van_phap_tuy_tam: { ...fromSkills('van_phap_tuy_tam', {
     name: 'Vạn Pháp Tùy Tâm',
     description: 'Mỗi đòn hóa thành một nguyên tố bất định.',
-  }),
-  da_phap_lien_tuyen: fromSkills('da_phap_lien_tuyen', {
+  }), iconKey: 'van_phap_tuy_tam' },
+  da_phap_lien_tuyen: { ...fromSkills('da_phap_lien_tuyen', {
     name: 'Đa Pháp Liên Tuyên',
     description: 'Pháp thuật cơ bản bắn ra liên tiếp nhiều lần.',
-  }),
+  }), iconKey: 'da_phap_lien_tuyen' },
   ngo_dao_hon_don: fromSkills('ngo_dao_hon_don', {
     name: 'Ngộ Đạo Hỗn Độn',
     description: 'Chỉ đòn ở ô Thường (Vạn Pháp Tùy Tâm) có thể tự phân luồng — Đa Pháp Liên Tuyên không kích hoạt.',
   }),
 
-  // Kiem Tu Reimagined (spec 2026-09-15 §3/§4.3) — the five Kiem Pho
+  // Kiem Tu Reimagined (spec 2026-09-15 3/4.3) -- the five Kiem Pho
   // orbs (manual picker + HUD strip readout). The 37 combos are
-  // DELIBERATELY absent: K11 forbids any combo-name surface — the fired
+  // DELIBERATELY absent: K11 forbids any combo-name surface -- the fired
   // payload's VFX/damage is the only discovery signal, so no combo id
   // may resolve to display text here (INV-7 fs-guard enforces).
   orb_dam: {
@@ -329,7 +334,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     description: 'Quét ngang toàn trận — sát thương mọi mục tiêu.',
   },
 
-  // Ngu Kiem Dao (Task 9) — the multi-instance phi kiem basic + the two
+  // Ngu Kiem Dao (Task 9) -- the multi-instance phi kiem basic + the two
   // emblem slots (HUD markers only, never resolvable).
   ngu_kiem_thuat: {
     name: 'Ngự Kiếm Thuật',
@@ -346,7 +351,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
 
 }
 
-/** Lookup an toàn — id không có trong map trả undefined (caller fallback). */
+/** Lookup an toan -- id khong co trong map tra undefined (caller fallback). */
 export function turnSkillDisplayMetaOf(skillId: string): TurnSkillDisplayMeta | undefined {
   return TURN_SKILL_DISPLAY_META[skillId]
 }

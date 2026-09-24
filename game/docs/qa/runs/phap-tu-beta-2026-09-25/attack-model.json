@@ -1,0 +1,54 @@
+{
+  "attacks": [
+    {
+      "id": "ATK-REWARD-BYPASS",
+      "surface": "rewardOnly nodes",
+      "probe": "canPurchaseNode/canUpgradeNode must reject every rewardOnly node even with prereqs satisfied and surplus Insight"
+    },
+    {
+      "id": "ATK-GRANT-IDEMPOTENT",
+      "surface": "grantedNodeLevels",
+      "probe": "double grant + pre-existing deeper level must never downgrade or double-apply"
+    },
+    {
+      "id": "ATK-REALM-GATE",
+      "surface": "realm prereq + grant realm",
+      "probe": "The lanes + reward records only apply at foundation_establishment+; isRealmAvailable suppresses unreleased realms"
+    },
+    {
+      "id": "ATK-ELEMENT-DORMANT",
+      "surface": "elementTag mastery",
+      "probe": "uncommitted/other-element mastery must aggregate nothing for the played element"
+    },
+    {
+      "id": "ATK-CAPSTONE-MUTEX",
+      "surface": "selectsSpecialization capstones",
+      "probe": "pairs are excludesNode-mutexed and reference authored spec ids on the base skill"
+    },
+    {
+      "id": "ATK-ICON-DEAD-PATH",
+      "surface": "SKILL_ICON_MANIFEST",
+      "probe": "every iconKey resolves to a file that exists under public/assets/skills"
+    },
+    {
+      "id": "ATK-VFX-UNKNOWN-PRESET",
+      "surface": "vfxPresetId",
+      "probe": "every vfxPresetId on the 5 basics exists in COMBAT_VFX_PRESETS and in the CombatVfxPresetId union"
+    },
+    {
+      "id": "ATK-WAY-LEAK",
+      "surface": "requiredWay stamps",
+      "probe": "non-reward nodes still require spell_pathway; reward nodes aggregate for hidden way only via grant"
+    },
+    {
+      "id": "ATK-DESC-LIE",
+      "surface": "skill descriptions",
+      "probe": "van_moc_lan_doc description claims only the implemented square-zone application"
+    },
+    {
+      "id": "ATK-LOCALE-DRIFT",
+      "surface": "i18n realm reason",
+      "probe": "vi+en lockedReasons.realm both accept {realm} and NodeInspector passes the realm display name"
+    }
+  ]
+}

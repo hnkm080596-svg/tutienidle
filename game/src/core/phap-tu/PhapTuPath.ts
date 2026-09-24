@@ -258,6 +258,21 @@ export const SPELL_PATHWAY: PathWayDefinition = {
     [ARTIFACT_UNLOCK_REALM_ID]: {
       artifactId: 'ngu_hanh_chau',
     },
+    // Three-path design (2026-09-25, sec.4-b + ruling #19) — Truc Co
+    // breakthrough: mastery per element (the element gate activates only
+    // the committed element's grant) + the The pool awakening (fill
+    // starts; spend stays Kim Dan-gated). Hidden way gets the same kinds
+    // at level 2.
+    foundation_establishment: {
+      grantedNodeLevels: {
+        tinh_thong_hoa: 1,
+        tinh_thong_thuy: 1,
+        tinh_thong_moc: 1,
+        tinh_thong_kim: 1,
+        tinh_thong_tho: 1,
+        the_thuc_tinh: 1,
+      },
+    },
   }),
   // P1 - spell_pathway owns the element/route machinery (elemental_casting:
   // element commit, route switch, route profiles, MP pills, the element
@@ -334,7 +349,20 @@ export const HIDDEN_SPELL_PATHWAY: PathWayDefinition = {
   skillIds: [HIDDEN_SPELL_BASIC_ID, HIDDEN_SPELL_SPECIAL_ID],
   passiveSkillIds: [HIDDEN_SPELL_PASSIVE_ID],
   // P7-M2 - canonical realm-entry passive ladder.
-  realmRewards: composeRealmRewards(),
+  // Three-path design (2026-09-25, sec.4-b) — hidden way takes the same
+  // grant kinds at level 2; the_thuc_tinh is omitted because ngo_dao
+  // owns no The pool (M4/R6 — a granted gain would be a dead write).
+  realmRewards: composeRealmRewards({
+    foundation_establishment: {
+      grantedNodeLevels: {
+        tinh_thong_hoa: 2,
+        tinh_thong_thuy: 2,
+        tinh_thong_moc: 2,
+        tinh_thong_kim: 2,
+        tinh_thong_tho: 2,
+      },
+    },
+  }),
   statModifiers: [
     {
       id: 'ngo_dao_linh_luc',

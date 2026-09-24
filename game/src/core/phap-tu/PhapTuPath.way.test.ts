@@ -33,7 +33,7 @@ import {
 import { getRouteStatModifiers, resolveMaxThe } from './PhapTuRoutes'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// Cultivation Path Framework (M4+M7, spec 2026-09-16, audit R6) — way
+// Cultivation Path Framework (M4+M7, spec 2026-09-16, audit R6) -- way
 // identity drives ALL way-specific behavior. Every spell_pathway-only
 // mechanism (element/route/The machinery) must gate on the WAY, never
 // the bare 'spell' path id, so the ngo_dao way cannot reach them.
@@ -56,7 +56,7 @@ function ngoDao(overrides: Partial<PlayerData> = {}): PlayerData {
 
 const NGO_DAO_SHAPES = { collapsed: ngoDao } as const
 
-/** Dirty ngo_dao state — an element/route pair that could only leak in
+/** Dirty ngo_dao state -- an element/route pair that could only leak in
  * through corruption (ngo_dao owns no spellPath commitment). */
 function dirtyNgoDao(make: (overrides?: Partial<PlayerData>) => PlayerData): PlayerData {
   return make({ spellPath: { element: 'fire', route: 'dot' } })
@@ -99,7 +99,7 @@ describe('way predicates — isSpellPathway / isHiddenSpellPathway', () => {
     expect(isSpellPathway(createDefaultPlayer())).toBe(false)
     expect(isSpellPathway(null)).toBe(false)
 
-    // Legacy-shaped (path only, no way) fails closed — the authority
+    // Legacy-shaped (path only, no way) fails closed -- the authority
     // writes both fields inside the ritual transaction.
     const legacy = createDefaultPlayer()
     legacy.cultivationPath = 'spell'
@@ -273,7 +273,15 @@ describe('PHAP_TU_NODES — requiredWay spell_pathway export stamp', () => {
   it('every node carries requiredCultivationPath spell + requiredWay spell_pathway', () => {
     for (const node of PHAP_TU_NODES) {
       expect(node.requiredCultivationPath, node.id).toBe('spell')
-      expect(node.requiredWay, node.id).toBe('spell_pathway')
+
+      // Three-path design (2026-09-25, sec.4-b): realm-reward grant nodes
+      // deliberately carry NO requiredWay -- both spell ways aggregate a
+      // granted level (purchases stay sealed by rewardOnly).
+      if (node.rewardOnly) {
+        expect(node.requiredWay, node.id).toBeUndefined()
+      } else {
+        expect(node.requiredWay, node.id).toBe('spell_pathway')
+      }
     }
   })
 
@@ -359,7 +367,7 @@ describe('way stat facet — shared spell domain emission', () => {
     wayLess.cultivationPath = 'spell'
     wayLess.baseStats.attunement = 10
 
-    // M7: the LEGACY_PATH_TO_WAY lenient fallback is gone — the attunement
+    // M7: the LEGACY_PATH_TO_WAY lenient fallback is gone -- the attunement
     // facet cannot resolve a way, so no spell emission occurs.
     expect(resolvePlayerFinalStats(wayLess, []).maxMp).toBe(0)
   })
@@ -399,7 +407,7 @@ describe('battle build — the way drives the kit branch', () => {
     expect(participant.basic?.id).toBe(HIDDEN_SPELL_BASIC_ID)
     expect(participant.basic?.compositePicks?.pool).toHaveLength(5)
     expect(participant.special?.skill.id).toBe(HIDDEN_SPELL_SPECIAL_ID)
-    // The An kit carries no The loop — no theGain fields on the basic.
+    // The An kit carries no The loop -- no theGain fields on the basic.
     expect(participant.basic?.theGainOnLandedCast).toBeUndefined()
     expect(participant.basic?.theGainOnCrit).toBeUndefined()
   })
@@ -409,7 +417,7 @@ describe('battle build — the way drives the kit branch', () => {
     const player = NGO_DAO_SHAPES.collapsed()
     gameManager.setActivePlayer(player)
 
-    // No kit skills learned — assertNgoDaoKitLearned must fail loudly.
+    // No kit skills learned -- assertNgoDaoKitLearned must fail loudly.
     expect(() => gameManager.startBattleWithPlayer(player, dummyEnemy())).toThrow()
   })
 

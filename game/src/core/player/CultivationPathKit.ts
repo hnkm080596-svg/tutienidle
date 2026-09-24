@@ -1,6 +1,4 @@
 import type { ElementType } from '../element/ElementType'
-import type { SpellPathRoute } from '../phap-tu/PhapTuState'
-import type { OrbId } from '../kiem-tu/KiemTuState'
 import type { DomainDeltaDeriver, StatModifier } from '../stats/StatCalculator'
 import type { Stats } from '../stats/StatBlock'
 import type { StatDomain } from '../stats/StatDomain'
@@ -74,6 +72,13 @@ export interface CultivationPathRealmReward {
   // from CANONICAL_REALM_PASSIVE_LADDER; null is an authored directive
   // suppressing the canonical pick for this realm.
   passiveSkillId?: string | null
+  // Three-path design (2026-09-25, sec.4-b + ruling #19) - realm-entry
+  // NODE GRANTS: nodeId -> level, applied by
+  // grantCultivationPathRealmReward as `nodeLevels[id] = max(current, L)`
+  // (idempotent, never downgrades). Only targets rewardOnly-authored
+  // nodes - purchase/upgrade/tree rendering stay sealed; element, route
+  // and way gates still govern whether a granted level is ACTIVE.
+  grantedNodeLevels?: Record<string, number>
 }
 
 // Ritual-time offer gate, evaluated live against the player (never

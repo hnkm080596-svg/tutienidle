@@ -217,6 +217,12 @@ export function canPurchaseNode(player: PlayerData, node: ProgressionNode): bool
     return false
   }
 
+  // Three-path design (2026-09-25) - realm-reward nodes arrive only via
+  // realmRewards.grantedNodeLevels; Insight is never a valid input.
+  if (node.rewardOnly) {
+    return false
+  }
+
   if (getNodeLevel(player, node.id) > 0) {
     return false
   }
@@ -243,6 +249,12 @@ export function canUpgradeNode(player: PlayerData, node: ProgressionNode): boole
   // M-QI-05 - cast-channel cores level by cast count ONLY; Insight is
   // never a valid input for them (QI-D3).
   if (node.levelsSkillId !== undefined && CAST_LEVELING_THRESHOLDS[node.levelsSkillId] !== undefined) {
+    return false
+  }
+
+  // Three-path design (2026-09-25) - realm-reward grants own the level;
+  // Insight upgrades would bypass the grant-vs-hidden-way number contract.
+  if (node.rewardOnly) {
     return false
   }
 

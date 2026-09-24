@@ -397,5 +397,17 @@ export function grantCultivationPathRealmReward(
     player.artifact = createDefaultArtifactProgress(reward.artifactId)
   }
 
+  // Three-path design (2026-09-25, sec.4-b) - realm-entry node grants:
+  // idempotent max-write (a re-entry or a deeper earlier grant never
+  // downgrades). Effect activation stays behind the standard
+  // element/route/way gates in NodeSystem.
+  if (reward.grantedNodeLevels) {
+    player.nodeLevels ??= {}
+
+    for (const [nodeId, level] of Object.entries(reward.grantedNodeLevels)) {
+      player.nodeLevels[nodeId] = Math.max(player.nodeLevels[nodeId] ?? 0, level)
+    }
+  }
+
   return true
 }

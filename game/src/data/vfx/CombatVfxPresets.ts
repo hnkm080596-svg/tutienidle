@@ -92,7 +92,7 @@ export const COMBAT_VFX_PRESETS = {
     durationMs: 340,
     screenShake: { durationMs: 120, intensity: 0.004 },
   },
-  // Kiếm Tu Bạt Kiếm channel tick (Task 8, 2026-08-28) — full-screen AoE
+  // Kiem Tu Bat Kiem channel tick (Task 8, 2026-08-28) -- full-screen AoE
   // per design spec, art sau.
   tu_luc: {
     id: 'tu_luc',
@@ -101,10 +101,10 @@ export const COMBAT_VFX_PRESETS = {
     areaScale: 1.2,
     durationMs: 260,
   },
-  // Kiem Tu Reimagined (spec 2026-09-15 §4.3, K11) — one entry per
+  // Kiem Tu Reimagined (spec 2026-09-15 4.3, K11) -- one entry per
   // Kiem Pho combo: tier-scaled shape (len3 hybrid 1.15 / len4 hybrid
   // 1.3 / len5 screen 1.5 + shake) plus a golden-angle distinct color
-  // signature per combo — the fired payload is the only discovery
+  // signature per combo -- the fired payload is the only discovery
   // signal, no two combos may render identically.
   kiem_combo_tam_thich: {
     id: 'kiem_combo_tam_thich',
@@ -374,6 +374,45 @@ export const COMBAT_VFX_PRESETS = {
     areaScale: 1.5,
     durationMs: 400,
     screenShake: { durationMs: 140, intensity: 0.005 }
+  },
+  // Three-path design (2026-09-25, ruling #12) -- one preset per Phap Tu
+  // element basic (distinct signature, no two basics render alike).
+  hoa_cau_comet: {
+    id: 'hoa_cau_comet',
+    color: 0xff8c42,
+    space: 'hybrid',
+    areaScale: 1.05,
+    durationMs: 260,
+    screenShake: { durationMs: 110, intensity: 0.003 },
+  },
+  thuy_tien_dart: {
+    id: 'thuy_tien_dart',
+    color: 0x63d8ff,
+    space: 'upright',
+    areaScale: 0.95,
+    durationMs: 240,
+  },
+  doc_chuong_palm: {
+    id: 'doc_chuong_palm',
+    color: 0x6ee86a,
+    space: 'attached',
+    areaScale: 1,
+    durationMs: 240,
+  },
+  diem_kim_point: {
+    id: 'diem_kim_point',
+    color: 0xfff3b0,
+    space: 'upright',
+    areaScale: 0.9,
+    durationMs: 200,
+  },
+  tho_cau_boulder: {
+    id: 'tho_cau_boulder',
+    color: 0xd9a05b,
+    space: 'ground_projected',
+    areaScale: 1.15,
+    durationMs: 280,
+    screenShake: { durationMs: 130, intensity: 0.004 },
   },
 } as const satisfies Record<CombatVfxPresetId, CombatVfxPreset>
 

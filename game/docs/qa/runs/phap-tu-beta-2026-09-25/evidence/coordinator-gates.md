@@ -1,0 +1,45 @@
+# Coordinator gates — phap-tu beta scope
+
+Head under review: working tree on devin/1790260800-phap-tu-basic (base be1bdf8d), 33 files changed.
+
+## Executed gates
+
+1. `npm run type-check` (vue-tsc --build) — exit 0, clean across the new
+   skillIcon thread (TurnSkillDisplayMeta -> SkillIconManifest ->
+   CombatSkillPresentation -> TurnCombatSkillBar -> CombatSkillSlot).
+2. Scoped vitest — new + touched pins green:
+   - PhapTuRealmRewardNodes.test.ts: 7/7 (rewardOnly seal, grant
+     idempotency + no-downgrade, hidden-way L2 + no The, element gate,
+     resolveMaxThe +10).
+   - PhapTuBasicNodes.test.ts: 8/8 (+10%/direction cap, root+realm
+     gates, mutex capstones, levelGates <= maxLevel).
+   - PhapTuPath.way.test.ts / CultivationPathKit.test.ts /
+     NodeInspector.test.ts / cultivationRitualFlow.integration.test.ts:
+     updated pins green (stamp exemption, realmRewards records, realm
+     name in locked reason, 8 resource modifiers incl. dormant
+     masteries at element null).
+   - GameManager.deadIds.test.ts: 5/5 after TECHNIQUE_CAP_ALLOWLIST
+     extension (ruling #8 authored gates).
+3. tests/architecture/asciiComments.test.ts — 1/1 after ASCII pass on
+   all new comments (40 violations found and fixed, comment tokens only;
+   Vietnamese data strings untouched by design).
+4. Adversarial attack-model probes — all defended by authored pin
+   tests above (ATK-REWARD-BYPASS -> canPurchase/canUpgrade seal;
+   ATK-GRANT-IDEMPOTENT -> max-write; ATK-REALM-GATE -> foundation
+   prereq + isRealmAvailable; ATK-ELEMENT-DORMANT -> isNodeElementActive;
+   ATK-CAPSTONE-MUTEX -> excludesNode + authored spec ids;
+   ATK-ICON-DEAD-PATH -> manifest keys backed by files on disk;
+   ATK-VFX-UNKNOWN-PRESET -> union + preset map; ATK-WAY-LEAK ->
+   requiredWay stamp pin; ATK-DESC-LIE -> van_moc_lan_doc description;
+   ATK-LOCALE-DRIFT -> vi+en lockedReasons.realm).
+5. Full `npm run verify` — in flight (vitest suite re-run after the two
+   real fixes above; CombatScene*/dongFu/staticArt extent file-level
+   failures are the known canvas/magick environment noise already
+   present on master, not task failures).
+
+## Honest labels
+
+- ngoDaoReaction `doc_can` single-test miss observed once in the first
+  full run, passes in isolation and alongside the new files; under
+  watch on the re-run (deterministic seeded rng, no random excuse).
+- NodeRenderer glyph layout is presentation-only; no runtime gate.

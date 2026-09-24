@@ -157,7 +157,7 @@
         "lockedReasons": {
           "cost": "Cần {cost} Cảm Ngộ (đang có {current})",
           "prerequisiteNode": "Cần lĩnh ngộ trước: {name}",
-          "realm": "Cần đạt cảnh giới yêu cầu",
+          "realm": "Mở ở cảnh giới {realm}",
           "element": "Cần mở khoá Hành liên quan",
           "elementMismatch": "Thuộc Hành {element} — đã chọn Hành khác",
           "routeMismatch": "Chỉ lĩnh ngộ ở hướng {route}",

@@ -258,6 +258,18 @@ export interface ProgressionNode {
   elementTag?: ElementType
 
   /**
+   * Three-path design (2026-09-25, realm-reward grants) - marks this node
+   * as a REALM-REWARD node: levels arrive only via a way's
+   * realmRewards.grantedNodeLevels record at breakthrough - never
+   * purchased (`canPurchaseNode` rejects), never upgraded with Insight
+   * (`canUpgradeNode` rejects), never tree-rendered. Effects still
+   * aggregate through the standard element/route/way gates exactly like
+   * a purchased node (an uncommitted element's mastery grant simply
+   * stays dormant).
+   */
+  rewardOnly?: boolean
+
+  /**
    * M-QI-05 / QI-D3 - marks this node as a SKILL CORE NODE: the
    * canonical level authority for the named skill (top-level Skill
    * template or eligible native TurnSkillDefinition). Core Nodes are

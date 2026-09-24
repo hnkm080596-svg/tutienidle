@@ -98,6 +98,10 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
   // in `prerequisites`, 8 cap nodes in `levelGates`); techniqueGrade and
   // revealWhen technique gates remain forbidden everywhere until a later
   // content mission extends the allowlist.
+  // Three-path design (2026-09-25, ruling #8): the Phap Tu basic lane
+  // extends the cap allowlist -- the minor tier inside a realm decides
+  // the level cap, so every leveled basic node carries techniqueRank
+  // levelGates by contract.
   const TECHNIQUE_UNLOCK_ALLOWLIST = new Set([
     'linh_ngo_tat_phuong_giang_the',
     'linh_ngo_bat_thu_can_quet',
@@ -118,6 +122,27 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
     'ngu_kiem_sac',
     'ngu_kiem_phong',
     'ngu_kiem_sat',
+    // Phap Tu basic lane (ruling #8 minor-tier caps).
+    'hoa_sac_nhiet',
+    'hoa_diem_chuan',
+    'hoa_an_sau',
+    'hoa_nhiet_keo',
+    'hoa_sac_huyet',
+    'thuy_xuyen_lan',
+    'thuy_diem_chuan',
+    'thuy_te_dam',
+    'thuy_nhiet_tri',
+    'moc_doc_sau',
+    'moc_doc_dien',
+    'moc_doc_tham',
+    'kim_sac_ben',
+    'kim_diem_chuan',
+    'kim_xuyen_nhuy',
+    'kim_bao_the',
+    'tho_tram_luy',
+    'tho_tran_sau',
+    'tho_cung_gioi',
+    'tho_linh_the',
   ])
 
   it('technique gates stay inside the M-QI-06 authored allowlist', () => {

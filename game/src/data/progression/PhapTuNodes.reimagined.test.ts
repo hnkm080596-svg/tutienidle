@@ -152,11 +152,30 @@ describe('PhapTuNodes reimagined — per-element branch', () => {
   })
 
   it('khong con legacy ids: lap_dao_thuan, reaction_path_unlock, the_man, selectsSpecialization', () => {
+    // Three-path design (2026-09-25, ruling #7) — the ONLY sanctioned
+    // selectsSpecialization nodes are the 10 basic-lane capstones (2-way
+    // variance split per element basic).
+    const BASIC_CAPSTONES = new Set([
+      'fire_basic_hoa_tu_diem',
+      'fire_basic_hoa_tan_diem',
+      'water_basic_thuy_ngan_lien',
+      'water_basic_thuy_dao_lan',
+      'wood_basic_moc_tu_doc',
+      'wood_basic_moc_lan_doc',
+      'metal_basic_kim_tu_phong',
+      'metal_basic_kim_tan_phong',
+      'earth_basic_tho_tu_nhan',
+      'earth_basic_tho_bang_loa',
+    ])
+
     for (const entry of PHAP_TU_NODES) {
       expect(entry.id).not.toContain('lap_dao_thuan')
       expect(entry.id).not.toContain('reaction_path_unlock')
       expect(entry.id).not.toContain('the_man')
-      expect(entry.effect.selectsSpecialization, entry.id).toBeUndefined()
+
+      if (entry.effect.selectsSpecialization !== undefined) {
+        expect(BASIC_CAPSTONES.has(entry.id), entry.id).toBe(true)
+      }
     }
   })
 })
