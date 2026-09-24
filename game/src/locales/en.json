@@ -916,7 +916,8 @@
       "creating": "Binding fate…",
       "errors": {
         "rollFailed": "Cannot observe the heavens. Please try again."
-      }
+      },
+      "summary": "{name} · {talent} · {skill}"
     }
   },
   "skillResource": {

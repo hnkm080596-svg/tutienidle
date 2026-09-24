@@ -40,7 +40,9 @@ begin
   -- No attribute distribution: base stats are the fixed 1/1/1/1/1 default and
   -- the mortal pick must be one of the three precursor ids (tram = Huy Kiem /
   -- linh_bao = Linh Bao / huy_quyen = Huy Quyen), matching
-  -- core/skill/MortalPrecursors.ts.
+  -- core/skill/MortalPrecursors.ts. DRIFT NOTE: this literal list must mirror
+  -- MORTAL_PRECURSOR_SKILL_IDS exactly - a fourth precursor added client-side
+  -- is rejected here until this check is updated in the same release.
   if p_mortal_basic_skill_id not in ('tram','linh_bao','huy_quyen') then raise exception 'invalid mortal basic skill'; end if;
 
   insert into public.characters(user_id, name, normalized_name, selected_talent_ids, base_attributes, mortal_basic_skill_id)

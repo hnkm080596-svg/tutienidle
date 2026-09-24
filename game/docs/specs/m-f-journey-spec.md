@@ -97,9 +97,10 @@ evidence, not a fix (P12/coordinator rule).
 Lives next to the harness: `core/simulation/earlygame/TrucCoJourney.test.ts`.
 Journey **legs** as named describes; every leg rides production seams.
 Pinned profile convention reused (`{name:'journey',
-talentIds:['hap_linh'], attributes:{strength:2,vitality:3}}` — the M-C
-PINNED profile; grade-leg fixtures use the committed seeded-state
-pattern instead).
+talentIds:['hap_linh'], mortalBasicSkillId:'tram'}` — the v82 creation
+profile shape; base stats are the fixed 1/1/1/1/1 default, no
+attribute distribution. Grade-leg fixtures use the committed
+seeded-state pattern instead).
 
 **Leg order (explicit — C2C-P2/M1/r86):** A → B → **E.1** (floor-1
 first clear at TC L1 — E owns ALL first-clear/unlock observations) →

@@ -916,7 +916,8 @@
       "creating": "Đang lập mệnh…",
       "errors": {
         "rollFailed": "Không thể quan sát thiên cơ. Vui lòng thử lại."
-      }
+      },
+      "summary": "Đạo danh {name} · {talent} · {skill}"
     }
   },
   "skillResource": {

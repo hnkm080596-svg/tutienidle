@@ -210,7 +210,7 @@ Chỉ đưa save hiện tại lên database không đủ chống cheat vì logic
 
 Trạng thái frontend prototype (2026-08-24):
 
-- Đã có intro 3 giây, Login/Register/Chơi ngay và wizard tạo nhân vật ba bước.
+- Đã có intro 3 giây, Login/Register/Chơi ngay và màn tạo nhân vật một trang (đạo danh + thiên phú + chiêu thức khởi đầu).
 - Đã có validation ID phía client, chọn đúng 1/9 thiên phú và chọn chiêu thức khởi đầu.
 - Đã nối kết quả tạo nhân vật vào local player/save để kiểm thử end-to-end UI.
 - Chưa hoàn thành backend auth, kiểm tra tên unique, server roll và transaction tạo nhân vật; các phần này vẫn thuộc Phase 2/4 phía server.

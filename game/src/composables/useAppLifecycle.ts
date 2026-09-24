@@ -313,7 +313,11 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         const restored = restoreGameSession(player, gameManager, loaded.save)
 
         if (restored.status === 'rejected') {
-          onError(restored.message ?? 'Restore failed')
+          // A save the boot path cannot consume must reach a recovery
+          // surface (export/delete) like incompatible/corrupted — routing
+          // 'rejected' to onError leaves the offending save wedged on
+          // every subsequent boot (QA F-INT-01).
+          saveIssue.report('corrupted', JSON.stringify(loaded.save))
           boot.fail()
           return { status: 'failed' }
         }

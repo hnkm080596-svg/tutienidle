@@ -119,7 +119,9 @@ const openedSkill = computed(() => {
 })
 
 function isPickedPrecursor(skillId: string): boolean {
-  // Absent pick = the runtime's default basic.
+  // Save v82 contract: a mortal save always carries the pick. An absent
+  // pick here means an in-memory/crafted player - the tram default below
+  // is the defensive runtime default, not a creation grant.
   return (player.mortalBasicSkillId ?? MORTAL_DEFAULT_BASIC_ID) === skillId
 }
 </script>
