@@ -280,10 +280,15 @@ export class GameManagerSaveRestore {
       throw new Error(`Invalid mortalBasicSkillId in save: ${String(mortalPick)}`)
     }
 
-    if (save.player.cultivationPath !== undefined) {
+    // The mortal predicate keys on realmId, not cultivationPath: a crafted
+    // non-mortal save with no path must not be treated as mortal here.
+    const isMortalSave =
+      save.player.realmId === 'mortal' && save.player.cultivationPath === undefined
+
+    if (!isMortalSave) {
       if (mortalPick !== undefined) {
         throw new Error(
-          `mortalBasicSkillId persisted post-path in save: '${mortalPick}' on path '${save.player.cultivationPath}'`,
+          `mortalBasicSkillId persisted post-mortal in save: '${mortalPick}' (realmId '${save.player.realmId}', path '${String(save.player.cultivationPath)}')`,
         )
       }
     } else {

@@ -13,8 +13,9 @@ import type { GameSave } from './saveTypes'
  *   - player.nodeLevels + purchasedNodeIds - the canonical core_<id>
  *     grant (v73 ownership + mirror)
  *
- * Saves for a post-path player (cultivationPath set) must NOT carry the
- * pick - the restore preflight rejects it - so this helper no-ops there.
+ * Saves for a non-mortal player (realmId other than 'mortal', or a
+ * committed cultivationPath) must NOT carry the pick - the restore
+ * preflight rejects it - so this helper no-ops there.
  *
  * Mutates the given save (callers own the fixture lifetime). Returns the
  * same save for chaining. */
@@ -24,7 +25,7 @@ export function withMortalCreationPick(save: GameSave, skillId = 'tram'): GameSa
   }
 
   const player = save.player
-  if (player.cultivationPath !== undefined) {
+  if (player.realmId !== 'mortal' || player.cultivationPath !== undefined) {
     return save
   }
 
@@ -53,7 +54,7 @@ export function primeMortalCreationPick(
   if (!isMortalPrecursorSkillId(skillId)) {
     throw new Error(`mortalSaveFixture: '${skillId}' is not a mortal precursor id`)
   }
-  if (player.cultivationPath !== undefined) {
+  if (player.realmId !== 'mortal' || player.cultivationPath !== undefined) {
     return
   }
 

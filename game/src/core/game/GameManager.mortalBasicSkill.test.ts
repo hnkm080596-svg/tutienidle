@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { ManualClockSource } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
@@ -55,6 +55,19 @@ describe('bootstrapEarlyGamePlayer — creation pick write', () => {
     const player = createDefaultPlayer()
 
     expect(() => bootstrapEarlyGamePlayer(gameManager, player, 'hoa_cau_thuat')).toThrow()
+    expect(player.mortalBasicSkillId).toBeUndefined()
+  })
+
+  it('throws fail-closed when any precursor learn fails', () => {
+    const gameManager = setup()
+    const player = createDefaultPlayer()
+
+    const originalLearn = gameManager.progressionOps.learnSkill.bind(gameManager.progressionOps)
+    vi.spyOn(gameManager.progressionOps, 'learnSkill').mockImplementation((skillId, p) =>
+      skillId === 'huy_quyen' ? false : originalLearn(skillId, p),
+    )
+
+    expect(() => bootstrapEarlyGamePlayer(gameManager, player, 'tram')).toThrow(/precursor learn failed/i)
     expect(player.mortalBasicSkillId).toBeUndefined()
   })
 })

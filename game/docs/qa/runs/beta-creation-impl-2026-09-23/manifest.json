@@ -750,7 +750,7 @@
       "path": "docs/online-login-cloud-save-plan.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "989ff330a7d9b8f35bdba5379e5f2553f99930c0efd3e069ca5f69380e0a14ad"
+      "hash": "08e1c47a266d55ebd180ac6a27d34632a812d60e1eeab69df82cc3a3f5edf921"
     },
     {
       "path": "docs/p7/decisions.md",
@@ -1146,7 +1146,7 @@
       "path": "docs/plans/beta-creation-plan.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "0687846aa9393050147fc9c8284d61efd7bfdf8f5797437d082dd6012986a776"
+      "hash": "959d77e553a61dfb04108d2d34815cda685d97ff4d22bb84a9a100cfe4f071d6"
     },
     {
       "path": "docs/plans/m-f-artifact-defer-plan.md",
@@ -2928,7 +2928,7 @@
       "path": "docs/specs/beta-creation-spec.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "c2130a6eb4dd66acab2ef8263b0f92fe95207d8e94509b6fabee2e41a0af0dbb"
+      "hash": "9437125108a7241efa81e7d6e2fc5b68228c50d844c0dac1ada14008dad65b99"
     },
     {
       "path": "docs/specs/m-f-artifact-defer-spec.md",
@@ -17886,7 +17886,7 @@
       "path": "src/core/game/GameManagerSaveRestore.boundary.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "74cba1e60d6c05268593627c0c73316554f793ede260db187e6e34bc178d7f75"
+      "hash": "b44fb3b0f8286a558e58ee688b4084e99a9fda5b52af78982f759f58d25488bc"
     },
     {
       "path": "src/core/game/GameManagerSaveRestore.onceOnlySettle.test.ts",
@@ -21900,7 +21900,7 @@
       "path": "src/services/character/SupabaseCharacterCreationService.contract.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "47e4d0daa57c5ab4f7b653d89d5282344431a4a583cfa07d27dadc28161d5116"
+      "hash": "8c2d614f875f49b9399048322eaeb1c8b6a1e56ef7b55273d13e468bbc07afc0"
     },
     {
       "path": "src/services/character/SupabaseCharacterCreationService.ts",
@@ -22293,6 +22293,12 @@
       "hash": "fd3d8e1abc0e2adf81ffec357533a90b17a30928525773abd51480dc02eeb077"
     },
     {
+      "path": "supabase/migrations/202609240001_beta_creation_character_pick.sql",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "591582b84a96adaa07ef2c95e14e64c45fd3c88145f028f249f8b8e38ea66d1b"
+    },
+    {
       "path": "test-results/.last-run.json",
       "kind": "file",
       "mode": 33188,
@@ -22428,7 +22434,7 @@
       "path": "tests/architecture/baselines/asciiComments.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "10504140008309bd9dc5299a47fd435ac92484d8c9196ef880c643e305f19ece"
+      "hash": "873c075ea180edf30404c6bc273e14be18e87636daba57c093d32d348aeb2523"
     },
     {
       "path": "tests/architecture/battleLifecyclePathBoundary.test.ts",
@@ -22857,5 +22863,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "08c93b6a43db04a2f06659ec81e378a63c9c21e98035f7c855ee5f5fcdeba51c"
+  "productStateId": "ebf0cb2206bfaaa5cab85310a965d27fdc59164134997a6e607bd08243632ce8"
 }

@@ -21,6 +21,7 @@
 // transaction (post-learn a valid pick cannot fail; false => throw).
 import type { GameManager } from './GameManager'
 import type { PlayerData } from '../player/Player'
+import { MORTAL_PRECURSOR_SKILL_IDS } from '../skill/MortalPrecursors'
 
 export interface EarlyGameCreationProfile {
   name: string
@@ -53,6 +54,14 @@ export function bootstrapEarlyGamePlayer(
   // Huy Quyen - second mortal basic, learned; grinding it
   // to Lv3 (10.000 casts) is what reveals hidden_body_pathway at the ritual.
   gameManager.progressionOps.learnSkill('huy_quyen', player)
+
+  // The learns are fail-closed like the pick below: a silently failed
+  // precursor learn drops that hidden-way Lv3 gate forever.
+  for (const skillId of MORTAL_PRECURSOR_SKILL_IDS) {
+    if (!gameManager.skillManager.has(skillId)) {
+      throw new Error(`bootstrap: precursor learn failed: ${skillId}`)
+    }
+  }
 
   // The pick is a runtime-validated write through the ONE role-write op.
   // A legal post-learn pick never returns false - treat false as drift.

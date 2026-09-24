@@ -77,7 +77,9 @@ function baseSave(player: PlayerData, overrides: Partial<GameSave> = {}): GameSa
   // the picked precursor must be learned. Callers passing a mortal player
   // get the boot seam's writes mirrored so fixtures stay legal saves;
   // callers overriding the skills slice own including the pick entry.
-  if (save.player.cultivationPath === undefined) {
+  // The mortal predicate mirrors the preflight: realmId 'mortal' and no
+  // path - a non-mortal realm fixture never carries a pick.
+  if (save.player.realmId === 'mortal' && save.player.cultivationPath === undefined) {
     if (save.player.mortalBasicSkillId === undefined) {
       save.player.mortalBasicSkillId = 'tram'
     }
@@ -1114,8 +1116,23 @@ describe('v82 mortalBasicSkillId preflight', () => {
       skills: [structuredClone(SAVED_SKILL)],
     })
 
-    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/mortalBasicSkillId persisted post-path/i)
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/mortalBasicSkillId persisted post-path|post-mortal/i)
     expect(manager.techniqueManager.getActive()).toBeUndefined()
+    expect(manager.skillManager.getAll()).toEqual([])
+  })
+
+  // The mortal predicate keys on realmId, not cultivationPath: a corrupt
+  // non-mortal + no-path save carrying a learned pick is still rejected.
+  it('rejects a non-mortal realm save carrying a pick before any owner mutation', () => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+    player.realmId = 'qi_refining'
+    player.mortalBasicSkillId = 'tram'
+    const save = baseSave(player, {
+      skills: [{ ...structuredClone(SAVED_SKILL), id: 'tram' }],
+    })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/post-mortal/i)
     expect(manager.skillManager.getAll()).toEqual([])
   })
 })
