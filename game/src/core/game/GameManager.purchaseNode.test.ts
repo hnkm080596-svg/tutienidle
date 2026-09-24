@@ -168,7 +168,7 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
     expect(gameManager.skillManager.get('test_spec_skill')?.selectedSpecializationId).toBeUndefined()
   })
 
-  // Three-path design (2026-09-25) — capstone/variant nodes own the
+  // Three-path design (2026-09-25) -- capstone/variant nodes own the
   // claim on the specialization they select: the free-switch chip path
   // must hold the claiming node or the Insight cost / realm prereq /
   // excludesNode mutex are all bypassed. Unclaimed specs stay free.

@@ -179,7 +179,7 @@ describe('buildTurnSkillPresentation — skillName/skillDescription (9.5 #5)', (
   })
 })
 
-// Three-path design (2026-09-25, sec.5.1) — skillIcon pipeline:
+// Three-path design (2026-09-25, sec.5.1) -- skillIcon pipeline:
 // TurnSkillDisplayMeta.iconKey -> SKILL_ICON_MANIFEST -> entry.skillIcon.
 describe('buildTurnSkillPresentation — skillIcon (iconKey -> manifest -> entry)', () => {
   it('mortal precursor skill (tram) → icon path từ manifest', () => {
