@@ -88,7 +88,14 @@ Independent blind reviewers on the frozen head — none had access to this doc.
   validator enforces `active === (completed < 36)`. Pin tests at both layers; the
   two COR-nit crafted-save imprecisions (unreachable "Complete" label, unwired
   reader) are now structurally rejected at load, closing them too.
-- **Delta seal** on 0578eb99: in flight (fresh reviewer on the fix delta).
+- **Delta seal** on 0578eb99: **SEAL** — finished⟺bodyCompleted invariant verified
+  against all writers; `active === completed<36` holds across every write site;
+  no runtime import cycle (back edge is `import type`); all acceptance seams
+  reach the mechanism module statically; pin tests genuine. 2 Nits recorded:
+  validator/reader pairing is optional per kind (vacuous — registered kinds pair
+  atomically); second nit same defer class.
+- **Clean pair satisfied** (clean-A SEAL×3 + clean-B COR/AUTH SEAL + INT finding
+  fixed + delta SEAL) → merged into beta/rc @22a2d466 (PR #25).
 - Deferred carried over: frozen-record `active=true` residue (inert — all
   consumers gate on `frozen`); `pityByLevel` over-cap entries (retained-history
   semantics, self-corrects at next attempt); `stepCost` shows "Giá bước kế: 0" at

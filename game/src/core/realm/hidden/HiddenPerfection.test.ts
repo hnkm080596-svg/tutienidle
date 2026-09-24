@@ -12,9 +12,10 @@ import {
   HIDDEN_MECHANIC_ANCIENT_BEAST_TRIAL,
   HIDDEN_MECHANIC_QUAN_THE,
 } from '../../../data/realm/HiddenBodyRealms'
-// Side-effect import: registers the nghich validator + finished reader
-// the integrity contract dispatches on.
+// Side-effect imports: register each mechanism's validator + finished
+// reader - the integrity contract dispatches on them.
 import './NghichChuTian'
+import './QuanTheDiversion'
 
 function issuesOf(player: { hiddenPerfection?: unknown }): string[] {
   const issues: { path: string; message: string }[] = []
@@ -171,6 +172,23 @@ describe('assertHiddenPerfectionIntegrity (restore preflight, fail-closed)', () 
     }
     nghich.completedHiddenBodyRealmIds = ['mortal', 'qi_refining']
     expect(integrityIssue({ hiddenPerfection: nghich, realmId: 'foundation_establishment' })).toMatch(
+      /integrity violation/,
+    )
+
+    // Same shape on the quan_the side: the registered reader reports
+    // finished (progress >= required) while bodyCompleted is false.
+    const quanThe = createDefaultHiddenPerfection()
+    quanThe.realms = {
+      mortal: { discovered: true, bodyCompleted: true, frozen: false },
+      qi_refining: {
+        discovered: true,
+        bodyCompleted: false,
+        frozen: false,
+        mechanic: { kind: 'quan_the', active: true, progress: 50_000, required: 50_000 },
+      },
+    }
+    quanThe.completedHiddenBodyRealmIds = ['mortal']
+    expect(integrityIssue({ hiddenPerfection: quanThe, realmId: 'qi_refining' })).toMatch(
       /integrity violation/,
     )
 
