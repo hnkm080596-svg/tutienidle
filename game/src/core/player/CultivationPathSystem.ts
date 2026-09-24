@@ -422,6 +422,28 @@ export function grantCultivationPathRealmReward(
         continue
       }
 
+      // core_ ids need the purchasedNodeIds mirror per save validation;
+      // a grant writes nodeLevels only, so one would corrupt the save.
+      if (nodeId.startsWith('core_')) {
+        console.warn(
+          `grantedNodeLevels entry '${nodeId}' targets a core_ id - grant skipped`,
+        )
+        continue
+      }
+
+      // Transactional effects (one-shot grants, spec claims, purchases)
+      // are dead on a levels-only grant - warn so the author notices.
+      if (
+        node.effect.unlocksSkillIds !== undefined ||
+        node.effect.selectsSpecialization !== undefined ||
+        node.effect.kiemYGrant !== undefined ||
+        node.effect.kiemDaoGrant !== undefined
+      ) {
+        console.warn(
+          `grantedNodeLevels entry '${nodeId}' carries transactional effects that node-level grants do not fire`,
+        )
+      }
+
       const clamped = Math.min(level, getNodeMaxLevel(node))
       player.nodeLevels[nodeId] = Math.max(player.nodeLevels[nodeId] ?? 0, clamped)
     }

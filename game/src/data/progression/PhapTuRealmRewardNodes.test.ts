@@ -15,7 +15,7 @@ import { resolveMaxThe } from '../../core/phap-tu/PhapTuRoutes'
 import { MAX_THE } from '../../core/combat/CombatTypes'
 import { SPELL_PATHWAY, HIDDEN_SPELL_PATHWAY } from '../../core/phap-tu/PhapTuPath'
 import { PHAP_TU_NODES } from './PhapTuNodes'
-import { PROGRESSION_NODE_BY_ID } from '../../data/progression/ProgressionNodeCatalog'
+import { ALL_PROGRESSION_NODES, PROGRESSION_NODE_BY_ID } from '../../data/progression/ProgressionNodeCatalog'
 import {
   THE_THUC_TINH_NODE_ID,
   TINH_THONG_NODE_IDS,
@@ -290,7 +290,9 @@ describe('grantCultivationPathRealmReward - ownership validation', () => {
 describe('specialization claims - uniqueness pin', () => {
   it('no two nodes claim the same (skillId, specializationId) pair', () => {
     const seen = new Map<string, string>()
-    for (const node of PHAP_TU_NODES) {
+    // Catalog-wide: a duplicate claimer in ANY node array would make the
+    // .find() claiming-node gate and the .some() clawback disagree.
+    for (const node of ALL_PROGRESSION_NODES) {
       const claim = node.effect.selectsSpecialization
       if (!claim) continue
       const key = `${claim.skillId}::${claim.specializationId}`
