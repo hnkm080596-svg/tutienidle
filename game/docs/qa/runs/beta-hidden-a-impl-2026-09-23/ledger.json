@@ -73,6 +73,54 @@
       "payloadPath": "events/0002.json",
       "payloadHash": "08fee3f8ab1ae2e77614d1f076e0c0ad1314c2e0663a3d06968e1b8e10dd1662",
       "eventHash": "5d507823ee7f12c3a13cbf969717bf50959e45dd66f10b056ae9e1de88b5af26"
+    },
+    {
+      "seq": 3,
+      "at": "2026-09-24T05:25:56.029Z",
+      "kind": "FINDINGS",
+      "actor": "sealed-reviewer-9b141c2f",
+      "state": {
+        "productStateId": "5e8731a4e2926efe8a5db3e8c1512c597234a11f30fb4c18e0b60ca3648ae6ae",
+        "contractId": "311da3efc0a98ba409d66885886fe882672b6aea282a22bc28e32e0f7dbca7c8",
+        "attackModelId": "fca30679635be3bbce1ca7d8a9ceb8f0daceaaa80e4cf645584db5ccc0dbf0b2",
+        "environmentId": "b77349bf1fa9b26d45d545d7d64dad96737e9cfbb3cbb5f5d10fb77b0fcc44ad"
+      },
+      "previousEventHash": "5d507823ee7f12c3a13cbf969717bf50959e45dd66f10b056ae9e1de88b5af26",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "50ba11b7b26bb69149c6085809deee828e19c33f894111d7cce8116579eaeb76",
+      "eventHash": "dab4d65f0bc258151b297c8f406bb654d32b1abcbb64ea83e37f12fd174ae2f9"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-24T05:25:56.030Z",
+      "kind": "REPAIR",
+      "actor": "coordinator-devin",
+      "state": {
+        "productStateId": "5e8731a4e2926efe8a5db3e8c1512c597234a11f30fb4c18e0b60ca3648ae6ae",
+        "contractId": "311da3efc0a98ba409d66885886fe882672b6aea282a22bc28e32e0f7dbca7c8",
+        "attackModelId": "fca30679635be3bbce1ca7d8a9ceb8f0daceaaa80e4cf645584db5ccc0dbf0b2",
+        "environmentId": "b77349bf1fa9b26d45d545d7d64dad96737e9cfbb3cbb5f5d10fb77b0fcc44ad"
+      },
+      "previousEventHash": "dab4d65f0bc258151b297c8f406bb654d32b1abcbb64ea83e37f12fd174ae2f9",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "6ad92cc98d6bd4a2e17d1dc16fb7e972006943ad7e99e9a0253f7b30ccb08e93",
+      "eventHash": "9c46b0bf1f182eb5c0f7da5a3f0af09e26b90e0f22e4c31c835d0bb1c736729d"
+    },
+    {
+      "seq": 5,
+      "at": "2026-09-24T05:25:56.030Z",
+      "kind": "CLEAN_ROUND",
+      "actor": "coordinator-devin",
+      "state": {
+        "productStateId": "5e8731a4e2926efe8a5db3e8c1512c597234a11f30fb4c18e0b60ca3648ae6ae",
+        "contractId": "311da3efc0a98ba409d66885886fe882672b6aea282a22bc28e32e0f7dbca7c8",
+        "attackModelId": "fca30679635be3bbce1ca7d8a9ceb8f0daceaaa80e4cf645584db5ccc0dbf0b2",
+        "environmentId": "b77349bf1fa9b26d45d545d7d64dad96737e9cfbb3cbb5f5d10fb77b0fcc44ad"
+      },
+      "previousEventHash": "9c46b0bf1f182eb5c0f7da5a3f0af09e26b90e0f22e4c31c835d0bb1c736729d",
+      "payloadPath": "events/0005.json",
+      "payloadHash": "bf708092327f6f9ac655372248b16bf5c586a8e77e06d8ed51e0013fd046e9de",
+      "eventHash": "4c7d385fbb4ddd9cfc3bfc024e43532d5f335c15db3493d7835e837ae3310141"
     }
   ]
 }
