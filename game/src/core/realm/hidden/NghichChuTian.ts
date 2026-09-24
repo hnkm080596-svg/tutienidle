@@ -255,6 +255,10 @@ HIDDEN_MECHANIC_STATE_VALIDATORS[HIDDEN_MECHANIC_NGHICH_CHU_TIAN] = (
 
   if (typeof active !== 'boolean') {
     emit('mechanic.active phai la boolean')
+  } else if (Number.isInteger(completed) && active !== ((completed as number) < NGHICH_CHU_TIAN_TOTAL_STEPS)) {
+    // active flips false exactly once, at 36 - an inactive payload with
+    // completed<36 is a dead-end the UI still renders as 'Complete'.
+    emit(`mechanic.active phai la ${(completed as number) < NGHICH_CHU_TIAN_TOTAL_STEPS} khi completed=${completed}`)
   }
 }
 

@@ -360,6 +360,17 @@ describe('NghichChuTian - persisted-state validator + finished reader', () => {
     expect(issuesOf({ kind: 'nghich_chu_tian', completed: 0, pityByLevel: [], active: 'yes' }).length).toBeGreaterThan(0)
   })
 
+  it('validator enforces active === (completed < 36) coherence', () => {
+    // Inactive before 36: crafted dead-end - attempt returns 'ineligible'
+    // forever while the UI still renders 'Complete'.
+    expect(issuesOf({ kind: 'nghich_chu_tian', completed: 5, pityByLevel: [], active: false }).length).toBeGreaterThan(0)
+    // Active past 36: likewise incoherent.
+    expect(issuesOf({ kind: 'nghich_chu_tian', completed: 36, pityByLevel: [], active: true }).length).toBeGreaterThan(0)
+    // Canonical endpoints stay clean.
+    expect(issuesOf({ kind: 'nghich_chu_tian', completed: 35, pityByLevel: [], active: true })).toEqual([])
+    expect(issuesOf({ kind: 'nghich_chu_tian', completed: 36, pityByLevel: [], active: false })).toEqual([])
+  })
+
   it('finished reader reports true exactly at 36/36', () => {
     expect(finished!({ completed: 36 } as never)).toBe(true)
     expect(finished!({ completed: 35 } as never)).toBe(false)

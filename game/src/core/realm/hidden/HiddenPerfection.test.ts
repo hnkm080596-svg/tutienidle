@@ -12,6 +12,9 @@ import {
   HIDDEN_MECHANIC_ANCIENT_BEAST_TRIAL,
   HIDDEN_MECHANIC_QUAN_THE,
 } from '../../../data/realm/HiddenBodyRealms'
+// Side-effect import: registers the nghich validator + finished reader
+// the integrity contract dispatches on.
+import './NghichChuTian'
 
 function issuesOf(player: { hiddenPerfection?: unknown }): string[] {
   const issues: { path: string; message: string }[] = []
@@ -149,6 +152,42 @@ describe('assertHiddenPerfectionIntegrity (restore preflight, fail-closed)', () 
     expect(integrityIssue({ hiddenPerfection: inverse, realmId: 'qi_refining' })).toMatch(
       /integrity violation/,
     )
+  })
+
+  it('throw khi mechanic finished-state khong khop bodyCompleted', () => {
+    // Crafted dead-end: nghich payload finished (completed=36) while the
+    // record's bodyCompleted is false - attempt would short-circuit
+    // 'complete' forever and the +10pp completion never lands.
+    const nghich = createDefaultHiddenPerfection()
+    nghich.realms = {
+      mortal: { discovered: true, bodyCompleted: true, frozen: false },
+      qi_refining: { discovered: true, bodyCompleted: true, frozen: false },
+      foundation_establishment: {
+        discovered: true,
+        bodyCompleted: false,
+        frozen: false,
+        mechanic: { kind: 'nghich_chu_tian', completed: 36, pityByLevel: [], active: false },
+      },
+    }
+    nghich.completedHiddenBodyRealmIds = ['mortal', 'qi_refining']
+    expect(integrityIssue({ hiddenPerfection: nghich, realmId: 'foundation_establishment' })).toMatch(
+      /integrity violation/,
+    )
+
+    // Consistent finished state stays accepted.
+    const coherent = createDefaultHiddenPerfection()
+    coherent.realms = {
+      mortal: { discovered: true, bodyCompleted: true, frozen: false },
+      qi_refining: { discovered: true, bodyCompleted: true, frozen: false },
+      foundation_establishment: {
+        discovered: true,
+        bodyCompleted: true,
+        frozen: false,
+        mechanic: { kind: 'nghich_chu_tian', completed: 36, pityByLevel: [], active: false },
+      },
+    }
+    coherent.completedHiddenBodyRealmIds = ['mortal', 'qi_refining', 'foundation_establishment']
+    expect(integrityIssue({ hiddenPerfection: coherent, realmId: 'foundation_establishment' })).toBeUndefined()
   })
 
   it('throw khi realm key khong duoc author', () => {
