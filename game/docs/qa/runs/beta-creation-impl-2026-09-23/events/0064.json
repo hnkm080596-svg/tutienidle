@@ -1,0 +1,4 @@
+{
+  "summary": "clean-D CORRECTNESS @132cbe16: SEAL zero findings. All 7 surfaces verified incl. marker-restore abort paths, handoff lifecycle census, 3-seam saveAcceptance parity, marker shape tolerance, v82 gates, overlay layer, net-state coherence. 221 files/2025 tests scoped green.",
+  "refs": []
+}
