@@ -1,0 +1,4 @@
+{
+  "summary": "Clean-C seals on d8589a11: CORRECTNESS SEAL (555/555 scoped, zero findings, all 6 surfaces clean incl. prior-seam re-verify) + INTEGRATION SEAL (729 tests + 5 Playwright specs green; runtime-verified saveGateModal confirm e2e, marker byte-binding, cross-seam collision, acceptance matrix 11x3) + AUTHORITY FINDINGS (AUTH-01 Medium pre-existing at merge-base - dead toast channel on save-gate surface; AUTH-02 Low marker-prep destroys pending pull marker on import abort; AUTH-03 Nit import-named key has two writers; AUTH-04 Nit claimed diacritics regression - REJECTED with proof: fallback matches live CoreSkills name verbatim).",
+  "refs": []
+}
