@@ -270,6 +270,14 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         }
       }
 
+      // ARCH-013 fence re-checked BEFORE the load: loadGame() itself has
+      // side effects (it consumes the one-shot import-handoff marker
+      // even on a byte mismatch), so a boot made stale mid-remoteSync
+      // must not pay for a disposed lifecycle.
+      if (bootGeneration !== lifecycleGeneration) {
+        return { status: 'skipped' }
+      }
+
       // Nhân vật mới reset revision về 0 khớp storage (deleteSave đã xoá
       // revision key) — tránh CAS-fail save đầu tiên.
       const loaded = createNewCharacter

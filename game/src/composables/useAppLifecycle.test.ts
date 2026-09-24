@@ -338,6 +338,31 @@ describe('useAppLifecycle — ARCH-013/L04 boot generation fence', () => {
     expect(stubs.onError).not.toHaveBeenCalled()
   })
 
+  // F-INT-1 (clean-B' INTEGRATION): the fence must sit BEFORE the
+  // consuming load too - loadGame() eats the one-shot import-handoff
+  // marker, so a boot made stale mid-remoteSync must never reach
+  // coordinator.load at all.
+  it('stopAll trong lúc remoteSync pending → coordinator.load KHÔNG chạy (load tự có side effect)', async () => {
+    const stubs = makeStubs()
+
+    let releaseSync: (value: unknown) => void = () => undefined
+    const syncGate = new Promise((resolve) => (releaseSync = resolve))
+    ;(stubs.remoteSync as ReturnType<typeof vi.fn>).mockImplementation(() => syncGate)
+
+    const lifecycle = makeLifecycle(stubs)
+
+    const boot = lifecycle.bootGame({ createNewCharacter: false })
+    lifecycle.stopAll()
+    releaseSync('skipped')
+
+    const outcome = await boot
+
+    expect(outcome.status).toBe('skipped')
+    expect(stubs.coordinator.load).not.toHaveBeenCalled()
+    expect(stubs.restoreGameSession).not.toHaveBeenCalled()
+    expect(stubs.boot.enterGame).not.toHaveBeenCalled()
+  })
+
   it('stopAll trong lúc new-character boot pending → continuation vẫn stale (cùng generation, synthetic await)', async () => {
     const stubs = makeStubs()
     const lifecycle = makeLifecycle(stubs)
