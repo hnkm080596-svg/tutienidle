@@ -276,4 +276,38 @@ describe('ancient beast trial - GameManager integration', () => {
         .some((enemy) => enemy.id === ANCIENT_BEAST_ENEMY_ID || enemy.id === beastEntityId),
     ).toBe(false)
   })
+
+  it('COR-1: a stage start admitted over a live trial releases the beast, not just the watcher', () => {
+    setActivePinia(createPinia())
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const gameManager = makeManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
+    const player = mortalEligiblePlayer()
+    const stage = registerFixtureStage(gameManager)
+    gameManager.setActivePlayer(player)
+
+    // The roll fires: the trial replaces the first stage's battle.
+    expect(gameManager.turnBattleOps.startStage(player, stage, false)).toBe(true)
+    const trialBattle = gameManager.turnBattleOps.getTurnBattle()
+    const beastEntityId = trialBattle!.enemies[0]!.entity.id
+    expect(trialBattle!.enemies[0]!.entity.undefeatable).toBe(true)
+    expect(gameManager.enemyManager.get(beastEntityId)).toBeDefined()
+
+    // Mid-trial: the trial holds no stage lease, so a second start is
+    // admitted. The resolver declines (roll high) and the normal stage
+    // launch replaces the live trial battle outright.
+    randomSpy.mockReturnValue(1)
+    const otherStage: Stage = { ...stage, id: 'fixture_stage_replacement' }
+    gameManager.catalogOps.registerStages([otherStage])
+    expect(gameManager.turnBattleOps.startStage(player, otherStage, false)).toBe(true)
+
+    // The watcher went down with the replaced battle - and cycle-entry
+    // teardown released the undefeatable beast instead of orphaning it
+    // in EnemyManager forever.
+    expect(gameManager.turnBattleOps.getActiveHiddenTrial()).toBeNull()
+    expect(gameManager.turnBattleOps.getTurnBattle()).not.toBe(trialBattle)
+    expect(gameManager.enemyManager.get(beastEntityId)).toBeUndefined()
+  })
 })

@@ -94,7 +94,9 @@ export function isQuanTheActionable(player: QuanThePlayer): boolean {
 
 registerFinalCultivationDiversion((player, amount) => {
   const data = player as QuanThePlayer
-  if (!isQuanTheActionable(data)) {
+  // A non-positive gain can bank nothing - discovery belongs to the
+  // first ACTIONABLE gain (spec sec.8.2), so it must not fire here.
+  if (!isQuanTheActionable(data) || amount <= 0) {
     return amount
   }
 

@@ -55,12 +55,14 @@ export class StageWaveSystem {
   constructor(private readonly deps: StageWaveSystemDeps) {}
 
   /**
-   * Non-mutating admission probe: would start() pass its two gates for
-   * this (player, stage) right now? Mirrors the refused-start checks -
+   * Admission probe: would start() pass its two gates for this
+   * (player, stage) right now? Mirrors the refused-start checks -
    * stage unlocked + the single slot free - without minting a lease or
-   * touching RNG. Callers with pre-admission side effects (HIDDEN-B's
-   * hidden-battle resolver consumes a roll on resolve) consult this
-   * BEFORE resolving so a refused start resolves nothing.
+   * touching RNG. The only write is the same stale-lease self-heal
+   * start() performs before acquiring. Callers with pre-admission side
+   * effects (HIDDEN-B's hidden-battle resolver consumes a roll on
+   * resolve) consult this BEFORE resolving so a refused start resolves
+   * nothing.
    */
   canStart(player: PlayerData, stage: Stage): boolean {
     if (!this.deps.isStageUnlocked(stage.id, player)) {

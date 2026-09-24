@@ -1463,6 +1463,14 @@ export class GameManagerTurnBattleOps {
     this.presentationOps.runtime.resetPendingState()
     this.boundaryQueue = []
     this.activeBuild = undefined
+    // A live trial torn down by cycle replacement must release its
+    // enemies here - the undefeatable beast has no other despawn path,
+    // and the watcher is about to be dropped. despawn() is a no-op for
+    // ids already swept by a prior enemyManager.clear() (abandon,
+    // discardFailedCycle), so this is safe on every caller.
+    if (this.activeHiddenTrial !== null) {
+      this.releaseHiddenTrialEnemies(this.activeHiddenTrial)
+    }
     this.activeHiddenTrial = null
     this.hiddenTrialResume = null
   }
