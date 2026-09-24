@@ -428,6 +428,26 @@ export class GameManagerProgressionOps {
       }
 
       if (record.specializationSkillId && record.specializationId) {
+        // Dual-source guard: giong chan skill leg - neu mot node con
+        // so huu khac cung claim spec nay thi spec phai song tiep.
+        const specStillClaimed = player.purchasedNodeIds.some((ownedId) => {
+          const owned = this.deps.nodeRegistry.has(ownedId)
+            ? this.deps.nodeRegistry.get(ownedId)
+            : undefined
+
+          const claim = owned?.effect.selectsSpecialization
+
+          return (
+            claim?.skillId === record.specializationSkillId &&
+            claim?.specializationId === record.specializationId
+          )
+        })
+
+        if (specStillClaimed) {
+          delete player.nodeOneShotGrants[nodeId]
+          continue
+        }
+
         // selectsSpecialization viet len skill instance - chi clear khi
         // spec hien tai van la spec record do (chon spec khac sau nay
         // khong phai viec cua grant nay).

@@ -155,4 +155,36 @@ describe('progressionOps respec one-shot clawback (F-W-2)', () => {
     expect(gameManager.skillManager.has('linh_bao')).toBe(false)
     expect(player.nodeOneShotGrants['grant_branch']).toBeUndefined()
   })
+
+  it('a node-granted spec survives while another owned node still claims it', () => {
+    const claim = {
+      skillId: 'tam_muoi_chan_hoa',
+      specializationId: 'tam_muoi_tu_diem',
+    }
+    const first = node({ id: 'spec_a', effect: { selectsSpecialization: claim } })
+    const second = node({ id: 'spec_b', effect: { selectsSpecialization: claim } })
+    const { gameManager, player } = setup([first, second])
+
+    gameManager.progressionOps.learnSkill('tam_muoi_chan_hoa', player)
+    expect(gameManager.progressionOps.purchaseNode('spec_a', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('spec_b', player)).toBe(true)
+
+    // respec/devReset go node khoi purchasedNodeIds TRUOC khi clawback
+    player.purchasedNodeIds = player.purchasedNodeIds.filter((id) => id !== 'spec_a')
+    gameManager.progressionOps.applyOneShotClawback(player, new Set(['spec_a']))
+
+    expect(
+      gameManager.skillManager.get('tam_muoi_chan_hoa')?.selectedSpecializationId,
+    ).toBe('tam_muoi_tu_diem')
+    expect(player.nodeOneShotGrants['spec_a']).toBeUndefined()
+    expect(player.nodeOneShotGrants['spec_b']).toBeDefined()
+
+    player.purchasedNodeIds = player.purchasedNodeIds.filter((id) => id !== 'spec_b')
+    gameManager.progressionOps.applyOneShotClawback(player, new Set(['spec_b']))
+
+    expect(
+      gameManager.skillManager.get('tam_muoi_chan_hoa')?.selectedSpecializationId,
+    ).toBeUndefined()
+  })
 })
+

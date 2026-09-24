@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "ca66330a50be30da27746523bdc6062afcd396af",
   "state": {
-   "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+   "productStateId": "76865d0e7113e05e232f43c9786e959e67a404e3f433997f3f288cd8da25b6d8",
    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -32,12 +32,7 @@
   "cleanRoundA": null,
   "cleanRoundB": null,
   "finalEvidenceIds": [],
-  "outcome": null,
-  "finalConformanceIds": [
-   "EV-FIX-VERIFY-03",
-   "EV-FIX-VERIFY-04",
-   "EV-FIX-VERIFY-05"
-  ]
+  "outcome": null
  },
  "briefs": [
   {
@@ -2891,6 +2886,463 @@
    "fixedInRevision": "12e3bec4",
    "closedAt": "2026-09-25T21:10:00.000Z",
    "closeReason": "new pin: realm-entry grant writes nodeLevels only, mirror untouched @12e3bec4"
+  },
+  {
+   "id": "F-AUT-01",
+   "title": "grantedNodeLevels unvalidated side-write: any record key wrote free gated power or corrupt save mirror",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathSystem.ts",
+     "symbolOrSection": "grantCultivationPathRealmReward grant loop",
+     "revision": "ca66330a",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "child-aut-a-0d2517",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "counterexample": "arbitrary record keys wrote player.nodeLevels unchecked",
+   "expected": "only rewardOnly catalog nodes within maxLevel may be granted",
+   "actual": "arbitrary record keys wrote player.nodeLevels unchecked",
+   "rootCause": "grant loop wrote nodeLevels directly without ownership/validity check",
+   "rootClass": "missing-input-validation",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player",
+      "src/core/progression",
+      "src/data/progression",
+      "src/services/save"
+     ],
+     "termsAndMethod": "AUT-A reviewer sweep + coordinator sibling check",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "scoped to grant/rewardOnly surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "resolver-injected grant validation: unknown/non-rewardOnly targets refused with warn; levels clamp to getNodeMaxLevel",
+   "pinEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "7fe39d11",
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-AUT-02",
+   "title": "element->basic skill id truth declared three times: SPELL_KIT_IDS map + two literal re-declarations",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuRealmRewardNodes.ts",
+     "symbolOrSection": "BASIC_IDS literal + PhapTuBasicNodes BASIC_ID",
+     "revision": "ca66330a",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "child-aut-a-0d2517",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "counterexample": "two literal maps re-declared the same identity; drift possible",
+   "expected": "single authority SPELL_KIT_IDS[element][0]",
+   "actual": "two literal maps re-declared the same identity; drift possible",
+   "rootCause": "duplicate literal declarations",
+   "rootClass": "duplicated-source-of-truth",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player",
+      "src/core/progression",
+      "src/data/progression",
+      "src/services/save"
+     ],
+     "termsAndMethod": "AUT-A reviewer sweep + coordinator sibling check",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "scoped to grant/rewardOnly surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "both literals deleted; consume SPELL_KIT_IDS[element][0]",
+   "pinEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "7fe39d11",
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-AUT-03",
+   "title": "the_thuc_tinh aggregated by hidden way despite owning no The pool",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuRealmRewardNodes.ts",
+     "symbolOrSection": "awakeningNode()",
+     "revision": "ca66330a",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "child-aut-a-0d2517",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "counterexample": "no requiredWay -> both spell ways aggregate granted level",
+   "expected": "Thế awakening sealed to spell_pathway",
+   "actual": "no requiredWay -> both spell ways aggregate granted level",
+   "rootCause": "reward node carried no requiredWay",
+   "rootClass": "missing-gate",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player",
+      "src/core/progression",
+      "src/data/progression",
+      "src/services/save"
+     ],
+     "termsAndMethod": "AUT-A reviewer sweep + coordinator sibling check",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "scoped to grant/rewardOnly surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "requiredWay:'spell_pathway' added; pin test updated",
+   "pinEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "7fe39d11",
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-AUT-04",
+   "title": "rewardOnly exemption lived in caller target sets, not the shared removal seam",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/progression/NodeSystem.ts",
+     "symbolOrSection": "revokeNodeOwnership",
+     "revision": "ca66330a",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "child-aut-a-0d2517",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "counterexample": "revokeNodeOwnership would strip rewardOnly levels if called",
+   "expected": "shared removal seam refuses rewardOnly regardless of caller",
+   "actual": "revokeNodeOwnership would strip rewardOnly levels if called",
+   "rootCause": "exemption duplicated across call sites instead of seam guard",
+   "rootClass": "missing-seam-guard",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player",
+      "src/core/progression",
+      "src/data/progression",
+      "src/services/save"
+     ],
+     "termsAndMethod": "AUT-A reviewer sweep + coordinator sibling check",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "scoped to grant/rewardOnly surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "revokeNodeOwnership returns 0 early for rewardOnly; pin test added",
+   "pinEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "7fe39d11",
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-AUT-05",
+   "title": "specializationClaimingNode first-match only; no uniqueness validator",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/progression/NodeSystem.ts",
+     "symbolOrSection": "specializationClaimingNode",
+     "revision": "ca66330a",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "child-aut-a-0d2517",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "counterexample": "two nodes claiming same spec silently resolve first-match",
+   "expected": "duplicate selectsSpecialization claims would be caught",
+   "actual": "two nodes claiming same spec silently resolve first-match",
+   "rootCause": "no authored uniqueness pin",
+   "rootClass": "missing-data-invariant",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player",
+      "src/core/progression",
+      "src/data/progression",
+      "src/services/save"
+     ],
+     "termsAndMethod": "AUT-A reviewer sweep + coordinator sibling check",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "scoped to grant/rewardOnly surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "uniqueness pin test over PHAP_TU_NODES authored claims",
+   "pinEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-AUT-A-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "7fe39d11",
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-AUT-06",
+   "title": "no catch-up path for realm-reward grants missed by late way selection",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathSystem.ts",
+     "symbolOrSection": "grantCultivationPathRealmReward call sites",
+     "revision": "ca66330a",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "child-aut-a-0d2517",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "once-per-transition grant model; consistent with sibling realmReward kinds",
+   "expected": "reviewer flagged for confirmation only",
+   "actual": "once-per-transition grant model; consistent with sibling realmReward kinds",
+   "rootCause": "no catch-up path exists",
+   "rootClass": "intentional-model",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player",
+      "src/core/progression",
+      "src/data/progression",
+      "src/services/save"
+     ],
+     "termsAndMethod": "AUT-A reviewer sweep + coordinator sibling check",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "scoped to grant/rewardOnly surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "rejected - once-per-transition is the stated model; reviewer asked for confirmation only",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "Once-per-transition grant is the stated reward model, consistent with every sibling realmReward kind.",
+   "exception": null,
+   "fixedInRevision": null,
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-AUT-07",
+   "title": "skill-scope convention disclosure: turnSkillResourceModifiers lists each basic id rather than family wildcard",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuRealmRewardNodes.ts",
+     "symbolOrSection": "turnSkillResourceModifiers",
+     "revision": "ca66330a",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "child-aut-a-0d2517",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "explicit per-skill list is the authored convention",
+   "expected": "informational note, no defect",
+   "actual": "explicit per-skill list is the authored convention",
+   "rootCause": "convention noted",
+   "rootClass": "informational",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player",
+      "src/core/progression",
+      "src/data/progression",
+      "src/services/save"
+     ],
+     "termsAndMethod": "AUT-A reviewer sweep + coordinator sibling check",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "scoped to grant/rewardOnly surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "rejected - informational disclosure",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "Informational convention disclosure; no defect claimed.",
+   "exception": null,
+   "fixedInRevision": null,
+   "closedAt": null,
+   "closeReason": null
   }
  ],
  "evidence": [
@@ -3055,7 +3507,7 @@
     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
    },
    "kind": "EXECUTED_UNIT_STRUCTURAL",
-   "status": "CURRENT",
+   "status": "STALE",
    "producer": "coordinator",
    "startedAt": "2026-09-25T21:10:00.000Z",
    "finishedAt": "2026-09-25T21:10:00.000Z",
@@ -3082,7 +3534,7 @@
     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
    },
    "kind": "EXECUTED_UNIT_STRUCTURAL",
-   "status": "CURRENT",
+   "status": "STALE",
    "producer": "coordinator",
    "startedAt": "2026-09-25T21:10:00.000Z",
    "finishedAt": "2026-09-25T21:10:00.000Z",
@@ -3109,7 +3561,7 @@
     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
    },
    "kind": "EXECUTED_UNIT_STRUCTURAL",
-   "status": "CURRENT",
+   "status": "STALE",
    "producer": "coordinator",
    "startedAt": "2026-09-25T21:10:00.000Z",
    "finishedAt": "2026-09-25T21:10:00.000Z",
@@ -3154,7 +3606,7 @@
     "MUT reward-seal: rewardOnly gate removal -> respec pin 2 failures (killed)"
    ],
    "limitations": [],
-   "status": "CURRENT"
+   "status": "STALE"
   },
   {
    "id": "EV-MUT-02",
@@ -3183,7 +3635,7 @@
     "MUT grant-maxwrite: purchasedNodeIds mirror push -> grant pin 1 failure (killed by new pin)"
    ],
    "limitations": [],
-   "status": "CURRENT"
+   "status": "STALE"
   },
   {
    "id": "EV-MUT-03",
@@ -3212,7 +3664,7 @@
     "MUT skill-scope: hoa_sac_nhiet -> might -> skill-scope pin 1 failure (killed)"
    ],
    "limitations": [],
-   "status": "CURRENT"
+   "status": "STALE"
   },
   {
    "id": "EV-MUT-04",
@@ -3241,7 +3693,7 @@
     "MUT realm-gate: FOUNDATION prereq strip -> outer-ring gate pin 1 failure (killed)"
    ],
    "limitations": [],
-   "status": "CURRENT"
+   "status": "STALE"
   },
   {
    "id": "EV-P15-GATE",
@@ -3268,7 +3720,35 @@
     "asciiComments ratchet green @ca66330a (post-P15 repair)"
    ],
    "limitations": [],
-   "status": "CURRENT"
+   "status": "STALE"
+  },
+  {
+   "id": "EV-AUT-A-FIX",
+   "state": {
+    "productStateId": "76865d0e7113e05e232f43c9786e959e67a404e3f433997f3f288cd8da25b6d8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "status": "CURRENT",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T21:12:00.000Z",
+   "finishedAt": "2026-09-25T21:12:00.000Z",
+   "cwd": "game",
+   "exitCode": 1,
+   "result": "PASS_WITH_ENV_NOISE",
+   "artifactHash": "32ff3575fed935bc49e1a0025066cf08a9ed0ef10f8e38f806890c382371477e",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "limitations": [
+    "36 env-noise failures (magick/canvas missing) same as master"
+   ],
+   "claims": [
+    "clean-A AUTHORITY adjudication @7fe39d11: scoped vitest 412/412 + 133/133 + 15/15 xanh; full verify 7106/7112 - 2 fail la nhieu moi truong (magick ENOENT, canvas npm missing) + 36 file 0-test canvas; type-check + eslint clean"
+   ],
+   "commandOrMethod": "npm run verify -> docs/qa/runs/phap-tu-beta-2026-09-25/evidence/fix-verify-aut-a.log"
   }
  ],
  "coverage": [
@@ -3284,7 +3764,7 @@
     "EV-FIX-VERIFY-04"
    ],
    "reviewerIds": [],
-   "status": "SATISFIED",
+   "status": "STALE",
    "weakProtection": false
   },
   {
@@ -3312,7 +3792,7 @@
     "EV-FIX-VERIFY-04"
    ],
    "reviewerIds": [],
-   "status": "SATISFIED",
+   "status": "STALE",
    "weakProtection": false
   },
   {
@@ -3340,7 +3820,7 @@
     "EV-FIX-VERIFY-04"
    ],
    "reviewerIds": [],
-   "status": "SATISFIED",
+   "status": "STALE",
    "weakProtection": false
   },
   {
@@ -3368,7 +3848,7 @@
     "EV-FIX-VERIFY-04"
    ],
    "reviewerIds": [],
-   "status": "SATISFIED",
+   "status": "STALE",
    "weakProtection": false
   },
   {
@@ -3397,7 +3877,7 @@
     "EV-P15-GATE"
    ],
    "reviewerIds": [],
-   "status": "SATISFIED",
+   "status": "STALE",
    "weakProtection": false
   },
   {
@@ -3711,6 +4191,41 @@
     "F-PT-D1",
     "F-PT-D2",
     "F-PT-D3"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-AUT-A2",
+   "state": {
+    "productStateId": "9c1cf8b126463912f6591eca5ef81dc0abfd9bd90d18adcfaf426ee997dc5a60",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 3,
+   "phase": "AUTHORITY",
+   "reviewerId": "child-aut-a-0d2517",
+   "contextId": "sealed-child-aut-a",
+   "model": "swe-2-max",
+   "role": "clean-round-A-authority",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T21:05:00.000Z",
+   "sealedAt": "2026-09-25T21:05:00.000Z",
+   "previousPhaseReviewId": "REV-COR-A",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-AUT-01",
+    "F-AUT-02",
+    "F-AUT-03",
+    "F-AUT-04",
+    "F-AUT-05",
+    "F-AUT-06",
+    "F-AUT-07"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -4426,6 +4941,68 @@
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
+  },
+  {
+   "id": "L-PT-19",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "FALSE_POSITIVE",
+   "findingIds": [
+    "F-AUT-06"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "intentional-model",
+   "missedInvariantIds": [],
+   "escapeReason": "once-per-transition reward grant is the stated model; flag was a confirmation request",
+   "applicability": [
+    "realm-reward grant model",
+    "progression node data authoring"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "reviewer context note: once-per-transition grants and explicit per-skill id lists are stated convention"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "reviewer context note: no catch-up path",
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-20",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "FALSE_POSITIVE",
+   "findingIds": [
+    "F-AUT-07"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "informational",
+   "missedInvariantIds": [],
+   "escapeReason": "convention disclosure, not a defect",
+   "applicability": [
+    "realm-reward grant model",
+    "progression node data authoring"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "reviewer context note: once-per-transition grants and explicit per-skill id lists are stated convention"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "reviewer context note: skill-scope convention",
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
   }
  ],
  "messages": [],
@@ -4877,6 +5454,22 @@
    "payloadPath": "events/0028.json",
    "payloadHash": "237aa0b12b07c2426d007a438f5d38456b18349da341f9464bcddf277ff21405",
    "eventHash": "a1c308514f71d2816f8ccf09514fd284e809fc48feaf6a43cc690a990f3e5d51"
+  },
+  {
+   "seq": 29,
+   "at": "2026-09-24T21:14:39.636Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "76865d0e7113e05e232f43c9786e959e67a404e3f433997f3f288cd8da25b6d8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "a1c308514f71d2816f8ccf09514fd284e809fc48feaf6a43cc690a990f3e5d51",
+   "payloadPath": "events/0029.json",
+   "payloadHash": "a85ff0a776ba72823a6f998d93e82f62383ea2917e853bcd38c7de909e1767c8",
+   "eventHash": "abcb995c3f968d2011f2a941e75f2f44d82522a480662695225648c941590894"
   }
  ]
 }
