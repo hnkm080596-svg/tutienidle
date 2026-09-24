@@ -94,14 +94,25 @@ describe('createTalentEntitlement — origination at breakthrough settle', () =>
     const player = usePlayerStore()
     const first = createTalentEntitlement(player, 'qi_refining')!
 
-    // A second origination (even for a different realm - the degenerate
-    // re-settle) keeps the bound record untouched.
-    const second = createTalentEntitlement(player, 'foundation_establishment')
+    // A same-realm re-origination keeps the bound record untouched.
+    const second = createTalentEntitlement(player, 'qi_refining')
 
     expect(second).toEqual(first)
     expect(player.pendingTalentEntitlement).toEqual(first)
     expect(player.pendingTalentEntitlement!.realmId).toBe('qi_refining')
     expect(player.pendingTalentEntitlement!.offeredTalentIds).toEqual(first.offeredTalentIds)
+  })
+
+  it('supersedes a pending record bound to a DIFFERENT realm (stale residue)', () => {
+    const player = usePlayerStore()
+    createTalentEntitlement(player, 'qi_refining')
+
+    // The record belongs to the breakthrough INTO its own realmId - a
+    // new breakthrough supersedes it and mints its own realm's record.
+    const next = createTalentEntitlement(player, 'foundation_establishment')
+
+    expect(next?.realmId).toBe('foundation_establishment')
+    expect(player.pendingTalentEntitlement?.realmId).toBe('foundation_establishment')
   })
 
   it('ReleasePolicy-disabled realm originates nothing', () => {

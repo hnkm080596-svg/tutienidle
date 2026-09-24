@@ -1448,7 +1448,6 @@ describe('validateGameSaveShape - talent v4 M2 fields (v61)', () => {
     const player = playerOf(save)
 
     player.cultivationOvercharge = 12
-    player.tribulationBonusStacks = 3
     player.nodeFreePurchaseRecord = { node_a: 2 }
     player.phaGiapCarryStacks = 4
     player.phaGiapCarryRealmId = 'qi_refining'
@@ -1458,7 +1457,6 @@ describe('validateGameSaveShape - talent v4 M2 fields (v61)', () => {
 
   it.each([
     ['cultivationOvercharge', 'player.cultivationOvercharge'],
-    ['tribulationBonusStacks', 'player.tribulationBonusStacks'],
     ['nodeFreePurchaseRecord', 'player.nodeFreePurchaseRecord'],
     ['phaGiapCarryStacks', 'player.phaGiapCarryStacks'],
     ['phaGiapCarryRealmId', 'player.phaGiapCarryRealmId'],
@@ -1475,7 +1473,6 @@ describe('validateGameSaveShape - talent v4 M2 fields (v61)', () => {
 
   it.each([
     ['cultivationOvercharge', 'player.cultivationOvercharge'],
-    ['tribulationBonusStacks', 'player.tribulationBonusStacks'],
     ['phaGiapCarryStacks', 'player.phaGiapCarryStacks'],
   ])('từ chối khi %s âm / NaN, path "%s"', (field, expectedPath) => {
     for (const bad of [-1, Number.NaN]) {
@@ -2537,5 +2534,116 @@ describe('validateGameSaveShape - companion gifts (v77)', () => {
     ]
 
     expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+describe('validateGameSaveShape — v82 seam repair cross-checks', () => {
+  function playerOf(save: Record<string, unknown>): Record<string, unknown> {
+    return save.player as Record<string, unknown>
+  }
+  it('F-W-9: từ chối grantedRealmPassiveIds mồ côi không modifier sống', () => {
+    const save = validSave()
+
+    playerOf(save).grantedRealmPassiveIds = ['qi_refining']
+    playerOf(save).modifiers = []
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.grantedRealmPassiveIds[0]')
+  })
+
+  it('F-W-9: từ chối grantedRealmPassiveIds chứa id không có trong registry', () => {
+    const save = validSave()
+
+    playerOf(save).grantedRealmPassiveIds = ['no_such_passive']
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.grantedRealmPassiveIds[0]')
+  })
+
+  it('F-W-9: chấp nhận marker kèm modifier sống cùng sourceId', () => {
+    const save = validSave()
+
+    playerOf(save).grantedRealmPassiveIds = ['qi_refining']
+    playerOf(save).modifiers = [
+      { id: 'm1', sourceId: 'nhap_dao', sourceType: 'realm', stat: 'might', flat: 2 },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('F-W-16: từ chối autoWorkerCapacity > 0 khi không có chi_hien_quan', () => {
+    const save = validSave()
+
+    playerOf(save).autoWorkerCapacity = 5
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.autoWorkerCapacity')
+  })
+
+  it('F-W-16: chấp nhận autoWorkerCapacity > 0 khi có chi_hien_quan instance', () => {
+    const save = validSave()
+
+    playerOf(save).autoWorkerCapacity = 5
+    save.buildings = [
+      {
+        instanceId: 'b-chq',
+        buildingId: 'chi_hien_quan',
+        level: 2,
+        lastCollectedAt: 1_725_000_000_000,
+      },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('F-W-17: từ chối formationLoadout assignment ô ngoài cellPattern', () => {
+    const save = validSave()
+
+    playerOf(save).formationLoadout = {
+      formationId: 'ngu_hanh_tran',
+      assignments: [{ combatantId: 'player', row: 9, column: 9 }],
+    }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.formationLoadout.assignments[0]')
+  })
+
+  it('F-W-17: từ chối formationLoadout combatant trùng trong đội hình', () => {
+    const save = validSave()
+
+    playerOf(save).formationLoadout = {
+      formationId: 'ngu_hanh_tran',
+      assignments: [
+        { combatantId: 'player', row: 0, column: 0 },
+        { combatantId: 'player', row: 0, column: 2 },
+      ],
+    }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.formationLoadout.assignments[1].combatantId')
+  })
+
+  it('F-W-17: từ chối formationLoadout combatant không thuộc đội', () => {
+    const save = validSave()
+
+    playerOf(save).formationLoadout = {
+      formationId: 'ngu_hanh_tran',
+      assignments: [{ combatantId: 'ghost_member', row: 0, column: 0 }],
+    }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.formationLoadout.assignments[0].combatantId')
   })
 })

@@ -59,6 +59,8 @@ export class GameManagerTickOps {
       passiveSystem: PassiveSystem
       turnBattleOps: GameManagerTurnBattleOps
       tribulationDirector: TribulationDirector
+      // Session rng seam (F-W-7) - GameManager-owned injectable stream.
+      sessionRng: () => number
     },
   ) {}
 
@@ -202,7 +204,7 @@ export class GameManagerTickOps {
         this.deps.pillBag,
         (pillId) =>
           this.deps.pillRegistry.has(pillId) ? this.deps.pillRegistry.get(pillId) : undefined,
-        Math.random,
+        this.deps.sessionRng,
         0,
         getAlchemyDoublePill(activePlayer.selectedTalentIds, activePlayer.talentLevels)?.yieldMultiplier ?? 1,
       )

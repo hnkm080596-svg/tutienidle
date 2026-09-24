@@ -41,6 +41,10 @@ function driveToTerminal(gameManager: GameManager, answerCorrectly = true) {
 /** Player ready to survive the authored foundation_establishment kiếp. */
 function surviveFoundationTribulation(player: ReturnType<typeof usePlayerStore>) {
   player.realmId = 'qi_refining'
+  player.realmLevel = 12
+  // F-W-8 - the single admission authority (level + chapter-final
+  // clear) gates startTribulation: tests must satisfy it like the UI.
+  player.completedStageIds = ['qi_refining_abyssal_pool']
   player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
 }
 
@@ -59,6 +63,7 @@ function investForGreatDao(player: ReturnType<typeof usePlayerStore>, gameManage
   player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
   gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
   player.realmLevel = 18
+  player.completedStageIds = ['qi_refining_abyssal_pool']
   player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
   player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
   gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
@@ -131,6 +136,7 @@ describe('CommittedTribulationOutcome — identity and lifecycle (M6)', () => {
     // strikes enough to kill a maxHp-1 tank. Release policy enforces the
     // transition direction, so the run starts from qi_refining again.
     player.realmId = 'qi_refining'
+    player.realmLevel = 12
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 1, defense: 0, hpRegenPerTurn: 0 })
     expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
     driveToTerminal(gameManager, false)
@@ -171,20 +177,20 @@ describe('settleOutcome — once-only commit with exact consequences (M6)', () =
     // Foundation recorded is the run's own resolved grade (uninvested
     // attempt -> the lowest grade), snapshotted on the committed record.
     expect(player.highestFoundationAchieved).toBe(committed.grade)
-    // loi_kiep stack is the non-idempotent probe: +1 per settlement.
-    expect(player.tribulationBonusStacks).toBe(1)
+    // loi_kiep modifier percent is the non-idempotent probe: +0.1 per settlement.
+    expect(player.modifiers.find((m: { id: string }) => m.id === 'talent_loi_kiep_strength')?.percent).toBe(0.1)
 
     // Duplicate settle converges on the bound receipt - nothing re-applies.
     const second = service.settleOutcome(player, gameManager, gameManager.tribulationDirector)
     expect(second).toBe(first)
-    expect(player.tribulationBonusStacks).toBe(1)
+    expect(player.modifiers.find((m: { id: string }) => m.id === 'talent_loi_kiep_strength')?.percent).toBe(0.1)
     expect(player.realmLevel).toBe(1)
 
     // A fresh service instance sees the same bound receipt - the dedup
     // identity lives on the domain record, not on the service.
     const third = new TribulationOutcomeService().settleOutcome(player, gameManager, gameManager.tribulationDirector)
     expect(third).toBe(first)
-    expect(player.tribulationBonusStacks).toBe(1)
+    expect(player.modifiers.find((m: { id: string }) => m.id === 'talent_loi_kiep_strength')?.percent).toBe(0.1)
   })
 
   it('great_dao victory converts the talent exactly once', () => {
@@ -267,14 +273,14 @@ describe('settleOutcome — once-only commit with exact consequences (M6)', () =
     const service = new TribulationOutcomeService()
 
     // Attempt 1: qi_refining victory (announcement-only outcome, still a
-    // banked loi_kiep stack). Release policy enforces the transition
+    // banked loi_kiep bonus). Release policy enforces the transition
     // direction, so the run starts from a mortal player.
     player.realmId = 'mortal'
     expect(gameManager.startTribulation(player.$state, 'qi_refining')).toBe(true)
     driveToTerminal(gameManager)
     const firstCommitted = gameManager.tribulationDirector.getCommittedOutcome()!
     service.settleOutcome(player, gameManager, gameManager.tribulationDirector)
-    expect(player.tribulationBonusStacks).toBe(1)
+    expect(player.modifiers.find((m: { id: string }) => m.id === 'talent_loi_kiep_strength')?.percent).toBe(0.1)
     gameManager.tribulationDirector.clear()
 
     // Attempt 2: another run, another victory -> its own once-only
@@ -287,9 +293,9 @@ describe('settleOutcome — once-only commit with exact consequences (M6)', () =
 
     const receipt = service.settleOutcome(player, gameManager, gameManager.tribulationDirector)
     expect(receipt).not.toBe(firstCommitted.receipt)
-    expect(player.tribulationBonusStacks).toBe(2)
+    expect(player.modifiers.find((m: { id: string }) => m.id === 'talent_loi_kiep_strength')?.percent).toBe(0.2)
     service.settleOutcome(player, gameManager, gameManager.tribulationDirector)
-    expect(player.tribulationBonusStacks).toBe(2)
+    expect(player.modifiers.find((m: { id: string }) => m.id === 'talent_loi_kiep_strength')?.percent).toBe(0.2)
   })
 })
 
@@ -305,6 +311,8 @@ describe('settleOutcome — mid-apply failure containment (M6 r1)', () => {
     const gameManager = new GameManager()
     const player = usePlayerStore()
     player.realmId = 'qi_refining'
+    player.realmLevel = 12
+    player.completedStageIds = ['qi_refining_abyssal_pool']
     // Too weak + unanswered questions -> real defeat (mind fail stacks
     // amplify the strikes enough to kill a maxHp-1 tank).
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 1, defense: 0, hpRegenPerTurn: 0 })
@@ -356,7 +364,7 @@ describe('settleOutcome — mid-apply failure containment (M6 r1)', () => {
     expect(buffSpy).toHaveBeenCalledTimes(1)
   })
 
-  it('a throwing victory resolve converges: the loi_kiep stack and realm write land exactly once', () => {
+  it('a throwing victory resolve converges: the loi_kiep bonus and realm write land exactly once', () => {
     const gameManager = new GameManager()
     const player = usePlayerStore()
     player.selectedTalentIds = ['loi_kiep']
@@ -382,7 +390,7 @@ describe('settleOutcome — mid-apply failure containment (M6 r1)', () => {
     expect(first).toBeNull()
     expect(committed.settlementError).toBeInstanceOf(Error)
     // Partial consequences landed - exactly once.
-    expect(player.tribulationBonusStacks).toBe(1)
+    expect(player.modifiers.find((m: { id: string }) => m.id === 'talent_loi_kiep_strength')?.percent).toBe(0.1)
     expect(player.realmId).toBe('foundation_establishment')
     expect(player.cultivation).toBe(0)
     expect(unequipSpy).toHaveBeenCalledTimes(1)
@@ -390,7 +398,7 @@ describe('settleOutcome — mid-apply failure containment (M6 r1)', () => {
     // Retry: nothing re-applies - the non-idempotent stack stays at 1.
     const second = service.settleOutcome(player, gameManager, gameManager.tribulationDirector)
     expect(second).toBeNull()
-    expect(player.tribulationBonusStacks).toBe(1)
+    expect(player.modifiers.find((m: { id: string }) => m.id === 'talent_loi_kiep_strength')?.percent).toBe(0.1)
     expect(unequipSpy).toHaveBeenCalledTimes(1)
   })
 })

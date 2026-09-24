@@ -30,6 +30,8 @@ import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
 import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
 import { getTalentDefinition } from '../../data/talent/Talents'
+import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
+import { REALM_PASSIVES } from '../../data/realm/RealmPassives'
 import { getTalentMaxLevel, isLegalBreakthroughOffer, isTalentEntitlementActionable } from '../../core/talent/TalentEntitlement'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
 import { isPhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
@@ -487,6 +489,44 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
 
   if (grantedRealmPassiveIds) {
     validateStringEntries(grantedRealmPassiveIds, 'player.grantedRealmPassiveIds', issues)
+
+    // F-W-9 (v82): marker/payload two-slice authority — mỗi id đã grant
+    // phải resolve trong REALM_PASSIVES VÀ còn ít nhất một modifier sống
+    // phát từ definition đó; trường hợp grantRealmPassive() chỉ push
+    // marker sau khi đã push modifiers nên marker-mồ-côi là corrupt.
+    for (let i = 0; i < grantedRealmPassiveIds.length; i += 1) {
+      const grantedId = grantedRealmPassiveIds[i]
+
+      if (typeof grantedId !== 'string') {
+        continue
+      }
+
+      const definition = REALM_PASSIVES.find((passive) => passive.id === grantedId)
+
+      if (!definition) {
+        issues.push({
+          path: `player.grantedRealmPassiveIds[${i}]`,
+          message: 'realm passive không tồn tại trong registry',
+        })
+        continue
+      }
+
+      const hasLiveModifier =
+        Array.isArray(playerModifiers) &&
+        playerModifiers.some(
+          (modifier) =>
+            isObject(modifier) &&
+            modifier.sourceType === 'realm' &&
+            modifier.sourceId === definition.sourceId,
+        )
+
+      if (!hasLiveModifier) {
+        issues.push({
+          path: `player.grantedRealmPassiveIds[${i}]`,
+          message: 'đã grant nhưng không có modifier sống nào từ passive này',
+        })
+      }
+    }
   }
 
   // persistentTimedEffects - expiresAtMs is the absolute authority
@@ -760,7 +800,9 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   // Loi Kiep, ledger mua node mien phi (Van Dao), tang Pha Giap mang
   // sang tran sau + canh gioi luc bank.
   requireNonNegativeNumber(player, 'cultivationOvercharge', 'player', issues)
-  requireNonNegativeNumber(player, 'tribulationBonusStacks', 'player', issues)
+  // tribulationBonusStacks removed at v82 — Loi Kiep lives only in
+  // talent_loi_kiep_* modifiers (was write-only).
+
   if (!isObject(player.nodeFreePurchaseRecord)) {
     issues.push({ path: 'player.nodeFreePurchaseRecord', message: 'phải là object' })
   } else {
@@ -769,6 +811,60 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
         issues.push({
           path: `player.nodeFreePurchaseRecord.${nodeId}`,
           message: 'phải là số hữu hạn >= 0',
+        })
+      }
+    }
+  }
+
+  // F-W-2 (v82) - provenance record của grant 1-lần (skill học, kiếm
+  // ý/kiếm đạo, specialization) mà respec/route-switch phải clawback.
+  // Optional per-field nhưng khi có phải đúng kiểu.
+  if (!isObject(player.nodeOneShotGrants)) {
+    issues.push({ path: 'player.nodeOneShotGrants', message: 'phải là object' })
+  } else {
+    for (const [nodeId, grant] of Object.entries(player.nodeOneShotGrants)) {
+      if (!isObject(grant)) {
+        issues.push({ path: `player.nodeOneShotGrants.${nodeId}`, message: 'phải là object' })
+        continue
+      }
+
+      if (grant.learnedSkillIds !== undefined) {
+        if (
+          !Array.isArray(grant.learnedSkillIds) ||
+          !grant.learnedSkillIds.every((id) => typeof id === 'string')
+        ) {
+          issues.push({
+            path: `player.nodeOneShotGrants.${nodeId}.learnedSkillIds`,
+            message: 'phải là mảng string',
+          })
+        }
+      }
+
+      if (grant.kiemY !== undefined && !isNonNegativeFiniteNumber(grant.kiemY)) {
+        issues.push({
+          path: `player.nodeOneShotGrants.${nodeId}.kiemY`,
+          message: 'phải là số hữu hạn >= 0',
+        })
+      }
+
+      if (grant.kiemDao !== undefined && !isNonNegativeFiniteNumber(grant.kiemDao)) {
+        issues.push({
+          path: `player.nodeOneShotGrants.${nodeId}.kiemDao`,
+          message: 'phải là số hữu hạn >= 0',
+        })
+      }
+
+      if (grant.specializationSkillId !== undefined && typeof grant.specializationSkillId !== 'string') {
+        issues.push({
+          path: `player.nodeOneShotGrants.${nodeId}.specializationSkillId`,
+          message: 'phải là string',
+        })
+      }
+
+      if (grant.specializationId !== undefined && typeof grant.specializationId !== 'string') {
+        issues.push({
+          path: `player.nodeOneShotGrants.${nodeId}.specializationId`,
+          message: 'phải là string',
         })
       }
     }
@@ -848,18 +944,27 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     }
   }
 
-  // formationLoadout: null | { formationId, assignments[] }. The write
-  // path validates content (commitFormationLoadout); here shape-only -
-  // resolvePartyFormation() maps .assignments blindly, so a malformed
-  // object crashes battle construction.
+  // formationLoadout: null | { formationId, assignments[] }. Mirror the
+  // commitFormationLoadout contract (FormationPlacement.ts): a malformed
+  // loadout passes shape-check then resolvePartyFormation() silently
+  // drops rows — validate content, not just shape.
   if (player.formationLoadout !== null) {
-    if (!isObject(player.formationLoadout)) {
+    const loadout = player.formationLoadout
+    if (!isObject(loadout)) {
       issues.push({ path: 'player.formationLoadout', message: 'phải là object hoặc null' })
     } else {
-      requireNonEmptyString(player.formationLoadout, 'formationId', 'player.formationLoadout', issues)
-      const assignments = requireArray(player.formationLoadout, 'assignments', 'player.formationLoadout', issues)
+      requireNonEmptyString(loadout, 'formationId', 'player.formationLoadout', issues)
+      const assignments = requireArray(loadout, 'assignments', 'player.formationLoadout', issues)
+      const formation = TRAN_PHAP_FORMATIONS.find((entry) => entry.id === loadout.formationId)
 
-      if (assignments) {
+      if (typeof loadout.formationId === 'string' && formation === undefined) {
+        issues.push({ path: 'player.formationLoadout.formationId', message: 'formationId không tồn tại' })
+      }
+
+      if (assignments && formation) {
+        const seenCombatants = new Set<string>()
+        const seenCells = new Set<string>()
+
         for (let i = 0; i < assignments.length; i += 1) {
           const assignment = assignments[i]
           const assignmentPath = `player.formationLoadout.assignments[${i}]`
@@ -877,6 +982,41 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
 
           if (!isFiniteNumber(assignment.column) || !Number.isInteger(assignment.column)) {
             issues.push({ path: `${assignmentPath}.column`, message: 'phải là số nguyên hữu hạn' })
+          }
+
+          if (typeof assignment.combatantId === 'string') {
+            const isKnownCombatant =
+              assignment.combatantId === 'player' ||
+              (Array.isArray(companions) &&
+                companions.some(
+                  (companion) => isObject(companion) && companion.definitionId === assignment.combatantId,
+                ))
+
+            if (!isKnownCombatant) {
+              issues.push({ path: `${assignmentPath}.combatantId`, message: 'combatant không tồn tại trong đội' })
+            } else if (seenCombatants.has(assignment.combatantId)) {
+              issues.push({ path: `${assignmentPath}.combatantId`, message: 'combatant bị trùng trong đội hình' })
+            } else {
+              seenCombatants.add(assignment.combatantId)
+            }
+          }
+
+          if (Number.isInteger(assignment.row) && Number.isInteger(assignment.column)) {
+            const inPattern = formation.cellPattern.some(
+              (cell) => cell.row === assignment.row && cell.column === assignment.column,
+            )
+
+            if (!inPattern) {
+              issues.push({ path: assignmentPath, message: 'ô không nằm trong cellPattern của trận pháp' })
+            }
+
+            const cellKey = `${assignment.row}:${assignment.column}`
+
+            if (seenCells.has(cellKey)) {
+              issues.push({ path: assignmentPath, message: 'hai combatant chung một ô' })
+            } else {
+              seenCells.add(cellKey)
+            }
           }
         }
       }
@@ -1670,6 +1810,24 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
 
   const buildings = requireArray(parsed, 'buildings', '', issues)
 
+  // F-W-16 (v82): restore recomputes autoWorkerCapacity from the chi_hien_quan
+  // instance, so a persisted non-zero capacity without that building is
+  // always corrupt — fail loud instead of silently clamping on restore.
+  if (
+    isObject(parsed.player) &&
+    isNonNegativeFiniteNumber(parsed.player.autoWorkerCapacity) &&
+    (parsed.player.autoWorkerCapacity as number) > 0 &&
+    Array.isArray(buildings) &&
+    !buildings.some(
+      (entry) => isObject(entry) && entry.buildingId === 'chi_hien_quan',
+    )
+  ) {
+    issues.push({
+      path: 'player.autoWorkerCapacity',
+      message: '> 0 yêu cầu tồn tại instance chi_hien_quan trong buildings',
+    })
+  }
+
   const equipmentSlots = requireArray(parsed, 'equipmentSlots', '', issues)
 
   // Field optional cua GameSave - chi kiem kieu khi hien dien, roi
@@ -1725,6 +1883,85 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
 
       if (typeof decompose.started !== 'boolean') {
         issues.push({ path: '.decompose.started', message: 'phải là boolean' })
+      }
+    }
+  }
+
+  // v82 (F-W-5) - tribulation slice optional; khi có, committedOutcome
+  // phải đủ shape tối thiểu để restore dựng lại director runtime thay
+  // vì crash/restore sai.
+  if (parsed.tribulation !== undefined) {
+    if (!isObject(parsed.tribulation)) {
+      issues.push({ path: '.tribulation', message: 'phải là object hoặc vắng mặt' })
+    } else {
+      const tribulation = parsed.tribulation as Record<string, unknown>
+
+      if (
+        tribulation.cooldownUntil !== undefined &&
+        !isNonNegativeFiniteNumber(tribulation.cooldownUntil)
+      ) {
+        issues.push({ path: '.tribulation.cooldownUntil', message: 'phải là số hữu hạn không âm' })
+      }
+
+      if (tribulation.committedOutcome !== undefined) {
+        const committed = tribulation.committedOutcome
+
+        if (!isObject(committed)) {
+          issues.push({ path: '.tribulation.committedOutcome', message: 'phải là object' })
+        } else {
+          if (!isNonNegativeFiniteNumber(committed.attemptId)) {
+            issues.push({
+              path: '.tribulation.committedOutcome.attemptId',
+              message: 'phải là số hữu hạn không âm',
+            })
+          }
+
+          if (committed.outcome !== 'victory' && committed.outcome !== 'defeat') {
+            issues.push({
+              path: '.tribulation.committedOutcome.outcome',
+              message: "phải là 'victory' hoặc 'defeat'",
+            })
+          }
+
+          if (typeof committed.targetRealmId !== 'string') {
+            issues.push({
+              path: '.tribulation.committedOutcome.targetRealmId',
+              message: 'phải là string',
+            })
+          }
+
+          if (
+            typeof committed.grade !== 'string' ||
+            !Object.prototype.hasOwnProperty.call(FOUNDATION_LABELS, committed.grade)
+          ) {
+            issues.push({
+              path: '.tribulation.committedOutcome.grade',
+              message: 'phải là FoundationType hợp lệ',
+            })
+          }
+
+          if (committed.receipt !== null && !isObject(committed.receipt)) {
+            issues.push({
+              path: '.tribulation.committedOutcome.receipt',
+              message: 'phải là object hoặc null',
+            })
+          } else if (isObject(committed.receipt)) {
+            const kind = (committed.receipt as Record<string, unknown>).kind
+            if (kind !== 'victory' && kind !== 'defeat') {
+              issues.push({
+                path: '.tribulation.committedOutcome.receipt.kind',
+                message: "phải là 'victory' hoặc 'defeat'",
+              })
+            }
+          }
+
+          if (typeof committed.settlementError !== 'boolean') {
+            issues.push({
+              path: '.tribulation.committedOutcome.settlementError',
+              message: 'phải là boolean',
+            })
+          }
+        }
       }
     }
   }

@@ -45,6 +45,7 @@ import { computeRestoreIdentity, type GameSave } from '../../services/save/saveT
 import { NotificationQueue } from './NotificationQueue'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
 import { TemplateRegistry } from './TemplateRegistry'
+import type { TribulationDirector } from '../tribulation/TribulationDirector'
 
 export interface GameManagerSaveRestoreDeps {
   skillManager: SkillManager
@@ -90,6 +91,12 @@ export interface GameManagerSaveRestoreDeps {
   // R8.1 (AR-09) - quest lifecycle reconciliation command (logic lives
   // on GameManager; restore triggers it at the right boundary).
   reconcileQuestLifecycle: () => void
+  // Session rng seam (F-W-7) - GameManager-owned injectable stream so
+  // offline alchemy settle rolls pin in deterministic harnesses.
+  sessionRng: () => number
+  // F-W-5 (v82) - tribulation runtime restore: committed outcome +
+  // cooldown tu save.tribulation nap lai vao director.
+  tribulationDirector: TribulationDirector
 }
 
 /**
@@ -623,6 +630,7 @@ export class GameManagerSaveRestore {
       0,
       // M3 - Hoa Hau Thong Than: x2 pill yield applies to offline settle too.
       getAlchemyDoublePill(this.deps.getActivePlayer()?.selectedTalentIds, this.deps.getActivePlayer()?.talentLevels)?.yieldMultiplier ?? 1,
+      this.deps.sessionRng,
     )
 
     // P7-M5 (v72) - body modifier rehydration: chapter state is the
@@ -637,6 +645,11 @@ export class GameManagerSaveRestore {
     if (bodyPlayer) {
       applyAllBodyModifiers(bodyPlayer)
     }
+
+    // F-W-5 (v82) - tribulation runtime: khôi phục committed outcome +
+    // cooldown sau khi mọi slice domain đã nạp (director không phụ
+    // thuộc thứ tự domain khác nhưng đặt cuối cho đúng boundary).
+    this.deps.tribulationDirector.restoreRuntime(save.tribulation)
 
     // R8.1 (AR-09) - activation is a lifecycle command, not a UI read:
     // restore converges the active set to current eligibility BEFORE

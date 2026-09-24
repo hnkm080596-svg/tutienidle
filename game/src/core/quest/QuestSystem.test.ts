@@ -205,3 +205,60 @@ describe('QuestSystem', () => {
     expect(notResetTwice).toBe(false)
   })
 })
+
+describe('QuestSystem - domain-scoped reward material gate (F-W-10)', () => {
+  const domainQuest: Quest = {
+    id: 'domain_reward_test',
+    name: 'Thuong domain',
+    description: '',
+    condition: { kind: 'collect', materialId: 'linh_chi', amount: 1 },
+    reward: {
+      reward: { spiritStone: 1 },
+      itemDrops: [{ kind: 'material', itemId: 'domain_scoped_ore', amount: 2 }],
+    },
+    cadence: 'once',
+  }
+
+  function domainSetup(playerRealmId: string) {
+    const registry = new QuestRegistry()
+    registry.register(domainQuest)
+
+    const manager = new QuestManager()
+    const system = new QuestSystem()
+
+    const materialRegistry = new MaterialRegistry()
+    materialRegistry.register(createMaterial('linh_chi'))
+    materialRegistry.register({
+      ...createMaterial('domain_scoped_ore'),
+      domainUnlockRealmId: 'qi_refining',
+    })
+    const materialBag = new MaterialBag()
+
+    const pillRegistry = new PillRegistry()
+    const pillBag = new PillBag()
+
+    const bags = { materialRegistry, materialBag, pillRegistry, pillBag, playerRealmId }
+    const rewardSystem = new RewardSystem()
+
+    const player = createPlayer()
+    system.reconcileActiveQuests(registry, manager, player)
+    materialBag.add(materialRegistry.get('linh_chi'), 1)
+    manager.incrementProgress('domain_reward_test', 1)
+
+    return { registry, manager, system, bags, rewardSystem, materialBag }
+  }
+
+  it('below the domain realm the scoped line stays dormant - claim still completes', () => {
+    const { registry, manager, system, bags, rewardSystem, materialBag } = domainSetup('mortal')
+
+    expect(system.claim(registry, manager, rewardSystem, createReceiver(), bags, 'domain_reward_test')).toBe(true)
+    expect(materialBag.getAmount('domain_scoped_ore')).toBe(0)
+  })
+
+  it('at the domain realm the scoped line lands', () => {
+    const { registry, manager, system, bags, rewardSystem, materialBag } = domainSetup('qi_refining')
+
+    expect(system.claim(registry, manager, rewardSystem, createReceiver(), bags, 'domain_reward_test')).toBe(true)
+    expect(materialBag.getAmount('domain_scoped_ore')).toBe(2)
+  })
+})

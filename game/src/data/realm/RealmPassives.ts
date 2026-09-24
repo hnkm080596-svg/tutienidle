@@ -14,6 +14,11 @@ export interface RealmPassiveDefinition {
 
   description: string
 
+  // sourceId ma buildModifiers() dat len moi StatModifier no phat - khai
+  // bao tuong minh de validator save co the doi chieu marker
+  // grantedRealmPassiveIds voi payload modifiers con song (F-W-9).
+  sourceId: string
+
   buildModifiers: (player: PlayerData) => StatModifier[]
 }
 
@@ -89,12 +94,14 @@ export const REALM_PASSIVES: RealmPassiveDefinition[] = [
     name: 'Nhập Đạo',
     description:
       'Xây dựng sinh mệnh nền và mở đường tu luyện — hiệu lực theo Bậc Nhập Đạo đạt được lúc Lễ Nhập Môn.',
+    sourceId: 'nhap_dao',
     buildModifiers: buildNhapDaoModifiers,
   },
   {
     id: 'foundation_establishment',
     name: 'Kiến Cơ',
     description: 'Xây dựng căn cơ, khuếch đại Main Stat — hiệu lực theo Loại Trúc Cơ đã đạt.',
+    sourceId: 'kien_co',
     buildModifiers: buildKienCoModifiers,
   },
 ]

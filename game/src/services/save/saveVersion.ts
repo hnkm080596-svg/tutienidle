@@ -160,4 +160,11 @@
 // optional `hiddenChannelCycles: Record<channelId, number>` (grotto
 // settle-cycle emission counters). Save v80 is rejected (dev phase, no
 // migration, no compat translator).
-export const CURRENT_SAVE_VERSION = 81 as const
+// v82 (2026-09-24, BETA-SEAM-REPAIR): player gains required
+// `nodeOneShotGrants: Record<nodeId, NodeOneShotGrantRecord>` (F-W-2
+// clawback provenance); GameSave gains optional `tribulation` slice
+// ({committedOutcome?, cooldownUntil?} - committed-but-undrained outcome
+// + retry cooldown survive reload, F-W-5); player.tribulationBonusStacks
+// dropped (write-only counter, F-W-15). Save v81 is rejected (dev phase,
+// no migration, no compat translator).
+export const CURRENT_SAVE_VERSION = 82 as const

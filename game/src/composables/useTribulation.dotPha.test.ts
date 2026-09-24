@@ -142,6 +142,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
 
     // Dau tu tiep de du dieu kien Dai Dao o Luyen Khi
     player.realmLevel = 18
+    player.completedStageIds = ['qi_refining_abyssal_pool']
     player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
     player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
     const trucCoDan = gameManager.pillRegistry.get('truc_co_dan')!
@@ -192,6 +193,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
 
     player.realmLevel = 18
+    player.completedStageIds = ['qi_refining_abyssal_pool']
     player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
     player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
@@ -274,6 +276,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
 
     // Dau tu du dieu kien Truc Co (nhanh heaven, khong can great_dao).
     player.realmLevel = 18
+    player.completedStageIds = ['qi_refining_abyssal_pool']
     player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
     player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
 

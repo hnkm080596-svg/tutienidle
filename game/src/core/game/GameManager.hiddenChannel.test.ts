@@ -209,7 +209,7 @@ describe('P13 runtime - real stage loop: substituted spawn -> kill -> signature 
 })
 
 describe('idle-path invariants (r97-LOW): auto-farm kills count, idle picks never substitute', () => {
-  it('armed auto-farm cycles advance the channel counter through the real idle path with no substitution', () => {
+  it('armed auto-farm cycles leave the active-only channel counter untouched through the real idle path with no substitution', () => {
     const manager = new GameManager()
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
@@ -250,11 +250,11 @@ describe('idle-path invariants (r97-LOW): auto-farm kills count, idle picks neve
     player.autoFarmStage!.lastCheckedMs = Date.now() - 2000
     manager.turnBattleOps.autoFarmOps.tickAutoFarm(player)
 
-    // (a) idle/auto-farm kills count: 2 cycles x 2 enemies = 4 banded
-    // non-beast kills advance the channel counter (no reset - no
-    // substituted beast was ever killed).
+    // (a) idle/auto-farm kills do NOT count (F-W-19): the hidden
+    // channel window is ACTIVE-only, so 2 cycles x 2 enemies leave the
+    // counter pinned - no advance, no reset.
     expect(pickSpy).toHaveBeenCalled()
-    expect(player.hiddenBeastKills[channel.id]).toBe(channel.killThreshold + 4)
+    expect(player.hiddenBeastKills[channel.id]).toBe(channel.killThreshold)
     // (b) the idle spawn path never invokes hidden-beast substitution,
     // even with the window open and a pinned winning roll.
     expect(replaceSpy).not.toHaveBeenCalled()

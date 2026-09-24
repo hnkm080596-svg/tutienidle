@@ -215,6 +215,13 @@ export interface PlayerData {
   // talent is removed so refund accounting stays honest.
   nodeFreePurchaseRecord: Record<string, number>
 
+  // F-W-2 (v82) - provenance cua cac one-shot grant node da thuc su phat
+  // luc purchase (0->1). Respec/revoke doc record nay de thu hoi dung
+  // phan grant ma node da dua - grant tu nguon khac (ritual, way kit,
+  // element root) khong bao gio duoc ghi nen clawback khong the tuoc nham.
+  // Xoa record sau khi clawback ap dung; rebuy ghi lai sach.
+  nodeOneShotGrants: Record<string, NodeOneShotGrantRecord>
+
   // Man chi mo tuan tu: thang mot man moi mo man ke tiep.
   completedStageIds: string[]
 
@@ -268,9 +275,9 @@ export interface PlayerData {
   breakthroughGrade: number
 
   // Loi Kiep talent (talent-catalog-v4 sec.4.3) - permanent +10% all
-  // attributes per successful tribulation while the talent is held.
-  // Owned by TribulationOutcomeService's victory path.
-  tribulationBonusStacks: number
+  // attributes per successful tribulation while the talent is held, lived
+  // entirely in `talent_loi_kiep_*` modifiers (upserted by the victory
+  // path) - no separate stack counter.
 
   // Pha Giap talent M2 carry (talent-catalog-v4 sec.4.3) - half the Pha
   // Giap passive's metalPenetration stacks bank at battle end and
@@ -358,6 +365,16 @@ export interface FormationSlotAssignment {
   row: number
   column: number
   combatantId: string
+}
+
+/** Grant mot-lan mot node da thuc su phat luc purchase - chi nhung
+ * field nao fire moi duoc ghi (learnSkill tra true moi vao danh sach). */
+export interface NodeOneShotGrantRecord {
+  learnedSkillIds?: string[]
+  kiemY?: number
+  kiemDao?: number
+  specializationSkillId?: string
+  specializationId?: string
 }
 
 export interface FormationLoadout {
@@ -461,13 +478,13 @@ export function createDefaultPlayer(): PlayerData {
     purchasedNodeIds: [],
     nodeLevels: {},
     nodeFreePurchaseRecord: {},
+    nodeOneShotGrants: {},
 
     bodyProgression: createDefaultBodyProgression(),
     bodyPerfection: createDefaultBodyPerfection(),
     physiqueGrade: 'pham',
     breakthroughGrade: 6,
     grantedRealmPassiveIds: [],
-    tribulationBonusStacks: 0,
     phaGiapCarryStacks: 0,
     phaGiapCarryRealmId: null,
 

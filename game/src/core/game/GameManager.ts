@@ -662,6 +662,7 @@ export class GameManager {
       // notifies via the castCountSink above - one owner per channel).
       onSkillLevelUp: (skillId, newLevel, levelsGained) =>
         this.pushSkillLevelUpNotification(skillId, newLevel, levelsGained),
+      sessionRng: () => this.sessionRng(),
     })
 
     this.realmAdvanceOps = new GameManagerRealmAdvanceOps({
@@ -759,6 +760,7 @@ export class GameManager {
       launchBattle: (player, enemy) =>
         this.startBattleWithPlayer(player, enemy),
       hiddenBeast: this.hiddenBeastSystem,
+      sessionRng: () => this.sessionRng(),
     })
 
     this.tribulationDirector = new TribulationDirector({
@@ -851,6 +853,7 @@ export class GameManager {
       alchemySystem: this.alchemySystem,
       notifications: this.notifications,
       getActivePlayer: () => this.activePlayer,
+      sessionRng: () => this.sessionRng(),
       refreshAutoWorkerCapacity: (player, instance) =>
         this.buildingOps.refreshAutoWorkerCapacity(player, instance),
       getWorkerAssignments: () => this.buildingOps.getWorkerAssignments(),
@@ -862,6 +865,7 @@ export class GameManager {
       // Deferred closures - tickOps is assigned later in this constructor.
       deliverDecomposeOutput: (entry) => this.tickOps.deliverDecomposeOutput(entry),
       reconcileQuestLifecycle: () => this.tickOps.reconcileQuestLifecycle(),
+      tribulationDirector: this.tribulationDirector,
     })
 
     // Turn-battle runtime ops (C2 split, 2026-09-08) - owns the TurnBattle
@@ -948,6 +952,7 @@ export class GameManager {
       passiveSystem: this.passiveSystem,
       turnBattleOps: this.turnBattleOps,
       tribulationDirector: this.tribulationDirector,
+      sessionRng: () => this.sessionRng(),
     })
   }
 
@@ -1104,6 +1109,20 @@ export class GameManager {
    */
   setLootRng(rng: (() => number) | undefined): void {
     this.battleLoot.setLootRng(rng)
+  }
+
+  // F-W-7 session rng seam — one injectable stream for non-combat,
+  // non-loot rolls (alchemy yields, Van Dao free-purchase, hidden-beast
+  // substitution, breakthrough talent draw). `undefined` restores
+  // Math.random. Deterministic harnesses pin it like setLootRng.
+  private rngSource: () => number = () => Math.random()
+
+  sessionRng(): number {
+    return this.rngSource()
+  }
+
+  setSessionRng(rng: (() => number) | undefined): void {
+    this.rngSource = rng ?? (() => Math.random())
   }
 
   /**
@@ -1353,6 +1372,13 @@ export class GameManager {
     player: PlayerData,
     targetRealmId: string,
   ): boolean {
+    // One admission authority: the same predicate rows the UI and the
+    // sim precheck (release policy + level/chapter) gate tribulation
+    // entry here too — fail-closed when nothing is attemptable.
+    if (!this.realmAdvanceOps.canTriggerBreakthrough(player)) {
+      return false
+    }
+
     // M-F-CEILING C2C-9 - the breakthrough-gate pill id comes from the
     // census so the integrity test binds the live gate to the tag.
     const hasTrucCoDan = this.pillBag.has(TRUC_CO_DAN_PILL_ID, 1)

@@ -183,3 +183,19 @@ describe('HiddenBeastSystem - channel-driven spawn substitution (m-f-body-hidden
     expect(broken.maybeReplaceSpawn(player, 'qi_refining', () => 0.5)?.id).toBe('enemy_b')
   })
 })
+
+describe('HiddenBeastSystem - band-less stage never attracts a hidden beast (F-W-12)', () => {
+  it('stageRealmId undefined: window open + guaranteed bound -> still undefined', () => {
+    const channel = fixtureChannel({
+      guaranteedSpawnAfterKills: 0,
+      spawnChancePerSpawn: 1,
+    })
+    const system = channelSystem([channel])
+    const player = luyenKhiPlayer()
+    player.hiddenBeastKills = { [channel.id]: channel.killThreshold + 100 }
+
+    expect(system.isWindowOpen(player, channel)).toBe(true)
+    expect(system.maybeReplaceSpawn(player, undefined)).toBeUndefined()
+    expect(system.maybeReplaceSpawn(player, channel.bandRealmId)).toEqual({ id: channel.enemyId })
+  })
+})

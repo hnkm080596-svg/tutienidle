@@ -6,6 +6,7 @@ import type { PlayerData } from '../player/Player'
 import { getRealmIndex } from '../realm/realmSystem'
 import {
   isBreakthroughAcquisitionEnabled,
+  isDomainScopedAcquisitionEnabled,
   isCompanionPullTokenSourceSuppressed,
 } from '../realm/ReleasePolicy'
 import type { RewardReceiver, RewardSystem } from '../reward/RewardSystem'
@@ -36,6 +37,12 @@ export interface QuestBagDeps {
   // AND canonical discovery share exactly-once semantics. Absent
   // (test/mock path) falls back to the legacy direct call.
   onMaterialGained?: (materialId: string, delivered: number) => void
+
+  // (optional) - realm of the claiming player; domain-scoped reward
+  // materials (doan_bao_thach) consult isDomainScopedAcquisitionEnabled
+  // against it - same window+reach rule as grantResolvedDrops. Absent
+  // fails closed for domain-scoped rows (release-safe default).
+  playerRealmId?: string
 }
 
 function isUnlocked(quest: Quest, player: PlayerData): boolean {
@@ -224,6 +231,13 @@ export class QuestSystem {
         // M-F-COMPANION-GIFT - censused pull-token reward lines stay
         // dormant while the pull pool is closed; sibling lines still land.
         if (isCompanionPullTokenSourceSuppressed(drop.itemId)) {
+          continue
+        }
+
+        // M-F-ARTIFACT-DEFER - domain-scoped reward materials (doan_bao_thach)
+        // additionally compose the window+reach rule against the claiming
+        // player's realm - same gate as grantResolvedDrops.
+        if (!isDomainScopedAcquisitionEnabled(template.domainUnlockRealmId, bags.playerRealmId)) {
           continue
         }
 

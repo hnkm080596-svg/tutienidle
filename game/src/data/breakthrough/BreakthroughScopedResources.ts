@@ -9,7 +9,9 @@
 // Authoring a breakthrough-scoped resource without listing it - or
 // listing it without the tag - fails the suite.
 
-/** Pill the Truc Co breakthrough gate consumes (hasTrucCoDan check). */
+/** Pill the Truc Co breakthrough gate requires (presence check via
+ *  hasTrucCoDan - it is a key, not a consumable: defeats already cost
+ *  cooldown + cultivation, the pill is not debited). */
 export const TRUC_CO_DAN_PILL_ID = 'truc_co_dan'
 
 export const BREAKTHROUGH_SCOPED_MATERIAL_IDS = ['great_dao_seed'] as const

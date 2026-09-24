@@ -412,10 +412,11 @@ export class AlchemySystem {
     nowMs: number = Date.now(),
     successBonusPercentPoints = 0,
     pillYieldMultiplier = 1,
+    rng: () => number = Math.random,
   ): number {
     const before = this.jobs.length
 
-    this.tick(nowMs, pillBag, resolvePill, Math.random, successBonusPercentPoints, pillYieldMultiplier)
+    this.tick(nowMs, pillBag, resolvePill, rng, successBonusPercentPoints, pillYieldMultiplier)
 
     return before - this.jobs.length
   }
