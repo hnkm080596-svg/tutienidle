@@ -311,3 +311,29 @@ describe('ancient beast trial - GameManager integration', () => {
     expect(gameManager.enemyManager.get(beastEntityId)).toBeUndefined()
   })
 })
+
+describe('mid-trial lineage closure guard', () => {
+  it('chooseCultivationPath refuses while a battle is live, so the mortal lineage cannot freeze mid-trial', () => {
+    setActivePinia(createPinia())
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const gameManager = makeManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
+    const player = { ...mortalEligiblePlayer(), realmLevel: 12 }
+    const stage = registerFixtureStage(gameManager)
+    gameManager.setActivePlayer(player)
+
+    expect(gameManager.turnBattleOps.startStage(player, stage, false)).toBe(true)
+    expect(gameManager.turnBattleOps.getTurnBattle()?.state).not.toBeUndefined()
+
+    // Without the guard this commit freezes the mortal record and moves
+    // the player to qi_refining mid-fight - settle then grants victory
+    // while completeHiddenBody silently no-ops, losing Pham Cot forever.
+    expect(
+      gameManager.realmAdvanceOps.chooseCultivationPath('body', 'body_pathway', player),
+    ).toBe(false)
+    expect(player.realmId).toBe('mortal')
+    expect(player.hiddenPerfection.realms['mortal']?.frozen).not.toBe(true)
+  })
+})
