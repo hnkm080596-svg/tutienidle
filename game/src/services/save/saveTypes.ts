@@ -36,122 +36,122 @@ export interface FormationStackSave {
   amount: number
 }
 
-// version 2: mở rộng từ { version, player } (chỉ lưu PlayerData) —
-// trước đây skill/technique đã học, 4 loại inventory, và thám hiểm
-// đang chạy đều mất khi reload. Manager nào lưu id thay vì full
-// object (materials/pills/talismans) đều resolve lại qua registry
-// tương ứng lúc restore — xem GameManager.restoreFromSave().
+// version 2: mo rong tu { version, player } (chi luu PlayerData) -
+// truoc day skill/technique da hoc, 4 loai inventory, va tham hiem
+// dang chay deu mat khi reload. Manager nao luu id thay vi full
+// object (materials/pills/talismans) deu resolve lai qua registry
+// tuong ung luc restore - xem GameManager.restoreFromSave().
 // version 3: adds formations (FormationBag) - formations ride the
 // existing `equipment` field, no separate field needed.
-// version 4: thêm crafts (CraftingManager) — lượt craft Đan/Phù/
-// Trận đang chạy, nguyên liệu đã trừ nên phải lưu lại tiến độ,
-// không thì reload giữa chừng sẽ mất trắng nguyên liệu đã tiêu.
-// version 5: tái cấu trúc toàn bộ hệ thống stat (nền Last Epoch) —
-// PlayerData.baseStats đổi hẳn shape (bỏ magicAttack/magicDefense/
-// elementAffinity, thêm attribute + cơ chế mới). Save cũ (version <5)
-// không tương thích, KHÔNG viết migration (đổi quá sâu, không đáng —
-// save cũ tự động bị coi như không tồn tại, xem loadGame()).
-// version 6: hoàn thiện stat (Mana Regen/CDR/Crit Avoidance/Chance
+// version 4: them crafts (CraftingManager) - luot craft Dan/Phu/
+// Tran dang chay, nguyen lieu da tru nen phai luu lai tien do,
+// khong thi reload giua chung se mat trang nguyen lieu da tieu.
+// version 5: tai cau truc toan bo he thong stat (nen Last Epoch) -
+// PlayerData.baseStats doi han shape (bo magicAttack/magicDefense/
+// elementAffinity, them attribute + co che moi). Save cu (version <5)
+// khong tuong thich, KHONG viet migration (doi qua sau, khong dang -
+// save cu tu dong bi coi nhu khong ton tai, xem loadGame()).
+// version 6: hoan thien stat (Mana Regen/CDR/Crit Avoidance/Chance
 // Ignore Resistance/Ailment Resist & Potency, tag-hierarchy Increased)
-// + hệ thống Tâm Pháp 3 tầng (Tu Luyện/Chiến Đấu/Phá Cảnh — Technique
-// đổi hẳn shape sang discriminated union, xem core/technique/Technique.ts).
+// + he thong Tam Phap 3 tang (Tu Luyen/Chien Dau/Pha Canh - Technique
+// doi han shape sang discriminated union, xem core/technique/Technique.ts).
 // PlayerData gains totalMonstersKilled. Old
 // saves (version <6) are INCOMPATIBLE, no migration written - same
 // reason as version 5: old saves are treated as absent.
-// version 7: MASTER SPEC Economy Phase 4 — thêm Building (Farm/Mine/
-// Smelter...), lưu buildings: BuildingInstance[] (xem
-// core/building/*). Save cũ (version <7) KHÔNG tương thích, không
-// viết migration — cùng lý do các version trước.
-// version 8: MASTER SPEC Mục XVI (Economy Phase 9) — Cường Hóa/Khắc
-// Trận/Yểm Phù chuyển từ EquipmentInstance sang EquipmentSlotState
-// (gắn theo SLOT, không theo item cụ thể — xem core/equipment/
-// EquipmentSlotState.ts), lưu equipmentSlots: EquipmentSlotState[].
+// version 7: MASTER SPEC Economy Phase 4 - them Building (Farm/Mine/
+// Smelter...), luu buildings: BuildingInstance[] (xem
+// core/building/*). Save cu (version <7) KHONG tuong thich, khong
+// viet migration - cung ly do cac version truoc.
+// version 8: MASTER SPEC Muc XVI (Economy Phase 9) - Cuong Hoa/Khac
+// Tran/Yem Phu chuyen tu EquipmentInstance sang EquipmentSlotState
+// (gan theo SLOT, khong theo item cu the - xem core/equipment/
+// EquipmentSlotState.ts), luu equipmentSlots: EquipmentSlotState[].
 // EquipmentInstance in saves no longer has the enhanceLevel field. Old
 // saves (version <8) are INCOMPATIBLE, no migration written - same
 // reason as previous versions.
-// version 9: Core Loop Foundation checklist (Mục AFFIX/RARITY) —
-// EquipmentInstance đổi `substats: StatModifier[]` thành
-// `affixes: RolledAffix[]` (xem core/equipment/RolledAffix.ts) + thêm
+// version 9: Core Loop Foundation checklist (Muc AFFIX/RARITY) -
+// EquipmentInstance doi `substats: StatModifier[]` thanh
+// `affixes: RolledAffix[]` (xem core/equipment/RolledAffix.ts) + them
 // field `rarity: EquipmentRarity` (xem core/equipment/EquipmentRarity.ts).
-// version 10: Đột Phá Trúc Cơ (Phase 1) — xoá PlayerData.pillUsageCount
-// + Pill.usageLimit, thay bằng trần theo cảnh giới (RealmData.attributeCap,
+// version 10: Dot Pha Truc Co (Phase 1) - xoa PlayerData.pillUsageCount
+// + Pill.usageLimit, thay bang tran theo canh gioi (RealmData.attributeCap,
 // xem PillSystem.canUse()).
-// version 11: Đột Phá Trúc Cơ (Phase 5) — thêm
-// PlayerData.highestFoundationAchieved (mục 16 spec `breakthrough`).
+// version 11: Dot Pha Truc Co (Phase 5) - them
+// PlayerData.highestFoundationAchieved (muc 16 spec `breakthrough`).
 // version 12: Home Hub (Phase 2).
-// version 13: Beta Phase 4 (Tutorial) — thêm PlayerData.hasSeenTutorial.
-// version 14: BUILDing spec (Building System rework) — ActiveCraft
-// (crafts: ActiveCraft[]) đổi field: thêm craftId bắt buộc (xem
-// core/recipe/CraftingManager.ts — hỗ trợ nhiều lượt craft song song
-// cùng resultType, trước đây định danh bằng resultType nên chỉ 1
-// lượt/loại). buildings: BuildingInstance[] giờ có thể chứa 4
-// building crafting_station mới (pill_room/formation_altar/
-// talisman_institute/equipment_hall — trước đây 4 panel này KHÔNG
-// gắn Building nào, giờ bắt buộc xây trước khi dùng, xem
+// version 13: Beta Phase 4 (Tutorial) - them PlayerData.hasSeenTutorial.
+// version 14: BUILDing spec (Building System rework) - ActiveCraft
+// (crafts: ActiveCraft[]) doi field: them craftId bat buoc (xem
+// core/recipe/CraftingManager.ts - ho tro nhieu luot craft song song
+// cung resultType, truoc day dinh danh bang resultType nen chi 1
+// luot/loai). buildings: BuildingInstance[] gio co the chua 4
+// building crafting_station moi (pill_room/formation_altar/
+// talisman_institute/equipment_hall - truoc day 4 panel nay KHONG
+// gan Building nao, gio bat buoc xay truoc khi dung, xem
 // BuildingConstructionGate.vue).
-// version 15: Equipment Rework — equipment: EquipmentInstance[] đổi
-// field: `rarity` giờ là 1 trong 4 giá trị mới (vo_duyen/tieu_duyen/
-// ky_duyen/thien_duyen, bỏ hẳn 'normal'/'magic'/'rare'/'exalted'/
-// 'unique' cũ), `refineLevel` bị XOÁ thay bằng `forgePoints` (xem
+// version 15: Equipment Rework - equipment: EquipmentInstance[] doi
+// field: `rarity` gio la 1 trong 4 gia tri moi (vo_duyen/tieu_duyen/
+// ky_duyen/thien_duyen, bo han 'normal'/'magic'/'rare'/'exalted'/
+// 'unique' cu), `refineLevel` bi XOA thay bang `forgePoints` (xem
 // core/equipment/EquipmentSystem.ts's forge()/refine()). Equipment
-// template (đăng ký lúc bootstrap, không nằm trong save) mất
-// `fixedAffixes`, thêm `forgeCost`.
+// template (dang ky luc bootstrap, khong nam trong save) mat
+// `fixedAffixes`, them `forgeCost`.
 // version 16: Tham Hiem rework - old saves (version <16) are
 // INCOMPATIBLE, no migration written - same reason as previous
 // versions.
-// version 17: Naming-principles pass ("nguyen li dat ten") —
-// equipment: EquipmentInstance[]'s `rarity` đổi hẳn value set — 5 bậc
-// Ngũ Phẩm mới (hoang_pham/huyen_pham/dia_pham/thien_pham/tien_pham,
-// xem core/item/Pham.ts) thay 4 bậc "Duyên" cũ (vo_duyen/tieu_duyen/
-// ky_duyen/thien_duyen). Pill/Talisman/Formation template (đăng ký lúc
-// bootstrap, không nằm trong save) đổi `grade: number` -> `grade: ItemGrade`
-// — không ảnh hưởng save vì đó là template, chỉ liệt kê ở đây để dễ
-// tra cứu.
-// version 18: "EquipemtnQuality&rarity" + "tunghematandsuch" pass —
-// equipment: EquipmentInstance[] thêm field BẮT BUỘC MỚI
-// `forgePotential: number` (0-100, Tiềm Năng Rèn — xem
+// version 17: Naming-principles pass ("nguyen li dat ten") -
+// equipment: EquipmentInstance[]'s `rarity` doi han value set - 5 bac
+// Ngu Pham moi (hoang_pham/huyen_pham/dia_pham/thien_pham/tien_pham,
+// xem core/item/Pham.ts) thay 4 bac "Duyen" cu (vo_duyen/tieu_duyen/
+// ky_duyen/thien_duyen). Pill/Talisman/Formation template (dang ky luc
+// bootstrap, khong nam trong save) doi `grade: number` -> `grade: ItemGrade`
+// - khong anh huong save vi do la template, chi liet ke o day de de
+// tra cuu.
+// version 18: "EquipemtnQuality&rarity" + "tunghematandsuch" pass -
+// equipment: EquipmentInstance[] them field BAT BUOC MOI
+// `forgePotential: number` (0-100, Tiem Nang Ren - xem
 // core/equipment/EquipmentSystem.ts's rollForgePotential()). materials:
-// MaterialStackSave[] có thể tham chiếu id material MỚI (yeu_dan_qi_refining/
-// yeu_huyet_qi_refining/yeu_cot_qi_refining/bui_cot/tinh_luyen_cot/...) —
-// save cũ tham chiếu id ĐÃ XOÁ (wolf-fang/wolf-hide/demon-core/13
-// material trophy tầng 1-10) sẽ bị MaterialRegistry bỏ qua khi restore
-// (registry.has() guard có sẵn, không throw) nhưng coi là KHÔNG tương
-// thích ở đây vì stat/economy đã đổi quá nhiều để tự động migrate.
-// version 19: Pháp Tu profession-tier ladder — player: PlayerData thêm
-// field TUỲ CHỌN `cultivationPath?: CultivationPathId` (xem
-// core/player/CultivationPathKit.ts). Optional nên về mặt dữ liệu save
-// cũ vẫn đọc được (undefined = Phàm Nhân, đúng default hiện tại của
-// MỌI nhân vật) — vẫn bump version theo đúng convention "mỗi thay đổi
-// schema đều bump" đã áp dụng nhất quán từ version 11 trở đi, để
-// CURRENT_SAVE_VERSION luôn phản ánh đúng shape PlayerData hiện hành.
-// version 20: Tâm Pháp hợp nhất — techniques: Technique[] đổi HẲN
-// shape (3 loại cultivation/combat/breakthrough với field riêng từng
-// loại -> 1 interface phẳng duy nhất, mọi field vai trò cụ thể giờ
-// optional, xem core/technique/Technique.ts). Save cũ (version <20)
-// có `technique.type`/`minorBreakthroughGrant`/`majorRealmEnhancements`
-// KHÔNG khớp shape mới — không viết migration, cùng convention mọi
-// version trước.
-// version 21: Kiếm Tu — player: PlayerData thêm field BẮT BUỘC MỚI
-// `totalCultivationGained: number` (đếm tu vi suốt đời — sau này nguồn
-// tier Kiếm Ý chuyển sang bossKillCount, xem KiemYSystem.ts). Save cũ
-// thiếu field này — không viết migration, cùng convention mọi version
-// trước.
-// version 53 (2026-08-29, kiem-the-kiem-y spec): thêm
-// `bossKillCount: number` (tầng Kiếm Ý vĩnh viễn theo boss diệt);
-// swordPathRoute chốt vĩnh viễn lúc chọn path; gỡ skill Kiếm Tu cũ (mỗi
-// route 1 active skill); gỡ rage. Chi tiết xem saveVersion.ts.
-// version 54 (2026-08-29, dot-pha-loi-kiep spec): thêm 4 field BẮT
-// BUỘC `openedMeridianIds: string[]` (Bát Mạch đã thông),
-// `luyenKhiKillsSinceBeast: number` (cửa sổ quái ẩn),
-// `mortalPerfectionAchieved: boolean` (snapshot hoàn hảo Phàm Nhân),
-// `greatDaoOpportunityLost: boolean` (mất vĩnh viễn Đại Đạo). Gỡ Đột
-// Phá Lệnh (token materials) + quái Kiếp. Save v53 bị từ chối (dev
-// phase, không migration). Chi tiết xem saveVersion.ts.
-// version 65 (2026-09-16, cultivation-path-framework M2): player thêm
-// field TUỲ CHỌN `cultivationWay?: CultivationWayId` (way trong path, xem
+// MaterialStackSave[] co the tham chieu id material MOI (yeu_dan_qi_refining/
+// yeu_huyet_qi_refining/yeu_cot_qi_refining/bui_cot/tinh_luyen_cot/...) -
+// save cu tham chieu id DA XOA (wolf-fang/wolf-hide/demon-core/13
+// material trophy tang 1-10) se bi MaterialRegistry bo qua khi restore
+// (registry.has() guard co san, khong throw) nhung coi la KHONG tuong
+// thich o day vi stat/economy da doi qua nhieu de tu dong migrate.
+// version 19: Phap Tu profession-tier ladder - player: PlayerData them
+// field TUY CHON `cultivationPath?: CultivationPathId` (xem
+// core/player/CultivationPathKit.ts). Optional nen ve mat du lieu save
+// cu van doc duoc (undefined = Pham Nhan, dung default hien tai cua
+// MOI nhan vat) - van bump version theo dung convention "moi thay doi
+// schema deu bump" da ap dung nhat quan tu version 11 tro di, de
+// CURRENT_SAVE_VERSION luon phan anh dung shape PlayerData hien hanh.
+// version 20: Tam Phap hop nhat - techniques: Technique[] doi HAN
+// shape (3 loai cultivation/combat/breakthrough voi field rieng tung
+// loai -> 1 interface phang duy nhat, moi field vai tro cu the gio
+// optional, xem core/technique/Technique.ts). Save cu (version <20)
+// co `technique.type`/`minorBreakthroughGrant`/`majorRealmEnhancements`
+// KHONG khop shape moi - khong viet migration, cung convention moi
+// version truoc.
+// version 21: Kiem Tu - player: PlayerData them field BAT BUOC MOI
+// `totalCultivationGained: number` (dem tu vi suot doi - sau nay nguon
+// tier Kiem Y chuyen sang bossKillCount, xem KiemYSystem.ts). Save cu
+// thieu field nay - khong viet migration, cung convention moi version
+// truoc.
+// version 53 (2026-08-29, kiem-the-kiem-y spec): them
+// `bossKillCount: number` (tang Kiem Y vinh vien theo boss diet);
+// swordPathRoute chot vinh vien luc chon path; go skill Kiem Tu cu (moi
+// route 1 active skill); go rage. Chi tiet xem saveVersion.ts.
+// version 54 (2026-08-29, dot-pha-loi-kiep spec): them 4 field BAT
+// BUOC `openedMeridianIds: string[]` (Bat Mach da thong),
+// `luyenKhiKillsSinceBeast: number` (cua so quai an),
+// `mortalPerfectionAchieved: boolean` (snapshot hoan hao Pham Nhan),
+// `greatDaoOpportunityLost: boolean` (mat vinh vien Dai Dao). Go Dot
+// Pha Lenh (token materials) + quai Kiep. Save v53 bi tu choi (dev
+// phase, khong migration). Chi tiet xem saveVersion.ts.
+// version 65 (2026-09-16, cultivation-path-framework M2): player them
+// field TUY CHON `cultivationWay?: CultivationWayId` (way trong path, xem
 // core/player/CultivationPathKit.ts). M7 (v66): `cultivationPath` thu
-// còn union 3 base id, các id '_an' thành way. Save v64 trở xuống bị
-// từ chối — cùng convention mọi version trước.
+// con union 3 base id, cac id '_an' thanh way. Save v64 tro xuong bi
+// tu choi - cung convention moi version truoc.
 // version 81 (2026-09-23, M-F-BODY-HIDDEN): `luyenKhiKillsSinceBeast`
 // (scalar, v54) becomes `hiddenBeastKills: Record<channelId, number>` -
 // per-channel counter for the channel registry; ProductionSiteState
@@ -180,23 +180,23 @@ export interface GameSave {
 
   pills: PillStackSave[]
 
-  /** v44: luôn rỗng — Phù legacy đã khai tử, quy đổi Linh Thạch (§10.1). */
+  /** v44: luon rong - Phu legacy da khai tu, quy doi Linh Thach (sec.10.1). */
   talismans: TalismanStackSave[]
 
-  /** v44: luôn rỗng — Trận legacy đã khai tử, quy đổi Linh Thạch (§10.1). */
+  /** v44: luon rong - Tran legacy da khai tu, quy doi Linh Thach (sec.10.1). */
   formations: FormationStackSave[]
 
   buildings: BuildingInstance[]
 
   equipmentSlots: EquipmentSlotState[]
 
-  /** v44: state ba nguồn Lâm/Quáng/Động Thiên (plan §4). */
+  /** v44: state ba nguon Lam/Quang/Dong Thien (plan sec.4). */
   productionSites?: ProductionSiteStateSave[]
 
-  /** v44: job luyện đan đang chạy (plan §8.2). */
+  /** v44: job luyen dan dang chay (plan sec.8.2). */
   alchemyJobs?: AlchemyJobSave[]
 
-  /** v51: state Quest System (active progress + completedOnceIds + daily reset mốc). */
+  /** v51: state Quest System (active progress + completedOnceIds + daily reset moc). */
   quests?: QuestManagerState
 
   /** R7 (AR-08): decompose settings + cycle timer. Optional - old
@@ -244,10 +244,10 @@ export type RestoreGameSessionResult =
  * two DIFFERENT saves can share those two fields and the old guard
  * restored the wrong (first) payload.
  *
- * M1 (ARCH-001) — the identity covers EVERY declared GameSave slice, not
+ * M1 (ARCH-001) - the identity covers EVERY declared GameSave slice, not
  * just materials/quests: a pills-only change (or any other single-slice
  * difference) is a different payload and must re-run restore. The ONLY
- * documented exclusion stays `player.lastSavedAt` — re-saving identical
+ * documented exclusion stays `player.lastSavedAt` - re-saving identical
  * content with a new timestamp still converges on retry. Absent optional
  * slices hash as `null` and are distinguished from present-but-empty
  * ones (`[]`), since presence-vs-absence is itself a payload difference.
@@ -295,7 +295,7 @@ export interface ProductionCycleSave {
   completesAtMs: number
 }
 
-/** Shape persist của ProductionSiteState — khớp core/production. */
+/** Shape persist cua ProductionSiteState - khop core/production. */
 export interface ProductionSiteStateSave {
   siteId: string
 
@@ -303,12 +303,12 @@ export interface ProductionSiteStateSave {
 
   autoRestart: boolean
 
-  // 2026-08-28 (economy-ecosystem-plan T3) — worker cycle dở dang trước
-  // đây KHÔNG được persist: mất trắng tiến trình mỗi lần reload và worker
-  // không sản xuất offline. Giờ lưu lại để settleOffline chạy tiếp trong cap.
+  // 2026-08-28 (economy-ecosystem-plan T3) - worker cycle do dang truoc
+  // day KHONG duoc persist: mat trang tien trinh moi lan reload va worker
+  // khong san xuat offline. Gio luu lai de settleOffline chay tiep trong cap.
   workerCycles?: ProductionCycleSave[]
 
-  // Mission A2 — manual worker allocation declared at v55 but dropped by
+  // Mission A2 - manual worker allocation declared at v55 but dropped by
   // the serializer until now; undefined = AUTO (round-robin) per
   // ProductionSiteState.
   assignedWorkers?: number
@@ -318,7 +318,7 @@ export interface ProductionSiteStateSave {
   hiddenChannelCycles?: Record<string, number>
 }
 
-/** Shape persist của ActiveAlchemyJob — khớp core/alchemy. */
+/** Shape persist cua ActiveAlchemyJob - khop core/alchemy. */
 export interface AlchemyJobSave {
   jobId: string
 

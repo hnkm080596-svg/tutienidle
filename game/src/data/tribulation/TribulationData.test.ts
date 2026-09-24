@@ -46,8 +46,8 @@ describe('TribulationChapters (spec dot-pha-loi-kiep §5.2/§5.5/§5.7)', () => 
     )
   })
 
-  it('hệ số bậc: human 1 / earth 1.15 / heaven 1.3 / great_dao 1.85 (spec §5.5)', () => {
-    expect(GRADE_DIFFICULTY_MULTIPLIER).toEqual({ human: 1, earth: 1.15, heaven: 1.3, great_dao: 1.85 })
+  it('hệ số bậc: human 1 / earth 1.15 / heaven 1.3 — no great_dao row (same tribulation for both breakthrough types, 2026-09-23)', () => {
+    expect(GRADE_DIFFICULTY_MULTIPLIER).toEqual({ human: 1, earth: 1.15, heaven: 1.3 })
   })
 
   it('phạt tu vi giảm dần theo realm + Linh Thạch scale (spec §5.7)', () => {

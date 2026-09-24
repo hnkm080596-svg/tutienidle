@@ -13,7 +13,6 @@ import type { NodeRegistry } from '../progression/NodeRegistry'
 import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward, hasStaticPathCapability } from '../player/CultivationPathSystem'
 import {
   computeBreakthroughGrade,
-  getBodyRefinementCompletedTiers,
   investBodyChapterState,
 } from '../realm/body/BodyProgressionSystem'
 import {
@@ -26,11 +25,6 @@ import {
   essenceSubstitutionCoverage,
   planEssenceSubstitution,
 } from '../realm/body/BodyChapterEssenceSubstitution'
-import {
-  applyBodyPerfection,
-  canPerfectBodyRealm,
-} from '../realm/body/BodyPerfection'
-import { bodyPerfectionMaterialIds } from '../../data/realm/BodyPerfection'
 import { pourCultivationOvercharge } from '../cultivation/CultivationSystem'
 import type { NotificationQueue } from './NotificationQueue'
 import {
@@ -38,16 +32,22 @@ import {
 } from '../../data/realm/PhysiqueEssence'
 import type { PhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
 import { MAX_STACK_AMOUNT } from '../inventory/StackLimits'
-import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
-import { CORE_REALM_LEVEL, QI_REFINING_BREAKTHROUGH_STAGE_ID, getCurrentRealm, getNextRealm } from '../realm/realmSystem'
-import { isRealmTransitionEnabled } from '../realm/ReleasePolicy'
+import { CORE_REALM_LEVEL, getCurrentRealm } from '../realm/realmSystem'
+import {
+  closeHiddenLineage,
+  recordHiddenBreakthrough,
+  resolveBreakthroughType,
+} from '../realm/hidden/HiddenLineage'
+import {
+  canTriggerBreakthrough as gateCanTriggerBreakthrough,
+  getBreakthroughRequirements as gateGetBreakthroughRequirements,
+  type BreakthroughRequirementRow,
+} from '../realm/BreakthroughGate'
 import { isArtifactDomainUnlocked } from '../artifact/ArtifactProgression'
 import type { Skill } from '../skill/Skill'
 import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
-import { getMainStatCap } from '../stats/StatCap'
-import { MAIN_STAT_KEYS } from '../stats/StatTypes'
 import type { Technique } from '../technique/Technique'
 import type { TechniqueManager } from '../technique/TechniqueManager'
 import type { TechniqueSystem } from '../technique/TechniqueSystem'
@@ -75,10 +75,7 @@ import type { TemplateRegistry } from './TemplateRegistry'
  * perfection, talents) are intentionally NOT rows here - QI-D6 keeps
  * them resolver-internal.
  */
-export interface BreakthroughRequirementRow {
-  key: 'level' | 'chapterClear'
-  met: boolean
-}
+export type { BreakthroughRequirementRow }
 
 
 
@@ -111,11 +108,9 @@ export class GameManagerRealmAdvanceOps {
       progressionOps: GameManagerProgressionOps
       getTurnBattle: () => TurnBattle | null
       markQuestRealmTransition: () => void
-      // M-F-BODY-PERFECTION - material-landing funnel (the essence
-      // change credit is a live landing) + the shared toast sink for
-      // the perfection transaction's commit notification.
+      // Material-landing funnel (the essence change credit is a live
+      // landing).
       notifyMaterialGained: (materialId: string, amount: number) => void
-      notifications: NotificationQueue
     },
   ) {
     this.techniqueManager = deps.techniqueManager
@@ -358,13 +353,16 @@ export class GameManagerRealmAdvanceOps {
       // final Luyen The value at the moment of the Initiation Ritual.
       player.breakthroughGrade = computeBreakthroughGrade(player)
 
-      // Spec dot-pha-loi-kiep sec.4.2 - the "perfect Pham Nhan" snapshot
-      // (5/5 main stats at mortal cap + Luyen The tier 6/6) locks at the
-      // moment Quan Khi is pressed, NOT asked again after entering Luyen
-      // Khi. It is one of the Truc Co tribulation conditions.
-      player.mortalPerfectionAchieved =
-        getBodyRefinementCompletedTiers(player) >= BODY_REFINEMENT_TIERS.length &&
-        MAIN_STAT_KEYS.every((stat) => player.baseStats[stat] >= getMainStatCap('mortal'))
+      // Hidden Perfection Lineage (2026-09-23): the breakthrough TYPE
+      // (normal vs hidden) resolves at commit - mortal uses
+      // chooseCultivationPath instead of a tribulation attempt. A
+      // NORMAL success closes the lineage on the DEPARTING realm
+      // (here 'mortal'); a hidden entry records the entered realm
+      // after the realm write below so the enhanced Nhap Dao selects.
+      const breakthroughType = resolveBreakthroughType(player)
+      if (breakthroughType === 'normal') {
+        closeHiddenLineage(player, 'mortal')
+      }
 
       player.realmId = 'qi_refining'
       player.realmLevel = 1
@@ -373,6 +371,10 @@ export class GameManagerRealmAdvanceOps {
       // Hai Nap (M2) - banked overflow follows into the new realm's level
       // 1 - same owner helper as the minor-tier breakthrough pour.
       pourCultivationOvercharge(player)
+
+      if (breakthroughType === 'hidden') {
+        recordHiddenBreakthrough(player, 'qi_refining')
+      }
 
       // R8.1 (AR-09) - realm transition may unlock quests; reconcile on
       // the next tick instead of waiting for a panel read.
@@ -654,112 +656,26 @@ export class GameManagerRealmAdvanceOps {
   }
 
   /**
-   * M-F-BODY-PERFECTION (spec S4) - the ONE Body-perfection
-   * transaction: validate -> probe -> consume -> mark -> stack ->
-   * rebuild. Atomic: every gate arm + a JSON-probe pass runs before
-   * ANY mutation, so a failure leaves zero state change. Idempotent:
-   * an already-perfected realm short-circuits inside
-   * canPerfectBodyRealm. The "stack + rebuild" steps need no explicit
-   * call: getBodyPerfectionMultiplier derives live from
-   * perfectedRealmIds inside the Body base-stat channel, and the UI
-   * re-resolves stats on the next state bump.
-   */
-  perfectBodyRealm(player: PlayerData, realmId: string): boolean {
-    const ownedOf = (materialId: string): number =>
-      this.deps.materialBag.getAmount(materialId)
-
-    if (!canPerfectBodyRealm(player, realmId, ownedOf)) {
-      return false
-    }
-
-    const required = bodyPerfectionMaterialIds(realmId)
-
-    if (required.length === 0) {
-      return false
-    }
-
-    // Same Pinia-safe probe convention as investBodyChapter: JSON
-    // round-trip (never structuredClone - proxies throw DataCloneError),
-    // then the mark step dry-runs on the detached copy. Consumption
-    // cannot legitimately fail past the gate, but the probe keeps the
-    // atomic convention uniform - and stays fail-closed: any
-    // serialization or probe exception returns false with zero mutation.
-    try {
-      const probe = JSON.parse(JSON.stringify(player)) as PlayerData
-
-      if (!canPerfectBodyRealm(probe, realmId, ownedOf)) {
-        return false
-      }
-
-      applyBodyPerfection(probe, realmId)
-    } catch {
-      return false
-    }
-
-    for (const materialId of required) {
-      this.deps.materialBag.remove(materialId, 1)
-    }
-
-    applyBodyPerfection(player, realmId)
-
-    this.deps.notifications.push({
-      kind: 'loot',
-      message: `Thể Phách Hoàn Thiện: ${getCurrentRealm(realmId).name}`,
-      messageKey: 'notifications.bodyRealmPerfected',
-      messageParams: { realm: getCurrentRealm(realmId).name },
-    })
-
-    return true
-  }
-
-  /**
    * M-QI-03 - normal breakthrough requirement read-model: the SAME
    * predicate rows that drive canTriggerBreakthrough, exposed so the UI
    * can render unmet requirements instead of a bare disabled button.
    * mortal: [level]; qi_refining: [level, chapterClear]; others: [].
+   *
+   * 2026-09-23 hidden-perfection-lineage: the rows are pure and shared
+   * - this delegates to BreakthroughGate so the hidden eligibility
+   *   resolver can read the ordinary gate without a class dependency.
    */
   getBreakthroughRequirements(player: PlayerData): BreakthroughRequirementRow[] {
-    // M-F-CEILING - release policy decides whether the next transition may
-    // be attempted at all; a closed transition reports no requirement rows
-    // (TC -> KD stays authored but disabled in the Beta window).
-    const nextRealmId = getNextRealm(player.realmId)?.id
-    if (nextRealmId === undefined || !isRealmTransitionEnabled(player.realmId, nextRealmId)) {
-      return []
-    }
-    if (player.realmId === 'mortal') {
-      return [{ key: 'level', met: player.realmLevel >= CORE_REALM_LEVEL }]
-    }
-    if (player.realmId === 'qi_refining') {
-      return [
-        { key: 'level', met: player.realmLevel >= CORE_REALM_LEVEL },
-        {
-          key: 'chapterClear',
-          met: player.completedStageIds.includes(QI_REFINING_BREAKTHROUGH_STAGE_ID),
-        },
-      ]
-    }
-    return []
+    return gateGetBreakthroughRequirements(player)
   }
 
   /**
    * Unified breakthrough gate - one function for EVERY realm. Returns
    * true when the player meets the conditions to press Breakthrough
-   * (Quan Khi / Truc Co / ...).
-   *
-   * QI-D5 - Truc Co admission has TWO mandatory inputs: realmLevel >=
-   * CORE_REALM_LEVEL AND the qi_refining chapter-final stage cleared
-   * (QI_REFINING_BREAKTHROUGH_STAGE_ID in completedStageIds). Hidden
-   * grade/foundation inputs stay resolver-internal - they are not part
-   * of this normal admission gate. Mortal stays level-only (its real
-   * transition is the initiation ritual, chooseCultivationPath).
-   *
-   * PRODUCT SCOPE: the game is currently designed up to Truc Co tier 18.
-   * Transitions into unreleased realms (Kim Dan+) are closed by the
-   * release-policy authority (ReleasePolicy.progressionCeilingRealmId) -
-   * their content stays authored/dormant.
+   * (Quan Khi / Truc Co / ...). Delegates to the pure gate - see
+   * core/realm/BreakthroughGate.ts.
    */
   canTriggerBreakthrough(player: PlayerData): boolean {
-    const requirements = this.getBreakthroughRequirements(player)
-    return requirements.length > 0 && requirements.every((row) => row.met)
+    return gateCanTriggerBreakthrough(player)
   }
 }

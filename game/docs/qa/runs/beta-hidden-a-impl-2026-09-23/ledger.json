@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "run": {
+    "id": "beta-hidden-a-impl-2026-09-23",
+    "createdAt": "2026-09-23T23:51:03.817592Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [
+      "game/src/**"
+    ],
+    "nonGoals": [
+      "realm mechanics (HIDDEN-B/C scope)",
+      "balance values",
+      "merge/push"
+    ],
+    "branch": "devin/1790198940-beta-hidden-a",
+    "base": "origin/beta/rc",
+    "head": "244078a1",
+    "phase": "EVIDENCE",
+    "outcome": "PASS WITH EVIDENCE - independence axis open (sealed reviewers undispatchable); all required internal gates green"
+  },
+  "invariants": [],
+  "census": [],
+  "findings": [],
+  "evidence": [
+    {
+      "id": "ev-impl-internal-gates",
+      "kind_": "review",
+      "summary": "Implementation QA evidence assembled internally (independence gap: sealed reviewer dispatch blocked - org SWE-2 5-slot cap; children of SWE-2 session cannot run normal mode; coordinator normal-mode amendment inapplicable here). Evidence chain: OCR gate 69/69 files delegation-mode clean (1 Medium + 1 Low fixed); P4 adversarial deep-audit PASS WITH EVIDENCE (docs/qa/2026-09-23-hidden-perfection-skel",
+      "files": [
+        "src/core/realm/hidden/**",
+        "src/core/game/**",
+        "src/services/save/**"
+      ]
+    }
+  ],
+  "coverage": [],
+  "attacks": [],
+  "reviews": [],
+  "cycles": [],
+  "mutations": [],
+  "corpus": [],
+  "lessons": [],
+  "messages": [],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-09-23T23:51:03.817592Z",
+      "kind": "PHASE",
+      "actor": "coordinator-9958",
+      "state": {
+        "productStateId": "5e8731a4e2926efe8a5db3e8c1512c597234a11f30fb4c18e0b60ca3648ae6ae",
+        "contractId": "311da3efc0a98ba409d66885886fe882672b6aea282a22bc28e32e0f7dbca7c8",
+        "attackModelId": "fca30679635be3bbce1ca7d8a9ceb8f0daceaaa80e4cf645584db5ccc0dbf0b2",
+        "environmentId": "b77349bf1fa9b26d45d545d7d64dad96737e9cfbb3cbb5f5d10fb77b0fcc44ad"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "d4bbe5882d960aacc644793dbe13139ed89a25b2ad6fb83a6e632ec75828b9f3",
+      "eventHash": "4f097606529397b78f832bf229eb5fc3e14b8f8243742c135362f49546f170f4"
+    },
+    {
+      "seq": 2,
+      "at": "2026-09-23T23:51:03.817592Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-9958",
+      "state": {
+        "productStateId": "5e8731a4e2926efe8a5db3e8c1512c597234a11f30fb4c18e0b60ca3648ae6ae",
+        "contractId": "311da3efc0a98ba409d66885886fe882672b6aea282a22bc28e32e0f7dbca7c8",
+        "attackModelId": "fca30679635be3bbce1ca7d8a9ceb8f0daceaaa80e4cf645584db5ccc0dbf0b2",
+        "environmentId": "b77349bf1fa9b26d45d545d7d64dad96737e9cfbb3cbb5f5d10fb77b0fcc44ad"
+      },
+      "previousEventHash": "4f097606529397b78f832bf229eb5fc3e14b8f8243742c135362f49546f170f4",
+      "payloadPath": "events/0002.json",
+      "payloadHash": "08fee3f8ab1ae2e77614d1f076e0c0ad1314c2e0663a3d06968e1b8e10dd1662",
+      "eventHash": "5d507823ee7f12c3a13cbf969717bf50959e45dd66f10b056ae9e1de88b5af26"
+    }
+  ]
+}

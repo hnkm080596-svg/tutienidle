@@ -17,15 +17,17 @@ function createLuyenKhiPlayer(): PlayerData {
 // from the retired MeridianSystem.test.ts onto
 // player.bodyProgression.meridian.openedIds.
 describe('MeridianChapter - Bat Mach (spec dot-pha-loi-kiep sec.4.1a)', () => {
-  it('data: 9 duong dung thu tu Nham -> Doc + Ky Kinh tang 18, cost tang dan, KHONG cham mana', () => {
+  it('data: 8 duong dung thu tu Nham -> Doc, cost tang dan, KHONG cham mana', () => {
+    // Hidden Perfection Lineage (2026-09-23): the 9th meridian
+    // (ky_kinh_thien_dia_chi_kieu) retires - its material-gated
+    // completion belonged to the old BodyPerfection authority and is
+    // superseded by the HIDDEN-B Quan The seam.
     expect(MERIDIANS.map((m) => m.id)).toEqual([
       'nham_mach', 'doi_mach', 'am_kieu_mach', 'am_duy_mach',
-      'duong_duy_mach', 'duong_kieu_mach', 'xung_mach', 'doc_mach', 'ky_kinh_thien_dia_chi_kieu',
+      'duong_duy_mach', 'duong_kieu_mach', 'xung_mach', 'doc_mach',
     ])
     expect(MERIDIANS[0]!.requiredRealmLevel).toBe(2)
     expect(MERIDIANS[7]!.requiredRealmLevel).toBe(16)
-    expect(MERIDIANS[8]!.requiredRealmLevel).toBe(18)
-    expect(MERIDIANS[8]!.requiresThienDiaChiKieu).toBe(true)
     const allStats = MERIDIANS.flatMap((m) => m.stats)
     expect(allStats).not.toContain('maxMp')
     expect(allStats).not.toContain('manaRegenPerTurn')
@@ -48,22 +50,6 @@ describe('MeridianChapter - Bat Mach (spec dot-pha-loi-kiep sec.4.1a)', () => {
     player.bodyProgression.meridian.openedIds = ['nham_mach']
     expect(meridianChapter.invest(player, 10, 0)).toBe(0)
     expect(player.bodyProgression.meridian.openedIds).toEqual(['nham_mach'])
-  })
-
-  it('Ky Kinh (duong 9) can ca Thong Mach Dan lan Thien Dia Chi Kieu', () => {
-    const player = createLuyenKhiPlayer()
-    player.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 8).map((m) => m.id)
-    const consumed = meridianChapter.invest(player, 40, 0)
-    expect(consumed).toBe(0)
-    expect(player.bodyProgression.meridian.openedIds).toHaveLength(8)
-  })
-
-  it('du 9/9: mo Ky Kinh khi co ca 2 nguyen lieu - aux KHONG bi tieu hao boi invest (op tru)', () => {
-    const player = createLuyenKhiPlayer()
-    player.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 8).map((m) => m.id)
-    const consumed = meridianChapter.invest(player, 40, 1)
-    expect(consumed).toBe(40)
-    expect(player.bodyProgression.meridian.openedIds).toHaveLength(9)
   })
 
   it('roi Luyen Khi (da vao Truc Co): van duoc tieu not dan do (pattern Luyen The)', () => {
@@ -96,11 +82,11 @@ describe('MeridianChapter - Bat Mach (spec dot-pha-loi-kiep sec.4.1a)', () => {
 })
 
 describe('MeridianChapter - chapter contract', () => {
-  it('descriptor: id/prefix/currency channels - thong_mach_dan la PILL, thien_dia_chi_kieu la material', () => {
+  it('descriptor: id/prefix/currency channels - thong_mach_dan la PILL', () => {
     expect(meridianChapter.id).toBe('meridian')
     expect(meridianChapter.modifierPrefix).toBe('bat-mach:')
     expect(meridianChapter.currency).toEqual({ bag: 'pill', id: 'thong_mach_dan' })
-    expect(meridianChapter.auxCurrency).toEqual({ bag: 'material', id: 'thien_dia_chi_kieu' })
+    expect(meridianChapter.auxCurrency).toBeUndefined()
   })
 
   it('invest does NOT rebuild modifiers (the system dispatch owns the rebuild)', () => {
@@ -140,12 +126,12 @@ describe('MeridianChapter - chapter contract', () => {
   it('progress / isComplete reads', () => {
     const player = createLuyenKhiPlayer()
 
-    expect(meridianChapter.progress(player)).toEqual({ completed: 0, total: 9 })
+    expect(meridianChapter.progress(player)).toEqual({ completed: 0, total: 8 })
     expect(meridianChapter.isComplete(player)).toBe(false)
 
     player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
 
-    expect(meridianChapter.progress(player)).toEqual({ completed: 9, total: 9 })
+    expect(meridianChapter.progress(player)).toEqual({ completed: 8, total: 8 })
     expect(meridianChapter.isComplete(player)).toBe(true)
   })
 })

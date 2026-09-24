@@ -1,48 +1,17 @@
-// M-F-BODY-HIDDEN (spec sec.4/6, plan Step 1.5) - the canonical
-// delivery seam end-to-end through the REAL GameManager tick path:
-// grotto hidden-channel emission -> pendingEvents ->
-// drainSettlementEvents -> questOps.notifyMaterialGained ->
-// questSystem.onMaterialCollected + recordBodyPerfectionMaterialDiscovery.
+// Hidden-channel material delivery end-to-end through the REAL
+// GameManager tick path: grotto hidden-channel emission -> pendingEvents
+// -> drainSettlementEvents -> questOps.notifyMaterialGained ->
+// questSystem.onMaterialCollected + material bag.
 //
-// The shipped channel registry and the perfection-material table are
-// intentionally empty, so the fixture channel is injected into the live
-// ProductionSystem deps (same test-only mutation convention as the
-// COMPANIONS catalog fixtures). The canonical perfection table is a
-// closed module-load registry (REALM_BY_MATERIAL is built at import
-// time), so the lookup seam the REAL writer consults -
-// isBodyPerfectionMaterial in the data module - is injected here to
-// also recognize the fixture id (r97-MEDIUM): the real
-// recordBodyPerfectionMaterialDiscovery then writes the discovery
-// marker itself, so the test proves pendingEvents -> funnel -> real
-// write-once discovery, not merely that the writer was invoked.
-import { afterEach, describe, expect, it, vi } from 'vitest'
-
-// Hoisted per repo convention (core/realm/body/BodyPerfection.test.ts):
-// vi.mock factories hoist above top-level consts - a plain const here
-// would hit TDZ when the factory evaluates.
-const { FIXTURE_PERFECTION_ID } = vi.hoisted(() => ({
-  FIXTURE_PERFECTION_ID: 'bp_gm_fixture_material',
-}))
-
-vi.mock('../../data/realm/BodyPerfection', async (importOriginal) => {
-  const original =
-    await importOriginal<typeof import('../../data/realm/BodyPerfection')>()
-
-  return {
-    ...original,
-    isBodyPerfectionMaterial: vi.fn(
-      (materialId: string): boolean =>
-        materialId === FIXTURE_PERFECTION_ID ||
-        original.isBodyPerfectionMaterial(materialId),
-    ),
-  }
-})
+// The shipped channel registry is intentionally small, so the fixture
+// channel is injected into the live ProductionSystem deps (same
+// test-only mutation convention as the COMPANIONS catalog fixtures).
+import { describe, expect, it, vi } from 'vitest'
 
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import type { GrottoChannel } from '../../data/drop/HiddenMaterialChannels'
 import { hiddenBeastChannels } from '../../data/drop/HiddenMaterialChannels'
-import { isBodyPerfectionMaterial } from '../../data/realm/BodyPerfection'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { FunctionCombatRng } from '../battle/runtime/rng/FunctionCombatRng'
 import { HiddenBeastSystem } from './HiddenBeastSystem'
@@ -54,7 +23,7 @@ import { asBaseStats } from '../stats/StatBlock'
 import type { Stage } from '../stage/Stage'
 
 const GROTTO = 'thanh_van_dong_thien'
-const MATERIAL_ID = FIXTURE_PERFECTION_ID
+const MATERIAL_ID = 'channel_fixture_material'
 
 function injectGrottoChannel(manager: GameManager, channel: GrottoChannel): void {
   ;(
@@ -87,12 +56,8 @@ function restoreDueGrottoCycle(manager: GameManager, rollSeed: number): void {
   ])
 }
 
-describe('GameManager - hidden-channel material delivery seam (m-f-body-hidden Step 1.5)', () => {
-  afterEach(() => {
-    vi.mocked(isBodyPerfectionMaterial).mockClear()
-  })
-
-  it('settle emits -> drain -> notifyMaterialGained -> real writer adds the discovery marker once', () => {
+describe('GameManager - hidden-channel material delivery seam', () => {
+  it('settle emits -> drain -> notifyMaterialGained -> bag gains the delivered amount', () => {
     const manager = new GameManager()
     const player = createDefaultPlayer()
     manager.setActivePlayer(player)
@@ -115,11 +80,9 @@ describe('GameManager - hidden-channel material delivery seam (m-f-body-hidden S
     })
 
     const funnelSpy = vi.spyOn(manager.questOps, 'notifyMaterialGained')
-    const lookupSpy = vi.mocked(isBodyPerfectionMaterial)
 
-    // First settle: the channel emits, the funnel fires with the
-    // delivered amount, and the REAL writer records the discovery
-    // marker (the injected lookup seam recognizes the fixture id).
+    // First settle: the channel emits and the funnel fires with the
+    // delivered amount; the bag takes the delivery.
     restoreDueGrottoCycle(manager, 1)
     manager.tickOps.update(1)
 
@@ -127,19 +90,13 @@ describe('GameManager - hidden-channel material delivery seam (m-f-body-hidden S
       funnelSpy.mock.calls.some(([materialId, amount]) => materialId === MATERIAL_ID && amount === 1),
     ).toBe(true)
     expect(
-      lookupSpy.mock.calls.filter(([materialId]) => materialId === MATERIAL_ID).length,
-    ).toBeGreaterThan(0)
-    expect(player.bodyPerfection.discoveredMaterials).toEqual([MATERIAL_ID])
-    expect(
       manager.materialBag.getAll().find((stack) => stack.material.id === MATERIAL_ID)?.amount,
     ).toBe(1)
 
-    // Second settle: a normal re-grant - the real write-once contract
-    // dedupes the marker while the bag still takes the delivery.
+    // Second settle: a normal re-grant stacks onto the first delivery.
     restoreDueGrottoCycle(manager, 2)
     manager.tickOps.update(1)
 
-    expect(player.bodyPerfection.discoveredMaterials).toEqual([MATERIAL_ID])
     expect(
       manager.materialBag.getAll().find((stack) => stack.material.id === MATERIAL_ID)?.amount,
     ).toBe(2)

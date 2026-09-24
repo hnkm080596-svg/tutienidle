@@ -39,7 +39,7 @@ import {
   applyAllBodyModifiers,
   assertBodyProgressionIntegrity,
 } from '../realm/body/BodyProgressionSystem'
-import { assertBodyPerfectionIntegrity } from '../realm/body/BodyPerfection'
+import { assertHiddenPerfectionIntegrity } from '../realm/hidden/HiddenPerfection'
 import type { StatModifier } from '../stats/StatCalculator'
 import { computeRestoreIdentity, type GameSave } from '../../services/save/saveTypes'
 import { NotificationQueue } from './NotificationQueue'
@@ -298,12 +298,13 @@ export class GameManagerSaveRestore {
     // hard-fail seam as the technique-holder contract above.
     assertBodyProgressionIntegrity(save.player)
 
-    // M-F-BODY-PERFECTION (v80) - the perfection slice's semantic
-    // integrity runs as the LAST preflight check too: authored-family
-    // membership, perfected-realm keys, subset + realm-cap rules (see
-    // core/realm/body/BodyPerfection). Same hard-fail seam - reject
-    // before any owner mutation.
-    assertBodyPerfectionIntegrity(save.player)
+    // Hidden Perfection Lineage (v82) - the lineage slice's semantic
+    // integrity runs as the LAST preflight check too: strict-prefix
+    // completed list, two-view agreement (completed<->bodyCompleted),
+    // authored-realm keys, frozen/exclusive pairs (see
+    // core/realm/hidden/HiddenPerfection). Same hard-fail seam -
+    // reject before any owner mutation.
+    assertHiddenPerfectionIntegrity(save.player)
   }
 
   /**

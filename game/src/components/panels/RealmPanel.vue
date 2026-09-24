@@ -8,21 +8,19 @@ import Eyebrow from '@/components/common/primitives/Eyebrow.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import BodyRefinementSection from '@/components/panels/realm/BodyRefinementSection.vue'
 import MeridianSection from '@/components/panels/realm/MeridianSection.vue'
-import BodyPerfectionSection from '@/components/panels/realm/BodyPerfectionSection.vue'
 import ZhouTianSection from '@/components/panels/realm/ZhouTianSection.vue'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
 import { CORE_REALM_LEVEL, getCurrentRealm, getNextRealm } from '@/core/realm/realmSystem'
-import { isBodyPerfectionRevealed } from '@/core/realm/body/BodyPerfection'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
 import { REALM_PASSIVE_NODES } from '@/data/realm/RealmPassiveNodes'
 import { useRealmStatPassives } from '@/composables/useRealmStatPassives'
 
-// 2026-08-28 — tiểu cảnh giới tự tăng khi đủ tu vi (App.vue's tick(),
-// không còn nút Đột phá hay checkbox). Panel chỉ còn nút đại cảnh
-// giới (Quán Khí / Trúc Cơ / Độ Kiếp) — tách đúng 2 loại nghi lễ.
+// 2026-08-28 - tieu canh gioi tu tang khi du tu vi (App.vue's tick(),
+// khong con nut Dot pha hay checkbox). Panel chi con nut dai canh
+// gioi (Quan Khi / Truc Co / Do Kiep) - tach dung 2 loai nghi le.
 const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
@@ -31,10 +29,6 @@ const requirement = useBreakthroughRequirementStore()
 const { realmStatPassiveRows } = useRealmStatPassives()
 
 const currentTier = computed(() => getRealmTier(player.realmId))
-// M-F-BODY-PERFECTION (spec S6) - the whole col stays ABSENT until
-// the first authored perfection material is discovered; player.$state
-// is Pinia-reactive so this computed re-evaluates on the first write.
-const bodyPerfectionRevealed = computed(() => isBodyPerfectionRevealed(player.$state))
 const canBreakthrough = computed(() => gameManager.realmAdvanceOps.canTriggerBreakthrough(player.$state))
 // M-QI-03 - normal Truc Co read-model: the visible requirement block is
 // scoped to qi_refining (the domain rows also drive the gate itself;
@@ -141,13 +135,6 @@ function majorBreakthrough() {
           <Eyebrow>{{ t('panels.realm.zhouTian.title') }}</Eyebrow>
           <ZhouTianSection />
         </div>
-        <!-- M-F-BODY-PERFECTION - hidden col: v-if on the COLUMN, not
-             inside the section, so no empty eyebrow renders before
-             first discovery. -->
-        <div v-if="bodyPerfectionRevealed" class="realm-panel__body-col">
-          <Eyebrow>{{ t('panels.realm.bodyPerfection.title') }}</Eyebrow>
-          <BodyPerfectionSection />
-        </div>
       </div>
     </div>
   </OverlayPanel>
@@ -169,9 +156,9 @@ function majorBreakthrough() {
   --paper-line: var(--sys-line, var(--ink-line));
   --paper-line-soft: var(--sys-line-soft, var(--ink-line-soft));
 }
-/* Tên/cảnh giới không có cỡ chữ tường minh trước đây (2026-08-30
-   frontend-design pass: dòng nhận diện quan trọng nhất panel lại nhỏ
-   nhất) — nâng lên đúng cỡ CharacterPanel's identity block dùng. */
+/* Ten/canh gioi khong co co chu tuong minh truoc day (2026-08-30
+   frontend-design pass: dong nhan dien quan trong nhat panel lai nho
+   nhat) - nang len dung co CharacterPanel's identity block dung. */
 .realm-panel__name { font-size: var(--text-title); }
 .realm-panel__realm-line { font-size: var(--text-body); font-weight: 600; color: var(--jade); }
 .realm-panel__cultivation-label { font-size: var(--text-md); font-weight: 700; }
@@ -186,9 +173,9 @@ function majorBreakthrough() {
 .realm-requirement__marker { font-weight: 700; width: 1em; text-align: center; }
 .realm-panel__cultivation { width: min(560px, 90%); margin: 0 auto; }
 .realm-panel__cultivation-bar { --bar-track: var(--sys-bg-0, var(--ink-950)); border: 1px solid var(--sys-line-soft, var(--ink-line)); }
-/* Fit-refactor đợt 3 — grid node cảnh giới auto-fit theo CARD: 9 cột khi
-   rộng, tự xuống 5/3 cột khi hẹp (bỏ dead zone 901–957px của media query
-   viewport cũ). Node khiên tròn giữ nguyên shape qua flex min-width. */
+/* Fit-refactor dot 3 - grid node canh gioi auto-fit theo CARD: 9 cot khi
+   rong, tu xuong 5/3 cot khi hep (bo dead zone 901-957px cua media query
+   viewport cu). Node khien tron giu nguyen shape qua flex min-width. */
 .realm-panel__nodes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(108px, 100%), 1fr)); gap: 8px; position: relative; }
 .realm-node { position: relative; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; color: var(--text-muted); background: var(--ink-800); border: 1px solid var(--ink-line); border-radius: 50% 50% 12px 12px; }
 .realm-node:not(:last-child)::after { content: ''; position: absolute; left: 100%; top: 48%; width: 9px; height: 2px; background: var(--ink-line); }
@@ -199,8 +186,8 @@ function majorBreakthrough() {
 .realm-node small { font-size: var(--text-xs); }
 .realm-panel__passives { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
 .realm-panel__passives article { display: flex; flex-direction: column; gap: 3px; padding: 10px; background: var(--ink-800); border: 1px solid var(--ink-line-soft); border-radius: var(--radius-sm); }
-/* Tên passive trước đây không có cỡ chữ riêng — bằng hệt description,
-   không phân biệt được tiêu đề/nội dung (2026-08-30 frontend-design pass). */
+/* Ten passive truoc day khong co co chu rieng - bang het description,
+   khong phan biet duoc tieu de/noi dung (2026-08-30 frontend-design pass). */
 .realm-panel__passives article strong { font-size: var(--text-md); color: var(--text-primary); }
 .realm-panel__passives article span { color: var(--text-muted); font-size: var(--text-sm); }
 /* P7-M7 - body chapter subviews side by side on wide cards, stacked
@@ -209,7 +196,7 @@ function majorBreakthrough() {
 .realm-panel__body-col { display: flex; flex-direction: column; gap: 8px; }
 .realm-panel__body-col .eyebrow { margin: 0; }
 @keyframes realm-breathe { 50% { transform: scale(1.08); opacity: .65; } }
-/* UI-006 (Task 4) — reduced motion: aura đứng yên. */
+/* UI-006 (Task 4) - reduced motion: aura dung yen. */
 @media (prefers-reduced-motion: reduce) { .realm-panel__aura { animation: none; } }
 @container overlay-panel (max-width: 900px) { .realm-node::after { display: none; } }
 </style>

@@ -11,7 +11,6 @@ import { PillRegistry } from '../pill/PillRegistry'
 import { PillBag } from '../pill/PillBag'
 import { NotificationQueue } from './NotificationQueue'
 import type { PlayerData } from '../player/Player'
-import { recordBodyPerfectionMaterialDiscovery } from '../realm/body/BodyPerfection'
 
 export interface GameManagerQuestOpsDeps {
   questSystem: QuestSystem
@@ -23,38 +22,40 @@ export interface GameManagerQuestOpsDeps {
   pillRegistry: PillRegistry
   pillBag: PillBag
   notifications: NotificationQueue
-  // GameManager giữ activePlayer như field mutable (setActivePlayer) — đọc
-  // LIVE qua closure thay vì snapshot tại constructor time, giống
+  // GameManager giu activePlayer nhu field mutable (setActivePlayer) - doc
+  // LIVE qua closure thay vi snapshot tai constructor time, giong
   // GameManagerBuildingOps.
   getActivePlayer: () => PlayerData | undefined
-  // RewardReceiver dùng chung cho mọi nơi cấp Reward trực tiếp cho player
-  // (battle victory, claim quest...) — logic thật (insight/Linh Thạch) nằm
-  // ngoài phạm vi QUEST section nên GameManager cung cấp qua closure thay
-  // vì tách theo.
+  // RewardReceiver dung chung cho moi noi cap Reward truc tiep cho player
+  // (battle victory, claim quest...) - logic that (insight/Linh Thach) nam
+  // ngoai pham vi QUEST section nen GameManager cung cap qua closure thay
+  // vi tach theo.
   buildPlayerRewardReceiver: (player: PlayerData) => RewardReceiver
 }
 
 /**
- * Tách khỏi GameManager (2026-09-03, task 4 — GameManager split) — toàn bộ
- * thao tác Quest (collect-quest hook, query active/canClaim, claim). Cùng
- * pattern DI với GameManagerAlchemyOps/GameManagerBuildingOps: constructor
- * nhận dependency tường minh qua object `deps`, KHÔNG tự import ngược
+ * Tach khoi GameManager (2026-09-03, task 4 - GameManager split) - toan bo
+ * thao tac Quest (collect-quest hook, query active/canClaim, claim). Cung
+ * pattern DI voi GameManagerAlchemyOps/GameManagerBuildingOps: constructor
+ * nhan dependency tuong minh qua object `deps`, KHONG tu import nguoc
  * GameManager.
  */
 export class GameManagerQuestOps {
   constructor(private readonly deps: GameManagerQuestOpsDeps) {}
 
   /**
-   * Material-landing funnel (M-F-BODY-PERFECTION, ex
-   * notifyQuestMaterialGained) - call EVERY time a material lands in
-   * the player bag. Fans out to TWO canonical consumers: collect-quest
-   * progress (questSystem.onMaterialCollected) and perfection-material
-   * discovery (recordBodyPerfectionMaterialDiscovery). A zero/negative
-   * delivered amount is not a landing: no subscriber fires at all.
-   * NEVER call during save restore (double-count).
+   * Material-landing funnel (ex notifyQuestMaterialGained) - call
+   * EVERY time a material lands in the player bag. Subscriber:
+   * collect-quest progress (questSystem.onMaterialCollected). A
+   * zero/negative delivered amount is not a landing: no subscriber
+   * fires at all. NEVER call during save restore (double-count).
    * BattleLootSystem and every GameManager material-granting path
    * (production settle, building claim, Hoa Luyen, Linh Thach reward,
    * refund, change credit...) route through this helper.
+   *
+   * 2026-09-23 hidden-perfection-lineage sec.19: the perfection-material
+   * discovery subscriber retired with BodyPerfection - HIDDEN-B/C
+   * mechanisms own their own discovery events.
    */
   notifyMaterialGained(materialId: string, amount: number): void {
     if (amount <= 0) {
@@ -67,12 +68,6 @@ export class GameManagerQuestOps {
       materialId,
       amount,
     )
-
-    const player = this.deps.getActivePlayer()
-
-    if (player) {
-      recordBodyPerfectionMaterialDiscovery(player, materialId)
-    }
   }
 
   getActiveQuests(): { quest: Quest; progress: QuestProgress }[] {
@@ -118,7 +113,7 @@ export class GameManagerQuestOps {
         materialBag: this.deps.materialBag,
         pillRegistry: this.deps.pillRegistry,
         pillBag: this.deps.pillBag,
-        // 9.8 — quest reward material tràn túi → push toast qua sink.
+        // 9.8 - quest reward material tran tui -> push toast qua sink.
         notifications: this.deps.notifications,
         // M-F-BODY-PERFECTION - reward materials granted inside claim()
         // route back through THIS funnel (quest + discovery), instead of

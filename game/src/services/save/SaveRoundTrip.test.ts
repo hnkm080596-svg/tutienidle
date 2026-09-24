@@ -78,18 +78,16 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     expect(materials).toContainEqual({ materialId: TEST_MATERIAL.id, amount: 42 })
   })
 
-  // Spec dot-pha-loi-kiep sec.6.1 - the v54 fields (meridian opened
+  // The persisted breakthrough-adjacent fields (meridian opened
   // ids inside bodyProgression since v72, hiddenBeastKills since v81,
-  // mortalPerfectionAchieved, greatDaoOpportunityLost) must survive
-  // the JSON round-trip.
-  it('save v54 với 4 fields đột phá mới round-trip nguyên vẹn', () => {
+  // hiddenPerfection since v82) must survive the JSON round-trip.
+  it('các field đột phá round-trip nguyên vẹn', () => {
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()
 
     player.bodyProgression.meridian.openedIds = ['nham_mach', 'doi_mach']
     player.hiddenBeastKills = { huyet_mong: 500 }
-    player.mortalPerfectionAchieved = true
-    player.greatDaoOpportunityLost = false
+    player.hiddenPerfection.realms.mortal = { discovered: true }
 
     const save = buildGameSave(player, gameManager)
     const roundTripped: unknown = JSON.parse(JSON.stringify(save))
@@ -104,8 +102,8 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
 
     expect(playerData.bodyProgression.meridian.openedIds).toEqual(['nham_mach', 'doi_mach'])
     expect(playerData.hiddenBeastKills).toEqual({ huyet_mong: 500 })
-    expect(playerData.mortalPerfectionAchieved).toBe(true)
-    expect(playerData.greatDaoOpportunityLost).toBe(false)
+    expect(playerData.hiddenPerfection.lineageActive).toBe(true)
+    expect(playerData.hiddenPerfection.realms.mortal?.discovered).toBe(true)
   })
 
   // M-F-BODY-HIDDEN (v81) - the two channel-counter maps ride the same
@@ -231,7 +229,6 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
           openedIds: [
             'nham_mach', 'doi_mach', 'am_kieu_mach', 'am_duy_mach',
             'duong_duy_mach', 'duong_kieu_mach', 'xung_mach', 'doc_mach',
-            'ky_kinh_thien_dia_chi_kieu',
           ],
         },
         zhou_tian: { circulation: 360 },

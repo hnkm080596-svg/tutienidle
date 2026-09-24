@@ -4,11 +4,20 @@ import {
   getCurrentRealm,
 } from '../realm/realmSystem'
 import { hasCultivationOverflowBank } from '../talent/TalentEffects'
+import { resolveFinalCultivationGain } from './CultivationDiversion'
 
 export function addCultivation(
   player: PlayerData,
   amount: number,
 ) {
+  // Hidden Perfection Lineage (2026-09-23, master spec sec.4.5.1): the
+  // FINAL-gain diversion seam - Quan The (HIDDEN-B) and later mechanism
+  // diverts run here, BEFORE the cap clamp and before any persistence
+  // or banked-overflow semantics (they see the post-diversion amount).
+  // The chain is total-conserving: a registered diversion owns how
+  // much cultivation lands; an unregistered player passes through.
+  amount = resolveFinalCultivationGain(player, amount)
+
   const required = getRequiredCultivation(
     player.realmId,
     player.realmLevel,

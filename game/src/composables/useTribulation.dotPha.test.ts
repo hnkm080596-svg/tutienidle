@@ -10,12 +10,14 @@ import { pills } from '../data/pill/pills'
 import { TECHNIQUES } from '../data/technique/Techniques'
 import { SKILLS } from '../data/skill/Skills'
 import { MERIDIANS } from '../data/realm/Meridians'
+import { completeHiddenBody } from '../core/realm/hidden/HiddenLineage'
 import { makeInstance } from '../core/equipment/EquipmentInstance.fixture'
 import { PROFESSION_GRADE_BY_REALM } from '../core/profession/ProfessionGrade'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// Snapshot hoan hao Pham Nhan + Pham Nhan Chi Cot (spec dot-pha-loi-kiep
-// S4.2/S4.4) - integration qua GameManager + useTribulation that.
+// Hidden Perfection Lineage (2026-09-23 design, master spec sec.3/sec.5) -
+// the lineage latch and the Dai Dao path, integration qua GameManager +
+// useTribulation that.
 function tribulationTotalSeconds(targetRealmId: string): number {
   return getTribulationChapters(targetRealmId)!.reduce((total, chapter) => {
     if (chapter.mind) {
@@ -25,7 +27,7 @@ function tribulationTotalSeconds(targetRealmId: string): number {
   }, 0)
 }
 
-describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
+describe('Chốt dòng Hoàn Hảo khi đột phá THƯỜNG (design §3)', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.useFakeTimers()
@@ -35,70 +37,66 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
     vi.useRealTimers()
   })
 
-  it('chooseCultivationPath khi 5/5 stat 10/10 + 6/6 Luyện Th thể → mortalPerfectionAchieved = true', () => {
+  it('chooseCultivationPath (normal commit) đóng lineage vĩnh viễn: lineageActive=false + closer mortal', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = usePlayerStore()
     player.realmLevel = 12
-    player.bodyProgression.body_refinement.completedTiers = 6
-    player.physiqueGrade = 'bao'
-    player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
+    expect(player.hiddenPerfection.lineageActive).toBe(true)
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
-    expect(player.mortalPerfectionAchieved).toBe(true)
+    expect(player.hiddenPerfection.lineageActive).toBe(false)
+    expect(player.hiddenPerfection.lineageClosedByRealmId).toBe('mortal')
   })
 
-  it('thiếu 1 stat (9/10) → false; thiếu 1 tầng Luyện Th thể (5/6) → false', () => {
-    // usePlayerStore() trong cung pinia tra CUNG instance - reset path
-    // giua 2 case (giu nguyen realm mortal tang 12).
+  it('lineage đã đóng KHÔNG hồi cứu: kiếp tiếp theo resolve normal dù đủ hidden mặt ngoài', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+    gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
     player.realmLevel = 12
-    player.bodyProgression.body_refinement.completedTiers = 6
-    player.physiqueGrade = 'bao'
-    player.baseStats = { ...player.baseStats, strength: 9, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
-
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
-    expect(player.mortalPerfectionAchieved).toBe(false)
-
-    // Reset de chon lai (case 2: du stat nhung Luyen Th the 5/6) -
-    // M2: path + way la 1 cap ghi nguyen tu, reset phai xoa ca hai.
-    // P7-M3: the technique holder is part of the ritual's atomic
-    // contract too - a non-empty holder rejects the re-choice.
-    player.cultivationPath = undefined
-    player.cultivationWay = undefined
-    gameManager.techniqueManager.setActive(null)
-    player.realmId = 'mortal'
-    player.realmLevel = 12
-    player.bodyProgression.body_refinement.completedTiers = 5
-    player.baseStats = { ...player.baseStats, strength: 10 }
-
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
-    expect(player.mortalPerfectionAchieved).toBe(false)
-  })
-
-  it('snapshot chốt tại thời điểm Quán Khí — KHÔNG hồi cứu sau khi vào Luyện Khí', () => {
-    const gameManager = new GameManager()
-    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
-    gameManager.catalogOps.registerSkillTemplates(SKILLS)
-    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
-    const player = usePlayerStore()
-    player.realmLevel = 12
-    player.bodyProgression.body_refinement.completedTiers = 6
-    player.physiqueGrade = 'bao'
-    player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
     gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
-    expect(player.mortalPerfectionAchieved).toBe(true)
+    expect(player.realmId).toBe('qi_refining')
+    expect(player.hiddenPerfection.lineageActive).toBe(false)
 
-    // Sau khi vao Luyen Khi, "hoan hao" khong doi du stat/luyen the doi
-    player.bodyProgression.body_refinement.completedTiers = 0
-    expect(player.mortalPerfectionAchieved).toBe(true)
+    // Bodies cannot complete once the lineage is closed (mutator
+    // refuses) - even a player matching every visible hidden input
+    // stays on the normal track.
+    player.realmLevel = 18
+    player.completedStageIds = ['qi_refining_abyssal_pool']
+    player.baseStats = { ...player.baseStats, strength: 36, dexterity: 36, intelligence: 36, attunement: 36, vitality: 36 }
+    player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000 })
+    gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
+
+    expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
+    expect(gameManager.tribulationDirector.getState()!.breakthroughType).toBe('normal')
+  })
+
+  it('hidden commit KHÔNG đóng lineage: lineageActive vẫn true sau khi vào Trúc Cơ', () => {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+    gameManager.catalogOps.registerPills(pills)
+    const player = usePlayerStore()
+
+    // Full hidden surface at mortal (body completed via the authored
+    // mutator, level 18, all five stats >= effective cap 11 =
+    // floor(10 * 1.1)): chooseCultivationPath resolves 'hidden', the
+    // commit records the entered realm, and the lineage stays open.
+    completeHiddenBody(player.$state, 'mortal')
+    player.realmLevel = 18
+    player.baseStats = { ...player.baseStats, strength: 12, dexterity: 12, intelligence: 12, attunement: 12, vitality: 12 }
+
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
+    expect(player.realmId).toBe('qi_refining')
+    expect(player.hiddenPerfection.lineageActive).toBe(true)
+    expect(player.hiddenPerfection.hiddenBreakthroughRealmIds).toEqual(['qi_refining'])
   })
 })
 
@@ -120,7 +118,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     expect(talent!.effects).toEqual([{ kind: 'cultivation_speed', percent: 0.75 }])
   })
 
-  it('thắng kiếp Đại Đạo Trúc Cơ: Phàm Cốt chuyển thành Phàm Nhân Chi Cốt + highestFoundationAchieved = great_dao', () => {
+  it('thắng kiếp Đại Đạo Trúc Cơ (đột phá ẨN): Phàm Cốt chuyển thành Phàm Nhân Chi Cốt + highestFoundationAchieved = great_dao', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
@@ -128,32 +126,38 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
-    // Dung nhan vat du moi dieu kien Dai Dao
+    // Dot pha an Pham Nhan -> Luyen Khi (mortal body completed + level
+    // 18 + all-5 >= effective cap): ghi nhan qi_refining vao
+    // hiddenBreakthroughRealmIds, lineage van mo.
     player.selectedTalentIds = ['pham_cot']
-    player.realmLevel = 12
-    player.bodyProgression.body_refinement.completedTiers = 6
-    player.physiqueGrade = 'bao'
-    player.mortalPerfectionAchieved = true
-    player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
+    completeHiddenBody(player.$state, 'mortal')
+    player.realmLevel = 18
+    player.baseStats = { ...player.baseStats, strength: 12, dexterity: 12, intelligence: 12, attunement: 12, vitality: 12 }
 
-    // Quan Khi truoc (vao Luyen Khi)
     gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
     expect(player.realmId).toBe('qi_refining')
+    expect(player.hiddenPerfection.hiddenBreakthroughRealmIds).toEqual(['qi_refining'])
 
-    // Dau tu tiep de du dieu kien Dai Dao o Luyen Khi
+    // Du mat an tai Luyen Khi: qi body completed, level 18, chapter
+    // cleared, all-5 >= effective cap 36 = floor(30 * 1.2).
+    completeHiddenBody(player.$state, 'qi_refining')
     player.realmLevel = 18
     player.completedStageIds = ['qi_refining_abyssal_pool']
-    player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
+    player.bodyProgression.body_refinement.completedTiers = 6
+    player.physiqueGrade = 'bao'
     player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
+    player.baseStats = { ...player.baseStats, strength: 36, dexterity: 36, intelligence: 36, attunement: 36, vitality: 36 }
     const trucCoDan = gameManager.pillRegistry.get('truc_co_dan')!
     gameManager.pillBag.add(trucCoDan, 1)
 
-    // Stats du tru kiep Dai Dao (x1.85 kho hon) - ARCH-002 (M7): the
+    // Stats du tru kiep - ARCH-002 (M7): the
     // snapshot resolves internally; patch the RAW base.
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
 
     expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
-    expect(gameManager.tribulationDirector.getState()!.grade).toBe('great_dao')
+    // Quality grade stays 'heaven' (fully invested); the Dai Dao
+    // outcome rides the breakthroughType channel.
+    expect(gameManager.tribulationDirector.getState()!.breakthroughType).toBe('hidden')
 
     // Troi het kiep + tra loi dung moi cau
     let guard = 0
@@ -170,13 +174,20 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     expect(player.selectedTalentIds).not.toContain('pham_cot')
     expect(player.selectedTalentIds).toContain('pham_nhan_chi_cot')
     expect(player.realmId).toBe('foundation_establishment')
+    // A hidden breakthrough KEEPS the lineage open and records the
+    // entered realm.
+    expect(player.hiddenPerfection.lineageActive).toBe(true)
+    expect(player.hiddenPerfection.hiddenBreakthroughRealmIds).toEqual([
+      'qi_refining',
+      'foundation_establishment',
+    ])
     // M-F-TALENT - the Dai Dao path's ONE result is the evolution: no
     // generic entitlement is minted and the drain is never held.
     expect(player.pendingTalentEntitlement).toBeUndefined()
     expect(gameManager.tribulationDirector.getCommittedOutcome()).toBeNull()
   })
 
-  it('thua kiếp Đại Đạo: greatDaoOpportunityLost vĩnh viễn + KHÔNG đổi talent; lần xét sau cap Thiên', () => {
+  it('thua kiếp Đại Đạo (đột phá ẨN): lineage vẫn mở + KHÔNG đổi talent; lần sau vẫn resolve hidden', () => {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
@@ -185,24 +196,25 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     const player = usePlayerStore()
 
     player.selectedTalentIds = ['pham_cot']
-    player.realmLevel = 12
-    player.bodyProgression.body_refinement.completedTiers = 6
-    player.physiqueGrade = 'bao'
-    player.mortalPerfectionAchieved = true
-    player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
+    completeHiddenBody(player.$state, 'mortal')
+    player.realmLevel = 18
+    player.baseStats = { ...player.baseStats, strength: 12, dexterity: 12, intelligence: 12, attunement: 12, vitality: 12 }
     gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
 
+    completeHiddenBody(player.$state, 'qi_refining')
     player.realmLevel = 18
     player.completedStageIds = ['qi_refining_abyssal_pool']
-    player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
+    player.bodyProgression.body_refinement.completedTiers = 6
+    player.physiqueGrade = 'bao'
     player.bodyProgression.meridian.openedIds = MERIDIANS.map((m) => m.id)
+    player.baseStats = { ...player.baseStats, strength: 36, dexterity: 36, intelligence: 36, attunement: 36, vitality: 36 }
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
 
-    // HP thap -> thua kiep dai dao
+    // HP thap -> thua kiep
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 1, defense: 0, hpRegenPerTurn: 0 })
 
     expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
-    expect(gameManager.tribulationDirector.getState()!.grade).toBe('great_dao')
+    expect(gameManager.tribulationDirector.getState()!.breakthroughType).toBe('hidden')
 
     let guard = 0
     while (gameManager.tribulationDirector.getState()?.state === 'ongoing' && guard++ < 5000) {
@@ -214,17 +226,20 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     expect(gameManager.tribulationDirector.getState()!.state).toBe('defeat')
     checkTribulationOutcomeAction(player, gameManager)
 
-    expect(player.greatDaoOpportunityLost).toBe(true)
+    // That bai KHONG dong lineage (design sec.3: chi dot pha THUONG thanh
+    // cong moi dong) - va khong ghi breakthrough.
+    expect(player.hiddenPerfection.lineageActive).toBe(true)
+    expect(player.hiddenPerfection.hiddenBreakthroughRealmIds).toEqual(['qi_refining'])
     expect(player.selectedTalentIds).toContain('pham_cot') // KHONG doi
     expect(player.realmId).toBe('qi_refining') // KHONG len Truc Co
 
-    // Lan xet sau: cap Thien (resolver test da khoa; o day kiem qua
-    // Director). Bo qua cooldown 5 phut bang cach day system time.
+    // Lan xet sau: eligibility con nguyen -> hidden lai. Bo qua
+    // cooldown 5 phut bang cach day system time.
     vi.setSystemTime(Date.now() + 6 * 60 * 1000)
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
     expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
-    expect(gameManager.tribulationDirector.getState()!.grade).toBe('heaven')
+    expect(gameManager.tribulationDirector.getState()!.breakthroughType).toBe('hidden')
   })
 })
 
@@ -250,7 +265,6 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     player.realmLevel = 12
     player.bodyProgression.body_refinement.completedTiers = 6
     player.physiqueGrade = 'bao'
-    player.mortalPerfectionAchieved = true
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
     gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
     expect(player.realmId).toBe('qi_refining')

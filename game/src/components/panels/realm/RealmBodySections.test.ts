@@ -215,40 +215,17 @@ describe('MeridianSection (P7-M7)', () => {
     await nextTick()
 
     expect(view.container.textContent).toContain(
-      i18n.global.t('panels.realm.meridian.summary', { completed: 2, total: 9 }),
+      i18n.global.t('panels.realm.meridian.summary', { completed: 2, total: 8 }),
     )
 
     const rows = view.container.querySelectorAll('.meridian-section__row')
-    expect(rows.length).toBe(9)
+    expect(rows.length).toBe(8)
     expect(rows[0]!.classList.contains('meridian-section__row--opened')).toBe(true)
     expect(rows[1]!.classList.contains('meridian-section__row--opened')).toBe(true)
     // index 2 = am_kieu_mach - the sequential next row.
     expect(rows[2]!.classList.contains('meridian-section__row--next')).toBe(true)
     expect(rows[2]!.textContent).toContain(i18n.global.t('panels.realm.meridian.stateNext'))
     expect(rows[3]!.classList.contains('meridian-section__row--locked')).toBe(true)
-
-    view.unmount()
-  })
-
-  it('the Ky Kinh row shows the Thien Dia Chi Kieu requirement when next', async () => {
-    const view = mountSection(MeridianSection, (player) => {
-      player.$state.realmId = 'qi_refining'
-      player.$state.realmLevel = 18
-      setBodyProgression(player, {
-        meridian: {
-          openedIds: [
-            'nham_mach', 'doi_mach', 'am_kieu_mach', 'am_duy_mach',
-            'duong_duy_mach', 'duong_kieu_mach', 'xung_mach', 'doc_mach',
-          ],
-        },
-      })
-    })
-
-    await nextTick()
-
-    const last = view.container.querySelectorAll('.meridian-section__row')[8]!
-    expect(last.classList.contains('meridian-section__row--next')).toBe(true)
-    expect(last.textContent).toContain(i18n.global.t('panels.realm.meridian.auxGate'))
 
     view.unmount()
   })
@@ -270,7 +247,7 @@ describe('MeridianSection (P7-M7)', () => {
     )
 
     const rows = view.container.querySelectorAll('.meridian-section__row')
-    expect(rows.length).toBe(9)
+    expect(rows.length).toBe(8)
     for (const row of rows) {
       expect(row.classList.contains('meridian-section__row--locked')).toBe(true)
     }
@@ -418,39 +395,29 @@ describe('MeridianSection (P7-M7)', () => {
       view.unmount()
     })
 
-    it('gates the final meridian on thien_dia_chi_kieu possession (not consumed)', async () => {
-      const opened8 = MERIDIANS.slice(0, 8).map((m) => m.id)
+    it('the final meridian needs no material aux - pills alone open it (sec.19: ninth meridian retired)', async () => {
+      const opened7 = MERIDIANS.slice(0, 7).map((m) => m.id)
 
-      const noAux = mountSection(MeridianSection, (player, manager) => {
+      const view = mountSection(MeridianSection, (player, manager) => {
         qiPlayer(player)
-        setBodyProgression(player, { meridian: { openedIds: opened8 } })
+        setBodyProgression(player, { meridian: { openedIds: opened7 } })
         manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 40)
       })
 
       await nextTick()
-      expect(nextRowButton(noAux)!.disabled).toBe(true)
-      noAux.unmount()
 
-      const withAux = mountSection(MeridianSection, (player, manager) => {
-        qiPlayer(player)
-        setBodyProgression(player, { meridian: { openedIds: opened8 } })
-        manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 40)
-        manager.materialBag.add(manager.materialRegistry.get('thien_dia_chi_kieu'), 1)
-      })
-
-      await nextTick()
-
-      const button = nextRowButton(withAux)
+      const button = nextRowButton(view)
+      expect(button).not.toBeNull()
       expect(button!.disabled).toBe(false)
 
       button!.click()
       await nextTick()
 
-      expect(withAux.bumpState).toHaveBeenCalledTimes(1)
-      expect(withAux.manager.materialBag.getAmount('thien_dia_chi_kieu')).toBe(1)
-      expect(withAux.manager.pillBag.getAmount('thong_mach_dan')).toBe(0)
+      expect(view.bumpState).toHaveBeenCalledTimes(1)
+      // doc_mach costs 30 thong_mach_dan - nothing else is checked.
+      expect(view.manager.pillBag.getAmount('thong_mach_dan')).toBe(10)
 
-      withAux.unmount()
+      view.unmount()
     })
 
     it('renders no invest button for a mortal player (locked page)', async () => {

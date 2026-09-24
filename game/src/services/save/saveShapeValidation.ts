@@ -21,7 +21,7 @@ import { COMBAT_AI_STRATEGIES } from '../../core/battle/CombatAiStrategy'
 import { FOUNDATION_LABELS } from '../../core/breakthrough/FoundationType'
 import { isArtifactGrade, isArtifactPath } from '../../core/artifact/Artifact'
 import { validateBodyProgressionPersistedState } from '../../core/realm/body/BodyProgressionSystem'
-import { validateBodyPerfectionPersistedState } from '../../core/realm/body/BodyPerfection'
+import { validateHiddenPerfectionPersistedState } from '../../core/realm/hidden/HiddenPerfection'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { SKILLS } from '../../data/skill/Skills'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
@@ -790,11 +790,12 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   // bodyRefinementCurrentTierProgress / openedMeridianIds) are gone.
   validateBodyProgressionPersistedState(player, (issue) => issues.push(issue))
 
-  // M-F-BODY-PERFECTION (v77) - the perfection slice is module-owned
-  // too: presence + discoveredMaterials/perfectedRealmIds string-array
+  // Hidden Perfection Lineage (v82, 2026-09-23) - the lineage slice
+  // replaces the retired bodyPerfection slice: presence + per-field
   // shape validated inside the delegated validator; semantic integrity
-  // (family membership, subset, realm cap) runs at restore preflight.
-  validateBodyPerfectionPersistedState(player, (issue) => issues.push(issue))
+  // (strict-prefix completed list, two-view agreement, authored realms)
+  // runs at restore preflight via assertHiddenPerfectionIntegrity.
+  validateHiddenPerfectionPersistedState(player, (issue) => issues.push(issue))
 
   // Talent v4 M2 (v61) - 5 field moi: ngan tu vi tran (Hai Nap), tang
   // Loi Kiep, ledger mua node mien phi (Van Dao), tang Pha Giap mang
@@ -874,18 +875,13 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({ path: 'player.phaGiapCarryRealmId', message: 'phải là string hoặc null' })
   }
 
-  // Spec dot-pha-loi-kiep sec.6.1 - the v54 fields (hidden-beast window,
-  // mortal-perfection snapshot, great-dao loss). Bat Mach moved into
-  // player.bodyProgression.meridian at v72 (delegated validator above);
-  // the scalar kill counter became a per-channel map at v81
-  // (M-F-BODY-HIDDEN).
+  // Spec dot-pha-loi-kiep sec.6.1 - the hidden-beast counters. Bat
+  // Mach moved into player.bodyProgression.meridian at v72; the scalar
+  // kill counter became a per-channel map at v81. mortalPerfectionAchieved
+  // + greatDaoOpportunityLost retired at v82 (hidden-perfection
+  // lineage). Lineage state validates via the delegated validator
+  // above.
   validateNonNegativeIntMap(player.hiddenBeastKills, 'player.hiddenBeastKills', issues)
-  if (typeof player.mortalPerfectionAchieved !== 'boolean') {
-    issues.push({ path: 'player.mortalPerfectionAchieved', message: 'phải là boolean' })
-  }
-  if (typeof player.greatDaoOpportunityLost !== 'boolean') {
-    issues.push({ path: 'player.greatDaoOpportunityLost', message: 'phải là boolean' })
-  }
 
   // lastSavedAt - buildGameSave() LUON ghi; thieu no khien offline time
   // tinh ra NaN (review 2026-08-28 bug #2). Save hien hanh bat buoc co.

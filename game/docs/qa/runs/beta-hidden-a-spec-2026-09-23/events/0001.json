@@ -1,0 +1,39 @@
+{
+  "phase": "INTAKE",
+  "request": {
+    "runId": "beta-hidden-a-spec-2026-09-23",
+    "productRoot": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-hidden-a-spec-target/game",
+    "checkout": "devin/1790198940-beta-hidden-a @ 1c48e00c (spec/plan review target)",
+    "branch": "devin/1790198940-beta-hidden-a",
+    "base": "origin/beta/rc",
+    "head": "1c48e00c",
+    "authorizedRepairs": [
+      "docs/specs/2026-09-23-hidden-perfection-lineage-master-spec.md"
+    ],
+    "nonGoals": [
+      "production code changes",
+      "implementation correctness (separate impl run)",
+      "balance values (design §18 deferred)",
+      "merge/push"
+    ],
+    "requiredDomains": [
+      "docs/design/2026-09-23-hidden-perfection-lineage.md",
+      "docs/specs/2026-09-23-hidden-perfection-lineage-master-spec.md",
+      "src (census-verify surface)"
+    ],
+    "contractPaths": [
+      "../AGENTS.md",
+      "docs/qa/protocol/README.md",
+      "docs/qa/protocol/agent-instructions.md",
+      "docs/qa/protocol/defect-taxonomy.md",
+      "docs/qa/protocol/ledger-schema.md"
+    ],
+    "attackModelPath": "attack-model.json",
+    "environmentPath": "environment.json",
+    "extraExclude": [
+      "docs/qa/runs/",
+      "docs/qa/learning/history/"
+    ],
+    "notes": "Spec/plan review round for BETA-HIDDEN-A master spec. Product state = detached worktree at the pushed spec commit. Reviewers are fresh sealed Devin child sessions (priorFindingsVisible=NO): derive own invariants/census, attack the spec against the design doc and the census'd code. Findings repair the spec doc only."
+  }
+}

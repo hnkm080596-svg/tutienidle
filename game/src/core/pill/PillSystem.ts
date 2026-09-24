@@ -4,7 +4,7 @@ import type { PlayerData } from '../player/Player'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import { MAIN_STAT_KEYS, type MainStatKey } from '../stats/StatTypes'
-import { getMainStatCap } from '../stats/StatCap'
+import { getEffectiveMainStatCap, getMainStatCap } from '../stats/StatCap'
 import { addCultivation } from '../cultivation/CultivationSystem'
 import { hasStaticPathCapability } from '../player/CultivationPathSystem'
 import { getRequiredCultivation } from '../realm/realmSystem'
@@ -159,7 +159,7 @@ export class PillSystem {
     }
 
     if (pill.effects.some((effect) => effect.type === 'random_main_stat')) {
-      const cap = getMainStatCap(player.realmId)
+      const cap = getEffectiveMainStatCap(player)
       const uncapped = MAIN_STAT_KEYS.filter((key) => (player.baseStats[key] ?? 0) < cap)
 
       if (uncapped.length === 0) {
@@ -196,7 +196,7 @@ export class PillSystem {
 
     for (const effect of pill.effects) {
       if (effect.type === 'random_main_stat') {
-        const cap = getMainStatCap(player.realmId)
+        const cap = getEffectiveMainStatCap(player)
         const candidates = MAIN_STAT_KEYS.filter((key) => (player.baseStats[key] ?? 0) < cap)
 
         const stat = candidates[Math.floor(random() * candidates.length)] ?? candidates[0]
