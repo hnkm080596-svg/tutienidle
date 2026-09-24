@@ -191,7 +191,7 @@ function adaptOne(
 
   // --- Primary lane ---------------------------------------------------
   if (def.damage !== undefined) {
-    operations.push(adaptDamageOp(def))
+    operations.push(adaptDamageOp(def, report, reportPrefix))
   } else if (!isSelfScope) {
     // Non-damaging enemy-scope lane (TBS :1926-1947 parity): ailments
     // then detonate then same-source seal interactions, per affected
@@ -203,7 +203,7 @@ function adaptOne(
     if (def.detonateDoT !== undefined) {
       inner.push({ type: 'detonate', target: 'loop_target', amp: def.detonateDoT.amp })
     }
-    inner.push(...adaptAilmentInteractions(def, 'loop_target'))
+    inner.push(...adaptAilmentInteractions(def, 'loop_target', report, reportPrefix))
     if (inner.length > 0) {
       operations.push({ type: 'for_each_target', target: 'affected_targets', ops: inner })
     }
@@ -288,6 +288,8 @@ function adaptOne(
 
 function adaptDamageOp(
   def: TurnSkillDefinition,
+  report: (message: string) => void,
+  reportPrefix: string,
 ): Extract<AuthoredSkillOperation, { type: 'deal_damage' }> {
   const info = def.damage!
   // M-QI-05 / QI-D3 — native defs carry a CONSTANT multiplier; when the
@@ -382,7 +384,7 @@ function adaptDamageOp(
   if (def.detonateDoT !== undefined) {
     onLanded.push({ type: 'detonate', target: 'loop_target', amp: def.detonateDoT.amp })
   }
-  onLanded.push(...adaptAilmentInteractions(def, 'loop_target'))
+  onLanded.push(...adaptAilmentInteractions(def, 'loop_target', report, reportPrefix))
 
   return {
     ...base,
@@ -430,6 +432,8 @@ function adaptAilment(
 function adaptAilmentInteractions(
   def: TurnSkillDefinition,
   target: SkillTargetIntent,
+  report: (message: string) => void,
+  reportPrefix: string,
 ): AuthoredSkillOperation[] {
   const appliedSealIds = new Set(
     ailmentList(def).map((ailment) => ailment.buffDefinitionId),
@@ -471,11 +475,17 @@ function adaptAilmentInteractions(
         })
         break
       case 'add_stacks':
+        // DEC-7: add_buff_stacks declares no apply-result lane -- stacks
+        // bind the latest instance even after a resisted apply. Emitting
+        // gateOnApplyResult here would be dead metadata masking that;
+        // report the inexpressible gate instead of emitting it.
+        if (gate.gateOnApplyResult === true) {
+          report(`${reportPrefix}.ailmentInteractions(add_stacks on self-applied seal: no apply-result lane, stacks bind latest instance)`)
+        }
         ops.push({
           type: 'add_buff_stacks',
           selector,
           stacks: interaction.stacks,
-          ...gate,
         })
         break
     }

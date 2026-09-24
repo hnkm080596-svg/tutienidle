@@ -249,9 +249,6 @@ const CHEM_BETA_NODES: ProgressionNode[] = [
 
 const ORB_NODES: ProgressionNode[] = [...DAM_BETA_NODES, ...CHEM_BETA_NODES]
 
-// ─────────────────── Hidden-path root (Task 10 contract) ───────────────────
-
-
 // ───────────────────────── Ngu branch ─────────────────────────
 
 // Roll Cascade unlocks (spec §5.2) — one node per slot, realm-gated to
