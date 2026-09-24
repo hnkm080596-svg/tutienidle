@@ -169,8 +169,10 @@ describe('progressionOps respec one-shot clawback (F-W-2)', () => {
     expect(gameManager.progressionOps.purchaseNode('spec_a', player)).toBe(true)
     expect(gameManager.progressionOps.purchaseNode('spec_b', player)).toBe(true)
 
-    // respec/devReset go node khoi purchasedNodeIds TRUOC khi clawback
+    // respec/devReset go node khoi ca hai ownership mirrors TRUOC khi
+    // clawback (revokeNodeOwnership xoa nodeLevels + purchasedNodeIds).
     player.purchasedNodeIds = player.purchasedNodeIds.filter((id) => id !== 'spec_a')
+    delete player.nodeLevels['spec_a']
     gameManager.progressionOps.applyOneShotClawback(player, new Set(['spec_a']))
 
     expect(
@@ -180,6 +182,7 @@ describe('progressionOps respec one-shot clawback (F-W-2)', () => {
     expect(player.nodeOneShotGrants['spec_b']).toBeDefined()
 
     player.purchasedNodeIds = player.purchasedNodeIds.filter((id) => id !== 'spec_b')
+    delete player.nodeLevels['spec_b']
     gameManager.progressionOps.applyOneShotClawback(player, new Set(['spec_b']))
 
     expect(

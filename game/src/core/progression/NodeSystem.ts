@@ -917,6 +917,14 @@ export function switchRoute(
       continue
     }
 
+    // rewardOnly grants are realm-reward state, not route purchases -
+    // routeTag cleanup must not revoke them (same refusal as
+    // revokeNodeOwnership). No rewardOnly node carries a routeTag
+    // today; the guard seals the seam for future authoring.
+    if (node.rewardOnly) {
+      continue
+    }
+
     const level = getNodeLevel(player, node.id)
 
     if (level <= 0) {
@@ -998,7 +1006,9 @@ export function previewRouteSwitch(
   }
 
   for (const node of registry.getAll()) {
-    if (node.routeTag !== oldRoute || getNodeLevel(player, node.id) <= 0) {
+    // rewardOnly skip mirrors switchRoute - the preview must not
+    // promise a refund for grants the switch would leave intact.
+    if (node.routeTag !== oldRoute || node.rewardOnly || getNodeLevel(player, node.id) <= 0) {
       continue
     }
 

@@ -83,7 +83,7 @@ function awakeningNode(): ProgressionNode {
   return {
     id: THE_THUC_TINH_NODE_ID,
     name: 'Thức Tỉnh Bể Thế',
-    description: 'Bể Thế thức tỉnh — đòn cơ bản trúng bắt đầu nạp Thế, trần Thế tăng theo cấp (xài Thế vẫn khóa tới Kim Đan).',
+    description: 'Bể Thế thức tỉnh — đòn cơ bản trúng nạp thêm +1 Thế mỗi lần, trần Thế +10 mỗi cấp (xài Thế vẫn khóa tới Kim Đan).',
     type: 'minor',
     role: 'growth',
     insightCost: 0,

@@ -71,6 +71,24 @@ import type { TemplateRegistry } from './TemplateRegistry'
 // rejection that creates the obligation.
 const RESPEC_PRESERVED_NODE_IDS: readonly string[] = Object.values(PHAP_TU_ELEMENT_ROOT_IDS)
 
+/**
+ * Owned node ids across both ownership representations: nodeLevels is
+ * the authority (realm-reward grants write there only), purchasedNodeIds
+ * is the compat mirror populated by the purchase path. Clawback guards
+ * must read the union or grant-owned claimers become invisible.
+ */
+function ownedNodeIds(player: PlayerData): string[] {
+  const ids = new Set(player.purchasedNodeIds)
+
+  for (const [nodeId, level] of Object.entries(player.nodeLevels)) {
+    if (level > 0) {
+      ids.add(nodeId)
+    }
+  }
+
+  return [...ids]
+}
+
 export class GameManagerProgressionOps {
   constructor(
     private readonly deps: {
@@ -386,8 +404,10 @@ export class GameManagerProgressionOps {
 
       for (const skillId of record.learnedSkillIds ?? []) {
         // Dual-source guard: neu mot node con so huu khac cung unlock
-        // skill nay thi membership phai song tiep.
-        const stillGrantedElsewhere = player.purchasedNodeIds.some((ownedId) => {
+        // skill nay thi membership phai song tiep. Authority la
+        // nodeLevels (grant ghi o do); purchasedNodeIds chi la mirror
+        // nen phai doc ca hai de khong bo sot node grant-owned.
+        const stillGrantedElsewhere = ownedNodeIds(player).some((ownedId) => {
           const owned = this.deps.nodeRegistry.has(ownedId)
             ? this.deps.nodeRegistry.get(ownedId)
             : undefined
@@ -430,7 +450,7 @@ export class GameManagerProgressionOps {
       if (record.specializationSkillId && record.specializationId) {
         // Dual-source guard: giong chan skill leg - neu mot node con
         // so huu khac cung claim spec nay thi spec phai song tiep.
-        const specStillClaimed = player.purchasedNodeIds.some((ownedId) => {
+        const specStillClaimed = ownedNodeIds(player).some((ownedId) => {
           const owned = this.deps.nodeRegistry.has(ownedId)
             ? this.deps.nodeRegistry.get(ownedId)
             : undefined
