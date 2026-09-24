@@ -1,0 +1,4 @@
+{
+  "summary": "OBS-1 repaired @91eed584: flags now required booleans, creation sites initialize all three, persisted-state validator requires them, fixtures updated; OBS-4 unused import removed. OBS-2/3/5/6/7 deferred with reasons. Delta re-review dispatched on 91eed584.",
+  "refs": []
+}
