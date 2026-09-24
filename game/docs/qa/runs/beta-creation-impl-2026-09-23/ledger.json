@@ -1297,8 +1297,8 @@
   },
   {
    "id": "F-IMPL-2",
-   "title": "missing-pick preflight rejection had no test pin (M-IMPL-2 SURVIVED)",
-   "severity": "Medium",
+   "title": "restoreGameSession handled-result layer lacked a missing-pick case (manager-level pin already existed)",
+   "severity": "Low",
    "classification": "COVERAGE_GAP",
    "reachability": "SUPPORTED_BOUNDARY",
    "status": "CLOSED",
@@ -1332,10 +1332,10 @@
      "basis": "SOURCE"
     }
    ],
-   "counterexample": "Deleting the missing-pick throw left the whole suite green (mutation survived).",
-   "expected": "every v82 preflight rejection has a boundary-table case",
-   "actual": "FIXED at 92b4ebaa: 'missing mortalBasicSkillId on a mortal save' case added; mutation re-run killed",
-   "rootCause": "rejection added in impl without a corresponding pin \u2014 detectable only by mutation",
+   "counterexample": "Removing the missing-pick throw left the coordinator-level suite green (SaveSystem.bootRestore.test.ts ran no missing-pick case); the manager-level boundary test would have caught it \u2014 detector scope was the gap.",
+   "expected": "every v82 preflight rejection reaches the restoreGameSession handled-result contract with a pin",
+   "actual": "FIXED at 92b4ebaa: coordinator rejection table += missing-pick case; manager-level pin already existed at boundary.test.ts:1075",
+   "rootCause": "coordinator-level rejection table covered equipment/invalid-id cases but not missing-pick; underlying manager-level rejection was already pinned",
    "rootClass": "MISSING_DETECTOR",
    "subsystem": "save-preflight",
    "repair": "bootRestore rejection table += missing-pick case asserting exact message + no owner mutation",
@@ -1345,15 +1345,15 @@
       "src/core/game/GameManagerSaveRestore.ts",
       "src/services/save"
      ],
-     "termsAndMethod": "enumerate all throw sites in preflight vs rejection-table coverage",
+     "termsAndMethod": "enumerate preflight throws vs BOTH test layers (manager-level boundary.test.ts + coordinator-level bootRestore.test.ts)",
      "evidenceIds": [
       "EV-IMPL-MUTATION-CORPUS"
      ],
      "hitDispositions": [
-      "3 other rejections already pinned (invalid-id, post-path, unlearned); no further gaps"
+      "manager-level: 4/4 rejections pinned; coordinator-level: missing-pick was the only gap"
      ],
      "coverageLimits": [
-      "preflight block only \u2014 deeper saveShape rejections covered by saveShapeValidation.test.ts"
+      "preflight block only"
      ]
     }
    ],

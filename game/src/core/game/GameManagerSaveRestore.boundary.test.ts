@@ -1154,7 +1154,6 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     // Zero-mutation: preflight threw before the skills slice replaced
     // the live set (an applied restore would carry SAVED_SKILL).
     expect(manager.skillManager.getAll()).toEqual([])
-    expect(manager.skillManager.getAll()).toEqual([])
   })
 
   it('accepts canonical default + mid-progress + complete states', () => {

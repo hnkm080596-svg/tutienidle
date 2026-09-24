@@ -1,8 +1,8 @@
-// BETA-CREATION — client↔migration contract pin for create_character.
+// BETA-CREATION - client<->migration contract pin for create_character.
 //
 // The RPC is the ONLY server channel that persisted creation data. The v82
 // contract is (p_session_id, p_roll_id, p_name, p_talent_ids,
-// p_mortal_basic_skill_id, p_initial_save, p_schema_version) — no
+// p_mortal_basic_skill_id, p_initial_save, p_schema_version) - no
 // p_attributes channel may survive anywhere. A rename/drift on the client
 // silently 404s or mis-binds server-side; this test pins the request shape
 // against migration 202608240001_online_auth_character.sql.
@@ -53,14 +53,14 @@ beforeEach(() => {
   })
 })
 
-describe('SupabaseCharacterCreationService — create_character RPC contract (v82)', () => {
+describe('SupabaseCharacterCreationService - create_character RPC contract (v82)', () => {
   const draft: CharacterCreationDraft = {
     name: 'Lạc Vân',
     talentIds: ['talent-a'],
     mortalBasicSkillId: 'huy_quyen',
   }
 
-  it('sends exactly the migration signature — pick included, no p_attributes channel', async () => {
+  it('sends exactly the migration signature - pick included, no p_attributes channel', async () => {
     const calls = stubFetch((call) => {
       if (call.url.endsWith('/rpc/create_talent_roll')) {
         return json({ rollId: 'roll-1', talents: [{ id: 'talent-a' }] })
