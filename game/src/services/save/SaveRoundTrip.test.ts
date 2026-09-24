@@ -87,7 +87,11 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
 
     player.bodyProgression.meridian.openedIds = ['nham_mach', 'doi_mach']
     player.hiddenBeastKills = { huyet_mong: 500 }
-    player.hiddenPerfection.realms.mortal = { discovered: true }
+    player.hiddenPerfection.realms.mortal = {
+      discovered: true,
+      bodyCompleted: false,
+      frozen: false,
+    }
 
     const save = buildGameSave(player, gameManager)
     const roundTripped: unknown = JSON.parse(JSON.stringify(save))

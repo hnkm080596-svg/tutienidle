@@ -26,7 +26,6 @@ import {
   planEssenceSubstitution,
 } from '../realm/body/BodyChapterEssenceSubstitution'
 import { pourCultivationOvercharge } from '../cultivation/CultivationSystem'
-import type { NotificationQueue } from './NotificationQueue'
 import {
   physiqueEssenceMaterialId,
 } from '../../data/realm/PhysiqueEssence'

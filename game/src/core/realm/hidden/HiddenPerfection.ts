@@ -40,25 +40,26 @@ export interface RealmHiddenMechanicState {
 
 export interface RealmHiddenState {
   /**
-   * Visibility flag (design sec.4): absent key = hidden. discoverHiddenRealm
-   * is the ONLY writer; it requires canProgressHiddenBody at write
-   * time - a closed lineage or out-of-prefix realm can never be
-   * discovered, so freeze mechanics can never fake a discovery.
+   * Visibility flag (design sec.4): false = hidden. discoverHiddenRealm
+   * is the ONLY writer flipping it true; it requires
+   * canProgressHiddenBody at write time - a closed lineage or
+   * out-of-prefix realm can never be discovered, so freeze mechanics
+   * can never fake a discovery.
    */
-  discovered?: boolean
+  discovered: boolean
 
   /**
    * Sole writer: completeHiddenBody (strict prefix + open lineage +
    * finished mechanism).
    */
-  bodyCompleted?: boolean
+  bodyCompleted: boolean
 
   /**
    * Frozen marker: written by closeHiddenLineage on EVERY record whose
    * bodyCompleted is false at lineage close (spec sec.2.3) - the
    * record stays readable-but-inert; mutators no-op on frozen realms.
    */
-  frozen?: boolean
+  frozen: boolean
 
   /** Mechanism-owned payload (kind per HIDDEN_BODY_REALMS). */
   mechanic?: RealmHiddenMechanicState
@@ -162,8 +163,8 @@ export function validateHiddenPerfectionPersistedState(
     const rs = realmState as Record<string, unknown>
 
     for (const flag of ['discovered', 'bodyCompleted', 'frozen'] as const) {
-      if (rs[flag] !== undefined && typeof rs[flag] !== 'boolean') {
-        emit({ path: `${path}.${flag}`, message: 'phải là boolean khi có mặt' })
+      if (typeof rs[flag] !== 'boolean') {
+        emit({ path: `${path}.${flag}`, message: 'phải là boolean bắt buộc' })
       }
     }
 

@@ -125,7 +125,9 @@ describe('assertHiddenPerfectionIntegrity (restore preflight, fail-closed)', () 
     const state = createDefaultHiddenPerfection()
     // qi_refining completed without mortal - violates strict prefix
     state.completedHiddenBodyRealmIds = ['qi_refining']
-    state.realms = { qi_refining: { bodyCompleted: true, discovered: true } }
+    state.realms = {
+      qi_refining: { bodyCompleted: true, discovered: true, frozen: false },
+    }
     expect(integrityIssue({ hiddenPerfection: state, realmId: 'qi_refining' })).toMatch(
       /strict-prefix|integrity violation/,
     )
@@ -134,13 +136,16 @@ describe('assertHiddenPerfectionIntegrity (restore preflight, fail-closed)', () 
   it('throw khi completed list va bodyCompleted flag khong dong nhat', () => {
     const state = createDefaultHiddenPerfection()
     state.completedHiddenBodyRealmIds = ['mortal']
-    state.realms = { mortal: { discovered: true } } // missing bodyCompleted flag
+    // bodyCompleted false while the realm sits in the completed list.
+    state.realms = { mortal: { discovered: true, bodyCompleted: false, frozen: false } }
     expect(integrityIssue({ hiddenPerfection: state, realmId: 'qi_refining' })).toMatch(
       /integrity violation/,
     )
 
     const inverse = createDefaultHiddenPerfection()
-    inverse.realms = { mortal: { bodyCompleted: true, discovered: true } }
+    inverse.realms = {
+      mortal: { bodyCompleted: true, discovered: true, frozen: false },
+    }
     expect(integrityIssue({ hiddenPerfection: inverse, realmId: 'qi_refining' })).toMatch(
       /integrity violation/,
     )
@@ -148,7 +153,9 @@ describe('assertHiddenPerfectionIntegrity (restore preflight, fail-closed)', () 
 
   it('throw khi realm key khong duoc author', () => {
     const state = createDefaultHiddenPerfection()
-    state.realms = { nascent_soul: { discovered: true } }
+    state.realms = {
+      nascent_soul: { discovered: true, bodyCompleted: false, frozen: false },
+    }
     expect(integrityIssue({ hiddenPerfection: state, realmId: 'mortal' })).toMatch(
       /integrity violation/,
     )
@@ -165,7 +172,9 @@ describe('assertHiddenPerfectionIntegrity (restore preflight, fail-closed)', () 
     // the DEPARTING realm's hidden body is the precondition
     const selfRef = createDefaultHiddenPerfection()
     selfRef.completedHiddenBodyRealmIds = ['mortal']
-    selfRef.realms = { mortal: { bodyCompleted: true } }
+    selfRef.realms = {
+      mortal: { bodyCompleted: true, discovered: true, frozen: false },
+    }
     selfRef.hiddenBreakthroughRealmIds = ['qi_refining']
     expect(
       integrityIssue({ hiddenPerfection: selfRef, realmId: 'qi_refining' }),
@@ -185,7 +194,9 @@ describe('assertHiddenPerfectionIntegrity (restore preflight, fail-closed)', () 
     // mortal body alone cannot unlock it
     const state = createDefaultHiddenPerfection()
     state.completedHiddenBodyRealmIds = ['mortal']
-    state.realms = { mortal: { bodyCompleted: true } }
+    state.realms = {
+      mortal: { bodyCompleted: true, discovered: true, frozen: false },
+    }
     state.hiddenBreakthroughRealmIds = ['qi_refining', 'foundation_establishment']
     expect(
       integrityIssue({ hiddenPerfection: state, realmId: 'foundation_establishment' }),
@@ -193,8 +204,8 @@ describe('assertHiddenPerfectionIntegrity (restore preflight, fail-closed)', () 
 
     state.completedHiddenBodyRealmIds = ['mortal', 'qi_refining']
     state.realms = {
-      mortal: { bodyCompleted: true },
-      qi_refining: { bodyCompleted: true },
+      mortal: { bodyCompleted: true, discovered: true, frozen: false },
+      qi_refining: { bodyCompleted: true, discovered: true, frozen: false },
     }
     expect(
       integrityIssue({ hiddenPerfection: state, realmId: 'foundation_establishment' }),
@@ -203,7 +214,14 @@ describe('assertHiddenPerfectionIntegrity (restore preflight, fail-closed)', () 
 
   it('throw khi mechanic kind khong khop authored tag', () => {
     const state = createDefaultHiddenPerfection()
-    state.realms = { qi_refining: { mechanic: { kind: 'bogus' } } }
+    state.realms = {
+      qi_refining: {
+        discovered: true,
+        bodyCompleted: false,
+        frozen: false,
+        mechanic: { kind: 'bogus' },
+      },
+    }
     expect(integrityIssue({ hiddenPerfection: state, realmId: 'qi_refining' })).toMatch(
       /integrity violation/,
     )
@@ -227,6 +245,7 @@ describe('assertHiddenPerfectionIntegrity (restore preflight, fail-closed)', () 
     state.realms = {
       qi_refining: {
         discovered: true,
+        bodyCompleted: false,
         frozen: true,
         mechanic: { kind: HIDDEN_MECHANIC_QUAN_THE },
       },
@@ -235,9 +254,13 @@ describe('assertHiddenPerfectionIntegrity (restore preflight, fail-closed)', () 
     expect(integrityIssue({ hiddenPerfection: state, realmId: 'qi_refining' })).toMatch(
       /integrity violation/,
     )
-    // frozen without a mechanism is incoherent too - nothing was ever
-    // frozen (closeHiddenLineage only freezes mechanic-bearing entries)
-    state.realms = { qi_refining: { discovered: true, frozen: true } }
+    // frozen discovered-only record on a closed lineage IS coherent
+    // post-sec.2.3 (freeze is unconditional on non-completed records) -
+    // the violation here is the completed-list mismatch: mortal listed
+    // completed but carries no record.
+    state.realms = {
+      qi_refining: { discovered: true, bodyCompleted: false, frozen: true },
+    }
     expect(integrityIssue({ hiddenPerfection: state, realmId: 'qi_refining' })).toMatch(
       /integrity violation/,
     )
@@ -250,8 +273,8 @@ describe('assertHiddenPerfectionIntegrity (restore preflight, fail-closed)', () 
     state.hiddenBreakthroughRealmIds = ['qi_refining']
     state.completedHiddenBodyRealmIds = ['mortal']
     state.realms = {
-      mortal: { discovered: true, bodyCompleted: true },
-      qi_refining: { discovered: true },
+      mortal: { discovered: true, bodyCompleted: true, frozen: false },
+      qi_refining: { discovered: true, bodyCompleted: false, frozen: true },
     }
     expect(
       integrityIssue({ hiddenPerfection: state, realmId: 'foundation_establishment' }),
@@ -262,20 +285,28 @@ describe('assertHiddenPerfectionIntegrity (restore preflight, fail-closed)', () 
     const state = createDefaultHiddenPerfection()
     // completed list is empty -> authored index 0 (mortal) is the
     // frontier; a foundation entry (authored index 2) is unreachable.
-    state.realms = { foundation_establishment: { discovered: true } }
+    state.realms = {
+      foundation_establishment: {
+        discovered: true,
+        bodyCompleted: false,
+        frozen: false,
+      },
+    }
     expect(integrityIssue({ hiddenPerfection: state, realmId: 'mortal' })).toMatch(
       /integrity violation/,
     )
     // qi_refining (index 1) at frontier 0 completed is also unreachable.
-    state.realms = { qi_refining: { discovered: true } }
+    state.realms = {
+      qi_refining: { discovered: true, bodyCompleted: false, frozen: false },
+    }
     expect(integrityIssue({ hiddenPerfection: state, realmId: 'mortal' })).toMatch(
       /integrity violation/,
     )
     // with mortal completed, qi_refining becomes the frontier - legal.
     state.completedHiddenBodyRealmIds = ['mortal']
     state.realms = {
-      mortal: { discovered: true, bodyCompleted: true },
-      qi_refining: { discovered: true },
+      mortal: { discovered: true, bodyCompleted: true, frozen: false },
+      qi_refining: { discovered: true, bodyCompleted: false, frozen: false },
     }
     expect(integrityIssue({ hiddenPerfection: state, realmId: 'qi_refining' })).toBeUndefined()
   })
@@ -283,7 +314,12 @@ describe('assertHiddenPerfectionIntegrity (restore preflight, fail-closed)', () 
   it('throw khi mechanic hien huu nhung chua discovered', () => {
     const state = createDefaultHiddenPerfection()
     state.realms = {
-      mortal: { mechanic: { kind: HIDDEN_MECHANIC_ANCIENT_BEAST_TRIAL } },
+      mortal: {
+        discovered: false,
+        bodyCompleted: false,
+        frozen: false,
+        mechanic: { kind: HIDDEN_MECHANIC_ANCIENT_BEAST_TRIAL },
+      },
     }
     expect(integrityIssue({ hiddenPerfection: state, realmId: 'mortal' })).toMatch(
       /integrity violation/,

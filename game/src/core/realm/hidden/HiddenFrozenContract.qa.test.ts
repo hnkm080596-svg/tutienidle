@@ -44,6 +44,7 @@ describe('frozen flag enforcement (spec sec.2.3 gate + sec.6.3 integrity arm)', 
     state.realms = {
       mortal: {
         discovered: true,
+        bodyCompleted: false,
         frozen: true,
         mechanic: { kind: HIDDEN_MECHANIC_ANCIENT_BEAST_TRIAL },
       },
@@ -62,6 +63,7 @@ describe('frozen flag enforcement (spec sec.2.3 gate + sec.6.3 integrity arm)', 
     }
     player.hiddenPerfection!.realms.mortal = {
       discovered: true,
+      bodyCompleted: false,
       frozen: true,
       mechanic: { kind: HIDDEN_MECHANIC_ANCIENT_BEAST_TRIAL },
     }

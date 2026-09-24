@@ -155,7 +155,11 @@ export function discoverHiddenRealm(
   }
 
   const realms = player.hiddenPerfection.realms
-  const entry = (realms[realmId] ??= {})
+  const entry = (realms[realmId] ??= {
+    discovered: false,
+    bodyCompleted: false,
+    frozen: false,
+  })
   entry.discovered = true
   return entry
 }
@@ -184,7 +188,11 @@ export function completeHiddenBody(
     return undefined
   }
 
-  const entry = (state.realms[realmId] ??= {})
+  const entry = (state.realms[realmId] ??= {
+    discovered: false,
+    bodyCompleted: false,
+    frozen: false,
+  })
   entry.discovered = true
   entry.bodyCompleted = true
   state.completedHiddenBodyRealmIds.push(realmId)
