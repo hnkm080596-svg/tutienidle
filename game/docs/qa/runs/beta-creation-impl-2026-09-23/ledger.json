@@ -18,6 +18,7 @@
       "tests/",
       "supabase/migrations/",
       "**/*.test.ts",
+      "docs/",
       "docs/qa/"
     ],
     "nonGoals": [
@@ -58,7 +59,6 @@
     ],
     "exclusions": [],
     "phase": "DECIDE",
-    "cleanRoundA": null,
     "cleanRoundB": null,
     "finalEvidenceIds": [
       "EV2-IMPL-TYPECHECK",
@@ -70,7 +70,8 @@
       "EV2-IMPL-MUTATION-CORPUS",
       "EV2-IMPL-RB-CLOSURE"
     ],
-    "outcome": "QA_UNVERIFIED"
+    "outcome": "QA_FINDINGS_OPEN",
+    "cleanRoundA": null
   },
   "invariants": [
     {
@@ -2038,6 +2039,528 @@
       "title": "Pre-existing remote seam: invalid/consumed rollId soft-locks to generic error; p_roll_id read races mid-flight reroll -> fail-closed rejection",
       "severity": "Nit",
       "classification": "NON_ACTIONABLE"
+    },
+    {
+      "id": "F-A-CORRECTNESS-1",
+      "title": "CharacterCreationScreen.finish(): stale error.value releases the creating-latch and stays rendered through a successful completion",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/components/onboarding/CharacterCreationScreen.vue",
+          "symbolOrSection": "65-85",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/components/onboarding/CharacterCreationScreen.vue",
+          "symbolOrSection": "132-133",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-937919a38fa84859bedc721d0573682f",
+      "invariantIds": [
+        "I-IMPL-CONSUME-ONCE"
+      ],
+      "evidenceIds": [
+        "EV-A-CORRECTNESS-SEAL"
+      ],
+      "counterexample": "Bounded by ok-gating: emit('complete') fires only after ok:true; second click blocked server-side (RPC name check) and locally (bootInFlight). Cosmetic only - hence Low.",
+      "expected": "Per-attempt error state: clear error.value at top of finish() so finally releases only when THIS attempt failed; stale message must not release latch nor render after success.",
+      "actual": "error.value never re-initialized inside finish(); finally treats cross-attempt flag as per-attempt state.",
+      "rootCause": "finish() lacks the error.value='' reset that reroll() performs; releasing condition if(error.value) reflects previous attempt's outcome.",
+      "rootClass": "STATE_LEAK",
+      "subsystem": "components/onboarding",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/components/onboarding/",
+            "src/App.vue",
+            "src/composables/"
+          ],
+          "termsAndMethod": "rg error.value and creating-latch resets across onboarding + boot seams; checked other async latches evaluating cross-attempt flags",
+          "evidenceIds": [
+            "EV-A-CORRECTNESS-SEAL"
+          ],
+          "hitDispositions": [
+            "reroll() clears at start (correct pattern); finish() is the only latch evaluating a stale flag; bootInFlight + RPC name check bound the re-click consequence"
+          ],
+          "coverageLimits": [
+            "reviewer-declared bounded; coordinator verified base had no finally-latch (behavior introduced by the 2d5349a6 repair)"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-A-AUTHORITY-1",
+      "title": "Spec-mandated documentation updates missed - 4 doc surfaces still describe the removed 3-step wizard / 5-point allocation",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "severity": "Low",
+      "classification": "DOCUMENTATION_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "docs/ui-components.md",
+          "symbolOrSection": "839",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "docs/ui-components.md",
+          "symbolOrSection": "841",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "docs/ui-components.md",
+          "symbolOrSection": "871",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "docs/specs/m-f-journey-spec.md",
+          "symbolOrSection": "100",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-23-early-progression-loop-closure.md",
+          "symbolOrSection": "210",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "docs/online-login-cloud-save-plan.md",
+          "symbolOrSection": "212",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-5a44592d49ea45aea6ec08109e219f90",
+      "invariantIds": [
+        "I-IMPL-NO-ALLOC",
+        "I-IMPL-SPEC-TRACE"
+      ],
+      "evidenceIds": [
+        "EV-A-AUTHORITY-SEAL"
+      ],
+      "counterexample": "Stale text verifiably present on frozen head; no runtime impact - documentation authority only.",
+      "expected": "All spec-enumerated doc surfaces rewritten to unified single-screen flow.",
+      "actual": "4 doc surfaces retain 3-step wizard / 5-point allocation narrative.",
+      "rootCause": "Doc sweep covered active contract docs but missed enumerated ui-components.md entry + plan/spec fixture quotes.",
+      "rootClass": "STALE_DOC",
+      "subsystem": "docs",
+      "siblingSearch": [
+        {
+          "roots": [
+            "docs/",
+            "src/"
+          ],
+          "termsAndMethod": "rg 'phan bo 5|3 buoc|ba buoc|attributeStep|creation-granted' across docs+src (ex qa/**)",
+          "evidenceIds": [
+            "EV-A-AUTHORITY-SEAL"
+          ],
+          "hitDispositions": [
+            "coordinator re-ran rg: ui-components:839/:841, login-plan:213, theTuAnE2E:330 confirmed verbatim on head; m-f-journey-spec:100 + superpowers plan:210 are pinned-fixture profiles carrying attributes{} - weaker hits, noted for adjudication"
+          ],
+          "coverageLimits": [
+            "docs surface only; coordinator spot-verified 5/6 locations verbatim"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-A-AUTHORITY-2",
+      "title": "D8 defensive-fallback comment updates and spec-mandated test retitle not applied - stale wording misattributes runtime default as creation grant",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "severity": "Low",
+      "classification": "DOCUMENTATION_DEFECT",
+      "actionable": true,
+      "reachability": "FIXTURE_INJECTED",
+      "locations": [
+        {
+          "path": "src/core/player/CultivationPathRegistry.ts",
+          "symbolOrSection": "325-346",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/components/panels/skill-path/SkillRoleStrip.vue",
+          "symbolOrSection": "122-124",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/game/GameManager.theTuAnE2E.test.ts",
+          "symbolOrSection": "330",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-5a44592d49ea45aea6ec08109e219f90",
+      "invariantIds": [
+        "I-IMPL-NO-SILENT-TRAM",
+        "I-IMPL-SPEC-TRACE"
+      ],
+      "evidenceIds": [
+        "EV-A-AUTHORITY-SEAL"
+      ],
+      "counterexample": "Test behavior correct; only title/comment attribution wrong.",
+      "expected": "D8 comments name the v82 contract; theTuAnE2E test retitled per spec S1h.",
+      "actual": "Comments and test title unchanged.",
+      "rootCause": "Comment-level spec items deprioritized vs code changes.",
+      "rootClass": "STALE_DOC",
+      "subsystem": "docs+tests",
+      "siblingSearch": [
+        {
+          "roots": [
+            "docs/",
+            "src/"
+          ],
+          "termsAndMethod": "rg 'phan bo 5|3 buoc|ba buoc|attributeStep|creation-granted' across docs+src (ex qa/**)",
+          "evidenceIds": [
+            "EV-A-AUTHORITY-SEAL"
+          ],
+          "hitDispositions": [
+            "coordinator re-ran rg: ui-components:839/:841, login-plan:213, theTuAnE2E:330 confirmed verbatim on head; m-f-journey-spec:100 + superpowers plan:210 are pinned-fixture profiles carrying attributes{} - weaker hits, noted for adjudication"
+          ],
+          "coverageLimits": [
+            "docs surface only; coordinator spot-verified 5/6 locations verbatim"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-A-AUTHORITY-3",
+      "title": "Spec D5 footer 'inline summary + finish' - footer renders finish only",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "severity": "Nit",
+      "classification": "SPEC_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/components/onboarding/CharacterCreationScreen.vue",
+          "symbolOrSection": "133",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-5a44592d49ea45aea6ec08109e219f90",
+      "invariantIds": [
+        "I-IMPL-SPEC-TRACE"
+      ],
+      "evidenceIds": [
+        "EV-A-AUTHORITY-SEAL"
+      ],
+      "counterexample": "N/A - presentation detail.",
+      "expected": "Per spec D5, inline summary adjacent to finish button.",
+      "actual": "Footer renders finish only.",
+      "rootCause": "Minimal footer chosen; single-screen layout already shows each selection.",
+      "rootClass": "SPEC_DEVIATION",
+      "subsystem": "components/onboarding",
+      "siblingSearch": [
+        {
+          "roots": [
+            "docs/",
+            "src/"
+          ],
+          "termsAndMethod": "rg 'phan bo 5|3 buoc|ba buoc|attributeStep|creation-granted' across docs+src (ex qa/**)",
+          "evidenceIds": [
+            "EV-A-AUTHORITY-SEAL"
+          ],
+          "hitDispositions": [
+            "coordinator re-ran rg: ui-components:839/:841, login-plan:213, theTuAnE2E:330 confirmed verbatim on head; m-f-journey-spec:100 + superpowers plan:210 are pinned-fixture profiles carrying attributes{} - weaker hits, noted for adjudication"
+          ],
+          "coverageLimits": [
+            "docs surface only; coordinator spot-verified 5/6 locations verbatim"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-A-INTEGRATION-1",
+      "title": "v82 restore-preflight rejections dead-end on a no-recovery boot screen (crafted/imported saves wedge the account)",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "src/services/save/SaveSystem.ts",
+          "symbolOrSection": "272-278,490-503,712-719",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/composables/useAppLifecycle.ts",
+          "symbolOrSection": "295-318",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/App.vue",
+          "symbolOrSection": "711-717",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/services/save/saveShapeValidation.ts",
+          "symbolOrSection": "731-734",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-51420a19475c4c268e31a43526fc6c57",
+      "invariantIds": [
+        "I-IMPL-SAVE-PREFLIGHT",
+        "I-IMPL-UI-FLOW"
+      ],
+      "evidenceIds": [
+        "EV-A-INTEGRATION-SEAL"
+      ],
+      "counterexample": "No in-app producer writes a pick-less mortal v82 save: buildGameSave serializes the live player (sole-write via setMortalBasicSkill at bootstrap; deleted only inside the ritual commit for post-path players). The wedge requires a crafted/edited/imported save -- but the app's own export/import feature makes hand-editing the natural user response to 'incompatible' (a v81 export bumped 'version':81->82 is exactly this shape).",
+      "expected": "A save the boot path cannot consume should reach a recovery surface with export/delete, at minimum parity with 'incompatible'/'corrupted' (SaveIncompatibleScreen).",
+      "actual": "'rejected' lands on the generic boot-error screen with no delete/export affordance; the wedged save loops every boot.",
+      "rootCause": "The restore-preflight failure class (restoreGameSession 'rejected') is routed to onError/boot.fail instead of saveIssue.report; v82 widened this class with the most plausible malformed-save shape (mortal missing pick).",
+      "rootClass": "CONTRACT_GAP",
+      "subsystem": "save/restore+lifecycle",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/services/save/",
+            "src/composables/",
+            "src/components/onboarding/",
+            "supabase/"
+          ],
+          "termsAndMethod": "rg 'rejected|saveIssue.report|creating' + migration list grep; coordinator verified routing verbatim at useAppLifecycle:295-318 + App.vue:711-717",
+          "evidenceIds": [
+            "EV-A-INTEGRATION-SEAL"
+          ],
+          "hitDispositions": [
+            "single reject-routing site (INT-01); two migrations + single TS list (INT-02); single back control site (INT-03) - reviewer line-level evidence; coordinator spot-verified INT-01 routing verbatim"
+          ],
+          "coverageLimits": [
+            "import-boundary accept path proven at unit level on reviewer VM (repro test uncommitted there); boot-UI half proven statically"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-A-INTEGRATION-2",
+      "title": "SQL migrations hardcode the precursor id list, duplicating the TS authority",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "severity": "Low",
+      "classification": "SPEC_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "supabase/migrations/202608240001_online_auth_character.sql",
+          "symbolOrSection": "file-level",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "supabase/migrations/202609240001_beta_creation_character_pick.sql",
+          "symbolOrSection": "file-level",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/skill/MortalPrecursors.ts",
+          "symbolOrSection": "file-level",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-51420a19475c4c268e31a43526fc6c57",
+      "invariantIds": [
+        "I-IMPL-SKILL-MAP"
+      ],
+      "evidenceIds": [
+        "EV-A-INTEGRATION-SEAL"
+      ],
+      "counterexample": "The client-side draft validation and the RPC reject the same set, so no behavior diverges until a fourth precursor is added.",
+      "expected": "Single authoritative precursor list, or an explicit drift note.",
+      "actual": "Two hardcoded SQL copies with no link to the TS constant.",
+      "rootCause": "Duplicated enumeration across language boundary with no shared source or drift guard.",
+      "rootClass": "DUPLICATED_AUTHORITY",
+      "subsystem": "supabase/migrations",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/services/save/",
+            "src/composables/",
+            "src/components/onboarding/",
+            "supabase/"
+          ],
+          "termsAndMethod": "rg 'rejected|saveIssue.report|creating' + migration list grep; coordinator verified routing verbatim at useAppLifecycle:295-318 + App.vue:711-717",
+          "evidenceIds": [
+            "EV-A-INTEGRATION-SEAL"
+          ],
+          "hitDispositions": [
+            "single reject-routing site (INT-01); two migrations + single TS list (INT-02); single back control site (INT-03) - reviewer line-level evidence; coordinator spot-verified INT-01 routing verbatim"
+          ],
+          "coverageLimits": [
+            "import-boundary accept path proven at unit level on reviewer VM (repro test uncommitted there); boot-UI half proven statically"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-A-INTEGRATION-3",
+      "title": "Back button stays live during `creating`; abort intent is ignored once the RPC is in flight",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/components/onboarding/CharacterCreationScreen.vue",
+          "symbolOrSection": "66-84,95",
+          "revision": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-51420a19475c4c268e31a43526fc6c57",
+      "invariantIds": [
+        "I-IMPL-UI-FLOW"
+      ],
+      "evidenceIds": [
+        "EV-A-INTEGRATION-SEAL"
+      ],
+      "counterexample": "Mock service resolves near-instantly, so the window is only real under remote RPC latency.",
+      "expected": "Back during an in-flight creation should either cancel the emit or be disabled.",
+      "actual": "Abort click is silently overridden by the in-flight completion.",
+      "rootCause": "No guard tying the back control to the creating latch; emit('complete') has no cancellation check.",
+      "rootClass": "STATE_LEAK",
+      "subsystem": "components/onboarding",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/services/save/",
+            "src/composables/",
+            "src/components/onboarding/",
+            "supabase/"
+          ],
+          "termsAndMethod": "rg 'rejected|saveIssue.report|creating' + migration list grep; coordinator verified routing verbatim at useAppLifecycle:295-318 + App.vue:711-717",
+          "evidenceIds": [
+            "EV-A-INTEGRATION-SEAL"
+          ],
+          "hitDispositions": [
+            "single reject-routing site (INT-01); two migrations + single TS list (INT-02); single back control site (INT-03) - reviewer line-level evidence; coordinator spot-verified INT-01 routing verbatim"
+          ],
+          "coverageLimits": [
+            "import-boundary accept path proven at unit level on reviewer VM (repro test uncommitted there); boot-UI half proven statically"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
     }
   ],
   "evidence": [
@@ -2874,6 +3397,96 @@
         "coordinator-executed; independence requirement is satisfied by the sealed reviewer pair, not this record"
       ],
       "status": "CURRENT"
+    },
+    {
+      "id": "EV-A-CORRECTNESS-SEAL",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "devin-937919a38fa84859bedc721d0573682f",
+      "startedAt": "2026-09-24T01:49:57Z",
+      "finishedAt": "2026-09-24T02:06:30Z",
+      "commandOrMethod": "sealed structured review by isolated reviewer session (structured output)",
+      "cwd": "reviewer-session",
+      "exitCode": null,
+      "result": "PASS",
+      "artifactPath": "reviews/round-a-correctness.md",
+      "artifactHash": "1a0ff2c468559e8eb05f07a2b28208b9285d37e84ad1bc5ebaf4b0b9e0caa0cd",
+      "inputPaths": [
+        "reviews/round-a-correctness.md",
+        "reviews/round-a-correctness.json"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "sealed CORRECTNESS review verdict=FINDINGS priorFindingsVisible=False findings=1"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-A-AUTHORITY-SEAL",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "devin-5a44592d49ea45aea6ec08109e219f90",
+      "startedAt": "2026-09-24T01:49:57Z",
+      "finishedAt": "2026-09-24T02:08:20Z",
+      "commandOrMethod": "sealed structured review by isolated reviewer session (structured output)",
+      "cwd": "reviewer-session",
+      "exitCode": null,
+      "result": "PASS",
+      "artifactPath": "reviews/round-a-authority.md",
+      "artifactHash": "13a7e8acb95db789b6421df8866ab830c234cd0abaa760636a41e8cb85c185b7",
+      "inputPaths": [
+        "reviews/round-a-authority.md",
+        "reviews/round-a-authority.json"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "sealed AUTHORITY review verdict=FINDINGS priorFindingsVisible=False findings=3"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-A-INTEGRATION-SEAL",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "devin-51420a19475c4c268e31a43526fc6c57",
+      "startedAt": "2026-09-24T02:07:52Z",
+      "finishedAt": "2026-09-24T02:14:12Z",
+      "commandOrMethod": "sealed structured review by isolated reviewer session (structured output)",
+      "cwd": "reviewer-session",
+      "exitCode": null,
+      "result": "PASS",
+      "artifactPath": "reviews/round-a-integration.md",
+      "artifactHash": "a78b18c91273e1e59bc8ebbb46ae5e6466a09b6d156cc6b4c17e741361e00f8a",
+      "inputPaths": [
+        "reviews/round-a-integration.md",
+        "reviews/round-a-integration.json"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "sealed INTEGRATION review verdict=FINDINGS priorFindingsVisible=False findings=3"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
     }
   ],
   "coverage": [
@@ -2901,9 +3514,17 @@
       "taxonomyIds": [],
       "applicability": "REQUIRED",
       "reason": "I-IMPL-NO-ALLOC x INDEPENDENT_REVIEW",
-      "evidenceIds": [],
-      "reviewerIds": [],
-      "status": "PENDING",
+      "evidenceIds": [
+        "EV-A-CORRECTNESS-SEAL",
+        "EV-A-AUTHORITY-SEAL",
+        "EV-A-INTEGRATION-SEAL"
+      ],
+      "reviewerIds": [
+        "REV-A-CORRECTNESS",
+        "REV-A-AUTHORITY",
+        "REV-A-INTEGRATION"
+      ],
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -2930,9 +3551,17 @@
       "taxonomyIds": [],
       "applicability": "REQUIRED",
       "reason": "I-IMPL-NO-SILENT-TRAM x INDEPENDENT_REVIEW",
-      "evidenceIds": [],
-      "reviewerIds": [],
-      "status": "PENDING",
+      "evidenceIds": [
+        "EV-A-CORRECTNESS-SEAL",
+        "EV-A-AUTHORITY-SEAL",
+        "EV-A-INTEGRATION-SEAL"
+      ],
+      "reviewerIds": [
+        "REV-A-CORRECTNESS",
+        "REV-A-AUTHORITY",
+        "REV-A-INTEGRATION"
+      ],
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -2975,9 +3604,17 @@
       "taxonomyIds": [],
       "applicability": "REQUIRED",
       "reason": "I-IMPL-PICK-REQUIRED x INDEPENDENT_REVIEW",
-      "evidenceIds": [],
-      "reviewerIds": [],
-      "status": "PENDING",
+      "evidenceIds": [
+        "EV-A-CORRECTNESS-SEAL",
+        "EV-A-AUTHORITY-SEAL",
+        "EV-A-INTEGRATION-SEAL"
+      ],
+      "reviewerIds": [
+        "REV-A-CORRECTNESS",
+        "REV-A-AUTHORITY",
+        "REV-A-INTEGRATION"
+      ],
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -3020,9 +3657,17 @@
       "taxonomyIds": [],
       "applicability": "REQUIRED",
       "reason": "I-IMPL-SAVE-PREFLIGHT x INDEPENDENT_REVIEW",
-      "evidenceIds": [],
-      "reviewerIds": [],
-      "status": "PENDING",
+      "evidenceIds": [
+        "EV-A-CORRECTNESS-SEAL",
+        "EV-A-AUTHORITY-SEAL",
+        "EV-A-INTEGRATION-SEAL"
+      ],
+      "reviewerIds": [
+        "REV-A-CORRECTNESS",
+        "REV-A-AUTHORITY",
+        "REV-A-INTEGRATION"
+      ],
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -3049,9 +3694,17 @@
       "taxonomyIds": [],
       "applicability": "REQUIRED",
       "reason": "I-IMPL-SKILL-MAP x INDEPENDENT_REVIEW",
-      "evidenceIds": [],
-      "reviewerIds": [],
-      "status": "PENDING",
+      "evidenceIds": [
+        "EV-A-CORRECTNESS-SEAL",
+        "EV-A-AUTHORITY-SEAL",
+        "EV-A-INTEGRATION-SEAL"
+      ],
+      "reviewerIds": [
+        "REV-A-CORRECTNESS",
+        "REV-A-AUTHORITY",
+        "REV-A-INTEGRATION"
+      ],
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -3078,9 +3731,17 @@
       "taxonomyIds": [],
       "applicability": "REQUIRED",
       "reason": "I-IMPL-RPC x INDEPENDENT_REVIEW",
-      "evidenceIds": [],
-      "reviewerIds": [],
-      "status": "PENDING",
+      "evidenceIds": [
+        "EV-A-CORRECTNESS-SEAL",
+        "EV-A-AUTHORITY-SEAL",
+        "EV-A-INTEGRATION-SEAL"
+      ],
+      "reviewerIds": [
+        "REV-A-CORRECTNESS",
+        "REV-A-AUTHORITY",
+        "REV-A-INTEGRATION"
+      ],
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -3107,9 +3768,17 @@
       "taxonomyIds": [],
       "applicability": "REQUIRED",
       "reason": "I-IMPL-CONSUME-ONCE x INDEPENDENT_REVIEW",
-      "evidenceIds": [],
-      "reviewerIds": [],
-      "status": "PENDING",
+      "evidenceIds": [
+        "EV-A-CORRECTNESS-SEAL",
+        "EV-A-AUTHORITY-SEAL",
+        "EV-A-INTEGRATION-SEAL"
+      ],
+      "reviewerIds": [
+        "REV-A-CORRECTNESS",
+        "REV-A-AUTHORITY",
+        "REV-A-INTEGRATION"
+      ],
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -3220,7 +3889,58 @@
       "weakProtection": false
     }
   ],
-  "attacks": [],
+  "attacks": [
+    {
+      "id": "NA-SOLE-01",
+      "invariantIds": [
+        "I-IMPL-PICK-REQUIRED"
+      ],
+      "taxonomyIds": [
+        "AUT-08"
+      ],
+      "challengedAssumption": "mortalBasicSkillId has exactly one production write seam (setMortalBasicSkill inside bootstrapEarlyGamePlayer)",
+      "sequenceOrInput": "rg 'mortalBasicSkillId\\s*=' across game/src non-test surfaces; census every write path",
+      "oracle": "no production writer outside the sole seam; restore whole-slice replacement and test-only fixture write do not count",
+      "noveltyReason": "sole-write is the load-bearing contract claim; a second writer would void PICK-REQUIRED",
+      "evidenceIds": [
+        "EV-A-AUTHORITY-SEAL"
+      ]
+    },
+    {
+      "id": "ATK-INT-REJECT-DEADEND-01",
+      "invariantIds": [
+        "I-IMPL-SAVE-PREFLIGHT"
+      ],
+      "taxonomyIds": [
+        "PER-08",
+        "UI-05"
+      ],
+      "challengedAssumption": "every save-failure class reaches a recovery surface (export/delete), not just incompatible/corrupted",
+      "sequenceOrInput": "shape-valid v82 mortal save with mortalBasicSkillId removed -> importSaveRaw -> inspectLocalSave -> boot restoreGameSession 'rejected'",
+      "oracle": "rejected saves reach saveIssue.report recovery affordance, not the dead-end boot-error screen",
+      "noveltyReason": "v82 widened the reject class with the most plausible producer (mortal missing pick); routing gap was invisible before",
+      "evidenceIds": [
+        "EV-A-INTEGRATION-SEAL"
+      ]
+    },
+    {
+      "id": "ATK-INT-VERSION-BUMP-IMPORT-02",
+      "invariantIds": [
+        "I-IMPL-SAVE-PREFLIGHT"
+      ],
+      "taxonomyIds": [
+        "PER-06",
+        "ROB-03"
+      ],
+      "challengedAssumption": "a hand-edited save cannot wedge the account through the app's own import feature",
+      "sequenceOrInput": "export v81 save, bump 'version' to 82, re-import via importSaveRaw -> accepted at boundary -> rejected at every subsequent boot",
+      "oracle": "import path either refuses version-unsupported pick-contract violations up front or delivers them to a recovery surface",
+      "noveltyReason": "version bump is the natural user response to incompatible; v82 makes it a boot-loop producer",
+      "evidenceIds": [
+        "EV-A-INTEGRATION-SEAL"
+      ]
+    }
+  ],
   "reviews": [
     {
       "id": "REV-CLOSURE-FIMPL1",
@@ -3390,9 +4110,147 @@
       ],
       "novelAttackIds": [],
       "status": "SEALED"
+    },
+    {
+      "id": "REV-A-CORRECTNESS",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "round": 3,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-937919a38fa84859bedc721d0573682f",
+      "contextId": "devin-937919a38fa84859bedc721d0573682f",
+      "model": "swe-2-max",
+      "role": "SEALED_REVIEWER",
+      "inputBundleHash": "2ab53d4de13c0d8447822e493a29ec0aa329c46a82a0cf4bda8469333bbb9d35",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-24T01:49:57Z",
+      "sealedAt": "2026-09-24T02:06:30Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-A-CORRECTNESS-SEAL"
+      ],
+      "findingIds": [
+        "F-A-CORRECTNESS-1"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-A-AUTHORITY",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "round": 3,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-5a44592d49ea45aea6ec08109e219f90",
+      "contextId": "devin-5a44592d49ea45aea6ec08109e219f90",
+      "model": "swe-2-max",
+      "role": "SEALED_REVIEWER",
+      "inputBundleHash": "765706f1bebd8ac80e9395da81d1f9a7094c61973e0b956086c921668d1251f3",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-24T01:49:57Z",
+      "sealedAt": "2026-09-24T02:08:20Z",
+      "previousPhaseReviewId": "REV-A-CORRECTNESS",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-A-AUTHORITY-SEAL"
+      ],
+      "findingIds": [
+        "F-A-AUTHORITY-1",
+        "F-A-AUTHORITY-2",
+        "F-A-AUTHORITY-3"
+      ],
+      "novelAttackIds": [
+        "NA-SOLE-01"
+      ],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-A-INTEGRATION",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "round": 3,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-51420a19475c4c268e31a43526fc6c57",
+      "contextId": "devin-51420a19475c4c268e31a43526fc6c57",
+      "model": "swe-2-max",
+      "role": "SEALED_REVIEWER",
+      "inputBundleHash": "2956cf92cf5a499762988a1287ff04e81033b531be18a9edc1834ffbbaa56929",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-24T02:07:52Z",
+      "sealedAt": "2026-09-24T02:13:46Z",
+      "previousPhaseReviewId": "REV-A-AUTHORITY",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-A-INTEGRATION-SEAL"
+      ],
+      "findingIds": [
+        "F-A-INTEGRATION-1",
+        "F-A-INTEGRATION-2",
+        "F-A-INTEGRATION-3"
+      ],
+      "novelAttackIds": [
+        "ATK-INT-REJECT-DEADEND-01",
+        "ATK-INT-VERSION-BUMP-IMPORT-02"
+      ],
+      "status": "SEALED"
     }
   ],
-  "cycles": [],
+  "cycles": [
+    {
+      "id": "CYC-RA-1",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "reviewIds": [
+        "REV-A-CORRECTNESS",
+        "REV-A-AUTHORITY",
+        "REV-A-INTEGRATION"
+      ],
+      "coverageIds": [
+        "COV-I-02",
+        "COV-I-04",
+        "COV-I-07",
+        "COV-I-10",
+        "COV-I-12",
+        "COV-I-14",
+        "COV-I-16"
+      ],
+      "evidenceIds": [
+        "EV-A-CORRECTNESS-SEAL",
+        "EV-A-AUTHORITY-SEAL",
+        "EV-A-INTEGRATION-SEAL"
+      ],
+      "noveltyEvidenceIds": [
+        "EV2-IMPL-NOVEL-ATTACKS",
+        "EV-A-INTEGRATION-SEAL"
+      ],
+      "startedAt": "2026-09-24T01:49:57Z",
+      "finishedAt": "2026-09-24T02:14:12Z",
+      "status": "FINDINGS"
+    }
+  ],
   "mutations": [
     {
       "id": "M-IMPL-1",
@@ -4150,6 +5008,69 @@
       "createdAt": "2026-09-24T01:49:57Z",
       "leaseId": "coordinator-devin-4df500e190cc4b9d837f408a5ed53852",
       "runId": "beta-creation-impl-2026-09-23"
+    },
+    {
+      "id": "MSG-SEALED-RA-CORRECTNESS",
+      "requestId": "req-roundA-correctness",
+      "parentRequestId": null,
+      "sender": "devin-937919a38fa84859bedc721d0573682f",
+      "recipient": "coordinator-devin-4df500e190cc4b9d837f408a5ed53852",
+      "kind": "SEALED_RESULT",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "phase": "CORRECTNESS",
+      "bundleHash": "6dbd36243cfa49fe6ea82661d38f77d0eef64333b3cd2f829949b21808e77aec",
+      "payloadPath": "reviews/round-a-correctness.json",
+      "payloadHash": "6dbd36243cfa49fe6ea82661d38f77d0eef64333b3cd2f829949b21808e77aec",
+      "createdAt": "2026-09-24T02:06:30Z",
+      "leaseId": "coordinator-devin-4df500e190cc4b9d837f408a5ed53852",
+      "runId": "beta-creation-impl-2026-09-23"
+    },
+    {
+      "id": "MSG-SEALED-RA-AUTHORITY",
+      "requestId": "req-roundA-authority",
+      "parentRequestId": null,
+      "sender": "devin-5a44592d49ea45aea6ec08109e219f90",
+      "recipient": "coordinator-devin-4df500e190cc4b9d837f408a5ed53852",
+      "kind": "SEALED_RESULT",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "phase": "AUTHORITY",
+      "bundleHash": "bd14779eaedcba6da26a9df5b5afa026c6cd00ad4f3930051626200250e17393",
+      "payloadPath": "reviews/round-a-authority.json",
+      "payloadHash": "bd14779eaedcba6da26a9df5b5afa026c6cd00ad4f3930051626200250e17393",
+      "createdAt": "2026-09-24T02:08:20Z",
+      "leaseId": "coordinator-devin-4df500e190cc4b9d837f408a5ed53852",
+      "runId": "beta-creation-impl-2026-09-23"
+    },
+    {
+      "id": "MSG-SEALED-RA-INTEGRATION",
+      "requestId": "req-roundA-integration",
+      "parentRequestId": null,
+      "sender": "devin-51420a19475c4c268e31a43526fc6c57",
+      "recipient": "coordinator-devin-4df500e190cc4b9d837f408a5ed53852",
+      "kind": "SEALED_RESULT",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "phase": "INTEGRATION",
+      "bundleHash": "550a75fcd709ac7751dbfb4a1fd1a0ffeec11c38fb926d04bb4ae00958a779f4",
+      "payloadPath": "reviews/round-a-integration.json",
+      "payloadHash": "550a75fcd709ac7751dbfb4a1fd1a0ffeec11c38fb926d04bb4ae00958a779f4",
+      "createdAt": "2026-09-24T02:14:12Z",
+      "leaseId": "coordinator-devin-4df500e190cc4b9d837f408a5ed53852",
+      "runId": "beta-creation-impl-2026-09-23"
     }
   ],
   "events": [
@@ -4600,6 +5521,86 @@
       "payloadPath": "events/0028.json",
       "payloadHash": "939006cf149d38ec34f1e46d0d98c2700991b2428db49c2054734b38459766d3",
       "eventHash": "7962d08c512c080945a46ebc991aed8f81534c5e16ec565f469fb81374ad9b2e"
+    },
+    {
+      "seq": 29,
+      "at": "2026-09-24T02:08:09.530Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-devin-4df500e190cc4b9d837f408a5ed53852",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "previousEventHash": "7962d08c512c080945a46ebc991aed8f81534c5e16ec565f469fb81374ad9b2e",
+      "payloadPath": "events/0029.json",
+      "payloadHash": "da0d613faf0563e98eb607be2eb777b6fa0bfb52fc8cce21209a7e29e23022ad",
+      "eventHash": "54652f0df3c9ff466c41d16d8f6d1a9f04e521599fb41359db40be9b5f19639a"
+    },
+    {
+      "seq": 30,
+      "at": "2026-09-24T02:10:45.451Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-devin-4df500e190cc4b9d837f408a5ed53852",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "previousEventHash": "54652f0df3c9ff466c41d16d8f6d1a9f04e521599fb41359db40be9b5f19639a",
+      "payloadPath": "events/0030.json",
+      "payloadHash": "833ed7cdd64f3230f4e6dd759c82c77098bae2904fbf909688eb4818361595ef",
+      "eventHash": "2b94a3a33f3a1455967fb94f44f546e459c8020b9437fc99fce41ac4b074ab10"
+    },
+    {
+      "seq": 31,
+      "at": "2026-09-24T02:15:39.007Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-devin-4df500e190cc4b9d837f408a5ed53852",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "previousEventHash": "2b94a3a33f3a1455967fb94f44f546e459c8020b9437fc99fce41ac4b074ab10",
+      "payloadPath": "events/0031.json",
+      "payloadHash": "ad0947397e7dd447f1cfc3d87655990466852a19d2d39d7eab94b0a083c344ef",
+      "eventHash": "74534e3f916fb73d83140d7155581db21497107e8282d2c75737857680b39976"
+    },
+    {
+      "seq": 32,
+      "at": "2026-09-24T02:15:39.128Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-devin-4df500e190cc4b9d837f408a5ed53852",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "previousEventHash": "74534e3f916fb73d83140d7155581db21497107e8282d2c75737857680b39976",
+      "payloadPath": "events/0032.json",
+      "payloadHash": "6048ab6d1767f6406f860bf816119e2e386343137f0a5ef64a470ed01e3a8476",
+      "eventHash": "56c177268ffbb92098d57dbd3744eaad639b78ac9a5f747cd3de6550c6f4a4b8"
+    },
+    {
+      "seq": 33,
+      "at": "2026-09-24T02:17:18.822Z",
+      "kind": "DECISION",
+      "actor": "coordinator-devin-4df500e190cc4b9d837f408a5ed53852",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "previousEventHash": "56c177268ffbb92098d57dbd3744eaad639b78ac9a5f747cd3de6550c6f4a4b8",
+      "payloadPath": "events/0033.json",
+      "payloadHash": "70866e87a07f54f623502d024043a220bda42817680dfb112673300b200652cb",
+      "eventHash": "3a92a2dd932d7738dd45463a23e1f78d1d0f0b08c36aaa21d835b4b629445699"
     }
   ]
 }

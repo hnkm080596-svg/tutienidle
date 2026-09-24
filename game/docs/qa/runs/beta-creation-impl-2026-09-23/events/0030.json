@@ -1,0 +1,10 @@
+{
+  "applied": [
+    "evidence:EV-A-AUTHORITY-SEAL",
+    "finding:F-A-AUTHORITY-1",
+    "finding:F-A-AUTHORITY-2",
+    "finding:F-A-AUTHORITY-3",
+    "review:REV-A-AUTHORITY",
+    "message:MSG-SEALED-RA-AUTHORITY"
+  ]
+}
