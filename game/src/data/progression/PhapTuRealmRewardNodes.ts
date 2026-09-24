@@ -92,7 +92,10 @@ function awakeningNode(): ProgressionNode {
     type: 'minor',
     role: 'growth',
     insightCost: 0,
-    maxLevel: 2,
+    // Grants exist at L1 only (spell_pathway foundation_establishment);
+    // rewardOnly rejects upgrades, so no live path reaches a higher
+    // level - a deeper grant can widen this alongside its reward entry.
+    maxLevel: 1,
     rewardOnly: true,
     effect: {
       turnSkillResourceModifiers: Object.values(BASIC_IDS).map((skillId) => ({

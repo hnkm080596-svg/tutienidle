@@ -42,12 +42,16 @@ function ngoDao(overrides: Partial<PlayerData> = {}): PlayerData {
 const registry = { getAll: () => PHAP_TU_NODES }
 
 describe('PhapTu realm-reward grant nodes', () => {
-  it('all six reward nodes are registered, rewardOnly-flagged and levelable to 2', () => {
+  it('all six reward nodes are registered and rewardOnly-flagged; mastery caps at the granted L2, the awakening at the granted L1', () => {
     for (const id of REWARD_NODE_IDS) {
       const node = PHAP_TU_NODES.find((n) => n.id === id)
       expect(node, id).toBeDefined()
       expect(node?.rewardOnly, id).toBe(true)
-      expect(node?.maxLevel, id).toBe(2)
+      // Masteries reach L2 via the hidden way's grant; the_thuc_tinh is
+      // granted at L1 on the normal way only, so its authored cap is 1
+      // (rewardOnly rejects upgrades -- a deeper maxLevel would be dead
+      // range).
+      expect(node?.maxLevel, id).toBe(id === THE_THUC_TINH_NODE_ID ? 1 : 2)
       expect(node?.requiredCultivationPath, id).toBe('spell')
       // No requiredWay stamp -- both spell ways aggregate a granted level.
       expect(node?.requiredWay, id).toBeUndefined()
