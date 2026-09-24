@@ -23,6 +23,7 @@ import {
   hiddenBodyRealmIndex,
   isAuthoredHiddenRealm,
 } from '../../../data/realm/HiddenBodyRealms'
+import { HIDDEN_MECHANIC_FINISHED_READERS } from './HiddenLineage'
 import { getRealmIndex } from '../realmSystem'
 import { REALMS } from '../../../data/realms/realm'
 
@@ -341,6 +342,21 @@ export function assertHiddenPerfectionIntegrity(player: {
       } else {
         validator(realmState.mechanic, (issue) =>
           issues.push(`realms.${realmId}.mechanic: ${issue}`),
+        )
+      }
+
+      // Mechanism-finished must mirror bodyCompleted: a payload whose
+      // registered reader reports finished while the flag is false (or
+      // the reverse) is incoherent - e.g. completed>=36 with
+      // bodyCompleted=false would short-circuit 'complete' forever
+      // while the +10pp completion never lands.
+      const finishedReader = HIDDEN_MECHANIC_FINISHED_READERS[realmState.mechanic.kind]
+      if (
+        finishedReader !== undefined &&
+        finishedReader(realmState.mechanic) !== (realmState.bodyCompleted === true)
+      ) {
+        issues.push(
+          `realms.${realmId}.mechanic: finished-state khong khop bodyCompleted`,
         )
       }
     }

@@ -139,7 +139,7 @@ export interface EarlyGameSnapshot {
   bodyProgression: {
     body_refinement: { completedTiers: number; currentTierProgress: number }
     meridian: { openedIds: string[] }
-    zhou_tian: { circulation: number }
+    zhou_tian: { completed: number }
   }
   physiqueGrade: string
   highestFoundationAchieved: string | null
@@ -666,7 +666,7 @@ export class EarlyGameSession {
           currentTierProgress: p.bodyProgression.body_refinement.currentTierProgress,
         },
         meridian: { openedIds: [...p.bodyProgression.meridian.openedIds] },
-        zhou_tian: { circulation: p.bodyProgression.zhou_tian.circulation },
+        zhou_tian: { completed: p.bodyProgression.zhou_tian.completed },
       },
       physiqueGrade: p.physiqueGrade,
       highestFoundationAchieved: p.highestFoundationAchieved ?? null,

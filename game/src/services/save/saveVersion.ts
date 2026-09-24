@@ -189,4 +189,12 @@
 // ({active, progress, required}, design sec.10 + master spec
 // sec.8.2). Save v82 is rejected (dev phase, no migration, no
 // compat translator) - master spec sec.8.4 re-bump on later merge.
-export const CURRENT_SAVE_VERSION = 83 as const
+// v84 (2026-09-24, HIDDEN-C Chu Thien 36 + Nghich Chu Thien):
+// player.bodyProgression.zhou_tian slice shape changes
+// {circulation:number} -> {completed:number} (0..36 discrete steps,
+// design sec.11); realms.foundation_establishment.mechanic may carry
+// the 'nghich_chu_tian' payload (completed/pityByLevel/active, sec.12
+// + master spec sec.8.3). Save v83 is rejected (dev phase, no
+// migration, no compat translator) - master spec sec.8.4 re-bump on
+// later merge.
+export const CURRENT_SAVE_VERSION = 84 as const

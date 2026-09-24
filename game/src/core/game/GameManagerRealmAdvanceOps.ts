@@ -38,6 +38,14 @@ import {
   recordHiddenBreakthrough,
   resolveBreakthroughType,
 } from '../realm/hidden/HiddenLineage'
+// HIDDEN-C - registering the Nghich Chu Tian mechanic module (validator +
+// finished reader self-register at load) and the ops-owned entry points:
+// post-invest discovery check + the dual-cost attempt command.
+import {
+  attemptNghichChuTian,
+  maybeDiscoverNghichChuTian,
+  type NghichChuTianAttemptResult,
+} from '../realm/hidden/NghichChuTian'
 import {
   canTriggerBreakthrough as gateCanTriggerBreakthrough,
   getBreakthroughRequirements as gateGetBreakthroughRequirements,
@@ -596,6 +604,12 @@ export class GameManagerRealmAdvanceOps {
       const consumed = investBodyChapterState(player, chapterId, available, auxOwned)
       if (consumed > 0) {
         bag.remove(chapter.currency.id, consumed)
+        if (chapterId === 'zhou_tian') {
+          // HIDDEN-C - a completed 36/36 normal track is the discovery
+          // event for the Nghich continuation (sec.12.1); the check is
+          // itself gated on realm + lineage and stays a no-op otherwise.
+          maybeDiscoverNghichChuTian(player)
+        }
       }
       return consumed
     }
@@ -656,7 +670,22 @@ export class GameManagerRealmAdvanceOps {
       // the full amount.
       this.deps.notifyMaterialGained(plan.change.materialId, plan.change.amount)
     }
-    return investBodyChapterState(player, chapterId, effectiveAvailable, auxOwned)
+    const applied = investBodyChapterState(player, chapterId, effectiveAvailable, auxOwned)
+    if (applied > 0 && chapterId === 'zhou_tian') {
+      // HIDDEN-C - same post-invest discovery check as the legacy path.
+      maybeDiscoverNghichChuTian(player)
+    }
+    return applied
+  }
+
+  /**
+   * HIDDEN-C - the Nghich Chu Tian attempt command (design sec.12):
+   * dual-cost, RNG + per-level pity, all inside NghichChuTian.attempt -
+   * this surface only supplies the material bag. The result object is
+   * presentation-neutral so UI can render outcome + costs honestly.
+   */
+  attemptNghichChuTian(player: PlayerData): NghichChuTianAttemptResult {
+    return attemptNghichChuTian(player, this.deps.materialBag)
   }
 
   private bodyChapterBag(currency: BodyChapterCurrency): { getAmount(id: string): number; has(id: string, amount: number): boolean; remove(id: string, amount: number): boolean } {

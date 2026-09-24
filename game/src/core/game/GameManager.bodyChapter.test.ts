@@ -96,36 +96,37 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
     const manager = managerWithCatalogs()
     const player = createDefaultPlayer()
     player.realmId = 'foundation_establishment'
-    player.realmLevel = 1 // capacity 20
+    player.realmLevel = 1 // capacity 2
     manager.setActivePlayer(player)
     completeBodyPrerequisites(player) // meridian complete -> unlocked
-    manager.materialBag.add(manager.materialRegistry.get('tinh_hoa_phap_the'), 7)
+    manager.materialBag.add(manager.materialRegistry.get('tinh_hoa_phap_the'), 35)
 
     const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')
 
-    expect(consumed).toBe(7)
+    // Step costs 15 + 20 -> two steps for exactly 35 (design sec.11).
+    expect(consumed).toBe(35)
     expect(manager.materialBag.getAmount('tinh_hoa_phap_the')).toBe(0)
-    expect(player.bodyProgression.zhou_tian.circulation).toBe(7)
+    expect(player.bodyProgression.zhou_tian.completed).toBe(2)
   })
 
   it('zhou_tian invest is capacity-clamped, no-debit when empty, and locked under the sequential gate', () => {
     const manager = managerWithCatalogs()
     const player = createDefaultPlayer()
     player.realmId = 'foundation_establishment'
-    player.realmLevel = 1 // capacity 20
+    player.realmLevel = 1 // capacity 2
     manager.setActivePlayer(player)
     completeBodyPrerequisites(player)
-    player.bodyProgression.zhou_tian.circulation = 18
+    player.bodyProgression.zhou_tian.completed = 1
     manager.materialBag.add(manager.materialRegistry.get('tinh_hoa_phap_the'), 50)
 
-    // Over-owned + remaining capacity 2 -> consumes exactly 2.
-    expect(manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')).toBe(2)
-    expect(manager.materialBag.getAmount('tinh_hoa_phap_the')).toBe(48)
-    expect(player.bodyProgression.zhou_tian.circulation).toBe(20)
+    // Over-owned + remaining capacity 1 -> consumes the step cost 20.
+    expect(manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')).toBe(20)
+    expect(manager.materialBag.getAmount('tinh_hoa_phap_the')).toBe(30)
+    expect(player.bodyProgression.zhou_tian.completed).toBe(2)
 
     // At capacity -> zero debit, idempotent.
     expect(manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')).toBe(0)
-    expect(manager.materialBag.getAmount('tinh_hoa_phap_the')).toBe(48)
+    expect(manager.materialBag.getAmount('tinh_hoa_phap_the')).toBe(30)
 
     // Locked (meridian incomplete) -> zero debit even with essence owned.
     const locked = createDefaultPlayer()
@@ -136,8 +137,8 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
     locked.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 7).map(m => m.id)
     manager.setActivePlayer(locked)
     expect(manager.realmAdvanceOps.investBodyChapter(locked, 'zhou_tian')).toBe(0)
-    expect(manager.materialBag.getAmount('tinh_hoa_phap_the')).toBe(48)
-    expect(locked.bodyProgression.zhou_tian.circulation).toBe(0)
+    expect(manager.materialBag.getAmount('tinh_hoa_phap_the')).toBe(30)
+    expect(locked.bodyProgression.zhou_tian.completed).toBe(0)
   })
 })
 

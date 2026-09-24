@@ -542,10 +542,11 @@
         "locked": "Complete the Eight Extraordinary Meridians chapter first",
         "realmLocked": "Unlocks at {realm}",
         "capacity": "Current capacity: {capacity}",
-        "tieuLabel": "Tieu Chu Thien · 180",
-        "daiLabel": "Dai Chu Thien · 360",
+        "tieuLabel": "Tieu Chu Thien · 18",
+        "daiLabel": "Dai Chu Thien · 36",
         "invest": "Circulate",
         "owned": "Dharma Physique Essence owned {count}",
+        "stepCost": "Next step cost: {cost}",
         "complete": "Dai Chu Thien circulation complete."
       }
     },
@@ -1246,6 +1247,13 @@
     },
     "trial": {
       "banner": "{name} · Round {elapsed}/{required}"
+    },
+    "foundation": {
+      "nghichName": "Reverse Circulation",
+      "stateActive": "Reversing",
+      "stateDone": "Complete",
+      "detail": "Essence {essence} · Spirit Stones {stones} · Success {chance}% · Pity {pity}/{pityLimit}",
+      "attempt": "Attempt Reverse Circulation"
     }
   }
 }

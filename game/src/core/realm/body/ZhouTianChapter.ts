@@ -1,23 +1,26 @@
-// M-F-CHU-THIEN - Chu Thien (Heavenly Circuit) chapter, the Truc Co
-// normal-Body track of the unified BodyProgression authority. One
-// scalar state (circulation), capacity derived from the
-// foundation_establishment realm level (20/level -> 180 Tieu at Lv9,
-// 360 Dai at Lv18 = normal completion; 361+ does not exist).
+// HIDDEN-C - Chu Thien (Heavenly Circuit) chapter reworked to the design
+// 2026-09-23 sec.11 discrete-step track: 36 deterministic advancements
+// (0/36), each advancing exactly +1 for an authored Tinh Hoa Phap The
+// cost (no RNG at the normal seam) and each granting authored raw/base
+// combat stats through the baseStat channel (sec.11.3 vocabulary:
+// maxHp/might/defense/hpRegenPerTurn - never the five main stats, never
+// a generic percentage). Capacity derives from the
+// foundation_establishment realm level (2 steps/level -> 36 at Lv18);
+// Tieu/Dai Chu Thien remain lore marks only, not gates.
 //
 // Sequentiality: the chapter declares unlocksAfterChapters: ['meridian']
 // - enforced by BodyProgressionSystem.investBodyChapterState (dispatch
 // authority), mirrored by isBodyChapterUnlocked, and pinned as a
 // persisted-state invariant by assertBodyProgressionIntegrity.
-//
-// Emission kind: baseStat with an EMPTY delta map - the mechanism is
-// the mission, stat values are content-deferred (no invest costs,
-// per-invest amounts, or stat values authored here).
 import {
-  ZHOU_TIAN_CAPACITY_PER_REALM_LEVEL,
   ZHOU_TIAN_CURRENCY_MATERIAL_ID,
-  ZHOU_TIAN_DAI_CIRCULATION,
+  ZHOU_TIAN_DAI_STEP,
   ZHOU_TIAN_REALM_ID,
-  ZHOU_TIAN_TIEU_CIRCULATION,
+  ZHOU_TIAN_STEPS_PER_REALM_LEVEL,
+  ZHOU_TIAN_TIEU_STEP,
+  ZHOU_TIAN_TOTAL_STEPS,
+  zhouTianStepCost,
+  zhouTianStepReward,
 } from '../../../data/realm/ZhouTian'
 import { getRealmIndex } from '../realmSystem'
 import type { PlayerData } from '../../player/Player'
@@ -26,8 +29,8 @@ import type { BaseStatBodyChapter, BodyProgressionIssue } from './BodyChapter'
 
 const LEGACY_MODIFIER_PREFIX = 'zhou-tian:'
 
-/** Chu Thien capacity: 0 before Truc Co, 20*realmLevel inside the
- * foundation_establishment realm, and the full 360 once past it.
+/** Chu Thien step capacity: 0 before Truc Co, 2*realmLevel inside the
+ * foundation_establishment realm, and the full 36 once past it.
  * Fails closed on unresolved realm ids (getRealmIndex -1 -> 0). */
 export function getZhouTianCapacity(player: PlayerData): number {
   const realmIndex = getRealmIndex(player.realmId)
@@ -37,23 +40,23 @@ export function getZhouTianCapacity(player: PlayerData): number {
     return 0
   }
   if (realmIndex > zhouTianIndex) {
-    return ZHOU_TIAN_DAI_CIRCULATION
+    return ZHOU_TIAN_TOTAL_STEPS
   }
 
   return Math.min(
-    ZHOU_TIAN_DAI_CIRCULATION,
-    ZHOU_TIAN_CAPACITY_PER_REALM_LEVEL * player.realmLevel,
+    ZHOU_TIAN_TOTAL_STEPS,
+    ZHOU_TIAN_STEPS_PER_REALM_LEVEL * player.realmLevel,
   )
 }
 
-/** Tieu Chu Thien milestone - circulation reached 180. */
+/** Tieu Chu Thien lore mark - step 18 reached (display only). */
 export function isTieuChuThienReached(player: PlayerData): boolean {
-  return player.bodyProgression.zhou_tian.circulation >= ZHOU_TIAN_TIEU_CIRCULATION
+  return player.bodyProgression.zhou_tian.completed >= ZHOU_TIAN_TIEU_STEP
 }
 
-/** Dai Chu Thien milestone - circulation reached 360 = chapter complete. */
+/** Dai Chu Thien lore mark - step 36 = chapter complete. */
 export function isDaiChuThienReached(player: PlayerData): boolean {
-  return player.bodyProgression.zhou_tian.circulation >= ZHOU_TIAN_DAI_CIRCULATION
+  return player.bodyProgression.zhou_tian.completed >= ZHOU_TIAN_DAI_STEP
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -62,7 +65,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 export const zhouTianChapter: BaseStatBodyChapter = {
   kind: 'baseStat',
-  // M-F-CHU-THIEN - authored chapter classification (the Chu Thien
+  // M-F-BODY-CORE - authored chapter classification (the Chu Thien
   // circulation chapter); orthogonal to the emission `kind`.
   chapterKind: 'zhou_tian',
   id: 'zhou_tian',
@@ -70,29 +73,46 @@ export const zhouTianChapter: BaseStatBodyChapter = {
   legacyModifierPrefix: LEGACY_MODIFIER_PREFIX,
   currency: { bag: 'material', id: ZHOU_TIAN_CURRENCY_MATERIAL_ID },
 
-  // Dau tu Tinh Hoa Phap The vao circulation - tieu toi da `available`,
-  // KHONG vuot qua capacity hien tai (clamped to the realm-derived cap).
-  // Tra ve so Tinh Hoa THAT SU da tieu (0 khi locked/capped/complete).
+  // Dau tu Tinh Hoa Phap The vao cac nang cap Chu Thien - moi nang cap
+  // deterministic +1 buoc, tieu gia cua buoc ke tiep. Chi tieu duoc toi
+  // da `available` va KHONG vuot qua capacity hien tai. Tra ve tong Tinh
+  // Hoa THAT SU da tieu (0 khi locked/capped/complete/khong du gia buoc).
   // No modifier rebuild here - the system dispatch owns that step.
   invest(player: PlayerData, available: number, _auxOwned: number): number {
     const state = player.bodyProgression.zhou_tian
     const capacity = getZhouTianCapacity(player)
-    const remaining = capacity - state.circulation
 
-    if (available <= 0 || remaining <= 0) {
-      return 0
+    let remaining = available
+    let consumed = 0
+
+    while (state.completed < capacity) {
+      const cost = zhouTianStepCost(state.completed)
+      if (remaining < cost) {
+        break
+      }
+      remaining -= cost
+      consumed += cost
+      state.completed += 1
     }
 
-    const consumed = Math.min(available, remaining)
-    state.circulation += consumed
     return consumed
   },
 
-  // Mechanism-only chapter: the base-stat channel is reserved for the
-  // circulation's gains, but no stat values are authored yet
-  // (content-deferred) - the delta map is intentionally empty.
-  collectBaseStatDeltas(_player: PlayerData): Partial<Record<StatType, number>> {
-    return {}
+  // Sec.11.3 - each completed step contributes its authored raw/base
+  // combat-stat reward through the chapter's baseStat channel. The map
+  // is derived on the fly from canonical state (never persisted).
+  collectBaseStatDeltas(player: PlayerData): Partial<Record<StatType, number>> {
+    const state = player.bodyProgression.zhou_tian
+    const deltas: Partial<Record<StatType, number>> = {}
+
+    for (let step = 0; step < state.completed; step++) {
+      const reward = zhouTianStepReward(step)
+      for (const [stat, amount] of Object.entries(reward) as [StatType, number][]) {
+        deltas[stat] = (deltas[stat] ?? 0) + amount
+      }
+    }
+
+    return deltas
   },
 
   // The chapter emits no modifiers today; the only correct "rebuild"
@@ -105,8 +125,8 @@ export const zhouTianChapter: BaseStatBodyChapter = {
 
   progress(player: PlayerData): { completed: number; total: number } {
     return {
-      completed: player.bodyProgression.zhou_tian.circulation,
-      total: ZHOU_TIAN_DAI_CIRCULATION,
+      completed: player.bodyProgression.zhou_tian.completed,
+      total: ZHOU_TIAN_TOTAL_STEPS,
     }
   },
 
@@ -124,20 +144,18 @@ export const zhouTianChapter: BaseStatBodyChapter = {
       return
     }
 
-    if (!Number.isFinite(slice.circulation) || (slice.circulation as number) < 0) {
+    if (!Number.isInteger(slice.completed)) {
       emit({
-        path: `${basePath}.circulation`,
-        message: 'circulation phai la so khong am',
+        path: `${basePath}.completed`,
+        message: 'completed phai la so nguyen',
       })
       return
     }
 
-    // C2C-79 - integer rejection also lives at this layer (integrity
-    // already fails closed later; the spec assigns it here too).
-    if (!Number.isInteger(slice.circulation)) {
+    if ((slice.completed as number) < 0 || (slice.completed as number) > ZHOU_TIAN_TOTAL_STEPS) {
       emit({
-        path: `${basePath}.circulation`,
-        message: 'circulation phai la so nguyen',
+        path: `${basePath}.completed`,
+        message: `completed phai nam trong 0..${ZHOU_TIAN_TOTAL_STEPS}`,
       })
     }
   },
@@ -146,20 +164,20 @@ export const zhouTianChapter: BaseStatBodyChapter = {
     const issues: string[] = []
     const state = player.bodyProgression.zhou_tian
 
-    if (!Number.isInteger(state.circulation)) {
-      issues.push(`zhou_tian.circulation phai la so nguyen (nhan ${state.circulation})`)
+    if (!Number.isInteger(state.completed)) {
+      issues.push(`zhou_tian.completed phai la so nguyen (nhan ${state.completed})`)
     }
-    if (state.circulation < 0 || state.circulation > ZHOU_TIAN_DAI_CIRCULATION) {
-      issues.push(`zhou_tian.circulation ngoai 0..${ZHOU_TIAN_DAI_CIRCULATION} (nhan ${state.circulation})`)
+    if (state.completed < 0 || state.completed > ZHOU_TIAN_TOTAL_STEPS) {
+      issues.push(`zhou_tian.completed ngoai 0..${ZHOU_TIAN_TOTAL_STEPS} (nhan ${state.completed})`)
     }
 
-    // C2C-75 - realm-capacity invariant: circulation can never exceed
-    // the capacity derivable at the player's realm (TC Lv1 -> 20);
+    // Realm-capacity invariant (C2C-75 analogue): completed can never
+    // exceed the capacity derivable at the player's realm (TC Lv1 -> 2);
     // a coherent-prerequisite save carrying more is still corrupt.
     const capacity = getZhouTianCapacity(player)
-    if (state.circulation > capacity) {
+    if (state.completed > capacity) {
       issues.push(
-        `zhou_tian.circulation vuot capacity hien tai (nhan ${state.circulation}, capacity ${capacity})`,
+        `zhou_tian.completed vuot capacity hien tai (nhan ${state.completed}, capacity ${capacity})`,
       )
     }
 

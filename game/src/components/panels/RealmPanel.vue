@@ -120,8 +120,8 @@ function majorBreakthrough() {
       </div>
 
       <!-- P7-M7 - unified body progression subviews (the retired
-           LuyenThePanel's tier block + the Bat Mach read-only list);
-           M-F-CHU-THIEN adds the Chu Thien circulation column. -->
+           LuyenThePanel's tier block + the Bat Mach read-only list
+           + the Chu Thien steps column). -->
       <div class="realm-panel__body">
         <div class="realm-panel__body-col">
           <Eyebrow>{{ t('panels.realm.bodyRefinement.title') }}</Eyebrow>

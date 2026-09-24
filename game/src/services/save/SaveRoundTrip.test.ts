@@ -110,6 +110,50 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     expect(playerData.hiddenPerfection.realms.mortal?.discovered).toBe(true)
   })
 
+  // HIDDEN-C (v83) - a POPULATED nghich_chu_tian mechanic payload must
+  // survive the whole detach->JSON->shape-validate pipeline: the skeleton
+  // dispatch (realms.X.mechanic.kind -> authored mechanicKind -> the
+  // module's registered validator) is exercised end-to-end here, not
+  // just the validator in isolation.
+  it('nghich_chu_tian mechanic payload round-trip nguyên vẹn (v83)', () => {
+    const gameManager = createBootedGameManager()
+    const player = createDefaultPlayer()
+
+    player.realmId = 'foundation_establishment'
+    player.realmLevel = 18
+    player.bodyProgression.zhou_tian.completed = 36
+    player.hiddenPerfection.completedHiddenBodyRealmIds = ['mortal', 'qi_refining']
+    player.hiddenPerfection.realms.foundation_establishment = {
+      discovered: true,
+      bodyCompleted: false,
+      frozen: false,
+      mechanic: {
+        kind: 'nghich_chu_tian',
+        completed: 7,
+        pityByLevel: [0, 0, 2],
+        active: true,
+      },
+    }
+
+    const save = buildGameSave(player, gameManager)
+    const roundTripped: unknown = JSON.parse(JSON.stringify(save))
+
+    expect(validateGameSaveShape(roundTripped)).toMatchObject({
+      ok: true,
+      issues: [],
+    })
+
+    const playerData = (roundTripped as { player: typeof player }).player
+    const mechanic =
+      playerData.hiddenPerfection.realms.foundation_establishment?.mechanic
+    expect(mechanic).toMatchObject({
+      kind: 'nghich_chu_tian',
+      completed: 7,
+      pityByLevel: [0, 0, 2],
+      active: true,
+    })
+  })
+
   // M-F-BODY-HIDDEN (v81) - the two channel-counter maps ride the same
   // detach->JSON->validate pipeline: player.hiddenBeastKills is required,
   // productionSites[].hiddenChannelCycles is optional and whitelisted
@@ -214,7 +258,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
       state: {
         body_refinement: { completedTiers: 0, currentTierProgress: 0 },
         meridian: { openedIds: [] as string[] },
-        zhou_tian: { circulation: 0 },
+        zhou_tian: { completed: 0 },
       },
     },
     {
@@ -222,7 +266,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
       state: {
         body_refinement: { completedTiers: 3, currentTierProgress: 120 },
         meridian: { openedIds: ['nham_mach', 'doi_mach'] },
-        zhou_tian: { circulation: 0 },
+        zhou_tian: { completed: 0 },
       },
     },
     {
@@ -235,7 +279,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
             'duong_duy_mach', 'duong_kieu_mach', 'xung_mach', 'doc_mach',
           ],
         },
-        zhou_tian: { circulation: 360 },
+        zhou_tian: { completed: 36 },
       },
     },
   ])('bodyProgression ($label) round-trip nguyen ven', ({ state }) => {
