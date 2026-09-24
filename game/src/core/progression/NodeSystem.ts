@@ -277,14 +277,19 @@ export function canUpgradeNode(player: PlayerData, node: ProgressionNode): boole
  * is unchanged - a free roll still requires being able to afford it.
  * Returns true when the cost was waived (caller deducts nothing).
  */
-function rollVanDaoWaive(player: PlayerData, node: ProgressionNode, cost: number): boolean {
+function rollVanDaoWaive(
+  player: PlayerData,
+  node: ProgressionNode,
+  cost: number,
+  rng: () => number = Math.random,
+): boolean {
   const chance = getNodeCostFreeChance(player.selectedTalentIds, player.talentLevels)
 
   if (chance <= 0 || cost <= 0) {
     return false
   }
 
-  if (Math.random() >= chance) {
+  if (rng() >= chance) {
     return false
   }
 
@@ -295,14 +300,18 @@ function rollVanDaoWaive(player: PlayerData, node: ProgressionNode, cost: number
   return true
 }
 
-export function purchaseNode(player: PlayerData, node: ProgressionNode): boolean {
+export function purchaseNode(
+  player: PlayerData,
+  node: ProgressionNode,
+  rng: () => number = Math.random,
+): boolean {
   if (!canPurchaseNode(player, node)) {
     return false
   }
 
   const cost = getNextLevelCost(node, 0)
 
-  if (!rollVanDaoWaive(player, node, cost)) {
+  if (!rollVanDaoWaive(player, node, cost, rng)) {
     player.skillInsight -= cost
   }
 
@@ -323,7 +332,11 @@ export function purchaseNode(player: PlayerData, node: ProgressionNode): boolean
  * Raises a node from its current level by +1 (sec.6.2) - charges exactly the
  * next level's cost, never exceeds maxLevel; failure mutates NOTHING.
  */
-export function upgradeNode(player: PlayerData, node: ProgressionNode): boolean {
+export function upgradeNode(
+  player: PlayerData,
+  node: ProgressionNode,
+  rng: () => number = Math.random,
+): boolean {
   if (!canUpgradeNode(player, node)) {
     return false
   }
@@ -332,7 +345,7 @@ export function upgradeNode(player: PlayerData, node: ProgressionNode): boolean 
 
   // M-QI-05 - cores never roll the waive: skill upgrades never did, and
   // nodeFreePurchaseRecord stays a tree-purchase concept.
-  if (node.levelsSkillId !== undefined || !rollVanDaoWaive(player, node, cost)) {
+  if (node.levelsSkillId !== undefined || !rollVanDaoWaive(player, node, cost, rng)) {
     player.skillInsight -= cost
   }
 
@@ -482,12 +495,15 @@ export function grantSkillCore(player: PlayerData, node: ProgressionNode): void 
  * cores repay their own spent Insight the same way (deterministic from
  * the frozen curve; cores never waive). Returns the total refund.
  */
-function revokeNodeOwnership(
+export function revokeNodeOwnership(
   player: PlayerData,
   node: ProgressionNode,
   registry: { has(id: string): boolean; get(id: string): ProgressionNode },
+  revokedOut?: Set<string>,
 ): number {
   const level = getNodeLevel(player, node.id)
+
+  revokedOut?.add(node.id)
 
   let refund = 0
 
@@ -519,7 +535,7 @@ function revokeNodeOwnership(
     const coreId = skillCoreNodeId(skillId)
 
     if (registry.has(coreId) && getNodeLevel(player, coreId) >= 1) {
-      refund += revokeNodeOwnership(player, registry.get(coreId), registry)
+      refund += revokeNodeOwnership(player, registry.get(coreId), registry, revokedOut)
     }
   }
 
@@ -539,6 +555,7 @@ export function devResetBranch(
   registry: { getAll(): ProgressionNode[]; has(id: string): boolean; get(id: string): ProgressionNode },
 
   branchTag: string,
+  revokedOut?: Set<string>,
 ): number {
   const nodes = registry.getAll().filter(node => node.branchTag === branchTag)
 
@@ -549,10 +566,10 @@ export function devResetBranch(
   let refund = 0
 
   for (const node of nodes) {
-    refund += revokeNodeOwnership(player, node, registry)
+    refund += revokeNodeOwnership(player, node, registry, revokedOut)
   }
 
-  refund += cascadeRevokeOrphanedNodes(player, registry)
+  refund += cascadeRevokeOrphanedNodes(player, registry, undefined, revokedOut)
 
   // Refunds Insight to the player (sec.6.10).
   player.skillInsight += refund
@@ -571,6 +588,7 @@ function cascadeRevokeOrphanedNodes(
   player: PlayerData,
   registry: { getAll(): ProgressionNode[]; has(id: string): boolean; get(id: string): ProgressionNode },
   preservedIds?: ReadonlySet<string>,
+  revokedOut?: Set<string>,
 ): number {
   let refund = 0
   let changed = true
@@ -594,7 +612,7 @@ function cascadeRevokeOrphanedNodes(
       )
 
       if (orphaned) {
-        refund += revokeNodeOwnership(player, node, registry)
+        refund += revokeNodeOwnership(player, node, registry, revokedOut)
         changed = true
       }
     }
@@ -675,6 +693,7 @@ export function respecNodeTree(
   registry: { getAll(): ProgressionNode[]; has(id: string): boolean; get(id: string): ProgressionNode },
 
   scope?: NodeRespecScope,
+  revokedOut?: Set<string>,
 ): number {
   const preservedIds = new Set(scope?.preserveIds ?? [])
 
@@ -705,9 +724,15 @@ export function respecNodeTree(
   // clone first - any throw (broken dependency/core tie, corrupt record)
   // fails closed here, BEFORE the first real mutation. The player object
   // can never be left half-respecced.
-  respecApply(JSON.parse(JSON.stringify(player)) as PlayerData, targets, registry, preservedIds)
+  respecApply(
+    JSON.parse(JSON.stringify(player)) as PlayerData,
+    targets,
+    registry,
+    preservedIds,
+    new Set<string>(),
+  )
 
-  return respecApply(player, targets, registry, preservedIds)
+  return respecApply(player, targets, registry, preservedIds, revokedOut)
 }
 
 /**
@@ -723,14 +748,15 @@ function respecApply(
   registry: { getAll(): ProgressionNode[]; has(id: string): boolean; get(id: string): ProgressionNode },
 
   preservedIds: ReadonlySet<string>,
+  revokedOut?: Set<string>,
 ): number {
   let refund = 0
 
   for (const node of targets) {
-    refund += revokeNodeOwnership(player, node, registry)
+    refund += revokeNodeOwnership(player, node, registry, revokedOut)
   }
 
-  refund += cascadeRevokeOrphanedNodes(player, registry, preservedIds)
+  refund += cascadeRevokeOrphanedNodes(player, registry, preservedIds, revokedOut)
 
   player.skillInsight += refund
 
@@ -792,6 +818,7 @@ export function switchRoute(
   registry: { getAll(): ProgressionNode[] },
 
   route: SpellPathRoute,
+  revokedOut?: Set<string>,
 ): number {
   const oldRoute = player.spellPath.route
 
@@ -831,6 +858,7 @@ export function switchRoute(
 
     refund += Math.floor(paid * 0.75)
 
+    revokedOut?.add(node.id)
     delete player.nodeLevels[node.id]
 
     const index = player.purchasedNodeIds.indexOf(node.id)

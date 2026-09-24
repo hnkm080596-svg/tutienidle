@@ -19,6 +19,7 @@ import type { GameSave } from '../../../services/save/saveTypes'
 import { SeededCombatRng } from '../../battle/runtime/rng/SeededCombatRng'
 import { GameManager } from '../../game/GameManager'
 import { createDefaultPlayer, type PlayerData } from '../../player/Player'
+import type { StatModifier } from '../../stats/StatCalculator'
 import { canBreakthrough, breakthrough } from '../../cultivation/CultivationSystem'
 import { cultivateTick } from '../../cultivation/CultivationTick'
 import { driveTurnBattleToTerminal } from '../BattleDriver'
@@ -318,6 +319,16 @@ export class EarlyGameSession {
           if (this.combatCultivationParity) {
             this.cultivate(COMBAT_STEP_SECONDS)
             this.breakthroughIfReady()
+            // F-W-20: production tickOps.update runs investBodyChapter
+            // moi tick - parity callback phai dau tu chapter theo cung
+            // nhip (body_refinement nhu wiring GameManager.ts:935).
+            // The consumed amount is folded into tinhHoaGained: the
+            // essence left the material bag before essenceAfter reads
+            // it, so earned = bag delta + invested.
+            this.simRunTotals.tinhHoaGained += this.gameManager.realmAdvanceOps.investBodyChapter(
+              this.player,
+              'body_refinement',
+            )
           }
         },
       })
@@ -365,7 +376,13 @@ export class EarlyGameSession {
     if (!this.gameManager.realmAdvanceOps.canTriggerBreakthrough(this.player)) {
       return 'refused'
     }
-    if (!this.gameManager.startTribulation(this.player, targetRealmId)) {
+    if (
+      !new TribulationOutcomeService().startTribulationPrepared(
+        this.writer(),
+        this.gameManager,
+        targetRealmId,
+      )
+    ) {
       return 'refused'
     }
     let ticks = 0
@@ -436,11 +453,24 @@ export class EarlyGameSession {
 
   /** The settle/drain write target: the owner store while the session
    * player IS its $state (absent-key write semantics), else the live
-   * PlayerData (a post-restore owner reassignment keeps parity). */
-  private writer(): TribulationPlayerWriter | PlayerData {
-    return this.playerOwner !== undefined && this.player === this.playerOwner.$state
-      ? this.playerOwner
-      : this.player
+   * PlayerData (a post-restore owner reassignment keeps parity). A bare
+   * PlayerData gets the tribulation writer contract installed lazily -
+   * the store action's own filtered-replace semantics; JSON saves drop
+   * functions, so the adapter never leaks into a save. */
+  private writer(): TribulationPlayerWriter {
+    if (this.playerOwner !== undefined && this.player === this.playerOwner.$state) {
+      return this.playerOwner
+    }
+    const player = this.player as PlayerData & Partial<TribulationPlayerWriter>
+    if (player.setEquipmentModifiers === undefined) {
+      player.setEquipmentModifiers = (modifiers: StatModifier[]) => {
+        player.modifiers = [
+          ...player.modifiers.filter((modifier) => modifier.sourceType !== 'equipment'),
+          ...modifiers,
+        ]
+      }
+    }
+    return player as TribulationPlayerWriter
   }
 
   performRitual(path: CultivationPathId, way: CultivationWayId): boolean {

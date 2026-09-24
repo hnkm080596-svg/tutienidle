@@ -98,7 +98,7 @@ describe('TribulationOutcomeService — victory parity', () => {
     expect(new Set(entitlement!.offeredTalentIds).size).toBe(3)
   })
 
-  it('a still-pending entitlement is never overwritten by a later victory', () => {
+  it('a still-pending entitlement is never overwritten by a same-realm victory', () => {
     const gameManager = new GameManager()
     const player = usePlayerStore()
     const service = new TribulationOutcomeService()
@@ -107,11 +107,26 @@ describe('TribulationOutcomeService — victory parity', () => {
     const bound = player.pendingTalentEntitlement
     expect(bound?.realmId).toBe('qi_refining')
 
-    service.resolveVictory(player, gameManager, makeActive('victory', 'golden_core'))
+    service.resolveVictory(player, gameManager, makeActive('victory', 'qi_refining'))
 
     // The first record binds - reload/repeat ticks can never rebind a
     // different offer set onto the pending decision.
     expect(player.pendingTalentEntitlement).toEqual(bound)
+  })
+
+  it('a pending record bound to a different realm is superseded by the new breakthrough', () => {
+    const gameManager = new GameManager()
+    const player = usePlayerStore()
+    const service = new TribulationOutcomeService()
+
+    service.resolveVictory(player, gameManager, makeActive('victory', 'qi_refining'))
+    expect(player.pendingTalentEntitlement?.realmId).toBe('qi_refining')
+
+    // A record bound to a different target is stale residue - the new
+    // breakthrough clears it, then mints whatever its own realm offers
+    // (golden_core's pool is release-disabled, so nothing rebinds).
+    service.resolveVictory(player, gameManager, makeActive('victory', 'golden_core'))
+    expect(player.pendingTalentEntitlement?.realmId).not.toBe('qi_refining')
   })
 
   it('foundation_establishment victory: realm/level reset, unequip-all, foundation recorded, talent converted, passives synced', () => {
@@ -129,6 +144,7 @@ describe('TribulationOutcomeService — victory parity', () => {
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
     gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
     player.realmLevel = 18
+    player.completedStageIds = ['qi_refining_abyssal_pool']
     player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
     player.bodyProgression.meridian.openedIds = MERIDIANS.map((m: { id: string }) => m.id)
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
@@ -210,6 +226,8 @@ describe('TribulationOutcomeService — victory parity', () => {
     gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
     player.realmId = 'qi_refining'
+    player.realmLevel = 12
+    player.completedStageIds = ['qi_refining_abyssal_pool']
     player.bodyProgression.meridian.openedIds = MERIDIANS.map((m: { id: string }) => m.id)
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
@@ -232,6 +250,7 @@ describe('TribulationOutcomeService — victory parity', () => {
     const player = usePlayerStore()
     player.realmId = 'qi_refining'
     player.realmLevel = 12
+    player.completedStageIds = ['qi_refining_abyssal_pool']
     player.bodyProgression.meridian.openedIds = MERIDIANS.map((m: { id: string }) => m.id)
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
@@ -263,6 +282,7 @@ describe('TribulationOutcomeService — victory parity', () => {
     const player = usePlayerStore()
     player.realmId = 'qi_refining'
     player.realmLevel = 12
+    player.completedStageIds = ['qi_refining_abyssal_pool']
     player.bodyProgression.meridian.openedIds = MERIDIANS.map((m: { id: string }) => m.id)
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
     player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })

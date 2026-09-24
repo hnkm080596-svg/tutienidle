@@ -383,6 +383,13 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
     // R7 (AR-08) - detached decompose snapshot (getSaveState returns a
     // value copy; detachSaveValue keeps it independent of live state).
     decompose: detachSaveValue(gameManager.decomposeSystem.getSaveState()),
+
+    // F-W-5 (v82) - tribulation director runtime: committed outcome +
+    // cooldown survive reload. Slice vang mat khi khong co gi pending.
+    tribulation: (() => {
+      const runtime = gameManager.tribulationDirector.serializeRuntime()
+      return Object.keys(runtime).length > 0 ? detachSaveValue(runtime) : undefined
+    })(),
   }
 }
 

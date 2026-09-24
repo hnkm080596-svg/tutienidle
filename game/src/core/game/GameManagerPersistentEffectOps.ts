@@ -65,11 +65,13 @@ export class GameManagerPersistentEffectOps {
    * effect - see getTechniqueTierModifiers().
    */
   getAggregatedModifiers(player?: PlayerData): StatModifier[] {
-    // STATIC-ONLY (2026-08-24, plan §5.4): timed effects + Phu/Tran
-    // sockets are LIVE modifiers - intentionally excluded here so the
-    // finalStats callers pass into battle is a clean static snapshot
-    // (no double-apply); combat recompute gets runtime modifiers via the
-    // provider each tick, menus display via the store getter plus
+    // Named-channel static partition (plan S5.4): persistent-buff +
+    // scaled-passive sources included here are battle-stable (they do
+    // not tick down or roll inside combat), while timed effects +
+    // Phu/Tran sockets stay LIVE - excluded so the finalStats callers
+    // pass into battle is a clean snapshot (no double-apply); combat
+    // recompute gets runtime modifiers via the provider each tick,
+    // menus display via the store getter plus
     // getActiveRuntimeModifiers().
     return [
       ...this.deps.persistentBuffs.getStatModifiers('player' as CombatEntityId),

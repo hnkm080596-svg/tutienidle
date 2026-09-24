@@ -13,7 +13,9 @@ import { COMPANION_BUFFS } from './CompanionBuffs'
 // spec `breakthrough`) — phạt có cảm giác nhưng không huỷ hoại, KHÔNG
 // reset cảnh giới. Xem composables/useTribulation.ts.
 // buff2 migration (M4): a persistent wall debuff -- 'seconds' clock
-// (advanced by onTimePassed), NOT a battle ailment.
+// (advanced by onTimePassed), NOT a battle ailment. Session-scoped by
+// design: the buff2 persistent pool has no save seam, so a reload
+// forgives the wound (60s debuff - the acceptable bound).
 export const KIEP_THUONG_DEBUFF: BuffDefinition = {
   id: 'kiep_thuong',
   name: 'Kiếp Thương',

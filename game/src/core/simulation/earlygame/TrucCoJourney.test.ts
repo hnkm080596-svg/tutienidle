@@ -413,11 +413,13 @@ describe('TrucCoJourney - ordered journey', () => {
       expect(committed?.targetRealmId).toBe('foundation_establishment')
 
       // Phase (a): settle binds/applies ONCE; the drain holds while the
-      // entitlement is unresolved.
+      // entitlement is unresolved. F-W-6: runTribulation goes through
+      // startTribulationPrepared so equipment is already stripped at
+      // tribulation start — zero equipment modifiers BEFORE the settle.
       expect(
         s.player.modifiers.filter((m) => m.sourceType === 'equipment')
           .length,
-      ).toBeGreaterThan(0)
+      ).toBe(0)
 
       const receipt = s.settleTribulationOutcome()
       expect(receipt?.kind).toBe('victory')

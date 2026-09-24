@@ -239,12 +239,13 @@ describe('MortalChapterJourney', () => {
         expect(resumed.player).not.toBe(s.player)
 
         const restored = resumed.snapshot()
-        // Persisted fields round-trip exactly. tribulationState is
-        // intentionally NOT in the GameSave schema - the committed
-        // outcome is transient director state, null on a fresh manager.
+        // Persisted fields round-trip exactly - including tribulationState:
+        // the v82 slice (F-W-5) makes the committed outcome/cooldown real
+        // GameSave state, so the restored manager re-presents it instead
+        // of losing the run on reload.
         const { tribulationState: _checkpointTrib, ...persistedCheckpoint } = checkpoint
         const { tribulationState: restoredTrib, ...persistedRestored } = restored
-        expect(restoredTrib).toBeNull()
+        expect(restoredTrib).toEqual(_checkpointTrib)
         expect(persistedRestored).toEqual(persistedCheckpoint)
 
         // Manager-backed continuation: a stage run proves catalogs,

@@ -267,6 +267,21 @@ export class SkillSystem {
     return true
   }
 
+  // F-W-2 - phan chieu cua selectSpecialization cho clawback: chi clear
+  // khi spec dang chon van dung la spec do grant dat (chon spec khac sau
+  // nay khong phai viec cua grant do). Tra ve co clear that.
+  clearSpecialization(skillId: string, specializationId: string): boolean {
+    const skill = this.manager.get(skillId)
+
+    if (!skill || skill.selectedSpecializationId !== specializationId) {
+      return false
+    }
+
+    delete skill.selectedSpecializationId
+
+    return true
+  }
+
   // P7-M4 -- learn() is the ONLY skill-state write: SkillManager
   // membership IS the learned authority (the retired unlocked/equipped/
   // loadout flags had no second writer). A held entry is learned;
@@ -283,6 +298,20 @@ export class SkillSystem {
       experience: skill.experience ?? 0,
       totalExperience: skill.totalExperience ?? 0,
     })
+
+    return true
+  }
+
+  // F-W-2 - clawback entry duy nhat de go membership mot skill da hoc.
+  // skillCastCounts tren PlayerData KHONG bi xoa: lich su luyen tap da
+  // kiem duoc giu lai (learned-then-lost van giu practice history), doi
+  // xung voi learn() la membership-write duy nhat. Tra ve co tung hoc.
+  unlearn(skillId: string): boolean {
+    if (!this.manager.has(skillId)) {
+      return false
+    }
+
+    this.manager.remove(skillId)
 
     return true
   }

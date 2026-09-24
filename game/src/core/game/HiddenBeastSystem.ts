@@ -43,7 +43,7 @@ export class HiddenBeastSystem {
    */
   maybeReplaceSpawn(
     player: PlayerData,
-    stageRealmId: string,
+    stageRealmId: string | undefined,
     rng: () => number = Math.random,
   ): Enemy | undefined {
     for (const channel of this.channels()) {

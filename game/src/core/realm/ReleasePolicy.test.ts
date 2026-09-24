@@ -244,6 +244,7 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
     const qiRefining = createDefaultPlayer()
     qiRefining.realmId = 'qi_refining'
     qiRefining.realmLevel = 12
+    qiRefining.completedStageIds = ['qi_refining_abyssal_pool']
     expect(gameManager.startTribulation(qiRefining, 'foundation_establishment')).toBe(true)
   })
 

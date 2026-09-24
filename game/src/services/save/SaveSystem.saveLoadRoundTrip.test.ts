@@ -12,6 +12,7 @@ import { createDefaultPlayer } from '../../core/player/Player'
 import { materials } from '../../data/materials/materials'
 import { equipment } from '../../data/equipment/equipment'
 import { affixes } from '../../data/equipment/affixes'
+import { buildings } from '../../data/building/buildings'
 import type { Quest } from '../../core/quest/Quest'
 import { buildGameSave, loadGame, writeGameSave } from './SaveSystem'
 
@@ -55,6 +56,7 @@ function createBootedGameManager(): GameManager {
   gameManager.catalogOps.registerMaterials(materials)
   gameManager.catalogOps.registerEquipment(equipment)
   gameManager.catalogOps.registerAffixes(affixes)
+  gameManager.catalogOps.registerBuildings(buildings)
 
   return gameManager
 }
@@ -142,7 +144,14 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
 
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()
-    player.autoWorkerCapacity = 5
+    // F-W-16: capacity derives from the CHQ instance - level 2 -> 5.
+    gameManager.buildingManager.add({
+      instanceId: 'b-chq',
+      buildingId: 'chi_hien_quan',
+      level: 2,
+      lastCollectedAt: Date.now(),
+    })
+    gameManager.buildingOps.refreshAutoWorkerCapacity(player, gameManager.buildingManager.get('b-chq')!)
 
     gameManager.decomposeSystem.updateCapacity(5)
     gameManager.decomposeSystem.setSetting({ workers: 3, ageFilter: 'decade' })
@@ -168,18 +177,21 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     }
     expect(outcome.save.decompose).toEqual(decomposeSnapshot)
 
-    // Restore into a FRESH manager: settings + timer come back; workers
-    // clamp to the fresh manager's live capacity (0) - no resurrected
-    // workforce; settling the same instant awards nothing new.
+    // Restore into a FRESH manager: settings + timer come back; the
+    // saved CHQ instance restores with the save (F-W-16 - capacity is
+    // derived, never trusted from the player slice), so workers land
+    // inside the restored capacity. Settling the same instant awards
+    // nothing new.
     const fresh = createBootedGameManager()
     const freshPlayer = createDefaultPlayer()
     fresh.setActivePlayer(freshPlayer)
     const restoredModifiers = fresh.saveOps.restoreFromSave(outcome.save as ReturnType<typeof buildGameSave>)
     expect(Array.isArray(restoredModifiers)).toBe(true)
+    expect(freshPlayer.autoWorkerCapacity).toBe(5)
     expect(fresh.decomposeSystem.getSettings()).toEqual({
       gradeFilter: 'all',
       ageFilter: 'decade',
-      workers: 0, // clamped: fresh manager has no CHQ -> capacity 0
+      workers: 3,
     })
 
     // No offline window elapsed (same mocked instant) - no double award.
@@ -191,7 +203,14 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
 
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()
-    player.autoWorkerCapacity = 5
+    // F-W-16: capacity derives from the CHQ instance - level 2 -> 5.
+    gameManager.buildingManager.add({
+      instanceId: 'b-chq',
+      buildingId: 'chi_hien_quan',
+      level: 2,
+      lastCollectedAt: Date.now(),
+    })
+    gameManager.buildingOps.refreshAutoWorkerCapacity(player, gameManager.buildingManager.get('b-chq')!)
     gameManager.setActivePlayer(player)
 
     const siteId = gameManager.productionSystem.getSiteDefinitions()[0]!.siteId

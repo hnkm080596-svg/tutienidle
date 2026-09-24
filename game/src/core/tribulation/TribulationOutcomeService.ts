@@ -201,7 +201,7 @@ export class TribulationOutcomeService {
     const isGreatDaoBreakthrough =
       facts.targetRealmId === 'foundation_establishment' && facts.grade === 'great_dao'
     if (!isGreatDaoBreakthrough) {
-      createTalentEntitlement(player, facts.targetRealmId)
+      createTalentEntitlement(player, facts.targetRealmId, () => gameManager.sessionRng())
     }
 
     // Quan Khi victory: pure announcement + path-choice navigation.
@@ -323,8 +323,6 @@ export class TribulationOutcomeService {
     if (percent <= 0) {
       return
     }
-
-    player.tribulationBonusStacks = (player.tribulationBonusStacks ?? 0) + 1
 
     const attributes = ['strength', 'dexterity', 'intelligence', 'attunement', 'vitality'] as const
 

@@ -17,7 +17,6 @@ function buildMinimalSave(playerOverrides: Record<string, unknown>): GameSave {
     cultivation: 0,
     cultivationPerSecond: 10,
     cultivationOvercharge: 0,
-    tribulationBonusStacks: 0,
     nodeFreePurchaseRecord: {},
     phaGiapCarryStacks: 0,
     phaGiapCarryRealmId: null,
