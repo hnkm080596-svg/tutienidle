@@ -17,7 +17,9 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { usePlayerStore } from '@/stores/player'
 import { MORTAL_DEFAULT_BASIC_ID, MORTAL_PRECURSOR_SKILL_IDS } from '@/core/skill/MortalPrecursors'
+import { getNodeLevel, specializationClaimingNode } from '@/core/progression/NodeSystem'
 import type { Skill } from '@/core/skill/Skill'
+import type { SkillSpecialization } from '@/core/skill/SkillSpecialization'
 
 const gameManager = useGameManager()
 const player = usePlayerStore()
@@ -127,6 +129,32 @@ function isPickedPrecursor(skillId: string): boolean {
   // is the defensive runtime default, not a creation grant.
   return (player.mortalBasicSkillId ?? MORTAL_DEFAULT_BASIC_ID) === skillId
 }
+
+// Three-path design (2026-09-25) -- capstone/variant nodes own the
+// claim on the specialization they select. A claimed-but-unowned spec
+// renders locked instead of a chip that silently no-ops (the op
+// rejects it anyway); unclaimed specs stay free-switch.
+function claimingNodeForSpec(skillId: string, specId: string) {
+  stateVersion.value
+
+  return specializationClaimingNode(gameManager.nodeRegistry, skillId, specId)
+}
+
+function specLocked(skillId: string, specId: string): boolean {
+  const node = claimingNodeForSpec(skillId, specId)
+
+  return node !== undefined && getNodeLevel(player.$state, node.id) <= 0
+}
+
+function specTooltip(skill: Skill, spec: SkillSpecialization) {
+  const node = claimingNodeForSpec(skill.id, spec.id)
+
+  if (node !== undefined && getNodeLevel(player.$state, node.id) <= 0) {
+    return { title: spec.name, description: `Mở qua node ${node.name} trong Skill Path.` }
+  }
+
+  return { title: spec.name, description: spec.description }
+}
 </script>
 
 <template>
@@ -191,7 +219,8 @@ function isPickedPrecursor(skillId: string): boolean {
         :key="spec.id"
         class="role-specializations__btn"
         :active="openedSkill.selectedSpecializationId === spec.id"
-        v-tooltip="{ title: spec.name, description: spec.description }"
+        :disabled="specLocked(openedSkill.id, spec.id)"
+        v-tooltip="specTooltip(openedSkill, spec)"
         @click="selectSkillSpecialization(openedSkill.id, spec.id)"
       >
         {{ spec.name }}

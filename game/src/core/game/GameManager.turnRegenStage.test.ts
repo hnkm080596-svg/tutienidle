@@ -169,6 +169,7 @@ describe('M8 — real stage-loop resource regen (ARCH-003)', () => {
       h.gameManager.progressionOps.selectSkillSpecialization(
         'thanh_tuyen_duong_linh',
         'duong_linh_bang_giap',
+        h.player,
       ),
     ).toBe(true)
 

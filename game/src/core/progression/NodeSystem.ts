@@ -443,6 +443,25 @@ export function nodeWayApplies(player: PlayerData, node: ProgressionNode): boole
   return node.requiredWay === undefined || node.requiredWay === player.cultivationWay
 }
 
+/**
+ * Three-path design (2026-09-25) -- capstone/variant nodes OWN the
+ * claim on the specialization they select: a spec some node authors via
+ * effect.selectsSpecialization may only be applied while that node is
+ * held. Returns the claiming node, or undefined when no node claims the
+ * pair (free-switch specs).
+ */
+export function specializationClaimingNode(
+  registry: { getAll(): ProgressionNode[] },
+  skillId: string,
+  specializationId: string,
+): ProgressionNode | undefined {
+  return registry.getAll().find(
+    (node) =>
+      node.effect.selectsSpecialization?.skillId === skillId &&
+      node.effect.selectsSpecialization.specializationId === specializationId,
+  )
+}
+
 export function aggregateNodeStatModifiers(
   registry: { getAll(): ProgressionNode[] },
 

@@ -167,4 +167,86 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
     expect(gameManager.progressionOps.purchaseNode('test_spec_node_bad', player)).toBe(true)
     expect(gameManager.skillManager.get('test_spec_skill')?.selectedSpecializationId).toBeUndefined()
   })
+
+  // Three-path design (2026-09-25) — capstone/variant nodes own the
+  // claim on the specialization they select: the free-switch chip path
+  // must hold the claiming node or the Insight cost / realm prereq /
+  // excludesNode mutex are all bypassed. Unclaimed specs stay free.
+  describe('selectSkillSpecialization node-claim gate', () => {
+    const claimNode = (nodeId: string, specializationId: string): ProgressionNode => ({
+      id: nodeId,
+      name: `Claim ${specializationId}`,
+      type: 'major',
+      insightCost: 3,
+      effect: {
+        unlocksSkillIds: ['test_spec_skill'],
+        selectsSpecialization: { skillId: 'test_spec_skill', specializationId },
+      },
+    })
+
+    it('spec có claiming node nhưng chưa mua node → free-switch bị từ chối', () => {
+      const gameManager = new GameManager()
+
+      gameManager.catalogOps.registerSkillTemplates([specSkillTemplate()])
+      gameManager.catalogOps.registerProgressionNodes([
+        claimNode('claim_hoa_long', 'hoa_long'),
+        specSkillCore,
+      ])
+      gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+
+      const player = createDefaultPlayer()
+
+      player.skillInsight = 5
+      gameManager.progressionOps.learnSkill('test_spec_skill', player)
+
+      expect(
+        gameManager.progressionOps.selectSkillSpecialization('test_spec_skill', 'hoa_long', player),
+      ).toBe(false)
+      expect(gameManager.skillManager.get('test_spec_skill')?.selectedSpecializationId).toBeUndefined()
+    })
+
+    it('sở hữu claiming node → chọn spec khác vẫn bị từ chối nếu node của spec đó chưa mua', () => {
+      const gameManager = new GameManager()
+
+      gameManager.catalogOps.registerSkillTemplates([specSkillTemplate()])
+      gameManager.catalogOps.registerProgressionNodes([
+        claimNode('claim_hoa_long', 'hoa_long'),
+        claimNode('claim_hoa_phung', 'hoa_phung'),
+        specSkillCore,
+      ])
+      gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+
+      const player = createDefaultPlayer()
+
+      player.skillInsight = 10
+
+      // Mua claim hoa_long: purchase tự set spec hoa_long (purchase path
+      // IS the authorization).
+      expect(gameManager.progressionOps.purchaseNode('claim_hoa_long', player)).toBe(true)
+      expect(gameManager.skillManager.get('test_spec_skill')?.selectedSpecializationId).toBe('hoa_long')
+
+      // Chip switch sang hoa_phung khi chưa mua node của nó → reject.
+      expect(
+        gameManager.progressionOps.selectSkillSpecialization('test_spec_skill', 'hoa_phung', player),
+      ).toBe(false)
+      expect(gameManager.skillManager.get('test_spec_skill')?.selectedSpecializationId).toBe('hoa_long')
+    })
+
+    it('spec không node nào claim → free-switch vẫn hoạt động', () => {
+      const gameManager = new GameManager()
+
+      gameManager.catalogOps.registerSkillTemplates([specSkillTemplate()])
+      gameManager.catalogOps.registerProgressionNodes([specSkillCore])
+      gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+
+      const player = createDefaultPlayer()
+
+      gameManager.progressionOps.learnSkill('test_spec_skill', player)
+
+      expect(
+        gameManager.progressionOps.selectSkillSpecialization('test_spec_skill', 'hoa_phung', player),
+      ).toBe(true)
+      expect(gameManager.skillManager.get('test_spec_skill')?.selectedSpecializationId).toBe('hoa_phung')
+    })
+  })
 })

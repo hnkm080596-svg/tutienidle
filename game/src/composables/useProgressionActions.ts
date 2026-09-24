@@ -40,7 +40,7 @@ export function useProgressionActions() {
     // Core Loop Foundation checklist (Muc SKILL) - "behavior-changing
     // node".
     selectSkillSpecialization: (skillId: string, specializationId: string) =>
-      withBump(gameManager.progressionOps.selectSkillSpecialization(skillId, specializationId)),
+      withBump(gameManager.progressionOps.selectSkillSpecialization(skillId, specializationId, player.$state)),
 
     // Node Tree - GameManager method (unlocksSkillIds can skillTemplates).
     purchaseNode: (nodeId: string) => withBump(gameManager.progressionOps.purchaseNode(nodeId, player.$state)),

@@ -14,6 +14,7 @@ import {
   previewNodeRespec as previewNodeRespecSystem,
   respecNodeTree as respecNodeTreeSystem,
   revokeNodeOwnership,
+  specializationClaimingNode,
   switchRoute as switchRouteSystem,
   upgradeNode as upgradeNodeSystem,
   grantSkillCore,
@@ -870,7 +871,17 @@ export class GameManagerProgressionOps {
   }
 
   // Core Loop Foundation checklist (Muc SKILL) - "behavior-changing node".
-  selectSkillSpecialization(skillId: string, specializationId: string): boolean {
+  // Three-path design (2026-09-25): capstone/variant nodes OWN the claim
+  // on the specialization they select - the free-switch chip path must
+  // hold the claiming node or the 3-Insight cost / realm prereq /
+  // excludesNode mutex are all bypassed. Unclaimed specs switch freely.
+  selectSkillSpecialization(skillId: string, specializationId: string, player: PlayerData): boolean {
+    const claimingNode = specializationClaimingNode(this.deps.nodeRegistry, skillId, specializationId)
+
+    if (claimingNode !== undefined && getNodeLevelSystem(player, claimingNode.id) <= 0) {
+      return false
+    }
+
     return this.deps.skillSystem.selectSpecialization(skillId, specializationId)
   }
 }

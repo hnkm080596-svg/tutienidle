@@ -287,7 +287,10 @@ export class CombatAnimationRuntime {
         .filter((target) => !targetIds.includes(target.id))
         .map((target) => target.id),
       hitCount: 1,
-      presetId: declared.action?.skill?.presetId,
+      // The RESOLVED payload owns presentation: empowered/composite/queued
+      // swaps keep action.skill = the root def while resolvedSkill is what
+      // actually fires - the root authors no preset for those lanes.
+      presetId: declared.execution?.resolvedSkill?.presetId ?? declared.action?.skill?.presetId,
     })
 
     // Kiem Tu Reimagined Task 6 — each provider-returned extra impact
