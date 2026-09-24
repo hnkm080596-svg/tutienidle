@@ -1,11 +1,3 @@
-# Unified ledger schema and validation contract
-
-Status: CANONICAL — installed by the internal fixed-point QA protocol adoption. Sole QA authority: `README.md` in this directory.
-The JSON block below is the complete structural schema; the extracted verbatim copy lives at `game/scripts/qa/ledger.schema.json` and is enforced by the runner (`game/scripts/qa/validate.mjs` invoked via `qa:internal`). Schema acceptance only establishes shape; the semantic checks below are mandatory and cannot be replaced by JSON validation.
-
-## Structural schema
-
-```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:tutienidle:internal-qa:ledger:1",
@@ -255,61 +247,3 @@ The JSON block below is the complete structural schema; the extracted verbatim c
     }
   }
 }
-```
-
-## Machine checks beyond shape
-
-The installed validator must fail closed on each condition below. It must print the offending record ID and exact reason; exit success only when both structural and requested semantic validation succeed. Default validation never emits a fixed-point verdict.
-
-Mechanical checks verify shape, references, hashes, chronology, state transitions and required attestations. They cannot determine whether a causal explanation is true or a reviewer reasoned well. Those judgments require the named independent reviewer and inspectable evidence; the runner verifies their presence/freshness and the coordinator challenges their content. Do not market schema validation or a hash chain as proof of honest QA. Unknown corpus severity is permitted only while recovering historical metadata and is never a measured severity result.
-
-1. Unique IDs within and across reference namespaces; every ID/reference resolves; no cycles in evidence prerequisites or duplicate-findings chains. Taxonomy IDs resolve to the canonical taxonomy. Referenced paths are contained, exist, and have matching recorded hashes; external citations are metadata, not commands to execute.
-2. All time fields are valid UTC instants; start <= finish/seal; chronology and sequential predecessor IDs are consistent. Report counters derive from actual evidence. Event sequence is contiguous, first previous hash null, subsequent links valid. Hash-chain validity detects accidental alteration, not a malicious author with full write access.
-3. Recompute state manifests before/after each gate. Staged/working/untracked identities cannot be conflated. Reject unknown excluded source files, stale runtime server identity, unrecorded environment change and unpinned aggregate parents.
-4. Current evidence must match required product/contract/attack/environment dependencies. Invalidation is transitive. Historical/INFERRED evidence cannot satisfy an EXECUTED requirement. A source proof needs a source artifact, not a fabricated command exit status. Executed gate evidence needs actual command result and log.
-5. CLOSED actionable findings require root cause/class, original-failure proof, implemented repair, sibling-search evidence and resolved sibling graph, regression kill proof or an explicit alternative rationale, current affected verification and a closure reviewer different from the fixer. Cyclic sibling links use one atomic closure event for the strongly connected group: all members must meet local closure conditions and outgoing dependencies must already be closed. Reject a CLOSED finding whose sibling is open outside that validated closure transaction.
-6. Actionability is derived from adjudication, not a free bypass flag: every proven REAL_DEFECT/SPEC_DEFECT/TEST_DEFECT/material COVERAGE_GAP/DOCUMENTATION_DEFECT is actionable. Setting actionable=false requires classification FALSE_POSITIVE or NON_ACTIONABLE and evidence-backed REJECTED_WITH_PROOF disposition. A human exception leaves actionable=true. DUPLICATE_LINKED inherits its primary's unresolved decision state. HUMAN_EXCEPTION requires explicit human instruction scope/reason/expiry; automatic model judgment is never a waiver.
-7. Each active invariant has every coverage-surface cell, including justified NOT_APPLICABLE. Required SATISFIED needs current sufficient evidence of the right kind and no material limitation. REQUIRED + NOT_APPLICABLE status is invalid. Missing coverage rows count as MISSING, never silently reduce the denominator.
-8. Required domain and cross-domain inventory is complete; census suspicious/live legacy entries have adjudicated dispositions. A reviewer reading only the diff cannot satisfy aggregate INDEPENDENT_REVIEW. Static-only runtime correctness is marked weakProtection.
-9. Review identity/context and material bundle match assignments. A clean-independent role requires no prior findings visible and no material access limitation; seal precedes reconciliation disclosure. Reviewer cannot be its own fixer/closure certifier. Sequential reviews begin after predecessor resolution/verification. Self-review records cannot count toward independent quota.
-10. Clean A/B reference entries in cycles, each containing all required sequential phase review IDs and coverage evidence, on identical candidate/contract/model/environment identity. New findings/fixes invalidate them, even if low severity. Novel challenges resolve to attacks and have actual executable/source-proof results, not merely a list of ideas. Per-execution seeds/inputs are retained in hashed evidence artifacts, not environmentId. A different seed alone does not establish novelty.
-11. High-risk invariants have valid representative mutations caught by the intended detector. SURVIVED/NOT_RUN cannot satisfy; INVALID/EQUIVALENT do not count as kills. Original/candidate hashes match after mutation job. Every historically meaningful golden case has a detected result or remains an explicit benchmark gap.
-12. Full final command matrix passed with no missing/failed/flaky required evidence, after clean rounds and final mutation check. All skips are accounted for against applicability, not ignored because exit=0. No open actionable finding, exception, critical access gap or disputed oracle. Independent terminal review signs the same state. Only now may the separate `decide` command return QA_FIXED_POINT_REACHED.
-13. Every meaningful incident has a linked lesson record; unresolved material missing protection is a coverage gap. PROMOTED lessons meet the learning protocol's kill/control/sibling/independent qualification predicate and have a policy hash/effective run. A policy relaxation without human authority is rejected. All matched promoted lessons are present in consumedLessonIds and coverage. Cross-run references use `runId:recordId`; lesson revisions are uniquely addressed `lessonId@version`, avoiding duplicate-ID ambiguity.
-14. (v2) Prevention records: `run.briefIds` resolve to briefs; a brief declaring `IMPLEMENTATION_READY` has empty `unresolvedAssumptions` and no `STALE`/`NEEDS_DISCOVERY` routing; assignment history is chronological and continuous (`history[i-1].to == history[i].from`); a `FINISHED` assignment carries `releaseEvidence` (a result message is not a release); consumptions resolve to `lessonId@version` and a known brief; a `QUALIFIED` guidance facet has `authorityRefs`, `qualificationEvidence` and independent `qualifiedBy`; `causalPrevention` beyond `NOT_ESTABLISHED` carries supporting evidence; a PROMOTED lesson may not carry a non-QUALIFIED facet (facets publish independently of detection promotion).
-
-## State-file ownership and race behavior
-
-The primary coordinator is the sole ledger writer. Workers return immutable result files; they never edit shared state. A coordinator event append uses compare-and-swap against expected event sequence/hash, writes a temporary record then atomically publishes it on the same filesystem. A lease identifies coordinator instance/run; a second coordinator cannot acquire an active lease. Lease expiry requires explicit recovery and state revalidation, not automatic duplicate ownership.
-
-Payload hashes use raw bytes. Object identity/event hashing uses UTF-8 JSON with recursively sorted object keys, array order preserved, no insignificant whitespace; omit only the object's own eventHash during event hashing. Manifest paths use forward slashes. Reject absolute/parent traversal paths in worker payload destinations; normalize then check containment before reads/writes. Never interpolate worker content into shell commands.
-
-Crash recovery replays the journal, verifies artifacts, compares current candidate identity, and resumes the first unmet prerequisite. The assignment tuple for a requestId is immutable. Multiple ACK/NEED_CONTEXT/FINDING/SEALED_RESULT messages may belong to that request, each with a unique message.id. Duplicate delivery is idempotent by message.id+payloadHash; the same message.id with different content is an integrity error. Exactly one terminal SEALED_RESULT is accepted per requestId: an identical terminal payload is a harmless replay, a different terminal payload requires a new linked request. Additional context that changes bundleHash also creates a new request with parentRequestId. Stale worker results remain historical evidence and cannot advance current phase.
-
-## Human-readable views
-
-Generate reports from the ledger, not an independently maintained second status document:
-
-- **Run:** exact candidate, dependencies, scope, access/tool limits, current phase and outcome.
-- **Invariants:** ID / owner / rule / transitions / oracle / required evidence / coverage.
-- **Findings:** ID / severity + class / evidence strength + reachability / root class / repair / pins / sibling closure / status.
-- **Coverage:** invariant x surface; required, satisfied, missing, stale and N/A counts separately; no single green percentage hides an unprotected critical invariant.
-- **Chronology:** one block per sequential pass: reviewed state, reviewed after previous fixes YES/NO, findings, repairs, verification IDs, reviewer context.
-- **Convergence:** Clean A, novel synthesis/results, Clean B, mutation audit, final full verification and terminal predicate. Unfulfilled clauses remain explicit.
-
-An example invariant's semantic content is `I-RESTORE-ATOMIC`: canonical owner is the current GameManager save/restore boundary; invalid payloads leave live player, bags, managers, pending operations, emitted events and persistence state unchanged according to the maintained failure contract. Its inverse is reset/new-session replacement; migration policy is current-version validation plus explicit unsupported-version rejection. Use the actual current symbols and call paths from census when populating a run, never this example as a substitute for source inspection.
-
-## Schema version 2 (prevention upgrade, 2026-09-24)
-
-`ledger.schema.json` is now `urn:tutienidle:internal-qa:ledger:2`. The frozen v1 schema is preserved verbatim at `game/scripts/qa/ledger.schema.v1.json` — historical v1 ledgers validate and replay against v1 unchanged; `validate` selects the schema by `ledger.schemaVersion`. Version 1 -> 2 migration is **explicit** (`qa:internal migrate --run <id>`) and is permitted only for a run that RESUMES; it appends a `MIGRATION` event, initializes empty `briefs`/`assignments`/`consumptions`, sets `run.capacityLimit` (default 5) and `run.requiredReadiness = false` (a v1 run never met v2 obligations — no retroactive claim), and leaves existing lessons `guidance: null`. Nothing fabricates evidence during migration.
-
-New record families (full shape in the canonical JSON `$defs`):
-
-- `brief` — the construction brief: task identity, `planningBaseline` state, `policyHash`, bound `requirementRefs`/`invariantIds`/`dependencyRefs`/`sourceDependencyHashes`, `lessonRouting` records, ordered `slices`, `firstProofObligations` (oracle + `BEFORE_WRITE`/`BEFORE_PROPAGATION` stage + admitted slice), `unresolvedAssumptions`, readiness (`DRAFT`/`IMPLEMENTATION_READY`/`DISCOVERY_REQUIRED`/`SCOPE_DECISION_REQUIRED`/`STALE`), `preflightEvidenceIds`, `deviations`, `consumedBy`, `checkpoints`, `finalConformanceIds`.
-- `assignment` — a slot-reservation record for dispatched agents: capacity scope, immutable `inputBundleHash`, readiness (`READY`/`WAITING_INPUT`/`BLOCKED`), status machine `QUEUED/READY/RESERVED/RUNNING/RESULT_RECEIVED/RELEASE_PENDING/FINISHED/BLOCKED/CANCELLED`, `reservedAt`, `observedRuntimeId`, `releaseEvidence`, `timeoutState`, chronological `history`.
-- `consumption` — proof a published guidance facet was consumed on an ordinary task: `lessonRef`, `briefId`, `policyHash`, `actionTaken` (`APPLIED`/`REJECTED_WITH_PROOF`/`STALE_REJECTED`/`DEVIATION_RECORDED`), `observedOutcome` (`EARLY_CORRECTION`/`SEAM_DEFECT_FOUND`/`APPLIED_NO_DEFECT`/`ESCAPE_OBSERVED`/`NONE`), evidence ids.
-- `guidanceFacet` on a lesson — the prevention payload (see `learning.md`); independently qualified and published into `learning/policies/<hash>.json` addressed by content hash.
-- `checkpoint` inside a brief — baseline vs observed state, `invalidatedItems`, `nextSlice`, reason; state drift marks the brief STALE.
-- `run` gains `briefIds`, `capacityLimit`, `requiredReadiness`; `event.kind` gains `MIGRATION` and `SCHEDULE`.
-
-A v2 run with `requiredReadiness` cannot reach `QA_FIXED_POINT_REACHED` while a declared brief never reached `IMPLEMENTATION_READY` or lacks final conformance evidence (decision clause `C9-readiness`).

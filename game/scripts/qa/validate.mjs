@@ -8,14 +8,16 @@ import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import { EXECUTED_KINDS, ACTIONABLE_CLASSES, TERMINAL_FINDING_STATUSES, fileHashHex, objectHash, buildManifest } from "./state.mjs";
 
-export function loadSchema(scriptDir) {
-  return JSON.parse(fs.readFileSync(path.join(scriptDir, "ledger.schema.json"), "utf8"));
+export function loadSchema(scriptDir, version = null) {
+  // v1 ledgers replay under the frozen v1 schema; v2 is canonical.
+  const file = version === 1 ? "ledger.schema.v1.json" : "ledger.schema.json";
+  return JSON.parse(fs.readFileSync(path.join(scriptDir, file), "utf8"));
 }
 
 export function validateStructure(ledger, scriptDir = path.dirname(fileURLToPath(import.meta.url))) {
   const ajv = new Ajv2020({ allErrors: true, strict: false });
   addFormats(ajv);
-  const validate = ajv.compile(loadSchema(scriptDir));
+  const validate = ajv.compile(loadSchema(scriptDir, ledger.schemaVersion === 1 ? 1 : null));
   validate(ledger);
   return (validate.errors ?? []).map((e) => ({
     check: "SCHEMA",
@@ -77,6 +79,7 @@ export function validateSemantics(ledger, { runDir = null, checkState = null } =
     attack: idSet(ledger.attacks), review: idSet(ledger.reviews), cycle: idSet(ledger.cycles),
     mutation: idSet(ledger.mutations), corpus: idSet(ledger.corpus), lesson: idSet(ledger.lessons),
     message: idSet(ledger.messages), request: new Set(ledger.messages.map((m) => m.requestId)),
+    consumption: idSet(ledger.consumptions ?? []), brief: idSet(ledger.briefs ?? []), assignment: idSet(ledger.assignments ?? []),
   };
   const allIds = new Map();
   for (const [kind, set] of Object.entries(ns)) {
@@ -462,6 +465,69 @@ export function validateSemantics(ledger, { runDir = null, checkState = null } =
   const promotedIds = new Set(ledger.lessons.filter((l) => l.status === "PROMOTED").map((l) => `${l.id}@${l.version}`));
   for (const cid of ledger.run.consumedLessonIds) {
     if (!promotedIds.has(cid)) f("MC13", cid, "run consumes lesson not PROMOTED in policy");
+  }
+
+  // ---- MC14 prevention records (schemaVersion 2): briefs, assignments,
+  // consumptions, guidance facets - references resolve + transitions legal.
+  if (ledger.schemaVersion === 2 || ledger.briefs || ledger.assignments) {
+    const briefIds = idSet(ledger.briefs ?? []);
+    for (const bid of ledger.run.briefIds ?? []) {
+      if (!briefIds.has(bid)) f("MC14", bid, `run.briefIds references missing brief`);
+    }
+    for (const b of ledger.briefs ?? []) {
+      b.preflightEvidenceIds.forEach((i) => req("evidence", i, b.id));
+      b.finalConformanceIds.forEach((i) => req("evidence", i, b.id));
+      if (b.readiness === "IMPLEMENTATION_READY" && b.unresolvedAssumptions.length > 0) {
+        f("MC14", b.id, "IMPLEMENTATION_READY with unresolvedAssumptions non-empty");
+      }
+      if (b.readiness === "IMPLEMENTATION_READY" && b.lessonRouting.some((r) => r.decision === "NEEDS_DISCOVERY" || r.decision === "STALE")) {
+        f("MC14", b.id, "IMPLEMENTATION_READY with unresolved STALE/NEEDS_DISCOVERY routing");
+      }
+      for (const cp of b.checkpoints) {
+        t(cp.at, `${b.id}@cp`);
+      }
+    }
+    const asgIds = idSet(ledger.assignments ?? []);
+    for (const a of ledger.assignments ?? []) {
+      if (a.parentId != null && !asgIds.has(a.parentId) && !ledger.messages.some((m) => m.requestId === a.parentId)) {
+        f("MC14", a.id, `parentId ${a.parentId} resolves to no assignment or request`);
+      }
+      for (let i = 0; i < a.history.length; i++) {
+        t(a.history[i].at, `${a.id}.history[${i}]`);
+        if (i > 0 && a.history[i - 1].to !== a.history[i].from) {
+          f("MC14", a.id, `assignment history discontinuity at ${i}: ${a.history[i - 1].to} -> ${a.history[i].from}`);
+        }
+      }
+      if (a.status === "FINISHED" && !a.releaseEvidence) {
+        f("MC14", a.id, "FINISHED without releaseEvidence - a result message is not slot release");
+      }
+    }
+    const lessonRefs = new Set((ledger.lessons ?? []).map((l) => `${l.id}@${l.version}`));
+    for (const c of ledger.consumptions ?? []) {
+      t(c.at, c.id);
+      c.evidenceIds.forEach((i) => req("evidence", i, c.id));
+      if (!lessonRefs.has(c.lessonRef)) f("MC14", c.id, `consumption references unknown lesson ${c.lessonRef}`);
+      if (c.briefId && !briefIds.has(c.briefId)) f("MC14", c.id, `consumption references missing brief ${c.briefId}`);
+    }
+    for (const l of ledger.lessons ?? []) {
+      if (!l.guidance) continue;
+      const g = l.guidance;
+      g.qualificationEvidence.forEach((i) => req("evidence", i, `${l.id}.guidance`));
+      g.adoptionEvidence.forEach((i) => {
+        if (!ns.consumption?.has(i) && !ns.evidence.has(i)) f("MC14", `${l.id}.guidance`, `adoptionEvidence ${i} resolves to no consumption/evidence record`);
+      });
+      if (g.status === "QUALIFIED") {
+        if (!g.authorityRefs.length) f("MC14", l.id, "QUALIFIED guidance without authorityRefs");
+        if (!g.qualifiedBy.length) f("MC14", l.id, "QUALIFIED guidance without independent qualifiedBy");
+        if (!g.qualificationEvidence.length) f("MC14", l.id, "QUALIFIED guidance without qualificationEvidence");
+      }
+      if (g.causalPrevention !== "NOT_ESTABLISHED" && g.qualificationEvidence.length === 0 && g.adoptionEvidence.length === 0) {
+        f("MC14", l.id, `causalPrevention ${g.causalPrevention} with no supporting evidence`);
+      }
+      if (l.status === "PROMOTED" && g.status !== "QUALIFIED") {
+        f("MC14", l.id, `PROMOTED lesson whose guidance facet is ${g.status} - facets publish independently`);
+      }
+    }
   }
 
   return fails;

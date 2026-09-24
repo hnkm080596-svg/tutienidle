@@ -4,7 +4,8 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION_V1 = 1;
 export const TERMINAL_FINDING_STATUSES = new Set(["CLOSED", "REJECTED_WITH_PROOF", "DUPLICATE_LINKED", "HUMAN_EXCEPTION"]);
 export const EXECUTED_KINDS = new Set(["EXECUTED_RUNTIME", "EXECUTED_INTEGRATION", "EXECUTED_PROPERTY", "EXECUTED_MUTATION", "EXECUTED_UNIT_STRUCTURAL"]);
 export const ACTIONABLE_CLASSES = new Set(["REAL_DEFECT", "SPEC_DEFECT", "TEST_DEFECT", "COVERAGE_GAP", "DOCUMENTATION_DEFECT"]);
@@ -121,12 +122,18 @@ export function newLedger(request) {
       aggregateParents: request.aggregateParents ?? [],
       requiredDomains: request.requiredDomains ?? [],
       exclusions: request.exclusions ?? [],
+      briefIds: request.briefIds ?? [],
+      capacityLimit: request.capacityLimit ?? 5,
+      requiredReadiness: request.requiredReadiness ?? true,
       phase: "INTAKE",
       cleanRoundA: null,
       cleanRoundB: null,
       finalEvidenceIds: [],
       outcome: null,
     },
+    briefs: [],
+    assignments: [],
+    consumptions: [],
     invariants: [],
     census: [],
     findings: [],

@@ -184,6 +184,8 @@ Reviewer scheduling is governed by the just-in-time slot policy in `agent-instru
 
 The runner `game/scripts/qa/cli.mjs` (`npm run qa:internal`) executes this orchestration contract: `init --request <file>` → `snapshot --run <id>` → `record --run <id> --input <file>` → `validate --run <id>` → `decide --run <id>` → `render --run <id>`; `qualify` runs the orchestrator attack suite + golden-bug benchmark.
 
+**Prevention upgrade (schema v2, 2026-09-24):** lessons may carry a `guidance` facet — binding construction guidance issued BEFORE implementation, alongside (never weakening) detection protection. Intake adds `prepare` (deterministic lesson routing + brief draft), `preflight` (brief readiness), `checkpoint` (drift → STALE + revalidate), `learn` (facet qualify/publish with anti-self-approval + atomic torn-safe publication), `schedule` (5-slot assignment admission/release — result ≠ release, timeout ≠ release), `migrate` (explicit v1→v2 for resumed runs). A `requiredReadiness` run cannot reach fixed point while its brief obligation is unmet (clause C9). See `ledger-schema.md` §"Schema version 2", `learning.md` §"Guidance facets", `agent-instructions.md` §B step 5/6 + §G.1, and `qualification.md` PU-01..32.
+
 ```text
 INTAKE -> SNAPSHOT -> CONTRACT_AND_CENSUS
   validate scope, access, tool capability, state/contract/attack identities

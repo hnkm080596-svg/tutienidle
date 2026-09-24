@@ -206,8 +206,25 @@ export function mkHappyLedger(dir, product) {
     qualifiedBy: ["REV-TERM"], capabilityDelta: "rejection no-mutation required",
     status: "PROMOTED", policyVersion: objectHash("policy-v1"), effectiveFromRun: "test-run",
     recurrenceFindingIds: [], preventionEvidenceIds: ["EV-UNIT-1"],
+    guidance: null,
   });
   ledger.run.consumedLessonIds = ["L-TEST@1"];
+
+  // schema-v2 prevention records: a conforming construction brief makes the
+  // happy run satisfy C9-readiness (requiredReadiness defaults true).
+  ledger.briefs.push({
+    id: "BRIEF-TEST", taskId: "test-task", revision: 1,
+    planningBaseline: { ...state }, policyHash: objectHash("policy-v1"),
+    requirementRefs: [], invariantIds: ["I-BAG-CONSERVATION"], dependencyRefs: [],
+    sourceDependencyHashes: [], expectedChangeSet: ["src/inventory.mjs"],
+    lessonRouting: [{ lessonRef: "L-TEST@1", decision: "APPLY", reason: "applicability matched" }],
+    slices: ["inventory"],
+    firstProofObligations: [{ oracle: "post-state equality", stage: "BEFORE_PROPAGATION", admittedSlice: "inventory", evidenceIds: ["EV-UNIT-1"] }],
+    unresolvedAssumptions: [], readiness: "IMPLEMENTATION_READY",
+    preflightEvidenceIds: ["EV-UNIT-1"], deviations: [], consumedBy: [], checkpoints: [],
+    finalConformanceIds: ["EV-FINAL"],
+  });
+  ledger.run.briefIds = ["BRIEF-TEST"];
 
   materializeEvidence(dir, ledger);
   return { ledger, state };

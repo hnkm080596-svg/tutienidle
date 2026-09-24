@@ -37,6 +37,8 @@ Every meaningful failure must enter `game/docs/qa/protocol/learning.md`: inciden
 
 Only the protocol's terminal predicate permits QA_FIXED_POINT_REACHED. Required unavailable evidence is QA_UNVERIFIED; known unresolved defects are QA_FINDINGS_OPEN; out-of-authority repairs are QA_BLOCKED_SCOPE; human-accepted deviations are QA_ACCEPTED_WITH_EXCEPTIONS. None of those outcomes authorize commit/merge/push/deploy.
 
+Prevention upgrade (ledger schema v2): lessons may additionally carry a `guidance` facet — binding construction guidance issued BEFORE implementation. Intake runs `qa:internal prepare` (deterministic lesson routing + construction brief draft) and `preflight` (readiness verdict); a run with `requiredReadiness` cannot reach fixed point while its brief obligation is unmet (clause C9). Agent dispatch follows the just-in-time 5-slot law (`agent-instructions.md` §G): assignment records in the ledger are the reservation authority — no standing watchers, a result message is not a release, timeout is not a release. Guidance facets qualify only with an independent verifier and publish atomically into `learning/policies/`; no self-approval, no torn publication, no fabricated prevention claims (`EFFICIENCY_NOT_YET_ESTABLISHED` until a comparative pilot exists).
+
 P3/P13/P14/P18 remain technical evidence requirements. P4 operators and P5 chronological responsibilities are scheduled inside this protocol, not separate competing approval systems. Generic skill round caps/minor deferral rules cannot override this completion contract. Quick checks are repair-loop operations, never a shortcut to aggregate completion.
 
 ---

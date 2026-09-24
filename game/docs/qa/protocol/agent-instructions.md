@@ -37,8 +37,8 @@ You own this mission from implementation through internal QA convergence.
 2. Inspect current checkout and pending PR dependencies. Resolve the actual intended base/head; never assume origin/master is the correct base for an integration mission. Materialize the candidate in assigned isolation; do not merge into a shared branch for testing.
 3. Freeze exact product/contract/attack/environment identity. Verify accessible source, production entry paths and tools. An unavailable file/tool is a coverage gap, not a clean result.
 4. Reconstruct invariants and all real producers/consumers, including unchanged callers, saves, resets, UI and simulations. Challenge the contract and plan before trusting implementation. Derive inverse and rejection-atomicity attacks.
-5. Load promoted learning policy and route matching lessons by semantic operation and owner/consumer graph. Add their pins and attacks to coverage; do not merely quote the learning log.
-6. Implement or diagnose only the authorized coherent responsibility. Simplify only when behavior and detection strength are preserved. Add tests at real production seams; demonstrate intended original failure where practical.
+5. Load promoted learning policy and route matching lessons by semantic operation and owner/consumer graph (`qa:internal prepare`). Write the construction brief for the task and pass `qa:internal preflight`; a run that declared `requiredReadiness` cannot claim fixed-point while its brief obligation is unmet (clause C9). Add their pins and attacks to coverage; do not merely quote the learning log. APPLY bindings are construction obligations, not decoration.
+6. Implement or diagnose only the authorized coherent responsibility. Satisfy each firstProofObligation at its declared stage (BEFORE_WRITE before the first production write, BEFORE_PROPAGATION before the next slice/push). Record a checkpoint (`qa:internal checkpoint`) when product/contract identity drifts under you; a drifted brief is STALE until revalidated. Simplify only when behavior and detection strength are preserved. Add tests at real production seams; demonstrate intended original failure where practical.
 7. Execute required deterministic, OCR, runtime/visual and adversarial operations. Test quality is part of the attack: examine fixtures, expected values, observed owner state, mock boundaries and skipped cases.
 8. Run the protocol's sequential correctness, authority and integration review responsibilities over resulting states. Make fresh internal reviewer assignments for independent cycles; own the synthesis and investigate every claim yourself. Do not expose earlier findings before their first analyses are sealed.
 9. For any real defect, record the invariant/root class, search siblings repository-wide, repair within scope, add/qualify protection, invalidate affected evidence and restart required gates. Do not close a class because one line changed.
@@ -147,3 +147,11 @@ Binding scheduling law (user-ratified 2026-09-24). The platform hard cap is **5 
    | Final synthesis | coordinator alone; all reviewers ended |
 
 6. **No rule above weakens QA.** Only the *transport* changes: from agents-holding-slots to a state queue. Cells that require sealed independence evidence are unchanged — a missing reviewer still records `QA_UNVERIFIED`/`INDEPENDENCE` gap, never a silent waiver.
+
+### G.1 Assignment records (ledger-state queue)
+
+Every dispatch is a ledger `assignment` record written through `qa:internal schedule` — the ledger is the reservation authority (there is no platform admission API; discipline + this record IS the mechanism). States: `QUEUED/READY -> RESERVED -> RUNNING -> RESULT_RECEIVED -> RELEASE_PENDING -> FINISHED` (`BLOCKED`/`CANCELLED` any time).
+
+- Admission is atomic under the coordinator lease: count ledger-active + known-external agents against `run.capacityLimit` (default 5). Overflow -> `QUEUED` (no slot held). Waiting/blocked tasks stay `QUEUED`/`BLOCKED` records — never a live agent.
+- A result message (`SEALED_RESULT`) only reaches `RESULT_RECEIVED`; release requires lifecycle verification (observed terminal `terminated`/`finished`/`exited`) -> `FINISHED` with `releaseEvidence`. Timeout/expiry alone revokes authority (`RELEASE_PENDING`) but NEVER frees the slot — the slot frees only on verified exit.
+- A suspended/resumed agent retains its reservation; its context is contaminated for Clean-B independence (same context = self-review).
