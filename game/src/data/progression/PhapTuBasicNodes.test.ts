@@ -20,6 +20,10 @@ const BASIC_CAPSTONE_IDS = PHAP_TU_NODES.filter(
 
 const ELEMENTS = ['fire', 'water', 'wood', 'metal', 'earth'] as const
 
+const ELEMENT_BY_CAPSTONE_PREFIX = new Map(
+  BASIC_CAPSTONE_IDS.map((id) => [id, id.split('_basic_')[0]]),
+)
+
 const BASIC_LANE_IDS = PHAP_TU_NODES.filter((n) =>
   [
     'hoa_sac_nhiet', 'hoa_diem_chuan', 'hoa_an_sau', 'hoa_nhiet_keo', 'hoa_sac_huyet',
@@ -97,6 +101,12 @@ describe('PhapTu basic lane — ruled contract', () => {
       expect(mutex, nodeId).toBeDefined()
       if (mutex?.kind === 'excludesNode') {
         expect(BASIC_CAPSTONE_IDS).toContain(mutex.nodeId)
+        // Same-element mutex only: a fire capstone must pair with the
+        // other fire capstone, never a different element's variant.
+        const element = nodeId.split('_basic_')[0]
+        expect(mutex.nodeId.startsWith(`${element}_basic_`), `${nodeId} -> ${mutex.nodeId}`).toBe(true)
+        expect(mutex.nodeId, nodeId).not.toBe(nodeId)
+        expect(ELEMENT_BY_CAPSTONE_PREFIX.get(nodeId), nodeId).toBe(element)
       }
     }
   })
