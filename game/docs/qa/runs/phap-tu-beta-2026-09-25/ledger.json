@@ -9,9 +9,9 @@
   "checkout": "/home/ubuntu/repos/tutienidle/.agent-worktrees/phap-tu-basic",
   "branch": "devin/1790260800-phap-tu-basic",
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
-  "head": "f85c40a00a5fb400022b5ae02634bc43b4370a6a",
+  "head": "05367f86cbaff3ed25b2c61da43d235e3e112e2d",
   "state": {
-   "productStateId": "7cf5fc63eba97242075dae9f07fafca590217d510d47f72384cb9c37c9295e8f",
+   "productStateId": "621131c599464816c7c1943a7b4d875840e411d906d41088ac9ed086691672ee",
    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -2945,14 +2945,16 @@
    "verificationEvidenceIds": [
     "EV-AUT-A-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "7fe39d11",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-AUT-02",
@@ -3012,14 +3014,16 @@
    "verificationEvidenceIds": [
     "EV-AUT-A-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "7fe39d11",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-AUT-03",
@@ -3048,7 +3052,7 @@
     "EV-AUT-A-FIX"
    ],
    "counterexample": "no requiredWay -> both spell ways aggregate granted level",
-   "expected": "Thế awakening sealed to spell_pathway",
+   "expected": "Th\u1ebf awakening sealed to spell_pathway",
    "actual": "no requiredWay -> both spell ways aggregate granted level",
    "rootCause": "reward node carried no requiredWay",
    "rootClass": "missing-gate",
@@ -3079,14 +3083,16 @@
    "verificationEvidenceIds": [
     "EV-AUT-A-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "7fe39d11",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-AUT-04",
@@ -3146,14 +3152,16 @@
    "verificationEvidenceIds": [
     "EV-AUT-A-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "7fe39d11",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-AUT-05",
@@ -3213,14 +3221,16 @@
    "verificationEvidenceIds": [
     "EV-AUT-A-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "7fe39d11",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-AUT-06",
@@ -3405,14 +3415,16 @@
    "verificationEvidenceIds": [
     "EV-AUT-A-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "7fe39d11",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-COR-A2",
@@ -3475,14 +3487,16 @@
    "verificationEvidenceIds": [
     "EV-AUT-A-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "e3388fc5",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-COR-A3",
@@ -3545,14 +3559,16 @@
    "verificationEvidenceIds": [
     "EV-AUT-A-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "7fe39d11",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-COR-A4",
@@ -3685,14 +3701,16 @@
    "verificationEvidenceIds": [
     "EV-AUT-A-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "7fe39d11",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-INT-A2",
@@ -3755,14 +3773,16 @@
    "verificationEvidenceIds": [
     "EV-AUT-A-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "e3388fc5",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-INT-A3",
@@ -3860,9 +3880,9 @@
    "evidenceIds": [
     "EV-AUT-A-FIX"
    ],
-   "counterexample": "'Mở qua node X' shown even when sibling capstone permanently excludes it",
+   "counterexample": "'M\u1edf qua node X' shown even when sibling capstone permanently excludes it",
    "expected": "honest unlock text",
-   "actual": "'Mở qua node X' shown even when sibling capstone permanently excludes it",
+   "actual": "'M\u1edf qua node X' shown even when sibling capstone permanently excludes it",
    "rootCause": "tooltip lacked excludesNode check",
    "rootClass": "honesty-gap",
    "subsystem": "phap-tu-beta",
@@ -3890,19 +3910,21 @@
    "siblingFindingIds": [],
    "repair": "mutex-excluded chips now read 'locked forever - opposite branch chosen'",
    "pinEvidenceIds": [
-    "EV-AUT-A-FIX"
+    "EV-NOVEL-LOCALE"
    ],
    "verificationEvidenceIds": [
     "EV-AUT-A-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "e3388fc5",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B2-C1",
@@ -3961,18 +3983,22 @@
    ],
    "siblingFindingIds": [],
    "repair": "description rewritten to disclose +1 The per landed basic and +10 cap per level",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-B5-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-CB2-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "aa02e1bc",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B2-C2",
@@ -4025,18 +4051,22 @@
    ],
    "siblingFindingIds": [],
    "repair": "ownedNodeIds() union helper (nodeLevels level>0 + purchasedNodeIds) feeds both guards",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-B5-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-CB2-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "aa02e1bc",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B2-C3",
@@ -4089,18 +4119,22 @@
    ],
    "siblingFindingIds": [],
    "repair": "switchRoute + previewRouteSwitch skip rewardOnly nodes explicitly",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-B5-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-CB2-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "aa02e1bc",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B2-C4",
@@ -4159,18 +4193,22 @@
    ],
    "siblingFindingIds": [],
    "repair": "description now states \"moi don danh\" (all hits) honestly",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-B5-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-CB2-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "aa02e1bc",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B2-C5",
@@ -4361,18 +4399,22 @@
    ],
    "siblingFindingIds": [],
    "repair": "all 3 sites now register ALL_PROGRESSION_NODES (one source)",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-B5-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-CB2-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "c2e36fbe",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B2-A2",
@@ -4485,18 +4527,22 @@
    ],
    "siblingFindingIds": [],
    "repair": "core_ ids refused (warn+skip); transactional effect fields warned as dead-on-grant",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-B5-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-CB2-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "c2e36fbe",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B2-A4",
@@ -4555,18 +4601,22 @@
    ],
    "siblingFindingIds": [],
    "repair": "uniqueness pin widened to ALL_PROGRESSION_NODES",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-B5-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-CB2-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "c2e36fbe",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B2-A5",
@@ -4739,18 +4789,22 @@
    ],
    "siblingFindingIds": [],
    "repair": "devResetBranch now returns null in-battle (same gate); composable propagates refusal",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-B5-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-CB2-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "632556a6",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B2-I2",
@@ -4803,18 +4857,22 @@
    ],
    "siblingFindingIds": [],
    "repair": "rewardOnly skip added (F-B2-C3); deeper funnel refactor deferred - unreachable by authored data, pinned by census",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-B5-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-CB2-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "aa02e1bc",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B2-I3",
@@ -4867,18 +4925,22 @@
    ],
    "siblingFindingIds": [],
    "repair": "wording changed to conditional \"dang khoa ... reset node de mo lai\"",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-B5-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-CB2-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "632556a6",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B2-I4",
@@ -4989,18 +5051,22 @@
    ],
    "siblingFindingIds": [],
    "repair": "useI18n added; strings moved to panels.skillPath.roleStrip.lockedByRival / unlockedByNode in vi+en",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-NOVEL-LOCALE"
+   ],
    "verificationEvidenceIds": [
     "EV-B5-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "86dfb313",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B5-A2",
@@ -5051,18 +5117,22 @@
    ],
    "siblingFindingIds": [],
    "repair": "grantsSkillCoreIds added to the skip gate alongside core_ prefix",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-B6-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-B5-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "86dfb313",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B5-A3",
@@ -5113,18 +5183,22 @@
    ],
    "siblingFindingIds": [],
    "repair": "header key set widened with honest scope note for finalDamagePercent",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-B6-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-B5-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "86dfb313",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B5-A4",
@@ -5175,18 +5249,22 @@
    ],
    "siblingFindingIds": [],
    "repair": "docblock rewritten to state the seal exception",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-B6-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-B5-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "86dfb313",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B5-A5",
@@ -5365,18 +5443,22 @@
    ],
    "siblingFindingIds": [],
    "repair": "MASTERY_RIDER water/earth perLevel 0.06 -> 0.05 (L2 = +10%)",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-B6-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-B6-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "f85c40a0",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B5-C2",
@@ -5471,18 +5553,22 @@
    ],
    "siblingFindingIds": [],
    "repair": "restat to skillDamagePercent + description rescoped to Tho Cau",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-B6-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-B6-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "f85c40a0",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B5-C4",
@@ -5577,18 +5663,22 @@
    ],
    "siblingFindingIds": [],
    "repair": "tram_slash / linh_bao_burst / huy_quyen_strike presets authored and bound",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-B6-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-B6-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "f85c40a0",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B5-C6",
@@ -5622,21 +5712,41 @@
    "rootCause": "same defect independently found by second lens",
    "rootClass": "i18n bypass",
    "subsystem": "phap-tu-beta",
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/locales"
+     ],
+     "termsAndMethod": "locale key census: roleStrip keys placed at panels.skillPath.roleStrip for vi+en",
+     "evidenceIds": [
+      "EV-NOVEL-LOCALE"
+     ],
+     "hitDispositions": [
+      "stale nested path removed - single placement"
+     ],
+     "coverageLimits": [
+      "roleStrip family only"
+     ]
+    }
+   ],
    "siblingFindingIds": [],
    "repair": "fixed in 86dfb313 (same commit as F-B5-A1)",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-NOVEL-LOCALE"
+   ],
    "verificationEvidenceIds": [
     "EV-B6-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-PT-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": "F-B5-A1",
    "rejectionReason": null,
    "exception": null,
    "fixedInRevision": "86dfb313",
-   "closedAt": null,
-   "closeReason": null
+   "closedAt": "2026-09-24T23:10:16.000Z",
+   "closeReason": "sealed closure verifier confirmed the repair exists and is semantically correct at pin 1961a64c"
   },
   {
    "id": "F-B5-C7",
@@ -5769,6 +5879,144 @@
    "fixedInRevision": null,
    "closedAt": null,
    "closeReason": null
+  },
+  {
+   "id": "F-COR6-1",
+   "title": "saveShapeValidation bounds-checks only core_ nodeLevels; registered non-core grant nodes accept arbitrary crafted levels",
+   "state": {
+    "productStateId": "a11a6468949ab6af2cd5fd646a120dea85e43838af945dc5576fced564c5d9bf",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/services/save/saveShapeValidation.ts",
+     "symbolOrSection": "nodeLevels loop",
+     "revision": "1961a64c",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/data/progression/PhapTuRealmRewardNodes.ts",
+     "symbolOrSection": "the_thuc_tinh/tinh_thong_*",
+     "revision": "1961a64c",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA CORRECTNESS reviewer (devin-9f863b2b)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "crafted save nodeLevels['the_thuc_tinh']=5 passes validation -> +50 max The; tinh_thong_hoa=5 -> +25% ailmentPotencyPercent",
+   "expected": "registered non-core nodes get the same integer/[1,maxLevel] enforcement as core_ entries",
+   "actual": "non-core ids only required a non-negative finite number \u2014 no integer or upper-bound check",
+   "rootCause": "validator integer/bounds contract gated on core_ prefix only; rewardOnly grants widened the injectable surface",
+   "rootClass": "validator-gap",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "non-core registered ids now bounds-checked via PROGRESSION_NODE_BY_ID (integer + [1,maxLevel]); pin test added; fix revision 05367f86",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "fixedInRevision": "05367f86",
+   "closedAt": null,
+   "closeReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-COR6-2",
+   "title": "TurnSkillDisplayMeta fallback name for thuy_tien_thuat mismatches authored name ('Th\u1ee7y Ti\u00ean' vs 'Th\u1ee7y Ti\u1ec5n')",
+   "state": {
+    "productStateId": "a11a6468949ab6af2cd5fd646a120dea85e43838af945dc5576fced564c5d9bf",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/TurnSkillDisplayMeta.ts",
+     "symbolOrSection": "thuy_tien_thuat",
+     "revision": "1961a64c",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA CORRECTNESS reviewer (devin-9f863b2b)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "fallback string differs from authored SKILLS name",
+   "expected": "fallback mirrors authored name",
+   "actual": "'Th\u1ee7y Ti\u00ean Thu\u1eadt' vs authored 'Th\u1ee7y Ti\u1ec5n Thu\u1eadt' \u2014 cosmetic dead string (live lookup preferred)",
+   "rootCause": "manual fallback drifted from authored name",
+   "rootClass": "cosmetic",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "fallback renamed to authored name at 05367f86",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "fixedInRevision": "05367f86",
+   "closedAt": null,
+   "closeReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-COR6-3",
+   "title": "crafted-save-only edge: selected spec chip can render selected-but-disabled",
+   "state": {
+    "productStateId": "a11a6468949ab6af2cd5fd646a120dea85e43838af945dc5576fced564c5d9bf",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/components/panels/skill-path/SkillRoleStrip.vue",
+     "symbolOrSection": "specLocked",
+     "revision": "1961a64c",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA CORRECTNESS reviewer (devin-9f863b2b)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "no legal path reaches the state (purchase records claim; clawback clears stale selections)",
+   "expected": "a selected specialization can always be deselected",
+   "actual": "crafted save with unowned claiming node shows selected-but-disabled chip \u2014 constructed state only",
+   "rootCause": "crafted-save-only edge, no production path",
+   "rootClass": "cosmetic",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "crafted-save-only state unreachable by any legal flow; recorded per P5 pre-existing/constructed-state rule",
+   "fixedInRevision": null,
+   "closedAt": null,
+   "closeReason": null,
+   "exception": null
   }
  ],
  "evidence": [
@@ -6293,7 +6541,142 @@
     "1072/1072 scoped tests + type-check clean on f85c40a0 post COR-A fixes"
    ],
    "limitations": [],
-   "status": "SEALED"
+   "status": "STALE"
+  },
+  {
+   "id": "EV-PT-FIX-6",
+   "state": {
+    "productStateId": "621131c599464816c7c1943a7b4d875840e411d906d41088ac9ed086691672ee",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-24T23:14:00.000Z",
+   "finishedAt": "2026-09-24T23:15:00.000Z",
+   "commandOrMethod": "npm run type-check && npx vitest run src/services/save/ src/data/skill/TurnSkillDisplayMeta",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/fix-verify-05367f86.log",
+   "artifactHash": "c7441a8f7736c71a2d9ad6a2526ce403b11bd69e72bccc1dd439e09af83cea08",
+   "inputPaths": [
+    "src/services/save/saveShapeValidation.ts",
+    "src/services/save/saveShapeValidation.test.ts",
+    "src/data/skill/TurnSkillDisplayMeta.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "non-core registered nodeLevels ids get integer/[1,maxLevel] enforcement; thuy_tien_thuat fallback name matches authored name; 479 scoped tests + type-check pass at 05367f86"
+   ],
+   "limitations": [
+    "scoped suite only - full verify runs at final gate"
+   ],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-NOVEL-SAVEBOUNDS",
+   "state": {
+    "productStateId": "621131c599464816c7c1943a7b4d875840e411d906d41088ac9ed086691672ee",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_PROPERTY",
+   "producer": "coordinator",
+   "startedAt": "2026-09-24T23:15:30.000Z",
+   "finishedAt": "2026-09-24T23:16:00.000Z",
+   "commandOrMethod": "npx vitest run --config docs/qa/runs/phap-tu-beta-2026-09-25/evidence/vitest.probe.config.mts evidence/probe-savebounds.test.ts --disable-console-intercept",
+   "cwd": "game",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/novel-attack-savebounds.log",
+   "artifactHash": "58b34f48943a7f2a12459f3ab073a41af1afb342659c16c4a1aa51d6f0662376",
+   "inputPaths": [
+    "docs/qa/runs/phap-tu-beta-2026-09-25/evidence/probe-savebounds.test.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "crafted the_thuc_tinh=5 and tinh_thong_hoa=3 rejected",
+    "non-integer/0/negative levels on basic capstone rejected",
+    "legit levels pass",
+    "unregistered ids remain dead-key lenient (no stat injection)"
+   ],
+   "limitations": [
+    "validator-level probe - does not cover runtime aggregation of unknown ids beyond dead-key reasoning"
+   ],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-NOVEL-LOCALE",
+   "state": {
+    "productStateId": "621131c599464816c7c1943a7b4d875840e411d906d41088ac9ed086691672ee",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_PROPERTY",
+   "producer": "coordinator",
+   "startedAt": "2026-09-24T23:17:00.000Z",
+   "finishedAt": "2026-09-24T23:17:30.000Z",
+   "commandOrMethod": "npx vitest run --config docs/qa/runs/phap-tu-beta-2026-09-25/evidence/vitest.probe.config.mts evidence/probe-locale.test.ts --disable-console-intercept",
+   "cwd": "game",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/novel-attack-locale.log",
+   "artifactHash": "9ad5c0c234748225eccb2baf92ef96b60a54ae64051407dc8279df0fd7b1b7b8",
+   "inputPaths": [
+    "docs/qa/runs/phap-tu-beta-2026-09-25/evidence/probe-locale.test.ts",
+    "src/locales/vi.json",
+    "src/locales/en.json"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "panels.skillPath.roleStrip.lockedByRival/unlockedByNode resolve to non-empty strings in vi+en",
+    "stale panels.skillPath.nodeInspector.roleStrip path no longer carries the keys"
+   ],
+   "limitations": [
+    "JSON-path probe - component render confirmed separately by closure verifier live checks"
+   ],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-FINAL-VERIFY",
+   "state": {
+    "productStateId": "621131c599464816c7c1943a7b4d875840e411d906d41088ac9ed086691672ee",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_INTEGRATION",
+   "producer": "coordinator",
+   "startedAt": "2026-09-24T23:19:00.000Z",
+   "finishedAt": "2026-09-24T23:25:00.000Z",
+   "commandOrMethod": "npm run verify (type-check + build + full vitest 779 files)",
+   "cwd": "game/",
+   "exitCode": 1,
+   "result": "PASS",
+   "artifactPath": "evidence/final-verify-05367f86.log",
+   "artifactHash": "7cef8718b1b88efcca70cfda1a5e500e77919562d67d66b2d4fbf408b8e11cfb",
+   "inputPaths": [],
+   "inputEvidenceIds": [
+    "EV-PT-FIX-6"
+   ],
+   "invariantIds": [],
+   "claims": [
+    "7107 tests passed, 4 expected-fail; only failures are dongFuBuildingPipeline + dongFuBackgroundAssets canvas/magick environment noise identical to master",
+    "type-check clean",
+    "production build succeeded"
+   ],
+   "limitations": [
+    "exitCode 1 driven by the 2 env-noise files only",
+    "canvas/magick not installed in this environment; 36 files uncollectable for missing canvas package - identical baseline on master"
+   ],
+   "status": "CURRENT"
   }
  ],
  "coverage": [
@@ -6582,6 +6965,20 @@
    "noveltyReason": "post-clean-B probe on final state; single-source registration was added in the adjudication wave",
    "evidenceIds": [
     "EV-NOVEL-CB2"
+   ]
+  },
+  {
+   "id": "ATK-SAVEBOUNDS",
+   "invariantIds": [],
+   "taxonomyIds": [
+    "crafted-save-injection"
+   ],
+   "challengedAssumption": "the new non-core bounds check could be bypassed (boundary levels, fractional/negative, capstone maxLevel, unregistered ids)",
+   "sequenceOrInput": "crafted saves through validateGameSaveShape: the_thuc_tinh=5, tinh_thong_hoa=3, basic-capstone level 0/-1/2.5/2, ghost id=999",
+   "oracle": "registered non-core ids reject out-of-range/non-integer; legit levels pass; unregistered ids tolerated as dead keys",
+   "noveltyReason": "post-COR-A probe on 05367f86 attacking exactly the surface F-COR6-1 opened",
+   "evidenceIds": [
+    "EV-NOVEL-SAVEBOUNDS"
    ]
   }
  ],
@@ -7150,7 +7547,65 @@
     "F-B5-C9"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PT-COR-6",
+   "state": {
+    "productStateId": "a11a6468949ab6af2cd5fd646a120dea85e43838af945dc5576fced564c5d9bf",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 6,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-9f863b2b57eb4277b6db9322b3e8b71d",
+   "contextId": "sealed-child-devin-9f863b2b57eb4277b6db9322b3e8b71d",
+   "model": "swe-2-max",
+   "role": "correctness",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-24T23:00:00.000Z",
+   "sealedAt": "2026-09-24T23:09:31.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-COR6-1",
+    "F-COR6-2",
+    "F-COR6-3"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PT-CLOSURE-1",
+   "state": {
+    "productStateId": "a11a6468949ab6af2cd5fd646a120dea85e43838af945dc5576fced564c5d9bf",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 6,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-c3539889798a4178b7633c2e57055346",
+   "contextId": "sealed-child-devin-c3539889798a4178b7633c2e57055346",
+   "model": "swe-2-max",
+   "role": "closure",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-24T22:56:00.000Z",
+   "sealedAt": "2026-09-24T23:10:16.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "STALE"
   }
  ],
  "cycles": [],
@@ -8536,6 +8991,206 @@
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
+  },
+  {
+   "id": "L-PT-30",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-AUT-01",
+    "F-AUT-02",
+    "F-AUT-03",
+    "F-AUT-04",
+    "F-AUT-05",
+    "F-B2-A1",
+    "F-B2-A3",
+    "F-B2-A4"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "grant-channel-validator",
+   "missedInvariantIds": [],
+   "escapeReason": "resolver-injected grant accepted arbitrary targets/levels and missing-catalog unions drifted between consumers",
+   "applicability": [
+    "realm-reward and grant funnels on any path"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "grant validator census: refuse unknown/non-rewardOnly/core_-prefixed ids, clamp to getNodeMaxLevel, warn dead transactional fields; ALL_PROGRESSION_NODES single source at every composition site + save validation"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "grant-funnel guard contract: resolver-based validation + single-source catalog registration",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-31",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-B2-C2",
+    "F-INT-A1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "ownership-mirror-drift",
+   "missedInvariantIds": [],
+   "escapeReason": "clawback guards read purchasedNodeIds alone; grant-owned (nodeLevels-only) claims were revoked silently",
+   "applicability": [
+    "every ownership predicate and revocation path"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "ownedNodeIds() union (purchasedNodeIds U nodeLevels>0) is the only ownership read outside the purchase path; clawback tests model dual-source"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "ownership-union invariant: mirror alone is never the ownership source",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-32",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-B2-C1",
+    "F-INT-A4",
+    "F-B5-C1",
+    "F-B5-C3",
+    "F-B5-C5",
+    "F-B5-C6",
+    "F-COR-A3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "description-honesty",
+   "missedInvariantIds": [],
+   "escapeReason": "descriptions and tooltips overclaimed (unconditional phrasing where behavior is additive, mutex wording where exclusion is claim-scoped) or drifted from authored names",
+   "applicability": [
+    "user-facing strings on skills/nodes/tooltips"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "quantified wording review on every authored description; honesty checklist pairs wording with engine semantics; locale-key placement probe"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "honesty gate: description review as a named checklist item",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-33",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-B2-C3",
+    "F-B2-C4",
+    "F-INT-A2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "route-seam-rewardonly",
+   "missedInvariantIds": [],
+   "escapeReason": "switchRoute/previewRouteSwitch treated grant-owned nodes as purchased (route removal + preview divergence)",
+   "applicability": [
+    "route switch and preview flows"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "rewardOnly skip on both apply and preview seams; routeTag removal consistent between them"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "route-seam guard: rewardOnly skip contract on apply+preview",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-34",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-COR-A1",
+    "F-COR-A2",
+    "F-B2-I1",
+    "F-B2-I2",
+    "F-B2-I3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "claim-uniqueness-and-gates",
+   "missedInvariantIds": [],
+   "escapeReason": "spec-claim uniqueness pin covered only a subset of node arrays; devResetBranch ran inside combat",
+   "applicability": [
+    "catalog-wide uniqueness pins and dev tooling gates"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "uniqueness pins iterate ALL_PROGRESSION_NODES; dev reset paths gated out-of-combat and propagate refusal"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "catalog-census convention: pins iterate the union, not one array",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-35",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-COR6-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "constructed-state-triage",
+   "missedInvariantIds": [],
+   "escapeReason": "crafted-save-only chip state unreachable by legal flow filed as a defect",
+   "applicability": [
+    "crafted-input findings"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "check legal-path reachability before filing; crafted-only edges recorded as constructed-state, not defects"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "reachability triage: legal-path check before defect classification",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
   }
  ],
  "messages": [],
@@ -9115,6 +9770,22 @@
    "payloadPath": "events/0036.json",
    "payloadHash": "b3c47a0ec630c3b5b4c5602294faf365301fe8a0f42f4a223dd043363715b012",
    "eventHash": "82ebf5f285213127252e27a90b6a1461ae7b18d4b5a3aa21a4a264e8593dfb24"
+  },
+  {
+   "seq": 37,
+   "at": "2026-09-24T23:12:26.718Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "621131c599464816c7c1943a7b4d875840e411d906d41088ac9ed086691672ee",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "82ebf5f285213127252e27a90b6a1461ae7b18d4b5a3aa21a4a264e8593dfb24",
+   "payloadPath": "events/0037.json",
+   "payloadHash": "a371f496de3643783a06ebd1eea1e62170499b8a76d0fb74b7098811fc3da7ae",
+   "eventHash": "500ba8545524228629fe2d95fda6dc11bf56210a227f33d6a1107dca9c36d276"
   }
  ]
 }

@@ -27,10 +27,15 @@ const ELEMENT_BY_CAPSTONE_PREFIX = new Map(
 const BASIC_LANE_IDS = PHAP_TU_NODES.filter((n) =>
   [
     'hoa_sac_nhiet', 'hoa_diem_chuan', 'hoa_an_sau', 'hoa_nhiet_keo', 'hoa_sac_huyet',
+    'hoa_diem_bao', 'hoa_bao_nhiet', 'hoa_diem_tham',
     'thuy_xuyen_lan', 'thuy_diem_chuan', 'thuy_te_dam', 'thuy_nhiet_tri',
+    'thuy_lan_diem', 'thuy_luu_tich', 'thuy_tram_xuyen', 'thuy_te_tham',
     'moc_doc_sau', 'moc_doc_dien', 'moc_doc_tham',
+    'moc_doc_man', 'moc_doc_nhuan', 'moc_doc_tu', 'moc_doc_am',
     'kim_sac_ben', 'kim_diem_chuan', 'kim_xuyen_nhuy', 'kim_bao_the',
+    'kim_liet_huyet', 'kim_diem_tham', 'kim_xuyen_thau', 'kim_bao_diem',
     'tho_tram_luy', 'tho_tran_sau', 'tho_cung_gioi', 'tho_linh_the',
+    'tho_tram_diem', 'tho_tran_cung', 'tho_linh_chung', 'tho_tram_bao',
   ].includes(n.id) || BASIC_CAPSTONE_IDS.includes(n.id),
 )
 
@@ -80,7 +85,10 @@ describe('PhapTu basic lane — ruled contract', () => {
   it('apply-chance nodes reach a x1.10 multiplier at max (ApplicationResolver is multiplicative)', () => {
     // ApplicationResolver.resolve computes chance = baseChance x (1 + pool),
     // so the documented 'toi da +10% so voi goc' requires pool 0.10 at max.
-    const APPLY_CHANCE_NODE_IDS = ['hoa_diem_chuan', 'thuy_diem_chuan', 'kim_diem_chuan']
+    const APPLY_CHANCE_NODE_IDS = [
+      'hoa_diem_chuan', 'thuy_diem_chuan', 'kim_diem_chuan',
+      'hoa_diem_tham', 'kim_diem_tham',
+    ]
 
     for (const nodeId of APPLY_CHANCE_NODE_IDS) {
       const node = PHAP_TU_NODES.find((n) => n.id === nodeId)!
@@ -102,11 +110,11 @@ describe('PhapTu basic lane — ruled contract', () => {
     // open (foundation gate), techniqueRank only caps levels inside an
     // open node - trunk nodes carry rank gates but never the realm gate.
     const EXPECTED_OUTER = new Set([
-      'hoa_nhiet_keo', 'hoa_sac_huyet',
-      'thuy_nhiet_tri',
-      'moc_doc_tham',
-      'kim_bao_the',
-      'tho_cung_gioi', 'tho_linh_the',
+      'hoa_nhiet_keo', 'hoa_sac_huyet', 'hoa_bao_nhiet', 'hoa_diem_tham',
+      'thuy_nhiet_tri', 'thuy_tram_xuyen', 'thuy_te_tham',
+      'moc_doc_tham', 'moc_doc_man', 'moc_doc_am',
+      'kim_bao_the', 'kim_diem_tham', 'kim_xuyen_thau', 'kim_bao_diem',
+      'tho_cung_gioi', 'tho_linh_the', 'tho_tran_cung', 'tho_linh_chung', 'tho_tram_bao',
       ...BASIC_CAPSTONE_IDS,
     ])
 

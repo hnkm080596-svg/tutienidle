@@ -364,7 +364,7 @@ export const CORE_SKILLS: Skill[] = [
       {
         id: 'hoa_tan_diem',
         name: 'Tán Diễm',
-        description: 'Hỏa Cầu tán thành vùng — quét nhiều mục tiêu, Thiêu Đốt nhẹ hơn.',
+        description: 'Hỏa Cầu tán thành vùng — quét nhiều mục tiêu, đòn nhẹ hơn, Thiêu Đốt khó trúng hơn.',
         targeting: { shape: 'square', laneRadius: 1 },
         effectsOverride: [
           {
@@ -454,7 +454,7 @@ export const CORE_SKILLS: Skill[] = [
       {
         id: 'moc_lan_doc',
         name: 'Lan Độc',
-        description: 'Độc Chưởng lan thành vùng — Trúng Độc phủ nhiều mục tiêu.',
+        description: 'Độc Chưởng lan thành vùng — phủ nhiều mục tiêu, nhưng Trúng Độc không còn chắc trúng.',
         targeting: { shape: 'square', laneRadius: 1 },
         effectsOverride: [{ type: 'debuff', buffId: 'doc_can', ailmentChance: 0.7 }],
       },
@@ -550,7 +550,7 @@ export const CORE_SKILLS: Skill[] = [
       {
         id: 'thuy_dao_lan',
         name: 'Đào Lan',
-        description: 'Thủy Tiễn vỡ thành làn sóng — quét nhiều mục tiêu.',
+        description: 'Thủy Tiễn vỡ thành làn sóng — quét nhiều mục tiêu, đòn nhẹ hơn, Tê Cóng khó trúng hơn.',
         targeting: { shape: 'square', laneRadius: 1 },
         effectsOverride: [
           {
@@ -656,7 +656,7 @@ export const CORE_SKILLS: Skill[] = [
       {
         id: 'kim_tan_phong',
         name: 'Tán Phong',
-        description: 'Điểm Kim tán thành mũi lưỡi — quét nhiều mục tiêu.',
+        description: 'Điểm Kim tán thành mũi lưỡi — quét nhiều mục tiêu, đòn nhẹ hơn, Xuất Huyết khó trúng hơn.',
         targeting: { shape: 'square', laneRadius: 1 },
         effectsOverride: [
           {
@@ -759,7 +759,7 @@ export const CORE_SKILLS: Skill[] = [
       {
         id: 'tho_bang_loa',
         name: 'Đá Loạn',
-        description: 'Thổ Cầu vỡ thành mảnh đá — quét nhiều mục tiêu, Thạch Hóa yếu hơn.',
+        description: 'Thổ Cầu vỡ thành mảnh đá — quét nhiều mục tiêu, đòn nhẹ hơn, Thạch Hóa yếu hơn.',
         targeting: { shape: 'square', laneRadius: 1 },
         effectsOverride: [
           {

@@ -14,9 +14,8 @@ import { SPELL_KIT_IDS } from '../skill/Skills'
 // kit (skill stat keys: skillDamagePercent /
 // elementApplicationPercent / ailmentPotencyPercent / ailmentDurationPercent
 // / criticalRate / criticalDamage / finalDamagePercent -- the last is a
-// broader all-hits multiplier reserved for the earth capstone, which
-// honestly discloses that scope; never character stats like
-// might/hp/armor). Stat scope is the spell domain: modifiers only
+// broader all-hits multiplier used by the earth lane; never character
+// stats like might/hp/armor). Stat scope is the spell domain: modifiers only
 // exist for a spell-path player, and inside the beta window (LQ/TC)
 // the basic is the only reachable spell skill, so the nodes' in-window
 // effect is exactly the basic lane; post-Kim-Dan spells share the same
@@ -179,6 +178,29 @@ function buildFire(): ProgressionNode[] {
       [stat('hoa_sac_huyet', 'skillDamagePercent', 0.025)],
       { foundation: true, maxLevel: 4 },
     ),
+    powerNode(
+      'hoa_diem_bao',
+      'Diễm Bạo',
+      '+2% tỉ lệ bạo kích của Hỏa Cầu mỗi cấp (tối đa +10%).',
+      'fire',
+      [stat('hoa_diem_bao', 'criticalRate', 0.02)],
+    ),
+    powerNode(
+      'hoa_bao_nhiet',
+      'Bạo Nhiệt',
+      '+2.5% sát thương bạo kích của Hỏa Cầu mỗi cấp (tầng Trúc Cơ).',
+      'fire',
+      [stat('hoa_bao_nhiet', 'criticalDamage', 0.025)],
+      { foundation: true, maxLevel: 4 },
+    ),
+    powerNode(
+      'hoa_diem_tham',
+      'Diễm Thấm',
+      '+2.5% tỉ lệ gây Thiêu Đốt mỗi cấp (tầng Trúc Cơ).',
+      'fire',
+      [stat('hoa_diem_tham', 'elementApplicationPercent', 0.025)],
+      { foundation: true, maxLevel: 4 },
+    ),
     capstone(
       'fire',
       'hoa_tu_diem',
@@ -189,7 +211,7 @@ function buildFire(): ProgressionNode[] {
       'fire',
       'hoa_tan_diem',
       'Tán Diễm',
-      'Hỏa Cầu tán thành vùng — quét nhiều mục tiêu, Thiêu Đốt nhẹ hơn.',
+      'Hỏa Cầu tán thành vùng — quét nhiều mục tiêu, đòn nhẹ hơn, Thiêu Đốt khó trúng hơn.',
     ),
   ]
 }
@@ -225,6 +247,36 @@ function buildWater(): ProgressionNode[] {
       [stat('thuy_nhiet_tri', 'ailmentDurationPercent', 0.025)],
       { foundation: true, maxLevel: 4 },
     ),
+    powerNode(
+      'thuy_lan_diem',
+      'Lãn Điểm',
+      '+2% tỉ lệ bạo kích của Thủy Tiễn mỗi cấp (tối đa +10%).',
+      'water',
+      [stat('thuy_lan_diem', 'criticalRate', 0.02)],
+    ),
+    powerNode(
+      'thuy_luu_tich',
+      'Lưu Tích',
+      '+2% thời gian Tê Cóng mỗi cấp (tối đa +10%).',
+      'water',
+      [stat('thuy_luu_tich', 'ailmentDurationPercent', 0.02)],
+    ),
+    powerNode(
+      'thuy_tram_xuyen',
+      'Trầm Xuyên',
+      '+2.5% sát thương Thủy Tiễn mỗi cấp (tầng Trúc Cơ).',
+      'water',
+      [stat('thuy_tram_xuyen', 'skillDamagePercent', 0.025)],
+      { foundation: true, maxLevel: 4 },
+    ),
+    powerNode(
+      'thuy_te_tham',
+      'Tê Thấm',
+      '+2.5% uy lực Tê Cóng mỗi cấp (tầng Trúc Cơ).',
+      'water',
+      [stat('thuy_te_tham', 'ailmentPotencyPercent', 0.025)],
+      { foundation: true, maxLevel: 4 },
+    ),
     capstone(
       'water',
       'thuy_ngan_lien',
@@ -235,7 +287,7 @@ function buildWater(): ProgressionNode[] {
       'water',
       'thuy_dao_lan',
       'Đào Lan',
-      'Thủy Tiễn vỡ thành làn sóng — quét nhiều mục tiêu.',
+      'Thủy Tiễn vỡ thành làn sóng — quét nhiều mục tiêu, đòn nhẹ hơn, Tê Cóng khó trúng hơn.',
     ),
   ]
 }
@@ -266,6 +318,39 @@ function buildWood(): ProgressionNode[] {
       [stat('moc_doc_tham', 'ailmentPotencyPercent', 0.025)],
       { foundation: true, maxLevel: 4 },
     ),
+    powerNode(
+      'moc_doc_man',
+      'Độc Mạn',
+      '+2.5% thời gian Trúng Độc mỗi cấp (tầng Trúc Cơ).',
+      'wood',
+      [stat('moc_doc_man', 'ailmentDurationPercent', 0.025)],
+      { foundation: true, maxLevel: 4 },
+    ),
+    powerNode(
+      'moc_doc_nhuan',
+      'Độc Nhuần',
+      '+2% uy lực và +2% thời gian Trúng Độc mỗi cấp.',
+      'wood',
+      [
+        stat('moc_doc_nhuan_pot', 'ailmentPotencyPercent', 0.02),
+        stat('moc_doc_nhuan_dur', 'ailmentDurationPercent', 0.02),
+      ],
+    ),
+    powerNode(
+      'moc_doc_tu',
+      'Độc Tú',
+      '+2% uy lực Trúng Độc mỗi cấp (tối đa +10%).',
+      'wood',
+      [stat('moc_doc_tu', 'ailmentPotencyPercent', 0.02)],
+    ),
+    powerNode(
+      'moc_doc_am',
+      'Độc Ám',
+      '+2.5% uy lực Trúng Độc mỗi cấp (tầng Trúc Cơ).',
+      'wood',
+      [stat('moc_doc_am', 'ailmentPotencyPercent', 0.025)],
+      { foundation: true, maxLevel: 4 },
+    ),
     capstone(
       'wood',
       'moc_tu_doc',
@@ -276,7 +361,7 @@ function buildWood(): ProgressionNode[] {
       'wood',
       'moc_lan_doc',
       'Lan Độc',
-      'Độc Chưởng lan thành vùng — Trúng Độc phủ nhiều mục tiêu.',
+      'Độc Chưởng lan thành vùng — phủ nhiều mục tiêu, nhưng Trúng Độc không còn chắc trúng.',
     ),
   ]
 }
@@ -312,6 +397,37 @@ function buildMetal(): ProgressionNode[] {
       [stat('kim_bao_the', 'criticalDamage', 0.025)],
       { foundation: true, maxLevel: 4 },
     ),
+    powerNode(
+      'kim_liet_huyet',
+      'Liệt Huyết',
+      '+2% uy lực Xuất Huyết mỗi cấp (tối đa +10%).',
+      'metal',
+      [stat('kim_liet_huyet', 'ailmentPotencyPercent', 0.02)],
+    ),
+    powerNode(
+      'kim_diem_tham',
+      'Điểm Thấm',
+      '+2.5% tỉ lệ gây Xuất Huyết mỗi cấp (tầng Trúc Cơ).',
+      'metal',
+      [stat('kim_diem_tham', 'elementApplicationPercent', 0.025)],
+      { foundation: true, maxLevel: 4 },
+    ),
+    powerNode(
+      'kim_xuyen_thau',
+      'Xuyên Thấu',
+      '+2.5% sát thương Điểm Kim mỗi cấp (tầng Trúc Cơ).',
+      'metal',
+      [stat('kim_xuyen_thau', 'skillDamagePercent', 0.025)],
+      { foundation: true, maxLevel: 4 },
+    ),
+    powerNode(
+      'kim_bao_diem',
+      'Bạo Điểm',
+      '+2.5% tỉ lệ bạo kích của Điểm Kim mỗi cấp (tầng Trúc Cơ).',
+      'metal',
+      [stat('kim_bao_diem', 'criticalRate', 0.025)],
+      { foundation: true, maxLevel: 4 },
+    ),
     capstone(
       'metal',
       'kim_tu_phong',
@@ -322,7 +438,7 @@ function buildMetal(): ProgressionNode[] {
       'metal',
       'kim_tan_phong',
       'Tán Phong',
-      'Điểm Kim tán thành mũi lưỡi — quét nhiều mục tiêu.',
+      'Điểm Kim tán thành mũi lưỡi — quét nhiều mục tiêu, đòn nhẹ hơn, Xuất Huyết khó trúng hơn.',
     ),
   ]
 }
@@ -359,6 +475,37 @@ function buildEarth(): ProgressionNode[] {
       [stat('tho_linh_the', 'skillDamagePercent', 0.025)],
       { foundation: true, maxLevel: 4 },
     ),
+    powerNode(
+      'tho_tram_diem',
+      'Trầm Điểm',
+      '+2% tỉ lệ bạo kích của Thổ Cầu mỗi cấp (tối đa +10%).',
+      'earth',
+      [stat('tho_tram_diem', 'criticalRate', 0.02)],
+    ),
+    powerNode(
+      'tho_tran_cung',
+      'Trần Củng',
+      '+2.5% thời gian Thạch Hóa mỗi cấp (tầng Trúc Cơ).',
+      'earth',
+      [stat('tho_tran_cung', 'ailmentDurationPercent', 0.025)],
+      { foundation: true, maxLevel: 4 },
+    ),
+    powerNode(
+      'tho_linh_chung',
+      'Lĩnh Chung',
+      '+2.5% sát thương cuối của Thổ Cầu mỗi cấp (tầng Trúc Cơ).',
+      'earth',
+      [stat('tho_linh_chung', 'finalDamagePercent', 0.025)],
+      { foundation: true, maxLevel: 4 },
+    ),
+    powerNode(
+      'tho_tram_bao',
+      'Trầm Bạo',
+      '+2.5% sát thương bạo kích của Thổ Cầu mỗi cấp (tầng Trúc Cơ).',
+      'earth',
+      [stat('tho_tram_bao', 'criticalDamage', 0.025)],
+      { foundation: true, maxLevel: 4 },
+    ),
     capstone(
       'earth',
       'tho_tu_nhan',
@@ -369,7 +516,7 @@ function buildEarth(): ProgressionNode[] {
       'earth',
       'tho_bang_loa',
       'Đá Loạn',
-      'Thổ Cầu vỡ thành mảnh đá — quét nhiều mục tiêu.',
+      'Thổ Cầu vỡ thành mảnh đá — quét nhiều mục tiêu, đòn nhẹ hơn, Thạch Hóa yếu hơn.',
     ),
   ]
 }

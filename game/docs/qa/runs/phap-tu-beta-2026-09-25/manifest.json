@@ -21090,7 +21090,7 @@
       "path": "src/data/skill/TurnSkillDisplayMeta.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0081fb7d4edd05428e2cd098031b947baf1fdbe60c11d323a32119fedfc0a55b"
+      "hash": "abe9f63908c3bb0e04b75904e233e35ec917e4faa3f484625908a3949d7c2660"
     },
     {
       "path": "src/data/stage/ChapterStages.test.ts",
@@ -21720,13 +21720,13 @@
       "path": "src/locales/en.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "5c23c9cb48cb36faef1272e5e215d6e091c4fe8d51ab0fcc6a5953b9bcd130a7"
+      "hash": "96b724063e0545bf1fc6a5bf9934fe5e683ba253899416b84e99a52c7486581e"
     },
     {
       "path": "src/locales/vi.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "e8bee88e30ebe856d324ab9373009c0aa462c94e4f8276c99efb5a8fef7e34a6"
+      "hash": "adf9ab5f01508050f4042be1ffa2f1ca0e196e6ac1487ec888da30541badfead"
     },
     {
       "path": "src/main-process/combatClockHost.test.ts",
@@ -22314,7 +22314,7 @@
       "path": "src/services/save/saveShapeValidation.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ca483f7a938991efca65b691f3648f091f0c3194bce90f422b2fabfec9ff1a66"
+      "hash": "52003818758fc4be90fd6306b71c9df144ebd991ba48222ea7828effd6fc044e"
     },
     {
       "path": "src/services/save/SaveSystem.bootRestore.test.ts",
@@ -23073,5 +23073,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "7cf5fc63eba97242075dae9f07fafca590217d510d47f72384cb9c37c9295e8f"
+  "productStateId": "621131c599464816c7c1943a7b4d875840e411d906d41088ac9ed086691672ee"
 }
