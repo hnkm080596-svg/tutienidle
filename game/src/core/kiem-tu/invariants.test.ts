@@ -19,16 +19,14 @@ import {
 import { buildKiemPhoProvider } from './KiemPhoProvider'
 import {
   buildNguKiemDaoProvider,
-  collectKiemDaoCascadeUnlocks,
+  collectOwnedEvolutionIds,
 } from './NguKiemDaoProvider'
 import {
   applyBreakthroughMerge,
   forgeCost,
   gainKiemY,
   kiemDaoCap,
-  CASCADE_CRIT_CHANCE,
-  CASCADE_PIERCE_CHANCE,
-  EXECUTE_MULT,
+  LIEN_MOMENTUM_RATE,
 } from './NguKiemDao'
 import { KIEM_PHO_COMBOS } from '../../data/skill/KiemPhoCombos'
 import { KIEM_PHO_ORBS, ORB_UNLOCK_REALM, unlockedOrbs } from '../../data/skill/KiemPhoOrbs'
@@ -43,6 +41,7 @@ import { ManualClockSource } from '../battle/turn/CombatClock'
 import { CombatSystem } from '../combat/CombatSystem'
 import { EventBus } from '../events/EventBus'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
+import type { DynamicBasicProvider } from '../battle/turn/TurnSkillAction'
 import { createBaseStats } from '../stats/StatBlock'
 import { resolveCultivationPathRuntime } from '../player/CultivationPathRegistry'
 import type { CultivationPathRuntimeDeps } from '../player/CultivationPathRuntime'
@@ -125,8 +124,10 @@ function makeBattle(dynamicBasic: TurnBattleParticipant['dynamicBasic'], defende
   const attacker = makeEntity('attacker', {
     stats: createBaseStats({ might: 100, accuracyRating: 9999 }),
   })
+  // blockChance 0 — a randomly blocked sword would skew any
+  // per-instance damage assertion below (default is 0.05).
   const defender = makeEntity('defender', {
-    stats: createBaseStats({ evasionRate: 0, maxHp: defenderMaxHp }),
+    stats: createBaseStats({ evasionRate: 0, blockChance: 0, maxHp: defenderMaxHp }),
   })
 
   const attackerP: TurnBattleParticipant = {
@@ -206,7 +207,7 @@ describe('INV-1 — way single-owner', () => {
     player.swordPath!.kiemDaoCount = 3
     player.swordPath!.kiemDaoBase = 2
 
-    const provider = buildNguKiemDaoProvider(player, { a: false, e: false, d: false })
+    const provider = buildNguKiemDaoProvider(player, new Set<string>(['khoi']))
     const before = provider.resolveBasic({} as TurnBattleParticipant)
 
     player.swordPath!.preset = ['orb_quet', 'orb_hat', 'orb_bo']
@@ -486,23 +487,23 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
     gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
     gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
-    const hien = hienPlayer(['orb_dam'], 'golden_core')
+    const hien = hienPlayer(['orb_dam'], 'foundation_establishment')
     hien.skillInsight = 500
-    // ngu_kiem_sac has no other prereq — the requiredWay gate alone blocks.
-    expect(gameManager.progressionOps.canPurchaseNode('ngu_kiem_sac', hien)).toBe(false)
-    expect(gameManager.progressionOps.purchaseNode('ngu_kiem_sac', hien)).toBe(false)
+    hien.nodeLevels = { ngu_kiem_khoi: 1 } // inconsistent save shape — the requiredWay gate alone still blocks.
+    expect(gameManager.progressionOps.canPurchaseNode('ngu_kiem_lien', hien)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('ngu_kiem_lien', hien)).toBe(false)
 
-    const ngu = nguPlayer('golden_core')
+    const ngu = nguPlayer('foundation_establishment')
     ngu.skillInsight = 500
-    // orb_dam_1's realm gate passes at golden_core — only the way gate blocks.
+    // orb_dam_1's realm gate passes — only the way gate blocks.
     expect(gameManager.progressionOps.canPurchaseNode('orb_dam_1', ngu)).toBe(false)
     expect(gameManager.progressionOps.purchaseNode('orb_dam_1', ngu)).toBe(false)
 
-    // ...and the matching way buys normally — no hidden root prereq
-    // chains the ngu subtree any more.
-    expect(gameManager.progressionOps.canPurchaseNode('ngu_kiem_sac', ngu)).toBe(true)
-    expect(gameManager.progressionOps.purchaseNode('ngu_kiem_sac', ngu)).toBe(true)
-    expect(ngu.nodeLevels['ngu_kiem_sac']).toBe(1)
+    // ...and the matching way buys normally once Khoi is owned.
+    ngu.nodeLevels = { ngu_kiem_khoi: 1 }
+    expect(gameManager.progressionOps.canPurchaseNode('ngu_kiem_lien', ngu)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('ngu_kiem_lien', ngu)).toBe(true)
+    expect(ngu.nodeLevels['ngu_kiem_lien']).toBe(1)
   })
 
   it('hien orb nodes stamp requiredWay hien; ngu branch nodes stamp requiredWay ngu', () => {
@@ -517,67 +518,172 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
   })
 })
 
-describe('INV-9 — cascade bounds', () => {
-  it('guaranteedHit is unconditional; no unlocks consume zero RNG', () => {
-    const rng = vi.fn(() => 0)
+describe('INV-9 — Kiem The bounds + standard pipeline (Ngu Kiem Beta)', () => {
+  const KHOI: ReadonlySet<string> = new Set<string>(['khoi'])
+  const LIEN: ReadonlySet<string> = new Set<string>(['khoi', 'lien'])
+
+  it('Khoi-only casts carry NO guaranteedHit/execute/crit/armor privilege — the standard pipeline rules', () => {
     const player = nguPlayer()
-    const provider = buildNguKiemDaoProvider(player, { a: false, e: false, d: false }, rng)
+    player.swordPath!.kiemDaoCount = 3
+    const provider = buildNguKiemDaoProvider(player, KHOI)
     const def = provider.resolveBasic({} as TurnBattleParticipant)
 
-    for (let i = 0; i < 3; i++) {
-      const opts = def.instances!.perInstanceOptions!(i, { currentHp: 1, maxHp: 100 } as CombatEntity)
-      expect(opts.guaranteedHit).toBe(true)
-      expect(Object.keys(opts).sort()).toEqual(['guaranteedHit'])
+    expect(def.instances?.perInstanceOptions).toBeUndefined()
+    expect(def.instances?.each).toBeUndefined()
+    const serialized = JSON.stringify(def)
+    for (const field of ['guaranteedHit', 'execute', 'armorPierce', 'critChance', 'armorBypass']) {
+      expect(serialized).not.toContain(field)
     }
-    expect(rng).not.toHaveBeenCalled()
+    // The provider takes no rng — Kiem The is deterministic stack
+    // arithmetic, not a roll.
+    expect(buildNguKiemDaoProvider.length).toBeLessThanOrEqual(2)
   })
 
-  it('rolls happen only when unlocked — e consumes 1 rng, d consumes 1 rng per instance', () => {
+  it('Lien declares the momentum layer once — each.momentumPerLandedInstance + landed-count options', () => {
     const player = nguPlayer()
-    const eOnly = vi.fn(() => CASCADE_CRIT_CHANCE + 0.001)
-    const eProvider = buildNguKiemDaoProvider(player, { a: false, e: true, d: false }, eOnly)
-    eProvider.resolveBasic({} as TurnBattleParticipant).instances!.perInstanceOptions!(0, { currentHp: 100, maxHp: 100 } as CombatEntity)
-    expect(eOnly).toHaveBeenCalledTimes(1)
-
-    const dOnly = vi.fn(() => CASCADE_PIERCE_CHANCE + 0.001)
-    const dProvider = buildNguKiemDaoProvider(player, { a: false, e: false, d: true }, dOnly)
-    dProvider.resolveBasic({} as TurnBattleParticipant).instances!.perInstanceOptions!(0, { currentHp: 100, maxHp: 100 } as CombatEntity)
-    expect(dOnly).toHaveBeenCalledTimes(1)
-
-    const both = vi.fn(() => 0.999)
-    const bothProvider = buildNguKiemDaoProvider(player, { a: true, e: true, d: true }, both)
-    // a is deterministic (hp check, no rng); e + d each consume one roll.
-    bothProvider.resolveBasic({} as TurnBattleParticipant).instances!.perInstanceOptions!(0, { currentHp: 100, maxHp: 100 } as CombatEntity)
-    expect(both).toHaveBeenCalledTimes(2)
-  })
-
-  it('execute is damage-scale only (survives SurviveLethalGuard); break-on-death consumes no further RNG', () => {
-    const player = nguPlayer('golden_core') // threshold min(0.5, 0.3) = 0.3
-    player.swordPath!.kiemDaoCount = 5 // multi-instance required for the break-on-death half
-    const rng = vi.fn(() => 0)
-    const provider = buildNguKiemDaoProvider(player, { a: true, e: true, d: true }, rng)
+    const provider = buildNguKiemDaoProvider(player, LIEN)
     const def = provider.resolveBasic({} as TurnBattleParticipant)
 
-    const opts = def.instances!.perInstanceOptions!(0, { currentHp: 20, maxHp: 100 } as CombatEntity)
-    expect(opts.damageMultiplier).toBe(EXECUTE_MULT)
-    expect(Object.keys(opts).sort()).toEqual([
-      'armorBypass',
-      'critical',
-      'damageMultiplier',
-      'guaranteedHit',
-    ])
+    expect(def.instances?.each?.momentumPerLandedInstance).toBe(LIEN_MOMENTUM_RATE)
+    const target = { currentHp: 100, maxHp: 100 } as CombatEntity
+    expect(def.instances!.perInstanceOptions!(0, target, 0)).toEqual({})
+    expect(def.instances!.perInstanceOptions!(1, target, 1).damageMultiplier).toBeCloseTo(
+      1 + LIEN_MOMENTUM_RATE,
+      10,
+    )
+    expect(def.instances!.perInstanceOptions!(2, target, 2).damageMultiplier).toBeCloseTo(
+      1 + 2 * LIEN_MOMENTUM_RATE,
+      10,
+    )
+  })
 
-    // Battle-level: target dies on sword 1 — remaining instances never
-    // evaluate options, so rng is consumed for live instances only.
-    vi.spyOn(Math, 'random').mockReturnValue(0)
-    const rngCallsBefore = rng.mock.calls.length
-    const { system, battle, defenderP } = makeBattle(provider, 10)
+  it('engine lane: landed swords stack Kiem The — later swords of the same cast hit harder', () => {
+    const player = nguPlayer('foundation_establishment')
+    player.swordPath!.kiemDaoCount = 3
+    const provider = buildNguKiemDaoProvider(player, LIEN)
+    const { system, battle, defenderP, eventBus } = makeBattle(provider)
+
+    const values: number[] = []
+    eventBus.on('damage', (event: { value?: number }) => {
+      if (event.value !== undefined) values.push(event.value)
+    })
+
     system.resolveNextStep(battle)
 
-    expect(defenderP.entity.alive).toBe(false)
-    // 1 live instance evaluated × 2 rolls (e + d); dead instances: 0.
-    expect(rng.mock.calls.length - rngCallsBefore).toBe(2)
+    // Three swords landed IN ORDER on the defender (evasion 0,
+    // accuracy 9999); each later sword carries one more Kiem The
+    // stack. Damage may round — compare ratios within tolerance.
+    expect(defenderP.entity.alive).toBe(true)
+    expect(values.length).toBe(3)
+    const [first, second, third] = values as [number, number, number]
+    expect(second / first).toBeCloseTo(1 + LIEN_MOMENTUM_RATE, 1)
+    expect(third / first).toBeCloseTo(1 + 2 * LIEN_MOMENTUM_RATE, 1)
+    expect(first).toBeLessThan(second)
+    expect(second).toBeLessThan(third)
+  })
+
+  it('a miss adds no stack and never resets — a dodge mid-cast leaves later momentum intact', () => {
+    const player = nguPlayer('foundation_establishment')
+    player.swordPath!.kiemDaoCount = 3
+    const provider = buildNguKiemDaoProvider(player, LIEN)
+
+    // Record the cast-local landed count the engine feeds each sword,
+    // and force sword 2 to miss by inflating evasion for its hit roll
+    // (deterministic — no RNG-order assumptions anywhere). `target`
+    // inside perInstanceOptions IS the defender entity.
+    const landedArgs: number[] = []
+    const wrapped: DynamicBasicProvider = {
+      ...provider,
+      resolveBasic: (participant) => {
+        const def = provider.resolveBasic(participant)
+        const inner = def.instances!.perInstanceOptions!
+        return {
+          ...def,
+          instances: {
+            ...def.instances!,
+            perInstanceOptions: (i: number, target: CombatEntity, prior: number) => {
+              landedArgs.push(prior)
+              target.stats.evasionRate = i === 1 ? 1_000_000 : 0
+              return inner(i, target, prior)
+            },
+          },
+        }
+      },
+    }
+
+    const { system, battle, eventBus } = makeBattle(wrapped)
+    const values: number[] = []
+    eventBus.on('damage', (event: { value?: number }) => {
+      if (event.value !== undefined) values.push(event.value)
+    })
+
+    // 0.999 rolls: lands every true hit (chance 1.0), misses the
+    // forced-miss sword even at the 5% evasion floor.
+    vi.spyOn(Math, 'random').mockReturnValue(0.999)
+    system.resolveNextStep(battle)
     vi.restoreAllMocks()
+
+    // sword1 lands (stack->1); sword2 misses (no stack); sword3 reads
+    // exactly ONE landed prior — the miss neither stacked nor reset.
+    expect(landedArgs).toEqual([0, 1, 1])
+    expect(values.length).toBe(2)
+    const [first, third] = values as [number, number]
+    expect(third / first).toBeCloseTo(1 + LIEN_MOMENTUM_RATE, 1)
+  })
+
+  it('Kiem The is cast-local: a NEW cast starts at zero stacks', () => {
+    const player = nguPlayer('foundation_establishment')
+    player.swordPath!.kiemDaoCount = 3
+    const provider = buildNguKiemDaoProvider(player, LIEN)
+    const { system, battle, eventBus } = makeBattle(provider)
+
+    // Only the attacker's swords count — the defender's own basic
+    // also emits 'damage'.
+    const values: number[] = []
+    eventBus.on('damage', (event: { value?: number; sourceId?: string }) => {
+      if (event.value !== undefined && event.sourceId === 'attacker') values.push(event.value)
+    })
+
+    system.resolveNextStep(battle) // cast 1 — swords 1..3
+    system.resolveNextStep(battle) // defender's turn (or next step)
+    system.resolveNextStep(battle) // cast 2 — sword 1 must NOT carry cast 1's stacks
+
+    expect(values.length).toBe(6)
+    const cast2First = values[3]!
+    const cast1First = values[0]!
+    // Cast 2 sword 1 has zero landed priors — same bare multiplier as
+    // cast 1 sword 1, never a residue of the previous cast's stacks.
+    expect(cast2First).toBeCloseTo(cast1First, 5)
+  })
+
+  it('cast-local stacks span targets of one cast (priorInstanceOpIds accumulates per deal_damage)', () => {
+    // Contract-level pin: the engine's landedPriorInstances spans the
+    // target loop — documented in TurnSkillAction.instances docs and
+    // covered at plan level by the ops_result_sum var the resolver
+    // emits; the provider closure itself is target-agnostic.
+    const player = nguPlayer()
+    const provider = buildNguKiemDaoProvider(player, LIEN)
+    const def = provider.resolveBasic({} as TurnBattleParticipant)
+    const targetA = { currentHp: 100, maxHp: 100 } as CombatEntity
+    const targetB = { currentHp: 100, maxHp: 100 } as CombatEntity
+    // 1 landed prior on target A still stacks for target B's first
+    // instance — the stack is cast-local, not per-target.
+    expect(def.instances!.perInstanceOptions!(0, targetB, 1).damageMultiplier).toBeCloseTo(
+      1 + LIEN_MOMENTUM_RATE,
+      10,
+    )
+    expect(targetA).toBeDefined()
+  })
+
+  it('evolution collectors read nodeLevels + way only — Kiếm Thế is never persisted', () => {
+    const player = nguPlayer()
+    player.nodeLevels = { ngu_kiem_khoi: 1, ngu_kiem_lien: 1 }
+    expect([...collectOwnedEvolutionIds(player, KIEM_TU_NODES)].sort()).toEqual(['khoi', 'lien'])
+    // No persisted field exists for the stack: SwordPathState carries
+    // only preset/kiemY/kiemDaoCount/kiemDaoBase.
+    expect(Object.keys(player.swordPath!).sort()).toEqual(
+      Object.keys(freshSwordPathState()).sort(),
+    )
   })
 })
 

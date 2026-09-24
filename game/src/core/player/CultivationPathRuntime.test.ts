@@ -182,7 +182,7 @@ describe('CultivationPathRuntime registry', () => {
     })
   })
 
-  it('sword runtimes expose the dynamic-basic provider; ngu adds emblem slots', () => {
+  it('sword runtimes expose the dynamic-basic provider; neither way authors emblem slots', () => {
     const deps = makeDeps()
 
     const hien = createDefaultPlayer()
@@ -199,9 +199,9 @@ describe('CultivationPathRuntime registry', () => {
     ngu.swordPath = freshSwordPathState()
     const nguRuntime = resolveCultivationPathRuntime(ngu, deps)
     expect(nguRuntime.buildDynamicBasic?.(ngu, [], () => 0.5)).toBeDefined()
-    const emblems = nguRuntime.emblemSlots?.()
-    expect(emblems?.special?.id).toBe('tu_kiem_y')
-    expect(emblems?.ultimate?.id).toBe('kiem_dao_cascade')
+    // Ngu Kiem Beta — no emblem slots: one evolving basic is the whole
+    // kit (special/ultimate stay undefined by design).
+    expect(nguRuntime.emblemSlots?.()).toBeUndefined()
   })
 
   it('a battle built through the ops consumes an injected path runtime — no path branch in the consumer', () => {
@@ -230,7 +230,7 @@ describe('CultivationPathRuntime registry', () => {
     expect(participant.entity.maxThe).toBe(7)
   })
 
-  it('sword ngu parity through the real build: provider + emblem slots survive the boundary', () => {
+  it('sword ngu parity through the real build: provider survives, emblem slots absent', () => {
     const gameManager = new GameManager()
     const combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
@@ -247,7 +247,7 @@ describe('CultivationPathRuntime registry', () => {
 
     const participant = gameManager.getTurnBattle()!.players[0]!
     expect(participant.dynamicBasic).toBeDefined()
-    expect(participant.special?.skill.id).toBe('tu_kiem_y')
-    expect(participant.ultimate?.skill.id).toBe('kiem_dao_cascade')
+    expect(participant.special).toBeUndefined()
+    expect(participant.ultimate).toBeUndefined()
   })
 })

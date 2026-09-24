@@ -4,7 +4,6 @@ import { SKILLS } from '../../data/skill/Skills'
 import { CORE_SKILLS } from '../../data/skill/CoreSkills'
 import { buffs } from '../../data/buff/buffs'
 import { BOSS_BUFFS } from '../../data/buff/BossBuffs'
-import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
@@ -115,9 +114,7 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
     'minor_wood_intensity',
     'minor_metal_intensity',
     'minor_earth_intensity',
-    'ngu_kiem_sac',
     'ngu_kiem_phong',
-    'ngu_kiem_sat',
   ])
 
   it('technique gates stay inside the M-QI-06 authored allowlist', () => {

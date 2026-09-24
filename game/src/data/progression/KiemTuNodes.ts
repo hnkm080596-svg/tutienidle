@@ -15,13 +15,12 @@ import { ORB_UNLOCK_REALM } from '../skill/KiemPhoOrbs'
 //
 //   branchTag 'ngu_kiem' — the ngu way subtree (Cultivation Path
 //   Framework M6: way membership replaces the retired kiem_tu_an flip
-//   node — entry is ritual-only now): 3 cascade unlock nodes (a/e/d),
-//   3 per-instance growth nodes (generic statModifiers — every phi
-//   kiem instance runs the standard damage pipeline so player stats
-//   scale all of them), and the Cuu Cung 3x3: 8 realm-gated
-//   kiemYGrant outers feeding trung_cung's +1 kiemDaoGrant. All 9 Cuu
-//   Cung nodes carry the kiemDaoBelowCap prereq — a capped pool
-//   rejects the buy BEFORE insight moves (spec K20).
+//   node — entry is ritual-only now). Ngu Kiem Beta: the subtree is
+//   ONE vertical accumulation spine — one evolution node per realm
+//   tier (Khoi granted at the ritual, Lien purchasable at Truc Co,
+//   plus a sealed '???' placeholder for the next tier). Chained node
+//   prereqs render the spine automatically inside the shared
+//   NodeTreePanel; old evolutions stay active once owned.
 //
 function stat(
   nodeId: string,
@@ -206,159 +205,70 @@ const ORB_NODES: ProgressionNode[] = ORB_BRANCHES.flatMap(branch => {
 // ─────────────────── Hidden-path root (Task 10 contract) ───────────────────
 
 
-// ───────────────────────── Ngu branch ─────────────────────────
+// ───────────────────────── Ngu branch — evolution spine ─────────────────────────
 
-// Roll Cascade unlocks (spec §5.2) — one node per slot, realm-gated to
-// the spec's ladder: a (execute) @ Truc Co, e (crit) @ Kim Dan,
-// d (armor) @ Nguyen Anh. The provider reads effect.cascadeUnlock via
-// collectKiemDaoCascadeUnlocks — the ids are content, not contract.
-const NGU_CASCADE_NODES: ProgressionNode[] = [
+// Ngu Kiem Beta (design sec.7/sec.52) — the hidden way's ONLY nodes:
+// one vertical accumulation spine, one single-level evolution node per
+// realm tier. Chained 'node' prereqs make NodeTreePanel depth-group them
+// vertically (the spine) — no dedicated view needed. effect.evolutionId
+// is the DATA marker the provider collects (combat stays node-agnostic);
+// the sealed '???' placeholder carries no effect so an owned tier never
+// resolves a mechanic it has no design for.
+export const NGU_KIEM_EVOLUTION_NODE_IDS = [
+  'ngu_kiem_khoi',
+  'ngu_kiem_lien',
+  'ngu_kiem_phong',
+] as const
+
+const NGU_EVOLUTION_NODES: ProgressionNode[] = [
   {
-    id: 'ngu_cascade_a',
-    name: 'Phi Kiếm · Sát',
-    description: 'Mở Roll Cascade Sát: mỗi phi kiếm xử quyết mục tiêu dưới ngưỡng HP theo cảnh giới.',
+    id: 'ngu_kiem_khoi',
+    name: 'Ngự Kiếm · Khởi',
+    description:
+      'Trước: chưa có phi kiếm. Sau: mỗi Kiếm Đạo triệu hồi một phi kiếm — mỗi kiếm một đòn đánh độc lập theo thứ tự.',
     type: 'major',
     role: 'keystone',
-    insightCost: 2,
+    insightCost: 0,
+    maxLevel: 1,
+    // Granted at the Initiation Ritual (way.grantedNodeIds) — never
+    // purchasable (design sec.28/sec.50).
+    grantedOnly: true,
+    effect: { evolutionId: 'khoi' },
+    branchTag: 'ngu_kiem',
+  },
+  {
+    id: 'ngu_kiem_lien',
+    name: 'Ngự Kiếm · Liên',
+    description:
+      'Trước: mỗi phi kiếm đánh độc lập, không cộng dồn. Sau: phi kiếm trúng tích Kiếm Thế — kiếm sau trong cùng một lần xuất kiếm mạnh hơn theo số kiếm đã trúng.',
+    type: 'major',
+    role: 'keystone',
+    insightCost: 3,
+    maxLevel: 1,
     prerequisites: [
+      { kind: 'node', nodeId: 'ngu_kiem_khoi' },
       { kind: 'realm', realmId: 'foundation_establishment' },
     ],
-    effect: { cascadeUnlock: 'a' },
+    effect: { evolutionId: 'lien' },
     branchTag: 'ngu_kiem',
   },
   {
-    id: 'ngu_cascade_e',
-    name: 'Phi Kiếm · Biến',
-    description: 'Mở Roll Cascade Biến: mỗi phi kiếm tự roll chí mạng.',
+    // Sealed '???' placeholder for the next tier (design: future realms
+    // may show sealed slots on the spine). prereq realm golden_core
+    // puts it permanently out of reach inside the beta ceiling — it
+    // renders locked forever.
+    id: 'ngu_kiem_phong',
+    name: '???',
+    description: 'Tầng tiếp theo của Ngự Kiếm — chưa mở.',
     type: 'major',
     role: 'keystone',
-    insightCost: 2,
+    insightCost: 3,
+    maxLevel: 1,
     prerequisites: [
+      { kind: 'node', nodeId: 'ngu_kiem_lien' },
       { kind: 'realm', realmId: 'golden_core' },
     ],
-    effect: { cascadeUnlock: 'e' },
-    branchTag: 'ngu_kiem',
-  },
-  {
-    id: 'ngu_cascade_d',
-    name: 'Phi Kiếm · Phá',
-    description: 'Mở Roll Cascade Phá: mỗi phi kiếm tự roll xuyên/bỏ giáp.',
-    type: 'major',
-    role: 'keystone',
-    insightCost: 2,
-    prerequisites: [
-      { kind: 'realm', realmId: 'nascent_soul' },
-    ],
-    effect: { cascadeUnlock: 'd' },
-    branchTag: 'ngu_kiem',
-  },
-]
-
-// Per-instance growth — every phi kiem resolves through the standard
-// damage pipeline, so generic statModifiers scale every instance.
-const NGU_GROWTH_NODES: ProgressionNode[] = [
-  {
-    id: 'ngu_kiem_sac',
-    name: 'Phi Kiếm Sắc',
-    description: '+3% Sát Thương Kỹ Năng mỗi cấp — mọi phi kiếm đều hưởng.',
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    // M-QI-06 authored cap gate: the last mastery level needs
-    // technique rank 4 (mechanism-proving set).
-    levelGates: [{ atLevel: 5, prerequisite: { kind: 'techniqueRank', rank: 4 } }],
-    prerequisites: [],
-    effect: { statModifiers: [stat('ngu_kiem_sac', 'skillDamagePercent', undefined, undefined, 0.03, 0.03)] },
-    branchTag: 'ngu_kiem',
-  },
-  {
-    id: 'ngu_kiem_phong',
-    name: 'Phi Kiếm Phong',
-    description: '+2% Xuyên Kháng mỗi cấp — phi kiếm xé giáp tốt hơn.',
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    // M-QI-06 authored cap gate: the last mastery level needs
-    // technique rank 4 (mechanism-proving set).
-    levelGates: [{ atLevel: 5, prerequisite: { kind: 'techniqueRank', rank: 4 } }],
-    prerequisites: [],
-    effect: { statModifiers: [stat('ngu_kiem_phong', 'chanceToIgnoreResistance', undefined, undefined, 0.02, 0.02)] },
-    branchTag: 'ngu_kiem',
-  },
-  {
-    id: 'ngu_kiem_sat',
-    name: 'Phi Kiếm Sát Khí',
-    description: '+3% Sát Thương Chí Mạng mỗi cấp — phi kiếm chí mạng đau hơn.',
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    // M-QI-06 authored cap gate: the last mastery level needs
-    // technique rank 4 (mechanism-proving set).
-    levelGates: [{ atLevel: 5, prerequisite: { kind: 'techniqueRank', rank: 4 } }],
-    prerequisites: [],
-    effect: { statModifiers: [stat('ngu_kiem_sat', 'criticalDamage', undefined, undefined, 0.03, 0.03)] },
-    branchTag: 'ngu_kiem',
-  },
-]
-
-// ───────────────────────── Cuu Cung 3x3 ─────────────────────────
-// Spec §5.4: 8 outer palaces each grant a lump of Kiem Y (insight-costed
-// + realm-gated, one per realm Luyện Khí → Đại Thừa); Trung Cung grants
-// +1 kiemDaoCount and requires ALL 8 outers. Every node in the cluster
-// carries kiemDaoBelowCap — at cap nothing here is purchasable, so no
-// Kiem Y can pool past the sword cap (K20). Grant amounts are a first
-// balance pass (~half of forgeCost at the gate realm).
-
-const CUU_CUNG_OUTER: Array<{
-  id: string
-  palace: string
-  realmId: string
-  kiemYGrant: number
-}> = [
-  { id: 'cuu_cung_kham', palace: 'Khảm', realmId: 'qi_refining', kiemYGrant: 5_000 },
-  { id: 'cuu_cung_khon', palace: 'Khôn', realmId: 'foundation_establishment', kiemYGrant: 6_500 },
-  { id: 'cuu_cung_chan', palace: 'Chấn', realmId: 'golden_core', kiemYGrant: 8_500 },
-  { id: 'cuu_cung_ton', palace: 'Tốn', realmId: 'nascent_soul', kiemYGrant: 11_000 },
-  { id: 'cuu_cung_can', palace: 'Càn', realmId: 'soul_transformation', kiemYGrant: 14_500 },
-  { id: 'cuu_cung_doai', palace: 'Đoài', realmId: 'void_refinement', kiemYGrant: 18_500 },
-  { id: 'cuu_cung_cin', palace: 'Cấn', realmId: 'body_integration', kiemYGrant: 24_000 },
-  { id: 'cuu_cung_ly', palace: 'Ly', realmId: 'mahayana', kiemYGrant: 31_000 },
-]
-
-const CUU_CUNG_NODES: ProgressionNode[] = [
-  ...CUU_CUNG_OUTER.map<ProgressionNode>(palace => ({
-    id: palace.id,
-    name: `Cửu Cung · ${palace.palace}`,
-    description: `Tụ Kiếm Ý vào cung ${palace.palace} — lập tức nhận ${palace.kiemYGrant} Kiếm Ý.`,
-    type: 'minor',
-    role: 'growth',
-    insightCost: 2,
-    prerequisites: [
-      { kind: 'realm', realmId: palace.realmId },
-      { kind: 'kiemDaoBelowCap' },
-    ],
-    effect: { kiemYGrant: palace.kiemYGrant },
-    branchTag: 'ngu_kiem',
-  })),
-  {
-    id: 'cuu_cung_trung',
-    name: 'Cửu Cung · Trung Cung',
-    description:
-      'Tám cung hội tụ về trung ương — trực tiếp luyện thêm 1 phi kiếm (không tốn Kiếm Ý).',
-    type: 'major',
-    role: 'keystone',
-    insightCost: 5,
-    prerequisites: [
-      { kind: 'nodeCount', nodeIds: CUU_CUNG_OUTER.map(p => p.id), countRequired: 8 },
-      { kind: 'kiemDaoBelowCap' },
-    ],
-    effect: { kiemDaoGrant: 1 },
+    effect: {},
     branchTag: 'ngu_kiem',
   },
 ]
@@ -375,7 +285,7 @@ export const KIEM_TU_NODES: ProgressionNode[] = [
     requiredCultivationPath: 'sword' as const,
     requiredWay: 'sword_pathway' as const,
   })),
-  ...[...NGU_CASCADE_NODES, ...NGU_GROWTH_NODES, ...CUU_CUNG_NODES].map(node => ({
+  ...NGU_EVOLUTION_NODES.map(node => ({
     ...node,
     requiredCultivationPath: 'sword' as const,
     requiredWay: 'hidden_sword_pathway' as const,

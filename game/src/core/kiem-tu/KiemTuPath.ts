@@ -8,11 +8,7 @@ import type { PlayerData } from '../player/Player'
 import { freshSwordPathState, KIEM_PHO_ORB_IDS } from './KiemTuState'
 import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
 import { KIEM_PHO_BUFFS } from '../../data/buff/KiemPhoBuffs'
-import {
-  KIEM_DAO_CASCADE_EMBLEM,
-  NGU_KIEM_THUAT,
-  TU_KIEM_Y_EMBLEM,
-} from '../../data/skill/NguKiemDaoSkills'
+import { NGU_KIEM_THUAT } from '../../data/skill/NguKiemDaoSkills'
 
 // Cultivation Path Framework (spec 2026-09-16, M6) — the Kiem Tu path
 // module: the two way definitions + the way membership predicates.
@@ -21,8 +17,8 @@ import {
 //     player.swordPath.preset; combat basics come from the KiemPho
 //     dynamicBasic provider.
 //   hidden_sword_pathway — Ngu Kiem Dao (hidden): ritual-only entry gated by tram Lv3,
-//     permanent; combat action is provider-injected (ngu_kiem_thuat +
-//     emblem slots). The Kiem Y -> Kiem Dao economy lives on the same
+//     permanent; combat action is provider-injected (ngu_kiem_thuat,
+//     one evolving skill — Ngu Kiem Beta). The Kiem Y -> Kiem Dao economy lives on the same
 //     player.swordPath slice — hidden_sword_pathway was NEVER a separate path id (the old
 //     swordPath.mode discriminator retired in M6; cultivationWay is the
 //     discriminator now).
@@ -154,8 +150,8 @@ export function isSwordPathway(player: SwordPathWayRead | null | undefined): boo
 
 /**
  * hidden_sword_pathway membership — the gate for the hidden way's machinery: the
- * NguKiemDao economy (gainKiemY/grantKiemDao/merge), the
- * NguKiemDaoProvider attach, the kiemDaoBelowCap prereq, and the hidden_sword_pathway
+ * NguKiemDao economy (gainKiemY/merge), the
+ * NguKiemDaoProvider attach, the evolution-spine grant chain, and the hidden_sword_pathway
  * node subtree. sword never had a hidden-variant path id, so a
  * single era exists: ('sword', 'hidden_sword_pathway') — the WAY id is the check.
  */
@@ -245,17 +241,20 @@ export const HIDDEN_SWORD_PATHWAY: PathWayDefinition = {
   },
   // P1 - hidden_sword_pathway owns the Ngu Kiem Dao machinery: the Kiem Y -> Kiem Dao
   // economy + realm merge, the provider-injected combat action, the
-  // emblem slots, and the 'ngu_kiem' node-tree tag.
+  // evolution spine, and the 'ngu_kiem' node-tree tag.
   capabilities: {
     static: ['sword.sword_riding'],
   },
-  // P1-M2 - the provider-injected action plus the two emblem defs the
-  // combat slots carry (emblemOnly markers, never real casts).
+  // P1-M2 - the provider-injected action (Ngu Kiem Beta: no emblem
+  // defs — the way's combat machinery is the provider alone).
   ownedContent: {
-    skillIds: [NGU_KIEM_THUAT.id, TU_KIEM_Y_EMBLEM.id, KIEM_DAO_CASCADE_EMBLEM.id],
+    skillIds: [NGU_KIEM_THUAT.id],
   },
-  // M-QI-05 - the provider action owns the way's canonical Core Node;
-  // the emblem defs are internal markers with no progression channel.
+  // M-QI-05 - the provider action owns the way's canonical Core Node.
   coreSkillIds: [NGU_KIEM_THUAT.id],
+  // Ngu Kiem Beta — Khởi is granted at ritual completion (the first
+  // evolution layer, node id declared in KiemTuNodes; the grant loop
+  // lives in GameManagerRealmAdvanceOps.chooseCultivationPath).
+  grantedNodeIds: ['ngu_kiem_khoi'],
   nodeTreeTag: 'ngu_kiem',
 }

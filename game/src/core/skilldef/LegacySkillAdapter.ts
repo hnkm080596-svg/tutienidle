@@ -658,6 +658,9 @@ function adaptInstances(
                   },
                 }
               : {}),
+            ...(def.instances.each.momentumPerLandedInstance !== undefined
+              ? { momentumPerLandedInstance: def.instances.each.momentumPerLandedInstance }
+              : {}),
           },
         }
       : {}),

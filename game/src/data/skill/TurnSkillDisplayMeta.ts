@@ -329,19 +329,11 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     description: 'Quét ngang toàn trận — sát thương mọi mục tiêu.',
   },
 
-  // Ngu Kiem Dao (Task 9) — the multi-instance phi kiem basic + the two
-  // emblem slots (HUD markers only, never resolvable).
+  // Ngu Kiem Beta — ONE evolving skill; the newest owned evolution's
+  // display name is resolved by resolveNguKiemSkillName (Khởi / Liên).
   ngu_kiem_thuat: {
-    name: 'Ngự Kiếm Thuật',
+    name: 'Ngự Kiếm',
     description: 'Phi kiếm độc lập đánh chuỗi mục tiêu — mỗi kiếm một đòn.',
-  },
-  tu_kiem_y: {
-    name: 'Tụ Kiếm Ý',
-    description: 'Mỗi đòn phi kiếm tích 1 Kiếm Ý — đủ Ý luyện thêm phi kiếm.',
-  },
-  kiem_dao_cascade: {
-    name: 'Kiếm Đạo Liên Toát',
-    description: 'Mỗi phi kiếm tự quyết sát chiêu, bạo kích, phá giáp.',
   },
 
 }

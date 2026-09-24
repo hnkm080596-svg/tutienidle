@@ -11,6 +11,7 @@ import { issueCompanionGifts } from '../companion/CompanionGifts'
 import { CULTIVATION_PATH_MODULES, getActiveWayDefinition } from '../player/CultivationPathKit'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward, hasStaticPathCapability } from '../player/CultivationPathSystem'
+import { grantSkillCore } from '../progression/NodeSystem'
 import {
   computeBreakthroughGrade,
   investBodyChapterState,
@@ -312,6 +313,14 @@ export class GameManagerRealmAdvanceOps {
       }
     }
 
+    // Ngu Kiem Beta — every declared granted node must be registered
+    // (a missing id fails the whole ritual before commit).
+    for (const nodeId of way.grantedNodeIds ?? []) {
+      if (!this.deps.nodeRegistry.has(nodeId)) {
+        return false
+      }
+    }
+
     // Path/way commit - the authority validates the pair, evaluates the
     // offerGate live, and writes cultivationWay + the base
     // cultivationPath id plus the path-state slice (sword). Zero
@@ -341,6 +350,13 @@ export class GameManagerRealmAdvanceOps {
     // as node-effect grantsSkillCoreIds (level authority: nodeLevels).
     for (const skillId of way.coreSkillIds ?? []) {
       this.deps.progressionOps.grantSkillCoreBySkillId(player, skillId)
+    }
+
+    // Ngu Kiem Beta — granted evolution nodes (Khởi at ritual) write
+    // through the same seam: nodeLevels + purchasedNodeIds (respec
+    // preserves them; devResetBranch still strips them deliberately).
+    for (const nodeId of way.grantedNodeIds ?? []) {
+      grantSkillCore(player, this.deps.nodeRegistry.get(nodeId))
     }
 
     // P7-M4 - starter learnedness pin: the way's starter basic is

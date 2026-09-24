@@ -168,7 +168,6 @@
           "skillCastCount": "{count} lần xuất chiêu",
           "skillJoin": "và",
           "skill": "Cần {skill} đạt {requirement}",
-          "kiemDaoCap": "Kiếm Đạo đã đạt trần của cảnh giới",
           "techniqueRank": "Cần tâm pháp đạt tầng {rank}",
           "techniqueGrade": "Cần tâm pháp đạt phẩm {grade}",
           "skillUpgrade": "Cần nâng kỹ năng liên quan"
@@ -188,6 +187,9 @@
         "aria": "Chế độ cột giữa",
         "tree": "Cây Kỹ Năng",
         "detail": "Chi Tiết"
+      },
+      "list": {
+        "evolution": "Tiến Hóa: {name}"
       },
       "detail": {
         "empty": "Chọn một kỹ năng để xem chi tiết.",

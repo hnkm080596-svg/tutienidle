@@ -129,11 +129,12 @@ describe('sword ngu way — ritual offer gate (tram Lv3)', () => {
     ).toBe(true)
 
     expect(player.skillInsight).toBe(insightBefore)
-    // M-QI-05 - the only owned nodes are granted cores (learnSkill
-    // tram -> core_tram at Lv1; way.coreSkillIds -> core_ngu_kiem_thuat).
-    // Grants are ownership entries for the revoke cascade, not Insight
-    // purchases - insightBefore is untouched above.
-    expect(player.purchasedNodeIds).toEqual(['core_tram', 'core_ngu_kiem_thuat'])
+    // M-QI-05 + Ngu Kiem Beta - owned ids are granted entries, not
+    // Insight purchases: learnSkill tram -> core_tram; way.coreSkillIds
+    // -> core_ngu_kiem_thuat; way.grantedNodeIds -> ngu_kiem_khoi.
+    // insightBefore is untouched above (grants cost nothing).
+    expect(player.purchasedNodeIds).toEqual(['core_tram', 'core_ngu_kiem_thuat', 'ngu_kiem_khoi'])
+    expect(player.nodeLevels['ngu_kiem_khoi']).toBe(1)
   })
 
   it('permanent: a second way choice is rejected by both the authority and the ritual', () => {
@@ -172,24 +173,27 @@ describe('sword ngu way — subtree isolation', () => {
   it('ngu nodes are purchasable only on the ngu way', () => {
     const ngu = committed('hidden_sword_pathway')
 
-    // ngu_kiem_sac carries no prereq besides the way/path stamps — the
-    // way gate alone decides.
+    // Post-ritual Khoi is granted; Lien's remaining gates are realm +
+    // the Khoi node — bump the realm so only the way gate can decide.
+    ngu.player.realmId = 'foundation_establishment'
     expect(
-      ngu.gameManager.progressionOps.canPurchaseNode('ngu_kiem_sac', ngu.player),
+      ngu.gameManager.progressionOps.canPurchaseNode('ngu_kiem_lien', ngu.player),
     ).toBe(true)
     expect(
-      ngu.gameManager.progressionOps.purchaseNode('ngu_kiem_sac', ngu.player),
+      ngu.gameManager.progressionOps.purchaseNode('ngu_kiem_lien', ngu.player),
     ).toBe(true)
-    expect(ngu.player.nodeLevels['ngu_kiem_sac']).toBe(1)
+    expect(ngu.player.nodeLevels['ngu_kiem_lien']).toBe(1)
 
     const hien = committed('sword_pathway')
+    hien.player.realmId = 'foundation_establishment'
+    hien.player.nodeLevels['ngu_kiem_khoi'] = 1 // corrupt save — way gate still holds
     expect(
-      hien.gameManager.progressionOps.canPurchaseNode('ngu_kiem_sac', hien.player),
+      hien.gameManager.progressionOps.canPurchaseNode('ngu_kiem_lien', hien.player),
     ).toBe(false)
     expect(
-      hien.gameManager.progressionOps.purchaseNode('ngu_kiem_sac', hien.player),
+      hien.gameManager.progressionOps.purchaseNode('ngu_kiem_lien', hien.player),
     ).toBe(false)
-    expect(hien.player.nodeLevels['ngu_kiem_sac']).toBeUndefined()
+    expect(hien.player.nodeLevels['ngu_kiem_lien']).toBeUndefined()
   })
 
   it('hien orb nodes are unpurchasable on the ngu way (inert trap prevented)', () => {
@@ -217,33 +221,38 @@ describe('sword ngu way — subtree isolation', () => {
   it('non-kiem-tu players cannot purchase ngu nodes at any way', () => {
     const { gameManager, player } = committed('hidden_sword_pathway')
     player.cultivationPath = 'spell' // corrupt save shape — path gate still holds
+    player.realmId = 'foundation_establishment'
 
     expect(
-      gameManager.progressionOps.canPurchaseNode('ngu_kiem_sac', player),
+      gameManager.progressionOps.canPurchaseNode('ngu_kiem_lien', player),
     ).toBe(false)
     expect(
-      gameManager.progressionOps.purchaseNode('ngu_kiem_sac', player),
+      gameManager.progressionOps.purchaseNode('ngu_kiem_lien', player),
     ).toBe(false)
   })
 
-  it('devResetBranch refunds ngu nodes normally — the non-refundable flip-node exception is gone', () => {
+  it('devResetBranch strips the whole ngu branch — granted Khoi included (dev tool contract)', () => {
     const { gameManager, player } = committed('hidden_sword_pathway')
-    const insightBefore = player.skillInsight
 
-    // Two cheap ngu buys: ngu_kiem_sac (cost 1) + cuu_cung_kham
-    // (cost 2; realm qi_refining + kiemDaoBelowCap both pass post-ritual).
-    expect(gameManager.progressionOps.purchaseNode('ngu_kiem_sac', player)).toBe(true)
-    expect(gameManager.progressionOps.purchaseNode('cuu_cung_kham', player)).toBe(true)
+    // The ritual grant writes through the ownership seam: Khoi sits in
+    // nodeLevels + purchasedNodeIds before any buy.
+    expect(player.nodeLevels['ngu_kiem_khoi']).toBe(1)
+    expect(player.purchasedNodeIds).toContain('ngu_kiem_khoi')
+
+    player.realmId = 'foundation_establishment'
+    const insightBefore = player.skillInsight
+    expect(gameManager.progressionOps.purchaseNode('ngu_kiem_lien', player)).toBe(true)
     expect(player.skillInsight).toBe(insightBefore - 3)
 
     const refund = gameManager.progressionOps.devResetBranch('ngu_kiem', player)
 
     expect(refund).toBe(3)
     expect(player.skillInsight).toBe(insightBefore)
-    expect(player.nodeLevels['ngu_kiem_sac']).toBeUndefined()
-    expect(player.nodeLevels['cuu_cung_kham']).toBeUndefined()
-    // M-QI-05 - the way/learn core grants stay owned: they were granted
-    // by the ritual + learnSkill, not by any node inside the ngu branch.
+    expect(player.nodeLevels['ngu_kiem_lien']).toBeUndefined()
+    // Deliberate: the dev tool resets the WHOLE branch — even the
+    // granted Khoi node goes (player-facing respec preserves it via
+    // RESPEC_PRESERVED_NODE_IDS instead).
+    expect(player.nodeLevels['ngu_kiem_khoi']).toBeUndefined()
     expect(player.purchasedNodeIds).toEqual(['core_tram', 'core_ngu_kiem_thuat'])
 
     // The way itself is never refunded away — resetting the branch is

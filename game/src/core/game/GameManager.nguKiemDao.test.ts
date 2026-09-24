@@ -9,8 +9,8 @@ import { SKILLS } from '../../data/skill/Skills'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // Kiem Tu Reimagined Task 9 — ngu wiring through the real build path:
-// emblem slots on the participant, multi-instance casts land N hits,
-// and each resolved cast banks +1 Kiem Y.
+// multi-instance casts land N hits, and each resolved cast banks +1
+// Kiem Y. Ngu Kiem Beta: no emblem slots — one evolving basic only.
 
 const ENEMY_STATS_INPUT = {
   maxHp: 10_000_000,
@@ -61,15 +61,13 @@ function advanceTurns(combatSource: ManualClockSource, turns: number) {
 }
 
 describe('GameManager — ngu participant wiring', () => {
-  it('carries dynamicBasic + tu_kiem_y/kiem_dao_cascade emblem slots', () => {
+  it('carries dynamicBasic and NO special/ultimate — one evolving basic is the whole kit', () => {
     const { gameManager } = setup()
     const participant = gameManager.getTurnBattle()!.players[0]!
 
     expect(participant.dynamicBasic).toBeDefined()
-    expect(participant.special?.skill.id).toBe('tu_kiem_y')
-    expect(participant.special?.skill.emblemOnly).toBe(true)
-    expect(participant.ultimate?.skill.id).toBe('kiem_dao_cascade')
-    expect(participant.ultimate?.skill.emblemOnly).toBe(true)
+    expect(participant.special).toBeUndefined()
+    expect(participant.ultimate).toBeUndefined()
   })
 
   it('one cast resolves kiemDaoCount independent hits (multi-instance)', () => {
@@ -88,7 +86,7 @@ describe('GameManager — ngu participant wiring', () => {
   })
 
   it('each resolved cast banks +1 Kiem Y via the provider hook', () => {
-    const { gameManager, combatSource, player } = setup()
+    const { combatSource, player } = setup()
 
     advanceTurns(combatSource, 2)
 

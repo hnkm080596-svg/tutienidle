@@ -18,12 +18,10 @@ import { getRealmIndex } from '../realm/realmSystem'
 
 export const KIEM_DAO_MERGE_BONUS = 0.3
 
-// Roll Cascade tunables (spec §11 first-pass values — the a/e/d unlock
-// nodes live in Task 11; the provider consumes these, never inlines).
-export const EXECUTE_MULT = 10
-export const CASCADE_CRIT_CHANCE = 0.25
-export const CASCADE_PIERCE_CHANCE = 0.5
-export const PIERCE_FRACTION = 0.6
+// Ngu Kiem Beta (design sec.56 — first-pass, tuning deferred): the
+// Lien evolution's Kiem The rate — each landed prior sword of the same
+// cast multiplies the next sword's coefficient by (1 + rate * stacks).
+export const LIEN_MOMENTUM_RATE = 0.15
 
 function assertRealmIndex(realmIndex: number): void {
   if (realmIndex < 1) {
@@ -71,52 +69,6 @@ export function gainKiemY(player: PlayerData, amount: number): void {
     state.kiemY -= cost
     state.kiemDaoCount += 1
   }
-}
-
-/**
- * Trung Cung purchase grant (spec §5.4) — +N live swords WITHOUT
- * spending Kiem Y, clamped at the current realm cap. hidden_sword_pathway-only; the
- * kiemDaoBelowCap prereq should already have rejected a capped buy —
- * this clamp is the second line of defense.
- */
-export function grantKiemDao(player: PlayerData, amount: number): void {
-  const state = player.swordPath
-  const realmIndex = getRealmIndex(player.realmId)
-
-  if (!state || !isHiddenSwordPathway(player) || amount <= 0 || realmIndex < 1) {
-    return
-  }
-
-  state.kiemDaoCount = Math.min(kiemDaoCap(realmIndex), state.kiemDaoCount + amount)
-}
-
-/**
- * F-W-2 - debit phản chiếu của gainKiemY cho clawback: trừ kiemY (sàn 0);
- * phần dư không trừ được quy về kiếm — mỗi forgeCost(realm) hiện tại một
- * thanh (pool auto-forge nên kiếm rèn từ Y được grant chính là phần tiếp
- * nối của món nợ). Dư vượt quá kiếm sống thì hấp thụ — kiếm đã merge vào
- * kiemDaoBase không thể un-merge (applyBreakthroughMerge là vĩnh viễn).
- */
-export function loseKiemY(player: PlayerData, amount: number): void {
-  const state = player.swordPath
-
-  if (!state || amount <= 0) {
-    return
-  }
-
-  const debited = Math.min(state.kiemY, amount)
-  state.kiemY -= debited
-
-  let residual = amount - debited
-
-  if (residual <= 0 || getRealmIndex(player.realmId) < 1) {
-    return
-  }
-
-  const cost = forgeCost(getRealmIndex(player.realmId))
-  const swordsToDebit = Math.min(state.kiemDaoCount, Math.ceil(residual / cost))
-  state.kiemDaoCount -= swordsToDebit
-  residual -= swordsToDebit * cost
 }
 
 /**

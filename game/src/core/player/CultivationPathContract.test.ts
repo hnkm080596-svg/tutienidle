@@ -36,11 +36,7 @@ import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import { SKILLS } from '../../data/skill/Skills'
 import { BASIC_ATTACKS_BY_BUILD, THUY_GIAP_LONG_WATER_SURGE } from '../../data/skill/TurnBasicAttacks'
 import { KIEM_PHO_ORBS } from '../../data/skill/KiemPhoOrbs'
-import {
-  KIEM_DAO_CASCADE_EMBLEM,
-  NGU_KIEM_THUAT,
-  TU_KIEM_Y_EMBLEM,
-} from '../../data/skill/NguKiemDaoSkills'
+import { NGU_KIEM_THUAT } from '../../data/skill/NguKiemDaoSkills'
 import {
   BACH_UNG,
   PHAN_KICH,
@@ -62,8 +58,6 @@ const KNOWN_SKILL_IDS: ReadonlySet<string> = new Set<string>([
   THUY_GIAP_LONG_WATER_SURGE.id,
   ...Object.values(KIEM_PHO_ORBS).map((def) => def.id),
   NGU_KIEM_THUAT.id,
-  TU_KIEM_Y_EMBLEM.id,
-  KIEM_DAO_CASCADE_EMBLEM.id,
   ...Object.values(THE_TU_KIT_BY_ROOT).flatMap((kit) => [
     kit.basic.id,
     kit.special.id,

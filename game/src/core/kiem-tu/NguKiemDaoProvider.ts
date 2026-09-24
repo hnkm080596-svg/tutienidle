@@ -1,99 +1,98 @@
 import type { PlayerData } from '../player/Player'
+import type { CombatEntity } from '../combat/CombatEntity'
 import type { DynamicBasicProvider, TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import type { HitResolveOptions } from '../battle/ActionImpactSystem'
-import type { CombatEntity } from '../combat/CombatEntity'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import { nodeWayApplies } from '../progression/NodeSystem'
-import { getRealmIndex } from '../realm/realmSystem'
-import {
-  CASCADE_CRIT_CHANCE,
-  CASCADE_PIERCE_CHANCE,
-  EXECUTE_MULT,
-  PIERCE_FRACTION,
-  gainKiemY,
-} from './NguKiemDao'
+import { LIEN_MOMENTUM_RATE, gainKiemY } from './NguKiemDao'
 import { NGU_KIEM_THUAT } from '../../data/skill/NguKiemDaoSkills'
 
-// Kiem Tu Reimagined Task 9 (spec §5.2) — the hidden_sword_pathway (Ngu Kiem Dao)
+// Ngu Kiem Beta — the hidden_sword_pathway (Ngu Kiem Dao)
 // DynamicBasicProvider. resolveBasic live-reads kiemDaoBase /
 // kiemDaoCount from PlayerData EVERY cast — a mid-battle forge is
 // immediately reflected (there is no battle-scoped state to reset:
 // count/base are persisted domain state, not runtime).
 //
-// Roll Cascade (spec §5.2) resolves per sword instance against the
-// LIVE target via instances.perInstanceOptions:
-//   Roll 1 (a): execute — hp% < min(0.5, 0.1 * realmIndex) → ×EXECUTE_MULT
-//   Roll 2 (e): crit    — rng() < CASCADE_CRIT_CHANCE → critical
-//   Roll 3 (d): armor   — rng() < CASCADE_PIERCE_CHANCE → armorBypass,
-//               else armorPierceFraction = PIERCE_FRACTION
-// guaranteedHit is unconditional — phi kiem never miss.
-// All rolls go through the injected rng (replay determinism + tests).
-
-export interface KiemDaoCascadeUnlocks {
-  a: boolean
-  e: boolean
-  d: boolean
-}
+// Khởi (design sec.7): every Kiem Dao spawns one phi kiem — each a REAL
+// ordered damage instance through the standard pipeline. NO
+// guaranteedHit, no execute, no crit/armor privilege: a Khởi-only def
+// carries just `instances.count`.
+//
+// Liên (Trúc Cơ): Kiem Thế momentum — each LANDED sword stacks +1;
+// later swords of the same cast multiply their coefficient by
+// (1 + LIEN_MOMENTUM_RATE * stacks). The stack is pure cast-local
+// runtime state — `each.momentumPerLandedInstance` expresses it
+// declaratively for the plan lane while `perInstanceOptions` receives
+// the same cast-local landed count as its third argument for the
+// engine-unit lane. Never persisted, never a buff, never a player stat.
 
 /**
- * Purchased nodes → cascade unlocks (spec §5.2 a/e/d). Effect-driven:
- * any node carrying `effect.cascadeUnlock` contributes its slot — the
- * authored ids live in KiemTuNodes data, not here.
+ * Owned evolution layers (design sec.52): any node carrying
+ * `effect.evolutionId` contributes its id when owned — the authored
+ * node ids live in KiemTuNodes data, not here; future realms add a
+ * node, not a code branch.
  */
-export function collectKiemDaoCascadeUnlocks(
+export function collectOwnedEvolutionIds(
   player: PlayerData,
   nodes: readonly ProgressionNode[],
-): KiemDaoCascadeUnlocks {
-  const unlocks: KiemDaoCascadeUnlocks = { a: false, e: false, d: false }
+): ReadonlySet<string> {
+  const owned = new Set<string>()
 
   for (const node of nodes) {
-    const slot = node.effect.cascadeUnlock
+    const evolutionId = node.effect.evolutionId
 
     // M3 — the way-membership gate applies here too (this collector
-    // reads nodeLevels directly): a wrong-way level must not unlock a
-    // cascade slot.
-    if (slot && (player.nodeLevels?.[node.id] ?? 0) > 0 && nodeWayApplies(player, node)) {
-      unlocks[slot] = true
+    // reads nodeLevels directly): a wrong-way level must not unlock an
+    // evolution layer.
+    if (evolutionId !== undefined && (player.nodeLevels?.[node.id] ?? 0) > 0 && nodeWayApplies(player, node)) {
+      owned.add(evolutionId)
     }
   }
 
-  return unlocks
+  return owned
+}
+
+/**
+ * Display name of the hidden way's single evolving skill (design
+ * sec.41-42): the name of the NEWEST owned evolution node — nodes are
+ * registered in spine order, so the last owned match is the newest
+ * layer. 'Ngự Kiếm' is the pre-evolution fallback.
+ */
+export function resolveNguKiemSkillName(
+  player: PlayerData,
+  nodes: readonly ProgressionNode[],
+): string {
+  let name = 'Ngự Kiếm'
+
+  for (const node of nodes) {
+    if (node.effect.evolutionId !== undefined && (player.nodeLevels?.[node.id] ?? 0) > 0 && nodeWayApplies(player, node)) {
+      name = node.name
+    }
+  }
+
+  return name
 }
 
 export function buildNguKiemDaoProvider(
   player: PlayerData,
-  unlocks: KiemDaoCascadeUnlocks,
-  rng: () => number = Math.random,
+  evolutions: ReadonlySet<string>,
 ): DynamicBasicProvider {
-  const perInstanceOptions = (
-    _instanceIndex: number,
-    target: CombatEntity,
-  ): Partial<HitResolveOptions> => {
-    const options: Partial<HitResolveOptions> = { guaranteedHit: true }
+  const lienOwned = evolutions.has('lien')
 
-    if (unlocks.a) {
-      const threshold = Math.min(0.5, 0.1 * getRealmIndex(player.realmId))
-      const hpRatio = target.maxHp > 0 ? target.currentHp / target.maxHp : 1
-
-      if (hpRatio < threshold) {
-        options.damageMultiplier = EXECUTE_MULT
-      }
-    }
-
-    if (unlocks.e && rng() < CASCADE_CRIT_CHANCE) {
-      options.critical = true
-    }
-
-    if (unlocks.d) {
-      if (rng() < CASCADE_PIERCE_CHANCE) {
-        options.armorBypass = true
-      } else {
-        options.armorPierceFraction = PIERCE_FRACTION
-      }
-    }
-
-    return options
-  }
+  // Engine-unit lane authority for Kiem Thế: `priorLandedInstances` is
+  // the cast-local count of landed prior swords supplied by the
+  // instance loop — the same stack the declarative
+  // `each.momentumPerLandedInstance` models for the plan lane.
+  const perInstanceOptions = lienOwned
+    ? (
+        _instanceIndex: number,
+        _target: CombatEntity,
+        priorLandedInstances: number,
+      ): Partial<HitResolveOptions> =>
+        priorLandedInstances > 0
+          ? { damageMultiplier: 1 + LIEN_MOMENTUM_RATE * priorLandedInstances }
+          : {}
+    : undefined
 
   const resolveDef = (): TurnSkillDefinition => ({
     ...NGU_KIEM_THUAT,
@@ -104,30 +103,10 @@ export function buildNguKiemDaoProvider(
       : undefined,
     instances: {
       count: player.swordPath?.kiemDaoCount ?? 1,
-      perInstanceOptions,
-      // Skill-definition M4 -- declarative mirror of the closure above;
-      // LegacySkillAdapter lifts `each` into SkillInstances.each (the
-      // closure remains the legacy resolveDeclaredHit lane's authority).
-      each: {
-        guaranteedHit: true,
-        ...(unlocks.a
-          ? {
-              execute: {
-                hpPercentBelow: Math.min(0.5, 0.1 * getRealmIndex(player.realmId)),
-                damageMultiplier: EXECUTE_MULT,
-              },
-            }
-          : {}),
-        ...(unlocks.e ? { critChance: CASCADE_CRIT_CHANCE } : {}),
-        ...(unlocks.d
-          ? {
-              armorPierce: {
-                bypassChance: CASCADE_PIERCE_CHANCE,
-                pierceFraction: PIERCE_FRACTION,
-              },
-            }
-          : {}),
-      },
+      ...(perInstanceOptions !== undefined ? { perInstanceOptions } : {}),
+      ...(lienOwned
+        ? { each: { momentumPerLandedInstance: LIEN_MOMENTUM_RATE } }
+        : {}),
     },
   })
 
@@ -141,8 +120,9 @@ export function buildNguKiemDaoProvider(
     // hidden_sword_pathway owns no battle-scoped cursor/log — nothing to reset.
     resetForBattle: () => {},
 
-    // +1 Kiem Y per resolved cast — the domain owner call lives HERE
-    // (the provider), never in the generic GameManager cast sink.
+    // +1 Kiem Y per resolved cast (hit-or-miss alike) — the domain
+    // owner call lives HERE (the provider), never in the generic
+    // GameManager cast sink.
     onCastResolved: () => {
       gainKiemY(player, 1)
       return []

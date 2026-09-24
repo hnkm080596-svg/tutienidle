@@ -168,7 +168,6 @@
           "skillCastCount": "{count} casts",
           "skillJoin": "and",
           "skill": "Requires {skill} at {requirement}",
-          "kiemDaoCap": "Flying swords at the realm cap",
           "techniqueRank": "Requires technique rank {rank}",
           "techniqueGrade": "Requires technique grade {grade}",
           "skillUpgrade": "Upgrade the related skill"
@@ -188,6 +187,9 @@
         "aria": "Center column view",
         "tree": "Node Tree",
         "detail": "Detail"
+      },
+      "list": {
+        "evolution": "Evolution: {name}"
       },
       "detail": {
         "empty": "Select a skill to view details.",

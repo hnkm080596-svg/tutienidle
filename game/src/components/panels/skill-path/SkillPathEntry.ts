@@ -33,6 +33,10 @@ export type SkillPathEntry =
       upgradeCost?: number
       canUpgrade: boolean
       meta?: TurnSkillDisplayMeta
+      // Ngu Kiem Beta (§43) — the newest owned evolution layer's
+      // suffix ('Khởi'/'Liên') for the list's `Evolution: X` tag.
+      // Absent on every non-evolving native entry.
+      evolutionName?: string
     }
 
 export type NativeSkillPathEntry = Extract<SkillPathEntry, { kind: 'native' }>

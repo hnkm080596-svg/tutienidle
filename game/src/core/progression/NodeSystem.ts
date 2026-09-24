@@ -6,7 +6,6 @@ import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import { getRealmIndex } from '../realm/realmSystem'
 import { getEffectiveTechniqueRank } from '../technique/TechniqueProgression'
 import { getNodeCostFreeChance } from '../talent/TalentEffects'
-import { kiemDaoCap } from '../kiem-tu/NguKiemDao'
 import { getSkillCoreLevel, getSkillCoreUpgradeCost, skillCoreNodeId } from './SkillCoreLevel'
 import { CAST_LEVELING_THRESHOLDS } from '../skill/CastLeveling'
 
@@ -95,22 +94,6 @@ export function hasPrerequisite(player: PlayerData, prerequisite: NodePrerequisi
       const levelOk = prerequisite.level === undefined || getSkillCoreLevel(player, prerequisite.skillId) >= prerequisite.level
 
       return castOk && levelOk
-    }
-
-    // Kiem Tu Reimagined (spec K20) - the Cuu Cung cap guard. Lives in
-    // hasPrerequisite so canPurchaseNode blocks the buy BEFORE insight
-    // is deducted or the node recorded. Mortal realm (index 0) fails -
-    // hidden_sword_pathway cannot be entered there anyway. M6: way membership replaces
-    // the retired swordPath.mode discriminator.
-    case 'kiemDaoBelowCap': {
-      const state = player.swordPath
-      const realmIndex = getRealmIndex(player.realmId)
-
-      if (!state || !hasStaticPathCapability(player, 'sword.sword_riding') || realmIndex < 1) {
-        return false
-      }
-
-      return state.kiemDaoCount < kiemDaoCap(realmIndex)
     }
 
     // P7-M6 + M-F-TECHNIQUE (F5) - technique gates read the live-cycle
@@ -212,8 +195,9 @@ export function isNodeElementActive(player: PlayerData, node: ProgressionNode): 
 /** Eligible to PURCHASE (0->1): no level yet, prereq met, enough Insight for the level-1 cost. */
 export function canPurchaseNode(player: PlayerData, node: ProgressionNode): boolean {
   // M-QI-05 - Core Nodes are granted through learn/kit-root/way-commit
-  // seams, never purchased.
-  if (node.levelsSkillId !== undefined) {
+  // seams, never purchased. Ngu Kiem Beta: grantedOnly nodes (evolution
+  // layers) likewise enter only through explicit grants.
+  if (node.levelsSkillId !== undefined || node.grantedOnly === true) {
     return false
   }
 
@@ -241,7 +225,12 @@ export function canPurchaseNode(player: PlayerData, node: ProgressionNode): bool
 /** Eligible to UPGRADE (L->L+1): already purchased, not maxed, enough Insight. */
 export function canUpgradeNode(player: PlayerData, node: ProgressionNode): boolean {
   // M-QI-05 - cast-channel cores level by cast count ONLY; Insight is
-  // never a valid input for them (QI-D3).
+  // never a valid input for them (QI-D3). Ngu Kiem Beta: evolution
+  // layers are single-level grants - no upgrade channel exists.
+  if (node.grantedOnly === true) {
+    return false
+  }
+
   if (node.levelsSkillId !== undefined && CAST_LEVELING_THRESHOLDS[node.levelsSkillId] !== undefined) {
     return false
   }

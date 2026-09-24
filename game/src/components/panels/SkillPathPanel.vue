@@ -42,6 +42,7 @@ import type { SkillPathEntry, NativeSkillPathEntry } from './skill-path/SkillPat
 import { NATIVE_CORE_SKILL_IDS } from '@/data/progression/SkillCoreNodes'
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import { getSkillCoreLevel } from '@/core/progression/SkillCoreLevel'
+import { resolveNguKiemSkillName } from '@/core/kiem-tu/NguKiemDaoProvider'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 
 const { t } = useI18n()
@@ -187,10 +188,22 @@ const skillPathEntries = computed<SkillPathEntry[]>(() => {
     const maxLevel = gameManager.progressionOps.getSkillCoreMaxLevel(skillId)
     const upgradeCost = gameManager.progressionOps.getSkillCoreUpgradeCost(skillId, player.$state)
 
+    // Ngu Kiem Beta (§43): the way's ONE evolving skill displays the
+    // NEWEST owned evolution's name (naming law) plus an `Evolution: X`
+    // tag carrying that layer's one-char suffix.
+    const nguKiemName =
+      skillId === 'ngu_kiem_thuat'
+        ? resolveNguKiemSkillName(player.$state, gameManager.nodeRegistry.getAll())
+        : undefined
+    const evolutionName =
+      nguKiemName !== undefined && nguKiemName.includes('·')
+        ? nguKiemName.split('·').at(-1)?.trim()
+        : undefined
+
     entries.push({
       kind: 'native',
       id: skillId,
-      name: meta?.name ?? skillId,
+      name: nguKiemName ?? meta?.name ?? skillId,
       description: meta?.description,
       level,
       maxLevel,
@@ -198,6 +211,7 @@ const skillPathEntries = computed<SkillPathEntry[]>(() => {
       upgradeCost,
       canUpgrade: upgradeCost !== undefined && player.skillInsight >= upgradeCost,
       ...(meta ? { meta } : {}),
+      ...(evolutionName !== undefined ? { evolutionName } : {}),
     })
   }
 

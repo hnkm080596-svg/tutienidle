@@ -16,7 +16,6 @@ import {
   getNodeMaxLevel,
   getEffectiveNodeMaxLevel,
   getBlockingNodeLevelGates,
-  getNextLevelCost,
   hasPrerequisite,
   canUpgradeNode,
   isNodeElementActive,
@@ -26,7 +25,6 @@ import {
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '@/data/progression/PhapTuNodes.builders'
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
-import type { ElementType } from '@/core/element/ElementType'
 import type { SpellPathRoute } from '@/core/phap-tu/PhapTuState'
 import type { NodePrerequisite, ProgressionNode } from '@/core/progression/ProgressionNode'
 
@@ -128,8 +126,6 @@ function nodePrereqReason(prereq: NodePrerequisite): string {
       skill: skillName,
       requirement,
     })
-  } else if (prereq.kind === 'kiemDaoBelowCap') {
-    return t('panels.skillPath.nodeInspector.lockedReasons.kiemDaoCap')
   } else if (prereq.kind === 'techniqueRank') {
     return t('panels.skillPath.nodeInspector.lockedReasons.techniqueRank', {
       rank: prereq.rank,
@@ -323,8 +319,11 @@ function onUpgrade() {
           {{ t('panels.skillPath.nodeInspector.actions.unlock') }}
         </GameButton>
 
+        <!-- Ngu Kiem Beta: `level < maxLevel`, not `!isMaxed` — a
+             single-level owned node (evolution layer, maxLevel 1) shows
+             only the purchased status, never an upgrade button. -->
         <GameButton
-          v-else-if="!isMaxed"
+          v-else-if="level < maxLevel"
           class="node-inspector__buy"
           size="sm"
           :disabled="!upgradable"

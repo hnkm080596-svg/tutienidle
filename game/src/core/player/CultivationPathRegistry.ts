@@ -18,7 +18,6 @@ import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import type { SurviveLethalSource } from '../combat/CombatSystem'
 import type { BuffDefinitionId } from '../battle/contracts/ids'
-import type { ProgressionNode } from '../progression/ProgressionNode'
 import type { ElementType } from '../element/ElementType'
 import type { CultivationPathRuntime, CultivationPathRuntimeDeps } from './CultivationPathRuntime'
 import { hasPathCapability, resolveActiveWayStatDomains } from './CultivationPathSystem'
@@ -63,18 +62,12 @@ import {
 import { collectBodyKitModifiers } from '../the-tu/TheTuKitModifiers'
 import { collectHiddenBodyMechanicModifiers } from '../the-tu/TheTuAnMechanicModifiers'
 import { BodyBatTuSurvival } from '../the-tu/TheTuBatTuSurvival'
-import { isBodyPathway, isHiddenBodyPathway } from '../the-tu/TheTuPath'
-import { isSwordPathway, isHiddenSwordPathway } from '../kiem-tu/KiemTuPath'
 import { buildKiemPhoProvider } from '../kiem-tu/KiemPhoProvider'
 import { collectKiemPhoComboModifiers } from '../kiem-tu/KiemPhoNodeModifiers'
 import {
   buildNguKiemDaoProvider,
-  collectKiemDaoCascadeUnlocks,
+  collectOwnedEvolutionIds,
 } from '../kiem-tu/NguKiemDaoProvider'
-import {
-  KIEM_DAO_CASCADE_EMBLEM,
-  TU_KIEM_Y_EMBLEM,
-} from '../../data/skill/NguKiemDaoSkills'
 
 // ---------------------------------------------------------------------------
 // Shared resolver internals (moved from GameManager)
@@ -367,16 +360,14 @@ function createSwordPathRuntime(deps: CultivationPathRuntimeDeps, hidden: boolea
     },
     resolveSpecialUltimate: () => undefined,
     buildDynamicBasic: hidden
-      ? (player, nodes, rng) =>
-          buildNguKiemDaoProvider(player, collectKiemDaoCascadeUnlocks(player, nodes), rng)
+      ? (player, nodes) =>
+          buildNguKiemDaoProvider(player, collectOwnedEvolutionIds(player, nodes))
       : (player, nodes) =>
           buildKiemPhoProvider(player, collectKiemPhoComboModifiers(player, nodes)),
-    emblemSlots: hidden
-      ? () => ({ special: TU_KIEM_Y_EMBLEM, ultimate: KIEM_DAO_CASCADE_EMBLEM })
-      : undefined,
     // P7-M4 — display label for the provider-backed basic (Kiếm Phổ orb
-    // machinery / Ngự Kiếm Đạo cascade), matching kiemBarBridge's wording.
-    describeDynamicBasic: () => ({ name: hidden ? 'Ngự Kiếm Đạo' : 'Kiếm Phổ' }),
+    // machinery / Ngự Kiếm — Ngu Kiem Beta: ONE evolving skill), matching
+    // kiemBarBridge's wording.
+    describeDynamicBasic: () => ({ name: hidden ? 'Ngự Kiếm' : 'Kiếm Phổ' }),
   }
 }
 
