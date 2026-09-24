@@ -2,19 +2,6 @@ import { SkillManager } from '../skill/SkillManager'
 import type { Skill } from '../skill/Skill'
 import type { TechniqueSystem } from '../technique/TechniqueSystem'
 import type { Technique } from '../technique/Technique'
-import {
-  getTechniqueGradeCeiling,
-  getTechniqueMasteryForNextRank,
-  TECHNIQUE_RANK_CAP,
-} from '../technique/TechniqueProgression'
-import { getRealmIndex } from '../realm/realmSystem'
-import {
-  TECHNIQUE_COMPLETION_STATES,
-  type TechniqueCompletionState,
-} from '../technique/Technique'
-import { ITEM_QUALITY_ORDER } from '../item/ItemQuality'
-import { getActiveWayDefinition } from '../player/CultivationPathKit'
-import { mortalBoundaryContractViolation } from '../skill/MortalPrecursors'
 import { MaterialRegistry } from '../material/MaterialRegistry'
 import { MaterialBag } from '../material/MaterialBag'
 import { PillRegistry } from '../pill/PillRegistry'
@@ -35,13 +22,10 @@ import { DecomposeSystem, type DecomposeOutputEntry } from '../production/Decomp
 import { AlchemySystem, type ActiveAlchemyJob } from '../alchemy/AlchemySystem'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
-import {
-  applyAllBodyModifiers,
-  assertBodyProgressionIntegrity,
-} from '../realm/body/BodyProgressionSystem'
-import { assertBodyPerfectionIntegrity } from '../realm/body/BodyPerfection'
+import { applyAllBodyModifiers } from '../realm/body/BodyProgressionSystem'
 import type { StatModifier } from '../stats/StatCalculator'
 import { computeRestoreIdentity, type GameSave } from '../../services/save/saveTypes'
+import { assertSaveAcceptable } from '../../services/save/saveAcceptance'
 import { NotificationQueue } from './NotificationQueue'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
 import { TemplateRegistry } from './TemplateRegistry'
@@ -125,176 +109,20 @@ export class GameManagerSaveRestore {
    * App calls this before Pinia restore; restoreFromSave repeats it defensively.
    */
   preflightSaveRegistryReferences(save: GameSave): void {
-    for (const instance of save.equipment) {
-      if (!this.deps.equipmentRegistry.has(instance.itemId)) {
-        throw new Error(`Unknown equipment template in save: ${instance.itemId}`)
-      }
-
-      for (const affix of instance.affixes) {
-        if (!this.deps.affixRegistry.has(affix.affixId)) {
-          throw new Error(`Unknown equipment affix in save: ${affix.affixId}`)
-        }
-      }
-    }
-
-    // R10 (AR-12, S4) - materials/pills/buildings previously had no
-    // preflight coverage at all: the restore loops silently dropped an
-    // unknown ID via `if (registry.has(id)) ...` instead of rejecting.
-    // Per the project's established registry-drift principle (learned-
-    // defects QA-2026-09-01-013), silently filtering an owned current
-    // entry is data loss, not recovery - hard-fail before any owner
-    // mutation, same contract equipment already had. Skills/techniques
-    // are intentionally NOT included here: an unknown template there
-    // drops the entry at restore (see the restore loops below), not a
-    // registry-drift rejection case.
-    for (const entry of save.materials) {
-      if (!this.deps.materialRegistry.has(entry.materialId)) {
-        throw new Error(`Unknown material in save: ${entry.materialId}`)
-      }
-    }
-
-    for (const entry of save.pills) {
-      if (!this.deps.pillRegistry.has(entry.pillId)) {
-        throw new Error(`Unknown pill in save: ${entry.pillId}`)
-      }
-    }
-
-    for (const instance of save.buildings) {
-      if (!this.deps.buildingRegistry.has(instance.buildingId)) {
-        throw new Error(`Unknown building in save: ${instance.buildingId}`)
-      }
-    }
-
-    // Mission A review (MA-R1-04) - an unknown siteId previously passed
-    // preflight, then occupied worker allocation slots while producing
-    // nothing (no definition -> cycleMs 0), permanently draining capacity
-    // from real sites. Registry-backed reference -> hard-fail here.
-    for (const site of save.productionSites ?? []) {
-      if (!this.deps.productionSystem.getSiteDefinition(site.siteId)) {
-        throw new Error(`Unknown production site in save: ${site.siteId}`)
-      }
-    }
-
-    // P7-M3 (v70) - techniques DO get hard validation here (upgraded
-    // from the old "unknown id drops silently" restore): the holder is
-    // 0-or-1 and MUST equal the committed way's techniqueId; a way-less
-    // (mortal) save must carry none. A mismatch is corrupt progression
-    // state, not drift - reject before any owner mutation.
-    const activeWay = getActiveWayDefinition(save.player)
-
-    if (activeWay) {
-      const entry = save.techniques[0]
-
-      if (save.techniques.length !== 1 || entry?.id !== activeWay.techniqueId) {
-        throw new Error(
-          `Technique holder contract violated in save: way '${activeWay.id}' requires exactly '${activeWay.techniqueId}', found ${save.techniques.length} entries`,
-        )
-      }
-
-      if (!this.deps.techniqueTemplates.has(entry.id)) {
-        throw new Error(`Unknown technique in save: ${entry.id}`)
-      }
-
-      const ceiling = getTechniqueGradeCeiling(save.player.realmId)
-      const cost = getTechniqueMasteryForNextRank(entry.grade)
-
-      // M-F-TECHNIQUE (v75) - gradeHistory is REQUIRED canonical
-      // state: every record is {finalRank int 0..18,
-      // completionState 'partial'|'dai_thanh'|'vien_man'} and the
-      // key set must be canonical: {1..grade-1} all sealed plus
-      // {grade} iff the live grade lags the realm (sealed or
-      // born-dead skipped). An in-band trainable live grade never
-      // carries a record.
-      const history = entry.gradeHistory
-      const records =
-        typeof history === 'object' && history !== null && !Array.isArray(history)
-          ? (history as Record<string, unknown>)
-          : undefined
-      const recordShapeOk =
-        records !== undefined &&
-        Object.entries(records).every(([key, record]) => {
-          const g = Number(key)
-          // Canonical decimal spelling: Number() coerces "01"/"1.0"/
-          // "1e0" to a valid grade, but the writer only ever emits
-          // canonical digits - an alias spelling is a stray record.
-          if (!Number.isInteger(g) || g < 1 || g > entry.grade || String(g) !== key) {
-            return false
-          }
-          const r = record as Record<string, unknown> | null
-          return (
-            typeof r === 'object' &&
-            r !== null &&
-            Number.isInteger(r.finalRank) &&
-            (r.finalRank as number) >= 0 &&
-            (r.finalRank as number) <= TECHNIQUE_RANK_CAP &&
-            TECHNIQUE_COMPLETION_STATES.includes(
-              r.completionState as TechniqueCompletionState,
-            )
-          )
-        })
-
-      const realmIndex = getRealmIndex(save.player.realmId)
-      const laggingLiveGrade = entry.grade < realmIndex
-      const keySetOk =
-        recordShapeOk &&
-        // Short-circuit bounds the enumeration before Array(): a
-        // non-integer/huge grade must reject via the chain below, not
-        // RangeError or allocate.
-        Number.isInteger(entry.grade) &&
-        entry.grade >= 1 &&
-        entry.grade <= ceiling &&
-        [...Array(entry.grade - 1).keys()].every((g) =>
-          Object.prototype.hasOwnProperty.call(records, g + 1),
-        ) &&
-        Object.prototype.hasOwnProperty.call(records, entry.grade) === laggingLiveGrade
-
-      if (
-        !Number.isInteger(entry.grade) ||
-        entry.grade < 1 ||
-        entry.grade > ceiling ||
-        !Number.isInteger(entry.rank) ||
-        entry.rank < 0 ||
-        entry.rank > TECHNIQUE_RANK_CAP ||
-        !Number.isInteger(entry.mastery) ||
-        entry.mastery < 0 ||
-        (entry.rank < TECHNIQUE_RANK_CAP && entry.mastery >= cost) ||
-        (entry.rank >= TECHNIQUE_RANK_CAP && entry.mastery !== 0) ||
-        !ITEM_QUALITY_ORDER.includes(entry.quality) ||
-        !recordShapeOk ||
-        !keySetOk
-      ) {
-        throw new Error(`Invalid technique progression state in save: ${entry.id}`)
-      }
-    } else if (save.techniques.length !== 0) {
-      throw new Error('Technique holder contract violated in save: way-less player carries a technique')
-    }
-
-    // P7-M4 (v71) + BETA-CREATION (v82) - the mortal-boundary contract
-    // (pick three-channel write, post-mortal clearing, realm/path
-    // pairing) is owned by MortalPrecursors so every acceptance seam -
-    // this preflight and the remote newest-wins gate - enforces one
-    // identical contract. Reject before any owner mutation, same
-    // hard-fail seam as the technique-holder contract above.
-    const boundaryViolation = mortalBoundaryContractViolation(save)
-    if (boundaryViolation !== null) {
-      throw new Error(boundaryViolation)
-    }
-
-    // P7-M5 (v72) - body progression integrity is the LAST preflight
-    // check, delegated to the BodyProgression authority in one call
-    // (shape already passed): completedTiers integral + 0..6, progress
-    // under the active-tier cap / zero at 6, openedIds a strict prefix
-    // of canonical MERIDIANS order. A corrupt slice is corrupt
-    // progression state - reject before any owner mutation, same
-    // hard-fail seam as the technique-holder contract above.
-    assertBodyProgressionIntegrity(save.player)
-
-    // M-F-BODY-PERFECTION (v80) - the perfection slice's semantic
-    // integrity runs as the LAST preflight check too: authored-family
-    // membership, perfected-realm keys, subset + realm-cap rules (see
-    // core/realm/body/BodyPerfection). Same hard-fail seam - reject
-    // before any owner mutation.
-    assertBodyPerfectionIntegrity(save.player)
+    // BETA-CREATION (qa-authority-01) - the acceptance predicate moved to
+    // services/save/saveAcceptance.ts so the remote newest-wins gate
+    // applies the IDENTICAL check set (registry refs, technique holder +
+    // progression, mortal-boundary contract, body integrity). One
+    // authority: edit there, never fork a second rule here.
+    assertSaveAcceptable(save, {
+      hasEquipment: (id) => this.deps.equipmentRegistry.has(id),
+      hasAffix: (id) => this.deps.affixRegistry.has(id),
+      hasMaterial: (id) => this.deps.materialRegistry.has(id),
+      hasPill: (id) => this.deps.pillRegistry.has(id),
+      hasBuilding: (id) => this.deps.buildingRegistry.has(id),
+      getSiteDefinition: (id) => this.deps.productionSystem.getSiteDefinition(id),
+      hasTechnique: (id) => this.deps.techniqueTemplates.has(id),
+    })
   }
 
   /**

@@ -770,6 +770,13 @@ export class GameManagerProgressionOps {
       return false
     }
 
+    // learned=>core leg of the boundary contract - mirror it here so
+    // the write guard covers the full three-channel contract instead
+    // of relying on learnSkill's atomic grant staying invariant.
+    if (getSkillCoreLevel(player, skillId) < 1) {
+      return false
+    }
+
     player.mortalBasicSkillId = skillId
 
     return true

@@ -6,6 +6,7 @@ import { asBaseStats } from '../stats/StatBlock'
 import { defineEnemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
 import { SKILLS } from '../../data/skill/Skills'
+import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { SPIRIT_STONE_MATERIAL } from '../material/SpiritStoneMaterial'
 import type { BattleRewardParticleEvent } from '../battle/BattleEvents'
 
@@ -99,7 +100,8 @@ describe('GameManager continuous repeat stage', () => {
     gameManager.catalogOps.registerEnemyTemplates([enemy])
     gameManager.catalogOps.registerStages([stage])
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
-    expect(gameManager.skillSystem.learn(SKILLS[0]!)).toBe(true)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+    expect(gameManager.progressionOps.learnSkill('tram', player)).toBe(true)
     // Execution policy rework (plan §8.6) — Trảm chiếm slot mặc định 0.
     expect(gameManager.progressionOps.setMortalBasicSkill(player, 'tram')).toBe(true)
     const rewardParticles: BattleRewardParticleEvent[] = []

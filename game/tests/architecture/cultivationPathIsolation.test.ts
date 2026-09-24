@@ -162,6 +162,10 @@ const SEAM_ALLOWLIST_FILES: readonly string[] = [
   // authority (hasPathCapability) or module-owned validators instead of
   // importing path modules. A new path-module value import anywhere
   // outside the dirs/files above fails this suite.
+  // BETA-CREATION - the committed-save fixture composes the path-owned
+  // swordPath slice via the module's own factory (freshSwordPathState);
+  // test-side seam only, never imported by production code.
+  'services/save/GameSave.fixture.ts',
 ]
 
 // ---------------------------------------------------------------------------
@@ -184,6 +188,10 @@ const SLICE_READ_ALLOWLIST: readonly string[] = [
   'core/game/GameManagerRealmAdvanceOps.ts',
   'core/progression/NodeSystem.ts',
   'presentation/bridges/kiemBarBridge.ts',
+  // BETA-CREATION - committed-save fixture; builds the slice via the
+  // module's freshSwordPathState() factory (test-only seam, same site
+  // as the SEAM_ALLOWLIST entry above).
+  'services/save/GameSave.fixture.ts',
 ]
 
 describe('cultivation path isolation (M10)', () => {

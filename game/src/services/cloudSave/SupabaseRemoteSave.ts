@@ -3,7 +3,10 @@ import { readSupabaseSession, resolveSupabaseSession } from '../supabase/Supabas
 import type { SupabaseConfig } from '../supabase/SupabaseConfig'
 import { CURRENT_SAVE_VERSION, inspectLocalSave, type GameSave } from '../save/SaveSystem'
 import { validateGameSaveShape } from '../save/saveShapeValidation'
-import { mortalBoundaryContractViolation } from '../../core/skill/MortalPrecursors'
+import {
+  isSaveAcceptable,
+  staticSaveAcceptanceCatalogs,
+} from '../save/saveAcceptance'
 import { resolveRevisionKey, resolveSaveKey } from '../save/saveKeys'
 import { readLocalSaveRevision } from './LocalCloudSaveService'
 
@@ -56,17 +59,20 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
       {},
       session.accessToken,
     )
+    const catalogs = staticSaveAcceptanceCatalogs()
     const remoteRow = rows[0]
     const remoteShape = remoteRow ? validateGameSaveShape(remoteRow.payload) : null
     // Preflight parity: a payload the boot restore would reject is 'no
     // remote' here - otherwise newest-wins resurrects it on every login
     // and the delete recovery can never converge (empty local loses to
-    // any remote timestamp). The contract is the SAME function the
-    // restore preflight calls, so the two acceptance gates cannot drift.
+    // any remote timestamp). The predicate is the SAME function the
+    // restore preflight calls (services/save/saveAcceptance.ts) over
+    // the SAME catalog ids, so the two acceptance gates cannot drift -
+    // every preflight class is covered, not just the boundary contract.
     const remoteUsable =
       remoteShape !== null &&
       remoteShape.ok &&
-      mortalBoundaryContractViolation(remoteShape.normalizedSave as GameSave) === null
+      isSaveAcceptable(remoteShape.normalizedSave as GameSave, catalogs)
         ? remoteShape
         : null
     const remoteUpdatedMs = remoteRow ? Date.parse(remoteRow.updated_at) : Number.NaN
@@ -75,7 +81,13 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
     // this preflight only compares timestamps, so it must not eat the
     // one-shot import-handoff marker before the owner boot load.
     const local = inspectLocalSave()
-    const localSave = local.status === 'ok' ? local.save : null
+    // Symmetric gate (qa-authority-01 + F-INT-02): a local payload the
+    // boot restore would reject counts as 'no local' - it must not
+    // push its poison over a usable remote, and its timestamp must not
+    // shield it from a pull-heal. The same predicate and catalogs the
+    // remote side uses.
+    const localSave =
+      local.status === 'ok' && isSaveAcceptable(local.save, catalogs) ? local.save : null
     const localLastSavedAt = localSave?.player.lastSavedAt ?? Number.NEGATIVE_INFINITY
 
     if (remoteUsable && remoteUpdatedMs > localLastSavedAt && remoteRow) {

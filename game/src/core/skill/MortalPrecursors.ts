@@ -45,6 +45,14 @@ export function mortalBoundaryContractViolation(save: {
     return `Invalid mortalBasicSkillId in save: ${String(mortalPick)}`
   }
 
+  // Self-contained pairing (F-INT-05): mortal + a path is contradictory
+  // on its face - the shape layer normally rejects it first, but the
+  // contract cannot accept it either, so a caller forgetting shape
+  // still gets an honest reject instead of a silent pass.
+  if (save.player.realmId === 'mortal' && save.player.cultivationPath !== undefined) {
+    return `mortal save carries cultivationPath '${String(save.player.cultivationPath)}' (contradictory boundary)`
+  }
+
   const isMortalSave =
     save.player.realmId === 'mortal' && save.player.cultivationPath === undefined
 

@@ -9,6 +9,10 @@ import type {
   RestoreGameSessionResult,
 } from './saveTypes'
 import { validateGameSaveShape } from './saveShapeValidation'
+import {
+  isSaveAcceptable,
+  staticSaveAcceptanceCatalogs,
+} from './saveAcceptance'
 import { CURRENT_SAVE_VERSION } from './saveVersion'
 import {
   resolveBackupKey,
@@ -725,6 +729,15 @@ export function importSaveRaw(raw: string): boolean {
     const shape = validateGameSaveShape(parsed)
 
     if (!shape.ok) {
+      return false
+    }
+
+    // Acceptance parity (F-INT-03): the third acceptance seam applies
+    // the SAME predicate as restore preflight + the remote gate - a
+    // file the boot restore would reject must not overwrite a healthy
+    // save slot (the old shape-only check let contract-bad imports
+    // poison local AND remote before the recovery surface appeared).
+    if (!isSaveAcceptable(shape.normalizedSave as GameSave, staticSaveAcceptanceCatalogs())) {
       return false
     }
 

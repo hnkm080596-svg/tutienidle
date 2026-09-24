@@ -73,11 +73,30 @@ function validGameSave(name?: string): GameSave {
     player.name = name
   }
 
+  // v82 mortal boundary contract (F-INT-03 import gate): the fixture
+  // doubles as a legal creation output - pick + learned entry + core
+  // grant, same shape the SupabaseRemoteSave fixture uses.
+  player.mortalBasicSkillId = 'tram'
+  player.nodeLevels = { ...player.nodeLevels, core_tram: 1 }
+  player.purchasedNodeIds = [...player.purchasedNodeIds, 'core_tram']
+
   return {
     version: CURRENT_SAVE_VERSION,
     player,
     techniques: [],
-    skills: [],
+    skills: [
+      {
+        id: 'tram',
+        name: 'Trảm',
+        description: 'creation pick',
+        type: 'active',
+        level: 1,
+        maxLevel: 10,
+        cooldown: 0,
+        target: 'enemy',
+        effects: [],
+      },
+    ],
     materials: [],
     equipment: [],
     pills: [],
@@ -370,6 +389,31 @@ describe('importSaveRaw', () => {
 
     expect(importSaveRaw(raw)).toBe(true)
     expect(getRawSave()).toBe(raw)
+  })
+
+  it('từ chối save v82 thiếu creation pick — shape-ok nhưng boot sẽ reject (F-INT-03)', () => {
+    // Shape-valid but boundary-contract-bad: a file like this would
+    // land in the slot then fail boot into the incompatible screen -
+    // import must reject at the door, same predicate as restore
+    // preflight.
+    const pickless = validGameSave()
+
+    delete pickless.player.mortalBasicSkillId
+    delete pickless.player.nodeLevels.core_tram
+    pickless.player.purchasedNodeIds = []
+    pickless.skills = []
+
+    expect(importSaveRaw(JSON.stringify(pickless))).toBe(false)
+    expect(getRawSave()).toBeNull()
+  })
+
+  it('từ chối save v82 chứa materialId không tồn tại (F-INT-03)', () => {
+    const poisoned = validGameSave()
+
+    poisoned.materials = [{ materialId: 'qa_no_such_material', amount: 1 }]
+
+    expect(importSaveRaw(JSON.stringify(poisoned))).toBe(false)
+    expect(getRawSave()).toBeNull()
   })
 
   it('đúng normalized payload nhận counter một lần và backup vẫn giữ save cũ', () => {

@@ -104,6 +104,10 @@ export function withCommittedSwordPath(save: GameSave): GameSave {
   if (player.realmId === 'mortal') {
     player.realmId = 'qi_refining'
   }
+  // Mirror the ritual commit block (GameManagerRealmAdvanceOps): the
+  // pick is consumed by commitment, so a committed save never carries
+  // it - the boundary contract rejects pick+path on every input seam.
+  delete player.mortalBasicSkillId
 
   // The committed way's coreSkillIds (sword_pathway's orb cores) must be
   // granted - the shape layer rejects an owned way whose cores are

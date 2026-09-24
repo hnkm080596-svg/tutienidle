@@ -29,11 +29,31 @@ function throwOnKey(keyToThrow: string): void {
 }
 
 function validSave(): GameSave {
+  const player = createDefaultPlayer()
+
+  // v82 contract (F-INT-03 import gate): the fixture must be a legal
+  // save - pick + learned entry + core grant.
+  player.mortalBasicSkillId = 'tram'
+  player.nodeLevels = { ...player.nodeLevels, core_tram: 1 }
+  player.purchasedNodeIds = [...player.purchasedNodeIds, 'core_tram']
+
   return {
     version: CURRENT_SAVE_VERSION,
-    player: createDefaultPlayer(),
+    player,
     techniques: [],
-    skills: [],
+    skills: [
+      {
+        id: 'tram',
+        name: 'Trảm',
+        description: 'creation pick',
+        type: 'active',
+        level: 1,
+        maxLevel: 10,
+        cooldown: 0,
+        target: 'enemy',
+        effects: [],
+      },
+    ],
     materials: [],
     equipment: [],
     pills: [],
