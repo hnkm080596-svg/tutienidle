@@ -27,7 +27,7 @@
    "merge/push to beta/rc or other branches",
    "external review services"
   ],
-  "checkout": "origin/beta/rc merge-base + devin/1790189100-beta-creation @ 94f0e9f7 (amended candidate)",
+  "checkout": "8f53aa18",
   "branch": "devin/1790189100-beta-creation",
   "base": "origin/beta/rc",
   "head": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
@@ -2604,6 +2604,76 @@
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null
+  },
+  {
+   "id": "SEAL-A1",
+   "severity": "low",
+   "status": "fixed",
+   "round": "clean-A",
+   "lens": "correctness",
+   "repairRefs": [
+    "8f53aa18"
+   ]
+  },
+  {
+   "id": "SEAL-A2",
+   "severity": "nit",
+   "status": "fixed",
+   "round": "clean-A",
+   "lens": "correctness",
+   "repairRefs": [
+    "8f53aa18"
+   ]
+  },
+  {
+   "id": "SEAL-A3",
+   "severity": "nit",
+   "status": "fixed",
+   "round": "clean-A",
+   "lens": "correctness",
+   "repairRefs": [
+    "8f53aa18"
+   ]
+  },
+  {
+   "id": "F-AUTH-01",
+   "severity": "low",
+   "status": "fixed",
+   "round": "clean-A",
+   "lens": "authority",
+   "repairRefs": [
+    "8f53aa18"
+   ]
+  },
+  {
+   "id": "F-AUTH-02",
+   "severity": "nit",
+   "status": "fixed-partial",
+   "round": "clean-A",
+   "lens": "authority",
+   "repairRefs": [
+    "8f53aa18"
+   ]
+  },
+  {
+   "id": "F-A1",
+   "severity": "low",
+   "status": "fixed",
+   "round": "clean-A",
+   "lens": "integration",
+   "repairRefs": [
+    "8f53aa18"
+   ]
+  },
+  {
+   "id": "F-A2",
+   "severity": "medium",
+   "status": "fixed",
+   "round": "clean-A",
+   "lens": "integration",
+   "repairRefs": [
+    "8f53aa18"
+   ]
   }
  ],
  "evidence": [
@@ -4255,6 +4325,16 @@
     "ATK-INT-VERSION-BUMP-IMPORT-02"
    ],
    "status": "SEALED"
+  },
+  {
+   "round": "clean-A",
+   "candidate": "94f0e9f7",
+   "seals": [
+    "correctness:FINDINGS",
+    "authority:FINDINGS",
+    "integration:FINDINGS"
+   ],
+   "outcome": "findings-repaired->8f53aa18"
   }
  ],
  "cycles": [

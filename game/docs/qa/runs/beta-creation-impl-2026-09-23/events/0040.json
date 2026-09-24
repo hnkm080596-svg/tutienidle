@@ -1,0 +1,26 @@
+{
+ "type": "SEAL_RECEIPT",
+ "round": "clean-A",
+ "lens": "AUTHORITY",
+ "reviewerSession": "13fedf7831c44e7dbab2fb2b786c70eb",
+ "candidate": "94f0e9f7",
+ "verdict": "FINDINGS",
+ "priorFindingsVisible": false,
+ "evidenceExecuted": "type-check exit 0 on 94f0e9f7; scoped vitest 731 tests green incl. authored repro GameManager.mortalPredicateAuthority.qa.test.ts 3/3 proving write/persistence predicate asymmetry end-to-end",
+ "findings": [
+  {
+   "id": "F-AUTH-01",
+   "severity": "low",
+   "title": "'Is mortal' predicate duplicated - write op wider than persistence (pathless-only vs realmId+pathless); op can manufacture a save its own preflight rejects (crafted-state only)",
+   "disposition": "FIXED @8f53aa18 - setMortalBasicSkill now requires realmId==='mortal' && pathless, matching the preflight terms"
+  },
+  {
+   "id": "F-AUTH-02",
+   "severity": "nit",
+   "title": "precursor/'tram' literals duplicated outside MortalPrecursors authority (sim profiles, SQL, fixture, DB mirror)",
+   "disposition": "PARTIALLY FIXED @8f53aa18 - sim profiles now consume MORTAL_DEFAULT_BASIC_ID; SQL literal list stays documented DRIFT NOTE; DB mirror column documented non-authoritative"
+  }
+ ],
+ "attestation": "reviewer did not read docs/qa/** or runs/*/reviews/*; independent context",
+ "accessLimitations": "spec/plan only; no live Supabase or e2e runtime"
+}

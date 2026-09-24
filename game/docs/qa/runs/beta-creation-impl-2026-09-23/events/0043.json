@@ -1,0 +1,8 @@
+{
+ "type": "CANDIDATE_AMENDMENT",
+ "note": "head 94f0e9f7 -> 8f53aa18: Clean-A findings repair commit (10 files, +88/-13). Frozen candidate for Clean-B is now 8f53aa18.",
+ "fixCommit": "8f53aa18",
+ "repairRefs": [
+  "8f53aa18"
+ ]
+}
