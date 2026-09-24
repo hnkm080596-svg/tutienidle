@@ -14,8 +14,8 @@
 // -> C + E.2 interleaved (level ladder + floors 2..10 clearing at each
 // level gate, honest Phap farming riding the already-cleared floor_1)
 // with G's midpoint checkpoint INSIDE the interleave at TC L9 /
-// circulation 180 / floors 1-9 -> continuation on the RESTORED session
-// (L10 -> floor_10 boss -> L18 -> 360/Dai) -> F (ceiling) -> I
+// completed 18 / floors 1-9 -> continuation on the RESTORED session
+// (L10 -> floor_10 boss -> L18 -> 36/Dai) -> F (ceiling) -> I
 // (first-class surfaces) -> K (hidden-lineage negative leg) -> L
 // (hidden-channel deferral). Leg J (determinism) and the grade ladder
 // run as seeded per-grade fixtures beside the ordered run.
@@ -64,7 +64,10 @@ import {
   MERIDIANS,
   THONG_MACH_DAN_MATERIAL_ID,
 } from '../../../data/realm/Meridians'
-import { ZHOU_TIAN_CURRENCY_MATERIAL_ID } from '../../../data/realm/ZhouTian'
+import {
+  ZHOU_TIAN_CURRENCY_MATERIAL_ID,
+  zhouTianStepCost,
+} from '../../../data/realm/ZhouTian'
 import { asBaseStats } from '../../stats/StatBlock'
 import { buildGameSave } from '../../../services/save/SaveSystem'
 import type { GameSave } from '../../../services/save/saveTypes'
@@ -356,7 +359,7 @@ describe('TrucCoJourney - ordered journey', () => {
       s.holdPill(THONG_MACH_DAN_MATERIAL_ID, 133)
 
       // Leg H (inline): capacity-0 zhou_tian arm at the seeded pre-TC
-      // state (realmId qi_refining - circulation does not exist below
+      // state (realmId qi_refining - zhou_tian steps do not exist below
       // TC; the chain lock also applies).
       expect(getZhouTianCapacity(s.player)).toBe(0)
       const phapAtLq = s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)
@@ -568,7 +571,7 @@ describe('TrucCoJourney - ordered journey', () => {
       expect(s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)).toBe(
         phapAtZhouReject,
       )
-      expect(s.player.bodyProgression.zhou_tian.circulation).toBe(0)
+      expect(s.player.bodyProgression.zhou_tian.completed).toBe(0)
 
       // (d) Meridian strict-prefix 8/8 - pace gates lifted at TC;
       // the sequential constraint remains (the 9th meridian retired
@@ -601,7 +604,7 @@ describe('TrucCoJourney - ordered journey', () => {
 
       // ===== Legs C + E.2 interleaved =====
       // G's midpoint checkpoint lands INSIDE this interleave at TC L9 /
-      // circulation 180 / floors 1-9 cleared; the journey continues on
+      // completed 18 / floors 1-9 cleared; the journey continues on
       // the restored session.
       const phapHeld = (): number =>
         s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)
@@ -624,16 +627,27 @@ describe('TrucCoJourney - ordered journey', () => {
           s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID),
         ).toBeGreaterThanOrEqual(target)
       }
+      // Essence needed to reach the current capacity from the current
+      // step - the new per-step cost curve (design sec.11).
+      const essenceToCapacity = (): number => {
+        const state = s.player.bodyProgression.zhou_tian
+        const cap = getZhouTianCapacity(s.player)
+        let sum = 0
+        for (let step = state.completed; step < cap; step++) {
+          sum += zhouTianStepCost(step)
+        }
+        return s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID) + sum
+      }
       const investZhouToCapacity = (): void => {
         const capacity = getZhouTianCapacity(s.player)
         let guard = 0
         while (
-          s.player.bodyProgression.zhou_tian.circulation < capacity &&
+          s.player.bodyProgression.zhou_tian.completed < capacity &&
           guard++ < 500
         ) {
           expect(s.investChapter('zhou_tian')).toBeGreaterThan(0)
         }
-        expect(s.player.bodyProgression.zhou_tian.circulation).toBe(
+        expect(s.player.bodyProgression.zhou_tian.completed).toBe(
           capacity,
         )
       }
@@ -646,15 +660,15 @@ describe('TrucCoJourney - ordered journey', () => {
       }
 
       // Leg C pinned observation 1 - the below-cap clamp at L1
-      // (capacity 20): circulation reached the cap, then a further
-      // invest leaves circulation AT the cap and debits NOTHING.
-      farmPhap(20)
+      // (capacity 2): completed steps reached the cap, then a further
+      // invest leaves completed AT the cap and debits NOTHING.
+      farmPhap(essenceToCapacity())
       investZhouToCapacity()
-      expect(s.player.bodyProgression.zhou_tian.circulation).toBe(20)
+      expect(s.player.bodyProgression.zhou_tian.completed).toBe(2)
       const heldAtCap = phapHeld()
       expect(s.investChapter('zhou_tian')).toBe(0)
       expect(phapHeld()).toBe(heldAtCap)
-      expect(s.player.bodyProgression.zhou_tian.circulation).toBe(20)
+      expect(s.player.bodyProgression.zhou_tian.completed).toBe(2)
 
       let resumed: EarlyGameSession | undefined
       let parityBefore: GameSave | undefined
@@ -670,7 +684,7 @@ describe('TrucCoJourney - ordered journey', () => {
 
         const newLevel = s.player.realmLevel
         expect(getZhouTianCapacity(s.player)).toBe(
-          Math.min(360, 20 * newLevel),
+          Math.min(36, 2 * newLevel),
         )
         // E.2: floor N clears as realmLevel reaches N; floor N+1 stays
         // locked below its level gate.
@@ -687,28 +701,28 @@ describe('TrucCoJourney - ordered journey', () => {
         }
 
         // Honest Phap farming rides the already-cleared floor_1, then
-        // the real invest seam tops circulation to the new capacity.
+        // the real invest seam tops completed to the new capacity.
         if (newLevel < 18) {
-          farmPhap(Math.min(360, 20 * newLevel))
+          farmPhap(essenceToCapacity())
           investZhouToCapacity()
-          expect(s.player.bodyProgression.zhou_tian.circulation).toBe(
-            Math.min(360, 20 * newLevel),
+          expect(s.player.bodyProgression.zhou_tian.completed).toBe(
+            Math.min(36, 2 * newLevel),
           )
         }
 
         // ===== Leg G - the pinned midpoint, INSIDE the interleave =====
-        // TC L9 / circulation 180 (Tieu reached, 180 remaining) /
+        // TC L9 / completed 18 (Tieu reached, 18 remaining) /
         // floors 1-9 cleared - everything L9's gates permit; floor_10
         // unlocks at L10 so the boss is not yet attempted; gift claimed,
         // entitlement resolved.
         if (newLevel === 9) {
           // Leg C pinned observation 2 - the L8->L9 boundary: capacity
-          // 160 -> 180 lands Tieu at exactly the threshold, and a
+          // 16 -> 18 lands Tieu at exactly the threshold, and a
           // second clamp observation at cap debits nothing.
-          const heldAt180 = phapHeld()
+          const heldAt18 = phapHeld()
           expect(s.investChapter('zhou_tian')).toBe(0)
-          expect(phapHeld()).toBe(heldAt180)
-          expect(s.player.bodyProgression.zhou_tian.circulation).toBe(180)
+          expect(phapHeld()).toBe(heldAt18)
+          expect(s.player.bodyProgression.zhou_tian.completed).toBe(18)
           expect(isTieuChuThienReached(s.player)).toBe(true)
           expect(isDaiChuThienReached(s.player)).toBe(false)
           expect(s.runStage('foundation_floor_10')).toBe('locked')
@@ -748,7 +762,7 @@ describe('TrucCoJourney - ordered journey', () => {
       s = resumed!
       expect(s.player.realmId).toBe('foundation_establishment')
       expect(s.player.realmLevel).toBe(9)
-      expect(s.player.bodyProgression.zhou_tian.circulation).toBe(180)
+      expect(s.player.bodyProgression.zhou_tian.completed).toBe(18)
 
       // Post-restore continuation runs manager-backed actions, not
       // only ticks: a real stage run AND a real invest.
@@ -758,12 +772,12 @@ describe('TrucCoJourney - ordered journey', () => {
       grindToBreakthrough()
       expect(s.breakthroughIfReady()).toBe(true)
       expect(s.player.realmLevel).toBe(10)
-      expect(getZhouTianCapacity(s.player)).toBe(200)
+      expect(getZhouTianCapacity(s.player)).toBe(20)
       expect(s.runStage('foundation_floor_10')).toBe('victory')
       expect(s.player.completedStageIds.at(-1)).toBe(
         'foundation_floor_10',
       )
-      farmPhap(200)
+      farmPhap(essenceToCapacity())
       investZhouToCapacity()
 
       for (let level = 10; level < 18; level++) {
@@ -773,15 +787,15 @@ describe('TrucCoJourney - ordered journey', () => {
         expect(s.player.realmLevel).toBe(level + 1)
         expect(s.player.attributePoints).toBeGreaterThan(pointsBefore)
         if (s.player.realmLevel < 18) {
-          farmPhap(Math.min(360, 20 * s.player.realmLevel))
+          farmPhap(essenceToCapacity())
           investZhouToCapacity()
         }
       }
 
-      // L17->L18 boundary: capacity 340 -> 360.
+      // L17->L18 boundary: capacity 34 -> 36.
       expect(s.player.realmLevel).toBe(18)
-      expect(s.player.bodyProgression.zhou_tian.circulation).toBe(340)
-      expect(getZhouTianCapacity(s.player)).toBe(360)
+      expect(s.player.bodyProgression.zhou_tian.completed).toBe(34)
+      expect(getZhouTianCapacity(s.player)).toBe(36)
 
       // Exact-Phap debit (spec leg C pin), run BELOW capacity so the
       // arm is live: holding ONLY the lower-band essence commits
@@ -802,24 +816,25 @@ describe('TrucCoJourney - ordered journey', () => {
         expect(s.materialAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)).toBe(
           phamHeld,
         )
-        expect(s.player.bodyProgression.zhou_tian.circulation).toBe(340)
+        expect(s.player.bodyProgression.zhou_tian.completed).toBe(34)
 
         // Supplying phap commits the remaining rungs with an exact
         // debit: debited == the op's reported consumed total (no
-        // surplus drawn, no substitution fill).
-        s.holdMaterial(ZHOU_TIAN_CURRENCY_MATERIAL_ID, 360)
+        // surplus drawn, no substitution fill). Steps 34->36 cost
+        // zhouTianStepCost(34)+zhouTianStepCost(35) = 375.
+        s.holdMaterial(ZHOU_TIAN_CURRENCY_MATERIAL_ID, 375)
         const phapBefore = s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)
         let totalInvested = 0
         let zhouGuard = 0
         while (
-          s.player.bodyProgression.zhou_tian.circulation < 360 &&
+          s.player.bodyProgression.zhou_tian.completed < 36 &&
           zhouGuard++ < 500
         ) {
           const consumed = s.investChapter('zhou_tian')
           expect(consumed).toBeGreaterThan(0)
           totalInvested += consumed
         }
-        expect(s.player.bodyProgression.zhou_tian.circulation).toBe(360)
+        expect(s.player.bodyProgression.zhou_tian.completed).toBe(36)
         expect(totalInvested).toBeGreaterThan(0)
         expect(
           phapBefore - s.materialAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID),
@@ -1138,7 +1153,7 @@ describe('TrucCoJourney - save integrity', () => {
     // Post-mortal saves carry no creation pick (v82 preflight rejects
     // pick+post-mortal before the body-progression check below).
     delete save.player.mortalBasicSkillId
-    save.player.bodyProgression.zhou_tian.circulation = 50
+    save.player.bodyProgression.zhou_tian.completed = 2
     setActivePinia(createPinia())
     const resumed = new EarlyGameSession({
       seed: 5,

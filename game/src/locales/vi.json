@@ -542,10 +542,11 @@
         "locked": "Hoàn thành Kỳ Kinh Bát Mạch trước",
         "realmLocked": "Mở khóa ở {realm}",
         "capacity": "Dung lượng hiện tại: {capacity}",
-        "tieuLabel": "Tiểu Chu Thiên · 180",
-        "daiLabel": "Đại Chu Thiên · 360",
+        "tieuLabel": "Tiểu Chu Thiên · 18",
+        "daiLabel": "Đại Chu Thiên · 36",
         "invest": "Vận Chu Thiên",
         "owned": "Tinh Hoa Pháp Thể sở hữu {count}",
+        "stepCost": "Giá bước kế: {cost}",
         "complete": "Đại Chu Thiên đã viên mãn."
       }
     },
@@ -1229,5 +1230,14 @@
   "save": {
     "conflict": "Save đã thay đổi ở một phiên khác.",
     "createFailed": "Tạo nhân vật thất bại — khởi tạo không hoàn tất."
+  },
+  "hidden": {
+    "foundation": {
+      "nghichName": "Nghịch Chu Thiên",
+      "stateActive": "Đang nghịch chuyển",
+      "stateDone": "Viên mãn",
+      "detail": "Tinh Hoa {essence} · Linh Thạch {stones} · Thành công {chance}% · Bảo hiểm {pity}/{pityLimit}",
+      "attempt": "Thử Nghịch Chu Thiên"
+    }
   }
 }

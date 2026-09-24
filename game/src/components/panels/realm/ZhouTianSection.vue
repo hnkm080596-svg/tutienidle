@@ -11,7 +11,18 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { getBodyChapterProgress, isBodyChapterUnlocked } from '@/core/realm/body/BodyProgressionSystem'
 import { getZhouTianCapacity, isDaiChuThienReached, isTieuChuThienReached } from '@/core/realm/body/ZhouTianChapter'
-import { ZHOU_TIAN_CURRENCY_MATERIAL_ID, ZHOU_TIAN_REALM_ID } from '@/data/realm/ZhouTian'
+import { ZHOU_TIAN_CURRENCY_MATERIAL_ID, ZHOU_TIAN_REALM_ID, zhouTianStepCost } from '@/data/realm/ZhouTian'
+import {
+  getNghichChuTianMechanic,
+  isNghichChuTianEligible,
+  isNghichChuTianRevealed,
+  NGHICH_CHU_TIAN_TOTAL_STEPS,
+  nghichChuTianEssenceCost,
+  nghichChuTianPityLimit,
+  nghichChuTianStoneCost,
+  nghichChuTianSuccessChance,
+} from '@/core/realm/hidden/NghichChuTian'
+import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import { REALMS } from '@/data/realms/realm'
 import GameButton from '@/components/common/GameButton.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
@@ -59,6 +70,76 @@ const ownedEssence = computed(() => {
   return gameManager.materialBag.getAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)
 })
 
+const nextStepCost = computed(() => {
+  stateVersion.value
+
+  const completed = chapterProgress.value.completed
+  return completed < capacity.value ? zhouTianStepCost(completed) : 0
+})
+
+// HIDDEN-C - Nghich Chu Thien (design sec.12): revealed only once the
+// realm record is discovered OR the player is presently eligible (36/36
+// + open lineage). Without an active lineage this stays hidden - no
+// hint of the continuation (sec.12.1).
+const nghichRevealed = computed(() => {
+  stateVersion.value
+
+  return isNghichChuTianRevealed(player.$state)
+})
+
+const nghichMechanic = computed(() => {
+  stateVersion.value
+
+  return getNghichChuTianMechanic(player.$state)
+})
+
+const nghichLevel = computed(() => nghichMechanic.value?.completed ?? 0)
+
+const nghichPity = computed(() => nghichMechanic.value?.pityByLevel[nghichLevel.value] ?? 0)
+
+const nghichCosts = computed(() => ({
+  essence: nghichChuTianEssenceCost(nghichLevel.value),
+  stones: nghichChuTianStoneCost(nghichLevel.value),
+}))
+
+const nghichChancePercent = computed(() =>
+  Math.round(nghichChuTianSuccessChance(nghichLevel.value) * 100),
+)
+
+const nghichPityLimitNow = computed(() => nghichChuTianPityLimit(nghichLevel.value))
+
+const ownedStones = computed(() => {
+  stateVersion.value
+
+  return gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
+})
+
+// Eligible-but-undiscovered stays actionable: the lineage can open after
+// 36/36 already landed, and no further invest will ever consume (36 = cap
+// -> consumed 0 -> the post-invest discovery hook cannot re-fire). The
+// first attempt writes the record itself (attempt auto-discovers).
+const nghichActive = computed(() =>
+  nghichMechanic.value?.active === true ||
+  (nghichMechanic.value === undefined && isNghichChuTianEligible(player.$state)),
+)
+
+const canAttemptNghich = computed(() =>
+  nghichActive.value
+  && ownedEssence.value >= nghichCosts.value.essence
+  && ownedStones.value >= nghichCosts.value.stones,
+)
+
+function attemptNghich(): void {
+  const result = gameManager.realmAdvanceOps.attemptNghichChuTian(player.$state)
+
+  // 'insufficient' can still mutate state: a first attempt auto-discovers
+  // the record (discovery + mechanic install) before the cost check
+  // fails. Only 'ineligible' and 'complete' provably write nothing.
+  if (result.outcome !== 'ineligible' && result.outcome !== 'complete') {
+    bumpState()
+  }
+}
+
 const zhouTianRealmName = computed(() =>
   REALMS.find((realm) => realm.id === ZHOU_TIAN_REALM_ID)?.name ?? ZHOU_TIAN_REALM_ID,
 )
@@ -83,8 +164,8 @@ const stateLabel = computed(() => {
 // zhouTianChapter.invest re-validates all of them on click.
 const canInvest = computed(() =>
   status.value === 'active'
-  && ownedEssence.value > 0
-  && chapterProgress.value.completed < capacity.value,
+  && ownedEssence.value >= nextStepCost.value
+  && nextStepCost.value > 0,
 )
 
 function invest(): void {
@@ -148,8 +229,48 @@ function invest(): void {
           <span class="zhou-tian-section__owned">
             {{ t('panels.realm.zhouTian.owned', { count: ownedEssence }) }}
           </span>
+          <span class="zhou-tian-section__owned">
+            {{ t('panels.realm.zhouTian.stepCost', { cost: nextStepCost }) }}
+          </span>
         </div>
       </template>
+
+      <div
+        v-if="nghichRevealed"
+        class="zhou-tian-section__row zhou-tian-section__row--hidden"
+        :class="{ 'zhou-tian-section__row--complete': !nghichActive && nghichMechanic }"
+      >
+        <div class="zhou-tian-section__nghich-summary">
+          <span>{{ t('hidden.foundation.nghichName') }}</span>
+          <span class="zhou-tian-section__state">
+            {{ nghichActive ? t('hidden.foundation.stateActive') : t('hidden.foundation.stateDone') }}
+          </span>
+        </div>
+
+        <Bar :value="nghichLevel" :max="NGHICH_CHU_TIAN_TOTAL_STEPS" :height="5" />
+
+        <p v-if="nghichActive" class="zhou-tian-section__nghich-detail">
+          {{
+            t('hidden.foundation.detail', {
+              essence: nghichCosts.essence,
+              stones: nghichCosts.stones,
+              chance: nghichChancePercent,
+              pity: nghichPity,
+              pityLimit: nghichPityLimitNow,
+            })
+          }}
+        </p>
+
+        <div v-if="nghichActive" class="zhou-tian-section__invest">
+          <GameButton
+            size="sm"
+            :disabled="!canAttemptNghich"
+            @click="attemptNghich"
+          >
+            {{ t('hidden.foundation.attempt') }}
+          </GameButton>
+        </div>
+      </div>
     </div>
   </section>
 </template>
@@ -239,6 +360,27 @@ function invest(): void {
 }
 
 .zhou-tian-section__owned {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.zhou-tian-section__row--hidden {
+  margin-top: 4px;
+  border-color: var(--violet, var(--ink-line-soft));
+  opacity: 1;
+}
+
+.zhou-tian-section__nghich-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--paper-text);
+}
+
+.zhou-tian-section__nghich-detail {
+  margin: 0;
   font-size: var(--text-xs);
   color: var(--text-muted);
 }

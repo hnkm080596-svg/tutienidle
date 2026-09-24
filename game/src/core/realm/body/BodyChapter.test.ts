@@ -19,7 +19,7 @@ describe('BodyChapter - canonical zero state', () => {
     expect(createDefaultBodyProgression()).toEqual({
       body_refinement: { completedTiers: 0, currentTierProgress: 0 },
       meridian: { openedIds: [] },
-      zhou_tian: { circulation: 0 },
+      zhou_tian: { completed: 0 },
     })
   })
 
@@ -36,7 +36,7 @@ describe('BodyChapter - canonical zero state', () => {
     expect(player.bodyProgression).toEqual({
       body_refinement: { completedTiers: 0, currentTierProgress: 0 },
       meridian: { openedIds: [] },
-      zhou_tian: { circulation: 0 },
+      zhou_tian: { completed: 0 },
     })
   })
 })

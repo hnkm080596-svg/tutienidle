@@ -1,21 +1,46 @@
-// M-F-CHU-THIEN - Chu Thien (Heavenly Circuit) authored constants, the
-// Truc Co normal-Body track. Circulation capacity scales with the
-// foundation_establishment realm level; the two milestone marks name
-// the small (Tieu) and great (Dai) circuits.
+// HIDDEN-C - Chu Thien (Heavenly Circuit) authored constants, the Truc Co
+// normal-Body track (design 2026-09-23 sec.11). Circulation is now 36
+// DISCRETE deterministic steps (0/36, not a continuous 0..360 pool);
+// capacity still derives from the foundation_establishment realm level
+// (2 steps per level -> 36 at Lv18). Tieu/Dai survive as non-authoritative
+// lore marks (sec.11.1) at steps 18/36.
+
+import type { StatType } from '../../core/stats/StatTypes'
 
 export const ZHOU_TIAN_REALM_ID = 'foundation_establishment'
 
-/** Circulation capacity per Truc Co minor level (20 * realmLevel). */
-export const ZHOU_TIAN_CAPACITY_PER_REALM_LEVEL = 20
+/** Total authored Chu Thien advancements (sec.11.1: canonical 0/36). */
+export const ZHOU_TIAN_TOTAL_STEPS = 36
 
-/** Tieu Chu Thien milestone - reached at circulation 180 (Lv9 cap). */
-export const ZHOU_TIAN_TIEU_CIRCULATION = 180
+/** Step capacity per Truc Co minor level (36/18 = 2 steps/level). */
+export const ZHOU_TIAN_STEPS_PER_REALM_LEVEL = 2
 
-/** Dai Chu Thien milestone - normal completion at 360 (Lv18 cap). */
-export const ZHOU_TIAN_DAI_CIRCULATION = 360
+/** Tieu Chu Thien lore mark - step 18. Non-authoritative display only. */
+export const ZHOU_TIAN_TIEU_STEP = 18
 
-// C2C-64 ruling: Phap essence is the mission's AUTHORED currency kind
-// (sec.38's designed candidate, already the live TC-band essence via
-// M-QI-10) - a chapter with no currency ships dead. The constant is
-// the single source; only per-action COST VALUES stay content-deferred.
+/** Dai Chu Thien lore mark - step 36 = normal completion. */
+export const ZHOU_TIAN_DAI_STEP = 36
+
+// C2C-64 ruling (unchanged): Phap essence is the AUTHORED currency kind;
+// only per-step COST VALUES are content-deferred below.
 export const ZHOU_TIAN_CURRENCY_MATERIAL_ID = 'tinh_hoa_phap_the'
+
+/** BALANCE - Tinh Hoa Phap The consumed to advance step `step` (0-indexed,
+ * i.e. the advancement INTO step+1). Increasing flat curve; full 36-step
+ * run totals 3690 essence. Design pins no cost shape - retune freely. */
+export function zhouTianStepCost(step: number): number {
+  return 15 + step * 5
+}
+
+/** BALANCE - authored raw/base combat-stat reward of step `step`
+ * (0-indexed). Vocabulary is limited to raw combat stats by sec.11.3
+ * (no five main stats, no generic percentage). Early steps weight maxHp,
+ * later steps weight offense/defense - retune freely. */
+export function zhouTianStepReward(step: number): Partial<Record<StatType, number>> {
+  return {
+    maxHp: 10 + step * 2,
+    might: 2 + Math.floor(step / 4),
+    defense: 1 + Math.floor(step / 6),
+    hpRegenPerTurn: Math.floor(step / 9),
+  }
+}

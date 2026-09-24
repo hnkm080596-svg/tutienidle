@@ -2161,7 +2161,7 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
     playerOf(save).bodyProgression = {
       body_refinement: { completedTiers: 'x', currentTierProgress: -1 },
       meridian: { openedIds: [] },
-      zhou_tian: { circulation: 0 },
+      zhou_tian: { completed: 0 },
     }
 
     const result = validateGameSaveShape(save)
@@ -2177,7 +2177,7 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
     playerOf(save).bodyProgression = {
       body_refinement: { completedTiers: 0, currentTierProgress: 0 },
       meridian: { openedIds: 'nope' },
-      zhou_tian: { circulation: 0 },
+      zhou_tian: { completed: 0 },
     }
     expect(validateGameSaveShape(save).ok).toBe(false)
 
@@ -2185,7 +2185,7 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
     playerOf(save2).bodyProgression = {
       body_refinement: { completedTiers: 0, currentTierProgress: 0 },
       meridian: { openedIds: ['nham_mach', 7] },
-      zhou_tian: { circulation: 0 },
+      zhou_tian: { completed: 0 },
     }
 
     const result = validateGameSaveShape(save2)
@@ -2200,7 +2200,7 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
     playerOf(save).bodyProgression = {
       body_refinement: { completedTiers: 3, currentTierProgress: 100 },
       meridian: { openedIds: ['nham_mach', 'doi_mach'] },
-      zhou_tian: { circulation: 0 },
+      zhou_tian: { completed: 0 },
     }
     expect(validateGameSaveShape(save).ok).toBe(true)
 
@@ -2213,7 +2213,7 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
           'duong_duy_mach', 'duong_kieu_mach', 'xung_mach', 'doc_mach',
         ],
       },
-      zhou_tian: { circulation: 0 },
+      zhou_tian: { completed: 0 },
     }
     expect(validateGameSaveShape(save2).ok).toBe(true)
   })
@@ -2234,21 +2234,21 @@ describe('validateGameSaveShape — v72 bodyProgression delegation', () => {
     expect(pathsOf(result)).toContain('player.bodyProgression.zhou_tian')
   })
 
-  // C2C-79 - fractional circulation rejects through the shape layer at
+  // C2C-79 - fractional completed rejects through the shape layer at
   // the persisted-state path (integrity would also catch it later).
-  it('từ chối zhou_tian circulation không nguyên tại player.bodyProgression.zhou_tian.circulation', () => {
+  it('từ chối zhou_tian completed không nguyên tại player.bodyProgression.zhou_tian.completed', () => {
     const save = validSave()
 
     playerOf(save).bodyProgression = {
       body_refinement: { completedTiers: 0, currentTierProgress: 0 },
       meridian: { openedIds: [] },
-      zhou_tian: { circulation: 1.5 },
+      zhou_tian: { completed: 1.5 },
     }
 
     const result = validateGameSaveShape(save)
 
     expect(result.ok).toBe(false)
-    expect(pathsOf(result)).toContain('player.bodyProgression.zhou_tian.circulation')
+    expect(pathsOf(result)).toContain('player.bodyProgression.zhou_tian.completed')
   })
 })
 
