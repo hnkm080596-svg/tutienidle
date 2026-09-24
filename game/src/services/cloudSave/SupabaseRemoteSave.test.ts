@@ -3,11 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { syncRemoteSaveOnLogin } from './SupabaseRemoteSave'
 import { storeSupabaseSession } from '../supabase/SupabaseSession'
 import {
+  resolveImportHandoffKey,
   resolveRevisionKey,
   resolveSaveKey,
   setSaveAccountId,
 } from '../save/saveKeys'
-import { CURRENT_SAVE_VERSION } from '../save/SaveSystem'
+import { CURRENT_SAVE_VERSION, loadGame } from '../save/SaveSystem'
 import { createDefaultPlayer } from '../../core/player/Player'
 import type { GameSave } from '../save/saveTypes'
 
@@ -356,6 +357,47 @@ describe('shared save acceptance gate (qa-authority-01 / F-INT-02 / F-INT-03)', 
 
     expect(await syncRemoteSaveOnLogin(config)).toBe('skipped')
     expect(calls.some((call) => call.init.method === 'POST')).toBe(false)
+
+    vi.unstubAllGlobals()
+  })
+
+  it('pull that normalized away legacy equipment reports the discard through the import-handoff channel (qa-authority-b-02)', async () => {
+    loginSession()
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(1_000)))
+
+    // A legacy entry (realmId/rarity markers) is tolerated by shape
+    // validation and counted in discardedEquipmentCount - but it is NOT
+    // part of normalizedSave, so the acceptance gate passes and the row
+    // pulls cleanly.
+    const remote = validGameSave(1_000) as GameSave & { equipment: unknown[] }
+    remote.equipment.push({ realmId: 'pham', rarity: 'hiem', instanceId: 'i1', itemId: 'x', slot: 'weapon' })
+
+    stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([{ payload: remote, save_revision: 7, updated_at: new Date(10_000_000).toISOString() }])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pulled')
+
+    const stored = localStorage.getItem(resolveSaveKey())
+    const marker = JSON.parse(localStorage.getItem(resolveImportHandoffKey()) ?? 'null') as {
+      normalizedRaw: string
+      discardedEquipmentCount: number
+    } | null
+    expect(marker?.normalizedRaw).toBe(stored)
+    expect(marker?.discardedEquipmentCount).toBe(1)
+
+    // One-shot consume: the owner load reports the count once, then the
+    // marker is gone.
+    const outcome = loadGame()
+    expect(outcome.status).toBe('ok')
+    if (outcome.status === 'ok') {
+      expect(outcome.discardedEquipmentCount).toBe(1)
+    }
+    expect(localStorage.getItem(resolveImportHandoffKey())).toBeNull()
 
     vi.unstubAllGlobals()
   })

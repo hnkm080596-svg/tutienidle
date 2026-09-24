@@ -7,7 +7,7 @@ import {
   isSaveAcceptable,
   staticSaveAcceptanceCatalogs,
 } from '../save/saveAcceptance'
-import { resolveRevisionKey, resolveSaveKey } from '../save/saveKeys'
+import { resolveImportHandoffKey, resolveRevisionKey, resolveSaveKey } from '../save/saveKeys'
 import { readLocalSaveRevision } from './LocalCloudSaveService'
 
 export type RemoteSyncOutcome = 'pulled' | 'pushed' | 'skipped' | 'unavailable'
@@ -95,8 +95,28 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
       // between the two writes leaves new-revision + old-save -> the next
       // CAS mismatches and the coordinator resyncs - never a stale-
       // revision split.
+      const pulledRaw = JSON.stringify(remoteUsable.normalizedSave)
       localStorage.setItem(resolveRevisionKey(), String(remoteRow.save_revision))
-      localStorage.setItem(resolveSaveKey(), JSON.stringify(remoteUsable.normalizedSave))
+      localStorage.setItem(resolveSaveKey(), pulledRaw)
+      // Discard-notice parity with importSaveRaw: equipment dropped by
+      // normalization on the pull seam reports through the same one-shot
+      // handoff channel - bound to the exact stored bytes so a stale
+      // marker can never misattribute. A marker-write failure degrades
+      // to a lost count, never a failed pull (loadGame's own marker-read
+      // policy).
+      if (remoteUsable.discardedEquipmentCount > 0) {
+        try {
+          localStorage.setItem(
+            resolveImportHandoffKey(),
+            JSON.stringify({
+              normalizedRaw: pulledRaw,
+              discardedEquipmentCount: remoteUsable.discardedEquipmentCount,
+            }),
+          )
+        } catch {
+          // Auxiliary channel - losing the count must not fail the pull.
+        }
+      }
       return 'pulled'
     }
 
