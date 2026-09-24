@@ -5,6 +5,9 @@ import {
 } from '../realm/realmSystem'
 import { hasCultivationOverflowBank } from '../talent/TalentEffects'
 import { resolveFinalCultivationGain } from './CultivationDiversion'
+// Side-effect import: module-load registration of the Quan The diverter
+// into CultivationDiversion (design 2026-09-23 sec.10, HIDDEN-B).
+import '../realm/hidden/QuanTheDiversion'
 
 export function addCultivation(
   player: PlayerData,

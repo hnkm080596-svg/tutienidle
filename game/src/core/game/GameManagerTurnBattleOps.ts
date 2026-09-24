@@ -49,7 +49,16 @@ import { createDamageProfileCatalog } from '../combat/DamageProfiles'
 import {
   resolveHiddenBattleReplacement,
   runHiddenBattleReplacement,
+  type HiddenBattleContext,
+  type HiddenBattlePlan,
 } from '../realm/hidden/HiddenBattleReplacement'
+import { completeHiddenBody } from '../realm/hidden/HiddenLineage'
+import { HIDDEN_BODY_REALMS } from '../../data/realm/HiddenBodyRealms'
+import { getHiddenBeastById } from '../../data/enemy/HiddenBeasts'
+// Side-effect import: module-load registration of the ancient_beast_trial
+// resolver + runner into the HiddenBattleReplacement registries (the
+// Quan The diverter registers itself from CultivationSystem's side).
+import '../realm/hidden/AncientBeastTrial'
 import { createDefaultCapabilityValidators } from '../battle/runtime/capability/DefaultCapabilityValidators'
 import type { TurnCombatRuntime } from '../battle/turn/TurnBattleSystem'
 import type { BuffDefinition } from '../buff2/BuffDefinition'
@@ -163,6 +172,17 @@ export class GameManagerTurnBattleOps {
 
   private activeStageForTurnBattle: Stage | null = null
   private playerDataForTurnBattle: PlayerData | null = null
+
+  // Hidden Perfection Lineage (design 2026-09-23 sec.9) - the live hidden
+  // trial replacement: set by launchHiddenBattle, adjudicated by
+  // settleHiddenTrialIfDue (survive plan.survivalRounds canonical rounds
+  // -> completeHiddenBody + victory), cleared on any cycle boundary.
+  private activeHiddenTrial: { player: PlayerData; plan: HiddenBattlePlan; battle: TurnBattle } | null = null
+
+  // The stage cycle the trial interrupted - recorded so the trial's
+  // victory can hand the loop back (sec.9.3: the replacement steals ONE
+  // cycle; continuous farming resumes the normal stage afterwards).
+  private hiddenTrialResume: { player: PlayerData; stage: Stage; resumeRepeat: boolean } | null = null
 
   /** Wall-clock timestamp at stage start (Hoan My clearSeconds normalization). */
   private turnBattleStartedAtMs: number | null = null
@@ -840,12 +860,28 @@ export class GameManagerTurnBattleOps {
    * clock, and anything left behind on the world tick would never fire.
    */
   private settleCombatOutcome(): void {
+    this.settleHiddenTrialIfDue()
     this.rewardOps.grantBattleRewardIfNeeded()
 
     const battle = this.turnBattle
 
     if (!battle || (battle.state !== 'victory' && battle.state !== 'defeat')) {
       return
+    }
+
+    // Trial resume (design sec.9.3): the replacement stole ONE cycle of
+    // the interrupted stage's loop - on victory a repeat-intent start
+    // re-enters through the public entry point (the manual-start seam
+    // runs before stageWaves.start, so no lease survived to restart in
+    // place; re-acquiring it via startStage IS the resume). Defeat takes
+    // the ordinary defeat contract and the record drops.
+    const resume = this.hiddenTrialResume
+    if (resume !== null) {
+      this.hiddenTrialResume = null
+      if (battle.state === 'victory' && resume.resumeRepeat) {
+        this.startStage(resume.player, resume.stage, true)
+        return
+      }
     }
 
     // Auto-repeat: victory + repeat on -> restart in place, exactly where the
@@ -1427,6 +1463,8 @@ export class GameManagerTurnBattleOps {
     this.presentationOps.runtime.resetPendingState()
     this.boundaryQueue = []
     this.activeBuild = undefined
+    this.activeHiddenTrial = null
+    this.hiddenTrialResume = null
   }
 
   /**
@@ -2026,6 +2064,13 @@ export class GameManagerTurnBattleOps {
       return
     }
 
+    // Hidden replacement seam (design sec.9.2 - the hook covers BOTH
+    // manual starts and continuous repeat cycles): a fired trial
+    // replaces this repeat cycle wholesale.
+    const hiddenPlan = resolveHiddenBattleReplacement(player, stage)
+    if (hiddenPlan !== undefined && runHiddenBattleReplacement({ player, stage, plan: hiddenPlan, ops: this, resumeRepeat: this.turnBattleRepeatContinuously })) {
+      return
+    }
     this.beginBattleCycle(BATTLE_CYCLE_POLICIES.repeat, { player, stage })
   }
 
@@ -2061,7 +2106,7 @@ export class GameManagerTurnBattleOps {
       // unregistered path or a declined run falls through to the
       // normal stage launch.
       const hiddenPlan = resolveHiddenBattleReplacement(player, stage)
-      if (hiddenPlan !== undefined && runHiddenBattleReplacement({ player, stage, plan: hiddenPlan })) {
+      if (hiddenPlan !== undefined && runHiddenBattleReplacement({ player, stage, plan: hiddenPlan, ops: this, resumeRepeat: repeatContinuously })) {
         return true
       }
       started = this.deps.stageWaves.start(player, stage, repeatContinuously, {
@@ -2083,14 +2128,27 @@ export class GameManagerTurnBattleOps {
     // factory, fresh engine, clock. This post-block contributes ONLY the
     // stage-aggregate extras (Mission C: the innermost call owns the
     // cycle; never re-invoke the canonical sequence here).
+    this.turnBattleRepeatContinuously = repeatContinuously
+    this.activeStageForTurnBattle = stage
+    this.playerDataForTurnBattle = player
+    this.mintCombatSessionForLaunch()
+
+    return true
+  }
+
+  /**
+   * Post-cycle presentation extras shared by stage launches and hidden
+   * trial replacements (design sec.9.3): end the outgoing session, mint a
+   * held interactive combat session, emit it, then freeze the cycle's
+   * clock until the battle is revealed. Stage binding fields are the
+   * caller's own concern - a 'fresh' cycle owns no stage state.
+   */
+  private mintCombatSessionForLaunch(): void {
     const activeSession = this.presentationOps.session.getCurrentSession()
     if (activeSession) {
       this.presentationOps.session.end(activeSession)
     }
 
-    this.turnBattleRepeatContinuously = repeatContinuously
-    this.activeStageForTurnBattle = stage
-    this.playerDataForTurnBattle = player
     this.turnBattleStartedAtMs = Date.now()
 
     const session: SessionRef = {
@@ -2107,8 +2165,98 @@ export class GameManagerTurnBattleOps {
     // session existed - a held interactive session must freeze it now
     // or combat ticks while the battle is not revealed.
     this.syncOffScreenFreeze()
+  }
 
+  // --- Hidden trial replacement (HiddenBattleOps surface) ------------------
+
+  /**
+   * HiddenBattleOps implementation (design sec.9): launches the plan's
+   * replacement battle as a 'fresh'-policy cycle - no stage binding, no
+   * wave, no carried loot session - and arms the survival watcher. The
+   * trial enemy resolves by template id through getHiddenBeastById; an
+   * unknown id fails open (false) so the caller can run the normal stage.
+   */
+  launchHiddenBattle(ctx: HiddenBattleContext): boolean {
+    const enemy = getHiddenBeastById(ctx.plan.enemyId)
+    if (enemy === undefined || ctx.plan.survivalRounds <= 0) {
+      return false
+    }
+
+    this.beginBattleCycle(BATTLE_CYCLE_POLICIES.fresh, {
+      player: ctx.player,
+      initialEnemy: enemy,
+    })
+
+    this.activeHiddenTrial = {
+      player: ctx.player,
+      plan: ctx.plan,
+      battle: this.turnBattle!,
+    }
+    this.hiddenTrialResume = {
+      player: ctx.player,
+      stage: ctx.stage,
+      resumeRepeat: ctx.resumeRepeat,
+    }
+    this.mintCombatSessionForLaunch()
     return true
+  }
+
+  /** UI read (combat top bar): live trial objective, null outside one. */
+  getActiveHiddenTrial(): { survivalRounds: number; roundsElapsed: number } | null {
+    const trial = this.activeHiddenTrial
+    if (trial === null || this.turnBattle !== trial.battle) {
+      return null
+    }
+    return {
+      survivalRounds: trial.plan.survivalRounds,
+      roundsElapsed: this.turnBattle.roundsElapsed ?? 0,
+    }
+  }
+
+  /**
+   * Survival adjudication (design sec.9.3/sec.9.5): alive through
+   * plan.survivalRounds COMPLETE canonical rounds -> completeHiddenBody
+   * on the registry-derived realm and end the battle as victory. Player
+   * death takes the engine's own defeat path instead (the watcher simply
+   * disarms). Runs before reward settlement so the converted victory
+   * settles in the same step.
+   */
+  private settleHiddenTrialIfDue(): void {
+    const trial = this.activeHiddenTrial
+    if (trial === null) {
+      return
+    }
+    const battle = this.turnBattle
+    // Disarm only when the watched battle is gone or reached a terminal
+    // state the trial did not produce (defeat by the engine's own path,
+    // abandon). 'intro'/'countdown' still lie ahead of the fight - the
+    // watcher must survive them, not disarm on the first step.
+    if (
+      battle !== trial.battle ||
+      battle.state === 'victory' ||
+      battle.state === 'defeat'
+    ) {
+      this.activeHiddenTrial = null
+      return
+    }
+    if (battle.state !== 'fighting') {
+      return
+    }
+    if (!battle.players.some((member) => member.entity.alive)) {
+      return
+    }
+    if ((battle.roundsElapsed ?? 0) < trial.plan.survivalRounds) {
+      return
+    }
+
+    const realmId = HIDDEN_BODY_REALMS.find(
+      (entry) => entry.mechanicKind === trial.plan.kind,
+    )?.realmId
+    if (realmId !== undefined) {
+      completeHiddenBody(trial.player, realmId)
+    }
+    battle.state = 'victory'
+    this.activeHiddenTrial = null
   }
 
   // Phase A0 (2026-09-07) - HUD progress composed from the LIVE turn battle:

@@ -31,10 +31,25 @@ export interface HiddenBattlePlan {
   details?: Record<string, unknown>
 }
 
+/**
+ * Narrow launch surface the battle ops hand to runners (HIDDEN-B): the
+ * ops implements it so a runner can spawn the replacement cycle without
+ * depending on GameManagerTurnBattleOps directly.
+ */
+export interface HiddenBattleOps {
+  launchHiddenBattle(ctx: HiddenBattleContext): boolean
+}
+
 export interface HiddenBattleContext {
   player: PlayerData
   stage: Stage
   plan: HiddenBattlePlan
+  ops: HiddenBattleOps
+  /** Would the interrupted cycle have repeated? startStage passes its
+   * repeatContinuously param; the repeat path passes the live flag.
+   * The trial records it so its victory can resume the stage's loop
+   * (design sec.9.3 - farming continues after the hidden battle). */
+  resumeRepeat: boolean
 }
 
 export type HiddenBattleReplacementResolver = (

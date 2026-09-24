@@ -629,6 +629,21 @@ export class CombatSystem {
       return
     }
 
+    // Hidden Perfection Lineage (design 2026-09-23 sec.9) - semantic
+    // immortality: an undefeatable entity (the Ancient Beast trial enemy)
+    // can never die in battle; a lethal hit clamps to 1 HP and emits the
+    // same vitals correction as the player survive-lethal path so HUD
+    // state never sticks on "dead".
+    if (entity.undefeatable === true) {
+      entity.currentHp = 1
+      this.vitals.emitCurrent(entity, 'survive_lethal', 1, {
+        hp: 0,
+        ward: entity.currentWard,
+        mp: entity.currentMp,
+      }, killerId)
+      return
+    }
+
     // Bat Tu The talent (talent-direction-choice-plan sec.6) - a lethal
     // single hit becomes survive-at-1-HP, consuming one charge of the
     // battle. Does NOT trigger during tribulation (session null -

@@ -39,6 +39,20 @@ const physiqueGradeLabel = computed(() => {
   return t(`panels.realm.physique.grades.${getPhysiqueGrade(player.$state)}`)
 })
 
+// HIDDEN-B (design sec.9/sec.19) - display-only "Bac 7 - Pham Cot" row.
+// The hidden realm stays invisible until the trial has actually fired
+// (discovered); once visible it mirrors bodyCompleted, nothing more.
+const hiddenMortalRow = computed(() => {
+  stateVersion.value
+
+  const record = player.$state.hiddenPerfection?.realms['mortal']
+  if (record?.discovered !== true) {
+    return null
+  }
+
+  return { completed: record.bodyCompleted === true }
+})
+
 const tierRows = computed(() => {
   stateVersion.value
 
@@ -116,6 +130,20 @@ const tierRows = computed(() => {
     </template>
 
     <EmptyState v-else size="lg">{{ t('panels.realm.bodyRefinement.empty') }}</EmptyState>
+
+    <div
+      v-if="hiddenMortalRow"
+      class="body-refinement__tier body-refinement__tier--hidden"
+      :class="{ 'body-refinement__tier--done': hiddenMortalRow.completed }"
+    >
+      <div class="body-refinement__tier-head">
+        <span class="body-refinement__tier-name">{{ t('hidden.mortal.tier7Name') }}</span>
+        <span class="body-refinement__tier-state">
+          {{ hiddenMortalRow.completed ? t('hidden.mortal.stateDone') : t('hidden.mortal.stateTrial') }}
+        </span>
+      </div>
+      <p class="body-refinement__tier-desc">{{ t('hidden.mortal.tier7Desc') }}</p>
+    </div>
   </section>
 </template>
 
@@ -213,5 +241,17 @@ const tierRows = computed(() => {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--text-secondary);
+}
+
+.body-refinement__tier--hidden {
+  opacity: 1;
+  border-color: var(--jade);
+}
+
+.body-refinement__tier-state {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--jade);
 }
 </style>

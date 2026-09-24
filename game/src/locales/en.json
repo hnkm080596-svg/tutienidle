@@ -1229,5 +1229,23 @@
   "save": {
     "conflict": "Save was changed by another session.",
     "createFailed": "Character creation failed — initialization did not complete."
+  },
+  "hidden": {
+    "mortal": {
+      "tier7Name": "Body Refinement · Tier 7 — Pham Cot",
+      "tier7Desc": "The mortal's hidden body path — survive the Ancient Beast to prove it.",
+      "stateTrial": "Ancient Beast trial",
+      "stateDone": "Completed",
+      "beastName": "Ancient Beast"
+    },
+    "qi": {
+      "quanTheName": "Meridian · Quan The",
+      "quanTheDesc": "Cultivation is diverted into quan the instead of realm progress — fill it to unlock the hidden body.",
+      "stateActive": "Diverting",
+      "stateDone": "Completed"
+    },
+    "trial": {
+      "banner": "{name} · Round {elapsed}/{required}"
+    }
   }
 }
