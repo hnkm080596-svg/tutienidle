@@ -412,7 +412,7 @@ describe('KIEM PHO BETA - node seams (design sec.10-12)', () => {
     expect(wound!.stacks).toBe(1)
   })
 
-  it('Kiem Ket + Lien Thuc append in phase order on the derived combo (design sec.8 pin)', () => {
+  it('Kiem Ket + Lien Thuc append after the authored interaction (pre-sort reduce order; the phase sort itself is pinned in GameManager.kiemTuTree.test.ts)', () => {
     const player = hienPlayer(['orb_chem'], 'foundation_establishment', {
       tram_can: 1,
       luu_ngan: 1,

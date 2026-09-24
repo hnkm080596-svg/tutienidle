@@ -2,14 +2,17 @@ import { describe, expect, it } from 'vitest'
 import { KIEM_TU_NODES } from './KiemTuNodes'
 import { ORB_UNLOCK_REALM } from '../skill/KiemPhoOrbs'
 
-// Kiem Tu Reimagined Task 11 (spec 2026-09-15 §6) — the reimagined
-// tree: 5 orb branches (growth + combo capstone) under 'kiem_pho',
-// and the ngu branch (cascade unlocks, per-instance growth, Cuu Cung
-// 3x3) under 'ngu_kiem'. The legacy Kiem Tran / Bat Kiem node set is
-// gone (Task 12 teardown). Cultivation Path Framework M6: the
-// kiem_tu_an flip node is retired — way entry is ritual-only and every
-// node carries requiredCultivationPath 'sword' + requiredWay
-// ('sword_pathway' orbs / 'hidden_sword_pathway' subtree) stamped at export.
+// Kiem Pho Beta (docs/specs/kiem-pho-beta-spec.md) — the tree under
+// test: 8 kiem_pho nodes — one four-role branch per beta orb (Dam at
+// qi_refining, Chem at foundation_establishment): Can (growth),
+// Thuan Thuc (skill-scoped keystone), Kiem Ket (combo modifier on the
+// completing orb), Lien Thuc (combo modifier on >=2 of that orb).
+// Bo/Hat/Quet stay out of scope. The ngu branch (cascade unlocks,
+// per-instance growth, Cuu Cung 3x3) under 'ngu_kiem' is unchanged.
+// Every node carries requiredCultivationPath 'sword' + requiredWay
+// ('sword_pathway' orbs / 'hidden_sword_pathway' subtree) stamped at
+// export; beta nodes modify the SKILL via skillDefinitionModifiers /
+// swordPathComboModifier, never the character.
 
 const REALM_BY_INDEX = [
   'mortal',

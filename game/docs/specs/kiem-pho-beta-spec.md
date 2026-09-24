@@ -114,8 +114,10 @@ DEC-5 — New generic NodeEffect channel `skillDefinitionModifiers:
 { skillId, damageMultiplierPerLevel?, armorPierceFractionOnDam?,
 addAilmentInteractions?: SkillAilmentInteraction[], priority? }[]`.
 KiemPhoNodeModifiers collects it (skill-scoped, never character-wide);
-KiemPhoProvider folds derived copies at every def emit point
-(resolveBasic/manualOptions/resolveManualPick + combo extras). Orb-
+KiemPhoProvider folds derived copies at every orb def emit point
+(resolveBasic/manualOptions/resolveManualPick). Combo extras are
+generated action ids — never a `skillId` target — so comboToExtraDef
+does not fold them. Orb-
 specific predicate `armorPierceFractionOnDam` is a generic armor-pierce
 field name (armorPierceFraction) — no orb ids in the seam. Generic, not
 node-id-keyed (sec.15 schema principle).
