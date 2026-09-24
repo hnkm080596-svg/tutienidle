@@ -173,10 +173,6 @@
           "techniqueGrade": "Cần tâm pháp đạt phẩm {grade}",
           "skillUpgrade": "Cần nâng kỹ năng liên quan"
         },
-        "roleStrip": {
-          "lockedByRival": "Đang khóa - nhánh đối lập đã chọn (reset node để mở lại).",
-          "unlockedByNode": "Mở qua node {name} trong Skill Path."
-        },
         "upgradeGateHeader": "Nâng cấp bị chặn:",
         "routePick": {
           "title": "Chọn Hướng Pháp Tu",
@@ -203,6 +199,10 @@
         "cost": "Tiêu Hao",
         "type": "Loại",
         "attackSpeed": "Nhịp theo Tốc Độ Đánh"
+      },
+      "roleStrip": {
+        "lockedByRival": "Đang khóa - nhánh đối lập đã chọn (reset node để mở lại).",
+        "unlockedByNode": "Mở qua node {name} trong Skill Path."
       }
     },
     "character": {
