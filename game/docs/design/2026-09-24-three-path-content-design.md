@@ -1,6 +1,6 @@
 # Three-Path Content Design — Beta Window (Pháp Tu / Kiếm Tu / Thể Tu)
 
-Status: DESIGN DRAFT (synthesis of 3 path inventories gathered 2026-09-24 on `beta/rc` tip 48fda66a / master be1bdf8d)
+Status: DESIGN DRAFT (synthesis of 3 path inventories gathered 2026-09-24 on `beta/rc` tip 48fda66a / master be1bdf8d) — **user rulings 2026-09-24 applied**: Pháp Tu scope locked to §0-R below.
 Scope: every content dimension a player touches — skills, hình ảnh (sprites/icons/VFX), đột phát/realm rewards, mechanics hooks — for the three cultivation paths inside the playable window.
 Authority model: this doc is a DESIGN layer. It names what to author and where it lands; all balance-flagged numbers (§BETA-BALANCE boundary) remain user-held.
 
@@ -24,30 +24,44 @@ Two design stances follow. (A) **Window re-gating** decisions — which authored
 
 ## §1. Pháp Tu — content design
 
-### 1.1 The unreachable-skill problem (design decision D-PT-1)
+### 1.1 The unreachable-skill problem (design decision D-PT-1 — **SUPERSEDED by ruling R3**)
 
-`SPELL_KIT_IDS` fixes the kit at `[basic(A), special(C), ultimate(E)]`. Ten B/D chain skills and 4 route skills exist with no unlock channel and no slot. The retired "node chuỗi" spec promised a node-grant layer that was never authored.
+`SPELL_KIT_IDS` fixes the kit at `[basic(A), special(C), ultimate(E)]`. Ten B/D chain skills and 4 route skills exist with no unlock channel and no slot. Ruling R3 (user, 2026-09-24): **leave them** — authored-but-unreachable is accepted; no alternates layer is built in beta. Recorded for context only.
 
-**Design: re-bin as alternates, don't widen the kit.**
+<details><summary>Rejected design (re-bin as C-slot alternates)</summary>
 
 - The 3-slot kit stays. B/D skills become **alternate choices for the C (special) slot**, unlocked by new `unlocksSkillIds` nodes on each element branch within the beta window:
-  - B-tier alternates (`nam_minh_liet_hoa`, `bat_dau_tran_thuy`, `xuan_sanh_doc_duc`, `thu_giap_kim_than`, `hau_tho_tran_ach` — the "set-up/control" alternates) unlock at a **Luyện Khí-tier node** on the element branch.
+  - B-tier alternates (`nam_minh_liet_hoa`, `bat_dau_tran_thuy`, `xuan_sanh_doc_duc`, `thu_giap_kim_than`, `hau_tho_tran_ach`) unlock at a **Luyện Khí-tier node** on the element branch.
   - D-tier alternates (`chuc_dung_dan_no`, `hoi_luu_thon_no`, `van_moc_lan_doc`, `kim_chung_cong_huong`, `con_lon_chan_dia`) unlock at a **Trúc Cơ-tier node**.
   - Loadout rule: special slot accepts any unlocked C-tier-or-alternate; UI swap via existing `SkillRoleStrip` pattern. Default remains the authored C skill.
 - Route skills (`dan_hoa_quyet` …, fire only): become **route-locked C-slot alternates** — selectable only while that route is committed; switching routes clears the pick (respec path already refunds).
 - D-tier specialization unlocks: author nodes that use the existing `selectsSpecialization` `NodeEffect` (engine path exists at `GameManagerProgressionOps.ts:320-323`, zero nodes use it); remove the free UI toggle for gated specs — UI shows unlocked options only.
 
-### 1.2 New content to author
+</details>
+
+### 1.2 New content — scoped by rulings
+
+In-beta scope (per §9 rulings):
 
 | Item | Lands | Notes |
 |---|---|---|
-| Route kits water/wood/metal/earth | `SPELL_ROUTE_SKILL_IDS` (Skills.ts:40-46 — 4 empty arrays) + new `PhapTuRouteSkills` entries | Fire has 4; author 4 per element (parallel structure: burst/DoT-control/defensive/ult-adjacent) |
-| Ẩn (Ngộ Đạo) node tree | `PHAP_TU_AN_NODES` (`data/progression/PhapTuAnNodes.ts:16` — empty by spec §5.3 deferral) | Design the tree here: multicast-rate, composite-pick depth, reaction aura amplification, The-economy nodes — all `requiredWay:'hidden_spell_pathway'` |
-| `dao_insight_art` grade-2 table | `data/technique/Techniques.ts` (grade-1 only today) | Hidden-way Trúc Cơ table |
-| Realm passives post-Trúc Cơ | `REALM_PASSIVES` (2 entries only) | Author Kim Đan+ rows (out of beta play but completes the ladder's contract) |
-| Per-realm Pháp Tu unlocks | kit/way `realmRewards` | Today zero path-specific breakthrough rewards — see §4 |
-| `van_moc_lan_doc` poison-spread | new authoring field (currently warn-and-dropped `scope`) | Needs either an authored `spreads_ailment` op or spec amendment to remove the claim |
-| Unsupported authored fields | `LegacySkillAdapter.ts:704-738` warn list | `scope`/`refresh`/`hitCount`/`realmDamageRatio`/`grantsZone`/`swordZone*`/`breakDamagePerHit`/`knockbackDistance` — each either gets an op binding or is stripped from data (per-field decision table in impl) |
+| Basic-path node tree design | element branches `PhapTuNodes` | **The design focus of this round** — see §1.2a |
+| Node-tree honesty | progression UI | Nodes `requiredRealmId` above ceiling render dimmed + "khóa Kim Đan" instead of purchasable-looking |
+| `van_moc_lan_doc` description | `SkillMechanicDescriptions.ts` | Strip the spread claim (mechanic never existed; skill unreachable anyway — text must not lie) |
+| Presentation layer | §5 | display meta for reachable skills, per-skill VFX, icons, player art, technique icons dir |
+| Breakthrough rewards | §4-b | brainstorm pass (user direction) |
+
+Deferred by ruling (recorded, not authored this round): route kits for 4 elements; Ẩn node tree (`PHAP_TU_AN_NODES`); `dao_insight_art` grade-2; Kim Đan+ realm passives; specialization-unlock nodes; `spreads_ailment`/`scope`/`refresh`/`hitCount` etc. unsupported-field bindings (decision table deferred with the skills they ride on).
+
+### 1.2a Basic-path node tree — the design focus
+
+The Pháp Tu beta experience = basic skill + element branch of the node tree. What the basic branch must deliver (to be authored):
+
+- **Identity per element**: each of the 5 element roots already grants its basic; the branch below it must make the same basic *feel different* per element — node effects that read the element's own mechanics (Hỏa: đốt/stack rider; Thủy: heal/slow rider; Mộc: độc spread depth — data-only flavors; Kim: pierce/crit; Thổ: ward/DR).
+- **Depth ladder within the window**: nodes must span qi_refining → foundation_establishment gates only; a node a player cannot buy in-window does not exist for beta (they render dimmed per §1.2 honesty rule).
+- **The-economy tease without the spend**: The pool is wired (`SPELL_ESSENCE_GAIN_*`); basic-branch nodes may grant The-generation or The-capacity riders so the bar matters before the spend unlocks (spend stays Kim Đan per R1).
+- **Element seal prep**: `hoa_an` is the only authored elemental-seal spec — basic nodes may surface seal-adjacent riders only where the buff already exists in data (`hoa_an`/`doc_can`/`liet_thuong`/`han_tuc`/`tran_an` all have `StatusVfxPresets` entries).
+- **Budget**: presentation constraint from `docs/skill-constellation-glyph-plan.md` — ~10-11 nodes per element branch; the authored branch plan must fit.
 
 ### 1.3 Stubs to resolve
 
@@ -127,6 +141,20 @@ Today's breakthrough rewards are path-agnostic (grade passive + technique grade 
 
 ---
 
+## §4-b. Breakthrough-reward brainstorm — Pháp Tu (user direction)
+
+Constraint: rewards must be reachable in-window and must not unlock spend mechanics ruled out by R1. Candidate pool (design-level, numbers stay BALANCE):
+
+| Tier | Candidate reward | Why it fits |
+|---|---|---|
+| Trúc Cơ đột phá | **Element-locked master table**: grant the element's authored seal talent line (hoa_an spec exists for Hỏa — others get the parallel rider their data supports) | Makes element choice visible at the gate |
+| Trúc Cơ đột phá | **The-pool awakening**: The capacity unlocks as a stored resource visibly filling (spend still locked — creates anticipation, zero new mechanic) | Uses wired economy without violating R1 |
+| Trúc Cơ đột phá | **Cast-leveling acceleration**: the basic skill's cast-XP curve gains a multiplier tier | Rewards the only verb the player has in-window |
+| Minor realms (LQ tiers) | Element-branch node discounts / node-level seeds on the basic branch | Feeds §1.2a — realms visibly feed the tree |
+| Hidden (Ẩn way) | Reaction-aura amplification row + multicast-depth row | Ẩn has mechanics, just no tree — a breakthrough grant can seed it without authoring the whole tree |
+
+To pick: one signature per breakthrough tier + 1-2 minor-realm riders. User selects from the pool; Devin authors the selection into `realmRewards` on the kit record.
+
 ## §5. Cross-cutting asset systems (design)
 
 ### 5.1 Skill icon channel
@@ -172,16 +200,20 @@ This doc authors *structure and content placement*, not those numbers.
 
 1. **DESIGN-ART-1**: asset manifests + technique icons + bind on-disk kiem-tu PNGs + enemy art ladder + hidden-beast art (art batch, no mechanics).
 2. **DESIGN-VFX-2**: per-skill/per-kit presetIds (all 3 paths) + status icons + display-meta gap fill (Pháp Tu 29 skills missing HUD meta).
-3. **DESIGN-SKILL-3**: Pháp Tu re-bin (D-PT-1) + route kits + spec unlocks + Ẩn node tree; Kiếm combo effect cells (D-KT-1) + stubs/orphans pass both paths.
+3. **DESIGN-SKILL-3** (Pháp Tu beta scope per rulings): basic-skill node tree design + node-tree honesty (dim/hide Kim Đan+ nodes); description-claim fix on `van_moc_lan_doc`; Kiếm combo effect cells (D-KT-1) — deferred to Kiếm Tu's own round; stubs/orphans pass on reachable Pháp Tu content only.
 4. **DESIGN-REALM-4**: per-way realmRewards + Thể Tu deferred channels + technique grade tables.
 5. Doc-hygiene sweep rides whichever PR last touches each file.
 
-## §9. User rulings needed before authoring
+## §9. User rulings (RESOLVED 2026-09-24)
 
-| # | Question | Default proposed |
+| # | Question | Ruling |
 |---|---|---|
-| R1 | Re-gate Pháp Tu special/The into Trúc Cơ window? (currently a Pháp Tu player runs basic-only) | Yes — move `linh_ngo_<special>` to foundation_establishment; keep god-ult/phap-tuong Kim Đan |
-| R2 | Move a third orb (Bổ) into the beta window for Kiếm Tu? | Yes — Bổ @ foundation (was golden_core) |
-| R3 | D-PT-1 re-bin vs retire B/D + route skills | Re-bin as alternates (this doc) |
-| R4 | Kiếm Tu artifact / Thể Tu artifact — author or deliberate asymmetry | Author both (symmetry) |
-| R5 | `van_moc_lan_doc` spread: author the field or strip the claim | Author (ailment-spread op) |
+| R1 | Re-gate Pháp Tu special/The into Trúc Cơ window? | **NO — intentional design.** Basic-only in beta is deliberate; keep all Kim Đan gating as authored. |
+| R2 | Move a third orb into the beta window? | Deferred — Kiếm Tu work comes after Pháp Tu. |
+| R3 | D-PT-1 re-bin vs retire B/D + route skills | **Leave them.** 10 B/D chain skills + 4 route skills stay authored-but-unreachable; no re-bin, no alternates layer. |
+| R4 | Kiếm Tu / Thể Tu artifacts | Deferred with the path work. |
+| R5 | `van_moc_lan_doc` poison-spread | Not needed in beta (skill unreachable); fix the *description claim* only so it stops lying — no mechanic authored. |
+| R6 | Pháp Tu Ẩn (Ngộ Đạo) node tree | **Out of scope.** Beta designs only the basic-path node tree. |
+| R7 | Specialization unlock design | Out of scope this round (spec unlock nodes deferred). |
+
+**Locked Pháp Tu beta scope (from rulings):** basic skill + its node tree; presentation layer (display meta, per-skill VFX, icons, player art, technique icons dir); node-tree honesty for the basic path (hide/dim Kim Đan+ nodes); lying-description fix; beta-needed orphans only; breakthrough-reward brainstorm (§4-b).
