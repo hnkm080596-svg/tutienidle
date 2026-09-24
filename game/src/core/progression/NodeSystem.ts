@@ -3,6 +3,7 @@ import type { NodePrerequisite, ProgressionNode, TurnSkillResourceModifier } fro
 import { hasStaticPathCapability } from '../player/CultivationPathSystem'
 
 import type { SpellPathRoute } from '../phap-tu/PhapTuState'
+import { isHiddenSpellPathway } from '../phap-tu/PhapTuPath'
 import { getRealmIndex } from '../realm/realmSystem'
 import { getEffectiveTechniqueRank } from '../technique/TechniqueProgression'
 import { getNodeCostFreeChance } from '../talent/TalentEffects'
@@ -207,6 +208,25 @@ export function isNodeElementActive(player: PlayerData, node: ProgressionNode): 
     player.spellPath.element === null ||
     player.spellPath.element === node.elementTag
   )
+}
+
+/**
+ * Aggregation-side element gate: at effect time a null element means
+ * 'everything activates' ONLY on the hidden way (ngo_dao owns no
+ * element and must activate all five granted masteries). On
+ * spell_pathway a null element is just 'not yet committed' - granted
+ * reward levels stay dormant until selectSpellPathElement commits one.
+ * Purchase/upgrade keep isNodeElementActive so a pre-commit player can
+ * still buy an element root (the purchase IS the commit).
+ */
+function isNodeElementEffective(player: PlayerData, node: ProgressionNode): boolean {
+  if (node.elementTag === undefined) {
+    return true
+  }
+  if (player.spellPath.element !== null) {
+    return player.spellPath.element === node.elementTag
+  }
+  return isHiddenSpellPathway(player)
 }
 
 /** Eligible to PURCHASE (0->1): no level yet, prereq met, enough Insight for the level-1 cost. */
@@ -433,7 +453,7 @@ export function aggregateNodeStatModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
+    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementEffective(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
       continue
     }
 
@@ -463,7 +483,7 @@ export function aggregateTurnSkillResourceModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
+    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementEffective(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
       continue
     }
 
@@ -717,14 +737,21 @@ export function respecNodeTree(
         ? // A preserved root is exempt from revocation but still seeds
           // its subtree - reset the owned descendants below it instead.
           subtreeDescendants(scope.rootId, registry).filter(
-            node => !preservedIds.has(node.id),
+            node => !preservedIds.has(node.id) && !node.rewardOnly,
           )
-        : [registry.get(scope.rootId)]
+        : registry.get(scope.rootId).rewardOnly
+          ? []
+          : [registry.get(scope.rootId)]
     }
   } else {
     targets = registry
       .getAll()
-      .filter(node => node.levelsSkillId === undefined && !preservedIds.has(node.id))
+      .filter(
+        node =>
+          node.levelsSkillId === undefined &&
+          !node.rewardOnly &&
+          !preservedIds.has(node.id),
+      )
   }
 
   if (targets.length === 0) {

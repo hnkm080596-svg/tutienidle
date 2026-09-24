@@ -3,11 +3,13 @@ import type { PlayerData } from '../../core/player/Player'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { grantCultivationPathRealmReward } from '../../core/player/CultivationPathSystem'
 import {
+  aggregateNodeStatModifiers,
   canPurchaseNode,
   canUpgradeNode,
   isNodeElementActive,
   nodeWayApplies,
 } from '../../core/progression/NodeSystem'
+import { CULTIVATION_PATH_MODULES } from '../../core/player/CultivationPathKit'
 import { resolveMaxThe } from '../../core/phap-tu/PhapTuRoutes'
 import { MAX_THE } from '../../core/combat/CombatTypes'
 import { SPELL_PATHWAY, HIDDEN_SPELL_PATHWAY } from '../../core/phap-tu/PhapTuPath'
@@ -112,6 +114,38 @@ describe('PhapTu realm-reward grant nodes', () => {
 
     expect(isNodeElementActive(player, water)).toBe(true)
     expect(isNodeElementActive(player, fire)).toBe(false)
+  })
+
+  it('null element on the normal way keeps grants dormant - only ngo_dao activates all', () => {
+    const uncommitted = nguHanh({
+      spellPath: { element: null, route: null },
+      nodeLevels: { tinh_thong_hoa: 1 },
+    })
+    expect(
+      aggregateNodeStatModifiers(registry, uncommitted).filter((m) => m.sourceId === 'spell'),
+    ).toEqual([])
+
+    const hidden = ngoDao({
+      spellPath: { element: null, route: null },
+      nodeLevels: { tinh_thong_hoa: 1 },
+    })
+    expect(
+      aggregateNodeStatModifiers(registry, hidden).some((m) => m.stat === 'ailmentPotencyPercent'),
+    ).toBe(true)
+  })
+
+  it('every grantedNodeLevels key across ways resolves to a registered rewardOnly node', () => {
+    for (const module of Object.values(CULTIVATION_PATH_MODULES)) {
+      for (const way of Object.values(module.ways)) {
+        for (const reward of Object.values(way.realmRewards ?? {})) {
+          for (const nodeId of Object.keys(reward.grantedNodeLevels ?? {})) {
+            const node = PHAP_TU_NODES.find((n) => n.id === nodeId)
+            expect(node, `${way.id} -> ${nodeId}`).toBeDefined()
+            expect(node?.rewardOnly, `${way.id} -> ${nodeId}`).toBe(true)
+          }
+        }
+      }
+    }
   })
 
   it('the awakening raises the battle-scoped The cap for the normal way', () => {

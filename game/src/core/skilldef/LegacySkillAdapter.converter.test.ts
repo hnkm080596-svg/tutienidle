@@ -43,6 +43,23 @@ describe('toTurnSkillDefinition', () => {
     expect(turnSkill.appliesAilment).toEqual({ buffDefinitionId: 'hoa_an', chance: 1 })
   })
 
+  it('carries authored vfxPresetId to presetId; absence stays undefined for the runtime fallback', () => {
+    const manager = new SkillManager()
+    const skillSystem = new SkillSystem(manager)
+    const skill = structuredClone(SKILLS.find((s) => s.id === 'hoa_cau_thuat')!)
+    manager.add(skill)
+
+    const effective = skillSystem.getEffectiveSkill(manager.get(skill.id)!)
+    const withPreset = toTurnSkillDefinition(manager.get(skill.id)!, effective)
+    expect(withPreset.presetId).toBe('hoa_cau_comet')
+
+    const noPresetSkill = structuredClone(SKILLS.find((s) => s.id === 'tam_muoi_chan_hoa')!)
+    manager.add(noPresetSkill)
+    const noPresetEffective = skillSystem.getEffectiveSkill(manager.get(noPresetSkill.id)!)
+    const withoutPreset = toTurnSkillDefinition(manager.get(noPresetSkill.id)!, noPresetEffective)
+    expect(withoutPreset.presetId).toBeUndefined()
+  })
+
   it('applies the selected specialization override through getEffectiveSkill (Tán Diễm AoE branch)', () => {
     const manager = new SkillManager()
     const skillSystem = new SkillSystem(manager)

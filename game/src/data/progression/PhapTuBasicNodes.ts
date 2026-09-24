@@ -9,10 +9,16 @@ import { PHAP_TU_ELEMENT_ROOT_IDS } from './PhapTuNodes.builders'
 
 // 2026-09-25 three-path content design (design doc sec.1.2a, user rulings
 // #1-#8) -- the BASIC-skill lane per element. Distinct from the existing
-// special/ult/route lanes: every node here powers the element's BASIC
-// skill only (skill-scoped stat keys: skillDamagePercent /
+// special/ult/route lanes: every node here powers the element's SKILL
+// kit (skill stat keys: skillDamagePercent /
 // elementApplicationPercent / ailmentPotencyPercent / ailmentDurationPercent
-// / criticalRate / criticalDamage -- never character stats), is leveled, and
+// / criticalRate / criticalDamage -- never character stats like
+// might/hp/armor). Stat scope is the spell domain: modifiers only
+// exist for a spell-path player, and inside the beta window (LQ/TC)
+// the basic is the only reachable spell skill, so the nodes' in-window
+// effect is exactly the basic lane; post-Kim-Dan spells share the same
+// element stats -- a per-skillId stat channel is future engine work,
+// not beta scope. Every node is leveled, and
 // a maxed node adds at most +10% of the skill's authored base in ONE
 // direction (power nodes: 5 levels x 2%, or 4 levels x 2.5%; apply-chance
 // nodes: +10% of the basic's base ailmentChance -- e.g. base 0.5 -> +0.05
@@ -72,7 +78,7 @@ function stat(nodeId: string, statKey: StatType, perLevelFlat: number): StatModi
     sourceId: 'spell',
     sourceType: 'realm',
     stat: statKey,
-    flat: 0,
+    flat: perLevelFlat,
     perLevelFlat,
     domain: 'spell',
   }
@@ -201,7 +207,7 @@ function buildWater(): ProgressionNode[] {
     ),
     powerNode(
       'thuy_diem_chuan',
-      'Diễm Chuẩn',
+      'Lưu Chuẩn',
       '+1% tỉ lệ gây Tê Cóng mỗi cấp.',
       'water',
       [stat('thuy_diem_chuan', 'elementApplicationPercent', 0.01)],
@@ -364,7 +370,7 @@ function buildEarth(): ProgressionNode[] {
     capstone(
       'earth',
       'tho_bang_loa',
-      'Băng Loạn',
+      'Đá Loạn',
       'Thổ Cầu vỡ thành mảnh đá — quét nhiều mục tiêu.',
     ),
   ]

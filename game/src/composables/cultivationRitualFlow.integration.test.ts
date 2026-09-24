@@ -92,11 +92,24 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
     expect(gameManager.techniqueManager.getActive()?.id).toBe('five_elements_art')
     // Three-path design (2026-09-25, sec.4-b): the Truc Co realm reward
     // also grants the five tinh_thong_<e> mastery nodes. This fixture
-    // never commits an element (spellPath.element === null), so all five
-    // masteries report active -- the element gate resolves live at commit
-    // and then only the committed element's grant stays on.
-    expect(gameManager.effectOps.getAggregatedModifiers(player.$state).filter(
+    // never commits an element (spellPath.element === null): a null
+    // element on spell_pathway means 'not yet committed', so the grants
+    // stay DORMANT - only ngo_dao activates all five at once. Committing
+    // an element then activates exactly that element's mastery.
+    const spellModifiers = () => gameManager.effectOps.getAggregatedModifiers(player.$state).filter(
       modifier => modifier.sourceId === 'spell',
-    )).toHaveLength(8)
+    )
+    const masteryModifiers = () => spellModifiers().filter(
+      modifier => modifier.id.startsWith('tinh_thong_'),
+    )
+    expect(spellModifiers()).toHaveLength(3)
+    expect(masteryModifiers()).toHaveLength(0)
+
+    expect(gameManager.progressionOps.selectSpellPathElement('fire', 'dot', player.$state)).toBe(true)
+    // Exactly one mastery wakes on commit - the fire one; the other
+    // four stay dormant rather than all firing during the null window.
+    expect(masteryModifiers().map((modifier) => modifier.id)).toEqual([
+      'tinh_thong_hoa_ailmentPotencyPercent',
+    ])
   })
 })

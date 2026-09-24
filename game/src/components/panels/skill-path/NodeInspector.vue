@@ -16,7 +16,6 @@ import {
   getNodeMaxLevel,
   getEffectiveNodeMaxLevel,
   getBlockingNodeLevelGates,
-  getNextLevelCost,
   hasPrerequisite,
   canUpgradeNode,
   isNodeElementActive,
@@ -27,7 +26,6 @@ import { PHAP_TU_ELEMENT_ROOT_IDS } from '@/data/progression/PhapTuNodes.builder
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
-import type { ElementType } from '@/core/element/ElementType'
 import type { SpellPathRoute } from '@/core/phap-tu/PhapTuState'
 import type { NodePrerequisite, ProgressionNode } from '@/core/progression/ProgressionNode'
 

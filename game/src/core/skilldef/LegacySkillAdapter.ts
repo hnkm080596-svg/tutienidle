@@ -840,6 +840,14 @@ export function toTurnSkillDefinition(skill: Skill, effective: EffectiveSkill): 
     targeting,
   }
 
+  // Three-path design (2026-09-25, ruling #12) - the authored vfxPresetId
+  // rides the Skill -> TurnSkillDefinition seam into action_impact.
+  // Undefined stays undefined so the runtime keeps its element/default
+  // fallback for skills that author none.
+  if (skill.vfxPresetId !== undefined) {
+    turnSkill.presetId = skill.vfxPresetId
+  }
+
   // Leech healing on hit (e.g. doc_vien_bao_can)
   if (damageEffect?.healPercentOfDamage) {
     turnSkill.healPercentOfDamage = damageEffect.healPercentOfDamage

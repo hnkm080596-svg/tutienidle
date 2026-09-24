@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer, type PlayerData } from '../player/Player'
-import { createBaseStats } from '../stats/StatBlock'
 import { defineEnemy } from '../enemy/Enemy'
 import { ManualClockSource } from '../battle/turn/CombatClock'
 import type { ProgressionNode } from '../progression/ProgressionNode'
@@ -204,5 +203,27 @@ describe('progressionOps.respecNodeTree', () => {
     expect(preview.resetCount).toBe(0)
     expect(preview.resetNodeIds).toEqual([])
     expect(player).toEqual(before)
+  })
+
+  it('realm-reward grants survive respec - rewardOnly nodes are exempt from revocation', () => {
+    const { gameManager, player } = setup(PHAP_TU_NODES)
+
+    const reward = PHAP_TU_NODES.find((node) => node.rewardOnly === true)!
+
+    // The grant writes nodeLevels only (no purchasedNodeIds mirror) -
+    // that is the canonical grant shape produced by
+    // grantCultivationPathRealmReward.
+    player.spellPath.element = 'fire'
+    player.spellPath.route = 'dot'
+    player.nodeLevels[reward.id] = 2
+    player.skillInsight = 100
+
+    const preview = gameManager.progressionOps.previewNodeRespec(player)
+    expect(preview.resetNodeIds).not.toContain(reward.id)
+
+    const refund = gameManager.progressionOps.respecNodeTree(player)
+
+    expect(refund).toBe(0)
+    expect(player.nodeLevels[reward.id]).toBe(2)
   })
 })

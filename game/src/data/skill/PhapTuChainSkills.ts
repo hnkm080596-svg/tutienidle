@@ -429,10 +429,9 @@ export const PHAP_TU_SKILLS: Skill[] = [
   {
     id: 'van_moc_lan_doc',
     name: 'Vạn Mộc Lan Độc',
-    // Three-path design (2026-09-25, ruling R5) -- description no longer
-    // claims a Trung Doc spread mechanic that was never implemented; the
-    // skill hits a square zone and applies Trung Doc per target.
-    description: 'Rừng cây lan độc — quét một vùng rộng, gây Trúng Độc lên từng mục tiêu trong vùng.',
+    // Three-path design (2026-09-25, ruling R5) -- the Trung Doc spread
+    // claim was never implemented; effects deal primary_target damage only.
+    description: 'Rừng cây lan độc — một đòn Mộc nặng vào mục tiêu chính.',
     type: 'active',
     level: 1,
     maxLevel: 10,

@@ -49,8 +49,12 @@ describe('PhapTu basic lane — ruled contract', () => {
     for (const node of BASIC_LANE_IDS) {
       const level = node.maxLevel ?? 1
       for (const mod of node.effect.statModifiers ?? []) {
-        const total = (mod.flat ?? 0) + (mod.perLevelFlat ?? 0) * level
+        const total = (mod.flat ?? 0) + (mod.perLevelFlat ?? 0) * (level - 1)
         expect(total, `${node.id} ${mod.stat}`).toBeLessThanOrEqual(0.1 + 1e-9)
+        // Level 1 must already pay out: per-level nodes with flat:0 are
+        // a dead first purchase (engine adds perLevelFlat*(level-1)).
+        const atLevelOne = (mod.flat ?? 0) + (mod.perLevelFlat ?? 0) * 0
+        expect(atLevelOne, `${node.id} ${mod.stat} level-1 payout`).toBeGreaterThan(0)
       }
     }
   })
@@ -73,15 +77,27 @@ describe('PhapTu basic lane — ruled contract', () => {
   })
 
   it('outer-ring nodes gate on foundation_establishment; trunk nodes do not', () => {
-    for (const node of BASIC_LANE_IDS) {
-      const hasFoundation = node.prerequisites?.some(
-        (p) => p.kind === 'realm' && p.realmId === 'foundation_establishment',
-      )
+    // The outer ring is pinned by explicit id: realm decides which nodes
+    // open (foundation gate), techniqueRank only caps levels inside an
+    // open node - trunk nodes carry rank gates but never the realm gate.
+    const EXPECTED_OUTER = new Set([
+      'hoa_nhiet_keo', 'hoa_sac_huyet',
+      'thuy_nhiet_tri',
+      'moc_doc_tham',
+      'kim_bao_the',
+      'tho_cung_gioi', 'tho_linh_the',
+      ...BASIC_CAPSTONE_IDS,
+    ])
 
-      if (node.effect.selectsSpecialization || node.id.endsWith('_keo') || node.id.endsWith('_the') || node.id.endsWith('_gioi') || node.id.endsWith('_tham')) {
-        expect(hasFoundation, node.id).toBe(true)
-      }
-    }
+    const actualOuter = new Set(
+      BASIC_LANE_IDS.filter((node) =>
+        node.prerequisites?.some(
+          (p) => p.kind === 'realm' && p.realmId === 'foundation_establishment',
+        ),
+      ).map((n) => n.id),
+    )
+
+    expect([...actualOuter].sort()).toEqual([...EXPECTED_OUTER].sort())
   })
 
   it('capstones come in mutex pairs and reference authored specializations', () => {
