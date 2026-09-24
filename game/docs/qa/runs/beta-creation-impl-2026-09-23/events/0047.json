@@ -1,0 +1,32 @@
+{
+  "type": "SEAL_RECEIPT",
+  "round": "clean-B",
+  "lens": "INTEGRATION",
+  "reviewerSession": "a94418a020154def83344133eb550bc9",
+  "candidate": "8f53aa18",
+  "verdict": "FINDINGS",
+  "priorFindingsVisible": false,
+  "evidenceExecuted": "vue-tsc --build clean; scoped vitest 656 + earlygame 48 green; authored BetaCreation.qa.test.ts 12/12 green; all 13 challenges attacked",
+  "findings": [
+    {
+      "id": "F-INT-BETA-1",
+      "severity": "high",
+      "disposition": "FIXED @0c434d43 - remoteUsable gate (shared root with F-B-AUTH-1)"
+    },
+    {
+      "id": "F-INT-BETA-2",
+      "severity": "medium",
+      "disposition": "FIXED @0c434d43 - non-mortal/pathless pairing rejected by boundary contract"
+    },
+    {
+      "id": "F-INT-BETA-3",
+      "severity": "nit",
+      "disposition": "FIXED @0c434d43 - duplicate of QA-BC-01 raw-export"
+    },
+    {
+      "id": "F-INT-BETA-4",
+      "severity": "nit",
+      "disposition": "DEFERRED - in-session saveIssue residue inert; clears on reload"
+    }
+  ]
+}
