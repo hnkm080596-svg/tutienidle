@@ -167,4 +167,35 @@ describe('TribulationDirector — v82 runtime persist (F-W-5)', () => {
     const restoredOutcome = restored.tribulationDirector.getCommittedOutcome()!
     expect(restoredOutcome.settlementError).toBeInstanceOf(Error)
   })
+
+  it('same-session restore is replacement-complete: a save without the slice clears stale outcome + live run (QA-2026-09-24-01)', () => {
+    const { gameManager, player } = setupManager()
+    surviveFoundationTribulation(player)
+
+    // Timeline A commits an outcome on THIS director.
+    expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
+    driveToTerminal(gameManager)
+    expect(gameManager.tribulationDirector.getCommittedOutcome()).not.toBeNull()
+
+    // A same-session load whose save carries no tribulation slice must
+    // not let timeline A's outcome survive: it would re-present, soft-
+    // lock start(), and re-run settlement onto a save that never earned
+    // it (receipt slot re-binds before dedup can fire).
+    gameManager.tribulationDirector.restoreRuntime(undefined)
+    expect(gameManager.tribulationDirector.getCommittedOutcome()).toBeNull()
+    expect(gameManager.tribulationDirector.getState()).toBeNull()
+
+    // An ONGOING run on the old timeline also dies with the load - the
+    // director must not keep ticking against the restored player and
+    // overwrite a legit commit later.
+    expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
+    expect(gameManager.tribulationDirector.getState()?.state).toBe('ongoing')
+    gameManager.tribulationDirector.restoreRuntime(undefined)
+    expect(gameManager.tribulationDirector.getState()).toBeNull()
+    expect(gameManager.tribulationDirector.getCommittedOutcome()).toBeNull()
+    expect(gameManager.tribulationDirector.getCooldownSeconds()).toBe(0)
+
+    // And the restored director accepts a fresh run on the new timeline.
+    expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
+  })
 })

@@ -760,6 +760,17 @@ export class TribulationDirector {
    * marker Error de terminal-after-first-attempt semantics giu nguyen.
    */
   restoreRuntime(slice: TribulationRuntimeSave | undefined): void {
+    // Save la authoritative - restore phai replacement-complete: xoa toan
+    // bo run-state khong persist (run dang chay + outcome cu cua timeline
+    // truoc) truoc khi nap slice, khong de gi sot lai tu timeline cu.
+    this.clear()
+    this.ghost = null
+    this.snapshotHp = 0
+    this.snapshotMaxHp = 0
+    this.snapshotDefense = 0
+    this.mindFailStacks = 0
+    this.mindCorrectLightningReduction = 0
+    this.lightningTalentMultiplier = 1
     this.cooldownUntil = slice?.cooldownUntil ?? 0
 
     if (slice?.committedOutcome) {
