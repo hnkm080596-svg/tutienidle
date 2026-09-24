@@ -153,6 +153,38 @@
       "payloadPath": "events/0007.json",
       "payloadHash": "b174ce5f85865f1c57f4a1e9c2788a28e15d68208d96891dc10ea35d12e30ec1",
       "eventHash": "4b04f6602be52e3d7a03ae8ca0cd111be60de1b977d58cff365d702b9c43d8f2"
+    },
+    {
+      "seq": 8,
+      "at": "2026-09-24T05:57:27.153Z",
+      "kind": "SEAL_RECEIPT",
+      "actor": "coordinator-devin",
+      "state": {
+        "productStateId": "5e8731a4e2926efe8a5db3e8c1512c597234a11f30fb4c18e0b60ca3648ae6ae",
+        "contractId": "311da3efc0a98ba409d66885886fe882672b6aea282a22bc28e32e0f7dbca7c8",
+        "attackModelId": "fca30679635be3bbce1ca7d8a9ceb8f0daceaaa80e4cf645584db5ccc0dbf0b2",
+        "environmentId": "b77349bf1fa9b26d45d545d7d64dad96737e9cfbb3cbb5f5d10fb77b0fcc44ad"
+      },
+      "previousEventHash": "4b04f6602be52e3d7a03ae8ca0cd111be60de1b977d58cff365d702b9c43d8f2",
+      "payloadPath": "events/0008.json",
+      "payloadHash": "8c99e33f5b1515b6fd0738b4431315878d070548b5ee6ca94bb60d65d2c876f2",
+      "eventHash": "340dcdec838a469ff2e4942ae8d07ef6c47ff6b77ee1ea7384fe89350797c64b"
+    },
+    {
+      "seq": 9,
+      "at": "2026-09-24T05:57:27.154Z",
+      "kind": "DECIDE",
+      "actor": "coordinator-devin",
+      "state": {
+        "productStateId": "5e8731a4e2926efe8a5db3e8c1512c597234a11f30fb4c18e0b60ca3648ae6ae",
+        "contractId": "311da3efc0a98ba409d66885886fe882672b6aea282a22bc28e32e0f7dbca7c8",
+        "attackModelId": "fca30679635be3bbce1ca7d8a9ceb8f0daceaaa80e4cf645584db5ccc0dbf0b2",
+        "environmentId": "b77349bf1fa9b26d45d545d7d64dad96737e9cfbb3cbb5f5d10fb77b0fcc44ad"
+      },
+      "previousEventHash": "340dcdec838a469ff2e4942ae8d07ef6c47ff6b77ee1ea7384fe89350797c64b",
+      "payloadPath": "events/0009.json",
+      "payloadHash": "2962e7b412fa2411e0a561becb9b05ed1a0e90d4e026bc8514a92d81b224895c",
+      "eventHash": "561f3bf5791d78a4f9a3e9a5eded315e46302dc528603c9d4c2b1c28568db60a"
     }
   ]
 }
