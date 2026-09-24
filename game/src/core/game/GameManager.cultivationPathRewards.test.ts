@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
 import { createDefaultPlayer } from '../player/Player'
 import { TECHNIQUES } from '../../data/technique/Techniques'
+import { ALL_PROGRESSION_NODES } from '../../data/progression/ProgressionNodeCatalog'
 import { GameManager } from './GameManager'
 
 describe('GameManager — cultivation path realm rewards', () => {
@@ -10,6 +11,7 @@ describe('GameManager — cultivation path realm rewards', () => {
     const player = createDefaultPlayer()
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerProgressionNodes(ALL_PROGRESSION_NODES)
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
     player.realmId = 'qi_refining'
@@ -45,6 +47,7 @@ describe('GameManager — cultivation path realm rewards', () => {
     const player = createDefaultPlayer()
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerProgressionNodes(ALL_PROGRESSION_NODES)
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
     player.realmId = 'foundation_establishment'
@@ -60,6 +63,7 @@ describe('GameManager — cultivation path realm rewards', () => {
     const player = createDefaultPlayer()
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerProgressionNodes(ALL_PROGRESSION_NODES)
     player.cultivationPath = 'sword'
     player.cultivationWay = 'sword_pathway'
     player.realmId = 'foundation_establishment'

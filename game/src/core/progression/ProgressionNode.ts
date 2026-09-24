@@ -283,3 +283,12 @@ export interface ProgressionNode {
    */
   levelsSkillId?: string
 }
+
+/**
+ * Effective authored level ceiling (tier nodes can exceed 1 - every
+ * level costs insightCost for EVERY purchase/upgrade; single-level
+ * root/keystone defaults to 1).
+ */
+export function getNodeMaxLevel(node: ProgressionNode): number {
+  return Math.max(1, node.maxLevel ?? 1)
+}

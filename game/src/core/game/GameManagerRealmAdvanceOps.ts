@@ -125,7 +125,9 @@ export class GameManagerRealmAdvanceOps {
 
   /** Grants the major-realm reward of the cultivation path data kit (P7-M3: artifact-only). */
   grantCultivationPathRealmReward(player: PlayerData, realmId: string): boolean {
-    return grantPathRealmReward(player, realmId)
+    return grantPathRealmReward(player, realmId, (nodeId) =>
+      this.deps.nodeRegistry.has(nodeId) ? this.deps.nodeRegistry.get(nodeId) : undefined,
+    )
   }
 
   /**

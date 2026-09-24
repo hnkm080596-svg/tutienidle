@@ -6,6 +6,7 @@ import type {
 } from '../../core/progression/ProgressionNode'
 import type { StatModifier } from '../../core/stats/StatCalculator'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from './PhapTuNodes.builders'
+import { SPELL_KIT_IDS } from '../skill/Skills'
 
 // 2026-09-25 three-path content design (design doc sec.1.2a, user rulings
 // #1-#8) -- the BASIC-skill lane per element. Distinct from the existing
@@ -37,13 +38,7 @@ import { PHAP_TU_ELEMENT_ROOT_IDS } from './PhapTuNodes.builders'
 // Kim Dan+ content keeps the honesty treatment (existing realm prereq
 // renders locked + inspector shows the realm name -- ruling #16 option C).
 
-const BASIC_ID: Record<ElementType, string> = {
-  fire: 'hoa_cau_thuat',
-  water: 'thuy_tien_thuat',
-  wood: 'doc_chuong',
-  metal: 'diem_kim_thuat',
-  earth: 'tho_cau_thuat',
-}
+
 
 /** Per-capstone pair: specialization ids authored on the basic Skill def. */
 const CAPSTONE_PAIR: Record<ElementType, [string, string]> = {
@@ -138,7 +133,7 @@ function capstone(
     ],
     elementTag: element,
     effect: {
-      selectsSpecialization: { skillId: BASIC_ID[element], specializationId },
+      selectsSpecialization: { skillId: SPELL_KIT_IDS[element][0], specializationId },
     },
   }
 }

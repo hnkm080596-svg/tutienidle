@@ -274,9 +274,12 @@ describe('PHAP_TU_NODES — requiredWay spell_pathway export stamp', () => {
       expect(node.requiredCultivationPath, node.id).toBe('spell')
 
       // Three-path design (2026-09-25, sec.4-b): realm-reward grant nodes
-      // deliberately carry NO requiredWay -- both spell ways aggregate a
-      // granted level (purchases stay sealed by rewardOnly).
-      if (node.rewardOnly) {
+      // carry no requiredWay when both spell ways should aggregate them
+      // (masteries); the_thuc_tinh is the exception - sealed to the
+      // normal way because hidden_spell_pathway owns no The pool.
+      if (node.id === 'the_thuc_tinh') {
+        expect(node.requiredWay, node.id).toBe('spell_pathway')
+      } else if (node.rewardOnly) {
         expect(node.requiredWay, node.id).toBeUndefined()
       } else {
         expect(node.requiredWay, node.id).toBe('spell_pathway')

@@ -1,6 +1,7 @@
 import type { ProgressionNode } from '../../core/progression/ProgressionNode'
 import type { ElementType } from '../../core/element/ElementType'
 import type { StatType } from '../../core/stats/StatTypes'
+import { SPELL_KIT_IDS } from '../skill/Skills'
 
 // Three-path design (2026-09-25, sec.4-b + ruling #19) -- realm-breakthrough
 // rewards for the spell path are NODE GRANTS, not purchases: each way's
@@ -47,13 +48,7 @@ export const TINH_THONG_NODE_IDS: Record<ElementType, string> = {
   earth: 'tinh_thong_tho',
 }
 
-const BASIC_IDS: Record<ElementType, string> = {
-  fire: 'hoa_cau_thuat',
-  water: 'thuy_tien_thuat',
-  wood: 'doc_chuong',
-  metal: 'diem_kim_thuat',
-  earth: 'tho_cau_thuat',
-}
+
 
 function masteryNode(element: ElementType): ProgressionNode {
   const { stat, perLevel } = MASTERY_RIDER[element]
@@ -97,8 +92,12 @@ function awakeningNode(): ProgressionNode {
     // level - a deeper grant can widen this alongside its reward entry.
     maxLevel: 1,
     rewardOnly: true,
+    // Sealed to the normal spell way structurally: hidden_spell_pathway
+    // owns no The pool, so a granted level there must stay inert - the
+    // way gate (not just record omission) now enforces it.
+    requiredWay: 'spell_pathway',
     effect: {
-      turnSkillResourceModifiers: Object.values(BASIC_IDS).map((skillId) => ({
+      turnSkillResourceModifiers: Object.values(SPELL_KIT_IDS).map((ids) => ids[0]).map((skillId) => ({
         skillId,
         theGainOnLandedCast: 1,
       })),

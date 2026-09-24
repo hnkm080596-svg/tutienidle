@@ -1,5 +1,8 @@
 import type { PlayerData } from '../player/Player'
 import type { NodePrerequisite, ProgressionNode, TurnSkillResourceModifier } from './ProgressionNode'
+import { getNodeMaxLevel } from './ProgressionNode'
+
+export { getNodeMaxLevel }
 import { hasStaticPathCapability } from '../player/CultivationPathSystem'
 
 import type { SpellPathRoute } from '../phap-tu/PhapTuState'
@@ -29,9 +32,8 @@ import { CAST_LEVELING_THRESHOLDS } from '../skill/CastLeveling'
  * 1,1,2,2,3 (per sec.6.2/sec.6.7). A node without upgradeCost uses
  * insightCost for EVERY purchase/upgrade (single-level root/keystone).
  */
-export function getNodeMaxLevel(node: ProgressionNode): number {
-  return Math.max(1, node.maxLevel ?? 1)
-}
+// getNodeMaxLevel lives on ProgressionNode.ts (pure data) and is
+// re-exported here so existing consumers keep working.
 
 /** Current node level in PlayerData - nodeLevels is the source of truth. */
 export function getNodeLevel(player: PlayerData, nodeId: string): number {
@@ -552,6 +554,13 @@ export function revokeNodeOwnership(
   registry: { has(id: string): boolean; get(id: string): ProgressionNode },
   revokedOut?: Set<string>,
 ): number {
+  // rewardOnly nodes are grant-owned: callers already scope them out of
+  // respec/devReset target sets; the guard belongs in this seam too so a
+  // future tag or new caller cannot silently re-open it.
+  if (node.rewardOnly) {
+    return 0
+  }
+
   const level = getNodeLevel(player, node.id)
 
   revokedOut?.add(node.id)

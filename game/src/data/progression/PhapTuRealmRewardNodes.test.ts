@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { PlayerData } from '../../core/player/Player'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { grantCultivationPathRealmReward } from '../../core/player/CultivationPathSystem'
@@ -8,12 +8,14 @@ import {
   canUpgradeNode,
   isNodeElementActive,
   nodeWayApplies,
+  revokeNodeOwnership,
 } from '../../core/progression/NodeSystem'
 import { CULTIVATION_PATH_MODULES } from '../../core/player/CultivationPathKit'
 import { resolveMaxThe } from '../../core/phap-tu/PhapTuRoutes'
 import { MAX_THE } from '../../core/combat/CombatTypes'
 import { SPELL_PATHWAY, HIDDEN_SPELL_PATHWAY } from '../../core/phap-tu/PhapTuPath'
 import { PHAP_TU_NODES } from './PhapTuNodes'
+import { PROGRESSION_NODE_BY_ID } from '../../data/progression/ProgressionNodeCatalog'
 import {
   THE_THUC_TINH_NODE_ID,
   TINH_THONG_NODE_IDS,
@@ -53,8 +55,15 @@ describe('PhapTu realm-reward grant nodes', () => {
       // range).
       expect(node?.maxLevel, id).toBe(id === THE_THUC_TINH_NODE_ID ? 1 : 2)
       expect(node?.requiredCultivationPath, id).toBe('spell')
-      // No requiredWay stamp -- both spell ways aggregate a granted level.
-      expect(node?.requiredWay, id).toBeUndefined()
+      // Masteries carry no requiredWay -- both spell ways aggregate them.
+      // the_thuc_tinh is sealed to the normal way: hidden_spell_pathway
+      // owns no The pool, so the way gate (not just record omission)
+      // keeps any granted level inert there.
+      if (id === THE_THUC_TINH_NODE_ID) {
+        expect(node?.requiredWay, id).toBe('spell_pathway')
+      } else {
+        expect(node?.requiredWay, id).toBeUndefined()
+      }
     }
   })
 
@@ -79,7 +88,7 @@ describe('PhapTu realm-reward grant nodes', () => {
     const player = nguHanh({ realmId: 'foundation_establishment' })
     player.nodeLevels = { tinh_thong_hoa: 2 } // deeper earlier grant must not downgrade
 
-    expect(grantCultivationPathRealmReward(player, 'foundation_establishment')).toBe(true)
+    expect(grantCultivationPathRealmReward(player, 'foundation_establishment', (id) => PROGRESSION_NODE_BY_ID.get(id))).toBe(true)
 
     expect(player.nodeLevels[THE_THUC_TINH_NODE_ID]).toBe(1)
     for (const id of Object.values(TINH_THONG_NODE_IDS)) {
@@ -88,7 +97,7 @@ describe('PhapTu realm-reward grant nodes', () => {
     expect(player.nodeLevels.tinh_thong_hoa).toBe(2)
 
     // Re-running the same grant is a no-op.
-    grantCultivationPathRealmReward(player, 'foundation_establishment')
+    grantCultivationPathRealmReward(player, 'foundation_establishment', (id) => PROGRESSION_NODE_BY_ID.get(id))
     expect(player.nodeLevels[THE_THUC_TINH_NODE_ID]).toBe(1)
   })
 
@@ -97,7 +106,7 @@ describe('PhapTu realm-reward grant nodes', () => {
     expect(record?.grantedNodeLevels?.[THE_THUC_TINH_NODE_ID]).toBeUndefined()
 
     const player = ngoDao({ realmId: 'foundation_establishment' })
-    expect(grantCultivationPathRealmReward(player, 'foundation_establishment')).toBe(true)
+    expect(grantCultivationPathRealmReward(player, 'foundation_establishment', (id) => PROGRESSION_NODE_BY_ID.get(id))).toBe(true)
 
     for (const id of Object.values(TINH_THONG_NODE_IDS)) {
       expect(player.nodeLevels[id], id).toBe(2)
@@ -203,5 +212,105 @@ describe('PhapTu realm-reward grant nodes', () => {
     for (const id of Object.values(TINH_THONG_NODE_IDS)) {
       expect(record?.grantedNodeLevels?.[id], id).toBe(1)
     }
+  })
+})
+
+describe('grantCultivationPathRealmReward - ownership validation', () => {
+  const resolve = (id: string) => PROGRESSION_NODE_BY_ID.get(id)
+
+  it('refuses entries targeting non-rewardOnly or unknown nodes (warns, no write)', () => {
+    const player = nguHanh({ realmId: 'foundation_establishment' })
+    const way = CULTIVATION_PATH_MODULES.spell.ways.spell_pathway!
+    const original = way.realmRewards?.foundation_establishment?.grantedNodeLevels
+
+    // A record entry naming a purchasable node must be refused - granting it
+    // would hand out gated power for free.
+    const bad = 'hoa_sac_nhiet'
+    expect(PHAP_TU_NODES.find((n) => n.id === bad)?.rewardOnly).not.toBe(true)
+
+    if (way.realmRewards?.foundation_establishment) {
+      way.realmRewards.foundation_establishment.grantedNodeLevels = {
+        [bad]: 3,
+        'core_hoa_cau_thuat': 2,
+        'no_such_node': 1,
+      }
+    }
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      grantCultivationPathRealmReward(player, 'foundation_establishment', resolve)
+      expect(player.nodeLevels?.[bad]).toBeUndefined()
+      expect(player.nodeLevels?.['core_hoa_cau_thuat']).toBeUndefined()
+      expect(player.nodeLevels?.['no_such_node']).toBeUndefined()
+      expect(warn).toHaveBeenCalled()
+    } finally {
+      warn.mockRestore()
+      if (way.realmRewards?.foundation_establishment) {
+        way.realmRewards.foundation_establishment.grantedNodeLevels = original
+      }
+    }
+  })
+
+  it('clamps grant levels to the authored maxLevel', () => {
+    const player = nguHanh({ realmId: 'foundation_establishment' })
+    const way = CULTIVATION_PATH_MODULES.spell.ways.spell_pathway!
+    const original = way.realmRewards?.foundation_establishment?.grantedNodeLevels
+
+    if (way.realmRewards?.foundation_establishment) {
+      way.realmRewards.foundation_establishment.grantedNodeLevels = {
+        [THE_THUC_TINH_NODE_ID]: 5, // authored maxLevel 1
+      }
+    }
+    try {
+      grantCultivationPathRealmReward(player, 'foundation_establishment', resolve)
+      expect(player.nodeLevels?.[THE_THUC_TINH_NODE_ID]).toBe(1)
+    } finally {
+      if (way.realmRewards?.foundation_establishment) {
+        way.realmRewards.foundation_establishment.grantedNodeLevels = original
+      }
+    }
+  })
+
+  it('every authored grantedNodeLevels entry resolves to a rewardOnly node within maxLevel', () => {
+    for (const [pathId, module] of Object.entries(CULTIVATION_PATH_MODULES)) {
+      for (const [wayId, way] of Object.entries(module.ways)) {
+        if (!way) continue
+        for (const record of Object.values(way.realmRewards ?? {})) {
+          for (const [nodeId, level] of Object.entries(record.grantedNodeLevels ?? {})) {
+            const node = PROGRESSION_NODE_BY_ID.get(nodeId)
+            expect(node, `${pathId}/${wayId} grants unknown node ${nodeId}`).toBeDefined()
+            expect(node!.rewardOnly, `${nodeId} is not rewardOnly`).toBe(true)
+            expect(level).toBeLessThanOrEqual(node!.maxLevel ?? 1)
+          }
+        }
+      }
+    }
+  })
+})
+
+describe('specialization claims - uniqueness pin', () => {
+  it('no two nodes claim the same (skillId, specializationId) pair', () => {
+    const seen = new Map<string, string>()
+    for (const node of PHAP_TU_NODES) {
+      const claim = node.effect.selectsSpecialization
+      if (!claim) continue
+      const key = `${claim.skillId}::${claim.specializationId}`
+      expect(seen.has(key), `${node.id} duplicates the claim held by ${seen.get(key)}`).toBe(false)
+      seen.set(key, node.id)
+    }
+  })
+})
+
+describe('rewardOnly nodes - shared removal seam', () => {
+  it('revokeNodeOwnership refuses rewardOnly nodes (level kept, zero refund)', () => {
+    const player = nguHanh({ realmId: 'foundation_establishment' })
+    player.nodeLevels = { [THE_THUC_TINH_NODE_ID]: 1 }
+    const node = PHAP_TU_NODES.find((n) => n.id === THE_THUC_TINH_NODE_ID)!
+
+    const registry = new Map(PHAP_TU_NODES.map((n) => [n.id, n]))
+    const resolve = { has: (id: string) => registry.has(id), get: (id: string) => registry.get(id)! }
+
+    const refund = revokeNodeOwnership(player, node, resolve)
+    expect(refund).toBe(0)
+    expect(player.nodeLevels[THE_THUC_TINH_NODE_ID]).toBe(1)
   })
 })

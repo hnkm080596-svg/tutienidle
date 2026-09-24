@@ -22,13 +22,9 @@ import { FOUNDATION_LABELS } from '../../core/breakthrough/FoundationType'
 import { isArtifactGrade, isArtifactPath } from '../../core/artifact/Artifact'
 import { validateBodyProgressionPersistedState } from '../../core/realm/body/BodyProgressionSystem'
 import { validateHiddenPerfectionPersistedState } from '../../core/realm/hidden/HiddenPerfection'
+import { PROGRESSION_NODE_BY_ID } from '../../data/progression/ProgressionNodeCatalog'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { SKILLS } from '../../data/skill/Skills'
-import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
-import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
-import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
-import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
-import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
 import { getTalentDefinition } from '../../data/talent/Talents'
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
 import { REALM_PASSIVES } from '../../data/realm/RealmPassives'
@@ -45,16 +41,7 @@ const SKILL_CORE_BY_ID = new Map(SKILL_CORE_NODES.map((node) => [node.id, node])
 
 const LEVELLED_SKILL_IDS = new Set(SKILLS.filter((skill) => skill.maxLevel > 1).map((skill) => skill.id))
 
-const PROGRESSION_NODE_BY_ID = new Map(
-  [
-    ...PHAP_TU_NODES,
-    ...PHAP_TU_AN_NODES,
-    ...KIEM_TU_NODES,
-    ...THE_TU_NODES,
-    ...THE_TU_AN_NODES,
-    ...SKILL_CORE_NODES,
-  ].map((node) => [node.id, node]),
-)
+
 
 const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
 

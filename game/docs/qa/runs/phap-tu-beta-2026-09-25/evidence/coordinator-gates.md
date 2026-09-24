@@ -53,3 +53,28 @@ review only became possible after `git push`. Standing rule going
 forward: **push the task branch before dispatching any child
 reviewer** — an unpushed head makes the seal non-line-verifiable by
 construction.
+
+## Clean-A adjudication (head 1b4935ea, 2026-09-25)
+
+All three sealed clean-A reviewers returned FINDINGS. Disposition:
+
+| Finding | Severity | Disposition | Fix commit |
+|---|---|---|---|
+| stat() L1 dead payout (formula off-by-one) | High | fixed | 1b4935ea |
+| respec revokes rewardOnly realm grants | High | fixed (both reviewers hit it) | 1b4935ea |
+| van_moc_lan_doc lying description | Medium | fixed | 1b4935ea |
+| element=null mastery leak | Low | fixed (aggregator gate split) | 1b4935ea |
+| vfxPresetId dead plumbing | Medium | fixed (adapter maps to presetId + pin) | 1b4935ea |
+| header skill-scoped overclaim | Medium | contract rewritten to spell-domain truth | 1b4935ea |
+| weak/leaky test pins x3 | Medium | re-pinned to independent expectations | 1b4935ea + 54d90faf |
+| dead imports x3 | Nit | fixed | 1b4935ea |
+| save leniency note | Nit | REJECTED_WITH_PROOF (pre-existing) | - |
+
+Deferred honestly: per-skillId stat scoping is an engine feature, not
+beta scope (recorded in header contract + ledger finding F-CA-06).
+
+Verification on fix head: scoped vitest 44/44 + isolation 5/5,
+vue-tsc clean, eslint clean (evidence/fix-verify.log).
+
+Clean-B: 3 sealed reviewers dispatched on 1b4935ea
+(CORRECTNESS / AUTHORITY / INTEGRATION over the resulting state).

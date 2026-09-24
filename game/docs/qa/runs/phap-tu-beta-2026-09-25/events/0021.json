@@ -1,0 +1,22 @@
+{
+  "applied": [
+    "finding:F-CB-C1",
+    "finding:F-CB-C2",
+    "finding:F-CB-C3",
+    "finding:F-CB-C4",
+    "finding:F-CB-C5",
+    "finding:F-CB-C6",
+    "finding:F-CB-C7",
+    "finding:F-CB-C8",
+    "finding:F-CB-C9",
+    "finding:F-CB-I1",
+    "finding:F-CB-I2",
+    "finding:F-CB-I3",
+    "finding:F-CB-I4",
+    "review:REV-COR-B",
+    "review:REV-INT-B",
+    "evidence:EV-FIX-VERIFY-03",
+    "evidence:EV-FIX-VERIFY-04",
+    "evidence:EV-FIX-VERIFY-05"
+  ]
+}

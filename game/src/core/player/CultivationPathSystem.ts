@@ -1,4 +1,6 @@
 import type { ElementType } from '../element/ElementType'
+import type { ProgressionNode } from '../progression/ProgressionNode'
+import { getNodeMaxLevel } from '../progression/ProgressionNode'
 import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import type { OrbId } from '../kiem-tu/KiemTuState'
 import {
@@ -366,6 +368,7 @@ export function getCultivationPathStatModifiers(player: PlayerData) {
 export function grantCultivationPathRealmReward(
   player: PlayerData,
   realmId: string,
+  resolveNode: (nodeId: string) => ProgressionNode | undefined,
 ): boolean {
   if (!player.cultivationPath) {
     return false
@@ -401,11 +404,26 @@ export function grantCultivationPathRealmReward(
   // idempotent max-write (a re-entry or a deeper earlier grant never
   // downgrades). Effect activation stays behind the standard
   // element/route/way gates in NodeSystem.
+  // Ownership: only rewardOnly-authored registry members may receive a
+  // grant, clamped to getNodeMaxLevel - anything else is refused and
+  // warned (a record entry naming a purchasable/core node would
+  // otherwise hand out gated power for free or corrupt the
+  // purchasedNodeIds mirror).
   if (reward.grantedNodeLevels) {
     player.nodeLevels ??= {}
 
     for (const [nodeId, level] of Object.entries(reward.grantedNodeLevels)) {
-      player.nodeLevels[nodeId] = Math.max(player.nodeLevels[nodeId] ?? 0, level)
+      const node = resolveNode(nodeId)
+
+      if (!node || node.rewardOnly !== true) {
+        console.warn(
+          `grantedNodeLevels entry '${nodeId}' is not a rewardOnly-authored node - grant skipped`,
+        )
+        continue
+      }
+
+      const clamped = Math.min(level, getNodeMaxLevel(node))
+      player.nodeLevels[nodeId] = Math.max(player.nodeLevels[nodeId] ?? 0, clamped)
     }
   }
 
