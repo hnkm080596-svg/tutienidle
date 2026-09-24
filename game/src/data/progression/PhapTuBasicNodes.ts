@@ -21,8 +21,9 @@ import { PHAP_TU_ELEMENT_ROOT_IDS } from './PhapTuNodes.builders'
 // not beta scope. Every node is leveled, and
 // a maxed node adds at most +10% of the skill's authored base in ONE
 // direction (power nodes: 5 levels x 2%, or 4 levels x 2.5%; apply-chance
-// nodes: +10% of the basic's base ailmentChance -- e.g. base 0.5 -> +0.05
-// total -> 0.01/level).
+// nodes: +10% RELATIVE to the basic's base ailmentChance -- the engine
+// consumes elementApplicationPercent multiplicatively as x(1+pool), so
+// base 0.5 needs pool 0.10 -> 0.02/level, landing the roll at 0.55).
 //
 // Gating contract (ruling #8): the REALM decides which ring opens --
 // trunk nodes require only the element root (open at Luyen Khi), the
@@ -154,9 +155,9 @@ function buildFire(): ProgressionNode[] {
     powerNode(
       'hoa_diem_chuan',
       'Diễm Chuẩn',
-      '+1% tỉ lệ gây Thiêu Đốt mỗi cấp (tối đa +10% so với gốc).',
+      '+2% tỉ lệ gây Thiêu Đốt mỗi cấp (tối đa +10% so với gốc).',
       'fire',
-      [stat('hoa_diem_chuan', 'elementApplicationPercent', 0.01)],
+      [stat('hoa_diem_chuan', 'elementApplicationPercent', 0.02)],
     ),
     powerNode(
       'hoa_an_sau',
@@ -208,9 +209,9 @@ function buildWater(): ProgressionNode[] {
     powerNode(
       'thuy_diem_chuan',
       'Lưu Chuẩn',
-      '+1% tỉ lệ gây Tê Cóng mỗi cấp.',
+      '+2% tỉ lệ gây Tê Cóng mỗi cấp (tối đa +10% so với gốc).',
       'water',
-      [stat('thuy_diem_chuan', 'elementApplicationPercent', 0.01)],
+      [stat('thuy_diem_chuan', 'elementApplicationPercent', 0.02)],
     ),
     powerNode(
       'thuy_te_dam',
@@ -295,9 +296,9 @@ function buildMetal(): ProgressionNode[] {
     powerNode(
       'kim_diem_chuan',
       'Điểm Chuẩn',
-      '+1% tỉ lệ gây Xuất Huyết mỗi cấp.',
+      '+2% tỉ lệ gây Xuất Huyết mỗi cấp (tối đa +10% so với gốc).',
       'metal',
-      [stat('kim_diem_chuan', 'elementApplicationPercent', 0.01)],
+      [stat('kim_diem_chuan', 'elementApplicationPercent', 0.02)],
     ),
     powerNode(
       'kim_xuyen_nhuy',
@@ -348,9 +349,9 @@ function buildEarth(): ProgressionNode[] {
     powerNode(
       'tho_cung_gioi',
       'Củng Giới',
-      '+2% uy lực Thạch Hóa mỗi cấp (tầng Trúc Cơ).',
+      '+2% sát thương cuối Thổ Cầu mỗi cấp (tầng Trúc Cơ).',
       'earth',
-      [stat('tho_cung_gioi', 'ailmentPotencyPercent', 0.02)],
+      [stat('tho_cung_gioi', 'finalDamagePercent', 0.02)],
       { foundation: true },
     ),
     powerNode(

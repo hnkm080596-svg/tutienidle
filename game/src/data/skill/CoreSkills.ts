@@ -363,12 +363,12 @@ export const CORE_SKILLS: Skill[] = [
         effectsOverride: [
           {
             type: 'damage',
-            value: 1,
+            value: 0.9,
             components: [{ kind: 'element', element: 'fire', ratio: 1 }],
             manaScalingRatio: 0.001,
             attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
           },
-          { type: 'debuff', buffId: 'hoa_an', ailmentChance: 0.35 },
+          { type: 'debuff', buffId: 'hoa_an', ailmentChance: 0.45 },
         ],
       },
     ],
@@ -752,7 +752,7 @@ export const CORE_SKILLS: Skill[] = [
       },
       {
         id: 'tho_bang_loa',
-        name: 'Băng Loạn',
+        name: 'Đá Loạn',
         description: 'Thổ Cầu vỡ thành mảnh đá — quét nhiều mục tiêu, Thạch Hóa yếu hơn.',
         targeting: { shape: 'square', laneRadius: 1 },
         effectsOverride: [

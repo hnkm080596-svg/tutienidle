@@ -79,12 +79,12 @@ export type StatType =
   // thêm vào tốc độ đạn bay (MissileSystem cũ đã xóa; combat hiện dùng
   // ActionImpactSystem). Nền 0, không ảnh
   // hưởng path/hành nào chưa có nguồn cấp.
-  // Hỏa Tu Trúc Cơ (Plans/FirePath mục 6/8, 2026-08-21) — cộng THẲNG
-  // vào effect.ailmentChance lúc roll áp ailment (xem
-  // resolveAilmentApplicationChance), clamped to 1 max.
-  // Nền 0 — Hỏa Cầu Thuật Luyện Khí có ailmentChance gốc < 1 (KHÔNG
-  // còn luôn luôn áp Thiêu Đốt), node "Dẫn Hỏa"/"Hỏa Nguyên" cộng
-  // thêm % này.
+  // Hỏa Tu Trúc Cơ (Plans/FirePath mục 6/8, 2026-08-21) — NHÂN vào
+  // effect.ailmentChance lúc roll áp ailment: chance = baseChance x
+  // (1 + elementApplicationPercent) trong ApplicationResolver.resolve,
+  // clamped to 1 max. Nền 0 — Hỏa Cầu Thuật Luyện Khí có ailmentChance
+  // gốc < 1 (KHÔNG luôn luôn áp Thiêu Đốt); node diem_chuan của basic
+  // lane và node "Dẫn Hỏa"/"Hỏa Nguyên" cũ đều đi qua kênh này.
   | 'elementApplicationPercent'
   // Hỏa Tu Trúc Cơ (Plans/FirePath mục 8, "Cộng Minh" minor) — %
   // khuếch đại burst damage lúc Reaction kích hoạt. Nền 0.

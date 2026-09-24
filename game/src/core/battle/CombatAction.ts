@@ -19,7 +19,7 @@ export type TargetSelectionMode = 'nearest' | 'lowest_hp' | 'highest_hp'
  * - shape 'square' dung laneRadius/columnRadius quanh primary target
  *   (radius 0 = chi hang/cot cua anchor; n = mo rong n o moi phia, clamp bien).
  * - shape 'line'  = toan bo hang cua primary target.
- * - shape 'all_lanes' = dai cot [anchor.col  columnRadius] tren MOI hang.
+ * - shape 'all_lanes' = dai cot [anchor.col +/- columnRadius] tren MOI hang.
  * - maxTargets: gioi han so enemy trung (can bang).
  */
 export interface ActionTargeting {

@@ -25,7 +25,7 @@ import {
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '@/data/progression/PhapTuNodes.builders'
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
-import { getCurrentRealm } from '@/core/realm/realmSystem'
+import { REALMS } from '@/data/realms/realm'
 import type { SpellPathRoute } from '@/core/phap-tu/PhapTuState'
 import type { NodePrerequisite, ProgressionNode } from '@/core/progression/ProgressionNode'
 
@@ -102,9 +102,11 @@ function nodePrereqReason(prereq: NodePrerequisite): string {
     })
   } else if (prereq.kind === 'realm') {
     // Three-path design (2026-09-25, ruling #16C) -- name the realm so a
-    // dimmed node previews exactly where it opens ("mo o Kim Dan").
+    // dimmed node previews exactly where it opens ("mo o Kim Dan"). A stale
+    // or unknown realm id falls back to the raw id instead of throwing.
+    const realmName = REALMS.find((realm) => realm.id === prereq.realmId)?.name ?? prereq.realmId
     return t('panels.skillPath.nodeInspector.lockedReasons.realm', {
-      realm: getCurrentRealm(prereq.realmId).name,
+      realm: realmName,
     })
   } else if (prereq.kind === 'excludesNode') {
     return t('panels.skillPath.nodeInspector.lockedReasons.excludesNode', {

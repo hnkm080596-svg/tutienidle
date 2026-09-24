@@ -62,6 +62,7 @@ describe('PhapTu basic lane — ruled contract', () => {
   it('all basic-lane stats stay skill-scoped (no character stats)', () => {
     const skillScoped = new Set([
       'skillDamagePercent',
+      'finalDamagePercent',
       'elementApplicationPercent',
       'ailmentPotencyPercent',
       'ailmentDurationPercent',
@@ -73,6 +74,26 @@ describe('PhapTu basic lane — ruled contract', () => {
       for (const mod of node.effect.statModifiers ?? []) {
         expect(skillScoped.has(mod.stat), `${node.id} ${mod.stat}`).toBe(true)
       }
+    }
+  })
+
+  it('apply-chance nodes reach a x1.10 multiplier at max (ApplicationResolver is multiplicative)', () => {
+    // ApplicationResolver.resolve computes chance = baseChance x (1 + pool),
+    // so the documented 'toi da +10% so voi goc' requires pool 0.10 at max.
+    const APPLY_CHANCE_NODE_IDS = ['hoa_diem_chuan', 'thuy_diem_chuan', 'kim_diem_chuan']
+
+    for (const nodeId of APPLY_CHANCE_NODE_IDS) {
+      const node = PHAP_TU_NODES.find((n) => n.id === nodeId)!
+
+      expect(node, nodeId).toBeDefined()
+
+      const mod = node.effect.statModifiers?.find((m) => m.stat === 'elementApplicationPercent')
+
+      expect(mod, `${nodeId} elementApplicationPercent`).toBeDefined()
+
+      const pool = (mod?.flat ?? 0) + (mod?.perLevelFlat ?? 0) * ((node.maxLevel ?? 1) - 1)
+
+      expect(pool, `${nodeId} pool at max`).toBeCloseTo(0.1, 9)
     }
   })
 
