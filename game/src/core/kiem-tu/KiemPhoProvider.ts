@@ -43,7 +43,7 @@ function comboToExtraDef(combo: KiemPhoCombo, triggeringOrbId: string): TurnSkil
     scalesWithAilmentStacks: combo.scalesWithAilmentStacks
       ? { ...combo.scalesWithAilmentStacks }
       : undefined,
-    ailmentInteractions: combo.ailmentInteractions,
+    ailmentInteractions: combo.ailmentInteractions ? [...combo.ailmentInteractions] : undefined,
     presetId: combo.presetId,
     // M-QI-05 - the combo payload inherits the triggering orb's Core
     // level (QI-D3 internal-action ownership), never its own id.

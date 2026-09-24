@@ -3,7 +3,7 @@ import type { ProgressionNode } from '../progression/ProgressionNode'
 import type { KiemPhoCombo, KiemPhoComboModifier } from './KiemPhoSystem'
 import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import { ailmentInteractionPhase, type SkillAilmentInteraction } from '../skill/SkillEffect'
-import { nodeWayApplies } from '../progression/NodeSystem'
+import { nodePathApplies, nodeWayApplies } from '../progression/NodeSystem'
 
 // Kiem Tu Reimagined Task 11 (spec sec.4.2) - converts purchased nodes
 // carrying `effect.swordPathComboModifier` into the runtime modifier hooks
@@ -39,7 +39,7 @@ export function collectKiemPhoComboModifiers(
   for (const node of nodes) {
     const data = node.effect.swordPathComboModifier
 
-    if (!data || (player.nodeLevels?.[node.id] ?? 0) <= 0 || !nodeWayApplies(player, node)) {
+    if (!data || (player.nodeLevels?.[node.id] ?? 0) <= 0 || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
       continue
     }
 
@@ -132,7 +132,7 @@ export function collectKiemPhoSkillDefinitionModifiers(
   for (const node of nodes) {
     const specs = node.effect.skillDefinitionModifiers
     const level = player.nodeLevels?.[node.id] ?? 0
-    if (specs === undefined || specs.length === 0 || level <= 0 || !nodeWayApplies(player, node)) {
+    if (specs === undefined || specs.length === 0 || level <= 0 || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
       continue
     }
     for (const spec of specs) {

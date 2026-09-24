@@ -475,6 +475,7 @@ function adaptAilmentInteractions(
           type: 'add_buff_stacks',
           selector,
           stacks: interaction.stacks,
+          ...gate,
         })
         break
     }

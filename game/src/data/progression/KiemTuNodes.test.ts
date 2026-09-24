@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { KIEM_TU_NODES } from './KiemTuNodes'
 import { ORB_UNLOCK_REALM } from '../skill/KiemPhoOrbs'
 
-// Kiem Pho Beta (docs/specs/kiem-pho-beta-spec.md) — the tree under
-// test: 8 kiem_pho nodes — one four-role branch per beta orb (Dam at
+// Kiem Pho Beta (docs/specs/kiem-pho-beta-spec.md) - the tree under
+// test: 8 kiem_pho nodes - one four-role branch per beta orb (Dam at
 // qi_refining, Chem at foundation_establishment): Can (growth),
 // Thuan Thuc (skill-scoped keystone), Kiem Ket (combo modifier on the
 // completing orb), Lien Thuc (combo modifier on >=2 of that orb).
@@ -40,7 +40,7 @@ function node(id: string) {
   return found
 }
 
-describe('KiemTuNodes — tree shape', () => {
+describe('KiemTuNodes - tree shape', () => {
   it('unique node ids', () => {
     const ids = KIEM_TU_NODES.map(n => n.id)
     expect(new Set(ids).size).toBe(ids.length)
@@ -61,7 +61,7 @@ describe('KiemTuNodes — tree shape', () => {
   })
 })
 
-describe('KiemTuNodes — kiem_pho beta branches (hien)', () => {
+describe('KiemTuNodes - kiem_pho beta branches (hien)', () => {
   // Kiem Pho Beta (design sec.10-12): exactly the 8 authored beta
   // nodes; the legacy orb_* growth/capstone ids are retired.
   const BETA_IDS = [
@@ -69,7 +69,7 @@ describe('KiemTuNodes — kiem_pho beta branches (hien)', () => {
     'tram_can', 'thuong_tham', 'luu_ngan', 'lien_tram',
   ]
 
-  it('the kiem_pho branch is exactly the 8 beta nodes — no legacy orb ids remain', () => {
+  it('the kiem_pho branch is exactly the 8 beta nodes - no legacy orb ids remain', () => {
     const kiemPho = KIEM_TU_NODES.filter(n => n.branchTag === 'kiem_pho').map(n => n.id)
     expect([...kiemPho].sort()).toEqual([...BETA_IDS].sort())
     expect(
@@ -79,7 +79,7 @@ describe('KiemTuNodes — kiem_pho beta branches (hien)', () => {
     ).toBe(false)
   })
 
-  it('no kiem_pho node carries statModifiers — nodes modify the SKILL, never the character (design sec.16.A)', () => {
+  it('no kiem_pho node carries statModifiers - nodes modify the SKILL, never the character (design sec.16.A)', () => {
     for (const n of KIEM_TU_NODES.filter(n => n.branchTag === 'kiem_pho')) {
       expect(n.effect.statModifiers).toBeUndefined()
     }
@@ -123,8 +123,8 @@ describe('KiemTuNodes — kiem_pho beta branches (hien)', () => {
   })
 })
 
-describe('KiemTuNodes — ngu branch', () => {
-  it('no kiem_tu_an flip node exists — way entry is ritual-only (M6)', () => {
+describe('KiemTuNodes - ngu branch', () => {
+  it('no kiem_tu_an flip node exists - way entry is ritual-only (M6)', () => {
     expect(KIEM_TU_NODES.find(n => n.id === 'kiem_tu_an')).toBeUndefined()
     // The retired effect field is gone from every node.
     for (const n of KIEM_TU_NODES) {
@@ -162,7 +162,7 @@ describe('KiemTuNodes — ngu branch', () => {
   })
 })
 
-describe('KiemTuNodes — Cuu Cung 3x3', () => {
+describe('KiemTuNodes - Cuu Cung 3x3', () => {
   it('8 outer kiemYGrant nodes, each realm-gated, cap-guarded, way-stamped ngu', () => {
     for (const id of CUU_CUNG_OUTER_IDS) {
       const n = node(id)
@@ -187,5 +187,18 @@ describe('KiemTuNodes — Cuu Cung 3x3', () => {
       countRequired: 8,
     })
     expect(trung.prerequisites).toContainEqual({ kind: 'kiemDaoBelowCap' })
+  })
+})
+
+describe('KiemTuNodes - swordPathComboModifier predicate contract (DEC-6)', () => {
+  it('every authored combo modifier carries at least one predicate', () => {
+    for (const n of KIEM_TU_NODES) {
+      const m = n.effect.swordPathComboModifier
+      if (!m) continue
+      expect(
+        m.minOrbCount !== undefined || m.completingOrb !== undefined,
+        `${n.id} authors a swordPathComboModifier with no predicate - it can never match`,
+      ).toBe(true)
+    }
   })
 })
