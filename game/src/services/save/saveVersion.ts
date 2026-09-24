@@ -182,4 +182,11 @@
 // `greatDaoOpportunityLost` (lineage owns both meanings now).
 // Save v81 is rejected (dev phase, no migration, no compat
 // translator).
-export const CURRENT_SAVE_VERSION = 82 as const
+// v83 (2026-09-24, HIDDEN-B Ancient Beast trial + Quan The
+// diversion): hiddenPerfection realms.mortal.mechanic may carry the
+// 'ancient_beast_trial' payload ({encounters, rolls}, design sec.9)
+// and realms.qi_refining.mechanic may carry the 'quan_the' payload
+// ({active, progress, required}, design sec.10 + master spec
+// sec.8.2). Save v82 is rejected (dev phase, no migration, no
+// compat translator) - master spec sec.8.4 re-bump on later merge.
+export const CURRENT_SAVE_VERSION = 83 as const

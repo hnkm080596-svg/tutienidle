@@ -255,7 +255,7 @@ describe('useAppLifecycle — boot idempotence (Remediation Task 5)', () => {
   it("restore 'rejected' → saveIssue recovery surface (corrupted + raw), không phải dead-end boot error", async () => {
     const stubs = makeStubs()
 
-    const save = { version: 82, player: { realm: 'pham_nhan' } }
+    const save = { version: 83, player: { realm: 'pham_nhan' } }
     ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       status: 'ok',
       revision: 5,
