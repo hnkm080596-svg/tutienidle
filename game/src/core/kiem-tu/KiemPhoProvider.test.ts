@@ -194,4 +194,14 @@ describe('KiemPhoProvider', () => {
     expect(fe).not.toContain('tam_phach')
     expect(fe).not.toContain('nhi_lieu_nhat_thich')
   })
+
+  it('reachableKiemPhoComboIds honors the realmComboMax length cap', () => {
+    // soul_transformation unlocks every orb but caps combos at len 4, so
+    // the len-5 set can never fire there and must not classify as
+    // reachable; void_refinement (len 5) opens them again.
+    const st = reachableKiemPhoComboIds('soul_transformation')
+    expect(st).not.toContain('ngu_hanh_kiem')
+    expect(st).toContain('thich_tram_phach_thich')
+    expect(reachableKiemPhoComboIds('void_refinement')).toContain('ngu_hanh_kiem')
+  })
 })

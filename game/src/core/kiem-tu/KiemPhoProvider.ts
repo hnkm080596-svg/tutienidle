@@ -2,7 +2,7 @@ import type { PlayerData } from '../player/Player'
 import type { DynamicBasicProvider, TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import type { KiemPhoBattleState, KiemPhoCombo, KiemPhoComboModifier } from './KiemPhoSystem'
-import { initKiemPhoBattle, nextOrb, recordCastAndMatch } from './KiemPhoSystem'
+import { initKiemPhoBattle, nextOrb, realmComboMax, recordCastAndMatch } from './KiemPhoSystem'
 import {
   applySkillDefinitionModifiers,
   type KiemPhoSkillDefinitionModifier,
@@ -69,9 +69,11 @@ export interface KiemPhoProviderHandle extends DynamicBasicProvider {
 // literals, and unreachable higher-realm combos classify as leakage
 // rather than kit.
 export function reachableKiemPhoComboIds(realmId: string): readonly string[] {
-  const unlocked = new Set(unlockedOrbs(getRealmIndex(realmId)))
+  const realmIndex = getRealmIndex(realmId)
+  const unlocked = new Set(unlockedOrbs(realmIndex))
+  const maxLen = realmComboMax(realmIndex)
   return KIEM_PHO_COMBOS
-    .filter((c) => c.pattern.every((orb) => unlocked.has(orb)))
+    .filter((c) => c.pattern.length <= maxLen && c.pattern.every((orb) => unlocked.has(orb)))
     .map((c) => c.id)
 }
 

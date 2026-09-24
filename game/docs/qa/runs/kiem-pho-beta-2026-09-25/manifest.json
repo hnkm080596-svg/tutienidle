@@ -19746,7 +19746,7 @@
       "path": "src/core/skilldef/LegacySkillAdapter.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "3fc1d5ed4e563ba19d6ed6fa3795a2c1c334d88b5a437225fbb504071f57b290"
+      "hash": "7c25f333067de7e247009c3807d3dd14f9ee76748afd118bf9f546a267382ac8"
     },
     {
       "path": "src/core/skilldef/LegacySkillCoverage.test.ts",
@@ -20670,7 +20670,7 @@
       "path": "src/data/progression/KiemTuNodes.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "bf1539a6e585f7a24214b309832b1d0b7bc8c2529027fbc81f65cd6cdd3b264d"
+      "hash": "39cf2e4b2ac7fcf840153e8c082a148e630e039e5e26587d7f5afa3a1845d285"
     },
     {
       "path": "src/data/progression/PhapTuAnNodes.ts",
@@ -22971,5 +22971,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "2b26f3425cd63e7a4f1cc22f0c5af19cc972530dcdac446fc6b3296617ed597d"
+  "productStateId": "142912cc9490823e64ae8ef2253d01b00573cb831a17008827394404cc9637b5"
 }
