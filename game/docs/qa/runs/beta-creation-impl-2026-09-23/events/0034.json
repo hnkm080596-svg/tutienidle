@@ -1,0 +1,11 @@
+{
+  "applied": [
+    "message:MSG-ASSIGN-CB-CORRECTNESS",
+    "message:MSG-ASSIGN-CB-AUTHORITY",
+    "message:MSG-ASSIGN-TERMINAL",
+    "message:MSG-CANCEL-CB-CORRECTNESS",
+    "message:MSG-CANCEL-CB-AUTHORITY",
+    "message:MSG-CANCEL-CB-INTEGRATION",
+    "message:MSG-CANCEL-TERMINAL"
+  ]
+}
