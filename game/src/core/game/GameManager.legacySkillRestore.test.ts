@@ -24,9 +24,11 @@ function buildLegacySave(skills: Skill[]): GameSave {
       // the required physique field at the current version.
       physiqueGrade: 'pham',
       realmId: 'mortal',
-      // v82 - a mortal save must carry the creation pick; the supplied
-      // skills entry is what satisfies its learned-membership check.
+      // v82 - a mortal save must carry the creation pick + its learned
+      // skills entry + the canonical core grant (three-channel write).
       mortalBasicSkillId: 'tram',
+      nodeLevels: { core_tram: 1 },
+      purchasedNodeIds: ['core_tram'],
     },
     techniques: [],
     skills,

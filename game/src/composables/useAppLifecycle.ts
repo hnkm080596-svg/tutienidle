@@ -316,7 +316,10 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
           // A save the boot path cannot consume must reach a recovery
           // surface (export/delete) like incompatible/corrupted; routing
           // 'rejected' to onError leaves the offending save wedged on
-          // every subsequent boot (QA F-INT-01).
+          // every subsequent boot (QA F-INT-01). The precise rejection
+          // reason stays in the diagnostics channel; the recovery
+          // surface deliberately shows a generic corrupted state.
+          console.warn('[boot] save rejected by restore preflight:', restored.message)
           saveIssue.report('corrupted', JSON.stringify(loaded.save))
           boot.fail()
           return { status: 'failed' }

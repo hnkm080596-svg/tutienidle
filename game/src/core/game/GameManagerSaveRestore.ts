@@ -15,6 +15,7 @@ import {
 import { ITEM_QUALITY_ORDER } from '../item/ItemQuality'
 import { getActiveWayDefinition } from '../player/CultivationPathKit'
 import { isMortalPrecursorSkillId } from '../skill/MortalPrecursors'
+import { getSkillCoreLevel } from '../progression/SkillCoreLevel'
 import { MaterialRegistry } from '../material/MaterialRegistry'
 import { MaterialBag } from '../material/MaterialBag'
 import { PillRegistry } from '../pill/PillRegistry'
@@ -305,6 +306,13 @@ export class GameManagerSaveRestore {
 
       if (!save.skills.some((entry) => entry.id === mortalPick)) {
         throw new Error(`mortalBasicSkillId not learned in save: '${mortalPick}'`)
+      }
+
+      // The creation seam grants the pick's core node alongside the
+      // learn - without it the picked basic sits at level 0 forever
+      // (the Insight channel and hidden-pathway Lv3 gate are dead).
+      if (getSkillCoreLevel(save.player, mortalPick) < 1) {
+        throw new Error(`mortalBasicSkillId missing core grant in save: '${mortalPick}'`)
       }
     }
 

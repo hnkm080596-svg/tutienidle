@@ -6,8 +6,8 @@
 -- migration converges already-migrated DBs to the fresh-apply shape.
 
 -- Column (bookkeeping mirror of the pick; the client save payload is
--- authoritative). NOT NULL on fresh apply; existing rows get the 'tram'
--- default then the default is dropped so new inserts must supply a value.
+-- authoritative). Added nullable, existing rows are backfilled with 'tram',
+-- then the column is set NOT NULL so new inserts must supply a value.
 alter table public.characters
   add column if not exists mortal_basic_skill_id text;
 

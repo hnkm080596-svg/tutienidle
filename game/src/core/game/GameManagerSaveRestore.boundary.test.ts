@@ -74,9 +74,11 @@ function baseSave(player: PlayerData, overrides: Partial<GameSave> = {}): GameSa
   }
 
   // BETA-CREATION (v82) - a mortal save must carry its creation pick and
-  // the picked precursor must be learned. Callers passing a mortal player
-  // get the boot seam's writes mirrored so fixtures stay legal saves;
-  // callers overriding the skills slice own including the pick entry.
+  // the picked precursor must be learned + core-granted (the creation
+  // seam's three-channel write). Callers passing a mortal player get the
+  // boot seam's writes mirrored so fixtures stay legal saves; callers
+  // overriding the skills slice own including the pick entry, and
+  // callers mutating nodeLevels own keeping the grant consistent.
   // The mortal predicate mirrors the preflight: realmId 'mortal' and no
   // path - a non-mortal realm fixture never carries a pick.
   if (save.player.realmId === 'mortal' && save.player.cultivationPath === undefined) {
@@ -85,6 +87,13 @@ function baseSave(player: PlayerData, overrides: Partial<GameSave> = {}): GameSa
     }
     if (overrides.skills === undefined) {
       save.skills = [precursorSkillEntry(save.player.mortalBasicSkillId)]
+    }
+    const coreId = `core_${save.player.mortalBasicSkillId}`
+    if ((save.player.nodeLevels[coreId] ?? 0) < 1) {
+      save.player.nodeLevels = { ...save.player.nodeLevels, [coreId]: 1 }
+    }
+    if (!save.player.purchasedNodeIds.includes(coreId)) {
+      save.player.purchasedNodeIds = [...save.player.purchasedNodeIds, coreId]
     }
   }
 
@@ -653,10 +662,13 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
     // v82 - mirror the boot seam's RESULT (learn precedes pick): the
-    // skills payload comes from skillManager, the pick from player.
+    // skills payload comes from skillManager, the pick from player,
+    // and the canonical core grant alongside them (three-channel write).
     // Direct fixture writes - this manager registers no progression
     // nodes, so the learn op cannot run here.
     player.mortalBasicSkillId = 'tram'
+    player.nodeLevels['core_tram'] = 1
+    player.purchasedNodeIds.push('core_tram')
     manager.skillManager.add(precursorSkillEntry('tram'))
     const save = seedWashableItem(manager, player)
 
@@ -710,6 +722,8 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
     player.mortalBasicSkillId = 'tram'
+    player.nodeLevels['core_tram'] = 1
+    player.purchasedNodeIds.push('core_tram')
     manager.skillManager.add(precursorSkillEntry('tram'))
     const save = seedWashableItem(manager, player)
 
@@ -1089,6 +1103,23 @@ describe('v82 mortalBasicSkillId preflight', () => {
     const save = baseSave(player, { skills: [structuredClone(SAVED_SKILL)] })
 
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/mortalBasicSkillId/i)
+    expect(manager.skillManager.getAll()).toEqual([])
+  })
+
+  // The pick is a three-channel contract (pick + learned + canonical
+  // core grant): a crafted save satisfying the first two but missing
+  // core_<pick> restores into a state whose picked basic can never gain
+  // a level - reject before any owner mutation.
+  it('rejects a learned pick missing its core grant', () => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+    player.mortalBasicSkillId = 'tram'
+    const save = baseSave(player, {
+      skills: [precursorSkillEntry('tram')],
+    })
+    delete save.player.nodeLevels['core_tram']
+
+    expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/missing core grant/i)
     expect(manager.skillManager.getAll()).toEqual([])
   })
 

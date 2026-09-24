@@ -25,13 +25,14 @@ import {
 import { pills } from '../../../data/pill/pills'
 import { QUESTS } from '../../../data/quest/quests'
 import type { Reward } from '../../reward/Reward'
+import { MORTAL_DEFAULT_BASIC_ID } from '../../skill/MortalPrecursors'
 
 /** Canonical measurement profile - one fixed creation identity so runs
  * differ only by seed. Combat passive, no economy subsidy. */
 const MEASUREMENT_PROFILE: EarlyGameCreationProfile = {
   name: 'economy-measure',
   talentIds: ['hap_linh'],
-  mortalBasicSkillId: 'tram',
+  mortalBasicSkillId: MORTAL_DEFAULT_BASIC_ID,
 }
 
 export type PerfectionOutcome = 'achieved' | 'proven_infeasible' | 'safety_bound'
