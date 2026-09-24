@@ -26,8 +26,14 @@ Full evidence tables in spec §1. Condensed edit map:
 - `core/game/GameManagerSaveRestore.ts` — v82 preflight extension.
 - `core/player/CultivationPathRegistry.ts` + `SkillRoleStrip.vue` —
   defensive-fallback comments only (optional micro-touch).
-- Tests: listed in spec §1h.
-- Docs: `docs/online-login-cloud-save-plan.md` creation-flow bullets.
+- `core/simulation/earlygame/PerfectionEconomy.ts` — constant import +
+  `MEASUREMENT_PROFILE` + `mortalStatBudget()` `creationPoints` term (spec §1c2).
+- `core/simulation/earlygame/EssenceSubstitutionEconomy.ts` —
+  `MEASUREMENT_PROFILE` literal.
+- Tests: listed in spec §1h (incl. the boundary-test v82 describe + the
+  `theTuAnE2E` title retitle added by spec/plan review).
+- Docs: `docs/online-login-cloud-save-plan.md` + `docs/ui-components.md`
+  creation-flow bullets (REV-A-F2 catch).
 
 ## Step 1 — service contract reshape
 
@@ -53,9 +59,11 @@ export interface CharacterCreationDraft {
 - `CharacterCreationService` interface otherwise unchanged.
 - `MockCharacterCreationService` — no logic change (draft passthrough).
 - `SupabaseCharacterCreationService.createCharacter` — RPC body:
-  `p_attributes` out, `p_mortal_basic_skill_id: draft.mortalBasicSkillId` in
-  (param name confirmed at impl time; open question Q-D tracks the server
-  side).
+  `p_attributes` out, `p_mortal_basic_skill_id: draft.mortalBasicSkillId` in.
+  DEPLOY ORDER (REV-A-02): the migration drops the old overload, so it must be
+  applied in the same deploy window as the client — an un-migrated server
+  rejects the new body and a migrated server rejects old clients. Q-D tracks
+  who applies it.
 
 ## Step 2 — bootstrap seam + App.vue wiring
 
@@ -72,10 +80,10 @@ export interface CharacterCreationDraft {
 
 - `onCharacterCreated(payload)`: `applyCreationProfile(player.$state, payload)`
   replacing the inline writes; store `payload.mortalBasicSkillId` in a
-  setup-scope `let pendingMortalBasicSkill: string | undefined` (survives the
+  setup-scope `let pendingCreationPick: string | undefined` (survives the
   boot retry path — `newCharacterGrantsApplied` semantics unchanged).
 - `onNewCharacter`: replace the three inline `learnSkill` calls with
-  `bootstrapEarlyGamePlayer(gameManager, player.$state, pendingMortalBasicSkill)`;
+  `bootstrapEarlyGamePlayer(gameManager, player.$state, pendingCreationPick)`;
   a missing pending value ⇒ fail fast (defensive — the screen always emits
   one). App-only wiring (buildings, materials, production autostart,
   `setActivePlayer`) stays inline unchanged.
@@ -102,7 +110,7 @@ write path (creation pick via the op inside bootstrap; strip repick).
   button (`creation-finish`, disabled until name valid ∧ 1 talent ∧ 1 skill)
   + back → `emit('back')`.
 - Vietnamese section copy via new `onboarding.creation.skillStep` keys
-  (`kicker`, `title`, `hint`); remove `step`/`stepperAria`/`attributeStep`/
+  (`kicker`, `title`, `selected`, `description`); remove `step`/`stepperAria`/`attributeStep`/
   `attributes` keys in BOTH `vi.json` and `en.json` (i18n parity test pins
   key-set equality).
 
@@ -113,7 +121,7 @@ write path (creation pick via the op inside bootstrap; strip repick).
   drop of the 5-point allocation; `mortalBasicSkillId` required on mortal
   saves — the starting-skill pick is now an explicit creation write. Save v81
   is rejected (dev phase, no migration, no compat translator)").
-- `GameManagerSaveRestore.ts` preflight (the v71 block :265-285): extend to
+- `GameManagerSaveRestore.ts` preflight (the v71 block :265-283): extend to
   reject a mortal save where the pick is absent, non-precursor, or not in
   `save.skills` ids. Post-path presence rule unchanged.
 

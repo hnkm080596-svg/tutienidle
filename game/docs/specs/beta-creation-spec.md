@@ -34,7 +34,7 @@ line number below is `src/`-relative under `game/` unless stated.
 
 | Surface | Evidence | Verdict |
 |---|---|---|
-| Attribute budget constant | `services/character/CharacterCreationService.ts:3` — `CHARACTER_CREATION_ATTRIBUTE_POINTS = 5` | DELETE — the budget exists only for creation allocation |
+| Attribute budget constant | `services/character/CharacterCreationService.ts:3` — `CHARACTER_CREATION_ATTRIBUTE_POINTS = 5` | DELETE — creation use is the only STAT write, but the constant also feeds the mortal-perfection budget model (§1c2) which must re-derive `creationPoints = 0` |
 | Draft shape | `CharacterCreationService.ts:11-18` — `CharacterAttribute` union, `CharacterAttributes`, `CharacterCreationDraft {name, talentIds, attributes}` | RESHAPE — `attributes` out; `mortalBasicSkillId` in (§3 D1) |
 | Draft validation | `CharacterCreationService.ts:52-55` — integer/nonneg/sum==5 check + `'invalid_attributes'` code (:20) | REPLACE with pick-membership validation (§3 D1) |
 | Service impls | `MockCharacterCreationService.ts` (all draft-shaped, no own attribute logic); `SupabaseCharacterCreationService.ts:65` — sends `p_attributes` in `create_character` RPC | RESHAPE — RPC body loses `p_attributes`, gains the pick param (§3 D6, open question Q-D) |
@@ -54,10 +54,19 @@ line number below is `src/`-relative under `game/` unless stated.
 | Surface | Evidence | Verdict |
 |---|---|---|
 | Shared creation seams | `core/game/EarlyGameBootstrap.ts` — `EarlyGameCreationProfile {name, talentIds, attributes}` :19-28; `applyCreationProfile` :30-42 (`baseStats +=` :37-41); `bootstrapEarlyGamePlayer` :44-59 (learns tram/linh_bao/huy_quyen :53-58) | RESHAPE — profile loses `attributes`, gains the pick; bootstrap gains pick application (§3 D2) |
-| App write path | `App.vue:548-587` `onNewCharacter` — INLINE `learnSkill('tram'/'linh_bao'/'huy_quyen')` :552-560 + app-only wiring (buildings :561-572, materials :574-583, production autostart :585-588, `setActivePlayer` :591); `onCharacterCreated` :621-635 — INLINE name/talentIds/baseStats writes | DRIFT — `EarlyGameBootstrap.ts:1-15` claims "both consumers (App.vue handlers, EarlyGameSession) run ONE path" but App.vue never calls the seams; it re-implements them. FIX in scope: delegate the core subset to the shared seams (§3 D2/D3 — A9, A12) |
-| Legacy restore seam | `App.vue:533-545` `onRestoreOk` — idempotent learn of `tram` + `linh_bao`/`huy_quyen` on old saves | KEEP — dead once v82 rejects v81 saves, but harmless for in-flight/corrupt states; no change needed this mission |
+| App write path | `App.vue:548-591` `onNewCharacter` — INLINE `learnSkill('tram'/'linh_bao'/'huy_quyen')` :552-560 + app-only wiring (buildings :561-572, materials :574-583, production autostart :585-588, `setActivePlayer` :591); `onCharacterCreated` :621-635 — INLINE name/talentIds/baseStats writes | DRIFT — `EarlyGameBootstrap.ts:1-15` claims "both consumers (App.vue handlers, EarlyGameSession) run ONE path" but App.vue never calls the seams; it re-implements them. FIX in scope: delegate the core subset to the shared seams (§3 D2/D3 — A9, A12) |
+| Legacy restore seam | `App.vue:533-546` `onRestoreOk` — idempotent learn of `tram` + `linh_bao`/`huy_quyen` on old saves | KEEP — dead once v82 rejects v81 saves, but harmless for in-flight/corrupt states; no change needed this mission |
 | Sim consumer | `core/simulation/earlygame/EarlyGameSession.ts:71` (`profile: EarlyGameCreationProfile`) + `:244-245` (`applyCreationProfile` then `bootstrapEarlyGamePlayer`) | RESHAPE — profile gains pick; session passes it through to bootstrap (§3 D2) |
 | Boot ordering | `useAppLifecycle.ts` `bootGame({createNewCharacter, onNewCharacter})` — `onCharacterCreated` (App.vue) runs BEFORE boot; `onNewCharacter` callback runs inside the boot transaction before first save | ORDER FACT — the pick cannot be written via `setMortalBasicSkill` inside `onCharacterCreated` (skills not learned yet, `skillManager.has` fails); it must land inside the post-learn seam (§3 D2) |
+
+### 1c2. Sim economy model — allocation is a budget term, not just UI (sealed-review REV-A-01/F1 catch)
+
+| Surface | Evidence | Verdict |
+|---|---|---|
+| Mortal-perfection budget | `core/simulation/earlygame/PerfectionEconomy.ts:25` imports the constant; `mortalStatBudget()` :91-115 uses it as `creationPoints` inside `available` (:103) and the `shortfall` identity (`PerfectionEconomy.test.ts:132` asserts measuredDeficit === shortfall) | RESHAPE — `creationPoints = 0` post-ruling (creation no longer grants stats); the deficit identity re-baselines with breakthrough as the only enumerated source |
+| Measurement profiles (production .ts, NOT test files) | `PerfectionEconomy.ts:32-35` + `EssenceSubstitutionEconomy.ts:48-51` — `MEASUREMENT_PROFILE: EarlyGameCreationProfile` literals carrying `attributes: {strength:2, vitality:3}` | RESHAPE — swap `attributes` → `mortalBasicSkillId: 'tram'` (compile breaks otherwise under the reshaped profile) |
+| Boundary test absent-default pin | `core/game/GameManagerSaveRestore.boundary.test.ts:1019-1045` — v71 describe pins 'restores a mortal save carrying no pick (absent = tram default)' | REWRITE → v82 describe: absent rejected, non-precursor rejected, unlearned rejected, learned pick accepted ×3 |
+| Stale test title | `core/game/GameManager.theTuAnE2E.test.ts:330` — 'creation-granted tram' | RETITLE — wording only |
 
 ### 1d. The pick authority (P7-M4 contract — already landed)
 
@@ -65,21 +74,21 @@ line number below is `src/`-relative under `game/` unless stated.
 |---|---|---|
 | Precursor set | `core/skill/MortalPrecursors.ts:7` — `['tram','linh_bao','huy_quyen']`; `MORTAL_DEFAULT_BASIC_ID='tram'` :9; `isMortalPrecursorSkillId` :11-12 | REUSE AS-IS — the ruling's three options map exactly (§2) |
 | Persisted field | `core/player/Player.ts:124-132` — `mortalBasicSkillId?: string` (mortal-only pick; cleared by ritual commit); default `undefined` :418 (Pinia toRefs convention) | REUSE — no new field needed |
-| Sole role write | `GameManagerProgressionOps.ts:639-654` `setMortalBasicSkill` — guards: `cultivationPath===undefined`, `isMortalPrecursorSkillId`, `skillManager.has(skillId)` | REUSE — creation must route through it (§3 D2) |
+| Sole role write | `GameManagerProgressionOps.ts:639-655` `setMortalBasicSkill` — guards: `cultivationPath===undefined`, `isMortalPrecursorSkillId`, `skillManager.has(skillId)` | REUSE — creation must route through it (§3 D2) |
 | Runtime read | `core/player/CultivationPathRegistry.ts:325-346` `createMortalRuntime().resolveBasic` — pick ∩ precursor ∩ learned → else `MORTAL_DEFAULT_BASIC_ID` | KEEP — `absent→tram` becomes defensive-only (unreachable on valid v82 saves, §3 D4) |
 | In-game repick UI | `components/panels/skill-path/SkillRoleStrip.vue` — `isPickedPrecursor` :121-124 uses `?? MORTAL_DEFAULT_BASIC_ID` display fallback; chooser writes via `setMortalBasicSkill` :173 | KEEP — unchanged; display fallback is defensive display, not a decision |
 | Ritual clear | `GameManagerRealmAdvanceOps.ts:315` — `delete player.mortalBasicSkillId` inside the initiation commit | UNCHANGED — post-path presence stays corrupt |
-| Save preflight | `GameManagerSaveRestore.ts:265-285` — v71 contract: pick must be precursor-valid and mortal-only | EXTEND for v82 — mortal ⇒ pick REQUIRED (§3 D4) |
+| Save preflight | `GameManagerSaveRestore.ts:265-283` — v71 contract: pick must be precursor-valid and mortal-only | EXTEND for v82 — mortal ⇒ pick REQUIRED (§3 D4) |
 | Role composition | `resolveCombatSkillRoles` (`core/player/CultivationPathRoles.ts:29`) ← `progressionOps.getResolvedSkillRoles` (:668) for UI, `CombatBuild.ts:225` for battle | UNCHANGED consumers |
 
 ### 1e. Skill data — do the three named skills exist?
 
 | Ruling option | Skill id | Evidence | Verdict |
 |---|---|---|---|
-| `Linh Bạo` | `linh_bao` | `data/skill/CoreSkills.ts:67-69` (name 'Linh Bạo'); primordial basic; Lv3 (10000 casts) gates `hidden_spell_pathway` (`core/skill/CastLeveling.ts:16`) | EXISTS |
-| `Huy Quyền` | `huy_quyen` | `CoreSkills.ts:118-120` (name 'Huy Quyền'); Lv3 gates `hidden_body_pathway` (`CastLeveling.ts:18`, `TheTuPath.ts:51,265`) | EXISTS |
-| `Huy Kiếm` | `tram` | `CoreSkills.ts:15-17` — id `tram`, name **'Huy Kiếm'**; Lv3 gates `hidden_sword_pathway` (`KiemTuPath.ts:23,234`); `SWORD_BASIC` id 'tram' (`data/skill/TurnBasicAttacks.ts:16-21`) | EXISTS — `huy_kiem` needs NO new enum value; `tram` IS Huy Kiếm |
-| Display meta | — | `data/skill/TurnSkillDisplayMeta.ts:48` tram→'Huy Kiếm'; :52 huy_quyen→'Hủy Quyền' (diacritic drift vs CoreSkills 'Huy Quyền' — m4 spec also writes 'Hủy Quyền') | NOTE — creation UI resolves name/description from the template catalog (SKILLS), matching ruling spelling; meta drift left as Notes/Suggestions |
+| `Linh Bạo` | `linh_bao` | `data/skill/CoreSkills.ts:67-69` (name 'Linh Bạo'); primordial basic; Lv3 (10000 casts) gates `hidden_spell_pathway` (`core/skill/CastLeveling.ts:17`) | EXISTS |
+| `Huy Quyền` | `huy_quyen` | `CoreSkills.ts:118-120` (name 'Huy Quyền'); Lv3 gates `hidden_body_pathway` (`CastLeveling.ts:18`, `core/skill/TheTuPath.ts:51,265`) | EXISTS |
+| `Huy Kiếm` | `tram` | `CoreSkills.ts:15-17` — id `tram`, name **'Huy Kiếm'**; Lv3 gates `hidden_sword_pathway` (`core/skill/KiemTuPath.ts:23,234`); `SWORD_BASIC` id 'tram' (`data/skill/TurnBasicAttacks.ts:16-21`) | EXISTS — `huy_kiem` needs NO new enum value; `tram` IS Huy Kiếm |
+| Display meta | — | `data/skill/TurnSkillDisplayMeta.ts:48` tram→'Huy Kiếm'; :52 huy_quyen→'Hủy Quyền' (diacritic drift vs CoreSkills 'Huy Quyền' — m4 spec also writes 'Hủy Quyền') | RESOLVED in impl — meta aligned to 'Huy Quyền' (Q-E closed in-pass) |
 
 Conclusion (census item a): all three named skills exist; the ruling's option
 set === `MORTAL_PRECURSOR_SKILL_IDS`. No new skill data or enum value.
@@ -87,7 +96,7 @@ set === `MORTAL_PRECURSOR_SKILL_IDS`. No new skill data or enum value.
 ### 1f. Base stats — what "1/1/1/1/1" means here
 
 `createBaseStats()` (`core/stats/StatBlock.ts:32`) already initializes
-`strength/dexterity/intelligence/attunement/vitality = 1` (:59-63 — deliberate
+`strength/dexterity/intelligence/attunement/vitality = 1` (:62-66 — deliberate
 baseline, Phàm Nhân cap headroom per StatCap.ts). The creation `+=` allocation
 is the ONLY thing adding on top. Removing it yields exactly the ruled outcome —
 no default-value change needed.
@@ -104,7 +113,7 @@ mechanic, not creation allocation — UNTOUCHED per ruling scope.
 | Version | `saveVersion.ts:163` `CURRENT_SAVE_VERSION = 81` + per-version changelog comments :80-162 | BUMP → 82 with v82 changelog entry |
 | Rejection | `saveShapeValidation.ts:1653-1656` — `parsed.version !== CURRENT_SAVE_VERSION` rejects | mechanism already in place |
 | Shape validation | `saveShapeValidation.ts` — player slice structural checks; `mortalBasicSkillId` shape contract intentionally lives at preflight (:731 comment) | no shape-field change needed (field already exists since v71) |
-| Restore preflight | `GameManagerSaveRestore.ts:265-285` | EXTEND: mortal ⇒ pick required + precursor + learned-member (§3 D4) |
+| Restore preflight | `GameManagerSaveRestore.ts:265-283` | EXTEND: mortal ⇒ pick required + precursor + learned-member (§3 D4) |
 | Learned-membership source | `saveTypes.ts:166` `skills: Skill[]` (learned entries persist as `Skill` objects with `id`) | available for the learned check |
 
 Shape-change analysis for the ruling's v82 trigger: the persisted field set
@@ -118,15 +127,18 @@ mechanism"). No migration (QI-S policy).
 
 | Test | Surface pinned | Required change |
 |---|---|---|
-| `services/character/CharacterCreationService.test.ts` | `validDraft.attributes` (:4-9), attribute rejection cases (:19-24) | rewrite draft cases → pick validation |
+| `services/character/CharacterCreationService.test.ts` | `validDraft.attributes` (:4-8), attribute rejection cases (:19-23) | rewrite draft cases → pick validation |
 | `components/onboarding/CharacterCreationScreen.test.ts` | 3-step walk + `CHARACTER_CREATION_ATTRIBUTE_POINTS` budget assert | rewrite → unified-screen + skill choice |
 | `tests/e2e/helpers.ts:36-65` `createCharacterThroughUi` | step 3 = click each `creation-attribute-plus-*` | step 3 = pick a `creation-skill-*` card |
 | `tests/e2e/accessibility.spec.ts:55-79` | keyboard flow incl. attribute plus buttons + finish-disabled-until-0-points | rewrite final section for skill choice |
 | `tests/e2e/boot-fresh.spec.ts:29` | creation screen visible | likely unchanged |
-| 15 e2e specs via `createCharacterThroughUi` (create-to-combat, cultivation-path-ritual ×7 calls, turn-combat-hud, save-reload, ink-wash-ui, etc.) | inherit helper change | no per-spec edits unless a spec asserts attributes |
+| 17 e2e specs via `createCharacterThroughUi` (create-to-combat, cultivation-path-ritual ×7 calls, turn-combat-hud, save-reload, ink-wash-ui, etc.) | inherit helper change | no per-spec edits unless a spec asserts attributes |
 | Sim fixtures `PINNED`/`PINNED_PROFILE` | `EarlyGameSession.test.ts:16`, `MortalChapterJourney.test.ts:19`, `QrProbe.test.ts:6`, `RngLeakProbe.test.ts:6`, `TrucCoJourney.test.ts:118` — all carry `attributes` | add `mortalBasicSkillId`, drop `attributes` |
-| `services/save/saveShapeValidation.test.ts:2260-2312` | v71 pick contract ("absent = tram default" :2309) | update absent-case for v82 mortal-required rule |
+| `services/save/saveShapeValidation.test.ts:2260-2312` | v71 pick contract ("absent = tram default" :2308) | update absent-case for v82 mortal-required rule |
 | `services/save/SaveSystem.bootRestore.test.ts:84-86` | invalid pick rejection | keep + add mortal-missing-pick rejection |
+| `core/game/GameManagerSaveRestore.boundary.test.ts:1019-1045` | v71 absent=tram default pin | rewrite → v82 describe (4 rejection/accept cases) |
+| `core/game/GameManager.theTuAnE2E.test.ts:330` | 'creation-granted tram' title | retitle (wording only) |
+| `core/simulation/earlygame/PerfectionEconomy.ts:25,32-35,91-115` + `EssenceSubstitutionEconomy.ts:48-51` | constant import + `attributes` profiles + budget term | reshape per §1c2 |
 | `core/game/GameManager.mortalBasicSkill.test.ts` | pick write/read/ritual-clear contract | add creation-path coverage (boot writes the pick) |
 | `useAppLifecycle.test.ts:607+` | B2 creation save transaction ordering | unchanged (shape-agnostic stubs) |
 | `core/skill/MortalPrecursors.test.ts:16` | precursor set === CAST_LEVELING_THRESHOLDS keys | unchanged — set unchanged |
@@ -136,6 +148,9 @@ mechanism"). No migration (QI-S policy).
 
 - `docs/online-login-cloud-save-plan.md:44` ("Phân bổ 5 điểm"), :207, :213 —
   stale once this lands; update the creation-flow bullets.
+- `docs/ui-components.md:839` ("Wizard 3 bước tạo nhân vật"), :841 (stepper
+  spec), :871 (stepper mention) — stale once this lands; update to the unified
+  screen (sealed-review REV-A-F2 catch).
 - `docs/roadmap.md` — no creation-contract section found (only the generic
   "boot → tạo nhân vật → combat E2E" completion note :2640); no roadmap edit
   required, note in the mission report.
@@ -169,7 +184,7 @@ learned inside the boot seam, AFTER `onCharacterCreated`. So:
   `progressionOps.setMortalBasicSkill(player, basicSkillId)` and assert
   `true` (post-learn a valid pick cannot fail — false ⇒ data drift, fail fast).
 - `App.vue` threads the pick from `onCharacterCreated`'s payload into the
-  `onNewCharacter` closure (`useState`-scope `pendingMortalBasicSkill`),
+  `onNewCharacter` closure (setup-scope `let pendingCreationPick`),
   then delegates the learn+pick core subset to `bootstrapEarlyGamePlayer` —
   this ALSO fixes the standing P6-M1 drift (the file claims App.vue runs the
   shared seam; it inlines it instead). App-only wiring (buildings, materials,
@@ -210,9 +225,11 @@ matching talent-card convention which renders `talent.name`/`description`
 from data). Back button returns to auth from the single screen.
 
 **D6 — Supabase RPC.** `create_character` body: drop `p_attributes`, send
-`p_mortal_basic_skill_id` (or `p_basic_skill_id`). The RPC lives server-side —
-deployment coordination is a real dependency (open question Q-D); client code
-changes are in scope.
+`p_mortal_basic_skill_id`. The RPC lives server-side — deployment ordering is a
+real dependency (REV-A-02): the migration drops the OLD overload, so an
+un-migrated server rejects the new body AND a migrated server rejects old
+clients — client and migration must ship in the same deploy window. Open
+question Q-D tracks who applies the migration.
 
 **D7 — Out of scope (explicit).** `attributePoints`/`allocateAttributePoint`/
 `CharacterPanel` spend UI (progression-time); `SkillRoleStrip` repick
@@ -285,9 +302,11 @@ question Q-A for the coordinator to confirm.
   meta from the same catalog elsewhere reads.
 - Q9: `validateDraft`/`checkNameAvailable`/`rollTalents` stay observational;
   the pick write happens once inside the boot transaction.
-- Q10: duplicate/stale — `newCharacterGrantsApplied` boot guard unchanged;
-  second `bootGame(true)` re-runs `onNewCharacter` — pick write is idempotent
-  (same value re-set through the op).
+- Q10: duplicate/stale — `newCharacterGrantsApplied` boot guard unchanged: a
+  second `bootGame(true)` does NOT re-run `onNewCharacter` (the guard
+  hard-resets and returns 'skipped'), so the pick write cannot double-run;
+  the module-slot pick is still consumed once as a defensive invariant
+  (sealed-review REV-A-F3 correction).
 - Q11: old paths retired — allocation UI/service/validation/RPC arg deleted;
   `absent→tram` classified defensive-only (retained, documented reason);
   `onRestoreOk` learn seam retained (in-flight/corrupt guard, zero cost).
