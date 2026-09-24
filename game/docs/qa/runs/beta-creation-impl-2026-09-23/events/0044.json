@@ -1,0 +1,22 @@
+{
+ "type": "CYCLE_DISPATCH",
+ "cycle": "CYC-RB-1",
+ "round": "clean-B",
+ "candidate": "8f53aa18",
+ "reviewers": [
+  {
+   "lens": "CORRECTNESS",
+   "session": "821c438c35fd4732a4ddc6ddff9f36e0"
+  },
+  {
+   "lens": "AUTHORITY",
+   "session": "684bb4b2d6124ebb956ed0979c64f7c6"
+  },
+  {
+   "lens": "INTEGRATION",
+   "session": "a94418a020154def83344133eb550bc9"
+  }
+ ],
+ "challengeSet": "13 coordinator-synthesized novel attacks delivered inline (crafted saves, union-v82 edges, recovery-surface honesty, latch/lifecycle, RPC drift, post-path consistency, locale, 1/1/1/1/1)",
+ "independence": "fresh context each, priorFindingsVisible=false required, docs/qa/** forbidden"
+}
