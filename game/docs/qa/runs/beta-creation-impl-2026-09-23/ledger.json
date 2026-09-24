@@ -6549,6 +6549,38 @@
       "payloadPath": "events/0057.json",
       "payloadHash": "421ffdb2dcd5ed0d46c94eac8a6f861e8696df678b52c419d2d33d2047ccb143",
       "eventHash": "f86498315457d004bcc56fc53d3a32c74209e8f378aa2ba566a45084b5d2bcba"
+    },
+    {
+      "seq": 58,
+      "at": "2026-09-24T05:08:33.965Z",
+      "kind": "SEAL",
+      "actor": "coordinator-devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "previousEventHash": "f86498315457d004bcc56fc53d3a32c74209e8f378aa2ba566a45084b5d2bcba",
+      "payloadPath": "events/0058.json",
+      "payloadHash": "1ca784c1142218c8bcba49f1f2987a343da9a1449b959154ca5c9909d0d8506f",
+      "eventHash": "44bc0ed861b96a002e2498d63d77afe4d6a2da0e7dce047b6cab7bb6b86debca"
+    },
+    {
+      "seq": 59,
+      "at": "2026-09-24T05:08:33.970Z",
+      "kind": "ADJUDICATION",
+      "actor": "coordinator-devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+      "state": {
+        "productStateId": "d3b0cb32aeea9c54b72464c8b6fa7e97b65f5e2c163d32395fefa9e9e7dbd689",
+        "contractId": "d7e0a86484d9aca392179a688c5d25252b9731c42cad9814e6037af2110a0c15",
+        "attackModelId": "ceaf20da9f77c38d91d80e97c1e07d37d00ac1b376dd809835e8b3dbec533069",
+        "environmentId": "0c6c1b0a38ab992efe6cb877acad947f678e3fc57dbbf16de3ccd54a0126123b"
+      },
+      "previousEventHash": "44bc0ed861b96a002e2498d63d77afe4d6a2da0e7dce047b6cab7bb6b86debca",
+      "payloadPath": "events/0059.json",
+      "payloadHash": "a83d68b5d5103a2ba3fb55e9b62e67a9b047d97e4a058474c8d1e692384edf5b",
+      "eventHash": "fec230a2cc788bef7b8b2ebfbf1428660c6b5dc69de90a3203a40470a28ecebe"
     }
   ]
 }

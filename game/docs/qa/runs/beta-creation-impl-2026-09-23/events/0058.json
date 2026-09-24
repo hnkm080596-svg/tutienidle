@@ -1,0 +1,30 @@
+{
+  "type": "SEAL_RECEIPT",
+  "cycle": "CYC-RB2-1",
+  "round": "clean-B-prime",
+  "candidate": "0e8351bd",
+  "lens": "INTEGRATION",
+  "reviewerSession": "04cf0428ab5049fe976bfad2982a4a5a",
+  "verdict": "FINDINGS",
+  "priorFindingsVisible": false,
+  "findings": [
+    {
+      "id": "F-PRE-1",
+      "severity": "Medium",
+      "title": "half-created server character wedges account at name_taken forever",
+      "preexisting": true
+    },
+    {
+      "id": "F-PRE-2",
+      "severity": "Medium",
+      "title": "SaveIncompatibleScreen delete dead - ConfirmModal at panel(1800) below saveGate(4000), runtime-evidenced occluded",
+      "preexisting": true
+    },
+    {
+      "id": "F-INT-1",
+      "severity": "Low",
+      "title": "missing generation fence between remoteSync and coordinator.load - stale boot eats one-shot import marker"
+    }
+  ],
+  "evidenceSummary": "All 10 attack seams verified; acceptance gate precedes timestamp compare; wedge-heal converges <=3 logins; class-order identical to old preflight; runtime: guest creation end-to-end pick huy_quyen + reload restore; poisoned local -> SaveIncompatibleScreen + byte-identical export. Scoped 769/769 + full suite clean modulo env noise."
+}
