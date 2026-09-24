@@ -14694,7 +14694,7 @@
       "path": "src/components/panels/skill-path/SkillRoleStrip.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "a71897e1e90c95e1b311ca0a2a90ceaa29af484493d1d2cbbb4970300ba0bd3e"
+      "hash": "57a2250f0241775a021f3edc7e304f612f8fe7fc5fb272577791dcc6d5daac52"
     },
     {
       "path": "src/components/panels/skill-path/TechniqueBand.test.ts",
@@ -18582,7 +18582,7 @@
       "path": "src/core/player/CultivationPathSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e3036a2f24d4835ce131ed0a7d23028d0371a2eeacb3756e40f5c7195f129bba"
+      "hash": "96daaed2a1f95d0c3610ccd58a9dff4c7a896b6526d9132d0d14dd491bbf3af2"
     },
     {
       "path": "src/core/player/PersistentTimedEffect.ts",
@@ -20754,7 +20754,7 @@
       "path": "src/data/progression/PhapTuBasicNodes.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a2327d1e5facc0bb66f2e84a5d37bd8af9377484156978aea0c76227a70478da"
+      "hash": "924a2f62df0bef6f162d12ab3311754f6c1c2ceaee9ac45aaab4b8510c102fc3"
     },
     {
       "path": "src/data/progression/PhapTuNodes.builders.ts",
@@ -20784,7 +20784,7 @@
       "path": "src/data/progression/PhapTuRealmRewardNodes.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8e8582538a95d324d9ead4b3a96c99a508578837fb2b86c351a1fa76e5527067"
+      "hash": "6604dfccdf2d1ba68801874c8ee71fec1578464b4cf824f63e87fb545aaee31a"
     },
     {
       "path": "src/data/progression/ProgressionNodeCatalog.ts",
@@ -21720,13 +21720,13 @@
       "path": "src/locales/en.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "731c3998e1494e098f5c7096dc013b7b93c0f6b905c60a04d3aa1bcd67e2fff6"
+      "hash": "5c23c9cb48cb36faef1272e5e215d6e091c4fe8d51ab0fcc6a5953b9bcd130a7"
     },
     {
       "path": "src/locales/vi.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "68491eb43d8df6812a15a6d2bba1c8905fbef7c3c81731f428249d1b26fe2730"
+      "hash": "e8bee88e30ebe856d324ab9373009c0aa462c94e4f8276c99efb5a8fef7e34a6"
     },
     {
       "path": "src/main-process/combatClockHost.test.ts",
@@ -23073,5 +23073,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a"
+  "productStateId": "04da55937245e3546b17af1899a4befc0e6a14746ab3a9e48d9e9838e22a6319"
 }

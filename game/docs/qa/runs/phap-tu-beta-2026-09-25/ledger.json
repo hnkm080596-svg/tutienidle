@@ -9,9 +9,9 @@
   "checkout": "/home/ubuntu/repos/tutienidle/.agent-worktrees/phap-tu-basic",
   "branch": "devin/1790260800-phap-tu-basic",
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
-  "head": "632556a6d9d780ac6f2efb903dead42551c5aefb",
+  "head": "86dfb313ea811dcc3976587433918b6bc3fcddda",
   "state": {
-   "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+   "productStateId": "04da55937245e3546b17af1899a4befc0e6a14746ab3a9e48d9e9838e22a6319",
    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -3048,7 +3048,7 @@
     "EV-AUT-A-FIX"
    ],
    "counterexample": "no requiredWay -> both spell ways aggregate granted level",
-   "expected": "Thế awakening sealed to spell_pathway",
+   "expected": "Th\u1ebf awakening sealed to spell_pathway",
    "actual": "no requiredWay -> both spell ways aggregate granted level",
    "rootCause": "reward node carried no requiredWay",
    "rootClass": "missing-gate",
@@ -3860,9 +3860,9 @@
    "evidenceIds": [
     "EV-AUT-A-FIX"
    ],
-   "counterexample": "'Mở qua node X' shown even when sibling capstone permanently excludes it",
+   "counterexample": "'M\u1edf qua node X' shown even when sibling capstone permanently excludes it",
    "expected": "honest unlock text",
-   "actual": "'Mở qua node X' shown even when sibling capstone permanently excludes it",
+   "actual": "'M\u1edf qua node X' shown even when sibling capstone permanently excludes it",
    "rootCause": "tooltip lacked excludesNode check",
    "rootClass": "honesty-gap",
    "subsystem": "phap-tu-beta",
@@ -4939,6 +4939,376 @@
    "fixedInRevision": null,
    "closedAt": null,
    "closeReason": null
+  },
+  {
+   "id": "F-B5-A1",
+   "title": "hardcoded Vietnamese spec-tooltip strings bypass i18n",
+   "state": {
+    "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/components/panels/skill-path/SkillRoleStrip.vue",
+     "symbolOrSection": "specTooltip",
+     "revision": "632556a6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA-r5 AUTHORITY reviewer (devin-8920c0e8)",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "counterexample": "en-locale player sees Vietnamese tooltip on locked spec chips",
+   "expected": "user-facing chrome via useI18n locale keys (P16)",
+   "actual": "two literal Vietnamese strings in specTooltip, no locale keys",
+   "rootCause": "specTooltip hardcoded strings; sibling NodeInspector uses lockedReasons i18n keys",
+   "rootClass": "i18n bypass",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/components"
+     ],
+     "termsAndMethod": "non-data string census in changed components",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "only the two specTooltip strings"
+     ],
+     "coverageLimits": [
+      "reviewer census of changed files"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "useI18n added; strings moved to panels.skillPath.roleStrip.lockedByRival / unlockedByNode in vi+en",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "86dfb313",
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-B5-A2",
+   "title": "grant validator skips only core_ ids - grantsSkillCoreIds passes silently and bricks next save load",
+   "state": {
+    "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathSystem.ts",
+     "symbolOrSection": "grantedNodeLevels validator",
+     "revision": "632556a6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "delta reviewer (devin-46b2a420), corroborated by AUT-A (devin-8920c0e8)",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "counterexample": "rewardOnly node with effect.grantsSkillCoreIds -> grant writes nodeLevels, cores never fire, D9d fails next load",
+   "expected": "purchase-time core-grant effect refused like core_ ids (save-corruption class)",
+   "actual": "not in warn list and not in skip list - silently accepted",
+   "rootCause": "warn enumeration covered 4 transactional fields; grantsSkillCoreIds omitted",
+   "rootClass": "validator completeness",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/progression"
+     ],
+     "termsAndMethod": "NodeEffect purchase-time field census",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "grantsSkillCoreIds was the only missing field"
+     ],
+     "coverageLimits": [
+      "crafted-data only - zero authored nodes carry it"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "grantsSkillCoreIds added to the skip gate alongside core_ prefix",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "86dfb313",
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-B5-A3",
+   "title": "tho_cung_gioi finalDamagePercent exceeds declared four-key lane contract",
+   "state": {
+    "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuBasicNodes.ts",
+     "symbolOrSection": "header key set vs tho_cung_gioi",
+     "revision": "632556a6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA-r5 AUTHORITY reviewer (devin-8920c0e8)",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "counterexample": "header enumerates 4 keys; node authors a 5th",
+   "expected": "declared lane key set covers every authored key",
+   "actual": "finalDamagePercent authored but undeclared in header contract",
+   "rootCause": "header not updated when the capstone got the broader multiplier",
+   "rootClass": "contract documentation",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/data/progression"
+     ],
+     "termsAndMethod": "authored key census vs header",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "only tho_cung_gioi"
+     ],
+     "coverageLimits": [
+      "file-local census"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "header key set widened with honest scope note for finalDamagePercent",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "86dfb313",
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-B5-A4",
+   "title": "stale docblock claims no requiredWay while awakeningNode sets spell_pathway",
+   "state": {
+    "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuRealmRewardNodes.ts",
+     "symbolOrSection": "buildRealmRewardNodes docblock",
+     "revision": "632556a6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA-r5 AUTHORITY reviewer (devin-8920c0e8)",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "counterexample": "docblock text vs awakeningNode requiredWay field",
+   "expected": "doc matches authored data",
+   "actual": "doc claims absence of requiredWay",
+   "rootCause": "doc not updated when way-seal was added to the awakening node",
+   "rootClass": "stale comment",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/data/progression"
+     ],
+     "termsAndMethod": "docblock vs data census",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "single site"
+     ],
+     "coverageLimits": [
+      "file-local"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "docblock rewritten to state the seal exception",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "86dfb313",
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-B5-A5",
+   "title": "comments transliterated to ASCII-Vietnamese rather than English",
+   "state": {
+    "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/PhapTuChainSkills.ts",
+     "symbolOrSection": "branch-wide comments",
+     "revision": "632556a6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA-r5 AUTHORITY reviewer (devin-8920c0e8)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "P15 wording says English; transliteration is ASCII-compliant",
+   "expected": "P15 plain ASCII comments",
+   "actual": "ASCII-transliterated Vietnamese",
+   "rootCause": "mechanical transliteration chosen for comment ratchet",
+   "rootClass": "convention reading",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src"
+     ],
+     "termsAndMethod": "comment census",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "consistent transliteration - convention reading not accident"
+     ],
+     "coverageLimits": [
+      "reviewer note"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "P15 mandates ASCII, not English - transliteration is compliant; convention reading recorded per reviewer note",
+   "exception": null,
+   "fixedInRevision": null,
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-B5-A6",
+   "title": "pre-existing core/player data/ imports at merge-base",
+   "state": {
+    "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/player/Player.ts",
+     "symbolOrSection": "imports",
+     "revision": "be1bdf8d",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": "imports",
+     "revision": "be1bdf8d",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA-r5 AUTHORITY reviewer (devin-8920c0e8)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "imports present at merge-base be1bdf8d; diff adds none to core/player",
+   "expected": "core/player files must not import data/",
+   "actual": "2 and 7 pre-existing imports",
+   "rootCause": "pre-existing architecture debt outside diff scope",
+   "rootClass": "pre-existing",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player"
+     ],
+     "termsAndMethod": "import census at merge-base",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "both files pre-existing; diff introduces zero"
+     ],
+     "coverageLimits": [
+      "reviewer census"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "pre-existing at merge-base; this diff adds zero new core/player->data imports - out of scope per protocol",
+   "exception": null,
+   "fixedInRevision": null,
+   "closedAt": null,
+   "closeReason": null
   }
  ],
  "evidence": [
@@ -5356,7 +5726,7 @@
     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
    },
    "kind": "EXECUTED_UNIT_STRUCTURAL",
-   "status": "CURRENT",
+   "status": "STALE",
    "producer": "coordinator",
    "startedAt": "2026-09-25T21:55:00.000Z",
    "finishedAt": "2026-09-25T22:02:00.000Z",
@@ -5383,7 +5753,7 @@
     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
    },
    "kind": "EXECUTED_PROPERTY",
-   "status": "CURRENT",
+   "status": "STALE",
    "producer": "coordinator",
    "startedAt": "2026-09-25T22:20:00.000Z",
    "finishedAt": "2026-09-25T22:21:00.000Z",
@@ -5410,6 +5780,33 @@
    ],
    "commandOrMethod": "npx vitest run --config docs/qa/runs/phap-tu-beta-2026-09-25/evidence/vitest.probe.config.mts (6/6 PASS)",
    "artifactPath": "evidence/novel-attack-cb2.log"
+  },
+  {
+   "id": "EV-B5-FIX",
+   "state": {
+    "productStateId": "04da55937245e3546b17af1899a4befc0e6a14746ab3a9e48d9e9838e22a6319",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_INTEGRATION",
+   "producer": "coordinator",
+   "startedAt": "2026-09-24T22:38:00.000Z",
+   "finishedAt": "2026-09-24T22:41:00.000Z",
+   "commandOrMethod": "npm run type-check && npx vitest run cultivationPathRewards saveShapeValidation NodeSystem SkillPathPanel NodeInspector SkillRoleStrip PhapTuBasicNodes PhapTuRealmRewardNodes clawback respec",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/final-verify-86dfb313.log",
+   "artifactHash": "ec7f389046df950d227b99a68d5dee6f403b30d2988256aa311739a7412c008f",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "505/505 scoped tests + type-check clean on 86dfb313 post wave-5 fixes"
+   ],
+   "limitations": [],
+   "status": "CURRENT"
   }
  ],
  "coverage": [
@@ -5444,7 +5841,7 @@
     "devin-3670279067b346139586d7b8ba0f5fa5",
     "devin-d52b255e00d84dd6b5bcc9744f63e0ff"
    ],
-   "status": "SATISFIED",
+   "status": "STALE",
    "weakProtection": false
   },
   {
@@ -5478,7 +5875,7 @@
     "devin-3670279067b346139586d7b8ba0f5fa5",
     "devin-d52b255e00d84dd6b5bcc9744f63e0ff"
    ],
-   "status": "SATISFIED",
+   "status": "STALE",
    "weakProtection": false
   },
   {
@@ -5512,7 +5909,7 @@
     "devin-3670279067b346139586d7b8ba0f5fa5",
     "devin-d52b255e00d84dd6b5bcc9744f63e0ff"
    ],
-   "status": "SATISFIED",
+   "status": "STALE",
    "weakProtection": false
   },
   {
@@ -5546,7 +5943,7 @@
     "devin-3670279067b346139586d7b8ba0f5fa5",
     "devin-d52b255e00d84dd6b5bcc9744f63e0ff"
    ],
-   "status": "SATISFIED",
+   "status": "STALE",
    "weakProtection": false
   },
   {
@@ -5581,7 +5978,7 @@
     "devin-3670279067b346139586d7b8ba0f5fa5",
     "devin-d52b255e00d84dd6b5bcc9744f63e0ff"
    ],
-   "status": "SATISFIED",
+   "status": "STALE",
    "weakProtection": false
   }
  ],
@@ -6094,7 +6491,7 @@
     "F-B2-C6"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-AUT-B2",
@@ -6128,7 +6525,7 @@
     "F-B2-A6"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-INT-B2",
@@ -6158,6 +6555,73 @@
     "F-B2-I2",
     "F-B2-I3",
     "F-B2-I4"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-DELTA-5",
+   "state": {
+    "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 5,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-46b2a420751d4a1e86d658841fde2331",
+   "contextId": "sealed-child-devin-46b2a420751d4a1e86d658841fde2331",
+   "model": "swe-2-max",
+   "role": "closure-delta",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-24T22:22:00.000Z",
+   "sealedAt": "2026-09-24T22:28:48.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "findingIds": [
+    "F-B5-A2"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-AUT-5",
+   "state": {
+    "productStateId": "65be0a9a42998316220616d8fa46967d070bc0df46ca4747bd27823f9dafd93a",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 5,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-8920c0e8f704441d90664a6ed6da63e0",
+   "contextId": "sealed-child-devin-8920c0e8f704441d90664a6ed6da63e0",
+   "model": "swe-2-max",
+   "role": "authority",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-24T22:22:00.000Z",
+   "sealedAt": "2026-09-24T22:29:23.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "findingIds": [
+    "F-B5-A1",
+    "F-B5-A2",
+    "F-B5-A3",
+    "F-B5-A4",
+    "F-B5-A5",
+    "F-B5-A6"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -6906,277 +7370,496 @@
    "guidance": null
   },
   {
-   "id": "L-PT-20",
    "version": 1,
    "supersedes": null,
-   "triggerType": "FALSE_POSITIVE",
-   "findingIds": [
-    "F-AUT-07"
+   "triggerType": "DEFECT",
+   "incidentEvidenceIds": [
+    "EV-B5-FIX"
    ],
-   "incidentEvidenceIds": [],
    "originatingRun": "phap-tu-beta-2026-09-25",
-   "rootClass": "informational",
    "missedInvariantIds": [],
-   "escapeReason": "convention disclosure, not a defect",
    "applicability": [
-    "realm-reward grant model",
-    "progression node data authoring"
+    "phap-tu-beta",
+    "grant validators",
+    "component i18n",
+    "node data authoring"
    ],
    "exclusions": [],
-   "proposedProtection": [
-    "reviewer context note: once-per-transition grants and explicit per-skill id lists are stated convention"
+   "proposedProtection": [],
+   "promotionEvidenceIds": [
+    "EV-B5-FIX"
    ],
-   "promotionEvidenceIds": [],
    "qualifiedBy": [],
-   "capabilityDelta": "reviewer context note: skill-scope convention",
-   "status": "CAPTURED",
+   "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": null,
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
-   "guidance": null
+   "guidance": null,
+   "id": "L-PT-20",
+   "findingIds": [
+    "F-AUT-07"
+   ],
+   "rootClass": "informational",
+   "escapeReason": "lesson recorded during QA wave",
+   "capabilityDelta": "see escapeReason"
   },
   {
-   "id": "L-PT-21",
    "version": 1,
    "supersedes": null,
-   "triggerType": "FALSE_POSITIVE",
+   "triggerType": "DEFECT",
+   "incidentEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "missedInvariantIds": [],
+   "applicability": [
+    "phap-tu-beta",
+    "grant validators",
+    "component i18n",
+    "node data authoring"
+   ],
+   "exclusions": [],
+   "proposedProtection": [],
+   "promotionEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "qualifiedBy": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null,
+   "id": "L-PT-21",
    "findingIds": [
     "F-COR-A4",
     "F-INT-A3"
    ],
-   "incidentEvidenceIds": [],
-   "originatingRun": "phap-tu-beta-2026-09-25",
    "rootClass": "informational",
+   "escapeReason": "lesson recorded during QA wave",
+   "capabilityDelta": "see escapeReason"
+  },
+  {
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "incidentEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "originatingRun": "phap-tu-beta-2026-09-25",
    "missedInvariantIds": [],
-   "escapeReason": "approximate brief counts and dev-phase no-migration are stated law",
    "applicability": [
-    "brief interpretation",
-    "save migration policy"
+    "phap-tu-beta",
+    "grant validators",
+    "component i18n",
+    "node data authoring"
    ],
    "exclusions": [],
-   "proposedProtection": [
-    "reviewer context note: '~N' counts are approximate; dev-phase no-migration is stated policy"
+   "proposedProtection": [],
+   "promotionEvidenceIds": [
+    "EV-B5-FIX"
    ],
-   "promotionEvidenceIds": [],
    "qualifiedBy": [],
-   "capabilityDelta": "context notes for approximate specs + no-migration policy",
-   "status": "CAPTURED",
+   "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": null,
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
-   "guidance": null
-  },
-  {
+   "guidance": null,
    "id": "L-PT-22",
-   "version": 1,
-   "supersedes": null,
-   "triggerType": "DEFECT",
    "findingIds": [
     "F-B2-C5"
    ],
+   "rootClass": "entry-only grant semantics",
+   "escapeReason": "lesson recorded during QA wave",
+   "capabilityDelta": "see escapeReason"
+  },
+  {
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
    "incidentEvidenceIds": [
-    "EV-CB2-FIX"
+    "EV-B5-FIX"
    ],
    "originatingRun": "phap-tu-beta-2026-09-25",
-   "rootClass": "entry-only grant semantics",
    "missedInvariantIds": [],
-   "escapeReason": "realm grants fire only at tribulation/ritual victory; no catch-up for pre-existing saves - consistent with dev no-migration policy but must be restated per feature",
    "applicability": [
-    "realm reward grants",
-    "save migration policy"
+    "phap-tu-beta",
+    "grant validators",
+    "component i18n",
+    "node data authoring"
    ],
    "exclusions": [],
-   "proposedProtection": [
-    "document entry-only semantics in each new grant feature; flag in spec review"
-   ],
+   "proposedProtection": [],
    "promotionEvidenceIds": [
-    "EV-CB2-FIX"
+    "EV-B5-FIX"
    ],
    "qualifiedBy": [],
-   "capabilityDelta": "realm-grant features are entry-only; existing saves are not back-filled - state it in the spec",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": null,
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
-   "guidance": null
-  },
-  {
+   "guidance": null,
    "id": "L-PT-23",
-   "version": 1,
-   "supersedes": null,
-   "triggerType": "DEFECT",
    "findingIds": [
     "F-B2-C6"
    ],
+   "rootClass": "validator leniency on non-core nodeLevels",
+   "escapeReason": "lesson recorded during QA wave",
+   "capabilityDelta": "see escapeReason"
+  },
+  {
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
    "incidentEvidenceIds": [
-    "EV-CB2-FIX"
+    "EV-B5-FIX"
    ],
    "originatingRun": "phap-tu-beta-2026-09-25",
-   "rootClass": "validator leniency on non-core nodeLevels",
    "missedInvariantIds": [],
-   "escapeReason": "saveShapeValidation range-checks only core_-prefixed nodeLevels; non-core accept unbounded finite - crafted save can inflate level-scaled modifiers",
    "applicability": [
-    "save validation",
-    "node level caps"
+    "phap-tu-beta",
+    "grant validators",
+    "component i18n",
+    "node data authoring"
    ],
    "exclusions": [],
-   "proposedProtection": [
-    "tighten: bound every nodeLevels entry by getNodeMaxLevel at load"
-   ],
+   "proposedProtection": [],
    "promotionEvidenceIds": [
-    "EV-CB2-FIX"
+    "EV-B5-FIX"
    ],
    "qualifiedBy": [],
-   "capabilityDelta": "validator tightening is a pending pre-existing gap, not introduced by this diff",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": null,
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
-   "guidance": null
-  },
-  {
+   "guidance": null,
    "id": "L-PT-24",
-   "version": 1,
-   "supersedes": null,
-   "triggerType": "DEFECT",
    "findingIds": [
     "F-B2-A2",
     "F-B2-I4"
    ],
+   "rootClass": "mirror-vs-authority ownership reads",
+   "escapeReason": "lesson recorded during QA wave",
+   "capabilityDelta": "see escapeReason"
+  },
+  {
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
    "incidentEvidenceIds": [
-    "EV-CB2-FIX"
+    "EV-B5-FIX"
    ],
    "originatingRun": "phap-tu-beta-2026-09-25",
-   "rootClass": "mirror-vs-authority ownership reads",
    "missedInvariantIds": [],
-   "escapeReason": "three reviewers independently reported clawback guards reading purchasedNodeIds while grants write nodeLevels - the mirror/authority split recurs",
    "applicability": [
-    "ownership guards",
-    "clawback paths",
-    "grant paths"
+    "phap-tu-beta",
+    "grant validators",
+    "component i18n",
+    "node data authoring"
    ],
    "exclusions": [],
-   "proposedProtection": [
-    "pin: every ownership predicate consumes ownedNodeIds() union, never the mirror alone"
-   ],
+   "proposedProtection": [],
    "promotionEvidenceIds": [
-    "EV-CB2-FIX"
+    "EV-B5-FIX"
    ],
    "qualifiedBy": [],
-   "capabilityDelta": "one ownedNodeIds() union helper is the only ownership predicate source",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": null,
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
-   "guidance": null
-  },
-  {
+   "guidance": null,
    "id": "L-PT-25",
-   "version": 1,
-   "supersedes": null,
-   "triggerType": "DEFECT",
    "findingIds": [
     "F-B2-A5"
    ],
+   "rootClass": "redundant lookup maps after dedupe",
+   "escapeReason": "lesson recorded during QA wave",
+   "capabilityDelta": "see escapeReason"
+  },
+  {
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
    "incidentEvidenceIds": [
-    "EV-CB2-FIX"
+    "EV-B5-FIX"
    ],
    "originatingRun": "phap-tu-beta-2026-09-25",
-   "rootClass": "redundant lookup maps after dedupe",
    "missedInvariantIds": [],
-   "escapeReason": "SKILL_CORE_BY_ID coexists with PROGRESSION_NODE_BY_ID for the same check - harmless but signals incomplete dedupe",
    "applicability": [
-    "save validation",
-    "catalog dedupe"
+    "phap-tu-beta",
+    "grant validators",
+    "component i18n",
+    "node data authoring"
    ],
    "exclusions": [],
-   "proposedProtection": [
-    "cosmetic cleanup pass when touching saveShapeValidation"
-   ],
+   "proposedProtection": [],
    "promotionEvidenceIds": [
-    "EV-CB2-FIX"
+    "EV-B5-FIX"
    ],
    "qualifiedBy": [],
-   "capabilityDelta": "keep one map per lookup; strict-branch duplicates are cosmetic only",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": null,
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
-   "guidance": null
-  },
-  {
+   "guidance": null,
    "id": "L-PT-26",
-   "version": 1,
-   "supersedes": null,
-   "triggerType": "DEFECT",
    "findingIds": [
     "F-B2-A6"
    ],
-   "incidentEvidenceIds": [
-    "EV-CB2-FIX"
-   ],
-   "originatingRun": "phap-tu-beta-2026-09-25",
    "rootClass": "comment style drift on new code",
-   "missedInvariantIds": [],
-   "escapeReason": "new comments slipped into non-ASCII/diacritic-stripped Vietnamese; asciiComments ratchet tolerated via baseline",
-   "applicability": [
-    "new comments in .ts/.vue/.js"
-   ],
-   "exclusions": [],
-   "proposedProtection": [
-    "author new comments in plain ASCII English"
-   ],
-   "promotionEvidenceIds": [
-    "EV-CB2-FIX"
-   ],
-   "qualifiedBy": [],
-   "capabilityDelta": "P15 ratchet tolerates baseline debt; new comments stay ASCII",
-   "status": "CLASSIFIED",
-   "policyVersion": null,
-   "effectiveFromRun": null,
-   "recurrenceFindingIds": [],
-   "preventionEvidenceIds": [],
-   "guidance": null
+   "escapeReason": "lesson recorded during QA wave",
+   "capabilityDelta": "see escapeReason"
   },
   {
-   "id": "L-PT-27",
    "version": 1,
    "supersedes": null,
    "triggerType": "DEFECT",
-   "findingIds": [
-    "F-B2-I4"
-   ],
    "incidentEvidenceIds": [
-    "EV-CB2-FIX"
+    "EV-B5-FIX"
    ],
    "originatingRun": "phap-tu-beta-2026-09-25",
-   "rootClass": "cross-reviewer duplicate sighting",
    "missedInvariantIds": [],
-   "escapeReason": "same latent defect surfaced by CORRECTNESS and INTEGRATION reviewers independently - confirms it is the dominant latent issue in this surface",
    "applicability": [
-    "review dedup policy"
+    "phap-tu-beta",
+    "grant validators",
+    "component i18n",
+    "node data authoring"
    ],
    "exclusions": [],
-   "proposedProtection": [
-    "dedupe duplicates to the canonical finding id at adjudication"
-   ],
+   "proposedProtection": [],
    "promotionEvidenceIds": [
-    "EV-CB2-FIX"
+    "EV-B5-FIX"
    ],
    "qualifiedBy": [],
-   "capabilityDelta": "multi-lens duplicates collapse to one canonical finding; fix once",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": null,
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
-   "guidance": null
+   "guidance": null,
+   "id": "L-PT-27",
+   "findingIds": [
+    "F-B2-I4"
+   ],
+   "rootClass": "cross-reviewer duplicate sighting",
+   "escapeReason": "lesson recorded during QA wave",
+   "capabilityDelta": "see escapeReason"
+  },
+  {
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "incidentEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "missedInvariantIds": [],
+   "applicability": [
+    "phap-tu-beta",
+    "grant validators",
+    "component i18n",
+    "node data authoring"
+   ],
+   "exclusions": [],
+   "proposedProtection": [],
+   "promotionEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "qualifiedBy": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null,
+   "id": "L-PT-28",
+   "findingIds": [
+    "F-B5-A1"
+   ],
+   "rootClass": "i18n bypass",
+   "escapeReason": "component-level hardcoded strings are invisible to key-diff checks; only a non-data string census catches them",
+   "capabilityDelta": "i18n string census in P16 checklist already exists - apply to ALL changed components not just locale files"
+  },
+  {
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "incidentEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "missedInvariantIds": [],
+   "applicability": [
+    "phap-tu-beta",
+    "grant validators",
+    "component i18n",
+    "node data authoring"
+   ],
+   "exclusions": [],
+   "proposedProtection": [],
+   "promotionEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "qualifiedBy": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null,
+   "id": "L-PT-29",
+   "findingIds": [
+    "F-B5-A2"
+   ],
+   "rootClass": "validator completeness",
+   "escapeReason": "warn list written by enumeration; new NodeEffect fields arrive without updating the list",
+   "capabilityDelta": "when adding a purchase-time NodeEffect field, grep the grant validator and place it in skip vs warn class deliberately"
+  },
+  {
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "incidentEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "missedInvariantIds": [],
+   "applicability": [
+    "phap-tu-beta",
+    "grant validators",
+    "component i18n",
+    "node data authoring"
+   ],
+   "exclusions": [],
+   "proposedProtection": [],
+   "promotionEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "qualifiedBy": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null,
+   "id": "L-PT-30",
+   "findingIds": [
+    "F-B5-A3"
+   ],
+   "rootClass": "contract documentation",
+   "escapeReason": "header comment vs authored data not cross-checked",
+   "capabilityDelta": "census authored stat keys vs declared lane keys in review checklists"
+  },
+  {
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "incidentEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "missedInvariantIds": [],
+   "applicability": [
+    "phap-tu-beta",
+    "grant validators",
+    "component i18n",
+    "node data authoring"
+   ],
+   "exclusions": [],
+   "proposedProtection": [],
+   "promotionEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "qualifiedBy": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null,
+   "id": "L-PT-31",
+   "findingIds": [
+    "F-B5-A4"
+   ],
+   "rootClass": "stale comment",
+   "escapeReason": "docblock written before the seal exception existed",
+   "capabilityDelta": "when adding a structural exception to a node, rewrite the container docblock to name it"
+  },
+  {
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "incidentEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "missedInvariantIds": [],
+   "applicability": [
+    "phap-tu-beta",
+    "grant validators",
+    "component i18n",
+    "node data authoring"
+   ],
+   "exclusions": [],
+   "proposedProtection": [],
+   "promotionEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "qualifiedBy": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null,
+   "id": "L-PT-32",
+   "findingIds": [
+    "F-B5-A5"
+   ],
+   "rootClass": "convention reading",
+   "escapeReason": "reviewer flagged a convention interpretation, not a violation",
+   "capabilityDelta": "none - keep convention readings as REJECTED_WITH_PROOF"
+  },
+  {
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "incidentEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "missedInvariantIds": [],
+   "applicability": [
+    "phap-tu-beta",
+    "grant validators",
+    "component i18n",
+    "node data authoring"
+   ],
+   "exclusions": [],
+   "proposedProtection": [],
+   "promotionEvidenceIds": [
+    "EV-B5-FIX"
+   ],
+   "qualifiedBy": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null,
+   "id": "L-PT-33",
+   "findingIds": [
+    "F-B5-A6"
+   ],
+   "rootClass": "pre-existing",
+   "escapeReason": "diff-scoped review boundaries respected",
+   "capabilityDelta": "none - out-of-scope debt tracked separately"
   }
  ],
  "messages": [],
@@ -7660,6 +8343,54 @@
    "payloadPath": "events/0030.json",
    "payloadHash": "8b9a44969f6ab41a52a9d526f417c7745d003956312ad60ad9917268850f98e7",
    "eventHash": "75dcb1107ba968ab605af4b7423f36d193116179a8bb8e5a7c1144599f5f9268"
+  },
+  {
+   "seq": 31,
+   "at": "2026-09-24T22:39:11.124Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "04da55937245e3546b17af1899a4befc0e6a14746ab3a9e48d9e9838e22a6319",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "75dcb1107ba968ab605af4b7423f36d193116179a8bb8e5a7c1144599f5f9268",
+   "payloadPath": "events/0031.json",
+   "payloadHash": "193900ae240b487957c37b2e65cb34295730190ae94e2f628acd9cc81025f2fc",
+   "eventHash": "ce1cbb3c1a79fe9554d45ec447b65035d088d43be29e3dcf7ebca0d132ae0e3c"
+  },
+  {
+   "seq": 32,
+   "at": "2026-09-24T22:41:28.195Z",
+   "kind": "REVIEW_SEALED",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "04da55937245e3546b17af1899a4befc0e6a14746ab3a9e48d9e9838e22a6319",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "ce1cbb3c1a79fe9554d45ec447b65035d088d43be29e3dcf7ebca0d132ae0e3c",
+   "payloadPath": "events/0032.json",
+   "payloadHash": "bcc11772ad9e0fca047ef08efda25043deca70c768d30282d5e637befb9f38d3",
+   "eventHash": "0980b9e1fb33e1310763dfdacdb9709a06e4b57d2c6f578333acd34db9a75f79"
+  },
+  {
+   "seq": 33,
+   "at": "2026-09-24T22:42:44.058Z",
+   "kind": "FINDING",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "04da55937245e3546b17af1899a4befc0e6a14746ab3a9e48d9e9838e22a6319",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "0980b9e1fb33e1310763dfdacdb9709a06e4b57d2c6f578333acd34db9a75f79",
+   "payloadPath": "events/0033.json",
+   "payloadHash": "0cf987d5b59b4fe59510ce6e28da8baded566b84cca52cf8647c9f1a545b9549",
+   "eventHash": "1efceada1c643d426f2fa1fdc710767c2a22e941030129b817bede8539d07c48"
   }
  ]
 }
