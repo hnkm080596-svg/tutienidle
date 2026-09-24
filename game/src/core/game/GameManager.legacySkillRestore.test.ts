@@ -9,6 +9,7 @@ import { HERO_LANE_INDEX } from '../battle/BattleLane'
 import type { GameSave } from '../../services/save/SaveSystem'
 import type { Skill } from '../skill/Skill'
 import { createDefaultBodyProgression } from '../realm/body/BodyChapter'
+import { createDefaultHiddenPerfection } from '../realm/hidden/HiddenPerfection'
 
 // Bug report 2026-08-26: "nhan vat khong gay sat thuong nua du van tele".
 // Root cause - save nhan vat CU (development build, khong migration) luu
@@ -23,12 +24,15 @@ function buildLegacySave(skills: Skill[]): GameSave {
       // M-QI-07 (v74) - the minimal legacy-skill fixture still declares
       // the required physique field at the current version.
       physiqueGrade: 'pham',
+      // v82 union - fixture carries every required current-version
+      // slice: mortal creation pick + learned entry + canonical core
+      // grant (three-channel write, CREATION) and the hiddenPerfection
+      // lineage slice (HIDDEN-A).
       realmId: 'mortal',
-      // v82 - a mortal save must carry the creation pick + its learned
-      // skills entry + the canonical core grant (three-channel write).
       mortalBasicSkillId: 'tram',
       nodeLevels: { core_tram: 1 },
       purchasedNodeIds: ['core_tram'],
+      hiddenPerfection: createDefaultHiddenPerfection(),
     },
     techniques: [],
     skills,

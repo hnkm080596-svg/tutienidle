@@ -1,0 +1,4 @@
+{
+  "summary": "HIDDEN-A QA_FIXED_POINT_REACHED: sealed review @2ed9cc44 SEAL + delta re-review @91eed584 SEAL = clean pair on final head (bd49651f docs-only after). All actionable findings (F1-F7, OBS-1, OBS-4) repaired; OBS-2/3/5/6/7 deferred with recorded reasons. Independence evidence complete. PR #22 merge-ready.",
+  "refs": []
+}

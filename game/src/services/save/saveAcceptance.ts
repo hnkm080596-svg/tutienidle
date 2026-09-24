@@ -25,7 +25,7 @@ import { ITEM_QUALITY_ORDER } from '../../core/item/ItemQuality'
 import { getActiveWayDefinition } from '../../core/player/CultivationPathKit'
 import { mortalBoundaryContractViolation } from '../../core/skill/MortalPrecursors'
 import { assertBodyProgressionIntegrity } from '../../core/realm/body/BodyProgressionSystem'
-import { assertBodyPerfectionIntegrity } from '../../core/realm/body/BodyPerfection'
+import { assertHiddenPerfectionIntegrity } from '../../core/realm/hidden/HiddenPerfection'
 import type { ProductionSiteDefinition } from '../../core/production/ProductionTypes'
 import type { GameSave } from './saveTypes'
 
@@ -222,12 +222,13 @@ export function assertSaveAcceptable(save: GameSave, catalogs: SaveAcceptanceCat
   // hard-fail seam as the technique-holder contract above.
   assertBodyProgressionIntegrity(save.player)
 
-  // M-F-BODY-PERFECTION (v80) - the perfection slice's semantic
-  // integrity runs as the LAST preflight check too: authored-family
-  // membership, perfected-realm keys, subset + realm-cap rules (see
-  // core/realm/body/BodyPerfection). Same hard-fail seam - reject
+  // Hidden Perfection Lineage (v82) - the lineage slice's semantic
+  // integrity runs as the LAST preflight check too: strict-prefix
+  // completed list, two-view agreement (completed<->bodyCompleted),
+  // authored-realm keys, frozen/exclusive pairs (see
+  // core/realm/hidden/HiddenPerfection). Same hard-fail seam - reject
   // before any owner mutation.
-  assertBodyPerfectionIntegrity(save.player)
+  assertHiddenPerfectionIntegrity(save.player)
 }
 
 /**

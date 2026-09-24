@@ -7,11 +7,13 @@ import {
 import type { PlayerData } from '../player/Player'
 import type { Stats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
-import type { FoundationType } from '../breakthrough/FoundationType'
 import type { EventBus } from '../events/EventBus'
 import type { TribulationOutcomeResult } from './TribulationOutcomeService'
 import { EntityVitalsSystem } from '../combat/EntityVitalsSystem'
-import { resolveKienCoGrade } from '../../data/breakthrough/BreakthroughGrades'
+import {
+  resolveKienCoGrade,
+  type ResolvableKienCoGrade,
+} from '../../data/breakthrough/BreakthroughGrades'
 import {
   getTribulationChapters,
   GRADE_DIFFICULTY_MULTIPLIER,
@@ -19,6 +21,10 @@ import {
 } from '../../data/tribulation/TribulationChapters'
 import { TRIBULATION_MIND_QUESTIONS, type MindQuestion } from '../../data/tribulation/TribulationMindQuestions'
 import { isRealmTransitionEnabled } from '../realm/ReleasePolicy'
+import {
+  resolveBreakthroughType,
+  type BreakthroughType,
+} from '../realm/hidden/HiddenLineage'
 import { getTribulationIntensityMultiplier } from '../talent/TalentEffects'
 
 // TribulationDirector (spec dot-pha-loi-kiep S5) - runtime loi kiep
@@ -50,7 +56,17 @@ export interface CommittedTribulationOutcome {
   readonly attemptId: number
   readonly outcome: 'victory' | 'defeat'
   readonly targetRealmId: string
-  readonly grade: FoundationType
+  readonly grade: ResolvableKienCoGrade
+  /**
+   * Hidden Perfection Lineage (2026-09-23): the breakthrough TYPE
+   * resolved at start() - 'normal' or 'hidden'. The victory path
+   * records hiddenBreakthroughRealmIds / closes the lineage on this
+   * flag; for foundation targets a hidden commit also lands grade
+   * 'great_dao' on this record (the ordinary grade stays on `grade`
+   * for difficulty - the override happens at the outcome service's
+   * facts read, not here).
+   */
+  readonly breakthroughType: BreakthroughType
   /** Bound once by the outcome service; presentation renders it. */
   receipt: TribulationOutcomeResult | null
   /**
@@ -65,7 +81,10 @@ export interface CommittedTribulationOutcome {
 export interface ActiveTribulationState {
   targetRealmId: string
   /** Bac Kien Co da chot luc bam dot pha (chi tu dau tu truoc kiep). */
-  grade: FoundationType
+  grade: ResolvableKienCoGrade
+  /** Breakthrough TYPE snapshot at start() - the commit records this,
+   * not a re-evaluated predicate. */
+  breakthroughType: BreakthroughType
   chapterIndex: number
   chaptersTotal: number
   chapterName: string
@@ -93,7 +112,10 @@ export interface TribulationRuntimeSave {
     attemptId: number
     outcome: 'victory' | 'defeat'
     targetRealmId: string
-    grade: FoundationType
+    // Ordinary grade only - 'great_dao' rides breakthroughType, never
+    // this slot (mirror of TribulationSaveSlice in saveTypes.ts).
+    grade: ResolvableKienCoGrade
+    breakthroughType: BreakthroughType
     receipt: TribulationOutcomeResult | null
     settlementError: boolean
   }
@@ -210,6 +232,9 @@ export class TribulationDirector {
     }
 
     const grade = resolveKienCoGrade(player, hasTrucCoDan)
+    // Hidden Perfection Lineage: the breakthrough TYPE resolves ONCE
+    // at start - mid-run state changes never re-qualify an attempt.
+    const breakthroughType = resolveBreakthroughType(player)
     const maxHp = Math.max(1, playerStats.maxHp)
 
     this.chapters = chapters
@@ -241,6 +266,7 @@ export class TribulationDirector {
     this.active = {
       targetRealmId,
       grade,
+      breakthroughType,
       chapterIndex: 0,
       chaptersTotal: chapters.length,
       chapterName: chapters[0]!.name,
@@ -583,6 +609,7 @@ export class TribulationDirector {
       outcome,
       targetRealmId: active.targetRealmId,
       grade: active.grade,
+      breakthroughType: active.breakthroughType,
       receipt: null,
       settlementError: null,
     }
@@ -740,6 +767,7 @@ export class TribulationDirector {
         outcome: this.committedOutcome.outcome,
         targetRealmId: this.committedOutcome.targetRealmId,
         grade: this.committedOutcome.grade,
+        breakthroughType: this.committedOutcome.breakthroughType,
         receipt: this.committedOutcome.receipt,
         settlementError: this.committedOutcome.settlementError !== null,
       }
@@ -779,6 +807,7 @@ export class TribulationDirector {
         outcome: slice.committedOutcome.outcome,
         targetRealmId: slice.committedOutcome.targetRealmId,
         grade: slice.committedOutcome.grade,
+        breakthroughType: slice.committedOutcome.breakthroughType,
         receipt: slice.committedOutcome.receipt,
         settlementError: slice.committedOutcome.settlementError
           ? new Error('restored tribulation settlement error')

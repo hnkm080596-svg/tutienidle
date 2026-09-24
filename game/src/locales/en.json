@@ -527,7 +527,6 @@
         "stateLocked": "Sealed",
         "cost": "{count} Meridian Pills",
         "realmGate": "{realm} floor {level}",
-        "auxGate": "requires Heaven-Earth Bridge",
         "pageLocked": "Unlocks at {realm}",
         "invest": "Open Meridian",
         "owned": "owned {count}",
@@ -548,13 +547,6 @@
         "invest": "Circulate",
         "owned": "Dharma Physique Essence owned {count}",
         "complete": "Dai Chu Thien circulation complete."
-      },
-      "bodyPerfection": {
-        "title": "Body Perfection",
-        "statePerfected": "Perfected",
-        "statePending": "Not perfected",
-        "owned": "owned {count}",
-        "perfect": "Perfect"
       }
     },
     "settings": {
@@ -1020,10 +1012,6 @@
         "title": "★ {realm} ★",
         "body": "You have passed the Tribulation and formally entered {realm}."
       },
-      "defeatGreatDao": {
-        "title": "Great Dao Foreclosed",
-        "body": "Defiance has failed — the Great Dao opportunity is forever closed. The next attempt caps at Heavenly Dao."
-      },
       "defeat": {
         "title": "Tribulation Failed",
         "body": "Tribulation wounds linger — recover, then try again."
@@ -1236,8 +1224,7 @@
   },
   "notifications": {
     "skillLevelUp": "{name} reached level {level}",
-    "skillLevelUpMulti": "{name} gained {gained} levels, reaching level {level}",
-    "bodyRealmPerfected": "Body Perfection: {realm}"
+    "skillLevelUpMulti": "{name} gained {gained} levels, reaching level {level}"
   },
   "save": {
     "conflict": "Save was changed by another session.",

@@ -9,10 +9,10 @@ import { createDefaultPlayer } from '../player/Player'
 import { GameManager } from './GameManager'
 
 // P7-M5 - the unified body-progression op dispatches through each
-// chapter's currency descriptor: tinh_hoa_pham_the is a MATERIAL,
-// thong_mach_dan is a type:'material' PILL (pillBag), and the final
-// meridian's aux (thien_dia_chi_kieu) is a material CHECK (not consumed
-// by the current contract).
+// chapter's currency descriptor: tinh_hoa_pham_the is a MATERIAL and
+// thong_mach_dan is a type:'material' PILL (pillBag). The ninth
+// meridian and its thien_dia_chi_kieu aux check retired 2026-09-23
+// (hidden-perfection-lineage sec.19) - every meridian opens on pills.
 describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
   function managerWithCatalogs(): GameManager {
     const manager = new GameManager()
@@ -55,30 +55,24 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
     expect(player.modifiers.some(m => m.id.startsWith('bat-mach:'))).toBe(true)
   })
 
-  it('aux check: the final meridian requires thien_dia_chi_kieu in materialBag (checked, not consumed)', () => {
+  it('the final meridian opens on pills alone - no material gate (sec.19: ninth meridian + aux retired)', () => {
     const manager = managerWithCatalogs()
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
     player.realmLevel = 18
-    // Coherent prerequisite chain (C2C-59/64): 8 opened meridians
+    // Coherent prerequisite chain (C2C-59/64): 7 opened meridians
     // requires completed refinement + the mirrored grade.
     player.physiqueGrade = 'bao'
     player.bodyProgression.body_refinement.completedTiers = 6
     manager.setActivePlayer(player)
-    player.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 8).map(m => m.id)
+    player.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 7).map(m => m.id)
     manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 40)
 
-    // No aux -> gated, nothing debited.
-    expect(manager.realmAdvanceOps.investBodyChapter(player, 'meridian')).toBe(0)
-    expect(manager.pillBag.getAmount('thong_mach_dan')).toBe(40)
-
-    manager.materialBag.add(manager.materialRegistry.get('thien_dia_chi_kieu'), 1)
-
-    expect(manager.realmAdvanceOps.investBodyChapter(player, 'meridian')).toBe(40)
-    expect(player.bodyProgression.meridian.openedIds).toHaveLength(9)
-    expect(manager.pillBag.getAmount('thong_mach_dan')).toBe(0)
-    // Aux is a possession check, not consumed (preserved contract).
-    expect(manager.materialBag.getAmount('thien_dia_chi_kieu')).toBe(1)
+    // doc_mach costs 30 thong_mach_dan and no longer asks for any
+    // material aux - the invest goes through on pills alone.
+    expect(manager.realmAdvanceOps.investBodyChapter(player, 'meridian')).toBe(30)
+    expect(player.bodyProgression.meridian.openedIds).toHaveLength(8)
+    expect(manager.pillBag.getAmount('thong_mach_dan')).toBe(10)
   })
 
   it('gated invest returns 0 without touching either bag', () => {
@@ -139,7 +133,7 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
     locked.realmLevel = 1
     locked.physiqueGrade = 'bao'
     locked.bodyProgression.body_refinement.completedTiers = 6
-    locked.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 8).map(m => m.id)
+    locked.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 7).map(m => m.id)
     manager.setActivePlayer(locked)
     expect(manager.realmAdvanceOps.investBodyChapter(locked, 'zhou_tian')).toBe(0)
     expect(manager.materialBag.getAmount('tinh_hoa_phap_the')).toBe(48)
@@ -148,7 +142,7 @@ describe('GameManagerRealmAdvanceOps.investBodyChapter', () => {
 })
 
 // M-F-CHU-THIEN - a coherent post-refinement state: 6/6 refinement
-// (+ mirrored bao grade) and all nine meridians open.
+// (+ mirrored bao grade) and all eight meridians open.
 function completeBodyPrerequisites(player: ReturnType<typeof createDefaultPlayer>): void {
   player.physiqueGrade = 'bao'
   player.bodyProgression.body_refinement.completedTiers = 6

@@ -39,7 +39,6 @@ function setupManager() {
   player.realmLevel = 12
   player.bodyProgression.body_refinement.completedTiers = 6
   player.physiqueGrade = 'bao'
-  player.mortalPerfectionAchieved = true
   player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
   gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
   player.realmLevel = 18
@@ -73,6 +72,7 @@ describe('TribulationDirector - restoreRuntime replacement leak (QA evidence)', 
         outcome: 'victory',
         targetRealmId: 'foundation_establishment',
         grade: 'heaven',
+        breakthroughType: 'normal',
         receipt: null,
         settlementError: false,
       },

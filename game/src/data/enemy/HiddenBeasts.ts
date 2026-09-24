@@ -1,10 +1,12 @@
 import { defineEnemy } from '../../core/enemy/Enemy'
 import type { Enemy } from '../../core/enemy/Enemy'
 
-// Quái ẩn (spec dot-pha-loi-kiep §4.1c) — Huyết Mông KHÔNG thuộc
-// enemyPool stage nào; chỉ trà trộn pool spawn qua HiddenBeastSystem
-// khi cửa sổ 1000 kill mở (xem core/game/HiddenBeastSystem.ts).
-// Rơi Thiên Địa Chi Kiều 5% — nguyên liệu Kỳ Kinh (đường 9 Bát Mạch).
+// Quai an (spec dot-pha-loi-kiep sec.4.1c) - Huyet Mong KHONG thuoc
+// enemyPool stage nao; chi tra tron pool spawn qua HiddenBeastSystem
+// khi cua so 1000 kill mo (xem core/game/HiddenBeastSystem.ts).
+// 2026-09-23: Thien Dia Chi Kieu signature line retired with the
+// material (hidden-perfection-lineage sec.19); the Pham catch-up
+// signature survives untouched.
 export const HIDDEN_BEASTS: Enemy[] = [
   defineEnemy({
     id: 'huyet_mong',
@@ -30,8 +32,6 @@ export const HIDDEN_BEASTS: Enemy[] = [
       spiritStone: 150,
     },
     signatureDrops: [
-      // Thiên Địa Chi Kiều 5% — nguyên liệu Kỳ Kinh (đường 9 Bát Mạch).
-      { kind: 'material', itemId: 'thien_dia_chi_kieu', amount: { min: 1, max: 1 }, chance: 0.05 },
       // M-QI-08 documented exception (spec sec.3.5): hand-placed Pham
       // catch-up bonus OUTSIDE the band authority - the band map
       // governs stage tables, not signature drops. Stays pham even

@@ -10,13 +10,13 @@
 //
 // Ordered journey (spec sec.3): A (seeded LQ side + admission) -> B
 // (tribulation + two-phase settle/drain) -> E.1 (floor_1 first clear at
-// TC L1) -> D.1 + D.2 (refinement completion + meridian 9/9 at TC L1)
+// TC L1) -> D.1 + D.2 (refinement completion + meridian 8/8 at TC L1)
 // -> C + E.2 interleaved (level ladder + floors 2..10 clearing at each
 // level gate, honest Phap farming riding the already-cleared floor_1)
 // with G's midpoint checkpoint INSIDE the interleave at TC L9 /
 // circulation 180 / floors 1-9 -> continuation on the RESTORED session
 // (L10 -> floor_10 boss -> L18 -> 360/Dai) -> F (ceiling) -> I
-// (first-class surfaces) -> K (perfection negative leg) -> L
+// (first-class surfaces) -> K (hidden-lineage negative leg) -> L
 // (hidden-channel deferral). Leg J (determinism) and the grade ladder
 // run as seeded per-grade fixtures beside the ordered run.
 //
@@ -44,7 +44,7 @@
 //   player.baseStats survival/clearing profile (FIXTURE_LQ_STATS)
 //   one equipped weapon instance (equipment resync observability)
 //   pills: truc_co_dan x1, thong_mach_dan x133
-//   materials: thien_dia_chi_kieu x1, tinh_hoa_pham_the topped up in
+//   materials: tinh_hoa_pham_the topped up in
 //     MAX_STACK_AMOUNT chunks through honest invests
 //   body_refinement tiers 1-3 invested at qi_refining before the press
 //   grade fixtures: meridian/physique/stat/flag writes per grade row
@@ -55,32 +55,13 @@
 
 import { ARTIFACT_UNLOCK_REALM_ID } from '../../artifact/ArtifactDomain'
 import { isArtifactDomainUnlocked } from '../../artifact/ArtifactProgression'
-import {
-  BODY_PERFECTION_REALM_MATERIALS,
-  bodyPerfectionMaterialIds,
-} from '../../../data/realm/BodyPerfection'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../../data/realm/BodyRefinement'
-import { ENEMIES } from '../../../data/enemy/Enemies'
-import { FAMILY_DROP_TABLES } from '../../../data/drop/FamilyDropTables'
-import { STAGE_DROP_TABLES } from '../../../data/drop/StageDropTables'
 import {
   HIDDEN_MATERIAL_CHANNELS,
   VISIBLE_GRANT_SOURCES,
-  channelEmittedMaterialIds,
-  hiddenBeastChannels,
 } from '../../../data/drop/HiddenMaterialChannels'
-import { QUESTS } from '../../../data/quest/quests'
-import { buildings } from '../../../data/building/buildings'
-import { LUYEN_KHI_TINH_HOA_ID } from '../../equipment/TinhHoaMaterial'
-import { COMPANION_PULL_TOKEN_ID } from '../../game/GameManagerCompanionOps'
-import {
-  SPIRIT_STONE_MATERIAL_ID,
-  SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID,
-  SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
-} from '../../material/SpiritStoneMaterial'
 import {
   MERIDIANS,
-  THIEN_DIA_CHI_KIEU_MATERIAL_ID,
   THONG_MACH_DAN_MATERIAL_ID,
 } from '../../../data/realm/Meridians'
 import { ZHOU_TIAN_CURRENCY_MATERIAL_ID } from '../../../data/realm/ZhouTian'
@@ -88,20 +69,13 @@ import { asBaseStats } from '../../stats/StatBlock'
 import { buildGameSave } from '../../../services/save/SaveSystem'
 import type { GameSave } from '../../../services/save/saveTypes'
 import {
-  canPerfectBodyRealm,
-  getBodyPerfectionMultiplier,
-  getBodyPerfectionRealmProgress,
-  isBodyPerfectionRevealed,
-} from '../../realm/body/BodyPerfection'
-import {
   collectBodyBaseStatDeltas,
-  collectEffectiveBodyBaseStatDeltas,
   getBodyRefinementCompletedTiers,
   getOpenedMeridianCount,
 } from '../../realm/body/BodyProgressionSystem'
+import { completeHiddenBody } from '../../realm/hidden/HiddenLineage'
 import { createPinia, setActivePinia } from 'pinia'
-import { getMainStatCap } from '../../stats/StatCap'
-import { MAIN_STAT_KEYS } from '../../stats/StatTypes'
+import { getEffectiveMainStatCap } from '../../stats/StatCap'
 import { getRequiredCultivation } from '../../realm/realmSystem'
 import { isCompanionDomainUnlocked } from '../../companion/CompanionAvailability'
 import { isCompanionPullPoolEnabled } from '../../realm/ReleasePolicy'
@@ -193,7 +167,6 @@ function seedLqSideState(s: EarlyGameSession): void {
   // persisted pre-TC progression slice).
   feedRefinementTo(s, 3)
   s.holdPill(THONG_MACH_DAN_MATERIAL_ID, 133)
-  s.holdMaterial(THIEN_DIA_CHI_KIEU_MATERIAL_ID, 1)
 }
 
 /** Pumps essence into the refinement chapter until `tiers` complete.
@@ -381,7 +354,6 @@ describe('TrucCoJourney - ordered journey', () => {
       expect(s.holdPill(TRUC_CO_DAN_ID, 1)).toBe(1)
       feedRefinementTo(s, 3)
       s.holdPill(THONG_MACH_DAN_MATERIAL_ID, 133)
-      s.holdMaterial(THIEN_DIA_CHI_KIEU_MATERIAL_ID, 1)
 
       // Leg H (inline): capacity-0 zhou_tian arm at the seeded pre-TC
       // state (realmId qi_refining - circulation does not exist below
@@ -550,12 +522,8 @@ describe('TrucCoJourney - ordered journey', () => {
       // (b) Leg H (inline): meridian invest rejects at 5/6 - nothing
       // debits, no page-lock half-state.
       const pillsAtReject = s.pillAmount(THONG_MACH_DAN_MATERIAL_ID)
-      const auxAtReject = s.materialAmount(THIEN_DIA_CHI_KIEU_MATERIAL_ID)
       expect(s.investChapter('meridian')).toBe(0)
       expect(s.pillAmount(THONG_MACH_DAN_MATERIAL_ID)).toBe(pillsAtReject)
-      expect(s.materialAmount(THIEN_DIA_CHI_KIEU_MATERIAL_ID)).toBe(
-        auxAtReject,
-      )
       expect(s.player.bodyProgression.meridian.openedIds).toEqual([])
 
       // Substitution probe inside D.1: drain the pham stack, hold ONLY
@@ -590,9 +558,6 @@ describe('TrucCoJourney - ordered journey', () => {
       expect(authoredDeltas.maxHp).toBe(100)
       expect(authoredDeltas.hpRegenPerTurn).toBe(3.5)
       expect(authoredDeltas.vitality).toBe(2)
-      expect(collectEffectiveBodyBaseStatDeltas(s.player)).toEqual(
-        authoredDeltas,
-      )
 
       // (c) Leg H (inline): zhou_tian rejects after refinement commits
       // but before the first meridian opens - no Phap debit.
@@ -605,8 +570,9 @@ describe('TrucCoJourney - ordered journey', () => {
       )
       expect(s.player.bodyProgression.zhou_tian.circulation).toBe(0)
 
-      // (d) Meridian strict-prefix 9/9 - pace gates lifted at TC,
-      // sequential constraint + the aux gate remain.
+      // (d) Meridian strict-prefix 8/8 - pace gates lifted at TC;
+      // the sequential constraint remains (the 9th meridian retired
+      // with Thien Dia Chi Kieu, 2026-09-23 hidden-perfection-lineage).
       const expectedOpened: string[] = []
       for (const meridian of MERIDIANS) {
         expect(s.investChapter('meridian')).toBe(meridian.thongMachDanCost)
@@ -615,11 +581,11 @@ describe('TrucCoJourney - ordered journey', () => {
           expectedOpened,
         )
       }
-      expect(getOpenedMeridianCount(s.player)).toBe(9)
-      // All 133 pills debited; the aux material GATES ky_kinh - held,
-      // not consumed.
-      expect(s.pillAmount(THONG_MACH_DAN_MATERIAL_ID)).toBe(0)
-      expect(s.materialAmount(THIEN_DIA_CHI_KIEU_MATERIAL_ID)).toBe(1)
+      expect(getOpenedMeridianCount(s.player)).toBe(8)
+      // Only the authored pill total debited.
+      expect(s.pillAmount(THONG_MACH_DAN_MATERIAL_ID)).toBe(
+        133 - MERIDIANS.reduce((sum, m) => sum + m.thongMachDanCost, 0),
+      )
 
       // bat-mach:* emissions live on the meridian modifier channel
       // ONLY; intrinsic baseStats remain untouched.
@@ -962,32 +928,17 @@ describe('TrucCoJourney - ordered journey', () => {
         s = resumed2
       }
 
-      // ===== Leg K - Body-Perfection negative leg (A14) =====
-      // The registry is the designed empty state of this wave: the
-      // pipeline exists, produces NO false perfection, and the
-      // persisted slice round-trips untouched (parity proven above -
-      // bodyPerfection fields ride the same checkpoint). The positive
-      // discovery -> perfection -> commit flow is the named expected
-      // deferral (notes doc) until >=1 authored material is reachable.
-      for (const realmId of Object.keys(BODY_PERFECTION_REALM_MATERIALS)) {
-        expect(bodyPerfectionMaterialIds(realmId)).toEqual([])
-        expect(
-          canPerfectBodyRealm(s.player, realmId, (materialId) =>
-            s.gameManager.materialBag.getAmount(materialId),
-          ),
-        ).toBe(false)
-        expect(
-          s.gameManager.realmAdvanceOps.perfectBodyRealm(
-            s.player,
-            realmId,
-          ),
-        ).toBe(false)
-      }
-      expect(s.player.bodyPerfection.discoveredMaterials).toEqual([])
-      expect(s.player.bodyPerfection.perfectedRealmIds).toEqual([])
-      expect(isBodyPerfectionRevealed(s.player)).toBe(false)
-      expect(getBodyPerfectionRealmProgress(s.player)).toEqual([])
-      expect(getBodyPerfectionMultiplier(s.player)).toBe(1)
+      // ===== Leg K - hidden-lineage negative leg =====
+      // 2026-09-23 hidden-perfection-lineage: the journey's initiation
+      // ritual ran as a NORMAL breakthrough (no mortal hidden body,
+      // no Lv18 investment) - a successful Normal commit permanently
+      // closes the lineage on the departing realm. No body completed,
+      // no realm discovered, no hidden breakthrough entered.
+      expect(s.player.hiddenPerfection.lineageActive).toBe(false)
+      expect(s.player.hiddenPerfection.lineageClosedByRealmId).toBe('mortal')
+      expect(s.player.hiddenPerfection.completedHiddenBodyRealmIds).toEqual([])
+      expect(s.player.hiddenPerfection.hiddenBreakthroughRealmIds).toEqual([])
+      expect(s.player.hiddenPerfection.realms).toEqual({})
 
       // ===== Leg L - hidden-channel deferral (A13 resolution) =====
       // BODY-HIDDEN landed shape: exactly one qi_refining-band
@@ -1096,7 +1047,6 @@ describe('TrucCoJourney - grade ladder', () => {
 
   const openMeridians = (s: EarlyGameSession, count: number): void => {
     s.holdPill(THONG_MACH_DAN_MATERIAL_ID, 133)
-    s.holdMaterial(THIEN_DIA_CHI_KIEU_MATERIAL_ID, 1)
     feedRefinementTo(s, 6)
     for (const meridian of MERIDIANS.slice(0, count)) {
       expect(s.investChapter('meridian')).toBe(meridian.thongMachDanCost)
@@ -1126,38 +1076,51 @@ describe('TrucCoJourney - grade ladder', () => {
     ).toBe('heaven')
   })
 
-  it('great_dao grade: full great-dao input set', () => {
-    expect(
-      runGradedTribulation((s) => {
-        s.holdPill(TRUC_CO_DAN_ID, 1)
-        openMeridians(s, 9)
-        s.player.mortalPerfectionAchieved = true
-        s.player.selectedTalentIds = ['pham_cot']
-        const cap = getMainStatCap('qi_refining')
-        for (const key of MAIN_STAT_KEYS) {
-          s.player.baseStats[key] = cap
-        }
-      }, 18),
-    ).toBe('great_dao')
-  })
+  it('hidden breakthrough at the full input set: hidden type + heaven quality grade (Đại Đạo rides the outcome channel)', () => {
+    // Design 2026-09-23: lineage open + strict-prefix bodies complete
+    // + Lv18 + all-5 at the EFFECTIVE cap (36 = floor(30 x 1.2) with
+    // two bodies) + chapter cleared + ordinary gate met -> hidden.
+    // The lineage survives only when the MORTAL exit also committed
+    // hidden: mortal hidden body complete + Lv18 + all-5 at the
+    // mortal effective cap (floor(10 x 1.1) = 11) BEFORE the ritual.
+    vi.useFakeTimers()
+    const s = makeJourneySession()
+    s.player.realmLevel = 18
+    s.player.completedStageIds = [...MORTAL_STAGE_IDS]
+    s.player.baseStats = asBaseStats({
+      ...s.player.baseStats,
+      strength: 11,
+      dexterity: 11,
+      intelligence: 11,
+      attunement: 11,
+      vitality: 11,
+    })
+    s.player.selectedTalentIds = ['pham_cot']
+    expect(completeHiddenBody(s.player, 'mortal')).toBeDefined()
+    expect(s.performRitual('spell', 'spell_pathway')).toBe(true)
+    s.player.realmLevel = 18
+    s.player.completedStageIds = [...MORTAL_STAGE_IDS, ...QI_STAGE_IDS]
+    s.player.baseStats = asBaseStats({
+      ...s.player.baseStats,
+      ...FIXTURE_LQ_STATS,
+    })
+    s.holdPill(TRUC_CO_DAN_ID, 1)
+    openMeridians(s, 8)
+    expect(completeHiddenBody(s.player, 'qi_refining')).toBeDefined()
+    const cap = getEffectiveMainStatCap(s.player)
+    expect(cap).toBe(36)
+    for (const key of ['strength', 'dexterity', 'intelligence', 'attunement', 'vitality'] as const) {
+      s.player.baseStats[key] = cap
+    }
 
-  it('capped grade: full great-dao inputs + lost opportunity -> heaven', () => {
     expect(
-      runGradedTribulation((s) => {
-        // The POSITIVE Great Dao input set (mirrors the great_dao
-        // test above) - only the opportunity flag differs, so the
-        // cap is attributed to greatDaoOpportunityLost alone.
-        s.holdPill(TRUC_CO_DAN_ID, 1)
-        openMeridians(s, 9)
-        s.player.mortalPerfectionAchieved = true
-        s.player.selectedTalentIds = ['pham_cot']
-        const cap = getMainStatCap('qi_refining')
-        for (const key of MAIN_STAT_KEYS) {
-          s.player.baseStats[key] = cap
-        }
-        s.player.greatDaoOpportunityLost = true
-      }, 18),
-    ).toBe('heaven')
+      s.gameManager.realmAdvanceOps.canTriggerBreakthrough(s.player),
+    ).toBe(true)
+    expect(s.runTribulation('foundation_establishment')).toBe('victory')
+    const committed = s.gameManager.tribulationDirector.getCommittedOutcome()
+    expect(committed?.grade).toBe('heaven')
+    expect(committed?.breakthroughType).toBe('hidden')
+    vi.useRealTimers()
   })
 })
 
@@ -1187,182 +1150,20 @@ describe('TrucCoJourney - save integrity', () => {
   })
 })
 
-// ===== Integration sweep - perfection-material channel census =====
-// Step 3's testable census: every authored perfection material is
-// enumerated against the full acquisition lattice (perfection registry
-// -> hidden-beast/grotto emitted sets -> visible-grant exemptions ->
-// exclusion from normal stage/family/non-channel-signature routes incl.
-// guaranteed/pool equivalents). Clean results are reported, not
-// skipped.
-describe('TrucCoJourney - integration sweep census', () => {
-  const signatureMaterialIdsOf = (enemyId: string): readonly string[] => {
-    const enemy = ENEMIES.find((e) => e.id === enemyId)
-    return (
-      enemy?.signatureDrops
-        ?.filter((d) => d.kind === 'material' && d.itemId !== undefined)
-        .map((d) => d.itemId!) ?? []
-    )
-  }
-
-  const channelEnemyIds = new Set(
-    hiddenBeastChannels().map((c) => c.enemyId),
-  )
-
-  // The leak oracle is wider than the emitted-set oracle: a perfection
-  // material id under ANY drop kind on a non-channel route is a
-  // bypass (a kind-mismatched row would still leak the id).
-  const nonChannelSignatureItemIds = (): Set<string> => {
-    const ids = new Set<string>()
-    for (const enemy of ENEMIES) {
-      if (channelEnemyIds.has(enemy.id)) continue
-      for (const drop of enemy.signatureDrops ?? []) {
-        if (drop.itemId !== undefined) ids.add(drop.itemId)
-      }
-    }
-    return ids
-  }
-
-  const channelEmittedIds = (): Set<string> => {
-    const ids = new Set<string>()
-    for (const channel of HIDDEN_MATERIAL_CHANNELS) {
-      for (const id of channelEmittedMaterialIds(
-        channel,
-        signatureMaterialIdsOf,
-      )) {
-        ids.add(id)
-      }
-    }
-    return ids
-  }
-
-  const tableItemIds = (): Set<string> => {
-    const ids = new Set<string>()
-    for (const table of [...STAGE_DROP_TABLES, ...FAMILY_DROP_TABLES]) {
-      for (const entry of [...table.guaranteed, ...table.pool]) {
-        if (entry.itemId !== undefined) {
-          ids.add(entry.itemId)
-        }
-      }
-    }
-    return ids
-  }
-
-  it('every authored perfection material resolves to exactly one acquisition authority', () => {
-    const authored = Object.values(BODY_PERFECTION_REALM_MATERIALS).flat()
-    const emitted = channelEmittedIds()
-    const granted = new Set(VISIBLE_GRANT_SOURCES.map((g) => g.materialId))
-    const signature = nonChannelSignatureItemIds()
-    const tables = tableItemIds()
-
-    // Route-less requirements: authored but unreachable via channel or
-    // visible grant.
-    const routeLess = authored.filter(
-      (id) => !emitted.has(id) && !granted.has(id),
-    )
-    // Duplicate authorities: reachable through both a channel AND a
-    // visible grant, emitted by TWO hidden channels (beast/grotto each
-    // count as an acquisition authority of their own), or granted by
-    // TWO visible-grant ROWS (kind+grantId - a Set(materialId) would
-    // collapse quest+quest / quest+building duplicates).
-    const channelEmissionCount = new Map<string, number>()
-    for (const channel of HIDDEN_MATERIAL_CHANNELS) {
-      for (const id of channelEmittedMaterialIds(
-        channel,
-        signatureMaterialIdsOf,
-      )) {
-        channelEmissionCount.set(id, (channelEmissionCount.get(id) ?? 0) + 1)
-      }
-    }
-    const visibleGrantCount = new Map<string, number>()
-    for (const row of VISIBLE_GRANT_SOURCES) {
-      visibleGrantCount.set(
-        row.materialId,
-        (visibleGrantCount.get(row.materialId) ?? 0) + 1,
-      )
-    }
-    const duplicated = authored.filter(
-      (id) =>
-        (emitted.has(id) && granted.has(id)) ||
-        (channelEmissionCount.get(id) ?? 0) > 1 ||
-        (visibleGrantCount.get(id) ?? 0) > 1,
-    )
-    // Loot bypasses: a perfection material on a normal stage/family
-    // table or a NON-channel enemy's signatureDrops (incl.
-    // guaranteed/pool equivalents those authorities represent).
-    const bypass = authored.filter(
-      (id) => tables.has(id) || signature.has(id),
-    )
-
-    // EVERY other material-producing grant surface a writer can reach
-    // (verified materialBag.add sites): quest reward.itemDrops,
-    // building producesMaterialId, equipment dissolve output,
-    // companion pull token, reward-ops spirit stones. A perfection
-    // material delivered by one WITHOUT a matching VISIBLE_GRANT_SOURCES
-    // row (kind+grantId+materialId) is an UNDECLARED acquisition
-    // authority - the registry is the declaration point, not a hint.
-    const declaredGrantKeys = new Set(
-      VISIBLE_GRANT_SOURCES.map(
-        (g) => `${g.kind}:${g.grantId}:${g.materialId}`,
-      ),
-    )
-    const questGrantRows = QUESTS.flatMap((quest) =>
-      (quest.reward.itemDrops ?? [])
-        .filter((drop) => drop.kind === 'material')
-        .map((drop) => ({
-          materialId: drop.itemId!,
-          grantKey: `quest:${quest.id}:${drop.itemId}`,
-        })),
-    )
-    const buildingGrantRows = buildings
-      .filter((b) => b.producesMaterialId !== undefined)
-      .map((b) => ({
-        materialId: b.producesMaterialId!,
-        grantKey: `building:${b.id}:${b.producesMaterialId}`,
-      }))
-    const grantRows = [...questGrantRows, ...buildingGrantRows]
-    // Fixed-output surfaces with no registrable kind today.
-    const fixedSurfaceIds = new Set([
-      LUYEN_KHI_TINH_HOA_ID,
-      COMPANION_PULL_TOKEN_ID,
-      SPIRIT_STONE_MATERIAL_ID,
-      SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
-      SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID,
-    ])
-    const undeclared = authored.filter(
-      (id) =>
-        fixedSurfaceIds.has(id) ||
-        grantRows.some(
-          (row) =>
-            row.materialId === id && !declaredGrantKeys.has(row.grantKey),
-        ),
-    )
-    // Registry hygiene: every declared row must resolve to a real
-    // grant that actually delivers the material (the registry's own
-    // contract - quest itemDrops contains it / building produces it).
-    const unresolvedGrants = VISIBLE_GRANT_SOURCES.filter((row) => {
-      if (row.kind === 'quest') {
-        const quest = QUESTS.find((q) => q.id === row.grantId)
-        return !(quest?.reward.itemDrops ?? []).some(
-          (drop) => drop.kind === 'material' && drop.itemId === row.materialId,
-        )
-      }
-      const building = buildings.find((b) => b.id === row.grantId)
-      return building?.producesMaterialId !== row.materialId
-    })
-
-    // The registry is empty on this wave -> the census reports clean;
-    // the enumeration still ran over every landed channel + table +
-    // grant surface. Guard the enumeration itself: an empty input set
-    // would let the result asserts pass vacuously.
-    expect(tables.size).toBeGreaterThan(0)
-    expect(emitted.size).toBeGreaterThan(0)
-    expect(signature.size).toBeGreaterThan(0)
-    expect(grantRows.length).toBeGreaterThan(0)
-
-    expect(routeLess).toEqual([])
-    expect(duplicated).toEqual([])
-    expect(bypass).toEqual([])
-    expect(undeclared).toEqual([])
-    expect(unresolvedGrants).toEqual([])
+// ===== Integration sweep - hidden acquisition channel census =====
+// The per-material authority census rode the perfection-material table
+// retired with BodyPerfection (2026-09-23 hidden-perfection-lineage
+// SS19). The surviving generic invariants live in
+// data/drop/HiddenMaterialChannels.test.ts.
+describe('TrucCoJourney - integration sweep census (retired with BodyPerfection, kept as a placeholder note)', () => {
+  it('the acquisition-authority census moved to HiddenMaterialChannels.test.ts', () => {
+    // 2026-09-23 hidden-perfection-lineage SS19: the per-material
+    // authority census rode the perfection-material table that retired
+    // wholesale. The surviving generic invariants (channel refs
+    // resolve, hidden-only launch surface) live in
+    // data/drop/HiddenMaterialChannels.test.ts; B/C re-author their
+    // own acquisition-material registries on top.
+    expect(HIDDEN_MATERIAL_CHANNELS.length).toBeGreaterThan(0)
   })
+
 })

@@ -1,0 +1,4 @@
+{
+  "summary": "Sealed impl review on head 762d456c (independence axis, fresh context): FINDINGS - F1 HIGH persisted tribulation committedOutcome drops breakthroughType (typecheck red + hidden victory settles non-hidden after save->reload); F2 MED fixtures still write retired mortalPerfectionAchieved; F3 MED frozen contract diverges spec sec.2.3/6.3 (freeze scope, no gates, no integrity arm, missing isHiddenRealmFrozen); F4 LOW spec/code drift (NHAP_DAO 0.21 vs spec 0.30, renamed reads); F5 LOW grantRealmPassive bypasses wasHiddenBreakthrough; F6 LOW ~60 mojibake comment fragments + 3 non-ASCII docblock lines; F7 LOW vacuous retired-surface tests.",
+  "refs": []
+}
