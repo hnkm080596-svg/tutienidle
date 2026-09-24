@@ -38,6 +38,7 @@ line number below is `src/`-relative under `game/` unless stated.
 | Draft shape | `CharacterCreationService.ts:11-18` — `CharacterAttribute` union, `CharacterAttributes`, `CharacterCreationDraft {name, talentIds, attributes}` | RESHAPE — `attributes` out; `mortalBasicSkillId` in (§3 D1) |
 | Draft validation | `CharacterCreationService.ts:52-55` — integer/nonneg/sum==5 check + `'invalid_attributes'` code (:20) | REPLACE with pick-membership validation (§3 D1) |
 | Service impls | `MockCharacterCreationService.ts` (all draft-shaped, no own attribute logic); `SupabaseCharacterCreationService.ts:65` — sends `p_attributes` in `create_character` RPC | RESHAPE — RPC body loses `p_attributes`, gains the pick param (§3 D6, open question Q-D) |
+| Server function | `supabase/migrations/202608240001_online_auth_character.sql:139-167` — `create_character` signature `(uuid,uuid,text,text[],jsonb,jsonb,integer)`: `p_attributes` validated (:156-159 sum=5), inserted to `base_attributes` NOT NULL (:44,:162), grants signature-scoped (:191,:196) | RESHAPE IN-REPO (INT-A-2) — the function is owned by this repo: add `mortal_basic_skill_id` column + `p_mortal_basic_skill_id` param, drop the v81 overload explicitly (`create or replace` alone leaves it callable), `base_attributes` gets the fixed 1/1/1/1/1 literal. Deploy order: same window as the client |
 | Service consumers | `CharacterCreationServiceFactory.ts` (singleton select), `CharacterCreationScreen.vue` (sole UI caller) | unchanged surface |
 
 ### 1b. Creation UI layer
@@ -67,6 +68,9 @@ line number below is `src/`-relative under `game/` unless stated.
 | Measurement profiles (production .ts, NOT test files) | `PerfectionEconomy.ts:32-35` + `EssenceSubstitutionEconomy.ts:48-51` — `MEASUREMENT_PROFILE: EarlyGameCreationProfile` literals carrying `attributes: {strength:2, vitality:3}` | RESHAPE — swap `attributes` → `mortalBasicSkillId: 'tram'` (compile breaks otherwise under the reshaped profile) |
 | Boundary test absent-default pin | `core/game/GameManagerSaveRestore.boundary.test.ts:1019-1045` — v71 describe pins 'restores a mortal save carrying no pick (absent = tram default)' | REWRITE → v82 describe: absent rejected, non-precursor rejected, unlearned rejected, learned pick accepted ×3 |
 | Stale test title | `core/game/GameManager.theTuAnE2E.test.ts:330` — 'creation-granted tram' | RETITLE — wording only |
+| Sim profile stat values (INT-A-4) | every sim `MEASUREMENT_PROFILE`/journey profile carried `attributes:{strength:2,vitality:3}` → chars at 3/4 STR/VIT pre-ruling, 1/1/1/1/1 post | RE-PIN RULE — conversion is NOT value-neutral: pinned margins (MortalChapterJourney:48,54,:66,:91-96; TrucCoJourney; economy verdicts) may drift on weaker characters; re-pin to new measured values only after confirming the flip is expected weaker-start drift |
+| Restore-fixture sweep (INT-A-1) | ~24 test files reach `restoreFromSave`/`restoreGameSession` with pickless mortal fixtures (`baseSave()` skills:[] :50-69, `createIncomingSave()` bootRestore:24-26, `validSave()` shape, `createDefaultPlayer()` call sites in saveLoadRoundTrip/conformance/r81qa + GameManager r7qa/r9qa/theTuE2E/bodyPhysique/questLifecycle/workerCapacity/refine/wash/overflow/legacySkill/autoFarm/dissolveUnifiedEssence + sim journeys MortalChapterJourney:222/TrucCoJourney:751/EarlyGameSession:587) | SWEEP — v82 mortal-required makes every pickless fixture red; each factory gains pick + learned skill entry |
+| Sim profile stat values (INT-A-4) | every sim `MEASUREMENT_PROFILE`/journey profile carried `attributes:{strength:2,vitality:3}` → chars at 3/4 STR/VIT pre-ruling, 1/1/1/1/1 post | RE-PIN RULE — conversion is NOT value-neutral: pinned margins (MortalChapterJourney:48,54,:66,:91-96; TrucCoJourney; economy verdicts) may drift on weaker characters; re-pin to new measured values only after confirming the flip is expected weaker-start drift |
 
 ### 1d. The pick authority (P7-M4 contract — already landed)
 
@@ -129,12 +133,12 @@ mechanism"). No migration (QI-S policy).
 |---|---|---|
 | `services/character/CharacterCreationService.test.ts` | `validDraft.attributes` (:4-8), attribute rejection cases (:19-23) | rewrite draft cases → pick validation |
 | `components/onboarding/CharacterCreationScreen.test.ts` | 3-step walk + `CHARACTER_CREATION_ATTRIBUTE_POINTS` budget assert | rewrite → unified-screen + skill choice |
-| `tests/e2e/helpers.ts:36-65` `createCharacterThroughUi` | step 3 = click each `creation-attribute-plus-*` | step 3 = pick a `creation-skill-*` card |
+| `tests/e2e/helpers.ts:36-65` `createCharacterThroughUi` | step 3 = click each `creation-attribute-plus-*`; stepper nav testids `creation-continue-name`/`creation-confirm-talent` (:41,:48) | REWRITE (INT-A-6) — nav testids die with the stepper; helper drops both continue/confirm clicks + the attribute loop, picks a `creation-skill-*` card, clicks `creation-finish` |
 | `tests/e2e/accessibility.spec.ts:55-79` | keyboard flow incl. attribute plus buttons + finish-disabled-until-0-points | rewrite final section for skill choice |
-| `tests/e2e/boot-fresh.spec.ts:29` | creation screen visible | likely unchanged |
+| `tests/e2e/boot-fresh.spec.ts:29` | creation screen visible + asserts `Bước 1 / 3` stepper text | REWRITE (INT-A-5) — stepper counter dies with D5 |
 | 17 e2e specs via `createCharacterThroughUi` (create-to-combat, cultivation-path-ritual ×7 calls, turn-combat-hud, save-reload, ink-wash-ui, etc.) | inherit helper change | no per-spec edits unless a spec asserts attributes |
 | Sim fixtures `PINNED`/`PINNED_PROFILE` | `EarlyGameSession.test.ts:16`, `MortalChapterJourney.test.ts:19`, `QrProbe.test.ts:6`, `RngLeakProbe.test.ts:6`, `TrucCoJourney.test.ts:118` — all carry `attributes` | add `mortalBasicSkillId`, drop `attributes` |
-| `services/save/saveShapeValidation.test.ts:2260-2312` | v71 pick contract ("absent = tram default" :2308) | update absent-case for v82 mortal-required rule |
+| `services/save/saveShapeValidation.test.ts:2260-2312` | v71 pick contract ("absent = tram default" :2308); file's own :2260 comment states the shape layer stays pick-agnostic by design | KEEP absent-case as the shape-layer pin (INT-A-9) — the absent→reject flip belongs to restore preflight (boundary.test row in §1c2), not shape validation |
 | `services/save/SaveSystem.bootRestore.test.ts:84-86` | invalid pick rejection | keep + add mortal-missing-pick rejection |
 | `core/game/GameManagerSaveRestore.boundary.test.ts:1019-1045` | v71 absent=tram default pin | rewrite → v82 describe (4 rejection/accept cases) |
 | `core/game/GameManager.theTuAnE2E.test.ts:330` | 'creation-granted tram' title | retitle (wording only) |
@@ -147,6 +151,12 @@ mechanism"). No migration (QI-S policy).
 ### 1i. Docs referencing the old contract
 
 - `docs/online-login-cloud-save-plan.md:44` ("Phân bổ 5 điểm"), :207, :213 —
+- `docs/ui-components.md` — creation screen described as 3-step stepper (INT-A-8)
+- `docs/specs/m-f-journey-spec.md:100` — quotes the PINNED `MEASUREMENT_PROFILE`
+  verbatim incl. `attributes:{strength:2,vitality:3}` (INT-A-8)
+- `docs/superpowers/plans/2026-09-23-early-progression-loop-closure.md:63,210` —
+  creation-attributes fixture rules (INT-A-8)
+- `docs/p7/ui-inventory.md` — creation UI surface inventory (INT-A-8)
   stale once this lands; update the creation-flow bullets.
 - `docs/ui-components.md:839` ("Wizard 3 bước tạo nhân vật"), :841 (stepper
   spec), :871 (stepper mention) — stale once this lands; update to the unified
@@ -220,16 +230,21 @@ footer: inline summary + finish. Finish enabled iff name valid ∧ 1 talent ∧
 1 skill picked; `finish()` runs the unchanged `validateDraft → createCharacter
 → emit('complete')` chain. i18n: `attributeStep`/`attributes`/`step`/
 `stepperAria` keys removed; `skillStep` block added (`kicker`, `title`,
-`selected`, per-skill name/description come from skill data — NOT i18n keys,
-matching talent-card convention which renders `talent.name`/`description`
-from data). Back button returns to auth from the single screen.
+`selected`, `description` — per-skill name/description come from skill data,
+NOT i18n keys, matching the talent-card convention which renders
+`talent.name`/`description` from data). Footer copy gets named homes at
+`onboarding.creation.finish`/`creating`/`errors.rollFailed`/`back` —
+`attributeStep.*` (incl. its finish/creating/summary*/rechoose* strings) is
+wholesale deleted (INT-A-7). Back button returns to auth from the single screen.
 
 **D6 — Supabase RPC.** `create_character` body: drop `p_attributes`, send
 `p_mortal_basic_skill_id`. The RPC lives server-side — deployment ordering is a
 real dependency (REV-A-02): the migration drops the OLD overload, so an
 un-migrated server rejects the new body AND a migrated server rejects old
 clients — client and migration must ship in the same deploy window. Open
-question Q-D tracks who applies the migration.
+Q-D RESOLVED — the function lives in-repo
+(`supabase/migrations/202608240001_online_auth_character.sql`); same-window
+deploy order required (INT-A-2).
 
 **D7 — Out of scope (explicit).** `attributePoints`/`allocateAttributePoint`/
 `CharacterPanel` spend UI (progression-time); `SkillRoleStrip` repick
@@ -267,7 +282,7 @@ question Q-A for the coordinator to confirm.
   REQUIRED on mortal saves (fail-closed; the ruling's "no silent tram" read as
   contract). Alternative: keep it optional and rely on the runtime default —
   weaker, leaves a silent-tram hole for hand-edited/edge saves.
-- **Q-D.** `create_character` RPC param change (`p_attributes` → pick param):
+- **Q-D (RESOLVED — in-repo migration file, INT-A-2).** `create_character` RPC param change (`p_attributes` → pick param):
   who owns the Supabase function, and does it need a deploy-order dance? The
   client diff is written either way; this only gates the cloud path.
 - **Q-E.** `huy_quyen` display name drift: `CoreSkills` 'Huy Quyền' (ruling's

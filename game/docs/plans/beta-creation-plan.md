@@ -16,6 +16,10 @@ Full evidence tables in spec §1. Condensed edit map:
 - `services/character/CharacterCreationService.ts` — contract reshape.
 - `services/character/MockCharacterCreationService.ts` — type follows.
 - `services/character/SupabaseCharacterCreationService.ts` — RPC body params.
+- `supabase/migrations/202608240001_online_auth_character.sql` — the
+  `create_character` function lives in-repo (INT-A-2): `mortal_basic_skill_id`
+  column + `p_mortal_basic_skill_id` param, v81 overload dropped explicitly,
+  `base_attributes` ← fixed 1/1/1/1/1 literal.
 - `components/onboarding/CharacterCreationScreen.vue` — single-screen rework.
 - `src/locales/vi.json` + `en.json` — `onboarding.creation` key reshape.
 - `core/game/EarlyGameBootstrap.ts` — profile + bootstrap signatures.
@@ -31,7 +35,9 @@ Full evidence tables in spec §1. Condensed edit map:
 - `core/simulation/earlygame/EssenceSubstitutionEconomy.ts` —
   `MEASUREMENT_PROFILE` literal.
 - Tests: listed in spec §1h (incl. the boundary-test v82 describe + the
-  `theTuAnE2E` title retitle added by spec/plan review).
+  `theTuAnE2E` title retitle added by spec/plan review) + the ~24-file
+  restore-fixture sweep (INT-A-1 — every pickless mortal fixture factory gains
+  pick + learned skill entry).
 - Docs: `docs/online-login-cloud-save-plan.md` + `docs/ui-components.md`
   creation-flow bullets (REV-A-F2 catch).
 
