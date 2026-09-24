@@ -748,14 +748,35 @@ export function importSaveRaw(raw: string): boolean {
   // Chuẩn bị handoff TRƯỚC khi đụng backup/save chính. Nếu storage không
   // nhận được marker thì import thất bại nguyên vẹn thay vì thay save nhưng
   // làm mất counter. Exact normalizedRaw ràng buộc marker với đúng payload.
+  // Snapshot the prior marker first: a pending marker written by the
+  // other seam (remote pull writes it after its save) belongs to the
+  // CURRENT save, so a later abort must restore it.
+  const handoffKey = resolveImportHandoffKey()
+  let priorMarker: string | null = null
+  try {
+    priorMarker = localStorage.getItem(handoffKey)
+  } catch {
+    // getItem failure means the prep below fails too - abort intact.
+  }
+  const restorePriorMarker = (): void => {
+    try {
+      if (priorMarker === null) {
+        localStorage.removeItem(handoffKey)
+      } else {
+        localStorage.setItem(handoffKey, priorMarker)
+      }
+    } catch {
+      // Restore fail = same degraded channel a marker read failure produces.
+    }
+  }
   try {
     if (discardedEquipmentCount > 0) {
       localStorage.setItem(
-        resolveImportHandoffKey(),
+        handoffKey,
         JSON.stringify({ normalizedRaw, discardedEquipmentCount }),
       )
     } else {
-      localStorage.removeItem(resolveImportHandoffKey())
+      localStorage.removeItem(handoffKey)
     }
   } catch {
     return false
@@ -765,12 +786,14 @@ export function importSaveRaw(raw: string): boolean {
   // the only save without a written safety net is the unsafe outcome,
   // so a failed backup returns false with SAVE_KEY untouched.
   if (!backupCurrentSave()) {
+    restorePriorMarker()
     return false
   }
 
   try {
     localStorage.setItem(resolveSaveKey(), normalizedRaw)
   } catch {
+    restorePriorMarker()
     return false
   }
 

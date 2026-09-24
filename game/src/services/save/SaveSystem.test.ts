@@ -522,4 +522,48 @@ describe('importSaveRaw', () => {
     expect(getRawSave()).toBe(VALID_RAW)
     expect(localStorage.getItem(BACKUP_KEY)).toBe(previousBackup)
   })
+
+  it('abort sau marker-prep phải restore marker pending của seam khác (AUTH-02)', () => {
+    // A pending marker written by the pull seam is bound to the CURRENT
+    // save; a failed import must not destroy it.
+    const priorMarker = JSON.stringify({
+      normalizedRaw: VALID_RAW,
+      discardedEquipmentCount: 2,
+    })
+
+    localStorage.setItem(SAVE_KEY, VALID_RAW)
+    localStorage.setItem(IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY, priorMarker)
+
+    const setItem = localStorage.setItem.bind(localStorage)
+
+    vi.spyOn(localStorage, 'setItem').mockImplementation((key, value) => {
+      if (key === BACKUP_KEY) {
+        throw new DOMException('quota', 'QuotaExceededError')
+      }
+
+      setItem(key, value)
+    })
+
+    // 0-discard import => marker prep removes the key, then backup fails.
+    expect(importSaveRaw(JSON.stringify(validSave()))).toBe(false)
+    expect(localStorage.getItem(IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY)).toBe(priorMarker)
+    expect(getRawSave()).toBe(VALID_RAW)
+  })
+
+  it('abort khi không có prior marker thì channel vẫn trống sau restore', () => {
+    localStorage.setItem(SAVE_KEY, VALID_RAW)
+
+    const setItem = localStorage.setItem.bind(localStorage)
+
+    vi.spyOn(localStorage, 'setItem').mockImplementation((key, value) => {
+      if (key === BACKUP_KEY) {
+        throw new DOMException('quota', 'QuotaExceededError')
+      }
+
+      setItem(key, value)
+    })
+
+    expect(importSaveRaw(JSON.stringify(validSave()))).toBe(false)
+    expect(localStorage.getItem(IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY)).toBeNull()
+  })
 })
