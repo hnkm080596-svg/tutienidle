@@ -65,3 +65,23 @@ as defensive symmetry with a comment. No Medium+.
 - Validator field-correlation (corrupted-save surface) — Nit.
 - `active:false + completed<36` corrupt payload renders "Done" with no button — same
   fail-closed surface as above — Nit.
+
+## Sealed-review chain (post-report)
+
+Independent blind reviewers on the frozen head — none had access to this doc.
+
+- **Closure reviewer** (criticals re-verification, aa8d1c0e): **SEAL** — sparse-pity
+  closure adversarially confirmed (only writers = install + dense push; crafted nulls
+  rejected at every acceptance seam); eligible-undiscovered closure confirmed at
+  mechanism level. 3 lows recorded (reachability caveat until HIDDEN-B mechanics land,
+  crafted-save validator correlations — deferred class).
+- **Clean-A round** (aa8d1c0e): CORRECTNESS **SEAL** (10 verified claims, 597 tests) /
+  INTEGRATION **SEAL** (all seams traced, 597 tests) / AUTHORITY **SEAL** (all authored
+  pins vs design sec.11/12 + spec sec.8.3).
+- **Clean-B round** (8d830bec, comment-only delta): CORRECTNESS **SEAL** (594 tests) /
+  AUTHORITY **SEAL** / INTEGRATION in flight.
+- Deferred carried over: crafted-save mechanic-vs-record coherence; frozen-record
+  `active=true` residue (inert — all consumers gate on `frozen`); `stepCost` shows
+  "Giá bước kế: 0" at capacity cap (UI polish, BETA-BALANCE); missing literal
+  NON-CANONICAL token; bare `Math.random` convention (rng-injectability sweep
+  candidate); EN 'Reverse Circulation' gloss.
