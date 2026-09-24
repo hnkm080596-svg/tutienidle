@@ -342,6 +342,71 @@
         "coordinator-run; full-suite re-run pending"
       ],
       "status": "CURRENT"
+    },
+    {
+      "id": "EV-FULL-VERIFY-01",
+      "state": {
+        "productStateId": "5dc6fbb8d9a50e38a49bbaec1fae7e03681b37993df3e8d40de3abd239951833",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coordinator",
+      "startedAt": "2026-09-25T16:50:12Z",
+      "finishedAt": "2026-09-25T16:56:10Z",
+      "commandOrMethod": "npx vitest run (full suite, 779 files) post ascii+allowlist fixes",
+      "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/phap-tu-basic/game",
+      "exitCode": 1,
+      "result": "PASS",
+      "artifactPath": "evidence/vitest-full-2.log",
+      "artifactHash": "4f2644f319cafd9aeac942a35b945c1bca160e949170dfabd2ac44a7d5eaa471",
+      "inputPaths": [],
+      "inputEvidenceIds": [
+        "EV-COORD-GATES-01"
+      ],
+      "invariantIds": [],
+      "claims": [
+        "7074 tests passed, 4 expected-fail; 2 remaining failures are dongFuBuildingPipeline + dongFuBackgroundAssets canvas/magick environment noise identical to master",
+        "asciiComments green post-fix; deadIds allowlist green post-extension; ngoDaoReaction doc_can single-test miss did NOT reproduce (flake, seeded rng, passes isolated and in this run)"
+      ],
+      "limitations": [
+        "exitCode 1 driven by the 2 env-noise files only",
+        "canvas/magick not installed in this environment"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-OCR-PASS-01",
+      "state": {
+        "productStateId": "5dc6fbb8d9a50e38a49bbaec1fae7e03681b37993df3e8d40de3abd239951833",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coordinator",
+      "startedAt": "2026-09-25T17:00:00Z",
+      "finishedAt": "2026-09-25T17:15:00Z",
+      "commandOrMethod": "ocr delegate preview --from origin/master --to HEAD + host review against resolved .opencodereview rules",
+      "cwd": "/home/ubuntu/repos/tutienidle/.agent-worktrees/phap-tu-basic",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/ocr-preview.json",
+      "artifactHash": "43a7a7c7ca3d99eae66536df7e7716f38763617d49fd108b48e03c0c4f130c07",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "previewed_files 42 / reviewed 42 / skipped 0 (coverage 100%; 11 QA-run JSON artifacts reviewed as authored content)",
+        "FINDING fixed: PhapTuRealmRewardNodes display strings were ASCII-transliterated vs the Vietnamese-diacritics data convention - restored Tinh Thong/Thuc Tinh Be The diacritics",
+        "verified: rewardOnly sealed from purchase/upgrade/tree (NodeSystem early-outs + NodeTreePanel:206); selectsSpecialization wired through purchase op + clawback clear; 5 basic VFX presets bound in CoreSkills + CombatAction union; realm lock reason names realm via getCurrentRealm + {realm} i18n in vi/en"
+      ],
+      "limitations": [
+        "delegation mode - host agent is the reviewer",
+        "OCR clean is P18 evidence only, not P5 sequential review"
+      ],
+      "status": "CURRENT"
     }
   ],
   "coverage": [
@@ -514,13 +579,13 @@
       "rootClass": "gate-removal/number-bump",
       "operator": "delete `node.rewardOnly` early-out in canPurchaseNode",
       "isolationPath": "worktree edit + revert",
-      "mutantHash": "ephemeral-in-place",
+      "mutantHash": "38d2152cace7fd9cf7e03dfe751e97f85d0b1f89f8ad0ccbe1cdc213f0561ecc",
       "expectedDetector": "PhapTuRealmRewardNodes.test.ts purchase-seal pin (1 failed)",
       "result": "KILLED_EXPECTED",
       "evidenceIds": [
         "EV-COORD-GATES-01"
       ],
-      "equivalenceReason": "",
+      "equivalenceReason": "reverted to candidate state; scoped pin re-green after revert",
       "candidateUnchanged": true
     },
     {
@@ -537,13 +602,13 @@
       "rootClass": "gate-removal/number-bump",
       "operator": "Math.max -> plain overwrite in grant leg",
       "isolationPath": "worktree edit + revert",
-      "mutantHash": "ephemeral-in-place",
+      "mutantHash": "2a2ab134b39221ae07a19b001a34e0be63730c01c612e228212c3ef84630d93a",
       "expectedDetector": "PhapTuRealmRewardNodes.test.ts no-downgrade pin (1 failed)",
       "result": "KILLED_EXPECTED",
       "evidenceIds": [
         "EV-COORD-GATES-01"
       ],
-      "equivalenceReason": "",
+      "equivalenceReason": "reverted to candidate state; scoped pin re-green after revert",
       "candidateUnchanged": true
     },
     {
@@ -560,13 +625,13 @@
       "rootClass": "gate-removal/number-bump",
       "operator": "hoa_sac_nhiet 0.02 -> 0.04/lvl (+20% > cap)",
       "isolationPath": "worktree edit + revert",
-      "mutantHash": "ephemeral-in-place",
+      "mutantHash": "4296aef80bc2bdf1f319a86db710ec9df9dedfdf5f046795976e84e9377b2ab1",
       "expectedDetector": "PhapTuBasicNodes.test.ts +10%/direction cap pin (1 failed)",
       "result": "KILLED_EXPECTED",
       "evidenceIds": [
         "EV-COORD-GATES-01"
       ],
-      "equivalenceReason": "",
+      "equivalenceReason": "reverted to candidate state; scoped pin re-green after revert",
       "candidateUnchanged": true
     },
     {
@@ -583,13 +648,13 @@
       "rootClass": "gate-removal/number-bump",
       "operator": "drop FOUNDATION prereq from capstone",
       "isolationPath": "worktree edit + revert",
-      "mutantHash": "ephemeral-in-place",
+      "mutantHash": "c376a63c34a7804d424dd6b07d1e4797382710e7c4ed61949ce455b593b771bb",
       "expectedDetector": "PhapTuBasicNodes.test.ts realm-gate pin (1 failed)",
       "result": "KILLED_EXPECTED",
       "evidenceIds": [
         "EV-COORD-GATES-01"
       ],
-      "equivalenceReason": "",
+      "equivalenceReason": "reverted to candidate state; scoped pin re-green after revert",
       "candidateUnchanged": true
     }
   ],
@@ -692,6 +757,38 @@
       "payloadPath": "events/0006.json",
       "payloadHash": "3fd48f42fa3377d70a000b0f6e907471d05768ec14c6f748a87ee9122a351254",
       "eventHash": "7f68cf2b57678c6e0518e548e2ba94f80492baa30c56388f8393060e9439acbb"
+    },
+    {
+      "seq": 7,
+      "at": "2026-09-24T17:00:41.732Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-63023",
+      "state": {
+        "productStateId": "5dc6fbb8d9a50e38a49bbaec1fae7e03681b37993df3e8d40de3abd239951833",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "7f68cf2b57678c6e0518e548e2ba94f80492baa30c56388f8393060e9439acbb",
+      "payloadPath": "events/0007.json",
+      "payloadHash": "c87de9659c069b94f32ace00f467a0c6fba95c0d4a1cd0124689bba0200b46de",
+      "eventHash": "a5f6922fd9b815d1c6e9505f1814858f5a951c3722cb873e7ecf654c9c5f8dd6"
+    },
+    {
+      "seq": 8,
+      "at": "2026-09-24T17:05:00.905Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-63023",
+      "state": {
+        "productStateId": "5dc6fbb8d9a50e38a49bbaec1fae7e03681b37993df3e8d40de3abd239951833",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "a5f6922fd9b815d1c6e9505f1814858f5a951c3722cb873e7ecf654c9c5f8dd6",
+      "payloadPath": "events/0008.json",
+      "payloadHash": "8398e27a6f18da4a902beb7c659291d6911e152d69bf7935890adcb378c488f8",
+      "eventHash": "babe6a11b93b2dd45cea3226b344d08e67a3a7edb44f400cf360842273ad07ed"
     }
   ]
 }

@@ -43,3 +43,13 @@ Head under review: working tree on devin/1790260800-phap-tu-basic (base be1bdf8d
   full run, passes in isolation and alongside the new files; under
   watch on the re-run (deterministic seeded rng, no random excuse).
 - NodeRenderer glyph layout is presentation-only; no runtime gate.
+
+## Pipeline lesson (2026-09-25)
+
+Sealed reviewers were dispatched BEFORE the branch was pushed —
+children could not read the diff and reconstructed it from the
+coordinator's event stream instead. Verdict downgraded: line-level
+review only became possible after `git push`. Standing rule going
+forward: **push the task branch before dispatching any child
+reviewer** — an unpushed head makes the seal non-line-verifiable by
+construction.
