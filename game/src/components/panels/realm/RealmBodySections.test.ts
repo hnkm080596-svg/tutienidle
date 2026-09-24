@@ -200,6 +200,35 @@ describe('BodyRefinementSection (P7-M7)', () => {
 
     view.unmount()
   })
+
+  // AUTH-2 (spec sec.3.4): frozen hidden progress is permanently inert
+  // and must never render as an active tier.
+  it('AUTH-2: a frozen hidden record renders no active tier row', async () => {
+    const frozen = mountSection(BodyRefinementSection, (player) => {
+      player.$state.hiddenPerfection.realms['mortal'] = {
+        discovered: true,
+        bodyCompleted: false,
+        frozen: true,
+      }
+    })
+    await nextTick()
+
+    expect(frozen.container.querySelector('.body-refinement__tier--hidden')).toBeNull()
+    frozen.unmount()
+
+    // Contrast: the same record unfrozen renders the trial row.
+    const active = mountSection(BodyRefinementSection, (player) => {
+      player.$state.hiddenPerfection.realms['mortal'] = {
+        discovered: true,
+        bodyCompleted: false,
+        frozen: false,
+      }
+    })
+    await nextTick()
+
+    expect(active.container.querySelector('.body-refinement__tier--hidden')).not.toBeNull()
+    active.unmount()
+  })
 })
 
 describe('MeridianSection (P7-M7)', () => {
@@ -452,6 +481,23 @@ describe('MeridianSection (P7-M7)', () => {
 
       view.unmount()
     })
+  })
+
+  // AUTH-2 (spec sec.3.4): frozen hidden progress is permanently inert
+  // and must never render as an active diversion row.
+  it('AUTH-2: a frozen Quan The record renders no active row', async () => {
+    const frozen = mountSection(MeridianSection, (player) => {
+      player.$state.realmId = 'qi_refining'
+      player.$state.hiddenPerfection.realms['qi_refining'] = {
+        discovered: true,
+        bodyCompleted: false,
+        frozen: true,
+      }
+    })
+    await nextTick()
+
+    expect(frozen.container.querySelector('.meridian-section__row--hidden')).toBeNull()
+    frozen.unmount()
   })
 })
 

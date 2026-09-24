@@ -29,13 +29,24 @@ const progress = computed(() => {
 
   return gameManager.turnBattleOps.getStageProgress()
 })
+
+// HIDDEN-B (design sec.9.6) - while a hidden trial battle is live the
+// top bar swaps the stage-progress counter for the survival objective.
+const hiddenTrial = computed(() => {
+  stateVersion.value
+
+  return gameManager.turnBattleOps.getActiveHiddenTrial()
+})
 </script>
 
 <template>
   <div class="combat-top-bar">
     <span class="combat-top-bar__title">{{ zoneName }}<template v-if="stage"> • {{ stage.name }}</template></span>
 
-    <span v-if="progress" class="combat-top-bar__progress">{{ progress.spawned }} / {{ progress.total }} {{ t('combat.overlay.topBar.enemiesSuffix') }}</span>
+    <span v-if="hiddenTrial" class="combat-top-bar__trial">
+      {{ t('hidden.trial.banner', { name: t('hidden.mortal.beastName'), elapsed: hiddenTrial.roundsElapsed, required: hiddenTrial.survivalRounds }) }}
+    </span>
+    <span v-else-if="progress" class="combat-top-bar__progress">{{ progress.spawned }} / {{ progress.total }} {{ t('combat.overlay.topBar.enemiesSuffix') }}</span>
   </div>
 </template>
 
@@ -74,5 +85,11 @@ const progress = computed(() => {
 .combat-top-bar__progress {
   font-size: var(--text-sm);
   color: var(--text-secondary);
+}
+
+.combat-top-bar__trial {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--crimson);
 }
 </style>

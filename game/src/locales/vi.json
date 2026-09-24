@@ -1229,5 +1229,23 @@
   "save": {
     "conflict": "Save đã thay đổi ở một phiên khác.",
     "createFailed": "Tạo nhân vật thất bại — khởi tạo không hoàn tất."
+  },
+  "hidden": {
+    "mortal": {
+      "tier7Name": "Luyện Thể · Bậc 7 — Phàm Cốt",
+      "tier7Desc": "Thể tu ẩn của phàm nhân — sống sót trước Cổ Thú để chứng thành.",
+      "stateTrial": "Thử luyện Cổ Thú",
+      "stateDone": "Hoàn thành",
+      "beastName": "Cổ Thú"
+    },
+    "qi": {
+      "quanTheName": "Bát Mạch · Quán Thể",
+      "quanTheDesc": "Tu vi chuyển hóa vào quán thể thay vì cảnh giới — tích lũy đủ sẽ khai mở thể tu ẩn.",
+      "stateActive": "Đang chuyển hóa",
+      "stateDone": "Hoàn thành"
+    },
+    "trial": {
+      "banner": "{name} · Hiệp {elapsed}/{required}"
+    }
   }
 }

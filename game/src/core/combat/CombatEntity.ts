@@ -157,4 +157,10 @@ export interface CombatEntity {
   breakGaugeMax?: number
 
   currentBreakGauge?: number
+
+  // Hidden Perfection Lineage (design 2026-09-23 sec.9) - semantic
+  // immortality: CombatSystem.killIfDead() clamps a lethal hit to 1 HP
+  // instead of writing alive=false. Authored on Enemy.undefeatable,
+  // threaded via enemyToCombatEntity() (Ancient Beast trial).
+  undefeatable?: boolean
 }

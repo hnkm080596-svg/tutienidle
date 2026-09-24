@@ -224,6 +224,15 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
+    // A realm commit mid-battle rewrites realmId/cultivation while a
+    // cycle is live - and inside a hidden trial it also freezes the
+    // lineage so the earned completion can silently never land. The
+    // sibling write paths below already refuse the same states.
+    const battle = this.deps.getTurnBattle()
+    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
+      return false
+    }
+
     // M2 - the (path, way) pair resolves its way definition from the
     // module catalog; an unknown pair yields no way and fails closed.
     // Way OFFERABILITY is no longer checked here: applyPathChoice owns
