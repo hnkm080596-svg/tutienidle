@@ -79,9 +79,20 @@ Independent blind reviewers on the frozen head — none had access to this doc.
   INTEGRATION **SEAL** (all seams traced, 597 tests) / AUTHORITY **SEAL** (all authored
   pins vs design sec.11/12 + spec sec.8.3).
 - **Clean-B round** (8d830bec, comment-only delta): CORRECTNESS **SEAL** (594 tests) /
-  AUTHORITY **SEAL** / INTEGRATION in flight.
-- Deferred carried over: crafted-save mechanic-vs-record coherence; frozen-record
-  `active=true` residue (inert — all consumers gate on `frozen`); `stepCost` shows
-  "Giá bước kế: 0" at capacity cap (UI polish, BETA-BALANCE); missing literal
-  NON-CANONICAL token; bare `Math.random` convention (rng-injectability sweep
-  candidate); EN 'Reverse Circulation' gloss.
+  AUTHORITY **SEAL** / INTEGRATION **FINDINGS** — adjudicated below.
+- **INT Medium — FIXED @0578eb99**: `HIDDEN_MECHANIC_FINISHED_READERS` had zero
+  consumers — a crafted payload finished=true with `bodyCompleted=false` passed
+  integrity and dead-ended hidden completion permanently (early `complete` return
+  precedes eligibility in `attemptNghichChuTian`). Fix: integrity now consults the
+  registered finished reader per kind (`finished ⟺ bodyCompleted`), and the nghich
+  validator enforces `active === (completed < 36)`. Pin tests at both layers; the
+  two COR-nit crafted-save imprecisions (unreachable "Complete" label, unwired
+  reader) are now structurally rejected at load, closing them too.
+- **Delta seal** on 0578eb99: in flight (fresh reviewer on the fix delta).
+- Deferred carried over: frozen-record `active=true` residue (inert — all
+  consumers gate on `frozen`); `pityByLevel` over-cap entries (retained-history
+  semantics, self-corrects at next attempt); `stepCost` shows "Giá bước kế: 0" at
+  capacity cap (UI polish, BETA-BALANCE); missing literal NON-CANONICAL token;
+  bare `Math.random` convention (rng-injectability sweep candidate); side-effect
+  import registration (isolated save tooling fails closed — same deferral class);
+  EN 'Reverse Circulation' gloss.
