@@ -61,7 +61,16 @@ The Pháp Tu beta experience = basic skill + element branch of the node tree. Wh
 - **Depth ladder within the window**: nodes must span qi_refining → foundation_establishment gates only; a node a player cannot buy in-window does not exist for beta (they render dimmed per §1.2 honesty rule).
 - **The-economy tease without the spend**: The pool is wired (`SPELL_ESSENCE_GAIN_*`); basic-branch nodes may grant The-generation or The-capacity riders so the bar matters before the spend unlocks (spend stays Kim Đan per R1).
 - **Element seal prep**: `hoa_an` is the only authored elemental-seal spec — basic nodes may surface seal-adjacent riders only where the buff already exists in data (`hoa_an`/`doc_can`/`liet_thuong`/`han_tuc`/`tran_an` all have `StatusVfxPresets` entries).
-- **Budget**: presentation constraint from `docs/skill-constellation-glyph-plan.md` — ~10-11 nodes per element branch; the authored branch plan must fit.
+- **Budget**: ~10-11 nodes per element branch (glyph-plan constraint); **shape is asymmetric per element — the tree takes the shape of the element's glyph** (火/水/木/金/土), ruling 2026-09-24 #2.
+
+**Ruled design contract (user rulings #1-#10, 2026-09-24):**
+
+- **Node semantics**: nodes grant power to THE SKILL, not the character — base stats of the skill (damage, rider chance, rider depth) and authored mechanic riders. Each node has LEVELS; per direction a maxed node contributes at most **+10%** of the skill's base power.
+- **Element identity map (approved)**: Hỏa = đốt/stack đốt; Thủy = hồi máu + chậm; Mộc = độc sâu + lan; Kim = xuyên giáp + bạo kích; Thổ = giáp/giảm thương + phản.
+- **Capstone = 2-way variance split**: the last tier of each element branch forks into two mutually-flavored variants of the same basic (two authored specialization variants selected through existing machinery).
+- **Gating rule**: cảnh giới lớn (qi_refining vs foundation_establishment) decides which nodes OPEN; tiểu cảnh (minor tier within realm) decides each node's LEVEL CAP. Thế-granting nodes open only at foundation_establishment+ (ruling #5 — no The sink below).
+- **Seal riders**: only after each seal is properly spec'd (ruling #6 — do each ấn thoroughly first, then wire into its element). Beta nodes may ride `hoa_an` (the authored seal); the other four elements get non-seal mechanic riders until their seal specs land.
+- **Honesty rule (ruling #16 = C)**: nodes above ceiling render dimmed with tooltip preview "mở ở Kim Đan"; no end-of-content banner (ruling #17).
 
 ### 1.3 Stubs to resolve
 
@@ -153,7 +162,7 @@ Constraint: rewards must be reachable in-window and must not unlock spend mechan
 | Minor realms (LQ tiers) | Element-branch node discounts / node-level seeds on the basic branch | Feeds §1.2a — realms visibly feed the tree |
 | Hidden (Ẩn way) | Reaction-aura amplification row + multicast-depth row | Ẩn has mechanics, just no tree — a breakthrough grant can seed it without authoring the whole tree |
 
-To pick: one signature per breakthrough tier + 1-2 minor-realm riders. User selects from the pool; Devin authors the selection into `realmRewards` on the kit record.
+**User pick (2026-09-24):** (a) element mastery line + (b) Thế-pool awakening. Reward model per ruling #19: **only 2 grant kinds — `normal` and `hidden` — same grant, different numbers** (no per-grade multi-tier). Land on each way's `realmRewards` entry: normal = mastery rider + The-pool activation at `foundation_establishment`; hidden = same grants with stronger numbers via the hidden-lineage channel.
 
 ## §5. Cross-cutting asset systems (design)
 
