@@ -414,6 +414,29 @@ export const COMBAT_VFX_PRESETS = {
     durationMs: 280,
     screenShake: { durationMs: 130, intensity: 0.004 },
   },
+  // Mortal precursors - distinct from the arcane_impact fallback.
+  tram_slash: {
+    id: 'tram_slash',
+    color: 0xd8e8f8,
+    space: 'upright',
+    areaScale: 1,
+    durationMs: 220,
+  },
+  linh_bao_burst: {
+    id: 'linh_bao_burst',
+    color: 0xbef0ff,
+    space: 'hybrid',
+    areaScale: 1.15,
+    durationMs: 270,
+    screenShake: { durationMs: 90, intensity: 0.003 },
+  },
+  huy_quyen_strike: {
+    id: 'huy_quyen_strike',
+    color: 0xffc890,
+    space: 'upright',
+    areaScale: 0.9,
+    durationMs: 210,
+  },
 } as const satisfies Record<CombatVfxPresetId, CombatVfxPreset>
 
 export function getCombatVfxPreset(id: CombatVfxPresetId): CombatVfxPreset {

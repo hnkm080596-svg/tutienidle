@@ -25,10 +25,10 @@ import { SPELL_KIT_IDS } from '../skill/Skills'
 // burst line -- no DoT rider to amplify).
 const MASTERY_RIDER: Record<ElementType, { stat: StatType; perLevel: number }> = {
   fire: { stat: 'ailmentPotencyPercent', perLevel: 0.05 },
-  water: { stat: 'ailmentDurationPercent', perLevel: 0.06 },
+  water: { stat: 'ailmentDurationPercent', perLevel: 0.05 },
   wood: { stat: 'ailmentPotencyPercent', perLevel: 0.05 },
   metal: { stat: 'skillDamagePercent', perLevel: 0.05 },
-  earth: { stat: 'ailmentDurationPercent', perLevel: 0.06 },
+  earth: { stat: 'ailmentDurationPercent', perLevel: 0.05 },
 }
 
 const ELEMENT_LABELS: Record<ElementType, string> = {

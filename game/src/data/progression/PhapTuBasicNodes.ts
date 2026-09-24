@@ -346,9 +346,9 @@ function buildEarth(): ProgressionNode[] {
     powerNode(
       'tho_cung_gioi',
       'Củng Giới',
-      '+2% sát thương cuối của mọi đòn đánh mỗi cấp (tầng Trúc Cơ).',
+      '+2% sát thương Thổ Cầu mỗi cấp (tầng Trúc Cơ).',
       'earth',
-      [stat('tho_cung_gioi', 'finalDamagePercent', 0.02)],
+      [stat('tho_cung_gioi', 'skillDamagePercent', 0.02)],
       { foundation: true },
     ),
     powerNode(

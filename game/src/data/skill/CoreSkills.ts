@@ -55,6 +55,8 @@ export const CORE_SKILLS: Skill[] = [
 
     resourceType: 'none',
 
+    vfxPresetId: 'tram_slash',
+
 
   },
 
@@ -108,6 +110,8 @@ export const CORE_SKILLS: Skill[] = [
 
     resourceType: 'none',
 
+    vfxPresetId: 'linh_bao_burst',
+
 
   },
 
@@ -155,6 +159,8 @@ export const CORE_SKILLS: Skill[] = [
     execution: { kind: 'attack_speed' },
 
     resourceType: 'none',
+
+    vfxPresetId: 'huy_quyen_strike',
 
 
   },

@@ -142,6 +142,9 @@ export type CombatVfxPresetId =
   // element basic. DATA ONLY until the presentation pass registers
   // dien xuat; renderer maps each preset to space/color/scale/shake.
   | 'hoa_cau_comet' | 'thuy_tien_dart' | 'doc_chuong_palm' | 'diem_kim_point' | 'tho_cau_boulder'
+  // Mortal precursors (same three-path pass) -- the three pre-path
+  // actives render distinct from the generic arcane fallback.
+  | 'tram_slash' | 'linh_bao_burst' | 'huy_quyen_strike'
   | 'kiem_combo_thich_lieu_phach_tram_tao'
   | 'kiem_combo_tao_tram_thich_phach_lieu'
   | 'kiem_combo_tram_phach_lieu_tao_thich'
