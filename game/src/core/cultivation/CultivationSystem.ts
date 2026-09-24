@@ -58,7 +58,13 @@ export function pourCultivationOvercharge(player: PlayerData): void {
 
   const required = getRequiredCultivation(player.realmId, player.realmLevel)
   const poured = Math.min(player.cultivationOvercharge, required)
-  player.cultivation = Math.min(player.cultivation + poured, required)
+  // Hidden Perfection Lineage (AUTH-1): the pour is a final cultivation
+  // gain like any other - while a diversion is active it routes through
+  // the same total-conserving channel as every other gain path (the
+  // banked amount is consumed either way; only the landed share is
+  // diverted).
+  const diverted = resolveFinalCultivationGain(player, poured)
+  player.cultivation = Math.min(player.cultivation + diverted, required)
   player.cultivationOvercharge -= poured
 }
 

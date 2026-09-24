@@ -82,7 +82,11 @@ export function isQuanTheActionable(player: QuanThePlayer): boolean {
   if (!canProgressHiddenBody(player, QI_REALM_ID)) {
     return false
   }
-  return player.bodyProgression.meridian.openedIds.length >= MERIDIANS.length
+  // Canonical-set membership, not a count: a legacy save can carry a
+  // retired ninth id, and the authored gate is the current 8/8 set.
+  return MERIDIANS.every((meridian) =>
+    player.bodyProgression.meridian.openedIds.includes(meridian.id),
+  )
 }
 
 // ---------------------------------------------------------------------------

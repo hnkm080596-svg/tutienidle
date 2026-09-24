@@ -2105,7 +2105,9 @@ export class GameManagerTurnBattleOps {
       // the post-start extras (the runner is the authority). An
       // unregistered path or a declined run falls through to the
       // normal stage launch.
-      const hiddenPlan = resolveHiddenBattleReplacement(player, stage)
+      const hiddenPlan = this.deps.stageWaves.canStart(player, stage)
+        ? resolveHiddenBattleReplacement(player, stage)
+        : undefined
       if (hiddenPlan !== undefined && runHiddenBattleReplacement({ player, stage, plan: hiddenPlan, ops: this, resumeRepeat: repeatContinuously })) {
         return true
       }
@@ -2236,6 +2238,7 @@ export class GameManagerTurnBattleOps {
       battle.state === 'victory' ||
       battle.state === 'defeat'
     ) {
+      this.releaseHiddenTrialEnemies(trial)
       this.activeHiddenTrial = null
       return
     }
@@ -2256,7 +2259,20 @@ export class GameManagerTurnBattleOps {
       completeHiddenBody(trial.player, realmId)
     }
     battle.state = 'victory'
+    this.releaseHiddenTrialEnemies(trial)
     this.activeHiddenTrial = null
+  }
+
+  /** INT-2 - the trial beast is authored immortal (undefeatable clamps
+   * killIfDead at 1 HP), so nothing in the normal defeat path despawns
+   * it; the trial's own teardown owns that release. Dead entities are
+   * untouched - processDefeatedEnemies may still owe them despawn. */
+  private releaseHiddenTrialEnemies(trial: { battle: TurnBattle }): void {
+    for (const enemy of trial.battle.enemies) {
+      if (enemy.entity.alive) {
+        this.deps.enemySystem.despawn(enemy.entity.id)
+      }
+    }
   }
 
   // Phase A0 (2026-09-07) - HUD progress composed from the LIVE turn battle:

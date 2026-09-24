@@ -21,7 +21,10 @@ import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
-import { ANCIENT_BEAST_SURVIVAL_ROUNDS } from '../realm/hidden/AncientBeastTrial'
+import {
+  ANCIENT_BEAST_ENEMY_ID,
+  ANCIENT_BEAST_SURVIVAL_ROUNDS,
+} from '../realm/hidden/AncientBeastTrial'
 
 function makeManager(): GameManager {
   const manager = new GameManager()
@@ -196,5 +199,81 @@ describe('ancient beast trial - GameManager integration', () => {
     expect(resumed?.state === 'intro' || resumed?.state === 'countdown' || resumed?.state === 'fighting').toBe(true)
     expect(gameManager.turnBattleOps.getActiveHiddenTrial()).toBeNull()
     expect(resumed!.enemies[0]?.entity.templateId).toBe('fixture_dummy')
+  })
+
+  it('INT-1: a refused start resolves nothing - no roll, no discovery, the live battle untouched', () => {
+    setActivePinia(createPinia())
+    vi.spyOn(Math, 'random').mockReturnValue(0) // primed: a resolve WOULD fire
+
+    const gameManager = makeManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
+    const player = mortalEligiblePlayer()
+    const stage = registerFixtureStage(gameManager)
+    gameManager.setActivePlayer(player)
+
+    // Case A - locked stage: requiredRealmId above the mortal player.
+    const lockedStage: Stage = {
+      ...stage,
+      id: 'fixture_stage_locked',
+      requiredRealmId: 'qi_refining',
+    }
+    gameManager.catalogOps.registerStages([lockedStage])
+
+    expect(gameManager.turnBattleOps.startStage(player, lockedStage, false)).toBe(false)
+    // The resolver never ran: discovery is stamped by the runner on a
+    // fired plan, and a refused start must not even roll.
+    expect(player.hiddenPerfection.realms['mortal']).toBeUndefined()
+    expect(gameManager.turnBattleOps.getTurnBattle()).toBeNull()
+
+    // Case B - slot already held by a live stage run: a second
+    // startStage is refused, the resolver stays unconsulted, and the
+    // running battle survives untouched.
+    const runningStage: Stage = { ...stage, id: 'fixture_stage_running' }
+    gameManager.catalogOps.registerStages([runningStage])
+    vi.spyOn(Math, 'random').mockReturnValue(1) // roll high: normal launch
+    expect(gameManager.turnBattleOps.startStage(player, runningStage, false)).toBe(true)
+    const liveBattle = gameManager.turnBattleOps.getTurnBattle()
+    expect(liveBattle).not.toBeNull()
+
+    vi.spyOn(Math, 'random').mockReturnValue(0) // re-prime: WOULD fire
+    const otherStage: Stage = { ...stage, id: 'fixture_stage_other' }
+    gameManager.catalogOps.registerStages([otherStage])
+    expect(gameManager.turnBattleOps.startStage(player, otherStage, false)).toBe(false)
+
+    expect(player.hiddenPerfection.realms['mortal']).toBeUndefined()
+    expect(gameManager.turnBattleOps.getTurnBattle()).toBe(liveBattle)
+    expect(liveBattle!.state).not.toBe('victory')
+    expect(liveBattle!.state).not.toBe('defeat')
+  })
+
+  it('INT-2: the trial teardown despawns the immortal beast from EnemyManager', () => {
+    setActivePinia(createPinia())
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const gameManager = makeManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
+    const player = mortalEligiblePlayer()
+    const stage = registerFixtureStage(gameManager)
+    gameManager.setActivePlayer(player)
+
+    gameManager.turnBattleOps.startStage(player, stage, false)
+    const beastEntityId = gameManager.turnBattleOps
+      .getTurnBattle()!
+      .enemies[0]!.entity.id
+    expect(gameManager.enemyManager.get(beastEntityId)).toBeDefined()
+
+    driveUntilTerminal(gameManager, combatSource)
+    expect(player.hiddenPerfection.realms['mortal']?.bodyCompleted).toBe(true)
+
+    // The beast never died (undefeatable) yet the registry released it
+    // at the trial's own teardown - no phantom live entity.
+    expect(gameManager.enemyManager.get(beastEntityId)).toBeUndefined()
+    expect(
+      gameManager.enemyManager
+        .getAll()
+        .some((enemy) => enemy.id === ANCIENT_BEAST_ENEMY_ID || enemy.id === beastEntityId),
+    ).toBe(false)
   })
 })

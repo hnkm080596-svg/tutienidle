@@ -55,6 +55,24 @@ export class StageWaveSystem {
   constructor(private readonly deps: StageWaveSystemDeps) {}
 
   /**
+   * Non-mutating admission probe: would start() pass its two gates for
+   * this (player, stage) right now? Mirrors the refused-start checks -
+   * stage unlocked + the single slot free - without minting a lease or
+   * touching RNG. Callers with pre-admission side effects (HIDDEN-B's
+   * hidden-battle resolver consumes a roll on resolve) consult this
+   * BEFORE resolving so a refused start resolves nothing.
+   */
+  canStart(player: PlayerData, stage: Stage): boolean {
+    if (!this.deps.isStageUnlocked(stage.id, player)) {
+      return false
+    }
+    if (!this.deps.stageManager.owns(this.stageLease)) {
+      this.stageLease = null
+    }
+    return this.deps.stageManager.getActive() === null
+  }
+
+  /**
    * Điểm vào DUY NHẤT để bắt đầu 1 màn. Quái đầu tiên spawn ngay trong
    * lệnh gọi này (qua launchBattle — tự nhiên tái dùng
    * passiveSystem.resetStacks() bên trong, đúng điểm reset stack 1 LẦN/

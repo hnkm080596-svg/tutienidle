@@ -118,7 +118,9 @@ const hiddenQuanThe = computed(() => {
   stateVersion.value
 
   const record = player.$state.hiddenPerfection?.realms['qi_refining']
-  if (record?.discovered !== true) {
+  // A frozen record is permanently inert (lineage closed) - spec
+  // sec.3.4: never expose frozen progress as active progression.
+  if (record?.discovered !== true || record.frozen === true) {
     return null
   }
 

@@ -11,6 +11,7 @@
 import { describe, expect, it } from 'vitest'
 import { createDefaultPlayer, type PlayerData } from '../../player/Player'
 import { resolveFinalCultivationGain } from '../../cultivation/CultivationDiversion'
+import { pourCultivationOvercharge } from '../../cultivation/CultivationSystem'
 import { HIDDEN_MECHANIC_FINISHED_READERS } from './HiddenLineage'
 import { HIDDEN_MECHANIC_STATE_VALIDATORS } from './HiddenPerfection'
 import {
@@ -48,6 +49,17 @@ describe('quan the - actionable gate (sec.10.2)', () => {
   it('rejects when the meridian chapter is short of 8/8', () => {
     const player = qiPlayerWithMortalBody()
     player.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, MERIDIANS.length - 1).map((m) => m.id)
+    expect(isQuanTheActionable(player)).toBe(false)
+  })
+
+  it('AUTH-3: a legacy ninth meridian id cannot stand in for the canonical 8/8 set', () => {
+    const player = qiPlayerWithMortalBody()
+    // 7 canonical + the retired Thien Dia Chi Kieu: the count matches
+    // MERIDIANS.length but the authored set is not fully opened.
+    player.bodyProgression.meridian.openedIds = [
+      ...MERIDIANS.slice(0, MERIDIANS.length - 1).map((m) => m.id),
+      'ky_kinh_thien_dia_chi_kieu',
+    ]
     expect(isQuanTheActionable(player)).toBe(false)
   })
 
@@ -128,6 +140,33 @@ describe('quan the - diversion (sec.10.3/sec.10.4)', () => {
 
     expect(resolveFinalCultivationGain(player, 250)).toBe(250)
     expect(getQuanTheMechanic(player)?.progress).toBe(100)
+  })
+
+  it('AUTH-1: poured overcharge routes through the diversion seam while Quan The is active', () => {
+    const player = qiPlayerWithMortalBody()
+    openAllMeridians(player)
+    player.cultivationOvercharge = 500
+
+    pourCultivationOvercharge(player)
+
+    // The banked amount is consumed either way, but the landed share
+    // went to Quan The - realm cultivation gains nothing.
+    expect(player.cultivationOvercharge).toBe(0)
+    expect(player.cultivation).toBe(0)
+    expect(getQuanTheMechanic(player)?.progress).toBe(500)
+  })
+
+  it('AUTH-1: the pour gains normally once the divert has released', () => {
+    const player = qiPlayerWithMortalBody()
+    openAllMeridians(player)
+    resolveFinalCultivationGain(player, QUAN_THE_REQUIRED_CULTIVATION)
+    expect(player.hiddenPerfection.realms['qi_refining']?.bodyCompleted).toBe(true)
+
+    player.cultivationOvercharge = 300
+    pourCultivationOvercharge(player)
+
+    expect(player.cultivationOvercharge).toBe(0)
+    expect(player.cultivation).toBe(300)
   })
 })
 
