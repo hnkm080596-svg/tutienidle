@@ -1,0 +1,7 @@
+{
+  "applied": [
+    "message:MSG-ASSIGN-RA-CORRECTNESS",
+    "message:MSG-ASSIGN-RA-AUTHORITY",
+    "message:MSG-ASSIGN-RA-INTEGRATION"
+  ]
+}

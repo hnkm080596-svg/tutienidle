@@ -1,0 +1,9 @@
+{
+  "applied": [
+    "evidence:EV-RB-CONTRACT-SEAL",
+    "evidence:EV-RB-CORRECTNESS-SEAL",
+    "review:REV-B-CONTRACT",
+    "review:REV-B-CORRECTNESS",
+    "review:REV-IMPL-CLOSURE-RB"
+  ]
+}

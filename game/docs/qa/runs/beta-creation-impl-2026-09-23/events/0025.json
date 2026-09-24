@@ -1,0 +1,46 @@
+{
+  "outcome": "QA_UNVERIFIED",
+  "detail": "required evidence/coverage/independence missing",
+  "clauses": [
+    {
+      "id": "C1-identity",
+      "ok": true,
+      "reason": "all final evidence binds the declared state"
+    },
+    {
+      "id": "C2-census-coverage",
+      "ok": false,
+      "reason": "coverage COV-I-02=PENDING; coverage COV-I-04=PENDING; coverage COV-I-07=PENDING; coverage COV-I-10=PENDING; coverage COV-I-12=PENDING; coverage COV-I-14=PENDING; coverage COV-I-16=PENDING"
+    },
+    {
+      "id": "C3-no-open",
+      "ok": true,
+      "reason": "none open"
+    },
+    {
+      "id": "C4-final-gates",
+      "ok": true,
+      "reason": "final gates green"
+    },
+    {
+      "id": "C5-sequential",
+      "ok": false,
+      "reason": "sequential CORRECTNESS→AUTHORITY→INTEGRATION reviews missing"
+    },
+    {
+      "id": "C6-clean-pair",
+      "ok": false,
+      "reason": "Clean A missing/not CLEAN; Clean B missing/not CLEAN"
+    },
+    {
+      "id": "C7-mutation-corpus",
+      "ok": true,
+      "reason": "mutation + corpus satisfied"
+    },
+    {
+      "id": "C8-terminal-check",
+      "ok": false,
+      "reason": "no sealed independent TERMINAL_CHECK on the final state"
+    }
+  ]
+}

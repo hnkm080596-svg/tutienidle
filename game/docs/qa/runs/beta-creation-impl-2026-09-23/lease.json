@@ -1,5 +1,6 @@
 {
-  "leaseId": "coordinator-59983",
-  "acquiredAt": "2026-09-23T20:54:34.679Z",
-  "pid": 59983
+  "leaseId": "coordinator-devin-4df500e190cc4b9d837f408a5ed53852",
+  "acquiredAt": "2026-09-24T01:21:07.871883+00:00",
+  "pid": 0,
+  "note": "recovered from dead coordinator-59983 VM; takeover by continuation coordinator session devin-4df500e190cc4b9d837f408a5ed53852"
 }
