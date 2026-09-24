@@ -108,3 +108,24 @@ The diff repairs all 21 findings of the `tc-wave-2026-09-23` aggregate retro swe
 
 - `src/assets/dongFuBuildingPipeline.test.ts`, `src/assets/dongFuBackgroundAssets.test.ts` — `spawnSync magick ENOENT`: ImageMagick missing on this QA box; unrelated to the diff (environment failure).
 - (Self-inflicted, fixed): the QA evidence file initially carried two em-dash comment tokens tripping `tests/architecture/asciiComments.test.ts` (P15 ratchet); corrected to ASCII — ratchet green.
+
+---
+
+# Post-Fix Recursion Pass (P5) — 2026-09-24, fix commit `c49f326b`
+
+Per P5 recursion, the production fix for QA-2026-09-24-01 invalidated prior evidence on the tribulation-restore surface; one more pass ran over the fix commit.
+
+## Reviewed state
+`c49f326b` on `devin/1790189112-beta-seam-repair` — `restoreRuntime` now calls `clear()` (ends `presentationSession`, nulls `active`/`mind`/`tank`/`committedOutcome`) and resets `ghost`/`snapshotHp`/`snapshotMaxHp`/`snapshotDefense`/`mindFailStacks`/`mindCorrectLightningReduction`/`lightningTalentMultiplier` before applying the slice.
+
+## Findings
+None. Field census: every observable runtime field is cleared, reset, or replaced before the slice applies. Residuals `chapters` and `attemptId` are dead data — only read while `active` is set and overwritten at the next `start()` — unreachable, no observable consequence. `presentationMode` is consumer config (not save state) and correctly preserved. No new caller of `restoreRuntime`; `serializeRuntime` unchanged — round-trip and receipt dedup semantics intact. `clear()`'s presentation-session end is UI-facing only and cannot loop back into domain state during restore.
+
+## Verification on c49f326b
+- `TribulationDirector.restoreLeak.qa.test.ts`: both former repro tests now PASS (folded into the branch by coordinator).
+- `TribulationDirector.persist.test.ts` pin test: PASS (same-session restore clears stale outcome + live run + accepts fresh run).
+- Scoped suite (tribulation + composables + save + saveRestore + clawback): 667/667 PASS.
+- `npm run type-check`: PASS.
+
+## Closing verdict
+**PASS WITH EVIDENCE** — the only Confirmed finding (QA-2026-09-24-01, Medium) is fixed and re-verified; remaining findings are recorded Low/Nit with documented deferral reasons (QA-2026-09-24-02/03/04). Branch is clean for merge to `beta/rc`.
