@@ -1,0 +1,18 @@
+{
+  "type": "SEAL_RECEIPT",
+  "cycle": "CYC-RB2-1",
+  "round": "clean-B-prime",
+  "candidate": "0e8351bd",
+  "lens": "CORRECTNESS",
+  "reviewerSession": "20b106d1aa184feb8da7ab2fec88fbaa",
+  "verdict": "SEAL",
+  "priorFindingsVisible": false,
+  "findings": [],
+  "notedEdges": [
+    "Date.parse(updated_at) NaN -> remote treated as never-newer (pre-existing, requires server corruption, self-heals via push leg) - ledger defer",
+    "pull-side legacy-equipment discard invisible - ALREADY FIXED @623b8b6f (same root as QA-AUTH-2)",
+    "isSaveAcceptable catch-all - fail-closed by design"
+  ],
+  "evidenceSummary": "SEAL: consumer census complete (exactly 3 gated callers); 13-case live/static parity battery; 4-corner pairing identical both bindings; orphan-core correctly rejected (shape rule 4); latch un-bypassable; fixtures produce legal saves; legal saves traverse all 3 gates; 30 new QA tests green + 1007 scoped existing + clean vue-tsc.",
+  "reportAttachment": "https://app.devin.ai/attachments/39cb235e-bb25-47f4-a67d-9b7b555371d0/qa-beta-creation-save-acceptance.md"
+}
