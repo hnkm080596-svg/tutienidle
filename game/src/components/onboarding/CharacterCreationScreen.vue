@@ -51,13 +51,13 @@ const pickedSkillName = computed(
 )
 
 function toggleTalent(talent: TalentDefinition) {
-  if (rolling.value) return
+  if (rolling.value || creating.value) return
   const index = selectedTalentIds.value.indexOf(talent.id)
   if (index >= 0) selectedTalentIds.value.splice(index, 1)
   else selectedTalentIds.value = [talent.id]
 }
 async function reroll() {
-  if (rolling.value) return
+  if (rolling.value || creating.value) return
   rolling.value = true
   error.value = ''
   try {
@@ -113,7 +113,7 @@ onMounted(() => { void reroll() })
       <div class="creation-section name-section">
         <p class="kicker">{{ t('onboarding.creation.nameStep.kicker') }}</p><h2>{{ t('onboarding.creation.nameStep.title') }}</h2>
         <p>{{ t('onboarding.creation.nameStep.description') }}</p>
-        <label><span>{{ t('onboarding.creation.nameStep.label') }}</span><input v-model="name" maxlength="20" autofocus :placeholder="t('onboarding.creation.nameStep.placeholder')" data-testid="creation-name-input" /></label>
+        <label><span>{{ t('onboarding.creation.nameStep.label') }}</span><input v-model="name" maxlength="20" autofocus :disabled="creating" :placeholder="t('onboarding.creation.nameStep.placeholder')" data-testid="creation-name-input" /></label>
         <small :class="{ valid: validName }">{{ t('onboarding.creation.nameStep.minLengthHint', { length: name.length }) }}</small>
       </div>
 
@@ -122,18 +122,18 @@ onMounted(() => { void reroll() })
         <p v-if="rolling && talents.length === 0" class="loading-roll">{{ t('onboarding.creation.talentStep.rolling') }}</p>
         <p v-else-if="error && talents.length === 0" class="loading-roll">{{ error }}</p>
         <div v-else class="talent-grid" :class="{ 'is-rolling': rolling }" :aria-busy="rolling">
-          <button v-for="talent in talents" :key="talent.id" type="button" class="talent-card" :data-testid="`creation-talent-${talent.id}`" :class="[`talent-tier-${talent.rarity}`, { selected: selectedTalentIds.includes(talent.id) }]" :disabled="rolling" @click="toggleTalent(talent)">
+          <button v-for="talent in talents" :key="talent.id" type="button" class="talent-card" :data-testid="`creation-talent-${talent.id}`" :class="[`talent-tier-${talent.rarity}`, { selected: selectedTalentIds.includes(talent.id) }]" :disabled="rolling || creating" @click="toggleTalent(talent)">
             <span class="talent-card__rarity">{{ TALENT_RARITY_LABELS[talent.rarity] }}</span><h3>{{ talent.name }}</h3><p>{{ talent.description }}</p><small>{{ talent.tags[0] }}</small>
           </button>
         </div>
-        <div class="section-actions"><GameButton variant="secondary" :disabled="rolling" @click="reroll">{{ t('onboarding.creation.talentStep.reroll') }}</GameButton></div>
+        <div class="section-actions"><GameButton variant="secondary" :disabled="rolling || creating" @click="reroll">{{ t('onboarding.creation.talentStep.reroll') }}</GameButton></div>
       </div>
 
       <div class="creation-section skill-section">
         <div class="panel-heading"><div><p class="kicker">{{ t('onboarding.creation.skillStep.kicker') }}</p><h2>{{ t('onboarding.creation.skillStep.title') }}</h2></div><strong>{{ t('onboarding.creation.skillStep.selected', { count: selectedSkillId === '' ? 0 : 1 }) }}</strong></div>
         <p class="section-description">{{ t('onboarding.creation.skillStep.description') }}</p>
         <div class="skill-grid">
-          <button v-for="skill in precursorSkills" :key="skill.id" type="button" class="skill-card" :data-testid="`creation-skill-${skill.id}`" :class="{ selected: selectedSkillId === skill.id }" @click="selectedSkillId = skill.id">
+          <button v-for="skill in precursorSkills" :key="skill.id" type="button" class="skill-card" :data-testid="`creation-skill-${skill.id}`" :class="{ selected: selectedSkillId === skill.id }" :disabled="creating" @click="selectedSkillId = skill.id">
             <h3>{{ skill.name }}</h3><p>{{ skill.description }}</p>
           </button>
         </div>

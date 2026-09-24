@@ -320,7 +320,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
           // reason stays in the diagnostics channel; the recovery
           // surface deliberately shows a generic corrupted state.
           console.warn('[boot] save rejected by restore preflight:', restored.message)
-          saveIssue.report('corrupted', JSON.stringify(loaded.save))
+          saveIssue.report('corrupted', loaded.raw)
           boot.fail()
           return { status: 'failed' }
         }

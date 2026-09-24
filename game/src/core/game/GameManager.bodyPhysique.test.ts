@@ -1,8 +1,9 @@
-import { withMortalCreationPick } from '../../services/save/GameSave.fixture'
+import { withCommittedSwordPath, withMortalCreationPick } from '../../services/save/GameSave.fixture'
 import { describe, expect, it } from 'vitest'
 
 import { materials } from '../../data/materials/materials'
 import { pills } from '../../data/pill/pills'
+import { TECHNIQUES } from '../../data/technique/Techniques'
 import { BODY_REFINEMENT_TIERS, TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
 import { createDefaultPlayer } from '../player/Player'
 import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
@@ -70,25 +71,29 @@ describe('GameManager.saveOps.restoreFromSave - physique restore contract', () =
     const manager = new GameManager()
     manager.catalogOps.registerMaterials(materials)
     manager.catalogOps.registerPills(pills)
+    // Committed-path fixture saves carry the way's technique entry.
+    manager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     return manager
   }
 
   function baseSave(player: ReturnType<typeof createDefaultPlayer>): GameSave {
-    return withMortalCreationPick({
-      version: CURRENT_SAVE_VERSION,
-      player,
-      techniques: [],
-      skills: [],
-      materials: [],
-      equipment: [],
-      equipmentSlots: [],
-      pills: [],
-      talismans: [],
-      formations: [],
-      buildings: [],
-      quests: { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
-      productionSites: [],
-    })
+    return withCommittedSwordPath(
+      withMortalCreationPick({
+        version: CURRENT_SAVE_VERSION,
+        player,
+        techniques: [],
+        skills: [],
+        materials: [],
+        equipment: [],
+        equipmentSlots: [],
+        pills: [],
+        talismans: [],
+        formations: [],
+        buildings: [],
+        quests: { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
+        productionSites: [],
+      }),
+    )
   }
 
   it('a completed chapter + persisted advanced grade restores unchanged', () => {

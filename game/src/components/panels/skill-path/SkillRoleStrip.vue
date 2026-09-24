@@ -40,8 +40,11 @@ const roles = computed(() => {
 })
 
 // The chooser is mortal-only - the write op rejects post-path anyway,
-// but the card shouldn't offer a dead affordance.
-const isMortal = computed(() => player.cultivationPath === undefined)
+// but the card shouldn't offer a dead affordance. Predicate parity with
+// the save contract: mortal = realmId 'mortal' AND pathless.
+const isMortal = computed(
+  () => player.realmId === 'mortal' && player.cultivationPath === undefined,
+)
 
 const mortalChoices = computed<Skill[]>(() => {
   stateVersion.value

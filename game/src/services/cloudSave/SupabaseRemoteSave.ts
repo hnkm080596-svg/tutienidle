@@ -1,8 +1,9 @@
 import { requestSupabase } from '../supabase/SupabaseHttp'
 import { readSupabaseSession, resolveSupabaseSession } from '../supabase/SupabaseSession'
 import type { SupabaseConfig } from '../supabase/SupabaseConfig'
-import { CURRENT_SAVE_VERSION, inspectLocalSave } from '../save/SaveSystem'
+import { CURRENT_SAVE_VERSION, inspectLocalSave, type GameSave } from '../save/SaveSystem'
 import { validateGameSaveShape } from '../save/saveShapeValidation'
+import { mortalBoundaryContractViolation } from '../../core/skill/MortalPrecursors'
 import { resolveRevisionKey, resolveSaveKey } from '../save/saveKeys'
 import { readLocalSaveRevision } from './LocalCloudSaveService'
 
@@ -57,7 +58,17 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
     )
     const remoteRow = rows[0]
     const remoteShape = remoteRow ? validateGameSaveShape(remoteRow.payload) : null
-    const remoteUsable = remoteShape !== null && remoteShape.ok ? remoteShape : null
+    // Preflight parity: a payload the boot restore would reject is 'no
+    // remote' here - otherwise newest-wins resurrects it on every login
+    // and the delete recovery can never converge (empty local loses to
+    // any remote timestamp). The contract is the SAME function the
+    // restore preflight calls, so the two acceptance gates cannot drift.
+    const remoteUsable =
+      remoteShape !== null &&
+      remoteShape.ok &&
+      mortalBoundaryContractViolation(remoteShape.normalizedSave as GameSave) === null
+        ? remoteShape
+        : null
     const remoteUpdatedMs = remoteRow ? Date.parse(remoteRow.updated_at) : Number.NaN
 
     // F2 / INV-F-19 - pure inspect, never the consuming loadGame():

@@ -419,7 +419,11 @@ export function writeGameSave(save: GameSave): SaveWriteResult {
 // biết vì sao — xem SaveIncompatibleScreen.vue.
 export type LoadOutcome =
   | { status: 'empty' }
-  | { status: 'ok'; save: GameSave; discardedEquipmentCount: number }
+  // `raw` rides along so a rejected-after-shape save can still be
+  // exported byte-identically (same contract as the incompatible/
+  // corrupted branches) - the normalized object silently drops
+  // shape-discarded entries and key order.
+  | { status: 'ok'; save: GameSave; discardedEquipmentCount: number; raw: string }
   | { status: 'incompatible'; foundVersion: number | undefined; raw: string }
   | { status: 'corrupted'; raw: string }
   // Mission A review (MA-R2-02) — storage access itself threw
@@ -581,6 +585,7 @@ export function loadGame(): LoadOutcome {
   return {
     status: 'ok',
     save: inspected.save,
+    raw,
     discardedEquipmentCount:
       inspected.shapeDiscardedEquipmentCount + importedDiscardedCount,
   }

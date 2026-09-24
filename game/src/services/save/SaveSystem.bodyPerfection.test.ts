@@ -4,7 +4,7 @@
 // production all-empty round-trip, malformed-payload emits, the
 // immediately-previous version rejected (C2C r60-f5), and the
 // future-realm-perfected integrity cap (C2C r60-f2).
-import { primeMortalCreationPick } from './GameSave.fixture'
+import { primeMortalCreationPick, withCommittedSwordPath } from './GameSave.fixture'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
@@ -47,6 +47,7 @@ vi.mock('../../data/realm/BodyPerfection', async (importOriginal) => {
 import { GameManager } from '../../core/game/GameManager'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { materials } from '../../data/materials/materials'
+import { TECHNIQUES } from '../../data/technique/Techniques'
 import { usePlayerStore } from '../../stores/player'
 import {
   buildGameSave,
@@ -86,6 +87,9 @@ class MemoryStorage implements Storage {
 function registeredManager(): GameManager {
   const manager = new GameManager()
   manager.catalogOps.registerMaterials(materials)
+  // Committed-path fixture saves carry the way's technique entry - the
+  // holder contract needs the template registered on restore.
+  manager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
   return manager
 }
 
@@ -107,7 +111,9 @@ describe('bodyPerfection save round-trip (C2C r68)', () => {
 
     primeMortalCreationPick(player, manager.skillManager)
 
-    const save = buildGameSave(player, manager)
+    // Pairing rule: a qi_refining save needs a committed path - the
+    // fixture doubles as a post-ritual save.
+    const save = withCommittedSwordPath(buildGameSave(player, manager))
     const persisted = JSON.parse(JSON.stringify(save)) as unknown
 
     const shape = validateGameSaveShape(persisted)

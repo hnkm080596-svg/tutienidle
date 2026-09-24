@@ -260,6 +260,7 @@ describe('useAppLifecycle — boot idempotence (Remediation Task 5)', () => {
       status: 'ok',
       revision: 5,
       save,
+      raw: 'stored-raw-bytes',
     })
     ;(stubs.restoreGameSession as ReturnType<typeof vi.fn>).mockReturnValueOnce({
       status: 'rejected',
@@ -269,7 +270,10 @@ describe('useAppLifecycle — boot idempotence (Remediation Task 5)', () => {
     const outcome = await lifecycle.bootGame({ createNewCharacter: false })
 
     expect(outcome.status).toBe('failed')
-    expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', JSON.stringify(save))
+    // The exported recovery payload is the stored raw bytes (same
+    // contract as the incompatible/corrupted branches), not the
+    // normalized save object.
+    expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', 'stored-raw-bytes')
     expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
     expect(stubs.onError).not.toHaveBeenCalled()
 

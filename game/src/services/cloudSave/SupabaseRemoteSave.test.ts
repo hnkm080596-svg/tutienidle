@@ -26,11 +26,28 @@ class MemoryStorage implements Storage {
 function validGameSave(lastSavedAt: number): GameSave {
   const player = createDefaultPlayer()
   player.lastSavedAt = lastSavedAt
+  // v82 mortal boundary contract: the fixture doubles as a legal
+  // creation output - pick + learned entry + core grant.
+  player.mortalBasicSkillId = 'tram'
+  player.nodeLevels = { ...player.nodeLevels, core_tram: 1 }
+  player.purchasedNodeIds = [...player.purchasedNodeIds, 'core_tram']
   return {
     version: CURRENT_SAVE_VERSION,
     player,
     techniques: [],
-    skills: [],
+    skills: [
+      {
+        id: 'tram',
+        name: 'Trảm',
+        description: 'creation pick',
+        type: 'active',
+        level: 1,
+        maxLevel: 10,
+        cooldown: 0,
+        target: 'enemy',
+        effects: [],
+      },
+    ],
     materials: [],
     equipment: [],
     pills: [],
@@ -181,6 +198,34 @@ describe('syncRemoteSaveOnLogin - newest-wins reconciliation (spec F8)', () => {
 
     expect(await syncRemoteSaveOnLogin(config)).toBe('pushed')
     expect(calls.some((call) => call.init.method === 'POST')).toBe(true)
+
+    vi.unstubAllGlobals()
+  })
+
+  it('remote payload failing the mortal boundary contract counts as absent -> push path heals', async () => {
+    loginSession()
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(50_000_000)))
+
+    // A v82-shaped remote payload missing the creation pick can only
+    // be a stale pre-repair write. The remote gate applies the same
+    // boundary contract as local restore, so the row counts as "no
+    // remote" and the local truth is pushed up instead of pulled down.
+    const badRemote = validGameSave(60_000_000)
+    badRemote.player = { ...badRemote.player, mortalBasicSkillId: undefined }
+
+    const calls = stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([{ payload: badRemote, save_revision: 9, updated_at: new Date().toISOString() }])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pushed')
+    expect(calls.some((call) => call.init.method === 'POST')).toBe(true)
+    // Local slot untouched - the bad remote was never written down.
+    const written = JSON.parse(localStorage.getItem(resolveSaveKey()) ?? '{}') as GameSave
+    expect(written.player.lastSavedAt).toBe(50_000_000)
 
     vi.unstubAllGlobals()
   })

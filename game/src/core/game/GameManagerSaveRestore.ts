@@ -14,8 +14,7 @@ import {
 } from '../technique/Technique'
 import { ITEM_QUALITY_ORDER } from '../item/ItemQuality'
 import { getActiveWayDefinition } from '../player/CultivationPathKit'
-import { isMortalPrecursorSkillId } from '../skill/MortalPrecursors'
-import { getSkillCoreLevel } from '../progression/SkillCoreLevel'
+import { mortalBoundaryContractViolation } from '../skill/MortalPrecursors'
 import { MaterialRegistry } from '../material/MaterialRegistry'
 import { MaterialBag } from '../material/MaterialBag'
 import { PillRegistry } from '../pill/PillRegistry'
@@ -270,50 +269,15 @@ export class GameManagerSaveRestore {
       throw new Error('Technique holder contract violated in save: way-less player carries a technique')
     }
 
-    // P7-M4 (v71) - mortalBasicSkillId is the MORTAL-ONLY basic pick:
-    // present = a precursor id the player could have learned.
-    // Post-path presence is corrupt (the ritual clears the pick inside
-    // the commit block - a way player can never carry one) - reject
-    // before any owner mutation, same hard-fail seam as the
-    // technique-holder contract above.
-    //
-    // BETA-CREATION (v82) - on mortal saves the pick is REQUIRED and
-    // must be LEARNED (id membership in the skills payload): the
-    // creation flow always writes it, so a mortal save without one -
-    // or pointing at an unlearned skill - is a contract violation.
-    // Reject, never silently default to tram.
-    const mortalPick = save.player.mortalBasicSkillId
-
-    if (mortalPick !== undefined && !isMortalPrecursorSkillId(mortalPick)) {
-      throw new Error(`Invalid mortalBasicSkillId in save: ${String(mortalPick)}`)
-    }
-
-    // The mortal predicate keys on realmId, not cultivationPath: a crafted
-    // non-mortal save with no path must not be treated as mortal here.
-    const isMortalSave =
-      save.player.realmId === 'mortal' && save.player.cultivationPath === undefined
-
-    if (!isMortalSave) {
-      if (mortalPick !== undefined) {
-        throw new Error(
-          `mortalBasicSkillId persisted post-mortal in save: '${mortalPick}' (realmId '${save.player.realmId}', path '${String(save.player.cultivationPath)}')`,
-        )
-      }
-    } else {
-      if (mortalPick === undefined) {
-        throw new Error('mortal save missing required mortalBasicSkillId (creation pick)')
-      }
-
-      if (!save.skills.some((entry) => entry.id === mortalPick)) {
-        throw new Error(`mortalBasicSkillId not learned in save: '${mortalPick}'`)
-      }
-
-      // The creation seam grants the pick's core node alongside the
-      // learn - without it the picked basic sits at level 0 forever
-      // (the Insight channel and hidden-pathway Lv3 gate are dead).
-      if (getSkillCoreLevel(save.player, mortalPick) < 1) {
-        throw new Error(`mortalBasicSkillId missing core grant in save: '${mortalPick}'`)
-      }
+    // P7-M4 (v71) + BETA-CREATION (v82) - the mortal-boundary contract
+    // (pick three-channel write, post-mortal clearing, realm/path
+    // pairing) is owned by MortalPrecursors so every acceptance seam -
+    // this preflight and the remote newest-wins gate - enforces one
+    // identical contract. Reject before any owner mutation, same
+    // hard-fail seam as the technique-holder contract above.
+    const boundaryViolation = mortalBoundaryContractViolation(save)
+    if (boundaryViolation !== null) {
+      throw new Error(boundaryViolation)
     }
 
     // P7-M5 (v72) - body progression integrity is the LAST preflight
