@@ -1,0 +1,46 @@
+{
+  "outcome": "QA_UNVERIFIED",
+  "detail": "required evidence/coverage/independence missing",
+  "clauses": [
+    {
+      "id": "C1-identity",
+      "ok": true,
+      "reason": "all final evidence binds the declared state"
+    },
+    {
+      "id": "C2-census-coverage",
+      "ok": false,
+      "reason": "domain src/components/onboarding uncovered; domain src/services/character uncovered; domain src/core/game uncovered; domain src/core/player uncovered; domain src/core/skill uncovered; domain src/services/save uncovered; domain src/data/skill uncovered; domain src/locales uncovered; domain tests/e2e uncovered; domain supabase/migrations uncovered; domain docs/specs uncovered; domain docs/plans uncovered; domain docs/qa uncovered"
+    },
+    {
+      "id": "C3-no-open",
+      "ok": true,
+      "reason": "none open"
+    },
+    {
+      "id": "C4-final-gates",
+      "ok": false,
+      "reason": "no final evidence recorded"
+    },
+    {
+      "id": "C5-sequential",
+      "ok": false,
+      "reason": "sequential CORRECTNESS→AUTHORITY→INTEGRATION reviews missing"
+    },
+    {
+      "id": "C6-clean-pair",
+      "ok": false,
+      "reason": "Clean A missing/not CLEAN; Clean B missing/not CLEAN"
+    },
+    {
+      "id": "C7-mutation-corpus",
+      "ok": true,
+      "reason": "mutation + corpus satisfied"
+    },
+    {
+      "id": "C8-terminal-check",
+      "ok": false,
+      "reason": "no sealed independent TERMINAL_CHECK on the final state"
+    }
+  ]
+}

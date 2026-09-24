@@ -9,6 +9,7 @@ import { LUYEN_KHI_TINH_HOA_ID } from '../../core/equipment/TinhHoaMaterial'
 import { createDefaultPlayer } from '../../core/player/Player'
 import type { StatModifier } from '../../core/stats/StatCalculator'
 import { usePlayerStore } from '../../stores/player'
+import { primeMortalCreationPick } from './GameSave.fixture'
 import { buildGameSave, restoreGameSession, type GameSave } from './SaveSystem'
 
 function createRegisteredManager(): GameManager {
@@ -24,6 +25,10 @@ function createRegisteredManager(): GameManager {
 function createIncomingSave(): GameSave {
   const manager = createRegisteredManager()
   const player = createDefaultPlayer()
+  // v82 - a legal mortal save carries the creation pick, the learned
+  // precursor entry, and the v73 canonical core grant for it (the boot
+  // seam writes all three); prime writes them before the build.
+  primeMortalCreationPick(player, manager.skillManager)
   const instance = makeInstance({
     instanceId: 'boot-restore-incoming-item',
     itemId: 'base_kiem',
@@ -84,6 +89,11 @@ describe('App save restore coordinator', () => {
       'non-precursor mortalBasicSkillId',
       (save: GameSave) => { save.player.mortalBasicSkillId = 'hoa_cau_thuat' },
       'Invalid mortalBasicSkillId in save: hoa_cau_thuat',
+    ],
+    [
+      'missing mortalBasicSkillId on a mortal save',
+      (save: GameSave) => { delete save.player.mortalBasicSkillId },
+      'mortal save missing required mortalBasicSkillId (creation pick)',
     ],
   ] as const)(
     'rejects %s before Pinia or any manager owner mutates and returns a handled result',

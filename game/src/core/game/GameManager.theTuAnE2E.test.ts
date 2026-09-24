@@ -327,7 +327,7 @@ describe('mortal basic wiring — huy_quyen is castable as the picked basic (spe
     expect(advanceUntil(combatSource, () => (player.skillCastCounts?.['tram'] ?? 0) > 0)).toBe(true)
   })
 
-  it('a non-precursor pick is rejected and falls back to the creation-granted tram', () => {
+  it('a non-precursor pick is rejected and falls back to the runtime-default tram', () => {
     const { gameManager, combatSource, player } = mortalWithBasic(null)
     gameManager.progressionOps.learnSkill('bat_kiem_thuat', player)
     expect(gameManager.progressionOps.setMortalBasicSkill(player, 'bat_kiem_thuat')).toBe(false)

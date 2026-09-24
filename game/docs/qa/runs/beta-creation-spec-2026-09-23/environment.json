@@ -1,0 +1,10 @@
+{
+  "tools": {
+    "node": "v22.23.2",
+    "npm": "11.x (bundled with node@22 brew)",
+    "devinSessions": "native child sessions via devin_session_create (reviewer isolation)"
+  },
+  "os": "linux",
+  "profile": "docs-review",
+  "note": "Spec/plan review run — no runtime cells required; deterministic cells = citation re-verification + vitest NOT required (no implementation). Reviewers run on isolated clones of the same commit."
+}

@@ -22,17 +22,17 @@ import {
   BODY_REFINEMENT_TIERS,
   TINH_HOA_PHAM_THE_MATERIAL_ID,
 } from '../../../data/realm/BodyRefinement'
-import { CHARACTER_CREATION_ATTRIBUTE_POINTS } from '../../../services/character/CharacterCreationService'
 import { pills } from '../../../data/pill/pills'
 import { QUESTS } from '../../../data/quest/quests'
 import type { Reward } from '../../reward/Reward'
+import { MORTAL_DEFAULT_BASIC_ID } from '../../skill/MortalPrecursors'
 
 /** Canonical measurement profile - one fixed creation identity so runs
  * differ only by seed. Combat passive, no economy subsidy. */
 const MEASUREMENT_PROFILE: EarlyGameCreationProfile = {
   name: 'economy-measure',
   talentIds: ['hap_linh'],
-  attributes: { strength: 2, vitality: 3 },
+  mortalBasicSkillId: MORTAL_DEFAULT_BASIC_ID,
 }
 
 export type PerfectionOutcome = 'achieved' | 'proven_infeasible' | 'safety_bound'
@@ -99,7 +99,10 @@ export function mortalStatBudget(): MortalStatBudget {
     0,
   )
   const breakthroughPoints = mortal.maxLevel - createDefaultPlayer().realmLevel
-  const available = CHARACTER_CREATION_ATTRIBUTE_POINTS + breakthroughPoints
+  // Creation grants no points post-BETA-CREATION - the only
+  // enumerated stat source is breakthrough.
+  const creationPoints = 0
+  const available = creationPoints + breakthroughPoints
   return {
     required,
     available,
@@ -108,7 +111,7 @@ export function mortalStatBudget(): MortalStatBudget {
       MAIN_STAT_KEYS.map((stat) => [stat, baseline[stat]]),
     ) as Record<MainStatKey, number>,
     cap,
-    creationPoints: CHARACTER_CREATION_ATTRIBUTE_POINTS,
+    creationPoints,
     breakthroughPoints,
   }
 }

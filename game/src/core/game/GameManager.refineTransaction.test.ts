@@ -1,3 +1,4 @@
+import { primeMortalCreationPick } from '../../services/save/GameSave.fixture'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { affixes } from '../../data/equipment/affixes'
 import { equipment } from '../../data/equipment/equipment'
@@ -77,6 +78,7 @@ describe('GameManager refine transaction', () => {
     expect(committedAccuracy).toBeDefined()
     expect(committedAccuracy!.flat).toBeGreaterThan(accuracyBefore!.flat ?? 0)
 
+    primeMortalCreationPick(player, manager.skillManager)
     const roundTripped: unknown = JSON.parse(JSON.stringify(buildGameSave(player, manager)))
     const validated = validateGameSaveShape(roundTripped)
 

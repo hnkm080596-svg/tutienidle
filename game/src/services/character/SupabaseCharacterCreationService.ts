@@ -62,7 +62,7 @@ export class SupabaseCharacterCreationService implements CharacterCreationServic
           p_roll_id: this.rollId,
           p_name: draft.name,
           p_talent_ids: draft.talentIds,
-          p_attributes: draft.attributes,
+          p_mortal_basic_skill_id: draft.mortalBasicSkillId,
           p_initial_save: {},
           // Trước đây hardcode 39 trong khi CURRENT_SAVE_VERSION đã lên 40 —
           // nhân vật tạo qua cloud sẽ bị chặn "incompatible" ngay lần load.

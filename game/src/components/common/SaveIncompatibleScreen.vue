@@ -114,6 +114,7 @@ function handleImport(event: Event) {
       :title="pendingConfirm?.title ?? ''"
       :message="pendingConfirm?.message ?? ''"
       :danger="pendingConfirm?.danger ?? false"
+      :layer="OVERLAY_LAYERS.saveGateModal"
       @confirm="resolvePendingConfirm"
       @cancel="cancelPendingConfirm"
     />

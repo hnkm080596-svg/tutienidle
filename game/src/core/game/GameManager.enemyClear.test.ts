@@ -8,6 +8,7 @@ import type { CombatEntity } from '../combat/CombatEntity'
 import { createDefaultPlayer } from '../player/Player'
 import type { Stage } from '../stage/Stage'
 import { SKILLS } from '../../data/skill/Skills'
+import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { SPIRIT_STONE_MATERIAL } from '../material/SpiritStoneMaterial'
 
 // Audit 2026-08-31 (M1) — EnemyManager.add() chỉ push, remove duy nhất
@@ -124,7 +125,8 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
     gameManager.catalogOps.registerEnemyTemplates([enemy])
     gameManager.catalogOps.registerStages([stage])
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
-    expect(gameManager.skillSystem.learn(SKILLS[0]!)).toBe(true)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+    expect(gameManager.progressionOps.learnSkill('tram', player)).toBe(true)
     expect(gameManager.progressionOps.setMortalBasicSkill(player, 'tram')).toBe(true)
 
     // KHÔNG auto-repeat — mục tiêu là state 'victory' cuối cùng.

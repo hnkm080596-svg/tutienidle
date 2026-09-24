@@ -1,0 +1,24 @@
+{
+  "applied": [
+    "census:CEN-I-ONBOARD",
+    "census:CEN-I-SVCCHAR",
+    "census:CEN-I-COREGAME",
+    "census:CEN-I-PLAYER",
+    "census:CEN-I-SKILL",
+    "census:CEN-I-SAVE",
+    "census:CEN-I-META",
+    "census:CEN-I-LOCALES",
+    "census:CEN-I-E2E",
+    "census:CEN-I-MIGRATION",
+    "census:CEN-I-EARLYGAME",
+    "census:CEN-I-SPEC",
+    "census:CEN-I-PLAN",
+    "census:CEN-I-QA",
+    "evidence:EV-IMPL-TYPECHECK (updated)",
+    "evidence:EV-IMPL-VITEST (updated)",
+    "evidence:EV-IMPL-E2E (updated)",
+    "evidence:EV-IMPL-ADVERSARIAL (updated)",
+    "evidence:EV-IMPL-FIMPL1-FIX (updated)",
+    "finding:F-IMPL-1 (updated)"
+  ]
+}

@@ -333,8 +333,10 @@ function createMortalRuntime(deps: CultivationPathRuntimeDeps): CultivationPathR
     ...sharedMembers(deps),
     resolveBasic(player) {
       // P7-M4 — the persisted pick is the mortal basic; the precursor
-      // whitelist + learned membership guard it (a post-path or corrupt
-      // pick resolves the tram default). NO slot read exists anymore.
+      // whitelist + learned membership guard it. Save v82 contract: a
+      // mortal SAVE must carry the pick (preflight rejects otherwise);
+      // this fallback is the defensive runtime default for in-memory /
+      // crafted players, never a creation grant. NO slot read exists.
       const pick = player.mortalBasicSkillId
       const authoredBasicId =
         pick !== undefined && isMortalPrecursorSkillId(pick) && deps.skillManager.has(pick)

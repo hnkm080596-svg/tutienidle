@@ -1,0 +1,9 @@
+{
+  "applied": [
+    "census:CEN-IMPL-DIFF",
+    "evidence:EV-IMPL-TYPECHECK",
+    "evidence:EV-IMPL-VITEST",
+    "evidence:EV-IMPL-E2E",
+    "evidence:EV-IMPL-ADVERSARIAL"
+  ]
+}

@@ -207,8 +207,8 @@ handing it to `EarlyGameSession`.
 **Pinned creation profile (fixed in this plan, not chosen at
 implementation time):**
 `{ name: 'P6 Loop Probe', talentIds: ['hap_linh'],
-attributes: { strength: 2, dexterity: 0, intelligence: 0,
-attunement: 0, vitality: 3 } }`. Rationale: `hap_linh` (Hấp Linh) is a
+mortalBasicSkillId: 'tram' }` — the v82 creation profile shape (base
+stats fixed 1/1/1/1/1, no attribute distribution). Rationale: `hap_linh` (Hấp Linh) is a
 creation-pool talent (weight 55) whose only effect is in-battle
 lifesteal below 50% HP — it subsidizes NONE of the gate surfaces
 (cultivation speed, insight income, node costs, drop tables, sink

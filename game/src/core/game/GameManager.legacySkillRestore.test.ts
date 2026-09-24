@@ -23,6 +23,12 @@ function buildLegacySave(skills: Skill[]): GameSave {
       // M-QI-07 (v74) - the minimal legacy-skill fixture still declares
       // the required physique field at the current version.
       physiqueGrade: 'pham',
+      realmId: 'mortal',
+      // v82 - a mortal save must carry the creation pick + its learned
+      // skills entry + the canonical core grant (three-channel write).
+      mortalBasicSkillId: 'tram',
+      nodeLevels: { core_tram: 1 },
+      purchasedNodeIds: ['core_tram'],
     },
     techniques: [],
     skills,

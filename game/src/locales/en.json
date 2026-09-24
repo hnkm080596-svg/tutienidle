@@ -891,60 +891,33 @@
       "back": "← Back",
       "headerKicker": "DESTINY-BINDING",
       "headerTitle": "Create Character",
-      "step": "Step {step} / {total}",
-      "stepperAria": "Character creation progress",
       "nameStep": {
         "kicker": "DAO NAME",
         "title": "A title carried through the immortal path",
         "description": "Character names are unique and cannot be changed in the early phase.",
         "label": "Character Name",
         "placeholder": "Enter a dao name…",
-        "minLengthHint": "{length}/20 · Minimum 2 characters",
-        "continue": "Continue"
+        "minLengthHint": "{length}/20 · Minimum 2 characters"
       },
       "talentStep": {
         "kicker": "DESTINY",
         "title": "Choose One Innate Talent",
         "selected": "Selected {count} / 1",
         "rolling": "Observing the heavens…",
-        "reroll": "↻ Reroll all",
-        "confirm": "Confirm talent"
+        "reroll": "↻ Reroll all"
       },
-      "attributeStep": {
-        "kicker": "FOUNDATION",
-        "title": "Allocate starting points",
-        "pointsLeft": "{count} points left",
-        "summaryTalent": "1 Talent",
-        "summaryPoints": "5 Foundation Points",
-        "rechooseTalent": "Rechoose talent",
-        "creating": "Binding fate…",
-        "finish": "Step onto the immortal path"
+      "skillStep": {
+        "kicker": "FIRST STRIKE",
+        "title": "Choose your starting technique",
+        "selected": "Selected {count} / 1",
+        "description": "All three techniques are learned — this choice decides your opening basic attack."
       },
-      "attributes": {
-        "strength": {
-          "name": "Physique",
-          "hint": "Raw strength of the body"
-        },
-        "dexterity": {
-          "name": "Agility",
-          "hint": "Mobility and evasion"
-        },
-        "intelligence": {
-          "name": "Divine Sense",
-          "hint": "Skill potency"
-        },
-        "attunement": {
-          "name": "Spirit Root",
-          "hint": "Elemental resonance"
-        },
-        "vitality": {
-          "name": "Constitution",
-          "hint": "Vitality and endurance"
-        }
-      },
+      "finish": "Step onto the immortal path",
+      "creating": "Binding fate…",
       "errors": {
         "rollFailed": "Cannot observe the heavens. Please try again."
-      }
+      },
+      "summary": "{name} · {talent} · {skill}"
     }
   },
   "skillResource": {

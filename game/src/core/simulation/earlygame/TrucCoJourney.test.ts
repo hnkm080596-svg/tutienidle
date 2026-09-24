@@ -118,7 +118,7 @@ import { EarlyGameSession } from './EarlyGameSession'
 const PINNED_PROFILE = {
   name: 'journey',
   talentIds: ['hap_linh'],
-  attributes: { strength: 2, vitality: 3 },
+  mortalBasicSkillId: 'tram',
 }
 
 const FOUNDATION_STAGE_IDS = Array.from(
@@ -1172,6 +1172,9 @@ describe('TrucCoJourney - save integrity', () => {
     const s = makeJourneySession()
     const save = buildGameSave(s.player, s.gameManager)
     save.player.realmId = 'foundation_establishment'
+    // Post-mortal saves carry no creation pick (v82 preflight rejects
+    // pick+post-mortal before the body-progression check below).
+    delete save.player.mortalBasicSkillId
     save.player.bodyProgression.zhou_tian.circulation = 50
     setActivePinia(createPinia())
     const resumed = new EarlyGameSession({

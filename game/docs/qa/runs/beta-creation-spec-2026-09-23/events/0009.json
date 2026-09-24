@@ -1,0 +1,15 @@
+{
+  "applied": [
+    "census:CEN-SPEC-DOC",
+    "census:CEN-PLAN-DOC",
+    "census:CEN-SVC-CHAR",
+    "census:CEN-CORE-GAME",
+    "census:CEN-CORE-PLAYER",
+    "census:CEN-CORE-SKILL",
+    "census:CEN-SVC-SAVE",
+    "census:CEN-ONBOARDING",
+    "census:CEN-LOCALES",
+    "census:CEN-TESTS",
+    "evidence:EV-SPEC-CENSUS-EXEC (updated)"
+  ]
+}

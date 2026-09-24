@@ -3,6 +3,7 @@
 // save boundary (decompose slice) and the pool accounting invariants.
 // They are written to PASS against correct behavior; a failure is a
 // confirmed defect (failing-for-the-intended-reason evidence).
+import { withMortalCreationPick } from '../../services/save/GameSave.fixture'
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
@@ -51,7 +52,7 @@ describe('QA R7 - shared pool boundedness', () => {
 // INV-R7-3: boot boundary with adversarial decompose payloads.
 describe('QA R7 - decompose slice boot safety', () => {
   function baseSave(player: ReturnType<typeof createDefaultPlayer>): GameSave {
-    return {
+    return withMortalCreationPick({
       version: CURRENT_SAVE_VERSION,
       player: { ...player, lastSavedAt: Date.now() },
       techniques: [],
@@ -65,7 +66,7 @@ describe('QA R7 - decompose slice boot safety', () => {
       buildings: [],
       quests: { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
       productionSites: [],
-    }
+    })
   }
 
   it('restore twice from the same save does not double-award decompose output', () => {
