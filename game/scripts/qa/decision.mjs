@@ -110,6 +110,24 @@ export function evaluateTerminal(ledger) {
     clauses.push({ id: "C8-terminal-check", ok, reason: ok ? "independent terminal verifier sealed" : "no sealed independent TERMINAL_CHECK on the final state" });
   }
 
+  // 9. readiness/conformance (schema v2): a run that declared requiredReadiness
+  //    must carry a brief that reached IMPLEMENTATION_READY and records whether
+  //    the final change followed or validly revised each binding constraint.
+  {
+    if (ledger.schemaVersion !== 2 || !ledger.run.requiredReadiness) {
+      clauses.push({ id: "C9-readiness", ok: true, reason: "readiness not required for this run (v1 or opt-out)" });
+    } else {
+      const briefs = (ledger.briefs ?? []).filter((b) => ledger.run.briefIds.includes(b.id));
+      const ready = briefs.filter((b) => b.readiness === "IMPLEMENTATION_READY");
+      const conformed = briefs.filter((b) => b.finalConformanceIds.length > 0);
+      const ok = briefs.length > 0 && ready.length === briefs.length && conformed.length === briefs.length;
+      clauses.push({ id: "C9-readiness", ok,
+        reason: briefs.length === 0 ? "requiredReadiness run has no construction brief (PU-24)"
+          : ready.length !== briefs.length ? `brief(s) never reached IMPLEMENTATION_READY: ${briefs.filter((b) => b.readiness !== "IMPLEMENTATION_READY").map((b) => b.id).join(",")}`
+          : `brief(s) lack finalConformance evidence: ${briefs.filter((b) => b.finalConformanceIds.length === 0).map((b) => b.id).join(",")}` });
+    }
+  }
+
   return clauses;
 }
 

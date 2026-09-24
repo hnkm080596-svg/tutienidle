@@ -14,8 +14,13 @@ import { execFileSync } from "node:child_process";
 import {
   newLedger, loadLedger, saveLedgerAtomic, acquireLease, checkLease, appendEvent,
   recordMessage, invalidateForNewState, buildManifest, hashFileSet, computeEnvironmentId,
-  objectHash, runDir,
+  objectHash, runDir, SCHEMA_VERSION_V1,
 } from "./state.mjs";
+import {
+  loadLessonsJsonl, routeLessons, draftBrief, preflightBrief, checkpointBrief,
+  admitAssignment, observeAssignment, applyLearningAction, publishPolicy,
+  loadActivePolicy, migrateLedgerV1toV2,
+} from "./prevention.mjs";
 import { validateLedger, validateStructure } from "./validate.mjs";
 import { decide, renderReport } from "./decision.mjs";
 
@@ -125,12 +130,14 @@ const RECORD_COLLECTION = {
   invariant: "invariants", census: "census", finding: "findings", evidence: "evidence",
   coverage: "coverage", attack: "attacks", review: "reviews", cycle: "cycles",
   mutation: "mutations", corpus: "corpus", lesson: "lessons", message: "messages",
+  brief: "briefs", assignment: "assignments", consumption: "consumptions",
 };
 
 const EVENT_KIND = {
   invariant: "PHASE", census: "PHASE", finding: "FINDING", evidence: "EVIDENCE",
   coverage: "EVIDENCE", attack: "EVIDENCE", review: "REVIEW_SEALED", cycle: "EVIDENCE",
   mutation: "EVIDENCE", corpus: "EVIDENCE", lesson: "EVIDENCE", message: "EVIDENCE",
+  brief: "EVIDENCE", assignment: "SCHEDULE", consumption: "EVIDENCE",
 };
 
 function cmdRecord(args) {
@@ -260,6 +267,121 @@ function cmdQualify() {
   process.exitCode = gaps.length ? 1 : 0;
 }
 
+function learningPaths() {
+  const learn = path.join(QA_ROOT, "learning");
+  return {
+    history: path.join(learn, "history", "lessons.jsonl"),
+    policyDir: path.join(learn, "policies"),
+    activePolicy: path.join(learn, "active-policy.json"),
+  };
+}
+
+function cmdPrepare(args) {
+  // `qa:internal prepare --task <file>` -> routing record + brief draft.
+  const task = readJson(path.resolve(args.task));
+  if (!task.taskId) throw new Error("task.taskId required");
+  const { history, activePolicy, policyDir } = learningPaths();
+  const lessons = loadLessonsJsonl(history);
+  const active = fs.existsSync(activePolicy) ? loadActivePolicy(activePolicy, policyDir) : null;
+  const product = args["product-root"] ? path.resolve(args["product-root"]) : GAME_ROOT;
+  const routing = routeLessons(task, lessons, { productRoot: product });
+  const brief = draftBrief(task, routing, {
+    policyHash: active?.policyHash ?? objectHash("no-policy"),
+    planningBaseline: task.planningBaseline ?? { productStateId: "", contractId: "", attackModelId: "", environmentId: "" },
+  });
+  const out = { taskId: task.taskId, generatedAt: utcNowMarker(), policyHash: brief.policyHash, routing, brief };
+  const outPath = args.out ? path.resolve(args.out) : null;
+  if (outPath) { fs.mkdirSync(path.dirname(outPath), { recursive: true }); fs.writeFileSync(outPath, JSON.stringify(out, null, 2) + "\n"); }
+  console.log(JSON.stringify(out, null, 2));
+}
+
+function utcNowMarker() { return new Date().toISOString(); }
+
+function cmdPreflight(args) {
+  // `qa:internal preflight --brief <file>` -> readiness verdict + unmet list.
+  const brief = readJson(path.resolve(args.brief));
+  const { activePolicy, policyDir } = learningPaths();
+  const active = fs.existsSync(activePolicy) ? loadActivePolicy(activePolicy, policyDir) : null;
+  const product = args["product-root"] ? path.resolve(args["product-root"]) : GAME_ROOT;
+  const res = preflightBrief(brief, { productRoot: product, activePolicyHash: active?.policyHash });
+  console.log(JSON.stringify(res, null, 2));
+  if (res.readiness === "BLOCKED") process.exitCode = 1;
+}
+
+function cmdCheckpoint(args) {
+  // `qa:internal checkpoint --brief <file> --state <file>` -> new brief revision.
+  const brief = readJson(path.resolve(args.brief));
+  const observedState = readJson(path.resolve(args.state));
+  const res = checkpointBrief(brief, { observedState, reason: args.reason ?? "checkpoint" });
+  const outPath = args.out ? path.resolve(args.out) : path.resolve(args.brief);
+  fs.writeFileSync(outPath, JSON.stringify(res.brief, null, 2) + "\n");
+  console.log(JSON.stringify({ revision: res.brief.revision, invalidated: res.invalidated }, null, 2));
+}
+
+function cmdLearn(args) {
+  // `qa:internal learn --run <id> --input <file>` -> lesson facet transition,
+  // guarded qualification, atomic policy publication.
+  const dir = runDir(QA_ROOT, args.run);
+  const leaseId = args.lease ?? leaseFromDir(dir);
+  checkLease(dir, leaseId);
+  const ledger = loadLedger(dir);
+  const input = readJson(path.resolve(args.input));
+  const lesson = ledger.lessons.find((l) => `${l.id}@${l.version}` === input.lessonRef || l.id === input.lessonRef);
+  if (!lesson) throw new Error(`lesson not in run ledger: ${input.lessonRef}`);
+  const res = applyLearningAction(lesson, input.action, { actor: input.actor ?? leaseId });
+  if (!res.ok) throw new Error(`learning action rejected: ${res.reason}`);
+  if (input.action.type === "publish") {
+    const { policyDir, activePolicy } = learningPaths();
+    const pub = publishPolicy(policyDir, activePolicy, input.policyPayload);
+    if (!pub.ok) throw new Error(`publication rejected: ${pub.reason}`);
+    lesson.guidance.policyRef = pub.policyHash;
+    lesson.status = "PROMOTED";
+    lesson.policyVersion = pub.policyHash;
+    lesson.effectiveFromRun = ledger.run.id;
+  }
+  appendEvent(dir, ledger, { kind: "EVIDENCE", actor: leaseId, state: ledger.run.state, payload: { learning: input.lessonRef, action: input.action.type } });
+  saveLedgerAtomic(dir, ledger);
+  console.log(`learn ${input.lessonRef}: ${input.action.type} applied`);
+}
+
+function cmdSchedule(args) {
+  // `qa:internal schedule --run <id> --input <file>` -> capacity admission or
+  // lifecycle-verified release. Queue records never hold a slot.
+  const dir = runDir(QA_ROOT, args.run);
+  const leaseId = args.lease ?? leaseFromDir(dir);
+  checkLease(dir, leaseId);
+  const ledger = loadLedger(dir);
+  const input = readJson(path.resolve(args.input));
+  let note;
+  if (input.action === "admit") {
+    const { record, admitted } = admitAssignment(ledger, input.assignment, { externalOccupied: input.externalOccupied ?? 0 });
+    const i = ledger.assignments.findIndex((a) => a.id === record.id);
+    if (i >= 0) ledger.assignments[i] = record; else ledger.assignments.push(record);
+    note = `admit ${record.id}: ${admitted ? "RESERVED" : record.status}`;
+  } else if (input.action === "observe") {
+    const a = observeAssignment(ledger, input.assignmentId, { observedStatus: input.observedStatus, evidence: input.evidence });
+    note = `observe ${a.id}: ${a.status}`;
+  } else {
+    throw new Error(`unknown schedule action: ${input.action}`);
+  }
+  appendEvent(dir, ledger, { kind: "SCHEDULE", actor: leaseId, state: ledger.run.state, payload: input });
+  saveLedgerAtomic(dir, ledger);
+  console.log(note);
+}
+
+function cmdMigrate(args) {
+  // `qa:internal migrate --run <id>` -> explicit v1->v2 for a RESUMED run only.
+  const dir = runDir(QA_ROOT, args.run);
+  const leaseId = args.lease ?? leaseFromDir(dir);
+  checkLease(dir, leaseId);
+  const ledger = loadLedger(dir);
+  if (ledger.schemaVersion !== SCHEMA_VERSION_V1) throw new Error(`migrate only applies to schemaVersion 1, got ${ledger.schemaVersion}`);
+  const { ledger: migrated, notes } = migrateLedgerV1toV2(ledger);
+  appendEvent(dir, migrated, { kind: "MIGRATION", actor: leaseId, state: migrated.run.state, payload: { from: 1, to: 2, notes } });
+  saveLedgerAtomic(dir, migrated);
+  console.log(`migrated run ${ledger.run.id} to schemaVersion 2 (${notes.length} initializations)`);
+}
+
 const [command, ...rest] = process.argv.slice(2);
 const args = parse(rest);
 try {
@@ -271,6 +393,12 @@ try {
     case "decide": cmdDecide(args); break;
     case "render": cmdRender(args); break;
     case "qualify": cmdQualify(); break;
+    case "prepare": cmdPrepare(args); break;
+    case "preflight": cmdPreflight(args); break;
+    case "checkpoint": cmdCheckpoint(args); break;
+    case "learn": cmdLearn(args); break;
+    case "schedule": cmdSchedule(args); break;
+    case "migrate": cmdMigrate(args); break;
     default:
       console.log("usage: cli.mjs init|snapshot|record|validate|decide|render|qualify");
       process.exitCode = 2;
