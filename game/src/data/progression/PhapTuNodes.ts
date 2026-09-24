@@ -13,10 +13,12 @@ import { buildRealmRewardNodes } from './PhapTuRealmRewardNodes'
 // Cultivation Path Framework (M4) -- every node in this tree is stamped
 // requiredCultivationPath 'spell' + requiredWay 'spell_pathway': the whole
 // element/root/route/The machinery belongs to the spell_pathway way only.
-// hidden_spell_pathway owns NO tree at all -- its way
-// has no progression nodes (PhapTuAnNodes.ts stays an empty stub), so a
-// Ngo Dao player can never purchase or aggregate these nodes even if a
-// dirty spellPath slice leaks into their state.
+// hidden_spell_pathway owns NO tree of its own (PhapTuAnNodes.ts stays
+// an empty stub), and a Ngo Dao player can never purchase or aggregate
+// these requiredWay-stamped nodes even if a dirty spellPath slice
+// leaks into their state. Way-LESS rewardOnly grant nodes (appended
+// below) are the deliberate exception: they aggregate on either spell
+// way once granted.
 export const PHAP_TU_NODES: ProgressionNode[] = [
   ...buildElementBranch('fire'),
   ...buildElementBranch('water'),

@@ -20,7 +20,7 @@ import { CAST_LEVELING_THRESHOLDS } from '../skill/CastLeveling'
  * - Modifiers are NO LONGER pushed permanently into player.modifiers nor
  *   mutate the Skill instance on purchase - every effect is derived from
  *   (registry, nodeLevels) via aggregateNodeStatModifiers()/
- *   aggregateNodeSkillModifiers() so recompute always yields the same
+ *   aggregateTurnSkillResourceModifiers() so recompute always yields the same
  *   deterministic result, never double-applied on load.
  *
  * Data-driven per-level cost: node.upgradeCost = { base, perLevel }
@@ -219,7 +219,7 @@ export function isNodeElementActive(player: PlayerData, node: ProgressionNode): 
  * Purchase/upgrade keep isNodeElementActive so a pre-commit player can
  * still buy an element root (the purchase IS the commit).
  */
-function isNodeElementEffective(player: PlayerData, node: ProgressionNode): boolean {
+export function isNodeElementEffective(player: PlayerData, node: ProgressionNode): boolean {
   if (node.elementTag === undefined) {
     return true
   }
@@ -634,6 +634,12 @@ function cascadeRevokeOrphanedNodes(
       }
 
       if (preservedIds?.has(node.id)) {
+        continue
+      }
+
+      // Grant-owned nodes are not revocable through respec - the same
+      // exemption the target selection above gives them.
+      if (node.rewardOnly) {
         continue
       }
 

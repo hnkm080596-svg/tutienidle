@@ -121,3 +121,14 @@ export function buildRealmRewardNodes(): ProgressionNode[] {
     requiredCultivationPath: 'spell',
   }))
 }
+
+/**
+ * grantedNodeLevels entries covering all five element masteries at the
+ * given level - the single id source (TINH_THONG_NODE_IDS), so way
+ * definitions cannot drift from the registered reward nodes.
+ */
+export function masteryGrantRecord(level: number): Record<string, number> {
+  return Object.fromEntries(
+    Object.values(TINH_THONG_NODE_IDS).map((id) => [id, level]),
+  )
+}

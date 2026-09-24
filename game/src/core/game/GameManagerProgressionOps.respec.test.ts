@@ -226,4 +226,32 @@ describe('progressionOps.respecNodeTree', () => {
     expect(refund).toBe(0)
     expect(player.nodeLevels[reward.id]).toBe(2)
   })
+
+  it('rewardOnly nodes are exempt from the orphan cascade even when they carry node prereqs', () => {
+    // Armor for the grant-owned channel: authored reward nodes carry no
+    // 'node' prereqs today, but if a future one does, revoking its parent
+    // must not sweep it (target-selection exemption alone is not enough).
+    const root = node({ id: 'ops_root', insightCost: 0 })
+    const mid = node({
+      id: 'ops_mid',
+      prerequisites: [{ kind: 'node', nodeId: 'ops_root' }],
+    })
+    const reward = node({
+      id: 'ops_reward',
+      rewardOnly: true,
+      prerequisites: [{ kind: 'node', nodeId: 'ops_mid' }],
+    })
+    const { gameManager, player } = setup([root, mid, reward])
+
+    own(player, { ops_root: 1, ops_mid: 1 })
+    // Canonical grant shape: nodeLevels write only, no purchasedNodeIds.
+    player.nodeLevels.ops_reward = 1
+    player.skillInsight = 100
+
+    gameManager.progressionOps.respecNodeTree(player)
+
+    // ops_mid's revocation would orphan ops_reward - the exemption keeps it.
+    expect(player.nodeLevels.ops_reward).toBe(1)
+    expect(player.nodeLevels.ops_mid).toBeUndefined()
+  })
 })

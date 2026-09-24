@@ -134,6 +134,40 @@ describe('PhapTu realm-reward grant nodes', () => {
     ).toBe(true)
   })
 
+  it('resolveMaxThe keeps element-gated The-cap nodes dormant until element commit', () => {
+    // Aggregation gate pin: the The-cap query must use the same
+    // dormant-until-commit element gate as the stat aggregators - a
+    // spell_pathway player with element === null gets nothing even while
+    // holding a level on an elementTag node.
+    const synthetic = {
+      id: 'synthetic_the_cap',
+      name: 'Synthetic The Cap',
+      type: 'minor' as const,
+      insightCost: 0,
+      elementTag: 'fire' as const,
+      effect: { theCapPerLevel: 5 },
+    }
+    const customRegistry = { getAll: () => [...PHAP_TU_NODES, synthetic] }
+
+    const uncommitted = nguHanh({
+      spellPath: { element: null, route: null },
+      nodeLevels: { synthetic_the_cap: 1 },
+    })
+    expect(resolveMaxThe(customRegistry, uncommitted)).toBe(MAX_THE)
+
+    const committed = nguHanh({
+      spellPath: { element: 'fire', route: 'dot' },
+      nodeLevels: { synthetic_the_cap: 1 },
+    })
+    expect(resolveMaxThe(customRegistry, committed)).toBe(MAX_THE + 5)
+
+    const wrongElement = nguHanh({
+      spellPath: { element: 'water', route: 'dot' },
+      nodeLevels: { synthetic_the_cap: 1 },
+    })
+    expect(resolveMaxThe(customRegistry, wrongElement)).toBe(MAX_THE)
+  })
+
   it('every grantedNodeLevels key across ways resolves to a registered rewardOnly node', () => {
     for (const module of Object.values(CULTIVATION_PATH_MODULES)) {
       for (const way of Object.values(module.ways)) {

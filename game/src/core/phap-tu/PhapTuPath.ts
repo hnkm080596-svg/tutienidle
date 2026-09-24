@@ -10,6 +10,7 @@ import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
 import { SPELL_KIT_IDS, SPELL_ROUTE_SKILL_IDS } from '../../data/skill/Skills'
 import { VAN_PHAP_THAN_HOA_ID } from '../../data/buff/ReactionStatusBuffs'
 import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
+import { THE_THUC_TINH_NODE_ID, masteryGrantRecord } from '../../data/progression/PhapTuRealmRewardNodes'
 import { ARTIFACT_UNLOCK_REALM_ID } from '../artifact/ArtifactDomain'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
 
@@ -265,12 +266,8 @@ export const SPELL_PATHWAY: PathWayDefinition = {
     // at level 2.
     foundation_establishment: {
       grantedNodeLevels: {
-        tinh_thong_hoa: 1,
-        tinh_thong_thuy: 1,
-        tinh_thong_moc: 1,
-        tinh_thong_kim: 1,
-        tinh_thong_tho: 1,
-        the_thuc_tinh: 1,
+        ...masteryGrantRecord(1),
+        [THE_THUC_TINH_NODE_ID]: 1,
       },
     },
   }),
@@ -355,11 +352,7 @@ export const HIDDEN_SPELL_PATHWAY: PathWayDefinition = {
   realmRewards: composeRealmRewards({
     foundation_establishment: {
       grantedNodeLevels: {
-        tinh_thong_hoa: 2,
-        tinh_thong_thuy: 2,
-        tinh_thong_moc: 2,
-        tinh_thong_kim: 2,
-        tinh_thong_tho: 2,
+        ...masteryGrantRecord(2),
       },
     },
   }),
