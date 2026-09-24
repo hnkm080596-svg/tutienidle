@@ -613,7 +613,14 @@ export class GameManagerProgressionOps {
    * (derived from level/cost data), cascades orphan child nodes; modifiers
    * update via the aggregators (no reverse subtraction of old modifiers).
    */
-  devResetBranch(branchTag: string, player: PlayerData): number {
+  devResetBranch(branchTag: string, player: PlayerData): number | null {
+    // Same out-of-combat contract as respecNodeTree/switchRoute: node
+    // investment is static during battle, so a mid-battle reset is
+    // refused even though this op is dev-console only today.
+    if (this.deps.isTurnBattleInProgress()) {
+      return null
+    }
+
     const revoked = new Set<string>()
     const refund = devResetBranchSystem(player, this.deps.nodeRegistry, branchTag, revoked)
     this.applyOneShotClawback(player, revoked)

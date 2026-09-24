@@ -59,9 +59,14 @@ export function useProgressionActions() {
       withBump(gameManager.progressionOps.switchRoute(route, player.$state)),
 
     // Reset development mot nhanh (plan sec.6.10) - hoan Cam Ngo da tieu;
-    // bump vo dieu kien (reset ve 0 level cung la thay doi state UI).
+    // ngoai combat only (op tu reject trong tran), tra false khi bi tu choi.
     devResetBranch: (branchTag: string) => {
-      gameManager.progressionOps.devResetBranch(branchTag, player.$state)
+      // null = tu choi trong tran (out-of-combat gate, giong respec).
+      const refund = gameManager.progressionOps.devResetBranch(branchTag, player.$state)
+
+      if (refund === null) {
+        return false
+      }
 
       bumpState()
 

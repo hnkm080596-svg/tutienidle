@@ -156,7 +156,7 @@ function specTooltip(skill: Skill, spec: SkillSpecialization) {
     )
 
     if (permanentlyExcluded) {
-      return { title: spec.name, description: 'Đã khóa vĩnh viễn - nhánh đối lập đã chọn.' }
+      return { title: spec.name, description: 'Đang khóa - nhánh đối lập đã chọn (reset node để mở lại).' }
     }
 
     return { title: spec.name, description: `Mở qua node ${node.name} trong Skill Path.` }
