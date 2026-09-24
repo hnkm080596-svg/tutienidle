@@ -8,11 +8,11 @@ import { GRID_COLUMN_COUNT } from '../../core/battle/BattleGrid'
 // Orbs are kind:'physical' damage scaled off might — no cooldowns, no
 // resource: the preset loop IS the pacing mechanism (spec §4.1).
 //
-// presetId choice: every orb uses the generic 'slash' preset for now —
-// the CombatVfxPresetId union has no per-orb sword entries and spec §8's
-// REQUIRED-presetId rule targets COMBO entries (per-combo distinct
-// signatures land with the combo table in Task 5), not orbs. Orb
-// identity is player-known via the preset strip/picker (Task 7).
+// presetId choice (Kiem Pho Beta, design sec.3): the two beta orbs
+// carry their authored stroke-identity presets (point->line->converge
+// for Dam, crescent->arc->scar for Chem); Bo/Hat/Quet keep the
+// generic 'slash' until their design window lands. DATA ONLY.
+// Orb identity is player-known via the preset strip/picker (Task 7).
 export type { OrbId }
 
 export const ORB_UNLOCK_REALM: Record<OrbId, number> = {
@@ -37,7 +37,7 @@ export const KIEM_PHO_ORBS: Record<OrbId, TurnSkillDefinition> = {
     cooldownTurns: 0,
     damage: { kind: 'physical', multiplier: 1, levelScaling: 0.05 },
     targeting: { shape: 'single' },
-    presetId: 'slash',
+    presetId: 'kiem_orb_dam',
   },
   orb_chem: {
     id: 'orb_chem',
@@ -45,7 +45,7 @@ export const KIEM_PHO_ORBS: Record<OrbId, TurnSkillDefinition> = {
     damage: { kind: 'physical', multiplier: 1.2, levelScaling: 0.05 },
     targeting: { shape: 'single' },
     appliesAilments: [{ buffDefinitionId: 'kiem_thuong', chance: 1, stacks: 1 }],
-    presetId: 'slash',
+    presetId: 'kiem_orb_chem',
   },
   orb_bo: {
     id: 'orb_bo',

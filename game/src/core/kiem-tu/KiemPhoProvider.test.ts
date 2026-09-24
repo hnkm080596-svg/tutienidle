@@ -40,7 +40,7 @@ describe('KiemPhoProvider', () => {
     expect(provider.resolveBasic(participant).id).toBe('orb_dam')
   })
 
-  it('combo fires on the third orb_dam and returns the tam_thich extra def', () => {
+  it('combo fires on the third orb_dam and returns the nhat_tuyen extra def', () => {
     const provider = buildKiemPhoProvider(hienPlayer(['orb_dam']), [])
 
     expect(provider.onCastResolved!(castCtx('orb_dam'))).toEqual([])
@@ -48,9 +48,12 @@ describe('KiemPhoProvider', () => {
 
     const extras = provider.onCastResolved!(castCtx('orb_dam'))
     expect(extras).toHaveLength(1)
-    expect(extras[0]!.id).toBe('tam_thich')
-    expect(extras[0]!.presetId).toBe('kiem_combo_tam_thich')
-    expect(extras[0]!.damage?.multiplier).toBe(2.5)
+    expect(extras[0]!.id).toBe('nhat_tuyen')
+    expect(extras[0]!.presetId).toBe('kiem_combo_nhat_tuyen')
+    expect(extras[0]!.damage?.multiplier).toBe(3.0)
+    // Design sec.7: Nhat Tuyen is a pure direct burst - no seal payload.
+    expect(extras[0]!.appliesBuffs).toBeUndefined()
+    expect(extras[0]!.ailmentInteractions).toBeUndefined()
 
     // M-QI-05 - the generated extra carries BOTH halves of owner
     // inheritance: progressionOwnerId transports the triggering orb's
@@ -100,7 +103,7 @@ describe('KiemPhoProvider', () => {
     const lv1 = evaluateScalarExpression(hit.coefficient, ctxAtLevel(1))
     const lv6 = evaluateScalarExpression(hit.coefficient, ctxAtLevel(6))
 
-    expect(lv1).toBeCloseTo(2.5, 6)
+    expect(lv1).toBeCloseTo(3.0, 6)
     expect(lv6 / lv1).toBeCloseTo(1 + 5 * 0.05, 6)
   })
 
@@ -116,7 +119,7 @@ describe('KiemPhoProvider', () => {
       }),
     })
     // golden_core unlocks len-4 matching; preset [C,B,D,C] fires
-    // 'tram_phach_thich_tram' which matches both capstone predicates.
+    // 'tram_phach_thich_tram' which matches both test predicates.
     const provider = buildKiemPhoProvider(
       hienPlayer(['orb_chem', 'orb_bo', 'orb_dam', 'orb_chem'], 'golden_core'),
       [buffMod('orb_chem', 2, 'kiem_thuong'), buffMod('orb_bo', 1, 'suy_nhuoc')],
@@ -152,7 +155,7 @@ describe('KiemPhoProvider', () => {
     provider.onCastResolved!(castCtx('orb_dam'))
     provider.onCastResolved!(castCtx('orb_dam'))
     const extras = provider.onCastResolved!(castCtx('orb_dam'))
-    expect(extras[0]?.id).toBe('tam_thich')
+    expect(extras[0]?.id).toBe('nhat_tuyen')
   })
 
   it('resetForBattle restores cursor and log (auto-repeat safe)', () => {
@@ -177,16 +180,17 @@ describe('KiemPhoProvider', () => {
   })
 
   it('reachableKiemPhoComboIds filters patterns to realm-unlocked orbs', () => {
-    // qi_refining unlocks orb_dam only -> tam_thich [D,D,D] is the sole
+    // qi_refining unlocks orb_dam only -> nhat_tuyen [D,D,D] is the sole
     // reachable combo; every pattern needing chem/bo/hat/quet is out.
-    expect(reachableKiemPhoComboIds('qi_refining')).toEqual(['tam_thich'])
+    expect(reachableKiemPhoComboIds('qi_refining')).toEqual(['nhat_tuyen'])
 
-    // foundation_establishment adds orb_chem -> pure C and C/D mixed
-    // patterns become reachable, B/H/Q patterns stay out.
+    // foundation_establishment adds orb_chem -> the other five beta
+    // combos become reachable, B/H/Q patterns stay out, and D-C-C /
+    // C-D-D are NOT combos (design sec.4).
     const fe = reachableKiemPhoComboIds('foundation_establishment')
-    expect(fe).toContain('tam_tram')
-    expect(fe).toContain('nhi_thich_nhat_tram')
-    expect(fe).toContain('tram_thich_tram')
+    expect([...fe].sort()).toEqual(
+      ['diep_ngan', 'hoi_tuyen', 'khai_ngan', 'liet_ngan', 'nhat_tuyen', 'thau_ngan'].sort(),
+    )
     expect(fe).not.toContain('tam_phach')
     expect(fe).not.toContain('nhi_lieu_nhat_thich')
   })

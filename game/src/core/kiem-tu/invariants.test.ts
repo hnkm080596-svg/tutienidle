@@ -19,7 +19,6 @@ import {
 import { buildKiemPhoProvider } from './KiemPhoProvider'
 import {
   buildNguKiemDaoProvider,
-  collectKiemDaoCascadeUnlocks,
 } from './NguKiemDaoProvider'
 import {
   applyBreakthroughMerge,
@@ -264,7 +263,7 @@ describe('INV-3/4/6 — combo determinism + suffix-free table + realm gating', (
     const state = initKiemPhoBattle(hienPlayer(['orb_dam']))
     recordCastAndMatch(state, 'orb_dam', KIEM_PHO_COMBOS)
     recordCastAndMatch(state, 'orb_dam', KIEM_PHO_COMBOS)
-    expect(recordCastAndMatch(state, 'orb_dam', KIEM_PHO_COMBOS)?.id).toBe('tam_thich')
+    expect(recordCastAndMatch(state, 'orb_dam', KIEM_PHO_COMBOS)?.id).toBe('nhat_tuyen')
     expect(state.log).toEqual([])
     expect(recordCastAndMatch(state, 'orb_dam', KIEM_PHO_COMBOS)).toBeNull()
   })
@@ -299,9 +298,9 @@ describe('INV-5 — additive resolution: the completing orb hit still lands', ()
     const comboDamagesBefore = damages
     const result = system.applyActionImpact(battle, system.declareActorAction(battle, attackerP))
 
-    // Third cast: orb_dam lands (1) AND tam_thich fires as extraImpact (2).
+    // Third cast: orb_dam lands (1) AND nhat_tuyen fires as extraImpact (2).
     expect(damages - comboDamagesBefore).toBe(2)
-    expect(result.extraImpacts[0]?.presetId).toBe('kiem_combo_tam_thich')
+    expect(result.extraImpacts[0]?.presetId).toBe('kiem_combo_nhat_tuyen')
     vi.restoreAllMocks()
   })
 })
@@ -339,9 +338,9 @@ describe('INV-7 — hardcore discovery', () => {
     ]
     const violations: string[] = []
     // A hardcoded literal bypasses the import scan — quote-delimited
-    // matching keeps presetId strings ('kiem_combo_tam_thich', the
+    // matching keeps presetId strings ('kiem_combo_nhat_tuyen', the
     // LEGITIMATE discovery signal in VFX/impact types) distinct from
-    // the bare combo id ('tam_thich') or name, which must never leak.
+    // the bare combo id ('nhat_tuyen') or name, which must never leak.
     const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     const literalPatterns = KIEM_PHO_COMBOS.flatMap((combo) =>
       [combo.id, combo.name].map(
@@ -494,9 +493,9 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
 
     const ngu = nguPlayer('golden_core')
     ngu.skillInsight = 500
-    // orb_dam_1's realm gate passes at golden_core — only the way gate blocks.
-    expect(gameManager.progressionOps.canPurchaseNode('orb_dam_1', ngu)).toBe(false)
-    expect(gameManager.progressionOps.purchaseNode('orb_dam_1', ngu)).toBe(false)
+    // thich_can's realm gate passes at golden_core - only the way gate blocks.
+    expect(gameManager.progressionOps.canPurchaseNode('thich_can', ngu)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('thich_can', ngu)).toBe(false)
 
     // ...and the matching way buys normally — no hidden root prereq
     // chains the ngu subtree any more.
@@ -506,7 +505,7 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
   })
 
   it('hien orb nodes stamp requiredWay hien; ngu branch nodes stamp requiredWay ngu', () => {
-    const orbNode = KIEM_TU_NODES.find(n => n.id === 'orb_dam_1')
+    const orbNode = KIEM_TU_NODES.find(n => n.id === 'thich_can')
     const nguNode = KIEM_TU_NODES.find(n => n.branchTag === 'ngu_kiem')
     expect(orbNode).toBeDefined()
     expect(nguNode).toBeDefined()

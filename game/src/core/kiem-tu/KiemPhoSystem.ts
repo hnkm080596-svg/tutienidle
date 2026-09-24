@@ -3,6 +3,7 @@ import type { PlayerData } from '../player/Player'
 import type { ActionTargeting, CombatVfxPresetId } from '../battle/CombatAction'
 import { getRealmIndex } from '../realm/realmSystem'
 import { unlockedOrbs } from '../../data/skill/KiemPhoOrbs'
+import { ailmentInteractionPhase, type SkillAilmentInteraction } from '../skill/SkillEffect'
 
 // Kiem Tu Reimagined Task 4 (spec 2026-09-15 §4) — KiemPhoSystem: the
 // sword_pathway battle-runtime matcher. Owns preset snapshot + cursor + cast log
@@ -30,6 +31,17 @@ export interface KiemPhoCombo {
    *  Entries with the same definitionId merge their stacks. */
   appliesBuffs?: { definitionId: string; target: 'self' | 'target'; stacks?: number }[]
   targeting?: ActionTargeting
+  // Kiem Pho Beta (design sec.7 Thau Ngan) -- direct hit scales by live
+  // same-source ailment stacks on the resolved target WITHOUT consuming
+  // (scaleBuff 'own' lane in the adapter).
+  scalesWithAilmentStacks?: { ailmentId: string; damagePerStack: number }
+  // Kiem Pho Beta (design sec.7/8) -- same-source seal interactions the
+  // combo executes inside its landed gate, ordered by the design's phase
+  // pin: stack application -> duration/instance-local modifiers ->
+  // manual periodic triggers. Node modifiers may APPEND entries; the
+  // phase sort in applyModifiers keeps the order contract regardless
+  // of node list order.
+  ailmentInteractions?: readonly SkillAilmentInteraction[]
 }
 
 /** Spec §4.2 — the ONLY way a node may alter a combo. Run order is
@@ -136,7 +148,7 @@ export function recordCastAndMatch(
   return null
 }
 
-function applyModifiers(
+export function applyModifiers(
   combo: KiemPhoCombo,
   modifiers: readonly KiemPhoComboModifier[],
 ): KiemPhoCombo {
@@ -147,6 +159,18 @@ function applyModifiers(
   for (const modifier of ordered) {
     if (modifier.matches(derived)) {
       derived = modifier.apply(derived)
+    }
+  }
+  // Kiem Pho Beta ordering pin (design sec.8) -- node-appended
+  // interactions must land in phase order (stacks -> duration/modifier
+  // -> manual trigger) no matter which node contributed them; the sort
+  // is stable so authored intra-phase order is preserved.
+  if (derived.ailmentInteractions !== undefined) {
+    derived = {
+      ...derived,
+      ailmentInteractions: [...derived.ailmentInteractions].sort(
+        (a, b) => ailmentInteractionPhase(a) - ailmentInteractionPhase(b),
+      ),
     }
   }
   return derived

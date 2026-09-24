@@ -3,6 +3,10 @@ import type { DynamicBasicProvider, TurnSkillDefinition } from '../battle/turn/T
 import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import type { KiemPhoBattleState, KiemPhoCombo, KiemPhoComboModifier } from './KiemPhoSystem'
 import { initKiemPhoBattle, nextOrb, recordCastAndMatch } from './KiemPhoSystem'
+import {
+  applySkillDefinitionModifiers,
+  type KiemPhoSkillDefinitionModifier,
+} from './KiemPhoNodeModifiers'
 import type { OrbId } from './KiemTuState'
 import { getRealmIndex } from '../realm/realmSystem'
 import { KIEM_PHO_ORBS, unlockedOrbs } from '../../data/skill/KiemPhoOrbs'
@@ -32,6 +36,14 @@ function comboToExtraDef(combo: KiemPhoCombo, triggeringOrbId: string): TurnSkil
     // re-collects the deterministic primary target in applyExtraImpact.
     targeting: combo.targeting ?? { shape: 'single' },
     appliesBuffs: combo.appliesBuffs?.map((buff) => ({ ...buff })),
+    // Kiem Pho Beta - Thau Ngan's stack-scaled hit and the seal
+    // interactions (Liet Ngan stacks, Diep Ngan manual trigger, Kiem
+    // Ket extensions, Lien Thuc triggers) ride the same extra-impact
+    // payload, phase-ordered by applyModifiers.
+    scalesWithAilmentStacks: combo.scalesWithAilmentStacks
+      ? { ...combo.scalesWithAilmentStacks }
+      : undefined,
+    ailmentInteractions: combo.ailmentInteractions,
     presetId: combo.presetId,
     // M-QI-05 - the combo payload inherits the triggering orb's Core
     // level (QI-D3 internal-action ownership), never its own id.
@@ -72,15 +84,28 @@ export function isKiemPhoProviderHandle(
 export function buildKiemPhoProvider(
   player: PlayerData,
   modifiers: readonly KiemPhoComboModifier[],
+  // Kiem Pho Beta (design sec.10/15) - Can / Thuan Thuc node effects
+  // folded into orb def copies at emit. Memoized per orb: node levels
+  // never change mid-battle, so auto/manual always emit the identical
+  // def object (INV-13).
+  skillModifiers: readonly KiemPhoSkillDefinitionModifier[] = [],
 ): KiemPhoProviderHandle {
   let state: KiemPhoBattleState = initKiemPhoBattle(player)
+  const foldedDefs = new Map<OrbId, TurnSkillDefinition>()
+  const orbDef = (orb: OrbId): TurnSkillDefinition => {
+    const cached = foldedDefs.get(orb)
+    if (cached) return cached
+    const folded = applySkillDefinitionModifiers(KIEM_PHO_ORBS[orb], skillModifiers)
+    foldedDefs.set(orb, folded)
+    return folded
+  }
   const manualDefs = (): TurnSkillDefinition[] =>
-    unlockedOrbs(getRealmIndex(player.realmId)).map(orb => KIEM_PHO_ORBS[orb])
+    unlockedOrbs(getRealmIndex(player.realmId)).map(orbDef)
 
   return {
     resolveBasic(participant: TurnBattleParticipant): TurnSkillDefinition {
       void participant
-      return KIEM_PHO_ORBS[nextOrb(state)]
+      return orbDef(nextOrb(state))
     },
 
     manualOptions(): readonly TurnSkillDefinition[] {
@@ -89,7 +114,7 @@ export function buildKiemPhoProvider(
 
     resolveManualPick(defId: string): TurnSkillDefinition | null {
       if (!isOrbId(defId)) return null
-      const def = KIEM_PHO_ORBS[defId]
+      const def = orbDef(defId)
       // Manual pick validates against realm-unlocked options only; the
       // cast lands in the log via onCastResolved — the cursor does NOT
       // advance (spec §4.1: resuming auto continues where it left off).

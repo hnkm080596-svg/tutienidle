@@ -335,6 +335,10 @@ function adaptDamageOp(
     ...(info.missingHpBonusCap !== undefined
       ? { missingHpBonusCap: info.missingHpBonusCap }
       : {}),
+    // Kiem Pho Beta (Nhat Diem) -- def-level armor policy lands on the
+    // primary hit op; instances.each.armorPierce overrides it per
+    // instance (SkillResolver.armorPolicyFor).
+    ...(def.armorPolicy !== undefined ? { armorPolicy: def.armorPolicy } : {}),
   }
   const lane =
     info.kind === 'elemental'
@@ -464,6 +468,13 @@ function adaptAilmentInteractions(
           selector,
           turns: interaction.turns,
           ...gate,
+        })
+        break
+      case 'add_stacks':
+        ops.push({
+          type: 'add_buff_stacks',
+          selector,
+          stacks: interaction.stacks,
         })
         break
     }

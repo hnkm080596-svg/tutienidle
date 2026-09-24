@@ -35,6 +35,36 @@ export type SkillAilmentInteraction =
       turns: number
       routes?: readonly SpellPathRoute[]
     }
+  // Kiem Pho Beta (design sec.7) -- add stacks to the caster's
+  // same-source instance through BuffSystem.addStacks (canonical cap
+  // clamp; never creates an instance, never re-rolls application).
+  // Compiled to add_buff_stacks; that op has no gateOnApplyResult lane,
+  // so an entry meant to ride a self-applied seal must be authored as
+  // add_modifier/extend_duration/trigger_periodic instead.
+  | {
+      kind: 'add_stacks'
+      buffId: string
+      stacks: number
+      routes?: readonly SpellPathRoute[]
+    }
+
+/** Execution-phase rank of a SkillAilmentInteraction (Kiem Pho Beta
+    ordering pin, design sec.8): stack application first, duration and
+    instance-local modifiers next, manual periodic triggers last.
+    Consumers that APPEND interactions to a derived def (KiemPho combo
+    modifiers, node skill-definition modifiers) stable-sort on this so
+    authored/append order can never reorder the phases. */
+export function ailmentInteractionPhase(interaction: SkillAilmentInteraction): number {
+  switch (interaction.kind) {
+    case 'add_stacks':
+      return 0
+    case 'add_modifier':
+    case 'extend_duration':
+      return 1
+    case 'trigger_periodic':
+      return 2
+  }
+}
 
 export interface SkillEffect {
   type: SkillEffectType

@@ -169,6 +169,13 @@ export interface TurnSkillDefinition {
   // coefficient by SAME-SOURCE ailment stacks without consuming:
   // coefficient += live stacks x damagePerStack per hit target.
   scalesWithAilmentStacks?: { ailmentId: string; damagePerStack: number }
+  // Kiem Pho Beta (design sec.11 Nhat Diem) -- def-level armor policy
+  // forwarded onto the primary deal_damage op (same field shape as
+  // AuthoredOperation.deal_damage.armorPolicy; per-instance
+  // instances.each.armorPierce still wins when both are authored).
+  // pierceFractionOnFail WITHOUT bypassChance is a deterministic partial
+  // pierce -- no RNG is consumed.
+  armorPolicy?: { bypassChance?: number; pierceFractionOnFail?: number }
   // Hoa An (spec sec.62) -- same-source seal interactions appended inside
   // the landed gate AFTER ailment applications, in authored order
   // (Phan Thien: apply -> manual tick -> potency modifier -> extend).

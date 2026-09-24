@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { KIEM_TU_NODES } from './KiemTuNodes'
 import { ORB_UNLOCK_REALM } from '../skill/KiemPhoOrbs'
-import type { OrbId } from '../../core/kiem-tu/KiemTuState'
 
 // Kiem Tu Reimagined Task 11 (spec 2026-09-15 §6) — the reimagined
 // tree: 5 orb branches (growth + combo capstone) under 'kiem_pho',
@@ -12,7 +11,6 @@ import type { OrbId } from '../../core/kiem-tu/KiemTuState'
 // node carries requiredCultivationPath 'sword' + requiredWay
 // ('sword_pathway' orbs / 'hidden_sword_pathway' subtree) stamped at export.
 
-const ORB_IDS: OrbId[] = ['orb_dam', 'orb_chem', 'orb_bo', 'orb_hat', 'orb_quet']
 const REALM_BY_INDEX = [
   'mortal',
   'qi_refining',
@@ -60,50 +58,65 @@ describe('KiemTuNodes — tree shape', () => {
   })
 })
 
-describe('KiemTuNodes — orb branches (hien)', () => {
-  it.each(ORB_IDS)('%s branch: 5 growth + 1 capstone, hien way, realm gate', orb => {
-    const short = orb.replace('orb_', '')
-    const growth = KIEM_TU_NODES.filter(
-      n => n.branchTag === 'kiem_pho' && n.id.startsWith(`orb_${short}_`) && !n.effect.swordPathComboModifier,
-    )
-    const capstone = KIEM_TU_NODES.find(
-      n => n.branchTag === 'kiem_pho' && n.id.startsWith(`orb_${short}_`) && n.effect.swordPathComboModifier,
-    )
+describe('KiemTuNodes — kiem_pho beta branches (hien)', () => {
+  // Kiem Pho Beta (design sec.10-12): exactly the 8 authored beta
+  // nodes; the legacy orb_* growth/capstone ids are retired.
+  const BETA_IDS = [
+    'thich_can', 'nhat_diem', 'quy_tuyen', 'lien_thich',
+    'tram_can', 'thuong_tham', 'luu_ngan', 'lien_tram',
+  ]
 
-    expect(growth.length).toBe(5)
-    expect(capstone, `missing capstone for ${orb}`).toBeDefined()
-
-    const gateRealm = REALM_BY_INDEX[ORB_UNLOCK_REALM[orb]]!
-    for (const g of growth) {
-      expect(g.requiredCultivationPath).toBe('sword')
-      expect(g.requiredWay).toBe('sword_pathway')
-      expect(g.prerequisites).toContainEqual({ kind: 'realm', realmId: gateRealm })
-    }
-    expect(capstone!.requiredCultivationPath).toBe('sword')
-    expect(capstone!.requiredWay).toBe('sword_pathway')
-    expect(capstone!.type).toBe('major')
+  it('the kiem_pho branch is exactly the 8 beta nodes — no legacy orb ids remain', () => {
+    const kiemPho = KIEM_TU_NODES.filter(n => n.branchTag === 'kiem_pho').map(n => n.id)
+    expect([...kiemPho].sort()).toEqual([...BETA_IDS].sort())
+    expect(
+      KIEM_TU_NODES.some(
+        n => /^orb_(dam|chem|bo|hat|quet)_\d+$/.test(n.id) || n.id.endsWith('_capstone'),
+      ),
+    ).toBe(false)
   })
 
-  it('capstones carry swordPathComboModifier targeting their own orb', () => {
-    for (const orb of ORB_IDS) {
-      const short = orb.replace('orb_', '')
-      const capstone = KIEM_TU_NODES.find(
-        n => n.id.startsWith(`orb_${short}_`) && n.effect.swordPathComboModifier,
-      )!
-      expect(capstone.effect.swordPathComboModifier!.minOrbCount.orb).toBe(orb)
-      expect(capstone.effect.swordPathComboModifier!.minOrbCount.count).toBeGreaterThanOrEqual(1)
-    }
-  })
-
-  it('orb growth nodes are prereq-chained inside their own branch (no cross-orb links)', () => {
+  it('no kiem_pho node carries statModifiers — nodes modify the SKILL, never the character (design sec.16.A)', () => {
     for (const n of KIEM_TU_NODES.filter(n => n.branchTag === 'kiem_pho')) {
-      const short = n.id.split('_')[1]
-      for (const prereq of n.prerequisites ?? []) {
-        if (prereq.kind === 'node') {
-          expect(prereq.nodeId.startsWith(`orb_${short}_`)).toBe(true)
-        }
-      }
+      expect(n.effect.statModifiers).toBeUndefined()
     }
+  })
+
+  it('branch shape per orb: Can realm-gated at the orb unlock realm, Thuan Thuc/Kiem Ket prereq Can, Lien Thuc prereq both', () => {
+    const branches = [
+      ['orb_dam', 'thich_can', 'nhat_diem', 'quy_tuyen', 'lien_thich'],
+      ['orb_chem', 'tram_can', 'thuong_tham', 'luu_ngan', 'lien_tram'],
+    ] as const
+    for (const [orb, can, thuanThuc, kiemKet, lienThuc] of branches) {
+      const gateRealm = REALM_BY_INDEX[ORB_UNLOCK_REALM[orb]]
+      const canNode = node(can)
+      expect(canNode.requiredCultivationPath).toBe('sword')
+      expect(canNode.requiredWay).toBe('sword_pathway')
+      expect(canNode.prerequisites).toContainEqual({ kind: 'realm', realmId: gateRealm })
+      expect(canNode.type).toBe('minor')
+      expect(canNode.role).toBe('growth')
+
+      for (const id of [thuanThuc, kiemKet, lienThuc]) {
+        const n = node(id)
+        expect(n.requiredCultivationPath).toBe('sword')
+        expect(n.requiredWay).toBe('sword_pathway')
+        expect(n.type).toBe('major')
+      }
+      expect(node(thuanThuc).prerequisites).toContainEqual({ kind: 'node', nodeId: can })
+      expect(node(kiemKet).prerequisites).toContainEqual({ kind: 'node', nodeId: can })
+      const lienPrereqs = node(lienThuc).prerequisites
+      expect(lienPrereqs).toContainEqual({ kind: 'node', nodeId: thuanThuc })
+      expect(lienPrereqs).toContainEqual({ kind: 'node', nodeId: kiemKet })
+    }
+  })
+
+  it('Can nodes carry per-level skillDefinitionModifiers on their own orb', () => {
+    expect(node('thich_can').effect.skillDefinitionModifiers).toContainEqual(
+      expect.objectContaining({ skillId: 'orb_dam' }),
+    )
+    expect(node('tram_can').effect.skillDefinitionModifiers).toContainEqual(
+      expect.objectContaining({ skillId: 'orb_chem' }),
+    )
   })
 })
 

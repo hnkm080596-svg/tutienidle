@@ -1,6 +1,7 @@
 import type { ElementType } from '../element/ElementType'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { OrbId } from '../kiem-tu/KiemTuState'
+import type { SkillAilmentInteraction } from '../skill/SkillEffect'
 import type { BodyKitModifierValues } from '../the-tu/TheTuKitModifiers'
 import type { HiddenBodyMechanicModifierValues } from '../the-tu/TheTuAnMechanicModifiers'
 import type { CultivationPathId, CultivationWayId } from '../player/CultivationPathKit'
@@ -108,7 +109,12 @@ export interface NodeEffect {
   // ONLY channel through which a node may alter a combo.
   swordPathComboModifier?: {
     // matches(combo): combo pattern contains >= count of `orb`.
-    minOrbCount: { orb: OrbId; count: number }
+    // Kiem Pho Beta: OPTIONAL - at least one predicate (this or
+    // completingOrb) must be authored on each entry.
+    minOrbCount?: { orb: OrbId; count: number }
+    // Kiem Pho Beta (design sec.10 Kiem Ket) - matches(combo): the
+    // combo's COMPLETING orb (last pattern entry) equals `orb`.
+    completingOrb?: OrbId
     // Multiplies the combo's bonus damage by (1 + x) - no-op on
     // damage-less combos.
     bonusDamageMultiplier?: number
@@ -118,9 +124,22 @@ export interface NodeEffect {
     appliesBuff?: { definitionId: string; target: 'self' | 'target'; stacks?: number }
     // Adds stacks to every buff the combo carries (no-op when empty).
     bonusAilmentStacks?: number
+    // Kiem Pho Beta (design sec.10-12) - appends same-source seal
+    // interactions to the derived combo; the collector keeps authored
+    // order, applyModifiers re-sorts on ailmentInteractionPhase so the
+    // sec.8 ordering pin (stacks -> modifiers -> triggers) holds.
+    ailmentInteractions?: readonly SkillAilmentInteraction[]
     // Deterministic apply order - ascending, nodeId tiebreak. Default 0.
     priority?: number
   }
+
+  // Kiem Pho Beta (design sec.10/15) - the ONLY node -> authored
+  // TurnSkillDefinition channel: skill-scoped def adjustments applied
+  // when the provider emits the def (derived copies - canonical data
+  // is never mutated). SKILL-scoped, never character-scoped: this
+  // channel may not touch statModifiers (design sec.16.A invariant -
+  // nodes modify the SKILL, never the character).
+  skillDefinitionModifiers?: SkillDefinitionModifierSpec[]
 
   // The Tu Reimagined (plan Task 6) - the ONLY node -> body kit
   // channel. Each channel value is the PER-LEVEL contribution;
@@ -142,6 +161,35 @@ export interface NodeEffect {
   // granted cores revoke (with spent-Insight refund) when this node's
   // ownership is removed by any path.
   grantsSkillCoreIds?: readonly string[]
+}
+
+/**
+ * Kiem Pho Beta (design sec.10) - DATA form of a skill-scoped node
+ * adjustment (see NodeEffect.skillDefinitionModifiers). All numeric
+ * channels are PER-LEVEL contributions of the owning node's level;
+ * `skillId` targets the authored TurnSkillDefinition id (an orb id for
+ * Kiem Pho - never a generated/internal action id). Values are folded
+ * into DERIVED def copies at provider emit; the node itself stores no
+ * runtime state.
+ */
+export interface SkillDefinitionModifierSpec {
+  skillId: string
+
+  /** def.damage.multiplier *= (1 + value x nodeLevel) - no-op on
+      damage-less defs. */
+  damageMultiplierPerLevel?: number
+
+  /** Adds to def.armorPolicy.pierceFractionOnFail (sum over nodes,
+      clamped to [0,1] at fold; bypassChance untouched). No-op on
+      damage-less defs. */
+  armorPierceFraction?: number
+
+  /** Appends same-source seal interactions to the def's
+      ailmentInteractions (phase-sorted at fold). */
+  addAilmentInteractions?: readonly SkillAilmentInteraction[]
+
+  /** Deterministic fold order - ascending, nodeId tiebreak. Default 0. */
+  priority?: number
 }
 
 /**
