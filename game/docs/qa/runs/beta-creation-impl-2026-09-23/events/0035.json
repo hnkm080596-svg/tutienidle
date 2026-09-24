@@ -1,0 +1,13 @@
+{
+ "type": "CANDIDATE_TRANSITION",
+ "previousHead": "2d5349a674de39738b7e23a6dcdd5c343ef7dc68",
+ "repairCommit": "1beffdda — fix(creation): Clean-A QA findings (F-INT-01 rejected-save routed to saveIssue recovery; F-INT-02 SQL drift-pin comment; F-INT-03 back-button disabled during creating; F-A-COR-1 stale error cleared at finish(); AUTH-1/2/3 doc+comment+test-title+footer-summary)",
+ "mergeCommit": "e9e5d103d9b5663b90ba8e7a510cfc17b1dda2d1 — merge origin/beta/rc (1662ffcc seam-repair incl.) into devin/1790189100-beta-creation; sole conflict saveVersion.ts resolved as union v82 block ([SEAM-REPAIR] nodeOneShotGrants + tribulation slice + tribulationBonusStacks-drop, [CREATION] mortalBasicSkillId required + 1/1/1/1/1)",
+ "newCandidate": "e9e5d103d9b5663b90ba8e7a510cfc17b1dda2d1",
+ "evidenceNote": "aggregate diff under review narrowed: beta/rc content moved to merge-base; reviewed delta vs new base = creation changes + Clean-A repairs. per protocol section 13 the fix/merge creates a new candidate: clean rounds reset, FINAL gates re-run on this head.",
+ "gateEvidence": {
+  "typeCheck": "clean on e9e5d103",
+  "build": "clean on e9e5d103",
+  "vitest": "592/592 green across save/tribulation/creation/onboarding/mortalBasicSkill/character scopes; simulation scope suite running"
+ }
+}

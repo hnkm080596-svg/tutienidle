@@ -1,6 +1,9 @@
 {
-  "leaseId": "coordinator-devin-4df500e190cc4b9d837f408a5ed53852",
-  "acquiredAt": "2026-09-24T01:21:07.871883+00:00",
-  "pid": 0,
-  "note": "recovered from dead coordinator-59983 VM; takeover by continuation coordinator session devin-4df500e190cc4b9d837f408a5ed53852"
+ "leaseId": "coordinator-devin-4df500e190cc4b9d837f408a5ed53852",
+ "acquiredAt": "2026-09-24T01:21:07.871883+00:00",
+ "pid": 0,
+ "note": "recovered from dead coordinator-59983 VM; takeover by continuation coordinator session devin-4df500e190cc4b9d837f408a5ed53852",
+ "coordinator": "coordinator-devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+ "transferredFrom": "coordinator-devin-4df500e190cc4b9d837f408a5ed53852",
+ "at": "2026-09-24T02:31:26.693Z"
 }
