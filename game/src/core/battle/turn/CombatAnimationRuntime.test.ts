@@ -147,7 +147,7 @@ describe('CombatAnimationRuntime', () => {
     const { runtime, player, eventBus, turnBattleSystem } = fixture()
 
     const emittedPresets: (string | undefined)[] = []
-    eventBus.on('action_impact', (payload) => emittedPresets.push(payload.presetId))
+    eventBus.on('action_impact', (payload) => emittedPresets.push((payload as { presetId?: string }).presetId))
 
     const realDeclare = turnBattleSystem.declareActorAction.bind(turnBattleSystem)
     vi.spyOn(turnBattleSystem, 'declareActorAction').mockImplementation((battle, actor) => {
@@ -155,7 +155,7 @@ describe('CombatAnimationRuntime', () => {
       if (declared.execution?.resolvedSkill) {
         declared.execution = {
           ...declared.execution,
-          resolvedSkill: { ...declared.execution.resolvedSkill, presetId: 'pin-picked-preset' },
+          resolvedSkill: { ...declared.execution.resolvedSkill, presetId: 'holy_radiance' },
         }
       }
       return declared
@@ -166,14 +166,14 @@ describe('CombatAnimationRuntime', () => {
     runtime.acknowledgeTurnReady(token)
     runtime.acknowledgeActionImpact(token)
 
-    expect(emittedPresets).toContain('pin-picked-preset')
+    expect(emittedPresets).toContain('holy_radiance')
   })
 
   it('action_impact falls back to action.skill.presetId when resolvedSkill authors none', () => {
     const { runtime, player, eventBus, turnBattleSystem } = fixture()
 
     const emittedPresets: (string | undefined)[] = []
-    eventBus.on('action_impact', (payload) => emittedPresets.push(payload.presetId))
+    eventBus.on('action_impact', (payload) => emittedPresets.push((payload as { presetId?: string }).presetId))
 
     const realDeclare = turnBattleSystem.declareActorAction.bind(turnBattleSystem)
     vi.spyOn(turnBattleSystem, 'declareActorAction').mockImplementation((battle, actor) => {
@@ -185,7 +185,7 @@ describe('CombatAnimationRuntime', () => {
         }
       }
       if (declared.action?.skill) {
-        declared.action = { ...declared.action, skill: { ...declared.action.skill, presetId: 'pin-root-preset' } }
+        declared.action = { ...declared.action, skill: { ...declared.action.skill, presetId: 'shadow_burst' } }
       }
       return declared
     })
@@ -195,7 +195,7 @@ describe('CombatAnimationRuntime', () => {
     runtime.acknowledgeTurnReady(token)
     runtime.acknowledgeActionImpact(token)
 
-    expect(emittedPresets).toContain('pin-root-preset')
+    expect(emittedPresets).toContain('shadow_burst')
   })
 
   it('acknowledgeTurnReady with a stale token is a no-op', () => {
