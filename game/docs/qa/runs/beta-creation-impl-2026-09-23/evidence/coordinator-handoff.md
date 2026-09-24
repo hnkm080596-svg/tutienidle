@@ -7,6 +7,14 @@ parent repaired all 7 on `devin/1790189100-beta-creation`: head moved
 F-INT-02/F-INT-03, F-A-CORRECTNESS-1, F-A-AUTHORITY-1/2/3. Coordinator-side local
 evidence reported by parent: type-check clean, 60 scoped tests green.
 
+Post-repair merge (~03:0xZ): head 1beffdda -> e9e5d103 — merge of origin/beta/rc
+resolving the saveVersion.ts conflict as a union v82 comment ([SEAM-REPAIR]
+nodeOneShotGrants+tribulation+tribulationBonusStacks-drop, [CREATION]
+mortalBasicSkillId-required + 1/1/1/1/1). Parent-reported post-merge evidence:
+type-check clean, 592 tests green (save/tribulation/creation/onboarding/
+mortalBasicSkill scopes). **Re-snapshot must target e9e5d103 (or later), not
+1beffdda.**
+
 ## Run-journal consequences (next coordinator must execute)
 - Frozen state N2 (d3b0cb32) binds head 2d5349a6 — SUPERSEDED. Next step is a
   fresh `snapshot` on head 1beffdda -> new state N3; all N2-bound
