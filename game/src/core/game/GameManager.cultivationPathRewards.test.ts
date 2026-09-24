@@ -40,6 +40,21 @@ describe('GameManager — cultivation path realm rewards', () => {
     expect(gameManager.techniqueManager.getActive()?.mastery).toBe(42)
   })
 
+  it('realm-entry grant writes nodeLevels only - purchasedNodeIds mirror stays untouched', () => {
+    const gameManager = new GameManager()
+    const player = createDefaultPlayer()
+
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.realmId = 'foundation_establishment'
+    player.purchasedNodeIds = ['existing_purchase']
+
+    expect(gameManager.realmAdvanceOps.grantCultivationPathRealmReward(player, player.realmId)).toBe(true)
+    expect(player.nodeLevels['the_thuc_tinh']).toBe(1)
+    expect(player.purchasedNodeIds).toEqual(['existing_purchase'])
+  })
+
   it('Kiếm Tu ở Trúc Cơ chỉ có record passive — không nhận nhầm technique/artifact Pháp Tu', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
