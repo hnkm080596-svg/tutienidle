@@ -1,0 +1,22 @@
+{
+  "type": "CYCLE_DISPATCH",
+  "cycle": "CYC-RB2-1",
+  "round": "clean-B-prime",
+  "candidate": "0e8351bd",
+  "reviewers": [
+    {
+      "lens": "CORRECTNESS",
+      "session": "20b106d1aa184feb8da7ab2fec88fbaa"
+    },
+    {
+      "lens": "AUTHORITY",
+      "session": "94d25515c80c46129fd6c5c5df7a07d2"
+    },
+    {
+      "lens": "INTEGRATION",
+      "session": "04cf0428ab5049fe976bfad2982a4a5a"
+    }
+  ],
+  "challengeSet": "Fresh lenses on the repaired head: 3-leg remote/local gate matrix, normalized-vs-raw visibility, orphan-core direction, 4-corner pairing at both gates, latch bypass, static-vs-live catalog equivalence, import->push->pull poison chain, ordering determinism, recovery-surface reach, concurrency, regression breadth",
+  "independence": "fresh sessions, priorFindingsVisible=false, no docs/qa access"
+}
