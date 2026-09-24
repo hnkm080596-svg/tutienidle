@@ -51,7 +51,7 @@ export const HIDDEN_BEASTS: Enemy[] = [
     id: 'co_thu',
     name: 'Cổ Thú',
     level: 11,
-    realmId: 'qi_refining',
+    realmId: 'mortal',
     lane: 'ground',
     archetype: 'melee',
     family: 'hidden_beast',
