@@ -18,6 +18,10 @@ describe('OVERLAY_LAYERS stacking contract', () => {
     expect(OVERLAY_LAYERS.appError).toBeGreaterThan(OVERLAY_LAYERS.panel)
   })
 
+  it('modals spawned by the save gate paint above the gate itself (F-PRE-2: its ConfirmModal must stay clickable)', () => {
+    expect(OVERLAY_LAYERS.saveGateModal).toBeGreaterThan(OVERLAY_LAYERS.saveGate)
+  })
+
   it('curtain is topmost by contract - no layer may outrank it while closed', () => {
     for (const [key, layer] of Object.entries(OVERLAY_LAYERS)) {
       expect(OVERLAY_LAYERS.curtain, `curtain must stay at-or-above '${key}'`).toBeGreaterThanOrEqual(layer)

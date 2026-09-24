@@ -527,7 +527,6 @@
         "stateLocked": "Chưa mở",
         "cost": "{count} Thông Mạch Đan",
         "realmGate": "{realm} tầng {level}",
-        "auxGate": "cần Thiên Địa Chi Kiều",
         "pageLocked": "Mở khóa ở {realm}",
         "invest": "Mở Mạch",
         "owned": "sở hữu {count}",
@@ -543,18 +542,12 @@
         "locked": "Hoàn thành Kỳ Kinh Bát Mạch trước",
         "realmLocked": "Mở khóa ở {realm}",
         "capacity": "Dung lượng hiện tại: {capacity}",
-        "tieuLabel": "Tiểu Chu Thiên · 180",
-        "daiLabel": "Đại Chu Thiên · 360",
+        "tieuLabel": "Tiểu Chu Thiên · 18",
+        "daiLabel": "Đại Chu Thiên · 36",
         "invest": "Vận Chu Thiên",
         "owned": "Tinh Hoa Pháp Thể sở hữu {count}",
+        "stepCost": "Giá bước kế: {cost}",
         "complete": "Đại Chu Thiên đã viên mãn."
-      },
-      "bodyPerfection": {
-        "title": "Thể Phách Hoàn Thiện",
-        "statePerfected": "Đã hoàn thiện",
-        "statePending": "Chưa hoàn thiện",
-        "owned": "sở hữu {count}",
-        "perfect": "Hoàn Thiện"
       }
     },
     "settings": {
@@ -891,60 +884,33 @@
       "back": "← Trở lại",
       "headerKicker": "KHAI MỆNH",
       "headerTitle": "Tạo Nhân Vật",
-      "step": "Bước {step} / {total}",
-      "stepperAria": "Tiến trình tạo nhân vật",
       "nameStep": {
         "kicker": "ĐẠO DANH",
         "title": "Danh xưng theo suốt tiên đồ",
         "description": "Tên nhân vật sẽ là duy nhất và không thể đổi trong giai đoạn đầu.",
         "label": "Tên nhân vật",
         "placeholder": "Nhập đạo danh…",
-        "minLengthHint": "{length}/20 · Tối thiểu 2 ký tự",
-        "continue": "Tiếp tục"
+        "minLengthHint": "{length}/20 · Tối thiểu 2 ký tự"
       },
       "talentStep": {
         "kicker": "THIÊN MỆNH",
         "title": "Chọn một Thiên Phú",
         "selected": "Đã chọn {count} / 1",
         "rolling": "Đang quan sát thiên cơ…",
-        "reroll": "↻ Reroll toàn bộ",
-        "confirm": "Xác nhận thiên phú"
+        "reroll": "↻ Reroll toàn bộ"
       },
-      "attributeStep": {
-        "kicker": "CĂN CƠ",
-        "title": "Phân bổ điểm khởi đầu",
-        "pointsLeft": "Còn {count} điểm",
-        "summaryTalent": "1 Thiên Phú",
-        "summaryPoints": "5 Điểm Căn Cơ",
-        "rechooseTalent": "Chọn lại thiên phú",
-        "creating": "Đang lập mệnh…",
-        "finish": "Bước vào tiên đồ"
+      "skillStep": {
+        "kicker": "KHỞI THỦY",
+        "title": "Chọn chiêu thức khởi đầu",
+        "selected": "Đã chọn {count} / 1",
+        "description": "Cả ba chiêu đều được học — lựa chọn này quyết định chiêu đánh thường mở màn."
       },
-      "attributes": {
-        "strength": {
-          "name": "Căn Cốt",
-          "hint": "Sức mạnh thể phách"
-        },
-        "dexterity": {
-          "name": "Thân Pháp",
-          "hint": "Linh hoạt và né tránh"
-        },
-        "intelligence": {
-          "name": "Thần Thức",
-          "hint": "Uy lực kỹ năng"
-        },
-        "attunement": {
-          "name": "Linh Căn",
-          "hint": "Cộng hưởng nguyên tố"
-        },
-        "vitality": {
-          "name": "Thể Chất",
-          "hint": "Sinh lực và bền bỉ"
-        }
-      },
+      "finish": "Bước vào tiên đồ",
+      "creating": "Đang lập mệnh…",
       "errors": {
         "rollFailed": "Không thể quan sát thiên cơ. Vui lòng thử lại."
-      }
+      },
+      "summary": "Đạo danh {name} · {talent} · {skill}"
     }
   },
   "skillResource": {
@@ -1046,10 +1012,6 @@
       "realm": {
         "title": "★ {realm} ★",
         "body": "Đạo hữu đã vượt qua Độ Kiếp, chính thức bước vào {realm}."
-      },
-      "defeatGreatDao": {
-        "title": "Đại Đạo Đoạn Tuyệt",
-        "body": "Nghịch thiên bất thành — cơ duyên Đại Đạo Chi Cơ đã vĩnh viễn đóng lại. Lần tới tối đa là Thiên Đạo."
       },
       "defeat": {
         "title": "Độ Kiếp Thất Bại",
@@ -1263,11 +1225,35 @@
   },
   "notifications": {
     "skillLevelUp": "{name} đạt cấp {level}",
-    "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}",
-    "bodyRealmPerfected": "Thể Phách Hoàn Thiện: {realm}"
+    "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}"
   },
   "save": {
     "conflict": "Save đã thay đổi ở một phiên khác.",
     "createFailed": "Tạo nhân vật thất bại — khởi tạo không hoàn tất."
+  },
+  "hidden": {
+    "mortal": {
+      "tier7Name": "Luyện Thể · Bậc 7 — Phàm Cốt",
+      "tier7Desc": "Thể tu ẩn của phàm nhân — sống sót trước Cổ Thú để chứng thành.",
+      "stateTrial": "Thử luyện Cổ Thú",
+      "stateDone": "Hoàn thành",
+      "beastName": "Cổ Thú"
+    },
+    "qi": {
+      "quanTheName": "Bát Mạch · Quán Thể",
+      "quanTheDesc": "Tu vi chuyển hóa vào quán thể thay vì cảnh giới — tích lũy đủ sẽ khai mở thể tu ẩn.",
+      "stateActive": "Đang chuyển hóa",
+      "stateDone": "Hoàn thành"
+    },
+    "trial": {
+      "banner": "{name} · Hiệp {elapsed}/{required}"
+    },
+    "foundation": {
+      "nghichName": "Nghịch Chu Thiên",
+      "stateActive": "Đang nghịch chuyển",
+      "stateDone": "Viên mãn",
+      "detail": "Tinh Hoa {essence} · Linh Thạch {stones} · Thành công {chance}% · Bảo hiểm {pity}/{pityLimit}",
+      "attempt": "Thử Nghịch Chu Thiên"
+    }
   }
 }

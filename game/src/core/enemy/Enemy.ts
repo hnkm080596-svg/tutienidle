@@ -130,6 +130,12 @@ export interface Enemy {
   // driven thay basic attack cứng, xem EnemySpecialAttack. Boss mẫu trước.
   specialAttacks?: EnemySpecialAttack[]
 
+  // Hidden Perfection Lineage (design 2026-09-23 sec.9) - semantic
+  // immortality for the Ancient Beast trial: an undefeatable enemy can
+  // never die in battle (lethal hits clamp to 1 HP in
+  // CombatSystem.killIfDead). NOT a huge-HP workaround.
+  undefeatable?: boolean
+
   lane: EnemyLane
 }
 
@@ -180,6 +186,10 @@ export interface EnemyDefinition {
   // thường không áp dụng — mỗi tier Kiếp tự khai statsInput riêng).
   // Chỉ tái dùng cờ isBoss để Combat HUD hiện thanh máu cố định.
   isBoss?: boolean
+
+  // Hidden Perfection Lineage (design 2026-09-23 sec.9) - semantic
+  // immortality; threaded to Enemy.undefeatable via defineEnemy().
+  undefeatable?: boolean
 }
 
 /**
@@ -225,6 +235,8 @@ export function defineEnemy(definition: EnemyDefinition): Enemy {
     specialAttacks: definition.specialAttacks,
 
     isBoss: definition.isBoss,
+
+    undefeatable: definition.undefeatable,
 
     stats,
 
@@ -327,5 +339,7 @@ export function enemyToCombatEntity(enemy: Enemy): CombatEntity {
     currentBreakGauge: enemy.breakGaugeMax,
 
     specialAttacks: enemy.specialAttacks,
+
+    undefeatable: enemy.undefeatable,
   }
 }

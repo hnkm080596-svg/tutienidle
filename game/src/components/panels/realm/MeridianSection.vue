@@ -23,9 +23,11 @@ import { REALMS } from '@/data/realms/realm'
 import { statLabel } from '@/core/stats/StatLabels'
 import GameButton from '@/components/common/GameButton.vue'
 import {
-  THIEN_DIA_CHI_KIEU_MATERIAL_ID,
   THONG_MACH_DAN_MATERIAL_ID,
 } from '@/data/realm/Meridians'
+import { getQuanTheMechanic } from '@/core/realm/hidden/QuanTheDiversion'
+import { formatNumber } from '@/core/format/NumberFormatter'
+import Bar from '@/components/common/primitives/Bar.vue'
 
 const player = usePlayerStore()
 const gameManager = useGameManager()
@@ -47,7 +49,6 @@ const pageViews = computed(() => {
 
   const completed = chapterProgress.value.completed
   const ownedPills = gameManager.pillBag.getAmount(THONG_MACH_DAN_MATERIAL_ID)
-  const ownedAux = gameManager.materialBag.getAmount(THIEN_DIA_CHI_KIEU_MATERIAL_ID)
   // M-F-CHU-THIEN (C2C-59) - sequential mirror: meridian invest stays
   // gated until body_refinement completes; the dispatch gate is the
   // authority, the button only mirrors it.
@@ -76,7 +77,6 @@ const pageViews = computed(() => {
       const canInvest = unlocked && seqUnlocked && status === 'next'
         && ownedPills >= meridian.thongMachDanCost
         && paced
-        && (!meridian.requiresThienDiaChiKieu || ownedAux >= 1)
 
       return {
         id: meridian.id,
@@ -92,7 +92,6 @@ const pageViews = computed(() => {
         requiredRealmLevel: unlocked && inPageRealm && status === 'next'
           ? meridian.requiredRealmLevel
           : null,
-        requiresAux: unlocked && status === 'next' && meridian.requiresThienDiaChiKieu === true,
         requiresSeq: unlocked && !seqUnlocked && status === 'next',
         canInvest,
         ownedPills,
@@ -110,6 +109,29 @@ function invest(): void {
     bumpState()
   }
 }
+
+// HIDDEN-B (design sec.10) - the Quan The row renders only once the
+// qi_refining hidden realm has been discovered (the first actionable
+// diverted gain creates the record); until then the continuation stays
+// invisible like every hidden-body surface.
+const hiddenQuanThe = computed(() => {
+  stateVersion.value
+
+  const record = player.$state.hiddenPerfection?.realms['qi_refining']
+  // A frozen record is permanently inert (lineage closed) - spec
+  // sec.3.4: never expose frozen progress as active progression.
+  if (record?.discovered !== true || record.frozen === true) {
+    return null
+  }
+
+  const mechanic = getQuanTheMechanic(player.$state)
+
+  return {
+    completed: record.bodyCompleted === true,
+    progress: mechanic?.progress ?? 0,
+    required: mechanic?.required ?? 0,
+  }
+})
 </script>
 
 <template>
@@ -153,7 +175,6 @@ function invest(): void {
             <template v-if="row.requiredRealmLevel !== null">
               · {{ t('panels.realm.meridian.realmGate', { realm: page.realmName, level: row.requiredRealmLevel }) }}
             </template>
-            <template v-if="row.requiresAux">· {{ t('panels.realm.meridian.auxGate') }}</template>
             <template v-if="row.requiresSeq">· {{ t('panels.realm.meridian.seqGate') }}</template>
           </p>
 
@@ -171,6 +192,27 @@ function invest(): void {
           </div>
         </div>
       </div>
+    </div>
+
+    <div
+      v-if="hiddenQuanThe"
+      class="meridian-section__row meridian-section__row--hidden"
+      :class="{ 'meridian-section__row--opened': hiddenQuanThe.completed }"
+    >
+      <div class="meridian-section__row-head">
+        <span class="meridian-section__row-name">{{ t('hidden.qi.quanTheName') }}</span>
+        <span class="meridian-section__row-state">
+          {{ hiddenQuanThe.completed ? t('hidden.qi.stateDone') : t('hidden.qi.stateActive') }}
+        </span>
+      </div>
+
+      <p class="meridian-section__row-desc">{{ t('hidden.qi.quanTheDesc') }}</p>
+
+      <Bar :value="hiddenQuanThe.progress" :max="hiddenQuanThe.required" :height="5" />
+
+      <span class="meridian-section__row-owned">
+        {{ formatNumber(hiddenQuanThe.progress) }} / {{ formatNumber(hiddenQuanThe.required) }}
+      </span>
     </div>
   </section>
 </template>
@@ -293,5 +335,11 @@ function invest(): void {
 .meridian-section__row-owned {
   font-size: var(--text-xs);
   color: var(--text-muted);
+}
+
+.meridian-section__row--hidden {
+  opacity: 1;
+  margin-top: 10px;
+  border-color: var(--jade);
 }
 </style>

@@ -1,0 +1,10 @@
+{
+  "applied": [
+    "evidence:EV-RA-CORRECTNESS-SEAL",
+    "evidence:EV-RA-AUTHORITY-SEAL",
+    "evidence:EV-RA-INTEGRATION-SEAL",
+    "review:REV-A-CORRECTNESS",
+    "review:REV-A-AUTHORITY",
+    "review:REV-A-INTEGRATION"
+  ]
+}

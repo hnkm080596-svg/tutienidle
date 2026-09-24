@@ -29,6 +29,7 @@ describe('TribulationOutcomeService — start-side prep parity', () => {
 
     player.realmId = 'qi_refining'
     player.realmLevel = 12
+    player.completedStageIds = ['qi_refining_abyssal_pool']
     player.baseStats.defense = 10_000
     player.baseStats.maxHp = 500_000
 

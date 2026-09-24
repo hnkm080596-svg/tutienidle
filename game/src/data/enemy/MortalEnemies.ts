@@ -2,9 +2,9 @@ import { defineEnemy } from '../../core/enemy/Enemy'
 import type { Enemy } from '../../core/enemy/Enemy'
 
 
-// defineEnemy() nhận statsInput gọn (~10-13 field, xem EnemyStatInput.ts)
-// thay vì phải khai đủ 41 field Stats như trước — đúng khuyến nghị
-// Last Epoch, quái thường không cần bộ stat đầy đủ như player.
+// defineEnemy() nhan statsInput gon (~10-13 field, xem EnemyStatInput.ts)
+// thay vi phai khai du 41 field Stats nhu truoc - dung khuyen nghi
+// Last Epoch, quai thuong khong can bo stat day du nhu player.
 export const MORTAL_ENEMIES: Enemy[] = [
   defineEnemy({
     id: 'wild_wolf',
@@ -17,8 +17,8 @@ export const MORTAL_ENEMIES: Enemy[] = [
 
     lane: 'ground',
 
-    // "tunghematandsuch" pass (2026-08-14) — family chỉ còn ý nghĩa
-    // LABEL (nhóm hình ảnh/lore), không còn quyết định material riêng.
+    // "tunghematandsuch" pass (2026-08-14) - family chi con y nghia
+    // LABEL (nhom hinh anh/lore), khong con quyet dinh material rieng.
     family: 'wolf',
 
     statsInput: {
@@ -29,7 +29,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       criticalDamage: 2,
       armor: 10,
 
-      // Mãnh thú hoang dã, thiên Mộc/Thổ — có chút kháng 2 hành đó.
+      // Manh thu hoang da, thien Moc/Tho - co chut khang 2 hanh do.
       resistances: { wood: 5, earth: 5 },
       elemental: { element: 'wood', power: 8 },
     },
@@ -40,7 +40,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     },
 
     signatureDrops: [
-      // Đột Phá Trúc Cơ lore drop - low chance on purpose, carries no
+      // Dot Pha Truc Co lore drop - low chance on purpose, carries no
       // functional sink (LORE_ALLOWLIST in EnemyDropSinkInvariant).
       { kind: 'material', itemId: 'cultivator_diary', amount: { min: 1, max: 1 }, chance: 0.07 },
     ],
@@ -68,7 +68,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
       armor: 20,
       evasionRate: 15,
 
-      // Dùng binh khí kim loại — có chút kháng Kim nhờ giáp trụ.
+      // Dung binh khi kim loai - co chut khang Kim nho giap tru.
       resistances: { metal: 8 },
       elemental: { element: 'metal', power: 10 },
     },
@@ -79,19 +79,19 @@ export const MORTAL_ENEMIES: Enemy[] = [
 
     },
 
-    // Bản Elite ("Sơn Tặc Đầu Lĩnh", xem Stages.ts's eliteChance) —
-    // thưởng đậm hơn hẳn + cơ hội rơi Phá Cảnh Tâm Pháp.
-    // Core Loop Foundation checklist (Mục BOSS) — boss tier RIÊNG:
-    // GUARANTEED Phá Cảnh Tâm Pháp vì Boss KHÔNG spawn ngẫu nhiên. Giờ
-    // diễn đạt qua signatureDrops; drop thường đến từ bảng stage/family.
+    // Ban Elite ("Son Tac Dau Linh", xem Stages.ts's eliteChance) -
+    // thuong dam hon han + co hoi roi Pha Canh Tam Phap.
+    // Core Loop Foundation checklist (Muc BOSS) - boss tier RIENG:
+    // GUARANTEED Pha Canh Tam Phap vi Boss KHONG spawn ngau nhien. Gio
+    // dien dat qua signatureDrops; drop thuong den tu bang stage/family.
     signatureDrops: [
       // van_kiem_quyet was removed from this table in the Kiem Tu
-      // Reimagined teardown (spec 2026-09-15 §7): it is the Ngu Kiem
-      // Dao signature technique now — granted by the ngu way ritual
+      // Reimagined teardown (spec 2026-09-15 sec.7): it is the Ngu Kiem
+      // Dao signature technique now - granted by the ngu way ritual
       // kit, never lootable.
-      // Đột Phá Trúc Cơ (Phase 3) — 0.01%, mức thấp nhất từng có trong
-      // codebase, có chủ đích (xem data/materials/materials.ts).
-      { kind: 'material', itemId: 'great_dao_seed', amount: { min: 1, max: 1 }, chance: 0.0001, requiresModifier: 'boss' },
+      // 2026-09-23: great_dao_seed drop retired with the material
+      // itself (hidden-perfection-lineage sec.19) - Dai Dao now belongs
+      // to the lineage channel, never to loot.
     ],
   }),
 
@@ -108,8 +108,8 @@ export const MORTAL_ENEMIES: Enemy[] = [
 
     family: 'hawk',
 
-    // Core Loop Foundation checklist (Mục MONSTER) — Ó Núi bay lượn
-    // trên cao, giữ khoảng cách thay vì lao vào cận chiến.
+    // Core Loop Foundation checklist (Muc MONSTER) - O Nui bay luon
+    // tren cao, giu khoang cach thay vi lao vao can chien.
     archetype: 'ranged',
 
     statsInput: {
@@ -119,10 +119,10 @@ export const MORTAL_ENEMIES: Enemy[] = [
       criticalRate: 0.12,
       criticalDamage: 2,
       armor: 8,
-      // Bay lượn, khó trúng hơn quái mặt đất thường.
+      // Bay luon, kho trung hon quai mat dat thuong.
       evasionRate: 45,
 
-      // Móng vuốt sắc — thiên Kim.
+      // Mong vuot sac - thien Kim.
       resistances: { metal: 10 },
       elemental: { element: 'metal', power: 9 },
     },
@@ -146,8 +146,8 @@ export const MORTAL_ENEMIES: Enemy[] = [
 
     family: 'earthworm',
 
-    // Core Loop Foundation checklist (Mục MONSTER) — lặn xuống đất
-    // rồi trồi lên tấn công, có "khoảng lặng" telegraph trước đòn.
+    // Core Loop Foundation checklist (Muc MONSTER) - lan xuong dat
+    // roi troi len tan cong, co "khoang lang" telegraph truoc don.
     archetype: 'caster',
 
     statsInput: {
@@ -157,10 +157,10 @@ export const MORTAL_ENEMIES: Enemy[] = [
       criticalRate: 0.02,
       criticalDamage: 1.5,
       armor: 25,
-      // Tank chậm, gần như không né được.
+      // Tank cham, gan nhu khong ne duoc.
       evasionRate: 8,
 
-      // Da dày, thiên Thổ đậm.
+      // Da day, thien Tho dam.
       resistances: { earth: 15 },
       elemental: { element: 'earth', power: 9 },
     },
@@ -171,23 +171,23 @@ export const MORTAL_ENEMIES: Enemy[] = [
     },
 
     signatureDrops: [
-      // Đột Phá Trúc Cơ lore drop - low chance on purpose.
+      // Dot Pha Truc Co lore drop - low chance on purpose.
       { kind: 'material', itemId: 'stele_fragment', amount: { min: 1, max: 1 }, chance: 0.07 },
     ],
   }),
 
-  // Luyện Khí tầng 1-10 content pass (2026-08-14) — 18 quái MỚI, đúng
-  // 2 species/tầng (1 "beast" thường + 1 "boss-eligible" tái dùng làm
-  // bossEnemyId của stage, y hệt pattern wild_wolf/bandit hiện có).
-  // Ngũ Hành Tương Sinh: Mộc(t1-2)→Hỏa(t3-4)→Thổ(t5-6)→Kim(t7-8)→
-  // Thủy(t9-10). Tầng chẵn = species y hệt tầng lẻ trong CÙNG cặp,
-  // chỉ + tiền tố "Hung " (hung dữ hơn) + stat mạnh hơn theo công thức (xem
-  // data/stage/Stages.ts's comment đầu file cho công thức đầy đủ) —
-  // KHÔNG tự thêm từ chỉ đẳng cấp (Vương/Chúa/Đầu Lĩnh) vào tên, engine
-  // đã tự thêm "Tinh Anh "/"Đại Vương " lúc spawn (xem tag tinh_anh qua
-  // applyEnemyTags / createBossVariant ở core/enemy).
+  // Luyen Khi tang 1-10 content pass (2026-08-14) - 18 quai MOI, dung
+  // 2 species/tang (1 "beast" thuong + 1 "boss-eligible" tai dung lam
+  // bossEnemyId cua stage, y het pattern wild_wolf/bandit hien co).
+  // Ngu Hanh Tuong Sinh: Moc(t1-2)->Hoa(t3-4)->Tho(t5-6)->Kim(t7-8)->
+  // Thuy(t9-10). Tang chan = species y het tang le trong CUNG cap,
+  // chi + tien to "Hung " (hung du hon) + stat manh hon theo cong thuc (xem
+  // data/stage/Stages.ts's comment dau file cho cong thuc day du) -
+  // KHONG tu them tu chi dang cap (Vuong/Chua/Dau Linh) vao ten, engine
+  // da tu them "Tinh Anh "/"Dai Vuong " luc spawn (xem tag tinh_anh qua
+  // applyEnemyTags / createBossVariant o core/enemy).
 
-  // --- Tầng 2 (Mộc, Thanh Vân Lâm) ---
+  // --- Tang 2 (Moc, Thanh Van Lam) ---
   defineEnemy({
     id: 'ferocious_wild_wolf',
     name: 'Hung Dã Lang',
@@ -235,7 +235,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     },
   }),
 
-  // --- Tầng 3 (Hỏa, Xích Diễm Cốc) ---
+  // --- Tang 3 (Hoa, Xich Diem Coc) ---
   defineEnemy({
     id: 'flame_fox',
     name: 'Viêm Hồ',
@@ -285,7 +285,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     },
   }),
 
-  // --- Tầng 4 (Hỏa, Xích Diễm Lĩnh) ---
+  // --- Tang 4 (Hoa, Xich Diem Linh) ---
   defineEnemy({
     id: 'ferocious_flame_fox',
     name: 'Hung Viêm Hồ',
@@ -335,7 +335,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     },
   }),
 
-  // --- Tầng 5 (Thổ, Hoàng Sa Nguyên) ---
+  // --- Tang 5 (Tho, Hoang Sa Nguyen) ---
   defineEnemy({
     id: 'sand_lynx',
     name: 'Sa Miêu',
@@ -384,7 +384,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     },
   }),
 
-  // --- Tầng 6 (Thổ, Hoàng Nhạc Sơn) ---
+  // --- Tang 6 (Tho, Hoang Nhac Son) ---
   defineEnemy({
     id: 'ferocious_sand_lynx',
     name: 'Hung Sa Miêu',
@@ -433,7 +433,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     },
   }),
 
-  // --- Tầng 7 (Kim, Bạch Nhận Sơn) ---
+  // --- Tang 7 (Kim, Bach Nhan Son) ---
   defineEnemy({
     id: 'blade_hawk',
     name: 'Đoạn Nhận Ưng',
@@ -484,7 +484,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     },
   }),
 
-  // --- Tầng 8 (Kim, Bạch Nhận Quật) ---
+  // --- Tang 8 (Kim, Bach Nhan Quat) ---
   defineEnemy({
     id: 'ferocious_blade_hawk',
     name: 'Hung Đoạn Nhận Ưng',
@@ -535,7 +535,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     },
   }),
 
-  // --- Tầng 9 (Thủy, Huyền Đàm Trạch) ---
+  // --- Tang 9 (Thuy, Huyen Dam Trach) ---
   defineEnemy({
     id: 'pool_toad',
     name: 'Đàm Oa',
@@ -586,7 +586,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     },
   }),
 
-  // --- Tầng 10 (Thủy, Huyền Đàm Uyên — chặng cuối trước Trúc Cơ) ---
+  // --- Tang 10 (Thuy, Huyen Dam Uyen - chang cuoi truoc Truc Co) ---
   defineEnemy({
     id: 'ferocious_pool_toad',
     name: 'Hung Đàm Oa',
@@ -620,10 +620,10 @@ export const MORTAL_ENEMIES: Enemy[] = [
     lane: 'ground',
     archetype: 'caster',
     family: 'flood_serpent',
-    // Phase A2 (2026-09-07) — turn-based enrage trigger; buff resolves
+    // Phase A2 (2026-09-07) - turn-based enrage trigger; buff resolves
     // through BUFF_REGISTRY at spawn (see TurnBattleAdapter).
     bossTrigger: { afterTurns: 60, buffDefinitionId: 'qi_refining_serpent_enrage' },
-    // Phase A3 Task 5 — periodic heavy attack (every 4th own action),
+    // Phase A3 Task 5 - periodic heavy attack (every 4th own action),
     // multiplier proportional to realm tier; playtesting starting points.
     specialAttacks: [{ everyNth: 4, damageMultiplier: 2.5, presetId: 'water_surge' }],
     statsInput: {
@@ -642,25 +642,25 @@ export const MORTAL_ENEMIES: Enemy[] = [
       spiritStone: 35,
     },
     signatureDrops: [
-      // Spec dot-pha-loi-kiep §4.1b — Yêu Đan 100% từ boss LK t10,
-      // nguyên liệu chính Thông Mạch Đan/Trúc Cơ Đan. chance:1 nên boss
-      // idle (auto-farm) vẫn rơi theo E11.
+      // Spec dot-pha-loi-kiep sec.4.1b - Yeu Dan 100% tu boss LK t10,
+      // nguyen lieu chinh Thong Mach Dan/Truc Co Dan. chance:1 nen boss
+      // idle (auto-farm) van roi theo E11.
       { kind: 'material', itemId: 'yeu_dan_hung_giao', amount: { min: 1, max: 1 }, chance: 1, requiresModifier: 'boss' },
     ],
   }),
 
-  // Phàm Nhân Động 1-10 (2026-08-16) — cùng "quy luật" Ngũ Hành Tương
-  // Sinh/2-loài-mỗi-hành/"Hung "-đổi-tầng-chẵn đã dùng cho Luyện Khí
-  // (xem memory content-pass), nhưng CÔNG THỨC RIÊNG, base THẤP HƠN hẳn
-  // (mortal tier, dưới Luyện Khí) — T reset về 1 trong phạm vi Phàm
-  // Nhân, KHÔNG dùng chung 1 đường cong xuyên cảnh giới với Luyện Khí:
+  // Pham Nhan Dong 1-10 (2026-08-16) - cung "quy luat" Ngu Hanh Tuong
+  // Sinh/2-loai-moi-hanh/"Hung "-doi-tang-chan da dung cho Luyen Khi
+  // (xem memory content-pass), nhung CONG THUC RIENG, base THAP HON han
+  // (mortal tier, duoi Luyen Khi) - T reset ve 1 trong pham vi Pham
+  // Nhan, KHONG dung chung 1 duong cong xuyen canh gioi voi Luyen Khi:
   // beastHP(T) = round(60 * 1.17^(T-1)), beastATK(T) = round(6 * 1.155^(T-1)),
-  // armor = 5 + T. Loài boss-eligible (2nd loài mỗi hành, luôn là
-  // bossEnemyId của Stage) = beast × 1.6 HP / × 1.4 ATK / × 1.3 armor,
-  // CÙNG T — vẫn PRE-multiplier (applyBossMultiplier tự nhân thêm ×7/×1.6
-  // lúc spawn boss thật, không tự cộng dồn ở đây). Không có material
-  // riêng mới (tránh material chết không ai tiêu) — chỉ rơi
-  // green-spirit-herb đã có sẵn.
+  // armor = 5 + T. Loai boss-eligible (2nd loai moi hanh, luon la
+  // bossEnemyId cua Stage) = beast x 1.6 HP / x 1.4 ATK / x 1.3 armor,
+  // CUNG T - van PRE-multiplier (applyBossMultiplier tu nhan them x7/x1.6
+  // luc spawn boss that, khong tu cong don o day). Khong co material
+  // rieng moi (tranh material chet khong ai tieu) - chi roi
+  // green-spirit-herb da co san.
   defineEnemy({
     id: 'mortal_wild_boar',
     name: 'Dã Trư',
@@ -1114,10 +1114,10 @@ export const MORTAL_ENEMIES: Enemy[] = [
     realmId: 'mortal',
     lane: 'ground',
     family: 'crocodile',
-    // Phase A2 (2026-09-07) — turn-based enrage trigger; buff resolves
+    // Phase A2 (2026-09-07) - turn-based enrage trigger; buff resolves
     // through BUFF_REGISTRY at spawn (see TurnBattleAdapter).
     bossTrigger: { afterTurns: 60, buffDefinitionId: 'mortal_crocodile_enrage' },
-    // Phase A3 Task 5 — periodic heavy attack (every 4th own action),
+    // Phase A3 Task 5 - periodic heavy attack (every 4th own action),
     // multiplier proportional to realm tier; playtesting starting points.
     specialAttacks: [{ everyNth: 4, damageMultiplier: 2, presetId: 'water_surge' }],
     statsInput: {

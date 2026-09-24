@@ -28,8 +28,9 @@ export async function bootToGuestHome(page: Page): Promise<void> {
 }
 
 /**
- * Tạo nhân vật qua 3 bước UI thực: tên → chọn thiên phú → phân bổ điểm
- * thuộc tính → "Bước vào tiên đồ".
+ * Creates a character through the ONE unified screen (BETA-CREATION):
+ * name + 1 talent + 1 starting-skill pick -> finish. The attribute
+ * allocation step no longer exists - base stats default to 1/1/1/1/1.
  *
  * Prerequisite: guest auth done (bootToGuestHome).
  */
@@ -37,30 +38,19 @@ export async function createCharacterThroughUi(page: Page, name: string): Promis
   const creation = page.getByTestId('character-creation-screen')
   await expect(creation).toBeVisible({ timeout: 15_000 })
 
-  // Step 1: name
+  // Name - validation runs on input; the finish gate needs a valid name.
   await page.getByTestId('creation-name-input').fill(name)
-  // Validation chạy theo input event — fill() set value qua input event,
-  // nhưng nút enable computed có thể lệch 1 tick; expect-enabled thay vì
-  // click-retry (best practice: explicit state assertion).
-  await expect(page.getByTestId('creation-continue-name')).toBeEnabled({ timeout: 5_000 })
-  await page.getByTestId('creation-continue-name').click()
 
-  // Step 2: talent selection — pick the first available talent card.
+  // Talent - pick the first available card (exactly one required).
   const talentCards = creation.locator('[data-testid^="creation-talent-"]')
   await expect(talentCards.first()).toBeVisible({ timeout: 10_000 })
   await talentCards.first().click()
 
-  await page.getByTestId('creation-confirm-talent').click()
+  // Starting skill - tram (Huy Kiem) keeps the historical basic.
+  await page.getByTestId('creation-skill-tram').click()
 
-  // Step 3: attribute distribution — give each stat exactly 1 point (5 total).
-  const buttons = creation.locator('[data-testid^="creation-attribute-plus-"]')
-  const count = await buttons.count()
-  // There are 5 attributes; if we have >=5, click each once.
-  for (let i = 0; i < Math.min(count, 5); i++) {
-    await buttons.nth(i).click()
-  }
-
-  // Finish — "Bước vào tiên đồ" triggers onCharacterCreated → bootGame(true).
+  // Finish - enabled once name + talent + skill are all satisfied.
+  await expect(page.getByTestId('creation-finish')).toBeEnabled({ timeout: 5_000 })
   await page.getByTestId('creation-finish').click()
 }
 

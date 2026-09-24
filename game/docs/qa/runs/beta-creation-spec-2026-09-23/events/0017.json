@@ -1,0 +1,29 @@
+{
+  "applied": [
+    "evidence:EV-RA-CORRECTNESS-SEAL (updated)",
+    "evidence:EV-RA-AUTHORITY-SEAL (updated)",
+    "evidence:EV-RA-INTEGRATION-SEAL (updated)",
+    "evidence:EV-SPEC-DOC-REPAIR",
+    "review:REV-A-CORRECTNESS (updated)",
+    "review:REV-A-AUTHORITY (updated)",
+    "review:REV-A-INTEGRATION (updated)",
+    "review:REV-CLOSURE-RA",
+    "finding:F-SPEC-01",
+    "finding:F-SPEC-02",
+    "finding:F-SPEC-03",
+    "finding:F-SPEC-04",
+    "finding:F-SPEC-05",
+    "finding:F-SPEC-06",
+    "finding:F-SPEC-07",
+    "finding:F-SPEC-08",
+    "finding:F-SPEC-09",
+    "finding:F-SPEC-10",
+    "finding:F-SPEC-11",
+    "finding:F-SPEC-12",
+    "finding:F-SPEC-13",
+    "lesson:L-SPEC-1",
+    "lesson:L-SPEC-2",
+    "lesson:L-SPEC-3",
+    "cycle:CYC-RA-1"
+  ]
+}

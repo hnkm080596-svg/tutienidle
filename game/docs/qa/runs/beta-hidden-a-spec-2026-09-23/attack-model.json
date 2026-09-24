@@ -1,0 +1,21 @@
+{
+  "runId": "beta-hidden-a-spec-2026-09-23",
+  "lenses": [
+    {"id": "contract", "attacks": [
+      "spec claims vs design doc §1-§20 verbatim fidelity (gates, formulas, strict-prefix, freeze, no-leak, two types, rewards)",
+      "state model completeness vs design §16 invariants (lineage latch, completedHiddenBodyCount semantics, frozen records, pity slot)",
+      "type-resolution rule edge cases (Lv18 without body, body without cap, forced-hidden at full eligibility, defeat semantics)"
+    ]},
+    {"id": "authority", "attacks": [
+      "census completeness: every §19 item traced to concrete file evidence; missed authorities (search the code for hidden/perfection/breakthrough-capable surfaces the spec missed)",
+      "retirement verdicts: does removing X break a surviving consumer? does keeping Y leave a competing authority?",
+      "cap-channel purity: effective-cap read switched everywhere a cap is enforced; no surviving getMainStatCap consumer that should be effective"
+    ]},
+    {"id": "integration", "attacks": [
+      "commit-site correctness: chooseCultivationPath + resolveVictory are really the only realm-transition writes (find others)",
+      "interface pins for B/C: seams exist where claimed (addCultivation divert seam, battle-cycle replacement seam, mechanic validator dispatch); parallel-safety matrix completeness",
+      "save/migration: every persisted hidden field named in design §3/§9-§12 has a declared shape + validator + integrity pin"
+    ]}
+  ],
+  "notes": "Spec/plan review (Op A adversarial contract/plan review). Runtime/persistence/mutation cells are NOT_APPLICABLE for a doc-review run — the impl run carries them."
+}

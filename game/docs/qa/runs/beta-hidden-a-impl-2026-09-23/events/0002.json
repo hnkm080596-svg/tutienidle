@@ -1,0 +1,8 @@
+{
+ "kind": "EVIDENCE",
+ "summary": "Implementation QA evidence assembled internally (independence gap: sealed reviewer dispatch blocked - org SWE-2 5-slot cap; children of SWE-2 session cannot run normal mode; coordinator normal-mode amendment inapplicable here). Evidence chain: OCR gate 69/69 files delegation-mode clean (1 Medium + 1 Low fixed); P4 adversarial deep-audit PASS WITH EVIDENCE (docs/qa/2026-09-23-hidden-perfection-skeleton-deep.md, commit 776c14e9) - 12-invariant ledger all Verified; P5 sequential multi-pass review 4 passes chronological - Pass1 High (effective-cap consumers) + fixes, Pass2 clean, Pass3 Medium x2 (residency gate, coherence rules) + fixes, Pass4 clean on resulting state; verification 1780 tests green across realm/game/save/pill/cultivation/simulation/panels + vue-tsc build + eslint 0 errors on touched files. QA repro suite GameManager.hiddenLineageRestore.qa.test.ts pins save/restore + tamper rejections.",
+ "refs": [
+  "docs/qa/2026-09-23-hidden-perfection-skeleton-deep.md",
+  "src/core/game/GameManager.hiddenLineageRestore.qa.test.ts"
+ ]
+}

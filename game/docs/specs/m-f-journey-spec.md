@@ -87,9 +87,9 @@ evidence, not a fix (P12/coordinator rule).
 | zhou_tian | capacity `20 × realmLevel` in TC (0 pre-TC, 360 post-TC); Tiểu ≥180 (L9), Đại ≥360 = complete (L18); currency `tinh_hoa_phap_the` (material bag, top-rung → exact debit, no substitution fill); `collectBaseStatDeltas` returns `{}` (channel wired, magnitudes deferred); no `physiqueAdvancement` declared. | `core/realm/body/ZhouTianChapter.ts`, `data/realm/ZhouTian.ts` |
 | Essence bands | `PHYSIQUE_ESSENCE_BAND`: mortal→pham, qi_refining→bao, foundation_establishment→phap; each banded realm's `STAGE_DROP_TABLES` guaranteed list carries the band drop (1-3/kill live on every stage victory); `huyet_mong` pham ×12 signature exempt. | `data/realm/PhysiqueEssence.ts`, `data/drop/StageDropTables.ts` |
 | Pill inputs | `truc_co_dan` + `thong_mach_dan` exist only via special alchemy recipes (pill_room building + herbs + fuel wood + spirit stones + `yeu_dan_hung_giao` boss-drop + 900s job). `thien_dia_chi_kieu` = 5% hidden-beast drop. Production pacing is measured in days — see §4 seeding decision. | `data/alchemy/alchemyRecipes.ts`, `data/enemy/{MortalEnemies,HiddenBeasts}.ts` |
-| Respec | `progressionOps.respecNodeTree(player, {rootId?})` — free Beta respec, clone-preflight atomicity, commit-marker roots exempt, 25% insight tax. | `core/game/GameManagerProgressionOps.ts:484`, `core/progression/NodeSystem.ts:660` |
+| Respec | `progressionOps.respecNodeTree(player, {rootId?})` — free Beta respec, clone-preflight atomicity, commit-marker roots exempt, refunds 100% of actually-paid Insight (the 75% figure belongs to `switchRoute`, GameManagerProgressionOps.ts:505). | `core/game/GameManagerProgressionOps.ts:484`, `core/progression/NodeSystem.ts:660` |
 | Release boundary | `progressionCeilingRealmId = 'foundation_establishment'`; `isRealmTransitionEnabled` adjacent-only → at TC `getBreakthroughRequirements` returns `[]`, `canTriggerBreakthrough` false, `startTribulation('golden_core')` refused; `isCompanionPullPoolEnabled()` false; `isBreakthroughAcquisitionEnabled` gates tagged acquisition routes (e.g. `alchemy_truc_co_dan`). | `core/realm/ReleasePolicy.ts` |
-| Save | `CURRENT_SAVE_VERSION = 78` (v72 body progression → v73 nodeLevels authority → v74 physiqueGrade → v75 technique frozen cycle → v76 pendingTalentEntitlement → v77 companionGifts → v78 zhou_tian slice). `buildGameSave`/`restoreGameSession` = the only persisted contract; restore = replacement; committed tribulation outcome is transient (not persisted — M-C documented exclusion). | `services/save/saveVersion.ts`, `services/save/SaveSystem.ts` |
+| Save | `CURRENT_SAVE_VERSION = 81` at spec-read time (v72 body progression → v73 nodeLevels authority → v74 physiqueGrade → v75 technique frozen cycle → v76 pendingTalentEntitlement → v77 companionGifts → v78 zhou_tian slice → v79/80 wave bumps → v81 hiddenChannelCycles; SEAM-REPAIR takes it to v82: `nodeOneShotGrants` + `tribulation` slice + drops `tribulationBonusStacks`). `buildGameSave`/`restoreGameSession` = the only persisted contract; restore = replacement. | `services/save/saveVersion.ts`, `services/save/SaveSystem.ts` |
 | Docs drift | `roadmap.md` ends at P7-M8 — no M-QI/M-F wave sections; `mission-graph.md` ledger covers M-QI-01..10 only; M-F specs live in `docs/specs|plans/` while older missions live in `docs/p7/missions/` (convention drift to record); `naming-conventions.md` untouched by the wave. | `docs/roadmap.md`, `docs/p7/mission-graph.md` |
 
 ## 3. Target design — `TrucCoJourney.test.ts`
@@ -97,9 +97,10 @@ evidence, not a fix (P12/coordinator rule).
 Lives next to the harness: `core/simulation/earlygame/TrucCoJourney.test.ts`.
 Journey **legs** as named describes; every leg rides production seams.
 Pinned profile convention reused (`{name:'journey',
-talentIds:['hap_linh'], attributes:{strength:2,vitality:3}}` — the M-C
-PINNED profile; grade-leg fixtures use the committed seeded-state
-pattern instead).
+talentIds:['hap_linh'], mortalBasicSkillId:'tram'}` — the v82 creation
+profile shape; base stats are the fixed 1/1/1/1/1 default, no
+attribute distribution. Grade-leg fixtures use the committed
+seeded-state pattern instead).
 
 **Leg order (explicit — C2C-P2/M1/r86):** A → B → **E.1** (floor-1
 first clear at TC L1 — E owns ALL first-clear/unlock observations) →

@@ -7,11 +7,13 @@ import {
 import type { PlayerData } from '../player/Player'
 import type { Stats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
-import type { FoundationType } from '../breakthrough/FoundationType'
 import type { EventBus } from '../events/EventBus'
 import type { TribulationOutcomeResult } from './TribulationOutcomeService'
 import { EntityVitalsSystem } from '../combat/EntityVitalsSystem'
-import { resolveKienCoGrade } from '../../data/breakthrough/BreakthroughGrades'
+import {
+  resolveKienCoGrade,
+  type ResolvableKienCoGrade,
+} from '../../data/breakthrough/BreakthroughGrades'
 import {
   getTribulationChapters,
   GRADE_DIFFICULTY_MULTIPLIER,
@@ -19,6 +21,10 @@ import {
 } from '../../data/tribulation/TribulationChapters'
 import { TRIBULATION_MIND_QUESTIONS, type MindQuestion } from '../../data/tribulation/TribulationMindQuestions'
 import { isRealmTransitionEnabled } from '../realm/ReleasePolicy'
+import {
+  resolveBreakthroughType,
+  type BreakthroughType,
+} from '../realm/hidden/HiddenLineage'
 import { getTribulationIntensityMultiplier } from '../talent/TalentEffects'
 
 // TribulationDirector (spec dot-pha-loi-kiep S5) - runtime loi kiep
@@ -50,7 +56,17 @@ export interface CommittedTribulationOutcome {
   readonly attemptId: number
   readonly outcome: 'victory' | 'defeat'
   readonly targetRealmId: string
-  readonly grade: FoundationType
+  readonly grade: ResolvableKienCoGrade
+  /**
+   * Hidden Perfection Lineage (2026-09-23): the breakthrough TYPE
+   * resolved at start() - 'normal' or 'hidden'. The victory path
+   * records hiddenBreakthroughRealmIds / closes the lineage on this
+   * flag; for foundation targets a hidden commit also lands grade
+   * 'great_dao' on this record (the ordinary grade stays on `grade`
+   * for difficulty - the override happens at the outcome service's
+   * facts read, not here).
+   */
+  readonly breakthroughType: BreakthroughType
   /** Bound once by the outcome service; presentation renders it. */
   receipt: TribulationOutcomeResult | null
   /**
@@ -65,7 +81,10 @@ export interface CommittedTribulationOutcome {
 export interface ActiveTribulationState {
   targetRealmId: string
   /** Bac Kien Co da chot luc bam dot pha (chi tu dau tu truoc kiep). */
-  grade: FoundationType
+  grade: ResolvableKienCoGrade
+  /** Breakthrough TYPE snapshot at start() - the commit records this,
+   * not a re-evaluated predicate. */
+  breakthroughType: BreakthroughType
   chapterIndex: number
   chaptersTotal: number
   chapterName: string
@@ -84,6 +103,24 @@ export interface ActiveTribulationState {
 
 // Cooldown thu lai sau that bai - giu nguyen 5 phut cua he cu.
 export const TRIBULATION_COOLDOWN_SECONDS = 5 * 60
+
+/** F-W-5 (v82) - persisted shape cua director runtime (mirror cua
+ * TribulationSaveSlice trong saveTypes.ts - core khong import services
+ * nen type song doc lap, cung shape). */
+export interface TribulationRuntimeSave {
+  committedOutcome?: {
+    attemptId: number
+    outcome: 'victory' | 'defeat'
+    targetRealmId: string
+    // Ordinary grade only - 'great_dao' rides breakthroughType, never
+    // this slot (mirror of TribulationSaveSlice in saveTypes.ts).
+    grade: ResolvableKienCoGrade
+    breakthroughType: BreakthroughType
+    receipt: TribulationOutcomeResult | null
+    settlementError: boolean
+  }
+  cooldownUntil?: number
+}
 
 // Debuff sai cau (spec S5.3): moi lan sai +1 stack, hieu luc den het
 // kiep: +5% damage taken + -3% defense moi stack.
@@ -195,6 +232,9 @@ export class TribulationDirector {
     }
 
     const grade = resolveKienCoGrade(player, hasTrucCoDan)
+    // Hidden Perfection Lineage: the breakthrough TYPE resolves ONCE
+    // at start - mid-run state changes never re-qualify an attempt.
+    const breakthroughType = resolveBreakthroughType(player)
     const maxHp = Math.max(1, playerStats.maxHp)
 
     this.chapters = chapters
@@ -226,6 +266,7 @@ export class TribulationDirector {
     this.active = {
       targetRealmId,
       grade,
+      breakthroughType,
       chapterIndex: 0,
       chaptersTotal: chapters.length,
       chapterName: chapters[0]!.name,
@@ -568,6 +609,7 @@ export class TribulationDirector {
       outcome,
       targetRealmId: active.targetRealmId,
       grade: active.grade,
+      breakthroughType: active.breakthroughType,
       receipt: null,
       settlementError: null,
     }
@@ -707,5 +749,70 @@ export class TribulationDirector {
 
   getCooldownSeconds(now = Date.now()): number {
     return Math.max(0, Math.ceil((this.cooldownUntil - now) / 1000))
+  }
+
+  /**
+   * F-W-5 (v82) - serialize runtime cho save slice `tribulation`:
+   * committed-but-undrained outcome + retry cooldown song qua reload.
+   * Mot run ONGOING co tinh KHONG persist - reload giua tran mat run
+   * theo design (run chua commit thi khong co gi de settle).
+   * settlementError persist nhu boolean marker vi Error khong JSON-safe.
+   */
+  serializeRuntime(): TribulationRuntimeSave {
+    const slice: TribulationRuntimeSave = {}
+
+    if (this.committedOutcome) {
+      slice.committedOutcome = {
+        attemptId: this.committedOutcome.attemptId,
+        outcome: this.committedOutcome.outcome,
+        targetRealmId: this.committedOutcome.targetRealmId,
+        grade: this.committedOutcome.grade,
+        breakthroughType: this.committedOutcome.breakthroughType,
+        receipt: this.committedOutcome.receipt,
+        settlementError: this.committedOutcome.settlementError !== null,
+      }
+    }
+
+    if (this.cooldownUntil > 0) {
+      slice.cooldownUntil = this.cooldownUntil
+    }
+
+    return slice
+  }
+
+  /**
+   * F-W-5 (v82) - khoi phuc runtime tu save slice. Committed outcome
+   * re-present nguyen receipt slot: settle lan dau sau reload bind lai
+   * receipt cu (dedup giu nguyen - khong double-apply), drain van doi
+   * entitlement resolve nhu run moi. settlementError=true dung lai
+   * marker Error de terminal-after-first-attempt semantics giu nguyen.
+   */
+  restoreRuntime(slice: TribulationRuntimeSave | undefined): void {
+    // Save la authoritative - restore phai replacement-complete: xoa toan
+    // bo run-state khong persist (run dang chay + outcome cu cua timeline
+    // truoc) truoc khi nap slice, khong de gi sot lai tu timeline cu.
+    this.clear()
+    this.ghost = null
+    this.snapshotHp = 0
+    this.snapshotMaxHp = 0
+    this.snapshotDefense = 0
+    this.mindFailStacks = 0
+    this.mindCorrectLightningReduction = 0
+    this.lightningTalentMultiplier = 1
+    this.cooldownUntil = slice?.cooldownUntil ?? 0
+
+    if (slice?.committedOutcome) {
+      this.committedOutcome = {
+        attemptId: slice.committedOutcome.attemptId,
+        outcome: slice.committedOutcome.outcome,
+        targetRealmId: slice.committedOutcome.targetRealmId,
+        grade: slice.committedOutcome.grade,
+        breakthroughType: slice.committedOutcome.breakthroughType,
+        receipt: slice.committedOutcome.receipt,
+        settlementError: slice.committedOutcome.settlementError
+          ? new Error('restored tribulation settlement error')
+          : null,
+      }
+    }
   }
 }

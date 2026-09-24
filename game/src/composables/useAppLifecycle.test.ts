@@ -251,6 +251,34 @@ describe('useAppLifecycle — boot idempotence (Remediation Task 5)', () => {
 
     lifecycle.stopAll()
   })
+
+  it("restore 'rejected' → saveIssue recovery surface (corrupted + raw), không phải dead-end boot error", async () => {
+    const stubs = makeStubs()
+
+    const save = { version: 83, player: { realm: 'pham_nhan' } }
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      status: 'ok',
+      revision: 5,
+      save,
+      raw: 'stored-raw-bytes',
+    })
+    ;(stubs.restoreGameSession as ReturnType<typeof vi.fn>).mockReturnValueOnce({
+      status: 'rejected',
+    })
+
+    const lifecycle = makeLifecycle(stubs)
+    const outcome = await lifecycle.bootGame({ createNewCharacter: false })
+
+    expect(outcome.status).toBe('failed')
+    // The exported recovery payload is the stored raw bytes (same
+    // contract as the incompatible/corrupted branches), not the
+    // normalized save object.
+    expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', 'stored-raw-bytes')
+    expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
+    expect(stubs.onError).not.toHaveBeenCalled()
+
+    lifecycle.stopAll()
+  })
 })
 
 describe('useAppLifecycle — ARCH-013/L04 boot generation fence', () => {
@@ -308,6 +336,31 @@ describe('useAppLifecycle — ARCH-013/L04 boot generation fence', () => {
     expect(stubs.boot.fail).not.toHaveBeenCalled()
     expect(stubs.saveIssue.report).not.toHaveBeenCalled()
     expect(stubs.onError).not.toHaveBeenCalled()
+  })
+
+  // F-INT-1 (clean-B' INTEGRATION): the fence must sit BEFORE the
+  // consuming load too - loadGame() eats the one-shot import-handoff
+  // marker, so a boot made stale mid-remoteSync must never reach
+  // coordinator.load at all.
+  it('stopAll trong lúc remoteSync pending → coordinator.load KHÔNG chạy (load tự có side effect)', async () => {
+    const stubs = makeStubs()
+
+    let releaseSync: (value: unknown) => void = () => undefined
+    const syncGate = new Promise((resolve) => (releaseSync = resolve))
+    ;(stubs.remoteSync as ReturnType<typeof vi.fn>).mockImplementation(() => syncGate)
+
+    const lifecycle = makeLifecycle(stubs)
+
+    const boot = lifecycle.bootGame({ createNewCharacter: false })
+    lifecycle.stopAll()
+    releaseSync('skipped')
+
+    const outcome = await boot
+
+    expect(outcome.status).toBe('skipped')
+    expect(stubs.coordinator.load).not.toHaveBeenCalled()
+    expect(stubs.restoreGameSession).not.toHaveBeenCalled()
+    expect(stubs.boot.enterGame).not.toHaveBeenCalled()
   })
 
   it('stopAll trong lúc new-character boot pending → continuation vẫn stale (cùng generation, synthetic await)', async () => {

@@ -11118,7 +11118,6 @@
   "// Character creation: name input bằng keyboard, continue bằng Enter.",
   "// Chọn talent bằng keyboard: focus card đầu + Enter (button/card).",
   "// Attribute points: phân bổ đủ 5 điểm qua Space trên nút plus (button",
-  "// activation) — creation-finish disabled tới khi pointsLeft === 0.",
   "// Home hiện sau boot — dismiss tutorial nếu có (keyboard: Enter = Bỏ Qua)."
  ],
  "tests/e2e/boot-fresh.spec.ts": [

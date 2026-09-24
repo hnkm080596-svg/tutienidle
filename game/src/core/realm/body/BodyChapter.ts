@@ -83,8 +83,11 @@ export interface MeridianChapterState {
   openedIds: string[]
 }
 
+// HIDDEN-C - persisted slice is the DISCRETE step counter (0..36; design
+// sec.11). The old continuous `circulation` scalar is retired at v83 -
+// dev-phase saves are rejected, no migration.
 export interface ZhouTianChapterState {
-  circulation: number
+  completed: number
 }
 
 export interface BodyProgressionState {
@@ -199,7 +202,7 @@ export function createDefaultBodyProgression(): BodyProgressionState {
   return {
     body_refinement: { completedTiers: 0, currentTierProgress: 0 },
     meridian: { openedIds: [] },
-    zhou_tian: { circulation: 0 },
+    zhou_tian: { completed: 0 },
   }
 }
 

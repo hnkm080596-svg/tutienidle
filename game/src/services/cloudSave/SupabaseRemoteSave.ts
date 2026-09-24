@@ -1,9 +1,13 @@
 import { requestSupabase } from '../supabase/SupabaseHttp'
 import { readSupabaseSession, resolveSupabaseSession } from '../supabase/SupabaseSession'
 import type { SupabaseConfig } from '../supabase/SupabaseConfig'
-import { CURRENT_SAVE_VERSION, inspectLocalSave } from '../save/SaveSystem'
+import { CURRENT_SAVE_VERSION, inspectLocalSave, type GameSave } from '../save/SaveSystem'
 import { validateGameSaveShape } from '../save/saveShapeValidation'
-import { resolveRevisionKey, resolveSaveKey } from '../save/saveKeys'
+import {
+  isSaveAcceptable,
+  staticSaveAcceptanceCatalogs,
+} from '../save/saveAcceptance'
+import { resolveImportHandoffKey, resolveRevisionKey, resolveSaveKey } from '../save/saveKeys'
 import { readLocalSaveRevision } from './LocalCloudSaveService'
 
 export type RemoteSyncOutcome = 'pulled' | 'pushed' | 'skipped' | 'unavailable'
@@ -55,16 +59,35 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
       {},
       session.accessToken,
     )
+    const catalogs = staticSaveAcceptanceCatalogs()
     const remoteRow = rows[0]
     const remoteShape = remoteRow ? validateGameSaveShape(remoteRow.payload) : null
-    const remoteUsable = remoteShape !== null && remoteShape.ok ? remoteShape : null
+    // Preflight parity: a payload the boot restore would reject is 'no
+    // remote' here - otherwise newest-wins resurrects it on every login
+    // and the delete recovery can never converge (empty local loses to
+    // any remote timestamp). The predicate is the SAME function the
+    // restore preflight calls (services/save/saveAcceptance.ts) over
+    // the SAME catalog ids, so the two acceptance gates cannot drift -
+    // every preflight class is covered, not just the boundary contract.
+    const remoteUsable =
+      remoteShape !== null &&
+      remoteShape.ok &&
+      isSaveAcceptable(remoteShape.normalizedSave as GameSave, catalogs)
+        ? remoteShape
+        : null
     const remoteUpdatedMs = remoteRow ? Date.parse(remoteRow.updated_at) : Number.NaN
 
     // F2 / INV-F-19 - pure inspect, never the consuming loadGame():
     // this preflight only compares timestamps, so it must not eat the
     // one-shot import-handoff marker before the owner boot load.
     const local = inspectLocalSave()
-    const localSave = local.status === 'ok' ? local.save : null
+    // Symmetric gate (qa-authority-01 + F-INT-02): a local payload the
+    // boot restore would reject counts as 'no local' - it must not
+    // push its poison over a usable remote, and its timestamp must not
+    // shield it from a pull-heal. The same predicate and catalogs the
+    // remote side uses.
+    const localSave =
+      local.status === 'ok' && isSaveAcceptable(local.save, catalogs) ? local.save : null
     const localLastSavedAt = localSave?.player.lastSavedAt ?? Number.NEGATIVE_INFINITY
 
     if (remoteUsable && remoteUpdatedMs > localLastSavedAt && remoteRow) {
@@ -72,8 +95,28 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
       // between the two writes leaves new-revision + old-save -> the next
       // CAS mismatches and the coordinator resyncs - never a stale-
       // revision split.
+      const pulledRaw = JSON.stringify(remoteUsable.normalizedSave)
       localStorage.setItem(resolveRevisionKey(), String(remoteRow.save_revision))
-      localStorage.setItem(resolveSaveKey(), JSON.stringify(remoteUsable.normalizedSave))
+      localStorage.setItem(resolveSaveKey(), pulledRaw)
+      // Discard-notice parity with importSaveRaw: equipment dropped by
+      // normalization on the pull seam reports through the same one-shot
+      // handoff channel - bound to the exact stored bytes so a stale
+      // marker can never misattribute. A marker-write failure degrades
+      // to a lost count, never a failed pull (loadGame's own marker-read
+      // policy).
+      if (remoteUsable.discardedEquipmentCount > 0) {
+        try {
+          localStorage.setItem(
+            resolveImportHandoffKey(),
+            JSON.stringify({
+              normalizedRaw: pulledRaw,
+              discardedEquipmentCount: remoteUsable.discardedEquipmentCount,
+            }),
+          )
+        } catch {
+          // Auxiliary channel - losing the count must not fail the pull.
+        }
+      }
       return 'pulled'
     }
 

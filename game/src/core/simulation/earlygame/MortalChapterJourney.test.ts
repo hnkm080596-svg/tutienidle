@@ -19,7 +19,7 @@ import { getRequiredCultivation } from '../../realm/realmSystem'
 const PINNED = {
   name: 'journey',
   talentIds: ['hap_linh'], // combat passive - no cultivation/insight/economy subsidy
-  attributes: { strength: 2, vitality: 3 }, // exactly 5 points
+  mortalBasicSkillId: 'tram',
 }
 
 function makeSession(seed = 11): EarlyGameSession {
@@ -48,9 +48,12 @@ function clearFloorsOneAndTwo(s: EarlyGameSession): void {
   expect(s.player.completedStageIds).toContain('mortal_dong_1')
 
   grindToLevel(s, 14)
-  while (s.allocateAttribute('strength')) {
-    // spend the earned pool like the canonical loop's allocate_all step
-  }
+  // Post-BETA-CREATION the creation pick grants no stats - base is the
+  // 1/1/1/1/1 default, so the earned pool covers BOTH survival (vitality)
+  // and damage (strength). strength caps first; the rest goes to vitality,
+  // mirroring the canonical loop's spend-until-dry behavior.
+  while (s.allocateAttribute('strength')) { /* str to cap */ }
+  while (s.allocateAttribute('vitality')) { /* remainder to vit */ }
   expect(s.runStage('mortal_dong_2')).toBe('victory')
 }
 
@@ -236,12 +239,13 @@ describe('MortalChapterJourney', () => {
         expect(resumed.player).not.toBe(s.player)
 
         const restored = resumed.snapshot()
-        // Persisted fields round-trip exactly. tribulationState is
-        // intentionally NOT in the GameSave schema - the committed
-        // outcome is transient director state, null on a fresh manager.
+        // Persisted fields round-trip exactly - including tribulationState:
+        // the v82 slice (F-W-5) makes the committed outcome/cooldown real
+        // GameSave state, so the restored manager re-presents it instead
+        // of losing the run on reload.
         const { tribulationState: _checkpointTrib, ...persistedCheckpoint } = checkpoint
         const { tribulationState: restoredTrib, ...persistedRestored } = restored
-        expect(restoredTrib).toBeNull()
+        expect(restoredTrib).toEqual(_checkpointTrib)
         expect(persistedRestored).toEqual(persistedCheckpoint)
 
         // Manager-backed continuation: a stage run proves catalogs,

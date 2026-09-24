@@ -4,11 +4,23 @@ import {
   getCurrentRealm,
 } from '../realm/realmSystem'
 import { hasCultivationOverflowBank } from '../talent/TalentEffects'
+import { resolveFinalCultivationGain } from './CultivationDiversion'
+// Side-effect import: module-load registration of the Quan The diverter
+// into CultivationDiversion (design 2026-09-23 sec.10, HIDDEN-B).
+import '../realm/hidden/QuanTheDiversion'
 
 export function addCultivation(
   player: PlayerData,
   amount: number,
 ) {
+  // Hidden Perfection Lineage (2026-09-23, master spec sec.4.5.1): the
+  // FINAL-gain diversion seam - Quan The (HIDDEN-B) and later mechanism
+  // diverts run here, BEFORE the cap clamp and before any persistence
+  // or banked-overflow semantics (they see the post-diversion amount).
+  // The chain is total-conserving: a registered diversion owns how
+  // much cultivation lands; an unregistered player passes through.
+  amount = resolveFinalCultivationGain(player, amount)
+
   const required = getRequiredCultivation(
     player.realmId,
     player.realmLevel,
@@ -46,7 +58,13 @@ export function pourCultivationOvercharge(player: PlayerData): void {
 
   const required = getRequiredCultivation(player.realmId, player.realmLevel)
   const poured = Math.min(player.cultivationOvercharge, required)
-  player.cultivation = Math.min(player.cultivation + poured, required)
+  // Hidden Perfection Lineage (AUTH-1): the pour is a final cultivation
+  // gain like any other - while a diversion is active it routes through
+  // the same total-conserving channel as every other gain path (the
+  // banked amount is consumed either way; only the landed share is
+  // diverted).
+  const diverted = resolveFinalCultivationGain(player, poured)
+  player.cultivation = Math.min(player.cultivation + diverted, required)
   player.cultivationOvercharge -= poured
 }
 

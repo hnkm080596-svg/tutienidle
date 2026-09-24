@@ -42,13 +42,14 @@ import { getBodyRefinementCompletedTiers } from '../../realm/body/BodyProgressio
 import { MAX_STACK_AMOUNT } from '../../inventory/StackLimits'
 import { getRequiredCultivation } from '../../realm/realmSystem'
 import { REALMS } from '../../../data/realms/realm'
+import { MORTAL_DEFAULT_BASIC_ID } from '../../skill/MortalPrecursors'
 
 /** Same canonical measurement profile as M-D - one fixed creation
  * identity so runs differ only by seed. */
 const MEASUREMENT_PROFILE: EarlyGameCreationProfile = {
   name: 'substitution-economy-measure',
   talentIds: ['hap_linh'],
-  attributes: { strength: 2, vitality: 3 },
+  mortalBasicSkillId: MORTAL_DEFAULT_BASIC_ID,
 }
 
 function makeSession(seed: number): EarlyGameSession {

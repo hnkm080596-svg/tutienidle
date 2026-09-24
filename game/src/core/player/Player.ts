@@ -1,6 +1,6 @@
 import { calculateStats, resolveAttributeTotals, type StatModifier } from '../stats/StatCalculator'
 import { collectActiveWayStatModifiers } from './CultivationPathSystem'
-import { collectEffectiveBodyBaseStatDeltas, statDeltaEntries } from '../realm/body/BodyProgressionSystem'
+import { collectBodyBaseStatDeltas, statDeltaEntries } from '../realm/body/BodyProgressionSystem'
 import { asBaseStats, createBaseStats, type BaseStats, type Stats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { CENTER_LANE_INDEX } from '../battle/BattleLane'
@@ -26,9 +26,9 @@ import {
   type BodyProgressionState,
 } from '../realm/body/BodyChapter'
 import {
-  createDefaultBodyPerfection,
-  type BodyPerfectionState,
-} from '../realm/body/BodyPerfection'
+  createDefaultHiddenPerfection,
+  type HiddenPerfectionState,
+} from '../realm/hidden/HiddenPerfection'
 import type { PhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
 import type { TalentEntitlement } from '../talent/TalentEntitlement'
 
@@ -125,10 +125,13 @@ export interface PlayerData {
 
   // P7-M4 - the mortal basic pick: which learned precursor the player
   // fights with before initiation ('tram' | 'linh_bao' | 'huy_quyen';
-  // absent -> 'tram'). Mortal-scoped: written only via
-  // progressionOps.setMortalBasicSkill() while cultivationPath is
-  // unset, and cleared by the ritual commit. A post-path save carrying
-  // it is corrupt (save-v71 preflight rejects).
+  // absent -> 'tram' as the defensive runtime fallback). BETA-CREATION
+  // (v82): creation now REQUIRES the pick - the unified screen collects
+  // it and the boot seam writes it post-learn; a mortal save without it
+  // is corrupt (restore preflight rejects, fail-closed). Mortal-scoped:
+  // written only via progressionOps.setMortalBasicSkill() while
+  // cultivationPath is unset, and cleared by the ritual commit. A
+  // post-path save carrying it is corrupt (save-v71 preflight rejects).
   mortalBasicSkillId?: string
 
   // Phap Tu Reimagined (spec 2026-09-14) - persistent path-choice
@@ -165,14 +168,14 @@ export interface PlayerData {
   // only it (save v81 - replaces the scalar luyenKhiKillsSinceBeast).
   hiddenBeastKills: Record<string, number>
 
-  // Dai Dao Truc Co (spec sec.4.2/sec.4.3) - snapshot "hoan hao Pham Nhan"
-  // (5/5 main stat 10/10 + Luyen Th the 6/6) chot luc bam Quan Khi,
-  // KHONG hoi cuu sau khi vao Luyen Khi.
-  mortalPerfectionAchieved: boolean
-
-  // Thua kiep Dai Dao -> mat VINH VIEN co hoi Dai Dao (spec sec.4.3) -
-  // chi set, khong bao gio clear. Resolver cap o Thien Dao khi true.
-  greatDaoOpportunityLost: boolean
+  // Hidden Perfection Lineage (design 2026-09-23, master spec sec.2) - the
+  // ONE slice owning every hidden-perfection flag: lineage open/closed,
+  // completed hidden bodies (strict prefix), realms entered via hidden
+  // breakthrough, and sparse per-realm hidden state (discovery,
+  // completion, frozen, mechanism payload). Owned by
+  // core/realm/hidden/HiddenLineage; consumers read through its
+  // mutators/derived reads, never this record directly.
+  hiddenPerfection: HiddenPerfectionState
 
   // Cam ngo Ky nang (skill-insight-and-auto-combat-hud-plan.md) - thay
   // HAN skillPoints cu (khong con cap khi dot pha tieu canh gioi, xem
@@ -215,6 +218,13 @@ export interface PlayerData {
   // talent is removed so refund accounting stays honest.
   nodeFreePurchaseRecord: Record<string, number>
 
+  // F-W-2 (v82) - provenance cua cac one-shot grant node da thuc su phat
+  // luc purchase (0->1). Respec/revoke doc record nay de thu hoi dung
+  // phan grant ma node da dua - grant tu nguon khac (ritual, way kit,
+  // element root) khong bao gio duoc ghi nen clawback khong the tuoc nham.
+  // Xoa record sau khi clawback ap dung; rebuy ghi lai sach.
+  nodeOneShotGrants: Record<string, NodeOneShotGrantRecord>
+
   // Man chi mo tuan tu: thang mot man moi mo man ke tiep.
   completedStageIds: string[]
 
@@ -240,15 +250,6 @@ export interface PlayerData {
   // through it, never the slices directly.
   bodyProgression: BodyProgressionState
 
-  // M-F-BODY-PERFECTION - canonical Body-perfection slice (TOP-LEVEL,
-  // not inside bodyProgression: that record is pinned 1:1 to the
-  // chapter registry). discoveredMaterials = write-once set of authored
-  // perfection-material ids ever received (persistent, NOT
-  // inventory-derived); perfectedRealmIds = realms whose perfection
-  // transaction committed. Owned by core/realm/body/BodyPerfection;
-  // the hidden UI reads the read-model, never the slice directly.
-  bodyPerfection: BodyPerfectionState
-
   // M-QI-07 (QI-D4) - the persisted physique (The Phach) grade on the
   // Pham -> Bao -> ... -> Tien ladder (data/realm/PhysiqueLadder.ts).
   // Advanced EXACTLY ONE rung per completed physique-advancement body
@@ -268,9 +269,9 @@ export interface PlayerData {
   breakthroughGrade: number
 
   // Loi Kiep talent (talent-catalog-v4 sec.4.3) - permanent +10% all
-  // attributes per successful tribulation while the talent is held.
-  // Owned by TribulationOutcomeService's victory path.
-  tribulationBonusStacks: number
+  // attributes per successful tribulation while the talent is held, lived
+  // entirely in `talent_loi_kiep_*` modifiers (upserted by the victory
+  // path) - no separate stack counter.
 
   // Pha Giap talent M2 carry (talent-catalog-v4 sec.4.3) - half the Pha
   // Giap passive's metalPenetration stacks bank at battle end and
@@ -358,6 +359,16 @@ export interface FormationSlotAssignment {
   row: number
   column: number
   combatantId: string
+}
+
+/** Grant mot-lan mot node da thuc su phat luc purchase - chi nhung
+ * field nao fire moi duoc ghi (learnSkill tra true moi vao danh sach). */
+export interface NodeOneShotGrantRecord {
+  learnedSkillIds?: string[]
+  kiemY?: number
+  kiemDao?: number
+  specializationSkillId?: string
+  specializationId?: string
 }
 
 export interface FormationLoadout {
@@ -451,8 +462,7 @@ export function createDefaultPlayer(): PlayerData {
     totalCultivationGained: 0,
     bossKillCount: 0,
     hiddenBeastKills: {},
-    mortalPerfectionAchieved: false,
-    greatDaoOpportunityLost: false,
+    hiddenPerfection: createDefaultHiddenPerfection(),
     skillInsight: 0,
     totalSkillInsightGained: 0,
     cultivationInsightAccumulator: 0,
@@ -461,13 +471,12 @@ export function createDefaultPlayer(): PlayerData {
     purchasedNodeIds: [],
     nodeLevels: {},
     nodeFreePurchaseRecord: {},
+    nodeOneShotGrants: {},
 
     bodyProgression: createDefaultBodyProgression(),
-    bodyPerfection: createDefaultBodyPerfection(),
     physiqueGrade: 'pham',
     breakthroughGrade: 6,
     grantedRealmPassiveIds: [],
-    tribulationBonusStacks: 0,
     phaGiapCarryStacks: 0,
     phaGiapCarryRealmId: null,
 
@@ -521,7 +530,7 @@ export function resolvePlayerStatAssembly(
   // mutated, so saves, mortal perfection's persisted-base read, and
   // restore rehydration are unaffected.
   const assembledBase = { ...player.baseStats }
-  for (const [stat, delta] of statDeltaEntries(collectEffectiveBodyBaseStatDeltas(player))) {
+  for (const [stat, delta] of statDeltaEntries(collectBodyBaseStatDeltas(player))) {
     assembledBase[stat] += delta
   }
   const pipelineBase = asBaseStats(assembledBase)

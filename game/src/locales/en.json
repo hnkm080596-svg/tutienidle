@@ -527,7 +527,6 @@
         "stateLocked": "Sealed",
         "cost": "{count} Meridian Pills",
         "realmGate": "{realm} floor {level}",
-        "auxGate": "requires Heaven-Earth Bridge",
         "pageLocked": "Unlocks at {realm}",
         "invest": "Open Meridian",
         "owned": "owned {count}",
@@ -543,18 +542,12 @@
         "locked": "Complete the Eight Extraordinary Meridians chapter first",
         "realmLocked": "Unlocks at {realm}",
         "capacity": "Current capacity: {capacity}",
-        "tieuLabel": "Tieu Chu Thien · 180",
-        "daiLabel": "Dai Chu Thien · 360",
+        "tieuLabel": "Tieu Chu Thien · 18",
+        "daiLabel": "Dai Chu Thien · 36",
         "invest": "Circulate",
         "owned": "Dharma Physique Essence owned {count}",
+        "stepCost": "Next step cost: {cost}",
         "complete": "Dai Chu Thien circulation complete."
-      },
-      "bodyPerfection": {
-        "title": "Body Perfection",
-        "statePerfected": "Perfected",
-        "statePending": "Not perfected",
-        "owned": "owned {count}",
-        "perfect": "Perfect"
       }
     },
     "settings": {
@@ -891,60 +884,33 @@
       "back": "← Back",
       "headerKicker": "DESTINY-BINDING",
       "headerTitle": "Create Character",
-      "step": "Step {step} / {total}",
-      "stepperAria": "Character creation progress",
       "nameStep": {
         "kicker": "DAO NAME",
         "title": "A title carried through the immortal path",
         "description": "Character names are unique and cannot be changed in the early phase.",
         "label": "Character Name",
         "placeholder": "Enter a dao name…",
-        "minLengthHint": "{length}/20 · Minimum 2 characters",
-        "continue": "Continue"
+        "minLengthHint": "{length}/20 · Minimum 2 characters"
       },
       "talentStep": {
         "kicker": "DESTINY",
         "title": "Choose One Innate Talent",
         "selected": "Selected {count} / 1",
         "rolling": "Observing the heavens…",
-        "reroll": "↻ Reroll all",
-        "confirm": "Confirm talent"
+        "reroll": "↻ Reroll all"
       },
-      "attributeStep": {
-        "kicker": "FOUNDATION",
-        "title": "Allocate starting points",
-        "pointsLeft": "{count} points left",
-        "summaryTalent": "1 Talent",
-        "summaryPoints": "5 Foundation Points",
-        "rechooseTalent": "Rechoose talent",
-        "creating": "Binding fate…",
-        "finish": "Step onto the immortal path"
+      "skillStep": {
+        "kicker": "FIRST STRIKE",
+        "title": "Choose your starting technique",
+        "selected": "Selected {count} / 1",
+        "description": "All three techniques are learned — this choice decides your opening basic attack."
       },
-      "attributes": {
-        "strength": {
-          "name": "Physique",
-          "hint": "Raw strength of the body"
-        },
-        "dexterity": {
-          "name": "Agility",
-          "hint": "Mobility and evasion"
-        },
-        "intelligence": {
-          "name": "Divine Sense",
-          "hint": "Skill potency"
-        },
-        "attunement": {
-          "name": "Spirit Root",
-          "hint": "Elemental resonance"
-        },
-        "vitality": {
-          "name": "Constitution",
-          "hint": "Vitality and endurance"
-        }
-      },
+      "finish": "Step onto the immortal path",
+      "creating": "Binding fate…",
       "errors": {
         "rollFailed": "Cannot observe the heavens. Please try again."
-      }
+      },
+      "summary": "{name} · {talent} · {skill}"
     }
   },
   "skillResource": {
@@ -1046,10 +1012,6 @@
       "realm": {
         "title": "★ {realm} ★",
         "body": "You have passed the Tribulation and formally entered {realm}."
-      },
-      "defeatGreatDao": {
-        "title": "Great Dao Foreclosed",
-        "body": "Defiance has failed — the Great Dao opportunity is forever closed. The next attempt caps at Heavenly Dao."
       },
       "defeat": {
         "title": "Tribulation Failed",
@@ -1263,11 +1225,35 @@
   },
   "notifications": {
     "skillLevelUp": "{name} reached level {level}",
-    "skillLevelUpMulti": "{name} gained {gained} levels, reaching level {level}",
-    "bodyRealmPerfected": "Body Perfection: {realm}"
+    "skillLevelUpMulti": "{name} gained {gained} levels, reaching level {level}"
   },
   "save": {
     "conflict": "Save was changed by another session.",
     "createFailed": "Character creation failed — initialization did not complete."
+  },
+  "hidden": {
+    "mortal": {
+      "tier7Name": "Body Refinement · Tier 7 — Pham Cot",
+      "tier7Desc": "The mortal's hidden body path — survive the Ancient Beast to prove it.",
+      "stateTrial": "Ancient Beast trial",
+      "stateDone": "Completed",
+      "beastName": "Ancient Beast"
+    },
+    "qi": {
+      "quanTheName": "Meridian · Quan The",
+      "quanTheDesc": "Cultivation is diverted into quan the instead of realm progress — fill it to unlock the hidden body.",
+      "stateActive": "Diverting",
+      "stateDone": "Completed"
+    },
+    "trial": {
+      "banner": "{name} · Round {elapsed}/{required}"
+    },
+    "foundation": {
+      "nghichName": "Reverse Circulation",
+      "stateActive": "Reversing",
+      "stateDone": "Complete",
+      "detail": "Essence {essence} · Spirit Stones {stones} · Success {chance}% · Pity {pity}/{pityLimit}",
+      "attempt": "Attempt Reverse Circulation"
+    }
   }
 }

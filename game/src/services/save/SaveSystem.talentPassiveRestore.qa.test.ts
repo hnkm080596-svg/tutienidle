@@ -1,3 +1,4 @@
+import { primeMortalCreationPick } from './GameSave.fixture'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { affixes } from '../../data/equipment/affixes'
@@ -58,6 +59,7 @@ describe('Talent combat passives across save restore (QA regression)', () => {
       expect(source.skillManager.has('talent_passive_can_than')).toBe(true)
       expect(source.skillManager.has('talent_passive_can_than_phi')).toBe(true)
 
+      primeMortalCreationPick(sourcePlayer, source.skillManager)
       const save = buildGameSave(sourcePlayer, source)
 
       // The save file itself carries the passives - they are real

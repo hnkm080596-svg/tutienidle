@@ -8,6 +8,9 @@ export type CloudSaveLoadResult =
       revision: number
       /** Luôn có; 0 khi load không loại equipment legacy. */
       discardedEquipmentCount: number
+      /** Stored bytes - mirrors LoadOutcome.ok so a rejected-after-shape
+       * save exports byte-identically at the recovery surface. */
+      raw: string
     }
   | Extract<LoadOutcome, { status: 'incompatible' | 'corrupted' }>
   | { status: 'unavailable'; message: string }

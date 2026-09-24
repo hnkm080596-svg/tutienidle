@@ -3,11 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { syncRemoteSaveOnLogin } from './SupabaseRemoteSave'
 import { storeSupabaseSession } from '../supabase/SupabaseSession'
 import {
+  resolveImportHandoffKey,
   resolveRevisionKey,
   resolveSaveKey,
   setSaveAccountId,
 } from '../save/saveKeys'
-import { CURRENT_SAVE_VERSION } from '../save/SaveSystem'
+import { CURRENT_SAVE_VERSION, loadGame } from '../save/SaveSystem'
 import { createDefaultPlayer } from '../../core/player/Player'
 import type { GameSave } from '../save/saveTypes'
 
@@ -26,11 +27,28 @@ class MemoryStorage implements Storage {
 function validGameSave(lastSavedAt: number): GameSave {
   const player = createDefaultPlayer()
   player.lastSavedAt = lastSavedAt
+  // v82 mortal boundary contract: the fixture doubles as a legal
+  // creation output - pick + learned entry + core grant.
+  player.mortalBasicSkillId = 'tram'
+  player.nodeLevels = { ...player.nodeLevels, core_tram: 1 }
+  player.purchasedNodeIds = [...player.purchasedNodeIds, 'core_tram']
   return {
     version: CURRENT_SAVE_VERSION,
     player,
     techniques: [],
-    skills: [],
+    skills: [
+      {
+        id: 'tram',
+        name: 'Trảm',
+        description: 'creation pick',
+        type: 'active',
+        level: 1,
+        maxLevel: 10,
+        cooldown: 0,
+        target: 'enemy',
+        effects: [],
+      },
+    ],
     materials: [],
     equipment: [],
     pills: [],
@@ -185,6 +203,34 @@ describe('syncRemoteSaveOnLogin - newest-wins reconciliation (spec F8)', () => {
     vi.unstubAllGlobals()
   })
 
+  it('remote payload failing the mortal boundary contract counts as absent -> push path heals', async () => {
+    loginSession()
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(50_000_000)))
+
+    // A v82-shaped remote payload missing the creation pick can only
+    // be a stale pre-repair write. The remote gate applies the same
+    // boundary contract as local restore, so the row counts as "no
+    // remote" and the local truth is pushed up instead of pulled down.
+    const badRemote = validGameSave(60_000_000)
+    badRemote.player = { ...badRemote.player, mortalBasicSkillId: undefined }
+
+    const calls = stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([{ payload: badRemote, save_revision: 9, updated_at: new Date().toISOString() }])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pushed')
+    expect(calls.some((call) => call.init.method === 'POST')).toBe(true)
+    // Local slot untouched - the bad remote was never written down.
+    const written = JSON.parse(localStorage.getItem(resolveSaveKey()) ?? '{}') as GameSave
+    expect(written.player.lastSavedAt).toBe(50_000_000)
+
+    vi.unstubAllGlobals()
+  })
+
   it('fetch rejection -> unavailable, local slot untouched', async () => {
     loginSession()
     localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(1_000)))
@@ -192,6 +238,166 @@ describe('syncRemoteSaveOnLogin - newest-wins reconciliation (spec F8)', () => {
 
     expect(await syncRemoteSaveOnLogin(config)).toBe('unavailable')
     expect(localStorage.getItem(resolveSaveKey())).not.toBeNull()
+
+    vi.unstubAllGlobals()
+  })
+})
+
+describe('shared save acceptance gate (qa-authority-01 / F-INT-02 / F-INT-03)', () => {
+  it('remote payload with an unknown material counts as absent -> push heals, never pulled', async () => {
+    loginSession()
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(50_000_000)))
+
+    // Registry-class poison, not boundary-class: shape passes, the
+    // shared acceptance predicate is what rejects it. Without the gate
+    // this row would be pulled, then boot would reject the local copy
+    // with no remote-delete path to break the loop.
+    const badRemote = validGameSave(60_000_000)
+    badRemote.materials = [{ materialId: 'qa_no_such_material', amount: 1 }]
+
+    const calls = stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([{ payload: badRemote, save_revision: 9, updated_at: new Date().toISOString() }])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pushed')
+    expect(calls.some((call) => call.init.method === 'POST')).toBe(true)
+
+    vi.unstubAllGlobals()
+  })
+
+  it('remote payload with an unknown pill counts as absent -> push heals', async () => {
+    loginSession()
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(50_000_000)))
+
+    const badRemote = validGameSave(60_000_000)
+    badRemote.pills = [{ pillId: 'qa_no_such_pill', amount: 1 }]
+
+    const calls = stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([{ payload: badRemote, save_revision: 9, updated_at: new Date().toISOString() }])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pushed')
+    expect(calls.some((call) => call.init.method === 'POST')).toBe(true)
+
+    vi.unstubAllGlobals()
+  })
+
+  it('contract-bad local + usable remote -> pulled: the pull heals the poisoned local slot', async () => {
+    loginSession()
+
+    // F-INT-02: a local payload the boot restore would reject must not
+    // push its poison over a usable remote. Ungated, the newer local
+    // timestamp would overwrite the only good copy.
+    const badLocal = validGameSave(99_000_000)
+    badLocal.player = { ...badLocal.player, mortalBasicSkillId: undefined }
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(badLocal))
+
+    const goodRemote = validGameSave(1_000)
+    goodRemote.player.name = 'remote-char'
+
+    const calls = stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([{ payload: goodRemote, save_revision: 4, updated_at: new Date(2_000).toISOString() }])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pulled')
+    expect(calls.some((call) => call.init.method === 'POST')).toBe(false)
+
+    const written = JSON.parse(localStorage.getItem(resolveSaveKey()) ?? '{}') as GameSave
+    expect(written.player.name).toBe('remote-char')
+    expect(written.player.mortalBasicSkillId).toBe('tram')
+
+    vi.unstubAllGlobals()
+  })
+
+  it('registry-bad local + usable remote -> pulled (non-boundary local poison heals too)', async () => {
+    loginSession()
+
+    const badLocal = validGameSave(99_000_000)
+    badLocal.materials = [{ materialId: 'qa_no_such_material', amount: 1 }]
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(badLocal))
+
+    const calls = stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([{ payload: validGameSave(1_000), save_revision: 4, updated_at: new Date(2_000).toISOString() }])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pulled')
+    expect(calls.some((call) => call.init.method === 'POST')).toBe(false)
+
+    vi.unstubAllGlobals()
+  })
+
+  it('bad local + no usable remote -> skipped, NOT pushed: poison never travels upward', async () => {
+    loginSession()
+
+    const badLocal = validGameSave(99_000_000)
+    badLocal.player = { ...badLocal.player, mortalBasicSkillId: undefined }
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(badLocal))
+
+    const calls = stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) return json([])
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('skipped')
+    expect(calls.some((call) => call.init.method === 'POST')).toBe(false)
+
+    vi.unstubAllGlobals()
+  })
+
+  it('pull that normalized away legacy equipment reports the discard through the import-handoff channel (qa-authority-b-02)', async () => {
+    loginSession()
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(1_000)))
+
+    // A legacy entry (realmId/rarity markers) is tolerated by shape
+    // validation and counted in discardedEquipmentCount - but it is NOT
+    // part of normalizedSave, so the acceptance gate passes and the row
+    // pulls cleanly.
+    const remote = validGameSave(1_000) as GameSave & { equipment: unknown[] }
+    remote.equipment.push({ realmId: 'pham', rarity: 'hiem', instanceId: 'i1', itemId: 'x', slot: 'weapon' })
+
+    stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([{ payload: remote, save_revision: 7, updated_at: new Date(10_000_000).toISOString() }])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pulled')
+
+    const stored = localStorage.getItem(resolveSaveKey())
+    const marker = JSON.parse(localStorage.getItem(resolveImportHandoffKey()) ?? 'null') as {
+      normalizedRaw: string
+      discardedEquipmentCount: number
+    } | null
+    expect(marker?.normalizedRaw).toBe(stored)
+    expect(marker?.discardedEquipmentCount).toBe(1)
+
+    // One-shot consume: the owner load reports the count once, then the
+    // marker is gone.
+    const outcome = loadGame()
+    expect(outcome.status).toBe('ok')
+    if (outcome.status === 'ok') {
+      expect(outcome.discardedEquipmentCount).toBe(1)
+    }
+    expect(localStorage.getItem(resolveImportHandoffKey())).toBeNull()
 
     vi.unstubAllGlobals()
   })

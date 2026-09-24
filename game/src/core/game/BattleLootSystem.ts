@@ -442,8 +442,10 @@ export class BattleLootSystem {
           }
 
           // Quai an (spec dot-pha-loi-kiep S4.1c) - dem kill Luyen Khi;
-          // giet Huyet Mong reset cua so ve 0.
-          if (this.player) {
+          // giet Huyet Mong reset cua so ve 0. ACTIVE kills only - the
+          // hidden-substitution window is ACTIVE-only, so idle auto-farm
+          // cycles must not warm the counter it never benefits from.
+          if (this.player && this.channel === 'active') {
             this.deps.hiddenBeast.onEnemyDefeated(
               this.player,
               defeatedTemplateId,

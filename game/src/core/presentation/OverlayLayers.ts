@@ -35,6 +35,8 @@ export const OVERLAY_LAYERS = {
   appError: 3000,
   /** SaveIncompatibleScreen — boot save gate. */
   saveGate: 4000,
+  /** Modals spawned BY the save gate (its ConfirmModal) - above the gate so the confirm is clickable; still under the curtain. */
+  saveGateModal: 4100,
   /** PresentationTransitionOverlay curtain — TOPMOST, covers everything while closed. */
   curtain: 5000,
 } as const

@@ -9,7 +9,6 @@
 // emission - ownership moved, rules did not.
 import {
   MERIDIANS,
-  THIEN_DIA_CHI_KIEU_MATERIAL_ID,
   THONG_MACH_DAN_MATERIAL_ID,
 } from '../../../data/realm/Meridians'
 import type { PlayerData } from '../../player/Player'
@@ -43,9 +42,8 @@ export const meridianChapter: ModifierBodyChapter = {
   id: 'meridian',
   modifierPrefix: MODIFIER_PREFIX,
   // thong_mach_dan is a type:'material' PILL (data/pill/pills.ts) -
-  // lives in pillBag, not materialBag. thien_dia_chi_kieu is a material.
+  // lives in pillBag, not materialBag.
   currency: { bag: 'pill', id: THONG_MACH_DAN_MATERIAL_ID },
-  auxCurrency: { bag: 'material', id: THIEN_DIA_CHI_KIEU_MATERIAL_ID },
   // M-F-CHU-THIEN (C2C-59) - system-wide sequentiality: meridian only
   // unlocks once body_refinement completes, so the canonical chain
   // body_refinement -> meridian -> zhou_tian holds at the dispatch gate
@@ -53,10 +51,9 @@ export const meridianChapter: ModifierBodyChapter = {
   unlocksAfterChapters: ['body_refinement'],
 
   // Dau tu Thong Mach Dan vao duong ke tiep. Tra ve so dan THAT SU da
-  // tieu (0 neu khong du dieu kien/khong con duong). auxOwned chi co y
-  // nghia voi duong cuoi (Ky Kinh) - cac duong khac bo qua. Does NOT
-  // rebuild modifiers - the system dispatch owns the rebuild.
-  invest(player: PlayerData, available: number, auxOwned: number): number {
+  // tieu (0 neu khong du dieu kien/khong con duong). Does NOT rebuild
+  // modifiers - the system dispatch owns the rebuild.
+  invest(player: PlayerData, available: number, _auxOwned: number): number {
     const next = nextMeridian(player)
 
     if (!next || available < next.thongMachDanCost) {
@@ -77,10 +74,6 @@ export const meridianChapter: ModifierBodyChapter = {
     // realm roi thi mo thang, chi con rang buoc tuan tu. Keyed on
     // next.pageRealmId so a future page paces inside ITS realm.
     if (player.realmId === next.pageRealmId && player.realmLevel < next.requiredRealmLevel) {
-      return 0
-    }
-
-    if (next.requiresThienDiaChiKieu && auxOwned < 1) {
       return 0
     }
 

@@ -87,14 +87,15 @@ describe('BodyProgressionSystem - unified invest dispatch', () => {
     player.realmLevel = 18
     player.physiqueGrade = 'bao'
     player.bodyProgression.body_refinement.completedTiers = 6
-    player.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 8).map(m => m.id)
+    player.bodyProgression.meridian.openedIds = MERIDIANS.slice(0, 7).map(m => m.id)
 
     expect(investBodyChapterState(player, 'zhou_tian', 50, 0)).toBe(0)
-    expect(player.bodyProgression.zhou_tian.circulation).toBe(0)
+    expect(player.bodyProgression.zhou_tian.completed).toBe(0)
 
     player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
-    expect(investBodyChapterState(player, 'zhou_tian', 50, 0)).toBe(50)
-    expect(player.bodyProgression.zhou_tian.circulation).toBe(50)
+    // 50 essence buys steps 0+1 (15+20=35); the next step costs 25.
+    expect(investBodyChapterState(player, 'zhou_tian', 50, 0)).toBe(35)
+    expect(player.bodyProgression.zhou_tian.completed).toBe(2)
   })
 
   it('isBodyChapterUnlocked mirrors the sequential gate exactly', () => {
@@ -171,7 +172,7 @@ describe('BodyProgressionSystem - modifier rehydration + reads', () => {
     player.bodyProgression.meridian.openedIds = ['nham_mach', 'doi_mach']
 
     expect(getBodyChapterProgress(player, 'body_refinement')).toEqual({ completed: 3, total: 6 })
-    expect(getBodyChapterProgress(player, 'meridian')).toEqual({ completed: 2, total: 9 })
+    expect(getBodyChapterProgress(player, 'meridian')).toEqual({ completed: 2, total: 8 })
     expect(getBodyRefinementCompletedTiers(player)).toBe(3)
     expect(getOpenedMeridianCount(player)).toBe(2)
   })
@@ -252,7 +253,7 @@ describe('BodyProgressionSystem - integrity gate', () => {
     zhouTianAhead.realmId = 'foundation_establishment'
     zhouTianAhead.physiqueGrade = 'bao'
     zhouTianAhead.bodyProgression.body_refinement.completedTiers = 6
-    zhouTianAhead.bodyProgression.zhou_tian.circulation = 5
+    zhouTianAhead.bodyProgression.zhou_tian.completed = 2
     expect(() => assertBodyProgressionIntegrity(zhouTianAhead)).toThrow(/meridian/)
 
     // The same chapters at zero progress stay coherent (a chapter is
@@ -265,7 +266,7 @@ describe('BodyProgressionSystem - integrity gate', () => {
     const missingRefinement = createDefaultPlayer()
     missingRefinement.bodyProgression = {
       meridian: { openedIds: ['nham_mach'] },
-      zhou_tian: { circulation: 0 },
+      zhou_tian: { completed: 0 },
     } as never
     expect(() => assertBodyProgressionIntegrity(missingRefinement)).toThrow(/body_refinement missing/)
   })

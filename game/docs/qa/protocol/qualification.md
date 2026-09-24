@@ -90,3 +90,44 @@ These are mandatory tests of the QA system itself. Use synthetic immutable test 
 ## Successful qualification means
 
 Structural validation, semantic transitions, state invalidation, internal reviewer isolation, learning promotion/routing and golden detection work in the actual Devin environment. It does not imply the game itself has reached an aggregate fixed point. Report `PROTOCOL_ADOPTION_QUALIFIED` only for this installation/qualification objective, and separately report the actual game's QA status without inventing a pass.
+
+## PU-01..PU-32 — prevention-upgrade qualification cases
+
+The upgrade adds prevention (construction guidance) alongside detection; these cases qualify it. Labels: `EXECUTED` = machine-executed here (`tests/prevention.test.mjs` + `qa:internal` commands), `SOURCE` = verified by source/logic inspection, `INFERRED` = reasoned from platform limits, `PLANNED` = requires live multi-agent context scheduled later, `UNVERIFIED` = not yet evidenced.
+
+| PU | Case | Where proven | Label |
+|---|---|---|---|
+| PU-01 | Applicable lesson routed APPLY into brief | `prepare` routing test | EXECUTED |
+| PU-02 | Exclusion/no-trigger lesson -> NOT_APPLICABLE | routing test | EXECUTED |
+| PU-03 | Drifted sourceDependency -> STALE (never auto-applied) | routing test | EXECUTED |
+| PU-04 | CANDIDATE facet -> NEEDS_DISCOVERY, informs discovery only | routing test | EXECUTED |
+| PU-05 | Routing is deterministic (no vector DB); record kept in brief | `routeLessons` impl | SOURCE |
+| PU-06 | Brief carries all 10 required field rows | schema `brief` def | EXECUTED (schema) |
+| PU-07 | Readiness outcomes IMPLEMENTATION_READY/DISCOVERY_REQUIRED/SCOPE_DECISION_REQUIRED | preflight + enum | EXECUTED |
+| PU-08 | Brief with unresolved assumptions cannot declare READY | preflight test | EXECUTED |
+| PU-09 | firstProof stage BEFORE_WRITE blocks write-side violation | doc + obligation schema | SOURCE (agent-discipline) |
+| PU-10 | BEFORE_PROPAGATION stage gates slice propagation | same | SOURCE |
+| PU-11 | Early seam proof = highest-cost uncertain assumption first | `firstProofObligations` nonempty check | EXECUTED |
+| PU-12 | wrong-owner / wrong-shape brief rejected by preflight | preflight unmet list | EXECUTED |
+| PU-13 | State drift -> checkpoint marks brief STALE + invalidates items | checkpoint test | EXECUTED |
+| PU-14 | One task -> one active assignment; queue holds no agent | `admitAssignment` | EXECUTED |
+| PU-15 | Result message != slot release (RESULT_RECEIVED keeps slot) | observe test | EXECUTED |
+| PU-16 | Timeout/expiry alone cannot release (RELEASE_PENDING retains) | observe test | EXECUTED |
+| PU-17 | External/unmanaged sessions count against capacity | externalOccupied test | EXECUTED |
+| PU-18 | No standing watcher/poll agent — dispatch only on READY frozen inputs | §G law + assignment states | SOURCE |
+| PU-19 | Ledger is reservation authority (no platform atomic API) | honesty: capability-limits doc | INFERRED |
+| PU-20 | Suspended agent keeps reservation AND is contaminated for Clean-B | §G.1 + platform behavior | INFERRED |
+| PU-21 | Guidance facet qualifies only with independent verifier | applyLearningAction guards | EXECUTED |
+| PU-22 | UNKNOWN origin cannot qualify a RECIPE (no fabricated causality) | qualify guard | EXECUTED |
+| PU-23 | Self-approval rejected (actor in qualifiedBy) | qualify guard | EXECUTED |
+| PU-24 | requiredReadiness run lacking conforming brief -> no fixed point | C9-readiness clause | EXECUTED |
+| PU-25 | v1 ledgers replay under frozen v1 schema; migration explicit | v1 schema file + migrate test | EXECUTED |
+| PU-26 | Migration fabricates no evidence (initializations logged) | migrate notes | EXECUTED |
+| PU-27 | Policy payload cannot self-hash (no policyHash/run refs) | publishPolicy reject | EXECUTED |
+| PU-28 | Torn publication detected on load, never silently trusted | loadActivePolicy throw | EXECUTED |
+| PU-29 | Candidate overlay trial != active policy (separate files) | publish boundary | SOURCE |
+| PU-30 | 5-slot qualification under live concurrency | needs real run | PLANNED |
+| PU-31 | Post-publication ordinary-task adoption demonstrated (consumption) | next real task | PLANNED |
+| PU-32 | False-positive facet cannot become law | reject/rollback transitions + independent qualify | EXECUTED |
+
+Verdict label `PREVENTION_UPGRADE_QUALIFIED` is withheld until every applicable case passes AND post-publication ordinary-task adoption exists (PU-30/PU-31 PLANNED). Effectiveness report remains `EFFICIENCY_NOT_YET_ESTABLISHED` until a comparative sample exists.

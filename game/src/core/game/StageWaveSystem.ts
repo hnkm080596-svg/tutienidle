@@ -31,6 +31,9 @@ export interface StageWaveSystemDeps {
   // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — roll trà trộn pool spawn
   // Luyện Khí khi cửa sổ 1000 kill mở.
   hiddenBeast: HiddenBeastSystem
+  // Session rng seam (F-W-7) - optional injectable stream so harnesses
+  // pin the hidden-substitution roll.
+  sessionRng?: () => number
 }
 
 /**
@@ -50,6 +53,26 @@ export class StageWaveSystem {
   private stageLease: StageLease | null = null
 
   constructor(private readonly deps: StageWaveSystemDeps) {}
+
+  /**
+   * Admission probe: would start() pass its two gates for this
+   * (player, stage) right now? Mirrors the refused-start checks -
+   * stage unlocked + the single slot free - without minting a lease or
+   * touching RNG. The only write is the same stale-lease self-heal
+   * start() performs before acquiring. Callers with pre-admission side
+   * effects (HIDDEN-B's hidden-battle resolver consumes a roll on
+   * resolve) consult this BEFORE resolving so a refused start resolves
+   * nothing.
+   */
+  canStart(player: PlayerData, stage: Stage): boolean {
+    if (!this.deps.isStageUnlocked(stage.id, player)) {
+      return false
+    }
+    if (!this.deps.stageManager.owns(this.stageLease)) {
+      this.stageLease = null
+    }
+    return this.deps.stageManager.getActive() === null
+  }
 
   /**
    * Điểm vào DUY NHẤT để bắt đầu 1 màn. Quái đầu tiên spawn ngay trong
@@ -249,11 +272,13 @@ export class StageWaveSystem {
 
     // Quái ẩn trà trộn (spec dot-pha-loi-kiep §4.1c) — chỉ stage Luyện
     // Khí + cửa sổ 1000 kill mở; roll 5% thay thế quái pool bằng Huyết Mông.
+    // Stage khong khai bao requiredRealmId thi khong thuoc band nao -
+    // pass raw, khong ngam coi nhu Luyen Khi.
     if (this.activeStagePlayer) {
       const hidden = this.deps.hiddenBeast.maybeReplaceSpawn(
         this.activeStagePlayer,
-        stage.requiredRealmId ?? 'qi_refining',
-        options?.rng,
+        stage.requiredRealmId,
+        options?.rng ?? this.deps.sessionRng,
       )
       if (hidden) {
         return applyStageRealm(hidden)

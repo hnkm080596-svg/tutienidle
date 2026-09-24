@@ -1,0 +1,6 @@
+{
+ "node": "node@22 via linuxbrew",
+ "vitest": "run, no reporter flags",
+ "ts": "vue-tsc --build",
+ "checked": "2026-09-23"
+}

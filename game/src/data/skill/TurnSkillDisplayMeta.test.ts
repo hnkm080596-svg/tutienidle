@@ -4,6 +4,7 @@ import { KIEM_PHO_COMBOS } from './KiemPhoCombos' // used below in the K11 negat
 import { KIEM_PHO_ORBS } from './KiemPhoOrbs'
 import { KIEM_DAO_CASCADE_EMBLEM, NGU_KIEM_THUAT, TU_KIEM_Y_EMBLEM } from './NguKiemDaoSkills'
 import { BASIC_ATTACKS_BY_BUILD, THUY_GIAP_LONG_WATER_SURGE } from './TurnBasicAttacks'
+import { MORTAL_PRECURSOR_SKILL_IDS } from '../../core/skill/MortalPrecursors'
 import { TURN_SKILL_DISPLAY_META, turnSkillDisplayMetaOf } from './TurnSkillDisplayMeta'
 
 // Bang 9.5 #5 (2026-09-07) - mapping skillId -> display metadata (name +
@@ -41,6 +42,12 @@ function productionTurnSkillIds(): string[] {
   }
   // KIEM_PHO_COMBOS deliberately excluded — K11: no combo id may
   // resolve to display text (the fired payload is the only signal).
+
+  // Mortal precursors are persisted turn-skill picks (creation contract):
+  // every pickable precursor must resolve authored meta in the HUD.
+  for (const id of MORTAL_PRECURSOR_SKILL_IDS) {
+    ids.add(id)
+  }
 
   for (const companion of COMPANIONS) {
     for (const skill of [companion.basic, companion.special, companion.ultimate]) {

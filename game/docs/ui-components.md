@@ -836,9 +836,9 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 ### CharacterCreationScreen
 
 - **Đường dẫn**: `game/src/components/onboarding/CharacterCreationScreen.vue`
-- **Chức năng**: Wizard 3 bước tạo nhân vật — Đạo danh → chọn Thiên Phú (reroll) → phân bổ 5 điểm căn cơ.
+- **Chức năng**: Màn tạo nhân vật một trang (single unified surface) — Đạo danh + chọn Thiên Phú (reroll, pick 1) + chọn chiêu thức khởi đầu (3 precursor); không còn bước phân bổ điểm (base stats cố định 1/1/1/1/1).
 - **Màu sắc**: nền radial như AuthEntry; panel gradient mực + `.ornate-frame`; talent card selected viền `--chrome-300` + inset ring + glow 12%; tier thiên phú → `--rank-color-1/3/5/7/8`; counter hợp lệ `--jade`; lỗi `--crimson`.
-- **Đặc tả**: stepper 26px tròn nối kẻ 1px; talent grid 3 cột min-height 128px hover `translateY(-2px)`.
+- **Đặc tả**: talent/skill grid 3 cột min-height 128px hover `translateY(-2px)`; footer = inline summary + nút finish.
 
 ---
 
@@ -868,7 +868,7 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 
 - `ArtifactCombatSlot` — mask cooldown **dọc** height-driven, không phải bar ngang.
 - `BagPaginationControls` sort button — nút đơn có `aria-haspopup` + SVG inline, không phải chip cluster.
-- `AuthEntryScreen` tab underline + `CharacterCreationScreen` stepper + `DongFuCommandWheel` radial — chủ đích visual khác biệt.
+- `AuthEntryScreen` tab underline + `DongFuCommandWheel` radial — chủ đích visual khác biệt.
 - `QuanKhiPanel` nút chọn path — giữ gradient crimson (nghi thức không hoàn tác), override cục bộ trên GameButton danger.
 
 ### Điểm cần biết khi thêm UI mới

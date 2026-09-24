@@ -1,26 +1,26 @@
-import type { FoundationType } from '../../core/breakthrough/FoundationType'
+import type { ResolvableKienCoGrade } from '../breakthrough/BreakthroughGrades'
 
-// Hệ Lôi Kiếp mới (spec dot-pha-loi-kiep §5) — chương kiếp theo realm,
-// KHÔNG quái Kiếp: Tâm Ma (minigame hỏi đáp) + Thân/Lôi (tank lôi).
-// Số liệu first-pass theo spec §5.4, playtest chỉnh (spec §9).
+// He Loi Kiep moi (spec dot-pha-loi-kiep sec.5) - chuong kiep theo realm,
+// KHONG quai Kiep: Tam Ma (minigame hoi dap) + Than/Loi (tank loi).
+// So lieu first-pass theo spec sec.5.4, playtest chinh (spec sec.9).
 
 export type TribulationChapterKind = 'mind' | 'body' | 'lightning'
 
 export interface MindTrialProfile {
   questionCount: number
-  /** Thời gian câu ĐẦU (giây) — giảm dần tới lastQuestionSeconds ở câu cuối. */
+  /** Thoi gian cau DAU (giay) - giam dan toi lastQuestionSeconds o cau cuoi. */
   firstQuestionSeconds: number
   lastQuestionSeconds: number
-  /** Nghỉ giữa 2 câu (giây). */
+  /** Nghi giua 2 cau (giay). */
   restSecondsBetweenQuestions: number
 }
 
 export interface TankTrialProfile {
   durationSeconds: number
   strikeIntervalSeconds: number
-  /** %maxHP mỗi lôi kích (fraction). */
+  /** %maxHP moi loi kich (fraction). */
   lightningMaxHpDamagePercent: number
-  /** Đại lôi cuối chương (chỉ lightning) — undefined = không có. */
+  /** Dai loi cuoi chuong (chi lightning) - undefined = khong co. */
   finalStrikeMaxHpDamagePercent?: number
 }
 
@@ -32,17 +32,19 @@ export interface TribulationChapterProfile {
   tank?: TankTrialProfile
 }
 
-// Hệ số khó theo bậc đã chốt (spec §5.5): nhân vào số lôi + %maxHP +
-// tốc độ tâm ma. Chuẩn bị tốt → kiếp khó hơn → passive mạnh hơn.
-export const GRADE_DIFFICULTY_MULTIPLIER: Record<FoundationType, number> = {
+// He so kho theo bac da chot (spec sec.5.5): nhan vao so loi + %maxHP +
+// toc do tam ma. Chuan bi tot -> kiep kho hon -> passive manh hon.
+// Hidden Perfection Lineage (2026-09-23): the 'great_dao' difficulty
+// row retired - design defines no separate hidden challenge, so a
+// hidden-typed run rides its RESOLVABLE quality grade like any other.
+export const GRADE_DIFFICULTY_MULTIPLIER: Record<ResolvableKienCoGrade, number> = {
   human: 1,
   earth: 1.15,
   heaven: 1.3,
-  great_dao: 1.85,
 }
 
-// Phạt thất bại chuẩn hóa theo realm (spec §5.7) — tu vi giảm dần theo
-// realm (sàn 0.2, fallback 0.3 cho realm chưa khai), Linh Thạch scale
+// Phat that bai chuan hoa theo realm (spec sec.5.7) - tu vi giam dan theo
+// realm (san 0.2, fallback 0.3 cho realm chua khai), Linh Thach scale
 // theo realm (fallback 2000).
 export const TRIBULATION_DEFEAT_CULTIVATION_LOSS_BY_REALM: Record<string, number> = {
   qi_refining: 0.5,
@@ -60,8 +62,8 @@ export const TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM: Record<string, numbe
 export const TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_FALLBACK = 2000
 
 const CHAPTERS_BY_REALM: Record<string, readonly TribulationChapterProfile[]> = {
-  // Quán Khí (Phàm Nhân → Luyện Khí) — 2 chương: Tâm Ma → Lôi (tank hợp
-  // nhất, lôi nhẹ). Số câu tâm ma: 3 (spec §5.3 — gate đầu).
+  // Quan Khi (Pham Nhan -> Luyen Khi) - 2 chuong: Tam Ma -> Loi (tank hop
+  // nhat, loi nhe). So cau tam ma: 3 (spec sec.5.3 - gate dau).
   qi_refining: [
     {
       kind: 'mind',
@@ -76,8 +78,8 @@ const CHAPTERS_BY_REALM: Record<string, readonly TribulationChapterProfile[]> = 
       tank: { durationSeconds: 15, strikeIntervalSeconds: 3, lightningMaxHpDamagePercent: 0.07 },
     },
   ],
-  // Trúc Cơ (Luyện Khí → Trúc Cơ) — 3 chương: Tâm Ma → Thân → Lôi
-  // (dồn dập + đại lôi). Số câu tâm ma: 4.
+  // Truc Co (Luyen Khi -> Truc Co) - 3 chuong: Tam Ma -> Than -> Loi
+  // (don dap + dai loi). So cau tam ma: 4.
   foundation_establishment: [
     {
       kind: 'mind',

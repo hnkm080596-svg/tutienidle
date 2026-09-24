@@ -160,4 +160,41 @@
 // optional `hiddenChannelCycles: Record<channelId, number>` (grotto
 // settle-cycle emission counters). Save v80 is rejected (dev phase, no
 // migration, no compat translator).
-export const CURRENT_SAVE_VERSION = 81 as const
+// v82 (2026-09-24, union of BETA-SEAM-REPAIR + BETA-CREATION +
+// BETA-HIDDEN-A):
+// [SEAM-REPAIR] player gains required
+// `nodeOneShotGrants: Record<nodeId, NodeOneShotGrantRecord>` (F-W-2
+// clawback provenance); GameSave gains optional `tribulation` slice
+// ({committedOutcome?, cooldownUntil?} - committed-but-undrained outcome
+// + retry cooldown survive reload, F-W-5); player.tribulationBonusStacks
+// dropped (write-only counter, F-W-15).
+// [CREATION] the 5-point creation allocation is removed entirely - new
+// characters start at the 1/1/1/1/1 base-stats default with no
+// distributed points. Creation now carries a starting-skill pick (one
+// of the three mortal precursors) written inside the boot seam, so on
+// MORTAL saves player.mortalBasicSkillId is REQUIRED and must be
+// learned - absence is rejected, never silently defaulted to tram.
+// [HIDDEN-A] player gains required `hiddenPerfection` slice (lineage
+// active/closedBy, completedHiddenBodyRealmIds,
+// hiddenBreakthroughRealmIds, per-realm hidden state with
+// discovered/bodyCompleted/frozen/mechanic). RETIRED: `bodyPerfection`
+// slice (replaced by lineage), `mortalPerfectionAchieved` +
+// `greatDaoOpportunityLost` (lineage owns both meanings now).
+// Save v81 is rejected (dev phase, no migration, no compat
+// translator).
+// v83 (2026-09-24, HIDDEN-B Ancient Beast trial + Quan The
+// diversion): hiddenPerfection realms.mortal.mechanic may carry the
+// 'ancient_beast_trial' payload ({encounters, rolls}, design sec.9)
+// and realms.qi_refining.mechanic may carry the 'quan_the' payload
+// ({active, progress, required}, design sec.10 + master spec
+// sec.8.2). Save v82 is rejected (dev phase, no migration, no
+// compat translator) - master spec sec.8.4 re-bump on later merge.
+// v84 (2026-09-24, HIDDEN-C Chu Thien 36 + Nghich Chu Thien):
+// player.bodyProgression.zhou_tian slice shape changes
+// {circulation:number} -> {completed:number} (0..36 discrete steps,
+// design sec.11); realms.foundation_establishment.mechanic may carry
+// the 'nghich_chu_tian' payload (completed/pityByLevel/active, sec.12
+// + master spec sec.8.3). Save v83 is rejected (dev phase, no
+// migration, no compat translator) - master spec sec.8.4 re-bump on
+// later merge.
+export const CURRENT_SAVE_VERSION = 84 as const

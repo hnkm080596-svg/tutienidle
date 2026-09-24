@@ -1,6 +1,6 @@
 import { isCombatAiStrategy, type CombatAiStrategy } from '../battle/CombatAiStrategy'
 import type { ElementType } from '../element/ElementType'
-import type { PlayerData } from '../player/Player'
+import type { NodeOneShotGrantRecord, PlayerData } from '../player/Player'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import {
   canPurchaseNode as canPurchaseNodeSystem,
@@ -13,6 +13,7 @@ import {
   purchaseNode as purchaseNodeSystem,
   previewNodeRespec as previewNodeRespecSystem,
   respecNodeTree as respecNodeTreeSystem,
+  revokeNodeOwnership,
   switchRoute as switchRouteSystem,
   upgradeNode as upgradeNodeSystem,
   grantSkillCore,
@@ -26,7 +27,8 @@ import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
 import { type OrbId } from '../kiem-tu/KiemTuState'
 import { isMortalPrecursorSkillId } from '../skill/MortalPrecursors'
-import { gainKiemY, grantKiemDao } from '../kiem-tu/NguKiemDao'
+import { gainKiemY, grantKiemDao, loseKiemY } from '../kiem-tu/NguKiemDao'
+import { isHiddenSwordPathway } from '../kiem-tu/KiemTuPath'
 import { validatePreset } from '../kiem-tu/KiemPhoSystem'
 import { getRealmIndex } from '../realm/realmSystem'
 import { isBattleInProgress } from '../battle/BattleTypes'
@@ -41,12 +43,11 @@ import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import { collectTalentEffects } from '../talent/TalentEffects'
 import { TALENT_PASSIVE_SKILLS } from '../../data/skill/TalentPassives'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
-import { SPELL_KIT_IDS } from '../../data/skill/Skills'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 import { getActiveElement, hasStaticPathCapability } from '../player/CultivationPathSystem'
 import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import { commitSpellPathElementRoute } from '../phap-tu/PhapTuState'
-import { getMainStatCap } from '../stats/StatCap'
+import { getEffectiveMainStatCap } from '../stats/StatCap'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { TemplateRegistry } from './TemplateRegistry'
 
@@ -85,6 +86,9 @@ export class GameManagerProgressionOps {
       // Deferred closure - turnBattleOps is assigned after this ops class
       // is constructed (same pattern as realmAdvanceOps/effectOps).
       getTurnBattle: () => TurnBattle | null
+      // Session rng seam (F-W-7) - GameManager-owned injectable stream so
+      // deterministic harnesses can pin the Van Dao free-purchase roll.
+      sessionRng: () => number
       // P7-M4 - the SHARED override-aware path-runtime binding (the
       // GameManager owns the override so combat + this UI accessor
       // resolve identically; setPathRuntimeResolver affects both).
@@ -289,14 +293,18 @@ export class GameManagerProgressionOps {
       }
     }
 
-    if (!purchaseNodeSystem(player, node)) {
+    if (!purchaseNodeSystem(player, node, this.deps.sessionRng)) {
       return false
     }
 
     // Skill-unlock effects only run on the 0 -> 1 transition -
     // purchaseNodeSystem only returns true exactly on that transition.
+    const learnedSkillIds: string[] = []
+
     for (const skillId of node.effect.unlocksSkillIds ?? []) {
-      this.learnSkill(skillId, player)
+      if (this.learnSkill(skillId, player)) {
+        learnedSkillIds.push(skillId)
+      }
     }
 
     for (const skillId of node.effect.grantsSkillCoreIds ?? []) {
@@ -310,10 +318,9 @@ export class GameManagerProgressionOps {
     // rolled back (Task 8 data guarantees the unlocksSkillIds prereq ran
     // earlier in the loop above).
     const selectsSpec = node.effect.selectsSpecialization
-
-    if (selectsSpec) {
+    const selectsSpecApplied =
+      selectsSpec !== undefined &&
       this.deps.skillSystem.selectSpecialization(selectsSpec.skillId, selectsSpec.specializationId)
-    }
 
     // Kiem Tu Reimagined Task 11 (spec sec.5.4/sec.6) - Cuu Cung grants run
     // through the NguKiemDao domain functions (the domain owns the cap
@@ -327,7 +334,110 @@ export class GameManagerProgressionOps {
       grantKiemDao(player, node.effect.kiemDaoGrant)
     }
 
+    // F-W-2 - record provenance CHI cho grant thuc su phat: learned
+    // chi khi learnSkill tra true (skill hoc san tu ritual/root/way kit
+    // khong ghi -> clawback khong the tuoc nham grant nguon khac);
+    // kiemY chi ghi khi pool thuc su nhan (mo phong guard cua gainKiemY);
+    // grantsSkillCoreIds khong ghi - revokeNodeOwnership cascade tu lo.
+    const grantRecord: NodeOneShotGrantRecord = {}
+
+    if (learnedSkillIds.length > 0) {
+      grantRecord.learnedSkillIds = learnedSkillIds
+    }
+
+    if (node.effect.kiemYGrant && player.swordPath && isHiddenSwordPathway(player)) {
+      grantRecord.kiemY = node.effect.kiemYGrant
+    }
+
+    if (node.effect.kiemDaoGrant && player.swordPath && isHiddenSwordPathway(player)) {
+      grantRecord.kiemDao = node.effect.kiemDaoGrant
+    }
+
+    if (selectsSpecApplied && selectsSpec) {
+      grantRecord.specializationSkillId = selectsSpec.skillId
+      grantRecord.specializationId = selectsSpec.specializationId
+    }
+
+    if (Object.keys(grantRecord).length > 0) {
+      player.nodeOneShotGrants[node.id] = grantRecord
+    }
+
     return true
+  }
+
+  /**
+   * F-W-2 - thu hoi dung cac one-shot grant ma node bi revoke da phat,
+   * chay SAU commit cua respec/devReset/switchRoute (revokedOut da phan
+   * anh dung set node bi go). Pure field mutation, KHONG throw - dry-run
+   * cua respecApply da validate atomicity cua node-set roi.
+   *
+   * Bounds (documented): swords da merge vao kiemDaoBase khong un-merge
+   * (residual cua loseKiemY hap thu); cast counts giu lai; grant tu
+   * nguon khac khong bao gio trong record.
+   */
+  applyOneShotClawback(player: PlayerData, revokedNodeIds: ReadonlySet<string>): void {
+    for (const nodeId of revokedNodeIds) {
+      const record = player.nodeOneShotGrants[nodeId]
+
+      if (!record) {
+        continue
+      }
+
+      for (const skillId of record.learnedSkillIds ?? []) {
+        // Dual-source guard: neu mot node con so huu khac cung unlock
+        // skill nay thi membership phai song tiep.
+        const stillGrantedElsewhere = player.purchasedNodeIds.some((ownedId) => {
+          const owned = this.deps.nodeRegistry.has(ownedId)
+            ? this.deps.nodeRegistry.get(ownedId)
+            : undefined
+
+          return owned?.effect.unlocksSkillIds?.includes(skillId) ?? false
+        })
+
+        if (stillGrantedElsewhere) {
+          continue
+        }
+
+        this.deps.skillSystem.unlearn(skillId)
+
+        // Core <skill> duoc grant kem membership - revoke qua cung
+        // funnel (refund Insight da do vao core levels: hop ly vi so
+        // Insight do di theo skill do node cap).
+        const coreId = skillCoreNodeId(skillId)
+
+        if (this.deps.nodeRegistry.has(coreId)) {
+          player.skillInsight += revokeNodeOwnership(
+            player,
+            this.deps.nodeRegistry.get(coreId),
+            this.deps.nodeRegistry,
+          )
+        }
+      }
+
+      if (record.kiemY) {
+        loseKiemY(player, record.kiemY)
+      }
+
+      if (record.kiemDao) {
+        const state = player.swordPath
+
+        if (state) {
+          state.kiemDaoCount = Math.max(0, state.kiemDaoCount - record.kiemDao)
+        }
+      }
+
+      if (record.specializationSkillId && record.specializationId) {
+        // selectsSpecialization viet len skill instance - chi clear khi
+        // spec hien tai van la spec record do (chon spec khac sau nay
+        // khong phai viec cua grant nay).
+        this.deps.skillSystem.clearSpecialization(
+          record.specializationSkillId,
+          record.specializationId,
+        )
+      }
+
+      delete player.nodeOneShotGrants[nodeId]
+    }
   }
 
   /**
@@ -386,7 +496,7 @@ export class GameManagerProgressionOps {
       }
     }
 
-    if (!purchaseNodeSystem(player, root)) {
+    if (!purchaseNodeSystem(player, root, this.deps.sessionRng)) {
       return false
     }
 
@@ -412,7 +522,7 @@ export class GameManagerProgressionOps {
       return false
     }
 
-    return upgradeNodeSystem(player, this.deps.nodeRegistry.get(nodeId))
+    return upgradeNodeSystem(player, this.deps.nodeRegistry.get(nodeId), this.deps.sessionRng)
   }
 
   getNodeLevel(nodeId: string, player: PlayerData): number {
@@ -463,7 +573,10 @@ export class GameManagerProgressionOps {
    * update via the aggregators (no reverse subtraction of old modifiers).
    */
   devResetBranch(branchTag: string, player: PlayerData): number {
-    return devResetBranchSystem(player, this.deps.nodeRegistry, branchTag)
+    const revoked = new Set<string>()
+    const refund = devResetBranchSystem(player, this.deps.nodeRegistry, branchTag, revoked)
+    this.applyOneShotClawback(player, revoked)
+    return refund
   }
 
   /**
@@ -492,10 +605,13 @@ export class GameManagerProgressionOps {
       return null
     }
 
-    return respecNodeTreeSystem(player, this.deps.nodeRegistry, {
+    const revoked = new Set<string>()
+    const refund = respecNodeTreeSystem(player, this.deps.nodeRegistry, {
       ...scope,
       preserveIds: RESPEC_PRESERVED_NODE_IDS,
-    })
+    }, revoked)
+    this.applyOneShotClawback(player, revoked)
+    return refund
   }
 
   /**
@@ -522,7 +638,9 @@ export class GameManagerProgressionOps {
       return false
     }
 
-    switchRouteSystem(player, this.deps.nodeRegistry, route)
+    const revoked = new Set<string>()
+    switchRouteSystem(player, this.deps.nodeRegistry, route, revoked)
+    this.applyOneShotClawback(player, revoked)
 
     return true
   }
@@ -554,7 +672,7 @@ export class GameManagerProgressionOps {
 
     const prior = getNodeLevelSystem(player, coreId)
 
-    if (!upgradeNodeSystem(player, node)) {
+    if (!upgradeNodeSystem(player, node, this.deps.sessionRng)) {
       return false
     }
 
@@ -611,15 +729,17 @@ export class GameManagerProgressionOps {
   /**
    * PLAN HOAN CHINH sec.2 - spend 1 attributePoint into EXACTLY 1 Main Stat.
    * No-op (returns false) when out of points or the stat hit the current
-   * major-realm cap (getMainStatCap()) - cap is per-stat, there is NO
-   * shared cap across all 5 (per the doc's "Nguyen tac" sec.2).
+   * major-realm cap (getEffectiveMainStatCap() - hidden-perfection
+   * completed bodies raise the cap, design 2026-09-23 sec.7) - cap is
+   * per-stat, there is NO shared cap across all 5 (per the doc's
+   * "Nguyen tac" sec.2).
    */
   allocateAttributePoint(player: PlayerData, stat: MainStatKey): boolean {
     if (player.attributePoints <= 0) {
       return false
     }
 
-    if (player.baseStats[stat] >= getMainStatCap(player.realmId)) {
+    if (player.baseStats[stat] >= getEffectiveMainStatCap(player)) {
       return false
     }
 
@@ -634,10 +754,12 @@ export class GameManagerProgressionOps {
    * precursor the mortal player fights with. Mortal-scoped - once ANY
    * cultivation path is chosen the pick can never be written (the K3
    * precursor gate). SkillManager membership is the learned authority
-   * (spec sec.4.3a - a held entry IS learned).
+   * (spec sec.4.3a - a held entry IS learned). The realm term mirrors
+   * the v82 save preflight (mortal = realmId 'mortal' + pathless) so a
+   * write can never produce a state restore would reject.
    */
   setMortalBasicSkill(player: PlayerData, skillId: string): boolean {
-    if (player.cultivationPath !== undefined) {
+    if (player.realmId !== 'mortal' || player.cultivationPath !== undefined) {
       return false
     }
 
@@ -646,6 +768,13 @@ export class GameManagerProgressionOps {
     }
 
     if (!this.deps.skillManager.has(skillId)) {
+      return false
+    }
+
+    // learned=>core leg of the boundary contract - mirror it here so
+    // the write guard covers the full three-channel contract instead
+    // of relying on learnSkill's atomic grant staying invariant.
+    if (getSkillCoreLevel(player, skillId) < 1) {
       return false
     }
 

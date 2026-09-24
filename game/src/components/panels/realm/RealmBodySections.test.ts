@@ -2,7 +2,7 @@
 // P7-M7 + M-QI-01 - RealmPanel's body chapter subviews: the Luyen The
 // tier block ported from the retired LuyenThePanel, and the Bat Mach
 // (meridian) list whose next row carries the live manual invest action
-// (QI-D1), and the Chu Thien (zhou_tian) circulation row (M-F-CHU-THIEN).
+// (QI-D1), and the Chu Thien (zhou_tian) row (M-F-CHU-THIEN).
 // All read through chapter-scoped seams.
 import { describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
@@ -20,6 +20,7 @@ import { materials } from '@/data/materials/materials'
 import { pills } from '@/data/pill/pills'
 import { MERIDIANS } from '@/data/realm/Meridians'
 import { ZHOU_TIAN_CURRENCY_MATERIAL_ID } from '@/data/realm/ZhouTian'
+import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import type { Component } from 'vue'
 import type { BodyProgressionState } from '@/core/realm/body/BodyChapter'
 
@@ -200,6 +201,35 @@ describe('BodyRefinementSection (P7-M7)', () => {
 
     view.unmount()
   })
+
+  // AUTH-2 (spec sec.3.4): frozen hidden progress is permanently inert
+  // and must never render as an active tier.
+  it('AUTH-2: a frozen hidden record renders no active tier row', async () => {
+    const frozen = mountSection(BodyRefinementSection, (player) => {
+      player.$state.hiddenPerfection.realms['mortal'] = {
+        discovered: true,
+        bodyCompleted: false,
+        frozen: true,
+      }
+    })
+    await nextTick()
+
+    expect(frozen.container.querySelector('.body-refinement__tier--hidden')).toBeNull()
+    frozen.unmount()
+
+    // Contrast: the same record unfrozen renders the trial row.
+    const active = mountSection(BodyRefinementSection, (player) => {
+      player.$state.hiddenPerfection.realms['mortal'] = {
+        discovered: true,
+        bodyCompleted: false,
+        frozen: false,
+      }
+    })
+    await nextTick()
+
+    expect(active.container.querySelector('.body-refinement__tier--hidden')).not.toBeNull()
+    active.unmount()
+  })
 })
 
 describe('MeridianSection (P7-M7)', () => {
@@ -215,40 +245,17 @@ describe('MeridianSection (P7-M7)', () => {
     await nextTick()
 
     expect(view.container.textContent).toContain(
-      i18n.global.t('panels.realm.meridian.summary', { completed: 2, total: 9 }),
+      i18n.global.t('panels.realm.meridian.summary', { completed: 2, total: 8 }),
     )
 
     const rows = view.container.querySelectorAll('.meridian-section__row')
-    expect(rows.length).toBe(9)
+    expect(rows.length).toBe(8)
     expect(rows[0]!.classList.contains('meridian-section__row--opened')).toBe(true)
     expect(rows[1]!.classList.contains('meridian-section__row--opened')).toBe(true)
     // index 2 = am_kieu_mach - the sequential next row.
     expect(rows[2]!.classList.contains('meridian-section__row--next')).toBe(true)
     expect(rows[2]!.textContent).toContain(i18n.global.t('panels.realm.meridian.stateNext'))
     expect(rows[3]!.classList.contains('meridian-section__row--locked')).toBe(true)
-
-    view.unmount()
-  })
-
-  it('the Ky Kinh row shows the Thien Dia Chi Kieu requirement when next', async () => {
-    const view = mountSection(MeridianSection, (player) => {
-      player.$state.realmId = 'qi_refining'
-      player.$state.realmLevel = 18
-      setBodyProgression(player, {
-        meridian: {
-          openedIds: [
-            'nham_mach', 'doi_mach', 'am_kieu_mach', 'am_duy_mach',
-            'duong_duy_mach', 'duong_kieu_mach', 'xung_mach', 'doc_mach',
-          ],
-        },
-      })
-    })
-
-    await nextTick()
-
-    const last = view.container.querySelectorAll('.meridian-section__row')[8]!
-    expect(last.classList.contains('meridian-section__row--next')).toBe(true)
-    expect(last.textContent).toContain(i18n.global.t('panels.realm.meridian.auxGate'))
 
     view.unmount()
   })
@@ -270,7 +277,7 @@ describe('MeridianSection (P7-M7)', () => {
     )
 
     const rows = view.container.querySelectorAll('.meridian-section__row')
-    expect(rows.length).toBe(9)
+    expect(rows.length).toBe(8)
     for (const row of rows) {
       expect(row.classList.contains('meridian-section__row--locked')).toBe(true)
     }
@@ -418,39 +425,29 @@ describe('MeridianSection (P7-M7)', () => {
       view.unmount()
     })
 
-    it('gates the final meridian on thien_dia_chi_kieu possession (not consumed)', async () => {
-      const opened8 = MERIDIANS.slice(0, 8).map((m) => m.id)
+    it('the final meridian needs no material aux - pills alone open it (sec.19: ninth meridian retired)', async () => {
+      const opened7 = MERIDIANS.slice(0, 7).map((m) => m.id)
 
-      const noAux = mountSection(MeridianSection, (player, manager) => {
+      const view = mountSection(MeridianSection, (player, manager) => {
         qiPlayer(player)
-        setBodyProgression(player, { meridian: { openedIds: opened8 } })
+        setBodyProgression(player, { meridian: { openedIds: opened7 } })
         manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 40)
       })
 
       await nextTick()
-      expect(nextRowButton(noAux)!.disabled).toBe(true)
-      noAux.unmount()
 
-      const withAux = mountSection(MeridianSection, (player, manager) => {
-        qiPlayer(player)
-        setBodyProgression(player, { meridian: { openedIds: opened8 } })
-        manager.pillBag.add(manager.pillRegistry.get('thong_mach_dan'), 40)
-        manager.materialBag.add(manager.materialRegistry.get('thien_dia_chi_kieu'), 1)
-      })
-
-      await nextTick()
-
-      const button = nextRowButton(withAux)
+      const button = nextRowButton(view)
+      expect(button).not.toBeNull()
       expect(button!.disabled).toBe(false)
 
       button!.click()
       await nextTick()
 
-      expect(withAux.bumpState).toHaveBeenCalledTimes(1)
-      expect(withAux.manager.materialBag.getAmount('thien_dia_chi_kieu')).toBe(1)
-      expect(withAux.manager.pillBag.getAmount('thong_mach_dan')).toBe(0)
+      expect(view.bumpState).toHaveBeenCalledTimes(1)
+      // doc_mach costs 30 thong_mach_dan - nothing else is checked.
+      expect(view.manager.pillBag.getAmount('thong_mach_dan')).toBe(10)
 
-      withAux.unmount()
+      view.unmount()
     })
 
     it('renders no invest button for a mortal player (locked page)', async () => {
@@ -486,17 +483,35 @@ describe('MeridianSection (P7-M7)', () => {
       view.unmount()
     })
   })
+
+  // AUTH-2 (spec sec.3.4): frozen hidden progress is permanently inert
+  // and must never render as an active diversion row.
+  it('AUTH-2: a frozen Quan The record renders no active row', async () => {
+    const frozen = mountSection(MeridianSection, (player) => {
+      player.$state.realmId = 'qi_refining'
+      player.$state.hiddenPerfection.realms['qi_refining'] = {
+        discovered: true,
+        bodyCompleted: false,
+        frozen: true,
+      }
+    })
+    await nextTick()
+
+    expect(frozen.container.querySelector('.meridian-section__row--hidden')).toBeNull()
+    frozen.unmount()
+  })
 })
 
 // M-F-CHU-THIEN - the Chu Thien section: sequential lock on the
 // meridian chapter (C2C-59), realm capacity gating, milestone labels
-// (180 Tieu / 360 Dai), and the live invest action through
+// (18 Tieu / 36 Dai under the design sec.11 step track), and the live
+// invest action through
 // realmAdvanceOps.investBodyChapter(player, 'zhou_tian').
 describe('ZhouTianSection (M-F-CHU-THIEN)', () => {
   function tcPlayer(
     player: ReturnType<typeof usePlayerStore>,
     realmLevel = 18,
-    circulation = 0,
+    completed = 0,
     { meridianComplete = true } = {},
   ) {
     player.$state.realmId = 'foundation_establishment'
@@ -505,7 +520,7 @@ describe('ZhouTianSection (M-F-CHU-THIEN)', () => {
     setBodyProgression(player, {
       body_refinement: { completedTiers: 6, currentTierProgress: 0 },
       meridian: { openedIds: meridianComplete ? MERIDIANS.map(m => m.id) : [] },
-      zhou_tian: { circulation },
+      zhou_tian: { completed },
     })
   }
 
@@ -535,7 +550,7 @@ describe('ZhouTianSection (M-F-CHU-THIEN)', () => {
       setBodyProgression(player, {
         body_refinement: { completedTiers: 6, currentTierProgress: 0 },
         meridian: { openedIds: MERIDIANS.map(m => m.id) },
-        zhou_tian: { circulation: 0 },
+        zhou_tian: { completed: 0 },
       })
     })
 
@@ -549,32 +564,34 @@ describe('ZhouTianSection (M-F-CHU-THIEN)', () => {
 
   it('active: shows capacity, milestones, and an enabled invest when essence is owned', async () => {
     const view = mountSection(ZhouTianSection, (player, manager) => {
-      tcPlayer(player, 9, 179) // Tieu boundary minus one
-      manager.materialBag.add(manager.materialRegistry.get(ZHOU_TIAN_CURRENCY_MATERIAL_ID), 5)
+      tcPlayer(player, 9, 17) // Tieu boundary minus one
+      // Step 17 costs 100 essence (15 + 17*5) - the invest arm needs
+      // at least the authored step cost owned.
+      manager.materialBag.add(manager.materialRegistry.get(ZHOU_TIAN_CURRENCY_MATERIAL_ID), 100)
     })
 
     await nextTick()
 
     const text = view.container.textContent ?? ''
     expect(text).toContain('Đang vận chuyển')
-    expect(text).toContain('Dung lượng hiện tại: 180')
+    expect(text).toContain('Dung lượng hiện tại: 18')
     const button = investButton(view)
     expect(button).not.toBeNull()
     expect(button!.disabled).toBe(false)
 
     // C2C-75 - the capacity bar fills against the CURRENT realm
-    // capacity (179/180 ~99%), never the absolute 360 ceiling.
+    // capacity (17/18 ~94%), never the absolute 36 ceiling.
     const bar = view.container.querySelector('[role="progressbar"]')
     expect(bar).not.toBeNull()
-    expect(bar!.getAttribute('aria-valuemax')).toBe('180')
-    expect(bar!.getAttribute('aria-valuenow')).toBe('179')
+    expect(bar!.getAttribute('aria-valuemax')).toBe('18')
+    expect(bar!.getAttribute('aria-valuenow')).toBe('17')
 
     view.unmount()
   })
 
-  it('complete: circulation 360 renders the Dai state and no invest control', async () => {
+  it('complete: 36 steps renders the Dai state and no invest control', async () => {
     const view = mountSection(ZhouTianSection, (player) => {
-      tcPlayer(player, 18, 360)
+      tcPlayer(player, 18, 36)
     })
 
     await nextTick()
@@ -591,8 +608,8 @@ describe('ZhouTianSection (M-F-CHU-THIEN)', () => {
     let state!: ReturnType<typeof usePlayerStore>['$state']
     const view = mountSection(ZhouTianSection, (player, manager) => {
       state = player.$state
-      tcPlayer(player, 1, 15) // capacity 20, room 5
-      manager.materialBag.add(manager.materialRegistry.get(ZHOU_TIAN_CURRENCY_MATERIAL_ID), 10)
+      tcPlayer(player, 1, 1) // capacity 2, one step left (cost 20)
+      manager.materialBag.add(manager.materialRegistry.get(ZHOU_TIAN_CURRENCY_MATERIAL_ID), 20)
     })
 
     await nextTick()
@@ -603,17 +620,65 @@ describe('ZhouTianSection (M-F-CHU-THIEN)', () => {
     button!.click()
     await nextTick()
 
-    expect(state.bodyProgression.zhou_tian.circulation).toBe(20)
+    expect(state.bodyProgression.zhou_tian.completed).toBe(2)
     expect(view.bumpState).toHaveBeenCalledTimes(1)
-    expect(view.manager.materialBag.getAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)).toBe(5)
+    expect(view.manager.materialBag.getAmount(ZHOU_TIAN_CURRENCY_MATERIAL_ID)).toBe(0)
 
     // After filling to capacity the button is disabled.
     expect(investButton(view)!.disabled).toBe(true)
 
-    // The bar max follows the same current capacity (20/20 = full).
+    // The bar max follows the same current capacity (2/2 = full).
     const bar = view.container.querySelector('[role="progressbar"]')
-    expect(bar!.getAttribute('aria-valuemax')).toBe('20')
-    expect(bar!.getAttribute('aria-valuenow')).toBe('20')
+    expect(bar!.getAttribute('aria-valuemax')).toBe('2')
+    expect(bar!.getAttribute('aria-valuenow')).toBe('2')
+
+    view.unmount()
+  })
+
+  // HIDDEN-C - Nghich Chu Thien row: eligible-but-undiscovered must stay
+  // actionable (the first attempt writes the record itself - lineage can
+  // open after 36/36, and at cap no invest can re-fire discovery).
+  it('nghich: eligible but never discovered still shows the attempt arm', async () => {
+    const view = mountSection(ZhouTianSection, (player, manager) => {
+      tcPlayer(player, 18, 36)
+      player.$state.hiddenPerfection = {
+        lineageActive: true,
+        completedHiddenBodyRealmIds: ['mortal', 'qi_refining'],
+        hiddenBreakthroughRealmIds: [],
+        realms: {},
+      }
+      manager.materialBag.add(
+        manager.materialRegistry.get(ZHOU_TIAN_CURRENCY_MATERIAL_ID), 40)
+      manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID), 1)
+    })
+
+    await nextTick()
+
+    const row = view.container.querySelector('.zhou-tian-section__row--hidden')
+    expect(row).not.toBeNull()
+    const button = row!.querySelector<HTMLButtonElement>('button')
+    expect(button).not.toBeNull()
+    expect(button!.disabled).toBe(false)
+
+    view.unmount()
+  })
+
+  it('nghich: no lineage, no hint - the row never renders', async () => {
+    const view = mountSection(ZhouTianSection, (player, manager) => {
+      tcPlayer(player, 18, 36)
+      player.$state.hiddenPerfection = {
+        lineageActive: false,
+        completedHiddenBodyRealmIds: [],
+        hiddenBreakthroughRealmIds: [],
+        realms: {},
+      }
+      manager.materialBag.add(
+        manager.materialRegistry.get(ZHOU_TIAN_CURRENCY_MATERIAL_ID), 40)
+    })
+
+    await nextTick()
+
+    expect(view.container.querySelector('.zhou-tian-section__row--hidden')).toBeNull()
 
     view.unmount()
   })

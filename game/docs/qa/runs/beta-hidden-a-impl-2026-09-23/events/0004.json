@@ -1,0 +1,4 @@
+{
+  "summary": "F1-F7 repaired + pushed 52f61184 on devin/1790198940-beta-hidden-a: breakthroughType end-to-end (slice+serialize+restore+shape validation); freeze contract spec sec.2.3 unconditional (gates + integrity arms + new exports); NHAP_DAO 0.30 + spec renames + wasHiddenBreakthrough read; mojibake comments rewritten ASCII; vacuous e2e deleted + ownership guard retargeted to lineageActive; pin tests committed (TribulationDirector.hiddenTypePersist + HiddenFrozenContract). Verify: vue-tsc clean; scoped vitest 1215+573 green (canvas env noise only).",
+  "refs": []
+}

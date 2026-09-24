@@ -6,7 +6,7 @@ import { EventBus } from '../events/EventBus'
 
 // Talent v4 M2 — Loi Kiep (spec §4.3 row 17): lightning intensity x2
 // while the talent is held; each tribulation victory grants a permanent
-// +10% all-attribute stack (tribulationBonusStacks + player.modifiers).
+// +10% all-attribute bonus (talent_loi_kiep_* modifiers).
 function makeDirector() {
   const eventBus = new EventBus()
   return { director: new TribulationDirector({ eventBus }), eventBus }

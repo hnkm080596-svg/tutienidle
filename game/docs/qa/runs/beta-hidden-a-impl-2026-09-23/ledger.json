@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "run": {
+    "id": "beta-hidden-a-impl-2026-09-23",
+    "createdAt": "2026-09-23T23:51:03.817592Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [
+      "game/src/**"
+    ],
+    "nonGoals": [
+      "realm mechanics (HIDDEN-B/C scope)",
+      "balance values",
+      "merge/push"
+    ],
+    "branch": "devin/1790198940-beta-hidden-a",
+    "base": "origin/beta/rc",
+    "head": "244078a1",
+    "phase": "EVIDENCE",
+    "outcome": "PASS WITH EVIDENCE - independence axis open (sealed reviewers undispatchable); all required internal gates green"
+  },
+  "invariants": [],
+  "census": [],
+  "findings": [],
+  "evidence": [
+    {
+      "id": "ev-impl-internal-gates",
+      "kind_": "review",
+      "summary": "Implementation QA evidence assembled internally (independence gap: sealed reviewer dispatch blocked - org SWE-2 5-slot cap; children of SWE-2 session cannot run normal mode; coordinator normal-mode amendment inapplicable here). Evidence chain: OCR gate 69/69 files delegation-mode clean (1 Medium + 1 Low fixed); P4 adversarial deep-audit PASS WITH EVIDENCE (docs/qa/2026-09-23-hidden-perfection-skel",
+      "files": [
+        "src/core/realm/hidden/**",
+        "src/core/game/**",
+        "src/services/save/**"
+      ]
+    }
+  ],
+  "coverage": [],
+  "attacks": [],
+  "reviews": [],
+  "cycles": [],
+  "mutations": [],
+  "corpus": [],
+  "lessons": [],
+  "messages": [],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-09-23T23:51:03.817592Z",
+      "kind": "PHASE",
+      "actor": "coordinator-9958",
+      "state": {
+        "productStateId": "5e8731a4e2926efe8a5db3e8c1512c597234a11f30fb4c18e0b60ca3648ae6ae",
+        "contractId": "311da3efc0a98ba409d66885886fe882672b6aea282a22bc28e32e0f7dbca7c8",
+        "attackModelId": "fca30679635be3bbce1ca7d8a9ceb8f0daceaaa80e4cf645584db5ccc0dbf0b2",
+        "environmentId": "b77349bf1fa9b26d45d545d7d64dad96737e9cfbb3cbb5f5d10fb77b0fcc44ad"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "d4bbe5882d960aacc644793dbe13139ed89a25b2ad6fb83a6e632ec75828b9f3",
+      "eventHash": "4f097606529397b78f832bf229eb5fc3e14b8f8243742c135362f49546f170f4"
+    },
+    {
+      "seq": 2,
+      "at": "2026-09-23T23:51:03.817592Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-9958",
+      "state": {
+        "productStateId": "5e8731a4e2926efe8a5db3e8c1512c597234a11f30fb4c18e0b60ca3648ae6ae",
+        "contractId": "311da3efc0a98ba409d66885886fe882672b6aea282a22bc28e32e0f7dbca7c8",
+        "attackModelId": "fca30679635be3bbce1ca7d8a9ceb8f0daceaaa80e4cf645584db5ccc0dbf0b2",
+        "environmentId": "b77349bf1fa9b26d45d545d7d64dad96737e9cfbb3cbb5f5d10fb77b0fcc44ad"
+      },
+      "previousEventHash": "4f097606529397b78f832bf229eb5fc3e14b8f8243742c135362f49546f170f4",
+      "payloadPath": "events/0002.json",
+      "payloadHash": "08fee3f8ab1ae2e77614d1f076e0c0ad1314c2e0663a3d06968e1b8e10dd1662",
+      "eventHash": "5d507823ee7f12c3a13cbf969717bf50959e45dd66f10b056ae9e1de88b5af26"
+    },
+    {
+      "seq": 3,
+      "at": "2026-09-24T05:25:56.029Z",
+      "kind": "FINDINGS",
+      "actor": "sealed-reviewer-9b141c2f",
+      "state": {
+        "productStateId": "5e8731a4e2926efe8a5db3e8c1512c597234a11f30fb4c18e0b60ca3648ae6ae",
+        "contractId": "311da3efc0a98ba409d66885886fe882672b6aea282a22bc28e32e0f7dbca7c8",
+        "attackModelId": "fca30679635be3bbce1ca7d8a9ceb8f0daceaaa80e4cf645584db5ccc0dbf0b2",
+        "environmentId": "b77349bf1fa9b26d45d545d7d64dad96737e9cfbb3cbb5f5d10fb77b0fcc44ad"
+      },
+      "previousEventHash": "5d507823ee7f12c3a13cbf969717bf50959e45dd66f10b056ae9e1de88b5af26",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "50ba11b7b26bb69149c6085809deee828e19c33f894111d7cce8116579eaeb76",
+      "eventHash": "dab4d65f0bc258151b297c8f406bb654d32b1abcbb64ea83e37f12fd174ae2f9"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-24T05:25:56.030Z",
+      "kind": "REPAIR",
+      "actor": "coordinator-devin",
+      "state": {
+        "productStateId": "5e8731a4e2926efe8a5db3e8c1512c597234a11f30fb4c18e0b60ca3648ae6ae",
+        "contractId": "311da3efc0a98ba409d66885886fe882672b6aea282a22bc28e32e0f7dbca7c8",
+        "attackModelId": "fca30679635be3bbce1ca7d8a9ceb8f0daceaaa80e4cf645584db5ccc0dbf0b2",
+        "environmentId": "b77349bf1fa9b26d45d545d7d64dad96737e9cfbb3cbb5f5d10fb77b0fcc44ad"
+      },
+      "previousEventHash": "dab4d65f0bc258151b297c8f406bb654d32b1abcbb64ea83e37f12fd174ae2f9",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "6ad92cc98d6bd4a2e17d1dc16fb7e972006943ad7e99e9a0253f7b30ccb08e93",
+      "eventHash": "9c46b0bf1f182eb5c0f7da5a3f0af09e26b90e0f22e4c31c835d0bb1c736729d"
+    },
+    {
+      "seq": 5,
+      "at": "2026-09-24T05:25:56.030Z",
+      "kind": "CLEAN_ROUND",
+      "actor": "coordinator-devin",
+      "state": {
+        "productStateId": "5e8731a4e2926efe8a5db3e8c1512c597234a11f30fb4c18e0b60ca3648ae6ae",
+        "contractId": "311da3efc0a98ba409d66885886fe882672b6aea282a22bc28e32e0f7dbca7c8",
+        "attackModelId": "fca30679635be3bbce1ca7d8a9ceb8f0daceaaa80e4cf645584db5ccc0dbf0b2",
+        "environmentId": "b77349bf1fa9b26d45d545d7d64dad96737e9cfbb3cbb5f5d10fb77b0fcc44ad"
+      },
+      "previousEventHash": "9c46b0bf1f182eb5c0f7da5a3f0af09e26b90e0f22e4c31c835d0bb1c736729d",
+      "payloadPath": "events/0005.json",
+      "payloadHash": "bf708092327f6f9ac655372248b16bf5c586a8e77e06d8ed51e0013fd046e9de",
+      "eventHash": "4c7d385fbb4ddd9cfc3bfc024e43532d5f335c15db3493d7835e837ae3310141"
+    },
+    {
+      "seq": 6,
+      "at": "2026-09-24T05:53:11.344Z",
+      "kind": "SEAL_RECEIPT",
+      "actor": "coordinator-devin",
+      "state": {
+        "productStateId": "5e8731a4e2926efe8a5db3e8c1512c597234a11f30fb4c18e0b60ca3648ae6ae",
+        "contractId": "311da3efc0a98ba409d66885886fe882672b6aea282a22bc28e32e0f7dbca7c8",
+        "attackModelId": "fca30679635be3bbce1ca7d8a9ceb8f0daceaaa80e4cf645584db5ccc0dbf0b2",
+        "environmentId": "b77349bf1fa9b26d45d545d7d64dad96737e9cfbb3cbb5f5d10fb77b0fcc44ad"
+      },
+      "previousEventHash": "4c7d385fbb4ddd9cfc3bfc024e43532d5f335c15db3493d7835e837ae3310141",
+      "payloadPath": "events/0006.json",
+      "payloadHash": "120b7685895c7cbeba0d96ae2051598ddb76772787693f822c8cc943518813bf",
+      "eventHash": "fc924090f6f8529bb6082613af2748224fdd0daaf1e09f1f803d31ec678f052b"
+    },
+    {
+      "seq": 7,
+      "at": "2026-09-24T05:53:11.344Z",
+      "kind": "FINDINGS_ADJUDICATION",
+      "actor": "coordinator-devin",
+      "state": {
+        "productStateId": "5e8731a4e2926efe8a5db3e8c1512c597234a11f30fb4c18e0b60ca3648ae6ae",
+        "contractId": "311da3efc0a98ba409d66885886fe882672b6aea282a22bc28e32e0f7dbca7c8",
+        "attackModelId": "fca30679635be3bbce1ca7d8a9ceb8f0daceaaa80e4cf645584db5ccc0dbf0b2",
+        "environmentId": "b77349bf1fa9b26d45d545d7d64dad96737e9cfbb3cbb5f5d10fb77b0fcc44ad"
+      },
+      "previousEventHash": "fc924090f6f8529bb6082613af2748224fdd0daaf1e09f1f803d31ec678f052b",
+      "payloadPath": "events/0007.json",
+      "payloadHash": "b174ce5f85865f1c57f4a1e9c2788a28e15d68208d96891dc10ea35d12e30ec1",
+      "eventHash": "4b04f6602be52e3d7a03ae8ca0cd111be60de1b977d58cff365d702b9c43d8f2"
+    },
+    {
+      "seq": 8,
+      "at": "2026-09-24T05:57:27.153Z",
+      "kind": "SEAL_RECEIPT",
+      "actor": "coordinator-devin",
+      "state": {
+        "productStateId": "5e8731a4e2926efe8a5db3e8c1512c597234a11f30fb4c18e0b60ca3648ae6ae",
+        "contractId": "311da3efc0a98ba409d66885886fe882672b6aea282a22bc28e32e0f7dbca7c8",
+        "attackModelId": "fca30679635be3bbce1ca7d8a9ceb8f0daceaaa80e4cf645584db5ccc0dbf0b2",
+        "environmentId": "b77349bf1fa9b26d45d545d7d64dad96737e9cfbb3cbb5f5d10fb77b0fcc44ad"
+      },
+      "previousEventHash": "4b04f6602be52e3d7a03ae8ca0cd111be60de1b977d58cff365d702b9c43d8f2",
+      "payloadPath": "events/0008.json",
+      "payloadHash": "8c99e33f5b1515b6fd0738b4431315878d070548b5ee6ca94bb60d65d2c876f2",
+      "eventHash": "340dcdec838a469ff2e4942ae8d07ef6c47ff6b77ee1ea7384fe89350797c64b"
+    },
+    {
+      "seq": 9,
+      "at": "2026-09-24T05:57:27.154Z",
+      "kind": "DECIDE",
+      "actor": "coordinator-devin",
+      "state": {
+        "productStateId": "5e8731a4e2926efe8a5db3e8c1512c597234a11f30fb4c18e0b60ca3648ae6ae",
+        "contractId": "311da3efc0a98ba409d66885886fe882672b6aea282a22bc28e32e0f7dbca7c8",
+        "attackModelId": "fca30679635be3bbce1ca7d8a9ceb8f0daceaaa80e4cf645584db5ccc0dbf0b2",
+        "environmentId": "b77349bf1fa9b26d45d545d7d64dad96737e9cfbb3cbb5f5d10fb77b0fcc44ad"
+      },
+      "previousEventHash": "340dcdec838a469ff2e4942ae8d07ef6c47ff6b77ee1ea7384fe89350797c64b",
+      "payloadPath": "events/0009.json",
+      "payloadHash": "2962e7b412fa2411e0a561becb9b05ed1a0e90d4e026bc8514a92d81b224895c",
+      "eventHash": "561f3bf5791d78a4f9a3e9a5eded315e46302dc528603c9d4c2b1c28568db60a"
+    }
+  ]
+}

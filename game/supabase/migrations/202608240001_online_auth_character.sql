@@ -46,6 +46,11 @@ create table public.characters (
   normalized_name text not null,
   selected_talent_ids text[] not null,
   base_attributes jsonb not null,
+  -- BETA-CREATION - the mortal starting-skill pick (one of the three
+  -- precursor ids: tram / linh_bao / huy_quyen). The client save payload
+  -- is authoritative; this column mirrors the pick for bookkeeping, the
+  -- same way selected_talent_ids mirrors the talent pick.
+  mortal_basic_skill_id text not null,
   realm_id text not null default 'pham_nhan',
   realm_level integer not null default 1,
   created_at timestamptz not null default now(),
@@ -136,16 +141,21 @@ begin
 end;
 $$;
 
+-- BETA-CREATION - the v81 signature (..., p_attributes jsonb, ...) is a
+-- different overload; drop it so the attribute-distribution path cannot
+-- survive a re-apply of this migration on an already-migrated database.
+drop function if exists public.create_character(uuid,uuid,text,text[],jsonb,jsonb,integer);
+
 create or replace function public.create_character(
   p_session_id uuid,
   p_roll_id uuid,
   p_name text,
   p_talent_ids text[],
-  p_attributes jsonb,
+  p_mortal_basic_skill_id text,
   p_initial_save jsonb,
   p_schema_version integer
 ) returns uuid language plpgsql security definer set search_path = public as $$
-declare roll_row public.talent_rolls; character_id uuid; attribute_total integer;
+declare roll_row public.talent_rolls; character_id uuid;
 begin
   perform public.assert_active_session(p_session_id);
   select * into roll_row from public.talent_rolls where id = p_roll_id and user_id = auth.uid() for update;
@@ -153,13 +163,19 @@ begin
   -- Client contract: CHARACTER_CREATION_TALENT_COUNT = 1 — one pick from the rolled nine.
   if cardinality(p_talent_ids) <> 1 or cardinality(array(select distinct unnest(p_talent_ids))) <> 1 or not p_talent_ids <@ roll_row.talent_ids then raise exception 'invalid talent selection'; end if;
   if char_length(trim(p_name)) not between 2 and 20 or not public.is_character_name_available(p_session_id, p_name) then raise exception 'character name unavailable'; end if;
-  if exists (select 1 from jsonb_each(p_attributes) where key not in ('strength','dexterity','intelligence','attunement','vitality') or jsonb_typeof(value) <> 'number' or (value::text)::numeric < 0 or trunc((value::text)::numeric) <> (value::text)::numeric) then raise exception 'invalid attributes'; end if;
-  if (select count(*) from jsonb_object_keys(p_attributes)) <> 5 then raise exception 'invalid attributes'; end if;
-  select sum((value::text)::integer) into attribute_total from jsonb_each(p_attributes);
-  if attribute_total <> 5 then raise exception 'invalid attribute total'; end if;
+  -- BETA-CREATION - no attribute distribution anymore: base stats are the
+  -- fixed 1/1/1/1/1 default, and the mortal pick must be one of the three
+  -- precursor ids (tram = Huy Kiếm / linh_bao = Linh Bạo / huy_quyen = Huy
+  -- Quyền), matching core/skill/MortalPrecursors.ts. DRIFT NOTE: this literal
+  -- list must mirror MORTAL_PRECURSOR_SKILL_IDS exactly - a fourth precursor
+  -- added client-side is rejected here until this check is updated in the
+  -- same release.
+  if p_mortal_basic_skill_id not in ('tram','linh_bao','huy_quyen') then raise exception 'invalid mortal basic skill'; end if;
 
-  insert into public.characters(user_id, name, normalized_name, selected_talent_ids, base_attributes)
-  values (auth.uid(), trim(p_name), lower(trim(p_name)), p_talent_ids, p_attributes) returning id into character_id;
+  insert into public.characters(user_id, name, normalized_name, selected_talent_ids, base_attributes, mortal_basic_skill_id)
+  values (auth.uid(), trim(p_name), lower(trim(p_name)), p_talent_ids,
+          '{"strength":1,"dexterity":1,"intelligence":1,"attunement":1,"vitality":1}'::jsonb,
+          p_mortal_basic_skill_id) returning id into character_id;
   insert into public.character_saves(character_id, user_id, schema_version, payload)
   values (character_id, auth.uid(), p_schema_version, p_initial_save);
   update public.talent_rolls set consumed_at = now() where id = p_roll_id;
@@ -188,12 +204,12 @@ create policy saves_own_update on public.character_saves for update using (user_
 revoke all on function public.claim_active_session(text) from public;
 revoke all on function public.assert_active_session(uuid) from public;
 revoke all on function public.create_talent_roll(uuid) from public;
-revoke all on function public.create_character(uuid,uuid,text,text[],jsonb,jsonb,integer) from public;
+revoke all on function public.create_character(uuid,uuid,text,text[],text,jsonb,integer) from public;
 grant execute on function public.claim_active_session(text) to authenticated;
 grant execute on function public.assert_active_session(uuid) to authenticated;
 grant execute on function public.is_character_name_available(uuid,text) to authenticated;
 grant execute on function public.create_talent_roll(uuid) to authenticated;
-grant execute on function public.create_character(uuid,uuid,text,text[],jsonb,jsonb,integer) to authenticated;
+grant execute on function public.create_character(uuid,uuid,text,text[],text,jsonb,integer) to authenticated;
 
 insert into public.talents(id,name,description,rarity,weight,tags) values
 ('tam_tinh','Tâm Tĩnh Như Thủy','Tốc độ tu luyện tăng 8%.','pham',55,array['cultivation']),

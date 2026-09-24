@@ -255,20 +255,21 @@ describe('investBodyChapter essence substitution (M-QI-09)', () => {
     const manager = managerWithCatalogs()
     const player = createDefaultPlayer()
     player.realmId = 'foundation_establishment'
-    player.realmLevel = 1 // capacity 20
+    player.realmLevel = 1 // capacity 2
     player.physiqueGrade = 'bao'
     player.bodyProgression.body_refinement.completedTiers = 6
     player.bodyProgression.meridian.openedIds = MERIDIANS.map(m => m.id)
     manager.setActivePlayer(player)
     // Phap is the highest rung - nothing sits above it to cover a
-    // shortfall, so the seam debits the owned amount 1:1 and only that.
-    manager.materialBag.add(manager.materialRegistry.get(PHAP), 7)
+    // shortfall, so the seam debits the authored per-step cost and
+    // only that.
+    manager.materialBag.add(manager.materialRegistry.get(PHAP), 15)
 
     const consumed = manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')
 
-    expect(consumed).toBe(7)
+    expect(consumed).toBe(15)
     expect(manager.materialBag.getAmount(PHAP)).toBe(0)
-    expect(player.bodyProgression.zhou_tian.circulation).toBe(7)
+    expect(player.bodyProgression.zhou_tian.completed).toBe(1)
   })
 
   it('never substitutes lower-band essence for a Phap shortfall - lower stacks stay untouched (C2C-75)', () => {
@@ -288,15 +289,15 @@ describe('investBodyChapter essence substitution (M-QI-09)', () => {
     expect(manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')).toBe(0)
     expect(manager.materialBag.getAmount(PHAM)).toBe(10)
     expect(manager.materialBag.getAmount(BAO)).toBe(25)
-    expect(player.bodyProgression.zhou_tian.circulation).toBe(0)
+    expect(player.bodyProgression.zhou_tian.completed).toBe(0)
 
-    // Partial Phap: the owned stack debits 1:1 and the lower-band
-    // stacks remain byte-for-byte untouched.
-    manager.materialBag.add(manager.materialRegistry.get(PHAP), 3)
-    expect(manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')).toBe(3)
-    expect(manager.materialBag.getAmount(PHAP)).toBe(0)
+    // Partial Phap: 20 essence buys exactly the first step (15) and the
+    // lower-band stacks remain byte-for-byte untouched.
+    manager.materialBag.add(manager.materialRegistry.get(PHAP), 20)
+    expect(manager.realmAdvanceOps.investBodyChapter(player, 'zhou_tian')).toBe(15)
+    expect(manager.materialBag.getAmount(PHAP)).toBe(5)
     expect(manager.materialBag.getAmount(PHAM)).toBe(10)
     expect(manager.materialBag.getAmount(BAO)).toBe(25)
-    expect(player.bodyProgression.zhou_tian.circulation).toBe(3)
+    expect(player.bodyProgression.zhou_tian.completed).toBe(1)
   })
 })

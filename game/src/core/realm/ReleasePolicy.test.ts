@@ -244,6 +244,7 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
     const qiRefining = createDefaultPlayer()
     qiRefining.realmId = 'qi_refining'
     qiRefining.realmLevel = 12
+    qiRefining.completedStageIds = ['qi_refining_abyssal_pool']
     expect(gameManager.startTribulation(qiRefining, 'foundation_establishment')).toBe(true)
   })
 
@@ -552,9 +553,8 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
 
 describe('ReleasePolicy - authored breakthrough tags (Beta window)', () => {
   it('breakthrough-scoped resources carry their target-realm tag', () => {
-    expect(materials.find((m) => m.id === 'great_dao_seed')?.breakthroughRealmId).toBe(
-      'foundation_establishment',
-    )
+    // great_dao_seed retired 2026-09-23 (hidden-perfection-lineage sec.19) -
+    // truc_co_dan remains the tagged breakthrough-scoped resource.
     expect(pills.find((p) => p.id === 'truc_co_dan')?.breakthroughRealmId).toBe(
       'foundation_establishment',
     )
