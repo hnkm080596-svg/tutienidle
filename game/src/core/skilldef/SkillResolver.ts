@@ -979,7 +979,7 @@ export class SkillResolver {
               ...(op.else !== undefined
                 ? { else: this.translateOps(op.else, ctx, scope) }
                 : {}),
-              gate: { hitOperationIds: hitOpIds, targetId },
+              gate: { hitOperationIds: [...hitOpIds], targetId },
             },
           ]
         }

@@ -289,7 +289,7 @@ export interface TurnSkillDefinition {
   }
   /**
    * Emblem-occupying slot def: never selectable by
-   * selectAction/selectForcedAction, never deals damage. Two producers:
+   * selectAction/selectForcedAction, never deals damage. Producers:
    * - (retained contract; the Ngu Kiem redesign removed emblem markers - no current producer)
    * - The Tu Reimagined (spec 2026-09-15 section 5.2) - passive emblems;
    *   their permanent buff lands via grantsBuffsAtBuild.
