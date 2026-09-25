@@ -19752,7 +19752,7 @@
       "path": "src/core/skilldef/LegacySkillAdapter.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8c164d69389d3a0b3fed7701b36c126b7cc6c278d04890efae034eb32c7a92ed"
+      "hash": "c3b31a768856d806a454c9ea740b505d688906b0e8b690e1be27989b63635a1d"
     },
     {
       "path": "src/core/skilldef/LegacySkillAdapter.ts",
@@ -22983,5 +22983,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "5fb15ec224c4b99d4504fca4752228d46b60b9bb6611f13515c57ff8b5d2bf82"
+  "productStateId": "e25a50783be924146632ab6b8ab26c775d1c47830ed310cc969683c4b7c2594d"
 }

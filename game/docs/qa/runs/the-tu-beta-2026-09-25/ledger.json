@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "bdc04bf9",
   "state": {
-   "productStateId": "5fb15ec224c4b99d4504fca4752228d46b60b9bb6611f13515c57ff8b5d2bf82",
+   "productStateId": "e25a50783be924146632ab6b8ab26c775d1c47830ed310cc969683c4b7c2594d",
    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -1853,12 +1853,18 @@
    ],
    "siblingFindingIds": [],
    "repair": "spec sec.2.2 updated to 1.4 tuned value with balance flag + ward/flat-channel note @c8cbf932",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-CLO-5"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-CLO-5"
+   ],
+   "closureReviewIds": [
+    "REV-TT-CLO-5"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -1910,12 +1916,18 @@
    ],
    "siblingFindingIds": [],
    "repair": "spec sec.2.3 ward/flat-channel note pinned (intentional for beta, revisit at BETA-BALANCE) @c8cbf932",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-CLO-5"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-CLO-5"
+   ],
+   "closureReviewIds": [
+    "REV-TT-CLO-5"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   }
  ],
@@ -2107,6 +2119,39 @@
    ],
    "invariantIds": [],
    "limitations": [],
+   "result": "PASS",
+   "status": "STALE"
+  },
+  {
+   "id": "EV-TT-CLO-5",
+   "state": {
+    "productStateId": "5fb15ec224c4b99d4504fca4752228d46b60b9bb6611f13515c57ff8b5d2bf82",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "closure-reviewer",
+   "commandOrMethod": "spec text read + npm run type-check + npx vitest run src/core/skilldef/LegacySkillAdapter.test.ts",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T08:12:28.000Z",
+   "finishedAt": "2026-09-25T08:29:09.000Z",
+   "inputPaths": [
+    "docs/specs/the-tu-beta-spec.md",
+    "src/data/skill/TheTuSkills.ts",
+    "src/core/skilldef/LegacySkillAdapter.test.ts"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/clo-5.log",
+   "artifactHash": "402f5ee28708c43a930acfc839f62361757c40a96fb601564010481c9c4c053d",
+   "claims": [
+    "spec 2.2 coefficient 1.4 recorded; spec 2.3 ward note pinned; adapter test passes 24/24"
+   ],
+   "invariantIds": [],
+   "limitations": [
+    "initial type-check failure on the new test was fixed at 3742fa9a and re-verified"
+   ],
    "result": "PASS",
    "status": "STALE"
   }
@@ -2501,6 +2546,37 @@
    "coverageIds": [],
    "evidenceIds": [],
    "findingIds": [
+    "F-TT-INT-7",
+    "F-TT-INT-8"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-TT-CLO-5",
+   "state": {
+    "productStateId": "5fb15ec224c4b99d4504fca4752228d46b60b9bb6611f13515c57ff8b5d2bf82",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 9,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-3a4b40bfdaa4496e856c68d98a7c0d44",
+   "contextId": "sealed-child-3a4b40bfdaa4496e856c68d98a7c0d44",
+   "model": "swe-2-max",
+   "role": "closure-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T08:12:28.000Z",
+   "sealedAt": "2026-09-25T08:29:09.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-AUT-8",
     "F-TT-INT-7",
     "F-TT-INT-8"
    ],
@@ -3506,6 +3582,22 @@
    "payloadPath": "events/0007.json",
    "payloadHash": "8e4bcf28ea293a80980b8a592732d0b2540593c2db93193221c9301908094400",
    "eventHash": "532a207e5a09cebc6bc1294acf669bf5ad598456dfe944234c750ee6774e65c5"
+  },
+  {
+   "seq": 8,
+   "at": "2026-09-25T08:27:44.892Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-406257",
+   "state": {
+    "productStateId": "e25a50783be924146632ab6b8ab26c775d1c47830ed310cc969683c4b7c2594d",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "532a207e5a09cebc6bc1294acf669bf5ad598456dfe944234c750ee6774e65c5",
+   "payloadPath": "events/0008.json",
+   "payloadHash": "b0d2cae7d8a0af470317aeb110df5c834b77a0753247e79a2954e78b28cf828a",
+   "eventHash": "e291dc27467d780f4d09d0e813d475123e42cc16f855b8cbf9e0f57dfa49eea3"
   }
  ]
 }
