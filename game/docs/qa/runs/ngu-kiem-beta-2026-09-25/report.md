@@ -1,8 +1,8 @@
 # QA run ngu-kiem-beta-2026-09-25
 
 - phase: DECIDE
-- outcome: QA_UNVERIFIED
-- state: product=7a934c47fb1d contract=f2105ee05f6e attack=e3ff786f0f1a env=e3ca14a6b377
+- outcome: QA_FIXED_POINT_REACHED
+- state: product=54cb20fa0560 contract=f2105ee05f6e attack=e3ff786f0f1a env=e3ca14a6b377
 - base/head: be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df -> d8321ba8
 
 ## Findings
@@ -58,6 +58,43 @@
 - **F-NK-INTB-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — devResetBranch strips granted Khoi; reconcileWayGrants re-grants only at next restore
 - **F-NK-INTB-4** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — QuanKhi spec card still reads 'Ngu Kiem Dao' - spec beta rewording not applied
 - **F-NK-INTB-5** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — kiem_tu_ngu/burst_pressure baseline shares one fingerprint for seeds 11 and 22
+- **F-NK-FA-1** High/REAL_DEFECT — CLOSED — P15 ascii-comments ratchet fails on NguKiemDaoProvider comment
+- **F-NK-FA-2** Low/REAL_DEFECT — CLOSED — kiem_tu_ngu baseline snapshot is an unreachable-state build (missing core_ngu_kiem_thuat + purchasedNodeIds mirror)
+- **F-NK-FA-3** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — devResetBranch('ngu_kiem') strip of granted khoi re-granted by reconcileWayGrants on next restore
+- **F-NK-FA-4** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — kiem_tu_ngu/burst_pressure seeds 11 and 22 produce identical fingerprint '576e9420'
+- **F-NK-FA-5** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — evolution-resolved name surfaces only on SkillPath entry; combat HUD/log show base 'Ngự Kiếm'
+- **F-NK-FC-1** Low/REAL_DEFECT — CLOSED — TurnSkillDisplayMeta ngu_kiem_thuat description not rewritten per spec sec.65
+- **F-NK-FC-2** Low/REAL_DEFECT — CLOSED — QuanKhiPanel spec card text not updated per spec sec.103
+- **F-NK-FC-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — plan-lane momentum accumulator scopes per deal_damage op (latent)
+- **F-NK-FC-4** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — provider does not gate on ngu_kiem_khoi ownership (latent)
+- **F-NK-FA-11** Low/REAL_DEFECT — CLOSED — mangled comment separators in KiemTuNodes.ts (box chars -> '?' runs)
+- **F-NK-FA-6** Nit/REAL_DEFECT — CLOSED — 'dONG BO' capitalization artifact from ASCII sweep
+- **F-NK-FA-7** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — latent lane-scope asymmetry in momentum contract (dormant)
+- **F-NK-FA-8** Low/REAL_DEFECT — CLOSED — devResetBranch wipe of ngu_kiem_khoi silently resurrected on restore
+- **F-NK-FA-9** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — base-name literal 'Ngự Kiếm' authored in 3 surfaces
+- **F-NK-FA-10** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — kiem_tu_ngu/burst_pressure seeds 11+22 share fingerprint
+- **F-NK-FA-12** Low/REAL_DEFECT — CLOSED — Stale cascade-era flavor text on myriad_swords_art
+- **F-NK-FA-13** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Base-name literal 'Ngự Kiếm' duplicated across 3 static surfaces
+- **F-NK-FA-14** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Evolution spine tier order encoded twice
+- **F-NK-FA-15** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Contract member emblemSlots retained with zero producers
+- **F-NK-COR-A3-1** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — locale files lost trailing EOF newline
+- **F-NK-AUT-A3-1** Low/COVERAGE_GAP — CLOSED — way.grantedNodeIds has no contract coverage - nothing asserts members are grant-only, way-tagged, or respec-preserved
+- **F-NK-AUT-A3-2** Nit/REAL_DEFECT — CLOSED — 'Ngự Kiếm' base-name literal triplicated across three display channels
+- **F-NK-AUT-A3-3** Nit/DOCUMENTATION_DEFECT — CLOSED — stale KiemTuPath.ts header comment claims file imports only the sibling SwordPathState factory
+- **F-NK-COR-A4-1** Low/TEST_DEFECT — CLOSED — hiddenNguFoundationBuild snapshot is not a reachable post-ritual state
+- **F-NK-COR-A4-2** Nit/REAL_DEFECT — CLOSED — en.json + vi.json lost the file-ending newline
+- **F-NK-AUT-A4-1** Low/REAL_DEFECT — CLOSED — runtime import cycle KiemTuPath <-> NguKiemDao inverts the leaf invariant
+- **F-NK-AUT-A4-2** Low/TEST_DEFECT — CLOSED — hiddenNguFoundationBuild fixture violates the core_* mirror contract
+- **F-NK-AUT-A4-3** Nit/REAL_DEFECT — CLOSED — ngu_kiem_phong_an carries unreachable insightCost: 3 on a grantedOnly node
+- **F-NK-COR-A5-1** Low/REAL_DEFECT — CLOSED — onCastResolved ignores resolvedSkillId - +1 Kiem Y on any committed participant action
+- **F-NK-COR-A5-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — sealed '???' node renders 'locked' with zero lock reasons at golden_core
+- **F-NK-COR-A5-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — BalanceMatrix oracle cross-seed fingerprint collision
+- **F-NK-COR-A6-1** Medium/REAL_DEFECT — CLOSED — P15 asciiComments gate red at pinned HEAD - unmasked em dashes in NguKiemDao doc blocks
+- **F-NK-COR-A6-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — asciiComments scanTsChunk desyncs at ${ - stale baselines + latent masking (pre-existing)
+- **F-NK-AUT-A6-1** Medium/REAL_DEFECT — DUPLICATE_LINKED — P15 asciiComments gate red at d6592689 - same em-dash docblocks as COR-A6-1
+- **F-NK-AUT-A6-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Zero-producer contract seams retained after legacy removal
+- **F-NK-AUT-A6-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Stale P15 baseline allowances for removed NguKiemDao // header lines
+- **F-NK-TERMINAL-1** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Evolved skill name resolves only in SkillPathPanel - combat HUD/loadout show 'Ngu Kiem' base name
 
 ## Coverage
 
@@ -66,20 +103,18 @@
 ## Chronology
 
 - cycle CYCLE-NK-A: STALE; reviews REV-NK-COR-A,REV-NK-AUT-A,REV-NK-INT-A
-- cycle CYCLE-NK-B: STALE; reviews REV-NK-COR-B,REV-NK-AUT-B,REV-NK-INT-B,REV-NK-CLO-6
+- cycle CYCLE-NK-B: STALE; reviews REV-NK-COR-B,REV-NK-AUT-B,REV-NK-INT-B
+- cycle CYCLE-NK-CLEAN-A: CLEAN; reviews REV-NK-COR-A7,REV-NK-AUT-A7,REV-NK-INT-A7
+- cycle CYCLE-NK-CLEAN-B: CLEAN; reviews REV-NK-COR-B,REV-NK-AUT-B,REV-NK-INT-B
 
 ## Convergence
 
 - OK C1-identity: all final evidence binds the declared state
 - OK C2-census-coverage: census + coverage complete
 - OK C3-no-open: none open
-- UNMET C4-final-gates: EV-NK-FIX-4 status=STALE result=PASS
+- OK C4-final-gates: final gates green
 - OK C5-sequential: sequential phase reviews present
-- UNMET C6-clean-pair: Clean A missing/not CLEAN; Clean B missing/not CLEAN
+- OK C6-clean-pair: Clean A/B complete and independent
 - OK C7-mutation-corpus: mutation + corpus satisfied
-- UNMET C8-terminal-check: no sealed independent TERMINAL_CHECK on the final state
-- UNMET C9-readiness: brief(s) lack finalConformance evidence: BRF-NK-01
-
-## Validation failures
-
-- MC12 EV-NK-FIX-4: final gate evidence is not CURRENT
+- OK C8-terminal-check: independent terminal verifier sealed
+- OK C9-readiness: brief(s) lack finalConformance evidence: 
