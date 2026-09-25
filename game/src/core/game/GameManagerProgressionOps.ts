@@ -414,10 +414,20 @@ export class GameManagerProgressionOps {
 
         // Core <skill> duoc grant kem membership - revoke qua cung
         // funnel (refund Insight da do vao core levels: hop ly vi so
-        // Insight do di theo skill do node cap).
+        // Insight do di theo skill do node cap). Dual-source guard
+        // giong skill leg: mot node con so huu khac grant core nay qua
+        // grantsSkillCoreIds thi core phai song tiep - D9d save
+        // validation bat moi grantsSkillCoreIds member ton tai.
         const coreId = skillCoreNodeId(skillId)
+        const coreStillGranted = ownedNodeIds(player).some((ownedId) => {
+          const owned = this.deps.nodeRegistry.has(ownedId)
+            ? this.deps.nodeRegistry.get(ownedId)
+            : undefined
 
-        if (this.deps.nodeRegistry.has(coreId)) {
+          return owned?.effect.grantsSkillCoreIds?.includes(skillId) ?? false
+        })
+
+        if (!coreStillGranted && this.deps.nodeRegistry.has(coreId)) {
           const coreRefund = revokeNodeOwnership(
             player,
             this.deps.nodeRegistry.get(coreId),
@@ -715,8 +725,17 @@ export class GameManagerProgressionOps {
         }
 
         const coreId = skillCoreNodeId(skillId)
+        // Dual-source guard giong apply: core song tiep khi mot node
+        // con so huu van grant no qua grantsSkillCoreIds (D9d).
+        const coreStillGranted = ownedNodeIds(sim).some((ownedId) => {
+          const owned = this.deps.nodeRegistry.has(ownedId)
+            ? this.deps.nodeRegistry.get(ownedId)
+            : undefined
 
-        if (this.deps.nodeRegistry.has(coreId) && !this.deps.nodeRegistry.get(coreId).rewardOnly) {
+          return owned?.effect.grantsSkillCoreIds?.includes(skillId) ?? false
+        })
+
+        if (!coreStillGranted && this.deps.nodeRegistry.has(coreId) && !this.deps.nodeRegistry.get(coreId).rewardOnly) {
           const core = this.deps.nodeRegistry.get(coreId)
           const level = getNodeLevelSystem(sim, coreId)
           const coreRefund = computeNodeRefundSystem(

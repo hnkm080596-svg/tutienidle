@@ -449,18 +449,8 @@ export function nodeWayApplies(player: PlayerData, node: ProgressionNode): boole
  * Three-path design (2026-09-25) -- capstone/variant nodes OWN the
  * claim on the specialization they select: a spec some node authors via
  * effect.selectsSpecialization may only be applied while that node is
- * held. Returns the claiming node, or undefined when no node claims the
- * pair (free-switch specs).
- */
-export function specializationClaimingNode(
-  registry: { getAll(): ProgressionNode[] },
-  skillId: string,
-  specializationId: string,
-): ProgressionNode | undefined {
-  return specializationClaimingNodes(registry, skillId, specializationId)[0]
-}
-
-/**
+ * held.
+ *
  * ALL nodes claiming a (skillId, specializationId) pair - usually 0 or 1
  * authored, but ownership checks must evaluate the whole claimant set:
  * 'a claiming node exists and is owned' means ANY owned claimant
