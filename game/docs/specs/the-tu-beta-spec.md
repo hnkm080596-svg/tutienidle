@@ -125,6 +125,11 @@ re-authored), **MISSING** (net-new seam).
   `base + var(hpPaid) * bonusPerHpPaid` (var = non-foldable → EXECUTE-time
   eval, post-read). Ordering is structural: pay → read → hit. Payoffs use
   actual paid — INV-9/10/11.
+- 1-HP edge (pinned 2026-09-25): a cast at exactly 1 HP pays 0 — the op
+  skips and the cast still commits at base coefficient. The sacrifice is a
+  cost, not a gate; the berserker edge (free cast at maximum missing-HP
+  state) is intentional for beta. Whether the cast should instead be
+  gated below 2 HP is a BETA-BALANCE ruling.
 - Ordered multi-hit: `instances: { count: N, perInstanceOptions: true }` —
   existing per-instance settle = sequential hits into the same target.
 - Huyết Sát node → `loanDauPaidBonusPerHpPaidBonus` (adds to the per-paid-HP

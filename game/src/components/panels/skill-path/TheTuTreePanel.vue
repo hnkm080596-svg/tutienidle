@@ -104,6 +104,7 @@ function nodeState(nodeId: string) {
 }
 
 function isAbandoned(col: RootColumn): boolean {
+  stateVersion.value
   return getNodeLevel(player.$state, col.abandonedByNodeId) > 0
 }
 
