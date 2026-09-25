@@ -6,6 +6,7 @@ import {
   canPurchaseNode as canPurchaseNodeSystem,
   canUpgradeNode as canUpgradeNodeSystem,
   devResetBranch as devResetBranchSystem,
+  computeNodeRefund as computeNodeRefundSystem,
   getNodeLevel as getNodeLevelSystem,
   getNextLevelCost as getNextLevelCostSystem,
   getNodeMaxLevel as getNodeMaxLevelSystem,
@@ -674,14 +675,11 @@ export class GameManagerProgressionOps {
         if (this.deps.nodeRegistry.has(coreId) && !this.deps.nodeRegistry.get(coreId).rewardOnly) {
           const core = this.deps.nodeRegistry.get(coreId)
           const level = getNodeLevelSystem(sim, coreId)
-          let coreRefund = 0
-          const spentStart = core.levelsSkillId !== undefined ? 1 : 0
-
-          for (let spent = spentStart; spent < level; spent++) {
-            coreRefund += getNextLevelCostSystem(core, spent)
-          }
-
-          coreRefund = Math.max(0, coreRefund - (sim.nodeFreePurchaseRecord?.[coreId] ?? 0))
+          const coreRefund = computeNodeRefundSystem(
+            core,
+            level,
+            sim.nodeFreePurchaseRecord?.[coreId],
+          )
           clawback.refund += coreRefund
 
           if (coreId in sim.nodeLevels) {

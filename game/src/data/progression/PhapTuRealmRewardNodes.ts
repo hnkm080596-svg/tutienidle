@@ -1,5 +1,6 @@
 import type { ProgressionNode } from '../../core/progression/ProgressionNode'
 import type { ElementType } from '../../core/element/ElementType'
+import { ELEMENT_LABELS } from '../../core/element/ElementLabels'
 import type { StatType } from '../../core/stats/StatTypes'
 import { SPELL_KIT_IDS } from '../skill/Skills'
 
@@ -29,14 +30,6 @@ const MASTERY_RIDER: Record<ElementType, { stat: StatType; perLevel: number }> =
   wood: { stat: 'ailmentPotencyPercent', perLevel: 0.05 },
   metal: { stat: 'skillDamagePercent', perLevel: 0.05 },
   earth: { stat: 'ailmentDurationPercent', perLevel: 0.05 },
-}
-
-const ELEMENT_LABELS: Record<ElementType, string> = {
-  fire: 'Hỏa',
-  water: 'Thủy',
-  wood: 'Mộc',
-  metal: 'Kim',
-  earth: 'Thổ',
 }
 
 export const THE_THUC_TINH_NODE_ID = 'the_thuc_tinh'

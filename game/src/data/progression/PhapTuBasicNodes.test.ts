@@ -31,7 +31,7 @@ const BASIC_LANE_IDS = PHAP_TU_NODES.filter((n) =>
     'thuy_xuyen_lan', 'thuy_diem_chuan', 'thuy_te_dam', 'thuy_nhiet_tri',
     'thuy_lan_diem', 'thuy_luu_tich', 'thuy_tram_xuyen', 'thuy_te_tham',
     'moc_doc_sau', 'moc_doc_dien', 'moc_doc_tham',
-    'moc_doc_man', 'moc_doc_nhuan', 'moc_doc_tu', 'moc_doc_am',
+    'moc_doc_man', 'moc_doc_nhuan', 'moc_doc_tu', 'moc_doc_am', 'moc_doc_nhiem',
     'kim_sac_ben', 'kim_diem_chuan', 'kim_xuyen_nhuy', 'kim_bao_the',
     'kim_liet_huyet', 'kim_diem_tham', 'kim_xuyen_thau', 'kim_bao_diem',
     'tho_tram_luy', 'tho_tran_sau', 'tho_cung_gioi', 'tho_linh_the',
@@ -40,13 +40,21 @@ const BASIC_LANE_IDS = PHAP_TU_NODES.filter((n) =>
 )
 
 describe('PhapTu basic lane — ruled contract', () => {
-  it('every basic-lane node is leveled and gated by the element root', () => {
+  it('every basic-lane node is leveled and chains to the element root', () => {
+    // Glyph shape (ruling #2): trunk nodes prereq the element root
+    // (*_linh_ngo) directly; ring/capstone nodes hang off a same-element
+    // basic-lane node, so every chain resolves to the root.
+    const laneIds = new Set(BASIC_LANE_IDS.map((n) => n.id))
+
     for (const node of BASIC_LANE_IDS) {
       expect(node.maxLevel ?? 1, node.id).toBeGreaterThanOrEqual(1)
-      expect(
-        node.prerequisites?.some((p) => p.kind === 'node' && p.nodeId.endsWith('linh_ngo')),
-        node.id,
-      ).toBe(true)
+
+      const target = node.prerequisites?.find((p) => p.kind === 'node')?.nodeId
+
+      expect(target, node.id).toBeDefined()
+      const onRoot = target!.endsWith('linh_ngo')
+      const onLanePeer = laneIds.has(target!)
+      expect(onRoot || onLanePeer, `${node.id} -> ${target}`).toBe(true)
     }
   })
 
@@ -112,7 +120,7 @@ describe('PhapTu basic lane — ruled contract', () => {
     const EXPECTED_OUTER = new Set([
       'hoa_nhiet_keo', 'hoa_sac_huyet', 'hoa_bao_nhiet', 'hoa_diem_tham',
       'thuy_nhiet_tri', 'thuy_tram_xuyen', 'thuy_te_tham',
-      'moc_doc_tham', 'moc_doc_man', 'moc_doc_am',
+      'moc_doc_tham', 'moc_doc_man', 'moc_doc_am', 'moc_doc_nhiem',
       'kim_bao_the', 'kim_diem_tham', 'kim_xuyen_thau', 'kim_bao_diem',
       'tho_cung_gioi', 'tho_linh_the', 'tho_tran_cung', 'tho_linh_chung', 'tho_tram_bao',
       ...BASIC_CAPSTONE_IDS,

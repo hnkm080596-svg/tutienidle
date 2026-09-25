@@ -122,7 +122,7 @@
         "clawbackSkills": "mất {n} kỹ năng",
         "clawbackSpecs": "mất {n} chuyên hóa",
         "clawbackSwords": "mất {y} Kiếm Ý và {d} kiếm",
-        "clawbackRefund": "hoàn thêm {n} Cảm Ngộ"
+        "clawbackRefund": "gồm {n} Cảm Ngộ đã tính trong tổng hoàn"
       },
       "branchLabels": {
         "theTu": "Thể Tu Hiện",

@@ -36,6 +36,12 @@ import { SPELL_KIT_IDS } from '../skill/Skills'
 // Capstones are a 2-way variance split (ruling #7): two opposing
 // selectsSpecialization nodes gating each other through excludesNode.
 //
+// Glyph shape (ruling #2): each ring node carries a 'node' prereq on a
+// trunk node of the same stat family, and each capstone hangs off one
+// ring node -- depth-1 trunk / depth-2 ring / depth-3 capstone instead
+// of a flat star (clean-A-5 nit). A ring node therefore also requires
+// owning its trunk node; purchase order follows the same stat family.
+//
 // Kim Dan+ content keeps the honesty treatment (existing realm prereq
 // renders locked + inspector shows the realm name -- ruling #16 option C).
 
@@ -87,10 +93,10 @@ function powerNode(
   description: string,
   element: ElementType,
   modifiers: StatModifier[],
-  options: { foundation?: boolean; maxLevel?: number } = {},
+  options: { foundation?: boolean; maxLevel?: number; prereqNodeId?: string } = {},
 ): ProgressionNode {
   const prerequisites: NodePrerequisite[] = [
-    { kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS[element] },
+    { kind: 'node', nodeId: options.prereqNodeId ?? PHAP_TU_ELEMENT_ROOT_IDS[element] },
     ...(options.foundation ? [FOUNDATION] : []),
   ]
 
@@ -115,6 +121,7 @@ function capstone(
   specializationId: string,
   name: string,
   description: string,
+  prereqNodeId: string,
 ): ProgressionNode {
   const [a, b] = CAPSTONE_PAIR[element]
   const other = specializationId === a ? b : a
@@ -128,7 +135,7 @@ function capstone(
     insightCost: 3,
     maxLevel: 1,
     prerequisites: [
-      { kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS[element] },
+      { kind: 'node', nodeId: prereqNodeId },
       FOUNDATION,
       { kind: 'excludesNode', nodeId: `${element}_basic_${other}` },
     ],
@@ -168,7 +175,7 @@ function buildFire(): ProgressionNode[] {
       '+2.5% thời gian tật trạng mỗi cấp (tầng Trúc Cơ).',
       'fire',
       [stat('hoa_nhiet_keo', 'ailmentDurationPercent', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_an_sau' },
     ),
     powerNode(
       'hoa_sac_huyet',
@@ -176,7 +183,7 @@ function buildFire(): ProgressionNode[] {
       '+2.5% sát thương chiêu mỗi cấp (tầng Trúc Cơ).',
       'fire',
       [stat('hoa_sac_huyet', 'skillDamagePercent', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_sac_nhiet' },
     ),
     powerNode(
       'hoa_diem_bao',
@@ -191,7 +198,7 @@ function buildFire(): ProgressionNode[] {
       '+2.5% sát thương bạo kích chiêu mỗi cấp (tầng Trúc Cơ).',
       'fire',
       [stat('hoa_bao_nhiet', 'criticalDamage', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_diem_bao' },
     ),
     powerNode(
       'hoa_diem_tham',
@@ -199,19 +206,21 @@ function buildFire(): ProgressionNode[] {
       '+2.5% tỉ lệ áp dục tật trạng mỗi cấp (tầng Trúc Cơ).',
       'fire',
       [stat('hoa_diem_tham', 'elementApplicationPercent', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_diem_chuan' },
     ),
     capstone(
       'fire',
       'hoa_tu_diem',
       'Tụ Diễm',
       'Hỏa Cầu tụ một điểm — sát thương cao hơn, Thiêu Đốt dễ trúng.',
+      'hoa_sac_huyet',
     ),
     capstone(
       'fire',
       'hoa_tan_diem',
       'Tán Diễm',
       'Hỏa Cầu tán thành vùng — quét nhiều mục tiêu, đòn nhẹ hơn, Thiêu Đốt khó trúng hơn.',
+      'hoa_diem_tham',
     ),
   ]
 }
@@ -245,7 +254,7 @@ function buildWater(): ProgressionNode[] {
       '+2.5% thời gian tật trạng mỗi cấp (tầng Trúc Cơ).',
       'water',
       [stat('thuy_nhiet_tri', 'ailmentDurationPercent', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'thuy_luu_tich' },
     ),
     powerNode(
       'thuy_lan_diem',
@@ -267,7 +276,7 @@ function buildWater(): ProgressionNode[] {
       '+2.5% sát thương chiêu mỗi cấp (tầng Trúc Cơ).',
       'water',
       [stat('thuy_tram_xuyen', 'skillDamagePercent', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'thuy_xuyen_lan' },
     ),
     powerNode(
       'thuy_te_tham',
@@ -275,19 +284,21 @@ function buildWater(): ProgressionNode[] {
       '+2.5% uy lực tật trạng mỗi cấp (tầng Trúc Cơ).',
       'water',
       [stat('thuy_te_tham', 'ailmentPotencyPercent', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'thuy_te_dam' },
     ),
     capstone(
       'water',
       'thuy_ngan_lien',
       'Ngưng Liễn',
       'Thủy Tiễn ngưng một điểm — sát thương cao hơn, Tê Cóng dễ trúng.',
+      'thuy_tram_xuyen',
     ),
     capstone(
       'water',
       'thuy_dao_lan',
       'Đào Lan',
       'Thủy Tiễn vỡ thành làn sóng — quét nhiều mục tiêu, đòn nhẹ hơn, Tê Cóng khó trúng hơn.',
+      'thuy_nhiet_tri',
     ),
   ]
 }
@@ -316,7 +327,7 @@ function buildWood(): ProgressionNode[] {
       '+2.5% uy lực tật trạng mỗi cấp (tầng Trúc Cơ).',
       'wood',
       [stat('moc_doc_tham', 'ailmentPotencyPercent', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'moc_doc_sau' },
     ),
     powerNode(
       'moc_doc_man',
@@ -324,14 +335,14 @@ function buildWood(): ProgressionNode[] {
       '+2.5% thời gian tật trạng mỗi cấp (tầng Trúc Cơ).',
       'wood',
       [stat('moc_doc_man', 'ailmentDurationPercent', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'moc_doc_dien' },
     ),
     powerNode(
       'moc_doc_nhuan',
       'Độc Nhuần',
-      '+2% tỉ lệ áp dục tật trạng mỗi cấp.',
+      '+2% thời gian tật trạng mỗi cấp (tối đa +10%).',
       'wood',
-      [stat('moc_doc_nhuan', 'elementApplicationPercent', 0.02)],
+      [stat('moc_doc_nhuan', 'ailmentDurationPercent', 0.02)],
     ),
     powerNode(
       'moc_doc_tu',
@@ -346,27 +357,29 @@ function buildWood(): ProgressionNode[] {
       '+2.5% uy lực tật trạng mỗi cấp (tầng Trúc Cơ).',
       'wood',
       [stat('moc_doc_am', 'ailmentPotencyPercent', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'moc_doc_tu' },
     ),
     powerNode(
       'moc_doc_nhiem',
       'Độc Nhiễm',
-      '+2.5% tỉ lệ áp dục tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% uy lực tật trạng mỗi cấp (tầng Trúc Cơ).',
       'wood',
-      [stat('moc_doc_nhiem', 'elementApplicationPercent', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      [stat('moc_doc_nhiem', 'ailmentPotencyPercent', 0.025)],
+      { foundation: true, maxLevel: 4, prereqNodeId: 'moc_doc_nhuan' },
     ),
     capstone(
       'wood',
       'moc_tu_doc',
       'Tụ Độc',
       'Độc Chưởng tụ một điểm — đắp thêm 1 tầng Trúng Độc khi trúng.',
+      'moc_doc_tham',
     ),
     capstone(
       'wood',
       'moc_lan_doc',
       'Lan Độc',
       'Độc Chưởng lan thành vùng — phủ nhiều mục tiêu, nhưng Trúng Độc không còn chắc trúng.',
+      'moc_doc_nhiem',
     ),
   ]
 }
@@ -400,7 +413,7 @@ function buildMetal(): ProgressionNode[] {
       '+2.5% sát thương bạo kích mỗi cấp (tầng Trúc Cơ).',
       'metal',
       [stat('kim_bao_the', 'criticalDamage', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'kim_xuyen_nhuy' },
     ),
     powerNode(
       'kim_liet_huyet',
@@ -415,7 +428,7 @@ function buildMetal(): ProgressionNode[] {
       '+2.5% tỉ lệ áp dục tật trạng mỗi cấp (tầng Trúc Cơ).',
       'metal',
       [stat('kim_diem_tham', 'elementApplicationPercent', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'kim_diem_chuan' },
     ),
     powerNode(
       'kim_xuyen_thau',
@@ -423,7 +436,7 @@ function buildMetal(): ProgressionNode[] {
       '+2.5% sát thương chiêu mỗi cấp (tầng Trúc Cơ).',
       'metal',
       [stat('kim_xuyen_thau', 'skillDamagePercent', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'kim_sac_ben' },
     ),
     powerNode(
       'kim_bao_diem',
@@ -431,19 +444,21 @@ function buildMetal(): ProgressionNode[] {
       '+2.5% tỉ lệ bạo kích chiêu mỗi cấp (tầng Trúc Cơ).',
       'metal',
       [stat('kim_bao_diem', 'criticalRate', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'kim_xuyen_nhuy' },
     ),
     capstone(
       'metal',
       'kim_tu_phong',
       'Tụ Phong',
       'Điểm Kim tụ một điểm — sát thương lớn hơn.',
+      'kim_xuyen_thau',
     ),
     capstone(
       'metal',
       'kim_tan_phong',
       'Tán Phong',
       'Điểm Kim tán thành mũi lưỡi — quét nhiều mục tiêu, đòn nhẹ hơn, Xuất Huyết khó trúng hơn.',
+      'kim_bao_the',
     ),
   ]
 }
@@ -470,7 +485,7 @@ function buildEarth(): ProgressionNode[] {
       '+2% sát thương chiêu mỗi cấp (tầng Trúc Cơ).',
       'earth',
       [stat('tho_cung_gioi', 'skillDamagePercent', 0.02)],
-      { foundation: true },
+      { foundation: true, prereqNodeId: 'tho_tram_luy' },
     ),
     powerNode(
       'tho_linh_the',
@@ -478,7 +493,7 @@ function buildEarth(): ProgressionNode[] {
       '+2.5% sát thương chiêu mỗi cấp (tầng Trúc Cơ).',
       'earth',
       [stat('tho_linh_the', 'skillDamagePercent', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'tho_tram_luy' },
     ),
     powerNode(
       'tho_tram_diem',
@@ -493,7 +508,7 @@ function buildEarth(): ProgressionNode[] {
       '+2.5% thời gian tật trạng mỗi cấp (tầng Trúc Cơ).',
       'earth',
       [stat('tho_tran_cung', 'ailmentDurationPercent', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'tho_tran_sau' },
     ),
     powerNode(
       'tho_linh_chung',
@@ -501,7 +516,7 @@ function buildEarth(): ProgressionNode[] {
       '+2.5% sát thương cuối chiêu mỗi cấp (tầng Trúc Cơ).',
       'earth',
       [stat('tho_linh_chung', 'finalDamagePercent', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'tho_tram_luy' },
     ),
     powerNode(
       'tho_tram_bao',
@@ -509,19 +524,21 @@ function buildEarth(): ProgressionNode[] {
       '+2.5% sát thương bạo kích chiêu mỗi cấp (tầng Trúc Cơ).',
       'earth',
       [stat('tho_tram_bao', 'criticalDamage', 0.025)],
-      { foundation: true, maxLevel: 4 },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'tho_tram_diem' },
     ),
     capstone(
       'earth',
       'tho_tu_nhan',
       'Tụ Nhán',
       'Thổ Cầu nén một điểm — sát thương cao hơn.',
+      'tho_linh_the',
     ),
     capstone(
       'earth',
       'tho_bang_loa',
       'Đá Loạn',
       'Thổ Cầu vỡ thành mảnh đá — quét nhiều mục tiêu, đòn nhẹ hơn, Thạch Hóa yếu hơn.',
+      'tho_linh_chung',
     ),
   ]
 }

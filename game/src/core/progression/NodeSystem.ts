@@ -487,7 +487,7 @@ export function specializationClaimingNodes(
 export function ownedNodeIds(player: PlayerData): string[] {
   const ids = new Set(player.purchasedNodeIds)
 
-  for (const [nodeId, level] of Object.entries(player.nodeLevels)) {
+  for (const [nodeId, level] of Object.entries(player.nodeLevels ?? {})) {
     if (level > 0) {
       ids.add(nodeId)
     }
@@ -572,6 +572,30 @@ export function grantSkillCore(player: PlayerData, node: ProgressionNode): void 
 }
 
 /**
+ * Insight owed back for a node at the given level. M-QI-05: a skill
+ * core's level 1 was GRANTED free, so only upgrades (levels 1..L-1)
+ * repay; ordinary nodes paid for level 1 (spentStart 0). Van Dao (M2):
+ * refund only the insight actually paid - minus the waived record.
+ * Shared by revokeNodeOwnership (apply) and the clawback preview so
+ * the two paths cannot diverge.
+ */
+export function computeNodeRefund(
+  node: ProgressionNode,
+  level: number,
+  freePurchaseRecord: number | undefined,
+): number {
+  const spentStart = node.levelsSkillId !== undefined ? 1 : 0
+
+  let refund = 0
+
+  for (let spent = spentStart; spent < level; spent++) {
+    refund += getNextLevelCost(node, spent)
+  }
+
+  return Math.max(0, refund - (freePurchaseRecord ?? 0))
+}
+
+/**
  * M-QI-05 - shared ownership-removal seam: deletes the node's level +
  * purchasedNodeIds membership, repays the Insight actually spent on it
  * (total cost minus waived record, cleared alongside), and revokes
@@ -597,20 +621,10 @@ export function revokeNodeOwnership(
 
   revokedOut?.add(node.id)
 
-  let refund = 0
-
-  // M-QI-05 - a core's level 1 is GRANTED free: only its upgrades
-  // (levels 1..L-1) repaid Insight. Ordinary nodes paid for level 1.
-  const spentStart = node.levelsSkillId !== undefined ? 1 : 0
-
-  for (let spent = spentStart; spent < level; spent++) {
-    refund += getNextLevelCost(node, spent)
-  }
-
   // Van Dao (M2): refund only the insight ACTUALLY paid - subtract the
   // waived amounts recorded at purchase time, then clear the record
   // alongside the node itself.
-  refund = Math.max(0, refund - (player.nodeFreePurchaseRecord?.[node.id] ?? 0))
+  const refund = computeNodeRefund(node, level, player.nodeFreePurchaseRecord?.[node.id])
   if (player.nodeFreePurchaseRecord) {
     delete player.nodeFreePurchaseRecord[node.id]
   }
@@ -623,15 +637,17 @@ export function revokeNodeOwnership(
     player.purchasedNodeIds.splice(index, 1)
   }
 
+  let refunded = refund
+
   for (const skillId of node.effect.grantsSkillCoreIds ?? []) {
     const coreId = skillCoreNodeId(skillId)
 
     if (registry.has(coreId) && getNodeLevel(player, coreId) >= 1) {
-      refund += revokeNodeOwnership(player, registry.get(coreId), registry, revokedOut)
+      refunded += revokeNodeOwnership(player, registry.get(coreId), registry, revokedOut)
     }
   }
 
-  return refund
+  return refunded
 }
 
 /**

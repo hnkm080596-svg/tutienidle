@@ -122,7 +122,7 @@
         "clawbackSkills": "lose {n} skills",
         "clawbackSpecs": "clear {n} specializations",
         "clawbackSwords": "lose {y} Sword Intent and {d} forged swords",
-        "clawbackRefund": "regain {n} extra Insight"
+        "clawbackRefund": "includes {n} Insight already counted above"
       },
       "branchLabels": {
         "theTu": "Body Cultivation",
