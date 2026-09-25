@@ -14,6 +14,7 @@ const NATIVE_TOP_LEVEL_IDS = [
   'loan_dau',
   'bat_tu_ba_the',
   'tran_ap',
+  'phan_chan',
   'son_nhac',
   'tham_the',
   'tu_the',

@@ -31,10 +31,14 @@ export function calculateBaseDamage(
   damageType: 'physical' | 'primordial',
   ignoreResistance = false,
   armorPierceFraction = 0,
+  sourceMaxHpRatio = 0,
 ): number {
   switch (damageType) {
     case 'physical': {
-      const raw = source.stats.might
+      // The Tu beta (Tran Ap) -- Max-HP-derived base: the source's
+      // maxHp x sourceMaxHpRatio rides the raw base alongside might,
+      // mitigated like might (Trấn Thể hits are still physical hits).
+      const raw = source.stats.might + source.stats.maxHp * sourceMaxHpRatio
 
       const mitigation = ignoreResistance
         ? 0

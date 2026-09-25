@@ -2370,13 +2370,17 @@ describe('validateGameSaveShape — v73 core inverse ownership', () => {
     player.cultivationPath = 'body'
     player.cultivationWay = 'body_pathway'
 
-    // A real purchase writes BOTH: nodeLevels.cuong_chien = 1 is the
+    // A real purchase writes BOTH: nodeLevels.<id> = 1 is the
     // canonical ownership; purchasedNodeIds is the mirror. The
     // forward check requires every grantsSkillCoreIds member present.
-    ;(player.nodeLevels as Record<string, number>).cuong_chien = 1
-    ;(player.purchasedNodeIds as string[]).push('cuong_chien')
+    // Beta grant seams: cuong_chien -> cuong_quyen, major_loan_dau ->
+    // loan_dau. core_bat_tu_ba_the has NO beta source (parked def).
+    for (const nodeId of ['cuong_chien', 'major_loan_dau']) {
+      ;(player.nodeLevels as Record<string, number>)[nodeId] = 1
+      ;(player.purchasedNodeIds as string[]).push(nodeId)
+    }
 
-    for (const skillId of ['cuong_quyen', 'loan_dau', 'bat_tu_ba_the']) {
+    for (const skillId of ['cuong_quyen', 'loan_dau']) {
       const coreId = skillCoreNodeId(skillId)
       ;(player.nodeLevels as Record<string, number>)[coreId] = 1
       ;(player.purchasedNodeIds as string[]).push(coreId)

@@ -11,9 +11,8 @@ import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 import {
-  PHAN_CHINH_BUFF,
-  PHAN_CHINH_MAXHP_RATIO,
-  PHAN_CHINH_TAKEN_RATIO,
+  PHAN_CHAN_BUFF,
+  PHAN_CHAN_BASE_RATIO,
 } from '../../../data/buff/TheTuBuffs'
 import type { EntityVitalsChangedEvent } from '../../combat/EntityVitalsSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
@@ -227,7 +226,7 @@ function declaredCompositeCast(
 }
 
 describe('composite extra picks run the declared-hit pipeline', () => {
-  it('each landed pick reflects through the defender phan_chinh emblem (2 hits -> 2 reflects)', () => {
+  it('landed picks reflect through the defender phan_chan passive (one action -> ONE reflect)', () => {
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
 
@@ -242,7 +241,7 @@ describe('composite extra picks run the declared-hit pipeline', () => {
     })
     const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY, undefined, runtime)
 
-    runtime.applyBuff(PHAN_CHINH_BUFF.id, defenderP)
+    runtime.applyBuff(PHAN_CHAN_BUFF.id, defenderP)
 
     // No randomness control needed — every roll in this path is
     // deterministic by construction: hits land (accuracy 9999 vs
@@ -259,9 +258,13 @@ describe('composite extra picks run the declared-hit pipeline', () => {
     }
 
     const reflectAmounts: number[] = []
+    const defenderHits: number[] = []
     eventBus.on<EntityVitalsChangedEvent>('entity_vitals_changed', (event) => {
       if (event.reason === 'reflection' && event.entityId === attackerP.entity.id) {
         reflectAmounts.push(event.amount)
+      }
+      if (event.reason === 'damage' && event.entityId === defenderP.entity.id) {
+        defenderHits.push(event.amount)
       }
     })
 
@@ -270,15 +273,17 @@ describe('composite extra picks run the declared-hit pipeline', () => {
       declaredCompositeCast(attackerP, [defenderP], battle.enemies),
     )
 
-    // Each hit takes 100 hpDamage (might 100, zero mitigation); each
-    // taken hit owes hpDamage x takenRatio + holder maxHp x maxHpRatio.
-    const expectedPerHit =
-      100 * PHAN_CHINH_TAKEN_RATIO + 1_000_000 * PHAN_CHINH_MAXHP_RATIO
+    // Each pick takes 100 hpDamage (might 100, zero mitigation); the
+    // beta reflect rule is ONCE PER hostile ACTION (the composite cast
+    // is one action, its hits settle first) at holder maxHp x ratio.
+    const expectedReflect = 1_000_000 * PHAN_CHAN_BASE_RATIO
 
-    // Pre-fix failure signature: only the primary hit reflects (1 event);
-    // the composite extra pick bypassed rollReactiveTrigger entirely.
-    expect(reflectAmounts).toEqual([expectedPerHit, expectedPerHit])
-    expect(1_000_000 - attackerP.entity.currentHp).toBe(2 * expectedPerHit)
+    // Both picks landed through the shared hit pipeline (regression
+    // signal for the extra-pick lane); exactly one reflect fires per
+    // action now that reflects merge per hostile action.
+    expect(defenderHits).toHaveLength(2)
+    expect(reflectAmounts).toEqual([expectedReflect])
+    expect(1_000_000 - attackerP.entity.currentHp).toBe(expectedReflect)
   })
 
   it('each landed pick opens the defender phan_mon taken window (2 hits -> 2 counters queued)', () => {

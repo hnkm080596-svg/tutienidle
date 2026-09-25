@@ -22,6 +22,7 @@ import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import NodeTreePanel from './skill-path/NodeTreePanel.vue'
+import TheTuTreePanel from './skill-path/TheTuTreePanel.vue'
 import NodeInspector from './skill-path/NodeInspector.vue'
 import SkillPathList from './skill-path/SkillPathList.vue'
 import SkillDetailView from './skill-path/SkillDetailView.vue'
@@ -338,8 +339,14 @@ function close() {
               </button>
             </div>
 
+            <TheTuTreePanel
+              v-if="showTree && !showDetail && wayNodeTreeTag === 'the_tu'"
+              :selected-node-id="selectedNode?.id ?? null"
+              @select="onSelectNode"
+            />
+
             <NodeTreePanel
-              v-if="showTree && !showDetail"
+              v-else-if="showTree && !showDetail"
               :branch-tag="treeBranchTag"
               :selected-node-id="selectedNode?.id ?? null"
               :unlock-trigger="unlockTrigger"

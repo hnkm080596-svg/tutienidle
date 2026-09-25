@@ -151,8 +151,8 @@ describe('buffs.ts — ported definitions match original values (buff2 shape)', 
       expect(b.statModifiers).toContainEqual({ stat: 'wardBreakDamagePercent', flat: 0.25 })
     })
 
-    it('all 66 definitions (6 inline + 16 legacy + 1 Kiem Pho + 14 thuan-he + 5 talent + 3 boss + 12 the_tu + 5 reaction + 4 companion) are present', () => {
-      expect(buffs).toHaveLength(66)
+    it('all 68 definitions (6 inline + 16 legacy + 1 Kiem Pho + 14 thuan-he + 5 talent + 3 boss + 14 the_tu + 5 reaction + 4 companion) are present', () => {
+      expect(buffs).toHaveLength(68)
     })
   })
 

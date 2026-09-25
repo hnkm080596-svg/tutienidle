@@ -238,7 +238,16 @@ export class CombatSystem {
 
     const baseDamage = damage.kind === 'elemental'
       ? calculateSkillBaseDamage(source, target, damage.components, ignoreResistance)
-      : calculateBaseDamage(source, target, damage.kind, ignoreResistance, options.armorPierceFraction ?? 0)
+      : calculateBaseDamage(
+          source,
+          target,
+          damage.kind,
+          ignoreResistance,
+          options.armorPierceFraction ?? 0,
+          // The Tu beta -- Max-HP-derived base rides the physical raw
+          // (primordial hits ignore it: no armor term exists there).
+          damage.kind === 'physical' ? (damage.sourceMaxHpRatio ?? 0) : 0,
+        )
 
     const afterCrit = applyMultiplierAndCritical(baseDamage, effectiveMultiplier, isCritical, source.stats.criticalDamage)
 

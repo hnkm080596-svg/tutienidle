@@ -25,7 +25,6 @@ import type {
 } from '../contracts/ids'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { MAX_THE } from '../../combat/CombatTypes'
-import type { CombatOperationResult } from '../contracts/results'
 import type { CombatRng } from '../contracts/rng'
 import type { CombatScheduler } from '../runtime/scheduler/CombatScheduler'
 import type { BuffDefinition, PeriodicDamageDefinition } from '../../buff2/BuffDefinition'
@@ -83,12 +82,16 @@ export interface TurnSkillPlanOrchestration {
     skillId: string | undefined,
   ): void
   /** procs.onHitLanded + the target's onImpactLanded reactive trigger
-      (hpDamage>0 gate lives inside) + the queuedFollowUps push. */
+      (hpDamage>0 gate lives inside) + the queuedFollowUps push.
+      `reflectsEligible` gates the once-per-action Phan Chan reflect --
+      the caller passes the INV-9 natural-source check so reactive
+      (counter/follow_up/intercept) actions never reflect. */
   runLandedHitProcs(
     battle: TurnBattle,
     actor: TurnBattleParticipant,
     target: TurnBattleParticipant,
     hpDamage: number,
+    reflectsEligible: boolean,
   ): void
   /** Taken-side reactive window -- gated inside on hpDamage>0 and a
       natural actionSource (INV-9). */
@@ -554,11 +557,17 @@ export class TurnSkillPlanRuntime {
         const target = tbs.participant(battle, gate.targetId)
         if (source === undefined || target === undefined) return
         // Legacy slot: after consume ops, before authored ailments.
+        // The reflect eligibility check rides the action's provenance
+        // (INV-9 parity with resolveTakenWindow): only natural
+        // ('normal'/'skill') hostile actions can reflect -- counter/
+        // follow_up/intercept hits damage the holder without recursing.
         tbs.runLandedHitProcs(
           battle,
           source,
           target,
           sumHpDamage(gate.hitOperationIds),
+          declared.actionSource === 'normal' ||
+            declared.actionSource === 'skill',
         )
       },
 

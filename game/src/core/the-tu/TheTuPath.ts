@@ -18,7 +18,9 @@ import {
 } from '../stats/TheTuStatChannels'
 import {
   BACH_UNG,
+  BAT_TU_BA_THE,
   PHAN_KICH,
+  SON_NHAC,
   THAM_THE,
   THE_TU_KIT_BY_ROOT,
   TRO_KICH,
@@ -28,13 +30,15 @@ import {
 import {
   BACH_UNG_BUFF,
   BAT_TU_BA_THE_BUFF,
+  CHAN_AN_DEBUFF,
   HO_MON_MARKER,
   HO_VE_BUFF,
   KHIEM_KHICH_DEBUFF,
-  PHAN_CHINH_BUFF,
+  PHAN_CHAN_BUFF,
   PHAN_MON_MARKER,
   SON_NHAC_BUFF,
   SON_NHAC_HO_THE_BUFF,
+  TRAN_KINH_DEBUFF,
   TRO_MON_MARKER,
   TU_THE_BUFF,
   UNG_THE_BUFF,
@@ -230,25 +234,28 @@ export const BODY_PATHWAY: PathWayDefinition = {
   subpaths: {
     root: { state: 'player.nodeLevels' },
   },
-  // P1-M2 - both root kits (cuong_chien + tran_the) resolve at battle
-  // build from THE_TU_KIT_BY_ROOT; the buff list is what those kits
-  // plant (bat_tu_ba_the survival, phan_chinh reflect emblem, son_nhac
-  // ward + ho_the ally ward, khiem_khich taunt).
+  // Beta — the buff list is what the beta kits + parked legacy defs
+  // can plant (phan_chan passive + chan_an mark + khiem_khich taunt +
+  // tran_kinh weaken; bat_tu_ba_the / son_nhac stay listed — authored
+  // defs parked for post-beta content).
   ownedContent: {
     skillIds: [
       ...Object.values(THE_TU_KIT_BY_ROOT).flatMap((kit) => [
         kit.basic.id,
         kit.special.id,
-        kit.ultimate.id,
       ]),
+      BAT_TU_BA_THE.id,
+      SON_NHAC.id,
       'passive_kim_cang_y_chi',
     ],
     buffIds: [
+      PHAN_CHAN_BUFF.id,
+      CHAN_AN_DEBUFF.id,
+      TRAN_KINH_DEBUFF.id,
+      KHIEM_KHICH_DEBUFF.id,
       BAT_TU_BA_THE_BUFF.id,
-      PHAN_CHINH_BUFF.id,
       SON_NHAC_BUFF.id,
       SON_NHAC_HO_THE_BUFF.id,
-      KHIEM_KHICH_DEBUFF.id,
     ],
   },
 }

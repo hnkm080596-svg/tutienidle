@@ -9,6 +9,11 @@
 //     elemental components             -> components + coefficient
 //     scaling                          -> scaling (verbatim)
 //     missingHpBonus*                  -> missingHpBonus* scalar fields
+//     sourceMaxHpRatio                 -> sourceMaxHpRatio scalar field
+//   sacrificeMaxHpRatio +
+//     damageBonusPerPaidHpPoint        -> pay_hp op (emitted BEFORE
+//       damage); paid-HP payoff lands on the damage coefficient via
+//       {query:'var'} (resolved post-read at EXECUTE)
 //   appliesAilment(s)                  -> apply_buff ops 'eligible':
 //     damaging def                     -> inside deal_damage.onLanded
 //                                       (per-landed-HIT parity)
@@ -102,6 +107,12 @@ export interface AdaptedSkillCatalog {
   unsupported: readonly string[]
 }
 
+/** The Tu beta -- plan-var name the emitted pay_hp read binds the
+    actual sacrificed HP into; damageBonusPerPaidHpPoint expressions
+    read it via {query:'var'}. A sentinel (never author-addressed) so
+    two sacrifice defs in one cast cannot collide. */
+const SACRIFICE_PAID_HP_VAR = '__paid_hp'
+
 /** Adapt a TurnSkillDefinition (and its composite pool / empowered
     payload transitively) into SkillDefinitions. */
 export function adaptTurnSkillDefinition(
@@ -191,6 +202,27 @@ function adaptOne(
 
   // --- Primary lane ---------------------------------------------------
   if (def.damage !== undefined) {
+    // The Tu beta (Loan Dau) -- the sacrifice op settles BEFORE the hit
+    // lane: pay_hp lowers to a self-targeted 'sacrifice' profile op and
+    // an ops_result_sum read binding the ACTUAL paid HP (the authority
+    // floors the payment at leaving the caster 1 HP). The damage op's
+    // coefficient reads the bound var through damageBonusPerPaidHpPoint
+    // -- only the vitals-truth paid number feeds the payoff.
+    if (def.sacrificeMaxHpRatio !== undefined) {
+      operations.push({
+        type: 'pay_hp',
+        maxHpRatio: def.sacrificeMaxHpRatio,
+        into: SACRIFICE_PAID_HP_VAR,
+      })
+    }
+    if (
+      def.sacrificeMaxHpRatio === undefined &&
+      def.damageBonusPerPaidHpPoint !== undefined
+    ) {
+      report(
+        `${reportPrefix}.damageBonusPerPaidHpPoint(no sacrificeMaxHpRatio: the payoff var is never bound)`,
+      )
+    }
     operations.push(adaptDamageOp(def))
   } else if (!isSelfScope) {
     // Non-damaging enemy-scope lane (TBS :1926-1947 parity): ailments
@@ -297,7 +329,7 @@ function adaptDamageOp(
   // skill_level is a first-class ScalarExpression query fed by the
   // battle's CastSnapshot.statScalars.skill_level (the canonical core
   // projection), so no def rewrites per level.
-  const coefficient: ScalarExpression =
+  const baseCoefficient: ScalarExpression =
     info.levelScaling !== undefined
       ? {
           op: 'multiply',
@@ -324,6 +356,27 @@ function adaptDamageOp(
         }
       : (info.multiplier as ScalarExpression)
 
+  // The Tu beta (Loan Dau) -- paid-HP payoff: coefficient gains
+  // actualPaidHp x damageBonusPerPaidHpPoint. The var is bound by the
+  // emitted pay_hp op's read (ACTUAL paid amount after the 1-HP floor
+  // -- the post-sacrifice missing-HP state then carries into the hit).
+  const coefficient: ScalarExpression =
+    def.damageBonusPerPaidHpPoint !== undefined
+      ? {
+          op: 'add',
+          values: [
+            baseCoefficient,
+            {
+              op: 'multiply',
+              values: [
+                { query: 'var', name: SACRIFICE_PAID_HP_VAR },
+                def.damageBonusPerPaidHpPoint,
+              ],
+            },
+          ],
+        }
+      : baseCoefficient
+
   const base = {
     type: 'deal_damage' as const,
     target: 'affected_targets' as SkillTargetIntent,
@@ -334,6 +387,9 @@ function adaptDamageOp(
       : {}),
     ...(info.missingHpBonusCap !== undefined
       ? { missingHpBonusCap: info.missingHpBonusCap }
+      : {}),
+    ...(info.sourceMaxHpRatio !== undefined
+      ? { sourceMaxHpRatio: info.sourceMaxHpRatio as ScalarExpression }
       : {}),
   }
   const lane =

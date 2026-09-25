@@ -9,12 +9,11 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
-import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { buffs as LIVE_BUFFS } from '../../../data/buff/buffs'
 import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 import { PHAN_KICH } from '../../../data/skill/TheTuSkills'
-import { HO_MON_MARKER, PHAN_CHINH_BUFF, PHAN_CHINH_MAXHP_RATIO, PHAN_CHINH_TAKEN_RATIO } from '../../../data/buff/TheTuBuffs'
+import { HO_MON_MARKER, PHAN_CHAN_BUFF, PHAN_CHAN_BASE_RATIO } from '../../../data/buff/TheTuBuffs'
 import { THE_PROC_GAIN } from '../../the-tu/TheEconomy'
 import type { ReactiveProcPayload } from '../../proc/ProcCapabilities'
 import type { EntityVitalsChangedEvent } from '../../combat/EntityVitalsSystem'
@@ -507,10 +506,10 @@ describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () =
     })
   })
 
-  it('a charged hit into a phan_chinh emblem reflects back at the attacker', () => {
+  it('a charged hit into a phan_chan passive reflects back at the attacker', () => {
     const f = makeFixture()
     f.enemyP.special = { skill: ENEMY_CHARGED, remainingCooldownTurns: 0 }
-    f.runtime.applyBuff(PHAN_CHINH_BUFF.id, f.squishyP)
+    f.runtime.applyBuff(PHAN_CHAN_BUFF.id, f.squishyP)
 
     const sys = new TurnBattleSystem(f.combat, 10_000, f.runtime.registry, undefined, f.runtime)
 
@@ -532,9 +531,9 @@ describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () =
 
     expect(targetIds).toEqual(['squishy'])
 
-    // might 100 x multiplier 1 = 100 hpDamage taken; the emblem owes
-    // hpDamage x takenRatio + holder maxHp x maxHpRatio.
-    const expected = 100 * PHAN_CHINH_TAKEN_RATIO + 100_000 * PHAN_CHINH_MAXHP_RATIO
+    // might 100 x multiplier 1 = 100 hpDamage taken; the beta reflect
+    // owes holder maxHp x ratio (Max-HP-derived, once per action).
+    const expected = 100_000 * PHAN_CHAN_BASE_RATIO
     expect(reflections).toEqual([expected])
     expect(f.enemyP.entity.currentHp).toBe(100_000 - expected)
   })

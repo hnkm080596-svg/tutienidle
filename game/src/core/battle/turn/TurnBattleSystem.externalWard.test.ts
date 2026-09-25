@@ -5,7 +5,7 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
-import { SON_NHAC, TRAN_AP, PHAN_CHINH, SON_NHAC_WARD_RATIO } from '../../../data/skill/TheTuSkills'
+import { SON_NHAC, TRAN_AP, PHAN_CHAN, SON_NHAC_WARD_RATIO } from '../../../data/skill/TheTuSkills'
 import { SON_NHAC_TURNS } from '../../../data/buff/TheTuBuffs'
 import { makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
@@ -70,7 +70,9 @@ function makeBattle() {
 
   const tankP = makeParticipant('tank', tank, 10, 0)
   tankP.basic = TRAN_AP
-  tankP.special = { skill: PHAN_CHINH, remainingCooldownTurns: 0 } // emblem — never cast
+  // Phan Chan is castable in beta — park it emblem-style so the pick
+  // order still lands on son_nhac first (this suite tests the ward).
+  tankP.special = { skill: { ...PHAN_CHAN, emblemOnly: true }, remainingCooldownTurns: 0 }
   tankP.ultimate = { skill: SON_NHAC, remainingCooldownTurns: 0 }
   const allyP = makeParticipant('ally', ally, 1, 1)
   const enemyP = makeParticipant('enemy', enemy, 1, 0)

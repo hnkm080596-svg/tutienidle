@@ -281,6 +281,22 @@ export interface TurnSkillDefinition {
     }
   }
   /**
+   * The Tu beta (Loan Dau) -- HP-sacrifice-before-resolution: when set,
+   * the adapter emits a pay_hp op BEFORE the damage op: the caster pays
+   * `sacrificeMaxHpRatio` x stats.maxHp (the authority floors the paid
+   * amount at leaving 1 HP -- never a self-kill) and the ACTUAL paid
+   * amount binds into the plan for `damageBonusPerPaidHpPoint` scaling
+   * (nominal vs actual diverge at low HP -- only the paid number feeds
+   * the payoff).
+   */
+  sacrificeMaxHpRatio?: number
+  /**
+   * The Tu beta -- paid-HP damage payoff: the damage op's coefficient
+   * gains `actualPaidHp x damageBonusPerPaidHpPoint` (resolved late,
+   * post-sacrifice-read). Requires sacrificeMaxHpRatio.
+   */
+  damageBonusPerPaidHpPoint?: number
+  /**
    * Emblem-occupying slot def: never selectable by
    * selectAction/selectForcedAction, never deals damage. Two producers:
    * - Kiem Tu Reimagined Task 9 - Ngu Kiem Dao HUD emblem markers render

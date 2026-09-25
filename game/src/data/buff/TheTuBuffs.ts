@@ -16,8 +16,11 @@ import { THE_GAIN_ON_EVADE, THE_GAIN_ON_HIT_TAKEN, THE_GAIN_PER_ROUND } from '@/
 // core/proc + core/the-tu validate the payloads).
 
 // Tunable first-pass constants (spec section 11: "playtest-tunable"):
-export const PHAN_CHINH_MAXHP_RATIO = 0.02
-export const PHAN_CHINH_TAKEN_RATIO = 0.15
+export const PHAN_CHAN_BASE_RATIO = 0.03
+export const PHAN_CHAN_MARKED_RATIO = 0.06
+export const CHAN_AN_TURNS = 3
+export const TRAN_KINH_WEAKEN_RATIO = 0.15
+export const TRAN_KINH_TURNS = 1
 export const SON_NHAC_SELF_DR = 0.3
 export const SON_NHAC_TURNS = 3
 export const KHIEM_KHICH_TURNS = 2
@@ -47,27 +50,78 @@ export const BAT_TU_BA_THE_BUFF: BuffDefinition = {
 }
 
 /**
- * Phan Chinh — Trấn Thể's permanent Reflection emblem buff. The
- * reflectsDamage payload is resolved by CombatProcSystem +
- * TurnBattleSystem inside the taken-only gate (Task 8, D4/INV-8).
+ * Phan Chan — Trấn Thể's permanent Reflect passive (granted when the
+ * Phản Chấn special is learned). Once-per-hostile-action: hits of the
+ * same hostile action merge into one pending reflect; the action-end
+ * flush emits a single flat 'reflection' op at the attacker for
+ * maxHp x ratio -- a marked (Chấn Ấn) attacker reflects at the marked
+ * ratio. The mark is never consumed; takenRatio/per-hit reflect is
+ * retired (beta design: fixed Max-HP coefficient only).
  */
-export const PHAN_CHINH_BUFF: BuffDefinition = {
-  id: 'phan_chinh',
+export const PHAN_CHAN_BUFF: BuffDefinition = {
+  id: 'phan_chan',
   name: 'Phản Chấn',
-  description: 'Phản lại một phần sát thương nhận vào cho kẻ tấn công.',
+  description: 'Phản lại sát thương bằng một tỉ lệ Sinh Mệnh Tối Đa cho kẻ tấn công.',
   kind: 'buff',
   polarity: 'buff',
   instanceScope: 'per_source',
   stacking: { maxStacks: 1, ...REPLACE },
   lifetime: PERMANENT,
   capabilities: [
-    cap('phan_chinh.reactive', 'reactive_trigger', {
+    cap('phan_chan.reactive', 'reactive_trigger', {
       trigger: 'onImpactLanded',
       chance: 1,
-      reflectsDamage: { maxHpRatio: PHAN_CHINH_MAXHP_RATIO, takenRatio: PHAN_CHINH_TAKEN_RATIO },
+      reflectsDamage: {
+        maxHpRatio: PHAN_CHAN_BASE_RATIO,
+        markedMaxHpRatio: PHAN_CHAN_MARKED_RATIO,
+        markedBy: 'chan_an',
+      },
     }),
   ],
   dispellable: false,
+}
+
+/**
+ * Chan An — the Phản Chấn mark: a debuff ON every enemy the cast
+ * reached. Mark-only by design (beta spec): no DoT, no stat change,
+ * never consumed -- the phan_chan reflect reads its presence at
+ * action-end for the higher marked ratio. per_target+latest => a
+ * recast refreshes the holder's own mark.
+ */
+export const CHAN_AN_DEBUFF: BuffDefinition = {
+  id: 'chan_an',
+  name: 'Chấn Ấn',
+  description: 'Bị Chấn Ấn đánh dấu: phản kích của Trấn Thể mạnh hơn lên kẻ mang ấn.',
+  kind: 'ailment',
+  polarity: 'debuff',
+  ...PER_TARGET,
+  stacking: { maxStacks: 1, ...REPLACE },
+  lifetime: { clock: 'holder_turns', duration: CHAN_AN_TURNS, scaling: 'ailment_scaled' },
+  application: { resistance: 'ailment' },
+  dispellable: true,
+}
+
+/**
+ * Tran Kinh — the Trấn Kình debuff: an enemy hit by Trấn Áp has the
+ * damage of its next hostile turn weakened by a flat
+ * finalDamagePercent cut. Implemented as a one-holder-turn ailment
+ * window (the design's "next hit" weakens on the enemy's next turn);
+ * ailment resistance legitimately shortens it.
+ */
+export const TRAN_KINH_DEBUFF: BuffDefinition = {
+  id: 'tran_kinh',
+  name: 'Trấn Kình',
+  description: 'Bị Trấn Kình đánh yếu: đòn kế tiếp gây sát thương giảm.',
+  kind: 'ailment',
+  polarity: 'debuff',
+  ...PER_TARGET,
+  // Stacks ARE the Trấn Kình node's amplification channel -- the
+  // finalDamagePercent flat scales x stacks (StatCalculator parity).
+  stacking: { maxStacks: 9, ...REPLACE },
+  lifetime: { clock: 'holder_turns', duration: TRAN_KINH_TURNS, scaling: 'ailment_scaled' },
+  application: { resistance: 'ailment' },
+  statModifiers: [{ stat: 'finalDamagePercent', flat: -TRAN_KINH_WEAKEN_RATIO }],
+  dispellable: true,
 }
 
 /** Son Nhac — self damage-reduction window (fixed holder-turns). */
@@ -239,7 +293,9 @@ export const HO_VE_BUFF: BuffDefinition = {
 
 export const THE_TU_BUFFS: BuffDefinition[] = [
   BAT_TU_BA_THE_BUFF,
-  PHAN_CHINH_BUFF,
+  PHAN_CHAN_BUFF,
+  CHAN_AN_DEBUFF,
+  TRAN_KINH_DEBUFF,
   SON_NHAC_BUFF,
   SON_NHAC_HO_THE_BUFF,
   KHIEM_KHICH_DEBUFF,

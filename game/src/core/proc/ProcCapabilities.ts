@@ -43,7 +43,17 @@ export interface ReactiveTriggerPayload {
   chance: number
   appliesDefinitionId?: BuffDefinitionId
   queuesFollowUp?: boolean
-  reflectsDamage?: { maxHpRatio: number; takenRatio: number }
+  /** The Tu beta (Phan Chan) -- once-per-hostile-action reflect: the
+      holder's pending reflect merges every hit of the action, then the
+      action-end flush emits ONE deal_damage 'reflection' op at the
+      attacker for holder.maxHp x ratio. `markedBy` names the mark
+      debuff; a marked attacker reflects at `markedMaxHpRatio`
+      (absent = base ratio). The mark is never consumed. */
+  reflectsDamage?: {
+    maxHpRatio: number
+    markedMaxHpRatio?: number
+    markedBy?: BuffDefinitionId
+  }
 }
 
 // --- reactive_proc (legacy ReactiveProcEffect) ---
@@ -140,7 +150,15 @@ export function validateReactiveTrigger(payload: unknown): asserts payload is Re
       throw new Error(`capability '${type}': reflectsDamage must be an object`)
     }
     requireFiniteNumber(reflect.maxHpRatio, 'reflectsDamage.maxHpRatio', type)
-    requireFiniteNumber(reflect.takenRatio, 'reflectsDamage.takenRatio', type)
+    if (reflect.markedMaxHpRatio !== undefined) {
+      requireFiniteNumber(reflect.markedMaxHpRatio, 'reflectsDamage.markedMaxHpRatio', type)
+      if (reflect.markedBy === undefined) {
+        throw new Error(`capability '${type}': reflectsDamage.markedMaxHpRatio requires markedBy`)
+      }
+    }
+    if (reflect.markedBy !== undefined) {
+      requireNonEmptyString(reflect.markedBy, 'reflectsDamage.markedBy', type)
+    }
   }
 }
 

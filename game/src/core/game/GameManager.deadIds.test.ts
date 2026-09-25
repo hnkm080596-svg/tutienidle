@@ -4,7 +4,6 @@ import { SKILLS } from '../../data/skill/Skills'
 import { CORE_SKILLS } from '../../data/skill/CoreSkills'
 import { buffs } from '../../data/buff/buffs'
 import { BOSS_BUFFS } from '../../data/buff/BossBuffs'
-import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
@@ -94,7 +93,7 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
   })
 
   // M-QI-06 - constrained-authoring guard: the minimal proving set may
-  // carry techniqueRank gates on exactly the listed ids (9 unlock nodes
+  // carry techniqueRank gates on exactly the listed ids (7 unlock nodes
   // in `prerequisites`, 8 cap nodes in `levelGates`); techniqueGrade and
   // revealWhen technique gates remain forbidden everywhere until a later
   // content mission extends the allowlist.
@@ -104,10 +103,10 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
     'linh_ngo_kien_moc_thong_thien',
     'linh_ngo_kim_phat_thu_sat',
     'linh_ngo_hau_tho_thanh_luy',
-    'major_bat_tu_tuc_menh',
-    'major_loan_dau_sat',
-    'major_khiem_khich_dien',
-    'major_son_nhac_bao_bi',
+    // Beta the-tu: the retired legacy majors' techniqueRank gates carry
+    // onto the two Trúc Cơ unlock majors (the-tu-beta content mission).
+    'major_loan_dau',
+    'major_phan_chan',
   ])
   const TECHNIQUE_CAP_ALLOWLIST = new Set([
     'minor_fire_intensity',

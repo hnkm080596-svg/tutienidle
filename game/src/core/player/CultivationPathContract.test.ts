@@ -43,7 +43,9 @@ import {
 } from '../../data/skill/NguKiemDaoSkills'
 import {
   BACH_UNG,
+  BAT_TU_BA_THE,
   PHAN_KICH,
+  SON_NHAC,
   THAM_THE,
   THE_TU_KIT_BY_ROOT,
   TRO_KICH,
@@ -67,8 +69,11 @@ const KNOWN_SKILL_IDS: ReadonlySet<string> = new Set<string>([
   ...Object.values(THE_TU_KIT_BY_ROOT).flatMap((kit) => [
     kit.basic.id,
     kit.special.id,
-    kit.ultimate.id,
   ]),
+  // Parked post-beta ultimates — authored defs, referenced by
+  // ownedContent but never granted inside the beta realm window.
+  BAT_TU_BA_THE.id,
+  SON_NHAC.id,
   THAM_THE.id,
   TU_THE.id,
   BACH_UNG.id,

@@ -17,7 +17,6 @@ import type { TurnSkillDefinition, TurnSkillSlot, SelectedAction, DynamicBasicPr
 import type { ActionDamageInfo, HitResolveOptions } from '../ActionImpactSystem'
 import type { BuffSystem } from '../../buff2/BuffSystem'
 import type { BuffRegistry } from '../../buff2/BuffRegistry'
-import type { BuffInstanceSnapshot } from '../../buff2/BuffInstance'
 import type { BuffLifecycleContext } from '../../buff2/BuffLifecycleContext'
 import type { CombatProcSystem } from '../../proc/CombatProcSystem'
 import type { GaugeDeltaHandler } from './GaugeDeltaHandler'
@@ -628,7 +627,7 @@ export class TurnBattleSystem {
       // resolveDeclaredHit :2136-2166 parity -- on-hit procs, then the
       // target's onImpactLanded reactive roll gated on hpDamage > 0,
       // then the queuedFollowUps FIFO push.
-      runLandedHitProcs: (battle, actor, target, hpDamage) => {
+      runLandedHitProcs: (battle, actor, target, hpDamage, reflectsEligible) => {
         if (this.runtime === undefined) return
         const procRoot = `hit.proc.${battle.totalTurnsElapsed}.${actor.id}.${target.id}.${this.nextOccurrence()}`
         this.procs.onHitLanded(actor.entity.id, target.entity.id, procRoot)
@@ -637,7 +636,7 @@ export class TurnBattleSystem {
             ? this.procs.rollReactiveTrigger(
                 target.entity.id,
                 'onImpactLanded',
-                { attacker: actor.entity, hpDamage },
+                { attacker: actor.entity, hpDamage, reflectsEligible },
                 procRoot,
               )
             : { firedFollowUp: false }
@@ -2339,6 +2338,16 @@ export class TurnBattleSystem {
           }
         }
       }
+    }
+
+    // The Tu beta (Phan Chan) -- once-per-hostile-action reflect settle:
+    // hits of this action queued ONE pending entry per reflect-holder;
+    // the action is fully settled here (primary cast, extras, dynamic
+    // basics), so each entry emits its single reflection op now. The
+    // reflect is a flat 'reflection' op -- it never rolls hit/crit and
+    // cannot recurse (a landed channel never opens for it).
+    if (this.runtime !== undefined) {
+      this.procs.flushReflects()
     }
 
     // Spec 6.2.3 -- the Tro window: after a player-side action completes

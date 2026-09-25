@@ -30,6 +30,17 @@ interface ActionDamageMissingHpScalar {
 }
 
 /**
+ * The Tu beta (Tran Ap) - Max-HP-derived damage: the source's
+ * stats.maxHp x sourceMaxHpRatio is added into the physical raw base
+ * BEFORE mitigation (CombatSystem.resolveActionHit ->
+ * calculateBaseDamage). Primary scaling for the Trấn Thể kit; absent
+ * = might-only base.
+ */
+interface ActionDamageSourceMaxHp {
+  sourceMaxHpRatio?: number
+}
+
+/**
  * M-QI-05 / QI-D3 - adapter-only metadata: when present,
  * LegacySkillAdapter wraps the authored coefficient as
  * `multiplier x (1 + (max(1, skill_level) - 1) x levelScaling)` so a
@@ -42,16 +53,17 @@ interface ActionDamageLevelScaling {
 }
 
 export type ActionDamageInfo =
-  | ({ kind: 'physical' | 'primordial'; multiplier: number; scaling?: DamageScalingConfig } & ActionDamageMissingHpScalar & ActionDamageLevelScaling)
-  | ({ kind: 'elemental'; components: SkillDamageComponent[]; multiplier: number; scaling?: DamageScalingConfig } & ActionDamageMissingHpScalar & ActionDamageLevelScaling)
+  | ({ kind: 'physical' | 'primordial'; multiplier: number; scaling?: DamageScalingConfig } & ActionDamageMissingHpScalar & ActionDamageSourceMaxHp & ActionDamageLevelScaling)
+  | ({ kind: 'elemental'; components: SkillDamageComponent[]; multiplier: number; scaling?: DamageScalingConfig } & ActionDamageMissingHpScalar & ActionDamageSourceMaxHp & ActionDamageLevelScaling)
 
 export function scaleActionDamage(
   info: ActionDamageInfo,
   percent: number,
 ): ActionDamageInfo {
-  const scalar: ActionDamageMissingHpScalar & ActionDamageLevelScaling = {
+  const scalar: ActionDamageMissingHpScalar & ActionDamageSourceMaxHp & ActionDamageLevelScaling = {
     missingHpBonusPerMissingPercent: info.missingHpBonusPerMissingPercent,
     missingHpBonusCap: info.missingHpBonusCap,
+    sourceMaxHpRatio: info.sourceMaxHpRatio,
     // M-QI-05 - preserve the level-scaling contract through the
     // node-scale reconstruction (multiplier scales; metadata carries).
     levelScaling: info.levelScaling,
