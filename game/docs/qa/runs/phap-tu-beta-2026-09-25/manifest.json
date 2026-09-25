@@ -18042,7 +18042,7 @@
       "path": "src/core/game/GameManagerProgressionOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a17d1deaeb3bff7f7578c90d9aaeaef0213dfda4d8a17125d7f1ada3715399b2"
+      "hash": "e48c631b67137fe3a7b29a39cda060e9946985615b806d6467df0c325e20081f"
     },
     {
       "path": "src/core/game/GameManagerQuestOps.ts",
@@ -18942,7 +18942,7 @@
       "path": "src/core/progression/NodeSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "2c099d13b4ee6405a7d9df95097e07df2af6363b7a132a72a92bb90baf748ca6"
+      "hash": "34e9b17a266aed13e48716bcc76c6cdb29155fdaa1e4aa16c163fc9058aaea42"
     },
     {
       "path": "src/core/progression/NodeSystem.vanDao.test.ts",
@@ -20748,13 +20748,13 @@
       "path": "src/data/progression/PhapTuBasicNodes.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ff0f4cf0cae156913e74c365016fb3c275d1ca6053b5fa71e1c6a32199cfcded"
+      "hash": "5d81bbdba849d479c71648bd23b6b59eb20ef0a13ad996575c084003e1c0cff7"
     },
     {
       "path": "src/data/progression/PhapTuBasicNodes.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "bd4828b7d5f30f612cc2bc65f8d34c7e0bfae1d9ef6dd9a668623c9e301d1701"
+      "hash": "aa1fedc94ac9299008bb5e7101834f9a3d701b30e12d36663c5525dce31b0423"
     },
     {
       "path": "src/data/progression/PhapTuNodes.builders.ts",
@@ -20784,7 +20784,7 @@
       "path": "src/data/progression/PhapTuRealmRewardNodes.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "9079b660b3da8552c167fd507e0fe19fd42b32f1fe8d6954c673d97150bbf575"
+      "hash": "6b5b172ca53acaa5f7d3059fb6c55b0c08b83b994dfd7be49cacb3c51fee37d8"
     },
     {
       "path": "src/data/progression/ProgressionNodeCatalog.ts",
@@ -21720,13 +21720,13 @@
       "path": "src/locales/en.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "9b0298038481b2f501c801b0e7310e62996d4ad8790513226af624367bdb87e8"
+      "hash": "ae46b13497c70cdd73875ba4dde87143f204653af3a8806eb6d2c91f745c7305"
     },
     {
       "path": "src/locales/vi.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "7fa99e2fe4b01661a8dbaf0315208e6705f464c8e8e2ee4980709a501d37f209"
+      "hash": "e9e22d737a9edc3aa06c5132426ed824bd8f378e967cae9ecbdfcc788d4743a5"
     },
     {
       "path": "src/main-process/combatClockHost.test.ts",
@@ -23073,5 +23073,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "684a3dbab78879281abb32f162b5df266be9d5c2617d3723e59323d9dabd92d1"
+  "productStateId": "0b666d95ea006e05885b0fdc4a90640300afeafcf1803c6320b30c392f6f4e39"
 }
