@@ -6527,10 +6527,12 @@
       "verificationEvidenceIds": [
         "EV-TT-CLEANA2-FIX"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TT-CLO-20"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -6586,10 +6588,12 @@
       "verificationEvidenceIds": [
         "EV-TT-CLEANA2-FIX"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TT-CLO-20"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -6647,10 +6651,12 @@
       "verificationEvidenceIds": [
         "EV-TT-CLEANA2-FIX"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TT-CLO-20"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -6705,10 +6711,12 @@
       "verificationEvidenceIds": [
         "EV-TT-CLEANA2-FIX"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TT-CLO-20"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -7618,7 +7626,7 @@
     {
       "id": "EV-TT-CLEANA2-FIX",
       "state": {
-        "productStateId": "7f5643ac4688e09fd9e1c7a59d2991e80d9f23c5a4f6e2c2c49f0f0b9f8d5e5a1f0e00",
+        "productStateId": "7f5643ac46887fb66fef2ca6bd690c96fc3591875b268de40b81985cf524b494",
         "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
         "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
         "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -7644,7 +7652,7 @@
         "cleanA2 fix batch verified on 853cad02: tran_kinh clock fix + e2e pin, chan_an expiry pin, 5 in-battle gate pins, dead sweep removal"
       ],
       "limitations": [],
-      "status": "SEALED",
+      "status": "CURRENT",
       "kind": "EXECUTED_UNIT_STRUCTURAL"
     }
   ],
@@ -9393,6 +9401,94 @@
         "F-TT-CLEAN-A2-INT-2",
         "F-TT-CLEAN-A2-INT-3",
         "F-TT-CLEAN-A2-INT-4"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TT-CLEAN-A3-AUT",
+      "state": {
+        "productStateId": "7f5643ac46887fb66fef2ca6bd690c96fc3591875b268de40b81985cf524b494",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 3,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-ee8ce6ef06cb4f85b76b1e341ef6d8df",
+      "contextId": "sealed-child-ee8ce6ef06cb4f85b76b1e341ef6d8df",
+      "model": "swe-2-max",
+      "role": "AUTHORITY",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T21:54:00.000Z",
+      "sealedAt": "2026-09-25T22:07:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-A2-AUT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TT-CLEAN-A3-COR",
+      "state": {
+        "productStateId": "7f5643ac46887fb66fef2ca6bd690c96fc3591875b268de40b81985cf524b494",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 3,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-da59fb9812d94b8c8811bc9957907203",
+      "contextId": "sealed-child-da59fb9812d94b8c8811bc9957907203",
+      "model": "swe-2-max",
+      "role": "CORRECTNESS",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T21:54:00.000Z",
+      "sealedAt": "2026-09-25T22:11:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-A2-COR",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TT-CLO-20",
+      "state": {
+        "productStateId": "7f5643ac46887fb66fef2ca6bd690c96fc3591875b268de40b81985cf524b494",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 20,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-892bb81dda4c4c56b1a58222bd281db2",
+      "contextId": "sealed-child-892bb81dda4c4c56b1a58222bd281db2",
+      "model": "swe-2-max",
+      "role": "CLOSURE",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T22:11:00.000Z",
+      "sealedAt": "2026-09-25T22:13:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLO-19",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-TT-CLEANA2-FIX"
+      ],
+      "findingIds": [
+        "F-TT-CLEAN-A2-AUT-1",
+        "F-TT-CLEAN-A2-INT-1",
+        "F-TT-CLEAN-A2-INT-2",
+        "F-TT-CLEAN-A2-INT-3"
       ],
       "novelAttackIds": [],
       "status": "SEALED"
@@ -12244,6 +12340,142 @@
       "policyVersion": null,
       "effectiveFromRun": null,
       "guidance": null
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "id": "L-TT-80",
+      "findingIds": [
+        "F-TT-CLEAN-A2-INT-1"
+      ],
+      "rootClass": "coverage-gap",
+      "missedInvariantIds": [],
+      "escapeReason": "5 progression writers had in-battle gates added without a single dedicated pin file; gate list existed in source but no test enumerated it.",
+      "applicability": [
+        "When gates are added to N related writer functions, a single enumeration pin should cover all N, not just the ones exercised."
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "Add a census test file per gate family (progression writers, automation writers) that iterates the full writer list."
+      ],
+      "promotionEvidenceIds": [],
+      "preventionEvidenceIds": [
+        "EV-TT-CLEANA2-FIX"
+      ],
+      "qualifiedBy": [
+        "REV-TT-CLO-20"
+      ],
+      "capabilityDelta": "Gate-family census pins.",
+      "recurrenceFindingIds": [],
+      "guidance": null
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "id": "L-TT-81",
+      "findingIds": [
+        "F-TT-CLEAN-A2-INT-2"
+      ],
+      "rootClass": "clock-convention",
+      "missedInvariantIds": [],
+      "escapeReason": "holder_turns riders applied at duration N see their Nth turn consumed at the holder status phase BEFORE declare, so N covered actions need duration N+1; authored value matched covered turns not engine duration.",
+      "applicability": [
+        "Any holder_turns duration gate must be specified as coveredActions+1 under the decrement-before-declare convention; same convention documented in cam_cong."
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "e2e pin asserting the rider actually weakens/empowers the Nth covered action; document the +1 convention at each duration constant."
+      ],
+      "promotionEvidenceIds": [],
+      "preventionEvidenceIds": [
+        "EV-TT-CLEANA2-FIX"
+      ],
+      "qualifiedBy": [
+        "REV-TT-CLO-20"
+      ],
+      "capabilityDelta": "Duration constants encode the holder_turns off-by-one.",
+      "recurrenceFindingIds": [],
+      "guidance": null
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "id": "L-TT-82",
+      "findingIds": [
+        "F-TT-CLEAN-A2-INT-3"
+      ],
+      "rootClass": "state-reversion-coverage",
+      "missedInvariantIds": [],
+      "escapeReason": "chan_an mark raises reflect ratio while marked but no pin covered the expiry leg reverting to base ratio; only the marked leg was pinned.",
+      "applicability": [
+        "Mark-based conditional effects need pins on BOTH legs: while marked AND after expiry."
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "Dual-leg pins for every mark-expiry conditional effect (assert value while marked and after expiry)."
+      ],
+      "promotionEvidenceIds": [],
+      "preventionEvidenceIds": [
+        "EV-TT-CLEANA2-FIX"
+      ],
+      "qualifiedBy": [
+        "REV-TT-CLO-20"
+      ],
+      "capabilityDelta": "Mark-expiry dual-leg pin rule.",
+      "recurrenceFindingIds": [],
+      "guidance": null
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "id": "L-TT-83",
+      "findingIds": [
+        "F-TT-CLEAN-A2-AUT-1"
+      ],
+      "rootClass": "dead-code",
+      "missedInvariantIds": [],
+      "escapeReason": "sweepBuffDeaths was called in a lane guarded by runtime===undefined (unreachable in wired battles); dead call looked live to readers.",
+      "applicability": [
+        "Unwired/fallback lanes must not contain real-looking calls; either remove or visibly annotate as inert."
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "Unwired lanes contain only explicit inert comments; no live-looking calls."
+      ],
+      "promotionEvidenceIds": [],
+      "preventionEvidenceIds": [
+        "EV-TT-CLEANA2-FIX"
+      ],
+      "qualifiedBy": [
+        "REV-TT-CLO-20"
+      ],
+      "capabilityDelta": "Dead-lane annotation rule.",
+      "recurrenceFindingIds": [],
+      "guidance": null
     }
   ],
   "messages": [],
@@ -13127,6 +13359,134 @@
       "payloadPath": "events/0055.json",
       "payloadHash": "7cc9c0e1e9a80cc0d9b8b047b936fc17f371a96c237e91c173c7c0b64e4ac758",
       "eventHash": "2933adaffef9f35b1b3c0c350fbfde55f1dc45ce3db0206e394b7b81ea2cc966"
+    },
+    {
+      "seq": 56,
+      "at": "2026-09-25T22:08:02.070Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "7f5643ac46887fb66fef2ca6bd690c96fc3591875b268de40b81985cf524b494",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "2933adaffef9f35b1b3c0c350fbfde55f1dc45ce3db0206e394b7b81ea2cc966",
+      "payloadPath": "events/0056.json",
+      "payloadHash": "db73dbd38358a83a87350267e72fc1fc00ac13f99f17578442b57b3dc4d7a309",
+      "eventHash": "990ca54f3fe15ed7bb59ab4400eb3aa58f8bd2bbdc2d61c6a398184423aeef99"
+    },
+    {
+      "seq": 57,
+      "at": "2026-09-25T22:08:42.115Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "7f5643ac46887fb66fef2ca6bd690c96fc3591875b268de40b81985cf524b494",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "990ca54f3fe15ed7bb59ab4400eb3aa58f8bd2bbdc2d61c6a398184423aeef99",
+      "payloadPath": "events/0057.json",
+      "payloadHash": "375bcaa29275cfb2d2dd2cc552a0b65839c4a3b49639f397a3867189c489ab2f",
+      "eventHash": "b39a85b558680166ecb1bfa50391620be6d8bf92f964c70301f2dceb54038119"
+    },
+    {
+      "seq": 58,
+      "at": "2026-09-25T22:11:38.091Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "7f5643ac46887fb66fef2ca6bd690c96fc3591875b268de40b81985cf524b494",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "b39a85b558680166ecb1bfa50391620be6d8bf92f964c70301f2dceb54038119",
+      "payloadPath": "events/0058.json",
+      "payloadHash": "2732a35e22e25a6d7c59f35b6d3a9f4769ab0fba0c3759eac63ee843fca961b2",
+      "eventHash": "af57f246d79743ca288ade0ac85cfb29aa935c902a7a60354f58c67fabf11dbc"
+    },
+    {
+      "seq": 59,
+      "at": "2026-09-25T22:13:43.709Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "7f5643ac46887fb66fef2ca6bd690c96fc3591875b268de40b81985cf524b494",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "af57f246d79743ca288ade0ac85cfb29aa935c902a7a60354f58c67fabf11dbc",
+      "payloadPath": "events/0059.json",
+      "payloadHash": "da014495bc4dc826cba97f88a96da3a75ba1c2a5baf05f9d76007209234858fb",
+      "eventHash": "e95dcc9a75b3839537b370c0431df2eeeb642d157e7a9539e365497726115430"
+    },
+    {
+      "seq": 60,
+      "at": "2026-09-25T22:14:31.845Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "7f5643ac46887fb66fef2ca6bd690c96fc3591875b268de40b81985cf524b494",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "e95dcc9a75b3839537b370c0431df2eeeb642d157e7a9539e365497726115430",
+      "payloadPath": "events/0060.json",
+      "payloadHash": "e22c327bc014c050681ddc12f56d37091647287875b77921b55cecbb46b1a072",
+      "eventHash": "232b781c8f2239dae9a64999ea9e91da9114bedc748a25c35a65e1db88e050d7"
+    },
+    {
+      "seq": 61,
+      "at": "2026-09-25T22:14:35.535Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "7f5643ac46887fb66fef2ca6bd690c96fc3591875b268de40b81985cf524b494",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "232b781c8f2239dae9a64999ea9e91da9114bedc748a25c35a65e1db88e050d7",
+      "payloadPath": "events/0061.json",
+      "payloadHash": "645cb61d12c814700a82da106ec6b6df3628215c52f2871e6b83ed754e74c394",
+      "eventHash": "2008fa0ead81a569efb9f25b62a72dc2446065323e9868a2664e5cce7c32d1c4"
+    },
+    {
+      "seq": 62,
+      "at": "2026-09-25T22:14:43.735Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "7f5643ac46887fb66fef2ca6bd690c96fc3591875b268de40b81985cf524b494",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "2008fa0ead81a569efb9f25b62a72dc2446065323e9868a2664e5cce7c32d1c4",
+      "payloadPath": "events/0062.json",
+      "payloadHash": "645cb61d12c814700a82da106ec6b6df3628215c52f2871e6b83ed754e74c394",
+      "eventHash": "1ebd484470eaac0b48133fbd2df8ef3ca976ecf4bae9d486552d1a8341e757b7"
+    },
+    {
+      "seq": 63,
+      "at": "2026-09-25T22:14:53.198Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "7f5643ac46887fb66fef2ca6bd690c96fc3591875b268de40b81985cf524b494",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "1ebd484470eaac0b48133fbd2df8ef3ca976ecf4bae9d486552d1a8341e757b7",
+      "payloadPath": "events/0063.json",
+      "payloadHash": "645cb61d12c814700a82da106ec6b6df3628215c52f2871e6b83ed754e74c394",
+      "eventHash": "1893d427f44c2dfce2c6aefad90e1e681325f6fe58d01d2ce769a0d726abf632"
     }
   ]
 }
