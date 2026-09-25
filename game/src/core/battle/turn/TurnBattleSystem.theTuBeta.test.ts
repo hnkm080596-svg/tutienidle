@@ -24,7 +24,7 @@ import { collectBodyKitModifiers } from '../../the-tu/TheTuKitModifiers'
 import { createDefaultPlayer } from '../../player/Player'
 import type { EntityVitalsChangedEvent } from '../../combat/EntityVitalsSystem'
 
-// The Tu beta pin tests (the-tu-body-pathway-design) — the runtime seams
+// The Tu beta pin tests (the-tu-body-pathway-design) - the runtime seams
 // the spec demands evidence for: Loan Dau's pay-first ordering, the 1-HP
 // floor, actual-vs-nominal payoff, Huyet Cuong's kit-local scope, Tran
 // Ap's Max-HP authority, and Phan Chan's all-enemy taunt+mark cast.
@@ -148,7 +148,7 @@ describe('loan_dau — sacrifice ordering, 1-HP floor, actual-paid payoff', () =
       maxHp: 1_000_000,
     })
     const f = makeFixture(caster, enemy)
-    // The post-TC clone carries Huyet Cuong's missing-HP fields — the
+    // The post-TC clone carries Huyet Cuong's missing-HP fields - the
     // order proof below reads the damage THROUGH the new missing state.
     const kit = buildTheTuKit('cuong_chien', ZERO_MODS, { special: true })
     f.casterP.basic = kit.special!
@@ -292,7 +292,7 @@ describe('tran_ap — Max-HP authority + AoE', () => {
 
     f.system.resolveNextStep(f.battle)
 
-    // (might 0 + 10_000 x 0.3) x 0.4 = 1_200 per enemy — Max HP is the
+    // (might 0 + 10_000 x 0.3) x 0.4 = 1_200 per enemy - Max HP is the
     // whole authority here; no might term exists at might 0.
     const expected = 10_000 * TRAN_AP_MAXHP_RATIO * TRAN_AP_MULTIPLIER
     expect(100_000 - enemyA.currentHp).toBeCloseTo(expected)

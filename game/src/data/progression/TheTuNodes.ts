@@ -1,29 +1,29 @@
 import type { ProgressionNode } from '../../core/progression/ProgressionNode'
 
-// The Tu beta (the-tu-body-pathway-design sec.56) — the visible body
+// The Tu beta (the-tu-body-pathway-design sec.56) - the visible body
 // tree: two excludesNode-mutex roots, each a vertical line
-//   root -> Basic branch (2 nodes) -> ─ Trúc Cơ ─ -> Special branch (2 nodes)
+//   root -> Basic branch (2 nodes) -> - Truc Co - -> Special branch (2 nodes)
 // rendered by TheTuTreePanel (two root cards, realm separators, the
-// abandoned root shows 'Đã bỏ con đường này').
+// abandoned root shows 'Da bo con duong nay').
 //
 // Path gate: every node carries requiredCultivationPath 'body' +
-// requiredWay 'body_pathway' (stamped once at the export below) —
+// requiredWay 'body_pathway' (stamped once at the export below) -
 // NodeSystem.nodePathApplies/nodeWayApplies enforce at purchase/upgrade/
 // aggregation, so a wrong-path level can never aggregate even if the
 // render layer is bypassed. Realm gates are data: roots + the Basic
 // branches open at qi_refining; Specials and their branches gate
 // foundation_establishment (the beta content bound).
 //
-// Beta rules (design): nodes are SKILL-LOCAL only — `bodyKitModifiers`
+// Beta rules (design): nodes are SKILL-LOCAL only - `bodyKitModifiers`
 // channels summed by collectBodyKitModifiers and baked into
 // participant-local kit clones by buildTheTuKit. NO node grants
-// Might/HP/Defense/Block or generic player stats — the retired stat
+// Might/HP/Defense/Block or generic player stats - the retired stat
 // trunk + stat nodes are gone (audit CONFLICTS). Node levels are
 // modifier levels only; Core Skill Level stays the sole skill-level
 // authority (M-QI-05). Legacy post-beta nodes (bat_tu/son_nhac/taunt
 // duration) are dropped from the tree with their channels.
 
-const GROWTH_5 = { base: 1, perLevel: 2 } // 1,1,2,2,3 — sibling growth convention.
+const GROWTH_5 = { base: 1, perLevel: 2 } // 1,1,2,2,3 - sibling growth convention.
 
 // ---------------- Cuong Chien (Might -> single-target) ----------------
 
@@ -40,7 +40,7 @@ const CUONG_ROOT: ProgressionNode = {
     { kind: 'excludesNode', nodeId: 'tran_the' },
   ],
   effect: {
-    // The root grants the BASIC core only — the Trúc Cơ special arrives
+    // The root grants the BASIC core only - the Truc Co special arrives
     // through major_loan_dau (M-QI-05 grant seam, revoked on dev-reset).
     grantsSkillCoreIds: ['cuong_quyen'],
   },
@@ -76,8 +76,8 @@ const CUONG_BASIC_BRANCH: ProgressionNode[] = [
   },
 ]
 
-// Trúc Cơ gate — learning Loạn Đấu opens the TC special AND the kit's
-// Huyết Cuồng passive (missing-HP damage for the Cuồng Chiến kit only).
+// Truc Co gate - learning Loan Dau opens the TC special AND the kit's
+// Huyet Cuong passive (missing-HP damage for the Cuong Chien kit only).
 const LOAN_DAU_MAJOR: ProgressionNode = {
   id: 'major_loan_dau',
   name: 'Loạn Đấu',
@@ -139,7 +139,7 @@ const TRAN_ROOT: ProgressionNode = {
     { kind: 'excludesNode', nodeId: 'cuong_chien' },
   ],
   effect: {
-    // The root grants the BASIC core only — the Trúc Cơ special arrives
+    // The root grants the BASIC core only - the Truc Co special arrives
     // through major_phan_chan.
     grantsSkillCoreIds: ['tran_ap'],
   },
@@ -221,7 +221,7 @@ const TRAN_SPECIAL_BRANCH: ProgressionNode[] = [
   },
 ]
 
-// M5 — path/way stamps once here: every node belongs to the BASE
+// M5 - path/way stamps once here: every node belongs to the BASE
 // body path family (NodeSystem.nodePathApplies resolves both eras to
 // the family) and to the HIEN way only (nodeWayApplies). An ung_the
 // player can neither purchase nor aggregate this tree; the An tree

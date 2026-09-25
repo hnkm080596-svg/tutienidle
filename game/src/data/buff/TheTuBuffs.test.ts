@@ -11,11 +11,11 @@ import type {
 } from '@/core/the-tu/TheTuCapabilities'
 import type { MarkerPayload } from '@/core/proc/MarkerCapabilities'
 
-// The Tu Reimagined (spec 2026-09-15 section 5-6, plan Task 6) — buff
+// The Tu Reimagined (spec 2026-09-15 section 5-6, plan Task 6) - buff
 // definition authoring, M4 canonical shape. Holder-turn state buffs keep
 // lifetime.scaling:'fixed' so a caster's own ailment stats can never
 // scale them; khiem_khich stays 'ailment_scaled' (real debuff ON the
-// enemy — enemy resist legitimately shortens Taunt). Effects live in
+// enemy - enemy resist legitimately shortens Taunt). Effects live in
 // capabilities[] now; payloads narrow via the owner-module types.
 
 function capPayload<T>(def: BuffDefinition, type: string): T | undefined {
@@ -53,7 +53,7 @@ describe('TheTuBuffs — registry authoring (buff2 shape)', () => {
     expect(reflect.maxHpRatio).toBeGreaterThan(0)
     expect(reflect.markedMaxHpRatio).toBeGreaterThan(reflect.maxHpRatio)
     expect(reflect.markedBy).toBe('chan_an')
-    // Beta design: NO taken-damage ratio — the reflect is Max-HP derived only.
+    // Beta design: NO taken-damage ratio - the reflect is Max-HP derived only.
     expect('takenRatio' in reflect).toBe(false)
   })
 
@@ -187,7 +187,7 @@ describe('TheTuBuffs — registry authoring (buff2 shape)', () => {
 
     expect(economy).toBeDefined()
     expect(economy!.freeProcs).toBe(true)
-    // Spec-listed rider: "counter hits +break" — an ailment application on
+    // Spec-listed rider: "counter hits +break" - an ailment application on
     // the payload hit through the existing appliesAilments mechanism.
     expect(economy!.payloadAilments?.length).toBeGreaterThan(0)
     expect(def.lifetime.scaling).toBe('fixed')

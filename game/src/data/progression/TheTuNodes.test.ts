@@ -10,7 +10,7 @@ import { TRAN_KINH_DEBUFF } from '../buff/TheTuBuffs'
 import { STAT_DOMAIN } from '../../core/stats/StatDomain'
 import type { StatType } from '../../core/stats/StatTypes'
 
-// The Tu Reimagined (plan Task 12, spec section 8.1) — body tree data:
+// The Tu Reimagined (plan Task 12, spec section 8.1) - body tree data:
 // mutex roots, realm gates, collector->kit delivery, INV-13 authoring ban.
 
 // Every node in this tree carries requiredCultivationPath 'body' +
@@ -112,7 +112,7 @@ describe('TheTuNodes — node -> collector -> kit-def delivery', () => {
 
     const kit = buildTheTuKit('cuong_chien', mods)
     expect(kit.basic.damage?.multiplier).toBeCloseTo((CUONG_QUYEN.damage?.multiplier ?? 0) + 0.3)
-    // Registry def untouched — participant clones carry the bonus.
+    // Registry def untouched - participant clones carry the bonus.
     expect(CUONG_QUYEN.damage?.multiplier).not.toBeCloseTo(kit.basic.damage!.multiplier)
   })
 
@@ -160,7 +160,7 @@ describe('TheTuNodes — node -> collector -> kit-def delivery', () => {
     for (const def of [kit.basic, kit.special!]) {
       expect(def.damage?.missingHpBonusPerMissingPercent).toBeGreaterThan(0)
     }
-    // Authored defs stay clean — the scalar is clone-local.
+    // Authored defs stay clean - the scalar is clone-local.
     expect(LOAN_DAU.damage?.missingHpBonusPerMissingPercent).toBeUndefined()
   })
 })

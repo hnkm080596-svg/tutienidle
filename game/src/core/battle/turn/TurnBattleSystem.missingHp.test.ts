@@ -10,7 +10,7 @@ import { collectBodyKitModifiers } from '../../the-tu/TheTuKitModifiers'
 import { createDefaultPlayer } from '../../player/Player'
 import type { ProgressionNode } from '../../progression/ProgressionNode'
 
-// The Tu Reimagined (spec 2026-09-15 section 3.4, plan Task 7) — the
+// The Tu Reimagined (spec 2026-09-15 section 3.4, plan Task 7) - the
 // Cuong Chien missing-HP scalar is an authored damage-field contract,
 // NOT a stat: bonus = min(cap, missingFraction x perPercent x 100),
 // resolved per hit at impact against the actor's LIVE hp (a Reflection
@@ -108,7 +108,7 @@ describe('missing-HP scalar (spec section 3.4)', () => {
 
     new TurnBattleSystem(new CombatSystem(new EventBus()), 10).resolveNextStep(battle)
 
-    // might 100 x mult 1 x (1 + 0 bonus) — no armor, no crit.
+    // might 100 x mult 1 x (1 + 0 bonus) - no armor, no crit.
     expect(1_000_000 - enemy.currentHp).toBe(100)
   })
 

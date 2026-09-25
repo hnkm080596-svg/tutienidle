@@ -12,10 +12,10 @@ import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
 import { TURN_SKILL_DISPLAY_META } from '../../data/skill/TurnSkillDisplayMeta'
 import { COMPANIONS } from '../../data/companion/Companions'
 
-// Phap Tu Reimagined Task 14 (INV-12) — retired ids must not survive in
+// Phap Tu Reimagined Task 14 (INV-12) - retired ids must not survive in
 // ANY registry or content table a fresh save loads. The kill list is
-// data-level: the legacy reaction-path chain (Ngũ Hành Luân Chuyển /
-// Ngũ Hành Hợp Nhất marker pair + the reaction_empowerment self-buff),
+// data-level: the legacy reaction-path chain (Ngu Hanh Luan Chuyen /
+// Ngu Hanh Hop Nhat marker pair + the reaction_empowerment self-buff),
 // the thuan_he node family (lap_dao_thuan_*/thuan_* node ids,
 // reaction_path_unlock_* keystones), and the old element authority
 // (unlockedElements/equippedElements on PlayerData).
@@ -104,7 +104,7 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
     'linh_ngo_kim_phat_thu_sat',
     'linh_ngo_hau_tho_thanh_luy',
     // Beta the-tu: the retired legacy majors' techniqueRank gates carry
-    // onto the two Trúc Cơ unlock majors (the-tu-beta content mission).
+    // onto the two Truc Co unlock majors (the-tu-beta content mission).
     'major_loan_dau',
     'major_phan_chan',
   ])

@@ -2,7 +2,7 @@ import type { BuffDefinition } from '@/core/buff2/BuffDefinition'
 import type { CapabilityGrantDefinition } from '@/core/battle/contracts/capability'
 import { THE_GAIN_ON_EVADE, THE_GAIN_ON_HIT_TAKEN, THE_GAIN_PER_ROUND } from '@/core/the-tu/TheEconomy'
 
-// The Tu Reimagined (spec 2026-09-15 sections 5-6, plan Task 6) — the_tu
+// The Tu Reimagined (spec 2026-09-15 sections 5-6, plan Task 6) - the_tu
 // buff family. All holder-turn state/protection buffs carry
 // durationPolicy:'fixed_holder_turns' -> lifetime.scaling:'fixed' so the
 // holder's own ailment resist/duration stats can never scale them
@@ -34,7 +34,7 @@ const PERMANENT = { clock: 'permanent', scaling: 'fixed' } as const
 const REPLACE = { onReapplyStacks: 'replace', onReapplyDuration: 'refresh', replaceInstanceOnReapply: true } as const
 const PER_TARGET = { instanceScope: 'per_target', sourceOwnership: 'latest' } as const
 
-/** Bat Tu Ba The — undying + Ba The window, counted in the holder's own turns. */
+/** Bat Tu Ba The - undying + Ba The window, counted in the holder's own turns. */
 export const BAT_TU_BA_THE_BUFF: BuffDefinition = {
   id: 'bat_tu_ba_the',
   name: 'Bất Tử Bá Thể',
@@ -50,11 +50,11 @@ export const BAT_TU_BA_THE_BUFF: BuffDefinition = {
 }
 
 /**
- * Phan Chan — Trấn Thể's permanent Reflect passive (granted when the
- * Phản Chấn special is learned). Once-per-hostile-action: hits of the
+ * Phan Chan - Tran The's permanent Reflect passive (granted when the
+ * Phan Chan special is learned). Once-per-hostile-action: hits of the
  * same hostile action merge into one pending reflect; the action-end
  * flush emits a single flat 'reflection' op at the attacker for
- * maxHp x ratio -- a marked (Chấn Ấn) attacker reflects at the marked
+ * maxHp x ratio -- a marked (Chan An) attacker reflects at the marked
  * ratio. The mark is never consumed; takenRatio/per-hit reflect is
  * retired (beta design: fixed Max-HP coefficient only).
  */
@@ -82,7 +82,7 @@ export const PHAN_CHAN_BUFF: BuffDefinition = {
 }
 
 /**
- * Chan An — the Phản Chấn mark: a debuff ON every enemy the cast
+ * Chan An - the Phan Chan mark: a debuff ON every enemy the cast
  * reached. Mark-only by design (beta spec): no DoT, no stat change,
  * never consumed -- the phan_chan reflect reads its presence at
  * action-end for the higher marked ratio. per_target+latest => a
@@ -102,7 +102,7 @@ export const CHAN_AN_DEBUFF: BuffDefinition = {
 }
 
 /**
- * Tran Kinh — the Trấn Kình debuff: an enemy hit by Trấn Áp has the
+ * Tran Kinh - the Tran Kinh debuff: an enemy hit by Tran Ap has the
  * damage of its next hostile turn weakened by a flat
  * finalDamagePercent cut. Implemented as a one-holder-turn ailment
  * window (the design's "next hit" weakens on the enemy's next turn);
@@ -115,7 +115,7 @@ export const TRAN_KINH_DEBUFF: BuffDefinition = {
   kind: 'ailment',
   polarity: 'debuff',
   ...PER_TARGET,
-  // Stacks ARE the Trấn Kình node's amplification channel -- the
+  // Stacks ARE the Tran Kinh node's amplification channel -- the
   // finalDamagePercent flat scales x stacks (StatCalculator parity).
   stacking: { maxStacks: 9, ...REPLACE },
   lifetime: { clock: 'holder_turns', duration: TRAN_KINH_TURNS, scaling: 'ailment_scaled' },
@@ -124,7 +124,7 @@ export const TRAN_KINH_DEBUFF: BuffDefinition = {
   dispellable: true,
 }
 
-/** Son Nhac — self damage-reduction window (fixed holder-turns). */
+/** Son Nhac - self damage-reduction window (fixed holder-turns). */
 export const SON_NHAC_BUFF: BuffDefinition = {
   id: 'son_nhac',
   name: 'Sơn Nhạc',
@@ -139,7 +139,7 @@ export const SON_NHAC_BUFF: BuffDefinition = {
 }
 
 /**
- * Son Nhac Ho The — marker instance on each protected ally binding an
+ * Son Nhac Ho The - marker instance on each protected ally binding an
  * externalWard pool to this source (plan Task 11). uniquePerTarget ->
  * per_target + latest: a newer grant replaces older-source markers so
  * marker and pool always share one owner.
@@ -158,7 +158,7 @@ export const SON_NHAC_HO_THE_BUFF: BuffDefinition = {
 }
 
 /**
- * Khiem Khich — Taunt debuff ON the enemy; the instance's sourceId is the
+ * Khiem Khich - Taunt debuff ON the enemy; the instance's sourceId is the
  * taunter's entity id and selectTarget reads the victim's own pool
  * (Task 10). per_target+latest => newest taunt wins (INV-11). Stays
  * ailment_scaled: enemy ailment resist legitimately shortens Taunt.
@@ -178,7 +178,7 @@ export const KHIEM_KHICH_DEBUFF: BuffDefinition = {
 
 // --- ung_the markers (spec section 6, plan Task 14) ---
 // ung_the owns the own-basic-lands income channel (single channel per
-// review P1 — THAM_THE carries no gain field). The *_mon markers carry
+// review P1 - THAM_THE carries no gain field). The *_mon markers carry
 // each root's reactiveProc spec read by the reactive windows (Tasks
 // 15-18). tu_the/bach_ung modulate the check cost/window through
 // reactiveEconomy (Tasks 15/19).
@@ -232,7 +232,7 @@ export const TRO_MON_MARKER = makeHiddenMarker('tro_mon', 'Trợ Môn', 'Trợ: 
   }),
 ])
 
-/** Tu The — stance window: reactive checks cost less (3 self-turns). */
+/** Tu The - stance window: reactive checks cost less (3 self-turns). */
 export const TU_THE_BUFF: BuffDefinition = {
   id: 'tu_the',
   name: 'Tú Thế',
@@ -247,10 +247,10 @@ export const TU_THE_BUFF: BuffDefinition = {
 }
 
 /**
- * Bach Ung — burst window: reactive checks are free and payloads gain
+ * Bach Ung - burst window: reactive checks are free and payloads gain
  * the authored upgrade rider (spec section 6.1 "counter hits +break":
  * the payload merges `payloadAilments` into its appliesAilments at
- * resolve time — a choang stun application through the existing ailment
+ * resolve time - a choang stun application through the existing ailment
  * mechanism, not an invented damage multiplier).
  */
 export const BACH_UNG_BUFF: BuffDefinition = {
@@ -272,7 +272,7 @@ export const BACH_UNG_BUFF: BuffDefinition = {
 }
 
 /**
- * Ho Ve — marker on an ally rescued by a successful Ho intercept,
+ * Ho Ve - marker on an ally rescued by a successful Ho intercept,
  * binding their externalWard pool to the protector source (Task 20,
  * spec 8.2 "intercept->ally ward"). Same existence-bound contract as
  * son_nhac_ho_the: per_target + reconcileExternalWard.

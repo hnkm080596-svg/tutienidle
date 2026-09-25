@@ -38,7 +38,7 @@ const ELEMENTAL_BASIC_B: TurnSkillDefinition = {
 }
 
 function makeEntity(id: string): CombatEntity {
-  // M8 flake fix — stats.maxHp must agree with the 1M currentHp/maxHp
+  // M8 flake fix - stats.maxHp must agree with the 1M currentHp/maxHp
   // fixture below: refreshParticipantStats clamps currentHp to the
   // EFFECTIVE maxHp, so the old default (100) silently turned this
   // "immortal" target into a 100-hp one that a random ~5% crit (143)
@@ -95,7 +95,7 @@ describe('AR-18: Generic composite skill policy', () => {
     const playerP = makeParticipant('player', player, 0)
     const enemyP = makeParticipant('enemy', enemy, 1)
 
-    // A custom skill ID — the element_basic lane resolves the pool
+    // A custom skill ID - the element_basic lane resolves the pool
     // attached ON the def (Task 11): picks[0] is the payload, extras
     // resolve through the shared composite-picks lane.
     const customCompositeSkill: TurnSkillDefinition = {
@@ -123,7 +123,7 @@ describe('AR-18: Generic composite skill policy', () => {
   })
 })
 
-// Regression guard — composite EXTRA picks once resolved through bare
+// Regression guard - composite EXTRA picks once resolved through bare
 // CombatSystem.resolveActionHit inside applyActionImpact's picks lane,
 // skipping the shared resolveDeclaredHit() pipeline: no defender
 // onImpactLanded reactive window (Phan counter) and no phan_chinh
@@ -243,7 +243,7 @@ describe('composite extra picks run the declared-hit pipeline', () => {
 
     runtime.applyBuff(PHAN_CHAN_BUFF.id, defenderP)
 
-    // No randomness control needed — every roll in this path is
+    // No randomness control needed - every roll in this path is
     // deterministic by construction: hits land (accuracy 9999 vs
     // evasion 0 -> chance 1.0), no crit/block (chance 0), and the
     // reflect trigger's authored chance is 1.0. The reflect roll reads
@@ -290,7 +290,7 @@ describe('composite extra picks run the declared-hit pipeline', () => {
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
     // Injected rng pinned low: every onImpactLanded proc roll draws
-    // from the rng seam and succeeds — reactive chances hard-cap at
+    // from the rng seam and succeeds - reactive chances hard-cap at
     // REACTIVE_CHANCE_CAP = 0.6, so the roll must be < 0.6 (a high
     // dodge-style value would suppress it). Hits land by construction
     // (accuracy 9999 vs evasion 0), so the global Math.random needs

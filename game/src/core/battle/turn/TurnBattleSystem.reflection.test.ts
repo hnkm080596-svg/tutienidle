@@ -19,10 +19,10 @@ import { collectBodyKitModifiers } from '../../the-tu/TheTuKitModifiers'
 import { createDefaultPlayer } from '../../player/Player'
 import type { ProgressionNode } from '../../progression/ProgressionNode'
 
-// The Tu beta (the-tu-body-pathway-design, Phản Chấn) — on a TAKEN
+// The Tu beta (the-tu-body-pathway-design, Phan Chan) - on a TAKEN
 // hostile hit (hpDamage > 0 from an eligible 'normal'/'skill' action)
 // the holder reflects holder.maxHp x baseRatio back at the attacker as
-// a terminal 'reflection' op — never a hit/crit roll, never a window on
+// a terminal 'reflection' op - never a hit/crit roll, never a window on
 // the attacker side, max ONE per hostile action (multi-hit settles
 // first), marked attackers take the higher marked ratio. DoT /
 // environmental / self-inflicted / reactive damage never triggers.
@@ -89,8 +89,8 @@ function makeAttacker(id: string, overrides: Parameters<typeof createBaseStats>[
   })
 }
 
-// Self-scope noop with NO damage — a x0 physical hit would still floor
-// to 1 damage ("tối thiểu 1" in resolveAttack) and pollute the deltas.
+// Self-scope noop with NO damage - a x0 physical hit would still floor
+// to 1 damage ("toi thieu 1" in resolveAttack) and pollute the deltas.
 const NOOP_PLAYER_BASIC = {
   id: 'tank_noop',
   cooldownTurns: 0,
@@ -228,7 +228,7 @@ describe('phan_chan reflect (Max-HP ratio, once-per-action)', () => {
   })
 
   it('dodged hit -> no reflection', () => {
-    // Hit chance floors at 5% (Accuracy.ts) — force the roll high so the
+    // Hit chance floors at 5% (Accuracy.ts) - force the roll high so the
     // dodge is deterministic rather than stat-absurd.
     const tank = makeTank('tank', { evasionRate: 1_000_000 })
     const attacker = makeAttacker('enemy', { accuracyRating: 0 })

@@ -2,14 +2,14 @@ import type { PlayerData } from '../player/Player'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import { getNodeLevel, nodePathApplies, nodeWayApplies } from '../progression/NodeSystem'
 
-// The Tu beta — the ONLY node -> kit channel for body. Nodes declare
+// The Tu beta - the ONLY node -> kit channel for body. Nodes declare
 // `effect.bodyKitModifiers` (flat, per-level); this collector sums them
 // by channel over owned node levels and the participant build bakes the
 // totals into participant-local def clones (kit skills + the phan_chan
-// buff def). Registry/singleton defs are NEVER mutated — a shared-def
+// buff def). Registry/singleton defs are NEVER mutated - a shared-def
 // mutation would leak node state across participants, battles, and
 // tests. Every channel is skill-local: nodes fix CONVERSION/coercion,
-// never character stats (no Might/HP/Defense/Block grants — beta spec).
+// never character stats (no Might/HP/Defense/Block grants - beta spec).
 
 export interface BodyKitModifierValues {
   /** Trong Quyen: adds to cuong_quyen's damage multiplier (Might-conversion). */
@@ -27,7 +27,7 @@ export interface BodyKitModifierValues {
   tranKinhStacksBonus: number
   /** Chan Cot: adds to phan_chan's reflectsDamage.maxHpRatio. */
   reflectMaxHpRatioBonus: number
-  /** Tran An: adds to phan_chan's reflectsDamage.markedMaxHpRatio (Chấn Ấn amplification). */
+  /** Tran An: adds to phan_chan's reflectsDamage.markedMaxHpRatio (Chan An amplification). */
   reflectMarkedRatioBonus: number
 }
 
@@ -58,7 +58,7 @@ export function collectBodyKitModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    // Review fix (LOW-3) — the path-ownership authority applies here
+    // Review fix (LOW-3) - the path-ownership authority applies here
     // too, not just in the generic aggregators: a wrong-path level
     // (corrupt save, future reuse) must not leak into kit channels.
     // M3: the way-membership gate rides the same line.

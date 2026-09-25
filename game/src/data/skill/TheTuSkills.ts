@@ -18,14 +18,14 @@ import {
   UNG_THE_BUFF,
 } from '../buff/TheTuBuffs'
 
-// The Tu beta (the-tu-body-pathway-design) — the two body_pathway roots
+// The Tu beta (the-tu-body-pathway-design) - the two body_pathway roots
 // are NATIVE TurnSkillDefinitions (not Skill objects; body has no
 // cast-leveled skills). Kit resolution reads the owned root at
 // participant build: cuong_chien / tran_the are an excludesNode mutex
 // pair, no root -> GENERIC_PHYSICAL_BASIC only (INV-3). Beta window =
-// Luyện Khí -> Trúc Cơ: roots grant the Basic only; the Trúc Cơ
-// special node grants the Special (Loạn Đấu / Phản Chấn); NO Ultimate
-// exists in beta (Bất Tử Bá Thể / Sơn Nhạc stay authored, unreachable).
+// Luyen Khi -> Truc Co: roots grant the Basic only; the Truc Co
+// special node grants the Special (Loan Dau / Phan Chan); NO Ultimate
+// exists in beta (Bat Tu Ba The / Son Nhac stay authored, unreachable).
 //
 // Tunable first-pass constants (design sec.75: numbers are tunable,
 // semantics/topology are locked):
@@ -40,13 +40,13 @@ export const TRAN_AP_MULTIPLIER = 0.4
 export const TRAN_AP_MAXHP_RATIO = 0.3
 export const SON_NHAC_WARD_RATIO = 0.25
 
-// --- Cuong Chien (Might -> single-target) — root 'cuong_chien' ---
+// --- Cuong Chien (Might -> single-target) - root 'cuong_chien' ---
 
 /**
- * Cuong Quyen — the Cuồng Chiến Basic: single-target physical at high
+ * Cuong Quyen - the Cuong Chien Basic: single-target physical at high
  * Might conversion. Beta design: NEVER an HP cost, and NO missing-HP
- * scaling at Luyện Khí (missing-HP is the Trúc Cơ Huyết Cuồng passive
- * baked onto the clone when Loạn Đấu is owned — kit-local, never on
+ * scaling at Luyen Khi (missing-HP is the Truc Co Huyet Cuong passive
+ * baked onto the clone when Loan Dau is owned - kit-local, never on
  * normal attacks or other paths).
  */
 export const CUONG_QUYEN: TurnSkillDefinition = {
@@ -62,8 +62,8 @@ export const CUONG_QUYEN: TurnSkillDefinition = {
 }
 
 /**
- * Loan Dau — the Trúc Cơ Special: pay `sacrificeMaxHpRatio` x MAX HP
- * first (the authority floors the payment at leaving 1 HP — never a
+ * Loan Dau - the Truc Co Special: pay `sacrificeMaxHpRatio` x MAX HP
+ * first (the authority floors the payment at leaving 1 HP - never a
  * self-kill), THEN resolve an ordered multi-hit into the same target;
  * the new missing-HP state carries into the hits and the ACTUAL paid
  * amount feeds damageBonusPerPaidHpPoint (never the nominal ratio).
@@ -83,7 +83,7 @@ export const LOAN_DAU: TurnSkillDefinition = {
 }
 
 /**
- * Bat Tu Ba The — LEGACY (post-beta content): parked authored def. The
+ * Bat Tu Ba The - LEGACY (post-beta content): parked authored def. The
  * beta kit never grants it (ultimate slot stays empty); the def + buff
  * remain for the later-realm pass.
  */
@@ -98,13 +98,13 @@ export const BAT_TU_BA_THE: TurnSkillDefinition = {
   appliesBuffs: [{ definitionId: 'bat_tu_ba_the', target: 'self' }],
 }
 
-// --- Tran The (Max HP -> AoE) — root 'tran_the' ---
+// --- Tran The (Max HP -> AoE) - root 'tran_the' ---
 
 /**
- * Tran Ap — the Trấn Thể Basic: physical AoE across all valid enemies,
+ * Tran Ap - the Tran The Basic: physical AoE across all valid enemies,
  * primary scaling = caster MAX HP (sourceMaxHpRatio rides the raw base
- * pre-mitigation). Trọng Thế node levels add sourceMaxHpRatio on the
- * clone; the Trấn Kình node adds the tran_kinh weaken application.
+ * pre-mitigation). Trong The node levels add sourceMaxHpRatio on the
+ * clone; the Tran Kinh node adds the tran_kinh weaken application.
  */
 export const TRAN_AP: TurnSkillDefinition = {
   id: 'tran_ap',
@@ -119,8 +119,8 @@ export const TRAN_AP: TurnSkillDefinition = {
 }
 
 /**
- * Phan Chan — the Trúc Cơ Special: a REAL castable action dealing NO
- * direct damage. The cast applies Khiêu Khích (taunt) + Chấn Ấn (mark)
+ * Phan Chan - the Truc Co Special: a REAL castable action dealing NO
+ * direct damage. The cast applies Khieu Khich (taunt) + Chan An (mark)
  * to every valid enemy; learning it also plants the permanent
  * phan_chan reflect passive via grantsBuffsAtBuild (the once-per-
  * hostile-action reflect, holder maxHp x ratio, marked at the higher
@@ -139,7 +139,7 @@ export const PHAN_CHAN: TurnSkillDefinition = {
 }
 
 /**
- * Son Nhac — LEGACY (post-beta content): parked authored def (team
+ * Son Nhac - LEGACY (post-beta content): parked authored def (team
  * protection + Taunt + self DR). Unreachable in beta.
  */
 export const SON_NHAC: TurnSkillDefinition = {
@@ -158,7 +158,7 @@ export const SON_NHAC: TurnSkillDefinition = {
   ],
 }
 
-// --- ung_the (The Tu An) — fixed kit granted at path choice (spec 6.1) ---
+// --- ung_the (The Tu An) - fixed kit granted at path choice (spec 6.1) ---
 // The kit itself is NOT root-gated: roots plant the reactive-mechanic
 // markers that make the kit's proc windows live (Tasks 15-18).
 
@@ -185,7 +185,7 @@ export const BACH_UNG: TurnSkillDefinition = {
   appliesBuffs: [{ definitionId: 'bach_ung', target: 'self' }],
 }
 
-// Reactive payloads (spec 6.2) — real TurnSkillDefinitions resolved as
+// Reactive payloads (spec 6.2) - real TurnSkillDefinitions resolved as
 // bypass-turn actions through the follow-up queue (Tasks 16-18). They
 // are never slotted; the *_mon markers reference them by id.
 export const PHAN_KICH: TurnSkillDefinition = {
@@ -208,12 +208,12 @@ export const TRO_KICH: TurnSkillDefinition = {
 }
 
 /**
- * Trong Phan Kich — the post-evasion heavy-counter payload variant
+ * Trong Phan Kich - the post-evasion heavy-counter payload variant
  * (spec 8.2 "post-evasion heavy counter"). Never in the registry slot
  * rotation: buildTheTuAnKit clones it into reactivePayloads and swaps
  * the phan_mon marker's onEvade queuedAction to this id only when the
  * evadeCounterMultiplierBonus node channel is owned. Base multiplier
- * equals phan_kich's — the node bonus is the whole delta.
+ * equals phan_kich's - the node bonus is the whole delta.
  */
 export const TRONG_PHAN_KICH: TurnSkillDefinition = {
   id: 'trong_phan_kich',
@@ -234,12 +234,12 @@ const THE_TU_AN_ROOT_MARKERS: Record<TheTuAnRootId, BuffDefinition> = {
 /**
  * Participant-build factory for ung_the (plan Task 14): returns
  * participant-local CLONES of the fixed kit with the marker set baked
- * into basic.grantsBuffsAtBuild — ung_the always, plus one marker per
+ * into basic.grantsBuffsAtBuild - ung_the always, plus one marker per
  * owned root (non-mutex, T9). The ops' existing grantsBuffsAtBuild seam
  * applies them to the participant's pool; registry defs never mutate.
  *
  * Task 20 (review P1.7): `mods` is the collectHiddenBodyMechanicModifiers
- * total — trunk economy lands on the ung_the marker's theEconomy fields
+ * total - trunk economy lands on the ung_the marker's theEconomy fields
  * + every reactiveProc's theCost/theGainOnSuccess; branch riders land on
  * their marker's own fields (intercept ward, evade payload swap, Tro
  * heal/non-damaging). maxThe rides the kit for the adapter to stamp on
@@ -294,7 +294,7 @@ export function buildTheTuAnKit(
     ...ownedRoots.map((root) => structuredClone(THE_TU_AN_ROOT_MARKERS[root])),
   ]
 
-  // Trunk economy — node bonuses bake onto the marker clone's authored
+  // Trunk economy - node bonuses bake onto the marker clone's authored
   // income fields; the engine reads these, never the constants.
   const ungThe = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === 'ung_the')
   for (const payload of defPayloads<TheEconomyPayload>(ungThe, 'the_economy')) {
@@ -316,7 +316,7 @@ export function buildTheTuAnKit(
     }
   }
 
-  // Ho branch — intercept riders.
+  // Ho branch - intercept riders.
   if (mods.interceptWardRatio > 0) {
     const marker = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === 'ho_mon')
     for (const payload of defPayloads<ReactiveProcPayload>(marker, 'reactive_proc')) {
@@ -329,7 +329,7 @@ export function buildTheTuAnKit(
     }
   }
 
-  // Phan branch — evade-context heavy counter payload swap.
+  // Phan branch - evade-context heavy counter payload swap.
   if (mods.evadeCounterMultiplierBonus > 0 && ownedRoots.includes('phan_mon')) {
     const marker = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === 'phan_mon')
     for (const payload of defPayloads<ReactiveProcPayload>(marker, 'reactive_proc')) {
@@ -353,7 +353,7 @@ export function buildTheTuAnKit(
       kit.reactivePayloads[TRONG_PHAN_KICH.id] = heavy
     }
 
-    // Break rider — the counter payload gains a choang application
+    // Break rider - the counter payload gains a choang application
     // through the existing appliesAilments channel (same mechanism as
     // bach_ung's payloadAilments merge).
     if (mods.counterChoangChance > 0) {
@@ -371,7 +371,7 @@ export function buildTheTuAnKit(
     kit.reactivePayloads[TRO_KICH.id] = structuredClone(TRO_KICH)
   }
 
-  // Tro branch — marker riders (heal the triggering ally; non-damaging
+  // Tro branch - marker riders (heal the triggering ally; non-damaging
   // window opt-in). The cost delta already landed in the shared loop.
   const troMarker = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === 'tro_mon')
   for (const payload of defPayloads<ReactiveProcPayload>(troMarker, 'reactive_proc')) {
@@ -389,15 +389,15 @@ export function buildTheTuAnKit(
 
 export interface TheTuKit {
   basic: TurnSkillDefinition
-  /** Beta window: the Trúc Cơ special is present ONLY when the owning
-      realm-gated node granted its core (undefined at Luyện Khí). */
+  /** Beta window: the Truc Co special is present ONLY when the owning
+      realm-gated node granted its core (undefined at Luyen Khi). */
   special?: TurnSkillDefinition
-  /** Beta window: no Ultimate exists (Bất Tử Bá Thể / Sơn Nhạc are
+  /** Beta window: no Ultimate exists (Bat Tu Ba The / Son Nhac are
       post-beta content). Slot stays undefined. */
   ultimate?: TurnSkillDefinition
 }
 
-/** The Tu Reimagined (plan Task 16) — the An kit also carries the
+/** The Tu Reimagined (plan Task 16) - the An kit also carries the
  * reactive payload clones the typed follow-up queue resolves. Task 20:
  * `maxThe` is the participant's proc-fuel cap (MAX_THE + node bonus),
  * stamped onto the entity by the adapter at participant build. */
@@ -409,7 +409,7 @@ export interface TheTuAnKit {
   maxThe: number
 }
 
-/** The Tu beta — per-root authored defs; slot grant is decided by
+/** The Tu beta - per-root authored defs; slot grant is decided by
     ownership flags at build (root -> basic always; TC node -> special). */
 export const THE_TU_KIT_BY_ROOT: Record<
   'cuong_chien' | 'tran_the',
@@ -423,13 +423,13 @@ export type TheTuRootId = keyof typeof THE_TU_KIT_BY_ROOT
 
 /**
  * Participant-build factory: returns participant-local CLONES with
- * collectBodyKitModifiers totals baked in (review P0.2/INV-5 — the
+ * collectBodyKitModifiers totals baked in (review P0.2/INV-5 - the
  * registry defs are never mutated; each battle builds fresh copies).
  *
- * Beta ownership gates (design: Basic at Luyện Khí, Special at Trúc
- * Cơ): `owned.special` controls the special slot; the ultimate slot is
- * never produced in beta. Huyết Cuồng is kit-local: the missing-HP
- * bonus lands on the Cuồng Chiến clones ONLY when Loạn Đấu is owned.
+ * Beta ownership gates (design: Basic at Luyen Khi, Special at Truc
+ * Co): `owned.special` controls the special slot; the ultimate slot is
+ * never produced in beta. Huyet Cuong is kit-local: the missing-HP
+ * bonus lands on the Cuong Chien clones ONLY when Loan Dau is owned.
  */
 export function buildTheTuKit(
   root: TheTuRootId,
@@ -472,12 +472,12 @@ export function buildTheTuKit(
           }
         }
       }
-      // Huyet Sat — paid-HP payoff on the sacrifice's coefficient.
+      // Huyet Sat - paid-HP payoff on the sacrifice's coefficient.
       kit.special.damageBonusPerPaidHpPoint =
         (kit.special.damageBonusPerPaidHpPoint ?? 0) + mods.loanDauPaidHpBonus
     }
   } else {
-    // Trong The — Max-HP conversion on the AoE basic.
+    // Trong The - Max-HP conversion on the AoE basic.
     if (kit.basic.damage !== undefined) {
       kit.basic.damage = {
         ...kit.basic.damage,
@@ -485,7 +485,7 @@ export function buildTheTuKit(
           (kit.basic.damage.sourceMaxHpRatio ?? 0) + mods.tranApMaxHpRatioBonus,
       }
     }
-    // Tran Kinh rider — the tran_kinh weaken application exists only
+    // Tran Kinh rider - the tran_kinh weaken application exists only
     // while the node is owned; node levels add stacks (statModifier
     // flat scales x stacks).
     if (mods.tranKinhStacksBonus > 0) {
@@ -499,7 +499,7 @@ export function buildTheTuKit(
       ]
     }
 
-    // Chan Cot + Tran An — reflect coefficient / mark amplification on
+    // Chan Cot + Tran An - reflect coefficient / mark amplification on
     // the participant-local phan_chan buff CLONE (registry def never
     // mutates; the clone lands via grantsBuffsAtBuild).
     const passiveBuff: BuffDefinition | undefined =

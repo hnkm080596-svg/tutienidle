@@ -9,7 +9,7 @@ import { SON_NHAC, TRAN_AP, PHAN_CHAN, SON_NHAC_WARD_RATIO } from '../../../data
 import { SON_NHAC_TURNS } from '../../../data/buff/TheTuBuffs'
 import { makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
-// The Tu Reimagined (plan Task 11, spec section 5.2/7.11, D3/INV-12) —
+// The Tu Reimagined (plan Task 11, spec section 5.2/7.11, D3/INV-12) -
 // Son Nhac's appliesBuffs grant allies the son_nhac_ho_the marker PLUS
 // a source-tagged externalWard pool (protection-only, replace-never-
 // stack, external-first absorb, ward-break gates on the NATIVE ward).
@@ -70,7 +70,7 @@ function makeBattle() {
 
   const tankP = makeParticipant('tank', tank, 10, 0)
   tankP.basic = TRAN_AP
-  // Phan Chan is castable in beta — park it emblem-style so the pick
+  // Phan Chan is castable in beta - park it emblem-style so the pick
   // order still lands on son_nhac first (this suite tests the ward).
   tankP.special = { skill: { ...PHAN_CHAN, emblemOnly: true }, remainingCooldownTurns: 0 }
   tankP.ultimate = { skill: SON_NHAC, remainingCooldownTurns: 0 }
@@ -228,11 +228,11 @@ describe('son_nhac external ward contract (D3/INV-12)', () => {
     const { battle, allyP, combat, system } = makeBattle()
     system.resolveNextStep(battle)
 
-    // Ally has wardMax 0 yet holds 5000 external — no regen clamp applies.
+    // Ally has wardMax 0 yet holds 5000 external - no regen clamp applies.
     expect(allyP.entity.stats.wardMax).toBe(0)
     expect(allyP.entity.externalWard!.amount).toBe(5_000)
 
-    // spendWard reads currentWard only — external pool invisible to it.
+    // spendWard reads currentWard only - external pool invisible to it.
     const wardBefore = allyP.entity.externalWard!.amount
     const spent = combat.spendWard(allyP.entity, 100, 'ward_spend', 'test')
     expect(spent).toBe(0)

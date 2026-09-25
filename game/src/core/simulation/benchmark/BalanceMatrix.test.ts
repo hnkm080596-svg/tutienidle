@@ -72,8 +72,8 @@ describe('balance matrix regression', () => {
     // exit-1: no path strictly dominates every benchmark.
     expect(gates.dominance.pass).toBe(true)
     // exit-2: every primary path has an identifiable strength AND
-    // weakness somewhere. THỂ TU BETA RECORDED DEVIATION (design
-    // authority: 'Exact coefficient để balance sau' - Luyện Khí Thể Tu
+    // weakness somewhere. THE TU BETA RECORDED DEVIATION (design
+    // authority: 'Exact coefficient de balance sau' - Luyen Khi The Tu
     // is basic-only by design): the_tu_hien lost its identifiable
     // strength and phap_tu_ngu_hanh's strictly-worst slot moved to
     // the_tu_hien. Pinned per-recipe so the oracle still catches drift;

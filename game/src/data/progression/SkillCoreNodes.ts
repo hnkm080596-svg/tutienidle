@@ -27,9 +27,9 @@ import { turnSkillDisplayMetaOf } from '../skill/TurnSkillDisplayMeta'
 //     the census test.
 
 /** The 15 eligible native top-level def ids (QI-D3 census).
-    Beta: phan_chan is the castable Trấn Thể special (non-damage core);
+    Beta: phan_chan is the castable Tran The special (non-damage core);
     the emblem def phan_chinh is retired (internal sub-actions stay
-    ineligible). bat_tu_ba_the / son_nhac keep authored cores — parked
+    ineligible). bat_tu_ba_the / son_nhac keep authored cores - parked
     post-beta content, granted by no beta node. */
 export const NATIVE_CORE_SKILL_IDS = [
   // body_pathway kits - granted by the kit roots'/majors'

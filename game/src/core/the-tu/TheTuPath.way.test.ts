@@ -1,16 +1,16 @@
-// The Tu Reimagined — cultivation-path framework M5+M7: Thể Tu
+// The Tu Reimagined - cultivation-path framework M5+M7: The Tu
 // way-normalisation spec contract tests. Post-M7 cultivationPath is the
-// BASE id ('body') and cultivationWay the discriminator — there is
-// exactly one persisted shape. EVERY Thể Tu way-specific gate (kit
-// build, Bất Tử Ba Thể survival, path stat emission, node-tree access,
-// the Thế resource bar / stat domain) resolves on the WAY —
-// cultivationPath + cultivationWay — never on the raw path id.
+// BASE id ('body') and cultivationWay the discriminator - there is
+// exactly one persisted shape. EVERY The Tu way-specific gate (kit
+// build, Bat Tu Ba The survival, path stat emission, node-tree access,
+// the The resource bar / stat domain) resolves on the WAY -
+// cultivationPath + cultivationWay - never on the raw path id.
 //
 // Mirrors core/phap-tu/PhapTuPath.way.test.ts: fail-closed behaviour on
 // corrupt (path, way) pairs.
 //
-// The Hiện dual-root mutex (cuong_chien XOR tran_the) stays NodeSystem-owned
-// — these tests only verify it still operates under the way stamp.
+// The Hien dual-root mutex (cuong_chien XOR tran_the) stays NodeSystem-owned
+// - these tests only verify it still operates under the way stamp.
 
 import { describe, expect, it } from 'vitest'
 
@@ -410,8 +410,8 @@ describe('battle builds — participant kit is way-resolved', () => {
 })
 
 describe('Bất Tử Ba Thể survival — hien-only machinery', () => {
-  // Beta: the ultimate slot is gone — no survival source builds on the
-  // hien side either; a lethal hit is simply lethal (Bất Tử Bá Thể is
+  // Beta: the ultimate slot is gone - no survival source builds on the
+  // hien side either; a lethal hit is simply lethal (Bat Tu Ba The is
   // post-beta content).
   it('hien does NOT survive a lethal hit in the beta window (no ultimate slot)', () => {
     const { gameManager, combatSource } = makeManager()

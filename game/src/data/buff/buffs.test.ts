@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { buffs } from './buffs'
 import type { BuffDefinition, PeriodicDamageDefinition } from '@/core/buff2/BuffDefinition'
 
-// M4 — parity test rewritten to the canonical buff2 shape: the same
+// M4 - parity test rewritten to the canonical buff2 shape: the same
 // numbers, asserted in their new homes (dot.dpsRatio -> periodic
 // .coefficient; stackMode -> stacking.onReapplyStacks; duration ->
 // lifetime.duration; cc -> controls; proc/trigger/economy effects ->
@@ -115,7 +115,7 @@ describe('buffs.ts — ported definitions match original values (buff2 shape)', 
       expect(b.statModifiers).toContainEqual({ stat: 'defense', percent: 0.06 })
     })
 
-    // Engine áp/gỡ THEO ID qua theManBuffId() — id phải khớp chính xác `the_man_<element>`.
+    // Engine ap/go THEO ID qua theManBuffId() - id phai khop chinh xac `the_man_<element>`.
     it('the_man_<el> ×5 — permanent, effects theo bảng §4', () => {
       const expected: Record<string, { stat: string; flat?: number; percent?: number; domain?: 'spell' }[]> = {
         the_man_fire: [{ stat: 'ailmentPotencyPercent', percent: 0.15 }],

@@ -21,7 +21,7 @@ import type { PlayerData } from '../player/Player'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// The Tu Reimagined (plan Task 13) — Hien end-to-end: real initiation
+// The Tu Reimagined (plan Task 13) - Hien end-to-end: real initiation
 // ritual -> node purchase -> GameManager battle build -> live combat
 // through the CombatClock-driven stack (survival source, kit clones,
 // emblem buffs all wired by GameManagerTurnBattleOps), plus save/restore
@@ -217,7 +217,7 @@ describe('cuong_chien battle flow', () => {
     const participant = battle.players[0]!
     const enemy = battle.enemies[0]!
 
-    // Beta window pin: root grants ONLY the Basic — no special, no ultimate.
+    // Beta window pin: root grants ONLY the Basic - no special, no ultimate.
     expect(participant.special).toBeUndefined()
     expect(participant.ultimate).toBeUndefined()
 
@@ -303,7 +303,7 @@ describe('cuong_chien battle flow', () => {
       advanceUntil(combatSource, () => enemy.entity.currentHp < hpBefore || participant.consecutiveHardCcTurns > 0, 200),
     ).toBe(true)
 
-    // The stunned-but-undying actor still acted — no CC-block counter moved.
+    // The stunned-but-undying actor still acted - no CC-block counter moved.
     expect(participant.consecutiveHardCcTurns).toBe(0)
     expect(enemy.entity.currentHp).toBeLessThan(hpBefore)
     expect(battle.totalTurnsElapsed).toBeGreaterThan(turnsBefore)
@@ -360,7 +360,7 @@ describe('tran_the battle flow', () => {
     ).toHaveLength(1)
 
     // The active cast applies BOTH khiem_khich (taunt) and chan_an (mark)
-    // to every valid enemy — never direct damage.
+    // to every valid enemy - never direct damage.
     expect(
       advanceUntil(
         combatSource,
@@ -376,7 +376,7 @@ describe('tran_the battle flow', () => {
     player.realmId = 'foundation_establishment'
     player.techniqueProgress = { rank: 5, grade: 2 }
     gameManager.progressionOps.purchaseNode('major_phan_chan', player)
-    // Slow enemy — the tank casts phan_chan long before its first hit,
+    // Slow enemy - the tank casts phan_chan long before its first hit,
     // so EVERY enemy action happens under Taunt + mark.
     const enemy = makeDummy('e2e_taunt_reflect', { might: 5_000, attackSpeed: 0.3 })
     const battle = startBattle(gameManager, combatSource, player, enemy)
@@ -407,10 +407,10 @@ describe('tran_the battle flow', () => {
       ),
     ).toBe(true)
 
-    // Taunt forced the tank target — the natural-target companion is untouched.
+    // Taunt forced the tank target - the natural-target companion is untouched.
     expect(companion!.entity.currentHp).toBe(companion!.entity.stats.maxHp)
     // Exactly ONE reflect per hostile action at holder maxHp x MARKED
-    // ratio — the enemy is Chấn Ấn-marked by the phan_chan cast.
+    // ratio - the enemy is Chan An-marked by the phan_chan cast.
     expect(reflects).toEqual([tank!.entity.stats.maxHp * PHAN_CHAN_MARKED_RATIO])
   })
 })
@@ -466,7 +466,7 @@ describe('save/restore parity', () => {
     expect(participant.basic?.damage?.multiplier).toBeCloseTo(
       (CUONG_QUYEN.damage?.multiplier ?? 0) + 0.1,
     )
-    // Beta window: root at Luyện Khí grants the Basic only.
+    // Beta window: root at Luyen Khi grants the Basic only.
     expect(participant.special).toBeUndefined()
     expect(participant.ultimate).toBeUndefined()
   })

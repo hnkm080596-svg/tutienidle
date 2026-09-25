@@ -9,13 +9,13 @@ import { createBaseStats } from '../../stats/StatBlock'
 import type { BuffDefinitionId } from '../contracts/ids'
 import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
-// Mission C Task 7 (audit T3-22b) — REFRAMED for the The Tu beta
+// Mission C Task 7 (audit T3-22b) - REFRAMED for the The Tu beta
 // reflect redesign: a reflect can no longer kill the actor MID-impact
 // (design authority: max ONE reflect per hostile ACTION, the action's
 // hits settle first). These tests now pin the new contract instead:
 // the hostile action resolves fully (every target, every instance),
 // then each reflect-holder emits exactly ONE 'reflection' op at the
-// action-end flush — a lethal reflect still kills the actor, just
+// action-end flush - a lethal reflect still kills the actor, just
 // after its swing, not during it.
 
 function reflectDef(id: string, maxHpRatio: number): BuffDefinition {
@@ -77,7 +77,7 @@ function makeParticipant(id: string, entity: CombatEntity): TurnBattleParticipan
 
 function fixture() {
   // Fragile actor: any lethal reflect kills it on the FIRST landed hit.
-  // maxHp goes inside the stats — refreshParticipantStats clamps vitals
+  // maxHp goes inside the stats - refreshParticipantStats clamps vitals
   // to the EFFECTIVE maxHp, so a hand-set field is wiped by the refresh.
   const actorEntity = createCombatant('player', {
     type: 'player', row: 4,
@@ -160,7 +160,7 @@ describe('reflect settles once per hostile action after the action completes (T3
     const damageSpy = vi.spyOn(combat, 'applyModifiedDirectDamage')
     const result = system.applyActionImpact(battle, aoeDeclared(actor, battle))
 
-    // The action settled fully — both targets damaged before any reflect.
+    // The action settled fully - both targets damaged before any reflect.
     expect(target1.entity.currentHp).toBeLessThan(target1.entity.maxHp)
     expect(target2.entity.currentHp).toBeLessThan(target2.entity.maxHp)
     expect(result.targetIds).toEqual(['enemy1', 'enemy2'])
@@ -221,7 +221,7 @@ describe('reflect settles once per hostile action after the action completes (T3
 
     // The provider hook lives inside the `affected.length > 0` action
     // block, so the primary lane needs a target; a non-damaging payload
-    // leaves enemy1 unharmed — the extra impact is the only damage lane.
+    // leaves enemy1 unharmed - the extra impact is the only damage lane.
     const declared = aoeDeclared(actor, battle)
     declared.action = {
       skillId: 'self_ping', skill: null, targeting: { shape: 'single' }, slot: null,
@@ -238,7 +238,7 @@ describe('reflect settles once per hostile action after the action completes (T3
   })
 
   it('multi-instance lane: all instances settle, then the single reflect kills the actor', () => {
-    // The Tu beta — the once-per-action reflect waits for the action's
+    // The Tu beta - the once-per-action reflect waits for the action's
     // multi-hit payload to settle: a lethal reflect can no longer stop
     // instances 2..N mid-swing; it lands once at the action end.
     const { battle, system, actor, target1, combat, runtime } = fixture()

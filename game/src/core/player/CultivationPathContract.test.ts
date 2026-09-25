@@ -1,5 +1,5 @@
 /**
- * Cultivation Path Framework contract runner (M10, spec §28) —
+ * Cultivation Path Framework contract runner (M10, spec -28) -
  * `runCultivationPathContractTests(module)` applies the structural way
  * contract to every registered path module, so a NEW path/way is held
  * to the same shape the moment it is added to the catalog.
@@ -8,7 +8,7 @@
  * still PATH-OWNED ('sword_pathway' belongs to the sword module
  * alone), so a node carrying `requiredWay` must also carry
  * `requiredCultivationPath`, and the
- * pair must resolve in the catalog — otherwise a way-gated node would
+ * pair must resolve in the catalog - otherwise a way-gated node would
  * open to a same-named way on the wrong path.
  */
 import { describe, expect, it } from 'vitest'
@@ -70,7 +70,7 @@ const KNOWN_SKILL_IDS: ReadonlySet<string> = new Set<string>([
     kit.basic.id,
     kit.special.id,
   ]),
-  // Parked post-beta ultimates — authored defs, referenced by
+  // Parked post-beta ultimates - authored defs, referenced by
   // ownedContent but never granted inside the beta realm window.
   BAT_TU_BA_THE.id,
   SON_NHAC.id,
@@ -362,7 +362,7 @@ describe('cultivation path catalog contract (M10)', () => {
     const fake: CultivationPathModule = {
       id: 'sword',
       name: 'Fake Path',
-      // 'demo' is deliberately not a CultivationWayId — the runner must
+      // 'demo' is deliberately not a CultivationWayId - the runner must
       // prove out on infra that never joined the canonical catalog.
       ways: {
         demo: {

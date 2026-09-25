@@ -4,7 +4,7 @@
 // same entity inside one battle re-minted an identical operationId and
 // faulted the scheduler.
 //
-// THỂ TU BETA: the Bat Tu Ba The ultimate is parked (no ultimate slot),
+// THE TU BETA: the Bat Tu Ba The ultimate is parked (no ultimate slot),
 // so the body way can no longer reach a second grant-bearing survive
 // source -- the designed Bat Tu -> talent-charge pairing is post-beta.
 // What remains pin-able in beta: the talent charge grants tu_sinh_ngo

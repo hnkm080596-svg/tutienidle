@@ -3,27 +3,27 @@ import { getArmorMitigationPercent } from './Armor'
 import type { StatType } from '../stats/StatTypes'
 
 /**
- * Helper nền DÙNG CHUNG cho Skill Power (combat-skill-flow-element-
- * power-dot-plan.md §3.1) — mọi damage type "có power riêng" đều lấy
- * ATK cộng power chuyên biệt làm nền. MỘT điểm duy nhất để direct hit
- * (calculateBaseDamage + elementalBasePower) và DoT snapshot
- * (AilmentSystem) không thể lệch công thức về sau.
+ * Helper nen DUNG CHUNG cho Skill Power (combat-skill-flow-element-
+ * power-dot-plan.md -3.1) - moi damage type "co power rieng" deu lay
+ * ATK cong power chuyen biet lam nen. MOT diem duy nhat de direct hit
+ * (calculateBaseDamage + elementalBasePower) va DoT snapshot
+ * (AilmentSystem) khong the lech cong thuc ve sau.
  */
 export function baseMightPlusPower(might: number, power: number): number {
   return might + power
 }
 
 /**
- * Base damage cho 2 damage type "đơn giản" (không nhiều component) —
- * 'elemental' KHÔNG đi qua đây, xem ElementDamageCalculator.ts (mỗi
- * component tự mitigate theo đúng hành của nó, không gộp chung 1
- * công thức được).
+ * Base damage cho 2 damage type "don gian" (khong nhieu component) -
+ * 'elemental' KHONG di qua day, xem ElementDamageCalculator.ts (moi
+ * component tu mitigate theo dung hanh cua no, khong gop chung 1
+ * cong thuc duoc).
  *
- * Physical đã ÁP MITIGATION (Armor) ngay tại đây — Hỗn Nguyên
- * (primordial) thì KHÔNG, gây sát thương CHUẨN bỏ qua mọi phòng thủ,
- * đúng yêu cầu revamp. Phần Block/Endurance/Ward/Leech/Thorns còn lại
- * của pipeline nằm ở CombatSystem.resolveHit() (áp dụng đều cho cả 2
- * loại + elemental, không phân biệt).
+ * Physical da AP MITIGATION (Armor) ngay tai day - Hon Nguyen
+ * (primordial) thi KHONG, gay sat thuong CHUAN bo qua moi phong thu,
+ * dung yeu cau revamp. Phan Block/Endurance/Ward/Leech/Thorns con lai
+ * cua pipeline nam o CombatSystem.resolveHit() (ap dung deu cho ca 2
+ * loai + elemental, khong phan biet).
  */
 export function calculateBaseDamage(
   source: CombatEntity,
@@ -37,7 +37,7 @@ export function calculateBaseDamage(
     case 'physical': {
       // The Tu beta (Tran Ap) -- Max-HP-derived base: the source's
       // maxHp x sourceMaxHpRatio rides the raw base alongside might,
-      // mitigated like might (Trấn Thể hits are still physical hits).
+      // mitigated like might (Tran The hits are still physical hits).
       const raw = source.stats.might + source.stats.maxHp * sourceMaxHpRatio
 
       const mitigation = ignoreResistance
@@ -48,9 +48,9 @@ export function calculateBaseDamage(
     }
 
     case 'primordial':
-      // combat-skill-flow-element-power-dot-plan.md §3.1 — Primordial
-      // component cũng cộng ATK vào Power nền, QUA ĐÚNG helper nền dùng
-      // chung baseMightPlusPower() (tránh hai công thức độc lập).
+      // combat-skill-flow-element-power-dot-plan.md -3.1 - Primordial
+      // component cung cong ATK vao Power nen, QUA DUNG helper nen dung
+      // chung baseMightPlusPower() (tranh hai cong thuc doc lap).
       return baseMightPlusPower(source.stats.might, source.stats.primordialPower)
   }
 }
@@ -91,12 +91,12 @@ export function calculateScalingBonus(source: CombatEntity, scaling: DamageScali
 }
 
 /**
- * Áp multiplier + critical vào 1 số base damage đã tính sẵn — tách
- * riêng để ElementDamageCalculator.ts (pipeline nhiều component, vd
- * 20% Physical + 80% Fire) dùng chung. KHÔNG còn floor "tối thiểu 1"
- * ở đây — floor dời xuống bước CUỐI CÙNG của pipeline
- * (CombatSystem.resolveHit()), sau cả Block/Endurance, để đòn bị
- * giảm nhiều tầng vẫn luôn gây được ít nhất 1 sát thương.
+ * Ap multiplier + critical vao 1 so base damage da tinh san - tach
+ * rieng de ElementDamageCalculator.ts (pipeline nhieu component, vd
+ * 20% Physical + 80% Fire) dung chung. KHONG con floor "toi thieu 1"
+ * o day - floor doi xuong buoc CUOI CUNG cua pipeline
+ * (CombatSystem.resolveHit()), sau ca Block/Endurance, de don bi
+ * giam nhieu tang van luon gay duoc it nhat 1 sat thuong.
  */
 export function applyMultiplierAndCritical(
   baseDamage: number,

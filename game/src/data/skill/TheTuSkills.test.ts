@@ -24,16 +24,16 @@ import type { ProgressionNode } from '../../core/progression/ProgressionNode'
 import { collectBodyKitModifiers } from '../../core/the-tu/TheTuKitModifiers'
 import type { ReactiveTriggerPayload } from '../../core/proc/ProcCapabilities'
 
-// The Tu Reimagined (spec 2026-09-15 section 5, plan Task 6) — the two
+// The Tu Reimagined (spec 2026-09-15 section 5, plan Task 6) - the two
 // Hien kits are native TurnSkillDefinitions resolved by owned root;
 // node bonuses reach them ONLY through collectBodyKitModifiers applied
 // to participant-local def clones (registry defs never mutate).
 
-// The Tu beta (the-tu-body-pathway-design) — the two Hiện roots resolve
+// The Tu beta (the-tu-body-pathway-design) - the two Hien roots resolve
 // native TurnSkillDefinition kits; node bonuses reach them ONLY through
 // collectBodyKitModifiers applied to participant-local def clones
 // (registry defs never mutate). Beta window: roots grant the Basic;
-// the Trúc Cơ major grants the Special; NO Ultimate slot exists.
+// the Truc Co major grants the Special; NO Ultimate slot exists.
 
 describe('body kit data', () => {
   it('cuong_quyen — high-Might single-target basic; NO HP cost, NO missing-HP scaling at LQ', () => {
@@ -41,8 +41,8 @@ describe('body kit data', () => {
     expect(CUONG_QUYEN.cooldownTurns).toBe(0)
     expect(CUONG_QUYEN.damage?.kind).toBe('physical')
     expect(CUONG_QUYEN.damage?.multiplier).toBeGreaterThan(1)
-    // Beta authority: missing-HP scaling arrives ONLY with the Trúc Cơ
-    // special (Huyết Cuồng bake) — never on the authored basic.
+    // Beta authority: missing-HP scaling arrives ONLY with the Truc Co
+    // special (Huyet Cuong bake) - never on the authored basic.
     expect(CUONG_QUYEN.damage?.missingHpBonusPerMissingPercent).toBeUndefined()
     expect(CUONG_QUYEN.damage?.missingHpBonusCap).toBeUndefined()
     expect('sacrificeMaxHpRatio' in CUONG_QUYEN).toBe(false)
@@ -55,7 +55,7 @@ describe('body kit data', () => {
     expect(LOAN_DAU.instances?.count).toBeGreaterThan(1)
     expect(LOAN_DAU.targeting.shape).toBe('single')
     expect(LOAN_DAU.cooldownTurns).toBeGreaterThan(0)
-    // Legacy-authored defs carry no missing-HP scalar; Huyết Cuồng is
+    // Legacy-authored defs carry no missing-HP scalar; Huyet Cuong is
     // kit-local (baked onto clones by buildTheTuKit when owned).
     expect(LOAN_DAU.damage?.missingHpBonusPerMissingPercent).toBeUndefined()
   })
@@ -213,7 +213,7 @@ describe('buildTheTuKit — beta slot gates + node modifiers reach def clones on
     expect(kit.special?.damageBonusPerPaidHpPoint).toBeCloseTo(
       (LOAN_DAU.damageBonusPerPaidHpPoint ?? 0) + 0.002,
     )
-    // Registry def untouched — the clone absorbed the node bonus alone.
+    // Registry def untouched - the clone absorbed the node bonus alone.
     expect(LOAN_DAU.damageBonusPerPaidHpPoint).toBe(LOAN_DAU_PAID_HP_BONUS)
   })
 
@@ -254,7 +254,7 @@ describe('buildTheTuKit — beta slot gates + node modifiers reach def clones on
       (base?.markedMaxHpRatio ?? 0) + 0.02,
     )
 
-    // The embedded passive buff is a CLONE — mutating it must not touch the registry.
+    // The embedded passive buff is a CLONE - mutating it must not touch the registry.
     passiveBuff!.capabilities = []
     expect(BUFF_REGISTRY.get('phan_chan').capabilities?.length).toBeGreaterThan(0)
     // And the authored tran_ap never carries the node rider.
@@ -302,7 +302,7 @@ describe('the_tu_an kit data (spec section 6.1)', () => {
     expect(kit.ultimate.id).toBe('bach_ung')
     expect(kit.basic.grantsBuffsAtBuild?.map((def) => def.id)).toEqual(['ung_the', 'ho_mon', 'phan_mon'])
 
-    // Clones — mutating the kit's marker must not touch the registry def.
+    // Clones - mutating the kit's marker must not touch the registry def.
     const marker = kit.basic.grantsBuffsAtBuild!.find((def) => def.id === 'ho_mon')!
     marker.capabilities = []
     expect(BUFF_REGISTRY.get('ho_mon').capabilities?.length).toBeGreaterThan(0)

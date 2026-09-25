@@ -33,7 +33,7 @@ interface ActionDamageMissingHpScalar {
  * The Tu beta (Tran Ap) - Max-HP-derived damage: the source's
  * stats.maxHp x sourceMaxHpRatio is added into the physical raw base
  * BEFORE mitigation (CombatSystem.resolveActionHit ->
- * calculateBaseDamage). Primary scaling for the Trấn Thể kit; absent
+ * calculateBaseDamage). Primary scaling for the Tran The kit; absent
  * = might-only base.
  */
 interface ActionDamageSourceMaxHp {

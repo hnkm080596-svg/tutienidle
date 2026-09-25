@@ -177,7 +177,7 @@ export type AuthoredSkillOperation =
       /** The Tu beta (Tran Ap) -- Max-HP-derived base: the damage
           authority adds source.stats.maxHp x this ratio into the
           physical raw base before mitigation. ScalarExpression is
-          legal (fold-or-late) so Trọng Thế node totals can ride the
+          legal (fold-or-late) so Trong The node totals can ride the
           clone-baked coefficient. */
       sourceMaxHpRatio?: ScalarExpression
       /** Per-landed-HIT consequence ops (TBS resolveDeclaredHit parity):

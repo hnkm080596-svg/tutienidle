@@ -320,7 +320,7 @@ const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
 
   'body:body_pathway': () =>
     (
-      // Beta: roots produce Basic only; Special arrives via the Trúc Cơ
+      // Beta: roots produce Basic only; Special arrives via the Truc Co
       // core grant (core_<skill>), and there is no Ultimate slot.
       [
         { label: 'no_root', nodeLevels: {} as Record<string, number>, requiredSlots: [] },

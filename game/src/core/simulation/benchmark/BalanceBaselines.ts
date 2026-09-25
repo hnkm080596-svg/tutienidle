@@ -126,7 +126,7 @@ export const BASELINE_RECIPES: readonly BaselineRecipe[] = [
     // build. Purchased via the public progressionOps writer.
     postRitual: [{ type: 'purchase_node', nodeId: 'cuong_chien' }],
     // Beta: the live kit at this entry power point is the basic ONLY -
-    // Loạn Đấu unlocks via the Trúc Cơ core grant and Bất Tử Bá Thể is
+    // Loan Dau unlocks via the Truc Co core grant and Bat Tu Ba The is
     // post-beta, so neither can mint an originId here.
     kitSkillIds: ['cuong_quyen'],
     expectedEconomy: {

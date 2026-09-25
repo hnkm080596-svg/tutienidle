@@ -1,14 +1,14 @@
 <script setup lang="ts">
-// The Tu beta (the-tu-body-pathway-design sec.59-61) — the body way's
-// tree is NOT Ngự Kiếm's evolution spine: TWO root cards (Cuồng Chiến /
-// Trấn Thể, an excludesNode mutex — the loser renders 'Đã bỏ con đường
-// này' and is no longer a purchasable branch), each column reading
-//   root -> ── Luyện Khí ── -> basic card + branch nodes
-//       -> ── Trúc Cơ ──   -> special card + branch nodes
-//       -> Kim Đan 'Phong ấn' placeholder (tree continues, no KD nodes).
+// The Tu beta (the-tu-body-pathway-design sec.59-61) - the body way's
+// tree is NOT Ngu Kiem's evolution spine: TWO root cards (Cuong Chien /
+// Tran The, an excludesNode mutex - the loser renders 'Da bo con duong
+// nay' and is no longer a purchasable branch), each column reading
+//   root -> -- Luyen Khi -- -> basic card + branch nodes
+//       -> -- Truc Co --   -> special card + branch nodes
+//       -> Kim Dan 'Phong an' placeholder (tree continues, no KD nodes).
 // Skill cards carry role/realm/scaling headers per design sec.60 so the
-// player reads the kit from the card. Pre-Trúc Cơ the special card is a
-// sealed silhouette (name revealed, mechanics locked — the realm gate
+// player reads the kit from the card. Pre-Truc Co the special card is a
+// sealed silhouette (name revealed, mechanics locked - the realm gate
 // itself still lives on the node's prerequisite, this is presentation).
 // Same select contract as NodeTreePanel so NodeInspector purchases
 // without a second seam.
@@ -35,11 +35,11 @@ const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 
-// The beta layout is a fixed slot grid — node lookups by id, not a
+// The beta layout is a fixed slot grid - node lookups by id, not a
 // generic tree walk (the data topology is authored to match).
 interface SkillCardDef {
   /** The purchasable major node the card selects (root basics select
-      their root instead — the root grant delivers the core). */
+      their root instead - the root grant delivers the core). */
   nodeId: string
   skillId: string
   scalingKeys: string[]
@@ -120,7 +120,7 @@ function selectNode(nodeId: string) {
 }
 
 function onCardClick(col: RootColumn, card: SkillCardDef) {
-  // A sealed/abandoned special still selects its major node — the
+  // A sealed/abandoned special still selects its major node - the
   // inspector surfaces the realm/prerequisite lock reasons.
   selectNode(card.nodeId === col.rootNodeId ? col.rootNodeId : card.nodeId)
 }
@@ -138,7 +138,7 @@ function onCardClick(col: RootColumn, card: SkillCardDef) {
         {{ t('panels.theTuTree.abandoned') }}
       </div>
 
-      <!-- Root card — the mutex choice itself -->
+      <!-- Root card - the mutex choice itself -->
       <button
         type="button"
         class="the-tu-tree__card the-tu-tree__card--root"
@@ -156,7 +156,7 @@ function onCardClick(col: RootColumn, card: SkillCardDef) {
 
       <div class="the-tu-tree__separator"><span>{{ t('panels.theTuTree.realms.luyenKhi') }}</span></div>
 
-      <!-- Basic skill card — granted by the root, level = core level -->
+      <!-- Basic skill card - granted by the root, level = core level -->
       <button
         type="button"
         class="the-tu-tree__card the-tu-tree__card--skill"
@@ -199,7 +199,7 @@ function onCardClick(col: RootColumn, card: SkillCardDef) {
 
       <div class="the-tu-tree__separator"><span>{{ t('panels.theTuTree.realms.trucCo') }}</span></div>
 
-      <!-- Special card — sealed silhouette before Trúc Cơ -->
+      <!-- Special card - sealed silhouette before Truc Co -->
       <button
         type="button"
         class="the-tu-tree__card the-tu-tree__card--skill"
