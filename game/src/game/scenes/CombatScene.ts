@@ -932,7 +932,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
         hasThamFocus: the.thamTargetId !== undefined,
         quanTheActive: the.quanTheActive,
         reactionDebt: the.reactionDebt,
-        reactionDebtCap: the.reactionDebtCap,
+        quaThe: the.quaThe,
       })
     } else {
       this.playerHud?.updateThe(0, 0, 0, false)

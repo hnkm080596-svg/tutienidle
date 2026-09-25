@@ -165,15 +165,16 @@ export const ALTERNATE_RECIPES: readonly BaselineRecipe[] = [
     id: 'the_tu_ung_the',
     primary: false,
     ritual: { pathId: 'body', wayId: 'hidden_body_pathway' },
-    // Non-mutex roots plant the proc-window markers (ho/phan/tro_mon)
-    // at battle build - without them the kit is the bare ung_the marker
-    // and no reactive window ever opens (all free at qi_refining).
+    // Beta tree (sec.88): Phan is BASELINE - the kit opens its window
+    // with no node. The two LQ minors are the only purchasable writes
+    // at this power point; Ho/Tro baselines and the consequence majors
+    // sit behind major_quan_the (foundation_establishment + rank 5),
+    // unreachable at qi_refining. tu_the/bach_ung are parked defs.
     postRitual: [
-      { type: 'purchase_node', nodeId: 'ho_mon' },
-      { type: 'purchase_node', nodeId: 'phan_mon' },
-      { type: 'purchase_node', nodeId: 'tro_mon' },
+      { type: 'purchase_node', nodeId: 'minor_thau_the' },
+      { type: 'purchase_node', nodeId: 'minor_phan_kinh' },
     ],
-    kitSkillIds: ['tham_the', 'tu_the', 'bach_ung', 'phan_kich', 'tro_kich', 'trong_phan_kich'],
+    kitSkillIds: ['tham_the', 'phan_kich'],
     expectedEconomy: {
       mustGenerate: ['theGained'],
       // Reactive procs spend the pool (TheEconomy is hidden_body_pathway-owned).

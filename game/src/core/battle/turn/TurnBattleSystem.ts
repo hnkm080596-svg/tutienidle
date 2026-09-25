@@ -1525,30 +1525,23 @@ export class TurnBattleSystem {
 
     if (isCharging) {
       ccBlocked = false
-    } else if (this.runtime !== undefined && this.buffs.getForTarget(actor.entity.id).some((i) => i.definitionId === 'bat_tu_ba_the')) {
+    } else if (this.hasBaTheWard(actor)) {
       // Bat Tu Ba The (The Tu Reimagined plan Task 9, D10): while the
       // buff is active, hard CC cannot block the holder. The counter is
       // SUPPRESSED, not reset -- consecutiveHardCcTurns is left untouched
       // so accumulation resumes where it left off after the buff expires.
       ccBlocked = false
+    } else if (!this.hasHardCc(actor)) {
+      actor.consecutiveHardCcTurns = 0
+      ccBlocked = false
+    } else if (actor.consecutiveHardCcTurns >= 3) {
+      this.clearHardCc(actor, battle, `status.cc_clear.${battle.totalTurnsElapsed}.${actor.id}`)
+      actor.consecutiveHardCcTurns = 0
+      actor.baTheTriggeredAtTurn = battle.totalTurnsElapsed
+      ccBlocked = false
     } else {
-      const hardCcActive =
-        this.runtime !== undefined &&
-        (this.buffs.hasControl(actor.entity.id, 'stun') ||
-          this.buffs.hasControl(actor.entity.id, 'freeze'))
-
-      if (hardCcActive && actor.consecutiveHardCcTurns >= 3) {
-        this.clearHardCc(actor, battle, `status.cc_clear.${battle.totalTurnsElapsed}.${actor.id}`)
-        actor.consecutiveHardCcTurns = 0
-        actor.baTheTriggeredAtTurn = battle.totalTurnsElapsed
-        ccBlocked = false
-      } else if (hardCcActive) {
-        actor.consecutiveHardCcTurns += 1
-        ccBlocked = true
-      } else {
-        actor.consecutiveHardCcTurns = 0
-        ccBlocked = false
-      }
+      actor.consecutiveHardCcTurns += 1
+      ccBlocked = true
     }
 
     // Cooldown snapshot BEFORE the status phase: a lethal DoT tick inside
@@ -2997,19 +2990,32 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Ung The beta gate -- hard incapacitating CC (stun/freeze) blocks
-   * every reactive window; slow/taunt/root do NOT. Mirrors the
-   * ccBlocked suppression (bat_tu_ba_the means the CC cannot block).
+   * Hard incapacitating CC atoms -- stun/freeze presence and the
+   * bat_tu_ba_the suppression ward. The declare-path ccBlocked
+   * computation and the Ung The window gate both compose these; do
+   * not re-derive the literal checks at either site.
    */
-  private isHardCcBlocked(participant: TurnBattleParticipant): boolean {
+  private hasHardCc(participant: TurnBattleParticipant): boolean {
     if (this.runtime === undefined) return false
-    const ccActive =
+    return (
       this.buffs.hasControl(participant.entity.id, 'stun') ||
       this.buffs.hasControl(participant.entity.id, 'freeze')
-    if (!ccActive) return false
-    return !this.buffs
+    )
+  }
+
+  private hasBaTheWard(participant: TurnBattleParticipant): boolean {
+    if (this.runtime === undefined) return false
+    return this.buffs
       .getForTarget(participant.entity.id)
       .some((inst) => inst.definitionId === 'bat_tu_ba_the')
+  }
+
+  /**
+   * Ung The beta gate -- hard incapacitating CC (stun/freeze) blocks
+   * every reactive window; slow/taunt/root do NOT.
+   */
+  private isHardCcBlocked(participant: TurnBattleParticipant): boolean {
+    return this.hasHardCc(participant) && !this.hasBaTheWard(participant)
   }
 
   /** Qua The predicate: debt at cap -> no NEW windows (income continues). */

@@ -187,7 +187,7 @@ export class PlayerHudLayer {
       hasThamFocus?: boolean
       quanTheActive?: boolean
       reactionDebt?: number
-      reactionDebtCap?: number
+      quaThe?: boolean
     },
   ): void {
     const hasPool = Number.isFinite(max) && max > 0
@@ -211,10 +211,8 @@ export class PlayerHudLayer {
     this.theGroup.marker.setPosition(this.theGroup.background.x + this.theGroup.width * markerRatio, this.theGroup.background.y)
 
     // Ung The beta -- focus/Quan The/Ung Tre state suffix (design Part XV).
-    const quaThe =
-      ungThe !== undefined &&
-      ungThe.reactionDebtCap !== undefined &&
-      (ungThe.reactionDebt ?? 0) >= ungThe.reactionDebtCap
+    // quaThe arrives computed from the bridge (single predicate authority).
+    const quaThe = ungThe?.quaThe === true
     const suffix =
       ungThe === undefined
         ? ''

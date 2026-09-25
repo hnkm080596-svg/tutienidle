@@ -52,8 +52,9 @@ export interface TheBarSnapshot {
   /** Ung The beta — current Ung Tre reaction debt. */
   reactionDebt?: number
 
-  /** Ung The beta — debt cap; debt at cap = Qua The. */
-  reactionDebtCap?: number
+  /** Ung The beta — Qua The (debt at cap); computed against
+      REACTION_DEBT_CAP here so views never re-derive the predicate. */
+  quaThe?: boolean
 }
 
 export type TheBarReader = () => TheBarSnapshot | null
@@ -135,7 +136,7 @@ export function makeTheBarReader(
           .getBattleBuffs(battleEntity.id)
           .some((inst) => inst.definitionId === 'quan_the'),
         reactionDebt: battleParticipant.reactionDebt ?? 0,
-        reactionDebtCap: REACTION_DEBT_CAP,
+        quaThe: (battleParticipant.reactionDebt ?? 0) >= REACTION_DEBT_CAP,
       }
     }
 
