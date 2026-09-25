@@ -11,7 +11,7 @@
     "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
     "head": "f730adc6",
     "state": {
-      "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+      "productStateId": "418187f500194478462ab6cecc8f30f419442fee09dabc810680552c6af92482",
       "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
       "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -4007,11 +4007,11 @@
       "duplicateOf": null,
       "exception": null,
       "status": "REJECTED_WITH_PROOF",
-      "rejectionReason": "rejected: spec-ambiguity resolved toward deliberate design \u2014 \"flat/direct-vitals\" = applyDirectDamage vitals channel (ward bypass intact); finalDamagePercent is designed to apply to ALL direct reactive damage (stat-system-reimagined Task 6 D13); changing channel now is a balance-affecting behavior change under frozen balance (BETA-BALANCE ruling)"
+      "rejectionReason": "rejected: spec-ambiguity resolved toward deliberate design — \"flat/direct-vitals\" = applyDirectDamage vitals channel (ward bypass intact); finalDamagePercent is designed to apply to ALL direct reactive damage (stat-system-reimagined Task 6 D13); changing channel now is a balance-affecting behavior change under frozen balance (BETA-BALANCE ruling)"
     },
     {
       "id": "F-TT-COR-A9-2",
-      "title": "Save/restore boundary does not re-enforce root mutex \u2014 crafted v85 save can own both cuong_chien and tran_the",
+      "title": "Save/restore boundary does not re-enforce root mutex — crafted v85 save can own both cuong_chien and tran_the",
       "state": {
         "productStateId": "3954e88d7601834989e11f6fceb47c0bc546e04635bce6f8faec3d2994afae10",
         "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
@@ -7118,7 +7118,7 @@
       "counterexample": "none - reads as dead production code but is deliberately retained",
       "expected": "production modules reachable from production callers",
       "actual": "module consumed only by its own tests; header documents the parking",
-      "rootCause": "feature intentionally parked pending the B\u00e1t T\u1ef1 mission set; tests keep the contract warm",
+      "rootCause": "feature intentionally parked pending the Bát Tự mission set; tests keep the contract warm",
       "rootClass": "deliberate-design-contract",
       "subsystem": "the-tu-beta",
       "siblingSearch": [
@@ -7142,7 +7142,7 @@
       "duplicateOf": null,
       "exception": null,
       "status": "REJECTED_WITH_PROOF",
-      "rejectionReason": "deliberate documented parking \u2014 the module header declares its parked status and tests keep the contract warm; deleting it is a product decision for the B\u00e1t T\u1ef1 mission, not a defect"
+      "rejectionReason": "deliberate documented parking — the module header declares its parked status and tests keep the contract warm; deleting it is a product decision for the Bát Tự mission, not a defect"
     },
     {
       "id": "F-TT-COR-A4-4",
@@ -7205,7 +7205,7 @@
       "duplicateOf": "F-TT-COR-A4-1",
       "exception": null,
       "status": "REJECTED_WITH_PROOF",
-      "rejectionReason": "duplicate of F-TT-COR-A4-1 \u2014 crafted/corrupt save only; registry-less save validation is a documented project boundary; tamper-only reachability per prior adjudications"
+      "rejectionReason": "duplicate of F-TT-COR-A4-1 — crafted/corrupt save only; registry-less save validation is a documented project boundary; tamper-only reachability per prior adjudications"
     },
     {
       "id": "F-TT-COR-A4-5",
@@ -7231,7 +7231,7 @@
       "discoveredBy": "devin-f26cfbc75b4240d8b0c7dd4064aa90a6",
       "invariantIds": [],
       "evidenceIds": [],
-      "counterexample": "a mid-fight breakthrough that reaches syncRealmPassive with a missing realm passive has every learnSkill grant rejected and the result ignored \u2014 masked today by the has() early-return",
+      "counterexample": "a mid-fight breakthrough that reaches syncRealmPassive with a missing realm passive has every learnSkill grant rejected and the result ignored — masked today by the has() early-return",
       "expected": "the sync refuses the battle boundary explicitly like its sibling syncTalentCombatPassive",
       "actual": "learnSkill's mid-battle rejection is swallowed; the seam silently no-ops",
       "rootCause": "new writer gate introduced a silent-skip seam the sync did not observe",
@@ -7470,7 +7470,7 @@
     },
     {
       "id": "F-TT-COR-A5-1",
-      "title": "Save boundary does not enforce the excludesNode mutex \u2014 crafted save can own both roots",
+      "title": "Save boundary does not enforce the excludesNode mutex — crafted save can own both roots",
       "state": {
         "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
         "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
@@ -7499,7 +7499,7 @@
           ],
           "termsAndMethod": "grep 'excludesNode' at the save boundary; enumerate node-set invariants",
           "hitDispositions": [
-            "zero hits \u2014 only core-catalog membership, purchasedNodeIds mirror, D9f inverse-source are enforced; owned-node acquisition legality is never re-validated at load"
+            "zero hits — only core-catalog membership, purchasedNodeIds mirror, D9f inverse-source are enforced; owned-node acquisition legality is never re-validated at load"
           ],
           "coverageLimits": [
             "save-edit surface only; no in-game path can produce dual roots (purchase gates on getNodeLevel===0)"
@@ -7539,7 +7539,7 @@
       "locations": [
         {
           "path": "src/composables/useProgressionActions.ts",
-          "symbolOrSection": "devResetBranch wrapper :63-72 \u2014 refund===0 early-returns without bumpState; ops layer GameManagerProgressionOps.devResetBranch :622-628",
+          "symbolOrSection": "devResetBranch wrapper :63-72 — refund===0 early-returns without bumpState; ops layer GameManagerProgressionOps.devResetBranch :622-628",
           "revision": "697c2050",
           "basis": "SOURCE"
         }
@@ -7555,7 +7555,7 @@
           ],
           "termsAndMethod": "enumerate wrapper return-value conventions",
           "hitDispositions": [
-            "respecNodeTree already uses null=reject/0=success-with-bump \u2014 the intended shape exists; devResetBranch returns 0 for both rejection and revoked free nodes"
+            "respecNodeTree already uses null=reject/0=success-with-bump — the intended shape exists; devResetBranch returns 0 for both rejection and revoked free nodes"
           ],
           "coverageLimits": [
             "dev-only surface; App.vue bumpState() runs every tick so panels self-correct within a frame"
@@ -7569,9 +7569,9 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "counterexample": "a reset of a branch holding only free nodes (insightCost:0) revokes nodes, refunds 0, and skips bumpState \u2014 UI reads stale until next tick",
+      "counterexample": "a reset of a branch holding only free nodes (insightCost:0) revokes nodes, refunds 0, and skips bumpState — UI reads stale until next tick",
       "expected": "wrapper bumps on any successful reset; only rejection should skip",
-      "actual": "refund===0 conflates reject with success-0; impact nil \u2014 dev-only channel, no Vue callers, tick-level bumpState self-heals",
+      "actual": "refund===0 conflates reject with success-0; impact nil — dev-only channel, no Vue callers, tick-level bumpState self-heals",
       "rootCause": "scalar return conflates two semantic outcomes; ops layer performs the reset correctly either way",
       "rootClass": "interface-ambiguity",
       "subsystem": "the-tu-beta",
@@ -7579,7 +7579,7 @@
       "status": "REJECTED_WITH_PROOF",
       "duplicateOf": null,
       "exception": null,
-      "rejectionReason": "nil impact on a dev-only surface: the ops layer performs the reset correctly and App.vue bumpState() runs every tick, so the panel self-corrects within a frame. The wrapper comment is descriptive, not contractive. Accepted as a known convention gap \u2014 lesson recorded for the null=reject convention."
+      "rejectionReason": "nil impact on a dev-only surface: the ops layer performs the reset correctly and App.vue bumpState() runs every tick, so the panel self-corrects within a frame. The wrapper comment is descriptive, not contractive. Accepted as a known convention gap — lesson recorded for the null=reject convention."
     },
     {
       "id": "F-TT-AUT-A5-1",
@@ -7612,7 +7612,7 @@
           ],
           "termsAndMethod": "cross-check wrapper conventions across progression actions",
           "hitDispositions": [
-            "duplicate of F-TT-COR-A5-2 \u2014 independent lens found the same conflation"
+            "duplicate of F-TT-COR-A5-2 — independent lens found the same conflation"
           ],
           "coverageLimits": [
             "dev-only, nil impact"
@@ -7628,7 +7628,7 @@
       "closureReviewIds": [],
       "counterexample": "same crafted branch as F-TT-COR-A5-2",
       "expected": "bump on successful zero-refund reset",
-      "actual": "skipped \u2014 cosmetic staleness at worst on a dev-only channel",
+      "actual": "skipped — cosmetic staleness at worst on a dev-only channel",
       "rootCause": "scalar return conflates reject vs success-0",
       "rootClass": "interface-ambiguity",
       "subsystem": "the-tu-beta",
@@ -8656,7 +8656,7 @@
       "limitations": [
         "reflect-queue-leak finding rejected statically: resolveReactiveProcs early-returns on runtime===undefined (TBS:2970) and its context never carries hpDamage"
       ],
-      "status": "CURRENT",
+      "status": "STALE",
       "kind": "EXECUTED_UNIT_STRUCTURAL"
     }
   ],
@@ -10652,7 +10652,7 @@
         "F-TT-INT-A4-3"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLO-22",
@@ -10690,7 +10690,7 @@
         "F-TT-INT-A4-3"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLEAN-A5-COR",
@@ -10720,7 +10720,7 @@
         "F-TT-COR-A5-2"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLEAN-A5-AUT",
@@ -10749,7 +10749,7 @@
         "F-TT-AUT-A5-1"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     }
   ],
   "cycles": [],
@@ -13313,7 +13313,7 @@
       "applicability": [],
       "exclusions": [],
       "proposedProtection": [
-        "when a validator already enforces crafted-state strictness (orphan cores, grant-less majors), extend the same strictness to domain invariants like mutex pairs \u2014 or explicitly record the accepted gap."
+        "when a validator already enforces crafted-state strictness (orphan cores, grant-less majors), extend the same strictness to domain invariants like mutex pairs — or explicitly record the accepted gap."
       ],
       "promotionEvidenceIds": [],
       "qualifiedBy": [
@@ -13339,7 +13339,7 @@
       "originatingRun": "the-tu-beta-2026-09-25",
       "rootClass": "boundary-gap",
       "missedInvariantIds": [],
-      "escapeReason": "non-core nodeLevels validated only for number shape; registry membership and authored maxLevel bounds are unchecked \u2014 tamper saves persist dead ids or uncapped modifiers.",
+      "escapeReason": "non-core nodeLevels validated only for number shape; registry membership and authored maxLevel bounds are unchecked — tamper saves persist dead ids or uncapped modifiers.",
       "applicability": [],
       "exclusions": [],
       "proposedProtection": [
@@ -13373,7 +13373,7 @@
       "applicability": [],
       "exclusions": [],
       "proposedProtection": [
-        "after any diff touching files containing ${} template substitutions, scan added comment lines for >127 codepoints directly \u2014 the ratchet blind-spots them."
+        "after any diff touching files containing ${} template substitutions, scan added comment lines for >127 codepoints directly — the ratchet blind-spots them."
       ],
       "promotionEvidenceIds": [],
       "qualifiedBy": [
@@ -13835,7 +13835,7 @@
       "qualifiedBy": [
         "REV-TT-CLEAN-A4-AUT"
       ],
-      "capabilityDelta": "no code change \u2014 adjudication precedent only",
+      "capabilityDelta": "no code change — adjudication precedent only",
       "recurrenceFindingIds": [],
       "status": "CLASSIFIED",
       "policyVersion": null,
@@ -13857,7 +13857,7 @@
       "originatingRun": "the-tu-beta-2026-09-25",
       "rootClass": "crafted-save-unreachable-path",
       "missedInvariantIds": [],
-      "escapeReason": "reviewer flagged ungated progression write on tier update only reachable through a crafted/corrupted save \u2014 the save boundary has no registry by deliberate design",
+      "escapeReason": "reviewer flagged ungated progression write on tier update only reachable through a crafted/corrupted save — the save boundary has no registry by deliberate design",
       "applicability": [
         "any save-boundary write-path finding without a registry-less crafted-save proof"
       ],
@@ -13873,7 +13873,7 @@
       "qualifiedBy": [
         "REV-TT-CLEAN-A4-COR"
       ],
-      "capabilityDelta": "none \u2014 rejection precedent recorded",
+      "capabilityDelta": "none — rejection precedent recorded",
       "recurrenceFindingIds": [
         "F-TT-COR-A4-1"
       ],
@@ -14133,7 +14133,7 @@
       "originatingRun": "the-tu-beta-2026-09-25",
       "rootClass": "interface-ambiguity",
       "missedInvariantIds": [],
-      "escapeReason": "scalar return values conflating reject vs success-0 surfaced twice in one round from two lenses \u2014 the null=reject convention (respecNodeTree) is the established answer",
+      "escapeReason": "scalar return values conflating reject vs success-0 surfaced twice in one round from two lenses — the null=reject convention (respecNodeTree) is the established answer",
       "applicability": [
         "all progression-op wrappers"
       ],
@@ -15534,6 +15534,22 @@
       "payloadPath": "events/0086.json",
       "payloadHash": "b129c3d3edc4f50f6edd0b4ef5d98bbc5858fa14f6b073998529830a60b7ec9b",
       "eventHash": "3c094c6baa33df544228936cc4b27c521ec94bcec2bc09bbc0b709dddd3d5829"
+    },
+    {
+      "seq": 87,
+      "at": "2026-09-25T23:58:19.383Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "418187f500194478462ab6cecc8f30f419442fee09dabc810680552c6af92482",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "3c094c6baa33df544228936cc4b27c521ec94bcec2bc09bbc0b709dddd3d5829",
+      "payloadPath": "events/0087.json",
+      "payloadHash": "a73350ac9a67d1f1f71c8ce3bb3970f2e66ee8e01c0f673c6d60fb734aeae4b0",
+      "eventHash": "648d1f2141cf828b93f9f77b9eab334fab956739c8238e7eea61dcf851d3e1e4"
     }
   ]
 }

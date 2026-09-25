@@ -14586,7 +14586,7 @@
       "path": "src/components/panels/skill-path/NodeInspector.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "4c2e75bd29fbc60bd18e54837842622cec143e43ea190bce6a767145df556754"
+      "hash": "dea05eade3399eb72b3a91c2706289d0af086bb203225d9b77b59294ea5e7011"
     },
     {
       "path": "src/components/panels/skill-path/NodeTreePanel.test.ts",
@@ -17707,6 +17707,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "7966da64d56a69e6f813ab6ff2c22f92c456451a9f956ef741bbd94f00dd5022"
+    },
+    {
+      "path": "src/core/game/GameManager.realmAdvanceInBattle.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "2d481ba48a707ba09538cc06df4e38a0ce57b514569c2baa6f0dd317887de0a2"
     },
     {
       "path": "src/core/game/GameManager.realmAdvanceUnequip.test.ts",
@@ -23007,5 +23013,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f"
+  "productStateId": "418187f500194478462ab6cecc8f30f419442fee09dabc810680552c6af92482"
 }
