@@ -2255,10 +2255,57 @@
     "scene/canvas tests excluded (env: libuuid/magick absent) \u2014 unaffected by ngu-kiem surface"
    ],
    "status": "CURRENT"
+  },
+  {
+   "id": "EV-NK-NOVEL-1",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_PROPERTY",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T02:43:00.000Z",
+   "finishedAt": "2026-09-25T02:44:50.000Z",
+   "commandOrMethod": "npx vitest run --config docs/qa/runs/ngu-kiem-beta-2026-09-25/evidence/vitest.probe.config.mts (probe-plan-lane-momentum.test.ts - 3 attacks on the production plan-cast lane)",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/probe-plan-lane-momentum.log",
+   "artifactHash": "01461a9222fea830eb814166f9c67aa951b8c570f6f4199bad5db7aa1fcda02e",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "plan-lane (tryPlanCast) momentum parity: three landed swords carry 1.0 / 1+rate / 1+2*rate via ops_result_sum over priorInstanceOpIds - no double-apply with perInstanceOptions",
+    "mid-cast enemy death drops remaining swords - no phantom hits on the dead target",
+    "kiemY banks +1 per resolved cast at battle level through provider onCastResolved; no auto-forge at foundation (count 2 < cap 3, forgeCost >> 1)"
+   ],
+   "limitations": [
+    "probe runs GameManager-driven battle; sim-only consumers (SimManager) share tryPlanCast via the same resolver"
+   ],
+   "status": "CURRENT"
   }
  ],
  "coverage": [],
- "attacks": [],
+ "attacks": [
+  {
+   "id": "ATK-NK-PLAN-LANE-PARITY",
+   "invariantIds": [],
+   "taxonomyIds": [
+    "coverage",
+    "determinism"
+   ],
+   "challengedAssumption": "prior momentum pinning covered only the engine-unit lane (runtime===undefined); production and sim run the plan lane via tryPlanCast where momentum is a declarative ops_result_sum over priorInstanceOpIds",
+   "sequenceOrInput": "GameManager battle -> Kiem The basic cast -> 'damage' events captured; 4-sword cast on a 10hp dummy; foundation-realm kiemY banking",
+   "oracle": "1.0/1+rate/1+2*rate per-instance ratios (no ops-vs-instances double counting); dead target drops remaining swords; +1 kiemY per resolved cast",
+   "noveltyReason": "first probe on the production scheduler lane - all previous ratio evidence was engine-lane",
+   "evidenceIds": [
+    "EV-NK-NOVEL-1"
+   ]
+  }
+ ],
  "reviews": [
   {
    "round": 1,
@@ -2907,6 +2954,22 @@
    "payloadPath": "events/0009.json",
    "payloadHash": "3b4a1ed4e0439b86b70ee43d4e655c57c0af9f32936330f9514b3db24478ec29",
    "eventHash": "5df0dcab957be55c74f43226b62d2cd30fd54205278f889c92d91cdd4b4f336a"
+  },
+  {
+   "seq": 10,
+   "at": "2026-09-25T02:45:14.374Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "5df0dcab957be55c74f43226b62d2cd30fd54205278f889c92d91cdd4b4f336a",
+   "payloadPath": "events/0010.json",
+   "payloadHash": "7d585c203034caacdf083ec0ecea39bc5f06657c6576830d396706f9693790c1",
+   "eventHash": "630a4efa22405f3a97a779d411aad963f2ee28566857c2e91148e85b517d8234"
   }
  ]
 }
