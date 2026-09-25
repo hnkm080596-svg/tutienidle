@@ -263,6 +263,21 @@ describe('phan_chan reflect (Max-HP ratio, once-per-action)', () => {
     expect(attacker.currentHp).toBe(10_000)
   })
 
+  it('post-mortem: a holder killed by the triggering hit still reflects (queued at hit time)', () => {
+    const tank = makeTank('tank')
+    tank.currentHp = 1 // the hostile hit is lethal
+    const attacker = makeAttacker('enemy')
+    const f = makeBattle(tank, attacker)
+    applyPhanChan(f.runtime, f.tankP)
+
+    const system = systemOf(f)
+    system.resolveNextStep(f.battle)
+    system.resolveNextStep(f.battle)
+
+    expect(tank.alive).toBe(false)
+    expect(10_000 - attacker.currentHp).toBeCloseTo(10_000 * PHAN_CHAN_BASE_RATIO)
+  })
+
   it('reflect can kill through the vitals authority', () => {
     const tank = makeTank('tank')
     const attacker = makeAttacker('enemy')
