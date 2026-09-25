@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "5f0d296be768afe76b07b46358a7766bae0ac28d",
   "state": {
-   "productStateId": "8b14b2fe966e148e9c1253436ad0a19a6f62baf3b36cda90281aab814efc2cb3",
+   "productStateId": "2330ef22ed54c9314513c6cb4dd933e93e0eb58ec9446ba2af65f4b2d055f65f",
    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -10829,6 +10829,189 @@
    "repair": "committed 93b0cb4b on devin/1790260800-phap-tu-basic",
    "status": "CLOSED",
    "rejectionReason": null
+  },
+  {
+   "state": {
+    "productStateId": "8b14b2fe966e148e9c1253436ad0a19a6f62baf3b36cda90281aab814efc2cb3",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PT-A8-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PT-A8-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null,
+   "rootClass": "dual-source-guard-gap",
+   "siblingFindingIds": [],
+   "repair": "committed e1ca815b on devin/1790260800-phap-tu-basic",
+   "id": "F-PT-AUT-A8-1",
+   "title": "clawback core leg omits grantsSkillCoreIds-source exemption (latent save-corruption under authoring overlap)",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "game/src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": "applyOneShotClawback + dryRunOneShotClawback core leg",
+     "revision": "93b0cb4b",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "game/src/services/save/saveShapeValidation.ts",
+     "symbolOrSection": "D9d/D9f",
+     "revision": "93b0cb4b",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "node A.unlocksSkillIds=[S] on respecified branch + node B.grantsSkillCoreIds=[S] surviving -> respec unlearns S and revokes core_S while B owned -> next load flags D9d",
+   "expected": "core leg mirrors skills leg's stillGrantedElsewhere - core survives when a still-owned node's grantsSkillCoreIds declares it",
+   "actual": "both legs revoked core_<skillId> unconditionally once the skill was unlearned",
+   "discoveredBy": "devin-dff450cf70e044aa9547a15ae807e8ff",
+   "rootCause": "clawback core leg written before grantsSkillCoreIds authoring existed; skill leg had the dual-source guard, core leg did not",
+   "subsystem": "progression",
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "every clawback leg vs every declared-source channel (unlocksSkillIds/grantsSkillCoreIds/learned template)",
+     "evidenceIds": [
+      "EV-PT-A8-FIX"
+     ],
+     "hitDispositions": [
+      "skills leg already guarded; spec leg already guarded; core leg was the only unguarded channel - now guarded in apply+dry-run"
+     ],
+     "coverageLimits": []
+    }
+   ]
+  },
+  {
+   "state": {
+    "productStateId": "8b14b2fe966e148e9c1253436ad0a19a6f62baf3b36cda90281aab814efc2cb3",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PT-A8-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PT-A8-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null,
+   "rootClass": "vestigial-export",
+   "siblingFindingIds": [],
+   "repair": "committed e1ca815b on devin/1790260800-phap-tu-basic",
+   "id": "F-PT-AUT-A8-2",
+   "title": "specializationClaimingNode (singular) dead export",
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "game/src/core/progression/NodeSystem.ts",
+     "symbolOrSection": "export",
+     "revision": "93b0cb4b",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "grep -rn specializationClaimingNode\\b returns only the definition",
+   "expected": "exports used by callers or removed",
+   "actual": "zero call sites; every caller uses specializationClaimingNodes plural",
+   "discoveredBy": "devin-dff450cf70e044aa9547a15ae807e8ff",
+   "rootCause": "plural API superseded singular during claimant-set hardening; singular left exported",
+   "subsystem": "progression",
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "other singular/plural API pairs in NodeSystem",
+     "evidenceIds": [
+      "EV-PT-A8-FIX"
+     ],
+     "hitDispositions": [
+      "specClaimingNode the only pair; removed"
+     ],
+     "coverageLimits": []
+    }
+   ]
+  },
+  {
+   "state": {
+    "productStateId": "8b14b2fe966e148e9c1253436ad0a19a6f62baf3b36cda90281aab814efc2cb3",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PT-A8-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PT-A8-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "Pre-existing validator tolerance on trusted input; reachable only via crafted saves (strict save law out-of-scope) and fully inert at runtime - no legitimate write path produces unknown nodeLevels ids.",
+   "rootClass": null,
+   "siblingFindingIds": [],
+   "repair": null,
+   "id": "F-PT-AUT-A8-3",
+   "title": "unregistered non-core_ nodeLevels ids pass save validation silently",
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "locations": [
+    {
+     "path": "game/src/services/save/saveShapeValidation.ts",
+     "symbolOrSection": "nodeLevels bounds check",
+     "revision": "93b0cb4b",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "crafted save {nodeLevels:{bogus_id:5}} loads clean; id stays inert",
+   "expected": "unknown ids reported or documented as intentional tolerance",
+   "actual": "bounds check only applies to registered ids; unknown ids pass and stay inert",
+   "discoveredBy": "devin-dff450cf70e044aa9547a15ae807e8ff",
+   "rootCause": "validator bounds-check added for registered ids only; unknown-id tolerance predates it",
+   "subsystem": "save",
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "other unvalidated save fields",
+     "evidenceIds": [
+      "EV-PT-A8-FIX"
+     ],
+     "hitDispositions": [
+      "pre-existing tolerance on trusted input; inert at runtime - accepted crafted-save posture per run precedent"
+     ],
+     "coverageLimits": []
+    }
+   ]
   }
  ],
  "evidence": [
@@ -12035,6 +12218,38 @@
    "artifactHash": "63e57692fbdd01f77b334c1dd60760eccbf469d4dd50d90358fc8c8732e89a3e",
    "claims": [
     "type-check clean; 24/24 scoped tests pass; all 3 fixed sites confirmed in source"
+   ],
+   "invariantIds": [],
+   "limitations": [],
+   "result": "PASS",
+   "status": "STALE"
+  },
+  {
+   "id": "EV-PT-A8-FIX",
+   "state": {
+    "productStateId": "2330ef22ed54c9314513c6cb4dd933e93e0eb58ec9446ba2af65f4b2d055f65f",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+   "commandOrMethod": "npm run type-check + vitest NodeSystem*.test/GameManagerProgressionOps (72 tests) + grep proof dead export removed",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T13:15:23.000Z",
+   "finishedAt": "2026-09-25T13:16:12.000Z",
+   "inputPaths": [
+    "src/core/game/GameManagerProgressionOps.ts",
+    "src/core/progression/NodeSystem.ts"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/fix-verify-a8.log",
+   "artifactHash": "b227f781fffb8570dc60528124c1785bbb9a437efaa256e094c6dcd958dd8342",
+   "claims": [
+    "clawback core leg honors grantsSkillCoreIds-source exemption in apply AND dry-run legs (D9d parity)",
+    "specializationClaimingNode singular export removed; zero call sites",
+    "type-check + 72 tests pass"
    ],
    "invariantIds": [],
    "limitations": [],
@@ -14371,7 +14586,7 @@
    "evidenceIds": [],
    "findingIds": [],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-CLO-14",
@@ -14398,7 +14613,7 @@
    "evidenceIds": [],
    "findingIds": [],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-COR-A8",
@@ -14419,6 +14634,64 @@
    "accessLimitations": [],
    "startedAt": "2026-09-25T12:50:12.000Z",
    "sealedAt": "2026-09-25T13:27:29.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PT-AUT-A8",
+   "state": {
+    "productStateId": "8b14b2fe966e148e9c1253436ad0a19a6f62baf3b36cda90281aab814efc2cb3",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 24,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-dff450cf70e044aa9547a15ae807e8ff",
+   "contextId": "sealed-child-dff450cf70e044aa9547a15ae807e8ff",
+   "model": "swe-2-max",
+   "role": "authority-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T12:46:34.000Z",
+   "sealedAt": "2026-09-25T13:13:48.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-AUT-A8-1",
+    "F-PT-AUT-A8-2",
+    "F-PT-AUT-A8-3"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-INT-A8",
+   "state": {
+    "productStateId": "8b14b2fe966e148e9c1253436ad0a19a6f62baf3b36cda90281aab814efc2cb3",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 24,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-d8142c8267b643afb5bea86d341a5221",
+   "contextId": "sealed-child-d8142c8267b643afb5bea86d341a5221",
+   "model": "swe-2-max",
+   "role": "integration-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T12:57:25.000Z",
+   "sealedAt": "2026-09-25T13:27:38.000Z",
    "previousPhaseReviewId": null,
    "reviewedAfterPreviousFixes": true,
    "coverageIds": [],
@@ -17937,6 +18210,102 @@
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
+  },
+  {
+   "id": "L-PT-81",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUT-A8-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "dual-source-guard-gap",
+   "missedInvariantIds": [],
+   "escapeReason": "core leg written before grantsSkillCoreIds authoring; sibling guard present in skills leg but not propagated",
+   "applicability": [
+    "clawback legs",
+    "declared-source channels"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "when adding a guard to one leg of a multi-leg clawback, audit every sibling leg for the same guard"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A8"
+   ],
+   "capabilityDelta": "clawback leg-guard audit",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-82",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUT-A8-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "vestigial-export",
+   "missedInvariantIds": [],
+   "escapeReason": "plural API superseded singular; removal missed at refactor time",
+   "applicability": [
+    "API supersessions"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "after superseding an API, grep its identifier before landing"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A8"
+   ],
+   "capabilityDelta": "superseded-API sweep",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-83",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUT-A8-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "crafted-save-boundary",
+   "missedInvariantIds": [],
+   "escapeReason": "unknown-id tolerance predates bounds check; trusted-input posture",
+   "applicability": [
+    "save shape validation posture",
+    "unknown ids in ledgered maps"
+   ],
+   "exclusions": [],
+   "proposedProtection": "crafted-save boundary stance",
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A8"
+   ],
+   "capabilityDelta": "crafted-save boundary stance",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
   }
  ],
  "messages": [],
@@ -18964,6 +19333,22 @@
    "payloadPath": "events/0064.json",
    "payloadHash": "f9beec0270895441acb195ef602a4f842dc53caf0bbe2da70fd94a30ead524ad",
    "eventHash": "b734ea81aa3ea8de897e8be909073a408dfa8e0cd0d8bbfd82ac7c0ea2a2c609"
+  },
+  {
+   "seq": 65,
+   "at": "2026-09-25T13:15:50.734Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "2330ef22ed54c9314513c6cb4dd933e93e0eb58ec9446ba2af65f4b2d055f65f",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "b734ea81aa3ea8de897e8be909073a408dfa8e0cd0d8bbfd82ac7c0ea2a2c609",
+   "payloadPath": "events/0065.json",
+   "payloadHash": "998818ea7803a344f2f4326cec9675f2e83cda5c97bdc677b52187974ea008f8",
+   "eventHash": "0d7d25b76164b932408690845264154cf83912c2665bb855379a457f384e3a69"
   }
  ]
 }
