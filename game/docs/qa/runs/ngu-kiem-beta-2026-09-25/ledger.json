@@ -2898,13 +2898,19 @@
    ],
    "siblingFindingIds": [],
    "repair": "ebb4b03c: restored real Vietnamese in all 33 strings from master + hand-fixed; SLICE_READ_ALLOWLIST benchmark fixture seam",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "pinEvidenceIds": [
+    "EV-NK-FIX-6"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-6"
+   ],
+   "closureReviewIds": [
+    "REV-NK-CLO-5"
+   ],
    "exception": null,
    "duplicateOf": null,
    "rejectionReason": null,
-   "status": "FIXED_PENDING_PROOF"
+   "status": "CLOSED"
   },
   {
    "id": "F-NK-CORB-1",
@@ -2951,13 +2957,19 @@
    ],
    "siblingFindingIds": [],
    "repair": "ebb4b03c: restored real Vietnamese in all 33 strings",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "pinEvidenceIds": [
+    "EV-NK-FIX-6"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-6"
+   ],
+   "closureReviewIds": [
+    "REV-NK-CLO-5"
+   ],
    "exception": null,
    "duplicateOf": "F-NK-AUTB-1",
    "rejectionReason": null,
-   "status": "DUPLICATE_LINKED"
+   "status": "CLOSED"
   },
   {
    "id": "F-NK-AUTB-2",
@@ -3004,13 +3016,19 @@
    ],
    "siblingFindingIds": [],
    "repair": "a960a7d0: restored the three ids in RETIRED_IDS",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "pinEvidenceIds": [
+    "EV-NK-FIX-6"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-6"
+   ],
+   "closureReviewIds": [
+    "REV-NK-CLO-5"
+   ],
    "exception": null,
    "duplicateOf": null,
    "rejectionReason": null,
-   "status": "FIXED_PENDING_PROOF"
+   "status": "CLOSED"
   },
   {
    "id": "F-NK-CLO4-1",
@@ -3057,13 +3075,19 @@
    ],
    "siblingFindingIds": [],
    "repair": "ebb4b03c: restored real Vietnamese in all 33 strings",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "pinEvidenceIds": [
+    "EV-NK-FIX-6"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-6"
+   ],
+   "closureReviewIds": [
+    "REV-NK-CLO-5"
+   ],
    "exception": null,
    "duplicateOf": "F-NK-AUTB-1",
    "rejectionReason": null,
-   "status": "DUPLICATE_LINKED"
+   "status": "CLOSED"
   },
   {
    "id": "F-NK-CLO4-2",
@@ -3312,6 +3336,37 @@
    "invariantIds": [],
    "claims": [
     "F-NK-AUT-8..10,12,13 repairs verified at fa45c1eb"
+   ],
+   "limitations": [],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-NK-FIX-6",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T04:00:00.000Z",
+   "finishedAt": "2026-09-25T04:10:00.000Z",
+   "commandOrMethod": "npx vitest run src/core/game/GameManager.deadIds.test.ts tests/architecture/cultivationPathIsolation.test.ts src/data/skill/TurnSkillDisplayMeta.test.ts (14 pass) + vocab sweep zero corrupted forms",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/fix-verify-ebb4b03c.log",
+   "artifactHash": "6cdff8a1130bd7c2c001d4550997587d3d891637417ee1f82b9515ec294f874b",
+   "inputPaths": [
+    "src/data/skill/TurnSkillDisplayMeta.ts",
+    "src/core/game/GameManager.deadIds.test.ts",
+    "tests/architecture/cultivationPathIsolation.test.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "F-NK-AUTB-1/AUTB-2/CORB-1/CLO4-1 repairs verified at 0ccdbdc4"
    ],
    "limitations": [],
    "status": "CURRENT"
@@ -3758,6 +3813,33 @@
     "F-NK-AUTB-1",
     "F-NK-AUTB-2"
    ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-NK-CLO-5",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 11,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-14259d75f7b24c0e9b0199190eaaf9e3",
+   "contextId": "sealed-child-14259d75f7b24c0e9b0199190eaaf9e3",
+   "model": "swe-2-max",
+   "role": "closure-5",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T04:30:00.000Z",
+   "sealedAt": "2026-09-25T04:45:00.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
   }
