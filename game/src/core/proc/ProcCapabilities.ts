@@ -13,6 +13,24 @@ import type {
 } from '../battle/contracts/capability'
 import type { CapabilityValidatorRegistry } from '../battle/runtime/capability/CapabilityValidatorRegistry'
 
+// The Tu Reimagined (spec 7.1, plan Task 16) -- provenance axis for the
+// reactive queue. 'normal'/'skill' describe natural turns; the reactive
+// sources describe bypass actions queued by a proc window. Lives here
+// (proc vocabulary leaf) so both TurnBattleSystem and TurnSkillPlanRuntime
+// read it without a runtime edge between them.
+export type ReactiveActionSource = 'normal' | 'skill' | 'counter' | 'follow_up' | 'intercept'
+
+/**
+ * INV-9 natural-turn classifier -- 'normal' and 'skill' are the only
+ * sources a player's own turn produces; queued bypass actions
+ * (counter/follow_up/intercept) never re-open proc windows.
+ */
+export function isNaturalActionSource(
+  source: ReactiveActionSource | undefined,
+): boolean {
+  return source === 'normal' || source === 'skill'
+}
+
 // The shared reactive-window name space (legacy ReactiveTriggerName).
 export type ReactiveTriggerName =
   | 'onCastBegin'
