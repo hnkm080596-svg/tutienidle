@@ -8561,10 +8561,16 @@
    ],
    "siblingFindingIds": [],
    "repair": "FIXED (uncommitted): spec descriptions rewritten to primary-target honest text",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "pinEvidenceIds": [
+    "EV-PT-VERIFY-FINAL-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PT-VERIFY-FINAL-2"
+   ],
+   "closureReviewIds": [
+    "REV-PT-CLO-7"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null
@@ -8618,10 +8624,16 @@
    ],
    "siblingFindingIds": [],
    "repair": "FIXED (uncommitted): specTooltip rewritten on same plural+union read as specLocked",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "pinEvidenceIds": [
+    "EV-PT-VERIFY-FINAL-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PT-VERIFY-FINAL-2"
+   ],
+   "closureReviewIds": [
+    "REV-PT-CLO-7"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null
@@ -8675,10 +8687,16 @@
    ],
    "siblingFindingIds": [],
    "repair": "FIXED (uncommitted): non-integer or level<1 grant entries warn-skipped",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "pinEvidenceIds": [
+    "EV-PT-VERIFY-FINAL-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PT-VERIFY-FINAL-2"
+   ],
+   "closureReviewIds": [
+    "REV-PT-CLO-7"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null
@@ -11370,6 +11388,37 @@
    "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-CLO-7",
+   "state": {
+    "productStateId": "34b363cf7fe53e27f5d27f5a6f561dea1d5a93b5b71c09e65c9af724f8c74a39",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 14,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-9049269b3a7b4a86bc69b73a69af868b",
+   "contextId": "sealed-child-9049269b3a7b4a86bc69b73a69af868b",
+   "model": "swe-2-max",
+   "role": "closure",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T05:10:00.000Z",
+   "sealedAt": "2026-09-25T05:13:34.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-FA-C1",
+    "F-PT-FA-C2",
+    "F-PT-FA-C3"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [
@@ -13727,6 +13776,96 @@
    "promotionEvidenceIds": [],
    "qualifiedBy": [
     "REV-PT-AUT-A4"
+   ],
+   "capabilityDelta": "terminal-finding lesson required by MC13",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-27",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-FA-C2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "ui-read-path divergence",
+   "missedInvariantIds": [],
+   "escapeReason": "tooltip read singular claimant while lock logic read plural union",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "paired UI readers must consume the same predicate/union"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-CLO-7"
+   ],
+   "capabilityDelta": "terminal-finding lesson required by MC13",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-28",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-FA-C3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "grant-shape validation gap",
+   "missedInvariantIds": [],
+   "escapeReason": "grantedNodeLevels accepted non-integer/<1 levels into nodeLevels",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "grant writers must guard integer>=1 before clamp"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-CLO-7"
+   ],
+   "capabilityDelta": "terminal-finding lesson required by MC13",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-29",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-FA-C1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "spec-conformance display text",
+   "missedInvariantIds": [],
+   "escapeReason": "spec description claimed spread/pin while override dealt primary-target damage only",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "display text audit: every authored description must be cross-checked against its effectsOverride scope"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-CLO-7"
    ],
    "capabilityDelta": "terminal-finding lesson required by MC13",
    "status": "CLASSIFIED",
