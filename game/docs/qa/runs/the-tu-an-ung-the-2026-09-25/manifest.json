@@ -15522,7 +15522,7 @@
       "path": "src/core/battle/turn/ActionGauge.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "60136f9bb932e6a2239540453a37ea08460b3e9574099a2b6c89d6919a51d21e"
+      "hash": "604c051be4fd39e9629c655220699cdb5745bf78d72e652624c7b776c2a19d16"
     },
     {
       "path": "src/core/battle/turn/ActionValidator.test.ts",
@@ -15942,13 +15942,19 @@
       "path": "src/core/battle/turn/TurnBattleSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8eb76d8431f292e99817f4836972efac86b020f373729353e74783622cf5a472"
+      "hash": "0b0680b50e85419ba56e3e9238bcbe226fc3256dc1a924bfcb23a4102485dbd2"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.turnRegen.test.ts",
       "kind": "file",
       "mode": 33188,
       "hash": "05b702ec1525840cf4b4e42d2b79ce8155cee64d7f2b0bb6a0a0d94d3e568744"
+    },
+    {
+      "path": "src/core/battle/turn/TurnBattleSystem.ungTreR4.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "7fb3816cc195e69a5d6cf246300bd545dbd72d6ad74d437b4476197d2d42b622"
     },
     {
       "path": "src/core/battle/turn/TurnBuffIdentity.test.ts",
@@ -23001,5 +23007,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "481da16b23ca5e52361d887b771c8c7b066478919712cf025d8eccab93c0b52f"
+  "productStateId": "d78eb2683fa0c3b0aefe9b8de713e8451cc54cef292dd7d979a0ffad48f880ea"
 }
