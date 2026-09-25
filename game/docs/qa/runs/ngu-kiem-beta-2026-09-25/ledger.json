@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "d8321ba8",
   "state": {
-   "productStateId": "90acfe897e3bd6d52c288bc8c21f5ef770c91f9d36edafed594c86836fe3817d",
+   "productStateId": "5e9c83af8bed9cf82ec38a4089430e4878c49a3820dda91d3d117c371f9f8ed8",
    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -4789,6 +4789,247 @@
    "exception": null,
    "status": "CLOSED",
    "rejectionReason": null
+  },
+  {
+   "state": {
+    "productStateId": "90acfe897e3bd6d52c288bc8c21f5ef770c91f9d36edafed594c86836fe3817d",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "siblingSearch": [],
+   "pinEvidenceIds": [
+    "EV-NK-A4-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-A4-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null,
+   "rootClass": null,
+   "repair": "committed 2bca6f8b on devin/1790284398-ngu-kiem-beta",
+   "id": "F-NK-COR-A4-1",
+   "title": "hiddenNguFoundationBuild snapshot is not a reachable post-ritual state",
+   "severity": "Low",
+   "classification": "TEST_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "game/src/core/simulation/benchmark/BalanceBaselines.ts",
+     "symbolOrSection": "hiddenNguFoundationBuild()",
+     "revision": "bc98d4bd",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "core_tram:1 vs offerGate tram Lv3; core_huy_quyen:3 in nodeLevels but absent from purchasedNodeIds; skills:[]",
+   "expected": "fixture consistent with ritual+lien purchase: core_tram=3, mortal precursors learned, mirror complete",
+   "actual": "fixture could not be produced by any canonical write sequence",
+   "discoveredBy": "devin-5a112e8944ef4ae883c9f0432d60ff96",
+   "rootCause": "fixture hand-edited without modeling the real post-ritual writes",
+   "subsystem": "benchmark",
+   "siblingFindingIds": [
+    "F-NK-AUT-A4-2"
+   ]
+  },
+  {
+   "state": {
+    "productStateId": "90acfe897e3bd6d52c288bc8c21f5ef770c91f9d36edafed594c86836fe3817d",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "siblingSearch": [],
+   "pinEvidenceIds": [
+    "EV-NK-A4-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-A4-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null,
+   "rootClass": null,
+   "repair": "committed 2bca6f8b on devin/1790284398-ngu-kiem-beta",
+   "id": "F-NK-COR-A4-2",
+   "title": "en.json + vi.json lost the file-ending newline",
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "game/src/locales/en.json",
+     "symbolOrSection": "EOF",
+     "revision": "bc98d4bd",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "game/src/locales/vi.json",
+     "symbolOrSection": "EOF",
+     "revision": "bc98d4bd",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "both files end '}' without trailing newline vs base '}\\n'",
+   "expected": "files end with trailing newline",
+   "actual": "missing trailing newline",
+   "discoveredBy": "devin-5a112e8944ef4ae883c9f0432d60ff96",
+   "rootCause": "editor/format pass stripped the final newline",
+   "subsystem": "i18n",
+   "siblingFindingIds": []
+  },
+  {
+   "state": {
+    "productStateId": "90acfe897e3bd6d52c288bc8c21f5ef770c91f9d36edafed594c86836fe3817d",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "siblingSearch": [],
+   "pinEvidenceIds": [
+    "EV-NK-A4-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-A4-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null,
+   "rootClass": null,
+   "repair": "committed 2bca6f8b on devin/1790284398-ngu-kiem-beta",
+   "id": "F-NK-AUT-A4-1",
+   "title": "runtime import cycle KiemTuPath <-> NguKiemDao inverts the leaf invariant",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "game/src/core/kiem-tu/KiemTuPath.ts",
+     "symbolOrSection": "imports + validateSwordPathPersistedState",
+     "revision": "bc98d4bd",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "game/src/core/kiem-tu/NguKiemDao.ts",
+     "symbolOrSection": "imports",
+     "revision": "bc98d4bd",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "KiemTuPath value-imports kiemDaoCap from NguKiemDao while NguKiemDao value-imports isHiddenSwordPathway back - bidirectional runtime edge; header still claims no cycle",
+   "expected": "KiemTuPath stays leaf-consumed (one-way dependency)",
+   "actual": "bidirectional runtime edge; ESM-safe only by deferred call sites (TDZ hazard if either gains a top-level use)",
+   "discoveredBy": "devin-6405bacbf2824b83a8ba9b97f343d063",
+   "rootCause": "realm-cap formula needed by the persisted-state validator lived on the economy module instead of the leaf",
+   "subsystem": "kiem-tu",
+   "siblingFindingIds": []
+  },
+  {
+   "state": {
+    "productStateId": "90acfe897e3bd6d52c288bc8c21f5ef770c91f9d36edafed594c86836fe3817d",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "siblingSearch": [],
+   "pinEvidenceIds": [
+    "EV-NK-A4-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-A4-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null,
+   "rootClass": null,
+   "repair": "committed 2bca6f8b on devin/1790284398-ngu-kiem-beta",
+   "id": "F-NK-AUT-A4-2",
+   "title": "hiddenNguFoundationBuild fixture violates the core_* mirror contract",
+   "severity": "Low",
+   "classification": "TEST_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "game/src/core/simulation/benchmark/BalanceBaselines.ts",
+     "symbolOrSection": "hiddenNguFoundationBuild()",
+     "revision": "bc98d4bd",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "nodeLevels carries core_huy_quyen:3 but purchasedNodeIds omits it - the mirror rule save validation enforces",
+   "expected": "purchasedNodeIds mirrors every leveled node id incl. core_*",
+   "actual": "fixture no longer models a legal player state",
+   "discoveredBy": "devin-6405bacbf2824b83a8ba9b97f343d063",
+   "rootCause": "same fixture hand-edit as F-NK-COR-A4-1",
+   "subsystem": "benchmark",
+   "siblingFindingIds": [
+    "F-NK-COR-A4-1"
+   ]
+  },
+  {
+   "state": {
+    "productStateId": "90acfe897e3bd6d52c288bc8c21f5ef770c91f9d36edafed594c86836fe3817d",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "siblingSearch": [],
+   "pinEvidenceIds": [
+    "EV-NK-A4-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-A4-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null,
+   "rootClass": null,
+   "repair": "committed 2bca6f8b on devin/1790284398-ngu-kiem-beta",
+   "id": "F-NK-AUT-A4-3",
+   "title": "ngu_kiem_phong_an carries unreachable insightCost: 3 on a grantedOnly node",
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "game/src/data/progression/KiemTuNodes.ts",
+     "symbolOrSection": "ngu_kiem_phong_an",
+     "revision": "bc98d4bd",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "insightCost 3 declared on a node that can never be purchased",
+   "expected": "grantedOnly nodes carry cost 0 like the sibling grant",
+   "actual": "dead cost field reads as if purchasable",
+   "discoveredBy": "devin-6405bacbf2824b83a8ba9b97f343d063",
+   "rootCause": "cost copied from the purchasable lien node",
+   "subsystem": "progression",
+   "siblingFindingIds": []
   }
  ],
  "evidence": [
@@ -5412,6 +5653,41 @@
    "limitations": [
     "scoped vitest, not full suite"
    ],
+   "result": "PASS",
+   "status": "STALE"
+  },
+  {
+   "id": "EV-NK-A4-FIX",
+   "state": {
+    "productStateId": "5e9c83af8bed9cf82ec38a4089430e4878c49a3820dda91d3d117c371f9f8ed8",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+   "commandOrMethod": "grep cycle checks + source spot-checks + vitest invariants/KiemTuNodes + full scoped suite (622 tests incl. simulation)",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T12:20:05.000Z",
+   "finishedAt": "2026-09-25T12:25:59.000Z",
+   "inputPaths": [
+    "src/core/kiem-tu/KiemTuPath.ts",
+    "src/core/kiem-tu/KiemTuState.ts",
+    "src/core/kiem-tu/NguKiemDao.ts",
+    "src/core/simulation/benchmark/BalanceBaselines.ts",
+    "src/data/progression/KiemTuNodes.ts",
+    "src/locales/en.json",
+    "src/locales/vi.json"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/fix-verify-a4.log",
+   "artifactHash": "60e11ed0562b06a72999d792e199c286fc02486dd11e1b988a6daa491cb99002",
+   "claims": [
+    "KiemTuPath no longer value-imports NguKiemDao; formulas on leaf + re-exported; fixture legal (tram L3 inherited, mirror complete, precursors learned); grantedOnly cost 0; locale newlines restored; 622+53 tests pass"
+   ],
+   "invariantIds": [],
+   "limitations": [],
    "result": "PASS",
    "status": "CURRENT"
   }
@@ -6342,7 +6618,7 @@
     "F-NK-AUT-A3-3"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-NK-CLO-10",
@@ -6371,6 +6647,67 @@
     "F-NK-AUT-A3-1",
     "F-NK-AUT-A3-2",
     "F-NK-AUT-A3-3"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-NK-COR-A4",
+   "state": {
+    "productStateId": "90acfe897e3bd6d52c288bc8c21f5ef770c91f9d36edafed594c86836fe3817d",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 5,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-5a112e8944ef4ae883c9f0432d60ff96",
+   "contextId": "sealed-child-5a112e8944ef4ae883c9f0432d60ff96",
+   "model": "swe-2-max",
+   "role": "correctness-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T11:28:41.000Z",
+   "sealedAt": "2026-09-25T11:50:34.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-NK-COR-A4-1",
+    "F-NK-COR-A4-2"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-NK-AUT-A4",
+   "state": {
+    "productStateId": "90acfe897e3bd6d52c288bc8c21f5ef770c91f9d36edafed594c86836fe3817d",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 5,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-6405bacbf2824b83a8ba9b97f343d063",
+   "contextId": "sealed-child-6405bacbf2824b83a8ba9b97f343d063",
+   "model": "swe-2-max",
+   "role": "authority-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T11:28:45.000Z",
+   "sealedAt": "2026-09-25T11:55:43.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-NK-AUT-A4-1",
+    "F-NK-AUT-A4-2",
+    "F-NK-AUT-A4-3"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -7919,6 +8256,138 @@
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
+  },
+  {
+   "id": "L-NK-40",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-COR-A4-1",
+    "F-NK-AUT-A4-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "fixture-legality",
+   "missedInvariantIds": [],
+   "escapeReason": "benchmark fixture hand-edited past what canonical writes can produce; offerGate + mirror contract not re-derived",
+   "applicability": [
+    "benchmark/simulation baseline fixtures",
+    "committed-way snapshots"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "fixtures claiming a real state must be re-derived against gates + mirror rules, not hand-tuned"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-COR-A4"
+   ],
+   "capabilityDelta": "fixture legality vs canonical writes",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-41",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-AUT-A4-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "layer-direction",
+   "missedInvariantIds": [],
+   "escapeReason": "validator reached INTO the economy module for a bound formula; leaf predicates imported back upward",
+   "applicability": [
+    "kiem-tu module graph",
+    "persisted-state validators"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "realm-bound formulas consumed by both leaf and domain layers live on the leaf module"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-AUT-A4"
+   ],
+   "capabilityDelta": "formulas on leaf, edges one-way",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-42",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-AUT-A4-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "dead-field",
+   "missedInvariantIds": [],
+   "escapeReason": "insightCost copied onto a node that can never be purchased",
+   "applicability": [
+    "grantedOnly nodes",
+    "sealed placeholders"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "grantedOnly nodes carry cost 0 and a comment saying so"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-AUT-A4"
+   ],
+   "capabilityDelta": "grantedOnly cost discipline",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-43",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-COR-A4-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "whitespace-drift",
+   "missedInvariantIds": [],
+   "escapeReason": "formatter/editor pass stripped locale trailing newlines",
+   "applicability": [
+    "json locale files"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "keep file-ending newlines in locale json edits"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-COR-A4"
+   ],
+   "capabilityDelta": "locale whitespace hygiene",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
   }
  ],
  "messages": [],
@@ -8306,6 +8775,22 @@
    "payloadPath": "events/0024.json",
    "payloadHash": "26ae3ae2f22851971e64527af18758fe6e3247a347ef94bfc6eff2af28a376f5",
    "eventHash": "e7b029c3848b54d119fea464091eab505eb5a72f3d81b409a9144ae214668933"
+  },
+  {
+   "seq": 25,
+   "at": "2026-09-25T12:25:40.057Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "5e9c83af8bed9cf82ec38a4089430e4878c49a3820dda91d3d117c371f9f8ed8",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "e7b029c3848b54d119fea464091eab505eb5a72f3d81b409a9144ae214668933",
+   "payloadPath": "events/0025.json",
+   "payloadHash": "9514642e564d30cdc4b98739c12be6d4f480f3dcb95894ad5fabfe72b228fe9b",
+   "eventHash": "b2c42ae0dd28b4b2e4cdae781ab4c8992fd6e3952f454c58440744879f259f2c"
   }
  ]
 }
