@@ -11,8 +11,8 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "bdc04bf9",
   "state": {
-   "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
-   "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+   "productStateId": "78670408bf5e4fdda6b3931efb6432591a50eb058333226fba732331a3f28ab2",
+   "contractId": "05c4db99cc2008a384174d30d75fe2ed1579d7e55d76726bd9a195d02adec4d7",
    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
   },
@@ -380,7 +380,557 @@
    "closureReviewIds": [],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-TT-COR-1",
+   "title": "minor_tran_kinh: stacks-window weaken instead of spec consume-on-hit",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/TheTuNodes.ts",
+     "symbolOrSection": "minor_tran_kinh effect + tran_kinh buff def",
+     "revision": "bdc04bf9",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "sealed-review",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "spec text vs impl lines 164-175/491-500/111-125",
+   "expected": "spec channel tranKinhWeakenRatio + consume-on-hit next resolved hit",
+   "actual": "channel named tranKinhStacksBonus; 1-holder-turn window weakens every hit",
+   "rootCause": "channel authored outside spec vocabulary",
+   "rootClass": "contract",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer grep + seam audit",
+     "hitDispositions": [
+      "none else"
+     ],
+     "coverageLimits": [
+      "reviewer sweep"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-TT-COR-2",
+   "title": "mutex blind spot at load (dup of F-TT-AUT-1)",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/services/save/saveShapeValidation.ts",
+     "symbolOrSection": "D9d/D9f checks",
+     "revision": "bdc04bf9",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "sealed-review",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "crafted dual-root save passes",
+   "expected": "same as F-TT-AUT-1",
+   "actual": "same",
+   "rootCause": "same root cause",
+   "rootClass": "contract",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer grep + seam audit",
+     "hitDispositions": [
+      "none else"
+     ],
+     "coverageLimits": [
+      "reviewer sweep"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": "F-TT-AUT-1",
+   "exception": null,
+   "status": "DUPLICATE_LINKED",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-TT-COR-3",
+   "title": "stale phan_chinh comment in adapter (dup of F-TT-AUT-3)",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/runtime/scheduler/adapters/CombatSystemDamageAdapter.ts",
+     "symbolOrSection": "comment ~218",
+     "revision": "bdc04bf9",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "sealed-review",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "rename drift",
+   "expected": "live id phan_chan",
+   "actual": "comment says phan_chinh",
+   "rootCause": "same",
+   "rootClass": "contract",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer grep + seam audit",
+     "hitDispositions": [
+      "none else"
+     ],
+     "coverageLimits": [
+      "reviewer sweep"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": "F-TT-AUT-3",
+   "exception": null,
+   "status": "DUPLICATE_LINKED",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-TT-COR-4",
+   "title": "sacrifice paid<=0 resolves 0-damage instead of CombatOperationSkip",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/runtime/scheduler/adapters/CombatSystemDamageAdapter.ts",
+     "symbolOrSection": "sacrifice profile ~170-188",
+     "revision": "bdc04bf9",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "sealed-review",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "probe: 1HP caster survives, resolved",
+   "expected": "spec 2.3: paid<=0 -> skip",
+   "actual": "0-amount resolve + event",
+   "rootCause": "spec pin not implemented",
+   "rootClass": "contract",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer grep + seam audit",
+     "hitDispositions": [
+      "none else"
+     ],
+     "coverageLimits": [
+      "reviewer sweep"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-TT-COR-5",
+   "title": "killing blow no longer reflects - dead-holder skip drops legacy semantics",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/proc/CombatProcSystem.ts",
+     "symbolOrSection": "flushReflects ~223",
+     "revision": "bdc04bf9",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "sealed-review",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "probe: 10HP phan_chan holder killed -> 0 reflect",
+   "expected": "legacy + adapter comment: dead holder reflects",
+   "actual": "!holder.alive skip drops it",
+   "rootCause": "mission-added gate",
+   "rootClass": "contract",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer grep + seam audit",
+     "hitDispositions": [
+      "none else"
+     ],
+     "coverageLimits": [
+      "reviewer sweep"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-TT-COR-6",
+   "title": "rollChance draws before reflect-eligibility gate",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/proc/CombatProcSystem.ts",
+     "symbolOrSection": "~156 vs 179-201",
+     "revision": "bdc04bf9",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "sealed-review",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "chance=1 in beta -> unreachable",
+   "expected": "gate before roll",
+   "actual": "dead draws for ineligible actions",
+   "rootCause": "ordering",
+   "rootClass": "contract",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer grep + seam audit",
+     "hitDispositions": [
+      "none else"
+     ],
+     "coverageLimits": [
+      "reviewer sweep"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "unreachable in beta (chance=1); ordering nit only"
+  },
+  {
+   "id": "F-TT-COR-7",
+   "title": "pre-beta the-tu node ids load inert (non-core ids unchecked)",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/services/save/saveShapeValidation.ts",
+     "symbolOrSection": "~667-708",
+     "revision": "bdc04bf9",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "sealed-review",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "only core_* keys get catalog membership",
+   "expected": "fail honestly or clean",
+   "actual": "old non-core ids dormant",
+   "rootCause": "documented dormant legacy",
+   "rootClass": "contract",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer grep + seam audit",
+     "hitDispositions": [
+      "none else"
+     ],
+     "coverageLimits": [
+      "reviewer sweep"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "documented dormant legacy data; inert by design"
+  },
+  {
+   "id": "F-TT-INT-1",
+   "title": "dead-holder reflect silently drops - post-mortem semantics unpinned",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/proc/CombatProcSystem.ts",
+     "symbolOrSection": "flushReflects:223 !holder.alive",
+     "revision": "bdc04bf9",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "sealed-review",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "probe: holder killed by hit -> 0 reflection events",
+   "expected": "post-mortem retaliation per legacy+adapter comment",
+   "actual": "flush skips dead holder; lethal-hit case drops reflect",
+   "rootCause": "mission-added gate contradicts documented capability",
+   "rootClass": "contract",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer grep + seam audit",
+     "hitDispositions": [
+      "none else"
+     ],
+     "coverageLimits": [
+      "reviewer sweep"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-TT-INT-2",
+   "title": "dual-root crafted save silently picks cuong (dup of F-TT-AUT-1)",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": "resolveBodyKit ~277",
+     "revision": "bdc04bf9",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "sealed-review",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "same",
+   "expected": "same",
+   "actual": "same",
+   "rootCause": "same",
+   "rootClass": "contract",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer grep + seam audit",
+     "hitDispositions": [
+      "none else"
+     ],
+     "coverageLimits": [
+      "reviewer sweep"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": "F-TT-AUT-1",
+   "exception": null,
+   "status": "DUPLICATE_LINKED",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-TT-INT-3",
+   "title": "adapter comment claims dead-holder reflect unreachable at emit site",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/runtime/scheduler/adapters/CombatSystemDamageAdapter.ts",
+     "symbolOrSection": "comment ~218",
+     "revision": "bdc04bf9",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "sealed-review",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "comment vs gate divergence",
+   "expected": "comment matches reachable path",
+   "actual": "contradicts flush gate",
+   "rootCause": "documentation drift",
+   "rootClass": "contract",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer grep + seam audit",
+     "hitDispositions": [
+      "none else"
+     ],
+     "coverageLimits": [
+      "reviewer sweep"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": "F-TT-AUT-3",
+   "exception": null,
+   "status": "DUPLICATE_LINKED",
    "rejectionReason": null
   }
  ],
@@ -443,7 +993,7 @@
     "jsdom canvas env excludes scene tests",
     "ImageMagick absent"
    ],
-   "status": "CURRENT"
+   "status": "STALE"
   },
   {
    "id": "EV-TT-CLO-1",
@@ -476,7 +1026,7 @@
     "verdict artifact is session message, not a committed file"
    ],
    "result": "PASS",
-   "status": "CURRENT"
+   "status": "STALE"
   }
  ],
  "coverage": [],
@@ -511,7 +1061,7 @@
     "F-TT-P15-1"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-TT-AUT-A1",
@@ -542,7 +1092,73 @@
     "F-TT-AUT-3"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
+  },
+  {
+   "id": "REV-TT-COR-A1",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 3,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-4b83f9eca919414d939db038832130c3",
+   "contextId": "sealed-child-4b83f9eca919414d939db038832130c3",
+   "model": "swe-2-max",
+   "role": "clean-final-correctness",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T06:00:05.000Z",
+   "sealedAt": "2026-09-25T06:25:03.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-COR-1",
+    "F-TT-COR-2",
+    "F-TT-COR-3",
+    "F-TT-COR-4",
+    "F-TT-COR-5",
+    "F-TT-COR-6",
+    "F-TT-COR-7"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-TT-INT-A1",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 3,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-8828a01d13634a129ec3f8d690c6fd99",
+   "contextId": "sealed-child-8828a01d13634a129ec3f8d690c6fd99",
+   "model": "swe-2-max",
+   "role": "clean-final-integration",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T06:15:14.000Z",
+   "sealedAt": "2026-09-25T06:38:07.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-INT-1",
+    "F-TT-INT-2",
+    "F-TT-INT-3"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
   }
  ],
  "cycles": [],
@@ -640,6 +1256,186 @@
    "policyVersion": null,
    "effectiveFromRun": null,
    "guidance": null
+  },
+  {
+   "id": "L-TT-4",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-6"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "contract",
+   "missedInvariantIds": [],
+   "escapeReason": "seam gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "pin test"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-COR-A1"
+   ],
+   "capabilityDelta": "lesson for non-actionable reject",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-TT-5",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-7"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "contract",
+   "missedInvariantIds": [],
+   "escapeReason": "seam gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "pin test"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-COR-A1"
+   ],
+   "capabilityDelta": "lesson for non-actionable reject",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-TT-6",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "contract",
+   "missedInvariantIds": [],
+   "escapeReason": "seam gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "pin test"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-COR-A1"
+   ],
+   "capabilityDelta": "terminal-finding lesson MC13",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-TT-7",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-INT-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "contract",
+   "missedInvariantIds": [],
+   "escapeReason": "seam gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "pin test"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-INT-A1"
+   ],
+   "capabilityDelta": "terminal-finding lesson MC13",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-TT-8",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-INT-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "contract",
+   "missedInvariantIds": [],
+   "escapeReason": "seam gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "pin test"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-INT-A1"
+   ],
+   "capabilityDelta": "terminal-finding lesson MC13",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-TT-9",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "contract",
+   "missedInvariantIds": [],
+   "escapeReason": "seam gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "pin test"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-COR-A1"
+   ],
+   "capabilityDelta": "terminal-finding lesson MC13",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
   }
  ],
  "messages": [],
@@ -691,6 +1487,22 @@
    "payloadPath": "events/0003.json",
    "payloadHash": "f5b0ef49a0c68b6085c4d51163ae6fd8608ac10faa2a2019947bf6d2b293f280",
    "eventHash": "16a89ef4ad96af9180846b30345254838880281fc87dbac92d29e29205abcf02"
+  },
+  {
+   "seq": 4,
+   "at": "2026-09-25T06:49:56.705Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-406257",
+   "state": {
+    "productStateId": "78670408bf5e4fdda6b3931efb6432591a50eb058333226fba732331a3f28ab2",
+    "contractId": "05c4db99cc2008a384174d30d75fe2ed1579d7e55d76726bd9a195d02adec4d7",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "16a89ef4ad96af9180846b30345254838880281fc87dbac92d29e29205abcf02",
+   "payloadPath": "events/0004.json",
+   "payloadHash": "57e4b91618e1603c753c797d05c9308802dbbc9f8a94f63cd957fc7e29a99560",
+   "eventHash": "3a29377641acc911dbb9c3c7bbf90434d372cad0c35c8a553fca0216d3146209"
   }
  ]
 }
