@@ -474,6 +474,24 @@ describe('validateGameSaveShape — module-owned persisted slices (P1-M6)', () =
     expect(pathsOf(result).some((path) => path === 'player.swordPath.kiemDaoBase')).toBe(false)
   })
 
+  // F-NK-AUT-8 - kiemDaoBase is the breakthrough-merge PRODUCT, not the
+  // live queue count: after enough merges it legitimately grows past
+  // kiemDaoCap (base *= 1+0.3*merged). The cap bound applies to
+  // kiemDaoCount only - a save with base > cap is still valid.
+  it('chấp nhận kiemDaoBase vượt trần count-cap sau nhiều merge', () => {
+    const save = validSave()
+    const player = save.player as Record<string, unknown>
+    player.realmId = 'foundation_establishment'
+    player.cultivationPath = 'sword'
+    player.cultivationWay = 'hidden_sword_pathway'
+    // cap(2)=3: qi merge x1.6 -> TC merge x1.9 = 3.04 > 3, all legal.
+    player.swordPath = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 3.04 }
+
+    const result = validateGameSaveShape(save)
+
+    expect(pathsOf(result).some((path) => path.startsWith('player.swordPath'))).toBe(false)
+  })
+
   // F-NK-CLO-2 - the cap lane guards realmIndex>=1: a mortal-realm
   // swordPath slice emits a fault, it never lets kiemDaoCap throw
   // inside the untrusted-input validator.

@@ -149,12 +149,17 @@ export function validateSwordPathPersistedState(
     emit({ path: 'player.swordPath.kiemDaoBase', message: 'phải là number hữu hạn >= 1' })
   }
 
-  // F-NK-INT-3 / F-NK-CLO-2 - cap bound vs the realm cap: count/base may
-  // not exceed kiemDaoCap(realmIndex) (gainKiemY stops at cap; a crafted
-  // save exceeding it would emit more instances than authored). The cap
-  // is defined only from realmIndex>=1 - a mortal-realm swordPath slice
-  // is malformed on its own, so the lane emits a fault rather than
-  // letting kiemDaoCap throw inside the untrusted-input validator.
+  // F-NK-INT-3 / F-NK-CLO-2 - cap bound vs the realm cap: the live
+  // instance COUNT may not exceed kiemDaoCap(realmIndex) (gainKiemY
+  // stops at cap; a crafted save exceeding it would emit more
+  // instances than authored). kiemDaoBase is NOT bounded by the cap:
+  // it is the multiplicative breakthrough-merge product
+  // (base *= 1+0.3*mergedCount, K15) which legitimately grows past
+  // the count cap after enough merges - bounding it here would mark
+  // a fully legal save corrupted. The cap is defined only from
+  // realmIndex>=1 - a mortal-realm swordPath slice is malformed on
+  // its own, so the lane emits a fault rather than letting
+  // kiemDaoCap throw inside the untrusted-input validator.
   if (
     typeof playerPayload.realmId === 'string' &&
     REALMS.some((realm) => realm.id === playerPayload.realmId) &&
@@ -171,10 +176,10 @@ export function validateSwordPathPersistedState(
       })
     } else {
       const cap = kiemDaoCap(realmIndex)
-      if (swordPath.kiemDaoCount > cap || swordPath.kiemDaoBase > cap) {
+      if (swordPath.kiemDaoCount > cap) {
         emit({
           path: 'player.swordPath',
-          message: `kiemDaoCount/kiemDaoBase vượt trần theo cảnh giới (cap = ${cap})`,
+          message: `kiemDaoCount vượt trần theo cảnh giới (cap = ${cap})`,
         })
       }
     }
