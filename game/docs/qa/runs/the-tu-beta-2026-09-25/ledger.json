@@ -3535,16 +3535,18 @@
    "invariantIds": [],
    "evidenceIds": [],
    "pinEvidenceIds": [
-    "EV-TT-A8-FIX"
+    "EV-TT-A84-GAPFIX"
    ],
    "verificationEvidenceIds": [
-    "EV-TT-A8-FIX"
+    "EV-TT-A84-GAPFIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-13"
+   ],
    "duplicateOf": null,
    "exception": null,
    "siblingFindingIds": [],
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null,
    "rootClass": "spec-impl-vocabulary-drift",
    "repair": "FIXED @0956d787: spec:221 stale label loanDauPaidBonus -> loanDauPaidHpBonus (residual after 63ac970d)",
@@ -5558,6 +5560,35 @@
    "reviewedAfterPreviousFixes": true,
    "coverageIds": [],
    "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-TT-CLO-13",
+   "state": {
+    "productStateId": "3954e88d7601834989e11f6fceb47c0bc546e04635bce6f8faec3d2994afae10",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 24,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-9a88dac45dbd42b88539d9d378039391",
+   "contextId": "sealed-child-9a88dac45dbd42b88539d9d378039391",
+   "model": "swe-2-max",
+   "role": "closure-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T15:41:17.000Z",
+   "sealedAt": "2026-09-25T15:43:16.000Z",
+   "previousPhaseReviewId": "REV-TT-CLO-12",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-TT-A84-GAPFIX"
+   ],
    "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
