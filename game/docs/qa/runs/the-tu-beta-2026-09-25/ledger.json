@@ -11,8 +11,8 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "bdc04bf9",
   "state": {
-   "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a",
-   "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+   "productStateId": "309e78cb4f20127ae74ffa7a42a46ba3c7f243b7b0dfb4cdbcb983b060b244d7",
+   "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
   },
@@ -2271,6 +2271,202 @@
    "exception": null,
    "status": "FIXED_PENDING_PROOF",
    "rejectionReason": null
+  },
+  {
+   "id": "F-TT-INT-A5-1",
+   "title": "Save validation has no excludesNode mutex-consistency check (crafted both-roots save validates)",
+   "state": {
+    "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "FIXTURE_INJECTED",
+   "locations": [
+    {
+     "path": "src/services/save/saveShapeValidation.ts",
+     "symbolOrSection": "nodeLevels checks",
+     "revision": "bb040df3",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": "resolveBodyKit",
+     "revision": "bb040df3",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-75f6897af2e04c1496ce00da078b7034",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "crafted both-roots save validates; resolves deterministically to cuong_chien; tran levels inert",
+   "expected": "persisted state owning both mutex roots rejected or flagged",
+   "actual": "validates and resolves deterministically; unreachable via legal ops (excludesNode level-gate in canPurchaseNode/canUpgradeNode both directions)",
+   "rootCause": "registry-less save boundary by documented design; purchase-time rule only",
+   "rootClass": "crafted-save-only-reachability",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/services",
+      "src/data",
+      "src/components"
+     ],
+     "termsAndMethod": "grep excludesNode saveShapeValidation; resolveBodyKit ordering",
+     "hitDispositions": [
+      "same-class exposure is generic pre-existing save boundary"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [
+    "F-TT-AUT-A5-1",
+    "F-TT-COR-A4-1",
+    "F-TT-COR-A4-2"
+   ],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": "F-TT-AUT-A5-1",
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "duplicate of F-TT-AUT-A5-1 - same crafted-save mutex boundary already rejected (registry-less save boundary, tamper-only reachability)"
+  },
+  {
+   "id": "F-TT-INT-A5-2",
+   "title": "rollReactiveTrigger lacks the dead-holder guard that resolveReactiveProcs has",
+   "state": {
+    "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/proc/CombatProcSystem.ts",
+     "symbolOrSection": "rollReactiveTrigger",
+     "revision": "bb040df3",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/proc/CombatProcSystem.ts",
+     "symbolOrSection": "resolveReactiveProcs",
+     "revision": "bb040df3",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-75f6897af2e04c1496ce00da078b7034",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "trigger lane evaluates for dead holders; proc lane guards !holder.alive",
+   "expected": "consistent liveness policy across the two reactive lanes",
+   "actual": "asymmetry pre-exists; for phan_chan the dead-holder evaluation is spec-pinned (post-mortem reflect at captured ratios) - adding the guard would break beta spec",
+   "rootCause": "pre-existing asymmetry; spec-pinned correct for phan_chan",
+   "rootClass": "pre-existing-spec-pinned",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/services",
+      "src/data",
+      "src/components"
+     ],
+     "termsAndMethod": "grep holder.alive rollReactiveTrigger/resolveReactiveProcs",
+     "hitDispositions": [
+      "latent asymmetry only affects future trigger capabilities"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "pre-existing asymmetry, spec-pinned correct for phan_chan post-mortem reflect; adding a dead-holder guard to the trigger lane would break the pinned behavior"
+  },
+  {
+   "id": "F-TT-INT-A5-3",
+   "title": "collectKitCloneBuffs scans only battle.players - enemy grantsBuffsAtBuild would be inert",
+   "state": {
+    "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerTurnBattleOps.ts",
+     "symbolOrSection": "collectKitCloneBuffs",
+     "revision": "bb040df3",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/game/CombatBuild.ts",
+     "symbolOrSection": "grantsBuffsAtBuild",
+     "revision": "bb040df3",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-75f6897af2e04c1496ce00da078b7034",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "iterates battle.players slots exclusively; enemies never contribute clones",
+   "expected": "clone collection covers every participant that could carry grantsBuffsAtBuild",
+   "actual": "no enemy consumer exists today - inert latent limit, not beta-introduced",
+   "rootCause": "player-side scope by current design; no enemy kit-clone consumer",
+   "rootClass": "pre-existing-latent-limit",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/services",
+      "src/data",
+      "src/components"
+     ],
+     "termsAndMethod": "grep collectKitCloneBuffs call sites; applyEntryBuffs source",
+     "hitDispositions": [
+      "latent: a future enemy kit clone would silently no-op"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "latent pre-existing scope limit; zero enemy consumers today; no beta regression"
   }
  ],
  "evidence": [
@@ -2557,7 +2753,7 @@
     "scoped suite only"
    ],
    "result": "PASS",
-   "status": "CURRENT"
+   "status": "STALE"
   }
  ],
  "coverage": [],
@@ -3047,7 +3243,7 @@
     "F-TT-COR-A4-3"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-TT-AUT-A5",
@@ -3076,7 +3272,7 @@
     "F-TT-AUT-A5-2"
    ],
    "novelAttackIds": [],
-   "status": "SEALED",
+   "status": "STALE",
    "previousPhaseReviewId": "REV-TT-COR-A4"
   },
   {
@@ -3106,6 +3302,37 @@
    ],
    "findingIds": [
     "F-TT-COR-A4-3"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-TT-INT-A5",
+   "state": {
+    "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 12,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-75f6897af2e04c1496ce00da078b7034",
+   "contextId": "sealed-child-75f6897af2e04c1496ce00da078b7034",
+   "model": "swe-2-max",
+   "role": "integration-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T09:08:00.000Z",
+   "sealedAt": "2026-09-25T09:26:50.000Z",
+   "previousPhaseReviewId": "REV-TT-AUT-A5",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-INT-A5-1",
+    "F-TT-INT-A5-2",
+    "F-TT-INT-A5-3"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -4041,7 +4268,8 @@
    "supersedes": null,
    "triggerType": "DEFECT",
    "findingIds": [
-    "F-TT-AUT-A5-1"
+    "F-TT-AUT-A5-1",
+    "F-TT-INT-A5-1"
    ],
    "incidentEvidenceIds": [],
    "originatingRun": "the-tu-beta-2026-09-25",
@@ -4148,6 +4376,66 @@
     "REV-TT-CLO-2"
    ],
    "capabilityDelta": "post-mortem reflect behavior pinned in integration coverage",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-17",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-INT-A5-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "pre-existing-spec-pinned",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "dead-holder trigger-lane evaluation is spec-pinned for post-mortem reflect - do not add liveness guards to rollReactiveTrigger"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-INT-A5"
+   ],
+   "capabilityDelta": "dead-holder trigger-lane evaluation is spec-pinned for post-mortem reflect - do not add liveness guards to rollReactiveTrigger",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-18",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-INT-A5-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "pre-existing-latent-limit",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "collectKitCloneBuffs is player-side by design; revisit only when an enemy grantsBuffsAtBuild consumer exists"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-INT-A5"
+   ],
+   "capabilityDelta": "collectKitCloneBuffs is player-side by design; revisit only when an enemy grantsBuffsAtBuild consumer exists",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": "the-tu-beta-2026-09-25",
@@ -4301,6 +4589,22 @@
    "payloadPath": "events/0009.json",
    "payloadHash": "6477074b0ca300cc66478bb57f4fa4b70efdcd2a4fc46d43e7b946893dc3cfac",
    "eventHash": "edd3458db230d4f2b6585d4ffb90688be50480aead9b07caf16298fd69dc4949"
+  },
+  {
+   "seq": 10,
+   "at": "2026-09-25T09:25:21.009Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-406257",
+   "state": {
+    "productStateId": "309e78cb4f20127ae74ffa7a42a46ba3c7f243b7b0dfb4cdbcb983b060b244d7",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "edd3458db230d4f2b6585d4ffb90688be50480aead9b07caf16298fd69dc4949",
+   "payloadPath": "events/0010.json",
+   "payloadHash": "359205efcec8d81e5b7663a6de202ed2b208f4cc641e327cea0edb0f6cb08d75",
+   "eventHash": "1329a2529194038c59df47644a34e17c4d3d3d2b63ac07d14d329b9e65658cab"
   }
  ]
 }

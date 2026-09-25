@@ -3054,7 +3054,7 @@
       "path": "docs/specs/the-tu-beta-spec.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "a47eabd98963d1ea40b60bc506580c83eaa9a12731ec3a8e0b9653c4074b0d56"
+      "hash": "7acb503c6df9a8f0b43934703ff3cb0bb3c18b676f2be8ab1f8e4f0d6572de52"
     },
     {
       "path": "docs/superpowers/plans/2026-09-08-r10-save-restore-boundary.md",
@@ -22983,5 +22983,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a"
+  "productStateId": "309e78cb4f20127ae74ffa7a42a46ba3c7f243b7b0dfb4cdbcb983b060b244d7"
 }
