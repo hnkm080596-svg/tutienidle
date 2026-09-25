@@ -20742,7 +20742,7 @@
       "path": "src/data/progression/SkillCoreNodes.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "47ab7b4e21d4078b531fe8ac6c97f9623f14fd94031e5df8bdde7754d04fe7b7"
+      "hash": "a67744eb6df250c6f22ce1014d6a420df42443fbe7f749784722756513adf8f7"
     },
     {
       "path": "src/data/progression/SkillCoreNodes.ts",
@@ -23001,5 +23001,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "8c0ad3ddbaa42cd32ee06cfc54e697c0526d6ecba27449e0b066cbf8de56f111"
+  "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217"
 }
