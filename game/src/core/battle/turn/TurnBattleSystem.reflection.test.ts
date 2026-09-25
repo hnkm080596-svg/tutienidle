@@ -227,6 +227,33 @@ describe('phan_chan reflect (Max-HP ratio, once-per-action)', () => {
     expect(10_000 - attacker.currentHp).toBeCloseTo(10_000 * PHAN_CHAN_BASE_RATIO)
   })
 
+  it('a non-natural hostile hit (counter payload) never queues a reflect (INV-9)', () => {
+    const tank = makeTank('tank')
+    const attacker = makeAttacker('enemy')
+    const f = makeBattle(tank, attacker)
+    applyPhanChan(f.runtime, f.tankP)
+
+    f.attackerP.reactivePayloads = { enemy_hit: { ...makeAttackerBasic() } }
+    f.battle.queuedFollowUps = [
+      {
+        actorId: 'enemy',
+        executionKind: 'reactive_bypass',
+        actionSource: 'counter',
+        payloadSkillId: 'enemy_hit',
+        targetIds: ['tank'],
+      },
+    ]
+
+    const tankHpBefore = tank.currentHp
+    const system = systemOf(f)
+    system.resolveNextStep(f.battle)
+
+    // The hostile hit landed (the taken window genuinely opened)...
+    expect(tank.currentHp).toBeLessThan(tankHpBefore)
+    // ...but the bypass-source action feeds no reflect.
+    expect(attacker.currentHp).toBe(10_000)
+  })
+
   it('dodged hit -> no reflection', () => {
     // Hit chance floors at 5% (Accuracy.ts) - force the roll high so the
     // dodge is deterministic rather than stat-absurd.

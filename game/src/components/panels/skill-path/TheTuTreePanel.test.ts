@@ -13,7 +13,7 @@ import { i18n } from '@/i18n'
 import { THE_TU_NODES } from '@/data/progression/TheTuNodes'
 import type { GameManager } from '@/core/game/GameManager'
 
-function mockGameManager(inBattle: boolean): Partial<GameManager> {
+function mockGameManager(state: 'intro' | 'countdown' | 'fighting' | null): Partial<GameManager> {
   return {
     nodeRegistry: {
       getAll: () => THE_TU_NODES,
@@ -21,7 +21,7 @@ function mockGameManager(inBattle: boolean): Partial<GameManager> {
       has: (id: string) => THE_TU_NODES.some((node) => node.id === id),
     } as unknown as GameManager['nodeRegistry'],
     getTurnBattle: () =>
-      (inBattle ? { state: 'fighting' } : null) as ReturnType<GameManager['getTurnBattle']>,
+      (state === null ? null : { state }) as ReturnType<GameManager['getTurnBattle']>,
     progressionOps: {
       previewNodeRespec: () => null,
       respecNodeTree: () => 0,
@@ -29,7 +29,7 @@ function mockGameManager(inBattle: boolean): Partial<GameManager> {
   }
 }
 
-function mountPanel(inBattle = false) {
+function mountPanel(inBattle: 'intro' | 'countdown' | 'fighting' | false = false) {
   const container = document.createElement('div')
   document.body.appendChild(container)
 
@@ -48,7 +48,7 @@ function mountPanel(inBattle = false) {
   const pinia = createPinia()
   app.use(pinia)
   app.use(i18n)
-  app.provide(GAME_MANAGER_KEY, mockGameManager(inBattle) as GameManager)
+  app.provide(GAME_MANAGER_KEY, mockGameManager(inBattle === false ? null : inBattle) as GameManager)
   app.provide(STATE_VERSION_KEY, ref(0))
   app.provide(BUMP_STATE_KEY, () => {})
 
@@ -97,7 +97,7 @@ describe('TheTuTreePanel', () => {
   })
 
   it('respec stays disabled while a battle is in progress', async () => {
-    const view = mountPanel(true)
+    const view = mountPanel('fighting')
     view.player.$state.nodeLevels.cuong_chien = 1
     view.player.$state.purchasedNodeIds.push('cuong_chien')
     await nextTick()
@@ -106,6 +106,21 @@ describe('TheTuTreePanel', () => {
     expect(respec).not.toBeNull()
     expect(respec!.disabled).toBe(true)
 
+    respec!.click()
+    await nextTick()
+    expect(view.player.$state.nodeLevels.cuong_chien).toBe(1)
+    view.unmount()
+  })
+
+  it('countdown also counts as in-battle: respec stays disabled', async () => {
+    const view = mountPanel('countdown')
+    view.player.$state.nodeLevels.cuong_chien = 1
+    view.player.$state.purchasedNodeIds.push('cuong_chien')
+    await nextTick()
+
+    const respec = view.container.querySelector<HTMLButtonElement>('.the-tu-tree__respec')
+    expect(respec).not.toBeNull()
+    expect(respec!.disabled).toBe(true)
     respec!.click()
     await nextTick()
     expect(view.player.$state.nodeLevels.cuong_chien).toBe(1)
