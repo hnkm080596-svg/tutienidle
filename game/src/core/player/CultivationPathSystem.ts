@@ -449,6 +449,15 @@ export function grantCultivationPathRealmReward(
         )
       }
 
+      // Levels outside [1, maxLevel] would write a value saveShapeValidation
+      // rejects on the next load - refuse the grant rather than corrupt.
+      if (!Number.isInteger(level) || level < 1) {
+        console.warn(
+          `grantedNodeLevels entry '${nodeId}' has invalid level ${level} - grant skipped`,
+        )
+        continue
+      }
+
       const clamped = Math.min(level, getNodeMaxLevel(node))
       player.nodeLevels[nodeId] = Math.max(player.nodeLevels[nodeId] ?? 0, clamped)
     }

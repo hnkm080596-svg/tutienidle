@@ -456,7 +456,7 @@ export const PHAP_TU_SKILLS: Skill[] = [
       {
         id: 'lan_doc_quang',
         name: 'Lan Độc · Quảng',
-        description: 'Độc theo gió bay khắp chiến trường.',
+        description: 'Bóng độc trải khắp các hàng — đòn Mộc giáng vào mục tiêu chính.',
         // Spec 2.3: Quang = all_lanes columnRadius 1.
         targeting: { shape: 'all_lanes', columnRadius: 1 },
         effectsOverride: [
@@ -473,7 +473,7 @@ export const PHAP_TU_SKILLS: Skill[] = [
       {
         id: 'lan_doc_tham',
         name: 'Lan Độc · Thâm',
-        description: 'Độc ngấm thấu xương — lan trọn vẹn, giữ chân nguồn.',
+        description: 'Độc ngấm thấu xương — đòn Mộc dồn nặng vào mục tiêu chính.',
         effectsOverride: [
           {
             type: 'damage',

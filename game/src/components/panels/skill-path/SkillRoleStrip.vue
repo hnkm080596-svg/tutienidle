@@ -18,7 +18,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { usePlayerStore } from '@/stores/player'
 import { MORTAL_DEFAULT_BASIC_ID, MORTAL_PRECURSOR_SKILL_IDS } from '@/core/skill/MortalPrecursors'
-import { getNodeLevel, ownedNodeIds, specializationClaimingNode, specializationClaimingNodes } from '@/core/progression/NodeSystem'
+import { getNodeLevel, ownedNodeIds, specializationClaimingNodes } from '@/core/progression/NodeSystem'
 import type { Skill } from '@/core/skill/Skill'
 import type { SkillSpecialization } from '@/core/skill/SkillSpecialization'
 
@@ -136,12 +136,6 @@ function isPickedPrecursor(skillId: string): boolean {
 // claim on the specialization they select. A claimed-but-unowned spec
 // renders locked instead of a chip that silently no-ops (the op
 // rejects it anyway); unclaimed specs stay free-switch.
-function claimingNodeForSpec(skillId: string, specId: string) {
-  stateVersion.value
-
-  return specializationClaimingNode(gameManager.nodeRegistry, skillId, specId)
-}
-
 function specLocked(skillId: string, specId: string): boolean {
   // Reads the same ownership union as the authoritative gate
   // (ownedNodeIds = nodeLevels + purchasedNodeIds mirror): any owned
@@ -153,10 +147,16 @@ function specLocked(skillId: string, specId: string): boolean {
 }
 
 function specTooltip(skill: Skill, spec: SkillSpecialization) {
-  const node = claimingNodeForSpec(skill.id, spec.id)
+  // Same plural-claimant + ownership-union read as specLocked: the locked
+  // tooltip names an unowned claimant, and any owned claimant frees the spec.
+  const claimants = specializationClaimingNodes(gameManager.nodeRegistry, skill.id, spec.id)
+  const owned = ownedNodeIds(player.$state)
 
-  if (node !== undefined && getNodeLevel(player.$state, node.id) <= 0) {
-    const permanentlyExcluded = (node.prerequisites ?? []).some(
+  const lockedClaimant = claimants.find((node) => !owned.includes(node.id))
+  const anyOwned = claimants.some((node) => owned.includes(node.id))
+
+  if (claimants.length > 0 && !anyOwned && lockedClaimant !== undefined) {
+    const permanentlyExcluded = (lockedClaimant.prerequisites ?? []).some(
       (prereq) =>
         prereq.kind === 'excludesNode' && getNodeLevel(player.$state, prereq.nodeId) >= 1,
     )
@@ -165,7 +165,7 @@ function specTooltip(skill: Skill, spec: SkillSpecialization) {
       return { title: spec.name, description: t('panels.skillPath.roleStrip.lockedByRival') }
     }
 
-    return { title: spec.name, description: t('panels.skillPath.roleStrip.unlockedByNode', { name: node.name }) }
+    return { title: spec.name, description: t('panels.skillPath.roleStrip.unlockedByNode', { name: lockedClaimant.name }) }
   }
 
   return { title: spec.name, description: spec.description }
