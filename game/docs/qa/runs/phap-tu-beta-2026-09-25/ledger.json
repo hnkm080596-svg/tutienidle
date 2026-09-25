@@ -9,9 +9,9 @@
   "checkout": "/home/ubuntu/repos/tutienidle/.agent-worktrees/phap-tu-basic",
   "branch": "devin/1790260800-phap-tu-basic",
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
-  "head": "05367f86cbaff3ed25b2c61da43d235e3e112e2d",
+  "head": "3058b287f99bffdf066227da29719a4a69163af1",
   "state": {
-   "productStateId": "621131c599464816c7c1943a7b4d875840e411d906d41088ac9ed086691672ee",
+   "productStateId": "8f01d054a9f2abfc2ec58fff417412fdc7366cd0509dacb86a09c719368972cf",
    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -6017,6 +6017,309 @@
    "closedAt": null,
    "closeReason": null,
    "exception": null
+  },
+  {
+   "id": "F-COR7-1",
+   "title": "Mid-save retroactive-grant gap - M5 unreachable for spell players already at Truc Co+",
+   "state": {
+    "productStateId": "621131c599464816c7c1943a7b4d875840e411d906d41088ac9ed086691672ee",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathSystem.ts",
+     "symbolOrSection": "grantCultivationPathRealmReward",
+     "revision": "05367f86",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/tribulation/TribulationOutcomeService.ts",
+     "symbolOrSection": "realm-entry trigger",
+     "revision": "05367f86",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/phap-tu/PhapTuPath.ts",
+     "symbolOrSection": "grantedNodeLevels",
+     "revision": "05367f86",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/realm/ReleasePolicy.ts",
+     "symbolOrSection": "ceiling=foundation_establishment",
+     "revision": "05367f86",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA CORRECTNESS reviewer",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PT-FIX-7"
+   ],
+   "counterexample": "save at foundation_establishment + spell_pathway + empty nodeLevels -> the_thuc_tinh/tinh_thong stay 0 forever",
+   "expected": "pre-patch FC+ cohort still receives the Truc Co grants",
+   "actual": "grant fires only at realm entry; rewardOnly nodes cannot be purchased; no later trigger backfills",
+   "rootCause": "realm-entry-only trigger without retroactive catch-up path",
+   "rootClass": "lifecycle/migration-gap",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/data/skill",
+      "src/data/progression",
+      "src/core"
+     ],
+     "termsAndMethod": "other realm-entry-only grants: qi_refining ritual path + hidden pathway equivalents share the same shape",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "sealed re-review pending"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-PT-FIX-7"
+   ],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "Strict-version save law: saveShapeValidation.ts:1787 rejects any parsed.version !== CURRENT_SAVE_VERSION (84), so every pre-feature save is unloadable - there is no legitimate pre-patch FC+ cohort. The only way to reach 'FC+ with missing grants' on a v84 save is a crafted save or a dev-console realm jump; dev tooling is out of scope for user-facing correctness and the dev-phase no-migration policy (no save migrations between dev builds) applies. INTEGRATION clean-A independently noted the v84 rejection makes retro-grant moot.",
+   "exception": null
+  },
+  {
+   "id": "F-COR7-2",
+   "title": "Capstone spread-spec descriptions hide ailment-chance + damage downgrades (water/metal/wood)",
+   "state": {
+    "productStateId": "621131c599464816c7c1943a7b4d875840e411d906d41088ac9ed086691672ee",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/CoreSkills.ts",
+     "symbolOrSection": "thuy_dao_lan/kim_tan_phong/moc_lan_doc spec descriptions",
+     "revision": "05367f86",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/data/progression/PhapTuBasicNodes.ts",
+     "symbolOrSection": "matching capstone node descriptions",
+     "revision": "05367f86",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA CORRECTNESS reviewer",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "moc_lan_doc drops guaranteed apply 1.0->0.7 with no disclosure in a one-way mutex pick",
+   "expected": "M4 honesty - specs disclose their debuff trade-off like the fire/earth pairs do",
+   "actual": "spread descriptions show only AoE upside; ailmentChance and damage downgrades invisible",
+   "rootCause": "description authored before effectsOverride numbers settled",
+   "rootClass": "honesty/doc-drift",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/data/skill",
+      "src/data/progression",
+      "src/core"
+     ],
+     "termsAndMethod": "all 5 spread specs audited; fire/earth disclosed ailment but not damage - fixed all five",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "sealed re-review pending"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "CoreSkills.ts + PhapTuBasicNodes.ts: all five spread descriptions now disclose both damage and ailment-chance downgrades @3058b287",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-PT-FIX-7"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-COR7-3",
+   "title": "Same-direction stat totals stack past +10% across sibling nodes",
+   "state": {
+    "productStateId": "621131c599464816c7c1943a7b4d875840e411d906d41088ac9ed086691672ee",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuBasicNodes.ts",
+     "symbolOrSection": "earth/fire/wood damage stacks",
+     "revision": "05367f86",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA CORRECTNESS reviewer",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "three earth damage nodes co-purchasable -> +30% skillDamagePercent in one direction",
+   "expected": "ruling interpretation - 'max +10% per direction'",
+   "actual": "per-node cap honored (+10% max per node); siblings stack additively",
+   "rootCause": "spec-reading ambiguity in the ruling",
+   "rootClass": "spec-interpretation",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/data/skill",
+      "src/data/progression",
+      "src/core"
+     ],
+     "termsAndMethod": "all 5 elements audited for per-direction totals",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "sealed re-review pending"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "Ruling #3 verbatim: 'Max node nen chi tang toi da 10% suc manh base o mot huong' - a maxed NODE adds at most +10% in one direction. Per-node cap is the authored contract (file header comment + PhapTuBasicNodes.test.ts pin per node). Cross-node stacking is how node trees compose by design; balancing the totals belongs to the user's BETA-BALANCE pass.",
+   "exception": null
+  },
+  {
+   "id": "F-COR7-4",
+   "title": "Basic-lane node count below the stated ~10-11 per element",
+   "state": {
+    "productStateId": "621131c599464816c7c1943a7b4d875840e411d906d41088ac9ed086691672ee",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "SPEC_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuBasicNodes.ts",
+     "symbolOrSection": "branch rosters: fire7 water6 wood5 metal6 earth6",
+     "revision": "05367f86",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA CORRECTNESS reviewer",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "wood lane had 3 power nodes; new content inventory 5-8/element vs stated ~10-11",
+   "expected": "~10-11 nodes per element branch",
+   "actual": "6-8 per element",
+   "rootCause": "roster thinned during asymmetric-glyph authoring",
+   "rootClass": "spec-quantity-gap",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/data/skill",
+      "src/data/progression",
+      "src/core"
+     ],
+     "termsAndMethod": "available spell-domain stat channels audited per element; wood channels limited to potency+duration (no direct damage)",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "sealed re-review pending"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "Expanded rosters to fire10 water10 wood9 metal10 earth10 @3058b287 - 15 new nodes across LQ trunk + TC outer ring, all skill-scoped",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-PT-FIX-7"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-COR7-5",
+   "title": "Stale header comment - finalDamagePercent 'reserved for the earth capstone' unused",
+   "state": {
+    "productStateId": "621131c599464816c7c1943a7b4d875840e411d906d41088ac9ed086691672ee",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "DOCUMENTATION_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuBasicNodes.ts",
+     "symbolOrSection": "header comment",
+     "revision": "05367f86",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA CORRECTNESS reviewer",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "zero progression-data hits for finalDamagePercent",
+   "expected": "comment describes delivered content",
+   "actual": "describes a design that did not ship",
+   "rootCause": "comment drift",
+   "rootClass": "doc-drift",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "earth lane gained tho_linh_chung using finalDamagePercent; comment reworded @3058b287",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-PT-FIX-7"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
   }
  ],
  "evidence": [
@@ -6574,7 +6877,7 @@
    "limitations": [
     "scoped suite only - full verify runs at final gate"
    ],
-   "status": "CURRENT"
+   "status": "STALE"
   },
   {
    "id": "EV-NOVEL-SAVEBOUNDS",
@@ -6608,7 +6911,7 @@
    "limitations": [
     "validator-level probe - does not cover runtime aggregation of unknown ids beyond dead-key reasoning"
    ],
-   "status": "CURRENT"
+   "status": "STALE"
   },
   {
    "id": "EV-NOVEL-LOCALE",
@@ -6642,7 +6945,7 @@
    "limitations": [
     "JSON-path probe - component render confirmed separately by closure verifier live checks"
    ],
-   "status": "CURRENT"
+   "status": "STALE"
   },
   {
    "id": "EV-FINAL-VERIFY",
@@ -6675,6 +6978,36 @@
    "limitations": [
     "exitCode 1 driven by the 2 env-noise files only",
     "canvas/magick not installed in this environment; 36 files uncollectable for missing canvas package - identical baseline on master"
+   ],
+   "status": "STALE"
+  },
+  {
+   "id": "EV-PT-FIX-7",
+   "state": {
+    "productStateId": "8f01d054a9f2abfc2ec58fff417412fdc7366cd0509dacb86a09c719368972cf",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-24T23:47:00.000Z",
+   "finishedAt": "2026-09-24T23:50:00.000Z",
+   "commandOrMethod": "npx vitest run PhapTuBasicNodes deadIds asciiComments + vue-tsc --build",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/fix-verify-3058b287.log",
+   "artifactHash": "d984b87f6c907918f215ffe63c6fd3ae762c3231dc3fa5ad390b43cd117cba70",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "15/15 contract tests pass incl. expanded BASIC_LANE_IDS/EXPECTED_OUTER/TECHNIQUE_CAP_ALLOWLIST coverage",
+    "type-check clean at 3058b287"
+   ],
+   "limitations": [
+    "scoped only - full verify evidence at EV-FINAL-VERIFY (stale, pre-fix state)"
    ],
    "status": "CURRENT"
   }
@@ -7600,6 +7933,93 @@
    "startedAt": "2026-09-24T22:56:00.000Z",
    "sealedAt": "2026-09-24T23:10:16.000Z",
    "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PT-COR-7",
+   "state": {
+    "productStateId": "621131c599464816c7c1943a7b4d875840e411d906d41088ac9ed086691672ee",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 7,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-626c0ef1c661424fbee393e78046fd77",
+   "contextId": "sealed-child-devin-626c0ef1c661424fbee393e78046fd77",
+   "model": "swe-2-max",
+   "role": "clean-A",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-24T23:13:00.000Z",
+   "sealedAt": "2026-09-24T23:35:00.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-COR7-1",
+    "F-COR7-2",
+    "F-COR7-3",
+    "F-COR7-4",
+    "F-COR7-5"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PT-AUT-7",
+   "state": {
+    "productStateId": "621131c599464816c7c1943a7b4d875840e411d906d41088ac9ed086691672ee",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 7,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-d3db4ae104d84812980a1dafa0412722",
+   "contextId": "sealed-child-devin-d3db4ae104d84812980a1dafa0412722",
+   "model": "swe-2-max",
+   "role": "clean-A",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-24T23:13:00.000Z",
+   "sealedAt": "2026-09-24T23:35:00.000Z",
+   "previousPhaseReviewId": "REV-PT-COR-7",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PT-INT-7",
+   "state": {
+    "productStateId": "621131c599464816c7c1943a7b4d875840e411d906d41088ac9ed086691672ee",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 7,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-9a5e3863fafb49ad9eb17c351e5c898d",
+   "contextId": "sealed-child-devin-9a5e3863fafb49ad9eb17c351e5c898d",
+   "model": "swe-2-max",
+   "role": "clean-A",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-24T23:13:00.000Z",
+   "sealedAt": "2026-09-24T23:35:00.000Z",
+   "previousPhaseReviewId": "REV-PT-AUT-7",
    "reviewedAfterPreviousFixes": true,
    "coverageIds": [],
    "evidenceIds": [],
@@ -9191,6 +9611,47 @@
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
+  },
+  {
+   "id": "L-PT-36",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-COR7-1",
+    "F-COR7-2",
+    "F-COR7-3",
+    "F-COR7-4",
+    "F-COR7-5"
+   ],
+   "incidentEvidenceIds": [
+    "EV-PT-FIX-7"
+   ],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "spec-interpretation + doc-drift",
+   "missedInvariantIds": [],
+   "escapeReason": "clean-A round-2 caught what rounds 1-6 missed: description-vs-effectsOverride drift on AoE specs and roster thinness vs the stated plan",
+   "applicability": [
+    "capstone/spec descriptions that pair upside with numeric trade-offs",
+    "content rosters sized by an approved plan",
+    "strict-version save law reasoning for retro-grant findings"
+   ],
+   "exclusions": [
+    "per-node vs per-direction stat caps - ruled per-node"
+   ],
+   "proposedProtection": [
+    "probe: every effectsOverride downgrade must appear in its description text",
+    "contract test: basic-lane node count >= 8 per element"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "reviewers now have a documented pattern for description-overclaim findings",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
   }
  ],
  "messages": [],
@@ -9786,6 +10247,22 @@
    "payloadPath": "events/0037.json",
    "payloadHash": "a371f496de3643783a06ebd1eea1e62170499b8a76d0fb74b7098811fc3da7ae",
    "eventHash": "500ba8545524228629fe2d95fda6dc11bf56210a227f33d6a1107dca9c36d276"
+  },
+  {
+   "seq": 38,
+   "at": "2026-09-24T23:48:10.077Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "8f01d054a9f2abfc2ec58fff417412fdc7366cd0509dacb86a09c719368972cf",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "500ba8545524228629fe2d95fda6dc11bf56210a227f33d6a1107dca9c36d276",
+   "payloadPath": "events/0038.json",
+   "payloadHash": "71139c65bbf89fc9182c10ab9d2f07fa42dd7cdda7707487b753eda19f136f09",
+   "eventHash": "d329f612140a5c3c39fc6b96c9c5a7bb60c35df98d0d6f3fd52e2f63fa30e910"
   }
  ]
 }
