@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "bdc04bf9",
   "state": {
-   "productStateId": "beed7472d52814b7a8530c6b0c15f34abdf62411cfa0046f499cd797ffb95e95",
+   "productStateId": "f76a5acf1fa9419fcf8a03489438e0309b4d2f01ca4f28f7409ead81b54385a6",
    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -2850,6 +2850,484 @@
    "exception": null,
    "status": "CLOSED",
    "rejectionReason": null
+  },
+  {
+   "state": {
+    "productStateId": "beed7472d52814b7a8530c6b0c15f34abdf62411cfa0046f499cd797ffb95e95",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A7-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-A7-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "Pre-existing validator posture on master; reachable only through crafted saves, which run precedent treats as out-of-scope (strict save law). All in-session nodeLevels writes are gated by canPurchaseNode.",
+   "rootClass": null,
+   "repair": null,
+   "id": "F-TT-COR-A7-1",
+   "title": "saveShapeValidation does not re-check excludesNode mutex (pre-existing)",
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "locations": [
+    {
+     "path": "game/src/services/save/saveShapeValidation.ts",
+     "symbolOrSection": "excludeNodes",
+     "revision": "3789ac88",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "crafted save {cuong_chien:1,tran_the:1} loads clean; degrade-only",
+   "expected": "validator either enforces or deterministically handles the one-root invariant",
+   "actual": "excludesNode predates this diff (PhapTuNodes + NodeSystem on master); no legitimate runtime write path produces dual roots - crafted-save only",
+   "discoveredBy": "devin-19a6357515a94177a674a5707d027ead",
+   "rootCause": "validator was written before excludesNode existed; saves are trusted input",
+   "subsystem": "save",
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "same class: every realm/way/techniqueRank gate absent from save validation",
+     "evidenceIds": [
+      "EV-TT-A7-FIX"
+     ],
+     "hitDispositions": [
+      "pre-existing posture, same exposure class - accepted"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": []
+  },
+  {
+   "state": {
+    "productStateId": "beed7472d52814b7a8530c6b0c15f34abdf62411cfa0046f499cd797ffb95e95",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A7-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-A7-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null,
+   "rootClass": null,
+   "repair": "committed 1b6353cb on devin/1790308404-the-tu-beta",
+   "id": "F-TT-COR-A7-2",
+   "title": "coverage gap: no negative test techniqueRank<5 blocks major_loan_dau/major_phan_chan",
+   "severity": "Nit",
+   "classification": "COVERAGE_GAP",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "game/src/data/progression/TheTuNodes.test.ts",
+     "symbolOrSection": "realm-gate loop",
+     "revision": "3789ac88",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "test asserts open at rank5 but never closed at rank<5",
+   "expected": "pin: correct realm + correct root + techniqueRank<5 stays closed",
+   "actual": "no rank<5 negative assertion",
+   "discoveredBy": "devin-19a6357515a94177a674a5707d027ead",
+   "rootCause": "gate covered generically by TechniqueGateAuthored but not at node level",
+   "subsystem": "progression",
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "other techniqueRank-gated nodes' test files",
+     "evidenceIds": [
+      "EV-TT-A7-FIX"
+     ],
+     "hitDispositions": [
+      "SkillCoreNodes major gates pin rank gates generically; the_tu file lacked node-level pin - now added"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": []
+  },
+  {
+   "state": {
+    "productStateId": "beed7472d52814b7a8530c6b0c15f34abdf62411cfa0046f499cd797ffb95e95",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A7-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-A7-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null,
+   "rootClass": null,
+   "repair": "committed 1b6353cb on devin/1790308404-the-tu-beta",
+   "id": "F-TT-COR-A7-3",
+   "title": "coverage gap: warded hit (hpDamage=0) queuing no reflect untested",
+   "severity": "Nit",
+   "classification": "COVERAGE_GAP",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "game/src/core/proc/CombatProcSystem.ts",
+     "symbolOrSection": "hpDamage>0 gate",
+     "revision": "3789ac88",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "spec pin 'ward/miss/dodge -> nothing' has no test",
+   "expected": "test: fully-warded landed hit queues no reflect",
+   "actual": "gate correct in code; no dedicated hpDamage===0 test",
+   "discoveredBy": "devin-19a6357515a94177a674a5707d027ead",
+   "rootCause": "e2e suite covered positive reflect only",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "other zero-damage lanes (miss/dodge)",
+     "evidenceIds": [
+      "EV-TT-A7-FIX"
+     ],
+     "hitDispositions": [
+      "miss/dodge never reach the landed lane - different gate; only the warded landed lane was unpinned"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": []
+  },
+  {
+   "state": {
+    "productStateId": "beed7472d52814b7a8530c6b0c15f34abdf62411cfa0046f499cd797ffb95e95",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A7-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-A7-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null,
+   "rootClass": null,
+   "repair": "committed 1b6353cb on devin/1790308404-the-tu-beta",
+   "id": "F-TT-COR-A7-4",
+   "title": "redundant ternary in TheTuTreePanel.onCardClick",
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "game/src/components/panels/skill-path/TheTuTreePanel.vue",
+     "symbolOrSection": "onCardClick",
+     "revision": "3789ac88",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "card.nodeId===col.rootNodeId ? col.rootNodeId : card.nodeId - both yield card.nodeId",
+   "expected": "selectNode(card.nodeId)",
+   "actual": "redundant ternary",
+   "discoveredBy": "devin-19a6357515a94177a674a5707d027ead",
+   "rootCause": "copied select contract then simplified inconsistently",
+   "subsystem": "ui",
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "same select-node call sites",
+     "evidenceIds": [
+      "EV-TT-A7-FIX"
+     ],
+     "hitDispositions": [
+      "sibling panel already calls selectNode(card.nodeId) plainly; single instance"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": []
+  },
+  {
+   "state": {
+    "productStateId": "beed7472d52814b7a8530c6b0c15f34abdf62411cfa0046f499cd797ffb95e95",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A7-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-A7-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null,
+   "rootClass": null,
+   "repair": "committed 1b6353cb on devin/1790308404-the-tu-beta",
+   "id": "F-TT-INT-A7-1",
+   "title": "in-battle progression-op gate asymmetric: upgradeNode/levelUpSkill mutate nodeLevels mid-battle while purchaseNode rejects",
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "game/src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": "upgradeNode/levelUpSkill",
+     "revision": "3789ac88",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "executed repro: purchaseNode->false, upgradeNode->true (1->2), levelUpSkill->true at fighting state",
+   "expected": "gate rationale covers all nodeLevels investment - upgrade and core level-up alike",
+   "actual": "upgradeNode + levelUpSkill lacked the battle gate added to purchaseNode",
+   "discoveredBy": "devin-256935ee65094e08833275834571e733",
+   "rootCause": "gate added at purchase seam only; sibling ops write the same state",
+   "subsystem": "progression",
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "every other nodeLevels writer (respecNodeTree/switchRoute/devResetBranch/purchaseNode)",
+     "evidenceIds": [
+      "EV-TT-A7-FIX"
+     ],
+     "hitDispositions": [
+      "all already gated; upgradeNode+levelUpSkill were the only ungated writers"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": []
+  },
+  {
+   "state": {
+    "productStateId": "beed7472d52814b7a8530c6b0c15f34abdf62411cfa0046f499cd797ffb95e95",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A7-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-A7-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null,
+   "rootClass": null,
+   "repair": "committed 1b6353cb on devin/1790308404-the-tu-beta",
+   "id": "F-TT-INT-A7-2",
+   "title": "Node UI offers mid-battle purchases the engine rejects (dead-click)",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "game/src/components/panels/skill-path/NodeInspector.vue",
+     "symbolOrSection": "purchase/upgrade buttons",
+     "revision": "3789ac88",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "game/src/components/panels/SkillPathPanel.vue",
+     "symbolOrSection": "purchasable computed",
+     "revision": "3789ac88",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "mid-battle Linh Ngo button enabled -> click -> purchaseNode false -> silent no-op",
+   "expected": "inBattle disables the buttons (same as respec/route buttons already do)",
+   "actual": "purchase/upgrade buttons have no battle awareness",
+   "discoveredBy": "devin-256935ee65094e08833275834571e733",
+   "rootCause": "inBattle flag wired only to respec/route controls, not the inspector",
+   "subsystem": "ui",
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "other panels surfacing node purchase",
+     "evidenceIds": [
+      "EV-TT-A7-FIX"
+     ],
+     "hitDispositions": [
+      "NodeTreePanel/TheTuTreePanel funnel through NodeInspector; single inspector surface"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": []
+  },
+  {
+   "state": {
+    "productStateId": "beed7472d52814b7a8530c6b0c15f34abdf62411cfa0046f499cd797ffb95e95",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A7-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-A7-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "Spec-pinned behavior (sacrifice must never kill; cast commits at base when paid=0); skip op emitted honestly. Balance numbers are frozen by user ruling - flagged as design-confirm note in the run report.",
+   "rootClass": null,
+   "repair": null,
+   "id": "F-TT-INT-A7-3",
+   "title": "Loan Dau cast at exactly 1 HP executes all hits for free",
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "locations": [
+    {
+     "path": "game/src/core/battle/runtime/scheduler/adapters/CombatSystemDamageAdapter.ts",
+     "symbolOrSection": "pay_hp floor",
+     "revision": "3789ac88",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "at currentHp=1, paid=0 -> skip -> __paid_hp=0 -> base-coefficient cast forever",
+   "expected": "design confirm whether a 1HP caster may cast at base cost",
+   "actual": "spec-pinned 1HP floor + honest skip op; cast commits at base per spec",
+   "discoveredBy": "devin-256935ee65094e08833275834571e733",
+   "rootCause": "spec floor arithmetic allows zero-paid cast; deterministic and truthfully recorded",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "other sacrifice ops / spec text on floor",
+     "evidenceIds": [
+      "EV-TT-A7-FIX"
+     ],
+     "hitDispositions": [
+      "floor arithmetic + skip semantics consistent with spec - intended 1HP-floor behavior; design decision flagged to owner"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": []
+  },
+  {
+   "state": {
+    "productStateId": "beed7472d52814b7a8530c6b0c15f34abdf62411cfa0046f499cd797ffb95e95",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A7-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-A7-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null,
+   "rootClass": null,
+   "repair": "committed 1b6353cb on devin/1790308404-the-tu-beta",
+   "id": "F-TT-INT-A7-4",
+   "title": "SkillPathPanel inspector refresh watch misses cost-waived upgrades",
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "game/src/components/panels/SkillPathPanel.vue",
+     "symbolOrSection": "watch key",
+     "revision": "3789ac88",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "waived-cost upgrade changes a level without key count or skillInsight change -> stale flags",
+   "expected": "recompute on any node-level change",
+   "actual": "watch keyed only [keyCount, skillInsight]",
+   "discoveredBy": "devin-256935ee65094e08833275834571e733",
+   "rootCause": "watch key underapproximates nodeLevels mutations",
+   "subsystem": "ui",
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "other watchers on nodeLevels",
+     "evidenceIds": [
+      "EV-TT-A7-FIX"
+     ],
+     "hitDispositions": [
+      "this is the only inspector-flag watcher; single site"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": []
   }
  ],
  "evidence": [
@@ -3235,7 +3713,7 @@
     "scoped vitest, not full suite"
    ],
    "result": "PASS",
-   "status": "CURRENT"
+   "status": "STALE"
   },
   {
    "id": "EV-TT-CLO-10",
@@ -3260,6 +3738,40 @@
    "artifactHash": "340f40dd8bcd39b2c6704414be99de0bb86023353195f6e17707fc5bb75982e3",
    "claims": [
     "'14 eligible' absent repo-wide; header reads '15 eligible'; 9/9 SkillCoreNodes tests pass"
+   ],
+   "invariantIds": [],
+   "limitations": [],
+   "result": "PASS",
+   "status": "STALE"
+  },
+  {
+   "id": "EV-TT-A7-FIX",
+   "state": {
+    "productStateId": "f76a5acf1fa9419fcf8a03489438e0309b4d2f01ca4f28f7409ead81b54385a6",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+   "commandOrMethod": "grep gate/prop/watch proofs + vitest TheTuNodes/theTuE2E/ProgressionOps (37 tests)",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T12:49:33.000Z",
+   "finishedAt": "2026-09-25T12:49:56.000Z",
+   "inputPaths": [
+    "src/core/game/GameManagerProgressionOps.ts",
+    "src/components/panels/skill-path/NodeInspector.vue",
+    "src/components/panels/SkillPathPanel.vue",
+    "src/components/panels/skill-path/TheTuTreePanel.vue",
+    "src/data/progression/TheTuNodes.test.ts",
+    "src/core/game/GameManager.theTuE2E.test.ts"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/fix-verify-a7.log",
+   "artifactHash": "d50ec9b9df070b3b228b40f6fbda9fe34fc63a37dae32517609de01a3f35a3c3",
+   "claims": [
+    "in-battle gate now symmetric (purchase/upgrade/levelUp/respec/devReset/switchRoute all reject); inspector buttons disabled in battle; watch sees waived upgrades; rank<5 pin authored; warded-hit no-reflect pin authored; dead ternary removed; 37 tests pass"
    ],
    "invariantIds": [],
    "limitations": [],
@@ -3999,7 +4511,7 @@
     "F-TT-INT-A6-1"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-TT-CLO-10",
@@ -4027,6 +4539,97 @@
    "findingIds": [
     "F-TT-CLO-9-1",
     "F-TT-INT-A6-1"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-TT-AUT-A7",
+   "state": {
+    "productStateId": "beed7472d52814b7a8530c6b0c15f34abdf62411cfa0046f499cd797ffb95e95",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 19,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-6ca0ddf14cb74e1ebb33534c816d83ec",
+   "contextId": "sealed-child-6ca0ddf14cb74e1ebb33534c816d83ec",
+   "model": "swe-2-max",
+   "role": "authority-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T12:14:41.000Z",
+   "sealedAt": "2026-09-25T12:38:25.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-TT-COR-A7",
+   "state": {
+    "productStateId": "beed7472d52814b7a8530c6b0c15f34abdf62411cfa0046f499cd797ffb95e95",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 19,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-19a6357515a94177a674a5707d027ead",
+   "contextId": "sealed-child-19a6357515a94177a674a5707d027ead",
+   "model": "swe-2-max",
+   "role": "correctness-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T11:52:33.000Z",
+   "sealedAt": "2026-09-25T12:09:45.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-COR-A7-1",
+    "F-TT-COR-A7-2",
+    "F-TT-COR-A7-3",
+    "F-TT-COR-A7-4"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-TT-INT-A7",
+   "state": {
+    "productStateId": "beed7472d52814b7a8530c6b0c15f34abdf62411cfa0046f499cd797ffb95e95",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 19,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-256935ee65094e08833275834571e733",
+   "contextId": "sealed-child-256935ee65094e08833275834571e733",
+   "model": "swe-2-max",
+   "role": "integration-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T12:14:41.000Z",
+   "sealedAt": "2026-09-25T12:44:56.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-INT-A7-1",
+    "F-TT-INT-A7-2",
+    "F-TT-INT-A7-3",
+    "F-TT-INT-A7-4"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -5322,6 +5925,72 @@
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
+  },
+  {
+   "id": "L-TT-33",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-A7-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "crafted-save-boundary",
+   "missedInvariantIds": [],
+   "escapeReason": "validator gate coverage predates excludesNode; saves are trusted input",
+   "applicability": [
+    "save shape validation posture",
+    "mutex invariants"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "crafted-save-only findings are rejected per run precedent"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-COR-A7"
+   ],
+   "capabilityDelta": "crafted-save boundary stance",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-34",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-INT-A7-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "spec-floor-arithmetic",
+   "missedInvariantIds": [],
+   "escapeReason": "1HP-floor spec allows zero-paid cast; deterministic + honest",
+   "applicability": [
+    "sacrifice ops",
+    "balance-freeze ruling"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "spec-consistent behavior is not a defect; flag to owner for design confirm in run report"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-INT-A7"
+   ],
+   "capabilityDelta": "spec-pinned floor acceptance",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
   }
  ],
  "messages": [],
@@ -5565,6 +6234,22 @@
    "payloadPath": "events/0015.json",
    "payloadHash": "b5cabafac9165225b5cfd1e33e63ce5646c66fc61299fec1e68a59e2bd5b84bf",
    "eventHash": "3ca23afec408f0bb53322b1286d431a2936c3bb2136bfc0156c691271c2dd1fe"
+  },
+  {
+   "seq": 16,
+   "at": "2026-09-25T12:50:31.461Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-406257",
+   "state": {
+    "productStateId": "f76a5acf1fa9419fcf8a03489438e0309b4d2f01ca4f28f7409ead81b54385a6",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "3ca23afec408f0bb53322b1286d431a2936c3bb2136bfc0156c691271c2dd1fe",
+   "payloadPath": "events/0016.json",
+   "payloadHash": "e397a8b0c2c74cd57038877b6518d22ec6ead9269747937c4323c28b0b6c097b",
+   "eventHash": "f141481fb74029a2142c6d87a55d218ce3b6dce67f3db092df6ca65de63f72f3"
   }
  ]
 }

@@ -14580,7 +14580,7 @@
       "path": "src/components/panels/skill-path/NodeInspector.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "90cc2b04dd77a6fed30582e44e56316315e01fe0dc185b7f415af8f9885508b0"
+      "hash": "4c2e75bd29fbc60bd18e54837842622cec143e43ea190bce6a767145df556754"
     },
     {
       "path": "src/components/panels/skill-path/NodeTreePanel.test.ts",
@@ -14652,7 +14652,7 @@
       "path": "src/components/panels/skill-path/TheTuTreePanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "6c8885df29d1f81130b8bb593c196a6ca90780ca324f90c2122b6ffd732ec67c"
+      "hash": "36d9055e96875107fce432f7a7033ba5c6698fcac56035979b1a3032df82f470"
     },
     {
       "path": "src/components/panels/SkillPathPanel.test.ts",
@@ -14664,7 +14664,7 @@
       "path": "src/components/panels/SkillPathPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "b050a942976c34b8e7aa45df5a60e59dba719f88addb5786a0af53c5e4124b1c"
+      "hash": "cedbf46808192e48e9216ed49493de1d4d10353b6d674b5c2af2c40b65505f96"
     },
     {
       "path": "src/components/panels/StageSelectPanel.test.ts",
@@ -17808,7 +17808,7 @@
       "path": "src/core/game/GameManager.theTuE2E.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c409c308f071eb36e728c90ef638f523146dbd591986d8cd76bbb5eb9ddb1c73"
+      "hash": "41440ef142d6cf99e4178b20ee1e761b40a755d94a15f6afc31497eb74a0a6cb"
     },
     {
       "path": "src/core/game/GameManager.theTuKit.test.ts",
@@ -17988,7 +17988,7 @@
       "path": "src/core/game/GameManagerProgressionOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0f3e5f10b107cebb55ab33a45a4e6d22ccf05508e4a81a3e1b9c49753a4227bb"
+      "hash": "6ce4de447c6b066d8a5deba0a2d8b464d182a61ed3699a959e3796ec24d4eefc"
     },
     {
       "path": "src/core/game/GameManagerQuestOps.ts",
@@ -20754,7 +20754,7 @@
       "path": "src/data/progression/TheTuNodes.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "5dd2b5c45a6bffa9eed9bf395d2f8464927011635b3d14f85c712cf83ac7b76c"
+      "hash": "c0fccf2c79b31693e1bd127cca54fd0adb7496677e402ce21d4f8541872b1909"
     },
     {
       "path": "src/data/progression/TheTuNodes.ts",
@@ -22983,5 +22983,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "beed7472d52814b7a8530c6b0c15f34abdf62411cfa0046f499cd797ffb95e95"
+  "productStateId": "f76a5acf1fa9419fcf8a03489438e0309b4d2f01ca4f28f7409ead81b54385a6"
 }
