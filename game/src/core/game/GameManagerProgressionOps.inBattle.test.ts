@@ -140,4 +140,55 @@ describe('progressionOps in-battle rejection gates', () => {
     expect(gameManager.progressionOps.levelUpSkill('any_skill', player)).toBe(false)
     expect(player.nodeLevels).toEqual(before.nodeLevels)
   })
+
+  // F-TT-CLEAN-A3-INT-2 - coverage extension: the already-gated
+  // selectSpellPathElement and the four writers the cleanA3 census
+  // found ungated get the same rejection pin.
+  it('selectSpellPathElement rejects mid-battle without mutating state', () => {
+    const { gameManager, player } = setup()
+    startInProgressBattle(gameManager, player)
+    const before = structuredClone(player)
+
+    expect(gameManager.progressionOps.selectSpellPathElement('fire', 'dot', player)).toBe(false)
+    expect(player.spellPath).toEqual(before.spellPath)
+    expect(player.nodeLevels).toEqual(before.nodeLevels)
+  })
+
+  it('learnSkill rejects mid-battle without mutating state', () => {
+    const { gameManager, player } = setup()
+    startInProgressBattle(gameManager, player)
+    const before = structuredClone(player)
+
+    expect(gameManager.progressionOps.learnSkill('any_skill', player)).toBe(false)
+    expect(player.nodeLevels).toEqual(before.nodeLevels)
+  })
+
+  it('allocateAttributePoint rejects mid-battle without mutating state', () => {
+    const { gameManager, player } = setup()
+    player.attributePoints = 5
+    startInProgressBattle(gameManager, player)
+    const before = structuredClone(player)
+
+    expect(gameManager.progressionOps.allocateAttributePoint(player, 'strength')).toBe(false)
+    expect(player.attributePoints).toBe(5)
+    expect(player.baseStats).toEqual(before.baseStats)
+  })
+
+  it('setMortalBasicSkill rejects mid-battle without mutating state', () => {
+    const { gameManager, player } = setup()
+    startInProgressBattle(gameManager, player)
+    const before = structuredClone(player)
+
+    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'any_skill')).toBe(false)
+    expect(player.mortalBasicSkillId).toEqual(before.mortalBasicSkillId)
+  })
+
+  it('selectSkillSpecialization rejects mid-battle without mutating state', () => {
+    const { gameManager, player } = setup()
+    startInProgressBattle(gameManager, player)
+    const before = structuredClone(player)
+
+    expect(gameManager.progressionOps.selectSkillSpecialization('any_skill', 'any_spec')).toBe(false)
+    expect(player).toEqual(before)
+  })
 })

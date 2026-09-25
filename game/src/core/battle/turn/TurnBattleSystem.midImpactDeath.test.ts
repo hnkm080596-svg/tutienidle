@@ -317,3 +317,50 @@ describe('post-mortem retaliation (spec 2.5: dead holder still reflects)', () =>
     expect(damageSpy.mock.calls.filter((c) => c[3] === 'reflection')).toHaveLength(1)
   })
 })
+
+describe('attacker-dead-before-flush (cleanA3-INT-2 pin)', () => {
+  it('a queued reflect drops silently when the attacker dies mid-action (ward_break kickback)', () => {
+    // Attacker: fragile - the ward_break kickback kills it mid-hit.
+    const attackerEntity = createCombatant('enemy', {
+      type: 'enemy', row: 4,
+      stats: createBaseStats({ might: 100, speed: 100, criticalRate: 0, evasionRate: 0, dexterity: 0, maxHp: 50 }),
+    })
+    attackerEntity.baseStats = attackerEntity.stats
+
+    // Holder: reflect def + a thin native ward whose break kicks back
+    // wardMax x wardBreakDamagePercent = 1000 x 1 = 1000 damage.
+    const holderStats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0, maxHp: 1_000_000 })
+    holderStats.wardMax = 1000
+    holderStats.wardBreakDamagePercent = 1
+    const holderEntity = createCombatant('player', { type: 'player', stats: holderStats })
+    holderEntity.baseStats = holderEntity.stats
+    holderEntity.currentWard = 10
+
+    const attacker = makeParticipant('enemy', attackerEntity)
+    const holder = makeParticipant('player', holderEntity)
+
+    const combat = new CombatSystem(new EventBus())
+    const runtime = makeTurnRuntime({
+      registry: REGISTRY,
+      participants: () => [attacker, holder],
+      combatSystem: combat,
+    })
+    const battle: TurnBattle = { players: [holder], enemies: [attacker], state: 'fighting' }
+    const system = new TurnBattleSystem(combat, 10_000, REGISTRY, undefined, runtime)
+
+    applyReflect(runtime, holder, SOFT_REFLECT)
+
+    const declared = aoeDeclared(attacker, battle)
+    declared.opposingSide = battle.players
+    declared.affected = [holder]
+
+    const damageSpy = vi.spyOn(combat, 'applyModifiedDirectDamage')
+    system.applyActionImpact(battle, declared)
+
+    // The ward_break kickback killed the attacker mid-action; its
+    // queued reflect drops at the action-end flush (no reflection op).
+    expect(attacker.entity.alive).toBe(false)
+    expect(damageSpy.mock.calls.filter((c) => c[3] === 'ward_break')).toHaveLength(1)
+    expect(damageSpy.mock.calls.filter((c) => c[3] === 'reflection')).toHaveLength(0)
+  })
+})

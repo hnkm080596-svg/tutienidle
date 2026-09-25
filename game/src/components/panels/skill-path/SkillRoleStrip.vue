@@ -14,6 +14,7 @@ import { computed, ref } from 'vue'
 import SlotView from '../../common/SlotView.vue'
 import Chip from '../../common/primitives/Chip.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { usePlayerStore } from '@/stores/player'
 import { MORTAL_DEFAULT_BASIC_ID, MORTAL_PRECURSOR_SKILL_IDS } from '@/core/skill/MortalPrecursors'
@@ -52,6 +53,16 @@ const mortalChoices = computed<Skill[]>(() => {
   return MORTAL_PRECURSOR_SKILL_IDS
     .map((id) => gameManager.skillManager.get(id))
     .filter((skill): skill is Skill => skill !== undefined)
+})
+
+// mortal-pick + specialization writes reject mid-battle (ops gate) - the
+// chips disable up front so the affordance doesn't look live.
+const inBattle = computed(() => {
+  stateVersion.value
+
+  const battle = gameManager.getTurnBattle()
+
+  return battle !== null && isBattleInProgress(battle.state)
 })
 
 interface RoleCard {
@@ -174,6 +185,7 @@ function isPickedPrecursor(skillId: string): boolean {
         :key="skill.id"
         class="role-specializations__btn"
         :active="isPickedPrecursor(skill.id)"
+        :disabled="inBattle"
         v-tooltip="{ title: skill.name, description: skill.description }"
         @click="setMortalBasicSkill(skill.id)"
       >
@@ -191,6 +203,7 @@ function isPickedPrecursor(skillId: string): boolean {
         :key="spec.id"
         class="role-specializations__btn"
         :active="openedSkill.selectedSpecializationId === spec.id"
+        :disabled="inBattle"
         v-tooltip="{ title: spec.name, description: spec.description }"
         @click="selectSkillSpecialization(openedSkill.id, spec.id)"
       >

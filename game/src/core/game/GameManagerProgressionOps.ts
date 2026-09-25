@@ -155,6 +155,14 @@ export class GameManagerProgressionOps {
    * granted (nodeLevels[core] = 1 + mirror) via NodeSystem.
    */
   learnSkill(skillId: string, player: PlayerData): boolean {
+    // learnSkill writes nodeLevels via its own atomic grant (not the
+    // gated grantSkillCoreBySkillId wrapper) - same mid-battle contract:
+    // a running battle only reads its minted kit snapshot, so the grant
+    // rejects instead of looking applied mid-fight.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     const template = this.deps.skillTemplates.get(skillId)
 
     if (!template) {
@@ -775,6 +783,13 @@ export class GameManagerProgressionOps {
    * "Nguyen tac" sec.2).
    */
   allocateAttributePoint(player: PlayerData, stat: MainStatKey): boolean {
+    // baseStats are minted into the combat entity at battle build - a
+    // mid-battle write is invisible to the running fight, so it rejects
+    // like every other combat-shaping progression write.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     if (player.attributePoints <= 0) {
       return false
     }
@@ -799,6 +814,12 @@ export class GameManagerProgressionOps {
    * write can never produce a state restore would reject.
    */
   setMortalBasicSkill(player: PlayerData, skillId: string): boolean {
+    // the pick binds the kit at battle build - mid-battle writes are
+    // battle-invisible, so they reject like every other gated write.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     if (player.realmId !== 'mortal' || player.cultivationPath !== undefined) {
       return false
     }
@@ -911,6 +932,12 @@ export class GameManagerProgressionOps {
 
   // Core Loop Foundation checklist (Muc SKILL) - "behavior-changing node".
   selectSkillSpecialization(skillId: string, specializationId: string): boolean {
+    // specialization changes the resolved kit - same mid-battle gate as
+    // the other combat-shaping writes.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     return this.deps.skillSystem.selectSpecialization(skillId, specializationId)
   }
 }
