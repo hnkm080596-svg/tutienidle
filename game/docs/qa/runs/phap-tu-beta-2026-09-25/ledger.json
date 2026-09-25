@@ -8810,13 +8810,19 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "repair": "respec modal now discloses clawback legs via respecClawbackText + locale keys @90263d10",
+   "pinEvidenceIds": [
+    "EV-PT-FIX-A3"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PT-FIX-A3"
+   ],
+   "closureReviewIds": [
+    "REV-PT-CLO-9"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null,
    "fixedInRevision": null,
    "closedAt": null,
@@ -8990,13 +8996,19 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "repair": "comment corrected to reflect authored requiredWay on the_thuc_tinh @90263d10",
+   "pinEvidenceIds": [
+    "EV-PT-FIX-A3"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PT-FIX-A3"
+   ],
+   "closureReviewIds": [
+    "REV-PT-CLO-9"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null,
    "fixedInRevision": null,
    "closedAt": null,
@@ -9050,13 +9062,19 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "repair": "rewardOnly-root early-return rationale documented @90263d10",
+   "pinEvidenceIds": [
+    "EV-PT-FIX-A3"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PT-FIX-A3"
+   ],
+   "closureReviewIds": [
+    "REV-PT-CLO-9"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null,
    "fixedInRevision": null,
    "closedAt": null,
@@ -10112,6 +10130,39 @@
    "limitations": [],
    "result": "PASS",
    "status": "STALE"
+  },
+  {
+   "id": "EV-PT-FIX-A3",
+   "state": {
+    "productStateId": "25aed25d2142bede38d783e958aec2815e1a5707912b64045224c45e96273d0b",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "commandOrMethod": "npm run type-check + npx vitest run NodeSystem/respec/locales at 90263d10; REV-PT-CLO-9 sealed",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T06:59:00.000Z",
+   "finishedAt": "2026-09-25T07:07:14.000Z",
+   "inputPaths": [
+    "src/components/panels/skill-path/NodeTreePanel.vue",
+    "src/locales/vi.json",
+    "src/locales/en.json",
+    "src/data/progression/PhapTuNodes.ts",
+    "src/core/progression/NodeSystem.ts"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/fix-verify-a3.log",
+   "artifactHash": "6e0871d2a5b329cf0705c49aef0d0bf6a9b03fb828ac63e435945053257af117",
+   "claims": [
+    "3 clean-A3 findings repaired at 90263d10; type-check clean; 112 scoped tests pass; closure REV-PT-CLO-9 SEALED"
+   ],
+   "invariantIds": [],
+   "limitations": [],
+   "result": "PASS",
+   "status": "CURRENT"
   }
  ],
  "coverage": [
@@ -11978,6 +12029,33 @@
     "F-PT-AUT-A3-1",
     "F-PT-AUT-A3-2"
    ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-CLO-9",
+   "state": {
+    "productStateId": "25aed25d2142bede38d783e958aec2815e1a5707912b64045224c45e96273d0b",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 5,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-a1a327ede07e4d648dea9e0c3bba0c76",
+   "contextId": "sealed-child-a1a327ede07e4d648dea9e0c3bba0c76",
+   "model": "swe-2-max",
+   "role": "closure-verifier",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T07:05:20.000Z",
+   "sealedAt": "2026-09-25T07:07:14.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -14516,6 +14594,102 @@
    "preventionEvidenceIds": [],
    "qualifiedBy": [],
    "capabilityDelta": "adjudicated with proof",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-PT-58",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-COR-A3-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "review-surface gap",
+   "missedInvariantIds": [],
+   "escapeReason": "clean-A finding",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "pin via EV-PT-FIX-A3"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [
+    "EV-PT-FIX-A3"
+   ],
+   "qualifiedBy": [
+    "REV-PT-CLO-9"
+   ],
+   "capabilityDelta": "fix sealed on new head",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-PT-59",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUT-A3-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "review-surface gap",
+   "missedInvariantIds": [],
+   "escapeReason": "clean-A finding",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "pin via EV-PT-FIX-A3"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [
+    "EV-PT-FIX-A3"
+   ],
+   "qualifiedBy": [
+    "REV-PT-CLO-9"
+   ],
+   "capabilityDelta": "fix sealed on new head",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-PT-60",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUT-A3-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "review-surface gap",
+   "missedInvariantIds": [],
+   "escapeReason": "clean-A finding",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "pin via EV-PT-FIX-A3"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [
+    "EV-PT-FIX-A3"
+   ],
+   "qualifiedBy": [
+    "REV-PT-CLO-9"
+   ],
+   "capabilityDelta": "fix sealed on new head",
    "recurrenceFindingIds": [],
    "status": "CLASSIFIED",
    "policyVersion": null,
