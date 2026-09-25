@@ -1,0 +1,2212 @@
+# THỂ TU ẨN — ỨNG THẾ DESIGN AUTHORITY
+
+**Way:** `hidden_body_pathway`  
+**Path:** `body`  
+**Display:** Thể Tu Ẩn — Ứng Thế  
+**Scope chi tiết:** Luyện Khí → Trúc Cơ  
+**Tầm nhìn:** architecture phải mở được tới endgame, nhưng không author mechanic cụ thể cho Kim Đan+ trong tài liệu này.  
+**Status:** design authority thay thế content design cũ của `Thám Thế / Tú Thế / Bách Ứng + Hộ/Phản/Trợ tree`.
+
+---
+
+# 1. Design thesis
+
+Thể Tu Ẩn không mạnh bằng cách có stat cao hơn Thể Tu thường.
+
+Nó mạnh bằng cách:
+
+> **chen hành động của mình vào hành động của người khác.**
+
+Normal Thể Tu chủ yếu vận hành theo turn economy bình thường.
+
+Ứng Thế có thể:
+
+- đỡ thay giữa enemy action;
+- phản công ngoài lượt;
+- đánh theo sau ally;
+- thực hiện nhiều reactive actions giữa hai normal turns.
+
+Đổi lại:
+
+> mọi lần “mượn nhịp” đều phải được trả bằng chính nhịp hành động tương lai của bản thân.
+
+Design thesis:
+
+# **Quan sát sinh Thế. Ứng biến tiêu Thế.**
+
+và:
+
+# **Mượn nhịp của thiên hạ, trả bằng nhịp của chính mình.**
+
+---
+
+# 2. Hidden-path identity
+
+Thể Tu Ẩn phải có power ceiling cao hơn normal path.
+
+Nhưng không được là:
+
+> normal Thể Tu + nhiều proc miễn phí.
+
+Nó phải có các rủi ro nội tại:
+
+1. cần `Thế`;
+2. mỗi reaction gây `Ứng Trệ`;
+3. quá nhiều reaction gây `Quá Thế`;
+4. reaction thành công là bắt buộc;
+5. Hộ có thể kéo lethal attack vào bản thân;
+6. hard CC có thể shutdown toàn bộ reactive engine;
+7. focus chết có thể khiến path mất target quan sát;
+8. muốn mạnh đồng thời Hộ/Phản/Trợ phải chia stats.
+
+Ẩn mạnh hơn vì nó phá luật action economy.
+
+Ẩn nguy hiểm hơn vì nó phải trả giá cho việc phá luật đó.
+
+---
+
+# 3. Progression rule
+
+## Luyện Khí
+
+Chỉ có:
+
+# **Thám Thế**
+
+Basic.
+
+Luyện Khí tập trung vào:
+
+> quan sát một mục tiêu và phản ứng với chính mục tiêu đó.
+
+Baseline reactive capability:
+
+# **Phản**
+
+Không có Hộ/Trợ toàn diện.
+
+Không có full battlefield awareness.
+
+---
+
+## Trúc Cơ
+
+Mở Special:
+
+# **Quan Thế**
+
+Từ đây phạm vi nhận biết mở rộng:
+
+> từ một mục tiêu → toàn chiến trường trong một window.
+
+Đồng thời mở hai reactive channel mới:
+
+- **Hộ**
+- **Trợ**
+
+Phản tiếp tục tồn tại và được mở rộng phạm vi.
+
+---
+
+## Sau Trúc Cơ
+
+Không author chi tiết.
+
+Có thể tiếp tục tiến tới các fantasy như:
+
+- giảm cái giá của Ứng;
+- ứng dưới hard CC;
+- mở rộng reaction categories;
+- Bách Ứng;
+- điều khiển tempo sâu hơn.
+
+Nhưng tài liệu này không khóa tên, realm hoặc mechanic tương lai.
+
+---
+
+# 4. Beta kit overview
+
+| Realm | Slot | Skill | Vai trò |
+|---|---|---|---|
+| Luyện Khí | Basic | **Thám Thế** | đánh + chọn mục tiêu quan sát + sinh Thế |
+| Trúc Cơ | Special | **Quan Thế** | tạm thời quan sát toàn battlefield + mở full Hộ/Phản/Trợ |
+
+Beta không có Ultimate.
+
+`Bách Ứng` được giữ như **future design space**, không phải beta content.
+
+---
+
+# 5. Không dùng full 3-slot kit legacy
+
+Legacy current runtime:
+
+- `Thám Thế`
+- `Tú Thế`
+- `Bách Ứng`
+
+được grant như fixed kit.
+
+Design mới supersede điều đó.
+
+Beta authority:
+
+### Luyện Khí
+
+Chỉ `Thám Thế`.
+
+### Trúc Cơ
+
+Thêm `Quan Thế`.
+
+Không có `Tú Thế` kiểu “giảm proc cost”.
+
+Không có `Bách Ứng` ở beta.
+
+---
+
+# PART I — THẾ
+
+# 6. Thế là gì
+
+`Thế` là battle-scoped resource của Thể Tu Ẩn.
+
+Nó đại diện cho:
+
+> mức độ người tu đã đọc và nắm bắt nhịp hiện tại của chiến trường.
+
+Thế không phải:
+
+- rage;
+- mana;
+- proc chance;
+- permanent stat;
+- saved resource.
+
+Battle bắt đầu:
+
+> `Thế = 0`
+
+Battle kết thúc:
+
+> không persist.
+
+Auto-repeat cycle mới:
+
+> reset về 0.
+
+---
+
+# 7. Thế không quyết định xác suất
+
+Hard rule:
+
+> **Stats quyết định phản ứng có thành công không. Thế quyết định có đủ khả năng để thực hiện phản ứng đó không.**
+
+Không được dùng:
+
+`Thế cao → +counterChance`
+
+hoặc:
+
+`Thế cao → +protectChance`
+
+hoặc:
+
+`Thế cao → +followUpChance`.
+
+---
+
+# 8. Thế economy là một chiều
+
+Nguồn sinh Thế:
+
+> **Quan sát.**
+
+Nguồn tiêu Thế:
+
+> **Ứng biến.**
+
+Reactive actions không tự refund resource ngay lập tức.
+
+Không có:
+
+`proc success → hoàn lại cost + lời Thế`
+
+như legacy.
+
+---
+
+# 9. Luyện Khí sources of Thế
+
+Có hai nguồn chính.
+
+### 9.1 Thám Thế landed
+
+Khi Basic `Thám Thế` gây hit hợp lệ:
+
+> nhận một lượng Thế.
+
+Exact amount deferred.
+
+### 9.2 Observed enemy hoàn thành normal action
+
+Nếu enemy đang được quan sát hoàn thành một normal action:
+
+> nhận một lượng Thế nhỏ.
+
+Không yêu cầu action đó phải đánh trúng.
+
+Fantasy:
+
+> người tu quan sát cách đối thủ vận động và tích lũy hiểu biết về “thế”.
+
+---
+
+# 10. Không có passive round income
+
+Bỏ baseline:
+
+> +Thế mỗi round.
+
+Resource không tự chảy theo thời gian.
+
+Player phải thực sự quan sát combat.
+
+---
+
+# 11. Không có reactive refund
+
+Hộ / Phản / Trợ thành công:
+
+> tiêu Thế.
+
+Không:
+
+> success → +Thế.
+
+Điều này chống positive-feedback loop.
+
+---
+
+# 12. Ordering của observation income
+
+Enemy action phải resolve theo thứ tự:
+
+```text
+Enemy bắt đầu action
+      ↓
+Hộ window
+      ↓
+impact / action resolution
+      ↓
+Phản window
+      ↓
+action hoàn tất
+      ↓
+mới cấp Thế từ việc quan sát action đó
+```
+
+Invariant:
+
+> **Thế sinh từ action hiện tại không được tài trợ cho Hộ hoặc Phản của chính action đó.**
+
+Player phải có vốn từ trước.
+
+---
+
+# 13. Reactive cost
+
+Mỗi reactive action thành công phải trả Thế riêng.
+
+Ví dụ:
+
+`Hộ → Phản`
+
+là hai reactions.
+
+Phải trả:
+
+- cost Hộ;
+- sau đó nếu còn đủ Thế, cost Phản.
+
+Không bundle.
+
+Không combo discount baseline.
+
+---
+
+# PART II — ỨNG TRỆ
+
+# 14. Ứng Trệ
+
+Mỗi khi một reactive action thực sự được commit:
+
+- Hộ;
+- Phản;
+- Trợ;
+
+player nhận:
+
+# **Ứng Trệ**
+
+Ứng Trệ không phải buff/debuff stat.
+
+Nó là:
+
+> **tempo debt.**
+
+Mỗi reaction ngoài lượt làm normal action tiếp theo của player bị đẩy lùi.
+
+---
+
+# 15. Một reaction = một đơn vị debt
+
+Beta topology:
+
+> mỗi committed Hộ / Phản / Trợ cộng cùng một đơn vị Ứng Trệ.
+
+Không author:
+
+- Hộ = 1.5;
+- Phản = 0.7;
+- Trợ = 0.5.
+
+Exact actual delay duration có thể tune sau, nhưng semantic đồng nhất.
+
+---
+
+# 16. Ứng Trệ stack trong một cycle
+
+Ví dụ:
+
+```text
+Enemy A
+→ Hộ
+→ +1 debt
+→ attack resolves
+→ Phản
+→ +1 debt
+
+Ally A
+→ Trợ
+→ +1 debt
+```
+
+Trước normal action kế tiếp:
+
+> total reaction debt = 3.
+
+Normal action tiếp theo bị trì hoãn tương ứng.
+
+---
+
+# 17. Quá Thế
+
+Để chống infinite delay:
+
+> reaction debt có hard cap giữa hai normal actions.
+
+Khi đạt cap:
+
+# **Quá Thế**
+
+Trong Quá Thế:
+
+- không mở Hộ;
+- không mở Phản;
+- không mở Trợ.
+
+Nhưng player vẫn:
+
+- nhận damage;
+- nhận Thế từ observation;
+- giữ Quan Thế;
+- giữ Thám focus;
+- tiếp tục tiến tới normal turn.
+
+---
+
+# 18. Reset Quá Thế
+
+Khi player cuối cùng thực hiện một normal action:
+
+> reaction debt reset.
+
+> Quá Thế kết thúc.
+
+Normal action là điểm “thanh toán nợ nhịp”.
+
+---
+
+# 19. Không reset Thế khi Quá Thế
+
+Quá Thế chỉ giới hạn khả năng ứng biến.
+
+Nó không xóa khả năng quan sát.
+
+Vì vậy player có thể đang Quá Thế nhưng vẫn tích Thế.
+
+Sau normal action reset debt:
+
+> resource pool vẫn còn nguyên.
+
+---
+
+# 20. Ứng Trệ không dispellable
+
+Ứng Trệ và Quá Thế là internal combat states.
+
+Không chịu:
+
+- cleanse;
+- dispel;
+- ailment duration;
+- ailment resistance;
+- buff extension.
+
+Không để generic system xóa core downside của hidden path.
+
+---
+
+# 21. Không có node giảm Ứng Trệ trong beta
+
+Luyện Khí và Trúc Cơ không được có:
+
+- -reaction delay;
+- +reaction cap;
+- free reaction;
+- reaction không tạo debt.
+
+Đây là price-of-power trung tâm.
+
+Nếu realm cao hơn sau này học cách giảm cái giá này, đó phải là một power milestone thật sự.
+
+---
+
+# PART III — THÁM THẾ
+
+# 22. Luyện Khí Basic
+
+# **Thám Thế**
+
+Physical single-target Basic.
+
+Damage scale mức bình thường theo Might/Core Level.
+
+Nó không cạnh tranh với:
+
+- Cuồng Quyền về pure single-target Might conversion;
+- Trấn Áp về AoE/Max HP scaling.
+
+Power budget của Thám Thế nằm ở:
+
+> observation system.
+
+---
+
+# 23. Thám Ấn
+
+Khi cast Thám Thế vào target:
+
+> target trở thành **mục tiêu đang được quan sát**.
+
+Tạm gọi player-facing mark:
+
+# **Thám Ấn**
+
+Luyện Khí chỉ có thể có:
+
+> **một Thám target tại một thời điểm.**
+
+---
+
+# 24. Mark application không cần hit
+
+Khi Thám Thế action resolve:
+
+> target được chọn làm Thám target kể cả damage miss/dodge.
+
+Damage và observation là hai semantics khác nhau.
+
+Lý do:
+
+> người tu đã quan sát đối thủ ngay cả khi đòn đánh không trúng.
+
+Nếu mark yêu cầu hit, một miss có thể làm cả hidden engine không khởi động.
+
+---
+
+# 25. Thám target transfer
+
+Cast Thám Thế lên target B:
+
+> A mất trạng thái observed từ Basic focus.
+
+> B trở thành current Thám target.
+
+Không tồn tại nhiều basic marks ở Luyện Khí.
+
+---
+
+# 26. Nếu Thám target chết
+
+Thám focus biến mất.
+
+Không auto-transfer.
+
+Nếu Quan Thế không active:
+
+> không enemy nào được observed cho tới normal action tiếp theo cast Thám Thế vào target mới.
+
+Đây là intentional weakness.
+
+---
+
+# 27. Luyện Khí observation predicate
+
+Ngoài Quan Thế:
+
+```text
+isObserved(enemy)
+=
+enemy.id === currentThamTargetId
+```
+
+---
+
+# PART IV — PHẢN
+
+# 28. Phản là reactive nền
+
+Luyện ngộ Thám Thế đồng thời có capability:
+
+# **Phản**
+
+Không phải skill slot.
+
+Không phải purchasable root riêng.
+
+Nó là reactive mechanic nền của hidden body.
+
+---
+
+# 29. Trigger Phản
+
+Nếu:
+
+> observed enemy thực hiện direct hostile action lên chính Thể Tu Ẩn
+
+thì sau action impact/result:
+
+> có thể mở Phản window.
+
+Các outcome hợp lệ gồm:
+
+- hit;
+- blocked/absorbed hit;
+- miss;
+- evade.
+
+Phản không yêu cầu player phải thật sự mất HP.
+
+---
+
+# 30. Phản khác Phản Chấn
+
+### Normal Trấn Thể — Phản Chấn
+
+Là phản lực thân thể.
+
+Yêu cầu:
+
+> `hpDamage > 0`.
+
+### Hidden — Phản
+
+Là đọc sơ hở và chủ động phản công.
+
+Yêu cầu:
+
+> một direct hostile action của observed enemy đã resolve lên player.
+
+Không cần HP loss.
+
+Hai systems không dùng chung semantic trigger.
+
+---
+
+# 31. Counter chance
+
+Phản chance derive từ:
+
+# **Lực + Mẫn**
+
+Lực:
+
+> đủ sức trả đòn.
+
+Mẫn:
+
+> đủ nhanh để bắt đúng khe hở.
+
+Chance có cap tại roll layer.
+
+Exact constants deferred.
+
+---
+
+# 32. Phản Kích
+
+Success:
+
+> tiêu Thế.
+
+> cộng Ứng Trệ.
+
+> queue **Phản Kích**.
+
+Phản Kích:
+
+- physical;
+- target attacker;
+- không consume normal turn;
+- không có cooldown riêng;
+- không phải player-facing slot;
+- inherit Core Level từ Thám Thế;
+- mặc định không mở reactive windows mới.
+
+---
+
+# 33. Forced Phản
+
+Nếu:
+
+- window hợp lệ;
+- player còn sống;
+- không bị hard-disable;
+- chưa Quá Thế;
+- đủ Thế;
+- roll success;
+
+thì:
+
+> Phản bắt buộc xảy ra.
+
+Player không được decline.
+
+---
+
+# 34. Luyện Khí gameplay loop
+
+```text
+Thám Thế
+   ↓
+đặt focus
++
+landed → sinh Thế
+   ↓
+observed enemy hành động
+   ↓
+nếu nhắm mình
+→ Phản window
+   ↓
+success
+→ tiêu Thế
+→ +Ứng Trệ
+→ Phản Kích
+   ↓
+enemy action hoàn tất
+→ sinh Thế từ observation
+```
+
+---
+
+# PART V — QUAN THẾ
+
+# 35. Trúc Cơ Special
+
+# **Quan Thế**
+
+Không direct damage.
+
+Không tăng stats.
+
+Không tăng reactive chance.
+
+Không giảm reactive cost.
+
+Không xóa Ứng Trệ.
+
+Quan Thế làm hai việc:
+
+1. grant một lượng Thế cố định khi cast;
+2. tạm thời coi **mọi enemy** là observed.
+
+---
+
+# 36. Quan Thế không đặt hàng loạt Thám Ấn thật
+
+Không cần tạo mark instance trên từng enemy.
+
+Runtime predicate:
+
+```text
+isObserved(enemy)
+=
+enemy.id === currentThamTargetId
+OR
+quanTheActive
+```
+
+Khi Quan Thế hết:
+
+> chỉ original Thám target còn observed, nếu còn sống.
+
+---
+
+# 37. Enemy mới xuất hiện trong Quan Thế
+
+Nếu Quan Thế đang active:
+
+> enemy spawn sau đó cũng automatically observed.
+
+Không cần re-cast.
+
+---
+
+# 38. Quan Thế duration
+
+Duration theo:
+
+> **holder normal turns**.
+
+Không theo global rounds.
+
+Cast turn không lập tức tiêu hết một duration tick ngoài semantic chuẩn của engine.
+
+---
+
+# 39. Interaction với Ứng Trệ
+
+Vì Ứng Trệ delay normal turns:
+
+> Quan Thế có thể kéo dài lâu hơn theo wall-clock khi player phản ứng nhiều.
+
+Đây là intentional.
+
+Nhưng reaction debt cap/Quá Thế giới hạn proc storm.
+
+---
+
+# 40. Quan Thế Core Level
+
+Recommended single scaling authority:
+
+> Core Level tăng **initial Thế gain** khi cast.
+
+Không đồng thời tăng:
+
+- duration;
+- chance;
+- cost efficiency;
+- reaction cap.
+
+Exact scaling deferred.
+
+---
+
+# 41. Passive unlock package của Quan Thế
+
+Khi lĩnh ngộ Quan Thế ở Trúc Cơ:
+
+> **Hộ** được mở.
+
+> **Trợ** được mở.
+
+Phản đã có từ Luyện Khí.
+
+Không cần mua thêm Hộ/Trợ root để Special có functionality baseline.
+
+---
+
+# PART VI — HỘ
+
+# 42. Hộ trigger
+
+Observed enemy chuẩn bị thực hiện:
+
+> direct single-target hostile action
+
+vào:
+
+> một allied participant khác player.
+
+Mở Hộ window **trước impact**.
+
+---
+
+# 43. Hộ fail-fast
+
+Hộ chỉ roll khi:
+
+1. enemy observed;
+2. target là ally hợp lệ;
+3. player còn sống;
+4. player không hard-disabled;
+5. player chưa Quá Thế;
+6. đủ Thế.
+
+Sau đó mới roll chance.
+
+Không đủ Thế / hard CC / Quá Thế:
+
+> không consume RNG.
+
+---
+
+# 44. Hộ chance
+
+Derive từ:
+
+# **Thể + Mẫn**
+
+Thể:
+
+> đủ thể phách để gánh đòn.
+
+Mẫn:
+
+> đủ nhanh để chen vào.
+
+Không node tăng trực tiếp `protectChance`.
+
+---
+
+# 45. Hộ success
+
+Nếu roll thành công:
+
+```text
+tiêu Thế
+↓
++1 Ứng Trệ
+↓
+commit Hộ
+↓
+player thay ally trở thành target
+```
+
+Không phải movement logic thật.
+
+Dash chỉ là VFX.
+
+---
+
+# 46. Attack sau Hộ
+
+Hit resolve hoàn chỉnh lên protector:
+
+- accuracy;
+- miss;
+- dodge;
+- block;
+- ward;
+- damage;
+- ailments.
+
+Không auto-hit.
+
+Không auto-damage.
+
+---
+
+# 47. Hộ có thể giết player
+
+Không có HP safety rule.
+
+Nếu player đang 5% HP và Hộ một đòn lethal:
+
+> player chết.
+
+Đây là intentional downside.
+
+Không có:
+
+> “HP thấp thì Hộ tự tắt”.
+
+---
+
+# 48. Hộ → Phản
+
+Sau khi Hộ chuyển target và attack resolve:
+
+> nếu player còn sống và điều kiện Phản hợp lệ, mở Phản window.
+
+Combo:
+
+```text
+enemy → ally
+↓
+Hộ
+↓
+player nhận attack
+↓
+Phản
+```
+
+Đây là signature chain của path.
+
+---
+
+# 49. Hộ → Phản trả hai giá riêng
+
+Hộ thành công:
+
+> cost Hộ + Ứng Trệ.
+
+Sau impact:
+
+Phản thành công:
+
+> cost Phản + thêm Ứng Trệ.
+
+Không đủ resource cho Phản:
+
+> Hộ vẫn hoàn tất.
+
+---
+
+# 50. Hộ Bích
+
+Trúc Cơ Hộ-node:
+
+# **Hộ Bích**
+
+Hộ thành công:
+
+> ally vừa được cứu nhận external ward nhỏ dựa trên Max HP của protector.
+
+Ward được grant **ngay khi Hộ commit thành công**, trước impact.
+
+Nếu protector sau đó chết:
+
+> ally vẫn giữ Hộ Bích.
+
+---
+
+# 51. Hộ Bích không tăng stat
+
+Không:
+
+`+Max HP`
+
+Không:
+
+`+Defense`
+
+Mà:
+
+> consequence riêng của Hộ.
+
+---
+
+# PART VII — PHẢN TRÚC CƠ
+
+# 52. Phản tiếp tục hoạt động như Luyện Khí
+
+Quan Thế không tạo Phản mới.
+
+Nó chỉ mở rộng:
+
+> enemy nào đủ tư cách tạo Phản window.
+
+Ngoài Quan Thế:
+
+> chỉ Thám target.
+
+Trong Quan Thế:
+
+> mọi enemy.
+
+---
+
+# 53. Trọng Phản
+
+Trúc Cơ node:
+
+# **Trọng Phản**
+
+Nếu Phản phát sinh sau một **successful evade**:
+
+> reactive payload đổi thành **Trọng Phản Kích**.
+
+Không tăng chance.
+
+Không giảm cost.
+
+Không thêm reaction.
+
+---
+
+# 54. Trọng Phản Kích
+
+Trọng Phản Kích:
+
+> mạnh hơn Phản Kích baseline.
+
+Có thể dùng higher damage coefficient hoặc skill-specific rider.
+
+Exact coefficient deferred.
+
+Không có Core riêng.
+
+Inherit Thám Thế Core Level.
+
+---
+
+# PART VIII — TRỢ
+
+# 55. Trợ trigger
+
+Một allied participant khác player hoàn thành:
+
+> normal damaging action
+
+vào:
+
+> observed enemy.
+
+Mỗi ally action tối đa mở:
+
+> **một Trợ window.**
+
+---
+
+# 56. Không trigger theo hit count
+
+Ally dùng 8-hit skill:
+
+> một Trợ window.
+
+Không tám windows.
+
+Ally AoE:
+
+> một Trợ window.
+
+Không theo số targets.
+
+---
+
+# 57. Trợ không trigger từ reactive actions
+
+Không trigger bởi:
+
+- Phản Kích;
+- Trọng Phản Kích;
+- Trợ Kích;
+- Hộ;
+- DoT tick;
+- environmental damage;
+- generic reactive action.
+
+Only:
+
+> normal ally action.
+
+---
+
+# 58. Trợ chance
+
+Derive từ:
+
+# **Mẫn + Thần**
+
+Mẫn:
+
+> bắt nhịp ally.
+
+Thần:
+
+> đọc ý niệm và thế trận.
+
+Không node tăng trực tiếp `followUpChance`.
+
+---
+
+# 59. Trợ success
+
+Nếu roll thành công:
+
+```text
+tiêu Thế
+↓
++1 Ứng Trệ
+↓
+queue Trợ Kích
+```
+
+Trợ Kích đánh canonical target của ally action.
+
+---
+
+# 60. Trợ Kích
+
+Trợ Kích:
+
+- physical;
+- không consume normal turn;
+- không có cooldown riêng;
+- inherit Thám Thế Core Level;
+- không mở reactive windows khác.
+
+Baseline damage vừa phải.
+
+Power chính nằm ở extra-action economy.
+
+---
+
+# 61. Dẫn Thế
+
+Trúc Cơ Trợ-node:
+
+# **Dẫn Thế**
+
+Nếu Trợ Kích landed:
+
+> target nhận một one-shot state Dẫn Thế.
+
+Normal action kế tiếp của target, nếu player quan sát được action đó:
+
+> observation income từ action đó được tăng.
+
+Sau đó Dẫn Thế bị consume.
+
+---
+
+# 62. Dẫn Thế không refund tức thì
+
+Trợ Kích không lập tức trả lại Thế.
+
+Nó chỉ chuẩn bị:
+
+> một observation tương lai tốt hơn.
+
+Invariant:
+
+> reactive action không trực tiếp tự tài trợ phản ứng kế tiếp.
+
+---
+
+# 63. Nếu Dẫn Thế target chết
+
+State mất.
+
+Không transfer.
+
+Không refund.
+
+Accepted overkill risk.
+
+---
+
+# PART IX — STAT TRIANGLE
+
+# 64. Chance authority
+
+Ba reactive chance được derive từ main stats:
+
+| Channel | Stats |
+|---|---|
+| **Hộ** | Thể + Mẫn |
+| **Phản** | Lực + Mẫn |
+| **Trợ** | Mẫn + Thần |
+
+---
+
+# 65. Mẫn là trục lõi
+
+Mẫn xuất hiện trong cả ba.
+
+Điều này intentional:
+
+> Ứng Thế trước hết là khả năng phản ứng đúng lúc.
+
+Secondary stat quyết định người chơi nghiêng về đâu.
+
+---
+
+# 66. Build specialization
+
+Muốn thiên Hộ:
+
+> Thể + Mẫn.
+
+Muốn thiên Phản:
+
+> Lực + Mẫn.
+
+Muốn thiên Trợ:
+
+> Mẫn + Thần.
+
+Muốn mạnh cả ba:
+
+> phải spread stats.
+
+Đây là một hidden-path cost tự nhiên.
+
+---
+
+# 67. Node tree không tăng chance
+
+Forbidden:
+
+- +counterChance;
+- +protectChance;
+- +followUpChance.
+
+Chance authority thuộc stat derivation.
+
+Tree chỉ thay đổi:
+
+> consequence / payload / observation payoff.
+
+---
+
+# PART X — HARD CC
+
+# 68. Hard-disable rule
+
+Hard incapacitating CC chặn:
+
+- Hộ;
+- Phản;
+- Trợ.
+
+Trong hard CC:
+
+> không roll.
+
+> không mất Thế.
+
+> không cộng Ứng Trệ.
+
+> reactive window bị bỏ qua.
+
+---
+
+# 69. Không phải mọi control đều chặn Ứng
+
+Slow:
+
+> không tự chặn.
+
+Taunt:
+
+> không tự chặn.
+
+Root:
+
+> không tự chặn, vì Hộ substitution không yêu cầu real movement.
+
+Chỉ trạng thái thực sự khiến actor không thể hành động mới khóa reactive engine.
+
+---
+
+# 70. Future space
+
+Khả năng:
+
+> vẫn Ứng được khi hard CC
+
+có thể là high-realm fantasy sau này.
+
+Không thuộc beta.
+
+---
+
+# PART XI — REACTION COMMIT SEMANTICS
+
+# 71. Fail-fast order
+
+Mọi reactive check dùng:
+
+```text
+1. trigger valid?
+2. actor alive?
+3. actor hard-disabled?
+4. actor Quá Thế?
+5. enough Thế?
+6. roll chance
+7. fail → no cost
+8. success:
+   consume Thế
+   add Ứng Trệ
+   commit reaction
+```
+
+---
+
+# 72. RNG determinism
+
+Không đủ resource / Quá Thế / hard CC:
+
+> không consume RNG.
+
+Deterministic battle simulation không được drift vì invalid windows.
+
+---
+
+# 73. Sau khi commit thì không rollback
+
+Khi:
+
+- roll success;
+- Thế đã trả;
+- Ứng Trệ đã nhận;
+- reaction đã queue/commit;
+
+thì observation state thay đổi sau đó không cancel reaction.
+
+Ví dụ:
+
+Quan Thế hết ngay sau commit:
+
+> reaction vẫn resolve.
+
+---
+
+# 74. Actor chết trước payload resolve
+
+Nếu actor chết trước queued Phản Kích/Trợ Kích:
+
+> payload không resolve.
+
+Không có xác chết đánh tiếp.
+
+Không refund:
+
+- Thế;
+- Ứng Trệ.
+
+Commit đã xảy ra nhưng actor không sống đủ lâu để hoàn tất.
+
+---
+
+# 75. Hộ lethal
+
+Hộ là target substitution trực tiếp.
+
+Nếu Hộ thành công rồi incoming action giết player:
+
+> ally vẫn được cứu.
+
+> player chết.
+
+> không có subsequent Phản.
+
+---
+
+# PART XII — SOURCE-ACTION LIMITS
+
+# 76. One-reaction-per-channel-per-source-action
+
+Một source action tối đa tạo:
+
+- một Hộ window;
+- một Phản window trên participant thực tế;
+- một Trợ window khi source là ally action.
+
+Không per-hit spam.
+
+---
+
+# 77. Multi-hit
+
+Enemy 10-hit skill:
+
+> Hộ check một lần pre-impact.
+
+Sau toàn hit resolution:
+
+> Phản check tối đa một lần.
+
+Không 10 Phản.
+
+---
+
+# 78. AoE
+
+Hộ:
+
+> không intercept AoE trong beta.
+
+Phản:
+
+> nếu observed enemy AoE bao gồm player và action resolve lên player, có thể mở một Phản window.
+
+Trợ:
+
+> ally AoE vẫn tối đa một Trợ window.
+
+---
+
+# 79. Reactive-from-reactive off
+
+Reactive actions mặc định không mở:
+
+- Hộ;
+- Phản;
+- Trợ.
+
+Không có:
+
+```text
+Trợ
+→ enemy reactive
+→ Phản
+→ ally Trợ
+→ ...
+```
+
+Chain depth guard vẫn phải tồn tại như safety net, nhưng content design không dựa vào nó để cân bằng recursion.
+
+---
+
+# PART XIII — TREE
+
+# 80. Luyện Khí tree
+
+```text
+                 THÁM THẾ
+                 Luyện Khí
+                    │
+          ┌─────────┴─────────┐
+          │                   │
+       Thấu Thế            Phản Kình
+```
+
+---
+
+# 81. Thấu Thế
+
+Observed enemy hoàn thành normal action:
+
+> tăng lượng Thế nhận được từ observation.
+
+Skill/mechanic-local.
+
+Không:
+
+- +Max Thế filler;
+- +Mẫn;
+- +chance.
+
+Có thể multi-level.
+
+---
+
+# 82. Phản Kình
+
+Tăng payload riêng của Phản Kích.
+
+Recommended direction:
+
+> Phản Kích có skill-specific armor bypass.
+
+Không tăng generic penetration của character.
+
+Có thể multi-level.
+
+---
+
+# 83. Trúc Cơ tree
+
+```text
+                        QUAN THẾ
+                         Trúc Cơ
+                            │
+              ┌─────────────┼─────────────┐
+              │             │             │
+             HỘ            PHẢN           TRỢ
+              │             │             │
+           Hộ Bích      Trọng Phản      Dẫn Thế
+```
+
+Hộ/Phản/Trợ hàng trên là capability presentation.
+
+Không nhất thiết là purchasable node.
+
+Quan Thế unlock baseline Hộ + Trợ.
+
+---
+
+# 84. Hộ Bích
+
+Successful Hộ:
+
+> grant external ward cho rescued ally dựa trên caster Max HP.
+
+---
+
+# 85. Trọng Phản
+
+Phản sau successful evade:
+
+> dùng Trọng Phản Kích.
+
+---
+
+# 86. Dẫn Thế
+
+Trợ Kích landed:
+
+> target bị prepared để normal action kế tiếp sinh thêm observation Thế.
+
+---
+
+# 87. Forbidden tree content
+
+Beta tree không được chứa:
+
+- +Lực;
+- +Mẫn;
+- +Thể;
+- +Thần;
+- +Max HP;
+- +Defense;
+- +counterChance;
+- +protectChance;
+- +followUpChance;
+- generic final damage;
+- generic crit;
+- -Ứng Trệ;
+- +reaction debt cap;
+- free reaction;
+- broad proc-cost reduction filler.
+
+---
+
+# PART XIV — SKILL LEVEL AUTHORITY
+
+# 88. Thám Thế Core Level
+
+Thám Thế là canonical offensive Core.
+
+Core Level tăng:
+
+- Thám Thế damage;
+- Phản Kích payload;
+- Trọng Phản Kích payload;
+- Trợ Kích payload.
+
+Reactive internal actions không có Core riêng.
+
+---
+
+# 89. Quan Thế Core Level
+
+Quan Thế có Core Level riêng.
+
+Recommended scaling:
+
+> tăng initial Thế gain khi cast.
+
+Không đồng thời scale nhiều axes.
+
+---
+
+# 90. Node levels
+
+Node levels chỉ modify node mechanic.
+
+Không tạo skill-level authority thứ hai.
+
+---
+
+# PART XV — UI
+
+# 91. Tree presentation
+
+Không dùng root-choice tree như normal Thể Tu.
+
+Dùng:
+
+# **Reactive Web**
+
+Luyện Khí:
+
+```text
+                 THÁM THẾ
+                    │
+                  PHẢN
+              /           \
+        Thấu Thế        Phản Kình
+```
+
+Trúc Cơ:
+
+```text
+                  QUAN THẾ
+                     │
+          ┌──────────┼──────────┐
+          │          │          │
+         HỘ         PHẢN        TRỢ
+          │          │          │
+       Hộ Bích    Trọng Phản   Dẫn Thế
+```
+
+---
+
+# 92. HUD
+
+Combat HUD cần thể hiện rõ:
+
+### Thế bar
+
+Ví dụ:
+
+```text
+THẾ  42 / 100
+```
+
+### Current Thám target
+
+Enemy đang được focus có icon/outline rõ.
+
+### Quan Thế
+
+Khi active:
+
+> battlefield visual cho thấy toàn bộ enemy đang nằm trong perception.
+
+Không cần gắn physical Thám Ấn instance lên tất cả.
+
+---
+
+# 93. Reaction feedback
+
+Khi Hộ/Phản/Trợ success:
+
+- icon channel flash;
+- Thế bar giảm;
+- action timeline của player bị đẩy lùi;
+- Ứng Trệ feedback xuất hiện trên timeline.
+
+Player phải nhìn thấy cái giá.
+
+---
+
+# 94. Quá Thế feedback
+
+Khi đạt debt cap:
+
+> reactive icons dim/lock.
+
+Tooltip:
+
+> “Đã ứng biến quá giới hạn trong nhịp hiện tại. Chờ hành động bình thường tiếp theo.”
+
+Không hiển thị như generic debuff.
+
+---
+
+# 95. Hộ presentation
+
+Enemy target ally.
+
+Hộ proc:
+
+> player dash/interpose visually.
+
+Logic không di chuyển grid.
+
+Sau đó attack animation resolve lên player.
+
+---
+
+# 96. Phản presentation
+
+Sau enemy action:
+
+> immediate counter animation.
+
+Nếu Trọng Phản:
+
+> presentation mạnh hơn rõ rệt.
+
+Không biến thành full normal turn animation.
+
+---
+
+# 97. Trợ presentation
+
+Ally hoàn thành attack.
+
+Player chen một strike ngắn vào cùng target.
+
+Phải đọc như:
+
+> phối hợp theo nhịp ally.
+
+Không như cast một skill độc lập dài.
+
+---
+
+# PART XVI — AUTO COMBAT
+
+# 98. Forced reactive automation
+
+Hộ/Phản/Trợ tự động.
+
+Không prompt.
+
+Idle combat không dừng để hỏi player có phản hay không.
+
+---
+
+# 99. Quan Thế auto-cast
+
+Nếu Special scheduler cast Quan Thế:
+
+> nó có thể mở một burst reactive window rất nguy hiểm.
+
+Accepted.
+
+Không cần AI “chờ thời điểm an toàn” trong design authority.
+
+Advanced auto policy có thể được design riêng sau.
+
+---
+
+# 100. Risk accepted
+
+Auto combat có thể:
+
+- Hộ khi HP thấp;
+- tích nhiều Ứng Trệ;
+- Quá Thế;
+- chết vì đỡ lethal attack.
+
+Đây không phải bug.
+
+Nó là downside của hidden path.
+
+---
+
+# PART XVII — INTERACTION VỚI COMPANION
+
+# 101. Luyện Khí
+
+Không cần companion để path hoạt động.
+
+Phản đủ tạo gameplay solo.
+
+---
+
+# 102. Trúc Cơ
+
+Companion/formation bắt đầu có ý nghĩa lớn hơn.
+
+Hộ:
+
+> bảo vệ ally.
+
+Trợ:
+
+> theo sau ally action.
+
+Đây là lý do Hộ/Trợ được mở ở Trúc Cơ thay vì Luyện Khí.
+
+---
+
+# 103. Solo Trúc Cơ
+
+Nếu không có ally:
+
+- Hộ không có window;
+- Trợ không có window;
+- Phản vẫn hoạt động;
+- Quan Thế vẫn mở toàn-enemy observation.
+
+Path không trở thành vô dụng solo.
+
+Nhưng ceiling thấp hơn party setup.
+
+Intentional.
+
+---
+
+# PART XVIII — LEGACY AUDIT
+
+# 104. Legacy pieces đáng giữ về architecture
+
+Có thể reuse:
+
+- battle-scoped `currentThe`;
+- centralized Thế mutation/cap;
+- reactive queue;
+- `actionSource`;
+- `triggerContext`;
+- pre-impact intercept seam;
+- post-hit/post-evade reaction seam;
+- post-ally-action follow-up seam;
+- reactive payload definitions;
+- participant-local capability cloning;
+- chain-depth safety;
+- stat-derived reactive chance pipeline.
+
+---
+
+# 105. Legacy content bị supersede
+
+### Full kit ngay khi chọn path
+
+`Thám Thế / Tú Thế / Bách Ứng`
+
+→ superseded.
+
+### `Tú Thế` giảm reactive cost
+
+→ không còn beta Special.
+
+### `Bách Ứng` beta Ultimate
+
+→ parked future.
+
+### Hộ/Phản/Trợ đều là Luyện Khí roots
+
+→ superseded.
+
+### Hộ/Phản/Trợ non-mutex root purchasing ở Luyện Khí
+
+→ superseded.
+
+### Stat trunk +Lực/+Mẫn/+Thể/+Thần
+
+→ invalid theo authority mới.
+
+### +Max Thế / -proc cost / +proc gain filler
+
+→ phần lớn retire.
+
+### Pay-before-roll + success refund
+
+→ superseded bởi success-only consume.
+
+### Passive round Thế income
+
+→ retire.
+
+### Taken/evade generic Thế income
+
+→ retire khỏi baseline mới.
+
+### Trợ heal ally
+
+→ superseded bởi Dẫn Thế.
+
+---
+
+# PART XIX — REQUIRED RUNTIME SEMANTICS
+
+# 106. Required state
+
+Persisted:
+
+- learned Thám Thế Core;
+- learned Quan Thế Core;
+- nodeLevels;
+- way ownership.
+
+Battle-scoped:
+
+- current Thế;
+- current Thám target;
+- Quan Thế active state;
+- reaction debt;
+- Quá Thế state;
+- Dẫn Thế instances;
+- queued reactive actions.
+
+Không persist battle state.
+
+---
+
+# 107. Required seams
+
+Implementation cần có rõ:
+
+- `isObserved(enemy)`;
+- observation-complete hook;
+- success-only reactive cost;
+- reaction commit point;
+- reaction debt application;
+- Quá Thế gate;
+- pre-impact Hộ substitution;
+- post-action Phản;
+- post-ally-action Trợ;
+- reactive queue invalidation nếu actor chết;
+- no-RNG-consumption fail-fast gate.
+
+---
+
+# PART XX — MANDATORY INVARIANTS
+
+1. Hidden Body Luyện Khí chỉ có Basic `Thám Thế`.
+
+2. Trúc Cơ mới mở Special `Quan Thế`.
+
+3. Beta không có Ultimate.
+
+4. `Bách Ứng` không phải beta content.
+
+5. Thế là battle-scoped.
+
+6. Thế không tăng reactive chance.
+
+7. Observation sinh Thế.
+
+8. Reactive action tiêu Thế.
+
+9. Reactive action không trực tiếp refund Thế.
+
+10. Thế từ enemy action được grant sau Hộ/Phản của action đó.
+
+11. Luyện Khí chỉ có một Basic Thám target.
+
+12. Thám target không cần damage landed để được chọn.
+
+13. Thám target chết không auto-transfer.
+
+14. Phản là baseline capability của Thám Thế.
+
+15. Phản chỉ mở từ observed enemy.
+
+16. Phản không yêu cầu HP damage.
+
+17. Hộ/Trợ được mở tại Trúc Cơ qua Quan Thế.
+
+18. Quan Thế không thật sự gắn multiple Thám marks.
+
+19. Quan Thế làm mọi enemy satisfy `isObserved`.
+
+20. Enemy mới spawn trong Quan Thế cũng observed.
+
+21. Quan Thế không tăng chance.
+
+22. Quan Thế không giảm reactive cost.
+
+23. Quan Thế không xóa Ứng Trệ.
+
+24. Hộ chỉ intercept direct single-target hostile action trong beta.
+
+25. Hộ success tiêu Thế trước impact.
+
+26. Hộ success tạo Ứng Trệ.
+
+27. Hộ có thể giết protector.
+
+28. Hộ lethal vẫn cứu ally.
+
+29. Dead protector không được subsequent Phản.
+
+30. Hộ Bích được grant khi Hộ commit thành công.
+
+31. Phản success tiêu Thế.
+
+32. Phản success tạo Ứng Trệ.
+
+33. Trợ success tiêu Thế.
+
+34. Trợ success tạo Ứng Trệ.
+
+35. Một source action tối đa một reaction window mỗi channel.
+
+36. Multi-hit không nhân số Phản/Hộ/Trợ.
+
+37. Reactive actions mặc định không mở reactive windows mới.
+
+38. Hộ→Phản phải trả hai cost riêng.
+
+39. Mỗi committed reaction tạo reaction debt.
+
+40. Debt đạt cap → Quá Thế.
+
+41. Quá Thế chặn reaction mới.
+
+42. Quá Thế không chặn observation income.
+
+43. Normal action tiếp theo reset debt/Quá Thế.
+
+44. Thế không reset khi Quá Thế reset.
+
+45. Reaction success là forced.
+
+46. Player không được decline proc thành công.
+
+47. Hard incapacitating CC chặn Hộ/Phản/Trợ.
+
+48. Invalid reaction window không consume RNG.
+
+49. Reaction đã commit không rollback vì Quan Thế hết hoặc focus đổi.
+
+50. Queued payload không resolve nếu actor chết trước execution.
+
+51. Hộ chance derive từ Thể + Mẫn.
+
+52. Phản chance derive từ Lực + Mẫn.
+
+53. Trợ chance derive từ Mẫn + Thần.
+
+54. Node tree không trực tiếp tăng ba reactive chances.
+
+55. Node tree không grant main stats.
+
+56. Thám Thế Core Level là owner của offensive reactive payloads.
+
+57. Internal reactive payload không có Core Level riêng.
+
+58. Quan Thế Core Level dùng một canonical scaling axis.
+
+59. Dẫn Thế không trực tiếp hoàn resource.
+
+60. Dẫn Thế target chết → state mất, không transfer.
+
+---
+
+# 108. Final Luyện Khí journey
+
+Player chọn Thể Tu Ẩn.
+
+Nhận:
+
+# **Thám Thế**
+
+Player chọn một enemy để quan sát.
+
+Thám Thế:
+
+- gây Basic damage;
+- đặt focus;
+- landed sinh Thế.
+
+Enemy được quan sát hành động:
+
+> player học được thêm Thế.
+
+Nếu enemy đó tấn công player:
+
+> có thể Phản.
+
+Success:
+
+> tiêu Thế.
+
+> lập tức Phản Kích.
+
+> lượt bình thường tiếp theo bị đẩy lùi.
+
+Fantasy:
+
+# **Thám một người — chờ một khe hở — ứng ngay lập tức.**
+
+---
+
+# 109. Final Trúc Cơ journey
+
+Đột phá Trúc Cơ.
+
+Mở:
+
+# **Quan Thế**
+
+Cast Quan Thế:
+
+> nhận Thế.
+
+> toàn battlefield trở thành observed.
+
+Từ đây:
+
+### Enemy đánh mình
+
+→ Phản.
+
+### Enemy đánh ally
+
+→ Hộ.
+
+### Ally đánh enemy
+
+→ Trợ.
+
+Một combat sequence có thể là:
+
+```text
+Enemy A → Companion
+   ↓
+Hộ
+   ↓
+Player nhận đòn
+   ↓
+Phản
+
+Companion → Enemy B
+   ↓
+Trợ
+
+Enemy C → Player
+   ↓
+Phản
+```
+
+Player đã hành động nhiều lần ngoài lượt.
+
+Nhưng phải trả:
+
+- Thế;
+- Ứng Trệ;
+- nguy cơ Quá Thế;
+- nguy cơ Hộ lethal;
+- mất normal-turn tempo.
+
+Fantasy:
+
+# **Quan cả trận — ứng với mọi biến động — nhưng càng ứng nhiều, càng đánh mất nhịp của chính mình.**
+
+---
+
+# 110. Final identity
+
+Ba Thể Tu lúc này có ba triết lý hoàn toàn khác.
+
+### Cuồng Chiến
+
+> **Lấy huyết đổi công.**
+
+### Trấn Thể
+
+> **Lấy thân trấn địch.**
+
+### Ứng Thế
+
+> **Lấy biến động của chiến trường làm cơ hội hành động.**
+
+Normal paths sử dụng thân thể để cưỡng ép combat.
+
+Hidden path không cưỡng ép.
+
+Nó chờ mọi người khác chuyển động, rồi chen vào khoảng trống giữa những chuyển động đó.
+
+Sức mạnh của nó không nằm ở một đòn lớn.
+
+Sức mạnh nằm ở:
+
+# **một lượt của người khác cũng có thể trở thành lượt của ta.**
+
+Cái giá là:
+
+# **mỗi lần mượn lượt của thiên hạ, lượt của chính mình lại xa thêm một bước.**
