@@ -3433,6 +3433,240 @@
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null
+  },
+  {
+   "id": "F-NK-FA-2",
+   "title": "kiem_tu_ngu baseline snapshot is an unreachable-state build (missing core_ngu_kiem_thuat + purchasedNodeIds mirror)",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/core/simulation/benchmark/BalanceBaselines.ts",
+     "symbolOrSection": "hiddenNguFoundationBuild L78-98",
+     "revision": "386ca595",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A INTEGRATION reviewer (devin-897c5e9f5f6a499e84ab5bbbb6f981c2)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "see reviewer proof (SOURCE_PROOF/OBSERVED)",
+   "expected": "Committed snapshot models a real player state: ritual grants core_ngu_kiem_thuat + ngu_kiem_khoi and writes nodeLevels + purchasedNodeIds atomically",
+   "actual": "Build omitted core_ngu_kiem_thuat and purchasedNodeIds for granted nodes",
+   "rootCause": "baseline written before grant-mirror convention; representativeness gap",
+   "rootClass": "benchmark fixture fidelity",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/components",
+      "src/data"
+     ],
+     "termsAndMethod": "coordinator sibling sweep + reviewer locations",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "none additional"
+     ],
+     "coverageLimits": [
+      "scoped to reported seams"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "FIXED @2a3a6467: nodeLevels gains core_tram/core_ngu_kiem_thuat + purchasedNodeIds mirror; fingerprints unchanged (skill level clamps max(1,L))",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-NK-FA-3",
+   "title": "devResetBranch('ngu_kiem') strip of granted khoi re-granted by reconcileWayGrants on next restore",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/core/game/GameManagerRealmAdvanceOps.ts",
+     "symbolOrSection": "reconcileWayGrants L167-183",
+     "revision": "386ca595",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A INTEGRATION reviewer (devin-897c5e9f5f6a499e84ab5bbbb6f981c2)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "see reviewer proof (SOURCE_PROOF/OBSERVED)",
+   "expected": "Dev-tool branch wipe holds its result or re-grant is documented self-heal",
+   "actual": "reconcileWayGrants unconditionally replays way.grantedNodeIds on every restore; khoi re-appears",
+   "rootCause": "grantedNodeIds is declarative way data; restore enforces the way contract by design",
+   "rootClass": "dev-tool semantics (out of player scope)",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/components",
+      "src/data"
+     ],
+     "termsAndMethod": "coordinator sibling sweep + reviewer locations",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "none additional"
+     ],
+     "coverageLimits": [
+      "scoped to reported seams"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "REJECTED: reconcile replay is the intended invariant enforcement; devResetBranch is a dev-console op with no player path; wipe-then-heal matches way.grantedNodeIds authority",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "by-design invariant replay; dev-tool only; no player flow reaches the interim state",
+   "exception": null
+  },
+  {
+   "id": "F-NK-FA-4",
+   "title": "kiem_tu_ngu/burst_pressure seeds 11 and 22 produce identical fingerprint '576e9420'",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "game/src/core/simulation/benchmark/BalanceMatrix.test.ts",
+     "symbolOrSection": "L44",
+     "revision": "386ca595",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A INTEGRATION reviewer (devin-897c5e9f5f6a499e84ab5bbbb6f981c2)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "see reviewer proof (SOURCE_PROOF/OBSERVED)",
+   "expected": "Distinct seeds should produce distinct fingerprints when scenario exercises RNG",
+   "actual": "Two of eight seeds hash identically in one cell; all other cells/seeds distinct",
+   "rootCause": "cannot distinguish real collision from a seed-insensitive sub-channel without instrumenting inputs",
+   "rootClass": "low-signal observation",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/components",
+      "src/data"
+     ],
+     "termsAndMethod": "coordinator sibling sweep + reviewer locations",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "none additional"
+     ],
+     "coverageLimits": [
+      "scoped to reported seams"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "REJECTED: observational only, no demonstrated mechanics defect; fingerprint coverage unchanged",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "no defect demonstrated; flagged as low-signal by reviewer",
+   "exception": null
+  },
+  {
+   "id": "F-NK-FA-5",
+   "title": "evolution-resolved name surfaces only on SkillPath entry; combat HUD/log show base 'Ng\u1ef1 Ki\u1ebfm'",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/components/game/combat/hud/TurnCombatSkillBar.vue",
+     "symbolOrSection": "orbLabel L115-119",
+     "revision": "386ca595",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "game/src/components/game/combat/BattleLogPanel.vue",
+     "symbolOrSection": "skill name L55",
+     "revision": "386ca595",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A INTEGRATION reviewer (devin-897c5e9f5f6a499e84ab5bbbb6f981c2)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "see reviewer proof (SOURCE_PROOF/OBSERVED)",
+   "expected": "Design naming law 'newest unlocked evolution = displayed name' applied consistently, or explicitly panel-scoped",
+   "actual": "SkillPath entry resolves evolved name via resolveNguKiemSkillName; combat HUD/log show authored base name",
+   "rootCause": "TurnSkillDisplayMeta L333 documents name resolution as panel-scoped; combat displays authored skill name per display-meta convention",
+   "rootClass": "display scoping convention",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/components",
+      "src/data"
+     ],
+     "termsAndMethod": "coordinator sibling sweep + reviewer locations",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "none additional"
+     ],
+     "coverageLimits": [
+      "scoped to reported seams"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "REJECTED: authored meta comment marks resolution as panel-scoped; combat name = authored meta name by convention; flagged for design owner to revisit if law meant global",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "panel-scoped by authored convention (TurnSkillDisplayMeta L333); design-owner flag noted for revisit",
+   "exception": null
   }
  ],
  "evidence": [
@@ -4393,6 +4627,38 @@
    "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-NK-INT-A2",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 16,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-897c5e9f5f6a499e84ab5bbbb6f981c2",
+   "contextId": "sealed-child-897c5e9f5f6a499e84ab5bbbb6f981c2",
+   "model": "swe-2-max",
+   "role": "clean-round-integration",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T04:27:00.000Z",
+   "sealedAt": "2026-09-25T04:33:00.000Z",
+   "previousPhaseReviewId": "REV-NK-AUT-A2",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-NK-FA-2",
+    "F-NK-FA-3",
+    "F-NK-FA-4",
+    "F-NK-FA-5"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [
@@ -5226,6 +5492,102 @@
    "promotionEvidenceIds": [],
    "qualifiedBy": [
     "REV-NK-INT-B"
+   ],
+   "capabilityDelta": "terminal-finding lesson required by MC13",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-17",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-FA-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "dev-tool grant replay vs deliberate wipe semantics",
+   "missedInvariantIds": [],
+   "escapeReason": "devResetBranch strip cannot persist because restore replays way.grantedNodeIds by design",
+   "applicability": [],
+   "exclusions": [
+    "ngu-kiem-beta"
+   ],
+   "proposedProtection": [
+    "document dev-tool wipe semantics as intentional invariant replay (or add explicit grantsRevoked flag if ever needed)"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-INT-A2"
+   ],
+   "capabilityDelta": "terminal-finding lesson required by MC13",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-18",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-FA-4"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "deterministic seed convergence",
+   "missedInvariantIds": [],
+   "escapeReason": "two seeds hash identically in one fingerprint cell",
+   "applicability": [],
+   "exclusions": [
+    "ngu-kiem-beta"
+   ],
+   "proposedProtection": [
+    "if fingerprint collisions recur, instrument inputs to distinguish collision vs seed-insensitive channel"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-INT-A2"
+   ],
+   "capabilityDelta": "terminal-finding lesson required by MC13",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-19",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-FA-5"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "display-name scoping convention vs global naming law",
+   "missedInvariantIds": [],
+   "escapeReason": "authored meta scopes name resolution to SkillPath entry; combat shows authored name",
+   "applicability": [],
+   "exclusions": [
+    "ngu-kiem-beta"
+   ],
+   "proposedProtection": [
+    "design owner to confirm naming law scope; if global, wire resolver into HUD/log"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-INT-A2"
    ],
    "capabilityDelta": "terminal-finding lesson required by MC13",
    "status": "CLASSIFIED",
