@@ -5169,10 +5169,12 @@
    "verificationEvidenceIds": [
     "EV-NK-A5-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-12"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -7087,6 +7089,37 @@
    ],
    "novelAttackIds": [],
    "status": "STALE"
+  },
+  {
+   "id": "REV-NK-CLO-12",
+   "state": {
+    "productStateId": "fb56acd6c06e613efff0dd94615d401e5ada8f5d44b9b8ae61d9a31654f4bbad",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 7,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-7e9db295fad74d9e884053944d17c239",
+   "contextId": "sealed-child-7e9db295fad74d9e884053944d17c239",
+   "model": "swe-2-max",
+   "role": "closure-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T14:07:32.000Z",
+   "sealedAt": "2026-09-25T14:13:11.000Z",
+   "previousPhaseReviewId": "REV-NK-COR-A5",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-NK-A5-FIX"
+   ],
+   "findingIds": [
+    "F-NK-COR-A5-1"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [
