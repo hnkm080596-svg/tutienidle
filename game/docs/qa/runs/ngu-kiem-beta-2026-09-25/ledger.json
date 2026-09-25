@@ -2183,11 +2183,13 @@
    "verificationEvidenceIds": [
     "EV-NK-FIX-5"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-4"
+   ],
    "exception": null,
    "duplicateOf": null,
    "rejectionReason": null,
-   "status": "FIXED_PENDING_PROOF"
+   "status": "CLOSED"
   },
   {
    "id": "F-NK-AUT-9",
@@ -2249,11 +2251,13 @@
    "verificationEvidenceIds": [
     "EV-NK-FIX-5"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-4"
+   ],
    "exception": null,
    "duplicateOf": null,
    "rejectionReason": null,
-   "status": "FIXED_PENDING_PROOF"
+   "status": "CLOSED"
   },
   {
    "id": "F-NK-AUT-10",
@@ -2315,11 +2319,13 @@
    "verificationEvidenceIds": [
     "EV-NK-FIX-5"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-4"
+   ],
    "exception": null,
    "duplicateOf": null,
    "rejectionReason": null,
-   "status": "FIXED_PENDING_PROOF"
+   "status": "CLOSED"
   },
   {
    "id": "F-NK-AUT-11",
@@ -2439,11 +2445,13 @@
    "verificationEvidenceIds": [
     "EV-NK-FIX-5"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-4"
+   ],
    "exception": null,
    "duplicateOf": null,
    "rejectionReason": null,
-   "status": "FIXED_PENDING_PROOF"
+   "status": "CLOSED"
   },
   {
    "id": "F-NK-AUT-13",
@@ -2505,11 +2513,13 @@
    "verificationEvidenceIds": [
     "EV-NK-FIX-5"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-4"
+   ],
    "exception": null,
    "duplicateOf": null,
    "rejectionReason": null,
-   "status": "FIXED_PENDING_PROOF"
+   "status": "CLOSED"
   },
   {
    "id": "F-NK-COR-4",
@@ -2637,11 +2647,13 @@
    "verificationEvidenceIds": [
     "EV-NK-FIX-5"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-4"
+   ],
    "exception": null,
    "duplicateOf": null,
    "rejectionReason": null,
-   "status": "FIXED_PENDING_PROOF"
+   "status": "CLOSED"
   },
   {
    "id": "F-NK-COR-6",
@@ -2833,11 +2845,278 @@
    "verificationEvidenceIds": [
     "EV-NK-FIX-5"
    ],
+   "closureReviewIds": [
+    "REV-NK-CLO-4"
+   ],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "status": "CLOSED"
+  },
+  {
+   "id": "F-NK-AUTB-1",
+   "title": "fa45c1eb swept \u0111\u2192d inside user-facing description literals (26-33 strings), beyond comment-mojibake scope",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "High",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/TurnSkillDisplayMeta.ts",
+     "symbolOrSection": "meta entry keys water_surge..ngu_kiem_thuat (33 strings)",
+     "revision": "7ccc8cad",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-B AUTHORITY reviewer (devin-e304cefe)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "33 description literals de-accented (d\u1eb7c/d\u00e1nh/d\u1ecbch/d\u1ed3ng d\u1ed9i/d\u1ed1t/du\u00f4i/d\u1ea5m/d\u00e8/d\u00e1/d\u1ed9ng/d\u1eadp/d\u1ed9c/di\u1ec3m/d\u1ecba/d\u1ea5t/d\u00e2m/d\u00ecnh/d\u1eb1ng/d\u1ed9i...)",
+   "expected": "user-facing Vietnamese keeps '\u0111'; sweep scope = comment '?' fragments only",
+   "actual": "33 description literals de-accented (d\u1eb7c/d\u00e1nh/d\u1ecbch/d\u1ed3ng d\u1ed9i/d\u1ed1t/du\u00f4i/d\u1ea5m/d\u00e8/d\u00e1/d\u1ed9ng/d\u1eadp/d\u1ed9c/di\u1ec3m/d\u1ecba/d\u1ea5t/d\u00e2m/d\u00ecnh/d\u1eb1ng/d\u1ed9i...)",
+   "rootCause": "swept \u0111\u2192d inside user-facing description literals",
+   "rootClass": "encoding normalization beyond intended scope",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer enumeration + coordinator verify",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "reviewer-isolated surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "ebb4b03c: restored real Vietnamese in all 33 strings from master + hand-fixed; SLICE_READ_ALLOWLIST benchmark fixture seam",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
    "closureReviewIds": [],
    "exception": null,
    "duplicateOf": null,
    "rejectionReason": null,
    "status": "FIXED_PENDING_PROOF"
+  },
+  {
+   "id": "F-NK-CORB-1",
+   "title": "TurnSkillDisplayMeta.ts: 33 user-facing description strings corrupted by \u0111\u2192d sweep",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/TurnSkillDisplayMeta.ts",
+     "symbolOrSection": "33 enumerated keys/lines",
+     "revision": "7ccc8cad",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-B CORRECTNESS reviewer (devin-7bb5ec4a)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "same defect as F-NK-AUTB-1 (enumerated 33 keys/lines)",
+   "expected": "description literals unchanged outside feature rows",
+   "actual": "same defect as F-NK-AUTB-1 (enumerated 33 keys/lines)",
+   "rootCause": "same defect as F-NK-AUTB-1",
+   "rootClass": "duplicate",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer enumeration + coordinator verify",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "reviewer-isolated surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "ebb4b03c: restored real Vietnamese in all 33 strings",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": "F-NK-AUTB-1",
+   "rejectionReason": null,
+   "status": "DUPLICATE_LINKED"
+  },
+  {
+   "id": "F-NK-AUTB-2",
+   "title": "INV-12 absent-pin list lost retired ids ngu_kiem_sac/phong/sat",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManager.deadIds.test.ts",
+     "symbolOrSection": "RETIRED_IDS list",
+     "revision": "7ccc8cad",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-B AUTHORITY reviewer (devin-e304cefe)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "3 retired ngu ids deleted from RETIRED_IDS list",
+   "expected": "retired ids keep absence pins so re-add trips INV-12",
+   "actual": "3 retired ngu ids deleted from RETIRED_IDS list",
+   "rootCause": "absence pins dropped during refactor",
+   "rootClass": "regression-net weakening",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer enumeration + coordinator verify",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "reviewer-isolated surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "a960a7d0: restored the three ids in RETIRED_IDS",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "status": "FIXED_PENDING_PROOF"
+  },
+  {
+   "id": "F-NK-CLO4-1",
+   "title": "fa45c1eb regressed 33 user-facing description strings (\u0111\u2192d beyond mojibake scope)",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/TurnSkillDisplayMeta.ts",
+     "symbolOrSection": "33 description literals",
+     "revision": "7ccc8cad",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "CLOSURE reviewer (devin-339d3076)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "same defect as F-NK-AUTB-1",
+   "expected": "fix scope = comment '?' fragments; correct Vietnamese keeps '\u0111'",
+   "actual": "same defect as F-NK-AUTB-1",
+   "rootCause": "same defect as F-NK-AUTB-1",
+   "rootClass": "duplicate",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer enumeration + coordinator verify",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "reviewer-isolated surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "ebb4b03c: restored real Vietnamese in all 33 strings",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": "F-NK-AUTB-1",
+   "rejectionReason": null,
+   "status": "DUPLICATE_LINKED"
+  },
+  {
+   "id": "F-NK-CLO4-2",
+   "title": "pre-existing comment mojibake outside swept roots (useTribulation.ts, GameManager.phapTuChain/bossSummon.test.ts)",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/composables/useTribulation.ts; src/core/game/GameManager.phapTuChain.test.ts; src/core/game/GameManager.bossSummon.test.ts",
+     "symbolOrSection": "useTribulation.ts, phapTuChain/bossSummon tests",
+     "revision": "7ccc8cad",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "CLOSURE reviewer (devin-339d3076)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "older mojibake from earlier commits (229db663), different root cause, outside this diff",
+   "expected": "comments carry valid text",
+   "actual": "older mojibake from earlier commits (229db663), different root cause, outside this diff",
+   "rootCause": "pre-existing comment mojibake (229db663)",
+   "rootClass": "pre-existing",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer enumeration + coordinator verify",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "reviewer-isolated surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "recorded for a future repo-wide comment-encoding pass, not blocking",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": "pre-existing out-of-scope: predates this branch (229db663), separate root cause, not introduced or worsened by this change",
+   "status": "REJECTED_WITH_PROOF"
   }
  ],
  "evidence": [
@@ -3382,6 +3661,102 @@
    "findingIds": [
     "F-NK-INT-15",
     "F-NK-INT-16"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-NK-CLO-4",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 10,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-339d3076676e4adc91b058fea3d54f70",
+   "contextId": "sealed-child-devin-339d3076676e4adc91b058fea3d54f70",
+   "model": "swe-2-max",
+   "role": "closure-4",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T03:00:00.000Z",
+   "sealedAt": "2026-09-25T03:45:00.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-NK-FIX-5"
+   ],
+   "findingIds": [
+    "F-NK-AUT-8",
+    "F-NK-AUT-9",
+    "F-NK-AUT-10",
+    "F-NK-AUT-12",
+    "F-NK-AUT-13",
+    "F-NK-COR-5",
+    "F-NK-INT-16"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-NK-COR-B",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 10,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-7bb5ec4a786a42d994b725a5b8c2a176",
+   "contextId": "sealed-child-devin-7bb5ec4a786a42d994b725a5b8c2a176",
+   "model": "swe-2-max",
+   "role": "clean-round-correctness",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T03:00:00.000Z",
+   "sealedAt": "2026-09-25T03:45:00.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-NK-CORB-1"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-NK-AUT-B",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 10,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-e304cefe9be44cd0afb15a74acf733bc",
+   "contextId": "sealed-child-devin-e304cefe9be44cd0afb15a74acf733bc",
+   "model": "swe-2-max",
+   "role": "clean-round-authority",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T03:00:00.000Z",
+   "sealedAt": "2026-09-25T03:45:00.000Z",
+   "previousPhaseReviewId": "REV-NK-COR-B",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-NK-AUTB-1",
+    "F-NK-AUTB-2"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -3934,6 +4309,106 @@
     "REV-NK-INT-A"
    ],
    "capabilityDelta": "records adjudication",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-9",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-AUTB-1",
+    "F-NK-CORB-1",
+    "F-NK-CLO4-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "encoding normalization sweep beyond intended scope",
+   "missedInvariantIds": [],
+   "escapeReason": "no test pins description text; the sweep intended comment scope only",
+   "applicability": [
+    "ngu-kiem-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "any mojibake/encoding fix must be line-scoped (comment lines only) and verified against master bytes before commit"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-COR-B",
+    "REV-NK-AUT-B",
+    "REV-NK-CLO-4"
+   ],
+   "capabilityDelta": "description literals are live user-facing Vietnamese - encoding sweeps must not touch them",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-10",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-AUTB-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "regression-net weakening: retired-id absence pins dropped during refactor",
+   "missedInvariantIds": [],
+   "escapeReason": "INV-12 pin list edited as part of redesign without restoring the retired ids it removed",
+   "applicability": [
+    "ngu-kiem-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "retired ids keep their absence pins; deleting them needs an explicit reason in the commit"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-AUT-B"
+   ],
+   "capabilityDelta": "absence-pin lists are regression nets - shrink only deliberately",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-11",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-CLO4-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "pre-existing comment mojibake (separate root cause, older commits)",
+   "missedInvariantIds": [],
+   "escapeReason": "recorded for a future repo-wide comment-encoding pass",
+   "applicability": [],
+   "exclusions": [
+    "ngu-kiem-beta"
+   ],
+   "proposedProtection": [
+    "none - out of scope for this run"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-CLO-4"
+   ],
+   "capabilityDelta": "deferred polish inventory",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": null,
