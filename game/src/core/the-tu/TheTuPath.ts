@@ -61,7 +61,7 @@ import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
 // — same D12 two-channel pattern as spell (assembly emitter here,
 // mid-battle deltaDeriver registered in CultivationPathSystem).
 //
-// Dependency direction: this file is a leaf — it runtime-imports the
+// Dependency direction: this file is a leaf -- it runtime-imports the
 // authored kit/buff ids from data/ (TheTuSkills, buff ids, TheTuStatChannels
 // tuning) but imports no domain authority. CultivationPathKit (catalog)
 // and CultivationPathSystem (authority) import FROM here; nothing here
