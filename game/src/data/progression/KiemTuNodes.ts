@@ -270,7 +270,7 @@ const NGU_EVOLUTION_NODES: ProgressionNode[] = [
       { kind: 'node', nodeId: 'ngu_kiem_lien' },
       { kind: 'realm', realmId: 'golden_core' },
     ],
-    // F-NK-INT-2: grantedOnly so the sealed '???' node can never be
+    // F-NK-INT-16: grantedOnly so the sealed '???' node can never be
     // bought for Insight (empty effect would make any purchase a pure
     // trap) - the golden_core prereq alone cannot keep it locked once
     // the realm ladder reaches that realm.

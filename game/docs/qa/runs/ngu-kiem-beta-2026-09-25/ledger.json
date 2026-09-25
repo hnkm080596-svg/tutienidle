@@ -2512,7 +2512,7 @@
    "status": "FIXED_PENDING_PROOF"
   },
   {
-   "id": "F-NK-COR-1",
+   "id": "F-NK-COR-4",
    "title": "save cap validator bounds multiplicative kiemDaoBase by linear count cap",
    "state": {
     "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
@@ -2522,7 +2522,7 @@
    },
    "severity": "Medium",
    "classification": "REAL_DEFECT",
-   "actionable": false,
+   "actionable": true,
    "reachability": "HYPOTHETICAL",
    "locations": [
     {
@@ -2578,7 +2578,7 @@
    "status": "DUPLICATE_LINKED"
   },
   {
-   "id": "F-NK-COR-2",
+   "id": "F-NK-COR-5",
    "title": "kiem_tu_ngu benchmark recipe never exercises momentum multiplier",
    "state": {
     "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
@@ -2644,7 +2644,7 @@
    "status": "FIXED_PENDING_PROOF"
   },
   {
-   "id": "F-NK-COR-3",
+   "id": "F-NK-COR-6",
    "title": "Vietnamese comments flattened to ? fragments",
    "state": {
     "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
@@ -2654,7 +2654,7 @@
    },
    "severity": "Nit",
    "classification": "REAL_DEFECT",
-   "actionable": false,
+   "actionable": true,
    "reachability": "HYPOTHETICAL",
    "locations": [
     {
@@ -2710,7 +2710,7 @@
    "status": "DUPLICATE_LINKED"
   },
   {
-   "id": "F-NK-INT-1",
+   "id": "F-NK-INT-15",
    "title": "kiemDaoBase bounded by count cap - legitimate post-merge saves classified corrupted (3rd independent discovery, proven chain to save-refusal)",
    "state": {
     "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
@@ -2720,7 +2720,7 @@
    },
    "severity": "Critical",
    "classification": "REAL_DEFECT",
-   "actionable": false,
+   "actionable": true,
    "reachability": "PRODUCTION",
    "locations": [
     {
@@ -2775,7 +2775,7 @@
    "status": "DUPLICATE_LINKED"
   },
   {
-   "id": "F-NK-INT-2",
+   "id": "F-NK-INT-16",
    "title": "sealed ngu_kiem_phong_an purchasable at golden_core for 3 Insight delivering nothing",
    "state": {
     "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
@@ -3304,7 +3304,7 @@
    "accessLimitations": [],
    "startedAt": "2026-09-25T02:50:00.000Z",
    "sealedAt": "2026-09-25T03:01:42.000Z",
-   "previousPhaseReviewId": null,
+   "previousPhaseReviewId": "REV-NK-COR-A",
    "reviewedAfterPreviousFixes": true,
    "coverageIds": [],
    "evidenceIds": [
@@ -3347,9 +3347,9 @@
     "EV-NK-FIX-5"
    ],
    "findingIds": [
-    "F-NK-COR-1",
-    "F-NK-COR-2",
-    "F-NK-COR-3"
+    "F-NK-COR-4",
+    "F-NK-COR-5",
+    "F-NK-COR-6"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -3373,21 +3373,44 @@
    "accessLimitations": [],
    "startedAt": "2026-09-25T02:59:00.000Z",
    "sealedAt": "2026-09-25T03:15:00.000Z",
-   "previousPhaseReviewId": null,
+   "previousPhaseReviewId": "REV-NK-AUT-A",
    "reviewedAfterPreviousFixes": true,
    "coverageIds": [],
    "evidenceIds": [
     "EV-NK-FIX-5"
    ],
    "findingIds": [
-    "F-NK-INT-1",
-    "F-NK-INT-2"
+    "F-NK-INT-15",
+    "F-NK-INT-16"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
   }
  ],
- "cycles": [],
+ "cycles": [
+  {
+   "id": "CYCLE-NK-A",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reviewIds": [
+    "REV-NK-COR-A",
+    "REV-NK-AUT-A",
+    "REV-NK-INT-A"
+   ],
+   "coverageIds": [],
+   "evidenceIds": [],
+   "noveltyEvidenceIds": [
+    "EV-NK-NOVEL-1"
+   ],
+   "startedAt": "2026-09-25T01:40:00.000Z",
+   "finishedAt": "2026-09-25T01:58:00.000Z",
+   "status": "FINDINGS"
+  }
+ ],
  "mutations": [],
  "corpus": [],
  "lessons": [
@@ -3665,7 +3688,9 @@
    "supersedes": null,
    "triggerType": "DEFECT",
    "findingIds": [
-    "F-NK-AUT-8"
+    "F-NK-AUT-8",
+    "F-NK-COR-4",
+    "F-NK-INT-15"
    ],
    "incidentEvidenceIds": [],
    "originatingRun": "ngu-kiem-beta-2026-09-25",
@@ -3825,7 +3850,8 @@
    "supersedes": null,
    "triggerType": "DEFECT",
    "findingIds": [
-    "F-NK-AUT-13"
+    "F-NK-AUT-13",
+    "F-NK-COR-6"
    ],
    "incidentEvidenceIds": [],
    "originatingRun": "ngu-kiem-beta-2026-09-25",
@@ -3857,7 +3883,7 @@
    "supersedes": null,
    "triggerType": "DEFECT",
    "findingIds": [
-    "F-NK-COR-2"
+    "F-NK-COR-5"
    ],
    "incidentEvidenceIds": [],
    "originatingRun": "ngu-kiem-beta-2026-09-25",
@@ -3889,7 +3915,7 @@
    "supersedes": null,
    "triggerType": "DEFECT",
    "findingIds": [
-    "F-NK-INT-2"
+    "F-NK-INT-16"
    ],
    "incidentEvidenceIds": [],
    "originatingRun": "ngu-kiem-beta-2026-09-25",

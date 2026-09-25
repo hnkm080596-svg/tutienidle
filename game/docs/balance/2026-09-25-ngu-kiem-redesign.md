@@ -32,7 +32,7 @@ deadlocks — the redesign did not collapse the oracle. Absolute tuning
 (LIEN_MOMENTUM_RATE = 0.15, forge costs, cap ladder) is explicitly deferred
 to the user's BETA-BALANCE pass (design sec.56).
 
-## Delta 2 (F-NK-COR-2 fingerprint update)
+## Delta 2 (F-NK-COR-5 fingerprint update)
 
 The hidden_n Gu foundation recipe shipped with `kiemDaoCount=1`, so every
 cast emitted a single instance and the Lien momentum factor
