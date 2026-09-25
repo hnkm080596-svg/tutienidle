@@ -164,7 +164,12 @@ describe('LegacySkillAdapter -- ailments + detonate', () => {
   it('non-physical sourceMaxHpRatio reports unsupported instead of a silent drop', () => {
     const { unsupported } = adaptTurnSkillDefinition(
       turnDef({
-        damage: { kind: 'elemental', coefficient: 1, sourceMaxHpRatio: 0.5 },
+        damage: {
+          kind: 'elemental',
+          components: [{ kind: 'element' as const, element: 'fire' as const, ratio: 1 }],
+          multiplier: 1,
+          sourceMaxHpRatio: 0.5,
+        },
       }),
     )
     expect(unsupported.some((m) => m.includes('sourceMaxHpRatio'))).toBe(true)
