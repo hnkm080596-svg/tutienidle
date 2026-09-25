@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "5f0d296be768afe76b07b46358a7766bae0ac28d",
   "state": {
-   "productStateId": "25aed25d2142bede38d783e958aec2815e1a5707912b64045224c45e96273d0b",
+   "productStateId": "604c561747d1d7c8bcfb93f67b5614d31a6b443a9b35c8764f4747c25039f354",
    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -9079,6 +9079,177 @@
    "fixedInRevision": null,
    "closedAt": null,
    "closeReason": null
+  },
+  {
+   "id": "F-PT-COR-A4-1",
+   "title": "basic-node levels 3-5 reachable at Luyen Khi via techniqueRank gates",
+   "state": {
+    "productStateId": "25aed25d2142bede38d783e958aec2815e1a5707912b64045224c45e96273d0b",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuBasicNodes.ts",
+     "symbolOrSection": "MINOR_TIER_GATES",
+     "revision": "90263d10",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-dea8860890a34819997021e9993841c9",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "MINOR_TIER_GATES ride techniqueRank 2/3/4 at levels 3/4/5; qi_refining effective rank = min(18, realmLevel) so an LQ player at realmLevel>=4 satisfies all gates and can level trunk nodes to 5 before Truc Co",
+   "expected": "dispatch shorthand read as 'Truc Co raises level cap'",
+   "actual": "level caps run on minor tier (techniqueRank), per authored comment citing ruling #8",
+   "rootCause": "cap mechanism is minor tier by user ruling #8, not realm",
+   "rootClass": "spec-wording-ambiguity",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components"
+     ],
+     "termsAndMethod": "clean-A reviewer sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "user ruling #8 verbatim: realm decides which node opens, minor tier decides the level cap - techniqueRank gating is exactly that mechanism; cap VALUES (rank 2/3/4 at levels 3/4/5) are balance numbers reserved for BETA-BALANCE"
+  },
+  {
+   "id": "F-PT-COR-A4-2",
+   "title": "basic-lane buffs ride player-level statModifiers domain spell, not per-skillId",
+   "state": {
+    "productStateId": "25aed25d2142bede38d783e958aec2815e1a5707912b64045224c45e96273d0b",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuBasicNodes.ts",
+     "symbolOrSection": "stat()",
+     "revision": "90263d10",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-dea8860890a34819997021e9993841c9",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "stat() emits StatModifier{domain:'spell'} applied to ALL spell skills; a lingering mortal-precursor spell skill would also receive +10%",
+   "expected": "per-level stat buffs the SKILL (dispatch M1)",
+   "actual": "global skill-channel stats gated to spell domain; equivalent at beta scope (committed element is the only reachable basic)",
+   "rootCause": "no per-skillId statModifiers channel exists in NodeEffect (turnSkillResourceModifiers is per-skill but resource-only)",
+   "rootClass": "scope-granularity",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components"
+     ],
+     "termsAndMethod": "clean-A reviewer sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "ruling #3 targets skill-channel vs character stats (satisfied: stats are skill-channel, domain-gated); per-skillId scoping is equivalent at beta scope and costs a new NodeEffect channel + aggregator + save/respec wiring - candidate for post-beta if multi-skill kits return"
+  },
+  {
+   "id": "F-PT-COR-A4-3",
+   "title": "stale comment: 'targetingOverride', real field is 'targeting'",
+   "state": {
+    "productStateId": "25aed25d2142bede38d783e958aec2815e1a5707912b64045224c45e96273d0b",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/PhapTuChainSkills.ts",
+     "symbolOrSection": "header comment ~16",
+     "revision": "90263d10",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-dea8860890a34819997021e9993841c9",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "PhapTuChainSkills.ts header names targetingOverride; SkillSpecialization.ts:31 declares targeting",
+   "expected": "comment names the actual field",
+   "actual": "data correct, comment misleads future authors (unsupported field would warn-drop)",
+   "rootCause": "stale comment",
+   "rootClass": "stale-comment",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components"
+     ],
+     "termsAndMethod": "clean-A reviewer sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "targetingOverride -> targeting in header comment @68c18a84",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
   }
  ],
  "evidence": [
@@ -10162,7 +10333,7 @@
    "invariantIds": [],
    "limitations": [],
    "result": "PASS",
-   "status": "CURRENT"
+   "status": "STALE"
   }
  ],
  "coverage": [
@@ -12000,7 +12171,7 @@
     "F-PT-COR-A3-3"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-AUT-A3",
@@ -12030,7 +12201,7 @@
     "F-PT-AUT-A3-2"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-CLO-9",
@@ -12056,6 +12227,37 @@
    "coverageIds": [],
    "evidenceIds": [],
    "findingIds": [],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PT-COR-A4",
+   "state": {
+    "productStateId": "25aed25d2142bede38d783e958aec2815e1a5707912b64045224c45e96273d0b",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 8,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-dea8860890a34819997021e9993841c9",
+   "contextId": "sealed-child-dea8860890a34819997021e9993841c9",
+   "model": "swe-2-max",
+   "role": "clean-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T07:14:11.000Z",
+   "sealedAt": "2026-09-25T07:35:53.000Z",
+   "previousPhaseReviewId": "REV-PT-COR-A3",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-COR-A4-1",
+    "F-PT-COR-A4-2",
+    "F-PT-COR-A4-3"
+   ],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -14695,6 +14897,90 @@
    "policyVersion": null,
    "effectiveFromRun": null,
    "guidance": null
+  },
+  {
+   "id": "L-PT-61",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-COR-A4-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "spec-wording-ambiguity",
+   "missedInvariantIds": [],
+   "escapeReason": "clean-A finding",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "adjudicated"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "adjudicated",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-PT-62",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-COR-A4-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "scope-granularity",
+   "missedInvariantIds": [],
+   "escapeReason": "clean-A finding",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "adjudicated"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "adjudicated",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-PT-63",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-COR-A4-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "stale-comment",
+   "missedInvariantIds": [],
+   "escapeReason": "clean-A finding",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "adjudicated"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "adjudicated",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
   }
  ],
  "messages": [],
@@ -15578,6 +15864,22 @@
    "payloadPath": "events/0055.json",
    "payloadHash": "12638b47176ff40fc51475223ac1f9e671406e9669180b5022161826425dd581",
    "eventHash": "e11d1e7fa276d71a9fd61d7df1a2fd9d09244ecc4fd00921a2b92c26a4cfeb11"
+  },
+  {
+   "seq": 56,
+   "at": "2026-09-25T07:44:50.121Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "604c561747d1d7c8bcfb93f67b5614d31a6b443a9b35c8764f4747c25039f354",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "e11d1e7fa276d71a9fd61d7df1a2fd9d09244ecc4fd00921a2b92c26a4cfeb11",
+   "payloadPath": "events/0056.json",
+   "payloadHash": "2af15fdd00bb945839ed433641b49aa4e4494fd5108252e054ddc44f2dc4f5b8",
+   "eventHash": "0e9161ae5bf7754c270daf5ce09f433f1cebd4c205a195a7826bb3a4058df1d2"
   }
  ]
 }

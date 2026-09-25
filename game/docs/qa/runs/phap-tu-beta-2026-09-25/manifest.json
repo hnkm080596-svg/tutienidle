@@ -20988,7 +20988,7 @@
       "path": "src/data/skill/PhapTuChainSkills.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "4e389f3eef48e207c7e9d6ca9caca848c884d622089fe4f79f3ae3be5b417d6f"
+      "hash": "7d42b8a2201450b19cf344254112a3100a6f4756fabaa5aa33378485fff46ad9"
     },
     {
       "path": "src/data/skill/PhapTuEmpoweredUlts.ts",
@@ -23073,5 +23073,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "25aed25d2142bede38d783e958aec2815e1a5707912b64045224c45e96273d0b"
+  "productStateId": "604c561747d1d7c8bcfb93f67b5614d31a6b443a9b35c8764f4747c25039f354"
 }
