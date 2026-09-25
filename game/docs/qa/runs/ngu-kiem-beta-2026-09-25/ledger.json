@@ -3141,6 +3141,232 @@
    "duplicateOf": null,
    "rejectionReason": "pre-existing out-of-scope: predates this branch (229db663), separate root cause, not introduced or worsened by this change",
    "status": "REJECTED_WITH_PROOF"
+  },
+  {
+   "id": "F-NK-INTB-1",
+   "title": "INV-12 deadIds pin covers only 3 of 15 retired ngu-kiem ids",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/core/game/GameManager.deadIds.test.ts",
+     "symbolOrSection": "RETIRED_IDS L23-32",
+     "revision": "0ccdbdc4",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-B INTEGRATION reviewer (devin-cf8ce886)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "git show be1bdf8d KiemTuNodes.ts lists 12 more retired ids; TurnSkillDisplayMeta diff removed 2 emblem entries",
+   "expected": "Pin covers every content id a v84 save can carry in nodeLevels/purchasedNodeIds",
+   "actual": "Only ngu_kiem_sac/phong/sat pinned; 9 cuu_cung_* + 3 ngu_cascade_* + 2 emblem skill ids unpinned",
+   "rootCause": "pin added for the 3 pre-Khoi ids only; the other 12 retired ids were missed",
+   "rootClass": "incomplete retirement pin coverage",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/game",
+      "src/data/progression"
+     ],
+     "termsAndMethod": "git show be1bdf8d id sweep vs RETIRED_IDS list",
+     "evidenceIds": [
+      "EV-NK-FIX-7"
+     ],
+     "hitDispositions": [
+      "all 12 missed ids now pinned"
+     ],
+     "coverageLimits": [
+      "node/skill content ids only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "FIXED @d8946100: RETIRED_IDS extended to all 15 retired ids",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-7"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-7"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-NK-INTB-2",
+   "title": "Evolution ownership battle-build-scoped while counters live-read per cast",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/core/kiem-tu/NguKiemDaoProvider.ts",
+     "symbolOrSection": "collectOwnedEvolutionIds in buildDynamicBasic",
+     "revision": "0ccdbdc4",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-B INTEGRATION reviewer (devin-cf8ce886)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "provider comment states live-read every cast; collectOwnedEvolutionIds only inside buildDynamicBasic",
+   "expected": "Consistent unlock-vs-counter semantics or documented divergence",
+   "actual": "Evolutions freeze at battle build (Kiem Pho parity); counters live-read; mid-battle node purchase inert until next fight",
+   "rootCause": "deliberate parity with Kiem Pho evolution semantics; divergence undocumented",
+   "rootClass": "intended design divergence",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "REJECTED: intended: Kiem Pho parity is the design baseline; divergence now documented by this finding",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "intended: Kiem Pho parity is the design baseline; divergence now documented by this finding",
+   "exception": null
+  },
+  {
+   "id": "F-NK-INTB-3",
+   "title": "devResetBranch strips granted Khoi; reconcileWayGrants re-grants only at next restore",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/core/game/GameManagerRealmAdvanceOps.ts",
+     "symbolOrSection": "reconcileWayGrants L177-185",
+     "revision": "0ccdbdc4",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-B INTEGRATION reviewer (devin-cf8ce886)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "test asserts nodeLevels ngu_kiem_khoi undefined post-reset; reconcile called only in save-restore",
+   "expected": "n/a - documented dev-tool behavior; combat unaffected",
+   "actual": "Between dev reset and next save-load khoi is absent; name resolver falls back to 'Ngu Kiem'",
+   "rootCause": "dev-tool reset path intentionally strips; reconcile restores at next load",
+   "rootClass": "dev-tool transient state",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "REJECTED: documented dev-tool contract, test-pinned; combat unaffected",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "documented dev-tool contract, test-pinned; combat unaffected",
+   "exception": null
+  },
+  {
+   "id": "F-NK-INTB-4",
+   "title": "QuanKhi spec card still reads 'Ngu Kiem Dao' - spec beta rewording not applied",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/locales/vi.json",
+     "symbolOrSection": "specNames.nguKiemDao L243",
+     "revision": "0ccdbdc4",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-B INTEGRATION reviewer (devin-cf8ce886)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "locale entries unchanged since merge-base; description semantically correct",
+   "expected": "Spec S63 suggested updated spec-card wording for beta naming",
+   "actual": "Card still shows way-level name + semantically correct description",
+   "rootCause": "spec suggestion not applied; text remains accurate (way name vs skill name)",
+   "rootClass": "cosmetic wording deferral",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "REJECTED: cosmetic only; wording deferred to POLISH per user balance/wording ownership",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "cosmetic only; wording deferred to POLISH per user balance/wording ownership",
+   "exception": null
+  },
+  {
+   "id": "F-NK-INTB-5",
+   "title": "kiem_tu_ngu/burst_pressure baseline shares one fingerprint for seeds 11 and 22",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/core/simulation/benchmark/BalanceMatrix.test.ts",
+     "symbolOrSection": "baseline L44",
+     "revision": "0ccdbdc4",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-B INTEGRATION reviewer (devin-cf8ce886)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "asserted fingerprint passes; collision weakens seed-diversity signal only",
+   "expected": "Distinct seeds generally produce distinct fingerprints",
+   "actual": "Seeds 11/22 deterministically converge to identical outcomes under new recipe",
+   "rootCause": "recipe yields identical outcome under both seeds; honest computed value",
+   "rootClass": "deterministic seed convergence",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "REJECTED: honest computed baseline; collision is data, not a defect",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "honest computed baseline; collision is data, not a defect",
+   "exception": null
   }
  ],
  "evidence": [
@@ -3367,6 +3593,35 @@
    "invariantIds": [],
    "claims": [
     "F-NK-AUTB-1/AUTB-2/CORB-1/CLO4-1 repairs verified at 0ccdbdc4"
+   ],
+   "limitations": [],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-NK-FIX-7",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T04:00:00.000Z",
+   "finishedAt": "2026-09-25T04:02:00.000Z",
+   "commandOrMethod": "extended RETIRED_IDS to all 15 retired ngu-kiem ids + npx vitest run GameManager.deadIds.test.ts (5/5) + npm run type-check",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/intb-deadids-fix.log",
+   "artifactHash": "08657faa3fcc5930027e2272caea43c2a3d92482ab9b0707ddb55f5631b88798",
+   "inputPaths": [
+    "game/src/core/game/GameManager.deadIds.test.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "pin now covers every v84-era retired ngu-kiem content id"
    ],
    "limitations": [],
    "status": "CURRENT"
@@ -3840,6 +4095,39 @@
    "coverageIds": [],
    "evidenceIds": [],
    "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-NK-INT-B",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 15,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-cf8ce886a4ea43ed85b4a5e3d5665201",
+   "contextId": "sealed-child-cf8ce886a4ea43ed85b4a5e3d5665201",
+   "model": "swe-2-max",
+   "role": "clean-round-integration",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T04:20:00.000Z",
+   "sealedAt": "2026-09-25T04:40:00.000Z",
+   "previousPhaseReviewId": "REV-NK-AUT-B",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-NK-INTB-1",
+    "F-NK-INTB-2",
+    "F-NK-INTB-3",
+    "F-NK-INTB-4",
+    "F-NK-INTB-5"
+   ],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -4491,6 +4779,166 @@
     "REV-NK-CLO-4"
    ],
    "capabilityDelta": "deferred polish inventory",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-12",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-INTB-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "incomplete retirement pin coverage",
+   "missedInvariantIds": [],
+   "escapeReason": "pin written for the visible 3 ids; merge-base id sweep skipped for node/emblem ids",
+   "applicability": [],
+   "exclusions": [
+    "ngu-kiem-beta"
+   ],
+   "proposedProtection": [
+    "when pinning retired ids, enumerate every id retired in the diff vs merge-base, not just renamed ones"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-INT-B"
+   ],
+   "capabilityDelta": "retirement pins must cover the full retired id set across nodes, skills, and display meta",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-13",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-INTB-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "intended design divergence",
+   "missedInvariantIds": [],
+   "escapeReason": "Kiem Pho parity chosen as baseline; asymmetry undocumented",
+   "applicability": [],
+   "exclusions": [
+    "ngu-kiem-beta"
+   ],
+   "proposedProtection": [
+    "record adjudication in ledger"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-INT-B"
+   ],
+   "capabilityDelta": "terminal-finding lesson required by MC13",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-14",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-INTB-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "dev-tool transient state",
+   "missedInvariantIds": [],
+   "escapeReason": "dev reset intentionally strips; restore re-grants",
+   "applicability": [],
+   "exclusions": [
+    "ngu-kiem-beta"
+   ],
+   "proposedProtection": [
+    "record adjudication in ledger"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-INT-B"
+   ],
+   "capabilityDelta": "terminal-finding lesson required by MC13",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-15",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-INTB-4"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "cosmetic wording deferral",
+   "missedInvariantIds": [],
+   "escapeReason": "spec suggestion vs accurate existing text",
+   "applicability": [],
+   "exclusions": [
+    "ngu-kiem-beta"
+   ],
+   "proposedProtection": [
+    "record adjudication in ledger"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-INT-B"
+   ],
+   "capabilityDelta": "terminal-finding lesson required by MC13",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-16",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-INTB-5"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "deterministic seed convergence",
+   "missedInvariantIds": [],
+   "escapeReason": "recipe produces identical outcomes across seeds",
+   "applicability": [],
+   "exclusions": [
+    "ngu-kiem-beta"
+   ],
+   "proposedProtection": [
+    "record adjudication in ledger"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-INT-B"
+   ],
+   "capabilityDelta": "terminal-finding lesson required by MC13",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": null,
