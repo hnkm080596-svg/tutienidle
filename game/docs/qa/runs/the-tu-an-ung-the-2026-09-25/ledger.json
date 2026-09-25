@@ -1826,10 +1826,12 @@
       "verificationEvidenceIds": [
         "EV-TTA-CLEANA4-FIX"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TTA-CLO-5"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -1942,10 +1944,12 @@
       "verificationEvidenceIds": [
         "EV-TTA-CLEANA4-FIX"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TTA-CLO-5"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -2064,10 +2068,12 @@
       "verificationEvidenceIds": [
         "EV-TTA-CLEANA4-FIX"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TTA-CLO-5"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -2129,10 +2135,12 @@
       "verificationEvidenceIds": [
         "EV-TTA-CLEANA4-FIX"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TTA-CLO-5"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     }
   ],
@@ -2367,7 +2375,7 @@
         "cleanA4 INT fix batch verified on 7b683fd9: negative actionGauge persists through consume (ung_tre debt no longer refunded by the bypass drain); sweepBuffDeaths runs between flushReflects and resolvePostActionWindows so a reflect-killed Tham An mark clears at action end; AUT-1 debt reset now keyed on isNaturalActionSource; AUT-3 doc drift corrected to name sweepBuffDeaths as the eager-clear owner"
       ],
       "limitations": [],
-      "status": "VALID",
+      "status": "CURRENT",
       "kind": "EXECUTED_UNIT_STRUCTURAL"
     }
   ],
@@ -2870,6 +2878,40 @@
       "coverageIds": [],
       "evidenceIds": [],
       "findingIds": [
+        "F-TTA-INT-A4-1",
+        "F-TTA-INT-A4-2"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TTA-CLO-5",
+      "state": {
+        "productStateId": "d78eb2683fa0c3b0aefe9b8de713e8451cc54cef292dd7d979a0ffad48f880ea",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 22,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-7a0e6f3e286a4207ad440907de01caf7",
+      "contextId": "sealed-child-7a0e6f3e286a4207ad440907de01caf7",
+      "model": "swe-2-max",
+      "role": "CLOSURE",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T22:46:00.000Z",
+      "sealedAt": "2026-09-25T22:50:00.000Z",
+      "previousPhaseReviewId": "REV-TTA-CLO-4",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-TTA-CLEANA4-FIX"
+      ],
+      "findingIds": [
+        "F-TTA-CLEAN-A4-AUT-1",
+        "F-TTA-CLEAN-A4-AUT-3",
         "F-TTA-INT-A4-1",
         "F-TTA-INT-A4-2"
       ],
@@ -3856,6 +3898,158 @@
       "effectiveFromRun": null,
       "guidance": null,
       "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-TTA-32",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TTA-CLEAN-A4-AUT-1"
+      ],
+      "incidentEvidenceIds": [
+        "EV-TTA-CLEANA4-FIX"
+      ],
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "rootClass": "gate-boundary-reset",
+      "missedInvariantIds": [],
+      "escapeReason": "the debt reset lived below the return-object computation and fired on every lane (charge-tick, sealed NULL_ACTION, null pick) — the actionSource existed but was never used to guard the reset",
+      "applicability": [
+        "any state reset beside an action-source boundary"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "resets that must only fire on real actions must name the canonical source predicate (isNaturalActionSource) at the reset site"
+      ],
+      "promotionEvidenceIds": [
+        "EV-TTA-CLEANA4-FIX"
+      ],
+      "qualifiedBy": [
+        "REV-TTA-CLO-5"
+      ],
+      "capabilityDelta": "pins in TurnBattleSystem.ungTreR4.test.ts (negative gauge persists; reflect-killed mark clears at action end)",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [
+        "EV-TTA-CLEANA4-FIX"
+      ]
+    },
+    {
+      "id": "L-TTA-33",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TTA-CLEAN-A4-AUT-3"
+      ],
+      "incidentEvidenceIds": [
+        "EV-TTA-CLEANA4-FIX"
+      ],
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "rootClass": "doc-drift-vs-owner",
+      "missedInvariantIds": [],
+      "escapeReason": "three doc sites described the thamTargetId clear as lazy-read-only while the eager sweepBuffDeaths owner was added in cleanA3 — docs lagged the ownership change",
+      "applicability": [
+        "any owner change touching documented behavior"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "doc sites naming a lifecycle owner must be re-grepped whenever the owning sweep moves"
+      ],
+      "promotionEvidenceIds": [
+        "EV-TTA-CLEANA4-FIX"
+      ],
+      "qualifiedBy": [
+        "REV-TTA-CLO-5"
+      ],
+      "capabilityDelta": "pins in TurnBattleSystem.ungTreR4.test.ts (negative gauge persists; reflect-killed mark clears at action end)",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [
+        "EV-TTA-CLEANA4-FIX"
+      ]
+    },
+    {
+      "id": "L-TTA-34",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TTA-INT-A4-1"
+      ],
+      "incidentEvidenceIds": [
+        "EV-TTA-CLEANA4-FIX"
+      ],
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "rootClass": "clamp-erases-negative-state",
+      "missedInvariantIds": [],
+      "escapeReason": "Math.max(0,...) in consumeGaugeAfterAction silently refunded the debt-negative gauge — the below-zero semantics were authored in TheEconomy but never pinned",
+      "applicability": [
+        "any resource that may go negative by design"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "clamp decisions must be conditional on consume fraction; pin debt-negative persistence at introduction"
+      ],
+      "promotionEvidenceIds": [
+        "EV-TTA-CLEANA4-FIX"
+      ],
+      "qualifiedBy": [
+        "REV-TTA-CLO-5"
+      ],
+      "capabilityDelta": "pins in TurnBattleSystem.ungTreR4.test.ts (negative gauge persists; reflect-killed mark clears at action end)",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [
+        "EV-TTA-CLEANA4-FIX"
+      ]
+    },
+    {
+      "id": "L-TTA-35",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TTA-INT-A4-2"
+      ],
+      "incidentEvidenceIds": [
+        "EV-TTA-CLEANA4-FIX"
+      ],
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "rootClass": "missed-quiescent-point-sweep",
+      "missedInvariantIds": [],
+      "escapeReason": "flushReflects is itself a settle point (kills can land inside it) but only per-hit sweeps existed — the post-flush corpse state was never enumerated as a quiescent point",
+      "applicability": [
+        "any settle/quiescent point that can produce deaths"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "enumerate every settle point vs the death sweep; flush tails count"
+      ],
+      "promotionEvidenceIds": [
+        "EV-TTA-CLEANA4-FIX"
+      ],
+      "qualifiedBy": [
+        "REV-TTA-CLO-5"
+      ],
+      "capabilityDelta": "pins in TurnBattleSystem.ungTreR4.test.ts (negative gauge persists; reflect-killed mark clears at action end)",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [
+        "EV-TTA-CLEANA4-FIX"
+      ]
     }
   ],
   "messages": [],
@@ -4771,6 +4965,38 @@
       "payloadPath": "events/0057.json",
       "payloadHash": "7fd1848c16e20b14f4ede96ab46386107aa4a5e526a3cf5de68c9be62eb8d1ef",
       "eventHash": "1dd756044eb34966a2ca01d699cb9e8ab685fdfa94d720325c5079963c294d69"
+    },
+    {
+      "seq": 58,
+      "at": "2026-09-25T22:50:34.909Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "d78eb2683fa0c3b0aefe9b8de713e8451cc54cef292dd7d979a0ffad48f880ea",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "1dd756044eb34966a2ca01d699cb9e8ab685fdfa94d720325c5079963c294d69",
+      "payloadPath": "events/0058.json",
+      "payloadHash": "2cf46e164a7f9623f83f76ac1694277ae6dad395088aee3ea53713db4b4b1c54",
+      "eventHash": "99ae3853c75aef3d63061abe6e0fe1541d5d683b0484595264f9f3725e7d1d7b"
+    },
+    {
+      "seq": 59,
+      "at": "2026-09-25T22:50:53.624Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "d78eb2683fa0c3b0aefe9b8de713e8451cc54cef292dd7d979a0ffad48f880ea",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "99ae3853c75aef3d63061abe6e0fe1541d5d683b0484595264f9f3725e7d1d7b",
+      "payloadPath": "events/0059.json",
+      "payloadHash": "a1b33debcde63927a801cb8b49bc09a651132e396ae5e05dec2597e43b585967",
+      "eventHash": "aeb4d97959abbba4cd88958ab1bcf3677dfd918c72aa82eeb8b2a3343a5917cc"
     }
   ]
 }
