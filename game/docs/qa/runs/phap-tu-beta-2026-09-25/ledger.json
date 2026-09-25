@@ -11440,6 +11440,180 @@
    "exception": null,
    "status": "REJECTED_WITH_PROOF",
    "rejectionReason": "rejected: inert by design; crafted-save-only reachability"
+  },
+  {
+   "id": "F-PT-AUT-B1",
+   "title": "Domain switchRoute bypasses revokeNodeOwnership (no grantsSkillCoreIds/orphan cascade)",
+   "state": {
+    "productStateId": "2330ef22ed54c9314513c6cb4dd933e93e0eb58ec9446ba2af65f4b2d055f65f",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/progression/NodeSystem.ts",
+     "symbolOrSection": "switchRoute :951-986 vs revokeNodeOwnership ~590-640",
+     "revision": "e1ca815b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-1793e5ffb7e74c1293ce9501c72b5911",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "latent only: routeTag (PhapTu dot/no builders) and grantsSkillCoreIds (TheTuNodes) are disjoint sets; all route-tree deps point tag->untagged; live only if a future route-tagged node declares grantsSkillCoreIds or hosts cross-tag dependent",
+   "expected": "every revocation path flows through revokeNodeOwnership cascades",
+   "actual": "switchRoute hand-deletes ownership entries; skips grantsSkillCoreIds cascade + orphan cascade (still honors rewardOnly, refunds, applyOneShotClawback)",
+   "rootCause": "adjudicated below",
+   "rootClass": "adjudicated-non-actionable",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/progression",
+      "src/data/progression"
+     ],
+     "termsAndMethod": "routeTag|grantsSkillCoreIds cross-scan",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "disjoint sets - latent only"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "rejected as latent-non-actionable: zero current reachable defect (disjoint data sets enforced; a fix to shared revocation code at tail of QA risks regression for zero impact); lesson recorded so future node authors keep the invariant"
+  },
+  {
+   "id": "F-PT-AUT-B2",
+   "title": "New comments authored in unaccented Vietnamese (literal P15 wants English+ASCII)",
+   "state": {
+    "productStateId": "2330ef22ed54c9314513c6cb4dd933e93e0eb58ec9446ba2af65f4b2d055f65f",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": ":415-420,:396-400",
+     "revision": "e1ca815b",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/components/panels/skill-path/NodeTreePanel.vue",
+     "symbolOrSection": ":467,:575,:638",
+     "revision": "e1ca815b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-1793e5ffb7e74c1293ce9501c72b5911",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "comments are ASCII-clean Vietnamese",
+   "expected": "P15 literal: English + ASCII",
+   "actual": "pervasive repo convention is unaccented Vietnamese; asciiComments gate passes (ASCII half satisfied)",
+   "rootCause": "adjudicated below",
+   "rootClass": "adjudicated-non-actionable",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/progression",
+      "src/data/progression"
+     ],
+     "termsAndMethod": "routeTag|grantsSkillCoreIds cross-scan",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "disjoint sets - latent only"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "rejected: follows established repo comment convention; asciiComments gate is the enforced half of P15"
+  },
+  {
+   "id": "F-PT-AUT-B3",
+   "title": "Pre-existing: chain-skill C/D specialization pairs have no claiming nodes - free-switch persists",
+   "state": {
+    "productStateId": "2330ef22ed54c9314513c6cb4dd933e93e0eb58ec9446ba2af65f4b2d055f65f",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/PhapTuChainSkills.ts",
+     "symbolOrSection": "stale gating comment",
+     "revision": "e1ca815b",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": "selectSkillSpecialization",
+     "revision": "e1ca815b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-1793e5ffb7e74c1293ce9501c72b5911",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "C/D pairs return [] claimants - gate admits unconditionally, identical at merge-base",
+   "expected": "claim-gated spec switching where claimants exist",
+   "actual": "pre-existing data gap (stale comment references node gating no entry implements); no regression",
+   "rootCause": "adjudicated below",
+   "rootClass": "adjudicated-non-actionable",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/progression",
+      "src/data/progression"
+     ],
+     "termsAndMethod": "routeTag|grantsSkillCoreIds cross-scan",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "disjoint sets - latent only"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "rejected: pre-existing at merge-base - identical behavior, not introduced by this diff"
   }
  ],
  "evidence": [
@@ -15275,6 +15449,37 @@
    "coverageIds": [],
    "evidenceIds": [],
    "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-AUT-B",
+   "state": {
+    "productStateId": "2330ef22ed54c9314513c6cb4dd933e93e0eb58ec9446ba2af65f4b2d055f65f",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 27,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-1793e5ffb7e74c1293ce9501c72b5911",
+   "contextId": "sealed-child-1793e5ffb7e74c1293ce9501c72b5911",
+   "model": "swe-2-max",
+   "role": "authority-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T15:14:10.000Z",
+   "sealedAt": "2026-09-25T15:32:06.000Z",
+   "previousPhaseReviewId": "REV-PT-COR-B",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-AUT-B1",
+    "F-PT-AUT-B2",
+    "F-PT-AUT-B3"
+   ],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -19137,6 +19342,105 @@
     "REV-PT-INT-V9"
    ],
    "capabilityDelta": "integration surface verified clean",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-92",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUT-B1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "adjudicated",
+   "missedInvariantIds": [],
+   "escapeReason": "switchRoute bypasses shared revocation cascade",
+   "applicability": [
+    "revocation seams",
+    "data invariants"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "if a route-tagged node ever declares grantsSkillCoreIds or gains a cross-tag dependent, route switchRoute through revokeNodeOwnership first"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-B"
+   ],
+   "capabilityDelta": "latent-seam documentation",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-93",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUT-B2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "adjudicated",
+   "missedInvariantIds": [],
+   "escapeReason": "English vs unaccented-Vietnamese comments ambiguity",
+   "applicability": [
+    "revocation seams",
+    "data invariants"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "P15 enforced half is ASCII; english-only wording is guidance not ratchet"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-B"
+   ],
+   "capabilityDelta": "latent-seam documentation",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-94",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUT-B3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "adjudicated",
+   "missedInvariantIds": [],
+   "escapeReason": "stale comment implies gating that no data implements",
+   "applicability": [
+    "revocation seams",
+    "data invariants"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "spec-claim gate only activates where claiming nodes exist; C/D pairs intentionally unclaimed for beta"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-B"
+   ],
+   "capabilityDelta": "latent-seam documentation",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": "phap-tu-beta-2026-09-25",
