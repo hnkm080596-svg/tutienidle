@@ -160,6 +160,15 @@ describe('LegacySkillAdapter -- ailments + detonate', () => {
     expect(unsupported.some((m) => m.includes('self-scope'))).toBe(true)
     expect(root.adapterUnsupportedMetadata?.length).toBeGreaterThan(0)
   })
+
+  it('non-physical sourceMaxHpRatio reports unsupported instead of a silent drop', () => {
+    const { unsupported } = adaptTurnSkillDefinition(
+      turnDef({
+        damage: { kind: 'elemental', coefficient: 1, sourceMaxHpRatio: 0.5 },
+      }),
+    )
+    expect(unsupported.some((m) => m.includes('sourceMaxHpRatio'))).toBe(true)
+  })
 })
 
 describe('LegacySkillAdapter -- consume + leech lanes', () => {

@@ -226,6 +226,17 @@ function adaptOne(
         into: SACRIFICE_PAID_HP_VAR,
       })
     }
+    // sourceMaxHpRatio is read on physical hits only (the damage adapter
+    // spreads it onto the two physical returns) - a non-physical def
+    // carrying it passes validation and silently produces nothing.
+    if (
+      def.damage.kind !== 'physical' &&
+      def.damage.sourceMaxHpRatio !== undefined
+    ) {
+      report(
+        `${reportPrefix}.sourceMaxHpRatio(non-physical kind ${def.damage.kind}: source-scaled ratio is never emitted)`,
+      )
+    }
     if (
       def.sacrificeMaxHpRatio === undefined &&
       def.damageBonusPerPaidHpPoint !== undefined

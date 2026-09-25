@@ -100,8 +100,10 @@ re-authored), **MISSING** (net-new seam).
 
 ### 2.2 Cuồng Quyền (Basic, LQ, Cuồng Chiến)
 
-- Single-target physical hit. High might conversion (coefficient 1.1 +
-  levelScaling). **Never** HP cost. **No** missing-HP fields on the base def.
+- Single-target physical hit. High might conversion (coefficient 1.4,
+  tuned — balance-flagged per §3.6; the original 1.1 text was updated
+  2026-09-25 to match the shipped value + levelScaling). **Never** HP
+  cost. **No** missing-HP fields on the base def.
 - Trọng Quyền node → `cuongQuyenCoefficientBonus` (additive coefficient per
   node level, baked onto the clone's `operations[deal_damage].coefficient`).
 - Phá Kình node → `cuongQuyenArmorPierce` (fraction per level, baked onto the
@@ -130,6 +132,11 @@ re-authored), **MISSING** (net-new seam).
   cost, not a gate; the berserker edge (free cast at maximum missing-HP
   state) is intentional for beta. Whether the cast should instead be
   gated below 2 HP is a BETA-BALANCE ruling.
+- Ward/flat channel (pinned 2026-09-25): sacrifice and reflection ride
+  the flat/direct-vitals channels and bypass ward entirely. A warded
+  caster pays through its own ward (self-inflicted); a warded attacker
+  takes unmitigated reflect. Internally consistent and intentional for
+  beta — revisit in BETA-BALANCE if ward interaction is wanted.
 - Ordered multi-hit: `instances: { count: N, perInstanceOptions: true }` —
   existing per-instance settle = sequential hits into the same target.
 - Huyết Sát node → `loanDauPaidBonusPerHpPaidBonus` (adds to the per-paid-HP
