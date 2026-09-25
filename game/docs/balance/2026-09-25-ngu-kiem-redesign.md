@@ -31,3 +31,13 @@ semantics replacing the old privileged cascade.
 deadlocks — the redesign did not collapse the oracle. Absolute tuning
 (LIEN_MOMENTUM_RATE = 0.15, forge costs, cap ladder) is explicitly deferred
 to the user's BETA-BALANCE pass (design sec.56).
+
+## Delta 2 (F-NK-COR-2 fingerprint update)
+
+The hidden_n Gu foundation recipe shipped with `kiemDaoCount=1`, so every
+cast emitted a single instance and the Lien momentum factor
+`(1 + 0.15 * landedPriors)` was pinned at 1 — the benchmark claimed to
+exercise the momentum lane but never did. The recipe now snapshots a
+forged second sword (`kiemDaoCount=2`), so casts emit 2 ordered instances
+and the second carries the 1.15 factor. All 5 `kiem_tu_ngu/*`
+fingerprints updated to match; other recipes unchanged.

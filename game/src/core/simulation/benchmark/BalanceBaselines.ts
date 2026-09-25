@@ -81,13 +81,17 @@ function mortalBuild(): SimBuildSnapshot {
 // with insight). chooseCultivationPath only ever accepts mortal
 // realmLevel>=CORE, so a realm-elevated recipe must START committed -
 // there is no canonical write that grants way state later.
+// F-NK-COR-2: kiemDaoCount=2 (a forged second sword is honest
+// mid-progress state) so every cast emits 2 ordered instances and the
+// second actually exercises the Lien momentum multiplier - count=1
+// leaves the factor pinned at 1 and the lane unmeasured.
 function hiddenNguFoundationBuild(): SimBuildSnapshot {
   const player = mortalSourcePlayer()
   player.realmId = 'foundation_establishment'
   player.realmLevel = 1
   player.cultivationPath = 'sword'
   player.cultivationWay = 'hidden_sword_pathway'
-  player.swordPath = freshSwordPathState()
+  player.swordPath = { ...freshSwordPathState(), kiemDaoCount: 2 }
   player.nodeLevels = { ...player.nodeLevels, ngu_kiem_khoi: 1, ngu_kiem_lien: 1 }
   return { player, skills: [], techniques: [] }
 }
