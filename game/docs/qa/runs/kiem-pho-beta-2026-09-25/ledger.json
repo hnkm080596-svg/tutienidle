@@ -2532,6 +2532,38 @@
     "test-only change (P4-allowed scope); no production surface moved"
    ],
    "status": "STALE"
+  },
+  {
+   "id": "EV-KP-NOVEL-1",
+   "kind": "EXECUTED_INTEGRATION",
+   "state": {
+    "productStateId": "d2aeb17cdf3d266e57b09c6bc81b811d588b15a274e2a39c7008600b25ae8436",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T02:01:30.000Z",
+   "finishedAt": "2026-09-25T02:02:05.000Z",
+   "commandOrMethod": "npx vitest run src/core/kiem-tu/KiemPhoSystem.novelAttack (6 falsification probes, probe file preserved at evidence/novel-attack-probe-KP.test.ts.txt, removed from src after execution to hold product state)",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/novel-attack-kp.log",
+   "artifactHash": "1211e6af6616cd989f5c844619ea623cccc076589f020bb081c9fc864ce9c06d",
+   "inputPaths": [
+    "src/core/kiem-tu/KiemPhoSystem.ts",
+    "evidence/novel-attack-probe-KP.test.ts.txt"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "6/6 attacks failed: comboMaxLength=0 blocks fire, locked-orb preset narrowed, LOG_MAX trim no phantom match, tail equality exact, modifier cannot corrupt canonical entry, deterministic single fire on shared tail"
+   ],
+   "limitations": [
+    "probes are unit-level; no browser attack lane"
+   ],
+   "status": "CURRENT"
   }
  ],
  "coverage": [],
@@ -3187,9 +3219,113 @@
    ],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-KP-COR-A",
+   "state": {
+    "productStateId": "d2aeb17cdf3d266e57b09c6bc81b811d588b15a274e2a39c7008600b25ae8436",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "round": 7,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-77303baed90540d683605d23b5bf5152",
+   "contextId": "sealed-child-devin-77303baed90540d683605d23b5bf5152",
+   "model": "swe-2-max",
+   "role": "clean-correctness",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T01:40:28.000Z",
+   "sealedAt": "2026-09-25T01:50:37.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-KP-AUT-A",
+   "state": {
+    "productStateId": "d2aeb17cdf3d266e57b09c6bc81b811d588b15a274e2a39c7008600b25ae8436",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "round": 7,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-8d3cdb22c3124b9084bf70d586934f3a",
+   "contextId": "sealed-child-devin-8d3cdb22c3124b9084bf70d586934f3a",
+   "model": "swe-2-max",
+   "role": "clean-authority",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T01:41:17.000Z",
+   "sealedAt": "2026-09-25T01:52:21.000Z",
+   "previousPhaseReviewId": "REV-KP-COR-A",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-KP-INT-A",
+   "state": {
+    "productStateId": "d2aeb17cdf3d266e57b09c6bc81b811d588b15a274e2a39c7008600b25ae8436",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "round": 7,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-dfe0ceda164c49fe9ffda38b6c72b8f1",
+   "contextId": "sealed-child-devin-dfe0ceda164c49fe9ffda38b6c72b8f1",
+   "model": "swe-2-max",
+   "role": "clean-integration",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T01:51:21.000Z",
+   "sealedAt": "2026-09-25T02:00:42.000Z",
+   "previousPhaseReviewId": "REV-KP-AUT-A",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
- "cycles": [],
+ "cycles": [
+  {
+   "id": "CYCLE-KP-A",
+   "state": {
+    "productStateId": "d2aeb17cdf3d266e57b09c6bc81b811d588b15a274e2a39c7008600b25ae8436",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "reviewIds": [
+    "REV-KP-COR-A",
+    "REV-KP-AUT-A",
+    "REV-KP-INT-A"
+   ],
+   "coverageIds": [],
+   "evidenceIds": [],
+   "noveltyEvidenceIds": [
+    "EV-KP-NOVEL-1"
+   ],
+   "startedAt": "2026-09-25T01:40:00.000Z",
+   "finishedAt": "2026-09-25T01:58:00.000Z",
+   "status": "CLEAN"
+  }
+ ],
  "mutations": [],
  "corpus": [],
  "lessons": [
