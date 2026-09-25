@@ -4129,7 +4129,9 @@
    ],
    "siblingFindingIds": [],
    "repair": "FIXED @1455a961: ReactiveActionSource+isNaturalActionSource moved to proc/ProcCapabilities leaf; TSPR/TBS read it without cycle",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A9-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-TT-A9-FIX"
    ],
@@ -4188,7 +4190,9 @@
    ],
    "siblingFindingIds": [],
    "repair": "FIXED @1455a961: TheTuPath header comment corrected to describe real imports",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A9-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-TT-A9-FIX"
    ],
@@ -4247,7 +4251,9 @@
    ],
    "siblingFindingIds": [],
    "repair": "FIXED @1455a961: retired id annotated in INTERNAL_NEGATIVE_LIST",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A9-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-TT-A9-FIX"
    ],
@@ -4316,7 +4322,9 @@
    ],
    "siblingFindingIds": [],
    "repair": "FIXED @8f0ada4d: respec button + ConfirmModal + preview added to TheTuTreePanel",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A9-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-TT-A9-FIX"
    ],
@@ -4385,7 +4393,9 @@
    ],
    "siblingFindingIds": [],
    "repair": "FIXED @8f0ada4d: sweepBuffDeaths called after flushReflects at action tail",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A9-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-TT-A9-FIX"
    ],
@@ -7961,6 +7971,176 @@
     "REV-TT-COR-A9"
    ],
    "capabilityDelta": "spec-wording + save-boundary documentation",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-47",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-AUT-A9-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "adjudicated",
+   "missedInvariantIds": [],
+   "escapeReason": "value-import cycle TSPR<->TBS escaped until authority pass",
+   "applicability": [
+    "module deps",
+    "UI affordances",
+    "battle boundaries"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "shared predicates/types consumed by two pipeline modules must live in a leaf (proc vocabulary) - CI has no cycle check"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-CLO-14"
+   ],
+   "capabilityDelta": "review checklists updated",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-48",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-AUT-A9-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "adjudicated",
+   "missedInvariantIds": [],
+   "escapeReason": "header comment drift widened by diff",
+   "applicability": [
+    "module deps",
+    "UI affordances",
+    "battle boundaries"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "verify leaf/type-only claims after adding imports"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-CLO-14"
+   ],
+   "capabilityDelta": "review checklists updated",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-49",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-AUT-A9-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "adjudicated",
+   "missedInvariantIds": [],
+   "escapeReason": "retired id pinned without intent annotation",
+   "applicability": [
+    "module deps",
+    "UI affordances",
+    "battle boundaries"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "negative whitelists must annotate retired-vs-live guard"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-CLO-14"
+   ],
+   "capabilityDelta": "review checklists updated",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-50",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-INT-A9-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "adjudicated",
+   "missedInvariantIds": [],
+   "escapeReason": "way-specific panel diversion dropped shared affordance (respec)",
+   "applicability": [
+    "module deps",
+    "UI affordances",
+    "battle boundaries"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "diverting a UI surface to a bespoke panel must carry the previous panel's cross-way affordances or justify removal"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-CLO-14"
+   ],
+   "capabilityDelta": "review checklists updated",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-51",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-INT-A9-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "adjudicated",
+   "missedInvariantIds": [],
+   "escapeReason": "new settle point missed death sweep",
+   "applicability": [
+    "module deps",
+    "UI affordances",
+    "battle boundaries"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "every quiescent point that can create deaths must call sweepBuffDeaths - checklist for future settle sites"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-CLO-14"
+   ],
+   "capabilityDelta": "review checklists updated",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": "the-tu-beta-2026-09-25",
