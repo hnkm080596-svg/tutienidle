@@ -8118,6 +8118,177 @@
    "duplicateOf": null,
    "rejectionReason": "Equivalent today: verified no core_ node authors grantsSkillCoreIds (grep SkillCoreNodes/TheTuNodes); drift seam documented - deferred with visibility",
    "status": "REJECTED_WITH_PROOF"
+  },
+  {
+   "id": "F-PT-INT-A3-1",
+   "title": "previewNodeRespec.unlearnedSkillIds duplicate on crafted dual-record",
+   "state": {
+    "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "game/src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": "applyOneShotClawback/unlearnedSkillIds L655-670",
+     "revision": "de61f0cf",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A INTEGRATION reviewer (devin-d125a8e1)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "Loop pushes per-record with no dedupe; only reachable via crafted duplicate learn records (learnSkill returns false when already learned in normal flow); cosmetic UI report line only",
+   "expected": "Report arrays dedupe per skillId like apply-side unlearn idempotency",
+   "actual": "Loop pushes per-record with no dedupe; only reachable via crafted duplicate learn records (learnSkill returns false when already learned in normal flow); cosmetic UI report line only",
+   "rootCause": "latent/crafted-only cosmetic surface",
+   "rootClass": "latent/crafted-only cosmetic",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/game",
+      "src/core/progression",
+      "src/core/player"
+     ],
+     "termsAndMethod": "coordinator adjudication - authored data sweep for reachable trigger",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no authored data reaches the latent path"
+     ],
+     "coverageLimits": [
+      "latent path unreachable with current authored nodes"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "DEFERRED (deferred-with-visibility): Report arrays dedupe per skillId like apply-side unlearn idempotency",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": "Latent/crafted-only: Loop pushes per-record with no dedupe; only reachable via crafted duplicate learn records (learnSkill returns false when already learned in normal flow); cosmetic UI report line only",
+   "status": "REJECTED_WITH_PROOF"
+  },
+  {
+   "id": "F-PT-INT-A3-2",
+   "title": "previewRouteSwitch skips clawback-leg projection",
+   "state": {
+    "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "game/src/core/progression/NodeSystem.ts",
+     "symbolOrSection": "previewRouteSwitch L1037-1072",
+     "revision": "de61f0cf",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A INTEGRATION reviewer (devin-d125a8e1)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "previewRouteSwitch mirrors gates+75% refund+rewardOnly skip but no clawback legs; latent - no routeTag node authors one-shot grants today so preview/apply agree (both empty)",
+   "expected": "Preview reports clawback legs for revoked nodes carrying nodeOneShotGrants",
+   "actual": "previewRouteSwitch mirrors gates+75% refund+rewardOnly skip but no clawback legs; latent - no routeTag node authors one-shot grants today so preview/apply agree (both empty)",
+   "rootCause": "latent/crafted-only cosmetic surface",
+   "rootClass": "latent/crafted-only cosmetic",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/game",
+      "src/core/progression",
+      "src/core/player"
+     ],
+     "termsAndMethod": "coordinator adjudication - authored data sweep for reachable trigger",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no authored data reaches the latent path"
+     ],
+     "coverageLimits": [
+      "latent path unreachable with current authored nodes"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "DEFERRED (deferred-with-visibility): Preview reports clawback legs for revoked nodes carrying nodeOneShotGrants",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": "Latent/crafted-only: previewRouteSwitch mirrors gates+75% refund+rewardOnly skip but no clawback legs; latent - no routeTag node authors one-shot grants today so preview/apply agree (both empty)",
+   "status": "REJECTED_WITH_PROOF"
+  },
+  {
+   "id": "F-PT-INT-A3-3",
+   "title": "rewardOnly+unlocksSkillIds node would let stillGrantedElsewhere retain unlearned skill",
+   "state": {
+    "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "game/src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": "applyOneShotClawback stillGrantedElsewhere L398-404",
+     "revision": "de61f0cf",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A INTEGRATION reviewer (devin-d125a8e1)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "Hypothetical authored combo (rewardOnly+unlocksSkillIds on same node) could retain a skill never unlocked; no authored node today combines the two",
+   "expected": "Grant-retention checks honor the actual unlock leg",
+   "actual": "Hypothetical authored combo (rewardOnly+unlocksSkillIds on same node) could retain a skill never unlocked; no authored node today combines the two",
+   "rootCause": "latent/crafted-only cosmetic surface",
+   "rootClass": "latent/crafted-only cosmetic",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/game",
+      "src/core/progression",
+      "src/core/player"
+     ],
+     "termsAndMethod": "coordinator adjudication - authored data sweep for reachable trigger",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no authored data reaches the latent path"
+     ],
+     "coverageLimits": [
+      "latent path unreachable with current authored nodes"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "DEFERRED (deferred-with-visibility): Grant-retention checks honor the actual unlock leg",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": "Latent/crafted-only: Hypothetical authored combo (rewardOnly+unlocksSkillIds on same node) could retain a skill never unlocked; no authored node today combines the two",
+   "status": "REJECTED_WITH_PROOF"
   }
  ],
  "evidence": [
@@ -10428,6 +10599,64 @@
    ],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-INT-A3",
+   "state": {
+    "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 9,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-d125a8e15fe14d58842d4b30fbf76acc",
+   "contextId": "sealed-child-devin-d125a8e15fe14d58842d4b30fbf76acc",
+   "model": "swe-2-max",
+   "role": "clean-A",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T02:40:00.000Z",
+   "sealedAt": "2026-09-25T02:53:58.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-INT-A3-1",
+    "F-PT-INT-A3-2",
+    "F-PT-INT-A3-3"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-TERM-A3",
+   "state": {
+    "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 9,
+   "phase": "TERMINAL_CHECK",
+   "reviewerId": "devin-d125a8e15fe14d58842d4b30fbf76acc",
+   "contextId": "sealed-child-devin-d125a8e15fe14d58842d4b30fbf76acc",
+   "model": "swe-2-max",
+   "role": "clean-A",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T02:53:00.000Z",
+   "sealedAt": "2026-09-25T02:53:58.000Z",
+   "previousPhaseReviewId": "REV-PT-INT-A3",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [],
@@ -12503,6 +12732,102 @@
     "REV-PT-AUT-A3"
    ],
    "capabilityDelta": "records adjudication so later passes do not re-litigate",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-50",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-INT-A3-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "latent/crafted-only cosmetic",
+   "missedInvariantIds": [],
+   "escapeReason": "latent path only reachable via crafted state or hypothetical authoring",
+   "applicability": [
+    "phap-tu-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "deferred-with-visibility guard documented; revisit if authoring adds the trigger"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-INT-A3"
+   ],
+   "capabilityDelta": "records adjudicated latent surface",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-51",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-INT-A3-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "latent/crafted-only cosmetic",
+   "missedInvariantIds": [],
+   "escapeReason": "latent path only reachable via crafted state or hypothetical authoring",
+   "applicability": [
+    "phap-tu-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "deferred-with-visibility guard documented; revisit if authoring adds the trigger"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-INT-A3"
+   ],
+   "capabilityDelta": "records adjudicated latent surface",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-52",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-INT-A3-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "latent/crafted-only cosmetic",
+   "missedInvariantIds": [],
+   "escapeReason": "latent path only reachable via crafted state or hypothetical authoring",
+   "applicability": [
+    "phap-tu-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "deferred-with-visibility guard documented; revisit if authoring adds the trigger"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-INT-A3"
+   ],
+   "capabilityDelta": "records adjudicated latent surface",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": null,
