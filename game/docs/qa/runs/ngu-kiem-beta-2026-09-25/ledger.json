@@ -4521,6 +4521,67 @@
    "exception": null,
    "status": "REJECTED_WITH_PROOF",
    "rejectionReason": "deliberate per spec: generic consumer retained for future producers"
+  },
+  {
+   "id": "F-NK-COR-A3-1",
+   "title": "locale files lost trailing EOF newline",
+   "state": {
+    "productStateId": "ba331f3c554536d8fa1399da08387185a5de30a855f1adacf4241bbe56909e1b",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/locales/en.json",
+     "symbolOrSection": "EOF",
+     "revision": "ec86fdd3",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/locales/vi.json",
+     "symbolOrSection": "EOF",
+     "revision": "ec86fdd3",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-8f168a71c2ae4ae69cb5544c0e9f867d",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "git diff shows 'No newline at end of file' footer on both locale files",
+   "expected": "files keep the conventional trailing newline at EOF",
+   "actual": "final newline removed; cosmetic only - no parser or key impact",
+   "rootCause": "serializer rewrite dropped the trailing newline",
+   "rootClass": "cosmetic",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/locales"
+     ],
+     "termsAndMethod": "diff footer inspection",
+     "hitDispositions": [
+      "both locale files affected"
+     ],
+     "coverageLimits": [
+      "cosmetic"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "pure whitespace at EOF; JSON parses identically and fixing would force a full re-review cycle for a zero-impact byte"
   }
  ],
  "evidence": [
@@ -5975,6 +6036,35 @@
    ],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-NK-COR-A3",
+   "state": {
+    "productStateId": "ba331f3c554536d8fa1399da08387185a5de30a855f1adacf4241bbe56909e1b",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 4,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-8f168a71c2ae4ae69cb5544c0e9f867d",
+   "contextId": "sealed-child-8f168a71c2ae4ae69cb5544c0e9f867d",
+   "model": "swe-2-max",
+   "role": "clean-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T06:26:44.000Z",
+   "sealedAt": "2026-09-25T06:43:06.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-NK-COR-A3-1"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [
@@ -7387,6 +7477,34 @@
     "REV-NK-AUT-FA2"
    ],
    "capabilityDelta": "terminal-finding lesson MC13",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-NK-36",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-COR-A3-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "cosmetic",
+   "missedInvariantIds": [],
+   "escapeReason": "reviewer nit",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "none - adjudicated non-actionable"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "adjudicated with proof",
    "recurrenceFindingIds": [],
    "status": "CLASSIFIED",
    "policyVersion": null,
