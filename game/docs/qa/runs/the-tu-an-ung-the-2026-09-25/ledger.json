@@ -1524,10 +1524,12 @@
       "verificationEvidenceIds": [
         "EV-TTA-CLEANA3-FIX"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TTA-CLO-4"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -1732,7 +1734,9 @@
       ],
       "discoveredBy": "devin-bf99df37133e43feadf241eff5d9f6a1",
       "invariantIds": [],
-      "evidenceIds": [],
+      "evidenceIds": [
+        "EV-TTA-CLEANA3-FIX"
+      ],
       "counterexample": "mark dies -> thamTargetId stays set until next isObserved consult",
       "expected": "dead mark clears focus eagerly (no stale HUD frame)",
       "actual": "raw field read by HUD showed a dead focus target",
@@ -1760,10 +1764,12 @@
       "verificationEvidenceIds": [
         "EV-TTA-CLEANA3-FIX"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TTA-CLO-4"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     }
   ],
@@ -2350,6 +2356,38 @@
       "evidenceIds": [],
       "findingIds": [
         "F-TTA-CLEAN-A3-INT-1",
+        "F-TTA-CLEAN-A3-INT-2"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TTA-CLO-4",
+      "state": {
+        "productStateId": "481da16b23ca5e52361d887b771c8c7b066478919712cf025d8eccab93c0b52f",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 4,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-96aa48e5f32d48b08d5dd456a365d68b",
+      "contextId": "sealed-child-96aa48e5f32d48b08d5dd456a365d68b",
+      "model": "swe-2-max",
+      "role": "CLOSURE",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T21:47:00.000Z",
+      "sealedAt": "2026-09-25T21:49:10.000Z",
+      "previousPhaseReviewId": "REV-TTA-CLO-3",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-TTA-CLEANA3-FIX"
+      ],
+      "findingIds": [
+        "F-TTA-CLEAN-A3-COR-1",
         "F-TTA-CLEAN-A3-INT-2"
       ],
       "novelAttackIds": [],
@@ -3197,6 +3235,80 @@
       "policyVersion": null,
       "effectiveFromRun": null,
       "guidance": null
+    },
+    {
+      "id": "L-TTA-28",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TTA-CLEAN-A3-COR-1",
+        "F-TTA-CLEAN-A3-AUT-1",
+        "F-TTA-CLEAN-A3-INT-1"
+      ],
+      "incidentEvidenceIds": [
+        "EV-TTA-CLEANA3-FIX"
+      ],
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "rootClass": "boundary-drift/duplicate-gate",
+      "missedInvariantIds": [],
+      "escapeReason": "reset gate read a legacy predicate (`!ccBlocked && (!isCharging || chargeResolved)`) placed BEFORE action collapse while every consumer reads the actionSource boundary AFTER; sealed/null picks fell through the gap",
+      "applicability": [
+        "any state reset/decay that fires inside declareActorAction must read the same actionSource boundary its consumers read — write the reset where the boundary is decided, not before"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "attack pattern: sealed NULL_ACTION + null-pick turns against every reset/decay gate on the actor path"
+      ],
+      "promotionEvidenceIds": [],
+      "preventionEvidenceIds": [
+        "EV-TTA-CLEANA3-FIX"
+      ],
+      "qualifiedBy": [
+        "REV-TTA-CLO-4"
+      ],
+      "capabilityDelta": "boundary-consistency check between state-reset gates and consumer gates on the same action pipeline",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null
+    },
+    {
+      "id": "L-TTA-29",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TTA-CLEAN-A3-INT-2"
+      ],
+      "incidentEvidenceIds": [
+        "EV-TTA-CLEANA3-FIX"
+      ],
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "rootClass": "stale-read",
+      "missedInvariantIds": [],
+      "escapeReason": "clear-on-read (lazy clear) is only as fresh as the consult path; readers that take the raw field (HUD) see the stale value between consults",
+      "applicability": [
+        "fields read raw by non-consult consumers (HUD/render) must be cleared eagerly at the owning lifecycle point; lazy clear may remain only as belt"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "for every lazy-clear field, enumerate its raw readers; if any reader bypasses the consult, move the clear to the death/lifecycle sweep"
+      ],
+      "promotionEvidenceIds": [],
+      "preventionEvidenceIds": [
+        "EV-TTA-CLEANA3-FIX"
+      ],
+      "qualifiedBy": [
+        "REV-TTA-CLO-4"
+      ],
+      "capabilityDelta": "raw-reader census for lazy-cleared fields",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null
     }
   ],
   "messages": [],
@@ -3936,6 +4048,54 @@
       "payloadPath": "events/0046.json",
       "payloadHash": "936bcfe571e971e5c62644a63932db1e5a8356a5c901afa87d0f2df437fa002f",
       "eventHash": "5cd4bb16abe6e746203acfd30ebcf4a74219722ad41332154f8bb111e02ae84c"
+    },
+    {
+      "seq": 47,
+      "at": "2026-09-25T21:56:06.818Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "481da16b23ca5e52361d887b771c8c7b066478919712cf025d8eccab93c0b52f",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "5cd4bb16abe6e746203acfd30ebcf4a74219722ad41332154f8bb111e02ae84c",
+      "payloadPath": "events/0047.json",
+      "payloadHash": "d904960b2ebb3e98557d6dea1d6c26ba5d233ba484a3f85b0ba73778fd385850",
+      "eventHash": "24b84bb2d3599088c04408f3d3fb0abcb79d81324fa5e46644e6a4abc707f615"
+    },
+    {
+      "seq": 48,
+      "at": "2026-09-25T21:56:28.478Z",
+      "kind": "FINDING",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "481da16b23ca5e52361d887b771c8c7b066478919712cf025d8eccab93c0b52f",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "24b84bb2d3599088c04408f3d3fb0abcb79d81324fa5e46644e6a4abc707f615",
+      "payloadPath": "events/0048.json",
+      "payloadHash": "5c4347a80a62d5688ed8735e557a3185c6f0603a122d3682990c493941734b85",
+      "eventHash": "eb6fbe2b414a4a711a055fb05aa5101b54c724e4f60d37bb0523f3620ec3b81f"
+    },
+    {
+      "seq": 49,
+      "at": "2026-09-25T21:56:38.201Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "481da16b23ca5e52361d887b771c8c7b066478919712cf025d8eccab93c0b52f",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "eb6fbe2b414a4a711a055fb05aa5101b54c724e4f60d37bb0523f3620ec3b81f",
+      "payloadPath": "events/0049.json",
+      "payloadHash": "bf6d39ce1b58b2fc2790fca54ae0ec7f3cc9a3bdbbe8570b2a2f721a94a02251",
+      "eventHash": "3073981bc7774cd0fc127fa904d797e99f1b25793b2bf7e6c929ad5a1316f2cd"
     }
   ]
 }
