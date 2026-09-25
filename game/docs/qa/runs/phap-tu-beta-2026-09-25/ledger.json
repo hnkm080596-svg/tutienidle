@@ -9305,13 +9305,19 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "repair": "wood lane restat @5392bfb7: moc_doc_nhuan -> ailmentDurationPercent 0.02, moc_doc_nhiem -> ailmentPotencyPercent 0.025; zero dead elementApplicationPercent on doc_chuong",
+   "pinEvidenceIds": [
+    "EV-PT-CLO-12"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PT-CLO-12"
+   ],
+   "closureReviewIds": [
+    "REV-PT-CLO-12"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -9419,13 +9425,19 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "repair": "glyph chains @5392bfb7: powerNode prereqNodeId option; ring nodes chain to same-element trunk/ring; all 10 capstones hang off same-element ring nodes",
+   "pinEvidenceIds": [
+    "EV-PT-CLO-12"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PT-CLO-12"
+   ],
+   "closureReviewIds": [
+    "REV-PT-CLO-12"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -9476,13 +9488,19 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "repair": "ownedNodeIds guard @5392bfb7: Object.entries(player.nodeLevels ?? {})",
+   "pinEvidenceIds": [
+    "EV-PT-CLO-12"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PT-CLO-12"
+   ],
+   "closureReviewIds": [
+    "REV-PT-CLO-12"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -9533,13 +9551,19 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "repair": "locale wording @5392bfb7: clawbackRefund labelled as included-in-total (vi+en)",
+   "pinEvidenceIds": [
+    "EV-PT-CLO-12"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PT-CLO-12"
+   ],
+   "closureReviewIds": [
+    "REV-PT-CLO-12"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -9590,13 +9614,19 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "repair": "ELEMENT_LABELS imported from core/element/ElementLabels @5392bfb7; local map removed",
+   "pinEvidenceIds": [
+    "EV-PT-CLO-12"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PT-CLO-12"
+   ],
+   "closureReviewIds": [
+    "REV-PT-CLO-12"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -9647,13 +9677,19 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "repair": "shared computeNodeRefund helper @5392bfb7 used by revokeNodeOwnership + previewNodeRespec",
+   "pinEvidenceIds": [
+    "EV-PT-CLO-12"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PT-CLO-12"
+   ],
+   "closureReviewIds": [
+    "REV-PT-CLO-12"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   }
  ],
@@ -10771,6 +10807,38 @@
    ],
    "result": "PASS",
    "status": "STALE"
+  },
+  {
+   "id": "EV-PT-CLO-12",
+   "state": {
+    "productStateId": "0b666d95ea006e05885b0fdc4a90640300afeafcf1803c6320b30c392f6f4e39",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+   "commandOrMethod": "npx vitest run src/data/progression/PhapTuBasicNodes.test.ts src/core/progression/",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T09:12:35.000Z",
+   "finishedAt": "2026-09-25T09:12:37.000Z",
+   "inputPaths": [
+    "src/data/progression/PhapTuBasicNodes.test.ts",
+    "src/core/progression/"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/clo-12.log",
+   "artifactHash": "94c9ddc8af40fcda4f39cfb5c365d8076849559d98848840e8e17d72ddb8b3b0",
+   "claims": [
+    "112 tests green on 5392bfb7; closure reviewer independently verified all six fixes at pinned head (SEALED)"
+   ],
+   "invariantIds": [],
+   "limitations": [
+    "scoped suite only; closure seal performed by sealed child reviewer on detached 5392bfb7"
+   ],
+   "result": "PASS",
+   "status": "CURRENT"
   }
  ],
  "coverage": [
@@ -12843,6 +12911,42 @@
    "coverageIds": [],
    "evidenceIds": [],
    "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-CLO-12",
+   "state": {
+    "productStateId": "0b666d95ea006e05885b0fdc4a90640300afeafcf1803c6320b30c392f6f4e39",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 18,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-27412ac7ada24e339616dafd1fb50593",
+   "contextId": "sealed-child-27412ac7ada24e339616dafd1fb50593",
+   "model": "swe-2-max",
+   "role": "closure-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T09:08:00.000Z",
+   "sealedAt": "2026-09-25T09:10:50.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PT-CLO-12"
+   ],
+   "findingIds": [
+    "F-PT-COR-A5-1",
+    "F-PT-COR-A5-3",
+    "F-PT-COR-A5-4",
+    "F-PT-AUT-A5-1",
+    "F-PT-AUT-A5-2",
+    "F-PT-AUT-A5-3"
+   ],
    "novelAttackIds": [],
    "status": "SEALED"
   }
