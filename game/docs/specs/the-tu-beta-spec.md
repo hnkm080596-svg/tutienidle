@@ -246,8 +246,9 @@ No node grants raw stats anywhere (INV-31); node levels are modifier levels —
   when realm < foundation_establishment, purchasable major node when at TC →
   its two modifier nodes → `──── Kim Đan ────` `Phong ấn` placeholder.
 - Node cards emit the same `select` event → `NodeInspector` unchanged.
-- Skill cards emit selection that surfaces `NativeCoreDetail` (existing
-  native-core detail surface).
+- Skill cards emit the same `select` event → `NodeInspector` (unified
+  surface: the inspector renders realm/prerequisite lock reasons for the
+  sealed special, which `NativeCoreDetail` cannot).
 
 ## 3. Implementation plan
 

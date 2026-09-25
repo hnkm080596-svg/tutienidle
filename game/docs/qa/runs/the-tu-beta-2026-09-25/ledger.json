@@ -2126,13 +2126,19 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "repair": "pendingReflects leak closed @bb040df3: discardPendingReflects clears queue at applyActionImpact entry (runtime guard); flushReflects still tail-drains once per applied action",
+   "pinEvidenceIds": [
+    "EV-TT-CLO-7"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-CLO-7"
+   ],
+   "closureReviewIds": [
+    "REV-TT-CLO-7"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -2520,6 +2526,38 @@
    "limitations": [],
    "result": "PASS",
    "status": "STALE"
+  },
+  {
+   "id": "EV-TT-CLO-7",
+   "state": {
+    "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+   "commandOrMethod": "npx vitest run src/core/proc/ src/core/battle/",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T09:24:42.000Z",
+   "finishedAt": "2026-09-25T09:24:47.000Z",
+   "inputPaths": [
+    "src/core/proc/",
+    "src/core/battle/"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/clo-7.log",
+   "artifactHash": "668e6a3f502568a17a05a66d1e9c31f74eee8c6a2efd3f34a36b7cac6cb014d6",
+   "claims": [
+    "806 tests green on bb040df3; closure reviewer verified discardPendingReflects entry-guard + flush tail-drain at pinned head (SEALED)"
+   ],
+   "invariantIds": [],
+   "limitations": [
+    "scoped suite only"
+   ],
+   "result": "PASS",
+   "status": "CURRENT"
   }
  ],
  "coverage": [],
@@ -3040,6 +3078,37 @@
    "novelAttackIds": [],
    "status": "SEALED",
    "previousPhaseReviewId": "REV-TT-COR-A4"
+  },
+  {
+   "id": "REV-TT-CLO-7",
+   "state": {
+    "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 12,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-562a84dbdca943d3bf0e5de68545b99b",
+   "contextId": "sealed-child-562a84dbdca943d3bf0e5de68545b99b",
+   "model": "swe-2-max",
+   "role": "closure-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T09:14:00.000Z",
+   "sealedAt": "2026-09-25T09:15:45.000Z",
+   "previousPhaseReviewId": "REV-TT-AUT-A5",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-TT-CLO-7"
+   ],
+   "findingIds": [
+    "F-TT-COR-A4-3"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [],
