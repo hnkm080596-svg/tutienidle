@@ -7314,7 +7314,14 @@
       ],
       "repair": "FIXED @697c2050: wrapper returns op result (0 -> no bumpState), matching respecNodeTree contract",
       "status": "FIXED_PENDING_PROOF",
-      "rejectionReason": null
+      "rejectionReason": null,
+      "invariantIds": [],
+      "siblingFindingIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null
     },
     {
       "id": "F-TT-INT-A4-2",
@@ -7365,7 +7372,14 @@
       ],
       "repair": null,
       "status": "REJECTED_WITH_PROOF",
-      "rejectionReason": "Unreachable on two independent guards: private resolveReactiveProcs early-returns [] when this.runtime===undefined (TBS:2970); and its context never passes hpDamage so (context.hpDamage ?? 0) > 0 cannot hold. The sole queue feed runLandedHitProcs is itself gated on runtime!==undefined."
+      "rejectionReason": "Unreachable on two independent guards: private resolveReactiveProcs early-returns [] when this.runtime===undefined (TBS:2970); and its context never passes hpDamage so (context.hpDamage ?? 0) > 0 cannot hold. The sole queue feed runLandedHitProcs is itself gated on runtime!==undefined.",
+      "invariantIds": [],
+      "siblingFindingIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null
     },
     {
       "id": "F-TT-INT-A4-3",
@@ -7421,7 +7435,14 @@
       ],
       "repair": "FIXED @697c2050: counter-payload pin in TurnBattleSystem.reflection.test.ts; countdown pin in TheTuTreePanel.test.ts",
       "status": "FIXED_PENDING_PROOF",
-      "rejectionReason": null
+      "rejectionReason": null,
+      "invariantIds": [],
+      "siblingFindingIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null
     }
   ],
   "evidence": [
@@ -15001,6 +15022,38 @@
       "payloadPath": "events/0082.json",
       "payloadHash": "4162ab620d5ff7f329e1ec387d54e1d737ef39b6aac69cec5d59270198048230",
       "eventHash": "9b3722d705adfadeadca49ff65961252afc62773d70e048629f5892c4ad1746b"
+    },
+    {
+      "seq": 83,
+      "at": "2026-09-25T22:54:21.970Z",
+      "kind": "FINDING",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "9b3722d705adfadeadca49ff65961252afc62773d70e048629f5892c4ad1746b",
+      "payloadPath": "events/0083.json",
+      "payloadHash": "ce4c6ccb2d0dd5c84bfb468fc982845c9f1ee6e5917b393214d306b12ff729ce",
+      "eventHash": "4a60cd6cd50247a2f2c9f4d64bd9d76731a0ef80ac7d6d4d1b19c660fa6355a9"
+    },
+    {
+      "seq": 84,
+      "at": "2026-09-25T22:54:25.713Z",
+      "kind": "FINDING",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "4a60cd6cd50247a2f2c9f4d64bd9d76731a0ef80ac7d6d4d1b19c660fa6355a9",
+      "payloadPath": "events/0084.json",
+      "payloadHash": "ce4c6ccb2d0dd5c84bfb468fc982845c9f1ee6e5917b393214d306b12ff729ce",
+      "eventHash": "6089a83ceadba5e7baf15b606f055b5581df8e4c76ad7afba427c9aa8033b16f"
     }
   ]
 }
