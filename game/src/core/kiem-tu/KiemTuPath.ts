@@ -10,20 +10,20 @@ import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
 import { KIEM_PHO_BUFFS } from '../../data/buff/KiemPhoBuffs'
 import { NGU_KIEM_THUAT } from '../../data/skill/NguKiemDaoSkills'
 
-// Cultivation Path Framework (spec 2026-09-16, M6) — the Kiem Tu path
+// Cultivation Path Framework (spec 2026-09-16, M6) -- the Kiem Tu path
 // module: the two way definitions + the way membership predicates.
 //
-//   sword_pathway — Kiem Pho (preset-combo): the orb preset lives on
+//   sword_pathway -- Kiem Pho (preset-combo): the orb preset lives on
 //     player.swordPath.preset; combat basics come from the KiemPho
 //     dynamicBasic provider.
-//   hidden_sword_pathway — Ngu Kiem Dao (hidden): ritual-only entry gated by tram Lv3,
+//   hidden_sword_pathway -- Ngu Kiem Dao (hidden): ritual-only entry gated by tram Lv3,
 //     permanent; combat action is provider-injected (ngu_kiem_thuat,
-//     one evolving skill — Ngu Kiem Beta). The Kiem Y -> Kiem Dao economy lives on the same
-//     player.swordPath slice — hidden_sword_pathway was NEVER a separate path id (the old
+//     one evolving skill -- Ngu Kiem Beta). The Kiem Y -> Kiem Dao economy lives on the same
+//     player.swordPath slice -- hidden_sword_pathway was NEVER a separate path id (the old
 //     swordPath.mode discriminator retired in M6; cultivationWay is the
 //     discriminator now).
 //
-// Dependency direction: this file is a leaf — it never imports back
+// Dependency direction: this file is a leaf -- it never imports back
 // into the catalog/authority. The only runtime import is the sibling
 // SwordPathState slice factory (createInitialState below), so domain code
 // (NodeSystem/NguKiemDao) can consume the way predicates without a
@@ -160,7 +160,7 @@ export function isHiddenSwordPathway(player: SwordPathWayRead | null | undefined
 }
 
 // ---------------------------------------------------------------------------
-// Way definitions — consumed by CULTIVATION_PATH_MODULES.sword.ways in
+// Way definitions -- consumed by CULTIVATION_PATH_MODULES.sword.ways in
 // CultivationPathKit (the catalog is the single aggregation point).
 // ---------------------------------------------------------------------------
 
@@ -170,9 +170,9 @@ export const SWORD_PATHWAY: PathWayDefinition = {
   name: 'Kiếm Tu — Ngự Kiếm Tâm Kinh',
   element: 'metal',
   techniqueId: 'sword_control_art',
-  // Kiem Tu Reimagined (spec 2026-09-15) — no authored skill grants:
+  // Kiem Tu Reimagined (spec 2026-09-15) -- no authored skill grants:
   // sword_pathway basics come from the Kiem Pho orb preset (KiemPhoProvider).
-  // P7-M4 — mortal precursor skills stay learned past initiation; the
+  // P7-M4 -- mortal precursor skills stay learned past initiation; the
   // ritual clears mortalBasicSkillId inside the commit block and the
   // mortal-only pick gate blocks re-selection post-path.
   // P7-M2 - canonical realm-entry passive ladder (delivered by
@@ -180,7 +180,7 @@ export const SWORD_PATHWAY: PathWayDefinition = {
   // retired ngu_kiem.innateSkillId grant.
   realmRewards: composeRealmRewards(),
   passiveSkillIds: ['passive_kiem_tam_lanh_liet'],
-  // M7 — the facet declares domain OWNERSHIP only (resolveActiveWayStatDomains
+  // M7 -- the facet declares domain OWNERSHIP only (resolveActiveWayStatDomains
   // is the authority now that the path-keyed domain map is gone); Kiem Tu
   // has no totals-driven emission channel, so collectModifiers is a no-op.
   stats: {
@@ -225,15 +225,15 @@ export const HIDDEN_SWORD_PATHWAY: PathWayDefinition = {
   // P7-M2 - canonical realm-entry passive ladder; no initiation passive
   // (myriad_swords_art carries none).
   realmRewards: composeRealmRewards(),
-  // Ritual-only entry, permanent, FREE — the exact port of the retired
+  // Ritual-only entry, permanent, FREE -- the exact port of the retired
   // kiem_tu_an node's skillCastCount {tram, 3} gate (M-QI-05: reads the
   // canonical core_tram node level). A mortal without tram Lv3 at the
-  // ritual can never enter hidden_sword_pathway — there is no
+  // ritual can never enter hidden_sword_pathway -- there is no
   // mid-progression flip any more.
   offerGate: { requiresSkillLevel: { skillId: 'tram', level: 3 } },
   // P7-M4 - same mortal-precursor contract as sword_pathway (learned
   // skills kept; pick cleared at commit; mortal-only gate).
-  // M7 — same shared-domain facet as sword_pathway: 'sword', no totals-driven
+  // M7 -- same shared-domain facet as sword_pathway: 'sword', no totals-driven
   // channel.
   stats: {
     domains: ['sword'],
@@ -246,13 +246,13 @@ export const HIDDEN_SWORD_PATHWAY: PathWayDefinition = {
     static: ['sword.sword_riding'],
   },
   // P1-M2 - the provider-injected action (Ngu Kiem Beta: no emblem
-  // defs — the way's combat machinery is the provider alone).
+  // defs -- the way's combat machinery is the provider alone).
   ownedContent: {
     skillIds: [NGU_KIEM_THUAT.id],
   },
   // M-QI-05 - the provider action owns the way's canonical Core Node.
   coreSkillIds: [NGU_KIEM_THUAT.id],
-  // Ngu Kiem Beta — Khởi is granted at ritual completion (the first
+  // Ngu Kiem Beta -- Khoi is granted at ritual completion (the first
   // evolution layer, node id declared in KiemTuNodes; the grant loop
   // lives in GameManagerRealmAdvanceOps.chooseCultivationPath).
   grantedNodeIds: ['ngu_kiem_khoi'],

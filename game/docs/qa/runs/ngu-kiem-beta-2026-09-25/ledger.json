@@ -1,0 +1,221 @@
+{
+ "schemaVersion": 2,
+ "run": {
+  "id": "ngu-kiem-beta-2026-09-25",
+  "createdAt": "2026-09-24T23:56:23.217Z",
+  "scope": "AGGREGATE_REPOSITORY",
+  "authorizedRepairs": [],
+  "nonGoals": [],
+  "checkout": "",
+  "branch": "devin/1790284398-ngu-kiem-beta",
+  "base": "",
+  "head": "7e6ccab0f11fe9214169f8fbd91e400e3309d071",
+  "state": {
+   "productStateId": "aa07ff34e178d4528f77849d167dce0d7499fcd6f7ac3b2ca54101718e42dd65",
+   "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+   "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+   "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+  },
+  "manifestPath": "manifest.json",
+  "environmentPath": "environment.json",
+  "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "consumedLessonIds": [],
+  "aggregateParents": [],
+  "requiredDomains": [],
+  "exclusions": [],
+  "briefIds": [
+   "BRF-NK-01"
+  ],
+  "capacityLimit": 5,
+  "requiredReadiness": true,
+  "phase": "SNAPSHOT",
+  "cleanRoundA": null,
+  "cleanRoundB": null,
+  "finalEvidenceIds": [],
+  "outcome": null
+ },
+ "briefs": [
+  {
+   "id": "BRF-NK-01",
+   "taskId": "ngu-kiem-beta-2026-09-25",
+   "revision": 1,
+   "planningBaseline": {
+    "productStateId": "aa07ff34e178d4528f77849d167dce0d7499fcd6f7ac3b2ca54101718e42dd65",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "policyHash": "60ff569d5cbba6d6db8b6a34e9fecc72a87aeba60ff0cd6422455368c58b6a4b",
+   "requirementRefs": [
+    "docs/specs/ngu-kiem-beta-spec.md",
+    "design doc pasted-1790269026263.txt (user design): hidden_sword_pathway evolution redesign",
+    "beta ceiling foundation_establishment"
+   ],
+   "invariantIds": [],
+   "dependencyRefs": [
+    "src/core/kiem-tu/NguKiemDao.ts",
+    "src/core/kiem-tu/NguKiemDaoProvider.ts",
+    "src/core/kiem-tu/KiemTuPath.ts",
+    "src/core/battle/turn/TurnBattleSystem.ts",
+    "src/core/battle/turn/TurnSkillAction.ts",
+    "src/core/progression/NodeSystem.ts",
+    "src/core/progression/ProgressionNode.ts",
+    "src/core/game/GameManagerProgressionOps.ts",
+    "src/core/game/GameManagerRealmAdvanceOps.ts",
+    "src/core/player/CultivationPathKit.ts",
+    "src/core/player/Player.ts",
+    "src/data/progression/KiemTuNodes.ts",
+    "src/data/skill/NguKiemDaoSkills.ts",
+    "src/data/skill/TurnSkillDisplayMeta.ts",
+    "src/components/panels/skill-path/"
+   ],
+   "sourceDependencyHashes": [],
+   "expectedChangeSet": [
+    "src/core/kiem-tu/NguKiemDao.ts",
+    "src/core/kiem-tu/NguKiemDaoProvider.ts",
+    "src/core/kiem-tu/KiemTuPath.ts",
+    "src/core/battle/turn/TurnBattleSystem.ts",
+    "src/core/battle/turn/TurnSkillAction.ts",
+    "src/core/progression/NodeSystem.ts",
+    "src/core/progression/ProgressionNode.ts",
+    "src/core/game/GameManagerProgressionOps.ts",
+    "src/core/game/GameManagerRealmAdvanceOps.ts",
+    "src/core/player/CultivationPathKit.ts",
+    "src/core/player/CultivationPathRegistry.ts",
+    "src/core/player/Player.ts",
+    "src/core/skilldef/SkillDefinition.ts",
+    "src/core/skilldef/SkillResolver.ts",
+    "src/core/skilldef/LegacySkillAdapter.ts",
+    "src/data/progression/KiemTuNodes.ts",
+    "src/data/skill/NguKiemDaoSkills.ts",
+    "src/data/skill/TurnSkillDisplayMeta.ts",
+    "src/components/panels/SkillPathPanel.vue",
+    "src/components/panels/skill-path/",
+    "src/locales/en.json",
+    "src/locales/vi.json",
+    "docs/specs/ngu-kiem-beta-spec.md"
+   ],
+   "lessonRouting": [
+    {
+     "lessonRef": "L-016@1",
+     "decision": "NOT_APPLICABLE",
+     "reason": "no semantic trigger matched"
+    },
+    {
+     "lessonRef": "L-017@1",
+     "decision": "NOT_APPLICABLE",
+     "reason": "no semantic trigger matched"
+    },
+    {
+     "lessonRef": "L-018@1",
+     "decision": "NOT_APPLICABLE",
+     "reason": "no semantic trigger matched"
+    },
+    {
+     "lessonRef": "L-019@1",
+     "decision": "NOT_APPLICABLE",
+     "reason": "no semantic trigger matched"
+    },
+    {
+     "lessonRef": "L-020@1",
+     "decision": "NOT_APPLICABLE",
+     "reason": "no semantic trigger matched"
+    },
+    {
+     "lessonRef": "L-021@1",
+     "decision": "NOT_APPLICABLE",
+     "reason": "no semantic trigger matched"
+    }
+   ],
+   "slices": [
+    "S1 evolution engine (instances + momentum + forge)",
+    "S2 spine/grants/name/presentation"
+   ],
+   "firstProofObligations": [
+    {
+     "oracle": "scoped vitest green",
+     "stage": "BEFORE_WRITE",
+     "admittedSlice": "S1",
+     "evidenceIds": []
+    },
+    {
+     "oracle": "type-check + eslint clean",
+     "stage": "BEFORE_PROPAGATION",
+     "admittedSlice": "S2",
+     "evidenceIds": []
+    }
+   ],
+   "unresolvedAssumptions": [],
+   "readiness": "IMPLEMENTATION_READY",
+   "preflightEvidenceIds": [],
+   "deviations": [],
+   "consumedBy": [],
+   "checkpoints": [],
+   "finalConformanceIds": []
+  }
+ ],
+ "assignments": [],
+ "consumptions": [],
+ "invariants": [],
+ "census": [],
+ "findings": [],
+ "evidence": [],
+ "coverage": [],
+ "attacks": [],
+ "reviews": [],
+ "cycles": [],
+ "mutations": [],
+ "corpus": [],
+ "lessons": [],
+ "messages": [],
+ "events": [
+  {
+   "seq": 1,
+   "at": "2026-09-24T23:56:23.218Z",
+   "kind": "PHASE",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+    "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+    "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+    "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+   },
+   "previousEventHash": null,
+   "payloadPath": "events/0001.json",
+   "payloadHash": "e6846d243d0b4b6850812a2813fff2c223406f8ffc462189b7e3b190f992691f",
+   "eventHash": "58193c69f7959ac2df45153390895b4eec9f800aa4bf65faa1af7f64344f907c"
+  },
+  {
+   "seq": 2,
+   "at": "2026-09-24T23:56:23.997Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "aa07ff34e178d4528f77849d167dce0d7499fcd6f7ac3b2ca54101718e42dd65",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "58193c69f7959ac2df45153390895b4eec9f800aa4bf65faa1af7f64344f907c",
+   "payloadPath": "events/0002.json",
+   "payloadHash": "31b7deb88c142c3e3dc31196bc03503daba4a8eb48193dd0a025bc3fff20d22a",
+   "eventHash": "a2ea436fa29eb8002a83f65cf0b766134fe2ed6565f0ffe0f38ba5a8d87a2a93"
+  },
+  {
+   "seq": 3,
+   "at": "2026-09-24T23:57:07.863Z",
+   "kind": "EVIDENCE",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "aa07ff34e178d4528f77849d167dce0d7499fcd6f7ac3b2ca54101718e42dd65",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "a2ea436fa29eb8002a83f65cf0b766134fe2ed6565f0ffe0f38ba5a8d87a2a93",
+   "payloadPath": "events/0003.json",
+   "payloadHash": "d9dfff1097eb8f04d98025d38b9a383bcef6dd526f2f0bbd570c31549004c604",
+   "eventHash": "16abdd2df2aa6f98fbb096c09692727b618430c051eddf2c07278e857cdaec2c"
+  }
+ ]
+}

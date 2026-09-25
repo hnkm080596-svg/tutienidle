@@ -262,7 +262,7 @@ export interface TurnSkillDefinition {
    * target) so the provider can resolve execute/crit/armor rolls against
    * the CURRENT target state (not a declare-time snapshot).
    * `priorLandedInstances` is the cast-local count of landed prior
-   * instances of this cast — pure runtime state supplied by the
+   * instances of this cast -- pure runtime state supplied by the
    * instance loop, spanning targets (Ngu Kiem Beta: Kiem The momentum).
    */
   instances?: {

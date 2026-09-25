@@ -13,12 +13,12 @@ import { aggregateNodeStatModifiers } from '../progression/NodeSystem'
 import { KIEM_PHO_COMBOS } from '../../data/skill/KiemPhoCombos'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// Kiem Tu Reimagined Task 11 (spec 2026-09-15 §6, K20) — progression
+// Kiem Tu Reimagined Task 11 (spec 2026-09-15 sec.6, K20) -- progression
 // tree end-to-end: requiredWay-tagged nodes are inert + unpurchasable
-// across the way boundary (M6 — the retired swordPathMode field /
+// across the way boundary (M6 -- the retired swordPathMode field /
 // kiem_tu_an flip node are gone; way membership is the gate).
 //
-// Ngu Kiem Beta (design 2026-09-24) — the Cuu Cung purchase-grant
+// Ngu Kiem Beta (design 2026-09-24) -- the Cuu Cung purchase-grant
 // economy is a NON-GOAL and gone: no node grants kiemY/kiemDao and the
 // kiemDaoBelowCap prereq kind died with it. The ngu tree is now the
 // evolution spine: Khoi is grant-only through the way commit,
@@ -45,7 +45,7 @@ function setup() {
   return { gameManager, player }
 }
 
-// M6 — ngu membership is the WAY, not a purchased node: flipping
+// M6 -- ngu membership is the WAY, not a purchased node: flipping
 // cultivationWay is the whole switch.
 function asNgu(player: ReturnType<typeof createDefaultPlayer>) {
   player.cultivationWay = 'hidden_sword_pathway'
@@ -137,7 +137,7 @@ describe('swordPath tree — way boundary', () => {
     const { gameManager, player } = setup()
     player.cultivationWay = 'sword_pathway'
     player.realmId = 'foundation_establishment'
-    player.nodeLevels = { ngu_kiem_khoi: 1 } // inconsistent save shape — gate still holds
+    player.nodeLevels = { ngu_kiem_khoi: 1 } // inconsistent save shape -- gate still holds
     expect(gameManager.progressionOps.canPurchaseNode('ngu_kiem_lien', player)).toBe(false)
     expect(gameManager.progressionOps.purchaseNode('ngu_kiem_lien', player)).toBe(false)
     expect(player.nodeLevels.ngu_kiem_lien).toBeUndefined()
@@ -174,7 +174,7 @@ describe('swordPath tree — collectors', () => {
 
     const derived = modifiers[0]!.apply(matching)
     expect(derived.damage!.multiplier).toBeGreaterThan(matching.damage!.multiplier)
-    // Derived copy — canonical combo data untouched.
+    // Derived copy -- canonical combo data untouched.
     expect(derived).not.toBe(matching)
   })
 
@@ -186,13 +186,13 @@ describe('swordPath tree — collectors', () => {
     const modifiers = collectKiemPhoComboModifiers(player, KIEM_TU_NODES)
     expect(modifiers.length).toBe(3)
 
-    // [B,H,C,B] 'phach_lieu_tram_phach' — matches bo (>=1) + hat (>=1);
+    // [B,H,C,B] 'phach_lieu_tram_phach' -- matches bo (>=1) + hat (>=1);
     // chem needs >=2 and does not match.
     const twoBuff = KIEM_PHO_COMBOS.find(c => c.id === 'phach_lieu_tram_phach')!
     const d2 = modifiers.reduce((acc, m) => (m.matches(acc) ? m.apply(acc) : acc), twoBuff)
     expect((d2.appliesBuffs ?? []).map(b => b.definitionId).sort()).toEqual(['choang', 'suy_nhuoc'])
 
-    // [C,B,D,C] 'tram_phach_thich_tram' — matches chem (>=2) + bo (>=1).
+    // [C,B,D,C] 'tram_phach_thich_tram' -- matches chem (>=2) + bo (>=1).
     const threeOrb = KIEM_PHO_COMBOS.find(c => c.id === 'tram_phach_thich_tram')!
     const d3 = modifiers.reduce((acc, m) => (m.matches(acc) ? m.apply(acc) : acc), threeOrb)
     expect((d3.appliesBuffs ?? []).map(b => b.definitionId).sort()).toEqual(['kiem_thuong', 'suy_nhuoc'])

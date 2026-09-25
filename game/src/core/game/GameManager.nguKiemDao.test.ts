@@ -8,9 +8,9 @@ import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// Kiem Tu Reimagined Task 9 — ngu wiring through the real build path:
+// Kiem Tu Reimagined Task 9 -- ngu wiring through the real build path:
 // multi-instance casts land N hits, and each resolved cast banks +1
-// Kiem Y. Ngu Kiem Beta: no emblem slots — one evolving basic only.
+// Kiem Y. Ngu Kiem Beta: no emblem slots -- one evolving basic only.
 
 const ENEMY_STATS_INPUT = {
   maxHp: 10_000_000,

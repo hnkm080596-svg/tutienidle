@@ -3,16 +3,16 @@ import { KIEM_TU_NODES, NGU_KIEM_EVOLUTION_NODE_IDS } from './KiemTuNodes'
 import { ORB_UNLOCK_REALM } from '../skill/KiemPhoOrbs'
 import type { OrbId } from '../../core/kiem-tu/KiemTuState'
 
-// Kiem Tu Reimagined Task 11 (spec 2026-09-15 §6) — the reimagined
+// Kiem Tu Reimagined Task 11 (spec 2026-09-15 sec.6) -- the reimagined
 // tree: 5 orb branches (growth + combo capstone) under 'kiem_pho',
 // and the ngu branch (cascade unlocks, per-instance growth, Cuu Cung
 // 3x3) under 'ngu_kiem'. The legacy Kiem Tran / Bat Kiem node set is
 // gone (Task 12 teardown). Cultivation Path Framework M6: the
-// kiem_tu_an flip node is retired — way entry is ritual-only and every
+// kiem_tu_an flip node is retired -- way entry is ritual-only and every
 // node carries requiredCultivationPath 'sword' + requiredWay
 // ('sword_pathway' orbs / 'hidden_sword_pathway' subtree) stamped at export.
 //
-// Ngu Kiem Beta (design 2026-09-24) — the ngu branch is now a SINGLE
+// Ngu Kiem Beta (design 2026-09-24) -- the ngu branch is now a SINGLE
 // VERTICAL evolution spine: one single-level evolution node per realm
 // (Khoi auto-granted at way commit, Lien insight-purchased at Truc Co,
 // Phong a sealed '???' placeholder beyond the beta ceiling). Roll

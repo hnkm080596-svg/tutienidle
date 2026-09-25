@@ -7,28 +7,28 @@ import { nodeWayApplies } from '../progression/NodeSystem'
 import { LIEN_MOMENTUM_RATE, gainKiemY } from './NguKiemDao'
 import { NGU_KIEM_THUAT } from '../../data/skill/NguKiemDaoSkills'
 
-// Ngu Kiem Beta — the hidden_sword_pathway (Ngu Kiem Dao)
+// Ngu Kiem Beta -- the hidden_sword_pathway (Ngu Kiem Dao)
 // DynamicBasicProvider. resolveBasic live-reads kiemDaoBase /
-// kiemDaoCount from PlayerData EVERY cast — a mid-battle forge is
+// kiemDaoCount from PlayerData EVERY cast -- a mid-battle forge is
 // immediately reflected (there is no battle-scoped state to reset:
 // count/base are persisted domain state, not runtime).
 //
-// Khởi (design sec.7): every Kiem Dao spawns one phi kiem — each a REAL
+// Khoi (design sec.7): every Kiem Dao spawns one phi kiem -- each a REAL
 // ordered damage instance through the standard pipeline. NO
-// guaranteedHit, no execute, no crit/armor privilege: a Khởi-only def
+// guaranteedHit, no execute, no crit/armor privilege: a Khoi-only def
 // carries just `instances.count`.
 //
-// Liên (Trúc Cơ): Kiem Thế momentum — each LANDED sword stacks +1;
+// Lien (Truc Co): Kiem The momentum -- each LANDED sword stacks +1;
 // later swords of the same cast multiply their coefficient by
 // (1 + LIEN_MOMENTUM_RATE * stacks). The stack is pure cast-local
-// runtime state — `each.momentumPerLandedInstance` expresses it
+// runtime state -- `each.momentumPerLandedInstance` expresses it
 // declaratively for the plan lane while `perInstanceOptions` receives
 // the same cast-local landed count as its third argument for the
 // engine-unit lane. Never persisted, never a buff, never a player stat.
 
 /**
  * Owned evolution layers (design sec.52): any node carrying
- * `effect.evolutionId` contributes its id when owned — the authored
+ * `effect.evolutionId` contributes its id when owned -- the authored
  * node ids live in KiemTuNodes data, not here; future realms add a
  * node, not a code branch.
  */
@@ -41,7 +41,7 @@ export function collectOwnedEvolutionIds(
   for (const node of nodes) {
     const evolutionId = node.effect.evolutionId
 
-    // M3 — the way-membership gate applies here too (this collector
+    // M3 -- the way-membership gate applies here too (this collector
     // reads nodeLevels directly): a wrong-way level must not unlock an
     // evolution layer.
     if (evolutionId !== undefined && (player.nodeLevels?.[node.id] ?? 0) > 0 && nodeWayApplies(player, node)) {
@@ -54,9 +54,9 @@ export function collectOwnedEvolutionIds(
 
 /**
  * Display name of the hidden way's single evolving skill (design
- * sec.41-42): the name of the NEWEST owned evolution node — nodes are
+ * sec.41-42): the name of the NEWEST owned evolution node -- nodes are
  * registered in spine order, so the last owned match is the newest
- * layer. 'Ngự Kiếm' is the pre-evolution fallback.
+ * layer. 'Ngu Kiem' is the pre-evolution fallback.
  */
 export function resolveNguKiemSkillName(
   player: PlayerData,
@@ -79,9 +79,9 @@ export function buildNguKiemDaoProvider(
 ): DynamicBasicProvider {
   const lienOwned = evolutions.has('lien')
 
-  // Engine-unit lane authority for Kiem Thế: `priorLandedInstances` is
+  // Engine-unit lane authority for Kiem The: `priorLandedInstances` is
   // the cast-local count of landed prior swords supplied by the
-  // instance loop — the same stack the declarative
+  // instance loop -- the same stack the declarative
   // `each.momentumPerLandedInstance` models for the plan lane.
   const perInstanceOptions = lienOwned
     ? (
@@ -117,10 +117,10 @@ export function buildNguKiemDaoProvider(
 
     resolveManualPick: (defId: string) => (defId === NGU_KIEM_THUAT.id ? resolveDef() : null),
 
-    // hidden_sword_pathway owns no battle-scoped cursor/log — nothing to reset.
+    // hidden_sword_pathway owns no battle-scoped cursor/log -- nothing to reset.
     resetForBattle: () => {},
 
-    // +1 Kiem Y per resolved cast (hit-or-miss alike) — the domain
+    // +1 Kiem Y per resolved cast (hit-or-miss alike) -- the domain
     // owner call lives HERE (the provider), never in the generic
     // GameManager cast sink.
     onCastResolved: () => {

@@ -16,7 +16,7 @@ import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 // ren kiem/skill mien phi.
 //
 // Ngu Kiem Beta: the kiemY/kiemDao one-shot grant channel died with
-// the Cuu Cung economy — kiemY only ever accrues through casts
+// the Cuu Cung economy -- kiemY only ever accrues through casts
 // (provider), so no node can grant it and no clawback exists for it.
 // The evolution spine rides the RESPEC_PRESERVED list instead (design
 // sec.28: evolution is a progression layer, not a build toggle).

@@ -48,7 +48,7 @@ import type { CultivationPathRuntimeDeps } from '../player/CultivationPathRuntim
 import { SWORD_BASIC } from '../../data/skill/TurnBasicAttacks'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// The sword resolveBasic only reads BASIC_ATTACKS_BY_BUILD — the dep
+// The sword resolveBasic only reads BASIC_ATTACKS_BY_BUILD -- the dep
 // surface is stubbed; nothing here is invoked for this path.
 const PATH_RUNTIME_STUB_DEPS = {
   skillManager: {},
@@ -66,9 +66,9 @@ import { TECHNIQUES } from '../../data/technique/Techniques'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { makeTestBuffRegistry } from '../battle/turn/testing/TurnRuntimeFixtures'
 
-// Kiem Tu Reimagined Task 13 — spec 2026-09-15 §10 invariant suite.
+// Kiem Tu Reimagined Task 13 -- spec 2026-09-15 sec.10 invariant suite.
 // One consolidated contract surface: every INV below cites its spec
-// invariant. These codify Tasks 1-12 — they intentionally overlap the
+// invariant. These codify Tasks 1-12 -- they intentionally overlap the
 // per-task tests; this file is the regression tripwire a future edit
 // hits FIRST when it breaks the cross-system contract.
 
@@ -124,7 +124,7 @@ function makeBattle(dynamicBasic: TurnBattleParticipant['dynamicBasic'], defende
   const attacker = makeEntity('attacker', {
     stats: createBaseStats({ might: 100, accuracyRating: 9999 }),
   })
-  // blockChance 0 — a randomly blocked sword would skew any
+  // blockChance 0 -- a randomly blocked sword would skew any
   // per-instance damage assertion below (default is 0.05).
   const defender = makeEntity('defender', {
     stats: createBaseStats({ evasionRate: 0, blockChance: 0, maxHp: defenderMaxHp }),
@@ -236,13 +236,13 @@ describe('INV-2 — preset shape + cursor bounds', () => {
   it('KIEM_PHO_ORB_IDS stays in parity with the orb catalog', () => {
     // The save validator consumes KIEM_PHO_ORB_IDS; if a future orb
     // reaches the unlock table but not this list, a legal preset would
-    // be rejected on restore — the two sets must never drift.
+    // be rejected on restore -- the two sets must never drift.
     expect([...KIEM_PHO_ORB_IDS].sort()).toEqual(Object.keys(ORB_UNLOCK_REALM).sort())
     expect([...KIEM_PHO_ORB_IDS].sort()).toEqual(Object.keys(KIEM_PHO_ORBS).sort())
   })
 
   it('every orb has a display meta (preset strip + picker readout)', () => {
-    // Same drift class one layer over — the hand-authored meta map in
+    // Same drift class one layer over -- the hand-authored meta map in
     // TurnSkillDisplayMeta must cover every orb the catalog offers.
     for (const orbId of KIEM_PHO_ORB_IDS) {
       expect(turnSkillDisplayMetaOf(orbId), `missing display meta for ${orbId}`).toBeDefined()
@@ -292,7 +292,7 @@ describe('INV-5 — additive resolution: the completing orb hit still lands', ()
     })
 
     // Drive the attacker directly (resolveNextStep would interleave the
-    // defender's turns) — declare + apply is the same pipeline the
+    // defender's turns) -- declare + apply is the same pipeline the
     // engine runs per actor turn.
     for (let i = 0; i < 2; i++) {
       system.applyActionImpact(battle, system.declareActorAction(battle, attackerP))
@@ -327,7 +327,7 @@ describe('INV-7 — hardcore discovery', () => {
   })
 
   it('grep-guard: nothing outside the owner seam reads the combo table', () => {
-    // K11's discovery contract binds EVERY layer — scan all of src,
+    // K11's discovery contract binds EVERY layer -- scan all of src,
     // allowlisting the only legitimate referencers: the table itself
     // and the matcher/provider that own and inject it. A combo name or
     // id must NEVER reach presentation (no display-meta entry, no name
@@ -339,7 +339,7 @@ describe('INV-7 — hardcore discovery', () => {
       'src/core/kiem-tu/KiemPhoSystem.ts',
     ]
     const violations: string[] = []
-    // A hardcoded literal bypasses the import scan — quote-delimited
+    // A hardcoded literal bypasses the import scan -- quote-delimited
     // matching keeps presetId strings ('kiem_combo_tam_thich', the
     // LEGITIMATE discovery signal in VFX/impact types) distinct from
     // the bare combo id ('tam_thich') or name, which must never leak.
@@ -365,13 +365,13 @@ describe('INV-7 — hardcore discovery', () => {
 })
 
 describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', () => {
-  // M6 — the kiem_tu_an flip node is retired: ngu entry is the
+  // M6 -- the kiem_tu_an flip node is retired: ngu entry is the
   // Initiation Ritual itself, gated by the way's offerGate
   // (requiresSkillLevel tram Lv3 - reads the canonical core level, the
   // same read the node's skillCastCount level prereq used). The commit
-  // is FREE (no insight cost — no node purchase, no waive record) and
+  // is FREE (no insight cost -- no node purchase, no waive record) and
   // PERMANENT (applyPathChoice rejects any second choice); way
-  // membership — not a node — isolates the two subtrees.
+  // membership -- not a node -- isolates the two subtrees.
 
   function mortalAtRitual(tramLevel: number) {
     const gameManager = new GameManager()
@@ -425,11 +425,11 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
     expect(player.cultivationPath).toBe('sword')
     expect(player.cultivationWay).toBe('hidden_sword_pathway')
     expect(player.swordPath).toEqual(freshSwordPathState())
-    // Free commit — nothing was deducted, so there is no waive record.
+    // Free commit -- nothing was deducted, so there is no waive record.
     expect(player.skillInsight).toBe(insightBefore)
     expect(gameManager.techniqueManager.getActive()?.id).toBe('myriad_swords_art')
 
-    // One-way: the way is written AT the ritual — there is no node to
+    // One-way: the way is written AT the ritual -- there is no node to
     // repurchase and no re-choice; both the authority and the ritual
     // reject a second attempt.
     expect(applyPathChoice(player, 'sword', 'sword_pathway').ok).toBe(false)
@@ -489,13 +489,13 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
 
     const hien = hienPlayer(['orb_dam'], 'foundation_establishment')
     hien.skillInsight = 500
-    hien.nodeLevels = { ngu_kiem_khoi: 1 } // inconsistent save shape — the requiredWay gate alone still blocks.
+    hien.nodeLevels = { ngu_kiem_khoi: 1 } // inconsistent save shape -- the requiredWay gate alone still blocks.
     expect(gameManager.progressionOps.canPurchaseNode('ngu_kiem_lien', hien)).toBe(false)
     expect(gameManager.progressionOps.purchaseNode('ngu_kiem_lien', hien)).toBe(false)
 
     const ngu = nguPlayer('foundation_establishment')
     ngu.skillInsight = 500
-    // orb_dam_1's realm gate passes — only the way gate blocks.
+    // orb_dam_1's realm gate passes -- only the way gate blocks.
     expect(gameManager.progressionOps.canPurchaseNode('orb_dam_1', ngu)).toBe(false)
     expect(gameManager.progressionOps.purchaseNode('orb_dam_1', ngu)).toBe(false)
 
@@ -534,7 +534,7 @@ describe('INV-9 — Kiem The bounds + standard pipeline (Ngu Kiem Beta)', () => 
     for (const field of ['guaranteedHit', 'execute', 'armorPierce', 'critChance', 'armorBypass']) {
       expect(serialized).not.toContain(field)
     }
-    // The provider takes no rng — Kiem The is deterministic stack
+    // The provider takes no rng -- Kiem The is deterministic stack
     // arithmetic, not a roll.
     expect(buildNguKiemDaoProvider.length).toBeLessThanOrEqual(2)
   })
@@ -572,7 +572,7 @@ describe('INV-9 — Kiem The bounds + standard pipeline (Ngu Kiem Beta)', () => 
 
     // Three swords landed IN ORDER on the defender (evasion 0,
     // accuracy 9999); each later sword carries one more Kiem The
-    // stack. Damage may round — compare ratios within tolerance.
+    // stack. Damage may round -- compare ratios within tolerance.
     expect(defenderP.entity.alive).toBe(true)
     expect(values.length).toBe(3)
     const [first, second, third] = values as [number, number, number]
@@ -589,7 +589,7 @@ describe('INV-9 — Kiem The bounds + standard pipeline (Ngu Kiem Beta)', () => 
 
     // Record the cast-local landed count the engine feeds each sword,
     // and force sword 2 to miss by inflating evasion for its hit roll
-    // (deterministic — no RNG-order assumptions anywhere). `target`
+    // (deterministic -- no RNG-order assumptions anywhere). `target`
     // inside perInstanceOptions IS the defender entity.
     const landedArgs: number[] = []
     const wrapped: DynamicBasicProvider = {
@@ -624,7 +624,7 @@ describe('INV-9 — Kiem The bounds + standard pipeline (Ngu Kiem Beta)', () => 
     vi.restoreAllMocks()
 
     // sword1 lands (stack->1); sword2 misses (no stack); sword3 reads
-    // exactly ONE landed prior — the miss neither stacked nor reset.
+    // exactly ONE landed prior -- the miss neither stacked nor reset.
     expect(landedArgs).toEqual([0, 1, 1])
     expect(values.length).toBe(2)
     const [first, third] = values as [number, number]
@@ -637,28 +637,28 @@ describe('INV-9 — Kiem The bounds + standard pipeline (Ngu Kiem Beta)', () => 
     const provider = buildNguKiemDaoProvider(player, LIEN)
     const { system, battle, eventBus } = makeBattle(provider)
 
-    // Only the attacker's swords count — the defender's own basic
+    // Only the attacker's swords count -- the defender's own basic
     // also emits 'damage'.
     const values: number[] = []
     eventBus.on('damage', (event: { value?: number; sourceId?: string }) => {
       if (event.value !== undefined && event.sourceId === 'attacker') values.push(event.value)
     })
 
-    system.resolveNextStep(battle) // cast 1 — swords 1..3
+    system.resolveNextStep(battle) // cast 1 -- swords 1..3
     system.resolveNextStep(battle) // defender's turn (or next step)
-    system.resolveNextStep(battle) // cast 2 — sword 1 must NOT carry cast 1's stacks
+    system.resolveNextStep(battle) // cast 2 -- sword 1 must NOT carry cast 1's stacks
 
     expect(values.length).toBe(6)
     const cast2First = values[3]!
     const cast1First = values[0]!
-    // Cast 2 sword 1 has zero landed priors — same bare multiplier as
+    // Cast 2 sword 1 has zero landed priors -- same bare multiplier as
     // cast 1 sword 1, never a residue of the previous cast's stacks.
     expect(cast2First).toBeCloseTo(cast1First, 5)
   })
 
   it('cast-local stacks span targets of one cast (priorInstanceOpIds accumulates per deal_damage)', () => {
     // Contract-level pin: the engine's landedPriorInstances spans the
-    // target loop — documented in TurnSkillAction.instances docs and
+    // target loop -- documented in TurnSkillAction.instances docs and
     // covered at plan level by the ops_result_sum var the resolver
     // emits; the provider closure itself is target-agnostic.
     const player = nguPlayer()
@@ -667,7 +667,7 @@ describe('INV-9 — Kiem The bounds + standard pipeline (Ngu Kiem Beta)', () => 
     const targetA = { currentHp: 100, maxHp: 100 } as CombatEntity
     const targetB = { currentHp: 100, maxHp: 100 } as CombatEntity
     // 1 landed prior on target A still stacks for target B's first
-    // instance — the stack is cast-local, not per-target.
+    // instance -- the stack is cast-local, not per-target.
     expect(def.instances!.perInstanceOptions!(0, targetB, 1).damageMultiplier).toBeCloseTo(
       1 + LIEN_MOMENTUM_RATE,
       10,
@@ -693,7 +693,7 @@ describe('INV-10/11 — economy + base monotonic', () => {
     gainKiemY(player, 9_999)
     expect(player.swordPath!.kiemDaoCount).toBe(2)
 
-    gainKiemY(player, 50_000) // fully gated at cap — nothing banks
+    gainKiemY(player, 50_000) // fully gated at cap -- nothing banks
     expect(player.swordPath!.kiemDaoCount).toBe(2)
     expect(player.swordPath!.kiemY).toBe(0)
   })
@@ -833,7 +833,7 @@ describe('INV-15 — precursor lock (K3)', () => {
     gameManager.progressionOps.learnSkill('tram', player)
     gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)
 
-    // Mission C Task 9 — resolution now lives behind the path-runtime
+    // Mission C Task 9 -- resolution now lives behind the path-runtime
     // boundary; the resolved basic is the static authored def (object
     // identity), not a Skill-backed conversion of the precursor 'tram'.
     const runtime = resolveCultivationPathRuntime(player, PATH_RUNTIME_STUB_DEPS)

@@ -313,7 +313,7 @@ export class GameManagerRealmAdvanceOps {
       }
     }
 
-    // Ngu Kiem Beta — every declared granted node must be registered
+    // Ngu Kiem Beta -- every declared granted node must be registered
     // (a missing id fails the whole ritual before commit).
     for (const nodeId of way.grantedNodeIds ?? []) {
       if (!this.deps.nodeRegistry.has(nodeId)) {
@@ -352,7 +352,7 @@ export class GameManagerRealmAdvanceOps {
       this.deps.progressionOps.grantSkillCoreBySkillId(player, skillId)
     }
 
-    // Ngu Kiem Beta — granted evolution nodes (Khởi at ritual) write
+    // Ngu Kiem Beta -- granted evolution nodes (Khoi at ritual) write
     // through the same seam: nodeLevels + purchasedNodeIds (respec
     // preserves them; devResetBranch still strips them deliberately).
     for (const nodeId of way.grantedNodeIds ?? []) {

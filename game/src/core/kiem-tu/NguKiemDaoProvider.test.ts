@@ -12,10 +12,10 @@ import { NGU_KIEM_THUAT } from '../../data/skill/NguKiemDaoSkills'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 
-// Ngu Kiem Beta (design 2026-09-24) — the hidden way's single evolving
+// Ngu Kiem Beta (design 2026-09-24) -- the hidden way's single evolving
 // skill contract: Khoi-only casts carry just `instances.count` through
 // the STANDARD pipeline (no guaranteedHit, no execute, no crit/armor
-// privilege — Roll Cascade is gone); Lien adds the Kiem The momentum
+// privilege -- Roll Cascade is gone); Lien adds the Kiem The momentum
 // layer (`each.momentumPerLandedInstance` for the plan lane +
 // `perInstanceOptions` carrying the cast-local landed count for the
 // engine-unit lane). +1 Kiem Y per resolved cast, hit-or-miss alike,
@@ -115,7 +115,7 @@ describe('Lien layer — Kiem The cast-local momentum', () => {
     expect(def.instances!.perInstanceOptions!(1, target, 1)).toEqual({
       damageMultiplier: 1 + LIEN_MOMENTUM_RATE,
     })
-    // Third sword with two landed priors: +rate twice — a miss adds no
+    // Third sword with two landed priors: +rate twice -- a miss adds no
     // stack, so only LANDED priors feed the multiplier.
     expect(def.instances!.perInstanceOptions!(2, target, 2)).toEqual({
       damageMultiplier: 1 + 2 * LIEN_MOMENTUM_RATE,
@@ -215,7 +215,7 @@ describe('manual + cast hooks', () => {
     expect(player.swordPath!.kiemDaoCount).toBe(Math.min(kiemDaoCap(1), 2))
     expect(player.swordPath!.kiemY).toBe(0)
 
-    // At cap the forge is a NO-OP — no Y banks past the cap.
+    // At cap the forge is a NO-OP -- no Y banks past the cap.
     provider.onCastResolved?.(ctx)
     expect(player.swordPath!.kiemDaoCount).toBe(kiemDaoCap(1))
     expect(player.swordPath!.kiemY).toBe(0)

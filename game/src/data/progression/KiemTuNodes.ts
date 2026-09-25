@@ -4,19 +4,19 @@ import type { OrbId } from '../../core/kiem-tu/KiemTuState'
 import { REALMS } from '../realms/realm'
 import { ORB_UNLOCK_REALM } from '../skill/KiemPhoOrbs'
 
-// Kiem Tu Reimagined (spec 2026-09-15 §6) — the tree after the legacy
+// Kiem Tu Reimagined (spec 2026-09-15 sec.6) -- the tree after the legacy
 // Kiem Tran / Bat Kiem retirement:
 //
-//   branchTag 'kiem_pho' — 5 orb branches (hien way). Each branch: 5
+//   branchTag 'kiem_pho' -- 5 orb branches (hien way). Each branch: 5
 //   growth nodes realm-gated to the orb's own unlock realm (spec K13)
-//   + 1 keystone capstone carrying effect.swordPathComboModifier — the
-//   ONLY channel a node may alter a combo (spec §4.2). All stamped
-//   requiredWay 'sword_pathway' — inert and unpurchasable on the ngu way.
+//   + 1 keystone capstone carrying effect.swordPathComboModifier -- the
+//   ONLY channel a node may alter a combo (spec sec.4.2). All stamped
+//   requiredWay 'sword_pathway' -- inert and unpurchasable on the ngu way.
 //
-//   branchTag 'ngu_kiem' — the ngu way subtree (Cultivation Path
+//   branchTag 'ngu_kiem' -- the ngu way subtree (Cultivation Path
 //   Framework M6: way membership replaces the retired kiem_tu_an flip
-//   node — entry is ritual-only now). Ngu Kiem Beta: the subtree is
-//   ONE vertical accumulation spine — one evolution node per realm
+//   node -- entry is ritual-only now). Ngu Kiem Beta: the subtree is
+//   ONE vertical accumulation spine -- one evolution node per realm
 //   tier (Khoi granted at the ritual, Lien purchasable at Truc Co,
 //   plus a sealed '???' placeholder for the next tier). Chained node
 //   prereqs render the spine automatically inside the shared
@@ -42,7 +42,7 @@ function stat(
   }
 }
 
-// ───────────────────────── Orb branches (hien) ─────────────────────────
+// ????????????????????????? Orb branches (hien) ?????????????????????????
 
 interface OrbGrowthSpec {
   name: string
@@ -54,7 +54,7 @@ interface OrbBranchSpec {
   orb: OrbId
   orbName: string
   growth: [
-    OrbGrowthSpec, // [0] is the branch root — realm gate only
+    OrbGrowthSpec, // [0] is the branch root -- realm gate only
     OrbGrowthSpec, // [1] prereq g0
     OrbGrowthSpec, // [2] prereq g0
     OrbGrowthSpec, // [3] prereq g1
@@ -202,15 +202,15 @@ const ORB_NODES: ProgressionNode[] = ORB_BRANCHES.flatMap(branch => {
   return [...growth, capstone]
 })
 
-// ─────────────────── Hidden-path root (Task 10 contract) ───────────────────
+// ??????????????????? Hidden-path root (Task 10 contract) ???????????????????
 
 
-// ───────────────────────── Ngu branch — evolution spine ─────────────────────────
+// ????????????????????????? Ngu branch -- evolution spine ?????????????????????????
 
-// Ngu Kiem Beta (design sec.7/sec.52) — the hidden way's ONLY nodes:
+// Ngu Kiem Beta (design sec.7/sec.52) -- the hidden way's ONLY nodes:
 // one vertical accumulation spine, one single-level evolution node per
 // realm tier. Chained 'node' prereqs make NodeTreePanel depth-group them
-// vertically (the spine) — no dedicated view needed. effect.evolutionId
+// vertically (the spine) -- no dedicated view needed. effect.evolutionId
 // is the DATA marker the provider collects (combat stays node-agnostic);
 // the sealed '???' placeholder carries no effect so an owned tier never
 // resolves a mechanic it has no design for.
@@ -230,7 +230,7 @@ const NGU_EVOLUTION_NODES: ProgressionNode[] = [
     role: 'keystone',
     insightCost: 0,
     maxLevel: 1,
-    // Granted at the Initiation Ritual (way.grantedNodeIds) — never
+    // Granted at the Initiation Ritual (way.grantedNodeIds) -- never
     // purchasable (design sec.28/sec.50).
     grantedOnly: true,
     effect: { evolutionId: 'khoi' },
@@ -255,7 +255,7 @@ const NGU_EVOLUTION_NODES: ProgressionNode[] = [
   {
     // Sealed '???' placeholder for the next tier (design: future realms
     // may show sealed slots on the spine). prereq realm golden_core
-    // puts it permanently out of reach inside the beta ceiling — it
+    // puts it permanently out of reach inside the beta ceiling -- it
     // renders locked forever.
     id: 'ngu_kiem_phong',
     name: '???',
@@ -273,9 +273,9 @@ const NGU_EVOLUTION_NODES: ProgressionNode[] = [
   },
 ]
 
-// M6 — path + way membership stamped at export (same pattern as
+// M6 -- path + way membership stamped at export (same pattern as
 // TheTuNodes): 'sword_pathway' owns the orb branches, 'hidden_sword_pathway' owns everything in
-// the hidden subtree. requiredCultivationPath is REQUIRED alongside —
+// the hidden subtree. requiredCultivationPath is REQUIRED alongside --
 // way ids are globally unique but still module-owned, so the pair
 // (not the way alone) is the atomic gate. The
 // hidden-sword flip node is gone; requiredWay is the only sword-way gate.

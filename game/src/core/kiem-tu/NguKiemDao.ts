@@ -3,23 +3,23 @@ import type { SwordPathState } from './KiemTuState'
 import { isHiddenSwordPathway } from './KiemTuPath'
 import { getRealmIndex } from '../realm/realmSystem'
 
-// Kiem Tu Reimagined Task 8 (spec 2026-09-15 K14/K15) — Ngu Kiem Dao
-// economy. THE owner of the Kiem Y → Kiem Dao conversion and the
-// breakthrough merge. All numbers come from the CURRENT realmIndex —
+// Kiem Tu Reimagined Task 8 (spec 2026-09-15 K14/K15) -- Ngu Kiem Dao
+// economy. THE owner of the Kiem Y -> Kiem Dao conversion and the
+// breakthrough merge. All numbers come from the CURRENT realmIndex --
 // never snapshot at state-init time.
 //
 //   +1 Kiem Y per ngu_kiem_thuat cast (Task 9 provider onCastResolved)
-//   forgeCost(realmIndex) = ceil(9999 * 1.3^(r-1)) — the Kiem Y cost of
+//   forgeCost(realmIndex) = ceil(9999 * 1.3^(r-1)) -- the Kiem Y cost of
 //     one Kiem Dao at that realm
 //   kiemDaoCap(realmIndex) = realmIndex + 1
-//   gain is a NO-OP at cap (K14b) — excess Y is not banked past the cap
-//   breakthrough merge: base *= 1 + 0.3 * mergedCount, count → 1,
+//   gain is a NO-OP at cap (K14b) -- excess Y is not banked past the cap
+//   breakthrough merge: base *= 1 + 0.3 * mergedCount, count -> 1,
 //     Kiem Y untouched (K15)
 
 export const KIEM_DAO_MERGE_BONUS = 0.3
 
-// Ngu Kiem Beta (design sec.56 — first-pass, tuning deferred): the
-// Lien evolution's Kiem The rate — each landed prior sword of the same
+// Ngu Kiem Beta (design sec.56 -- first-pass, tuning deferred): the
+// Lien evolution's Kiem The rate -- each landed prior sword of the same
 // cast multiplies the next sword's coefficient by (1 + rate * stacks).
 export const LIEN_MOMENTUM_RATE = 0.15
 
@@ -29,7 +29,7 @@ function assertRealmIndex(realmIndex: number): void {
   }
 }
 
-/** Kiem Y cost of forging one Kiem Dao at this realm (asserts r>=1 —
+/** Kiem Y cost of forging one Kiem Dao at this realm (asserts r>=1 --
  *  mortal cannot enter hidden_sword_pathway, so r=0 is a contract violation). */
 export function forgeCost(realmIndex: number): number {
   assertRealmIndex(realmIndex)

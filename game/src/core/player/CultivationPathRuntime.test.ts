@@ -199,7 +199,7 @@ describe('CultivationPathRuntime registry', () => {
     ngu.swordPath = freshSwordPathState()
     const nguRuntime = resolveCultivationPathRuntime(ngu, deps)
     expect(nguRuntime.buildDynamicBasic?.(ngu, [], () => 0.5)).toBeDefined()
-    // Ngu Kiem Beta — no emblem slots: one evolving basic is the whole
+    // Ngu Kiem Beta -- no emblem slots: one evolving basic is the whole
     // kit (special/ultimate stay undefined by design).
     expect(nguRuntime.emblemSlots?.()).toBeUndefined()
   })

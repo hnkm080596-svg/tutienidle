@@ -38,11 +38,11 @@ const EXPECTED_FINGERPRINTS: Record<string, Record<number, string>> = {
   'the_tu_ung_the/durable_target': { 11: 'dd1c6d69', 22: '1812c7d3', 33: 'c2c0ec4a', 44: '0343489b', 55: '7ef9abe2', 66: '62b5e30a', 77: '5cbb10d9', 88: 'd72e8b48' },
   'the_tu_ung_the/burst_pressure': { 11: '2090970a', 22: 'c7d652db', 33: '9f709706', 44: 'cab3e268', 55: '01b55ff5', 66: '3f0c4312', 77: 'e3e2a447', 88: '4562c544' },
   'the_tu_ung_the/attrition': { 11: '858dc3bc', 22: '3ed79cba', 33: '07506795', 44: 'fe294423', 55: '46ad2a52', 66: '6baf0545', 77: '8fc9b2b8', 88: '73729934' },
-  'kiem_tu_ngu/single_target': { 11: '2cb76ec5', 22: '19b4de49', 33: 'ab8a6414', 44: '9fd0edd2', 55: '83c473cf', 66: '73e45ab0', 77: '2a7d839a', 88: '41d398a2' },
-  'kiem_tu_ngu/multi_enemy': { 11: '7bd221e0', 22: '4d9d4374', 33: '04a15926', 44: '9d2fba5f', 55: '191adb89', 66: 'a6bfc423', 77: '0ad3f298', 88: 'e4968d8c' },
-  'kiem_tu_ngu/durable_target': { 11: '3f6c7cd4', 22: 'a2793ddc', 33: '2f8c0702', 44: '424d248c', 55: '2788376b', 66: 'e79ef331', 77: '963d0fb9', 88: '9ba8df72' },
-  'kiem_tu_ngu/burst_pressure': { 11: '9d96701d', 22: '4decf2ab', 33: 'f517f1a8', 44: 'b1c20be9', 55: '557c9813', 66: '68a45cfb', 77: '079b495f', 88: '82dac6b2' },
-  'kiem_tu_ngu/attrition': { 11: 'bd003af0', 22: '1500e808', 33: '7bba0bbd', 44: 'db276579', 55: '42722d1a', 66: 'ca9d00dd', 77: 'b1cc78ab', 88: '6206025d' },
+  'kiem_tu_ngu/single_target': { 11: '7c2e4f1b', 22: '1a7a59c2', 33: '5ff44c11', 44: '51e404f3', 55: 'fee4ca29', 66: 'f7f74941', 77: 'ee01e59b', 88: '3a54a48a' },
+  'kiem_tu_ngu/multi_enemy': { 11: '41c1edd4', 22: '63e44a62', 33: '81f4cf66', 44: '3a39a9f1', 55: 'e73e17d3', 66: '9a2f797b', 77: '893c86ec', 88: '52a369e9' },
+  'kiem_tu_ngu/durable_target': { 11: 'c06ed3ed', 22: 'feec5a40', 33: 'e27974bd', 44: 'df92ad3d', 55: '0c71b3bb', 66: 'c47c4142', 77: '86e1028b', 88: '1ffdbb5d' },
+  'kiem_tu_ngu/burst_pressure': { 11: 'c3463b8b', 22: 'fbc8a307', 33: '1564da1f', 44: '75d25f53', 55: '8b299572', 66: 'b5cc6b62', 77: '84555fde', 88: '02f37965' },
+  'kiem_tu_ngu/attrition': { 11: 'fae3ebc1', 22: '52b1704e', 33: '2c6b15db', 44: 'aac7048b', 55: '2b5cf4ae', 66: '9a8703c2', 77: '54ca62af', 88: '883e523f' },
 
 }
 

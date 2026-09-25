@@ -45,7 +45,7 @@ function onUpgrade() {
     <template v-else>
       <h4 class="native-core-detail__name">{{ entry.name }}</h4>
 
-      <!-- §43: the ONE evolving ngu-kiem entry carries the newest
+      <!-- sec.43: the ONE evolving ngu-kiem entry carries the newest
            evolution layer's name; the suffix surfaces as the
            `Evolution: X` state line. -->
       <p v-if="entry.evolutionName !== undefined" class="native-core-detail__desc">
