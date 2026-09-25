@@ -5400,6 +5400,171 @@
    "exception": null,
    "status": "REJECTED_WITH_PROOF",
    "rejectionReason": "pre-existing test-infra blind spot on master; out of this branch's scope - recorded as observation per protocol"
+  },
+  {
+   "id": "F-NK-AUT-A6-1",
+   "title": "P15 asciiComments gate red at d6592689 - same em-dash docblocks as COR-A6-1",
+   "state": {
+    "productStateId": "fb56acd6c06e613efff0dd94615d401e5ada8f5d44b9b8ae61d9a31654f4bbad",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/kiem-tu/NguKiemDao.ts",
+     "symbolOrSection": "doc blocks :32-38,:61-66",
+     "revision": "d6592689",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-83cb8c0ec3724d85b4c4a99ab755b0df",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "same vitest failure as F-NK-COR-A6-1",
+   "expected": "gate green",
+   "actual": "gate red at d6592689 (superseded head)",
+   "rootCause": "same defect found independently by AUTHORITY lens",
+   "rootClass": "duplicate-of",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "reviewer probe",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "duplicate of F-NK-COR-A6-1 - already fixed @ca14a92f and sealed by CLO-13"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": "F-NK-COR-A6-1",
+   "exception": null,
+   "status": "DUPLICATE_LINKED",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-AUT-A6-2",
+   "title": "Zero-producer contract seams retained after legacy removal",
+   "state": {
+    "productStateId": "fb56acd6c06e613efff0dd94615d401e5ada8f5d44b9b8ae61d9a31654f4bbad",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnSkillAction.ts",
+     "symbolOrSection": "each.guaranteedHit/execute/critChance/armorPierce",
+     "revision": "d6592689",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/player/CultivationPathRuntime.ts",
+     "symbolOrSection": "emblemSlots",
+     "revision": "d6592689",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-83cb8c0ec3724d85b4c4a99ab755b0df",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "no data producer emits the four each.* privilege fields or emblemSlots anymore",
+   "expected": "legacy deleted from owning systems + data + i18n + tests",
+   "actual": "generic contract fields remain spec-sanctioned (contract kept); consumers tolerate undefined; tests pin absence",
+   "rootCause": "spec-sanctioned dead surface - contract fields kept for future producers",
+   "rootClass": "adjudicated-non-actionable",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "reviewer probe",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "rejected: contract surface is spec-sanctioned; dead fields are inert, not amputated seams"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "rejected: contract surface is spec-sanctioned; dead fields are inert, not amputated seams"
+  },
+  {
+   "id": "F-NK-AUT-A6-3",
+   "title": "Stale P15 baseline allowances for removed NguKiemDao // header lines",
+   "state": {
+    "productStateId": "fb56acd6c06e613efff0dd94615d401e5ada8f5d44b9b8ae61d9a31654f4bbad",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "tests/architecture/baselines/asciiComments.json",
+     "symbolOrSection": "NguKiemDao.ts 7 entries",
+     "revision": "d6592689",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-83cb8c0ec3724d85b4c4a99ab755b0df",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "all 7 recorded strings reference the deleted // header block",
+   "expected": "baseline entries correspond to live violations",
+   "actual": "inert under multiset semantics (a file's list may only shrink); stale bookkeeping only",
+   "rootCause": "baseline is a shrinking allowance - stale entries never re-apply",
+   "rootClass": "adjudicated-non-actionable",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "reviewer probe",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "rejected: inert bookkeeping - multiset semantics make stale entries unreachable"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "rejected: inert bookkeeping - multiset semantics make stale entries unreachable"
   }
  ],
  "evidence": [
@@ -7331,6 +7496,37 @@
    ],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-NK-AUT-A6",
+   "state": {
+    "productStateId": "fb56acd6c06e613efff0dd94615d401e5ada8f5d44b9b8ae61d9a31654f4bbad",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 8,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-83cb8c0ec3724d85b4c4a99ab755b0df",
+   "contextId": "sealed-child-83cb8c0ec3724d85b4c4a99ab755b0df",
+   "model": "swe-2-max",
+   "role": "authority-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T14:25:17.000Z",
+   "sealedAt": "2026-09-25T14:55:49.000Z",
+   "previousPhaseReviewId": "REV-NK-CLO-13",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-NK-AUT-A6-1",
+    "F-NK-AUT-A6-2",
+    "F-NK-AUT-A6-3"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
   }
  ],
  "cycles": [
@@ -9162,6 +9358,104 @@
     "REV-NK-COR-A6"
    ],
    "capabilityDelta": "ascii sweep must cover /** */ blocks",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-49",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-AUT-A6-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "adjudicated",
+   "missedInvariantIds": [],
+   "escapeReason": "dead contract fields flagged as amputated seams",
+   "applicability": [
+    "contract surfaces",
+    "test baselines"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "distinguish spec-sanctioned contract surface from amputated seam in AUTHORITY checks"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-AUT-A6"
+   ],
+   "capabilityDelta": "dead-field vs amputated-seam distinction",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-50",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-AUT-A6-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "adjudicated",
+   "missedInvariantIds": [],
+   "escapeReason": "stale baseline entries look like debt",
+   "applicability": [
+    "contract surfaces",
+    "test baselines"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "baseline shrink entries are inert - regenerate only on violations"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-AUT-A6"
+   ],
+   "capabilityDelta": "dead-field vs amputated-seam distinction",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-51",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-AUT-A6-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "duplicate-detection",
+   "missedInvariantIds": [],
+   "escapeReason": "same defect independently found on superseded head",
+   "applicability": [
+    "trio reviewers on superseded states"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "duplicate-link findings across lenses to keep one canonical fix"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-AUT-A6"
+   ],
+   "capabilityDelta": "cross-lens dedup works",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
