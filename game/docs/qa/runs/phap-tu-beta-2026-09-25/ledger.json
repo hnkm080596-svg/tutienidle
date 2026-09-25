@@ -11175,6 +11175,271 @@
      "coverageLimits": []
     }
    ]
+  },
+  {
+   "id": "F-PT-INT-A9-1",
+   "title": "dryRun kiemY leg lacks apply-side hidden-way gate",
+   "state": {
+    "productStateId": "2330ef22ed54c9314513c6cb4dd933e93e0eb58ec9446ba2af65f4b2d055f65f",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": "dryRunOneShotClawback",
+     "revision": "e1ca815b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-c20bd72774874ed9a04669e24ed1d462",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "dryRun debits kiemY+swords whenever record.kiemY && sim.swordPath; apply no-ops on non-hidden-sword",
+   "expected": "preview and apply agree per leg",
+   "actual": "unreachable divergence - record only written under isHiddenSwordPathway; ways cannot switch",
+   "rootCause": "crafted-save-only divergence",
+   "rootClass": "adjudicated-non-actionable",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "reviewer probe + coordinator adjudication",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "rejected: only reachable via crafted saves (strict save law precedent) - cosmetic preview-text gap"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "rejected: only reachable via crafted saves (strict save law precedent) - cosmetic preview-text gap"
+  },
+  {
+   "id": "F-PT-INT-A9-2",
+   "title": "Chain C/D specializations remain claim-free (pre-existing)",
+   "state": {
+    "productStateId": "2330ef22ed54c9314513c6cb4dd933e93e0eb58ec9446ba2af65f4b2d055f65f",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/PhapTuChainSkills.ts",
+     "symbolOrSection": ":67 comment",
+     "revision": "e1ca815b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-c20bd72774874ed9a04669e24ed1d462",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "chain spec ids have zero claiming nodes - free-switch same as pre-diff",
+   "expected": "stale comment claims C/D variants are node-gated",
+   "actual": "pre-existing at merge-base; only basic capstone specs gained claims in this diff",
+   "rootCause": "pre-existing; not a diff regression",
+   "rootClass": "adjudicated-non-actionable",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "reviewer probe + coordinator adjudication",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "rejected: pre-existing at merge-base; data-intent question for spec owner, not a defect of this change"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "rejected: pre-existing at merge-base; data-intent question for spec owner, not a defect of this change"
+  },
+  {
+   "id": "F-PT-INT-A9-3",
+   "title": "Preview ops callable mid-battle (read-only)",
+   "state": {
+    "productStateId": "2330ef22ed54c9314513c6cb4dd933e93e0eb58ec9446ba2af65f4b2d055f65f",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": "previewNodeRespec/previewRouteSwitch",
+     "revision": "e1ca815b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-c20bd72774874ed9a04669e24ed1d462",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "previews lack isTurnBattleInProgress guard; apply refuses",
+   "expected": "nothing user-visible - sims run on JSON clones",
+   "actual": "apply-side still refuses mid-battle; preview mutates only JSON-clone sim",
+   "rootCause": "read-only preview without apply - state-safe",
+   "rootClass": "adjudicated-non-actionable",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "reviewer probe + coordinator adjudication",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "rejected: state-safe by construction (JSON clone); apply still gated"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "rejected: state-safe by construction (JSON clone); apply still gated"
+  },
+  {
+   "id": "F-PT-INT-A9-4",
+   "title": "Hidden-way kit skills carry no vfxPresetId",
+   "state": {
+    "productStateId": "2330ef22ed54c9314513c6cb4dd933e93e0eb58ec9446ba2af65f4b2d055f65f",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/CoreSkills.ts",
+     "symbolOrSection": "van_phap_tuy_tam/da_phap_lien_tuyen",
+     "revision": "e1ca815b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-c20bd72774874ed9a04669e24ed1d462",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "iconKey meta but no preset; falls back to default presentation",
+   "expected": "reachable skills get VFX presets per beta scope",
+   "actual": "unchanged from merge-base; beta scope ruled basic-only for display meta (user ruling #20)",
+   "rootCause": "pre-existing; out of beta scope per user ruling",
+   "rootClass": "adjudicated-non-actionable",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "reviewer probe + coordinator adjudication",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "rejected: pre-existing at merge-base AND out of scope (user ruling: display meta covers basic only)"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "rejected: pre-existing at merge-base AND out of scope (user ruling: display meta covers basic only)"
+  },
+  {
+   "id": "F-PT-INT-A9-5",
+   "title": "Save validation accepts unregistered non-core nodeLevels ids (inert)",
+   "state": {
+    "productStateId": "2330ef22ed54c9314513c6cb4dd933e93e0eb58ec9446ba2af65f4b2d055f65f",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/services/save/saveShapeValidation.ts",
+     "symbolOrSection": "~:695",
+     "revision": "e1ca815b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-c20bd72774874ed9a04669e24ed1d462",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "unregistered non-core ids with in-range levels pass silently",
+   "expected": "dirty ids rejected",
+   "actual": "inert by design - no registry lookup, no aggregation, no grant path; every consumer guards registry.has",
+   "rootCause": "inert stray ids tolerated by design",
+   "rootClass": "adjudicated-non-actionable",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "reviewer probe + coordinator adjudication",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "rejected: inert by design; crafted-save-only reachability"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "rejected: inert by design; crafted-save-only reachability"
   }
  ],
  "evidence": [
@@ -14952,6 +15217,39 @@
    "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-INT-V9",
+   "state": {
+    "productStateId": "2330ef22ed54c9314513c6cb4dd933e93e0eb58ec9446ba2af65f4b2d055f65f",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 26,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-c20bd72774874ed9a04669e24ed1d462",
+   "contextId": "sealed-child-c20bd72774874ed9a04669e24ed1d462",
+   "model": "swe-2-max",
+   "role": "integration-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T13:46:35.000Z",
+   "sealedAt": "2026-09-25T14:15:10.000Z",
+   "previousPhaseReviewId": "REV-PT-AUT-V9",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-INT-A9-1",
+    "F-PT-INT-A9-2",
+    "F-PT-INT-A9-3",
+    "F-PT-INT-A9-4",
+    "F-PT-INT-A9-5"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [
@@ -18652,6 +18950,166 @@
     "REV-PT-COR-V9"
    ],
    "capabilityDelta": "description cap-note consistency check in later authoring",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-87",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-INT-A9-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "adjudicated-non-actionable",
+   "missedInvariantIds": [],
+   "escapeReason": "crafted-save divergence is not a defect",
+   "applicability": [
+    "reviewer adjudication"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "keep strict save law as adjudication filter"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-INT-V9"
+   ],
+   "capabilityDelta": "integration surface verified clean",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-88",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-INT-A9-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "adjudicated-non-actionable",
+   "missedInvariantIds": [],
+   "escapeReason": "stale data comments accumulate",
+   "applicability": [
+    "reviewer adjudication"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "periodic comment-truth sweep"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-INT-V9"
+   ],
+   "capabilityDelta": "integration surface verified clean",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-89",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-INT-A9-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "adjudicated-non-actionable",
+   "missedInvariantIds": [],
+   "escapeReason": "preview/apply parity asymmetry acceptable when read-only",
+   "applicability": [
+    "reviewer adjudication"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "document preview-vs-apply guard asymmetry in ops header"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-INT-V9"
+   ],
+   "capabilityDelta": "integration surface verified clean",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-90",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-INT-A9-4"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "adjudicated-non-actionable",
+   "missedInvariantIds": [],
+   "escapeReason": "scope rulings kill findings - record them",
+   "applicability": [
+    "reviewer adjudication"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "link rejections to ruling ids"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-INT-V9"
+   ],
+   "capabilityDelta": "integration surface verified clean",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-91",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-INT-A9-5"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "adjudicated-non-actionable",
+   "missedInvariantIds": [],
+   "escapeReason": "inert stray ids tolerated",
+   "applicability": [
+    "reviewer adjudication"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "registry-guard coverage already asserted by consumers"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-INT-V9"
+   ],
+   "capabilityDelta": "integration surface verified clean",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": "phap-tu-beta-2026-09-25",
