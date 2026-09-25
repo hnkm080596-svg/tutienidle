@@ -2471,6 +2471,238 @@
    "exception": null,
    "status": "REJECTED_WITH_PROOF",
    "rejectionReason": "latent pre-existing scope limit; zero enemy consumers today; no beta regression"
+  },
+  {
+   "id": "F-TT-COR-A6-1",
+   "title": "saveVersion v85 comment falsely claims core_phan_chinh retired from NATIVE_CORE_SKILL_IDS",
+   "state": {
+    "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/services/save/saveVersion.ts",
+     "symbolOrSection": "v85 comment block",
+     "revision": "d10586e1",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "CORR-COORD",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "merge-base NATIVE_CORE_SKILL_IDS has 14 ids, no phan_chinh; current adds only phan_chan (15 ids)",
+   "expected": "comment states the actual change: re-parented grants + phan_chan ADDED",
+   "actual": "comment says core_phan_chinh retired from NATIVE_CORE_SKILL_IDS - never a member",
+   "rootCause": "comment drafted against a planned-but-not-taken core retirement",
+   "rootClass": "comment-drift",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "grep NATIVE_CORE_SKILL_IDS membership at merge-base vs current",
+     "hitDispositions": [
+      "only this comment misstates membership; version reject itself correct"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "comment rewritten to the actual v85 change (phan_chan added)",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-TT-COR-A6-2",
+   "title": "TheTuTreePanel header comment contradicts implemented sealed-name behavior",
+   "state": {
+    "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/components/panels/skill-path/TheTuTreePanel.vue",
+     "symbolOrSection": "file header comment",
+     "revision": "d10586e1",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "CORR-COORD",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "template renders sealedName ??? when !tcReached && !purchased",
+   "expected": "header comment matches implementation: special card sealed pre-TC",
+   "actual": "header claims special card shows the real name (name revealed) - stale",
+   "rootCause": "comment written before sealed-name behavior landed",
+   "rootClass": "comment-drift",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "grep TheTuTreePanel template vs header text",
+     "hitDispositions": [
+      "single stale header sentence; behavior is spec-correct"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "header comment rewritten to ??? sealed-name behavior",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-TT-COR-A6-3",
+   "title": "CombatProcSystem queue-gate comment misstates holder-liveness gate",
+   "state": {
+    "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/proc/CombatProcSystem.ts",
+     "symbolOrSection": "rollReactiveTrigger pendingReflects gates",
+     "revision": "d10586e1",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "CORR-COORD",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "queue gates hpDamage>0 + attacker.alive + attacker!=holder; holder.alive NOT gated (post-mortem reflect spec-pinned)",
+   "expected": "comment describes real gates incl. deliberate dead-holder queueing",
+   "actual": "comment lists a living holder as a gate - wrong: dead-holder queue is intended",
+   "rootCause": "comment wrote liveness as a gate before post-mortem pin was documented",
+   "rootClass": "comment-drift",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "grep rollReactiveTrigger reflect queue gates + flush",
+     "hitDispositions": [
+      "single comment block; runtime behavior spec-correct"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "comment rewritten to defined-holder gate + dead-holder note",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-TT-AUT-A6-1",
+   "title": "Stale header comment in TheTuPath.ts claims type-only imports (pre-existing)",
+   "state": {
+    "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/the-tu/TheTuPath.ts",
+     "symbolOrSection": "header comment",
+     "revision": "d10586e1",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "CORR-COORD",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "git show be1bdf8d: same header + same data/* runtime imports at merge-base - stale before this diff",
+   "expected": "header comment matches actual dependency surface",
+   "actual": "comment was already false at merge-base; the diff extends the import block but the lie predates it",
+   "rootCause": "pre-existing stale comment outside diff authorship",
+   "rootClass": "pre-existing-out-of-scope",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "git show be1bdf8d header + imports",
+     "hitDispositions": [
+      "identical at merge-base - recorded separately per P5 pre-existing rule"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "identical header + import surface at merge-base be1bdf8d - pre-existing debt, not this diff"
   }
  ],
  "evidence": [
@@ -3399,6 +3631,66 @@
    ],
    "findingIds": [
     "F-TT-AUT-A5-2"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-TT-COR-A6",
+   "state": {
+    "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 16,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-5e2df2239ef4433a804e6a2a10afcdce",
+   "contextId": "sealed-child-5e2df2239ef4433a804e6a2a10afcdce",
+   "model": "swe-2-max",
+   "role": "correctness-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T09:35:26.000Z",
+   "sealedAt": "2026-09-25T10:00:34.000Z",
+   "previousPhaseReviewId": "REV-TT-INT-A5",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-COR-A6-1",
+    "F-TT-COR-A6-2",
+    "F-TT-COR-A6-3"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-TT-AUT-A6",
+   "state": {
+    "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 16,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-e0d37e5f76024b558afcd450aa331d64",
+   "contextId": "sealed-child-e0d37e5f76024b558afcd450aa331d64",
+   "model": "swe-2-max",
+   "role": "authority-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T09:44:29.000Z",
+   "sealedAt": "2026-09-25T09:56:18.000Z",
+   "previousPhaseReviewId": "REV-TT-COR-A6",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-AUT-A6-1"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -4502,6 +4794,126 @@
     "REV-TT-INT-A5"
    ],
    "capabilityDelta": "collectKitCloneBuffs is player-side by design; revisit only when an enemy grantsBuffsAtBuild consumer exists",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-19",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-A6-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "comment-drift",
+   "missedInvariantIds": [],
+   "escapeReason": "comment text drifted from behavior",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "version-bump comments must restate the actual delta (grep the real id lists)"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-COR-A6"
+   ],
+   "capabilityDelta": "version-bump comments must restate the actual delta (grep the real id lists)",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-20",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-A6-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "comment-drift",
+   "missedInvariantIds": [],
+   "escapeReason": "comment text drifted from behavior",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "file-header behavior claims verified against the template they describe"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-COR-A6"
+   ],
+   "capabilityDelta": "file-header behavior claims verified against the template they describe",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-21",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-A6-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "comment-drift",
+   "missedInvariantIds": [],
+   "escapeReason": "comment text drifted from behavior",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "gate comments enumerate the real predicates, not the imagined ones"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-COR-A6"
+   ],
+   "capabilityDelta": "gate comments enumerate the real predicates, not the imagined ones",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-22",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-AUT-A6-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "pre-existing-out-of-scope",
+   "missedInvariantIds": [],
+   "escapeReason": "comment text drifted from behavior",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "pre-existing stale comments recorded, not silently rewritten"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-AUT-A6"
+   ],
+   "capabilityDelta": "pre-existing stale comments recorded, not silently rewritten",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": "the-tu-beta-2026-09-25",

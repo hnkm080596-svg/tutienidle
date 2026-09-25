@@ -172,10 +172,12 @@ export class CombatProcSystem {
 
       // The Tu beta (Phan Chan) -- one reflect per hostile ACTION: queue
       // here, emit at the action-end flushReflects(). Gates: a TAKEN hit
-      // (hpDamage>0), a living attacker, a living holder, a natural
-      // action source (reflectsEligible), and never self-inflicted
-      // damage. AoE hits that deal hpDamage queue the same way; every
-      // later hit of the same action merges into the same pending entry.
+      // (hpDamage>0), a living attacker, a defined holder (holder.alive
+      // is deliberately NOT gated - post-mortem reflect is spec-pinned),
+      // a natural action source (reflectsEligible), and never
+      // self-inflicted damage. AoE hits that deal hpDamage queue the
+      // same way; every later hit of the same action merges into the
+      // same pending entry.
       if (
         reactive.reflectsDamage !== undefined &&
         context?.attacker !== undefined &&

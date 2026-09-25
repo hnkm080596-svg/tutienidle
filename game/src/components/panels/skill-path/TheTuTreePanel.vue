@@ -8,8 +8,8 @@
 //       -> Kim Dan 'Phong an' placeholder (tree continues, no KD nodes).
 // Skill cards carry role/realm/scaling headers per design sec.60 so the
 // player reads the kit from the card. Pre-Truc Co the special card is a
-// sealed silhouette (name revealed, mechanics locked - the realm gate
-// itself still lives on the node's prerequisite, this is presentation).
+// sealed silhouette (name shown as '???', mechanics locked - the realm
+// gate itself still lives on the node's prerequisite, this is presentation).
 // Same select contract as NodeTreePanel so NodeInspector purchases
 // without a second seam.
 import { computed } from 'vue'
