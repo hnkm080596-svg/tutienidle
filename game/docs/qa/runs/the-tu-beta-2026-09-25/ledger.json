@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "bdc04bf9",
   "state": {
-   "productStateId": "032e6c7d0259fcfa8ee64db5169b8c89d79483310750e79ceea6c18069663a53",
+   "productStateId": "96ea828cce270b30862044f2dca40b8d04f9d2034fa44be2f3006142b229d70c",
    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -4583,6 +4583,271 @@
    "duplicateOf": null,
    "rejectionReason": "rejected: pre-existing at merge-base be1bdf8d - the missing-HP scalar parity between engine-unit lane and op lane predates this diff (Huyet Cuong kit leans on it, does not introduce it). Consolidating the lanes is out-of-scope architecture work for the beta branch",
    "exception": null
+  },
+  {
+   "id": "F-TT-COR-A10-1",
+   "title": "No test pins post-mortem reflect or respec-frees-mutex switch",
+   "state": {
+    "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "COVERAGE_GAP",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.reflection.test.ts",
+     "symbolOrSection": "phan_chan describe",
+     "revision": "8f0ada4d",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/data/progression/TheTuNodes.test.ts",
+     "symbolOrSection": "INV-2 describe",
+     "revision": "8f0ada4d",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-525c061447b44bbca4ae5df8488a2ccb",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "coverage gap: dead-holder reflect + mutex-switch verified in code but had no dedicated assertion",
+   "expected": "pinned",
+   "actual": "coverage gap: dead-holder reflect + mutex-switch verified in code but had no dedicated assertion",
+   "rootCause": "deferred/pinned",
+   "rootClass": "adjudicated",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src"
+     ],
+     "termsAndMethod": "scoped search",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "PIN @29fe9187: post-mortem reflect test + respec-frees-mutex test added, both pass",
+   "pinEvidenceIds": [
+    "EV-TT-A10-PINS"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-A10-PINS"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-TT-COR-A10-2",
+   "title": "Reflect trigger chance roll consumes an rng draw before the queue gate",
+   "state": {
+    "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/proc/CombatProcSystem.ts",
+     "symbolOrSection": "rollReactiveTrigger",
+     "revision": "8f0ada4d",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-525c061447b44bbca4ae5df8488a2ccb",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "rng.rollChance(reactive.chance) runs before hpDamage/eligibility gates; deterministic today (chance=1)",
+   "expected": "pinned",
+   "actual": "rng.rollChance(reactive.chance) runs before hpDamage/eligibility gates; deterministic today (chance=1)",
+   "rootCause": "deferred/pinned",
+   "rootClass": "adjudicated-non-actionable",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src"
+     ],
+     "termsAndMethod": "scoped search",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "reject: chance=1 across the beta kit so the draw order cannot diverge today; a future chance<1 capability would re-spec the draw - recorded, not a defect now",
+   "exception": null
+  },
+  {
+   "id": "F-TT-COR-A10-3",
+   "title": "pendingReflects stores grantInstanceId/capabilityId unused at flush",
+   "state": {
+    "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/proc/CombatProcSystem.ts",
+     "symbolOrSection": "flushReflects",
+     "revision": "8f0ada4d",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-525c061447b44bbca4ae5df8488a2ccb",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "fields written at queue time never read during flush",
+   "expected": "pinned",
+   "actual": "fields written at queue time never read during flush",
+   "rootCause": "deferred/pinned",
+   "rootClass": "adjudicated-non-actionable",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src"
+     ],
+     "termsAndMethod": "scoped search",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "reject: fields key the per-capability dedup map; flushing reads the key, not the value - shape is deliberate for future attribution, harmless dead fields",
+   "exception": null
+  },
+  {
+   "id": "F-TT-COR-A10-4",
+   "title": "Two reflect capabilities on one holder would emit two reflects per action",
+   "state": {
+    "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/proc/CombatProcSystem.ts",
+     "symbolOrSection": "pendingReflects",
+     "revision": "8f0ada4d",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-525c061447b44bbca4ae5df8488a2ccb",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "map key holderId.capabilityId - distinct capabilities each reflect",
+   "expected": "pinned",
+   "actual": "map key holderId.capabilityId - distinct capabilities each reflect",
+   "rootCause": "deferred/pinned",
+   "rootClass": "adjudicated-non-actionable",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src"
+     ],
+     "termsAndMethod": "scoped search",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "reject: phan_chan is the only reflect capability authored; spec scope is once-per-(holder,capability) which the map enforces - double-emit across distinct capabilities is intended semantics",
+   "exception": null
+  },
+  {
+   "id": "F-TT-COR-A10-5",
+   "title": "In-battle purchase/upgrade gating now applies to all paths, not only the-tu",
+   "state": {
+    "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": "purchaseNode/upgradeNode/levelUpSkill/devResetBranch",
+     "revision": "8f0ada4d",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-525c061447b44bbca4ae5df8488a2ccb",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "isTurnBattleInProgress rejection added globally; UI already disables the buttons",
+   "expected": "pinned",
+   "actual": "isTurnBattleInProgress rejection added globally; UI already disables the buttons",
+   "rootCause": "deferred/pinned",
+   "rootClass": "adjudicated-non-actionable",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src"
+     ],
+     "termsAndMethod": "scoped search",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "reject: the ops-level gate is the correct authority layer (UI disable is cosmetic); extending it to every way is deliberate defense-in-depth, reachable impact nil",
+   "exception": null
   }
  ],
  "evidence": [
@@ -5251,9 +5516,39 @@
     "scoped scope only"
    ],
    "result": "PASS",
-   "status": "CURRENT",
+   "status": "STALE",
    "state": {
     "productStateId": "032e6c7d0259fcfa8ee64db5169b8c89d79483310750e79ceea6c18069663a53",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   }
+  },
+  {
+   "id": "EV-TT-A10-PINS",
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+   "commandOrMethod": "npx vitest run TurnBattleSystem.reflection TheTuNodes",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T17:19:00.000Z",
+   "finishedAt": "2026-09-25T17:19:30.000Z",
+   "inputPaths": [
+    "src/core/battle/turn/TurnBattleSystem.reflection.test.ts",
+    "src/data/progression/TheTuNodes.test.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "artifactPath": "evidence/pin-tests-a10.log",
+   "artifactHash": "8444f3c4b97675ecebada67424f10d4c273b86079ec833822549cadc1d938f99",
+   "claims": [
+    "23 tests pass incl. new pins: post-mortem reflect fires after holder death; respec frees cuong_chien/tran_the mutex"
+   ],
+   "limitations": [],
+   "result": "PASS",
+   "status": "CURRENT",
+   "state": {
+    "productStateId": "96ea828cce270b30862044f2dca40b8d04f9d2034fa44be2f3006142b229d70c",
     "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
     "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -6452,7 +6747,7 @@
     "F-TT-AUT-A10-3"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-TT-CLO-15",
@@ -6478,6 +6773,39 @@
    "coverageIds": [],
    "evidenceIds": [],
    "findingIds": [],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-TT-COR-A10",
+   "state": {
+    "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 10,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-525c061447b44bbca4ae5df8488a2ccb",
+   "contextId": "sealed-child-525c061447b44bbca4ae5df8488a2ccb",
+   "model": "swe-2-max",
+   "role": "CORRECTNESS",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T16:38:00.000Z",
+   "sealedAt": "2026-09-25T17:16:54.000Z",
+   "previousPhaseReviewId": "REV-TT-AUT-A10",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-COR-A10-1",
+    "F-TT-COR-A10-2",
+    "F-TT-COR-A10-3",
+    "F-TT-COR-A10-4",
+    "F-TT-COR-A10-5"
+   ],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -8513,6 +8841,175 @@
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
+  },
+  {
+   "id": "L-TT-55",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-A10-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "adjudicated-non-actionable",
+   "missedInvariantIds": [],
+   "escapeReason": "rng draw order changed before gating - deterministic only while chance=1",
+   "applicability": [
+    "proc pipeline",
+    "ops gating"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "deferred-with-reason requires an explicit note tying the deferral to reachable inputs"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-COR-A10"
+   ],
+   "capabilityDelta": "deferral policy notes",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-56",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-A10-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "adjudicated-non-actionable",
+   "missedInvariantIds": [],
+   "escapeReason": "dead fields in queue entries confuse readers",
+   "applicability": [
+    "proc pipeline",
+    "ops gating"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "deferred-with-reason requires an explicit note tying the deferral to reachable inputs"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-COR-A10"
+   ],
+   "capabilityDelta": "deferral policy notes",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-57",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-A10-4"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "adjudicated-non-actionable",
+   "missedInvariantIds": [],
+   "escapeReason": "per-capability keying reads as duplicate emission",
+   "applicability": [
+    "proc pipeline",
+    "ops gating"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "deferred-with-reason requires an explicit note tying the deferral to reachable inputs"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-COR-A10"
+   ],
+   "capabilityDelta": "deferral policy notes",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-58",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-A10-5"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "adjudicated-non-actionable",
+   "missedInvariantIds": [],
+   "escapeReason": "ops-level gates widen beyond task scope - flag in review",
+   "applicability": [
+    "proc pipeline",
+    "ops gating"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "deferred-with-reason requires an explicit note tying the deferral to reachable inputs"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-COR-A10"
+   ],
+   "capabilityDelta": "deferral policy notes",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-59",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-A10-1"
+   ],
+   "incidentEvidenceIds": [
+    "EV-TT-A10-PINS"
+   ],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "coverage",
+   "missedInvariantIds": [],
+   "escapeReason": "post-mortem reflect + mutex-switch verified by primitives, not pinned",
+   "applicability": [
+    "reflect boundary",
+    "mutex respec"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "pin test for each spec-pinned boundary behavior, not just the primitives"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-COR-A10"
+   ],
+   "capabilityDelta": "pin coverage",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [
+    "EV-TT-A10-PINS"
+   ],
+   "guidance": null
   }
  ],
  "messages": [],
@@ -8852,6 +9349,22 @@
    "payloadPath": "events/0021.json",
    "payloadHash": "7f600dde6ff74bcaf6682f9953aa3436c9483cf13d9912e8442b0ce296f977c1",
    "eventHash": "268cf8b09cc1c097b19ef8a463163113a2c37b8b84a2b2c3610a50fee18174a7"
+  },
+  {
+   "seq": 22,
+   "at": "2026-09-25T17:19:09.557Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-406257",
+   "state": {
+    "productStateId": "96ea828cce270b30862044f2dca40b8d04f9d2034fa44be2f3006142b229d70c",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "268cf8b09cc1c097b19ef8a463163113a2c37b8b84a2b2c3610a50fee18174a7",
+   "payloadPath": "events/0022.json",
+   "payloadHash": "2340278fe0b6037e1238ec4c4c730fdaa3f7167f03a6d555da013fe5e454e174",
+   "eventHash": "efcb6863cc09c4b003ba07359a3bb69f3ee04a3c400d06fe53653ccdf9646867"
   }
  ]
 }
