@@ -51,7 +51,7 @@ import type {
   TurnBattleParticipant,
   TurnDeclaredAction,
 } from './TurnBattleSystem'
-import { isNaturalActionSource } from './TurnBattleSystem'
+import { isNaturalActionSource } from '../../proc/ProcCapabilities'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import { executionCommitsCast } from './TurnSkillAction'
 

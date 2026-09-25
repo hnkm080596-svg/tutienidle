@@ -41,6 +41,8 @@ const NATIVE_DAMAGE_BEARING = new Set([
 ])
 
 const INTERNAL_NEGATIVE_LIST = [
+  // 'phan_chinh' is a RETIRED id pinned deliberately - it guards that the
+  // id never re-enters the core tree (retired in the the-tu beta redesign).
   'phan_chinh',
   'phan_kich',
   'tro_kich',

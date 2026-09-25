@@ -47,7 +47,12 @@ import {
 import { asReactiveEconomy } from '../../the-tu/TheTuCapabilities'
 import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
 import { reconcileExternalWard } from '../../the-tu/TheTuExternalWard'
-import { asReactiveProc, type ReactiveTriggerName } from '../../proc/ProcCapabilities'
+import {
+  asReactiveProc,
+  isNaturalActionSource,
+  type ReactiveActionSource,
+  type ReactiveTriggerName,
+} from '../../proc/ProcCapabilities'
 import type { ReactiveProcAttempt } from '../../proc/CombatProcSystem'
 import type { BuffDefinition } from '../../buff2/BuffDefinition'
 
@@ -378,23 +383,11 @@ export interface TurnDeclaredAction {
   interceptedBy?: string
 }
 
-/**
- * The Tu Reimagined (spec 7.1, plan Task 16) -- provenance axis for the
- * reactive queue. 'normal'/'skill' describe natural turns; the reactive
- * sources describe bypass actions queued by a proc window.
- */
-export type ReactiveActionSource = 'normal' | 'skill' | 'counter' | 'follow_up' | 'intercept'
-
-/**
- * INV-9 natural-turn classifier -- 'normal' and 'skill' are the only
- * sources a player's own turn produces; queued bypass actions
- * (counter/follow_up/intercept) never re-open proc windows.
- */
-export function isNaturalActionSource(
-  source: ReactiveActionSource | undefined,
-): boolean {
-  return source === 'normal' || source === 'skill'
-}
+// ReactiveActionSource + isNaturalActionSource live in
+// ../../proc/ProcCapabilities (proc vocabulary leaf) - re-exported for
+// existing consumers of this module.
+export type { ReactiveActionSource } from '../../proc/ProcCapabilities'
+export { isNaturalActionSource } from '../../proc/ProcCapabilities'
 
 /**
  * Composite trigger context (spec 6.2.2, plan Task 16) -- each axis is
@@ -2362,6 +2355,9 @@ export class TurnBattleSystem {
     // cannot recurse (a landed channel never opens for it).
     if (this.runtime !== undefined) {
       this.procs.flushReflects()
+      // A reflect kill is a death this boundary created - sweep now so the
+      // attacker's death hooks fire at this quiescent point, not the next.
+      this.sweepBuffDeaths(battle)
     }
 
     // Spec 6.2.3 -- the Tro window: after a player-side action completes

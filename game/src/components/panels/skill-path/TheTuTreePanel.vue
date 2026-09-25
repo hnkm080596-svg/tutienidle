@@ -12,14 +12,17 @@
 // gate itself still lives on the node's prerequisite, this is presentation).
 // Same select contract as NodeTreePanel so NodeInspector purchases
 // without a second seam.
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { useProgressionActions } from '@/composables/useProgressionActions'
 import { canPurchaseNode, getEffectiveNodeMaxLevel, getNodeLevel } from '@/core/progression/NodeSystem'
 import { getSkillCoreLevel } from '@/core/progression/SkillCoreLevel'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
+import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 
 const props = defineProps<{
@@ -34,6 +37,7 @@ const { t } = useI18n()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
+const { respecNodeTree } = useProgressionActions()
 
 // The beta layout is a fixed slot grid - node lookups by id, not a
 // generic tree walk (the data topology is authored to match).
@@ -124,6 +128,56 @@ function onCardClick(col: RootColumn, card: SkillCardDef) {
   // A sealed/abandoned special still selects its major node - the
   // inspector surfaces the realm/prerequisite lock reasons.
   selectNode(card.nodeId)
+}
+
+// M-F-RESPEC (ruling S14) - FREE Beta respec: same whole-tree op as
+// NodeTreePanel; the body way diverts to this panel so the affordance
+// lives here too (regression fix - cuong_chien owners must be able to
+// undo the mutex choice through the UI).
+const inBattle = computed(() => {
+  stateVersion.value
+
+  const battle = gameManager.getTurnBattle()
+
+  return battle !== null && isBattleInProgress(battle.state)
+})
+
+const pendingRespec = ref(false)
+
+const respecPreview = computed(() => {
+  stateVersion.value
+
+  if (!pendingRespec.value) {
+    return null
+  }
+
+  return gameManager.progressionOps.previewNodeRespec(player.$state)
+})
+
+const hasOwnedNodes = computed(() => {
+  stateVersion.value
+  return COLUMNS.some(col =>
+    [col.rootNodeId, col.special.nodeId, ...col.basicBranchNodeIds, ...col.specialBranchNodeIds]
+      .some(nodeId => getNodeLevel(player.$state, nodeId) > 0),
+  )
+})
+
+function onRespecClick() {
+  if (inBattle.value || !hasOwnedNodes.value) {
+    return
+  }
+
+  pendingRespec.value = true
+}
+
+function confirmRespec() {
+  pendingRespec.value = false
+
+  respecNodeTree()
+}
+
+function cancelRespec() {
+  pendingRespec.value = false
 }
 </script>
 
@@ -258,6 +312,29 @@ function onCardClick(col: RootColumn, card: SkillCardDef) {
         <span class="the-tu-tree__card-kind">{{ t('panels.theTuTree.sealedNext') }}</span>
       </div>
     </div>
+
+    <button
+      type="button"
+      class="the-tu-tree__respec"
+      :disabled="inBattle || !hasOwnedNodes"
+      @click="onRespecClick"
+    >
+      {{ t('panels.nodeTree.respec.button') }}
+    </button>
+
+    <ConfirmModal
+      v-if="pendingRespec && respecPreview !== null"
+      :open="true"
+      :title="t('panels.nodeTree.respec.title')"
+      :message="t('panels.nodeTree.respec.body', {
+        regain: respecPreview.refund,
+        count: respecPreview.resetCount,
+      })"
+      :confirm-label="t('panels.nodeTree.respec.confirm')"
+      danger
+      @confirm="confirmRespec"
+      @cancel="cancelRespec"
+    />
   </div>
 </template>
 
@@ -408,5 +485,27 @@ button.the-tu-tree__card:hover {
   padding-left: 18px;
   border-left: 1px dashed var(--ink-line-soft);
   margin-left: 8px;
+}
+
+.the-tu-tree__respec {
+  flex: 0 0 auto;
+  align-self: center;
+  padding: 8px 18px;
+  background: var(--ink-800);
+  border: 1px solid var(--gold-700);
+  border-radius: 8px;
+  color: var(--gold-300);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.the-tu-tree__respec:hover:not(:disabled) {
+  border-color: var(--gold-500);
+}
+
+.the-tu-tree__respec:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 </style>
