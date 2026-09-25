@@ -9691,6 +9691,122 @@
    "exception": null,
    "status": "CLOSED",
    "rejectionReason": null
+  },
+  {
+   "id": "F-PT-COR-A6-1",
+   "title": "Glyph comment claims ring prereqs use 'same stat family' trunk; two edges cross ailment stats",
+   "state": {
+    "productStateId": "0b666d95ea006e05885b0fdc4a90640300afeafcf1803c6320b30c392f6f4e39",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuBasicNodes.ts",
+     "symbolOrSection": "header comment + builder entries",
+     "revision": "5392bfb7",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-a42c0e6645884fafba39295d805aceae",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "hoa_nhiet_keo prereqNodeId:'hoa_an_sau' (potency->duration); moc_doc_nhiem prereqNodeId:'moc_doc_nhuan' (duration->potency)",
+   "expected": "each ring node prereqs a trunk of the same exact stat",
+   "actual": "both crossed stats are members of the element ailment stat family (ailmentPotency + ailmentDuration); comment's 'family' reading is the ailment family - defensible per reviewer",
+   "rootCause": "comment uses family-level wording; chains intentionally group ailment-lane nodes (glyph design)",
+   "rootClass": "doc-accurate-in-window",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "grep prereqNodeId crossing ailment stats; chain-to-root probe passes",
+     "hitDispositions": [
+      "two crossed edges stay inside the ailment family; ordering/caps unaffected"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "'stat family' in the file = the element ailment family (all ailment-lane stats); both edges satisfy it - comment accurate as designed (family-level, not per-stat); reviewer himself called it defensible"
+  },
+  {
+   "id": "F-PT-COR-A6-2",
+   "title": "Mastery rider description scopes to 'don co ban' but modifier is spell-domain-wide",
+   "state": {
+    "productStateId": "0b666d95ea006e05885b0fdc4a90640300afeafcf1803c6320b30c392f6f4e39",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuRealmRewardNodes.ts",
+     "symbolOrSection": "masteryNode description + statModifiers",
+     "revision": "5392bfb7",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-a42c0e6645884fafba39295d805aceae",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "MASTERY_RIDER statModifiers carry domain:'spell' with no skillId scope",
+   "expected": "description matches effect scope",
+   "actual": "description accurate for the reachable beta window (only the basic skill is reachable); overclaim only materializes post-beta when deeper spell skills unlock - documented acceptance pattern",
+   "rootCause": "beta-window scope makes the description truthful today; domain-wide modifier inert until post-beta skills exist",
+   "rootClass": "doc-accurate-in-window",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "grep domain:'spell' consumers; only basic reachable in LQ->TC window",
+     "hitDispositions": [
+      "single-domain description; per-skillId channel = future work"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "description truthful for the reachable beta window (basic is the only reachable spell skill); domain-wide modifier is inert - same documented acceptance pattern as basic-lane header"
   }
  ],
  "evidence": [
@@ -12949,6 +13065,36 @@
    ],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-COR-A6",
+   "state": {
+    "productStateId": "0b666d95ea006e05885b0fdc4a90640300afeafcf1803c6320b30c392f6f4e39",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 19,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-a42c0e6645884fafba39295d805aceae",
+   "contextId": "sealed-child-a42c0e6645884fafba39295d805aceae",
+   "model": "swe-2-max",
+   "role": "correctness-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T09:08:00.000Z",
+   "sealedAt": "2026-09-25T09:25:40.000Z",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-COR-A6-1",
+    "F-PT-COR-A6-2"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED",
+   "previousPhaseReviewId": null
   }
  ],
  "cycles": [
@@ -15905,6 +16051,66 @@
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-53",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-COR-A6-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "doc-accurate-in-window",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "family-level wording in node-file contract comments reads as the ailment family; do not over-tighten to per-stat"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-COR-A6"
+   ],
+   "capabilityDelta": "family-level wording in node-file contract comments reads as the ailment family; do not over-tighten to per-stat",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-54",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-COR-A6-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "doc-accurate-in-window",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "descriptions scoped to the reachable window are honest even when the modifier applies domain-wide; revisit when post-beta skills exist"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-COR-A6"
+   ],
+   "capabilityDelta": "descriptions scoped to the reachable window are honest even when the modifier applies domain-wide; revisit when post-beta skills exist",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
