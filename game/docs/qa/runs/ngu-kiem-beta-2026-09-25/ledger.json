@@ -2122,6 +2122,394 @@
    "rootClass": "stale-comment",
    "repair": "'Producers:' header (d8321ba8)",
    "status": "CLOSED"
+  },
+  {
+   "id": "F-NK-AUT-8",
+   "title": "save validator bounds kiemDaoBase by queue cap - merge product legitimately exceeds it",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/kiem-tu/KiemTuPath.ts:173-179",
+     "symbolOrSection": "validateSwordPathPersistedState cap block",
+     "revision": "36dd5273",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A AUTHORITY reviewer (devin-51c8cabf)",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-NK-FIX-5"
+   ],
+   "counterexample": "base bounded by count cap -> legal post-merge save (3.04 at TC cap 3) loads corrupted",
+   "expected": "persistence validation enforces only what the owning system produces",
+   "actual": "base bounded by count cap -> legal post-merge save (3.04 at TC cap 3) loads corrupted",
+   "rootCause": "saver-side reinterpretation: count cap applied to the multiplicative merge product",
+   "rootClass": "saver-side reinterpretation: count cap applied to the multiplicative merge product",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu",
+      "src/services/save",
+      "src/components",
+      "src/data"
+     ],
+     "termsAndMethod": "coordinator adjudication + sibling sweep",
+     "evidenceIds": [
+      "EV-NK-FIX-5"
+     ],
+     "hitDispositions": [
+      "48962aaa: cap clause checks kiemDaoCount only + pin test base=3.04>cap3 accepted"
+     ],
+     "coverageLimits": [
+      "reviewer-isolated surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "48962aaa: cap clause checks kiemDaoCount only + pin test base=3.04>cap3 accepted",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-5"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-5"
+   ],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "status": "FIXED_PENDING_PROOF"
+  },
+  {
+   "id": "F-NK-AUT-9",
+   "title": "duplicated naming authority: suffix map vs node.name",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/kiem-tu/NguKiemDaoProvider.ts:77-89",
+     "symbolOrSection": "NGU_KIEM_EVOLUTION_SUFFIXES",
+     "revision": "36dd5273",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A AUTHORITY reviewer (devin-51c8cabf)",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-NK-FIX-5"
+   ],
+   "counterexample": "parallel literal suffix map can drift from node.name",
+   "expected": "one name-resolver authority",
+   "actual": "parallel literal suffix map can drift from node.name",
+   "rootCause": "hand-maintained Record",
+   "rootClass": "hand-maintained Record",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu",
+      "src/services/save",
+      "src/components",
+      "src/data"
+     ],
+     "termsAndMethod": "coordinator adjudication + sibling sweep",
+     "evidenceIds": [
+      "EV-NK-FIX-5"
+     ],
+     "hitDispositions": [
+      "fa45c1eb: suffix derived from owned node.name (split on \u00b7)"
+     ],
+     "coverageLimits": [
+      "reviewer-isolated surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "fa45c1eb: suffix derived from owned node.name (split on \u00b7)",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-5"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-5"
+   ],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "status": "FIXED_PENDING_PROOF"
+  },
+  {
+   "id": "F-NK-AUT-10",
+   "title": "owned-evolution predicate duplicated in one file",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/kiem-tu/NguKiemDaoProvider.ts:47,69",
+     "symbolOrSection": "collectOwnedEvolutionIds/resolveNguKiemOwnedEvolutionNode",
+     "revision": "36dd5273",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A AUTHORITY reviewer (devin-51c8cabf)",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-NK-FIX-5"
+   ],
+   "counterexample": "identical 3-clause predicate in two loops",
+   "expected": "one owned-evolution predicate",
+   "actual": "identical 3-clause predicate in two loops",
+   "rootCause": "no shared extraction",
+   "rootClass": "no shared extraction",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu",
+      "src/services/save",
+      "src/components",
+      "src/data"
+     ],
+     "termsAndMethod": "coordinator adjudication + sibling sweep",
+     "evidenceIds": [
+      "EV-NK-FIX-5"
+     ],
+     "hitDispositions": [
+      "fa45c1eb: isOwnedEvolutionNode helper feeds both"
+     ],
+     "coverageLimits": [
+      "reviewer-isolated surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "fa45c1eb: isOwnedEvolutionNode helper feeds both",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-5"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-5"
+   ],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "status": "FIXED_PENDING_PROOF"
+  },
+  {
+   "id": "F-NK-AUT-11",
+   "title": "devResetBranch wipe of granted node non-durable - reconcileWayGrants re-grants on restore",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerRealmAdvanceOps.ts:177-185",
+     "symbolOrSection": "reconcileWayGrants",
+     "revision": "36dd5273",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A AUTHORITY reviewer (devin-51c8cabf)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "re-granted on next restore",
+   "expected": "dev reset persists OR non-durability is explicit decision",
+   "actual": "re-granted on next restore",
+   "rootCause": "grant = way-membership consequence (correct domain semantics); dev tool quirk documented as recorded decision",
+   "rootClass": "grant = way-membership consequence (correct domain semantics); dev tool quirk documented as recorded decision",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu",
+      "src/services/save",
+      "src/components",
+      "src/data"
+     ],
+     "termsAndMethod": "coordinator adjudication + sibling sweep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "ADJUDICATED: reconcile re-grant is the correct domain contract (grant is a way-membership consequence, not a purchase); non-durability of dev-reset for way-granted nodes recorded as explicit decision"
+     ],
+     "coverageLimits": [
+      "reviewer-isolated surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "ADJUDICATED: reconcile re-grant is the correct domain contract (grant is a way-membership consequence, not a purchase); non-durability of dev-reset for way-granted nodes recorded as explicit decision",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": "Recorded decision: reconcile re-grant is the correct domain contract (way grant is a membership consequence, not a purchase); dev-reset non-durability for way-granted nodes documented",
+   "status": "REJECTED_WITH_PROOF"
+  },
+  {
+   "id": "F-NK-AUT-12",
+   "title": "newest-layer resolution relies on registry iteration order",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/kiem-tu/NguKiemDaoProvider.ts:62-75",
+     "symbolOrSection": "resolveNguKiemOwnedEvolutionNode",
+     "revision": "36dd5273",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A AUTHORITY reviewer (devin-51c8cabf)",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-NK-FIX-5"
+   ],
+   "counterexample": "last-match over catalog iteration order",
+   "expected": "newest anchored on declared spine order",
+   "actual": "last-match over catalog iteration order",
+   "rootCause": "order dependency lived in comment only",
+   "rootClass": "order dependency lived in comment only",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu",
+      "src/services/save",
+      "src/components",
+      "src/data"
+     ],
+     "termsAndMethod": "coordinator adjudication + sibling sweep",
+     "evidenceIds": [
+      "EV-NK-FIX-5"
+     ],
+     "hitDispositions": [
+      "fa45c1eb: iterate NGU_KIEM_EVOLUTION_NODE_IDS declared order"
+     ],
+     "coverageLimits": [
+      "reviewer-isolated surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "fa45c1eb: iterate NGU_KIEM_EVOLUTION_NODE_IDS declared order",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-5"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-5"
+   ],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "status": "FIXED_PENDING_PROOF"
+  },
+  {
+   "id": "F-NK-AUT-13",
+   "title": "comment mojibake (? fragments) + dead rng contract member",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/TurnSkillDisplayMeta.ts + SkillPathPanel.vue + NodeInspector.vue",
+     "symbolOrSection": "27 comment lines",
+     "revision": "36dd5273",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A AUTHORITY reviewer (devin-51c8cabf)",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-NK-FIX-5"
+   ],
+   "counterexample": "? fragments where d->? conversion failed",
+   "expected": "comments carry valid text",
+   "actual": "? fragments where d->? conversion failed",
+   "rootCause": "failed transliteration; rng member is documented reserved contract (kept)",
+   "rootClass": "failed transliteration; rng member is documented reserved contract (kept)",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu",
+      "src/services/save",
+      "src/components",
+      "src/data"
+     ],
+     "termsAndMethod": "coordinator adjudication + sibling sweep",
+     "evidenceIds": [
+      "EV-NK-FIX-5"
+     ],
+     "hitDispositions": [
+      "fa45c1eb: 27 comment lines restored to unaccented Vietnamese convention; ?raw in LegacySkillCoverage.test.ts is real Vite syntax (not mojibake)"
+     ],
+     "coverageLimits": [
+      "reviewer-isolated surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "fa45c1eb: 27 comment lines restored to unaccented Vietnamese convention; ?raw in LegacySkillCoverage.test.ts is real Vite syntax (not mojibake)",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-5"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-5"
+   ],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "status": "FIXED_PENDING_PROOF"
   }
  ],
  "evidence": [
@@ -2285,6 +2673,40 @@
    "limitations": [
     "probe runs GameManager-driven battle; sim-only consumers (SimManager) share tryPlanCast via the same resolver"
    ],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-NK-FIX-5",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T03:02:00.000Z",
+   "finishedAt": "2026-09-25T03:05:00.000Z",
+   "commandOrMethod": "npx vitest run src/services/save/saveShapeValidation.test.ts (359 pass incl new base>cap pin) + src/core/kiem-tu/ + panels (470+273 pass) + npm run type-check exit 0",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/fix-verify-fa45c1eb.log",
+   "artifactHash": "a84de6651e2fd8b2a38d9f50e5dead5cff1efcc0308d96410ba195d73689f647",
+   "inputPaths": [
+    "src/core/kiem-tu/KiemTuPath.ts",
+    "src/core/kiem-tu/NguKiemDaoProvider.ts",
+    "src/services/save/saveShapeValidation.test.ts",
+    "src/data/skill/TurnSkillDisplayMeta.ts",
+    "src/components/panels/SkillPathPanel.vue",
+    "src/components/panels/skill-path/NodeInspector.vue"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "F-NK-AUT-8..10,12,13 repairs verified at fa45c1eb"
+   ],
+   "limitations": [],
    "status": "CURRENT"
   }
  ],
@@ -2532,6 +2954,42 @@
     "EV-NK-FIX-4"
    ],
    "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-NK-AUT-A",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 7,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-51c8cabf272e47ef8dd0987cbb4dfc13",
+   "contextId": "sealed-child-devin-51c8cabf272e47ef8dd0987cbb4dfc13",
+   "model": "swe-2-max",
+   "role": "clean-A",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T02:50:00.000Z",
+   "sealedAt": "2026-09-25T03:01:42.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-NK-FIX-5"
+   ],
+   "findingIds": [
+    "F-NK-AUT-8",
+    "F-NK-AUT-9",
+    "F-NK-AUT-10",
+    "F-NK-AUT-11",
+    "F-NK-AUT-12",
+    "F-NK-AUT-13"
+   ],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -2804,6 +3262,198 @@
    "status": "QUALIFIED",
    "policyVersion": null,
    "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-1",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-AUT-8"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "authority/ownership surface",
+   "missedInvariantIds": [],
+   "escapeReason": "sealed clean-A reviewer surface",
+   "applicability": [
+    "ngu-kiem-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "validator bounds only owner-produced quantities; single predicates; declared-order anchoring"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-AUT-A"
+   ],
+   "capabilityDelta": "records adjudication",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-2",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-AUT-9"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "authority/ownership surface",
+   "missedInvariantIds": [],
+   "escapeReason": "sealed clean-A reviewer surface",
+   "applicability": [
+    "ngu-kiem-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "validator bounds only owner-produced quantities; single predicates; declared-order anchoring"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-AUT-A"
+   ],
+   "capabilityDelta": "records adjudication",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-3",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-AUT-10"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "authority/ownership surface",
+   "missedInvariantIds": [],
+   "escapeReason": "sealed clean-A reviewer surface",
+   "applicability": [
+    "ngu-kiem-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "validator bounds only owner-produced quantities; single predicates; declared-order anchoring"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-AUT-A"
+   ],
+   "capabilityDelta": "records adjudication",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-4",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-AUT-11"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "authority/ownership surface",
+   "missedInvariantIds": [],
+   "escapeReason": "sealed clean-A reviewer surface",
+   "applicability": [
+    "ngu-kiem-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "validator bounds only owner-produced quantities; single predicates; declared-order anchoring"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-AUT-A"
+   ],
+   "capabilityDelta": "records adjudication",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-5",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-AUT-12"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "authority/ownership surface",
+   "missedInvariantIds": [],
+   "escapeReason": "sealed clean-A reviewer surface",
+   "applicability": [
+    "ngu-kiem-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "validator bounds only owner-produced quantities; single predicates; declared-order anchoring"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-AUT-A"
+   ],
+   "capabilityDelta": "records adjudication",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-6",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-AUT-13"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "authority/ownership surface",
+   "missedInvariantIds": [],
+   "escapeReason": "sealed clean-A reviewer surface",
+   "applicability": [
+    "ngu-kiem-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "validator bounds only owner-produced quantities; single predicates; declared-order anchoring"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-AUT-A"
+   ],
+   "capabilityDelta": "records adjudication",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
