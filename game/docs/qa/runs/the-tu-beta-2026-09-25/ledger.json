@@ -217,6 +217,171 @@
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null
+  },
+  {
+   "id": "F-TT-AUT-1",
+   "title": "Root mutex not re-verified at load or kit-resolution",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": "resolveBodyKit (~274)",
+     "revision": "bdc04bf9",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-7de368d2e6f240f68068e969d1cd89db",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "saveShapeValidation has no excludesNode check; ordered if/else skips validation",
+   "expected": "excludesNode pair rejected at integrity boundary or loudly resolved",
+   "actual": "crafted both-roots save passes validation; resolveBodyKit silently prefers cuong_chien",
+   "rootCause": "validator checks ownership/coverage not mutex pairs; purchase seam is the only acquisition path",
+   "rootClass": "authority-seam",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer grep + checklist seam audit",
+     "hitDispositions": [
+      "none else found"
+     ],
+     "coverageLimits": [
+      "reviewer sweep"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "strict-version validator intentionally checks shape, not domain invariants; no game path can produce both-roots; consistent with F-PT-C-3 precedent"
+  },
+  {
+   "id": "F-TT-AUT-2",
+   "title": "PendingReflect key omits attacker in map key",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/proc/CombatProcSystem.ts",
+     "symbolOrSection": "pendingReflects.set 188-199",
+     "revision": "bdc04bf9",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-7de368d2e6f240f68068e969d1cd89db",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "reachable only via thrown fault aborting applyActionImpact mid-queue",
+   "expected": "entries keyed per holder+attacker or cleared on abort",
+   "actual": "key omits attacker; stale entry could merge a different attacker's hits (timing only)",
+   "rootCause": "no early return between queue site and flushReflects in normal flow",
+   "rootClass": "authority-seam",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer grep + checklist seam audit",
+     "hitDispositions": [
+      "none else found"
+     ],
+     "coverageLimits": [
+      "reviewer sweep"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "requires a thrown fault mid-apply; unreachable via normal flow"
+  },
+  {
+   "id": "F-TT-AUT-3",
+   "title": "Stale phan_chinh comments survive rename to phan_chan",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/runtime/scheduler/adapters/CombatSystemDamageAdapter.ts",
+     "symbolOrSection": "comment ~219 (+ StatTypes.ts:51)",
+     "revision": "bdc04bf9",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-7de368d2e6f240f68068e969d1cd89db",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "comments not updated during the rename",
+   "expected": "comments reference the live def id",
+   "actual": "two production comments still say phan_chinh",
+   "rootCause": "comments not updated during the phan_chan rename",
+   "rootClass": "authority-seam",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer grep + checklist seam audit",
+     "hitDispositions": [
+      "none else found"
+     ],
+     "coverageLimits": [
+      "reviewer sweep"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null
   }
  ],
  "evidence": [
@@ -347,6 +512,37 @@
    ],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-TT-AUT-A1",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 3,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-7de368d2e6f240f68068e969d1cd89db",
+   "contextId": "sealed-child-7de368d2e6f240f68068e969d1cd89db",
+   "model": "swe-2-max",
+   "role": "clean-final-authority",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T06:03:43.000Z",
+   "sealedAt": "2026-09-25T06:17:18.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-AUT-1",
+    "F-TT-AUT-2",
+    "F-TT-AUT-3"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [],
@@ -383,6 +579,66 @@
    "effectiveFromRun": null,
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-2",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-AUT-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "review-surface",
+   "missedInvariantIds": [],
+   "escapeReason": "low-severity seam",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "expected - no action"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-AUT-A1"
+   ],
+   "capabilityDelta": "terminal-finding lesson MC13",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-TT-3",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-AUT-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "review-surface",
+   "missedInvariantIds": [],
+   "escapeReason": "low-severity seam",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "expected - no action"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-AUT-A1"
+   ],
+   "capabilityDelta": "terminal-finding lesson MC13",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
    "guidance": null
   }
  ],
