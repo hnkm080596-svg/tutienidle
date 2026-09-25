@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "bdc04bf9",
   "state": {
-   "productStateId": "78670408bf5e4fdda6b3931efb6432591a50eb058333226fba732331a3f28ab2",
+   "productStateId": "ab3ff91bb1b693bd524eeb8c5d4ecefd686a6da234a1b8a9b8b8b9cc4c7d6520",
    "contractId": "05c4db99cc2008a384174d30d75fe2ed1579d7e55d76726bd9a195d02adec4d7",
    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -962,6 +962,230 @@
    "exception": null,
    "status": "DUPLICATE_LINKED",
    "rejectionReason": null
+  },
+  {
+   "id": "F-TT-AUT-4",
+   "title": "sourceMaxHpRatio dead field on non-physical authored deal_damage ops (validates, spreads, silently drops)",
+   "state": {
+    "productStateId": "ab3ff91bb1b693bd524eeb8c5d4ecefd686a6da234a1b8a9b8b8b9cc4c7d6520",
+    "contractId": "05c4db99cc2008a384174d30d75fe2ed1579d7e55d76726bd9a195d02adec4d7",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/runtime/scheduler/adapters/CombatSystemDamageAdapter.ts",
+     "symbolOrSection": "damage-kind branch returns",
+     "revision": "b7f4bbfc",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-55df564eb88740dbaa6fcd243c07ffb8",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "adapter spreads {sourceMaxHpRatio} onto every ActionDamageInfo branch; CombatSystem.resolveActionHit forwards it only for kind==='physical'",
+   "expected": "registry faults or adapter strips sourceMaxHpRatio when the resolved damage kind is not physical",
+   "actual": "elemental and primordial ops silently drop the field (no authored def triggers it today - forward-contract gap)",
+   "rootCause": "spread applied to all branches instead of physical-only",
+   "rootClass": "silent-drop",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "authority-lens sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-TT-AUT-5",
+   "title": "sacrificeMaxHpRatio/damageBonusPerPaidHpPoint on a damage===undefined def drops silently",
+   "state": {
+    "productStateId": "ab3ff91bb1b693bd524eeb8c5d4ecefd686a6da234a1b8a9b8b8b9cc4c7d6520",
+    "contractId": "05c4db99cc2008a384174d30d75fe2ed1579d7e55d76726bd9a195d02adec4d7",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/skilldef/LegacySkillAdapter.ts",
+     "symbolOrSection": "primary lane sacrifice guard",
+     "revision": "b7f4bbfc",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-55df564eb88740dbaa6fcd243c07ffb8",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "both the pay_hp emit and the orphan report live inside `if (def.damage !== undefined)` - no else branch",
+   "expected": "a no-damage def carrying sacrifice fields reports() to adapterUnsupportedMetadata",
+   "actual": "neither op nor report produced",
+   "rootCause": "no else branch covering sacrifice fields on the no-damage lane",
+   "rootClass": "silent-drop",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "authority-lens sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-TT-AUT-6",
+   "title": "INV-9 natural-action-source predicate duplicated inline at three+ seams",
+   "state": {
+    "productStateId": "ab3ff91bb1b693bd524eeb8c5d4ecefd686a6da234a1b8a9b8b8b9cc4c7d6520",
+    "contractId": "05c4db99cc2008a384174d30d75fe2ed1579d7e55d76726bd9a195d02adec4d7",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "natural-source allowlist sites",
+     "revision": "b7f4bbfc",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-55df564eb88740dbaa6fcd243c07ffb8",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "`declared.actionSource === 'normal' || 'skill'` (and negations) written inline at TBS:657, TBS:2433, TBS:3006/3034/3103, TurnSkillPlanRuntime:569",
+   "expected": "a single named classifier shared by the windows",
+   "actual": "consistent today, but a future natural source kind needs three+ coordinated edits",
+   "rootCause": "two-member allowlist inlined at every seam",
+   "rootClass": "duplicated-predicate",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "authority-lens sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-TT-AUT-7",
+   "title": "Pha Kinh bake replaces kit.basic.instances instead of merging",
+   "state": {
+    "productStateId": "ab3ff91bb1b693bd524eeb8c5d4ecefd686a6da234a1b8a9b8b8b9cc4c7d6520",
+    "contractId": "05c4db99cc2008a384174d30d75fe2ed1579d7e55d76726bd9a195d02adec4d7",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/TheTuSkills.ts",
+     "symbolOrSection": "cuong_chien instances bake",
+     "revision": "b7f4bbfc",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-55df564eb88740dbaa6fcd243c07ffb8",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "plain `=` assignment on the clone, no pre-check",
+   "expected": "merge with or assert-absent a pre-existing instances block",
+   "actual": "CUONG_QUYEN has no instances today so nothing is lost, but a future instances-bearing basic would silently lose it",
+   "rootCause": "replacement instead of merge",
+   "rootClass": "forward-contract",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "authority-lens sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
   }
  ],
  "evidence": [
@@ -1089,7 +1313,7 @@
    "invariantIds": [],
    "limitations": [],
    "result": "PASS",
-   "status": "CURRENT"
+   "status": "STALE"
   }
  ],
  "coverage": [],
@@ -1247,6 +1471,38 @@
    "coverageIds": [],
    "evidenceIds": [],
    "findingIds": [],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-TT-AUT-A2",
+   "state": {
+    "productStateId": "78670408bf5e4fdda6b3931efb6432591a50eb058333226fba732331a3f28ab2",
+    "contractId": "05c4db99cc2008a384174d30d75fe2ed1579d7e55d76726bd9a195d02adec4d7",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 5,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-55df564eb88740dbaa6fcd243c07ffb8",
+   "contextId": "sealed-child-55df564eb88740dbaa6fcd243c07ffb8",
+   "model": "swe-2-max",
+   "role": "clean-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T07:05:19.000Z",
+   "sealedAt": "2026-09-25T07:18:56.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-AUT-4",
+    "F-TT-AUT-5",
+    "F-TT-AUT-6",
+    "F-TT-AUT-7"
+   ],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -1753,6 +2009,22 @@
    "payloadPath": "events/0004.json",
    "payloadHash": "57e4b91618e1603c753c797d05c9308802dbbc9f8a94f63cd957fc7e29a99560",
    "eventHash": "3a29377641acc911dbb9c3c7bbf90434d372cad0c35c8a553fca0216d3146209"
+  },
+  {
+   "seq": 5,
+   "at": "2026-09-25T07:24:41.284Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-406257",
+   "state": {
+    "productStateId": "ab3ff91bb1b693bd524eeb8c5d4ecefd686a6da234a1b8a9b8b8b9cc4c7d6520",
+    "contractId": "05c4db99cc2008a384174d30d75fe2ed1579d7e55d76726bd9a195d02adec4d7",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "3a29377641acc911dbb9c3c7bbf90434d372cad0c35c8a553fca0216d3146209",
+   "payloadPath": "events/0005.json",
+   "payloadHash": "577c9d8b9c02bc2cf77fd63741863e6c877cbb31ea12ee313a30287745cde915",
+   "eventHash": "9df8a48cd515027e92e88f060b8abe7fecef8efc9bf880627bbaea02462be273"
   }
  ]
 }
