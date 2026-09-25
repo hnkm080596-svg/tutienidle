@@ -16,7 +16,7 @@ import { MAIN_STAT_KEYS, type MainStatKey } from '@/core/stats/StatTypes'
 import { getEffectiveMainStatCap } from '@/core/stats/StatCap'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { isBattleInProgress } from '@/core/battle/BattleTypes'
+import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { getTalentDefinition } from '@/data/talent/Talents'
 import { TALENT_RARITY_LABELS, type TalentDefinition, type TalentRarity } from '@/core/talent/Talent'
 import SysStat from '../common/system/SysStat.vue'
@@ -31,13 +31,7 @@ const { allocateAttributePoint } = useProgressionActions()
 
 // attribute allocation rejects mid-battle (ops gate) - the + button
 // disables up front so the affordance doesn't look live.
-const inBattle = computed(() => {
-  stateVersion.value
-
-  const battle = gameManager.getTurnBattle()
-
-  return battle !== null && isBattleInProgress(battle.state)
-})
+const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 
 // Entry point Quán Khí (Task 7 review fix, Critical) — nút riêng trong
 // Character Panel này (openQuanKhi → ui.openStandalonePanel('quan_khi'))

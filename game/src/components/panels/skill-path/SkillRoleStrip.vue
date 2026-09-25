@@ -14,7 +14,7 @@ import { computed, ref } from 'vue'
 import SlotView from '../../common/SlotView.vue'
 import Chip from '../../common/primitives/Chip.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { isBattleInProgress } from '@/core/battle/BattleTypes'
+import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { usePlayerStore } from '@/stores/player'
 import { MORTAL_DEFAULT_BASIC_ID, MORTAL_PRECURSOR_SKILL_IDS } from '@/core/skill/MortalPrecursors'
@@ -57,13 +57,7 @@ const mortalChoices = computed<Skill[]>(() => {
 
 // mortal-pick + specialization writes reject mid-battle (ops gate) - the
 // chips disable up front so the affordance doesn't look live.
-const inBattle = computed(() => {
-  stateVersion.value
-
-  const battle = gameManager.getTurnBattle()
-
-  return battle !== null && isBattleInProgress(battle.state)
-})
+const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 
 interface RoleCard {
   key: RoleKey

@@ -109,6 +109,14 @@ export class GameManagerProgressionOps {
    * selectedTalentIds at character creation.
    */
   syncTalentCombatPassive(player: PlayerData) {
+    // A mid-battle sync would revoke the granted passives then see every
+    // re-grant rejected by learnSkill's in-battle gate, leaving the kit
+    // stripped - callers (boot/restore/creation/breakthrough) never run
+    // during combat, so the whole sync refuses the same boundary.
+    if (this.deps.isTurnBattleInProgress()) {
+      return
+    }
+
     const allTalentPassiveIds = TALENT_PASSIVE_SKILLS.map((skill) => skill.id)
 
     // Revoke every current talent passive first (granting right after is
@@ -900,7 +908,7 @@ export class GameManagerProgressionOps {
       return false
     }
 
-    if (isBattleInProgress(this.deps.getTurnBattle()?.state)) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 

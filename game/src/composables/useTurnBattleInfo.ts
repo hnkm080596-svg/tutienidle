@@ -1,6 +1,7 @@
 import { computed } from 'vue'
 import { useGameManager, useStateVersion } from './useGameState'
 import { peekUpcomingActors } from '@/core/battle/turn/TurnOrderPreview'
+import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import type { TurnBattleParticipant, TurnBattle } from '@/core/battle/turn/TurnBattleSystem'
 
 /**
@@ -26,6 +27,17 @@ export function useTurnBattleInfo() {
     stateVersion.value
 
     return battle.value?.state === 'fighting'
+  })
+
+  // The canonical in-progress predicate (intro|countdown|fighting) for
+  // panels that must refuse writes while a cycle is live — the ops-layer
+  // gate stays authoritative; this is the UI-side cosmetic mirror.
+  const isBattleInProgressNow = computed(() => {
+    stateVersion.value
+
+    const current = battle.value
+
+    return current !== null && isBattleInProgress(current.state)
   })
 
   /** Tối đa 5 actor kế tiếp theo gauge order (turn-order strip). */
@@ -89,6 +101,7 @@ export function useTurnBattleInfo() {
   return {
     battle,
     isBattleFighting,
+    isBattleInProgress: isBattleInProgressNow,
     upcomingActors,
     logEntries,
     roundsElapsed,

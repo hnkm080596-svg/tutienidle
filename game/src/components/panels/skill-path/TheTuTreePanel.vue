@@ -16,11 +16,11 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { canPurchaseNode, getEffectiveNodeMaxLevel, getNodeLevel } from '@/core/progression/NodeSystem'
 import { getSkillCoreLevel } from '@/core/progression/SkillCoreLevel'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
-import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
@@ -150,13 +150,7 @@ function onCardClick(col: RootColumn, card: SkillCardDef) {
 // NodeTreePanel; the body way diverts to this panel so the affordance
 // lives here too (regression fix - cuong_chien owners must be able to
 // undo the mutex choice through the UI).
-const inBattle = computed(() => {
-  stateVersion.value
-
-  const battle = gameManager.getTurnBattle()
-
-  return battle !== null && isBattleInProgress(battle.state)
-})
+const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 
 const pendingRespec = ref(false)
 

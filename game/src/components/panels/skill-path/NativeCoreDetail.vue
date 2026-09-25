@@ -10,8 +10,8 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { NativeSkillPathEntry } from './SkillPathEntry'
-import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { usePlayerStore } from '@/stores/player'
 import GameButton from '@/components/common/GameButton.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
@@ -29,13 +29,7 @@ const { stateVersion, bumpState } = useStateVersion()
 // parity with the node-tree panels: the upgrade writes through
 // progressionOps.levelUpSkill, which rejects mid-battle -- disable the
 // affordance rather than dead-click.
-const inBattle = computed(() => {
-  stateVersion.value
-
-  const battle = gameManager.getTurnBattle()
-
-  return battle !== null && isBattleInProgress(battle.state)
-})
+const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 
 const isMaxLevel = computed(() => !!props.entry && props.entry.level >= props.entry.maxLevel)
 

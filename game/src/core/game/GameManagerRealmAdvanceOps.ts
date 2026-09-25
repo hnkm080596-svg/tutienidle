@@ -114,6 +114,7 @@ export class GameManagerRealmAdvanceOps {
       breakthroughOutcomeService: BreakthroughOutcomeService
       progressionOps: GameManagerProgressionOps
       getTurnBattle: () => TurnBattle | null
+      isTurnBattleInProgress: () => boolean
       markQuestRealmTransition: () => void
       // Material-landing funnel (the essence change credit is a live
       // landing).
@@ -236,8 +237,7 @@ export class GameManagerRealmAdvanceOps {
     // cycle is live - and inside a hidden trial it also freezes the
     // lineage so the earned completion can silently never land. The
     // sibling write paths below already refuse the same states.
-    const battle = this.deps.getTurnBattle()
-    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
@@ -441,9 +441,7 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    const battle = this.deps.getTurnBattle()
-
-    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
@@ -470,9 +468,7 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    const battle = this.deps.getTurnBattle()
-
-    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
@@ -508,9 +504,7 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    const battle = this.deps.getTurnBattle()
-
-    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 

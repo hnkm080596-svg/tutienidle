@@ -21,7 +21,7 @@ import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { isBattleInProgress } from '@/core/battle/BattleTypes'
+import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import NodeTreePanel from './skill-path/NodeTreePanel.vue'
 import TheTuTreePanel from './skill-path/TheTuTreePanel.vue'
 import NodeInspector from './skill-path/NodeInspector.vue'
@@ -144,13 +144,7 @@ function onSelectNode(node: ProgressionNode, purchased: boolean, purchasable: bo
 // In-battle the engine rejects every nodeLevels write (purchaseNode /
 // upgradeNode / levelUpSkill all gate on isTurnBattleInProgress) -
 // disable the inspector buttons instead of offering a dead click.
-const inBattle = computed(() => {
-  stateVersion.value
-
-  const battle = gameManager.getTurnBattle()
-
-  return battle !== null && isBattleInProgress(battle.state)
-})
+const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 
 // Node vừa mua xong vẫn đang là selectedNode — refresh trạng thái
 // purchased/purchasable hiển thị ở inspector theo state mới nhất mỗi

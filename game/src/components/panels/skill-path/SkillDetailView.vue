@@ -17,8 +17,8 @@ import { skillResourceTypeLabel } from '@/core/skill/SkillResourceLabels'
 import { describeSkillMechanics } from '@/core/skill/SkillMechanicDescriptions'
 import { BUFF_REGISTRY } from '@/data/buff/BuffRegistry'
 import { CAST_LEVELING_THRESHOLDS } from '@/core/skill/SkillSystem'
-import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { usePlayerStore } from '@/stores/player'
 import GameButton from '@/components/common/GameButton.vue'
 import StatRow from '@/components/common/primitives/StatRow.vue'
@@ -37,13 +37,7 @@ const { stateVersion, bumpState } = useStateVersion()
 // parity with the node-tree panels: the upgrade writes through
 // progressionOps.levelUpSkill, which rejects mid-battle -- disable the
 // affordance rather than dead-click.
-const inBattle = computed(() => {
-  stateVersion.value
-
-  const battle = gameManager.getTurnBattle()
-
-  return battle !== null && isBattleInProgress(battle.state)
-})
+const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 
 const resourceTypeLabel = computed(() => {
   return skillResourceTypeLabel(props.skill?.resourceType)
