@@ -1259,6 +1259,214 @@
       "status": "REJECTED_WITH_PROOF",
       "repair": "REJECTED: the parity is deliberate so engineUnit lanes share one callback shape.",
       "rejectionReason": "harmless deliberate signature parity."
+    },
+    {
+      "id": "F-TTA-A2-INT-1",
+      "title": "Mid-action actor death suppresses owed (b)-income",
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "HYPOTHETICAL",
+      "locations": [
+        {
+          "path": "game/src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "isObserved / flushReflects / grantObservationIncome",
+          "revision": "d1e8b032",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-44f2224d5f714192867ac0683823c522",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "observed enemy completes landed hit then dies to the reflect it provoked -> isObserved fails alive gate -> no gainOnObservedAction",
+      "expected": "income owed on completed action even when actor dies mid-action",
+      "actual": "dead actor's completed action yields no observation income",
+      "rootCause": "isObserved enemy.entity.alive gate evaluated after flushReflects kills the actor",
+      "rootClass": "ordering-latency",
+      "subsystem": "the-tu-an-ung-the",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: no production trigger - the sole reflect grant (phan_chan) lives on the exclusive tran_the kit (cannot co-hold with ung_the) and no enemy/companion carries reflect; latent ordering defect only, activates with future reflect-adjacent content. Pin of the intended rule captured in lesson L-TTA-22. The Phan-window half of this boundary was separately decided at e4045625 (dead attacker = no window, parity with Tro).",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "rejectionReason": "unreachable in production today (exclusive-kit reflect); latent ordering defect + unpinned semantics recorded for future reflect-adjacent content",
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "exception": null
+    },
+    {
+      "id": "F-TTA-A2-INT-2",
+      "title": "reactionDebt/Qua The reset on turn arrival, not performed action",
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "declareActorAction debt reset site",
+          "revision": "d1e8b032",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-44f2224d5f714192867ac0683823c522",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "stunned or charge-tick holder at debt 3 -> consumed turn arrives -> reactionDebt 0 without any action performed",
+      "expected": "next normal action resets debt + Qua The",
+      "actual": "debt clears on any natural-turn arrival incl. ccBlocked/charge-tick",
+      "rootCause": "unconditional arrival-time reset (same root as F-TTA-A2-COR-1)",
+      "rootClass": "inconsistency",
+      "subsystem": "the-tu-an-ung-the",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/battle/turn"
+          ],
+          "termsAndMethod": "audit reactionDebt write sites",
+          "evidenceIds": [
+            "EV-TTA-CLO-3"
+          ],
+          "hitDispositions": [
+            "sole reset is the performed-action gate"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [
+        "F-TTA-A2-COR-1"
+      ],
+      "repair": "FIXED @e4045625 (verified REV-TTA-CLO-3): reset now gated on !ccBlocked && (!isCharging || chargeResolved)",
+      "pinEvidenceIds": [
+        "EV-TTA-CLO-3"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TTA-CLO-3"
+      ],
+      "closureReviewIds": [
+        "REV-TTA-CLO-3"
+      ],
+      "rejectionReason": null,
+      "status": "DUPLICATE_LINKED",
+      "duplicateOf": "F-TTA-A2-COR-1",
+      "exception": null
+    },
+    {
+      "id": "F-TTA-A2-INT-3",
+      "title": "Stale census comments in SkillCoreNodes.ts",
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/data/progression/SkillCoreNodes.ts",
+          "symbolOrSection": "JSDoc header",
+          "revision": "d1e8b032",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-44f2224d5f714192867ac0683823c522",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "comments say '14 eligible'/'15' while NATIVE_CORE_SKILL_IDS holds 16 ids",
+      "expected": "comments consistent with the 16-entry census",
+      "actual": "stale cosmetic counts",
+      "rootCause": "comment drift",
+      "rootClass": "doc-drift",
+      "subsystem": "the-tu-an-ung-the",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/data/progression/SkillCoreNodes.ts"
+          ],
+          "termsAndMethod": "grep census counts vs whitelist length",
+          "evidenceIds": [
+            "EV-TTA-CLO-3"
+          ],
+          "hitDispositions": [
+            "both counts corrected to 16"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [
+        "F-TTA-A2-AUT-3"
+      ],
+      "repair": "FIXED @e4045625 (verified REV-TTA-CLO-3): both counts corrected to 16",
+      "pinEvidenceIds": [
+        "EV-TTA-CLO-3"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TTA-CLO-3"
+      ],
+      "closureReviewIds": [
+        "REV-TTA-CLO-3"
+      ],
+      "rejectionReason": null,
+      "status": "DUPLICATE_LINKED",
+      "duplicateOf": "F-TTA-A2-AUT-3",
+      "exception": null
+    },
+    {
+      "id": "F-TTA-A2-INT-4",
+      "title": "Dead Tham mark lingers on HUD until next isObserved read",
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/battle/turn/TurnBattleSystem.ts + game/src/presentation/bridges/theBarBridge.ts",
+          "symbolOrSection": "isObserved lazy-clear vs raw thamTargetId read",
+          "revision": "d1e8b032",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-44f2224d5f714192867ac0683823c522",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "marked enemy dies -> HUD still shows 'Tham' indicator until the next predicate consult",
+      "expected": "focus indicator clears when marked enemy dies",
+      "actual": "lazy-clear fires only inside isObserved; bridge reads raw field",
+      "rootCause": "single-authority lazy-clear contract; bridge intentionally dumb",
+      "rootClass": "cosmetic-transient",
+      "subsystem": "the-tu-an-ung-the",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: lazy-clear is the canonical contract (single mark-clear authority); a display-side clear would duplicate that authority into the bridge for a transient cosmetic artifact that self-heals on the next consult. Captured in L-TTA-23.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "rejectionReason": "deliberate lazy-clear single-authority design; transient cosmetic self-healing artifact",
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "exception": null
     }
   ],
   "evidence": [
@@ -1693,6 +1901,38 @@
         "F-TTA-A2-AUT-2",
         "F-TTA-A2-AUT-3",
         "F-TTA-A2-AUT-4"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TTA-CLEAN-A2-INT",
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 2,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-44f2224d5f714192867ac0683823c522",
+      "contextId": "sealed-child-44f2224d5f714192867ac0683823c522",
+      "model": "swe-2-max",
+      "role": "INTEGRATION",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T20:25:00.000Z",
+      "sealedAt": "2026-09-25T20:45:49.000Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TTA-A2-INT-1",
+        "F-TTA-A2-INT-2",
+        "F-TTA-A2-INT-3",
+        "F-TTA-A2-INT-4"
       ],
       "novelAttackIds": [],
       "status": "SEALED"
@@ -2216,11 +2456,14 @@
       "effectiveFromRun": null,
       "status": "CLASSIFIED",
       "guidance": null,
-      "recurrenceFindingIds": [],
+      "recurrenceFindingIds": [
+        "F-TTA-A2-INT-3"
+      ],
       "preventionEvidenceIds": [],
       "id": "L-TTA-17",
       "findingIds": [
-        "F-TTA-A2-AUT-3"
+        "F-TTA-A2-AUT-3",
+        "F-TTA-A2-INT-3"
       ],
       "rootClass": "doc-drift",
       "escapeReason": "census comments enumerate a count next to the registry - update the count in the same commit as the census change",
@@ -2336,17 +2579,80 @@
       "effectiveFromRun": null,
       "status": "CLASSIFIED",
       "guidance": null,
-      "recurrenceFindingIds": [],
+      "recurrenceFindingIds": [
+        "F-TTA-A2-INT-2"
+      ],
       "preventionEvidenceIds": [],
       "id": "L-TTA-21",
       "findingIds": [
-        "F-TTA-A2-COR-1"
+        "F-TTA-A2-COR-1",
+        "F-TTA-A2-INT-2"
       ],
       "rootClass": "inconsistency",
       "escapeReason": "debt/gauge reset boundaries follow the performed-action rule - suppressed turns (cc/charge tick) do not discharge the debt they delayed",
       "capabilityDelta": "debt/gauge reset boundaries follow the performed-action rule - suppressed turns (cc/charge tick) do not discharge the debt they delayed",
       "proposedProtection": [
         "debt/gauge reset boundaries follow the performed-action rule - suppressed turns (cc/charge tick) do not discharge the debt they delayed"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "applicability": [],
+      "exclusions": [],
+      "incidentEvidenceIds": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLEAN-A2-INT"
+      ],
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "status": "CLASSIFIED",
+      "guidance": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "id": "L-TTA-22",
+      "findingIds": [
+        "F-TTA-A2-INT-1"
+      ],
+      "rootClass": "ordering-latency",
+      "escapeReason": "observation income on a completed action must not depend on the actor's post-action alive state - evaluated after reflects can kill the actor mid-action; latent until a second reflect source exists",
+      "capabilityDelta": "observation income on a completed action must not depend on the actor's post-action alive state - evaluated after reflects can kill the actor mid-action; latent until a second reflect source exists",
+      "proposedProtection": [
+        "observation income on a completed action must not depend on the actor's post-action alive state - evaluated after reflects can kill the actor mid-action; latent until a second reflect source exists"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "applicability": [],
+      "exclusions": [],
+      "incidentEvidenceIds": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLEAN-A2-INT"
+      ],
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "status": "CLASSIFIED",
+      "guidance": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "id": "L-TTA-23",
+      "findingIds": [
+        "F-TTA-A2-INT-4"
+      ],
+      "rootClass": "cosmetic-transient",
+      "escapeReason": "mark-clear lazily owned by the predicate, not the read path - bridges read raw fields; do not duplicate clear-authority into display code for transient artifacts",
+      "capabilityDelta": "mark-clear lazily owned by the predicate, not the read path - bridges read raw fields; do not duplicate clear-authority into display code for transient artifacts",
+      "proposedProtection": [
+        "mark-clear lazily owned by the predicate, not the read path - bridges read raw fields; do not duplicate clear-authority into display code for transient artifacts"
       ]
     }
   ],
@@ -2895,6 +3201,70 @@
       "payloadPath": "events/0034.json",
       "payloadHash": "1907ccd8211e95731b54b361f93b09c64ea28c26b7001d1db9b0ec9e3668f7af",
       "eventHash": "1ed39f41279b81b145da5d7a08e45c884581debfac4d7147ce83d157e0db35c1"
+    },
+    {
+      "seq": 35,
+      "at": "2026-09-25T20:47:33.383Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "1ed39f41279b81b145da5d7a08e45c884581debfac4d7147ce83d157e0db35c1",
+      "payloadPath": "events/0035.json",
+      "payloadHash": "67ee43dc633cc4543ed04218b68f80c328f42683be23941b0f242d0a484728f4",
+      "eventHash": "a5f1732856d6d8a11fa1a0dec61b6eac29b376d8ffb001cc9e244d2b68bcdb89"
+    },
+    {
+      "seq": 36,
+      "at": "2026-09-25T20:48:01.484Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "a5f1732856d6d8a11fa1a0dec61b6eac29b376d8ffb001cc9e244d2b68bcdb89",
+      "payloadPath": "events/0036.json",
+      "payloadHash": "27ff298e8e25613923182264bf522789fe3b03a805a6e8bec90dbf1ab028e57a",
+      "eventHash": "c2f64545829639feb7b6b4323c52cd21145b3170f27b9c683d11fdbfae14ad0f"
+    },
+    {
+      "seq": 37,
+      "at": "2026-09-25T20:48:19.027Z",
+      "kind": "FINDING",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "c2f64545829639feb7b6b4323c52cd21145b3170f27b9c683d11fdbfae14ad0f",
+      "payloadPath": "events/0037.json",
+      "payloadHash": "b9110a60a0519bcf1a3b2b6596ca1a5563ea9869a3e543b53be2c7d4fbfd4bc4",
+      "eventHash": "1f4d77d3018a204d7f5e64e895f580058e3e94d0ea4c7682a2789dab6c309d54"
+    },
+    {
+      "seq": 38,
+      "at": "2026-09-25T20:48:31.030Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "1f4d77d3018a204d7f5e64e895f580058e3e94d0ea4c7682a2789dab6c309d54",
+      "payloadPath": "events/0038.json",
+      "payloadHash": "8a643c0e7d8ca5ad19b9267ad03f1c3929157deceb24d4f55625ed50ca39502a",
+      "eventHash": "c5d41ea5043ac990c34354f38d86e17c257fe03d8674ee7d23e46936c62b2def"
     }
   ]
 }
