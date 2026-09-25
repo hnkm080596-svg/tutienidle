@@ -118,7 +118,7 @@ describe('SkillCoreNodes — template coverage', () => {
 })
 
 describe('SkillCoreNodes — native census', () => {
-  it('whitelist export matches the 14 eligible native ids exactly', () => {
+  it('whitelist export matches the 16 eligible native ids exactly', () => {
     expect([...NATIVE_CORE_SKILL_IDS].sort()).toEqual([...NATIVE_TOP_LEVEL_IDS].sort())
   })
 
