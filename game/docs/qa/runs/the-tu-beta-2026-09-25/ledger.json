@@ -6826,10 +6826,12 @@
       "verificationEvidenceIds": [
         "EV-TT-CLEANA3-FIX"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TT-CLO-21"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -6886,10 +6888,12 @@
       "verificationEvidenceIds": [
         "EV-TT-CLEANA3-FIX"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TT-CLO-21"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     }
   ],
@@ -9669,6 +9673,38 @@
       "reviewedAfterPreviousFixes": true,
       "coverageIds": [],
       "evidenceIds": [],
+      "findingIds": [
+        "F-TT-CLEAN-A3-INT-1",
+        "F-TT-CLEAN-A3-INT-2"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TT-CLO-21",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 21,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-d9955fe69a484e12bcdf558649ab62d4",
+      "contextId": "sealed-child-d9955fe69a484e12bcdf558649ab62d4",
+      "model": "swe-2-max",
+      "role": "CLOSURE",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T22:25:00.000Z",
+      "sealedAt": "2026-09-25T22:27:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLO-20",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-TT-CLEANA3-FIX"
+      ],
       "findingIds": [
         "F-TT-CLEAN-A3-INT-1",
         "F-TT-CLEAN-A3-INT-2"
@@ -12659,6 +12695,82 @@
       "capabilityDelta": "Dead-lane annotation rule.",
       "recurrenceFindingIds": [],
       "guidance": null
+    },
+    {
+      "id": "L-TT-84",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TT-CLEAN-A3-INT-1"
+      ],
+      "incidentEvidenceIds": [
+        "EV-TT-CLEANA3-FIX"
+      ],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "missing-guard",
+      "missedInvariantIds": [],
+      "escapeReason": "a2-INT-1 found the gate class via assembly comparison but the original gate census only covered 5 of ~11 combat-shaping writers; new openable surfaces created since then remained ungated",
+      "applicability": [
+        "any openable progression surface whose writes become battle-invisible mid-battle"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "when gating a writer class, enumerate ALL callers of the mutation path (ops + system-level), not just the ones in the first diff"
+      ],
+      "promotionEvidenceIds": [
+        "EV-TT-CLEANA3-FIX"
+      ],
+      "qualifiedBy": [
+        "REV-TT-CLEAN-A3-INT"
+      ],
+      "capabilityDelta": "isTurnBattleInProgress reject gates on all 10 combat-shaping progression writers + inBattle disables on SkillRoleStrip/CharacterPanel chips+buttons",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [
+        "EV-TT-CLEANA3-FIX"
+      ]
+    },
+    {
+      "id": "L-TT-85",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TT-CLEAN-A3-INT-2"
+      ],
+      "incidentEvidenceIds": [
+        "EV-TT-CLEANA3-FIX"
+      ],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "coverage-gap",
+      "missedInvariantIds": [],
+      "escapeReason": "census covered 5/6 gated writers; deliberate reflect-drop semantics existed since CombatProcSystem.ts:240 with no test; ward_break kickback path was unidentified until INT a3 traced CombatSystem.ts:534",
+      "applicability": [
+        "any deliberate silent-drop ordering contract + any newly gated writer"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "pin deliberate drop/ordering contracts at introduction (they read as latent bugs to every fresh reviewer); census-gated classes must name every member explicitly"
+      ],
+      "promotionEvidenceIds": [
+        "EV-TT-CLEANA3-FIX"
+      ],
+      "qualifiedBy": [
+        "REV-TT-CLEAN-A3-INT"
+      ],
+      "capabilityDelta": "inBattle pin file extended to 10 writers; ward_break attacker-death reflect-drop scenario pinned in midImpactDeath.test.ts",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [
+        "EV-TT-CLEANA3-FIX"
+      ]
     }
   ],
   "messages": [],
@@ -13734,6 +13846,54 @@
       "payloadPath": "events/0067.json",
       "payloadHash": "b78e660bb84cb50a2d1629f8cb466840ad909db2240f1747f406076c12c88fe4",
       "eventHash": "0ba5d4742bdac11fcbad4047d7a306aabd42b23038763f44fd8dc558a3a61401"
+    },
+    {
+      "seq": 68,
+      "at": "2026-09-25T22:27:19.303Z",
+      "kind": "FINDING",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "0ba5d4742bdac11fcbad4047d7a306aabd42b23038763f44fd8dc558a3a61401",
+      "payloadPath": "events/0068.json",
+      "payloadHash": "ef9e4b794b1cca569428066694f066d5186d5ea29bc103fb71d08b06956025ef",
+      "eventHash": "1b5b403a51a9617fffaf09369e5be997060069257f9d7c546ed292ed3462e642"
+    },
+    {
+      "seq": 69,
+      "at": "2026-09-25T22:27:28.749Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "1b5b403a51a9617fffaf09369e5be997060069257f9d7c546ed292ed3462e642",
+      "payloadPath": "events/0069.json",
+      "payloadHash": "a76b7e9952a7ed1940bcdc3a6407f70442eb636eaafbbbc8fbdbb8eaa325470a",
+      "eventHash": "b727a48801965d93fc77e627530eb5c08d1a93d83ca5403a331c612202198bed"
+    },
+    {
+      "seq": 70,
+      "at": "2026-09-25T22:27:40.912Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "b727a48801965d93fc77e627530eb5c08d1a93d83ca5403a331c612202198bed",
+      "payloadPath": "events/0070.json",
+      "payloadHash": "8a09d2cd9fa3046f0c451b23059c0100840d8749c05e01be36c5e2013acd5831",
+      "eventHash": "65b08ef9bcb1492ba39353570f56a1fccfd16fff397404cce5fdd3604cc4c587"
     }
   ]
 }
