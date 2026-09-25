@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "d8321ba8",
   "state": {
-   "productStateId": "ba331f3c554536d8fa1399da08387185a5de30a855f1adacf4241bbe56909e1b",
+   "productStateId": "90acfe897e3bd6d52c288bc8c21f5ef770c91f9d36edafed594c86836fe3817d",
    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -2236,7 +2236,7 @@
       "EV-NK-FIX-5"
      ],
      "hitDispositions": [
-      "fa45c1eb: suffix derived from owned node.name (split on \u00b7)"
+      "fa45c1eb: suffix derived from owned node.name (split on ·)"
      ],
      "coverageLimits": [
       "reviewer-isolated surface"
@@ -2244,7 +2244,7 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": "fa45c1eb: suffix derived from owned node.name (split on \u00b7)",
+   "repair": "fa45c1eb: suffix derived from owned node.name (split on ·)",
    "pinEvidenceIds": [
     "EV-NK-FIX-5"
    ],
@@ -2855,7 +2855,7 @@
   },
   {
    "id": "F-NK-AUTB-1",
-   "title": "fa45c1eb swept \u0111\u2192d inside user-facing description literals (26-33 strings), beyond comment-mojibake scope",
+   "title": "fa45c1eb swept đ→d inside user-facing description literals (26-33 strings), beyond comment-mojibake scope",
    "state": {
     "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
     "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
@@ -2877,10 +2877,10 @@
    "discoveredBy": "clean-B AUTHORITY reviewer (devin-e304cefe)",
    "invariantIds": [],
    "evidenceIds": [],
-   "counterexample": "33 description literals de-accented (d\u1eb7c/d\u00e1nh/d\u1ecbch/d\u1ed3ng d\u1ed9i/d\u1ed1t/du\u00f4i/d\u1ea5m/d\u00e8/d\u00e1/d\u1ed9ng/d\u1eadp/d\u1ed9c/di\u1ec3m/d\u1ecba/d\u1ea5t/d\u00e2m/d\u00ecnh/d\u1eb1ng/d\u1ed9i...)",
-   "expected": "user-facing Vietnamese keeps '\u0111'; sweep scope = comment '?' fragments only",
-   "actual": "33 description literals de-accented (d\u1eb7c/d\u00e1nh/d\u1ecbch/d\u1ed3ng d\u1ed9i/d\u1ed1t/du\u00f4i/d\u1ea5m/d\u00e8/d\u00e1/d\u1ed9ng/d\u1eadp/d\u1ed9c/di\u1ec3m/d\u1ecba/d\u1ea5t/d\u00e2m/d\u00ecnh/d\u1eb1ng/d\u1ed9i...)",
-   "rootCause": "swept \u0111\u2192d inside user-facing description literals",
+   "counterexample": "33 description literals de-accented (dặc/dánh/dịch/dồng dội/dốt/duôi/dấm/dè/dá/dộng/dập/dộc/diểm/dịa/dất/dâm/dình/dằng/dội...)",
+   "expected": "user-facing Vietnamese keeps 'đ'; sweep scope = comment '?' fragments only",
+   "actual": "33 description literals de-accented (dặc/dánh/dịch/dồng dội/dốt/duôi/dấm/dè/dá/dộng/dập/dộc/diểm/dịa/dất/dâm/dình/dằng/dội...)",
+   "rootCause": "swept đ→d inside user-facing description literals",
    "rootClass": "encoding normalization beyond intended scope",
    "subsystem": "ngu-kiem-beta",
    "siblingSearch": [
@@ -2914,7 +2914,7 @@
   },
   {
    "id": "F-NK-CORB-1",
-   "title": "TurnSkillDisplayMeta.ts: 33 user-facing description strings corrupted by \u0111\u2192d sweep",
+   "title": "TurnSkillDisplayMeta.ts: 33 user-facing description strings corrupted by đ→d sweep",
    "state": {
     "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
     "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
@@ -3032,7 +3032,7 @@
   },
   {
    "id": "F-NK-CLO4-1",
-   "title": "fa45c1eb regressed 33 user-facing description strings (\u0111\u2192d beyond mojibake scope)",
+   "title": "fa45c1eb regressed 33 user-facing description strings (đ→d beyond mojibake scope)",
    "state": {
     "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
     "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
@@ -3055,7 +3055,7 @@
    "invariantIds": [],
    "evidenceIds": [],
    "counterexample": "same defect as F-NK-AUTB-1",
-   "expected": "fix scope = comment '?' fragments; correct Vietnamese keeps '\u0111'",
+   "expected": "fix scope = comment '?' fragments; correct Vietnamese keeps 'đ'",
    "actual": "same defect as F-NK-AUTB-1",
    "rootCause": "same defect as F-NK-AUTB-1",
    "rootClass": "duplicate",
@@ -3396,7 +3396,7 @@
    "evidenceIds": [],
    "counterexample": "tests/architecture/asciiComments.test.ts reports the L94 middle-dot comment token at pinned head 386ca595",
    "expected": "All comments in production code plain ASCII (P15)",
-   "actual": "'Ngu Kiem \u00b7 Khoi' middle dot in a line comment",
+   "actual": "'Ngu Kiem · Khoi' middle dot in a line comment",
    "rootCause": "comment quoted the node display name verbatim including its non-ASCII separator",
    "rootClass": "comment hygiene (protection rule)",
    "subsystem": "ngu-kiem-beta",
@@ -3411,7 +3411,7 @@
       "EV-NK-FIX-FA1"
      ],
      "hitDispositions": [
-      "only L94 token flagged; 'Ng\u1ef1 Ki\u1ebfm'/'\u00b7' string literals in code are allowed"
+      "only L94 token flagged; 'Ngự Kiếm'/'·' string literals in code are allowed"
      ],
      "coverageLimits": [
       "comments only per P15"
@@ -3613,7 +3613,7 @@
   },
   {
    "id": "F-NK-FA-5",
-   "title": "evolution-resolved name surfaces only on SkillPath entry; combat HUD/log show base 'Ng\u1ef1 Ki\u1ebfm'",
+   "title": "evolution-resolved name surfaces only on SkillPath entry; combat HUD/log show base 'Ngự Kiếm'",
    "state": {
     "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
     "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
@@ -4168,7 +4168,7 @@
   },
   {
    "id": "F-NK-FA-9",
-   "title": "base-name literal 'Ng\u1ef1 Ki\u1ebfm' authored in 3 surfaces",
+   "title": "base-name literal 'Ngự Kiếm' authored in 3 surfaces",
    "state": {
     "productStateId": "11c546dda7eada1ec635e87cb7630c99c5dad96ddaf0abe2380b5d6f7efba8ec",
     "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
@@ -4204,7 +4204,7 @@
    "evidenceIds": [],
    "counterexample": "see reviewer proof (SOURCE)",
    "expected": "naming law single-seamed (it is); base string ideally sourced once",
-   "actual": "static 'Ng\u1ef1 Ki\u1ebfm' in 3 places - cosmetic dup; spec wants it in all three",
+   "actual": "static 'Ngự Kiếm' in 3 places - cosmetic dup; spec wants it in all three",
    "rootCause": "cosmetic duplication",
    "rootClass": "cosmetic-only",
    "subsystem": "ngu-kiem-beta",
@@ -4353,7 +4353,7 @@
   },
   {
    "id": "F-NK-FA-13",
-   "title": "Base-name literal 'Ng\u1ef1 Ki\u1ebfm' duplicated across 3 static surfaces",
+   "title": "Base-name literal 'Ngự Kiếm' duplicated across 3 static surfaces",
    "state": {
     "productStateId": "6d229225b82cd2b9d92db6e7db0e36a28bc16b0d55a37a887b905e8ae3a6f5ad",
     "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
@@ -4375,7 +4375,7 @@
    "discoveredBy": "devin-6c9c9c4fcf774e5bb295a155ea3d89b3",
    "invariantIds": [],
    "evidenceIds": [],
-   "counterexample": "grep 'Ng\u1ef1 Ki\u1ebfm' 3 hits",
+   "counterexample": "grep 'Ngự Kiếm' 3 hits",
    "expected": "one name authority",
    "actual": "base literal repeated in arg-less contexts (static meta, describeDynamicBasic, resolver fallback)",
    "rootCause": "arg-less static surfaces cannot call player-context resolver",
@@ -4582,6 +4582,207 @@
    "exception": null,
    "status": "REJECTED_WITH_PROOF",
    "rejectionReason": "pure whitespace at EOF; JSON parses identically and fixing would force a full re-review cycle for a zero-impact byte"
+  },
+  {
+   "id": "F-NK-AUT-A3-1",
+   "title": "way.grantedNodeIds has no contract coverage - nothing asserts members are grant-only, way-tagged, or respec-preserved",
+   "state": {
+    "productStateId": "ba331f3c554536d8fa1399da08387185a5de30a855f1adacf4241bbe56909e1b",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "COVERAGE_GAP",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+     "symbolOrSection": "preflight :338-342, grant loop :378-380",
+     "revision": "ec86fdd3",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/player/CultivationPathContract.test.ts",
+     "symbolOrSection": "expectWellFormedWay",
+     "revision": "ec86fdd3",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-87a7f3ea33e743c3941e54a074e9529f",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "only nodeRegistry.has() preflight existed; a future way declaring a purchasable node would trigger an Insight-refund oscillation loop via respec/devReset (unreachable today - sole member ngu_kiem_khoi is grant-only, cost 0, tagged, preserved)",
+   "expected": "way declarations get the same authored-contract assertions as ownedContent: every grantedNodeIds member is grantedOnly/cost-0, way-tagged, respec-preserved",
+   "actual": "only nodeRegistry.has() preflight existed; a future way declaring a purchasable node would trigger an Insight-refund oscillation loop via respec/devReset (unreachable today - sole member ngu_kiem_khoi is grant-only, cost 0, tagged, preserved)",
+   "rootCause": "contract assertions covered skillIds/ownedContent but not the newer grantedNodeIds field",
+   "rootClass": "authority-gap",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player",
+      "src/core/game",
+      "src/data"
+     ],
+     "termsAndMethod": "way.grantedNodeIds usage grepped across src/core/player, src/core/game, src/data",
+     "hitDispositions": [
+      "single declaring way hidden_sword_pathway passes all four assertions"
+     ],
+     "coverageLimits": [
+      "sealed clean-B pair pending"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "added grantedNodeIds assertions to expectWellFormedWay (resolve + grantedOnly-or-cost0 + requiredWay/requiredCultivationPath stamps + RESPEC_PRESERVED membership; exported RESPEC_PRESERVED_NODE_IDS) @bc98d4bd",
+   "pinEvidenceIds": [
+    "EV-NK-AUT-A3-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-AUT-A3-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-AUT-A3-2",
+   "title": "'Ngự Kiếm' base-name literal triplicated across three display channels",
+   "state": {
+    "productStateId": "ba331f3c554536d8fa1399da08387185a5de30a855f1adacf4241bbe56909e1b",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/TurnSkillDisplayMeta.ts",
+     "symbolOrSection": "ngu_kiem_thuat.name",
+     "revision": "ec86fdd3",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": "describeDynamicBasic",
+     "revision": "ec86fdd3",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/kiem-tu/NguKiemDaoProvider.ts",
+     "symbolOrSection": "resolveNguKiemSkillName :105",
+     "revision": "ec86fdd3",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-87a7f3ea33e743c3941e54a074e9529f",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "three independent literals; evolution-tier names correctly derive from node.name",
+   "expected": "one naming authority - the pre-evolution fallback derives from a shared declaration",
+   "actual": "three independent literals; evolution-tier names correctly derive from node.name",
+   "rootCause": "each channel hand-duplicated the tier-0 literal during incremental wiring",
+   "rootClass": "doc-drift",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player",
+      "src/core/game",
+      "src/data"
+     ],
+     "termsAndMethod": "grep 'Ngự Kiếm' literal across src/ excluding tests and authored node names",
+     "hitDispositions": [
+      "no other pre-evolution literal remaining outside node.name evolution tiers"
+     ],
+     "coverageLimits": [
+      "sealed clean-B pair pending"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "NGU_KIEM_BASE_NAME exported from NguKiemDaoSkills.ts and consumed by all three sites @bc98d4bd",
+   "pinEvidenceIds": [
+    "EV-NK-AUT-A3-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-AUT-A3-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-AUT-A3-3",
+   "title": "stale KiemTuPath.ts header comment claims file imports only the sibling SwordPathState factory",
+   "state": {
+    "productStateId": "ba331f3c554536d8fa1399da08387185a5de30a855f1adacf4241bbe56909e1b",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "DOCUMENTATION_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/kiem-tu/KiemTuPath.ts",
+     "symbolOrSection": "module header doc",
+     "revision": "ec86fdd3",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-87a7f3ea33e743c3941e54a074e9529f",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "header claimed single sibling import; file actually imports KiemTuState, NguKiemDao, realmSystem, REALMS, RealmPassiveLadder, KIEM_PHO_BUFFS, NGU_KIEM_THUAT (stale since before the diff; diff added more)",
+   "expected": "header doc describes actual imports",
+   "actual": "header claimed single sibling import; file actually imports KiemTuState, NguKiemDao, realmSystem, REALMS, RealmPassiveLadder, KIEM_PHO_BUFFS, NGU_KIEM_THUAT (stale since before the diff; diff added more)",
+   "rootCause": "doc drift accumulated across M6 + beta slices without header updates",
+   "rootClass": "doc-drift",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player",
+      "src/core/game",
+      "src/data"
+     ],
+     "termsAndMethod": "other KiemTu module headers scanned for the same stale-import claim",
+     "hitDispositions": [
+      "only KiemTuPath.ts carried the stale claim"
+     ],
+     "coverageLimits": [
+      "sealed clean-B pair pending"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "header rewritten to describe actual import set and preserved no-cycle constraint @bc98d4bd",
+   "pinEvidenceIds": [
+    "EV-NK-AUT-A3-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-AUT-A3-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null
   }
  ],
  "evidence": [
@@ -4712,7 +4913,7 @@
     "type-check clean; 128 files / 1564 tests green on d8321ba8 (incl. 2 new validator pins + snapshot fixes F-NK-CLO-4/5)"
    ],
    "limitations": [
-    "scene/canvas tests excluded (env: libuuid/magick absent) \u2014 unaffected by ngu-kiem surface"
+    "scene/canvas tests excluded (env: libuuid/magick absent) — unaffected by ngu-kiem surface"
    ],
    "status": "STALE"
   },
@@ -5165,6 +5366,46 @@
    ],
    "invariantIds": [],
    "limitations": [],
+   "result": "PASS",
+   "status": "STALE"
+  },
+  {
+   "id": "EV-NK-AUT-A3-FIX",
+   "state": {
+    "productStateId": "90acfe897e3bd6d52c288bc8c21f5ef770c91f9d36edafed594c86836fe3817d",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "commandOrMethod": "vue-tsc --build && vitest run CultivationPathContract.test.ts NguKiemDaoProvider.test.ts src/data @bc98d4bd",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T11:02:00.000Z",
+   "finishedAt": "2026-09-25T11:05:00.000Z",
+   "inputPaths": [
+    "src/data/skill/NguKiemDaoSkills.ts",
+    "src/data/skill/TurnSkillDisplayMeta.ts",
+    "src/core/player/CultivationPathRegistry.ts",
+    "src/core/kiem-tu/NguKiemDaoProvider.ts",
+    "src/core/kiem-tu/KiemTuPath.ts",
+    "src/core/game/GameManagerProgressionOps.ts",
+    "src/core/player/CultivationPathContract.test.ts"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/fix-verify-aut-a3.log",
+   "artifactHash": "41ed3265d92d7a560e200e6f62291bd58730b798b44098a98fed2905af756e5c",
+   "claims": [
+    "F-NK-AUT-A3-1 repaired: grantedNodeIds contract asserts grant-only/way-tag/respec-preserved",
+    "F-NK-AUT-A3-2 repaired: NGU_KIEM_BASE_NAME is the single pre-evolution name authority",
+    "F-NK-AUT-A3-3 repaired: KiemTuPath header describes actual imports",
+    "471 tests pass, type-check clean"
+   ],
+   "invariantIds": [],
+   "limitations": [
+    "scoped vitest, not full suite"
+   ],
    "result": "PASS",
    "status": "CURRENT"
   }
@@ -5977,7 +6218,7 @@
     "F-NK-FA-15"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-NK-INT-FA2",
@@ -6004,7 +6245,7 @@
    "evidenceIds": [],
    "findingIds": [],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-NK-CLO-9",
@@ -6035,7 +6276,7 @@
     "F-NK-FA-12"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-NK-COR-A3",
@@ -6062,6 +6303,37 @@
    "evidenceIds": [],
    "findingIds": [
     "F-NK-COR-A3-1"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-NK-AUT-A3",
+   "state": {
+    "productStateId": "ba331f3c554536d8fa1399da08387185a5de30a855f1adacf4241bbe56909e1b",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 4,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-87a7f3ea33e743c3941e54a074e9529f",
+   "contextId": "sealed-child-87a7f3ea33e743c3941e54a074e9529f",
+   "model": "swe-2-max",
+   "role": "authority-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T10:14:38.000Z",
+   "sealedAt": "2026-09-25T10:41:03.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-NK-AUT-A3-1",
+    "F-NK-AUT-A3-2",
+    "F-NK-AUT-A3-3"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -7510,6 +7782,40 @@
    "policyVersion": null,
    "effectiveFromRun": null,
    "guidance": null
+  },
+  {
+   "id": "L-NK-37",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-AUT-A3-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "authority-gap",
+   "missedInvariantIds": [],
+   "escapeReason": "contract tests asserted older way fields; new grant seam shipped without contract coverage",
+   "applicability": [
+    "way-declared node grants",
+    "initiation ritual grant seams"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "every new way-declared node list must land with contract assertions (resolve + flag + tag + preserve) in the same change",
+    "pin RESPEC_PRESERVED_NODE_IDS membership for grantedNodeIds members"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-AUT-A3"
+   ],
+   "capabilityDelta": "contract coverage for way.grantedNodeIds declarations",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
   }
  ],
  "messages": [],
@@ -7849,6 +8155,54 @@
    "payloadPath": "events/0021.json",
    "payloadHash": "e96e4054bab5391feb068962df596f18e7e254e84d104572faea85f4d9ad4efb",
    "eventHash": "34a04ec71cf679485651781fe1b27649ca6abd6852d89593a1133f1466bd6f41"
+  },
+  {
+   "seq": 22,
+   "at": "2026-09-25T11:03:08.543Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "90acfe897e3bd6d52c288bc8c21f5ef770c91f9d36edafed594c86836fe3817d",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "34a04ec71cf679485651781fe1b27649ca6abd6852d89593a1133f1466bd6f41",
+   "payloadPath": "events/0022.json",
+   "payloadHash": "837aa1aa18dcb4ce6f54da9e3751efb483f850e09e106d02f66a1377f154bd0d",
+   "eventHash": "7c711522a21f3833e6af5205629c4c9c26aee22e4581a73e2ecb1466280bb7c5"
+  },
+  {
+   "seq": 23,
+   "at": "2026-09-25T11:05:43.166Z",
+   "kind": "REVIEW_SEALED",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "90acfe897e3bd6d52c288bc8c21f5ef770c91f9d36edafed594c86836fe3817d",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "7c711522a21f3833e6af5205629c4c9c26aee22e4581a73e2ecb1466280bb7c5",
+   "payloadPath": "events/0023.json",
+   "payloadHash": "7c74005c2ab4af0b8665575a50697939bce2d73424f574b2de8649f7a15835dd",
+   "eventHash": "ae18bebbc15ce61615b28cd9a56e82dd57226e2d298c7bf5b25d18d97a9ba664"
+  },
+  {
+   "seq": 24,
+   "at": "2026-09-25T11:06:38.433Z",
+   "kind": "REVIEW_SEALED",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "90acfe897e3bd6d52c288bc8c21f5ef770c91f9d36edafed594c86836fe3817d",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "ae18bebbc15ce61615b28cd9a56e82dd57226e2d298c7bf5b25d18d97a9ba664",
+   "payloadPath": "events/0024.json",
+   "payloadHash": "26ae3ae2f22851971e64527af18758fe6e3247a347ef94bfc6eff2af28a376f5",
+   "eventHash": "e7b029c3848b54d119fea464091eab505eb5a72f3d81b409a9144ae214668933"
   }
  ]
 }
