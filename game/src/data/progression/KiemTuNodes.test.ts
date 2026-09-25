@@ -220,6 +220,41 @@ describe('KiemTuNodes - authored-id resolution contract', () => {
     }
   })
 
+  it('every swordPathComboModifier authored id resolves against the registries', () => {
+    // F-KP-9-1 - the combo channel carries the same registry-keyed ids:
+    // completingOrb/minOrbCount.orb vs KIEM_PHO_ORBS; appliesBuff
+    // .definitionId and ailmentInteractions[].buffId vs KIEM_PHO_BUFFS.
+    const buffIds = new Set(KIEM_PHO_BUFFS.map(b => b.id))
+    for (const n of KIEM_TU_NODES) {
+      const m = n.effect.swordPathComboModifier
+      if (!m) continue
+      if (m.completingOrb !== undefined) {
+        expect(
+          m.completingOrb in KIEM_PHO_ORBS,
+          `${n.id} completingOrb ${m.completingOrb} unknown - predicate can never match`,
+        ).toBe(true)
+      }
+      if (m.minOrbCount !== undefined) {
+        expect(
+          m.minOrbCount.orb in KIEM_PHO_ORBS,
+          `${n.id} minOrbCount.orb ${m.minOrbCount.orb} unknown - predicate can never match`,
+        ).toBe(true)
+      }
+      if (m.appliesBuff !== undefined) {
+        expect(
+          buffIds.has(m.appliesBuff.definitionId),
+          `${n.id} appliesBuff ${m.appliesBuff.definitionId} unknown - application binds no instance`,
+        ).toBe(true)
+      }
+      for (const i of m.ailmentInteractions ?? []) {
+        expect(
+          buffIds.has(i.buffId),
+          `${n.id} interaction buffId ${i.buffId} unknown - interaction binds no instance`,
+        ).toBe(true)
+      }
+    }
+  })
+
   it('every addAilmentInteractions buffId resolves against KIEM_PHO_BUFFS', () => {
     const buffIds = new Set(KIEM_PHO_BUFFS.map(b => b.id))
     for (const n of KIEM_TU_NODES) {
