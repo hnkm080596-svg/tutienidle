@@ -114,7 +114,6 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
     'minor_wood_intensity',
     'minor_metal_intensity',
     'minor_earth_intensity',
-    'ngu_kiem_phong',
   ])
 
   it('technique gates stay inside the M-QI-06 authored allowlist', () => {

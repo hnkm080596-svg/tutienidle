@@ -139,7 +139,7 @@ describe('evolution ownership + display name', () => {
   const nodes: ProgressionNode[] = [
     evolutionNode('ngu_kiem_khoi', 'khoi'),
     evolutionNode('ngu_kiem_lien', 'lien'),
-    evolutionNode('ngu_kiem_phong'), // sealed: no evolutionId
+    evolutionNode('ngu_kiem_phong_an'), // sealed: no evolutionId
   ]
 
   it('collectOwnedEvolutionIds surfaces owned layers only', () => {
@@ -152,7 +152,7 @@ describe('evolution ownership + display name', () => {
 
     // An unowned spine node contributes nothing; a sealed node never
     // contributes even when leveled (no evolutionId).
-    player.nodeLevels = { ngu_kiem_phong: 1 }
+    player.nodeLevels = { ngu_kiem_phong_an: 1 }
     expect([...collectOwnedEvolutionIds(player, nodes)]).toEqual([])
   })
 

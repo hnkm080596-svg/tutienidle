@@ -271,9 +271,9 @@ const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
         p.realmId = 'tribulation'
         p.swordPath = { ...freshSwordPathState(), kiemDaoCount: 3, kiemDaoBase: 2 }
         p.nodeLevels = {
-          ngu_cascade_a: unlocks.a ? 1 : 0,
-          ngu_cascade_e: unlocks.e ? 1 : 0,
-          ngu_cascade_d: unlocks.d ? 1 : 0,
+          ngu_kiem_khoi: unlocks.a ? 1 : 0,
+          ngu_kiem_lien: unlocks.e ? 1 : 0,
+          ngu_kiem_phong_an: unlocks.d ? 1 : 0,
         }
       }),
       nodes: KIEM_TU_NODES,

@@ -674,7 +674,12 @@ describe('INV-9 — Kiem The bounds + standard pipeline (Ngu Kiem Beta)', () => 
       1 + LIEN_MOMENTUM_RATE,
       10,
     )
-    expect(targetA).toBeDefined()
+    // And the stack count is read live: a second landed prior must
+    // produce exactly 1 + rate*2 (not a cached or capped value).
+    expect(def.instances!.perInstanceOptions!(0, targetA, 2).damageMultiplier).toBeCloseTo(
+      1 + LIEN_MOMENTUM_RATE * 2,
+      10,
+    )
   })
 
   it('evolution collectors read nodeLevels + way only — Kiếm Thế is never persisted', () => {

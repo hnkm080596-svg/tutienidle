@@ -1073,7 +1073,10 @@ export class SkillResolver {
             kind: 'read',
             query: {
               query: 'ops_result_sum',
-              operationIds: priorInstanceOpIds,
+              // Snapshot the accumulator - the emitted read must cover
+              // ONLY priors; sharing the live array would let later
+              // pushes leak this instance's own + future hit opIds.
+              operationIds: [...priorInstanceOpIds],
               field: 'landed',
             },
             into: landedVar,

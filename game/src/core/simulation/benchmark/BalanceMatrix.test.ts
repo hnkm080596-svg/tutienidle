@@ -38,12 +38,11 @@ const EXPECTED_FINGERPRINTS: Record<string, Record<number, string>> = {
   'the_tu_ung_the/durable_target': { 11: 'dd1c6d69', 22: '1812c7d3', 33: 'c2c0ec4a', 44: '0343489b', 55: '7ef9abe2', 66: '62b5e30a', 77: '5cbb10d9', 88: 'd72e8b48' },
   'the_tu_ung_the/burst_pressure': { 11: '2090970a', 22: 'c7d652db', 33: '9f709706', 44: 'cab3e268', 55: '01b55ff5', 66: '3f0c4312', 77: 'e3e2a447', 88: '4562c544' },
   'the_tu_ung_the/attrition': { 11: '858dc3bc', 22: '3ed79cba', 33: '07506795', 44: 'fe294423', 55: '46ad2a52', 66: '6baf0545', 77: '8fc9b2b8', 88: '73729934' },
-  'kiem_tu_ngu/single_target': { 11: '7c2e4f1b', 22: '1a7a59c2', 33: '5ff44c11', 44: '51e404f3', 55: 'fee4ca29', 66: 'f7f74941', 77: 'ee01e59b', 88: '3a54a48a' },
-  'kiem_tu_ngu/multi_enemy': { 11: '41c1edd4', 22: '63e44a62', 33: '81f4cf66', 44: '3a39a9f1', 55: 'e73e17d3', 66: '9a2f797b', 77: '893c86ec', 88: '52a369e9' },
-  'kiem_tu_ngu/durable_target': { 11: 'c06ed3ed', 22: 'feec5a40', 33: 'e27974bd', 44: 'df92ad3d', 55: '0c71b3bb', 66: 'c47c4142', 77: '86e1028b', 88: '1ffdbb5d' },
-  'kiem_tu_ngu/burst_pressure': { 11: 'c3463b8b', 22: 'fbc8a307', 33: '1564da1f', 44: '75d25f53', 55: '8b299572', 66: 'b5cc6b62', 77: '84555fde', 88: '02f37965' },
-  'kiem_tu_ngu/attrition': { 11: 'fae3ebc1', 22: '52b1704e', 33: '2c6b15db', 44: 'aac7048b', 55: '2b5cf4ae', 66: '9a8703c2', 77: '54ca62af', 88: '883e523f' },
-
+  'kiem_tu_ngu/single_target': { 11: '7df296f9', 22: 'efc75511', 33: 'f7dd3364', 44: 'ab805c80', 55: '970d357a', 66: 'f9665671', 77: '4c6509a1', 88: 'c294feac' },
+  'kiem_tu_ngu/multi_enemy': { 11: 'a5ff4e1b', 22: '852e83a4', 33: 'a2d70535', 44: '6e0ad15b', 55: 'd4a1db74', 66: '47c9c966', 77: '5767ed01', 88: '4840d2e3' },
+  'kiem_tu_ngu/durable_target': { 11: '792c17df', 22: '760f91b0', 33: 'd0f36cf1', 44: '8382cef9', 55: '6fa5d09a', 66: '19409b35', 77: '0b765923', 88: '8e787dd4' },
+  'kiem_tu_ngu/burst_pressure': { 11: '077decfe', 22: '4d03240c', 33: '61eabab5', 44: '7c98bbea', 55: '8d963c64', 66: '50d755d9', 77: 'ff403e82', 88: '99e05d2f' },
+  'kiem_tu_ngu/attrition': { 11: '904717be', 22: '649bab50', 33: 'ffa4be55', 44: 'ce156703', 55: '309d4b0d', 66: '977c5470', 77: '71bf5af2', 88: '008e166d' },
 }
 
 describe('balance matrix regression', () => {

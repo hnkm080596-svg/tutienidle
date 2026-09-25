@@ -6,12 +6,12 @@
   "scope": "AGGREGATE_REPOSITORY",
   "authorizedRepairs": [],
   "nonGoals": [],
-  "checkout": "",
+  "checkout": "/home/ubuntu/repos/tutienidle/.agent-worktrees/ngu-kiem-beta",
   "branch": "devin/1790284398-ngu-kiem-beta",
-  "base": "",
-  "head": "7e6ccab0f11fe9214169f8fbd91e400e3309d071",
+  "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
+  "head": "31c06c9b",
   "state": {
-   "productStateId": "aa07ff34e178d4528f77849d167dce0d7499fcd6f7ac3b2ca54101718e42dd65",
+   "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -47,27 +47,117 @@
    },
    "policyHash": "60ff569d5cbba6d6db8b6a34e9fecc72a87aeba60ff0cd6422455368c58b6a4b",
    "requirementRefs": [
-    "docs/specs/ngu-kiem-beta-spec.md",
-    "design doc pasted-1790269026263.txt (user design): hidden_sword_pathway evolution redesign",
-    "beta ceiling foundation_establishment"
+    {
+     "path": "docs/specs/ngu-kiem-beta-spec.md",
+     "symbolOrSection": "file",
+     "revision": "1fffae56",
+     "basis": "USER"
+    },
+    {
+     "path": "design doc pasted-1790269026263.txt (user design): hidden_sword_pathway evolution redesign",
+     "symbolOrSection": "file",
+     "revision": "1fffae56",
+     "basis": "USER"
+    },
+    {
+     "path": "beta ceiling foundation_establishment",
+     "symbolOrSection": "file",
+     "revision": "1fffae56",
+     "basis": "USER"
+    }
    ],
    "invariantIds": [],
    "dependencyRefs": [
-    "src/core/kiem-tu/NguKiemDao.ts",
-    "src/core/kiem-tu/NguKiemDaoProvider.ts",
-    "src/core/kiem-tu/KiemTuPath.ts",
-    "src/core/battle/turn/TurnBattleSystem.ts",
-    "src/core/battle/turn/TurnSkillAction.ts",
-    "src/core/progression/NodeSystem.ts",
-    "src/core/progression/ProgressionNode.ts",
-    "src/core/game/GameManagerProgressionOps.ts",
-    "src/core/game/GameManagerRealmAdvanceOps.ts",
-    "src/core/player/CultivationPathKit.ts",
-    "src/core/player/Player.ts",
-    "src/data/progression/KiemTuNodes.ts",
-    "src/data/skill/NguKiemDaoSkills.ts",
-    "src/data/skill/TurnSkillDisplayMeta.ts",
-    "src/components/panels/skill-path/"
+    {
+     "path": "src/core/kiem-tu/NguKiemDao.ts",
+     "symbolOrSection": "file",
+     "revision": "1fffae56",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/kiem-tu/NguKiemDaoProvider.ts",
+     "symbolOrSection": "file",
+     "revision": "1fffae56",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/kiem-tu/KiemTuPath.ts",
+     "symbolOrSection": "file",
+     "revision": "1fffae56",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "file",
+     "revision": "1fffae56",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/turn/TurnSkillAction.ts",
+     "symbolOrSection": "file",
+     "revision": "1fffae56",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/progression/NodeSystem.ts",
+     "symbolOrSection": "file",
+     "revision": "1fffae56",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/progression/ProgressionNode.ts",
+     "symbolOrSection": "file",
+     "revision": "1fffae56",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": "file",
+     "revision": "1fffae56",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+     "symbolOrSection": "file",
+     "revision": "1fffae56",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/player/CultivationPathKit.ts",
+     "symbolOrSection": "file",
+     "revision": "1fffae56",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/player/Player.ts",
+     "symbolOrSection": "file",
+     "revision": "1fffae56",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/data/progression/KiemTuNodes.ts",
+     "symbolOrSection": "file",
+     "revision": "1fffae56",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/data/skill/NguKiemDaoSkills.ts",
+     "symbolOrSection": "file",
+     "revision": "1fffae56",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/data/skill/TurnSkillDisplayMeta.ts",
+     "symbolOrSection": "file",
+     "revision": "1fffae56",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/components/panels/skill-path/",
+     "symbolOrSection": "file",
+     "revision": "1fffae56",
+     "basis": "SOURCE"
+    }
    ],
    "sourceDependencyHashes": [],
    "expectedChangeSet": [
@@ -158,8 +248,137 @@
  "consumptions": [],
  "invariants": [],
  "census": [],
- "findings": [],
- "evidence": [],
+ "findings": [
+  {
+   "id": "F-NK-QA-1",
+   "title": "Engine-lane Kiem The momentum pin flaky under unseeded rng (attacker critRate not zeroed)",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "TEST_DEFECT",
+   "actionable": true,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/kiem-tu/invariants.test.ts",
+     "symbolOrSection": "makeBattle attacker stats",
+     "revision": "1fffae56",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "coordinator verify-loop",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-NK-FIX-1"
+   ],
+   "counterexample": "observed third/first ratio 2.03 vs expected 1.3 on unseeded run; test passed when run isolated",
+   "expected": "deterministic momentum ratio assertions",
+   "actual": "default criticalRate 0.05 + unseeded Math.random rng let a crit inflate a later sword",
+   "rootCause": "test fixture omitted attacker criticalRate:0 while relying on damage ratios",
+   "rootClass": "test-fixture-gap",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu"
+     ],
+     "termsAndMethod": "all per-instance damage-ratio assertions audited for unzeroed crit/variance sources",
+     "hitDispositions": [
+      "no same-class sibling found (blockChance/evasion already zeroed; defender-side crit not a factor)"
+     ],
+     "coverageLimits": [
+      "sealed clean-A re-review pending"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-1"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "attacker createBaseStats gains criticalRate:0 @31c06c9b; 3x consecutive green runs",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-1"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-1"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  }
+ ],
+ "evidence": [
+  {
+   "id": "EV-NK-P4-QUICK",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "SOURCE_PROOF",
+   "producer": "coordinator",
+   "startedAt": "2026-09-24T23:30:00.000Z",
+   "finishedAt": "2026-09-24T23:31:59.000Z",
+   "commandOrMethod": "P4 adversarial quick review (14-row invariant ledger, 3 risk domains)",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/ngu-kiem-beta-quick.md",
+   "artifactHash": "f79a4b72a363bfba982b653a2a936818a185eff7c36d7fc3881f014ec162c047",
+   "inputPaths": [
+    "docs/qa/2026-09-24-ngu-kiem-beta-quick.md",
+    "src/core/kiem-tu/",
+    "src/core/battle/turn/",
+    "src/data/progression/KiemTuNodes.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "PASS WITH EVIDENCE: no confirmed defects; 14 invariants INV-NK-1..14 checked; 2 recorded coverage gaps (plan-lane live battle, UI e2e)"
+   ],
+   "limitations": [
+    "plan-lane momentum verified at contract/adapter level only",
+    "no browser e2e over skill-path panel"
+   ],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-NK-FIX-1",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T00:45:30.000Z",
+   "finishedAt": "2026-09-25T00:45:52.000Z",
+   "commandOrMethod": "npx vitest run src/core/kiem-tu src/core/progression GameManager.kiemTuNguWay GameManager.nguKiemDao GameManagerProgressionOps.clawback",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/fix-verify-1fffae56.log",
+   "artifactHash": "642de72fdf71be088557747f690757d98ca3e6b81f5d85c7024b469d60519db5",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "235 tests pass incl. engine-lane Kiem The momentum pin (deterministic after critRate:0 fix @31c06c9b)"
+   ],
+   "limitations": [
+    "scoped suite; full npm run verify env-noise profile identical to master (canvas/magick)"
+   ],
+   "status": "CURRENT"
+  }
+ ],
  "coverage": [],
  "attacks": [],
  "reviews": [],
@@ -216,6 +435,38 @@
    "payloadPath": "events/0003.json",
    "payloadHash": "d9dfff1097eb8f04d98025d38b9a383bcef6dd526f2f0bbd570c31549004c604",
    "eventHash": "16abdd2df2aa6f98fbb096c09692727b618430c051eddf2c07278e857cdaec2c"
+  },
+  {
+   "seq": 4,
+   "at": "2026-09-25T00:17:14.379Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "bca933d8f600dcaad8a342846af47ce31dc133980eb9b471dd3f6d5ecd114de3",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "16abdd2df2aa6f98fbb096c09692727b618430c051eddf2c07278e857cdaec2c",
+   "payloadPath": "events/0004.json",
+   "payloadHash": "98f79b03e7c761ca950eef6a67e37314ba95620b0800b3fbaa97902711926051",
+   "eventHash": "9d141e084338644b5f98e5dc9214604c1a6fba24cf63895aa28372113f92eb9c"
+  },
+  {
+   "seq": 5,
+   "at": "2026-09-25T00:45:57.202Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "9d141e084338644b5f98e5dc9214604c1a6fba24cf63895aa28372113f92eb9c",
+   "payloadPath": "events/0005.json",
+   "payloadHash": "b5840e81544151c4dafbf2e59580a04e8943ea52edae5f2f0870b14cba4c9d9a",
+   "eventHash": "3f1e8e53540a5cdd576efd5cc56b7cd63f3065bb01f0cd12add606fa9fb8664b"
   }
  ]
 }

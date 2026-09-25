@@ -16,7 +16,6 @@ import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 import { BuffPersistence } from '../buff2/BuffPersistence'
 import { CANONICAL_ELEMENTAL_SEALS, createElementalStateRegistry } from '../reaction/ElementalStateRegistry'
 import { FunctionCombatRng } from '../battle/runtime/rng/FunctionCombatRng'
-import type { BuffDefinitionId } from '../battle/contracts/ids'
 
 import { NodeRegistry } from '../progression/NodeRegistry'
 import { getSkillCoreLevel, skillCoreNodeId } from '../progression/SkillCoreLevel'
@@ -866,6 +865,7 @@ export class GameManager {
       // Deferred closures - tickOps is assigned later in this constructor.
       deliverDecomposeOutput: (entry) => this.tickOps.deliverDecomposeOutput(entry),
       reconcileQuestLifecycle: () => this.tickOps.reconcileQuestLifecycle(),
+      reconcileWayGrants: (player) => this.realmAdvanceOps.reconcileWayGrants(player),
       tribulationDirector: this.tribulationDirector,
     })
 

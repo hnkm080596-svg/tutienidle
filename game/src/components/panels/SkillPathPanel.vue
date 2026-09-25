@@ -42,7 +42,7 @@ import type { SkillPathEntry, NativeSkillPathEntry } from './skill-path/SkillPat
 import { NATIVE_CORE_SKILL_IDS } from '@/data/progression/SkillCoreNodes'
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import { getSkillCoreLevel } from '@/core/progression/SkillCoreLevel'
-import { resolveNguKiemSkillName } from '@/core/kiem-tu/NguKiemDaoProvider'
+import { resolveNguKiemEvolutionSuffix, resolveNguKiemSkillName } from '@/core/kiem-tu/NguKiemDaoProvider'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 
 const { t } = useI18n()
@@ -196,8 +196,8 @@ const skillPathEntries = computed<SkillPathEntry[]>(() => {
         ? resolveNguKiemSkillName(player.$state, gameManager.nodeRegistry.getAll())
         : undefined
     const evolutionName =
-      nguKiemName !== undefined && nguKiemName.includes('·')
-        ? nguKiemName.split('·').at(-1)?.trim()
+      skillId === 'ngu_kiem_thuat'
+        ? resolveNguKiemEvolutionSuffix(player.$state, gameManager.nodeRegistry.getAll())
         : undefined
 
     entries.push({

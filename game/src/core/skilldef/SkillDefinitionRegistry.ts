@@ -392,6 +392,14 @@ function validateActive(
       if (each.critChance !== undefined && (each.critChance < 0 || each.critChance > 1)) {
         fault('invalid_field_value', 'instances.each.critChance', 'critChance must be in [0, 1]')
       }
+      if (
+        each.momentumPerLandedInstance !== undefined &&
+        (typeof each.momentumPerLandedInstance !== 'number' ||
+          !Number.isFinite(each.momentumPerLandedInstance) ||
+          each.momentumPerLandedInstance < 0)
+      ) {
+        fault('invalid_field_value', 'instances.each.momentumPerLandedInstance', 'momentumPerLandedInstance must be a finite number >= 0')
+      }
       if (each.armorPierce !== undefined) {
         if (each.armorPierce.bypassChance < 0 || each.armorPierce.bypassChance > 1) {
           fault('invalid_field_value', 'instances.each.armorPierce.bypassChance', 'bypassChance must be in [0, 1]')

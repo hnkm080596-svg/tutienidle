@@ -129,7 +129,7 @@ describe('KiemTuNodes — ngu evolution spine', () => {
     expect(node('ngu_kiem_khoi').effect.evolutionId).toBe('khoi')
     expect(node('ngu_kiem_lien').effect.evolutionId).toBe('lien')
     // Sealed: no evolution layer ever activates from this node.
-    expect(node('ngu_kiem_phong').effect.evolutionId).toBeUndefined()
+    expect(node('ngu_kiem_phong_an').effect.evolutionId).toBeUndefined()
   })
 
   it('ngu_kiem_khoi is grant-only: free, grantedOnly, no prerequisites', () => {
@@ -147,8 +147,8 @@ describe('KiemTuNodes — ngu evolution spine', () => {
     expect(lien.prerequisites).toContainEqual({ kind: 'realm', realmId: 'foundation_establishment' })
   })
 
-  it("ngu_kiem_phong is the sealed '???' placeholder beyond the beta ceiling", () => {
-    const phong = node('ngu_kiem_phong')
+  it("ngu_kiem_phong_an is the sealed '???' placeholder beyond the beta ceiling", () => {
+    const phong = node('ngu_kiem_phong_an')
     expect(phong.name).toBe('???')
     expect(phong.prerequisites).toContainEqual({ kind: 'node', nodeId: 'ngu_kiem_lien' })
     expect(phong.prerequisites).toContainEqual({ kind: 'realm', realmId: 'golden_core' })
@@ -185,7 +185,7 @@ describe('KiemTuNodes — ngu evolution spine', () => {
       kind: 'node',
       nodeId: 'ngu_kiem_khoi',
     })
-    expect(node('ngu_kiem_phong').prerequisites).toContainEqual({
+    expect(node('ngu_kiem_phong_an').prerequisites).toContainEqual({
       kind: 'node',
       nodeId: 'ngu_kiem_lien',
     })

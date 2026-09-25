@@ -75,6 +75,9 @@ export interface GameManagerSaveRestoreDeps {
   // R8.1 (AR-09) - quest lifecycle reconciliation command (logic lives
   // on GameManager; restore triggers it at the right boundary).
   reconcileQuestLifecycle: () => void
+  // F-NK-AUT-7 (2026-09-25) - way grantedNodeIds replay (logic lives on
+  // realmAdvanceOps; idempotent grant at every restore).
+  reconcileWayGrants: (player: PlayerData) => void
   // Session rng seam (F-W-7) - GameManager-owned injectable stream so
   // offline alchemy settle rolls pin in deterministic harnesses.
   sessionRng: () => number
@@ -469,6 +472,13 @@ export class GameManagerSaveRestore {
     // cooldown sau khi mọi slice domain đã nạp (director không phụ
     // thuộc thứ tự domain khác nhưng đặt cuối cho đúng boundary).
     this.deps.tribulationDirector.restoreRuntime(save.tribulation)
+
+    // F-NK-AUT-7 - way grants replay BEFORE quest lifecycle so
+    // grantedNodeIds ownership exists when eligibility is evaluated;
+    // idempotent, runs on EVERY restore (not only the offline branch).
+    if (bodyPlayer) {
+      this.deps.reconcileWayGrants(bodyPlayer)
+    }
 
     // R8.1 (AR-09) - activation is a lifecycle command, not a UI read:
     // restore converges the active set to current eligibility BEFORE

@@ -41,7 +41,7 @@ export interface CultivationPathRuntime {
   /**
    * Kiem Tu sword_pathway/hidden_sword_pathway dynamic-basic provider - undefined for other paths.
    * `rng` is the session battle RNG (Mission C Task 8): provider-side
-   * rolls (Ngu cascade-crit/pierce) must not fall back to Math.random.
+   * rolls must not fall back to Math.random.
    */
   buildDynamicBasic?(
     player: PlayerData,

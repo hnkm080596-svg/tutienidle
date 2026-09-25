@@ -717,6 +717,12 @@
       "hash": "b7a61a46f7bcafd4d98968c59b3baf97acd9459898ec9a1039836b4512151fdb"
     },
     {
+      "path": "docs/balance/2026-09-25-ngu-kiem-redesign.md",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "63b9433610baeaeb73e6c6212357d0a2bdef30fab96f45d2c6e05e6c989886d5"
+    },
+    {
       "path": "docs/design/2026-09-23-hidden-perfection-lineage.md",
       "kind": "file",
       "mode": 33188,
@@ -14562,7 +14568,7 @@
       "path": "src/components/panels/skill-path/NativeCoreDetail.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "a737dfb9ad7496401cfdfbc166a81fbda702fcf21ac9ad346f6411054834d787"
+      "hash": "b50b08f1eb7227285e62097849b70793aa60b920ba1b2dd3747a704e016cfcab"
     },
     {
       "path": "src/components/panels/skill-path/NodeInspector.test.ts",
@@ -14574,7 +14580,7 @@
       "path": "src/components/panels/skill-path/NodeInspector.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "800bdd8218f31853560b11a92c58972b7dfc30df0b3f2949dd3258dc0d24deb5"
+      "hash": "bb86944ad158742e6c1508ce38799206473f22b4a945eb428e1e69e4ecbf5170"
     },
     {
       "path": "src/components/panels/skill-path/NodeTreePanel.test.ts",
@@ -14610,7 +14616,7 @@
       "path": "src/components/panels/skill-path/SkillPathEntry.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "71fc0e119db66a8dbfdbe7b50f4c59c0404495376fe4375d1c894fcdbf406ef3"
+      "hash": "a96ae98f921c65080b1ef8f2d8d68d596495026a2be9c6c7c411a61070047ce9"
     },
     {
       "path": "src/components/panels/skill-path/SkillPathList.vue",
@@ -14652,7 +14658,7 @@
       "path": "src/components/panels/SkillPathPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "c0b35f46e957374ee30761c13059d22d366116776321a26f06ca3b99cfec21a5"
+      "hash": "a478e48c62c49688d6fce844b31bbed27cac9aafd1dce5416d511c7bf33e52cf"
     },
     {
       "path": "src/components/panels/StageSelectPanel.test.ts",
@@ -15984,7 +15990,7 @@
       "path": "src/core/battle/turn/TurnSkillAction.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "096894a0bb518fbcf046150f32545c3f4a4cd8b1a9d5d9a5a03c534897667084"
+      "hash": "38d35859eb1dadbef86798354a6f2c535240c39967009c5d4278c0b1a04d386f"
     },
     {
       "path": "src/core/battle/turn/TurnSkillExecution.test.ts",
@@ -16332,7 +16338,7 @@
       "path": "src/core/combat/CombatSkillPresentation.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "bf36565031bbbcb37a328080c41fd880b431d7b56b39dbd8d85b5741a219e55a"
+      "hash": "e648e193a2df23434005764ad615bcaa1f2edbfd560f4bd9458307cfd8bd65dc"
     },
     {
       "path": "src/core/combat/CombatSkillPresentation.ts",
@@ -17514,7 +17520,7 @@
       "path": "src/core/game/GameManager.kiemTuNguWay.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "89aa13af05e2e2110ac05c3e93b0bcb6e174ae4b88461e76de99ed4334b9ac30"
+      "hash": "73012b1e7eaf37aee72b07c4945e218d11db39ac4251f8761fd415cb2dc08c95"
     },
     {
       "path": "src/core/game/GameManager.kiemTuState.test.ts",
@@ -17526,7 +17532,7 @@
       "path": "src/core/game/GameManager.kiemTuTree.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "3597cc3d81cfdb7f4c254126bcc65e6eca9c16e8cb4ce0b18d44811dac4623b5"
+      "hash": "178c8f40afa0c3db32e72162b1e4fcccc2c51dd5694639e723d2074d0c48ba87"
     },
     {
       "path": "src/core/game/GameManager.laneAssignment.test.ts",
@@ -17568,7 +17574,7 @@
       "path": "src/core/game/GameManager.nguKiemDao.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "49f32b291dc26aecf04368715e776822fb36922b947d89f9b279c617d4c3c0c7"
+      "hash": "3e9c6cd473332840c6a8a5a677333d6f58d4667397b8b2f4b53147364ccaafa9"
     },
     {
       "path": "src/core/game/GameManager.overflowSurfacing.test.ts",
@@ -17952,7 +17958,7 @@
       "path": "src/core/game/GameManagerProgressionOps.clawback.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "54e4fa910020a4866503b66280cfb41204a9a54b9e6b20d8f99c234095b194fe"
+      "hash": "d41c35d514f530786c7fcf1ec2b0301af1585f034ddfd336b26e474e64b2961f"
     },
     {
       "path": "src/core/game/GameManagerProgressionOps.levelGates.test.ts",
@@ -17982,7 +17988,7 @@
       "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e681b75e1860e738cded17a56b312bd19f3baa4308ab674ef01cd609bdb09855"
+      "hash": "42893918df5b8883bc1373fbd9b9071613d250e0d2d81ec269edfeffcf9aa500"
     },
     {
       "path": "src/core/game/GameManagerRewardOps.ts",
@@ -18210,7 +18216,7 @@
       "path": "src/core/kiem-tu/invariants.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "3082db2936e37977a16058796ed0b6dfd3eb4a24a65b652076ff6b95c2a4845a"
+      "hash": "dad1577812789ba36cb812ae693ee8a580f3732fc7b36aa1ce62d6f135dccd28"
     },
     {
       "path": "src/core/kiem-tu/KiemPhoNodeModifiers.ts",
@@ -18246,7 +18252,7 @@
       "path": "src/core/kiem-tu/KiemTuPath.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c7892ec217f40703f90bf03588aac6be9a50d2ea258e2a2d22b341f4b78ae329"
+      "hash": "302a760f02bcdeaca0bba0004ce845a1e0154d4eadfb598d276377022e4a594a"
     },
     {
       "path": "src/core/kiem-tu/KiemTuPath.way.test.ts",
@@ -18270,19 +18276,19 @@
       "path": "src/core/kiem-tu/NguKiemDao.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "babd2ac65587748be33fed0c5cc524d3bd710c14c8b4fcdda2d162a95f660d0e"
+      "hash": "c3f29532b0b025578189cd4ddbf7ce286472f9f4b202ec54fbb69bedee430095"
     },
     {
       "path": "src/core/kiem-tu/NguKiemDaoProvider.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e37d204faa1652dad380bdd6aa9b4df562dd1806f0c5ed776825de48fe814121"
+      "hash": "cda2d556eb1a575ea3c6eb53501ca318bc46c76a92c3cc91edb589770a63b83c"
     },
     {
       "path": "src/core/kiem-tu/NguKiemDaoProvider.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "5c1ec1c79728504db8e0a12f43f197194931994d3b7532f18ad6aab46c3f1c2d"
+      "hash": "cad35ba169c79dec6593c7f04746e63381770423dbf9c8207761641b98c00ac8"
     },
     {
       "path": "src/core/material/Material.ts",
@@ -18468,7 +18474,7 @@
       "path": "src/core/player/CultivationPathKit.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "3fa68b1d689c84dc7bd890c6e49caebbb374a791e4246afcc7139903aa758975"
+      "hash": "15dcf875ae6a7e462bfb7e86cc7497d779657ffadbbaf8b39f61f59053c6d41b"
     },
     {
       "path": "src/core/player/CultivationPathRegistry.ts",
@@ -18492,7 +18498,7 @@
       "path": "src/core/player/CultivationPathRuntime.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f03e01ac085ecee898b6637fb3ca17c0ce35b4aef74b533edef477993cbf58f9"
+      "hash": "f1d4138c1b68e94c09cc587c5bf24a5ad5d5b49da331f2f290e932332cc80633"
     },
     {
       "path": "src/core/player/CultivationPathRuntime.ts",
@@ -19476,7 +19482,7 @@
       "path": "src/core/simulation/benchmark/BalanceMatrix.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1207eb37916e860d9d79f555c2d310027d2234b65101a3f8f09543273338ca2f"
+      "hash": "b65779963261101e72e42392a2b99c8ddb836bff602d10579fa33433f79a5b52"
     },
     {
       "path": "src/core/simulation/benchmark/BalanceReport.test.ts",
@@ -20658,13 +20664,13 @@
       "path": "src/data/progression/KiemTuNodes.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c44c85eb845b7db64e9c566a35c47d14de09ac82762d3d31363e642931c99791"
+      "hash": "988bf2deb44acf164bdc37a7d8f97730d0470fd75baff6a7a17f9c747f1950cb"
     },
     {
       "path": "src/data/progression/KiemTuNodes.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f0728de1d96145a3c0a17a7886127487523f7c620a6badf4c92478c2f5b1f030"
+      "hash": "40a10ecd8be7ebfab77f06615dac9ddaad468dec903199e7d44f6231eab804dc"
     },
     {
       "path": "src/data/progression/PhapTuAnNodes.ts",
@@ -20874,7 +20880,7 @@
       "path": "src/data/skill/NguKiemDaoSkills.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "08b08a996734a0a9d9fe0cba4e94dd85f57a3b1b13564dcdd6ed5d8969baf974"
+      "hash": "65b1cf66540583ef124edba60c8a60e69129c3c970bb46f31849ccd30623cb90"
     },
     {
       "path": "src/data/skill/PassiveSkills.ts",
@@ -20982,7 +20988,7 @@
       "path": "src/data/skill/TurnSkillDisplayMeta.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a4a963fc2ab25ebef89e35976c53ad939126e1c737ada1eb44d8d1d0b1417d3f"
+      "hash": "b531f62a59585662c917880f73c2f13ffde7b7dc26160d95ad9fb02fa5a50c34"
     },
     {
       "path": "src/data/stage/ChapterStages.test.ts",
@@ -22965,5 +22971,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "aa07ff34e178d4528f77849d167dce0d7499fcd6f7ac3b2ca54101718e42dd65"
+  "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007"
 }

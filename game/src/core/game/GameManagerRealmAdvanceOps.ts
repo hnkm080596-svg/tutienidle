@@ -165,6 +165,26 @@ export class GameManagerRealmAdvanceOps {
   }
 
   /**
+   * Ngu Kiem Beta (F-NK-AUT-7) - replay the committed way's
+   * grantedNodeIds at restore. Saves that picked a way BEFORE its
+   * granted nodes shipped (v84 hidden_sword_pathway predates
+   * ngu_kiem_khoi) never re-run the initiation ritual, so the grant is
+   * permanently missing and the provider resolves a broken evolution
+   * chain. grantSkillCore is idempotent (level>=1 + mirror membership
+   * short-circuit) so every restore is safe; unregistered/unknown way
+   * pairs no-op (their ownsership/way validators report separately).
+   */
+  reconcileWayGrants(player: PlayerData): void {
+    const way = getActiveWayDefinition(player)
+
+    for (const nodeId of way?.grantedNodeIds ?? []) {
+      if (this.deps.nodeRegistry.has(nodeId)) {
+        grantSkillCore(player, this.deps.nodeRegistry.get(nodeId))
+      }
+    }
+  }
+
+  /**
    * M-F-COMPANION-GIFT - companion gift moments authored against the
    * realm just entered. Call once per realm-entered write, AFTER
    * `player.realmId` holds the new realm: issueCompanionGifts is

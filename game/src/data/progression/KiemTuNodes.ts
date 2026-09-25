@@ -217,7 +217,7 @@ const ORB_NODES: ProgressionNode[] = ORB_BRANCHES.flatMap(branch => {
 export const NGU_KIEM_EVOLUTION_NODE_IDS = [
   'ngu_kiem_khoi',
   'ngu_kiem_lien',
-  'ngu_kiem_phong',
+  'ngu_kiem_phong_an',
 ] as const
 
 const NGU_EVOLUTION_NODES: ProgressionNode[] = [
@@ -256,8 +256,10 @@ const NGU_EVOLUTION_NODES: ProgressionNode[] = [
     // Sealed '???' placeholder for the next tier (design: future realms
     // may show sealed slots on the spine). prereq realm golden_core
     // puts it permanently out of reach inside the beta ceiling -- it
-    // renders locked forever.
-    id: 'ngu_kiem_phong',
+    // renders locked forever. Fresh id: the retired 'ngu_kiem_phong'
+    // stat node shipped at v84, so reusing that id would rebind owned
+    // levels in live saves to a no-op placeholder.
+    id: 'ngu_kiem_phong_an',
     name: '???',
     description: 'Tầng tiếp theo của Ngự Kiếm — chưa mở.',
     type: 'major',

@@ -9,6 +9,9 @@ import { freshSwordPathState, KIEM_PHO_ORB_IDS } from './KiemTuState'
 import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
 import { KIEM_PHO_BUFFS } from '../../data/buff/KiemPhoBuffs'
 import { NGU_KIEM_THUAT } from '../../data/skill/NguKiemDaoSkills'
+import { kiemDaoCap } from './NguKiemDao'
+import { getRealmIndex } from '../realm/realmSystem'
+import { REALMS } from '../../data/realms/realm'
 
 // Cultivation Path Framework (spec 2026-09-16, M6) -- the Kiem Tu path
 // module: the two way definitions + the way membership predicates.
@@ -124,12 +127,43 @@ export function validateSwordPathPersistedState(
     emit({ path: 'player.swordPath.kiemY', message: 'phải là number hữu hạn >= 0' })
   }
 
-  if (typeof swordPath.kiemDaoCount !== 'number' || !Number.isFinite(swordPath.kiemDaoCount) || swordPath.kiemDaoCount < 1) {
-    emit({ path: 'player.swordPath.kiemDaoCount', message: 'phải là number hữu hạn >= 1' })
+  // F-NK-INT-3 - integer bound (the plan lane floors the count while
+  // the engine-unit lane iterates raw i<count: a fractional count
+  // makes the lanes diverge).
+  if (
+    typeof swordPath.kiemDaoCount !== 'number' ||
+    !Number.isInteger(swordPath.kiemDaoCount) ||
+    swordPath.kiemDaoCount < 1
+  ) {
+    emit({ path: 'player.swordPath.kiemDaoCount', message: 'phải là số nguyên >= 1' })
   }
 
-  if (typeof swordPath.kiemDaoBase !== 'number' || !Number.isFinite(swordPath.kiemDaoBase) || swordPath.kiemDaoBase < 1) {
-    emit({ path: 'player.swordPath.kiemDaoBase', message: 'phải là number hữu hạn >= 1' })
+  if (
+    typeof swordPath.kiemDaoBase !== 'number' ||
+    !Number.isInteger(swordPath.kiemDaoBase) ||
+    swordPath.kiemDaoBase < 1
+  ) {
+    emit({ path: 'player.swordPath.kiemDaoBase', message: 'phải là số nguyên >= 1' })
+  }
+
+  // F-NK-INT-3 - cap bound vs the realm cap: count/base may not exceed
+  // kiemDaoCap(realmIndex) (gainKiemY stops at cap; a crafted save
+  // exceeding it would emit more instances than authored).
+  if (
+    typeof playerPayload.realmId === 'string' &&
+    REALMS.some((realm) => realm.id === playerPayload.realmId) &&
+    typeof swordPath.kiemDaoCount === 'number' &&
+    Number.isInteger(swordPath.kiemDaoCount) &&
+    typeof swordPath.kiemDaoBase === 'number' &&
+    Number.isInteger(swordPath.kiemDaoBase)
+  ) {
+    const cap = kiemDaoCap(getRealmIndex(playerPayload.realmId))
+    if (swordPath.kiemDaoCount > cap || swordPath.kiemDaoBase > cap) {
+      emit({
+        path: 'player.swordPath',
+        message: `kiemDaoCount/kiemDaoBase vượt trần theo cảnh giới (cap = ${cap})`,
+      })
+    }
   }
 }
 

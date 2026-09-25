@@ -58,19 +58,41 @@ export function collectOwnedEvolutionIds(
  * registered in spine order, so the last owned match is the newest
  * layer. 'Ngu Kiem' is the pre-evolution fallback.
  */
+/** The owned evolution node (last matching wins -- spine order = tiers). */
+export function resolveNguKiemOwnedEvolutionNode(
+  player: PlayerData,
+  nodes: readonly ProgressionNode[],
+): ProgressionNode | undefined {
+  let owned: ProgressionNode | undefined
+
+  for (const node of nodes) {
+    if (node.effect.evolutionId !== undefined && (player.nodeLevels?.[node.id] ?? 0) > 0 && nodeWayApplies(player, node)) {
+      owned = node
+    }
+  }
+
+  return owned
+}
+
+const NGU_KIEM_EVOLUTION_SUFFIXES: Record<string, string> = {
+  khoi: 'Khởi',
+  lien: 'Liên',
+}
+
+/** The one-char evolution suffix for the `Evolution: X` display tag. */
+export function resolveNguKiemEvolutionSuffix(
+  player: PlayerData,
+  nodes: readonly ProgressionNode[],
+): string | undefined {
+  const evolutionId = resolveNguKiemOwnedEvolutionNode(player, nodes)?.effect.evolutionId
+  return evolutionId !== undefined ? NGU_KIEM_EVOLUTION_SUFFIXES[evolutionId] : undefined
+}
+
 export function resolveNguKiemSkillName(
   player: PlayerData,
   nodes: readonly ProgressionNode[],
 ): string {
-  let name = 'Ngự Kiếm'
-
-  for (const node of nodes) {
-    if (node.effect.evolutionId !== undefined && (player.nodeLevels?.[node.id] ?? 0) > 0 && nodeWayApplies(player, node)) {
-      name = node.name
-    }
-  }
-
-  return name
+  return resolveNguKiemOwnedEvolutionNode(player, nodes)?.name ?? 'Ngự Kiếm'
 }
 
 export function buildNguKiemDaoProvider(

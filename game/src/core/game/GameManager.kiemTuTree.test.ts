@@ -115,13 +115,13 @@ describe('swordPath tree — evolution spine grants', () => {
     expect([...collectOwnedEvolutionIds(player, KIEM_TU_NODES)].sort()).toEqual(['khoi', 'lien'])
   })
 
-  it('ngu_kiem_phong stays sealed inside the beta ceiling', () => {
+  it('ngu_kiem_phong_an stays sealed inside the beta ceiling', () => {
     const { gameManager, player } = setup()
     asNgu(player)
     player.realmId = 'foundation_establishment'
     player.nodeLevels = { ngu_kiem_khoi: 1, ngu_kiem_lien: 1 }
 
-    expect(gameManager.progressionOps.canPurchaseNode('ngu_kiem_phong', player)).toBe(false)
+    expect(gameManager.progressionOps.canPurchaseNode('ngu_kiem_phong_an', player)).toBe(false)
   })
 })
 

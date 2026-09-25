@@ -261,3 +261,50 @@ describe('sword ngu way — subtree isolation', () => {
     expect(player.swordPath).toBeDefined()
   })
 })
+
+
+describe('sword ngu way — reconcileWayGrants (F-NK-AUT-7)', () => {
+  // A save committed to hidden_sword_pathway BEFORE ngu_kiem_khoi
+  // shipped never re-runs the ritual: the grant is permanently
+  // missing and the provider resolves a broken evolution chain.
+  // reconcileWayGrants replays way.grantedNodeIds at restore --
+  // idempotent, so live saves are untouched.
+  it('grants the missing ngu_kiem_khoi to an old hidden-way save and is idempotent', () => {
+    const { gameManager, player } = mortalAtRitual(3)
+    player.realmId = 'foundation_establishment'
+    applyPathChoice(player, 'sword', 'hidden_sword_pathway')
+    // Old-save shape: way committed but the granted node absent.
+    expect(player.nodeLevels['ngu_kiem_khoi']).toBeUndefined()
+
+    gameManager.realmAdvanceOps.reconcileWayGrants(player)
+
+    expect(player.nodeLevels['ngu_kiem_khoi']).toBe(1)
+    expect(player.purchasedNodeIds).toContain('ngu_kiem_khoi')
+
+    // Idempotent: a second restore must not double-write or re-push.
+    gameManager.realmAdvanceOps.reconcileWayGrants(player)
+    expect(player.nodeLevels['ngu_kiem_khoi']).toBe(1)
+    expect(
+      player.purchasedNodeIds.filter((id) => id === 'ngu_kiem_khoi'),
+    ).toHaveLength(1)
+  })
+
+  it('no-ops for players on another way or with grants already present', () => {
+    const { gameManager, player } = mortalAtRitual(3)
+    // sword_pathway declares no grantedNodeIds.
+    player.realmId = 'foundation_establishment'
+    applyPathChoice(player, 'sword', 'sword_pathway')
+    gameManager.realmAdvanceOps.reconcileWayGrants(player)
+    expect(player.nodeLevels['ngu_kiem_khoi']).toBeUndefined()
+
+    // Way already holding the grant: untouched.
+    const { gameManager: gm2, player: p2 } = mortalAtRitual(3)
+    p2.realmId = 'foundation_establishment'
+    applyPathChoice(p2, 'sword', 'hidden_sword_pathway')
+    p2.nodeLevels['ngu_kiem_khoi'] = 1
+    p2.purchasedNodeIds.push('ngu_kiem_khoi')
+    const snapshot = { ...p2.nodeLevels }
+    gm2.realmAdvanceOps.reconcileWayGrants(p2)
+    expect(p2.nodeLevels).toEqual(snapshot)
+  })
+})
