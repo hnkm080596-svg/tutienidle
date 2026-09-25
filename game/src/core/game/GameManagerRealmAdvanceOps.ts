@@ -10,7 +10,7 @@ import { applyBreakthroughMerge } from '../kiem-tu/NguKiemDao'
 import { issueCompanionGifts } from '../companion/CompanionGifts'
 import { CULTIVATION_PATH_MODULES, getActiveWayDefinition } from '../player/CultivationPathKit'
 import type { NodeRegistry } from '../progression/NodeRegistry'
-import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward, hasStaticPathCapability } from '../player/CultivationPathSystem'
+import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward, reconcileCultivationPathRealmRewards as reconcilePathRealmRewards, hasStaticPathCapability } from '../player/CultivationPathSystem'
 import {
   computeBreakthroughGrade,
   investBodyChapterState,
@@ -126,6 +126,16 @@ export class GameManagerRealmAdvanceOps {
   /** Grants the major-realm reward of the cultivation path data kit (P7-M3: artifact-only). */
   grantCultivationPathRealmReward(player: PlayerData, realmId: string): boolean {
     return grantPathRealmReward(player, realmId, (nodeId) =>
+      this.deps.nodeRegistry.has(nodeId) ? this.deps.nodeRegistry.get(nodeId) : undefined,
+    )
+  }
+
+  /**
+   * Load-time reconcile (F-PT-A9-1): replays realm-entry grants the player
+   * already passed -- safe to run on every restore (idempotent max-write).
+   */
+  reconcileCultivationPathRealmRewards(player: PlayerData): boolean {
+    return reconcilePathRealmRewards(player, (nodeId) =>
       this.deps.nodeRegistry.has(nodeId) ? this.deps.nodeRegistry.get(nodeId) : undefined,
     )
   }

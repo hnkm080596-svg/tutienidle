@@ -23,6 +23,7 @@ import {
 } from './CultivationPathKit'
 import { registerDomainDeltaDeriver, type StatModifier } from '../stats/StatCalculator'
 import { isRealmAvailable } from '../realm/ReleasePolicy'
+import { getRealmTier } from '../realm/RealmTierMap'
 import { type StatDomain } from '../stats/StatDomain'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { Stats } from '../stats/StatBlock'
@@ -454,4 +455,37 @@ export function grantCultivationPathRealmReward(
   }
 
   return true
+}
+
+/**
+ * Load-time reconcile for realm-entry rewards (2026-09-25, F-PT-A9-1):
+ * grants fire only at the breakthrough transition, so a save that already
+ * PASSED a reward realm before the content existed would permanently miss
+ * rewardOnly nodeLevels (no purchase path exists). Grants are idempotent
+ * max-writes, so replaying them on every restore is safe -- same rehydrate
+ * seam as reconcileQuestLifecycle / applyAllBodyModifiers.
+ */
+export function reconcileCultivationPathRealmRewards(
+  player: PlayerData,
+  resolveNode: (nodeId: string) => ProgressionNode | undefined,
+): boolean {
+  if (!player.cultivationPath) {
+    return false
+  }
+
+  const rewards = getActiveWayDefinition(player)?.realmRewards
+  if (!rewards) {
+    return false
+  }
+
+  const playerTier = getRealmTier(player.realmId)
+  let granted = false
+
+  for (const realmId of Object.keys(rewards)) {
+    if (getRealmTier(realmId) <= playerTier && grantCultivationPathRealmReward(player, realmId, resolveNode)) {
+      granted = true
+    }
+  }
+
+  return granted
 }
