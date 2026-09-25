@@ -20,26 +20,28 @@ import { buildRealmRewardNodes } from './PhapTuRealmRewardNodes'
 // below) are the deliberate exception: they aggregate on either spell
 // way once granted.
 export const PHAP_TU_NODES: ProgressionNode[] = [
-  ...buildElementBranch('fire'),
-  ...buildElementBranch('water'),
-  ...buildElementBranch('wood'),
-  ...buildElementBranch('metal'),
-  ...buildElementBranch('earth'),
-  // Three-path design (2026-09-25, ruling #1-#8) -- the basic-skill lane
-  // beside the existing special/ult/route lanes.
-  ...buildBasicBranch('fire'),
-  ...buildBasicBranch('water'),
-  ...buildBasicBranch('wood'),
-  ...buildBasicBranch('metal'),
-  ...buildBasicBranch('earth'),
-].map((node) => ({
-  ...node,
-  requiredCultivationPath: 'spell',
-  requiredWay: 'spell_pathway',
-}))
-
-// Three-path design (2026-09-25, sec.4-b) -- realm-reward grant nodes sit
-// OUTSIDE the stamping map: they carry requiredCultivationPath 'spell'
-// but no requiredWay, so both spell ways aggregate them once granted
-// (hidden_spell_pathway still cannot buy a single tree node).
-PHAP_TU_NODES.push(...buildRealmRewardNodes())
+  ...[
+    ...buildElementBranch('fire'),
+    ...buildElementBranch('water'),
+    ...buildElementBranch('wood'),
+    ...buildElementBranch('metal'),
+    ...buildElementBranch('earth'),
+    // Three-path design (2026-09-25, ruling #1-#8) -- the basic-skill lane
+    // beside the existing special/ult/route lanes.
+    ...buildBasicBranch('fire'),
+    ...buildBasicBranch('water'),
+    ...buildBasicBranch('wood'),
+    ...buildBasicBranch('metal'),
+    ...buildBasicBranch('earth'),
+  ].map((node) => ({
+    ...node,
+    requiredCultivationPath: 'spell' as const,
+    requiredWay: 'spell_pathway' as const,
+  })),
+  // Three-path design (2026-09-25, sec.4-b) -- realm-reward grant nodes sit
+  // OUTSIDE the stamping map: buildRealmRewardNodes already stamps
+  // requiredCultivationPath 'spell' but no requiredWay, so both spell ways
+  // aggregate them once granted (hidden_spell_pathway still cannot buy a
+  // single tree node).
+  ...buildRealmRewardNodes(),
+]

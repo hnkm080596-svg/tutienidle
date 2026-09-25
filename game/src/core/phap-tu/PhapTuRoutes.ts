@@ -153,8 +153,8 @@ export function resolveRouteProfile(state?: SpellPathState): RouteProfile {
  * EffectiveSkill seam: multiplies every damage effect/trigger value by
  * directMultiplier and every debuff ailmentChance by
  * ailmentChanceFactor. The result still flows through the existing
- * +elementApplicationPercent / [0,1] clamp in resolveAilmentApplicationChance -
- * no second clamp here. Never fakes +1 stack by injecting an add_stack
+ * elementApplicationPercent multiplicative channel in ApplicationResolver.resolve
+ * (chance = baseChance x (1 + pool), clamped by the resolver). Never fakes +1 stack by injecting an add_stack
  * effect — stack semantics stay in applyRouteToTurnSkill.
  */
 export function applyRouteToEffectiveSkill(effective: EffectiveSkill, profile: RouteProfile): EffectiveSkill {

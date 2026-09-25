@@ -329,12 +329,9 @@ function buildWood(): ProgressionNode[] {
     powerNode(
       'moc_doc_nhuan',
       'Độc Nhuần',
-      '+2% uy lực và +2% thời gian tật trạng mỗi cấp.',
+      '+2% tỉ lệ áp dục tật trạng mỗi cấp.',
       'wood',
-      [
-        stat('moc_doc_nhuan_pot', 'ailmentPotencyPercent', 0.02),
-        stat('moc_doc_nhuan_dur', 'ailmentDurationPercent', 0.02),
-      ],
+      [stat('moc_doc_nhuan', 'elementApplicationPercent', 0.02)],
     ),
     powerNode(
       'moc_doc_tu',
@@ -349,6 +346,14 @@ function buildWood(): ProgressionNode[] {
       '+2.5% uy lực tật trạng mỗi cấp (tầng Trúc Cơ).',
       'wood',
       [stat('moc_doc_am', 'ailmentPotencyPercent', 0.025)],
+      { foundation: true, maxLevel: 4 },
+    ),
+    powerNode(
+      'moc_doc_nhiem',
+      'Độc Nhiễm',
+      '+2.5% tỉ lệ áp dục tật trạng mỗi cấp (tầng Trúc Cơ).',
+      'wood',
+      [stat('moc_doc_nhiem', 'elementApplicationPercent', 0.025)],
       { foundation: true, maxLevel: 4 },
     ),
     capstone(

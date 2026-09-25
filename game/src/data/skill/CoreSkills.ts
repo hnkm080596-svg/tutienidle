@@ -325,11 +325,11 @@ export const CORE_SKILLS: Skill[] = [
         buffId: 'hoa_an',
 
         // 2026-08-21 - REVISED the original decision ("always 100% apply"):
-        // original Hoa Cau Thuat only has a 50% chance to apply Burn; the "Dan
-        // Hoa" (+15%) and "Hoa Nguyen" (+5%) nodes at Truc Co add more via
-        // stat elementApplicationPercent (xem resolveAilmentApplicationChance,
-        // data/progression/PhapTuNodes.ts) - so those nodes carry real
-        // meaning instead of stacking onto an already-maxed number.
+        // original Hoa Cau Thuat only has a 50% chance to apply Burn; Truc Co
+        // application-chance nodes raise it via the multiplicative
+        // elementApplicationPercent pool (ApplicationResolver: chance =
+        // baseChance x (1 + pool)) - so those nodes carry real meaning
+        // instead of stacking onto an already-maxed number.
         ailmentChance: 0.5,
       },
     ],
