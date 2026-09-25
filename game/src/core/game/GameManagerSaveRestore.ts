@@ -480,7 +480,7 @@ export class GameManagerSaveRestore {
     // EVERY restore (not only the offline>60s branch) and is idempotent.
     if (bodyPlayer) {
       this.deps.reconcileRealmRewards(bodyPlayer)
-    this.deps.reconcileSpecClaims(bodyPlayer)
+      this.deps.reconcileSpecClaims(bodyPlayer)
     }
 
     // R8.1 (AR-09) - activation is a lifecycle command, not a UI read:

@@ -641,7 +641,7 @@ export const CORE_SKILLS: Skill[] = [
       {
         id: 'kim_tu_phong',
         name: 'Tụ Phong',
-        description: 'Điểm Kim tụ một điểm — đòn đánh đậm hơn.',
+        description: 'Điểm Kim tụ một điểm — đòn đánh đậm hơn, Xuất Huyết dễ trúng hơn.',
         effectsOverride: [
           {
             type: 'damage',

@@ -261,8 +261,8 @@ export const SPELL_PATHWAY: PathWayDefinition = {
     },
     // Three-path design (2026-09-25, sec.4-b + ruling #19) — Truc Co
     // breakthrough: mastery per element (the element gate activates only
-    // the committed element's grant) + the The pool awakening (fill
-    // starts; spend stays Kim Dan-gated). Hidden way gets the same kinds
+    // the committed element's grant) + the The pool deepening (+1/cast,
+    // +10 cap; spend stays Kim Dan-gated). Hidden way gets the same kinds
     // at level 2.
     foundation_establishment: {
       grantedNodeLevels: {
