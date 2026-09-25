@@ -6,9 +6,10 @@ import { NATIVE_CORE_SKILL_IDS, SKILL_CORE_NODES } from './SkillCoreNodes'
 
 // M-QI-05 / QI-D3 - the Core Node catalog IS the progression-metadata
 // source. Every levelled Skill template gets exactly one generated
-// core; the 14 eligible native top-level defs get authored cores;
+// core; the 16 eligible native top-level defs get authored cores;
 // internal chained/stance/emblem/generated ids NEVER get cores.
-// Ung The beta: tu_the / bach_ung cores are retired (superseded kit);
+// Ung The beta: tu_the / bach_ung cores stay PARKED-REGISTERED (defs
+// superseded, granted by nothing in beta) - they still HAVE cores;
 // quan_the is the Truc Co special granted via major_quan_the.
 
 const NATIVE_TOP_LEVEL_IDS = [
@@ -19,6 +20,8 @@ const NATIVE_TOP_LEVEL_IDS = [
   'phan_chan',
   'son_nhac',
   'tham_the',
+  'tu_the',
+  'bach_ung',
   'quan_the',
   'ngu_kiem_thuat',
   'orb_dam',
@@ -50,8 +53,6 @@ const INTERNAL_NEGATIVE_LIST = [
   'phan_kich',
   'tro_kich',
   'trong_phan_kich',
-  'tu_the',
-  'bach_ung',
 ] as const
 
 const levelledTemplates = SKILLS.filter((skill) => skill.maxLevel > 1)

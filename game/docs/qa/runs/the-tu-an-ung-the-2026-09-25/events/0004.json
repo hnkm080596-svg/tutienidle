@@ -1,0 +1,12 @@
+{
+  "applied": [
+    "evidence:EV-TTA-IMPL",
+    "evidence:EV-TTA-VERIFY-1",
+    "review:REV-TTA-COR-A1",
+    "finding:F-TTA-COR-A1-1",
+    "finding:F-TTA-COR-A1-2",
+    "finding:F-TTA-COR-A1-3",
+    "finding:F-TTA-COR-A1-4",
+    "lesson:L-TTA-1"
+  ]
+}

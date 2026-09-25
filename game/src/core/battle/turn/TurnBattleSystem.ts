@@ -1916,7 +1916,18 @@ export class TurnBattleSystem {
         : suddenDeathMultiplierCaptured,
       compositePickedSkills,
       isFollowUpBypass: false,
-      actionSource: action?.skillId === '' ? undefined : action?.slot ? 'skill' : 'normal',
+      // Provenance follows the committed action, not the `action`
+      // capture: a charge-RESOLVED declare executes the charged skill
+      // (a natural cast) while ccBlocked / charge tick / the sealed
+      // NULL_ACTION commit nothing and carry undefined.
+      actionSource:
+        action != null && action.skillId !== ''
+          ? action.slot
+            ? 'skill'
+            : 'normal'
+          : chargeResolved
+            ? 'normal'
+            : undefined,
       // Task 9 -- every real cast records its execution identity here:
       // 'original' for now (empowered/composite/repeat/multicast arrive
       // with Tasks 10-13). Charge-resolve/CC-blocked turns carry none.
