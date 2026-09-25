@@ -2030,12 +2030,13 @@ export class TurnBattleSystem {
             if (!targetParticipant || !targetParticipant.entity.alive) continue
 
             // Same per-hit authority as the normal lane (resolveDeclaredHit):
-            // defender income, leech, consume effects, on-hit procs, the
-            // Reflection queue, ailments, detonate, the taken-side Phan /
-            // evade windows and both stat refreshes are all owned there -
-            // a charged hit must not bypass them. The missing-HP scalar
-            // resolves inside against the actor's live hp, so the scaled
-            // damage packet passes through raw.
+            // defender income, leech, consume effects, on-hit procs,
+            // ailments, detonate, the taken-side Phan / evade windows and
+            // both stat refreshes are all owned there - a charged hit must
+            // not bypass them. (The reflect queue is fed by the plan
+            // lane's rollReactiveTrigger, not this path.) The missing-HP
+            // scalar resolves inside against the actor's live hp, so the
+            // scaled damage packet passes through raw.
             const hitResult = this.resolveDeclaredHit(
               battle,
               actor,
