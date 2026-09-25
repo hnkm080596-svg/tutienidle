@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "bdc04bf9",
   "state": {
-   "productStateId": "e25a50783be924146632ab6b8ab26c775d1c47830ed310cc969683c4b7c2594d",
+   "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a",
    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -1936,6 +1936,204 @@
    "exception": null,
    "status": "CLOSED",
    "rejectionReason": null
+  },
+  {
+   "id": "F-TT-COR-A4-1",
+   "title": "excludesNode mutex not enforced at save/restore boundary",
+   "state": {
+    "productStateId": "e25a50783be924146632ab6b8ab26c775d1c47830ed310cc969683c4b7c2594d",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "FIXTURE_INJECTED",
+   "locations": [
+    {
+     "path": "src/services/save/saveShapeValidation.ts",
+     "symbolOrSection": "nodeLevels checks",
+     "revision": "3742fa9a",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/progression/NodeSystem.ts",
+     "symbolOrSection": "canPurchaseNode",
+     "revision": "3742fa9a",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": "resolveBodyKit",
+     "revision": "3742fa9a",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-6cca830df8564e7395cb3e8e6512d8c7",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "crafted save owning both mutex roots validates clean; resolveBodyKit silently picks cuong-first; wrong-root children become purchasable in the impossible state",
+   "expected": "checklist asked save/restore to enforce exactly-one-root",
+   "actual": "crafted save owning both mutex roots validates clean; resolveBodyKit silently picks cuong-first; wrong-root children become purchasable in the impossible state",
+   "rootCause": "save boundary is registry-less by documented design; excludesNode is a purchase-time rule; no gameplay path produces the dual-root state",
+   "rootClass": "crafted-save-only-reachability",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "clean-A reviewer sweep + coordinator adjudication",
+     "hitDispositions": [
+      "same-class exposure is generic pre-existing save boundary"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "crafted/corrupt save only - no gameplay path to own both roots; registry-less save validation is a documented project boundary (no nodeRegistry access at the save layer); tamper-only reachability per prior adjudications"
+  },
+  {
+   "id": "F-TT-COR-A4-2",
+   "title": "non-core nodeLevels not capped or catalog-checked at restore - crafted over-level amplifies kit channels",
+   "state": {
+    "productStateId": "e25a50783be924146632ab6b8ab26c775d1c47830ed310cc969683c4b7c2594d",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "FIXTURE_INJECTED",
+   "locations": [
+    {
+     "path": "src/services/save/saveShapeValidation.ts",
+     "symbolOrSection": "667-708",
+     "revision": "3742fa9a",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/the-tu/TheTuKitModifiers.ts",
+     "symbolOrSection": "collectBodyKitModifiers",
+     "revision": "3742fa9a",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-6cca830df8564e7395cb3e8e6512d8c7",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "crafted save with 'minor_trong_quyen': 99 loads; collectBodyKitModifiers sums 99x0.1 -> +9.9 coefficient on the cuong_quyen clone",
+   "expected": "node levels respect authored maxLevel and catalog membership",
+   "actual": "crafted save with 'minor_trong_quyen': 99 loads; collectBodyKitModifiers sums 99x0.1 -> +9.9 coefficient on the cuong_quyen clone",
+   "rootCause": "generic pre-existing boundary: only core_* entries get maxLevel/existence checks; every progression branch inherits it",
+   "rootClass": "crafted-save-only-reachability",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "clean-A reviewer sweep + coordinator adjudication",
+     "hitDispositions": [
+      "same-class exposure is generic pre-existing save boundary"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "crafted save only - same tamper-only exposure exists on every pre-existing node branch; save layer intentionally has no catalog access"
+  },
+  {
+   "id": "F-TT-COR-A4-3",
+   "title": "pendingReflects can leak across an aborted action",
+   "state": {
+    "productStateId": "e25a50783be924146632ab6b8ab26c775d1c47830ed310cc969683c4b7c2594d",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/proc/CombatProcSystem.ts",
+     "symbolOrSection": "97,214-218",
+     "revision": "3742fa9a",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "2356-2358",
+     "revision": "3742fa9a",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-6cca830df8564e7395cb3e8e6512d8c7",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "flushReflects is the only drain at applyActionImpact tail with no try/finally; a mid-action throw leaves stale entries that fire mistimed at the next action and occupy its dedupe key",
+   "expected": "reflect queue is action-scoped",
+   "actual": "flushReflects is the only drain at applyActionImpact tail with no try/finally; a mid-action throw leaves stale entries that fire mistimed at the next action and occupy its dedupe key",
+   "rootCause": "no defensive clear at action entry",
+   "rootClass": "action-scoped-queue-leak",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "clean-A reviewer sweep + coordinator adjudication",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
   }
  ],
  "evidence": [
@@ -2190,7 +2388,7 @@
    "invariantIds": [],
    "limitations": [],
    "result": "PASS",
-   "status": "CURRENT"
+   "status": "STALE"
   }
  ],
  "coverage": [],
@@ -2618,7 +2816,7 @@
     "F-TT-INT-8"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-TT-CLO-6",
@@ -2647,6 +2845,37 @@
    ],
    "findingIds": [
     "F-TT-AUT-8"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-TT-COR-A4",
+   "state": {
+    "productStateId": "e25a50783be924146632ab6b8ab26c775d1c47830ed310cc969683c4b7c2594d",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 11,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-6cca830df8564e7395cb3e8e6512d8c7",
+   "contextId": "sealed-child-6cca830df8564e7395cb3e8e6512d8c7",
+   "model": "swe-2-max",
+   "role": "clean-round-correctness",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T08:45:00.000Z",
+   "sealedAt": "2026-09-25T08:54:27.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-COR-A4-1",
+    "F-TT-COR-A4-2",
+    "F-TT-COR-A4-3"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -3535,6 +3764,108 @@
    "policyVersion": null,
    "effectiveFromRun": null,
    "guidance": null
+  },
+  {
+   "id": "L-TT-10",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-A4-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "crafted-save-only-reachability",
+   "missedInvariantIds": [],
+   "escapeReason": "save boundary is registry-less by documented design; excludesNode is a purchase-time rule; no gameplay path produces the dual-root state",
+   "applicability": [
+    "the-tu-beta",
+    "save boundary",
+    "proc queues"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "reviewer checklist entry for this class"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-COR-A4"
+   ],
+   "capabilityDelta": "records adjudicated finding of class crafted-save-only-reachability",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-11",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-A4-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "crafted-save-only-reachability",
+   "missedInvariantIds": [],
+   "escapeReason": "generic pre-existing boundary: only core_* entries get maxLevel/existence checks; every progression branch inherits it",
+   "applicability": [
+    "the-tu-beta",
+    "save boundary",
+    "proc queues"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "reviewer checklist entry for this class"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-COR-A4"
+   ],
+   "capabilityDelta": "records adjudicated finding of class crafted-save-only-reachability",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-12",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-A4-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "action-scoped-queue-leak",
+   "missedInvariantIds": [],
+   "escapeReason": "no defensive clear at action entry",
+   "applicability": [
+    "the-tu-beta",
+    "save boundary",
+    "proc queues"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "reviewer checklist entry for this class"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-COR-A4"
+   ],
+   "capabilityDelta": "records adjudicated finding of class action-scoped-queue-leak",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
   }
  ],
  "messages": [],
@@ -3666,6 +3997,22 @@
    "payloadPath": "events/0008.json",
    "payloadHash": "b0d2cae7d8a0af470317aeb110df5c834b77a0753247e79a2954e78b28cf828a",
    "eventHash": "e291dc27467d780f4d09d0e813d475123e42cc16f855b8cbf9e0f57dfa49eea3"
+  },
+  {
+   "seq": 9,
+   "at": "2026-09-25T08:58:06.235Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-406257",
+   "state": {
+    "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "e291dc27467d780f4d09d0e813d475123e42cc16f855b8cbf9e0f57dfa49eea3",
+   "payloadPath": "events/0009.json",
+   "payloadHash": "6477074b0ca300cc66478bb57f4fa4b70efdcd2a4fc46d43e7b946893dc3cfac",
+   "eventHash": "edd3458db230d4f2b6585d4ffb90688be50480aead9b07caf16298fd69dc4949"
   }
  ]
 }
