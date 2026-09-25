@@ -2142,6 +2142,62 @@
       "exception": null,
       "status": "CLOSED",
       "rejectionReason": null
+    },
+    {
+      "id": "F-TTA-COR-A5-1",
+      "title": "Unrouted charged-def fizzle still opens post-action windows on declare-populated affected",
+      "state": {
+        "productStateId": "d78eb2683fa0c3b0aefe9b8de713e8451cc54cef292dd7d979a0ffad48f880ea",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "FIXTURE_INJECTED",
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "unrouted charge-resolve fall-through to shared tail :2026-2035, :2369-2385",
+          "revision": "7b683fd9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-dc0caa5e29354c1f9ad00401726d6dc3",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "requires the adapter to decline a covered def mid-action - already an alarmed internal-defect lane (reportUnroutedCast); no authored def reaches it",
+      "expected": "claimed: an action that resolves to a no-op should not open Phan/Tro windows",
+      "actual": "post-action window semantics are declare-scoped by design: affected populates at declare so observe windows legitimately open even when the hit fizzles (Tham marks on miss, income observation of the attempt)",
+      "rootCause": "reviewer flagged declare-scoped window semantics as questionable; the lane is already alarmed by reportUnroutedCast",
+      "rootClass": "deliberate-design-contract",
+      "subsystem": "the-tu-an-ung-the",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/battle/turn/TurnBattleSystem.ts"
+          ],
+          "termsAndMethod": "enumerate every path reaching resolvePostActionWindows vs the declare-scoped affected array",
+          "hitDispositions": [
+            "all lanes share the declare-populated affected array - miss and fizzle alike; contract is consistent across lanes",
+            "unrouted-def lane fires reportUnroutedCast (alarmed) before reaching the tail"
+          ],
+          "coverageLimits": [
+            "declare-scoped window semantics only"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "REJECTED_WITH_PROOF",
+      "rejectionReason": "Declare-scoped window semantics is the designed contract: observe windows key off the declared affected array (Tham marks on miss, income on the attempt) and are intentionally unaffected by the hit outcome. The only reaching lane (adapter declining a covered def) is already alarmed via reportUnroutedCast - an internal-defect alarm path, not a user-facing behavior."
     }
   ],
   "evidence": [
@@ -2914,6 +2970,37 @@
         "F-TTA-CLEAN-A4-AUT-3",
         "F-TTA-INT-A4-1",
         "F-TTA-INT-A4-2"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TTA-CLEAN-A5-COR",
+      "state": {
+        "productStateId": "d78eb2683fa0c3b0aefe9b8de713e8451cc54cef292dd7d979a0ffad48f880ea",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 23,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-dc0caa5e29354c1f9ad00401726d6dc3",
+      "contextId": "sealed-child-dc0caa5e29354c1f9ad00401726d6dc3",
+      "model": "swe-2-max",
+      "role": "CORRECTNESS",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T22:47:00.000Z",
+      "sealedAt": "2026-09-25T23:12:00.000Z",
+      "previousPhaseReviewId": "REV-TTA-CLEAN-A4-INT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-TTA-CLEANA4-FIX"
+      ],
+      "findingIds": [
+        "F-TTA-COR-A5-1"
       ],
       "novelAttackIds": [],
       "status": "SEALED"
@@ -4050,6 +4137,38 @@
       "preventionEvidenceIds": [
         "EV-TTA-CLEANA4-FIX"
       ]
+    },
+    {
+      "id": "L-TTA-36",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TTA-COR-A5-1"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "rootClass": "deliberate-design-contract",
+      "missedInvariantIds": [],
+      "escapeReason": "declare-scoped affected looks like a leak when read against hit-scoped expectations - reviewer lacked the design note that observe windows intentionally open on declaration (marks on miss are part of the design)",
+      "applicability": [
+        "any finding that treats declare-scoped window semantics as outcome-scoped"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "reject declare-vs-outcome mismatches when the contract is declared-scoped; check the alarm lane first (reportUnroutedCast already covers the unreachable fizzle path)"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLEAN-A5-COR"
+      ],
+      "capabilityDelta": "none - rejection precedent recorded",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": []
     }
   ],
   "messages": [],
@@ -4997,6 +5116,22 @@
       "payloadPath": "events/0059.json",
       "payloadHash": "a1b33debcde63927a801cb8b49bc09a651132e396ae5e05dec2597e43b585967",
       "eventHash": "aeb4d97959abbba4cd88958ab1bcf3677dfd918c72aa82eeb8b2a3343a5917cc"
+    },
+    {
+      "seq": 60,
+      "at": "2026-09-25T23:12:46.739Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "d78eb2683fa0c3b0aefe9b8de713e8451cc54cef292dd7d979a0ffad48f880ea",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "aeb4d97959abbba4cd88958ab1bcf3677dfd918c72aa82eeb8b2a3343a5917cc",
+      "payloadPath": "events/0060.json",
+      "payloadHash": "ba4eafd76a99568c0ee980528de2aeae3d84394561cbd5687f6d6e7086f36bd8",
+      "eventHash": "6dc93d866d666fd3fdd9e2416b9fa6b2aa0820e6eb66f95bbdd41eec67f420fd"
     }
   ]
 }
