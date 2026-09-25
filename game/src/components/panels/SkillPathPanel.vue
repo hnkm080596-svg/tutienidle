@@ -5,13 +5,13 @@
 // nang/chi tiet/Loadout). Bo cuc 3 cot AP DUNG CHO MOI PATH (ke ca
 // Pham Nhan/Kiem Tu, khong rieng Phap Tu) -- chi khac NOI DUNG cot
 // giua vi Kiem Tu/Pham Nhan khong co Node Tree phan nhanh:
-//   co tree   -> giua: NodeTreePanel (cay that cua skill/branch ?o)
-//   khac      -> giua: SkillDetailView (chi tiet skill ?ang chon, ?oc only)
+//   co tree   -> giua: NodeTreePanel (cay that cua skill/branch do)
+//   khac      -> giua: SkillDetailView (chi tiet skill dang chon, doc only)
 // Cot trai dung chung SkillPathList cho moi path; cot phai
 // (SkillRoleStrip, "Active Arts") and
-// NodeInspector (bottom, CHI co y nghia khi co node ?e mua) khong ?oi.
+// NodeInspector (bottom, CHI co y nghia khi co node de mua) khong doi.
 //
-// ElementLoadoutPicker.vue (equip Hanh vao combat) ?a GO HAN (2026-08-20,
+// ElementLoadoutPicker.vue (equip Hanh vao combat) da GO HAN (2026-08-20,
 // yeu cau "du thua, khong co tac dung gi") -- no trung chuc nang voi
 // SkillRoleStrip: the 3 fixed roles from getResolvedSkillRoles are what
 // actually runs in combat (see the role auto-cast scheduler in
@@ -119,10 +119,10 @@ function onSelectBranch(element: ElementType) {
 }
 
 // Skill Node unlock animation (2026-08-21, Plans/SkillNode) -- NodeInspector
-// emit 'unlocked' NGAY SAU khi purchaseNode() thanh cong (KHONG ?oi
+// emit 'unlocked' NGAY SAU khi purchaseNode() thanh cong (KHONG doi
 // logic mua) -- chi chuyen tiep id + so thu tu (seq) tang dan xuong
-// NodeTreePanel.vue ?e no tu chay animation connection->node. `seq`
-// ?am bao watch() o NodeTreePanel luon thay gia tri MOI ke ca khi mua
+// NodeTreePanel.vue de no tu chay animation connection->node. `seq`
+// dam bao watch() o NodeTreePanel luon thay gia tri MOI ke ca khi mua
 // lien tiep cung 1 node id (ve ly thuyet khong xay ra -- moi node chi
 // mua 1 lan -- nhung giu an toan, re).
 const unlockTrigger = ref<{ nodeId: string; seq: number } | null>(null)
@@ -140,9 +140,9 @@ function onSelectNode(node: ProgressionNode, purchased: boolean, purchasable: bo
   centerMode.value = 'tree'
 }
 
-// Node vua mua xong van ?ang la selectedNode -- refresh trang thai
+// Node vua mua xong van dang la selectedNode -- refresh trang thai
 // purchased/purchasable hien thi o inspector theo state moi nhat moi
-// khi nodeLevels/skillInsight ?oi, khong cho nguoi choi bam lai vao node.
+// khi nodeLevels/skillInsight doi, khong cho nguoi choi bam lai vao node.
 watch(
   () => [Object.keys(player.nodeLevels).length, player.skillInsight] as const,
   () => {
@@ -246,8 +246,8 @@ function skillElement(skill: Skill): ElementType | null {
 }
 
 // Phap Tu Reimagined (Task 16) -- cay Phap Tu luon hien thi: element
-// root ?uoc chon TRONG cay (element+route atomic commit), nen khong
-// the gate theo skill ?ang chon (truoc khi commit, player chua co
+// root duoc chon TRONG cay (element+route atomic commit), nen khong
+// the gate theo skill dang chon (truoc khi commit, player chua co
 // skill elemental nao). Kiem Tu giu nguyen -- route chot luc chon path.
 
 // M-QI-05 (D7) - the center column has an explicit user-facing mode:
@@ -408,7 +408,7 @@ function close() {
   gap: 0;
 }
 
-/* Fit-refactor ?ot 5 -- cot tree sau wheel-scroll an thanh (theme an san
+/* Fit-refactor dot 5 -- cot tree sau wheel-scroll an thanh (theme an san
    toan cuc), fade edge bao con noi dung; ngan sach chieu cao do flex body. */
 .skill-path-panel__col {
   min-height: 0;
@@ -417,7 +417,7 @@ function close() {
   padding: 12px 14px;
 }
 
-/* Fit-refactor ?ot 3 -- card hep (< 900px theo CARD, khong phai viewport)
+/* Fit-refactor dot 3 -- card hep (< 900px theo CARD, khong phai viewport)
    thi stack 3 cot thanh khoi doc: moi cot co gian theo noi dung thay vi
    ep cot trai 70px. Cot trai thanh accordion ngang bang flex-wrap chips. */
 @container overlay-panel (max-width: 900px) {

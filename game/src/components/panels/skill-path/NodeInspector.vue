@@ -1,9 +1,9 @@
 <script setup lang="ts">
 // SpellPathPanel plan muc 10/17/29 + node level (combat-skill-flow-element-
-// power-dot-plan.md sec.6.2) -- bottom panel: chi tiet node ?ang CHON + nut
+// power-dot-plan.md sec.6.2) -- bottom panel: chi tiet node dang CHON + nut
 // mua/nang cap. Node nhieu cap hien thi `Cap x/max`, Power nhan moi cap
-// + tong ?ang nhan, chi phi cap ke; nut "Linh Ngo" o level 0, "Nang
-// Cap" tu level 1, trang thai "Toi ?a" khi ?at maxLevel.
+// + tong dang nhan, chi phi cap ke; nut "Linh Ngo" o level 0, "Nang
+// Cap" tu level 1, trang thai "Toi da" khi dat maxLevel.
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
@@ -54,7 +54,7 @@ const isElementRoot = computed(() => props.node !== null && ELEMENT_ROOT_ID_SET.
 
 const routePickOpen = ref(false)
 
-// Level hien tai / max / cost cap ke cua node ?ang chon.
+// Level hien tai / max / cost cap ke cua node dang chon.
 const level = computed(() => {
   stateVersion.value
 
@@ -139,8 +139,8 @@ function nodePrereqReason(prereq: NodePrerequisite): string {
   return t('panels.skillPath.nodeInspector.lockedReasons.skillUpgrade')
 }
 
-// Ly do khoa -- thuan suy ra tu hasPrerequisite() ?a co (khong ?ung
-// core), chi ?e hien goi y, KHONG phai nguon su that.
+// Ly do khoa -- thuan suy ra tu hasPrerequisite() da co (khong dung
+// core), chi de hien goi y, KHONG phai nguon su that.
 const lockedReasons = computed(() => {
   if (!props.node || props.purchased || props.purchasable || level.value >= 1) {
     return []
@@ -384,7 +384,7 @@ function onUpgrade() {
   gap: 8px;
 }
 
-/* Ten node la "hero" cua khoi inspector -- truoc ?ay chi 14px, gan nhu
+/* Ten node la "hero" cua khoi inspector -- truoc day chi 14px, gan nhu
    cung co mo ta ben duoi (2026-08-30 frontend-design pass). */
 .node-inspector__name {
   font-size: var(--text-lg);
@@ -435,7 +435,7 @@ function onUpgrade() {
   margin-top: 6px;
 }
 
-/* Dong chi phi ?ung ngay canh nut hanh ?ong -- nang co ?e dan mat toi
+/* Dong chi phi dung ngay canh nut hanh dong -- nang co de dan mat toi
    quyet dinh thay vi chim cung co voi mo ta (2026-08-30 pass). */
 .node-inspector__cost {
   font-size: var(--text-md);

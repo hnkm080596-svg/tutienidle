@@ -6,6 +6,7 @@ import type { ProgressionNode } from '../progression/ProgressionNode'
 import { nodeWayApplies } from '../progression/NodeSystem'
 import { LIEN_MOMENTUM_RATE, gainKiemY } from './NguKiemDao'
 import { NGU_KIEM_THUAT } from '../../data/skill/NguKiemDaoSkills'
+import { NGU_KIEM_EVOLUTION_NODE_IDS } from '../../data/progression/KiemTuNodes'
 
 // Ngu Kiem Beta -- the hidden_sword_pathway (Ngu Kiem Dao)
 // DynamicBasicProvider. resolveBasic live-reads kiemDaoBase /
@@ -41,15 +42,20 @@ export function collectOwnedEvolutionIds(
   for (const node of nodes) {
     const evolutionId = node.effect.evolutionId
 
-    // M3 -- the way-membership gate applies here too (this collector
-    // reads nodeLevels directly): a wrong-way level must not unlock an
-    // evolution layer.
-    if (evolutionId !== undefined && (player.nodeLevels?.[node.id] ?? 0) > 0 && nodeWayApplies(player, node)) {
+    if (evolutionId !== undefined && isOwnedEvolutionNode(player, node)) {
       owned.add(evolutionId)
     }
   }
 
   return owned
+}
+
+// M3 -- the way-membership gate applies everywhere ownership is read
+// (this predicate reads nodeLevels directly): a wrong-way level must
+// not unlock an evolution layer. ONE owned-evolution predicate feeds
+// the combat collector and the display resolvers alike.
+function isOwnedEvolutionNode(player: PlayerData, node: ProgressionNode): boolean {
+  return (player.nodeLevels?.[node.id] ?? 0) > 0 && nodeWayApplies(player, node)
 }
 
 /**
@@ -63,10 +69,15 @@ export function resolveNguKiemOwnedEvolutionNode(
   player: PlayerData,
   nodes: readonly ProgressionNode[],
 ): ProgressionNode | undefined {
+  // Newest = last owned node in the DECLARED spine order
+  // (NGU_KIEM_EVOLUTION_NODE_IDS), not in whatever order the caller's
+  // registry iterates - an out-of-order catalog can never resolve the
+  // wrong layer.
   let owned: ProgressionNode | undefined
 
-  for (const node of nodes) {
-    if (node.effect.evolutionId !== undefined && (player.nodeLevels?.[node.id] ?? 0) > 0 && nodeWayApplies(player, node)) {
+  for (const spineId of NGU_KIEM_EVOLUTION_NODE_IDS) {
+    const node = nodes.find((entry) => entry.id === spineId)
+    if (node !== undefined && node.effect.evolutionId !== undefined && isOwnedEvolutionNode(player, node)) {
       owned = node
     }
   }
@@ -74,18 +85,17 @@ export function resolveNguKiemOwnedEvolutionNode(
   return owned
 }
 
-const NGU_KIEM_EVOLUTION_SUFFIXES: Record<string, string> = {
-  khoi: 'Khởi',
-  lien: 'Liên',
-}
-
 /** The one-char evolution suffix for the `Evolution: X` display tag. */
 export function resolveNguKiemEvolutionSuffix(
   player: PlayerData,
   nodes: readonly ProgressionNode[],
 ): string | undefined {
-  const evolutionId = resolveNguKiemOwnedEvolutionNode(player, nodes)?.effect.evolutionId
-  return evolutionId !== undefined ? NGU_KIEM_EVOLUTION_SUFFIXES[evolutionId] : undefined
+  // ONE naming authority: the suffix comes from the owned node's own
+  // name ('Ngu Kiem · Khoi' -> 'Khoi') so a future tier never needs a
+  // parallel literal map re-listed here.
+  const node = resolveNguKiemOwnedEvolutionNode(player, nodes)
+  const suffix = node?.name.split('·')[1]?.trim()
+  return suffix !== undefined && suffix.length > 0 ? suffix : undefined
 }
 
 export function resolveNguKiemSkillName(
