@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "5f0d296be768afe76b07b46358a7766bae0ac28d",
   "state": {
-   "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+   "productStateId": "0a458f24c0b52674a8fe65221ae12138941365863bf526bbe9df5a3c52b4e2ed",
    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -28,11 +28,11 @@
   ],
   "capacityLimit": 5,
   "requiredReadiness": true,
-  "phase": "SNAPSHOT",
+  "phase": "DECIDE",
   "cleanRoundA": null,
   "cleanRoundB": null,
   "finalEvidenceIds": [
-   "EV-PT-FIX-14"
+   "EV-PT-VERIFY-FINAL"
   ],
   "outcome": "QA_UNVERIFIED"
  },
@@ -169,9 +169,7 @@
    "consumedBy": [],
    "checkpoints": [],
    "finalConformanceIds": [
-    "EV-FIX-VERIFY-03",
-    "EV-FIX-VERIFY-04",
-    "EV-FIX-VERIFY-05"
+    "EV-PT-VERIFY-FINAL"
    ]
   }
  ],
@@ -8327,7 +8325,7 @@
    "verificationEvidenceIds": [
     "EV-PT-FIX-AUTB"
    ],
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "subsystem": "phap-tu-beta",
    "siblingSearch": [
     {
@@ -8347,7 +8345,9 @@
     }
    ],
    "siblingFindingIds": [],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PT-CLO-6"
+   ],
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
@@ -8393,6 +8393,124 @@
    "rejectionReason": "pre-existing debt: imports identical at merge-base be1bdf8d; task diff adds none",
    "exception": null,
    "repair": "DEFERRED (pre-existing/out-of-scope): identical at merge-base; no new violation"
+  },
+  {
+   "id": "F-PT-FA-A1",
+   "title": "core/player files already import data/ at merge-base (Player.ts:22,32; CultivationPathRegistry.ts:33-77)",
+   "state": {
+    "productStateId": "0a458f24c0b52674a8fe65221ae12138941365863bf526bbe9df5a3c52b4e2ed",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/core/player/Player.ts",
+     "symbolOrSection": "L22,L32",
+     "revision": "befbb551",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "game/src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": "L33-77",
+     "revision": "befbb551",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A AUTHORITY reviewer (devin-d74816cca8564fad9b118325f2d86ceb)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "see reviewer proof",
+   "expected": "core/player must not import data/ (A6 layering)",
+   "actual": "imports exist on merge-base itself, untouched by this diff; zero new core/player->data imports added",
+   "rootCause": "pre-existing on merge-base; out of diff scope",
+   "rootClass": "pre-existing / benign seam",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/components"
+     ],
+     "termsAndMethod": "reviewer proof (git show base + grep)",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "none additional"
+     ],
+     "coverageLimits": [
+      "scoped to reported seams"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "REJECTED: pre-existing on base; diff adds none (reviewer proof via git show be1bdf8)",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "pre-existing on merge-base; out of diff scope",
+   "exception": null
+  },
+  {
+   "id": "F-PT-FA-A2",
+   "title": "new data/ import in core/combat/CombatSkillPresentation.ts:5 rides the file's existing data seam",
+   "state": {
+    "productStateId": "0a458f24c0b52674a8fe65221ae12138941365863bf526bbe9df5a3c52b4e2ed",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/core/combat/CombatSkillPresentation.ts",
+     "symbolOrSection": "L5 SkillIconManifest import",
+     "revision": "befbb551",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A AUTHORITY reviewer (devin-d74816cca8564fad9b118325f2d86ceb)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "see reviewer proof",
+   "expected": "layered boundary treats data consumers as composition roots/adapters",
+   "actual": "file already imported data/skill/TurnSkillDisplayMeta pre-diff; SkillIconManifest import rides the same seam",
+   "rootCause": "core/combat is presentation-adapter layer, not under core/player restriction; same-seam import",
+   "rootClass": "pre-existing / benign seam",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/components"
+     ],
+     "termsAndMethod": "reviewer proof (git show base + grep)",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "none additional"
+     ],
+     "coverageLimits": [
+      "scoped to reported seams"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "REJECTED: same-seam adapter import, not a new boundary opening",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "core/combat is presentation-adapter layer, not under core/player restriction; same-seam import",
+   "exception": null
   }
  ],
  "evidence": [
@@ -9326,7 +9444,7 @@
    "limitations": [
     "scoped suite only; full npm run verify log pending on final state"
    ],
-   "status": "CURRENT"
+   "status": "STALE"
   },
   {
    "id": "EV-PT-FIX-AUTB",
@@ -9355,6 +9473,35 @@
     "docstring now describes full grant surface (artifact + grantedNodeLevels)"
    ],
    "limitations": [],
+   "status": "STALE"
+  },
+  {
+   "id": "EV-PT-VERIFY-FINAL",
+   "state": {
+    "productStateId": "0a458f24c0b52674a8fe65221ae12138941365863bf526bbe9df5a3c52b4e2ed",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T04:19:00.000Z",
+   "finishedAt": "2026-09-25T04:20:00.000Z",
+   "commandOrMethod": "npm run type-check + npx vitest run (19 changed-surface test files) at head befbb551",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/final-verify-scoped-befbb551.log",
+   "artifactHash": "02160e5d250b265404ef93908d7d56aa6202ffe0b60af502f21fd133545932e8",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "final head befbb551: type-check clean, 258 scoped tests pass across the changed surface"
+   ],
+   "limitations": [
+    "full suite not runnable on coordinator box (canvas jsdom unimplemented + magick ENOENT, pre-existing env limits identical on merge-base); INT-B reviewer ran full npm run verify on pinned de61f0cf with 7328/7334 pass"
+   ],
    "status": "CURRENT"
   }
  ],
@@ -10665,7 +10812,7 @@
     "F-PT-A10-6"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-COR-A3",
@@ -10697,7 +10844,7 @@
     "F-PT-A12-4"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-AUT-A3",
@@ -10731,7 +10878,7 @@
     "F-PT-A13-6"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-INT-A3",
@@ -10762,7 +10909,7 @@
     "F-PT-INT-A3-3"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-TERM-A3",
@@ -10789,7 +10936,7 @@
    "evidenceIds": [],
    "findingIds": [],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-CLO-5",
@@ -10820,7 +10967,7 @@
     "F-PT-A11-1"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-COR-B",
@@ -10847,7 +10994,7 @@
    "evidenceIds": [],
    "findingIds": [],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-AUT-B",
@@ -10877,6 +11024,92 @@
     "F-PT-AUTB-2"
    ],
    "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PT-INT-B",
+   "state": {
+    "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 14,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-a9fd79eff3c842d9bf35c76fd73772e5",
+   "contextId": "sealed-child-a9fd79eff3c842d9bf35c76fd73772e5",
+   "model": "swe-2-max",
+   "role": "clean-round-integration",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T04:24:00.000Z",
+   "sealedAt": "2026-09-25T04:50:00.000Z",
+   "previousPhaseReviewId": "REV-PT-AUT-B",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PT-CLO-6",
+   "state": {
+    "productStateId": "0a458f24c0b52674a8fe65221ae12138941365863bf526bbe9df5a3c52b4e2ed",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 15,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-ceb5c9ffdd7f4329a01371f7bba33056",
+   "contextId": "sealed-child-ceb5c9ffdd7f4329a01371f7bba33056",
+   "model": "swe-2-max",
+   "role": "closure",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T04:53:00.000Z",
+   "sealedAt": "2026-09-25T04:57:00.000Z",
+   "previousPhaseReviewId": "REV-PT-AUT-B",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-AUTB-1"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-AUT-A4",
+   "state": {
+    "productStateId": "0a458f24c0b52674a8fe65221ae12138941365863bf526bbe9df5a3c52b4e2ed",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 17,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-d74816cca8564fad9b118325f2d86ceb",
+   "contextId": "sealed-child-d74816cca8564fad9b118325f2d86ceb",
+   "model": "swe-2-max",
+   "role": "clean-round-authority",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T04:44:00.000Z",
+   "sealedAt": "2026-09-25T04:51:00.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-FA-A1",
+    "F-PT-FA-A2"
+   ],
+   "novelAttackIds": [],
    "status": "SEALED"
   }
  ],
@@ -10904,7 +11137,7 @@
    ],
    "startedAt": "2026-09-24T23:30:00.000Z",
    "finishedAt": "2026-09-25T02:58:38.000Z",
-   "status": "FINDINGS"
+   "status": "STALE"
   }
  ],
  "mutations": [
@@ -13179,6 +13412,70 @@
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
+  },
+  {
+   "id": "L-PT-25",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-FA-A1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "pre-existing layering debt",
+   "missedInvariantIds": [],
+   "escapeReason": "core/player->data imports exist on merge-base; not introduced by diff",
+   "applicability": [],
+   "exclusions": [
+    "phap-tu-beta"
+   ],
+   "proposedProtection": [
+    "architecture debt tracked; fix only in an authorized layering mission"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A4"
+   ],
+   "capabilityDelta": "terminal-finding lesson required by MC13",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-26",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-FA-A2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "same-seam data import in adapter layer",
+   "missedInvariantIds": [],
+   "escapeReason": "CombatSkillPresentation already imported data/ pre-diff; new import follows existing seam",
+   "applicability": [],
+   "exclusions": [
+    "phap-tu-beta"
+   ],
+   "proposedProtection": [
+    "no boundary violation; keep adapter-layer data imports consistent"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A4"
+   ],
+   "capabilityDelta": "terminal-finding lesson required by MC13",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
   }
  ],
  "messages": [],
@@ -13950,6 +14247,54 @@
    "payloadPath": "events/0048.json",
    "payloadHash": "1a0ee4679df49bf3b0970483eb02c0c2d50ba31649f58c3b39350398ca6afbe8",
    "eventHash": "c9a5d8788ba790d69c2e6712098883a6fe6b1b56060ae76fd6145c497b9f9ef8"
+  },
+  {
+   "seq": 49,
+   "at": "2026-09-25T04:11:24.353Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "0a458f24c0b52674a8fe65221ae12138941365863bf526bbe9df5a3c52b4e2ed",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "c9a5d8788ba790d69c2e6712098883a6fe6b1b56060ae76fd6145c497b9f9ef8",
+   "payloadPath": "events/0049.json",
+   "payloadHash": "c0103b058a16c1b0387d5b72c82640a826e2ddc4ca135017df952d5d230fb85e",
+   "eventHash": "b39920e0b25f46e0c1c409d995d9602ec1484d334f805b262f6a2f11ab9d5bfc"
+  },
+  {
+   "seq": 50,
+   "at": "2026-09-25T04:11:30.556Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "0a458f24c0b52674a8fe65221ae12138941365863bf526bbe9df5a3c52b4e2ed",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "b39920e0b25f46e0c1c409d995d9602ec1484d334f805b262f6a2f11ab9d5bfc",
+   "payloadPath": "events/0050.json",
+   "payloadHash": "55e35f84d68908ec8f939f4955e6acde695e43a9232ef885b3b23960ac45d4b8",
+   "eventHash": "0bd862b3cc9d520a3dd9b0eb8874311444c110258f3865998ad15a528db989fd"
+  },
+  {
+   "seq": 51,
+   "at": "2026-09-25T04:19:56.778Z",
+   "kind": "DECISION",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "0a458f24c0b52674a8fe65221ae12138941365863bf526bbe9df5a3c52b4e2ed",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "0bd862b3cc9d520a3dd9b0eb8874311444c110258f3865998ad15a528db989fd",
+   "payloadPath": "events/0051.json",
+   "payloadHash": "2ebf653ddb691ed39ffb142e83ed5124f8174b7f2e9da795cc17889cc5b5e3dd",
+   "eventHash": "7fb3b78ffab779c253fd646a1f97bb335369e3f49e5c29b303c5cfb52cb585b2"
   }
  ]
 }
