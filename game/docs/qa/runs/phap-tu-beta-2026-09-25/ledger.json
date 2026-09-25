@@ -7776,6 +7776,348 @@
    "status": "REJECTED_WITH_PROOF",
    "duplicateOf": null,
    "rejectionReason": "Non-actionable Nit: numbers accurate (refund+resetCount already include clawback); leg enumeration is display polish"
+  },
+  {
+   "id": "F-PT-A13-1",
+   "title": "specTooltip reads first-claimant + nodeLevels-only while specLocked uses all-claimants + union",
+   "state": {
+    "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/components/panels/skill-path/SkillRoleStrip.vue:139-168",
+     "symbolOrSection": "specTooltip",
+     "revision": "de61f0cf",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A AUTHORITY reviewer (devin-f386209e)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "Latent divergence guarded by the uniqueness pin (no two nodes claim same skillId+specId) and legit writes always set nodeLevels; tooltip only - deferred with visibility",
+   "expected": "see reviewer report",
+   "actual": "see reviewer report",
+   "rootCause": "Latent divergence guarded by the uniqueness pin (no two nodes claim same skillId+specId) and legit writes always set nodeLevels; tooltip only - deferred with visibility",
+   "rootClass": "non-actionable adjudication",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/components",
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "coordinator adjudication of isolated reviewer surface",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "Latent divergence guarded by the uniqueness pin (no two nodes claim same skillId+specId) and legit writes always set nodeLevels; tooltip only - deferred with visibility"
+     ],
+     "coverageLimits": [
+      "reviewer-isolated surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "none - rejected non-actionable",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": "Latent divergence guarded by the uniqueness pin (no two nodes claim same skillId+specId) and legit writes always set nodeLevels; tooltip only - deferred with visibility",
+   "status": "REJECTED_WITH_PROOF"
+  },
+  {
+   "id": "F-PT-A13-2",
+   "title": "respec ConfirmModal omits clawback side-effects the preview already computes",
+   "state": {
+    "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/components/panels/skill-path/NodeTreePanel.vue:727-733",
+     "symbolOrSection": "respec confirm dialog",
+     "revision": "de61f0cf",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A AUTHORITY reviewer (devin-f386209e)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "Display completeness only: refund+resetCount already include clawback legs accurately; enumeration of legs is polish - deferred with visibility",
+   "expected": "see reviewer report",
+   "actual": "see reviewer report",
+   "rootCause": "Display completeness only: refund+resetCount already include clawback legs accurately; enumeration of legs is polish - deferred with visibility",
+   "rootClass": "non-actionable adjudication",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/components",
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "coordinator adjudication of isolated reviewer surface",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "Display completeness only: refund+resetCount already include clawback legs accurately; enumeration of legs is polish - deferred with visibility"
+     ],
+     "coverageLimits": [
+      "reviewer-isolated surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "none - rejected non-actionable",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": "Display completeness only: refund+resetCount already include clawback legs accurately; enumeration of legs is polish - deferred with visibility",
+   "status": "REJECTED_WITH_PROOF"
+  },
+  {
+   "id": "F-PT-A13-3",
+   "title": "domain previewNodeRespec dead in production (duplicate of ops preview)",
+   "state": {
+    "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/progression/NodeSystem.ts:902-921",
+     "symbolOrSection": "previewNodeRespec",
+     "revision": "de61f0cf",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A AUTHORITY reviewer (devin-f386209e)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "Harmless dead-duplicate (~20 lines, zero production callers); removal deferred to avoid restating sealed clean-A3 evidence - same surface as F-PT-A12-2",
+   "expected": "see reviewer report",
+   "actual": "see reviewer report",
+   "rootCause": "Harmless dead-duplicate (~20 lines, zero production callers); removal deferred to avoid restating sealed clean-A3 evidence - same surface as F-PT-A12-2",
+   "rootClass": "non-actionable adjudication",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/components",
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "coordinator adjudication of isolated reviewer surface",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "Harmless dead-duplicate (~20 lines, zero production callers); removal deferred to avoid restating sealed clean-A3 evidence - same surface as F-PT-A12-2"
+     ],
+     "coverageLimits": [
+      "reviewer-isolated surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "none - rejected non-actionable",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": "Harmless dead-duplicate (~20 lines, zero production callers); removal deferred to avoid restating sealed clean-A3 evidence - same surface as F-PT-A12-2",
+   "status": "REJECTED_WITH_PROOF"
+  },
+  {
+   "id": "F-PT-A13-4",
+   "title": "kim_tu_phong capstone description underclaims the bleed raise",
+   "state": {
+    "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuBasicNodes.ts:436-441",
+     "symbolOrSection": "kim_tu_phong desc",
+     "revision": "de61f0cf",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A AUTHORITY reviewer (devin-f386209e)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "Underclaim is honest-but-incomplete description; sibling discloses symmetric data; cosmetic description polish - deferred with visibility",
+   "expected": "see reviewer report",
+   "actual": "see reviewer report",
+   "rootCause": "Underclaim is honest-but-incomplete description; sibling discloses symmetric data; cosmetic description polish - deferred with visibility",
+   "rootClass": "non-actionable adjudication",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/components",
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "coordinator adjudication of isolated reviewer surface",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "Underclaim is honest-but-incomplete description; sibling discloses symmetric data; cosmetic description polish - deferred with visibility"
+     ],
+     "coverageLimits": [
+      "reviewer-isolated surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "none - rejected non-actionable",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": "Underclaim is honest-but-incomplete description; sibling discloses symmetric data; cosmetic description polish - deferred with visibility",
+   "status": "REJECTED_WITH_PROOF"
+  },
+  {
+   "id": "F-PT-A13-5",
+   "title": "comment claims previewRouteSwitch rejects same-route - it takes no route arg",
+   "state": {
+    "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerProgressionOps.ts:804-806",
+     "symbolOrSection": "same-route comment",
+     "revision": "de61f0cf",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A AUTHORITY reviewer (devin-f386209e)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "Comment overreach only; the guard itself is verified correct (domain early-return); cosmetic - deferred with visibility",
+   "expected": "see reviewer report",
+   "actual": "see reviewer report",
+   "rootCause": "Comment overreach only; the guard itself is verified correct (domain early-return); cosmetic - deferred with visibility",
+   "rootClass": "non-actionable adjudication",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/components",
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "coordinator adjudication of isolated reviewer surface",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "Comment overreach only; the guard itself is verified correct (domain early-return); cosmetic - deferred with visibility"
+     ],
+     "coverageLimits": [
+      "reviewer-isolated surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "none - rejected non-actionable",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": "Comment overreach only; the guard itself is verified correct (domain early-return); cosmetic - deferred with visibility",
+   "status": "REJECTED_WITH_PROOF"
+  },
+  {
+   "id": "F-PT-A13-6",
+   "title": "preview clawback does not recurse grantsSkillCoreIds on cores (equivalent today)",
+   "state": {
+    "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerProgressionOps.ts:674-701",
+     "symbolOrSection": "analytic core leg",
+     "revision": "de61f0cf",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A AUTHORITY reviewer (devin-f386209e)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "Equivalent today: verified no core_ node authors grantsSkillCoreIds (grep SkillCoreNodes/TheTuNodes); drift seam documented - deferred with visibility",
+   "expected": "see reviewer report",
+   "actual": "see reviewer report",
+   "rootCause": "Equivalent today: verified no core_ node authors grantsSkillCoreIds (grep SkillCoreNodes/TheTuNodes); drift seam documented - deferred with visibility",
+   "rootClass": "non-actionable adjudication",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/components",
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "coordinator adjudication of isolated reviewer surface",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "Equivalent today: verified no core_ node authors grantsSkillCoreIds (grep SkillCoreNodes/TheTuNodes); drift seam documented - deferred with visibility"
+     ],
+     "coverageLimits": [
+      "reviewer-isolated surface"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "none - rejected non-actionable",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": "Equivalent today: verified no core_ node authors grantsSkillCoreIds (grep SkillCoreNodes/TheTuNodes); drift seam documented - deferred with visibility",
+   "status": "REJECTED_WITH_PROOF"
   }
  ],
  "evidence": [
@@ -10052,6 +10394,40 @@
    ],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-AUT-A3",
+   "state": {
+    "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 12,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-f386209efdbc4bb09b44ea97bb360c92",
+   "contextId": "sealed-child-devin-f386209efdbc4bb09b44ea97bb360c92",
+   "model": "swe-2-max",
+   "role": "clean-A",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T02:36:00.000Z",
+   "sealedAt": "2026-09-25T02:50:43.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-A13-1",
+    "F-PT-A13-2",
+    "F-PT-A13-3",
+    "F-PT-A13-4",
+    "F-PT-A13-5",
+    "F-PT-A13-6"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [],
@@ -11933,6 +12309,198 @@
    "promotionEvidenceIds": [],
    "qualifiedBy": [
     "REV-PT-COR-A3"
+   ],
+   "capabilityDelta": "records adjudication so later passes do not re-litigate",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-44",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-A13-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "adjudicated non-actionable",
+   "missedInvariantIds": [],
+   "escapeReason": "reviewer-isolated surface adjudicated non-actionable by coordinator",
+   "applicability": [
+    "phap-tu-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "none - deferred polish/contract-satisfied"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A3"
+   ],
+   "capabilityDelta": "records adjudication so later passes do not re-litigate",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-45",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-A13-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "adjudicated non-actionable",
+   "missedInvariantIds": [],
+   "escapeReason": "reviewer-isolated surface adjudicated non-actionable by coordinator",
+   "applicability": [
+    "phap-tu-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "none - deferred polish/contract-satisfied"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A3"
+   ],
+   "capabilityDelta": "records adjudication so later passes do not re-litigate",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-46",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-A13-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "adjudicated non-actionable",
+   "missedInvariantIds": [],
+   "escapeReason": "reviewer-isolated surface adjudicated non-actionable by coordinator",
+   "applicability": [
+    "phap-tu-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "none - deferred polish/contract-satisfied"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A3"
+   ],
+   "capabilityDelta": "records adjudication so later passes do not re-litigate",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-47",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-A13-4"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "adjudicated non-actionable",
+   "missedInvariantIds": [],
+   "escapeReason": "reviewer-isolated surface adjudicated non-actionable by coordinator",
+   "applicability": [
+    "phap-tu-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "none - deferred polish/contract-satisfied"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A3"
+   ],
+   "capabilityDelta": "records adjudication so later passes do not re-litigate",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-48",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-A13-5"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "adjudicated non-actionable",
+   "missedInvariantIds": [],
+   "escapeReason": "reviewer-isolated surface adjudicated non-actionable by coordinator",
+   "applicability": [
+    "phap-tu-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "none - deferred polish/contract-satisfied"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A3"
+   ],
+   "capabilityDelta": "records adjudication so later passes do not re-litigate",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-49",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-A13-6"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "adjudicated non-actionable",
+   "missedInvariantIds": [],
+   "escapeReason": "reviewer-isolated surface adjudicated non-actionable by coordinator",
+   "applicability": [
+    "phap-tu-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "none - deferred polish/contract-satisfied"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A3"
    ],
    "capabilityDelta": "records adjudication so later passes do not re-litigate",
    "status": "CLASSIFIED",
