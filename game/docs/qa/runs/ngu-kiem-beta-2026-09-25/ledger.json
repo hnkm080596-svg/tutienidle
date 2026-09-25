@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "d8321ba8",
   "state": {
-   "productStateId": "6d229225b82c9b751de3894cd14766b549307e32f072d1b582695dfdc31a537b",
+   "productStateId": "ba331f3c554536d8fa1399da08387185a5de30a855f1adacf4241bbe56909e1b",
    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -31,9 +31,7 @@
   "phase": "SNAPSHOT",
   "cleanRoundA": null,
   "cleanRoundB": null,
-  "finalEvidenceIds": [
-   "EV-NK-VERIFY-FINAL-5"
-  ],
+  "finalEvidenceIds": [],
   "outcome": "QA_BLOCKED_SCOPE"
  },
  "briefs": [
@@ -4289,6 +4287,240 @@
    "duplicateOf": null,
    "rejectionReason": "informational - deterministic identical outcomes share fingerprints by design",
    "exception": null
+  },
+  {
+   "id": "F-NK-FA-12",
+   "title": "Stale cascade-era flavor text on myriad_swords_art",
+   "state": {
+    "productStateId": "6d229225b82cd2b9d92db6e7db0e36a28bc16b0d55a37a887b905e8ae3a6f5ad",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/technique/Techniques.ts:125",
+     "symbolOrSection": "description field of myriad_swords_art entry",
+     "revision": "85c6f032",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-6c9c9c4fcf774e5bb295a155ea3d89b3",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "grep 'tu quyet sat chieu' hit @85c6f032",
+   "expected": "user-facing text consistent with removed Roll Cascade",
+   "actual": "description implied per-sword kill-strike adjudication no longer exists",
+   "rootCause": "legacy text survived mechanic removal",
+   "rootClass": "text/consistency",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "grepped all technique descriptions for cascade/kill-strike wording",
+     "hitDispositions": [
+      "only myriad_swords_art matched; rest clean"
+     ],
+     "coverageLimits": [
+      "manual review"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-FA3"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "description rewritten to ordered-instance framing @ec86fdd3",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-FA3"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-FA3"
+   ],
+   "closureReviewIds": [
+    "REV-NK-CLO-9"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "CLOSED",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-FA-13",
+   "title": "Base-name literal 'Ng\u1ef1 Ki\u1ebfm' duplicated across 3 static surfaces",
+   "state": {
+    "productStateId": "6d229225b82cd2b9d92db6e7db0e36a28bc16b0d55a37a887b905e8ae3a6f5ad",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/TurnSkillDisplayMeta.ts:335",
+     "symbolOrSection": "name literal in TURN_SKILL_DISPLAY_META entry",
+     "revision": "85c6f032",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-6c9c9c4fcf774e5bb295a155ea3d89b3",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "grep 'Ng\u1ef1 Ki\u1ebfm' 3 hits",
+   "expected": "one name authority",
+   "actual": "base literal repeated in arg-less contexts (static meta, describeDynamicBasic, resolver fallback)",
+   "rootCause": "arg-less static surfaces cannot call player-context resolver",
+   "rootClass": "text/consistency",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "grepped all technique descriptions for cascade/kill-strike wording",
+     "hitDispositions": [
+      "only myriad_swords_art matched; rest clean"
+     ],
+     "coverageLimits": [
+      "manual review"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-FA3"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "arg-less surfaces cannot route through the evolution-aware resolver; duplication is deliberate and consistent"
+  },
+  {
+   "id": "F-NK-FA-14",
+   "title": "Evolution spine tier order encoded twice",
+   "state": {
+    "productStateId": "6d229225b82cd2b9d92db6e7db0e36a28bc16b0d55a37a887b905e8ae3a6f5ad",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/KiemTuNodes.ts",
+     "symbolOrSection": "NGU_KIEM_EVOLUTION_NODE_IDS array",
+     "revision": "85c6f032",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-6c9c9c4fcf774e5bb295a155ea3d89b3",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "array order vs prereq chain encode same order",
+   "expected": "single ordering source",
+   "actual": "id-array order and prereq chain both encode tier order",
+   "rootCause": "two encodings, divergence unreachable while prereqs hold",
+   "rootClass": "text/consistency",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "grepped all technique descriptions for cascade/kill-strike wording",
+     "hitDispositions": [
+      "only myriad_swords_art matched; rest clean"
+     ],
+     "coverageLimits": [
+      "manual review"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-FA3"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "prereq chain makes divergence unreachable; adding an assertion would be guard-only"
+  },
+  {
+   "id": "F-NK-FA-15",
+   "title": "Contract member emblemSlots retained with zero producers",
+   "state": {
+    "productStateId": "6d229225b82cd2b9d92db6e7db0e36a28bc16b0d55a37a887b905e8ae3a6f5ad",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathRuntime.ts",
+     "symbolOrSection": "emblemSlots member",
+     "revision": "85c6f032",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-6c9c9c4fcf774e5bb295a155ea3d89b3",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "grep emblemSlots: no producer",
+   "expected": "no dead seams",
+   "actual": "producer-less contract member kept with honest comment + generic consumer",
+   "rootCause": "deliberate retention for generic future consumers",
+   "rootClass": "text/consistency",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "grepped all technique descriptions for cascade/kill-strike wording",
+     "hitDispositions": [
+      "only myriad_swords_art matched; rest clean"
+     ],
+     "coverageLimits": [
+      "manual review"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-FA3"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "deliberate per spec: generic consumer retained for future producers"
   }
  ],
  "evidence": [
@@ -4814,7 +5046,7 @@
     "type-check clean; 213 scoped tests pass at 85c6f032"
    ],
    "limitations": [],
-   "status": "CURRENT"
+   "status": "STALE"
   },
   {
    "id": "EV-NK-VERIFY-FINAL-5",
@@ -4844,6 +5076,35 @@
     "jsdom canvas env limit excludes scene tests",
     "ImageMagick absent"
    ],
+   "status": "STALE"
+  },
+  {
+   "id": "EV-NK-FIX-FA3",
+   "state": {
+    "productStateId": "ba331f3c554536d8fa1399da08387185a5de30a855f1adacf4241bbe56909e1b",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "commandOrMethod": "npm run type-check + asciiComments ratchet at ec86fdd3",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T06:12:00.000Z",
+   "finishedAt": "2026-09-25T06:14:00.000Z",
+   "inputPaths": [
+    "src/data/technique/Techniques.ts"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/fix-verify-fa2.log",
+   "artifactHash": "d2050f1cede0eeb35ee33d8a18a852c129feb72a904fc5dbf206150622bbd723",
+   "claims": [
+    "F-NK-FA-12 repaired: description no longer implies cascade adjudication"
+   ],
+   "invariantIds": [],
+   "limitations": [],
+   "result": "PASS",
    "status": "CURRENT"
   }
  ],
@@ -5563,7 +5824,7 @@
     "F-NK-FA-10"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-NK-CLO-8",
@@ -5596,7 +5857,7 @@
     "F-NK-FA-8"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-NK-COR-FA2",
@@ -5622,6 +5883,96 @@
    "coverageIds": [],
    "evidenceIds": [],
    "findingIds": [],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-NK-AUT-FA2",
+   "state": {
+    "productStateId": "6d229225b82cd2b9d92db6e7db0e36a28bc16b0d55a37a887b905e8ae3a6f5ad",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 21,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-6c9c9c4fcf774e5bb295a155ea3d89b3",
+   "contextId": "sealed-child-6c9c9c4fcf774e5bb295a155ea3d89b3",
+   "model": "swe-2-max",
+   "role": "clean-final-authority",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T05:43:25.000Z",
+   "sealedAt": "2026-09-25T05:53:36.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-NK-FA-12",
+    "F-NK-FA-13",
+    "F-NK-FA-14",
+    "F-NK-FA-15"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-NK-INT-FA2",
+   "state": {
+    "productStateId": "6d229225b82cd2b9d92db6e7db0e36a28bc16b0d55a37a887b905e8ae3a6f5ad",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 21,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-7c5a44e2013f42d9899daebfe092422f",
+   "contextId": "sealed-child-7c5a44e2013f42d9899daebfe092422f",
+   "model": "swe-2-max",
+   "role": "clean-final-integration",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T05:51:58.000Z",
+   "sealedAt": "2026-09-25T06:05:20.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-NK-CLO-9",
+   "state": {
+    "productStateId": "ba331f3c554536d8fa1399da08387185a5de30a855f1adacf4241bbe56909e1b",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 22,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-85d4324f993146a99f4e062296c934fb",
+   "contextId": "sealed-child-85d4324f993146a99f4e062296c934fb",
+   "model": "swe-2-max",
+   "role": "closure-verify",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T06:15:10.000Z",
+   "sealedAt": "2026-09-25T06:17:32.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-NK-FIX-FA3"
+   ],
+   "findingIds": [
+    "F-NK-FA-12"
+   ],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -6921,6 +7272,126 @@
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
+  },
+  {
+   "id": "L-NK-32",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-FA-12"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "stale user-facing text after mechanic removal",
+   "missedInvariantIds": [],
+   "escapeReason": "legacy-term grep covered code seams not flavor text",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "reviewer checklist already includes legacy-text sweep; retained"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-AUT-FA2"
+   ],
+   "capabilityDelta": "terminal-finding lesson MC13",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null,
+   "preventionEvidenceIds": [],
+   "recurrenceFindingIds": []
+  },
+  {
+   "id": "L-NK-33",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-FA-13"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "review-surface",
+   "missedInvariantIds": [],
+   "escapeReason": "nit severity",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "expected - no action"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-AUT-FA2"
+   ],
+   "capabilityDelta": "terminal-finding lesson MC13",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-NK-34",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-FA-14"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "review-surface",
+   "missedInvariantIds": [],
+   "escapeReason": "nit severity",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "expected - no action"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-AUT-FA2"
+   ],
+   "capabilityDelta": "terminal-finding lesson MC13",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-NK-35",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-FA-15"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "review-surface",
+   "missedInvariantIds": [],
+   "escapeReason": "nit severity",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "expected - no action"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-AUT-FA2"
+   ],
+   "capabilityDelta": "terminal-finding lesson MC13",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
   }
  ],
  "messages": [],
@@ -7244,6 +7715,22 @@
    "payloadPath": "events/0020.json",
    "payloadHash": "1a99ffd58092ae38c640d5cd76e6a662ca40dc51419ab68bbf2078e07bec7b84",
    "eventHash": "85e840012f0f1a19124c7e9356a01c62d6b64d80c1ca3cb5ab1ecb6eed71bd5c"
+  },
+  {
+   "seq": 21,
+   "at": "2026-09-25T06:13:12.796Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "ba331f3c554536d8fa1399da08387185a5de30a855f1adacf4241bbe56909e1b",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "85e840012f0f1a19124c7e9356a01c62d6b64d80c1ca3cb5ab1ecb6eed71bd5c",
+   "payloadPath": "events/0021.json",
+   "payloadHash": "e96e4054bab5391feb068962df596f18e7e254e84d104572faea85f4d9ad4efb",
+   "eventHash": "34a04ec71cf679485651781fe1b27649ca6abd6852d89593a1133f1466bd6f41"
   }
  ]
 }
