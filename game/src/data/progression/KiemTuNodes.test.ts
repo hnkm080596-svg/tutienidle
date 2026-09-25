@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { KIEM_TU_NODES } from './KiemTuNodes'
 import { KIEM_PHO_ORBS, ORB_UNLOCK_REALM } from '../skill/KiemPhoOrbs'
-import { KIEM_PHO_BUFFS } from '../buff/KiemPhoBuffs'
+import { BUFF_REGISTRY } from '../buff/BuffRegistry'
 
 // Kiem Pho Beta (docs/specs/kiem-pho-beta-spec.md) - the tree under
 // test: 8 kiem_pho nodes - one four-role branch per beta orb (Dam at
@@ -223,8 +223,9 @@ describe('KiemTuNodes - authored-id resolution contract', () => {
   it('every swordPathComboModifier authored id resolves against the registries', () => {
     // F-KP-9-1 - the combo channel carries the same registry-keyed ids:
     // completingOrb/minOrbCount.orb vs KIEM_PHO_ORBS; appliesBuff
-    // .definitionId and ailmentInteractions[].buffId vs KIEM_PHO_BUFFS.
-    const buffIds = new Set(KIEM_PHO_BUFFS.map(b => b.id))
+    // .definitionId and ailmentInteractions[].buffId vs BUFF_REGISTRY
+    // (runtime resolution space - superset of KIEM_PHO_BUFFS).
+    const resolves = (id: string) => BUFF_REGISTRY.has(id)
     for (const n of KIEM_TU_NODES) {
       const m = n.effect.swordPathComboModifier
       if (!m) continue
@@ -242,26 +243,26 @@ describe('KiemTuNodes - authored-id resolution contract', () => {
       }
       if (m.appliesBuff !== undefined) {
         expect(
-          buffIds.has(m.appliesBuff.definitionId),
+          resolves(m.appliesBuff.definitionId),
           `${n.id} appliesBuff ${m.appliesBuff.definitionId} unknown - application binds no instance`,
         ).toBe(true)
       }
       for (const i of m.ailmentInteractions ?? []) {
         expect(
-          buffIds.has(i.buffId),
+          resolves(i.buffId),
           `${n.id} interaction buffId ${i.buffId} unknown - interaction binds no instance`,
         ).toBe(true)
       }
     }
   })
 
-  it('every addAilmentInteractions buffId resolves against KIEM_PHO_BUFFS', () => {
-    const buffIds = new Set(KIEM_PHO_BUFFS.map(b => b.id))
+  it('every addAilmentInteractions buffId resolves against BUFF_REGISTRY', () => {
+    const resolves = (id: string) => BUFF_REGISTRY.has(id)
     for (const n of KIEM_TU_NODES) {
       for (const m of n.effect.skillDefinitionModifiers ?? []) {
         for (const i of m.addAilmentInteractions ?? []) {
           expect(
-            buffIds.has(i.buffId),
+            resolves(i.buffId),
             `${n.id} targets unknown buffId ${i.buffId} - interaction would bind no instance`,
           ).toBe(true)
         }

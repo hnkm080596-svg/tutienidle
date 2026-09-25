@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { KIEM_PHO_COMBOS } from './KiemPhoCombos'
 import { COMBAT_VFX_PRESETS } from '../vfx/CombatVfxPresets'
+import { BUFF_REGISTRY } from '../buff/BuffRegistry'
 import type { OrbId } from '../../core/kiem-tu/KiemTuState'
 
 // Kiem Tu Reimagined Task 5 — data invariants for the 37-combo table
@@ -69,6 +70,34 @@ describe('KIEM_PHO_COMBOS table', () => {
       const key = combo.pattern.join(',')
       expect(seen.has(key), `duplicate pattern ${key}`).toBe(false)
       seen.add(key)
+    }
+  })
+
+  it('every authored registry-keyed buff id resolves against BUFF_REGISTRY', () => {
+    // F-KP-10-1 - the combo table carries the same registry-keyed buff
+    // ids the node channel pins: appliesBuffs[].definitionId,
+    // ailmentInteractions[].buffId, scalesWithAilmentStacks.ailmentId.
+    // A typo silently dead-codes (add_stacks/trigger_periodic bind no
+    // same-source instance; scalesWith* reads 0 stacks).
+    for (const combo of KIEM_PHO_COMBOS) {
+      for (const b of combo.appliesBuffs ?? []) {
+        expect(
+          BUFF_REGISTRY.has(b.definitionId),
+          `${combo.id} appliesBuffs ${b.definitionId} unknown - application binds no instance`,
+        ).toBe(true)
+      }
+      for (const i of combo.ailmentInteractions ?? []) {
+        expect(
+          BUFF_REGISTRY.has(i.buffId),
+          `${combo.id} interaction buffId ${i.buffId} unknown - interaction binds no instance`,
+        ).toBe(true)
+      }
+      if (combo.scalesWithAilmentStacks !== undefined) {
+        expect(
+          BUFF_REGISTRY.has(combo.scalesWithAilmentStacks.ailmentId),
+          `${combo.id} scalesWithAilmentStacks ${combo.scalesWithAilmentStacks.ailmentId} unknown - reads 0 stacks`,
+        ).toBe(true)
+      }
     }
   })
 
