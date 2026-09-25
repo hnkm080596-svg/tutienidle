@@ -78,6 +78,8 @@ export interface GameManagerSaveRestoreDeps {
   // F-PT-A9-1 (2026-09-25) - realm-entry reward reconcile (logic lives
   // on realmAdvanceOps; idempotent max-write replay at every restore).
   reconcileRealmRewards: (player: PlayerData) => void
+  // F-PT-INT-2 - stale spec-claim reconcile (claim gate pre-dates saves)
+  reconcileSpecClaims: (player: PlayerData) => void
   // Session rng seam (F-W-7) - GameManager-owned injectable stream so
   // offline alchemy settle rolls pin in deterministic harnesses.
   sessionRng: () => number
@@ -478,6 +480,7 @@ export class GameManagerSaveRestore {
     // EVERY restore (not only the offline>60s branch) and is idempotent.
     if (bodyPlayer) {
       this.deps.reconcileRealmRewards(bodyPlayer)
+    this.deps.reconcileSpecClaims(bodyPlayer)
     }
 
     // R8.1 (AR-09) - activation is a lifecycle command, not a UI read:

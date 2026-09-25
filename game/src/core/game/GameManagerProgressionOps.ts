@@ -925,10 +925,31 @@ export class GameManagerProgressionOps {
   selectSkillSpecialization(skillId: string, specializationId: string, player: PlayerData): boolean {
     const claimingNode = specializationClaimingNode(this.deps.nodeRegistry, skillId, specializationId)
 
-    if (claimingNode !== undefined && getNodeLevelSystem(player, claimingNode.id) <= 0) {
+    // F-PT-C-3 - claim gate reads the same ownership mirror as clawback:
+    // ownedNodeIds union (nodeLevels + purchasedNodeIds). nodeLevels-only
+    // would disagree with the clawback leg on diverged crafted saves.
+    if (claimingNode !== undefined && !ownedNodeIds(player).includes(claimingNode.id)) {
       return false
     }
 
     return this.deps.skillSystem.selectSpecialization(skillId, specializationId)
+  }
+
+  // F-PT-INT-2 - load-time reconcile for stale spec claims: a selection
+  // made before the claim gate existed (or via a crafted save) may name
+  // a spec whose claiming node was never owned. Clear it - the spec
+  // gate above means the player can re-pick freely once the claimer is
+  // legitimately held.
+  reconcileSpecClaims(player: PlayerData): void {
+    for (const skill of this.deps.skillManager.getAll()) {
+      const specId = skill.selectedSpecializationId
+      if (specId === undefined) {
+        continue
+      }
+      const claimingNode = specializationClaimingNode(this.deps.nodeRegistry, skill.id, specId)
+      if (claimingNode !== undefined && !ownedNodeIds(player).includes(claimingNode.id)) {
+        this.deps.skillSystem.clearSpecialization(skill.id, specId)
+      }
+    }
   }
 }

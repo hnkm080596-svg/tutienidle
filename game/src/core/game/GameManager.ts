@@ -867,6 +867,7 @@ export class GameManager {
       reconcileQuestLifecycle: () => this.tickOps.reconcileQuestLifecycle(),
       reconcileRealmRewards: (player) =>
         this.realmAdvanceOps.reconcileCultivationPathRealmRewards(player),
+      reconcileSpecClaims: (player) => this.progressionOps.reconcileSpecClaims(player),
       tribulationDirector: this.tribulationDirector,
     })
 
