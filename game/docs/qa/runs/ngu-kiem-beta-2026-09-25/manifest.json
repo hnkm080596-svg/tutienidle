@@ -720,7 +720,7 @@
       "path": "docs/balance/2026-09-25-ngu-kiem-redesign.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "63b9433610baeaeb73e6c6212357d0a2bdef30fab96f45d2c6e05e6c989886d5"
+      "hash": "3b170a2c0333e4e206752c4d23bebea92cf7e5efda03c4ce936240cea63b7a8e"
     },
     {
       "path": "docs/design/2026-09-23-hidden-perfection-lineage.md",
@@ -14580,7 +14580,7 @@
       "path": "src/components/panels/skill-path/NodeInspector.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "bb86944ad158742e6c1508ce38799206473f22b4a945eb428e1e69e4ecbf5170"
+      "hash": "defe529d3575fc67b9415d94ef6d19961fa7e56ddfdd3eb054783bd8cc297abe"
     },
     {
       "path": "src/components/panels/skill-path/NodeTreePanel.test.ts",
@@ -14658,7 +14658,7 @@
       "path": "src/components/panels/SkillPathPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "ef44259aac6e07c3535b08ebb4316f67735415a90ed4b46db2192bf512631478"
+      "hash": "bea42c6ed7b6b2188328b9cdb991ed11d7f651dc7c191f48ae66deb58ef3ad6d"
     },
     {
       "path": "src/components/panels/StageSelectPanel.test.ts",
@@ -17424,7 +17424,7 @@
       "path": "src/core/game/GameManager.deadIds.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d04c8d05dfcc66fa36d0396d2707eba4b99bd9163070f14a39851b23110e9212"
+      "hash": "1d802986fd42bffb2e2decdf678f3bc6db577a71185dc019e6655ab6f1407722"
     },
     {
       "path": "src/core/game/GameManager.decomposeOutput.test.ts",
@@ -18252,7 +18252,7 @@
       "path": "src/core/kiem-tu/KiemTuPath.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a493fac6170c8a00cfebb5967c9a59051c30a779a0f218c240cbf81cc81f8890"
+      "hash": "05de3d6ed11f5afe27030662286911b5fbd00c0e6c47591dc0cddf1517b49aa2"
     },
     {
       "path": "src/core/kiem-tu/KiemTuPath.way.test.ts",
@@ -18288,7 +18288,7 @@
       "path": "src/core/kiem-tu/NguKiemDaoProvider.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "cddacf9f4c3c711bc2df3fafa2138449ac28c938c0c7b32f483ca3c6a65dc061"
+      "hash": "2de365212e9b2b6add2895bf0ed835bcfde79c584483b3fe797dc4c6f8536fd7"
     },
     {
       "path": "src/core/material/Material.ts",
@@ -19476,13 +19476,13 @@
       "path": "src/core/simulation/benchmark/BalanceBaselines.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8c20cfa878ae0bac14468b28a363fd733bacc654b9a0da6a73a8673d5a7cd40e"
+      "hash": "6a317e2c90f3b8082084697df7c36cf3633c3cf549589460359a2955a87209e1"
     },
     {
       "path": "src/core/simulation/benchmark/BalanceMatrix.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f75a47ce7e9a2595b022b0d7804dbc93b68d89e10f22795b0c7ba767f6f67605"
+      "hash": "233af436916191eae32f812260aa027b073049ebeb985edf97ba47416099f362"
     },
     {
       "path": "src/core/simulation/benchmark/BalanceReport.test.ts",
@@ -20670,7 +20670,7 @@
       "path": "src/data/progression/KiemTuNodes.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0ebca1a758c3cc261607e7e78d98c4d6666df5f6b9e8b7b2ffacb7ac092b2628"
+      "hash": "90020c7ae8b1b44582253ae54f8749654212b09d5cfe8c18307a53e4ef9da9fc"
     },
     {
       "path": "src/data/progression/PhapTuAnNodes.ts",
@@ -20988,7 +20988,7 @@
       "path": "src/data/skill/TurnSkillDisplayMeta.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "b531f62a59585662c917880f73c2f13ffde7b7dc26160d95ad9fb02fa5a50c34"
+      "hash": "9f679d0ab1d92051ddf7dad440e69b78342e19d8ce379346c46130cdf70df4a0"
     },
     {
       "path": "src/data/stage/ChapterStages.test.ts",
@@ -22206,7 +22206,7 @@
       "path": "src/services/save/saveShapeValidation.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "b6d1b7d71f1d5de51a172355bf6409a6120f466d49e76d4bd76a2b5031ebc0f6"
+      "hash": "153a4fdfe40980e7504e04d9d5dff5122f87ee2b5b07485a35880fe67fa7f876"
     },
     {
       "path": "src/services/save/saveShapeValidation.ts",
@@ -22596,7 +22596,7 @@
       "path": "tests/architecture/cultivationPathIsolation.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "9f8d500e68d58442be0fd9e7d2cb55d0bd0e9d4189f98f34008b46e6de17740b"
+      "hash": "192931b3961cf68b9f7a1ced2e52f90e8957139d1fed8a10e369ed9f729f0b75"
     },
     {
       "path": "tests/architecture/damageAuthorityRng.test.ts",
@@ -22971,5 +22971,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2"
+  "productStateId": "339eff79f533f09bbc06139a85b601669edd3c11bf7d1e81142130df706632b7"
 }

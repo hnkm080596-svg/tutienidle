@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "d8321ba8",
   "state": {
-   "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+   "productStateId": "339eff79f533f09bbc06139a85b601669edd3c11bf7d1e81142130df706632b7",
    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -32,9 +32,9 @@
   "cleanRoundA": null,
   "cleanRoundB": null,
   "finalEvidenceIds": [
-   "EV-NK-FIX-4"
+   "EV-NK-VERIFY-FINAL-2"
   ],
-  "outcome": null
+  "outcome": "QA_UNVERIFIED"
  },
  "briefs": [
   {
@@ -243,7 +243,9 @@
    "deviations": [],
    "consumedBy": [],
    "checkpoints": [],
-   "finalConformanceIds": []
+   "finalConformanceIds": [
+    "EV-NK-VERIFY-FINAL-2"
+   ]
   }
  ],
  "assignments": [],
@@ -3198,8 +3200,10 @@
    "verificationEvidenceIds": [
     "EV-NK-FIX-7"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-NK-CLO-6"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null
@@ -3367,6 +3371,68 @@
    "duplicateOf": null,
    "rejectionReason": "honest computed baseline; collision is data, not a defect",
    "exception": null
+  },
+  {
+   "id": "F-NK-FA-1",
+   "title": "P15 ascii-comments ratchet fails on NguKiemDaoProvider comment",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "High",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/core/kiem-tu/NguKiemDaoProvider.ts",
+     "symbolOrSection": "L94 comment",
+     "revision": "386ca595",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A AUTHORITY reviewer (devin-5264a6179435434f9119b0b5b628bf36)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "tests/architecture/asciiComments.test.ts reports the L94 middle-dot comment token at pinned head 386ca595",
+   "expected": "All comments in production code plain ASCII (P15)",
+   "actual": "'Ngu Kiem \u00b7 Khoi' middle dot in a line comment",
+   "rootCause": "comment quoted the node display name verbatim including its non-ASCII separator",
+   "rootClass": "comment hygiene (protection rule)",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu",
+      "src"
+     ],
+     "termsAndMethod": "grep -nP '[^\\x00-\\x7F]' sweep + asciiComments suite as canonical detector",
+     "evidenceIds": [
+      "EV-NK-FIX-FA1"
+     ],
+     "hitDispositions": [
+      "only L94 token flagged; 'Ng\u1ef1 Ki\u1ebfm'/'\u00b7' string literals in code are allowed"
+     ],
+     "coverageLimits": [
+      "comments only per P15"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "FIXED @dd15cad7: comment reworded to ASCII ('text after its middle-dot separator')",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-FA1"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-FA1"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
   }
  ],
  "evidence": [
@@ -3499,7 +3565,7 @@
    "limitations": [
     "scene/canvas tests excluded (env: libuuid/magick absent) \u2014 unaffected by ngu-kiem surface"
    ],
-   "status": "CURRENT"
+   "status": "STALE"
   },
   {
    "id": "EV-NK-NOVEL-1",
@@ -3530,7 +3596,7 @@
    "limitations": [
     "probe runs GameManager-driven battle; sim-only consumers (SimManager) share tryPlanCast via the same resolver"
    ],
-   "status": "CURRENT"
+   "status": "STALE"
   },
   {
    "id": "EV-NK-FIX-5",
@@ -3564,7 +3630,7 @@
     "F-NK-AUT-8..10,12,13 repairs verified at fa45c1eb"
    ],
    "limitations": [],
-   "status": "CURRENT"
+   "status": "STALE"
   },
   {
    "id": "EV-NK-FIX-6",
@@ -3595,7 +3661,7 @@
     "F-NK-AUTB-1/AUTB-2/CORB-1/CLO4-1 repairs verified at 0ccdbdc4"
    ],
    "limitations": [],
-   "status": "CURRENT"
+   "status": "STALE"
   },
   {
    "id": "EV-NK-FIX-7",
@@ -3624,6 +3690,120 @@
     "pin now covers every v84-era retired ngu-kiem content id"
    ],
    "limitations": [],
+   "status": "STALE"
+  },
+  {
+   "id": "EV-NK-VERIFY-FINAL",
+   "state": {
+    "productStateId": "7a934c47fb1d0f9daccba696d0d8ded1b9ee4259bf0ae465dd9dfa65d7bab2b1",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T04:05:00.000Z",
+   "finishedAt": "2026-09-25T04:07:00.000Z",
+   "commandOrMethod": "npm run type-check + npx vitest run (deadIds + kiem-tu + kiemTuNguWay + ProgressionOps + data/skill) at head 386ca595",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/final-verify-386ca595.log",
+   "artifactHash": "e962e258226179c87d28fc924c586aabe75bcd69b0a49635794532f5df17d0ee",
+   "inputPaths": [
+    "game/src/core/game/GameManager.deadIds.test.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "final head 386ca595: type-check clean, 218 scoped tests pass"
+   ],
+   "limitations": [],
+   "status": "STALE"
+  },
+  {
+   "id": "EV-NK-NOVEL-2",
+   "state": {
+    "productStateId": "7a934c47fb1d0f9daccba696d0d8ded1b9ee4259bf0ae465dd9dfa65d7bab2b1",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_PROPERTY",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T04:08:00.000Z",
+   "finishedAt": "2026-09-25T04:08:10.000Z",
+   "commandOrMethod": "npx vitest run --config docs/qa/runs/ngu-kiem-beta-2026-09-25/evidence/vitest.probe.config.mts (probe-plan-lane-momentum.test.ts - 3 attacks on the production plan-cast lane, rerun on head 386ca595)",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/probe-plan-lane-momentum-final.log",
+   "artifactHash": "3381b0e0d319911348b9db396c844fc1896e62f69c96071d49132512665b845e",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "plan-lane momentum parity holds on final state: 1.0 / 1+rate / 1+2*rate; mid-cast forge/defeat attacks still handled"
+   ],
+   "limitations": [],
+   "status": "STALE"
+  },
+  {
+   "id": "EV-NK-FIX-FA1",
+   "state": {
+    "productStateId": "339eff79f533f09bbc06139a85b601669edd3c11bf7d1e81142130df706632b7",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T04:21:00.000Z",
+   "finishedAt": "2026-09-25T04:22:00.000Z",
+   "commandOrMethod": "npx vitest run tests/architecture/asciiComments.test.ts src/core/kiem-tu/ + npm run type-check at head dd15cad7",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/fix-fa1-ascii-dd15cad7.log",
+   "artifactHash": "8581956f6226e830c68206aa36aedc411e2fe2ebf053d623870cfc7cd7874c8f",
+   "inputPaths": [
+    "game/src/core/kiem-tu/NguKiemDaoProvider.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "asciiComments ratchet green on dd15cad7; 113 kiem-tu tests + type-check pass"
+   ],
+   "limitations": [],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-NK-VERIFY-FINAL-2",
+   "state": {
+    "productStateId": "339eff79f533f09bbc06139a85b601669edd3c11bf7d1e81142130df706632b7",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T04:22:00.000Z",
+   "finishedAt": "2026-09-25T04:23:00.000Z",
+   "commandOrMethod": "npm run type-check + npx vitest run (changed-surface test files + asciiComments) at head dd15cad7",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/final-verify-scoped-dd15cad7.log",
+   "artifactHash": "febe8d1f89e074aa0f2be4377e6780d9288573e7ddacd9ec179d1386ca5037bb",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "final head dd15cad7: type-check clean, 619 scoped tests pass (changed surface + asciiComments ratchet)"
+   ],
+   "limitations": [
+    "full suite not runnable on coordinator box (canvas jsdom + magick env limits, identical on merge-base)"
+   ],
    "status": "CURRENT"
   }
  ],
@@ -3843,7 +4023,7 @@
     "F-NK-CLO-5"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-NK-DELTA-1",
@@ -3872,7 +4052,7 @@
    ],
    "findingIds": [],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-NK-AUT-A",
@@ -3908,7 +4088,7 @@
     "F-NK-AUT-13"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-NK-COR-A",
@@ -3941,7 +4121,7 @@
     "F-NK-COR-6"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-NK-INT-A",
@@ -3973,7 +4153,7 @@
     "F-NK-INT-16"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-NK-CLO-4",
@@ -4010,7 +4190,7 @@
     "F-NK-INT-16"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-NK-COR-B",
@@ -4039,7 +4219,7 @@
     "F-NK-CORB-1"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-NK-AUT-B",
@@ -4069,7 +4249,7 @@
     "F-NK-AUTB-2"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-NK-CLO-5",
@@ -4096,7 +4276,7 @@
    "evidenceIds": [],
    "findingIds": [],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-NK-INT-B",
@@ -4113,7 +4293,7 @@
    "model": "swe-2-max",
    "role": "clean-round-integration",
    "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
-   "priorFindingsVisible": true,
+   "priorFindingsVisible": false,
    "accessLimitations": [],
    "startedAt": "2026-09-25T04:20:00.000Z",
    "sealedAt": "2026-09-25T04:40:00.000Z",
@@ -4129,6 +4309,89 @@
     "F-NK-INTB-5"
    ],
    "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-NK-CLO-6",
+   "state": {
+    "productStateId": "7a934c47fb1d0f9daccba696d0d8ded1b9ee4259bf0ae465dd9dfa65d7bab2b1",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 15,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-16a9da5a68ef4f5daeb5513bb4aeab6e",
+   "contextId": "sealed-child-16a9da5a68ef4f5daeb5513bb4aeab6e",
+   "model": "swe-2-max",
+   "role": "closure-6",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T04:45:00.000Z",
+   "sealedAt": "2026-09-25T04:51:00.000Z",
+   "previousPhaseReviewId": "REV-NK-INT-B",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-NK-AUT-A2",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 16,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-5264a6179435434f9119b0b5b628bf36",
+   "contextId": "sealed-child-5264a6179435434f9119b0b5b628bf36",
+   "model": "swe-2-max",
+   "role": "clean-round-authority",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T04:30:00.000Z",
+   "sealedAt": "2026-09-25T04:33:00.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-NK-FA-1"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-NK-COR-A2",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 16,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-5a100c15cf67464391abddfefcba93d7",
+   "contextId": "sealed-child-5a100c15cf67464391abddfefcba93d7",
+   "model": "swe-2-max",
+   "role": "clean-round-correctness",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T04:32:00.000Z",
+   "sealedAt": "2026-09-25T04:37:00.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
    "status": "SEALED"
   }
  ],
@@ -4136,7 +4399,7 @@
   {
    "id": "CYCLE-NK-A",
    "state": {
-    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "productStateId": "7a934c47fb1d0f9daccba696d0d8ded1b9ee4259bf0ae465dd9dfa65d7bab2b1",
     "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
     "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -4153,7 +4416,32 @@
    ],
    "startedAt": "2026-09-25T01:40:00.000Z",
    "finishedAt": "2026-09-25T01:58:00.000Z",
-   "status": "FINDINGS"
+   "status": "STALE"
+  },
+  {
+   "id": "CYCLE-NK-B",
+   "state": {
+    "productStateId": "7a934c47fb1d0f9daccba696d0d8ded1b9ee4259bf0ae465dd9dfa65d7bab2b1",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reviewIds": [
+    "REV-NK-COR-B",
+    "REV-NK-AUT-B",
+    "REV-NK-INT-B"
+   ],
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-NK-FIX-6",
+    "EV-NK-FIX-7"
+   ],
+   "noveltyEvidenceIds": [
+    "EV-NK-NOVEL-2"
+   ],
+   "startedAt": "2026-09-25T03:00:00.000Z",
+   "finishedAt": "2026-09-25T04:51:00.000Z",
+   "status": "STALE"
   }
  ],
  "mutations": [],
@@ -4808,7 +5096,8 @@
    ],
    "promotionEvidenceIds": [],
    "qualifiedBy": [
-    "REV-NK-INT-B"
+    "REV-NK-INT-B",
+    "REV-NK-CLO-6"
    ],
    "capabilityDelta": "retirement pins must cover the full retired id set across nodes, skills, and display meta",
    "status": "CLASSIFIED",
@@ -5108,6 +5397,102 @@
    "payloadPath": "events/0010.json",
    "payloadHash": "7d585c203034caacdf083ec0ecea39bc5f06657c6576830d396706f9693790c1",
    "eventHash": "630a4efa22405f3a97a779d411aad963f2ee28566857c2e91148e85b517d8234"
+  },
+  {
+   "seq": 11,
+   "at": "2026-09-25T04:05:19.363Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "7a934c47fb1d0f9daccba696d0d8ded1b9ee4259bf0ae465dd9dfa65d7bab2b1",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "630a4efa22405f3a97a779d411aad963f2ee28566857c2e91148e85b517d8234",
+   "payloadPath": "events/0011.json",
+   "payloadHash": "3d9b316bb8ccb824515cc6008a094b02a5a6ad91cae1d853cfac9e75faf4311d",
+   "eventHash": "0b518b38165a7a8ca52d0770792160eec3cc29388e692ce5d73a8def85fd9668"
+  },
+  {
+   "seq": 12,
+   "at": "2026-09-25T04:05:19.603Z",
+   "kind": "DECISION",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "7a934c47fb1d0f9daccba696d0d8ded1b9ee4259bf0ae465dd9dfa65d7bab2b1",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "0b518b38165a7a8ca52d0770792160eec3cc29388e692ce5d73a8def85fd9668",
+   "payloadPath": "events/0012.json",
+   "payloadHash": "97480a5f8b75cd35b3e95f7188a23e11a7ca3e5ff1c6d55f49dbda3e1a45175e",
+   "eventHash": "2dd2670a64af7508267882170ad5d646b4771baae3322f6e4de7bcddb2de4f34"
+  },
+  {
+   "seq": 13,
+   "at": "2026-09-25T04:06:39.115Z",
+   "kind": "DECISION",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "7a934c47fb1d0f9daccba696d0d8ded1b9ee4259bf0ae465dd9dfa65d7bab2b1",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "2dd2670a64af7508267882170ad5d646b4771baae3322f6e4de7bcddb2de4f34",
+   "payloadPath": "events/0013.json",
+   "payloadHash": "18e76248e9c74cda7a456a86bcb224babd68c6bc753ed02b8c89e96e6bbe3a24",
+   "eventHash": "3ce5e1ea9e52d04a06d014e6ff136a3986068df70a2665a932649192908cb257"
+  },
+  {
+   "seq": 14,
+   "at": "2026-09-25T04:07:35.744Z",
+   "kind": "DECISION",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "7a934c47fb1d0f9daccba696d0d8ded1b9ee4259bf0ae465dd9dfa65d7bab2b1",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "3ce5e1ea9e52d04a06d014e6ff136a3986068df70a2665a932649192908cb257",
+   "payloadPath": "events/0014.json",
+   "payloadHash": "5e7e5fc19c57408ed27072fda78a41a204bfcdf0478b9da33e01292e169a4de7",
+   "eventHash": "19575ecfc3b671361356bea90382ccae6fec71d8db00bc824999c5c9465c4c9f"
+  },
+  {
+   "seq": 15,
+   "at": "2026-09-25T04:08:16.552Z",
+   "kind": "DECISION",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "7a934c47fb1d0f9daccba696d0d8ded1b9ee4259bf0ae465dd9dfa65d7bab2b1",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "19575ecfc3b671361356bea90382ccae6fec71d8db00bc824999c5c9465c4c9f",
+   "payloadPath": "events/0015.json",
+   "payloadHash": "41b1125a4460b88ba286434416d1a4388d9d7545c702c8f5c03dc8116492ca3e",
+   "eventHash": "872c67f5ed196f56e81ecfafa591c31957a4537b21fff2c6347ecfd1164b19fc"
+  },
+  {
+   "seq": 16,
+   "at": "2026-09-25T04:21:36.917Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "339eff79f533f09bbc06139a85b601669edd3c11bf7d1e81142130df706632b7",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "872c67f5ed196f56e81ecfafa591c31957a4537b21fff2c6347ecfd1164b19fc",
+   "payloadPath": "events/0016.json",
+   "payloadHash": "cda6ef5fa93839728c823db085fb79608ae114a716943c15be6f5511630a8039",
+   "eventHash": "4da8a7f82f314f85a4e5aa80f8d91116ca85ecb2287d2b521944b633261ea4ed"
   }
  ]
 }
