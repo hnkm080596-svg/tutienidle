@@ -375,8 +375,14 @@ export class GameManagerProgressionOps {
    * Bounds (documented): swords da merge vao kiemDaoBase khong un-merge
    * (residual cua loseKiemY hap thu); cast counts giu lai; grant tu
    * nguon khac khong bao gio trong record.
+   *
+   * Tra ve tong Insight ma cac leg da hoan lai vao player.skillInsight
+   * (hien chi core refund) - caller cong vao refund domain de bao cao
+   * dung tong, khop previewNodeRespec.
    */
-  applyOneShotClawback(player: PlayerData, revokedNodeIds: ReadonlySet<string>): void {
+  applyOneShotClawback(player: PlayerData, revokedNodeIds: ReadonlySet<string>): number {
+    let clawbackRefund = 0
+
     for (const nodeId of revokedNodeIds) {
       const record = player.nodeOneShotGrants[nodeId]
 
@@ -409,11 +415,14 @@ export class GameManagerProgressionOps {
         const coreId = skillCoreNodeId(skillId)
 
         if (this.deps.nodeRegistry.has(coreId)) {
-          player.skillInsight += revokeNodeOwnership(
+          const coreRefund = revokeNodeOwnership(
             player,
             this.deps.nodeRegistry.get(coreId),
             this.deps.nodeRegistry,
           )
+
+          player.skillInsight += coreRefund
+          clawbackRefund += coreRefund
         }
       }
 
@@ -456,6 +465,8 @@ export class GameManagerProgressionOps {
 
       delete player.nodeOneShotGrants[nodeId]
     }
+
+    return clawbackRefund
   }
 
   /**
@@ -600,8 +611,8 @@ export class GameManagerProgressionOps {
 
     const revoked = new Set<string>()
     const refund = devResetBranchSystem(player, this.deps.nodeRegistry, branchTag, revoked)
-    this.applyOneShotClawback(player, revoked)
-    return refund
+
+    return refund + this.applyOneShotClawback(player, revoked)
   }
 
   /**
@@ -766,8 +777,8 @@ export class GameManagerProgressionOps {
       ...scope,
       preserveIds: RESPEC_PRESERVED_NODE_IDS,
     }, revoked)
-    this.applyOneShotClawback(player, revoked)
-    return refund
+
+    return refund + this.applyOneShotClawback(player, revoked)
   }
 
   /**
