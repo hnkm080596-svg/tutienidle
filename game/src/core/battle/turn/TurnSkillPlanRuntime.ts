@@ -25,7 +25,6 @@ import type {
 } from '../contracts/ids'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { MAX_THE } from '../../combat/CombatTypes'
-import type { CombatOperationResult } from '../contracts/results'
 import type { CombatRng } from '../contracts/rng'
 import type { CombatScheduler } from '../runtime/scheduler/CombatScheduler'
 import type { BuffDefinition, PeriodicDamageDefinition } from '../../buff2/BuffDefinition'
