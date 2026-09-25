@@ -6958,10 +6958,12 @@
       "verificationEvidenceIds": [
         "EV-TT-CLEANA4-FIX"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TT-CLO-22"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -7020,10 +7022,12 @@
       "verificationEvidenceIds": [
         "EV-TT-CLEANA4-FIX"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TT-CLO-22"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -7079,10 +7083,12 @@
       "verificationEvidenceIds": [
         "EV-TT-CLEANA4-FIX"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TT-CLO-22"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -7256,10 +7262,12 @@
       "verificationEvidenceIds": [
         "EV-TT-CLEANA4-FIX-2"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TT-CLO-22"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -7290,7 +7298,9 @@
         }
       ],
       "discoveredBy": "devin-ac185f2118834a4d8f36d4afa3f7086a",
-      "evidenceIds": [],
+      "evidenceIds": [
+        "EV-TT-CLEANA4-INT-FIX"
+      ],
       "counterexample": "a dev-channel call mid-battle returns true while the op refused (returned 0) - the op-side gate exists but the wrapper lies about it",
       "expected": "the wrapper propagates the op rejection like respecNodeTree does",
       "actual": "wrapper discarded the op return; unconditional bumpState()+true",
@@ -7313,13 +7323,19 @@
         }
       ],
       "repair": "FIXED @697c2050: wrapper returns op result (0 -> no bumpState), matching respecNodeTree contract",
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null,
       "invariantIds": [],
       "siblingFindingIds": [],
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "pinEvidenceIds": [
+        "EV-TT-CLEANA4-INT-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLEANA4-INT-FIX"
+      ],
+      "closureReviewIds": [
+        "REV-TT-CLO-22"
+      ],
       "duplicateOf": null,
       "exception": null
     },
@@ -7409,7 +7425,9 @@
         }
       ],
       "discoveredBy": "devin-ac185f2118834a4d8f36d4afa3f7086a",
-      "evidenceIds": [],
+      "evidenceIds": [
+        "EV-TT-CLEANA4-INT-FIX"
+      ],
       "counterexample": "deleting the reflectsEligible gate or narrowing the isBattleInProgress union would regress silently - no test would fire",
       "expected": "pins: non-natural hostile action emits no reflection; countdown disables the same affordances as fighting",
       "actual": "every reflect pin used natural normal sources; UI pins mocked only state:fighting",
@@ -7434,13 +7452,19 @@
         }
       ],
       "repair": "FIXED @697c2050: counter-payload pin in TurnBattleSystem.reflection.test.ts; countdown pin in TheTuTreePanel.test.ts",
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null,
       "invariantIds": [],
       "siblingFindingIds": [],
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "pinEvidenceIds": [
+        "EV-TT-CLEANA4-INT-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLEANA4-INT-FIX"
+      ],
+      "closureReviewIds": [
+        "REV-TT-CLO-22"
+      ],
       "duplicateOf": null,
       "exception": null
     }
@@ -10455,6 +10479,44 @@
       "findingIds": [
         "F-TT-INT-A4-1",
         "F-TT-INT-A4-2",
+        "F-TT-INT-A4-3"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TT-CLO-22",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 23,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-e0959b207e5546bb9564760ed333d6ee",
+      "contextId": "sealed-child-e0959b207e5546bb9564760ed333d6ee",
+      "model": "swe-2-max",
+      "role": "CLOSURE",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T22:54:00.000Z",
+      "sealedAt": "2026-09-25T22:57:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-A4-INT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-TT-CLEANA4-INT-FIX",
+        "EV-TT-CLEANA4-FIX",
+        "EV-TT-CLEANA4-FIX-2"
+      ],
+      "findingIds": [
+        "F-TT-AUT-A4-1",
+        "F-TT-AUT-A4-2",
+        "F-TT-AUT-A4-3",
+        "F-TT-COR-A4-5",
+        "F-TT-INT-A4-1",
         "F-TT-INT-A4-3"
       ],
       "novelAttackIds": [],
@@ -13707,6 +13769,92 @@
       "preventionEvidenceIds": [
         "EV-TT-CLEANA4-INT-FIX"
       ]
+    },
+    {
+      "id": "L-TT-91",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TT-AUT-A4-1",
+        "F-TT-AUT-A4-2"
+      ],
+      "incidentEvidenceIds": [
+        "EV-TT-CLEANA4-FIX",
+        "EV-TT-CLEANA4-FIX-2"
+      ],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "duplicated-truth-predicate",
+      "missedInvariantIds": [],
+      "escapeReason": "the in-battle gate predicate was re-derived three ways (inline literals x4 + isBattleInProgress(state) + deps.isTurnBattleInProgress) at ops layer and again as a local computed in 9 UI panels - each new gate copy could drift",
+      "applicability": [
+        "any predicate re-spelled at multiple layers"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "one canonical predicate per layer boundary: ops-level dep + one composable for UI"
+      ],
+      "promotionEvidenceIds": [
+        "EV-TT-CLEANA4-FIX",
+        "EV-TT-CLEANA4-FIX-2"
+      ],
+      "qualifiedBy": [
+        "REV-TT-CLEAN-A4-AUT",
+        "REV-TT-CLEAN-A4-COR"
+      ],
+      "capabilityDelta": "isTurnBattleInProgress dep on both ops + isBattleInProgress composable consumed by all 9 panels",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [
+        "EV-TT-CLEANA4-FIX",
+        "EV-TT-CLEANA4-FIX-2"
+      ]
+    },
+    {
+      "id": "L-TT-92",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TT-AUT-A4-3",
+        "F-TT-COR-A4-5"
+      ],
+      "incidentEvidenceIds": [
+        "EV-TT-CLEANA4-FIX",
+        "EV-TT-CLEANA4-FIX-2"
+      ],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "partial-mutation-across-gate",
+      "missedInvariantIds": [],
+      "escapeReason": "sync helpers revoked before the gated re-grant - a mid-battle call revoked the passive then skipped the re-grant, silently un-granting while in battle",
+      "applicability": [
+        "any sync/re-apply helper containing revoke-then-conditional-regrant"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "sync helpers that mutate must refuse wholesale when the gated half cannot run - the gate belongs before ANY mutation, not only before the write"
+      ],
+      "promotionEvidenceIds": [
+        "EV-TT-CLEANA4-FIX",
+        "EV-TT-CLEANA4-FIX-2"
+      ],
+      "qualifiedBy": [
+        "REV-TT-CLEAN-A4-AUT",
+        "REV-TT-CLEAN-A4-COR"
+      ],
+      "capabilityDelta": "syncTalentCombatPassive + syncRealmPassive early-return on isTurnBattleInProgress",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [
+        "EV-TT-CLEANA4-FIX",
+        "EV-TT-CLEANA4-FIX-2"
+      ]
     }
   ],
   "messages": [],
@@ -15054,6 +15202,38 @@
       "payloadPath": "events/0084.json",
       "payloadHash": "ce4c6ccb2d0dd5c84bfb468fc982845c9f1ee6e5917b393214d306b12ff729ce",
       "eventHash": "6089a83ceadba5e7baf15b606f055b5581df8e4c76ad7afba427c9aa8033b16f"
+    },
+    {
+      "seq": 85,
+      "at": "2026-09-25T22:57:24.911Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "6089a83ceadba5e7baf15b606f055b5581df8e4c76ad7afba427c9aa8033b16f",
+      "payloadPath": "events/0085.json",
+      "payloadHash": "b7ab8ed722bda1ef3404282d1cf72c4a8cc491b7691e06c405158771639669bd",
+      "eventHash": "51681ddc90a52265fce4a2d9c263acc6d6a621f5b2c9ea62ed9dac5b56503161"
+    },
+    {
+      "seq": 86,
+      "at": "2026-09-25T22:57:34.291Z",
+      "kind": "FINDING",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "51681ddc90a52265fce4a2d9c263acc6d6a621f5b2c9ea62ed9dac5b56503161",
+      "payloadPath": "events/0086.json",
+      "payloadHash": "b129c3d3edc4f50f6edd0b4ef5d98bbc5858fa14f6b073998529830a60b7ec9b",
+      "eventHash": "3c094c6baa33df544228936cc4b27c521ec94bcec2bc09bbc0b709dddd3d5829"
     }
   ]
 }
