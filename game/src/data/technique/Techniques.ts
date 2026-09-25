@@ -122,7 +122,7 @@ export const TECHNIQUES: Technique[] = [
     icon: '/assets/techniques/van_kiem_quyet.png',
 
     description:
-      'Tâm pháp Ngự Kiếm Đạo — vạn kiếm quy tông, mỗi phi kiếm tự quyết sát chiêu.',
+      'Tâm pháp Ngự Kiếm Đạo — vạn kiếm quy tông, phi kiếm giáng đòn liên tiếp theo thứ tự.',
 
     gradeEffects: {
       1: {
