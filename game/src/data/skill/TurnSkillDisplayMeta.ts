@@ -8,7 +8,7 @@ import { SKILLS } from './Skills'
 // can bo sung 1 entry o day.
 //
 // Nguon du lieu:
-// - id trung SKILLS (Skills.ts) -> dONG BO name/description tu bang Skill
+// - id trung SKILLS (Skills.ts) -> DONG BO name/description tu bang Skill
 //   that (SKILLS_BY_ID lookup luc khoi tao -- khong hardcode 2 noi).
 // - id authored rieng cho turn engine (generic_physical, ngu_kiem_thuat,
 //   orb_* / kiem_combo_*, water_surge, reaction path) -> author truc tiep

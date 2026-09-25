@@ -538,6 +538,10 @@ export function revokeNodeOwnership(
  * create a refund discrepancy (cost 0 naturally refunds 0). Out-of-combat
  * use only, for balancing.
  */
+// NOTE: way-granted ids (way.grantedNodeIds, e.g. ngu_kiem_khoi) are an
+// ownership invariant - reconcileWayGrants re-grants them on every
+// save/restore, so a dev wipe of those ids is re-enforced on next load.
+// Other wiped nodes stay wiped.
 export function devResetBranch(
   player: PlayerData,
 
