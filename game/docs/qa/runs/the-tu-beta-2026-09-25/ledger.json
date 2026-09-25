@@ -4458,8 +4458,10 @@
    "verificationEvidenceIds": [
     "EV-TT-A10-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-TT-CLO-15"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null
@@ -4515,8 +4517,10 @@
    "verificationEvidenceIds": [
     "EV-TT-A10-FIX"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-TT-CLO-15"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null
@@ -6447,6 +6451,33 @@
     "F-TT-AUT-A10-2",
     "F-TT-AUT-A10-3"
    ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-TT-CLO-15",
+   "state": {
+    "productStateId": "032e6c7d0259fcfa8ee64db5169b8c89d79483310750e79ceea6c18069663a53",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 10,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-21b87bd9371042229a4cd27232711778",
+   "contextId": "sealed-child-21b87bd9371042229a4cd27232711778",
+   "model": "swe-2-max",
+   "role": "CLOSURE",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T17:10:00.000Z",
+   "sealedAt": "2026-09-25T17:11:29.000Z",
+   "previousPhaseReviewId": "REV-TT-AUT-A10",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -8410,6 +8441,72 @@
     "REV-TT-AUT-A10"
    ],
    "capabilityDelta": "lane-divergence awareness",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-53",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-AUT-A10-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "adjudicated",
+   "missedInvariantIds": [],
+   "escapeReason": "hard-coded id lists duplicated from data silently degrade",
+   "applicability": [
+    "UI id bindings",
+    "compat re-exports"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "a UI fixed slot grid duplicating authored ids needs a loud integrity check at setup"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-CLO-15"
+   ],
+   "capabilityDelta": "hardening checklist",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-54",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-AUT-A10-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "adjudicated",
+   "missedInvariantIds": [],
+   "escapeReason": "migration re-exports outlive their consumers",
+   "applicability": [
+    "UI id bindings",
+    "compat re-exports"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "after a compat migration completes, grep the re-exported names and drop dead paths"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-CLO-15"
+   ],
+   "capabilityDelta": "hardening checklist",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": "the-tu-beta-2026-09-25",
