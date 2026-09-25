@@ -2926,12 +2926,14 @@
    "verificationEvidenceIds": [
     "EV-TT-A7-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-11"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null,
-   "rootClass": null,
+   "rootClass": "missing-node-level-pins",
    "repair": "committed 1b6353cb on devin/1790308404-the-tu-beta",
    "id": "F-TT-COR-A7-2",
    "title": "coverage gap: no negative test techniqueRank<5 blocks major_loan_dau/major_phan_chan",
@@ -2985,12 +2987,14 @@
    "verificationEvidenceIds": [
     "EV-TT-A7-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-11"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null,
-   "rootClass": null,
+   "rootClass": "missing-node-level-pins",
    "repair": "committed 1b6353cb on devin/1790308404-the-tu-beta",
    "id": "F-TT-COR-A7-3",
    "title": "coverage gap: warded hit (hpDamage=0) queuing no reflect untested",
@@ -3044,12 +3048,14 @@
    "verificationEvidenceIds": [
     "EV-TT-A7-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-11"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null,
-   "rootClass": null,
+   "rootClass": "vestigial-expression",
    "repair": "committed 1b6353cb on devin/1790308404-the-tu-beta",
    "id": "F-TT-COR-A7-4",
    "title": "redundant ternary in TheTuTreePanel.onCardClick",
@@ -3103,12 +3109,14 @@
    "verificationEvidenceIds": [
     "EV-TT-A7-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-11"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null,
-   "rootClass": null,
+   "rootClass": "partial-gate-propagation",
    "repair": "committed 1b6353cb on devin/1790308404-the-tu-beta",
    "id": "F-TT-INT-A7-1",
    "title": "in-battle progression-op gate asymmetric: upgradeNode/levelUpSkill mutate nodeLevels mid-battle while purchaseNode rejects",
@@ -3162,12 +3170,14 @@
    "verificationEvidenceIds": [
     "EV-TT-A7-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-11"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null,
-   "rootClass": null,
+   "rootClass": "partial-gate-propagation",
    "repair": "committed 1b6353cb on devin/1790308404-the-tu-beta",
    "id": "F-TT-INT-A7-2",
    "title": "Node UI offers mid-battle purchases the engine rejects (dead-click)",
@@ -3286,12 +3296,14 @@
    "verificationEvidenceIds": [
     "EV-TT-A7-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-11"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null,
-   "rootClass": null,
+   "rootClass": "partial-gate-propagation",
    "repair": "committed 1b6353cb on devin/1790308404-the-tu-beta",
    "id": "F-TT-INT-A7-4",
    "title": "SkillPathPanel inspector refresh watch misses cost-waived upgrades",
@@ -4630,6 +4642,42 @@
     "F-TT-INT-A7-2",
     "F-TT-INT-A7-3",
     "F-TT-INT-A7-4"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-TT-CLO-11",
+   "state": {
+    "productStateId": "f76a5acf1fa9419fcf8a03489438e0309b4d2f01ca4f28f7409ead81b54385a6",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 20,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-a34831d1222c4c3fa3b1c70e8f49bf2a",
+   "contextId": "sealed-child-a34831d1222c4c3fa3b1c70e8f49bf2a",
+   "model": "swe-2-max",
+   "role": "closure-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T12:57:24.000Z",
+   "sealedAt": "2026-09-25T13:01:21.000Z",
+   "previousPhaseReviewId": "REV-TT-INT-A7",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-TT-A7-FIX"
+   ],
+   "findingIds": [
+    "F-TT-INT-A7-1",
+    "F-TT-INT-A7-2",
+    "F-TT-INT-A7-4",
+    "F-TT-COR-A7-2",
+    "F-TT-COR-A7-3",
+    "F-TT-COR-A7-4"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -5985,6 +6033,109 @@
     "REV-TT-INT-A7"
    ],
    "capabilityDelta": "spec-pinned floor acceptance",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-35",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-INT-A7-1",
+    "F-TT-INT-A7-2",
+    "F-TT-INT-A7-4"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "partial-gate-propagation",
+   "missedInvariantIds": [],
+   "escapeReason": "a gate added at one write seam (purchaseNode) left sibling writers (upgradeNode/levelUpSkill) and the UI surface ungated; watch keys underapproximated the same state",
+   "applicability": [
+    "battle-state gating of nodeLevels writes",
+    "UI battle-awareness of inspector controls",
+    "reactivity watch keys"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "every state-mutation seam needs its sibling writers audited for the same gate",
+    "watch keys must cover the full mutation surface, not just the common path"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-CLO-11"
+   ],
+   "capabilityDelta": "sibling-write gate audit",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-36",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-A7-2",
+    "F-TT-COR-A7-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "missing-node-level-pins",
+   "missedInvariantIds": [],
+   "escapeReason": "generic gate coverage existed but no node-level negative pin (rank<5 stays closed; warded hit queues no reflect)",
+   "applicability": [
+    "realm/techniqueRank gate coverage",
+    "zero-damage lanes"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "each authored gate needs a negative pin at node level, not only generic coverage"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-CLO-11"
+   ],
+   "capabilityDelta": "negative pin per authored gate",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-37",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-A7-4"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "vestigial-expression",
+   "missedInvariantIds": [],
+   "escapeReason": "copied select contract left a no-op ternary",
+   "applicability": [
+    "copy-adapt code paths"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "simplify copied contracts before landing"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-CLO-11"
+   ],
+   "capabilityDelta": "no-op expression sweep",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": "the-tu-beta-2026-09-25",
