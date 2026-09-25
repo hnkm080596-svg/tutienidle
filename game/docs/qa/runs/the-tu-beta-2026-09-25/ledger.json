@@ -374,9 +374,13 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "repair": "stale comments renamed phan_chinh->phan_chan @b7f4bbfc",
+   "pinEvidenceIds": [
+    "EV-TT-FIX-A2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-FIX-A2"
+   ],
    "closureReviewIds": [
     "REV-TT-CLO-2"
    ],
@@ -431,9 +435,13 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "repair": "channel renamed to tranKinhWeakenRatio end-to-end; spec sec.2.4 amended @b7f4bbfc",
+   "pinEvidenceIds": [
+    "EV-TT-FIX-A2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-FIX-A2"
+   ],
    "closureReviewIds": [
     "REV-TT-CLO-2"
    ],
@@ -598,9 +606,13 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "repair": "sacrifice paid<=0 throws CombatOperationSkip('blocked_by_restriction') @b7f4bbfc",
+   "pinEvidenceIds": [
+    "EV-TT-FIX-A2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-FIX-A2"
+   ],
    "closureReviewIds": [
     "REV-TT-CLO-2"
    ],
@@ -655,9 +667,13 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "repair": "flushReflects dead-holder gate removed @b7f4bbfc",
+   "pinEvidenceIds": [
+    "EV-TT-FIX-A2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-FIX-A2"
+   ],
    "closureReviewIds": [
     "REV-TT-CLO-2"
    ],
@@ -822,9 +838,13 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "repair": "flushReflects dead-holder gate removed; post-mortem retaliation pinned @b7f4bbfc",
+   "pinEvidenceIds": [
+    "EV-TT-FIX-A2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-FIX-A2"
+   ],
    "closureReviewIds": [
     "REV-TT-CLO-2"
    ],
@@ -1037,6 +1057,39 @@
    ],
    "result": "PASS",
    "status": "STALE"
+  },
+  {
+   "id": "EV-TT-FIX-A2",
+   "state": {
+    "productStateId": "78670408bf5e4fdda6b3931efb6432591a50eb058333226fba732331a3f28ab2",
+    "contractId": "05c4db99cc2008a384174d30d75fe2ed1579d7e55d76726bd9a195d02adec4d7",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "commandOrMethod": "npm run type-check + npx vitest run scoped suite at b7f4bbfc; REV-TT-CLO-2 sealed",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T06:45:00.000Z",
+   "finishedAt": "2026-09-25T06:53:30.000Z",
+   "inputPaths": [
+    "src/core/proc/CombatProcSystem.ts",
+    "src/core/battle/runtime/scheduler/adapters/CombatSystemDamageAdapter.ts",
+    "src/data/skill/TheTuSkills.ts",
+    "src/data/progression/TheTuNodes.ts",
+    "src/core/the-tu/TheTuKitModifiers.ts"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/fix-verify-a2.log",
+   "artifactHash": "4c89050c3abb91fe7cc2d2b113a854e4464eb026e584d6499778eb37ba1753af",
+   "claims": [
+    "5 round-3 findings repaired at b7f4bbfc; type-check clean; 799 scoped tests pass; closure REV-TT-CLO-2 SEALED"
+   ],
+   "invariantIds": [],
+   "limitations": [],
+   "result": "PASS",
+   "status": "CURRENT"
   }
  ],
  "coverage": [],
@@ -1468,6 +1521,166 @@
     "REV-TT-COR-A1"
    ],
    "capabilityDelta": "terminal-finding lesson MC13",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-TT-10",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-AUT-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "contract",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "pin test + spec amendment"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [
+    "EV-TT-FIX-A2"
+   ],
+   "qualifiedBy": [
+    "REV-TT-CLO-2"
+   ],
+   "capabilityDelta": "fix verified on new head",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-TT-11",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "contract",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "pin test + spec amendment"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [
+    "EV-TT-FIX-A2"
+   ],
+   "qualifiedBy": [
+    "REV-TT-CLO-2"
+   ],
+   "capabilityDelta": "fix verified on new head",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-TT-12",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-4"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "contract",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "pin test + spec amendment"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [
+    "EV-TT-FIX-A2"
+   ],
+   "qualifiedBy": [
+    "REV-TT-CLO-2"
+   ],
+   "capabilityDelta": "fix verified on new head",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-TT-13",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-5"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "contract",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "pin test + spec amendment"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [
+    "EV-TT-FIX-A2"
+   ],
+   "qualifiedBy": [
+    "REV-TT-CLO-2"
+   ],
+   "capabilityDelta": "fix verified on new head",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-TT-14",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-INT-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "contract",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "pin test + spec amendment"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [
+    "EV-TT-FIX-A2"
+   ],
+   "qualifiedBy": [
+    "REV-TT-CLO-2"
+   ],
+   "capabilityDelta": "fix verified on new head",
    "recurrenceFindingIds": [],
    "status": "CLASSIFIED",
    "policyVersion": null,

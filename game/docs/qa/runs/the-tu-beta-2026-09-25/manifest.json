@@ -3054,7 +3054,7 @@
       "path": "docs/specs/the-tu-beta-spec.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "a17c75787140b785b67931937c8c010997932a29bb4fec56667076f6d688428d"
+      "hash": "f838a5debc7225e092beb3e06045adf511a3e0179c2a1bf168220e23541ceae9"
     },
     {
       "path": "docs/superpowers/plans/2026-09-08-r10-save-restore-boundary.md",
@@ -15354,7 +15354,7 @@
       "path": "src/core/battle/runtime/scheduler/adapters/CombatSystemDamageAdapter.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "bc0d0f704bd53eec90b40cb093690256ce6205ccfc66c3525795f56e93fc41a5"
+      "hash": "e4df47c6cea1e713ebdf30be178666d3324b7647e879be30e73a538200e50caa"
     },
     {
       "path": "src/core/battle/runtime/scheduler/adapters/CombatSystemHealAdapter.test.ts",
@@ -15780,7 +15780,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.midImpactDeath.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d903f9c9505e2f842b92c39a786009c56c5fbca230df648d6d455834b7d08e3d"
+      "hash": "d18ebe06630ed3c2e25b75910189d96f6bae6103b6f43adcab282ba722eb25cf"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.missingHp.test.ts",
@@ -18618,7 +18618,7 @@
       "path": "src/core/proc/CombatProcSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "27533e1a898ddfe137abf5cf618a78f535144fb81a3f0ac181d973d50c17b732"
+      "hash": "609c3d7304abab10a6fdba9c1b89c8072e6f09dd0c4367812beab182fc16cd26"
     },
     {
       "path": "src/core/proc/MarkerCapabilities.ts",
@@ -19764,7 +19764,7 @@
       "path": "src/core/skilldef/LegacySkillCoverage.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d7a7139f0f36e9489097fc7dd2709cd469edaa8b2e73b270a640626607bea85b"
+      "hash": "959c3e3cca31224c92d1e8b8906e7204c15dfa225364464f6c35a6a09981b076"
     },
     {
       "path": "src/core/skilldef/ResolvedSkillPlan.test.ts",
@@ -20046,7 +20046,7 @@
       "path": "src/core/stats/StatTypes.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "7e30548b0e5117b516b9510260728d34964f48dba9011ad266e56f7451b8ce26"
+      "hash": "589904ee74c4e945f693878f175117bb7808eee8eb3de453a817a67530856745"
     },
     {
       "path": "src/core/stats/TheTuStatChannels.ts",
@@ -20190,7 +20190,7 @@
       "path": "src/core/the-tu/TheTuKitModifiers.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c12b8ebf24784ea452b1353e1f113433682df8a0da38be1ae7d35b66b48a0a29"
+      "hash": "046442844f873ac5ce0879a98f3e7d98c15310856c0930b462626181d90251ad"
     },
     {
       "path": "src/core/the-tu/TheTuPath.ts",
@@ -20754,13 +20754,13 @@
       "path": "src/data/progression/TheTuNodes.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6c160b17d40369131d4a71648f570fe2f22481e18137a75c8c5d093760e5d24c"
+      "hash": "5dd2b5c45a6bffa9eed9bf395d2f8464927011635b3d14f85c712cf83ac7b76c"
     },
     {
       "path": "src/data/progression/TheTuNodes.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "76d03b8a7e5c7c32eea1e81aae83e671e0a9d377cf6ce48f90389028be3ec2e6"
+      "hash": "269c78208c1f359fb9a7e641a6835c7a6624196b83aaf2c8839d8e4be4518fef"
     },
     {
       "path": "src/data/quest/quests.test.ts",
@@ -20964,13 +20964,13 @@
       "path": "src/data/skill/TheTuSkills.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e4ab88c756ae49d9f2f1d83f72a386521e2bc6ac784f9005bff33fac7fe7ecc8"
+      "hash": "9bf3fdd9736db93755e113a8fb5c315013e54e497c58926c1560f9939901bd64"
     },
     {
       "path": "src/data/skill/TheTuSkills.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "9169c4c9f7bd3db37e34c2bda692afd894f8672344771d37dc2d203fac6b5a8b"
+      "hash": "a64567898dc35315e3b3d916751f830726d136ecc1a724bbecf5440e0faa34bb"
     },
     {
       "path": "src/data/skill/TurnAnKitSkills.ts",
@@ -22983,5 +22983,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5"
+  "productStateId": "78670408bf5e4fdda6b3931efb6432591a50eb058333226fba732331a3f28ab2"
 }
