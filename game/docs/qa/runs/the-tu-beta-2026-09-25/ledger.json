@@ -23,7 +23,9 @@
   "aggregateParents": [],
   "requiredDomains": [],
   "exclusions": [],
-  "briefIds": [],
+  "briefIds": [
+   "BRF-TT-01"
+  ],
   "capacityLimit": 5,
   "requiredReadiness": true,
   "phase": "SNAPSHOT",
@@ -32,7 +34,122 @@
   "finalEvidenceIds": [],
   "outcome": null
  },
- "briefs": [],
+ "briefs": [
+  {
+   "id": "BRF-TT-01",
+   "taskId": "the-tu-beta-2026-09-25",
+   "revision": 1,
+   "planningBaseline": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "policyHash": "60ff569d5cbba6d6db8b6a34e9fecc72a87aeba60ff0cd6422455368c58b6a4b",
+   "requirementRefs": [
+    {
+     "path": "docs/specs/the-tu-beta-spec.md",
+     "symbolOrSection": "file",
+     "revision": "e76157c2",
+     "basis": "USER"
+    },
+    {
+     "path": "design doc pasted-1790286661996.txt (user design): the-tu beta body_pathway",
+     "symbolOrSection": "file",
+     "revision": "e76157c2",
+     "basis": "USER"
+    }
+   ],
+   "invariantIds": [],
+   "dependencyRefs": [
+    {
+     "path": "src/core/the-tu/",
+     "symbolOrSection": "dir",
+     "revision": "e76157c2",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/data/progression/TheTuNodes.ts",
+     "symbolOrSection": "file",
+     "revision": "e76157c2",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/data/skill/TheTuSkills.ts",
+     "symbolOrSection": "file",
+     "revision": "e76157c2",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/data/skill/TheTuKitModifiers.ts",
+     "symbolOrSection": "file",
+     "revision": "e76157c2",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "file",
+     "revision": "e76157c2",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/components/TheTuTreePanel.vue",
+     "symbolOrSection": "file",
+     "revision": "e76157c2",
+     "basis": "SOURCE"
+    }
+   ],
+   "sourceDependencyHashes": [],
+   "expectedChangeSet": [
+    "src/core/the-tu/",
+    "src/data/progression/TheTuNodes.ts",
+    "src/data/skill/TheTuSkills.ts",
+    "src/data/skill/TheTuKitModifiers.ts",
+    "src/data/skill/TheTuBuffs.ts",
+    "src/core/battle/turn/",
+    "src/components/TheTuTreePanel.vue"
+   ],
+   "lessonRouting": [
+    {
+     "lessonRef": "L-TT-1@1",
+     "decision": "APPLY",
+     "reason": "worker prompt must run asciiComments before G5; enforced for this run's reviewers"
+    }
+   ],
+   "slices": [
+    "S1 the-tu engine (roots mutex, pay_hp, huyet_cuong, tran_ap, phan_chien)",
+    "S2 node tree + UI + modifiers"
+   ],
+   "firstProofObligations": [
+    {
+     "oracle": "scoped vitest green",
+     "stage": "BEFORE_WRITE",
+     "admittedSlice": "S1",
+     "evidenceIds": [
+      "EV-TT-VERIFY-1"
+     ]
+    },
+    {
+     "oracle": "type-check + asciiComments ratchet clean",
+     "stage": "BEFORE_PROPAGATION",
+     "admittedSlice": "S2",
+     "evidenceIds": [
+      "EV-TT-VERIFY-1",
+      "EV-TT-CLO-1"
+     ]
+    }
+   ],
+   "unresolvedAssumptions": [],
+   "readiness": "IMPLEMENTATION_READY",
+   "preflightEvidenceIds": [
+    "EV-TT-VERIFY-1"
+   ],
+   "deviations": [],
+   "consumedBy": [],
+   "checkpoints": [],
+   "finalConformanceIds": []
+  }
+ ],
  "assignments": [],
  "consumptions": [],
  "invariants": [],
