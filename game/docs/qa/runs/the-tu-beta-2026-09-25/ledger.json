@@ -11,8 +11,8 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "bdc04bf9",
   "state": {
-   "productStateId": "c56d930aad049afb66001077c94193acee9e99f5712aa3b2b28e61681ec500d4",
-   "contractId": "7660d2c0ef0a019b5697f877a97b3fc13e7f3e9a7d5e31b7778b665a1b17ae81",
+   "productStateId": "3954e88d7601834989e11f6fceb47c0bc546e04635bce6f8faec3d2994afae10",
+   "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
   },
@@ -3526,8 +3526,8 @@
   },
   {
    "state": {
-    "productStateId": "f76a5acf1fa9419fcf8a03489438e0309b4d2f01ca4f28f7409ead81b54385a6",
-    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "productStateId": "3954e88d7601834989e11f6fceb47c0bc546e04635bce6f8faec3d2994afae10",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
     "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
    },
@@ -3547,7 +3547,7 @@
    "status": "REPAIR_AUTHORIZED",
    "rejectionReason": null,
    "rootClass": "spec-impl-vocabulary-drift",
-   "repair": "committed 63ac970d on devin/1790308404-the-tu-beta",
+   "repair": "FIXED @0956d787: spec:221 stale label loanDauPaidBonus -> loanDauPaidHpBonus (residual after 63ac970d)",
    "id": "F-TT-AUT-A8-4",
    "title": "spec-name drift on sacrifice payoff channel",
    "severity": "Nit",
@@ -3597,13 +3597,15 @@
     "EV-TT-A8-FIX"
    ],
    "verificationEvidenceIds": [
-    "EV-TT-A8-FIX"
+    "EV-TT-CLO-12-A85"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-12"
+   ],
    "duplicateOf": null,
    "exception": null,
    "siblingFindingIds": [],
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null,
    "rootClass": "stale-fixture-field",
    "repair": "committed 63ac970d on devin/1790308404-the-tu-beta",
@@ -3717,14 +3719,16 @@
     "EV-TT-COR-A8-FIX"
    ],
    "verificationEvidenceIds": [
-    "EV-TT-COR-A8-FIX"
+    "EV-TT-CLO-12-COR"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-12"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null,
-   "rootClass": null,
+   "rootClass": "authored-data-contract-drift",
    "siblingFindingIds": [],
    "repair": "FIXED @86301af1: tran_ap all_lanes columnRadius=GRID_COLUMN_COUNT + spread-column pin test",
    "id": "F-TT-COR-A8-1",
@@ -3835,7 +3839,7 @@
    "severity": "Low",
    "classification": "NON_ACTIONABLE",
    "actionable": false,
-   "reachability": "CRAFTED_SAVE_ONLY",
+   "reachability": "FIXTURE_INJECTED",
    "locations": [
     {
      "path": "src/services/save/saveShapeValidation.ts",
@@ -4445,6 +4449,102 @@
    "invariantIds": [],
    "limitations": [],
    "result": "PASS",
+   "status": "STALE"
+  },
+  {
+   "id": "EV-TT-CLO-12-A85",
+   "state": {
+    "productStateId": "f2c55f6bb3691e4d9750cfb8e52bbf6850df1973686b62d27c8ec4555b72552d",
+    "contractId": "7660d2c0ef0a019b5697f877a97b3fc13e7f3e9a7d5e31b7778b665a1b17ae81",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "SOURCE_PROOF",
+   "producer": "closure-reviewer",
+   "startedAt": "2026-09-25T15:26:11.000Z",
+   "finishedAt": "2026-09-25T15:30:10.000Z",
+   "commandOrMethod": "grep takenRatio src/core/battle/turn/TurnBattleSystem.contract.test.ts",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/ev-tt-clo-12-a85.md",
+   "artifactHash": "4e9676bdd97287bb950b198bf82610b9d328f6c42e0fda1bbc49a735a34ba780",
+   "inputPaths": [
+    "src/core/battle/turn/TurnBattleSystem.contract.test.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "QA_REFLECT payload reads reflectsDamage.maxHpRatio 1; zero takenRatio matches in TurnBattleSystem.contract.test.ts"
+   ],
+   "limitations": [
+    "scoped verification"
+   ],
+   "status": "STALE"
+  },
+  {
+   "id": "EV-TT-CLO-12-COR",
+   "state": {
+    "productStateId": "f2c55f6bb3691e4d9750cfb8e52bbf6850df1973686b62d27c8ec4555b72552d",
+    "contractId": "7660d2c0ef0a019b5697f877a97b3fc13e7f3e9a7d5e31b7778b665a1b17ae81",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "closure-reviewer",
+   "startedAt": "2026-09-25T15:26:11.000Z",
+   "finishedAt": "2026-09-25T15:30:10.000Z",
+   "commandOrMethod": "npx vitest run TurnSkillAction.test.ts TheTuSkills.test.ts TurnBattleSystem.contract.test.ts",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/ev-tt-clo-12-cor.md",
+   "artifactHash": "ec5c8c5dcccde3adf6d18198a37786209a09ef8336e60c0c06b2af79e8fe342c",
+   "inputPaths": [
+    "src/data/skill/TheTuSkills.ts",
+    "src/core/battle/turn/TurnSkillAction.test.ts",
+    "src/core/battle/turn/TurnBattleSystem.contract.test.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "TRAN_AP targeting all_lanes+columnRadius GRID_COLUMN_COUNT; TurnSkillAction.test pins enemies at cols 7/9/11 across rows; 70 tests pass"
+   ],
+   "limitations": [
+    "scoped verification"
+   ],
+   "status": "STALE"
+  },
+  {
+   "id": "EV-TT-A84-GAPFIX",
+   "state": {
+    "productStateId": "3954e88d7601834989e11f6fceb47c0bc546e04635bce6f8faec3d2994afae10",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "SOURCE_PROOF",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T15:26:11.000Z",
+   "finishedAt": "2026-09-25T15:30:10.000Z",
+   "commandOrMethod": "grep loanDauPaidBonus docs/specs/the-tu-beta-spec.md (zero) + TheTuNodes.ts:109 channel confirm",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/ev-tt-a84-gapfix.md",
+   "artifactHash": "2953e29e27f3a20d5234c5ea7c8b6cddeeee10b506d21aceee5ea3b1727a97c0",
+   "inputPaths": [
+    "docs/specs/the-tu-beta-spec.md",
+    "src/data/progression/TheTuNodes.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "spec:221 minor_huyet_sat label now loanDauPaidHpBonus matching engine channel; zero loanDauPaidBonus remains in spec"
+   ],
+   "limitations": [
+    "scoped verification"
+   ],
    "status": "CURRENT"
   }
  ],
@@ -5403,7 +5503,7 @@
     "F-TT-COR-A8-2"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-TT-INT-V8",
@@ -5432,6 +5532,33 @@
     "F-TT-INT-A8-1",
     "F-TT-INT-A8-2"
    ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-TT-CLO-12",
+   "state": {
+    "productStateId": "f2c55f6bb3691e4d9750cfb8e52bbf6850df1973686b62d27c8ec4555b72552d",
+    "contractId": "7660d2c0ef0a019b5697f877a97b3fc13e7f3e9a7d5e31b7778b665a1b17ae81",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 23,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-132dad25ab134258a80c590552355a5a",
+   "contextId": "sealed-child-132dad25ab134258a80c590552355a5a",
+   "model": "swe-2-max",
+   "role": "closure-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T15:26:11.000Z",
+   "sealedAt": "2026-09-25T15:30:10.000Z",
+   "previousPhaseReviewId": "REV-TT-INT-V8",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -7094,7 +7221,7 @@
    "qualifiedBy": [
     "REV-TT-INT-V8"
    ],
-   "capabilityDelta": "",
+   "capabilityDelta": "adjudication recorded",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": "the-tu-beta-2026-09-25",
@@ -7126,7 +7253,7 @@
    "qualifiedBy": [
     "REV-TT-INT-V8"
    ],
-   "capabilityDelta": "",
+   "capabilityDelta": "adjudication recorded",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": "the-tu-beta-2026-09-25",
@@ -7424,6 +7551,22 @@
    "payloadPath": "events/0018.json",
    "payloadHash": "e78d01da29d2dd6cb7111be7d1ffac1ae53ebd07ad1e64873a8405c965dc1cfd",
    "eventHash": "794c934a2c07e1405273c602a56fd831d6884535b8861f2ccd54fe2b124a4f1e"
+  },
+  {
+   "seq": 19,
+   "at": "2026-09-25T15:17:46.069Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-406257",
+   "state": {
+    "productStateId": "3954e88d7601834989e11f6fceb47c0bc546e04635bce6f8faec3d2994afae10",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "794c934a2c07e1405273c602a56fd831d6884535b8861f2ccd54fe2b124a4f1e",
+   "payloadPath": "events/0019.json",
+   "payloadHash": "94dc3f78abc68baadb9d891c8230fc6f8cde0a204479efa8f7dbf85af5e6c86d",
+   "eventHash": "b26a0975d8b364d7d09dee314a2fec139df9e43ced33e14f45096a8b6913e3d6"
   }
  ]
 }

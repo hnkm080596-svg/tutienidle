@@ -729,6 +729,12 @@
       "hash": "e9229248f04701e163fef488215d5225755e3373ef009a6276665821992a9f0b"
     },
     {
+      "path": "docs/design/the-tu-an-ung-the-design.txt",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "d727f5eb91a1b922a04eb09c65e5d05f8b43d379f2a78be440164647f6db1afb"
+    },
+    {
       "path": "docs/future-talisman-formation-system-plan.md",
       "kind": "file",
       "mode": 33188,
@@ -3054,7 +3060,7 @@
       "path": "docs/specs/the-tu-beta-spec.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "a7b44c7fce185504eb21f6366de06d6348f47235a0b1bf544ee86865fda57e38"
+      "hash": "30933b7f73f261a7bf9c4417e1189079ced748192dfb6c816ec98ae8edbe4602"
     },
     {
       "path": "docs/superpowers/plans/2026-09-08-r10-save-restore-boundary.md",
@@ -22983,5 +22989,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "c56d930aad049afb66001077c94193acee9e99f5712aa3b2b28e61681ec500d4"
+  "productStateId": "3954e88d7601834989e11f6fceb47c0bc546e04635bce6f8faec3d2994afae10"
 }
