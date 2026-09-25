@@ -2009,11 +2009,32 @@
    ],
    "counterexample": "closure reviewer inspection on pinned head",
    "subsystem": "kiem-tu-ngu",
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/skilldef",
+      "src/core/battle/turn"
+     ],
+     "termsAndMethod": "delta reviewer sibling check on the patched line itself",
+     "hitDispositions": [
+      "both sites sealed"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-4"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "siblingFindingIds": [],
-   "closureReviewIds": [],
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "closureReviewIds": [
+    "REV-NK-DELTA-1"
+   ],
+   "pinEvidenceIds": [
+    "EV-NK-FIX-4"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-4"
+   ],
    "exception": null,
    "duplicateOf": null,
    "rejectionReason": null,
@@ -2036,7 +2057,7 @@
    "rootCause": "live-array alias (same latent class as F-NK-AUT-1/F-NK-CLO-3)",
    "rootClass": "live-alias",
    "repair": "hitOperationIds: [...hitOpIds] (d8321ba8)",
-   "status": "FIXED_PENDING_PROOF"
+   "status": "CLOSED"
   },
   {
    "state": {
@@ -2052,11 +2073,32 @@
    ],
    "counterexample": "closure reviewer inspection on pinned head",
    "subsystem": "kiem-tu-ngu",
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/skilldef",
+      "src/core/battle/turn"
+     ],
+     "termsAndMethod": "delta reviewer sibling check on the patched line itself",
+     "hitDispositions": [
+      "both sites sealed"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-4"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "siblingFindingIds": [],
-   "closureReviewIds": [],
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "closureReviewIds": [
+    "REV-NK-DELTA-1"
+   ],
+   "pinEvidenceIds": [
+    "EV-NK-FIX-4"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-4"
+   ],
    "exception": null,
    "duplicateOf": null,
    "rejectionReason": null,
@@ -2079,7 +2121,7 @@
    "rootCause": "stale header after contract retention",
    "rootClass": "stale-comment",
    "repair": "'Producers:' header (d8321ba8)",
-   "status": "FIXED_PENDING_PROOF"
+   "status": "CLOSED"
   }
  ],
  "evidence": [
@@ -2414,6 +2456,35 @@
     "F-NK-CLO-4",
     "F-NK-CLO-5"
    ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-NK-DELTA-1",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 8,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-f2f6f7bafce04b588169c417294ed06a",
+   "contextId": "sealed-child-devin-f2f6f7bafce04b588169c417294ed06a",
+   "model": "swe-2-max",
+   "role": "closure",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T01:59:05.000Z",
+   "sealedAt": "2026-09-25T02:00:36.000Z",
+   "previousPhaseReviewId": "REV-NK-CLO-3",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-NK-FIX-4"
+   ],
+   "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
   }
