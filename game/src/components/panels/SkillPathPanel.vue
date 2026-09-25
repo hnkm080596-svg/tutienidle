@@ -62,7 +62,7 @@ const { stateVersion } = useStateVersion()
 //
 // P1 - tree selection resolves on the WAY's declared nodeTreeTag, never
 // a concrete way predicate: kiem hien -> 'kiem_pho', ngu -> 'ngu_kiem',
-// body hien -> 'body', ung_the -> 'hidden_body'. Ways without a fixed
+// body hien -> 'the_tu', ung_the -> 'the_tu_an'. Ways without a fixed
 // tree (spell_pathway - element-driven; ngo_dao - none) declare no tag; the
 // resolver fails closed on a corrupt pair.
 const wayNodeTreeTag = computed(() => getActiveWayDefinition(player)?.nodeTreeTag)
