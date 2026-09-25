@@ -1971,6 +1971,13 @@ export class TurnBattleSystem {
       return { targetIds, extraImpacts }
     }
 
+    // Phan Chan queue is action-scoped -- drop leftovers from an aborted
+    // action before this action queues its own (defensive; a mid-action
+    // throw already failed loudly upstream).
+    if (this.runtime !== undefined) {
+      this.procs.discardPendingReflects()
+    }
+
     // buff2 M-INT -- the legacy per-participant wuxing-initiation flag is
     // gone: reaction eligibility is instance metadata on the apply_buff
     // ops (every application marks 'eligible'; the elemental registry

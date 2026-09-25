@@ -205,6 +205,15 @@ export class CombatProcSystem {
   }
 
   /**
+   * Drops queued reflects without emitting. The queue is action-scoped:
+   * a throw mid-action would otherwise leak entries into the next
+   * action's dedupe map (mistimed fire + suppressed fresh entry).
+   */
+  discardPendingReflects(): void {
+    this.pendingReflects.clear()
+  }
+
+  /**
    * The Tu beta -- action-end settle: emit ONE 'reflection' op per
    * pending (holder, capability) entry. The damage authority resolves it
    * (flat, holder-as-attacker, never a hit roll / crit / turn). The
