@@ -4007,11 +4007,11 @@
       "duplicateOf": null,
       "exception": null,
       "status": "REJECTED_WITH_PROOF",
-      "rejectionReason": "rejected: spec-ambiguity resolved toward deliberate design — \"flat/direct-vitals\" = applyDirectDamage vitals channel (ward bypass intact); finalDamagePercent is designed to apply to ALL direct reactive damage (stat-system-reimagined Task 6 D13); changing channel now is a balance-affecting behavior change under frozen balance (BETA-BALANCE ruling)"
+      "rejectionReason": "rejected: spec-ambiguity resolved toward deliberate design \u2014 \"flat/direct-vitals\" = applyDirectDamage vitals channel (ward bypass intact); finalDamagePercent is designed to apply to ALL direct reactive damage (stat-system-reimagined Task 6 D13); changing channel now is a balance-affecting behavior change under frozen balance (BETA-BALANCE ruling)"
     },
     {
       "id": "F-TT-COR-A9-2",
-      "title": "Save/restore boundary does not re-enforce root mutex — crafted v85 save can own both cuong_chien and tran_the",
+      "title": "Save/restore boundary does not re-enforce root mutex \u2014 crafted v85 save can own both cuong_chien and tran_the",
       "state": {
         "productStateId": "3954e88d7601834989e11f6fceb47c0bc546e04635bce6f8faec3d2994afae10",
         "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
@@ -7118,7 +7118,7 @@
       "counterexample": "none - reads as dead production code but is deliberately retained",
       "expected": "production modules reachable from production callers",
       "actual": "module consumed only by its own tests; header documents the parking",
-      "rootCause": "feature intentionally parked pending the Bát Tự mission set; tests keep the contract warm",
+      "rootCause": "feature intentionally parked pending the B\u00e1t T\u1ef1 mission set; tests keep the contract warm",
       "rootClass": "deliberate-design-contract",
       "subsystem": "the-tu-beta",
       "siblingSearch": [
@@ -7142,7 +7142,7 @@
       "duplicateOf": null,
       "exception": null,
       "status": "REJECTED_WITH_PROOF",
-      "rejectionReason": "deliberate documented parking — the module header declares its parked status and tests keep the contract warm; deleting it is a product decision for the Bát Tự mission, not a defect"
+      "rejectionReason": "deliberate documented parking \u2014 the module header declares its parked status and tests keep the contract warm; deleting it is a product decision for the B\u00e1t T\u1ef1 mission, not a defect"
     },
     {
       "id": "F-TT-COR-A4-4",
@@ -7205,7 +7205,7 @@
       "duplicateOf": "F-TT-COR-A4-1",
       "exception": null,
       "status": "REJECTED_WITH_PROOF",
-      "rejectionReason": "duplicate of F-TT-COR-A4-1 — crafted/corrupt save only; registry-less save validation is a documented project boundary; tamper-only reachability per prior adjudications"
+      "rejectionReason": "duplicate of F-TT-COR-A4-1 \u2014 crafted/corrupt save only; registry-less save validation is a documented project boundary; tamper-only reachability per prior adjudications"
     },
     {
       "id": "F-TT-COR-A4-5",
@@ -7231,7 +7231,7 @@
       "discoveredBy": "devin-f26cfbc75b4240d8b0c7dd4064aa90a6",
       "invariantIds": [],
       "evidenceIds": [],
-      "counterexample": "a mid-fight breakthrough that reaches syncRealmPassive with a missing realm passive has every learnSkill grant rejected and the result ignored — masked today by the has() early-return",
+      "counterexample": "a mid-fight breakthrough that reaches syncRealmPassive with a missing realm passive has every learnSkill grant rejected and the result ignored \u2014 masked today by the has() early-return",
       "expected": "the sync refuses the battle boundary explicitly like its sibling syncTalentCombatPassive",
       "actual": "learnSkill's mid-battle rejection is swallowed; the seam silently no-ops",
       "rootCause": "new writer gate introduced a silent-skip seam the sync did not observe",
@@ -7467,6 +7467,176 @@
       ],
       "duplicateOf": null,
       "exception": null
+    },
+    {
+      "id": "F-TT-COR-A5-1",
+      "title": "Save boundary does not enforce the excludesNode mutex \u2014 crafted save can own both roots",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "FIXTURE_INJECTED",
+      "locations": [
+        {
+          "path": "src/services/save/saveShapeValidation.ts",
+          "symbolOrSection": "validateSkillCoreCoverage ~1239-1353 + nodeLevels loop ~667-709",
+          "revision": "697c2050",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-7feb5c9ab0a94512821e11c4dea6830d",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/services/save/saveShapeValidation.ts"
+          ],
+          "termsAndMethod": "grep 'excludesNode' at the save boundary; enumerate node-set invariants",
+          "hitDispositions": [
+            "zero hits \u2014 only core-catalog membership, purchasedNodeIds mirror, D9f inverse-source are enforced; owned-node acquisition legality is never re-validated at load"
+          ],
+          "coverageLimits": [
+            "save-edit surface only; no in-game path can produce dual roots (purchase gates on getNodeLevel===0)"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "counterexample": "crafted v85 save with nodeLevels.{cuong_chien:1,tran_the:1} + purchasedNodeIds mirror validates and loads; resolveBodyKit deterministically prefers cuong_chien while tran_the stays owned-but-inert",
+      "expected": "save boundary rejects node-ownership states no legal path can produce",
+      "actual": "excludesNode is a purchase-time gate only; no acquisition-legality re-validation at load; same for Phap Tu element roots (systemic scope)",
+      "rootCause": "owned-node acquisition legality was never in the save-boundary contract; deterministic resolution makes the crafted state inert, not undefined",
+      "rootClass": "crafted-save-only",
+      "subsystem": "the-tu-beta",
+      "repair": null,
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "exception": null,
+      "rejectionReason": "crafted-save-only reachability: no authored path can produce dual roots (purchase enforces excludesNode both directions at level===0; respec/devReset cascades revoke). The loaded-but-inert second root is deterministic and recoverable via respec. Same class as previously rejected save-boundary findings (cleanA4 wave). If acquisition-legality validation is ever added it belongs to a systemic contract change across all node trees, not this feature."
+    },
+    {
+      "id": "F-TT-COR-A5-2",
+      "title": "devResetBranch wrapper conflates op rejection with a legitimate zero-refund reset",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/composables/useProgressionActions.ts",
+          "symbolOrSection": "devResetBranch wrapper :63-72 \u2014 refund===0 early-returns without bumpState; ops layer GameManagerProgressionOps.devResetBranch :622-628",
+          "revision": "697c2050",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-7feb5c9ab0a94512821e11c4dea6830d",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/composables/useProgressionActions.ts",
+            "src/core/game/GameManagerProgressionOps.ts"
+          ],
+          "termsAndMethod": "enumerate wrapper return-value conventions",
+          "hitDispositions": [
+            "respecNodeTree already uses null=reject/0=success-with-bump \u2014 the intended shape exists; devResetBranch returns 0 for both rejection and revoked free nodes"
+          ],
+          "coverageLimits": [
+            "dev-only surface; App.vue bumpState() runs every tick so panels self-correct within a frame"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [
+        "F-TT-AUT-A5-1"
+      ],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "counterexample": "a reset of a branch holding only free nodes (insightCost:0) revokes nodes, refunds 0, and skips bumpState \u2014 UI reads stale until next tick",
+      "expected": "wrapper bumps on any successful reset; only rejection should skip",
+      "actual": "refund===0 conflates reject with success-0; impact nil \u2014 dev-only channel, no Vue callers, tick-level bumpState self-heals",
+      "rootCause": "scalar return conflates two semantic outcomes; ops layer performs the reset correctly either way",
+      "rootClass": "interface-ambiguity",
+      "subsystem": "the-tu-beta",
+      "repair": null,
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "exception": null,
+      "rejectionReason": "nil impact on a dev-only surface: the ops layer performs the reset correctly and App.vue bumpState() runs every tick, so the panel self-corrects within a frame. The wrapper comment is descriptive, not contractive. Accepted as a known convention gap \u2014 lesson recorded for the null=reject convention."
+    },
+    {
+      "id": "F-TT-AUT-A5-1",
+      "title": "devResetBranch wrapper skips bumpState when refund===0 even if a waived-cost reset revoked nodes",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/composables/useProgressionActions.ts",
+          "symbolOrSection": "useProgressionActions.devResetBranch :63-73",
+          "revision": "697c2050",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-2f8db6f52c52414fb189f8ab87799b68",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/composables/useProgressionActions.ts"
+          ],
+          "termsAndMethod": "cross-check wrapper conventions across progression actions",
+          "hitDispositions": [
+            "duplicate of F-TT-COR-A5-2 \u2014 independent lens found the same conflation"
+          ],
+          "coverageLimits": [
+            "dev-only, nil impact"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [
+        "F-TT-COR-A5-2"
+      ],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "counterexample": "same crafted branch as F-TT-COR-A5-2",
+      "expected": "bump on successful zero-refund reset",
+      "actual": "skipped \u2014 cosmetic staleness at worst on a dev-only channel",
+      "rootCause": "scalar return conflates reject vs success-0",
+      "rootClass": "interface-ambiguity",
+      "subsystem": "the-tu-beta",
+      "repair": null,
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": "F-TT-COR-A5-2",
+      "exception": null,
+      "rejectionReason": "Duplicate of F-TT-COR-A5-2 (independent lens, same conclusion). Same rejection: dev-only, nil impact, self-heals each tick."
     }
   ],
   "evidence": [
@@ -10521,6 +10691,65 @@
       ],
       "novelAttackIds": [],
       "status": "SEALED"
+    },
+    {
+      "id": "REV-TT-CLEAN-A5-COR",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 28,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-7feb5c9ab0a94512821e11c4dea6830d",
+      "contextId": "sealed-child-7feb5c9ab0a94512821e11c4dea6830d",
+      "model": "swe-2-max",
+      "role": "CORRECTNESS",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T22:57:00.000Z",
+      "sealedAt": "2026-09-25T23:19:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLO-22",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TT-COR-A5-1",
+        "F-TT-COR-A5-2"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TT-CLEAN-A5-AUT",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 29,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-2f8db6f52c52414fb189f8ab87799b68",
+      "contextId": "sealed-child-2f8db6f52c52414fb189f8ab87799b68",
+      "model": "swe-2-max",
+      "role": "AUTHORITY",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T22:59:00.000Z",
+      "sealedAt": "2026-09-25T23:29:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-A5-COR",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TT-AUT-A5-1"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
     }
   ],
   "cycles": [],
@@ -13084,7 +13313,7 @@
       "applicability": [],
       "exclusions": [],
       "proposedProtection": [
-        "when a validator already enforces crafted-state strictness (orphan cores, grant-less majors), extend the same strictness to domain invariants like mutex pairs — or explicitly record the accepted gap."
+        "when a validator already enforces crafted-state strictness (orphan cores, grant-less majors), extend the same strictness to domain invariants like mutex pairs \u2014 or explicitly record the accepted gap."
       ],
       "promotionEvidenceIds": [],
       "qualifiedBy": [
@@ -13110,7 +13339,7 @@
       "originatingRun": "the-tu-beta-2026-09-25",
       "rootClass": "boundary-gap",
       "missedInvariantIds": [],
-      "escapeReason": "non-core nodeLevels validated only for number shape; registry membership and authored maxLevel bounds are unchecked — tamper saves persist dead ids or uncapped modifiers.",
+      "escapeReason": "non-core nodeLevels validated only for number shape; registry membership and authored maxLevel bounds are unchecked \u2014 tamper saves persist dead ids or uncapped modifiers.",
       "applicability": [],
       "exclusions": [],
       "proposedProtection": [
@@ -13144,7 +13373,7 @@
       "applicability": [],
       "exclusions": [],
       "proposedProtection": [
-        "after any diff touching files containing ${} template substitutions, scan added comment lines for >127 codepoints directly — the ratchet blind-spots them."
+        "after any diff touching files containing ${} template substitutions, scan added comment lines for >127 codepoints directly \u2014 the ratchet blind-spots them."
       ],
       "promotionEvidenceIds": [],
       "qualifiedBy": [
@@ -13606,7 +13835,7 @@
       "qualifiedBy": [
         "REV-TT-CLEAN-A4-AUT"
       ],
-      "capabilityDelta": "no code change — adjudication precedent only",
+      "capabilityDelta": "no code change \u2014 adjudication precedent only",
       "recurrenceFindingIds": [],
       "status": "CLASSIFIED",
       "policyVersion": null,
@@ -13628,7 +13857,7 @@
       "originatingRun": "the-tu-beta-2026-09-25",
       "rootClass": "crafted-save-unreachable-path",
       "missedInvariantIds": [],
-      "escapeReason": "reviewer flagged ungated progression write on tier update only reachable through a crafted/corrupted save — the save boundary has no registry by deliberate design",
+      "escapeReason": "reviewer flagged ungated progression write on tier update only reachable through a crafted/corrupted save \u2014 the save boundary has no registry by deliberate design",
       "applicability": [
         "any save-boundary write-path finding without a registry-less crafted-save proof"
       ],
@@ -13644,7 +13873,7 @@
       "qualifiedBy": [
         "REV-TT-CLEAN-A4-COR"
       ],
-      "capabilityDelta": "none — rejection precedent recorded",
+      "capabilityDelta": "none \u2014 rejection precedent recorded",
       "recurrenceFindingIds": [
         "F-TT-COR-A4-1"
       ],
@@ -13855,6 +14084,77 @@
         "EV-TT-CLEANA4-FIX",
         "EV-TT-CLEANA4-FIX-2"
       ]
+    },
+    {
+      "id": "L-TT-93",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TT-COR-A5-1"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "crafted-save-only",
+      "missedInvariantIds": [],
+      "escapeReason": "crafted-save-only reachability re-raised: owned-node acquisition legality is never re-validated at load, but every authored path enforces it at purchase; deterministic resolution (cuong_chien preferred) keeps the crafted state inert",
+      "applicability": [
+        "save-boundary validation across all node trees"
+      ],
+      "exclusions": [
+        "runtime in-game flows"
+      ],
+      "proposedProtection": [
+        "add a save-boundary acquisition-legality note to reviewer prompts; systemic legality validation belongs to a dedicated hardening mission"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TT-CLEAN-A5-COR",
+        "REV-TT-CLEAN-A5-AUT"
+      ],
+      "capabilityDelta": "reviewer prompts now name the crafted-save boundary and the null=reject wrapper convention",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-TT-94",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TT-COR-A5-2",
+        "F-TT-AUT-A5-1"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "interface-ambiguity",
+      "missedInvariantIds": [],
+      "escapeReason": "scalar return values conflating reject vs success-0 surfaced twice in one round from two lenses \u2014 the null=reject convention (respecNodeTree) is the established answer",
+      "applicability": [
+        "all progression-op wrappers"
+      ],
+      "exclusions": [
+        "runtime in-game flows"
+      ],
+      "proposedProtection": [
+        "progression-op wrappers distinguish rejection (null) from success values; convention documented in useProgressionActions"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TT-CLEAN-A5-COR",
+        "REV-TT-CLEAN-A5-AUT"
+      ],
+      "capabilityDelta": "reviewer prompts now name the crafted-save boundary and the null=reject wrapper convention",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": []
     }
   ],
   "messages": [],
