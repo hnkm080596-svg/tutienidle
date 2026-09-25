@@ -966,7 +966,10 @@ export class SkillResolver {
           return [
             {
               kind: 'read',
-              query: { query: 'ops_landed_any', operationIds: hitOpIds },
+              // snapshot - the same array instance is appended to by
+              // later deal_damage ops on this target (F-NK-CLO-3, same
+              // class as F-NK-AUT-1)
+              query: { query: 'ops_landed_any', operationIds: [...hitOpIds] },
               into: landedVar,
             },
             {

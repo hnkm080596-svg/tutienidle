@@ -127,9 +127,12 @@ export function validateSwordPathPersistedState(
     emit({ path: 'player.swordPath.kiemY', message: 'phải là number hữu hạn >= 0' })
   }
 
-  // F-NK-INT-3 - integer bound (the plan lane floors the count while
-  // the engine-unit lane iterates raw i<count: a fractional count
-  // makes the lanes diverge).
+  // F-NK-INT-3 - integer bound on the instance count only (the plan
+  // lane floors the count while the engine-unit lane iterates raw
+  // i<count: a fractional count makes the lanes diverge). kiemDaoBase
+  // stays a float multiplier - applyBreakthroughMerge produces
+  // fractional bases (1+0.3*merged), so an integer bound here would
+  // reject every legitimate post-breakthrough save (F-NK-CLO-1).
   if (
     typeof swordPath.kiemDaoCount !== 'number' ||
     !Number.isInteger(swordPath.kiemDaoCount) ||
@@ -140,29 +143,40 @@ export function validateSwordPathPersistedState(
 
   if (
     typeof swordPath.kiemDaoBase !== 'number' ||
-    !Number.isInteger(swordPath.kiemDaoBase) ||
+    !Number.isFinite(swordPath.kiemDaoBase) ||
     swordPath.kiemDaoBase < 1
   ) {
-    emit({ path: 'player.swordPath.kiemDaoBase', message: 'phải là số nguyên >= 1' })
+    emit({ path: 'player.swordPath.kiemDaoBase', message: 'phải là number hữu hạn >= 1' })
   }
 
-  // F-NK-INT-3 - cap bound vs the realm cap: count/base may not exceed
-  // kiemDaoCap(realmIndex) (gainKiemY stops at cap; a crafted save
-  // exceeding it would emit more instances than authored).
+  // F-NK-INT-3 / F-NK-CLO-2 - cap bound vs the realm cap: count/base may
+  // not exceed kiemDaoCap(realmIndex) (gainKiemY stops at cap; a crafted
+  // save exceeding it would emit more instances than authored). The cap
+  // is defined only from realmIndex>=1 - a mortal-realm swordPath slice
+  // is malformed on its own, so the lane emits a fault rather than
+  // letting kiemDaoCap throw inside the untrusted-input validator.
   if (
     typeof playerPayload.realmId === 'string' &&
     REALMS.some((realm) => realm.id === playerPayload.realmId) &&
     typeof swordPath.kiemDaoCount === 'number' &&
     Number.isInteger(swordPath.kiemDaoCount) &&
     typeof swordPath.kiemDaoBase === 'number' &&
-    Number.isInteger(swordPath.kiemDaoBase)
+    Number.isFinite(swordPath.kiemDaoBase)
   ) {
-    const cap = kiemDaoCap(getRealmIndex(playerPayload.realmId))
-    if (swordPath.kiemDaoCount > cap || swordPath.kiemDaoBase > cap) {
+    const realmIndex = getRealmIndex(playerPayload.realmId)
+    if (realmIndex < 1) {
       emit({
         path: 'player.swordPath',
-        message: `kiemDaoCount/kiemDaoBase vượt trần theo cảnh giới (cap = ${cap})`,
+        message: 'hidden_sword_pathway economy requires realmIndex >= 1',
       })
+    } else {
+      const cap = kiemDaoCap(realmIndex)
+      if (swordPath.kiemDaoCount > cap || swordPath.kiemDaoBase > cap) {
+        emit({
+          path: 'player.swordPath',
+          message: `kiemDaoCount/kiemDaoBase vượt trần theo cảnh giới (cap = ${cap})`,
+        })
+      }
     }
   }
 }

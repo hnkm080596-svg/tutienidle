@@ -457,6 +457,37 @@ describe('validateGameSaveShape — module-owned persisted slices (P1-M6)', () =
       expect(pathsOf(result).some((path) => path.startsWith('player.swordPath'))).toBe(true)
     },
   )
+
+  // F-NK-CLO-1 - kiemDaoBase is a float multiplier: post-breakthrough
+  // merges produce fractional bases (1 + 0.3*merged). The validator must
+  // accept them; integer bound applies to kiemDaoCount only.
+  it('chấp nhận kiemDaoBase phân số sau breakthrough-merge', () => {
+    const save = validSave()
+    const player = save.player as Record<string, unknown>
+    player.realmId = 'golden_core'
+    player.cultivationPath = 'sword'
+    player.cultivationWay = 'hidden_sword_pathway'
+    player.swordPath = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 2.2 }
+
+    const result = validateGameSaveShape(save)
+
+    expect(pathsOf(result).some((path) => path === 'player.swordPath.kiemDaoBase')).toBe(false)
+  })
+
+  // F-NK-CLO-2 - the cap lane guards realmIndex>=1: a mortal-realm
+  // swordPath slice emits a fault, it never lets kiemDaoCap throw
+  // inside the untrusted-input validator.
+  it('mortal + swordPath slice emits fault thay vì throw', () => {
+    const save = validSave()
+    const player = save.player as Record<string, unknown>
+    player.realmId = 'mortal'
+    player.swordPath = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result).some((path) => path === 'player.swordPath')).toBe(true)
+  })
 })
 
 describe('validateGameSaveShape — arrays bắt buộc', () => {
