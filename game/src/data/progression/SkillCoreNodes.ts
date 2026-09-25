@@ -12,7 +12,7 @@ import { turnSkillDisplayMetaOf } from '../skill/TurnSkillDisplayMeta'
 //  1. Generated template cores - one per authored Skill template with
 //     maxLevel > 1 (id/maxLevel mirror the template; drift is a data
 //     bug pinned by SkillCoreNodes.test.ts).
-//  2. Authored native cores - the 15 eligible top-level native
+//  2. Authored native cores - the 16 eligible top-level native
 //     TurnSkillDefinition ids below (the census whitelist). Damage-
 //     bearing defs get maxLevel 10 + damage.levelScaling 0.05;
 //     non-damage defs get maxLevel 1 (canonical at Lv1, Insight-
@@ -26,7 +26,7 @@ import { turnSkillDisplayMetaOf } from '../skill/TurnSkillDisplayMeta'
 //     native whitelist requires an eligibility note here AND updating
 //     the census test.
 
-/** The 14 eligible native top-level def ids (QI-D3 census).
+/** The 16 eligible native top-level def ids (QI-D3 census).
     Beta: phan_chan is the castable Tran The special (non-damage core);
     the emblem def phan_chinh is retired (internal sub-actions stay
     ineligible). bat_tu_ba_the / son_nhac keep authored cores - parked

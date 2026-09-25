@@ -271,8 +271,7 @@ const ZERO_AN_MODS: HiddenBodyMechanicModifierValues = {
   danTheBonus: 0,
 }
 
-/** Quan The cast's base The seed; Core Level adds QUAN_THE_THE_PER_LEVEL each. */
-export const QUAN_THE_BASE_THE = 25
+/** Core Level adds this much The to Quan The's authored base gain each level. */
 export const QUAN_THE_THE_PER_LEVEL = 10
 
 // buff2 M4 -- node adjustments bake onto the clone's capability PAYLOADS
@@ -326,7 +325,7 @@ export function buildTheTuAnKit(
     // Quan The Core Level = the ONLY scaling axis (design Part V):
     // it raises the cast's initial The gain and nothing else.
     kit.special.theGainOnLandedCast =
-      QUAN_THE_BASE_THE + QUAN_THE_THE_PER_LEVEL * Math.max(0, owned.quanTheCoreLevel - 1)
+      (kit.special.theGainOnLandedCast ?? 0) + QUAN_THE_THE_PER_LEVEL * Math.max(0, owned.quanTheCoreLevel - 1)
 
     // Ho Bich - a committed intercept wards the rescued ally.
     if (mods.interceptWardRatio > 0) {

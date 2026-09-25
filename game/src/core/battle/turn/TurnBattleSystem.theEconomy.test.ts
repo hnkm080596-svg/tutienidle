@@ -382,6 +382,57 @@ describe('Ung Tre / Qua The (reaction debt)', () => {
   })
 })
 
+describe('Ung Tre / Qua The (debt boundary + dead-attacker gate)', () => {
+  it('a ccBlocked turn performs no action - the held debt does NOT reset on turn arrival', () => {
+    const { battle, playerP, combat, runtime } = makeBattle()
+    runtime.applyBuff('choang', playerP) // stun: the turn is consumed by hard CC
+    const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY, undefined, runtime)
+    playerP.reactionDebt = 2
+    playerP.actionGauge = 10_000
+
+    system.resolveNextStep(battle) // ccBlocked declare - no action performed
+    expect(playerP.reactionDebt).toBe(2)
+    expect(playerP.entity.alive).toBe(true)
+  })
+
+  it('a charge-tick turn performs no action - debt persists until the resolve turn', () => {
+    const { battle, playerP, combat, runtime } = makeBattle()
+    const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY, undefined, runtime)
+    playerP.reactionDebt = 2
+    playerP.actionGauge = 10_000
+    playerP.chargingTurnsRemaining = 2 // still mid-charge after this tick
+    playerP.pendingChargedSkillId = 'does_not_matter'
+
+    system.resolveNextStep(battle) // charge tick - suppressed, still mid-charge
+    expect(playerP.reactionDebt).toBe(2)
+  })
+
+  it('a dead attacker opens no Phan window - no cost, no debt, no gauge penalty', () => {
+    const { battle, playerP, enemyP, combat, runtime } = makeBattle()
+    runtime.applyBuff('ung_the', playerP)
+    runtime.applyBuff('phan_mon', playerP)
+    runtime.applyBuff('phan_chan', playerP) // reflect kills the attacker mid-action
+    playerP.entity.baseStats = asBaseStats({ ...playerP.entity.baseStats, counterChance: 1 })
+    playerP.entity.stats = { ...playerP.entity.stats, counterChance: 1 }
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY, undefined, runtime)
+    playerP.entity.currentThe = 100
+    playerP.thamTargetId = 'enemy'
+    enemyP.entity.currentHp = 1 // the reflect is lethal
+    enemyP.actionGauge = 10_000
+    const gaugeBefore = playerP.actionGauge
+
+    system.resolveNextStep(battle) // enemy hits -> reflect kills it mid-action
+    expect(enemyP.entity.alive).toBe(false)
+    // No window opened: no -15 cost, no +1 debt, no -400 gauge penalty.
+    // (The dead actor's action tail also skips the +4 observed income.)
+    expect(playerP.entity.currentThe).toBe(100)
+    expect(playerP.reactionDebt ?? 0).toBe(0)
+    expect(playerP.actionGauge).toBeGreaterThanOrEqual(gaugeBefore)
+  })
+})
+
 describe('Dan The one-shot (Dẫn Thế node)', () => {
   it('a marked enemy\'s next OBSERVED action yields x3 income, then the mark is consumed', () => {
     const { battle, playerP, enemyP, combat, runtime } = makeBattle()

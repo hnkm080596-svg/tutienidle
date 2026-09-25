@@ -1401,12 +1401,6 @@ export class TurnBattleSystem {
       return this.declareReactiveBypass(battle, actor, entry)
     }
 
-    // Ung The beta -- the holder's next NATURAL action resets Ung Tre /
-    // Qua The (design Part III): the debt that delayed this turn is
-    // cleared as the turn arrives (a queued reactive entry above is not
-    // a natural action and never resets). The The pool is untouched.
-    actor.reactionDebt = 0
-
     battle.totalTurnsElapsed = (battle.totalTurnsElapsed ?? 0) + 1
 
     // Round tracking (spec v3 D1 revision, 2026-09-12): a round completes
@@ -1690,6 +1684,16 @@ export class TurnBattleSystem {
     // hoàn toàn bởi charge block (tick → không hit; resolve → hits đã push
     // ở charge block). Cooldown của special đã commit ở charge-init lượt
     // trước, không commit lại ở đây.
+    // Ung The beta -- the holder's next NATURAL action resets Ung Tre /
+    // Qua The (design Part III). 'Performs' means an action actually
+    // executes this turn: a ccBlocked or charge-tick turn performs none
+    // (the charge RESOLVE turn does), matching the income gate's reading
+    // of the same boundary. A queued reactive entry above is not a
+    // natural action and never resets. The The pool is untouched.
+    if (!ccBlocked && (!isCharging || chargeResolved)) {
+      actor.reactionDebt = 0
+    }
+
     if (actor.entity.alive && !ccBlocked && !isCharging) {
       // Slots whose cooldown was (re)committed during this turn's status
       // phase -- value above its pre-update snapshot, or a slot object
@@ -3095,6 +3099,14 @@ export class TurnBattleSystem {
     declared: TurnDeclaredAction,
   ): void {
     if (this.runtime === undefined || !isNaturalActionSource(declared.actionSource)) {
+      return
+    }
+
+    // The Phan payload's sole target is the attacker (targetMode
+    // 'attacker'): a dead attacker leaves nothing queueable, so the
+    // window never opens - matching the Tro channel's alive-canonical
+    // pre-check rather than paying commit cost for an empty queue.
+    if (!actor.entity.alive) {
       return
     }
 
