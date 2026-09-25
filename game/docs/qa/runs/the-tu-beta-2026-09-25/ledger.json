@@ -11,7 +11,7 @@
     "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
     "head": "f730adc6",
     "state": {
-      "productStateId": "4ece93ac619efaae661b0b59ab0447f9ec313fa0908d3a7496a4e4365627860c",
+      "productStateId": "b2fd591c186233490f753ef41624d0f0b03d57dd8fd157a105e29a4c5202961b",
       "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
       "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -7137,6 +7137,130 @@
       "exception": null,
       "status": "REJECTED_WITH_PROOF",
       "rejectionReason": "deliberate documented parking — the module header declares its parked status and tests keep the contract warm; deleting it is a product decision for the Bát Tự mission, not a defect"
+    },
+    {
+      "id": "F-TT-COR-A4-4",
+      "title": "excludesNode root mutex not re-checked at save validation",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/services/save/saveShapeValidation.ts",
+          "symbolOrSection": "validateSkillCoreCoverage ~1236-1352",
+          "revision": "dbe41cdd",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/player/CultivationPathRegistry.ts",
+          "symbolOrSection": "resolveBodyKit ~275-290",
+          "revision": "dbe41cdd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-f26cfbc75b4240d8b0c7dd4064aa90a6",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "hand-edited v85 save with nodeLevels {cuong_chien:1, tran_the:1} + both granted cores passes validation; resolveBodyKit silently resolves cuong first",
+      "expected": "purchase/respec/save enforce exactly one root",
+      "actual": "no save-load pass re-evaluates excludesNode; tamper-only reachability",
+      "rootCause": "save boundary is registry-less by documented design; excludesNode is a purchase-time rule",
+      "rootClass": "crafted-save-only-reachability",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/services/save"
+          ],
+          "termsAndMethod": "grep excludesNode + nodeLevel catalog checks at the save layer",
+          "hitDispositions": [
+            "same rejection class as F-TT-COR-A4-1/A4-2"
+          ],
+          "coverageLimits": [
+            "save boundary only"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [
+        "F-TT-COR-A4-1"
+      ],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": "F-TT-COR-A4-1",
+      "exception": null,
+      "status": "REJECTED_WITH_PROOF",
+      "rejectionReason": "duplicate of F-TT-COR-A4-1 — crafted/corrupt save only; registry-less save validation is a documented project boundary; tamper-only reachability per prior adjudications"
+    },
+    {
+      "id": "F-TT-COR-A4-5",
+      "title": "syncRealmPassive swallows the now-gated learnSkill return",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+          "symbolOrSection": "syncRealmPassive :533-555",
+          "revision": "dbe41cdd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-f26cfbc75b4240d8b0c7dd4064aa90a6",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "a mid-fight breakthrough that reaches syncRealmPassive with a missing realm passive has every learnSkill grant rejected and the result ignored — masked today by the has() early-return",
+      "expected": "the sync refuses the battle boundary explicitly like its sibling syncTalentCombatPassive",
+      "actual": "learnSkill's mid-battle rejection is swallowed; the seam silently no-ops",
+      "rootCause": "new writer gate introduced a silent-skip seam the sync did not observe",
+      "rootClass": "partial-mutation-across-gate-boundary",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/game"
+          ],
+          "termsAndMethod": "grep sync*/revoke helpers reaching learnSkill ungated",
+          "hitDispositions": [
+            "sibling syncTalentCombatPassive already gated (F-TT-AUT-A4-3)"
+          ],
+          "coverageLimits": [
+            "ops helpers only"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [
+        "F-TT-AUT-A4-3"
+      ],
+      "repair": "FIXED @7f0e7616: syncRealmPassive refuses wholesale while isTurnBattleInProgress; a mid-fight-breakthrough passive self-heals at the next restore",
+      "pinEvidenceIds": [
+        "EV-TT-CLEANA4-FIX-2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLEANA4-FIX-2"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
     }
   ],
   "evidence": [
@@ -8090,6 +8214,35 @@
       "invariantIds": [],
       "claims": [
         "cleanA4 AUT fix batch verified on 022689b6: canonical in-battle predicate unified at 6 ops sites, talent sync gated at the boundary, isBattleInProgress single-sourced in useTurnBattleInfo and consumed by 9 panels"
+      ],
+      "limitations": [],
+      "status": "STALE",
+      "kind": "EXECUTED_UNIT_STRUCTURAL"
+    },
+    {
+      "id": "EV-TT-CLEANA4-FIX-2",
+      "state": {
+        "productStateId": "b2fd591c186233490f753ef41624d0f0b03d57dd8fd157a105e29a4c5202961b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+      "startedAt": "2026-09-25T22:44:30.000Z",
+      "finishedAt": "2026-09-25T22:45:00.000Z",
+      "commandOrMethod": "npm run type-check (clean) + vitest realmPassiveSkill (1 file / 7 pass) at 7f0e7616",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/cleanA4-fix-verify-2.log",
+      "artifactHash": "94ab6609f2599b11ad27d605900cb5ea106a0204a440fc1fc114abc9ca452c67",
+      "inputPaths": [
+        "src/core/game/GameManagerRealmAdvanceOps.ts"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "cleanA4 COR nit fix verified on 7f0e7616: syncRealmPassive refuses wholesale while isTurnBattleInProgress (same boundary as syncTalentCombatPassive)"
       ],
       "limitations": [],
       "status": "VALID",
@@ -10023,6 +10176,36 @@
         "F-TT-AUT-A4-2",
         "F-TT-AUT-A4-3",
         "F-TT-AUT-A4-4"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "REV-TT-CLEAN-A4-COR",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 4,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-f26cfbc75b4240d8b0c7dd4064aa90a6",
+      "contextId": "sealed-child-f26cfbc75b4240d8b0c7dd4064aa90a6",
+      "model": "swe-2-max",
+      "role": "CORRECTNESS",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T22:26:00.000Z",
+      "sealedAt": "2026-09-25T22:44:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-A3-COR",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TT-COR-A4-4",
+        "F-TT-COR-A4-5"
       ],
       "novelAttackIds": [],
       "status": "SEALED"
@@ -14289,6 +14472,38 @@
       "payloadPath": "events/0073.json",
       "payloadHash": "64f3b411b702ddef21258726218bb1266d90a8fbe858762c462b8c055c7f58e7",
       "eventHash": "1527fd011a98fc05049efa3c7fd68761d3a8a1886921f1b0292cf38bd44295bc"
+    },
+    {
+      "seq": 74,
+      "at": "2026-09-25T22:45:14.942Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "b2fd591c186233490f753ef41624d0f0b03d57dd8fd157a105e29a4c5202961b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "1527fd011a98fc05049efa3c7fd68761d3a8a1886921f1b0292cf38bd44295bc",
+      "payloadPath": "events/0074.json",
+      "payloadHash": "2349611525f55122c4dddd025d6ccb4392e1ac49ab7da48eb8df067237d2ddac",
+      "eventHash": "f48e8b274023984d11e977f385a85a57366b9aee5b565df41651906ca7098b80"
+    },
+    {
+      "seq": 75,
+      "at": "2026-09-25T22:45:33.146Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "b2fd591c186233490f753ef41624d0f0b03d57dd8fd157a105e29a4c5202961b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "f48e8b274023984d11e977f385a85a57366b9aee5b565df41651906ca7098b80",
+      "payloadPath": "events/0075.json",
+      "payloadHash": "f6b92de7db510cd66537711e3cf637c23f308523f41443955434af92caef4435",
+      "eventHash": "0f7bb0219ab15c0e7aec89f2289d8c78ccfd0561f8e644a42bc449cfadb9c2be"
     }
   ]
 }
