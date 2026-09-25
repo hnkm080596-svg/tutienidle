@@ -235,9 +235,9 @@ export const BODY_PATHWAY: PathWayDefinition = {
   subpaths: {
     root: { state: 'player.nodeLevels' },
   },
-  // Beta — the buff list is what the beta kits + parked legacy defs
+  // Beta: the buff list is what the beta kits + parked legacy defs
   // can plant (phan_chan passive + chan_an mark + khiem_khich taunt +
-  // tran_kinh weaken; bat_tu_ba_the / son_nhac stay listed — authored
+  // tran_kinh weaken; bat_tu_ba_the / son_nhac stay listed; authored
   // defs parked for post-beta content).
   ownedContent: {
     skillIds: [

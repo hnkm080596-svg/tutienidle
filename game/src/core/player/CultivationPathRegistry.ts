@@ -261,11 +261,11 @@ function resolveAuthoredBasic(
 }
 
 /**
- * The Tu beta — resolve the owned branch root (cuong_chien XOR
+ * The Tu beta: resolve the owned branch root (cuong_chien XOR
  * tran_the, excludesNode mutex) into a participant-local kit clone
  * with collectBodyKitModifiers baked in. No root -> undefined (INV-3
  * fallback is the caller's job). Slot ownership gates at build: the
- * Trúc Cơ special arrives only with its owning major node (the beta
+ * Truc Co special arrives only with its owning major node (the beta
  * window has no Ultimate slot).
  */
 function resolveBodyKit(
@@ -512,8 +512,8 @@ function createBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivation
       const kit = resolveBodyKit(deps, player)
       return kit ? { special: kit.special, ultimate: kit.ultimate } : {}
     },
-    // Beta: no buildSurviveSources — BodyBatTuSurvival reads the
-    // ultimate slot that post-beta Bất Tử Bá Thể will occupy; parked
+    // Beta: no buildSurviveSources; BodyBatTuSurvival reads the
+    // ultimate slot that post-beta bat_tu_ba_the will occupy; parked
     // until that content returns.
   }
 }

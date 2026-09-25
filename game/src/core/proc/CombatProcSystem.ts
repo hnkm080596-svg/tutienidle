@@ -238,7 +238,7 @@ export class CombatProcSystem {
       if (holder === undefined) continue
       if (attacker === undefined || !attacker.alive) continue
 
-      // Mark check at FLUSH time (post-settle): a Chấn Ấn instance the
+      // Mark check at FLUSH time (post-settle): a chan_an instance the
       // holder sourced on the attacker upgrades the coefficient; the
       // mark itself is never consumed.
       const marked =

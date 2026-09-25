@@ -235,7 +235,7 @@ describe('loan_dau — sacrifice ordering, 1-HP floor, actual-paid payoff', () =
   })
 
   it('casts at exactly 1 HP pay NOTHING (op skips) and land at the base coefficient', () => {
-    // Spec §4 pin #4 zero-paid leg: paid <= 0 -> CombatOperationSkip ->
+    // Spec 4 pin #4 zero-paid leg: paid <= 0 -> CombatOperationSkip ->
     // __paid_hp binds 0 -> the payoff contributes nothing. The cast
     // itself still resolves at the base multiplier.
     const caster = createCombatant({
