@@ -6807,8 +6807,10 @@
       "verificationEvidenceIds": [
         "EV-PT-FIX-12"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-PT-CLO-4"
+      ],
+      "status": "CLOSED",
       "rejectionReason": null,
       "duplicateOf": null,
       "exception": null
@@ -6871,8 +6873,10 @@
       "verificationEvidenceIds": [
         "EV-PT-FIX-12"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-PT-CLO-4"
+      ],
+      "status": "CLOSED",
       "rejectionReason": null,
       "duplicateOf": null,
       "exception": null
@@ -6934,8 +6938,10 @@
       "verificationEvidenceIds": [
         "EV-PT-FIX-12"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-PT-CLO-4"
+      ],
+      "status": "CLOSED",
       "rejectionReason": null,
       "duplicateOf": null,
       "exception": null
@@ -7004,8 +7010,10 @@
       "verificationEvidenceIds": [
         "EV-PT-FIX-12"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-PT-CLO-4"
+      ],
+      "status": "CLOSED",
       "rejectionReason": null,
       "duplicateOf": null,
       "exception": null
@@ -7067,8 +7075,10 @@
       "verificationEvidenceIds": [
         "EV-PT-FIX-12"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-PT-CLO-4"
+      ],
+      "status": "CLOSED",
       "rejectionReason": null,
       "duplicateOf": null,
       "exception": null
@@ -7178,8 +7188,10 @@
       "verificationEvidenceIds": [
         "EV-PT-FIX-13"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-PT-CLO-4"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null
@@ -7310,7 +7322,23 @@
       "rootCause": "manual indent slip during the A9 fix sweep",
       "rootClass": "formatting",
       "subsystem": "phap-tu-beta",
-      "siblingSearch": [],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/game"
+          ],
+          "termsAndMethod": "grep all reconcileSpecClaims call sites for guard-structure drift",
+          "evidenceIds": [
+            "EV-PT-FIX-14"
+          ],
+          "hitDispositions": [
+            "single call site at GameManagerSaveRestore.ts:481-484 - now inside the bodyPlayer guard; no other site exists"
+          ],
+          "coverageLimits": [
+            "call-site audit only"
+          ]
+        }
+      ],
       "siblingFindingIds": [],
       "repair": "re-indented inside the guard (840cbdfe)",
       "pinEvidenceIds": [
@@ -7319,8 +7347,10 @@
       "verificationEvidenceIds": [
         "EV-PT-FIX-13"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-PT-CLO-4"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null
@@ -7382,8 +7412,10 @@
       "verificationEvidenceIds": [
         "EV-PT-FIX-13"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-PT-CLO-4"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null
@@ -7420,7 +7452,24 @@
       "rootCause": "comment wording drafted before the base essence channel was recalled",
       "rootClass": "honest-comment drift",
       "subsystem": "phap-tu-beta",
-      "siblingSearch": [],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/phap-tu",
+            "src/data"
+          ],
+          "termsAndMethod": "grep The-pool wording across PhapTuPath + skill descriptions for the same overstated 'awakening' phrasing",
+          "evidenceIds": [
+            "EV-PT-FIX-14"
+          ],
+          "hitDispositions": [
+            "one site fixed (PhapTuPath.ts:262-266 now reads deepening/+1-per-cast/+10-cap); sibling strings advertise same grant correctly"
+          ],
+          "coverageLimits": [
+            "text grep only"
+          ]
+        }
+      ],
       "siblingFindingIds": [],
       "repair": "comment now reads 'pool deepening (+1/cast, +10 cap)' (840cbdfe)",
       "pinEvidenceIds": [
@@ -7429,8 +7478,10 @@
       "verificationEvidenceIds": [
         "EV-PT-FIX-13"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-PT-CLO-4"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null
@@ -9702,6 +9753,45 @@
       ],
       "novelAttackIds": [],
       "status": "STALE"
+    },
+    {
+      "id": "REV-PT-CLO-4",
+      "state": {
+        "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 11,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-6c055aab2ca44e669c9d826c1065ab70",
+      "contextId": "sealed-child-devin-6c055aab2ca44e669c9d826c1065ab70",
+      "model": "swe-2-max",
+      "role": "closure-4",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T02:14:00.000Z",
+      "sealedAt": "2026-09-25T02:26:47.000Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-PT-FIX-14"
+      ],
+      "findingIds": [
+        "F-PT-A9-1",
+        "F-PT-A9-2",
+        "F-PT-A9-3",
+        "F-PT-A9-4",
+        "F-PT-A9-5",
+        "F-PT-A10-1",
+        "F-PT-A10-4",
+        "F-PT-A10-5",
+        "F-PT-A10-6"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
     }
   ],
   "cycles": [],
