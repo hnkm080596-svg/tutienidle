@@ -377,10 +377,12 @@
    "repair": null,
    "pinEvidenceIds": [],
    "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-2"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -432,10 +434,12 @@
    "repair": null,
    "pinEvidenceIds": [],
    "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-2"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -597,10 +601,12 @@
    "repair": null,
    "pinEvidenceIds": [],
    "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-2"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -652,10 +658,12 @@
    "repair": null,
    "pinEvidenceIds": [],
    "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-2"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -817,10 +825,12 @@
    "repair": null,
    "pinEvidenceIds": [],
    "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-2"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -1159,6 +1169,33 @@
    ],
    "novelAttackIds": [],
    "status": "STALE"
+  },
+  {
+   "id": "REV-TT-CLO-2",
+   "state": {
+    "productStateId": "78670408bf5e4fdda6b3931efb6432591a50eb058333226fba732331a3f28ab2",
+    "contractId": "05c4db99cc2008a384174d30d75fe2ed1579d7e55d76726bd9a195d02adec4d7",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 4,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-ad4bbae5100a4cb990b1fda824bc8518",
+   "contextId": "sealed-child-ad4bbae5100a4cb990b1fda824bc8518",
+   "model": "swe-2-max",
+   "role": "closure-verifier",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T06:51:27.000Z",
+   "sealedAt": "2026-09-25T06:53:25.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [],
