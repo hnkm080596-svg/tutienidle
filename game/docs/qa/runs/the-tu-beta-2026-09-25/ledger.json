@@ -2770,12 +2770,18 @@
    ],
    "siblingFindingIds": [],
    "repair": "rewrite header count to 15 (pending batch commit)",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-CLO-10"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-CLO-10"
+   ],
+   "closureReviewIds": [
+    "REV-TT-CLO-10"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -2837,10 +2843,12 @@
    "verificationEvidenceIds": [
     "EV-TT-INT-A6-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-10"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null
   }
  ],
@@ -3226,6 +3234,35 @@
    "limitations": [
     "scoped vitest, not full suite"
    ],
+   "result": "PASS",
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-TT-CLO-10",
+   "state": {
+    "productStateId": "beed7472d52814b7a8530c6b0c15f34abdf62411cfa0046f499cd797ffb95e95",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+   "commandOrMethod": "grep -rn '14 eligible' src/ + vitest SkillCoreNodes.test.ts",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T11:31:46.000Z",
+   "finishedAt": "2026-09-25T11:31:46.000Z",
+   "inputPaths": [
+    "src/data/progression/SkillCoreNodes.ts"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/clo-10-verify.log",
+   "artifactHash": "340f40dd8bcd39b2c6704414be99de0bb86023353195f6e17707fc5bb75982e3",
+   "claims": [
+    "'14 eligible' absent repo-wide; header reads '15 eligible'; 9/9 SkillCoreNodes tests pass"
+   ],
+   "invariantIds": [],
+   "limitations": [],
    "result": "PASS",
    "status": "CURRENT"
   }
@@ -3959,6 +3996,36 @@
    "coverageIds": [],
    "evidenceIds": [],
    "findingIds": [
+    "F-TT-INT-A6-1"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-TT-CLO-10",
+   "state": {
+    "productStateId": "beed7472d52814b7a8530c6b0c15f34abdf62411cfa0046f499cd797ffb95e95",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 18,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-845ecb2d7a494b1f8597615af0d69894",
+   "contextId": "sealed-child-845ecb2d7a494b1f8597615af0d69894",
+   "model": "swe-2-max",
+   "role": "closure-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T11:25:33.000Z",
+   "sealedAt": "2026-09-25T11:27:31.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-CLO-9-1",
     "F-TT-INT-A6-1"
    ],
    "novelAttackIds": [],
@@ -5217,6 +5284,38 @@
     "REV-TT-INT-A6"
    ],
    "capabilityDelta": "battle-gate coverage across all nodeLevels mutation ops",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-32",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-CLO-9-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "stale-comment",
+   "missedInvariantIds": [],
+   "escapeReason": "numeric count in comment not pinned by any test; list gained a member without the comment being updated",
+   "applicability": [
+    "comments carrying counts or enumerations"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "avoid literal counts in comments, or pin them with a grep/invariant when the count is contract-bearing"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-CLO-10"
+   ],
+   "capabilityDelta": "count-bearing comments treated as contract surface; verified with repo-wide grep",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": "the-tu-beta-2026-09-25",
