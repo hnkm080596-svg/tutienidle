@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "bdc04bf9",
   "state": {
-   "productStateId": "3954e88d7601834989e11f6fceb47c0bc546e04635bce6f8faec3d2994afae10",
+   "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -4128,13 +4128,15 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
+   "repair": "FIXED @1455a961: ReactiveActionSource+isNaturalActionSource moved to proc/ProcCapabilities leaf; TSPR/TBS read it without cycle",
    "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-TT-A9-FIX"
+   ],
    "closureReviewIds": [],
    "duplicateOf": null,
    "exception": null,
-   "status": "TRIAGED",
+   "status": "FIXED_PENDING_PROOF",
    "rejectionReason": null
   },
   {
@@ -4183,13 +4185,15 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
+   "repair": "FIXED @1455a961: TheTuPath header comment corrected to describe real imports",
    "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-TT-A9-FIX"
+   ],
    "closureReviewIds": [],
    "duplicateOf": null,
    "exception": null,
-   "status": "TRIAGED",
+   "status": "FIXED_PENDING_PROOF",
    "rejectionReason": null
   },
   {
@@ -4238,14 +4242,150 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
+   "repair": "FIXED @1455a961: retired id annotated in INTERNAL_NEGATIVE_LIST",
    "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-TT-A9-FIX"
+   ],
    "closureReviewIds": [],
    "duplicateOf": null,
    "exception": null,
-   "status": "TRIAGED",
+   "status": "FIXED_PENDING_PROOF",
    "rejectionReason": null
+  },
+  {
+   "id": "F-TT-INT-A9-1",
+   "title": "TheTuTreePanel drops whole-tree respec affordance - regression for body_pathway players",
+   "state": {
+    "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/components/panels/SkillPathPanel.vue",
+     "symbolOrSection": ":357-363 TheTuTreePanel v-if replaces NodeTreePanel",
+     "revision": "0956d787",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/components/panels/skill-path/TheTuTreePanel.vue",
+     "symbolOrSection": "no respec path",
+     "revision": "0956d787",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/components/panels/skill-path/NodeTreePanel.vue",
+     "symbolOrSection": ":296-345 respec lives only here",
+     "revision": "0956d787",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-0869529c1cc54afc93da7a04812ab826",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "v84 rendered NodeTreePanel for the_tu way with respec button; v85 diverts to TheTuTreePanel with none",
+   "expected": "S14 free beta respec reachable on the_tu way UI",
+   "actual": "respecNodeTree exists but unreachable via any the_tu UI surface",
+   "rootCause": "panel diversion dropped the affordance",
+   "rootClass": "ui-regression",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/components"
+     ],
+     "termsAndMethod": "respec affordance per panel",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "only TheTuTreePanel affected"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "FIXED @8f0ada4d: respec button + ConfirmModal + preview added to TheTuTreePanel",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-TT-A9-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-TT-INT-A9-2",
+   "title": "Reflect kill of attacker bypasses per-boundary death sweep",
+   "state": {
+    "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/proc/CombatProcSystem.ts",
+     "symbolOrSection": ":225-274 flushReflects",
+     "revision": "0956d787",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": ":2356-2365 flushReflects at tail without sweepBuffDeaths",
+     "revision": "0956d787",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": ":846-853 sweepBuffDeaths",
+     "revision": "0956d787",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-0869529c1cc54afc93da7a04812ab826",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "attacker killed by reflect gets no onEntityDeath until next quiescent point",
+   "expected": "every death created at a quiescent point gets its death hooks there",
+   "actual": "flushReflects kills settle ops without the boundary sweep",
+   "rootCause": "missing sweepBuffDeaths after flushReflects",
+   "rootClass": "boundary-sweep-gap",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/battle"
+     ],
+     "termsAndMethod": "other emit sites missing sweep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "emitAndSettle and runBuffLifecycle already sweep"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "FIXED @8f0ada4d: sweepBuffDeaths called after flushReflects at action tail",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-TT-A9-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
   }
  ],
  "evidence": [
@@ -4852,6 +4992,41 @@
    "limitations": [
     "scoped verification"
    ],
+   "status": "STALE"
+  },
+  {
+   "id": "EV-TT-A9-FIX",
+   "state": {
+    "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+   "commandOrMethod": "npm run type-check + npx vitest run src/core/battle/turn/ src/core/proc/ src/components/panels/",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T16:27:30.000Z",
+   "finishedAt": "2026-09-25T16:28:00.000Z",
+   "inputPaths": [
+    "src/core/proc/ProcCapabilities.ts",
+    "src/core/battle/turn/TurnBattleSystem.ts",
+    "src/core/battle/turn/TurnSkillPlanRuntime.ts",
+    "src/components/panels/skill-path/TheTuTreePanel.vue",
+    "src/core/the-tu/TheTuPath.ts",
+    "src/data/progression/SkillCoreNodes.test.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "artifactPath": "evidence/fix-verify-a9.log",
+   "artifactHash": "e61b831748d081d673aa964cc144b096f6ac501d5f1fce7279110e8e0ddec4b2",
+   "claims": [
+    "type-check 0 errors",
+    "716 tests pass incl panels + turn + proc scopes"
+   ],
+   "limitations": [],
+   "result": "PASS",
    "status": "CURRENT"
   }
  ],
@@ -5867,7 +6042,7 @@
    "evidenceIds": [],
    "findingIds": [],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-TT-CLO-13",
@@ -5896,7 +6071,7 @@
    ],
    "findingIds": [],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-TT-COR-A9",
@@ -5926,7 +6101,7 @@
     "F-TT-COR-A9-2"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-TT-AUT-A9",
@@ -5955,6 +6130,36 @@
     "F-TT-AUT-A9-1",
     "F-TT-AUT-A9-2",
     "F-TT-AUT-A9-3"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-TT-INT-A9",
+   "state": {
+    "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 26,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-0869529c1cc54afc93da7a04812ab826",
+   "contextId": "sealed-child-0869529c1cc54afc93da7a04812ab826",
+   "model": "swe-2-max",
+   "role": "integration-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T15:49:45.000Z",
+   "sealedAt": "2026-09-25T16:22:14.000Z",
+   "previousPhaseReviewId": "REV-TT-AUT-A9",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-INT-A9-1",
+    "F-TT-INT-A9-2"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -8030,6 +8235,22 @@
    "payloadPath": "events/0019.json",
    "payloadHash": "94dc3f78abc68baadb9d891c8230fc6f8cde0a204479efa8f7dbf85af5e6c86d",
    "eventHash": "b26a0975d8b364d7d09dee314a2fec139df9e43ced33e14f45096a8b6913e3d6"
+  },
+  {
+   "seq": 20,
+   "at": "2026-09-25T16:27:29.974Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-406257",
+   "state": {
+    "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "b26a0975d8b364d7d09dee314a2fec139df9e43ced33e14f45096a8b6913e3d6",
+   "payloadPath": "events/0020.json",
+   "payloadHash": "1d71596cc739d42e8f84a1f044662ac4f0454b53c5fbd13a1683021843348206",
+   "eventHash": "9dc4c8534d6c7f3e7548641ad05f12209fb14297578564459a0c11baba477ea5"
   }
  ]
 }
