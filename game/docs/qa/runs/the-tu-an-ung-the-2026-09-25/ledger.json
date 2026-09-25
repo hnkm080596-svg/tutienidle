@@ -574,8 +574,10 @@
       "verificationEvidenceIds": [
         "EV-TTA-VERIFY-COR-A1"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-TTA-CLO-2"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null
@@ -633,8 +635,10 @@
       "verificationEvidenceIds": [
         "EV-TTA-VERIFY-COR-A1"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-TTA-CLO-2"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null
@@ -692,8 +696,10 @@
       "verificationEvidenceIds": [
         "EV-TTA-VERIFY-COR-A1"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-TTA-CLO-2"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null
@@ -1056,6 +1062,37 @@
       ],
       "novelAttackIds": [],
       "status": "SEALED"
+    },
+    {
+      "id": "REV-TTA-CLO-2",
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 1,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-2bc1df77918f421aa7d65643d14e8731",
+      "contextId": "sealed-child-2bc1df77918f421aa7d65643d14e8731",
+      "model": "swe-2-max",
+      "role": "CLOSURE",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T19:58:00.000Z",
+      "sealedAt": "2026-09-25T20:00:00.000Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TTA-COR-1",
+        "F-TTA-COR-2",
+        "F-TTA-COR-3"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
     }
   ],
   "cycles": [],
@@ -1312,6 +1349,102 @@
       "policyVersion": null,
       "effectiveFromRun": null,
       "guidance": null
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "applicability": [],
+      "exclusions": [],
+      "incidentEvidenceIds": [
+        "EV-TTA-VERIFY-COR-A1"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLO-2"
+      ],
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "status": "CLASSIFIED",
+      "guidance": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "id": "L-TTA-9",
+      "findingIds": [
+        "F-TTA-COR-1"
+      ],
+      "rootClass": "incomplete-seam",
+      "escapeReason": "a seam predicate covered only one of the two committed-execution fields; any \"queued execution, not a choice\" gate must enumerate EVERY pending-entry field that represents an already-committed action.",
+      "capabilityDelta": "a seam predicate covered only one of the two committed-execution fields; any \"queued execution, not a choice\" gate must enumerate EVERY pending-entry field that represents an already-committed action.",
+      "proposedProtection": [
+        "seam gates must enumerate all pending committed-execution fields (pendingQueuedExecution AND pendingReactiveEntry)"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "applicability": [],
+      "exclusions": [],
+      "incidentEvidenceIds": [
+        "EV-TTA-VERIFY-COR-A1"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLO-2"
+      ],
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "status": "CLASSIFIED",
+      "guidance": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "id": "L-TTA-10",
+      "findingIds": [
+        "F-TTA-COR-2"
+      ],
+      "rootClass": "contract-drift",
+      "escapeReason": "substitution/consume decisions must gate on the full commit pair (success AND paid); a rolled-success that never paid must never produce effects.",
+      "capabilityDelta": "substitution/consume decisions must gate on the full commit pair (success AND paid); a rolled-success that never paid must never produce effects.",
+      "proposedProtection": [
+        "intercept/substitution consumers must filter on success&&paid, not success alone"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "applicability": [],
+      "exclusions": [],
+      "incidentEvidenceIds": [
+        "EV-TTA-VERIFY-COR-A1"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLO-2"
+      ],
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "status": "CLASSIFIED",
+      "guidance": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "id": "L-TTA-11",
+      "findingIds": [
+        "F-TTA-COR-3"
+      ],
+      "rootClass": "contract-drift",
+      "escapeReason": "attempt records that skip before the roll must be distinguishable from rolled attempts; once/one-shot gates must count only rolled attempts.",
+      "capabilityDelta": "attempt records that skip before the roll must be distinguishable from rolled attempts; once/one-shot gates must count only rolled attempts.",
+      "proposedProtection": [
+        "mark rolled attempts explicitly (rolled flag) so one-shot gates count the trigger correctly"
+      ]
     }
   ],
   "messages": [],
@@ -1715,6 +1848,38 @@
       "payloadPath": "events/0025.json",
       "payloadHash": "85aa9e483a321e5d8c662ce138e71adf974efc1f07eba60be01c087a320ccb4e",
       "eventHash": "1e59cbe7e8af1e8b74d61d9199227229b6e3421a4f9626ce013864a11f9d7db8"
+    },
+    {
+      "seq": 26,
+      "at": "2026-09-25T20:03:56.552Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "1e59cbe7e8af1e8b74d61d9199227229b6e3421a4f9626ce013864a11f9d7db8",
+      "payloadPath": "events/0026.json",
+      "payloadHash": "2f9a9c0f52addb30870969d4eb99dc0d1d88c706669f70a336d4c20dcc193fc2",
+      "eventHash": "b7a19719007d3d3a80eccb55e8d0ff450ed035f31c92ff72ba89b693d165e48c"
+    },
+    {
+      "seq": 27,
+      "at": "2026-09-25T20:04:17.372Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "b7a19719007d3d3a80eccb55e8d0ff450ed035f31c92ff72ba89b693d165e48c",
+      "payloadPath": "events/0027.json",
+      "payloadHash": "3a70fc0cd0cefb50287b6955f7dc8cdfebe5861a4a112277d84e96ef7c920a1c",
+      "eventHash": "c99523223b8099accc94c571dd808ccf3ed528eb18a4e81c3a88bf89b98f2349"
     }
   ]
 }
