@@ -2071,13 +2071,11 @@ export class TurnBattleSystem {
           this.grantTheFromCast(actor, chargedSkill, chargedCrit)
         }
 
-        // Boundary parity with the post-impact tail below: a charged hit
-        // that queued a reflect must flush + sweep here too, else the
-        // entry is dropped by the next action's discardPendingReflects.
-        // (No proc lane exists in an unwired battle, so guard.)
-        if (this.runtime !== undefined) {
-          this.procs.flushReflects()
-        }
+        // Sweep deaths produced inside this unwired lane. Reflect
+        // entries are not flushed here: this lane only runs when
+        // runtime === undefined (no proc lane exists), and in a wired
+        // battle the charged resolve routes through the plan lane,
+        // whose queued reflects flush at the shared action tail below.
         this.sweepBuffDeaths(battle)
 
         this.resolveAllyActionWindow(battle, actor, declared, landedTargets)
