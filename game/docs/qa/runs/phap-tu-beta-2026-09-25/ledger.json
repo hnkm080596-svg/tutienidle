@@ -9807,6 +9807,384 @@
    "exception": null,
    "status": "REJECTED_WITH_PROOF",
    "rejectionReason": "description truthful for the reachable beta window (basic is the only reachable spell skill); domain-wide modifier is inert - same documented acceptance pattern as basic-lane header"
+  },
+  {
+   "id": "F-PT-AUT-A6-1",
+   "title": "paidForNodeLevels remains a parallel spentStart loop alongside computeNodeRefund",
+   "state": {
+    "productStateId": "684a3dbab78879281abb32f162b5df266be9d5c2617d3723e59323d9dabd92d1",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/progression/NodeSystem.ts",
+     "symbolOrSection": "paidForNodeLevels + switchRoute + previewRouteSwitch",
+     "revision": "5392bfb7",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-7221f282d26f4e6dbf1807157f8127c5",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "35 routeTag nodes verified: none carry levelsSkillId so spentStart=0 - identical math on live inputs",
+   "expected": "computeNodeRefund is the shared refund-math authority; no parallel spentStart loops",
+   "actual": "switchRoute/previewRouteSwitch call paidForNodeLevels own spent=0 loop instead of computeNodeRefund + 0.75 tax - latent divergence: a route-tagged skill core authored later over-refunds level 1",
+   "rootCause": "extraction consolidated revoke path but left the route-switch helper as a second spentStart loop",
+   "rootClass": "latent-divergence",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "grep spentStart NodeSystem.ts; all paidForNodeLevels call sites",
+     "hitDispositions": [
+      "single surviving parallel loop; identical on current data"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "reuse computeNodeRefund(node, level, record) inside paidForNodeLevels (keep 0.75 route tax at call sites)",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-PT-AUT-A6-2",
+   "title": "previewRouteSwitch omits the clawback surface that switchRoute applies",
+   "state": {
+    "productStateId": "684a3dbab78879281abb32f162b5df266be9d5c2617d3723e59323d9dabd92d1",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/progression/NodeSystem.ts",
+     "symbolOrSection": "previewRouteSwitch",
+     "revision": "5392bfb7",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": "route preview wiring",
+     "revision": "5392bfb7",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-7221f282d26f4e6dbf1807157f8127c5",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "all 35 routeTag nodes carry no transactional effects - dead today",
+   "expected": "routeTag removal consistent between apply and preview",
+   "actual": "switchRoute op feeds revoked set into applyOneShotClawback (unlearns skills, clears spec, debits kiemY/kiemDao); RouteSwitchPreview exposes only refund/forfeited/resetNodeCount - understates losses if a route node gains a one-shot grant",
+   "rootCause": "preview surface authored before clawback legs existed; asymmetric with respec preview",
+   "rootClass": "latent-divergence",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "grep RouteSwitchPreview fields; compare previewNodeRespec legs",
+     "hitDispositions": [
+      "single asymmetric preview surface; dead on current data"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "extend RouteSwitchPreview with the same clawback legs respec preview reports (unlearn/core-refund/spec-clear/kiemY-kiemDao)",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-PT-AUT-A6-3",
+   "title": "core/player production files import data/ (pre-existing, unchanged by diff)",
+   "state": {
+    "productStateId": "684a3dbab78879281abb32f162b5df266be9d5c2617d3723e59323d9dabd92d1",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/player/Player.ts",
+     "symbolOrSection": "data imports",
+     "revision": "5392bfb7",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": "data imports",
+     "revision": "5392bfb7",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-7221f282d26f4e6dbf1807157f8127c5",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "git show be1bdf8: Player.ts + CultivationPathRegistry.ts import blocks identical at merge-base",
+   "expected": "core/player must not import data/",
+   "actual": "pre-existing violations unchanged by this diff; new player files (CultivationPathSystem/Kit) add no data/ imports",
+   "rootCause": "pre-existing architecture debt outside task scope",
+   "rootClass": "pre-existing-out-of-scope",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "git show be1bdf8 import blocks identical",
+     "hitDispositions": [
+      "not introduced by diff - recorded separately per P5 pre-existing rule"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "identical at merge-base be1bdf8 - pre-existing out-of-scope debt, not this diff"
+  },
+  {
+   "id": "F-PT-AUT-A6-4",
+   "title": "Local ASCII ELEMENT_LABELS in PhapTuNodes.builders diverges from canonical ElementLabels",
+   "state": {
+    "productStateId": "684a3dbab78879281abb32f162b5df266be9d5c2617d3723e59323d9dabd92d1",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuNodes.builders.ts",
+     "symbolOrSection": "local ELEMENT_LABELS",
+     "revision": "5392bfb7",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/element/ElementLabels.ts",
+     "symbolOrSection": "canonical",
+     "revision": "5392bfb7",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-7221f282d26f4e6dbf1807157f8127c5",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "new rewardOnly nodes render canonical diacritics (Tinh Thong Hoa) next to un-diacritics lane names (Hoa Luc) in the same tree",
+   "expected": "ELEMENT_LABELS imported from core/element/ElementLabels - no local dup",
+   "actual": "builders.ts keeps local Record without diacritics (Hoa/Thuy/Moc/Tho); diff adds conforming canonical usage but leaves the divergent authority - visible inconsistency introduced",
+   "rootCause": "local ASCII map is pre-existing; inconsistency surfaces only now because new file uses canonical",
+   "rootClass": "divergent-authority",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "grep ELEMENT_LABELS across data/progression + core/element",
+     "hitDispositions": [
+      "one local map in builders.ts; canonical in ElementLabels.ts"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "import canonical ELEMENT_LABELS in builders.ts and delete the local map (labels gain proper diacritics)",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-PT-AUT-A6-5",
+   "title": "Save-validation level bound diverges from getNodeMaxLevel",
+   "state": {
+    "productStateId": "684a3dbab78879281abb32f162b5df266be9d5c2617d3723e59323d9dabd92d1",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/services/save/saveShapeValidation.ts",
+     "symbolOrSection": "level bound",
+     "revision": "5392bfb7",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/progression/ProgressionNode.ts",
+     "symbolOrSection": "getNodeMaxLevel",
+     "revision": "5392bfb7",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-7221f282d26f4e6dbf1807157f8127c5",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "catalog histogram: no node with maxLevel <= 0 - dead today",
+   "expected": "nodeLevels mirrors validation expectations",
+   "actual": "validator bounds at raw node.maxLevel ?? 1 while writers clamp via getNodeMaxLevel=Math.max(1,...) - a node authored maxLevel:0 would accept level-1 writes the next load rejects",
+   "rootCause": "validator predates the getNodeMaxLevel clamp helper",
+   "rootClass": "latent-divergence",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "grep maxLevel bound in saveShapeValidation vs getNodeMaxLevel",
+     "hitDispositions": [
+      "single divergent bound; dead on current catalog"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "validator reuses getNodeMaxLevel (Math.max(1,...)) for the same bound writers apply",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-PT-AUT-A6-6",
+   "title": "Domain previewNodeRespec is a public stale preview diverging from the ops preview",
+   "state": {
+    "productStateId": "684a3dbab78879281abb32f162b5df266be9d5c2617d3723e59323d9dabd92d1",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/progression/NodeSystem.ts",
+     "symbolOrSection": "previewNodeRespec",
+     "revision": "5392bfb7",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": "previewNodeRespec",
+     "revision": "5392bfb7",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-7221f282d26f4e6dbf1807157f8127c5",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "grep shows only NodeTreePanel.vue -> progressionOps.previewNodeRespec; domain fn has zero production callers",
+   "expected": "one preview authority per transaction",
+   "actual": "domain export runs respecNodeTree without RESPEC_PRESERVED_NODE_IDS and produces no clawback legs - a future caller bypassing ops previews committed element roots as revoked and omits clawback",
+   "rootCause": "domain preview predates ops preview; left exported as dead surface",
+   "rootClass": "dead-surface-divergence",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "grep previewNodeRespec callers (production + tests)",
+     "hitDispositions": [
+      "two exported previews; only ops version is live"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "remove the domain-level previewNodeRespec export (zero callers) so ops preview is the only authority",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null
   }
  ],
  "evidence": [
@@ -13095,6 +13473,40 @@
    "novelAttackIds": [],
    "status": "SEALED",
    "previousPhaseReviewId": null
+  },
+  {
+   "id": "REV-PT-AUT-A6",
+   "state": {
+    "productStateId": "684a3dbab78879281abb32f162b5df266be9d5c2617d3723e59323d9dabd92d1",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 19,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-7221f282d26f4e6dbf1807157f8127c5",
+   "contextId": "sealed-child-7221f282d26f4e6dbf1807157f8127c5",
+   "model": "swe-2-max",
+   "role": "authority-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T09:27:00.000Z",
+   "sealedAt": "2026-09-25T09:45:03.000Z",
+   "previousPhaseReviewId": "REV-PT-COR-A6",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-AUT-A6-1",
+    "F-PT-AUT-A6-2",
+    "F-PT-AUT-A6-3",
+    "F-PT-AUT-A6-4",
+    "F-PT-AUT-A6-5",
+    "F-PT-AUT-A6-6"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [
@@ -16108,6 +16520,186 @@
     "REV-PT-COR-A6"
    ],
    "capabilityDelta": "descriptions scoped to the reachable window are honest even when the modifier applies domain-wide; revisit when post-beta skills exist",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-55",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUT-A6-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "latent-divergence",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "refund math lives only in computeNodeRefund - grep for parallel spentStart loops"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A6"
+   ],
+   "capabilityDelta": "refund math lives only in computeNodeRefund - grep for parallel spentStart loops",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-56",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUT-A6-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "latent-divergence",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "every mutating op needs a preview that surfaces the same leg set"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A6"
+   ],
+   "capabilityDelta": "every mutating op needs a preview that surfaces the same leg set",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-57",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUT-A6-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "pre-existing-out-of-scope",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "diff-inherited debt is recorded, not silently fixed"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A6"
+   ],
+   "capabilityDelta": "diff-inherited debt is recorded, not silently fixed",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-58",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUT-A6-4"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "divergent-authority",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "element labels import canonical ElementLabels everywhere"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A6"
+   ],
+   "capabilityDelta": "element labels import canonical ElementLabels everywhere",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-59",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUT-A6-5"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "latent-divergence",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "validators share the same bound helpers writers use (getNodeMaxLevel)"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A6"
+   ],
+   "capabilityDelta": "validators share the same bound helpers writers use (getNodeMaxLevel)",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-60",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUT-A6-6"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "dead-surface-divergence",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "unexport dead duplicate previews; one preview authority per transaction"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A6"
+   ],
+   "capabilityDelta": "unexport dead duplicate previews; one preview authority per transaction",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": "phap-tu-beta-2026-09-25",
