@@ -49,7 +49,7 @@ function masteryNode(element: ElementType): ProgressionNode {
   return {
     id: TINH_THONG_NODE_IDS[element],
     name: `Tinh Thông ${ELEMENT_LABELS[element]}`,
-    description: `Mastery ${ELEMENT_LABELS[element]} — rider của đòn cơ bản ${ELEMENT_LABELS[element]} tăng theo cấp.`,
+    description: `Mastery ${ELEMENT_LABELS[element]} — rider của mọi chiêu pháp ${ELEMENT_LABELS[element]} tăng theo cấp.`,
     type: 'minor',
     role: 'growth',
     insightCost: 0,

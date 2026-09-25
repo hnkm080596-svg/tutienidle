@@ -365,7 +365,7 @@ function buildWood(): ProgressionNode[] {
       '+2.5% uy lực tật trạng mỗi cấp (tầng Trúc Cơ).',
       'wood',
       [stat('moc_doc_nhiem', 'ailmentPotencyPercent', 0.025)],
-      { foundation: true, maxLevel: 4, prereqNodeId: 'moc_doc_nhuan' },
+      { foundation: true, maxLevel: 4, prereqNodeId: 'moc_doc_tu' },
     ),
     capstone(
       'wood',
@@ -450,7 +450,7 @@ function buildMetal(): ProgressionNode[] {
       'metal',
       'kim_tu_phong',
       'Tụ Phong',
-      'Điểm Kim tụ một điểm — sát thương lớn hơn.',
+      'Điểm Kim tụ một điểm — đòn đánh đậm hơn, Xuất Huyết dễ trúng hơn.',
       'kim_xuyen_thau',
     ),
     capstone(
