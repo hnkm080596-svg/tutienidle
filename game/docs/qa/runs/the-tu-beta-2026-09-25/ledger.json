@@ -4848,6 +4848,108 @@
    "duplicateOf": null,
    "rejectionReason": "reject: the ops-level gate is the correct authority layer (UI disable is cosmetic); extending it to every way is deliberate defense-in-depth, reachable impact nil",
    "exception": null
+  },
+  {
+   "id": "F-TT-INT-A10-1",
+   "title": "NativeCoreDetail upgrade button not gated on inBattle",
+   "state": {
+    "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "FIXTURE_INJECTED",
+   "locations": [
+    {
+     "path": "src/components/panels/skill-path/NativeCoreDetail.vue",
+     "symbolOrSection": "onUpgrade",
+     "revision": "8f0ada4d",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-71fff5fd1bc04b14818d2afb748c43db",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "button disabled only by insight/cost while engine levelUpSkill rejects in-battle; no inBattle prop reaches this surface - unreachable by construction (home UI unmounts on combat route)",
+   "expected": "gated/persisted",
+   "actual": "button disabled only by insight/cost while engine levelUpSkill rejects in-battle; no inBattle prop reaches this surface - unreachable by construction (home UI unmounts on combat route)",
+   "rootCause": "unreachable by construction",
+   "rootClass": "adjudicated-non-actionable",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src"
+     ],
+     "termsAndMethod": "reachability check",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "reject: crafted-unreachable - the whole home UI tree unmounts while the combat route is active (GameRoot !isFullSceneActive) and abandonBattle flips battle state terminal; auto-farm holds no turnBattle. Ops-level gate already covers the engine",
+   "exception": null
+  },
+  {
+   "id": "F-TT-INT-A10-2",
+   "title": "pendingReflects transient: mid-action save/restore would drop a queued reflect",
+   "state": {
+    "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "FIXTURE_INJECTED",
+   "locations": [
+    {
+     "path": "src/core/proc/CombatProcSystem.ts",
+     "symbolOrSection": "pendingReflects",
+     "revision": "8f0ada4d",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-71fff5fd1bc04b14818d2afb748c43db",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "Map lives on per-mint CombatProcSystem; a save between queue and flush would lose the pending entry - but turn battles persist only at boundaries where pendingReflects is empty",
+   "expected": "gated/persisted",
+   "actual": "Map lives on per-mint CombatProcSystem; a save between queue and flush would lose the pending entry - but turn battles persist only at boundaries where pendingReflects is empty",
+   "rootCause": "unreachable by construction",
+   "rootClass": "adjudicated-non-actionable",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src"
+     ],
+     "termsAndMethod": "reachability check",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "reject: no deterministic repro - save/restore snapshots at battle boundaries where the queue is already flushed+discarded; transient in-battle queue is not part of the persisted surface by design",
+   "exception": null
   }
  ],
  "evidence": [
@@ -6805,6 +6907,36 @@
     "F-TT-COR-A10-3",
     "F-TT-COR-A10-4",
     "F-TT-COR-A10-5"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-TT-INT-A10",
+   "state": {
+    "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 10,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-71fff5fd1bc04b14818d2afb748c43db",
+   "contextId": "sealed-child-71fff5fd1bc04b14818d2afb748c43db",
+   "model": "swe-2-max",
+   "role": "INTEGRATION",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T16:47:14.000Z",
+   "sealedAt": "2026-09-25T17:19:45.000Z",
+   "previousPhaseReviewId": "REV-TT-COR-A10",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-INT-A10-1",
+    "F-TT-INT-A10-2"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -9009,6 +9141,72 @@
    "preventionEvidenceIds": [
     "EV-TT-A10-PINS"
    ],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-60",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-INT-A10-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "adjudicated-non-actionable",
+   "missedInvariantIds": [],
+   "escapeReason": "UI gate cosmetic only - ops gate is the authority",
+   "applicability": [
+    "UI gating",
+    "battle persistence"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "unreachable-by-construction findings must cite the mounting/persist boundary in the repro before being reported"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-INT-A10"
+   ],
+   "capabilityDelta": "reachability discipline",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-61",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-INT-A10-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "adjudicated-non-actionable",
+   "missedInvariantIds": [],
+   "escapeReason": "transient queues at persist boundaries need a reachability story",
+   "applicability": [
+    "UI gating",
+    "battle persistence"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "unreachable-by-construction findings must cite the mounting/persist boundary in the repro before being reported"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-INT-A10"
+   ],
+   "capabilityDelta": "reachability discipline",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
    "guidance": null
   }
  ],
