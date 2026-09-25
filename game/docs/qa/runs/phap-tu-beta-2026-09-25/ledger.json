@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "5f0d296be768afe76b07b46358a7766bae0ac28d",
   "state": {
-   "productStateId": "34b363cf7fe53e27f5d27f5a6f561dea1d5a93b5b71c09e65c9af724f8c74a39",
+   "productStateId": "f5678d3189429d3c8409706ec66ae9b9b29d8a15afdc72e8154cd03122248e4d",
    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -31,9 +31,7 @@
   "phase": "SNAPSHOT",
   "cleanRoundA": null,
   "cleanRoundB": null,
-  "finalEvidenceIds": [
-   "EV-PT-VERIFY-FINAL-2"
-  ],
+  "finalEvidenceIds": [],
   "outcome": "QA_UNVERIFIED"
  },
  "briefs": [
@@ -8700,6 +8698,69 @@
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null
+  },
+  {
+   "id": "F-PT-FA-6",
+   "title": "lan_doc spec pair vestigial - identical payloads, aim-region only difference",
+   "state": {
+    "productStateId": "34b363cf7fe53e27f5d27f5a6f561dea1d5a93b5b71c09e65c9af724f8c74a39",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/PhapTuChainSkills.ts",
+     "symbolOrSection": "van_moc_lan_doc specializations lan_doc_quang/lan_doc_tham",
+     "revision": "3a3456cb",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-323c85d126de40ebb99c041958f47104",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "direct read: both effectsOverride arrays identical single damage op; only targeting shape differs",
+   "expected": "two mutex D-variant specs with distinct payloads or an honest shared payload",
+   "actual": "identical payload; Quang strictly dominates Tham; comments claimed spread payloads that never occur",
+   "rootCause": "post-R5 rewrite flattened both spec payloads; comments kept original spec claims",
+   "rootClass": "text/consistency",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/data/skill"
+     ],
+     "termsAndMethod": "audited other specialization pairs for identical effectsOverride",
+     "hitDispositions": [
+      "no other identical-payload spec pairs found"
+     ],
+     "coverageLimits": [
+      "manual review"
+     ],
+     "evidenceIds": [
+      "EV-PT-FIX-FA5"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "descriptions/comments rewritten to honest aim-region distinction @7d9035c8",
+   "pinEvidenceIds": [
+    "EV-PT-FIX-FA5"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PT-FIX-FA5"
+   ],
+   "closureReviewIds": [
+    "REV-PT-CLO-8"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "CLOSED",
+   "rejectionReason": null
   }
  ],
  "evidence": [
@@ -9721,6 +9782,35 @@
     "jsdom canvas env limit excludes scene tests",
     "ImageMagick absent"
    ],
+   "status": "STALE"
+  },
+  {
+   "id": "EV-PT-FIX-FA5",
+   "state": {
+    "productStateId": "f5678d3189429d3c8409706ec66ae9b9b29d8a15afdc72e8154cd03122248e4d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "commandOrMethod": "npm run type-check + asciiComments ratchet at 7d9035c8",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T06:12:00.000Z",
+   "finishedAt": "2026-09-25T06:15:00.000Z",
+   "inputPaths": [
+    "src/data/skill/PhapTuChainSkills.ts"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/fix-verify-fa5.log",
+   "artifactHash": "a61203bc7cb294873d1ddc9892811feb9eab68a1587cd619dda59b632d6ed7ca",
+   "claims": [
+    "F-PT-FA-6 repaired: spec pair descriptions honest about aim-region-only distinction"
+   ],
+   "invariantIds": [],
+   "limitations": [],
+   "result": "PASS",
    "status": "CURRENT"
   }
  ],
@@ -11387,7 +11477,7 @@
    "evidenceIds": [],
    "findingIds": [],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-CLO-7",
@@ -11418,7 +11508,7 @@
     "F-PT-FA-C3"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-COR-FA5",
@@ -11445,7 +11535,7 @@
    "evidenceIds": [],
    "findingIds": [],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-AUT-FA5",
@@ -11466,6 +11556,62 @@
    "accessLimitations": [],
    "startedAt": "2026-09-25T05:43:00.000Z",
    "sealedAt": "2026-09-25T06:06:48.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PT-INT-FA5",
+   "state": {
+    "productStateId": "34b363cf7fe53e27f5d27f5a6f561dea1d5a93b5b71c09e65c9af724f8c74a39",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 16,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-323c85d126de40ebb99c041958f47104",
+   "contextId": "sealed-child-323c85d126de40ebb99c041958f47104",
+   "model": "swe-2-max",
+   "role": "clean-final-integration",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T05:51:58.000Z",
+   "sealedAt": "2026-09-25T06:07:42.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-FA-6"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-CLO-8",
+   "state": {
+    "productStateId": "f5678d3189429d3c8409706ec66ae9b9b29d8a15afdc72e8154cd03122248e4d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 9,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-8663c063f22644fe95fecfc81b03b1db",
+   "contextId": "sealed-child-8663c063f22644fe95fecfc81b03b1db",
+   "model": "swe-2-max",
+   "role": "closure-verifier",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T06:23:38.000Z",
+   "sealedAt": "2026-09-25T06:26:08.000Z",
    "previousPhaseReviewId": null,
    "reviewedAfterPreviousFixes": true,
    "coverageIds": [],
@@ -13928,6 +14074,36 @@
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
+  },
+  {
+   "id": "L-PT-30",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-FA-6"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "stale spec-claim text after payload rewrite",
+   "missedInvariantIds": [],
+   "escapeReason": "honesty pass covered descriptions not spec-pair payload claims",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "spec pair audit in reviewer checklist"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-INT-FA5"
+   ],
+   "capabilityDelta": "terminal-finding lesson MC13",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
   }
  ],
  "messages": [],
@@ -14779,6 +14955,22 @@
    "payloadPath": "events/0053.json",
    "payloadHash": "35faaabc052ed677370752b624daf37155d6e8b7480bf780e8828d4d7694d5d1",
    "eventHash": "69010174b06a1f746005021cffcedb3a609309523ec8d8b41860caf20f7e0d3c"
+  },
+  {
+   "seq": 54,
+   "at": "2026-09-25T06:13:13.565Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "f5678d3189429d3c8409706ec66ae9b9b29d8a15afdc72e8154cd03122248e4d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "69010174b06a1f746005021cffcedb3a609309523ec8d8b41860caf20f7e0d3c",
+   "payloadPath": "events/0054.json",
+   "payloadHash": "f7c1736b61595d5e084435565a3e2b280bc9c7bdcf2df5e87ec83d85a0053136",
+   "eventHash": "7e3a0dc4654f64fd081861acf9fa113e777578de4694045fafa7ad0be342cc35"
   }
  ]
 }
