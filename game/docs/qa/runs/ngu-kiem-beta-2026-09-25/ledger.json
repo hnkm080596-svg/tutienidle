@@ -9,9 +9,9 @@
   "checkout": "/home/ubuntu/repos/tutienidle/.agent-worktrees/ngu-kiem-beta",
   "branch": "devin/1790284398-ngu-kiem-beta",
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
-  "head": "01a121b82dd785cc3cf54a1ff82a196149354dca",
+  "head": "d8321ba8",
   "state": {
-   "productStateId": "b2ceb83482f2752ad8892ec4fca7a93343d9e14c6c50b60e31d02d7f7f328f56",
+   "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -31,7 +31,9 @@
   "phase": "SNAPSHOT",
   "cleanRoundA": null,
   "cleanRoundB": null,
-  "finalEvidenceIds": [],
+  "finalEvidenceIds": [
+   "EV-NK-FIX-4"
+  ],
   "outcome": null
  },
  "briefs": [
@@ -294,17 +296,17 @@
       "sealed clean-A re-review pending"
      ],
      "evidenceIds": [
-      "EV-NK-FIX-1"
+      "EV-NK-FIX-4"
      ]
     }
    ],
    "siblingFindingIds": [],
    "repair": "attacker createBaseStats gains criticalRate:0 @31c06c9b; 3x consecutive green runs",
    "pinEvidenceIds": [
-    "EV-NK-FIX-1"
+    "EV-NK-FIX-4"
    ],
    "verificationEvidenceIds": [
-    "EV-NK-FIX-1"
+    "EV-NK-FIX-4"
    ],
    "closureReviewIds": [
     "REV-NK-CLO-2"
@@ -357,17 +359,17 @@
       "clean round pending"
      ],
      "evidenceIds": [
-      "EV-NK-FIX-2"
+      "EV-NK-FIX-4"
      ]
     }
    ],
    "siblingFindingIds": [],
    "repair": "operationIds:[...priorInstanceOpIds] snapshot + pin test scoping ids per instance",
    "pinEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "verificationEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "closureReviewIds": [
     "REV-NK-CLO-2"
@@ -420,17 +422,17 @@
       "clean round pending"
      ],
      "evidenceIds": [
-      "EV-NK-FIX-2"
+      "EV-NK-FIX-4"
      ]
     }
    ],
    "siblingFindingIds": [],
    "repair": "invalid_field_value fault added; shipped producer already constant 0.15",
    "pinEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "verificationEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "closureReviewIds": [
     "REV-NK-CLO-2"
@@ -483,17 +485,17 @@
       "clean round pending"
      ],
      "evidenceIds": [
-      "EV-NK-FIX-2"
+      "EV-NK-FIX-4"
      ]
     }
    ],
    "siblingFindingIds": [],
    "repair": "fixtures realigned to authored ids",
    "pinEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "verificationEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "closureReviewIds": [
     "REV-NK-CLO-2"
@@ -552,17 +554,17 @@
       "clean round pending"
      ],
      "evidenceIds": [
-      "EV-NK-FIX-2"
+      "EV-NK-FIX-4"
      ]
     }
    ],
    "siblingFindingIds": [],
    "repair": "comments rewritten to evolution vocabulary",
    "pinEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "verificationEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "closureReviewIds": [
     "REV-NK-CLO-2"
@@ -615,17 +617,17 @@
       "clean round pending"
      ],
      "evidenceIds": [
-      "EV-NK-FIX-2"
+      "EV-NK-FIX-4"
      ]
     }
    ],
    "siblingFindingIds": [],
    "repair": "renamed to ngu_kiem_phong_an; all refs + allowlist updated",
    "pinEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "verificationEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "closureReviewIds": [
     "REV-NK-CLO-2"
@@ -678,17 +680,17 @@
       "clean round pending"
      ],
      "evidenceIds": [
-      "EV-NK-FIX-2"
+      "EV-NK-FIX-4"
      ]
     }
    ],
    "siblingFindingIds": [],
    "repair": "resolveNguKiemOwnedEvolutionNode + resolveNguKiemEvolutionSuffix exported; panel consumes API",
    "pinEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "verificationEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "closureReviewIds": [
     "REV-NK-CLO-2"
@@ -747,17 +749,17 @@
       "clean round pending"
      ],
      "evidenceIds": [
-      "EV-NK-FIX-2"
+      "EV-NK-FIX-4"
      ]
     }
    ],
    "siblingFindingIds": [],
    "repair": "reconcileWayGrants dep on realmAdvanceOps called with bodyPlayer before reconcileQuestLifecycle; +2 pins",
    "pinEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "verificationEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "closureReviewIds": [
     "REV-NK-CLO-2"
@@ -871,22 +873,24 @@
       "clean round pending"
      ],
      "evidenceIds": [
-      "EV-NK-FIX-2"
+      "EV-NK-FIX-4"
      ]
     }
    ],
    "siblingFindingIds": [],
    "repair": "float bound on kiemDaoBase (integer only on count) + realmIndex>=1 guard on cap lane (01a121b8)",
    "pinEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "verificationEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-3"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -993,17 +997,17 @@
       "clean round pending"
      ],
      "evidenceIds": [
-      "EV-NK-FIX-2"
+      "EV-NK-FIX-4"
      ]
     }
    ],
    "siblingFindingIds": [],
    "repair": "committed-snapshot build override (recipe.build + hiddenNguFoundationBuild); 5 ngu cells re-baselined",
    "pinEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "verificationEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "closureReviewIds": [
     "REV-NK-CLO-2"
@@ -1056,17 +1060,17 @@
       "clean round pending"
      ],
      "evidenceIds": [
-      "EV-NK-FIX-2"
+      "EV-NK-FIX-4"
      ]
     }
    ],
    "siblingFindingIds": [],
    "repair": "replaced with live second-stack read 1+rate*2",
    "pinEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "verificationEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "closureReviewIds": [
     "REV-NK-CLO-2"
@@ -1254,15 +1258,37 @@
    "rootCause": "comment normalization sweep at e47648db missed 4 sites in runtime/contract files",
    "rootClass": "stale-comment-residue",
    "subsystem": "ngu-kiem-beta",
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu",
+      "src/core/skilldef",
+      "src/data/progression"
+     ],
+     "termsAndMethod": "closure reviewer enumerated sibling lanes for each fix",
+     "hitDispositions": [
+      "verified closed at fix head"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-4"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "siblingFindingIds": [],
    "repair": "normalized @dcc5303c + dropped unused CombatOperationResult import @5773e77d",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "pinEvidenceIds": [
+    "EV-NK-FIX-4"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-4"
+   ],
+   "closureReviewIds": [
+    "REV-NK-CLO-3"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -1313,14 +1339,32 @@
    ],
    "counterexample": "isolated reviewer repro on pinned head 31c06c9b",
    "subsystem": "kiem-tu-ngu",
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu",
+      "src/core/skilldef",
+      "src/data/progression"
+     ],
+     "termsAndMethod": "closure reviewer enumerated sibling lanes for each fix",
+     "hitDispositions": [
+      "verified closed at fix head"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-4"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "siblingFindingIds": [],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-3"
+   ],
    "pinEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "verificationEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "exception": null,
    "duplicateOf": null,
@@ -1361,7 +1405,7 @@
    "rootCause": "way grants replayed only inside chooseCultivationPath; restore never replays",
    "rootClass": "missing-restore-reconcile",
    "repair": "reconcileWayGrants replays way.grantedNodeIds idempotently on every restore (e47648db) + pin GameManager.kiemTuNguWay.test.ts:266-307",
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "invariantIds": []
   },
   {
@@ -1378,14 +1422,32 @@
    ],
    "counterexample": "isolated reviewer repro on pinned head 31c06c9b",
    "subsystem": "kiem-tu-ngu",
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu",
+      "src/core/skilldef",
+      "src/data/progression"
+     ],
+     "termsAndMethod": "closure reviewer enumerated sibling lanes for each fix",
+     "hitDispositions": [
+      "verified closed at fix head"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-4"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "siblingFindingIds": [],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-3"
+   ],
    "pinEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "verificationEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "exception": null,
    "duplicateOf": null,
@@ -1408,7 +1470,7 @@
    "rootCause": "validator coverage gap on the new momentum field",
    "rootClass": "validator-coverage-gap",
    "repair": "type/finite/>=0 validation added (e47648db)",
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "invariantIds": []
   },
   {
@@ -1425,14 +1487,32 @@
    ],
    "counterexample": "isolated reviewer repro on pinned head 31c06c9b",
    "subsystem": "kiem-tu-ngu",
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu",
+      "src/core/skilldef",
+      "src/data/progression"
+     ],
+     "termsAndMethod": "closure reviewer enumerated sibling lanes for each fix",
+     "hitDispositions": [
+      "verified closed at fix head"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-4"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "siblingFindingIds": [],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-3"
+   ],
    "pinEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "verificationEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "exception": null,
    "duplicateOf": null,
@@ -1467,7 +1547,7 @@
    "rootCause": "save validation accepted fractional dao counters",
    "rootClass": "validation-gap",
    "repair": "Number.isInteger bound + realm-cap bound on count/base (e47648db)",
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "invariantIds": []
   },
   {
@@ -1484,14 +1564,32 @@
    ],
    "counterexample": "isolated reviewer repro on pinned head 31c06c9b",
    "subsystem": "kiem-tu-ngu",
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu",
+      "src/core/skilldef",
+      "src/data/progression"
+     ],
+     "termsAndMethod": "closure reviewer enumerated sibling lanes for each fix",
+     "hitDispositions": [
+      "verified closed at fix head"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-4"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "siblingFindingIds": [],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-3"
+   ],
    "pinEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "verificationEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "exception": null,
    "duplicateOf": null,
@@ -1514,7 +1612,7 @@
    "rootCause": "allowlist not cleaned with the mechanic",
    "rootClass": "stale-allowlist",
    "repair": "entry dropped (e47648db)",
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "invariantIds": []
   },
   {
@@ -1531,14 +1629,32 @@
    ],
    "counterexample": "isolated reviewer repro on pinned head 31c06c9b",
    "subsystem": "kiem-tu-ngu",
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu",
+      "src/core/skilldef",
+      "src/data/progression"
+     ],
+     "termsAndMethod": "closure reviewer enumerated sibling lanes for each fix",
+     "hitDispositions": [
+      "verified closed at fix head"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-4"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "siblingFindingIds": [],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-3"
+   ],
    "pinEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "verificationEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "exception": null,
    "duplicateOf": null,
@@ -1561,7 +1677,7 @@
    "rootCause": "recipe predates lien/momentum lane",
    "rootClass": "stale-baseline",
    "repair": "committed build hiddenNguFoundationBuild() exercises momentum lane (e47648db)",
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "invariantIds": []
   },
   {
@@ -1621,14 +1737,32 @@
    ],
    "counterexample": "isolated reviewer repro on pinned head 31c06c9b",
    "subsystem": "kiem-tu-ngu",
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu",
+      "src/core/skilldef",
+      "src/data/progression"
+     ],
+     "termsAndMethod": "closure reviewer enumerated sibling lanes for each fix",
+     "hitDispositions": [
+      "verified closed at fix head"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-4"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "siblingFindingIds": [],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-3"
+   ],
    "pinEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "verificationEvidenceIds": [
-    "EV-NK-FIX-2"
+    "EV-NK-FIX-4"
    ],
    "exception": null,
    "duplicateOf": null,
@@ -1651,7 +1785,7 @@
    "rootCause": "placeholder assertion",
    "rootClass": "weak-assertion",
    "repair": "branch asserts toBeCloseTo damageMultiplier on both targets (e47648db)",
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "invariantIds": []
   },
   {
@@ -1668,11 +1802,33 @@
    ],
    "counterexample": "closure reviewer deterministic repro on pinned head",
    "subsystem": "kiem-tu-ngu",
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu",
+      "src/core/skilldef",
+      "src/data/progression"
+     ],
+     "termsAndMethod": "closure reviewer enumerated sibling lanes for each fix",
+     "hitDispositions": [
+      "verified closed at fix head"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-4"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "siblingFindingIds": [],
-   "closureReviewIds": [],
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-3"
+   ],
+   "pinEvidenceIds": [
+    "EV-NK-FIX-4"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-4"
+   ],
    "exception": null,
    "duplicateOf": null,
    "rejectionReason": null,
@@ -1701,7 +1857,7 @@
    "rootCause": "integer bound applied to the float multiplier field",
    "rootClass": "validator-over-application",
    "repair": "kiemDaoBase bound = finite number >= 1; integer kept on kiemDaoCount only (01a121b8) + pin saveShapeValidation.test.ts",
-   "status": "FIXED_PENDING_PROOF"
+   "status": "CLOSED"
   },
   {
    "state": {
@@ -1717,11 +1873,33 @@
    ],
    "counterexample": "closure reviewer deterministic repro on pinned head",
    "subsystem": "kiem-tu-ngu",
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu",
+      "src/core/skilldef",
+      "src/data/progression"
+     ],
+     "termsAndMethod": "closure reviewer enumerated sibling lanes for each fix",
+     "hitDispositions": [
+      "verified closed at fix head"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-4"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "siblingFindingIds": [],
-   "closureReviewIds": [],
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-3"
+   ],
+   "pinEvidenceIds": [
+    "EV-NK-FIX-4"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-4"
+   ],
    "exception": null,
    "duplicateOf": null,
    "rejectionReason": null,
@@ -1750,7 +1928,7 @@
    "rootCause": "cap lane unguarded for realmIndex<1",
    "rootClass": "unguarded-boundary-call",
    "repair": "realmIndex<1 lane emits a fault instead of calling the cap (01a121b8) + pin",
-   "status": "FIXED_PENDING_PROOF"
+   "status": "CLOSED"
   },
   {
    "state": {
@@ -1766,11 +1944,33 @@
    ],
    "counterexample": "closure reviewer deterministic repro on pinned head",
    "subsystem": "kiem-tu-ngu",
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu",
+      "src/core/skilldef",
+      "src/data/progression"
+     ],
+     "termsAndMethod": "closure reviewer enumerated sibling lanes for each fix",
+     "hitDispositions": [
+      "verified closed at fix head"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-4"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "siblingFindingIds": [],
-   "closureReviewIds": [],
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-3"
+   ],
+   "pinEvidenceIds": [
+    "EV-NK-FIX-4"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-4"
+   ],
    "exception": null,
    "duplicateOf": null,
    "rejectionReason": null,
@@ -1793,6 +1993,92 @@
    "rootCause": "live-array alias (same latent class as F-NK-AUT-1)",
    "rootClass": "live-alias",
    "repair": "operationIds: [...hitOpIds] snapshot (01a121b8)",
+   "status": "CLOSED"
+  },
+  {
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "discoveredBy": "REV-NK-CLO-3",
+   "evidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "counterexample": "closure reviewer inspection on pinned head",
+   "subsystem": "kiem-tu-ngu",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "closureReviewIds": [],
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "invariantIds": [],
+   "id": "F-NK-CLO-4",
+   "title": "gate.hitOperationIds still aliases live hitOpIdsByTarget array",
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "src/core/skilldef/SkillResolver.ts",
+     "symbolOrSection": "branch.gate",
+     "revision": "01a121b8",
+     "basis": "SOURCE"
+    }
+   ],
+   "expected": "gate captures priors-only op ids (snapshot), consistent with the read step",
+   "actual": "gate: { hitOperationIds: hitOpIds } passes the live array reference",
+   "rootCause": "live-array alias (same latent class as F-NK-AUT-1/F-NK-CLO-3)",
+   "rootClass": "live-alias",
+   "repair": "hitOperationIds: [...hitOpIds] (d8321ba8)",
+   "status": "FIXED_PENDING_PROOF"
+  },
+  {
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "discoveredBy": "REV-NK-CLO-3",
+   "evidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "counterexample": "closure reviewer inspection on pinned head",
+   "subsystem": "kiem-tu-ngu",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "closureReviewIds": [],
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "invariantIds": [],
+   "id": "F-NK-CLO-5",
+   "title": "'Two producers' header contradicts 'no current producer' bullet",
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnSkillAction.ts",
+     "symbolOrSection": "emblemOnly doc",
+     "revision": "01a121b8",
+     "basis": "SOURCE"
+    }
+   ],
+   "expected": "producer count consistent with bullets",
+   "actual": "header reads 'Two producers' but the first bullet is a retained contract with no current producer",
+   "rootCause": "stale header after contract retention",
+   "rootClass": "stale-comment",
+   "repair": "'Producers:' header (d8321ba8)",
    "status": "FIXED_PENDING_PROOF"
   }
  ],
@@ -1893,6 +2179,40 @@
     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
    },
    "kind": "EXECUTED_UNIT_STRUCTURAL"
+  },
+  {
+   "id": "EV-NK-FIX-4",
+   "kind": "EXECUTED_INTEGRATION",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T01:57:30.000Z",
+   "finishedAt": "2026-09-25T01:58:05.000Z",
+   "commandOrMethod": "npm run type-check && npx vitest run src/core/kiem-tu src/services/save src/core/game/GameManager.kiemTuNguWay src/core/skilldef src/core/battle",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/final-verify-d8321ba8.log",
+   "artifactHash": "73edf066fbb04422ede707f32931eff52506e1b59779d53198629e269e2cdd15",
+   "inputPaths": [
+    "src/core/kiem-tu/KiemTuPath.ts",
+    "src/core/skilldef/SkillResolver.ts",
+    "src/core/battle/turn/TurnSkillAction.ts",
+    "src/services/save/saveShapeValidation.test.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "type-check clean; 128 files / 1564 tests green on d8321ba8 (incl. 2 new validator pins + snapshot fixes F-NK-CLO-4/5)"
+   ],
+   "limitations": [
+    "scene/canvas tests excluded (env: libuuid/magick absent) \u2014 unaffected by ngu-kiem surface"
+   ],
+   "status": "CURRENT"
   }
  ],
  "coverage": [],
@@ -2063,6 +2383,36 @@
     "F-NK-CLO-1",
     "F-NK-CLO-2",
     "F-NK-CLO-3"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-NK-CLO-3",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 7,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-770e23b4e85e4949999f9f2aa98e6ca4",
+   "contextId": "sealed-child-devin-770e23b4e85e4949999f9f2aa98e6ca4",
+   "model": "swe-2-max",
+   "role": "closure",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T01:51:37.000Z",
+   "sealedAt": "2026-09-25T01:55:59.000Z",
+   "previousPhaseReviewId": "REV-NK-CLO-2",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-NK-CLO-4",
+    "F-NK-CLO-5"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -2262,7 +2612,18 @@
     "F-NK-AUT-6",
     "F-NK-AUT-7",
     "F-NK-INT-5",
-    "F-NK-INT-7"
+    "F-NK-INT-7",
+    "F-NK-INT-3",
+    "F-NK-INT-8",
+    "F-NK-INT-9",
+    "F-NK-INT-10",
+    "F-NK-INT-11",
+    "F-NK-INT-12",
+    "F-NK-INT-14",
+    "F-NK-CLO-1",
+    "F-NK-CLO-2",
+    "F-NK-CLO-3",
+    "F-NK-COR-2"
    ],
    "incidentEvidenceIds": [
     "EV-NK-FIX-2"
@@ -2285,6 +2646,43 @@
     "REV-NK-CLO-2"
    ],
    "capabilityDelta": "closure proof covers all 10 adjudicated redesign ripples",
+   "status": "QUALIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-07",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-CLO-4",
+    "F-NK-CLO-5"
+   ],
+   "incidentEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "residual-after-fix",
+   "missedInvariantIds": [],
+   "escapeReason": "two residual defects survived the same-channel fix: the branch.gate twin of the hitOpIds live-alias and a count header that stayed stale after its bullet was retained",
+   "applicability": [
+    "when patching a live-alias, sweep every other emission site of the same array in the same function; comment normalization must keep count headers consistent with their bullets"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "closure reviewer sibling check on the patched line itself"
+   ],
+   "promotionEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "qualifiedBy": [
+    "REV-NK-CLO-3"
+   ],
+   "capabilityDelta": "both residual classes pinned by same-line sibling sweep",
    "status": "QUALIFIED",
    "policyVersion": null,
    "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
@@ -2422,6 +2820,22 @@
    "payloadPath": "events/0008.json",
    "payloadHash": "07b39efa76f47a9fe2c449d7806c15dbd5956becefbe4fc7838181bbef79db31",
    "eventHash": "1dbe114c18003a4649689a83bd0239763b38c69eb097391c81b078bc6c5dee12"
+  },
+  {
+   "seq": 9,
+   "at": "2026-09-25T01:57:22.854Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "9c183c77c3530ebceeb28c459e70c6d558c257604a5f989c44529964375de9b2",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "1dbe114c18003a4649689a83bd0239763b38c69eb097391c81b078bc6c5dee12",
+   "payloadPath": "events/0009.json",
+   "payloadHash": "3b4a1ed4e0439b86b70ee43d4e655c57c0af9f32936330f9514b3db24478ec29",
+   "eventHash": "5df0dcab957be55c74f43226b62d2cd30fd54205278f889c92d91cdd4b4f336a"
   }
  ]
 }
