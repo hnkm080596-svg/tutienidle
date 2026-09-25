@@ -13,6 +13,7 @@ import {
   getEffectiveNodeMaxLevel as getEffectiveNodeMaxLevelSystem,
   ownedNodeIds,
   purchaseNode as purchaseNodeSystem,
+  previewRouteSwitch as previewRouteSwitchSystem,
   respecNodeTree as respecNodeTreeSystem,
   revokeNodeOwnership,
   specializationClaimingNodes,
@@ -20,6 +21,7 @@ import {
   upgradeNode as upgradeNodeSystem,
   grantSkillCore,
   type NodeRespecPreview,
+  type RouteSwitchPreview,
 } from '../progression/NodeSystem'
 import { getSkillCoreLevel, skillCoreNodeId } from '../progression/SkillCoreLevel'
 import { CAST_LEVELING_THRESHOLDS } from '../skill/CastLeveling'
@@ -634,9 +636,48 @@ export class GameManagerProgressionOps {
       preserveIds: RESPEC_PRESERVED_NODE_IDS,
     }, revoked)
 
-    // Dry-run the one-shot-grant clawback analytically: mirror every leg
-    // of applyOneShotClawback on the post-respec sim without SkillSystem
-    // writes (SkillManager is a live registry, not part of PlayerData).
+    const clawback = this.dryRunOneShotClawback(sim, revoked)
+
+    const resetNodeIds = Object.keys(player.nodeLevels ?? {}).filter(
+      id => !(id in (sim.nodeLevels ?? {})),
+    )
+
+    return {
+      refund: refund + clawback.refund,
+      resetNodeIds,
+      resetCount: resetNodeIds.length,
+      clawback,
+    }
+  }
+
+  /**
+   * Route-switch counterpart of previewNodeRespec: the domain preview
+   * reports refund/forfeited/reset counts; this wrapper dry-runs the
+   * same one-shot-grant clawback legs switchRoute applies, so the
+   * "you regain X, lose Y" dialog shows every loss leg.
+   */
+  previewRouteSwitch(player: PlayerData): RouteSwitchPreview {
+    const preview = previewRouteSwitchSystem(player, this.deps.nodeRegistry)
+
+    const sim = JSON.parse(JSON.stringify(player)) as PlayerData
+    const revoked = new Set<string>()
+    const route = sim.spellPath.route === 'dot' ? 'no' : 'dot'
+
+    switchRouteSystem(sim, this.deps.nodeRegistry, route, revoked)
+
+    return { ...preview, clawback: this.dryRunOneShotClawback(sim, revoked) }
+  }
+
+  /**
+   * Dry-run the one-shot-grant clawback analytically: mirror every leg
+   * of applyOneShotClawback on the post-revocation sim without
+   * SkillSystem writes (SkillManager is a live registry, not part of
+   * PlayerData).
+   */
+  private dryRunOneShotClawback(
+    sim: PlayerData,
+    revoked: Set<string>,
+  ): NonNullable<NodeRespecPreview['clawback']> {
     const clawback: NonNullable<NodeRespecPreview['clawback']> = {
       refund: 0,
       removedNodeIds: [],
@@ -666,7 +707,10 @@ export class GameManagerProgressionOps {
           continue
         }
 
-        if (this.deps.skillManager.has(skillId)) {
+        if (
+          this.deps.skillManager.has(skillId) &&
+          !clawback.unlearnedSkillIds.includes(skillId)
+        ) {
           clawback.unlearnedSkillIds.push(skillId)
         }
 
@@ -746,16 +790,7 @@ export class GameManagerProgressionOps {
       delete sim.nodeOneShotGrants[nodeId]
     }
 
-    const resetNodeIds = Object.keys(player.nodeLevels ?? {}).filter(
-      id => !(id in (sim.nodeLevels ?? {})),
-    )
-
-    return {
-      refund: refund + clawback.refund,
-      resetNodeIds,
-      resetCount: resetNodeIds.length,
-      clawback,
-    }
+    return clawback
   }
 
   /**

@@ -918,27 +918,6 @@ export interface NodeRespecPreview {
   }
 }
 
-export function previewNodeRespec(
-  player: PlayerData,
-
-  registry: { getAll(): ProgressionNode[]; has(id: string): boolean; get(id: string): ProgressionNode },
-
-  scope?: NodeRespecScope,
-): NodeRespecPreview {
-  // JSON round-trip (not structuredClone): callers hand in the Pinia
-  // reactive state, which structuredClone refuses; PlayerData is what
-  // the save system serializes, so JSON round-trip is exact.
-  const sim = JSON.parse(JSON.stringify(player)) as PlayerData
-
-  const refund = respecNodeTree(sim, registry, scope)
-
-  const resetNodeIds = Object.keys(player.nodeLevels ?? {}).filter(
-    id => !(id in (sim.nodeLevels ?? {})),
-  )
-
-  return { refund, resetNodeIds, resetCount: resetNodeIds.length }
-}
-
 /**
  * Phap Tu Reimagined Task 4 - switch the route half of the atomic
  * (element, route) commitment. Out-of-combat only (the orchestration op
@@ -1026,15 +1005,11 @@ export function switchRoute(
 /** Insight ACTUALLY paid into a node across its levels - Van Dao waived
  * amounts are deducted (same accounting as devResetBranch/switchRoute). */
 function paidForNodeLevels(player: PlayerData, node: ProgressionNode): number {
-  const level = getNodeLevel(player, node.id)
-
-  let paid = 0
-
-  for (let spent = 0; spent < level; spent++) {
-    paid += getNextLevelCost(node, spent)
-  }
-
-  return Math.max(0, paid - (player.nodeFreePurchaseRecord?.[node.id] ?? 0))
+  return computeNodeRefund(
+    node,
+    getNodeLevel(player, node.id),
+    player.nodeFreePurchaseRecord?.[node.id],
+  )
 }
 
 export interface RouteSwitchPreview {
@@ -1046,6 +1021,11 @@ export interface RouteSwitchPreview {
 
   /** Old-route nodes that would reset to level 0. */
   resetNodeCount: number
+
+  /** Effects the one-shot-grant clawback would apply on top of the
+   * domain revocation (filled by the orchestration layer - its legs
+   * read SkillManager and kiem-tu state the domain layer cannot reach). */
+  clawback?: NodeRespecPreview['clawback']
 }
 
 /**

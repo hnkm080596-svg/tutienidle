@@ -437,7 +437,8 @@ export function grantCultivationPathRealmReward(
       }
 
       // Transactional effects (one-shot grants, spec claims, purchases)
-      // are dead on a levels-only grant - warn so the author notices.
+      // are dead on a levels-only grant - skip the write, same contract as
+      // the purchase-time effect reject above.
       if (
         node.effect.unlocksSkillIds !== undefined ||
         node.effect.selectsSpecialization !== undefined ||
@@ -445,8 +446,9 @@ export function grantCultivationPathRealmReward(
         node.effect.kiemDaoGrant !== undefined
       ) {
         console.warn(
-          `grantedNodeLevels entry '${nodeId}' carries transactional effects that node-level grants do not fire`,
+          `grantedNodeLevels entry '${nodeId}' carries transactional effects that node-level grants do not fire - grant skipped`,
         )
+        continue
       }
 
       // Levels outside [1, maxLevel] would write a value saveShapeValidation

@@ -110,19 +110,21 @@
       },
       "routeSwitch": {
         "title": "Change Pháp Tu Stance",
-        "body": "Switch to the {route} stance? Old stance nodes reset to 0 — regain {regain} Insight, lose {lose}.",
+        "body": "Switch to the {route} stance? Old stance nodes reset to 0 — regain {regain} Insight, lose {lose}.{clawback}",
         "confirm": "Switch Stance"
+      },
+      "clawback": {
+        "summary": " Also revoked: {detail}.",
+        "skills": "lose {n} skills",
+        "specs": "clear {n} specializations",
+        "swords": "lose {y} Sword Intent and {d} forged swords",
+        "refund": "includes {n} Insight already counted above"
       },
       "respec": {
         "button": "Respec",
         "title": "Respec Node Tree",
         "body": "Reset all node investment? Regain {regain} Insight — {count} nodes and cores reset to 0. Free while in Beta.{clawback}",
-        "confirm": "Respec",
-        "clawback": " Also revoked: {detail}.",
-        "clawbackSkills": "lose {n} skills",
-        "clawbackSpecs": "clear {n} specializations",
-        "clawbackSwords": "lose {y} Sword Intent and {d} forged swords",
-        "clawbackRefund": "includes {n} Insight already counted above"
+        "confirm": "Respec"
       },
       "branchLabels": {
         "theTu": "Body Cultivation",

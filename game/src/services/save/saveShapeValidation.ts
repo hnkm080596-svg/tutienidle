@@ -30,6 +30,7 @@ import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
 import { REALM_PASSIVES } from '../../data/realm/RealmPassives'
 import { getTalentMaxLevel, isLegalBreakthroughOffer, isTalentEntitlementActionable } from '../../core/talent/TalentEntitlement'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
+import { getNodeMaxLevel } from '../../core/progression/ProgressionNode'
 import { isPhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
 
 // M-QI-05 (v73) - canonical Core Node lookups for the coverage checks:
@@ -694,7 +695,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
       } else {
         const node = PROGRESSION_NODE_BY_ID.get(nodeId)
         if (node !== undefined) {
-          const nodeMax = node.maxLevel ?? 1
+          const nodeMax = getNodeMaxLevel(node)
           if (!Number.isInteger(level) || level < 1 || level > nodeMax) {
             issues.push({
               path: `player.nodeLevels.${nodeId}`,

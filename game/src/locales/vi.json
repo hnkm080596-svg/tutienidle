@@ -110,19 +110,21 @@
       },
       "routeSwitch": {
         "title": "Đổi Hướng Pháp Tu",
-        "body": "Chuyển sang hướng {route}? Node hướng cũ về 0 — lấy lại {regain} Cảm Ngộ, mất {lose}.",
+        "body": "Chuyển sang hướng {route}? Node hướng cũ về 0 — lấy lại {regain} Cảm Ngộ, mất {lose}.{clawback}",
         "confirm": "Đổi Hướng"
+      },
+      "clawback": {
+        "summary": " Thu hồi thêm: {detail}.",
+        "skills": "mất {n} kỹ năng",
+        "specs": "mất {n} chuyên hóa",
+        "swords": "mất {y} Kiếm Ý và {d} kiếm",
+        "refund": "gồm {n} Cảm Ngộ đã tính trong tổng hoàn"
       },
       "respec": {
         "button": "Đặt Lại",
         "title": "Đặt Lại Cây Node",
         "body": "Đặt lại toàn bộ đầu tư node? Lấy lại {regain} Cảm Ngộ — {count} node và core về 0. Miễn phí trong thời gian Beta.{clawback}",
-        "confirm": "Đặt Lại",
-        "clawback": " Thu hồi thêm: {detail}.",
-        "clawbackSkills": "mất {n} kỹ năng",
-        "clawbackSpecs": "mất {n} chuyên hóa",
-        "clawbackSwords": "mất {y} Kiếm Ý và {d} kiếm",
-        "clawbackRefund": "gồm {n} Cảm Ngộ đã tính trong tổng hoàn"
+        "confirm": "Đặt Lại"
       },
       "branchLabels": {
         "theTu": "Thể Tu Hiện",

@@ -27,7 +27,7 @@ import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useProgressionActions } from '@/composables/useProgressionActions'
-import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNodeMaxLevel, getEffectiveNodeMaxLevel, getNextLevelCost, previewRouteSwitch, hasPrerequisite, nodeWayApplies } from '@/core/progression/NodeSystem'
+import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNodeMaxLevel, getEffectiveNodeMaxLevel, getNextLevelCost, hasPrerequisite, nodeWayApplies } from '@/core/progression/NodeSystem'
 import { getActiveRoute } from '@/core/player/CultivationPathSystem'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import { HIDDEN_BRANCH_TAGS, viewBranchTags } from '@/core/progression/NodeBranchViews'
@@ -126,7 +126,7 @@ const routePreview = computed(() => {
     return null
   }
 
-  return previewRouteSwitch(player.$state, gameManager.nodeRegistry)
+  return gameManager.progressionOps.previewRouteSwitch(player.$state)
 })
 
 function onRouteClick(route: SpellPathRoute) {
@@ -316,12 +316,12 @@ const respecPreview = computed(() => {
   return gameManager.progressionOps.previewNodeRespec(player.$state)
 })
 
-// Clawback legs the plain {regain}/{count} line does not cover: skills and
-// specialization picks revoked by grant clawback, plus kiem-tu residual
-// losses. Rendered only when the preview reports at least one leg.
-const respecClawbackText = computed(() => {
-  const clawback = respecPreview.value?.clawback
+// Clawback legs the plain {regain}/{count}/{lose} lines do not cover:
+// skills and specialization picks revoked by grant clawback, plus kiem-tu
+// residual losses. Rendered only when the preview reports at least one leg.
+type GrantClawback = NonNullable<import('@/core/progression/NodeSystem').NodeRespecPreview['clawback']>
 
+function clawbackDetailText(clawback: GrantClawback | undefined): string {
   if (clawback === undefined) {
     return ''
   }
@@ -330,7 +330,7 @@ const respecClawbackText = computed(() => {
 
   if (clawback.unlearnedSkillIds.length > 0) {
     parts.push(
-      t('panels.nodeTree.respec.clawbackSkills', {
+      t('panels.nodeTree.clawback.skills', {
         n: clawback.unlearnedSkillIds.length,
       }),
     )
@@ -338,7 +338,7 @@ const respecClawbackText = computed(() => {
 
   if (clawback.clearedSpecializations.length > 0) {
     parts.push(
-      t('panels.nodeTree.respec.clawbackSpecs', {
+      t('panels.nodeTree.clawback.specs', {
         n: clawback.clearedSpecializations.length,
       }),
     )
@@ -346,7 +346,7 @@ const respecClawbackText = computed(() => {
 
   if (clawback.kiemY > 0 || clawback.kiemDao > 0) {
     parts.push(
-      t('panels.nodeTree.respec.clawbackSwords', {
+      t('panels.nodeTree.clawback.swords', {
         y: clawback.kiemY,
         d: clawback.kiemDao,
       }),
@@ -355,14 +355,18 @@ const respecClawbackText = computed(() => {
 
   if (clawback.refund > 0) {
     parts.push(
-      t('panels.nodeTree.respec.clawbackRefund', { n: clawback.refund }),
+      t('panels.nodeTree.clawback.refund', { n: clawback.refund }),
     )
   }
 
   return parts.length === 0
     ? ''
-    : t('panels.nodeTree.respec.clawback', { detail: parts.join(', ') })
-})
+    : t('panels.nodeTree.clawback.summary', { detail: parts.join(', ') })
+}
+
+const respecClawbackText = computed(() => clawbackDetailText(respecPreview.value?.clawback))
+
+const routeClawbackText = computed(() => clawbackDetailText(routePreview.value?.clawback))
 
 // Any purchased node in the rendered view makes respec meaningful; the
 // branch computation already resolved ownership per entry.
@@ -762,6 +766,7 @@ onBeforeUnmount(() => {
         route: t(`panels.nodeTree.routes.${pendingRoute}`),
         regain: routePreview.refund,
         lose: routePreview.forfeited,
+        clawback: routeClawbackText,
       })"
       :confirm-label="t('panels.nodeTree.routeSwitch.confirm')"
       danger

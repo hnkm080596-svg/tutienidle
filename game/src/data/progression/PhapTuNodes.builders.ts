@@ -7,6 +7,7 @@ import type {
 import type { StatModifier } from '../../core/stats/StatCalculator'
 import { SPELL_KIT_IDS } from '../skill/Skills'
 import { PHAP_TU_ULTIMATE_IDS } from '../skill/PhapTuUltimates'
+import { ELEMENT_LABELS } from '../../core/element/ElementLabels'
 
 // Phap Tu Reimagined (2026-09-15 plan, Task 6) — node builders for the
 // new tree: 5 mutex element roots (committed atomically by
@@ -24,22 +25,6 @@ export const PHAP_TU_ELEMENT_ROOT_IDS: Record<ElementType, string> = {
 }
 
 export const TRUONG_THE_CAP_PER_LEVEL = 10
-
-const ELEMENT_LABELS: Record<ElementType, string> = {
-  fire: 'Hoa',
-  water: 'Thuy',
-  wood: 'Moc',
-  metal: 'Kim',
-  earth: 'Tho',
-}
-
-const ELEMENT_NAMES: Record<ElementType, string> = {
-  fire: 'Hoa Linh Ngo',
-  water: 'Thuy Linh Ngo',
-  wood: 'Moc Linh Ngo',
-  metal: 'Kim Linh Ngo',
-  earth: 'Tho Linh Ngo',
-}
 
 function stat(
   nodeId: string,
@@ -68,8 +53,8 @@ function elementRoot(element: ElementType): ProgressionNode {
 
   return {
     id: rootId,
-    name: ELEMENT_NAMES[element],
-    description: `Mo hanh ${ELEMENT_LABELS[element]} — chon nguyen to Phap Tu (atomic voi route, qua selectSpellPathElement).`,
+    name: `${ELEMENT_LABELS[element]} Linh Ngộ`,
+    description: `Mở hành ${ELEMENT_LABELS[element]} — chọn nguyên tố Pháp Tu (nguyên tử với hướng, qua selectSpellPathElement).`,
     type: 'major',
     role: 'root',
     insightCost: 0,
@@ -140,8 +125,8 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
     // proving set, not a balance pass).
     growth(
       `minor_${element}_intensity`,
-      `${label} Luc`,
-      `+2 ${element}Power ${label}/cap.`,
+      `${label} Lực`,
+      `+2 ${element}Power ${label}/cấp.`,
       element,
       [stat(`minor_${element}_intensity`, `${element}Power`, 2, 2)],
       {
@@ -157,8 +142,8 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
     // Ailment-leaning growth (shared — ap dung bat ke route).
     growth(
       `${element}_ailment_mastery`,
-      `${label} Chuong`,
-      `+4% ailment potency, +3% ailment duration ${label}/cap.`,
+      `${label} Chưởng`,
+      `+4% ailment potency, +3% ailment duration ${label}/cấp.`,
       element,
       [
         stat(`${element}_ailment_mastery_pot`, 'ailmentPotencyPercent', 0.04, 0.04),
@@ -169,8 +154,8 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
     // Damage-leaning growth (shared).
     growth(
       `${element}_damage_mastery`,
-      `${label} Sat`,
-      `+5% skill damage ${label}/cap.`,
+      `${label} Sát`,
+      `+5% skill damage ${label}/cấp.`,
       element,
       [stat(`${element}_damage_mastery`, 'skillDamagePercent', 0.05, 0.05)],
     ),
@@ -183,8 +168,8 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
     {
       ...unlockNode(
         specialId,
-        `Linh Ngo ${label} Dac Biet`,
-        `Mo khoa ky nang dac biet ${label}.`,
+        `Linh Ngộ ${label} Đặc Biệt`,
+        `Mở khóa kỹ năng đặc biệt ${label}.`,
         element,
         PHAP_TU_ELEMENT_ROOT_IDS[element],
         [specialId, ultimateId],
@@ -201,8 +186,8 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
     {
       ...unlockNode(
         godUltId,
-        `Phap Tuong ${label}`,
-        `Mo khoa Phap Tuong ${label} — gate cho ultimate empowerment.`,
+        `Pháp Tướng ${label}`,
+        `Mở khóa Pháp Tướng ${label} — cổng cường hóa ultimate.`,
         element,
         `linh_ngo_${specialId}`,
       ),
@@ -216,8 +201,8 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
     // Tu The — The gain lane (basic + special +1/cap).
     {
       id: `tu_the_${element}`,
-      name: `Tu The ${label}`,
-      description: `+1 The per landed cast cho basic + special ${label}/cap.`,
+      name: `Tụ Thế ${label}`,
+      description: `+1 Thế mỗi lần cast trúng của basic + special ${label}/cấp.`,
       type: 'minor',
       role: 'growth',
       insightCost: 1,
@@ -242,8 +227,8 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
     // Truong The — route 'no', cap The +10/cap.
     {
       id: `truong_the_${element}`,
-      name: `Truong The ${label}`,
-      description: `+${TRUONG_THE_CAP_PER_LEVEL} max The/cap (route No).`,
+      name: `Trữ Thế ${label}`,
+      description: `+${TRUONG_THE_CAP_PER_LEVEL} Thế tối đa/cấp (hướng Nộ).`,
       type: 'minor',
       role: 'specialization',
       insightCost: 1,
@@ -261,24 +246,24 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
     // Route 'dot' specialization — 3 nodes.
     growth(
       `${element}_dot_potency`,
-      `Dot Hoa ${label}`,
-      `+6% ailment potency/cap (route Dot).`,
+      `Đốt Hỏa ${label}`,
+      `+6% ailment potency/cấp (hướng Đốt).`,
       element,
       [stat(`${element}_dot_potency`, 'ailmentPotencyPercent', 0.06, 0.06)],
       { routeTag: 'dot' },
     ),
     growth(
       `${element}_dot_duration`,
-      `Dot Dien ${label}`,
-      `+5% ailment duration/cap (route Dot).`,
+      `Đốt Diễn ${label}`,
+      `+5% ailment duration/cấp (hướng Đốt).`,
       element,
       [stat(`${element}_dot_duration`, 'ailmentDurationPercent', 0.05, 0.05)],
       { routeTag: 'dot' },
     ),
     growth(
       `${element}_dot_chance`,
-      `Dot Van ${label}`,
-      `+4% element application/cap (route Dot).`,
+      `Đốt Vân ${label}`,
+      `+4% element application/cấp (hướng Đốt).`,
       element,
       [stat(`${element}_dot_chance`, 'elementApplicationPercent', 0.04, 0.04)],
       { routeTag: 'dot' },
@@ -287,24 +272,24 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
     // Route 'no' specialization — 3 nodes (ngoai truong_the).
     growth(
       `${element}_no_crit`,
-      `No Tam ${label}`,
-      `+2% crit rate/cap (route No).`,
+      `Nộ Tâm ${label}`,
+      `+2% crit rate/cấp (hướng Nộ).`,
       element,
       [stat(`${element}_no_crit`, 'criticalRate', 0.02, 0.02)],
       { routeTag: 'no' },
     ),
     growth(
       `${element}_no_critdmg`,
-      `No Pha ${label}`,
-      `+6% crit damage/cap (route No).`,
+      `Nộ Phá ${label}`,
+      `+6% crit damage/cấp (hướng Nộ).`,
       element,
       [stat(`${element}_no_critdmg`, 'criticalDamage', 0.06, 0.06)],
       { routeTag: 'no' },
     ),
     growth(
       `${element}_no_damage`,
-      `No Sat ${label}`,
-      `+5% skill damage/cap (route No).`,
+      `Nộ Sát ${label}`,
+      `+5% skill damage/cấp (hướng Nộ).`,
       element,
       [stat(`${element}_no_damage`, 'skillDamagePercent', 0.05, 0.05)],
       { routeTag: 'no' },
