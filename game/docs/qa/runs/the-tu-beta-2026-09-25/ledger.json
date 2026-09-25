@@ -4410,7 +4410,12 @@
   {
    "id": "F-TT-AUT-A10-1",
    "title": "TheTuTreePanel COLUMNS hard-code node topology; a broken id degrades silently",
-   "state": "4a274821084ae1e7",
+   "state": {
+    "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
    "severity": "Low",
    "classification": "REAL_DEFECT",
    "actionable": true,
@@ -4446,10 +4451,7 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": {
-    "commit": "4042f730",
-    "approach": "setup-time guard: flatten all COLUMNS-referenced ids and console.warn on any missing registry entry"
-   },
+   "repair": "FIXED @4042f730: setup-time guard: flatten all COLUMNS-referenced ids and console.warn on any missing registry entry",
    "pinEvidenceIds": [
     "EV-TT-A10-FIX"
    ],
@@ -4465,7 +4467,12 @@
   {
    "id": "F-TT-AUT-A10-2",
    "title": "Dead compat re-export of ReactiveActionSource/isNaturalActionSource",
-   "state": "4a274821084ae1e7",
+   "state": {
+    "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
    "severity": "Nit",
    "classification": "DOCUMENTATION_DEFECT",
    "actionable": true,
@@ -4501,10 +4508,7 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": {
-    "commit": "4042f730",
-    "approach": "removed the re-export block and stale comment"
-   },
+   "repair": "FIXED @4042f730: removed the re-export block and stale comment",
    "pinEvidenceIds": [
     "EV-TT-A10-FIX"
    ],
@@ -4520,7 +4524,12 @@
   {
    "id": "F-TT-AUT-A10-3",
    "title": "Missing-HP scalar formula duplicated across the two hit lanes (A9)",
-   "state": "4a274821084ae1e7",
+   "state": {
+    "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
    "severity": "Low",
    "classification": "NON_ACTIONABLE",
    "actionable": false,
@@ -5215,8 +5224,7 @@
   },
   {
    "id": "EV-TT-A10-FIX",
-   "version": 1,
-   "kind": "EXECUTED",
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
    "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
    "commandOrMethod": "npm run type-check && npx vitest run theTuBeta reflection TheTuBuffs theTuE2E theTuKit TheTuNodes TheTuSkills SkillCoreNodes respec",
    "cwd": "game",
@@ -5238,7 +5246,7 @@
    "limitations": [
     "scoped scope only"
    ],
-   "result": "pass",
+   "result": "PASS",
    "status": "CURRENT",
    "state": {
     "productStateId": "032e6c7d0259fcfa8ee64db5169b8c89d79483310750e79ceea6c18069663a53",
@@ -6413,7 +6421,12 @@
   },
   {
    "id": "REV-TT-AUT-A10",
-   "state": "4a274821084ae1e7",
+   "state": {
+    "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
    "round": 10,
    "phase": "CORRECTNESS",
    "reviewerId": "devin-f9c11ff6f8bd44a4a5432fad0fc8c864",
