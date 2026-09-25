@@ -1316,13 +1316,19 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "repair": "isAbandoned() touches stateVersion.value before getNodeLevel @d50a0020",
+   "pinEvidenceIds": [
+    "EV-TT-FIX-A4"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-FIX-A4"
+   ],
+   "closureReviewIds": [
+    "REV-TT-CLO-4"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -1373,13 +1379,19 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": null,
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "repair": "CURRENT_SAVE_VERSION 84 -> 85 with v85 comment block @d50a0020",
+   "pinEvidenceIds": [
+    "EV-TT-FIX-A4"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-FIX-A4"
+   ],
+   "closureReviewIds": [
+    "REV-TT-CLO-4"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -1656,6 +1668,37 @@
    "limitations": [],
    "result": "PASS",
    "status": "STALE"
+  },
+  {
+   "id": "EV-TT-FIX-A4",
+   "state": {
+    "productStateId": "e930eaa3ffbbf566dfdaaed858328eb902c377151961249a6038852d294ead08",
+    "contractId": "646e81317d47bc6029e7fbdff98a4672daf20091c54408ff15e606fba82228e1",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "commandOrMethod": "npm run type-check + vitest scoped suites at d50a0020; REV-TT-CLO-4 sealed",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T07:36:00.000Z",
+   "finishedAt": "2026-09-25T07:49:35.000Z",
+   "inputPaths": [
+    "src/services/save/saveVersion.ts",
+    "src/components/panels/skill-path/TheTuTreePanel.vue",
+    "docs/specs/the-tu-beta-spec.md"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/fix-verify-a4.log",
+   "artifactHash": "9952df6db2ccf61368c94d34c345e51729503e91d08f399da6e91d540ac5dbc4",
+   "claims": [
+    "F-TT-INT-4 (v85 bump) + F-TT-COR-9 (isAbandoned stateVersion) repaired at d50a0020; type-check clean; 636 scoped tests pass; closure REV-TT-CLO-4 SEALED"
+   ],
+   "invariantIds": [],
+   "limitations": [],
+   "result": "PASS",
+   "status": "CURRENT"
   }
  ],
  "coverage": [],
@@ -1933,6 +1976,33 @@
     "F-TT-INT-5",
     "F-TT-INT-6"
    ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-TT-CLO-4",
+   "state": {
+    "productStateId": "e930eaa3ffbbf566dfdaaed858328eb902c377151961249a6038852d294ead08",
+    "contractId": "646e81317d47bc6029e7fbdff98a4672daf20091c54408ff15e606fba82228e1",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 7,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-fcb714e45c824ad481ef4b82d9c0d3f0",
+   "contextId": "sealed-child-fcb714e45c824ad481ef4b82d9c0d3f0",
+   "model": "swe-2-max",
+   "role": "closure-verifier",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T07:47:48.000Z",
+   "sealedAt": "2026-09-25T07:49:35.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
   }
