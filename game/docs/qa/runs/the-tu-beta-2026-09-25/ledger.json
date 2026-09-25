@@ -2134,6 +2134,137 @@
    "exception": null,
    "status": "FIXED_PENDING_PROOF",
    "rejectionReason": null
+  },
+  {
+   "id": "F-TT-AUT-A5-1",
+   "title": "excludesNode mutex not re-checked on restored saves - crafted save can hold both roots",
+   "state": {
+    "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "FIXTURE_INJECTED",
+   "locations": [
+    {
+     "path": "src/services/save/saveShapeValidation.ts",
+     "symbolOrSection": "nodeLevels checks",
+     "revision": "bb040df3",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": "resolveBodyKit",
+     "revision": "bb040df3",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-0305b54bc9384ac582d481e8901a13ac",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "crafted v85 save owning both mutex roots passes validation; resolveBodyKit silently prefers cuong_chien",
+   "expected": "restored state violating root mutex would be flagged like other node invariants",
+   "actual": "validator does not consult prereq semantics; dual-root tampered save passes; resolution deterministic to coherent cuong kit - masks tampering, no corruption",
+   "rootCause": "save boundary is registry-less by documented design; excludesNode is purchase-time only",
+   "rootClass": "crafted-save-only-reachability",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "grep excludesNode saveShapeValidation; resolveBodyKit ordering",
+     "hitDispositions": [
+      "same-class exposure is generic pre-existing save boundary"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [
+    "F-TT-COR-A4-1",
+    "F-TT-COR-A4-2"
+   ],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "crafted/corrupt save only - no gameplay path to own both roots; registry-less save validation is a documented project boundary; deterministic coherent resolution (precedent F-TT-COR-A4-1/2)"
+  },
+  {
+   "id": "F-TT-AUT-A5-2",
+   "title": "Spec section 2.7 deviation: skill cards surface NodeInspector, not NativeCoreDetail",
+   "state": {
+    "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/components/panels/skill-path/TheTuTreePanel.vue",
+     "symbolOrSection": "onCardClick select emit",
+     "revision": "bb040df3",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "docs/specs/the-tu-beta-spec.md",
+     "symbolOrSection": "section 2.7",
+     "revision": "bb040df3",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-0305b54bc9384ac582d481e8901a13ac",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "spec section 2.7 names NativeCoreDetail; impl emits select(node) -> NodeInspector",
+   "expected": "spec text names NativeCoreDetail as the selection surface",
+   "actual": "all cards emit select(node) into NodeInspector purchase/lock flow; inspector renders realm/prereq lock reasons (NativeCoreDetail cannot); native-core detail reachable via SkillPathList",
+   "rootCause": "defensible unification chosen during implementation; spec text not updated to match",
+   "rootClass": "spec-text-drift",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "grep NativeCoreDetail TheTuTreePanel; spec lines 249-250",
+     "hitDispositions": [
+      "single-surface deviation - text only"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "update spec section 2.7 wording to the implemented NodeInspector selection flow",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
   }
  ],
  "evidence": [
@@ -2879,6 +3010,36 @@
    ],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-TT-AUT-A5",
+   "state": {
+    "productStateId": "2eb8548f10ecd77e14d30583d8b6e5bfc01d74e60476c6f6f6f7e2a1f4ecee9a",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 12,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-0305b54bc9384ac582d481e8901a13ac",
+   "contextId": "sealed-child-0305b54bc9384ac582d481e8901a13ac",
+   "model": "swe-2-max",
+   "role": "authority-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T09:08:00.000Z",
+   "sealedAt": "2026-09-25T09:17:55.000Z",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-AUT-A5-1",
+    "F-TT-AUT-A5-2"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED",
+   "previousPhaseReviewId": "REV-TT-COR-A4"
   }
  ],
  "cycles": [],
@@ -3254,70 +3415,6 @@
    "guidance": null
   },
   {
-   "id": "L-TT-13",
-   "version": 1,
-   "supersedes": null,
-   "triggerType": "DEFECT",
-   "findingIds": [
-    "F-TT-COR-5"
-   ],
-   "incidentEvidenceIds": [],
-   "originatingRun": "the-tu-beta-2026-09-25",
-   "rootClass": "contract",
-   "missedInvariantIds": [],
-   "escapeReason": "review-surface gap",
-   "applicability": [],
-   "exclusions": [],
-   "proposedProtection": [
-    "pin test + spec amendment"
-   ],
-   "promotionEvidenceIds": [],
-   "preventionEvidenceIds": [
-    "EV-TT-FIX-A2"
-   ],
-   "qualifiedBy": [
-    "REV-TT-CLO-2"
-   ],
-   "capabilityDelta": "fix verified on new head",
-   "recurrenceFindingIds": [],
-   "status": "CLASSIFIED",
-   "policyVersion": null,
-   "effectiveFromRun": null,
-   "guidance": null
-  },
-  {
-   "id": "L-TT-14",
-   "version": 1,
-   "supersedes": null,
-   "triggerType": "DEFECT",
-   "findingIds": [
-    "F-TT-INT-1"
-   ],
-   "incidentEvidenceIds": [],
-   "originatingRun": "the-tu-beta-2026-09-25",
-   "rootClass": "contract",
-   "missedInvariantIds": [],
-   "escapeReason": "review-surface gap",
-   "applicability": [],
-   "exclusions": [],
-   "proposedProtection": [
-    "pin test + spec amendment"
-   ],
-   "promotionEvidenceIds": [],
-   "preventionEvidenceIds": [
-    "EV-TT-FIX-A2"
-   ],
-   "qualifiedBy": [
-    "REV-TT-CLO-2"
-   ],
-   "capabilityDelta": "fix verified on new head",
-   "recurrenceFindingIds": [],
-   "status": "CLASSIFIED",
-   "policyVersion": null,
-   "effectiveFromRun": null,
-   "guidance": null
-  },
-  {
    "id": "L-TT-15",
    "version": 1,
    "supersedes": null,
@@ -3365,7 +3462,9 @@
    ],
    "promotionEvidenceIds": [],
    "preventionEvidenceIds": [],
-   "qualifiedBy": [],
+   "qualifiedBy": [
+    "REV-TT-CLO-2"
+   ],
    "capabilityDelta": "adjudicated",
    "recurrenceFindingIds": [],
    "status": "CLASSIFIED",
@@ -3863,6 +3962,126 @@
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-13",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-AUT-A5-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "crafted-save-only-reachability",
+   "missedInvariantIds": [],
+   "escapeReason": "sealed reviewer caught the gap at authority phase",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "save validator does not re-derive prereq mutex; tamper-only states are documented out of scope (registry-less boundary)"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-AUT-A5"
+   ],
+   "capabilityDelta": "save validator does not re-derive prereq mutex; tamper-only states are documented out of scope (registry-less boundary)",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-14",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-AUT-A5-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "spec-text-drift",
+   "missedInvariantIds": [],
+   "escapeReason": "sealed reviewer caught the gap at authority phase",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "spec text must name the surface the implementation actually emits (NodeInspector, not NativeCoreDetail)"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-AUT-A5"
+   ],
+   "capabilityDelta": "spec text must name the surface the implementation actually emits (NodeInspector, not NativeCoreDetail)",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-15",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-5"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "lifecycle-semantics",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "dead-holder reflect semantics pinned via post-mortem reflect test"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-CLO-6"
+   ],
+   "capabilityDelta": "dead-holder reflect semantics pinned via post-mortem reflect test",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-16",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-INT-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "lifecycle-semantics",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "post-mortem reflect behavior pinned in integration coverage"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-CLO-2"
+   ],
+   "capabilityDelta": "post-mortem reflect behavior pinned in integration coverage",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
