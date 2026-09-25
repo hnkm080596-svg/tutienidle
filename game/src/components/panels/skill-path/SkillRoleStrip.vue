@@ -18,7 +18,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { usePlayerStore } from '@/stores/player'
 import { MORTAL_DEFAULT_BASIC_ID, MORTAL_PRECURSOR_SKILL_IDS } from '@/core/skill/MortalPrecursors'
-import { getNodeLevel, specializationClaimingNode } from '@/core/progression/NodeSystem'
+import { getNodeLevel, ownedNodeIds, specializationClaimingNode, specializationClaimingNodes } from '@/core/progression/NodeSystem'
 import type { Skill } from '@/core/skill/Skill'
 import type { SkillSpecialization } from '@/core/skill/SkillSpecialization'
 
@@ -143,9 +143,13 @@ function claimingNodeForSpec(skillId: string, specId: string) {
 }
 
 function specLocked(skillId: string, specId: string): boolean {
-  const node = claimingNodeForSpec(skillId, specId)
+  // Reads the same ownership union as the authoritative gate
+  // (ownedNodeIds = nodeLevels + purchasedNodeIds mirror): any owned
+  // claimant unlocks the spec, not just the first registry hit.
+  const claimants = specializationClaimingNodes(gameManager.nodeRegistry, skillId, specId)
+  const owned = ownedNodeIds(player.$state)
 
-  return node !== undefined && getNodeLevel(player.$state, node.id) <= 0
+  return claimants.length > 0 && !claimants.some((claimant) => owned.includes(claimant.id))
 }
 
 function specTooltip(skill: Skill, spec: SkillSpecialization) {

@@ -155,7 +155,7 @@ export function resolveRouteProfile(state?: SpellPathState): RouteProfile {
  * ailmentChanceFactor. The result still flows through the existing
  * elementApplicationPercent multiplicative channel in ApplicationResolver.resolve
  * (chance = baseChance x (1 + pool), clamped by the resolver). Never fakes +1 stack by injecting an add_stack
- * effect — stack semantics stay in applyRouteToTurnSkill.
+ * effect - stack semantics stay in applyRouteToTurnSkill.
  */
 export function applyRouteToEffectiveSkill(effective: EffectiveSkill, profile: RouteProfile): EffectiveSkill {
   if (profile === NEUTRAL_ROUTE_PROFILE) {

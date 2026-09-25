@@ -10,11 +10,11 @@ import {
   getNextLevelCost as getNextLevelCostSystem,
   getNodeMaxLevel as getNodeMaxLevelSystem,
   getEffectiveNodeMaxLevel as getEffectiveNodeMaxLevelSystem,
+  ownedNodeIds,
   purchaseNode as purchaseNodeSystem,
-  previewNodeRespec as previewNodeRespecSystem,
   respecNodeTree as respecNodeTreeSystem,
   revokeNodeOwnership,
-  specializationClaimingNode,
+  specializationClaimingNodes,
   switchRoute as switchRouteSystem,
   upgradeNode as upgradeNodeSystem,
   grantSkillCore,
@@ -28,7 +28,7 @@ import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
 import { type OrbId } from '../kiem-tu/KiemTuState'
 import { isMortalPrecursorSkillId } from '../skill/MortalPrecursors'
-import { gainKiemY, grantKiemDao, loseKiemY } from '../kiem-tu/NguKiemDao'
+import { forgeCost, gainKiemY, grantKiemDao, loseKiemY } from '../kiem-tu/NguKiemDao'
 import { isHiddenSwordPathway } from '../kiem-tu/KiemTuPath'
 import { validatePreset } from '../kiem-tu/KiemPhoSystem'
 import { getRealmIndex } from '../realm/realmSystem'
@@ -70,24 +70,6 @@ import type { TemplateRegistry } from './TemplateRegistry'
 // would be stranded. The preserve list lives here with the purchase
 // rejection that creates the obligation.
 const RESPEC_PRESERVED_NODE_IDS: readonly string[] = Object.values(PHAP_TU_ELEMENT_ROOT_IDS)
-
-/**
- * Owned node ids across both ownership representations: nodeLevels is
- * the authority (realm-reward grants write there only), purchasedNodeIds
- * is the compat mirror populated by the purchase path. Clawback guards
- * must read the union or grant-owned claimers become invisible.
- */
-function ownedNodeIds(player: PlayerData): string[] {
-  const ids = new Set(player.purchasedNodeIds)
-
-  for (const [nodeId, level] of Object.entries(player.nodeLevels)) {
-    if (level > 0) {
-      ids.add(nodeId)
-    }
-  }
-
-  return [...ids]
-}
 
 export class GameManagerProgressionOps {
   constructor(
@@ -449,19 +431,14 @@ export class GameManagerProgressionOps {
 
       if (record.specializationSkillId && record.specializationId) {
         // Dual-source guard: giong chan skill leg - neu mot node con
-        // so huu khac cung claim spec nay thi spec phai song tiep.
-        const specStillClaimed = ownedNodeIds(player).some((ownedId) => {
-          const owned = this.deps.nodeRegistry.has(ownedId)
-            ? this.deps.nodeRegistry.get(ownedId)
-            : undefined
-
-          const claim = owned?.effect.selectsSpecialization
-
-          return (
-            claim?.skillId === record.specializationSkillId &&
-            claim?.specializationId === record.specializationId
-          )
-        })
+        // so huu khac cung claim spec nay thi spec phai song tiep. Do
+        // voi tap claimant day du (dau tien trong registry khong phai
+        // claimant duy nhat hop le).
+        const specStillClaimed = specializationClaimingNodes(
+          this.deps.nodeRegistry,
+          record.specializationSkillId,
+          record.specializationId,
+        ).some((claimant) => ownedNodeIds(player).includes(claimant.id))
 
         if (specStillClaimed) {
           delete player.nodeOneShotGrants[nodeId]
@@ -635,10 +612,141 @@ export class GameManagerProgressionOps {
    * respec can never strand a committed element without its root.
    */
   previewNodeRespec(player: PlayerData, scope?: { rootId?: string }): NodeRespecPreview {
-    return previewNodeRespecSystem(player, this.deps.nodeRegistry, {
+    // JSON round-trip (not structuredClone): callers hand in the Pinia
+    // reactive state; PlayerData is what the save system serializes.
+    const sim = JSON.parse(JSON.stringify(player)) as PlayerData
+
+    const revoked = new Set<string>()
+    const refund = respecNodeTreeSystem(sim, this.deps.nodeRegistry, {
       ...scope,
       preserveIds: RESPEC_PRESERVED_NODE_IDS,
-    })
+    }, revoked)
+
+    // Dry-run the one-shot-grant clawback analytically: mirror every leg
+    // of applyOneShotClawback on the post-respec sim without SkillSystem
+    // writes (SkillManager is a live registry, not part of PlayerData).
+    const clawback: NonNullable<NodeRespecPreview['clawback']> = {
+      refund: 0,
+      removedNodeIds: [],
+      unlearnedSkillIds: [],
+      clearedSpecializations: [],
+      kiemY: 0,
+      kiemDao: 0,
+    }
+
+    for (const nodeId of revoked) {
+      const record = sim.nodeOneShotGrants[nodeId]
+
+      if (!record) {
+        continue
+      }
+
+      for (const skillId of record.learnedSkillIds ?? []) {
+        const stillGrantedElsewhere = ownedNodeIds(sim).some((ownedId) => {
+          const owned = this.deps.nodeRegistry.has(ownedId)
+            ? this.deps.nodeRegistry.get(ownedId)
+            : undefined
+
+          return owned?.effect.unlocksSkillIds?.includes(skillId) ?? false
+        })
+
+        if (stillGrantedElsewhere) {
+          continue
+        }
+
+        if (this.deps.skillManager.has(skillId)) {
+          clawback.unlearnedSkillIds.push(skillId)
+        }
+
+        const coreId = skillCoreNodeId(skillId)
+
+        if (this.deps.nodeRegistry.has(coreId) && !this.deps.nodeRegistry.get(coreId).rewardOnly) {
+          const core = this.deps.nodeRegistry.get(coreId)
+          const level = getNodeLevelSystem(sim, coreId)
+          let coreRefund = 0
+          const spentStart = core.levelsSkillId !== undefined ? 1 : 0
+
+          for (let spent = spentStart; spent < level; spent++) {
+            coreRefund += getNextLevelCostSystem(core, spent)
+          }
+
+          coreRefund = Math.max(0, coreRefund - (sim.nodeFreePurchaseRecord?.[coreId] ?? 0))
+          clawback.refund += coreRefund
+
+          if (coreId in sim.nodeLevels) {
+            delete sim.nodeLevels[coreId]
+            clawback.removedNodeIds.push(coreId)
+          }
+
+          const index = sim.purchasedNodeIds.indexOf(coreId)
+
+          if (index !== -1) {
+            sim.purchasedNodeIds.splice(index, 1)
+          }
+
+          if (sim.nodeFreePurchaseRecord) {
+            delete sim.nodeFreePurchaseRecord[coreId]
+          }
+        }
+      }
+
+      if (record.kiemY && sim.swordPath) {
+        const debited = Math.min(sim.swordPath.kiemY, record.kiemY)
+        sim.swordPath.kiemY -= debited
+        clawback.kiemY += debited
+
+        const residual = record.kiemY - debited
+        const realmIndex = getRealmIndex(sim.realmId)
+
+        if (residual > 0 && realmIndex >= 1) {
+          const swords = Math.min(
+            sim.swordPath.kiemDaoCount,
+            Math.ceil(residual / forgeCost(realmIndex)),
+          )
+
+          sim.swordPath.kiemDaoCount -= swords
+          clawback.kiemDao += swords
+        }
+      }
+
+      if (record.kiemDao && sim.swordPath) {
+        const removed = Math.min(record.kiemDao, sim.swordPath.kiemDaoCount)
+        sim.swordPath.kiemDaoCount -= removed
+        clawback.kiemDao += removed
+      }
+
+      if (record.specializationSkillId && record.specializationId) {
+        const stillClaimed = specializationClaimingNodes(
+          this.deps.nodeRegistry,
+          record.specializationSkillId,
+          record.specializationId,
+        ).some((claimant) => ownedNodeIds(sim).includes(claimant.id))
+
+        if (
+          !stillClaimed &&
+          this.deps.skillManager.get(record.specializationSkillId)
+            ?.selectedSpecializationId === record.specializationId
+        ) {
+          clawback.clearedSpecializations.push({
+            skillId: record.specializationSkillId,
+            specializationId: record.specializationId,
+          })
+        }
+      }
+
+      delete sim.nodeOneShotGrants[nodeId]
+    }
+
+    const resetNodeIds = Object.keys(player.nodeLevels ?? {}).filter(
+      id => !(id in (sim.nodeLevels ?? {})),
+    )
+
+    return {
+      refund: refund + clawback.refund,
+      resetNodeIds,
+      resetCount: resetNodeIds.length,
+      clawback,
+    }
   }
 
   /**
@@ -681,7 +789,10 @@ export class GameManagerProgressionOps {
     if (
       !hasStaticPathCapability(player, 'spell.elemental_casting') ||
       player.spellPath.element === null ||
-      player.spellPath.route === null
+      player.spellPath.route === null ||
+      // Same-route no-op: the domain early-returns without a write, and
+      // previewRouteSwitch rejects it - the op must not report success.
+      player.spellPath.route === route
     ) {
       return false
     }
@@ -923,12 +1034,14 @@ export class GameManagerProgressionOps {
   // hold the claiming node or the 3-Insight cost / realm prereq /
   // excludesNode mutex are all bypassed. Unclaimed specs switch freely.
   selectSkillSpecialization(skillId: string, specializationId: string, player: PlayerData): boolean {
-    const claimingNode = specializationClaimingNode(this.deps.nodeRegistry, skillId, specializationId)
+    const claimants = specializationClaimingNodes(this.deps.nodeRegistry, skillId, specializationId)
 
     // F-PT-C-3 - claim gate reads the same ownership mirror as clawback:
     // ownedNodeIds union (nodeLevels + purchasedNodeIds). nodeLevels-only
     // would disagree with the clawback leg on diverged crafted saves.
-    if (claimingNode !== undefined && !ownedNodeIds(player).includes(claimingNode.id)) {
+    // Any owned claimant authorizes the spec (first registry hit is not
+    // the only legitimate owner when nodes share a claim).
+    if (claimants.length > 0 && !claimants.some((claimant) => ownedNodeIds(player).includes(claimant.id))) {
       return false
     }
 
@@ -946,8 +1059,8 @@ export class GameManagerProgressionOps {
       if (specId === undefined) {
         continue
       }
-      const claimingNode = specializationClaimingNode(this.deps.nodeRegistry, skill.id, specId)
-      if (claimingNode !== undefined && !ownedNodeIds(player).includes(claimingNode.id)) {
+      const claimants = specializationClaimingNodes(this.deps.nodeRegistry, skill.id, specId)
+      if (claimants.length > 0 && !claimants.some((claimant) => ownedNodeIds(player).includes(claimant.id))) {
         this.deps.skillSystem.clearSpecialization(skill.id, specId)
       }
     }

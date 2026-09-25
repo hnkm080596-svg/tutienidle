@@ -457,11 +457,43 @@ export function specializationClaimingNode(
   skillId: string,
   specializationId: string,
 ): ProgressionNode | undefined {
-  return registry.getAll().find(
+  return specializationClaimingNodes(registry, skillId, specializationId)[0]
+}
+
+/**
+ * ALL nodes claiming a (skillId, specializationId) pair - usually 0 or 1
+ * authored, but ownership checks must evaluate the whole claimant set:
+ * 'a claiming node exists and is owned' means ANY owned claimant
+ * authorizes the spec, not just the first registry hit.
+ */
+export function specializationClaimingNodes(
+  registry: { getAll(): ProgressionNode[] },
+  skillId: string,
+  specializationId: string,
+): ProgressionNode[] {
+  return registry.getAll().filter(
     (node) =>
       node.effect.selectsSpecialization?.skillId === skillId &&
       node.effect.selectsSpecialization.specializationId === specializationId,
   )
+}
+
+/**
+ * Owned node ids across both ownership representations: nodeLevels is
+ * the authority (realm-reward grants write there only), purchasedNodeIds
+ * is the compat mirror populated by the purchase path. Clawback guards
+ * must read the union or grant-owned claimers become invisible.
+ */
+export function ownedNodeIds(player: PlayerData): string[] {
+  const ids = new Set(player.purchasedNodeIds)
+
+  for (const [nodeId, level] of Object.entries(player.nodeLevels)) {
+    if (level > 0) {
+      ids.add(nodeId)
+    }
+  }
+
+  return [...ids]
 }
 
 export function aggregateNodeStatModifiers(
@@ -849,6 +881,22 @@ export interface NodeRespecPreview {
    * confirm dialog's count covers all of them as one number). */
   resetNodeIds: string[]
   resetCount: number
+  /** Effects the one-shot-grant clawback would apply on top of the
+   * domain reset (filled by the orchestration layer - its legs read
+   * SkillManager and kiem-tu state the domain layer cannot reach). */
+  clawback?: {
+    /** Extra Insight returned by revoking granted core_ nodes. */
+    refund: number
+    /** core_ node ids the clawback removes from nodeLevels. */
+    removedNodeIds: string[]
+    /** Skills whose grant membership is revoked (no remaining owner). */
+    unlearnedSkillIds: string[]
+    /** Specialization selections the clawback clears. */
+    clearedSpecializations: { skillId: string; specializationId: string }[]
+    /** kiemY and live swords lost (residual conversions included). */
+    kiemY: number
+    kiemDao: number
+  }
 }
 
 export function previewNodeRespec(
