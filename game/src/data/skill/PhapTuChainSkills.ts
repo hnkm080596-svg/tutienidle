@@ -13,7 +13,7 @@ export const PHAP_TU_SKILLS: Skill[] = [
   // 0.001 + attributeScaling attunement 0.004 (nhu A). resourceType
   // 'none' (1.4); unlocked false, mo qua node chuoi (Task 11, 1.7 --
   // B-E KHONG requiredRealmId, realm gate o node + bang slot).
-  // Bien the C/D = SkillSpecialization (effectsOverride/targetingOverride
+  // Bien the C/D = SkillSpecialization (effectsOverride/targeting
   // theo node selectsSpecialization E-8 -- id specialization khop
   // specializationId trong PhapTuNodes.ts Task 11).
   // ==================================================================
