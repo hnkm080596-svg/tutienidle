@@ -2263,14 +2263,18 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": "update spec section 2.7 wording to the implemented NodeInspector selection flow",
+   "repair": "spec 2.7 updated @d10586e1: unified select -> NodeInspector documented (inspector renders realm/prereq lock reasons NativeCoreDetail cannot)",
    "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "verificationEvidenceIds": [
+    "EV-TT-CLO-8"
+   ],
+   "closureReviewIds": [
+    "REV-TT-CLO-8"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
-   "rejectionReason": null
+   "status": "CLOSED",
+   "rejectionReason": "spec-text fix - no executable regression pin applicable; the spec document itself is the pinned rationale"
   },
   {
    "id": "F-TT-INT-A5-1",
@@ -2754,6 +2758,37 @@
    ],
    "result": "PASS",
    "status": "STALE"
+  },
+  {
+   "id": "EV-TT-CLO-8",
+   "state": {
+    "productStateId": "309e78cb4f20127ae74ffa7a42a46ba3c7f243b7b0dfb4cdbcb983b060b244d7",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+   "commandOrMethod": "npm run type-check",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T09:38:00.000Z",
+   "finishedAt": "2026-09-25T09:39:10.000Z",
+   "inputPaths": [
+    "docs/specs/the-tu-beta-spec.md"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/clo-8.log",
+   "artifactHash": "d93d000afd482140dc38c8dc215b24869fecfa72d4dcdca8d124a25fa670574a",
+   "claims": [
+    "type-check green on d10586e1; spec 2.7 documents NodeInspector selection - closure reviewer SEALED"
+   ],
+   "invariantIds": [],
+   "limitations": [
+    "docs-text fix - no behavioral surface to pin"
+   ],
+   "result": "PASS",
+   "status": "CURRENT"
   }
  ],
  "coverage": [],
@@ -3333,6 +3368,37 @@
     "F-TT-INT-A5-1",
     "F-TT-INT-A5-2",
     "F-TT-INT-A5-3"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-TT-CLO-8",
+   "state": {
+    "productStateId": "309e78cb4f20127ae74ffa7a42a46ba3c7f243b7b0dfb4cdbcb983b060b244d7",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 12,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-3d12b7ec0b1d43e890af7737a16ffacb",
+   "contextId": "sealed-child-3d12b7ec0b1d43e890af7737a16ffacb",
+   "model": "swe-2-max",
+   "role": "closure-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T09:27:00.000Z",
+   "sealedAt": "2026-09-25T09:29:58.000Z",
+   "previousPhaseReviewId": "REV-TT-INT-A5",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-TT-CLO-8"
+   ],
+   "findingIds": [
+    "F-TT-AUT-A5-2"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
