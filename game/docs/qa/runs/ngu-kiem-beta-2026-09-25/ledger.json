@@ -7554,6 +7554,33 @@
    "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-NK-AUT-A7",
+   "state": {
+    "productStateId": "fb56acd6c06e613efff0dd94615d401e5ada8f5d44b9b8ae61d9a31654f4bbad",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 9,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-c7e361aa9e6f4016a53488a83a66f36a",
+   "contextId": "sealed-child-c7e361aa9e6f4016a53488a83a66f36a",
+   "model": "swe-2-max",
+   "role": "authority-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T15:04:44.000Z",
+   "sealedAt": "2026-09-25T15:20:03.000Z",
+   "previousPhaseReviewId": "REV-NK-COR-A7",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [
