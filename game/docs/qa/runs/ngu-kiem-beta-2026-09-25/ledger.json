@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "d8321ba8",
   "state": {
-   "productStateId": "5e9c83af8bed9cf82ec38a4089430e4878c49a3820dda91d3d117c371f9f8ed8",
+   "productStateId": "fb56acd6c06e613efff0dd94615d401e5ada8f5d44b9b8ae61d9a31654f4bbad",
    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -5110,6 +5110,176 @@
    "rootCause": "insightCost authored before grantedOnly, leaving an unreachable price field on a grant-only node",
    "subsystem": "progression",
    "siblingFindingIds": []
+  },
+  {
+   "id": "F-NK-COR-A5-1",
+   "title": "onCastResolved ignores resolvedSkillId - +1 Kiem Y on any committed participant action",
+   "state": {
+    "productStateId": "5e9c83af8bed9cf82ec38a4089430e4878c49a3820dda91d3d117c371f9f8ed8",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/kiem-tu/NguKiemDaoProvider.ts",
+     "symbolOrSection": "onCastResolved",
+     "revision": "2bca6f8b",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "onCastResolved hook ~:2321",
+     "revision": "2bca6f8b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-d48f7dd963b945239c45b227ef35de53",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "unconditional gainKiemY(player,1) per committed non-charge action; resolvedSkillId unused",
+   "expected": "+1 Kiem Y per resolved ngu_kiem_thuat cast only (spec K14; sibling provider tail-matches)",
+   "actual": "any committed participant action banks +1 Kiem Y (latent: unreachable under single-skill kit)",
+   "rootCause": "provider hook dropped the tail-match guard the ctx signature was built for",
+   "rootClass": "missing-provider-tail-match",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src/core"
+     ],
+     "termsAndMethod": "all onCastResolved implementations checked for resolvedSkillId usage",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "KiemPhoProvider tail-matches correctly",
+      "only two implementations exist"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "FIXED @d6592689: onCastResolved gates on resolvedSkillId===NGU_KIEM_THUAT.id",
+   "pinEvidenceIds": [
+    "EV-NK-A5-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-A5-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-COR-A5-2",
+   "title": "sealed '???' node renders 'locked' with zero lock reasons at golden_core",
+   "state": {
+    "productStateId": "5e9c83af8bed9cf82ec38a4089430e4878c49a3820dda91d3d117c371f9f8ed8",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/components/panels/skill-path/NodeInspector.vue",
+     "symbolOrSection": "lockedReasons ~:278",
+     "revision": "2bca6f8b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-d48f7dd963b945239c45b227ef35de53",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "all prereqs pass yet purchase stays blocked by grantedOnly -> bare 'locked' + Cost 0",
+   "expected": "sealed node explains itself or shows no cost/button",
+   "actual": "cosmetic dead-end only visible at golden_core (beyond beta realm ceiling)",
+   "rootCause": "grantedOnly enforced inside canPurchaseNode and never surfaced as a lock reason",
+   "rootClass": "out-of-window-ui-gap",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src/components/panels/skill-path"
+     ],
+     "termsAndMethod": "lockedReasons derivation vs grantedOnly enforcement path",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "single gap site"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "unreachable inside beta realm ceiling (foundation_establishment); cosmetic only"
+  },
+  {
+   "id": "F-NK-COR-A5-3",
+   "title": "BalanceMatrix oracle cross-seed fingerprint collision",
+   "state": {
+    "productStateId": "5e9c83af8bed9cf82ec38a4089430e4878c49a3820dda91d3d117c371f9f8ed8",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/simulation/benchmark/BalanceMatrix.test.ts",
+     "symbolOrSection": ":44",
+     "revision": "2bca6f8b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-d48f7dd963b945239c45b227ef35de53",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "kiem_tu_ngu/burst_pressure seeds 11 and 22 both commit '576e9420'",
+   "expected": "per-seed fingerprints distinguishable (soft expectation)",
+   "actual": "collisions are legal under the oracle tolerance",
+   "rootCause": "deterministic fingerprint space permits collisions",
+   "rootClass": "benign-collision",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src/core/simulation/benchmark"
+     ],
+     "termsAndMethod": "all committed fingerprints checked for collision count",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "single collision pair within tolerance"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "fingerprint collisions are legal per oracle design tolerance"
   }
  ],
  "evidence": [
@@ -5769,7 +5939,40 @@
    "invariantIds": [],
    "limitations": [],
    "result": "PASS",
-   "status": "CURRENT"
+   "status": "STALE"
+  },
+  {
+   "id": "EV-NK-A5-FIX",
+   "state": {
+    "productStateId": "fb56acd6c06e613efff0dd94615d401e5ada8f5d44b9b8ae61d9a31654f4bbad",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+   "commandOrMethod": "npm run type-check + vitest run src/core/kiem-tu src/core/battle/turn/TurnBattleSystem.test.ts (177 tests green)",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T14:04:30.000Z",
+   "finishedAt": "2026-09-25T14:05:03.000Z",
+   "inputPaths": [
+    "src/core/kiem-tu/NguKiemDaoProvider.ts",
+    "src/core/battle/turn/TurnBattleSystem.ts"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/fix-verify-a5.log",
+   "artifactHash": "1c27ac8b899185a98e5fdabc86ff1f5f37a5f4297fa8ade597a221e4a6cf0129",
+   "claims": [
+    "onCastResolved gates +1 Kiem Y on resolvedSkillId===ngu_kiem_thuat",
+    "sibling provider tail-match convention mirrored"
+   ],
+   "limitations": [
+    "latent seam - unreachable under current single-skill kit content"
+   ],
+   "result": "PASS",
+   "status": "CURRENT",
+   "invariantIds": []
   }
  ],
  "coverage": [],
@@ -6759,7 +6962,7 @@
     "F-NK-COR-A4-2"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-NK-AUT-A4",
@@ -6790,7 +6993,7 @@
     "F-NK-AUT-A4-3"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-NK-INT-A4",
@@ -6817,7 +7020,7 @@
    "evidenceIds": [],
    "findingIds": [],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-NK-CLO-11",
@@ -6852,7 +7055,38 @@
     "F-NK-AUT-A4-3"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
+  },
+  {
+   "id": "REV-NK-COR-A5",
+   "state": {
+    "productStateId": "5e9c83af8bed9cf82ec38a4089430e4878c49a3820dda91d3d117c371f9f8ed8",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 7,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-d48f7dd963b945239c45b227ef35de53",
+   "contextId": "sealed-child-d48f7dd963b945239c45b227ef35de53",
+   "model": "swe-2-max",
+   "role": "correctness-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T13:46:10.000Z",
+   "sealedAt": "2026-09-25T14:01:27.000Z",
+   "previousPhaseReviewId": "REV-NK-CLO-11",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-NK-COR-A5-1",
+    "F-NK-COR-A5-2",
+    "F-NK-COR-A5-3"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
   }
  ],
  "cycles": [
@@ -8530,6 +8764,102 @@
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
+  },
+  {
+   "id": "L-NK-44",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-COR-A5-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "missing-provider-tail-match",
+   "missedInvariantIds": [],
+   "escapeReason": "hook signature carried resolvedSkillId but body ignored it",
+   "applicability": [
+    "dynamicBasic provider hooks"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "every onCastResolved consumer must gate on resolvedSkillId"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-COR-A5"
+   ],
+   "capabilityDelta": "provider tail-match convention",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-45",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-COR-A5-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "out-of-window-ui-gap",
+   "missedInvariantIds": [],
+   "escapeReason": "grantedOnly not surfaced as lock reason",
+   "applicability": [
+    "dynamicBasic provider hooks"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "surface purchase-blocking gates in lockedReasons when realm ladder extends"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-COR-A5"
+   ],
+   "capabilityDelta": "provider tail-match convention",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-46",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-COR-A5-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "benign-collision",
+   "missedInvariantIds": [],
+   "escapeReason": "fingerprint space tolerates collisions",
+   "applicability": [
+    "dynamicBasic provider hooks"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "record collision rate in oracle docs"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-COR-A5"
+   ],
+   "capabilityDelta": "provider tail-match convention",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
   }
  ],
  "messages": [],
@@ -8933,6 +9263,22 @@
    "payloadPath": "events/0025.json",
    "payloadHash": "9514642e564d30cdc4b98739c12be6d4f480f3dcb95894ad5fabfe72b228fe9b",
    "eventHash": "b2c42ae0dd28b4b2e4cdae781ab4c8992fd6e3952f454c58440744879f259f2c"
+  },
+  {
+   "seq": 26,
+   "at": "2026-09-25T14:03:37.084Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "fb56acd6c06e613efff0dd94615d401e5ada8f5d44b9b8ae61d9a31654f4bbad",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "b2c42ae0dd28b4b2e4cdae781ab4c8992fd6e3952f454c58440744879f259f2c",
+   "payloadPath": "events/0026.json",
+   "payloadHash": "bcd9763dff98050063605dad685514b6a3ccdac23b3e303abcad920113738fbb",
+   "eventHash": "834ed9df649936a0b6d2202cb81f2b6526fa184e8f54bf0a24b9dc1c8b068304"
   }
  ]
 }
