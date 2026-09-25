@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "5f0d296be768afe76b07b46358a7766bae0ac28d",
   "state": {
-   "productStateId": "0a458f24c0b52674a8fe65221ae12138941365863bf526bbe9df5a3c52b4e2ed",
+   "productStateId": "34b363cf7fe53e27f5d27f5a6f561dea1d5a93b5b71c09e65c9af724f8c74a39",
    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -28,11 +28,11 @@
   ],
   "capacityLimit": 5,
   "requiredReadiness": true,
-  "phase": "DECIDE",
+  "phase": "SNAPSHOT",
   "cleanRoundA": null,
   "cleanRoundB": null,
   "finalEvidenceIds": [
-   "EV-PT-VERIFY-FINAL"
+   "EV-PT-VERIFY-FINAL-2"
   ],
   "outcome": "QA_UNVERIFIED"
  },
@@ -8511,6 +8511,177 @@
    "duplicateOf": null,
    "rejectionReason": "core/combat is presentation-adapter layer, not under core/player restriction; same-seam import",
    "exception": null
+  },
+  {
+   "id": "F-PT-FA-C1",
+   "title": "van_moc_lan_doc specialization descriptions overclaim (M4 honesty miss on spec variants)",
+   "state": {
+    "productStateId": "0a458f24c0b52674a8fe65221ae12138941365863bf526bbe9df5a3c52b4e2ed",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/data/skill/PhapTuChainSkills.ts",
+     "symbolOrSection": "lan_doc_quang/lan_doc_tham L455-488",
+     "revision": "befbb551",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A CORRECTNESS reviewer (devin-b479c8f5474c46be875eea0ba3788c54)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "see reviewer proof (SOURCE)",
+   "expected": "Spec descriptions must not overclaim (M4 honesty pass)",
+   "actual": "'\u0110\u1ed9c theo gi\u00f3 bay kh\u1eafp chi\u1ebfn tr\u01b0\u1eddng' claims spread; 'lan tr\u1ecdn v\u1eb9n, gi\u1eef ch\u00e2n ngu\u1ed3n' claims pin - both effectsOverride are single damage scope:'primary_target'",
+   "rootCause": "base description fixed in M4 pass but the two spec variant texts were missed",
+   "rootClass": "honesty-copy parity",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/data",
+      "src/components",
+      "src/core"
+     ],
+     "termsAndMethod": "reviewer ad-hoc structural suite + coordinator check",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "none additional"
+     ],
+     "coverageLimits": [
+      "scoped to reported seams"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "FIXED (uncommitted): spec descriptions rewritten to primary-target honest text",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-PT-FA-C2",
+   "title": "SkillRoleStrip.specTooltip names only first claimant while specLocked uses plural set",
+   "state": {
+    "productStateId": "0a458f24c0b52674a8fe65221ae12138941365863bf526bbe9df5a3c52b4e2ed",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/components/panels/skill-path/SkillRoleStrip.vue",
+     "symbolOrSection": "specTooltip L155-172",
+     "revision": "befbb551",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A CORRECTNESS reviewer (devin-b479c8f5474c46be875eea0ba3788c54)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "see reviewer proof (SOURCE)",
+   "expected": "Tooltip naming consistent with plural-claimant lock logic",
+   "actual": "specLocked reads specializationClaimingNodes + ownedNodeIds union; specTooltip resolved only claimingNode()[0] and getNodeLevel (not the union)",
+   "rootCause": "singular naming path drifted from plural lock logic",
+   "rootClass": "plural-claimant parity",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/data",
+      "src/components",
+      "src/core"
+     ],
+     "termsAndMethod": "reviewer ad-hoc structural suite + coordinator check",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "none additional"
+     ],
+     "coverageLimits": [
+      "scoped to reported seams"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "FIXED (uncommitted): specTooltip rewritten on same plural+union read as specLocked",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-PT-FA-C3",
+   "title": "grantedNodeLevels writes nodeLevels values that fail saveShapeValidation on next load",
+   "state": {
+    "productStateId": "0a458f24c0b52674a8fe65221ae12138941365863bf526bbe9df5a3c52b4e2ed",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/core/player/CultivationPathSystem.ts",
+     "symbolOrSection": "grantedNodeLevels L413-452",
+     "revision": "befbb551",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A CORRECTNESS reviewer (devin-b479c8f5474c46be875eea0ba3788c54)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "see reviewer proof (SOURCE)",
+   "expected": "Grant writes produce validation-clean nodeLevels or are refused",
+   "actual": "clamp is Math.min(level,maxLevel) only; authored 0/negative/fractional level writes that value; integer-in-[1,maxLevel] check flags next load",
+   "rootCause": "no lower-bound/integer validation on grant writes",
+   "rootClass": "authoring hazard",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/data",
+      "src/components",
+      "src/core"
+     ],
+     "termsAndMethod": "reviewer ad-hoc structural suite + coordinator check",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "none additional"
+     ],
+     "coverageLimits": [
+      "scoped to reported seams"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "FIXED (uncommitted): non-integer or level<1 grant entries warn-skipped",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
   }
  ],
  "evidence": [
@@ -9501,6 +9672,36 @@
    ],
    "limitations": [
     "full suite not runnable on coordinator box (canvas jsdom unimplemented + magick ENOENT, pre-existing env limits identical on merge-base); INT-B reviewer ran full npm run verify on pinned de61f0cf with 7328/7334 pass"
+   ],
+   "status": "STALE"
+  },
+  {
+   "id": "EV-PT-VERIFY-FINAL-2",
+   "state": {
+    "productStateId": "34b363cf7fe53e27f5d27f5a6f561dea1d5a93b5b71c09e65c9af724f8c74a39",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T05:05:00.000Z",
+   "finishedAt": "2026-09-25T05:08:24.000Z",
+   "commandOrMethod": "npm run type-check + npx vitest run (changed-surface test files + asciiComments) at head 3a3456cb",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/final-verify-scoped-3a3456cb.log",
+   "artifactHash": "9ea1bb3f1f299f53b193831e47dedbada7a24680019f0694c53fe0fffb557dec",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "final head 3a3456cb (state 34b363cf): type-check clean, 259 scoped tests pass (changed surface + asciiComments ratchet)"
+   ],
+   "limitations": [
+    "jsdom canvas env limit excludes scene tests",
+    "ImageMagick absent"
    ],
    "status": "CURRENT"
   }
@@ -11080,7 +11281,7 @@
     "F-PT-AUTB-1"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-AUT-A4",
@@ -11109,6 +11310,64 @@
     "F-PT-FA-A1",
     "F-PT-FA-A2"
    ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PT-COR-A4",
+   "state": {
+    "productStateId": "0a458f24c0b52674a8fe65221ae12138941365863bf526bbe9df5a3c52b4e2ed",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 17,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-b479c8f5474c46be875eea0ba3788c54",
+   "contextId": "sealed-child-b479c8f5474c46be875eea0ba3788c54",
+   "model": "swe-2-max",
+   "role": "clean-round-correctness",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T04:22:00.000Z",
+   "sealedAt": "2026-09-25T04:50:35.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-FA-C1",
+    "F-PT-FA-C2",
+    "F-PT-FA-C3"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PT-INT-A4",
+   "state": {
+    "productStateId": "0a458f24c0b52674a8fe65221ae12138941365863bf526bbe9df5a3c52b4e2ed",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 17,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-5549d54345074ac493470ad023b0fa90",
+   "contextId": "sealed-child-5549d54345074ac493470ad023b0fa90",
+   "model": "swe-2-max",
+   "role": "clean-round-integration",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T04:30:00.000Z",
+   "sealedAt": "2026-09-25T05:07:10.000Z",
+   "previousPhaseReviewId": "REV-PT-AUT-A4",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -14295,6 +14554,22 @@
    "payloadPath": "events/0051.json",
    "payloadHash": "2ebf653ddb691ed39ffb142e83ed5124f8174b7f2e9da795cc17889cc5b5e3dd",
    "eventHash": "7fb3b78ffab779c253fd646a1f97bb335369e3f49e5c29b303c5cfb52cb585b2"
+  },
+  {
+   "seq": 52,
+   "at": "2026-09-25T05:02:37.706Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "34b363cf7fe53e27f5d27f5a6f561dea1d5a93b5b71c09e65c9af724f8c74a39",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "7fb3b78ffab779c253fd646a1f97bb335369e3f49e5c29b303c5cfb52cb585b2",
+   "payloadPath": "events/0052.json",
+   "payloadHash": "d4c42726ae3a114c67a37a491e36a63f193f7179104a5b628f9990bd39fbb80c",
+   "eventHash": "d5bb69048a87b16d3a962288be4cd7f9b5a3ff6ec99fa3e75cf40d189011b9cb"
   }
  ]
 }
