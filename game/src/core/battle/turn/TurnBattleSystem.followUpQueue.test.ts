@@ -127,6 +127,50 @@ describe('TurnBattleSystem — queuedFollowUps honored by the PRODUCTION loop (t
 
     expect(enemyParticipant.actionGauge).toBe(500)
   })
+
+  it('a committed reactive follow-up reports isPendingQueuedExecution — manual mode must not park it', () => {
+    // Pin for the manual-mode seam (GameManagerTurnBattleOps claims the
+    // token with manualMode=false for queued executions): a committed
+    // Phan/Tro counter drains through pendingReactiveEntry, and a fake
+    // AWAITING_INPUT prompt there would silently discard the choice.
+    const { battle, system, enemyParticipant } = fixture()
+
+    for (let i = 0; i < 9; i++) {
+      system.tickPacing(battle)
+    }
+    system.tickPacing(battle) // player turn, queues enemy counter
+
+    // resolve=false matches the production caller (stepTurnBattle): the
+    // manual-mode gate runs between dequeue and declare.
+    const actor = system.tickPacing(battle, false)
+
+    expect(actor?.id).toBe('enemy')
+    expect(system.isPendingQueuedExecution(actor!.id)).toBe(true)
+    expect(system.isPendingQueuedExecution('player')).toBe(false)
+    expect(enemyParticipant.actionGauge).toBeLessThan(1000)
+  })
+
+  it('a PLAYER-side committed reactive entry also reports isPendingQueuedExecution', () => {
+    // The reported defect was player-side: the manual token must never
+    // pause for a committed counter the UI cannot choose.
+    const { battle, system } = fixture()
+
+    battle.queuedFollowUps = [
+      {
+        actorId: 'player',
+        executionKind: 'reactive_bypass',
+        actionSource: 'follow_up',
+        payloadSkillId: 'phan_kich',
+        targetIds: ['enemy'],
+      },
+    ]
+
+    const actor = system.tickPacing(battle, false)
+
+    expect(actor?.id).toBe('player')
+    expect(system.isPendingQueuedExecution('player')).toBe(true)
+    expect(battle.queuedFollowUps).toBeUndefined()
+  })
 })
 
 describe('TurnBattleSystem — queuedExecutions drain order and dead actors (Mission C contract)', () => {

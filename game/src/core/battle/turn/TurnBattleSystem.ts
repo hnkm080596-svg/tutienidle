@@ -2844,12 +2844,18 @@ export class TurnBattleSystem {
 
   /**
    * Task 11 -- presentation/orchestration seam: is the actor's pending
-   * turn a queued EXECUTION (repeat/multicast) rather than a real turn?
-   * Manual mode must NOT await player input for these -- the cast was
-   * already chosen; the follow-up resolves automatically.
+   * turn a queued EXECUTION rather than a real turn? Manual mode must
+   * NOT await player input for these -- the cast was already committed;
+   * the follow-up resolves automatically. Covers prepared executions
+   * (repeat/multicast) AND committed reactive follow-ups (Phan/Tro
+   * counters drain through pendingReactiveEntry with a forced bypass
+   * declare -- any submitted choice would be silently discarded).
    */
   isPendingQueuedExecution(actorId: string): boolean {
-    return this.pendingQueuedExecution?.actorId === actorId
+    return (
+      this.pendingQueuedExecution?.actorId === actorId ||
+      this.pendingReactiveEntry?.actorId === actorId
+    )
   }
 
   /**
@@ -3370,7 +3376,10 @@ export class TurnBattleSystem {
       { once: true },
     )
 
-    const winning = attempts.find((attempt) => attempt.success)
+    // Substitution requires the same success+paid pair commitReaction
+    // uses -- a rolled-but-unpaid attempt must never rewire the target
+    // for free.
+    const winning = attempts.find((attempt) => attempt.success && attempt.paid)
 
     if (!winning) {
       return

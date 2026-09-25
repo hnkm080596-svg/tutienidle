@@ -61,6 +61,10 @@ export interface ReactiveTriggerRollResult {
 export interface ReactiveProcAttempt {
   paid: boolean
   success: boolean
+  /** Present+true only when the grant reached the chance roll --
+      distinguishes a rolled attempt (trigger consumed) from an
+      unaffordable skip ({paid:false,success:false} without a roll). */
+  rolled?: boolean
   effect?: ReactiveProcPayload
 }
 
@@ -309,7 +313,10 @@ export class CombatProcSystem {
     for (const grant of grants) {
       const proc = asReactiveProc(grant)
       if (proc === undefined || proc.trigger !== trigger) continue
-      if (opts.once === true && attempts.length > 0) {
+      // 'once' = stop after the first ROLLED attempt -- an unaffordable
+      // grant (skipped before the roll) must not consume the trigger
+      // and suppress a later affordable grant on the same holder.
+      if (opts.once === true && attempts.some((attempt) => attempt.rolled === true)) {
         return { attempts, queuedFollowUps }
       }
 
@@ -357,7 +364,7 @@ export class CombatProcSystem {
               intercepted: context.intercepted,
               outcome: context.outcome,
             }
-            attempts.push({ paid, success, effect: proc })
+            attempts.push({ paid, success, rolled: true, effect: proc })
             queuedFollowUps.push({
               actorId: holderId,
               executionKind: 'reactive_bypass',
@@ -371,7 +378,7 @@ export class CombatProcSystem {
         }
       }
 
-      attempts.push({ paid, success, effect: proc })
+      attempts.push({ paid, success, rolled: true, effect: proc })
     }
 
     return { attempts, queuedFollowUps }
