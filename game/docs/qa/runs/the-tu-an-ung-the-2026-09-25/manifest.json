@@ -717,6 +717,12 @@
       "hash": "b7a61a46f7bcafd4d98968c59b3baf97acd9459898ec9a1039836b4512151fdb"
     },
     {
+      "path": "docs/balance/2026-09-25-the-tu-an-ung-the-baseline.md",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "1edd7613dc24dbb88cda6f4d9ead21a9e25d21834c08f3717ee25fc3a2d26e18"
+    },
+    {
       "path": "docs/balance/2026-09-25-the-tu-beta-baseline.md",
       "kind": "file",
       "mode": 33188,
@@ -15942,7 +15948,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0b0680b50e85419ba56e3e9238bcbe226fc3256dc1a924bfcb23a4102485dbd2"
+      "hash": "9b03fe107c1f480273be205a84220958b822ac83014d6d0bd9520100c3c0cae3"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.turnRegen.test.ts",
@@ -19512,13 +19518,13 @@
       "path": "src/core/simulation/benchmark/BalanceBaselines.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "2816db72f7d5aca219b156ff12ede679d13ded4002cbb5367cf06cc7ff9a6c66"
+      "hash": "edc118996a0010411423d67603fc60e2f817b9df1f4f38c5ff7904441cc4d183"
     },
     {
       "path": "src/core/simulation/benchmark/BalanceMatrix.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "cb79ae4e910a14fee723363b7ac36ea92ec2b0ae84ad52945bc6d0c77d1c1d0e"
+      "hash": "dc600d485255d3a1507c8fc31d51fdfa69fc6e8075217858091a15eac59177bd"
     },
     {
       "path": "src/core/simulation/benchmark/BalanceReport.test.ts",
@@ -21366,7 +21372,7 @@
       "path": "src/game/scenes/combat/PlayerHudLayer.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "cd4f13224c46ab3dea5c6d230b55fa6fb73f3cd10caa77d8a99e65ded0c0cf08"
+      "hash": "60abc1d331e78ff238b8656456532087fcd0559891ade8acbd322f3c772d46bc"
     },
     {
       "path": "src/game/scenes/CombatScene.actionPlayback.test.ts",
@@ -21468,7 +21474,7 @@
       "path": "src/game/scenes/CombatScene.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "61b73fa799fba55c9ce78a4f698b3bae0d3a54259776b570e97a6b8884de1f7b"
+      "hash": "7592bbd8f33f1b4eb40f3837c87bbf90f85403c5bc87f1defef50053db95815e"
     },
     {
       "path": "src/game/scenes/CombatScene.turnCountdownSpawn.test.ts",
@@ -21834,7 +21840,7 @@
       "path": "src/presentation/bridges/theBarBridge.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "7916a7e3c6da309a8a3e88b4098ab9a37e04e462c5071bb79f02339af5cd0238"
+      "hash": "1c309c188494f9b191513ce8a98df7922219efc7465e28c6b86f9958a9179fbd"
     },
     {
       "path": "src/presentation/clock/MainProcessClockSource.test.ts",
@@ -23007,5 +23013,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "d78eb2683fa0c3b0aefe9b8de713e8451cc54cef292dd7d979a0ffad48f880ea"
+  "productStateId": "3ba3eec6b6a872dfd3224d4b220059b678beb8841f1808c2c739d39c1fcc32d0"
 }

@@ -1,0 +1,23 @@
+{
+  "applied": [
+    "review:REV-TTA-CLEAN-A5-AUT",
+    "review:REV-TTA-CLEAN-A5-INT",
+    "evidence:EV-TTA-CLEANA5-FIX",
+    "finding:F-TTA-AUT-A5-1",
+    "finding:F-TTA-AUT-A5-2",
+    "finding:F-TTA-AUT-A5-3",
+    "finding:F-TTA-AUT-A5-4",
+    "finding:F-TTA-AUT-A5-5",
+    "finding:F-TTA-AUT-A5-6",
+    "finding:F-TTA-INT-A5-1",
+    "finding:F-TTA-INT-A5-2",
+    "lesson:L-TTA-37",
+    "lesson:L-TTA-38",
+    "lesson:L-TTA-39",
+    "lesson:L-TTA-40",
+    "lesson:L-TTA-41",
+    "lesson:L-TTA-42",
+    "lesson:L-TTA-43",
+    "lesson:L-TTA-44"
+  ]
+}
