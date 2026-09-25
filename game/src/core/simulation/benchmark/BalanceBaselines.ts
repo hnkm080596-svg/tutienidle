@@ -92,7 +92,19 @@ function hiddenNguFoundationBuild(): SimBuildSnapshot {
   player.cultivationPath = 'sword'
   player.cultivationWay = 'hidden_sword_pathway'
   player.swordPath = { ...freshSwordPathState(), kiemDaoCount: 2 }
-  player.nodeLevels = { ...player.nodeLevels, ngu_kiem_khoi: 1, ngu_kiem_lien: 1 }
+  player.nodeLevels = {
+    ...player.nodeLevels,
+    core_tram: 1,
+    core_ngu_kiem_thuat: 1,
+    ngu_kiem_khoi: 1,
+    ngu_kiem_lien: 1,
+  }
+  player.purchasedNodeIds = [
+    'core_tram',
+    'core_ngu_kiem_thuat',
+    'ngu_kiem_khoi',
+    'ngu_kiem_lien',
+  ]
   return { player, skills: [], techniques: [] }
 }
 
