@@ -11,7 +11,7 @@
     "base": "be1bdf8d5f3fa45cbe82318473980b7b03ec9227",
     "head": "70636f2981906a12b56686d13561977270924115",
     "state": {
-      "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+      "productStateId": "481da16b23ca5e52361d887b771c8c7b066478919712cf025d8eccab93c0b52f",
       "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
       "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -1477,24 +1477,26 @@
         "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
         "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
       },
-      "severity": "Low",
+      "severity": "Medium",
       "classification": "REAL_DEFECT",
       "actionable": true,
       "reachability": "PRODUCTION",
       "locations": [
         {
-          "path": "game/src/core/battle/turn/TurnBattleSystem.ts",
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
           "symbolOrSection": "debt-reset gate :1693 vs actionSource :1927-1934",
           "revision": "e4045625",
           "basis": "SOURCE"
         }
       ],
-      "discoveredBy": "REV-TTA-CLEAN-A3-COR",
+      "discoveredBy": "devin-df6d10b425ba43838fb1f796faa38f8e",
       "invariantIds": [],
-      "evidenceIds": [],
+      "evidenceIds": [
+        "EV-TTA-CLEANA3-FIX"
+      ],
       "counterexample": "Cam-Cong sealed NULL_ACTION (skillId '', ccBlocked false) passes the reset gate: reactionDebt=0 + Qua The ends with no performed action",
-      "expected": "Design Part III: reset fires only when a normal action actually executes; income/window gates read the same boundary (actionSource undefined = non-acting)",
-      "actual": "Reset gate `!ccBlocked && (!isCharging || chargeResolved)` fires before the seal collapse at ~1837, so sealed/null-pick turns reset debt early — re-opening Ho/Phan/Tro windows a turn early",
+      "expected": "Design Part III: reset fires only when a normal action actually executes",
+      "actual": "reset gate `!ccBlocked && (!isCharging || chargeResolved)` fired before the seal collapse",
       "rootCause": "reset gate placed before action collapse and checks cc/charge only, not the actionSource boundary",
       "rootClass": "boundary-drift/duplicate-gate",
       "subsystem": "battle/turn",
@@ -1504,22 +1506,265 @@
             "src/core/battle/turn"
           ],
           "termsAndMethod": "census of reactionDebt writes + actionSource-shaped gates",
-          "evidenceIds": [],
           "hitDispositions": [
-            "income gate ~3223 reads actionSource correctly; reset gate is the only divergent one"
+            "income gate reads actionSource correctly; reset gate was the only divergent one"
           ],
-          "coverageLimits": []
+          "coverageLimits": [],
+          "evidenceIds": []
         }
       ],
+      "siblingFindingIds": [
+        "F-TTA-CLEAN-A3-AUT-1",
+        "F-TTA-CLEAN-A3-INT-1"
+      ],
+      "repair": "FIXED @78e4ab98: reset moved to the actionSource boundary `(action != null && action.skillId !== '') || chargeResolved`; pin proves sealed NULL_ACTION preserves debt + Qua The",
+      "pinEvidenceIds": [
+        "EV-TTA-CLEANA3-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TTA-CLEANA3-FIX"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TTA-CLEAN-A3-AUT-1",
+      "title": "reactionDebt resets on a Cam-Cong-sealed NULL_ACTION turn performing no action — diverges from the adjudicated 'normal action' boundary",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "debt-reset gate :1693 vs income gate :3226-3230",
+          "revision": "e4045625",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-TTA-CLEAN-A3-AUT",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "Static proof: reset at :1693 precedes NULL_ACTION production ~1726-1734; income gate rejects the same turn (actionSource undefined)",
+      "expected": "Design sec.18: debt/Qua The clears only when a normal action is actually performed; income gate reads the actionSource boundary",
+      "actual": "Reset gate runs before selection and never consults the committed action — a fully-sealed NULL turn resets debt",
+      "rootCause": "reset gate placed before action collapse and checks cc/charge only, not the actionSource boundary",
+      "rootClass": "boundary-drift/duplicate-gate",
+      "subsystem": "battle/turn",
+      "siblingSearch": [],
       "siblingFindingIds": [],
-      "repair": "move reset to the actionSource boundary: `action != null && action.skillId !== '' || chargeResolved` (pending, batched with AUT/INT)",
+      "repair": null,
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "PROVEN",
-      "duplicateOf": null,
+      "status": "DUPLICATE_LINKED",
+      "duplicateOf": "F-TTA-CLEAN-A3-COR-1",
       "rejectionReason": null,
       "exception": null
+    },
+    {
+      "id": "F-TTA-CLEAN-A3-AUT-2",
+      "title": "'holder normal turn' splits into three boundary predicates across quan_the duration, debt reset, observation income",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "holder_turn_start :1433; debt reset :1693; income :3226-3230",
+          "revision": "e4045625",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-TTA-CLEAN-A3-AUT",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "Static proof at the three call sites; divergent only under CC/seal",
+      "expected": "One vocabulary for the three boundaries, per design sec.38",
+      "actual": "Three different reads: holder_turns ticks every declare incl. CC/sealed; reset fired on declare-attempt; income requires actionSource",
+      "rootCause": "reset gate placed before action collapse and checks cc/charge only, not the actionSource boundary",
+      "rootClass": "boundary-drift/duplicate-gate",
+      "subsystem": "battle/turn",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": "Deliberate design contract after the COR-1 fix: quan_the's FIXED_TURNS holder_turns clock is declare-based by design (a stunned holder still burns duration — standard buff-duration semantics); the COR-1 fix converges debt reset onto the same actionSource boundary income reads, leaving exactly two deliberately-different predicates (duration clock vs performed-action boundary), not three accidental ones.",
+      "exception": null
+    },
+    {
+      "id": "F-TTA-CLEAN-A3-AUT-3",
+      "title": "resolveHiddenBodyKit built twice per role resolution (resolveBasic + resolveSpecialUltimate)",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/player/CultivationPathRegistry.ts",
+          "symbolOrSection": "createHiddenBodyPathwayRuntime :523-537",
+          "revision": "e4045625",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-TTA-CLEAN-A3-AUT",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "Static source proof; both call sites visible; no semantic effect",
+      "expected": "One kit build per combat-role resolution, or a shared cached build",
+      "actual": "resolveBasic + resolveSpecialUltimate each invoke resolveHiddenBodyKit; second build's result is discarded except special/payload fields",
+      "rootCause": "reset gate placed before action collapse and checks cc/charge only, not the actionSource boundary",
+      "rootClass": "boundary-drift/duplicate-gate",
+      "subsystem": "battle/turn",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": "Independent entry points: callers (battle build vs UI preview) may invoke only one resolver, so each must build its own kit. A shared memo would need invalidation on nodeLevels changes (respec/devReset) — stale-kit risk outweighs one deterministic clone build; correct-by-construction beats the micro-optimization.",
+      "exception": null
+    },
+    {
+      "id": "F-TTA-CLEAN-A3-INT-1",
+      "title": "sealed NULL_ACTION resets reactionDebt a turn early (independent INT discovery of COR-1)",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "debt-reset gate vs actionSource boundary",
+          "revision": "e4045625",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-bf99df37133e43feadf241eff5d9f6a1",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "debt 3 -> cam_cong sealed NULL_ACTION -> debt 0 -> Phan window reopened on next enemy turn",
+      "expected": "debt decays only on a performed action",
+      "actual": "same root cause as F-TTA-CLEAN-A3-COR-1 (reset gate precedes the actionSource boundary)",
+      "rootCause": "reset gate fires on non-acting turns",
+      "rootClass": "boundary-drift/duplicate-gate",
+      "subsystem": "battle/turn",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/battle/turn"
+          ],
+          "termsAndMethod": "reactionDebt writes",
+          "hitDispositions": [
+            "covered by COR-1 fix"
+          ],
+          "coverageLimits": [],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [
+        "F-TTA-CLEAN-A3-COR-1",
+        "F-TTA-CLEAN-A3-AUT-1"
+      ],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": "F-TTA-CLEAN-A3-COR-1",
+      "exception": null,
+      "status": "DUPLICATE_LINKED",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TTA-CLEAN-A3-INT-2",
+      "title": "thamTargetId lazy-cleared inside isObserved — HUD reads the stale field between consults",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "isObserved lazy clear ~2967",
+          "revision": "e4045625",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-bf99df37133e43feadf241eff5d9f6a1",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "mark dies -> thamTargetId stays set until next isObserved consult",
+      "expected": "dead mark clears focus eagerly (no stale HUD frame)",
+      "actual": "raw field read by HUD showed a dead focus target",
+      "rootCause": "lazy clear placement reachable only via window consults",
+      "rootClass": "stale-read",
+      "subsystem": "battle/turn",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/battle/turn"
+          ],
+          "termsAndMethod": "thamTargetId writers/readers",
+          "hitDispositions": [
+            "eager clear added in sweepBuffDeaths; lazy clear retained as belt"
+          ],
+          "coverageLimits": [],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED @78e4ab98: sweepBuffDeaths clears every observer mark on a dead participant; pin proves kill clears field at action end",
+      "pinEvidenceIds": [
+        "EV-TTA-CLEANA3-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TTA-CLEANA3-FIX"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
     }
   ],
   "evidence": [
@@ -1687,13 +1932,43 @@
       "inputPaths": [],
       "inputEvidenceIds": [],
       "invariantIds": [],
-      "status": "CURRENT",
+      "status": "STALE",
       "claims": [
         "all 5 A2 fix groups verified on e4045625: conditional debt reset gate, dead-attacker Phan gate, census=16, QUAN_THE bake reads def field, QUAN_THE_BASE_THE fully removed"
       ],
       "limitations": [
         "scoped vitest only (turn+proc+data)"
       ]
+    },
+    {
+      "id": "EV-TTA-CLEANA3-FIX",
+      "state": {
+        "productStateId": "481da16b23ca5e52361d887b771c8c7b066478919712cf025d8eccab93c0b52f",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+      "startedAt": "2026-09-25T21:46:00.000Z",
+      "finishedAt": "2026-09-25T21:47:30.000Z",
+      "commandOrMethod": "npm run type-check (clean) + npx vitest run src/core/battle/turn (75 files / 581 pass) at 78e4ab98",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/cleanA3-fix-verify.log",
+      "artifactHash": "55591d9978b5f9563589eb2e0d097d2bba81455c7e41a112457e18ef1e7eb218",
+      "inputPaths": [
+        "src/core/battle/turn/TurnBattleSystem.ts",
+        "src/core/battle/turn/TurnBattleSystem.theEconomy.test.ts"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "cleanA3 fix batch verified on 78e4ab98: debt reset moved to actionSource boundary + eager Tham mark clear, 2 pins"
+      ],
+      "limitations": [],
+      "status": "CURRENT",
+      "kind": "EXECUTED_UNIT_STRUCTURAL"
     }
   ],
   "coverage": [],
@@ -1921,7 +2196,7 @@
         "F-TTA-A2-AUT-6"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TTA-CLO-3",
@@ -1956,7 +2231,7 @@
         "F-TTA-A2-AUT-4"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TTA-CLEAN-A2-INT",
@@ -1988,7 +2263,7 @@
         "F-TTA-A2-INT-4"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TTA-CLEAN-A3-COR",
@@ -2015,6 +2290,67 @@
       "evidenceIds": [],
       "findingIds": [
         "F-TTA-CLEAN-A3-COR-1"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "REV-TTA-CLEAN-A3-AUT",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 3,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-3fb0a4704e9a4d2c9104841017cb156a",
+      "contextId": "sealed-child-3fb0a4704e9a4d2c9104841017cb156a",
+      "model": "swe-2-max",
+      "role": "AUTHORITY",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T20:51:00.000Z",
+      "sealedAt": "2026-09-25T21:17:00.000Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TTA-CLEAN-A3-AUT-1",
+        "F-TTA-CLEAN-A3-AUT-2",
+        "F-TTA-CLEAN-A3-AUT-3"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "REV-TTA-CLEAN-A3-INT",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 3,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-bf99df37133e43feadf241eff5d9f6a1",
+      "contextId": "sealed-child-bf99df37133e43feadf241eff5d9f6a1",
+      "model": "swe-2-max",
+      "role": "INTEGRATION",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T21:15:00.000Z",
+      "sealedAt": "2026-09-25T21:41:00.000Z",
+      "previousPhaseReviewId": "REV-TTA-CLEAN-A2-INT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TTA-CLEAN-A3-INT-1",
+        "F-TTA-CLEAN-A3-INT-2"
       ],
       "novelAttackIds": [],
       "status": "SEALED"
@@ -2736,6 +3072,131 @@
       "proposedProtection": [
         "mark-clear lazily owned by the predicate, not the read path - bridges read raw fields; do not duplicate clear-authority into display code for transient artifacts"
       ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "applicability": [],
+      "exclusions": [],
+      "incidentEvidenceIds": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLEAN-A3-AUT"
+      ],
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "status": "CLASSIFIED",
+      "guidance": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "id": "L-TTA-24",
+      "findingIds": [
+        "F-TTA-CLEAN-A3-AUT-1"
+      ],
+      "rootClass": "boundary-drift/duplicate-gate",
+      "escapeReason": "independent lenses converged on the same divergence: the debt-reset gate must read the committed-action (actionSource) boundary, not the declare-attempt; when two predicates describe one design concept ('performs a normal action'), bind both to the same field",
+      "capabilityDelta": "independent lenses converged on the same divergence: the debt-reset gate must read the committed-action (actionSource) boundary, not the declare-attempt; when two predicates describe one design concept ('performs a normal action'), bind both to the same field",
+      "proposedProtection": [
+        "mark-clear lazily owned by the predicate, not the read path - bridges read raw fields; do not duplicate clear-authority into display code for transient artifacts"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "applicability": [],
+      "exclusions": [],
+      "incidentEvidenceIds": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLEAN-A3-AUT"
+      ],
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "status": "CLASSIFIED",
+      "guidance": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "id": "L-TTA-25",
+      "findingIds": [
+        "F-TTA-CLEAN-A3-AUT-2"
+      ],
+      "rootClass": "design-contract/multi-predicate",
+      "escapeReason": "design's 'holder normal turn' intentionally has two reads: duration clocks tick on every declare (CC burns Quan The), performed-action effects read actionSource; do not merge deliberately-different predicates just because they share a phrase",
+      "capabilityDelta": "design's 'holder normal turn' intentionally has two reads: duration clocks tick on every declare (CC burns Quan The), performed-action effects read actionSource; do not merge deliberately-different predicates just because they share a phrase",
+      "proposedProtection": [
+        "mark-clear lazily owned by the predicate, not the read path - bridges read raw fields; do not duplicate clear-authority into display code for transient artifacts"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "applicability": [],
+      "exclusions": [],
+      "incidentEvidenceIds": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLEAN-A3-AUT"
+      ],
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "status": "CLASSIFIED",
+      "guidance": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "id": "L-TTA-26",
+      "findingIds": [
+        "F-TTA-CLEAN-A3-AUT-3"
+      ],
+      "rootClass": "correctness-over-micro-optimization",
+      "escapeReason": "path resolvers are independent API entry points (battle build vs UI preview); a shared kit memo would need invalidation on nodeLevels/respec — duplicated deterministic builds beat stale-cache risk",
+      "capabilityDelta": "path resolvers are independent API entry points (battle build vs UI preview); a shared kit memo would need invalidation on nodeLevels/respec — duplicated deterministic builds beat stale-cache risk",
+      "proposedProtection": [
+        "mark-clear lazily owned by the predicate, not the read path - bridges read raw fields; do not duplicate clear-authority into display code for transient artifacts"
+      ]
+    },
+    {
+      "id": "L-TTA-27",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TTA-CLEAN-A3-INT-1"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "rootClass": "boundary-drift/duplicate-gate",
+      "missedInvariantIds": [],
+      "escapeReason": "three independent reviewers found the same divergent boundary — the reset gate read a legacy predicate while every consumer reads actionSource",
+      "applicability": [
+        "boundary predicates that gate shared state must read the same boundary the consumers read"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "attack-pattern: probe sealed/null-action turns against every state reset in the actor path"
+      ],
+      "promotionEvidenceIds": [],
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLEAN-A3-INT"
+      ],
+      "capabilityDelta": "sealed-NULL_ACTION boundary probes on shared-state resets",
+      "recurrenceFindingIds": [
+        "F-TTA-CLEAN-A3-AUT-1",
+        "F-TTA-CLEAN-A3-COR-1"
+      ],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null
     }
   ],
   "messages": [],
@@ -3363,6 +3824,118 @@
       "payloadPath": "events/0039.json",
       "payloadHash": "77c0604a53143ded69739aae76314c873253192e14cfc83fae543d5778efdf58",
       "eventHash": "76b7add3b89cf12f50e914527c206467777fb2b6711991ceec6bbe9037d451b3"
+    },
+    {
+      "seq": 40,
+      "at": "2026-09-25T21:18:00.842Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "76b7add3b89cf12f50e914527c206467777fb2b6711991ceec6bbe9037d451b3",
+      "payloadPath": "events/0040.json",
+      "payloadHash": "927ac6d5a53de959c41a27c9722eebbafe2d13516c560b2fc319c4eb434d7453",
+      "eventHash": "c01913877a2e39161146f056fad365419a3069e87cd6fbea1f2f3ddd0fa13e6e"
+    },
+    {
+      "seq": 41,
+      "at": "2026-09-25T21:18:29.712Z",
+      "kind": "FINDING",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "c01913877a2e39161146f056fad365419a3069e87cd6fbea1f2f3ddd0fa13e6e",
+      "payloadPath": "events/0041.json",
+      "payloadHash": "dea902046f29a05fc0d8138d43a3997de762249c470457db4e00af8b185d1b9b",
+      "eventHash": "bd1a71be4b73af3b286e6354a51eb23eab4a3bbebe198a1f5ec86ef04be103ec"
+    },
+    {
+      "seq": 42,
+      "at": "2026-09-25T21:46:50.552Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "481da16b23ca5e52361d887b771c8c7b066478919712cf025d8eccab93c0b52f",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "bd1a71be4b73af3b286e6354a51eb23eab4a3bbebe198a1f5ec86ef04be103ec",
+      "payloadPath": "events/0042.json",
+      "payloadHash": "5d0e3b3cdc6a8b0eb5d602aaac59d152b522187d77a78710e3c627074a9df762",
+      "eventHash": "3656a3e61a1ef00440b2a6e56f24882194bd42ca8c7aa481ccc3adf236fb30a3"
+    },
+    {
+      "seq": 43,
+      "at": "2026-09-25T21:50:47.706Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "481da16b23ca5e52361d887b771c8c7b066478919712cf025d8eccab93c0b52f",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "3656a3e61a1ef00440b2a6e56f24882194bd42ca8c7aa481ccc3adf236fb30a3",
+      "payloadPath": "events/0043.json",
+      "payloadHash": "4637235221a00ae2016dffd742a732e927d7f8712624a239282d51671d54ea3f",
+      "eventHash": "5ba9d3953b27a77a067a8e1bfeab0cf2f5596bcf0574b94b3e507c4c82098d9b"
+    },
+    {
+      "seq": 44,
+      "at": "2026-09-25T21:50:57.538Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "481da16b23ca5e52361d887b771c8c7b066478919712cf025d8eccab93c0b52f",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "5ba9d3953b27a77a067a8e1bfeab0cf2f5596bcf0574b94b3e507c4c82098d9b",
+      "payloadPath": "events/0044.json",
+      "payloadHash": "4fe856e67f628404d30522da2afb2372c626463c57b60d8268858bbc997ab310",
+      "eventHash": "bfb7eb76c20c2b9ee405491acdaa63de6a4fd07f96b674e99cafd615f63f7b80"
+    },
+    {
+      "seq": 45,
+      "at": "2026-09-25T21:51:04.331Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "481da16b23ca5e52361d887b771c8c7b066478919712cf025d8eccab93c0b52f",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "bfb7eb76c20c2b9ee405491acdaa63de6a4fd07f96b674e99cafd615f63f7b80",
+      "payloadPath": "events/0045.json",
+      "payloadHash": "4fe856e67f628404d30522da2afb2372c626463c57b60d8268858bbc997ab310",
+      "eventHash": "e18e4bb62cea134c579a51fe62686162afd61c9f0a0316b0de31b8e46dd719c1"
+    },
+    {
+      "seq": 46,
+      "at": "2026-09-25T21:51:47.373Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "481da16b23ca5e52361d887b771c8c7b066478919712cf025d8eccab93c0b52f",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "e18e4bb62cea134c579a51fe62686162afd61c9f0a0316b0de31b8e46dd719c1",
+      "payloadPath": "events/0046.json",
+      "payloadHash": "936bcfe571e971e5c62644a63932db1e5a8356a5c901afa87d0f2df437fa002f",
+      "eventHash": "5cd4bb16abe6e746203acfd30ebcf4a74219722ad41332154f8bb111e02ae84c"
     }
   ]
 }
