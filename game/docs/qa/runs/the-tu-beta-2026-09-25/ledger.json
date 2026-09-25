@@ -6475,6 +6475,59 @@
       "status": "CLOSED",
       "repair": "report arg now declared.chargedSkill?.id (93efc8aa).",
       "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLEAN-A2-AUT-1",
+      "title": "Vacuous sweepBuffDeaths call with a false-fact comment in the unwired charged-resolve lane",
+      "state": {
+        "productStateId": "fcfd1db3a34687ab7a2a6b8af0d5847e3479b5791f3b3bbeec69df5755d239b4",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "legacy charged-resolve else-branch :2073-2079",
+          "revision": "93efc8aa",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-TT-CLEAN-A2-AUT",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "Branch condition routed===null && runtime===undefined (TBS:1991-2011); sweepBuffDeaths early-return at :834",
+      "expected": "No dead/vacuous calls left in the charged lanes; comments state what the code actually does.",
+      "actual": "Legacy charged-resolve else-branch runs only when runtime===undefined yet calls sweepBuffDeaths(battle) which early-returns when runtime===undefined — provably a no-op; comment claims it sweeps deaths it cannot.",
+      "rootCause": "dead call left behind after the routed charged lanes made the unwired lane unreachable-in-production",
+      "rootClass": "dead-code/false-comment",
+      "subsystem": "battle/turn",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/battle/turn"
+          ],
+          "termsAndMethod": "grep sweepBuffDeaths call sites",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "only other call sites run with runtime bound"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "remove the vacuous sweepBuffDeaths call and correct the comment (pending, batched with INT findings)",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
     }
   ],
   "evidence": [
@@ -9013,6 +9066,35 @@
       "coverageIds": [],
       "evidenceIds": [],
       "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TT-CLEAN-A2-AUT",
+      "state": {
+        "productStateId": "fcfd1db3a34687ab7a2a6b8af0d5847e3479b5791f3b3bbeec69df5755d239b4",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 2,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-3ef82fba04764b64bbdc268ef7a39e65",
+      "contextId": "sealed-child-3ef82fba04764b64bbdc268ef7a39e65",
+      "model": "swe-2-max",
+      "role": "AUTHORITY",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T20:50:00.000Z",
+      "sealedAt": "2026-09-25T21:06:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-A-AUT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TT-CLEAN-A2-AUT-1"
+      ],
       "novelAttackIds": [],
       "status": "SEALED"
     }
@@ -12634,6 +12716,54 @@
       "payloadPath": "events/0050.json",
       "payloadHash": "6201f35b7a0fee49747eddacf27a62b6a675cd2452d75d415a305aeec2876ea3",
       "eventHash": "7e8fc79ec5ed7b359eff74853f24a82dd052365807a4f445be7d41cbbcaf253a"
+    },
+    {
+      "seq": 51,
+      "at": "2026-09-25T21:06:59.723Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "fcfd1db3a34687ab7a2a6b8af0d5847e3479b5791f3b3bbeec69df5755d239b4",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "7e8fc79ec5ed7b359eff74853f24a82dd052365807a4f445be7d41cbbcaf253a",
+      "payloadPath": "events/0051.json",
+      "payloadHash": "7e3c7d21b92e91f3d018bc5a925d53d1b6e3146b085a598a5a5453a2e602efc3",
+      "eventHash": "2fa551b0c6e2cda0315c7a1b1e463bfaa3db1f18528f163d4b8fad7ad722fd8f"
+    },
+    {
+      "seq": 52,
+      "at": "2026-09-25T21:07:36.696Z",
+      "kind": "FINDING",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "fcfd1db3a34687ab7a2a6b8af0d5847e3479b5791f3b3bbeec69df5755d239b4",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "2fa551b0c6e2cda0315c7a1b1e463bfaa3db1f18528f163d4b8fad7ad722fd8f",
+      "payloadPath": "events/0052.json",
+      "payloadHash": "e1d470f6049f4eece897bb63a3bacad7412ee3542a60813c6dc1dd529019977e",
+      "eventHash": "32973298d17068fe5d1b93fd0cd7aeffca09c1d61db0a7dcb071c2a0e27bdde3"
+    },
+    {
+      "seq": 53,
+      "at": "2026-09-25T21:07:45.342Z",
+      "kind": "FINDING",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "fcfd1db3a34687ab7a2a6b8af0d5847e3479b5791f3b3bbeec69df5755d239b4",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "32973298d17068fe5d1b93fd0cd7aeffca09c1d61db0a7dcb071c2a0e27bdde3",
+      "payloadPath": "events/0053.json",
+      "payloadHash": "e1d470f6049f4eece897bb63a3bacad7412ee3542a60813c6dc1dd529019977e",
+      "eventHash": "109cebd358d8651ad35ef821286dd7dec36d22484a9c91ca4475e8ca06efcefe"
     }
   ]
 }
