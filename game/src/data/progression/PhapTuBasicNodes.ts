@@ -455,7 +455,7 @@ function buildEarth(): ProgressionNode[] {
     powerNode(
       'tho_tran_sau',
       'Trần Sâu',
-      '+2% thời gian Thạch Hóa mỗi cấp (tối đa +10%).',
+      '+2% thời gian tật trạng mỗi cấp (tối đa +10%).',
       'earth',
       [stat('tho_tran_sau', 'ailmentDurationPercent', 0.02)],
     ),
@@ -485,7 +485,7 @@ function buildEarth(): ProgressionNode[] {
     powerNode(
       'tho_tran_cung',
       'Trần Củng',
-      '+2.5% thời gian Thạch Hóa mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% thời gian tật trạng mỗi cấp (tầng Trúc Cơ).',
       'earth',
       [stat('tho_tran_cung', 'ailmentDurationPercent', 0.025)],
       { foundation: true, maxLevel: 4 },
