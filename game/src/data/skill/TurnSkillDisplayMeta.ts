@@ -333,7 +333,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   // display name is resolved by resolveNguKiemSkillName (Khoi / Lien).
   ngu_kiem_thuat: {
     name: 'Ngự Kiếm',
-    description: 'Phi kiếm độc lập đánh chuỗi mục tiêu — mỗi kiếm một đòn.',
+    description: 'Phi kiếm từng đòn độc lập theo thứ tự — mỗi kiếm giáng một đòn vào mục tiêu.',
   },
 
 }
