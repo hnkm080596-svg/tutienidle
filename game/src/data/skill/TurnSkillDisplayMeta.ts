@@ -1,5 +1,6 @@
 import type { Skill } from '../../core/skill/Skill'
 import { SKILLS } from './Skills'
+import { NGU_KIEM_BASE_NAME } from './NguKiemDaoSkills'
 
 // Bang 9.5 #5 (2026-09-07) -- mapping skillId -> display metadata cho HUD
 // turn (TurnCombatSkillBar/CombatSkillSlot). TurnSkillDefinition co y
@@ -332,7 +333,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   // Ngu Kiem Beta -- ONE evolving skill; the newest owned evolution's
   // display name is resolved by resolveNguKiemSkillName (Khoi / Lien).
   ngu_kiem_thuat: {
-    name: 'Ngự Kiếm',
+    name: NGU_KIEM_BASE_NAME,
     description: 'Phi kiếm từng đòn độc lập theo thứ tự — mỗi kiếm giáng một đòn vào mục tiêu.',
   },
 

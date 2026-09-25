@@ -11,6 +11,12 @@ import type { TurnSkillDefinition } from '../../core/battle/turn/TurnSkillAction
 // shape only. 'metal_slash' keeps phi kiem VFX distinct from the
 // Kiem Pho swing preset (design sec.44-48).
 
+// The pre-evolution display name -- the single authored literal the
+// display meta, the HUD basic label, and the evolution-name resolver
+// fallback all derive from (evolution tiers resolve from owned node
+// names instead).
+export const NGU_KIEM_BASE_NAME = 'Ngự Kiếm'
+
 export const NGU_KIEM_THUAT: TurnSkillDefinition = {
   id: 'ngu_kiem_thuat',
   cooldownTurns: 0,

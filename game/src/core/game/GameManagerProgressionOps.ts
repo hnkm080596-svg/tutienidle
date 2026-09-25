@@ -70,7 +70,7 @@ import type { TemplateRegistry } from './TemplateRegistry'
 // never re-earn it (grantedOnly seals the purchase path), which would
 // turn evolution into a build toggle (design sec.28). The preserve list
 // lives here with the purchase rejection that creates the obligation.
-const RESPEC_PRESERVED_NODE_IDS: readonly string[] = [
+export const RESPEC_PRESERVED_NODE_IDS: readonly string[] = [
   ...Object.values(PHAP_TU_ELEMENT_ROOT_IDS),
   ...NGU_KIEM_EVOLUTION_NODE_IDS,
 ]

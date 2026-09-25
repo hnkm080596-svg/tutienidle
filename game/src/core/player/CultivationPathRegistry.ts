@@ -30,6 +30,7 @@ import {
   collectUnsupportedSkillSemantics,
 } from '../skilldef/LegacySkillAdapter'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
+import { NGU_KIEM_BASE_NAME } from '../../data/skill/NguKiemDaoSkills'
 import { SPELL_KIT_IDS } from '../../data/skill/Skills'
 import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
 import { PHAP_TU_EMPOWERED_ULTS } from '../../data/skill/PhapTuEmpoweredUlts'
@@ -367,7 +368,7 @@ function createSwordPathRuntime(deps: CultivationPathRuntimeDeps, hidden: boolea
     // P7-M4 — display label for the provider-backed basic (Kiếm Phổ orb
     // machinery / Ngự Kiếm — Ngu Kiem Beta: ONE evolving skill), matching
     // kiemBarBridge's wording.
-    describeDynamicBasic: () => ({ name: hidden ? 'Ngự Kiếm' : 'Kiếm Phổ' }),
+    describeDynamicBasic: () => ({ name: hidden ? NGU_KIEM_BASE_NAME : 'Kiếm Phổ' }),
   }
 }
 

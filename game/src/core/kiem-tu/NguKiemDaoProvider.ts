@@ -5,7 +5,7 @@ import type { HitResolveOptions } from '../battle/ActionImpactSystem'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import { nodeWayApplies } from '../progression/NodeSystem'
 import { LIEN_MOMENTUM_RATE, gainKiemY } from './NguKiemDao'
-import { NGU_KIEM_THUAT } from '../../data/skill/NguKiemDaoSkills'
+import { NGU_KIEM_BASE_NAME, NGU_KIEM_THUAT } from '../../data/skill/NguKiemDaoSkills'
 import { NGU_KIEM_EVOLUTION_NODE_IDS } from '../../data/progression/KiemTuNodes'
 
 // Ngu Kiem Beta -- the hidden_sword_pathway (Ngu Kiem Dao)
@@ -102,7 +102,7 @@ export function resolveNguKiemSkillName(
   player: PlayerData,
   nodes: readonly ProgressionNode[],
 ): string {
-  return resolveNguKiemOwnedEvolutionNode(player, nodes)?.name ?? 'Ngự Kiếm'
+  return resolveNguKiemOwnedEvolutionNode(player, nodes)?.name ?? NGU_KIEM_BASE_NAME
 }
 
 export function buildNguKiemDaoProvider(
