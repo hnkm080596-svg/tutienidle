@@ -1563,12 +1563,19 @@
    ],
    "siblingFindingIds": [],
    "repair": "non-physical def carrying sourceMaxHpRatio reports to adapterUnsupportedMetadata @c8cbf932 + regression test",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-CLO-6"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-CLO-6"
+   ],
+   "closureReviewIds": [
+    "REV-TT-CLO-5",
+    "REV-TT-CLO-6"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -2154,6 +2161,36 @@
    ],
    "result": "PASS",
    "status": "STALE"
+  },
+  {
+   "id": "EV-TT-CLO-6",
+   "state": {
+    "productStateId": "e25a50783be924146632ab6b8ab26c775d1c47830ed310cc969683c4b7c2594d",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "closure-reviewer",
+   "commandOrMethod": "npm run type-check + npx vitest run src/core/skilldef/LegacySkillAdapter.test.ts at 3742fa9a",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T08:28:35.000Z",
+   "finishedAt": "2026-09-25T08:30:41.000Z",
+   "inputPaths": [
+    "src/core/skilldef/LegacySkillAdapter.ts",
+    "src/core/skilldef/LegacySkillAdapter.test.ts"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/clo-6.log",
+   "artifactHash": "8232c86dcfb3147f1aca7f9dcc0da455f24bf9bbebaade59b87935f5f132a7cf",
+   "claims": [
+    "guard present at L227-236; corrected elemental literal; type-check exit 0; 24/24 tests"
+   ],
+   "invariantIds": [],
+   "limitations": [],
+   "result": "PASS",
+   "status": "CURRENT"
   }
  ],
  "coverage": [],
@@ -2579,6 +2616,37 @@
     "F-TT-AUT-8",
     "F-TT-INT-7",
     "F-TT-INT-8"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-TT-CLO-6",
+   "state": {
+    "productStateId": "e25a50783be924146632ab6b8ab26c775d1c47830ed310cc969683c4b7c2594d",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 10,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-c58ede07d39647ac89c1a590da1d88ba",
+   "contextId": "sealed-child-c58ede07d39647ac89c1a590da1d88ba",
+   "model": "swe-2-max",
+   "role": "closure-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T08:28:35.000Z",
+   "sealedAt": "2026-09-25T08:30:41.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-TT-CLO-6"
+   ],
+   "findingIds": [
+    "F-TT-AUT-8"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
