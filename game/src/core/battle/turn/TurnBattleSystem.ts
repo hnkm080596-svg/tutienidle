@@ -150,9 +150,10 @@ export interface TurnBattleParticipant {
    * Ung The beta -- Tham An (design Part IV): the participant id of this
    * reactor's single observed target, planted by a Tham The cast BEFORE
    * the hit resolves (a miss/dodge still marks). Recast overwrites; the
-   * marked target's death lazy-clears the focus at read -- NEVER
-   * auto-transfers. Quan The needs no mark: its live marker instance
-   * makes every enemy satisfy isObserved.
+   * marked target's death clears the focus eagerly in sweepBuffDeaths
+   * (isObserved's lazy read is the belt for a removed participant) --
+   * NEVER auto-transfers. Quan The needs no mark: its live marker
+   * instance makes every enemy satisfy isObserved.
    */
   thamTargetId?: string
   /**
@@ -1895,14 +1896,24 @@ export class TurnBattleSystem {
         ? actor.pendingChargedSkillId ?? chargedSkillId
         : (action?.skillId ?? '')
 
+    // Provenance follows the committed action: a charge-RESOLVED declare
+    // executes the charged skill (a natural cast) while ccBlocked /
+    // charge tick / the sealed NULL_ACTION commit nothing and carry
+    // undefined.
+    const actionSource =
+      action != null && action.skillId !== ''
+        ? action.slot
+          ? 'skill'
+          : 'normal'
+        : chargeResolved
+          ? 'normal'
+          : undefined
+
     // Ung The beta -- the holder's next NATURAL action resets Ung Tre /
-    // Qua The (design Part III). The reset reads the same boundary
-    // actionSource does: a real action (non-empty skillId) or a charge
-    // resolve actually executed this turn; a ccBlocked, charge-tick,
-    // sealed NULL_ACTION, or null-pick turn performs none. A queued
-    // reactive entry is not a natural action and never resets. The The
-    // pool is untouched.
-    if ((action != null && action.skillId !== '') || chargeResolved) {
+    // Qua The (design Part III). The reset reads the same provenance the
+    // declared record carries; a queued reactive entry is not a natural
+    // action and never resets. The The pool is untouched.
+    if (isNaturalActionSource(actionSource)) {
       actor.reactionDebt = 0
     }
 
@@ -1929,18 +1940,7 @@ export class TurnBattleSystem {
         : suddenDeathMultiplierCaptured,
       compositePickedSkills,
       isFollowUpBypass: false,
-      // Provenance follows the committed action, not the `action`
-      // capture: a charge-RESOLVED declare executes the charged skill
-      // (a natural cast) while ccBlocked / charge tick / the sealed
-      // NULL_ACTION commit nothing and carry undefined.
-      actionSource:
-        action != null && action.skillId !== ''
-          ? action.slot
-            ? 'skill'
-            : 'normal'
-          : chargeResolved
-            ? 'normal'
-            : undefined,
+      actionSource,
       // Task 9 -- every real cast records its execution identity here:
       // 'original' for now (empowered/composite/repeat/multicast arrive
       // with Tasks 10-13). Charge-resolve/CC-blocked turns carry none.
@@ -2375,6 +2375,12 @@ export class TurnBattleSystem {
     if (this.runtime !== undefined) {
       this.procs.flushReflects()
     }
+
+    // The flush settle is itself a quiescent point: a reflect that kills
+    // its attacker inside the tail otherwise leaves the corpse's buff
+    // instances, onEntityDeath hooks, and any observer's thamTargetId
+    // unswept until the next declare (HUD reads a dead mark for a step).
+    this.sweepBuffDeaths(battle)
 
     this.resolvePostActionWindows(battle, actor, declared, landedTargets)
 
@@ -2939,7 +2945,8 @@ export class TurnBattleSystem {
    * Tham An (design Part IV): the cast plants the mark on the declared
    * primary target BEFORE the hits resolve -- a whiff/dodge still marks
    * (observation is not damage). Exactly one focus: a new set overwrites;
-   * the mark's death is lazy-cleared at read with no transfer.
+   * the mark's death is cleared eagerly in sweepBuffDeaths with no
+   * transfer.
    */
   private applyThamMark(
     battle: TurnBattle,
@@ -2961,7 +2968,7 @@ export class TurnBattleSystem {
   /**
    * isObserved(reactor, enemy) -- the single observation predicate
    * (design Parts IV-V): the enemy matches the reactor's live Tham An
-   * mark (lazy-cleared when dead -- no transfer), or the reactor's
+   * mark (cleared when the target dies -- no transfer), or the reactor's
    * quan_the marker is live (Quan The: every enemy satisfies it,
    * incl. later spawns).
    */

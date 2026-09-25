@@ -24,6 +24,9 @@ export function isGaugeReady(actor: GaugeActor): boolean {
  * Tiêu hao gauge sau khi hành động. fractionConsumed=1 (mặc định) = reset
  * hoàn toàn (lượt thường). fractionConsumed<1 = hành động "rẻ" (spec: chỉ
  * tốn nửa gauge), actor còn lại gần lượt kế hơn.
+ * Gauge âm TỒN TẠI qua consume (Ung Tre debt: hình phạt -400 đẩy gauge
+ * xuống âm để trì hoãn lượt kế) — consume không bao giờ nâng số âm về 0;
+ * một consume fraction<1 trừ tiếp trên đỉnh số âm như mọi khoản nợ khác.
  */
 export function consumeGaugeAfterAction(actor: GaugeActor, fractionConsumed = 1): void {
   const clamped = Math.min(1, Math.max(0, fractionConsumed))
@@ -33,7 +36,7 @@ export function consumeGaugeAfterAction(actor: GaugeActor, fractionConsumed = 1)
     return
   }
 
-  actor.actionGauge = Math.max(0, actor.actionGauge - GAUGE_MAX * clamped)
+  actor.actionGauge = actor.actionGauge - GAUGE_MAX * clamped
 }
 
 /** Hồi gauge tức thời (vd buff "+300 gauge khi kill") — clamp trong 0..GAUGE_MAX. */
