@@ -10407,6 +10407,385 @@
    "exception": null,
    "status": "REJECTED_WITH_PROOF",
    "rejectionReason": "pre-existing shape at merge-base: devResetBranch keys on node.branchTag while phap-tu nodes use elementTag per element; not introduced by this diff; cosmetic dev-console gap only"
+  },
+  {
+   "id": "F-PT-AUT-A7-1",
+   "title": "Mastery node description underclaims effect scope",
+   "state": {
+    "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuRealmRewardNodes.ts",
+     "symbolOrSection": "masteryNode description (:49)",
+     "revision": "a27ad402",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-03e7a95d03594896b28930f0a87914aa",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "underclaim direction - player receives more than described; no overclaim",
+   "expected": "description truthful about modifier scope",
+   "actual": "description reads 'rider cua don co ban' (basic-hit rider) but statModifiers grant spell-domain ailmentPotency/ailmentDuration/skillDamage applying to all element spell skills",
+   "rootCause": "wording narrower than the domain:'spell' statModifiers",
+   "rootClass": "description-scope-drift",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "sealed authority review - static proof per checklist",
+     "hitDispositions": [
+      "single surface"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "reword 'don co ban' -> 'moi chieu thuc nguyen to' (pending batch commit with any v7 findings)",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-PT-AUT-A7-2",
+   "title": "Non-core unknown node ids in nodeLevels pass save validation silently",
+   "state": {
+    "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/services/save/saveShapeValidation.ts",
+     "symbolOrSection": "non-core nodeLevels else branch (:695-705)",
+     "revision": "a27ad402",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-03e7a95d03594896b28930f0a87914aa",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "pre-diff behavior; the file's own contract declares catalog membership belongs to the path authority, not the save boundary",
+   "expected": "catalog membership check symmetry with core_ ids",
+   "actual": "else branch validates bounds only when the id is known; unknown non-core ids ignored",
+   "rootCause": "documented leniency, not a defect",
+   "rootClass": "pre-existing-out-of-scope",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "sealed authority review - static proof per checklist",
+     "hitDispositions": [
+      "single surface"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "pre-diff stated leniency: 'catalog membership belongs to the path authority, not the save boundary'; unknown ids are inert (aggregation iterates registry) - dead save field, no gameplay effect"
+  },
+  {
+   "id": "F-PT-AUT-A7-3",
+   "title": "Shared maxLevel 2 on tinh_thong nodes accepts a crafted L2 on spell_pathway",
+   "state": {
+    "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuRealmRewardNodes.ts",
+     "symbolOrSection": "maxLevel 2 (:51)",
+     "revision": "a27ad402",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/phap-tu/PhapTuPath.ts",
+     "symbolOrSection": "masteryGrantRecord(1)",
+     "revision": "a27ad402",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-03e7a95d03594896b28930f0a87914aa",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "no live path produces L2 on the normal way - grant clamps at masteryGrantRecord(1); reachable only via crafted save",
+   "expected": "way-conditional max level enforcement",
+   "actual": "shared node declares maxLevel 2 (required by the hidden way's record); bound-check allows crafted L2",
+   "rootCause": "shared node contract across two ways; legitimate hidden-way ceiling",
+   "rootClass": "crafted-save-only",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "sealed authority review - static proof per checklist",
+     "hitDispositions": [
+      "single surface"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "crafted-save only: normal way grants exactly L1 (masteryGrantRecord(1)); maxLevel 2 is the authored hidden-way ceiling - tamper-only fixture, not reachable production"
+  },
+  {
+   "id": "F-PT-AUT-A7-4",
+   "title": "Pre-existing violations observed, not chargeable to this diff",
+   "state": {
+    "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": "runtime data/ imports",
+     "revision": "a27ad402",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/components/game/combat/hud/CombatSkillSlot.vue",
+     "symbolOrSection": "'Trong' literal (:83)",
+     "revision": "a27ad402",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/components/game/combat/hud/TurnCombatSkillBar.vue",
+     "symbolOrSection": "ROLE_LABELS literals (:24)",
+     "revision": "a27ad402",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/components/panels/skill-path/NodeTreePanel.vue + NodeInspector.vue",
+     "symbolOrSection": "SPELL_PATH_ROUTE_IDS duplicated literal",
+     "revision": "a27ad402",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-03e7a95d03594896b28930f0a87914aa",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "git diff be1bdf8d..a27ad402 shows none of these lines were introduced by this change",
+   "expected": "A-rules / P16 compliance",
+   "actual": "pre-existing core->data imports, hardcoded Vietnamese literals, duplicated route-id list",
+   "rootCause": "predate this diff",
+   "rootClass": "pre-existing-out-of-scope",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "sealed authority review - static proof per checklist",
+     "hitDispositions": [
+      "single surface"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "pre-existing at merge-base: none of the listed lines were introduced by this diff (git diff proof)"
+  },
+  {
+   "state": {
+    "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "discoveredBy": "devin-a9339da5f3634910b96a919112442476",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "id": "F-PT-COR-A7-1",
+   "title": "Trunk L3-L5 techniqueRank gates reachable at Luyen Khi, not Truc Co",
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/data/progression/PhapTuBasicNodes.ts",
+     "symbolOrSection": "MINOR_TIER_GATES",
+     "revision": "a27ad402",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "LQ player at realmLevel>=4 satisfies ranks 2-4 and can max trunks pre-TC; TC grade advance resets rank to 0",
+   "expected": "M1 wording 'Truc Co raises level cap' read literally for all deeper node levels",
+   "actual": "effective rank = min(18, realmLevel) within the grade-matched cycle; rank resets on grade advance",
+   "rootCause": null,
+   "rootClass": null,
+   "subsystem": "progression",
+   "repair": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "Ruling #8: 'bac nho hon quy dinh duoc cong den level may' -- techniqueRank IS the in-realm minor-tier throttle (rank = realmLevel within grade). LQ reaching rank>=4 can max LQ-gated trunk levels exactly per spec; TC-gated rings/capstone carry the realm prerequisite, not the rank gate. Reviewer itself flagged 'likely intended'. Design-consistent."
+  },
+  {
+   "state": {
+    "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "discoveredBy": "devin-a9339da5f3634910b96a919112442476",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "id": "F-PT-COR-A7-2",
+   "title": "moc_doc_nhiem anchors to a cross-stat-family trunk",
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/data/progression/PhapTuBasicNodes.ts",
+     "symbolOrSection": "buildWood/moc_doc_nhiem",
+     "revision": "a27ad402",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "ailmentPotencyPercent ring prereqs ailmentDurationPercent trunk -- only lane with a cross-family edge",
+   "expected": "ring nodes prereq the same-stat trunk",
+   "actual": "moc_doc_nhiem prereqNodeId = moc_doc_nhuan (duration trunk)",
+   "rootCause": null,
+   "rootClass": null,
+   "subsystem": "progression",
+   "repair": "pending-batch: prereq moc_doc_tu (same potency family)",
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null
+  },
+  {
+   "state": {
+    "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "discoveredBy": "devin-a9339da5f3634910b96a919112442476",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "id": "F-PT-COR-A7-3",
+   "title": "kim_tu_phong capstone description underclaims its spec",
+   "severity": "Nit",
+   "classification": "DOCUMENTATION_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/data/progression/PhapTuBasicNodes.ts",
+     "symbolOrSection": "kim_tu_phong capstone",
+     "revision": "a27ad402",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "node says only 'sat thuong lon hon' while spec raises liet_thuong 0.4->0.45",
+   "expected": "node description previews what the spec grants",
+   "actual": "description omits the liet_thuong reliability increase",
+   "rootCause": null,
+   "rootClass": null,
+   "subsystem": "progression",
+   "repair": "pending-batch: reword description per sibling capstone wording",
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null
   }
  ],
  "evidence": [
@@ -13830,6 +14209,69 @@
    ],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-AUT-A7",
+   "state": {
+    "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 21,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-03e7a95d03594896b28930f0a87914aa",
+   "contextId": "sealed-child-03e7a95d03594896b28930f0a87914aa",
+   "model": "swe-2-max",
+   "role": "authority-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T10:33:39.000Z",
+   "sealedAt": "2026-09-25T10:50:56.999Z",
+   "previousPhaseReviewId": "REV-PT-CLO-13",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-AUT-A7-1",
+    "F-PT-AUT-A7-2",
+    "F-PT-AUT-A7-3",
+    "F-PT-AUT-A7-4"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-COR-A7",
+   "state": {
+    "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 21,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-a9339da5f3634910b96a919112442476",
+   "contextId": "sealed-child-a9339da5f3634910b96a919112442476",
+   "model": "swe-2-max",
+   "role": "correctness-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T10:40:00.000Z",
+   "sealedAt": "2026-09-25T10:54:07.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-COR-A7-1",
+    "F-PT-COR-A7-2",
+    "F-PT-COR-A7-3"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [
@@ -17119,6 +17561,129 @@
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
+  },
+  {
+   "id": "L-PT-74",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUT-A7-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "pre-existing-out-of-scope",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "diff-inherited debt is recorded, not silently fixed"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A7"
+   ],
+   "capabilityDelta": "diff-inherited debt is recorded, not silently fixed",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-75",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUT-A7-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "crafted-save-only",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "crafted-save-only surfaces are rejected with proof, not fixed"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A7"
+   ],
+   "capabilityDelta": "crafted-save-only surfaces are rejected with proof, not fixed",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-76",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUT-A7-4"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "pre-existing-out-of-scope",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "diff-inherited debt is recorded, not silently fixed"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-A7"
+   ],
+   "capabilityDelta": "diff-inherited debt is recorded, not silently fixed",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-77",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-COR-A7-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "design-intent",
+   "missedInvariantIds": [],
+   "escapeReason": "techniqueRank-as-minor-tier throttle read once as realm-tier gate; wording in M1 spec ('Truc Co raises level cap') literalized beyond ruling #8",
+   "applicability": [
+    "realm-gated progression nodes",
+    "techniqueRank levelGates"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "when a levelGate kind is techniqueRank, adjudicate against ruling #8 (minor tier governs level cap) before flagging reachability"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-COR-A7"
+   ],
+   "capabilityDelta": "distinguish realm-tier gates (FOUNDATION prerequisite) from minor-tier throttles (techniqueRank) when adjudicating level-cap findings",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
   }
  ],
  "messages": [],
@@ -18114,6 +18679,22 @@
    "payloadPath": "events/0062.json",
    "payloadHash": "a2e5ae5d1f9e22a0c23d3bcf4dc299e80480993099bc7b9024e5bd3c1e4be521",
    "eventHash": "4f757953409bf1bbdabe516cb746028ea16c19aa631348f23346e6e0332ff1b3"
+  },
+  {
+   "seq": 63,
+   "at": "2026-09-25T10:57:10.085Z",
+   "kind": "REVIEW_SEALED",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "4f757953409bf1bbdabe516cb746028ea16c19aa631348f23346e6e0332ff1b3",
+   "payloadPath": "events/0063.json",
+   "payloadHash": "9f1619f20c08531f4486e8d61c6c234d5c6289c3eee8cea9356d61a8c9dce91b",
+   "eventHash": "1190e6c73953a2dfbc4b98831cb014d81f287f6064842fca1cbbf9c46b833ba6"
   }
  ]
 }
