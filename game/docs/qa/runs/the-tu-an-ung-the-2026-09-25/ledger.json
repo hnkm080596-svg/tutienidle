@@ -11,7 +11,7 @@
     "base": "be1bdf8d5f3fa45cbe82318473980b7b03ec9227",
     "head": "70636f2981906a12b56686d13561977270924115",
     "state": {
-      "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+      "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
       "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
       "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -785,6 +785,480 @@
       "rejectionReason": "unreachable defensive default — every call site overwrites before read.",
       "exception": null,
       "repair": "REJECTED: unreachable defensive default — every call site overwrites before read."
+    },
+    {
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "discoveredBy": "devin-6144a6a552a4441583f846e4d5e0d1ab",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/battle/turn"
+          ],
+          "termsAndMethod": "audit every write site of actor.reactionDebt",
+          "evidenceIds": [
+            "EV-TTA-CLO-3"
+          ],
+          "hitDispositions": [
+            "sole remaining reset site is the performed-action gate at L1694"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [
+        "F-TTA-A2-AUT-2"
+      ],
+      "pinEvidenceIds": [
+        "EV-TTA-CLO-3"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TTA-CLO-3"
+      ],
+      "closureReviewIds": [
+        "REV-TTA-CLO-3"
+      ],
+      "duplicateOf": null,
+      "exception": null,
+      "id": "F-TTA-A2-COR-1",
+      "title": "Ung Tre debt resets on suppressed/charging declares, not only on performed normal actions",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "reactionDebt=0 at natural declare ~L1408",
+          "revision": "d1e8b032",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "a stunned or charge-ticking Qua The holder sheds debt/Qua The on the suppressed turn itself",
+      "expected": "debt resets when the holder performs a normal action (strict reading; income gate already reads ccBlocked as no-action)",
+      "actual": "any natural-turn declare clears debt",
+      "rootCause": "reset placed before the cc/charge determination",
+      "rootClass": "inconsistency",
+      "subsystem": "the-tu-an-ung-the",
+      "status": "CLOSED",
+      "repair": "reset moved behind the cc/charge returns, gated on !ccBlocked && (!isCharging || chargeResolved) (e4045625); pin tests cover stun + charge tick. Flipped from rejected after the AUT lens showed the internal inconsistency with the income gate.",
+      "rejectionReason": null
+    },
+    {
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "discoveredBy": "devin-6144a6a552a4441583f846e4d5e0d1ab",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "id": "F-TTA-A2-COR-2",
+      "title": "reactive_economy capability riders (procCostFlatDelta/freeProcs/payloadAilments) validated but never consumed",
+      "severity": "Low",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/proc/CombatProcSystem.ts",
+          "symbolOrSection": "proc cost read L280-385; payloadAilments merge absent",
+          "revision": "d1e8b032",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "if parked tu_the/bach_ung are revived, their authored riders silently no-op",
+      "expected": "consumers read the authored capability fields",
+      "actual": "no runtime consumer; validation/typing only",
+      "rootCause": "riders authored ahead of their grant sources (defs parked by design)",
+      "rootClass": "dormant-wiring",
+      "subsystem": "the-tu-an-ung-the",
+      "status": "REJECTED_WITH_PROOF",
+      "repair": "REJECTED: defs intentionally parked/ungranted (same posture as bat_tu_ba_the/son_nhac); wiring consumers now would be dead speculative paths.",
+      "rejectionReason": "dormant-by-design parked content — wiring consumers adds dead code before the grant source exists."
+    },
+    {
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "discoveredBy": "devin-6144a6a552a4441583f846e4d5e0d1ab",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "id": "F-TTA-A2-COR-3",
+      "title": "pendingQueuedExecution dropped unconditionally vs pendingReactiveEntry actorId-checked",
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "HYPOTHETICAL",
+      "locations": [
+        {
+          "path": "game/src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "L1364-1367 vs L1374-1376",
+          "revision": "d1e8b032",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "a mismatched declare would silently delete a committed repeat/multicast entry",
+      "expected": "committed entries survive actorId mismatch",
+      "actual": "pendingQueuedExecution nulled before the actorId check",
+      "rootCause": "enqueue->declare flow always pairs dequeue with same-actor declare; mismatch unreachable via UI",
+      "rootClass": "defensive-edge",
+      "subsystem": "the-tu-an-ung-the",
+      "status": "REJECTED_WITH_PROOF",
+      "repair": "REJECTED: unreachable in production — dequeue pairs declareActorAction with the same actor; no caller declares for a different actor while a queued exec is pending.",
+      "rejectionReason": "hypothetical edge only reachable via a non-existent mismatched caller."
+    },
+    {
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "discoveredBy": "devin-d68cbffb7b4449e68bf7533218f7792c",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/battle/turn"
+          ],
+          "termsAndMethod": "audit all reactive windows (Phan/Tro) for attacker-alive pre-checks",
+          "evidenceIds": [
+            "EV-TTA-CLO-3"
+          ],
+          "hitDispositions": [
+            "Phan now mirrors Tro's alive-canonical gate; no other window lacks the check"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "pinEvidenceIds": [
+        "EV-TTA-CLO-3"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TTA-CLO-3"
+      ],
+      "closureReviewIds": [
+        "REV-TTA-CLO-3"
+      ],
+      "duplicateOf": null,
+      "exception": null,
+      "id": "F-TTA-A2-AUT-1",
+      "title": "Phan window pays cost+debt+gauge for an unqueueable counter when the attacker dies mid-action",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "resolvePhanWindow ~3092-3124",
+          "revision": "d1e8b032",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "defender-side reflect kills the attacker mid-action; the rolled success still settles -15 The/+1 debt/-400 gauge with nothing queued",
+      "expected": "attacker-alive gate at window open, matching Tro's alive-canonical pre-check",
+      "actual": "no attacker-alive check; empty targetIds falls through to paid+success commit",
+      "rootCause": "missing canonical-liveness pre-check on the Phan channel",
+      "rootClass": "missing-guard",
+      "subsystem": "the-tu-an-ung-the",
+      "status": "CLOSED",
+      "repair": "resolvePhanWindow returns early when !actor.entity.alive, before any roll (e4045625); pin test kills the attacker via phan_chan reflect mid-action.",
+      "rejectionReason": null
+    },
+    {
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "discoveredBy": "devin-d68cbffb7b4449e68bf7533218f7792c",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/battle/turn"
+          ],
+          "termsAndMethod": "same root as F-TTA-A2-COR-1 (sibling defect of the debt-reset move)",
+          "evidenceIds": [
+            "EV-TTA-CLO-3"
+          ],
+          "hitDispositions": [
+            "reset gate covers both ccBlocked and charge-tick no-action turns"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [
+        "F-TTA-A2-COR-1"
+      ],
+      "pinEvidenceIds": [
+        "EV-TTA-CLO-3"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TTA-CLO-3"
+      ],
+      "closureReviewIds": [
+        "REV-TTA-CLO-3"
+      ],
+      "duplicateOf": null,
+      "exception": null,
+      "id": "F-TTA-A2-AUT-2",
+      "title": "reactionDebt resets on ANY natural turn arrival incl. ccBlocked and charge-tick",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "reactionDebt=0 at declare ~1408 vs income gate ~3213",
+          "revision": "d1e8b032",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "a stunned Qua The holder sheds debt on the suppressed turn while the income gate treats the same turn as no-action-completed",
+      "expected": "debt resets only when an action actually performs (strict spec reading + internal consistency)",
+      "actual": "unconditional reset at natural-turn arrival",
+      "rootCause": "reset placed before the cc/charge determination",
+      "rootClass": "inconsistency",
+      "subsystem": "the-tu-an-ung-the",
+      "status": "CLOSED",
+      "repair": "reset moved behind the cc/charge returns, gated on !ccBlocked && (!isCharging || chargeResolved) (e4045625); pin tests cover stun + charge tick.",
+      "rejectionReason": null
+    },
+    {
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "discoveredBy": "devin-d68cbffb7b4449e68bf7533218f7792c",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/data/progression/SkillCoreNodes.ts"
+          ],
+          "termsAndMethod": "grep census-count comments vs NATIVE_CORE_SKILL_IDS length",
+          "evidenceIds": [
+            "EV-TTA-CLO-3"
+          ],
+          "hitDispositions": [
+            "both header counts corrected to 16; whitelist length is 16"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "pinEvidenceIds": [
+        "EV-TTA-CLO-3"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TTA-CLO-3"
+      ],
+      "closureReviewIds": [
+        "REV-TTA-CLO-3"
+      ],
+      "duplicateOf": null,
+      "exception": null,
+      "id": "F-TTA-A2-AUT-3",
+      "title": "stale census counts in SkillCoreNodes.ts comments (15/14 written, 16 actual)",
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/data/progression/SkillCoreNodes.ts",
+          "symbolOrSection": "doc header ~L15, ~L29",
+          "revision": "d1e8b032",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "comment count drifts from the registry it documents",
+      "expected": "comment matches NATIVE_CORE_SKILL_IDS length",
+      "actual": "two stale counts",
+      "rootCause": "comments predated the quan_the/phan_chan additions",
+      "rootClass": "doc-drift",
+      "subsystem": "progression",
+      "status": "CLOSED",
+      "repair": "comments corrected to 16 (e4045625).",
+      "rejectionReason": null
+    },
+    {
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "discoveredBy": "devin-d68cbffb7b4449e68bf7533218f7792c",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/data/skill",
+            "src/core"
+          ],
+          "termsAndMethod": "grep QUAN_THE_BASE_THE and theGainOnLandedCast reads",
+          "evidenceIds": [
+            "EV-TTA-CLO-3"
+          ],
+          "hitDispositions": [
+            "constant fully removed; bake reads the cloned def field"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "pinEvidenceIds": [
+        "EV-TTA-CLO-3"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TTA-CLO-3"
+      ],
+      "closureReviewIds": [
+        "REV-TTA-CLO-3"
+      ],
+      "duplicateOf": null,
+      "exception": null,
+      "id": "F-TTA-A2-AUT-4",
+      "title": "QUAN_THE authored theGainOnLandedCast duplicated as QUAN_THE_BASE_THE - bake overwrites rather than reads the def field",
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/data/skill/TheTuSkills.ts",
+          "symbolOrSection": "QUAN_THE ~214 vs buildTheTuAnKit ~328",
+          "revision": "d1e8b032",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "changing the authored def value silently produces no in-game change",
+      "expected": "bake reads the def's authored base",
+      "actual": "bake writes a duplicated constant; the def field is dead on the kit path",
+      "rootCause": "duplicated source of truth",
+      "rootClass": "duplicated-truth",
+      "subsystem": "the-tu-an-ung-the",
+      "status": "CLOSED",
+      "repair": "bake now reads the cloned def field; unused QUAN_THE_BASE_THE removed (e4045625).",
+      "rejectionReason": null
+    },
+    {
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "discoveredBy": "devin-d68cbffb7b4449e68bf7533218f7792c",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": "F-TTA-A2-COR-2",
+      "exception": null,
+      "id": "F-TTA-A2-AUT-5",
+      "title": "parked reactive_economy payloads (tu_the/bach_ung) validate but have zero runtime consumers",
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/data/buff/TheTuBuffs.ts",
+          "symbolOrSection": "TU_THE/BACH_UNG capability payloads",
+          "revision": "d1e8b032",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "re-granting either makes its declared economy effects silently no-op",
+      "expected": "a consumer exists when they un-park",
+      "actual": "no runtime reads of procCostFlatDelta/freeProcs/payloadAilments",
+      "rootCause": "riders authored ahead of their grant sources",
+      "rootClass": "dormant-wiring",
+      "subsystem": "the-tu-an-ung-the",
+      "status": "REJECTED_WITH_PROOF",
+      "repair": "REJECTED: parked/ungranted by design; consumers wire when the grant source lands.",
+      "rejectionReason": "dormant-by-design parked content (duplicate of F-TTA-A2-COR-2)."
+    },
+    {
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "discoveredBy": "devin-d68cbffb7b4449e68bf7533218f7792c",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "id": "F-TTA-A2-AUT-6",
+      "title": "recordHitOutcome keeps an unused `battle` parameter (void battle)",
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "~2914-2922",
+          "revision": "d1e8b032",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "invisible contract on a hot-path callback",
+      "expected": "drop the param unless signature parity requires it",
+      "actual": "kept for signature parity",
+      "rootCause": "deliberate signature parity",
+      "rootClass": "signature-parity",
+      "subsystem": "turn-battle",
+      "status": "REJECTED_WITH_PROOF",
+      "repair": "REJECTED: the parity is deliberate so engineUnit lanes share one callback shape.",
+      "rejectionReason": "harmless deliberate signature parity."
     }
   ],
   "evidence": [
@@ -921,11 +1395,40 @@
       "inputPaths": [],
       "inputEvidenceIds": [],
       "invariantIds": [],
-      "status": "CURRENT",
+      "status": "STALE",
       "claims": [
         "isPendingQueuedExecution covers pendingReactiveEntry",
         "intercept substitution requires success+paid",
         "once:true stops after first rolled attempt"
+      ],
+      "limitations": [
+        "scoped vitest only (turn+proc+data)"
+      ]
+    },
+    {
+      "id": "EV-TTA-CLO-3",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "devin-861d5625fef14630ade3b87ba783df48",
+      "startedAt": "2026-09-25T20:25:00.000Z",
+      "finishedAt": "2026-09-25T20:28:00.000Z",
+      "commandOrMethod": "npm run type-check + npx vitest run src/core/battle/turn/TurnBattleSystem.theEconomy.test.ts (17/17 PASS) at e4045625",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/clo3-verification.log",
+      "artifactHash": "b09de01b3fb2c6ea4b36c6fe14afce188ea28a198ee31ad527ed9fba33b14504",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "status": "CURRENT",
+      "claims": [
+        "all 5 A2 fix groups verified on e4045625: conditional debt reset gate, dead-attacker Phan gate, census=16, QUAN_THE bake reads def field, QUAN_THE_BASE_THE fully removed"
       ],
       "limitations": [
         "scoped vitest only (turn+proc+data)"
@@ -966,7 +1469,7 @@
         "F-TTA-COR-5"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TTA-AUT-A1",
@@ -1061,7 +1564,7 @@
         "F-TTA-AUT-2"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TTA-CLO-2",
@@ -1090,6 +1593,106 @@
         "F-TTA-COR-1",
         "F-TTA-COR-2",
         "F-TTA-COR-3"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "REV-TTA-CLEAN-A2-COR",
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 2,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-6144a6a552a4441583f846e4d5e0d1ab",
+      "contextId": "sealed-child-6144a6a552a4441583f846e4d5e0d1ab",
+      "model": "swe-2-max",
+      "role": "CORRECTNESS",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T20:02:00.000Z",
+      "sealedAt": "2026-09-25T20:23:00.000Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TTA-A2-COR-1",
+        "F-TTA-A2-COR-2",
+        "F-TTA-A2-COR-3"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "REV-TTA-CLEAN-A2-AUT",
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 2,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-d68cbffb7b4449e68bf7533218f7792c",
+      "contextId": "sealed-child-d68cbffb7b4449e68bf7533218f7792c",
+      "model": "swe-2-max",
+      "role": "AUTHORITY",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T20:05:00.000Z",
+      "sealedAt": "2026-09-25T20:26:00.000Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TTA-A2-AUT-1",
+        "F-TTA-A2-AUT-2",
+        "F-TTA-A2-AUT-3",
+        "F-TTA-A2-AUT-4",
+        "F-TTA-A2-AUT-5",
+        "F-TTA-A2-AUT-6"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TTA-CLO-3",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 3,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-861d5625fef14630ade3b87ba783df48",
+      "contextId": "sealed-child-861d5625fef14630ade3b87ba783df48",
+      "model": "swe-2-max",
+      "role": "CLOSURE",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T20:20:00.000Z",
+      "sealedAt": "2026-09-25T20:28:00.000Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-TTA-CLO-3"
+      ],
+      "findingIds": [
+        "F-TTA-A2-COR-1",
+        "F-TTA-A2-AUT-1",
+        "F-TTA-A2-AUT-2",
+        "F-TTA-A2-AUT-3",
+        "F-TTA-A2-AUT-4"
       ],
       "novelAttackIds": [],
       "status": "SEALED"
@@ -1444,6 +2047,306 @@
       "capabilityDelta": "attempt records that skip before the roll must be distinguishable from rolled attempts; once/one-shot gates must count only rolled attempts.",
       "proposedProtection": [
         "mark rolled attempts explicitly (rolled flag) so one-shot gates count the trigger correctly"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "applicability": [],
+      "exclusions": [],
+      "incidentEvidenceIds": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLEAN-A2-COR"
+      ],
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "status": "CLASSIFIED",
+      "guidance": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "id": "L-TTA-12",
+      "findingIds": [
+        "F-TTA-A2-COR-1"
+      ],
+      "rootClass": "spec-ambiguity",
+      "escapeReason": "ambiguous spec semantics on balance-adjacent behavior (debt reset timing) are rejected to BETA-BALANCE review, not unilaterally tightened",
+      "capabilityDelta": "ambiguous spec semantics on balance-adjacent behavior (debt reset timing) are rejected to BETA-BALANCE review, not unilaterally tightened",
+      "proposedProtection": [
+        "ambiguous spec semantics on balance-adjacent behavior (debt reset timing) are rejected to BETA-BALANCE review, not unilaterally tightened"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "applicability": [],
+      "exclusions": [],
+      "incidentEvidenceIds": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLEAN-A2-COR"
+      ],
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "status": "CLASSIFIED",
+      "guidance": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "id": "L-TTA-13",
+      "findingIds": [
+        "F-TTA-A2-COR-2"
+      ],
+      "rootClass": "dormant-wiring",
+      "escapeReason": "validated-but-unconsumed capability fields on parked defs are accepted debt — record the pairing so revival wires the consumer",
+      "capabilityDelta": "validated-but-unconsumed capability fields on parked defs are accepted debt — record the pairing so revival wires the consumer",
+      "proposedProtection": [
+        "validated-but-unconsumed capability fields on parked defs are accepted debt — record the pairing so revival wires the consumer"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "applicability": [],
+      "exclusions": [],
+      "incidentEvidenceIds": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLEAN-A2-COR"
+      ],
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "status": "CLASSIFIED",
+      "guidance": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "id": "L-TTA-14",
+      "findingIds": [
+        "F-TTA-A2-COR-3"
+      ],
+      "rootClass": "defensive-edge",
+      "escapeReason": "actor-scoped pending entries should be actorId-checked symmetrically when a mismatched caller is plausible; unreachable pairs may stay asymmetric",
+      "capabilityDelta": "actor-scoped pending entries should be actorId-checked symmetrically when a mismatched caller is plausible; unreachable pairs may stay asymmetric",
+      "proposedProtection": [
+        "actor-scoped pending entries should be actorId-checked symmetrically when a mismatched caller is plausible; unreachable pairs may stay asymmetric"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "applicability": [],
+      "exclusions": [],
+      "incidentEvidenceIds": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLEAN-A2-AUT"
+      ],
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "status": "CLASSIFIED",
+      "guidance": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "id": "L-TTA-15",
+      "findingIds": [
+        "F-TTA-A2-AUT-1"
+      ],
+      "rootClass": "missing-guard",
+      "escapeReason": "reactive channels whose payload targets a single canonical actor must pre-check canonical liveness before rolling - match the Tro alive-canonical gate",
+      "capabilityDelta": "reactive channels whose payload targets a single canonical actor must pre-check canonical liveness before rolling - match the Tro alive-canonical gate",
+      "proposedProtection": [
+        "reactive channels whose payload targets a single canonical actor must pre-check canonical liveness before rolling - match the Tro alive-canonical gate"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "applicability": [],
+      "exclusions": [],
+      "incidentEvidenceIds": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLEAN-A2-AUT"
+      ],
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "status": "CLASSIFIED",
+      "guidance": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "id": "L-TTA-16",
+      "findingIds": [
+        "F-TTA-A2-AUT-2"
+      ],
+      "rootClass": "inconsistency",
+      "escapeReason": "paired gates on the same boundary phrase must share one reading - reset and income sides of a lifecycle boundary are decided together",
+      "capabilityDelta": "paired gates on the same boundary phrase must share one reading - reset and income sides of a lifecycle boundary are decided together",
+      "proposedProtection": [
+        "paired gates on the same boundary phrase must share one reading - reset and income sides of a lifecycle boundary are decided together"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "applicability": [],
+      "exclusions": [],
+      "incidentEvidenceIds": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLEAN-A2-AUT"
+      ],
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "status": "CLASSIFIED",
+      "guidance": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "id": "L-TTA-17",
+      "findingIds": [
+        "F-TTA-A2-AUT-3"
+      ],
+      "rootClass": "doc-drift",
+      "escapeReason": "census comments enumerate a count next to the registry - update the count in the same commit as the census change",
+      "capabilityDelta": "census comments enumerate a count next to the registry - update the count in the same commit as the census change",
+      "proposedProtection": [
+        "census comments enumerate a count next to the registry - update the count in the same commit as the census change"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "applicability": [],
+      "exclusions": [],
+      "incidentEvidenceIds": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLEAN-A2-AUT"
+      ],
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "status": "CLASSIFIED",
+      "guidance": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "id": "L-TTA-18",
+      "findingIds": [
+        "F-TTA-A2-AUT-4"
+      ],
+      "rootClass": "duplicated-truth",
+      "escapeReason": "a bake must read the def authored field rather than a shadow constant - constants only for values the def does not carry",
+      "capabilityDelta": "a bake must read the def authored field rather than a shadow constant - constants only for values the def does not carry",
+      "proposedProtection": [
+        "a bake must read the def authored field rather than a shadow constant - constants only for values the def does not carry"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "applicability": [],
+      "exclusions": [],
+      "incidentEvidenceIds": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLEAN-A2-AUT"
+      ],
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "status": "CLASSIFIED",
+      "guidance": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "id": "L-TTA-19",
+      "findingIds": [
+        "F-TTA-A2-AUT-5"
+      ],
+      "rootClass": "dormant-wiring",
+      "escapeReason": "parked payloads are contracts-only - revival pairs the grant with the consumer in one change",
+      "capabilityDelta": "parked payloads are contracts-only - revival pairs the grant with the consumer in one change",
+      "proposedProtection": [
+        "parked payloads are contracts-only - revival pairs the grant with the consumer in one change"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "applicability": [],
+      "exclusions": [],
+      "incidentEvidenceIds": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLEAN-A2-AUT"
+      ],
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "status": "CLASSIFIED",
+      "guidance": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "id": "L-TTA-20",
+      "findingIds": [
+        "F-TTA-A2-AUT-6"
+      ],
+      "rootClass": "signature-parity",
+      "escapeReason": "void params kept for callback parity are documented at the signature site so reviewers do not flag them as dead",
+      "capabilityDelta": "void params kept for callback parity are documented at the signature site so reviewers do not flag them as dead",
+      "proposedProtection": [
+        "void params kept for callback parity are documented at the signature site so reviewers do not flag them as dead"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "applicability": [],
+      "exclusions": [],
+      "incidentEvidenceIds": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TTA-CLEAN-A2-AUT"
+      ],
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "status": "CLASSIFIED",
+      "guidance": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "id": "L-TTA-21",
+      "findingIds": [
+        "F-TTA-A2-COR-1"
+      ],
+      "rootClass": "inconsistency",
+      "escapeReason": "debt/gauge reset boundaries follow the performed-action rule - suppressed turns (cc/charge tick) do not discharge the debt they delayed",
+      "capabilityDelta": "debt/gauge reset boundaries follow the performed-action rule - suppressed turns (cc/charge tick) do not discharge the debt they delayed",
+      "proposedProtection": [
+        "debt/gauge reset boundaries follow the performed-action rule - suppressed turns (cc/charge tick) do not discharge the debt they delayed"
       ]
     }
   ],
@@ -1880,6 +2783,118 @@
       "payloadPath": "events/0027.json",
       "payloadHash": "3a70fc0cd0cefb50287b6955f7dc8cdfebe5861a4a112277d84e96ef7c920a1c",
       "eventHash": "c99523223b8099accc94c571dd808ccf3ed528eb18a4e81c3a88bf89b98f2349"
+    },
+    {
+      "seq": 28,
+      "at": "2026-09-25T20:25:34.096Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "4f066cd6d7d71816fbb3762f9674044e00f64a49282c9176c572687fa398f217",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "c99523223b8099accc94c571dd808ccf3ed528eb18a4e81c3a88bf89b98f2349",
+      "payloadPath": "events/0028.json",
+      "payloadHash": "192f9ff189d4c794faa1768f82c97d0390f2eaaa46531a3b3dc9b26e5b98e418",
+      "eventHash": "976d76694d6d5d4b65e83b533f5afee30f6394fd8069b52983a29fc2ede7a6f4"
+    },
+    {
+      "seq": 29,
+      "at": "2026-09-25T20:35:14.537Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "976d76694d6d5d4b65e83b533f5afee30f6394fd8069b52983a29fc2ede7a6f4",
+      "payloadPath": "events/0029.json",
+      "payloadHash": "9a75547b125617a885e938371379990133ea2991637d8631e836575054223816",
+      "eventHash": "8d13a5b3db8725353674dc26dfbdcab8891773ffd11efa3b5f6d7f5a45be4691"
+    },
+    {
+      "seq": 30,
+      "at": "2026-09-25T20:37:15.311Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "8d13a5b3db8725353674dc26dfbdcab8891773ffd11efa3b5f6d7f5a45be4691",
+      "payloadPath": "events/0030.json",
+      "payloadHash": "dbb8632f5bd3bcd9f5072b30d8d50c3fabe05a22f97a332abf49bf379b3dded1",
+      "eventHash": "fa0cc685c54423b121447829c44ab82a51a7503cd7dd6d7f1e2cc8d3b76065b5"
+    },
+    {
+      "seq": 31,
+      "at": "2026-09-25T20:37:50.312Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "fa0cc685c54423b121447829c44ab82a51a7503cd7dd6d7f1e2cc8d3b76065b5",
+      "payloadPath": "events/0031.json",
+      "payloadHash": "f96907605434392b733bfec58c39c74b95d9ef757a368a2ecb49136f5653c1af",
+      "eventHash": "df64ec40c42adb00b2921af5d71ef32d86369db4802306c188a257f5700182e5"
+    },
+    {
+      "seq": 32,
+      "at": "2026-09-25T20:42:54.488Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "df64ec40c42adb00b2921af5d71ef32d86369db4802306c188a257f5700182e5",
+      "payloadPath": "events/0032.json",
+      "payloadHash": "51727ebb01bbd44bcab0cf2181ff175d9887f7e0c9ece789ab98b6ffe402859f",
+      "eventHash": "9a43ef4851502641bc747d16812e0517ac7173509a8a78ca13826b2b68ec55e5"
+    },
+    {
+      "seq": 33,
+      "at": "2026-09-25T20:43:36.778Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "9a43ef4851502641bc747d16812e0517ac7173509a8a78ca13826b2b68ec55e5",
+      "payloadPath": "events/0033.json",
+      "payloadHash": "c7044b9802ce971abf0e4716100d035845e9bfc61c24c0997c34921081c315f2",
+      "eventHash": "f181c693c25ab9bb7b481c1f7fda3d030ae8a28f945c80eee113169b0e9b7390"
+    },
+    {
+      "seq": 34,
+      "at": "2026-09-25T20:44:04.794Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "f181c693c25ab9bb7b481c1f7fda3d030ae8a28f945c80eee113169b0e9b7390",
+      "payloadPath": "events/0034.json",
+      "payloadHash": "1907ccd8211e95731b54b361f93b09c64ea28c26b7001d1db9b0ec9e3668f7af",
+      "eventHash": "1ed39f41279b81b145da5d7a08e45c884581debfac4d7147ce83d157e0db35c1"
     }
   ]
 }
