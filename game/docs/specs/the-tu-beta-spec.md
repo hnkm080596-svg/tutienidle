@@ -218,7 +218,7 @@ cuong_chien (root, LQ, grants core_cuong_quyen)   tran_the (root, LQ, grants cor
    └─ minor_pha_kinh     (cuongQuyenArmorPierce)         └─ minor_tran_kinh   (tranKinhWeakenRatio)
    ──── Trúc Cơ ────                                    ──── Trúc Cơ ────
    major_loan_dau (TC, grants core_loan_dau)             major_phan_chan (TC, grants core_phan_chan)
-   ├─ minor_huyet_sat    (loanDauPaidBonus)              ├─ minor_chan_cot    (reflectMaxHpRatioBonus)
+   ├─ minor_huyet_sat    (loanDauPaidHpBonus)            ├─ minor_chan_cot    (reflectMaxHpRatioBonus)
    └─ minor_cuong_y      (missingHpBonusBonus)           └─ minor_tran_an     (reflectMarkedRatioBonus)
 ```
 
