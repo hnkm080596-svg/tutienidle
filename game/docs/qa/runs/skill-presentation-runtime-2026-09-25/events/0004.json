@@ -1,0 +1,30 @@
+{
+  "action": "admit",
+  "externalOccupied": 1,
+  "assignment": {
+    "id": "ASG-CORE",
+    "parentId": null,
+    "capacityScope": "skill-presentation-runtime",
+    "inputBundleHash": "926a6a41c099283376697437b5de7534cd7e9cd5062fa76b950dd5aacc1ff9a6",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "repository read/write",
+      "Vitest",
+      "TypeScript"
+    ],
+    "writeSurface": [
+      "game/src/core/battle/turn/**",
+      "game/src/core/game/GameManagerTurnBattleOps.ts",
+      "game/src/core/game/GameManagerTurnBattlePresentationOps.ts",
+      "game/src/core/game/*.test.ts"
+    ],
+    "readiness": "READY",
+    "status": "READY",
+    "reservedAt": "2026-09-25T03:00:00Z",
+    "observedRuntimeId": null,
+    "releaseEvidence": null,
+    "resultRef": null,
+    "timeoutState": null,
+    "history": []
+  }
+}

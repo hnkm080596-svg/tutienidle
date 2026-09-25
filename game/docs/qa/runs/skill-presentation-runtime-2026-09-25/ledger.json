@@ -1,0 +1,380 @@
+{
+  "schemaVersion": 2,
+  "run": {
+    "id": "skill-presentation-runtime-2026-09-25",
+    "createdAt": "2026-09-25T03:13:10.769Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [
+      "Shared skill presentation runtime and production wiring",
+      "Copy-only combat presentation receipts",
+      "ACK lifecycle defects proven in affected runtime",
+      "Dev preview, focused tests and existing VFX clip admission"
+    ],
+    "nonGoals": [
+      "Gameplay balance/save schema changes",
+      "Merge sibling branches",
+      "Commit/push/deploy"
+    ],
+    "checkout": "E:/tutienidle/.agent-worktrees/skill-presentation-design",
+    "branch": "codex/skill-presentation-runtime",
+    "base": "48962aaa36caffa4a37f6fdf6a01ee3af98e5f50",
+    "head": "48962aaa36caffa4a37f6fdf6a01ee3af98e5f50",
+    "state": {
+      "productStateId": "e3d0b7cfa8cd9c3ff8e19dd55a354a6a817d61a9cd59cd53756aaee0d6ac1a34",
+      "contractId": "926a6a41c099283376697437b5de7534cd7e9cd5062fa76b950dd5aacc1ff9a6",
+      "attackModelId": "6d5ff83fd56133eaba8a053381974d782f8fbf6e1a77d469ec3e1944052baf2f",
+      "environmentId": "196cd8a61db0b622208f0bf02ecfeb1ca4ad61687c47916c466257d88b2fee7e"
+    },
+    "manifestPath": "manifest.json",
+    "environmentPath": "environment.json",
+    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "consumedLessonIds": [],
+    "aggregateParents": [],
+    "requiredDomains": [
+      "combat",
+      "presentation",
+      "runtime",
+      "test-quality"
+    ],
+    "exclusions": [],
+    "briefIds": [],
+    "capacityLimit": 4,
+    "requiredReadiness": true,
+    "phase": "SNAPSHOT",
+    "cleanRoundA": null,
+    "cleanRoundB": null,
+    "finalEvidenceIds": [],
+    "outcome": null
+  },
+  "briefs": [
+    {
+      "id": "BRIEF-SKILL-PRESENTATION-RUNTIME",
+      "taskId": "SKILL-PRESENTATION-RUNTIME",
+      "revision": 1,
+      "planningBaseline": {
+        "productStateId": "e3d0b7cfa8cd9c3ff8e19dd55a354a6a817d61a9cd59cd53756aaee0d6ac1a34",
+        "contractId": "926a6a41c099283376697437b5de7534cd7e9cd5062fa76b950dd5aacc1ff9a6",
+        "attackModelId": "6d5ff83fd56133eaba8a053381974d782f8fbf6e1a77d469ec3e1944052baf2f",
+        "environmentId": "196cd8a61db0b622208f0bf02ecfeb1ca4ad61687c47916c466257d88b2fee7e"
+      },
+      "policyHash": "60ff569d5cbba6d6db8b6a34e9fecc72a87aeba60ff0cd6422455368c58b6a4b",
+      "requirementRefs": [
+        {
+          "path": "docs/superpowers/specs/2026-09-25-skill-presentation-system-design.md",
+          "symbolOrSection": "4-13",
+          "revision": "user-approved 2026-09-25",
+          "basis": "USER"
+        }
+      ],
+      "invariantIds": [],
+      "dependencyRefs": [
+        {
+          "symbolOrSection": "presentation receipt and ACK seam",
+          "path": "src/core/battle/turn/CombatAnimationRuntime.ts",
+          "basis": "SOURCE",
+          "revision": "sha256:5d3a1c6d68d407e255f61545e31d462b08c16aec943e63e8e283e204bd60c4ec"
+        },
+        {
+          "symbolOrSection": "presentation receipt and ACK seam",
+          "path": "src/core/battle/turn/TurnSkillPlanRuntime.ts",
+          "basis": "SOURCE",
+          "revision": "sha256:c8fd90747b766d09fb2b5e6f97e55f872274991977adc9bca8aec58c8161f737"
+        },
+        {
+          "symbolOrSection": "presentation receipt and ACK seam",
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "basis": "SOURCE",
+          "revision": "sha256:e8b7af87c1d8c9232575cc4a88303409857fe312328732de4b5878ed0ef2149c"
+        },
+        {
+          "symbolOrSection": "presentation receipt and ACK seam",
+          "path": "src/core/game/GameManagerTurnBattleOps.ts",
+          "basis": "SOURCE",
+          "revision": "sha256:5eea9598d2ff4627fb8db5ad0c6737fddce6f3d7226cb6e719fbc9257bd72da6"
+        }
+      ],
+      "sourceDependencyHashes": [
+        {
+          "symbolOrSection": "presentation receipt and ACK seam",
+          "path": "src/core/battle/turn/CombatAnimationRuntime.ts",
+          "basis": "SOURCE",
+          "revision": "sha256:5d3a1c6d68d407e255f61545e31d462b08c16aec943e63e8e283e204bd60c4ec"
+        },
+        {
+          "symbolOrSection": "presentation receipt and ACK seam",
+          "path": "src/core/battle/turn/TurnSkillPlanRuntime.ts",
+          "basis": "SOURCE",
+          "revision": "sha256:c8fd90747b766d09fb2b5e6f97e55f872274991977adc9bca8aec58c8161f737"
+        },
+        {
+          "symbolOrSection": "presentation receipt and ACK seam",
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "basis": "SOURCE",
+          "revision": "sha256:e8b7af87c1d8c9232575cc4a88303409857fe312328732de4b5878ed0ef2149c"
+        },
+        {
+          "symbolOrSection": "presentation receipt and ACK seam",
+          "path": "src/core/game/GameManagerTurnBattleOps.ts",
+          "basis": "SOURCE",
+          "revision": "sha256:5eea9598d2ff4627fb8db5ad0c6737fddce6f3d7226cb6e719fbc9257bd72da6"
+        }
+      ],
+      "expectedChangeSet": [
+        "src/core/battle/turn/CombatAnimationRuntime.ts",
+        "src/core/battle/turn/TurnSkillPlanRuntime.ts",
+        "src/core/battle/turn/TurnBattleSystem.ts",
+        "src/core/game/GameManagerTurnBattleOps.ts"
+      ],
+      "lessonRouting": [
+        {
+          "lessonRef": "L-016@1",
+          "decision": "NOT_APPLICABLE",
+          "reason": "no semantic trigger matched"
+        },
+        {
+          "lessonRef": "L-017@1",
+          "decision": "NOT_APPLICABLE",
+          "reason": "no semantic trigger matched"
+        },
+        {
+          "lessonRef": "L-018@1",
+          "decision": "NOT_APPLICABLE",
+          "reason": "no semantic trigger matched"
+        },
+        {
+          "lessonRef": "L-019@1",
+          "decision": "NOT_APPLICABLE",
+          "reason": "no semantic trigger matched"
+        },
+        {
+          "lessonRef": "L-020@1",
+          "decision": "NOT_APPLICABLE",
+          "reason": "no semantic trigger matched"
+        },
+        {
+          "lessonRef": "L-021@1",
+          "decision": "NOT_APPLICABLE",
+          "reason": "no semantic trigger matched"
+        }
+      ],
+      "slices": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5"
+      ],
+      "firstProofObligations": [
+        {
+          "oracle": "Real GameManager/manual clock: hold >4000ms cannot consume pending step; resume resolves once",
+          "stage": "BEFORE_WRITE",
+          "admittedSlice": "S1",
+          "evidenceIds": []
+        },
+        {
+          "oracle": "Synchronous resolved emission must not lose complete-step acknowledgement",
+          "stage": "BEFORE_WRITE",
+          "admittedSlice": "S1",
+          "evidenceIds": []
+        },
+        {
+          "oracle": "Real Phi Kiem cast in CombatScene plus next turn and zero live leases",
+          "stage": "BEFORE_PROPAGATION",
+          "admittedSlice": "S4",
+          "evidenceIds": []
+        }
+      ],
+      "unresolvedAssumptions": [],
+      "readiness": "IMPLEMENTATION_READY",
+      "preflightEvidenceIds": [],
+      "deviations": [
+        "Preflight READY_TO_DECLARE, exit 0. First proofs remain required before production writes, not yet executed.",
+        "Candidate L-017/L-019 inspected as non-binding hypotheses: real registration/ACK seam tests in plan; no promoted active policy exists."
+      ],
+      "consumedBy": [],
+      "checkpoints": [],
+      "finalConformanceIds": []
+    }
+  ],
+  "assignments": [
+    {
+      "id": "ASG-CORE",
+      "parentId": null,
+      "capacityScope": "skill-presentation-runtime",
+      "inputBundleHash": "926a6a41c099283376697437b5de7534cd7e9cd5062fa76b950dd5aacc1ff9a6",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "repository read/write",
+        "Vitest",
+        "TypeScript"
+      ],
+      "writeSurface": [
+        "game/src/core/battle/turn/**",
+        "game/src/core/game/GameManagerTurnBattleOps.ts",
+        "game/src/core/game/GameManagerTurnBattlePresentationOps.ts",
+        "game/src/core/game/*.test.ts"
+      ],
+      "readiness": "READY",
+      "status": "FINISHED",
+      "reservedAt": "2026-09-25T03:15:01.602Z",
+      "observedRuntimeId": null,
+      "releaseEvidence": {
+        "kind": "EXECUTED_RUNTIME",
+        "ref": "collaboration.list_agents 2026-09-25T03:40Z /root/core_runtime completed"
+      },
+      "resultRef": null,
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-25T03:15:01.601Z",
+          "from": "READY",
+          "to": "RESERVED",
+          "reason": "admitted at 2/4 (incl. external 1)"
+        },
+        {
+          "at": "2026-09-25T03:41:13.531Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'finished'"
+        }
+      ]
+    },
+    {
+      "id": "ASG-CORE-REVIEW",
+      "parentId": null,
+      "capacityScope": "skill-presentation-runtime",
+      "inputBundleHash": "926a6a41c099283376697437b5de7534cd7e9cd5062fa76b950dd5aacc1ff9a6",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "read-only architecture review"
+      ],
+      "writeSurface": [],
+      "readiness": "READY",
+      "status": "RESERVED",
+      "reservedAt": "2026-09-25T03:40:55.518Z",
+      "observedRuntimeId": null,
+      "releaseEvidence": null,
+      "resultRef": null,
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-25T03:40:55.517Z",
+          "from": "READY",
+          "to": "RESERVED",
+          "reason": "admitted at 3/4 (incl. external 1)"
+        }
+      ]
+    }
+  ],
+  "consumptions": [],
+  "invariants": [],
+  "census": [],
+  "findings": [],
+  "evidence": [],
+  "coverage": [],
+  "attacks": [],
+  "reviews": [],
+  "cycles": [],
+  "mutations": [],
+  "corpus": [],
+  "lessons": [],
+  "messages": [],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-09-25T03:13:10.771Z",
+      "kind": "PHASE",
+      "actor": "codex-skill-runtime",
+      "state": {
+        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "a0b3ec98b50b8da9210746479f51af200838d2273dc55ad59e6f01b920e5cf1e",
+      "eventHash": "3e3fda55182e9c933c17604f3d14a2ef831c448e45fb0fe503f1e24b3e504008"
+    },
+    {
+      "seq": 2,
+      "at": "2026-09-25T03:13:14.097Z",
+      "kind": "SNAPSHOT",
+      "actor": "codex-skill-runtime",
+      "state": {
+        "productStateId": "e3d0b7cfa8cd9c3ff8e19dd55a354a6a817d61a9cd59cd53756aaee0d6ac1a34",
+        "contractId": "926a6a41c099283376697437b5de7534cd7e9cd5062fa76b950dd5aacc1ff9a6",
+        "attackModelId": "6d5ff83fd56133eaba8a053381974d782f8fbf6e1a77d469ec3e1944052baf2f",
+        "environmentId": "196cd8a61db0b622208f0bf02ecfeb1ca4ad61687c47916c466257d88b2fee7e"
+      },
+      "previousEventHash": "3e3fda55182e9c933c17604f3d14a2ef831c448e45fb0fe503f1e24b3e504008",
+      "payloadPath": "events/0002.json",
+      "payloadHash": "c239e9b8bc954321681c3a46dabd7709d47def20e5bf74aad09857af691ba811",
+      "eventHash": "d948f3b08fd075bc8942d1b87998c0a0835b3af3a1d926ca71a614ced0894757"
+    },
+    {
+      "seq": 3,
+      "at": "2026-09-25T03:15:01.450Z",
+      "kind": "EVIDENCE",
+      "actor": "codex-skill-runtime",
+      "state": {
+        "productStateId": "e3d0b7cfa8cd9c3ff8e19dd55a354a6a817d61a9cd59cd53756aaee0d6ac1a34",
+        "contractId": "926a6a41c099283376697437b5de7534cd7e9cd5062fa76b950dd5aacc1ff9a6",
+        "attackModelId": "6d5ff83fd56133eaba8a053381974d782f8fbf6e1a77d469ec3e1944052baf2f",
+        "environmentId": "196cd8a61db0b622208f0bf02ecfeb1ca4ad61687c47916c466257d88b2fee7e"
+      },
+      "previousEventHash": "d948f3b08fd075bc8942d1b87998c0a0835b3af3a1d926ca71a614ced0894757",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "db0e61de92a192f11016c28cbb4059d596b2a4ddd5f3a01869b02f96733b44ec",
+      "eventHash": "c1abc3833930a9cef7e4e6642b8ffcb21984e77b0b25376a0d26817aede73879"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-25T03:15:01.603Z",
+      "kind": "SCHEDULE",
+      "actor": "codex-skill-runtime",
+      "state": {
+        "productStateId": "e3d0b7cfa8cd9c3ff8e19dd55a354a6a817d61a9cd59cd53756aaee0d6ac1a34",
+        "contractId": "926a6a41c099283376697437b5de7534cd7e9cd5062fa76b950dd5aacc1ff9a6",
+        "attackModelId": "6d5ff83fd56133eaba8a053381974d782f8fbf6e1a77d469ec3e1944052baf2f",
+        "environmentId": "196cd8a61db0b622208f0bf02ecfeb1ca4ad61687c47916c466257d88b2fee7e"
+      },
+      "previousEventHash": "c1abc3833930a9cef7e4e6642b8ffcb21984e77b0b25376a0d26817aede73879",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "8e4e2fb5d32119eb9c5310f3b64fa0fa0a0aa755f7542301fd594cbb99475d3d",
+      "eventHash": "a3180387cfe8dc503f9d5df05b6313b6fc7553632d43dc1b9e1d59c734e21950"
+    },
+    {
+      "seq": 5,
+      "at": "2026-09-25T03:40:55.519Z",
+      "kind": "SCHEDULE",
+      "actor": "codex-skill-runtime",
+      "state": {
+        "productStateId": "e3d0b7cfa8cd9c3ff8e19dd55a354a6a817d61a9cd59cd53756aaee0d6ac1a34",
+        "contractId": "926a6a41c099283376697437b5de7534cd7e9cd5062fa76b950dd5aacc1ff9a6",
+        "attackModelId": "6d5ff83fd56133eaba8a053381974d782f8fbf6e1a77d469ec3e1944052baf2f",
+        "environmentId": "196cd8a61db0b622208f0bf02ecfeb1ca4ad61687c47916c466257d88b2fee7e"
+      },
+      "previousEventHash": "a3180387cfe8dc503f9d5df05b6313b6fc7553632d43dc1b9e1d59c734e21950",
+      "payloadPath": "events/0005.json",
+      "payloadHash": "a0a084adf5095655f96634e16e05ccb2b80d7be0ee80db54b46ce855c0455c1c",
+      "eventHash": "d4eacf0e198ab8b2ce93d196ca5e75a58f8a6d666ccfaf12c604fe062498115b"
+    },
+    {
+      "seq": 6,
+      "at": "2026-09-25T03:41:13.533Z",
+      "kind": "SCHEDULE",
+      "actor": "codex-skill-runtime",
+      "state": {
+        "productStateId": "e3d0b7cfa8cd9c3ff8e19dd55a354a6a817d61a9cd59cd53756aaee0d6ac1a34",
+        "contractId": "926a6a41c099283376697437b5de7534cd7e9cd5062fa76b950dd5aacc1ff9a6",
+        "attackModelId": "6d5ff83fd56133eaba8a053381974d782f8fbf6e1a77d469ec3e1944052baf2f",
+        "environmentId": "196cd8a61db0b622208f0bf02ecfeb1ca4ad61687c47916c466257d88b2fee7e"
+      },
+      "previousEventHash": "d4eacf0e198ab8b2ce93d196ca5e75a58f8a6d666ccfaf12c604fe062498115b",
+      "payloadPath": "events/0006.json",
+      "payloadHash": "a8e055aa164ffb74cdb32e77cbc73382afa82303729b82d62ce332cf4f20d53b",
+      "eventHash": "df6209e44514395a93f5013095cfeca08f26f23a0a4d73ec364d1445c06cd94c"
+    }
+  ]
+}

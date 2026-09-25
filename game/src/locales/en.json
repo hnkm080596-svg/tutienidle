@@ -1,4 +1,29 @@
 {
+  "skillVfxLab": {
+    "title": "Training · Flying Sword",
+    "intro": "A development preview using the same playback runtime as real combat. Switch skills to compare flight, melee, area effects and healing.",
+    "back": "Enter game →",
+    "play": "Cast",
+    "cancel": "Cancel effect",
+    "note": "Development only · Synthetic outcomes, no damage and no save writes. Procedural Phaser Graphics, no VFX sprite download.",
+    "skill": "Skill",
+    "outcome": "Simulated outcome",
+    "speed": "Playback speed",
+    "ngu_kiem_flight": "Flying Sword · Ngu Kiem",
+    "slash": "Melee slash",
+    "earth_shockwave": "Earth shockwave · AoE",
+    "holy_radiance": "Healing",
+    "hit": "Landed hit",
+    "miss": "Miss",
+    "multi": "8 flying swords",
+    "combo": "With combo",
+    "empty": "No effect",
+    "release": "Release · 120 ms",
+    "cruise": "Cruise · 180 ms",
+    "acceleration": "Acceleration · 70 ms",
+    "impact": "Impact · 80 ms",
+    "recall": "Recall · 170 ms"
+  },
   "_meta": {
     "version": 1,
     "language": "en"

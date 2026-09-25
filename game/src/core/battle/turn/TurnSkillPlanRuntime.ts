@@ -53,6 +53,7 @@ import type {
 } from './TurnBattleSystem'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import { executionCommitsCast } from './TurnSkillAction'
+import { PlanPresentationCollector, type ResolvedPresentationGroup } from './SkillPresentationFacts'
 
 // ---------------------------------------------------------------------------
 // Orchestration surface -- TBS implements these over its private helpers.
@@ -123,6 +124,7 @@ export interface TurnSkillPlanOrchestration {
 }
 
 export interface TurnSkillPlanRoutedCast {
+  presentationGroups: readonly ResolvedPresentationGroup[]
   outcome: SkillCastOutcome
   /** Deduped first-landed order -- the legacy targetIds/landedTargets
       bookkeeping for the Tro window + the return value. */
@@ -141,6 +143,7 @@ export class TurnSkillPlanRuntimeError extends Error {}
 // ---------------------------------------------------------------------------
 
 interface PlanCastSession {
+  presentation?: PlanPresentationCollector
   landedTargetIds: string[]
   landedTargets: TurnBattleParticipant[]
   /** apply_buff targets whose op resolved -- the non-damaging lane's
@@ -250,6 +253,7 @@ export class TurnSkillPlanRuntime {
       commitsCast && (rootDef.chargeTurns ?? 0) > 0
 
     const session = this.newSession(declared)
+    session.presentation = new PlanPresentationCollector(actor, [rootDef, payloadDef, ...(declared.compositePickedSkills ?? [])], id => tbs.participant(battle, id), 'primary')
     const executor = this.buildExecutor(battle, actor, declared, session)
 
     const input: SkillResolveInput = {
@@ -278,9 +282,11 @@ export class TurnSkillPlanRuntime {
     }
 
     const plan = this.resolver.resolve(input)
+    session.presentation.register(plan)
     const outcome = executor.execute(plan, input)
 
     return {
+      presentationGroups: session.presentation.finish(outcome.blocked ? 'insufficient-resource' : chargeInit ? 'charging' : 'no-presentable-operation'),
       outcome,
       landedTargetIds: session.landedTargetIds,
       landedTargets: session.landedTargets,
@@ -304,12 +310,13 @@ export class TurnSkillPlanRuntime {
     declared: TurnDeclaredAction,
     extraDef: TurnSkillDefinition,
     extraTargets: readonly TurnBattleParticipant[],
-  ): { landedTargetIds: readonly string[]; hitCount: number } | null {
+  ): { landedTargetIds: readonly string[]; hitCount: number; presentationGroups: readonly ResolvedPresentationGroup[] } | null {
     const catalog = this.catalogFor(extraDef)
     if (catalog.unsupported.length > 0) return null
 
     const tbs = this.deps.orchestration
     const session = this.newSession(declared, extraTargets)
+    session.presentation = new PlanPresentationCollector(actor, [extraDef], id => tbs.participant(battle, id), 'combo')
     const executor = this.buildExecutor(battle, actor, declared, session)
 
     const input: SkillResolveInput = {
@@ -335,9 +342,11 @@ export class TurnSkillPlanRuntime {
     }
 
     const plan = this.resolver.resolve(input)
-    executor.execute(plan, input)
+    session.presentation.register(plan)
+    const outcome = executor.execute(plan, input)
 
     return {
+      presentationGroups: session.presentation.finish(outcome.blocked ? 'insufficient-resource' : 'no-presentable-operation'),
       landedTargetIds: session.landedTargetIds,
       hitCount: session.hitCount,
     }
@@ -469,7 +478,14 @@ export class TurnSkillPlanRuntime {
       }, 0)
 
     return {
+      onOperationWillSettle: (operation) => {
+        if ('selector' in operation.payload) {
+          const instance = this.deps.buffs.getInstance(operation.payload.selector)
+          if (instance) session.presentation?.captureSelectedBuff(operation.operationId, instance.targetId, instance.instanceId)
+        }
+      },
       onOperationSettled: (operation, result, plan) => {
+        session.presentation?.settle(operation, result, plan)
         if (result.status === 'resolved') {
           const opTarget = (operation.payload as { targetId?: string })
             .targetId
@@ -579,6 +595,7 @@ export class TurnSkillPlanRuntime {
       },
 
       onPlanCompleted: (plan) => {
+        session.presentation?.register(plan)
         // Legacy refresh boundary (ARCH-002 parity): applyDeclaredBuff
         // refreshes each applied target and the non-damaging lane
         // refreshes affected + actor, so routed ops must leave stats

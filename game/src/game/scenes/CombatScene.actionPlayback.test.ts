@@ -77,92 +77,40 @@ function impactEvent() {
   }
 }
 
-describe('CombatScene.onActionImpact â€” VFX completion owns ack (Remediation Task 2)', () => {
-  it('KHÃ”NG cÃ²n delayedCall tá»± tÃ­nh duration (bá» duplicate duration calc)', () => {
-    const { scene } = createScene()
-
-    scene.onActionImpact(impactEvent())
-
-    expect(scene.time.delayedCall).not.toHaveBeenCalled()
-  })
-
-  it('tween onComplete â†’ acknowledgeActionComplete Ä‘Ãºng 1 láº§n', () => {
+describe('legacy action feedback is non-authoritative', () => {
+  it('visual completion never acknowledges the shared skill playback', () => {
     const { scene, tweenConfigs, acks } = createScene()
-
     scene.onActionImpact(impactEvent())
-
+    expect(scene.time.delayedCall).not.toHaveBeenCalled()
+    ;(tweenConfigs.at(-1)?.onComplete as (() => void) | undefined)?.()
     expect(acks).toHaveLength(0)
-
-    // MÃ´ phá»ng Phaser tween xong.
-    const onComplete = tweenConfigs
-      .at(-1)
-      ?.onComplete as (() => void) | undefined
-
-    expect(onComplete).toBeDefined()
-    onComplete!()
-
-    expect(acks).toHaveLength(1)
-    expect(acks[0]!.token).toBe('playback-7')
   })
-
-  it('projection miss (spawner tráº£ undefined) â†’ ack ngay fallback', () => {
+  it('projection miss cannot acknowledge a pending action', () => {
     const { scene, acks } = createScene()
-
     scene.projection = undefined
     scene.onActionImpact(impactEvent())
-
-    expect(acks).toHaveLength(1)
-    expect(acks[0]!.token).toBe('playback-7')
-    expect(scene.time.delayedCall).not.toHaveBeenCalled()
-  })
-
-  it('handle.complete() thá»§ cÃ´ng trÆ°á»›c tween xong â†’ tween xong sau KHÃ”NG ack láº¡i (idempotent)', () => {
-    const { scene, tweenConfigs, acks } = createScene()
-
-    // Báº¯t handle qua spawner (callback token-captured do CombatScene truyá»n).
-    const handle = scene.vfxSpawner.onActionImpact(impactEvent(), () => {
-      const token = scene.gameManagerRef.getPendingPlaybackToken()
-
-      if (token !== null) {
-        scene.gameManagerRef.acknowledgeActionComplete(token)
-      }
-    })
-
-    handle.complete()
-    expect(acks).toHaveLength(1)
-
-    // Tween xong sau Ä‘Ã³ â€” khÃ´ng ack láº§n 2.
-    ;(tweenConfigs.at(-1)?.onComplete as () => void)()
-    expect(acks).toHaveLength(1)
-  })
-
-  it('token capture Táº I SPAWN: token Ä‘á»•i giá»¯a chá»«ng â†’ completion cÅ© KHÃ”NG ack nháº§m phase má»›i', () => {
-    const { scene, tweenConfigs, acks } = createScene()
-
-    let currentToken: string | null = 'playback-7'
-    scene.gameManagerRef.getPendingPlaybackToken = vi.fn(() => currentToken)
-
-    scene.onActionImpact(impactEvent())
-
-    // Battle má»›i báº¯t Ä‘áº§u giá»¯a chá»«ng â€” token mint má»›i.
-    currentToken = 'playback-8'
-
-    // Completion cÅ© bÃ¢y giá» má»›i cháº¡y.
-    ;(tweenConfigs.at(-1)?.onComplete as () => void)()
-
-    // Completion cÅ© ack vá»›i token CÅ¨ (playback-7) â€” GameManager sáº½ tá»« chá»‘i.
-    expect(acks).toHaveLength(1)
-    expect(acks[0]!.token).toBe('playback-7')
-  })
-
-  it('khÃ´ng cÃ³ phase pending (token null) â†’ KHÃ”NG ack (stale-guard)', () => {
-    const { scene, tweenConfigs, acks } = createScene()
-
-    scene.gameManagerRef.getPendingPlaybackToken = vi.fn(() => null)
-
-    scene.onActionImpact(impactEvent())
-    ;(tweenConfigs.at(-1)?.onComplete as () => void)()
-
     expect(acks).toHaveLength(0)
+  })
+  it('an obsolete legacy callback cannot acknowledge a replacement command port', () => {
+    const { scene, tweenConfigs, acks } = createScene()
+    scene.onActionImpact(impactEvent())
+    const next = vi.fn()
+    scene.gameManagerRef = { acknowledgeActionComplete: next }
+    ;(tweenConfigs.at(-1)?.onComplete as (() => void) | undefined)?.()
+    expect(next).not.toHaveBeenCalled()
+    expect(acks).toHaveLength(0)
+  })
+  it('standalone spawner completion remains idempotent for visual consumers', () => {
+    const { scene, tweenConfigs } = createScene()
+    const complete = vi.fn()
+    const handle = scene.vfxSpawner.onActionImpact(impactEvent(), complete)
+    handle.complete()
+    ;(tweenConfigs.at(-1)?.onComplete as () => void)()
+    expect(complete).toHaveBeenCalledTimes(1)
+  })
+  it('legacy attack lunge cannot acknowledge impact', () => {
+    const { scene } = createScene()
+    scene.onAttack({ sourceId: 'missing' })
+    expect(scene.gameManagerRef.acknowledgeActionImpact).not.toHaveBeenCalled()
   })
 })

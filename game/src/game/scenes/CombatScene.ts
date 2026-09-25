@@ -1,5 +1,9 @@
 ﻿import Phaser from 'phaser'
 import type { ResumePlayback } from '@/core/battle/turn/CombatAnimationRuntime'
+import type { SkillCastPresentation, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
+import { SkillPresentationRunner } from '@/presentation/skills/SkillPresentationRunner'
+import { PhaserSkillVfxDriver } from '@/game/support/skill-vfx/PhaserSkillVfxDriver'
+import { getSkillPresentationRecipe } from '@/data/vfx/SkillPresentationRecipes'
 import type { EventBus, EventHandler } from '@/core/events/EventBus'
 import {
   readOptionalGate,
@@ -579,9 +583,51 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // Internal (module boundary — combat-action-feedback paces engine acks).
   gameManagerRef?: DomainCommandPort
 
+  private _skillPlayback?: SkillPresentationRunner
+  private _skillVfxDriver?: PhaserSkillVfxDriver
+
+  private get skillPlayback(): SkillPresentationRunner {
+    if (!this._skillPlayback) {
+      const reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+      this._skillVfxDriver = new PhaserSkillVfxDriver({
+        graphics: () => this.add.graphics(),
+        anchor: fact => this.bodyAnchorScreen(fact.entityId, 'centre')
+          ?? this.lastKnownScreenPositions?.get(fact.entityId)
+          ?? this.projection?.gridToScreen(fact.row, fact.column),
+        ground: fact => this.projection?.gridToScreen(fact.row, fact.column),
+        uprightDepth: fact => {
+          const foot = this.projection?.gridToScreen(fact.row, fact.column)
+          return this.isPerspective && foot
+            ? uprightVfxDepth(foot.y, this.entityFootMinY, this.entityFootMaxY, fact.column)
+            : DEPTH_UPRIGHT_VFX
+        },
+        cameraImpulse: () => this.cameras.main.shake(45, 0.001, false),
+      }, reducedMotion ? 'low' : 'standard', reducedMotion)
+      this._skillPlayback = new SkillPresentationRunner(this._skillVfxDriver, getSkillPresentationRecipe,
+        error => { console.warn('[SkillPresentation]', error) })
+    }
+    return this._skillPlayback
+  }
+
+  /** Read-only diagnostics; never used to control combat. */
+  get skillVfxDebug() {
+    return { playback: this._skillPlayback?.snapshot,
+      pool: this._skillVfxDriver?.stats ?? { allocated: 0, active: 0, capacity: 24 } }
+  }
+
+  private onSkillCast(cast: SkillCastPresentation): void {
+    const port = this.gameManagerRef
+    if (port) this.skillPlayback.start(cast, port)
+  }
+
+  private onSkillResolved(resolved: SkillPresentationResolved): void {
+    this._skillPlayback?.resolve(resolved)
+  }
+
   private getCombatEventBindings(): Array<[string, EventHandler<never>]> {
     return [
-      ['turn_cast_start', (event: CombatScenePayload) => this.onAttack(event)],
+      ['skill_presentation_cast', (event: SkillCastPresentation) => this.onSkillCast(event)],
+      ['skill_presentation_resolved', (event: SkillPresentationResolved) => this.onSkillResolved(event)],
       ['critical', (event: CombatScenePayload) => this.onCritical(event)],
       ['hit', (event: CombatScenePayload) => this.onHit(event)],
       ['dodge', (event: CombatScenePayload) => this.onDodge(event)],
@@ -642,7 +688,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
           }
         },
       ],
-      ['action_impact', (event: ActionImpactEvent) => this.onActionImpact(event)],
       ['turn_ready', (event: { actorId: string }) => this.onTurnReady(event)],
       ['turn_standby_complete', (event: { actorId: string }) => this.onTurnStandbyComplete(event)],
       ['status_vfx_attached', (event: StatusVfxAttachedEvent) => this.onStatusAttached(event)],
@@ -837,6 +882,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   update(_time: number, delta: number) {
+    this._skillPlayback?.update(delta)
     for (const [id, sprite] of this.sprites) {
       const visualX = this.getInterpolatedX(id)
 
@@ -1370,6 +1416,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   private clearSceneState() {
+    this._skillPlayback?.cancel()
+    this._skillVfxDriver?.destroy()
+    this._skillPlayback = undefined
+    this._skillVfxDriver = undefined
     for (const status of this.statuses.values()) {
       status.icon.destroy()
       status.stackLabel.destroy()
@@ -1773,6 +1823,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // player, hÃƒÂ m nÃƒÂ y reset lÃ¡ÂºÂ¡i vÃ¡Â»Â Ã„â€˜ÃƒÂºng trÃ¡ÂºÂ¡ng thÃƒÂ¡i ban Ã„â€˜Ã¡ÂºÂ§u cho chÃ¡ÂºÂ¯c,
   // no-op nÃ¡ÂºÂ¿u Ã„â€˜ÃƒÂ£ sÃ¡ÂºÂ¡ch sÃ¡ÂºÂµn).
   onBattleStart() {
+    this._skillPlayback?.cancel()
+    this._skillVfxDriver?.reset()
     this.inBattle = true
 
     // 6A-T5 — HUD hiện khi vào trận.
@@ -1895,16 +1947,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     if (resume.phase === 'ready') {
       this.onTurnReady({ actorId: resume.actorId })
     } else if (resume.phase === 'cast') {
-      this.onAttack({
-        sourceId: resume.actorId,
-        skillId: resume.skillId,
-        targetId: resume.targetIds[0],
-      })
+      this.onSkillCast(resume.cast)
     } else if (resume.phase === 'complete') {
-      const token = resume.token
-      this.time.delayedCall(50, () => {
-        this.gameManagerRef?.acknowledgeActionComplete(token)
-      })
+      const port = this.gameManagerRef
+      if (port) this.skillPlayback.resumeResolved(resume.resolved, port)
     }
   }
 

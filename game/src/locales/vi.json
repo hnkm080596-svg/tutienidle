@@ -1,4 +1,29 @@
 {
+  "skillVfxLab": {
+    "title": "Diễn võ · Phi Kiếm",
+    "intro": "Phòng thử hiệu ứng dùng chung bộ chạy với combat thật. Đổi kỹ năng để xem cùng một hệ thống biểu diễn đường kiếm, đòn chém, vùng ảnh hưởng và hồi phục.",
+    "back": "Vào game →",
+    "play": "Thi triển",
+    "cancel": "Hủy hiệu ứng",
+    "note": "Chỉ dành cho phát triển · Kết quả giả lập, không gây sát thương và không ghi bản lưu. Hiệu ứng được dựng bằng Phaser Graphics, không tải sprite VFX.",
+    "skill": "Kỹ năng",
+    "outcome": "Kết quả giả lập",
+    "speed": "Tốc độ xem",
+    "ngu_kiem_flight": "Phi Kiếm · Ngự Kiếm",
+    "slash": "Đòn chém",
+    "earth_shockwave": "Địa chấn · AoE",
+    "holy_radiance": "Hồi phục",
+    "hit": "Trúng mục tiêu",
+    "miss": "Đòn hụt",
+    "multi": "8 phi kiếm",
+    "combo": "Kèm combo",
+    "empty": "Không có hiệu lực",
+    "release": "Xuất kiếm · 120 ms",
+    "cruise": "Ngự kiếm · 180 ms",
+    "acceleration": "Tăng tốc · 70 ms",
+    "impact": "Xuyên kích · 80 ms",
+    "recall": "Hồi kiếm · 170 ms"
+  },
   "_meta": {
     "version": 1,
     "language": "vi"

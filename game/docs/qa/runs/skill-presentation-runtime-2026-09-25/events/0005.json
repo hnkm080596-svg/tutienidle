@@ -1,0 +1,23 @@
+{
+  "action": "admit",
+  "externalOccupied": 1,
+  "assignment": {
+    "id": "ASG-CORE-REVIEW",
+    "parentId": null,
+    "capacityScope": "skill-presentation-runtime",
+    "inputBundleHash": "926a6a41c099283376697437b5de7534cd7e9cd5062fa76b950dd5aacc1ff9a6",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "read-only architecture review"
+    ],
+    "writeSurface": [],
+    "readiness": "READY",
+    "status": "READY",
+    "reservedAt": null,
+    "observedRuntimeId": null,
+    "releaseEvidence": null,
+    "resultRef": null,
+    "timeoutState": null,
+    "history": []
+  }
+}

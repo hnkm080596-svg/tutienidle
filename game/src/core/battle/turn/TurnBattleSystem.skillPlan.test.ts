@@ -15,6 +15,106 @@ import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 import type { CombatOperationResult } from '../contracts/results'
 import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
+import { buildSkillCastPresentation, sealSkillPresentation } from './SkillPresentationFacts'
+
+describe('skill presentation settled facts', () => {
+  it('includes the actual removed buff instance when a skill consumes its stacks', () => {
+    const f = battleWith({ ...STRIKE, consumesAilmentId: 'qa_mark', damagePerStack: 5 }, { rng: new FunctionCombatRng(() => 0) })
+    f.runtime.applyBuff('qa_mark', f.enemyParticipant, f.playerParticipant, { stacks: 2 })
+    const instanceId = f.runtime.buffs.getForTarget(f.enemyParticipant.entity.id)[0]!.instanceId
+    const result = f.system.applyActionImpact(f.battle, f.system.declareActorAction(f.battle, f.playerParticipant, 'special'))
+    expect(result.presentationGroups.flatMap(g => g.outcomes)).toContainEqual(expect.objectContaining({ kind: 'status', action: 'remove', removed: true, instanceId, target: expect.objectContaining({ entityId: 'enemy' }) }))
+  })
+  it('engine-unit receipt copies direct heal authority output without invented operation identity', () => {
+    const player = makeParticipant('player', createCombatant('player'), 100, 0)
+    const enemy = makeParticipant('enemy', createCombatant('enemy', { type: 'enemy' }), 1, 1)
+    player.basic = { ...BASIC, healPercentOfDamage: 0.5, consumesWardForDamage: true, damagePerWardPoint: 2 }
+    player.entity.currentWard = 5
+    player.entity.baseStats = asBaseStats({ ...player.entity.baseStats, wardMax: 5 })
+    player.entity.currentHp = 100
+    const combat = new CombatSystem(new EventBus())
+    combat.setRandomSource(() => 0)
+    const system = new TurnBattleSystem(combat)
+    const battle: TurnBattle = { players: [player], enemies: [enemy], state: 'fighting' }
+    const declared = system.declareActorAction(battle, player, 'basic')
+    const before = player.entity.currentHp
+    const enemyHp = enemy.entity.currentHp
+    const result = system.applyActionImpact(battle, declared)
+    const heal = result.presentationGroups[0]!.outcomes.find(o => o.kind === 'heal')
+    expect(heal).toMatchObject({ kind: 'heal', healed: player.entity.currentHp - before })
+    expect(heal!.operationId).toBeUndefined()
+    const hits = result.presentationGroups[0]!.outcomes.filter(o => o.kind === 'hit')
+    expect(hits.reduce((sum, hit) => sum + hit.hpDamage, 0)).toBeCloseTo(enemyHp - enemy.entity.currentHp)
+  })
+  it('copies authoritative healing without extending the damage footprint to the healed caster', () => {
+    const f = battleWith({ ...STRIKE, healPercentOfDamage: 0.5 }, { rng: new FunctionCombatRng(() => 0) })
+    f.playerParticipant.entity.currentHp = 100
+    f.playerParticipant.entity.row = 5
+    const result = f.system.applyActionImpact(f.battle, f.system.declareActorAction(f.battle, f.playerParticipant, 'special'))
+    const group = result.presentationGroups[0]!
+    const heal = group.outcomes.find(o => o.kind === 'heal')
+    const settledHeal = f.runtime.scheduler.trace.records.find(r => r.result.type === 'heal')!.result
+    expect(settledHeal.type).toBe('heal')
+    if (settledHeal.type !== 'heal') throw new Error('Expected authoritative heal')
+    expect(heal).toMatchObject({ kind: 'heal', target: { entityId: 'player' }, healed: settledHeal.result!.healed })
+    expect(group.footprint).toEqual({ kind: 'cells', cells: [{ row: 2, column: 0 }] })
+  })
+  it('preserves primary/composite/two combo identities and operation provenance without consuming extra RNG', () => {
+    const a: TurnSkillDefinition = { ...BASIC, id: 'receipt_a', presetId: 'slash' }
+    const b: TurnSkillDefinition = { ...BASIC, id: 'receipt_b', presetId: 'arcane_impact' }
+    const root: TurnSkillDefinition = { ...BASIC, id: 'receipt_root', compositePicks: { poolType: 'element_basic', pool: [a, b], count: 2 } }
+    let draws = 0
+    const { battle, playerParticipant, system, runtime } = battleWith(root, { rng: new FunctionCombatRng(() => { draws++; return 0 }) })
+    playerParticipant.dynamicBasic = { resolveBasic: () => BASIC, onCastResolved: () => [a, a] }
+    const declared = system.declareActorAction(battle, playerParticipant, 'special')
+    const afterDeclare = draws
+    const cast = buildSkillCastPresentation({ sessionId: 1, requestId: 'request', token: 'token' }, playerParticipant, declared)
+    expect(draws).toBe(afterDeclare)
+    const result = system.applyActionImpact(battle, declared)
+    const beforeSeal = draws
+    const batch = sealSkillPresentation(cast.ref, result.presentationGroups)
+    expect(draws).toBe(beforeSeal)
+    expect(batch.groups.map(g => g.role)).toEqual(['primary', 'composite', 'combo', 'combo'])
+    expect(new Set(batch.groups.map(g => g.groupId)).size).toBe(4)
+    const hits = batch.groups.flatMap(g => g.outcomes).filter(o => o.kind === 'hit')
+    expect(hits).toHaveLength(4)
+    expect(hits.every(o => o.operationId && o.castId && o.rootActionId && o.subcastIndex !== undefined)).toBe(true)
+    expect(hits.map(o => o.operationId).sort()).toEqual(runtime.scheduler.trace.records.filter(r => r.operation.type === 'deal_damage').map(r => r.operation.operationId).sort())
+    expect(batch.groups[0]!.presetId).toBe('slash')
+    playerParticipant.entity.row = 5
+    expect(cast.source.row).toBe(2)
+    expect(Object.isFrozen(batch.groups[0]!.outcomes[0])).toBe(true)
+  })
+  it('reports executed misses separately and never invents hits for instances after death', () => {
+    const skill: TurnSkillDefinition = { ...STRIKE, instances: { count: 4 } }
+    const f = battleWith(skill, { rng: new FunctionCombatRng(() => 0) })
+    f.enemyParticipant.entity.currentHp = 1
+    const declared = f.system.declareActorAction(f.battle, f.playerParticipant, 'special')
+    const cast = buildSkillCastPresentation({ sessionId: 1, requestId: 'r', token: 't' }, f.playerParticipant, declared)
+    const result = f.system.applyActionImpact(f.battle, declared)
+    expect(cast.candidateInstanceCount).toBe(4)
+    const hits = result.presentationGroups.flatMap(g => g.outcomes).filter(o => o.kind === 'hit')
+    expect(hits).toHaveLength(1)
+    expect(hits[0]).toMatchObject({ landed: true, killed: true })
+    const miss = battleWith(skill, { rng: new FunctionCombatRng(() => 0.999) })
+    miss.enemyParticipant.entity.stats = { ...miss.enemyParticipant.entity.stats, evasionRate: 1e9 }
+    miss.enemyParticipant.entity.baseStats = asBaseStats({ ...miss.enemyParticipant.entity.baseStats, evasionRate: 1e9 })
+    const misses = miss.system.applyActionImpact(miss.battle, miss.system.declareActorAction(miss.battle, miss.playerParticipant, 'special')).presentationGroups.flatMap(g => g.outcomes).filter(o => o.kind === 'hit')
+    expect(misses).toHaveLength(4)
+    expect(misses.every(o => !o.landed && o.hpDamage === 0)).toBe(true)
+  })
+  it('reports charge start as no effect and non-damaging applications as status, never dodge', () => {
+    const f = battleWith({ ...STRIKE, chargeTurns: 2 })
+    const declared = f.system.declareActorAction(f.battle, f.playerParticipant, 'special')
+    const cast = buildSkillCastPresentation({ sessionId: 1, requestId: 'r', token: 't' }, f.playerParticipant, declared)
+    expect(cast.disposition).toBe('charge-start')
+    expect(f.system.applyActionImpact(f.battle, declared).presentationGroups[0]!.outcomes).toEqual([{ outcomeId: '', kind: 'no-effect', reason: 'charging' }])
+    const buff = battleWith({ id: 'receipt_buff', cooldownTurns: 0, targeting: { shape: 'single' }, appliesAilments: [{ buffDefinitionId: 'qa_mark', chance: 1, stacks: 1 }] })
+    const groups = buff.system.applyActionImpact(buff.battle, buff.system.declareActorAction(buff.battle, buff.playerParticipant, 'special')).presentationGroups
+    expect(groups[0]!.outcomes[0]).toMatchObject({ kind: 'status', applied: true, target: { entityId: 'enemy' } })
+    expect(groups[0]!.footprint).toEqual({ kind: 'entity-targets', entityIds: ['enemy'] })
+  })
+})
 
 // skilldef M4e/M4f/M5b -- the plan-pipeline routing contract:
 //   adapter-covered casts -> LegacySkillAdapter -> SkillResolver ->
@@ -122,7 +222,7 @@ function battleWith(
     state: 'fighting',
   }
 
-  const system = new TurnBattleSystem(combat, 100, REGISTRY, undefined, runtime, opts.onSkillCast)
+  const system = new TurnBattleSystem(combat, 100, REGISTRY, undefined, runtime, opts.onSkillCast, undefined, opts.rng)
 
   return { battle, playerParticipant, enemyParticipant, system, eventBus, runtime }
 }

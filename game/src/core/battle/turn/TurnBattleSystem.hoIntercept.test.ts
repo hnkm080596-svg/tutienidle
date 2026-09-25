@@ -213,6 +213,20 @@ afterEach(() => {
 })
 
 describe('Ho intercept window (spec 6.2.1)', () => {
+  it('keeps intended anchor detached while receipt points at actual protector', () => {
+    const f = makeFixture()
+    withHoMon(f, f.protectorP, 1, 15)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const declared = declaredAgainst(f, [f.squishyP])
+    const intended = declared.affected.map(p => ({ entityId: p.id, row: p.entity.row, column: p.entity.x }))
+    const result = system(f).applyActionImpact(f.battle, declared)
+    expect(intended[0]!.entityId).toBe(f.squishyP.id)
+    const hits = result.presentationGroups.flatMap(g => g.outcomes).filter(o => o.kind === 'hit')
+    expect(hits).toHaveLength(1)
+    expect(hits[0]!.target.entityId).toBe('protector')
+    expect(hits[0]!.operationId).toBeDefined()
+    expect(result.presentationGroups[0]!.actualTargets.map(t => t.entityId)).toEqual(['protector'])
+  })
   it('a successful protectChance roll substitutes the protector as the hit target', () => {
     const f = makeFixture()
     withHoMon(f, f.protectorP, 1, 15)

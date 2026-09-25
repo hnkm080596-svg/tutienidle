@@ -4,6 +4,7 @@
 // đúng end-to-end trước khi lớp thêm skill/buff/reaction/hazard zone ở
 // slice sau.
 import type { CombatEntity } from '../../combat/CombatEntity'
+import { actorAnchor, castDisposition, declaredPresentationSkill, freezePresentation, presentationGroup, withGroupOutcomes, type ResolvedPresentationGroup, type SkillPresentationOutcome } from './SkillPresentationFacts'
 import type { CombatSystem } from '../../combat/CombatSystem'
 import type { CombatRng } from '../contracts/rng'
 import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
@@ -1949,6 +1950,30 @@ export class TurnBattleSystem {
   applyActionImpact(
     battle: TurnBattle,
     declared: TurnDeclaredAction,
+  ): { targetIds: string[]; extraImpacts: TurnActionExtraImpact[]; presentationGroups: readonly ResolvedPresentationGroup[] } {
+    const groups: ResolvedPresentationGroup[] = []
+    const outcomes: SkillPresentationOutcome[] = []
+    const actor = [...battle.players, ...battle.enemies].find(p => p.id === declared.actorId)
+    const skill = declaredPresentationSkill(declared)
+    const primary = actor ? presentationGroup(actor, skill) : {
+      groupId: '', role: 'primary' as const, resolvedSkillId: skill?.id ?? declared.skillId,
+      presetId: skill?.presetId ?? 'arcane_impact' as const,
+      source: { entityId: declared.actorId, row: 0, column: 0 }, actualTargets: [], footprint: { kind: 'none' as const }, outcomes: [],
+    }
+    const result = this.applyActionImpactCollected(battle, declared, groups, outcomes)
+    if (!groups.some(g => g.role === 'primary')) {
+      const disposition = castDisposition(declared)
+      const reason = !actor ? 'missing-source' : disposition !== 'action' && disposition !== 'charge-release' ? disposition : this.runtime ? 'unsupported' : 'engine-unit-no-effect'
+      groups.unshift(withGroupOutcomes(primary, outcomes.length ? outcomes : [{ outcomeId: '', kind: 'no-effect', reason }]))
+    }
+    return { ...result, presentationGroups: freezePresentation(groups) }
+  }
+
+  private applyActionImpactCollected(
+    battle: TurnBattle,
+    declared: TurnDeclaredAction,
+    groups: ResolvedPresentationGroup[],
+    outcomes: SkillPresentationOutcome[],
   ): { targetIds: string[]; extraImpacts: TurnActionExtraImpact[] } {
     const targetIds: string[] = []
     const extraImpacts: TurnActionExtraImpact[] = []
@@ -1993,6 +2018,7 @@ export class TurnBattleSystem {
           : null
 
       if (routed !== null) {
+        groups.push(...routed.presentationGroups)
         targetIds.push(...routed.landedTargetIds)
         landedTargets.push(...routed.landedTargets)
         // Fall through -- the shared Tro window at the tail fires once,
@@ -2042,6 +2068,8 @@ export class TurnBattleSystem {
               chargedDamage,
               chargedSkill,
               declared,
+              undefined,
+              outcomes,
             )
 
             if (!hitResult.dodged) {
@@ -2101,6 +2129,8 @@ export class TurnBattleSystem {
         } else {
           this.reportUnroutedCast(actor, declared.action.skill, declared.action.skillId, true)
         }
+      } else {
+        groups.push(...routed.presentationGroups)
       }
     }
 
@@ -2155,6 +2185,7 @@ export class TurnBattleSystem {
       }
 
       if (routed !== null) {
+        groups.push(...routed.presentationGroups)
         targetIds.push(...routed.landedTargetIds)
         landedTargets.push(...routed.landedTargets)
         // Non-damaging lane parity (the else-branch below): every
@@ -2176,6 +2207,7 @@ export class TurnBattleSystem {
       if (engineUnitLane && declared.compositePickedSkills?.length) {
         for (const pickedSkill of declared.compositePickedSkills) {
           if (!pickedSkill.damage) continue
+          const pickedOutcomes: SkillPresentationOutcome[] = []
 
           const pickedDamage = declared.suddenDeathMultiplier === 1
             ? pickedSkill.damage
@@ -2192,6 +2224,8 @@ export class TurnBattleSystem {
               pickedDamage,
               pickedSkill,
               declared,
+              undefined,
+              pickedOutcomes,
             )
 
             if (!hitResult.dodged) {
@@ -2203,6 +2237,7 @@ export class TurnBattleSystem {
               }
             }
           }
+          groups.push(withGroupOutcomes(presentationGroup(actor, pickedSkill, 'composite'), pickedOutcomes.length ? pickedOutcomes : [{ outcomeId: '', kind: 'no-effect', reason: 'no-executed-hit' }]))
         }
       }
 
@@ -2235,6 +2270,7 @@ export class TurnBattleSystem {
               payloadSkill ?? null,
               declared,
               hitOptions,
+              outcomes,
             )
 
             if (!hitResult.dodged) {
@@ -2340,7 +2376,7 @@ export class TurnBattleSystem {
           })
 
           for (const extraDef of extraDefs) {
-            extraImpacts.push(this.applyExtraImpact(battle, actor, declared, extraDef))
+            extraImpacts.push(this.applyExtraImpact(battle, actor, declared, extraDef, groups))
           }
         }
       }
@@ -2370,6 +2406,7 @@ export class TurnBattleSystem {
     skill: TurnSkillDefinition | null,
     declared: TurnDeclaredAction,
     hitOptions?: Partial<HitResolveOptions>,
+    presentationOutcomes?: SkillPresentationOutcome[],
   ): DamageResult {
     // The Tu Reimagined (spec section 3.4, plan Task 7) -- the missing-HP
     // scalar resolves PER HIT against the actor's LIVE hp: a
@@ -2381,6 +2418,7 @@ export class TurnBattleSystem {
       this.applyMissingHpScalar(damage, actor.entity),
       hitOptions,
     )
+    presentationOutcomes?.push({ outcomeId: '', kind: 'hit', target: actorAnchor(target), hitOrdinal: presentationOutcomes.filter(o => o.kind === 'hit').length, landed: !hitResult.dodged, crit: hitResult.critical, hpDamage: hitResult.hpDamage, killed: !target.entity.alive })
 
     // The Tu Reimagined (spec 4.1 ordering lock) -- defender income
     // lands before any window this hit opens (evade/taken).
@@ -2397,12 +2435,13 @@ export class TurnBattleSystem {
       // target THẬT SỰ lost post-absorb -- a fully-warded hit feeds
       // nothing (damage-proportional = taken-only trigger).
       if (skill?.healPercentOfDamage && hitResult.hpDamage > 0) {
-        this.combat.applyHealing(
+        const healed = this.combat.applyHealing(
           actor.entity,
           hitResult.hpDamage * skill.healPercentOfDamage,
           actor.entity.id,
           'leech',
         )
+        presentationOutcomes?.push({ outcomeId: '', kind: 'heal', target: actorAnchor(actor), healed })
       }
 
       // consume-for-ward (Tho Tu ward burst) -- the only consume
@@ -2414,7 +2453,8 @@ export class TurnBattleSystem {
         const ward = actor.entity.currentWard
 
         if (ward > 0) {
-          this.combat.applyDirectDamage(target.entity, ward * skill.damagePerWardPoint, actor.entity.id)
+          const hpDamage = this.combat.applyDirectDamage(target.entity, ward * skill.damagePerWardPoint, actor.entity.id)
+          presentationOutcomes?.push({ outcomeId: '', kind: 'hit', target: actorAnchor(target), hitOrdinal: presentationOutcomes.filter(o => o.kind === 'hit').length, landed: true, crit: false, hpDamage, killed: !target.entity.alive })
           this.combat.spendWard(actor.entity, ward, 'ward_spend', actor.entity.id)
         }
       }
@@ -2604,7 +2644,9 @@ export class TurnBattleSystem {
     actor: TurnBattleParticipant,
     declared: TurnDeclaredAction,
     extraDef: TurnSkillDefinition,
+    presentationGroups: ResolvedPresentationGroup[],
   ): TurnActionExtraImpact {
+    const outcomes: SkillPresentationOutcome[] = []
     const extraScope = extraDef.targetScope ?? 'enemy'
 
     const extraTargets: TurnBattleParticipant[] =
@@ -2629,6 +2671,7 @@ export class TurnBattleSystem {
         : null
 
     if (routed !== null) {
+      presentationGroups.push(...routed.presentationGroups)
       landedIds.push(...routed.landedTargetIds)
       hitCount = routed.hitCount
     } else if (this.runtime !== undefined) {
@@ -2652,7 +2695,7 @@ export class TurnBattleSystem {
             if (!target.entity.alive || !actor.entity.alive) break
 
             const opts = extraDef.instances?.perInstanceOptions?.(i, target.entity, landedPriorInstances)
-            const result = this.resolveDeclaredHit(battle, actor, target, scaled, extraDef, declared, opts)
+            const result = this.resolveDeclaredHit(battle, actor, target, scaled, extraDef, declared, opts, outcomes)
             hitCount += 1
 
             if (!result.dodged) {
@@ -2673,6 +2716,9 @@ export class TurnBattleSystem {
 
     if (extraScope === 'self' && !landedIds.includes(actor.id)) {
       landedIds.push(actor.id)
+    }
+    if (routed === null) {
+      presentationGroups.push(withGroupOutcomes(presentationGroup(actor, extraDef, 'combo'), outcomes.length ? outcomes : [{ outcomeId: '', kind: 'no-effect', reason: this.runtime ? 'unsupported' : 'engine-unit-no-effect' }]))
     }
 
     return {

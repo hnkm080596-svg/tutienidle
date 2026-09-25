@@ -3,11 +3,12 @@ import type { ForcedTurnChoice } from './TurnSkillAction'
 import { emitTurnReady, emitTurnCastStart, emitTurnActionImpact, emitTurnStandbyComplete } from './TurnActionPresentationEvents'
 import type { EventBus } from '../../events/EventBus'
 import type { CombatAnimationName } from '../CombatAnimationTypes'
+import { buildSkillCastPresentation, freezePresentation, sealSkillPresentation, type SkillCastPresentation, type SkillPresentationResolved } from './SkillPresentationFacts'
 
 export type ResumePlayback =
   | Readonly<{ phase: 'ready'; token: string; actorId: string }>
-  | Readonly<{ phase: 'cast'; token: string; actorId: string; skillId: string; targetIds: readonly string[] }>
-  | Readonly<{ phase: 'complete'; token: string; actorId: string; targetIds: readonly string[] }>
+  | Readonly<{ phase: 'cast'; token: string; actorId: string; skillId: string; targetIds: readonly string[]; cast: SkillCastPresentation }>
+  | Readonly<{ phase: 'complete'; token: string; actorId: string; targetIds: readonly string[]; resolved: SkillPresentationResolved }>
   | Readonly<{ phase: 'manual'; actorId: string }>
 
 /**
@@ -42,6 +43,7 @@ export class CombatAnimationRuntime {
       eventBus: EventBus
       getTurnBattle: () => TurnBattle | null
       isSessionBlocking?: () => boolean
+      getSessionId?: () => number
       /**
        * Combat Turn Mechanism (2026-09-10 spec section 4.1a) — the runtime
        * reports that an asynchronous step FINISHED without knowing what a
@@ -107,10 +109,17 @@ export class CombatAnimationRuntime {
   private pendingReadyActor: TurnBattleParticipant | null = null
 
   /** Đã declare action, chờ acknowledgeActionImpact(). */
-  private pendingDeclaredAction: { actor: TurnBattleParticipant; declared: TurnDeclaredAction } | null = null
+  private pendingDeclaredAction: { actor: TurnBattleParticipant; declared: TurnDeclaredAction; cast: SkillCastPresentation } | null = null
 
   /** Đã áp damage, chờ acknowledgeActionComplete(). */
-  private pendingImpact: { actor: TurnBattleParticipant; declared: TurnDeclaredAction; targetIds: string[] } | null = null
+  private pendingImpact: { actor: TurnBattleParticipant; declared: TurnDeclaredAction; targetIds: string[]; resolved: SkillPresentationResolved } | null = null
+  private requestSequence = 0
+  private publishingImpact = false
+  private deferredCompleteToken: string | undefined
+
+  private declarePresentation(actor: TurnBattleParticipant, declared: TurnDeclaredAction): SkillCastPresentation {
+    return buildSkillCastPresentation({ sessionId: this.deps.getSessionId?.() ?? 0, requestId: `skill-request-${++this.requestSequence}`, token: this.playbackToken }, actor, declared)
+  }
 
   // Remediation Task 1 (2026-09-05) — playback token: mỗi lần phase tiến
   // tới 'ready' sinh 1 token mới; stale ack (token cũ) là no-op, chặn
@@ -231,11 +240,13 @@ export class CombatAnimationRuntime {
     // toggle mid-turn is an external command and takes effect at the next turn
     // boundary (spec section 9.1) — it must not strand the turn in flight.
     const declared = this.deps.getTurnBattleSystem().declareActorAction(battle, actor)
-    this.pendingDeclaredAction = { actor, declared }
+    const cast = this.declarePresentation(actor, declared)
+    this.pendingDeclaredAction = { actor, declared, cast }
 
     emitTurnCastStart(this.deps.eventBus, actor.id, declared.skillId, declared.affected.map((target) => target.id))
 
     this.deps.stepCompletionSink?.onReady()
+    this.deps.eventBus.emit('skill_presentation_cast', cast)
   }
 
   /** Phaser gọi tại impact frame (lunge tween xong) → áp damage, phát VFX. */
@@ -255,11 +266,13 @@ export class CombatAnimationRuntime {
       return
     }
 
-    const { actor, declared } = this.pendingDeclaredAction
+    const { actor, declared, cast } = this.pendingDeclaredAction
     this.pendingDeclaredAction = null
 
-    const { targetIds, extraImpacts } = this.deps.getTurnBattleSystem().applyActionImpact(battle, declared)
-    this.pendingImpact = { actor, declared, targetIds }
+    const { targetIds, extraImpacts, presentationGroups } = this.deps.getTurnBattleSystem().applyActionImpact(battle, declared)
+    const resolved = sealSkillPresentation(cast.ref, presentationGroups)
+    this.pendingImpact = { actor, declared, targetIds, resolved }
+    this.publishingImpact = true
 
     const primaryTargetId = targetIds[0] ?? declared.affected[0]?.id ?? ''
     const anchorEntity =
@@ -322,10 +335,19 @@ export class CombatAnimationRuntime {
     }
 
     this.deps.stepCompletionSink?.onImpact()
+    this.deps.eventBus.emit('skill_presentation_resolved', resolved)
+    this.publishingImpact = false
+    const completeToken = this.deferredCompleteToken
+    this.deferredCompleteToken = undefined
+    if (completeToken) this.acknowledgeActionComplete(completeToken)
   }
 
   /** Phaser gọi khi VFX tween xong → turn cleanup, phát standby tail. */
   acknowledgeActionComplete(token?: string): void {
+    if (this.publishingImpact) {
+      if (token === this.playbackToken) this.deferredCompleteToken = token
+      return
+    }
     if (this.deps.isSessionBlocking?.()) {
       return
     }
@@ -375,9 +397,11 @@ export class CombatAnimationRuntime {
     // same path as an auto one from here on. Resolving inline would give
     // turn-end a second owner, which is the defect the turn spec removes.
     const declared = this.deps.getTurnBattleSystem().declareActorAction(battle, actor, choice)
-    this.pendingDeclaredAction = { actor, declared }
+    const cast = this.declarePresentation(actor, declared)
+    this.pendingDeclaredAction = { actor, declared, cast }
 
     emitTurnCastStart(this.deps.eventBus, actor.id, declared.skillId, declared.affected.map((target) => target.id))
+    this.deps.eventBus.emit('skill_presentation_cast', cast)
 
     return true
   }
@@ -454,6 +478,8 @@ export class CombatAnimationRuntime {
     this.pendingDeclaredAction = null
     this.pendingImpact = null
     this.playbackToken = ''
+    this.publishingImpact = false
+    this.deferredCompleteToken = undefined
   }
 
   /**
@@ -487,8 +513,11 @@ export class CombatAnimationRuntime {
 
     if (this.pendingDeclaredAction) {
       const token = this.nextPlaybackToken()
+      const cast = freezePresentation({ ...this.pendingDeclaredAction.cast, ref: { ...this.pendingDeclaredAction.cast.ref, token } })
+      this.pendingDeclaredAction.cast = cast
       return {
         phase: 'cast',
+        cast,
         token,
         actorId: this.pendingDeclaredAction.actor.id,
         skillId: this.pendingDeclaredAction.declared.skillId,
@@ -498,8 +527,11 @@ export class CombatAnimationRuntime {
 
     if (this.pendingImpact) {
       const token = this.nextPlaybackToken()
+      const resolved = freezePresentation({ ...this.pendingImpact.resolved, ref: { ...this.pendingImpact.resolved.ref, token } })
+      this.pendingImpact.resolved = resolved
       return {
         phase: 'complete',
+        resolved,
         token,
         actorId: this.pendingImpact.actor.id,
         targetIds: [...this.pendingImpact.targetIds],

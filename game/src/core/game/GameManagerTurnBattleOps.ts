@@ -758,11 +758,16 @@ export class GameManagerTurnBattleOps {
    * mean the turn made progress.
    */
   private awaitStep(signal: TurnStepSignal, done: () => void): void {
-    const timer = setTimeout(() => {
-      this.pendingStepDone[signal] = undefined
+    const fallback = () => {
+      if (this.presentationOps.session.isBlocking()) {
+        timer = setTimeout(fallback, ANIMATION_FALLBACK_MS)
+        this.pendingStepTimers.push(timer)
+        return
+      }
+      // Runtime acknowledgement owns settlement; rejected work cannot advance.
       this.driveStepWork(signal)
-      done()
-    }, ANIMATION_FALLBACK_MS)
+    }
+    let timer = setTimeout(fallback, ANIMATION_FALLBACK_MS)
 
     this.pendingStepTimers.push(timer)
 

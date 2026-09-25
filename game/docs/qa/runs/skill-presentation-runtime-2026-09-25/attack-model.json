@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "scope": "shared-skill-presentation runtime and affected unchanged consumers",
+  "required": [
+    "domain RNG and outcome parity",
+    "exactly once impact/complete",
+    "synchronous emit reentrancy",
+    "held session watchdog liveness",
+    "primary composite combo sealed barrier",
+    "resume/reset/detach stale ports",
+    "missing atlas and pool exhaustion",
+    "curved tangent and projection",
+    "preview and production progression",
+    "100x100 seeded lifecycle sequences",
+    "representative stale token and early complete mutants"
+  ],
+  "oracle": "authoritative vitals/trace at logical boundaries plus real canvas playback and bounded resources"
+}

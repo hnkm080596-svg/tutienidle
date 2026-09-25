@@ -25,40 +25,12 @@ import type { StatusVfxAttachedEvent } from '@/core/battle/BattleEvents'
 export class CombatActionFeedback {
   constructor(private readonly scene: CombatScene) {}
 
+  /** Optional actor motion only; shared skill playback owns both action ACKs. */
   onAttack(event: CombatScenePayload) {
-    const scene = this.scene
-    const attacker = scene.spriteFor(event.sourceId)
-
-    if (attacker) {
-      const isPlayer = event.sourceId === PLAYER_ID
-      const dx = isPlayer ? ATTACK_LUNGE_PX : -ATTACK_LUNGE_PX
-
-      // Uniform contract (2026-09-19) - attack readability IS the lunge
-      // tween for every entity. No per-skill clips: cast/sweep_hand/punch
-      // were removed from CombatAnimationName when the per-faction art
-      // split died.
-      scene.playHorizontalImpulse(attacker, dx, ATTACK_LUNGE_DURATION_MS)
-
-      // Action Playback Task 7 (2026-09-05) / R5 (AR-20) - impact frame tai midpoint
-      // lunge: damage ap dung luc don "trung" tren man hinh. Token bat tai spawn.
-      const token = scene.gameManagerRef?.getPendingPlaybackToken() ?? ''
-      if (scene.gameManagerRef && this.isActionPlaybackActive()) {
-        scene.time.delayedCall(ATTACK_LUNGE_DURATION_MS / 2, () => {
-          scene.gameManagerRef?.acknowledgeActionImpact(token)
-        })
-      }
-    } else if (scene.gameManagerRef && this.isActionPlaybackActive()) {
-      const token = scene.gameManagerRef?.getPendingPlaybackToken() ?? ''
-      scene.gameManagerRef.acknowledgeActionImpact(token)
-    }
-  }
-
-  /**
-   * Action Playback Task 7 - presentationActive dang bat? Dung registry
-   * gameManagerRef presence lam proxy (set/unmount cung subscribe lifecycle).
-   */
-  private isActionPlaybackActive(): boolean {
-    return this.scene.gameManagerRef !== undefined
+    const attacker = this.scene.spriteFor(event.sourceId)
+    if (!attacker) return
+    const dx = event.sourceId === PLAYER_ID ? ATTACK_LUNGE_PX : -ATTACK_LUNGE_PX
+    this.scene.playHorizontalImpulse(attacker, dx, ATTACK_LUNGE_DURATION_MS)
   }
 
   onCritical(event: CombatScenePayload) {
@@ -136,19 +108,8 @@ export class CombatActionFeedback {
    * (projection miss) -> ack ngay de engine khong treo.
    */
   onActionImpact(event: ActionImpactEvent) {
-    const scene = this.scene
-    const token = scene.gameManagerRef?.getPendingPlaybackToken() ?? null
-    const acknowledge = () => {
-      if (token !== null) {
-        scene.gameManagerRef?.acknowledgeActionComplete(token)
-      }
-    }
-
-    const handle = scene.vfxSpawner.onActionImpact(event, acknowledge)
-
-    if (!handle) {
-      acknowledge()
-    }
+    // Retained standalone visual API, not subscribed to production action events.
+    this.scene.vfxSpawner.onActionImpact(event)
   }
 
   /**
@@ -159,12 +120,13 @@ export class CombatActionFeedback {
    */
   onTurnReady(event: { actorId: string }) {
     const scene = this.scene
-    const token = scene.gameManagerRef?.getPendingPlaybackToken() ?? ''
+    const port = scene.gameManagerRef
+    const token = port?.getPendingPlaybackToken() ?? ''
     const sprite = scene.spriteFor(event.actorId)
 
     if (!sprite) {
       // Khong co sprite (late-join miss) - ack ngay de engine khong treo.
-      scene.gameManagerRef?.acknowledgeTurnReady(token)
+      port?.acknowledgeTurnReady(token)
       return
     }
 
@@ -188,7 +150,7 @@ export class CombatActionFeedback {
       onComplete: () => {
         sprite.boost.value = 1
 
-        scene.gameManagerRef?.acknowledgeTurnReady(token)
+        port?.acknowledgeTurnReady(token)
       },
     })
   }

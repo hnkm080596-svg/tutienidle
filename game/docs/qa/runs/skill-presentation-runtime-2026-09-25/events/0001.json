@@ -1,0 +1,42 @@
+{
+  "phase": "INTAKE",
+  "request": {
+    "runId": "skill-presentation-runtime-2026-09-25",
+    "productRoot": "E:/tutienidle/.agent-worktrees/skill-presentation-design/game",
+    "checkout": "E:/tutienidle/.agent-worktrees/skill-presentation-design",
+    "branch": "codex/skill-presentation-runtime",
+    "base": "48962aaa36caffa4a37f6fdf6a01ee3af98e5f50",
+    "head": "48962aaa36caffa4a37f6fdf6a01ee3af98e5f50",
+    "authorizedRepairs": [
+      "Shared skill presentation runtime and production wiring",
+      "Copy-only combat presentation receipts",
+      "ACK lifecycle defects proven in affected runtime",
+      "Dev preview, focused tests and existing VFX clip admission"
+    ],
+    "nonGoals": [
+      "Gameplay balance/save schema changes",
+      "Merge sibling branches",
+      "Commit/push/deploy"
+    ],
+    "requiredDomains": [
+      "combat",
+      "presentation",
+      "runtime",
+      "test-quality"
+    ],
+    "capacityLimit": 4,
+    "contractPaths": [
+      "../AGENTS.md",
+      "docs/qa/protocol/README.md",
+      "docs/superpowers/specs/2026-09-25-skill-presentation-system-design.md",
+      "docs/superpowers/plans/2026-09-25-skill-presentation-runtime.md"
+    ],
+    "extraExclude": [
+      ".env",
+      ".env.",
+      "test-results/",
+      "playwright-report/"
+    ],
+    "requiredReadiness": true
+  }
+}

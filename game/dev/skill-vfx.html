@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="vi">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Skill VFX Lab</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#09141e;color:#e1eff3}*{box-sizing:border-box}body{margin:0}main{max-width:1120px;margin:36px auto;padding:0 24px}header{display:flex;justify-content:space-between;align-items:center;gap:24px}h1{font:500 30px Georgia,serif;margin:8px 0 12px}p{color:#99b1bc;line-height:1.7;max-width:780px}.eyebrow{color:#dcc98b;letter-spacing:.2em;font-size:11px}a{color:#aeeaff}#stage{width:100%;aspect-ratio:24/11;border:1px solid #284451;border-radius:8px;overflow:hidden;background:#101f2a;margin:24px 0 16px}canvas{display:block}.controls{display:flex;gap:16px;align-items:end;flex-wrap:wrap}label{display:grid;gap:7px;color:#afc5cc;font-size:12px}select,button{min-height:44px;padding:10px 16px;border:1px solid #365361;border-radius:5px;background:#132a37;color:#eaf7fb;font:inherit}button{background:#bde8ed;color:#15313b;font-weight:600;cursor:pointer}button.secondary{background:transparent;color:#bde8ed}button:focus-visible,select:focus-visible{outline:2px solid #fff;outline-offset:3px}ol{display:flex;gap:2px;padding:0;list-style:none;margin-top:24px}li{flex:1;background:#142b36;padding:10px;font-size:12px;color:#b7cbd3;border-top:2px solid #416573}output{display:block;font:12px monospace;color:#93b5c4;margin:12px 0}footer{border-top:1px solid #203744;margin-top:24px;padding-top:14px;font-size:12px;color:#78949f}@media(max-width:640px){main{margin:20px auto;padding:0 14px}header{display:block}h1{font-size:25px}#stage{aspect-ratio:16/10}li{font-size:10px;padding:7px}select{max-width:180px}}
+</style></head>
+<body><main><header><div><span class="eyebrow">TU TIÊN IDLE / VFX LAB</span><h1 id="title"></h1></div><a id="back" href="/"></a></header>
+<p id="intro"></p><div id="stage"></div>
+<div class="controls"><label><span id="skill-label"></span><select id="preset"></select></label>
+<label><span id="outcome-label"></span><select id="outcome"></select></label>
+<label><span id="speed-label"></span><select id="speed"><option value="1">1×</option><option value="0.35">0.35×</option></select></label>
+<button id="play"></button><button id="cancel" class="secondary"></button></div>
+<ol id="sequence"></ol><output id="stats" aria-live="off"></output><footer id="note"></footer>
+</main><script type="module" src="/src/dev/skill-vfx.ts"></script></body></html>
