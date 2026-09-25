@@ -8245,7 +8245,7 @@
         "cleanA4 COR nit fix verified on 7f0e7616: syncRealmPassive refuses wholesale while isTurnBattleInProgress (same boundary as syncTalentCombatPassive)"
       ],
       "limitations": [],
-      "status": "VALID",
+      "status": "CURRENT",
       "kind": "EXECUTED_UNIT_STRUCTURAL"
     }
   ],
@@ -13301,6 +13301,48 @@
       "effectiveFromRun": null,
       "guidance": null,
       "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-TT-87",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TT-COR-A4-4"
+      ],
+      "incidentEvidenceIds": [
+        "EV-TT-CLEANA4-FIX-2"
+      ],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "crafted-save-unreachable-path",
+      "missedInvariantIds": [],
+      "escapeReason": "reviewer flagged ungated progression write on tier update only reachable through a crafted/corrupted save — the save boundary has no registry by deliberate design",
+      "applicability": [
+        "any save-boundary write-path finding without a registry-less crafted-save proof"
+      ],
+      "exclusions": [
+        "findings with a real gameplay reachability chain"
+      ],
+      "proposedProtection": [
+        "reject crafted-save-only reachability at adjudication; run bound must enumerate real entry points not fabricated save state"
+      ],
+      "promotionEvidenceIds": [
+        "EV-TT-CLEANA4-FIX-2"
+      ],
+      "qualifiedBy": [
+        "REV-TT-CLEAN-A4-COR"
+      ],
+      "capabilityDelta": "none — rejection precedent recorded",
+      "recurrenceFindingIds": [
+        "F-TT-COR-A4-1"
+      ],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [
+        "EV-TT-CLEANA4-FIX-2"
+      ]
     }
   ],
   "messages": [],
@@ -14504,6 +14546,38 @@
       "payloadPath": "events/0075.json",
       "payloadHash": "f6b92de7db510cd66537711e3cf637c23f308523f41443955434af92caef4435",
       "eventHash": "0f7bb0219ab15c0e7aec89f2289d8c78ccfd0561f8e644a42bc449cfadb9c2be"
+    },
+    {
+      "seq": 76,
+      "at": "2026-09-25T22:50:59.399Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "b2fd591c186233490f753ef41624d0f0b03d57dd8fd157a105e29a4c5202961b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "0f7bb0219ab15c0e7aec89f2289d8c78ccfd0561f8e644a42bc449cfadb9c2be",
+      "payloadPath": "events/0076.json",
+      "payloadHash": "ab736d793957993424333a161d123322571130d243cfc8869a5a62a9e68bba64",
+      "eventHash": "2ad5b07b06d2ff2c8ac5ce8394fdcac2efde0ec06a891650274a20efe3bff790"
+    },
+    {
+      "seq": 77,
+      "at": "2026-09-25T22:51:12.521Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "b2fd591c186233490f753ef41624d0f0b03d57dd8fd157a105e29a4c5202961b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "2ad5b07b06d2ff2c8ac5ce8394fdcac2efde0ec06a891650274a20efe3bff790",
+      "payloadPath": "events/0077.json",
+      "payloadHash": "b0ab90e81828719b1292f3ee02614507af88c18e51fd94cde559c8b4321573dc",
+      "eventHash": "34e3d1e46eb7dd477238c96d8986929e9d68067ad7a72d4e2fc14933d348e34d"
     }
   ]
 }
