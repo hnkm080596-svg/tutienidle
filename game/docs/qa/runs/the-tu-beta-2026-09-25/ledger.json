@@ -11,7 +11,7 @@
     "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
     "head": "f730adc6",
     "state": {
-      "productStateId": "b2fd591c186233490f753ef41624d0f0b03d57dd8fd157a105e29a4c5202961b",
+      "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
       "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
       "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -7261,6 +7261,167 @@
       "exception": null,
       "status": "FIXED_PENDING_PROOF",
       "rejectionReason": null
+    },
+    {
+      "id": "F-TT-INT-A4-1",
+      "title": "devResetBranch composable masks in-battle rejection (unconditional success contract)",
+      "state": {
+        "productStateId": "b2fd591c186233490f753ef41624d0f0b03d57dd8fd157a105e29a4c5202961b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "src/composables/useProgressionActions.ts",
+          "symbolOrSection": "devResetBranch :63-69",
+          "revision": "dbe41cdd",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/game/GameManagerProgressionOps.ts",
+          "symbolOrSection": "devResetBranch op :614",
+          "revision": "dbe41cdd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-ac185f2118834a4d8f36d4afa3f7086a",
+      "evidenceIds": [],
+      "counterexample": "a dev-channel call mid-battle returns true while the op refused (returned 0) - the op-side gate exists but the wrapper lies about it",
+      "expected": "the wrapper propagates the op rejection like respecNodeTree does",
+      "actual": "wrapper discarded the op return; unconditional bumpState()+true",
+      "rootCause": "wrapper authored before the op gained the in-battle gate; return value never wired",
+      "rootClass": "wrapper-rejection-masking",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/composables"
+          ],
+          "termsAndMethod": "grep every useProgressionActions wrapper discarding the op return",
+          "hitDispositions": [
+            "all sibling wrappers propagate; devResetBranch was the only masking one"
+          ],
+          "coverageLimits": [
+            "composables layer only"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "repair": "FIXED @697c2050: wrapper returns op result (0 -> no bumpState), matching respecNodeTree contract",
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-INT-A4-2",
+      "title": "Reflect queue fed but never drained in engine-unit (runtime===undefined) battles",
+      "state": {
+        "productStateId": "b2fd591c186233490f753ef41624d0f0b03d57dd8fd157a105e29a4c5202961b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "FIXTURE_INJECTED",
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "legacy resolveTakenWindow -> resolveReactiveProcs :2444",
+          "revision": "dbe41cdd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-ac185f2118834a4d8f36d4afa3f7086a",
+      "evidenceIds": [],
+      "counterexample": "claimed: a crafted engine-unit battle could queue a pendingReflects entry that never drains",
+      "expected": "engine-unit battles either do not queue reflects or also drain/discard them",
+      "actual": "queue is unreachable: resolveReactiveProcs early-returns [] on runtime===undefined and its context never carries hpDamage",
+      "rootCause": "reviewer missed the runtime guard at TBS:2970 and the hpDamage precondition in the queue gate",
+      "rootClass": "reviewer-missed-guard",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/battle/turn/TurnBattleSystem.ts",
+            "src/core/proc/CombatProcSystem.ts"
+          ],
+          "termsAndMethod": "enumerate every rollReactiveTrigger call site vs the reflect-queue gate conditions",
+          "hitDispositions": [
+            "resolveReactiveProcs (:2970) guards runtime===undefined and carries no hpDamage",
+            "rollReactiveTrigger at :634 is runtime-gated; :1511 passes context=undefined",
+            "only runLandedHitProcs feeds the queue, itself gated on runtime!==undefined (:629)"
+          ],
+          "coverageLimits": [
+            "static enumeration of all three call sites"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "repair": null,
+      "status": "REJECTED_WITH_PROOF",
+      "rejectionReason": "Unreachable on two independent guards: private resolveReactiveProcs early-returns [] when this.runtime===undefined (TBS:2970); and its context never passes hpDamage so (context.hpDamage ?? 0) > 0 cannot hold. The sole queue feed runLandedHitProcs is itself gated on runtime!==undefined."
+    },
+    {
+      "id": "F-TT-INT-A4-3",
+      "title": "Coverage gap: INV-9 bypass-source exclusion unpinned for reflect; countdown-state UI disable unpinned",
+      "state": {
+        "productStateId": "b2fd591c186233490f753ef41624d0f0b03d57dd8fd157a105e29a4c5202961b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnSkillPlanRuntime.ts",
+          "symbolOrSection": "reflect feed gate :565",
+          "revision": "dbe41cdd",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/components/panels/skill-path/TheTuTreePanel.test.ts",
+          "symbolOrSection": "mockGameManager state:fighting only",
+          "revision": "dbe41cdd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-ac185f2118834a4d8f36d4afa3f7086a",
+      "evidenceIds": [],
+      "counterexample": "deleting the reflectsEligible gate or narrowing the isBattleInProgress union would regress silently - no test would fire",
+      "expected": "pins: non-natural hostile action emits no reflection; countdown disables the same affordances as fighting",
+      "actual": "every reflect pin used natural normal sources; UI pins mocked only state:fighting",
+      "rootCause": "exclusion gate and state union shipped without negative pins",
+      "rootClass": "coverage-gap",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/battle/turn",
+            "src/components/panels/skill-path"
+          ],
+          "termsAndMethod": "grep actionSource across reflect/TBS test files + state mocks across panel tests",
+          "hitDispositions": [
+            "only normal sources appeared in reflect tests",
+            "TheTuTreePanel mocked only fighting; countdown/intro unmocked"
+          ],
+          "coverageLimits": [
+            "the-tu beta surface only"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "repair": "FIXED @697c2050: counter-payload pin in TurnBattleSystem.reflection.test.ts; countdown pin in TheTuTreePanel.test.ts",
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
     }
   ],
   "evidence": [
@@ -8245,6 +8406,41 @@
         "cleanA4 COR nit fix verified on 7f0e7616: syncRealmPassive refuses wholesale while isTurnBattleInProgress (same boundary as syncTalentCombatPassive)"
       ],
       "limitations": [],
+      "status": "STALE",
+      "kind": "EXECUTED_UNIT_STRUCTURAL"
+    },
+    {
+      "id": "EV-TT-CLEANA4-INT-FIX",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+      "startedAt": "2026-09-25T22:53:00.000Z",
+      "finishedAt": "2026-09-25T22:55:00.000Z",
+      "commandOrMethod": "npm run type-check (clean) + vitest reflection+TheTuTreePanel+composables (19 files / 131 pass) at 697c2050",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/cleanA4-int-fix-verify.log",
+      "artifactHash": "c4d43246943f464b81f77e57170e7393a44854de33fd51de7329434511f658dc",
+      "inputPaths": [
+        "src/composables/useProgressionActions.ts",
+        "src/core/battle/turn/TurnBattleSystem.reflection.test.ts",
+        "src/components/panels/skill-path/TheTuTreePanel.test.ts"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "devResetBranch wrapper propagates op rejection (0 = no bump)",
+        "counter-sourced hostile payload landing hpDamage emits no reflection (INV-9 pin)",
+        "countdown state disables respec affordances like fighting (UI pin)"
+      ],
+      "limitations": [
+        "reflect-queue-leak finding rejected statically: resolveReactiveProcs early-returns on runtime===undefined (TBS:2970) and its context never carries hpDamage"
+      ],
       "status": "CURRENT",
       "kind": "EXECUTED_UNIT_STRUCTURAL"
     }
@@ -10206,6 +10402,39 @@
       "findingIds": [
         "F-TT-COR-A4-4",
         "F-TT-COR-A4-5"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "REV-TT-CLEAN-A4-INT",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 22,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-ac185f2118834a4d8f36d4afa3f7086a",
+      "contextId": "sealed-child-ac185f2118834a4d8f36d4afa3f7086a",
+      "model": "swe-2-max",
+      "role": "INTEGRATION",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T22:28:00.000Z",
+      "sealedAt": "2026-09-25T22:51:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-A4-COR",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-TT-CLEANA4-INT-FIX"
+      ],
+      "findingIds": [
+        "F-TT-INT-A4-1",
+        "F-TT-INT-A4-2",
+        "F-TT-INT-A4-3"
       ],
       "novelAttackIds": [],
       "status": "SEALED"
@@ -13343,6 +13572,120 @@
       "preventionEvidenceIds": [
         "EV-TT-CLEANA4-FIX-2"
       ]
+    },
+    {
+      "id": "L-TT-88",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TT-INT-A4-1"
+      ],
+      "incidentEvidenceIds": [
+        "EV-TT-CLEANA4-INT-FIX"
+      ],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "wrapper-rejection-masking",
+      "missedInvariantIds": [],
+      "escapeReason": "the composable wrapper introduced an unconditional bumpState+return-true contract over an op that gained an in-battle gate later - sibling wrappers were updated but this dev-channel one was missed",
+      "applicability": [
+        "any op wrapper around a newly gated op"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "when an op gains a rejection gate, audit every wrapper for discarded return values"
+      ],
+      "promotionEvidenceIds": [
+        "EV-TT-CLEANA4-INT-FIX"
+      ],
+      "qualifiedBy": [
+        "REV-TT-CLEAN-A4-INT"
+      ],
+      "capabilityDelta": "devResetBranch propagates the op result (0 = no bump)",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [
+        "EV-TT-CLEANA4-INT-FIX"
+      ]
+    },
+    {
+      "id": "L-TT-89",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TT-INT-A4-3"
+      ],
+      "incidentEvidenceIds": [
+        "EV-TT-CLEANA4-INT-FIX"
+      ],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "coverage-gap",
+      "missedInvariantIds": [],
+      "escapeReason": "the INV-9 exclusion was authored at introduction but never pinned against the reflect feed; countdown existed in isBattleInProgress but only fighting was mocked",
+      "applicability": [
+        "any source-exclusion or state-union gate introduced without a negative pin"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "exclusion gates and state unions must ship with negative pins at introduction"
+      ],
+      "promotionEvidenceIds": [
+        "EV-TT-CLEANA4-INT-FIX"
+      ],
+      "qualifiedBy": [
+        "REV-TT-CLEAN-A4-INT"
+      ],
+      "capabilityDelta": "pins: counter payload emits no reflection; countdown disables respec like fighting",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [
+        "EV-TT-CLEANA4-INT-FIX"
+      ]
+    },
+    {
+      "id": "L-TT-90",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TT-INT-A4-2"
+      ],
+      "incidentEvidenceIds": [
+        "EV-TT-CLEANA4-INT-FIX"
+      ],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "reviewer-missed-guard",
+      "missedInvariantIds": [],
+      "escapeReason": "the reviewer enumerated the queue gate but skipped the callers runtime guard and the hpDamage precondition - a plausible-looking leak that two independent guards already block",
+      "applicability": [
+        "any claimed queue/leak finding"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "before accepting a leak finding, enumerate every guard between feed and drain, not only the queue gate"
+      ],
+      "promotionEvidenceIds": [
+        "EV-TT-CLEANA4-INT-FIX"
+      ],
+      "qualifiedBy": [
+        "REV-TT-CLEAN-A4-INT"
+      ],
+      "capabilityDelta": "none - rejection precedent recorded",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [
+        "EV-TT-CLEANA4-INT-FIX"
+      ]
     }
   ],
   "messages": [],
@@ -14578,6 +14921,86 @@
       "payloadPath": "events/0077.json",
       "payloadHash": "b0ab90e81828719b1292f3ee02614507af88c18e51fd94cde559c8b4321573dc",
       "eventHash": "34e3d1e46eb7dd477238c96d8986929e9d68067ad7a72d4e2fc14933d348e34d"
+    },
+    {
+      "seq": 78,
+      "at": "2026-09-25T22:52:42.277Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "34e3d1e46eb7dd477238c96d8986929e9d68067ad7a72d4e2fc14933d348e34d",
+      "payloadPath": "events/0078.json",
+      "payloadHash": "32642a8258ba29215068f614439a78b93289e002096b49725c9c682c8d2b684e",
+      "eventHash": "d10488066233b7efd809c643d55f77d004cdb7fb405d8b5fca3d55c91e9f820c"
+    },
+    {
+      "seq": 79,
+      "at": "2026-09-25T22:53:02.589Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "d10488066233b7efd809c643d55f77d004cdb7fb405d8b5fca3d55c91e9f820c",
+      "payloadPath": "events/0079.json",
+      "payloadHash": "19fe613232352efaf7d128c530d6711ad9bb424ddbdea3370b53147d789cee6d",
+      "eventHash": "8919e89e2d43cf8d6e3f9d32dba7b3fb7303d2b57761b5582d5568178223c745"
+    },
+    {
+      "seq": 80,
+      "at": "2026-09-25T22:53:09.567Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "8919e89e2d43cf8d6e3f9d32dba7b3fb7303d2b57761b5582d5568178223c745",
+      "payloadPath": "events/0080.json",
+      "payloadHash": "4cdfb2d3e80cda9a4ad098a8141b7dd1f5632200d826f30a2df5f8e2b5710c55",
+      "eventHash": "2e9a03b8a282a1919b6e0bc33227742c91f1bf53012b789b83d62c63a0a04cfe"
+    },
+    {
+      "seq": 81,
+      "at": "2026-09-25T22:53:43.081Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "2e9a03b8a282a1919b6e0bc33227742c91f1bf53012b789b83d62c63a0a04cfe",
+      "payloadPath": "events/0081.json",
+      "payloadHash": "4cdfb2d3e80cda9a4ad098a8141b7dd1f5632200d826f30a2df5f8e2b5710c55",
+      "eventHash": "bdb90b8f8984416588937186441e6b1de65c21281c69f47cbe6a57199e1682cb"
+    },
+    {
+      "seq": 82,
+      "at": "2026-09-25T22:54:09.374Z",
+      "kind": "FINDING",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "bdb90b8f8984416588937186441e6b1de65c21281c69f47cbe6a57199e1682cb",
+      "payloadPath": "events/0082.json",
+      "payloadHash": "4162ab620d5ff7f329e1ec387d54e1d737ef39b6aac69cec5d59270198048230",
+      "eventHash": "9b3722d705adfadeadca49ff65961252afc62773d70e048629f5892c4ad1746b"
     }
   ]
 }
