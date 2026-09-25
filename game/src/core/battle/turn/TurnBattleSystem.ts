@@ -383,12 +383,6 @@ export interface TurnDeclaredAction {
   interceptedBy?: string
 }
 
-// ReactiveActionSource + isNaturalActionSource live in
-// ../../proc/ProcCapabilities (proc vocabulary leaf) - re-exported for
-// existing consumers of this module.
-export type { ReactiveActionSource } from '../../proc/ProcCapabilities'
-export { isNaturalActionSource } from '../../proc/ProcCapabilities'
-
 /**
  * Composite trigger context (spec 6.2.2, plan Task 16) -- each axis is
  * read independently by node payload variants: a Ho->EVA->Counter chain

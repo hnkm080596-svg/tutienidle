@@ -81,6 +81,22 @@ function nodeOf(nodeId: string): ProgressionNode | undefined {
   return gameManager.nodeRegistry.getAll().find(node => node.id === nodeId)
 }
 
+// COLUMNS duplicates authored node ids from TheTuNodes data - a renamed id must
+// fail loudly here instead of rendering a dead card.
+const columnNodeIds = COLUMNS.flatMap(col => [
+  col.rootNodeId,
+  col.abandonedByNodeId,
+  col.basic.nodeId,
+  col.special.nodeId,
+  ...col.basicBranchNodeIds,
+  ...col.specialBranchNodeIds,
+])
+for (const id of columnNodeIds) {
+  if (nodeOf(id) === undefined) {
+    console.warn(`[TheTuTreePanel] column references missing node: ${id}`)
+  }
+}
+
 const tcReached = computed(() => {
   stateVersion.value
   return getRealmTier(player.realmId) >= getRealmTier('foundation_establishment')
