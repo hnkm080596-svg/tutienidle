@@ -8988,6 +8988,33 @@
       ],
       "novelAttackIds": [],
       "status": "SEALED"
+    },
+    {
+      "id": "REV-TT-CLEAN-A2-COR",
+      "state": {
+        "productStateId": "fcfd1db3a34687ab7a2a6b8af0d5847e3479b5791f3b3bbeec69df5755d239b4",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 2,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-c95338cb4e5b4444ac48bcd1839985b7",
+      "contextId": "sealed-child-c95338cb4e5b4444ac48bcd1839985b7",
+      "model": "swe-2-max",
+      "role": "CORRECTNESS",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T20:39:00.000Z",
+      "sealedAt": "2026-09-25T21:00:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-A-COR",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
     }
   ],
   "cycles": [],
@@ -12575,6 +12602,38 @@
       "payloadPath": "events/0048.json",
       "payloadHash": "d0075f111bee85011fb6722b13126761da00d2b1099911ddd4bdee64a2049db9",
       "eventHash": "b7cb8d45bc6554bee53cc63835e6d0386d8250de5098affae59398c2bccfe0d5"
+    },
+    {
+      "seq": 49,
+      "at": "2026-09-25T20:58:55.832Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "fcfd1db3a34687ab7a2a6b8af0d5847e3479b5791f3b3bbeec69df5755d239b4",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "b7cb8d45bc6554bee53cc63835e6d0386d8250de5098affae59398c2bccfe0d5",
+      "payloadPath": "events/0049.json",
+      "payloadHash": "fc3c6981416ff6ba183a90da35de4be93e241690b5307ea162d0e3a187e74d13",
+      "eventHash": "0484cdc4507d3de5f9f62215c61c83e693d8d5b15e8b836d86972c9886cf5b99"
+    },
+    {
+      "seq": 50,
+      "at": "2026-09-25T20:59:13.353Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "fcfd1db3a34687ab7a2a6b8af0d5847e3479b5791f3b3bbeec69df5755d239b4",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "0484cdc4507d3de5f9f62215c61c83e693d8d5b15e8b836d86972c9886cf5b99",
+      "payloadPath": "events/0050.json",
+      "payloadHash": "6201f35b7a0fee49747eddacf27a62b6a675cd2452d75d415a305aeec2876ea3",
+      "eventHash": "7e8fc79ec5ed7b359eff74853f24a82dd052365807a4f445be7d41cbbcaf253a"
     }
   ]
 }
