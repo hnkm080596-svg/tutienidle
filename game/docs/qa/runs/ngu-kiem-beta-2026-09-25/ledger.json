@@ -9,9 +9,9 @@
   "checkout": "/home/ubuntu/repos/tutienidle/.agent-worktrees/ngu-kiem-beta",
   "branch": "devin/1790284398-ngu-kiem-beta",
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
-  "head": "31c06c9b",
+  "head": "5773e77dba69a8ee8277cd1a886f14f2934c4f12",
   "state": {
-   "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+   "productStateId": "deacfdab28729260f51b7206ef06b786d318603cf060b4ede094738de568e518",
    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -311,6 +311,973 @@
    "exception": null,
    "status": "FIXED_PENDING_PROOF",
    "rejectionReason": null
+  },
+  {
+   "id": "F-NK-AUT-1",
+   "title": "Momentum ops_result_sum reads aliased the live prior-opId accumulator",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/skilldef/SkillResolver.ts",
+     "symbolOrSection": "instances.each.momentumPerLandedInstance emit",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA reviewer",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "pin test: reads[0].operationIds=[hit0], reads[1].operationIds=[hit0,hit1] failed pre-fix",
+   "expected": "emitted read covers only the opIds landed before that instance",
+   "actual": "instance-2 read carried all 3 hit opIds incl. its own + future (live-array alias)",
+   "rootCause": "read emitted with operationIds=priorInstanceOpIds (live ref) - later pushes leaked future hit ids",
+   "rootClass": "emit-aliasing",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "all ops_result_sum reads audited for aliasing",
+     "hitDispositions": [
+      "siblings audited by reviewer + coordinator"
+     ],
+     "coverageLimits": [
+      "clean round pending"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-2"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "operationIds:[...priorInstanceOpIds] snapshot + pin test scoping ids per instance",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-AUT-2",
+   "title": "instances.each.momentumPerLandedInstance unvalidated in registry",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "TEST_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/skilldef/SkillDefinitionRegistry.ts",
+     "symbolOrSection": "each field validation",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA reviewer",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "a NaN/negative authored value would silently corrupt the coefficient",
+   "expected": "finite number >= 0 validation matching count/critChance/armorPierce",
+   "actual": "field flowed unchecked into coefficient folding",
+   "rootCause": "no finite>=0 check unlike sibling fields",
+   "rootClass": "validation-gap",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "sibling field validators compared",
+     "hitDispositions": [
+      "siblings audited by reviewer + coordinator"
+     ],
+     "coverageLimits": [
+      "clean round pending"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-2"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "invalid_field_value fault added; shipped producer already constant 0.15",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-AUT-3",
+   "title": "fixture/evolution ids inconsistent with authored spine",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "TEST_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/KiemTuNodes.test.ts",
+     "symbolOrSection": "evolution id fixtures",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA reviewer",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "authored vs fixture id grep diff",
+   "expected": "fixture ids equal authored evolution ids khoi/lien/phong_an",
+   "actual": "fixtures carried drifted/legacy ids",
+   "rootCause": "fixture ids drifted from authored evolution ids",
+   "rootClass": "fixture-drift",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "all evolution-id refs grepped",
+     "hitDispositions": [
+      "siblings audited by reviewer + coordinator"
+     ],
+     "coverageLimits": [
+      "clean round pending"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-2"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "fixtures realigned to authored ids",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-AUT-4",
+   "title": "stale cascade-era comments in runtime files",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "TEST_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathRuntime.ts",
+     "symbolOrSection": "comment",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/turn/TurnSkillPlanRuntime.ts",
+     "symbolOrSection": "comment",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA reviewer",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "grep cascade in comments",
+   "expected": "comments describe evolution mechanic",
+   "actual": "comments described retired cascade/roll paths",
+   "rootCause": "comments still described retired cascade mechanic",
+   "rootClass": "stale-docs",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "cascade/roll-cascade greps clean in comments",
+     "hitDispositions": [
+      "siblings audited by reviewer + coordinator"
+     ],
+     "coverageLimits": [
+      "clean round pending"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-2"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "comments rewritten to evolution vocabulary",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-AUT-5",
+   "title": "ngu_kiem_phong shipped at v84 - reuse would rebind owned save levels",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/KiemTuNodes.ts",
+     "symbolOrSection": "sealed placeholder id",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA reviewer",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "git show 65379240: id shipped at v84",
+   "expected": "sealed placeholder carries a fresh id never shipped",
+   "actual": "placeholder reused v84-shipped ngu_kiem_phong",
+   "rootCause": "placeholder reused a v84-shipped stat-node id",
+   "rootClass": "save-integrity",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "ngu_kiem_phong refs grepped to zero outside allowlist history",
+     "hitDispositions": [
+      "siblings audited by reviewer + coordinator"
+     ],
+     "coverageLimits": [
+      "clean round pending"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-2"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "renamed to ngu_kiem_phong_an; all refs + allowlist updated",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-AUT-6",
+   "title": "evolution display name hardcoded '-' split; no resolver API",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/components/panels/SkillPathPanel.vue",
+     "symbolOrSection": "evolutionName",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA reviewer",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "evolutionName was a split on the tier separator",
+   "expected": "panel resolves tier via resolver API",
+   "actual": "panel string-split on skill name",
+   "rootCause": "panel derived tier name by string split on skill name",
+   "rootClass": "ui-coupling",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "panel evolutionName path audited",
+     "hitDispositions": [
+      "siblings audited by reviewer + coordinator"
+     ],
+     "coverageLimits": [
+      "clean round pending"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-2"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "resolveNguKiemOwnedEvolutionNode + resolveNguKiemEvolutionSuffix exported; panel consumes API",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-AUT-7",
+   "title": "pre-beta hidden-way saves can never obtain ngu_kiem_khoi (grantedOnly, no retro-grant)",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+     "symbolOrSection": "chooseCultivationPath",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/game/GameManagerSaveRestore.ts",
+     "symbolOrSection": "restore seam",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA reviewer",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "repro: crafted pre-beta save -> khoi unpurchasable, lien unreachable",
+   "expected": "old hidden-way save reaches evolution axis or is honestly rejected",
+   "actual": "loads clean with evolution spine permanently locked (grantedOnly + no retro-grant)",
+   "rootCause": "way.grantedNodeIds consumed only inside ritual; restore never reconciles",
+   "rootClass": "backfill-gap",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "learnSkill-starter repair precedent followed; grantedOnly seam audited",
+     "hitDispositions": [
+      "siblings audited by reviewer + coordinator"
+     ],
+     "coverageLimits": [
+      "clean round pending"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-2"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "reconcileWayGrants dep on realmAdvanceOps called with bodyPlayer before reconcileQuestLifecycle; +2 pins",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-INT-2",
+   "title": "SkillDefinitionRegistry does not validate instances.each.momentumPerLandedInstance (INTEGRATION duplicate of F-NK-AUT-2)",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "TEST_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/skilldef/SkillDefinitionRegistry.ts",
+     "symbolOrSection": "each validation",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA INTEGRATION reviewer",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "same defect as F-NK-AUT-2",
+   "expected": "finite>=0 validation on momentumPerLandedInstance",
+   "actual": "no check (pre-fix)",
+   "rootCause": "field unchecked - negative/NaN flows into coefficient folding",
+   "rootClass": "validation-gap",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "sibling each-fields all validated now",
+     "hitDispositions": [
+      "siblings audited by reviewer + coordinator"
+     ],
+     "coverageLimits": [
+      "clean round pending"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-2"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "finite>=0 fault added (F-NK-AUT-2 same repair)",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": "F-NK-AUT-2",
+   "exception": null,
+   "status": "DUPLICATE_LINKED",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-INT-3",
+   "title": "fractional kiemDaoCount/kiemDaoBase accepted; plan lane floors vs engine lane iterates raw",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/kiem-tu/KiemTuPath.ts",
+     "symbolOrSection": "validateSwordPathPersistedState",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA reviewer",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "crafted save count=2.5",
+   "expected": "integer + realm-cap bound on kiemDao fields",
+   "actual": "fractional count diverged plan vs engine lanes",
+   "rootCause": ">=1 finite only - count 2.5 diverges lanes on crafted save",
+   "rootClass": "validator-bound",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "swordPath validator fields audited for non-integer gaps",
+     "hitDispositions": [
+      "siblings audited by reviewer + coordinator"
+     ],
+     "coverageLimits": [
+      "clean round pending"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-2"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "Number.isInteger + realm-cap bound (kiemDaoCap(realmIndex)) at validation",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-INT-4",
+   "title": "ngu_kiem_phong stale in TECHNIQUE_CAP_ALLOWLIST (INTEGRATION duplicate of F-NK-AUT-5)",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "TEST_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManager.deadIds.test.ts",
+     "symbolOrSection": "TECHNIQUE_CAP_ALLOWLIST",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA INTEGRATION reviewer",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "crafted save count=2.5 -> lanes diverge",
+   "expected": "integer bound + realm-cap bound on kiemDaoCount/kiemDaoBase",
+   "actual": "count 2.5: plan lane floors (2 inst) vs engine lane iterates (3 inst)",
+   "rootCause": "allowlist entry survived levelGates removal",
+   "rootClass": "stale-entry",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "allowlist vs authored ids re-audited",
+     "hitDispositions": [
+      "siblings audited by reviewer + coordinator"
+     ],
+     "coverageLimits": [
+      "clean round pending"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-2"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "entry dropped (F-NK-AUT-5 rename commit)",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": "F-NK-AUT-5",
+   "exception": null,
+   "status": "DUPLICATE_LINKED",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-INT-5",
+   "title": "kiem_tu_ngu benchmark recipe owns khoi only - momentum lane unexercised",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "TEST_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/simulation/benchmark/BalanceBaselines.ts",
+     "symbolOrSection": "kiem_tu_ngu recipe",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA reviewer",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "postRitual [] on mortal build",
+   "expected": "benchmark fingerprint exercises momentum",
+   "actual": "khoi-only recipe",
+   "rootCause": "mortal-only build + ritual gate makes lien unpurchasable via canonical writes",
+   "rootClass": "fixture-ceiling",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "canonical write union cannot grant way state post-ritual - recorded limitation",
+     "hitDispositions": [
+      "siblings audited by reviewer + coordinator"
+     ],
+     "coverageLimits": [
+      "clean round pending"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-2"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "committed-snapshot build override (recipe.build + hiddenNguFoundationBuild); 5 ngu cells re-baselined",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-INT-7",
+   "title": "filler assertion in cross-target momentum test",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "TEST_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/kiem-tu/invariants.test.ts",
+     "symbolOrSection": "cross-target momentum test",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA reviewer",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "postRitual [] on mortal build",
+   "expected": "benchmark fingerprint exercises shipped momentum mechanics",
+   "actual": "recipe owns khoi only - momentum lane never ran",
+   "rootCause": "expect(targetA).toBeDefined() weakened branch",
+   "rootClass": "weak-assertion",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "perInstanceOptions call sites asserted real multipliers",
+     "hitDispositions": [
+      "siblings audited by reviewer + coordinator"
+     ],
+     "coverageLimits": [
+      "clean round pending"
+     ],
+     "evidenceIds": [
+      "EV-NK-FIX-2"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "replaced with live second-stack read 1+rate*2",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-INT-6",
+   "title": "purchaseNode lacks the in-battle guard respecNodeTree/switchRoute carry",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": "purchaseNode",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA reviewer",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "borderline-intentional reviewer note",
+   "expected": "consistent battle guard or documented intent",
+   "actual": "buying lien mid-battle defers effect to next battle - documented node-purchase contract",
+   "rootCause": "deferred effect is the documented node-purchase contract",
+   "rootClass": "consistent-semantics",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src/core/game"
+     ],
+     "termsAndMethod": "purchaseNode vs respecNodeTree/switchRoute battle guards compared",
+     "hitDispositions": [
+      "purchase intentionally unguarded - deferred effect is the contract"
+     ],
+     "coverageLimits": [],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "none - contract-consistent behavior",
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "deferred-effect semantics are the documented node-purchase contract across all ways; reviewer marked 'borderline intentional'"
+  },
+  {
+   "id": "F-NK-INT-1",
+   "title": "Pre-beta hidden_sword_pathway saves can never obtain ngu_kiem_khoi - evolution spine locked (INTEGRATION duplicate of F-NK-AUT-7)",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerSaveRestore.ts",
+     "symbolOrSection": "restore seam",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA INTEGRATION reviewer",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "reviewer repro test GameManager.nguKiemOldSave.repro.test.ts 4/4 green",
+   "expected": "old hidden-way save reaches evolution axis or is honestly rejected",
+   "actual": "loads clean with spine locked (pre-F-NK-AUT-7 fix)",
+   "rootCause": "same defect as F-NK-AUT-7",
+   "rootClass": "backfill-gap",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "DUPLICATE_LINKED",
+   "duplicateOf": "F-NK-AUT-7",
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-NK-COR-1",
+   "title": "pre-existing hidden_sword_pathway saves can never obtain ngu_kiem_khoi - Lien permanently gated",
+   "state": {
+    "productStateId": "59a34d8568ee5cfc932eba0ca7d8952f34345f050c96cbf651089c41a7ee0cb0",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [],
+   "discoveredBy": "clean-A correctness reviewer REV-NK-COR-1 @31c06c9b (devin-39ab2bde9dc54c049252378dc4d5b9a0)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "getNodeLevel(ngu_kiem_khoi)=0 forever for pre-beta hidden-way saves; Lien prereq fails forever",
+   "expected": "save on hidden way before the branch reaches the evolution spine or the lockout is a recorded exception",
+   "actual": "same defect surface as F-NK-AUT-7: grant seam only inside ritual commit; validator does not require grantedNodeIds",
+   "rootCause": "grant seam only inside ritual commit; validator does not require grantedNodeIds (same root as F-NK-AUT-7)",
+   "rootClass": "missing-retro-grant",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "covered by F-NK-AUT-7 reconcileWayGrants fix @e47648db",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": "F-NK-AUT-7",
+   "exception": null,
+   "status": "DUPLICATE_LINKED",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-COR-2",
+   "title": "stale comments referencing removed ngu mechanics mislead authors",
+   "state": {
+    "productStateId": "59a34d8568ee5cfc932eba0ca7d8952f34345f050c96cbf651089c41a7ee0cb0",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "DOCUMENTATION_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/skilldef/SkillDefinition.ts",
+     "symbolOrSection": "guaranteedHit doc (phi kiem never miss claim)",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/turn/TurnSkillAction.ts",
+     "symbolOrSection": "emblemOnly producer comment",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/player/CultivationPathRuntime.ts",
+     "symbolOrSection": "emblemSlots doc",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/turn/TurnSkillPlanRuntime.ts",
+     "symbolOrSection": "onCastResolved extras comment",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-A correctness reviewer REV-NK-COR-1 @31c06c9b (devin-39ab2bde9dc54c049252378dc4d5b9a0)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "phi kiem CAN miss now - comment claimed never-miss",
+   "expected": "comments describe current contract semantics",
+   "actual": "four comments cite removed cascade/guaranteed-hit/emblem behavior; SkillDefinition one directly contradicted the new standard-hit spec",
+   "rootCause": "comment normalization sweep at e47648db missed 4 sites in runtime/contract files",
+   "rootClass": "stale-comment-residue",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "normalized @dcc5303c + dropped unused CombatOperationResult import @5773e77d",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-COR-3",
+   "title": "dead plumbing after removal: unused rng param + zero-implementer emblemSlots + technique description retains old way name",
+   "state": {
+    "productStateId": "59a34d8568ee5cfc932eba0ca7d8952f34345f050c96cbf651089c41a7ee0cb0",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [],
+   "discoveredBy": "clean-A correctness reviewer REV-NK-COR-1 @31c06c9b (devin-39ab2bde9dc54c049252378dc4d5b9a0)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "removal would churn the provider interface + all implementers for zero behavior change",
+   "expected": "removed-feature plumbing fully excised or documented as retained",
+   "actual": "rng param of buildDynamicBasic consumed by no current provider; emblemSlots contract zero implementers; technique description keeps old way name (its own name)",
+   "rootCause": "retained contract seams - interface params kept for future producers; technique name intentional",
+   "rootClass": "retained-contract-seam",
+   "subsystem": "ngu-kiem-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "comment updates at COR-2 annotate the retention",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "retained interface contract (buildDynamicBasic signature shared across path providers; emblemSlots is the documented extension seam; technique description is the artifact its own name). Dead-but-harmless; removing would be a breaking refactor for cosmetic gain."
   }
  ],
  "evidence": [
@@ -347,7 +1314,7 @@
     "plan-lane momentum verified at contract/adapter level only",
     "no browser e2e over skill-path panel"
    ],
-   "status": "CURRENT"
+   "status": "STALE"
   },
   {
    "id": "EV-NK-FIX-1",
@@ -376,16 +1343,224 @@
    "limitations": [
     "scoped suite; full npm run verify env-noise profile identical to master (canvas/magick)"
    ],
-   "status": "CURRENT"
+   "status": "STALE"
+  },
+  {
+   "id": "EV-NK-FIX-2",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T01:10:00.000Z",
+   "finishedAt": "2026-09-25T01:18:00.000Z",
+   "commandOrMethod": "npm run type-check (0) + vitest scoped (321+150 pass) + eslint touched files (0) + fingerprint diff audit (only kiem_tu_ngu/* cells changed)",
+   "cwd": "game",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/fix-verify-e47648db.log",
+   "artifactHash": "d1dde144c19afdf14abfecba36a04d1810626d29906f90aad320fadf0e4a9ac0",
+   "inputPaths": [
+    "src/core/skilldef/SkillResolver.ts",
+    "src/core/kiem-tu/KiemTuPath.ts",
+    "src/core/simulation/benchmark/BalanceBaselines.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "F-NK-AUT-1..7 + F-NK-INT-1..5,7 repairs verified at new head"
+   ],
+   "limitations": [
+    "full npm run verify not rerun at this head (scoped + type-check + eslint only)"
+   ],
+   "status": "STALE",
+   "state": {
+    "productStateId": "59a34d8568ee5cfc932eba0ca7d8952f34345f050c96cbf651089c41a7ee0cb0",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL"
   }
  ],
  "coverage": [],
  "attacks": [],
- "reviews": [],
+ "reviews": [
+  {
+   "round": 1,
+   "phase": "AUTHORITY",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": false,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "novelAttackIds": [],
+   "status": "STALE",
+   "id": "REV-NK-AUT-1",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reviewerId": "devin-c892acdee9284551b6cee8d89859ffd3",
+   "contextId": "sealed-child-devin-c892acdee9284551b6cee8d89859ffd3",
+   "model": "swe-2-max",
+   "role": "authority",
+   "startedAt": "2026-09-25T00:17:00.000Z",
+   "sealedAt": "2026-09-25T00:52:00.000Z",
+   "findingIds": [
+    "F-NK-AUT-1",
+    "F-NK-AUT-2",
+    "F-NK-AUT-3",
+    "F-NK-AUT-4",
+    "F-NK-AUT-5",
+    "F-NK-AUT-6",
+    "F-NK-AUT-7"
+   ]
+  },
+  {
+   "round": 1,
+   "phase": "INTEGRATION",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": false,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "novelAttackIds": [],
+   "status": "STALE",
+   "id": "REV-NK-INT-1",
+   "state": {
+    "productStateId": "14fa7edff9d9d7128e7f0ba20d7f75b279294d5e0e05bea7df28a73431917007",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reviewerId": "devin-9e7fe39903a54743b10fda6b8fbc6c2d",
+   "contextId": "sealed-child-devin-9e7fe39903a54743b10fda6b8fbc6c2d",
+   "model": "swe-2-max",
+   "role": "integration",
+   "startedAt": "2026-09-25T00:57:00.000Z",
+   "sealedAt": "2026-09-25T01:11:00.000Z",
+   "findingIds": [
+    "F-NK-INT-1",
+    "F-NK-INT-2",
+    "F-NK-INT-3",
+    "F-NK-INT-4",
+    "F-NK-INT-5",
+    "F-NK-INT-6",
+    "F-NK-INT-7"
+   ]
+  },
+  {
+   "id": "REV-NK-COR-1",
+   "state": {
+    "productStateId": "59a34d8568ee5cfc932eba0ca7d8952f34345f050c96cbf651089c41a7ee0cb0",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 2,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-39ab2bde9dc54c049252378dc4d5b9a0",
+   "contextId": "sealed-child-devin-39ab2bde9dc54c049252378dc4d5b9a0",
+   "model": "swe-2-max",
+   "role": "cleanA-correctness",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "reviewed pinned head 31c06c9b - pre-fix state; findings adjudicated against later head e47648db+"
+   ],
+   "startedAt": "2026-09-25T00:29:07.000Z",
+   "sealedAt": "2026-09-25T00:57:48.000Z",
+   "previousPhaseReviewId": "REV-NK-INT-1",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-NK-COR-1",
+    "F-NK-COR-2",
+    "F-NK-COR-3"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  }
+ ],
  "cycles": [],
  "mutations": [],
  "corpus": [],
- "lessons": [],
+ "lessons": [
+  {
+   "id": "L-NK-01",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "FALSE_POSITIVE",
+   "findingIds": [
+    "F-NK-INT-1",
+    "F-NK-INT-2",
+    "F-NK-INT-4",
+    "F-NK-INT-6",
+    "F-NK-COR-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "consistent-semantics",
+   "missedInvariantIds": [],
+   "escapeReason": "INTEGRATION findings adjudicated: 1 Medium + 2 Nit were duplicates of AUTHORITY findings (linked); purchaseNode battle-guard rejected as documented contract",
+   "applicability": [
+    "ngu-kiem-beta + sibling purchase paths"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "documented contract is the detector - no new pin needed"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "duplicate-link + contract-rejection adjudications recorded",
+   "status": "QUALIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-02",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-COR-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "missing-retro-grant",
+   "missedInvariantIds": [],
+   "escapeReason": "grantedOnly node had no load-time reconcile; pre-branch saves locked out (independent rediscovery of F-NK-AUT-7)",
+   "applicability": [
+    "any grantedOnly/rewardOnly node consumed via prereq gates"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "load-time reconcile for granted-node seam on save restore"
+   ],
+   "promotionEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "qualifiedBy": [
+    "REV-NK-COR-1"
+   ],
+   "capabilityDelta": "confirmed reconcileWayGrants covers the surface; duplicate recorded for recurrence stats",
+   "status": "QUALIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [
+    "F-NK-AUT-7"
+   ],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  }
+ ],
  "messages": [],
  "events": [
   {
@@ -467,6 +1642,38 @@
    "payloadPath": "events/0005.json",
    "payloadHash": "b5840e81544151c4dafbf2e59580a04e8943ea52edae5f2f0870b14cba4c9d9a",
    "eventHash": "3f1e8e53540a5cdd576efd5cc56b7cd63f3065bb01f0cd12add606fa9fb8664b"
+  },
+  {
+   "seq": 6,
+   "at": "2026-09-25T01:16:57.647Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "59a34d8568ee5cfc932eba0ca7d8952f34345f050c96cbf651089c41a7ee0cb0",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "3f1e8e53540a5cdd576efd5cc56b7cd63f3065bb01f0cd12add606fa9fb8664b",
+   "payloadPath": "events/0006.json",
+   "payloadHash": "535c9dc9d4f662b12385b441df7390d4945add32e72e68a3d6ad62e2744784c2",
+   "eventHash": "53d5fe7def7d94575047c9ea360df42a1cb45b89e91898076ca7eb6f4abbfa51"
+  },
+  {
+   "seq": 7,
+   "at": "2026-09-25T01:34:11.283Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "deacfdab28729260f51b7206ef06b786d318603cf060b4ede094738de568e518",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "53d5fe7def7d94575047c9ea360df42a1cb45b89e91898076ca7eb6f4abbfa51",
+   "payloadPath": "events/0007.json",
+   "payloadHash": "1808a79c4881713a21498a82ff3f4966da8f72c79db62685daefb717c39f91de",
+   "eventHash": "34d9a8a80ef246aec3389898a3acdff74e3787a432e1f2974bcd5e8ab8a70f36"
   }
  ]
 }
