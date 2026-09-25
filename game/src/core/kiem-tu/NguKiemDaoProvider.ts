@@ -91,8 +91,8 @@ export function resolveNguKiemEvolutionSuffix(
   nodes: readonly ProgressionNode[],
 ): string | undefined {
   // ONE naming authority: the suffix comes from the owned node's own
-  // name ('Ngu Kiem · Khoi' -> 'Khoi') so a future tier never needs a
-  // parallel literal map re-listed here.
+  // name (text after its middle-dot separator, e.g. 'Khoi') so a future
+  // tier never needs a parallel literal map re-listed here.
   const node = resolveNguKiemOwnedEvolutionNode(player, nodes)
   const suffix = node?.name.split('·')[1]?.trim()
   return suffix !== undefined && suffix.length > 0 ? suffix : undefined
