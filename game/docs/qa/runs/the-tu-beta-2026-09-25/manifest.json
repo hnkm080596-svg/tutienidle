@@ -3054,7 +3054,7 @@
       "path": "docs/specs/the-tu-beta-spec.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "f838a5debc7225e092beb3e06045adf511a3e0179c2a1bf168220e23541ceae9"
+      "hash": "611c2ecba33ebd1a5a7a9fb2351513f18889142754cbe8724660ecfa901bc129"
     },
     {
       "path": "docs/superpowers/plans/2026-09-08-r10-save-restore-boundary.md",
@@ -14652,7 +14652,7 @@
       "path": "src/components/panels/skill-path/TheTuTreePanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "c4c0d8f1adeca9483ef3d79b81b7db19ba3d873650e1223cf9077bf66eb8934c"
+      "hash": "c8c555e83827c87d0b32f04f7ddccb48dc34bef39f94748c4d15e794019d5d38"
     },
     {
       "path": "src/components/panels/SkillPathPanel.test.ts",
@@ -15354,7 +15354,7 @@
       "path": "src/core/battle/runtime/scheduler/adapters/CombatSystemDamageAdapter.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e4df47c6cea1e713ebdf30be178666d3324b7647e879be30e73a538200e50caa"
+      "hash": "c4222674c13d15d5493f04facb19b7bfb198229ab730598aadd451e2c3131d96"
     },
     {
       "path": "src/core/battle/runtime/scheduler/adapters/CombatSystemHealAdapter.test.ts",
@@ -15924,7 +15924,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "93fae790452686d1a1130d608b08da10bbc64866abff97fef84b04fb6f34f6f3"
+      "hash": "a7f3f1020b4db81bad3c2ddfafad3558978b257832ec7073f0c6831ad2926aef"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.turnRegen.test.ts",
@@ -16014,7 +16014,7 @@
       "path": "src/core/battle/turn/TurnSkillPlanRuntime.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "dc93ea027b8d72781935a940689b284eb7dc365b6c8e8087e56bff679b8d2fb7"
+      "hash": "1654a4bc82da4fffa0484d422b65e19dc9086676d9ddcb0b89224ec09290c287"
     },
     {
       "path": "src/core/battle/turn/TurnStatsRecompute.test.ts",
@@ -19758,7 +19758,7 @@
       "path": "src/core/skilldef/LegacySkillAdapter.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "17858bfa72cbc78a620fcb9a45c0cdcb01ad36bd8ddb1eb57c5990da6b22f17a"
+      "hash": "6c61991849519760a25feb19426044ca294ce5fb118bb5dc65b193fe5c1e3419"
     },
     {
       "path": "src/core/skilldef/LegacySkillCoverage.test.ts",
@@ -20970,7 +20970,7 @@
       "path": "src/data/skill/TheTuSkills.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a64567898dc35315e3b3d916751f830726d136ecc1a724bbecf5440e0faa34bb"
+      "hash": "34170536ee35fa7e7e35a0a8c265fb43034047f5544a0ae1f26a4ef6471d3875"
     },
     {
       "path": "src/data/skill/TurnAnKitSkills.ts",
@@ -22296,7 +22296,7 @@
       "path": "src/services/save/saveVersion.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "144edb1fd01f7cff1a31d22a0d3f0650eb4d9762053876c07394ee5249823ae8"
+      "hash": "03b770af4228ef5e40661c63c8f05cad8c4dad974efc6d55cd4ecef8d6f7087c"
     },
     {
       "path": "src/services/supabase/SupabaseConfig.ts",
@@ -22983,5 +22983,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "78670408bf5e4fdda6b3931efb6432591a50eb058333226fba732331a3f28ab2"
+  "productStateId": "e930eaa3ffbbf566dfdaaed858328eb902c377151961249a6038852d294ead08"
 }
