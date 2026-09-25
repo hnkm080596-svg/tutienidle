@@ -8291,6 +8291,108 @@
    "duplicateOf": null,
    "rejectionReason": "Latent/crafted-only: Hypothetical authored combo (rewardOnly+unlocksSkillIds on same node) could retain a skill never unlocked; no authored node today combines the two",
    "status": "REJECTED_WITH_PROOF"
+  },
+  {
+   "id": "F-PT-AUTB-1",
+   "title": "Stale docstring on grantCultivationPathRealmReward says 'artifact-only'",
+   "state": {
+    "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/core/game/GameManagerRealmAdvanceOps.ts",
+     "symbolOrSection": "grantCultivationPathRealmReward docstring L126",
+     "revision": "de61f0cf",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-B AUTHORITY reviewer (devin-0e0a1e70)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "git show de61f0cf:game/src/core/game/GameManagerRealmAdvanceOps.ts L126 contains stale artifact-only docstring",
+   "expected": "Docstring reflects the full grant surface (artifact + grantedNodeLevels)",
+   "actual": "Docstring still claims P7-M3 artifact-only surface",
+   "rootCause": "docstring not updated when grant seam gained node-level rewards",
+   "rootClass": "stale documentation on evolved wrapper",
+   "pinEvidenceIds": [
+    "EV-PT-FIX-AUTB"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PT-FIX-AUTB"
+   ],
+   "status": "FIXED_PENDING_PROOF",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/game"
+     ],
+     "termsAndMethod": "grep artifact-only / P7-M3 docstrings on grant wrappers",
+     "evidenceIds": [
+      "EV-PT-FIX-AUTB"
+     ],
+     "hitDispositions": [
+      "no other stale grant-surface docstring found"
+     ],
+     "coverageLimits": [
+      "docstring sweep only covers grant wrappers in src/core/game"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "repair": "FIXED @b481ba61: docstring now names full grant surface"
+  },
+  {
+   "id": "F-PT-AUTB-2",
+   "title": "core/player -> data/ imports exist at merge-base (pre-existing)",
+   "state": {
+    "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": "data/skill imports L33-77",
+     "revision": "de61f0cf",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-B AUTHORITY reviewer (devin-0e0a1e70)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "git show be1bdf8d:game/src/core/player/CultivationPathRegistry.ts matches HEAD data/ imports",
+   "expected": "core/player files must not import data/",
+   "actual": "7+ data/ imports identical at merge-base be1bdf8d; diff adds none (grant seam uses resolver injection)",
+   "rootCause": "pre-existing architecture debt outside task scope; no new violation introduced",
+   "rootClass": "pre-existing/out-of-scope architecture debt",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "rejectionReason": "pre-existing debt: imports identical at merge-base be1bdf8d; task diff adds none",
+   "exception": null,
+   "repair": "DEFERRED (pre-existing/out-of-scope): identical at merge-base; no new violation"
   }
  ],
  "evidence": [
@@ -9224,6 +9326,35 @@
    "limitations": [
     "scoped suite only; full npm run verify log pending on final state"
    ],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-PT-FIX-AUTB",
+   "state": {
+    "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T04:30:00.000Z",
+   "finishedAt": "2026-09-25T04:32:00.000Z",
+   "commandOrMethod": "docstring refresh at GameManagerRealmAdvanceOps.ts:126 + git show b481ba61 verification artifact",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/autb-docstring-fix.log",
+   "artifactHash": "42f701003b17822dd820f93d6147574bb0d193a0f3ad8100ef33c9667b5cb992",
+   "inputPaths": [
+    "game/src/core/game/GameManagerRealmAdvanceOps.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "docstring now describes full grant surface (artifact + grantedNodeLevels)"
+   ],
+   "limitations": [],
    "status": "CURRENT"
   }
  ],
@@ -10715,6 +10846,36 @@
    "coverageIds": [],
    "evidenceIds": [],
    "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-AUT-B",
+   "state": {
+    "productStateId": "8b01563b180a80c1d03d1f05e8b482919af68afe0cc949524635fec6b3ec4ca8",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 14,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-0e0a1e70d541451c8a19c05649cddc25",
+   "contextId": "sealed-child-0e0a1e70d541451c8a19c05649cddc25",
+   "model": "swe-2-max",
+   "role": "clean-round-authority",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T04:20:00.000Z",
+   "sealedAt": "2026-09-25T04:30:00.000Z",
+   "previousPhaseReviewId": "REV-PT-COR-B",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-AUTB-1",
+    "F-PT-AUTB-2"
+   ],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -12948,6 +13109,70 @@
     "REV-PT-CLO-5"
    ],
    "capabilityDelta": "clawback funnels must add the helper's credited return; boolean funnels may discard",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-54",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUTB-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "stale documentation on evolved wrapper",
+   "missedInvariantIds": [],
+   "escapeReason": "wrapper grew node-level grants after P7-M3; docstring left claiming artifact-only",
+   "applicability": [
+    "phap-tu-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "grep docstrings when a wrapper's delegated body gains a new grant surface"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-B"
+   ],
+   "capabilityDelta": "wrapper docstrings must name the full grant surface, not the original milestone scope",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-55",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUTB-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "pre-existing/out-of-scope architecture debt",
+   "missedInvariantIds": [],
+   "escapeReason": "core/player data/ imports predate task; diff adds none so gate cannot block on it",
+   "applicability": [
+    "phap-tu-beta"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "merge-base diff check for import-direction findings before adjudicating"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-AUT-B"
+   ],
+   "capabilityDelta": "import-direction findings only count violations the diff introduces",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": null,
