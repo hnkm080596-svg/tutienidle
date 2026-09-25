@@ -11,8 +11,8 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "bdc04bf9",
   "state": {
-   "productStateId": "e930eaa3ffbbf566dfdaaed858328eb902c377151961249a6038852d294ead08",
-   "contractId": "646e81317d47bc6029e7fbdff98a4672daf20091c54408ff15e606fba82228e1",
+   "productStateId": "5fb15ec224c4b99d4504fca4752228d46b60b9bb6611f13515c57ff8b5d2bf82",
+   "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
   },
@@ -1507,6 +1507,416 @@
    "exception": null,
    "status": "REJECTED_WITH_PROOF",
    "rejectionReason": "unreachable in current single-player builds - only one participant can carry phan_chan; flagged for future multi-holder case"
+  },
+  {
+   "id": "F-TT-AUT-8",
+   "title": "sourceMaxHpRatio silently dropped on non-physical damage defs - no registration fault or unsupported-field warning",
+   "state": {
+    "productStateId": "e930eaa3ffbbf566dfdaaed858328eb902c377151961249a6038852d294ead08",
+    "contractId": "646e81317d47bc6029e7fbdff98a4672daf20091c54408ff15e606fba82228e1",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/skilldef/LegacySkillAdapter.ts",
+     "symbolOrSection": "adaptDamageOp ~402",
+     "revision": "d50a0020",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/runtime/scheduler/adapters/CombatSystemDamageAdapter.ts",
+     "symbolOrSection": "physical returns ~261-303",
+     "revision": "d50a0020",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-087d45708e434a599d2f22dbd68a905d",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "an authored elemental/primordial def carrying sourceMaxHpRatio passes validation and silently produces nothing - adaptDamageOp copies it unconditionally; CombatSystem applies it only on kind==='physical'",
+   "expected": "physical-only field follows the armorPierce+explicitlyNonPhysical precedent (contradictory_damage_policy fault) or surfaces via collectUnsupportedSkillSemantics",
+   "actual": "validated-but-unread field rides the op payload silently",
+   "rootCause": "no kind-consistency check or unsupported-semantics warning for sourceMaxHpRatio",
+   "rootClass": "unsupported-field-silent-drop",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components"
+     ],
+     "termsAndMethod": "clean-A reviewer sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "non-physical def carrying sourceMaxHpRatio reports to adapterUnsupportedMetadata @c8cbf932 + regression test",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-TT-AUT-9",
+   "title": "TurnSkillDisplayMeta.ts comments re-saved with stripped Vietnamese diacritics",
+   "state": {
+    "productStateId": "e930eaa3ffbbf566dfdaaed858328eb902c377151961249a6038852d294ead08",
+    "contractId": "646e81317d47bc6029e7fbdff98a4672daf20091c54408ff15e606fba82228e1",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/TurnSkillDisplayMeta.ts",
+     "symbolOrSection": "file comments",
+     "revision": "d50a0020",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-087d45708e434a599d2f22dbd68a905d",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "~40 diff lines of comment-only churn transliterating Vietnamese comments (DONG BO etc.) outside the the_tu entries",
+   "expected": "diff limited to the-tu metadata",
+   "actual": "functionally inert comment churn",
+   "rootCause": "ASCII sweep of comments",
+   "rootClass": "cosmetic-churn",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components"
+     ],
+     "termsAndMethod": "clean-A reviewer sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "protection rule P15 requires comments to be ASCII-only; the transliteration was the mandated P15 fix, not accidental churn - displayed strings retain diacritics correctly"
+  },
+  {
+   "id": "F-TT-COR-10",
+   "title": "reflection profile passes through fDP/fDRP - delivered amount diverges from spec-pinned maxHp*ratio",
+   "state": {
+    "productStateId": "e930eaa3ffbbf566dfdaaed858328eb902c377151961249a6038852d294ead08",
+    "contractId": "646e81317d47bc6029e7fbdff98a4672daf20091c54408ff15e606fba82228e1",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/runtime/scheduler/adapters/CombatSystemDamageAdapter.ts",
+     "symbolOrSection": "reflection profile ~224-237",
+     "revision": "d50a0020",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-7ef35238e0dd4bd0ac1057ec3349ff5d",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "applyModifiedDirectDamage applies finalDamageMultiplier (1+holder fDP)*(1-attacker fDRP) on the reflect amount",
+   "expected": "spec sec.2.5 pins amount = holder.maxHp * ratio",
+   "actual": "authored coefficient is exact; the shared channel multiplies fDP/fDRP before the vitals write",
+   "rootCause": "reflection rides the modified-direct channel (legacy phan_chinh parity)",
+   "rootClass": "spec-wording-ambiguity",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "clean-A reviewer sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "spec pins the authored coefficient; post-channel fDP/fDRP is the existing convention shared with legacy phan_chinh (parity preserved) - multiplier values are BETA-BALANCE territory"
+  },
+  {
+   "id": "F-TT-COR-11",
+   "title": "pendingReflects not keyed on rootActionId - stale entry only via mid-action exception",
+   "state": {
+    "productStateId": "e930eaa3ffbbf566dfdaaed858328eb902c377151961249a6038852d294ead08",
+    "contractId": "646e81317d47bc6029e7fbdff98a4672daf20091c54408ff15e606fba82228e1",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/proc/CombatProcSystem.ts",
+     "symbolOrSection": "pendingReflects ~85-263",
+     "revision": "d50a0020",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-7ef35238e0dd4bd0ac1057ec3349ff5d",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "an exception between queue and tail flush could strand a pending entry emitting a correctly-targeted reflect under a stale rootActionId",
+   "expected": "pending entry drained by the same action's flush",
+   "actual": "no early return exists between queue and flush; carryover only via exception",
+   "rootCause": "defensive keying absent; control-flow shows no legitimate path",
+   "rootClass": "defensive-note",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "clean-A reviewer sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "non-exploitable - reviewer-traced control flow shows no reachable path between queue and flush other than an engine exception; defensive-keying hygiene note"
+  },
+  {
+   "id": "F-TT-COR-12",
+   "title": "resolveBodyKit silently prefers cuong_chien on a forged dual-root save",
+   "state": {
+    "productStateId": "e930eaa3ffbbf566dfdaaed858328eb902c377151961249a6038852d294ead08",
+    "contractId": "646e81317d47bc6029e7fbdff98a4672daf20091c54408ff15e606fba82228e1",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": "resolveBodyKit ~271-290",
+     "revision": "d50a0020",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-7ef35238e0dd4bd0ac1057ec3349ff5d",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "hand-edited v85 save with both roots levelled passes shape validation; cuong wins first check, tran mods collect inert",
+   "expected": "exactly-one-root at purchase/respec (verified)",
+   "actual": "mutex is not a save invariant; forged-save only",
+   "rootCause": "no save-level check on the root pair",
+   "rootClass": "crafted-state",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "clean-A reviewer sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [
+    "F-TT-COR-8"
+   ],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": "F-TT-COR-8",
+   "exception": null,
+   "status": "DUPLICATE_LINKED",
+   "rejectionReason": "duplicate of F-TT-COR-8 (crafted dual-root save - unreachable via gameplay, see F-TT-COR-8 rejection)"
+  },
+  {
+   "id": "F-TT-INT-7",
+   "title": "spec/impl coefficient drift: CUONG_QUYEN_MULTIPLIER 1.4 vs spec sec.2.2 '1.1'",
+   "state": {
+    "productStateId": "e930eaa3ffbbf566dfdaaed858328eb902c377151961249a6038852d294ead08",
+    "contractId": "646e81317d47bc6029e7fbdff98a4672daf20091c54408ff15e606fba82228e1",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/TheTuSkills.ts",
+     "symbolOrSection": "CUONG_QUYEN_MULTIPLIER",
+     "revision": "d50a0020",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "docs/specs/the-tu-beta-spec.md",
+     "symbolOrSection": "sec.2.2 ~103",
+     "revision": "d50a0020",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-913ec4a4a1144be48f0027e8329b3142",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "spec sec.2.2 pins coefficient 1.1; impl ships 1.4 (+27%) and the balance baseline validates the shipped build - semantic authority and impl diverged without a flag",
+   "expected": "spec records the tuned shipped value with a balance flag per sec.3.6",
+   "actual": "spec text stale at 1.1",
+   "rootCause": "tuned constant never written back to spec",
+   "rootClass": "spec-drift",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "docs/specs"
+     ],
+     "termsAndMethod": "clean-A reviewer sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "spec sec.2.2 updated to 1.4 tuned value with balance flag + ward/flat-channel note @c8cbf932",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-TT-INT-8",
+   "title": "sacrifice + reflection ride flat channels bypassing ward entirely",
+   "state": {
+    "productStateId": "e930eaa3ffbbf566dfdaaed858328eb902c377151961249a6038852d294ead08",
+    "contractId": "646e81317d47bc6029e7fbdff98a4672daf20091c54408ff15e606fba82228e1",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/runtime/scheduler/adapters/CombatSystemDamageAdapter.ts",
+     "symbolOrSection": "sacrifice/reflection profiles",
+     "revision": "d50a0020",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-913ec4a4a1144be48f0027e8329b3142",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "warded caster pays through own ward; warded attacker takes unmitigated reflect (applyDamage writes currentHp directly, no ward consultation)",
+   "expected": "spec silent on ward interaction; sibling damage channels route through ward",
+   "actual": "internally consistent flat-channel semantics, plausible intent, unflagged",
+   "rootCause": "flat-channel design, undocumented",
+   "rootClass": "spec-silence",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "docs/specs"
+     ],
+     "termsAndMethod": "clean-A reviewer sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "spec sec.2.3 ward/flat-channel note pinned (intentional for beta, revisit at BETA-BALANCE) @c8cbf932",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
   }
  ],
  "evidence": [
@@ -1698,7 +2108,7 @@
    "invariantIds": [],
    "limitations": [],
    "result": "PASS",
-   "status": "CURRENT"
+   "status": "STALE"
   }
  ],
  "coverage": [],
@@ -1916,7 +2326,7 @@
    "evidenceIds": [],
    "findingIds": [],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-TT-COR-A2",
@@ -1946,7 +2356,7 @@
     "F-TT-COR-9"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-TT-INT-A2",
@@ -1977,7 +2387,7 @@
     "F-TT-INT-6"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-TT-CLO-4",
@@ -2003,6 +2413,97 @@
    "coverageIds": [],
    "evidenceIds": [],
    "findingIds": [],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-TT-AUT-A3",
+   "state": {
+    "productStateId": "e930eaa3ffbbf566dfdaaed858328eb902c377151961249a6038852d294ead08",
+    "contractId": "646e81317d47bc6029e7fbdff98a4672daf20091c54408ff15e606fba82228e1",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 8,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-087d45708e434a599d2f22dbd68a905d",
+   "contextId": "sealed-child-087d45708e434a599d2f22dbd68a905d",
+   "model": "swe-2-max",
+   "role": "clean-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T07:47:49.000Z",
+   "sealedAt": "2026-09-25T08:07:35.000Z",
+   "previousPhaseReviewId": "REV-TT-COR-A2",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-AUT-8",
+    "F-TT-AUT-9"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-TT-COR-A3",
+   "state": {
+    "productStateId": "e930eaa3ffbbf566dfdaaed858328eb902c377151961249a6038852d294ead08",
+    "contractId": "646e81317d47bc6029e7fbdff98a4672daf20091c54408ff15e606fba82228e1",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 8,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-7ef35238e0dd4bd0ac1057ec3349ff5d",
+   "contextId": "sealed-child-7ef35238e0dd4bd0ac1057ec3349ff5d",
+   "model": "swe-2-max",
+   "role": "clean-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T07:47:49.000Z",
+   "sealedAt": "2026-09-25T08:08:12.000Z",
+   "previousPhaseReviewId": "REV-TT-AUT-A3",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-COR-10",
+    "F-TT-COR-11",
+    "F-TT-COR-12"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-TT-INT-A3",
+   "state": {
+    "productStateId": "e930eaa3ffbbf566dfdaaed858328eb902c377151961249a6038852d294ead08",
+    "contractId": "646e81317d47bc6029e7fbdff98a4672daf20091c54408ff15e606fba82228e1",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 8,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-913ec4a4a1144be48f0027e8329b3142",
+   "contextId": "sealed-child-913ec4a4a1144be48f0027e8329b3142",
+   "model": "swe-2-max",
+   "role": "clean-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T07:47:50.000Z",
+   "sealedAt": "2026-09-25T08:12:14.000Z",
+   "previousPhaseReviewId": "REV-TT-AUT-A3",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-INT-7",
+    "F-TT-INT-8"
+   ],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -2694,6 +3195,202 @@
    "policyVersion": null,
    "effectiveFromRun": null,
    "guidance": null
+  },
+  {
+   "id": "L-TT-24",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-AUT-9"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "cosmetic-churn",
+   "missedInvariantIds": [],
+   "escapeReason": "clean-A finding",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "adjudicated - P15-mandated"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "adjudicated",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-TT-25",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-10"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "spec-wording-ambiguity",
+   "missedInvariantIds": [],
+   "escapeReason": "clean-A finding",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "adjudicated"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "adjudicated",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-TT-26",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-11"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "defensive-note",
+   "missedInvariantIds": [],
+   "escapeReason": "clean-A finding",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "adjudicated"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "adjudicated",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-TT-27",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-COR-12"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "crafted-state",
+   "missedInvariantIds": [],
+   "escapeReason": "clean-A finding",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "adjudicated"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "adjudicated",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-TT-28",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-INT-7"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "spec-drift",
+   "missedInvariantIds": [],
+   "escapeReason": "clean-A finding",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "adjudicated"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "adjudicated",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-TT-29",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-INT-8"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "spec-silence",
+   "missedInvariantIds": [],
+   "escapeReason": "clean-A finding",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "adjudicated"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "adjudicated",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-TT-30",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-AUT-8"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "unsupported-field-silent-drop",
+   "missedInvariantIds": [],
+   "escapeReason": "clean-A finding",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "adjudicated"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "adjudicated",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
   }
  ],
  "messages": [],
@@ -2793,6 +3490,22 @@
    "payloadPath": "events/0006.json",
    "payloadHash": "9787dbe34e9f279fc27a822710605b546f1ff33e71ff0a7d89f29bb686d85438",
    "eventHash": "aa9e344f806520a1da0d378cb0fc8ba2512efe6dda6373d10d71973373d0bf88"
+  },
+  {
+   "seq": 7,
+   "at": "2026-09-25T08:13:20.017Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-406257",
+   "state": {
+    "productStateId": "5fb15ec224c4b99d4504fca4752228d46b60b9bb6611f13515c57ff8b5d2bf82",
+    "contractId": "467b4525eae5cd095600b71d8e7d27041ba6fecba515d0ff1b7f6c91fb56e8ac",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "aa9e344f806520a1da0d378cb0fc8ba2512efe6dda6373d10d71973373d0bf88",
+   "payloadPath": "events/0007.json",
+   "payloadHash": "8e4bcf28ea293a80980b8a592732d0b2540593c2db93193221c9301908094400",
+   "eventHash": "532a207e5a09cebc6bc1294acf669bf5ad598456dfe944234c750ee6774e65c5"
   }
  ]
 }

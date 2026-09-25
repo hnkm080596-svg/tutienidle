@@ -3054,7 +3054,7 @@
       "path": "docs/specs/the-tu-beta-spec.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "611c2ecba33ebd1a5a7a9fb2351513f18889142754cbe8724660ecfa901bc129"
+      "hash": "a47eabd98963d1ea40b60bc506580c83eaa9a12731ec3a8e0b9653c4074b0d56"
     },
     {
       "path": "docs/superpowers/plans/2026-09-08-r10-save-restore-boundary.md",
@@ -19752,13 +19752,13 @@
       "path": "src/core/skilldef/LegacySkillAdapter.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d1ac50f94da2373ed24692b64b59e295acdb43f65d4877580ed3f02b89e453d4"
+      "hash": "8c164d69389d3a0b3fed7701b36c126b7cc6c278d04890efae034eb32c7a92ed"
     },
     {
       "path": "src/core/skilldef/LegacySkillAdapter.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6c61991849519760a25feb19426044ca294ce5fb118bb5dc65b193fe5c1e3419"
+      "hash": "b5773fb9a15cf56bf74f135d7c96f63ac97a8f17a22c818eb622b0f0b0876eab"
     },
     {
       "path": "src/core/skilldef/LegacySkillCoverage.test.ts",
@@ -22983,5 +22983,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "e930eaa3ffbbf566dfdaaed858328eb902c377151961249a6038852d294ead08"
+  "productStateId": "5fb15ec224c4b99d4504fca4752228d46b60b9bb6611f13515c57ff8b5d2bf82"
 }
