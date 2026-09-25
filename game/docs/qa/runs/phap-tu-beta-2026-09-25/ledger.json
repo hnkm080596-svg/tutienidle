@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "5f0d296be768afe76b07b46358a7766bae0ac28d",
   "state": {
-   "productStateId": "604c561747d1d7c8bcfb93f67b5614d31a6b443a9b35c8764f4747c25039f354",
+   "productStateId": "684a3dbab78879281abb32f162b5df266be9d5c2617d3723e59323d9dabd92d1",
    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -9242,7 +9242,7 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": "targetingOverride -> targeting in header comment @68c18a84",
+   "repair": "targetingOverride -> targeting in PhapTuChainSkills.ts:16 @68c18a84 + SkillSystem.ts:66 @d1f6455b (second instance caught by REV-PT-CLO-10)",
    "pinEvidenceIds": [],
    "verificationEvidenceIds": [],
    "closureReviewIds": [],
@@ -12258,6 +12258,33 @@
     "F-PT-COR-A4-2",
     "F-PT-COR-A4-3"
    ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PT-CLO-10",
+   "state": {
+    "productStateId": "604c561747d1d7c8bcfb93f67b5614d31a6b443a9b35c8764f4747c25039f354",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 9,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-18c34db77ec1490faacdeddcdedd791c",
+   "contextId": "sealed-child-18c34db77ec1490faacdeddcdedd791c",
+   "model": "swe-2-max",
+   "role": "closure-verifier",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T07:55:38.000Z",
+   "sealedAt": "2026-09-25T07:59:00.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -15880,6 +15907,22 @@
    "payloadPath": "events/0056.json",
    "payloadHash": "2af15fdd00bb945839ed433641b49aa4e4494fd5108252e054ddc44f2dc4f5b8",
    "eventHash": "0e9161ae5bf7754c270daf5ce09f433f1cebd4c205a195a7826bb3a4058df1d2"
+  },
+  {
+   "seq": 57,
+   "at": "2026-09-25T08:01:02.864Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "684a3dbab78879281abb32f162b5df266be9d5c2617d3723e59323d9dabd92d1",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "0e9161ae5bf7754c270daf5ce09f433f1cebd4c205a195a7826bb3a4058df1d2",
+   "payloadPath": "events/0057.json",
+   "payloadHash": "e8aeed25e4c6943851785c6821fc10f02cd15f094029163e3de2206aee55a254",
+   "eventHash": "097bd7529defcc0df2a340fd23415723abccfbd604c33ead5562c2ec782def60"
   }
  ]
 }
