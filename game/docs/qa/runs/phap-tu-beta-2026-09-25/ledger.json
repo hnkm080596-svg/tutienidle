@@ -9243,7 +9243,9 @@
    ],
    "siblingFindingIds": [],
    "repair": "targetingOverride -> targeting in PhapTuChainSkills.ts:16 @68c18a84 + SkillSystem.ts:66 @d1f6455b (second instance caught by REV-PT-CLO-10)",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PT-CLO-11"
+   ],
    "verificationEvidenceIds": [
     "EV-PT-CLO-11"
    ],
@@ -10341,18 +10343,35 @@
   },
   {
    "id": "EV-PT-CLO-11",
-   "kind": "closure-verification",
-   "artifactPath": "docs/qa/runs/phap-tu-beta-2026-09-25/evidence/clo-11.log",
-   "artifactHash": "c9db5ded26088ab5ae20891a1f10fb16f2b3e194c7bb4055e8544c750afc44f5",
-   "capturedAt": "2026-09-25T08:11:53.000Z",
    "state": {
     "productStateId": "684a3dbab78879281abb32f162b5df266be9d5c2617d3723e59323d9dabd92d1",
     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
     "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
    },
-   "status": "CURRENT",
-   "notes": "SEALED: both comments name targeting, zero targetingOverride in src, type-check exit 0"
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "closure-reviewer",
+   "commandOrMethod": "git grep targetingOverride + npm run type-check at d1f6455b (reviewer session f84f0439)",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T08:09:00.000Z",
+   "finishedAt": "2026-09-25T08:11:53.000Z",
+   "inputPaths": [
+    "src/data/skill/PhapTuChainSkills.ts",
+    "src/core/skill/SkillSystem.ts"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/clo-11.log",
+   "artifactHash": "c9db5ded26088ab5ae20891a1f10fb16f2b3e194c7bb4055e8544c750afc44f5",
+   "claims": [
+    "both comments name targeting; zero targetingOverride literals in src; type-check exit 0"
+   ],
+   "invariantIds": [],
+   "limitations": [
+    "comment-only change"
+   ],
+   "result": "PASS",
+   "status": "CURRENT"
   }
  ],
  "coverage": [
