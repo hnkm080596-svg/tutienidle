@@ -9244,11 +9244,15 @@
    "siblingFindingIds": [],
    "repair": "targetingOverride -> targeting in PhapTuChainSkills.ts:16 @68c18a84 + SkillSystem.ts:66 @d1f6455b (second instance caught by REV-PT-CLO-10)",
    "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "verificationEvidenceIds": [
+    "EV-PT-CLO-11"
+   ],
+   "closureReviewIds": [
+    "REV-PT-CLO-11"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   }
  ],
@@ -10334,6 +10338,21 @@
    "limitations": [],
    "result": "PASS",
    "status": "STALE"
+  },
+  {
+   "id": "EV-PT-CLO-11",
+   "kind": "closure-verification",
+   "artifactPath": "docs/qa/runs/phap-tu-beta-2026-09-25/evidence/clo-11.log",
+   "artifactHash": "c9db5ded26088ab5ae20891a1f10fb16f2b3e194c7bb4055e8544c750afc44f5",
+   "capturedAt": "2026-09-25T08:11:53.000Z",
+   "state": {
+    "productStateId": "684a3dbab78879281abb32f162b5df266be9d5c2617d3723e59323d9dabd92d1",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "status": "CURRENT",
+   "notes": "SEALED: both comments name targeting, zero targetingOverride in src, type-check exit 0"
   }
  ],
  "coverage": [
@@ -12285,6 +12304,37 @@
    "coverageIds": [],
    "evidenceIds": [],
    "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-CLO-11",
+   "state": {
+    "productStateId": "684a3dbab78879281abb32f162b5df266be9d5c2617d3723e59323d9dabd92d1",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 9,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-f84f043923854be1801bcd8b08567508",
+   "contextId": "sealed-child-f84f043923854be1801bcd8b08567508",
+   "model": "swe-2-max",
+   "role": "closure-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T08:09:00.000Z",
+   "sealedAt": "2026-09-25T08:11:53.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PT-CLO-11"
+   ],
+   "findingIds": [
+    "F-PT-COR-A4-3"
+   ],
    "novelAttackIds": [],
    "status": "SEALED"
   }
