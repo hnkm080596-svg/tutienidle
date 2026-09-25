@@ -11,8 +11,8 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "bdc04bf9",
   "state": {
-   "productStateId": "f76a5acf1fa9419fcf8a03489438e0309b4d2f01ca4f28f7409ead81b54385a6",
-   "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+   "productStateId": "f2c55f6bb3691e4d9750cfb8e52bbf6850df1973686b62d27c8ec4555b72552d",
+   "contractId": "7660d2c0ef0a019b5697f877a97b3fc13e7f3e9a7d5e31b7778b665a1b17ae81",
    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
   },
@@ -3340,6 +3340,366 @@
     }
    ],
    "siblingFindingIds": []
+  },
+  {
+   "state": {
+    "productStateId": "f76a5acf1fa9419fcf8a03489438e0309b4d2f01ca4f28f7409ead81b54385a6",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A8-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-A8-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "Pre-existing at merge-base (Phap Tu era), out of this diff's authorized scope - recorded as pre-existing/out-of-scope per protocol; the beta diff adds no new bypasses.",
+   "rootClass": null,
+   "repair": null,
+   "actionable": false,
+   "id": "F-TT-AUT-A8-1",
+   "title": "PRE-EXISTING The-economy authority bypass: direct entity.currentThe writes in TBS skip grantThe/tryPayProcCost clamps",
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "locations": [
+    {
+     "path": "game/src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "consumesAllThe ~:2890 + grantTheFromCast ~:2902-2916",
+     "revision": "1b6353cb",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "game/src/core/the-tu/TheEconomy.ts",
+     "symbolOrSection": "authority",
+     "revision": "1b6353cb",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "TBS writes entity.currentThe directly in cast-grant and consume-all paths",
+   "expected": "all The mutations flow through grantThe/tryPayProcCost",
+   "actual": "pre-existing direct writes predate this diff (Phap Tu era)",
+   "discoveredBy": "devin-d192cb4927394ad7b3cf5cc439391032",
+   "rootCause": "authority seam introduced after the Phap Tu The-economy; TBS write sites never migrated",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "direct entity.currentThe writes outside TheEconomy",
+     "evidenceIds": [
+      "EV-TT-A8-FIX"
+     ],
+     "hitDispositions": [
+      "only the two flagged TBS sites; diff introduces no new direct writes - sacrifice/reflect route through damage ops"
+     ],
+     "coverageLimits": []
+    }
+   ]
+  },
+  {
+   "state": {
+    "productStateId": "f76a5acf1fa9419fcf8a03489438e0309b4d2f01ca4f28f7409ead81b54385a6",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A8-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-A8-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "Dead capacity only - no authored data uses it on non-physical lanes and behavior is consistent; narrowing the shared op contract is out-of-scope churn for zero behavioral delta.",
+   "rootClass": null,
+   "repair": null,
+   "actionable": false,
+   "id": "F-TT-AUT-A8-2",
+   "title": "sourceMaxHpRatio typed on all deal_damage arms but dead on non-physical lanes",
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "locations": [
+    {
+     "path": "game/src/core/battle/contracts/operations.ts",
+     "symbolOrSection": "DealDamageOperation.sourceMaxHpRatio",
+     "revision": "1b6353cb",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "elemental/primordial ops may carry the field; consumer reads it for physical hits only",
+   "expected": "contract admits only reachable fields or rejects unreachable combos",
+   "actual": "dead capacity on non-physical lanes; def-layer validation warns anyway",
+   "discoveredBy": "devin-d192cb4927394ad7b3cf5cc439391032",
+   "rootCause": "shared operation contract is wider than any single lane consumes",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "other deal_damage fields with lane-scoped consumption",
+     "evidenceIds": [
+      "EV-TT-A8-FIX"
+     ],
+     "hitDispositions": [
+      "consistent existing pattern; no data authors the field on non-physical lanes"
+     ],
+     "coverageLimits": []
+    }
+   ]
+  },
+  {
+   "state": {
+    "productStateId": "f76a5acf1fa9419fcf8a03489438e0309b4d2f01ca4f28f7409ead81b54385a6",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A8-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-A8-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "Pure deterministic duplicate work with identical behavior; the cheap memo (WeakMap on PlayerData) introduces staleness risk on mutated player objects - cost/benefit favors leaving as-is.",
+   "rootClass": null,
+   "repair": null,
+   "actionable": false,
+   "id": "F-TT-AUT-A8-3",
+   "title": "resolveBodyKit invoked twice per participant build",
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "locations": [
+    {
+     "path": "game/src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": "resolveBasic + resolveSpecialUltimate call sites",
+     "revision": "1b6353cb",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "pure builder called once per resolveBasic + once per resolveSpecialUltimate",
+   "expected": "kit resolved once per participant build",
+   "actual": "duplicate pure work; behavior identical via downstream dedup",
+   "discoveredBy": "devin-d192cb4927394ad7b3cf5cc439391032",
+   "rootCause": "two public runtime methods each resolve the kit; no shared memo at the composition boundary",
+   "subsystem": "progression",
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "other duplicated pure resolves across the runtime interface",
+     "evidenceIds": [
+      "EV-TT-A8-FIX"
+     ],
+     "hitDispositions": [
+      "this is the only kit resolver; memoizing on PlayerData would risk staleness on mutated saves - worse than the trivial dup cost"
+     ],
+     "coverageLimits": []
+    }
+   ]
+  },
+  {
+   "state": {
+    "productStateId": "f76a5acf1fa9419fcf8a03489438e0309b4d2f01ca4f28f7409ead81b54385a6",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A8-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-A8-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null,
+   "rootClass": "spec-impl-vocabulary-drift",
+   "repair": "committed 63ac970d on devin/1790308404-the-tu-beta",
+   "id": "F-TT-AUT-A8-4",
+   "title": "spec-name drift on sacrifice payoff channel",
+   "severity": "Nit",
+   "classification": "DOCUMENTATION_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "game/docs/specs/the-tu-beta-spec.md",
+     "symbolOrSection": "loanDauPaidBonusPerHpPaidBonus mentions",
+     "revision": "1b6353cb",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "spec uses loanDauPaidBonusPerHpPaidBonus; impl uses loanDauPaidHpBonus / damageBonusPerPaidHpPoint",
+   "expected": "field names match spec vocabulary",
+   "actual": "cosmetic drift, semantics identical",
+   "discoveredBy": "devin-d192cb4927394ad7b3cf5cc439391032",
+   "rootCause": "impl channel name shortened at authoring; spec text never aligned",
+   "subsystem": "docs",
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "other spec channel names vs impl identifiers",
+     "evidenceIds": [
+      "EV-TT-A8-FIX"
+     ],
+     "hitDispositions": [
+      "loanDauPaidBonusPerHpPaidBonus the only drift; aligned both spec sites"
+     ],
+     "coverageLimits": []
+    }
+   ]
+  },
+  {
+   "state": {
+    "productStateId": "f76a5acf1fa9419fcf8a03489438e0309b4d2f01ca4f28f7409ead81b54385a6",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A8-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-A8-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null,
+   "rootClass": "stale-fixture-field",
+   "repair": "committed 63ac970d on devin/1790308404-the-tu-beta",
+   "id": "F-TT-AUT-A8-5",
+   "title": "stale retired field takenRatio:1 in QA reflect fixture",
+   "severity": "Nit",
+   "classification": "TEST_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "game/src/core/battle/turn/TurnBattleSystem.contract.test.ts",
+     "symbolOrSection": "QA_REFLECT payload",
+     "revision": "1b6353cb",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "fixture carries removed reflectsDamage.takenRatio; payload: unknown so it compiles, silently ignored",
+   "expected": "fixtures author only live schema fields",
+   "actual": "dead field left in fixture",
+   "discoveredBy": "devin-d192cb4927394ad7b3cf5cc439391032",
+   "rootCause": "reflect fixture authored before takenRatio retired; payload unknown so no excess-property check caught it",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "other QA reflect fixtures carrying retired fields",
+     "evidenceIds": [
+      "EV-TT-A8-FIX"
+     ],
+     "hitDispositions": [
+      "only this fixture; sibling reflect fixtures author maxHpRatio only"
+     ],
+     "coverageLimits": []
+    }
+   ]
+  },
+  {
+   "state": {
+    "productStateId": "f76a5acf1fa9419fcf8a03489438e0309b4d2f01ca4f28f7409ead81b54385a6",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-TT-A8-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-A8-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "Reviewer-classified note, not a defect: the bump is required by strict-version policy (new tree invalidates old the-tu ids) and is documented in-code - spec text is stale, behavior is correct and honest.",
+   "rootClass": null,
+   "repair": null,
+   "actionable": false,
+   "id": "F-TT-AUT-A8-6",
+   "title": "save-version bump 84->85 documented deviation (spec said no bump)",
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "locations": [
+    {
+     "path": "game/src/services/save/saveVersion.ts",
+     "symbolOrSection": "CURRENT_SAVE_VERSION=85",
+     "revision": "1b6353cb",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "spec said no bump; impl bumped because new tree invalidates old the-tu node ids",
+   "expected": "honest documented deviation",
+   "actual": "bump documented in-code; consistent with strict-version policy - reviewer recorded as a note not a defect",
+   "discoveredBy": "devin-d192cb4927394ad7b3cf5cc439391032",
+   "rootCause": "spec predates the save-compatibility ruling; strict-version policy required the honest bump",
+   "subsystem": "save",
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "other spec-vs-impl deviation notes in the diff",
+     "evidenceIds": [
+      "EV-TT-A8-FIX"
+     ],
+     "hitDispositions": [
+      "documented deviations are honest behavior, not defects"
+     ],
+     "coverageLimits": []
+    }
+   ]
   }
  ],
  "evidence": [
@@ -3784,6 +4144,38 @@
    "artifactHash": "d50ec9b9df070b3b228b40f6fbda9fe34fc63a37dae32517609de01a3f35a3c3",
    "claims": [
     "in-battle gate now symmetric (purchase/upgrade/levelUp/respec/devReset/switchRoute all reject); inspector buttons disabled in battle; watch sees waived upgrades; rank<5 pin authored; warded-hit no-reflect pin authored; dead ternary removed; 37 tests pass"
+   ],
+   "invariantIds": [],
+   "limitations": [],
+   "result": "PASS",
+   "status": "STALE"
+  },
+  {
+   "id": "EV-TT-A8-FIX",
+   "state": {
+    "productStateId": "f2c55f6bb3691e4d9750cfb8e52bbf6850df1973686b62d27c8ec4555b72552d",
+    "contractId": "7660d2c0ef0a019b5697f877a97b3fc13e7f3e9a7d5e31b7778b665a1b17ae81",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+   "commandOrMethod": "npm run type-check + vitest TurnBattleSystem.contract.test (22 tests) + grep proofs",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T13:36:00.000Z",
+   "finishedAt": "2026-09-25T13:36:40.000Z",
+   "inputPaths": [
+    "docs/specs/the-tu-beta-spec.md",
+    "src/core/battle/turn/TurnBattleSystem.contract.test.ts"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/fix-verify-a8.log",
+   "artifactHash": "a1518b2a042f14cdca27de80ada791b80e517bce3dcde96348c94fd5cffa3151",
+   "claims": [
+    "spec field name aligned to impl channel loanDauPaidHpBonus (2 sites)",
+    "retired takenRatio field removed from QA reflect fixture",
+    "type-check + 22 tests pass"
    ],
    "invariantIds": [],
    "limitations": [],
@@ -4612,7 +5004,7 @@
     "F-TT-COR-A7-4"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-TT-INT-A7",
@@ -4644,7 +5036,7 @@
     "F-TT-INT-A7-4"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-TT-CLO-11",
@@ -4678,6 +5070,40 @@
     "F-TT-COR-A7-2",
     "F-TT-COR-A7-3",
     "F-TT-COR-A7-4"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-TT-AUT-A8",
+   "state": {
+    "productStateId": "f76a5acf1fa9419fcf8a03489438e0309b4d2f01ca4f28f7409ead81b54385a6",
+    "contractId": "e008b2ff7a679a6ef5cfa90337626c97a75959fb65fd4798784f4b0f91a39a6c",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 21,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-d192cb4927394ad7b3cf5cc439391032",
+   "contextId": "sealed-child-d192cb4927394ad7b3cf5cc439391032",
+   "model": "swe-2-max",
+   "role": "authority-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T13:34:14.000Z",
+   "sealedAt": "2026-09-25T13:34:45.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-AUT-A8-1",
+    "F-TT-AUT-A8-2",
+    "F-TT-AUT-A8-3",
+    "F-TT-AUT-A8-4",
+    "F-TT-AUT-A8-5",
+    "F-TT-AUT-A8-6"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -6142,6 +6568,106 @@
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
+  },
+  {
+   "id": "L-TT-38",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-AUT-A8-4"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "spec-impl-vocabulary-drift",
+   "missedInvariantIds": [],
+   "escapeReason": "impl channel name shortened at authoring; spec never aligned",
+   "applicability": [
+    "spec docs naming impl channels"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "spec text must name impl identifiers verbatim; grep spec names vs impl at authoring time"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-AUT-A8"
+   ],
+   "capabilityDelta": "spec-impl name parity check",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-39",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-AUT-A8-5"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "stale-fixture-field",
+   "missedInvariantIds": [],
+   "escapeReason": "payload: unknown admits dead fields silently in fixtures",
+   "applicability": [
+    "QA fixtures vs schema retirements"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "when retiring a schema field, grep fixtures for it at removal time"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-AUT-A8"
+   ],
+   "capabilityDelta": "fixture-field retirement sweep",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-TT-40",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-AUT-A8-1",
+    "F-TT-AUT-A8-2",
+    "F-TT-AUT-A8-3",
+    "F-TT-AUT-A8-6"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "pre-existing-or-dead-capacity",
+   "missedInvariantIds": [],
+   "escapeReason": "authority bypass + contract dead capacity + dup pure work + documented deviation - all pre-existing/harmless classes, not this diff's defects",
+   "applicability": [
+    "pre-existing findings on merge-base",
+    "dead-capacity contract fields"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "pre-existing items recorded as out-of-scope with proof rather than fixed inside an unrelated diff"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-AUT-A8"
+   ],
+   "capabilityDelta": "pre-existing boundary stance",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
   }
  ],
  "messages": [],
@@ -6401,6 +6927,22 @@
    "payloadPath": "events/0016.json",
    "payloadHash": "e397a8b0c2c74cd57038877b6518d22ec6ead9269747937c4323c28b0b6c097b",
    "eventHash": "f141481fb74029a2142c6d87a55d218ce3b6dce67f3db092df6ca65de63f72f3"
+  },
+  {
+   "seq": 17,
+   "at": "2026-09-25T13:36:34.458Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-406257",
+   "state": {
+    "productStateId": "f2c55f6bb3691e4d9750cfb8e52bbf6850df1973686b62d27c8ec4555b72552d",
+    "contractId": "7660d2c0ef0a019b5697f877a97b3fc13e7f3e9a7d5e31b7778b665a1b17ae81",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "f141481fb74029a2142c6d87a55d218ce3b6dce67f3db092df6ca65de63f72f3",
+   "payloadPath": "events/0017.json",
+   "payloadHash": "fd352485499e9feb4e1c163401d595d5a93164a470b1150192d30bc2c59dcb38",
+   "eventHash": "49d8c2c54e396f9b0e2d7d6e3c6689df3a20455a49a31714e434e8c4b2307cb8"
   }
  ]
 }

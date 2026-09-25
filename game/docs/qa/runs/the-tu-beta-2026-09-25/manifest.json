@@ -3054,7 +3054,7 @@
       "path": "docs/specs/the-tu-beta-spec.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "7acb503c6df9a8f0b43934703ff3cb0bb3c18b676f2be8ab1f8e4f0d6572de52"
+      "hash": "a7b44c7fce185504eb21f6366de06d6348f47235a0b1bf544ee86865fda57e38"
     },
     {
       "path": "docs/superpowers/plans/2026-09-08-r10-save-restore-boundary.md",
@@ -15714,7 +15714,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.contract.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "9cd1851e8f2a7a71ac90ed0b7fba53ea42b8201b195e1f1e72ac132409369c13"
+      "hash": "730466795ad7ec369ca298b97f44696e81ab501e2b8aa4525f9338ad7825f434"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.determinism.test.ts",
@@ -22983,5 +22983,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "f76a5acf1fa9419fcf8a03489438e0309b4d2f01ca4f28f7409ead81b54385a6"
+  "productStateId": "f2c55f6bb3691e4d9750cfb8e52bbf6850df1973686b62d27c8ec4555b72552d"
 }
