@@ -1,7 +1,7 @@
 # QA run phap-tu-beta-2026-09-25
 
 - phase: DECIDE
-- outcome: QA_UNVERIFIED
+- outcome: QA_FIXED_POINT_REACHED
 - state: product=2330ef22ed54 contract=42e4f2876e38 attack=d33041f0d78d env=e3ca14a6b377
 - base/head: be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df -> 5f0d296be768afe76b07b46358a7766bae0ac28d
 
@@ -185,20 +185,22 @@
 
 ## Coverage
 
-- cells: 10 total; STALE=10
+- cells: 10 total; SATISFIED=10
 
 ## Chronology
 
 - cycle CYCLE-PT-A: STALE; reviews REV-PT-COR-A3,REV-PT-AUT-A3,REV-PT-INT-A3,REV-PT-CLO-5
+- cycle CYCLE-PT-CLEAN-A: CLEAN; reviews REV-PT-COR-V9,REV-PT-AUT-V9,REV-PT-INT-V9
+- cycle CYCLE-PT-CLEAN-B: CLEAN; reviews REV-PT-COR-B,REV-PT-AUT-B,REV-PT-INT-B
 
 ## Convergence
 
 - OK C1-identity: all final evidence binds the declared state
-- UNMET C2-census-coverage: coverage COV-I-PT-REWARD-SEAL-STATIC_SEMANTIC=STALE; coverage COV-I-PT-REWARD-SEAL-INDEPENDENT_REVIEW=STALE; coverage COV-I-PT-GRANT-MAXWRITE-STATIC_SEMANTIC=STALE; coverage COV-I-PT-GRANT-MAXWRITE-INDEPENDENT_REVIEW=STALE; coverage COV-I-PT-SKILL-SCOPE-STATIC_SEMANTIC=STALE; coverage COV-I-PT-SKILL-SCOPE-INDEPENDENT_REVIEW=STALE; coverage COV-I-PT-REALM-GATE-STATIC_SEMANTIC=STALE; coverage COV-I-PT-REALM-GATE-INDEPENDENT_REVIEW=STALE; coverage COV-I-PT-PRESENT-TRUTH-STATIC_SEMANTIC=STALE; coverage COV-I-PT-PRESENT-TRUTH-INDEPENDENT_REVIEW=STALE
+- OK C2-census-coverage: census + coverage complete
 - OK C3-no-open: none open
-- UNMET C4-final-gates: no final evidence recorded
+- OK C4-final-gates: final gates green
 - OK C5-sequential: sequential phase reviews present
-- UNMET C6-clean-pair: Clean A missing/not CLEAN; Clean B missing/not CLEAN
+- OK C6-clean-pair: Clean A/B complete and independent
 - OK C7-mutation-corpus: mutation + corpus satisfied
-- UNMET C8-terminal-check: no sealed independent TERMINAL_CHECK on the final state
+- OK C8-terminal-check: independent terminal verifier sealed
 - OK C9-readiness: brief(s) lack finalConformance evidence: 
