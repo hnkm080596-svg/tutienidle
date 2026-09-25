@@ -9,9 +9,9 @@
   "checkout": "devin/1790269261-kiem-pho-beta",
   "branch": "devin/1790269261-kiem-pho-beta",
   "base": "master",
-  "head": "4defb64c6dfde531175667cfd0cb26756498040e",
+  "head": "cc235a3715d6a17a13350c2fcb14a6ac67b4e7f8",
   "state": {
-   "productStateId": "00019db695b95687840da15f79876aeda4eb4e12c9807c0f650c6ea0f2520ee6",
+   "productStateId": "d2aeb17cdf3d266e57b09c6bc81b811d588b15a274e2a39c7008600b25ae8436",
    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
@@ -1390,7 +1390,7 @@
   },
   {
    "id": "F-KP-C4-2",
-   "title": "reachableKiemPhoComboIds ignores realmComboMax — len-5 combos listed reachable where cap is 4",
+   "title": "reachableKiemPhoComboIds ignores realmComboMax \u2014 len-5 combos listed reachable where cap is 4",
    "state": {
     "productStateId": "2b26f3425cd63e7a4f1cc22f0c5af19cc972530dcdac446fc6b3296617ed597d",
     "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
@@ -1414,7 +1414,7 @@
    "evidenceIds": [],
    "counterexample": "len-5 combo with all orbs unlocked reported reachable at realmIndex 5 though realmComboMax(5)=4 so it can never fire",
    "expected": "reachable view applies the same length cap as recordCastAndMatch",
-   "actual": "only orb-unlock filtering applied; length cap ignored — unreachable combos classified as reachable in the metric lane",
+   "actual": "only orb-unlock filtering applied; length cap ignored \u2014 unreachable combos classified as reachable in the metric lane",
    "rootCause": "derived view diverged from engine cap semantics",
    "rootClass": "derived-view",
    "subsystem": "kiem-pho-beta",
@@ -1478,7 +1478,7 @@
    "evidenceIds": [],
    "counterexample": "crafted save with preset orbs above realm unlock passes; nextOrb still casts them",
    "expected": "preset validated against realm unlock at load",
-   "actual": "pre-existing behavior predating this diff — preset shape-checked but not realm-gated at load",
+   "actual": "pre-existing behavior predating this diff \u2014 preset shape-checked but not realm-gated at load",
    "rootCause": "pre-existing validator surface, unchanged by diff",
    "rootClass": "derived-view",
    "subsystem": "kiem-pho-beta",
@@ -2052,7 +2052,7 @@
    "id": "F-KP-9-1",
    "title": "swordPathComboModifier authored ids lack the same resolution pin F-KP-7A-1 added",
    "state": {
-    "productStateId": "f240cfc7d1123358665ec535bf55e55d12cd02d2c69fa1d7a1b3dd023c8325dc",
+    "productStateId": "ce78cb3bbcd87d57210b4bb93e089e3dff91d0a5fa7ec17467ae7f544e96b387",
     "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
     "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
     "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
@@ -2060,7 +2060,7 @@
    "severity": "Medium",
    "classification": "TEST_DEFECT",
    "actionable": true,
-   "reachability": "CONFIRMED",
+   "reachability": "PRODUCTION",
    "locations": [
     {
      "path": "src/data/progression/KiemTuNodes.test.ts",
@@ -2075,19 +2075,174 @@
    "counterexample": "6 authored ids (quy_tuyen.completingOrb, lien_thich.minOrbCount.orb, luu_ngan.completingOrb + ailmentInteraction.buffId, lien_tram.minOrbCount.orb + ailmentInteraction.buffId) resolve today but carry no resolution pin - a typo'd id silently never matches (same class F-KP-7A-1 adjudicated).",
    "expected": "every authored registry-keyed id in swordPathComboModifier pinned to resolve (completingOrb/minOrbCount.orb vs KIEM_PHO_ORBS; ailmentInteractions[].buffId + appliesBuff.definitionId vs KIEM_PHO_BUFFS)",
    "actual": "pin asserts only predicate presence (minOrbCount!=undefined || completingOrb!=undefined), not id resolution",
-   "rootCause": null,
-   "rootClass": null,
+   "rootCause": "authored-id resolution contract added by F-KP-7A-1 covered skillDefinitionModifiers channels but not the sibling swordPathComboModifier channel",
+   "rootClass": "missing-pin-sibling-channel",
    "subsystem": "kiem-pho-beta",
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/data/progression",
+      "src/core/progression"
+     ],
+     "termsAndMethod": "enumerated every effect.* channel field carrying a registry-keyed id (skillId/buffId/OrbId/definitionId) across ProgressionNode.ts and all *Nodes.ts data files; skillDefinitionModifiers covered by 7A-1 pin, swordPathComboModifier was the sole uncovered channel",
+     "hitDispositions": [
+      "swordPathComboModifier = the one uncovered channel - pinned by this fix",
+      "all other effect channels carry no registry-keyed ids"
+     ],
+     "coverageLimits": [],
+     "evidenceIds": [
+      "EV-KP-FIX-8"
+     ]
+    }
+   ],
    "siblingFindingIds": [],
-   "repair": null,
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
-   "closureReviewIds": [],
+   "repair": "authored-id resolution contract extended to swordPathComboModifier @f2aaef56 (completingOrb/minOrbCount.orb vs KIEM_PHO_ORBS; appliesBuff.definitionId + ailmentInteractions[].buffId vs KIEM_PHO_BUFFS)",
+   "pinEvidenceIds": [
+    "EV-KP-FIX-8"
+   ],
+   "verificationEvidenceIds": [
+    "EV-KP-FIX-8"
+   ],
+   "closureReviewIds": [
+    "REV-KP-CLOSURE-3"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "OPEN",
+   "status": "CLOSED",
    "rejectionReason": null
+  },
+  {
+   "state": {
+    "productStateId": "ce78cb3bbcd87d57210b4bb93e089e3dff91d0a5fa7ec17467ae7f544e96b387",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "discoveredBy": "closure reviewer REV-KP-CLOSURE-3 (devin-601534b4e9934338928309fb4a3206e0)",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/kiem-tu/KiemPhoSystem.ts",
+      "src/data/skill/KiemPhoCombos.ts"
+     ],
+     "termsAndMethod": "closure reviewer enumerated KiemPhoCombo interface - only runtime-string-keyed fields are appliesBuffs[].definitionId, ailmentInteractions[].buffId, scalesWithAilmentStacks.ailmentId (all now pinned); presetId + pattern orbs covered by separate pins; rest compile-time-typed",
+     "hitDispositions": [
+      "all three buff-id lanes pinned at cc235a37"
+     ],
+     "evidenceIds": [],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "pinEvidenceIds": [
+    "EV-KP-FIX-9"
+   ],
+   "verificationEvidenceIds": [
+    "EV-KP-FIX-9"
+   ],
+   "closureReviewIds": [
+    "REV-KP-CLOSURE-4"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "CLOSED",
+   "rejectionReason": null,
+   "subsystem": "kiem-pho-beta",
+   "id": "F-KP-10-1",
+   "title": "KIEM_PHO_COMBOS authored buff ids lack the resolution pin F-KP-9-1 added to the node channel",
+   "severity": "Medium",
+   "classification": "TEST_DEFECT",
+   "locations": [
+    {
+     "path": "src/data/skill/KiemPhoCombos.ts",
+     "symbolOrSection": "liet_ngan/khai_ngan/diep_ngan ailmentInteractions buffId; thau_ngan scalesWithAilmentStacks.ailmentId",
+     "revision": "f2aaef56",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/data/skill/KiemPhoCombos.test.ts",
+     "symbolOrSection": "pins pattern orbs + presetId only",
+     "revision": "f2aaef56",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "4 authored buff ids (kiem_thuong x4) resolve today but carry no resolution pin - a typo silently dead-codes (add_stacks/trigger_periodic bind no same-source instance; scalesWith* reads 0 stacks). Same TEST_DEFECT class as F-KP-9-1.",
+   "expected": "every authored registry-keyed buff id in the combo table pinned to resolve against BUFF_REGISTRY (runtime resolution space)",
+   "actual": "no test iterates KIEM_PHO_COMBOS buff-id fields (appliesBuffs.definitionId, ailmentInteractions.buffId, scalesWithAilmentStacks.ailmentId)",
+   "rootCause": "authored-id resolution contract covered node channels (F-KP-7A-1, F-KP-9-1) but not the combo-table data itself",
+   "rootClass": "missing-pin-sibling-channel",
+   "repair": "pin added iterating KIEM_PHO_COMBOS registry-keyed buff ids (appliesBuffs[].definitionId, ailmentInteractions[].buffId, scalesWithAilmentStacks.ailmentId) vs BUFF_REGISTRY @cc235a37"
+  },
+  {
+   "state": {
+    "productStateId": "ce78cb3bbcd87d57210b4bb93e089e3dff91d0a5fa7ec17467ae7f544e96b387",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "discoveredBy": "closure reviewer REV-KP-CLOSURE-3 (devin-601534b4e9934338928309fb4a3206e0)",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/data/progression/KiemTuNodes.test.ts",
+      "src/data/buff/buffs.ts",
+      "src/data/skill/KiemPhoOrbs.ts"
+     ],
+     "termsAndMethod": "enumerated all buff-id pin sites in the test file + confirmed shared ailments suy_nhuoc/choang resolve via BUFF_REGISTRY but not KIEM_PHO_BUFFS",
+     "hitDispositions": [
+      "both pin sites retargeted to BUFF_REGISTRY.has"
+     ],
+     "evidenceIds": [],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "pinEvidenceIds": [
+    "EV-KP-FIX-9"
+   ],
+   "verificationEvidenceIds": [
+    "EV-KP-FIX-9"
+   ],
+   "closureReviewIds": [
+    "REV-KP-CLOSURE-4"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "CLOSED",
+   "rejectionReason": null,
+   "subsystem": "kiem-pho-beta",
+   "id": "F-KP-10-2",
+   "title": "buff-id pins assert vs KIEM_PHO_BUFFS while runtime resolution space is BUFF_REGISTRY",
+   "severity": "Nit",
+   "classification": "TEST_DEFECT",
+   "locations": [
+    {
+     "path": "src/data/progression/KiemTuNodes.test.ts",
+     "symbolOrSection": "swordPathComboModifier + addAilmentInteractions pins",
+     "revision": "f2aaef56",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/data/buff/buffs.ts",
+     "symbolOrSection": "global catalog spreads KIEM_PHO_BUFFS",
+     "revision": "f2aaef56",
+     "basis": "SOURCE"
+    }
+   ],
+   "counterexample": "orb_bo suy_nhuoc / orb_hat choang are shared ailments resolving via BUFF_REGISTRY but not members of KIEM_PHO_BUFFS - a future same-source interaction on a shared seal would be rejected loudly by the pin",
+   "expected": "pin registry matches the legal target space (BUFF_REGISTRY)",
+   "actual": "pins enumerated only kiem-pho-authored buffs; contract over-restricts the legal resolution space",
+   "rootCause": "pin written against the narrow authored set instead of the runtime registry",
+   "rootClass": "pin-scope-mismatch",
+   "repair": "node buff-id pins retargeted from KIEM_PHO_BUFFS set to BUFF_REGISTRY.has() (runtime resolution space, superset incl. shared ailments suy_nhuoc/choang) @cc235a37"
   }
  ],
  "evidence": [
@@ -2317,7 +2472,66 @@
    "limitations": [
     "scoped suite"
    ],
-   "status": "CURRENT"
+   "status": "STALE"
+  },
+  {
+   "id": "EV-KP-FIX-8",
+   "state": {
+    "productStateId": "ce78cb3bbcd87d57210b4bb93e089e3dff91d0a5fa7ec17467ae7f544e96b387",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T01:08:30.000Z",
+   "finishedAt": "2026-09-25T01:08:35.000Z",
+   "commandOrMethod": "npx vitest run src/data/progression/KiemTuNodes.test.ts (16/16 green)",
+   "cwd": "game",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/fix-verify-9-1.log",
+   "artifactHash": "500c8561fcc233168114f1fbf6b4d51bdcff15f77d4f8af769ae4e8f66dabd7e",
+   "inputPaths": [
+    "src/data/progression/KiemTuNodes.test.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "swordPathComboModifier id-resolution pin covers completingOrb/minOrbCount.orb vs KIEM_PHO_ORBS and appliesBuff.definitionId/ailmentInteractions[].buffId vs KIEM_PHO_BUFFS"
+   ],
+   "limitations": [],
+   "status": "STALE"
+  },
+  {
+   "id": "EV-KP-FIX-9",
+   "state": {
+    "productStateId": "ce78cb3bbcd87d57210b4bb93e089e3dff91d0a5fa7ec17467ae7f544e96b387",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T01:26:00.000Z",
+   "finishedAt": "2026-09-25T01:27:30.000Z",
+   "commandOrMethod": "npm run type-check + npx vitest run KiemPhoCombos.test.ts KiemTuNodes.test.ts + npx eslint (touched files)",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/fix-verify-cc235a37.log",
+   "artifactHash": "3103044ca50702848cab5b8332fcc7b93ec0e4efda60208f7eb864d33f8ba48e",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "type-check 0 errors; 25 pin tests pass; eslint clean",
+    "new pin iterates KIEM_PHO_COMBOS appliesBuffs/ailmentInteractions/scalesWithAilmentStacks buff ids vs BUFF_REGISTRY; node pins retargeted from KIEM_PHO_BUFFS to BUFF_REGISTRY"
+   ],
+   "limitations": [
+    "test-only change (P4-allowed scope); no production surface moved"
+   ],
+   "status": "STALE"
   }
  ],
  "coverage": [],
@@ -2912,9 +3126,66 @@
     "F-KP-8A-3",
     "F-KP-9-1"
    ],
-   "novelAttackIds": [
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-KP-CLOSURE-3",
+   "state": {
+    "productStateId": "ce78cb3bbcd87d57210b4bb93e089e3dff91d0a5fa7ec17467ae7f544e96b387",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "round": 12,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-601534b4e9934338928309fb4a3206e0",
+   "contextId": "sealed-child-devin-601534b4e9934338928309fb4a3206e0",
+   "model": "swe-2-max",
+   "role": "closure",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T01:09:47.000Z",
+   "sealedAt": "2026-09-25T01:24:38.000Z",
+   "previousPhaseReviewId": "REV-KP-CLOSURE-2",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
     "F-KP-9-1"
    ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-KP-CLOSURE-4",
+   "state": {
+    "productStateId": "d2aeb17cdf3d266e57b09c6bc81b811d588b15a274e2a39c7008600b25ae8436",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "round": 13,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-6ae57dd474e2437bb62c9ea57230d7f6",
+   "contextId": "sealed-child-devin-6ae57dd474e2437bb62c9ea57230d7f6",
+   "model": "swe-2-max",
+   "role": "closure",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T01:32:31.000Z",
+   "sealedAt": "2026-09-25T01:35:21.000Z",
+   "previousPhaseReviewId": "REV-KP-CLOSURE-3",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-KP-10-1",
+    "F-KP-10-2"
+   ],
+   "novelAttackIds": [],
    "status": "SEALED"
   }
  ],
@@ -3568,7 +3839,7 @@
    "originatingRun": "kiem-pho-beta-2026-09-25",
    "rootClass": "balance-oracle-drift",
    "missedInvariantIds": [],
-   "escapeReason": "content change drifted committed fingerprints and removed the_tu_hien strengths — oracle did its job; user exception recorded instead of rebalance",
+   "escapeReason": "content change drifted committed fingerprints and removed the_tu_hien strengths \u2014 oracle did its job; user exception recorded instead of rebalance",
    "applicability": [
     "committed balance oracles on content-affecting diffs"
    ],
@@ -3599,7 +3870,7 @@
    "originatingRun": "kiem-pho-beta-2026-09-25",
    "rootClass": "crafted-save-surface",
    "missedInvariantIds": [],
-   "escapeReason": "two crafted-save edges flagged (preset realm bypass, empty-preset crash) — both unreachable by legal flows",
+   "escapeReason": "two crafted-save edges flagged (preset realm bypass, empty-preset crash) \u2014 both unreachable by legal flows",
    "applicability": [
     "crafted-input findings on legal-path-guarded surfaces"
    ],
@@ -3629,7 +3900,7 @@
    "originatingRun": "kiem-pho-beta-2026-09-25",
    "rootClass": "dead-metadata",
    "missedInvariantIds": [],
-   "escapeReason": "authored flag spread onto op payload whose executor never reads it — same class as F-KP-3A-1 fixed in wave 3A",
+   "escapeReason": "authored flag spread onto op payload whose executor never reads it \u2014 same class as F-KP-3A-1 fixed in wave 3A",
    "applicability": [
     "op-payload authoring across ailment/buff interactions"
    ],
@@ -3809,6 +4080,214 @@
     "REV-KP-COR-5"
    ],
    "capabilityDelta": "combo reachability = per-pattern stream, not 'any fires'",
+   "status": "QUALIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "kiem-pho-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-KP-11",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-KP-7A-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "kiem-pho-beta-2026-09-25",
+   "rootClass": "unpinned-authored-id",
+   "missedInvariantIds": [],
+   "escapeReason": "skillDefinitionModifiers.skillId had no registry-resolution check - a typo'd id matched nothing and the node was silently inert",
+   "applicability": [
+    "kiem-pho node authoring",
+    "regression test authoring"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "authored-id resolution contract test: every registry-keyed id must resolve against its registry"
+   ],
+   "promotionEvidenceIds": [
+    "EV-KP-FIX-8"
+   ],
+   "qualifiedBy": [
+    "REV-KP-CLOSURE-2"
+   ],
+   "capabilityDelta": "registry-keyed authored ids now require a resolution pin, not just presence",
+   "status": "QUALIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "kiem-pho-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-KP-12",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-KP-8A-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "kiem-pho-beta-2026-09-25",
+   "rootClass": "crafted-save-invariant-gap",
+   "missedInvariantIds": [],
+   "escapeReason": "battle-time preset snapshot trusted persisted swordPath.preset verbatim - a crafted save carrying realm-locked orbs could drive auto casts past the realm gate",
+   "applicability": [
+    "save-load boundary",
+    "battle init narrowing"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "battle-time snapshots re-derive through live realm gates; persisted user state is never trusted verbatim"
+   ],
+   "promotionEvidenceIds": [
+    "EV-KP-FIX-8"
+   ],
+   "qualifiedBy": [
+    "REV-KP-CLOSURE-2"
+   ],
+   "capabilityDelta": "battle snapshots must narrow persisted state through the live unlock predicate",
+   "status": "QUALIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "kiem-pho-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-KP-13",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-KP-8A-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "kiem-pho-beta-2026-09-25",
+   "rootClass": "clamp-gap",
+   "missedInvariantIds": [],
+   "escapeReason": "fold applied Math.min upper bound only - a negative authored value would produce negative pierce amplifying armor",
+   "applicability": [
+    "kiem-pho node modifier folds"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "folds clamp to the full documented range [0,1], never one side"
+   ],
+   "promotionEvidenceIds": [
+    "EV-KP-FIX-8"
+   ],
+   "qualifiedBy": [
+    "REV-KP-CLOSURE-2"
+   ],
+   "capabilityDelta": "clamp checks cover BOTH bounds when a spec promises a range",
+   "status": "QUALIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "kiem-pho-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-KP-14",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-KP-9-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "kiem-pho-beta-2026-09-25",
+   "rootClass": "missing-pin-sibling-channel",
+   "missedInvariantIds": [],
+   "escapeReason": "authored-id resolution contract covered sibling channels (skillDefinitionModifiers, ailmentInteractions) but not the swordPathComboModifier channel added later",
+   "applicability": [
+    "any data channel carrying registry-keyed ids (orbs, buffs, skills, definitions)"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "resolution pin per channel against the runtime registry, not the authored subset"
+   ],
+   "promotionEvidenceIds": [
+    "EV-KP-FIX-9"
+   ],
+   "qualifiedBy": [
+    "REV-KP-CLOSURE-3"
+   ],
+   "capabilityDelta": "new channels carrying registry ids must be enumerated in the pin sweep checklist",
+   "status": "QUALIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "kiem-pho-beta-2026-09-25",
+   "recurrenceFindingIds": [
+    "F-KP-10-1"
+   ],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-KP-15",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-KP-10-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "kiem-pho-beta-2026-09-25",
+   "rootClass": "missing-pin-sibling-channel",
+   "missedInvariantIds": [],
+   "escapeReason": "resolution contract covered node channels, not the combo-table data itself",
+   "applicability": [
+    "any registry-keyed id channel (orbs, buffs, skills)"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "pin every authored id channel against the runtime registry"
+   ],
+   "promotionEvidenceIds": [
+    "EV-KP-FIX-9"
+   ],
+   "qualifiedBy": [
+    "REV-KP-CLOSURE-4"
+   ],
+   "capabilityDelta": "pin sweep covers data tables as well as effect channels",
+   "status": "QUALIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "kiem-pho-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-KP-16",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-KP-10-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "kiem-pho-beta-2026-09-25",
+   "rootClass": "pin-scope-mismatch",
+   "missedInvariantIds": [],
+   "escapeReason": "pin written against authored subset not the runtime registry",
+   "applicability": [
+    "any registry-keyed id channel (orbs, buffs, skills)"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "pin every authored id channel against the runtime registry"
+   ],
+   "promotionEvidenceIds": [
+    "EV-KP-FIX-9"
+   ],
+   "qualifiedBy": [
+    "REV-KP-CLOSURE-4"
+   ],
+   "capabilityDelta": "pin sweep covers data tables as well as effect channels",
    "status": "QUALIFIED",
    "policyVersion": null,
    "effectiveFromRun": "kiem-pho-beta-2026-09-25",
@@ -4010,6 +4489,38 @@
    "payloadPath": "events/0012.json",
    "payloadHash": "29d59b4d693d1fdf208eeea548add120b8278cb3c22f7d824f485fa88f02d7ce",
    "eventHash": "0cca59a64814542c4437b3d815b57b02ca0c0a74167869cee9b051ff7ef20ec2"
+  },
+  {
+   "seq": 13,
+   "at": "2026-09-25T01:08:34.385Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-128148",
+   "state": {
+    "productStateId": "ce78cb3bbcd87d57210b4bb93e089e3dff91d0a5fa7ec17467ae7f544e96b387",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "previousEventHash": "0cca59a64814542c4437b3d815b57b02ca0c0a74167869cee9b051ff7ef20ec2",
+   "payloadPath": "events/0013.json",
+   "payloadHash": "2f9f73ae3f0450968a90a77fd24c5116175c94d4107ed67aa09f8f285c87eb9d",
+   "eventHash": "bcccaca31808268de2736fcba61760c8fab864a165a96228693cda740e39d496"
+  },
+  {
+   "seq": 14,
+   "at": "2026-09-25T01:28:11.980Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-128148",
+   "state": {
+    "productStateId": "d2aeb17cdf3d266e57b09c6bc81b811d588b15a274e2a39c7008600b25ae8436",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "previousEventHash": "bcccaca31808268de2736fcba61760c8fab864a165a96228693cda740e39d496",
+   "payloadPath": "events/0014.json",
+   "payloadHash": "35d508eac7f70dec458531bf9cf21602c354105ebc4bd0b1fd9c45041c402353",
+   "eventHash": "5abb51d5b1da8e19dd475de7fe67f2ea4745d61b40c59c87a280615ad660d4bc"
   }
  ]
 }
