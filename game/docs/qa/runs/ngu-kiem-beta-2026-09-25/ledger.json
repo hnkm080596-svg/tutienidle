@@ -1278,6 +1278,361 @@
    "exception": null,
    "status": "REJECTED_WITH_PROOF",
    "rejectionReason": "retained interface contract (buildDynamicBasic signature shared across path providers; emblemSlots is the documented extension seam; technique description is the artifact its own name). Dead-but-harmless; removing would be a breaking refactor for cosmetic gain."
+  },
+  {
+   "state": {
+    "productStateId": "deacfdab28729260f51b7206ef06b786d318603cf060b4ede094738de568e518",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "discoveredBy": "REV-NK-INT-1",
+   "evidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "counterexample": "isolated reviewer repro on pinned head 31c06c9b",
+   "subsystem": "kiem-tu-ngu",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "closureReviewIds": [],
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "id": "F-NK-INT-8",
+   "title": "pre-beta hidden_sword_pathway saves can never obtain ngu_kiem_khoi",
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+     "symbolOrSection": "chooseCultivationPath / reconcileWayGrants",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/game/GameManagerSaveRestore.ts",
+     "symbolOrSection": "restore seam",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/progression/NodeSystem.ts",
+     "symbolOrSection": "grantedOnly seal",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/data/progression/KiemTuNodes.ts",
+     "symbolOrSection": "ngu_kiem_khoi",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "expected": "restore-time reconcile retro-grants way.grantedNodeIds for saves committed before the grant shipped",
+   "actual": "no restore seam re-granted; grantedOnly seals purchase and ritual re-run rejected - evolution spine locked forever",
+   "rootCause": "way grants replayed only inside chooseCultivationPath; restore never replays",
+   "rootClass": "missing-restore-reconcile",
+   "repair": "reconcileWayGrants replays way.grantedNodeIds idempotently on every restore (e47648db) + pin GameManager.kiemTuNguWay.test.ts:266-307",
+   "status": "FIXED_PENDING_PROOF",
+   "invariantIds": []
+  },
+  {
+   "state": {
+    "productStateId": "deacfdab28729260f51b7206ef06b786d318603cf060b4ede094738de568e518",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "discoveredBy": "REV-NK-INT-1",
+   "evidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "counterexample": "isolated reviewer repro on pinned head 31c06c9b",
+   "subsystem": "kiem-tu-ngu",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "closureReviewIds": [],
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "id": "F-NK-INT-9",
+   "title": "SkillDefinitionRegistry does not validate instances.each.momentumPerLandedInstance",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "src/core/skilldef/SkillDefinitionRegistry.ts",
+     "symbolOrSection": "instances.each validation",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "expected": "range/type validation matching sibling fields",
+   "actual": "field unchecked - negative/NaN flows into coefficient folding",
+   "rootCause": "validator coverage gap on the new momentum field",
+   "rootClass": "validator-coverage-gap",
+   "repair": "type/finite/>=0 validation added (e47648db)",
+   "status": "FIXED_PENDING_PROOF",
+   "invariantIds": []
+  },
+  {
+   "state": {
+    "productStateId": "deacfdab28729260f51b7206ef06b786d318603cf060b4ede094738de568e518",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "discoveredBy": "REV-NK-INT-1",
+   "evidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "counterexample": "isolated reviewer repro on pinned head 31c06c9b",
+   "subsystem": "kiem-tu-ngu",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "closureReviewIds": [],
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "id": "F-NK-INT-10",
+   "title": "fractional kiemDaoCount/kiemDaoBase accepted by save validation",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "src/core/kiem-tu/KiemTuPath.ts",
+     "symbolOrSection": "save validation",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/skilldef/SkillResolver.ts",
+     "symbolOrSection": "Math.floor lane",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "engine-unit lane",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "expected": "integer bound plus cap bound at validation",
+   "actual": ">=1 finite only - lanes diverge on corrupt input",
+   "rootCause": "save validation accepted fractional dao counters",
+   "rootClass": "validation-gap",
+   "repair": "Number.isInteger bound + realm-cap bound on count/base (e47648db)",
+   "status": "FIXED_PENDING_PROOF",
+   "invariantIds": []
+  },
+  {
+   "state": {
+    "productStateId": "deacfdab28729260f51b7206ef06b786d318603cf060b4ede094738de568e518",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "discoveredBy": "REV-NK-INT-1",
+   "evidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "counterexample": "isolated reviewer repro on pinned head 31c06c9b",
+   "subsystem": "kiem-tu-ngu",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "closureReviewIds": [],
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "id": "F-NK-INT-11",
+   "title": "ngu_kiem_phong left in TECHNIQUE_CAP_ALLOWLIST",
+   "severity": "Nit",
+   "classification": "TEST_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "src/core/game/GameManager.deadIds.test.ts",
+     "symbolOrSection": "TECHNIQUE_CAP_ALLOWLIST",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "expected": "allowlist entry dropped when phong lost its levelGates",
+   "actual": "stale inert allowlist entry",
+   "rootCause": "allowlist not cleaned with the mechanic",
+   "rootClass": "stale-allowlist",
+   "repair": "entry dropped (e47648db)",
+   "status": "FIXED_PENDING_PROOF",
+   "invariantIds": []
+  },
+  {
+   "state": {
+    "productStateId": "deacfdab28729260f51b7206ef06b786d318603cf060b4ede094738de568e518",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "discoveredBy": "REV-NK-INT-1",
+   "evidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "counterexample": "isolated reviewer repro on pinned head 31c06c9b",
+   "subsystem": "kiem-tu-ngu",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "closureReviewIds": [],
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "id": "F-NK-INT-12",
+   "title": "kiem_tu_ngu benchmark recipe never exercises momentum",
+   "severity": "Nit",
+   "classification": "TEST_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "src/core/simulation/benchmark/BalanceBaselines.ts",
+     "symbolOrSection": "kiem_tu_ngu recipe",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "expected": "fingerprint reflects shipped mechanics where reachable",
+   "actual": "recipe owned khoi only",
+   "rootCause": "recipe predates lien/momentum lane",
+   "rootClass": "stale-baseline",
+   "repair": "committed build hiddenNguFoundationBuild() exercises momentum lane (e47648db)",
+   "status": "FIXED_PENDING_PROOF",
+   "invariantIds": []
+  },
+  {
+   "state": {
+    "productStateId": "deacfdab28729260f51b7206ef06b786d318603cf060b4ede094738de568e518",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "discoveredBy": "REV-NK-INT-1",
+   "evidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "counterexample": "isolated reviewer repro on pinned head 31c06c9b",
+   "subsystem": "kiem-tu-ngu",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "closureReviewIds": [],
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": "consistent with existing purchase snapshot semantics across all trees; reviewer flagged borderline-intentional; deferred to BETA-BALANCE",
+   "id": "F-NK-INT-13",
+   "title": "purchaseNode lacks the in-battle guard respec/switchRoute carry",
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": "purchaseNode",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "expected": "consistent battle guard or documented intent",
+   "actual": "mid-battle purchase mutates nodeLevels; provider snapshot defers effect to next battle",
+   "rootCause": "existing node-purchase snapshot semantics - consistent with pre-NK behavior",
+   "rootClass": "pre-existing-semantics",
+   "repair": null,
+   "status": "REJECTED_WITH_PROOF",
+   "invariantIds": []
+  },
+  {
+   "state": {
+    "productStateId": "deacfdab28729260f51b7206ef06b786d318603cf060b4ede094738de568e518",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reachability": "PRODUCTION",
+   "discoveredBy": "REV-NK-INT-1",
+   "evidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "counterexample": "isolated reviewer repro on pinned head 31c06c9b",
+   "subsystem": "kiem-tu-ngu",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "closureReviewIds": [],
+   "pinEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "exception": null,
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "id": "F-NK-INT-14",
+   "title": "filler assertion in cross-target momentum test",
+   "severity": "Nit",
+   "classification": "TEST_DEFECT",
+   "actionable": true,
+   "locations": [
+    {
+     "path": "src/core/kiem-tu/invariants.test.ts",
+     "symbolOrSection": "cross-target momentum test",
+     "revision": "31c06c9b",
+     "basis": "SOURCE"
+    }
+   ],
+   "expected": "every branch asserts a real ratio",
+   "actual": "expect(targetA).toBeDefined() weakened one branch",
+   "rootCause": "placeholder assertion",
+   "rootClass": "weak-assertion",
+   "repair": "branch asserts toBeCloseTo damageMultiplier on both targets (e47648db)",
+   "status": "FIXED_PENDING_PROOF",
+   "invariantIds": []
   }
  ],
  "evidence": [
@@ -1484,6 +1839,41 @@
    ],
    "novelAttackIds": [],
    "status": "STALE"
+  },
+  {
+   "id": "REV-NK-INT-1",
+   "state": {
+    "productStateId": "deacfdab28729260f51b7206ef06b786d318603cf060b4ede094738de568e518",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 5,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-9e7fe39903a54743b10fda6b8fbc6c2d",
+   "contextId": "sealed-child-devin-9e7fe39903a54743b10fda6b8fbc6c2d",
+   "model": "swe-2-max",
+   "role": "integration",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T00:57:16.000Z",
+   "sealedAt": "2026-09-25T01:11:10.000Z",
+   "previousPhaseReviewId": "REV-NK-AUT-1",
+   "reviewedAfterPreviousFixes": false,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-NK-INT-8",
+    "F-NK-INT-9",
+    "F-NK-INT-10",
+    "F-NK-INT-11",
+    "F-NK-INT-12",
+    "F-NK-INT-13",
+    "F-NK-INT-14"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [],
@@ -1557,6 +1947,74 @@
    "recurrenceFindingIds": [
     "F-NK-AUT-7"
    ],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-03",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-INT-8"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "missing-restore-reconcile",
+   "missedInvariantIds": [],
+   "escapeReason": "way-grant seam only covered the ritual commit path; restore-time backfill for pre-existing way members unconsidered",
+   "applicability": [
+    "any ownership grant bound to a one-shot ceremony (way choice, ritual, unlock event)"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "every grantedOnly/grant-once seam needs a restore-time reconcile or an explicit save-version migration"
+   ],
+   "promotionEvidenceIds": [
+    "EV-NK-FIX-4"
+   ],
+   "qualifiedBy": [
+    "REV-NK-INT-1"
+   ],
+   "capabilityDelta": "way grants replay idempotently on every restore",
+   "status": "QUALIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-04",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "FALSE_POSITIVE",
+   "findingIds": [
+    "F-NK-INT-13"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "pre-existing-semantics",
+   "missedInvariantIds": [],
+   "escapeReason": "reviewer flagged a consistent pre-existing snapshot semantic as a guard gap - borderline-intentional by its own note",
+   "applicability": [
+    "guards that mirror a documented, consistent pre-existing semantic are NON_ACTIONABLE absent a spec change"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "document the in-battle purchase snapshot semantic in the progression ops contract"
+   ],
+   "promotionEvidenceIds": [
+    "EV-NK-FIX-2"
+   ],
+   "qualifiedBy": [
+    "REV-NK-INT-1"
+   ],
+   "capabilityDelta": "rejection precedent recorded for purchase-snapshot guard nits",
+   "status": "QUALIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
   }
