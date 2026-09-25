@@ -2392,6 +2392,33 @@
       ],
       "novelAttackIds": [],
       "status": "SEALED"
+    },
+    {
+      "id": "REV-TTA-CLEAN-A4-COR",
+      "state": {
+        "productStateId": "481da16b23ca5e52361d887b771c8c7b066478919712cf025d8eccab93c0b52f",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 4,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-86e0a6a0901c44759dc6bb7809f6fb67",
+      "contextId": "sealed-child-86e0a6a0901c44759dc6bb7809f6fb67",
+      "model": "swe-2-max",
+      "role": "CORRECTNESS",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T21:50:00.000Z",
+      "sealedAt": "2026-09-25T22:28:00.000Z",
+      "previousPhaseReviewId": "REV-TTA-CLEAN-A3-COR",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
     }
   ],
   "cycles": [],
@@ -4096,6 +4123,22 @@
       "payloadPath": "events/0049.json",
       "payloadHash": "bf6d39ce1b58b2fc2790fca54ae0ec7f3cc9a3bdbbe8570b2a2f721a94a02251",
       "eventHash": "3073981bc7774cd0fc127fa904d797e99f1b25793b2bf7e6c929ad5a1316f2cd"
+    },
+    {
+      "seq": 50,
+      "at": "2026-09-25T22:28:12.056Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "481da16b23ca5e52361d887b771c8c7b066478919712cf025d8eccab93c0b52f",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "3073981bc7774cd0fc127fa904d797e99f1b25793b2bf7e6c929ad5a1316f2cd",
+      "payloadPath": "events/0050.json",
+      "payloadHash": "c325f78c94068e8001a86f6c24955e3803158e08caa35abedf2bb17021157d2f",
+      "eventHash": "79648c7f190600ef7d64c9679f18a9c17609958d80ed205ab6742fd451347e0f"
     }
   ]
 }
