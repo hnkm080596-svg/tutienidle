@@ -152,10 +152,13 @@ export function buildNguKiemDaoProvider(
     // hidden_sword_pathway owns no battle-scoped cursor/log -- nothing to reset.
     resetForBattle: () => {},
 
-    // +1 Kiem Y per resolved cast (hit-or-miss alike) -- the domain
-    // owner call lives HERE (the provider), never in the generic
-    // GameManager cast sink.
-    onCastResolved: () => {
+    // +1 Kiem Y per resolved ngu_kiem_thuat cast (hit-or-miss alike) --
+    // the domain owner call lives HERE (the provider), never in the
+    // generic GameManager cast sink. The tail-match guard mirrors
+    // KiemPhoProvider: only a resolved way skill banks Y (a future
+    // committable second skill or an unrouted re-entry must not count).
+    onCastResolved: (ctx) => {
+      if (ctx.resolvedSkillId !== NGU_KIEM_THUAT.id) return []
       gainKiemY(player, 1)
       return []
     },
