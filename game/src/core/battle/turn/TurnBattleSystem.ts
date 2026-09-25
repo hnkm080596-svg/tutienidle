@@ -2005,7 +2005,7 @@ export class TurnBattleSystem {
         this.reportUnroutedCast(
           actor,
           declared.chargedSkill,
-          actor.pendingChargedSkillId ?? declared.action?.skillId,
+          declared.chargedSkill?.id,
           true,
         )
       } else {

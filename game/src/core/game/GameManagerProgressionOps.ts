@@ -237,6 +237,13 @@ export class GameManagerProgressionOps {
    * core - callers preflight so this never silently fails post-commit.
    */
   grantSkillCoreBySkillId(player: PlayerData, skillId: string): boolean {
+    // node investment mutates player.nodeLevels, which a running battle only
+    // ever reads through its minted kit snapshot - reject instead of
+    // letting an in-battle purchase look like it applied mid-fight.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     const core = this.resolveSkillCore(skillId)
 
     if (!core) {
@@ -463,6 +470,13 @@ export class GameManagerProgressionOps {
     // 'hidden_spell_pathway') shape cannot commit an element. The requiredWay stamp
     // on PHAP_TU_NODES is the second layer.
     if (!hasStaticPathCapability(player, 'spell.elemental_casting')) {
+      return false
+    }
+
+    // node investment mutates player.nodeLevels, which a running battle only
+    // ever reads through its minted kit snapshot - reject instead of
+    // letting an in-battle purchase look like it applied mid-fight.
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
