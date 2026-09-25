@@ -145,6 +145,7 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
     'moc_doc_nhuan',
     'moc_doc_tu',
     'moc_doc_am',
+    'moc_doc_nhiem',
     'kim_sac_ben',
     'kim_diem_chuan',
     'kim_xuyen_nhuy',
