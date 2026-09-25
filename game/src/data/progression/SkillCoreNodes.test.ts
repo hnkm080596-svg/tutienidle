@@ -6,8 +6,10 @@ import { NATIVE_CORE_SKILL_IDS, SKILL_CORE_NODES } from './SkillCoreNodes'
 
 // M-QI-05 / QI-D3 - the Core Node catalog IS the progression-metadata
 // source. Every levelled Skill template gets exactly one generated
-// core; the 15 eligible native top-level defs get authored cores;
+// core; the 14 eligible native top-level defs get authored cores;
 // internal chained/stance/emblem/generated ids NEVER get cores.
+// Ung The beta: tu_the / bach_ung cores are retired (superseded kit);
+// quan_the is the Truc Co special granted via major_quan_the.
 
 const NATIVE_TOP_LEVEL_IDS = [
   'cuong_quyen',
@@ -17,8 +19,7 @@ const NATIVE_TOP_LEVEL_IDS = [
   'phan_chan',
   'son_nhac',
   'tham_the',
-  'tu_the',
-  'bach_ung',
+  'quan_the',
   'ngu_kiem_thuat',
   'orb_dam',
   'orb_chem',
@@ -40,11 +41,17 @@ const NATIVE_DAMAGE_BEARING = new Set([
   'orb_quet',
 ])
 
+// Non-damage defs that still carry a real level channel (quan_the:
+// Core Level scales the cast's initial The grant) -> maxLevel 10.
+const NATIVE_LEVEL_SCALED = new Set(['quan_the'])
+
 const INTERNAL_NEGATIVE_LIST = [
   'phan_chinh',
   'phan_kich',
   'tro_kich',
   'trong_phan_kich',
+  'tu_the',
+  'bach_ung',
 ] as const
 
 const levelledTemplates = SKILLS.filter((skill) => skill.maxLevel > 1)
@@ -110,7 +117,7 @@ describe('SkillCoreNodes — template coverage', () => {
 })
 
 describe('SkillCoreNodes — native census', () => {
-  it('whitelist export matches the 15 eligible native ids exactly', () => {
+  it('whitelist export matches the 14 eligible native ids exactly', () => {
     expect([...NATIVE_CORE_SKILL_IDS].sort()).toEqual([...NATIVE_TOP_LEVEL_IDS].sort())
   })
 
@@ -121,7 +128,7 @@ describe('SkillCoreNodes — native census', () => {
       expect(core, `native core for ${skillId}`).toBeDefined()
       expect(core!.levelsSkillId).toBe(skillId)
 
-      const expectedMax = NATIVE_DAMAGE_BEARING.has(skillId) ? 10 : 1
+      const expectedMax = NATIVE_DAMAGE_BEARING.has(skillId) || NATIVE_LEVEL_SCALED.has(skillId) ? 10 : 1
 
       expect(core!.maxLevel, `${skillId} maxLevel`).toBe(expectedMax)
     }

@@ -13,12 +13,14 @@ import type {
 import type { CapabilityValidatorRegistry } from '../battle/runtime/capability/CapabilityValidatorRegistry'
 
 // --- the_economy (legacy TheEconomyEffect) ---
+// Ung The beta: income exists ONLY as observation -- Tham The landed
+// (gainOnBasicHit) and an observed enemy completing a normal action
+// (gainOnObservedAction). The taken/evade/round channels are retired
+// (design Part II: no passive income, no hit-outcome income).
 
 export interface TheEconomyPayload {
   gainOnBasicHit?: number
-  gainOnEvade?: number
-  gainOnHitTaken?: number
-  gainPerRound?: number
+  gainOnObservedAction?: number
 }
 
 // --- reactive_economy (legacy ReactiveEconomyEffect) ---
@@ -49,9 +51,7 @@ export function validateTheEconomy(payload: unknown): asserts payload is TheEcon
   const type = 'the_economy'
   if (!isRecord(payload)) throw new Error(`capability '${type}': payload must be an object`)
   optionalFiniteNumber(payload.gainOnBasicHit, 'gainOnBasicHit', type)
-  optionalFiniteNumber(payload.gainOnEvade, 'gainOnEvade', type)
-  optionalFiniteNumber(payload.gainOnHitTaken, 'gainOnHitTaken', type)
-  optionalFiniteNumber(payload.gainPerRound, 'gainPerRound', type)
+  optionalFiniteNumber(payload.gainOnObservedAction, 'gainOnObservedAction', type)
 }
 
 export function validateReactiveEconomy(payload: unknown): asserts payload is ReactiveEconomyPayload {

@@ -42,15 +42,14 @@ import {
   TU_KIEM_Y_EMBLEM,
 } from '../../data/skill/NguKiemDaoSkills'
 import {
-  BACH_UNG,
   BAT_TU_BA_THE,
   PHAN_KICH,
+  QUAN_THE,
   SON_NHAC,
   THAM_THE,
   THE_TU_KIT_BY_ROOT,
   TRO_KICH,
   TRONG_PHAN_KICH,
-  TU_THE,
 } from '../../data/skill/TheTuSkills'
 import { PHAP_TU_EMPOWERED_ULTS } from '../../data/skill/PhapTuEmpoweredUlts'
 
@@ -75,8 +74,7 @@ const KNOWN_SKILL_IDS: ReadonlySet<string> = new Set<string>([
   BAT_TU_BA_THE.id,
   SON_NHAC.id,
   THAM_THE.id,
-  TU_THE.id,
-  BACH_UNG.id,
+  QUAN_THE.id,
   PHAN_KICH.id,
   TRO_KICH.id,
   TRONG_PHAN_KICH.id,

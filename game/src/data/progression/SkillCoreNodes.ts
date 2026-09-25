@@ -26,11 +26,16 @@ import { turnSkillDisplayMetaOf } from '../skill/TurnSkillDisplayMeta'
 //     native whitelist requires an eligibility note here AND updating
 //     the census test.
 
-/** The 15 eligible native top-level def ids (QI-D3 census).
+/** The 14 eligible native top-level def ids (QI-D3 census).
     Beta: phan_chan is the castable Tran The special (non-damage core);
     the emblem def phan_chinh is retired (internal sub-actions stay
     ineligible). bat_tu_ba_the / son_nhac keep authored cores - parked
-    post-beta content, granted by no beta node. */
+    post-beta content, granted by no beta node.
+    Ung The beta: tu_the / bach_ung cores are RETIRED (skills superseded);
+    quan_the is the Truc Co special granted by major_quan_the's
+    grantsSkillCoreIds - its Core Level is the authored scaling axis for
+    the cast's initial The gain, so it carries a REAL level channel
+    (non-damage but maxLevel > 1: see NATIVE_LEVEL_SCALED). */
 export const NATIVE_CORE_SKILL_IDS = [
   // body_pathway kits - granted by the kit roots'/majors'
   // grantsSkillCoreIds
@@ -40,10 +45,10 @@ export const NATIVE_CORE_SKILL_IDS = [
   'tran_ap',
   'phan_chan',
   'son_nhac',
-  // hidden_body_pathway fixed kit - granted by way.coreSkillIds
+  // hidden_body_pathway - tham_the granted by way.coreSkillIds;
+  // quan_the granted by the major_quan_the node's grantsSkillCoreIds
   'tham_the',
-  'tu_the',
-  'bach_ung',
+  'quan_the',
   // hidden_sword_pathway provider action - way.coreSkillIds
   'ngu_kiem_thuat',
   // sword_pathway orb actions - way.coreSkillIds
@@ -67,6 +72,11 @@ const NATIVE_DAMAGE_BEARING: ReadonlySet<string> = new Set([
   'orb_hat',
   'orb_quet',
 ])
+
+/** Non-damage native defs with an AUTHORED core-level progression
+    channel (quan_the: Core Level scales the cast's theGainOnLandedCast
+    The seed - baked at kit build, design Part V). */
+const NATIVE_LEVEL_SCALED: ReadonlySet<string> = new Set(['quan_the'])
 
 function coreNode(skillId: string, name: string, description: string | undefined, maxLevel: number): ProgressionNode {
   return {
@@ -93,7 +103,7 @@ const nativeCores: ProgressionNode[] = NATIVE_CORE_SKILL_IDS.map((skillId) => {
     skillId,
     meta?.name ?? skillId,
     meta?.description,
-    NATIVE_DAMAGE_BEARING.has(skillId) ? 10 : 1,
+    NATIVE_DAMAGE_BEARING.has(skillId) || NATIVE_LEVEL_SCALED.has(skillId) ? 10 : 1,
   )
 })
 

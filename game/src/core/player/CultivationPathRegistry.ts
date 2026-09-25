@@ -290,24 +290,23 @@ function resolveBodyKit(
 }
 
 /**
- * The Tu Reimagined (plan Task 14) — the An kit is fixed at path
- * choice (spec 6.1); owned roots (ho_mon/phan_mon/tro_mon, non-mutex
- * T9) only decide which mechanic markers get planted on the built
- * basic clone's grantsBuffsAtBuild.
+ * Ung The beta — the An kit is the basic Tham The at path choice (Phan
+ * rides it baseline); the major_quan_the node's granted skill core is
+ * the ONLY special gate, opening the Ho/Tro markers with it. Node
+ * consequence riders ride the one locked channel and bake into
+ * participant-local marker/payload clones here.
  */
 function resolveHiddenBodyKit(
   deps: CultivationPathRuntimeDeps,
   player: PlayerData,
 ): TheTuAnKit {
-  const ownedRoots = (['ho_mon', 'phan_mon', 'tro_mon'] as const).filter(
-    (root) => deps.getNodeLevel(root, player) > 0,
-  )
-
-  // Plan Task 20 — trunk economy + branch riders ride the one locked
-  // channel; baked into participant-local marker/payload clones here.
   const mods = collectHiddenBodyMechanicModifiers(deps.nodeRegistry, player)
+  const quanTheCoreLevel = getSkillCoreLevel(player, 'quan_the')
 
-  return buildTheTuAnKit(ownedRoots, mods)
+  return buildTheTuAnKit(mods, {
+    quanThe: quanTheCoreLevel > 0,
+    quanTheCoreLevel,
+  })
 }
 
 // ---------------------------------------------------------------------------

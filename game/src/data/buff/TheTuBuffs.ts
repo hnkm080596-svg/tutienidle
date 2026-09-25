@@ -1,6 +1,5 @@
 import type { BuffDefinition } from '@/core/buff2/BuffDefinition'
 import type { CapabilityGrantDefinition } from '@/core/battle/contracts/capability'
-import { THE_GAIN_ON_EVADE, THE_GAIN_ON_HIT_TAKEN, THE_GAIN_PER_ROUND } from '@/core/the-tu/TheEconomy'
 
 // The Tu Reimagined (spec 2026-09-15 sections 5-6, plan Task 6) - the_tu
 // buff family. All holder-turn state/protection buffs carry
@@ -204,12 +203,14 @@ function makeHiddenMarker(
   }
 }
 
-export const UNG_THE_BUFF = makeHiddenMarker('ung_the', 'Ứng Thế', 'Nội tại Thể Tu Ẩn: tích lũy Thế theo nhịp đánh.', [
+export const UNG_THE_BUFF = makeHiddenMarker('ung_the', 'Ứng Thế', 'Nội tại Thể Tu Ẩn: quan sát sinh Thế, ứng biến tiêu Thế.', [
   cap('ung_the.economy', 'the_economy', {
+    // Ung The beta income channels (design Part II): Tham The landed
+    // (gainOnBasicHit) and an observed enemy completing a normal action
+    // (gainOnObservedAction). Thau The bakes its bonus onto the clone's
+    // gainOnObservedAction at participant build.
     gainOnBasicHit: 4,
-    gainOnEvade: THE_GAIN_ON_EVADE,
-    gainOnHitTaken: THE_GAIN_ON_HIT_TAKEN,
-    gainPerRound: THE_GAIN_PER_ROUND,
+    gainOnObservedAction: 4,
   }),
 ])
 export const HO_MON_MARKER = makeHiddenMarker('ho_mon', 'Hộ Môn', 'Hộ: đón thay đòn cho đồng đội.', [
@@ -291,6 +292,46 @@ export const HO_VE_BUFF: BuffDefinition = {
   dispellable: false,
 }
 
+/**
+ * Quan The (Ung The beta, design Part V) -- hidden marker on the holder:
+ * its live presence IS the quanTheActive predicate (every enemy satisfies
+ * isObserved, incl. later spawns). FIXED_TURNS counts HOLDER normal
+ * turns, so Ung Tre's delayed actions stretch it by wall-clock -- the
+ * design's intended interaction (Part V sec.39).
+ */
+export const QUAN_THE_BUFF: BuffDefinition = {
+  id: 'quan_the',
+  name: 'Quan Thế',
+  description: 'Quan sát toàn trận: mọi kẻ địch được coi là đang được quan sát.',
+  kind: 'marker',
+  polarity: 'buff',
+  hidden: true,
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 1, ...REPLACE },
+  lifetime: FIXED_TURNS(4),
+  dispellable: false,
+}
+
+/**
+ * Dan The (Ung The beta, design Part VIII) -- one-shot state ON THE
+ * ENEMY landed by Tro Kich: the target's next OBSERVED normal action
+ * yields boosted observation income, then the mark is consumed (dies
+ * with the target -- no transfer, no refund). Marker-only; the consume
+ * rides the observation-income seam.
+ */
+export const DAN_THE_BUFF: BuffDefinition = {
+  id: 'dan_the',
+  name: 'Dẫn Thế',
+  description: 'Bị Dẫn Thế: nhịp quan sát kế tiếp từ kẻ mang ấn sinh thêm Thế.',
+  kind: 'marker',
+  polarity: 'debuff',
+  hidden: true,
+  ...PER_TARGET,
+  stacking: { maxStacks: 1, ...REPLACE },
+  lifetime: PERMANENT,
+  dispellable: false,
+}
+
 export const THE_TU_BUFFS: BuffDefinition[] = [
   BAT_TU_BA_THE_BUFF,
   PHAN_CHAN_BUFF,
@@ -306,4 +347,6 @@ export const THE_TU_BUFFS: BuffDefinition[] = [
   TU_THE_BUFF,
   BACH_UNG_BUFF,
   HO_VE_BUFF,
+  QUAN_THE_BUFF,
+  DAN_THE_BUFF,
 ]

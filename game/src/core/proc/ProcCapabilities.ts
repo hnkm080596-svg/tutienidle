@@ -68,19 +68,20 @@ export interface ReactiveProcPayload {
   trigger: ReactiveTriggerName
   mechanic: ReactiveProcMechanic
   chanceStat: ReactiveProcChanceStat
+  /** Flat authored cost, paid ONLY on a successful roll (success-only
+      consume -- the pay-before-roll + refund lane is superseded). */
   theCost?: number
-  theGainOnSuccess?: number
   queuedAction?: {
     payloadSkillId: string
     actionSource: 'counter' | 'follow_up' | 'intercept'
     targetMode: 'attacker' | 'triggering_targets'
   }
+  /** Ho Bich -- a committed intercept wards the rescued ally at commit
+      (survives the protector's death). */
   grantsWardToOriginalTarget?: {
     buffDefinitionId: BuffDefinitionId
     sourceMaxHpRatio: number
   }
-  healsTriggeringAllyMaxHpRatio?: number
-  firesOnNonDamagingAction?: boolean
 }
 
 // --- validators ---
@@ -192,9 +193,6 @@ export function validateReactiveProc(payload: unknown): asserts payload is React
   if (payload.theCost !== undefined) {
     requireFiniteNumber(payload.theCost, 'theCost', type)
   }
-  if (payload.theGainOnSuccess !== undefined) {
-    requireFiniteNumber(payload.theGainOnSuccess, 'theGainOnSuccess', type)
-  }
   if (payload.queuedAction !== undefined) {
     const queued = payload.queuedAction
     if (!isRecord(queued)) {
@@ -223,10 +221,7 @@ export function validateReactiveProc(payload: unknown): asserts payload is React
     requireNonEmptyString(ward.buffDefinitionId, 'grantsWardToOriginalTarget.buffDefinitionId', type)
     requireFiniteNumber(ward.sourceMaxHpRatio, 'grantsWardToOriginalTarget.sourceMaxHpRatio', type)
   }
-  if (payload.healsTriggeringAllyMaxHpRatio !== undefined) {
-    requireFiniteNumber(payload.healsTriggeringAllyMaxHpRatio, 'healsTriggeringAllyMaxHpRatio', type)
-  }
-  optionalBoolean(payload.firesOnNonDamagingAction, 'firesOnNonDamagingAction', type)
+
 }
 
 // --- grant narrowers (consumers call these -- never `as`) ---

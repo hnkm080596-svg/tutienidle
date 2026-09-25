@@ -17,30 +17,29 @@ import {
   BODY_VITALITY_ENDURANCE_THRESHOLD_PER_POINT,
 } from '../stats/TheTuStatChannels'
 import {
-  BACH_UNG,
   BAT_TU_BA_THE,
   PHAN_KICH,
+  QUAN_THE,
   SON_NHAC,
   THAM_THE,
   THE_TU_KIT_BY_ROOT,
   TRO_KICH,
   TRONG_PHAN_KICH,
-  TU_THE,
 } from '../../data/skill/TheTuSkills'
 import {
-  BACH_UNG_BUFF,
   BAT_TU_BA_THE_BUFF,
   CHAN_AN_DEBUFF,
+  DAN_THE_BUFF,
   HO_MON_MARKER,
   HO_VE_BUFF,
   KHIEM_KHICH_DEBUFF,
   PHAN_CHAN_BUFF,
   PHAN_MON_MARKER,
+  QUAN_THE_BUFF,
   SON_NHAC_BUFF,
   SON_NHAC_HO_THE_BUFF,
   TRAN_KINH_DEBUFF,
   TRO_MON_MARKER,
-  TU_THE_BUFF,
   UNG_THE_BUFF,
 } from '../../data/buff/TheTuBuffs'
 import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
@@ -52,9 +51,12 @@ import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
 //     kit (cuong_chien XOR tran_the) + the 'body' stat domain
 //     (vitality -> enduranceThreshold channel).
 //   ung_the — The Tu An (kit ung_the_than_quyet): hidden way offered
-//     only at the Initiation Ritual when huy_quyen reaches Lv3. Fixed
-//     tham_the/tu_the/bach_ung kit with the The resource pool and the
-//     reactive-chance 'hidden_body' stat domain.
+//     only at the Initiation Ritual when huy_quyen reaches Lv3. Ung The
+//     beta: the kit is the basic tham_the alone (Phan rides it
+//     baseline); quan_the is the Truc Co special granted by the
+//     major_quan_the node, which also opens the Ho/Tro channels. The
+//     The resource pool and the 'hidden_body' reactive-chance domain
+//     are the way's machinery.
 //
 // Each way owns exactly one stat facet: body_pathway emits enduranceThreshold
 // on 'body', ung_the emits the three reactive chances on 'hidden_body'
@@ -189,9 +191,10 @@ export function isBodyPathway(player: BodyWayRead | null | undefined): boolean {
 }
 
 /**
- * hidden_body_pathway membership — the gate for the hidden way's fixed-kit
- * machinery (tham_the/tu_the/bach_ung, reactive payloads, the The
- * pool, the 'hidden_body' reactive facet, the An node tree). M7 — strict
+ * hidden_body_pathway membership — the gate for the hidden way's kit
+ * machinery (tham_the + baseline Phan, the Truc Co quan_the special,
+ * reactive payloads, the The pool, the 'hidden_body' reactive facet,
+ * the An node tree). M7 — strict
  * base-pair predicate: only the persisted pair ('body', 'hidden_body_pathway')
  * matches; the legacy 'the_tu_an' path id is gone from the union and
  * can never satisfy this.
@@ -278,26 +281,29 @@ export const HIDDEN_BODY_PATHWAY: PathWayDefinition = {
   capabilities: {
     static: ['body.essence_economy'],
   },
-  // P1-M2 - the fixed kit plus the reactive-payload defs, the hidden
-  // markers (ung_the economy + the three mon procs), and the buffs the
-  // kit plants (tu_the/bach_ung self-buffs, ho_ve intercept ward).
+  // Ung The beta - the kit basic plus the Truc Co special, the
+  // reactive-payload defs, the hidden markers (ung_the economy + the
+  // three mon procs), the quan_the observation marker, the dan_the
+  // one-shot mark, and the ho_ve intercept ward.
   ownedContent: {
-    skillIds: [THAM_THE.id, TU_THE.id, BACH_UNG.id, PHAN_KICH.id, TRO_KICH.id, TRONG_PHAN_KICH.id],
+    skillIds: [THAM_THE.id, QUAN_THE.id, PHAN_KICH.id, TRO_KICH.id, TRONG_PHAN_KICH.id],
     buffIds: [
       UNG_THE_BUFF.id,
       HO_MON_MARKER.id,
       PHAN_MON_MARKER.id,
       TRO_MON_MARKER.id,
-      TU_THE_BUFF.id,
-      BACH_UNG_BUFF.id,
+      QUAN_THE_BUFF.id,
+      DAN_THE_BUFF.id,
       HO_VE_BUFF.id,
     ],
   },
-  // M-QI-05 - the three top-level kit actions own canonical Core Nodes
-  // (granted at ritual commit); the reactive payloads are internal
-  // actions inheriting tham_the's level via progressionOwnerId, so
-  // they get no core.
-  coreSkillIds: [THAM_THE.id, TU_THE.id, BACH_UNG.id],
+  // M-QI-05 - tham_the owns a canonical Core Node (granted at ritual
+  // commit) and owns every offensive reactive payload's level via
+  // progressionOwnerId. quan_the's core is granted by the
+  // major_quan_the node (NOT at commit) - its Core Level scales only
+  // the cast's initial The gain (design Part V). Internal payloads
+  // get no core.
+  coreSkillIds: [THAM_THE.id],
   // P1 - the hidden way's fixed tree tag (TheTuAnNodes).
   nodeTreeTag: 'the_tu_an',
   // P1-M3 - same root ownership record as body_pathway; the hidden_body_pathway roots are

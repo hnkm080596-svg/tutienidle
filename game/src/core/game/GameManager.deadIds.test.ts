@@ -104,9 +104,11 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
     'linh_ngo_kim_phat_thu_sat',
     'linh_ngo_hau_tho_thanh_luy',
     // Beta the-tu: the retired legacy majors' techniqueRank gates carry
-    // onto the two Truc Co unlock majors (the-tu-beta content mission).
+    // onto the Truc Co unlock majors (the-tu-beta content mission).
+    // The ung-the mission adds its own Quan The major on the same gate.
     'major_loan_dau',
     'major_phan_chan',
+    'major_quan_the',
   ])
   const TECHNIQUE_CAP_ALLOWLIST = new Set([
     'minor_fire_intensity',

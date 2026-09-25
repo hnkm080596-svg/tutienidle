@@ -928,7 +928,12 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     const the = this.registry ? readTheBar(this.registry) : null
 
     if (the) {
-      this.playerHud?.updateThe(the.current, the.max, the.threshold, the.empowered)
+      this.playerHud?.updateThe(the.current, the.max, the.threshold, the.empowered, {
+        hasThamFocus: the.thamTargetId !== undefined,
+        quanTheActive: the.quanTheActive,
+        reactionDebt: the.reactionDebt,
+        reactionDebtCap: the.reactionDebtCap,
+      })
     } else {
       this.playerHud?.updateThe(0, 0, 0, false)
     }

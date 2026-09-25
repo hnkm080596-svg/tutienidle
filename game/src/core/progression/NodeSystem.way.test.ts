@@ -168,17 +168,17 @@ describe('requiredWay — domain collectors honor the same gate', () => {
     const anNode = minorNode({
       id: 'ung_the_an_node',
       requiredWay: 'hidden_body_pathway',
-      effect: { hiddenBodyMechanicModifiers: { maxTheBonus: 7 } },
+      effect: { hiddenBodyMechanicModifiers: { danTheBonus: 7 } },
     })
     const registry = { getAll: () => [kitNode, anNode] }
 
     const hien = playerWith({ cultivationPath: 'body', cultivationWay: 'body_pathway', nodeLevels: { ung_the_kit_node: 2, ung_the_an_node: 2 } })
     expect(collectBodyKitModifiers(registry, hien).missingHpBonusBonus).toBe(0)
-    expect(collectHiddenBodyMechanicModifiers(registry, hien).maxTheBonus).toBe(0)
+    expect(collectHiddenBodyMechanicModifiers(registry, hien).danTheBonus).toBe(0)
 
     const ungThe = playerWith({ cultivationPath: 'body', cultivationWay: 'hidden_body_pathway', nodeLevels: { ung_the_kit_node: 2, ung_the_an_node: 2 } })
     expect(collectBodyKitModifiers(registry, ungThe).missingHpBonusBonus).toBe(1)
-    expect(collectHiddenBodyMechanicModifiers(registry, ungThe).maxTheBonus).toBe(14)
+    expect(collectHiddenBodyMechanicModifiers(registry, ungThe).danTheBonus).toBe(14)
   })
 
   it('resolveMaxThe skips a way-mismatched node even with owned levels', () => {

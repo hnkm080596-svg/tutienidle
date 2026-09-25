@@ -13,18 +13,22 @@ import { CORE_REALM_LEVEL } from '../realm/realmSystem'
 import { buildGameSave, restoreGameSession } from '../../services/save/SaveSystem'
 import { usePlayerStore } from '../../stores/player'
 import { COMPANIONS, type CompanionDefinition } from '../../data/companion/Companions'
-import { MAX_THE } from '../combat/CombatTypes'
+import { THE_PROC_COST } from '../the-tu/TheEconomy'
 import type { PlayerData } from '../player/Player'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// The Tu Reimagined (plan Task 21, spec section 6) — An end-to-end:
-// gated ritual -> ho_mon/phan_mon purchase -> GameManager battle build
-// -> enemy hits the companion -> the player intercepts (Ho window),
-// takes the hit, then its Phan window queues a counter bypass with the
-// composite trigger context. Solo An has no Ho/Tro windows (spec 6.3).
-// Chance stats derive from attributes (Task 3): vit/dex -> protectChance,
-// str/dex -> counterChance. Math.random mocked to 0 = every roll wins.
+// The Tu Reimagined - An end-to-end (Ung The beta): path pick ->
+// major_quan_the purchase (realm + techniqueRank prereqs) grants the
+// quan_the skill core -> GameManager battle build plants ung_the +
+// phan_mon baseline and ho_mon/tro_mon while Quan The is owned ->
+// enemy hits the companion -> the player intercepts (Ho window),
+// takes the hit, then its Phan window queues a counter bypass with
+// the composite trigger context. Economy: each committed reaction
+// costs THE_PROC_COST, each observed enemy action grants +4 after
+// its own windows close. Chance stats derive from attributes:
+// vit/dex -> protectChance, str/dex -> counterChance. Math.random
+// mocked to 0 = every roll wins.
 
 const TANKY_DUMMY = {
   maxHp: 10_000_000,
@@ -97,10 +101,15 @@ function mortalAtGate(): PlayerData {
   return player
 }
 
-function advance(combatSource: ManualClockSource, ticks: number) {
-  for (let i = 0; i < ticks; i++) {
-    combatSource.advance(COMBAT_STEP_SECONDS)
-  }
+/** Ung The beta: promote the gate player to Truc Co and buy the
+ * major_quan_the node - its grantsSkillCoreIds writes core_quan_the,
+ * the ONLY authority that opens the quan_the special + Ho/Tro markers. */
+function grantQuanThe(player: PlayerData) {
+  player.realmId = 'foundation_establishment'
+  player.realmLevel = 1
+  // techniqueRank gate (rank 5) reads the mirror's live grade at the
+  // realm index - foundation_establishment is index 2.
+  player.techniqueProgress = { rank: 5, grade: 2 }
 }
 
 function advanceUntil(combatSource: ManualClockSource, predicate: () => boolean, cap = 4000): boolean {
@@ -126,14 +135,23 @@ function advanceIntoFighting(combatSource: ManualClockSource, battle: TurnBattle
   expect(battle.state).toBe('fighting')
 }
 
-/** An Ẩn player with capped reactive chances and a companion to protect. */
+/** Freeze the player's pace: gauge accrual reads speed off baseStats
+ * and the participant mirror, so all three must move together. */
+function parkParticipantSpeed(participant: TurnBattle['players'][number]) {
+  participant.entity.baseStats = asBaseStats({ ...participant.entity.baseStats, speed: 1 })
+  participant.entity.stats = { ...participant.entity.stats, speed: 1 }
+  participant.speed = 1
+}
+
+/** An Ẩn player at Truc Co with Quan The owned, capped reactive
+ * chances, and a companion to protect. */
 function makeAnPlayerWithCompanion() {
   registerE2ECompanion()
   const { gameManager, combatSource } = makeManager()
   const player = mortalAtGate()
   gameManager.realmAdvanceOps.chooseCultivationPath('body', 'hidden_body_pathway', player)
-  gameManager.progressionOps.purchaseNode('ho_mon', player)
-  gameManager.progressionOps.purchaseNode('phan_mon', player)
+  grantQuanThe(player)
+  gameManager.progressionOps.purchaseNode('major_quan_the', player)
   // vit+dex -> protectChance, str+dex -> counterChance: 200s reach the
   // 0.60 stat cap so a mocked 0 roll always procs.
   player.baseStats = asBaseStats({ ...player.baseStats, vitality: 200, dexterity: 200, strength: 200, might: 10, speed: 500 })
@@ -176,6 +194,9 @@ describe('an e2e — Ho intercept + Phan counter through the live stack', () => 
     companion!.entity.row = enemyP.entity.row
     companion!.entity.x = enemyP.entity.x - 1
     protector!.entity.x = Math.max(0, enemyP.entity.x - 8)
+    // The enemy is observed through the single Tham mark (Quan The is
+    // owned but not cast - isObserved still resolves via the mark).
+    protector!.thamTargetId = enemyP.id
     protector!.entity.currentThe = 50
 
     vi.spyOn(Math, 'random').mockReturnValue(0)
@@ -188,13 +209,13 @@ describe('an e2e — Ho intercept + Phan counter through the live stack', () => 
     // hit's impact tick and the queue's drain tick.
     let entry: (typeof battle.queuedFollowUps extends (infer T)[] | undefined ? T : never) | undefined
     let theBefore = 0
-    let cycles = 0
+    let cycleDelta = 0
     for (let i = 0; i < 4000 && entry === undefined; i++) {
       theBefore = protector!.entity.currentThe ?? 0
       combatSource.advance(COMBAT_STEP_SECONDS)
       entry = (battle.queuedFollowUps ?? []).find((candidate) => candidate.actionSource === 'counter')
       if (entry !== undefined) {
-        cycles = Math.round(((protector!.entity.currentThe ?? 0) - theBefore) / 16)
+        cycleDelta = (protector!.entity.currentThe ?? 0) - theBefore
       }
     }
 
@@ -205,8 +226,9 @@ describe('an e2e — Ho intercept + Phan counter through the live stack', () => 
       targetIds: [enemyP.id],
       triggerContext: { origin: 'enemy_hit', intercepted: true, outcome: 'taken' },
     })
-    // One cycle = intercept -15/+20, taken income +6, counter -15/+20.
-    expect(cycles).toBe(1)
+    // One cycle = intercept -15, counter -15, observed-action income +4
+    // (lands only after both windows closed).
+    expect(cycleDelta).toBe(-THE_PROC_COST * 2 + 4)
 
     // The substitution resolved fully vs the protector — the companion
     // was never touched.
@@ -221,12 +243,14 @@ describe('an e2e — Ho intercept + Phan counter through the live stack', () => 
     const { gameManager, combatSource } = makeManager()
     const player = mortalAtGate()
     gameManager.realmAdvanceOps.chooseCultivationPath('body', 'hidden_body_pathway', player)
-    gameManager.progressionOps.purchaseNode('ho_mon', player)
-    gameManager.progressionOps.purchaseNode('phan_mon', player)
+    grantQuanThe(player)
+    gameManager.progressionOps.purchaseNode('major_quan_the', player)
     player.baseStats = asBaseStats({ ...player.baseStats, vitality: 200, dexterity: 200, strength: 200, might: 10, speed: 1 })
 
     const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_an_solo', { might: 5_000, attackSpeed: 100 }))
     const participant = battle.players[0]!
+    // thamTargetId takes the enemy's PARTICIPANT id, not the source id.
+    participant.thamTargetId = battle.enemies[0]!.id
     participant.entity.currentThe = 50
 
     vi.spyOn(Math, 'random').mockReturnValue(0)
@@ -234,38 +258,31 @@ describe('an e2e — Ho intercept + Phan counter through the live stack', () => 
 
     expect(advanceUntil(combatSource, () => participant.entity.currentHp < participant.entity.stats.maxHp)).toBe(true)
 
-    // A Ho attempt would have paid -15 before the roll even with no valid
-    // substitute target — it never ran. Net: +6 taken, -15 +20 counter.
-    expect(participant.entity.currentThe).toBe(50 + 6 - 15 + 20)
+    // Ho/Tro need an ALLY action/target - solo, neither window opens.
+    // Only the Phan window ran: -15 paid +4 observed income afterwards.
+    expect(participant.entity.currentThe).toBe(50 - THE_PROC_COST + 4)
     expect((battle.queuedFollowUps ?? []).every((entry) => entry.actionSource === 'counter')).toBe(true)
   })
 
-  it('bach_ung cast through the stack makes reactive checks free', () => {
+  it('quan_the marker through the stack observes every enemy — no Tham mark needed', () => {
     const { gameManager, combatSource, player } = makeAnPlayerWithCompanion()
-    // Fast enemy: hits keep landing while the 3-holder-turn buff is live.
-    const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_an_bach', { might: 5_000, attackSpeed: 100 }))
-    const [protector, companion] = battle.players
+    const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_an_quan', { might: 5_000, attackSpeed: 100 }))
+    const [protector] = battle.players
     const enemyP = battle.enemies[0]!
 
-    companion!.entity.row = enemyP.entity.row
-    companion!.entity.x = enemyP.entity.x - 1
-    protector!.entity.x = Math.max(0, enemyP.entity.x - 8)
-    // The first player turn casts the ultimate (special parked on CD).
-    protector!.special!.remainingCooldownTurns = 99
+    advanceIntoFighting(combatSource, battle)
+    // The live quan_the marker IS the quanTheActive predicate: every
+    // enemy satisfies isObserved even with no Tham mark planted.
+    gameManager.turnBattleOps.applyBuffToPlayer('quan_the')
+    parkParticipantSpeed(protector!)
+    protector!.thamTargetId = undefined
+    protector!.entity.currentThe = 50
 
     vi.spyOn(Math, 'random').mockReturnValue(0)
-    advanceIntoFighting(combatSource, battle)
 
-    expect(
-      advanceUntil(combatSource, () =>
-        gameManager
-          .getBattleBuffs(protector!.entity.id)
-          .some((i) => i.definitionId === 'bach_ung'),
-      ),
-    ).toBe(true)
-
-    // Pin the pool under the live buff, then isolate one hit's delta.
-    protector!.entity.currentThe = 30
+    // The enemy hits the protector directly (companion sits off-lane):
+    // Phan window commits on observation alone.
+    enemyP.entity.row = protector!.entity.row
     let delta = 0
     for (let i = 0; i < 4000; i++) {
       const before = protector!.entity.currentThe ?? 0
@@ -277,17 +294,44 @@ describe('an e2e — Ho intercept + Phan counter through the live stack', () => 
       }
     }
 
-    // Free checks: intercept 0 cost +20, taken income +6, counter 0 +20.
-    expect(delta).toBe(46)
+    // -15 counter paid +4 observed income = -11 on the hit tick.
+    expect(delta).toBe(-THE_PROC_COST + 4)
+    expect(
+      (battle.queuedFollowUps ?? []).some(
+        (entry) => entry.actionSource === 'counter' && entry.payloadSkillId === 'phan_kich',
+      ),
+    ).toBe(true)
   })
 
-  it('economy nodes reach the participant: maxThe cap baked at build', () => {
+  it('economy nodes reach the participant: Thau The bakes observed income at build', () => {
     const { gameManager, combatSource, player } = makeAnPlayerWithCompanion()
-    gameManager.progressionOps.purchaseNode('minor_ung_the_bi_the', player)
-    gameManager.progressionOps.upgradeNode('minor_ung_the_bi_the', player)
+    gameManager.progressionOps.purchaseNode('minor_thau_the', player)
 
-    const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_an_cap'))
-    expect(battle.players[0]!.entity.maxThe).toBe(MAX_THE + 20)
+    const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_an_thau', { attackSpeed: 100 }))
+    const participant = battle.players[0]!
+    participant.thamTargetId = battle.enemies[0]!.id
+    parkParticipantSpeed(participant)
+
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    advanceIntoFighting(combatSource, battle)
+
+    // Isolate per-tick pool deltas: each observed enemy action nets
+    // +6 (base 4 + Thau The 2) until the pool can afford the Phan
+    // window, when the action nets 6 - 15 = -9.
+    participant.entity.currentThe = 0
+    const deltas: number[] = []
+    let prev = 0
+    for (let i = 0; i < 400 && deltas.length < 4; i++) {
+      combatSource.advance(COMBAT_STEP_SECONDS)
+      const now = participant.entity.currentThe ?? 0
+      if (now !== prev) {
+        deltas.push(now - prev)
+        prev = now
+      }
+    }
+
+    expect(deltas[0]).toBe(6)
+    expect(deltas.every((delta) => delta === 6 || delta === 6 - THE_PROC_COST)).toBe(true)
   })
 })
 
@@ -338,12 +382,14 @@ describe('mortal basic wiring — huy_quyen is castable as the picked basic (spe
 })
 
 describe('an save/restore parity', () => {
-  it('path + root nodes round-trip; the rebuilt battle plants the markers', () => {
+  it('path + the quan_the core round-trip; the rebuilt battle plants all four markers', () => {
     const { gameManager } = makeManager()
     const player = mortalAtGate()
     gameManager.realmAdvanceOps.chooseCultivationPath('body', 'hidden_body_pathway', player)
-    gameManager.progressionOps.purchaseNode('ho_mon', player)
-    gameManager.progressionOps.purchaseNode('tro_mon', player)
+    // Granted-core state written directly (the purchase path needs a
+    // real technique holder; the kit only reads the core level).
+    player.nodeLevels.core_quan_the = 1
+    player.nodeLevels.major_quan_the = 1
 
     const save = buildGameSave(player, gameManager)
 
@@ -356,17 +402,23 @@ describe('an save/restore parity', () => {
     const restoredPlayer = playerStore.$state
     expect(restoredPlayer.cultivationPath).toBe('body')
     expect(restoredPlayer.cultivationWay).toBe('hidden_body_pathway')
-    expect(restoredPlayer.nodeLevels?.ho_mon).toBe(1)
-    expect(restoredPlayer.nodeLevels?.tro_mon).toBe(1)
+    expect(restoredPlayer.nodeLevels?.major_quan_the).toBe(1)
+    // grantsSkillCoreIds wrote the core at purchase; it round-trips
+    // through nodeLevels like every other node level.
+    expect(restoredPlayer.nodeLevels?.core_quan_the).toBe(1)
 
     const battle = startBattle(restored, combatSource, restoredPlayer, makeDummy('e2e_an_restore'))
     advanceIntoFighting(combatSource, battle)
     const participant = battle.players[0]!
     expect(participant.basic?.id).toBe('tham_the')
-    expect(restored.getBattleBuffs(participant.entity.id).some((i) => i.definitionId === 'ung_the')).toBe(true)
-    expect(restored.getBattleBuffs(participant.entity.id).some((i) => i.definitionId === 'ho_mon')).toBe(true)
-    expect(restored.getBattleBuffs(participant.entity.id).some((i) => i.definitionId === 'tro_mon')).toBe(true)
-    expect(restored.getBattleBuffs(participant.entity.id).some((i) => i.definitionId === 'phan_mon')).toBe(false)
+    expect(participant.special?.skill.id).toBe('quan_the')
+    for (const marker of ['ung_the', 'phan_mon', 'ho_mon', 'tro_mon'] as const) {
+      expect(
+        restored.getBattleBuffs(participant.entity.id).some((i) => i.definitionId === marker),
+        `marker ${marker}`,
+      ).toBe(true)
+    }
+    expect(participant.reactivePayloads?.['phan_kich']).toBeDefined()
     expect(participant.reactivePayloads?.['tro_kich']).toBeDefined()
   })
 })
