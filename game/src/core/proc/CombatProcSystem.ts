@@ -19,6 +19,7 @@
 // in the same action.
 
 import type {
+  BuffDefinitionId,
   CombatEntityId,
   CombatOperationId,
 } from '../battle/contracts/ids'
@@ -87,7 +88,7 @@ interface PendingReflect {
   attackerId: CombatEntityId
   maxHpRatio: number
   markedMaxHpRatio?: number
-  markedBy?: string
+  markedBy?: BuffDefinitionId
   rootActionId: string
   grantInstanceId: string
   capabilityId: string
