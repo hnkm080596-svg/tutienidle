@@ -2218,7 +2218,9 @@
         }
       ],
       "siblingFindingIds": [],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TTA-CLO-6"
+      ],
       "duplicateOf": null,
       "exception": null,
       "id": "F-TTA-AUT-A5-1",
@@ -2248,7 +2250,7 @@
       "rootClass": "incomplete-migration",
       "subsystem": "simulation/benchmark",
       "repair": "FIXED @a1a9c83d: postRitual purchases minor_thau_the + minor_phan_kinh (the only LQ-purchasable writes; major_quan_the is TC+rank5-gated); kitSkillIds narrowed to tham_the/phan_kich; EXPECTED_FINGERPRINTS rows re-baselined with delta documented in docs/balance/2026-09-25-the-tu-an-ung-the-baseline.md",
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "pinEvidenceIds": [
         "EV-TTA-CLEANA5-FIX"
       ],
@@ -2283,7 +2285,9 @@
         }
       ],
       "siblingFindingIds": [],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TTA-CLO-6"
+      ],
       "duplicateOf": null,
       "exception": null,
       "id": "F-TTA-AUT-A5-2",
@@ -2307,7 +2311,7 @@
       "rootClass": "duplicated-truth",
       "subsystem": "the-tu-an-ung-the",
       "repair": "FIXED @a1a9c83d: extracted hasHardCc/hasBaTheWard private atoms; isHardCcBlocked = hasHardCc && !hasBaTheWard; ccBlocked computation composes the same atoms (suppressed-not-reset semantics preserved)",
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "pinEvidenceIds": [
         "EV-TTA-CLEANA5-FIX"
       ],
@@ -2397,7 +2401,9 @@
         }
       ],
       "siblingFindingIds": [],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TTA-CLO-6"
+      ],
       "duplicateOf": null,
       "exception": null,
       "id": "F-TTA-AUT-A5-4",
@@ -2421,7 +2427,7 @@
       "rootClass": "duplicated-truth",
       "subsystem": "presentation/hud",
       "repair": "FIXED @a1a9c83d: theBarBridge computes quaThe against REACTION_DEBT_CAP (single predicate authority at the bridge boundary); CombatScene forwards the flag; PlayerHudLayer consumes it - reactionDebtCap field removed from the view-model chain",
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "pinEvidenceIds": [
         "EV-TTA-CLEANA5-FIX"
       ],
@@ -3566,6 +3572,39 @@
       "findingIds": [
         "F-TTA-INT-A5-1",
         "F-TTA-INT-A5-2"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TTA-CLO-6",
+      "state": {
+        "productStateId": "3ba3eec6b6a872dfd3224d4b220059b678beb8841f1808c2c739d39c1fcc32d0",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 26,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-6c3811598d6f46e2802d12106309dfa2",
+      "contextId": "sealed-child-6c3811598d6f46e2802d12106309dfa2",
+      "model": "swe-2-max",
+      "role": "CLOSURE",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T01:45:00.000Z",
+      "sealedAt": "2026-09-26T01:47:00.000Z",
+      "previousPhaseReviewId": "REV-TTA-CLEAN-A5-INT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-TTA-CLEANA5-FIX"
+      ],
+      "findingIds": [
+        "F-TTA-AUT-A5-1",
+        "F-TTA-AUT-A5-2",
+        "F-TTA-AUT-A5-4"
       ],
       "novelAttackIds": [],
       "status": "SEALED"
