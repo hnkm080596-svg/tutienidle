@@ -4800,19 +4800,35 @@
    "reachability": "PRODUCTION",
    "invariantIds": [],
    "evidenceIds": [],
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "all hidden foundation fixtures checked against offerGate thresholds + mirror ownership",
+     "evidenceIds": [
+      "EV-NK-A4-FIX"
+     ],
+     "hitDispositions": [
+      "hiddenNguFoundationBuild repaired; sibling fixtures verified legal"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "pinEvidenceIds": [
     "EV-NK-A4-FIX"
    ],
    "verificationEvidenceIds": [
     "EV-NK-A4-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-11"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null,
-   "rootClass": null,
+   "rootClass": "fixture-drift-from-real-derivation",
    "repair": "committed 2bca6f8b on devin/1790284398-ngu-kiem-beta",
    "id": "F-NK-COR-A4-1",
    "title": "hiddenNguFoundationBuild snapshot is not a reachable post-ritual state",
@@ -4831,7 +4847,7 @@
    "expected": "fixture consistent with ritual+lien purchase: core_tram=3, mortal precursors learned, mirror complete",
    "actual": "fixture could not be produced by any canonical write sequence",
    "discoveredBy": "devin-5a112e8944ef4ae883c9f0432d60ff96",
-   "rootCause": "fixture hand-edited without modeling the real post-ritual writes",
+   "rootCause": "benchmark fixture hand-authored instead of deriving from the mortal source, leaving it below offerGate thresholds and orphaning purchasedNodeIds/skills",
    "subsystem": "benchmark",
    "siblingFindingIds": [
     "F-NK-AUT-A4-2"
@@ -4847,19 +4863,35 @@
    "reachability": "PRODUCTION",
    "invariantIds": [],
    "evidenceIds": [],
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "locale json files missing trailing newline",
+     "evidenceIds": [
+      "EV-NK-A4-FIX"
+     ],
+     "hitDispositions": [
+      "en.json + vi.json restored; no other locale file affected"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "pinEvidenceIds": [
     "EV-NK-A4-FIX"
    ],
    "verificationEvidenceIds": [
     "EV-NK-A4-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-11"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null,
-   "rootClass": null,
+   "rootClass": "whitespace-drift",
    "repair": "committed 2bca6f8b on devin/1790284398-ngu-kiem-beta",
    "id": "F-NK-COR-A4-2",
    "title": "en.json + vi.json lost the file-ending newline",
@@ -4884,7 +4916,7 @@
    "expected": "files end with trailing newline",
    "actual": "missing trailing newline",
    "discoveredBy": "devin-5a112e8944ef4ae883c9f0432d60ff96",
-   "rootCause": "editor/format pass stripped the final newline",
+   "rootCause": "a prior write path stripped the EOF newline from en.json/vi.json",
    "subsystem": "i18n",
    "siblingFindingIds": []
   },
@@ -4898,19 +4930,35 @@
    "reachability": "PRODUCTION",
    "invariantIds": [],
    "evidenceIds": [],
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "grep for back-edges from leaf modules to consumers across src/core",
+     "evidenceIds": [
+      "EV-NK-A4-FIX"
+     ],
+     "hitDispositions": [
+      "only KiemTuPath<->NguKiemDao cycle existed; hoisted to KiemTuState leaf + re-export"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "pinEvidenceIds": [
     "EV-NK-A4-FIX"
    ],
    "verificationEvidenceIds": [
     "EV-NK-A4-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-11"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null,
-   "rootClass": null,
+   "rootClass": "leaf-invariant-inversion",
    "repair": "committed 2bca6f8b on devin/1790284398-ngu-kiem-beta",
    "id": "F-NK-AUT-A4-1",
    "title": "runtime import cycle KiemTuPath <-> NguKiemDao inverts the leaf invariant",
@@ -4935,7 +4983,7 @@
    "expected": "KiemTuPath stays leaf-consumed (one-way dependency)",
    "actual": "bidirectional runtime edge; ESM-safe only by deferred call sites (TDZ hazard if either gains a top-level use)",
    "discoveredBy": "devin-6405bacbf2824b83a8ba9b97f343d063",
-   "rootCause": "realm-cap formula needed by the persisted-state validator lived on the economy module instead of the leaf",
+   "rootCause": "kiemDaoCap/forgeCost formulas lived on the consumer side of the module graph, so the leaf had to import back - bidirectional runtime edge",
    "subsystem": "kiem-tu",
    "siblingFindingIds": []
   },
@@ -4949,19 +4997,35 @@
    "reachability": "PRODUCTION",
    "invariantIds": [],
    "evidenceIds": [],
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "hidden fixture fields vs purchase/grant mirror semantics",
+     "evidenceIds": [
+      "EV-NK-A4-FIX"
+     ],
+     "hitDispositions": [
+      "repaired to derive from mortalSourcePlayer"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "pinEvidenceIds": [
     "EV-NK-A4-FIX"
    ],
    "verificationEvidenceIds": [
     "EV-NK-A4-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-11"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null,
-   "rootClass": null,
+   "rootClass": "fixture-drift-from-real-derivation",
    "repair": "committed 2bca6f8b on devin/1790284398-ngu-kiem-beta",
    "id": "F-NK-AUT-A4-2",
    "title": "hiddenNguFoundationBuild fixture violates the core_* mirror contract",
@@ -4980,7 +5044,7 @@
    "expected": "purchasedNodeIds mirrors every leveled node id incl. core_*",
    "actual": "fixture no longer models a legal player state",
    "discoveredBy": "devin-6405bacbf2824b83a8ba9b97f343d063",
-   "rootCause": "same fixture hand-edit as F-NK-COR-A4-1",
+   "rootCause": "same fixture-drift root as F-NK-COR-A4-1 - hand-authored hidden fixture not a reachable post-ritual state",
    "subsystem": "benchmark",
    "siblingFindingIds": [
     "F-NK-COR-A4-1"
@@ -4996,19 +5060,35 @@
    "reachability": "PRODUCTION",
    "invariantIds": [],
    "evidenceIds": [],
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo at pinned state"
+     ],
+     "termsAndMethod": "grantedOnly nodes with nonzero insightCost",
+     "evidenceIds": [
+      "EV-NK-A4-FIX"
+     ],
+     "hitDispositions": [
+      "ngu_kiem_phong_an was the only one; sibling ngu_kiem_khoi already 0"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "pinEvidenceIds": [
     "EV-NK-A4-FIX"
    ],
    "verificationEvidenceIds": [
     "EV-NK-A4-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-11"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null,
-   "rootClass": null,
+   "rootClass": "unreachable-auth-field",
    "repair": "committed 2bca6f8b on devin/1790284398-ngu-kiem-beta",
    "id": "F-NK-AUT-A4-3",
    "title": "ngu_kiem_phong_an carries unreachable insightCost: 3 on a grantedOnly node",
@@ -5027,7 +5107,7 @@
    "expected": "grantedOnly nodes carry cost 0 like the sibling grant",
    "actual": "dead cost field reads as if purchasable",
    "discoveredBy": "devin-6405bacbf2824b83a8ba9b97f343d063",
-   "rootCause": "cost copied from the purchasable lien node",
+   "rootCause": "insightCost authored before grantedOnly, leaving an unreachable price field on a grant-only node",
    "subsystem": "progression",
    "siblingFindingIds": []
   }
@@ -6736,6 +6816,41 @@
    "coverageIds": [],
    "evidenceIds": [],
    "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-NK-CLO-11",
+   "state": {
+    "productStateId": "5e9c83af8bed9cf82ec38a4089430e4878c49a3820dda91d3d117c371f9f8ed8",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 6,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-a1e98ad81af346548eb964689e2037da",
+   "contextId": "sealed-child-a1e98ad81af346548eb964689e2037da",
+   "model": "swe-2-max",
+   "role": "closure-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T13:29:46.000Z",
+   "sealedAt": "2026-09-25T13:32:44.000Z",
+   "previousPhaseReviewId": "REV-NK-INT-A4",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-NK-A4-FIX"
+   ],
+   "findingIds": [
+    "F-NK-COR-A4-1",
+    "F-NK-COR-A4-2",
+    "F-NK-AUT-A4-1",
+    "F-NK-AUT-A4-2",
+    "F-NK-AUT-A4-3"
+   ],
    "novelAttackIds": [],
    "status": "SEALED"
   }
