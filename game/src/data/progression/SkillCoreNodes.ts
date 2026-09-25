@@ -31,11 +31,12 @@ import { turnSkillDisplayMetaOf } from '../skill/TurnSkillDisplayMeta'
     the emblem def phan_chinh is retired (internal sub-actions stay
     ineligible). bat_tu_ba_the / son_nhac keep authored cores - parked
     post-beta content, granted by no beta node.
-    Ung The beta: tu_the / bach_ung cores are RETIRED (skills superseded);
-    quan_the is the Truc Co special granted by major_quan_the's
-    grantsSkillCoreIds - its Core Level is the authored scaling axis for
-    the cast's initial The gain, so it carries a REAL level channel
-    (non-damage but maxLevel > 1: see NATIVE_LEVEL_SCALED). */
+    Ung The beta: tu_the / bach_ung cores stay PARKED-REGISTERED (defs
+    superseded, granted by nothing in beta); quan_the is the Truc Co
+    special granted by major_quan_the's grantsSkillCoreIds - its Core
+    Level is the authored scaling axis for the cast's initial The gain,
+    so it carries a REAL level channel (non-damage but maxLevel > 1: see
+    NATIVE_LEVEL_SCALED). */
 export const NATIVE_CORE_SKILL_IDS = [
   // body_pathway kits - granted by the kit roots'/majors'
   // grantsSkillCoreIds
@@ -46,8 +47,11 @@ export const NATIVE_CORE_SKILL_IDS = [
   'phan_chan',
   'son_nhac',
   // hidden_body_pathway - tham_the granted by way.coreSkillIds;
-  // quan_the granted by the major_quan_the node's grantsSkillCoreIds
+  // quan_the granted by the major_quan_the node's grantsSkillCoreIds;
+  // tu_the/bach_ung parked (granted by nothing in beta)
   'tham_the',
+  'tu_the',
+  'bach_ung',
   'quan_the',
   // hidden_sword_pathway provider action - way.coreSkillIds
   'ngu_kiem_thuat',

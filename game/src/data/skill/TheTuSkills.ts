@@ -177,6 +177,27 @@ export const THAM_THE: TurnSkillDefinition = {
   targeting: { shape: 'single' },
 }
 
+// Tu The - LEGACY-SUPERSEDED: parked authored def. Removed from the kit
+// + way.coreSkillIds by the Ung The beta (like parked bat_tu_ba_the);
+// the def + its buff stay authored for post-beta revival.
+export const TU_THE: TurnSkillDefinition = {
+  id: 'tu_the',
+  cooldownTurns: 5,
+  targetScope: 'self',
+  targeting: { shape: 'single' },
+  appliesBuffs: [{ definitionId: 'tu_the', target: 'self' }],
+}
+
+// Bach Ung - LEGACY-SUPERSEDED: parked future content (ultimate slot
+// stays empty in beta); the def + its buff stay authored.
+export const BACH_UNG: TurnSkillDefinition = {
+  id: 'bach_ung',
+  cooldownTurns: 8,
+  targetScope: 'self',
+  targeting: { shape: 'single' },
+  appliesBuffs: [{ definitionId: 'bach_ung', target: 'self' }],
+}
+
 /**
  * Quan The - the Truc Co Special: self-cast, NO damage. On cast it
  * applies the quan_the marker (every enemy satisfies isObserved while

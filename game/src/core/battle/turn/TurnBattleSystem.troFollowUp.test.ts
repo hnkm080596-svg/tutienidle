@@ -510,4 +510,100 @@ describe('Tro ally-action window (Ung The beta)', () => {
     expect(supporterP.entity.currentThe).toBe(100)
     expect(supporterP.reactionDebt ?? 0).toBe(0)
   })
+
+  it('every observing reactor opens its own window — a second reactor is not suppressed', () => {
+    // Regression: the candidate dedup `seen` set was hoisted outside
+    // the per-ally loop, so candidates consumed by the first reactor's
+    // scan were invisible to later reactors.
+    const { battle, supporterP, enemyP, w } = makeParty()
+    const supporter2 = createCombatant({ id: 'supporter2', type: 'player' })
+    const supporter2P = makeParticipant('supporter2', supporter2, 5, 2)
+    supporter2P.reactivePayloads = { tro_kich: { ...TRO_KICH } }
+    battle.players.push(supporter2P)
+    withTro(w, supporterP, 1, 100)
+    withTro(w, supporter2P, 1, 100)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    systemOf(w).applyActionImpact(battle, declaredAction('attacker', BASIC, [enemyP], battle.enemies))
+
+    expect(battle.queuedFollowUps).toHaveLength(2)
+    expect(battle.queuedFollowUps!.map((f) => f.actorId)).toEqual(['supporter', 'supporter2'])
+    expect(supporterP.reactionDebt).toBe(1)
+    expect(supporter2P.reactionDebt).toBe(1)
+  })
+
+  it('never counters a same-side candidate — a quan_the observer on a self-scoped action queues nothing', () => {
+    // Regression: candidates were never restricted to the enemy side,
+    // so the actor itself (self scopes land in `affected`) satisfied
+    // quan_the observation and got counter-attacked.
+    const { battle, attackerP, supporterP, w } = makeParty()
+    withMarker(w, supporterP, 'tro_mon', 'followUpChance', 1, 100)
+    w.runtime.applyBuff('quan_the', supporterP) // observes every participant
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const selfHit: TurnSkillDefinition = { ...BASIC, id: 'self_hit', targetScope: 'self' }
+    systemOf(w).applyActionImpact(
+      battle,
+      declaredAction('attacker', selfHit, [attackerP], battle.enemies),
+    )
+
+    expect(battle.queuedFollowUps).toBeUndefined()
+    expect(supporterP.entity.currentThe).toBe(100)
+    expect(supporterP.reactionDebt ?? 0).toBe(0)
+  })
+})
+
+describe('Tham An mark (Ung The beta)', () => {
+  it('a self-scoped basic never plants the mark on the caster', () => {
+    // Regression: applyThamMark marked affected[0] with no side check,
+    // so a self-targeted basic marked the caster itself.
+    const attacker = createCombatant({ id: 'attacker', type: 'player' })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 100_000, maxHp: 100_000 })
+    const attackerP = makeParticipant('attacker', attacker, 10, 0)
+    const enemyP = makeParticipant('enemy', enemy, 3, 100)
+    const battle: TurnBattle = { players: [attackerP], enemies: [enemyP], state: 'fighting' }
+    const w = world(() => [...battle.players, ...battle.enemies])
+    w.runtime.applyBuff('ung_the', attackerP)
+
+    const thamThe: TurnSkillDefinition = {
+      id: 'tham_the',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+      targetScope: 'self',
+    }
+    attackerP.basic = thamThe
+
+    systemOf(w).applyActionImpact(
+      battle,
+      declaredAction('attacker', thamThe, [attackerP], battle.enemies),
+    )
+
+    expect(attackerP.thamTargetId).toBeUndefined()
+  })
+
+  it('a basic aimed at the enemy plants the mark on it', () => {
+    const attacker = createCombatant({ id: 'attacker', type: 'player' })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 100_000, maxHp: 100_000 })
+    const attackerP = makeParticipant('attacker', attacker, 10, 0)
+    const enemyP = makeParticipant('enemy', enemy, 3, 100)
+    const battle: TurnBattle = { players: [attackerP], enemies: [enemyP], state: 'fighting' }
+    const w = world(() => [...battle.players, ...battle.enemies])
+    w.runtime.applyBuff('ung_the', attackerP)
+
+    const thamThe: TurnSkillDefinition = {
+      id: 'tham_the',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+    }
+    attackerP.basic = thamThe
+
+    systemOf(w).applyActionImpact(
+      battle,
+      declaredAction('attacker', thamThe, [enemyP], battle.enemies),
+    )
+
+    expect(attackerP.thamTargetId).toBe('enemy')
+  })
 })

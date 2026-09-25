@@ -1979,7 +1979,7 @@ export class TurnBattleSystem {
     // the target as observed BEFORE the hit resolves (a miss/dodge still
     // plants the mark -- observation is not damage). One focus: the set
     // overwrites any previous mark; death lazy-clears with no transfer.
-    this.applyThamMark(actor, declared)
+    this.applyThamMark(battle, actor, declared)
 
     // Charge-resolve turn: hits apply từ chargedSkill capture tại declare
     // (pendingChargedSkillId đã clear ở declare -- đọc declared.chargedSkill).
@@ -2911,13 +2911,20 @@ export class TurnBattleSystem {
    * (observation is not damage). Exactly one focus: a new set overwrites;
    * the mark's death is lazy-cleared at read with no transfer.
    */
-  private applyThamMark(actor: TurnBattleParticipant, declared: TurnDeclaredAction): void {
+  private applyThamMark(
+    battle: TurnBattle,
+    actor: TurnBattleParticipant,
+    declared: TurnDeclaredAction,
+  ): void {
     if (this.runtime === undefined || !isNaturalActionSource(declared.actionSource)) return
     const skillId = declared.execution?.rootSkillId ?? declared.action?.skillId
     if (skillId === undefined || skillId !== actor.basic?.id) return
     if (!isUngTheCombatant(this.buffs.getCapabilities(actor.entity.id))) return
+    // The mark only lives on the actor's opposing side -- a self-scoped
+    // basic (affected=[actor]) must not mark the caster itself.
+    const opposing = battle.players.includes(actor) ? battle.enemies : battle.players
     const mark = declared.affected[0]
-    if (mark === undefined) return
+    if (mark === undefined || !opposing.includes(mark)) return
     actor.thamTargetId = mark.id
   }
 
@@ -3131,8 +3138,12 @@ export class TurnBattleSystem {
       return
     }
 
-    const candidates = [...landedTargets, ...declared.affected]
-    const seen = new Set<string>()
+    // Canonical candidates live on the reactors' opposing side: a
+    // teammate's self-hit or the acting ally itself can land in
+    // `affected` (self scopes, AoE) and must never be countered.
+    const candidates = [...landedTargets, ...declared.affected].filter(
+      (candidate) => !battle.players.includes(candidate),
+    )
 
     for (const ally of battle.players) {
       if (ally === actor || !ally.entity.alive) {
@@ -3142,6 +3153,9 @@ export class TurnBattleSystem {
         continue
       }
 
+      // Per-ally dedup: each reactor scans the candidate list itself;
+      // candidates consumed by an earlier ally stay visible to later ones.
+      const seen = new Set<string>()
       let canonical: TurnBattleParticipant | undefined
       for (const candidate of candidates) {
         if (seen.has(candidate.id) || !candidate.entity.alive) continue

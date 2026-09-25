@@ -108,6 +108,14 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     name: 'Thám Thế',
     description: 'Dò thế địch bằng một đòn thân pháp — đánh dấu mục tiêu, đánh trúng tích Thế.',
   },
+  tu_the: {
+    name: 'Tú Thế',
+    description: 'Tích tụ nhịp thế trong 3 lượt: kiểm tra phản ứng tốn ít Thế hơn. Hồi 5 lượt.',
+  },
+  bach_ung: {
+    name: 'Bách Ứng',
+    description: 'Bách ứng bất lao trong 3 lượt: mọi kiểm tra phản ứng miễn phí, phản kích kèm Choáng. Hồi 8 lượt.',
+  },
   quan_the: {
     name: 'Quan Thế',
     description: 'Mở Quan Thế trong 4 lượt của bản thân: mọi kẻ địch đều bị quan sát, tức thời tích Thế. Hồi 6 lượt.',
