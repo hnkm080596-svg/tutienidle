@@ -531,6 +531,14 @@ export class GameManagerRealmAdvanceOps {
    * before learn) so repeat calls are safe.
    */
   syncRealmPassive(player: PlayerData) {
+    // A mid-battle sync reaches a learnSkill that now rejects the grant,
+    // silently swallowing the missed passive - realm entry itself is
+    // battle-gated (chooseCultivationPath), so a missing passive here can
+    // only come from a mid-fight breakthrough; the next restore re-syncs.
+    if (this.deps.isTurnBattleInProgress()) {
+      return
+    }
+
     const realm = getCurrentRealm(player.realmId)
 
     const skillId = getActiveWayDefinition(player)?.realmRewards?.[realm.id]?.passiveSkillId

@@ -11,7 +11,7 @@
     "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
     "head": "f730adc6",
     "state": {
-      "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+      "productStateId": "4ece93ac619efaae661b0b59ab0447f9ec313fa0908d3a7496a4e4365627860c",
       "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
       "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -6895,6 +6895,248 @@
       "exception": null,
       "status": "CLOSED",
       "rejectionReason": null
+    },
+    {
+      "id": "F-TT-AUT-A4-1",
+      "title": "In-battle write gate spelled three ways across ops",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/game/GameManagerProgressionOps.ts",
+          "symbolOrSection": "sword-scroll preset gate :903",
+          "revision": "dbe41cdd",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+          "symbolOrSection": "inline 'intro|countdown|fighting' literals :240,:446,:475,:513",
+          "revision": "dbe41cdd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-51eb67813db04aebb82d63a355367d4d",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "a fifth battle state (or a renamed 'countdown') silently re-opens every inline-literal gate while canonical-predicate callers stay closed",
+      "expected": "one canonical in-progress predicate for every in-battle write gate",
+      "actual": "three spellings coexist: isBattleInProgress(state), the inline literal x4, deps.isTurnBattleInProgress()",
+      "rootCause": "gates added over multiple missions each re-derived the predicate locally",
+      "rootClass": "duplicated-truth-predicate",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/game",
+            "src/components"
+          ],
+          "termsAndMethod": "grep 'battle.state' + 'isBattleInProgress(' across ops and components",
+          "hitDispositions": [
+            "6 sites unified to deps.isTurnBattleInProgress(); no other literal spelling remains in ops"
+          ],
+          "coverageLimits": [
+            "ops-layer write gates only"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [
+        "F-TT-AUT-A4-2"
+      ],
+      "repair": "FIXED @022689b6: RealmAdvanceOps gained isTurnBattleInProgress dep (wired in GameManager.ts); all 4 inline literals + the ProgressionOps:903 gate now call the canonical predicate",
+      "pinEvidenceIds": [
+        "EV-TT-CLEANA4-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLEANA4-FIX"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-AUT-A4-2",
+      "title": "inBattle computed duplicated across 9 panel components",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/components/panels",
+          "symbolOrSection": "QuanKhiPanel/ArtifactPanel/CharacterPanel/SkillPathPanel + skill-path/{NativeCoreDetail,SkillDetailView,TheTuTreePanel,SkillRoleStrip,NodeTreePanel}",
+          "revision": "dbe41cdd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-51eb67813db04aebb82d63a355367d4d",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "a battle-state transition added to the predicate must be re-applied to 9 copies; any missed copy leaves a UI disable lying",
+      "expected": "UI in-battle read single-sourced on the canonical predicate",
+      "actual": "each panel re-derives getTurnBattle()+isBattleInProgress in its own computed",
+      "rootCause": "each panel added the same cosmetic gate independently (ops gate is authoritative so the duplication stayed cosmetic)",
+      "rootClass": "duplicated-truth-read",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/components",
+            "src/composables"
+          ],
+          "termsAndMethod": "grep isBattleInProgress in .vue + composable census",
+          "hitDispositions": [
+            "useTurnBattleInfo was the natural owner (already owns battle + isBattleFighting)"
+          ],
+          "coverageLimits": [
+            "UI-side cosmetic mirror only"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [
+        "F-TT-AUT-A4-1"
+      ],
+      "repair": "FIXED @022689b6: useTurnBattleInfo exposes isBattleInProgress (stateVersion-reactive); all 9 panels destructure it",
+      "pinEvidenceIds": [
+        "EV-TT-CLEANA4-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLEANA4-FIX"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-AUT-A4-3",
+      "title": "syncTalentCombatPassive revokes before the gated re-grant",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/game/GameManagerProgressionOps.ts",
+          "symbolOrSection": "syncTalentCombatPassive :111-131",
+          "revision": "dbe41cdd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-51eb67813db04aebb82d63a355367d4d",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "reach the sync during 'fighting' (any future mid-battle caller beside learnSkill) -> ungated revoke strips passives, every learnSkill re-grant rejects, kit left empty",
+      "expected": "the sync is atomic w.r.t. the in-battle boundary: both revoke and re-grant obey it or neither runs",
+      "actual": "revoke loop ungated; only the learnSkill re-grants refuse mid-battle -> partial mutation",
+      "rootCause": "the function predates the writer-gate convention; gates were added per-writer, never at the sync boundary",
+      "rootClass": "partial-mutation-across-gate-boundary",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/game"
+          ],
+          "termsAndMethod": "grep other sync/revoke helpers for ungated mutation before gated writes",
+          "hitDispositions": [
+            "no other helper mutates before calling a gated funnel"
+          ],
+          "coverageLimits": [
+            "GameManager ops helpers only"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED @022689b6: sync refuses wholesale while isTurnBattleInProgress (nothing mid-battle can change talent entitlement)",
+      "pinEvidenceIds": [
+        "EV-TT-CLEANA4-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLEANA4-FIX"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-AUT-A4-4",
+      "title": "BodyBatTuSurvival exercised only by tests (parked production module)",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/the-tu/BodyBatTuSurvival.ts",
+          "symbolOrSection": "whole module",
+          "revision": "dbe41cdd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-51eb67813db04aebb82d63a355367d4d",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "none - reads as dead production code but is deliberately retained",
+      "expected": "production modules reachable from production callers",
+      "actual": "module consumed only by its own tests; header documents the parking",
+      "rootCause": "feature intentionally parked pending the Bát Tự mission set; tests keep the contract warm",
+      "rootClass": "deliberate-design-contract",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/the-tu"
+          ],
+          "termsAndMethod": "header + import census",
+          "hitDispositions": [
+            "documented parking, not drift"
+          ],
+          "coverageLimits": [],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "REJECTED_WITH_PROOF",
+      "rejectionReason": "deliberate documented parking — the module header declares its parked status and tests keep the contract warm; deleting it is a product decision for the Bát Tự mission, not a defect"
     }
   ],
   "evidence": [
@@ -7809,7 +8051,48 @@
         "cleanA3 fix batch verified on dbe41cdd: 4 new inBattle gates + UI disables + gate-census pins + ward_break dead-attacker reflect-drop pin"
       ],
       "limitations": [],
-      "status": "CURRENT",
+      "status": "STALE",
+      "kind": "EXECUTED_UNIT_STRUCTURAL"
+    },
+    {
+      "id": "EV-TT-CLEANA4-FIX",
+      "state": {
+        "productStateId": "4ece93ac619efaae661b0b59ab0447f9ec313fa0908d3a7496a4e4365627860c",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+      "startedAt": "2026-09-25T22:42:00.000Z",
+      "finishedAt": "2026-09-25T22:44:00.000Z",
+      "commandOrMethod": "npm run type-check (clean) + vitest GameManagerProgressionOps/GameManagerRealmAdvanceOps/useTurnBattleInfo/syncTalent/combatReactivity (5 files / 26 pass) + vitest src/components (69 files / 381 pass) at 022689b6",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/cleanA4-fix-verify.log",
+      "artifactHash": "8b9f661a9f645bef20bbf764cff7500815e73171192c167d9ffe7f8ff74ca9b6",
+      "inputPaths": [
+        "src/core/game/GameManagerProgressionOps.ts",
+        "src/core/game/GameManagerRealmAdvanceOps.ts",
+        "src/core/game/GameManager.ts",
+        "src/composables/useTurnBattleInfo.ts",
+        "src/components/panels/QuanKhiPanel.vue",
+        "src/components/panels/ArtifactPanel.vue",
+        "src/components/panels/CharacterPanel.vue",
+        "src/components/panels/SkillPathPanel.vue",
+        "src/components/panels/skill-path/NativeCoreDetail.vue",
+        "src/components/panels/skill-path/SkillDetailView.vue",
+        "src/components/panels/skill-path/TheTuTreePanel.vue",
+        "src/components/panels/skill-path/SkillRoleStrip.vue",
+        "src/components/panels/skill-path/NodeTreePanel.vue"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "cleanA4 AUT fix batch verified on 022689b6: canonical in-battle predicate unified at 6 ops sites, talent sync gated at the boundary, isBattleInProgress single-sourced in useTurnBattleInfo and consumed by 9 panels"
+      ],
+      "limitations": [],
+      "status": "VALID",
       "kind": "EXECUTED_UNIT_STRUCTURAL"
     }
   ],
@@ -9678,7 +9961,7 @@
         "F-TT-CLEAN-A3-INT-2"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLO-21",
@@ -9708,6 +9991,38 @@
       "findingIds": [
         "F-TT-CLEAN-A3-INT-1",
         "F-TT-CLEAN-A3-INT-2"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "REV-TT-CLEAN-A4-AUT",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 4,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-51eb67813db04aebb82d63a355367d4d",
+      "contextId": "sealed-child-51eb67813db04aebb82d63a355367d4d",
+      "model": "swe-2-max",
+      "role": "AUTHORITY",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T22:30:00.000Z",
+      "sealedAt": "2026-09-25T22:41:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-A3-AUT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TT-AUT-A4-1",
+        "F-TT-AUT-A4-2",
+        "F-TT-AUT-A4-3",
+        "F-TT-AUT-A4-4"
       ],
       "novelAttackIds": [],
       "status": "SEALED"
@@ -12771,6 +13086,38 @@
       "preventionEvidenceIds": [
         "EV-TT-CLEANA3-FIX"
       ]
+    },
+    {
+      "id": "L-TT-86",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TT-AUT-A4-4"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "deliberate-design-contract",
+      "missedInvariantIds": [],
+      "escapeReason": "a parked-only-by-test module reads as dead production code to every fresh isolated reviewer; the parking intent lives only in prose",
+      "applicability": [
+        "any module deliberately retained beyond its production callers"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "parked modules should carry a machine-readable marker (registry flag or PARKED file) so reviewers can self-dismiss without burning a finding slot"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TT-CLEAN-A4-AUT"
+      ],
+      "capabilityDelta": "no code change — adjudication precedent only",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": []
     }
   ],
   "messages": [],
@@ -13894,6 +14241,54 @@
       "payloadPath": "events/0070.json",
       "payloadHash": "8a09d2cd9fa3046f0c451b23059c0100840d8749c05e01be36c5e2013acd5831",
       "eventHash": "65b08ef9bcb1492ba39353570f56a1fccfd16fff397404cce5fdd3604cc4c587"
+    },
+    {
+      "seq": 71,
+      "at": "2026-09-25T22:42:29.069Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "4ece93ac619efaae661b0b59ab0447f9ec313fa0908d3a7496a4e4365627860c",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "65b08ef9bcb1492ba39353570f56a1fccfd16fff397404cce5fdd3604cc4c587",
+      "payloadPath": "events/0071.json",
+      "payloadHash": "7a0b7de9be0f06cefe6e14fbf8d58dc6bda3cf847c60d6e3c7a0bc3252eab616",
+      "eventHash": "99f716c8667b46b071146bee64bfcaf6be960f6a2330cfbb3e8c1b810e53d515"
+    },
+    {
+      "seq": 72,
+      "at": "2026-09-25T22:44:02.776Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "4ece93ac619efaae661b0b59ab0447f9ec313fa0908d3a7496a4e4365627860c",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "99f716c8667b46b071146bee64bfcaf6be960f6a2330cfbb3e8c1b810e53d515",
+      "payloadPath": "events/0072.json",
+      "payloadHash": "57969e59d623180708717b1cc2925377a8500ff7ce30e062d4dc88ffba614e81",
+      "eventHash": "20996f4b8580525e3f8755650f4be8fe7c91e461abd7cd0bac11ff403f679b4a"
+    },
+    {
+      "seq": 73,
+      "at": "2026-09-25T22:44:12.125Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "4ece93ac619efaae661b0b59ab0447f9ec313fa0908d3a7496a4e4365627860c",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "20996f4b8580525e3f8755650f4be8fe7c91e461abd7cd0bac11ff403f679b4a",
+      "payloadPath": "events/0073.json",
+      "payloadHash": "64f3b411b702ddef21258726218bb1266d90a8fbe858762c462b8c055c7f58e7",
+      "eventHash": "1527fd011a98fc05049efa3c7fd68761d3a8a1886921f1b0292cf38bd44295bc"
     }
   ]
 }
