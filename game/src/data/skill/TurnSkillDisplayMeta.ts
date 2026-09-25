@@ -40,7 +40,7 @@ function fromSkills(id: string, fallback: TurnSkillDisplayMeta): TurnSkillDispla
 
 /**
  * Metadata cho mọi TurnSkillDefinition production id. Lookup qua
- * turnSkillDisplayMetaOf() — id lạ trả undefined dể caller fallback
+ * turnSkillDisplayMetaOf() — id lạ trả undefined để caller fallback
  * nhãn role (không crash, không hiển thị raw id).
  */
 export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
@@ -72,26 +72,26 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   // everyNth 4, damage x2.5).
   water_surge: {
     name: 'Nuốt Sáng',
-    description: 'Đòn dặc biệt của Thủy Giáp Long — sóng nước dâng quét ngang, mỗi 4 lượt.',
+    description: 'Đòn đặc biệt của Thủy Giáp Long — sóng nước dâng quét ngang, mỗi 4 lượt.',
   },
 
   // The Tu Reimagined (spec 2026-09-15 section 5, BodySkills.ts) --
   // Hien kits: Cuong Chien (missing-HP berserker) + Tran The (tank).
   cuong_quyen: {
     name: 'Cuồng Quyền',
-    description: 'Quyền cuồng bạo — sát thương tăng theo phần sinh mệnh dã mất.',
+    description: 'Quyền cuồng bạo — sát thương tăng theo phần sinh mệnh đã mất.',
   },
   loan_dau: {
     name: 'Loạn Đấu',
-    description: 'Đòn dánh mạnh cùng scalar sinh mệnh thiếu hụt. Hồi 4 lượt.',
+    description: 'Đòn đánh mạnh cùng scalar sinh mệnh thiếu hụt. Hồi 4 lượt.',
   },
   bat_tu_ba_the: {
     name: 'Bất Tử Bá Thể',
-    description: 'Trong 3 lượt của bản thân, sát thương trí mạng chỉ dể lại 1 sinh mệnh. Hồi 8 lượt.',
+    description: 'Trong 3 lượt của bản thân, sát thương trí mạng chỉ để lại 1 sinh mệnh. Hồi 8 lượt.',
   },
   tran_ap: {
     name: 'Trấn Áp',
-    description: 'Trấn áp quét ngang mọi kẻ dịch bằng sức thân thể.',
+    description: 'Trấn áp quét ngang mọi kẻ địch bằng sức thân thể.',
   },
   phan_chinh: {
     name: 'Phản Chấn',
@@ -99,14 +99,14 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   },
   son_nhac: {
     name: 'Sơn Nhạc',
-    description: 'Thân như núi lớn: hộ thể cho dồng dội, khiêu khích kẻ dịch, giảm sát thương bản thân. Hồi 6 lượt.',
+    description: 'Thân như núi lớn: hộ thể cho đồng đội, khiêu khích kẻ địch, giảm sát thương bản thân. Hồi 6 lượt.',
   },
 
   // The Tu Reimagined (spec 2026-09-15 section 6, BodySkills.ts) --
   // An kit (fixed at path choice) + reactive payload defs.
   tham_the: {
     name: 'Thám Thế',
-    description: 'Dò thế dịch bằng một dòn thân pháp — dánh trúng tích Thế.',
+    description: 'Dò thế địch bằng một đòn thân pháp — đánh trúng tích Thế.',
   },
   tu_the: {
     name: 'Tú Thế',
@@ -118,11 +118,11 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   },
   phan_kich: {
     name: 'Phản Kích',
-    description: 'Đòn phản kích tức thì sau khi trúng hoặc né dòn.',
+    description: 'Đòn phản kích tức thì sau khi trúng hoặc né đòn.',
   },
   tro_kich: {
     name: 'Trợ Kích',
-    description: 'Đòn dánh theo sau hành dộng của dồng dội.',
+    description: 'Đòn đánh theo sau hành động của đồng đội.',
   },
 
   // ---------------------------------------------------------------------
@@ -137,24 +137,24 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   },
   ho_ly_tinh_special: {
     name: 'Hồ Hỏa',
-    description: 'Lửa hồ ly thiêu dốt một mục tiêu, có thể gây Bỏng.',
+    description: 'Lửa hồ ly thiêu đốt một mục tiêu, có thể gây Bỏng.',
   },
   ho_ly_tinh_ultimate: {
     name: 'Tam Vĩ Diễm',
-    description: 'Diễm hỏa từ ba cái duôi thiêu rụi mục tiêu, chồng 2 tầng Bỏng.',
+    description: 'Diễm hỏa từ ba cái đuôi thiêu rụi mục tiêu, chồng 2 tầng Bỏng.',
   },
 
   khai_son_luc_si_basic: {
     name: 'Trọng Quyền',
-    description: 'Nắm dấm nặng như núi dè vào một mục tiêu.',
+    description: 'Nắm đấm nặng như núi đè vào một mục tiêu.',
   },
   khai_son_luc_si_special: {
     name: 'Khai Sơn Trảm',
-    description: 'Chém mở núi quét qua các ô lân cận, mảnh dá có thể gây Thạch Hóa.',
+    description: 'Chém mở núi quét qua các ô lân cận, mảnh đá có thể gây Thạch Hóa.',
   },
   khai_son_luc_si_ultimate: {
     name: 'Bàn Sơn Thế',
-    description: 'Sức mạnh bàn sơn dè vùng rộng, chấn dộng có thể gây Choáng.',
+    description: 'Sức mạnh bàn sơn đè vùng rộng, chấn động có thể gây Choáng.',
   },
 
   linh_hac_basic: {
@@ -172,11 +172,11 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
 
   duoc_dong_tu_basic: {
     name: 'Dược Trụ',
-    description: 'Chày giã thuốc dập vào một mục tiêu, có thể gây Trúng Độc.',
+    description: 'Chày giã thuốc đập vào một mục tiêu, có thể gây Trúng Độc.',
   },
   duoc_dong_tu_special: {
     name: 'Ngũ Độc Tán',
-    description: 'Rải bột ngũ dộc lên một vùng, chắc chắn gây Trúng Độc.',
+    description: 'Rải bột ngũ độc lên một vùng, chắc chắn gây Trúng Độc.',
   },
   duoc_dong_tu_ultimate: {
     name: 'Vạn Độc Quy Tông',
@@ -189,7 +189,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   },
   van_du_kiem_khach_special: {
     name: 'Phi Kiếm Thứ',
-    description: 'Phi kiếm xuyên dọc cả hàng dịch.',
+    description: 'Phi kiếm xuyên dọc cả hàng địch.',
   },
   van_du_kiem_khach_ultimate: {
     name: 'Tuyệt Kiếm Nhất Thứ',
@@ -215,7 +215,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   },
   thiet_y_tang_special: {
     name: 'Kim Cang Hộ Thể',
-    description: 'Thân hóa kim cang — tự tăng phòng ngự và phản dòn trong 6 lượt.',
+    description: 'Thân hóa kim cang — tự tăng phòng ngự và phản đòn trong 6 lượt.',
   },
   thiet_y_tang_ultimate: {
     name: 'Phật Chưởng Trấn Ma',
@@ -224,7 +224,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
 
   kim_quang_thanh_nhan_basic: {
     name: 'Kim Quang Chỉ',
-    description: 'Tia kim quang diểm xuyết một mục tiêu, có thể gây Chảy Máu.',
+    description: 'Tia kim quang điểm xuyết một mục tiêu, có thể gây Chảy Máu.',
   },
   kim_quang_thanh_nhan_special: {
     name: 'Vạn Kiếm Quyết',
@@ -237,24 +237,24 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
 
   huyen_vu_basic: {
     name: 'Quy Giáp Trùng',
-    description: 'Mai rùa huyền võ dập vào một mục tiêu, có thể gây Thạch Hóa.',
+    description: 'Mai rùa huyền võ đập vào một mục tiêu, có thể gây Thạch Hóa.',
   },
   huyen_vu_special: {
     name: 'Huyền Vũ Trấn Địa',
-    description: 'Trấn dịa theo hình chữ thập, dất nứt có thể gây Trói Chân.',
+    description: 'Trấn địa theo hình chữ thập, đất nứt có thể gây Trói Chân.',
   },
   huyen_vu_ultimate: {
     name: 'Hậu Thổ Gia Thân',
-    description: 'Hậu thổ phù hộ — tự dựng Địa Trụ khiên dày, hồi khiên và phản dòn.',
+    description: 'Hậu thổ phù hộ — tự dựng Địa Trụ khiên dày, hồi khiên và phản đòn.',
   },
 
   cuu_thien_huyen_nu_basic: {
     name: 'Tinh Hoa Kiếm Quang',
-    description: 'Kiếm quang tinh hoa bản nguyên dâm một mục tiêu.',
+    description: 'Kiếm quang tinh hoa bản nguyên đâm một mục tiêu.',
   },
   cuu_thien_huyen_nu_special: {
     name: 'Lạc Tinh Thứ',
-    description: 'Sao rơi dọc cả hàng, uy áp thiên dình có thể gây Uy Áp.',
+    description: 'Sao rơi dọc cả hàng, uy áp thiên đình có thể gây Uy Áp.',
   },
   cuu_thien_huyen_nu_ultimate: {
     name: 'Cửu Thiên Tinh Lạc',
@@ -264,15 +264,15 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   // P7-M-G beta roster - Than Nong (healer) + Khai Minh (buffer).
   than_nong_basic: {
     name: 'Dược Thảo Kích',
-    description: 'Thảo mộc hóa gai dâm một mục tiêu.',
+    description: 'Thảo mộc hóa gai đâm một mục tiêu.',
   },
   than_nong_hoi_phuc_thuat: {
     name: 'Hồi Phục Thuật',
-    description: 'Dược lực phủ khắp dồng dội — mỗi người hồi sinh lực dần theo lượt của mình.',
+    description: 'Dược lực phủ khắp đồng đội — mỗi người hồi sinh lực dần theo lượt của mình.',
   },
   than_nong_than_dang: {
     name: 'Thần Đằng Dược Vương',
-    description: 'Thần dằng dâng trào — hồi phục mạnh cho toàn dội và thanh tẩy khống chế.',
+    description: 'Thần đằng dâng trào — hồi phục mạnh cho toàn đội và thanh tẩy khống chế.',
   },
   khai_minh_basic: {
     name: 'Cửu Thủ Trảo',
@@ -280,11 +280,11 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   },
   khai_minh_ho_ve_thuat: {
     name: 'Hộ Vệ Thuật',
-    description: 'Cửu thủ gầm vang — toàn dội tăng công và thủ.',
+    description: 'Cửu thủ gầm vang — toàn đội tăng công và thủ.',
   },
   khai_minh_thanh_an: {
     name: 'Thanh Ấn Côn Lôn',
-    description: 'Ấn Côn Lôn che chở — mỗi dồng dội nhận một lớp giáp ngoài hấp thụ sát thương.',
+    description: 'Ấn Côn Lôn che chở — mỗi đồng đội nhận một lớp giáp ngoài hấp thụ sát thương.',
   },
 
   // Phap Tu An kit (Task 16) -- dong bo tu Skills.ts; ngo_dao_hon_don's
@@ -292,7 +292,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   // its HUD emblem tooltip is the only place the rule surfaces.
   van_phap_tuy_tam: fromSkills('van_phap_tuy_tam', {
     name: 'Vạn Pháp Tùy Tâm',
-    description: 'Mỗi dòn hóa thành một nguyên tố bất dịnh.',
+    description: 'Mỗi đòn hóa thành một nguyên tố bất định.',
   }),
   da_phap_lien_tuyen: fromSkills('da_phap_lien_tuyen', {
     name: 'Đa Pháp Liên Tuyên',
@@ -300,7 +300,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   }),
   ngo_dao_hon_don: fromSkills('ngo_dao_hon_don', {
     name: 'Ngộ Đạo Hỗn Độn',
-    description: 'Chỉ dòn ở ô Thường (Vạn Pháp Tùy Tâm) có thể tự phân luồng — Đa Pháp Liên Tuyên không kích hoạt.',
+    description: 'Chỉ đòn ở ô Thường (Vạn Pháp Tùy Tâm) có thể tự phân luồng — Đa Pháp Liên Tuyên không kích hoạt.',
   }),
 
   // Kiem Tu Reimagined (spec 2026-09-15 sec.3/sec.4.3) -- the five Kiem Pho
@@ -310,7 +310,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   // may resolve to display text here (INV-7 fs-guard enforces).
   orb_dam: {
     name: 'Đâm',
-    description: 'Đâm thẳng một mục tiêu — dòn kiếm gốc của Kiếm Phổ.',
+    description: 'Đâm thẳng một mục tiêu — đòn kiếm gốc của Kiếm Phổ.',
   },
   orb_chem: {
     name: 'Chém',
@@ -333,7 +333,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   // display name is resolved by resolveNguKiemSkillName (Khoi / Lien).
   ngu_kiem_thuat: {
     name: 'Ngự Kiếm',
-    description: 'Phi kiếm dộc lập dánh chuỗi mục tiêu — mỗi kiếm một dòn.',
+    description: 'Phi kiếm độc lập đánh chuỗi mục tiêu — mỗi kiếm một đòn.',
   },
 
 }
