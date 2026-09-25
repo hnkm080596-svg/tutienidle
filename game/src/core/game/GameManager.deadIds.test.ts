@@ -24,6 +24,11 @@ const RETIRED_IDS = [
   'phap_tu_reaction_special',
   'phap_tu_reaction_ultimate',
   'reaction_empowerment',
+  // retired by the ngu-kiem beta redesign (legacy pre-Khoi spine ids);
+  // keep pinned so a stray re-add trips INV-12.
+  'ngu_kiem_sac',
+  'ngu_kiem_phong',
+  'ngu_kiem_sat',
 ] as const
 
 const RETIRED_ID_PATTERNS = [
