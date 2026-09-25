@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "d8321ba8",
   "state": {
-   "productStateId": "fb56acd6c06e613efff0dd94615d401e5ada8f5d44b9b8ae61d9a31654f4bbad",
+   "productStateId": "54cb20fa056003c0e6f1bd470c4a2d82d42bb4362c28c826b4ec2b7588258225",
    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -5282,6 +5282,122 @@
    "exception": null,
    "status": "REJECTED_WITH_PROOF",
    "rejectionReason": "fingerprint collisions are legal per oracle design tolerance"
+  },
+  {
+   "id": "F-NK-COR-A6-1",
+   "title": "P15 asciiComments gate red at pinned HEAD - unmasked em dashes in NguKiemDao doc blocks",
+   "state": {
+    "productStateId": "fb56acd6c06e613efff0dd94615d401e5ada8f5d44b9b8ae61d9a31654f4bbad",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/kiem-tu/NguKiemDao.ts",
+     "symbolOrSection": "doc blocks :33-34, :63",
+     "revision": "d6592689",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "tests/architecture/asciiComments.test.ts",
+     "symbolOrSection": "failing gate",
+     "revision": "d6592689",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-13416e17c3614d3890db235409f00b13",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "npx vitest run tests/architecture/asciiComments.test.ts -> 1 failed at d659268, green at be1bdf8",
+   "expected": "all non-ASCII comment violations absent or baselined",
+   "actual": "em dash U+2014 in two /** */ doc blocks (3 sites); unmasked when the refactor removed the file's last ${",
+   "rootCause": "ASCII sweep converted // comments but missed the /** */ doc blocks it reflowed",
+   "rootClass": "ascii-sweep-missed-doc-block",
+   "subsystem": "kiem-tu",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src/core/kiem-tu"
+     ],
+     "termsAndMethod": "grep -P [^\\x00-\\x7F] across NguKiemDao.ts + sibling files",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "only the 2 doc blocks"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "FIXED @ca14a92f: em dashes replaced with -- in both doc blocks; gate green",
+   "pinEvidenceIds": [
+    "EV-NK-A6-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-NK-A6-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REPAIR_AUTHORIZED",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-NK-COR-A6-2",
+   "title": "asciiComments scanTsChunk desyncs at ${ - stale baselines + latent masking (pre-existing)",
+   "state": {
+    "productStateId": "fb56acd6c06e613efff0dd94615d401e5ada8f5d44b9b8ae61d9a31654f4bbad",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "tests/architecture/helpers/asciiComments.ts",
+     "symbolOrSection": "scanTsChunk",
+     "revision": "d6592689",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-13416e17c3614d3890db235409f00b13",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "scanner EOFs inside template literal - comments below never scanned on master",
+   "expected": "comment scanner reaches every comment in a file",
+   "actual": "naive scan() exits early at first ${ without reScanTemplateToken handling",
+   "rootCause": "pre-existing scanner blind spot on master - unchanged by this branch",
+   "rootClass": "pre-existing-out-of-scope",
+   "subsystem": "tests/architecture",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/tests/architecture"
+     ],
+     "termsAndMethod": "scanner probe on master vs branch file",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "masking is symmetric - any file gaining/losing ${ shifts coverage"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "pre-existing test-infra blind spot on master; out of this branch's scope - recorded as observation per protocol"
   }
  ],
  "evidence": [
@@ -5973,8 +6089,40 @@
     "latent seam - unreachable under current single-skill kit content"
    ],
    "result": "PASS",
-   "status": "CURRENT",
+   "status": "STALE",
    "invariantIds": []
+  },
+  {
+   "id": "EV-NK-A6-FIX",
+   "state": {
+    "productStateId": "54cb20fa056003c0e6f1bd470c4a2d82d42bb4362c28c826b4ec2b7588258225",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+   "commandOrMethod": "npm run type-check + vitest tests/architecture src/core/kiem-tu (705 pass; staticArtExtentDeclared load-error = env missing libuuid, pre-existing)",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T14:36:30.000Z",
+   "finishedAt": "2026-09-25T14:36:49.000Z",
+   "inputPaths": [
+    "src/core/kiem-tu/NguKiemDao.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "artifactPath": "evidence/fix-verify-a6.log",
+   "artifactHash": "508f701a5e6680fd8e5b92ba72e5fedf1bcb654e5cea0a8c1a126bb0f9de6a4d",
+   "claims": [
+    "em dashes removed from /** */ doc blocks",
+    "asciiComments gate green at new head"
+   ],
+   "limitations": [
+    "staticArtExtentDeclared cannot load on this box (libuuid missing) - env limitation"
+   ],
+   "result": "PASS",
+   "status": "CURRENT"
   }
  ],
  "coverage": [],
@@ -7119,7 +7267,37 @@
     "F-NK-COR-A5-1"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
+  },
+  {
+   "id": "REV-NK-COR-A6",
+   "state": {
+    "productStateId": "fb56acd6c06e613efff0dd94615d401e5ada8f5d44b9b8ae61d9a31654f4bbad",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 8,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-13416e17c3614d3890db235409f00b13",
+   "contextId": "sealed-child-13416e17c3614d3890db235409f00b13",
+   "model": "swe-2-max",
+   "role": "correctness-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T14:14:40.000Z",
+   "sealedAt": "2026-09-25T14:35:08.000Z",
+   "previousPhaseReviewId": "REV-NK-CLO-12",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-NK-COR-A6-1",
+    "F-NK-COR-A6-2"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
   }
  ],
  "cycles": [
@@ -8893,6 +9071,70 @@
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
+  },
+  {
+   "id": "L-NK-47",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-COR-A6-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "ascii-sweep-missed-doc-block",
+   "missedInvariantIds": [],
+   "escapeReason": "sweep only grepped // lines",
+   "applicability": [
+    "asciiComments gate"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "ascii sweeps must grep whole file incl block comments"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-COR-A6"
+   ],
+   "capabilityDelta": "ascii sweep must cover /** */ blocks",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-48",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-COR-A6-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "scanner-template-desync",
+   "missedInvariantIds": [],
+   "escapeReason": "scanTsChunk lacks template rescan",
+   "applicability": [
+    "asciiComments gate"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "upgrade scanner or baseline per-file coverage"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-COR-A6"
+   ],
+   "capabilityDelta": "ascii sweep must cover /** */ blocks",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
   }
  ],
  "messages": [],
@@ -9312,6 +9554,22 @@
    "payloadPath": "events/0026.json",
    "payloadHash": "bcd9763dff98050063605dad685514b6a3ccdac23b3e303abcad920113738fbb",
    "eventHash": "834ed9df649936a0b6d2202cb81f2b6526fa184e8f54bf0a24b9dc1c8b068304"
+  },
+  {
+   "seq": 27,
+   "at": "2026-09-25T14:37:17.705Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-238489",
+   "state": {
+    "productStateId": "54cb20fa056003c0e6f1bd470c4a2d82d42bb4362c28c826b4ec2b7588258225",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "834ed9df649936a0b6d2202cb81f2b6526fa184e8f54bf0a24b9dc1c8b068304",
+   "payloadPath": "events/0027.json",
+   "payloadHash": "c6f23cca363227ead078f2ae05c84c7568816b10cbd4fe336a67216dc81c915d",
+   "eventHash": "2cf554f9469a3ab6f0cc50d9f89d5d1399f92006d4de2e2b74602f75c7449223"
   }
  ]
 }
