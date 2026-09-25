@@ -10435,37 +10435,38 @@
    "counterexample": "underclaim direction - player receives more than described; no overclaim",
    "expected": "description truthful about modifier scope",
    "actual": "description reads 'rider cua don co ban' (basic-hit rider) but statModifiers grant spell-domain ailmentPotency/ailmentDuration/skillDamage applying to all element spell skills",
-   "rootCause": "wording narrower than the domain:'spell' statModifiers",
-   "rootClass": "description-scope-drift",
+   "rootCause": "description written for basic-only preview while modifier carries domain spell",
+   "rootClass": "description-scope",
    "subsystem": "phap-tu-beta",
    "siblingSearch": [
     {
      "roots": [
-      "src/core",
-      "src/data",
-      "src/components",
-      "src/services"
+      "repo diff at pinned state"
      ],
-     "termsAndMethod": "sealed authority review - static proof per checklist",
+     "termsAndMethod": "read all 5 masteryNode/reward descriptions vs their modifier domains",
+     "evidenceIds": [
+      "EV-PT-CLO-14-VERIFY"
+     ],
      "hitDispositions": [
-      "single surface"
+      "no other underclaim — single instance"
      ],
-     "coverageLimits": [
-      "reviewer-scope audit"
-     ],
-     "evidenceIds": []
+     "coverageLimits": []
     }
    ],
    "siblingFindingIds": [],
    "repair": "committed 93b0cb4b on devin/1790260800-phap-tu-basic",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PT-CLO-14-VERIFY"
+   ],
    "verificationEvidenceIds": [
     "EV-PT-CLO-14-VERIFY"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PT-CLO-14"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -10717,13 +10718,31 @@
    "discoveredBy": "devin-a9339da5f3634910b96a919112442476",
    "invariantIds": [],
    "evidenceIds": [],
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo diff at pinned state"
+     ],
+     "termsAndMethod": "audited every ring/branch prereq anchor across the 5 element lanes for same-stat family",
+     "evidenceIds": [
+      "EV-PT-CLO-14-VERIFY"
+     ],
+     "hitDispositions": [
+      "only moc_doc_nhiem crossed families — now reanchored"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "siblingFindingIds": [],
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PT-CLO-14-VERIFY"
+   ],
    "verificationEvidenceIds": [
     "EV-PT-CLO-14-VERIFY"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PT-CLO-14"
+   ],
    "duplicateOf": null,
    "exception": null,
    "id": "F-PT-COR-A7-2",
@@ -10743,11 +10762,11 @@
    "counterexample": "ailmentPotencyPercent ring prereqs ailmentDurationPercent trunk -- only lane with a cross-family edge",
    "expected": "ring nodes prereq the same-stat trunk",
    "actual": "moc_doc_nhiem prereqNodeId = moc_doc_nhuan (duration trunk)",
-   "rootCause": null,
-   "rootClass": null,
+   "rootCause": "ring node authored against the wrong-family trunk during glyph layout",
+   "rootClass": "topology-shape",
    "subsystem": "progression",
    "repair": "committed 93b0cb4b on devin/1790260800-phap-tu-basic",
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -10760,13 +10779,31 @@
    "discoveredBy": "devin-a9339da5f3634910b96a919112442476",
    "invariantIds": [],
    "evidenceIds": [],
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "repo diff at pinned state"
+     ],
+     "termsAndMethod": "checked the other capstone descriptions against their spec fields",
+     "evidenceIds": [
+      "EV-PT-CLO-14-VERIFY"
+     ],
+     "hitDispositions": [
+      "none other dropped spec fields"
+     ],
+     "coverageLimits": []
+    }
+   ],
    "siblingFindingIds": [],
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PT-CLO-14-VERIFY"
+   ],
    "verificationEvidenceIds": [
     "EV-PT-CLO-14-VERIFY"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PT-CLO-14"
+   ],
    "duplicateOf": null,
    "exception": null,
    "id": "F-PT-COR-A7-3",
@@ -10786,11 +10823,11 @@
    "counterexample": "node says only 'sat thuong lon hon' while spec raises liet_thuong 0.4->0.45",
    "expected": "node description previews what the spec grants",
    "actual": "description omits the liet_thuong reliability increase",
-   "rootCause": null,
-   "rootClass": null,
+   "rootCause": "capstone description covered the damage aspect but dropped the ailmentChance half of the spec",
+   "rootClass": "description-scope",
    "subsystem": "progression",
    "repair": "committed 93b0cb4b on devin/1790260800-phap-tu-basic",
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null
   }
  ],
@@ -14335,6 +14372,33 @@
    "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-CLO-14",
+   "state": {
+    "productStateId": "8b14b2fe966e148e9c1253436ad0a19a6f62baf3b36cda90281aab814efc2cb3",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 22,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-0de4116f391d4e27ad0bc91df177718f",
+   "contextId": "sealed-child-0de4116f391d4e27ad0bc91df177718f",
+   "model": "swe-2-max",
+   "role": "closure-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T12:14:39.000Z",
+   "sealedAt": "2026-09-25T12:18:16.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [
@@ -17741,6 +17805,105 @@
     "REV-PT-COR-A7"
    ],
    "capabilityDelta": "distinguish realm-tier gates (FOUNDATION prerequisite) from minor-tier throttles (techniqueRank) when adjudicating level-cap findings",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-78",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-AUT-A7-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "description-scope",
+   "missedInvariantIds": [],
+   "escapeReason": "node description claimed basic-only scope while the modifier carried domain:'spell' across all element techniques",
+   "applicability": [
+    "realm-reward node descriptions",
+    "statModifier domain fields"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "descriptions must claim the full modifier scope; diff descriptions against the domain field"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-CLO-14"
+   ],
+   "capabilityDelta": "scope-honest descriptions",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-79",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-COR-A7-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "topology-shape",
+   "missedInvariantIds": [],
+   "escapeReason": "a ring node anchored to a trunk of a different stat family — the only cross-family edge in the lanes",
+   "applicability": [
+    "node tree topology",
+    "ring/trunk anchoring"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "rings anchor to trunks of the same stat family; run a same-stat anchor check over authored trees"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-CLO-14"
+   ],
+   "capabilityDelta": "same-family anchoring",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-80",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-COR-A7-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "description-scope",
+   "missedInvariantIds": [],
+   "escapeReason": "capstone description named only the damage half of a two-part spec (ailmentChance bump dropped)",
+   "applicability": [
+    "capstone/spec descriptions",
+    "effectsOverride previews"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "spec descriptions enumerate every changed field, not just the headline stat"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-CLO-14"
+   ],
+   "capabilityDelta": "spec-complete descriptions",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": "phap-tu-beta-2026-09-25",
