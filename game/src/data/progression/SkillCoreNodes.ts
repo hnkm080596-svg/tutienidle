@@ -12,7 +12,7 @@ import { turnSkillDisplayMetaOf } from '../skill/TurnSkillDisplayMeta'
 //  1. Generated template cores - one per authored Skill template with
 //     maxLevel > 1 (id/maxLevel mirror the template; drift is a data
 //     bug pinned by SkillCoreNodes.test.ts).
-//  2. Authored native cores - the 14 eligible top-level native
+//  2. Authored native cores - the 15 eligible top-level native
 //     TurnSkillDefinition ids below (the census whitelist). Damage-
 //     bearing defs get maxLevel 10 + damage.levelScaling 0.05;
 //     non-damage defs get maxLevel 1 (canonical at Lv1, Insight-

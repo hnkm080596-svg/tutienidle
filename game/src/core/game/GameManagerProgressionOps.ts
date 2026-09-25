@@ -261,6 +261,14 @@ export class GameManagerProgressionOps {
    * result.
    */
   purchaseNode(nodeId: string, player: PlayerData): boolean {
+    // Same out-of-combat discipline as respecNodeTree/switchRoute: node
+    // investment mutates player.nodeLevels, which a running battle only
+    // ever reads through its minted kit snapshot - reject instead of
+    // letting an in-battle purchase look like it applied mid-fight.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     if (!this.deps.nodeRegistry.has(nodeId)) {
       return false
     }
@@ -573,6 +581,11 @@ export class GameManagerProgressionOps {
    * update via the aggregators (no reverse subtraction of old modifiers).
    */
   devResetBranch(branchTag: string, player: PlayerData): number {
+    // Dev channel, same out-of-combat discipline as respecNodeTree.
+    if (this.deps.isTurnBattleInProgress()) {
+      return 0
+    }
+
     const revoked = new Set<string>()
     const refund = devResetBranchSystem(player, this.deps.nodeRegistry, branchTag, revoked)
     this.applyOneShotClawback(player, revoked)
