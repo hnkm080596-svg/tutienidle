@@ -9858,14 +9858,18 @@
    ],
    "siblingFindingIds": [],
    "repair": "reuse computeNodeRefund(node, level, record) inside paidForNodeLevels (keep 0.75 route tax at call sites)",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PT-INT-A6-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-PT-INT-A6-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PT-CLO-13"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -9924,14 +9928,18 @@
    ],
    "siblingFindingIds": [],
    "repair": "extend RouteSwitchPreview with the same clawback legs respec preview reports (unlearn/core-refund/spec-clear/kiemY-kiemDao)",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PT-INT-A6-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-PT-INT-A6-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PT-CLO-13"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -10054,14 +10062,18 @@
    ],
    "siblingFindingIds": [],
    "repair": "import canonical ELEMENT_LABELS in builders.ts and delete the local map (labels gain proper diacritics)",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PT-INT-A6-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-PT-INT-A6-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PT-CLO-13"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -10120,14 +10132,18 @@
    ],
    "siblingFindingIds": [],
    "repair": "validator reuses getNodeMaxLevel (Math.max(1,...)) for the same bound writers apply",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PT-INT-A6-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-PT-INT-A6-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PT-CLO-13"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -10186,14 +10202,18 @@
    ],
    "siblingFindingIds": [],
    "repair": "remove the domain-level previewNodeRespec export (zero callers) so ops preview is the only authority",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PT-INT-A6-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-PT-INT-A6-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PT-CLO-13"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -10246,14 +10266,18 @@
    ],
    "siblingFindingIds": [],
    "repair": "warn + skip the write (fixed a27ad402)",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PT-INT-A6-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-PT-INT-A6-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PT-CLO-13"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -10306,14 +10330,18 @@
    ],
    "siblingFindingIds": [],
    "repair": "dedupe via includes() guard (fixed a27ad402)",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PT-INT-A6-FIX"
+   ],
    "verificationEvidenceIds": [
     "EV-PT-INT-A6-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PT-CLO-13"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -13765,6 +13793,43 @@
    ],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-CLO-13",
+   "state": {
+    "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 20,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-51e8f22011fa427ea53f666b467bc787",
+   "contextId": "sealed-child-51e8f22011fa427ea53f666b467bc787",
+   "model": "swe-2-max",
+   "role": "closure-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T10:21:46.000Z",
+   "sealedAt": "2026-09-25T10:26:38.738Z",
+   "previousPhaseReviewId": "REV-PT-INT-A6",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PT-INT-A6-FIX"
+   ],
+   "findingIds": [
+    "F-PT-AUT-A6-1",
+    "F-PT-AUT-A6-2",
+    "F-PT-AUT-A6-4",
+    "F-PT-AUT-A6-5",
+    "F-PT-AUT-A6-6",
+    "F-PT-INT-A6-1",
+    "F-PT-INT-A6-2"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [
@@ -16994,6 +17059,66 @@
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
+  },
+  {
+   "id": "L-PT-72",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-INT-A6-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "authority-inconsistency",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "grant-skip contract: every refused class in a validation loop skips the write - no warn-only dead paths"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-INT-A6"
+   ],
+   "capabilityDelta": "grant-skip contract: every refused class in a validation loop skips the write - no warn-only dead paths",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PT-73",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-INT-A6-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "preview-divergence",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "preview mirrors must dedupe identically to apply - a shared grant recorded by two revoked nodes lists once"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-INT-A6"
+   ],
+   "capabilityDelta": "preview mirrors must dedupe identically to apply - a shared grant recorded by two revoked nodes lists once",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
   }
  ],
  "messages": [],
@@ -17973,6 +18098,22 @@
    "payloadPath": "events/0061.json",
    "payloadHash": "90a901d9a519fb124187d682943854683e70e598dae93e1bb83e5dbd2931c263",
    "eventHash": "8363f9616500f4aca7e7824688828b172844ed7770630c433833318df5a64300"
+  },
+  {
+   "seq": 62,
+   "at": "2026-09-25T10:30:52.277Z",
+   "kind": "REVIEW_SEALED",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "8363f9616500f4aca7e7824688828b172844ed7770630c433833318df5a64300",
+   "payloadPath": "events/0062.json",
+   "payloadHash": "a2e5ae5d1f9e22a0c23d3bcf4dc299e80480993099bc7b9024e5bd3c1e4be521",
+   "eventHash": "4f757953409bf1bbdabe516cb746028ea16c19aa631348f23346e6e0332ff1b3"
   }
  ]
 }
