@@ -2,8 +2,8 @@
 
 - phase: DECIDE
 - outcome: QA_UNVERIFIED
-- state: product=d458c31d3444 contract=42e4f2876e38 attack=d33041f0d78d env=e3ca14a6b377
-- base/head: be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df -> 61a192e9e58c6811721538859ba975968b3f6705
+- state: product=2330ef22ed54 contract=42e4f2876e38 attack=d33041f0d78d env=e3ca14a6b377
+- base/head: be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df -> 5f0d296be768afe76b07b46358a7766bae0ac28d
 
 ## Findings
 
@@ -99,6 +99,89 @@
 - **F-PT-A8-4** Low/DOCUMENTATION_DEFECT — CLOSED — StatLabels tooltip claims elementApplicationPercent is flat-add; engine multiplies
 - **F-PT-A8-5** Low/REAL_DEFECT — CLOSED — No load-time backfill for realm-entry node grants on pre-diff v84 saves
 - **F-PT-A8-6** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Stale specialization selections pre-dating the claim gate persist across load
+- **F-PT-A9-1** Medium/TEST_DEFECT — CLOSED — New P15 non-ASCII comment (U+2014 em dash) in PhapTuRoutes JSDoc fails the asciiComments ratchet
+- **F-PT-A9-2** Medium/REAL_DEFECT — CLOSED — previewNodeRespec under-reports the one-shot-grant clawback - dry-run invisible to the confirm dialog
+- **F-PT-A9-3** Low/REAL_DEFECT — CLOSED — ops switchRoute reports success on a same-route no-op the domain and previewRouteSwitch reject
+- **F-PT-A9-4** Nit/REAL_DEFECT — CLOSED — specializationClaimingNode uses first-match while clawback evaluates all claimants - divergent claimant semantics (latent)
+- **F-PT-A9-5** Nit/REAL_DEFECT — CLOSED — SkillRoleStrip specLocked reads canonical-only while the op gate reads the ownership union - crafted-save divergence
+- **F-PT-A9-6** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — core/progression gains a phap-tu import - way predicate coupled inside generic NodeSystem
+- **F-PT-A10-1** Medium/TEST_DEFECT — CLOSED — TECHNIQUE_CAP_ALLOWLIST missing moc_doc_nhiem - pinned INV-12 contract test red
+- **F-PT-A10-2** Medium/DOCUMENTATION_DEFECT — DUPLICATE_LINKED — PhapTuRoutes.ts rewritten doc comment retains U+2014 em-dash - P15 ratchet red
+- **F-PT-A10-3** Nit/REAL_DEFECT — DUPLICATE_LINKED — SkillRoleStrip spec-lock reads nodeLevels only vs ownedNodeIds union gate
+- **F-PT-A10-4** Nit/REAL_DEFECT — CLOSED — reconcileSpecClaims call dedented outside the bodyPlayer guard
+- **F-PT-A10-5** Nit/DOCUMENTATION_DEFECT — CLOSED — kim_tu_phong spec raises ailmentChance 0.4->0.45 unadvertised in description
+- **F-PT-A10-6** Nit/DOCUMENTATION_DEFECT — CLOSED — PhapTuPath realmRewards comment 'The pool awakening (fill starts)' overstates mechanism
+- **F-PT-A11-1** Medium/REAL_DEFECT — CLOSED — respecNodeTree/devResetBranch return value excludes clawback-credited core refund (preview/apply divergence)
+- **F-PT-A12-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — spec ambiguity: '+10%/direction' reads per-node in data, summed directions exceed it
+- **F-PT-A12-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — domain-level previewNodeRespec orphaned duplicate of the ops preview
+- **F-PT-A12-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — SkillRoleStrip specTooltip names only the first claimant in multi-claimant specs
+- **F-PT-A12-4** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — respec confirm dialog shows refund+count but not the clawback legs
+- **F-PT-A13-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — specTooltip reads first-claimant + nodeLevels-only while specLocked uses all-claimants + union
+- **F-PT-A13-2** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — respec ConfirmModal omits clawback side-effects the preview already computes
+- **F-PT-A13-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — domain previewNodeRespec dead in production (duplicate of ops preview)
+- **F-PT-A13-4** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — kim_tu_phong capstone description underclaims the bleed raise
+- **F-PT-A13-5** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — comment claims previewRouteSwitch rejects same-route - it takes no route arg
+- **F-PT-A13-6** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — preview clawback does not recurse grantsSkillCoreIds on cores (equivalent today)
+- **F-PT-INT-A3-1** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — previewNodeRespec.unlearnedSkillIds duplicate on crafted dual-record
+- **F-PT-INT-A3-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — previewRouteSwitch skips clawback-leg projection
+- **F-PT-INT-A3-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — rewardOnly+unlocksSkillIds node would let stillGrantedElsewhere retain unlearned skill
+- **F-PT-AUTB-1** Nit/REAL_DEFECT — CLOSED — Stale docstring on grantCultivationPathRealmReward says 'artifact-only'
+- **F-PT-AUTB-2** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — core/player -> data/ imports exist at merge-base (pre-existing)
+- **F-PT-FA-A1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — core/player files already import data/ at merge-base (Player.ts:22,32; CultivationPathRegistry.ts:33-77)
+- **F-PT-FA-A2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — new data/ import in core/combat/CombatSkillPresentation.ts:5 rides the file's existing data seam
+- **F-PT-FA-C1** Low/REAL_DEFECT — CLOSED — van_moc_lan_doc specialization descriptions overclaim (M4 honesty miss on spec variants)
+- **F-PT-FA-C2** Nit/REAL_DEFECT — CLOSED — SkillRoleStrip.specTooltip names only first claimant while specLocked uses plural set
+- **F-PT-FA-C3** Nit/REAL_DEFECT — CLOSED — grantedNodeLevels writes nodeLevels values that fail saveShapeValidation on next load
+- **F-PT-FA-6** Low/REAL_DEFECT — CLOSED — lan_doc spec pair vestigial - identical payloads, aim-region only difference
+- **F-PT-COR-A3-1** Low/REAL_DEFECT — CLOSED — respec confirm modal never renders the new clawback preview legs
+- **F-PT-COR-A3-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — wood elementApplicationPercent nodes conditional-only vs doc_chuong ailmentChance 1.0
+- **F-PT-COR-A3-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — ngo_dao_hon_don lacks iconKey (monogram fallback)
+- **F-PT-AUT-A3-1** Nit/REAL_DEFECT — CLOSED — comment claims realm-reward nodes carry no requiredWay - the_thuc_tinh does
+- **F-PT-AUT-A3-2** Nit/REAL_DEFECT — CLOSED — respecNodeTree rewardOnly-root early-return undocumented
+- **F-PT-COR-A4-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — basic-node levels 3-5 reachable at Luyen Khi via techniqueRank gates
+- **F-PT-COR-A4-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — basic-lane buffs ride player-level statModifiers domain spell, not per-skillId
+- **F-PT-COR-A4-3** Nit/REAL_DEFECT — CLOSED — stale comment: 'targetingOverride', real field is 'targeting'
+- **F-PT-COR-A5-1** Low/REAL_DEFECT — CLOSED — moc_doc_nhuan/moc_doc_nhiem buff a dead stat pool (elementApplicationPercent on doc_chuong with base ailmentChance 1.0)
+- **F-PT-COR-A5-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — per-node +10% cap documented as per-direction but reviewer read it as per-node-total
+- **F-PT-COR-A5-3** Nit/REAL_DEFECT — CLOSED — basic lane is a flat star - every node hangs off the element root, no glyph-shaped depth
+- **F-PT-COR-A5-4** Nit/REAL_DEFECT — CLOSED — ownedNodeIds mirror read without ?? {} guard on nodeLevels
+- **F-PT-AUT-A5-1** Low/REAL_DEFECT — CLOSED — respec confirm dialog double-reports clawback refund - regain total already includes it
+- **F-PT-AUT-A5-2** Nit/REAL_DEFECT — CLOSED — ELEMENT_LABELS re-declared locally in PhapTuRealmRewardNodes.ts instead of canonical import
+- **F-PT-AUT-A5-3** Nit/REAL_DEFECT — CLOSED — analytic clawback preview hand-duplicates revokeNodeOwnership refund arithmetic
+- **F-PT-COR-A6-1** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Glyph comment claims ring prereqs use 'same stat family' trunk; two edges cross ailment stats
+- **F-PT-COR-A6-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Mastery rider description scopes to 'don co ban' but modifier is spell-domain-wide
+- **F-PT-AUT-A6-1** Low/REAL_DEFECT — CLOSED — paidForNodeLevels remains a parallel spentStart loop alongside computeNodeRefund
+- **F-PT-AUT-A6-2** Low/REAL_DEFECT — CLOSED — previewRouteSwitch omits the clawback surface that switchRoute applies
+- **F-PT-AUT-A6-3** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — core/player production files import data/ (pre-existing, unchanged by diff)
+- **F-PT-AUT-A6-4** Low/REAL_DEFECT — CLOSED — Local ASCII ELEMENT_LABELS in PhapTuNodes.builders diverges from canonical ElementLabels
+- **F-PT-AUT-A6-5** Nit/REAL_DEFECT — CLOSED — Save-validation level bound diverges from getNodeMaxLevel
+- **F-PT-AUT-A6-6** Nit/REAL_DEFECT — CLOSED — Domain previewNodeRespec is a public stale preview diverging from the ops preview
+- **F-PT-INT-A6-1** Low/REAL_DEFECT — CLOSED — Realm-reward grant warns-but-still-grants levels for nodes carrying transactional flags (unlocksSkillIds/selectsSpecialization/kiemYGrant/kiemDaoGrant)
+- **F-PT-INT-A6-2** Nit/REAL_DEFECT — CLOSED — previewNodeRespec could double-list a clawed-back skill if two revoked nodes recorded the same learned skill
+- **F-PT-INT-A6-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — devResetBranch('phap_tu') resets nothing - phap-tu nodes carry elementTag, not branchTag
+- **F-PT-AUT-A7-1** Nit/REAL_DEFECT — CLOSED — Mastery node description underclaims effect scope
+- **F-PT-AUT-A7-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Non-core unknown node ids in nodeLevels pass save validation silently
+- **F-PT-AUT-A7-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Shared maxLevel 2 on tinh_thong nodes accepts a crafted L2 on spell_pathway
+- **F-PT-AUT-A7-4** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Pre-existing violations observed, not chargeable to this diff
+- **F-PT-COR-A7-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Trunk L3-L5 techniqueRank gates reachable at Luyen Khi, not Truc Co
+- **F-PT-COR-A7-2** Nit/REAL_DEFECT — CLOSED — moc_doc_nhiem anchors to a cross-stat-family trunk
+- **F-PT-COR-A7-3** Nit/DOCUMENTATION_DEFECT — CLOSED — kim_tu_phong capstone description underclaims its spec
+- **F-PT-AUT-A8-1** Low/REAL_DEFECT — CLOSED — clawback core leg omits grantsSkillCoreIds-source exemption (latent save-corruption under authoring overlap)
+- **F-PT-AUT-A8-2** Nit/REAL_DEFECT — CLOSED — specializationClaimingNode (singular) dead export
+- **F-PT-AUT-A8-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — unregistered non-core_ nodeLevels ids pass save validation silently
+- **F-PT-COR-A9-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — basic-lane stats are character-scope (domain spell), not per-skill
+- **F-PT-COR-A9-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — moc_doc_am and moc_doc_nhiem are functionally identical
+- **F-PT-COR-A9-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — ailment trunk node descriptions omit the +10% cap note
+- **F-PT-INT-A9-1** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — dryRun kiemY leg lacks apply-side hidden-way gate
+- **F-PT-INT-A9-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Chain C/D specializations remain claim-free (pre-existing)
+- **F-PT-INT-A9-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Preview ops callable mid-battle (read-only)
+- **F-PT-INT-A9-4** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Hidden-way kit skills carry no vfxPresetId
+- **F-PT-INT-A9-5** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Save validation accepts unregistered non-core nodeLevels ids (inert)
+- **F-PT-AUT-B1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Domain switchRoute bypasses revokeNodeOwnership (no grantsSkillCoreIds/orphan cascade)
+- **F-PT-AUT-B2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — New comments authored in unaccented Vietnamese (literal P15 wants English+ASCII)
+- **F-PT-AUT-B3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Pre-existing: chain-skill C/D specialization pairs have no claiming nodes - free-switch persists
+- **F-PT-INT-B1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Crafted-save nodeLevels/purchasedNodeIds bypass realm/reward/claim gates at load (The spend unlockable below Kim Dan, capstone claims free)
+- **F-PT-INT-B2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Unknown node ids in nodeLevels/purchasedNodeIds pass validation silently, immune to respec (dead weight / phantom ownership)
 
 ## Coverage
 
@@ -106,6 +189,7 @@
 
 ## Chronology
 
+- cycle CYCLE-PT-A: STALE; reviews REV-PT-COR-A3,REV-PT-AUT-A3,REV-PT-INT-A3,REV-PT-CLO-5
 
 ## Convergence
 
@@ -113,8 +197,8 @@
 - UNMET C2-census-coverage: coverage COV-I-PT-REWARD-SEAL-STATIC_SEMANTIC=STALE; coverage COV-I-PT-REWARD-SEAL-INDEPENDENT_REVIEW=STALE; coverage COV-I-PT-GRANT-MAXWRITE-STATIC_SEMANTIC=STALE; coverage COV-I-PT-GRANT-MAXWRITE-INDEPENDENT_REVIEW=STALE; coverage COV-I-PT-SKILL-SCOPE-STATIC_SEMANTIC=STALE; coverage COV-I-PT-SKILL-SCOPE-INDEPENDENT_REVIEW=STALE; coverage COV-I-PT-REALM-GATE-STATIC_SEMANTIC=STALE; coverage COV-I-PT-REALM-GATE-INDEPENDENT_REVIEW=STALE; coverage COV-I-PT-PRESENT-TRUTH-STATIC_SEMANTIC=STALE; coverage COV-I-PT-PRESENT-TRUTH-INDEPENDENT_REVIEW=STALE
 - OK C3-no-open: none open
 - UNMET C4-final-gates: no final evidence recorded
-- UNMET C5-sequential: sequential CORRECTNESS→AUTHORITY→INTEGRATION reviews missing
+- OK C5-sequential: sequential phase reviews present
 - UNMET C6-clean-pair: Clean A missing/not CLEAN; Clean B missing/not CLEAN
 - OK C7-mutation-corpus: mutation + corpus satisfied
-- OK C8-terminal-check: independent terminal verifier sealed
+- UNMET C8-terminal-check: no sealed independent TERMINAL_CHECK on the final state
 - OK C9-readiness: brief(s) lack finalConformance evidence: 
