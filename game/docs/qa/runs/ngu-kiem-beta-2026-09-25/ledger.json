@@ -4644,10 +4644,12 @@
    "verificationEvidenceIds": [
     "EV-NK-AUT-A3-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-10"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -4717,10 +4719,12 @@
    "verificationEvidenceIds": [
     "EV-NK-AUT-A3-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-10"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -4778,10 +4782,12 @@
    "verificationEvidenceIds": [
     "EV-NK-AUT-A3-FIX"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-NK-CLO-10"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "CLOSED",
    "rejectionReason": null
   }
  ],
@@ -6337,6 +6343,37 @@
    ],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-NK-CLO-10",
+   "state": {
+    "productStateId": "90acfe897e3bd6d52c288bc8c21f5ef770c91f9d36edafed594c86836fe3817d",
+    "contractId": "f2105ee05f6e1c8c93422e46d5582c2b21c469f8cdbe5d00d1c2725974620902",
+    "attackModelId": "e3ff786f0f1a92e35069ec525b69bed10adc008344e3aedf741813673903e9a8",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 4,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-1171f53a623d445cae841611cc484076",
+   "contextId": "sealed-child-1171f53a623d445cae841611cc484076",
+   "model": "swe-2-max",
+   "role": "closure-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T11:10:26.000Z",
+   "sealedAt": "2026-09-25T11:14:20.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-NK-AUT-A3-1",
+    "F-NK-AUT-A3-2",
+    "F-NK-AUT-A3-3"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [
@@ -7810,6 +7847,72 @@
     "REV-NK-AUT-A3"
    ],
    "capabilityDelta": "contract coverage for way.grantedNodeIds declarations",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-38",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-AUT-A3-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "authority-gap",
+   "missedInvariantIds": [],
+   "escapeReason": "display-name literal hand-duplicated in each consumer channel instead of one authored constant",
+   "applicability": [
+    "display-name fallbacks",
+    "authored text consumed from multiple channels"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "one exported constant per user-facing literal consumed by more than one channel"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-CLO-10"
+   ],
+   "capabilityDelta": "single-authority literals for shared display names",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-NK-39",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-NK-AUT-A3-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "ngu-kiem-beta-2026-09-25",
+   "rootClass": "doc-drift",
+   "missedInvariantIds": [],
+   "escapeReason": "module header claims drifted from the import block as slices accumulated",
+   "applicability": [
+    "module header docs",
+    "import-block claims"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "header claims get updated in the same diff that changes imports"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-NK-CLO-10"
+   ],
+   "capabilityDelta": "header-import parity",
    "status": "CLASSIFIED",
    "policyVersion": null,
    "effectiveFromRun": "ngu-kiem-beta-2026-09-25",
