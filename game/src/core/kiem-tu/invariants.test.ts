@@ -122,7 +122,9 @@ function makeBattle(dynamicBasic: TurnBattleParticipant['dynamicBasic'], defende
   const system = new TurnBattleSystem(combat, 10, EMPTY_CATALOG)
 
   const attacker = makeEntity('attacker', {
-    stats: createBaseStats({ might: 100, accuracyRating: 9999 }),
+    // criticalRate 0 -- a random crit on a later sword inflates its
+    // damage ratio and fails the momentum assertions (unseeded rng).
+    stats: createBaseStats({ might: 100, accuracyRating: 9999, criticalRate: 0 }),
   })
   // blockChance 0 -- a randomly blocked sword would skew any
   // per-instance damage assertion below (default is 0.05).
