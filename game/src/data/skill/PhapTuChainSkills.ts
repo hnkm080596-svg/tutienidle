@@ -450,14 +450,15 @@ export const PHAP_TU_SKILLS: Skill[] = [
         scope: 'primary_target',
       },
     ],
-    // Bien the D (2.3): Quang = all_lanes spread 50%; Tham = area
-    // spread 100% + refresh duration primary.
+    // Bien the D (2.3): chon vung nhaim - Quang = all_lanes
+    // columnRadius 1; Tham = vung 3x3 mac dinh. Payload don muc
+    // tieu chinh giong nhau; khac biet chi la tam nhaim.
     specializations: [
       {
         id: 'lan_doc_quang',
         name: 'Lan Độc · Quảng',
-        description: 'Bóng độc trải khắp các hàng — đòn Mộc giáng vào mục tiêu chính.',
-        // Spec 2.3: Quang = all_lanes columnRadius 1.
+        description: 'Bóng độc trải khắp các hàng — tầm nhắm mở rộng toàn diện, đòn Mộc giáng vào mục tiêu chính.',
+        // Quang widens aim region: all_lanes columnRadius 1.
         targeting: { shape: 'all_lanes', columnRadius: 1 },
         effectsOverride: [
           {
@@ -473,7 +474,7 @@ export const PHAP_TU_SKILLS: Skill[] = [
       {
         id: 'lan_doc_tham',
         name: 'Lan Độc · Thâm',
-        description: 'Độc ngấm thấu xương — đòn Mộc dồn nặng vào mục tiêu chính.',
+        description: 'Độc ngấm thấu xương — tầm nhắm thu gọn 3x3, đòn Mộc dồn vào mục tiêu chính.',
         effectsOverride: [
           {
             type: 'damage',
