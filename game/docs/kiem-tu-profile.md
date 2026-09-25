@@ -1,5 +1,7 @@
 # Hồ sơ KIẾM TU — hiện trạng code (2026-09-02)
 
+> **⚠️ STALE SNAPSHOT (cập nhật 2026-09-25):** đây là inventory đóng băng ngày 2026-09-02 tại `3e2d944` — KHÔNG phải trạng thái hiện tại. Đã superseded bởi: route split Kiếm Trận/Bạt Kiếm retired (P1 canonical path authority, 2026-09-20 — `systems/cultivation-paths.md`); toàn bộ kit cổ (`kiem_tran_*`, `bat_kiem_thuat`, `tru_tien_kiem_tran`, `kiem_khai_thien_mon`) đã gỡ khỏi `Skills.ts`; `Skills.ts` nguyên khối nay là barrel re-export qua per-family files (`data/skill/KiemPhoCombos.ts`, `KiemPhoOrbs.ts`, `NguKiemDaoSkills.ts`, `TurnAnKitSkills.ts`...); wave path-beta đang chạy: KIEM-PHO node tree + combo table (PR #30) và Ngự Kiếm Đạo rework — phi-kiếm ordered queue + Kiếm Ý forge (PR #32). Body dưới giữ nguyên làm lịch sử thiết kế/inventory — tra cứu giá trị hiện tại thì đọc code trực tiếp.
+
 > Nguồn: quét toàn bộ `game/src` + `game/docs`, commit master `3e2d944`. Mọi giá trị trích file + dòng.
 > Tài liệu song song: `kiem-tu-profile.md` ↔ `phap-tu-profile.md`.
 
