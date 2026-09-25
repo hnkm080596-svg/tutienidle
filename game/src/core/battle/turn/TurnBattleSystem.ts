@@ -837,6 +837,14 @@ export class TurnBattleSystem {
     if (this.runtime === undefined) return
     for (const participant of [...battle.players, ...battle.enemies]) {
       if (participant.entity.alive) continue
+      // Ung The -- a dead Tham An mark kills the observer's focus NOW:
+      // the isObserved lazy-clear only runs when a window consults it,
+      // while the HUD reads thamTargetId raw between sweeps.
+      for (const observer of [...battle.players, ...battle.enemies]) {
+        if (observer.thamTargetId === participant.id) {
+          observer.thamTargetId = undefined
+        }
+      }
       const lctx = this.lifecycleRoot(`status.death.${battle.totalTurnsElapsed}.${participant.id}`)
       this.buffs.onEntityDeath(participant.entity.id, lctx)
     }
@@ -1684,16 +1692,6 @@ export class TurnBattleSystem {
     // hoàn toàn bởi charge block (tick → không hit; resolve → hits đã push
     // ở charge block). Cooldown của special đã commit ở charge-init lượt
     // trước, không commit lại ở đây.
-    // Ung The beta -- the holder's next NATURAL action resets Ung Tre /
-    // Qua The (design Part III). 'Performs' means an action actually
-    // executes this turn: a ccBlocked or charge-tick turn performs none
-    // (the charge RESOLVE turn does), matching the income gate's reading
-    // of the same boundary. A queued reactive entry above is not a
-    // natural action and never resets. The The pool is untouched.
-    if (!ccBlocked && (!isCharging || chargeResolved)) {
-      actor.reactionDebt = 0
-    }
-
     if (actor.entity.alive && !ccBlocked && !isCharging) {
       // Slots whose cooldown was (re)committed during this turn's status
       // phase -- value above its pre-update snapshot, or a slot object
@@ -1896,6 +1894,17 @@ export class TurnBattleSystem {
       : isCharging
         ? actor.pendingChargedSkillId ?? chargedSkillId
         : (action?.skillId ?? '')
+
+    // Ung The beta -- the holder's next NATURAL action resets Ung Tre /
+    // Qua The (design Part III). The reset reads the same boundary
+    // actionSource does: a real action (non-empty skillId) or a charge
+    // resolve actually executed this turn; a ccBlocked, charge-tick,
+    // sealed NULL_ACTION, or null-pick turn performs none. A queued
+    // reactive entry is not a natural action and never resets. The The
+    // pool is untouched.
+    if ((action != null && action.skillId !== '') || chargeResolved) {
+      actor.reactionDebt = 0
+    }
 
     return {
       actorId: actor.id,

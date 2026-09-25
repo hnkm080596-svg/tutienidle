@@ -395,6 +395,19 @@ describe('Ung Tre / Qua The (debt boundary + dead-attacker gate)', () => {
     expect(playerP.entity.alive).toBe(true)
   })
 
+  it('a sealed NULL_ACTION turn performs no action - debt and Qua The persist', () => {
+    const { battle, playerP, combat, runtime } = makeBattle()
+    runtime.applyBuff('ung_the', playerP)
+    vi.spyOn(Math, 'random').mockReturnValue(0) // cam_cong application must beat the ailment roll
+    runtime.applyBuff('cam_cong', playerP, undefined, { durationOverride: 3 }) // seals 'attack' - Tham The is the only pick
+    const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY, undefined, runtime)
+    playerP.reactionDebt = REACTION_DEBT_CAP
+    playerP.actionGauge = 10_000
+
+    system.resolveNextStep(battle) // sealed empty declare - nothing performed
+    expect(playerP.reactionDebt).toBe(REACTION_DEBT_CAP)
+  })
+
   it('a charge-tick turn performs no action - debt persists until the resolve turn', () => {
     const { battle, playerP, combat, runtime } = makeBattle()
     const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY, undefined, runtime)
@@ -450,5 +463,22 @@ describe('Dan The one-shot (Dẫn Thế node)', () => {
     system.resolveNextStep(battle) // player turn
     system.resolveNextStep(battle) // enemy observed action -> plain +4 (mark gone)
     expect(playerP.entity.currentThe).toBe(4 + 4 * DAN_THE_INCOME_MULT + 4 + 4)
+  })
+})
+
+describe('Tham An focus lifecycle (cleanA3-INT-2 pin)', () => {
+  it('the observed mark dying clears thamTargetId eagerly — no HUD stale-frame window', () => {
+    const { battle, playerP, enemyP, combat, runtime } = makeBattle()
+    runtime.applyBuff('ung_the', playerP)
+    // One tham_the hit kills the mark - the same action end sweep must
+    // clear the observer's focus (the HUD reads the field raw).
+    enemyP.entity.currentHp = 1
+    playerP.entity.stats = { ...playerP.entity.stats, might: 1_000_000 }
+
+    const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY, undefined, runtime)
+    system.resolveNextStep(battle) // tham_the lands; mark planted then target dies
+
+    expect(enemyP.entity.alive).toBe(false)
+    expect(playerP.thamTargetId).toBeUndefined()
   })
 })
