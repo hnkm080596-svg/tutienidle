@@ -8371,6 +8371,38 @@
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
+  },
+  {
+   "id": "L-TT-52",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-AUT-A10-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "pre-existing",
+   "missedInvariantIds": [],
+   "escapeReason": "lane-parity duplication predates beta diff; new kit leans on it",
+   "applicability": [
+    "damage formula lanes"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "flag duplicated formulas across engine/op lanes for a single-home refactor in a later architecture pass"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-AUT-A10"
+   ],
+   "capabilityDelta": "lane-divergence awareness",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "the-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
   }
  ],
  "messages": [],
