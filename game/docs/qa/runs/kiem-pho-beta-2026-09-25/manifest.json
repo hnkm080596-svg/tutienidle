@@ -717,6 +717,12 @@
       "hash": "b7a61a46f7bcafd4d98968c59b3baf97acd9459898ec9a1039836b4512151fdb"
     },
     {
+      "path": "docs/balance/2026-09-25-kiem-pho-beta-rebaseline.md",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "42fdb16e3358cee5d9c3e1df203d2e019e2aa6dc6ed22a9380b149fb06236a7f"
+    },
+    {
       "path": "docs/design/2026-09-23-hidden-perfection-lineage.md",
       "kind": "file",
       "mode": 33188,
@@ -18228,13 +18234,13 @@
       "path": "src/core/kiem-tu/KiemPhoProvider.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "de5d97ee175108b0e446601f2fc5936814fd8e5b61e4dae6969ac7049aaed452"
+      "hash": "ab24d07fc0e7f6d9b8c8f7c409071068deca20fa9ec0abd8a7f9fde57faf3659"
     },
     {
       "path": "src/core/kiem-tu/KiemPhoProvider.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "304faed943909db3665fbfed8d688c609f5231bb0c683268b7a5950f84ff70bb"
+      "hash": "db8ab73b1f9e94732986b83cd17932402354699223e813e76f7ae1c5832e36f1"
     },
     {
       "path": "src/core/kiem-tu/KiemPhoSystem.test.ts",
@@ -19482,7 +19488,7 @@
       "path": "src/core/simulation/benchmark/BalanceMatrix.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1207eb37916e860d9d79f555c2d310027d2234b65101a3f8f09543273338ca2f"
+      "hash": "d3ba82348fcd267d656991b0309b473260bf4d768bf3c0ab136698ed5e5af479"
     },
     {
       "path": "src/core/simulation/benchmark/BalanceReport.test.ts",
@@ -22971,5 +22977,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "142912cc9490823e64ae8ef2253d01b00573cb831a17008827394404cc9637b5"
+  "productStateId": "1935efed8662be4d37bcdbac6e1afa839b89ca00ff4353dc3db57ba2e336399c"
 }

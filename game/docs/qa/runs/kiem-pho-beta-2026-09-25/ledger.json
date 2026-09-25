@@ -9,9 +9,9 @@
   "checkout": "devin/1790269261-kiem-pho-beta",
   "branch": "devin/1790269261-kiem-pho-beta",
   "base": "master",
-  "head": "fdc88b9fb6001dfc146808fe178ae6c06f2d0965",
+  "head": "21d83ccacc1f9b2a560deb1bc13eef687472a973",
   "state": {
-   "productStateId": "142912cc9490823e64ae8ef2253d01b00573cb831a17008827394404cc9637b5",
+   "productStateId": "1935efed8662be4d37bcdbac6e1afa839b89ca00ff4353dc3db57ba2e336399c",
    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
@@ -1212,12 +1212,16 @@
    ],
    "siblingFindingIds": [],
    "repair": "...gate dropped on add_stacks; inexpressible gate now reported via report(); report threaded into adaptDamageOp/adaptAilmentInteractions (fix rev fdc88b9f)",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-KP-CLOSURE-1"
+   ],
    "verificationEvidenceIds": [
     "EV-KP-FIX-1"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-KP-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null
@@ -1254,15 +1258,36 @@
    "rootCause": "restructure leftover",
    "rootClass": "dead comment",
    "subsystem": "kiem-pho-beta",
-   "siblingSearch": [],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "grep 'Hidden-path|Task 10' across src/ for other scaffold comments",
+     "evidenceIds": [
+      "EV-KP-CLOSURE-1"
+     ],
+     "hitDispositions": [
+      "zero matches - only this one existed"
+     ],
+     "coverageLimits": [
+      "closure-scope"
+     ]
+    }
+   ],
    "siblingFindingIds": [],
    "repair": "comment removed (fix rev fdc88b9f)",
-   "pinEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-KP-CLOSURE-1"
+   ],
    "verificationEvidenceIds": [
     "EV-KP-FIX-1"
    ],
-   "closureReviewIds": [],
-   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [
+    "REV-KP-CLOSURE-1"
+   ],
+   "status": "CLOSED",
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null
@@ -1320,6 +1345,234 @@
    "status": "REJECTED_WITH_PROOF",
    "duplicateOf": null,
    "rejectionReason": "already pinned - KiemTuNodes.test.ts DEC-6 contract test asserts every authored swordPathComboModifier declares minOrbCount or completingOrb; reviewer missed the existing pin",
+   "exception": null
+  },
+  {
+   "id": "F-KP-C4-1",
+   "title": "Balance fingerprint + strengths gate red after kiem-pho beta (oracle re-baseline + the_tu_hien strength loss)",
+   "state": {
+    "productStateId": "2b26f3425cd63e7a4f1cc22f0c5af19cc972530dcdac446fc6b3296617ed597d",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "severity": "High",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/simulation/benchmark/BalanceMatrix.test.ts",
+     "symbolOrSection": "EXPECTED_FINGERPRINTS/strengths",
+     "revision": "f59b0d89",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA CORRECTNESS reviewer (devin-f684f4f8)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "kiem_tu_hien fingerprints drifted and the_tu_hien lost every strength cell",
+   "expected": "fingerprint oracle regenerated with the content change; strengths gate stays green",
+   "actual": "re-baseline landed at 52d480af + it.fails user-exception marker; rebalance deferred to BETA-BALANCE per user ruling",
+   "rootCause": "same defect family as F-KP-CB-C1 (oracle drift + balance exception)",
+   "rootClass": "balance-oracle-drift",
+   "subsystem": "kiem-pho-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "DUPLICATE_LINKED",
+   "duplicateOf": "F-KP-CB-C1",
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-KP-C4-2",
+   "title": "reachableKiemPhoComboIds ignores realmComboMax \u2014 len-5 combos listed reachable where cap is 4",
+   "state": {
+    "productStateId": "2b26f3425cd63e7a4f1cc22f0c5af19cc972530dcdac446fc6b3296617ed597d",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/kiem-tu/KiemPhoProvider.ts",
+     "symbolOrSection": "reachableKiemPhoComboIds",
+     "revision": "f59b0d89",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA CORRECTNESS reviewer (devin-f684f4f8)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "len-5 combo with all orbs unlocked reported reachable at realmIndex 5 though realmComboMax(5)=4 so it can never fire",
+   "expected": "reachable view applies the same length cap as recordCastAndMatch",
+   "actual": "only orb-unlock filtering applied; length cap ignored \u2014 unreachable combos classified as reachable in the metric lane",
+   "rootCause": "derived view diverged from engine cap semantics",
+   "rootClass": "derived-view",
+   "subsystem": "kiem-pho-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "other derived reachable/list views vs engine cap semantics (reachable list, metric lanes, preset editor catalog)",
+     "evidenceIds": [
+      "EV-KP-CLOSURE-1"
+     ],
+     "hitDispositions": [
+      "no sibling: reachableKiemPhoComboIds was the only cap-ignoring view; recordCastAndMatch already enforced cap"
+     ],
+     "coverageLimits": [
+      "closure-scope"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "pattern.length <= realmComboMax(realmIndex) filter added; pin test (soul_transformation excludes len-5, void_refinement includes) at 21d83cca",
+   "pinEvidenceIds": [
+    "EV-KP-CLOSURE-1"
+   ],
+   "verificationEvidenceIds": [
+    "EV-KP-CLOSURE-1"
+   ],
+   "closureReviewIds": [
+    "REV-KP-CLOSURE-1"
+   ],
+   "status": "CLOSED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-KP-C4-3",
+   "title": "crafted save: kiemPhoPreset containing realm-locked orbs passes load validation",
+   "state": {
+    "productStateId": "2b26f3425cd63e7a4f1cc22f0c5af19cc972530dcdac446fc6b3296617ed597d",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/services/save/saveShapeValidation.ts",
+     "symbolOrSection": "kiemPhoPreset",
+     "revision": "f59b0d89",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA CORRECTNESS reviewer (devin-f684f4f8)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "crafted save with preset orbs above realm unlock passes; nextOrb still casts them",
+   "expected": "preset validated against realm unlock at load",
+   "actual": "pre-existing behavior predating this diff \u2014 preset shape-checked but not realm-gated at load",
+   "rootCause": "pre-existing validator surface, unchanged by diff",
+   "rootClass": "derived-view",
+   "subsystem": "kiem-pho-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "pre-existing repository behavior predating this diff; recorded out-of-scope per AGENTS P5 pre-existing rule",
+   "exception": null
+  },
+  {
+   "id": "F-KP-C4-4",
+   "title": "gateOnApplyResult metadata dead on add_buff_stacks path",
+   "state": {
+    "productStateId": "2b26f3425cd63e7a4f1cc22f0c5af19cc972530dcdac446fc6b3296617ed597d",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/KiemPhoCombos.ts",
+     "symbolOrSection": "ailmentInteractions",
+     "revision": "f59b0d89",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA CORRECTNESS reviewer (devin-f684f4f8)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "gate field carried into op payload but add_buff_stacks executor ignores it",
+   "expected": "no dead authored metadata on the op",
+   "actual": "spread carried the flag onto ops whose executor never reads it",
+   "rootCause": "same class as F-KP-3A-1 (dead authored flag on op)",
+   "rootClass": "dead-metadata",
+   "subsystem": "kiem-pho-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "DUPLICATE_LINKED",
+   "duplicateOf": "F-KP-3A-1",
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-KP-C4-5",
+   "title": "crafted empty preset -> nextOrb index crash",
+   "state": {
+    "productStateId": "2b26f3425cd63e7a4f1cc22f0c5af19cc972530dcdac446fc6b3296617ed597d",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/kiem-tu/KiemPhoSystem.ts",
+     "symbolOrSection": "nextOrb",
+     "revision": "f59b0d89",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanA CORRECTNESS reviewer (devin-f684f4f8)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "empty preset array indexed without length guard",
+   "expected": "nextOrb tolerates crafted empty preset",
+   "actual": "pre-existing: validatePreset enforces 1..9 on legal paths; only crafted saves reach the crash",
+   "rootCause": "pre-existing crafted-input edge predating this diff",
+   "rootClass": "derived-view",
+   "subsystem": "kiem-pho-beta",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "crafted-save-only state unreachable by any legal flow; validatePreset guards legal writes",
    "exception": null
   }
  ],
@@ -1432,6 +1685,36 @@
     "451/451 scoped tests + type-check clean on fdc88b9f post AUT-A fixes"
    ],
    "limitations": [],
+   "status": "STALE"
+  },
+  {
+   "id": "EV-KP-CLOSURE-1",
+   "state": {
+    "productStateId": "1935efed8662be4d37bcdbac6e1afa839b89ca00ff4353dc3db57ba2e336399c",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "sealed-child-devin-1723a728c77e48589a839deb531fbc38",
+   "startedAt": "2026-09-24T23:42:00.000Z",
+   "finishedAt": "2026-09-24T23:45:00.000Z",
+   "commandOrMethod": "sealed closure review @21d83cca: type-check + scoped vitest (skilldef/kiem-tu/progression/skill)",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/closure-21d83cca.json",
+   "artifactHash": "067da9be1cb1c786467f907179cb10fbac04859328d99260c86c2ac2335ff3c3",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "all 3 fixes present and semantically correct",
+    "34 files / 452 scoped tests pass"
+   ],
+   "limitations": [
+    "closure-scope only, not a full-state seal"
+   ],
    "status": "CURRENT"
   }
  ],
@@ -1776,6 +2059,74 @@
     "F-KP-3A-1",
     "F-KP-3A-2",
     "F-KP-3A-3"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-KP-COR-4",
+   "state": {
+    "productStateId": "2b26f3425cd63e7a4f1cc22f0c5af19cc972530dcdac446fc6b3296617ed597d",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "round": 4,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-f684f4f818f34de7b8d4d761909c3b10",
+   "contextId": "sealed-child-devin-f684f4f818f34de7b8d4d761909c3b10",
+   "model": "swe-2-max",
+   "role": "correctness",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "pinned to f59b0d89 (stale); verdict adjudicated against fdc88b9f state"
+   ],
+   "startedAt": "2026-09-24T22:50:00.000Z",
+   "sealedAt": "2026-09-24T23:05:00.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-KP-C4-1",
+    "F-KP-C4-2",
+    "F-KP-C4-3",
+    "F-KP-C4-4",
+    "F-KP-C4-5"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-KP-CLOSURE-1",
+   "state": {
+    "productStateId": "1935efed8662be4d37bcdbac6e1afa839b89ca00ff4353dc3db57ba2e336399c",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "round": 5,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-1723a728c77e48589a839deb531fbc38",
+   "contextId": "sealed-child-devin-1723a728c77e48589a839deb531fbc38",
+   "model": "swe-2-max",
+   "role": "closure",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-24T23:42:00.000Z",
+   "sealedAt": "2026-09-24T23:45:00.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-KP-CLOSURE-1"
+   ],
+   "findingIds": [
+    "F-KP-3A-1",
+    "F-KP-3A-2",
+    "F-KP-C4-2"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -2418,6 +2769,134 @@
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
+  },
+  {
+   "id": "L-KP-19",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-KP-C4-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "kiem-pho-beta-2026-09-25",
+   "rootClass": "balance-oracle-drift",
+   "missedInvariantIds": [],
+   "escapeReason": "content change drifted committed fingerprints and removed the_tu_hien strengths \u2014 oracle did its job; user exception recorded instead of rebalance",
+   "applicability": [
+    "committed balance oracles on content-affecting diffs"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "fingerprint re-baseline must land with the content change + docs/balance delta (oracle contract); it.fails exception marker self-flags when gate recovers"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "user-exception pattern: committed it.fails marker + delta doc instead of silent gate suppression",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-KP-20",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-KP-C4-3",
+    "F-KP-C4-5"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "kiem-pho-beta-2026-09-25",
+   "rootClass": "crafted-save-surface",
+   "missedInvariantIds": [],
+   "escapeReason": "two crafted-save edges flagged (preset realm bypass, empty-preset crash) \u2014 both unreachable by legal flows",
+   "applicability": [
+    "crafted-input findings on legal-path-guarded surfaces"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "reviewer checks whether a legal path reaches the state before filing; crafted-only edges go to the pre-existing/constructed ledger"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "constructed-state triage convention: reachable-by-legal-flow check before filing",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-KP-21",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-KP-C4-4"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "kiem-pho-beta-2026-09-25",
+   "rootClass": "dead-metadata",
+   "missedInvariantIds": [],
+   "escapeReason": "authored flag spread onto op payload whose executor never reads it \u2014 same class as F-KP-3A-1 fixed in wave 3A",
+   "applicability": [
+    "op-payload authoring across ailment/buff interactions"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "lint/data test asserts authored fields have a reader on the executor side"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "dead-authored-field detector class for op payloads",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-KP-01",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-KP-3A-1",
+    "F-KP-3A-2",
+    "F-KP-C4-2"
+   ],
+   "incidentEvidenceIds": [
+    "EV-KP-CLOSURE-1"
+   ],
+   "originatingRun": "kiem-pho-beta-2026-09-25",
+   "rootClass": "adapter-inexpressible-flag + scaffold-residue + derived-view-divergence",
+   "missedInvariantIds": [],
+   "escapeReason": "gateOnApplyResult silently emitted onto ops that declare no such lane; derived reachable-view drifted from engine cap; scaffold comment survived refactors",
+   "applicability": [
+    "adapter lanes that emit gate flags",
+    "derived views that mirror engine filtering",
+    "comments tied to task contracts"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "probe: emitted op fields must be declared in AuthoredOperation schema",
+    "probe: derived reachable-views share the engine cap predicate"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "adapter dead-flag + derived-view divergence pattern captured for future reviewers",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
   }
  ],
  "messages": [],
@@ -2549,6 +3028,22 @@
    "payloadPath": "events/0008.json",
    "payloadHash": "92c0534f8574464bab9c25a4b3dc34f4b3d436951ffa716ed432cf6c9d6c0e85",
    "eventHash": "6a7be8f5fef1a7ca2a77b5f3fbf39defb2c6d84b6458e4581b7d4ece82da6c70"
+  },
+  {
+   "seq": 9,
+   "at": "2026-09-24T23:13:41.546Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-128148",
+   "state": {
+    "productStateId": "1935efed8662be4d37bcdbac6e1afa839b89ca00ff4353dc3db57ba2e336399c",
+    "contractId": "68be2876e9dfd864cd4eee13d49f74ee9f3ef6ebcdc7c490d1a37e51f18f6c71",
+    "attackModelId": "f73add73bfbe4c565404d0fc01e2e8650a2ea5bcfe16915d491d134de33495ee",
+    "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+   },
+   "previousEventHash": "6a7be8f5fef1a7ca2a77b5f3fbf39defb2c6d84b6458e4581b7d4ece82da6c70",
+   "payloadPath": "events/0009.json",
+   "payloadHash": "35dda742c9a62f641b3aeac3916d844f0788be928259cad0a31652615d123350",
+   "eventHash": "998b36dfee2d3702480fb1bf8fbb39e578451b0b2a55f37b4810837f99abd9c0"
   }
  ]
 }

@@ -94,20 +94,25 @@ export function buildKiemPhoProvider(
 ): KiemPhoProviderHandle {
   let state: KiemPhoBattleState = initKiemPhoBattle(player)
   const foldedDefs = new Map<OrbId, TurnSkillDefinition>()
-  const orbDef = (orb: OrbId): TurnSkillDefinition => {
+  const orbDef = (orb: OrbId): TurnSkillDefinition | undefined => {
+    const def = KIEM_PHO_ORBS[orb]
+    if (!def) return undefined
     const cached = foldedDefs.get(orb)
     if (cached) return cached
-    const folded = applySkillDefinitionModifiers(KIEM_PHO_ORBS[orb], skillModifiers)
+    const folded = applySkillDefinitionModifiers(def, skillModifiers)
     foldedDefs.set(orb, folded)
     return folded
   }
   const manualDefs = (): TurnSkillDefinition[] =>
-    unlockedOrbs(getRealmIndex(player.realmId)).map(orbDef)
+    unlockedOrbs(getRealmIndex(player.realmId))
+      .map(orbDef)
+      .filter((d): d is TurnSkillDefinition => d !== undefined)
 
   return {
-    resolveBasic(participant: TurnBattleParticipant): TurnSkillDefinition {
+    resolveBasic(participant: TurnBattleParticipant): TurnSkillDefinition | undefined {
       void participant
-      return orbDef(nextOrb(state))
+      const orb = nextOrb(state)
+      return orb === undefined ? undefined : orbDef(orb)
     },
 
     manualOptions(): readonly TurnSkillDefinition[] {
@@ -120,7 +125,7 @@ export function buildKiemPhoProvider(
       // Manual pick validates against realm-unlocked options only; the
       // cast lands in the log via onCastResolved — the cursor does NOT
       // advance (spec §4.1: resuming auto continues where it left off).
-      return manualDefs().includes(def) ? def : null
+      return def !== undefined && manualDefs().includes(def) ? def : null
     },
 
     resetForBattle(): void {

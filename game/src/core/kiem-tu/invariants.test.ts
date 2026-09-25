@@ -190,13 +190,13 @@ describe('INV-1 — way single-owner', () => {
     const provider = buildKiemPhoProvider(player, [])
     const participant = {} as Parameters<typeof provider.resolveBasic>[0]
 
-    const before = [provider.resolveBasic(participant).id, provider.resolveBasic(participant).id]
+    const before = [provider.resolveBasic(participant)!.id, provider.resolveBasic(participant)!.id]
 
     player.swordPath!.kiemY = 777_777
     player.swordPath!.kiemDaoCount = 9
     player.swordPath!.kiemDaoBase = 42
 
-    expect(provider.resolveBasic(participant).id).toBe('orb_dam')
+    expect(provider.resolveBasic(participant)!.id).toBe('orb_dam')
     expect(before).toEqual(['orb_dam', 'orb_chem'])
   })
 
@@ -206,11 +206,11 @@ describe('INV-1 — way single-owner', () => {
     player.swordPath!.kiemDaoBase = 2
 
     const provider = buildNguKiemDaoProvider(player, { a: false, e: false, d: false })
-    const before = provider.resolveBasic({} as TurnBattleParticipant)
+    const before = provider.resolveBasic({} as TurnBattleParticipant)!
 
     player.swordPath!.preset = ['orb_quet', 'orb_hat', 'orb_bo']
 
-    const after = provider.resolveBasic({} as TurnBattleParticipant)
+    const after = provider.resolveBasic({} as TurnBattleParticipant)!
     expect(after.instances?.count).toBe(before.instances?.count)
     expect(after.damage).toEqual(before.damage)
   })
@@ -521,7 +521,7 @@ describe('INV-9 — cascade bounds', () => {
     const rng = vi.fn(() => 0)
     const player = nguPlayer()
     const provider = buildNguKiemDaoProvider(player, { a: false, e: false, d: false }, rng)
-    const def = provider.resolveBasic({} as TurnBattleParticipant)
+    const def = provider.resolveBasic({} as TurnBattleParticipant)!
 
     for (let i = 0; i < 3; i++) {
       const opts = def.instances!.perInstanceOptions!(i, { currentHp: 1, maxHp: 100 } as CombatEntity)
@@ -535,18 +535,18 @@ describe('INV-9 — cascade bounds', () => {
     const player = nguPlayer()
     const eOnly = vi.fn(() => CASCADE_CRIT_CHANCE + 0.001)
     const eProvider = buildNguKiemDaoProvider(player, { a: false, e: true, d: false }, eOnly)
-    eProvider.resolveBasic({} as TurnBattleParticipant).instances!.perInstanceOptions!(0, { currentHp: 100, maxHp: 100 } as CombatEntity)
+    eProvider.resolveBasic({} as TurnBattleParticipant)!.instances!.perInstanceOptions!(0, { currentHp: 100, maxHp: 100 } as CombatEntity)
     expect(eOnly).toHaveBeenCalledTimes(1)
 
     const dOnly = vi.fn(() => CASCADE_PIERCE_CHANCE + 0.001)
     const dProvider = buildNguKiemDaoProvider(player, { a: false, e: false, d: true }, dOnly)
-    dProvider.resolveBasic({} as TurnBattleParticipant).instances!.perInstanceOptions!(0, { currentHp: 100, maxHp: 100 } as CombatEntity)
+    dProvider.resolveBasic({} as TurnBattleParticipant)!.instances!.perInstanceOptions!(0, { currentHp: 100, maxHp: 100 } as CombatEntity)
     expect(dOnly).toHaveBeenCalledTimes(1)
 
     const both = vi.fn(() => 0.999)
     const bothProvider = buildNguKiemDaoProvider(player, { a: true, e: true, d: true }, both)
     // a is deterministic (hp check, no rng); e + d each consume one roll.
-    bothProvider.resolveBasic({} as TurnBattleParticipant).instances!.perInstanceOptions!(0, { currentHp: 100, maxHp: 100 } as CombatEntity)
+    bothProvider.resolveBasic({} as TurnBattleParticipant)!.instances!.perInstanceOptions!(0, { currentHp: 100, maxHp: 100 } as CombatEntity)
     expect(both).toHaveBeenCalledTimes(2)
   })
 
@@ -555,7 +555,7 @@ describe('INV-9 — cascade bounds', () => {
     player.swordPath!.kiemDaoCount = 5 // multi-instance required for the break-on-death half
     const rng = vi.fn(() => 0)
     const provider = buildNguKiemDaoProvider(player, { a: true, e: true, d: true }, rng)
-    const def = provider.resolveBasic({} as TurnBattleParticipant)
+    const def = provider.resolveBasic({} as TurnBattleParticipant)!
 
     const opts = def.instances!.perInstanceOptions!(0, { currentHp: 20, maxHp: 100 } as CombatEntity)
     expect(opts.damageMultiplier).toBe(EXECUTE_MULT)
@@ -655,8 +655,8 @@ describe('INV-13 — manual/auto parity', () => {
     const participant = {} as Parameters<typeof autoProvider.resolveBasic>[0]
 
     // Advance auto cursor to orb_chem (slot 2), then compare defs.
-    autoProvider.resolveBasic(participant)
-    const autoDef = autoProvider.resolveBasic(participant)
+    autoProvider.resolveBasic(participant)!
+    const autoDef = autoProvider.resolveBasic(participant)!
     const manualDef = manualProvider.resolveManualPick!('orb_chem')
 
     expect(manualDef).toBe(autoDef) // same authored def object
@@ -731,7 +731,7 @@ describe('INV-15 — precursor lock (K3)', () => {
     // identity), not a Skill-backed conversion of the precursor 'tram'.
     const runtime = resolveCultivationPathRuntime(player, PATH_RUNTIME_STUB_DEPS)
 
-    expect(runtime.resolveBasic(player)).toBe(SWORD_BASIC)
+    expect(runtime.resolveBasic(player)!).toBe(SWORD_BASIC)
     expect(unlockedOrbs(1)).toContain('orb_dam')
   })
 })

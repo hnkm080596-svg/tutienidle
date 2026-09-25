@@ -331,8 +331,10 @@ export interface DynamicBasicCastContext {
  * the basic slot - participant.basic becomes inert.
  */
 export interface DynamicBasicProvider {
-  /** Auto path - resolves the definition for the next auto basic cast. */
-  resolveBasic(participant: TurnBattleParticipant): TurnSkillDefinition
+  /** Auto path - resolves the definition for the next auto basic cast. May
+   * return undefined when it cannot resolve a def; the caller falls back
+   * to participant.basic. */
+  resolveBasic(participant: TurnBattleParticipant): TurnSkillDefinition | undefined
   /** Definitions the manual UI may legitimately submit. */
   manualOptions?(): readonly TurnSkillDefinition[]
   /**

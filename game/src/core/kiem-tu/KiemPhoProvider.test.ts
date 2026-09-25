@@ -35,9 +35,9 @@ describe('KiemPhoProvider', () => {
     const provider = buildKiemPhoProvider(hienPlayer(['orb_dam', 'orb_chem']), [])
     const participant = {} as Parameters<typeof provider.resolveBasic>[0]
 
-    expect(provider.resolveBasic(participant).id).toBe('orb_dam')
-    expect(provider.resolveBasic(participant).id).toBe('orb_chem')
-    expect(provider.resolveBasic(participant).id).toBe('orb_dam')
+    expect(provider.resolveBasic(participant)!.id).toBe('orb_dam')
+    expect(provider.resolveBasic(participant)!.id).toBe('orb_chem')
+    expect(provider.resolveBasic(participant)!.id).toBe('orb_dam')
   })
 
   it('combo fires on the third orb_dam and returns the nhat_tuyen extra def', () => {
@@ -143,7 +143,7 @@ describe('KiemPhoProvider', () => {
 
     expect(provider.resolveManualPick!('orb_bo')).toBeNull()          // realm 3 orb at realm 2
     expect(provider.resolveManualPick!('orb_chem')?.id).toBe('orb_chem')
-    expect(provider.resolveBasic(participant).id).toBe('orb_dam')      // cursor still 0
+    expect(provider.resolveBasic(participant)!.id).toBe('orb_dam')      // cursor still 0
   })
 
   it('manual picks land in the log and can complete a combo', () => {
@@ -162,7 +162,7 @@ describe('KiemPhoProvider', () => {
     const provider = buildKiemPhoProvider(hienPlayer(['orb_chem']), [])
     const participant = {} as Parameters<typeof provider.resolveBasic>[0]
 
-    provider.resolveBasic(participant) // cursor -> 1... preset len 1 so wraps to 0
+    provider.resolveBasic(participant)! // cursor -> 1... preset len 1 so wraps to 0
     provider.onCastResolved!(castCtx('orb_dam'))
     provider.onCastResolved!(castCtx('orb_dam'))
 

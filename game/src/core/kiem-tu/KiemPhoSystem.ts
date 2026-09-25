@@ -97,7 +97,8 @@ export function initKiemPhoBattle(player: PlayerData): KiemPhoBattleState {
 /** Auto-cast pick (spec §4.1): preset[cursor], cursor advances mod
  *  preset.length. Manual picks do NOT call this — they leave the cursor
  *  where auto left it. */
-export function nextOrb(state: KiemPhoBattleState): OrbId {
+export function nextOrb(state: KiemPhoBattleState): OrbId | undefined {
+  if (state.preset.length === 0) return undefined
   const orb = state.preset[state.cursor % state.preset.length]!
   state.cursor = (state.cursor + 1) % state.preset.length
   return orb

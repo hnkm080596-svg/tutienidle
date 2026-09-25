@@ -340,8 +340,8 @@ describe('KIEM PHO BETA - node seams (design sec.10-12)', () => {
     const provider = buildFor(player)
     const participant = {} as Parameters<typeof provider.resolveBasic>[0]
 
-    const damDef = provider.resolveBasic(participant)
-    const chemDef = provider.resolveBasic(participant)
+    const damDef = provider.resolveBasic(participant)!
+    const chemDef = provider.resolveBasic(participant)!
     expect(damDef.damage!.multiplier).toBeCloseTo(1 * (1 + 0.08 * 5), 6)
     expect(chemDef.damage!.multiplier).toBe(1.2) // untouched
   })
@@ -354,7 +354,7 @@ describe('KIEM PHO BETA - node seams (design sec.10-12)', () => {
     const provider = buildFor(player)
     const participant = {} as Parameters<typeof provider.resolveBasic>[0]
 
-    const damDef = provider.resolveBasic(participant)
+    const damDef = provider.resolveBasic(participant)!
     expect(damDef.armorPolicy?.pierceFractionOnFail).toBeCloseTo(0.3, 6)
     expect(damDef.armorPolicy?.bypassChance).toBeUndefined()
 
