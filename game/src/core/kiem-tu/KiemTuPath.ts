@@ -5,11 +5,10 @@ import type {
   CultivationWayId,
 } from '../player/CultivationPathKit'
 import type { PlayerData } from '../player/Player'
-import { freshSwordPathState, KIEM_PHO_ORB_IDS } from './KiemTuState'
+import { freshSwordPathState, KIEM_PHO_ORB_IDS, kiemDaoCap } from './KiemTuState'
 import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
 import { KIEM_PHO_BUFFS } from '../../data/buff/KiemPhoBuffs'
 import { NGU_KIEM_THUAT } from '../../data/skill/NguKiemDaoSkills'
-import { kiemDaoCap } from './NguKiemDao'
 import { getRealmIndex } from '../realm/realmSystem'
 import { REALMS } from '../../data/realms/realm'
 
@@ -28,7 +27,7 @@ import { REALMS } from '../../data/realms/realm'
 //
 // Dependency direction: this file never imports back into the
 // catalog/authority layer -- runtime imports are the sibling slice
-// factory (KiemTuState), the sibling domain (NguKiemDao), the realm
+// leaf (KiemTuState: state factory + realm-bound formulas), the realm
 // helpers, and the leaf data catalogs (REALMS / RealmPassiveLadder /
 // KIEM_PHO_BUFFS / NGU_KIEM_THUAT), so domain code (NodeSystem/
 // NguKiemDao) can consume the way predicates without a runtime cycle.

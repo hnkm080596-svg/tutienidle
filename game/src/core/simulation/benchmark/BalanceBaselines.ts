@@ -8,6 +8,7 @@ import { createDefaultPlayer, type PlayerData } from '../../player/Player'
 import { CAST_LEVELING_THRESHOLDS } from '../../skill/SkillSystem'
 import { reachableKiemPhoComboIds } from '../../kiem-tu/KiemPhoProvider'
 import { SPELL_BASICS } from '../../../data/skill/TurnBasicAttacks'
+import { CORE_SKILLS } from '../../../data/skill/CoreSkills'
 import type { CultivationPathId, CultivationWayId } from '../../player/CultivationPathKit'
 import { freshSwordPathState } from '../../kiem-tu/KiemTuState'
 import type {
@@ -85,6 +86,13 @@ function mortalBuild(): SimBuildSnapshot {
 // mid-progress state) so every cast emits 2 ordered instances and the
 // second actually exercises the Lien momentum multiplier - count=1
 // leaves the factor pinned at 1 and the lane unmeasured.
+//
+// Reachable post-ritual shape (F-NK-COR-A4-1 / F-NK-AUT-A4-2): the
+// offerGate requires tram Lv3 - core_tram:3 is the level authority, so
+// the mortal value is inherited rather than overwritten; every leveled
+// node id must appear in purchasedNodeIds (the core_* mirror rule save
+// validation enforces), and the mortal precursor skills a real player
+// learned stay learned (P7-M4 learned-set membership).
 function hiddenNguFoundationBuild(): SimBuildSnapshot {
   const player = mortalSourcePlayer()
   player.realmId = 'foundation_establishment'
@@ -94,18 +102,35 @@ function hiddenNguFoundationBuild(): SimBuildSnapshot {
   player.swordPath = { ...freshSwordPathState(), kiemDaoCount: 2 }
   player.nodeLevels = {
     ...player.nodeLevels,
-    core_tram: 1,
     core_ngu_kiem_thuat: 1,
     ngu_kiem_khoi: 1,
     ngu_kiem_lien: 1,
   }
   player.purchasedNodeIds = [
     'core_tram',
+    'core_huy_quyen',
     'core_ngu_kiem_thuat',
     'ngu_kiem_khoi',
     'ngu_kiem_lien',
   ]
-  return { player, skills: [], techniques: [] }
+  // Mortal precursors remain learned: core_tram:3 -> tram L3, the
+  // linh_bao cast count sits at its Lv3 threshold, core_huy_quyen:3 ->
+  // huy_quyen L3. ngu_kiem_thuat itself is a kit-minted
+  // TurnSkillDefinition, not a Skill - it never enters this list.
+  const precursor = (id: string, level: number) => {
+    const def = CORE_SKILLS.find((skill) => skill.id === id)
+    if (def === undefined) {
+      throw new Error(`missing precursor skill def ${id}`)
+    }
+    return { ...def, level }
+  }
+  const skills = [
+    precursor('tram', 3),
+    // linh_bao cast count sits at its Lv3 threshold -> learned at L3.
+    precursor('linh_bao', 3),
+    precursor('huy_quyen', 3),
+  ]
+  return { player, skills, techniques: [] }
 }
 
 const NO_ECONOMY: ExpectedEconomy = {

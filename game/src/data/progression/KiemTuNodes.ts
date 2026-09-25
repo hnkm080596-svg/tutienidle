@@ -261,7 +261,8 @@ const NGU_EVOLUTION_NODES: ProgressionNode[] = [
     description: 'Tầng tiếp theo của Ngự Kiếm — chưa mở.',
     type: 'major',
     role: 'keystone',
-    insightCost: 3,
+    // grantedOnly below makes any cost unreachable - 0 like khoi.
+    insightCost: 0,
     maxLevel: 1,
     prerequisites: [
       { kind: 'node', nodeId: 'ngu_kiem_lien' },
