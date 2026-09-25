@@ -413,6 +413,46 @@ describe('tran_the battle flow', () => {
     // ratio - the enemy is Chan An-marked by the phan_chan cast.
     expect(reflects).toEqual([tank!.entity.stats.maxHp * PHAN_CHAN_MARKED_RATIO])
   })
+
+  it('a fully-warded hit (hpDamage=0) queues no reflect', () => {
+    const { gameManager, combatSource, player } = makeTranPlayerCompanion()
+    player.realmId = 'foundation_establishment'
+    player.techniqueProgress = { rank: 5, grade: 2 }
+    gameManager.progressionOps.purchaseNode('major_phan_chan', player)
+    const enemy = makeDummy('e2e_ward_reflect', { might: 100, attackSpeed: 0.5 })
+    const battle = startBattle(gameManager, combatSource, player, enemy)
+    const [tank, companion] = battle.players
+    const enemyP = battle.enemies[0]!
+
+    const enemyPos = { row: enemyP.entity.row, x: enemyP.entity.x }
+    companion!.entity.row = enemyPos.row
+    companion!.entity.x = enemyPos.x - 1
+    tank!.entity.x = Math.max(0, enemyPos.x - 8)
+
+    // Native ward pool sized to absorb every hit - hpDamage stays
+    // 0, so the taken-gate never queues a reflect.
+    tank!.entity.currentWard = tank!.entity.stats.maxHp * 100
+
+    const reflects: number[] = []
+    gameManager.eventBus.on<EntityVitalsChangedEvent>('entity_vitals_changed', (event) => {
+      if (event.reason === 'reflection' && event.entityId === enemyP.entity.id) {
+        reflects.push(event.amount)
+      }
+    })
+
+    const hpBefore = tank!.entity.currentHp
+    const wardBefore = tank!.entity.currentWard
+    // Wait for at least one absorbed hit: ward drops, hp does not.
+    expect(
+      advanceUntil(
+        combatSource,
+        () => tank!.entity.currentWard < wardBefore,
+        400,
+      ),
+    ).toBe(true)
+    expect(tank!.entity.currentHp).toBe(hpBefore)
+    expect(reflects).toEqual([])
+  })
 })
 
 describe('hidden_body build wiring (Task 14)', () => {

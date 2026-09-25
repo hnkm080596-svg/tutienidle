@@ -123,7 +123,7 @@ function selectNode(nodeId: string) {
 function onCardClick(col: RootColumn, card: SkillCardDef) {
   // A sealed/abandoned special still selects its major node - the
   // inspector surfaces the realm/prerequisite lock reasons.
-  selectNode(card.nodeId === col.rootNodeId ? col.rootNodeId : card.nodeId)
+  selectNode(card.nodeId)
 }
 </script>
 

@@ -21,6 +21,7 @@ import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import NodeTreePanel from './skill-path/NodeTreePanel.vue'
 import TheTuTreePanel from './skill-path/TheTuTreePanel.vue'
 import NodeInspector from './skill-path/NodeInspector.vue'
@@ -140,11 +141,28 @@ function onSelectNode(node: ProgressionNode, purchased: boolean, purchasable: bo
   centerMode.value = 'tree'
 }
 
+// In-battle the engine rejects every nodeLevels write (purchaseNode /
+// upgradeNode / levelUpSkill all gate on isTurnBattleInProgress) -
+// disable the inspector buttons instead of offering a dead click.
+const inBattle = computed(() => {
+  stateVersion.value
+
+  const battle = gameManager.getTurnBattle()
+
+  return battle !== null && isBattleInProgress(battle.state)
+})
+
 // Node vừa mua xong vẫn đang là selectedNode — refresh trạng thái
 // purchased/purchasable hiển thị ở inspector theo state mới nhất mỗi
 // khi nodeLevels/skillInsight đổi, không chờ người chơi bấm lại vào node.
+// The summed level term catches waived-cost upgrades (a level bump
+// without an Insight spend changes no other key).
 watch(
-  () => [Object.keys(player.nodeLevels).length, player.skillInsight] as const,
+  () => [
+    Object.keys(player.nodeLevels).length,
+    Object.values(player.nodeLevels).reduce((sum, level) => sum + level, 0),
+    player.skillInsight,
+  ] as const,
   () => {
     if (!selectedNode.value) {
       return
@@ -370,6 +388,7 @@ function close() {
           :node="selectedNode"
           :purchased="selectedNodePurchased"
           :purchasable="selectedNodePurchasable"
+          :in-battle="inBattle"
           @unlocked="onNodeUnlocked"
         />
       </div>

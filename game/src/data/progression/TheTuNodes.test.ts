@@ -91,6 +91,16 @@ describe('TheTuNodes — root mutex + realm gates (INV-2)', () => {
       owner.realmId = 'foundation_establishment'
       // M-F-TECHNIQUE (F5) - at realm index 2 the grade-1 cycle is
       // sealed: the mirror shows the caught-up in-band grade-2 cycle.
+      const hasRankGate = (gated.prerequisites ?? []).some(
+        (prerequisite) => prerequisite.kind === 'techniqueRank',
+      )
+      if (hasRankGate) {
+        owner.techniqueProgress = { rank: 4, grade: 2 }
+        expect(
+          canPurchaseNode(owner, gated),
+          `${gated.id} stays closed at foundation_establishment with techniqueRank<5`,
+        ).toBe(false)
+      }
       owner.techniqueProgress = { rank: 5, grade: 2 }
       expect(canPurchaseNode(owner, gated), `${gated.id} opens at foundation_establishment`).toBe(true)
     }

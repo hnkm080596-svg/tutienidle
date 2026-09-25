@@ -526,6 +526,13 @@ export class GameManagerProgressionOps {
    * per node data; cannot exceed maxLevel; failure mutates nothing.
    */
   upgradeNode(nodeId: string, player: PlayerData): boolean {
+    // Same battle gate as purchaseNode: an upgrade writes the same
+    // player.nodeLevels the running battle reads only through minted
+    // clones - reject instead of silently applying nothing mid-fight.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     if (!this.deps.nodeRegistry.has(nodeId)) {
       return false
     }
@@ -671,6 +678,12 @@ export class GameManagerProgressionOps {
    * injected dep so GameManager stays the notification owner.
    */
   levelUpSkill(skillId: string, player: PlayerData): boolean {
+    // Same battle gate as purchaseNode/upgradeNode - the core upgrade
+    // below writes player.nodeLevels mid-fight would never apply.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     const coreId = skillCoreNodeId(skillId)
 
     if (!this.deps.nodeRegistry.has(coreId)) {
