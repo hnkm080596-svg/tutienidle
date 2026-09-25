@@ -55,7 +55,7 @@ export interface CultivationPathRuntime {
     participant: TurnBattleParticipant,
     hasActiveBuff: (definitionId: BuffDefinitionId) => boolean,
   ): SurviveLethalSource[]
-  /** Emblem/marker slot overrides (Ngu Kiem Dao special/ultimate). */
+  /** Emblem/marker slot overrides (retained contract - no current producer). */
   emblemSlots?(): { special?: TurnSkillDefinition; ultimate?: TurnSkillDefinition }
   /**
    * P7-M4 - presentation-only label for a provider-backed basic (the

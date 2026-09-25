@@ -113,7 +113,8 @@ export interface SkillInstances {
   /** may query player state (Ngu Kiem Dao kiemDaoCount) */
   count: ScalarExpression
   each?: {
-    /** phi kiem never miss -> hitPolicy.guaranteedHit */
+    /** guaranteedHit field: generic contract; phi kiem uses standard-hit (can miss) */
+
     guaranteedHit?: boolean
     /** live-target hp% at EXECUTE -> execute-branch coefficient fold */
     execute?: { hpPercentBelow: ScalarExpression; damageMultiplier: number }

@@ -290,8 +290,7 @@ export interface TurnSkillDefinition {
   /**
    * Emblem-occupying slot def: never selectable by
    * selectAction/selectForcedAction, never deals damage. Two producers:
-   * - Kiem Tu Reimagined Task 9 - Ngu Kiem Dao HUD emblem markers render
-   *   on the bar as slot occupants for presentation to label.
+   * - (retained contract; the Ngu Kiem redesign removed emblem markers - no current producer)
    * - The Tu Reimagined (spec 2026-09-15 section 5.2) - passive emblems;
    *   their permanent buff lands via grantsBuffsAtBuild.
    */
