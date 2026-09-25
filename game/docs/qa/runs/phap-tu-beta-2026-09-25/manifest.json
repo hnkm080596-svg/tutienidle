@@ -14658,7 +14658,7 @@
       "path": "src/components/panels/skill-path/NodeTreePanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "ea46641e402bd0a1084e525ffa4e4cd97cd60e3c772f43da83d282af4e96a377"
+      "hash": "c849eee995f3333814b145179954e1521730d66ae972bbb1898772991e2b8445"
     },
     {
       "path": "src/components/panels/skill-path/SkillConnections.vue",
@@ -18042,7 +18042,7 @@
       "path": "src/core/game/GameManagerProgressionOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e48c631b67137fe3a7b29a39cda060e9946985615b806d6467df0c325e20081f"
+      "hash": "7176644233e31b601ac37f03acd75531987ae0db106e6858303d10aed2860d78"
     },
     {
       "path": "src/core/game/GameManagerQuestOps.ts",
@@ -18582,7 +18582,7 @@
       "path": "src/core/player/CultivationPathSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6e57446481aa51e7d6ebd398b8c501d3cdd88c6fbab543a689ba356383f388fc"
+      "hash": "fa269c8c9bffbc6b25b296d7c4b01b4d9687db11cacce28b6c2dc80852538a5c"
     },
     {
       "path": "src/core/player/PersistentTimedEffect.ts",
@@ -18936,13 +18936,13 @@
       "path": "src/core/progression/NodeSystem.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6513e90abe598e95f943047175f232611d425c54a19e96eb16f801a127b5002f"
+      "hash": "2e5808f31b274071ed27cb31079557e9ea2b7858d96355cbd4639f0856111678"
     },
     {
       "path": "src/core/progression/NodeSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "34e9b17a266aed13e48716bcc76c6cdb29155fdaa1e4aa16c163fc9058aaea42"
+      "hash": "8e1520b92bc82ee8d71aced9d559a946fd1240ef2884f62c57dd121f68a81af1"
     },
     {
       "path": "src/core/progression/NodeSystem.vanDao.test.ts",
@@ -20760,7 +20760,7 @@
       "path": "src/data/progression/PhapTuNodes.builders.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "95cea471758be7ff44bc4000db88854f24d005d2a9458686df1b5116431a0b69"
+      "hash": "86a1d2f3dd9e715750fc77bf17a14ad9e52b81dd22d4995984750e9e02d0699c"
     },
     {
       "path": "src/data/progression/PhapTuNodes.reimagined.test.ts",
@@ -21720,13 +21720,13 @@
       "path": "src/locales/en.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "ae46b13497c70cdd73875ba4dde87143f204653af3a8806eb6d2c91f745c7305"
+      "hash": "da9579f6bd68074bc387af646a3513f0faa565962563379f2148ab329af561fe"
     },
     {
       "path": "src/locales/vi.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "e9e22d737a9edc3aa06c5132426ed824bd8f378e967cae9ecbdfcc788d4743a5"
+      "hash": "1a698f1d7592dc12bb13a91003676a80455f567d976494c78ec9d7ddc09c5612"
     },
     {
       "path": "src/main-process/combatClockHost.test.ts",
@@ -22314,7 +22314,7 @@
       "path": "src/services/save/saveShapeValidation.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "52003818758fc4be90fd6306b71c9df144ebd991ba48222ea7828effd6fc044e"
+      "hash": "ab12b5b0394422d6e680a0f28820e7b08f7b312f448259a0d4caa5e90d188e5f"
     },
     {
       "path": "src/services/save/SaveSystem.bootRestore.test.ts",
@@ -23073,5 +23073,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "0b666d95ea006e05885b0fdc4a90640300afeafcf1803c6320b30c392f6f4e39"
+  "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56"
 }

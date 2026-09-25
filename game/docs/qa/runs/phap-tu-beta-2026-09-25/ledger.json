@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "5f0d296be768afe76b07b46358a7766bae0ac28d",
   "state": {
-   "productStateId": "0b666d95ea006e05885b0fdc4a90640300afeafcf1803c6320b30c392f6f4e39",
+   "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -9859,11 +9859,13 @@
    "siblingFindingIds": [],
    "repair": "reuse computeNodeRefund(node, level, record) inside paidForNodeLevels (keep 0.75 route tax at call sites)",
    "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-PT-INT-A6-FIX"
+   ],
    "closureReviewIds": [],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "FIXED_PENDING_PROOF",
    "rejectionReason": null
   },
   {
@@ -9923,11 +9925,13 @@
    "siblingFindingIds": [],
    "repair": "extend RouteSwitchPreview with the same clawback legs respec preview reports (unlearn/core-refund/spec-clear/kiemY-kiemDao)",
    "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-PT-INT-A6-FIX"
+   ],
    "closureReviewIds": [],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "FIXED_PENDING_PROOF",
    "rejectionReason": null
   },
   {
@@ -10051,11 +10055,13 @@
    "siblingFindingIds": [],
    "repair": "import canonical ELEMENT_LABELS in builders.ts and delete the local map (labels gain proper diacritics)",
    "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-PT-INT-A6-FIX"
+   ],
    "closureReviewIds": [],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "FIXED_PENDING_PROOF",
    "rejectionReason": null
   },
   {
@@ -10115,11 +10121,13 @@
    "siblingFindingIds": [],
    "repair": "validator reuses getNodeMaxLevel (Math.max(1,...)) for the same bound writers apply",
    "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-PT-INT-A6-FIX"
+   ],
    "closureReviewIds": [],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
+   "status": "FIXED_PENDING_PROOF",
    "rejectionReason": null
   },
   {
@@ -10179,12 +10187,198 @@
    "siblingFindingIds": [],
    "repair": "remove the domain-level previewNodeRespec export (zero callers) so ops preview is the only authority",
    "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-PT-INT-A6-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-PT-INT-A6-1",
+   "title": "Realm-reward grant warns-but-still-grants levels for nodes carrying transactional flags (unlocksSkillIds/selectsSpecialization/kiemYGrant/kiemDaoGrant)",
+   "state": {
+    "productStateId": "684a3dbab78879281abb32f162b5df266be9d5c2617d3723e59323d9dabd92d1",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathSystem.ts",
+     "symbolOrSection": "grantedNodeLevels transactional-flag block",
+     "revision": "5392bfb7",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-772ce2edc3094daf997fabbe6dbdeb53",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "all six authored rewardOnly nodes are clean - no live record hits the path; content-authoring hazard",
+   "expected": "transactional nodes refused like the non-rewardOnly/core_/grantsSkillCoreIds rejects in the same loop",
+   "actual": "warn-only, still writes the clamped level",
+   "rootCause": "warn-then-continue asymmetry vs. the adjacent hard reject",
+   "rootClass": "authority-inconsistency",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "sealed integration review - grep + source trace per checklist seam",
+     "hitDispositions": [
+      "single surface"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "warn + skip the write (fixed a27ad402)",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-PT-INT-A6-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-PT-INT-A6-2",
+   "title": "previewNodeRespec could double-list a clawed-back skill if two revoked nodes recorded the same learned skill",
+   "state": {
+    "productStateId": "684a3dbab78879281abb32f162b5df266be9d5c2617d3723e59323d9dabd92d1",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": "clawback preview unlearnedSkillIds push loop",
+     "revision": "5392bfb7",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-772ce2edc3094daf997fabbe6dbdeb53",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "unreachable today: no two authored nodes share an unlocksSkillIds member",
+   "expected": "preview unlearnedSkillIds mirrors apply's effective single unlearn per unique skill",
+   "actual": "live skillManager.has() never flips mid-dry-run so a shared skill is pushed twice, over-reporting the dialog count",
+   "rootCause": "missing dedupe in the mirrored loop",
+   "rootClass": "preview-divergence",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "sealed integration review - grep + source trace per checklist seam",
+     "hitDispositions": [
+      "single surface"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "dedupe via includes() guard (fixed a27ad402)",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-PT-INT-A6-FIX"
+   ],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-PT-INT-A6-3",
+   "title": "devResetBranch('phap_tu') resets nothing - phap-tu nodes carry elementTag, not branchTag",
+   "state": {
+    "productStateId": "684a3dbab78879281abb32f162b5df266be9d5c2617d3723e59323d9dabd92d1",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/progression/NodeSystem.ts",
+     "symbolOrSection": "devResetBranch branchTag filter",
+     "revision": "5392bfb7",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/data/progression/PhapTuNodes.builders.ts",
+     "symbolOrSection": "no branchTag on any phap-tu node",
+     "revision": "5392bfb7",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-772ce2edc3094daf997fabbe6dbdeb53",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "no UI calls devResetBranch with a phap-tu tag; cosmetic dev-console gap only",
+   "expected": "branch-scoped dev reset keyed 'phap_tu' would clear phap-tu lanes",
+   "actual": "zero phap-tu nodes match branchTag==='phap_tu' (they use elementTag)",
+   "rootCause": "tag-vocabulary mismatch predating this diff",
+   "rootClass": "pre-existing",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core",
+      "src/data",
+      "src/components",
+      "src/services"
+     ],
+     "termsAndMethod": "sealed integration review - grep + source trace per checklist seam",
+     "hitDispositions": [
+      "single surface"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
    "verificationEvidenceIds": [],
    "closureReviewIds": [],
    "duplicateOf": null,
    "exception": null,
-   "status": "REPAIR_AUTHORIZED",
-   "rejectionReason": null
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "pre-existing shape at merge-base: devResetBranch keys on node.branchTag while phap-tu nodes use elementTag per element; not introduced by this diff; cosmetic dev-console gap only"
   }
  ],
  "evidence": [
@@ -11330,6 +11524,39 @@
    "invariantIds": [],
    "limitations": [
     "scoped suite only; closure seal performed by sealed child reviewer on detached 5392bfb7"
+   ],
+   "result": "PASS",
+   "status": "STALE"
+  },
+  {
+   "id": "EV-PT-INT-A6-FIX",
+   "state": {
+    "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+   "commandOrMethod": "npm run type-check && npx vitest run src/core/player/CultivationPathSystem src/core/game/GameManagerProgressionOps src/core/progression/NodeSystem.test.ts",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T10:18:20.000Z",
+   "finishedAt": "2026-09-25T10:18:53.000Z",
+   "inputPaths": [
+    "src/core/player/CultivationPathSystem.ts",
+    "src/core/game/GameManagerProgressionOps.ts",
+    "src/core/progression/NodeSystem.test.ts"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/int-a6-fix.log",
+   "artifactHash": "2c1ce355732d4b70393e87aec2f6969dbc0eb56e549451dc455c2b050b55cf5b",
+   "claims": [
+    "type-check PASS and 114 scoped tests green on a27ad402 covering the INT-A6 grant-skip and clawback-dedupe fixes and the earlier AUT-A6 fix set"
+   ],
+   "invariantIds": [],
+   "limitations": [
+    "scoped suite only"
    ],
    "result": "PASS",
    "status": "CURRENT"
@@ -13348,7 +13575,7 @@
     "F-PT-COR-A5-4"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-AUT-A5",
@@ -13379,7 +13606,7 @@
     "F-PT-AUT-A5-3"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-INT-A5",
@@ -13406,7 +13633,7 @@
    "evidenceIds": [],
    "findingIds": [],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-CLO-12",
@@ -13442,7 +13669,7 @@
     "F-PT-AUT-A5-3"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-COR-A6",
@@ -13471,7 +13698,7 @@
     "F-PT-COR-A6-2"
    ],
    "novelAttackIds": [],
-   "status": "SEALED",
+   "status": "STALE",
    "previousPhaseReviewId": null
   },
   {
@@ -13504,6 +13731,37 @@
     "F-PT-AUT-A6-4",
     "F-PT-AUT-A6-5",
     "F-PT-AUT-A6-6"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PT-INT-A6",
+   "state": {
+    "productStateId": "684a3dbab78879281abb32f162b5df266be9d5c2617d3723e59323d9dabd92d1",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 19,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-772ce2edc3094daf997fabbe6dbdeb53",
+   "contextId": "sealed-child-772ce2edc3094daf997fabbe6dbdeb53",
+   "model": "swe-2-max",
+   "role": "integration-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T09:47:08.000Z",
+   "sealedAt": "2026-09-25T10:11:42.778Z",
+   "previousPhaseReviewId": "REV-PT-AUT-A6",
+   "reviewedAfterPreviousFixes": false,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-INT-A6-1",
+    "F-PT-INT-A6-2",
+    "F-PT-INT-A6-3"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -16706,6 +16964,36 @@
    "recurrenceFindingIds": [],
    "preventionEvidenceIds": [],
    "guidance": null
+  },
+  {
+   "id": "L-PT-71",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-INT-A6-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "pre-existing-out-of-scope",
+   "missedInvariantIds": [],
+   "escapeReason": "review-surface gap",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "diff-inherited debt is recorded, not silently fixed"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-PT-INT-A6"
+   ],
+   "capabilityDelta": "diff-inherited debt is recorded, not silently fixed",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": "phap-tu-beta-2026-09-25",
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
   }
  ],
  "messages": [],
@@ -17637,6 +17925,54 @@
    "payloadPath": "events/0058.json",
    "payloadHash": "d491ae273ae4e25c9f070cc86c8edc5cfd7928e9cb824fa63dc88f70c1e7d3c1",
    "eventHash": "faa9d22170beabc279faa36e52a9bcfc4fe5b513a30ee0b0c196e8a00c676db0"
+  },
+  {
+   "seq": 59,
+   "at": "2026-09-25T10:16:52.504Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "faa9d22170beabc279faa36e52a9bcfc4fe5b513a30ee0b0c196e8a00c676db0",
+   "payloadPath": "events/0059.json",
+   "payloadHash": "4e53a3253866c421e4bbee30d31bf8e6ed1163c33ef158330c67ffb8a8cc1f48",
+   "eventHash": "da67699c1bc50773b84bb8a2e0081cfb7645f735f3dc43aa76c759c4dddf4e2c"
+  },
+  {
+   "seq": 60,
+   "at": "2026-09-25T10:19:37.086Z",
+   "kind": "EVIDENCE",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "da67699c1bc50773b84bb8a2e0081cfb7645f735f3dc43aa76c759c4dddf4e2c",
+   "payloadPath": "events/0060.json",
+   "payloadHash": "161b6528d82795f509425df983e81a4b73d17240f0260b840f7b62c83f02dace",
+   "eventHash": "2112b26e637d29e30797c7606817689f74e633650603abe5d661b0bddb57c6ce"
+  },
+  {
+   "seq": 61,
+   "at": "2026-09-25T10:19:50.620Z",
+   "kind": "EVIDENCE",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "2112b26e637d29e30797c7606817689f74e633650603abe5d661b0bddb57c6ce",
+   "payloadPath": "events/0061.json",
+   "payloadHash": "90a901d9a519fb124187d682943854683e70e598dae93e1bb83e5dbd2931c263",
+   "eventHash": "8363f9616500f4aca7e7824688828b172844ed7770630c433833318df5a64300"
   }
  ]
 }
