@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "5f0d296be768afe76b07b46358a7766bae0ac28d",
   "state": {
-   "productStateId": "f5678d3189429d3c8409706ec66ae9b9b29d8a15afdc72e8154cd03122248e4d",
+   "productStateId": "25aed25d2142bede38d783e958aec2815e1a5707912b64045224c45e96273d0b",
    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -8761,6 +8761,306 @@
    "exception": null,
    "status": "CLOSED",
    "rejectionReason": null
+  },
+  {
+   "id": "F-PT-COR-A3-1",
+   "title": "respec confirm modal never renders the new clawback preview legs",
+   "state": {
+    "productStateId": "25aed25d2142bede38d783e958aec2815e1a5707912b64045224c45e96273d0b",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/components/panels/skill-path/NodeTreePanel.vue",
+     "symbolOrSection": "respec ConfirmModal + locale body",
+     "revision": "7d9035c8",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-9628ec3d16964f268b3c90443bfbef88",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "ops preview returns clawback legs (unlearnedSkillIds, clearedSpecializations, kiemY, kiemDao, refund) while ConfirmModal interpolates only {regain, count}",
+   "expected": "the respec confirm discloses every consequence the preview produces",
+   "actual": "clawback legs produced by GameManagerProgressionOps.previewNodeRespec are unconsumed by NodeTreePanel - a respec that unlearns skills, clears spec claims or debits swords discloses none of it",
+   "rootCause": "clawback field added to the preview contract without a UI consumer",
+   "rootClass": "ui-disclosure-gap",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/components",
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "clean-A reviewer sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null,
+   "fixedInRevision": null,
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-PT-COR-A3-2",
+   "title": "wood elementApplicationPercent nodes conditional-only vs doc_chuong ailmentChance 1.0",
+   "state": {
+    "productStateId": "25aed25d2142bede38d783e958aec2815e1a5707912b64045224c45e96273d0b",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuBasicNodes.ts",
+     "symbolOrSection": "moc_doc_nhuan/moc_doc_nhiem",
+     "revision": "7d9035c8",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-9628ec3d16964f268b3c90443bfbef88",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "ApplicationResolver clamps chance to [0,1]; doc_chuong base ailmentChance is 1",
+   "expected": "per-node +10%/direction with real effect",
+   "actual": "the pair only matters under moc_lan_doc (0.7 chance) or vs ailmentResistPercent enemies",
+   "rootCause": "base ailment already applies at certainty on resist-free targets",
+   "rootClass": "conditional-utility",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/components",
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "clean-A reviewer sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "real effect under moc_lan_doc (0.7 chance) and vs ailmentResistPercent enemies; conditional utility is honest design, no defect",
+   "fixedInRevision": null,
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-PT-COR-A3-3",
+   "title": "ngo_dao_hon_don lacks iconKey (monogram fallback)",
+   "state": {
+    "productStateId": "25aed25d2142bede38d783e958aec2815e1a5707912b64045224c45e96273d0b",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/skill/TurnSkillDisplayMeta.ts",
+     "symbolOrSection": "ngo_dao_hon_don",
+     "revision": "7d9035c8",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-9628ec3d16964f268b3c90443bfbef88",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "TURN_SKILL_DISPLAY_META entry ngo_dao_hon_don has name/desc but no iconKey",
+   "expected": "display meta per reachable Phap Tu skill",
+   "actual": "passive emblem falls back to monogram while An-kit actives carry manifest icons",
+   "rootCause": "icons authored for actives only; passives share monogram fallback",
+   "rootClass": "cosmetic-asymmetry",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/components",
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "clean-A reviewer sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "monogram fallback is consistent with every other passive emblem in TURN_SKILL_DISPLAY_META; spec only required reachable actives",
+   "fixedInRevision": null,
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-PT-AUT-A3-1",
+   "title": "comment claims realm-reward nodes carry no requiredWay - the_thuc_tinh does",
+   "state": {
+    "productStateId": "25aed25d2142bede38d783e958aec2815e1a5707912b64045224c45e96273d0b",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuNodes.ts",
+     "symbolOrSection": "buildRealmRewardNodes comment",
+     "revision": "7d9035c8",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-b3291aba9e0045eca0484191e570d034",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "the_thuc_tinh def sets requiredWay:'spell_pathway'; the comment says the stamping map output has 'no requiredWay, so both spell ways see the realm-reward nodes'",
+   "expected": "comment reflects authored requiredWay on the_thuc_tinh",
+   "actual": "code correct; comment imprecise",
+   "rootCause": "comment written against the map, not the authored defs",
+   "rootClass": "text/consistency",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/components",
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "clean-A reviewer sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null,
+   "fixedInRevision": null,
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "id": "F-PT-AUT-A3-2",
+   "title": "respecNodeTree rewardOnly-root early-return undocumented",
+   "state": {
+    "productStateId": "25aed25d2142bede38d783e958aec2815e1a5707912b64045224c45e96273d0b",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/progression/NodeSystem.ts",
+     "symbolOrSection": "respecNodeTree scope.rootId rewardOnly guard",
+     "revision": "7d9035c8",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-b3291aba9e0045eca0484191e570d034",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "scope.rootId pointing at a rewardOnly node returns targets=[] early, unlike the preserved-root path that sweeps descendants",
+   "expected": "consistent handling documented (sweep or refusal)",
+   "actual": "undocumented refusal; unreachable in practice - zero kind:'node' prereqs reference reward-only nodes",
+   "rootCause": "guard existed without its rationale",
+   "rootClass": "missing-rationale",
+   "subsystem": "phap-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/components",
+      "src/core",
+      "src/data"
+     ],
+     "termsAndMethod": "clean-A reviewer sweep",
+     "hitDispositions": [
+      "no same-class sibling found"
+     ],
+     "coverageLimits": [
+      "reviewer-scope audit"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null,
+   "fixedInRevision": null,
+   "closedAt": null,
+   "closeReason": null
   }
  ],
  "evidence": [
@@ -9811,7 +10111,7 @@
    "invariantIds": [],
    "limitations": [],
    "result": "PASS",
-   "status": "CURRENT"
+   "status": "STALE"
   }
  ],
  "coverage": [
@@ -11591,7 +11891,7 @@
     "F-PT-FA-6"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-CLO-8",
@@ -11617,6 +11917,67 @@
    "coverageIds": [],
    "evidenceIds": [],
    "findingIds": [],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PT-COR-A3",
+   "state": {
+    "productStateId": "f5678d3189429d3c8409706ec66ae9b9b29d8a15afdc72e8154cd03122248e4d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 4,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-9628ec3d16964f268b3c90443bfbef88",
+   "contextId": "sealed-child-9628ec3d16964f268b3c90443bfbef88",
+   "model": "swe-2-max",
+   "role": "clean-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T06:34:37.000Z",
+   "sealedAt": "2026-09-25T06:57:42.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-COR-A3-1",
+    "F-PT-COR-A3-2",
+    "F-PT-COR-A3-3"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-PT-AUT-A3",
+   "state": {
+    "productStateId": "f5678d3189429d3c8409706ec66ae9b9b29d8a15afdc72e8154cd03122248e4d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 4,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-b3291aba9e0045eca0484191e570d034",
+   "contextId": "sealed-child-b3291aba9e0045eca0484191e570d034",
+   "model": "swe-2-max",
+   "role": "clean-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T06:34:39.000Z",
+   "sealedAt": "2026-09-25T06:49:25.000Z",
+   "previousPhaseReviewId": "REV-PT-COR-A3",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PT-AUT-A3-1",
+    "F-PT-AUT-A3-2"
+   ],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -14104,6 +14465,62 @@
    "policyVersion": null,
    "effectiveFromRun": null,
    "guidance": null
+  },
+  {
+   "id": "L-PT-56",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-COR-A3-2"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "conditional/cosmetic",
+   "missedInvariantIds": [],
+   "escapeReason": "reviewer nit",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "none - adjudicated non-actionable"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "adjudicated with proof",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
+  },
+  {
+   "id": "L-PT-57",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PT-COR-A3-3"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-beta-2026-09-25",
+   "rootClass": "conditional/cosmetic",
+   "missedInvariantIds": [],
+   "escapeReason": "reviewer nit",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "none - adjudicated non-actionable"
+   ],
+   "promotionEvidenceIds": [],
+   "preventionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "adjudicated with proof",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null
   }
  ],
  "messages": [],
@@ -14971,6 +15388,22 @@
    "payloadPath": "events/0054.json",
    "payloadHash": "f7c1736b61595d5e084435565a3e2b280bc9c7bdcf2df5e87ec83d85a0053136",
    "eventHash": "7e3a0dc4654f64fd081861acf9fa113e777578de4694045fafa7ad0be342cc35"
+  },
+  {
+   "seq": 55,
+   "at": "2026-09-25T07:02:32.786Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "25aed25d2142bede38d783e958aec2815e1a5707912b64045224c45e96273d0b",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "7e3a0dc4654f64fd081861acf9fa113e777578de4694045fafa7ad0be342cc35",
+   "payloadPath": "events/0055.json",
+   "payloadHash": "12638b47176ff40fc51475223ac1f9e671406e9669180b5022161826425dd581",
+   "eventHash": "e11d1e7fa276d71a9fd61d7df1a2fd9d09244ecc4fd00921a2b92c26a4cfeb11"
   }
  ]
 }
