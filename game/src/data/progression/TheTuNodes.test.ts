@@ -126,7 +126,7 @@ describe('TheTuNodes — node -> collector -> kit-def delivery', () => {
     player.nodeLevels[kinh.id] = 2
 
     const mods = collectBodyKitModifiers(registry, player)
-    expect(mods.tranKinhStacksBonus).toBe(2)
+    expect(mods.tranKinhWeakenRatio).toBeCloseTo(0.3)
 
     const kit = buildTheTuKit('tran_the', mods)
     const application = kit.basic.appliesAilments?.find((entry) => entry.buffDefinitionId === 'tran_kinh')

@@ -14,6 +14,7 @@ import {
   HO_MON_MARKER,
   PHAN_CHAN_BUFF,
   PHAN_MON_MARKER,
+  TRAN_KINH_WEAKEN_RATIO,
   TRO_MON_MARKER,
   UNG_THE_BUFF,
 } from '../buff/TheTuBuffs'
@@ -488,13 +489,15 @@ export function buildTheTuKit(
     // Tran Kinh rider - the tran_kinh weaken application exists only
     // while the node is owned; node levels add stacks (statModifier
     // flat scales x stacks).
-    if (mods.tranKinhStacksBonus > 0) {
+    if (mods.tranKinhWeakenRatio > 0) {
       kit.basic.appliesAilments = [
         ...(kit.basic.appliesAilments ?? []),
         {
           buffDefinitionId: 'tran_kinh',
           chance: 1,
-          stacks: 1 + Math.floor(mods.tranKinhStacksBonus),
+          stacks:
+            1 +
+            Math.round(mods.tranKinhWeakenRatio / TRAN_KINH_WEAKEN_RATIO),
         },
       ]
     }

@@ -586,7 +586,7 @@ function collectCastableDefs(): Census {
     loanDauPaidHpBonus: 0,
     missingHpBonusBonus: 0,
     tranApMaxHpRatioBonus: 0,
-    tranKinhStacksBonus: 0,
+    tranKinhWeakenRatio: 0,
     reflectMaxHpRatioBonus: 0,
     reflectMarkedRatioBonus: 0,
   }

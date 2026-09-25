@@ -275,3 +275,45 @@ describe('reflect settles once per hostile action after the action completes (T3
     expect(actor.entity.alive).toBe(false)
   })
 })
+
+describe('post-mortem retaliation (spec 2.5: dead holder still reflects)', () => {
+  it('a reflect holder killed by the triggering hit still emits ONE reflection at flush', () => {
+    // Enemy actor: lethal might so the triggering hit kills the holder.
+    const attackerEntity = createCombatant('enemy', {
+      stats: createBaseStats({ might: 999_999, speed: 100, criticalRate: 0, evasionRate: 0, dexterity: 0, maxHp: 1_000_000 }),
+    })
+    attackerEntity.baseStats = attackerEntity.stats
+
+    // Fragile holder: dies to the hit, but its reflect is maxHp-derived.
+    const holderEntity = createCombatant('player', {
+      type: 'player', row: 4,
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0, maxHp: 100 }),
+    })
+    holderEntity.baseStats = holderEntity.stats
+
+    const attacker = makeParticipant('enemy', attackerEntity)
+    const holder = makeParticipant('player', holderEntity)
+
+    const combat = new CombatSystem(new EventBus())
+    const runtime = makeTurnRuntime({
+      registry: REGISTRY,
+      participants: () => [attacker, holder],
+      combatSystem: combat,
+    })
+    const battle: TurnBattle = { players: [holder], enemies: [attacker], state: 'fighting' }
+    const system = new TurnBattleSystem(combat, 10_000, REGISTRY, undefined, runtime)
+
+    applyReflect(runtime, holder, SOFT_REFLECT)
+
+    const declared = aoeDeclared(attacker, battle)
+    declared.opposingSide = battle.players
+    declared.affected = [holder]
+
+    const damageSpy = vi.spyOn(combat, 'applyModifiedDirectDamage')
+    system.applyActionImpact(battle, declared)
+
+    expect(holder.entity.alive).toBe(false)
+    // Post-mortem: the dead holder still emits its one reflect.
+    expect(damageSpy.mock.calls.filter((c) => c[3] === 'reflection')).toHaveLength(1)
+  })
+})

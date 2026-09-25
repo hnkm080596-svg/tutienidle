@@ -184,6 +184,12 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
         0,
         Math.min(source.stats.maxHp * op.coefficient, source.currentHp - 1),
       )
+      if (paid <= 0) {
+        throw new CombatOperationSkip(
+          'blocked_by_restriction',
+          `sacrifice source '${sourceId}' has no payable HP (paid=${paid})`,
+        )
+      }
       const hpDamage = this.combat.applyDirectDamage(target, paid, sourceId, 'sacrifice')
       return { rawDamage: paid, hpDamage, killed: !target.alive }
     }
@@ -216,7 +222,7 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
     }
 
     if (op.damageProfile === 'reflection') {
-      // phan_chinh Reflection: the hit-layer multiplier applies through
+      // phan_chan Reflection: the hit-layer multiplier applies through
       // the REFLECTING holder as attacker; vitals reason 'reflection'.
       // A dead holder still reflects (legacy passed the entity object).
       const holder = this.resolveEntity(sourceId)

@@ -145,10 +145,16 @@ re-authored), **MISSING** (net-new seam).
   `source.stats.maxHp * ratio` into the physical raw base **before**
   mitigation). A small might multiplier remains as the secondary term.
 - Trọng Thế node → `tranApMaxHpRatioBonus` (adds to the ratio on the clone).
-- Trấn Kình node → `tranKinhWeakenRatio`: the clone gains an `appliesAilments`
-  landed-gate debuff `tran_kinh` (no DoT; a `finalDamagePercent` penalty on the
-  marked enemy's next resolved damage hit — implemented as a per_target,
-  consume-on-hit debuff via the existing `next_damage` modifier lifetime).
+- Trấn Kình node → `tranKinhWeakenRatio` (0.15/level): the clone gains an
+  `appliesAilments` landed-gate debuff `tran_kinh` (no DoT; a
+  `finalDamagePercent` penalty on the marked enemy, stacked at
+  `1 + ratio/TRAN_KINH_WEAKEN_RATIO` → L1 −0.30 … L5 −0.90). Beta model:
+  one-holder-turn weaken window covering the enemy's next hostile turn —
+  accepted deviation from the design's consume-on-next-hit wording
+  ("Không cần duration dài"): the buff engine has no next-action-damage
+  consume channel and adding one is deferred to BETA-BALANCE where the
+  magnitude curve is re-tuned anyway (design also allows deferring the
+  whole node without breaking the Trấn fantasy).
 
 ### 2.5 Phản Chấn (Special, TC, Trấn Thể)
 
@@ -177,7 +183,11 @@ re-authored), **MISSING** (net-new seam).
   self/reflect → never queued (no landed gate / self-target / 'reflection'
   profile has no gate); reflect rolls no hit/crit (`canMiss/canCrit:false`),
   consumes no turn (op, not action), never recurses (reflection profile → no
-  gate → no re-queue), never consumes Chấn Ấn.
+  gate → no re-queue), never consumes Chấn Ấn; post-mortem retaliation —
+  a holder killed by the triggering hit still reflects at the flush (the
+  authored amount derives from holder.maxHp, never live vitals; legacy
+  semantics and the Trấn Thể tanking fantasy), while a dead *attacker*
+  always skips (no target).
 - Flush site: `TurnBattleSystem.applyActionImpact` tail (before
   `resolveAllyActionWindow`), gated on `runtime !== undefined` — covers plan
   casts; the legacy lane never had reflect (no `rollReactiveTrigger` call

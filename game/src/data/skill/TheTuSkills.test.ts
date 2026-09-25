@@ -224,7 +224,7 @@ describe('buildTheTuKit — beta slot gates + node modifiers reach def clones on
     const mods = collectBodyKitModifiers(
       registryWith([
         makeNode('tt_the_1', { tranApMaxHpRatioBonus: 0.06 }),
-        makeNode('tt_kinh_1', { tranKinhStacksBonus: 1 }),
+        makeNode('tt_kinh_1', { tranKinhWeakenRatio: 0.15 }),
         makeNode('tt_cot_1', { reflectMaxHpRatioBonus: 0.01 }),
         makeNode('tt_an_1', { reflectMarkedRatioBonus: 0.02 }),
       ]),

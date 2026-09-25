@@ -170,7 +170,7 @@ const TRAN_BASIC_BRANCH: ProgressionNode[] = [
     maxLevel: 5,
     upgradeCost: GROWTH_5,
     prerequisites: [{ kind: 'node', nodeId: 'tran_the' }],
-    effect: { bodyKitModifiers: { tranKinhStacksBonus: 1 } },
+    effect: { bodyKitModifiers: { tranKinhWeakenRatio: 0.15 } },
     branchTag: 'the_tu',
   },
 ]

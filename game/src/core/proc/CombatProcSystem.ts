@@ -220,7 +220,10 @@ export class CombatProcSystem {
     for (const entry of entries) {
       const holder = this.deps.resolveEntity(entry.holderId)
       const attacker = this.deps.resolveEntity(entry.attackerId)
-      if (holder === undefined || !holder.alive) continue
+      // Post-mortem retaliation: a holder killed by the triggering hit
+      // still reflects -- the authored amount derives from maxHp, not
+      // live vitals (legacy semantics + Tran The tanking fantasy).
+      if (holder === undefined) continue
       if (attacker === undefined || !attacker.alive) continue
 
       // Mark check at FLUSH time (post-settle): a Chấn Ấn instance the

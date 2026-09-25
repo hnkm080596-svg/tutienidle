@@ -22,9 +22,10 @@ export interface BodyKitModifierValues {
   missingHpBonusBonus: number
   /** Trong The: adds to tran_ap's damage.sourceMaxHpRatio (Max-HP conversion). */
   tranApMaxHpRatioBonus: number
-  /** Tran Kinh: +stacks on tran_ap's tran_kinh ailment application
-      (statModifier.flat scales x stacks). */
-  tranKinhStacksBonus: number
+  /** Tran Kinh: adds to the tran_kinh weaken ratio per node level
+      (each TRAN_KINH_WEAKEN_RATIO of it adds one stack on the
+      tran_ap tran_kinh application). */
+  tranKinhWeakenRatio: number
   /** Chan Cot: adds to phan_chan's reflectsDamage.maxHpRatio. */
   reflectMaxHpRatioBonus: number
   /** Tran An: adds to phan_chan's reflectsDamage.markedMaxHpRatio (Chan An amplification). */
@@ -39,7 +40,7 @@ const ZERO_MODIFIERS: BodyKitModifierValues = {
   loanDauPaidHpBonus: 0,
   missingHpBonusBonus: 0,
   tranApMaxHpRatioBonus: 0,
-  tranKinhStacksBonus: 0,
+  tranKinhWeakenRatio: 0,
   reflectMaxHpRatioBonus: 0,
   reflectMarkedRatioBonus: 0,
 }
