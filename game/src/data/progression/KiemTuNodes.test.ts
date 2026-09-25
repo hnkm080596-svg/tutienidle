@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { KIEM_TU_NODES } from './KiemTuNodes'
-import { ORB_UNLOCK_REALM } from '../skill/KiemPhoOrbs'
+import { KIEM_PHO_ORBS, ORB_UNLOCK_REALM } from '../skill/KiemPhoOrbs'
+import { KIEM_PHO_BUFFS } from '../buff/KiemPhoBuffs'
 
 // Kiem Pho Beta (docs/specs/kiem-pho-beta-spec.md) - the tree under
 // test: 8 kiem_pho nodes - one four-role branch per beta orb (Dam at
@@ -199,6 +200,37 @@ describe('KiemTuNodes - swordPathComboModifier predicate contract (DEC-6)', () =
         m.minOrbCount !== undefined || m.completingOrb !== undefined,
         `${n.id} authors a swordPathComboModifier with no predicate - it can never match`,
       ).toBe(true)
+    }
+  })
+})
+
+
+describe('KiemTuNodes - authored-id resolution contract', () => {
+  // A typo'd skillId/buffId matches nothing at fold and the purchased
+  // node is silently inert - authored ids must resolve against the
+  // authored registries, same as the DEC-6 predicate pin's sibling.
+  it('every skillDefinitionModifiers.skillId resolves against KIEM_PHO_ORBS', () => {
+    for (const n of KIEM_TU_NODES) {
+      for (const m of n.effect.skillDefinitionModifiers ?? []) {
+        expect(
+          m.skillId in KIEM_PHO_ORBS,
+          `${n.id} targets unknown skillId ${m.skillId} - node would be silently inert`,
+        ).toBe(true)
+      }
+    }
+  })
+
+  it('every addAilmentInteractions buffId resolves against KIEM_PHO_BUFFS', () => {
+    const buffIds = new Set(KIEM_PHO_BUFFS.map(b => b.id))
+    for (const n of KIEM_TU_NODES) {
+      for (const m of n.effect.skillDefinitionModifiers ?? []) {
+        for (const i of m.addAilmentInteractions ?? []) {
+          expect(
+            buffIds.has(i.buffId),
+            `${n.id} targets unknown buffId ${i.buffId} - interaction would bind no instance`,
+          ).toBe(true)
+        }
+      }
     }
   })
 })
