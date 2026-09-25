@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "bdc04bf9",
   "state": {
-   "productStateId": "4a274821084ae1e71d574f66d56fbb732c1099bdc84c6920b7f69029917bfc98",
+   "productStateId": "032e6c7d0259fcfa8ee64db5169b8c89d79483310750e79ceea6c18069663a53",
    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -4406,6 +4406,170 @@
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null
+  },
+  {
+   "id": "F-TT-AUT-A10-1",
+   "title": "TheTuTreePanel COLUMNS hard-code node topology; a broken id degrades silently",
+   "state": "4a274821084ae1e7",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/components/panels/skill-path/TheTuTreePanel.vue",
+     "symbolOrSection": "COLUMNS/nodeOf",
+     "revision": "8f0ada4d",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-f9c11ff6f8bd44a4a5432fad0fc8c864",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "nodeOf returns undefined for unmatched id; card renders with empty name and no select emit - renamed id = dead card with no visible fault",
+   "expected": "a broken authored id fails loudly",
+   "actual": "silent dead card",
+   "rootCause": "fixed slot grid with silent undefined fallback",
+   "rootClass": "adjudicated",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/components/panels/skill-path"
+     ],
+     "termsAndMethod": "checked other panels (SkillPathPanel, PhapTuTreePanel) for duplicate-id maps",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no other hard-coded id lists"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": {
+    "commit": "4042f730",
+    "approach": "setup-time guard: flatten all COLUMNS-referenced ids and console.warn on any missing registry entry"
+   },
+   "pinEvidenceIds": [
+    "EV-TT-A10-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-A10-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-TT-AUT-A10-2",
+   "title": "Dead compat re-export of ReactiveActionSource/isNaturalActionSource",
+   "state": "4a274821084ae1e7",
+   "severity": "Nit",
+   "classification": "DOCUMENTATION_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": ":386-390 re-export block",
+     "revision": "8f0ada4d",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-f9c11ff6f8bd44a4a5432fad0fc8c864",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "comment claims re-export for existing consumers but no consumer imports either name from TurnBattleSystem (TSPR reads ProcCapabilities directly)",
+   "expected": "no dead compat paths",
+   "actual": "dead re-export + misleading comment",
+   "rootCause": "leftover from cycle-break migration",
+   "rootClass": "adjudicated",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/battle"
+     ],
+     "termsAndMethod": "grep isNaturalActionSource/ReactiveActionSource consumers",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "only TSPR, importing ProcCapabilities"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": {
+    "commit": "4042f730",
+    "approach": "removed the re-export block and stale comment"
+   },
+   "pinEvidenceIds": [
+    "EV-TT-A10-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-A10-FIX"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-TT-AUT-A10-3",
+   "title": "Missing-HP scalar formula duplicated across the two hit lanes (A9)",
+   "state": "4a274821084ae1e7",
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "applyMissingHpScalar",
+     "revision": "8f0ada4d",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/runtime/scheduler/adapters/CombatSystemDamageAdapter.ts",
+     "symbolOrSection": "toActionDamageInfo",
+     "revision": "8f0ada4d",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-f9c11ff6f8bd44a4a5432fad0fc8c864",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "bonus = min(cap, (1 - currentHp/maxHp) * perPercent * 100) implemented in both lanes - documented parity, tuning change to one silently diverges",
+   "expected": "single formula home",
+   "actual": "copied rule in two owners (pre-existing at merge-base)",
+   "rootCause": "pre-existing lane-parity architecture",
+   "rootClass": "pre-existing",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/battle"
+     ],
+     "termsAndMethod": "verified duplication exists at merge-base be1bdf8d (git show) - not introduced by this diff",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "pre-existing at base confirmed"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "rejected: pre-existing at merge-base be1bdf8d - the missing-HP scalar parity between engine-unit lane and op lane predates this diff (Huyet Cuong kit leans on it, does not introduce it). Consolidating the lanes is out-of-scope architecture work for the beta branch",
+   "exception": null
   }
  ],
  "evidence": [
@@ -5047,7 +5211,41 @@
    ],
    "limitations": [],
    "result": "PASS",
-   "status": "CURRENT"
+   "status": "STALE"
+  },
+  {
+   "id": "EV-TT-A10-FIX",
+   "version": 1,
+   "kind": "EXECUTED",
+   "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+   "commandOrMethod": "npm run type-check && npx vitest run theTuBeta reflection TheTuBuffs theTuE2E theTuKit TheTuNodes TheTuSkills SkillCoreNodes respec",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T17:04:00.000Z",
+   "finishedAt": "2026-09-25T17:07:00.000Z",
+   "inputPaths": [
+    "src/components/panels/skill-path/TheTuTreePanel.vue",
+    "src/core/battle/turn/TurnBattleSystem.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "artifactPath": "evidence/fix-verify-a10.log",
+   "artifactHash": "a6990d08d753c61641707b5793151d00b4e1a01d14ec93b5499c2923f951bc33",
+   "claims": [
+    "vue-tsc clean",
+    "95 scoped tests green after column missing-id guard + dead re-export removal"
+   ],
+   "limitations": [
+    "scoped scope only"
+   ],
+   "result": "pass",
+   "status": "CURRENT",
+   "state": {
+    "productStateId": "032e6c7d0259fcfa8ee64db5169b8c89d79483310750e79ceea6c18069663a53",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   }
   }
  ],
  "coverage": [],
@@ -6182,7 +6380,7 @@
     "F-TT-INT-A9-2"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-TT-CLO-14",
@@ -6210,6 +6408,32 @@
     "EV-TT-A9-FIX"
    ],
    "findingIds": [],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-TT-AUT-A10",
+   "state": "4a274821084ae1e7",
+   "round": 10,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-f9c11ff6f8bd44a4a5432fad0fc8c864",
+   "contextId": "sealed-child-f9c11ff6f8bd44a4a5432fad0fc8c864",
+   "model": "swe-2-max",
+   "role": "AUTHORITY",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T16:37:49.000Z",
+   "sealedAt": "2026-09-25T17:03:47.000Z",
+   "previousPhaseReviewId": "REV-TT-AUT-A9",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-AUT-A10-1",
+    "F-TT-AUT-A10-2",
+    "F-TT-AUT-A10-3"
+   ],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -8470,6 +8694,22 @@
    "payloadPath": "events/0020.json",
    "payloadHash": "1d71596cc739d42e8f84a1f044662ac4f0454b53c5fbd13a1683021843348206",
    "eventHash": "9dc4c8534d6c7f3e7548641ad05f12209fb14297578564459a0c11baba477ea5"
+  },
+  {
+   "seq": 21,
+   "at": "2026-09-25T17:05:27.617Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-406257",
+   "state": {
+    "productStateId": "032e6c7d0259fcfa8ee64db5169b8c89d79483310750e79ceea6c18069663a53",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "9dc4c8534d6c7f3e7548641ad05f12209fb14297578564459a0c11baba477ea5",
+   "payloadPath": "events/0021.json",
+   "payloadHash": "7f600dde6ff74bcaf6682f9953aa3436c9483cf13d9912e8442b0ce296f977c1",
+   "eventHash": "268cf8b09cc1c097b19ef8a463163113a2c37b8b84a2b2c3610a50fee18174a7"
   }
  ]
 }
