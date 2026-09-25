@@ -276,6 +276,9 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
     }
 
     const scaling = op.scaling !== undefined ? { scaling: op.scaling } : {}
+    // sourceMaxHpRatio is physical-only (resolveActionHit reads it on
+    // kind==='physical'); attaching it to elemental/primordial results
+    // would silently drop the field.
     const maxHpBase =
       op.sourceMaxHpRatio !== undefined ? { sourceMaxHpRatio: op.sourceMaxHpRatio } : {}
     const components = op.components ?? []
@@ -283,10 +286,10 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
       return { kind: 'physical', multiplier, ...scaling, ...maxHpBase }
     }
     if (components.length === 1 && components[0]!.kind === 'primordial') {
-      return { kind: 'primordial', multiplier, ...scaling, ...maxHpBase }
+      return { kind: 'primordial', multiplier, ...scaling }
     }
     if (components.length > 0) {
-      return { kind: 'elemental', components: [...components], multiplier, ...scaling, ...maxHpBase }
+      return { kind: 'elemental', components: [...components], multiplier, ...scaling }
     }
     if (op.element !== undefined && op.element !== 'physical') {
       return {
@@ -294,7 +297,6 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
         components: [{ kind: 'element', element: op.element, ratio: 1 }],
         multiplier,
         ...scaling,
-        ...maxHpBase,
       }
     }
     return { kind: 'physical', multiplier, ...scaling, ...maxHpBase }

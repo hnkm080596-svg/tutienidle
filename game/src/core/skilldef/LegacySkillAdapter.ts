@@ -201,6 +201,17 @@ function adaptOne(
   const isSelfScope = def.targetScope === 'self'
 
   // --- Primary lane ---------------------------------------------------
+  // A no-damage def carrying sacrifice fields produces neither op nor
+  // payoff - surface it like every other unsupported authored field.
+  if (
+    def.damage === undefined &&
+    (def.sacrificeMaxHpRatio !== undefined ||
+      def.damageBonusPerPaidHpPoint !== undefined)
+  ) {
+    report(
+      `${reportPrefix}.sacrificeFields(no damage lane: sacrificeMaxHpRatio/damageBonusPerPaidHpPoint are never emitted)`,
+    )
+  }
   if (def.damage !== undefined) {
     // The Tu beta (Loan Dau) -- the sacrifice op settles BEFORE the hit
     // lane: pay_hp lowers to a self-targeted 'sacrifice' profile op and

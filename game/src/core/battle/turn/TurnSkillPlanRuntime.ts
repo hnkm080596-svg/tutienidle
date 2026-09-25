@@ -51,6 +51,7 @@ import type {
   TurnBattleParticipant,
   TurnDeclaredAction,
 } from './TurnBattleSystem'
+import { isNaturalActionSource } from './TurnBattleSystem'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import { executionCommitsCast } from './TurnSkillAction'
 
@@ -566,8 +567,7 @@ export class TurnSkillPlanRuntime {
           source,
           target,
           sumHpDamage(gate.hitOperationIds),
-          declared.actionSource === 'normal' ||
-            declared.actionSource === 'skill',
+          isNaturalActionSource(declared.actionSource),
         )
       },
 

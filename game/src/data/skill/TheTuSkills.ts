@@ -452,9 +452,12 @@ export function buildTheTuKit(
       }
     }
     if (mods.cuongQuyenArmorPierce > 0) {
+      // Merge, don't replace: a future instances-bearing basic keeps its
+      // authored count/extra riders and gains the armorPierce entry.
       kit.basic.instances = {
-        count: 1,
+        count: kit.basic.instances?.count ?? 1,
         each: {
+          ...(kit.basic.instances?.each ?? {}),
           armorPierce: { bypassChance: 0, pierceFraction: mods.cuongQuyenArmorPierce },
         },
       }

@@ -386,6 +386,17 @@ export interface TurnDeclaredAction {
 export type ReactiveActionSource = 'normal' | 'skill' | 'counter' | 'follow_up' | 'intercept'
 
 /**
+ * INV-9 natural-turn classifier -- 'normal' and 'skill' are the only
+ * sources a player's own turn produces; queued bypass actions
+ * (counter/follow_up/intercept) never re-open proc windows.
+ */
+export function isNaturalActionSource(
+  source: ReactiveActionSource | undefined,
+): boolean {
+  return source === 'normal' || source === 'skill'
+}
+
+/**
  * Composite trigger context (spec 6.2.2, plan Task 16) -- each axis is
  * read independently by node payload variants: a Ho->EVA->Counter chain
  * produces {origin:'enemy_hit', intercepted:true, outcome:'evaded'}.
@@ -652,11 +663,7 @@ export class TurnBattleSystem {
       // Spec 6.2.2 taken-side window -- the same gate as the legacy
       // lane (hpDamage > 0 = "taken", natural actions only INV-9).
       resolveTakenWindow: (battle, target, actor, declared, hpDamage) => {
-        if (
-          hpDamage > 0 &&
-          (declared.actionSource === 'normal' ||
-            declared.actionSource === 'skill')
-        ) {
+        if (hpDamage > 0 && isNaturalActionSource(declared.actionSource)) {
           this.resolveReactiveProcs(battle, target, 'onImpactLanded', {
             attacker: actor,
             outcome: 'taken',
@@ -2428,10 +2435,7 @@ export class TurnBattleSystem {
       // Reflection) rolls the defender's onImpactLanded reactiveProc
       // effects. Natural actions only (INV-9); income already landed
       // above, so this hit's +6 can fund the check.
-      if (
-        hitResult.hpDamage > 0 &&
-        (declared.actionSource === 'normal' || declared.actionSource === 'skill')
-      ) {
+      if (hitResult.hpDamage > 0 && isNaturalActionSource(declared.actionSource)) {
         this.resolveReactiveProcs(battle, target, 'onImpactLanded', {
           attacker: actor,
           outcome: 'taken',
@@ -3001,7 +3005,7 @@ export class TurnBattleSystem {
     attacker: TurnBattleParticipant,
     declared: TurnDeclaredAction,
   ): void {
-    if (declared.actionSource !== 'normal' && declared.actionSource !== 'skill') {
+    if (!isNaturalActionSource(declared.actionSource)) {
       return
     }
 
@@ -3029,7 +3033,7 @@ export class TurnBattleSystem {
   ): void {
     if (
       !battle.players.includes(actor) ||
-      (declared.actionSource !== 'normal' && declared.actionSource !== 'skill')
+      !isNaturalActionSource(declared.actionSource)
     ) {
       return
     }
@@ -3098,7 +3102,7 @@ export class TurnBattleSystem {
 
     // INV-9 -- reactive/replayed actions (counter/follow_up/intercept and
     // queued executions) never open new reactive windows.
-    if (declared.actionSource !== 'normal' && declared.actionSource !== 'skill') {
+    if (!isNaturalActionSource(declared.actionSource)) {
       return
     }
 
