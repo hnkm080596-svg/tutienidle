@@ -1,0 +1,323 @@
+{
+ "schemaVersion": 2,
+ "run": {
+  "id": "the-tu-beta-2026-09-25",
+  "createdAt": "2026-09-25T05:43:15.040Z",
+  "scope": "AGGREGATE_REPOSITORY",
+  "authorizedRepairs": [],
+  "nonGoals": [],
+  "checkout": "/home/ubuntu/repos/tutienidle/.agent-worktrees/the-tu-beta",
+  "branch": "devin/1790308404-the-tu-beta",
+  "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
+  "head": "bdc04bf9",
+  "state": {
+   "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+   "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+   "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+   "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+  },
+  "manifestPath": "manifest.json",
+  "environmentPath": "environment.json",
+  "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "consumedLessonIds": [],
+  "aggregateParents": [],
+  "requiredDomains": [],
+  "exclusions": [],
+  "briefIds": [],
+  "capacityLimit": 5,
+  "requiredReadiness": true,
+  "phase": "SNAPSHOT",
+  "cleanRoundA": null,
+  "cleanRoundB": null,
+  "finalEvidenceIds": [],
+  "outcome": null
+ },
+ "briefs": [],
+ "assignments": [],
+ "consumptions": [],
+ "invariants": [],
+ "census": [],
+ "findings": [
+  {
+   "id": "F-TT-P15-1",
+   "title": "78 non-ASCII comment violations (em dashes, Vietnamese, box chars) across the-tu beta files",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/",
+     "symbolOrSection": "31 files incl TheTuTreePanel/ActionImpactSystem/operations/TheTuKitModifiers/TheTuBuffs/TheTuNodes/TheTuSkills",
+     "revision": "e76157c2",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "coordinator initial verify (asciiComments ratchet)",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-TT-VERIFY-INIT"
+   ],
+   "counterexample": "ratchet lists 78 violations",
+   "expected": "comments plain ASCII English",
+   "actual": "em dashes, Vietnamese names, box chars in comments",
+   "rootCause": "worker authored Vietnamese + box-char comments against P15",
+   "rootClass": "comment hygiene",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "ratchet full-file scan",
+     "evidenceIds": [
+      "EV-TT-VERIFY-INIT"
+     ],
+     "hitDispositions": [
+      "all 78 fixed"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "FIXED @bdc04bf9: de-diacritized comment lines only in 31 files",
+   "pinEvidenceIds": [
+    "EV-TT-CLO-1"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-VERIFY-1"
+   ],
+   "closureReviewIds": [
+    "REV-TT-CLO-1"
+   ],
+   "status": "CLOSED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  }
+ ],
+ "evidence": [
+  {
+   "id": "EV-TT-VERIFY-INIT",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T05:42:00.000Z",
+   "finishedAt": "2026-09-25T05:43:48.000Z",
+   "commandOrMethod": "npm run type-check + npx vitest run (22 changed test files + asciiComments) at head e76157c2",
+   "cwd": "game/",
+   "exitCode": 1,
+   "result": "FAIL",
+   "artifactPath": "evidence/initial-verify-e76157c2.log",
+   "artifactHash": "57e76554bdc255a588f0ba87406db7674ecb2f9b94100a59d8b415a9bf13e310",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "593/594 pass; asciiComments ratchet FAIL - 78 non-ASCII comment violations across the-tu files"
+   ],
+   "limitations": [
+    "jsdom canvas env excludes scene tests",
+    "ImageMagick absent"
+   ],
+   "status": "STALE"
+  },
+  {
+   "id": "EV-TT-VERIFY-1",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-25T05:44:00.000Z",
+   "finishedAt": "2026-09-25T05:45:14.000Z",
+   "commandOrMethod": "npm run type-check + npx vitest run (changed-surface tests + asciiComments) at head bdc04bf9",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/fix-p15-comments.log",
+   "artifactHash": "b3faf8ae142231df47c730155a2f0423479b17afafbc2bf6412a79a6e3af2fc6",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "type-check clean; 594 scoped tests pass incl asciiComments ratchet at bdc04bf9 (state abf02546)"
+   ],
+   "limitations": [
+    "jsdom canvas env excludes scene tests",
+    "ImageMagick absent"
+   ],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-TT-CLO-1",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "devin-1e15ca11622d40c9a3c9490bcd4a485a",
+   "commandOrMethod": "npx vitest run tests/architecture/asciiComments.test.ts + tokenizer rescan (comment trivia only)",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T06:11:59.000Z",
+   "finishedAt": "2026-09-25T06:15:26.000Z",
+   "inputPaths": [
+    "tests/architecture/asciiComments.test.ts",
+    "src/**/TheTu*.ts",
+    "src/**/TheTu*.vue"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/clo-1-verdict.json",
+   "artifactHash": "09acc06a17479a0f68580378a36e8fd27daf13baca656278b9b0c75e36c831e1",
+   "claims": [
+    "F-TT-P15-1 repaired: 78->0 un-baselined non-ASCII comment offenders at bdc04bf9; type-check exit 0; asciiComments 1/1 pass"
+   ],
+   "invariantIds": [],
+   "limitations": [
+    "verdict artifact is session message, not a committed file"
+   ],
+   "result": "PASS",
+   "status": "CURRENT"
+  }
+ ],
+ "coverage": [],
+ "attacks": [],
+ "reviews": [
+  {
+   "id": "REV-TT-CLO-1",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 2,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-1e15ca11622d40c9a3c9490bcd4a485a",
+   "contextId": "sealed-child-1e15ca11622d40c9a3c9490bcd4a485a",
+   "model": "swe-2-max",
+   "role": "closure-verify",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T06:11:59.000Z",
+   "sealedAt": "2026-09-25T06:15:26.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-TT-CLO-1"
+   ],
+   "findingIds": [
+    "F-TT-P15-1"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  }
+ ],
+ "cycles": [],
+ "mutations": [],
+ "corpus": [],
+ "lessons": [
+  {
+   "id": "L-TT-1",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-P15-1"
+   ],
+   "incidentEvidenceIds": [
+    "EV-TT-VERIFY-INIT"
+   ],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "comment hygiene",
+   "missedInvariantIds": [],
+   "escapeReason": "worker wrote Vietnamese + box chars in comments without running asciiComments ratchet",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "worker prompt must include asciiComments check before returning G5"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-CLO-1"
+   ],
+   "capabilityDelta": "worker-prompt gap",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  }
+ ],
+ "messages": [],
+ "events": [
+  {
+   "seq": 1,
+   "at": "2026-09-25T05:43:15.040Z",
+   "kind": "PHASE",
+   "actor": "coordinator-406257",
+   "state": {
+    "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+    "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+    "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+    "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+   },
+   "previousEventHash": null,
+   "payloadPath": "events/0001.json",
+   "payloadHash": "888d51d9f768819ea7976ec1af9456acca6a59f498755adcddd874d55bdc246f",
+   "eventHash": "01b8d17a5a2f54a0264a43ad253caf4806414b012d6b625ba497632957ce5501"
+  },
+  {
+   "seq": 2,
+   "at": "2026-09-25T05:43:15.793Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-406257",
+   "state": {
+    "productStateId": "0dd32a45fe705c622987307b390264a59fe9f276e984410e47262dcde7fc408c",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "01b8d17a5a2f54a0264a43ad253caf4806414b012d6b625ba497632957ce5501",
+   "payloadPath": "events/0002.json",
+   "payloadHash": "5e115b43b3d2e1a48739e97b380cffbc0e6244d1a4536c514c883c855ce0efb9",
+   "eventHash": "ba05b890c49157fe07bba35b91ccfee2994247e65ff4c1720a3bb31040272164"
+  },
+  {
+   "seq": 3,
+   "at": "2026-09-25T05:45:25.413Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-406257",
+   "state": {
+    "productStateId": "abf0254628636d333a8d793cdb4f85a13f096065d199439d51b69ed99cc78df5",
+    "contractId": "2bed863012bc433581d5eb9ff89067b79f10839a51ad696cef24d9418e052b38",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "ba05b890c49157fe07bba35b91ccfee2994247e65ff4c1720a3bb31040272164",
+   "payloadPath": "events/0003.json",
+   "payloadHash": "f5b0ef49a0c68b6085c4d51163ae6fd8608ac10faa2a2019947bf6d2b293f280",
+   "eventHash": "16a89ef4ad96af9180846b30345254838880281fc87dbac92d29e29205abcf02"
+  }
+ ]
+}
