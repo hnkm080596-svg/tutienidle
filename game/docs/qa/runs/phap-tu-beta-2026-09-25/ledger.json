@@ -18294,7 +18294,9 @@
     "unknown ids in ledgered maps"
    ],
    "exclusions": [],
-   "proposedProtection": "crafted-save boundary stance",
+   "proposedProtection": [
+    "crafted-save boundary stance"
+   ],
    "promotionEvidenceIds": [],
    "qualifiedBy": [
     "REV-PT-AUT-A8"
