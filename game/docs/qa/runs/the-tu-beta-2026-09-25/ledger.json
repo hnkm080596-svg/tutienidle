@@ -11,7 +11,7 @@
     "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
     "head": "f730adc6",
     "state": {
-      "productStateId": "7f5643ac46887fb66fef2ca6bd690c96fc3591875b268de40b81985cf524b494",
+      "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
       "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
       "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -6771,6 +6771,126 @@
       "exception": null,
       "status": "REJECTED_WITH_PROOF",
       "rejectionReason": "fault-only defensive discard: a live leftover queue requires a mid-action throw that already fails loudly; pinning the discard would simulate the louder fault itself"
+    },
+    {
+      "id": "F-TT-CLEAN-A3-INT-1",
+      "title": "Ungated combat-shaping progression writers reachable mid-battle",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/game/GameManagerProgressionOps.ts",
+          "symbolOrSection": "selectSkillSpecialization/allocateAttributePoint/setMortalBasicSkill/learnSkill + SkillRoleStrip/CharacterPanel surfaces",
+          "revision": "dbe41cdd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-742c525d25db477ca11eeee61d4e8187",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "delete any new gate -> mid-battle mortal-pick/spec/attribute/learn writes resume",
+      "expected": "every combat-shaping progression write on an openable surface fails closed while isBattleInProgress",
+      "actual": "four ops lacked the gate; chips/buttons had no inBattle disable; writes were battle-invisible but persisted",
+      "rootCause": "four ops lacked the gate; chips/buttons had no inBattle disable; writes were battle-invisible but persisted",
+      "rootClass": "missing-guard",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/game",
+            "src/components/panels"
+          ],
+          "termsAndMethod": "grep isTurnBattleInProgress writers + chip/button disables",
+          "hitDispositions": [
+            "5 writers already gated (cleanA2-INT-1); these 4 + selectSpellPathElement pin round out the census"
+          ],
+          "coverageLimits": [
+            "combat-shaping writer surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED @dbe41cdd: isTurnBattleInProgress gates on learnSkill/allocateAttributePoint/setMortalBasicSkill/selectSkillSpecialization + inBattle disables on SkillRoleStrip chips + CharacterPanel allocate",
+      "pinEvidenceIds": [
+        "EV-TT-CLEANA3-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLEANA3-FIX"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLEAN-A3-INT-2",
+      "title": "Coverage gaps: dead-attacker reflect drop + selectSpellPathElement gate unpinned",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/proc/CombatProcSystem.ts",
+          "symbolOrSection": "flushReflects attacker.alive drop :240; GameManagerProgressionOps.selectSpellPathElement gate :479",
+          "revision": "dbe41cdd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-742c525d25db477ca11eeee61d4e8187",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "remove the !attacker.alive flush check -> dead attackers receive reflections",
+      "expected": "deliberate drop semantics + every newly gated writer pinned",
+      "actual": "no test covered attacker-dead-before-flush drop; selectSpellPathElement gate unpinned (5/6 covered)",
+      "rootCause": "no test covered attacker-dead-before-flush drop; selectSpellPathElement gate unpinned (5/6 covered)",
+      "rootClass": "coverage-gap",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/game",
+            "src/components/panels"
+          ],
+          "termsAndMethod": "grep isTurnBattleInProgress writers + chip/button disables",
+          "hitDispositions": [
+            "5 of 6 inBattle gates pinned before; ward_break retaliation path identified at CombatSystem.ts:534"
+          ],
+          "coverageLimits": [
+            "combat-shaping writer surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED @dbe41cdd: pin file extended to all 10 gated writers incl selectSpellPathElement; ward_break attacker-death reflect-drop pin in midImpactDeath.test.ts",
+      "pinEvidenceIds": [
+        "EV-TT-CLEANA3-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLEANA3-FIX"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
     }
   ],
   "evidence": [
@@ -7650,6 +7770,39 @@
       "invariantIds": [],
       "claims": [
         "cleanA2 fix batch verified on 853cad02: tran_kinh clock fix + e2e pin, chan_an expiry pin, 5 in-battle gate pins, dead sweep removal"
+      ],
+      "limitations": [],
+      "status": "STALE",
+      "kind": "EXECUTED_UNIT_STRUCTURAL"
+    },
+    {
+      "id": "EV-TT-CLEANA3-FIX",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+      "startedAt": "2026-09-25T22:21:00.000Z",
+      "finishedAt": "2026-09-25T22:25:00.000Z",
+      "commandOrMethod": "npm run type-check (clean) + vitest inBattle+midImpactDeath pins + vitest battle/game/skill-path (214 files / 1504 pass / 4 expected-fail) at dbe41cdd",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/cleanA3-fix-verify.log",
+      "artifactHash": "7aeed609a5b5a4a84d938debaf27d1b777f8bf48319aad73287ce26cb63132b6",
+      "inputPaths": [
+        "src/core/game/GameManagerProgressionOps.ts",
+        "src/core/game/GameManagerProgressionOps.inBattle.test.ts",
+        "src/core/battle/turn/TurnBattleSystem.midImpactDeath.test.ts",
+        "src/components/panels/skill-path/SkillRoleStrip.vue",
+        "src/components/panels/CharacterPanel.vue"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "cleanA3 fix batch verified on dbe41cdd: 4 new inBattle gates + UI disables + gate-census pins + ward_break dead-attacker reflect-drop pin"
       ],
       "limitations": [],
       "status": "CURRENT",
@@ -9403,7 +9556,7 @@
         "F-TT-CLEAN-A2-INT-4"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLEAN-A3-AUT",
@@ -9430,7 +9583,7 @@
       "evidenceIds": [],
       "findingIds": [],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLEAN-A3-COR",
@@ -9457,7 +9610,7 @@
       "evidenceIds": [],
       "findingIds": [],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLO-20",
@@ -9489,6 +9642,36 @@
         "F-TT-CLEAN-A2-INT-1",
         "F-TT-CLEAN-A2-INT-2",
         "F-TT-CLEAN-A2-INT-3"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "REV-TT-CLEAN-A3-INT",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 3,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-742c525d25db477ca11eeee61d4e8187",
+      "contextId": "sealed-child-742c525d25db477ca11eeee61d4e8187",
+      "model": "swe-2-max",
+      "role": "INTEGRATION",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T21:54:00.000Z",
+      "sealedAt": "2026-09-25T22:20:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-A2-INT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TT-CLEAN-A3-INT-1",
+        "F-TT-CLEAN-A3-INT-2"
       ],
       "novelAttackIds": [],
       "status": "SEALED"
@@ -13487,6 +13670,70 @@
       "payloadPath": "events/0063.json",
       "payloadHash": "645cb61d12c814700a82da106ec6b6df3628215c52f2871e6b83ed754e74c394",
       "eventHash": "1893d427f44c2dfce2c6aefad90e1e681325f6fe58d01d2ce769a0d726abf632"
+    },
+    {
+      "seq": 64,
+      "at": "2026-09-25T22:23:43.986Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "1893d427f44c2dfce2c6aefad90e1e681325f6fe58d01d2ce769a0d726abf632",
+      "payloadPath": "events/0064.json",
+      "payloadHash": "4f03e32ee83a57d4e5294da9c4828c78951b3e573c685097de087fa920a17663",
+      "eventHash": "cf02cce82d3d1a1d7636df8b0ef040ef6e33f62204d25163358b6f974fbef63e"
+    },
+    {
+      "seq": 65,
+      "at": "2026-09-25T22:24:05.554Z",
+      "kind": "FINDING",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "cf02cce82d3d1a1d7636df8b0ef040ef6e33f62204d25163358b6f974fbef63e",
+      "payloadPath": "events/0065.json",
+      "payloadHash": "f11ee1464b940896f0fbc08dbfb1f6a0b021878445258596042e971b5832979d",
+      "eventHash": "c4b8df6b198abd60c86d21e7b1b6abf06e8e612bb9d9168fab7826dbd605ff02"
+    },
+    {
+      "seq": 66,
+      "at": "2026-09-25T22:24:59.174Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "c4b8df6b198abd60c86d21e7b1b6abf06e8e612bb9d9168fab7826dbd605ff02",
+      "payloadPath": "events/0066.json",
+      "payloadHash": "772c4357466ed82484ea28fa79f68fa6e49a038b5dfb0c4d93cdb7968b17b8fd",
+      "eventHash": "ffee3821ba1570114a383e5136bdf3bc86bf287376938e0b82b47559d2e89447"
+    },
+    {
+      "seq": 67,
+      "at": "2026-09-25T22:25:03.763Z",
+      "kind": "FINDING",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "ffee3821ba1570114a383e5136bdf3bc86bf287376938e0b82b47559d2e89447",
+      "payloadPath": "events/0067.json",
+      "payloadHash": "b78e660bb84cb50a2d1629f8cb466840ad909db2240f1747f406076c12c88fe4",
+      "eventHash": "0ba5d4742bdac11fcbad4047d7a306aabd42b23038763f44fd8dc558a3a61401"
     }
   ]
 }

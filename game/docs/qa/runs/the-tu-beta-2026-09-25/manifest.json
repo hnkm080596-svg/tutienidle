@@ -14328,7 +14328,7 @@
       "path": "src/components/panels/CharacterPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "3ec28f17a2c010f7c3b7a8b92bae762026099b14baa200c789a29f399c2e4174"
+      "hash": "88de31f93e2a8288252298b16e98af010085cc1b5105bf3010bb652a88700b64"
     },
     {
       "path": "src/components/panels/ChiHienQuan.integration.test.ts",
@@ -14634,7 +14634,7 @@
       "path": "src/components/panels/skill-path/SkillRoleStrip.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "6ff0c11610cbc1b04ba7bcbaef01d0e565331fec89c400c907f4c40744a8850a"
+      "hash": "e3780936617f337788ade072f68bc23d5606501bb2dba4604dbbf85c9f33676d"
     },
     {
       "path": "src/components/panels/skill-path/TechniqueBand.test.ts",
@@ -15792,7 +15792,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.midImpactDeath.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d18ebe06630ed3c2e25b75910189d96f6bae6103b6f43adcab282ba722eb25cf"
+      "hash": "6b54ee100e2f52aa52dd6965d2cc306bcb479498dc575cb7ebff51703b010877"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.missingHp.test.ts",
@@ -17994,7 +17994,7 @@
       "path": "src/core/game/GameManagerProgressionOps.inBattle.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "559c2587b035ffa500aa5c67d35aaa8d3a4df3a675c5f85a2212ce56ed1165fc"
+      "hash": "eb7124601169663185d30c2cb95486242947555b0208d170c5c2042a513aef19"
     },
     {
       "path": "src/core/game/GameManagerProgressionOps.levelGates.test.ts",
@@ -18012,7 +18012,7 @@
       "path": "src/core/game/GameManagerProgressionOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f2e795b733353efab231bed7bd1816efd278b9c81afb7eac47a43b7f6fda9abc"
+      "hash": "2ccfd12030a91870f76ee444d847ba06a18e48b93b91a5688f987734a05fc516"
     },
     {
       "path": "src/core/game/GameManagerQuestOps.ts",
@@ -23007,5 +23007,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "7f5643ac46887fb66fef2ca6bd690c96fc3591875b268de40b81985cf524b494"
+  "productStateId": "b1ef73d4f602e378ec2af20f9d0a6e1abf475130875a969bc6a99c2fe1ad4e1b"
 }
