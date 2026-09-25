@@ -32,7 +32,7 @@ function castCtx(resolvedSkillId: string): DynamicBasicCastContext {
 
 describe('KiemPhoProvider', () => {
   it('resolveBasic cycles the preset in order', () => {
-    const provider = buildKiemPhoProvider(hienPlayer(['orb_dam', 'orb_chem']), [])
+    const provider = buildKiemPhoProvider(hienPlayer(['orb_dam', 'orb_chem'], 'foundation_establishment'), [])
     const participant = {} as Parameters<typeof provider.resolveBasic>[0]
 
     expect(provider.resolveBasic(participant)!.id).toBe('orb_dam')

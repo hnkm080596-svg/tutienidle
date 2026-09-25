@@ -86,11 +86,17 @@ export function validatePreset(preset: OrbId[], realmIndex: number): boolean {
  *  isSwordPathway(player) before constructing (M6: way membership). */
 export function initKiemPhoBattle(player: PlayerData): KiemPhoBattleState {
   const swordPath = player.swordPath
+  const realmIndex = getRealmIndex(player.realmId)
+  const unlocked = new Set(unlockedOrbs(realmIndex))
   return {
-    preset: [...(swordPath?.preset ?? [])],
+    // Crafted saves can carry realm-locked orbs in preset (load-time
+    // validation is shape-only) - narrow like the write path so the
+    // auto path cannot cast locked orbs (the persisted preset itself
+    // is untouched; realm only increases).
+    preset: (swordPath?.preset ?? []).filter((orb) => unlocked.has(orb)),
     cursor: 0,
     log: [],
-    comboMaxLength: realmComboMax(getRealmIndex(player.realmId)),
+    comboMaxLength: realmComboMax(realmIndex),
   }
 }
 

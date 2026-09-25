@@ -183,7 +183,7 @@ export function applySkillDefinitionModifiers(
       const existing = next.armorPolicy?.pierceFractionOnFail ?? 0
       next.armorPolicy = {
         ...next.armorPolicy,
-        pierceFractionOnFail: Math.min(1, existing + modifier.armorPierceFraction * modifier.level),
+        pierceFractionOnFail: Math.min(1, Math.max(0, existing + modifier.armorPierceFraction * modifier.level)),
       }
     }
 

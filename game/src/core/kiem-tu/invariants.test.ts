@@ -186,7 +186,7 @@ function stripComments(source: string): string {
 
 describe('INV-1 — way single-owner', () => {
   it('hien provider output never depends on kiemY/kiemDao state', () => {
-    const player = hienPlayer(['orb_dam', 'orb_chem'])
+    const player = hienPlayer(['orb_dam', 'orb_chem'], 'foundation_establishment')
     const provider = buildKiemPhoProvider(player, [])
     const participant = {} as Parameters<typeof provider.resolveBasic>[0]
 
@@ -223,7 +223,7 @@ describe('INV-2 — preset shape + cursor bounds', () => {
     expect(validatePreset(['orb_quet'], 4)).toBe(false)
     expect(validatePreset(['orb_quet'], 5)).toBe(true)
 
-    const state = initKiemPhoBattle(hienPlayer(['orb_dam', 'orb_chem']))
+    const state = initKiemPhoBattle(hienPlayer(['orb_dam', 'orb_chem'], 'foundation_establishment'))
     for (let i = 0; i < 7; i++) {
       nextOrb(state)
       expect(state.cursor).toBeGreaterThanOrEqual(0)
