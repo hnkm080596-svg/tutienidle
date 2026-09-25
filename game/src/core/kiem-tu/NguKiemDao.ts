@@ -30,8 +30,8 @@ export const LIEN_MOMENTUM_RATE = 0.15
 
 /**
  * The ONLY Kiem Y entry point (A3). No-op entirely when the player is
- * not on the hidden_sword_pathway way (cultivationWay is the discriminator — M6) or
- * when already at the realm cap — a capped forge does not bank Y.
+ * not on the hidden_sword_pathway way (cultivationWay is the discriminator -- M6) or
+ * when already at the realm cap -- a capped forge does not bank Y.
  * Otherwise adds `amount` and converts greedily at the CURRENT realm's
  * forgeCost until under cost or at cap.
  */
@@ -60,7 +60,7 @@ export function gainKiemY(player: PlayerData, amount: number): void {
 /**
  * Breakthrough merge (K15): the swords forged this realm fold into the
  * permanent base multiplier, then the live count resets to 1. The
- * count snapshot MUST precede the reset — order is load-bearing.
+ * count snapshot MUST precede the reset -- order is load-bearing.
  * Banked Kiem Y carries over untouched (it converts at the NEW realm's
  * forgeCost on the next gain).
  */
