@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
   "head": "5f0d296be768afe76b07b46358a7766bae0ac28d",
   "state": {
-   "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
+   "productStateId": "8b14b2fe966e148e9c1253436ad0a19a6f62baf3b36cda90281aab814efc2cb3",
    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -10457,9 +10457,11 @@
     }
    ],
    "siblingFindingIds": [],
-   "repair": "reword 'don co ban' -> 'moi chieu thuc nguyen to' (pending batch commit with any v7 findings)",
+   "repair": "committed 93b0cb4b on devin/1790260800-phap-tu-basic",
    "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-PT-CLO-14-VERIFY"
+   ],
    "closureReviewIds": [],
    "duplicateOf": null,
    "exception": null,
@@ -10718,7 +10720,9 @@
    "siblingSearch": [],
    "siblingFindingIds": [],
    "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-PT-CLO-14-VERIFY"
+   ],
    "closureReviewIds": [],
    "duplicateOf": null,
    "exception": null,
@@ -10742,7 +10746,7 @@
    "rootCause": null,
    "rootClass": null,
    "subsystem": "progression",
-   "repair": "pending-batch: prereq moc_doc_tu (same potency family)",
+   "repair": "committed 93b0cb4b on devin/1790260800-phap-tu-basic",
    "status": "REPAIR_AUTHORIZED",
    "rejectionReason": null
   },
@@ -10759,7 +10763,9 @@
    "siblingSearch": [],
    "siblingFindingIds": [],
    "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-PT-CLO-14-VERIFY"
+   ],
    "closureReviewIds": [],
    "duplicateOf": null,
    "exception": null,
@@ -10783,7 +10789,7 @@
    "rootCause": null,
    "rootClass": null,
    "subsystem": "progression",
-   "repair": "pending-batch: reword description per sibling capstone wording",
+   "repair": "committed 93b0cb4b on devin/1790260800-phap-tu-basic",
    "status": "REPAIR_AUTHORIZED",
    "rejectionReason": null
   }
@@ -11965,6 +11971,36 @@
    "limitations": [
     "scoped suite only"
    ],
+   "result": "PASS",
+   "status": "STALE"
+  },
+  {
+   "id": "EV-PT-CLO-14-VERIFY",
+   "state": {
+    "productStateId": "8b14b2fe966e148e9c1253436ad0a19a6f62baf3b36cda90281aab814efc2cb3",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+   "commandOrMethod": "npm run type-check + vitest PhapTu* tests + spot grep of fixed sites",
+   "cwd": "game",
+   "exitCode": 0,
+   "startedAt": "2026-09-25T12:13:03.000Z",
+   "finishedAt": "2026-09-25T12:13:03.000Z",
+   "inputPaths": [
+    "src/data/progression/PhapTuBasicNodes.ts",
+    "src/data/progression/PhapTuRealmRewardNodes.ts"
+   ],
+   "inputEvidenceIds": [],
+   "artifactPath": "evidence/fix-verify-trio-v7.log",
+   "artifactHash": "63e57692fbdd01f77b334c1dd60760eccbf469d4dd50d90358fc8c8732e89a3e",
+   "claims": [
+    "type-check clean; 24/24 scoped tests pass; all 3 fixed sites confirmed in source"
+   ],
+   "invariantIds": [],
+   "limitations": [],
    "result": "PASS",
    "status": "CURRENT"
   }
@@ -14171,7 +14207,7 @@
     "F-PT-INT-A6-3"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-CLO-13",
@@ -14208,7 +14244,7 @@
     "F-PT-INT-A6-2"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-AUT-A7",
@@ -14240,7 +14276,7 @@
     "F-PT-AUT-A7-4"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PT-COR-A7",
@@ -14270,6 +14306,33 @@
     "F-PT-COR-A7-2",
     "F-PT-COR-A7-3"
    ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PT-INT-A7",
+   "state": {
+    "productStateId": "06fad03fe1b05393adf0732badaa0d8181bb0f6a7bd87fd0765f54bc59722e56",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 21,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-6f4004fbe8e546dc8c45c3717bf17a0b",
+   "contextId": "sealed-child-6f4004fbe8e546dc8c45c3717bf17a0b",
+   "model": "swe-2-max",
+   "role": "integration-reviewer",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-25T11:08:41.000Z",
+   "sealedAt": "2026-09-25T11:51:58.000Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -18695,6 +18758,22 @@
    "payloadPath": "events/0063.json",
    "payloadHash": "9f1619f20c08531f4486e8d61c6c234d5c6289c3eee8cea9356d61a8c9dce91b",
    "eventHash": "1190e6c73953a2dfbc4b98831cb014d81f287f6064842fca1cbbf9c46b833ba6"
+  },
+  {
+   "seq": 64,
+   "at": "2026-09-25T12:12:26.663Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-63023",
+   "state": {
+    "productStateId": "8b14b2fe966e148e9c1253436ad0a19a6f62baf3b36cda90281aab814efc2cb3",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "d33041f0d78dfc3bf6b270aeeabc6595d271493497a69a9229f3cb572c0d5f7c",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "1190e6c73953a2dfbc4b98831cb014d81f287f6064842fca1cbbf9c46b833ba6",
+   "payloadPath": "events/0064.json",
+   "payloadHash": "f9beec0270895441acb195ef602a4f842dc53caf0bbe2da70fd94a30ead524ad",
+   "eventHash": "b734ea81aa3ea8de897e8be909073a408dfa8e0cd0d8bbfd82ac7c0ea2a2c609"
   }
  ]
 }
