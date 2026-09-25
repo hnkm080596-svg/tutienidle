@@ -2088,8 +2088,11 @@ export class TurnBattleSystem {
     // affected-gated block below: enemy-targeted charge skills collect
     // targets only at resolve time, so `affected` stays empty at declare
     // and the block below never ran for them -- their cooldown/resource
-    // were never committed (dead isChargeInit branch). The charge-resolve
-    // turn returns early above and never reaches this point.
+    // were never committed (dead isChargeInit branch). Only the legacy
+    // (runtime === undefined) lane returns early above; routed and
+    // unrouted charge resolves intentionally fall through to the shared
+    // tail and DO reach this point (action is null there, so this block
+    // skips by shape, not by control flow).
     // skilldef M5b/M5d -- the commit rides the plan pipeline when the
     // def is adapter-covered (commitShell + consume ops through the
     // scheduler); an adapter-unsupported charge def on a live battle

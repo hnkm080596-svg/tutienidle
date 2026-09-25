@@ -234,6 +234,56 @@ describe('loan_dau — sacrifice ordering, 1-HP floor, actual-paid payoff', () =
     }
   })
 
+  it('casts at exactly 1 HP pay NOTHING (op skips) and land at the base coefficient', () => {
+    // Spec §4 pin #4 zero-paid leg: paid <= 0 -> CombatOperationSkip ->
+    // __paid_hp binds 0 -> the payoff contributes nothing. The cast
+    // itself still resolves at the base multiplier.
+    const caster = createCombatant({
+      id: 'caster',
+      type: 'player',
+      stats: createBaseStats({ ...NO_MITIGATION, might: 100 }),
+      currentHp: 1,
+      maxHp: 10_000,
+    })
+    const enemy = createCombatant({
+      id: 'enemy',
+      stats: createBaseStats({ ...NO_MITIGATION }),
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+    })
+    const f = makeFixture(caster, enemy)
+    const kit = buildTheTuKit('cuong_chien', ZERO_MODS, { special: true })
+    f.casterP.basic = kit.special!
+
+    const log = vitalsLog(f.eventBus)
+    f.system.resolveNextStep(f.battle)
+
+    // No pay happened at all: the caster stays at 1 HP and stays alive.
+    expect(caster.currentHp).toBe(1)
+    expect(caster.alive).toBe(true)
+
+    // Payoff reads __paid_hp = 0: hits land at the base coefficient with
+    // only the (maximal) missing-HP scaling on top.
+    const missingFraction = 1 - 1 / 10_000
+    const basePerHit =
+      100 *
+      LOAN_DAU_MULTIPLIER *
+      (1 + Math.min(HUYET_CUONG_CAP, missingFraction * HUYET_CUONG_PER_PERCENT * 100))
+    const withPaidBonus =
+      100 *
+      (LOAN_DAU_MULTIPLIER + 1 * LOAN_DAU_PAID_HP_BONUS) *
+      (1 + Math.min(HUYET_CUONG_CAP, missingFraction * HUYET_CUONG_PER_PERCENT * 100))
+
+    const hits = log.filter(
+      (entry) => entry.entityId === enemy.id && entry.reason === 'damage',
+    )
+    expect(hits).toHaveLength(3)
+    for (const hit of hits) {
+      expect(hit.amount).toBeCloseTo(basePerHit)
+      expect(hit.amount).not.toBeCloseTo(withPaidBonus)
+    }
+  })
+
   it('a hostile multi-hit action into a phan_chan holder still produces exactly ONE reflect', () => {
     const caster = createCombatant({
       id: 'caster',
@@ -260,6 +310,47 @@ describe('loan_dau — sacrifice ordering, 1-HP floor, actual-paid payoff', () =
     )
     // The self-pay never reflects (sacrifice/self-hit is not an eligible
     // action); the 3-hit hostile action merges to ONE reflect.
+    expect(reflects).toHaveLength(1)
+    expect(reflects[0]!.amount).toBeCloseTo(1_000_000 * PHAN_CHAN_BASE_RATIO)
+  })
+
+  it('a CHARGED hit queues its reflect and the action tail flushes it', () => {
+    // Pin: a reflect queued through a charged resolve flushes at the
+    // shared action tail (routed charged lane falls through to it) -
+    // the next action's discardPendingReflects must never drop it.
+    const caster = createCombatant({
+      id: 'caster',
+      type: 'player',
+      stats: createBaseStats({ ...NO_MITIGATION, might: 100 }),
+      currentHp: 10_000,
+      maxHp: 10_000,
+    })
+    const enemy = createCombatant({
+      id: 'enemy',
+      stats: createBaseStats({ ...NO_MITIGATION }),
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+    })
+    const f = makeFixture(caster, enemy)
+    const chargedSkill = {
+      id: 'charged_strike',
+      cooldownTurns: 0,
+      chargeTurns: 1,
+      damage: { kind: 'physical' as const, multiplier: 1 },
+      targeting: { shape: 'single' as const },
+    }
+    f.casterP.basic = { ...LOAN_DAU }
+    f.casterP.special = { skill: chargedSkill, remainingCooldownTurns: 0 }
+    f.casterP.chargingTurnsRemaining = 1
+    f.casterP.pendingChargedSkillId = 'charged_strike'
+    f.runtime.applyBuff(PHAN_CHAN_BUFF.id, f.enemyP)
+
+    const log = vitalsLog(f.eventBus)
+    f.system.resolveNextStep(f.battle)
+
+    const reflects = log.filter(
+      (entry) => entry.reason === 'reflection' && entry.entityId === caster.id,
+    )
     expect(reflects).toHaveLength(1)
     expect(reflects[0]!.amount).toBeCloseTo(1_000_000 * PHAN_CHAN_BASE_RATIO)
   })
