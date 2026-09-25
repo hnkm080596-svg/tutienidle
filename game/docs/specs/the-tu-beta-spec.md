@@ -139,7 +139,7 @@ re-authored), **MISSING** (net-new seam).
   beta — revisit in BETA-BALANCE if ward interaction is wanted.
 - Ordered multi-hit: `instances: { count: N, perInstanceOptions: true }` —
   existing per-instance settle = sequential hits into the same target.
-- Huyết Sát node → `loanDauPaidBonusPerHpPaidBonus` (adds to the per-paid-HP
+- Huyết Sát node → `loanDauPaidHpBonus` (adds to the per-paid-HP
   ratio baked on the clone).
 - **Huyết Cuồng** (passive unlocked by learning Loạn Đấu): `buildTheTuKit`
   bakes `missingHpBonusPerMissingPercent`/`missingHpBonusCap` onto the
@@ -224,7 +224,7 @@ cuong_chien (root, LQ, grants core_cuong_quyen)   tran_the (root, LQ, grants cor
 
 `bodyKitModifiers` channel inventory after rework:
 `cuongQuyenCoefficientBonus`, `cuongQuyenArmorPierce`,
-`loanDauPaidBonusPerHpPaidBonus`, `missingHpBonusBonus` (Huyết Cuồng
+`loanDauPaidHpBonus`, `missingHpBonusBonus` (Huyết Cuồng
 efficiency), `tranApMaxHpRatioBonus`, `tranKinhWeakenRatio`,
 `reflectMaxHpRatioBonus`, `reflectMarkedRatioBonus`.
 Deleted channels: `reflectTakenRatioBonus`, `sonNhacWardRatioBonus`,
