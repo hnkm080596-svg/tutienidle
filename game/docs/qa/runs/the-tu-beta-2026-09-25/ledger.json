@@ -11,7 +11,7 @@
     "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
     "head": "f730adc6",
     "state": {
-      "productStateId": "fcfd1db3a34687ab7a2a6b8af0d5847e3479b5791f3b3bbeec69df5755d239b4",
+      "productStateId": "7f5643ac46887fb66fef2ca6bd690c96fc3591875b268de40b81985cf524b494",
       "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
       "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -6478,7 +6478,7 @@
     },
     {
       "id": "F-TT-CLEAN-A2-AUT-1",
-      "title": "Vacuous sweepBuffDeaths call with a false-fact comment in the unwired charged-resolve lane",
+      "title": "Dead sweepBuffDeaths call in unwired charged lane",
       "state": {
         "productStateId": "fcfd1db3a34687ab7a2a6b8af0d5847e3479b5791f3b3bbeec69df5755d239b4",
         "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
@@ -6491,43 +6491,278 @@
       "reachability": "PRODUCTION",
       "locations": [
         {
-          "path": "game/src/core/battle/turn/TurnBattleSystem.ts",
-          "symbolOrSection": "legacy charged-resolve else-branch :2073-2079",
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "unwired charged-resolve lane (~2073)",
           "revision": "93efc8aa",
           "basis": "SOURCE"
         }
       ],
-      "discoveredBy": "REV-TT-CLEAN-A2-AUT",
+      "discoveredBy": "devin-3ef82fba04764b64bbdc268ef7a39e65",
       "invariantIds": [],
       "evidenceIds": [],
-      "counterexample": "Branch condition routed===null && runtime===undefined (TBS:1991-2011); sweepBuffDeaths early-return at :834",
-      "expected": "No dead/vacuous calls left in the charged lanes; comments state what the code actually does.",
-      "actual": "Legacy charged-resolve else-branch runs only when runtime===undefined yet calls sweepBuffDeaths(battle) which early-returns when runtime===undefined — provably a no-op; comment claims it sweeps deaths it cannot.",
-      "rootCause": "dead call left behind after the routed charged lanes made the unwired lane unreachable-in-production",
-      "rootClass": "dead-code/false-comment",
-      "subsystem": "battle/turn",
+      "counterexample": "dead call on a runtime===undefined lane",
+      "expected": "no-op sweep removed or justified",
+      "actual": "sweepBuffDeaths call sits in a lane that only runs unwired (no buff authority exists)",
+      "rootCause": "stale call after lane unwiring",
+      "rootClass": "dead-code",
+      "subsystem": "the-tu-beta",
       "siblingSearch": [
         {
           "roots": [
             "src/core/battle/turn"
           ],
-          "termsAndMethod": "grep sweepBuffDeaths call sites",
-          "evidenceIds": [],
+          "termsAndMethod": "sweepBuffDeaths call sites",
           "hitDispositions": [
-            "only other call sites run with runtime bound"
+            "wired sites retained; unwired one removed"
           ],
-          "coverageLimits": []
+          "coverageLimits": [],
+          "evidenceIds": []
         }
       ],
       "siblingFindingIds": [],
-      "repair": "remove the vacuous sweepBuffDeaths call and correct the comment (pending, batched with INT findings)",
+      "repair": "FIXED @853cad02: dead call removed; comment documents no sweep/reflect flush exists on the unwired lane",
+      "pinEvidenceIds": [
+        "EV-TT-CLEANA2-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLEANA2-FIX"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLEAN-A2-INT-1",
+      "title": "In-battle progression-writer gates unpinned (5 of 6 rejections)",
+      "state": {
+        "productStateId": "fcfd1db3a34687ab7a2a6b8af0d5847e3479b5791f3b3bbeec69df5755d239b4",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/game/GameManagerProgressionOps.ts",
+          "symbolOrSection": "grantSkillCoreBySkillId/purchaseNode/upgradeNode/devResetBranch/levelUpSkill battle gates",
+          "revision": "93efc8aa",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-c22e959b6e1543d89cc2b727841d5224",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "delete any isTurnBattleInProgress gate -> silent mid-fight nodeLevels writes resume",
+      "expected": "each battle-gate rejection pinned like respecNodeTree's",
+      "actual": "zero tests covered the 5 new gates; UI disabled-state is cosmetic",
+      "rootCause": "coverage gap on newly added guard clauses",
+      "rootClass": "coverage-gap",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/game"
+          ],
+          "termsAndMethod": "grep isTurnBattleInProgress writers vs tests",
+          "hitDispositions": [
+            "respecNodeTree already pinned; 5 added"
+          ],
+          "coverageLimits": [
+            "ops surface only"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED @853cad02: GameManagerProgressionOps.inBattle.test.ts pins all 5 gates (reject + no mutation)",
+      "pinEvidenceIds": [
+        "EV-TT-CLEANA2-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLEANA2-FIX"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLEAN-A2-INT-2",
+      "title": "tran_kinh weaken inert: holder_turns duration 1 expires before the holder's action",
+      "state": {
+        "productStateId": "fcfd1db3a34687ab7a2a6b8af0d5847e3479b5791f3b3bbeec69df5755d239b4",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/data/buff/TheTuBuffs.ts",
+          "symbolOrSection": "TRAN_KINH_TURNS / TRAN_KINH_DEBUFF.lifetime",
+          "revision": "93efc8aa",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-c22e959b6e1543d89cc2b727841d5224",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-TT-CLEANA2-FIX"
+      ],
+      "counterexample": "duration 1 holder_turns -> holder's status phase decrements before its declare -> weaken never lands (adjudication pin proved hit stays 100 not 70)",
+      "expected": "Tran Ap hit weakens the target's next hostile action by -0.15/stack",
+      "actual": "authored duration expired at the holder's own status phase; the reviewed Low coverage gap concealed a real inert mechanic (severity upgraded at adjudication)",
+      "rootCause": "authored duration ignored the holder_turns decrement-before-declare clock convention (cam_cong documents the same N+1 rule)",
+      "rootClass": "logic-off-by-one",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/data/buff"
+          ],
+          "termsAndMethod": "audit holder_turns debuffs for duration 1",
+          "hitDispositions": [
+            "cam_cong base=1 but production always supplies durationOverride>=2 (documented); no other inert cases"
+          ],
+          "coverageLimits": [
+            "BUFF_REGISTRY defs"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED @853cad02: TRAN_KINH_TURNS 1->2 + convention comment; e2e pin proves rider stacks -> -0.30 weaken lands on next hostile action",
+      "pinEvidenceIds": [
+        "EV-TT-CLEANA2-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLEANA2-FIX"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLEAN-A2-INT-3",
+      "title": "chan_an mark-expiry reversion unpinned (marked reflect ratio -> base)",
+      "state": {
+        "productStateId": "fcfd1db3a34687ab7a2a6b8af0d5847e3479b5791f3b3bbeec69df5755d239b4",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/data/buff/TheTuBuffs.ts",
+          "symbolOrSection": "CHAN_AN_DEBUFF / PHAN_CHAN_BUFF markedBy",
+          "revision": "93efc8aa",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-c22e959b6e1543d89cc2b727841d5224",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "stale markedBy read post-expiry would keep the amplified ratio forever",
+      "expected": "reflect reverts to PHAN_CHAN_BASE_RATIO once the mark expires",
+      "actual": "no pin covered the mark-expiry boundary of the amplification",
+      "rootCause": "coverage gap on new mark-driven amplification",
+      "rootClass": "coverage-gap",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/data/buff",
+            "src/core/battle/turn"
+          ],
+          "termsAndMethod": "markedBy consumers",
+          "hitDispositions": [
+            "single consumer (phan_chan reflect)"
+          ],
+          "coverageLimits": [],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED @853cad02: battle pin asserts marked 0.06 -> base 0.03 after expiry",
+      "pinEvidenceIds": [
+        "EV-TT-CLEANA2-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLEANA2-FIX"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLEAN-A2-INT-4",
+      "title": "discardPendingReflects fault-only path untested",
+      "state": {
+        "productStateId": "fcfd1db3a34687ab7a2a6b8af0d5847e3479b5791f3b3bbeec69df5755d239b4",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "HYPOTHETICAL",
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "discardPendingReflects call (~1965)",
+          "revision": "93efc8aa",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-c22e959b6e1543d89cc2b727841d5224",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "non-empty map at discard requires a mid-action throw",
+      "expected": "(reviewer) pin the discard draining a leftover queue",
+      "actual": "discard is defensive-only; the precondition (live reflects at action start) is reachable only after a mid-action throw that already faults loudly upstream",
+      "rootCause": "defensive fault-tolerance lane misread as unpinned behavior",
+      "rootClass": "review-surface",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/battle/turn"
+          ],
+          "termsAndMethod": "callers of discardPendingReflects",
+          "hitDispositions": [
+            "single call site; flush is the only live drain"
+          ],
+          "coverageLimits": [],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": null,
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "PROVEN",
       "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "status": "REJECTED_WITH_PROOF",
+      "rejectionReason": "fault-only defensive discard: a live leftover queue requires a mid-action throw that already fails loudly; pinning the discard would simulate the louder fault itself"
     }
   ],
   "evidence": [
@@ -7348,7 +7583,7 @@
       "limitations": [
         "jsdom canvas env excludes scene tests"
       ],
-      "status": "CURRENT",
+      "status": "STALE",
       "kind": "EXECUTED_UNIT_STRUCTURAL"
     },
     {
@@ -7377,7 +7612,39 @@
       "limitations": [
         "jsdom canvas env excludes scene tests"
       ],
-      "status": "CURRENT",
+      "status": "STALE",
+      "kind": "EXECUTED_UNIT_STRUCTURAL"
+    },
+    {
+      "id": "EV-TT-CLEANA2-FIX",
+      "state": {
+        "productStateId": "7f5643ac4688e09fd9e1c7a59d2991e80d9f23c5a4f6e2c2c49f0f0b9f8d5e5a1f0e00",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+      "startedAt": "2026-09-25T21:31:00.000Z",
+      "finishedAt": "2026-09-25T21:42:00.000Z",
+      "commandOrMethod": "npm run type-check (clean) + npx vitest run src/core/battle/turn src/core/game src/data (256 files / 1901 pass / 4 expected-fail) at 853cad02",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/cleanA2-fix-verify.log",
+      "artifactHash": "4585dd3b0b2e0c5ad8e08fa9465590346297810e7b1d08e294b8a6284038d2fb",
+      "inputPaths": [
+        "src/core/battle/turn/TurnBattleSystem.ts",
+        "src/data/buff/TheTuBuffs.ts",
+        "src/core/battle/turn/TurnBattleSystem.theTuBeta.test.ts",
+        "src/core/game/GameManagerProgressionOps.inBattle.test.ts"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "cleanA2 fix batch verified on 853cad02: tran_kinh clock fix + e2e pin, chan_an expiry pin, 5 in-battle gate pins, dead sweep removal"
+      ],
+      "limitations": [],
+      "status": "SEALED",
       "kind": "EXECUTED_UNIT_STRUCTURAL"
     }
   ],
@@ -9007,7 +9274,7 @@
         "F-TT-CLEAN-A-INT-4"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLO-19",
@@ -9040,7 +9307,7 @@
         "F-TT-CLEAN-A-INT-4"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLEAN-A2-COR",
@@ -9067,7 +9334,7 @@
       "evidenceIds": [],
       "findingIds": [],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLEAN-A2-AUT",
@@ -9094,6 +9361,38 @@
       "evidenceIds": [],
       "findingIds": [
         "F-TT-CLEAN-A2-AUT-1"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "REV-TT-CLEAN-A2-INT",
+      "state": {
+        "productStateId": "fcfd1db3a34687ab7a2a6b8af0d5847e3479b5791f3b3bbeec69df5755d239b4",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 2,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-c22e959b6e1543d89cc2b727841d5224",
+      "contextId": "sealed-child-c22e959b6e1543d89cc2b727841d5224",
+      "model": "swe-2-max",
+      "role": "INTEGRATION",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T21:00:00.000Z",
+      "sealedAt": "2026-09-25T21:29:37.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-A-INT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TT-CLEAN-A2-INT-1",
+        "F-TT-CLEAN-A2-INT-2",
+        "F-TT-CLEAN-A2-INT-3",
+        "F-TT-CLEAN-A2-INT-4"
       ],
       "novelAttackIds": [],
       "status": "SEALED"
@@ -11913,6 +12212,38 @@
       "proposedProtection": [
         "fallback reads on fields cleared upstream are dead - trace the field lifecycle before writing ?? chains"
       ]
+    },
+    {
+      "id": "L-TT-79",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TT-CLEAN-A2-INT-4"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "review-surface",
+      "missedInvariantIds": [],
+      "escapeReason": "defensive drain lanes are unreachable in well-formed flow by construction; their upstream fault is the loud failure",
+      "applicability": [
+        "reviewer: do not request pins for fault-only defensive paths whose precondition is itself an upstream loud failure"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "expected - no action"
+      ],
+      "promotionEvidenceIds": [],
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TT-CLEAN-A2-INT"
+      ],
+      "capabilityDelta": "reject fault-only defensive-discard paths without pins",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null
     }
   ],
   "messages": [],
@@ -12764,6 +13095,38 @@
       "payloadPath": "events/0053.json",
       "payloadHash": "e1d470f6049f4eece897bb63a3bacad7412ee3542a60813c6dc1dd529019977e",
       "eventHash": "109cebd358d8651ad35ef821286dd7dec36d22484a9c91ca4475e8ca06efcefe"
+    },
+    {
+      "seq": 54,
+      "at": "2026-09-25T21:42:25.357Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "7f5643ac46887fb66fef2ca6bd690c96fc3591875b268de40b81985cf524b494",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "109cebd358d8651ad35ef821286dd7dec36d22484a9c91ca4475e8ca06efcefe",
+      "payloadPath": "events/0054.json",
+      "payloadHash": "dcc7c25fb5e68eef229e7af85f0390adde514f1148d01286b858358812111272",
+      "eventHash": "4ed335372e89115fe892acc954fe20afaaa747dacfbac7d66731137dfd3371bf"
+    },
+    {
+      "seq": 55,
+      "at": "2026-09-25T21:49:10.846Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "7f5643ac46887fb66fef2ca6bd690c96fc3591875b268de40b81985cf524b494",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "4ed335372e89115fe892acc954fe20afaaa747dacfbac7d66731137dfd3371bf",
+      "payloadPath": "events/0055.json",
+      "payloadHash": "7cc9c0e1e9a80cc0d9b8b047b936fc17f371a96c237e91c173c7c0b64e4ac758",
+      "eventHash": "2933adaffef9f35b1b3c0c350fbfde55f1dc45ce3db0206e394b7b81ea2cc966"
     }
   ]
 }
