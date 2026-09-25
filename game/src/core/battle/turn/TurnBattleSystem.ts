@@ -2071,13 +2071,11 @@ export class TurnBattleSystem {
           this.grantTheFromCast(actor, chargedSkill, chargedCrit)
         }
 
-        // Sweep deaths produced inside this unwired lane. Reflect
-        // entries are not flushed here: this lane only runs when
-        // runtime === undefined (no proc lane exists), and in a wired
-        // battle the charged resolve routes through the plan lane,
-        // whose queued reflects flush at the shared action tail below.
-        this.sweepBuffDeaths(battle)
-
+        // No death sweep or reflect flush here: this lane only runs
+        // when runtime === undefined, so no buff/proc authority exists
+        // to sweep and no reflect lane is queued; in a wired battle the
+        // charged resolve routes through the plan lane, whose queued
+        // reflects flush at the shared action tail below.
         this.resolveAllyActionWindow(battle, actor, declared, landedTargets)
 
         return { targetIds, extraImpacts }

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
@@ -6,7 +6,7 @@ import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
-import { PHAN_CHAN_BASE_RATIO, PHAN_CHAN_BUFF } from '../../../data/buff/TheTuBuffs'
+import { PHAN_CHAN_BASE_RATIO, PHAN_CHAN_BUFF, PHAN_CHAN_MARKED_RATIO } from '../../../data/buff/TheTuBuffs'
 import {
   HUYET_CUONG_CAP,
   HUYET_CUONG_PER_PERCENT,
@@ -21,6 +21,7 @@ import {
   buildTheTuKit,
 } from '../../../data/skill/TheTuSkills'
 import { collectBodyKitModifiers } from '../../the-tu/TheTuKitModifiers'
+import { THE_TU_NODES } from '../../../data/progression/TheTuNodes'
 import { createDefaultPlayer } from '../../player/Player'
 import type { EntityVitalsChangedEvent } from '../../combat/EntityVitalsSystem'
 
@@ -450,5 +451,106 @@ describe('huyet_cuong — kit-local scope', () => {
         HUYET_CUONG_PER_PERCENT + 0.005 * 3,
       )
     }
+  })
+})
+
+describe('tran_kinh — landed-hit weaken chain (node -> clone -> stacks -> damage cut)', () => {
+  it('minor_tran_kinh L1 bakes stacks=2 onto tran_ap; the weakened enemy deals 30% less on its next action', () => {
+    const player = createDefaultPlayer()
+    player.cultivationPath = 'body'
+    player.cultivationWay = 'body_pathway'
+    player.nodeLevels = { minor_tran_kinh: 1 }
+    const mods = collectBodyKitModifiers({ getAll: () => THE_TU_NODES }, player)
+
+    const kit = buildTheTuKit('tran_the', mods, { special: true })
+    const rider = kit.basic.appliesAilments?.find((a) => a.buffDefinitionId === 'tran_kinh')
+    expect(rider).toBeDefined()
+    expect(rider!.stacks).toBe(2)
+
+    const caster = createCombatant({
+      id: 'caster',
+      type: 'player',
+      stats: createBaseStats({ ...NO_MITIGATION, might: 10 }),
+      currentHp: 100_000,
+      maxHp: 100_000,
+    })
+    const enemy = createCombatant({
+      id: 'enemy',
+      stats: createBaseStats({ ...NO_MITIGATION, might: 100 }),
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+    })
+    const f = makeFixture(caster, enemy)
+    f.casterP.basic = kit.basic
+
+    const log = vitalsLog(f.eventBus)
+    vi.spyOn(Math, 'random').mockReturnValue(0) // ailment application must land
+    f.system.resolveNextStep(f.battle) // caster AoE lands tran_kinh x2
+
+    const weaken = f.runtime.buffs
+      .getForTarget(enemy.id as never)
+      .find((instance) => instance.definitionId === 'tran_kinh')
+    expect(weaken).toBeDefined()
+    expect(weaken!.stacks).toBe(2)
+    expect(enemy.stats.finalDamagePercent).toBe(-0.3)
+
+    f.system.resolveNextStep(f.battle) // weakened enemy acts: -0.15/stack = -30% final damage
+
+    const enemyHits = log.filter(
+      (entry) => entry.reason === 'damage' && entry.entityId === caster.id,
+    )
+    const enemyHit = enemyHits[enemyHits.length - 1]
+    expect(enemyHit).toBeDefined()
+    // Base hit: might 100 x multiplier 1, no mitigation -> 100; weakened
+    // finalDamagePercent -0.30 -> 70.
+    expect(enemyHit!.amount).toBe(70)
+
+    // Clock = N+1 (TRAN_KINH_TURNS 2 covers one hostile action): the
+    // instance survives the weakened turn and expires at the holder's
+    // next status phase.
+    expect(
+      f.runtime.buffs
+        .getForTarget(enemy.id as never)
+        .some((instance) => instance.definitionId === 'tran_kinh'),
+    ).toBe(true)
+  })
+})
+
+describe('chan_an — mark-expiry reverts the amplified reflect (INT-3 pin)', () => {
+  it('the marked reflect ratio reverts to base once the chan_an mark expires', () => {
+    const caster = createCombatant({
+      id: 'caster',
+      type: 'player',
+      stats: createBaseStats({ ...NO_MITIGATION, might: 100 }),
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+    })
+    const enemy = createCombatant({
+      id: 'enemy',
+      stats: createBaseStats({ ...NO_MITIGATION }),
+      currentHp: 10_000,
+      maxHp: 10_000,
+    })
+    const f = makeFixture(caster, enemy)
+    // Enemy holds the phan_chan reflect; the mark rides the ATTACKER
+    // (markedBy presence is read on the reflected side).
+    f.runtime.applyBuff(PHAN_CHAN_BUFF.id, f.enemyP)
+    vi.spyOn(Math, 'random').mockReturnValue(0) // chan_an application must land
+    // durationOverride 2 = exactly ONE marked hostile turn (the
+    // holder's status phase decrements before its declare - same N+1
+    // clock convention as cam_cong).
+    f.runtime.applyBuff('chan_an', f.casterP, f.enemyP, { durationOverride: 2 })
+
+    const log = vitalsLog(f.eventBus)
+    f.system.resolveNextStep(f.battle) // caster turn 1: mark 2->1 active -> marked reflect
+    f.system.resolveNextStep(f.battle) // enemy turn
+    f.system.resolveNextStep(f.battle) // caster turn 2: mark 1->0 expired -> base reflect
+
+    const reflects = log.filter(
+      (entry) => entry.reason === 'reflection' && entry.entityId === caster.id,
+    )
+    expect(reflects).toHaveLength(2)
+    expect(reflects[0]!.amount).toBeCloseTo(10_000 * PHAN_CHAN_MARKED_RATIO)
+    expect(reflects[1]!.amount).toBeCloseTo(10_000 * PHAN_CHAN_BASE_RATIO)
   })
 })
