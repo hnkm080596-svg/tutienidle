@@ -9,6 +9,7 @@ import type { TheEconomyPayload } from '../../core/the-tu/TheTuCapabilities'
 import type { BodyKitModifierValues } from '../../core/the-tu/TheTuKitModifiers'
 import type { HiddenBodyMechanicModifierValues } from '../../core/the-tu/TheTuAnMechanicModifiers'
 import { THE_PROC_COST, THE_PROC_GAIN } from '../../core/the-tu/TheEconomy'
+import { GRID_COLUMN_COUNT } from '../../core/battle/BattleGrid'
 import { MAX_THE } from '../../core/combat/CombatTypes'
 import {
   HO_MON_MARKER,
@@ -106,6 +107,9 @@ export const BAT_TU_BA_THE: TurnSkillDefinition = {
  * primary scaling = caster MAX HP (sourceMaxHpRatio rides the raw base
  * pre-mitigation). Trong The node levels add sourceMaxHpRatio on the
  * clone; the Tran Kinh node adds the tran_kinh weaken application.
+ * all_lanes reads anchor.col +/- columnRadius on every row - enemy
+ * slots sit 2 columns apart, so the full-grid radius is what actually
+ * makes this hit every valid enemy (default radius would band ~1 col).
  */
 export const TRAN_AP: TurnSkillDefinition = {
   id: 'tran_ap',
@@ -116,7 +120,7 @@ export const TRAN_AP: TurnSkillDefinition = {
     sourceMaxHpRatio: TRAN_AP_MAXHP_RATIO,
     levelScaling: 0.05,
   },
-  targeting: { shape: 'all_lanes' },
+  targeting: { shape: 'all_lanes', columnRadius: GRID_COLUMN_COUNT },
 }
 
 /**

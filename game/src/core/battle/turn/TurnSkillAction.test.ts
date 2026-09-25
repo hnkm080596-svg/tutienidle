@@ -11,6 +11,7 @@ import {
 import type { TurnBattleParticipant } from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { createBaseStats } from '../../stats/StatBlock'
+import { TRAN_AP } from '../../../data/skill/TheTuSkills'
 
 function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats()
@@ -245,6 +246,18 @@ describe('collectTurnTargets', () => {
     const affected = collectTurnTargets(primary, [primary], { shape: 'column' })
 
     expect(affected.map((p) => p.id)).toEqual(['primary'])
+  })
+
+  // tran_ap pins AoE = every valid enemy: enemy slots sit 2 columns
+  // apart, so a default-band all_lanes would hit ~1 column only.
+  it("tran_ap's authored all_lanes covers the full enemy column spread", () => {
+    const primary = participant({ id: 'primary', entity: entity({ id: 'primary', x: 7, row: 0 }) })
+    const e1 = participant({ id: 'e1', entity: entity({ id: 'e1', x: 9, row: 0 }) })
+    const e2 = participant({ id: 'e2', entity: entity({ id: 'e2', x: 11, row: 1 }) })
+
+    const affected = collectTurnTargets(primary, [primary, e1, e2], TRAN_AP.targeting!)
+
+    expect(affected.map((p) => p.id).sort()).toEqual(['e1', 'e2', 'primary'])
   })
 })
 
