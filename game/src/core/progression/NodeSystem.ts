@@ -806,7 +806,10 @@ export function respecNodeTree(
             node => !preservedIds.has(node.id) && !node.rewardOnly,
           )
         : registry.get(scope.rootId).rewardOnly
-          ? []
+          ? // Grant-owned roots refuse respec and seed no sweep: no
+            // kind:'node' prerequisite anywhere points at a reward-only
+            // node, so there are no descendants to reset either.
+            []
           : [registry.get(scope.rootId)]
     }
   } else {

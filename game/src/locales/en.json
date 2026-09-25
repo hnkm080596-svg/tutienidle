@@ -116,8 +116,13 @@
       "respec": {
         "button": "Respec",
         "title": "Respec Node Tree",
-        "body": "Reset all node investment? Regain {regain} Insight — {count} nodes and cores reset to 0. Free while in Beta.",
-        "confirm": "Respec"
+        "body": "Reset all node investment? Regain {regain} Insight — {count} nodes and cores reset to 0. Free while in Beta.{clawback}",
+        "confirm": "Respec",
+        "clawback": " Also revoked: {detail}.",
+        "clawbackSkills": "lose {n} skills",
+        "clawbackSpecs": "clear {n} specializations",
+        "clawbackSwords": "lose {y} Sword Intent and {d} forged swords",
+        "clawbackRefund": "regain {n} extra Insight"
       },
       "branchLabels": {
         "theTu": "Body Cultivation",

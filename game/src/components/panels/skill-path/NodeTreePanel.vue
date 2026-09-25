@@ -316,6 +316,54 @@ const respecPreview = computed(() => {
   return gameManager.progressionOps.previewNodeRespec(player.$state)
 })
 
+// Clawback legs the plain {regain}/{count} line does not cover: skills and
+// specialization picks revoked by grant clawback, plus kiem-tu residual
+// losses. Rendered only when the preview reports at least one leg.
+const respecClawbackText = computed(() => {
+  const clawback = respecPreview.value?.clawback
+
+  if (clawback === undefined) {
+    return ''
+  }
+
+  const parts: string[] = []
+
+  if (clawback.unlearnedSkillIds.length > 0) {
+    parts.push(
+      t('panels.nodeTree.respec.clawbackSkills', {
+        n: clawback.unlearnedSkillIds.length,
+      }),
+    )
+  }
+
+  if (clawback.clearedSpecializations.length > 0) {
+    parts.push(
+      t('panels.nodeTree.respec.clawbackSpecs', {
+        n: clawback.clearedSpecializations.length,
+      }),
+    )
+  }
+
+  if (clawback.kiemY > 0 || clawback.kiemDao > 0) {
+    parts.push(
+      t('panels.nodeTree.respec.clawbackSwords', {
+        y: clawback.kiemY,
+        d: clawback.kiemDao,
+      }),
+    )
+  }
+
+  if (clawback.refund > 0) {
+    parts.push(
+      t('panels.nodeTree.respec.clawbackRefund', { n: clawback.refund }),
+    )
+  }
+
+  return parts.length === 0
+    ? ''
+    : t('panels.nodeTree.respec.clawback', { detail: parts.join(', ') })
+})
+
 // Any purchased node in the rendered view makes respec meaningful; the
 // branch computation already resolved ownership per entry.
 const hasOwnedNodes = computed(() => {
@@ -730,6 +778,7 @@ onBeforeUnmount(() => {
       :message="t('panels.nodeTree.respec.body', {
         regain: respecPreview.refund,
         count: respecPreview.resetCount,
+        clawback: respecClawbackText,
       })"
       :confirm-label="t('panels.nodeTree.respec.confirm')"
       danger

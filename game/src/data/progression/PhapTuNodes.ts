@@ -39,9 +39,11 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     requiredWay: 'spell_pathway' as const,
   })),
   // Three-path design (2026-09-25, sec.4-b) -- realm-reward grant nodes sit
-  // OUTSIDE the stamping map: buildRealmRewardNodes already stamps
-  // requiredCultivationPath 'spell' but no requiredWay, so both spell ways
-  // aggregate them once granted (hidden_spell_pathway still cannot buy a
-  // single tree node).
+  // OUTSIDE the stamping map: buildRealmRewardNodes stamps
+  // requiredCultivationPath 'spell' but adds no requiredWay of its own.
+  // Individual authored defs may still carry one: the_thuc_tinh sets
+  // requiredWay 'spell_pathway', so the hidden way never aggregates it even
+  // though the other reward nodes are visible to both spell ways once
+  // granted (hidden_spell_pathway still cannot buy a single tree node).
   ...buildRealmRewardNodes(),
 ]

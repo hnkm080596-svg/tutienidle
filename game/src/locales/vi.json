@@ -116,8 +116,13 @@
       "respec": {
         "button": "Đặt Lại",
         "title": "Đặt Lại Cây Node",
-        "body": "Đặt lại toàn bộ đầu tư node? Lấy lại {regain} Cảm Ngộ — {count} node và core về 0. Miễn phí trong thời gian Beta.",
-        "confirm": "Đặt Lại"
+        "body": "Đặt lại toàn bộ đầu tư node? Lấy lại {regain} Cảm Ngộ — {count} node và core về 0. Miễn phí trong thời gian Beta.{clawback}",
+        "confirm": "Đặt Lại",
+        "clawback": " Thu hồi thêm: {detail}.",
+        "clawbackSkills": "mất {n} kỹ năng",
+        "clawbackSpecs": "mất {n} chuyên hóa",
+        "clawbackSwords": "mất {y} Kiếm Ý và {d} kiếm",
+        "clawbackRefund": "hoàn thêm {n} Cảm Ngộ"
       },
       "branchLabels": {
         "theTu": "Thể Tu Hiện",
