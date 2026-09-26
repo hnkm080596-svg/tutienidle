@@ -1,6 +1,5 @@
 import type { TurnSkillDefinition } from '../../core/battle/turn/TurnSkillAction'
 import type { BuffDefinition } from '../../core/buff2/BuffDefinition'
-import type { BuffDefinitionId } from '../../core/battle/contracts/ids'
 import type {
   ReactiveProcPayload,
   ReactiveTriggerPayload,
@@ -13,6 +12,7 @@ import { MAX_THE } from '../../core/combat/CombatTypes'
 import {
   DAN_THE_BUFF,
   HO_MON_MARKER,
+  HO_VE_BUFF,
   PHAN_CHAN_BUFF,
   PHAN_MON_MARKER,
   TRAN_KINH_WEAKEN_RATIO,
@@ -315,7 +315,7 @@ export function buildTheTuAnKit(
 
   // Thau The - observed-action income bonus bakes onto the marker
   // clone's authored field; the engine reads it, never the constant.
-  const ungThe = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === 'ung_the')
+  const ungThe = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === UNG_THE_BUFF.id)
   for (const payload of defPayloads<TheEconomyPayload>(ungThe, 'the_economy')) {
     payload.gainOnObservedAction =
       (payload.gainOnObservedAction ?? 0) + mods.observationGainBonus
@@ -329,11 +329,11 @@ export function buildTheTuAnKit(
 
     // Ho Bich - a committed intercept wards the rescued ally.
     if (mods.interceptWardRatio > 0) {
-      const marker = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === 'ho_mon')
+      const marker = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === HO_MON_MARKER.id)
       for (const payload of defPayloads<ReactiveProcPayload>(marker, 'reactive_proc')) {
         if (payload.mechanic === 'intercept') {
           payload.grantsWardToOriginalTarget = {
-            buffDefinitionId: 'ho_ve' as BuffDefinitionId,
+            buffDefinitionId: HO_VE_BUFF.id,
             sourceMaxHpRatio: mods.interceptWardRatio,
           }
         }
@@ -356,7 +356,7 @@ export function buildTheTuAnKit(
   // Trong Phan - evade-context heavy counter payload swap on the marker
   // plus the payload clone (base phan_kich multiplier + node bonus).
   if (mods.evadeCounterMultiplierBonus > 0) {
-    const marker = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === 'phan_mon')
+    const marker = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === PHAN_MON_MARKER.id)
     for (const payload of defPayloads<ReactiveProcPayload>(marker, 'reactive_proc')) {
       if (payload.trigger === 'onEvade' && payload.queuedAction !== undefined) {
         payload.queuedAction = { ...payload.queuedAction, payloadSkillId: TRONG_PHAN_KICH.id }

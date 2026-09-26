@@ -2,6 +2,8 @@ import { MAX_THE } from '../combat/CombatTypes'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { ActiveCapabilityGrant } from '../battle/contracts/capability'
 
+import { UNG_THE_BUFF } from '../../data/buff/TheTuBuffs'
+
 import { asTheEconomy } from './TheTuCapabilities'
 
 // The Tu An -- Ung The beta (design authority
@@ -46,7 +48,7 @@ export const UNG_TRE_GAUGE_PENALTY = 400
 /** Dan The one-shot: observed-action income multiplied while it sits. */
 export const DAN_THE_INCOME_MULT = 3
 
-const UNG_THE_ID = 'ung_the'
+const UNG_THE_ID = UNG_THE_BUFF.id
 
 /** Single cap authority — entity.maxThe is baked at participant build. */
 export function theCap(entity: Pick<CombatEntity, 'maxThe'>): number {

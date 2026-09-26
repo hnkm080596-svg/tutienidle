@@ -289,6 +289,59 @@ describe('observation income (Ung The beta)', () => {
     expect(playerP.thamTargetId).toBeUndefined()
     void enemyP2
   })
+
+  it('ward-break retaliation killing the observed enemy mid-action still pays observation income', () => {
+    const { battle, playerP, enemyP, combat, runtime } = makeBattle()
+    runtime.applyBuff('ung_the', playerP)
+    // Pre-planted mark; the enemy acts FIRST (speed authority is baseStats).
+    playerP.thamTargetId = 'enemy'
+    enemyP.entity.baseStats = asBaseStats({ ...enemyP.entity.baseStats, speed: 30 })
+    enemyP.entity.stats = { ...enemyP.entity.stats, speed: 30 }
+    enemyP.speed = 30
+
+    // The player's own ward breaks under the hit and retaliates lethal
+    // damage onto the attacker INSIDE the hit loop -- the observed enemy
+    // dies before the post-action tail runs, so its marks are already
+    // swept by the time income is computed. The resolution-time snapshot
+    // must still pay.
+    playerP.entity.currentWard = 1
+    playerP.entity.baseStats = asBaseStats({
+      ...playerP.entity.baseStats,
+      wardMax: 100_000,
+      wardBreakDamagePercent: 10,
+    })
+    playerP.entity.stats = { ...playerP.entity.stats, wardMax: 100_000, wardBreakDamagePercent: 10 }
+
+    const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY, undefined, runtime)
+    system.resolveNextStep(battle)
+
+    expect(enemyP.entity.alive).toBe(false)
+    expect(playerP.entity.currentThe).toBe(4)
+  })
+
+  it('a dan_the-marked observed enemy dying inside its action pays the x3 yield', () => {
+    const { battle, playerP, enemyP, combat, runtime } = makeBattle()
+    runtime.applyBuff('ung_the', playerP)
+    playerP.thamTargetId = 'enemy'
+    runtime.applyBuff('dan_the', enemyP)
+    enemyP.entity.baseStats = asBaseStats({ ...enemyP.entity.baseStats, speed: 30 })
+    enemyP.entity.stats = { ...enemyP.entity.stats, speed: 30 }
+    enemyP.speed = 30
+
+    playerP.entity.currentWard = 1
+    playerP.entity.baseStats = asBaseStats({
+      ...playerP.entity.baseStats,
+      wardMax: 100_000,
+      wardBreakDamagePercent: 10,
+    })
+    playerP.entity.stats = { ...playerP.entity.stats, wardMax: 100_000, wardBreakDamagePercent: 10 }
+
+    const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY, undefined, runtime)
+    system.resolveNextStep(battle)
+
+    expect(enemyP.entity.alive).toBe(false)
+    expect(playerP.entity.currentThe).toBe(4 * DAN_THE_INCOME_MULT)
+  })
 })
 
 describe('INV-10 — income never funds the action that earned it', () => {

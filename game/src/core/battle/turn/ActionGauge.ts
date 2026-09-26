@@ -25,8 +25,10 @@ export function isGaugeReady(actor: GaugeActor): boolean {
  * hoàn toàn (lượt thường). fractionConsumed<1 = hành động "rẻ" (spec: chỉ
  * tốn nửa gauge), actor còn lại gần lượt kế hơn.
  * Gauge âm TỒN TẠI qua consume (Ung Tre debt: hình phạt -400 đẩy gauge
- * xuống âm để trì hoãn lượt kế) — consume không bao giờ nâng số âm về 0;
- * một consume fraction<1 trừ tiếp trên đỉnh số âm như mọi khoản nợ khác.
+ * xuống âm để trì hoãn lượt kế) — một consume fraction<1 trừ tiếp trên
+ * đỉnh số âm như mọi khoản nợ khác. Consume đầy đủ (fraction=1) reset về
+ * 0 như mọi lượt thường; một debtor không thể hành động tự nhiên cho
+ * tới khi gauge vượt GAUGE_MAX nên nhánh này unreachable trong gameplay.
  */
 export function consumeGaugeAfterAction(actor: GaugeActor, fractionConsumed = 1): void {
   const clamped = Math.min(1, Math.max(0, fractionConsumed))
@@ -54,4 +56,10 @@ export function refundGauge(actor: GaugeActor, amount: number): void {
     (a clamped refund would eat part of it). */
 export function applyDebtPenalty(actor: GaugeActor, amount: number): void {
   actor.actionGauge -= amount
+}
+
+/** Pacing reset on a wave lull — idle gauge drops to 0 but an Ung Tre
+    debt survives the lull: a pacing reset is not a debt amnesty. */
+export function resetGaugeOnWaveLull(actor: GaugeActor): void {
+  actor.actionGauge = Math.min(0, actor.actionGauge)
 }

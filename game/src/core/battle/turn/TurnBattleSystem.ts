@@ -15,6 +15,7 @@ import {
   consumeGaugeAfterAction,
   advanceGauge,
   isGaugeReady,
+  resetGaugeOnWaveLull,
 } from './ActionGauge'
 import { resolveNextTurn } from './TurnQueue'
 import { tickCooldowns, selectAction, selectForcedAction, commitAction, collectTurnTargets, executionCommitsCast, pickCompositePool, MAX_MULTICAST, NULL_ACTION, type TurnSkillExecution, type TurnQueuedExecution } from './TurnSkillAction'
@@ -61,6 +62,7 @@ import {
 } from '../../proc/ProcCapabilities'
 import type { ReactiveProcAttempt } from '../../proc/CombatProcSystem'
 import type { BuffDefinition } from '../../buff2/BuffDefinition'
+import type { BuffInstanceSnapshot } from '../../buff2/BuffInstance'
 
 export interface TurnResourcePool {
   values: Record<string, number>
@@ -1257,7 +1259,7 @@ export class TurnBattleSystem {
           // Wave-lull resets tempo but never forgives an Ung Tre debt:
           // a negative gauge (the committed-reaction penalty) carries
           // into the next wave -- the debt's delay is still owed.
-          participant.actionGauge = Math.min(0, participant.actionGauge)
+          resetGaugeOnWaveLull(participant)
         }
 
         return null
@@ -1981,6 +1983,26 @@ export class TurnBattleSystem {
       this.procs.discardPendingReflects()
     }
 
+    // Ung The observation income is judged at action-resolution time: an
+    // observed enemy that completes its action earns The even if a
+    // ward-break retaliation or the reflect flush below kills it inside
+    // this resolution (the mark dies with it, but the completed action
+    // already paid). Snapshot the observing reactors AND the dan_the
+    // one-shot mark before any hit resolves -- the tail cannot read
+    // either off a corpse.
+    const observedAtResolution = new Set<string>()
+    let danTheAtResolution: BuffInstanceSnapshot | null | undefined
+    if (this.runtime !== undefined && battle.enemies.includes(actor)) {
+      for (const reactor of battle.players) {
+        if (this.isObserved(battle, reactor, actor)) {
+          observedAtResolution.add(reactor.id)
+        }
+      }
+      danTheAtResolution = this.buffs
+        .getForTarget(actor.entity.id)
+        .find((inst) => inst.definitionId === DAN_THE_BUFF.id) ?? null
+    }
+
     // buff2 M-INT -- the legacy per-participant wuxing-initiation flag is
     // gone: reaction eligibility is instance metadata on the apply_buff
     // ops (every application marks 'eligible'; the elemental registry
@@ -2368,20 +2390,6 @@ export class TurnBattleSystem {
       }
     }
 
-    // Ung The observation income is judged at action-resolution time:
-    // an observed enemy that completes its action earns The even if the
-    // reflect flush below kills it inside this same tail (the mark dies
-    // with it, but the completed action already paid). Snapshot the
-    // observing reactors before the settle can remove the actor.
-    const observedAtResolution = new Set<string>()
-    if (this.runtime !== undefined && battle.enemies.includes(actor)) {
-      for (const reactor of battle.players) {
-        if (this.isObserved(battle, reactor, actor)) {
-          observedAtResolution.add(reactor.id)
-        }
-      }
-    }
-
     // The Tu beta (Phan Chan) -- once-per-hostile-action reflect settle:
     // hits of this action queued ONE pending entry per reflect-holder;
     // the action is fully settled here (primary cast, extras, dynamic
@@ -2398,7 +2406,14 @@ export class TurnBattleSystem {
     // unswept until the next declare (HUD reads a dead mark for a step).
     this.sweepBuffDeaths(battle)
 
-    this.resolvePostActionWindows(battle, actor, declared, landedTargets, observedAtResolution)
+    this.resolvePostActionWindows(
+      battle,
+      actor,
+      declared,
+      landedTargets,
+      observedAtResolution,
+      danTheAtResolution,
+    )
 
     return { targetIds, extraImpacts }
   }
@@ -3120,10 +3135,11 @@ export class TurnBattleSystem {
     declared: TurnDeclaredAction,
     landedTargets: TurnBattleParticipant[],
     observedAtResolution?: ReadonlySet<string>,
+    danTheAtResolution?: BuffInstanceSnapshot | null,
   ): void {
     this.resolvePhanWindow(battle, actor, declared)
     this.resolveAllyActionWindow(battle, actor, declared, landedTargets)
-    this.grantObservationIncome(battle, actor, declared, landedTargets, observedAtResolution)
+    this.grantObservationIncome(battle, actor, declared, landedTargets, observedAtResolution, danTheAtResolution)
   }
 
   /**
@@ -3269,6 +3285,7 @@ export class TurnBattleSystem {
     declared: TurnDeclaredAction,
     landedTargets: TurnBattleParticipant[],
     observedAtResolution?: ReadonlySet<string>,
+    danTheAtResolution?: BuffInstanceSnapshot | null,
   ): void {
     // ccBlocked: the enemy's turn was consumed by hard CC -- it never
     // completed an action, matching the sealed NULL_ACTION (undefined
@@ -3307,11 +3324,17 @@ export class TurnBattleSystem {
 
     // (b) Observed enemy completed a natural action -- income to every
     // OBSERVING player reactor. dan_the on the actor multiplies this
-    // action's yield and is consumed on use (dies with the target).
+    // action's yield and is consumed on use (dies with the target). The
+    // mark is judged on the resolution-time snapshot -- a ward-break or
+    // reflect kill already swept the live instance off the corpse. null
+    // = snapshot taken, no mark; undefined = legacy lane, no snapshot.
     if (battle.enemies.includes(actor)) {
-      const danThe = this.buffs
-        .getForTarget(actor.entity.id)
-        .find((inst) => inst.definitionId === DAN_THE_BUFF.id)
+      const danThe =
+        danTheAtResolution === undefined
+          ? this.buffs
+              .getForTarget(actor.entity.id)
+              .find((inst) => inst.definitionId === DAN_THE_BUFF.id)
+          : danTheAtResolution ?? undefined
       const mult = danThe !== undefined ? DAN_THE_INCOME_MULT : 1
       let consumed = false
 
@@ -3707,14 +3730,87 @@ export class TurnBattleSystem {
       return { state: battle.state, actorId: '', skillId: '', targetIds: [], ccBlocked: false }
     }
 
+    // Headless wave lane: pending telegraphs only tick inside tickPacing
+    // (the production pacing driver) -- this lane has no pacing clock, so
+    // the telegraph collapses into the pick: in-flight spawns materialize
+    // before actor selection, else a wave lull would hand phantom turns
+    // to the survivors while the wave waits unspawned forever. The next
+    // wave only starts once the field is empty again -- sequential waves
+    // preserved; there is no lull hold (gauge keeps running).
+    this.advanceHeadlessWave(battle)
+
     const actor = this.peekNextActor(battle)
 
     if (!actor) {
+      if (battle.wave !== undefined) {
+        const livingEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
+        const pendingCount = battle.wave.pendingEnemySpawns.length
+
+        if (
+          isStageComplete(
+            battle.wave.spawnedCount,
+            battle.wave.totalEnemyCount,
+            livingEnemyCount,
+            pendingCount,
+          )
+        ) {
+          battle.state = 'victory'
+          return { state: 'victory', actorId: '', skillId: '', targetIds: [], ccBlocked: false }
+        }
+      }
+
       battle.state = 'defeat'
       return { state: 'defeat', actorId: '', skillId: '', targetIds: [], ccBlocked: false }
     }
 
     return this.resolveActorTurn(battle, actor)
+  }
+
+  /**
+   * Headless lane only (resolveNextStep/runToCompletion): collapse the
+   * pacing telegraph -- materialize every in-flight spawn, and start the
+   * next wave's pending batch when the field is empty (same predicate as
+   * the tickPacing wave block). Returns true when the field changed.
+   */
+  private advanceHeadlessWave(battle: TurnBattle): boolean {
+    const wave = battle.wave
+
+    if (wave === undefined) {
+      return false
+    }
+
+    const aliveCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
+
+    if (
+      wave.pendingEnemySpawns.length === 0 &&
+      this.spawnEnemy !== undefined &&
+      shouldStartNextWave(aliveCount, 0, wave.waveIndex, wave.waves.length)
+    ) {
+      // Same standing-slot dedupe scope as the tickPacing spawn batch.
+      const occupiedSlots = new Set<string>()
+
+      for (let index = 0; index < wave.waves[wave.waveIndex]!; index++) {
+        const participant = this.spawnEnemy(occupiedSlots)
+        const totalTicks = spawnTelegraphTicks(participant.entity)
+
+        wave.pendingEnemySpawns.push({ participant, ticksRemaining: totalTicks, totalTicks })
+        wave.spawnedCount += 1
+      }
+
+      wave.waveIndex += 1
+    }
+
+    if (wave.pendingEnemySpawns.length === 0) {
+      return false
+    }
+
+    for (const pending of wave.pendingEnemySpawns) {
+      battle.enemies.push(pending.participant)
+    }
+
+    wave.pendingEnemySpawns = []
+
+    return true
   }
 
   /** Thin wrapper for tests/dev tooling -- loops resolveNextStep() to completion. */
