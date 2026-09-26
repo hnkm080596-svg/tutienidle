@@ -4007,11 +4007,11 @@
    "duplicateOf": null,
    "exception": null,
    "status": "REJECTED_WITH_PROOF",
-   "rejectionReason": "rejected: spec-ambiguity resolved toward deliberate design — \"flat/direct-vitals\" = applyDirectDamage vitals channel (ward bypass intact); finalDamagePercent is designed to apply to ALL direct reactive damage (stat-system-reimagined Task 6 D13); changing channel now is a balance-affecting behavior change under frozen balance (BETA-BALANCE ruling)"
+   "rejectionReason": "rejected: spec-ambiguity resolved toward deliberate design \u2014 \"flat/direct-vitals\" = applyDirectDamage vitals channel (ward bypass intact); finalDamagePercent is designed to apply to ALL direct reactive damage (stat-system-reimagined Task 6 D13); changing channel now is a balance-affecting behavior change under frozen balance (BETA-BALANCE ruling)"
   },
   {
    "id": "F-TT-COR-A9-2",
-   "title": "Save/restore boundary does not re-enforce root mutex — crafted v85 save can own both cuong_chien and tran_the",
+   "title": "Save/restore boundary does not re-enforce root mutex \u2014 crafted v85 save can own both cuong_chien and tran_the",
    "state": {
     "productStateId": "3954e88d7601834989e11f6fceb47c0bc546e04635bce6f8faec3d2994afae10",
     "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
@@ -7118,7 +7118,7 @@
    "counterexample": "none - reads as dead production code but is deliberately retained",
    "expected": "production modules reachable from production callers",
    "actual": "module consumed only by its own tests; header documents the parking",
-   "rootCause": "feature intentionally parked pending the Bát Tự mission set; tests keep the contract warm",
+   "rootCause": "feature intentionally parked pending the B\u00e1t T\u1ef1 mission set; tests keep the contract warm",
    "rootClass": "deliberate-design-contract",
    "subsystem": "the-tu-beta",
    "siblingSearch": [
@@ -7142,7 +7142,7 @@
    "duplicateOf": null,
    "exception": null,
    "status": "REJECTED_WITH_PROOF",
-   "rejectionReason": "deliberate documented parking — the module header declares its parked status and tests keep the contract warm; deleting it is a product decision for the Bát Tự mission, not a defect"
+   "rejectionReason": "deliberate documented parking \u2014 the module header declares its parked status and tests keep the contract warm; deleting it is a product decision for the B\u00e1t T\u1ef1 mission, not a defect"
   },
   {
    "id": "F-TT-COR-A4-4",
@@ -7205,7 +7205,7 @@
    "duplicateOf": "F-TT-COR-A4-1",
    "exception": null,
    "status": "REJECTED_WITH_PROOF",
-   "rejectionReason": "duplicate of F-TT-COR-A4-1 — crafted/corrupt save only; registry-less save validation is a documented project boundary; tamper-only reachability per prior adjudications"
+   "rejectionReason": "duplicate of F-TT-COR-A4-1 \u2014 crafted/corrupt save only; registry-less save validation is a documented project boundary; tamper-only reachability per prior adjudications"
   },
   {
    "id": "F-TT-COR-A4-5",
@@ -7231,7 +7231,7 @@
    "discoveredBy": "devin-f26cfbc75b4240d8b0c7dd4064aa90a6",
    "invariantIds": [],
    "evidenceIds": [],
-   "counterexample": "a mid-fight breakthrough that reaches syncRealmPassive with a missing realm passive has every learnSkill grant rejected and the result ignored — masked today by the has() early-return",
+   "counterexample": "a mid-fight breakthrough that reaches syncRealmPassive with a missing realm passive has every learnSkill grant rejected and the result ignored \u2014 masked today by the has() early-return",
    "expected": "the sync refuses the battle boundary explicitly like its sibling syncTalentCombatPassive",
    "actual": "learnSkill's mid-battle rejection is swallowed; the seam silently no-ops",
    "rootCause": "new writer gate introduced a silent-skip seam the sync did not observe",
@@ -7470,7 +7470,7 @@
   },
   {
    "id": "F-TT-COR-A5-1",
-   "title": "Save boundary does not enforce the excludesNode mutex — crafted save can own both roots",
+   "title": "Save boundary does not enforce the excludesNode mutex \u2014 crafted save can own both roots",
    "state": {
     "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
     "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
@@ -7499,7 +7499,7 @@
      ],
      "termsAndMethod": "grep 'excludesNode' at the save boundary; enumerate node-set invariants",
      "hitDispositions": [
-      "zero hits — only core-catalog membership, purchasedNodeIds mirror, D9f inverse-source are enforced; owned-node acquisition legality is never re-validated at load"
+      "zero hits \u2014 only core-catalog membership, purchasedNodeIds mirror, D9f inverse-source are enforced; owned-node acquisition legality is never re-validated at load"
      ],
      "coverageLimits": [
       "save-edit surface only; no in-game path can produce dual roots (purchase gates on getNodeLevel===0)"
@@ -7539,7 +7539,7 @@
    "locations": [
     {
      "path": "src/composables/useProgressionActions.ts",
-     "symbolOrSection": "devResetBranch wrapper :63-72 — refund===0 early-returns without bumpState; ops layer GameManagerProgressionOps.devResetBranch :622-628",
+     "symbolOrSection": "devResetBranch wrapper :63-72 \u2014 refund===0 early-returns without bumpState; ops layer GameManagerProgressionOps.devResetBranch :622-628",
      "revision": "697c2050",
      "basis": "SOURCE"
     }
@@ -7555,7 +7555,7 @@
      ],
      "termsAndMethod": "enumerate wrapper return-value conventions",
      "hitDispositions": [
-      "respecNodeTree already uses null=reject/0=success-with-bump — the intended shape exists; devResetBranch returns 0 for both rejection and revoked free nodes"
+      "respecNodeTree already uses null=reject/0=success-with-bump \u2014 the intended shape exists; devResetBranch returns 0 for both rejection and revoked free nodes"
      ],
      "coverageLimits": [
       "dev-only surface; App.vue bumpState() runs every tick so panels self-correct within a frame"
@@ -7569,9 +7569,9 @@
    "pinEvidenceIds": [],
    "verificationEvidenceIds": [],
    "closureReviewIds": [],
-   "counterexample": "a reset of a branch holding only free nodes (insightCost:0) revokes nodes, refunds 0, and skips bumpState — UI reads stale until next tick",
+   "counterexample": "a reset of a branch holding only free nodes (insightCost:0) revokes nodes, refunds 0, and skips bumpState \u2014 UI reads stale until next tick",
    "expected": "wrapper bumps on any successful reset; only rejection should skip",
-   "actual": "refund===0 conflates reject with success-0; impact nil — dev-only channel, no Vue callers, tick-level bumpState self-heals",
+   "actual": "refund===0 conflates reject with success-0; impact nil \u2014 dev-only channel, no Vue callers, tick-level bumpState self-heals",
    "rootCause": "scalar return conflates two semantic outcomes; ops layer performs the reset correctly either way",
    "rootClass": "interface-ambiguity",
    "subsystem": "the-tu-beta",
@@ -7579,7 +7579,7 @@
    "status": "REJECTED_WITH_PROOF",
    "duplicateOf": null,
    "exception": null,
-   "rejectionReason": "nil impact on a dev-only surface: the ops layer performs the reset correctly and App.vue bumpState() runs every tick, so the panel self-corrects within a frame. The wrapper comment is descriptive, not contractive. Accepted as a known convention gap — lesson recorded for the null=reject convention."
+   "rejectionReason": "nil impact on a dev-only surface: the ops layer performs the reset correctly and App.vue bumpState() runs every tick, so the panel self-corrects within a frame. The wrapper comment is descriptive, not contractive. Accepted as a known convention gap \u2014 lesson recorded for the null=reject convention."
   },
   {
    "id": "F-TT-AUT-A5-1",
@@ -7612,7 +7612,7 @@
      ],
      "termsAndMethod": "cross-check wrapper conventions across progression actions",
      "hitDispositions": [
-      "duplicate of F-TT-COR-A5-2 — independent lens found the same conflation"
+      "duplicate of F-TT-COR-A5-2 \u2014 independent lens found the same conflation"
      ],
      "coverageLimits": [
       "dev-only, nil impact"
@@ -7628,7 +7628,7 @@
    "closureReviewIds": [],
    "counterexample": "same crafted branch as F-TT-COR-A5-2",
    "expected": "bump on successful zero-refund reset",
-   "actual": "skipped — cosmetic staleness at worst on a dev-only channel",
+   "actual": "skipped \u2014 cosmetic staleness at worst on a dev-only channel",
    "rootCause": "scalar return conflates reject vs success-0",
    "rootClass": "interface-ambiguity",
    "subsystem": "the-tu-beta",
@@ -7755,11 +7755,11 @@
    "status": "REJECTED_WITH_PROOF",
    "duplicateOf": null,
    "exception": null,
-   "rejectionReason": "Every listed surface is backstopped by the domain gate — ops reject mid-battle (pinned for all writers incl. the new RealmAdvanceOps pins). The affordance binding is a single shared predicate consumed identically; TheTuTreePanel.test.ts demonstrates the disabled-state pattern. Eight duplicative component-mount pins assert no additional behavior and the maintenance cost is disproportionate; accepted as a recorded coverage limitation."
+   "rejectionReason": "Every listed surface is backstopped by the domain gate \u2014 ops reject mid-battle (pinned for all writers incl. the new RealmAdvanceOps pins). The affordance binding is a single shared predicate consumed identically; TheTuTreePanel.test.ts demonstrates the disabled-state pattern. Eight duplicative component-mount pins assert no additional behavior and the maintenance cost is disproportionate; accepted as a recorded coverage limitation."
   },
   {
    "id": "F-TT-CLN5-INT-3",
-   "title": "resolveTalentEntitlement ungated while its inner passive sync is gated — latent partial-application window",
+   "title": "resolveTalentEntitlement ungated while its inner passive sync is gated \u2014 latent partial-application window",
    "state": {
     "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
     "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
@@ -7814,7 +7814,7 @@
    "status": "REJECTED_WITH_PROOF",
    "duplicateOf": null,
    "exception": null,
-   "rejectionReason": "Unreachable by construction: the entitlement modal is blocking aria-modal (no dismiss path mid-battle) and pendingTalentEntitlement drains only outside battle. If a future caller emerges, adding the gate is one line — recorded as a latent-edge precedent for future reviewers instead of speculative hardening now."
+   "rejectionReason": "Unreachable by construction: the entitlement modal is blocking aria-modal (no dismiss path mid-battle) and pendingTalentEntitlement drains only outside battle. If a future caller emerges, adding the gate is one line \u2014 recorded as a latent-edge precedent for future reviewers instead of speculative hardening now."
   },
   {
    "id": "F-TT-CLN5-INT-4",
@@ -7925,7 +7925,7 @@
    "closureReviewIds": [],
    "counterexample": "realmLevel++ lands while a fight is running",
    "expected": "progression writes gated mid-battle",
-   "actual": "benign — minted kits are the only mid-battle read; realmId unchanged so syncs no-op",
+   "actual": "benign \u2014 minted kits are the only mid-battle read; realmId unchanged so syncs no-op",
    "rootCause": "minor path touches realmLevel only; battle state never reads it",
    "rootClass": "pre-existing",
    "subsystem": "core",
@@ -8392,6 +8392,184 @@
    "exception": null,
    "status": "REJECTED_WITH_PROOF",
    "rejectionReason": "cosmetic stale comment on a dev-channel-only wrapper (no production caller); comment-only churn on this file would invalidate the sealed fixed-point for zero behavioral delta - documented as lesson L-TT-116 and carried into the next product batch if one lands"
+  },
+  {
+   "state": {
+    "productStateId": "3a3d365cf93cdfe71690deb04a083c36468bed941ceee4a93920729ffdb0da2b",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "invariantIds": [],
+   "evidenceIds": [],
+   "siblingFindingIds": [],
+   "closureReviewIds": [],
+   "exception": null,
+   "subsystem": "the-tu-beta",
+   "id": "F-TT-CLN7-COR-1",
+   "title": "Save boundary does not enforce excludesNode mutex - crafted save can own both TheTu roots",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "FIXTURE_INJECTED",
+   "locations": [
+    {
+     "path": "src/services/save/saveShapeValidation.ts",
+     "symbolOrSection": "nodeLevels checks :667-709, core ownership :1290-1352",
+     "revision": "5029acf2",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": "resolveBodyKit precedence :271-290",
+     "revision": "5029acf2",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-d81142cd46504ece87d4241e3cde3344",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/services/save/",
+      "src/core/player/"
+     ],
+     "termsAndMethod": "crafted dual-root save -> validateGameSaveShape -> resolveBodyKit",
+     "hitDispositions": [
+      "ok=true, empty issues; resolveBodyKit deterministically picks cuong"
+     ],
+     "coverageLimits": [
+      "runtime inert - tran channels never baked"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "counterexample": "crafted nodeLevels{cuong_chien:1, tran_the:1, both cores} passes validation; runtime picks cuong deterministically",
+   "expected": "exactly one root ownable; dual-root save flagged at the boundary",
+   "actual": "purchase/respec gates enforce mutex; save shape performs no excludesNode check; runtime inert",
+   "rootCause": "save boundary validates shape, not progression invariant - intentional beta scope",
+   "rootClass": "crafted-save-tolerance",
+   "repair": "REJECT_WITH_PROOF",
+   "status": "DUPLICATE_LINKED",
+   "duplicateOf": "F-TT-AUT-1",
+   "rejectionReason": "Duplicate of F-TT-AUT-1 (13th+ independent rediscovery): crafted-save-only reachability, deterministic inert resolution (resolveBodyKit picks cuong, tran never baked), no registry at the boundary is deliberate beta contract. Precedents: F-TT-COR-2, F-TT-INT-2, F-TT-COR-12, F-TT-CLN6-COR-1 all duplicate-linked."
+  },
+  {
+   "state": {
+    "productStateId": "3a3d365cf93cdfe71690deb04a083c36468bed941ceee4a93920729ffdb0da2b",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "invariantIds": [],
+   "evidenceIds": [],
+   "siblingFindingIds": [],
+   "closureReviewIds": [],
+   "exception": null,
+   "subsystem": "the-tu-beta",
+   "id": "F-TT-CLN7-COR-2",
+   "title": "Pre-existing nondeterministic failure: ngoDaoReaction ailment-resist RNG flake",
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManager.ngoDaoReaction.test.ts",
+     "symbolOrSection": "ailmentResistPercent 0.002 vs battle Math.random()",
+     "revision": "5029acf2",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-d81142cd46504ece87d4241e3cde3344",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/game/"
+     ],
+     "termsAndMethod": "scoped vitest rerun x5 + merge-base comparison",
+     "hitDispositions": [
+      "passes standalone + on merge-base; ~0.2%/application player ailmentResist roll"
+     ],
+     "coverageLimits": [
+      "not caused by the Th\u1ec3 Tu beta diff"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "counterexample": "expected ['tran_an'] to include 'doc_can' - ailmentResist occasionally resists the test expectation",
+   "expected": "deterministic scoped suite",
+   "actual": "one flaky failure in the scoped run; formula unchanged by this diff",
+   "rootCause": "test asserts through a Math.random() resist roll - pre-existing RNG exposure",
+   "rootClass": "pre-existing-flake",
+   "repair": "REJECT_WITH_PROOF",
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "Pre-existing on merge-base, outside the beta surface, formula untouched. Reruns 5/5 pass. Pinning a seeded-RNG test fixture is a repo-wide hygiene task, not a beta-scope repair."
+  },
+  {
+   "state": {
+    "productStateId": "3a3d365cf93cdfe71690deb04a083c36468bed941ceee4a93920729ffdb0da2b",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "invariantIds": [],
+   "evidenceIds": [],
+   "siblingFindingIds": [],
+   "closureReviewIds": [],
+   "exception": null,
+   "subsystem": "the-tu-beta",
+   "id": "F-TT-CLN7-AUT-1",
+   "title": "Dead getTurnBattle dep retained on GameManagerRealmAdvanceOps after canonical-predicate conversion",
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+     "symbolOrSection": "deps interface :116",
+     "revision": "5029acf2",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/game/GameManager.ts",
+     "symbolOrSection": "wiring :684",
+     "revision": "5029acf2",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-364b691c556348c2a11263dc15936545",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/game/"
+     ],
+     "termsAndMethod": "grep 'getTurnBattle' inside the class - only the declaration line matches",
+     "hitDispositions": [
+      "all 4 former consumers now call deps.isTurnBattleInProgress()"
+     ],
+     "coverageLimits": [
+      "harmless dead wiring"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "counterexample": "removing the member changes zero call sites - nothing reads it",
+   "expected": "deps interface drops getTurnBattle after the conversion",
+   "actual": "declaration + wiring retained with zero consumers",
+   "rootCause": "conversion to the canonical predicate left the old dep unwired-in-practice",
+   "rootClass": "dead-contract",
+   "repair": "REJECT_WITH_PROOF",
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "Zero behavioral delta, grep-verifiable dead contract on a live deps interface - terminal-stage cosmetic judged non-defect per the established dead-contract posture (same class as prior rejected dead-surface nits). Removing it would churn the sealed product state for no semantic change; recorded as L-TT-117 so future reviewers can duplicate-link instead of reflagging."
   }
  ],
  "evidence": [
@@ -11796,6 +11974,65 @@
    ],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-TT-CLEAN-A7-COR",
+   "state": {
+    "productStateId": "3a3d365cf93cdfe71690deb04a083c36468bed941ceee4a93920729ffdb0da2b",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 35,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-d81142cd46504ece87d4241e3cde3344",
+   "contextId": "sealed-child-d81142cd46504ece87d4241e3cde3344",
+   "model": "swe-2-max",
+   "role": "CORRECTNESS",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-26T01:36:00.000Z",
+   "sealedAt": "2026-09-26T01:57:00.000Z",
+   "previousPhaseReviewId": "REV-TT-CLO-24",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-CLN7-COR-1",
+    "F-TT-CLN7-COR-2"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-TT-CLEAN-A7-AUT",
+   "state": {
+    "productStateId": "3a3d365cf93cdfe71690deb04a083c36468bed941ceee4a93920729ffdb0da2b",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 36,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-364b691c556348c2a11263dc15936545",
+   "contextId": "sealed-child-364b691c556348c2a11263dc15936545",
+   "model": "swe-2-max",
+   "role": "AUTHORITY",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-26T01:40:00.000Z",
+   "sealedAt": "2026-09-26T02:00:00.000Z",
+   "previousPhaseReviewId": "REV-TT-CLEAN-A7-COR",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TT-CLN7-AUT-1"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [],
@@ -14359,7 +14596,7 @@
    "applicability": [],
    "exclusions": [],
    "proposedProtection": [
-    "when a validator already enforces crafted-state strictness (orphan cores, grant-less majors), extend the same strictness to domain invariants like mutex pairs — or explicitly record the accepted gap."
+    "when a validator already enforces crafted-state strictness (orphan cores, grant-less majors), extend the same strictness to domain invariants like mutex pairs \u2014 or explicitly record the accepted gap."
    ],
    "promotionEvidenceIds": [],
    "qualifiedBy": [
@@ -14385,7 +14622,7 @@
    "originatingRun": "the-tu-beta-2026-09-25",
    "rootClass": "boundary-gap",
    "missedInvariantIds": [],
-   "escapeReason": "non-core nodeLevels validated only for number shape; registry membership and authored maxLevel bounds are unchecked — tamper saves persist dead ids or uncapped modifiers.",
+   "escapeReason": "non-core nodeLevels validated only for number shape; registry membership and authored maxLevel bounds are unchecked \u2014 tamper saves persist dead ids or uncapped modifiers.",
    "applicability": [],
    "exclusions": [],
    "proposedProtection": [
@@ -14419,7 +14656,7 @@
    "applicability": [],
    "exclusions": [],
    "proposedProtection": [
-    "after any diff touching files containing ${} template substitutions, scan added comment lines for >127 codepoints directly — the ratchet blind-spots them."
+    "after any diff touching files containing ${} template substitutions, scan added comment lines for >127 codepoints directly \u2014 the ratchet blind-spots them."
    ],
    "promotionEvidenceIds": [],
    "qualifiedBy": [
@@ -14881,7 +15118,7 @@
    "qualifiedBy": [
     "REV-TT-CLEAN-A4-AUT"
    ],
-   "capabilityDelta": "no code change — adjudication precedent only",
+   "capabilityDelta": "no code change \u2014 adjudication precedent only",
    "recurrenceFindingIds": [],
    "status": "CLASSIFIED",
    "policyVersion": null,
@@ -14903,7 +15140,7 @@
    "originatingRun": "the-tu-beta-2026-09-25",
    "rootClass": "crafted-save-unreachable-path",
    "missedInvariantIds": [],
-   "escapeReason": "reviewer flagged ungated progression write on tier update only reachable through a crafted/corrupted save — the save boundary has no registry by deliberate design",
+   "escapeReason": "reviewer flagged ungated progression write on tier update only reachable through a crafted/corrupted save \u2014 the save boundary has no registry by deliberate design",
    "applicability": [
     "any save-boundary write-path finding without a registry-less crafted-save proof"
    ],
@@ -14919,7 +15156,7 @@
    "qualifiedBy": [
     "REV-TT-CLEAN-A4-COR"
    ],
-   "capabilityDelta": "none — rejection precedent recorded",
+   "capabilityDelta": "none \u2014 rejection precedent recorded",
    "recurrenceFindingIds": [
     "F-TT-COR-A4-1"
    ],
@@ -15179,7 +15416,7 @@
    "originatingRun": "the-tu-beta-2026-09-25",
    "rootClass": "interface-ambiguity",
    "missedInvariantIds": [],
-   "escapeReason": "scalar return values conflating reject vs success-0 surfaced twice in one round from two lenses — the null=reject convention (respecNodeTree) is the established answer",
+   "escapeReason": "scalar return values conflating reject vs success-0 surfaced twice in one round from two lenses \u2014 the null=reject convention (respecNodeTree) is the established answer",
    "applicability": [
     "all progression-op wrappers"
    ],
@@ -15214,7 +15451,7 @@
    "originatingRun": "the-tu-beta-2026-09-25",
    "rootClass": "coverage-gap",
    "missedInvariantIds": [],
-   "escapeReason": "gate added at ops layer without the rejection pin that sibling writers carry — detection escaped until the adversarial coverage enumeration",
+   "escapeReason": "gate added at ops layer without the rejection pin that sibling writers carry \u2014 detection escaped until the adversarial coverage enumeration",
    "applicability": [
     "any new isTurnBattleInProgress gate",
     "RealmAdvanceOps writers"
@@ -15247,7 +15484,7 @@
    "originatingRun": "the-tu-beta-2026-09-25",
    "rootClass": "coverage-gap",
    "missedInvariantIds": [],
-   "escapeReason": "affordance-layer pins scale linearly with surface count while the authoritative gate is already pinned — reviewer enumerates surfaces, not the boundary",
+   "escapeReason": "affordance-layer pins scale linearly with surface count while the authoritative gate is already pinned \u2014 reviewer enumerates surfaces, not the boundary",
    "applicability": [
     "UI affordance surfaces consuming isBattleInProgress"
    ],
@@ -15317,7 +15554,7 @@
    ],
    "exclusions": [],
    "proposedProtection": [
-    "when disabling a surface inBattle, enumerate EVERY interactive element in the same template — a modal v-for is easy to miss"
+    "when disabling a surface inBattle, enumerate EVERY interactive element in the same template \u2014 a modal v-for is easy to miss"
    ],
    "promotionEvidenceIds": [],
    "qualifiedBy": [
@@ -15369,7 +15606,8 @@
    "supersedes": null,
    "triggerType": "DEFECT",
    "findingIds": [
-    "F-TT-CLN6-COR-1"
+    "F-TT-CLN6-COR-1",
+    "F-TT-CLN7-COR-1"
    ],
    "incidentEvidenceIds": [],
    "originatingRun": "the-tu-beta-2026-09-25",
@@ -15385,7 +15623,8 @@
    ],
    "promotionEvidenceIds": [],
    "qualifiedBy": [
-    "REV-TT-CLEAN-A6-COR"
+    "REV-TT-CLEAN-A6-COR",
+    "REV-TT-CLEAN-A7-COR"
    ],
    "capabilityDelta": "crafted-save mutex gap confirmed duplicate class",
    "recurrenceFindingIds": [],
@@ -15556,6 +15795,70 @@
    "effectiveFromRun": null,
    "guidance": null,
    "preventionEvidenceIds": []
+  },
+  {
+   "id": "L-TT-117",
+   "qualifiedBy": [
+    "REV-TT-CLEAN-A7-AUT"
+   ],
+   "applicability": [
+    "deps-interface members after predicate conversions"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "future reviewers: a retained-but-unread deps member is a judged non-defect (duplicate-link to F-TT-CLN7-AUT-1) unless a caller was meant to keep using it"
+   ],
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "missedInvariantIds": [],
+   "promotionEvidenceIds": [],
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null,
+   "preventionEvidenceIds": [],
+   "findingIds": [
+    "F-TT-CLN7-AUT-1"
+   ],
+   "rootClass": "dead-contract",
+   "escapeReason": "interface retains a member whose last reader was converted - invisible to behavior, only visible to maintainers reading the wiring",
+   "capabilityDelta": "deps-surface hygiene after a predicate migration"
+  },
+  {
+   "id": "L-TT-118",
+   "qualifiedBy": [
+    "REV-TT-CLEAN-A7-COR"
+   ],
+   "applicability": [
+    "scoped vitest runs asserting through Math.random() rolls"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "scoped-suite flake triage rule: rerun the file standalone + on merge-base; pre-existing RNG exposure is REJECT-class, out of the beta surface"
+   ],
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "missedInvariantIds": [],
+   "promotionEvidenceIds": [],
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null,
+   "preventionEvidenceIds": [],
+   "findingIds": [
+    "F-TT-CLN7-COR-2"
+   ],
+   "rootClass": "pre-existing-flake",
+   "escapeReason": "unseeded ailmentResist roll inside an assertion - deterministic failure only at ~0.2%/application",
+   "capabilityDelta": "rng-seeded test fixtures for resist rolls"
   }
  ],
  "messages": [],
