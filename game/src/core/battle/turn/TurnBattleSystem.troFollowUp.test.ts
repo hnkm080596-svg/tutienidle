@@ -329,7 +329,7 @@ describe('Phan post-action window (Ung The beta)', () => {
     expect(defenderP.reactionDebt).toBe(1)
   })
 
-  it('a NON-DAMAGING enemy cast resolving on the defender still opens the window (outcome taken)', () => {
+  it('a NON-DAMAGING enemy cast resolving on the defender still opens the window (outcome evaded)', () => {
     const { battle, defenderP, w } = makePhanWorld()
     const mark: TurnSkillDefinition = {
       id: 'enemy_mark',
@@ -343,6 +343,38 @@ describe('Phan post-action window (Ung The beta)', () => {
 
     expect(battle.queuedFollowUps).toHaveLength(1)
     expect(battle.queuedFollowUps![0]!.payloadSkillId).toBe('phan_kich')
+  })
+
+  // cleanA12 COR pin — the adjudicated default: a reactor in affected
+  // with NO recorded hit outcome resolves 'evaded' (TBS ~:3200). Under
+  // major_trong_phan that means a non-damaging hostile cast mints the
+  // premium trong_phan_kich payload — this pins the contract so the
+  // default cannot silently regress.
+  it('trong_phan owned: a NON-DAMAGING cast on the defender queues trong_phan_kich (evaded default)', () => {
+    const { battle, enemyP, defenderP } = makePhanWorld()
+    const evadeMods = {
+      observationGainBonus: 0,
+      phanKinhArmorPierce: 0,
+      interceptWardRatio: 0,
+      evadeCounterMultiplierBonus: 0.6,
+      danTheBonus: 0,
+    }
+    const w = world(() => [defenderP, enemyP], bakedKitRegistry(evadeMods))
+    withMarker(w, defenderP, 'phan_mon', 'counterChance', 1, 100)
+    defenderP.thamTargetId = 'enemy'
+    defenderP.reactivePayloads = buildTheTuAnKit(evadeMods).reactivePayloads
+    const mark: TurnSkillDefinition = {
+      id: 'enemy_mark',
+      cooldownTurns: 0,
+      targeting: { shape: 'single' },
+      appliesAilments: [{ buffDefinitionId: 'chan_an', chance: 1 }],
+    }
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    systemOf(w).applyActionImpact(battle, declaredAction('enemy', mark, [defenderP], battle.players))
+
+    expect(battle.queuedFollowUps).toHaveLength(1)
+    expect(battle.queuedFollowUps![0]!.payloadSkillId).toBe('trong_phan_kich')
   })
 })
 

@@ -11,7 +11,7 @@
     "base": "be1bdf8d5f3fa45cbe82318473980b7b03ec9227",
     "head": "70636f2981906a12b56686d13561977270924115",
     "state": {
-      "productStateId": "b28946e2d6a125d0797c20ae3272799570769467893e99ff89b1d282319a9f6f",
+      "productStateId": "ca812f5eaae9b4e70246ddf57ecd811e1907692e283e8a9c21b4f8532602aa3c",
       "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
       "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -5305,6 +5305,116 @@
       "exception": null,
       "status": "REJECTED_WITH_PROOF",
       "rejectionReason": "success-pays is authored; no refund channel; unreachable with authored data"
+    },
+    {
+      "id": "F-TTA-CLN12-COR-1",
+      "title": "non-damaging hostile cast on the player resolves the evaded branch — under trong_phan mints the premium payload",
+      "state": {
+        "productStateId": "ca812f5eaae9b4e70246ddf57ecd811e1907692e283e8a9c21b4f8532602aa3c",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": ":3200-3216 resolvePhanWindow",
+          "revision": "fea642ba",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-284df4d164b14a3980192b8d1b544ce2",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "affected-without-hit-outcome defaults to evaded; debuff cast mints trong_phan_kich under the node",
+      "expected": "an evade premium should follow an actual dodge per design fiction",
+      "actual": "affected-without-hit-outcome defaults to evaded; debuff cast mints trong_phan_kich under the node",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-an-ung-the",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton site"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: the cleanA11 adjudication deliberately chose the evaded default (an unrecorded hit must not mint an onImpactLanded payload). A distinct third outcome is a design contract change, not a defect — the behavior is now pinned (evaded default + premium minting) so it cannot silently regress.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "REJECTED_WITH_PROOF",
+      "rejectionReason": "adjudicated default; design-contract change requires ruling; now pinned"
+    },
+    {
+      "id": "F-TTA-CLN12-COR-2",
+      "title": "stale test title claims (outcome taken) — assertion could not distinguish the branch",
+      "state": {
+        "productStateId": "ca812f5eaae9b4e70246ddf57ecd811e1907692e283e8a9c21b4f8532602aa3c",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.troFollowUp.test.ts",
+          "symbolOrSection": ":332",
+          "revision": "fea642ba",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-284df4d164b14a3980192b8d1b544ce2",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "title said \"(outcome taken)\" but engine resolves evaded; assertion identical under either branch without trong_phan",
+      "expected": "title/assertion pin the actual outcome contract",
+      "actual": "title said \"(outcome taken)\" but engine resolves evaded; assertion identical under either branch without trong_phan",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-an-ung-the",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton site"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED uncommitted: title corrected to (outcome evaded); new pin asserts trong_phan_kich under major_trong_phan on the same non-damaging cast — branch now distinguishable.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
     }
   ],
   "evidence": [
@@ -7205,7 +7315,7 @@
         "F-TTA-CLN11-AUT-4"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TTA-CLO-13",
@@ -7234,7 +7344,7 @@
       ],
       "findingIds": [],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TTA-CLEAN-A11-INT",
@@ -7263,7 +7373,7 @@
         "F-TTA-CLN11-INT-1"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TTA-CLEAN-A11-COR",
@@ -7291,6 +7401,36 @@
       "findingIds": [
         "F-TTA-CLN11-COR-1",
         "F-TTA-CLN11-COR-2"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "REV-TTA-CLEAN-A12-COR",
+      "state": {
+        "productStateId": "ca812f5eaae9b4e70246ddf57ecd811e1907692e283e8a9c21b4f8532602aa3c",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 48,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-284df4d164b14a3980192b8d1b544ce2",
+      "contextId": "sealed-child-284df4d1",
+      "model": "swe-2-max",
+      "role": "CORRECTNESS",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T07:39:00.000Z",
+      "sealedAt": "2026-09-26T08:04:00.000Z",
+      "previousPhaseReviewId": "REV-TTA-CLEAN-A11-COR",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TTA-CLN12-COR-1",
+        "F-TTA-CLN12-COR-2"
       ],
       "novelAttackIds": [],
       "status": "SEALED"
@@ -9724,6 +9864,58 @@
       "findingIds": [
         "F-TTA-CLN11-COR-2"
       ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TTA-79",
+      "rootClass": "spec-ambiguity",
+      "escapeReason": "premium payload reachable via non-damaging cast",
+      "capabilityDelta": "evaded-default contract pinned; third outcome needs design ruling",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TTA-CLN12-COR-1"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-an-ung-the-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TTA-80",
+      "rootClass": "test-drift",
+      "escapeReason": "stale title masked the actual outcome branch",
+      "capabilityDelta": "pins must assert the branch-distinguishing payload",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TTA-CLN12-COR-2"
+      ]
     }
   ],
   "messages": [],
@@ -10879,6 +11071,22 @@
       "payloadPath": "events/0072.json",
       "payloadHash": "241dcf103e065e1bc86909640b27386fad2aa0e17aadfcd856d216a56b6da6d8",
       "eventHash": "2d37963cc99f15aaf036082f847361b081eb9c13af7bdbb7bb37883c9b3e09c2"
+    },
+    {
+      "seq": 73,
+      "at": "2026-09-26T07:37:05.882Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "ca812f5eaae9b4e70246ddf57ecd811e1907692e283e8a9c21b4f8532602aa3c",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "2d37963cc99f15aaf036082f847361b081eb9c13af7bdbb7bb37883c9b3e09c2",
+      "payloadPath": "events/0073.json",
+      "payloadHash": "faf7da3b745e502ef887c56718ce432b1bffa1b879bb8156b9046b486038047b",
+      "eventHash": "3a82d72e26cd5b2b5169472389a6744722630db791cd3964492bd5f7cca33ee5"
     }
   ]
 }
