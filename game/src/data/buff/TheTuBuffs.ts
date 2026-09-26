@@ -179,8 +179,9 @@ export const KHIEM_KHICH_DEBUFF: BuffDefinition = {
 // ung_the owns the own-basic-lands income channel (single channel per
 // review P1 - THAM_THE carries no gain field). The *_mon markers carry
 // each root's reactiveProc spec read by the reactive windows (Tasks
-// 15-18). tu_the/bach_ung modulate the check cost/window through
-// reactiveEconomy (Tasks 15/19).
+// 15-18). tu_the/bach_ung carry PARKED reactive_economy payloads
+// (validated data, zero engine consumers in the beta window -
+// asReactiveEconomy has no callers; see SkillCoreNodes).
 
 function makeHiddenMarker(
   id: string,
@@ -233,7 +234,7 @@ export const TRO_MON_MARKER = makeHiddenMarker('tro_mon', 'Trợ Môn', 'Trợ: 
   }),
 ])
 
-/** Tu The - stance window: reactive checks cost less (3 self-turns). */
+/** Tu The - stance window. PARKED: reactive_economy payload has no beta consumer. */
 export const TU_THE_BUFF: BuffDefinition = {
   id: 'tu_the',
   name: 'Tú Thế',
@@ -248,11 +249,12 @@ export const TU_THE_BUFF: BuffDefinition = {
 }
 
 /**
- * Bach Ung - burst window: reactive checks are free and payloads gain
- * the authored upgrade rider (spec section 6.1 "counter hits +break":
- * the payload merges `payloadAilments` into its appliesAilments at
- * resolve time - a choang stun application through the existing ailment
- * mechanism, not an invented damage multiplier).
+ * Bach Ung - burst window: payloads gain the authored upgrade rider
+ * (spec section 6.1 "counter hits +break": the payload merges
+ * `payloadAilments` into its appliesAilments at resolve time - a choang
+ * stun application through the existing ailment mechanism, not an
+ * invented damage multiplier). PARKED: reactive_economy payload has no
+ * beta consumer.
  */
 export const BACH_UNG_BUFF: BuffDefinition = {
   id: 'bach_ung',
