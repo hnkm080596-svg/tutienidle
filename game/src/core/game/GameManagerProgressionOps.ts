@@ -31,7 +31,6 @@ import { gainKiemY, grantKiemDao, loseKiemY } from '../kiem-tu/NguKiemDao'
 import { isHiddenSwordPathway } from '../kiem-tu/KiemTuPath'
 import { validatePreset } from '../kiem-tu/KiemPhoSystem'
 import { getRealmIndex } from '../realm/realmSystem'
-import { isBattleInProgress } from '../battle/BattleTypes'
 import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
 import {
   resolveCombatSkillRoles,
@@ -109,6 +108,14 @@ export class GameManagerProgressionOps {
    * selectedTalentIds at character creation.
    */
   syncTalentCombatPassive(player: PlayerData) {
+    // A mid-battle sync would revoke the granted passives then see every
+    // re-grant rejected by learnSkill's in-battle gate, leaving the kit
+    // stripped - callers (boot/restore/creation/breakthrough) never run
+    // during combat, so the whole sync refuses the same boundary.
+    if (this.deps.isTurnBattleInProgress()) {
+      return
+    }
+
     const allTalentPassiveIds = TALENT_PASSIVE_SKILLS.map((skill) => skill.id)
 
     // Revoke every current talent passive first (granting right after is
@@ -155,6 +162,14 @@ export class GameManagerProgressionOps {
    * granted (nodeLevels[core] = 1 + mirror) via NodeSystem.
    */
   learnSkill(skillId: string, player: PlayerData): boolean {
+    // learnSkill writes nodeLevels via its own atomic grant (not the
+    // gated grantSkillCoreBySkillId wrapper) - same mid-battle contract:
+    // a running battle only reads its minted kit snapshot, so the grant
+    // rejects instead of looking applied mid-fight.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     const template = this.deps.skillTemplates.get(skillId)
 
     if (!template) {
@@ -237,6 +252,13 @@ export class GameManagerProgressionOps {
    * core - callers preflight so this never silently fails post-commit.
    */
   grantSkillCoreBySkillId(player: PlayerData, skillId: string): boolean {
+    // node investment mutates player.nodeLevels, which a running battle only
+    // ever reads through its minted kit snapshot - reject instead of
+    // letting an in-battle purchase look like it applied mid-fight.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     const core = this.resolveSkillCore(skillId)
 
     if (!core) {
@@ -261,6 +283,14 @@ export class GameManagerProgressionOps {
    * result.
    */
   purchaseNode(nodeId: string, player: PlayerData): boolean {
+    // Same out-of-combat discipline as respecNodeTree/switchRoute: node
+    // investment mutates player.nodeLevels, which a running battle only
+    // ever reads through its minted kit snapshot - reject instead of
+    // letting an in-battle purchase look like it applied mid-fight.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     if (!this.deps.nodeRegistry.has(nodeId)) {
       return false
     }
@@ -458,6 +488,13 @@ export class GameManagerProgressionOps {
       return false
     }
 
+    // node investment mutates player.nodeLevels, which a running battle only
+    // ever reads through its minted kit snapshot - reject instead of
+    // letting an in-battle purchase look like it applied mid-fight.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     if (player.spellPath.element !== null || player.spellPath.route !== null) {
       return false
     }
@@ -518,6 +555,13 @@ export class GameManagerProgressionOps {
    * per node data; cannot exceed maxLevel; failure mutates nothing.
    */
   upgradeNode(nodeId: string, player: PlayerData): boolean {
+    // Same battle gate as purchaseNode: an upgrade writes the same
+    // player.nodeLevels the running battle reads only through minted
+    // clones - reject instead of silently applying nothing mid-fight.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     if (!this.deps.nodeRegistry.has(nodeId)) {
       return false
     }
@@ -572,7 +616,13 @@ export class GameManagerProgressionOps {
    * (derived from level/cost data), cascades orphan child nodes; modifiers
    * update via the aggregators (no reverse subtraction of old modifiers).
    */
-  devResetBranch(branchTag: string, player: PlayerData): number {
+  devResetBranch(branchTag: string, player: PlayerData): number | null {
+    // Dev channel, same out-of-combat discipline as respecNodeTree:
+    // null = rejected in-battle, 0 = a legit empty refund.
+    if (this.deps.isTurnBattleInProgress()) {
+      return null
+    }
+
     const revoked = new Set<string>()
     const refund = devResetBranchSystem(player, this.deps.nodeRegistry, branchTag, revoked)
     this.applyOneShotClawback(player, revoked)
@@ -658,6 +708,12 @@ export class GameManagerProgressionOps {
    * injected dep so GameManager stays the notification owner.
    */
   levelUpSkill(skillId: string, player: PlayerData): boolean {
+    // Same battle gate as purchaseNode/upgradeNode - the core upgrade
+    // below writes player.nodeLevels mid-fight would never apply.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     const coreId = skillCoreNodeId(skillId)
 
     if (!this.deps.nodeRegistry.has(coreId)) {
@@ -735,6 +791,13 @@ export class GameManagerProgressionOps {
    * "Nguyen tac" sec.2).
    */
   allocateAttributePoint(player: PlayerData, stat: MainStatKey): boolean {
+    // baseStats are minted into the combat entity at battle build - a
+    // mid-battle write is invisible to the running fight, so it rejects
+    // like every other combat-shaping progression write.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     if (player.attributePoints <= 0) {
       return false
     }
@@ -759,6 +822,12 @@ export class GameManagerProgressionOps {
    * write can never produce a state restore would reject.
    */
   setMortalBasicSkill(player: PlayerData, skillId: string): boolean {
+    // the pick binds the kit at battle build - mid-battle writes are
+    // battle-invisible, so they reject like every other gated write.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     if (player.realmId !== 'mortal' || player.cultivationPath !== undefined) {
       return false
     }
@@ -839,7 +908,7 @@ export class GameManagerProgressionOps {
       return false
     }
 
-    if (isBattleInProgress(this.deps.getTurnBattle()?.state)) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
@@ -871,6 +940,12 @@ export class GameManagerProgressionOps {
 
   // Core Loop Foundation checklist (Muc SKILL) - "behavior-changing node".
   selectSkillSpecialization(skillId: string, specializationId: string): boolean {
+    // specialization changes the resolved kit - same mid-battle gate as
+    // the other combat-shaping writes.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     return this.deps.skillSystem.selectSpecialization(skillId, specializationId)
   }
 }

@@ -124,6 +124,32 @@
         "theTuAn": "Thể Tu Ẩn"
       }
     },
+    "theTuTree": {
+      "abandoned": "Đã bỏ con đường này",
+      "sealed": "Chưa đủ cảnh giới",
+      "sealedName": "???",
+      "sealedNext": "Phong ấn",
+      "roles": {
+        "root": "Võ Đạo",
+        "basic": "Cơ Bản",
+        "special": "Đặc Biệt"
+      },
+      "scaling": {
+        "might": "Sát Thương theo Căn Cốt",
+        "maxHp": "Sát Thương theo Sinh Mệnh Tối Đa",
+        "aoe": "Đánh Nhiều Kẻ",
+        "sacrifice": "Hiến Sinh Mệnh",
+        "huyetCuong": "Huyết Cuồng",
+        "taunt": "Khiêu Khích",
+        "mark": "Chấn Ấn",
+        "reflect": "Phản lực theo Sinh Mệnh Tối Đa"
+      },
+      "realms": {
+        "luyenKhi": "Luyện Khí",
+        "trucCo": "Trúc Cơ",
+        "kimDan": "Kim Đan"
+      }
+    },
     "skillPath": {
       "title": "Kỹ Năng",
       "mortalName": "Phàm Nhân",

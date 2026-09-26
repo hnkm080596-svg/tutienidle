@@ -9,18 +9,17 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
-import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { buffs as LIVE_BUFFS } from '../../../data/buff/buffs'
 import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 import { PHAN_KICH } from '../../../data/skill/TheTuSkills'
-import { HO_MON_MARKER, PHAN_CHINH_BUFF, PHAN_CHINH_MAXHP_RATIO, PHAN_CHINH_TAKEN_RATIO } from '../../../data/buff/TheTuBuffs'
+import { HO_MON_MARKER, PHAN_CHAN_BUFF, PHAN_CHAN_BASE_RATIO } from '../../../data/buff/TheTuBuffs'
 import { THE_PROC_GAIN } from '../../the-tu/TheEconomy'
 import type { ReactiveProcPayload } from '../../proc/ProcCapabilities'
 import type { EntityVitalsChangedEvent } from '../../combat/EntityVitalsSystem'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 
-// The Tu Reimagined (spec 6.2.1, plan Task 17) — the Ho intercept window:
+// The Tu Reimagined (spec 6.2.1, plan Task 17) - the Ho intercept window:
 // between an enemy-side declaration and impact, ONE player-side
 // protector (nearest to the attacker, carrying the ho_mon marker, able
 // to pay the proc cost) rolls protectChance; on success it replaces the
@@ -77,7 +76,7 @@ const ENEMY_AOE: TurnSkillDefinition = {
   cooldownTurns: 0,
   damage: { kind: 'physical', multiplier: 1 },
   // A column band across every lane (all_lanes, default columnRadius 1)
-  // — semantically multi-target regardless of how many entries survive
+  // - semantically multi-target regardless of how many entries survive
   // in declared.affected at impact time.
   targeting: { shape: 'all_lanes' },
 }
@@ -116,7 +115,7 @@ interface Fixture {
   roll: () => number
 }
 
-/** Enemy at (0,0); protected ally at (0,2); protector at (5,2) — near. */
+/** Enemy at (0,0); protected ally at (0,2); protector at (5,2) - near. */
 function makeFixture(): Fixture {
   const enemy = createCombatant({ id: 'enemy', type: 'enemy', currentHp: 100_000, maxHp: 100_000, x: 0, row: 0 }, 10)
   const squishy = createCombatant({ id: 'squishy', type: 'player', currentHp: 100_000, maxHp: 100_000, x: 0, row: 2 }, 5)
@@ -161,7 +160,7 @@ function makeFixture(): Fixture {
   return f
 }
 
-/** A declared enemy action against the squishy — the pre-impact state. */
+/** A declared enemy action against the squishy - the pre-impact state. */
 function declaredAgainst(fixture: Fixture, affected: TurnBattleParticipant[]): TurnDeclaredAction {
   return {
     actorId: 'enemy',
@@ -189,7 +188,7 @@ function declaredAgainst(fixture: Fixture, affected: TurnBattleParticipant[]): T
 }
 
 function system(f: Fixture, rng?: () => number): TurnBattleSystem {
-  // The rng seam is the LAST constructor param — engine rolls draw from
+  // The rng seam is the LAST constructor param - engine rolls draw from
   // it; proc rolls draw from the runtime's rng, which reads f.roll, so
   // a scripted closure here must feed BOTH seams (same stream, same
   // consumption order as the old single-seam construction).
@@ -234,7 +233,7 @@ describe('Ho intercept window (spec 6.2.1)', () => {
   it('only the NEAREST protector rolls — a broke near-protector means no fallback to the far one', () => {
     const f = makeFixture()
     // Near protector at (5,2) cannot pay; far protector at (9,2) is rich
-    // with guaranteed chance — spec D5: one substitution attempt only.
+    // with guaranteed chance - spec D5: one substitution attempt only.
     withHoMon(f, f.protectorP, 1, 5)
 
     const far = createCombatant({ id: 'far', type: 'player', currentHp: 100_000, maxHp: 100_000, x: 9, row: 2 }, 5)
@@ -247,7 +246,7 @@ describe('Ho intercept window (spec 6.2.1)', () => {
 
     expect(declared.intercepted).toBeUndefined()
     expect(f.squishyP.entity.currentHp).toBeLessThan(100_000)
-    // The far protector's pool was never touched — no attempt, no gain.
+    // The far protector's pool was never touched - no attempt, no gain.
     expect(farP.entity.currentThe).toBe(100)
   })
 
@@ -358,14 +357,14 @@ describe('Ho intercept — semantic single-target', () => {
     const f = makeFixture()
     f.enemyP.basic = ENEMY_AOE
     withHoMon(f, f.protectorP, 1, 100)
-    // Injected rng pinned low — the proc roll WOULD succeed if the
+    // Injected rng pinned low - the proc roll WOULD succeed if the
     // window opened. The hit on the squishy lands by construction
     // (accuracy 100 vs evasion 0 -> hit chance 1.0), so the global
     // Math.random needs no spy.
 
     // The AoE anchors on the squishy (column 0); the protector sits at
     // column 5 outside the columnRadius-1 band, so the declare collects
-    // a single affected entry — the degenerate case an affected-count
+    // a single affected entry - the degenerate case an affected-count
     // gate misreads as a single-target hit.
     const sys = system(f, () => 0)
     const declared = sys.declareActorAction(f.battle, f.enemyP)
@@ -387,7 +386,7 @@ describe('Ho intercept — semantic single-target', () => {
     f.enemyP.special = { skill: ENEMY_CHARGED, remainingCooldownTurns: 0 }
     withHoMon(f, f.protectorP, 1, 100)
 
-    // Injected rng pinned low — the intercept proc roll succeeds. The
+    // Injected rng pinned low - the intercept proc roll succeeds. The
     // substituted hit lands on the protector by construction (hit
     // chance 1.0), so the global Math.random needs no spy.
     const sys = system(f, () => 0)
@@ -398,7 +397,7 @@ describe('Ho intercept — semantic single-target', () => {
     expect(f.enemyP.chargingTurnsRemaining).toBe(1)
 
     // Charge-resolve turn: the declared targets materialize into BOTH
-    // chargeTargetIds and affected — the intercept window and the
+    // chargeTargetIds and affected - the intercept window and the
     // charged hit lane share one consumed target list (the regression
     // this guards: affected used to stay EMPTY here, so the window
     // could never see a charged hit).
@@ -413,7 +412,7 @@ describe('Ho intercept — semantic single-target', () => {
     expect(declared.intercepted).toBe(true)
     expect(declared.interceptedBy).toBe('protector')
     expect(declared.affected).toEqual([f.protectorP])
-    // Substitution must rewrite the charged target set — that is the
+    // Substitution must rewrite the charged target set - that is the
     // array the charge-resolve hit loop iterates.
     expect(declared.chargeTargetIds).toEqual(['protector'])
     expect(targetIds).toEqual(['protector'])
@@ -424,11 +423,11 @@ describe('Ho intercept — semantic single-target', () => {
   it('a reactive enemy action (actionSource: counter) never opens the window (INV-9)', () => {
     const f = makeFixture()
     withHoMon(f, f.protectorP, 1, 100)
-    // Injected rng pinned low — the roll would succeed if the window
+    // Injected rng pinned low - the roll would succeed if the window
     // opened; INV-9 must keep it closed.
 
     // A queued enemy-side reactive entry declares through the same
-    // TurnDeclaredAction shape but carries a reactive actionSource —
+    // TurnDeclaredAction shape but carries a reactive actionSource -
     // INV-9 bars it from opening new reactive windows. The evade /
     // ally-action / taken windows all gate on this field; the intercept
     // window must too.
@@ -483,7 +482,7 @@ describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () =
     // Injected rng pinned low: BOTH reactive-proc rolls (the intercept
     // and the taken-side counter) draw from the rng seam and succeed
     // (reactive chances hard-cap at REACTIVE_CHANCE_CAP = 0.6). The hit
-    // lands by construction — no Math.random spy.
+    // lands by construction - no Math.random spy.
     const sys = system(f, () => 0)
     const declared = driveChargedHit(f, sys)
     const { targetIds } = sys.applyActionImpact(f.battle, declared)
@@ -507,10 +506,10 @@ describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () =
     })
   })
 
-  it('a charged hit into a phan_chinh emblem reflects back at the attacker', () => {
+  it('a charged hit into a phan_chan passive reflects back at the attacker', () => {
     const f = makeFixture()
     f.enemyP.special = { skill: ENEMY_CHARGED, remainingCooldownTurns: 0 }
-    f.runtime.applyBuff(PHAN_CHINH_BUFF.id, f.squishyP)
+    f.runtime.applyBuff(PHAN_CHAN_BUFF.id, f.squishyP)
 
     const sys = new TurnBattleSystem(f.combat, 10_000, f.runtime.registry, undefined, f.runtime)
 
@@ -521,7 +520,7 @@ describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () =
       }
     })
 
-    // No randomness control needed — every roll in this path is
+    // No randomness control needed - every roll in this path is
     // deterministic by construction: the hit lands (accuracy 100 vs
     // evasion 0 -> chance 1.0) and the reflect trigger's authored
     // chance is 1.0 (the reflect roll itself still reads the global
@@ -532,9 +531,38 @@ describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () =
 
     expect(targetIds).toEqual(['squishy'])
 
-    // might 100 x multiplier 1 = 100 hpDamage taken; the emblem owes
-    // hpDamage x takenRatio + holder maxHp x maxHpRatio.
-    const expected = 100 * PHAN_CHINH_TAKEN_RATIO + 100_000 * PHAN_CHINH_MAXHP_RATIO
+    // might 100 x multiplier 1 = 100 hpDamage taken; the beta reflect
+    // owes holder maxHp x ratio (Max-HP-derived, once per action).
+    const expected = 100_000 * PHAN_CHAN_BASE_RATIO
+    expect(reflections).toEqual([expected])
+    expect(f.enemyP.entity.currentHp).toBe(100_000 - expected)
+  })
+
+  it('an intercepted hit reflects off the intercepting protector (phan_chan keyed on the protector)', () => {
+    const f = makeFixture()
+    // Protector intercepts (protectChance 1, roll pinned low) AND holds
+    // phan_chan - the reflect must queue on the protector, not the
+    // declared target, and land once on the attacker.
+    withHoMon(f, f.protectorP, 1, 100)
+    f.runtime.applyBuff(PHAN_CHAN_BUFF.id, f.protectorP)
+
+    const reflections: number[] = []
+    f.eventBus.on<EntityVitalsChangedEvent>('entity_vitals_changed', (event) => {
+      if (event.reason === 'reflection' && event.entityId === 'enemy') {
+        reflections.push(event.amount)
+      }
+    })
+
+    const sys = system(f, () => 0)
+    const declared = declaredAgainst(f, [f.squishyP])
+    const { targetIds } = sys.applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBe(true)
+    expect(targetIds).toEqual(['protector'])
+    expect(f.protectorP.entity.currentHp).toBeLessThan(100_000)
+    expect(f.squishyP.entity.currentHp).toBe(100_000)
+
+    const expected = 100_000 * PHAN_CHAN_BASE_RATIO
     expect(reflections).toEqual([expected])
     expect(f.enemyP.entity.currentHp).toBe(100_000 - expected)
   })
@@ -561,18 +589,18 @@ describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () =
   })
 })
 
-// RNG authority guard — the reactive-proc success roll in
+// RNG authority guard - the reactive-proc success roll in
 // resolveReactiveProcs must draw from the injected this.rng, never the
 // global Math.random (pre-fix it read the global, so a spy controlled
 // the proc while a scripted rng could not). The pair below pins the
 // two sources to OPPOSITE outcomes; the injected seam must win both
-// directions. The hit roll still lands either way — accuracy 100 vs
+// directions. The hit roll still lands either way - accuracy 100 vs
 // evasion 0 gives hit chance exactly 1.0.
 describe('reactive proc rolls read the injected rng, not Math.random', () => {
   it('a protectChance-1.0 interceptor does NOT intercept when injected rng fails the roll (global pinned low)', () => {
     const f = makeFixture()
     withHoMon(f, f.protectorP, 1, 15)
-    // Global pinned to a would-succeed value — pre-fix this forced the
+    // Global pinned to a would-succeed value - pre-fix this forced the
     // intercept through the global seam; now it must change nothing.
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
@@ -581,7 +609,7 @@ describe('reactive proc rolls read the injected rng, not Math.random', () => {
 
     expect(declared.intercepted).toBeUndefined()
     expect(declared.affected).toEqual([f.squishyP])
-    // The attempt still paid the 15-The proc cost — the ROLL failed on
+    // The attempt still paid the 15-The proc cost - the ROLL failed on
     // the injected seam, not the eligibility gate.
     expect(f.protectorP.entity.currentThe).toBe(0)
     expect(f.squishyP.entity.currentHp).toBeLessThan(100_000)
@@ -591,7 +619,7 @@ describe('reactive proc rolls read the injected rng, not Math.random', () => {
   it('the interceptor DOES intercept when injected rng succeeds (global pinned high)', () => {
     const f = makeFixture()
     withHoMon(f, f.protectorP, 1, 15)
-    // Global pinned high — pre-fix this failed the proc roll; the
+    // Global pinned high - pre-fix this failed the proc roll; the
     // injected rng low must still drive the intercept. The global now
     // only feeds the CombatSystem hit seam, where chance 1.0 lands
     // regardless.

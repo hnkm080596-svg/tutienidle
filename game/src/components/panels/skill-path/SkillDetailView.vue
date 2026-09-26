@@ -18,6 +18,7 @@ import { describeSkillMechanics } from '@/core/skill/SkillMechanicDescriptions'
 import { BUFF_REGISTRY } from '@/data/buff/BuffRegistry'
 import { CAST_LEVELING_THRESHOLDS } from '@/core/skill/SkillSystem'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { usePlayerStore } from '@/stores/player'
 import GameButton from '@/components/common/GameButton.vue'
 import StatRow from '@/components/common/primitives/StatRow.vue'
@@ -32,6 +33,11 @@ const props = defineProps<{
 const gameManager = useGameManager()
 const player = usePlayerStore()
 const { stateVersion, bumpState } = useStateVersion()
+
+// parity with the node-tree panels: the upgrade writes through
+// progressionOps.levelUpSkill, which rejects mid-battle -- disable the
+// affordance rather than dead-click.
+const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 
 const resourceTypeLabel = computed(() => {
   return skillResourceTypeLabel(props.skill?.resourceType)
@@ -135,7 +141,7 @@ function onUpgrade() {
           class="skill-detail__upgrade"
           variant="ghost"
           size="sm"
-          :disabled="!canUpgrade"
+          :disabled="!canUpgrade || inBattle"
           @click="onUpgrade"
         >
           {{ t('panels.skillPath.detail.upgrade', { cost: upgradeCost }) }}

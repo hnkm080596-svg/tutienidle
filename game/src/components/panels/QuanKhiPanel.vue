@@ -28,7 +28,7 @@ import {
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
-import { isBattleInProgress } from '@/core/battle/BattleTypes'
+import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { KIEM_PHO_ORBS, ORB_UNLOCK_REALM } from '@/data/skill/KiemPhoOrbs'
 import type { OrbId } from '@/core/kiem-tu/KiemTuState'
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
@@ -41,6 +41,7 @@ const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
+const { isBattleInProgress } = useTurnBattleInfo()
 const cooldownSeconds = computed(() => {
   stateVersion.value
   return gameManager.tribulationDirector.getCooldownSeconds()
@@ -180,7 +181,7 @@ const presetOrbs = computed<OrbId[]>(() => {
 const presetBattleLocked = computed(() => {
   stateVersion.value
 
-  return isBattleInProgress(gameManager.getTurnBattle()?.state)
+  return isBattleInProgress.value
 })
 
 function orbLabel(orbId: OrbId): string {

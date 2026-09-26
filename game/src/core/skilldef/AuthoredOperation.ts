@@ -174,6 +174,12 @@ export type AuthoredSkillOperation =
           fraction, resolved per hit by the damage authority. */
       missingHpBonusPerMissingPercent?: number
       missingHpBonusCap?: number
+      /** The Tu beta (Tran Ap) -- Max-HP-derived base: the damage
+          authority adds source.stats.maxHp x this ratio into the
+          physical raw base before mitigation. ScalarExpression is
+          legal (fold-or-late) so Trong The node totals can ride the
+          clone-baked coefficient. */
+      sourceMaxHpRatio?: ScalarExpression
       /** Per-landed-HIT consequence ops (TBS resolveDeclaredHit parity):
           compiled INSIDE each instance's landed gate, after the consume
           lanes -- ailments/detonate fire once per landed instance hit,
@@ -257,6 +263,13 @@ export type AuthoredSkillOperation =
       inside a target_hit_landed gate for damaging defs (TBS fires it
       per landed hit), ungated for non-damaging ones. */
   | { type: 'detonate'; target: SkillTargetIntent; amp: number }
+  /** The Tu beta (Loan Dau) -- HP sacrifice BEFORE the authored hit
+      lane: the resolver lowers this to a 'sacrifice'-profile
+      deal_damage on the caster plus an ops_result_sum read binding the
+      ACTUAL paid HP (vitals truth; the cost floors at leaving 1 HP, so
+      nominal != actual at low HP) into `into`. Author the read variable
+      into later expressions via {query:'var'}. */
+  | { type: 'pay_hp'; maxHpRatio: ScalarExpression; into: string }
   | { type: 'push_gauge'; target: SkillTargetIntent; fractionOfMax: ScalarExpression }
   | {
       type: 'gain_resource' | 'consume_resource'

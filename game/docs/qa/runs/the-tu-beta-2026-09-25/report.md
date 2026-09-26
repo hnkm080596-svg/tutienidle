@@ -1,0 +1,228 @@
+# QA run the-tu-beta-2026-09-25
+
+- phase: DECIDE
+- outcome: QA_FIXED_POINT_REACHED
+- state: product=d9f8298db06b contract=5380cc4f3581 attack=cd6fe5a6e0e5 env=e3ca14a6b377
+- base/head: be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df -> f730adc6
+
+## Findings
+
+- **F-TT-P15-1** Low/REAL_DEFECT — CLOSED — 78 non-ASCII comment violations (em dashes, Vietnamese, box chars) across the-tu beta files
+- **F-TT-AUT-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Root mutex not re-verified at load or kit-resolution
+- **F-TT-AUT-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — PendingReflect key omits attacker in map key
+- **F-TT-AUT-3** Nit/REAL_DEFECT — CLOSED — Stale phan_chinh comments survive rename to phan_chan
+- **F-TT-COR-1** Low/REAL_DEFECT — CLOSED — minor_tran_kinh: stacks-window weaken instead of spec consume-on-hit
+- **F-TT-COR-2** Low/REAL_DEFECT — DUPLICATE_LINKED — mutex blind spot at load (dup of F-TT-AUT-1)
+- **F-TT-COR-3** Nit/REAL_DEFECT — DUPLICATE_LINKED — stale phan_chinh comment in adapter (dup of F-TT-AUT-3)
+- **F-TT-COR-4** Nit/REAL_DEFECT — CLOSED — sacrifice paid<=0 resolves 0-damage instead of CombatOperationSkip
+- **F-TT-COR-5** Low/REAL_DEFECT — CLOSED — killing blow no longer reflects - dead-holder skip drops legacy semantics
+- **F-TT-COR-6** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — rollChance draws before reflect-eligibility gate
+- **F-TT-COR-7** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — pre-beta the-tu node ids load inert (non-core ids unchecked)
+- **F-TT-INT-1** Medium/REAL_DEFECT — CLOSED — dead-holder reflect silently drops - post-mortem semantics unpinned
+- **F-TT-INT-2** Low/REAL_DEFECT — DUPLICATE_LINKED — dual-root crafted save silently picks cuong (dup of F-TT-AUT-1)
+- **F-TT-INT-3** Low/REAL_DEFECT — DUPLICATE_LINKED — adapter comment claims dead-holder reflect unreachable at emit site
+- **F-TT-AUT-4** Low/REAL_DEFECT — CLOSED — sourceMaxHpRatio dead field on non-physical authored deal_damage ops (validates, spreads, silently drops)
+- **F-TT-AUT-5** Nit/REAL_DEFECT — CLOSED — sacrificeMaxHpRatio/damageBonusPerPaidHpPoint on a damage===undefined def drops silently
+- **F-TT-AUT-6** Nit/REAL_DEFECT — CLOSED — INV-9 natural-action-source predicate duplicated inline at three+ seams
+- **F-TT-AUT-7** Nit/REAL_DEFECT — CLOSED — Pha Kinh bake replaces kit.basic.instances instead of merging
+- **F-TT-COR-8** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — corrupt both-roots-owned state silently resolves to cuong kit
+- **F-TT-COR-9** Nit/REAL_DEFECT — CLOSED — TheTuTreePanel isAbandoned() omits stateVersion touch unlike sibling accessors
+- **F-TT-INT-4** Medium/REAL_DEFECT — CLOSED — save version not re-bumped across the node-tree redesign - v84 the-tu saves die as 'corrupted' instead of 'incompatible'
+- **F-TT-INT-5** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Loan Dau cast at exactly 1 HP commits with zero sacrifice
+- **F-TT-INT-6** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — chan_an per_target+latest ownership shadows an earlier phan_chan holder's mark
+- **F-TT-AUT-8** Low/REAL_DEFECT — CLOSED — sourceMaxHpRatio silently dropped on non-physical damage defs - no registration fault or unsupported-field warning
+- **F-TT-AUT-9** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — TurnSkillDisplayMeta.ts comments re-saved with stripped Vietnamese diacritics
+- **F-TT-COR-10** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — reflection profile passes through fDP/fDRP - delivered amount diverges from spec-pinned maxHp*ratio
+- **F-TT-COR-11** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — pendingReflects not keyed on rootActionId - stale entry only via mid-action exception
+- **F-TT-COR-12** Nit/REAL_DEFECT — DUPLICATE_LINKED — resolveBodyKit silently prefers cuong_chien on a forged dual-root save
+- **F-TT-INT-7** Low/REAL_DEFECT — CLOSED — spec/impl coefficient drift: CUONG_QUYEN_MULTIPLIER 1.4 vs spec sec.2.2 '1.1'
+- **F-TT-INT-8** Nit/REAL_DEFECT — CLOSED — sacrifice + reflection ride flat channels bypassing ward entirely
+- **F-TT-COR-A4-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — excludesNode mutex not enforced at save/restore boundary
+- **F-TT-COR-A4-2** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — non-core nodeLevels not capped or catalog-checked at restore - crafted over-level amplifies kit channels
+- **F-TT-COR-A4-3** Nit/REAL_DEFECT — CLOSED — pendingReflects can leak across an aborted action
+- **F-TT-AUT-A5-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — excludesNode mutex not re-checked on restored saves - crafted save can hold both roots
+- **F-TT-AUT-A5-2** Nit/REAL_DEFECT — CLOSED — Spec section 2.7 deviation: skill cards surface NodeInspector, not NativeCoreDetail
+- **F-TT-INT-A5-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Save validation has no excludesNode mutex-consistency check (crafted both-roots save validates)
+- **F-TT-INT-A5-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — rollReactiveTrigger lacks the dead-holder guard that resolveReactiveProcs has
+- **F-TT-INT-A5-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — collectKitCloneBuffs scans only battle.players - enemy grantsBuffsAtBuild would be inert
+- **F-TT-COR-A6-1** Nit/REAL_DEFECT — CLOSED — saveVersion v85 comment falsely claims core_phan_chinh retired from NATIVE_CORE_SKILL_IDS
+- **F-TT-COR-A6-2** Nit/REAL_DEFECT — CLOSED — TheTuTreePanel header comment contradicts implemented sealed-name behavior
+- **F-TT-COR-A6-3** Nit/REAL_DEFECT — CLOSED — CombatProcSystem queue-gate comment misstates holder-liveness gate
+- **F-TT-AUT-A6-1** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Stale header comment in TheTuPath.ts claims type-only imports (pre-existing)
+- **F-TT-CLO-9-1** Nit/REAL_DEFECT — CLOSED — SkillCoreNodes.ts header comment still says '14 eligible' ids while the list carries 15 (phan_chan added at e76157c2)
+- **F-TT-INT-A6-1** Nit/REAL_DEFECT — CLOSED — devResetBranch/purchaseNode skip the isTurnBattleInProgress gate that respecNodeTree/switchRoute enforce
+- **F-TT-COR-A7-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — saveShapeValidation does not re-check excludesNode mutex (pre-existing)
+- **F-TT-COR-A7-2** Nit/COVERAGE_GAP — CLOSED — coverage gap: no negative test techniqueRank<5 blocks major_loan_dau/major_phan_chan
+- **F-TT-COR-A7-3** Nit/COVERAGE_GAP — CLOSED — coverage gap: warded hit (hpDamage=0) queuing no reflect untested
+- **F-TT-COR-A7-4** Nit/REAL_DEFECT — CLOSED — redundant ternary in TheTuTreePanel.onCardClick
+- **F-TT-INT-A7-1** Medium/REAL_DEFECT — CLOSED — in-battle progression-op gate asymmetric: upgradeNode/levelUpSkill mutate nodeLevels mid-battle while purchaseNode rejects
+- **F-TT-INT-A7-2** Low/REAL_DEFECT — CLOSED — Node UI offers mid-battle purchases the engine rejects (dead-click)
+- **F-TT-INT-A7-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Loan Dau cast at exactly 1 HP executes all hits for free
+- **F-TT-INT-A7-4** Nit/REAL_DEFECT — CLOSED — SkillPathPanel inspector refresh watch misses cost-waived upgrades
+- **F-TT-AUT-A8-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — PRE-EXISTING The-economy authority bypass: direct entity.currentThe writes in TBS skip grantThe/tryPayProcCost clamps
+- **F-TT-AUT-A8-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — sourceMaxHpRatio typed on all deal_damage arms but dead on non-physical lanes
+- **F-TT-AUT-A8-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — resolveBodyKit invoked twice per participant build
+- **F-TT-AUT-A8-4** Nit/DOCUMENTATION_DEFECT — CLOSED — spec-name drift on sacrifice payoff channel
+- **F-TT-AUT-A8-5** Nit/TEST_DEFECT — CLOSED — stale retired field takenRatio:1 in QA reflect fixture
+- **F-TT-AUT-A8-6** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — save-version bump 84->85 documented deviation (spec said no bump)
+- **F-TT-COR-A8-1** High/REAL_DEFECT — CLOSED — tran_ap all_lanes without columnRadius resolves to ~1-column band, not every valid enemy
+- **F-TT-COR-A8-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — crafted saves can hold both mutex roots (no excludesNode semantic in save validation)
+- **F-TT-INT-A8-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Save boundary does not enforce cuong_chien/tran_the mutex (excludesNode)
+- **F-TT-INT-A8-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — cuong_quyen bypassChance=0 still consumes an rng.roll that always fails
+- **F-TT-COR-A9-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Reflect applied amount scaled by hit-layer finalDamageMultiplier (deviates from literal holder.maxHp x ratio when affixes nonzero)
+- **F-TT-COR-A9-2** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Save/restore boundary does not re-enforce root mutex — crafted v85 save can own both cuong_chien and tran_the
+- **F-TT-AUT-A9-1** Low/REAL_DEFECT — CLOSED — New runtime module cycle: TurnSkillPlanRuntime <-> TurnBattleSystem via isNaturalActionSource value import
+- **F-TT-AUT-A9-2** Nit/DOCUMENTATION_DEFECT — CLOSED — Stale 'leaf / type-only imports' header comment in TheTuPath.ts widened by this diff
+- **F-TT-AUT-A9-3** Nit/TEST_DEFECT — CLOSED — Retired id 'phan_chinh' still pinned in SkillCoreNodes.test INTERNAL_NEGATIVE_LIST
+- **F-TT-INT-A9-1** Medium/REAL_DEFECT — CLOSED — TheTuTreePanel drops whole-tree respec affordance - regression for body_pathway players
+- **F-TT-INT-A9-2** Low/REAL_DEFECT — CLOSED — Reflect kill of attacker bypasses per-boundary death sweep
+- **F-TT-AUT-A10-1** Low/REAL_DEFECT — CLOSED — TheTuTreePanel COLUMNS hard-code node topology; a broken id degrades silently
+- **F-TT-AUT-A10-2** Nit/DOCUMENTATION_DEFECT — CLOSED — Dead compat re-export of ReactiveActionSource/isNaturalActionSource
+- **F-TT-AUT-A10-3** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Missing-HP scalar formula duplicated across the two hit lanes (A9)
+- **F-TT-COR-A10-1** Low/COVERAGE_GAP — CLOSED — No test pins post-mortem reflect or respec-frees-mutex switch
+- **F-TT-COR-A10-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Reflect trigger chance roll consumes an rng draw before the queue gate
+- **F-TT-COR-A10-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — pendingReflects stores grantInstanceId/capabilityId unused at flush
+- **F-TT-COR-A10-4** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Two reflect capabilities on one holder would emit two reflects per action
+- **F-TT-COR-A10-5** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — In-battle purchase/upgrade gating now applies to all paths, not only the-tu
+- **F-TT-INT-A10-1** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — NativeCoreDetail upgrade button not gated on inBattle
+- **F-TT-INT-A10-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — pendingReflects transient: mid-action save/restore would drop a queued reflect
+- **F-TT-INT-A11-1** Low/REAL_DEFECT — CLOSED — Charged-resolve early return skips flushReflects - a charged hostile action never reflects
+- **F-TT-INT-A11-2** Low/DOCUMENTATION_DEFECT — CLOSED — dynamicBasic extra impacts bypass the reflect queue (+ stale comment)
+- **F-TT-INT-A11-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — tran_kinh applies 1+L stacks - L1 node yields -30% outgoing
+- **F-TT-AUT-A11-1** Low/TEST_DEFECT — CLOSED — Stale P15 baseline allowances for re-authored reflection test (ratchet weakened)
+- **F-TT-AUT-A11-2** Nit/DOCUMENTATION_DEFECT — CLOSED — Stale tag documentation in tree-selection comment (pre-existing)
+- **F-TT-AUT-A11-3** Nit/DOCUMENTATION_DEFECT — CLOSED — Charge-lane comment claims Reflection queue owned in resolveDeclaredHit
+- **F-TT-COR-A11-1** Nit/REAL_DEFECT — CLOSED — PendingReflect.markedBy typed as bare string
+- **F-TT-COR-A11-2** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Respec enable narrower than respec operation scope
+- **F-TT-AUT-A12-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Authored-op sourceMaxHpRatio kind-compat unvalidated - silently dropped on non-single-physical components
+- **F-TT-AUT-A12-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — TheTuTreePanel COLUMNS drift guard is one-directional
+- **F-TT-INT-A12-1** Low/REAL_DEFECT — CLOSED — In-battle dead click: skill-core upgrade buttons not disabled like node buttons
+- **F-TT-INT-A12-2** Nit/REAL_DEFECT — CLOSED — Dead-code flushReflects guard + misleading comment in unwired charged-resolve lane
+- **F-TT-INT-A12-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — nodeOf() linear getAll().find() per render call
+- **F-TT-COR-A12-1** Low/REAL_DEFECT — CLOSED — Spec 4 pin #4 zero-paid leg unpinned: cast at exactly 1 HP
+- **F-TT-COR-A12-2** Low/REAL_DEFECT — CLOSED — Charged-resolve reflect queue/flush unpinned
+- **F-TT-COR-A12-3** Nit/REAL_DEFECT — DUPLICATE_LINKED — Dead-code runtime guard on flushReflects in legacy charged lane
+- **F-TT-COR-A12-4** Nit/REAL_DEFECT — CLOSED — Stale comment: 'charge-resolve turn returns early above'
+- **F-TT-COR-A12-5** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — pendingReflects map key uses dotted string join
+- **F-TT-COR-A12-6** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — markedBy without markedMaxHpRatio validates to inert config
+- **F-TT-CLEAN-A-COR-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — save boundary tolerates dual mutex roots (excludesNode is purchase-time only)
+- **F-TT-CLEAN-A-COR-2** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — non-core nodeLevels entries not validated for registry membership or level<=maxLevel
+- **F-TT-CLEAN-A-AUT-1** Low/REAL_DEFECT — CLOSED — P15: new non-ASCII comments added by this diff (invisible to the ratchet)
+- **F-TT-CLEAN-A-AUT-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — inBattle computed duplicated verbatim across 5 view components
+- **F-TT-CLEAN-A-AUT-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — TheTuTreePanel COLUMNS re-declares authored node ids
+- **F-TT-CLEAN-A-INT-1** Low/REAL_DEFECT — CLOSED — isTurnBattleInProgress gate missing on selectSpellPathElement + grantSkillCoreBySkillId (2 of 8 nodeLevels writers)
+- **F-TT-CLEAN-A-INT-2** Low/REAL_DEFECT — CLOSED — TheTuTreePanel.vue (527 lines) has zero test coverage while every sibling panel has a spec
+- **F-TT-CLEAN-A-INT-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — charge-resolve only resolves skills in special/ultimate slots - a charged basic-slot def would silently fizzle
+- **F-TT-CLEAN-A-INT-4** Nit/REAL_DEFECT — CLOSED — dead fallback in unrouted charged-resolve report - pendingChargedSkillId always already cleared
+- **F-TT-CLEAN-A2-AUT-1** Nit/REAL_DEFECT — CLOSED — Dead sweepBuffDeaths call in unwired charged lane
+- **F-TT-CLEAN-A2-INT-1** Low/REAL_DEFECT — CLOSED — In-battle progression-writer gates unpinned (5 of 6 rejections)
+- **F-TT-CLEAN-A2-INT-2** Medium/REAL_DEFECT — CLOSED — tran_kinh weaken inert: holder_turns duration 1 expires before the holder's action
+- **F-TT-CLEAN-A2-INT-3** Nit/REAL_DEFECT — CLOSED — chan_an mark-expiry reversion unpinned (marked reflect ratio -> base)
+- **F-TT-CLEAN-A2-INT-4** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — discardPendingReflects fault-only path untested
+- **F-TT-CLEAN-A3-INT-1** Low/REAL_DEFECT — CLOSED — Ungated combat-shaping progression writers reachable mid-battle
+- **F-TT-CLEAN-A3-INT-2** Low/REAL_DEFECT — CLOSED — Coverage gaps: dead-attacker reflect drop + selectSpellPathElement gate unpinned
+- **F-TT-AUT-A4-1** Nit/REAL_DEFECT — CLOSED — In-battle write gate spelled three ways across ops
+- **F-TT-AUT-A4-2** Nit/REAL_DEFECT — CLOSED — inBattle computed duplicated across 9 panel components
+- **F-TT-AUT-A4-3** Low/REAL_DEFECT — CLOSED — syncTalentCombatPassive revokes before the gated re-grant
+- **F-TT-AUT-A4-4** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — BodyBatTuSurvival exercised only by tests (parked production module)
+- **F-TT-COR-A4-4** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — excludesNode root mutex not re-checked at save validation
+- **F-TT-COR-A4-5** Nit/REAL_DEFECT — CLOSED — syncRealmPassive swallows the now-gated learnSkill return
+- **F-TT-INT-A4-1** Nit/REAL_DEFECT — CLOSED — devResetBranch composable masks in-battle rejection (unconditional success contract)
+- **F-TT-INT-A4-2** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Reflect queue fed but never drained in engine-unit (runtime===undefined) battles
+- **F-TT-INT-A4-3** Low/REAL_DEFECT — CLOSED — Coverage gap: INV-9 bypass-source exclusion unpinned for reflect; countdown-state UI disable unpinned
+- **F-TT-COR-A5-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Save boundary does not enforce the excludesNode mutex — crafted save can own both roots
+- **F-TT-COR-A5-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — devResetBranch wrapper conflates op rejection with a legitimate zero-refund reset
+- **F-TT-AUT-A5-1** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — devResetBranch wrapper skips bumpState when refund===0 even if a waived-cost reset revoked nodes
+- **F-TT-CLN5-INT-1** Medium/REAL_DEFECT — CLOSED — RealmAdvanceOps in-battle gates unpinned (the seam this round adjudicated)
+- **F-TT-CLN5-INT-2** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — inBattle affordance pins exist only for TheTuTreePanel; 8 other disabled surfaces unpinned
+- **F-TT-CLN5-INT-3** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — resolveTalentEntitlement ungated while its inner passive sync is gated — latent partial-application window
+- **F-TT-CLN5-INT-4** Nit/REAL_DEFECT — CLOSED — Route-pick modal buttons stay live mid-battle (affordance only)
+- **F-TT-CLN5-INT-5** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Minor-realm auto-breakthrough can fire mid-turn-battle (pre-existing, benign)
+- **F-TT-CLN6-COR-1** Low/REAL_DEFECT — DUPLICATE_LINKED — Crafted save can own both mutex roots - excludesNode is a purchase gate, not a save invariant
+- **F-TT-CLN6-COR-2** Nit/DOCUMENTATION_DEFECT — CLOSED — Comment claims skipped syncRealmPassive re-syncs 'on next restore' - no such restore path exists
+- **F-TT-CLN6-AUT-1** Low/REAL_DEFECT — CLOSED — syncRealmPassive gate: sibling syncRealmStatPassive left ungated at the same call sites
+- **F-TT-CLN6-AUT-2** Low/REAL_DEFECT — CLOSED — resolveTalentEntitlement can resolve mid-battle while syncTalentCombatPassive silently no-ops
+- **F-TT-CLN6-AUT-3** Nit/SPEC_DEFECT — CLOSED — devResetBranch rejects as bare 0 - indistinguishable from 'nothing to reset'
+- **F-TT-CLN6-AUT-4** Nit/DOCUMENTATION_DEFECT — CLOSED — Ungated persistent writes coexist with the new reject boundary - two conventions, undocumented
+- **F-TT-CLN6-CLO-1** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Stale 'bump vo dieu kien' comment on devResetBranch wrapper after null-rejection propagation
+- **F-TT-CLN7-COR-1** Low/REAL_DEFECT — DUPLICATE_LINKED — Save boundary does not enforce excludesNode mutex - crafted save can own both TheTu roots
+- **F-TT-CLN7-COR-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Pre-existing nondeterministic failure: ngoDaoReaction ailment-resist RNG flake
+- **F-TT-CLN7-AUT-1** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Dead getTurnBattle dep retained on GameManagerRealmAdvanceOps after canonical-predicate conversion
+- **F-TT-CLN7-INT-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Regen pill's timed effect reaches the live battle mid-fight (boundary-convention census miss)
+- **F-TT-CLN7-INT-2** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Repeat/multicast queued executions carry no actionSource - their hits can never queue a phan_chan reflect
+- **F-TT-CLN7-INT-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — TalentEntitlementModal can overlay a running battle while its only action is rejected by the new gate
+- **F-TT-CLN7-INT-4** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Panel disable surfaces lag battle start by up to ~1s (stateVersion tick cadence)
+- **F-TT-CLN7-INT-5** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Coverage gaps: unpinned defensive reflect branches (discard, multi-holder, repeat exclusion)
+- **F-TT-CLNB-AUT-1** Medium/REAL_DEFECT — CLOSED — Non-ASCII em-dash in useTurnBattleInfo comment (doc convention breach)
+- **F-TT-CLNB-AUT-2** Nit/REAL_DEFECT — CLOSED — Reflect dedupe key collision surface in CombatProcSystem
+- **F-TT-CLNB-INT-1** Medium/REAL_DEFECT — CLOSED — Save-boundary canonicality: mutex roots + prereq-less keystone pass validation
+- **F-TT-CLNB-INT-2** Medium/REAL_DEFECT — CLOSED — Non-core nodeLevels not integer/maxLevel bounded (minor_trong_quyen:99 -> ~9.9 over +0.5 ceiling)
+- **F-TT-CLNB-INT-3** Nit/REAL_DEFECT — CLOSED — Respec ConfirmModal survives battle start -> confirm silently no-ops
+- **F-TT-CLNC-AUT-1** Nit/REAL_DEFECT — CLOSED — Residual U+2014 em-dashes in diff-added comments (3 sites + 1 describe)
+- **F-TT-CLNC-AUT-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — BodyBatTuSurvival module retained while unreferenced
+- **F-TT-CLNC-INT-1** Low/REAL_DEFECT — CLOSED — Suppressed-reflect paths unpinned: dead-attacker flush skip + aborted-action residue discard
+- **F-TT-CLNC-INT-2** Nit/REAL_DEFECT — CLOSED — reflectsEligible gate covered only reflectsDamage branch of rollReactiveTrigger
+- **F-TT-CLNC-INT-3** Nit/REAL_DEFECT — CLOSED — onCastBegin discarded firedFollowUp return of rollReactiveTrigger
+- **F-TT-CLND-AUT-1** Low/REAL_DEFECT — CLOSED — non-core nodeLevels replay skips purchasedNodeIds mirror membership
+- **F-TT-CLND-AUT-2** Nit/REAL_DEFECT — CLOSED — TheTuTreePanel tcReached uses second realm ordering
+- **F-TT-CLND-AUT-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — column id drift signal is console.warn + dead card only
+- **F-TT-CLND-INT-1** Medium/REAL_DEFECT — CLOSED — checklist invariants unpinned: sacrifice-under-ward, multi-holder AoE reflect, per-affordance UI disables
+- **F-TT-CLND-INT-2** Low/REAL_DEFECT — CLOSED — devResetBranch skips bumpState() on zero-refund resets
+- **F-TT-CLND-INT-3** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — pre-existing: peekNextActor arms entries off-queue (dequeueFollowUpActor)
+- **F-TT-CLNE-COR-1** Low/REAL_DEFECT — CLOSED — player-team reactive_bypass pauses for manual input then discards the choice
+- **F-TT-CLNE-COR-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — save validation silently tolerates unknown non-core nodeIds
+- **F-TT-CLNE-COR-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — dispatch PIN string malformed (64+ hex chars)
+- **F-TT-CLNE-AUT-1** Nit/REAL_DEFECT — CLOSED — P15 residual: em-dash in newly added test comment
+- **F-TT-CLNE-AUT-2** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — validator accepts silently-inert authored fields (markedBy alone; sourceMaxHpRatio on non-physical kinds)
+- **F-TT-CLNE-INT-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — techniqueRank prerequisite kind not replayed by save canonicality check
+- **F-TT-CLNE-INT-2** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — reflect never triggers on non-hit HP damage channels (detonate/DoT) on a phan_chan holder
+- **F-TT-CLNE-INT-3** Low/REAL_DEFECT — CLOSED — coverage: no pin for charged-resolve reflect / intercept-substituted reflect / queued-execution non-reflect
+- **F-TT-CLNE-INT-4** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — reflect damage does not reset attacker ward-regen delay
+- **F-TT-CLNE-INT-5** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — kit-clone buff registry keyed by definitionId — latent collision if differently-modded clones coexist
+- **F-TT-CLNF-INT-1** Medium/COVERAGE_GAP — CLOSED — Double-wipe precedence (players-first => defeat) unpinned
+- **F-TT-CLNF-INT-2** Low/COVERAGE_GAP — CLOSED — Reflect through a Ho intercept (protector-as-holder) unpinned
+- **F-TT-CLNF-INT-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — queuesFollowUp bare-basic bypass has zero authored producers
+- **F-TT-CLNF-INT-4** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — isBattleFighting vs isBattleInProgress dual exports
+- **F-TT-CLNG-AUT-1** Medium/REAL_DEFECT — CLOSED — P15 em-dash sweep left Vietnamese comment token -> asciiComments guard fails
+- **F-TT-CLNG-AUT-2** Low/REAL_DEFECT — CLOSED — Diff-introduced dead imports/vars after inBattle refactor
+- **F-TT-CLNG-AUT-3** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Missing-HP scalar formula duplicated across legacy and plan lanes
+- **F-TT-CLNG-INT-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Charge-init can queue repeat/multicast executions resolving full payload immediately (latent)
+- **F-TT-CLNG-INT-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Queued reactive bypass interleaved with charging never ticks the charge
+- **F-TT-CLNG-INT-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Coverage: charge-init hit-free/no-queued-executions invariant unpinned
+- **F-TT-CLNH-COR-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Resolved flat deal_damage ops (pay_hp sacrifice) count as damage-landed — whiffed Loan Dau cast reports landed and would pay landed-gated grants
+- **F-TT-CLNH-COR-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Dual-root state silently resolves to Cuong Chien at kit build
+- **F-TT-CLNH-COR-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Cuong/Tran participants mint a full-capacity The pool that can never fill
+- **F-TT-CLNH-INT-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Uncovered invariant: phan_chan holder under hard CC still reflects — reachable but unpinned
+- **F-TT-CLNH-INT-2** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Uncovered invariant: charged-unrouted fall-through branch untested
+- **F-TT-CLNH-INT-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — extraImpact/dynamicBasic hits bypass the reflect lane (latent asymmetry)
+- **F-TT-CLNH-INT-4** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — pendingReflects first-queued-wins silently ignores second reflectsDamage on one holder
+- **F-TT-CLNH-INT-5** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — sourceMaxHpRatio silently drops on elemental/primordial plan ops
+- **F-TT-CLNH-INT-6** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — resolveBodyKit gates special on getSkillCoreLevel alone — grantor provenance not replayed
+- **F-TT-CLNB-COR-1** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Save validator accepts negative integer node levels despite claiming [0, maxLevel]
+- **F-TT-CLNB-COR-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — P15 em-dash sweep over-stripped Vietnamese diacritics and section markers in comments
+- **F-TT-CLNB-INT-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Reflect queue structurally absent on legacy declared-hit lane (extra impacts / runtime-less battles)
+- **F-TT-CLNB-INT-2** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — suddenDeathMultiplier does not scale sourceMaxHpRatio portion
+- **F-TT-CLNB-INT-3** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — __paid_hp sentinel is a single shared var across picked defs
+- **F-TT-TERM-1** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Scoped respec accepts a core_<id> rootId, revoking the core while its granting node stays owned
+
+## Coverage
+
+- cells: 0 total; 
+
+## Chronology
+
+- cycle CYCLE-TT-A: STALE; reviews REV-TT-CLEAN-A7-COR,REV-TT-CLEAN-A7-AUT,REV-TT-CLEAN-A7-INT
+- cycle CYCLE-TT-CLEANH-A: CLEAN; reviews REV-TT-CLNH-COR,REV-TT-CLNH-AUT,REV-TT-CLNH-INT
+- cycle CYCLE-TT-CLEANB: CLEAN; reviews REV-TT-CLNB-COR,REV-TT-CLNB-AUT,REV-TT-CLNB-INT
+
+## Convergence
+
+- OK C1-identity: all final evidence binds the declared state
+- OK C2-census-coverage: census + coverage complete
+- OK C3-no-open: none open
+- OK C4-final-gates: final gates green
+- OK C5-sequential: sequential phase reviews present
+- OK C6-clean-pair: Clean A/B complete and independent
+- OK C7-mutation-corpus: mutation + corpus satisfied
+- OK C8-terminal-check: independent terminal verifier sealed
+- OK C9-readiness: brief(s) lack finalConformance evidence: 
