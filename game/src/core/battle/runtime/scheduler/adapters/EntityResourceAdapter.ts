@@ -9,14 +9,13 @@
 // no-op'ing.
 //
 // currentThe writes are direct field mutation -- matching the existing
-// TheEconomy practice (grantThe / tryPayProcCost write entity.currentThe
-// directly; the The pool has no vitals-event contract). gain routes
-// through grantThe anyway so the cap stays single-authority; consume
-// writes the clamped result directly like consumeResourceFor.
+// TheEconomy practice (the The pool has no vitals-event contract; gain
+// routes through grantThe so the cap stays single-authority, and the
+// spend lanes write the clamped result directly like consumeResourceFor).
 //
 // Consume semantics: numeric consume is all-or-nothing -- an
 // unaffordable amount throws CombatOperationSkip('insufficient_resource')
-// and mutates NOTHING (mirroring tryPayProcCost's pay-or-fail gate);
+// and mutates NOTHING (pay-or-fail: no partial spend);
 // 'all' always resolves and drains the pool to 0. The resource ops are
 // not liveness-gated: TheEconomy never checks alive (a dead participant's
 // pool may still be drained by settlement hand-off).

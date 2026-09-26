@@ -35,16 +35,17 @@ import { scaleActionDamage } from '../ActionImpactSystem'
 import { recomputeEffectiveStats } from './TurnStatsRecompute'
 import type { BattleLogEntry } from './TurnOrderPreview'
 
-import { MAX_THE } from '../../combat/CombatTypes'
 import type { DamageResult } from '../../combat/CombatTypes'
 import {
   DAN_THE_INCOME_MULT,
-  REACTION_DEBT_CAP,
   UNG_TRE_GAUGE_PENALTY,
+  grantThe,
+  isQuaTheDebt,
   isUngTheCombatant,
   theGainOnBasicHit,
   theGainOnObservedAction,
 } from '../../the-tu/TheEconomy'
+import { hasQuanTheMarker } from '../../../data/buff/TheTuBuffs'
 import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
 import { reconcileExternalWard } from '../../the-tu/TheTuExternalWard'
 import {
@@ -2896,22 +2897,20 @@ export class TurnBattleSystem {
    * authored on the resolving TurnSkillDefinition: theGainOnLandedCast
    * applies once per landed cast; theGainOnCrit once more when any
    * direct hit of the cast crited. The cap reads the battle-snapshotted
-   * entity.maxThe (Truong The nodes, 'no' route) with MAX_THE as the
-   * default -- never a hard-coded constant.
+   * entity.maxThe (Truong The nodes, 'no' route) via grantThe/theCap
+   * -- never a hard-coded constant.
    */
   private grantTheFromCast(
     actor: TurnBattleParticipant,
     skill: TurnSkillDefinition,
     castCritLanded: boolean,
   ): void {
-    const cap = actor.entity.maxThe ?? MAX_THE
-
     if (skill.theGainOnLandedCast) {
-      actor.entity.currentThe = Math.min(cap, (actor.entity.currentThe ?? 0) + skill.theGainOnLandedCast)
+      grantThe(actor.entity, skill.theGainOnLandedCast)
     }
 
     if (castCritLanded && skill.theGainOnCrit) {
-      actor.entity.currentThe = Math.min(cap, (actor.entity.currentThe ?? 0) + skill.theGainOnCrit)
+      grantThe(actor.entity, skill.theGainOnCrit)
     }
   }
 
@@ -2984,9 +2983,7 @@ export class TurnBattleSystem {
         return true
       }
     }
-    return this.buffs
-      .getForTarget(observer.entity.id)
-      .some((inst) => inst.definitionId === 'quan_the')
+    return hasQuanTheMarker(this.buffs.getForTarget(observer.entity.id))
   }
 
   /**
@@ -3020,7 +3017,7 @@ export class TurnBattleSystem {
 
   /** Qua The predicate: debt at cap -> no NEW windows (income continues). */
   private isQuaThe(participant: TurnBattleParticipant): boolean {
-    return (participant.reactionDebt ?? 0) >= REACTION_DEBT_CAP
+    return isQuaTheDebt(participant.reactionDebt)
   }
 
   /**

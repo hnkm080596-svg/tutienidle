@@ -19,7 +19,7 @@ import { turnSkillDisplayMetaOf } from '../skill/TurnSkillDisplayMeta'
 //     rejected - a direct progression channel must be authored before
 //     the cap rises).
 //  3. NOTHING ELSE - levelsSkillId must never target an internal
-//     chained/stance/emblem/reactive/generated sub-action (phan_chinh,
+//     chained/stance/emblem/reactive/generated sub-action (retired phan_chinh,
 //     phan_kich, tro_kich, trong_phan_kich, ngu_kiem emblem defs,
 //     combo extras). Internal actions inherit their parent's Core
 //     level via TurnSkillDefinition.progressionOwnerId. Extending the
@@ -28,7 +28,7 @@ import { turnSkillDisplayMetaOf } from '../skill/TurnSkillDisplayMeta'
 
 /** The 16 eligible native top-level def ids (QI-D3 census).
     Beta: phan_chan is the castable Tran The special (non-damage core);
-    the emblem def phan_chinh is retired (internal sub-actions stay
+    the old emblem def phan_chinh was renamed/retired (internal sub-actions stay
     ineligible). bat_tu_ba_the / son_nhac keep authored cores - parked
     post-beta content, granted by no beta node.
     Ung The beta: tu_the / bach_ung cores stay PARKED-REGISTERED (defs

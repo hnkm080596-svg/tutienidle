@@ -18,7 +18,9 @@ import { asTheEconomy } from './TheTuCapabilities'
 //   (gainOnBasicHit = Tham The landed; gainOnObservedAction = observed
 //   enemy action completion; node bonuses bake onto the participant-local
 //   clone at build).
-// - every mutation goes through grantThe's single clamp expression.
+// - every GAIN routes through grantThe's single clamp expression; the
+//   spend/burn lanes (consume op, consumesAllThe drain) write currentThe
+//   directly through their own adapters by design.
 // - reactive cost is a flat authored per-proc `theCost` paid ONLY on a
 //   successful roll (success-only consume, design Part XI) -- the pay-
 //   before-roll + refund lane is superseded.
@@ -32,6 +34,11 @@ export const THE_PROC_COST = 15
 
 /** Qua The cap: reaching it closes every new reactive window. */
 export const REACTION_DEBT_CAP = 3
+
+/** Single Qua The predicate — engine window gate and presentation share it. */
+export function isQuaTheDebt(reactionDebt: number | undefined): boolean {
+  return (reactionDebt ?? 0) >= REACTION_DEBT_CAP
+}
 
 /** ATB gauge subtracted per committed reaction (may go negative). */
 export const UNG_TRE_GAUGE_PENALTY = 400

@@ -13,7 +13,8 @@
 
 import { MAX_THE } from '@/core/combat/CombatTypes'
 import { SPELL_EMPOWERMENT_ESSENCE_THRESHOLD } from '@/core/phap-tu/PhapTuRoutes'
-import { REACTION_DEBT_CAP } from '@/core/the-tu/TheEconomy'
+import { isQuaTheDebt } from '@/core/the-tu/TheEconomy'
+import { hasQuanTheMarker } from '@/data/buff/TheTuBuffs'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import type { GameManager } from '@/core/game/GameManager'
 import type { SpellPathState } from '@/core/phap-tu/PhapTuState'
@@ -53,7 +54,7 @@ export interface TheBarSnapshot {
   reactionDebt?: number
 
   /** Ung The beta — Qua The (debt at cap); computed against
-      REACTION_DEBT_CAP here so views never re-derive the predicate. */
+      isQuaTheDebt here so views never re-derive the predicate. */
   quaThe?: boolean
 }
 
@@ -132,11 +133,9 @@ export function makeTheBarReader(
         empowered: false,
         label: 'Thế',
         thamTargetId: battleParticipant.thamTargetId,
-        quanTheActive: gameManager
-          .getBattleBuffs(battleEntity.id)
-          .some((inst) => inst.definitionId === 'quan_the'),
+        quanTheActive: hasQuanTheMarker(gameManager.getBattleBuffs(battleEntity.id)),
         reactionDebt: battleParticipant.reactionDebt ?? 0,
-        quaThe: (battleParticipant.reactionDebt ?? 0) >= REACTION_DEBT_CAP,
+        quaThe: isQuaTheDebt(battleParticipant.reactionDebt),
       }
     }
 
