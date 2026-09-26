@@ -9573,12 +9573,18 @@
       ],
       "siblingFindingIds": [],
       "repair": "FIXED uncommitted: membership check added inside the non-core level>=1 branch, same message shape as core; new pin test (mirror-missing non-core level rejected).",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "pinEvidenceIds": [
+        "EV-TT-CLND-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLND-FIX"
+      ],
+      "closureReviewIds": [
+        "REV-TT-CLO-26"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -9628,12 +9634,18 @@
       ],
       "siblingFindingIds": [],
       "repair": "FIXED uncommitted: tcReached now uses getRealmIndex over REALMS (same ordering as canPurchaseNode).",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "pinEvidenceIds": [
+        "EV-TT-CLND-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLND-FIX"
+      ],
+      "closureReviewIds": [
+        "REV-TT-CLO-26"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -9738,12 +9750,18 @@
       ],
       "siblingFindingIds": [],
       "repair": "FIXED uncommitted: 4 new pins — sacrifice through a real ho_ve-bound externalWard (hp drops full ratio, ward untouched); two-holder AoE reflect = 2x ratio; NodeInspector buy+upgrade and NativeCoreDetail/SkillDetailView upgrade disabled in-battle.",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "pinEvidenceIds": [
+        "EV-TT-CLND-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLND-FIX"
+      ],
+      "closureReviewIds": [
+        "REV-TT-CLO-26"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -9793,12 +9811,18 @@
       ],
       "siblingFindingIds": [],
       "repair": "FIXED uncommitted: early return narrowed to refund===null (op rejected); bump unconditional per the function comment.",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "pinEvidenceIds": [
+        "EV-TT-CLND-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLND-FIX"
+      ],
+      "closureReviewIds": [
+        "REV-TT-CLO-26"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -9855,6 +9879,281 @@
       "exception": null,
       "status": "REJECTED_WITH_PROOF",
       "rejectionReason": "pre-existing latent; peek=claim by design; no reachable orphan path"
+    },
+    {
+      "id": "F-TT-CLNE-COR-1",
+      "title": "player-team reactive_bypass pauses for manual input then discards the choice",
+      "state": {
+        "productStateId": "a940449f65990e1617bd9c1527219ffbf6a76ee1e85d62a243031be2ca7c901b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/game/GameManagerTurnBattleOps.ts",
+          "symbolOrSection": ":541-560 claim path",
+          "revision": "a37fb54b",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-5ea5f45ee90a4a7daadbc58c06b4f9c6",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "isPendingQueuedExecution covered only pendingQueuedExecution; pendingReactiveEntry claimed manualMode=true -> dead AWAITING_INPUT prompt, chosenSlot ignored",
+      "expected": "queued reactive bypass resolves automatically or the choice is used",
+      "actual": "isPendingQueuedExecution covered only pendingQueuedExecution; pendingReactiveEntry claimed manualMode=true -> dead AWAITING_INPUT prompt, chosenSlot ignored",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton site"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED uncommitted: isPendingQueuedExecution now also covers pendingReactiveEntry (same contract as the-tu-an lane).",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLNE-COR-2",
+      "title": "save validation silently tolerates unknown non-core nodeIds",
+      "state": {
+        "productStateId": "a940449f65990e1617bd9c1527219ffbf6a76ee1e85d62a243031be2ca7c901b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/services/save/saveShapeValidation.ts",
+          "symbolOrSection": "non-core replay loop",
+          "revision": "a37fb54b",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-5ea5f45ee90a4a7daadbc58c06b4f9c6",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "unknown ids skip canonicality replay via continue — benign dead data (mirror not authority); reviewer flagged for the record, not a fix",
+      "expected": "reject or document the tolerance contract",
+      "actual": "unknown ids skip canonicality replay via continue — benign dead data (mirror not authority); reviewer flagged for the record, not a fix",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton site"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: consistent with purchasedNodeIds-mirror-not-authority design; dead data cannot grant behavior (aggregators read by id). Documented tolerance, reviewer agreed no fix needed.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "REJECTED_WITH_PROOF",
+      "rejectionReason": "dead data by design; reviewer flagged for record only"
+    },
+    {
+      "id": "F-TT-CLNE-COR-3",
+      "title": "dispatch PIN string malformed (64+ hex chars)",
+      "state": {
+        "productStateId": "a940449f65990e1617bd9c1527219ffbf6a76ee1e85d62a243031be2ca7c901b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "dispatch prompt",
+          "symbolOrSection": "PIN field",
+          "revision": "a37fb54b",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-5ea5f45ee90a4a7daadbc58c06b4f9c6",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "PIN concatenated beyond 40 chars (first 40 matched head)",
+      "expected": "40-hex SHA",
+      "actual": "PIN concatenated beyond 40 chars (first 40 matched head)",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton site"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: dispatch artifact, not product code.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "REJECTED_WITH_PROOF",
+      "rejectionReason": "dispatch artifact outside product surface"
+    },
+    {
+      "id": "F-TT-CLNE-AUT-1",
+      "title": "P15 residual: em-dash in newly added test comment",
+      "state": {
+        "productStateId": "a940449f65990e1617bd9c1527219ffbf6a76ee1e85d62a243031be2ca7c901b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.reflection.test.ts",
+          "symbolOrSection": ":253",
+          "revision": "a37fb54b",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-79a6550e06b14225ae3baa3a095dfd9d",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "em-dash U+2014 in one added comment line",
+      "expected": "ASCII-only added comments",
+      "actual": "em-dash U+2014 in one added comment line",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton site"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED uncommitted: em-dash -> --.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLNE-AUT-2",
+      "title": "validator accepts silently-inert authored fields (markedBy alone; sourceMaxHpRatio on non-physical kinds)",
+      "state": {
+        "productStateId": "a940449f65990e1617bd9c1527219ffbf6a76ee1e85d62a243031be2ca7c901b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/proc/CombatProcSystem.ts",
+          "symbolOrSection": "reflect payload validation",
+          "revision": "a37fb54b",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-79a6550e06b14225ae3baa3a095dfd9d",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "markedBy without markedMaxHpRatio is inert; sourceMaxHpRatio validates on non-physical kinds but is dropped — nothing authored hits either case today",
+      "expected": "inert fields should fault at validation or be documented",
+      "actual": "markedBy without markedMaxHpRatio is inert; sourceMaxHpRatio validates on non-physical kinds but is dropped — nothing authored hits either case today",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton site"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: latent zero-impact — no authored def hits either case; validation strictness on unused fields is a design decision outside this diff scope.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "REJECTED_WITH_PROOF",
+      "rejectionReason": "latent zero-impact; nothing authored reaches it"
     }
   ],
   "evidence": [
@@ -11151,6 +11450,38 @@
       "status": "STALE",
       "inputEvidenceIds": [],
       "inputPaths": []
+    },
+    {
+      "id": "EV-TT-CLND-FIX",
+      "state": {
+        "productStateId": "a940449f65990e1617bd9c1527219ffbf6a76ee1e85d62a243031be2ca7c901b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coordinator",
+      "startedAt": "2026-09-26T08:00:00.000Z",
+      "finishedAt": "2026-09-26T08:04:00.000Z",
+      "commandOrMethod": "npm run type-check && npx vitest run battle/save/panels/composables scopes",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/clnd-fix-verify.log",
+      "artifactHash": "994c6d34599b4c4443e41be46646595fdbfc68535574a8d92918e192e1b66237",
+      "claims": [
+        "vue-tsc 0",
+        "1198 scoped tests PASS incl. 4 new pins (sacrifice-under-ward, multi-holder reflect, per-affordance disables)"
+      ],
+      "invariantIds": [],
+      "limitations": [],
+      "status": "CURRENT",
+      "inputEvidenceIds": [],
+      "inputPaths": [
+        "src/core/battle/turn/TurnBattleSystem.ts",
+        "src/composables/useProgressionActions.ts",
+        "src/components/panels/skill-path/NodeInspector.test.ts"
+      ]
     }
   ],
   "coverage": [],
@@ -13792,6 +14123,94 @@
       ],
       "novelAttackIds": [],
       "status": "STALE"
+    },
+    {
+      "id": "REV-TT-CLNE-COR",
+      "state": {
+        "productStateId": "a940449f65990e1617bd9c1527219ffbf6a76ee1e85d62a243031be2ca7c901b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 47,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-5ea5f45ee90a4a7daadbc58c06b4f9c6",
+      "contextId": "sealed-child-5ea5f45e",
+      "model": "swe-2-max",
+      "role": "CORRECTNESS",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T08:05:00.000Z",
+      "sealedAt": "2026-09-26T08:35:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-D-COR",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TT-CLNE-COR-1",
+        "F-TT-CLNE-COR-2",
+        "F-TT-CLNE-COR-3"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TT-CLNE-AUT",
+      "state": {
+        "productStateId": "a940449f65990e1617bd9c1527219ffbf6a76ee1e85d62a243031be2ca7c901b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 47,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-79a6550e06b14225ae3baa3a095dfd9d",
+      "contextId": "sealed-child-79a6550e",
+      "model": "swe-2-max",
+      "role": "AUTHORITY",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T08:05:00.000Z",
+      "sealedAt": "2026-09-26T08:37:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-D-AUT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TT-CLNE-AUT-1",
+        "F-TT-CLNE-AUT-2"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TT-CLEAN-D-COR",
+      "state": {
+        "productStateId": "a940449f65990e1617bd9c1527219ffbf6a76ee1e85d62a243031be2ca7c901b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 48,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-4d10a2040f2e478b8c46f4a7f6526c35",
+      "contextId": "sealed-child-4d10a204",
+      "model": "swe-2-max",
+      "role": "CORRECTNESS",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T07:00:00.000Z",
+      "sealedAt": "2026-09-26T07:35:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLNC-COR",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
     }
   ],
   "cycles": [
@@ -18024,6 +18443,111 @@
       "proposedProtection": [],
       "findingIds": [
         "F-TT-CLND-INT-3"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-84",
+      "rootClass": "missing-invariant",
+      "escapeReason": "manual-mode carve-out missed the reactive lane",
+      "capabilityDelta": "isPendingQueuedExecution must cover every auto-resolving pending lane",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLNE-COR-1"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-85",
+      "rootClass": "comment-hygiene",
+      "escapeReason": "P15 sweep missed one new comment",
+      "capabilityDelta": "diff-added comments checked for ASCII",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLNE-AUT-1"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-86",
+      "rootClass": "spec-ambiguity",
+      "escapeReason": "inert authored fields tolerated by validator",
+      "capabilityDelta": "latent contract — flag for record",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLNE-AUT-2",
+        "F-TT-CLNE-COR-2"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-87",
+      "rootClass": "out-of-scope",
+      "escapeReason": "dispatch prompt artifact flagged",
+      "capabilityDelta": "pin strings: exactly 40 hex",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLNE-COR-3"
       ]
     }
   ],

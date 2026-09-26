@@ -250,7 +250,7 @@ describe('phan_chan reflect (Max-HP ratio, once-per-action)', () => {
     // Both tanks (speed 10) act before the attacker (speed 9).
     system.resolveNextStep(f.battle)
 
-    // Per-holder reflect: 2 x (holder maxHp x base ratio) — the
+    // Per-holder reflect: 2 x (holder maxHp x base ratio) -- the
     // once-per-action cap binds per holder, not per action.
     expect(10_000 - attacker.currentHp).toBeCloseTo(2 * (10_000 * PHAN_CHAN_BASE_RATIO))
   })

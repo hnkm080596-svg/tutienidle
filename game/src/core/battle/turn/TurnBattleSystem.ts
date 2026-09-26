@@ -2875,6 +2875,7 @@ export class TurnBattleSystem {
    */
   isPendingQueuedExecution(actorId: string): boolean {
     return this.pendingQueuedExecution?.actorId === actorId
+      || this.pendingReactiveEntry?.actorId === actorId
   }
 
   /**
