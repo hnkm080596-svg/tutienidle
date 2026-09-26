@@ -2369,6 +2369,238 @@
    "exception": null,
    "classification": "NON_ACTIONABLE",
    "rejectionReason": "Spec-authored redundancy with zero behavioral delta; editing spec-authored data to satisfy lint-style minimalism diverges from the design authority."
+  },
+  {
+   "id": "F-PTR-40",
+   "title": "Type-check red at pin \u2014 qa(intB) test files (dup of F-PTR-36)",
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/combat/CombatSystem.hoThe.test.ts",
+     "symbolOrSection": "makePair",
+     "revision": "f7f18d43",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanC INT",
+   "counterexample": "same 4 TS errors as F-PTR-36; clean at head",
+   "status": "DUPLICATE_LINKED",
+   "closureReviewIds": [
+    "REV-PTR-CLO-4"
+   ],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "actual": "same 4 TS errors as F-PTR-36; clean at head",
+   "expected": "vue-tsc clean",
+   "rootCause": "same defect independently surfaced by INT-C",
+   "rootClass": "TEST_DEFECT",
+   "subsystem": "test",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites \u2014 swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "dup of F-PTR-36 (fixed @cfbcc271, sealed REV-PTR-CLO-4)",
+   "pinEvidenceIds": [
+    "EV-PTR-CORC-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-CORC-FIX"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "TEST_DEFECT",
+   "rejectionReason": "Duplicate of F-PTR-36 \u2014 independently discovered by INT-C on same pin; fix+seal already recorded."
+  },
+  {
+   "id": "F-PTR-41",
+   "title": "oncePerCast dedup keys on first landed lane, not first firing lane",
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "actionable": false,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/SkillResolver.ts",
+     "symbolOrSection": "oncePerCast dedup :1256-1314",
+     "revision": "f7f18d43",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanC INT",
+   "counterexample": "flagged secondary behind a failed inner gate on first landed lane is permanently skipped",
+   "status": "REJECTED_WITH_PROOF",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "actual": "flagged secondary behind a failed inner gate on first landed lane is permanently skipped",
+   "expected": "dedup keys on firing order",
+   "rootCause": "latent semantics divergence \u2014 no shipped def expresses an inner-gated secondary (water rider inner gate is tautological)",
+   "rootClass": "NON_ACTIONABLE",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites \u2014 swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "none \u2014 REJECTED: unreachable in shipped content; semantics recorded as authoring hazard for future defs",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "NON_ACTIONABLE",
+   "rejectionReason": "No shipped def authors a oncePerCast secondary behind a non-tautological inner gate; water rider's gate is always-true in-lane (F-PTR-39). Recorded as hazard lesson."
+  },
+  {
+   "id": "F-PTR-42",
+   "title": "instances.count bleeds into in-lane secondaries (N hits per firing lane)",
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "actionable": false,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/SkillResolver.ts",
+     "symbolOrSection": "instances :1095",
+     "revision": "f7f18d43",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanC INT",
+   "counterexample": "multi-instance def's oncePerCast rider mints N hits not 1",
+   "status": "REJECTED_WITH_PROOF",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "actual": "multi-instance def's oncePerCast rider mints N hits not 1",
+   "expected": "one secondary per firing lane",
+   "rootCause": "no shipped def uses instances",
+   "rootClass": "NON_ACTIONABLE",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites \u2014 swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "none \u2014 REJECTED: no shipped def uses instances; recorded as hazard for future multi-instance authoring",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "NON_ACTIONABLE",
+   "rejectionReason": "instances field unused across all shipped defs (grep-verified); divergence documented as authoring hazard."
+  },
+  {
+   "id": "F-PTR-43",
+   "title": "Non-damaging landedConsequences fires per declared target incl. dead targets' lanes",
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "actionable": false,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/skilldef/LegacySkillAdapter.ts",
+     "symbolOrSection": "non-damaging lane :206-209",
+     "revision": "f7f18d43",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/turn/SkillResolver.ts",
+     "symbolOrSection": "affected_targets :522,1061-1070",
+     "revision": "f7f18d43",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanC INT",
+   "counterexample": "consequence fires per declared target unconditionally incl. dead lanes",
+   "status": "REJECTED_WITH_PROOF",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "actual": "consequence fires per declared target unconditionally incl. dead lanes",
+   "expected": "alive-target gating",
+   "rootCause": "no shipped non-damaging def carries landedConsequences (doc_chuong uses effects, not consequences)",
+   "rootClass": "NON_ACTIONABLE",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites \u2014 swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "none \u2014 REJECTED: no shipped consumer \u2014 doc_chuong expresses its window via effects/payload not landedConsequences; semantics recorded as hazard",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "NON_ACTIONABLE",
+   "rejectionReason": "grep: no shipped non-damaging def authors landedConsequences; the consumer lane exists for spec-authored future defs."
   }
  ],
  "evidence": [
@@ -2978,6 +3210,40 @@
    ],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-PTR-INT-C1",
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 4,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-baa05e70f9a84f6f967dea771291e3f4",
+   "contextId": "ctx-baa05e70",
+   "model": "swe-2",
+   "role": "clean-adversarial",
+   "inputBundleHash": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-26T20:48:00Z",
+   "sealedAt": "2026-09-26T20:55:00Z",
+   "previousPhaseReviewId": "REV-PTR-INT-B1",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PTR-40",
+    "F-PTR-41",
+    "F-PTR-42",
+    "F-PTR-43"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [
@@ -3371,6 +3637,41 @@
    "triggerType": "DEFECT",
    "supersedes": null,
    "rootClass": "TEST_DEFECT+DEAD_DATA"
+  },
+  {
+   "effectiveFromRun": null,
+   "version": 1,
+   "escapeReason": "INT-C surfaced the same type-check defect as COR-C plus 3 latent seam-semantics Lows (dedup key, instances bleed, dead-target consequences) \u2014 none reachable by shipped defs; recorded as authoring hazards, not defects.",
+   "promotionEvidenceIds": [],
+   "exclusions": [],
+   "capabilityDelta": "latent divergences belong in hazard lessons, not actionable findings, when no shipped consumer can trigger them",
+   "id": "L-PTR-INTC-REJ",
+   "originatingRun": "phap-tu-reimagine-2026-09-26",
+   "applicability": [
+    "latent seam semantics",
+    "save-shape leniency",
+    "spec-TBD authoring"
+   ],
+   "recurrenceFindingIds": [],
+   "guidance": null,
+   "policyVersion": null,
+   "preventionEvidenceIds": [],
+   "missedInvariantIds": [],
+   "incidentEvidenceIds": [],
+   "qualifiedBy": [],
+   "status": "CAPTURED",
+   "proposedProtection": [
+    "adversarial lens: attempt repro through shipped defs first; unreachable semantics go to hazard lessons"
+   ],
+   "findingIds": [
+    "F-PTR-40",
+    "F-PTR-41",
+    "F-PTR-42",
+    "F-PTR-43"
+   ],
+   "triggerType": "FALSE_POSITIVE",
+   "supersedes": null,
+   "rootClass": "LATENT_SEMANTICS+DUPLICATE"
   }
  ],
  "messages": [],
