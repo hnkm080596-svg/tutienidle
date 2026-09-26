@@ -65,9 +65,6 @@ Missing capability (new generic primitives, all in skilldef/combat layers):
   - Capability grant 'periodic_growth' {definitionId, stacks, consume,
     applyAfter} consumed by BuffSystem.emitLifecycleUnit (Sinh Co payoff:
     +1 stack on the next own-source tick, marker consumed, one-shot flag).
-  - Capability grant 'on_apply_potency' {definitionId, op, value} consumed
-    by BuffSystem.apply (Tam Muoi: own new hoa_an applications get +potency
-    while the buff is held — no op-ordering coupling).
   - Stat 'linhLucHoTheCap' + DR application in CombatSystem.resolveAttack
     (pre-ward split, hostile direct damage only).
   - TurnSkillDefinition 'resourceCostPercentOfMax' +
@@ -75,6 +72,9 @@ Missing capability (new generic primitives, all in skilldef/combat layers):
     primary hit's landed gate — before adapter-emitted ailment ops).
   - SkillCondition 'stacks_below' (negated-at-most form; avoids empty
     else-branches for once-per-window gates).
+  - SkillAilmentInteraction 'whenSourceBuff' gate — adapter wraps the
+    interaction's ops in `if stacks_at_least(self, <buff>)` (replaces the
+    retiring `routes` field; Tam Muoi potency rides this — see D12/F9).
 Production chain: TBS declare -> TurnSkillPlanRuntime.routeCast ->
   LegacySkillAdapter -> SkillResolver -> SkillExecutor -> CombatScheduler
   -> CombatSystemDamageAdapter -> CombatSystem.resolveActionHit.
@@ -123,7 +123,7 @@ LEGACY-SUPERSEDED / REUSABLE / MISSING.
 | `resolveSpecialUltimate` (emblem-first) | REUSABLE | special resolves learned specialId; ultimate slot resolves undefined (nothing authored) |
 | `collectUnsupportedSkillSemantics` gate | REUSABLE | unchanged |
 | `manaScalingRatio` on payloads | REUSABLE | IS the authoredConversion channel (sec.29-30); remains authored per-payload |
-| TurnSkillDefinition damage/ailment/appliesBuffs/`ailmentInteractions` | REUSABLE | all stay generic |
+| TurnSkillDefinition damage/ailment/appliesBuffs/`ailmentInteractions` | REUSABLE | all stay generic; ailmentInteractions drops `routes` (dies with routes) and gains `whenSourceBuff` (F9) |
 
 ### 1.3 Routes
 
@@ -131,7 +131,7 @@ LEGACY-SUPERSEDED / REUSABLE / MISSING.
 |---|---|---|
 | `SpellPathRoute`/`route` field on SpellPathState | LEGACY-SUPERSEDED | SpellPathState -> { element: ElementType \| null }; commit function drops route arg; validator drops atomic pair rule |
 | PhapTuRoutes.ts (RouteProfile, SPELL_PATH_ROUTES, applyRouteToEffectiveSkill, applyRouteToTurnSkill, getRouteStatModifiers, resolveRouteProfile, ailmentStackBonus/applicationFactor routing) | LEGACY-SUPERSEDED | delete file; `resolveMaxThe` moves/keeps as pathway->5 in PhapTuPath.ts |
-| `routeTag` on ProgressionNode, `isNodeRouteActive`, switchRoute/previewRouteSwitch, ROUTE_SWITCH_REFUND_RATE (75%), 'phap_tu_route' BuildStatChannel, `routeProfileProvider` dep | LEGACY-SUPERSEDED | delete end-to-end |
+| `routeTag` on ProgressionNode, `isNodeRouteActive`, switchRoute/previewRouteSwitch, ROUTE_SWITCH_REFUND_RATE (75%), 'phap_tu_route' BuildStatChannel (declared in `CombatBuild.ts` L46, NOT StatDomain), `routeProfileProvider` dep | LEGACY-SUPERSEDED | delete end-to-end — consumer census in 3a |
 | Route UI: NodeInspector route-pick modal, NodeTreePanel route switcher/preview, useProgressionActions.switchSpellPathRoute, route i18n keys | LEGACY-SUPERSEDED | delete; element pick commits element-only |
 | `selectSpellPathElement(element, route)` | CONFLICTS | signature -> (element) |
 | `GameManagerRealmAdvanceOps` / realmRewards spellPath refs | LEGACY-SUPERSEDED for route part | breakthrough grant no longer awards the_thuc_tinh |
@@ -231,11 +231,19 @@ damage, `resourceType 'mana'` + new `resourceCostPercentOfMax` (authored
 percent, initial uniform 0.30 -> TBD flag), appliesBuffs -> self buff def
 (lifetime holder_turns N=3 same family all five, onReapplyStacks 'keep' +
 onReapplyDuration 'refresh' => recast never stacks, refreshes). Cost
-ordering falls out of the executor: plan.cost precheck (full cost or
-blocked, no cooldown) -> consume_resource op settles first -> apply_buff
-settles after. Recast pays full cost again (design sec.43 — NOTE: the
-dispatch summary said "full refund + refresh"; the doc's full-cost-again
-reading wins; flagged in openQuestions).
+evaluation is LIVE at both sites (F10): `hasResourceFor` in
+TurnSkillAction evaluates `resourceCostPercentOfMax x entity.stats.maxMp`
+for the selection/affordability check (same live read the plan path
+does); the plan path maps it to authored `cost {percentOfMax}` ->
+resolver computes `statScalars.maxMp x percent` -> concrete
+`plan.cost.amount` -> the unchanged PRECHECK enforces full-cost-or-blocked
+(no cooldown on block). Selection-time and commit-time reads can diverge
+only if maxMp/currentMp shifts between action selection and execution —
+PRECHECK at commit is authoritative. Ordering falls out of the executor:
+precheck -> consume_resource settles first -> apply_buff settles after.
+Recast pays full cost again (design sec.43 — NOTE: the dispatch summary
+said "full refund + refresh"; the doc's full-cost-again reading wins;
+flagged in openQuestions).
 
 D9. Linh Luc Ho The: stat `linhLucHoTheCap` (domain 'spell', authored 0.25
 initial — balance TBD) on the linh_ngo_<special> node. DR implemented in
@@ -283,12 +291,23 @@ D11. Marker mechanics:
 - van_moc window buff + tam_muoi window buff + kim_y + trong_nhac +
   thanh_tuyen: holder_turns=3 (same family), keep/refresh.
 
-D12. Tam Muoi Chan Hoa: capability grant 'on_apply_potency' on the
-tam_muoi buff — BuffSystem.apply consults the SOURCE's active grants; when
-the applied instance's definitionId matches, attach a BuffModifierPayload
-{channel 'potency', op multiply, value, lifetime buff_lifetime} to the new
-instance at apply time. Only NEW applications get it (existing instances
-never touched); no second bonus pulse (that would be a rider — banned).
+D12. Tam Muoi Chan Hoa (REVISED per gate F9 — no new capability):
+the FIRE basic's `ailmentInteractions` gains an entry
+`{kind:'add_modifier', buffId:'hoa_an', whenSourceBuff:'tam_muoi',
+modifier:{channel 'potency', op multiply, value, lifetime buff_lifetime}}`.
+SkillAilmentInteraction drops `routes` (dies with routes) and gains
+`whenSourceBuff?: BuffDefinitionId` on all three variants; the adapter
+wraps that interaction's ops in `if stacks_at_least(self, tam_muoi, 1)`
+inside the landed gate AFTER the apply (existing post-ailment position +
+gateOnApplyResult binding => the modifier keys to the just-applied own
+instance). Op lane inside onLanded: apply_buff hoa_an -> if(self has
+tam_muoi) -> add_buff_modifier. Only NEW applications during the window
+get +potency; pre-existing instances never touched; no extra pulse. Works
+on normal AND empowered variants (both defs carry the entry — window
+gate, not empowerment gate). REJECTED alternative (recorded): a
+BuffSystem.apply() 'on_apply_potency' capability hook — coordinator
+preferred keeping the modifier in-def via the existing
+gateOnApplyResult channel over a new grant + apply() hook.
 
 D13. Thanh Tuyen Duong Linh: applies existing 'thanh_tuyen' buff (+8 flat
 /+10% manaRegenPerTurn, domain 'spell') — ResourceTurnHook ticks it next
@@ -333,27 +352,70 @@ D17. UI (sec.86-92):
   ready/affordable slot — see openQuestions if special needs an
   auto-cast toggle.
 
+## 2a. Coordinator plan-gate decisions (recorded verbatim)
+
+Gate verdict: FAIL on §3a file map only; substance PASS. Amendments below
+are binding on the plan.
+
+- F9: 'on_apply_potency' capability DROPPED — Tam Muoi uses in-def
+  add_buff_modifier + gateOnApplyResult + relaxed `if` inside the landed
+  lane (D12 rewritten above).
+- F10: percent-of-max cost is evaluated LIVE — extend `hasResourceFor`
+  to evaluate `resourceCostPercentOfMax` against `entity.stats.maxMp`
+  (same live read as the plan path); PRECHECK keeps reading the resolved
+  `plan.cost.amount` (D8 amended).
+- F11: two added pins (§4 items 19-20): hidden_spell_pathway basics never
+  gain Thế (the +1 attach condition stays spell_pathway + element-
+  committed); DoT/reaction/flat-profile damage bypasses Hộ Thể DR (the
+  DR hook sits in resolveAttack only).
+- F12: SPELL_KIT_IDS triple->pair change moves ATOMICALLY with the
+  CultivationPathRegistry destructure fix — both land in Slice A (the
+  retirement slice); the kit type change and the `const [, specialId,
+  ultimateId]` -> pair destructure ship in the same commit boundary.
+- F13: Hộ Thể DR readout surface named explicitly: `linhLucHoTheCap`
+  StatLabels entry + a combat status tooltip line showing CURRENT DR%
+  (live `cap x currentMp/maxMp` value, not just the cap).
+- F14: keep `ailmentPotencyPercent`/`ailmentDurationPercent`/
+  `elementApplicationPercent` as GLOBAL channels — rationale: the element
+  basic is the only own-source ailment producer for spell_pathway, so a
+  global ailment channel is behaviorally equivalent to a per-skillId one;
+  no new channel needed.
+- F15 nit: the 0.75 Ho The cap ceiling is an inline authored literal, not
+  a named symbol.
+- F16 nit: reject-all migration deviates literally from design sec.94
+  "keep element" — sanctioned per the repo's no-migration save convention
+  (version bump + reject; the escape hatch is export/backup).
+- F17 nit: sweep stale comments and `routeProfileProvider` deps stubs
+  when retiring (CultivationPathRuntimeDeps member, save-shape comments
+  in CultivationPathKit L363/391, the GameManager closure comment).
+
 ## 3. Implementation plan (slices)
 
 Slice A — retirement (task 2): delete route machinery end-to-end
 (PhapTuRoutes, routeTag/isNodeRouteActive/switchRoute/previewRouteSwitch/
-refund, 'phap_tu_route' channel, routeProfileProvider dep, route UI,
-route i18n), legacy Thế (+5/+15, theGainOnCrit, tu_the/truong_the/
-the_thuc_tinh nodes, aggregateTurnSkillResourceModifiers + field,
-SPELL_ESSENCE_GAIN_*, empowerment@100/consumesAllThe/theScaling/detonate
-content, applySpellPathEmpowerment), chain C/D/E + god-ult skills +
+refund, 'phap_tu_route' channel, routeProfileProvider dep + the
+GameManager provider closure, route UI, route i18n), legacy Thế (+5/+15,
+theGainOnCrit, tu_the/truong_the/the_thuc_tinh nodes,
+aggregateTurnSkillResourceModifiers + field, SPELL_ESSENCE_GAIN_*,
+empowerment@100/consumesAllThe/theScaling/detonate content,
+applySpellPathEmpowerment), chain C/D/E + god-ult skills +
 PhapTuRouteSkills + PhapTuEmpoweredUlts + PHAP_TU_ULTIMATE_IDS,
-manaShieldPercent leak, SPELL_KIT_IDS -> pairs, linh_ngo_<godUlt> node,
-save shape + version bump. Fix all consumers/test files.
+manaShieldPercent leak, linh_ngo_<godUlt> node, save shape + version bump.
+ATOMIC in this slice (F12): SPELL_KIT_IDS triple->pair + the
+CultivationPathRegistry destructure fix + every kit-membership consumer
+(GameManager provider closure's SPELL_ROUTE_SKILL_IDS check, SkillSystem
+effective-surface seam). Fix all consumers/test files.
 Verification: type-check + existing suite adjusted.
 
 Slice B — engine primitives (task 3 + 4 foundations): intents
 other_enemy/other_enemies; onLanded 'if' + secondary deal_damage
 relaxation; elementalPenetrationBonus chain (op -> payload -> adapter ->
 HitResolveOptions -> calculateSkillBaseDamage); penetrationFromStacks
-(scalesWithAilmentStacks sibling); cost percentOfMax; stacks_below
-condition; boundToSourceBuffId; 'periodic_growth' + 'on_apply_potency'
-capabilities; linhLucHoTheCap stat + resolveAttack DR.
+(scalesWithAilmentStacks sibling); cost percentOfMax (authored ->
+resolved amount + hasResourceFor live read); stacks_below condition;
+boundToSourceBuffId; 'periodic_growth' capability; ailmentInteractions
+`whenSourceBuff` (routes field removed); linhLucHoTheCap stat +
+resolveAttack DR + StatLabels/tooltip readout.
 
 Slice C — content (tasks 3 + 4): element basics get
 theGainOnLandedCast:1 + window mechanics + empowerment variants via
@@ -443,10 +505,18 @@ Engine primitives (slice B):
   'linhLucHoTheCap' stat, clamp [0,1], label.
 - `src/core/buff2/BuffDefinition.ts`: boundToSourceBuffId?: BuffDefinitionId;
   CapabilityGrantDefinition union += 'periodic_growth' {definitionId,
-  stacks, consume} + 'on_apply_potency' {definitionId, channel, op, value};
-  capability validator registration wherever grants are validated.
+  stacks, consume}; capability validator registration wherever grants are
+  validated. (F9: NO 'on_apply_potency' grant — dropped.)
 - `src/core/buff2/BuffSystem.ts`: runPhaseB boundToSourceBuffId sweep;
-  emitLifecycleUnit periodic_growth hook; apply() on_apply_potency hook.
+  emitLifecycleUnit periodic_growth hook. (apply() unchanged — F9.)
+- `src/core/skill/SkillEffect.ts`: SkillAilmentInteraction — drop the
+  `routes?: readonly SpellPathRoute[]` field from all three variants
+  (L22/30/36) and the SpellPathRoute import (L7); add
+  `whenSourceBuff?: BuffDefinitionId` on all three variants.
+- `src/core/skill/LegacySkillAdapter.ts` (skill-layer adapter that emits
+  ailmentInteractions ops): wrap an interaction's ops in
+  `if stacks_at_least(self, whenSourceBuff, 1)` when the field is present
+  (post-ailment position + gateOnApplyResult binding preserved).
 - `src/core/battle/turn/TurnSkillAction.ts`: TurnSkillDefinition +=
   resourceCostPercentOfMax?: number; landedConsequences?:
   AuthoredSkillOperation[] (spliced first inside the primary hit's
@@ -515,8 +585,33 @@ Data (slice C/D):
   <el>Power).
 - `src/data/progression/PhapTuRealmRewardNodes.ts`: remove the_thuc_tinh.
 - `src/data/progression/PhapTuNodes.ts`: registry assembly update.
-- `src/core/stats/StatDomain.ts` / StatDomain.test.ts: 'phap_tu_route'
-  channel removal if declared there.
+- `src/core/game/CombatBuild.ts`: 'phap_tu_route' member of the
+  BuildStatChannel union (L46) — remove. (Correction: the channel is
+  declared HERE, not in StatDomain.ts — StatDomain untouched by routes.)
+- `src/core/game/GameManager.ts`: remove the route-profile wiring —
+  imports (SPELL_ROUTE_SKILL_IDS L146, NEUTRAL_ROUTE_PROFILE/
+  resolveRouteProfile/RouteProfile L149-156), the routeProfileProvider
+  closure (L564-596, including its SPELL_KIT_IDS + SPELL_ROUTE_SKILL_IDS
+  membership check L581 — rewritten to the pair-era kit shape or deleted
+  with the seam), setRouteProfileProvider call (L596),
+  pathRuntimeDeps.routeProfileProvider (L642), the member field + comment
+  (L988). F17: sweep the stale comments.
+- `src/core/game/GameManagerPersistentEffectOps.ts`: remove
+  getRouteStatModifiers import (L19) and both 'phap_tu_route' channel
+  emissions (L88 modifier spread, L128 channel entry).
+- `src/core/skill/SkillSystem.ts`: remove applyRouteToEffectiveSkill/
+  RouteProfile/NEUTRAL_ROUTE_PROFILE imports (L9-11), routeProfileProvider
+  member + setter (L107-110), and the effective-surface seam call
+  (L181-187).
+- `src/core/player/CultivationPathSystem.ts`: remove getActiveRoute
+  (L261) — subpathAxisResolves (L244) STAYS (generic axis machinery used
+  by element + sword preset axes); only the route axis consumer dies.
+- `src/core/player/CultivationPathKit.ts`: remove the `route?:
+  PathSubpathAxis` member (L186) and fix the save-shape comments
+  (L363/391) that describe element/route pair ownership.
+- `src/core/simulation/BattleSimulation.ts`: `select_phap_tu_element`
+  write type loses the `route` field (L55); the selectSpellPathElement
+  call site (L170) drops the arg — production break fixed, not tests.
 - locales (`src/locales/*.json` or wherever skillPath routes keys live):
   remove route keys, add Trang/marker strings if needed (P16 - i18n via
   useI18n; Vietnamese strings live in locale files, not comments).
@@ -538,8 +633,17 @@ UI (slice D):
   skill (CombatSkillPanel/SkillPathPanel) — add cost%/duration lines via
   existing tooltip channel.
 
-Tests (rewrite/adjust):
-- `src/core/player/CultivationPathContract.test.ts`,
+Tests (rewrite/adjust — additions from the gate pass in bold-class):
+- `src/core/game/GameManagerProgressionOps.respec.test.ts` (route writes
+  L138/165/198), `src/core/phap-tu/PhapTuPath.way.test.ts` (L13-15),
+  `src/core/player/CultivationPathSystem.test.ts` (L15),
+  `CultivationPathRuntime.test.ts` (NEUTRAL_ROUTE_PROFILE L13),
+  `src/core/progression/SkillCoreNodes.test.ts` (routeTag assertion L96),
+  `src/core/game/CombatBuild.test.ts` ('phap_tu_route' L128/L312),
+  `src/core/player/CultivationPathKit.test.ts` (route member + comments),
+  `src/core/skill/SkillSystem.test.ts` / `SkillEffect` interaction tests
+  if present (routes field removal + whenSourceBuff pins).
+- `src/core/player/CultivationPathContract.test.ts`,,
   `CultivationPathKit.test.ts`, `GameManager.phapTuAnPath.test.ts`,
   `GameManager.cultivationPathRewards.test.ts`, `GameManager.deadIds.test.ts`,
   `PhapTuNodes.reimagined.test.ts`, `PhapTuBasicNodes.test.ts`,
@@ -599,6 +703,12 @@ Tests (rewrite/adjust):
     learnedSpecial round-trip via skills map; nodeLevels intact.
 18. MaxLL scaling: only per-payload authoredConversion — no generic
     %MaxLL damage channel.
+19. (F11) hidden_spell_pathway basics (Ngo Dao An kit) NEVER gain The —
+    the +1 attach condition stays spell_pathway + element-committed; a
+    hidden-path basic cast landing does not move currentThe.
+20. (F11) Ho The DR applies to hostile DIRECT damage only — DoT ticks,
+    reaction payloads, and flat-profile damage bypass it entirely
+    (resolveAttack is the only hook site).
 
 ## 5. Q1-Q12 evidence
 
@@ -657,10 +767,11 @@ Tests (rewrite/adjust):
 ## 7. openQuestions (for coordinator report)
 
 1. Dispatch paraphrase says Special recast = "full refund + refresh";
-   design sec.43 says recast PAYS FULL COST AGAIN + refreshes. Implemented
-   the doc. Flag for confirmation.
+   design sec.43 says recast PAYS FULL COST AGAIN + refreshes. Planned
+   per the doc. Awaiting coordinator confirmation.
 2. CURRENT_SAVE_VERSION head value was 84 (dispatch guessed 86) — bumped
-   to 85.
+   to 85. (F16: reject-all deviates literally from design sec.94 "keep
+   element" — sanctioned by the repo's no-migration convention.)
 3. Rider ops gated on primary LANDED (miss => no rider); design says
    "sau primary hit" — landed-only chosen for consistency with the Thế
    miss rule; confirm.
