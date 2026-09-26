@@ -37,7 +37,7 @@ export const THE_PROC_COST = 15
 /** Qua The cap: reaching it closes every new reactive window. */
 export const REACTION_DEBT_CAP = 3
 
-/** Single Qua The predicate — engine window gate and presentation share it. */
+/** Single Qua The predicate - engine window gate and presentation share it. */
 export function isQuaTheDebt(reactionDebt: number | undefined): boolean {
   return (reactionDebt ?? 0) >= REACTION_DEBT_CAP
 }
@@ -67,7 +67,7 @@ export function isUngTheCombatant(grants: readonly ActiveCapabilityGrant[]): boo
 }
 
 /**
- * Own-basic-lands income — reads the authored theEconomy.gainOnBasicHit
+ * Own-basic-lands income - reads the authored theEconomy.gainOnBasicHit
  * field off the holder's marker clone (Tham The landed; node bonuses
  * bake at participant build).
  */

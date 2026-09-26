@@ -31,7 +31,6 @@ import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
 import { type OrbId } from '../kiem-tu/KiemTuState'
 import { isMortalPrecursorSkillId } from '../skill/MortalPrecursors'
-import { forgeCost, gainKiemY, grantKiemDao, loseKiemY } from '../kiem-tu/NguKiemDao'
 import { isHiddenSwordPathway } from '../kiem-tu/KiemTuPath'
 import { validatePreset } from '../kiem-tu/KiemPhoSystem'
 import { getRealmIndex } from '../realm/realmSystem'
@@ -711,8 +710,6 @@ export class GameManagerProgressionOps {
       removedNodeIds: [],
       unlearnedSkillIds: [],
       clearedSpecializations: [],
-      kiemY: 0,
-      kiemDao: 0,
     }
 
     for (const nodeId of revoked) {
@@ -778,31 +775,6 @@ export class GameManagerProgressionOps {
             delete sim.nodeFreePurchaseRecord[coreId]
           }
         }
-      }
-
-      if (record.kiemY && sim.swordPath) {
-        const debited = Math.min(sim.swordPath.kiemY, record.kiemY)
-        sim.swordPath.kiemY -= debited
-        clawback.kiemY += debited
-
-        const residual = record.kiemY - debited
-        const realmIndex = getRealmIndex(sim.realmId)
-
-        if (residual > 0 && realmIndex >= 1) {
-          const swords = Math.min(
-            sim.swordPath.kiemDaoCount,
-            Math.ceil(residual / forgeCost(realmIndex)),
-          )
-
-          sim.swordPath.kiemDaoCount -= swords
-          clawback.kiemDao += swords
-        }
-      }
-
-      if (record.kiemDao && sim.swordPath) {
-        const removed = Math.min(record.kiemDao, sim.swordPath.kiemDaoCount)
-        sim.swordPath.kiemDaoCount -= removed
-        clawback.kiemDao += removed
       }
 
       if (record.specializationSkillId && record.specializationId) {

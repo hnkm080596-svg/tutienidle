@@ -13,7 +13,7 @@ import { PHAN_KICH } from '../../../data/skill/TheTuSkills'
 import { THE_PROC_COST } from '../../the-tu/TheEconomy'
 import { makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
-// Ung The beta — Quan The marker semantics (design Part V): the
+// Ung The beta - Quan The marker semantics (design Part V): the
 // hidden marker makes EVERY enemy satisfy isObserved for its holder
 // (incl. later spawns) for 4 HOLDER turns, then observation reverts to
 // the Tham mark alone. bat_tu_ba_the remains the hard-CC unblocker;
@@ -120,7 +120,7 @@ describe('quan_the marker (Ung The beta)', () => {
     const { battle, playerP, combat, runtime } = makeDuel(1, 100)
     runtime.applyBuff('phan_mon', playerP)
     runtime.applyBuff('quan_the', playerP)
-    // No thamTargetId at all — the marker alone observes the attacker.
+    // No thamTargetId at all - the marker alone observes the attacker.
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     new TurnBattleSystem(combat, 10_000, BUFF_REGISTRY, undefined, runtime).resolveNextStep(battle)
@@ -136,7 +136,7 @@ describe('quan_the marker (Ung The beta)', () => {
     runtime.applyBuff('quan_the', playerP)
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
-    // Age the marker out — 4 holder-turn boundaries.
+    // Age the marker out - 4 holder-turn boundaries.
     for (let turn = 0; turn < 4; turn += 1) {
       runtime.tickHolderTurnsEnd(playerP.entity.id)
     }
@@ -161,7 +161,7 @@ describe('quan_the marker (Ung The beta)', () => {
     expect(battle.queuedFollowUps).toBeUndefined()
     expect(playerP.entity.currentThe).toBe(100)
 
-    // Bat Tu Ba The: the CC cannot block — window reopens on the next action.
+    // Bat Tu Ba The: the CC cannot block - window reopens on the next action.
     runtime.applyBuff('bat_tu_ba_the', playerP)
     new TurnBattleSystem(combat, 10_000, BUFF_REGISTRY, undefined, runtime).resolveNextStep(battle)
 

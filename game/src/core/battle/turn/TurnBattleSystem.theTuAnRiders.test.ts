@@ -26,7 +26,7 @@ import type { ResolvedCombatOperation } from '../contracts/operations'
 import type { BuffDefinitionId, CombatEntityId, CombatOperationId } from '../contracts/ids'
 import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
-// Ung The beta (design Parts V-VIII) — node-rider mechanics on the
+// Ung The beta (design Parts V-VIII) - node-rider mechanics on the
 // *_mon marker clones: the Ho Bich intercept->ally ward and the Dan
 // The one-shot mark (tro_kich clone carrying appliesAilments). Riders
 // are baked onto clones at participant build; these tests register
@@ -302,8 +302,8 @@ describe('Dan The one-shot mark (Ung The beta node)', () => {
 
   it('tro_kich landed applies the dan_the mark; the marked enemy\'s observed action yields boosted income, then the mark is consumed', () => {
     const f = fixture()
-    // The Dẫn Thế node bakes the one-shot ailment onto the tro_kich
-    // payload clone — register the baked kit clones under their ids.
+    // The Dan The node bakes the one-shot ailment onto the tro_kich
+    // payload clone - register the baked kit clones under their ids.
     const kit = buildTheTuAnKit(
       {
         observationGainBonus: 0,

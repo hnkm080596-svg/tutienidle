@@ -252,19 +252,21 @@ describe('the bar bridge — spell_pathway way gate', () => {
       getTurnBattle: () => fightingBattle(),
       hasPathCapability: (cap: PathCapability) =>
         hasPathCapability(barState, cap, { hasSkill: () => false }),
+      getBattleBuffs: () => [],
     } as unknown as GameManager
 
     const nguReader = makeTheBarReader(gameManager, () => barPlayer())
     expect(nguReader()?.current).toBe(40)
 
-    for (const shape of [
-      { cultivationPath: 'spell', cultivationWay: 'hidden_spell_pathway' },
-      { cultivationPath: 'body', cultivationWay: 'hidden_body_pathway' },
-    ]) {
-      barState = barPlayer(shape)
-      const reader = makeTheBarReader(gameManager, () => barState)
-      expect(reader(), JSON.stringify(shape)).toBeNull()
-    }
+    // hidden_spell is still unimplemented -> null; hidden_body (Ung The,
+    // shipped by the-tu-an wave) is a real pathway now -> snapshot.
+    barState = barPlayer({ cultivationPath: 'spell', cultivationWay: 'hidden_spell_pathway' })
+    expect(makeTheBarReader(gameManager, () => barState)()).toBeNull()
+
+    barState = barPlayer({ cultivationPath: 'body', cultivationWay: 'hidden_body_pathway' })
+    const anBar = makeTheBarReader(gameManager, () => barState)()
+    expect(anBar?.label).toBe('Thế')
+    expect(anBar?.current).toBe(40)
   })
 })
 

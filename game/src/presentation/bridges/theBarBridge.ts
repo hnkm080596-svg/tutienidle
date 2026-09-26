@@ -43,17 +43,17 @@ export interface TheBarSnapshot {
 
   label: string
 
-  /** Ung The beta — entity id of the live Tham An mark (undefined = no
+  /** Ung The beta - entity id of the live Tham An mark (undefined = no
       focus). */
   thamTargetId?: string
 
-  /** Ung The beta — quan_the marker live on the player. */
+  /** Ung The beta - quan_the marker live on the player. */
   quanTheActive?: boolean
 
-  /** Ung The beta — current Ung Tre reaction debt. */
+  /** Ung The beta - current Ung Tre reaction debt. */
   reactionDebt?: number
 
-  /** Ung The beta — Qua The (debt at cap); computed against
+  /** Ung The beta - Qua The (debt at cap); computed against
       isQuaTheDebt here so views never re-derive the predicate. */
   quaThe?: boolean
 }

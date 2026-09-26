@@ -23,7 +23,7 @@ import {
 import { MAX_THE } from '../../combat/CombatTypes'
 import { makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
-// Ung The beta (design authority Parts II-VII) — the observation-driven
+// Ung The beta (design authority Parts II-VII) - the observation-driven
 // The economy: income ONLY from Tham The landed + an observed enemy
 // completing a normal action, landing AFTER that action's own reactive
 // windows close (INV-10). No passive income, no free procs: the flat
@@ -191,7 +191,7 @@ describe('observation income (Ung The beta)', () => {
     runtime.applyBuff('ung_the', playerP)
     playerP.thamTargetId = undefined
 
-    // Speed lives on baseStats — force the enemy first this round.
+    // Speed lives on baseStats - force the enemy first this round.
     enemyP.entity.baseStats = asBaseStats({ ...enemyP.entity.baseStats, speed: 30 })
     enemyP.entity.stats = { ...enemyP.entity.stats, speed: 30 }
     enemyP.speed = 30
@@ -210,7 +210,7 @@ describe('observation income (Ung The beta)', () => {
     playerP.thamTargetId = 'enemy'
     runtime.applyBuff('choang', enemyP) // stun: its turn is consumed by hard CC
 
-    // Enemy acts first — its ccBlocked declaration carries a natural
+    // Enemy acts first - its ccBlocked declaration carries a natural
     // actionSource, so only the ccBlocked gate keeps income from firing.
     enemyP.entity.baseStats = asBaseStats({ ...enemyP.entity.baseStats, speed: 30 })
     enemyP.entity.stats = { ...enemyP.entity.stats, speed: 30 }
@@ -230,14 +230,14 @@ describe('observation income (Ung The beta)', () => {
     system.resolveNextStep(battle) // player basic +4, marks enemy
     system.resolveNextStep(battle) // enemy observed action +4 -> round boundary grants NOTHING
 
-    // Exactly the two observation channels — the retired gainPerRound is gone.
+    // Exactly the two observation channels - the retired gainPerRound is gone.
     expect(playerP.entity.currentThe).toBe(8)
   })
 
   it('Tham An marks on MISS: the dodged cast still observes, income still lands', () => {
     const { battle, playerP, enemyP, combat, runtime } = makeBattle()
     runtime.applyBuff('ung_the', playerP)
-    // Enemy dodges everything — the tham_the hit whiffs. The 0.999
+    // Enemy dodges everything - the tham_the hit whiffs. The 0.999
     // roll beats the 5% hit floor deterministically.
     enemyP.entity.baseStats = asBaseStats({ ...enemyP.entity.baseStats, evasionRate: 1_000_000 })
     enemyP.entity.stats = { ...enemyP.entity.stats, evasionRate: 1_000_000 }
@@ -400,7 +400,7 @@ describe('Ung Tre / Qua The (reaction debt)', () => {
     expect(playerP.reactionDebt).toBe(0)
     expect(playerP.entity.currentThe).toBe(THE_PROC_COST * REACTION_DEBT_CAP + 10 + 4)
 
-    // Force the enemy's gauge so IT — not the player — acts next.
+    // Force the enemy's gauge so IT - not the player - acts next.
     enemyP.actionGauge = 10_000
     playerP.actionGauge = 500
     system.resolveNextStep(battle) // enemy hits -> Phan commits: -15, +1 debt, -400 gauge
@@ -425,12 +425,12 @@ describe('Ung Tre / Qua The (reaction debt)', () => {
     playerP.entity.currentThe = THE_PROC_COST * REACTION_DEBT_CAP + 10
     playerP.thamTargetId = 'enemy'
     playerP.reactionDebt = REACTION_DEBT_CAP
-    enemyP.actionGauge = 10_000 // the ENEMY acts first — the player's own action would reset the debt
+    enemyP.actionGauge = 10_000 // the ENEMY acts first - the player's own action would reset the debt
 
     system.resolveNextStep(battle) // enemy acts: window closed by Qua The
     expect(battle.queuedFollowUps ?? []).toHaveLength(0)
     expect(playerP.reactionDebt).toBe(REACTION_DEBT_CAP)
-    // Income still lands — Qua The only blocks reactions.
+    // Income still lands - Qua The only blocks reactions.
     expect(playerP.entity.currentThe).toBe(THE_PROC_COST * REACTION_DEBT_CAP + 10 + 4)
   })
 })

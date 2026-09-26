@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { GAUGE_MAX, refundGauge, type GaugeActor } from './ActionGauge'
 
 // QA adversarial probe (2026-09-04 quick review) — attack operator: value
-// mutation (số âm) trên primitive công khai chưa có caller. Contract
-// (post-Ứng-Trệ): a non-debtor is never pushed below 0 — debt exists only
+// mutation (so am) tren primitive cong khai chua co caller. Contract
+// (post-Ung-Tre): a non-debtor is never pushed below 0 - debt exists only
 // via consume; an existing debtor floor-pins at its own residue so a
 // push repays without forgiveness and a pushback cannot invert to haste.
 describe('ActionGauge adversarial: refundGauge', () => {

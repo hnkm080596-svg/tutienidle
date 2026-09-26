@@ -19,15 +19,15 @@ import type { TurnSkillDefinition } from './TurnSkillAction'
 import type { TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
-// Ung The beta (design Parts VI + VIII) — the Phan post-action window
+// Ung The beta (design Parts VI + VIII) - the Phan post-action window
 // and the Tro ally-action window. Phan: an observed enemy's natural
-// hostile action RESOLVING on the reactor opens one window — hit,
+// hostile action RESOLVING on the reactor opens one window - hit,
 // blocked, absorbed, missed and evaded all qualify; the taken outcome
 // rolls onImpactLanded, a fully dodged action rolls onEvade. Tro: an
 // ally's authored-DAMAGING natural action completes into an enemy the
 // reactor observes -> one window -> tro_kich at the canonical target
 // (first landed, else affected, alive + observed). Success pays The
-// and commits +1 Ung Tre debt — nothing is spent on a failed roll.
+// and commits +1 Ung Tre debt - nothing is spent on a failed roll.
 
 const NO_MITIGATION = {
   evasionRate: 0,
@@ -92,7 +92,7 @@ function registryWith(replacements: readonly BuffDefinition[]): BuffRegistry {
   return makeTestBuffRegistry(LIVE_BUFFS.map((def) => byId.get(def.id) ?? def))
 }
 
-/** Kit-baked marker clones under their own ids — e.g. phan_mon carrying
+/** Kit-baked marker clones under their own ids - e.g. phan_mon carrying
     the Trong Phan payload swap. */
 function bakedKitRegistry(mods: Parameters<typeof buildTheTuAnKit>[0]): BuffRegistry {
   const kit = buildTheTuAnKit(mods, { quanThe: true, quanTheCoreLevel: 1 })
@@ -179,7 +179,7 @@ function makePhanWorld(): {
   const battle: TurnBattle = { players: [defenderP], enemies: [enemyP], state: 'fighting' }
   const w = world(() => [defenderP, enemyP])
   withMarker(w, defenderP, 'phan_mon', 'counterChance', 1, 100)
-  // The defender OBSERVES the attacker — the mark is the base gate.
+  // The defender OBSERVES the attacker - the mark is the base gate.
   defenderP.thamTargetId = 'enemy'
   return { battle, enemyP, defenderP, w }
 }
@@ -287,7 +287,7 @@ describe('Phan post-action window (Ung The beta)', () => {
     expect(battle.queuedFollowUps).toHaveLength(1)
     expect(defenderP.entity.currentThe).toBe(100 - THE_PROC_COST)
 
-    // The attacker dies BEFORE the queued payload resolves — the dead
+    // The attacker dies BEFORE the queued payload resolves - the dead
     // captured target filters out; payment + debt stand (no refund).
     enemyP.entity.alive = false
     enemyP.alive = false
@@ -345,10 +345,10 @@ describe('Phan post-action window (Ung The beta)', () => {
     expect(battle.queuedFollowUps![0]!.payloadSkillId).toBe('phan_kich')
   })
 
-  // cleanA12 COR pin — the adjudicated default: a reactor in affected
+  // cleanA12 COR pin - the adjudicated default: a reactor in affected
   // with NO recorded hit outcome resolves 'evaded' (TBS ~:3200). Under
   // major_trong_phan that means a non-damaging hostile cast mints the
-  // premium trong_phan_kich payload — this pins the contract so the
+  // premium trong_phan_kich payload - this pins the contract so the
   // default cannot silently regress.
   it('trong_phan owned: a NON-DAMAGING cast on the defender queues trong_phan_kich (evaded default)', () => {
     const { battle, enemyP, defenderP } = makePhanWorld()

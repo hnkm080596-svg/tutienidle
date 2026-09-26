@@ -11,7 +11,7 @@ import type { ReactiveProcPayload } from '../../core/proc/ProcCapabilities'
 import type { BuffDefinition } from '../../core/buff2/BuffDefinition'
 import type { StatType } from '../../core/stats/StatTypes'
 
-// Ung The beta — kit clones bake node modifiers into capability payloads
+// Ung The beta - kit clones bake node modifiers into capability payloads
 // (the retired effects[] channel). These helpers read the typed payloads
 // straight off the clone defs.
 function procPayloads(def: BuffDefinition): ReactiveProcPayload[] {
@@ -25,7 +25,7 @@ function economyPayload(def: BuffDefinition): TheEconomyPayload | undefined {
   return grant?.payload as TheEconomyPayload | undefined
 }
 
-// Ung The beta tree (design Part XIII): 6 nodes — LQ minors Thau The +
+// Ung The beta tree (design Part XIII): 6 nodes - LQ minors Thau The +
 // Phan Kinh behind tham_the; Truc Co major_quan_the grants the quan_the
 // core; ho_bi / trong_phan / dan_the gate on it. The design forbids
 // tree content touching chances, main stats, debt, proc cost, or free

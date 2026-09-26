@@ -338,15 +338,6 @@ function clawbackDetailText(clawback: GrantClawback | undefined): string {
     )
   }
 
-  if (clawback.kiemY > 0 || clawback.kiemDao > 0) {
-    parts.push(
-      t('panels.nodeTree.clawback.swords', {
-        y: clawback.kiemY,
-        d: clawback.kiemDao,
-      }),
-    )
-  }
-
   if (clawback.refund > 0) {
     parts.push(
       t('panels.nodeTree.clawback.refund', { n: clawback.refund }),

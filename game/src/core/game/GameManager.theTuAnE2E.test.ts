@@ -143,7 +143,7 @@ function parkParticipantSpeed(participant: TurnBattle['players'][number]) {
   participant.speed = 1
 }
 
-/** An Ẩn player at Truc Co with Quan The owned, capped reactive
+/** An An player at Truc Co with Quan The owned, capped reactive
  * chances, and a companion to protect. */
 function makeAnPlayerWithCompanion() {
   registerE2ECompanion()

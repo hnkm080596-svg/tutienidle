@@ -18,13 +18,13 @@ import { THE_PROC_COST, UNG_TRE_GAUGE_PENALTY, REACTION_DEBT_CAP } from '../../t
 import type { EntityVitalsChangedEvent } from '../../combat/EntityVitalsSystem'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 
-// Ung The beta (design Parts V-VI + XI) — the Ho intercept window:
+// Ung The beta (design Parts V-VI + XI) - the Ho intercept window:
 // between an enemy-side declaration and impact, ONE player-side
 // protector (nearest to the attacker, carrying the ho_mon marker,
 // OBSERVING the attacker, free of hard CC, not Qua The) rolls
 // protectChance; on success ONLY it pays The + commits Ung Tre debt and
-// replaces the declared target — the hit resolves fully vs the
-// protector (Hộ can kill; the rescued ally is safe regardless).
+// replaces the declared target - the hit resolves fully vs the
+// protector (Ho can kill; the rescued ally is safe regardless).
 
 const NO_MITIGATION = {
   evasionRate: 0,
@@ -311,7 +311,7 @@ describe('Ho intercept window (Ung The beta)', () => {
   it('an invalid window consumes NO proc RNG — the gate sits before the roll lane', () => {
     const f = makeFixture()
     // Unaffordable + unobserved: both ride caller-side gates, so
-    // resolveReactiveProcs never runs — observable contract: no payment,
+    // resolveReactiveProcs never runs - observable contract: no payment,
     // no substitution, no queue.
     withHoMon(f, f.protectorP, 1, 5, { observed: false })
     vi.spyOn(Math, 'random').mockReturnValue(0)
@@ -340,7 +340,7 @@ describe('Ho intercept window (Ung The beta)', () => {
 
     expect(declared.intercepted).toBeUndefined()
     expect(f.squishyP.entity.currentHp).toBeLessThan(100_000)
-    // The far protector's pool was never touched — no attempt at all.
+    // The far protector's pool was never touched - no attempt at all.
     expect(farP.entity.currentThe).toBe(100)
   })
 
@@ -423,7 +423,7 @@ describe('Ho intercept window (Ung The beta)', () => {
     expect(declared.intercepted).toBe(true)
     expect(f.protectorP.entity.alive).toBe(false)
     expect(f.squishyP.entity.currentHp).toBe(100_000)
-    // Commit already happened — debt stands, no rollback on death.
+    // Commit already happened - debt stands, no rollback on death.
     expect(f.protectorP.reactionDebt).toBe(1)
   })
 
@@ -479,7 +479,7 @@ describe('Ho intercept window (Ung The beta)', () => {
       targetIds: ['enemy'],
       triggerContext: { origin: 'enemy_hit', intercepted: true, outcome: 'evaded' },
     })
-    // Two commits (Ho + Phan) — debt 2, pool -30.
+    // Two commits (Ho + Phan) - debt 2, pool -30.
     expect(f.protectorP.reactionDebt).toBe(2)
     expect(f.protectorP.entity.currentThe).toBe(70)
   })

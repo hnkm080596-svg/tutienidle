@@ -308,7 +308,7 @@ export const HO_VE_BUFF: BuffDefinition = {
  */
 export const QUAN_THE_ID = 'quan_the'
 
-/** Live-presence predicate — engine observation check and HUD bridge share it. */
+/** Live-presence predicate - engine observation check and HUD bridge share it. */
 export function hasQuanTheMarker(
   instances: ReadonlyArray<{ definitionId: string }>,
 ): boolean {

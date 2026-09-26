@@ -441,9 +441,7 @@ export function grantCultivationPathRealmReward(
       // the purchase-time effect reject above.
       if (
         node.effect.unlocksSkillIds !== undefined ||
-        node.effect.selectsSpecialization !== undefined ||
-        node.effect.kiemYGrant !== undefined ||
-        node.effect.kiemDaoGrant !== undefined
+        node.effect.selectsSpecialization !== undefined
       ) {
         console.warn(
           `grantedNodeLevels entry '${nodeId}' carries transactional effects that node-level grants do not fire - grant skipped`,

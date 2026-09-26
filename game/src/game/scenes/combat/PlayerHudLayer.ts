@@ -227,7 +227,7 @@ export class PlayerHudLayer {
     this.theGroup.label.text = `Thế ${formatNumber(Math.floor(current))} / ${formatNumber(Math.max(0, Math.round(max)))}${armed ? ' ◆' : ''}${suffix ? ` · ${suffix}` : ''}`
   }
 
-  // External ward pool — its own layer label; max is the holder's maxHp
+  // External ward pool - its own layer label; max is the holder's maxHp
   // (shield fraction of health), NOT a spendable ward cap.
   updateExternalWard(current: number, max: number): void {
     this.updateGroup(

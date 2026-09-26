@@ -11,7 +11,6 @@ import { issueCompanionGifts } from '../companion/CompanionGifts'
 import { CULTIVATION_PATH_MODULES, getActiveWayDefinition } from '../player/CultivationPathKit'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward, reconcileCultivationPathRealmRewards as reconcilePathRealmRewards, hasStaticPathCapability } from '../player/CultivationPathSystem'
-import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward, hasStaticPathCapability } from '../player/CultivationPathSystem'
 import { grantSkillCore } from '../progression/NodeSystem'
 import {
   computeBreakthroughGrade,

@@ -13,13 +13,13 @@ import { PHAN_KICH } from '../../../data/skill/TheTuSkills'
 import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
-// Ung The beta — the reactive bypass contract (design Parts VI-XI): a
+// Ung The beta - the reactive bypass contract (design Parts VI-XI): a
 // queued entry resolves as a REAL action through declare -> impact but
 // skips the ENTIRE natural-turn lifecycle (turn counter, round
 // tracking, buff/DoT ticks, cooldowns, regen, resource deltas, charge
 // advance, CC check, gauge) and opens NO new reactive windows (INV-9).
 // The post-action Phan window pins: an observed enemy's action that
-// resolved on the reactor rolls the marker's grant — success pays the
+// resolved on the reactor rolls the marker's grant - success pays the
 // flat cost, commits +1 Ung Tre debt, queues the payload.
 
 const NO_MITIGATION = {

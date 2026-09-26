@@ -338,7 +338,7 @@ describe('CombatAnimationRuntime', () => {
   it('presentation deactivation auto-drains a queued execution — never parks a committed cast for manual input (cleanA11 INT)', () => {
     // A queued repeat/multicast execution is an already-committed cast
     // (and a reactive entry an already-PAID reaction). Manual mode must
-    // not strand it in awaitedManualActor — it resolves exactly once
+    // not strand it in awaitedManualActor - it resolves exactly once
     // through the auto declare->impact->complete path.
     const { runtime, battle, player, enemy, turnBattleSystem } = fixture()
 

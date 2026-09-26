@@ -13,11 +13,11 @@ import { PHAN_KICH } from '../../../data/skill/TheTuSkills'
 import { THE_PROC_COST } from '../../the-tu/TheEconomy'
 import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
-// Ung The beta — cleanA4 INT-R4 regression pins:
+// Ung The beta - cleanA4 INT-R4 regression pins:
 // (a) the -400 UNG_TRE_GAUGE_PENALTY persists NEGATIVE through a queued
 //     bypass drain (a free action never lifts a debt-negative gauge);
 // (b) a reflect kill inside the action-tail flush is itself a death
-//     boundary — a dead Tham An mark clears observer focus at action end,
+//     boundary - a dead Tham An mark clears observer focus at action end,
 //     never on the next declare (the HUD must never read a stale mark).
 
 const NO_MITIGATION = {
@@ -142,7 +142,7 @@ describe('reflect kill at the action-tail flush is a death boundary (INT-R4 F2)'
     runtime.applyBuff('ung_the', playerP)
     runtime.applyBuff('phan_chan', playerP)
     playerP.thamTargetId = 'enemy'
-    playerP.entity.currentThe = 0 // no procs to pay — pure reflect path
+    playerP.entity.currentThe = 0 // no procs to pay - pure reflect path
 
     vi.spyOn(Math, 'random').mockReturnValue(0)
 

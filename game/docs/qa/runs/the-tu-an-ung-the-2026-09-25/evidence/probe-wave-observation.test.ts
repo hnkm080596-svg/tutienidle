@@ -150,7 +150,7 @@ describe('novel-attack probe: wave-spawn observation + quan_the lifetime', () =>
     makeAct(system, battle, enemyP, participants)
     expect(playerP.entity.currentThe ?? 0).toBe(liveBefore + 4)
 
-    // Burn remaining holder turns (3 left: rem 3→2→1→expired).
+    // Burn remaining holder turns (3 left: rem 3->2->1->expired).
     for (let i = 0; i < 3; i++) {
       makeAct(system, battle, playerP, participants)
       playerP.thamTargetId = undefined // each basic re-plants; undo

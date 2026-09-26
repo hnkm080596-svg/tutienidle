@@ -895,9 +895,6 @@ export interface NodeRespecPreview {
     unlearnedSkillIds: string[]
     /** Specialization selections the clawback clears. */
     clearedSpecializations: { skillId: string; specializationId: string }[]
-    /** kiemY and live swords lost (residual conversions included). */
-    kiemY: number
-    kiemDao: number
   }
 }
 
