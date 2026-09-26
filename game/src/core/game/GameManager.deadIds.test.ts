@@ -93,7 +93,7 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
   })
 
   // M-QI-06 - constrained-authoring guard: the minimal proving set may
-  // carry techniqueRank gates on exactly the listed ids (9 unlock nodes
+  // carry techniqueRank gates on exactly the listed ids (4 unlock nodes
   // in `prerequisites`, 8 cap nodes in `levelGates`); techniqueGrade and
   // revealWhen technique gates remain forbidden everywhere until a later
   // content mission extends the allowlist.
@@ -102,22 +102,12 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
   // the level cap, so every leveled basic node carries techniqueRank
   // levelGates by contract.
   const TECHNIQUE_UNLOCK_ALLOWLIST = new Set([
-    'linh_ngo_tat_phuong_giang_the',
-    'linh_ngo_bat_thu_can_quet',
-    'linh_ngo_kien_moc_thong_thien',
-    'linh_ngo_kim_phat_thu_sat',
-    'linh_ngo_hau_tho_thanh_luy',
     'major_bat_tu_tuc_menh',
     'major_loan_dau_sat',
     'major_khiem_khich_dien',
     'major_son_nhac_bao_bi',
   ])
   const TECHNIQUE_CAP_ALLOWLIST = new Set([
-    'minor_fire_intensity',
-    'minor_water_intensity',
-    'minor_wood_intensity',
-    'minor_metal_intensity',
-    'minor_earth_intensity',
     'ngu_kiem_sac',
     'ngu_kiem_phong',
     'ngu_kiem_sat',
