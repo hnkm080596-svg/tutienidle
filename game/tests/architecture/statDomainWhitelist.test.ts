@@ -170,16 +170,7 @@ describe('domain source whitelist (INV-11)', () => {
   })
 
   it('every authored domain tag in src/data/** is whitelisted', () => {
-    // Glob negation (LegacySkillCoverage.test.ts precedent): without the
-    // .test.ts exclusion the eager import executes every matched test
-    // module and re-registers its suites inside this file (measured:
-    // +424 duplicate case executions in one run). The runtime
-    // path.endsWith('.test.ts') skip below only spares the scan, not the
-    // registration - the exclusion must happen in the glob itself.
-    const modules = import.meta.glob(
-      ['../../src/data/**/*.ts', '!../../src/data/**/*.test.ts'],
-      { eager: true },
-    )
+    const modules = import.meta.glob('../../src/data/**/*.ts', { eager: true })
     const found = new Map<object, FoundModifier>()
 
     for (const [path, moduleExports] of Object.entries(modules)) {

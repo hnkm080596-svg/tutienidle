@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createBaseStats } from './StatBlock'
+import type { Stats } from './StatBlock'
 import {
   calculateEffectiveStats,
   resolveAttributeTotals,
@@ -286,14 +287,7 @@ describe('INV-13 — no authored chance-stat modifiers', () => {
   }
 
   it('no Body*/TheTuAn* data module emits chance-stat modifiers', () => {
-    // Glob negation (LegacySkillCoverage.test.ts precedent): TheTu*.ts
-    // also matches TheTu*.test.ts; without the exclusion the eager import
-    // executes those test modules and re-registers their suites inside
-    // this file (measured: +59 duplicate case executions in one run).
-    const modules = import.meta.glob(
-      ['../../data/**/TheTu*.ts', '!../../data/**/*.test.ts'],
-      { eager: true },
-    )
+    const modules = import.meta.glob('../../data/**/TheTu*.ts', { eager: true })
     const hits: string[] = []
 
     for (const [path, moduleExports] of Object.entries(modules)) {

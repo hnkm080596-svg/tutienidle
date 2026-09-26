@@ -5,7 +5,7 @@
   // that touch DOM types; `types` opts node back in for node:fs/node:path
   // helpers (tests/architecture/helpers/scanTs.ts).
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["tests/architecture/**/*", "tests/lab/**/*", "tests/balance/**/*"],
+  "include": ["tests/architecture/**/*", "tests/lab/**/*"],
   // tests/lab/local/ is gitignored personal scratch — never part of the gate.
   "exclude": ["tests/lab/local/**"],
   "compilerOptions": {

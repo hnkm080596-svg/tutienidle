@@ -5,7 +5,6 @@
     "vite.config.*",
     "vitest.config.*",
     "vitest.lab.config.*",
-    "vitest.balance.config.*",
     "scripts/**/*.ts",
     "cypress.config.*",
     "playwright.config.*",
