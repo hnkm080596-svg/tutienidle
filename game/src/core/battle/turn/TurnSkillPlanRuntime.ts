@@ -539,7 +539,7 @@ export class TurnSkillPlanRuntime {
         if (source === undefined || target === undefined) return
         // Legacy slot: after consume ops, before authored ailments.
         // The reflect eligibility check rides the action's provenance
-        // (INV-9 parity with resolveTakenWindow): only natural
+        // (INV-9 parity with resolvePhanWindow): only natural
         // ('normal'/'skill') hostile actions can reflect -- counter/
         // follow_up/intercept hits damage the holder without recursing.
         tbs.runLandedHitProcs(

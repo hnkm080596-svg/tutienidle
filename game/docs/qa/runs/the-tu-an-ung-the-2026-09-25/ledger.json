@@ -5415,6 +5415,59 @@
       "exception": null,
       "status": "FIXED_PENDING_PROOF",
       "rejectionReason": null
+    },
+    {
+      "id": "F-TTA-CLN12-AUT-1",
+      "title": "stale function-name reference in comment (resolveTakenWindow retired)",
+      "state": {
+        "productStateId": "ca812f5eaae9b4e70246ddf57ecd811e1907692e283e8a9c21b4f8532602aa3c",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnSkillPlanRuntime.ts",
+          "symbolOrSection": ":542",
+          "revision": "fea642ba",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-451d05775029408fa9ca1a3a5321560c",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "comment names a retired authority",
+      "expected": "name resolvePhanWindow",
+      "actual": "resolveTakenWindow (removed)",
+      "rootCause": "comment drift after the taken-window fold",
+      "rootClass": "comment-drift",
+      "subsystem": "the-tu-an-ung-the",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "grep resolveTakenWindow",
+          "hitDispositions": [
+            "sole hit"
+          ],
+          "coverageLimits": [],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED uncommitted: comment now names resolvePhanWindow",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
     }
   ],
   "evidence": [
@@ -7431,6 +7484,35 @@
       "findingIds": [
         "F-TTA-CLN12-COR-1",
         "F-TTA-CLN12-COR-2"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TTA-CLEAN-A12-AUT",
+      "state": {
+        "productStateId": "ca812f5eaae9b4e70246ddf57ecd811e1907692e283e8a9c21b4f8532602aa3c",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 49,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-451d05775029408fa9ca1a3a5321560c",
+      "contextId": "sealed-child-451d0577",
+      "model": "swe-2-max",
+      "role": "AUTHORITY",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T07:39:00.000Z",
+      "sealedAt": "2026-09-26T08:08:00.000Z",
+      "previousPhaseReviewId": "REV-TTA-CLEAN-A11-AUT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TTA-CLN12-AUT-1"
       ],
       "novelAttackIds": [],
       "status": "SEALED"
