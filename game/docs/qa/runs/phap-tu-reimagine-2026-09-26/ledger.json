@@ -924,8 +924,10 @@
    "discoveredBy": "cleanB COR",
    "counterexample": "doc_chuong authors zero damage (PoisonPath sec.1) so it routes to the for_each_target lane; landedConsequences' sole consumer sat inside adaptDamageOp -- the van_moc->sinh_co plant never fired.",
    "expected": "spec D11/D15: Sinh Co marker plants on the first own-source landed Moc basic while van_moc is up.",
-   "status": "FIXED_PENDING_PROOF",
-   "closureReviewIds": [],
+   "status": "CLOSED",
+   "closureReviewIds": [
+    "REV-PTR-CLO-2"
+   ],
    "invariantIds": [],
    "evidenceIds": [],
    "actual": "doc_chuong authors zero damage (PoisonPath sec.1) so it routes to the for_each_target lane; landedConsequences' sole consumer sat inside adaptDamageOp -- the van_moc->sinh_co plant never fired.",
@@ -949,12 +951,18 @@
    ],
    "siblingFindingIds": [],
    "repair": "Non-damaging enemy-scope lane appends def.landedConsequences per loop target (landing = application); pin test in LegacySkillAdapter.test.ts.",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PTR-FIX-B1"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-CLO-2"
+   ],
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
-   "fixedInRevision": "cleanB batch"
+   "fixedInRevision": "cleanB batch",
+   "closedAt": "2026-09-26T19:56:00Z",
+   "closeReason": "closure reviewer SEALED fix batch @038706f7 (8/8 verified)"
   },
   {
    "id": "F-PTR-17",
@@ -1034,8 +1042,10 @@
    ],
    "discoveredBy": "cleanB COR",
    "counterexample": "CURRENT_SAVE_VERSION = 85 has no changelog line; a retire-heavy pass leaves no trail in the file.",
-   "status": "FIXED_PENDING_PROOF",
-   "closureReviewIds": [],
+   "status": "CLOSED",
+   "closureReviewIds": [
+    "REV-PTR-CLO-2"
+   ],
    "invariantIds": [],
    "evidenceIds": [],
    "actual": "CURRENT_SAVE_VERSION = 85 has no changelog line; a retire-heavy pass leaves no trail in the file.",
@@ -1060,12 +1070,18 @@
    ],
    "siblingFindingIds": [],
    "repair": "v85 changelog entry added (route slots / kiem_tu queue / the_tu_an ops pane retirements).",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PTR-FIX-B1"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-CLO-2"
+   ],
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
-   "fixedInRevision": "cleanB batch"
+   "fixedInRevision": "cleanB batch",
+   "closedAt": "2026-09-26T19:56:00Z",
+   "closeReason": "closure reviewer SEALED fix batch @038706f7 (8/8 verified)"
   },
   {
    "id": "F-PTR-19",
@@ -1090,8 +1106,10 @@
    ],
    "discoveredBy": "cleanB AUT",
    "counterexample": "runPeriodicPhase ticks BEFORE runPhaseB's bound re-sweep; a marker whose bound window expired mid-action still feeds one periodic_growth grant (and consumes) in the gap.",
-   "status": "FIXED_PENDING_PROOF",
-   "closureReviewIds": [],
+   "status": "CLOSED",
+   "closureReviewIds": [
+    "REV-PTR-CLO-2"
+   ],
    "invariantIds": [],
    "evidenceIds": [],
    "actual": "runPeriodicPhase ticks BEFORE runPhaseB's bound re-sweep; a marker whose bound window expired mid-action still feeds one periodic_growth grant (and consumes) in the gap.",
@@ -1116,12 +1134,18 @@
    ],
    "siblingFindingIds": [],
    "repair": "applyPeriodicGrowth skips a marker whose boundToSourceBuffId source no longer holds the window (same liveness rule as the (5b) re-sweep).",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PTR-FIX-B1"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-CLO-2"
+   ],
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
-   "fixedInRevision": "cleanB batch"
+   "fixedInRevision": "cleanB batch",
+   "closedAt": "2026-09-26T19:56:00Z",
+   "closeReason": "closure reviewer SEALED fix batch @038706f7 (8/8 verified)"
   },
   {
    "id": "F-PTR-20",
@@ -1145,8 +1169,10 @@
     }
    ],
    "discoveredBy": "cleanB AUT",
-   "status": "FIXED_PENDING_PROOF",
-   "closureReviewIds": [],
+   "status": "CLOSED",
+   "closureReviewIds": [
+    "REV-PTR-CLO-2"
+   ],
    "invariantIds": [],
    "evidenceIds": [],
    "counterexample": "see evidence",
@@ -1172,12 +1198,18 @@
    ],
    "siblingFindingIds": [],
    "repair": "TODO replaced with the verified ordering (penetrationFromStacks reads pre-apply stacks).",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PTR-FIX-B1"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-CLO-2"
+   ],
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
-   "fixedInRevision": "cleanB batch"
+   "fixedInRevision": "cleanB batch",
+   "closedAt": "2026-09-26T19:56:00Z",
+   "closeReason": "closure reviewer SEALED fix batch @038706f7 (8/8 verified)"
   },
   {
    "id": "F-PTR-21",
@@ -1207,8 +1239,10 @@
     }
    ],
    "discoveredBy": "cleanB AUT",
-   "status": "FIXED_PENDING_PROOF",
-   "closureReviewIds": [],
+   "status": "CLOSED",
+   "closureReviewIds": [
+    "REV-PTR-CLO-2"
+   ],
    "invariantIds": [],
    "evidenceIds": [],
    "counterexample": "see evidence",
@@ -1234,12 +1268,18 @@
    ],
    "siblingFindingIds": [],
    "repair": "Unused throwing stubs removed from both fixtures.",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PTR-FIX-B1"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-CLO-2"
+   ],
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
-   "fixedInRevision": "cleanB batch"
+   "fixedInRevision": "cleanB batch",
+   "closedAt": "2026-09-26T19:56:00Z",
+   "closeReason": "closure reviewer SEALED fix batch @038706f7 (8/8 verified)"
   },
   {
    "id": "F-PTR-22",
@@ -1263,8 +1303,10 @@
     }
    ],
    "discoveredBy": "cleanB AUT",
-   "status": "FIXED_PENDING_PROOF",
-   "closureReviewIds": [],
+   "status": "CLOSED",
+   "closureReviewIds": [
+    "REV-PTR-CLO-2"
+   ],
    "invariantIds": [],
    "evidenceIds": [],
    "counterexample": "see evidence",
@@ -1290,12 +1332,18 @@
    ],
    "siblingFindingIds": [],
    "repair": "Retired theOnCrit mapping line removed from the header.",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PTR-FIX-B1"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-CLO-2"
+   ],
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
-   "fixedInRevision": "cleanB batch"
+   "fixedInRevision": "cleanB batch",
+   "closedAt": "2026-09-26T19:56:00Z",
+   "closeReason": "closure reviewer SEALED fix batch @038706f7 (8/8 verified)"
   },
   {
    "id": "F-PTR-23",
@@ -1319,8 +1367,10 @@
     }
    ],
    "discoveredBy": "cleanB AUT",
-   "status": "FIXED_PENDING_PROOF",
-   "closureReviewIds": [],
+   "status": "CLOSED",
+   "closureReviewIds": [
+    "REV-PTR-CLO-2"
+   ],
    "invariantIds": [],
    "evidenceIds": [],
    "counterexample": "see evidence",
@@ -1346,12 +1396,18 @@
    ],
    "siblingFindingIds": [],
    "repair": "grantTheFromCast delegates to TheEconomy.grantThe (single cap authority).",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PTR-FIX-B1"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-CLO-2"
+   ],
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
-   "fixedInRevision": "cleanB batch"
+   "fixedInRevision": "cleanB batch",
+   "closedAt": "2026-09-26T19:56:00Z",
+   "closeReason": "closure reviewer SEALED fix batch @038706f7 (8/8 verified)"
   },
   {
    "id": "F-PTR-24",
@@ -1382,8 +1438,10 @@
    ],
    "discoveredBy": "cleanB INT",
    "counterexample": "Doc said 'root plans AND follow-up executions' but subcastIndex>0 suppresses them. The engine lane (runtime===undefined) is NOT gated on executionCommitsCast -- latent divergence, reachable only in unit-test harnesses (production always mints a runtime).",
-   "status": "FIXED_PENDING_PROOF",
-   "closureReviewIds": [],
+   "status": "CLOSED",
+   "closureReviewIds": [
+    "REV-PTR-CLO-2"
+   ],
    "invariantIds": [],
    "evidenceIds": [],
    "actual": "Doc said 'root plans AND follow-up executions' but subcastIndex>0 suppresses them. The engine lane (runtime===undefined) is NOT gated on executionCommitsCast -- latent divergence, reachable only in unit-test harnesses (production always mints a runtime).",
@@ -1408,12 +1466,18 @@
    ],
    "siblingFindingIds": [],
    "repair": "Comment corrected to root-plan-only semantics. Engine-lane divergence recorded as latent (no live consumer).",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PTR-FIX-B1"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-CLO-2"
+   ],
    "duplicateOf": null,
    "rejectionReason": null,
    "exception": null,
-   "fixedInRevision": "cleanB batch"
+   "fixedInRevision": "cleanB batch",
+   "closedAt": "2026-09-26T19:56:00Z",
+   "closeReason": "closure reviewer SEALED fix batch @038706f7 (8/8 verified)"
   },
   {
    "id": "F-PTR-25",
@@ -1613,6 +1677,35 @@
    ],
    "limitations": [],
    "status": "CURRENT"
+  },
+  {
+   "id": "EV-PTR-CLO-2",
+   "state": {
+    "productStateId": "a305ed3583896a70e967dcd09c9cc43ead1e648a6476f28de4b9dc2abc104225",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_INTEGRATION",
+   "producer": "devin-4250b30e14fb42d4a9b2bd0431a4a773",
+   "startedAt": "2026-09-26T19:50:28Z",
+   "finishedAt": "2026-09-26T19:55:34Z",
+   "commandOrMethod": "file-by-file verification + scoped vitest (101 files / 903 tests pass; buff2+skilldef+battle/turn)",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "records-clo1.json",
+   "artifactHash": "843e9e3cd7d6d140f25a1c3c914541258224df566ef1a7f85226a222f1b953ad",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "clean-B fix batch verified on current head"
+   ],
+   "limitations": [
+    "lint residual fixed post-verdict"
+   ],
+   "status": "STALE"
   }
  ],
  "coverage": [],
@@ -1838,6 +1931,46 @@
    "reviewedAfterPreviousFixes": true,
    "coverageIds": [],
    "evidenceIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-PTR-CLO-2",
+   "state": {
+    "productStateId": "a305ed3583896a70e967dcd09c9cc43ead1e648a6476f28de4b9dc2abc104225",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 3,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-4250b30e14fb42d4a9b2bd0431a4a773",
+   "contextId": "ctx-4250b30e",
+   "model": "swe-2",
+   "role": "closure-verifier",
+   "inputBundleHash": "a305ed3583896a70e967dcd09c9cc43ead1e648a6476f28de4b9dc2abc104225",
+   "priorFindingsVisible": true,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-26T19:50:28Z",
+   "sealedAt": "2026-09-26T19:55:34Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-CLO-2"
+   ],
+   "findingIds": [
+    "F-PTR-16",
+    "F-PTR-18",
+    "F-PTR-19",
+    "F-PTR-20",
+    "F-PTR-21",
+    "F-PTR-22",
+    "F-PTR-23",
+    "F-PTR-24"
+   ],
    "novelAttackIds": [],
    "status": "SEALED"
   }

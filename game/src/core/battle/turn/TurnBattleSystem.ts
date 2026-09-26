@@ -35,7 +35,6 @@ import { scaleActionDamage } from '../ActionImpactSystem'
 import { recomputeEffectiveStats } from './TurnStatsRecompute'
 import type { BattleLogEntry } from './TurnOrderPreview'
 
-import { MAX_THE } from '../../combat/CombatTypes'
 import type { DamageResult } from '../../combat/CombatTypes'
 import {
   theGainOnEvade,
