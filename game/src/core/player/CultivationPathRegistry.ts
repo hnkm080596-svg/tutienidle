@@ -370,13 +370,17 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
             }
           : resolved
 
-      // The +1 The gain only applies to the element-committed basic —
-      // spec D2 mints The on the element basic's landed cast (it fuels
-      // the Phap The empowerment); a generic fallback basic never mints
-      // The. Stamped on `stamped` (not the return wrapper) so the
-      // empowered variant inherits it through {...base}.
+      // The +1 The gain applies to the element basic AND the pre-element
+      // starter phase (spec D2 mints The on a landed basic cast to fuel the
+      // Phap The empowerment): pre-commit whatever basic resolved IS the
+      // legitimate starter; post-commit only a legit resolution mints — the
+      // corrupt-state GENERIC_PHYSICAL_BASIC fallback never does. Stamped on
+      // `stamped` (not the return wrapper) so the empowered variant inherits
+      // it through {...base}.
       const stamped: TurnSkillDefinition =
-        element !== undefined ? { ...kitResolved, theGainOnLandedCast: 1 } : kitResolved
+        element === undefined || resolved !== GENERIC_PHYSICAL_BASIC
+          ? { ...kitResolved, theGainOnLandedCast: 1 }
+          : kitResolved
 
       return {
         ...stamped,

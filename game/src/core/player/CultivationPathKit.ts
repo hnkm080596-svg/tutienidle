@@ -76,8 +76,8 @@ export interface CultivationPathRealmReward {
   // NODE GRANTS: nodeId -> level, applied by
   // grantCultivationPathRealmReward as `nodeLevels[id] = max(current, L)`
   // (idempotent, never downgrades). Only targets rewardOnly-authored
-  // nodes - purchase/upgrade/tree rendering stay sealed; element, route
-  // and way gates still govern whether a granted level is ACTIVE.
+  // nodes - purchase/upgrade/tree rendering stay sealed; element and
+  // way gates still govern whether a granted level is ACTIVE.
   grantedNodeLevels?: Record<string, number>
 }
 
@@ -386,7 +386,7 @@ export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathId, Cultiv
       hidden_spell_pathway: HIDDEN_SPELL_PATHWAY,
     },
     // P1-M6 - the module owns player.spellPath validation (required shape
-    // on every save; element/route pair ownership is spell_pathway-only).
+    // on every save; element ownership is spell_pathway-only).
     validatePersistedState: validateSpellPathPersistedState,
   },
 
