@@ -518,15 +518,28 @@ function createBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivation
 }
 
 function createHiddenBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
+  // resolveBasic + resolveSpecialUltimate run back-to-back inside one
+  // participant build (resolveCombatRoleComposition); the kit build
+  // structuredClones every def, so memoize on the nodeLevels fingerprint
+  // — every kit input (hidden-body mods, skill-core levels incl. the
+  // quan_the gate) derives from it.
+  let kitMemo: { fingerprint: string; kit: TheTuAnKit } | null = null
+  const kitFor = (player: PlayerData): TheTuAnKit => {
+    const fingerprint = JSON.stringify(player.nodeLevels ?? null)
+    if (kitMemo?.fingerprint === fingerprint) return kitMemo.kit
+    const kit = resolveHiddenBodyKit(deps, player)
+    kitMemo = { fingerprint, kit }
+    return kit
+  }
   return {
     ...sharedMembers(deps),
     resolveBasic(player) {
       // Spec section 6.1 — fixed kit granted at path choice; the built
       // clone's grantsBuffsAtBuild plants ung_the + owned-root markers.
-      return resolveHiddenBodyKit(deps, player).basic
+      return kitFor(player).basic
     },
     resolveSpecialUltimate(player) {
-      const kit = resolveHiddenBodyKit(deps, player)
+      const kit = kitFor(player)
       return {
         special: kit.special,
         ultimate: kit.ultimate,

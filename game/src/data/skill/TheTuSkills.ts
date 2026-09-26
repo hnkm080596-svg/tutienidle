@@ -404,8 +404,9 @@ export interface TheTuKit {
 
 /** The Tu Reimagined (plan Task 16) - the An kit also carries the
  * reactive payload clones the typed follow-up queue resolves. Task 20:
- * `maxThe` is the participant's proc-fuel cap (MAX_THE + node bonus),
- * stamped onto the entity by the adapter at participant build. */
+ * `maxThe` is the participant's proc-fuel cap (flat MAX_THE — no node
+ * bonus in the beta window), stamped onto the entity by the adapter
+ * at participant build. */
 export interface TheTuAnKit {
   basic: TurnSkillDefinition
   /** Beta window: Quan The exists only while its skill core is owned. */
