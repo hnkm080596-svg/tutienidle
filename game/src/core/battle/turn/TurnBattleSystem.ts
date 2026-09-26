@@ -1372,9 +1372,9 @@ export class TurnBattleSystem {
     // descriptor IS the remainder of an already-committed cast -- it only
     // re-resolves the payload (composite picks re-roll per execution).
     const queuedExec = this.pendingQueuedExecution
-    this.pendingQueuedExecution = null
 
     if (queuedExec && queuedExec.actorId === actor.id) {
+      this.pendingQueuedExecution = null
       return this.declareQueuedExecution(battle, actor, queuedExec)
     }
 
@@ -3150,6 +3150,7 @@ export class TurnBattleSystem {
           outcome,
           intercepted: declared.intercepted === true,
         },
+        { once: true },
       )
     }
   }

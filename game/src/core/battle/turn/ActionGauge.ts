@@ -39,7 +39,12 @@ export function consumeGaugeAfterAction(actor: GaugeActor, fractionConsumed = 1)
   actor.actionGauge = actor.actionGauge - GAUGE_MAX * clamped
 }
 
-/** Hồi gauge tức thời (vd buff "+300 gauge khi kill") — clamp trong 0..GAUGE_MAX. */
+/** Hồi gauge tức thời (vd buff "+300 gauge khi kill") — signed delta,
+    ceiling GAUGE_MAX; floor = min(0, current): a non-debtor is never
+    pushed below 0 (debt comes only from consume), while an Ứng Trệ
+    debtor gets the authored delta applied against the debt — never a
+    forgiven remainder or an inverted-sign haste. */
 export function refundGauge(actor: GaugeActor, amount: number): void {
-  actor.actionGauge = Math.min(GAUGE_MAX, Math.max(0, actor.actionGauge + amount))
+  const floor = Math.min(0, actor.actionGauge)
+  actor.actionGauge = Math.min(GAUGE_MAX, Math.max(floor, actor.actionGauge + amount))
 }
