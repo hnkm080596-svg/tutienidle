@@ -5,7 +5,7 @@ import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import type { TurnBattleParticipant, TurnBattle } from '@/core/battle/turn/TurnBattleSystem'
 
 /**
- * Slice 7 extension (Completion Task 11) — turn-order preview + battle log
+ * Slice 7 extension (Completion Task 11) - turn-order preview + battle log
  * reactivity bridge. Cùng pattern stateVersion như useTurnCombatManual.
  */
 export function useTurnBattleInfo() {
@@ -20,7 +20,7 @@ export function useTurnBattleInfo() {
 
   // stateVersion must be read in EVERY computed below: the engine mutates
   // the TurnBattle object in place (state/roundsElapsed/log), so `battle`
-  // resolves to the same reference forever — a computed depending only on
+  // resolves to the same reference forever - a computed depending only on
   // `battle.value` is never invalidated again after first eval (strip stayed
   // invisible in live combat; 2026-09-12).
   const isBattleFighting = computed(() => {
@@ -60,7 +60,7 @@ export function useTurnBattleInfo() {
     return battle.value?.log ?? []
   })
 
-  // Combat speed gauge + round indicator (2026-09-12) — ATB round counter
+  // Combat speed gauge + round indicator (2026-09-12) - ATB round counter
   // and the stage that launched this battle (for its perfectClearTurnLimit).
   // Both are read-only views over GameManager-owned state.
   const roundsElapsed = computed(() => {

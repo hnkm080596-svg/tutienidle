@@ -78,7 +78,7 @@ const REFLECTION_PROFILE = 'reflection'
 
 /**
  * The Tu beta (Phan Chan) -- ONE reflect per hostile ACTION: hits of the
- * same action merge into a pending entry keyed on (holder, capability),
+ * same action merge into a pending entry keyed on holderId (one reflect per holder per action),
  * then the action-end flush emits a single 'reflection' op per entry.
  * Multi-hit actions settle fully before the reflect fires; the attacker
  * identity is the action's source, so every hit of the action carries it.
@@ -220,7 +220,7 @@ export class CombatProcSystem {
 
   /**
    * The Tu beta -- action-end settle: emit ONE 'reflection' op per
-   * pending (holder, capability) entry. The damage authority resolves it
+   * pending holderId entry. The damage authority resolves it
    * (flat, holder-as-attacker, never a hit roll / crit / turn). The
    * caller drains once per applied action -- an empty map is a no-op, so
    * actions that damaged no reflect-holder cost nothing.
