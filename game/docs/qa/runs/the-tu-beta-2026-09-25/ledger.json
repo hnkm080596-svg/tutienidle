@@ -14708,6 +14708,25 @@
       ],
       "lessons": [],
       "summary": "CLO-27 SEALED: double-wipe->defeat pin exercises simultaneous wipe genuinely; intercept-reflect pin catches wrong-keying/no-substitution/double-fire. 36/36 PASS, type-check clean."
+    },
+    {
+      "id": "REV-TT-CLNG-COR",
+      "kind": "COMPLIANCE_REVIEW",
+      "reviewerSessionId": "d455265f83734521bfa72ec49e3bc6a8",
+      "previousPhaseReviewId": "REV-TT-CLO-27",
+      "verdict": "SEAL",
+      "status": "SEALED",
+      "round": 13,
+      "scope": "lens CORRECTNESS only",
+      "recordedAt": "2026-09-26T10:06:00.000Z",
+      "evidenceIds": [
+        "EV-TT-CLNF-INT-FIX"
+      ],
+      "findingIds": [],
+      "findingPointers": [],
+      "verificationOfFindingIds": [],
+      "lessons": [],
+      "summary": "cleanG COR: SEAL clean on c80530ad -- mutex/pay_hp/reflect/in-battle freeze/v85 all verified live; adversarial probes pass; queuesFollowUp noted inert-observation."
     }
   ],
   "cycles": [
