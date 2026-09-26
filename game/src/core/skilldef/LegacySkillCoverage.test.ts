@@ -320,10 +320,14 @@ const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
 
   'body:body_pathway': () =>
     (
+      // Beta: roots produce Basic only; Special arrives via the Truc Co
+      // core grant (core_<skill>), and there is no Ultimate slot.
       [
         { label: 'no_root', nodeLevels: {} as Record<string, number>, requiredSlots: [] },
-        { label: 'cuong_chien', nodeLevels: { cuong_chien: 1 } as Record<string, number>, requiredSlots: ['special', 'ultimate'] },
-        { label: 'tran_the', nodeLevels: { tran_the: 1 } as Record<string, number>, requiredSlots: ['special', 'ultimate'] },
+        { label: 'cuong_chien', nodeLevels: { cuong_chien: 1 } as Record<string, number>, requiredSlots: [] },
+        { label: 'cuong_chien+special', nodeLevels: { cuong_chien: 1, core_loan_dau: 1 } as Record<string, number>, requiredSlots: ['special'] },
+        { label: 'tran_the', nodeLevels: { tran_the: 1 } as Record<string, number>, requiredSlots: [] },
+        { label: 'tran_the+special', nodeLevels: { tran_the: 1, core_phan_chan: 1 } as Record<string, number>, requiredSlots: ['special'] },
       ] as const
     ).map(({ label, nodeLevels, requiredSlots }) => ({
       label,
@@ -577,19 +581,20 @@ function collectCastableDefs(): Census {
 
   // -- Leg 4: producer-fn matrices (direct calls for shape variants) -----
   const zeroKitMods = {
+    cuongQuyenCoefficientBonus: 0,
+    cuongQuyenArmorPierce: 0,
+    loanDauPaidHpBonus: 0,
     missingHpBonusBonus: 0,
+    tranApMaxHpRatioBonus: 0,
+    tranKinhWeakenRatio: 0,
     reflectMaxHpRatioBonus: 0,
-    reflectTakenRatioBonus: 0,
-    sonNhacWardRatioBonus: 0,
-    tauntTurnsBonus: 0,
-    batTuDurationBonus: 0,
+    reflectMarkedRatioBonus: 0,
   }
   for (const root of ['cuong_chien', 'tran_the'] as const) {
-    const kit = buildTheTuKit(root, zeroKitMods)
+    const kit = buildTheTuKit(root, zeroKitMods, { special: true })
     exercisedProducerFns.add('../../data/skill/TheTuSkills.ts#buildTheTuKit')
     requireDef(`TheTuKit:${root}.basic`, kit.basic)
     requireDef(`TheTuKit:${root}.special`, kit.special)
-    requireDef(`TheTuKit:${root}.ultimate`, kit.ultimate)
   }
   const anKit = buildTheTuAnKit(['ho_mon', 'phan_mon', 'tro_mon'])
   exercisedProducerFns.add('../../data/skill/TheTuSkills.ts#buildTheTuAnKit')

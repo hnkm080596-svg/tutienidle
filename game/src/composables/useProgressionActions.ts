@@ -59,18 +59,17 @@ export function useProgressionActions() {
       withBump(gameManager.progressionOps.switchRoute(route, player.$state)),
 
     // Reset development mot nhanh (plan sec.6.10) - hoan Cam Ngo da tieu;
-    // ngoai combat only (op tu reject trong tran), tra false khi bi tu choi.
+    // bump vo dieu kien (reset ve 0 level cung la thay doi state UI).
     devResetBranch: (branchTag: string) => {
-      // null = tu choi trong tran (out-of-combat gate, giong respec).
       const refund = gameManager.progressionOps.devResetBranch(branchTag, player.$state)
 
       if (refund === null) {
-        return false
+        return refund
       }
 
       bumpState()
 
-      return true
+      return refund
     },
 
     // M-F-RESPEC (ruling S14) - FREE Beta respec: reset node dau tu,

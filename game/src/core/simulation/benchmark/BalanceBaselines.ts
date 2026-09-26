@@ -125,7 +125,10 @@ export const BASELINE_RECIPES: readonly BaselineRecipe[] = [
     // cuong_chien root -> resolveBodyKit produces the kit at battle
     // build. Purchased via the public progressionOps writer.
     postRitual: [{ type: 'purchase_node', nodeId: 'cuong_chien' }],
-    kitSkillIds: ['cuong_quyen', 'loan_dau', 'bat_tu_ba_the'],
+    // Beta: the live kit at this entry power point is the basic ONLY -
+    // Loan Dau unlocks via the Truc Co core grant and Bat Tu Ba The is
+    // post-beta, so neither can mint an originId here.
+    kitSkillIds: ['cuong_quyen'],
     expectedEconomy: {
       // kim_cang_bat_hoai_the hp regen is the sustain channel - it
       // cycles only after the player takes damage, guaranteed in

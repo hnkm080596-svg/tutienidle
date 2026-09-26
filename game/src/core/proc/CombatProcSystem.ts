@@ -19,15 +19,14 @@
 // in the same action.
 
 import type {
+  BuffDefinitionId,
   CombatEntityId,
   CombatOperationId,
 } from '../battle/contracts/ids'
 import type {
   ApplyBuffOperation,
   ConsumeResourceOperation,
-  DealDamageOperation,
   GainResourceOperation,
-  HealOperation,
   ResolvedCombatOperation,
 } from '../battle/contracts/operations'
 import type { CombatOperationOrigin } from '../battle/contracts/origin'
@@ -77,7 +76,27 @@ export interface ReactiveProcContext {
 const RESOURCE_THE = 'the'
 const REFLECTION_PROFILE = 'reflection'
 
+/**
+ * The Tu beta (Phan Chan) -- ONE reflect per hostile ACTION: hits of the
+ * same action merge into a pending entry keyed on holderId (one reflect per holder per action),
+ * then the action-end flush emits a single 'reflection' op per entry.
+ * Multi-hit actions settle fully before the reflect fires; the attacker
+ * identity is the action's source, so every hit of the action carries it.
+ */
+interface PendingReflect {
+  holderId: CombatEntityId
+  attackerId: CombatEntityId
+  maxHpRatio: number
+  markedMaxHpRatio?: number
+  markedBy?: BuffDefinitionId
+  rootActionId: string
+  grantInstanceId: string
+  capabilityId: string
+}
+
 export class CombatProcSystem {
+  private readonly pendingReflects = new Map<string, PendingReflect>()
+
   constructor(private readonly deps: CombatProcSystemDeps) {}
 
   /**
@@ -117,7 +136,16 @@ export class CombatProcSystem {
   rollReactiveTrigger(
     holderId: CombatEntityId,
     trigger: 'onCastBegin' | 'onImpactLanded',
-    context: { attacker?: CombatEntity; hpDamage?: number } | undefined,
+    context:
+      | {
+          attacker?: CombatEntity
+          hpDamage?: number
+          /** The Tu beta -- false for non-natural action sources
+              (counter/follow_up/intercept: INV-9 parity); absent = eligible
+              (context-less calls never reach the reflect branch anyway). */
+          reflectsEligible?: boolean
+        }
+      | undefined,
     rootActionId: string,
   ): ReactiveTriggerRollResult {
     let firedFollowUp = false
@@ -126,6 +154,10 @@ export class CombatProcSystem {
     for (const grant of this.deps.buffs.getCapabilities(holderId)) {
       const reactive = asReactiveTrigger(grant)
       if (reactive === undefined || reactive.trigger !== trigger) continue
+      // INV-9 applies to the whole lane: a non-natural action source
+      // (counter/follow_up/intercept) opens no reactive outcome at all --
+      // skip before the roll so excluded sources consume no RNG.
+      if (context?.reflectsEligible === false) continue
       if (!this.deps.rng.rollChance(reactive.chance)) continue
 
       if (reactive.appliesDefinitionId !== undefined) {
@@ -143,37 +175,108 @@ export class CombatProcSystem {
         firedFollowUp = true
       }
 
-      // Reflection (phan_chinh): only a TAKEN hit reflects -- the caller
-      // gates on hpDamage > 0; the context guard keeps context-less
-      // onCastBegin calls from reflecting nothing.
+      // The Tu beta (Phan Chan) -- one reflect per hostile ACTION: queue
+      // here, emit at the action-end flushReflects(). Gates: a TAKEN hit
+      // (hpDamage>0), a living attacker, a defined holder (holder.alive
+      // is deliberately NOT gated - post-mortem reflect is spec-pinned),
+      // a natural action source (reflectsEligible), and never
+      // self-inflicted damage. AoE hits that deal hpDamage queue the
+      // same way; every later hit of the same action merges into the
+      // same pending entry.
       if (
         reactive.reflectsDamage !== undefined &&
         context?.attacker !== undefined &&
         (context.hpDamage ?? 0) > 0 &&
         context.attacker.alive &&
+        context.attacker.id !== holderId &&
         holder !== undefined
       ) {
-        const amount =
-          context.hpDamage! * reactive.reflectsDamage.takenRatio +
-          holder.stats.maxHp * reactive.reflectsDamage.maxHpRatio
-        this.emitOp({
-          type: 'deal_damage',
-          operationId:
-            `proc.${rootActionId}.reflect.${grant.instanceId}.${grant.capability.id}` as CombatOperationId,
-          payload: {
-            targetId: context.attacker.id,
-            damageProfile: REFLECTION_PROFILE,
-            coefficient: amount,
-            hitCount: 1,
-            canCrit: false,
-            canMiss: false,
-          },
-          origin: this.origin(holderId, rootActionId, `reflect.${grant.capability.id}`),
-        })
+        // Spec: one reflect per holder per hostile action -- key on the
+        // holder only so a second reflecting capability cannot emit twice.
+        const key = holderId
+        if (!this.pendingReflects.has(key)) {
+          this.pendingReflects.set(key, {
+            holderId,
+            attackerId: context.attacker.id,
+            maxHpRatio: reactive.reflectsDamage.maxHpRatio,
+            markedMaxHpRatio: reactive.reflectsDamage.markedMaxHpRatio,
+            markedBy: reactive.reflectsDamage.markedBy,
+            rootActionId,
+            grantInstanceId: grant.instanceId,
+            capabilityId: grant.capability.id,
+          })
+        }
       }
     }
 
     return { firedFollowUp }
+  }
+
+  /**
+   * Drops queued reflects without emitting. The queue is action-scoped:
+   * a throw mid-action would otherwise leak entries into the next
+   * action's dedupe map (mistimed fire + suppressed fresh entry).
+   */
+  discardPendingReflects(): void {
+    this.pendingReflects.clear()
+  }
+
+  /**
+   * The Tu beta -- action-end settle: emit ONE 'reflection' op per
+   * pending holderId entry. The damage authority resolves it
+   * (flat, holder-as-attacker, never a hit roll / crit / turn). The
+   * caller drains once per applied action -- an empty map is a no-op, so
+   * actions that damaged no reflect-holder cost nothing.
+   */
+  flushReflects(): void {
+    if (this.pendingReflects.size === 0) return
+
+    const entries = [...this.pendingReflects.values()]
+    this.pendingReflects.clear()
+
+    for (const entry of entries) {
+      const holder = this.deps.resolveEntity(entry.holderId)
+      const attacker = this.deps.resolveEntity(entry.attackerId)
+      // Post-mortem retaliation: a holder killed by the triggering hit
+      // still reflects -- the authored amount derives from maxHp, not
+      // live vitals (legacy semantics + Tran The tanking fantasy).
+      if (holder === undefined) continue
+      if (attacker === undefined || !attacker.alive) continue
+
+      // Mark check at FLUSH time (post-settle): a chan_an instance the
+      // holder sourced on the attacker upgrades the coefficient; the
+      // mark itself is never consumed.
+      const marked =
+        entry.markedBy !== undefined &&
+        this.deps.buffs
+          .getForTarget(entry.attackerId)
+          .some(
+            (inst) =>
+              inst.definitionId === entry.markedBy &&
+              inst.sourceId === entry.holderId,
+          )
+      const ratio =
+        marked && entry.markedMaxHpRatio !== undefined
+          ? entry.markedMaxHpRatio
+          : entry.maxHpRatio
+      const coefficient = holder.stats.maxHp * ratio
+      if (coefficient <= 0) continue
+
+      this.emitOp({
+        type: 'deal_damage',
+        operationId:
+          `proc.${entry.rootActionId}.reflect.${entry.grantInstanceId}.${entry.capabilityId}` as CombatOperationId,
+        payload: {
+          targetId: entry.attackerId,
+          damageProfile: REFLECTION_PROFILE,
+          coefficient,
+          hitCount: 1,
+          canCrit: false,
+          canMiss: false,
+        },
+        origin: this.origin(entry.holderId, entry.rootActionId, `reflect.${entry.capabilityId}`),
+      })
+    }
   }
 
   /**

@@ -14,12 +14,14 @@ import { buildGameSave, restoreGameSession } from '../../services/save/SaveSyste
 import { usePlayerStore } from '../../stores/player'
 import type { BuffDefinitionId, CombatEntityId, CombatOperationId } from '../battle/contracts/ids'
 import { COMPANIONS, type CompanionDefinition } from '../../data/companion/Companions'
-import { CUONG_QUYEN_MISSING_HP_PER_PERCENT, SON_NHAC_WARD_RATIO } from '../../data/skill/TheTuSkills'
+import { CUONG_QUYEN } from '../../data/skill/TheTuSkills'
+import { PHAN_CHAN_MARKED_RATIO } from '../../data/buff/TheTuBuffs'
+import type { EntityVitalsChangedEvent } from '../combat/EntityVitalsSystem'
 import type { PlayerData } from '../player/Player'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// The Tu Reimagined (plan Task 13) — Hien end-to-end: real initiation
+// The Tu Reimagined (plan Task 13) - Hien end-to-end: real initiation
 // ritual -> node purchase -> GameManager battle build -> live combat
 // through the CombatClock-driven stack (survival source, kit clones,
 // emblem buffs all wired by GameManagerTurnBattleOps), plus save/restore
@@ -91,12 +93,6 @@ function mortalAtGate(): PlayerData {
   player.realmLevel = CORE_REALM_LEVEL
   player.skillInsight = 99
   return player
-}
-
-function advance(combatSource: ManualClockSource, ticks: number) {
-  for (let i = 0; i < ticks; i++) {
-    combatSource.advance(COMBAT_STEP_SECONDS)
-  }
 }
 
 /** Advance until `predicate` holds or the cap hits; returns predicate(). */
@@ -190,76 +186,100 @@ describe('initiation ritual (T1/T6)', () => {
 })
 
 describe('cuong_chien battle flow', () => {
-  it('root + scalar node reach the participant-local kit clone', () => {
+  it('root + Trọng Quyền node levels reach the participant-local kit clone', () => {
     const { gameManager, combatSource } = makeManager()
     const player = mortalAtGate()
     gameManager.realmAdvanceOps.chooseCultivationPath('body', 'body_pathway', player)
     gameManager.progressionOps.purchaseNode('cuong_chien', player)
-    gameManager.progressionOps.purchaseNode('minor_cuong_huyet_no', player)
-    gameManager.progressionOps.upgradeNode('minor_cuong_huyet_no', player)
-    gameManager.progressionOps.upgradeNode('minor_cuong_huyet_no', player)
+    gameManager.progressionOps.purchaseNode('minor_trong_quyen', player)
+    gameManager.progressionOps.upgradeNode('minor_trong_quyen', player)
+    gameManager.progressionOps.upgradeNode('minor_trong_quyen', player)
 
     const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_cuong_kit'))
     advanceIntoFighting(combatSource, battle)
     const participant = battle.players[0]!
 
     expect(participant.basic?.id).toBe('cuong_quyen')
-    expect(participant.basic?.damage?.missingHpBonusPerMissingPercent).toBeCloseTo(
-      CUONG_QUYEN_MISSING_HP_PER_PERCENT + 0.005 * 3,
+    expect(participant.basic?.damage?.multiplier).toBeCloseTo(
+      (CUONG_QUYEN.damage?.multiplier ?? 0) + 0.1 * 3,
     )
   })
 
-  it('missing-HP scalar lands through the live battle: wounded hits deal more', () => {
+  it('LQ window: no special/ultimate slot; Cuồng Quyền never pays HP and never scales with missing HP', () => {
     const { gameManager, combatSource } = makeManager()
     const player = mortalAtGate()
     gameManager.realmAdvanceOps.chooseCultivationPath('body', 'body_pathway', player)
     gameManager.progressionOps.purchaseNode('cuong_chien', player)
-    player.baseStats = asBaseStats({ ...player.baseStats, might: 50, speed: 500 })
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 50, speed: 500, criticalRate: 0 })
 
-    const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_missing_hp'))
+    const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_no_missing_hp'))
     advanceIntoFighting(combatSource, battle)
     const participant = battle.players[0]!
     const enemy = battle.enemies[0]!
 
-    // Basic-only stream: park the special/ultimate on cooldown.
-    participant.special!.remainingCooldownTurns = 99
-    participant.ultimate!.remainingCooldownTurns = 99
+    // Beta window pin: root grants ONLY the Basic - no special, no ultimate.
+    expect(participant.special).toBeUndefined()
+    expect(participant.ultimate).toBeUndefined()
+
+    const sacrifices: number[] = []
+    gameManager.eventBus.on<EntityVitalsChangedEvent>('entity_vitals_changed', (event) => {
+      if (event.reason === 'sacrifice' && event.entityId === participant.entity.id) {
+        sacrifices.push(event.amount)
+      }
+    })
 
     const hpBefore = enemy.entity.currentHp
     expect(advanceUntil(combatSource, () => enemy.entity.currentHp < hpBefore)).toBe(true)
     const fullHpHit = hpBefore - enemy.entity.currentHp
+    const fullHpMight = participant.entity.stats.might
+
+    // Wounded to 10% -- the LQ basic carries no missing-HP scalar, so
+    // damage per unit might must be INVARIANT (live stat drift inside
+    // the battle is real; missing-HP scaling would add a term on top).
+    participant.entity.currentHp = Math.floor(participant.entity.stats.maxHp * 0.1)
+    const hpBefore2 = enemy.entity.currentHp
+    expect(advanceUntil(combatSource, () => enemy.entity.currentHp < hpBefore2)).toBe(true)
+    const woundedHit = hpBefore2 - enemy.entity.currentHp
+    const woundedMight = participant.entity.stats.might
+
+    expect(woundedHit / woundedMight).toBeCloseTo(fullHpHit / fullHpMight, 3)
+    expect(sacrifices).toHaveLength(0)
+  })
+
+  it('post-TC window: major_loan_dau grants Loạn Đấu; wounded hits deal more through Huyết Cuồng', () => {
+    const { gameManager, combatSource } = makeManager()
+    const player = mortalAtGate()
+    gameManager.realmAdvanceOps.chooseCultivationPath('body', 'body_pathway', player)
+    player.realmId = 'foundation_establishment'
+    player.techniqueProgress = { rank: 5, grade: 2 }
+    gameManager.progressionOps.purchaseNode('cuong_chien', player)
+    gameManager.progressionOps.purchaseNode('major_loan_dau', player)
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 50, speed: 500, criticalRate: 0 })
+
+    const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_huyet_cuong'))
+    advanceIntoFighting(combatSource, battle)
+    const participant = battle.players[0]!
+    const enemy = battle.enemies[0]!
+
+    expect(participant.special?.skill.id).toBe('loan_dau')
+    // Basic-only stream: park the special on cooldown so the wounded-hit
+    // comparison reads the kit-local missing-HP scalar alone.
+    participant.special!.remainingCooldownTurns = 99
+
+    const hpBefore = enemy.entity.currentHp
+    expect(advanceUntil(combatSource, () => enemy.entity.currentHp < hpBefore)).toBe(true)
+    const fullHpHit = hpBefore - enemy.entity.currentHp
+    const fullHpMight = participant.entity.stats.might
 
     participant.entity.currentHp = Math.floor(participant.entity.stats.maxHp * 0.1)
     const hpBefore2 = enemy.entity.currentHp
     expect(advanceUntil(combatSource, () => enemy.entity.currentHp < hpBefore2)).toBe(true)
     const woundedHit = hpBefore2 - enemy.entity.currentHp
+    const woundedMight = participant.entity.stats.might
 
-    expect(woundedHit).toBeGreaterThan(fullHpHit)
-  })
-
-  it('lethal hit triggers the ops-wired Bat Tu survival: HP 1, buff, ult CD spent', () => {
-    const { gameManager, combatSource } = makeManager()
-    const player = mortalAtGate()
-    gameManager.realmAdvanceOps.chooseCultivationPath('body', 'body_pathway', player)
-    gameManager.progressionOps.purchaseNode('cuong_chien', player)
-    player.baseStats = asBaseStats({ ...player.baseStats, speed: 1 })
-
-    const enemy = makeDummy('e2e_bat_tu', { might: 9_999_999, attackSpeed: 500 })
-    const battle = startBattle(gameManager, combatSource, player, enemy)
-    const participant = battle.players[0]!
-    // Set low HP BEFORE the fight starts — the enemy is far faster and
-    // lands the lethal hit during the first fighting ticks.
-    participant.entity.currentHp = 50
-    advanceIntoFighting(combatSource, battle)
-
-    expect(
-      advanceUntil(combatSource, () =>
-        hasBuff(gameManager, participant.entity.id, 'bat_tu_ba_the'),
-      ),
-    ).toBe(true)
-    expect(participant.entity.alive).toBe(true)
-    expect(participant.entity.currentHp).toBe(1)
-    expect(participant.ultimate!.remainingCooldownTurns).toBe(8)
+    // Huyet Cuong: damage per unit might GROWS with missing HP (the
+    // drift-normalized scalar comparison).
+    expect(woundedHit / woundedMight).toBeGreaterThan(fullHpHit / fullHpMight)
   })
 
   it('Ba The suppresses hard-CC blocking while the buff is active (INV-5)', () => {
@@ -273,8 +293,6 @@ describe('cuong_chien battle flow', () => {
     advanceIntoFighting(combatSource, battle)
     const participant = battle.players[0]!
     const enemy = battle.enemies[0]!
-    participant.special!.remainingCooldownTurns = 99
-    participant.ultimate!.remainingCooldownTurns = 99
 
     applyBattleBuff(gameManager, 'choang', participant.entity.id, enemy.entity.id)
     applyBattleBuff(gameManager, 'bat_tu_ba_the', participant.entity.id, enemy.entity.id)
@@ -285,7 +303,7 @@ describe('cuong_chien battle flow', () => {
       advanceUntil(combatSource, () => enemy.entity.currentHp < hpBefore || participant.consecutiveHardCcTurns > 0, 200),
     ).toBe(true)
 
-    // The stunned-but-undying actor still acted — no CC-block counter moved.
+    // The stunned-but-undying actor still acted - no CC-block counter moved.
     expect(participant.consecutiveHardCcTurns).toBe(0)
     expect(enemy.entity.currentHp).toBeLessThan(hpBefore)
     expect(battle.totalTurnsElapsed).toBeGreaterThan(turnsBefore)
@@ -324,32 +342,42 @@ describe('tran_the battle flow', () => {
     return { gameManager, combatSource, player }
   }
 
-  it('son_nhac cast through the stack: taunt on enemy, external ward on companion, emblem buff on tank', () => {
+  it('phan_chan cast through the stack: taunt + Chấn Ấn on every enemy, reflect passive buff on tank', () => {
     const { gameManager, combatSource, player } = makeTranPlayerCompanion()
-    const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_son_nhac'))
+    player.realmId = 'foundation_establishment'
+    player.techniqueProgress = { rank: 5, grade: 2 }
+    gameManager.progressionOps.purchaseNode('major_phan_chan', player)
+
+    const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_phan_chan'))
     advanceIntoFighting(combatSource, battle)
     const [tank, companion] = battle.players
     const enemy = battle.enemies[0]!
 
     expect(companion).toBeDefined()
+    // grantsBuffsAtBuild plants the reflect passive with the special.
     expect(
-      gameManager.getBattleBuffs(tank!.entity.id).filter((i) => i.definitionId === 'phan_chinh'),
+      gameManager.getBattleBuffs(tank!.entity.id).filter((i) => i.definitionId === 'phan_chan'),
     ).toHaveLength(1)
 
+    // The active cast applies BOTH khiem_khich (taunt) and chan_an (mark)
+    // to every valid enemy - never direct damage.
     expect(
-      advanceUntil(combatSource, () => hasBuff(gameManager, enemy.entity.id, 'khiem_khich')),
+      advanceUntil(
+        combatSource,
+        () =>
+          hasBuff(gameManager, enemy.entity.id, 'khiem_khich') &&
+          hasBuff(gameManager, enemy.entity.id, 'chan_an'),
+      ),
     ).toBe(true)
-    expect(
-      gameManager.getBattleBuffs(tank!.entity.id).filter((i) => i.definitionId === 'son_nhac'),
-    ).toHaveLength(1)
-    expect(companion!.entity.externalWard?.sourceId).toBe(tank!.entity.id)
-    expect(companion!.entity.externalWard!.amount).toBeCloseTo(tank!.entity.stats.maxHp * SON_NHAC_WARD_RATIO)
   })
 
-  it('taunted enemy hits the tank (companion untouched); phan_chinh reflects into the attacker', () => {
+  it('taunted enemy hits the tank (companion untouched); phan_chan reflects Max-HP damage back', () => {
     const { gameManager, combatSource, player } = makeTranPlayerCompanion()
-    // Slow enemy (speed ~30) — the tank casts son_nhac long before its
-    // first hit, so EVERY enemy action happens under Taunt.
+    player.realmId = 'foundation_establishment'
+    player.techniqueProgress = { rank: 5, grade: 2 }
+    gameManager.progressionOps.purchaseNode('major_phan_chan', player)
+    // Slow enemy - the tank casts phan_chan long before its first hit,
+    // so EVERY enemy action happens under Taunt + mark.
     const enemy = makeDummy('e2e_taunt_reflect', { might: 5_000, attackSpeed: 0.3 })
     const battle = startBattle(gameManager, combatSource, player, enemy)
     const [tank, companion] = battle.players
@@ -362,8 +390,14 @@ describe('tran_the battle flow', () => {
     companion!.entity.x = enemyPos.x - 1
     tank!.entity.x = Math.max(0, enemyPos.x - 8)
 
+    const reflects: number[] = []
+    gameManager.eventBus.on<EntityVitalsChangedEvent>('entity_vitals_changed', (event) => {
+      if (event.reason === 'reflection' && event.entityId === enemyP.entity.id) {
+        reflects.push(event.amount)
+      }
+    })
+
     const tankHpBefore = tank!.entity.currentHp
-    const enemyHpBefore = enemyP.entity.currentHp
 
     // Wait until the enemy has actually landed a taunted hit on the tank.
     expect(
@@ -373,11 +407,51 @@ describe('tran_the battle flow', () => {
       ),
     ).toBe(true)
 
-    // Taunt forced the tank target — the natural-target companion is untouched.
+    // Taunt forced the tank target - the natural-target companion is untouched.
     expect(companion!.entity.currentHp).toBe(companion!.entity.stats.maxHp)
-    // Reflection credits the taken hit back: tank might is 10 (tran_ap
-    // basic ~8-10 per hit), so a >50 drop is the reflect, not the poke.
-    expect(enemyHpBefore - enemyP.entity.currentHp).toBeGreaterThan(50)
+    // Exactly ONE reflect per hostile action at holder maxHp x MARKED
+    // ratio - the enemy is Chan An-marked by the phan_chan cast.
+    expect(reflects).toEqual([tank!.entity.stats.maxHp * PHAN_CHAN_MARKED_RATIO])
+  })
+
+  it('a fully-warded hit (hpDamage=0) queues no reflect', () => {
+    const { gameManager, combatSource, player } = makeTranPlayerCompanion()
+    player.realmId = 'foundation_establishment'
+    player.techniqueProgress = { rank: 5, grade: 2 }
+    gameManager.progressionOps.purchaseNode('major_phan_chan', player)
+    const enemy = makeDummy('e2e_ward_reflect', { might: 100, attackSpeed: 0.5 })
+    const battle = startBattle(gameManager, combatSource, player, enemy)
+    const [tank, companion] = battle.players
+    const enemyP = battle.enemies[0]!
+
+    const enemyPos = { row: enemyP.entity.row, x: enemyP.entity.x }
+    companion!.entity.row = enemyPos.row
+    companion!.entity.x = enemyPos.x - 1
+    tank!.entity.x = Math.max(0, enemyPos.x - 8)
+
+    // Native ward pool sized to absorb every hit - hpDamage stays
+    // 0, so the taken-gate never queues a reflect.
+    tank!.entity.currentWard = tank!.entity.stats.maxHp * 100
+
+    const reflects: number[] = []
+    gameManager.eventBus.on<EntityVitalsChangedEvent>('entity_vitals_changed', (event) => {
+      if (event.reason === 'reflection' && event.entityId === enemyP.entity.id) {
+        reflects.push(event.amount)
+      }
+    })
+
+    const hpBefore = tank!.entity.currentHp
+    const wardBefore = tank!.entity.currentWard
+    // Wait for at least one absorbed hit: ward drops, hp does not.
+    expect(
+      advanceUntil(
+        combatSource,
+        () => tank!.entity.currentWard < wardBefore,
+        400,
+      ),
+    ).toBe(true)
+    expect(tank!.entity.currentHp).toBe(hpBefore)
+    expect(reflects).toEqual([])
   })
 })
 
@@ -410,7 +484,7 @@ describe('save/restore parity', () => {
     const player = mortalAtGate()
     gameManager.realmAdvanceOps.chooseCultivationPath('body', 'body_pathway', player)
     gameManager.progressionOps.purchaseNode('cuong_chien', player)
-    gameManager.progressionOps.purchaseNode('minor_cuong_huyet_no', player)
+    gameManager.progressionOps.purchaseNode('minor_trong_quyen', player)
 
     const save = buildGameSave(player, gameManager)
 
@@ -423,15 +497,17 @@ describe('save/restore parity', () => {
     const restoredPlayer = playerStore.$state
     expect(restoredPlayer.cultivationPath).toBe('body')
     expect(restoredPlayer.nodeLevels?.cuong_chien).toBe(1)
-    expect(restoredPlayer.nodeLevels?.minor_cuong_huyet_no).toBe(1)
+    expect(restoredPlayer.nodeLevels?.minor_trong_quyen).toBe(1)
 
     const battle = startBattle(restored, combatSource, restoredPlayer, makeDummy('e2e_restore'))
     advanceIntoFighting(combatSource, battle)
     const participant = battle.players[0]!
     expect(participant.basic?.id).toBe('cuong_quyen')
-    expect(participant.basic?.damage?.missingHpBonusPerMissingPercent).toBeCloseTo(
-      CUONG_QUYEN_MISSING_HP_PER_PERCENT + 0.005,
+    expect(participant.basic?.damage?.multiplier).toBeCloseTo(
+      (CUONG_QUYEN.damage?.multiplier ?? 0) + 0.1,
     )
-    expect(participant.ultimate?.skill.id).toBe('bat_tu_ba_the')
+    // Beta window: root at Luyen Khi grants the Basic only.
+    expect(participant.special).toBeUndefined()
+    expect(participant.ultimate).toBeUndefined()
   })
 })

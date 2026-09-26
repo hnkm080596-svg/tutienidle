@@ -114,6 +114,7 @@ export class GameManagerRealmAdvanceOps {
       breakthroughOutcomeService: BreakthroughOutcomeService
       progressionOps: GameManagerProgressionOps
       getTurnBattle: () => TurnBattle | null
+      isTurnBattleInProgress: () => boolean
       markQuestRealmTransition: () => void
       // Material-landing funnel (the essence change credit is a live
       // landing).
@@ -150,6 +151,12 @@ export class GameManagerRealmAdvanceOps {
    * absent-key write semantics as TribulationOutcomeService).
    */
   resolveTalentEntitlement(player: PlayerData, decision: TalentEntitlementDecision): boolean {
+    // Out-of-combat write: resolving mid-battle would persist the record
+    // while the combat-passive sync no-ops. Rejecting keeps the pending
+    // entitlement (and its mandatory modal) valid until the battle ends.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
     const resolved = resolveTalentEntitlementRecord(player, decision)
 
     if (resolved) {
@@ -248,8 +255,7 @@ export class GameManagerRealmAdvanceOps {
     // cycle is live - and inside a hidden trial it also freezes the
     // lineage so the earned completion can silently never land. The
     // sibling write paths below already refuse the same states.
-    const battle = this.deps.getTurnBattle()
-    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
@@ -460,9 +466,7 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    const battle = this.deps.getTurnBattle()
-
-    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
@@ -489,9 +493,7 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    const battle = this.deps.getTurnBattle()
-
-    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
@@ -527,9 +529,7 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    const battle = this.deps.getTurnBattle()
-
-    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
@@ -556,6 +556,17 @@ export class GameManagerRealmAdvanceOps {
    * before learn) so repeat calls are safe.
    */
   syncRealmPassive(player: PlayerData) {
+    // A mid-battle sync would reach a learnSkill that rejects the grant,
+    // silently swallowing the passive. The skip can fire on a mid-fight
+    // minor breakthrough (realmLevel only - realmId never changes
+    // mid-battle), and is harmless because the current realm's passive
+    // was already granted at realm entry and this learn is idempotent.
+    // There is no restore-time re-sync; a passive genuinely missing
+    // (corrupt save, future caller) waits for the next breakthrough.
+    if (this.deps.isTurnBattleInProgress()) {
+      return
+    }
+
     const realm = getCurrentRealm(player.realmId)
 
     const skillId = getActiveWayDefinition(player)?.realmRewards?.[realm.id]?.passiveSkillId
@@ -589,6 +600,11 @@ export class GameManagerRealmAdvanceOps {
    * useTribulation.ts's resolveVictory()).
    */
   syncRealmStatPassive(player: PlayerData) {
+    // Same battle gate as syncRealmPassive above - a mid-fight grant
+    // would write player state outside combat authority.
+    if (this.deps.isTurnBattleInProgress()) {
+      return
+    }
     grantRealmPassive(player, getCurrentRealm(player.realmId).id)
   }
 

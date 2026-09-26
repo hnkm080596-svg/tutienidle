@@ -35,6 +35,7 @@ const props = defineProps<{
   node: ProgressionNode | null
   purchased: boolean
   purchasable: boolean
+  inBattle?: boolean
 }>()
 
 const emit = defineEmits<{ unlocked: [node: ProgressionNode] }>()
@@ -322,7 +323,7 @@ function onUpgrade() {
           v-if="level === 0"
           class="node-inspector__buy"
           size="sm"
-          :disabled="!purchasable"
+          :disabled="!purchasable || inBattle"
           @click="onPurchase"
         >
           {{ t('panels.skillPath.nodeInspector.actions.unlock') }}
@@ -332,7 +333,7 @@ function onUpgrade() {
           v-else-if="!isMaxed"
           class="node-inspector__buy"
           size="sm"
-          :disabled="!upgradable"
+          :disabled="!upgradable || inBattle"
           @click="onUpgrade"
         >
           {{ t('panels.skillPath.nodeInspector.actions.upgrade') }}
@@ -357,6 +358,7 @@ function onUpgrade() {
               :key="route"
               class="route-pick__option"
               variant="ghost"
+              :disabled="inBattle"
               @click="onRoutePick(route)"
             >
               <span class="route-pick__option-name">{{ t(`panels.nodeTree.routes.${route}`) }}</span>

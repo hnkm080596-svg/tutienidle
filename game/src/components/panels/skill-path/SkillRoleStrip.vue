@@ -15,6 +15,7 @@ import { useI18n } from 'vue-i18n'
 import SlotView from '../../common/SlotView.vue'
 import Chip from '../../common/primitives/Chip.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { usePlayerStore } from '@/stores/player'
 import { MORTAL_DEFAULT_BASIC_ID, MORTAL_PRECURSOR_SKILL_IDS } from '@/core/skill/MortalPrecursors'
@@ -57,6 +58,10 @@ const mortalChoices = computed<Skill[]>(() => {
     .map((id) => gameManager.skillManager.get(id))
     .filter((skill): skill is Skill => skill !== undefined)
 })
+
+// mortal-pick + specialization writes reject mid-battle (ops gate) - the
+// chips disable up front so the affordance doesn't look live.
+const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 
 interface RoleCard {
   key: RoleKey
@@ -217,6 +222,7 @@ function specTooltip(skill: Skill, spec: SkillSpecialization) {
         :key="skill.id"
         class="role-specializations__btn"
         :active="isPickedPrecursor(skill.id)"
+        :disabled="inBattle"
         v-tooltip="{ title: skill.name, description: skill.description }"
         @click="setMortalBasicSkill(skill.id)"
       >
@@ -234,7 +240,7 @@ function specTooltip(skill: Skill, spec: SkillSpecialization) {
         :key="spec.id"
         class="role-specializations__btn"
         :active="openedSkill.selectedSpecializationId === spec.id"
-        :disabled="specLocked(openedSkill.id, spec.id)"
+        :disabled="inBattle || specLocked(openedSkill.id, spec.id)"
         v-tooltip="specTooltip(openedSkill, spec)"
         @click="selectSkillSpecialization(openedSkill.id, spec.id)"
       >

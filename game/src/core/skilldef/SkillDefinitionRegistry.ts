@@ -599,6 +599,9 @@ function validateOperation(
       if (op.missingHpBonusCap !== undefined && op.missingHpBonusCap < 0) {
         fault('invalid_field_value', `${path}.missingHpBonusCap`, 'must be >= 0')
       }
+      if (op.sourceMaxHpRatio !== undefined) {
+        validateExpression(op.sourceMaxHpRatio, `${path}.sourceMaxHpRatio`, fault)
+      }
       for (const [index, landedOp] of (op.onLanded ?? []).entries()) {
         const lpath = `${path}.onLanded[${index}]`
         // Per-hit consequence ops: flat lanes only -- no nested damage
@@ -766,6 +769,13 @@ function validateOperation(
       if (op.source !== undefined) {
         requireSingleBindingTarget(op.source, 'source')
       }
+      if (typeof op.into !== 'string' || op.into.length === 0) {
+        fault('invalid_field_value', `${path}.into`, 'into must be a non-empty var name')
+      }
+      return
+    }
+    case 'pay_hp': {
+      validateExpression(op.maxHpRatio, `${path}.maxHpRatio`, fault)
       if (typeof op.into !== 'string' || op.into.length === 0) {
         fault('invalid_field_value', `${path}.into`, 'into must be a non-empty var name')
       }

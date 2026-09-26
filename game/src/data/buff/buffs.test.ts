@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { buffs } from './buffs'
 import type { BuffDefinition, PeriodicDamageDefinition } from '@/core/buff2/BuffDefinition'
 
-// M4 — parity test rewritten to the canonical buff2 shape: the same
+// M4 - parity test rewritten to the canonical buff2 shape: the same
 // numbers, asserted in their new homes (dot.dpsRatio -> periodic
 // .coefficient; stackMode -> stacking.onReapplyStacks; duration ->
 // lifetime.duration; cc -> controls; proc/trigger/economy effects ->
@@ -115,7 +115,7 @@ describe('buffs.ts — ported definitions match original values (buff2 shape)', 
       expect(b.statModifiers).toContainEqual({ stat: 'defense', percent: 0.06 })
     })
 
-    // Engine áp/gỡ THEO ID qua theManBuffId() — id phải khớp chính xác `the_man_<element>`.
+    // Engine ap/go THEO ID qua theManBuffId() - id phai khop chinh xac `the_man_<element>`.
     it('the_man_<el> ×5 — permanent, effects theo bảng §4', () => {
       const expected: Record<string, { stat: string; flat?: number; percent?: number; domain?: 'spell' }[]> = {
         the_man_fire: [{ stat: 'ailmentPotencyPercent', percent: 0.15 }],
@@ -151,8 +151,8 @@ describe('buffs.ts — ported definitions match original values (buff2 shape)', 
       expect(b.statModifiers).toContainEqual({ stat: 'wardBreakDamagePercent', flat: 0.25 })
     })
 
-    it('all 66 definitions (6 inline + 16 legacy + 1 Kiem Pho + 14 thuan-he + 5 talent + 3 boss + 12 the_tu + 5 reaction + 4 companion) are present', () => {
-      expect(buffs).toHaveLength(66)
+    it('all 68 definitions (6 inline + 16 legacy + 1 Kiem Pho + 14 thuan-he + 5 talent + 3 boss + 14 the_tu + 5 reaction + 4 companion) are present', () => {
+      expect(buffs).toHaveLength(68)
     })
   })
 

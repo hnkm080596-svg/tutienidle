@@ -681,6 +681,7 @@ export class GameManager {
       progressionOps: this.progressionOps,
       // Deferred closures - turnBattleOps/activePlayer are assigned later.
       getTurnBattle: () => this.turnBattleOps.getTurnBattle(),
+      isTurnBattleInProgress: () => this.turnBattleOps?.isTurnBattleInProgress() ?? false,
       // Deferred closure - tickOps is assigned later in this constructor.
       markQuestRealmTransition: () => this.tickOps.markQuestRealmTransition(),
       // Deferred closures - questOps is assigned later in this

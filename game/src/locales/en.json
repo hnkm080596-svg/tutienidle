@@ -131,6 +131,32 @@
         "theTuAn": "Hidden Body"
       }
     },
+    "theTuTree": {
+      "abandoned": "Path abandoned",
+      "sealed": "Realm not reached",
+      "sealedName": "???",
+      "sealedNext": "Sealed",
+      "roles": {
+        "root": "Martial Way",
+        "basic": "Basic",
+        "special": "Special"
+      },
+      "scaling": {
+        "might": "Might scaling",
+        "maxHp": "Max HP scaling",
+        "aoe": "Hits all enemies",
+        "sacrifice": "Sacrifices Max HP",
+        "huyetCuong": "Huyết Cuồng",
+        "taunt": "Taunt",
+        "mark": "Chấn Ấn mark",
+        "reflect": "Reflects by Max HP"
+      },
+      "realms": {
+        "luyenKhi": "Qi Refining",
+        "trucCo": "Foundation",
+        "kimDan": "Golden Core"
+      }
+    },
     "skillPath": {
       "title": "Skills",
       "mortalName": "Mortal",

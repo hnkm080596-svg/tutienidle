@@ -15,10 +15,6 @@
  */
 import type { PlayerData } from './Player'
 import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
-import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
-import type { SurviveLethalSource } from '../combat/CombatSystem'
-import type { BuffDefinitionId } from '../battle/contracts/ids'
-import type { ProgressionNode } from '../progression/ProgressionNode'
 import type { ElementType } from '../element/ElementType'
 import type { CultivationPathRuntime, CultivationPathRuntimeDeps } from './CultivationPathRuntime'
 import { hasPathCapability, resolveActiveWayStatDomains } from './CultivationPathSystem'
@@ -62,9 +58,7 @@ import {
 } from '../../data/skill/TheTuSkills'
 import { collectBodyKitModifiers } from '../the-tu/TheTuKitModifiers'
 import { collectHiddenBodyMechanicModifiers } from '../the-tu/TheTuAnMechanicModifiers'
-import { BodyBatTuSurvival } from '../the-tu/TheTuBatTuSurvival'
-import { isBodyPathway, isHiddenBodyPathway } from '../the-tu/TheTuPath'
-import { isSwordPathway, isHiddenSwordPathway } from '../kiem-tu/KiemTuPath'
+import { getSkillCoreLevel } from '../progression/SkillCoreLevel'
 import { buildKiemPhoProvider } from '../kiem-tu/KiemPhoProvider'
 import { collectKiemPhoComboModifiers } from '../kiem-tu/KiemPhoNodeModifiers'
 import {
@@ -267,10 +261,12 @@ function resolveAuthoredBasic(
 }
 
 /**
- * The Tu Reimagined (plan Task 6) — resolve the owned branch root
- * (cuong_chien XOR tran_the, excludesNode mutex) into a participant-
- * local kit clone with collectBodyKitModifiers baked in. No root ->
- * undefined (INV-3 fallback is the caller's job).
+ * The Tu beta: resolve the owned branch root (cuong_chien XOR
+ * tran_the, excludesNode mutex) into a participant-local kit clone
+ * with collectBodyKitModifiers baked in. No root -> undefined (INV-3
+ * fallback is the caller's job). Slot ownership gates at build: the
+ * Truc Co special arrives only with its owning major node (the beta
+ * window has no Ultimate slot).
  */
 function resolveBodyKit(
   deps: CultivationPathRuntimeDeps,
@@ -279,11 +275,15 @@ function resolveBodyKit(
   const mods = collectBodyKitModifiers(deps.nodeRegistry, player)
 
   if (deps.getNodeLevel('cuong_chien', player) > 0) {
-    return buildTheTuKit('cuong_chien', mods)
+    return buildTheTuKit('cuong_chien', mods, {
+      special: getSkillCoreLevel(player, 'loan_dau') > 0,
+    })
   }
 
   if (deps.getNodeLevel('tran_the', player) > 0) {
-    return buildTheTuKit('tran_the', mods)
+    return buildTheTuKit('tran_the', mods, {
+      special: getSkillCoreLevel(player, 'phan_chan') > 0,
+    })
   }
 
   return undefined
@@ -512,21 +512,9 @@ function createBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivation
       const kit = resolveBodyKit(deps, player)
       return kit ? { special: kit.special, ultimate: kit.ultimate } : {}
     },
-    buildSurviveSources(player: PlayerData, participant: TurnBattleParticipant, hasActiveBuff: (definitionId: BuffDefinitionId) => boolean): SurviveLethalSource[] {
-      // The Tu Reimagined (plan Task 9, D9) — Cuong Chien only: the
-      // survival source reads the participant's live ultimate slot and
-      // buff pool; node-resolved duration comes off the baked kit clone.
-      if (deps.getNodeLevel('cuong_chien', player) <= 0) {
-        return []
-      }
-
-      return [
-        new BodyBatTuSurvival({
-          ultimateSlot: () => participant.ultimate,
-          hasActiveBuff,
-        }),
-      ]
-    },
+    // Beta: no buildSurviveSources; BodyBatTuSurvival reads the
+    // ultimate slot that post-beta bat_tu_ba_the will occupy; parked
+    // until that content returns.
   }
 }
 

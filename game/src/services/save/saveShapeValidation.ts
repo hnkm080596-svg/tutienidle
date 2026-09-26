@@ -22,15 +22,19 @@ import { FOUNDATION_LABELS } from '../../core/breakthrough/FoundationType'
 import { isArtifactGrade, isArtifactPath } from '../../core/artifact/Artifact'
 import { validateBodyProgressionPersistedState } from '../../core/realm/body/BodyProgressionSystem'
 import { validateHiddenPerfectionPersistedState } from '../../core/realm/hidden/HiddenPerfection'
-import { PROGRESSION_NODE_BY_ID } from '../../data/progression/ProgressionNodeCatalog'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { SKILLS } from '../../data/skill/Skills'
+import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
+import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
+import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
+import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
+import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
 import { getTalentDefinition } from '../../data/talent/Talents'
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
 import { REALM_PASSIVES } from '../../data/realm/RealmPassives'
+import { getRealmIndex } from '../../core/realm/realmSystem'
 import { getTalentMaxLevel, isLegalBreakthroughOffer, isTalentEntitlementActionable } from '../../core/talent/TalentEntitlement'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
-import { getNodeMaxLevel } from '../../core/progression/ProgressionNode'
 import { isPhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
 
 // M-QI-05 (v73) - canonical Core Node lookups for the coverage checks:
@@ -42,7 +46,16 @@ const SKILL_CORE_BY_ID = new Map(SKILL_CORE_NODES.map((node) => [node.id, node])
 
 const LEVELLED_SKILL_IDS = new Set(SKILLS.filter((skill) => skill.maxLevel > 1).map((skill) => skill.id))
 
-
+const PROGRESSION_NODE_BY_ID = new Map(
+  [
+    ...PHAP_TU_NODES,
+    ...PHAP_TU_AN_NODES,
+    ...KIEM_TU_NODES,
+    ...THE_TU_NODES,
+    ...THE_TU_AN_NODES,
+    ...SKILL_CORE_NODES,
+  ].map((node) => [node.id, node]),
+)
 
 const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
 
@@ -693,14 +706,89 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
           })
         }
       } else {
+        // F-TT-CLNB-INT (clean-B INT) -- non-core progression nodes get
+        // the same canonicality replay as core_* and talents. The
+        // buy-side gates are MONOTONIC invariants (respec only ever
+        // removes levels, devResetBranch cascade-revokes orphans), so an
+        // owned level that still violates them at load time is only
+        // reachable via a crafted save:
+        //   - integer level inside [0, maxLevel]
+        //   - kind 'node': the parent node must still be owned
+        //   - kind 'excludesNode': the mutex peer must be unowned
+        //   - kind 'realm': player realm must still meet the gate
+        //   - kind 'nodeCount': enough member nodes still owned
+        // Laggy gates are deliberately NOT replayed (NodeSystem
+        // :122-123 -- owned levels above a live gate are legal frozen
+        // surplus): techniqueRank, techniqueGrade, skillCastCount,
+        // kiemDaoBelowCap.
         const node = PROGRESSION_NODE_BY_ID.get(nodeId)
-        if (node !== undefined) {
-          const nodeMax = getNodeMaxLevel(node)
-          if (!Number.isInteger(level) || level < 1 || level > nodeMax) {
+
+        if (node === undefined) {
+          continue
+        }
+
+        if (!Number.isInteger(level) || level > (node.maxLevel ?? 1)) {
+          issues.push({
+            path: `player.nodeLevels.${nodeId}`,
+            message: `phải là số nguyên trong [0, ${node.maxLevel ?? 1}]`,
+          })
+          continue
+        }
+
+        if (level >= 1) {
+          const nodeLevelsRecord = player.nodeLevels as Record<string, unknown>
+
+          if (purchasedNodeIds && !purchasedNodeIds.includes(nodeId)) {
             issues.push({
               path: `player.nodeLevels.${nodeId}`,
-              message: `phải là số nguyên trong [1, ${nodeMax}]`,
+              message: 'node đã mua phải nằm trong purchasedNodeIds',
             })
+          }
+
+          for (const prereq of node.prerequisites ?? []) {
+            if (prereq.kind === 'node') {
+              const parentLevel = nodeLevelsRecord[prereq.nodeId]
+
+              if (typeof parentLevel !== 'number' || parentLevel < 1) {
+                issues.push({
+                  path: `player.nodeLevels.${nodeId}`,
+                  message: `thiếu node tiền điều kiện '${prereq.nodeId}'`,
+                })
+              }
+            } else if (prereq.kind === 'excludesNode') {
+              const mutexLevel = nodeLevelsRecord[prereq.nodeId]
+
+              if (typeof mutexLevel === 'number' && mutexLevel > 0) {
+                issues.push({
+                  path: `player.nodeLevels.${nodeId}`,
+                  message: `xung đột loại trừ với node '${prereq.nodeId}' đang sở hữu`,
+                })
+              }
+            } else if (prereq.kind === 'nodeCount') {
+              const ownedCount = prereq.nodeIds.filter(
+                (memberId) =>
+                  typeof nodeLevelsRecord[memberId] === 'number' &&
+                  (nodeLevelsRecord[memberId] as number) >= 1,
+              ).length
+
+              if (ownedCount < prereq.countRequired) {
+                issues.push({
+                  path: `player.nodeLevels.${nodeId}`,
+                  message: `thiếu điều kiện nodeCount: cần ${prereq.countRequired}/${prereq.nodeIds.length} node, có ${ownedCount}`,
+                })
+              }
+            } else if (prereq.kind === 'realm') {
+              const requiredIndex = getRealmIndex(prereq.realmId)
+              const playerRealmIndex =
+                typeof player.realmId === 'string' ? getRealmIndex(player.realmId) : -1
+
+              if (requiredIndex >= 0 && playerRealmIndex < requiredIndex) {
+                issues.push({
+                  path: `player.nodeLevels.${nodeId}`,
+                  message: `thiếu cảnh giới tiền điều kiện '${prereq.realmId}'`,
+                })
+              }
+            }
           }
         }
       }

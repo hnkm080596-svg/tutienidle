@@ -10,7 +10,7 @@ import { collectBodyKitModifiers } from '../../the-tu/TheTuKitModifiers'
 import { createDefaultPlayer } from '../../player/Player'
 import type { ProgressionNode } from '../../progression/ProgressionNode'
 
-// The Tu Reimagined (spec 2026-09-15 section 3.4, plan Task 7) — the
+// The Tu Reimagined (spec 2026-09-15 section 3.4, plan Task 7) - the
 // Cuong Chien missing-HP scalar is an authored damage-field contract,
 // NOT a stat: bonus = min(cap, missingFraction x perPercent x 100),
 // resolved per hit at impact against the actor's LIVE hp (a Reflection
@@ -108,7 +108,7 @@ describe('missing-HP scalar (spec section 3.4)', () => {
 
     new TurnBattleSystem(new CombatSystem(new EventBus()), 10).resolveNextStep(battle)
 
-    // might 100 x mult 1 x (1 + 0 bonus) — no armor, no crit.
+    // might 100 x mult 1 x (1 + 0 bonus) - no armor, no crit.
     expect(1_000_000 - enemy.currentHp).toBe(100)
   })
 
@@ -185,15 +185,17 @@ describe('missing-HP scalar (spec section 3.4)', () => {
     player.nodeLevels = { tt_scalar_1: 1 }
 
     const mods = collectBodyKitModifiers({ getAll: () => [node] }, player)
-    const kit = buildTheTuKit('cuong_chien', mods)
+    // Beta: the missing-HP bake lands only with the TC special owned.
+    const kit = buildTheTuKit('cuong_chien', mods, { special: true })
 
-    // 50% missing: 0.5 x (0.02 + 0.01) x 100 = 1.5 -> x2.5 damage.
+    // 50% missing: 0.5 x (0.015 + 0.01) x 100 = 1.25 -> x2.25 on the
+    // cuong_quyen clone (multiplier 1.4): 100 x 1.4 x 2.25 = 315.
     const actor = makeActor(500)
     const enemy = makeEnemy('enemy')
     const { battle } = makeBattle(kit.basic, actor, [enemy])
 
     new TurnBattleSystem(new CombatSystem(new EventBus()), 10).resolveNextStep(battle)
 
-    expect(1_000_000 - enemy.currentHp).toBe(250)
+    expect(1_000_000 - enemy.currentHp).toBe(315)
   })
 })

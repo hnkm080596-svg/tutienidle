@@ -1,0 +1,20 @@
+{
+  "applied": [
+    "evidence:EV-TT-FIX-A12 (updated)",
+    "evidence:EV-TT-VERIFY-A12 (updated)",
+    "review:REV-TT-INT-A12 (updated)",
+    "review:REV-TT-COR-A12 (updated)",
+    "finding:F-TT-INT-A12-1 (updated)",
+    "finding:F-TT-INT-A12-2 (updated)",
+    "finding:F-TT-INT-A12-3 (updated)",
+    "finding:F-TT-COR-A12-1 (updated)",
+    "finding:F-TT-COR-A12-2 (updated)",
+    "finding:F-TT-COR-A12-3 (updated)",
+    "finding:F-TT-COR-A12-4 (updated)",
+    "finding:F-TT-COR-A12-5 (updated)",
+    "finding:F-TT-COR-A12-6 (updated)",
+    "lesson:L-TT-67 (updated)",
+    "lesson:L-TT-68 (updated)",
+    "lesson:L-TT-69 (updated)"
+  ]
+}

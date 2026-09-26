@@ -84,11 +84,11 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   // Hien kits: Cuong Chien (missing-HP berserker) + Tran The (tank).
   cuong_quyen: {
     name: 'Cuồng Quyền',
-    description: 'Quyền cuồng bạo — sát thương tăng theo phần sinh mệnh đã mất.',
+    description: 'Quyền cuồng bạo — đòn vật lý đơn mục tiêu, chuyển hóa Căn Cốt cao.',
   },
   loan_dau: {
     name: 'Loạn Đấu',
-    description: 'Đòn đánh mạnh cùng scalar sinh mệnh thiếu hụt. Hồi 4 lượt.',
+    description: 'Hiến một phần Sinh Mệnh Tối Đa rồi đánh loạn liên hoàn vào một mục tiêu. Hồi 4 lượt.',
   },
   bat_tu_ba_the: {
     name: 'Bất Tử Bá Thể',
@@ -96,11 +96,11 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   },
   tran_ap: {
     name: 'Trấn Áp',
-    description: 'Trấn áp quét ngang mọi kẻ địch bằng sức thân thể.',
+    description: 'Trấn áp quét ngang mọi kẻ địch bằng Sinh Mệnh Tối Đa của bản thân.',
   },
-  phan_chinh: {
+  phan_chan: {
     name: 'Phản Chấn',
-    description: 'Huy chương nội tại — phản lại một phần sát thương nhận vào.',
+    description: 'Khiêu khích và đánh Chấn Ấn mọi kẻ địch; kẻ đánh trúng bị phản theo Sinh Mệnh Tối Đa. Hồi 6 lượt.',
   },
   son_nhac: {
     name: 'Sơn Nhạc',
