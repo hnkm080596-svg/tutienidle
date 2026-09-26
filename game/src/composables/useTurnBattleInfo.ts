@@ -30,8 +30,8 @@ export function useTurnBattleInfo() {
   })
 
   // The canonical in-progress predicate (intro|countdown|fighting) for
-  // panels that must refuse writes while a cycle is live — the ops-layer
-  // gate stays authoritative; this is the UI-side cosmetic mirror.
+  // panels that must refuse writes while a cycle is live; the ops-layer
+  // gate stays authoritative -- this is the UI-side cosmetic mirror.
   const isBattleInProgressNow = computed(() => {
     stateVersion.value
 

@@ -188,7 +188,9 @@ export class CombatProcSystem {
         holder !== undefined &&
         context.reflectsEligible !== false
       ) {
-        const key = `${holderId}.${grant.capability.id}`
+        // Spec: one reflect per holder per hostile action -- key on the
+        // holder only so a second reflecting capability cannot emit twice.
+        const key = holderId
         if (!this.pendingReflects.has(key)) {
           this.pendingReflects.set(key, {
             holderId,

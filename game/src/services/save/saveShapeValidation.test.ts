@@ -2366,7 +2366,11 @@ describe('validateGameSaveShape — v73 core inverse ownership', () => {
     const save = validSave()
     const player = playerOf(save)
 
-    player.realmId = 'qi_refining'
+    // major_loan_dau gates on realm >= foundation_establishment --
+    // the save-boundary canonicality replay (clean-B INT-B fix) rejects
+    // owned nodes whose monotonic prereqs no longer hold, so the
+    // fixture must carry a canonical realm for the grant test.
+    player.realmId = 'foundation_establishment'
     player.cultivationPath = 'body'
     player.cultivationWay = 'body_pathway'
 

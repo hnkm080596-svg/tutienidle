@@ -12,7 +12,7 @@
 // gate itself still lives on the node's prerequisite, this is presentation).
 // Same select contract as NodeTreePanel so NodeInspector purchases
 // without a second seam.
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -180,10 +180,20 @@ function onRespecClick() {
   pendingRespec.value = true
 }
 
+// Battle start kills a pending confirm — a stale modal's confirm would
+// otherwise silently no-op against the ops gate.
+watch(inBattle, (engaged) => {
+  if (engaged) {
+    pendingRespec.value = false
+  }
+})
+
 function confirmRespec() {
   pendingRespec.value = false
 
-  respecNodeTree()
+  if (!inBattle.value) {
+    respecNodeTree()
+  }
 }
 
 function cancelRespec() {

@@ -136,7 +136,7 @@ function confirmRouteSwitch() {
 
   pendingRoute.value = null
 
-  if (route !== null) {
+  if (route !== null && !inBattle.value) {
     switchSpellPathRoute(route)
   }
 }
@@ -325,10 +325,22 @@ function onRespecClick() {
   pendingRespec.value = true
 }
 
+// Battle start kills any pending confirm — a stale modal's confirm
+// would otherwise silently no-op against the ops gate (the store
+// refuses ops while a battle runs).
+watch(inBattle, (engaged) => {
+  if (engaged) {
+    pendingRespec.value = false
+    pendingRoute.value = null
+  }
+})
+
 function confirmRespec() {
   pendingRespec.value = false
 
-  respecNodeTree()
+  if (!inBattle.value) {
+    respecNodeTree()
+  }
 }
 
 function cancelRespec() {
