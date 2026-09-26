@@ -31,7 +31,6 @@ import { gainKiemY, grantKiemDao, loseKiemY } from '../kiem-tu/NguKiemDao'
 import { isHiddenSwordPathway } from '../kiem-tu/KiemTuPath'
 import { validatePreset } from '../kiem-tu/KiemPhoSystem'
 import { getRealmIndex } from '../realm/realmSystem'
-import { isBattleInProgress } from '../battle/BattleTypes'
 import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
 import {
   resolveCombatSkillRoles,

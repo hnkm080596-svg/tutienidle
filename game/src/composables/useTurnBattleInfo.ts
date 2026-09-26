@@ -6,7 +6,7 @@ import type { TurnBattleParticipant, TurnBattle } from '@/core/battle/turn/TurnB
 
 /**
  * Slice 7 extension (Completion Task 11) - turn-order preview + battle log
- * reactivity bridge. Cùng pattern stateVersion như useTurnCombatManual.
+ * reactivity bridge. Same stateVersion pattern as useTurnCombatManual.
  */
 export function useTurnBattleInfo() {
   const gameManager = useGameManager()

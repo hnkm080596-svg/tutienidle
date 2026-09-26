@@ -24,7 +24,7 @@ const props = defineProps<{
 
 const gameManager = useGameManager()
 const player = usePlayerStore()
-const { stateVersion, bumpState } = useStateVersion()
+const { bumpState } = useStateVersion()
 
 // parity with the node-tree panels: the upgrade writes through
 // progressionOps.levelUpSkill, which rejects mid-battle -- disable the
