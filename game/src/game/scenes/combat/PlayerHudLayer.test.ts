@@ -4,6 +4,7 @@
 // ẩn MP khi maxMp<=0, ẩn Kiếm khi max<=0, update HP từ event values.
 import { describe, expect, it } from 'vitest'
 import { PlayerHudLayer, HUD_MARGIN, HUD_HP_WIDTH, HUD_SUB_WIDTH } from './PlayerHudLayer'
+import { PLAYER_HUD_THE_ARMED_COLOR, PLAYER_HUD_THE_COLOR } from './combatConstants'
 
 interface FakeRect {
   x: number
@@ -19,6 +20,22 @@ interface FakeRect {
   setStrokeStyle(...a: unknown[]): FakeRect
   setOrigin(...a: unknown[]): FakeRect
   setFillStyle(color: number): FakeRect
+  destroy(): void
+}
+
+interface FakeArc {
+  x: number
+  y: number
+  radius: number
+  fillColor?: number
+  strokeColor?: number
+  visible: boolean
+  setPosition(x: number, y: number): FakeArc
+  setVisible(v: boolean): FakeArc
+  setDepth(d: number): FakeArc
+  setStrokeStyle(width: number, color: number): FakeArc
+  setOrigin(...a: unknown[]): FakeArc
+  setFillStyle(color: number): FakeArc
   destroy(): void
 }
 
@@ -100,9 +117,49 @@ function makeFakeText(initial: string): FakeText {
   return text
 }
 
+function makeFakeArc(radius: number, color: number): FakeArc {
+  const arc = {
+    x: 0,
+    y: 0,
+    radius,
+    fillColor: color,
+    strokeColor: 0,
+    visible: true,
+    setPosition(x: number, y: number) {
+      arc.x = x
+      arc.y = y
+      return arc
+    },
+    setVisible(v: boolean) {
+      arc.visible = v
+      return arc
+    },
+    setDepth() {
+      return arc
+    },
+    setStrokeStyle(_width: number, c: number) {
+      arc.strokeColor = c
+      return arc
+    },
+    setOrigin() {
+      return arc
+    },
+    setFillStyle(c: number) {
+      arc.fillColor = c
+      return arc
+    },
+    destroy() {
+      arc.visible = false
+    },
+  } as unknown as FakeArc
+
+  return arc
+}
+
 function makeScene() {
   const rects: FakeRect[] = []
   const texts: FakeText[] = []
+  const arcs: FakeArc[] = []
 
   return {
     add: {
@@ -112,6 +169,13 @@ function makeScene() {
         rects.push(rect)
 
         return rect
+      },
+      circle: (_x: number, _y: number, radius: number, color: number) => {
+        const arc = makeFakeArc(radius, color)
+
+        arcs.push(arc)
+
+        return arc
       },
       text: (_x: number, _y: number, content: string) => {
         const text = makeFakeText(content)
@@ -123,6 +187,7 @@ function makeScene() {
     },
     rects,
     texts,
+    arcs,
   }
 }
 
@@ -188,40 +253,61 @@ describe('PlayerHudLayer — in-canvas HUD (6A-T4)', () => {
     expect(hud.kiemFill.scaleX).toBeCloseTo(0.3, 5)
   })
 
-  // Task 16 — The bar (Phap Tu): fill vs the FIXED 100 marker; a
-  // truong_the-raised cap leaves the marker inside the bar; armed marks
-  // the phap-tuong unlock.
-  it('updateThe: max 0 → ẩn; cap raised → marker visible inside bar', () => {
+  // Phap Tu Reimagine (spec D17, design sec.86) -- the The bar renders
+  // as a dot row (cap == threshold == 5); the PHAP THE label lights when
+  // the bridge reports phapTheActive (empowerment variant + full pool).
+  it('updateThe: max 0 → ẩn; dot row renders one pip per point', () => {
     const scene = makeScene()
     const hud = new PlayerHudLayer(scene as never, { width: 800, height: 600 })
 
-    hud.updateThe(0, 0, 100, false)
+    hud.updateThe(0, 0, false)
 
     expect(hud.theGroupVisible).toBe(false)
+    expect(hud.thePhapTheLabel.visible).toBe(false)
 
-    hud.updateThe(65, 130, 100, false)
+    hud.updateThe(3, 5, false)
 
     expect(hud.theGroupVisible).toBe(true)
-    expect(hud.theFill.scaleX).toBeCloseTo(0.5, 5)
-    expect(hud.theMarker.visible).toBe(true)
-    expect(hud.theLabel.text).toContain('65')
-    expect(hud.theLabel.text).toContain('130')
+    expect(hud.theLabel.text).toContain('3')
+    expect(hud.theLabel.text).toContain('5')
+    expect(hud.theDots).toHaveLength(5)
+    // 3 filled with THE color, 2 hollow (background fill)
+    expect(hud.theDots.map((dot) => dot.fillColor)).toEqual([
+      PLAYER_HUD_THE_COLOR,
+      PLAYER_HUD_THE_COLOR,
+      PLAYER_HUD_THE_COLOR,
+      0x241b1b,
+      0x241b1b,
+    ])
 
-    // Marker sits at 100/130 along the bar (x measured from the bar's
-    // left edge — background origin is (0, .5)).
+    // Dots are spaced evenly across the bar track.
     const bar = hud.theFill
 
-    expect(hud.theMarker.x).toBeCloseTo(bar.x + bar.width * (100 / 130), 5)
+    hud.theDots.forEach((dot, index) => {
+      expect(dot.x).toBeCloseTo(bar.x + bar.width / 5 * (index + 0.5), 5)
+    })
   })
 
-  it('updateThe: cap == threshold → marker hidden (edge of bar); armed marks the label', () => {
+  it('updateThe: phapTheActive → PHÁP THẾ label hiện, dots sáng armed', () => {
     const scene = makeScene()
     const hud = new PlayerHudLayer(scene as never, { width: 800, height: 600 })
 
-    hud.updateThe(100, 100, 100, true)
+    hud.updateThe(5, 5, false)
 
-    expect(hud.theMarker.visible).toBe(false)
-    expect(hud.theLabel.text).toContain('◆')
+    expect(hud.thePhapTheLabel.visible).toBe(false)
+    expect(hud.theDots.every((dot) => dot.fillColor === PLAYER_HUD_THE_COLOR)).toBe(true)
+
+    hud.updateThe(5, 5, true)
+
+    expect(hud.thePhapTheLabel.visible).toBe(true)
+    expect(hud.thePhapTheLabel.text).toBe('PHÁP THẾ')
+    expect(hud.theDots.every((dot) => dot.fillColor === PLAYER_HUD_THE_ARMED_COLOR)).toBe(true)
+
+    hud.updateThe(4, 5, true)
+
+    // Active flag is bridge-side; the HUD just lights what it's told --
+    // a partial pool still brightens when the flag is on.
+    expect(hud.thePhapTheLabel.visible).toBe(true)
   })
 
   it('destroy: mọi rect/text được destroy (không leak giữa trận)', () => {

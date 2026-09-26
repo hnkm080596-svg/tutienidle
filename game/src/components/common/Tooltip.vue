@@ -252,7 +252,10 @@ function hideBrokenImage(event: Event) {
    design pass: tiêu đề tooltip cần tách bậc rõ khỏi nội dung). */
 .tooltip__title { margin: 0 0 3px; color: var(--paper-text, #211f1a); font-family: var(--font-display); font-size: var(--text-md); font-weight: 700; line-height: 1.25; }
 .tooltip__meta { margin: 0; color: var(--paper-text-muted, #8f897c); font-size: var(--text-xs); }
-.tooltip__description { margin: 3px 0 0; color: var(--paper-text-soft, #5e5a50); line-height: 1.45; } .tooltip__description--rich { margin-top: 9px; }
+/* pre-line: authored multi-line descriptions (Phap Tu Reimagine special
+   previews -- cost %MaxLL + duration + effect + consequence) render as
+   lines; single-line descriptions are unaffected. */
+.tooltip__description { margin: 3px 0 0; color: var(--paper-text-soft, #5e5a50); line-height: 1.45; white-space: pre-line; } .tooltip__description--rich { margin-top: 9px; }
 .tooltip__section { margin-top: 10px; padding-top: 7px; border-top: 1px solid color-mix(in srgb, var(--tooltip-accent) 18%, var(--paper-line, rgba(42,41,36,.42))); }
 .tooltip__section-label { margin: 0 0 5px; color: color-mix(in srgb, var(--tooltip-accent) 76%, var(--paper-text, #211f1a)); font-size: var(--text-xs); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
 .tooltip__section-row { display: grid; grid-template-columns: minmax(0,1fr) auto; column-gap: 14px; align-items: baseline; color: var(--paper-text-soft, #5e5a50); line-height: 1.55; }

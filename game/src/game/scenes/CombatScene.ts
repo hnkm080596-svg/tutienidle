@@ -257,7 +257,7 @@ interface CastBarSprite {
   widthPx: number
 }
 
-/**
+  /**
  * Combat UI Redesign Ã¢â‚¬â€ battlefield riÃƒÂªng, TÃƒÂCH KHÃ¡Â»Å½I MainScene.ts (Ã„ÂÃ¡Â»â„¢ng
  * PhÃ¡Â»Â§/Home) hoÃƒÂ n toÃƒÂ n. MainScene.ts gÃ¡Â»Âi `this.scene.start('CombatScene')`
  * khi nhÃ¡ÂºÂ­n 'battle_start' (xem MainScene.ts); scene nÃƒÂ y tÃ¡Â»Â± gÃ¡Â»Âi
@@ -266,11 +266,11 @@ interface CastBarSprite {
  * Ã¢â‚¬â€ xem stores/ui.ts's exitCombatScene()). Auto-refight KHÃƒâ€NG cÃ¡ÂºÂ§n
  * switch scene Ã¢â‚¬â€ chÃ¡Â»â€° 1 'battle_start' mÃ¡Â»â€ºi tÃ¡Â»â€ºi trong lÃƒÂºc scene nÃƒÂ y vÃ¡ÂºÂ«n
  * Ã„â€˜ang active, xÃ¡Â»Â­ lÃƒÂ½ y hÃ¡Â»â€¡t lÃƒÂºc mÃ¡Â»â€ºi vÃƒÂ o (xem onBattleStart()).
- *
+   *
  * CORE Ã¢â€ â€ PHASER CHÃ¡Â»Ë† GIAO TIÃ¡ÂºÂ¾P QUA EVENTBUS Ã¢â‚¬â€ kÃ¡ÂºÂ¿ thÃ¡Â»Â«a nguyÃƒÂªn tÃ¡ÂºÂ¯c tÃ¡Â»Â«
  * MainScene.ts, xem ghi chÃƒÂº Ã¡Â»Å¸ Ã„â€˜ÃƒÂ³ cho lÃƒÂ½ do kÃ¡Â»Â¹ thuÃ¡ÂºÂ­t (nÃ¡Â»â„¢i suy vÃ¡Â»â€¹ trÃƒÂ­,
  * animation rÃ¡Â»Âi rÃ¡ÂºÂ¡c...).
- */
+   */
 export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // ui-discoverability-refactor-plan.md Ã‚Â§3.2 Ã¢â‚¬â€ module tÃƒÂ¡ch khÃ¡Â»Âi god-class,
   // khÃ¡Â»Å¸i tÃ¡ÂºÂ¡o LAZY (Object.create(CombatScene.prototype) trong test KHÃƒâ€NG
@@ -928,9 +928,9 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     const the = this.registry ? readTheBar(this.registry) : null
 
     if (the) {
-      this.playerHud?.updateThe(the.current, the.max, the.threshold, the.empowered)
+      this.playerHud?.updateThe(the.current, the.max, the.phapTheActive)
     } else {
-      this.playerHud?.updateThe(0, 0, 0, false)
+      this.playerHud?.updateThe(0, 0, false)
     }
   }
 

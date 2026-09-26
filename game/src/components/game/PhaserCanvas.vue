@@ -14,6 +14,7 @@ import { useDynamicRegion } from '@/presentation/host/useDynamicRegion'
 import type { PlayerVisualProfileId } from '@/presentation/art/PlayerVisualProfiles'
 import { makeKiemBarReader, registerKiemBarReader } from '@/presentation/bridges/kiemBarBridge'
 import { makeTheBarReader, registerTheBarReader } from '@/presentation/bridges/theBarBridge'
+import { makeHoTheReader, registerHoTheReader } from '@/presentation/bridges/hoTheBridge'
 
 const gameManager = useGameManager()
 const player = usePlayerStore()
@@ -91,6 +92,9 @@ function seedRegion(registry: GateRegistry): () => void {
 
   // Task 16 — The bar reader (Pháp Tu) — cùng bridge pattern.
   registerTheBarReader(registry, makeTheBarReader(gameManager, () => usePlayerStore()))
+
+  // Phap Tu Reimagine (F13) -- Ho The DR reader for status tooltips.
+  registerHoTheReader(registry, makeHoTheReader(gameManager))
 
   // Player visual profile bridge (player-body-anchor-reward-gourd-plan §4.2) —
   // snapshot ID vào registry để scene đọc lúc create() (không bỏ lỡ trạng thái

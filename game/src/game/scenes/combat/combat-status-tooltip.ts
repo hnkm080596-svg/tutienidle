@@ -13,6 +13,9 @@ const TOOLTIP_STROKE = 0xf4f4f0
 const TOOLTIP_WIDTH = 120
 const TOOLTIP_HEIGHT = 30
 const TOOLTIP_MARGIN = 8
+/** Phap Tu Reimagine (F13) -- extra readout row (e.g. live Ho The DR).
+ * The panel grows one row taller when extraLine is present. */
+const TOOLTIP_EXTRA_LINE_HEIGHT = 12
 
 const POLARITY_HEX = { buff: '#7bd88f', debuff: '#ff6b6b' } as const
 
@@ -22,6 +25,9 @@ export interface StatusTooltipData {
   stacks: number
   remainingTime?: number
   permanent?: boolean
+  /** Optional live readout line rendered under the detail row -- the
+   *  caller resolves the value per show() (nothing is snapshotted). */
+  extraLine?: string
 }
 
 interface TooltipParts {
@@ -37,17 +43,19 @@ export class StatusTooltip {
   show(screenX: number, screenY: number, statusInstanceId: string, data: StatusTooltipData) {
     this.hide()
 
+    const height = TOOLTIP_HEIGHT + (data.extraLine ? TOOLTIP_EXTRA_LINE_HEIGHT : 0)
+
     const clampedX = Math.max(
       TOOLTIP_MARGIN,
       Math.min(screenX, this.scene.scale.width - TOOLTIP_WIDTH - TOOLTIP_MARGIN),
     )
-    const clampedY = Math.max(screenY, TOOLTIP_HEIGHT + TOOLTIP_MARGIN)
+    const clampedY = Math.max(screenY, height + TOOLTIP_MARGIN)
 
     const bg = this.scene.add.graphics()
     bg.fillStyle(TOOLTIP_BG, 0.92)
-    bg.fillRoundedRect(0, 0, TOOLTIP_WIDTH, TOOLTIP_HEIGHT, 4)
+    bg.fillRoundedRect(0, 0, TOOLTIP_WIDTH, height, 4)
     bg.lineStyle(1, TOOLTIP_STROKE, 0.4)
-    bg.strokeRoundedRect(0, 0, TOOLTIP_WIDTH, TOOLTIP_HEIGHT, 4)
+    bg.strokeRoundedRect(0, 0, TOOLTIP_WIDTH, height, 4)
 
     const polarityHex = data.polarity === 'buff' ? POLARITY_HEX.buff : POLARITY_HEX.debuff
 
@@ -62,7 +70,18 @@ export class StatusTooltip {
       color: '#f4f4f0',
     })
 
-    const container = this.scene.add.container(clampedX, clampedY, [bg, nameText, detailText])
+    const children: Phaser.GameObjects.GameObject[] = [bg, nameText, detailText]
+
+    if (data.extraLine) {
+      children.push(
+        this.scene.add.text(6, TOOLTIP_HEIGHT - 2, data.extraLine, {
+          fontSize: '10px',
+          color: '#7ec8a9',
+        }),
+      )
+    }
+
+    const container = this.scene.add.container(clampedX, clampedY, children)
     container.setDepth(DEPTH_OVERLAY_UI + 8)
 
     this.active = { container, anchorStatusId: statusInstanceId }

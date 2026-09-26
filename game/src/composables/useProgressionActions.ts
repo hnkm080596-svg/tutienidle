@@ -2,7 +2,6 @@ import { useGameManager, useStateVersion } from './useGameState'
 import { usePlayerStore } from '../stores/player'
 import type { MainStatKey } from '../core/stats/StatTypes'
 import type { ElementType } from '../core/element/ElementType'
-import type { SpellPathRoute } from '../core/phap-tu/PhapTuState'
 
 /**
  * Generic progression actions (attributes, nodes, spell-path selection,
@@ -48,15 +47,10 @@ export function useProgressionActions() {
     // Node level (plan sec.6.2) - nang node da linh ngo len +1 cap.
     upgradeNode: (nodeId: string) => withBump(gameManager.progressionOps.upgradeNode(nodeId, player.$state)),
 
-    // Phap Tu Reimagined (Task 16) - atomic element+route commit at the
-    // element root (INV-13); the blocking modal only collects input.
-    selectSpellPathElement: (element: ElementType, route: SpellPathRoute) =>
-      withBump(gameManager.progressionOps.selectSpellPathElement(element, route, player.$state)),
-
-    // Route respec (spec P3) - out-of-combat only (op enforces), resets
-    // old-route nodes and refunds floor(actualPaid x 0.75).
-    switchSpellPathRoute: (route: SpellPathRoute) =>
-      withBump(gameManager.progressionOps.switchRoute(route, player.$state)),
+    // Phap Tu Reimagine (spec D5) -- element-only commit at the element
+    // root; routes are retired, no pick modal.
+    selectSpellPathElement: (element: ElementType) =>
+      withBump(gameManager.progressionOps.selectSpellPathElement(element, player.$state)),
 
     // Reset development mot nhanh (plan sec.6.10) - hoan Cam Ngo da tieu;
     // ngoai combat only (op tu reject trong tran), tra false khi bi tu choi.

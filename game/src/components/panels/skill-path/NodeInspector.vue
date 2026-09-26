@@ -4,7 +4,7 @@
 // mua/nang cap. Node nhieu cap hien thi `Cap x/max`, Power nhan moi cap
 // + tong dang nhan, chi phi cap ke; nut "Linh Ngo" o level 0, "Nang
 // Cap" tu level 1, trang thai "Toi da" khi dat maxLevel.
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -19,14 +19,11 @@ import {
   hasPrerequisite,
   canUpgradeNode,
   isNodeElementActive,
-  isNodeRouteActive,
   nodeWayApplies,
 } from '@/core/progression/NodeSystem'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '@/data/progression/PhapTuNodes.builders'
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
-import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { REALMS } from '@/data/realms/realm'
-import type { SpellPathRoute } from '@/core/phap-tu/PhapTuState'
 import type { NodePrerequisite, ProgressionNode } from '@/core/progression/ProgressionNode'
 
 const { t } = useI18n()
@@ -45,15 +42,12 @@ const { stateVersion } = useStateVersion()
 const { purchaseNode, upgradeNode, selectSpellPathElement } = useProgressionActions()
 
 const ELEMENT_ROOT_ID_SET = new Set<string>(Object.values(PHAP_TU_ELEMENT_ROOT_IDS))
-const SPELL_PATH_ROUTE_IDS: readonly SpellPathRoute[] = ['dot', 'no']
 
-// Task 16 -- element roots are NOT purchasable through purchaseNode()
-// (the op rejects them): clicking one opens the blocking route pick,
-// and the atomic selectSpellPathElement() transaction commits
-// element+route together (INV-13 -- no element-without-route state).
+// Phap Tu Reimagine (spec D5) -- element roots are NOT purchasable
+// through purchaseNode() (the op rejects them): clicking one commits
+// the element directly via selectSpellPathElement() -- routes are
+// retired, no pick modal.
 const isElementRoot = computed(() => props.node !== null && ELEMENT_ROOT_ID_SET.has(props.node.id))
-
-const routePickOpen = ref(false)
 
 // Level hien tai / max / cost cap ke cua node dang chon.
 const level = computed(() => {
@@ -157,18 +151,12 @@ const lockedReasons = computed(() => {
 
   const reasons: string[] = []
 
-  // Task 16 -- element/route membership gates (isNodeElementActive /
-  // isNodeRouteActive) are not prerequisites, so hasPrerequisite()
-  // cannot explain them; surface the real lock reason here.
+  // Phap Tu Reimagine -- element membership (isNodeElementActive) is
+  // not a prerequisite, so hasPrerequisite() cannot explain it;
+  // surface the real lock reason here. Route membership is retired.
   if (!isNodeElementActive(player.$state, props.node) && props.node.elementTag) {
     reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.elementMismatch', {
       element: ELEMENT_LABELS[props.node.elementTag],
-    }))
-  }
-
-  if (!isNodeRouteActive(player.$state, props.node) && props.node.routeTag) {
-    reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.routeMismatch', {
-      route: t(`panels.nodeTree.routes.${props.node.routeTag}`),
     }))
   }
 
@@ -220,30 +208,18 @@ function onPurchase() {
     return
   }
 
-  // Element root -> the blocking route pick collects the second half of
-  // the atomic commit (spec 3.3: "blocking choice, no dismiss").
+  const node = props.node
+
+  // Element root -> element-only commit (spec D5); purchaseNode() does
+  // not accept roots.
   if (isElementRoot.value) {
-    routePickOpen.value = true
+    if (node.elementTag && selectSpellPathElement(node.elementTag)) {
+      emit('unlocked', node)
+    }
     return
   }
-
-  const node = props.node
 
   if (purchaseNode(node.id)) {
-    emit('unlocked', node)
-  }
-}
-
-function onRoutePick(route: SpellPathRoute) {
-  const node = props.node
-
-  routePickOpen.value = false
-
-  if (!node?.elementTag) {
-    return
-  }
-
-  if (selectSpellPathElement(node.elementTag, route)) {
     emit('unlocked', node)
   }
 }
@@ -340,32 +316,6 @@ function onUpgrade() {
       </div>
     </template>
 
-    <!-- Blocking route pick (spec §3.3 + plan Task 16: "blocking
-         choice, no dismiss") — element+route commit atomically via
-         selectSpellPathElement; the modal only collects input, it is not
-         the guarantee. No cancel: the element root was clicked
-         deliberately, the route half is mandatory. -->
-    <Teleport to="body">
-      <div v-if="routePickOpen" class="route-pick" :style="{ zIndex: OVERLAY_LAYERS.modal }">
-        <section class="route-pick__card" role="alertdialog" aria-modal="true">
-          <h3 class="route-pick__title">{{ t('panels.skillPath.nodeInspector.routePick.title') }}</h3>
-          <p class="route-pick__hint">{{ t('panels.skillPath.nodeInspector.routePick.hint') }}</p>
-
-          <div class="route-pick__options">
-            <GameButton
-              v-for="route in SPELL_PATH_ROUTE_IDS"
-              :key="route"
-              class="route-pick__option"
-              variant="ghost"
-              @click="onRoutePick(route)"
-            >
-              <span class="route-pick__option-name">{{ t(`panels.nodeTree.routes.${route}`) }}</span>
-              <span class="route-pick__option-desc">{{ t(`panels.skillPath.nodeInspector.routePick.${route}Desc`) }}</span>
-            </GameButton>
-          </div>
-        </section>
-      </div>
-    </Teleport>
   </div>
 </template>
 
@@ -459,65 +409,4 @@ function onUpgrade() {
   cursor: not-allowed;
 }
 
-/* Blocking route pick -- no dismiss affordance by design (spec 3.3);
-   the card itself is a plain overlay since ConfirmModal always renders
-   a cancel action. */
-.route-pick {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, #000 62%, transparent);
-}
-
-.route-pick__card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: min(420px, 88vw);
-  padding: 20px 24px;
-  background: var(--ink-800);
-  border: 1px solid var(--chrome-500);
-  border-radius: var(--radius-md);
-}
-
-.route-pick__title {
-  margin: 0;
-  font-size: var(--text-lg);
-  font-weight: 700;
-  color: var(--chrome-100);
-}
-
-.route-pick__hint {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-}
-
-.route-pick__options {
-  display: flex;
-  gap: 10px;
-}
-
-.route-pick__option {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px;
-  text-align: left;
-}
-
-.route-pick__option-name {
-  font-size: var(--text-md);
-  font-weight: 700;
-  color: var(--gold-700);
-}
-
-.route-pick__option-desc {
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-  line-height: 1.4;
-}
 </style>

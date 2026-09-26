@@ -54,7 +54,6 @@ function mockGameManager(overrides: {
       purchaseNode: () => false,
       upgradeNode: () => false,
       selectSpellPathElement: () => false,
-      switchRoute: () => 0,
       devResetBranch: () => 0,
       allocateAttributePoint: () => false,
     } as unknown as GameManager['progressionOps'],

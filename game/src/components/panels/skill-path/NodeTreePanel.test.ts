@@ -36,7 +36,6 @@ function mockGameManager(nodes: ProgressionNode[]): Partial<GameManager> {
     } as unknown as GameManager['nodeRegistry'],
     getTurnBattle: () => null,
     progressionOps: {
-      switchRoute: () => 0,
     } as unknown as GameManager['progressionOps'],
   }
 }

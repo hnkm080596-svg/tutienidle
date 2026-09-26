@@ -18,7 +18,6 @@ import {
   PLAYER_HUD_THE_ARMED_COLOR,
   PLAYER_HUD_WARD_COLOR,
   PLAYER_HUD_LABEL_COLOR,
-  PLAYER_HUD_LABEL_COLOR_INT,
   PLAYER_HUD_STROKE_COLOR,
   ENEMY_HP_BAR_HEIGHT,
 } from './combatConstants'
@@ -34,6 +33,10 @@ const HUD_LABEL_FONT_SIZE = '12px'
 const HUD_SUB_LABEL_FONT_SIZE = '10px'
 const LABEL_ABOVE_BAR = 4
 
+/** Phap Tu Reimagine -- one pip per The point (HUD_DOT_RADIUS ~1.5x the
+ * 4px sub-bar height so the row reads clearly). */
+const THE_DOT_RADIUS = 3
+
 interface HudRectGroup {
   background: Phaser.GameObjects.Rectangle
   fill: Phaser.GameObjects.Rectangle
@@ -43,11 +46,18 @@ interface HudRectGroup {
   visible: boolean
 }
 
-// Phap Tu Reimagined (Task 16) — the The bar is the one group carrying
-// a threshold marker (a tick at the fixed 100 empowerment point vs a
-// truong_the-raised cap) so it gets an optional marker member.
+// Phap Tu Reimagine (spec D17, design sec.86) -- the The bar is the one
+// group rendered as a DOT ROW (cap == threshold == 5, one dot per point)
+// plus a PHAP THE text indicator that lights once the pool is full and
+// the basic carries an empowerment variant.
 interface TheBarGroup extends HudRectGroup {
-  marker: Phaser.GameObjects.Rectangle
+  dots: Phaser.GameObjects.Arc[]
+
+  /** How many dots the last updateThe() laid out -- resize relayout key. */
+  dotMax: number
+
+  /** 'PHAP THE' -- lit only while the bridge reports phapTheActive. */
+  phapTheLabel: Phaser.GameObjects.Text
 }
 
 export class PlayerHudLayer {
@@ -124,8 +134,12 @@ export class PlayerHudLayer {
     return this.theGroup.fill
   }
 
-  get theMarker(): Phaser.GameObjects.Rectangle {
-    return this.theGroup.marker
+  get theDots(): readonly Phaser.GameObjects.Arc[] {
+    return this.theGroup.dots
+  }
+
+  get thePhapTheLabel(): Phaser.GameObjects.Text {
+    return this.theGroup.phapTheLabel
   }
 
   get hpWidth(): number {
@@ -157,6 +171,7 @@ export class PlayerHudLayer {
     this.positionGroup(this.kiemGroup, leftX, sub2Y, HUD_SUB_WIDTH, HUD_SUB_HEIGHT)
     this.positionGroup(this.theGroup, leftX, sub2Y, HUD_SUB_WIDTH, HUD_SUB_HEIGHT)
     this.positionGroup(this.wardGroup, leftX, sub3Y, HUD_SUB_WIDTH, HUD_SUB_HEIGHT)
+    this.layoutTheExtras()
   }
 
   updateHp(current: number, max: number): void {
@@ -172,34 +187,65 @@ export class PlayerHudLayer {
   }
 
   /**
-   * The bar (Task 16) — fill vs the FIXED threshold marker at 100 (a
-   * raised cap via truong_the leaves the marker inside the bar);
-   * `armed` = the phap-tuong unlock node is owned, so at threshold the
-   * ult resolves empowered (label marks the armed state, fill brightens
-   * once the pool reaches the marker).
+   * The bar (Phap Tu Reimagine, design sec.86) -- a DOT ROW of `max`
+   * pips filled left-to-right (cap == threshold == 5 -- the fill rect
+   * stays parked), plus the PHAP THE indicator when `phapTheActive`
+   * (element basic carries an empowerment variant AND the pool is full;
+   * the empowered swap consumes nothing).
    */
-  updateThe(current: number, max: number, threshold: number, armed: boolean): void {
+  updateThe(current: number, max: number, phapTheActive: boolean): void {
     const hasPool = Number.isFinite(max) && max > 0
 
     this.setGroupVisible(this.theGroup, hasPool)
-    this.theGroup.marker.setVisible(hasPool && max > threshold)
+    // The reimagined readout is pips, not a fill -- the fill layer is
+    // parked permanently (background survives as the quiet track line).
+    this.theGroup.fill.setVisible(false)
 
     if (!hasPool) {
+      this.theGroup.dotMax = 0
+      this.theGroup.phapTheLabel.setVisible(false)
+      for (const dot of this.theGroup.dots) {
+        dot.setVisible(false)
+      }
       return
     }
 
-    const ratio = Math.min(1, Math.max(0, current / max))
+    const dotMax = Math.max(0, Math.round(max))
 
-    this.theGroup.fill.scaleX = ratio
-    this.theGroup.fill.setFillStyle(armed && current >= threshold ? PLAYER_HUD_THE_ARMED_COLOR : PLAYER_HUD_THE_COLOR)
+    if (dotMax !== this.theGroup.dotMax) {
+      this.theGroup.dotMax = dotMax
 
-    // Marker sits at threshold/max along the bar — it only leaves the
-    // bar's right edge when the cap is raised past 100.
-    const markerRatio = Math.min(1, threshold / max)
+      while (this.theGroup.dots.length < dotMax) {
+        this.theGroup.dots.push(
+          this.scene.add
+            .circle(0, 0, THE_DOT_RADIUS, PLAYER_HUD_BG_COLOR)
+            .setStrokeStyle(1, PLAYER_HUD_THE_COLOR)
+            .setDepth(DEPTH_OVERLAY_UI + 2),
+        )
+      }
 
-    this.theGroup.marker.setPosition(this.theGroup.background.x + this.theGroup.width * markerRatio, this.theGroup.background.y)
+      this.layoutTheExtras()
+    }
 
-    this.theGroup.label.text = `Thế ${formatNumber(Math.floor(current))} / ${formatNumber(Math.max(0, Math.round(max)))}${armed ? ' ◆' : ''}`
+    const filled = Math.min(dotMax, Math.max(0, Math.floor(current)))
+
+    this.theGroup.dots.forEach((dot, index) => {
+      const isFilled = index < filled
+
+      dot.setVisible(index < dotMax)
+      dot.setFillStyle(
+        isFilled
+          ? (phapTheActive ? PLAYER_HUD_THE_ARMED_COLOR : PLAYER_HUD_THE_COLOR)
+          : PLAYER_HUD_BG_COLOR,
+      )
+      dot.setStrokeStyle(
+        1,
+        phapTheActive ? PLAYER_HUD_THE_ARMED_COLOR : PLAYER_HUD_THE_COLOR,
+      )
+    })
+
+    this.theGroup.label.text = `Thế ${formatNumber(filled)} / ${formatNumber(dotMax)}`
+    this.theGroup.phapTheLabel.setVisible(phapTheActive)
   }
 
   // External ward pool — its own layer label; max is the holder's maxHp
@@ -220,7 +266,11 @@ export class PlayerHudLayer {
       this.setGroupVisible(group, visible && (group === this.hpGroup || group.visible))
     }
 
-    this.theGroup.marker.setVisible(visible && this.theGroup.marker.visible)
+    this.theGroup.fill.setVisible(false)
+    this.theGroup.phapTheLabel.setVisible(visible && this.theGroup.phapTheLabel.visible)
+    for (const dot of this.theGroup.dots) {
+      dot.setVisible(visible && dot.visible)
+    }
   }
 
   destroy(): void {
@@ -236,7 +286,11 @@ export class PlayerHudLayer {
       group.label.destroy()
     }
 
-    this.theGroup.marker.destroy()
+    for (const dot of this.theGroup.dots) {
+      dot.destroy()
+    }
+
+    this.theGroup.phapTheLabel.destroy()
   }
 
   private createGroup(
@@ -281,17 +335,42 @@ export class PlayerHudLayer {
     return group
   }
 
-  /** The bar carries a threshold marker the other groups don't need. */
+  /** The bar carries the dot row + PHAP THE label the other groups
+   * don't need (dots are created lazily in updateThe once `max` is
+   * known). */
   private createTheGroup(width: number, height: number, fontSize: string): TheBarGroup {
     const group = this.createGroup(width, height, fontSize, false, PLAYER_HUD_THE_COLOR) as TheBarGroup
 
-    group.marker = this.scene.add
-      .rectangle(0, 0, 2, height + 4, PLAYER_HUD_LABEL_COLOR_INT)
-      .setOrigin(0.5, 0.5)
+    group.dots = []
+    group.dotMax = 0
+    group.fill.setVisible(false)
+    group.phapTheLabel = this.scene.add
+      .text(0, 0, 'PHÁP THẾ', {
+        fontSize,
+        fontStyle: 'bold',
+        color: `#${PLAYER_HUD_THE_ARMED_COLOR.toString(16).padStart(6, '0')}`,
+      })
+      .setOrigin(0, 0.5)
       .setDepth(DEPTH_OVERLAY_UI + 3)
       .setVisible(false)
 
     return group
+  }
+
+  /** Dot spacing + the PHAP THE label hug the group's live geometry --
+   * called from layout() (resize) and updateThe() (dot count change). */
+  private layoutTheExtras(): void {
+    const group = this.theGroup
+    const spacing = group.dotMax > 0 ? group.width / group.dotMax : 0
+
+    group.dots.forEach((dot, index) => {
+      dot.setPosition(group.background.x + spacing * (index + 0.5), group.background.y)
+    })
+
+    group.phapTheLabel.setPosition(
+      group.background.x + group.width + HUD_GAP,
+      group.background.y,
+    )
   }
 
   private positionGroup(group: HudRectGroup, x: number, barY: number, width: number, height: number): void {

@@ -85,10 +85,10 @@ const showTree = computed(
 )
 
 // ---- Nhánh spell (Hành -> Node Tree) ----
-// Task 16: element tabs always visible for spell — the element-root
-// pick happens IN the tree (element+route atomic commit), so the tree
-// must render before any elemental skill is learned. Default tab = the
-// committed element once the element axis resolves one.
+// Phap Tu Reimagine: element tabs always visible for spell -- the
+// element-root pick happens IN the tree (element-only commit), so the
+// tree must render before any elemental skill is learned. Default tab
+// = the committed element once the element axis resolves one.
 const committedElement = computed(() => getActiveElement(player))
 
 const selectedBranch = ref<ElementType>(committedElement.value ?? 'fire')
@@ -231,10 +231,10 @@ function skillElement(skill: Skill): ElementType | null {
   return null
 }
 
-// Phap Tu Reimagined (Task 16) — cây Pháp Tu luôn hiển thị: element
-// root được chọn TRONG cây (element+route atomic commit), nên không
-// thể gate theo skill đang chọn (trước khi commit, player chưa có
-// skill elemental nào). Kiem Tu giữ nguyên — route chốt lúc chọn path.
+// Phap Tu Reimagine -- the Phap Tu tree always renders: the element
+// root commits IN the tree (element-only commit), so the gate cannot
+// be the selected skill (pre-commit the player owns no elemental
+// skill). Kiem Tu unchanged -- route locked at path pick.
 
 // M-QI-05 (D7) - the center column has an explicit user-facing mode:
 // a visible Tree/Detail tab renders whenever showTree is true. A

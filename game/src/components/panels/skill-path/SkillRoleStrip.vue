@@ -195,10 +195,15 @@ function specTooltip(skill: Skill, spec: SkillSpecialization) {
         </template>
 
         <template v-else>
+          <!-- Phap Tu Reimagine (D17) -- the special card's tooltip must
+               carry the authored Trang lines (cost %MaxLL + duration +
+               effect + the Ho The consequence); the Skill description is
+               the authored channel, previously dropped here. -->
           <SlotView
             class="skill-role__icon"
             :item="roleCards[key].skill ?? null"
             :label="roleCards[key].name ?? ''"
+            :description="roleCards[key].skill?.description"
           />
           <span v-if="roleCards[key].skill" class="skill-role__level">
             Lv. {{ roleCards[key].skill!.level }}/{{ roleCards[key].skill!.maxLevel }}

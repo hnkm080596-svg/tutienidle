@@ -17,6 +17,7 @@ import { spawnEnemySpawnVfx } from '@/game/support/EnemySpawnVfx'
 import { getCombatVfxPreset } from '@/data/vfx/CombatVfxPresets'
 import { getStatusVfxPreset } from '@/data/vfx/StatusVfxPresets'
 import type { BodyAnchorId } from '@/presentation/geometry/combatBodyAnchors'
+import { readHoThe } from '@/presentation/bridges/hoTheBridge'
 import {
   DEPTH_OVERLAY_UI,
   DEPTH_UPRIGHT_VFX,
@@ -101,8 +102,22 @@ export class CombatVfxSpawner {
         stacks: entry.stacks,
         remainingTime: entry.remainingTime,
         permanent: entry.permanent,
+        // Phap Tu Reimagine (F13) -- player-owned statuses carry the live
+        // Ho The DR line (cap * currentMp/maxMp read at show time).
+        extraLine: entry.targetId === PLAYER_ID ? this.hoTheLine() : undefined,
       },
     )
+  }
+
+  /** F13 -- live Ho The DR readout; null/0 DR hides the row. */
+  private hoTheLine(): string | undefined {
+    const ho = this.scene.registry ? readHoThe(this.scene.registry) : null
+
+    if (!ho || ho.dr <= 0) {
+      return undefined
+    }
+
+    return `Hộ Thể -${Math.round(ho.dr * 100)}%`
   }
 
   /**

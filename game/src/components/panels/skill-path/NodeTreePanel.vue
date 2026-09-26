@@ -28,16 +28,13 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNodeMaxLevel, getEffectiveNodeMaxLevel, getNextLevelCost, hasPrerequisite, nodeWayApplies } from '@/core/progression/NodeSystem'
-import { getActiveRoute } from '@/core/player/CultivationPathSystem'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import { HIDDEN_BRANCH_TAGS, viewBranchTags } from '@/core/progression/NodeBranchViews'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import SkillConnections from './SkillConnections.vue'
 import type { SkillConnectionEntry, SkillConnectionRect } from './SkillConnections.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
-import SysTag from '@/components/common/system/SysTag.vue'
 import type { ElementType } from '@/core/element/ElementType'
-import type { SpellPathRoute } from '@/core/phap-tu/PhapTuState'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 
 const props = defineProps<{
@@ -58,7 +55,7 @@ const { t } = useI18n()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
-const { switchSpellPathRoute, respecNodeTree } = useProgressionActions()
+const { respecNodeTree } = useProgressionActions()
 
 function branchLabel(branchTag: string | undefined): string {
   if (!branchTag) {
@@ -88,27 +85,6 @@ function branchColor(branchTag: string | undefined): string {
   return ELEMENT_COLOR_VARS[branchTag as ElementType] ?? 'var(--paper-text)'
 }
 
-// Phap Tu Reimagined (Task 16) -- route respec toggle (P3). A route is a
-// stance, not a node: the toggle lives in the tree header and only
-// shows for normal Phap Tu once the atomic element+route commit exists.
-const SPELL_PATH_ROUTE_IDS: readonly SpellPathRoute[] = ['dot', 'no']
-
-// M-UI-SYSTEM - route tags become SysTag chips; glyph shape + label text
-// carry the route (hue only reinforces, spec 7.3).
-const NODE_ROUTE_TONE: Record<SpellPathRoute, 'warn' | 'violet'> = {
-  dot: 'warn',
-  no: 'violet',
-}
-
-const spellPathRoute = computed<SpellPathRoute | null>(() => {
-  stateVersion.value
-
-  // P1 - the canonical route read carries the way gate: the axis is
-  // declared on spell_pathway and gated by 'spell.elemental_casting', so a
-  // collapsed ('spell','hidden_spell_pathway') player resolves nothing.
-  return getActiveRoute(player) ?? null
-})
-
 const inBattle = computed(() => {
   stateVersion.value
 
@@ -117,39 +93,6 @@ const inBattle = computed(() => {
   return battle !== null && isBattleInProgress(battle.state)
 })
 
-const pendingRoute = ref<SpellPathRoute | null>(null)
-
-const routePreview = computed(() => {
-  stateVersion.value
-
-  if (pendingRoute.value === null) {
-    return null
-  }
-
-  return gameManager.progressionOps.previewRouteSwitch(player.$state)
-})
-
-function onRouteClick(route: SpellPathRoute) {
-  if (route === spellPathRoute.value || inBattle.value) {
-    return
-  }
-
-  pendingRoute.value = route
-}
-
-function confirmRouteSwitch() {
-  const route = pendingRoute.value
-
-  pendingRoute.value = null
-
-  if (route !== null) {
-    switchSpellPathRoute(route)
-  }
-}
-
-function cancelRouteSwitch() {
-  pendingRoute.value = null
-}
 interface TreeEntry {
   node: ProgressionNode
   purchased: boolean
@@ -301,9 +244,9 @@ const branches = computed(() => {
 
 // M-F-RESPEC (ruling S14) - FREE Beta respec: whole-tree node reset at
 // 100% actually-paid Insight, out of combat only (the op rejects during
-// battle; the button mirrors the route options' disabled state). The
-// preview goes through the ops layer so commit-marker exemptions
-// (Phap Tu element roots) match the real transaction exactly.
+// battle; the button mirrors that gate). The preview goes through the
+// ops layer so commit-marker exemptions (Phap Tu element roots) match
+// the real transaction exactly.
 const pendingRespec = ref(false)
 
 const respecPreview = computed(() => {
@@ -365,8 +308,6 @@ function clawbackDetailText(clawback: GrantClawback | undefined): string {
 }
 
 const respecClawbackText = computed(() => clawbackDetailText(respecPreview.value?.clawback))
-
-const routeClawbackText = computed(() => clawbackDetailText(routePreview.value?.clawback))
 
 // Any purchased node in the rendered view makes respec meaningful; the
 // branch computation already resolved ownership per entry.
@@ -664,22 +605,6 @@ onBeforeUnmount(() => {
     <div class="node-tree__header">
       <span class="node-tree__title sys-eyebrow">{{ t('panels.nodeTree.title') }}</span>
 
-      <!-- Route respec toggle (P3) — Phap Tu only, once element+route
-           committed; switching refunds 75% of old-route investment. -->
-      <div v-if="spellPathRoute" class="node-tree__route" role="group" :aria-label="t('panels.nodeTree.routes.aria')">
-        <button
-          v-for="route in SPELL_PATH_ROUTE_IDS"
-          :key="route"
-          type="button"
-          class="node-tree__route-option"
-          :class="{ 'is-active': route === spellPathRoute }"
-          :disabled="inBattle"
-          @click="onRouteClick(route)"
-        >
-          {{ t(`panels.nodeTree.routes.${route}`) }}
-        </button>
-      </div>
-
       <!-- M-F-RESPEC (S14) - whole-tree respec entry: FREE Beta reset,
            confirm dialog shows the exact refund + reset count first. -->
       <button
@@ -741,9 +666,6 @@ onBeforeUnmount(() => {
                   <!-- Badge cấp cho node nhiều cấp (plan §6.2): `3/10`. -->
                   <span v-if="entry.maxLevel > 1" class="node-tree__node-level">{{ entry.level }}/{{ entry.maxLevel }}</span>
 
-                  <!-- Badge hướng Dot/No — node routeTag chỉ mua/hiệu
-                       lực khi route đang chọn khớp (query-time gate). -->
-                  <SysTag v-if="entry.node.routeTag" :tone="NODE_ROUTE_TONE[entry.node.routeTag]" class="node-tree__node-route">{{ t(`panels.nodeTree.routes.${entry.node.routeTag}`) }}</SysTag>
                 </span>
                 <span v-if="entry.node.description" class="node-tree__node-desc">{{ entry.node.description }}</span>
                 <span class="node-tree__node-cost">
@@ -755,24 +677,6 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </div>
-
-    <!-- Route respec confirm — preview shows actual-paid refund math
-         ("regain X, lose Y", spec §11). -->
-    <ConfirmModal
-      v-if="pendingRoute !== null && routePreview !== null"
-      :open="true"
-      :title="t('panels.nodeTree.routeSwitch.title')"
-      :message="t('panels.nodeTree.routeSwitch.body', {
-        route: t(`panels.nodeTree.routes.${pendingRoute}`),
-        regain: routePreview.refund,
-        lose: routePreview.forfeited,
-        clawback: routeClawbackText,
-      })"
-      :confirm-label="t('panels.nodeTree.routeSwitch.confirm')"
-      danger
-      @confirm="confirmRouteSwitch"
-      @cancel="cancelRouteSwitch"
-    />
 
     <!-- M-F-RESPEC confirm - the ops preview reports the exact Insight
          refund and how many nodes (targets + cascade) reset to 0. -->
@@ -812,36 +716,6 @@ onBeforeUnmount(() => {
   align-items: baseline;
   gap: 10px;
   font-family: var(--font-body);
-}
-
-.node-tree__route {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.node-tree__route-option {
-  min-height: 22px;
-  padding: 1px 10px;
-  background: var(--sys-bg-0, var(--ink-800));
-  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
-  border-radius: 999px;
-  color: var(--sys-text-muted, var(--text-secondary));
-  font-family: var(--sys-font-display, var(--font-body));
-  font-size: var(--text-xs);
-  line-height: 1;
-  cursor: pointer;
-}
-
-.node-tree__route-option.is-active {
-  border-color: var(--sys-cyan, var(--gold-700));
-  color: var(--sys-cyan, var(--gold-700));
-  font-weight: 600;
-}
-
-.node-tree__route-option:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 .node-tree__respec {
@@ -1059,14 +933,6 @@ onBeforeUnmount(() => {
   font-size: var(--text-xs);
   line-height: 1.4;
   color: var(--chrome-100);
-}
-
-/* Route badge - node routeTag (Phap Tu Reimagined Task 16). M-UI-SYSTEM:
-   the chip is a SysTag; the .sys-tag anchor re-maps its border line so it
-   stays quiet on the node card. */
-.node-tree__node-route.sys-tag {
-  --sys-tag-line: var(--sys-line-soft, color-mix(in srgb, var(--gold-700) 60%, transparent));
-  font-size: var(--text-xs);
 }
 
 .node-tree__node-desc {
