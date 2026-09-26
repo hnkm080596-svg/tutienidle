@@ -11,7 +11,7 @@
   "base": "master",
   "head": "038706f7",
   "state": {
-   "productStateId": "8ecfcb37d2ec7c9c31961550fb8f2973e8ea4e7abddb8700fb74436a8061c027",
+   "productStateId": "5fa4ba2a9a6062df8bc7402898db7ca74dac0722367f8a02c86aa3323c544952",
    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -3995,6 +3995,192 @@
    "siblingFindingIds": [],
    "rejectionReason": "COSMETIC -- comment-only indentation, zero behavior",
    "fixedInRevision": null
+  },
+  {
+   "state": {
+    "productStateId": "5fa4ba2a9a6062df8bc7402898db7ca74dac0722367f8a02c86aa3323c544952",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [
+    "REV-PTR-CLO-8"
+   ],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-INTE"
+   ],
+   "exception": null,
+   "duplicateOf": null,
+   "verificationEvidenceIds": [
+    "EV-PTR-INTE"
+   ],
+   "pinEvidenceIds": [
+    "EV-PTR-INTE"
+   ],
+   "closedAt": "2026-09-27T01:14:00Z",
+   "closeReason": "FIXED",
+   "actionable": true,
+   "classification": "REAL_DEFECT",
+   "id": "F-PTR-66",
+   "title": "Nested landed gates double-fire orchestration hooks (empowered Thuy basic: minted per-hit gate + authored if-gate)",
+   "severity": "High",
+   "reachability": "PRODUCTION",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/core/skilldef/SkillExecutor.ts",
+     "symbolOrSection": ":269-276 vs SkillResolver.ts:1272-1277 + :1034-1049",
+     "revision": "b1f59d72",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-E INT (devin-797d9de269d44b76bf81d0e63bbca57c)",
+   "counterexample": "empowered Thuy basic onLanded -> authored `if target_hit_landed` -> entered/exited fired 2x per landed hit -> double runLandedHitProcs + double resolveTakenWindow (2x The-cost payment, 2x counter roll). Deterministic vitest repro (reviewer) + local pin test",
+   "expected": "n/a",
+   "actual": "n/a",
+   "status": "CLOSED",
+   "rootCause": "double hook fire on same hit ops",
+   "rootClass": "SPEC_UNDECIDED",
+   "repair": "SkillExecutor.runSteps branch case: nested gate over the same hit-op key (targetId + sorted hitOperationIds) runs ops without re-firing onLandedGateEntered/Exited -- only the outermost gate fires. Active-key set with try/finally cleanup + pin test SkillExecutor.nestedGate.test.ts (2/2) -- c6b33645",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "latent hazard recorded in lesson"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "rejectionReason": null,
+   "fixedInRevision": "c6b33645"
+  },
+  {
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-INTE"
+   ],
+   "exception": null,
+   "duplicateOf": "F-PTR-60",
+   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [],
+   "closedAt": "2026-09-27T01:14:00Z",
+   "closeReason": "REJECTED",
+   "actionable": false,
+   "classification": "NON_ACTIONABLE",
+   "id": "F-PTR-67",
+   "title": "emitGrants dedups subcastIndex>0 only, not commitsCast (queued follow-ups re-resolve at subcastIndex:0)",
+   "severity": "Low",
+   "reachability": "HYPOTHETICAL",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/core/skilldef/SkillExecutor.ts",
+     "symbolOrSection": ":686",
+     "revision": "b1f59d72",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-E INT (devin-797d9de269d44b76bf81d0e63bbca57c)",
+   "counterexample": "static analysis",
+   "expected": "n/a",
+   "actual": "n/a",
+   "status": "REJECTED_WITH_PROOF",
+   "rootCause": "duplicate",
+   "rootClass": "SPEC_UNDECIDED",
+   "repair": null,
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "latent hazard recorded in lesson"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "rejectionReason": "DUPLICATE of F-PTR-60 (AUT-E LOW-1) -- same commitsCast hole; fixed at 0b160fca on the post-pin state",
+   "fixedInRevision": null
+  },
+  {
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-INTE"
+   ],
+   "exception": null,
+   "duplicateOf": null,
+   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [],
+   "closedAt": "2026-09-27T01:14:00Z",
+   "closeReason": "REJECTED",
+   "actionable": false,
+   "classification": "NON_ACTIONABLE",
+   "id": "F-PTR-68",
+   "title": "validateSpellPathPersistedState does not check spellPath.element coherence with purchased element root",
+   "severity": "Low",
+   "reachability": "HYPOTHETICAL",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/data/progression/PhapTuPath.ts",
+     "symbolOrSection": ":161-205",
+     "revision": "b1f59d72",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-E INT (devin-797d9de269d44b76bf81d0e63bbca57c)",
+   "counterexample": "static analysis",
+   "expected": "n/a",
+   "actual": "n/a",
+   "status": "REJECTED_WITH_PROOF",
+   "rootCause": "crafted-save only",
+   "rootClass": "SPEC_UNDECIDED",
+   "repair": null,
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "latent hazard recorded in lesson"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "rejectionReason": "CRAFTED-SAVE ONLY -- no gameplay path produces an incoherent (element, purchased-root) pair: element is minted by the node purchase itself. Same class as prior crafted-save rejections this run (dual mutex roots, nodeLevels skip). Strict v87 equality seals the older-shape class",
+   "fixedInRevision": null
   }
  ],
  "evidence": [
@@ -4344,7 +4530,7 @@
     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
    },
-   "status": "CURRENT",
+   "status": "STALE",
    "kind": "EXECUTED_INTEGRATION",
    "producer": "devin-coordinator",
    "startedAt": "2026-09-27T00:48:00Z",
@@ -4363,6 +4549,41 @@
    "inputPaths": [
     "src/core/skilldef/SkillExecutor.ts",
     "src/core/battle/turn/TurnBattleSystem.ts"
+   ],
+   "invariantIds": [],
+   "limitations": [
+    "scoped vitest only"
+   ]
+  },
+  {
+   "id": "EV-PTR-INTE",
+   "state": {
+    "productStateId": "5fa4ba2a9a6062df8bc7402898db7ca74dac0722367f8a02c86aa3323c544952",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "status": "CURRENT",
+   "kind": "EXECUTED_INTEGRATION",
+   "producer": "devin-coordinator",
+   "startedAt": "2026-09-27T00:59:00Z",
+   "finishedAt": "2026-09-27T01:05:00Z",
+   "commandOrMethod": "fix @c6b33645; npx vitest run SkillExecutor.nestedGate.test.ts (2/2); npm run type-check (exit 0); npx vitest run skilldef+battle+game+player (2031 passed, 4 expected-fail)",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "records-inte.json",
+   "artifactHash": "66dfb28a9588e2f6789658135cbafe4168bfe65822517b34301befd80f390f5d",
+   "claims": [
+    "F-PTR-66 fixed @c6b33645 -- nested same-key gates fire hooks once",
+    "F-PTR-67 duplicate of F-PTR-60",
+    "F-PTR-68 crafted-save rejected"
+   ],
+   "inputEvidenceIds": [],
+   "inputPaths": [
+    "src/core/skilldef/SkillExecutor.ts",
+    "src/core/skilldef/SkillExecutor.testkit.ts",
+    "src/core/skilldef/SkillExecutor.nestedGate.test.ts"
    ],
    "invariantIds": [],
    "limitations": [
@@ -5058,7 +5279,7 @@
     "F-PTR-65"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PTR-CLO-7",
@@ -5089,6 +5310,74 @@
    ],
    "findingIds": [
     "F-PTR-60"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PTR-INT-E1",
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 6,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-797d9de269d44b76bf81d0e63bbca57c",
+   "contextId": "ctx-797d9de2",
+   "model": "swe-2",
+   "role": "clean-adversarial",
+   "inputBundleHash": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-26T23:49:00Z",
+   "sealedAt": "2026-09-27T00:56:00Z",
+   "previousPhaseReviewId": "REV-PTR-INT-D1",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-INTE"
+   ],
+   "findingIds": [
+    "F-PTR-66",
+    "F-PTR-67",
+    "F-PTR-68"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-PTR-CLO-8",
+   "state": {
+    "productStateId": "5fa4ba2a9a6062df8bc7402898db7ca74dac0722367f8a02c86aa3323c544952",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 6,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-coordinator",
+   "contextId": "ctx-coord",
+   "model": "swe-2",
+   "role": "closure",
+   "inputBundleHash": "5fa4ba2a9a6062df8bc7402898db7ca74dac0722367f8a02c86aa3323c544952",
+   "priorFindingsVisible": true,
+   "accessLimitations": [
+    "self-verified fix verification"
+   ],
+   "startedAt": "2026-09-27T01:00:00Z",
+   "sealedAt": "2026-09-27T01:12:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-INTE"
+   ],
+   "findingIds": [
+    "F-PTR-66"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -5823,6 +6112,41 @@
     "if percentOfMax ever becomes computed/dynamic, clamp Number.isFinite AND re-audit the scalars source"
    ],
    "capabilityDelta": "hazard recorded -- no behavior change"
+  },
+  {
+   "version": 1,
+   "supersedes": null,
+   "incidentEvidenceIds": [
+    "EV-PTR-INTE"
+   ],
+   "originatingRun": "phap-tu-reimagine-2026-09-26",
+   "missedInvariantIds": [],
+   "exclusions": [],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null,
+   "id": "L-PTR-INTE-GATE",
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PTR-66",
+    "F-PTR-67",
+    "F-PTR-68"
+   ],
+   "rootClass": "AUTHORITY_GAP",
+   "escapeReason": "gate mint sites (resolver per-hit wrapper + authored-if) never reconciled -- identical hit keys produced two independently-hook-firing gates; structure pin asserted the inner if exists so nobody removed it, but the runtime dedup was missing",
+   "applicability": [
+    "any gate-producing construct nested inside an already-gated context (onLanded + authored target_hit_landed, future nested intent gates)"
+   ],
+   "proposedProtection": [
+    "executor dedups same-key nested gates -- only the outermost fires orchestration hooks",
+    "pin test asserts single hook pair per landed hit (water-rider shape + 2-target AoE)"
+   ],
+   "capabilityDelta": "nested landed gates collapse to one hook bracket per hit"
   }
  ],
  "messages": [],
@@ -6050,6 +6374,22 @@
    "payloadPath": "events/0014.json",
    "payloadHash": "1270e367927d061bb02af0c8d2c2dd5ebe64d80080be0ea34357fe3aa8b9ba09",
    "eventHash": "fd3e99bc54fd307b120d16b00e4aa11547355be1ff98b5dda63fbd69a542e731"
+  },
+  {
+   "seq": 15,
+   "at": "2026-09-26T23:00:19.591Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-1021454",
+   "state": {
+    "productStateId": "5fa4ba2a9a6062df8bc7402898db7ca74dac0722367f8a02c86aa3323c544952",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "fd3e99bc54fd307b120d16b00e4aa11547355be1ff98b5dda63fbd69a542e731",
+   "payloadPath": "events/0015.json",
+   "payloadHash": "b9f14de40289e53301702b69e25439787af5ac2f188c26737a47b3ea35a15821",
+   "eventHash": "4694b361e549cc040db311ca6ed97cd5ccb505f44d0a800d9cd0baf014312266"
   }
  ]
 }
