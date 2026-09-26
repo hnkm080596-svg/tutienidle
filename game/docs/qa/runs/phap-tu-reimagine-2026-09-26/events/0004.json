@@ -1,0 +1,22 @@
+{
+  "applied": [
+    "review:REV-PTR-COR-A1",
+    "review:REV-PTR-AUT-A1",
+    "review:REV-PTR-INT-A1",
+    "finding:F-PTR-01",
+    "finding:F-PTR-02",
+    "finding:F-PTR-03",
+    "finding:F-PTR-04",
+    "finding:F-PTR-05",
+    "finding:F-PTR-06",
+    "finding:F-PTR-07",
+    "finding:F-PTR-08",
+    "finding:F-PTR-09",
+    "finding:F-PTR-10",
+    "finding:F-PTR-11",
+    "finding:F-PTR-12",
+    "finding:F-PTR-13",
+    "evidence:EV-PTR-FIX-A1",
+    "cycle:CYCLE-PTR-A1"
+  ]
+}
