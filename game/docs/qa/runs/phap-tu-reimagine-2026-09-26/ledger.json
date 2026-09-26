@@ -11,7 +11,7 @@
     "base": "",
     "head": "",
     "state": {
-      "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+      "productStateId": "a305ed3583896a70e967dcd09c9cc43ead1e648a6476f28de4b9dc2abc104225",
       "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
       "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -350,6 +350,259 @@
       "status": "FIXED",
       "fixedIn": "84267d47",
       "fix": "CombatScene.ts restored to HEAD (damage-only diff); rebuild pass reconstructed files as HEAD + non-comment changes; fix2 pass with exact helper semantics stripped only unrecorded tokens; asciiComments green."
+    },
+    {
+      "id": "F-PTR-16",
+      "title": "Moc window lane dead -- non-damaging basic never consumes landedConsequences",
+      "state": {
+        "productStateId": "pin-f9b965d6"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/skilldef/LegacySkillAdapter.ts",
+          "symbolOrSection": "non-damaging for_each_target lane"
+        },
+        {
+          "path": "src/data/skill/PhapTuSkills.ts",
+          "symbolOrSection": "PHAP_TU_WINDOW_LANDED_CONSEQUENCES.wood"
+        }
+      ],
+      "discoveredBy": "cleanB COR",
+      "counterexample": "doc_chuong authors zero damage (PoisonPath sec.1) so it routes to the for_each_target lane; landedConsequences' sole consumer sat inside adaptDamageOp -- the van_moc->sinh_co plant never fired.",
+      "expected": "spec D11/D15: Sinh Co marker plants on the first own-source landed Moc basic while van_moc is up.",
+      "status": "FIXED",
+      "fixedIn": "cleanB batch",
+      "fix": "Non-damaging enemy-scope lane appends def.landedConsequences per loop target (landing = application); pin test in LegacySkillAdapter.test.ts."
+    },
+    {
+      "id": "F-PTR-17",
+      "title": "Water empowered rider hardcodes han_tuc chance 0.5 (specialization authors 0.65/0.4)",
+      "state": {
+        "productStateId": "pin-f9b965d6"
+      },
+      "severity": "Low",
+      "classification": "SPEC_GAP",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/data/skill/PhapTuSkills.ts",
+          "symbolOrSection": "PHAP_TU_PHAP_THE_LANDED_CONSEQUENCES.water"
+        }
+      ],
+      "discoveredBy": "cleanB COR",
+      "counterexample": "Secondary hit applies han_tuc at fixed 0.5 while the specialization-modified primary applies 0.65 (Ngung Lien) or 0.4 (Dao Lan).",
+      "expected": "Reviewer expectation: rider mirrors the primary's effective chance.",
+      "status": "REJECTED",
+      "rejectionReason": "Spec D4 pins no chance for the secondary's ailment application -- the rider is a distinct authored op, and its 0.5 equals the BASE authored chance. Specialization parity would require a new resolve-time seam (writing the modified value into a static consequence table). Recorded as design observation; revisit if spec pins the rule."
+    },
+    {
+      "id": "F-PTR-18",
+      "title": "saveVersion.ts header omits the v85 changelog entry",
+      "state": {
+        "productStateId": "pin-f9b965d6"
+      },
+      "severity": "Nit",
+      "classification": "DOC_GAP",
+      "actionable": true,
+      "reachability": "N_A",
+      "locations": [
+        {
+          "path": "src/services/save/saveVersion.ts",
+          "symbolOrSection": "header comment"
+        }
+      ],
+      "discoveredBy": "cleanB COR",
+      "counterexample": "CURRENT_SAVE_VERSION = 85 has no changelog line; a retire-heavy pass leaves no trail in the file.",
+      "status": "FIXED",
+      "fixedIn": "cleanB batch",
+      "fix": "v85 changelog entry added (route slots / kiem_tu queue / the_tu_an ops pane retirements)."
+    },
+    {
+      "id": "F-PTR-19",
+      "title": "Bound marker pays one last periodic_growth tick after mid-action window loss",
+      "state": {
+        "productStateId": "pin-f9b965d6"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/buff2/BuffSystem.ts",
+          "symbolOrSection": "applyPeriodicGrowth / runPeriodicPhase-before-runPhaseB anchor order"
+        }
+      ],
+      "discoveredBy": "cleanB AUT",
+      "counterexample": "runPeriodicPhase ticks BEFORE runPhaseB's bound re-sweep; a marker whose bound window expired mid-action still feeds one periodic_growth grant (and consumes) in the gap.",
+      "status": "FIXED",
+      "fixedIn": "cleanB batch",
+      "fix": "applyPeriodicGrowth skips a marker whose boundToSourceBuffId source no longer holds the window (same liveness rule as the (5b) re-sweep)."
+    },
+    {
+      "id": "F-PTR-20",
+      "title": "Resolved TODO(coordinator) left in the metal window lane comment",
+      "state": {
+        "productStateId": "pin-f9b965d6"
+      },
+      "severity": "Nit",
+      "classification": "DOC_GAP",
+      "actionable": true,
+      "reachability": "N_A",
+      "locations": [
+        {
+          "path": "src/data/skill/PhapTuSkills.ts",
+          "symbolOrSection": "PHAP_TU_WINDOW_LANDED_CONSEQUENCES.metal"
+        }
+      ],
+      "discoveredBy": "cleanB AUT",
+      "status": "FIXED",
+      "fixedIn": "cleanB batch",
+      "fix": "TODO replaced with the verified ordering (penetrationFromStacks reads pre-apply stacks)."
+    },
+    {
+      "id": "F-PTR-21",
+      "title": "Dead routeProfileProvider stubs left in 2 test fixtures after route retirement",
+      "state": {
+        "productStateId": "pin-f9b965d6"
+      },
+      "severity": "Nit",
+      "classification": "DEAD_CODE",
+      "actionable": true,
+      "reachability": "TEST_ONLY",
+      "locations": [
+        {
+          "path": "src/core/game/GameManager.kiemTuState.test.ts",
+          "symbolOrSection": "fixture deps"
+        },
+        {
+          "path": "src/core/kiem-tu/invariants.test.ts",
+          "symbolOrSection": "fixture deps"
+        }
+      ],
+      "discoveredBy": "cleanB AUT",
+      "status": "FIXED",
+      "fixedIn": "cleanB batch",
+      "fix": "Unused throwing stubs removed from both fixtures."
+    },
+    {
+      "id": "F-PTR-22",
+      "title": "LegacySkillAdapter header still maps theGainOnCrit -> grants.theOnCrit (field retired)",
+      "state": {
+        "productStateId": "pin-f9b965d6"
+      },
+      "severity": "Nit",
+      "classification": "DOC_GAP",
+      "actionable": true,
+      "reachability": "N_A",
+      "locations": [
+        {
+          "path": "src/core/skilldef/LegacySkillAdapter.ts",
+          "symbolOrSection": "header field-map comment"
+        }
+      ],
+      "discoveredBy": "cleanB AUT",
+      "status": "FIXED",
+      "fixedIn": "cleanB batch",
+      "fix": "Retired theOnCrit mapping line removed from the header."
+    },
+    {
+      "id": "F-PTR-23",
+      "title": "grantTheFromCast duplicates the TheEconomy.grantThe clamp inline",
+      "state": {
+        "productStateId": "pin-f9b965d6"
+      },
+      "severity": "Nit",
+      "classification": "AUTHORITY_DUPLICATION",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "grantTheFromCast"
+        }
+      ],
+      "discoveredBy": "cleanB AUT",
+      "status": "FIXED",
+      "fixedIn": "cleanB batch",
+      "fix": "grantTheFromCast delegates to TheEconomy.grantThe (single cap authority)."
+    },
+    {
+      "id": "F-PTR-24",
+      "title": "Stale emitGrants doc comment claims follow-up executions mint The; engine-lane divergence is latent",
+      "state": {
+        "productStateId": "pin-f9b965d6"
+      },
+      "severity": "Nit",
+      "classification": "DOC_GAP + LATENT_DEFECT",
+      "actionable": true,
+      "reachability": "HARNESS_ONLY",
+      "locations": [
+        {
+          "path": "src/core/skilldef/SkillExecutor.ts",
+          "symbolOrSection": "emitGrants doc comment"
+        },
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "grantTheFromCast call sites"
+        }
+      ],
+      "discoveredBy": "cleanB INT",
+      "counterexample": "Doc said 'root plans AND follow-up executions' but subcastIndex>0 suppresses them. The engine lane (runtime===undefined) is NOT gated on executionCommitsCast -- latent divergence, reachable only in unit-test harnesses (production always mints a runtime).",
+      "status": "FIXED",
+      "fixedIn": "cleanB batch",
+      "fix": "Comment corrected to root-plan-only semantics. Engine-lane divergence recorded as latent (no live consumer)."
+    },
+    {
+      "id": "F-PTR-25",
+      "title": "hitOpIdsByTarget accumulates secondary-hit ops -- future target_hit_landed gate could open on a secondary's landing",
+      "state": {
+        "productStateId": "pin-f9b965d6"
+      },
+      "severity": "Low",
+      "classification": "LATENT_DEFECT",
+      "actionable": false,
+      "reachability": "UNREACHABLE_TODAY",
+      "locations": [
+        {
+          "path": "src/core/skilldef/SkillResolver.ts",
+          "symbolOrSection": "hitOpIdsByTarget accumulation"
+        }
+      ],
+      "discoveredBy": "cleanB INT",
+      "counterexample": "Per-target map records every hit op aimed at the target including secondaries minted by other lanes; a lane whose primary whiffed could still see target_hit_landed true if an earlier lane's secondary landed on it.",
+      "status": "REJECTED",
+      "rejectionReason": "Latent today: the only authored consumer (water rider) sits inside the oncePerCast dedup wrapper, so the dedup suppresses it first; adversarial execution tests confirm no live leak. Recorded as a lesson -- if a future lane authors target_hit_landed without the flag, scope the map to lane-primary hits."
+    },
+    {
+      "id": "F-PTR-26",
+      "title": "PHAP_TU_SPECIAL_COOLDOWN_TURNS(5) > PHAP_TRANG_TURNS(3) makes keep/refresh window semantics unreachable at authored numbers",
+      "state": {
+        "productStateId": "pin-f9b965d6"
+      },
+      "severity": "Low",
+      "classification": "SPEC_AUTHORED_OBSERVATION",
+      "actionable": false,
+      "reachability": "UNREACHABLE_TODAY",
+      "locations": [
+        {
+          "path": "src/data/buff/PhapTuTrangBuffs.ts",
+          "symbolOrSection": "window duration"
+        },
+        {
+          "path": "src/core/phap-tu/PhapTuPath.ts",
+          "symbolOrSection": "PHAP_TU_SPECIAL_COOLDOWN_TURNS"
+        }
+      ],
+      "discoveredBy": "cleanB INT",
+      "counterexample": "Window (3 turns) always expires before the special's cooldown (5 turns) permits recast; keep/refresh branch is dead at current authored numbers.",
+      "status": "REJECTED",
+      "rejectionReason": "Both numbers are spec-authored; the refresh path exists for retuning. No behavioral defect -- design observation only."
     }
   ],
   "evidence": [
@@ -368,6 +621,40 @@
         "npm run type-check",
         "npx vitest run tests/architecture/asciiComments.test.ts",
         "npm test"
+      ],
+      "status": "STALE"
+    },
+    {
+      "id": "EV-PTR-CLO-1",
+      "state": {
+        "productStateId": "d0529c93f7a1",
+        "contractId": "f6c338574232",
+        "attackModelId": "6741d10ad40a",
+        "environmentId": "e3ca14a6b377"
+      },
+      "kind2": "CLOSURE_VERIFY",
+      "at": "2026-09-26T19:05:52Z",
+      "summary": "closure reviewer on f9b965d6: type-check exit 0; 34 files/364 scoped tests pass; all 11 fixes verified (stamps present, ordering correct, dedup snapshot pins this-lane priors, guards/clamps/resweep/canonical-import all live).",
+      "commandRefs": [
+        "vue-tsc --build",
+        "npx vitest run SkillResolver PhapTu theBar CultivationPath BuffSystem CombatSystem GameManagerProgressionOps TechniqueGateAuthored asciiComments"
+      ],
+      "status": "STALE"
+    },
+    {
+      "id": "EV-PTR-FIX-B1",
+      "state": {
+        "productStateId": "a305ed358389",
+        "contractId": "f6c338574232",
+        "attackModelId": "6741d10ad40a",
+        "environmentId": "e3ca14a6b377"
+      },
+      "kind2": "VERIFICATION",
+      "at": "2026-09-26T19:45:00Z",
+      "summary": "cleanB fix batch: type-check clean; scoped vitest 400 pass (TurnBattleSystem+LegacySkillAdapter+resolver suites); new pin: non-damaging defs honor landedConsequences inside the per-target lane.",
+      "commandRefs": [
+        "npm run type-check",
+        "npx vitest run LegacySkillAdapter SkillResolver TurnBattleSystem BuffSystem"
       ]
     }
   ],
@@ -398,7 +685,8 @@
         "F-PTR-04",
         "F-PTR-05"
       ],
-      "notes": "type-check clean; 97 files/1300 tests pass over the dead-attach defects (tests pin constants, not seams)."
+      "notes": "type-check clean; 97 files/1300 tests pass over the dead-attach defects (tests pin constants, not seams).",
+      "status": "STALE"
     },
     {
       "id": "REV-PTR-AUT-A1",
@@ -425,7 +713,8 @@
         "F-PTR-05",
         "F-PTR-07"
       ],
-      "notes": "retired-symbol census clean; seam direction clean where implemented; defect class = engine primitives + data tables built but the declared attach seam never implemented."
+      "notes": "retired-symbol census clean; seam direction clean where implemented; defect class = engine primitives + data tables built but the declared attach seam never implemented.",
+      "status": "STALE"
     },
     {
       "id": "REV-PTR-INT-A1",
@@ -452,7 +741,112 @@
         "F-PTR-10",
         "F-PTR-11"
       ],
-      "notes": "adversarial pass; Criticals overlap COR/AUT attach defects; High = oncePerCast secondary-firing per AoE target."
+      "notes": "adversarial pass; Criticals overlap COR/AUT attach defects; High = oncePerCast secondary-firing per AoE target.",
+      "status": "STALE"
+    },
+    {
+      "id": "REV-PTR-CLO-1",
+      "state": {
+        "productStateId": "d0529c93f7a1",
+        "contractId": "f6c338574232",
+        "attackModelId": "6741d10ad40a",
+        "environmentId": "e3ca14a6b377"
+      },
+      "round": 1,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-3f5c340840444d2094c6c57e51a91f81",
+      "contextId": "sealed-child-3f5c340840444d2094c6c57e51a91f81",
+      "role": "closure",
+      "priorFindingsVisible": false,
+      "startedAt": "2026-09-26T18:59:00Z",
+      "sealedAt": "2026-09-26T19:05:52Z",
+      "verdict": "SEALED",
+      "fixesVerified": [
+        "F-PTR-01",
+        "F-PTR-02",
+        "F-PTR-03",
+        "F-PTR-04",
+        "F-PTR-05",
+        "F-PTR-06",
+        "F-PTR-07",
+        "F-PTR-08",
+        "F-PTR-09",
+        "F-PTR-10",
+        "F-PTR-11"
+      ],
+      "notes": "All 11 claimed fixes verified present + functional on f9b965d6; scoped vitest 34 files/364 tests pass; no new defect introduced by the batch.",
+      "status": "STALE"
+    },
+    {
+      "id": "REV-PTR-COR-B1",
+      "state": {
+        "productStateId": "pin-f9b965d6",
+        "contractId": "f6c338574232",
+        "attackModelId": "6741d10ad40a",
+        "environmentId": "e3ca14a6b377"
+      },
+      "round": 2,
+      "phase": "CLEAN",
+      "reviewerId": "devin-dddf1f6f94964d078d5501c65650f1e8",
+      "contextId": "sealed-child-dddf1f6f94964d078d5501c65650f1e8",
+      "role": "cleanB CORRECTNESS",
+      "priorFindingsVisible": false,
+      "sealedAt": "2026-09-26T19:15:00Z",
+      "verdict": "FINDINGS",
+      "findingsIds": [
+        "F-PTR-16",
+        "F-PTR-17",
+        "F-PTR-18"
+      ],
+      "notes": "Runtime repro committed (QA-write surface): GameManager.phapTuWindowLane.qa.test.ts -- doc_chuong on van_moc window plants no sinh_co. 1 High + 1 Low + 1 Nit."
+    },
+    {
+      "id": "REV-PTR-AUT-B1",
+      "state": {
+        "productStateId": "pin-f9b965d6",
+        "contractId": "f6c338574232",
+        "attackModelId": "6741d10ad40a",
+        "environmentId": "e3ca14a6b377"
+      },
+      "round": 2,
+      "phase": "CLEAN",
+      "reviewerId": "devin-59cb29a370bb42a593943789ac53e2c3",
+      "contextId": "sealed-child-59cb29a370bb42a593943789ac53e2c3",
+      "role": "cleanB ARCHITECTURE",
+      "priorFindingsVisible": false,
+      "sealedAt": "2026-09-26T19:20:00Z",
+      "verdict": "FINDINGS",
+      "findingsIds": [
+        "F-PTR-19",
+        "F-PTR-20",
+        "F-PTR-21",
+        "F-PTR-22",
+        "F-PTR-23"
+      ],
+      "notes": "1 Low (bound marker pays a periodic_growth tick between window loss and runPhaseB re-sweep) + 4 Nit (stale TODO, dead route stubs, retired-field header doc, clamp duplication)."
+    },
+    {
+      "id": "REV-PTR-INT-B1",
+      "state": {
+        "productStateId": "pin-f9b965d6",
+        "contractId": "f6c338574232",
+        "attackModelId": "6741d10ad40a",
+        "environmentId": "e3ca14a6b377"
+      },
+      "round": 2,
+      "phase": "CLEAN",
+      "reviewerId": "devin-3ca9617585694236b28eb3e054adad4d",
+      "contextId": "sealed-child-3ca9617585694236b28eb3e054adad4d",
+      "role": "cleanB ADVERSARIAL",
+      "priorFindingsVisible": false,
+      "sealedAt": "2026-09-26T19:37:42Z",
+      "verdict": "FINDINGS",
+      "findingsIds": [
+        "F-PTR-24",
+        "F-PTR-25",
+        "F-PTR-26"
+      ],
+      "notes": "0 Critical/High/Medium. 18-case adversarial suites green (oncePerCast AoE dedup, subcast grants, 30% MaxLL gate, Ho The DR matrix, save v85 fail-closed, bound re-sweep). 1 Nit + 2 Low latent/spec-authored."
     }
   ],
   "cycles": [
@@ -476,8 +870,31 @@
       "noveltyEvidenceIds": [],
       "startedAt": "2026-09-26T16:25:00Z",
       "finishedAt": "2026-09-26T18:55:00Z",
-      "status": "CLEAN_P_PENDING_CLOSURE",
+      "status": "STALE",
       "notes": "cleanA trio on pin d3f1fff0 -> 13 dedup findings (2C/2H/1M/7L/1N) all FIXED @84267d47; closure reviewer then clean-B trio on the new head."
+    },
+    {
+      "id": "CYCLE-PTR-B1",
+      "state": {
+        "productStateId": "a305ed358389",
+        "contractId": "f6c338574232",
+        "attackModelId": "6741d10ad40a",
+        "environmentId": "e3ca14a6b377"
+      },
+      "reviewIds": [
+        "REV-PTR-COR-B1",
+        "REV-PTR-AUT-B1",
+        "REV-PTR-INT-B1"
+      ],
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-PTR-FIX-B1"
+      ],
+      "noveltyEvidenceIds": [],
+      "startedAt": "2026-09-26T19:05:00Z",
+      "finishedAt": "2026-09-26T19:45:00Z",
+      "status": "CLEAN_B_FINDINGS_ADJUDICATED",
+      "notes": "cleanB trio on pin f9b965d6 -> 11 findings: 1H+1L+1N (COR), 1L+4N (AUT), 1N+2L (INT). FIXED: F-PTR-16 (Moc lane adapter attach), F-PTR-18..24 (nit batch + bound-marker liveness + doc/stub/dedup fixes). REJECTED: F-PTR-17 (spec D4 unpinned rider chance), F-PTR-25 (latent hitOpIdsByTarget), F-PTR-26 (spec-authored numbers). Closure reviewer then CYCLE + TERMINAL."
     }
   ],
   "mutations": [],
@@ -548,6 +965,54 @@
       "payloadPath": "events/0004.json",
       "payloadHash": "e7cd315927b9b7f77cb5b4f0ee55a66e10619a82a11aa0d82bca1a348d88d812",
       "eventHash": "6521cd846ca95ecc33ab903bb206d3f91b9773f364c29904f694a9ad1497f69a"
+    },
+    {
+      "seq": 5,
+      "at": "2026-09-26T19:09:18.766Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "6521cd846ca95ecc33ab903bb206d3f91b9773f364c29904f694a9ad1497f69a",
+      "payloadPath": "events/0005.json",
+      "payloadHash": "3907099ca48d79436266fdfaee197a883db6c9350d531ee158ed9b987f310b9f",
+      "eventHash": "6afccc62780452038daa181735fe95c6c7a12de38e2594144b08dcb41e20762a"
+    },
+    {
+      "seq": 6,
+      "at": "2026-09-26T19:43:11.198Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "a305ed3583896a70e967dcd09c9cc43ead1e648a6476f28de4b9dc2abc104225",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "6afccc62780452038daa181735fe95c6c7a12de38e2594144b08dcb41e20762a",
+      "payloadPath": "events/0006.json",
+      "payloadHash": "2a01361a096c541f6421ff78a906d950cae0499c8c23147234b17e05254d3418",
+      "eventHash": "91135fb9696a54ae507ac6de29eec0e955eb63b79f47e7243b94ae4e8999b039"
+    },
+    {
+      "seq": 7,
+      "at": "2026-09-26T19:43:15.248Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "a305ed3583896a70e967dcd09c9cc43ead1e648a6476f28de4b9dc2abc104225",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "91135fb9696a54ae507ac6de29eec0e955eb63b79f47e7243b94ae4e8999b039",
+      "payloadPath": "events/0007.json",
+      "payloadHash": "06cdb372a506bc06f55a214e0ec105df478c7f7951eb8bc524eb3905b4b511f4",
+      "eventHash": "3b3ad9cede335116793d744ede34c2e346413802539ba2c49f2cd2f62cd66590"
     }
   ]
 }
