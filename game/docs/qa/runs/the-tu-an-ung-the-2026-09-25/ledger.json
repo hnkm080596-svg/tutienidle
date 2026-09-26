@@ -5499,12 +5499,16 @@
       "severity": "Low",
       "lens": "AUT",
       "title": "externalWard write in TBS-owned lanes not gated on op settle result",
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "pinEvidenceIds": [
         "EV-TTA-CLNA13-FIX"
       ],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "verificationEvidenceIds": [
+        "EV-TTA-CLNA13-FIX"
+      ],
+      "closureReviewIds": [
+        "REV-TTA-CLO-15"
+      ],
       "locations": [
         "src/core/battle/turn/TurnBattleSystem.ts applyDeclaredBuff + intercept ward"
       ],
@@ -5516,12 +5520,16 @@
       "severity": "Nit",
       "lens": "AUT",
       "title": "Stale comment: charge-resolve 'never reaches this point' false for routed lane",
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "pinEvidenceIds": [
         "EV-TTA-CLNA13-FIX"
       ],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "verificationEvidenceIds": [
+        "EV-TTA-CLNA13-FIX"
+      ],
+      "closureReviewIds": [
+        "REV-TTA-CLO-15"
+      ],
       "locations": [
         "src/core/battle/turn/TurnBattleSystem.ts:2149-2152"
       ],
@@ -5533,12 +5541,16 @@
       "severity": "Nit",
       "lens": "AUT",
       "title": "'phan_chan' literal in kit builder where PHAN_CHAN_BUFF imported",
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "pinEvidenceIds": [
         "EV-TTA-CLNA13-FIX"
       ],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "verificationEvidenceIds": [
+        "EV-TTA-CLNA13-FIX"
+      ],
+      "closureReviewIds": [
+        "REV-TTA-CLO-15"
+      ],
       "locations": [
         "src/data/skill/TheTuSkills.ts:519"
       ],
@@ -5550,12 +5562,16 @@
       "severity": "Nit",
       "lens": "AUT",
       "title": "Raw gauge write on simulation clone bypasses ActionGauge primitive",
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "pinEvidenceIds": [
         "EV-TTA-CLNA13-FIX"
       ],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "verificationEvidenceIds": [
+        "EV-TTA-CLNA13-FIX"
+      ],
+      "closureReviewIds": [
+        "REV-TTA-CLO-15"
+      ],
       "locations": [
         "src/core/battle/turn/TurnOrderPreview.ts:81"
       ],
@@ -7809,6 +7825,30 @@
       "verificationOfFindingIds": [],
       "lessons": [],
       "summary": "cleanA13 INT: SEAL clean -- ordering/debt/marks/manual-mode/bypass/save-boundary/UI all defended; unreachable nits recorded (headless lull-skip test-only; non-finite progress JSON-unreachable)."
+    },
+    {
+      "id": "REV-TTA-CLO-15",
+      "kind": "CLOSURE_REVIEW",
+      "reviewerSessionId": "f5fc31e064324cdfaa60de6dc3e0d320",
+      "previousPhaseReviewId": "REV-TTA-CLN13-INT",
+      "verdict": "SEALED",
+      "status": "SEALED",
+      "round": 13,
+      "scope": "verify CLN13-AUT-1..4 fixes",
+      "recordedAt": "2026-09-26T10:08:00.000Z",
+      "evidenceIds": [
+        "EV-TTA-CLNA13-FIX"
+      ],
+      "findingIds": [],
+      "findingPointers": [],
+      "verificationOfFindingIds": [
+        "F-TTA-CLN13-AUT-1",
+        "F-TTA-CLN13-AUT-2",
+        "F-TTA-CLN13-AUT-3",
+        "F-TTA-CLN13-AUT-4"
+      ],
+      "lessons": [],
+      "summary": "CLO-15 SEALED: ward gating verified at all 3 write sites; comment/literal/primitive fixes verified; emitAndSettle return backward-compatible."
     }
   ],
   "cycles": [],
