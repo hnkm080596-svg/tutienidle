@@ -1,0 +1,523 @@
+# FINAL REVIEW — TEST WORKLOAD REMEDIATION AFTER PR #36
+
+Basis: PR #36 — Test Workload & Redundancy Audit.
+
+The audit is accepted as sufficiently evidenced to proceed to remediation.
+
+This mission supersedes the earlier assumption that the repository's 700+ test files are themselves the main performance problem.
+
+## 1. Final conclusion from PR #36
+
+Current default Vitest workload:
+
+    777 files
+    7,268 executed case-instances
+    ~307.7 s median wall time
+
+The test suite is NOT broadly slow.
+
+Measured evidence shows:
+
+    PerfectionEconomy.test.ts      ~296.7 s
+    EssenceSubstitutionEconomy      ~8.7 s
+    TrucCoJourney                    ~5.0 s
+
+while the overwhelming majority of the remaining suite is individually cheap.
+
+In particular:
+
+    GameManager.* family
+      101 files
+      572 cases
+      ~4.0 s
+
+    TurnBattleSystem* family
+      48 files
+      358 cases
+      ~1.4 s
+
+Therefore:
+
+**Do NOT perform a broad GameManager/TurnBattleSystem consolidation for performance reasons.**
+
+Reducing physical file count is a maintainability concern, not the current workload bottleneck.
+
+---
+
+# 2. The accumulated QA tests are mostly legitimate protection
+
+PR #36 found very little true semantic redundancy.
+
+Accepted high-confidence SAFE_DELETE set:
+
+    src/core/game/GameManager.bossSummon.test.ts
+    src/core/game/GameManager.phapTuChain.test.ts
+    src/core/battle/turn/TurnBattleSystem.qadebug.test.ts
+
+plus the single strictly-subsumed case in:
+
+    GameManager.turnManualMode.test.ts
+
+The first two are retired `expect(true)` stubs.
+
+`TurnBattleSystem.qadebug` is strictly subsumed by:
+
+    TurnBattleSystem.adversarial.test.ts
+    INV-S1-4
+
+and the audit mutation-validated the surviving protection.
+
+The manual-mode case is subsumed by the stronger `INV-TM-5`.
+
+Apply these removals.
+
+Do NOT use this as justification for deleting other:
+
+    *.qa
+    *.adversarial
+    *.reaudit
+    review-round
+    historical regression
+
+tests.
+
+The audit demonstrated that most of them contain unique boundary/degenerate-input protection.
+
+---
+
+# 3. Fix the 483 accidental duplicate executions
+
+PR #36 identified an execution-graph defect.
+
+Two eager globs import test modules as data modules, causing their tests to register and execute again.
+
+Fix:
+
+    game/tests/architecture/statDomainWhitelist.test.ts
+
+Its include root is:
+
+    ../../src/data/**/*.ts
+
+Therefore its exclusion must correspond to that same root:
+
+    !../../src/data/**/*.test.ts
+
+Do NOT accidentally use:
+
+    !../../data/**/*.test.ts
+
+for this file.
+
+Also fix:
+
+    game/src/core/stats/StatCalculator.theTu.test.ts
+
+with an exclusion corresponding to its data root, e.g.:
+
+    !../../data/**/*.test.ts
+
+Use the existing glob-negation pattern in:
+
+    LegacySkillCoverage.test.ts
+
+as repository precedent.
+
+Expected result:
+
+    -424 accidental registrations
+    -59 accidental registrations
+
+Total:
+
+    -483 duplicate executions
+
+All affected tests must continue to execute exactly once from their canonical test files.
+
+Verify this through Vitest enumeration/reporting rather than assuming the glob change is correct.
+
+Add a small stable regression guard if one can prevent this class of eager-glob test registration without introducing significant framework complexity.
+
+Do not overengineer it.
+
+---
+
+# 4. Reclassify PerfectionEconomy correctly
+
+`PerfectionEconomy.test.ts` is not an ordinary regression suite.
+
+It currently contains two semantically different classes of tests.
+
+## A. Cheap analytic/invariant tests
+
+Keep these in the normal regression gate.
+
+They protect contracts such as:
+
+    mortalStatBudget
+    reachableStatSourceCensus
+    no unintended stat source
+    expectedEssencePerKill
+    expectedKillsForBody
+
+These are cheap and valuable during normal development.
+
+## B. Full driven economy simulations
+
+The tests invoking:
+
+    measureNormalRun(...)
+    measurePerfectionRun(...)
+
+are long-horizon balance simulations.
+
+They include:
+
+    canonical normal measurement
+    perfection full-accounting run
+    deterministic repeated seed
+    safety-bound simulation
+    three-seed measurement
+    normal/perfection cross-run consistency
+
+These simulations are valuable.
+
+DO NOT delete them.
+
+DO NOT weaken them.
+
+DO NOT reduce their seed coverage merely to make the default suite faster.
+
+Instead, move them out of the normal development regression gate into an explicit:
+
+    BALANCE SIMULATION GATE
+
+---
+
+# 5. Use two primary concepts, not unnecessary tier complexity
+
+For the current project, prefer:
+
+## REGRESSION GATE
+
+Purpose:
+
+    fast code → test → fix feedback
+
+Contains:
+
+    unit tests
+    contracts
+    invariants
+    architecture tests
+    QA regressions
+    adversarial tests
+    cheap integration tests
+    cheap PerfectionEconomy analytic tests
+
+This should remain the normal/default Vitest command.
+
+Target after remediation:
+
+    approximately 55–60 seconds
+
+Exact measured result is authoritative.
+
+## BALANCE SIMULATION GATE
+
+Purpose:
+
+    validate long-horizon economy/progression behavior
+
+Contains the expensive driven PerfectionEconomy simulations.
+
+Provide an explicit command such as:
+
+    npm run test:balance
+
+or an equivalent repository-consistent name.
+
+The balance suite must remain first-class and easy to run.
+
+Do NOT implement it using `it.skip`, commented tests, or otherwise-disabled tests.
+
+The tests must be executable through an explicit command.
+
+---
+
+# 6. When Balance Simulation should run
+
+It does NOT need to run during every normal development test cycle.
+
+It SHOULD be run when changes affect:
+
+    drop rates
+    essence income
+    essence costs
+    spirit-stone economy
+    body-refinement costs
+    stage rewards
+    progression pacing
+    breakthrough requirements
+    stat-source availability
+    technique/material economy
+    auto-farm economy
+    time-to-progression
+    perfection feasibility
+
+It should also be run deliberately during:
+
+    balance passes
+    milestone validation
+    beta/release preparation
+
+Do not require a ~5-minute economy simulation after unrelated changes such as:
+
+    UI layout
+    localization
+    VFX
+    presentation-only changes
+    unrelated component refactors
+
+---
+
+# 7. Do NOT move the proposed Tier-B tests yet
+
+PR #36 suggested potentially moving:
+
+    EssenceSubstitutionEconomy
+    TrucCoJourney
+    EarlyGameSession
+    MortalChapterJourney
+    BattleSimulation.determinism
+    BattleMetrics
+    ProductionBalance.simulation
+    dropCharacterization
+
+out of the default gate.
+
+Do NOT do that yet.
+
+First apply:
+
+    PerfectionEconomy split
+    + eager-glob fixes
+    + proven SAFE_DELETE items
+
+Then benchmark the resulting regression gate.
+
+If the normal gate becomes approximately:
+
+    55–60 seconds
+
+prefer retaining the remaining integration protection in the default gate unless further evidence demonstrates that moving it provides a meaningful developer-feedback benefit.
+
+Do not optimize away valuable integration coverage merely to chase a smaller number.
+
+---
+
+# 8. Do NOT introduce TestWorld/MCP as part of this mission
+
+PR #36 demonstrates that repeated GameManager/TurnBattleSystem construction is not a meaningful runtime bottleneck.
+
+Therefore this remediation does NOT require:
+
+    TestWorld
+    ScenarioRunner
+    MCP
+    DevBridge
+    broad fixture rewrite
+    broad test-file consolidation
+
+Those may still have independent maintainability or agent-control value later, but they are unrelated to the current workload bottleneck.
+
+Keep this mission narrow.
+
+---
+
+# 9. Balance simulation is strategically valuable
+
+Treat the moved PerfectionEconomy simulation as the beginning of a reusable balance laboratory, not as unwanted slow tests.
+
+Do NOT build the full laboratory in this mission.
+
+However, preserve an architecture that can later support simulations for:
+
+    Mortal normal progression
+    Mortal perfection progression
+    Qi Refining normal progression
+    Qi Refining hidden/perfection progression
+    Nghịch Chu Thiên
+    Foundation progression
+    essence economy
+    spirit-stone economy
+    technique economy
+    body economy
+
+Potential future outputs may include:
+
+    time to breakthrough
+    kills required
+    essence earned/spent
+    spirit stones earned/spent
+    body completion time
+    normal/perfection delta
+    P10/P50/P90 progression
+    failure/safety-bound rates
+
+This is future scope only.
+
+Do not implement it now.
+
+---
+
+# 10. Implementation scope
+
+Perform only these changes:
+
+### Change A
+
+Split `PerfectionEconomy.test.ts` by semantics:
+
+    cheap analytic tests
+        → normal regression gate
+
+    expensive measureNormalRun/measurePerfectionRun simulations
+        → explicit balance simulation gate
+
+Preserve every assertion and seed.
+
+### Change B
+
+Fix both eager-glob patterns so test files cannot be imported as data modules.
+
+Verify the expected 483 duplicate registrations disappear.
+
+### Change C
+
+Apply the three proven file-level SAFE_DELETE removals and the one proven case-level deletion.
+
+No other semantic deletion.
+
+### Change D
+
+Add/adjust package commands/configuration so developers can clearly run:
+
+    normal regression
+    balance simulation
+    complete relevant validation
+
+Do not modify Playwright behavior in this mission.
+
+---
+
+# 11. Validation requirements
+
+After implementation, run the normal regression gate at least three comparable times.
+
+Report:
+
+    min
+    median
+    max
+
+Also report:
+
+    file count
+    executed case count
+    pass/fail/skip/todo
+    wall time
+    relevant Vitest timing phases
+
+Run the balance simulation gate separately.
+
+Verify:
+
+    every moved simulation executes
+    all original assertions remain
+    all original seeds remain
+    determinism test remains
+    safety-bound test remains
+
+Run the complete relevant Vitest protection set.
+
+Explicitly reconcile the old 7,268 executions against:
+
+    -483 accidental duplicate registrations
+    -4 strictly-subsumed executions
+    -N simulations moved from default to balance
+
+The balance simulations are MOVED, not removed.
+
+No unique semantic protection may disappear.
+
+---
+
+# 12. Performance acceptance
+
+Do not judge success by physical test-file count.
+
+Success is:
+
+    lower default execution workload
+    lower development feedback latency
+    equal unique regression protection
+    full balance simulation still available
+
+Expected approximate result:
+
+    BEFORE
+      7,268 default executions
+      ~307.7 s median
+
+    AFTER
+      ~6.7k default executions
+      approximately 55–60 s median
+
+Do not manipulate the implementation merely to hit those exact numbers.
+
+Measured results are authoritative.
+
+---
+
+# 13. Documentation
+
+Create or update:
+
+    game/docs/audit/test-workload-remediation-phase1.md
+
+Include:
+
+    implementation changes
+    before/after census
+    before/after timing
+    duplicate-registration evidence
+    regression-gate command
+    balance-gate command
+    complete-validation command
+    SAFE_DELETE accounting
+    coverage accounting
+    remaining known failures/environment issues
+
+End with:
+
+    [TEST-WORKLOAD-PHASE1] PASS
+
+or:
+
+    [TEST-WORKLOAD-PHASE1] BLOCKED
+
+PASS requires:
+
+1. 483 duplicate registrations are eliminated.
+2. No affected foreign test disappears from its canonical suite.
+3. Cheap PerfectionEconomy analytic protection remains in normal regression.
+4. All expensive PerfectionEconomy simulations remain executable through the balance gate.
+5. Only the PR #36 strictly-subsumed items are deleted.
+6. Normal regression runtime is measured after the change.
+7. Complete relevant Vitest protection remains available.
+8. No unique invariant is knowingly lost.
+
+Do not begin any Phase 2 optimization automatically.
+
+Return the Phase-1 evidence for review first.
