@@ -4007,11 +4007,11 @@
       "duplicateOf": null,
       "exception": null,
       "status": "REJECTED_WITH_PROOF",
-      "rejectionReason": "rejected: spec-ambiguity resolved toward deliberate design — \"flat/direct-vitals\" = applyDirectDamage vitals channel (ward bypass intact); finalDamagePercent is designed to apply to ALL direct reactive damage (stat-system-reimagined Task 6 D13); changing channel now is a balance-affecting behavior change under frozen balance (BETA-BALANCE ruling)"
+      "rejectionReason": "rejected: spec-ambiguity resolved toward deliberate design \u2014 \"flat/direct-vitals\" = applyDirectDamage vitals channel (ward bypass intact); finalDamagePercent is designed to apply to ALL direct reactive damage (stat-system-reimagined Task 6 D13); changing channel now is a balance-affecting behavior change under frozen balance (BETA-BALANCE ruling)"
     },
     {
       "id": "F-TT-COR-A9-2",
-      "title": "Save/restore boundary does not re-enforce root mutex — crafted v85 save can own both cuong_chien and tran_the",
+      "title": "Save/restore boundary does not re-enforce root mutex \u2014 crafted v85 save can own both cuong_chien and tran_the",
       "state": {
         "productStateId": "3954e88d7601834989e11f6fceb47c0bc546e04635bce6f8faec3d2994afae10",
         "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
@@ -7118,7 +7118,7 @@
       "counterexample": "none - reads as dead production code but is deliberately retained",
       "expected": "production modules reachable from production callers",
       "actual": "module consumed only by its own tests; header documents the parking",
-      "rootCause": "feature intentionally parked pending the Bát Tự mission set; tests keep the contract warm",
+      "rootCause": "feature intentionally parked pending the B\u00e1t T\u1ef1 mission set; tests keep the contract warm",
       "rootClass": "deliberate-design-contract",
       "subsystem": "the-tu-beta",
       "siblingSearch": [
@@ -7142,7 +7142,7 @@
       "duplicateOf": null,
       "exception": null,
       "status": "REJECTED_WITH_PROOF",
-      "rejectionReason": "deliberate documented parking — the module header declares its parked status and tests keep the contract warm; deleting it is a product decision for the Bát Tự mission, not a defect"
+      "rejectionReason": "deliberate documented parking \u2014 the module header declares its parked status and tests keep the contract warm; deleting it is a product decision for the B\u00e1t T\u1ef1 mission, not a defect"
     },
     {
       "id": "F-TT-COR-A4-4",
@@ -7205,7 +7205,7 @@
       "duplicateOf": "F-TT-COR-A4-1",
       "exception": null,
       "status": "REJECTED_WITH_PROOF",
-      "rejectionReason": "duplicate of F-TT-COR-A4-1 — crafted/corrupt save only; registry-less save validation is a documented project boundary; tamper-only reachability per prior adjudications"
+      "rejectionReason": "duplicate of F-TT-COR-A4-1 \u2014 crafted/corrupt save only; registry-less save validation is a documented project boundary; tamper-only reachability per prior adjudications"
     },
     {
       "id": "F-TT-COR-A4-5",
@@ -7231,7 +7231,7 @@
       "discoveredBy": "devin-f26cfbc75b4240d8b0c7dd4064aa90a6",
       "invariantIds": [],
       "evidenceIds": [],
-      "counterexample": "a mid-fight breakthrough that reaches syncRealmPassive with a missing realm passive has every learnSkill grant rejected and the result ignored — masked today by the has() early-return",
+      "counterexample": "a mid-fight breakthrough that reaches syncRealmPassive with a missing realm passive has every learnSkill grant rejected and the result ignored \u2014 masked today by the has() early-return",
       "expected": "the sync refuses the battle boundary explicitly like its sibling syncTalentCombatPassive",
       "actual": "learnSkill's mid-battle rejection is swallowed; the seam silently no-ops",
       "rootCause": "new writer gate introduced a silent-skip seam the sync did not observe",
@@ -7470,7 +7470,7 @@
     },
     {
       "id": "F-TT-COR-A5-1",
-      "title": "Save boundary does not enforce the excludesNode mutex — crafted save can own both roots",
+      "title": "Save boundary does not enforce the excludesNode mutex \u2014 crafted save can own both roots",
       "state": {
         "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
         "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
@@ -7499,7 +7499,7 @@
           ],
           "termsAndMethod": "grep 'excludesNode' at the save boundary; enumerate node-set invariants",
           "hitDispositions": [
-            "zero hits — only core-catalog membership, purchasedNodeIds mirror, D9f inverse-source are enforced; owned-node acquisition legality is never re-validated at load"
+            "zero hits \u2014 only core-catalog membership, purchasedNodeIds mirror, D9f inverse-source are enforced; owned-node acquisition legality is never re-validated at load"
           ],
           "coverageLimits": [
             "save-edit surface only; no in-game path can produce dual roots (purchase gates on getNodeLevel===0)"
@@ -7539,7 +7539,7 @@
       "locations": [
         {
           "path": "src/composables/useProgressionActions.ts",
-          "symbolOrSection": "devResetBranch wrapper :63-72 — refund===0 early-returns without bumpState; ops layer GameManagerProgressionOps.devResetBranch :622-628",
+          "symbolOrSection": "devResetBranch wrapper :63-72 \u2014 refund===0 early-returns without bumpState; ops layer GameManagerProgressionOps.devResetBranch :622-628",
           "revision": "697c2050",
           "basis": "SOURCE"
         }
@@ -7555,7 +7555,7 @@
           ],
           "termsAndMethod": "enumerate wrapper return-value conventions",
           "hitDispositions": [
-            "respecNodeTree already uses null=reject/0=success-with-bump — the intended shape exists; devResetBranch returns 0 for both rejection and revoked free nodes"
+            "respecNodeTree already uses null=reject/0=success-with-bump \u2014 the intended shape exists; devResetBranch returns 0 for both rejection and revoked free nodes"
           ],
           "coverageLimits": [
             "dev-only surface; App.vue bumpState() runs every tick so panels self-correct within a frame"
@@ -7569,9 +7569,9 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "counterexample": "a reset of a branch holding only free nodes (insightCost:0) revokes nodes, refunds 0, and skips bumpState — UI reads stale until next tick",
+      "counterexample": "a reset of a branch holding only free nodes (insightCost:0) revokes nodes, refunds 0, and skips bumpState \u2014 UI reads stale until next tick",
       "expected": "wrapper bumps on any successful reset; only rejection should skip",
-      "actual": "refund===0 conflates reject with success-0; impact nil — dev-only channel, no Vue callers, tick-level bumpState self-heals",
+      "actual": "refund===0 conflates reject with success-0; impact nil \u2014 dev-only channel, no Vue callers, tick-level bumpState self-heals",
       "rootCause": "scalar return conflates two semantic outcomes; ops layer performs the reset correctly either way",
       "rootClass": "interface-ambiguity",
       "subsystem": "the-tu-beta",
@@ -7579,7 +7579,7 @@
       "status": "REJECTED_WITH_PROOF",
       "duplicateOf": null,
       "exception": null,
-      "rejectionReason": "nil impact on a dev-only surface: the ops layer performs the reset correctly and App.vue bumpState() runs every tick, so the panel self-corrects within a frame. The wrapper comment is descriptive, not contractive. Accepted as a known convention gap — lesson recorded for the null=reject convention."
+      "rejectionReason": "nil impact on a dev-only surface: the ops layer performs the reset correctly and App.vue bumpState() runs every tick, so the panel self-corrects within a frame. The wrapper comment is descriptive, not contractive. Accepted as a known convention gap \u2014 lesson recorded for the null=reject convention."
     },
     {
       "id": "F-TT-AUT-A5-1",
@@ -7612,7 +7612,7 @@
           ],
           "termsAndMethod": "cross-check wrapper conventions across progression actions",
           "hitDispositions": [
-            "duplicate of F-TT-COR-A5-2 — independent lens found the same conflation"
+            "duplicate of F-TT-COR-A5-2 \u2014 independent lens found the same conflation"
           ],
           "coverageLimits": [
             "dev-only, nil impact"
@@ -7628,7 +7628,7 @@
       "closureReviewIds": [],
       "counterexample": "same crafted branch as F-TT-COR-A5-2",
       "expected": "bump on successful zero-refund reset",
-      "actual": "skipped — cosmetic staleness at worst on a dev-only channel",
+      "actual": "skipped \u2014 cosmetic staleness at worst on a dev-only channel",
       "rootCause": "scalar return conflates reject vs success-0",
       "rootClass": "interface-ambiguity",
       "subsystem": "the-tu-beta",
@@ -7637,6 +7637,303 @@
       "duplicateOf": "F-TT-COR-A5-2",
       "exception": null,
       "rejectionReason": "Duplicate of F-TT-COR-A5-2 (independent lens, same conclusion). Same rejection: dev-only, nil impact, self-heals each tick."
+    },
+    {
+      "id": "F-TT-CLN5-INT-1",
+      "title": "RealmAdvanceOps in-battle gates unpinned (the seam this round adjudicated)",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+          "symbolOrSection": "chooseCultivationPath :240, setArtifactPath :444, tryUpgradeArtifactGrade :471, tryAdvanceTechniqueGrade :507, syncRealmPassive :538; wiring GameManager.ts:685",
+          "revision": "697c2050",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-58daccc140494df9bb3e78739643bc04",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/game/",
+            "src/composables/"
+          ],
+          "termsAndMethod": "grep -rln 'isTurnBattleInProgress|inBattle' *.test.ts",
+          "hitDispositions": [
+            "setArtifactPath mid-battle pin exists (setArtifactPath.test.ts)",
+            "tryUpgradeArtifactGrade mid-battle pin exists (artifactGradeUpgrade.test.ts:110)",
+            "chooseCultivationPath/tryAdvanceTechniqueGrade/syncRealmPassive: no mid-battle pin"
+          ],
+          "coverageLimits": [
+            "coverage gap, not observed failure"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "pinEvidenceIds": [
+        "EV-TT-CLEANA5-INT-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLEANA5-INT-FIX"
+      ],
+      "closureReviewIds": [
+        "REV-TT-CLO-23"
+      ],
+      "counterexample": "a later refactor removing one gate or flipping the ?? false dep wiring regresses silently",
+      "expected": "each newly-added gate pinned by rejection-without-mutation test",
+      "actual": "no test exercises mid-battle rejection for chooseCultivationPath/tryAdvanceTechniqueGrade/syncRealmPassive",
+      "rootCause": "gates added at the ops layer without accompanying rejection pins",
+      "rootClass": "coverage-gap",
+      "subsystem": "the-tu-beta",
+      "repair": "FIXED @dc91adad: GameManager.realmAdvanceInBattle.test.ts pins mid-battle rejection for chooseCultivationPath, tryAdvanceTechniqueGrade (stocked material, grade unchanged), syncRealmPassive (no learn)",
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "exception": null,
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLN5-INT-2",
+      "title": "inBattle affordance pins exist only for TheTuTreePanel; 8 other disabled surfaces unpinned",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/components/",
+          "symbolOrSection": "QuanKhiPanel:184, CharacterPanel:345, ArtifactPanel:58, SkillPathPanel:385, NativeCoreDetail:64, SkillDetailView:144, SkillRoleStrip:182/200, NodeTreePanel:615/627, NodeInspector:321/331",
+          "revision": "697c2050",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-58daccc140494df9bb3e78739643bc04",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/components/"
+          ],
+          "termsAndMethod": "grep -rn inBattle *.test.ts",
+          "hitDispositions": [
+            "only TheTuTreePanel.test.ts mounts intro/countdown/fighting and asserts disables"
+          ],
+          "coverageLimits": [
+            "affordance-level only; domain gates backstop every surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "counterexample": "a dropped :disabled binding reintroduces dead-click/live-click drift",
+      "expected": "one disabled-state pin per affordance surface",
+      "actual": "only TheTuTreePanel pinned",
+      "rootCause": "affordance-layer bindings are duplicated consumption of one canonical predicate; the authoritative boundary is the ops gate",
+      "rootClass": "coverage-gap",
+      "subsystem": "the-tu-beta",
+      "repair": null,
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "exception": null,
+      "rejectionReason": "Every listed surface is backstopped by the domain gate \u2014 ops reject mid-battle (pinned for all writers incl. the new RealmAdvanceOps pins). The affordance binding is a single shared predicate consumed identically; TheTuTreePanel.test.ts demonstrates the disabled-state pattern. Eight duplicative component-mount pins assert no additional behavior and the maintenance cost is disproportionate; accepted as a recorded coverage limitation."
+    },
+    {
+      "id": "F-TT-CLN5-INT-3",
+      "title": "resolveTalentEntitlement ungated while its inner passive sync is gated \u2014 latent partial-application window",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "HYPOTHETICAL",
+      "locations": [
+        {
+          "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+          "symbolOrSection": "resolveTalentEntitlement :141-145 -> gated syncTalentCombatPassive",
+          "revision": "697c2050",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-58daccc140494df9bb3e78739643bc04",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/components/",
+            "src/composables/",
+            "src/core/game/"
+          ],
+          "termsAndMethod": "enumerate callers of resolveTalentEntitlement and modal reachability",
+          "hitDispositions": [
+            "TalentEntitlementModal is blocking aria-modal with no dismiss",
+            "pendingTalentEntitlement defers drain outside battle",
+            "useAutoRetryCountdown dies on unmount"
+          ],
+          "coverageLimits": [
+            "unreachable today; static analysis only, not reproduced"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "counterexample": "a future caller could record the entitlement mid-battle while the passive silently defers",
+      "expected": "op itself gated or permanently unreachable mid-battle",
+      "actual": "unreachable via all current paths (blocking modal + deferred drain + unmounted countdown)",
+      "rootCause": "entitlement commit is deferred behind a blocking modal by design; the inner sync gate is belt",
+      "rootClass": "latent-edge",
+      "subsystem": "the-tu-beta",
+      "repair": null,
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "exception": null,
+      "rejectionReason": "Unreachable by construction: the entitlement modal is blocking aria-modal (no dismiss path mid-battle) and pendingTalentEntitlement drains only outside battle. If a future caller emerges, adding the gate is one line \u2014 recorded as a latent-edge precedent for future reviewers instead of speculative hardening now."
+    },
+    {
+      "id": "F-TT-CLN5-INT-4",
+      "title": "Route-pick modal buttons stay live mid-battle (affordance only)",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/components/panels/skill-path/NodeInspector.vue",
+          "symbolOrSection": "route-pick GameButtons :352-361 lacked :disabled=inBattle",
+          "revision": "697c2050",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-58daccc140494df9bb3e78739643bc04",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/components/panels/skill-path/NodeInspector.vue"
+          ],
+          "termsAndMethod": "enumerate interactive elements vs inBattle binding",
+          "hitDispositions": [
+            "purchase :321 and upgrade :331 already disabled; route-pick options were the gap"
+          ],
+          "coverageLimits": [
+            "cosmetic: selectSpellPathElement domain-gated (pin at GameManagerProgressionOps.inBattle.test.ts:147)"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "pinEvidenceIds": [
+        "EV-TT-CLEANA5-INT-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLEANA5-INT-FIX"
+      ],
+      "closureReviewIds": [
+        "REV-TT-CLO-23"
+      ],
+      "counterexample": "click route-pick mid-battle -> silent domain rejection",
+      "expected": "all combat-shaping affordances disabled mid-battle",
+      "actual": "route-pick buttons clickable; domain gate rejects silently",
+      "rootCause": "surface missed when the disabled binding was added to sibling buttons",
+      "rootClass": "inconsistent-affordance",
+      "subsystem": "the-tu-beta",
+      "repair": "FIXED @dc91adad: :disabled=\"inBattle\" added to the route-pick v-for GameButton",
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "exception": null,
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLN5-INT-5",
+      "title": "Minor-realm auto-breakthrough can fire mid-turn-battle (pre-existing, benign)",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/App.vue",
+          "symbolOrSection": "tick: cultivation>=required -> breakthrough() :477-479; CultivationSystem.breakthrough() minor path realmLevel++",
+          "revision": "697c2050",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-58daccc140494df9bb3e78739643bc04",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/App.vue",
+            "src/core/realm/"
+          ],
+          "termsAndMethod": "trace breakthrough() realmId vs realmLevel paths and who consumes them mid-battle",
+          "hitDispositions": [
+            "running battle reads only minted kits",
+            "realmId untouched on the minor path; both passive syncs are already-granted no-ops",
+            "rewards compute at the new level post-battle"
+          ],
+          "coverageLimits": [
+            "pre-existing behavior, not introduced by this branch"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "counterexample": "realmLevel++ lands while a fight is running",
+      "expected": "progression writes gated mid-battle",
+      "actual": "benign \u2014 minted kits are the only mid-battle read; realmId unchanged so syncs no-op",
+      "rootCause": "minor path touches realmLevel only; battle state never reads it",
+      "rootClass": "pre-existing",
+      "subsystem": "core",
+      "repair": null,
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "exception": null,
+      "rejectionReason": "Pre-existing behavior outside this branch scope; the reviewer themselves confirmed benign by the minted-kit contract (running battle reads only minted kits; realmId untouched on minor path; both passive syncs already-granted no-ops). Changing tick-level breakthrough gating is a design decision for the user, not a defect repair."
     }
   ],
   "evidence": [
@@ -8658,6 +8955,41 @@
       ],
       "status": "STALE",
       "kind": "EXECUTED_UNIT_STRUCTURAL"
+    },
+    {
+      "id": "EV-TT-CLEANA5-INT-FIX",
+      "state": {
+        "productStateId": "418187f500194478462ab6cecc8f30f419442fee09dabc810680552c6af92482",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coordinator",
+      "startedAt": "2026-09-26T00:00:00.000Z",
+      "finishedAt": "2026-09-26T00:01:00.000Z",
+      "commandOrMethod": "npm run type-check && npx vitest run src/core/game/GameManager.realmAdvanceInBattle.test.ts src/core/game/GameManagerProgressionOps.inBattle.test.ts src/components/panels/skill-path",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/cleanA5-int-fix-verify.log",
+      "artifactHash": "55d4a65f4986375636f04a994f768454d78ed74da0bf7b4833ee1a393e9d4374",
+      "inputPaths": [
+        "src/core/game/GameManager.realmAdvanceInBattle.test.ts",
+        "src/components/panels/skill-path/NodeInspector.vue"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "type-check clean; 39 tests pass incl. 3 new realmAdvanceOps in-battle pins",
+        "chooseCultivationPath/tryAdvanceTechniqueGrade reject mid-battle without mutation",
+        "syncRealmPassive no-ops mid-battle",
+        "NodeInspector route-pick options disabled inBattle"
+      ],
+      "limitations": [
+        "setArtifactPath + tryUpgradeArtifactGrade already carried mid-battle pins pre-existing"
+      ],
+      "status": "CURRENT"
     }
   ],
   "coverage": [],
@@ -10750,6 +11082,71 @@
       ],
       "novelAttackIds": [],
       "status": "STALE"
+    },
+    {
+      "id": "REV-TT-CLEAN-A5-INT",
+      "state": {
+        "productStateId": "ec52c7b579dcf8fcbe55324d835f9923c8698aa7481725501f0ed88dda07138f",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 30,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-58daccc140494df9bb3e78739643bc04",
+      "contextId": "sealed-child-58daccc140494df9bb3e78739643bc04",
+      "model": "swe-2-max",
+      "role": "INTEGRATION",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-25T23:24:00.000Z",
+      "sealedAt": "2026-09-25T23:54:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-A5-AUT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TT-CLN5-INT-1",
+        "F-TT-CLN5-INT-2",
+        "F-TT-CLN5-INT-3",
+        "F-TT-CLN5-INT-4",
+        "F-TT-CLN5-INT-5"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TT-CLO-23",
+      "state": {
+        "productStateId": "418187f500194478462ab6cecc8f30f419442fee09dabc810680552c6af92482",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 31,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-4b75e0b3348e44be9625f5536c98b1b4",
+      "contextId": "sealed-child-4b75e0b3348e44be9625f5536c98b1b4",
+      "model": "swe-2-max",
+      "role": "CLOSURE",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T00:04:00.000Z",
+      "sealedAt": "2026-09-26T00:06:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-A5-INT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-TT-CLEANA5-INT-FIX"
+      ],
+      "findingIds": [
+        "F-TT-CLN5-INT-1",
+        "F-TT-CLN5-INT-4"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
     }
   ],
   "cycles": [],
@@ -13313,7 +13710,7 @@
       "applicability": [],
       "exclusions": [],
       "proposedProtection": [
-        "when a validator already enforces crafted-state strictness (orphan cores, grant-less majors), extend the same strictness to domain invariants like mutex pairs — or explicitly record the accepted gap."
+        "when a validator already enforces crafted-state strictness (orphan cores, grant-less majors), extend the same strictness to domain invariants like mutex pairs \u2014 or explicitly record the accepted gap."
       ],
       "promotionEvidenceIds": [],
       "qualifiedBy": [
@@ -13339,7 +13736,7 @@
       "originatingRun": "the-tu-beta-2026-09-25",
       "rootClass": "boundary-gap",
       "missedInvariantIds": [],
-      "escapeReason": "non-core nodeLevels validated only for number shape; registry membership and authored maxLevel bounds are unchecked — tamper saves persist dead ids or uncapped modifiers.",
+      "escapeReason": "non-core nodeLevels validated only for number shape; registry membership and authored maxLevel bounds are unchecked \u2014 tamper saves persist dead ids or uncapped modifiers.",
       "applicability": [],
       "exclusions": [],
       "proposedProtection": [
@@ -13373,7 +13770,7 @@
       "applicability": [],
       "exclusions": [],
       "proposedProtection": [
-        "after any diff touching files containing ${} template substitutions, scan added comment lines for >127 codepoints directly — the ratchet blind-spots them."
+        "after any diff touching files containing ${} template substitutions, scan added comment lines for >127 codepoints directly \u2014 the ratchet blind-spots them."
       ],
       "promotionEvidenceIds": [],
       "qualifiedBy": [
@@ -13835,7 +14232,7 @@
       "qualifiedBy": [
         "REV-TT-CLEAN-A4-AUT"
       ],
-      "capabilityDelta": "no code change — adjudication precedent only",
+      "capabilityDelta": "no code change \u2014 adjudication precedent only",
       "recurrenceFindingIds": [],
       "status": "CLASSIFIED",
       "policyVersion": null,
@@ -13857,7 +14254,7 @@
       "originatingRun": "the-tu-beta-2026-09-25",
       "rootClass": "crafted-save-unreachable-path",
       "missedInvariantIds": [],
-      "escapeReason": "reviewer flagged ungated progression write on tier update only reachable through a crafted/corrupted save — the save boundary has no registry by deliberate design",
+      "escapeReason": "reviewer flagged ungated progression write on tier update only reachable through a crafted/corrupted save \u2014 the save boundary has no registry by deliberate design",
       "applicability": [
         "any save-boundary write-path finding without a registry-less crafted-save proof"
       ],
@@ -13873,7 +14270,7 @@
       "qualifiedBy": [
         "REV-TT-CLEAN-A4-COR"
       ],
-      "capabilityDelta": "none — rejection precedent recorded",
+      "capabilityDelta": "none \u2014 rejection precedent recorded",
       "recurrenceFindingIds": [
         "F-TT-COR-A4-1"
       ],
@@ -14133,7 +14530,7 @@
       "originatingRun": "the-tu-beta-2026-09-25",
       "rootClass": "interface-ambiguity",
       "missedInvariantIds": [],
-      "escapeReason": "scalar return values conflating reject vs success-0 surfaced twice in one round from two lenses — the null=reject convention (respecNodeTree) is the established answer",
+      "escapeReason": "scalar return values conflating reject vs success-0 surfaced twice in one round from two lenses \u2014 the null=reject convention (respecNodeTree) is the established answer",
       "applicability": [
         "all progression-op wrappers"
       ],
@@ -14149,6 +14546,167 @@
         "REV-TT-CLEAN-A5-AUT"
       ],
       "capabilityDelta": "reviewer prompts now name the crafted-save boundary and the null=reject wrapper convention",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-TT-95",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TT-CLN5-INT-1"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "coverage-gap",
+      "missedInvariantIds": [],
+      "escapeReason": "gate added at ops layer without the rejection pin that sibling writers carry \u2014 detection escaped until the adversarial coverage enumeration",
+      "applicability": [
+        "any new isTurnBattleInProgress gate",
+        "RealmAdvanceOps writers"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "every new in-battle gate gets a rejection-without-mutation pin in the same commit"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TT-CLEAN-A5-INT"
+      ],
+      "capabilityDelta": "realmAdvanceInBattle.test.ts now pins the 3 previously unpinned gates",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-TT-96",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TT-CLN5-INT-2"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "coverage-gap",
+      "missedInvariantIds": [],
+      "escapeReason": "affordance-layer pins scale linearly with surface count while the authoritative gate is already pinned \u2014 reviewer enumerates surfaces, not the boundary",
+      "applicability": [
+        "UI affordance surfaces consuming isBattleInProgress"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "one pattern pin per affordance class suffices when the domain gate is pinned; duplicative mounts are an accepted limitation"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TT-CLEAN-A5-INT"
+      ],
+      "capabilityDelta": "recorded coverage limitation so future rounds do not re-flag",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-TT-97",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TT-CLN5-INT-3"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "latent-edge",
+      "missedInvariantIds": [],
+      "escapeReason": "ungated op whose only inner writer is gated looks partial, but all callers sit behind a blocking modal + deferred drain",
+      "applicability": [
+        "realm/talent ops behind blocking modals"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "reachability enumeration before gating; reject latent edges with the caller census as proof"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TT-CLEAN-A5-INT"
+      ],
+      "capabilityDelta": "caller-census pattern recorded for ungated-op findings",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-TT-98",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TT-CLN5-INT-4"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "inconsistent-affordance",
+      "missedInvariantIds": [],
+      "escapeReason": "new surface added to a modal forgot the shared disabled binding carried by siblings",
+      "applicability": [
+        "any interactive element on combat-shaping panels"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "when disabling a surface inBattle, enumerate EVERY interactive element in the same template \u2014 a modal v-for is easy to miss"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TT-CLEAN-A5-INT"
+      ],
+      "capabilityDelta": "route-pick options now carry :disabled=inBattle",
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-TT-99",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TT-CLN5-INT-5"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "pre-existing",
+      "missedInvariantIds": [],
+      "escapeReason": "tick-level realmLevel++ fires mid-battle but minted-kit contract makes it a no-op for the running fight",
+      "applicability": [
+        "minor-realm breakthrough during battle"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "document the minted-kit read contract so reviewers stop re-flagging realmLevel writes"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [
+        "REV-TT-CLEAN-A5-INT"
+      ],
+      "capabilityDelta": "pre-existing-benign pattern recorded",
       "recurrenceFindingIds": [],
       "status": "CLASSIFIED",
       "policyVersion": null,
@@ -15550,6 +16108,22 @@
       "payloadPath": "events/0087.json",
       "payloadHash": "a73350ac9a67d1f1f71c8ce3bb3970f2e66ee8e01c0f673c6d60fb734aeae4b0",
       "eventHash": "648d1f2141cf828b93f9f77b9eab334fab956739c8238e7eea61dcf851d3e1e4"
+    },
+    {
+      "seq": 88,
+      "at": "2026-09-26T00:00:12.154Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "418187f500194478462ab6cecc8f30f419442fee09dabc810680552c6af92482",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "648d1f2141cf828b93f9f77b9eab334fab956739c8238e7eea61dcf851d3e1e4",
+      "payloadPath": "events/0088.json",
+      "payloadHash": "1f112023b6d6af685fe9de5a329473ef56d1f2b37eba1a533caf70b6419b5848",
+      "eventHash": "4acc8b2b575794a3f5e6f51ed2588dc77e9e323d6dd956dd22c431fec2855476"
     }
   ]
 }
