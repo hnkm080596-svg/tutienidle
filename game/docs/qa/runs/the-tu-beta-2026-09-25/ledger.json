@@ -9525,6 +9525,171 @@
       "exception": null,
       "status": "CLOSED",
       "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLND-AUT-1",
+      "title": "non-core nodeLevels replay skips purchasedNodeIds mirror membership",
+      "state": {
+        "productStateId": "fea576e2d9a15cf8dab73cd31d0d8c1a2acbcdae50419aa64433704a73f35851",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/services/save/saveShapeValidation.ts",
+          "symbolOrSection": ":708 else branch",
+          "revision": "72822607",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-602a0ba74b844474bdc7ff0c2c9d19cd",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "else branch replays level/prereqs but never asserts mirror membership; crafted v85 save could hold level without mirror (defense-in-depth, hand-edited saves only)",
+      "expected": "same canonicality replay as core_* — every owned level must sit in the purchasedNodeIds mirror",
+      "actual": "else branch replays level/prereqs but never asserts mirror membership; crafted v85 save could hold level without mirror (defense-in-depth, hand-edited saves only)",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton site"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED uncommitted: membership check added inside the non-core level>=1 branch, same message shape as core; new pin test (mirror-missing non-core level rejected).",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLND-AUT-2",
+      "title": "TheTuTreePanel tcReached uses second realm ordering",
+      "state": {
+        "productStateId": "fea576e2d9a15cf8dab73cd31d0d8c1a2acbcdae50419aa64433704a73f35851",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/components/panels/skill-path/TheTuTreePanel.vue",
+          "symbolOrSection": ":100-103 tcReached",
+          "revision": "72822607",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-602a0ba74b844474bdc7ff0c2c9d19cd",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "REALM_TIERS ordering duplicated; numerically equivalent today, can silently diverge",
+      "expected": "presentation mirror uses the authority ordering (getRealmIndex/REALMS like canPurchaseNode)",
+      "actual": "REALM_TIERS ordering duplicated; numerically equivalent today, can silently diverge",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton site"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED uncommitted: tcReached now uses getRealmIndex over REALMS (same ordering as canPurchaseNode).",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLND-AUT-3",
+      "title": "column id drift signal is console.warn + dead card only",
+      "state": {
+        "productStateId": "fea576e2d9a15cf8dab73cd31d0d8c1a2acbcdae50419aa64433704a73f35851",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/components/panels/skill-path/TheTuTreePanel.vue",
+          "symbolOrSection": ":80-98 nodeOf + column check",
+          "revision": "72822607",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-602a0ba74b844474bdc7ff0c2c9d19cd",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "console.warn only; presentation renders empty card",
+      "expected": "renamed id should fail loudly via registry-level assertion",
+      "actual": "console.warn only; presentation renders empty card",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton site"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: console.warn is the established dev-only drift signal; presentation surface; data-side renames already fail via TheTuNodes.test.ts census pins (node(id) lookups). Panel-side COLUMNS is a presentation copy — extracting to a module is a refactor beyond nit scale.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "REJECTED_WITH_PROOF",
+      "rejectionReason": "dev-only drift signal; data-side renames pinned by census tests; presentation-only"
     }
   ],
   "evidence": [
@@ -13398,6 +13563,37 @@
       "coverageIds": [],
       "evidenceIds": [],
       "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TT-CLEAN-D-AUT",
+      "state": {
+        "productStateId": "fea576e2d9a15cf8dab73cd31d0d8c1a2acbcdae50419aa64433704a73f35851",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 45,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-602a0ba74b844474bdc7ff0c2c9d19cd",
+      "contextId": "sealed-child-602a0ba7",
+      "model": "swe-2-max",
+      "role": "AUTHORITY",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T07:18:00.000Z",
+      "sealedAt": "2026-09-26T07:42:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLNC-AUT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TT-CLND-AUT-1",
+        "F-TT-CLND-AUT-2",
+        "F-TT-CLND-AUT-3"
+      ],
       "novelAttackIds": [],
       "status": "SEALED"
     }
@@ -17476,6 +17672,84 @@
       "proposedProtection": [],
       "findingIds": [
         "F-TT-CLNC-AUT-2"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-78",
+      "rootClass": "missing-invariant",
+      "escapeReason": "mirror check applied only to core_*",
+      "capabilityDelta": "membership replay must be symmetric across all owned levels",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLND-AUT-1"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-79",
+      "rootClass": "convention-drift",
+      "escapeReason": "second realm ordering shadowed the authority",
+      "capabilityDelta": "presentation mirrors reuse the authority ordering source",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLND-AUT-2"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-80",
+      "rootClass": "out-of-scope",
+      "escapeReason": "drift-signal strength flagged beyond convention",
+      "capabilityDelta": "dev-only warn suffices when census tests pin the data side; presentation extraction is out of scope",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLND-AUT-3"
       ]
     }
   ],

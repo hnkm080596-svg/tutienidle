@@ -2435,6 +2435,24 @@ describe('validateGameSaveShape — v73 core inverse ownership', () => {
     expect(pathsOf(result)).toContain('player.nodeLevels.core_cuong_quyen')
   })
 
+  // cleanD AUT: the mirror check is symmetric -- a canonical non-core
+  // level without its purchasedNodeIds mirror is non-canonical by
+  // construction (NodeSystem mirrors every purchase).
+  it('từ chối node level canonical khi purchasedNodeIds mirror sót entry đó', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    player.realmId = 'qi_refining'
+    player.cultivationPath = 'body'
+    player.cultivationWay = 'body_pathway'
+    ;(player.nodeLevels as Record<string, number>).cuong_chien = 1
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.nodeLevels.cuong_chien')
+  })
+
   it('từ chối core_cuong_quyen khi skills[] chứa entry giả id cuong_quyen (không phải learned template)', () => {
     const save = validSave()
     const player = playerOf(save)

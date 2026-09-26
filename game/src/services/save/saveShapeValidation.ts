@@ -738,6 +738,13 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
         if (level >= 1) {
           const nodeLevelsRecord = player.nodeLevels as Record<string, unknown>
 
+          if (purchasedNodeIds && !purchasedNodeIds.includes(nodeId)) {
+            issues.push({
+              path: `player.nodeLevels.${nodeId}`,
+              message: 'node đã mua phải nằm trong purchasedNodeIds',
+            })
+          }
+
           for (const prereq of node.prerequisites ?? []) {
             if (prereq.kind === 'node') {
               const parentLevel = nodeLevelsRecord[prereq.nodeId]

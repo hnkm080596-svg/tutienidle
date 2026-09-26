@@ -20,7 +20,7 @@ import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { canPurchaseNode, getEffectiveNodeMaxLevel, getNodeLevel } from '@/core/progression/NodeSystem'
 import { getSkillCoreLevel } from '@/core/progression/SkillCoreLevel'
-import { getRealmTier } from '@/core/realm/RealmTierMap'
+import { getRealmIndex } from '@/core/realm/realmSystem'
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
@@ -99,7 +99,7 @@ for (const id of columnNodeIds) {
 
 const tcReached = computed(() => {
   stateVersion.value
-  return getRealmTier(player.realmId) >= getRealmTier('foundation_establishment')
+  return getRealmIndex(player.realmId) >= getRealmIndex('foundation_establishment')
 })
 
 const chosenRootId = computed(() => {
