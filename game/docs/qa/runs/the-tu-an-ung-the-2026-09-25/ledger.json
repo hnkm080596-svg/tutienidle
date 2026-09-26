@@ -11,7 +11,7 @@
     "base": "be1bdf8d5f3fa45cbe82318473980b7b03ec9227",
     "head": "70636f2981906a12b56686d13561977270924115",
     "state": {
-      "productStateId": "ca812f5eaae9b4e70246ddf57ecd811e1907692e283e8a9c21b4f8532602aa3c",
+      "productStateId": "14401a4f5efea59b40ddd43a89a5f6833867139b042a15e9a813302ec49088e2",
       "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
       "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -4961,12 +4961,18 @@
       ],
       "siblingFindingIds": [],
       "repair": "FIXED pending commit: default 'evaded' (window still opens per spec — miss qualifies — but no onImpactLanded payload/cost without the Trong node).",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "pinEvidenceIds": [
+        "EV-TTA-CLNA11-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TTA-CLNA11-FIX"
+      ],
+      "closureReviewIds": [
+        "REV-TTA-CLO-14"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -5126,12 +5132,18 @@
       ],
       "siblingFindingIds": [],
       "repair": "FIXED pending commit.",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "pinEvidenceIds": [
+        "EV-TTA-CLNA11-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TTA-CLNA11-FIX"
+      ],
+      "closureReviewIds": [
+        "REV-TTA-CLO-14"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -5188,12 +5200,18 @@
       ],
       "siblingFindingIds": [],
       "repair": "FIXED uncommitted: isManualActor excludes isPendingQueuedExecution(actor.id); pin test 'presentation deactivation auto-drains a queued execution' in CombatAnimationRuntime.test.ts (27/27 pass)",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "pinEvidenceIds": [
+        "EV-TTA-CLNA11-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TTA-CLNA11-FIX"
+      ],
+      "closureReviewIds": [
+        "REV-TTA-CLO-14"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -5243,12 +5261,18 @@
       ],
       "siblingFindingIds": [],
       "repair": "FIXED uncommitted: named+unregistered fizzles (null skill); basic fallback reserved for unnamed entries / actors with no authored payloads — matches existing 'only when authored payloads are absent' pin. New pins in followUpQueue.test.ts (named-miss fizzle + unnamed basic).",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "pinEvidenceIds": [
+        "EV-TTA-CLNA11-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TTA-CLNA11-FIX"
+      ],
+      "closureReviewIds": [
+        "REV-TTA-CLO-14"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -5853,21 +5877,21 @@
     {
       "id": "EV-TTA-PROBE-WAVE-OBS",
       "state": {
-        "productStateId": "b9ded25602b269552ff4de41041cf5d5c9844ad0f8cc0a1cd3e1841cf348dd4f",
+        "productStateId": "14401a4f5efea59b40ddd43a89a5f6833867139b042a15e9a813302ec49088e2",
         "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
         "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
         "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
       },
       "kind": "EXECUTED_UNIT_STRUCTURAL",
       "producer": "coordinator",
-      "startedAt": "2026-09-26T01:13:00.000Z",
-      "finishedAt": "2026-09-26T01:38:00.000Z",
+      "startedAt": "2026-09-26T08:52:00.000Z",
+      "finishedAt": "2026-09-26T08:53:00.000Z",
       "commandOrMethod": "npx vitest run --config docs/qa/runs/the-tu-an-ung-the-2026-09-25/evidence/vitest.probe.config.mts",
       "cwd": "game/",
       "exitCode": 0,
       "result": "PASS",
       "artifactPath": "evidence/probe-wave-observation.log",
-      "artifactHash": "d40323d2570b399d15556808bd84b45ac31050a42e0a7fde41d0edf5d219eb4a",
+      "artifactHash": "d6c902ba138d008399a347bf25bd1573f5ce2c8cc59d96b786e64997e71cab51",
       "inputPaths": [
         "src/core/battle/turn/TurnBattleSystem.ts",
         "src/data/buff/TheTuBuffs.ts"
@@ -5875,14 +5899,14 @@
       "inputEvidenceIds": [],
       "invariantIds": [],
       "claims": [
-        "P1: wave-spawned enemy observed under live quan_the with NO Tham mark (+4 observed income)",
-        "P2: quan_the expires at FIXED_TURNS(4) holder turns; quan_the-only observation dies with it",
-        "novel-attack seam: pendingEnemySpawns materialization -> isObserved quan_the path"
+        "P1: wave-spawned enemy observed under live quan_the with NO Tham mark (+4 observed income) (re-run on post-cleanA12 state)",
+        "P2: quan_the expires at FIXED_TURNS(4) holder turns; quan_the-only observation dies with it (re-run on post-cleanA12 state)",
+        "novel-attack seam: pendingEnemySpawns materialization -> isObserved quan_the path (re-run on post-cleanA12 state)"
       ],
       "limitations": [
         "headless TBS harness; presentation lane not covered"
       ],
-      "status": "STALE"
+      "status": "CURRENT"
     },
     {
       "id": "EV-TTA-CLNA7-INT-FIX",
@@ -6063,6 +6087,39 @@
         "src/core/battle/turn/TurnBattleSystem.ts",
         "src/core/combat/CombatTypes.ts",
         "src/core/battle/turn/TurnBattleSystem.followUpQueue.test.ts"
+      ]
+    },
+    {
+      "id": "EV-TTA-CLNA11-FIX",
+      "state": {
+        "productStateId": "14401a4f5efea59b40ddd43a89a5f6833867139b042a15e9a813302ec49088e2",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coordinator",
+      "startedAt": "2026-09-26T07:40:00.000Z",
+      "finishedAt": "2026-09-26T07:55:00.000Z",
+      "commandOrMethod": "npm run type-check && npx vitest run scoped battle/save scopes",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/clna11-fix-verify.md",
+      "artifactHash": "4404427ce95f07b4b47aa2d8938ba85b1c64e18215950253fe0bc3473d33876a",
+      "claims": [
+        "776 scoped tests PASS",
+        "payload named-miss fizzle pin",
+        "manual-park orphan fix verified"
+      ],
+      "invariantIds": [],
+      "limitations": [],
+      "status": "CURRENT",
+      "inputEvidenceIds": [],
+      "inputPaths": [
+        "src/core/battle/turn/TurnBattleSystem.ts",
+        "src/core/battle/turn/TurnBattleSystem.followUpQueue.test.ts",
+        "src/core/battle/turn/CombatAnimationRuntime.ts"
       ]
     }
   ],
@@ -7486,7 +7543,7 @@
         "F-TTA-CLN12-COR-2"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TTA-CLEAN-A12-AUT",
@@ -7515,7 +7572,61 @@
         "F-TTA-CLN12-AUT-1"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
+    },
+    {
+      "id": "REV-TTA-CLO-14",
+      "state": {
+        "productStateId": "ca812f5eaae9b4e70246ddf57ecd811e1907692e283e8a9c21b4f8532602aa3c",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 50,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-c61a29397c7d401385728efd8b1d6ff2",
+      "contextId": "sealed-child-c61a2939",
+      "model": "swe-2-max",
+      "role": "CLOSURE",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T07:10:00.000Z",
+      "sealedAt": "2026-09-26T07:45:00.000Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "REV-TTA-CLEAN-A12-INT",
+      "state": {
+        "productStateId": "ca812f5eaae9b4e70246ddf57ecd811e1907692e283e8a9c21b4f8532602aa3c",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 51,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-a857eb8c27b04dcebbbdcd2d9e9d702d",
+      "contextId": "sealed-child-a857eb8c",
+      "model": "swe-2-max",
+      "role": "INTEGRATION",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T07:39:00.000Z",
+      "sealedAt": "2026-09-26T08:29:00.000Z",
+      "previousPhaseReviewId": "REV-TTA-CLEAN-A11-INT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "STALE"
     }
   ],
   "cycles": [],
@@ -11169,6 +11280,22 @@
       "payloadPath": "events/0073.json",
       "payloadHash": "faf7da3b745e502ef887c56718ce432b1bffa1b879bb8156b9046b486038047b",
       "eventHash": "3a82d72e26cd5b2b5169472389a6744722630db791cd3964492bd5f7cca33ee5"
+    },
+    {
+      "seq": 74,
+      "at": "2026-09-26T08:35:36.629Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-619024",
+      "state": {
+        "productStateId": "14401a4f5efea59b40ddd43a89a5f6833867139b042a15e9a813302ec49088e2",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "3a82d72e26cd5b2b5169472389a6744722630db791cd3964492bd5f7cca33ee5",
+      "payloadPath": "events/0074.json",
+      "payloadHash": "8239e1dd2564e1e072fc938dbba2b19057d2bb35cf036b1759419b1480b798e6",
+      "eventHash": "49da8418c6ed9575e8589816bca0c872c40e79b427adadbc552fa9c28c9e2677"
     }
   ]
 }
