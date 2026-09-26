@@ -18084,7 +18084,7 @@
       "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "36faa807b158178bf381478ed1c4219630ad4cc4b73d9459b3671288143d8a68"
+      "hash": "bc4f4889d664ad9ccfd2f122411b99ebdb5f09f93c1c9be111eef80443394fa9"
     },
     {
       "path": "src/core/game/GameManagerRewardOps.ts",
@@ -18564,13 +18564,13 @@
       "path": "src/core/player/CultivationPathKit.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d139c21339f7440c4dd0ddac5a387bf9963aac6ef10db245137db84d90955d14"
+      "hash": "f756c0d71886978ce108ec24527211b4aa44307a17c0c42dfab4c956ec9fcac6"
     },
     {
       "path": "src/core/player/CultivationPathRegistry.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a0f7295e868474f67a9008e03aa8889717771057f8a75cc045c26bd0dba59241"
+      "hash": "d45767bfa8c51086b62e6a99971e928943ecc7ff3a0435e8fb4341de27e4297c"
     },
     {
       "path": "src/core/player/CultivationPathRoles.test.ts",
@@ -23085,5 +23085,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "d1f14a0325e2dd29d87f3436e9d269d792a33f272fb604d6f1d3aa575be84546"
+  "productStateId": "2f3ec591c784f18101b530f8e3b92f1257457ad0e671e8b7ea7abaea83261f0a"
 }
