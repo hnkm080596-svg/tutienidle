@@ -1,0 +1,749 @@
+# TASK — FULL TEST WORKLOAD & REDUNDANCY AUDIT
+
+Repository: Tiên Hiệp Idle  
+Scope: entire current repository / current HEAD.
+
+## Objective
+
+Audit the accumulated test system to determine how much **real test workload** can be removed or made cheaper **without weakening behavioral coverage, architectural protection, regression protection, or invariants**.
+
+The repository has accumulated roughly 700+ Vitest test files over many development missions and QA rounds.
+
+This task is NOT primarily about reducing physical file count.
+
+The actual objective is to reduce:
+
+- executed test cases;
+- duplicated semantic coverage;
+- repeated expensive setup;
+- repeated GameManager construction;
+- repeated battle simulations;
+- repeated save/restore cycles;
+- unnecessarily expensive integration tests;
+- tests that are already strictly subsumed by stronger canonical tests;
+- tests unnecessarily executed in the default development gate.
+
+A reduction such as:
+
+777 files → 400 files
+
+is NOT considered an improvement if approximately the same workload still executes.
+
+The metrics that matter are:
+
+1. executed test cases;
+2. wall-clock execution time;
+3. expensive runtime/setup operations;
+4. semantic/invariant coverage retained;
+5. default-gate workload;
+6. full-suite workload.
+
+---
+
+# 0. HARD RULES
+
+## AUDIT ONLY
+
+Do NOT:
+
+- modify production code;
+- modify tests;
+- delete tests;
+- consolidate files;
+- change Vitest configuration;
+- change CI;
+- commit anything.
+
+This mission produces evidence and a remediation plan only.
+
+---
+
+## NEVER CLASSIFY BY FILENAME ALONE
+
+Names such as:
+
+- `.qa.test.ts`
+- `.adversarial.test.ts`
+- `.reaudit.test.ts`
+- `r7qa`
+- `r81qa`
+- `slice3qa`
+- `review-round-*`
+
+are historical metadata, NOT evidence that the test is obsolete.
+
+Read the tests.
+
+Compare their actual:
+
+- setup;
+- actions;
+- assertions;
+- event traces;
+- state transitions;
+- failure modes;
+- boundary conditions.
+
+A historical regression test may still be the only test protecting an invariant.
+
+---
+
+## ASSERTION PRESERVATION > TEST REDUCTION
+
+When uncertain whether removing a test weakens coverage:
+
+KEEP IT.
+
+Do not optimize based on aesthetics.
+
+The goal is NOT to achieve a predetermined test count.
+
+---
+
+# 1. BASELINE INVENTORY
+
+Establish the exact current baseline.
+
+Report:
+
+- HEAD SHA;
+- Vitest version;
+- default Vitest include/exclude configuration;
+- number of default-gate test files;
+- number of total executable test files;
+- total executed test cases;
+- pass/fail/skip/todo counts;
+- full-suite wall-clock runtime;
+- default-suite wall-clock runtime;
+- architecture test count/runtime;
+- Playwright count/runtime separately;
+- lab/optional tests separately.
+
+Run the suite sufficiently to obtain trustworthy timings.
+
+If timings fluctuate significantly, run enough samples to report:
+
+- median;
+- min/max or variance where useful.
+
+Do not mix Playwright timing into Vitest timing.
+
+---
+
+# 2. RUNTIME PROFILING
+
+Profile test workload.
+
+Produce at minimum:
+
+## Top 50 slowest test files
+
+For each:
+
+- path;
+- test count;
+- runtime;
+- percentage of total runtime;
+- primary authority under test.
+
+## Top expensive test families
+
+Group by actual subsystem/authority, e.g.:
+
+- GameManager;
+- GameManagerTurnBattleOps;
+- GameManagerSaveRestore;
+- GameManagerAutoFarmOps;
+- TurnBattleSystem;
+- CombatAnimationRuntime;
+- BattleLootSystem;
+- CombatScene;
+- save system;
+- progression;
+- body/realm;
+- skill/path;
+- equipment/economy;
+- architecture.
+
+Report cumulative runtime.
+
+We need to know whether 10–20% of the suite is responsible for most of the cost.
+
+---
+
+# 3. EXPENSIVE SETUP CENSUS
+
+Search the entire suite for repeated expensive operations.
+
+Count and locate at least:
+
+- `new GameManager(...)`;
+- equivalent GameManager factories;
+- TurnBattleSystem construction;
+- battle construction;
+- combat runtime construction;
+- player bootstrap;
+- registry/catalog population;
+- large fixture construction;
+- stage start;
+- battle advancement;
+- large turn loops;
+- save serialization;
+- restore;
+- save round-trip;
+- fake timer advancement;
+- async timers;
+- Vue mounting;
+- Phaser/scene harness setup;
+- repeated content registration.
+
+Distinguish:
+
+### A. Cheap pure-unit setup
+
+from:
+
+### B. Integration setup
+
+from:
+
+### C. Full runtime/game setup.
+
+Identify tests using category C to verify behavior that could be proven at category A/B.
+
+Those are candidates for `REWRITE_CHEAPER`.
+
+---
+
+# 4. SEMANTIC REDUNDANCY AUDIT
+
+This is the core of the mission.
+
+For every major multi-test family, determine whether tests are:
+
+### UNIQUE
+
+Protect a behavior/invariant not equivalently protected elsewhere.
+
+### OVERLAPPING
+
+Share some semantic coverage but each still contains unique assertions.
+
+### STRICTLY SUBSUMED
+
+Every meaningful behavior/assertion protected by test A is already protected by test B or another canonical suite at equal or stronger boundaries.
+
+Only STRICTLY SUBSUMED tests may become `SAFE_DELETE`.
+
+Similarity of setup or test names is NOT subsumption.
+
+Example:
+
+A tests:
+
+    level 18 allows hidden breakthrough
+
+B tests:
+
+    levels 1..18 satisfy hiddenBreakthrough === level >= 18
+
+If B exercises the same production authority and same relevant state boundary, A may be strictly subsumed.
+
+But if A additionally verifies:
+
+    persisted hidden flag
+    emitted event
+    no currency mutation
+
+then B does NOT subsume A unless those properties are also asserted.
+
+Document the proof.
+
+---
+
+# 5. HISTORICAL TEST ACCRETION
+
+Explicitly inspect historical families such as:
+
+- QA;
+- adversarial;
+- reaudit;
+- slice QA;
+- round-specific QA;
+- mission-specific regression suites.
+
+Prioritize known large families:
+
+## GameManager.*
+
+There are historically many `GameManager.*.test.ts` files.
+
+Map each test to the CURRENT production authority.
+
+Examples:
+
+    GameManagerAutoFarmOps
+    GameManagerEconomyOps
+    GameManagerRealmAdvanceOps
+    GameManagerProgressionOps
+    GameManagerSaveRestore
+    GameManagerTickOps
+    GameManagerTurnBattleOps
+    GameManagerTurnBattlePresentationOps
+    GameManagerQuestOps
+    GameManagerCompanionOps
+
+Determine whether older GameManager facade tests duplicate direct tests of the extracted owner.
+
+Facade tests should remain only where they verify actual facade/orchestration behavior.
+
+Do not repeatedly test deep domain behavior through GameManager if the owner already proves it.
+
+---
+
+## TurnBattleSystem.*
+
+Audit the complete family, including:
+
+    TurnBattleSystem.test
+    contract
+    determinism
+    adversarial
+    slice QA
+    attack-event QA
+    hit-resolution QA
+    buff/status QA
+    skill/resource tests
+    turn-order tests
+    party/companion tests
+
+Construct an invariant map.
+
+For every invariant, identify every test that exercises it.
+
+Look specifically for repeated testing of:
+
+- hit resolution;
+- damage;
+- RNG determinism;
+- event emission;
+- buff lifecycle;
+- resource debit;
+- skill legality;
+- turn ordering;
+- death settlement;
+- reaction dispatch;
+- playback/presentation boundaries.
+
+---
+
+# 6. SAVE / RESTORE REDUNDANCY
+
+Save/restore tests are often expensive and historically accumulate regressions.
+
+Build a complete map covering:
+
+- serialization;
+- acceptance/preflight;
+- restore;
+- round-trip;
+- once-only settlement;
+- offline settlement;
+- registry reconciliation;
+- removed/stale IDs;
+- technique/skill restoration;
+- body state;
+- auto-farm state;
+- quests;
+- pending transactions;
+- tribulation state;
+- progression re-derivation.
+
+Identify cases where the same invariant is verified through multiple increasingly broad round-trip tests.
+
+Do NOT remove narrow regression tests merely because an E2E save test touches the same code.
+
+Only mark deletion when semantic subsumption is demonstrated.
+
+---
+
+# 7. ARCHITECTURE TESTS
+
+Audit architecture tests separately.
+
+These often have low runtime but high protection value.
+
+Prefer KEEP when a test enforces a distinct law such as:
+
+- import direction;
+- write authority;
+- projection ownership;
+- dependency boundary;
+- domain whitelist;
+- runtime ownership.
+
+Do not consolidate architecture laws merely to reduce file count.
+
+However, identify:
+
+- duplicated source scans;
+- duplicated filesystem traversal;
+- duplicated parser work;
+- repeated compilation/parsing that could share infrastructure.
+
+Classify performance improvements separately from semantic deletion.
+
+---
+
+# 8. PLAYWRIGHT / E2E
+
+Audit Playwright separately.
+
+Do NOT assume E2E is expensive waste.
+
+For each E2E flow determine whether it protects:
+
+- actual browser integration;
+- routing;
+- Phaser/runtime integration;
+- persistence;
+- accessibility;
+- presentation;
+- user-visible state.
+
+Do not replace browser assertions with unit tests when the browser boundary itself is what matters.
+
+But identify expensive E2E setup that could use deterministic fixtures/dev seams without weakening the browser assertion.
+
+---
+
+# 9. PROPERTY / INVARIANT REPLACEMENT
+
+Find groups of example-based tests that can be replaced by a stronger invariant/property test.
+
+Good candidates include:
+
+- numerical bounds;
+- monotonic scaling;
+- realm mappings;
+- grade mappings;
+- cost/debit laws;
+- resource conservation;
+- deterministic RNG;
+- save round-trip equivalence;
+- stat composition;
+- prerequisite/gate boundaries.
+
+A property replacement is acceptable only when it protects all relevant semantics of the examples.
+
+Keep historically important concrete regression examples when they provide useful boundary documentation or exercise a distinct path.
+
+Do not use property tests merely to reduce test count.
+
+---
+
+# 10. DEFAULT GATE VS FULL SUITE
+
+Not every valuable test necessarily needs to run in every local/default gate.
+
+Classify tests into possible execution tiers:
+
+## TIER A — FAST DEFAULT
+
+Must run continuously.
+
+Examples:
+
+- unit contracts;
+- invariants;
+- architecture laws;
+- high-value regression tests;
+- cheap integration tests.
+
+## TIER B — INTEGRATION
+
+More expensive subsystem scenarios.
+
+Run in appropriate CI/pre-merge gate.
+
+## TIER C — EXHAUSTIVE / ADVERSARIAL
+
+Large matrices, fuzz/property stress, exhaustive simulations, historical stress cases.
+
+Run in full CI/nightly/manual QA where appropriate.
+
+Important:
+
+Moving a test out of the default gate does NOT mean deleting it.
+
+The full suite must remain available.
+
+Recommend tier movement only when the feedback-speed benefit is meaningful.
+
+---
+
+# 11. REQUIRED CLASSIFICATION
+
+Every candidate optimization must use exactly one of these categories:
+
+### KEEP_DEFAULT
+
+Unique/high-value protection and appropriate cost.
+
+### SAFE_DELETE
+
+Strictly semantically subsumed.
+
+Must provide the exact surviving test(s) that cover every relevant assertion/invariant.
+
+### MOVE_OUT_OF_DEFAULT_GATE
+
+Valuable test, but unnecessary for every default run.
+
+State recommended tier.
+
+### REWRITE_CHEAPER
+
+Invariant should remain, but current test exercises too much runtime.
+
+State:
+
+- current expensive path;
+- proposed cheaper authority/seam;
+- why coverage remains equivalent.
+
+### STRUCTURAL_MERGE_ONLY
+
+Files/setup can be consolidated for maintainability, but this does NOT materially reduce runtime.
+
+Do not count this category toward workload reduction.
+
+---
+
+# 12. SUBSUMPTION PROOF FORMAT
+
+For every `SAFE_DELETE` candidate provide:
+
+    Candidate:
+      path + test name
+
+    Protected behaviors:
+      B1
+      B2
+      B3
+
+    Surviving coverage:
+      B1 -> file/test X
+      B2 -> file/test Y
+      B3 -> file/test Y
+
+    Authority equivalence:
+      explain why both paths reach the same canonical production authority
+
+    Boundary equivalence:
+      explain why the surviving test is equal or stronger
+
+    Verdict:
+      STRICTLY SUBSUMED
+
+If any behavior cannot be mapped:
+
+    Verdict:
+      NOT SAFE TO DELETE
+
+No hand-waving.
+
+---
+
+# 13. WORKLOAD MODEL
+
+Produce BEFORE and projected AFTER numbers.
+
+At minimum:
+
+| Metric | Current | Safe phase | Aggressive-safe phase |
+|---|---:|---:|---:|
+| Default test files | | | |
+| Default test cases | | | |
+| Full test cases | | | |
+| Default runtime | | | |
+| Full runtime | | | |
+| GameManager constructions | | | |
+| Battle simulations | | | |
+| Save/restore cycles | | | |
+| Browser E2E runtime | | | |
+
+`Safe phase`:
+
+Only high-confidence SAFE_DELETE + obvious cheaper equivalent paths.
+
+`Aggressive-safe phase`:
+
+May additionally include validated tier movement, property replacement and test harness changes, but MUST preserve protection.
+
+Report both:
+
+    absolute reduction
+
+and:
+
+    percentage reduction.
+
+---
+
+# 14. EXPECTED OUTPUT
+
+Create:
+
+`game/docs/qa/test-workload-redundancy-audit.md`
+
+The report must contain these sections:
+
+1. Executive Summary
+2. Baseline
+3. Runtime Profile
+4. Expensive Setup Census
+5. Semantic Redundancy Map
+6. GameManager Family Audit
+7. TurnBattleSystem Family Audit
+8. Save/Restore Audit
+9. Architecture Audit
+10. E2E Audit
+11. Property/Invariant Opportunities
+12. Default-vs-Full Gate Proposal
+13. SAFE_DELETE Candidates
+14. REWRITE_CHEAPER Candidates
+15. MOVE_OUT_OF_DEFAULT_GATE Candidates
+16. KEEP_DEFAULT Inventory Summary
+17. Structural-Only Consolidation
+18. Workload Before/After Model
+19. Risk Analysis
+20. Recommended Migration Order
+21. Evidence Appendix
+
+---
+
+# 15. RECOMMENDED MIGRATION ORDER
+
+The audit should evaluate whether this order is correct rather than assuming it:
+
+1. TurnBattleSystem
+2. GameManager / extracted Ops
+3. Save/Restore
+4. Combat runtime
+5. Progression / realm / body
+6. Economy/equipment
+7. Small pure-domain matrices
+8. Architecture scanner optimization
+9. Playwright setup optimization
+
+Change the order if runtime evidence shows another hotspot.
+
+---
+
+# 16. VALIDATION STANDARD
+
+A proposed optimized suite must still detect all known classes of failures protected by the current suite.
+
+For high-value proposed deletions, perform mutation-style validation where practical:
+
+Temporarily introduce or simulate a representative defect locally and confirm the surviving test fails.
+
+Do NOT commit these mutations.
+
+Examples:
+
+- change a gate boundary;
+- remove a debit;
+- allow duplicate settlement;
+- change deterministic ordering;
+- skip restore reconciliation;
+- emit the wrong combat event.
+
+This is particularly important when claiming that a broad/property test subsumes historical regression tests.
+
+---
+
+# 17. IMPORTANT DISTINCTION
+
+Do not confuse:
+
+    fewer files
+
+with:
+
+    less workload.
+
+Example:
+
+    48 files / 400 cases
+    ->
+    10 files / 400 cases
+
+is primarily a maintainability improvement.
+
+Report it as:
+
+    STRUCTURAL_MERGE_ONLY
+
+unless measured runtime proves otherwise.
+
+The primary success criterion is:
+
+    LESS EXECUTED WORK
+    WITH EQUAL OR STRONGER PROTECTION.
+
+---
+
+# 18. FINAL VERDICT
+
+End the report with:
+
+    CURRENT DEFAULT:
+      <files>
+      <cases>
+      <runtime>
+
+    SAFE REDUCTION:
+      <cases removable>
+      <runtime removable>
+      <percentage>
+
+    DEFAULT-GATE REDUCTION:
+      <workload movable out of default>
+      <percentage>
+
+    REWRITE-CHEAPER POTENTIAL:
+      <estimated runtime reduction>
+      <evidence>
+
+    PROJECTED DEFAULT:
+      <cases>
+      <runtime>
+
+    PROJECTED FULL:
+      <cases>
+      <runtime>
+
+    COVERAGE/INVARIANT IMPACT:
+      <assessment>
+
+    TOP 10 HIGHEST-ROI CHANGES:
+      ...
+
+    DO NOT REMOVE:
+      list especially important test families
+
+    [TEST-WORKLOAD-AUDIT] <PASS|INSUFFICIENT_EVIDENCE>
+
+PASS means the report contains enough evidence to begin a separate remediation mission.
+
+It does NOT mean any tests have been deleted.
+
+---
+
+The purpose of this mission is to answer one question with evidence:
+
+**How much of Tiên Hiệp Idle's accumulated test workload can actually be eliminated or made cheaper while retaining equal or stronger defect-detection power?**
+
+Do not optimize for a pretty test count. Optimize for execution cost per unit of protection.
