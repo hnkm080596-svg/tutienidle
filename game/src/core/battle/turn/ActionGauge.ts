@@ -48,3 +48,10 @@ export function refundGauge(actor: GaugeActor, amount: number): void {
   const floor = Math.min(0, actor.actionGauge)
   actor.actionGauge = Math.min(GAUGE_MAX, Math.max(floor, actor.actionGauge + amount))
 }
+
+/** Hình phạt nợ Ứng Trệ — signed negative delta, no floor: debt is the
+    only legal source of negative gauge, so the penalty subtracts raw
+    (a clamped refund would eat part of it). */
+export function applyDebtPenalty(actor: GaugeActor, amount: number): void {
+  actor.actionGauge -= amount
+}

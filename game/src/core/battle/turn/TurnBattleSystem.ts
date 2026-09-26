@@ -10,7 +10,12 @@ import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 import type { CombatScheduler } from '../runtime/scheduler/CombatScheduler'
 import { entityGridPosition, getChebyshevDistance } from '../BattleGrid'
 import { actionTagsOfSkill, Buff2ActionValidator, type ActionValidator } from './ActionValidator'
-import { consumeGaugeAfterAction, advanceGauge, isGaugeReady } from './ActionGauge'
+import {
+  applyDebtPenalty,
+  consumeGaugeAfterAction,
+  advanceGauge,
+  isGaugeReady,
+} from './ActionGauge'
 import { resolveNextTurn } from './TurnQueue'
 import { tickCooldowns, selectAction, selectForcedAction, commitAction, collectTurnTargets, executionCommitsCast, pickCompositePool, MAX_MULTICAST, NULL_ACTION, type TurnSkillExecution, type TurnQueuedExecution } from './TurnSkillAction'
 import type { TurnSkillDefinition, TurnSkillSlot, SelectedAction, DynamicBasicProvider, ForcedTurnChoice, TurnSkillBuffApplication } from './TurnSkillAction'
@@ -45,7 +50,7 @@ import {
   theGainOnBasicHit,
   theGainOnObservedAction,
 } from '../../the-tu/TheEconomy'
-import { hasQuanTheMarker } from '../../../data/buff/TheTuBuffs'
+import { BAT_TU_BA_THE_BUFF, DAN_THE_BUFF, hasQuanTheMarker } from '../../../data/buff/TheTuBuffs'
 import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
 import { reconcileExternalWard } from '../../the-tu/TheTuExternalWard'
 import {
@@ -1249,7 +1254,10 @@ export class TurnBattleSystem {
 
       if (moreComing) {
         for (const participant of [...battle.players, ...battle.enemies]) {
-          participant.actionGauge = 0
+          // Wave-lull resets tempo but never forgives an Ung Tre debt:
+          // a negative gauge (the committed-reaction penalty) carries
+          // into the next wave -- the debt's delay is still owed.
+          participant.actionGauge = Math.min(0, participant.actionGauge)
         }
 
         return null
@@ -2360,6 +2368,20 @@ export class TurnBattleSystem {
       }
     }
 
+    // Ung The observation income is judged at action-resolution time:
+    // an observed enemy that completes its action earns The even if the
+    // reflect flush below kills it inside this same tail (the mark dies
+    // with it, but the completed action already paid). Snapshot the
+    // observing reactors before the settle can remove the actor.
+    const observedAtResolution = new Set<string>()
+    if (this.runtime !== undefined && battle.enemies.includes(actor)) {
+      for (const reactor of battle.players) {
+        if (this.isObserved(battle, reactor, actor)) {
+          observedAtResolution.add(reactor.id)
+        }
+      }
+    }
+
     // The Tu beta (Phan Chan) -- once-per-hostile-action reflect settle:
     // hits of this action queued ONE pending entry per reflect-holder;
     // the action is fully settled here (primary cast, extras, dynamic
@@ -2376,7 +2398,7 @@ export class TurnBattleSystem {
     // unswept until the next declare (HUD reads a dead mark for a step).
     this.sweepBuffDeaths(battle)
 
-    this.resolvePostActionWindows(battle, actor, declared, landedTargets)
+    this.resolvePostActionWindows(battle, actor, declared, landedTargets, observedAtResolution)
 
     return { targetIds, extraImpacts }
   }
@@ -3004,7 +3026,7 @@ export class TurnBattleSystem {
     if (this.runtime === undefined) return false
     return this.buffs
       .getForTarget(participant.entity.id)
-      .some((inst) => inst.definitionId === 'bat_tu_ba_the')
+      .some((inst) => inst.definitionId === BAT_TU_BA_THE_BUFF.id)
   }
 
   /**
@@ -3028,7 +3050,7 @@ export class TurnBattleSystem {
    */
   private commitReaction(holder: TurnBattleParticipant): void {
     holder.reactionDebt = (holder.reactionDebt ?? 0) + 1
-    holder.actionGauge -= UNG_TRE_GAUGE_PENALTY
+    applyDebtPenalty(holder, UNG_TRE_GAUGE_PENALTY)
   }
 
   /**
@@ -3097,10 +3119,11 @@ export class TurnBattleSystem {
     actor: TurnBattleParticipant,
     declared: TurnDeclaredAction,
     landedTargets: TurnBattleParticipant[],
+    observedAtResolution?: ReadonlySet<string>,
   ): void {
     this.resolvePhanWindow(battle, actor, declared)
     this.resolveAllyActionWindow(battle, actor, declared, landedTargets)
-    this.grantObservationIncome(battle, actor, declared, landedTargets)
+    this.grantObservationIncome(battle, actor, declared, landedTargets, observedAtResolution)
   }
 
   /**
@@ -3219,10 +3242,16 @@ export class TurnBattleSystem {
         continue
       }
 
-      this.resolveReactiveProcs(battle, ally, 'onAllyActionComplete', {
-        attacker: actor,
-        triggeringTargets: [canonical],
-      })
+      this.resolveReactiveProcs(
+        battle,
+        ally,
+        'onAllyActionComplete',
+        {
+          attacker: actor,
+          triggeringTargets: [canonical],
+        },
+        { once: true },
+      )
     }
   }
 
@@ -3239,6 +3268,7 @@ export class TurnBattleSystem {
     actor: TurnBattleParticipant,
     declared: TurnDeclaredAction,
     landedTargets: TurnBattleParticipant[],
+    observedAtResolution?: ReadonlySet<string>,
   ): void {
     // ccBlocked: the enemy's turn was consumed by hard CC -- it never
     // completed an action, matching the sealed NULL_ACTION (undefined
@@ -3281,12 +3311,16 @@ export class TurnBattleSystem {
     if (battle.enemies.includes(actor)) {
       const danThe = this.buffs
         .getForTarget(actor.entity.id)
-        .find((inst) => inst.definitionId === 'dan_the')
+        .find((inst) => inst.definitionId === DAN_THE_BUFF.id)
       const mult = danThe !== undefined ? DAN_THE_INCOME_MULT : 1
       let consumed = false
 
       for (const reactor of battle.players) {
-        if (!reactor.entity.alive || !this.isObserved(battle, reactor, actor)) continue
+        const observed =
+          observedAtResolution !== undefined
+            ? observedAtResolution.has(reactor.id)
+            : this.isObserved(battle, reactor, actor)
+        if (!reactor.entity.alive || !observed) continue
         const grants = this.buffs.getCapabilities(reactor.entity.id)
         const amount = theGainOnObservedAction(grants) * mult
         if (amount <= 0) continue

@@ -430,7 +430,9 @@ describe('Ung Tre / Qua The (debt boundary + dead-attacker gate)', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY, undefined, runtime)
-    playerP.entity.currentThe = 100
+    // Exactly THE_PROC_COST and below cap: the +4 income must be
+    // distinguishable from both a paid reaction and a capped pool.
+    playerP.entity.currentThe = THE_PROC_COST
     playerP.thamTargetId = 'enemy'
     enemyP.entity.currentHp = 1 // the reflect is lethal
     enemyP.actionGauge = 10_000
@@ -439,10 +441,44 @@ describe('Ung Tre / Qua The (debt boundary + dead-attacker gate)', () => {
     system.resolveNextStep(battle) // enemy hits -> reflect kills it mid-action
     expect(enemyP.entity.alive).toBe(false)
     // No window opened: no -15 cost, no +1 debt, no -400 gauge penalty.
-    // (The dead actor's action tail also skips the +4 observed income.)
-    expect(playerP.entity.currentThe).toBe(100)
+    // The action DID complete while observed, so the +4 observed income
+    // still lands -- observation is judged at action-resolution time,
+    // before the action-tail reflect can clear the mark.
+    expect(playerP.entity.currentThe).toBe(THE_PROC_COST + 4)
     expect(playerP.reactionDebt ?? 0).toBe(0)
     expect(playerP.actionGauge).toBeGreaterThanOrEqual(gaugeBefore)
+  })
+
+  it('a wave-lull pacing reset does NOT forgive Ung Tre negative gauge debt', () => {
+    const { battle, playerP, enemyP, combat, runtime } = makeBattle()
+    const system = new TurnBattleSystem(combat, 10, BUFF_REGISTRY, undefined, runtime)
+
+    // Kill the only enemy while a wave is pending -> the lull pacing
+    // branch resets tempo. A debt-negative gauge must carry into the
+    // next wave; only positive progress resets.
+    enemyP.entity.currentHp = 0
+    enemyP.entity.alive = false
+    battle.enemies = []
+    battle.wave = {
+      totalEnemyCount: 2,
+      spawnedCount: 1,
+      waves: [2],
+      waveIndex: 0,
+      pendingEnemySpawns: [
+        { participant: enemyP, ticksRemaining: 5, totalTicks: 8 },
+      ],
+    }
+    playerP.actionGauge = -UNG_TRE_GAUGE_PENALTY
+    playerP.reactionDebt = 1
+
+    system.tickPacing(battle)
+
+    expect(playerP.actionGauge).toBe(-UNG_TRE_GAUGE_PENALTY)
+    expect(playerP.reactionDebt).toBe(1)
+
+    playerP.actionGauge = 500
+    system.tickPacing(battle)
+    expect(playerP.actionGauge).toBe(0)
   })
 })
 
