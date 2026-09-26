@@ -426,4 +426,36 @@ Steps 1–3 are each a single-file/single-commit change with no interdependency 
       ~6,766 executed cases (all duplicates removed, all deletions applied)
       ~57.6 s wall measured (≈ −81 %); ~50–55 s with the Tier-B set also moved
 
-    VERDICT: [TEST-WORKLOAD-AUDIT] PASS
+    PROJECTED FULL:
+      ~7,266 surviving unique cases across Tier A + B + C + lab + E2E
+      (every surviving case retained — tiering only)
+      default ~57.6 s + Tier B ~16 s + Tier C ~297 s (scheduled) + lab 4.4 s + E2E 11.4 min
+
+    COVERAGE/INVARIANT IMPACT:
+      Zero unique-assertion loss. The 3 deleted files + 1 deleted case are
+      strictly subsumed (§13 proofs; qadebug mutation-validated). The 483
+      removed duplicate executions are registration artifacts — the same
+      tests still run once in their own files. All tier moves preserve
+      execution on a B/C schedule; only per-PR latency changes.
+
+    TOP 10 HIGHEST-ROI CHANGES:
+      1. Move src/core/simulation/earlygame/PerfectionEconomy.test.ts to Tier C / tests/lab — −81 % wall, zero coverage loss
+      2. Add '!**/*.test.ts' to statDomainWhitelist.test.ts eager glob — −424 duplicate executions
+      3. Add '!**/*.test.ts' to StatCalculator.theTu.test.ts eager glob — −59 duplicate executions
+      4. Delete GameManager.bossSummon.test.ts + GameManager.phapTuChain.test.ts (retired expect(true) stubs)
+      5. Delete TurnBattleSystem.qadebug.test.ts (subsumed by adversarial INV-S1-4; mutation-validated)
+      6. Delete GameManager.turnManualMode.test.ts case 'submit khi KHÔNG pause → false' (subsumed by INV-TM-5)
+      7. Move EssenceSubstitutionEconomy + TrucCoJourney (+ optionally EarlyGameSession/MortalChapterJourney) to Tier B — −~14 s
+      8. Move BattleSimulation.determinism / BattleMetrics / ProductionBalance.simulation / dropCharacterization to Tier B — −~2 s
+      9. Tag Playwright capture specs (@capture: wave-vfx, combat-idle-motion) for on-demand runs
+      10. Triage the 3 pre-existing E2E failures (idle-motion capture, standing-slot panel, technique-frozen warning) and the 2 magick env failures
+
+    DO NOT REMOVE:
+      - All *.adversarial/*.qa twins — they pin degenerate-input and boundary invariants the base files do not exercise
+      - GameManager.* facade tests — seam-level restore/wiring invariants distinct from owner tests
+      - Save/restore seam layers (SaveSystem service, GameManagerSaveRestore facade, per-system persistence, cloud)
+      - tests/architecture/** drift guards — cheapest protection per case in the suite
+      - it.fails markers in GameManager.perfectClear.feasibility — deliberate playtest-debt documentation
+      - PerfectionEconomy's 7 analytic cases — keep in Tier A even if the driven cases move
+
+    [TEST-WORKLOAD-AUDIT] PASS
