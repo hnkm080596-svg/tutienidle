@@ -23,16 +23,104 @@
   "aggregateParents": [],
   "requiredDomains": [],
   "exclusions": [],
-  "briefIds": [],
+  "briefIds": [
+   "BRF-TTA-01"
+  ],
   "capacityLimit": 5,
   "requiredReadiness": true,
-  "phase": "SNAPSHOT",
-  "cleanRoundA": null,
-  "cleanRoundB": null,
-  "finalEvidenceIds": [],
-  "outcome": null
+  "phase": "DECIDE",
+  "cleanRoundA": "CYCLE-TTA-A",
+  "cleanRoundB": "CYCLE-TTA-B",
+  "finalEvidenceIds": [
+   "EV-TTA-FINAL-GATES",
+   "EV-TTA-PROBE-WAVE-OBS"
+  ],
+  "outcome": "QA_BLOCKED_SCOPE"
  },
- "briefs": [],
+ "briefs": [
+  {
+   "id": "BRF-TTA-01",
+   "taskId": "the-tu-an-ung-the-2026-09-25",
+   "revision": 1,
+   "planningBaseline": {
+    "productStateId": "14401a4f5efea59b40ddd43a89a5f6833867139b042a15e9a813302ec49088e2",
+    "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+    "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "policyHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "requirementRefs": [
+    {
+     "path": "design doc pasted-1790289644921.txt (user design): the-tu-an ung-the hidden_body_pathway",
+     "symbolOrSection": "file",
+     "revision": "071984c2",
+     "basis": "USER"
+    }
+   ],
+   "invariantIds": [],
+   "dependencyRefs": [
+    {
+     "path": "src/core/the-tu-an/",
+     "symbolOrSection": "dir",
+     "revision": "071984c2",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/data/progression/TheTuAnNodes.ts",
+     "symbolOrSection": "file",
+     "revision": "071984c2",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/data/skill/TheTuAnSkills.ts",
+     "symbolOrSection": "file",
+     "revision": "071984c2",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "file",
+     "revision": "071984c2",
+     "basis": "SOURCE"
+    }
+   ],
+   "sourceDependencyHashes": [],
+   "expectedChangeSet": [
+    "src/core/the-tu-an/",
+    "src/data/progression/TheTuAnNodes.ts",
+    "src/data/skill/TheTuAnSkills.ts",
+    "src/data/skill/TheTuAnBuffs.ts",
+    "src/core/battle/turn/",
+    "src/components/TheTuAnTreePanel.vue"
+   ],
+   "lessonRouting": [],
+   "slices": [
+    "S1 ung-the engine (reaction debt, tham target, wave observation)",
+    "S2 node lane + UI"
+   ],
+   "firstProofObligations": [
+    {
+     "oracle": "scoped vitest green",
+     "stage": "BEFORE_WRITE",
+     "admittedSlice": "S1",
+     "evidenceIds": [
+      "EV-TTA-FINAL-GATES"
+     ]
+    }
+   ],
+   "unresolvedAssumptions": [],
+   "readiness": "IMPLEMENTATION_READY",
+   "preflightEvidenceIds": [
+    "EV-TTA-FINAL-GATES"
+   ],
+   "deviations": [],
+   "consumedBy": [],
+   "checkpoints": [],
+   "finalConformanceIds": [
+    "EV-TTA-FINAL-GATES"
+   ]
+  }
+ ],
  "assignments": [],
  "consumptions": [],
  "invariants": [],
@@ -5781,6 +5869,59 @@
    "exception": null,
    "status": "REJECTED_WITH_PROOF",
    "rejectionReason": "Pre-existing at merge-base be1bdf8d; TheTuBatTuSurvival.ts untouched by this branch. Out-of-diff note per reviewer."
+  },
+  {
+   "id": "F-TTA-CLNB-COR-1",
+   "title": "Latent: double-dequeue overwrites an unconsumed pending queued entry",
+   "state": {
+    "productStateId": "14401a4f5efea59b40ddd43a89a5f6833867139b042a15e9a813302ec49088e2",
+    "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+    "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "dequeueFollowUpActor ~1050-1118",
+     "revision": "071984c2",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-201b8eca78e34a31a6911a6a1af61ccf",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "second dequeue overwrites pendingQueuedExecution/pendingReactiveEntry before first declares",
+   "expected": "later queued entry not silently dropped",
+   "actual": "unreachable via current callers - immediate resolve + frozen turn clock",
+   "rootCause": "pre-existing machinery",
+   "rootClass": "dormant-lane",
+   "subsystem": "hidden_body_pathway",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "caller census",
+     "hitDispositions": [
+      "all callers resolve immediately"
+     ],
+     "coverageLimits": [],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "REJECTED: pre-existing, unreachable via all current callers",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "Unreachable via tickPacing/resolveNextStep callers; pre-existing machinery outside diff blast radius."
   }
  ],
  "evidence": [
@@ -6443,6 +6584,39 @@
     "src/core/battle/turn/TurnBattleSystem.ts",
     "src/core/battle/turn/TurnOrderPreview.ts",
     "src/data/skill/TheTuSkills.ts"
+   ]
+  },
+  {
+   "id": "EV-TTA-FINAL-GATES",
+   "state": {
+    "productStateId": "14401a4f5efea59b40ddd43a89a5f6833867139b042a15e9a813302ec49088e2",
+    "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+    "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-26T10:51:00.000Z",
+   "finishedAt": "2026-09-26T10:53:00.000Z",
+   "commandOrMethod": "npm run type-check; npx vitest run src/core/battle/turn src/core/battle/runtime src/core/the-tu",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/final-gates.md",
+   "artifactHash": "5ce31d8170fa4098c6246cce8ae6d038543c58476e358db0d4647863be2aa863",
+   "claims": [
+    "type-check clean on final head",
+    "813/813 scoped tests green",
+    "2 CLN12 pending fixes verified in-tree"
+   ],
+   "invariantIds": [],
+   "limitations": [],
+   "status": "CURRENT",
+   "inputEvidenceIds": [],
+   "inputPaths": [
+    "src/core/battle/turn",
+    "src/core/battle/runtime",
+    "src/core/the-tu"
    ]
   }
  ],
@@ -8088,7 +8262,63 @@
    "accessLimitations": [],
    "startedAt": "2026-09-26T09:50:00.000Z",
    "sealedAt": "2026-09-26T10:10:00.000Z",
+   "previousPhaseReviewId": "REV-TTA-CLNB-COR",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-TTA-CLNB-COR",
+   "state": {
+    "productStateId": "14401a4f5efea59b40ddd43a89a5f6833867139b042a15e9a813302ec49088e2",
+    "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+    "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 53,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-201b8eca78e34a31a6911a6a1af61ccf",
+   "contextId": "sealed-child-201b8eca",
+   "model": "swe-2-max",
+   "role": "CORRECTNESS",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-26T09:55:00.000Z",
+   "sealedAt": "2026-09-26T10:36:00.000Z",
    "previousPhaseReviewId": "REV-TTA-CLO-15",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TTA-CLNB-COR-1"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-TTA-CLNB-INT",
+   "state": {
+    "productStateId": "14401a4f5efea59b40ddd43a89a5f6833867139b042a15e9a813302ec49088e2",
+    "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+    "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 53,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-8b0ac2b84180437289c17a33d64b97e6",
+   "contextId": "sealed-child-8b0ac2b8",
+   "model": "swe-2-max",
+   "role": "INTEGRATION",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-26T10:05:00.000Z",
+   "sealedAt": "2026-09-26T10:48:00.000Z",
+   "previousPhaseReviewId": "REV-TTA-CLNB-AUT",
    "reviewedAfterPreviousFixes": true,
    "coverageIds": [],
    "evidenceIds": [],
@@ -8097,7 +8327,56 @@
    "status": "SEALED"
   }
  ],
- "cycles": [],
+ "cycles": [
+  {
+   "id": "CYCLE-TTA-A",
+   "state": {
+    "productStateId": "14401a4f5efea59b40ddd43a89a5f6833867139b042a15e9a813302ec49088e2",
+    "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+    "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reviewIds": [
+    "REV-TTA-CLN13-COR",
+    "REV-TTA-CLN13-AUT",
+    "REV-TTA-CLN13-INT"
+   ],
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-TTA-FINAL-GATES"
+   ],
+   "noveltyEvidenceIds": [
+    "EV-TTA-PROBE-WAVE-OBS"
+   ],
+   "startedAt": "2026-09-26T09:50:00.000Z",
+   "finishedAt": "2026-09-26T10:50:00.000Z",
+   "status": "CLEAN"
+  },
+  {
+   "id": "CYCLE-TTA-B",
+   "state": {
+    "productStateId": "14401a4f5efea59b40ddd43a89a5f6833867139b042a15e9a813302ec49088e2",
+    "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+    "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "reviewIds": [
+    "REV-TTA-CLNB-COR",
+    "REV-TTA-CLNB-AUT",
+    "REV-TTA-CLNB-INT"
+   ],
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-TTA-FINAL-GATES"
+   ],
+   "noveltyEvidenceIds": [
+    "EV-TTA-PROBE-WAVE-OBS"
+   ],
+   "startedAt": "2026-09-26T09:50:00.000Z",
+   "finishedAt": "2026-09-26T10:50:00.000Z",
+   "status": "CLEAN"
+  }
+ ],
  "mutations": [],
  "corpus": [],
  "lessons": [
@@ -10657,6 +10936,32 @@
     "F-TTA-CLN13-AUT-3",
     "F-TTA-CLN13-AUT-4"
    ]
+  },
+  {
+   "id": "L-TTA-84",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-an-ung-the-2026-09-25",
+   "rootClass": "dormant-lane",
+   "missedInvariantIds": [],
+   "escapeReason": "latent double-dequeue overwrite flagged",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "pre-existing unreachable machinery -> reject family",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null,
+   "findingIds": [
+    "F-TTA-CLNB-COR-1"
+   ]
   }
  ],
  "messages": [],
@@ -11844,6 +12149,22 @@
    "payloadPath": "events/0074.json",
    "payloadHash": "8239e1dd2564e1e072fc938dbba2b19057d2bb35cf036b1759419b1480b798e6",
    "eventHash": "49da8418c6ed9575e8589816bca0c872c40e79b427adadbc552fa9c28c9e2677"
+  },
+  {
+   "seq": 75,
+   "at": "2026-09-26T10:52:06.724Z",
+   "kind": "DECISION",
+   "actor": "coordinator-619024",
+   "state": {
+    "productStateId": "14401a4f5efea59b40ddd43a89a5f6833867139b042a15e9a813302ec49088e2",
+    "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+    "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "49da8418c6ed9575e8589816bca0c872c40e79b427adadbc552fa9c28c9e2677",
+   "payloadPath": "events/0075.json",
+   "payloadHash": "803865c4c6fd1e9a02adb966ac43b0cbabd90e5594722b12c18e42133d59e087",
+   "eventHash": "4190ecb4649cb17acfcd84b83ecc71f94010f7939e27c03c919b6ae0f0f66d86"
   }
  ]
 }
