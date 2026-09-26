@@ -10154,6 +10154,281 @@
       "exception": null,
       "status": "REJECTED_WITH_PROOF",
       "rejectionReason": "latent zero-impact; nothing authored reaches it"
+    },
+    {
+      "id": "F-TT-CLNE-INT-1",
+      "title": "techniqueRank prerequisite kind not replayed by save canonicality check",
+      "state": {
+        "productStateId": "a940449f65990e1617bd9c1527219ffbf6a76ee1e85d62a243031be2ca7c901b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/services/save/saveShapeValidation.ts",
+          "symbolOrSection": "non-core replay loop",
+          "revision": "a37fb54b",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-564bed41ceb84c58a76162e3ab5ca7c2",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "replay covers node/excludesNode/nodeCount/realm only; techniqueRank absent",
+      "expected": "keystone below its technique-rank gate should be rejected like realm-gated ownership",
+      "actual": "replay covers node/excludesNode/nodeCount/realm only; techniqueRank absent",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton site"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: the replay explicitly documents laggy gates (techniqueRank, techniqueGrade, skillCastCount, kiemDaoBelowCap) as deliberately NOT replayed — owned levels above a live gate are legal frozen surplus (NodeSystem convention). Realm is replayed because it is monotonic; rank gates are not, per the documented contract.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "REJECTED_WITH_PROOF",
+      "rejectionReason": "laggy-gate exclusion is the documented contract (frozen surplus legal)"
+    },
+    {
+      "id": "F-TT-CLNE-INT-2",
+      "title": "reflect never triggers on non-hit HP damage channels (detonate/DoT) on a phan_chan holder",
+      "state": {
+        "productStateId": "a940449f65990e1617bd9c1527219ffbf6a76ee1e85d62a243031be2ca7c901b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/proc/CombatProcSystem.ts",
+          "symbolOrSection": "onImpactLanded reflect fill",
+          "revision": "a37fb54b",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-564bed41ceb84c58a76162e3ab5ca7c2",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "only landed-hit hpDamage>0 queues a reflect — latent: no enemy/def produces detonate vs a holder",
+      "expected": "arguably a hostile action that dealt hpDamage via non-hit channels should reflect",
+      "actual": "only landed-hit hpDamage>0 queues a reflect — latent: no enemy/def produces detonate vs a holder",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton site"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: latent zero-impact — unreachable in shipped content (detonate exists only player-side); spec scope is hit-channel reflect.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "REJECTED_WITH_PROOF",
+      "rejectionReason": "latent unreachable; per-hit channel is the spec scope"
+    },
+    {
+      "id": "F-TT-CLNE-INT-3",
+      "title": "coverage: no pin for charged-resolve reflect / intercept-substituted reflect / queued-execution non-reflect",
+      "state": {
+        "productStateId": "a940449f65990e1617bd9c1527219ffbf6a76ee1e85d62a243031be2ca7c901b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "charge-resolve + intercept + queued execution lanes",
+          "revision": "a37fb54b",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-564bed41ceb84c58a76162e3ab5ca7c2",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "partially false: charged-resolve reflect already pinned (hoIntercept.test.ts:509, theTuBeta.test.ts:355) and intercept-substituted reflect already pinned (hoIntercept.test.ts:~495, intercepted:true triggerContext). Genuine gap: queued repeat/multicast execution non-reflect.",
+      "expected": "flush/discard seams pinned",
+      "actual": "partially false: charged-resolve reflect already pinned (hoIntercept.test.ts:509, theTuBeta.test.ts:355) and intercept-substituted reflect already pinned (hoIntercept.test.ts:~495, intercepted:true triggerContext). Genuine gap: queued repeat/multicast execution non-reflect.",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton site"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED uncommitted: new pin — queued repeat execution lands the hit but queues no reflect (non-natural actionSource); preexisting pins recorded for the charged/intercept lanes.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLNE-INT-4",
+      "title": "reflect damage does not reset attacker ward-regen delay",
+      "state": {
+        "productStateId": "a940449f65990e1617bd9c1527219ffbf6a76ee1e85d62a243031be2ca7c901b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/combat/EntityVitalsSystem.ts",
+          "symbolOrSection": "applyDamage / turnsSinceLastHitLanded",
+          "revision": "a37fb54b",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-564bed41ceb84c58a76162e3ab5ca7c2",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "reflection ops never touch the regen timer — same family as DoT ticks, reviewer calls it likely intended parity",
+      "expected": "debatable — sustained reflect arguably counts as being hit",
+      "actual": "reflection ops never touch the regen timer — same family as DoT ticks, reviewer calls it likely intended parity",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton site"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: debatable semantics, reviewer-agreed likely-intended parity with DoT ticks; no spec clause requires the reset.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "REJECTED_WITH_PROOF",
+      "rejectionReason": "debatable semantics, DoT-parity likely intended"
+    },
+    {
+      "id": "F-TT-CLNE-INT-5",
+      "title": "kit-clone buff registry keyed by definitionId — latent collision if differently-modded clones coexist",
+      "state": {
+        "productStateId": "a940449f65990e1617bd9c1527219ffbf6a76ee1e85d62a243031be2ca7c901b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/game/GameManagerTurnBattleOps.ts",
+          "symbolOrSection": "collectKitCloneBuffs",
+          "revision": "a37fb54b",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-564bed41ceb84c58a76162e3ab5ca7c2",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "last-registered clone wins — unreachable: clones are player-side only and share identical mods",
+      "expected": "duplicate ids with different mods should resolve own payloads",
+      "actual": "last-registered clone wins — unreachable: clones are player-side only and share identical mods",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton site"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: dormant assumption, not a live defect — identical-mods clones make collisions impossible today.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "REJECTED_WITH_PROOF",
+      "rejectionReason": "dormant unreachable; identical mods"
     }
   ],
   "evidence": [
@@ -14209,6 +14484,39 @@
       "coverageIds": [],
       "evidenceIds": [],
       "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TT-CLNE-INT",
+      "state": {
+        "productStateId": "a940449f65990e1617bd9c1527219ffbf6a76ee1e85d62a243031be2ca7c901b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 49,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-564bed41ceb84c58a76162e3ab5ca7c2",
+      "contextId": "sealed-child-564bed41",
+      "model": "swe-2-max",
+      "role": "INTEGRATION",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T08:10:00.000Z",
+      "sealedAt": "2026-09-26T08:46:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-D-INT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TT-CLNE-INT-1",
+        "F-TT-CLNE-INT-2",
+        "F-TT-CLNE-INT-3",
+        "F-TT-CLNE-INT-4",
+        "F-TT-CLNE-INT-5"
+      ],
       "novelAttackIds": [],
       "status": "SEALED"
     }
@@ -18548,6 +18856,111 @@
       "proposedProtection": [],
       "findingIds": [
         "F-TT-CLNE-COR-3"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-88",
+      "rootClass": "spec-ambiguity",
+      "escapeReason": "laggy-gate exclusion challenged",
+      "capabilityDelta": "documented contract stands; rank gates not replayed by design",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLNE-INT-1"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-89",
+      "rootClass": "coverage",
+      "escapeReason": "queued-execution lane unpinned for reflect exclusion",
+      "capabilityDelta": "repeat/multicast execution pinned non-reflecting",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLNE-INT-3"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-90",
+      "rootClass": "out-of-scope",
+      "escapeReason": "latent semantics flagged (ward-regen, clone registry)",
+      "capabilityDelta": "debatable semantics and dormant collisions rejected with proof",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLNE-INT-4",
+        "F-TT-CLNE-INT-5"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-91",
+      "rootClass": "out-of-scope",
+      "escapeReason": "non-hit damage channel reflect flagged",
+      "capabilityDelta": "latent unreachable — hit-channel is spec scope",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLNE-INT-2"
       ]
     }
   ],

@@ -282,6 +282,27 @@ describe('phan_chan reflect (Max-HP ratio, once-per-action)', () => {
     expect(attacker.currentHp).toBe(10_000)
   })
 
+  // cleanE INT pin -- a queued repeat/multicast execution carries no
+  // actionSource (non-natural), so it lands the hit but queues no
+  // reflect. The original cast reflects exactly once.
+  it('a queued repeat execution hits but never reflects (INV-9 non-natural)', () => {
+    const tank = makeTank('tank')
+    const attacker = makeAttacker('enemy')
+    const f = makeBattle(tank, attacker, BUFF_REGISTRY, { repeatCasts: 1 })
+    applyPhanChan(f.runtime, f.tankP)
+
+    const tankHpBefore = tank.currentHp
+    const system = systemOf(f)
+    system.resolveNextStep(f.battle) // tank noop
+    system.resolveNextStep(f.battle) // attacker original -> 1 reflect
+    const afterOriginal = attacker.currentHp
+    system.resolveNextStep(f.battle) // queued repeat drains -> hit, no reflect
+
+    expect(tank.currentHp).toBeLessThan(tankHpBefore) // the repeat landed too
+    expect(10_000 - afterOriginal).toBeCloseTo(10_000 * PHAN_CHAN_BASE_RATIO)
+    expect(attacker.currentHp).toBe(afterOriginal)
+  })
+
   it('dodged hit -> no reflection', () => {
     // Hit chance floors at 5% (Accuracy.ts) - force the roll high so the
     // dodge is deterministic rather than stat-absurd.
