@@ -22,21 +22,8 @@ const ALL_NODES = [...PHAP_TU_NODES, ...KIEM_TU_NODES, ...THE_TU_NODES]
 
 const UNLOCK_IDS = [
   ...Object.values(PHAP_TU_ULTIMATE_IDS).map((id) => `linh_ngo_${id}`),
-  'major_bat_tu_tuc_menh',
-  'major_loan_dau_sat',
-  'major_khiem_khich_dien',
-  'major_son_nhac_bao_bi',
-] as const
-
-const CAP_IDS = [
-  'minor_fire_intensity',
-  'minor_water_intensity',
-  'minor_wood_intensity',
-  'minor_metal_intensity',
-  'minor_earth_intensity',
-  'ngu_kiem_sac',
-  'ngu_kiem_phong',
-  'ngu_kiem_sat',
+  'major_loan_dau',
+  'major_phan_chan',
 ] as const
 
 function byId(id: string): ProgressionNode {

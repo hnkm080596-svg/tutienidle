@@ -1,0 +1,15 @@
+{
+ "verdict": "SEALED",
+ "pin": {
+  "branch": "devin/1790308404-the-tu-beta",
+  "head": "bdc04bf9"
+ },
+ "perFinding": [
+  {
+   "id": "F-TT-P15-1",
+   "repaired": true,
+   "proof": "type-check exit 0; asciiComments 1/1 pass; tokenizer rescan 78->0 un-baselined offenders; spot-check finding-named files 0 non-ASCII comment tokens"
+  }
+ ],
+ "notes": "55 remaining violations are baselined legacy entries outside finding scope; baseline not regenerated (ratchet only shrinks)"
+}

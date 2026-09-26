@@ -16,12 +16,7 @@
 //      reads the snapshot; live reads stay as `late` bindings /
 //      resolved query leaves on plan steps.
 
-import type {
-  BuffDefinitionId,
-  CombatEntityId,
-  CombatOperationId,
-  SkillId,
-} from '../battle/contracts/ids'
+import type { CombatEntityId, CombatOperationId, SkillId } from '../battle/contracts/ids'
 import type {
   CleanseBuffOperation,
   CombatOperation,
@@ -397,6 +392,9 @@ export class SkillResolver {
             if (op.healPercentOfDamage !== undefined) {
               collectFromExpr(op.healPercentOfDamage)
             }
+            if (op.sourceMaxHpRatio !== undefined) {
+              collectFromExpr(op.sourceMaxHpRatio)
+            }
             for (const entry of op.scaling?.attributeScaling ?? []) {
               for (const attr of entry.attributes) statKeys.add(attr)
             }
@@ -416,6 +414,9 @@ export class SkillResolver {
           case 'remove_buff_stacks':
           case 'consume_buff_stacks':
             if (op.stacks !== 'all') collectFromExpr(op.stacks)
+            break
+          case 'pay_hp':
+            collectFromExpr(op.maxHpRatio)
             break
           case 'push_gauge':
             collectFromExpr(op.fractionOfMax)
@@ -933,6 +934,8 @@ export class SkillResolver {
         return this.translateApplyShield(op, ctx, scope)
       case 'read_stacks':
         return this.translateReadStacks(op, ctx, scope)
+      case 'pay_hp':
+        return this.translatePayHp(op, ctx, scope)
       case 'detonate':
         // per resolved target -- the executor expands the
         // consume->burst->re-seed sequence at this step position
@@ -1004,6 +1007,50 @@ export class SkillResolver {
         return steps
       }
     }
+  }
+
+  // -----------------------------------------------------------------------
+  // pay_hp -- The Tu beta self-sacrifice (Loan Dau): lowers to a
+  // 'sacrifice'-profile deal_damage on the caster + an ops_result_sum
+  // read binding the ACTUAL paid HP into `into`. The damage authority
+  // floors the paid amount at leaving the caster 1 HP, so the read is
+  // the only legal payoff source (never the nominal maxHpRatio).
+  // -----------------------------------------------------------------------
+
+  private translatePayHp(
+    op: Extract<AuthoredSkillOperation, { type: 'pay_hp' }>,
+    ctx: TranslateContext,
+    scope: ResolveScope,
+  ): ResolvedSkillPlanStep[] {
+    const late: ResolvedLateBinding[] = []
+    const coefficient = this.bindScalar(op.maxHpRatio, 1, ctx, scope, late, 'coefficient')
+    const payStep = this.operationStep(
+      {
+        type: 'deal_damage',
+        payload: {
+          targetId: ctx.input.sourceId,
+          damageProfile: 'sacrifice',
+          coefficient,
+          hitCount: 1,
+          canCrit: false,
+          canMiss: false,
+        },
+      },
+      ctx,
+      late,
+    )
+    return [
+      payStep,
+      {
+        kind: 'read',
+        query: {
+          query: 'ops_result_sum',
+          operationIds: [payStep.operation.operationId],
+          field: 'hpDamage',
+        },
+        into: op.into,
+      },
+    ]
   }
 
   // -----------------------------------------------------------------------
@@ -1259,6 +1306,18 @@ export class SkillResolver {
           : {}),
         ...(op.missingHpBonusCap !== undefined
           ? { missingHpBonusCap: op.missingHpBonusCap }
+          : {}),
+        ...(op.sourceMaxHpRatio !== undefined
+          ? {
+              sourceMaxHpRatio: this.bindScalar(
+                op.sourceMaxHpRatio,
+                0,
+                ctx,
+                scope,
+                late,
+                'sourceMaxHpRatio',
+              ),
+            }
           : {}),
         snapshot: ctx.snapshot.statScalars,
       }

@@ -1,16 +1,16 @@
-// The Tu Reimagined — cultivation-path framework M5+M7: Thể Tu
+// The Tu Reimagined - cultivation-path framework M5+M7: The Tu
 // way-normalisation spec contract tests. Post-M7 cultivationPath is the
-// BASE id ('body') and cultivationWay the discriminator — there is
-// exactly one persisted shape. EVERY Thể Tu way-specific gate (kit
-// build, Bất Tử Ba Thể survival, path stat emission, node-tree access,
-// the Thế resource bar / stat domain) resolves on the WAY —
-// cultivationPath + cultivationWay — never on the raw path id.
+// BASE id ('body') and cultivationWay the discriminator - there is
+// exactly one persisted shape. EVERY The Tu way-specific gate (kit
+// build, Bat Tu Ba The survival, path stat emission, node-tree access,
+// the The resource bar / stat domain) resolves on the WAY -
+// cultivationPath + cultivationWay - never on the raw path id.
 //
 // Mirrors core/phap-tu/PhapTuPath.way.test.ts: fail-closed behaviour on
 // corrupt (path, way) pairs.
 //
-// The Hiện dual-root mutex (cuong_chien XOR tran_the) stays NodeSystem-owned
-// — these tests only verify it still operates under the way stamp.
+// The Hien dual-root mutex (cuong_chien XOR tran_the) stays NodeSystem-owned
+// - these tests only verify it still operates under the way stamp.
 
 import { describe, expect, it } from 'vitest'
 
@@ -216,7 +216,7 @@ describe('node trees — way stamps + bidirectional isolation', () => {
     const player = bodyPlayer()
 
     expect(purchaseNode(player, nodeById('cuong_chien'))).toBe(true)
-    expect(purchaseNode(player, nodeById('minor_cuong_huyet_no'))).toBe(true)
+    expect(purchaseNode(player, nodeById('minor_trong_quyen'))).toBe(true)
     expect(purchaseNode(player, nodeById('ho_mon'))).toBe(false)
     expect(purchaseNode(player, nodeById('minor_ung_the_the_chat'))).toBe(false)
   })
@@ -231,7 +231,7 @@ describe('node trees — way stamps + bidirectional isolation', () => {
       expect(purchaseNode(player, nodeById('minor_ung_the_the_chat'))).toBe(true)
       expect(purchaseNode(player, nodeById('cuong_chien'))).toBe(false)
       expect(purchaseNode(player, nodeById('tran_the'))).toBe(false)
-      expect(purchaseNode(player, nodeById('minor_the_can_cot'))).toBe(false)
+      expect(purchaseNode(player, nodeById('minor_trong_quyen'))).toBe(false)
     },
   )
 
@@ -252,7 +252,7 @@ describe('node trees — way stamps + bidirectional isolation', () => {
 
     for (const [, build] of UNG_THE_SHAPES) {
       const ungThe = build()
-      ungThe.nodeLevels = { minor_the_can_cot: 2 }
+      ungThe.nodeLevels = { minor_trong_quyen: 2 }
       expect(aggregateNodeStatModifiers(NODE_REGISTRY, ungThe)).toEqual([])
     }
   })
@@ -261,7 +261,7 @@ describe('node trees — way stamps + bidirectional isolation', () => {
     '%s way-gated collectors ignore leaked Hiện node levels',
     (_label, build) => {
       const player = build()
-      player.nodeLevels = { cuong_chien: 1, minor_cuong_huyet_no: 1 }
+      player.nodeLevels = { cuong_chien: 1, minor_trong_quyen: 1 }
 
       expect(collectBodyKitModifiers(NODE_REGISTRY, player).missingHpBonusBonus).toBe(0)
       expect(collectHiddenBodyMechanicModifiers(NODE_REGISTRY, player).maxTheBonus).toBe(0)
@@ -350,7 +350,7 @@ describe('battle builds — participant kit is way-resolved', () => {
     (_label, build) => {
       const { gameManager } = makeManager()
       const player = build()
-      player.nodeLevels = { cuong_chien: 1, minor_cuong_huyet_no: 1 }
+      player.nodeLevels = { cuong_chien: 1, minor_trong_quyen: 1 }
 
       const battle = startBattle(gameManager, player)
       const participant = battle.players[0]!
@@ -361,7 +361,7 @@ describe('battle builds — participant kit is way-resolved', () => {
     },
   )
 
-  it('hien + cuong_chien → cường quyền / loạn đấu / bất tử ba thể on the body domain', () => {
+  it('hien + cuong_chien → cường quyền basic on the body domain (beta: no special/ultimate at LQ)', () => {
     const { gameManager } = makeManager()
     const player = bodyPlayer()
     player.nodeLevels = { cuong_chien: 1 }
@@ -370,8 +370,8 @@ describe('battle builds — participant kit is way-resolved', () => {
     const participant = battle.players[0]!
 
     expect(participant.basic?.id).toBe('cuong_quyen')
-    expect(participant.special?.skill.id).toBe('loan_dau')
-    expect(participant.ultimate?.skill.id).toBe('bat_tu_ba_the')
+    expect(participant.special).toBeUndefined()
+    expect(participant.ultimate).toBeUndefined()
     expect(participant.reactivePayloads).toBeUndefined()
     expect(participant.activeDomains?.has('body')).toBe(true)
     expect(participant.activeDomains?.has('hidden_body')).toBe(false)
@@ -410,13 +410,16 @@ describe('battle builds — participant kit is way-resolved', () => {
 })
 
 describe('Bất Tử Ba Thể survival — hien-only machinery', () => {
-  it('hien survives a lethal hit once via the Cuồng Chiến ultimate', () => {
+  // Beta: the ultimate slot is gone - no survival source builds on the
+  // hien side either; a lethal hit is simply lethal (Bat Tu Ba The is
+  // post-beta content).
+  it('hien does NOT survive a lethal hit in the beta window (no ultimate slot)', () => {
     const { gameManager, combatSource } = makeManager()
     const player = bodyPlayer()
     player.nodeLevels = { cuong_chien: 1 }
     player.baseStats = asBaseStats({ ...player.baseStats, speed: 1 })
 
-    const enemy = makeDummy('m5_bat_tu', { might: 9_999_999, attackSpeed: 500 })
+    const enemy = makeDummy('m5_no_ult', { might: 9_999_999, attackSpeed: 500 })
     gameManager.setActivePlayer(player)
     gameManager.startBattleWithPlayer(player, enemy)
     const battle = gameManager.getTurnBattle()!
@@ -424,15 +427,12 @@ describe('Bất Tử Ba Thể survival — hien-only machinery', () => {
     participant.entity.currentHp = 50
     advanceIntoFighting(combatSource, battle)
 
+    expect(advanceUntil(combatSource, () => !participant.entity.alive)).toBe(true)
     expect(
-      advanceUntil(combatSource, () =>
-        gameManager
-          .getBattleBuffs(participant.entity.id)
-          .some((i) => i.definitionId === 'bat_tu_ba_the'),
-      ),
-    ).toBe(true)
-    expect(participant.entity.alive).toBe(true)
-    expect(participant.entity.currentHp).toBe(1)
+      gameManager
+        .getBattleBuffs(participant.entity.id)
+        .filter((i) => i.definitionId === 'bat_tu_ba_the'),
+    ).toHaveLength(0)
   })
 
   it.each(UNG_THE_SHAPES)(
@@ -440,7 +440,7 @@ describe('Bất Tử Ba Thể survival — hien-only machinery', () => {
     (_label, build) => {
       const { gameManager, combatSource } = makeManager()
       const player = build()
-      player.nodeLevels = { cuong_chien: 1, minor_cuong_huyet_no: 1 }
+      player.nodeLevels = { cuong_chien: 1, minor_trong_quyen: 1 }
       player.baseStats = asBaseStats({ ...player.baseStats, speed: 1 })
 
       const enemy = makeDummy('m5_no_bat_tu', { might: 9_999_999, attackSpeed: 500 })
@@ -465,7 +465,7 @@ describe('way-authored kits still compose from the node collectors', () => {
   it('buildTheTuKit + buildTheTuAnKit remain data factories — way resolution lives in the GameManager', () => {
     const hienMods = collectBodyKitModifiers(
       NODE_REGISTRY,
-      bodyPlayer({ nodeLevels: { minor_cuong_huyet_no: 1 } }),
+      bodyPlayer({ nodeLevels: { minor_trong_quyen: 1 } }),
     )
     const hienKit = buildTheTuKit('cuong_chien', hienMods)
     expect(hienKit.basic.id).toBe('cuong_quyen')

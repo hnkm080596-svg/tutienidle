@@ -167,6 +167,33 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
       return { rawDamage: op.coefficient, hpDamage, killed: !target.alive }
     }
 
+    if (op.damageProfile === 'sacrifice') {
+      // The Tu beta (Loan Dau self-pay): coefficient = maxHp fraction
+      // authored on the pay_hp op; the ACTUAL paid amount floors at
+      // leaving the caster 1 HP -- a sacrifice can never self-kill
+      // (design: cost % MAX HP, floor at current-1). The settled
+      // hpDamage IS the vitals-truth paid amount the plan reads back.
+      const source = this.resolveEntity(sourceId)
+      if (source === undefined || source.id !== target.id) {
+        throw new CombatOperationSkip(
+          'invalid_target_state',
+          `sacrifice source '${sourceId}' is not resolvable in the live battle roster`,
+        )
+      }
+      const paid = Math.max(
+        0,
+        Math.min(source.stats.maxHp * op.coefficient, source.currentHp - 1),
+      )
+      if (paid <= 0) {
+        throw new CombatOperationSkip(
+          'blocked_by_restriction',
+          `sacrifice source '${sourceId}' has no payable HP (paid=${paid})`,
+        )
+      }
+      const hpDamage = this.combat.applyDirectDamage(target, paid, sourceId, 'sacrifice')
+      return { rawDamage: paid, hpDamage, killed: !target.alive }
+    }
+
     if (op.damageProfile === 'skill_hit') {
       // The skill pipeline's hit-resolving channel: full
       // resolveActionHit semantics (accuracy/evasion, crit, block,
@@ -195,7 +222,7 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
     }
 
     if (op.damageProfile === 'reflection') {
-      // phan_chinh Reflection: the hit-layer multiplier applies through
+      // phan_chan Reflection: the hit-layer multiplier applies through
       // the REFLECTING holder as attacker; vitals reason 'reflection'.
       // A dead holder still reflects (legacy passed the entity object).
       const holder = this.resolveEntity(sourceId)
@@ -249,9 +276,14 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
     }
 
     const scaling = op.scaling !== undefined ? { scaling: op.scaling } : {}
+    // sourceMaxHpRatio is physical-only (resolveActionHit reads it on
+    // kind==='physical'); attaching it to elemental/primordial results
+    // would silently drop the field.
+    const maxHpBase =
+      op.sourceMaxHpRatio !== undefined ? { sourceMaxHpRatio: op.sourceMaxHpRatio } : {}
     const components = op.components ?? []
     if (components.length === 1 && components[0]!.kind === 'physical') {
-      return { kind: 'physical', multiplier, ...scaling }
+      return { kind: 'physical', multiplier, ...scaling, ...maxHpBase }
     }
     if (components.length === 1 && components[0]!.kind === 'primordial') {
       return { kind: 'primordial', multiplier, ...scaling }
@@ -267,7 +299,7 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
         ...scaling,
       }
     }
-    return { kind: 'physical', multiplier, ...scaling }
+    return { kind: 'physical', multiplier, ...scaling, ...maxHpBase }
   }
 
   /**

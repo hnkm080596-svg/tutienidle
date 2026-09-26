@@ -37,7 +37,7 @@ function mountDetail(skill: Skill | null) {
   app.provide(BUMP_STATE_KEY, () => { version.value += 1 })
   app.mount(container)
 
-  return { container, pinia, unmount: () => app.unmount() }
+  return { container, pinia, manager, unmount: () => app.unmount() }
 }
 
 afterEach(() => { document.body.innerHTML = '' })
@@ -79,6 +79,29 @@ describe('SkillDetailView — cast-level progress (Task 16)', () => {
     const mounted = mountDetail(skill)
 
     expect(mounted.container.querySelector('.skill-detail__cast-progress')).toBeNull()
+    mounted.unmount()
+  })
+})
+
+describe('SkillDetailView — in-battle affordance disable (cleanD INT)', () => {
+  it('inBattle disables the upgrade button on an upgradable skill', async () => {
+    const { usePlayerStore } = await import('@/stores/player')
+    const skill = SKILLS.find(s => s.id === 'hoa_cau_thuat')!
+    const mounted = mountDetail(skill)
+
+    usePlayerStore(mounted.pinia).skillInsight = 999_999
+    await nextTick()
+
+    const button = mounted.container.querySelector<HTMLButtonElement>('.skill-detail__upgrade')
+
+    expect(button).not.toBeNull()
+
+    mounted.manager.getTurnBattle = () => ({ state: 'fighting' }) as ReturnType<GameManager['getTurnBattle']>
+    // Any state read re-evaluates the version-keyed computed.
+    usePlayerStore(mounted.pinia).skillInsight = 1_000_000
+    await nextTick()
+
+    expect(mounted.container.querySelector<HTMLButtonElement>('.skill-detail__upgrade')!.disabled).toBe(true)
     mounted.unmount()
   })
 })
