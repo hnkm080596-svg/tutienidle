@@ -1,0 +1,23 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "CLEANB-AUT",
+    "parentId": null,
+    "capacityScope": "swe2-promo-5",
+    "inputBundleHash": "1f185b2986d5fd95c6a13a36a58f7b2bbed699deb246faca8c7322e2bbd61c1b",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "isolated-review"
+    ],
+    "writeSurface": [],
+    "readiness": "READY",
+    "status": "QUEUED",
+    "reservedAt": null,
+    "observedRuntimeId": null,
+    "releaseEvidence": null,
+    "resultRef": null,
+    "timeoutState": null,
+    "history": []
+  },
+  "externalOccupied": 1
+}

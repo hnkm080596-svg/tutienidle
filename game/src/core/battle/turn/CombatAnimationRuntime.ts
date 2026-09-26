@@ -163,8 +163,14 @@ export class CombatAnimationRuntime {
       // Defect Task 4 (2026-09-05) — manual player ở ready-phase KHÔNG
       // được auto-resolve bằng AI khi rời scene: chuyển vào
       // awaitedManualActor giữ choice chờ submitTurnChoice (cùng nhánh
-      // với acknowledgeTurnReady()).
-      const isManualActor = this.battleManualMode && battle.players.includes(actor)
+      // với acknowledgeTurnReady()). Ngoại lệ: entry đã dequeue khỏi
+      // queuedExecutions / đã trả giá reactive (pendingQueuedExecution /
+      // pendingReactiveEntry) là hành động đã commit — phải resolve đúng
+      // một lần qua đường auto, không được park chờ input (cleanA11 INT).
+      const isManualActor =
+        this.battleManualMode &&
+        battle.players.includes(actor) &&
+        !turnBattleSystem.isPendingQueuedExecution(actor.id)
 
       if (isManualActor) {
         this.awaitedManualActor = actor
@@ -287,7 +293,10 @@ export class CombatAnimationRuntime {
         .filter((target) => !targetIds.includes(target.id))
         .map((target) => target.id),
       hitCount: 1,
-      presetId: declared.action?.skill?.presetId,
+      // The RESOLVED payload owns presentation: empowered/composite/queued
+      // swaps keep action.skill = the root def while resolvedSkill is what
+      // actually fires - the root authors no preset for those lanes.
+      presetId: declared.execution?.resolvedSkill?.presetId ?? declared.action?.skill?.presetId,
     })
 
     // Kiem Tu Reimagined Task 6 — each provider-returned extra impact

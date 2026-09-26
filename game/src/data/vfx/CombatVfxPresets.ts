@@ -107,7 +107,7 @@ export const COMBAT_VFX_PRESETS = {
     durationMs: 340,
     screenShake: { durationMs: 120, intensity: 0.004 },
   },
-  // Kiếm Tu Bạt Kiếm channel tick (Task 8, 2026-08-28) — full-screen AoE
+  // Kiem Tu Bat Kiem channel tick (Task 8, 2026-08-28) -- full-screen AoE
   // per design spec, art sau.
   tu_luc: {
     id: 'tu_luc',
@@ -139,7 +139,7 @@ export const COMBAT_VFX_PRESETS = {
   // Kiem Tu Reimagined (spec 2026-09-15 §4.3, K11) — one entry per
   // Kiem Pho combo: tier-scaled shape (len3 hybrid 1.15 / len4 hybrid
   // 1.3 / len5 screen 1.5 + shake) plus a golden-angle distinct color
-  // signature per combo — the fired payload is the only discovery
+  // signature per combo -- the fired payload is the only discovery
   // signal, no two combos may render identically.
   // Kiem Pho Beta (design sec.7/13) - the six beta combos keep the
   // locked ids and carry stroke signatures composed from their orb
@@ -160,6 +160,20 @@ export const COMBAT_VFX_PRESETS = {
     areaScale: 1.15,
     durationMs: 280,
     signature: ['crescent', 'arc', 'scar']
+  },
+  kiem_combo_tam_thich: {
+    id: 'kiem_combo_tam_thich',
+    color: 0xcb4d4d,
+    space: 'hybrid',
+    areaScale: 1.15,
+    durationMs: 280
+  },
+  kiem_combo_tam_tram: {
+    id: 'kiem_combo_tam_tram',
+    color: 0x4dcb73,
+    space: 'hybrid',
+    areaScale: 1.15,
+    durationMs: 280
   },
   kiem_combo_tam_phach: {
     id: 'kiem_combo_tam_phach',
@@ -419,6 +433,68 @@ export const COMBAT_VFX_PRESETS = {
     areaScale: 1.5,
     durationMs: 400,
     screenShake: { durationMs: 140, intensity: 0.005 }
+  },
+  // Three-path design (2026-09-25, ruling #12) -- one preset per Phap Tu
+  // element basic (distinct signature, no two basics render alike).
+  hoa_cau_comet: {
+    id: 'hoa_cau_comet',
+    color: 0xff8c42,
+    space: 'hybrid',
+    areaScale: 1.05,
+    durationMs: 260,
+    screenShake: { durationMs: 110, intensity: 0.003 },
+  },
+  thuy_tien_dart: {
+    id: 'thuy_tien_dart',
+    color: 0x63d8ff,
+    space: 'upright',
+    areaScale: 0.95,
+    durationMs: 240,
+  },
+  doc_chuong_palm: {
+    id: 'doc_chuong_palm',
+    color: 0x6ee86a,
+    space: 'attached',
+    areaScale: 1,
+    durationMs: 240,
+  },
+  diem_kim_point: {
+    id: 'diem_kim_point',
+    color: 0xfff3b0,
+    space: 'upright',
+    areaScale: 0.9,
+    durationMs: 200,
+  },
+  tho_cau_boulder: {
+    id: 'tho_cau_boulder',
+    color: 0xd9a05b,
+    space: 'ground_projected',
+    areaScale: 1.15,
+    durationMs: 280,
+    screenShake: { durationMs: 130, intensity: 0.004 },
+  },
+  // Mortal precursors - distinct from the arcane_impact fallback.
+  tram_slash: {
+    id: 'tram_slash',
+    color: 0xd8e8f8,
+    space: 'upright',
+    areaScale: 1,
+    durationMs: 220,
+  },
+  linh_bao_burst: {
+    id: 'linh_bao_burst',
+    color: 0xbef0ff,
+    space: 'hybrid',
+    areaScale: 1.15,
+    durationMs: 270,
+    screenShake: { durationMs: 90, intensity: 0.003 },
+  },
+  huy_quyen_strike: {
+    id: 'huy_quyen_strike',
+    color: 0xffc890,
+    space: 'upright',
+    areaScale: 0.9,
+    durationMs: 210,
   },
 } as const satisfies Record<CombatVfxPresetId, CombatVfxPreset>
 

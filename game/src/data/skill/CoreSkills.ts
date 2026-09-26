@@ -55,6 +55,8 @@ export const CORE_SKILLS: Skill[] = [
 
     resourceType: 'none',
 
+    vfxPresetId: 'tram_slash',
+
 
   },
 
@@ -108,6 +110,8 @@ export const CORE_SKILLS: Skill[] = [
 
     resourceType: 'none',
 
+    vfxPresetId: 'linh_bao_burst',
+
 
   },
 
@@ -155,6 +159,8 @@ export const CORE_SKILLS: Skill[] = [
     execution: { kind: 'attack_speed' },
 
     resourceType: 'none',
+
+    vfxPresetId: 'huy_quyen_strike',
 
 
   },
@@ -319,11 +325,11 @@ export const CORE_SKILLS: Skill[] = [
         buffId: 'hoa_an',
 
         // 2026-08-21 - REVISED the original decision ("always 100% apply"):
-        // original Hoa Cau Thuat only has a 50% chance to apply Burn; the "Dan
-        // Hoa" (+15%) and "Hoa Nguyen" (+5%) nodes at Truc Co add more via
-        // stat elementApplicationPercent (xem resolveAilmentApplicationChance,
-        // data/progression/PhapTuNodes.ts) - so those nodes carry real
-        // meaning instead of stacking onto an already-maxed number.
+        // original Hoa Cau Thuat only has a 50% chance to apply Burn; Truc Co
+        // application-chance nodes raise it via the multiplicative
+        // elementApplicationPercent pool (ApplicationResolver: chance =
+        // baseChance x (1 + pool)) - so those nodes carry real meaning
+        // instead of stacking onto an already-maxed number.
         ailmentChance: 0.5,
       },
     ],
@@ -335,7 +341,49 @@ export const CORE_SKILLS: Skill[] = [
     // self-learned + placed in the basic role slot (cost 0, see GameManager.chooseCultivationPath()).
 
 
+    // Three-path design (2026-09-25) -- capstone variance pair bought
+    // through the basic-lane nodes fire_basic_hoa_tu_diem /
+    // fire_basic_hoa_tan_diem (mutex via excludesNode). Focus raises the
+    // single-target hit; spread pays hit power for an AoE edge.
+    specializations: [
+      {
+        id: 'hoa_tu_diem',
+        name: 'Tụ Diễm',
+        description: 'Hỏa Cầu tụ một điểm — đòn đánh đậm hơn, Thiêu Đốt dễ trúng.',
+        effectsOverride: [
+          {
+            type: 'damage',
+            value: 1.15,
+            components: [{ kind: 'element', element: 'fire', ratio: 1 }],
+            manaScalingRatio: 0.001,
+            attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
+          },
+          { type: 'debuff', buffId: 'hoa_an', ailmentChance: 0.7 },
+        ],
+      },
+      {
+        id: 'hoa_tan_diem',
+        name: 'Tán Diễm',
+        description: 'Hỏa Cầu tán thành vùng — quét nhiều mục tiêu, đòn nhẹ hơn, Thiêu Đốt khó trúng hơn.',
+        targeting: { shape: 'square', laneRadius: 1 },
+        effectsOverride: [
+          {
+            type: 'damage',
+            value: 0.9,
+            components: [{ kind: 'element', element: 'fire', ratio: 1 }],
+            manaScalingRatio: 0.001,
+            attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
+          },
+          { type: 'debuff', buffId: 'hoa_an', ailmentChance: 0.45 },
+        ],
+      },
+    ],
+
     resourceType: 'none',
+
+    // Three-path design (2026-09-25) -- distinct VFX signature per basic
+    // (vfxPresetForSkill reads this before the element-generic fallback).
+    vfxPresetId: 'hoa_cau_comet',
 
     buildTag: 'burst',
 
@@ -389,9 +437,34 @@ export const CORE_SKILLS: Skill[] = [
       },
     ],
 
+    // Three-path design (2026-09-25) -- capstone variance pair
+    // (wood_basic_moc_tu_doc / wood_basic_moc_lan_doc, mutex). Tu Doc
+    // deepens the single hit with an extra stack; Lan Doc trades stack
+    // depth for an AoE application lane.
+    specializations: [
+      {
+        id: 'moc_tu_doc',
+        name: 'Tụ Độc',
+        description: 'Độc Chưởng tụ một điểm — đắp thêm 1 tầng Trúng Độc khi trúng.',
+        effectsOverride: [
+          { type: 'debuff', buffId: 'doc_can', ailmentChance: 1 },
+          { type: 'add_stack', buffId: 'doc_can', stacks: 1 },
+        ],
+      },
+      {
+        id: 'moc_lan_doc',
+        name: 'Lan Độc',
+        description: 'Độc Chưởng lan thành vùng — phủ nhiều mục tiêu, nhưng Trúng Độc không còn chắc trúng.',
+        targeting: { shape: 'square', laneRadius: 1 },
+        effectsOverride: [{ type: 'debuff', buffId: 'doc_can', ailmentChance: 0.7 }],
+      },
+    ],
+
     // Skill tree redesign (2026-08-21) - root node of the Wood tree, taking
     // BASIC role (see hoa_cau_thuat's note).
     resourceType: 'none',
+
+    vfxPresetId: 'doc_chuong_palm',
 
     buildTag: 'core',
 
@@ -456,11 +529,49 @@ export const CORE_SKILLS: Skill[] = [
       },
     ],
 
+    // Three-path design (2026-09-25) -- capstone variance pair
+    // (water_basic_thuy_ngan_lien / water_basic_thuy_dao_lan, mutex).
+    specializations: [
+      {
+        id: 'thuy_ngan_lien',
+        name: 'Ngưng Liễn',
+        description: 'Thủy Tiễn ngưng một điểm — đòn đánh đậm hơn, Tê Cóng dễ trúng.',
+        effectsOverride: [
+          {
+            type: 'damage',
+            value: 1.15,
+            components: [{ kind: 'element', element: 'water', ratio: 1 }],
+            manaScalingRatio: 0.001,
+            attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
+          },
+          { type: 'debuff', buffId: 'han_tuc', ailmentChance: 0.65 },
+        ],
+      },
+      {
+        id: 'thuy_dao_lan',
+        name: 'Đào Lan',
+        description: 'Thủy Tiễn vỡ thành làn sóng — quét nhiều mục tiêu, đòn nhẹ hơn, Tê Cóng khó trúng hơn.',
+        targeting: { shape: 'square', laneRadius: 1 },
+        effectsOverride: [
+          {
+            type: 'damage',
+            value: 0.85,
+            components: [{ kind: 'element', element: 'water', ratio: 1 }],
+            manaScalingRatio: 0.001,
+            attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
+          },
+          { type: 'debuff', buffId: 'han_tuc', ailmentChance: 0.4 },
+        ],
+      },
+    ],
+
     // Skill tree redesign (2026-08-21) - this skill is the ROOT NODE of the
     // element tree (see PhapTuNodes.ts), taking the BASIC role and running through the unified auto-cast scheduler like every skill
     // other. The ONLY difference between Hoa Cau Thuat and the other 4 elements is
     // it is self-learned + placed in the basic role slot (cost 0, see GameManager.chooseCultivationPath()).
     resourceType: 'none',
+
+    vfxPresetId: 'thuy_tien_dart',
 
     buildTag: 'core',
 
@@ -524,9 +635,47 @@ export const CORE_SKILLS: Skill[] = [
       },
     ],
 
+    // Three-path design (2026-09-25) -- capstone variance pair
+    // (metal_basic_kim_tu_phong / metal_basic_kim_tan_phong, mutex).
+    specializations: [
+      {
+        id: 'kim_tu_phong',
+        name: 'Tụ Phong',
+        description: 'Điểm Kim tụ một điểm — đòn đánh đậm hơn, Xuất Huyết dễ trúng hơn.',
+        effectsOverride: [
+          {
+            type: 'damage',
+            value: 1.25,
+            components: [{ kind: 'element', element: 'metal', ratio: 1 }],
+            manaScalingRatio: 0.001,
+            attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
+          },
+          { type: 'debuff', buffId: 'liet_thuong', ailmentChance: 0.45 },
+        ],
+      },
+      {
+        id: 'kim_tan_phong',
+        name: 'Tán Phong',
+        description: 'Điểm Kim tán thành mũi lưỡi — quét nhiều mục tiêu, đòn nhẹ hơn, Xuất Huyết khó trúng hơn.',
+        targeting: { shape: 'square', laneRadius: 1 },
+        effectsOverride: [
+          {
+            type: 'damage',
+            value: 0.85,
+            components: [{ kind: 'element', element: 'metal', ratio: 1 }],
+            manaScalingRatio: 0.001,
+            attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
+          },
+          { type: 'debuff', buffId: 'liet_thuong', ailmentChance: 0.35 },
+        ],
+      },
+    ],
+
     // Skill tree redesign (2026-08-21) - root node of the Metal tree, taking
     // BASIC role (see hoa_cau_thuat's note).
     resourceType: 'none',
+
+    vfxPresetId: 'diem_kim_point',
 
     buildTag: 'core',
 
@@ -589,9 +738,47 @@ export const CORE_SKILLS: Skill[] = [
       },
     ],
 
+    // Three-path design (2026-09-25) -- capstone variance pair
+    // (earth_basic_tho_tu_nhan / earth_basic_tho_bang_loa, mutex).
+    specializations: [
+      {
+        id: 'tho_tu_nhan',
+        name: 'Tụ Nhán',
+        description: 'Thổ Cầu nén một điểm — đòn đánh đậm hơn.',
+        effectsOverride: [
+          {
+            type: 'damage',
+            value: 1.15,
+            components: [{ kind: 'element', element: 'earth', ratio: 1 }],
+            manaScalingRatio: 0.001,
+            attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
+          },
+          { type: 'debuff', buffId: 'tran_an', ailmentChance: 1 },
+        ],
+      },
+      {
+        id: 'tho_bang_loa',
+        name: 'Đá Loạn',
+        description: 'Thổ Cầu vỡ thành mảnh đá — quét nhiều mục tiêu, đòn nhẹ hơn, Thạch Hóa yếu hơn.',
+        targeting: { shape: 'square', laneRadius: 1 },
+        effectsOverride: [
+          {
+            type: 'damage',
+            value: 0.9,
+            components: [{ kind: 'element', element: 'earth', ratio: 1 }],
+            manaScalingRatio: 0.001,
+            attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
+          },
+          { type: 'debuff', buffId: 'tran_an', ailmentChance: 0.65 },
+        ],
+      },
+    ],
+
     // Skill tree redesign (2026-08-21) - root node of the Earth tree, taking
     // BASIC role (see hoa_cau_thuat's note).
     resourceType: 'none',
+
+    vfxPresetId: 'tho_cau_boulder',
 
     buildTag: 'core',
 

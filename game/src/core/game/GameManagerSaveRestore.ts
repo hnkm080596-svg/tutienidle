@@ -75,6 +75,14 @@ export interface GameManagerSaveRestoreDeps {
   // R8.1 (AR-09) - quest lifecycle reconciliation command (logic lives
   // on GameManager; restore triggers it at the right boundary).
   reconcileQuestLifecycle: () => void
+  // F-PT-A9-1 (2026-09-25) - realm-entry reward reconcile (logic lives
+  // on realmAdvanceOps; idempotent max-write replay at every restore).
+  reconcileRealmRewards: (player: PlayerData) => void
+  // F-PT-INT-2 - stale spec-claim reconcile (claim gate pre-dates saves)
+  reconcileSpecClaims: (player: PlayerData) => void
+  // F-NK-AUT-7 (2026-09-25) - way grantedNodeIds replay (logic lives on
+  // realmAdvanceOps; idempotent grant at every restore).
+  reconcileWayGrants: (player: PlayerData) => void
   // Session rng seam (F-W-7) - GameManager-owned injectable stream so
   // offline alchemy settle rolls pin in deterministic harnesses.
   sessionRng: () => number
@@ -469,6 +477,21 @@ export class GameManagerSaveRestore {
     // cooldown sau khi mọi slice domain đã nạp (director không phụ
     // thuộc thứ tự domain khác nhưng đặt cuối cho đúng boundary).
     this.deps.tribulationDirector.restoreRuntime(save.tribulation)
+
+    // F-PT-A9-1 - realm-entry rewards replay BEFORE quest lifecycle so
+    // rewardOnly nodeLevels exist when eligibility is evaluated; runs on
+    // EVERY restore (not only the offline>60s branch) and is idempotent.
+    if (bodyPlayer) {
+      this.deps.reconcileRealmRewards(bodyPlayer)
+      this.deps.reconcileSpecClaims(bodyPlayer)
+    }
+
+    // F-NK-AUT-7 - way grants replay BEFORE quest lifecycle so
+    // grantedNodeIds ownership exists when eligibility is evaluated;
+    // idempotent, runs on EVERY restore (not only the offline branch).
+    if (bodyPlayer) {
+      this.deps.reconcileWayGrants(bodyPlayer)
+    }
 
     // R8.1 (AR-09) - activation is a lifecycle command, not a UI read:
     // restore converges the active set to current eligibility BEFORE

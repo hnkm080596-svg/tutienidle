@@ -1,0 +1,54 @@
+{
+ "attacks": [
+  {
+   "id": "ATK-EVO-INSTANCE",
+   "surface": "Khoi evolution phi-kiem instances",
+   "probe": "every Kiem Dao spawns exactly one ordered damage instance; standard hit/miss/crit/armor pipeline; no guaranteedHit/privilege; sequential resolution; cast locks one target, no retarget"
+  },
+  {
+   "id": "ATK-MOMENTUM-LEAK",
+   "surface": "Lien cast-local Kiem The momentum",
+   "probe": "momentum exists only inside one cast resolution; never persisted to save, never a buff/statModifier; resets across casts/targets; miss adds none"
+  },
+  {
+   "id": "ATK-KIEMY-FORGE",
+   "surface": "kiemY accrual + forge",
+   "probe": "+1 kiemY per RESOLVED cast (hit or miss); forge threshold auto-forges +1 Kiem Dao consuming kiemY; realm caps LQ=2/TC=3 enforced; breakthrough merge base*=1+0.3*count count->1"
+  },
+  {
+   "id": "ATK-GRANTEDONLY-SEAL",
+   "surface": "grantedOnly / grantedNodeIds seam",
+   "probe": "grantedOnly nodes refuse canPurchaseNode/canUpgradeNode; ngu_kiem_khoi granted only inside chooseCultivationPath commit via grantSkillCore idempotent; other ways unaffected; crafted save with missing grant stays missing"
+  },
+  {
+   "id": "ATK-RESPEC-SPINE",
+   "surface": "evolution spine vs respec/devReset",
+   "probe": "RESPEC_PRESERVED_NODE_IDS covers all 3 spine ids on respec; devResetBranch strips them; nodeLevels/purchasedNodeIds dual-source consistent after each path"
+  },
+  {
+   "id": "ATK-REALM-GATE",
+   "surface": "spine prereqs + realm caps",
+   "probe": "ngu_kiem_lien requires node:khoi + foundation_establishment; ngu_kiem_phong golden_core-gated sealed '???' with NO evolutionId; LQ cannot purchase TC nodes"
+  },
+  {
+   "id": "ATK-WAY-LEAK",
+   "surface": "hidden_sword_pathway isolation",
+   "probe": "kiem_pho nodes inert on ngu way; ngu spine inert on kiem_pho way; evolution name resolver only applies to ngu_kiem_thuat id"
+  },
+  {
+   "id": "ATK-NAME-RESOLVER",
+   "surface": "resolveNguKiemSkillName",
+   "probe": "name = NEWEST owned evolution in registry order (khoi->lien); phong sealed placeholder never selected; list shows ONE 'Ngự Kiếm' entry with Evolution tag; i18n en+vi"
+  },
+  {
+   "id": "ATK-SAVE-CORRUPTION",
+   "surface": "save shape validation",
+   "probe": "crafted kiemY (NaN/negative), kiemDaoCount 0/out-of-range, phantom spine nodeLevels rejected or inert at load; no version bump (swordPath shape unchanged)"
+  },
+  {
+   "id": "ATK-REMOVED-LEGACY",
+   "surface": "removed legacy surface",
+   "probe": "guaranteedHit provider gone; Roll Cascade EXECUTE_MULT/crit/armor privilege gone; Cuu Cung tree/kiemYGrant/kiemDaoGrant/cascadeUnlock/kiemDaoBelowCap/emblem fields absent everywhere incl. stale call sites"
+  }
+ ]
+}

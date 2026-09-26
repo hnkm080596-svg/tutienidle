@@ -286,7 +286,7 @@ describe('composite extra picks run the declared-hit pipeline', () => {
     expect(1_000_000 - attackerP.entity.currentHp).toBe(expectedReflect)
   })
 
-  it('each landed pick opens the defender phan_mon taken window (2 hits -> 2 counters queued)', () => {
+  it('a landed multi-pick composite opens ONE defender phan_mon window (once per action)', () => {
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
     // Injected rng pinned low: every onImpactLanded proc roll draws
@@ -327,6 +327,11 @@ describe('composite extra picks run the declared-hit pipeline', () => {
     )
 
     runtime.applyBuff('phan_mon', defenderP)
+    // Ung The beta: the window is post-action and observation-gated --
+    // quan_the makes the defender observe every attacker. The action
+    // completes once, so both landed picks collapse into ONE window
+    // (once-per-channel-per-action: multi-hit = one check).
+    runtime.applyBuff('quan_the', defenderP)
 
     const battle: TurnBattle = {
       players: [attackerP],
@@ -343,10 +348,7 @@ describe('composite extra picks run the declared-hit pipeline', () => {
       (entry) => entry.actorId === 'enemy' && entry.actionSource === 'counter',
     )
 
-    // Pre-fix failure signature: only the primary hit rolled the
-    // defender's onImpactLanded proc -> 1 queued phan_kich; the extra
-    // pick never reached resolveReactiveProcs.
-    expect(counters).toHaveLength(2)
-    expect(counters.map((entry) => entry.targetIds)).toEqual([['player'], ['player']])
+    expect(counters).toHaveLength(1)
+    expect(counters.map((entry) => entry.targetIds)).toEqual([['player']])
   })
 })

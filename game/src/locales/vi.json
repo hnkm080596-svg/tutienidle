@@ -110,13 +110,20 @@
       },
       "routeSwitch": {
         "title": "Đổi Hướng Pháp Tu",
-        "body": "Chuyển sang hướng {route}? Node hướng cũ về 0 — lấy lại {regain} Cảm Ngộ, mất {lose}.",
+        "body": "Chuyển sang hướng {route}? Node hướng cũ về 0 — lấy lại {regain} Cảm Ngộ, mất {lose}.{clawback}",
         "confirm": "Đổi Hướng"
+      },
+      "clawback": {
+        "summary": " Thu hồi thêm: {detail}.",
+        "skills": "mất {n} kỹ năng",
+        "specs": "mất {n} chuyên hóa",
+        "swords": "mất {y} Kiếm Ý và {d} kiếm",
+        "refund": "gồm {n} Cảm Ngộ đã tính trong tổng hoàn"
       },
       "respec": {
         "button": "Đặt Lại",
         "title": "Đặt Lại Cây Node",
-        "body": "Đặt lại toàn bộ đầu tư node? Lấy lại {regain} Cảm Ngộ — {count} node và core về 0. Miễn phí trong thời gian Beta.",
+        "body": "Đặt lại toàn bộ đầu tư node? Lấy lại {regain} Cảm Ngộ — {count} node và core về 0. Miễn phí trong thời gian Beta.{clawback}",
         "confirm": "Đặt Lại"
       },
       "branchLabels": {
@@ -183,7 +190,7 @@
         "lockedReasons": {
           "cost": "Cần {cost} Cảm Ngộ (đang có {current})",
           "prerequisiteNode": "Cần lĩnh ngộ trước: {name}",
-          "realm": "Cần đạt cảnh giới yêu cầu",
+          "realm": "Mở ở cảnh giới {realm}",
           "element": "Cần mở khoá Hành liên quan",
           "elementMismatch": "Thuộc Hành {element} — đã chọn Hành khác",
           "routeMismatch": "Chỉ lĩnh ngộ ở hướng {route}",
@@ -194,7 +201,6 @@
           "skillCastCount": "{count} lần xuất chiêu",
           "skillJoin": "và",
           "skill": "Cần {skill} đạt {requirement}",
-          "kiemDaoCap": "Kiếm Đạo đã đạt trần của cảnh giới",
           "techniqueRank": "Cần tâm pháp đạt tầng {rank}",
           "techniqueGrade": "Cần tâm pháp đạt phẩm {grade}",
           "skillUpgrade": "Cần nâng kỹ năng liên quan"
@@ -215,6 +221,9 @@
         "tree": "Cây Kỹ Năng",
         "detail": "Chi Tiết"
       },
+      "list": {
+        "evolution": "Tiến Hóa: {name}"
+      },
       "detail": {
         "empty": "Chọn một kỹ năng để xem chi tiết.",
         "upgrade": "Nâng Cấp ({cost} Cảm Ngộ)",
@@ -225,6 +234,10 @@
         "cost": "Tiêu Hao",
         "type": "Loại",
         "attackSpeed": "Nhịp theo Tốc Độ Đánh"
+      },
+      "roleStrip": {
+        "lockedByRival": "Đang khóa - nhánh đối lập đã chọn (reset node để mở lại).",
+        "unlockedByNode": "Mở qua node {name} trong Skill Path."
       }
     },
     "character": {
@@ -278,7 +291,7 @@
           "hintPrefix": "Chuyên tu Kiếm Tu:",
           "hintSuffix": ".",
           "hienDescription": "Kiếm Phổ — sắp sẵn tối đa chín ấn kiếm, mỗi đòn đánh thường đánh theo thứ tự ấn; chuỗi ấn khớp phổ sẽ bộc phát thành tuyệt chiêu.",
-          "nguDescription": "Ngự Kiếm Đạo — vạn kiếm ngự không, mỗi phi kiếm là một đòn độc lập; Kiếm Ý tích lũy rèn thành Kiếm Đạo vĩnh viễn."
+          "nguDescription": "Ngự Kiếm — phi kiếm từng đòn độc lập theo thứ tự; Kiếm Ý rèn Kiếm Đạo, cảnh giới mới mở tầng tiến hóa."
         },
         "kiemPhoPreset": {
           "title": "Kiếm Phổ — Thứ Tự Ấn Kiếm",

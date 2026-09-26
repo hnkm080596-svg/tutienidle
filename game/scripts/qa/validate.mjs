@@ -92,76 +92,76 @@ export function validateSemantics(ledger, { runDir = null, checkState = null } =
     if (!ns[kind]?.has(id)) f("MC1", owner, `unresolved ${kind} reference: ${id}`);
   };
   const reqMaybe = (kind, id, owner) => { if (id != null) req(kind, id, owner); };
-  for (const c of ledger.census) c.invariantIds.forEach((i) => req("invariant", i, c.id));
+  for (const c of ledger.census) (c.invariantIds ?? []).forEach((i) => req("invariant", i, c.id));
   for (const x of ledger.findings) {
-    x.invariantIds.forEach((i) => req("invariant", i, x.id));
-    x.evidenceIds.forEach((i) => req("evidence", i, x.id));
-    x.pinEvidenceIds.forEach((i) => req("evidence", i, x.id));
-    x.verificationEvidenceIds.forEach((i) => req("evidence", i, x.id));
-    x.closureReviewIds.forEach((i) => req("review", i, x.id));
-    x.siblingFindingIds.forEach((i) => req("finding", i, x.id));
-    x.siblingSearch.forEach((s) => s.evidenceIds.forEach((i) => req("evidence", i, x.id)));
+    (x.invariantIds ?? []).forEach((i) => req("invariant", i, x.id));
+    (x.evidenceIds ?? []).forEach((i) => req("evidence", i, x.id));
+    (x.pinEvidenceIds ?? []).forEach((i) => req("evidence", i, x.id));
+    (x.verificationEvidenceIds ?? []).forEach((i) => req("evidence", i, x.id));
+    (x.closureReviewIds ?? []).forEach((i) => req("review", i, x.id));
+    (x.siblingFindingIds ?? []).forEach((i) => req("finding", i, x.id));
+    (x.siblingSearch ?? []).forEach((s) => (s.evidenceIds ?? []).forEach((i) => req("evidence", i, x.id)));
     reqMaybe("finding", x.duplicateOf, x.id);
   }
   for (const e of ledger.evidence) {
-    e.invariantIds.forEach((i) => req("invariant", i, e.id));
-    e.inputEvidenceIds.forEach((i) => req("evidence", i, e.id));
+    (e.invariantIds ?? []).forEach((i) => req("invariant", i, e.id));
+    (e.inputEvidenceIds ?? []).forEach((i) => req("evidence", i, e.id));
   }
   for (const c of ledger.coverage) {
     req("invariant", c.invariantId, c.id);
-    c.attackIds.forEach((i) => req("attack", i, c.id));
-    c.evidenceIds.forEach((i) => req("evidence", i, c.id));
+    (c.attackIds ?? []).forEach((i) => req("attack", i, c.id));
+    (c.evidenceIds ?? []).forEach((i) => req("evidence", i, c.id));
   }
   for (const a of ledger.attacks) {
-    a.invariantIds.forEach((i) => req("invariant", i, a.id));
-    a.evidenceIds.forEach((i) => req("evidence", i, a.id));
+    (a.invariantIds ?? []).forEach((i) => req("invariant", i, a.id));
+    (a.evidenceIds ?? []).forEach((i) => req("evidence", i, a.id));
   }
   for (const r of ledger.reviews) {
     reqMaybe("review", r.previousPhaseReviewId, r.id);
-    r.coverageIds.forEach((i) => req("coverage", i, r.id));
-    r.evidenceIds.forEach((i) => req("evidence", i, r.id));
-    r.findingIds.forEach((i) => req("finding", i, r.id));
-    r.novelAttackIds.forEach((i) => req("attack", i, r.id));
+    (r.coverageIds ?? []).forEach((i) => req("coverage", i, r.id));
+    (r.evidenceIds ?? []).forEach((i) => req("evidence", i, r.id));
+    (r.findingIds ?? []).forEach((i) => req("finding", i, r.id));
+    (r.novelAttackIds ?? []).forEach((i) => req("attack", i, r.id));
   }
   for (const c of ledger.cycles) {
-    c.reviewIds.forEach((i) => req("review", i, c.id));
-    c.coverageIds.forEach((i) => req("coverage", i, c.id));
-    c.evidenceIds.forEach((i) => req("evidence", i, c.id));
-    c.noveltyEvidenceIds.forEach((i) => req("evidence", i, c.id));
+    (c.reviewIds ?? []).forEach((i) => req("review", i, c.id));
+    (c.coverageIds ?? []).forEach((i) => req("coverage", i, c.id));
+    (c.evidenceIds ?? []).forEach((i) => req("evidence", i, c.id));
+    (c.noveltyEvidenceIds ?? []).forEach((i) => req("evidence", i, c.id));
   }
   for (const m of ledger.mutations) {
-    m.invariantIds.forEach((i) => req("invariant", i, m.id));
-    m.evidenceIds.forEach((i) => req("evidence", i, m.id));
+    (m.invariantIds ?? []).forEach((i) => req("invariant", i, m.id));
+    (m.evidenceIds ?? []).forEach((i) => req("evidence", i, m.id));
     if (m.candidateState) {
       // candidateState is a state object, not an id
     }
   }
   for (const c of ledger.corpus) {
-    c.invariantIds.forEach((i) => req("invariant", i, c.id));
-    c.baselineEvidenceIds.forEach((i) => req("evidence", i, c.id));
-    c.candidateEvidenceIds.forEach((i) => req("evidence", i, c.id));
+    (c.invariantIds ?? []).forEach((i) => req("invariant", i, c.id));
+    (c.baselineEvidenceIds ?? []).forEach((i) => req("evidence", i, c.id));
+    (c.candidateEvidenceIds ?? []).forEach((i) => req("evidence", i, c.id));
   }
   for (const l of ledger.lessons) {
-    l.findingIds.forEach((i) => req("finding", i, l.id));
-    l.incidentEvidenceIds.forEach((i) => req("evidence", i, l.id));
-    l.missedInvariantIds.forEach((i) => req("invariant", i, l.id));
-    l.promotionEvidenceIds.forEach((i) => req("evidence", i, l.id));
-    l.qualifiedBy.forEach((i) => req("review", i, l.id));
-    l.recurrenceFindingIds.forEach((i) => req("finding", i, l.id));
-    l.preventionEvidenceIds.forEach((i) => req("evidence", i, l.id));
+    (l.findingIds ?? []).forEach((i) => req("finding", i, l.id));
+    (l.incidentEvidenceIds ?? []).forEach((i) => req("evidence", i, l.id));
+    (l.missedInvariantIds ?? []).forEach((i) => req("invariant", i, l.id));
+    (l.promotionEvidenceIds ?? []).forEach((i) => req("evidence", i, l.id));
+    (l.qualifiedBy ?? []).forEach((i) => req("review", i, l.id));
+    (l.recurrenceFindingIds ?? []).forEach((i) => req("finding", i, l.id));
+    (l.preventionEvidenceIds ?? []).forEach((i) => req("evidence", i, l.id));
     if (l.supersedes) req("lesson", l.supersedes.split("@")[0], l.id);
   }
   for (const m of ledger.messages) {
     if (m.runId !== ledger.run.id) f("MC1", m.id, `message runId ${m.runId} != run ${ledger.run.id}`);
     if (m.parentRequestId) req("request", m.parentRequestId, m.id);
   }
-  ledger.run.finalEvidenceIds.forEach((i) => req("evidence", i, "run.finalEvidenceIds"));
+  (ledger.run.finalEvidenceIds ?? []).forEach((i) => req("evidence", i, "run.finalEvidenceIds"));
   for (const cyc of [ledger.run.cleanRoundA, ledger.run.cleanRoundB]) {
     if (cyc != null) req("cycle", cyc, "run");
   }
   // cycles: evidence prerequisites, duplicate chains
   {
-    const cyc = hasCycle(ns.evidence, (id) => ledger.evidence.find((e) => e.id === id).inputEvidenceIds);
+    const cyc = hasCycle(ns.evidence, (id) => ledger.evidence.find((e) => e.id === id)?.inputEvidenceIds ?? []);
     if (cyc) f("MC1", cyc, "cycle in evidence prerequisite graph");
     const dupEdges = (id) => {
       const x = ledger.findings.find((v) => v.id === id);
@@ -232,7 +232,7 @@ export function validateSemantics(ledger, { runDir = null, checkState = null } =
   // stale propagation consistency: evidence depending on STALE evidence must be STALE/REJECTED
   const evById = new Map(ledger.evidence.map((e) => [e.id, e]));
   for (const e of ledger.evidence) {
-    for (const dep of e.inputEvidenceIds) {
+    for (const dep of (e.inputEvidenceIds ?? [])) {
       if (evById.get(dep)?.status === "STALE" && e.status === "CURRENT") {
         f("MC4", e.id, `depends on STALE evidence ${dep} but still CURRENT (invalidation must be transitive)`);
       }
@@ -245,16 +245,16 @@ export function validateSemantics(ledger, { runDir = null, checkState = null } =
     if (x.status !== "CLOSED") continue;
     if (!x.rootCause || !x.rootClass) f("MC5", x.id, "CLOSED without rootCause/rootClass");
     if (!x.repair) f("MC5", x.id, "CLOSED without implemented repair reference");
-    if (x.siblingSearch.length === 0) f("MC5", x.id, "CLOSED without sibling-search evidence");
-    if (x.pinEvidenceIds.length === 0 && !x.rejectionReason) f("MC5", x.id, "CLOSED without regression pin or explicit alternative rationale");
-    if (x.verificationEvidenceIds.length === 0) f("MC5", x.id, "CLOSED without current affected verification");
-    if (x.closureReviewIds.length === 0) f("MC5", x.id, "CLOSED without closure review");
-    for (const rid of x.closureReviewIds) {
+    if ((x.siblingSearch ?? []).length === 0) f("MC5", x.id, "CLOSED without sibling-search evidence");
+    if ((x.pinEvidenceIds ?? []).length === 0 && !x.rejectionReason) f("MC5", x.id, "CLOSED without regression pin or explicit alternative rationale");
+    if ((x.verificationEvidenceIds ?? []).length === 0) f("MC5", x.id, "CLOSED without current affected verification");
+    if ((x.closureReviewIds ?? []).length === 0) f("MC5", x.id, "CLOSED without closure review");
+    for (const rid of (x.closureReviewIds ?? [])) {
       const r = reviewById.get(rid);
       if (r && r.reviewerId === x.discoveredBy && r.role !== "CLOSURE") f("MC5", x.id, `closure reviewer ${r.reviewerId} is the discovering fixer context`);
     }
     // open siblings outside atomic group
-    for (const sid of x.siblingFindingIds) {
+    for (const sid of (x.siblingFindingIds ?? [])) {
       const sib = ledger.findings.find((v) => v.id === sid);
       if (sib && !TERMINAL_FINDING_STATUSES.has(sib.status)) {
         f("MC5", x.id, `CLOSED while sibling ${sid} is ${sib.status} — cyclic/linked siblings must close in one atomic group`);
@@ -336,7 +336,7 @@ export function validateSemantics(ledger, { runDir = null, checkState = null } =
   const cleanReviewIds = new Set();
   for (const key of [ledger.run.cleanRoundA, ledger.run.cleanRoundB]) {
     const c = key && ledger.cycles.find((v) => v.id === key);
-    if (c) c.reviewIds.forEach((id) => cleanReviewIds.add(id));
+    if (c) (c.reviewIds ?? []).forEach((id) => cleanReviewIds.add(id));
   }
   const reviewIsClean = (r) => r.priorFindingsVisible === false && r.accessLimitations.length === 0;
   for (const r of ledger.reviews) {
@@ -475,8 +475,8 @@ export function validateSemantics(ledger, { runDir = null, checkState = null } =
       if (!briefIds.has(bid)) f("MC14", bid, `run.briefIds references missing brief`);
     }
     for (const b of ledger.briefs ?? []) {
-      b.preflightEvidenceIds.forEach((i) => req("evidence", i, b.id));
-      b.finalConformanceIds.forEach((i) => req("evidence", i, b.id));
+      (b.preflightEvidenceIds ?? []).forEach((i) => req("evidence", i, b.id));
+      (b.finalConformanceIds ?? []).forEach((i) => req("evidence", i, b.id));
       if (b.readiness === "IMPLEMENTATION_READY" && b.unresolvedAssumptions.length > 0) {
         f("MC14", b.id, "IMPLEMENTATION_READY with unresolvedAssumptions non-empty");
       }
@@ -505,15 +505,15 @@ export function validateSemantics(ledger, { runDir = null, checkState = null } =
     const lessonRefs = new Set((ledger.lessons ?? []).map((l) => `${l.id}@${l.version}`));
     for (const c of ledger.consumptions ?? []) {
       t(c.at, c.id);
-      c.evidenceIds.forEach((i) => req("evidence", i, c.id));
+      (c.evidenceIds ?? []).forEach((i) => req("evidence", i, c.id));
       if (!lessonRefs.has(c.lessonRef)) f("MC14", c.id, `consumption references unknown lesson ${c.lessonRef}`);
       if (c.briefId && !briefIds.has(c.briefId)) f("MC14", c.id, `consumption references missing brief ${c.briefId}`);
     }
     for (const l of ledger.lessons ?? []) {
       if (!l.guidance) continue;
       const g = l.guidance;
-      g.qualificationEvidence.forEach((i) => req("evidence", i, `${l.id}.guidance`));
-      g.adoptionEvidence.forEach((i) => {
+      (g.qualificationEvidence ?? []).forEach((i) => req("evidence", i, `${l.id}.guidance`));
+      (g.adoptionEvidence ?? []).forEach((i) => {
         if (!ns.consumption?.has(i) && !ns.evidence.has(i)) f("MC14", `${l.id}.guidance`, `adoptionEvidence ${i} resolves to no consumption/evidence record`);
       });
       if (g.status === "QUALIFIED") {

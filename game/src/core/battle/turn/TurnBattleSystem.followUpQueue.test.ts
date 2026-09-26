@@ -87,6 +87,31 @@ function enemySkill(): TurnSkillDefinition {
   return { id: 'enemy_basic', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } }
 }
 
+describe('TurnBattleSystem — queuedFollowUps headless lane (peekNextActor)', () => {
+  it('a natural gauge pick resets followUpChainDepth — cumulative follow-ups cannot starve the queue', () => {
+    const { battle, system } = fixture()
+
+    // A battle deep in a consecutive follow-up chain: the paced loop's
+    // cap is CONSECUTIVE dequeues, so a natural turn must reset the
+    // depth before the next entry may fire (same as tickPacing's
+    // gauge-pick branch).
+    battle.followUpChainDepth = 4
+
+    const actor = system.peekNextActor(battle)
+
+    expect(actor?.id).toBe('player')
+    expect(battle.followUpChainDepth).toBe(0)
+
+    // The queue is still honored after the natural pick — an entry
+    // queued now dequeues instead of being dropped at the stale cap.
+    battle.queuedFollowUps = [
+      { actorId: 'enemy', executionKind: 'reactive_bypass', actionSource: 'follow_up' },
+    ]
+
+    expect(system.peekNextActor(battle)?.id).toBe('enemy')
+  })
+})
+
 describe('TurnBattleSystem — queuedFollowUps honored by the PRODUCTION loop (tickPacing)', () => {
   it('tickPacing() grants the queued follow-up actor a bypass turn on the NEXT call, not just peekNextActor()', () => {
     const { battle, system, enemyParticipant } = fixture()
@@ -126,6 +151,50 @@ describe('TurnBattleSystem — queuedFollowUps honored by the PRODUCTION loop (t
     system.tickPacing(battle) // enemy's bypass turn
 
     expect(enemyParticipant.actionGauge).toBe(500)
+  })
+
+  it('a committed reactive follow-up reports isPendingQueuedExecution — manual mode must not park it', () => {
+    // Pin for the manual-mode seam (GameManagerTurnBattleOps claims the
+    // token with manualMode=false for queued executions): a committed
+    // Phan/Tro counter drains through pendingReactiveEntry, and a fake
+    // AWAITING_INPUT prompt there would silently discard the choice.
+    const { battle, system, enemyParticipant } = fixture()
+
+    for (let i = 0; i < 9; i++) {
+      system.tickPacing(battle)
+    }
+    system.tickPacing(battle) // player turn, queues enemy counter
+
+    // resolve=false matches the production caller (stepTurnBattle): the
+    // manual-mode gate runs between dequeue and declare.
+    const actor = system.tickPacing(battle, false)
+
+    expect(actor?.id).toBe('enemy')
+    expect(system.isPendingQueuedExecution(actor!.id)).toBe(true)
+    expect(system.isPendingQueuedExecution('player')).toBe(false)
+    expect(enemyParticipant.actionGauge).toBeLessThan(1000)
+  })
+
+  it('a PLAYER-side committed reactive entry also reports isPendingQueuedExecution', () => {
+    // The reported defect was player-side: the manual token must never
+    // pause for a committed counter the UI cannot choose.
+    const { battle, system } = fixture()
+
+    battle.queuedFollowUps = [
+      {
+        actorId: 'player',
+        executionKind: 'reactive_bypass',
+        actionSource: 'follow_up',
+        payloadSkillId: 'phan_kich',
+        targetIds: ['enemy'],
+      },
+    ]
+
+    const actor = system.tickPacing(battle, false)
+
+    expect(actor?.id).toBe('player')
+    expect(system.isPendingQueuedExecution('player')).toBe(true)
+    expect(battle.queuedFollowUps).toBeUndefined()
   })
 })
 
@@ -188,5 +257,60 @@ describe('TurnBattleSystem — follow-up reciprocity guard', () => {
     expect(battle.queuedFollowUps).toBeUndefined()
     expect(battle.followUpChainDepth).toBe(0)
     expect(result).toBeNull()
+  })
+})
+
+describe('TurnBattleSystem — declareReactiveBypass payload contract (cleanA11 COR)', () => {
+  it('a NAMED-but-unregistered payload fizzles instead of substituting the basic attack', () => {
+    const { battle, system, playerParticipant, enemyParticipant } = fixture()
+
+    // Actor owns authored payloads — a named miss must fizzle, not borrow
+    // the basic swing (the basic fallback is only for actors with no
+    // authored payloads at all / unnamed entries).
+    playerParticipant.reactivePayloads = { phan_kich: playerSkill() }
+
+    battle.queuedFollowUps = [
+      {
+        actorId: 'player',
+        executionKind: 'reactive_bypass',
+        actionSource: 'follow_up',
+        payloadSkillId: 'qa_unregistered_payload',
+        targetIds: ['enemy'],
+      },
+    ]
+
+    const actor = system.tickPacing(battle, false)
+
+    expect(actor?.id).toBe('player')
+
+    const declared = system.declareActorAction(battle, actor!)
+
+    // No-op shape: no skill payload — captured targets alone cannot mint
+    // an attack (no scaled damage, impact resolves nothing).
+    expect(declared.action).toBeNull()
+    expect(declared.scaledDamage).toBeNull()
+    system.applyActionImpact(battle, declared)
+    expect(enemyParticipant.entity.currentHp).toBe(enemyParticipant.entity.maxHp)
+    expect(system.isPendingQueuedExecution('player')).toBe(false)
+  })
+
+  it('an UNNAMED entry still defaults to the basic swing by design', () => {
+    const { battle, system, enemyParticipant } = fixture()
+
+    battle.queuedFollowUps = [
+      {
+        actorId: 'player',
+        executionKind: 'reactive_bypass',
+        actionSource: 'follow_up',
+        targetIds: ['enemy'],
+      },
+    ]
+
+    const actor = system.tickPacing(battle, false)
+    const declared = system.declareActorAction(battle, actor!)
+
+    expect(declared.action?.skillId).toBe('player_basic')
+    expect(declared.affected.map((participant) => participant.id)).toEqual(['enemy'])
+    expect(enemyParticipant.entity.currentHp).toBe(enemyParticipant.entity.maxHp) // not yet applied
   })
 })

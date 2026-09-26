@@ -4,10 +4,11 @@
 // pushGauge's fractionOfMax is a SIGNED fraction of GAUGE_MAX -- positive
 // accelerates toward the ready threshold, negative pushes back. The
 // applied delta goes through refundGauge, which already IS the engine's
-// signed additive-delta primitive: it clamps the result into
-// [0, GAUGE_MAX] in both directions (a negative pushback floors at 0, a
-// positive push caps at GAUGE_MAX). consumeGaugeAfterAction stays a
-// separate concern -- this port only pushes deltas.
+// signed additive-delta primitive: it clamps into [min(0, gauge),
+// GAUGE_MAX] -- a negative pushback floors at 0 for non-debtors and can
+// never invert an Ung-Tre debtor's residue into haste; a positive push
+// repays debt first. consumeGaugeAfterAction stays a separate concern --
+// this port only pushes deltas.
 //
 // Result units are fraction-of-max (the port's own unit, matching the
 // fractionOfMax input): before/after are actionGauge / GAUGE_MAX -- so

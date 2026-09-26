@@ -1,0 +1,10 @@
+{
+  "applied": [
+    "evidence:EV-TTA-CLEANA4-FIX",
+    "review:REV-TTA-CLEAN-A4-INT",
+    "finding:F-TTA-INT-A4-1",
+    "finding:F-TTA-INT-A4-2",
+    "finding:F-TTA-CLEAN-A4-AUT-1 (updated)",
+    "finding:F-TTA-CLEAN-A4-AUT-3 (updated)"
+  ]
+}

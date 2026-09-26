@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { KIEM_TU_NODES } from './KiemTuNodes'
+import { KIEM_TU_NODES, NGU_KIEM_EVOLUTION_NODE_IDS } from './KiemTuNodes'
 import { KIEM_PHO_ORBS, ORB_UNLOCK_REALM } from '../skill/KiemPhoOrbs'
 import { BUFF_REGISTRY } from '../buff/BuffRegistry'
 
@@ -22,17 +22,6 @@ const REALM_BY_INDEX = [
   'golden_core',
   'nascent_soul',
   'soul_transformation',
-] as const
-
-const CUU_CUNG_OUTER_IDS = [
-  'cuu_cung_kham',
-  'cuu_cung_khon',
-  'cuu_cung_chan',
-  'cuu_cung_ton',
-  'cuu_cung_can',
-  'cuu_cung_doai',
-  'cuu_cung_cin',
-  'cuu_cung_ly',
 ] as const
 
 function node(id: string) {
@@ -124,8 +113,8 @@ describe('KiemTuNodes - kiem_pho beta branches (hien)', () => {
   })
 })
 
-describe('KiemTuNodes - ngu branch', () => {
-  it('no kiem_tu_an flip node exists - way entry is ritual-only (M6)', () => {
+describe('KiemTuNodes — ngu evolution spine', () => {
+  it('no kiem_tu_an flip node exists — way entry is ritual-only (M6)', () => {
     expect(KIEM_TU_NODES.find(n => n.id === 'kiem_tu_an')).toBeUndefined()
     // The retired effect field is gone from every node.
     for (const n of KIEM_TU_NODES) {
@@ -133,61 +122,83 @@ describe('KiemTuNodes - ngu branch', () => {
     }
   })
 
-  it('cascade unlock nodes: a @ foundation, e @ golden_core, d @ nascent_soul', () => {
-    const expected: Array<[string, 'a' | 'e' | 'd', string]> = [
-      ['ngu_cascade_a', 'a', 'foundation_establishment'],
-      ['ngu_cascade_e', 'e', 'golden_core'],
-      ['ngu_cascade_d', 'd', 'nascent_soul'],
-    ]
-    for (const [id, unlock, realmId] of expected) {
-      const n = node(id)
-      expect(n.branchTag).toBe('ngu_kiem')
-      expect(n.requiredCultivationPath).toBe('sword')
-      expect(n.requiredWay).toBe('hidden_sword_pathway')
-      expect(n.effect.cascadeUnlock).toBe(unlock)
-      expect(n.prerequisites).toContainEqual({ kind: 'realm', realmId })
-    }
-  })
-
-  it('every ngu node is way-stamped (requiredWay ngu + requiredCultivationPath sword) and never prereqs the retired flip node', () => {
+  it('exactly the three spine nodes exist (Khoi / Lien / Phong) — no Cuu Cung or Roll Cascade ids remain', () => {
     const nguNodes = KIEM_TU_NODES.filter(n => n.branchTag === 'ngu_kiem')
-    expect(nguNodes.length).toBeGreaterThan(0)
-    for (const n of nguNodes) {
-      expect(n.requiredCultivationPath).toBe('sword')
-      expect(n.requiredWay).toBe('hidden_sword_pathway')
-      const nodePrereqs = (n.prerequisites ?? []).filter(p => p.kind === 'node')
-      // No 'node' prereq may point at the retired kiem_tu_an flip node;
-      // in-branch node links (none today) stay legal.
-      expect(nodePrereqs.every(p => p.nodeId !== 'kiem_tu_an')).toBe(true)
-    }
+    expect(nguNodes.map(n => n.id)).toEqual([...NGU_KIEM_EVOLUTION_NODE_IDS])
   })
-})
 
-describe('KiemTuNodes - Cuu Cung 3x3', () => {
-  it('8 outer kiemYGrant nodes, each realm-gated, cap-guarded, way-stamped ngu', () => {
-    for (const id of CUU_CUNG_OUTER_IDS) {
+  it('every spine node is single-level, major and way-stamped; live layers carry evolutionId, the sealed node carries none', () => {
+    for (const id of NGU_KIEM_EVOLUTION_NODE_IDS) {
       const n = node(id)
       expect(n.branchTag).toBe('ngu_kiem')
+      expect(n.type).toBe('major')
+      expect(n.maxLevel).toBe(1)
       expect(n.requiredCultivationPath).toBe('sword')
       expect(n.requiredWay).toBe('hidden_sword_pathway')
-      expect(n.effect.kiemYGrant).toBeGreaterThan(0)
-      expect(n.prerequisites).toContainEqual({ kind: 'kiemDaoBelowCap' })
-      expect((n.prerequisites ?? []).some(p => p.kind === 'realm')).toBe(true)
+    }
+    expect(node('ngu_kiem_khoi').effect.evolutionId).toBe('khoi')
+    expect(node('ngu_kiem_lien').effect.evolutionId).toBe('lien')
+    // Sealed: no evolution layer ever activates from this node.
+    expect(node('ngu_kiem_phong_an').effect.evolutionId).toBeUndefined()
+  })
+
+  it('ngu_kiem_khoi is grant-only: free, grantedOnly, no prerequisites', () => {
+    const khoi = node('ngu_kiem_khoi')
+    expect(khoi.grantedOnly).toBe(true)
+    expect(khoi.insightCost).toBe(0)
+    expect(khoi.prerequisites ?? []).toEqual([])
+  })
+
+  it('ngu_kiem_lien requires Khoi + foundation_establishment and costs insight', () => {
+    const lien = node('ngu_kiem_lien')
+    expect(lien.grantedOnly).not.toBe(true)
+    expect(lien.insightCost).toBeGreaterThan(0)
+    expect(lien.prerequisites).toContainEqual({ kind: 'node', nodeId: 'ngu_kiem_khoi' })
+    expect(lien.prerequisites).toContainEqual({ kind: 'realm', realmId: 'foundation_establishment' })
+  })
+
+  it("ngu_kiem_phong_an is the sealed '???' placeholder beyond the beta ceiling", () => {
+    const phong = node('ngu_kiem_phong_an')
+    expect(phong.name).toBe('???')
+    expect(phong.prerequisites).toContainEqual({ kind: 'node', nodeId: 'ngu_kiem_lien' })
+    expect(phong.prerequisites).toContainEqual({ kind: 'realm', realmId: 'golden_core' })
+  })
+
+  it('spine nodes never modify character stats — no stat/kiem-economy effect fields', () => {
+    for (const id of NGU_KIEM_EVOLUTION_NODE_IDS) {
+      const n = node(id)
+      const forbidden = [
+        'kiemYGrant',
+        'kiemDaoGrant',
+        'cascadeUnlock',
+        'statBonus',
+        'damageBonus',
+        'levelsSkillId',
+      ]
+      for (const field of forbidden) {
+        expect(
+          (n.effect as Record<string, unknown>)[field],
+          `${id} carries forbidden field ${field}`,
+        ).toBeUndefined()
+      }
+      expect('levelsSkillId' in n).toBe(false)
     }
   })
 
-  it('trung_cung grants +1 kiemDaoCount, requires all 8 outers, cap-guarded', () => {
-    const trung = node('cuu_cung_trung')
-    expect(trung.branchTag).toBe('ngu_kiem')
-    expect(trung.requiredCultivationPath).toBe('sword')
-    expect(trung.requiredWay).toBe('hidden_sword_pathway')
-    expect(trung.effect.kiemDaoGrant).toBe(1)
-    expect(trung.prerequisites).toContainEqual({
-      kind: 'nodeCount',
-      nodeIds: [...CUU_CUNG_OUTER_IDS],
-      countRequired: 8,
+  it('spine node-prereq chain is strictly linear (khoi -> lien -> phong)', () => {
+    for (const id of NGU_KIEM_EVOLUTION_NODE_IDS) {
+      const n = node(id)
+      const nodePrereqs = (n.prerequisites ?? []).filter(p => p.kind === 'node')
+      expect(nodePrereqs.length).toBeLessThanOrEqual(1)
+    }
+    expect(node('ngu_kiem_lien').prerequisites).toContainEqual({
+      kind: 'node',
+      nodeId: 'ngu_kiem_khoi',
     })
-    expect(trung.prerequisites).toContainEqual({ kind: 'kiemDaoBelowCap' })
+    expect(node('ngu_kiem_phong_an').prerequisites).toContainEqual({
+      kind: 'node',
+      nodeId: 'ngu_kiem_lien',
+    })
   })
 })
 

@@ -2,13 +2,14 @@ import type { TurnBattle, TurnBattleParticipant } from '../battle/turn/TurnBattl
 import type { TurnSkillDefinition, TurnSkillSlot } from '../battle/turn/TurnSkillAction'
 import { hasResourceFor } from '../battle/turn/TurnSkillAction'
 import { turnSkillDisplayMetaOf } from '../../data/skill/TurnSkillDisplayMeta'
+import { skillIconPath } from '../../data/skill/SkillIconManifest'
 
-// Slice 7 (2026-09-04) — bản rewrite HOÀN TOÀN của CombatSkillPresentation:
-// bản cũ đọc shape real-time `Battle` (skillCadenceRemainingBySlot/castTime/
-// stats.speed) vốn KHÔNG tồn tại trên TurnBattleParticipant — dead code từ
-// Slice 6 cutover (6 test fail pre-existing là triệu chứng). Mô hình N-slot
-// loadout đã bị Slice 2 thay bằng 3 skill role cố định — file này giờ phản
-// chiếu đúng model đó.
+// Slice 7 (2026-09-04) -- ban rewrite HOAN TOAN cua CombatSkillPresentation:
+// ban cu doc shape real-time `Battle` (skillCadenceRemainingBySlot/castTime/
+// stats.speed) von KHONG ton tai tren TurnBattleParticipant -- dead code tu
+// Slice 6 cutover (6 test fail pre-existing la trieu chung). Mo hinh N-slot
+// loadout da bi Slice 2 thay bang 3 skill role co dinh -- file nay gio phan
+// chieu dung model do.
 
 export type TurnSkillPresentationStateKind =
   | 'ready'
@@ -21,11 +22,16 @@ export type TurnSkillPresentationStateKind =
 export interface TurnSkillPresentationEntry {
   skillId: string
 
-  /** Bảng 9.5 #5 — tên hiển thị thật (TurnSkillDisplayMeta); undefined = fallback nhãn role. */
+  /** Bang 9.5 #5 -- ten hien thi that (TurnSkillDisplayMeta); undefined = fallback nhan role. */
   skillName?: string
 
-  /** Bảng 9.5 #5 — mô tả tooltip thật; undefined = không override tooltip. */
+  /** Bang 9.5 #5 -- mo ta tooltip that; undefined = khong override tooltip. */
   skillDescription?: string
+
+  /** Three-path design (2026-09-25) -- icon path resolved tu
+   * TurnSkillDisplayMeta.iconKey qua SKILL_ICON_MANIFEST; undefined =
+   * slot roi ve monogram. */
+  skillIcon?: string
 
   cooldownRemaining: number
 
@@ -36,7 +42,7 @@ export interface TurnSkillPresentationEntry {
   state: TurnSkillPresentationStateKind
 }
 
-/** Bổ sung display metadata (name/description) vào entry — lookup an toàn theo skillId. */
+/** Bo sung display metadata (name/description) vao entry -- lookup an toan theo skillId. */
 function withDisplayMeta(entry: TurnSkillPresentationEntry): TurnSkillPresentationEntry {
   const meta = turnSkillDisplayMetaOf(entry.skillId)
 
@@ -44,7 +50,12 @@ function withDisplayMeta(entry: TurnSkillPresentationEntry): TurnSkillPresentati
     return entry
   }
 
-  return { ...entry, skillName: meta.name, skillDescription: meta.description }
+  return {
+    ...entry,
+    skillName: meta.name,
+    skillDescription: meta.description,
+    skillIcon: skillIconPath(meta.iconKey),
+  }
 }
 
 const EMPTY_ENTRY: TurnSkillPresentationEntry = {
@@ -95,7 +106,7 @@ function slotEntry(
     resourceCost,
   }
 
-  // The Tu Reimagined (T22) — emblemOnly slots (Phan Chinh) are passive
+  // The Tu Reimagined (T22) -- emblemOnly slots (Phan Chinh) are passive
   // emblems: the engine never selects them, so the bar renders the name
   // locked instead of offering an untappable "ready" state.
   if (slot.skill.emblemOnly) {
@@ -118,10 +129,10 @@ function slotEntry(
 }
 
 /**
- * Turn-based replacement cho `buildLoadoutPresentation` đã retire. 'locked'
- * giữ trong union cho forward-compat (mô hình 3 role không còn khái niệm
- * unlock theo realm — khớp spec §5); 'empty' phủ "participant không có
- * slot này" là trạng thái not-ready-content duy nhất có thật hiện nay.
+ * Turn-based replacement cho `buildLoadoutPresentation` da retire. 'locked'
+ * giu trong union cho forward-compat (mo hinh 3 role khong con khai niem
+ * unlock theo realm -- khop spec 5); 'empty' phu "participant khong co
+ * slot nay" la trang thai not-ready-content duy nhat co that hien nay.
  */
 export function buildTurnSkillPresentation(
   battle: TurnBattle,
@@ -132,9 +143,9 @@ export function buildTurnSkillPresentation(
   special: TurnSkillPresentationEntry
   ultimate: TurnSkillPresentationEntry
 } {
-  // Party (Future Systems Task 9/10): presentation theo participant được
-  // chỉ định — mặc định players[0] (main character); GameManager truyền
-  // paused actor khi manual pause là party member khác players[0].
+  // Party (Future Systems Task 9/10): presentation theo participant duoc
+  // chi dinh -- mac dinh players[0] (main character); GameManager truyen
+  // paused actor khi manual pause la party member khac players[0].
   const player =
     participantOverride ?? battle.players[0]
 

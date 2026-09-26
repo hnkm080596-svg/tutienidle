@@ -113,7 +113,8 @@ export interface SkillInstances {
   /** may query player state (Ngu Kiem Dao kiemDaoCount) */
   count: ScalarExpression
   each?: {
-    /** phi kiem never miss -> hitPolicy.guaranteedHit */
+    /** guaranteedHit field: generic contract; phi kiem uses standard-hit (can miss) */
+
     guaranteedHit?: boolean
     /** live-target hp% at EXECUTE -> execute-branch coefficient fold */
     execute?: { hpPercentBelow: ScalarExpression; damageMultiplier: number }
@@ -122,6 +123,11 @@ export interface SkillInstances {
     /** one authority roll: bypass, else mitigation x (1-fraction)
         -> armorPolicy{bypassChance, pierceFractionOnFail} */
     armorPierce?: { bypassChance: number; pierceFraction: number }
+    /** Ngu Kiem Beta (Kiem The) -- instance N's coefficient folds
+        (1 + rate * count-of-landed-prior-instances-of-this-cast). The
+        landed count is a cast-local ops_result_sum read; never
+        persisted. */
+    momentumPerLandedInstance?: number
   }
 }
 

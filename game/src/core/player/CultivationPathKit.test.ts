@@ -107,6 +107,16 @@ describe('way definitions — authored content carried over from kits', () => {
     // the artifact record on the shared unlock declaration (Kim Dan).
     expect(way?.realmRewards?.foundation_establishment).toEqual({
       passiveSkillId: 'passive_truc_co_y_chi',
+      // Three-path design (2026-09-25, sec.4-b) — mastery per element +
+      // The awakening grants at the Truc Co breakthrough.
+      grantedNodeLevels: {
+        tinh_thong_hoa: 1,
+        tinh_thong_thuy: 1,
+        tinh_thong_moc: 1,
+        tinh_thong_kim: 1,
+        tinh_thong_tho: 1,
+        the_thuc_tinh: 1,
+      },
     })
     expect(way?.realmRewards?.golden_core).toEqual({
       artifactId: 'ngu_hanh_chau',

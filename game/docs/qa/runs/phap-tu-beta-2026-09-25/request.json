@@ -1,0 +1,10 @@
+{
+  "runId": "phap-tu-beta-2026-09-25",
+  "productRoot": ".",
+  "goal": "Phap Tu beta scope: M1 basic node tree + M2 presentation + M3 asset placeholders + M4 honesty + M5 realm-reward grants",
+  "requiredReadiness": true,
+  "briefRef": "/home/ubuntu/qa/phap-tu-basic/brief.json",
+  "contractPaths": [
+    "docs/qa/protocol/README.md"
+  ]
+}

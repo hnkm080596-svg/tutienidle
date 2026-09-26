@@ -1,6 +1,4 @@
 import type { ElementType } from '../element/ElementType'
-import type { SpellPathRoute } from '../phap-tu/PhapTuState'
-import type { OrbId } from '../kiem-tu/KiemTuState'
 import type { DomainDeltaDeriver, StatModifier } from '../stats/StatCalculator'
 import type { Stats } from '../stats/StatBlock'
 import type { StatDomain } from '../stats/StatDomain'
@@ -74,6 +72,13 @@ export interface CultivationPathRealmReward {
   // from CANONICAL_REALM_PASSIVE_LADDER; null is an authored directive
   // suppressing the canonical pick for this realm.
   passiveSkillId?: string | null
+  // Three-path design (2026-09-25, sec.4-b + ruling #19) - realm-entry
+  // NODE GRANTS: nodeId -> level, applied by
+  // grantCultivationPathRealmReward as `nodeLevels[id] = max(current, L)`
+  // (idempotent, never downgrades). Only targets rewardOnly-authored
+  // nodes - purchase/upgrade/tree rendering stay sealed; element, route
+  // and way gates still govern whether a granted level is ACTIVE.
+  grantedNodeLevels?: Record<string, number>
 }
 
 // Ritual-time offer gate, evaluated live against the player (never
@@ -255,6 +260,14 @@ export interface PathWayDefinition {
   // and grants them inside the commit block - a missing/mismatched
   // core fails the whole ritual with zero mutation.
   coreSkillIds?: readonly string[]
+
+  // Ngu Kiem Beta -- node ids granted at way commit through the same
+  // grantSkillCore seam (evolution layers like ngu_kiem_khoi: real
+  // nodes on the way's tag subtree, nodeLevels-owned, respec-preserved,
+  // unpurchasable via grantedOnly). chooseCultivationPath preflights
+  // every member's registry presence BEFORE commit and grants inside
+  // the commit block -- a missing node fails the ritual.
+  grantedNodeIds?: readonly string[]
 
   // P7-M2 - passives learned at path initiation (replaces the retired
   // technique-carried innateSkillId).

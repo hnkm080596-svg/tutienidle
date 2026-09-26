@@ -63,7 +63,7 @@ export interface EffectiveSkill {
 
   passiveConvertsTo?: Skill['passiveConvertsTo']
 
-  // Phap Tu Thuan He (Task 10) - specialization.targetingOverride: co
+  // Phap Tu Thuan He (Task 10) - specialization.targeting: co
   // thi thay targeting skill goc (xem SkillSpecialization).
   targeting?: ActionTargeting
 }

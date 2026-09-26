@@ -23,7 +23,7 @@ import {
   purchaseNode,
 } from '../progression/NodeSystem'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
-import { gainKiemY, grantKiemDao } from './NguKiemDao'
+import { gainKiemY } from './NguKiemDao'
 import {
   isSwordPathway,
   isHiddenSwordPathway,
@@ -148,11 +148,15 @@ describe('node stamps — requiredCultivationPath + requiredWay', () => {
 
   it('hien player buys orb nodes but not ngu nodes; ngu player buys ngu nodes but not orb nodes', () => {
     const hien = swordPathPlayer('sword_pathway')
+    hien.realmId = 'foundation_establishment'
+    hien.nodeLevels = { ngu_kiem_khoi: 1 } // inconsistent save shape — way gate still holds
     expect(purchaseNode(hien, nodeById('thich_can'))).toBe(true)
-    expect(purchaseNode(hien, nodeById('ngu_kiem_sac'))).toBe(false)
+    expect(purchaseNode(hien, nodeById('ngu_kiem_lien'))).toBe(false)
 
     const ngu = swordPathPlayer('hidden_sword_pathway')
-    expect(purchaseNode(ngu, nodeById('ngu_kiem_sac'))).toBe(true)
+    ngu.realmId = 'foundation_establishment'
+    ngu.nodeLevels = { ngu_kiem_khoi: 1 }
+    expect(purchaseNode(ngu, nodeById('ngu_kiem_lien'))).toBe(true)
     expect(purchaseNode(ngu, nodeById('thich_can'))).toBe(false)
   })
 
@@ -168,7 +172,7 @@ describe('node stamps — requiredCultivationPath + requiredWay', () => {
 
   it('aggregateNodeStatModifiers ignores cross-way levels both directions', () => {
     const hien = swordPathPlayer('sword_pathway')
-    hien.nodeLevels = { ngu_kiem_sac: 3 }
+    hien.nodeLevels = { ngu_kiem_lien: 3 }
     expect(aggregateNodeStatModifiers(NODE_REGISTRY, hien)).toEqual([])
 
     const ngu = swordPathPlayer('hidden_sword_pathway')
@@ -210,17 +214,15 @@ describe('way-resolved stat/domain channels', () => {
 })
 
 describe('ngu economy — way-gated writes', () => {
-  it('gainKiemY/grantKiemDao are no-ops off the ngu way', () => {
+  it('gainKiemY is a no-op off the ngu way', () => {
     const hien = swordPathPlayer('sword_pathway')
     gainKiemY(hien, 50_000)
-    grantKiemDao(hien, 5)
     expect(hien.swordPath!.kiemY).toBe(0)
     expect(hien.swordPath!.kiemDaoCount).toBe(1)
 
     const mortal = createDefaultPlayer()
     mortal.swordPath = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 }
     gainKiemY(mortal, 50_000)
-    grantKiemDao(mortal, 5)
     expect(mortal.swordPath.kiemY).toBe(0)
     expect(mortal.swordPath.kiemDaoCount).toBe(1)
   })

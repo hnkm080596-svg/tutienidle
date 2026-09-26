@@ -27,7 +27,7 @@ Nhãn trạng thái dùng xuyên suốt:
 - [meridians.md](./meridians.md) — Kỳ Kinh Bát Mạch (Luyện Khí)
 - [tribulation.md](./tribulation.md) — Độ Kiếp (đột phá đại cảnh giới), Kiến Cơ grades
 - [talents.md](./talents.md) — Thiên Phú (roll 9 chọn 1)
-- [cultivation-paths.md](./cultivation-paths.md) — Pháp Tu / Kiếm Tu, route, Kiếm Ý
+- [cultivation-paths.md](./cultivation-paths.md) — paths × ways (Pháp/Kiếm/Thể), capabilities, Kiếm Phổ/Ngự Kiếm
 - [techniques.md](./techniques.md) — Tâm Pháp
 - [node-tree.md](./node-tree.md) — cây công pháp / skill nodes
 

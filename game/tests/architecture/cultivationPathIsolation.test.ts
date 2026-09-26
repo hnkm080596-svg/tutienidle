@@ -192,6 +192,10 @@ const SLICE_READ_ALLOWLIST: readonly string[] = [
   // module's freshSwordPathState() factory (test-only seam, same site
   // as the SEAM_ALLOWLIST entry above).
   'services/save/GameSave.fixture.ts',
+  // Benchmark recipes are build fixtures of the same seam class: the
+  // committed-way snapshot is constructed through the module's
+  // freshSwordPathState() factory, not by mutating a live save.
+  'core/simulation/benchmark/BalanceBaselines.ts',
 ]
 
 describe('cultivation path isolation (M10)', () => {

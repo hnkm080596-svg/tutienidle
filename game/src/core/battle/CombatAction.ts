@@ -1,26 +1,26 @@
-// Combat Grid Rework (2026-08-24) — hệ action THỐNG NHẤT thay
+// Combat Grid Rework (2026-08-24) -- he action THONG NHAT thay
 // MissileSystem: player basic attack, player skill, enemy attack,
-// enemy/boss skill… đều đi cùng một pipeline windup → impact → resolve.
-// Gameplay KHÔNG phụ thuộc VFX hay Phaser callback — core emit đúng MỘT
-// event `action_impact` cho mỗi lần action áp sát thương, renderer đọc
-// preset để diễn xuất.
+// enemy/boss skill... deu di cung mot pipeline windup -> impact -> resolve.
+// Gameplay KHONG phu thuoc VFX hay Phaser callback -- core emit dung MOT
+// event `action_impact` cho moi lan action ap sat thuong, renderer doc
+// preset de dien xuat.
 import { GRID_COLUMN_COUNT } from './BattleGrid'
 
-/** Hình dạng chọn vùng ảnh hưởng (decision 2026-08-24: shape union; 2026-09-04: mở rộng cross/row/column, đổi 'area' → 'square'). */
+/** Hinh dang chon vung anh huong (decision 2026-08-24: shape union; 2026-09-04: mo rong cross/row/column, doi 'area' -> 'square'). */
 export type ActionTargetingShape = 'single' | 'square' | 'cross' | 'line' | 'row' | 'column' | 'all_lanes'
 
 export type TargetSelectionMode = 'nearest' | 'lowest_hp' | 'highest_hp'
 
 /**
- * Targeting đo hoàn toàn bằng đơn vị GRID (cột/hàng) — plan §2.6: KHÔNG
- * còn targeting range riêng cho skill; tầm với do action targeting quyết
- * định (stat-system-reimagined Task 3 đã retire stat attackRange).
- * Interface này CHỈ chuẩn hoá shape/AOE quanh primary target:
- * - shape 'square' dùng laneRadius/columnRadius quanh primary target
- *   (radius 0 = chỉ hàng/cột của anchor; n = mở rộng n ô mỗi phía, clamp biên).
- * - shape 'line'  = toàn bộ hàng của primary target.
- * - shape 'all_lanes' = dải cột [anchor.col ± columnRadius] trên MỌI hàng.
- * - maxTargets: giới hạn số enemy trúng (cân bằng).
+ * Targeting do hoan toan bang don vi GRID (cot/hang) -- plan 2.6: KHONG
+ * con targeting range rieng cho skill; tam voi do action targeting quyet
+ * dinh (stat-system-reimagined Task 3 da retire stat attackRange).
+ * Interface nay CHI chuan hoa shape/AOE quanh primary target:
+ * - shape 'square' dung laneRadius/columnRadius quanh primary target
+ *   (radius 0 = chi hang/cot cua anchor; n = mo rong n o moi phia, clamp bien).
+ * - shape 'line'  = toan bo hang cua primary target.
+ * - shape 'all_lanes' = dai cot [anchor.col +/- columnRadius] tren MOI hang.
+ * - maxTargets: gioi han so enemy trung (can bang).
  */
 export interface ActionTargeting {
   shape: ActionTargetingShape
@@ -54,31 +54,31 @@ export function targetingForSkill(skill: {
   }
 }
 
-/** Windup = thời gian từ lúc bắt đầu animation tới IMPACT. Không còn thời gian bay. */
+/** Windup = thoi gian tu luc bat dau animation toi IMPACT. Khong con thoi gian bay. */
 export interface CombatActionTiming {
   windupSeconds: number
   recoverySeconds?: number
 }
 
 /**
- * Scope của một SkillEffect trong action:
- * - 'source': buff/heal bản thân — chỉ chạy MỘT LẦN mỗi impact.
- * - 'primary_target': debuff/đánh dấu chỉ áp mục tiêu chính.
- * - 'affected_targets': damage/AOE chạy trên toàn target set.
+ * Scope cua mot SkillEffect trong action:
+ * - 'source': buff/heal ban than -- chi chay MOT LAN moi impact.
+ * - 'primary_target': debuff/danh dau chi ap muc tieu chinh.
+ * - 'affected_targets': damage/AOE chay tren toan target set.
  */
 export type EffectScope = 'source' | 'primary_target' | 'affected_targets'
 
-/** Multi-hit: kết quả ổn định theo snapshot lúc impact (mặc định). */
+/** Multi-hit: ket qua on dinh theo snapshot luc impact (mac dinh). */
 export type MultiHitTargetPolicy = 'on_impact' | 'each_hit'
 
 /**
- * Định nghĩa action thống nhất — player skill và enemy attack đều được
- * chuẩn hóa về shape này khi chạy (enemy archetype tự sinh def mặc định).
+ * Dinh nghia action thong nhat -- player skill va enemy attack deu duoc
+ * chuan hoa ve shape nay khi chay (enemy archetype tu sinh def mac dinh).
  */
 export interface CombatActionDefinition {
   id: string
 
-  /** Component sát thương — resolve từng hit qua CombatSystem pipeline đầy đủ. */
+  /** Component sat thuong -- resolve tung hit qua CombatSystem pipeline day du. */
   damage: Array<{
     element?: string
     percent?: number
@@ -89,7 +89,7 @@ export interface CombatActionDefinition {
 
   timing: CombatActionTiming
 
-  /** Số hit lên từng target (mỗi hit tự roll crit/dodge/on-hit). */
+  /** So hit len tung target (moi hit tu roll crit/dodge/on-hit). */
   hitCount?: number
 
   multiHitTargetPolicy?: MultiHitTargetPolicy
@@ -97,7 +97,7 @@ export interface CombatActionDefinition {
   vfxPresetId: string
 }
 
-/** Id preset VFX impact — renderer đăng ký diễn xuất tương ứng. */
+/** Id preset VFX impact -- renderer dang ky dien xuat tuong ung. */
 export type CombatVfxPresetId =
   | 'slash'
   | 'claw'
@@ -112,8 +112,8 @@ export type CombatVfxPresetId =
   | 'holy_radiance'
   | 'shadow_burst'
   | 'boss_ground_slam'
-  // Kiếm Tu (Task 8, 2026-08-28) — DATA ONLY, art/
-  // animation sau (renderer chưa đăng ký diễn xuất tương ứng).
+  // Kiem Tu (Task 8, 2026-08-28) -- DATA ONLY, art/
+  // animation sau (renderer chua dang ky dien xuat tuong ung).
   | 'tu_luc'
   // Kiem Pho Beta (design sec.3) - per-orb VFX identity for the two
   // beta orbs: Dam point->line->converge (silver/cool-blue), Chem
@@ -128,6 +128,7 @@ export type CombatVfxPresetId =
   // design's locked ids: nhat_tuyen/liet_ngan/khai_ngan/thau_ngan/
   // hoi_tuyen/diep_ngan.
   | 'kiem_combo_nhat_tuyen' | 'kiem_combo_liet_ngan' | 'kiem_combo_tam_phach'
+  | 'kiem_combo_tam_thich' | 'kiem_combo_tam_tram'
   | 'kiem_combo_tam_lieu' | 'kiem_combo_tam_tao'
   | 'kiem_combo_khai_ngan' | 'kiem_combo_nhi_thich_nhat_phach'
   | 'kiem_combo_thau_ngan' | 'kiem_combo_nhi_tram_nhat_phach'
@@ -145,6 +146,13 @@ export type CombatVfxPresetId =
   | 'kiem_combo_thich_tram_tram_phach_thich'
   | 'kiem_combo_tram_thich_phach_tram_phach'
   | 'kiem_combo_phach_tram_thich_lieu_tao'
+  // Three-path design (2026-09-25, ruling #12) -- one preset per Phap Tu
+  // element basic. DATA ONLY until the presentation pass registers
+  // dien xuat; renderer maps each preset to space/color/scale/shake.
+  | 'hoa_cau_comet' | 'thuy_tien_dart' | 'doc_chuong_palm' | 'diem_kim_point' | 'tho_cau_boulder'
+  // Mortal precursors (same three-path pass) -- the three pre-path
+  // actives render distinct from the generic arcane fallback.
+  | 'tram_slash' | 'linh_bao_burst' | 'huy_quyen_strike'
   | 'kiem_combo_thich_lieu_phach_tram_tao'
   | 'kiem_combo_tao_tram_thich_phach_lieu'
   | 'kiem_combo_tram_phach_lieu_tao_thich'
@@ -152,21 +160,21 @@ export type CombatVfxPresetId =
   | 'kiem_combo_lieu_tao_thich_tram_phach'
 
 /**
- * Id preset VFX telegraph spawn quái (luồng "telegraph → xuất hiện →
- * tham chiến") — renderer đăng ký diễn xuất theo cấp bậc quái.
+ * Id preset VFX telegraph spawn quai (luong "telegraph -> xuat hien ->
+ * tham chien") -- renderer dang ky dien xuat theo cap bac quai.
  */
 export type EnemySpawnVfxPresetId = 'enemy_spawn' | 'elite_spawn' | 'boss_spawn'
 
 /**
- * Id preset VFX telegraph spawn Player (plan §5.3) — contract RIÊNG với
- * enemy spawn để renderer phân biệt preset và không giả danh
+ * Id preset VFX telegraph spawn Player (plan 5.3) -- contract RIENG voi
+ * enemy spawn de renderer phan biet preset va khong gia danh
  * `enemy_spawned`.
  */
 export type PlayerSpawnVfxPresetId = 'player_spawn'
 
 /**
- * Map element của skill → preset VFX mặc định. Skill có thể override
- * bằng field `vfxPresetId` riêng.
+ * Map element cua skill -> preset VFX mac dinh. Skill co the override
+ * bang field `vfxPresetId` rieng.
  */
 export function vfxPresetForElement(element: string | undefined): CombatVfxPresetId {
   switch (element) {
@@ -180,9 +188,9 @@ export function vfxPresetForElement(element: string | undefined): CombatVfxPrese
       return 'earth_shockwave'
     case 'metal':
       return 'metal_slash'
-    // Spec 2026-08-30-phap-tu-dao-sac §5 — case 'wind'/'lightning' đã
-    // xoá cùng element; preset wind_blade/lightning_strike không còn
-    // đường gán từ element của skill.
+    // Spec 2026-08-30-phap-tu-dao-sac 5 -- case 'wind'/'lightning' da
+    // xoa cung element; preset wind_blade/lightning_strike khong con
+    // duong gan tu element cua skill.
     case 'primordial':
       return 'shadow_burst'
     default:
@@ -195,7 +203,7 @@ export interface SkillVfxHint {
 
   vfxPresetId?: CombatVfxPresetId
 
-  /** AOE lan theo hàng quanh primary target (shape 'square' mặc định). */
+  /** AOE lan theo hang quanh primary target (shape 'square' mac dinh). */
   laneRadius?: number
 
   columnRadius?: number

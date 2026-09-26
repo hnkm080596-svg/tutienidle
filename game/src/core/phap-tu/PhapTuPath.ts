@@ -10,6 +10,7 @@ import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
 import { SPELL_KIT_IDS, SPELL_ROUTE_SKILL_IDS } from '../../data/skill/Skills'
 import { VAN_PHAP_THAN_HOA_ID } from '../../data/buff/ReactionStatusBuffs'
 import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
+import { THE_THUC_TINH_NODE_ID, masteryGrantRecord } from '../../data/progression/PhapTuRealmRewardNodes'
 import { ARTIFACT_UNLOCK_REALM_ID } from '../artifact/ArtifactDomain'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
 
@@ -258,6 +259,17 @@ export const SPELL_PATHWAY: PathWayDefinition = {
     [ARTIFACT_UNLOCK_REALM_ID]: {
       artifactId: 'ngu_hanh_chau',
     },
+    // Three-path design (2026-09-25, sec.4-b + ruling #19) — Truc Co
+    // breakthrough: mastery per element (the element gate activates only
+    // the committed element's grant) + the The pool deepening (+1/cast,
+    // +10 cap; spend stays Kim Dan-gated). Hidden way gets the same kinds
+    // at level 2.
+    foundation_establishment: {
+      grantedNodeLevels: {
+        ...masteryGrantRecord(1),
+        [THE_THUC_TINH_NODE_ID]: 1,
+      },
+    },
   }),
   // P1 - spell_pathway owns the element/route machinery (elemental_casting:
   // element commit, route switch, route profiles, MP pills, the element
@@ -334,7 +346,16 @@ export const HIDDEN_SPELL_PATHWAY: PathWayDefinition = {
   skillIds: [HIDDEN_SPELL_BASIC_ID, HIDDEN_SPELL_SPECIAL_ID],
   passiveSkillIds: [HIDDEN_SPELL_PASSIVE_ID],
   // P7-M2 - canonical realm-entry passive ladder.
-  realmRewards: composeRealmRewards(),
+  // Three-path design (2026-09-25, sec.4-b) — hidden way takes the same
+  // grant kinds at level 2; the_thuc_tinh is omitted because ngo_dao
+  // owns no The pool (M4/R6 — a granted gain would be a dead write).
+  realmRewards: composeRealmRewards({
+    foundation_establishment: {
+      grantedNodeLevels: {
+        ...masteryGrantRecord(2),
+      },
+    },
+  }),
   statModifiers: [
     {
       id: 'ngo_dao_linh_luc',

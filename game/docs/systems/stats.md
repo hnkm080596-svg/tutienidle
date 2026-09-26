@@ -64,7 +64,7 @@ Core: `attack, defense, maxHp, maxMp, speed, attackRange, criticalRate, critical
 | Trang bị | `EquipmentSystem` → `setEquipmentModifiers` |
 | Đan permanent | `PillSystem` → `player.modifiers` (`pill-permanent:*`) |
 | Talent | `TalentEffects` + hidden passive skill |
-| Kiếm Ý (Bạt Kiếm) | `getKiemYDamageMultipliers` → finalStats |
+| Kiếm Ý (Ngự Kiếm Đạo forge) | `getKiemYDamageMultipliers` → finalStats |
 
 ## Liên quan
 

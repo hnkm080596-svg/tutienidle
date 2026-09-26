@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildTurnSkillPresentation } from './CombatSkillPresentation'
+import { SKILL_ICON_MANIFEST } from '../../data/skill/SkillIconManifest'
+import { TURN_SKILL_DISPLAY_META, turnSkillDisplayMetaOf } from '../../data/skill/TurnSkillDisplayMeta'
 import type { TurnBattle, TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
@@ -158,7 +160,7 @@ describe('buildTurnSkillPresentation — skillName/skillDescription (9.5 #5)', (
 
     const result = buildTurnSkillPresentation(b, true)
 
-    expect(result.special.skillName).toBe('Ngự Kiếm Thuật')
+    expect(result.special.skillName).toBe('Ngự Kiếm')
   })
 
   it('id lạ (fixture không có trong map) → không set name/description (fallback nhãn role)', () => {
@@ -174,5 +176,69 @@ describe('buildTurnSkillPresentation — skillName/skillDescription (9.5 #5)', (
 
     expect(result.ultimate.state).toBe('empty')
     expect(result.ultimate.skillName).toBeUndefined()
+  })
+})
+
+// Three-path design (2026-09-25, sec.5.1) -- skillIcon pipeline:
+// TurnSkillDisplayMeta.iconKey -> SKILL_ICON_MANIFEST -> entry.skillIcon.
+describe('buildTurnSkillPresentation — skillIcon (iconKey -> manifest -> entry)', () => {
+  it('mortal precursor skill (tram) → icon path từ manifest', () => {
+    const b = battle()
+    b.players[0]!.basic!.id = 'tram'
+
+    const result = buildTurnSkillPresentation(b, true)
+
+    expect(result.basic.skillIcon).toBe('/assets/skills/tram.png')
+  })
+
+  it('Phap Tu basic (hoa_cau_thuat) → icon path riêng của hệ', () => {
+    const b = battle()
+    b.players[0]!.basic!.id = 'hoa_cau_thuat'
+
+    const result = buildTurnSkillPresentation(b, true)
+
+    expect(result.basic.skillIcon).toBe('/assets/skills/hoa_cau_thuat.png')
+  })
+
+  it('id lạ / meta không có iconKey → skillIcon undefined (rơi về monogram)', () => {
+    const result = buildTurnSkillPresentation(battle(), true)
+
+    expect(result.basic.skillIcon).toBeUndefined()
+    expect(result.special.skillIcon).toBeUndefined()
+  })
+
+  it('mọi iconKey authored trong TURN_SKILL_DISPLAY_META đều resolve ra path /assets/skills/', () => {
+    const entries = Object.entries(TURN_SKILL_DISPLAY_META).filter(
+      ([, meta]) => meta.iconKey !== undefined,
+    )
+
+    expect(entries.length).toBeGreaterThan(0)
+
+    for (const [skillId, meta] of entries) {
+      const path = SKILL_ICON_MANIFEST[meta.iconKey!]
+
+      expect(path, `iconKey '${meta.iconKey}' của '${skillId}' thiếu trong manifest`).toBe(
+        `/assets/skills/${meta.iconKey}.png`,
+      )
+    }
+  })
+
+  it('turnSkillDisplayMetaOf trả meta có iconKey cho từng skill Phap Tu reachable trong beta', () => {
+    const reachable = [
+      'hoa_cau_thuat',
+      'thuy_tien_thuat',
+      'doc_chuong',
+      'diem_kim_thuat',
+      'tho_cau_thuat',
+      'van_phap_tuy_tam',
+      'da_phap_lien_tuyen',
+      'tram',
+      'linh_bao',
+      'huy_quyen',
+    ]
+
+    for (const skillId of reachable) {
+      expect(turnSkillDisplayMetaOf(skillId)?.iconKey, skillId).toBe(skillId)
+    }
   })
 })

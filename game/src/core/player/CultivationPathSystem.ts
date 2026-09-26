@@ -1,4 +1,6 @@
 import type { ElementType } from '../element/ElementType'
+import type { ProgressionNode } from '../progression/ProgressionNode'
+import { getNodeMaxLevel } from '../progression/ProgressionNode'
 import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import type { OrbId } from '../kiem-tu/KiemTuState'
 import {
@@ -21,6 +23,7 @@ import {
 } from './CultivationPathKit'
 import { registerDomainDeltaDeriver, type StatModifier } from '../stats/StatCalculator'
 import { isRealmAvailable } from '../realm/ReleasePolicy'
+import { getRealmTier } from '../realm/RealmTierMap'
 import { type StatDomain } from '../stats/StatDomain'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { Stats } from '../stats/StatBlock'
@@ -366,6 +369,7 @@ export function getCultivationPathStatModifiers(player: PlayerData) {
 export function grantCultivationPathRealmReward(
   player: PlayerData,
   realmId: string,
+  resolveNode: (nodeId: string) => ProgressionNode | undefined,
 ): boolean {
   if (!player.cultivationPath) {
     return false
@@ -397,5 +401,100 @@ export function grantCultivationPathRealmReward(
     player.artifact = createDefaultArtifactProgress(reward.artifactId)
   }
 
+  // Three-path design (2026-09-25, sec.4-b) - realm-entry node grants:
+  // idempotent max-write (a re-entry or a deeper earlier grant never
+  // downgrades). Effect activation stays behind the standard
+  // element/route/way gates in NodeSystem.
+  // Ownership: only rewardOnly-authored registry members may receive a
+  // grant, clamped to getNodeMaxLevel - anything else is refused and
+  // warned (a record entry naming a purchasable/core node would
+  // otherwise hand out gated power for free or corrupt the
+  // purchasedNodeIds mirror).
+  if (reward.grantedNodeLevels) {
+    player.nodeLevels ??= {}
+
+    for (const [nodeId, level] of Object.entries(reward.grantedNodeLevels)) {
+      const node = resolveNode(nodeId)
+
+      if (!node || node.rewardOnly !== true) {
+        console.warn(
+          `grantedNodeLevels entry '${nodeId}' is not a rewardOnly-authored node - grant skipped`,
+        )
+        continue
+      }
+
+      // core_ ids need the purchasedNodeIds mirror per save validation;
+      // a grant writes nodeLevels only, so one would corrupt the save.
+      // grantsSkillCoreIds is the same save-corruption class: its cores
+      // fire at purchase time only, so a levels-only grant would leave
+      // the node owned while its declared cores are missing (D9d fails
+      // the next save load).
+      if (nodeId.startsWith('core_') || node.effect.grantsSkillCoreIds !== undefined) {
+        console.warn(
+          `grantedNodeLevels entry '${nodeId}' needs purchase-time effects a levels-only grant cannot fire - grant skipped`,
+        )
+        continue
+      }
+
+      // Transactional effects (one-shot grants, spec claims, purchases)
+      // are dead on a levels-only grant - skip the write, same contract as
+      // the purchase-time effect reject above.
+      if (
+        node.effect.unlocksSkillIds !== undefined ||
+        node.effect.selectsSpecialization !== undefined
+      ) {
+        console.warn(
+          `grantedNodeLevels entry '${nodeId}' carries transactional effects that node-level grants do not fire - grant skipped`,
+        )
+        continue
+      }
+
+      // Levels outside [1, maxLevel] would write a value saveShapeValidation
+      // rejects on the next load - refuse the grant rather than corrupt.
+      if (!Number.isInteger(level) || level < 1) {
+        console.warn(
+          `grantedNodeLevels entry '${nodeId}' has invalid level ${level} - grant skipped`,
+        )
+        continue
+      }
+
+      const clamped = Math.min(level, getNodeMaxLevel(node))
+      player.nodeLevels[nodeId] = Math.max(player.nodeLevels[nodeId] ?? 0, clamped)
+    }
+  }
+
   return true
+}
+
+/**
+ * Load-time reconcile for realm-entry rewards (2026-09-25, F-PT-A9-1):
+ * grants fire only at the breakthrough transition, so a save that already
+ * PASSED a reward realm before the content existed would permanently miss
+ * rewardOnly nodeLevels (no purchase path exists). Grants are idempotent
+ * max-writes, so replaying them on every restore is safe -- same rehydrate
+ * seam as reconcileQuestLifecycle / applyAllBodyModifiers.
+ */
+export function reconcileCultivationPathRealmRewards(
+  player: PlayerData,
+  resolveNode: (nodeId: string) => ProgressionNode | undefined,
+): boolean {
+  if (!player.cultivationPath) {
+    return false
+  }
+
+  const rewards = getActiveWayDefinition(player)?.realmRewards
+  if (!rewards) {
+    return false
+  }
+
+  const playerTier = getRealmTier(player.realmId)
+  let granted = false
+
+  for (const realmId of Object.keys(rewards)) {
+    if (getRealmTier(realmId) <= playerTier && grantCultivationPathRealmReward(player, realmId, resolveNode)) {
+      granted = true
+    }
+  }
+
+  return granted
 }

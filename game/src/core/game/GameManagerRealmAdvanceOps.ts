@@ -10,7 +10,8 @@ import { applyBreakthroughMerge } from '../kiem-tu/NguKiemDao'
 import { issueCompanionGifts } from '../companion/CompanionGifts'
 import { CULTIVATION_PATH_MODULES, getActiveWayDefinition } from '../player/CultivationPathKit'
 import type { NodeRegistry } from '../progression/NodeRegistry'
-import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward, hasStaticPathCapability } from '../player/CultivationPathSystem'
+import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward, reconcileCultivationPathRealmRewards as reconcilePathRealmRewards, hasStaticPathCapability } from '../player/CultivationPathSystem'
+import { grantSkillCore } from '../progression/NodeSystem'
 import {
   computeBreakthroughGrade,
   investBodyChapterState,
@@ -124,9 +125,21 @@ export class GameManagerRealmAdvanceOps {
     this.techniqueManager = deps.techniqueManager
   }
 
-  /** Grants the major-realm reward of the cultivation path data kit (P7-M3: artifact-only). */
+  /** Grants the major-realm reward of the cultivation path data kit (artifact + grantedNodeLevels). */
   grantCultivationPathRealmReward(player: PlayerData, realmId: string): boolean {
-    return grantPathRealmReward(player, realmId)
+    return grantPathRealmReward(player, realmId, (nodeId) =>
+      this.deps.nodeRegistry.has(nodeId) ? this.deps.nodeRegistry.get(nodeId) : undefined,
+    )
+  }
+
+  /**
+   * Load-time reconcile (F-PT-A9-1): replays realm-entry grants the player
+   * already passed -- safe to run on every restore (idempotent max-write).
+   */
+  reconcileCultivationPathRealmRewards(player: PlayerData): boolean {
+    return reconcilePathRealmRewards(player, (nodeId) =>
+      this.deps.nodeRegistry.has(nodeId) ? this.deps.nodeRegistry.get(nodeId) : undefined,
+    )
   }
 
   /**
@@ -167,6 +180,26 @@ export class GameManagerRealmAdvanceOps {
     // the slice presence check stays (corrupt saves fail closed).
     if (player.swordPath && hasStaticPathCapability(player, 'sword.sword_riding')) {
       applyBreakthroughMerge(player.swordPath)
+    }
+  }
+
+  /**
+   * Ngu Kiem Beta (F-NK-AUT-7) - replay the committed way's
+   * grantedNodeIds at restore. Saves that picked a way BEFORE its
+   * granted nodes shipped (v84 hidden_sword_pathway predates
+   * ngu_kiem_khoi) never re-run the initiation ritual, so the grant is
+   * permanently missing and the provider resolves a broken evolution
+   * chain. grantSkillCore is idempotent (level>=1 + mirror membership
+   * short-circuit) so every restore is safe; unregistered/unknown way
+   * pairs no-op (their ownsership/way validators report separately).
+   */
+  reconcileWayGrants(player: PlayerData): void {
+    const way = getActiveWayDefinition(player)
+
+    for (const nodeId of way?.grantedNodeIds ?? []) {
+      if (this.deps.nodeRegistry.has(nodeId)) {
+        grantSkillCore(player, this.deps.nodeRegistry.get(nodeId))
+      }
     }
   }
 
@@ -318,6 +351,14 @@ export class GameManagerRealmAdvanceOps {
       }
     }
 
+    // Ngu Kiem Beta -- every declared granted node must be registered
+    // (a missing id fails the whole ritual before commit).
+    for (const nodeId of way.grantedNodeIds ?? []) {
+      if (!this.deps.nodeRegistry.has(nodeId)) {
+        return false
+      }
+    }
+
     // Path/way commit - the authority validates the pair, evaluates the
     // offerGate live, and writes cultivationWay + the base
     // cultivationPath id plus the path-state slice (sword). Zero
@@ -347,6 +388,13 @@ export class GameManagerRealmAdvanceOps {
     // as node-effect grantsSkillCoreIds (level authority: nodeLevels).
     for (const skillId of way.coreSkillIds ?? []) {
       this.deps.progressionOps.grantSkillCoreBySkillId(player, skillId)
+    }
+
+    // Ngu Kiem Beta -- granted evolution nodes (Khoi at ritual) write
+    // through the same seam: nodeLevels + purchasedNodeIds (respec
+    // preserves them; devResetBranch still strips them deliberately).
+    for (const nodeId of way.grantedNodeIds ?? []) {
+      grantSkillCore(player, this.deps.nodeRegistry.get(nodeId))
     }
 
     // P7-M4 - starter learnedness pin: the way's starter basic is
@@ -408,6 +456,13 @@ export class GameManagerRealmAdvanceOps {
 
       this.syncRealmPassive(player)
       this.syncRealmStatPassive(player)
+
+      // Uniform funnel: every major-realm entry runs the way-authored
+      // realm-reward grant (qi_refining authors none today - no-op).
+      grantPathRealmReward(player, 'qi_refining', (nodeId) =>
+        this.deps.nodeRegistry.has(nodeId) ? this.deps.nodeRegistry.get(nodeId) : undefined,
+      )
+
       // M6 - NO applySwordPathRealmTransition here: hidden_sword_pathway can now be picked at
       // this very ritual, so the pre-M6 "hidden_sword_pathway cannot exist at mortal"
       // assumption is false. The slice was JUST created (kiemDaoCount 1 -

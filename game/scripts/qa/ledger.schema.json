@@ -735,6 +735,19 @@
               "$ref": "#/$defs/exception"
             }
           ]
+        },
+        "fixedInRevision": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "closedAt": {
+          "$ref": "#/$defs/maybeText"
+        },
+        "closeReason": {
+          "$ref": "#/$defs/maybeText"
         }
       }
     },

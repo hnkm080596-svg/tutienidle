@@ -27,6 +27,7 @@ import {
   collectUnsupportedSkillSemantics,
 } from '../skilldef/LegacySkillAdapter'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
+import { NGU_KIEM_BASE_NAME } from '../../data/skill/NguKiemDaoSkills'
 import { SPELL_KIT_IDS } from '../../data/skill/Skills'
 import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
 import { PHAP_TU_EMPOWERED_ULTS } from '../../data/skill/PhapTuEmpoweredUlts'
@@ -66,12 +67,8 @@ import {
 } from '../kiem-tu/KiemPhoNodeModifiers'
 import {
   buildNguKiemDaoProvider,
-  collectKiemDaoCascadeUnlocks,
+  collectOwnedEvolutionIds,
 } from '../kiem-tu/NguKiemDaoProvider'
-import {
-  KIEM_DAO_CASCADE_EMBLEM,
-  TU_KIEM_Y_EMBLEM,
-} from '../../data/skill/NguKiemDaoSkills'
 
 // ---------------------------------------------------------------------------
 // Shared resolver internals (moved from GameManager)
@@ -293,24 +290,23 @@ function resolveBodyKit(
 }
 
 /**
- * The Tu Reimagined (plan Task 14) — the An kit is fixed at path
- * choice (spec 6.1); owned roots (ho_mon/phan_mon/tro_mon, non-mutex
- * T9) only decide which mechanic markers get planted on the built
- * basic clone's grantsBuffsAtBuild.
+ * Ung The beta — the An kit is the basic Tham The at path choice (Phan
+ * rides it baseline); the major_quan_the node's granted skill core is
+ * the ONLY special gate, opening the Ho/Tro markers with it. Node
+ * consequence riders ride the one locked channel and bake into
+ * participant-local marker/payload clones here.
  */
 function resolveHiddenBodyKit(
   deps: CultivationPathRuntimeDeps,
   player: PlayerData,
 ): TheTuAnKit {
-  const ownedRoots = (['ho_mon', 'phan_mon', 'tro_mon'] as const).filter(
-    (root) => deps.getNodeLevel(root, player) > 0,
-  )
-
-  // Plan Task 20 — trunk economy + branch riders ride the one locked
-  // channel; baked into participant-local marker/payload clones here.
   const mods = collectHiddenBodyMechanicModifiers(deps.nodeRegistry, player)
+  const quanTheCoreLevel = getSkillCoreLevel(player, 'quan_the')
 
-  return buildTheTuAnKit(ownedRoots, mods)
+  return buildTheTuAnKit(mods, {
+    quanThe: quanTheCoreLevel > 0,
+    quanTheCoreLevel,
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -370,20 +366,18 @@ function createSwordPathRuntime(deps: CultivationPathRuntimeDeps, hidden: boolea
     },
     resolveSpecialUltimate: () => undefined,
     buildDynamicBasic: hidden
-      ? (player, nodes, rng) =>
-          buildNguKiemDaoProvider(player, collectKiemDaoCascadeUnlocks(player, nodes), rng)
+      ? (player, nodes) =>
+          buildNguKiemDaoProvider(player, collectOwnedEvolutionIds(player, nodes))
       : (player, nodes) =>
           buildKiemPhoProvider(
             player,
             collectKiemPhoComboModifiers(player, nodes),
             collectKiemPhoSkillDefinitionModifiers(player, nodes),
           ),
-    emblemSlots: hidden
-      ? () => ({ special: TU_KIEM_Y_EMBLEM, ultimate: KIEM_DAO_CASCADE_EMBLEM })
-      : undefined,
     // P7-M4 — display label for the provider-backed basic (Kiếm Phổ orb
-    // machinery / Ngự Kiếm Đạo cascade), matching kiemBarBridge's wording.
-    describeDynamicBasic: () => ({ name: hidden ? 'Ngự Kiếm Đạo' : 'Kiếm Phổ' }),
+    // machinery / Ngự Kiếm — Ngu Kiem Beta: ONE evolving skill), matching
+    // kiemBarBridge's wording.
+    describeDynamicBasic: () => ({ name: hidden ? NGU_KIEM_BASE_NAME : 'Kiếm Phổ' }),
   }
 }
 
@@ -526,15 +520,33 @@ function createBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivation
 }
 
 function createHiddenBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
+  // resolveBasic + resolveSpecialUltimate run back-to-back inside one
+  // participant build (resolveCombatRoleComposition); the kit build
+  // structuredClones every def, so memoize on the fingerprint — every
+  // kit input (hidden-body mods, skill-core levels incl. the quan_the
+  // gate) derives from nodeLevels, and nodePathApplies/nodeWayApplies
+  // read cultivationPath/way too, so all three join the fingerprint.
+  let kitMemo: { fingerprint: string; kit: TheTuAnKit } | null = null
+  const kitFor = (player: PlayerData): TheTuAnKit => {
+    const fingerprint = JSON.stringify({
+      levels: player.nodeLevels ?? null,
+      path: player.cultivationPath ?? null,
+      way: player.cultivationWay ?? null,
+    })
+    if (kitMemo?.fingerprint === fingerprint) return kitMemo.kit
+    const kit = resolveHiddenBodyKit(deps, player)
+    kitMemo = { fingerprint, kit }
+    return kit
+  }
   return {
     ...sharedMembers(deps),
     resolveBasic(player) {
       // Spec section 6.1 — fixed kit granted at path choice; the built
       // clone's grantsBuffsAtBuild plants ung_the + owned-root markers.
-      return resolveHiddenBodyKit(deps, player).basic
+      return kitFor(player).basic
     },
     resolveSpecialUltimate(player) {
-      const kit = resolveHiddenBodyKit(deps, player)
+      const kit = kitFor(player)
       return {
         special: kit.special,
         ultimate: kit.ultimate,

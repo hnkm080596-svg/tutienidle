@@ -8,7 +8,7 @@ import {
   nodeWayApplies,
   purchaseNode,
 } from './NodeSystem'
-import { collectKiemDaoCascadeUnlocks } from '../kiem-tu/NguKiemDaoProvider'
+import { collectOwnedEvolutionIds } from '../kiem-tu/NguKiemDaoProvider'
 import { collectKiemPhoComboModifiers } from '../kiem-tu/KiemPhoNodeModifiers'
 import { collectBodyKitModifiers } from '../the-tu/TheTuKitModifiers'
 import { collectHiddenBodyMechanicModifiers } from '../the-tu/TheTuAnMechanicModifiers'
@@ -145,18 +145,18 @@ describe('requiredWay — domain collectors honor the same gate', () => {
     expect(collectKiemPhoComboModifiers(ngu, [node])).toHaveLength(1)
   })
 
-  it('collectKiemDaoCascadeUnlocks skips a way-mismatched node even with owned levels', () => {
+  it('collectOwnedEvolutionIds skips a way-mismatched node even with owned levels', () => {
     const node = minorNode({
-      id: 'ngu_cascade_node',
+      id: 'ngu_evolution_node',
       requiredWay: 'hidden_sword_pathway',
-      effect: { cascadeUnlock: 'a' },
+      effect: { evolutionId: 'lien' },
     })
 
-    const hien = playerWith({ cultivationPath: 'sword', cultivationWay: 'sword_pathway', nodeLevels: { ngu_cascade_node: 1 } })
-    expect(collectKiemDaoCascadeUnlocks(hien, [node])).toEqual({ a: false, e: false, d: false })
+    const hien = playerWith({ cultivationPath: 'sword', cultivationWay: 'sword_pathway', nodeLevels: { ngu_evolution_node: 1 } })
+    expect([...collectOwnedEvolutionIds(hien, [node])]).toEqual([])
 
-    const ngu = playerWith({ cultivationPath: 'sword', cultivationWay: 'hidden_sword_pathway', nodeLevels: { ngu_cascade_node: 1 } })
-    expect(collectKiemDaoCascadeUnlocks(ngu, [node])).toEqual({ a: true, e: false, d: false })
+    const ngu = playerWith({ cultivationPath: 'sword', cultivationWay: 'hidden_sword_pathway', nodeLevels: { ngu_evolution_node: 1 } })
+    expect([...collectOwnedEvolutionIds(ngu, [node])]).toEqual(['lien'])
   })
 
   it('collectBodyKitModifiers / collectHiddenBodyMechanicModifiers skip way-mismatched nodes', () => {
@@ -168,17 +168,17 @@ describe('requiredWay — domain collectors honor the same gate', () => {
     const anNode = minorNode({
       id: 'ung_the_an_node',
       requiredWay: 'hidden_body_pathway',
-      effect: { hiddenBodyMechanicModifiers: { maxTheBonus: 7 } },
+      effect: { hiddenBodyMechanicModifiers: { danTheBonus: 7 } },
     })
     const registry = { getAll: () => [kitNode, anNode] }
 
     const hien = playerWith({ cultivationPath: 'body', cultivationWay: 'body_pathway', nodeLevels: { ung_the_kit_node: 2, ung_the_an_node: 2 } })
     expect(collectBodyKitModifiers(registry, hien).missingHpBonusBonus).toBe(0)
-    expect(collectHiddenBodyMechanicModifiers(registry, hien).maxTheBonus).toBe(0)
+    expect(collectHiddenBodyMechanicModifiers(registry, hien).danTheBonus).toBe(0)
 
     const ungThe = playerWith({ cultivationPath: 'body', cultivationWay: 'hidden_body_pathway', nodeLevels: { ung_the_kit_node: 2, ung_the_an_node: 2 } })
     expect(collectBodyKitModifiers(registry, ungThe).missingHpBonusBonus).toBe(1)
-    expect(collectHiddenBodyMechanicModifiers(registry, ungThe).maxTheBonus).toBe(14)
+    expect(collectHiddenBodyMechanicModifiers(registry, ungThe).danTheBonus).toBe(14)
   })
 
   it('resolveMaxThe skips a way-mismatched node even with owned levels', () => {

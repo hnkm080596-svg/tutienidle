@@ -67,7 +67,7 @@ function fixture() {
     getTurnBattle: () => battle,
   })
 
-  return { runtime, battle, player, enemy, eventBus }
+  return { runtime, battle, player, enemy, eventBus, turnBattleSystem }
 }
 
 describe('CombatAnimationRuntime', () => {
@@ -138,6 +138,64 @@ describe('CombatAnimationRuntime', () => {
     expect(runtime.getAnimationState('player')).toBe('idle')
     expect(runtime.isActionPlaybackWaiting()).toBe(false)
     expect(events).toContain('turn_standby_complete')
+  })
+
+  // The RESOLVED payload owns presentation: composite/empowered lanes fire a
+  // different skill than action.skill, so action_impact must emit
+  // execution.resolvedSkill.presetId first, falling back to action.skill.
+  it('action_impact emits resolvedSkill.presetId over the root skill preset', () => {
+    const { runtime, player, eventBus, turnBattleSystem } = fixture()
+
+    const emittedPresets: (string | undefined)[] = []
+    eventBus.on('action_impact', (payload) => emittedPresets.push((payload as { presetId?: string }).presetId))
+
+    const realDeclare = turnBattleSystem.declareActorAction.bind(turnBattleSystem)
+    vi.spyOn(turnBattleSystem, 'declareActorAction').mockImplementation((battle, actor) => {
+      const declared = realDeclare(battle, actor)
+      if (declared.execution?.resolvedSkill) {
+        declared.execution = {
+          ...declared.execution,
+          resolvedSkill: { ...declared.execution.resolvedSkill, presetId: 'holy_radiance' },
+        }
+      }
+      return declared
+    })
+
+    runtime.notifyReadyActor(player)
+    const token = runtime.getPendingPlaybackToken()!
+    runtime.acknowledgeTurnReady(token)
+    runtime.acknowledgeActionImpact(token)
+
+    expect(emittedPresets).toContain('holy_radiance')
+  })
+
+  it('action_impact falls back to action.skill.presetId when resolvedSkill authors none', () => {
+    const { runtime, player, eventBus, turnBattleSystem } = fixture()
+
+    const emittedPresets: (string | undefined)[] = []
+    eventBus.on('action_impact', (payload) => emittedPresets.push((payload as { presetId?: string }).presetId))
+
+    const realDeclare = turnBattleSystem.declareActorAction.bind(turnBattleSystem)
+    vi.spyOn(turnBattleSystem, 'declareActorAction').mockImplementation((battle, actor) => {
+      const declared = realDeclare(battle, actor)
+      if (declared.execution?.resolvedSkill) {
+        declared.execution = {
+          ...declared.execution,
+          resolvedSkill: { ...declared.execution.resolvedSkill, presetId: undefined },
+        }
+      }
+      if (declared.action?.skill) {
+        declared.action = { ...declared.action, skill: { ...declared.action.skill, presetId: 'shadow_burst' } }
+      }
+      return declared
+    })
+
+    runtime.notifyReadyActor(player)
+    const token = runtime.getPendingPlaybackToken()!
+    runtime.acknowledgeTurnReady(token)
+    runtime.acknowledgeActionImpact(token)
+
+    expect(emittedPresets).toContain('shadow_burst')
   })
 
   it('acknowledgeTurnReady with a stale token is a no-op', () => {
@@ -275,6 +333,34 @@ describe('CombatAnimationRuntime', () => {
     runtime.setPresentationActive(false)
 
     expect(runtime.isActionPlaybackWaiting()).toBe(false)
+  })
+
+  it('presentation deactivation auto-drains a queued execution — never parks a committed cast for manual input (cleanA11 INT)', () => {
+    // A queued repeat/multicast execution is an already-committed cast
+    // (and a reactive entry an already-PAID reaction). Manual mode must
+    // not strand it in awaitedManualActor - it resolves exactly once
+    // through the auto declare->impact->complete path.
+    const { runtime, battle, player, enemy, turnBattleSystem } = fixture()
+
+    battle.queuedExecutions = [
+      { actorId: 'player', rootSkill: GENERIC_PHYSICAL_BASIC, source: 'repeat', multicastDepth: 0 },
+    ]
+
+    const ready = turnBattleSystem.tickPacing(battle, false)
+
+    expect(ready?.id).toBe('player')
+    expect(turnBattleSystem.isPendingQueuedExecution('player')).toBe(true)
+
+    runtime.setBattleManualMode(true)
+    runtime.setPresentationActive(true)
+    runtime.notifyReadyActor(ready!)
+
+    // Route away mid-ready: the pending entry must drain, not park.
+    runtime.setPresentationActive(false)
+
+    expect(runtime.isAwaitingManualTurnChoice()).toBe(false)
+    expect(turnBattleSystem.isPendingQueuedExecution('player')).toBe(false)
+    expect(enemy.entity.currentHp).toBeLessThan(enemy.entity.maxHp)
   })
 
   it('isPresentationActive reflects the last setPresentationActive() call', () => {

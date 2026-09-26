@@ -1313,19 +1313,21 @@ export class GameManagerTurnBattleOps {
     return runtime
   }
 
-  /** The participant-local kit-clone defs riding each player's skill
-      slots (grantsBuffsAtBuild) -- the battle-local registry replaces
-      same-id base defs with these clones. */
+  /** The participant-local kit-clone defs riding the primary player's
+      skill slots (grantsBuffsAtBuild) -- the battle-local registry
+      replaces same-id base defs with these clones. Only the primary
+      player carries a kit (players[0] convention); scanning companions
+      would register a second clone of a colliding definition id and
+      fault at BuffRegistry.register. */
   private collectKitCloneBuffs(): BuffDefinition[] {
     const battle = this.turnBattle
-    if (battle === null) {
+    const primary = battle?.players[0]
+    if (primary === undefined) {
       return []
     }
     const clones: BuffDefinition[] = []
-    for (const participant of battle.players) {
-      for (const slot of [participant.basic, participant.special?.skill, participant.ultimate?.skill]) {
-        clones.push(...(slot?.grantsBuffsAtBuild ?? []))
-      }
+    for (const slot of [primary.basic, primary.special?.skill, primary.ultimate?.skill]) {
+      clones.push(...(slot?.grantsBuffsAtBuild ?? []))
     }
     return clones
   }

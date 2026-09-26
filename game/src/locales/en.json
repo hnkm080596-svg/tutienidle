@@ -110,13 +110,20 @@
       },
       "routeSwitch": {
         "title": "Change Pháp Tu Stance",
-        "body": "Switch to the {route} stance? Old stance nodes reset to 0 — regain {regain} Insight, lose {lose}.",
+        "body": "Switch to the {route} stance? Old stance nodes reset to 0 — regain {regain} Insight, lose {lose}.{clawback}",
         "confirm": "Switch Stance"
+      },
+      "clawback": {
+        "summary": " Also revoked: {detail}.",
+        "skills": "lose {n} skills",
+        "specs": "clear {n} specializations",
+        "swords": "lose {y} Sword Intent and {d} forged swords",
+        "refund": "includes {n} Insight already counted above"
       },
       "respec": {
         "button": "Respec",
         "title": "Respec Node Tree",
-        "body": "Reset all node investment? Regain {regain} Insight — {count} nodes and cores reset to 0. Free while in Beta.",
+        "body": "Reset all node investment? Regain {regain} Insight — {count} nodes and cores reset to 0. Free while in Beta.{clawback}",
         "confirm": "Respec"
       },
       "branchLabels": {
@@ -183,7 +190,7 @@
         "lockedReasons": {
           "cost": "Requires {cost} Insight (currently have {current} Insight)",
           "prerequisiteNode": "Enlighten first: {name}",
-          "realm": "Reach the required realm",
+          "realm": "Unlocks at {realm}",
           "element": "Unlock the related Element",
           "elementMismatch": "Belongs to the {element} element — another element is committed",
           "routeMismatch": "Enlightenable only in the {route} stance",
@@ -194,7 +201,6 @@
           "skillCastCount": "{count} casts",
           "skillJoin": "and",
           "skill": "Requires {skill} at {requirement}",
-          "kiemDaoCap": "Flying swords at the realm cap",
           "techniqueRank": "Requires technique rank {rank}",
           "techniqueGrade": "Requires technique grade {grade}",
           "skillUpgrade": "Upgrade the related skill"
@@ -215,6 +221,9 @@
         "tree": "Node Tree",
         "detail": "Detail"
       },
+      "list": {
+        "evolution": "Evolution: {name}"
+      },
       "detail": {
         "empty": "Select a skill to view details.",
         "upgrade": "Upgrade ({cost} Insight)",
@@ -225,6 +234,10 @@
         "cost": "Cost",
         "type": "Type",
         "attackSpeed": "Scales with Attack Speed"
+      },
+      "roleStrip": {
+        "lockedByRival": "Locked - the rival branch is already chosen (reset the node to reopen).",
+        "unlockedByNode": "Unlock via the {name} node in Skill Path."
       }
     },
     "character": {
@@ -278,7 +291,7 @@
           "hintPrefix": "Sword Cultivator specialization:",
           "hintSuffix": ".",
           "hienDescription": "Kiếm Phổ — preset up to nine sword seals; each basic attack plays the next seal, and seal chains matching the manual burst into combo strikes.",
-          "nguDescription": "Ngự Kiếm Đạo — myriad swords under one will, each flying sword an independent strike; accumulated Sword Intent forges permanent Sword Dao."
+          "nguDescription": "Ngự Kiếm — flying swords strike one at a time in order; Sword Intent forges Sword Dao, and each new realm opens the next evolution tier."
         },
         "kiemPhoPreset": {
           "title": "Kiếm Phổ — Seal Sequence",

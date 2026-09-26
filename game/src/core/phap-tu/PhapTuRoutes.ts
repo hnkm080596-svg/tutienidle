@@ -3,7 +3,7 @@ import type { PlayerData } from '../player/Player'
 import type { EffectiveSkill } from '../skill/SkillSystem'
 import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import type { ProgressionNode } from '../progression/ProgressionNode'
-import { getNodeLevel, isNodeElementActive, isNodeRouteActive, nodeWayApplies } from '../progression/NodeSystem'
+import { getNodeLevel, isNodeElementEffective, isNodeRouteActive, nodePathApplies, nodeWayApplies } from '../progression/NodeSystem'
 import { MAX_THE } from '../combat/CombatTypes'
 import { isSpellPathway } from './PhapTuPath'
 import type { SpellPathState, SpellPathRoute } from './PhapTuState'
@@ -153,9 +153,9 @@ export function resolveRouteProfile(state?: SpellPathState): RouteProfile {
  * EffectiveSkill seam: multiplies every damage effect/trigger value by
  * directMultiplier and every debuff ailmentChance by
  * ailmentChanceFactor. The result still flows through the existing
- * +elementApplicationPercent / [0,1] clamp in resolveAilmentApplicationChance -
- * no second clamp here. Never fakes +1 stack by injecting an add_stack
- * effect — stack semantics stay in applyRouteToTurnSkill.
+ * elementApplicationPercent multiplicative channel in ApplicationResolver.resolve
+ * (chance = baseChance x (1 + pool), clamped by the resolver). Never fakes +1 stack by injecting an add_stack
+ * effect - stack semantics stay in applyRouteToTurnSkill.
  */
 export function applyRouteToEffectiveSkill(effective: EffectiveSkill, profile: RouteProfile): EffectiveSkill {
   if (profile === NEUTRAL_ROUTE_PROFILE) {
@@ -272,7 +272,7 @@ export function resolveMaxThe(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodeWayApplies(player, node)) {
+    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementEffective(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
       continue
     }
 

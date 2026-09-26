@@ -188,7 +188,7 @@ describe('progressionOps in-battle rejection gates', () => {
     startInProgressBattle(gameManager, player)
     const before = structuredClone(player)
 
-    expect(gameManager.progressionOps.selectSkillSpecialization('any_skill', 'any_spec')).toBe(false)
+    expect(gameManager.progressionOps.selectSkillSpecialization('any_skill', 'any_spec', player)).toBe(false)
     expect(player).toEqual(before)
   })
 })

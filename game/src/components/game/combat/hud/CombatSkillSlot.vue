@@ -1,18 +1,18 @@
 <script setup lang="ts">
-// skill-insight-and-auto-combat-hud-plan.md mục 6/8 — component nhỏ
-// DÙNG CHUNG cho mọi renderer theo path (icon/cooldown mask/resource
-// cost/cast indicator), thuần trình bày, đọc snapshot chỉ-đọc.
+// skill-insight-and-auto-combat-hud-plan.md muc 6/8 -- component nho
+// DUNG CHUNG cho moi renderer theo path (icon/cooldown mask/resource
+// cost/cast indicator), thuan trinh bay, doc snapshot chi-doc.
 //
-// Slice 7 (2026-09-04) — THAY ĐỔI thiết kế cũ "không có nút bấm": thêm
-// isTappable prop + click emit (plan Task 6). Emit CHỈ khi tappable
-// (call site quyết định điều kiện — đang là lượt player paused + slot
+// Slice 7 (2026-09-04) -- THAY DOI thiet ke cu "khong co nut bam": them
+// isTappable prop + click emit (plan Task 6). Emit CHI khi tappable
+// (call site quyet dinh dieu kien -- dang la luot player paused + slot
 // ready); keyboard accessibility qua role="button"/tabindex.
 //
-// electron-combat-timing-smoothing-plan.md mục 7 — prop shape CỐ Ý
-// dùng tên trung lập (remaining/total/isMasked): component phục vụ cả
-// cooldown thật lẫn cadence Attack Speed — 2 clock khác nhau ở tầng dữ
-// liệu core, KHÔNG được hợp nhất lại thành 1 semantic ở đây. Mỗi call
-// site tự map state CỦA MÌNH sang prop trung lập bên dưới.
+// electron-combat-timing-smoothing-plan.md muc 7 -- prop shape CO Y
+// dung ten trung lap (remaining/total/isMasked): component phuc vu ca
+// cooldown that lan cadence Attack Speed -- 2 clock khac nhau o tang du
+// lieu core, KHONG duoc hop nhat lai thanh 1 semantic o day. Moi call
+// site tu map state CUA MINH sang prop trung lap ben duoi.
 import { computed } from 'vue'
 import SlotView from '@/components/common/SlotView.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
@@ -24,19 +24,23 @@ const props = withDefaults(defineProps<{
   skill?: Skill
   emptyLabel?: string
 
-  // Bảng 9.5 #5 (2026-09-07) — label hiển thị override (tên skill thật
-  // từ TurnSkillDisplayMeta). undefined = fallback skill?.name →
-  // emptyLabel → 'Trống' như cũ. Không đụng tooltip riêng (tooltipOverride).
+  // Bang 9.5 #5 (2026-09-07) -- label hien thi override (ten skill that
+  // tu TurnSkillDisplayMeta). undefined = fallback skill?.name ->
+  // emptyLabel -> 'Trong' nhu cu. Khong dung tooltip rieng (tooltipOverride).
   displayLabel?: string
 
-  // Thời gian còn lại/tổng của "vòng phủ" đang hiện — cooldown thật
-  // (policy cooldown/cast_time) hoặc cadence Attack Speed (policy
-  // attack_speed), tuỳ call site. Turn-based: SỐ LƯỢT.
+  // Three-path design (2026-09-25) -- icon path tu iconKey manifest;
+  // undefined/loi tai = SlotView monogram fallback.
+  displayIcon?: string
+
+  // Thoi gian con lai/tong cua "vong phu" dang hien -- cooldown that
+  // (policy cooldown/cast_time) hoac cadence Attack Speed (policy
+  // attack_speed), tuy call site. Turn-based: SO LUOT.
   remaining: number
   total: number
 
-  // true = hiện vòng phủ tối + số đếm ngược (remaining > 0 VÀ đang
-  // "chạy", call site tự quyết định).
+  // true = hien vong phu toi + so dem nguoc (remaining > 0 VA dang
+  // "chay", call site tu quyet dinh).
   isMasked?: boolean
 
   castRemaining?: number
@@ -46,14 +50,14 @@ const props = withDefaults(defineProps<{
   resourceCost?: number
   isInsufficientResource?: boolean
 
-  // Trạng thái 'out_of_range' thống nhất (plan §11.3) — không có primary
-  // target trong attack range của avatar; slot làm mờ thay vì vòng phủ.
+  // Trang thai 'out_of_range' thong nhat (plan 11.3) -- khong co primary
+  // target trong attack range cua avatar; slot lam mo thay vi vong phu.
   isOutOfRange?: boolean
 
   isUnreleased?: boolean
   isLocked?: boolean
 
-  // Slice 7 — true = slot bấm được LÚC NÀY (player paused turn + ready).
+  // Slice 7 -- true = slot bam duoc LUC NAY (player paused turn + ready).
   isTappable?: boolean
 
   tooltipOverride?: TooltipContent
@@ -136,6 +140,7 @@ const tooltip = computed<TooltipContent | undefined>(() => {
   >
     <SlotView
       :item="skill ?? null"
+      :icon="displayIcon"
       :label="label"
       show-label
       :tooltip="tooltip"
@@ -170,7 +175,7 @@ const tooltip = computed<TooltipContent | undefined>(() => {
   pointer-events: auto;
 }
 
-/* Slice 7 — affordance cho slot bấm được (cursor + hover ring). */
+/* Slice 7 -- affordance cho slot bam duoc (cursor + hover ring). */
 .combat-skill-slot.is-tappable {
   cursor: pointer;
 }

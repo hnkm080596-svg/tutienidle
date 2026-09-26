@@ -1,9 +1,9 @@
 <script setup lang="ts">
-// SpellPathPanel plan mục 10/17/29 + node level (combat-skill-flow-element-
-// power-dot-plan.md §6.2) — bottom panel: chi tiết node đang CHỌN + nút
-// mua/nâng cấp. Node nhiều cấp hiển thị `Cấp x/max`, Power nhận mỗi cấp
-// + tổng đang nhận, chi phí cấp kế; nút "Lĩnh Ngộ" ở level 0, "Nâng
-// Cấp" từ level 1, trạng thái "Tối đa" khi đạt maxLevel.
+// SpellPathPanel plan muc 10/17/29 + node level (combat-skill-flow-element-
+// power-dot-plan.md 6.2) -- bottom panel: chi tiet node dang CHON + nut
+// mua/nang cap. Node nhieu cap hien thi `Cap x/max`, Power nhan moi cap
+// + tong dang nhan, chi phi cap ke; nut "Linh Ngo" o level 0, "Nang
+// Cap" tu level 1, trang thai "Toi da" khi dat maxLevel.
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
@@ -16,7 +16,6 @@ import {
   getNodeMaxLevel,
   getEffectiveNodeMaxLevel,
   getBlockingNodeLevelGates,
-  getNextLevelCost,
   hasPrerequisite,
   canUpgradeNode,
   isNodeElementActive,
@@ -26,7 +25,7 @@ import {
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '@/data/progression/PhapTuNodes.builders'
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
-import type { ElementType } from '@/core/element/ElementType'
+import { REALMS } from '@/data/realms/realm'
 import type { SpellPathRoute } from '@/core/phap-tu/PhapTuState'
 import type { NodePrerequisite, ProgressionNode } from '@/core/progression/ProgressionNode'
 
@@ -49,15 +48,15 @@ const { purchaseNode, upgradeNode, selectSpellPathElement } = useProgressionActi
 const ELEMENT_ROOT_ID_SET = new Set<string>(Object.values(PHAP_TU_ELEMENT_ROOT_IDS))
 const SPELL_PATH_ROUTE_IDS: readonly SpellPathRoute[] = ['dot', 'no']
 
-// Task 16 — element roots are NOT purchasable through purchaseNode()
+// Task 16 -- element roots are NOT purchasable through purchaseNode()
 // (the op rejects them): clicking one opens the blocking route pick,
 // and the atomic selectSpellPathElement() transaction commits
-// element+route together (INV-13 — no element-without-route state).
+// element+route together (INV-13 -- no element-without-route state).
 const isElementRoot = computed(() => props.node !== null && ELEMENT_ROOT_ID_SET.has(props.node.id))
 
 const routePickOpen = ref(false)
 
-// Level hiện tại / max / cost cấp kế của node đang chọn.
+// Level hien tai / max / cost cap ke cua node dang chon.
 const level = computed(() => {
   stateVersion.value
 
@@ -103,7 +102,13 @@ function nodePrereqReason(prereq: NodePrerequisite): string {
       name: gameManager.nodeRegistry.get(prereq.nodeId).name,
     })
   } else if (prereq.kind === 'realm') {
-    return t('panels.skillPath.nodeInspector.lockedReasons.realm')
+    // Three-path design (2026-09-25, ruling #16C) -- name the realm so a
+    // dimmed node previews exactly where it opens ("mo o Kim Dan"). A stale
+    // or unknown realm id falls back to the raw id instead of throwing.
+    const realmName = REALMS.find((realm) => realm.id === prereq.realmId)?.name ?? prereq.realmId
+    return t('panels.skillPath.nodeInspector.lockedReasons.realm', {
+      realm: realmName,
+    })
   } else if (prereq.kind === 'excludesNode') {
     return t('panels.skillPath.nodeInspector.lockedReasons.excludesNode', {
       name: gameManager.nodeRegistry.get(prereq.nodeId).name,
@@ -129,8 +134,6 @@ function nodePrereqReason(prereq: NodePrerequisite): string {
       skill: skillName,
       requirement,
     })
-  } else if (prereq.kind === 'kiemDaoBelowCap') {
-    return t('panels.skillPath.nodeInspector.lockedReasons.kiemDaoCap')
   } else if (prereq.kind === 'techniqueRank') {
     return t('panels.skillPath.nodeInspector.lockedReasons.techniqueRank', {
       rank: prereq.rank,
@@ -144,8 +147,8 @@ function nodePrereqReason(prereq: NodePrerequisite): string {
   return t('panels.skillPath.nodeInspector.lockedReasons.skillUpgrade')
 }
 
-// Lý do khoá — thuần suy ra từ hasPrerequisite() đã có (không đụng
-// core), chỉ để hiện gợi ý, KHÔNG phải nguồn sự thật.
+// Ly do khoa -- thuan suy ra tu hasPrerequisite() da co (khong dung
+// core), chi de hien goi y, KHONG phai nguon su that.
 const lockedReasons = computed(() => {
   if (!props.node || props.purchased || props.purchasable || level.value >= 1) {
     return []
@@ -153,7 +156,7 @@ const lockedReasons = computed(() => {
 
   const reasons: string[] = []
 
-  // Task 16 — element/route membership gates (isNodeElementActive /
+  // Task 16 -- element/route membership gates (isNodeElementActive /
   // isNodeRouteActive) are not prerequisites, so hasPrerequisite()
   // cannot explain them; surface the real lock reason here.
   if (!isNodeElementActive(player.$state, props.node) && props.node.elementTag) {
@@ -168,7 +171,7 @@ const lockedReasons = computed(() => {
     }))
   }
 
-  // M3 — way-membership gate is not a prerequisite either; surface the
+  // M3 -- way-membership gate is not a prerequisite either; surface the
   // real lock reason (normally the tree filter hides these nodes, but
   // the inspector still explains a stale/edge selection).
   if (!nodeWayApplies(player.$state, props.node) && props.node.requiredWay) {
@@ -216,8 +219,8 @@ function onPurchase() {
     return
   }
 
-  // Element root → the blocking route pick collects the second half of
-  // the atomic commit (spec §3.3: "blocking choice, no dismiss").
+  // Element root -> the blocking route pick collects the second half of
+  // the atomic commit (spec 3.3: "blocking choice, no dismiss").
   if (isElementRoot.value) {
     routePickOpen.value = true
     return
@@ -261,7 +264,7 @@ function onUpgrade() {
       <div class="node-inspector__header">
         <span class="node-inspector__name">{{ node.name }}</span>
 
-        <!-- Badge `Cấp x/max` cho node nhiều cấp (plan §6.2). -->
+        <!-- Badge `Cap x/max` cho node nhieu cap (plan sec.6.2). -->
         <span v-if="maxLevel > 1" class="node-inspector__level">{{ level }}/{{ maxLevel }}</span>
 
         <span
@@ -324,8 +327,11 @@ function onUpgrade() {
           {{ t('panels.skillPath.nodeInspector.actions.unlock') }}
         </GameButton>
 
+        <!-- Ngu Kiem Beta: `level < maxLevel`, not `!isMaxed` -- a
+             single-level owned node (evolution layer, maxLevel 1) shows
+             only the purchased status, never an upgrade button. -->
         <GameButton
-          v-else-if="!isMaxed"
+          v-else-if="level < maxLevel"
           class="node-inspector__buy"
           size="sm"
           :disabled="!upgradable || inBattle"
@@ -336,8 +342,8 @@ function onUpgrade() {
       </div>
     </template>
 
-    <!-- Blocking route pick (spec §3.3 + plan Task 16: "blocking
-         choice, no dismiss") — element+route commit atomically via
+    <!-- Blocking route pick (spec sec.3.3 + plan Task 16: "blocking
+         choice, no dismiss") -- element+route commit atomically via
          selectSpellPathElement; the modal only collects input, it is not
          the guarantee. No cancel: the element root was clicked
          deliberately, the route half is mandatory. -->
@@ -387,15 +393,15 @@ function onUpgrade() {
   gap: 8px;
 }
 
-/* Tên node là "hero" của khối inspector — trước đây chỉ 14px, gần như
-   cùng cỡ mô tả bên dưới (2026-08-30 frontend-design pass). */
+/* Ten node la "hero" cua khoi inspector -- truoc day chi 14px, gan nhu
+   cung co mo ta ben duoi (2026-08-30 frontend-design pass). */
 .node-inspector__name {
   font-size: var(--text-lg);
   font-weight: 700;
   color: var(--chrome-100);
 }
 
-/* Badge `Cấp x/max` — node nhiều cấp (plan §6.2). */
+/* Badge `Cap x/max` -- node nhieu cap (plan 6.2). */
 .node-inspector__level {
   padding: 1px 8px;
   border-radius: 999px;
@@ -438,8 +444,8 @@ function onUpgrade() {
   margin-top: 6px;
 }
 
-/* Dòng chi phí đứng ngay cạnh nút hành động — nâng cỡ để dẫn mắt tới
-   quyết định thay vì chìm cùng cỡ với mô tả (2026-08-30 pass). */
+/* Dong chi phi dung ngay canh nut hanh dong -- nang co de dan mat toi
+   quyet dinh thay vi chim cung co voi mo ta (2026-08-30 pass). */
 .node-inspector__cost {
   font-size: var(--text-md);
   font-weight: 600;
@@ -456,7 +462,7 @@ function onUpgrade() {
   cursor: not-allowed;
 }
 
-/* Blocking route pick — no dismiss affordance by design (spec §3.3);
+/* Blocking route pick -- no dismiss affordance by design (spec 3.3);
    the card itself is a plain overlay since ConfirmModal always renders
    a cancel action. */
 .route-pick {

@@ -1,12 +1,15 @@
 import type { PlayerData } from '../player/Player'
 import type { NodePrerequisite, ProgressionNode, TurnSkillResourceModifier } from './ProgressionNode'
+import { getNodeMaxLevel } from './ProgressionNode'
+
+export { getNodeMaxLevel }
 import { hasStaticPathCapability } from '../player/CultivationPathSystem'
 
 import type { SpellPathRoute } from '../phap-tu/PhapTuState'
+import { isHiddenSpellPathway } from '../phap-tu/PhapTuPath'
 import { getRealmIndex } from '../realm/realmSystem'
 import { getEffectiveTechniqueRank } from '../technique/TechniqueProgression'
 import { getNodeCostFreeChance } from '../talent/TalentEffects'
-import { kiemDaoCap } from '../kiem-tu/NguKiemDao'
 import { getSkillCoreLevel, getSkillCoreUpgradeCost, skillCoreNodeId } from './SkillCoreLevel'
 import { CAST_LEVELING_THRESHOLDS } from '../skill/CastLeveling'
 
@@ -19,7 +22,7 @@ import { CAST_LEVELING_THRESHOLDS } from '../skill/CastLeveling'
  * - Modifiers are NO LONGER pushed permanently into player.modifiers nor
  *   mutate the Skill instance on purchase - every effect is derived from
  *   (registry, nodeLevels) via aggregateNodeStatModifiers()/
- *   aggregateNodeSkillModifiers() so recompute always yields the same
+ *   aggregateTurnSkillResourceModifiers() so recompute always yields the same
  *   deterministic result, never double-applied on load.
  *
  * Data-driven per-level cost: node.upgradeCost = { base, perLevel }
@@ -28,9 +31,8 @@ import { CAST_LEVELING_THRESHOLDS } from '../skill/CastLeveling'
  * 1,1,2,2,3 (per sec.6.2/sec.6.7). A node without upgradeCost uses
  * insightCost for EVERY purchase/upgrade (single-level root/keystone).
  */
-export function getNodeMaxLevel(node: ProgressionNode): number {
-  return Math.max(1, node.maxLevel ?? 1)
-}
+// getNodeMaxLevel lives on ProgressionNode.ts (pure data) and is
+// re-exported here so existing consumers keep working.
 
 /** Current node level in PlayerData - nodeLevels is the source of truth. */
 export function getNodeLevel(player: PlayerData, nodeId: string): number {
@@ -95,22 +97,6 @@ export function hasPrerequisite(player: PlayerData, prerequisite: NodePrerequisi
       const levelOk = prerequisite.level === undefined || getSkillCoreLevel(player, prerequisite.skillId) >= prerequisite.level
 
       return castOk && levelOk
-    }
-
-    // Kiem Tu Reimagined (spec K20) - the Cuu Cung cap guard. Lives in
-    // hasPrerequisite so canPurchaseNode blocks the buy BEFORE insight
-    // is deducted or the node recorded. Mortal realm (index 0) fails -
-    // hidden_sword_pathway cannot be entered there anyway. M6: way membership replaces
-    // the retired swordPath.mode discriminator.
-    case 'kiemDaoBelowCap': {
-      const state = player.swordPath
-      const realmIndex = getRealmIndex(player.realmId)
-
-      if (!state || !hasStaticPathCapability(player, 'sword.sword_riding') || realmIndex < 1) {
-        return false
-      }
-
-      return state.kiemDaoCount < kiemDaoCap(realmIndex)
     }
 
     // P7-M6 + M-F-TECHNIQUE (F5) - technique gates read the live-cycle
@@ -209,11 +195,37 @@ export function isNodeElementActive(player: PlayerData, node: ProgressionNode): 
   )
 }
 
+/**
+ * Aggregation-side element gate: at effect time a null element means
+ * 'everything activates' ONLY on the hidden way (ngo_dao owns no
+ * element and must activate all five granted masteries). On
+ * spell_pathway a null element is just 'not yet committed' - granted
+ * reward levels stay dormant until selectSpellPathElement commits one.
+ * Purchase/upgrade keep isNodeElementActive so a pre-commit player can
+ * still buy an element root (the purchase IS the commit).
+ */
+export function isNodeElementEffective(player: PlayerData, node: ProgressionNode): boolean {
+  if (node.elementTag === undefined) {
+    return true
+  }
+  if (player.spellPath.element !== null) {
+    return player.spellPath.element === node.elementTag
+  }
+  return isHiddenSpellPathway(player)
+}
+
 /** Eligible to PURCHASE (0->1): no level yet, prereq met, enough Insight for the level-1 cost. */
 export function canPurchaseNode(player: PlayerData, node: ProgressionNode): boolean {
   // M-QI-05 - Core Nodes are granted through learn/kit-root/way-commit
-  // seams, never purchased.
-  if (node.levelsSkillId !== undefined) {
+  // seams, never purchased. Ngu Kiem Beta: grantedOnly nodes (evolution
+  // layers) likewise enter only through explicit grants.
+  if (node.levelsSkillId !== undefined || node.grantedOnly === true) {
+    return false
+  }
+
+  // Three-path design (2026-09-25) - realm-reward nodes arrive only via
+  // realmRewards.grantedNodeLevels; Insight is never a valid input.
+  if (node.rewardOnly) {
     return false
   }
 
@@ -241,8 +253,19 @@ export function canPurchaseNode(player: PlayerData, node: ProgressionNode): bool
 /** Eligible to UPGRADE (L->L+1): already purchased, not maxed, enough Insight. */
 export function canUpgradeNode(player: PlayerData, node: ProgressionNode): boolean {
   // M-QI-05 - cast-channel cores level by cast count ONLY; Insight is
-  // never a valid input for them (QI-D3).
+  // never a valid input for them (QI-D3). Ngu Kiem Beta: evolution
+  // layers are single-level grants - no upgrade channel exists.
+  if (node.grantedOnly === true) {
+    return false
+  }
+
   if (node.levelsSkillId !== undefined && CAST_LEVELING_THRESHOLDS[node.levelsSkillId] !== undefined) {
+    return false
+  }
+
+  // Three-path design (2026-09-25) - realm-reward grants own the level;
+  // Insight upgrades would bypass the grant-vs-hidden-way number contract.
+  if (node.rewardOnly) {
     return false
   }
 
@@ -411,6 +434,47 @@ export function nodeWayApplies(player: PlayerData, node: ProgressionNode): boole
   return node.requiredWay === undefined || node.requiredWay === player.cultivationWay
 }
 
+/**
+ * Three-path design (2026-09-25) -- capstone/variant nodes OWN the
+ * claim on the specialization they select: a spec some node authors via
+ * effect.selectsSpecialization may only be applied while that node is
+ * held.
+ *
+ * ALL nodes claiming a (skillId, specializationId) pair - usually 0 or 1
+ * authored, but ownership checks must evaluate the whole claimant set:
+ * 'a claiming node exists and is owned' means ANY owned claimant
+ * authorizes the spec, not just the first registry hit.
+ */
+export function specializationClaimingNodes(
+  registry: { getAll(): ProgressionNode[] },
+  skillId: string,
+  specializationId: string,
+): ProgressionNode[] {
+  return registry.getAll().filter(
+    (node) =>
+      node.effect.selectsSpecialization?.skillId === skillId &&
+      node.effect.selectsSpecialization.specializationId === specializationId,
+  )
+}
+
+/**
+ * Owned node ids across both ownership representations: nodeLevels is
+ * the authority (realm-reward grants write there only), purchasedNodeIds
+ * is the compat mirror populated by the purchase path. Clawback guards
+ * must read the union or grant-owned claimers become invisible.
+ */
+export function ownedNodeIds(player: PlayerData): string[] {
+  const ids = new Set(player.purchasedNodeIds)
+
+  for (const [nodeId, level] of Object.entries(player.nodeLevels ?? {})) {
+    if (level > 0) {
+      ids.add(nodeId)
+    }
+  }
+
+  return [...ids]
+}
+
 export function aggregateNodeStatModifiers(
   registry: { getAll(): ProgressionNode[] },
 
@@ -421,7 +485,7 @@ export function aggregateNodeStatModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
+    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementEffective(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
       continue
     }
 
@@ -451,7 +515,7 @@ export function aggregateTurnSkillResourceModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
+    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementEffective(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
       continue
     }
 
@@ -487,6 +551,30 @@ export function grantSkillCore(player: PlayerData, node: ProgressionNode): void 
 }
 
 /**
+ * Insight owed back for a node at the given level. M-QI-05: a skill
+ * core's level 1 was GRANTED free, so only upgrades (levels 1..L-1)
+ * repay; ordinary nodes paid for level 1 (spentStart 0). Van Dao (M2):
+ * refund only the insight actually paid - minus the waived record.
+ * Shared by revokeNodeOwnership (apply) and the clawback preview so
+ * the two paths cannot diverge.
+ */
+export function computeNodeRefund(
+  node: ProgressionNode,
+  level: number,
+  freePurchaseRecord: number | undefined,
+): number {
+  const spentStart = node.levelsSkillId !== undefined ? 1 : 0
+
+  let refund = 0
+
+  for (let spent = spentStart; spent < level; spent++) {
+    refund += getNextLevelCost(node, spent)
+  }
+
+  return Math.max(0, refund - (freePurchaseRecord ?? 0))
+}
+
+/**
  * M-QI-05 - shared ownership-removal seam: deletes the node's level +
  * purchasedNodeIds membership, repays the Insight actually spent on it
  * (total cost minus waived record, cleared alongside), and revokes
@@ -501,24 +589,21 @@ export function revokeNodeOwnership(
   registry: { has(id: string): boolean; get(id: string): ProgressionNode },
   revokedOut?: Set<string>,
 ): number {
+  // rewardOnly nodes are grant-owned: callers already scope them out of
+  // respec/devReset target sets; the guard belongs in this seam too so a
+  // future tag or new caller cannot silently re-open it.
+  if (node.rewardOnly) {
+    return 0
+  }
+
   const level = getNodeLevel(player, node.id)
 
   revokedOut?.add(node.id)
 
-  let refund = 0
-
-  // M-QI-05 - a core's level 1 is GRANTED free: only its upgrades
-  // (levels 1..L-1) repaid Insight. Ordinary nodes paid for level 1.
-  const spentStart = node.levelsSkillId !== undefined ? 1 : 0
-
-  for (let spent = spentStart; spent < level; spent++) {
-    refund += getNextLevelCost(node, spent)
-  }
-
   // Van Dao (M2): refund only the insight ACTUALLY paid - subtract the
   // waived amounts recorded at purchase time, then clear the record
   // alongside the node itself.
-  refund = Math.max(0, refund - (player.nodeFreePurchaseRecord?.[node.id] ?? 0))
+  const refund = computeNodeRefund(node, level, player.nodeFreePurchaseRecord?.[node.id])
   if (player.nodeFreePurchaseRecord) {
     delete player.nodeFreePurchaseRecord[node.id]
   }
@@ -531,15 +616,17 @@ export function revokeNodeOwnership(
     player.purchasedNodeIds.splice(index, 1)
   }
 
+  let refunded = refund
+
   for (const skillId of node.effect.grantsSkillCoreIds ?? []) {
     const coreId = skillCoreNodeId(skillId)
 
     if (registry.has(coreId) && getNodeLevel(player, coreId) >= 1) {
-      refund += revokeNodeOwnership(player, registry.get(coreId), registry, revokedOut)
+      refunded += revokeNodeOwnership(player, registry.get(coreId), registry, revokedOut)
     }
   }
 
-  return refund
+  return refunded
 }
 
 /**
@@ -549,6 +636,10 @@ export function revokeNodeOwnership(
  * create a refund discrepancy (cost 0 naturally refunds 0). Out-of-combat
  * use only, for balancing.
  */
+// NOTE: way-granted ids (way.grantedNodeIds, e.g. ngu_kiem_khoi) are an
+// ownership invariant - reconcileWayGrants re-grants them on every
+// save/restore, so a dev wipe of those ids is re-enforced on next load.
+// Other wiped nodes stay wiped.
 export function devResetBranch(
   player: PlayerData,
 
@@ -602,6 +693,12 @@ function cascadeRevokeOrphanedNodes(
       }
 
       if (preservedIds?.has(node.id)) {
+        continue
+      }
+
+      // Grant-owned nodes are not revocable through respec - the same
+      // exemption the target selection above gives them.
+      if (node.rewardOnly) {
         continue
       }
 
@@ -705,14 +802,24 @@ export function respecNodeTree(
         ? // A preserved root is exempt from revocation but still seeds
           // its subtree - reset the owned descendants below it instead.
           subtreeDescendants(scope.rootId, registry).filter(
-            node => !preservedIds.has(node.id),
+            node => !preservedIds.has(node.id) && !node.rewardOnly,
           )
-        : [registry.get(scope.rootId)]
+        : registry.get(scope.rootId).rewardOnly
+          ? // Grant-owned roots refuse respec and seed no sweep: no
+            // kind:'node' prerequisite anywhere points at a reward-only
+            // node, so there are no descendants to reset either.
+            []
+          : [registry.get(scope.rootId)]
     }
   } else {
     targets = registry
       .getAll()
-      .filter(node => node.levelsSkillId === undefined && !preservedIds.has(node.id))
+      .filter(
+        node =>
+          node.levelsSkillId === undefined &&
+          !node.rewardOnly &&
+          !preservedIds.has(node.id),
+      )
   }
 
   if (targets.length === 0) {
@@ -776,27 +883,19 @@ export interface NodeRespecPreview {
    * confirm dialog's count covers all of them as one number). */
   resetNodeIds: string[]
   resetCount: number
-}
-
-export function previewNodeRespec(
-  player: PlayerData,
-
-  registry: { getAll(): ProgressionNode[]; has(id: string): boolean; get(id: string): ProgressionNode },
-
-  scope?: NodeRespecScope,
-): NodeRespecPreview {
-  // JSON round-trip (not structuredClone): callers hand in the Pinia
-  // reactive state, which structuredClone refuses; PlayerData is what
-  // the save system serializes, so JSON round-trip is exact.
-  const sim = JSON.parse(JSON.stringify(player)) as PlayerData
-
-  const refund = respecNodeTree(sim, registry, scope)
-
-  const resetNodeIds = Object.keys(player.nodeLevels ?? {}).filter(
-    id => !(id in (sim.nodeLevels ?? {})),
-  )
-
-  return { refund, resetNodeIds, resetCount: resetNodeIds.length }
+  /** Effects the one-shot-grant clawback would apply on top of the
+   * domain reset (filled by the orchestration layer - its legs read
+   * SkillManager and kiem-tu state the domain layer cannot reach). */
+  clawback?: {
+    /** Extra Insight returned by revoking granted core_ nodes. */
+    refund: number
+    /** core_ node ids the clawback removes from nodeLevels. */
+    removedNodeIds: string[]
+    /** Skills whose grant membership is revoked (no remaining owner). */
+    unlearnedSkillIds: string[]
+    /** Specialization selections the clawback clears. */
+    clearedSpecializations: { skillId: string; specializationId: string }[]
+  }
 }
 
 /**
@@ -844,6 +943,14 @@ export function switchRoute(
       continue
     }
 
+    // rewardOnly grants are realm-reward state, not route purchases -
+    // routeTag cleanup must not revoke them (same refusal as
+    // revokeNodeOwnership). No rewardOnly node carries a routeTag
+    // today; the guard seals the seam for future authoring.
+    if (node.rewardOnly) {
+      continue
+    }
+
     const level = getNodeLevel(player, node.id)
 
     if (level <= 0) {
@@ -878,15 +985,11 @@ export function switchRoute(
 /** Insight ACTUALLY paid into a node across its levels - Van Dao waived
  * amounts are deducted (same accounting as devResetBranch/switchRoute). */
 function paidForNodeLevels(player: PlayerData, node: ProgressionNode): number {
-  const level = getNodeLevel(player, node.id)
-
-  let paid = 0
-
-  for (let spent = 0; spent < level; spent++) {
-    paid += getNextLevelCost(node, spent)
-  }
-
-  return Math.max(0, paid - (player.nodeFreePurchaseRecord?.[node.id] ?? 0))
+  return computeNodeRefund(
+    node,
+    getNodeLevel(player, node.id),
+    player.nodeFreePurchaseRecord?.[node.id],
+  )
 }
 
 export interface RouteSwitchPreview {
@@ -898,6 +1001,11 @@ export interface RouteSwitchPreview {
 
   /** Old-route nodes that would reset to level 0. */
   resetNodeCount: number
+
+  /** Effects the one-shot-grant clawback would apply on top of the
+   * domain revocation (filled by the orchestration layer - its legs
+   * read SkillManager and kiem-tu state the domain layer cannot reach). */
+  clawback?: NodeRespecPreview['clawback']
 }
 
 /**
@@ -925,7 +1033,9 @@ export function previewRouteSwitch(
   }
 
   for (const node of registry.getAll()) {
-    if (node.routeTag !== oldRoute || getNodeLevel(player, node.id) <= 0) {
+    // rewardOnly skip mirrors switchRoute - the preview must not
+    // promise a refund for grants the switch would leave intact.
+    if (node.routeTag !== oldRoute || node.rewardOnly || getNodeLevel(player, node.id) <= 0) {
       continue
     }
 

@@ -9,20 +9,15 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
-import { buffs as LIVE_BUFFS } from '../../../data/buff/buffs'
 import { PHAN_KICH } from '../../../data/skill/TheTuSkills'
-import { THE_PROC_GAIN } from '../../the-tu/TheEconomy'
-import type { BuffDefinition } from '../../buff2/BuffDefinition'
-import type { ReactiveProcPayload } from '../../proc/ProcCapabilities'
-import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
+import { THE_PROC_COST } from '../../the-tu/TheEconomy'
+import { makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
-// The Tu Reimagined (spec 6.1, plan Task 19) — stance/burst semantics:
-// bach_ung's freeProcs zero the attempt cost while success still credits
-// +20, and its payloadAilments rider merges into bypass payloads at
-// resolve time; tu_the's procCostFlatDelta -5 floors at 0; both expire
-// on the holder's own turns and restore the base cost on expiry.
-// buff2 M4: the phan_mon marker used here is the kit-clone shape —
-// theGainOnSuccess baked on (the bare marker carries none).
+// Ung The beta - Quan The marker semantics (design Part V): the
+// hidden marker makes EVERY enemy satisfy isObserved for its holder
+// (incl. later spawns) for 4 HOLDER turns, then observation reverts to
+// the Tham mark alone. bat_tu_ba_the remains the hard-CC unblocker;
+// tu_the/bach_ung are parked (never granted in beta).
 
 const NO_MITIGATION = {
   evasionRate: 0,
@@ -73,21 +68,6 @@ function buffsOf(runtime: TurnRuntimeFixture, participant: TurnBattleParticipant
     .filter((instance) => instance.definitionId === id)
 }
 
-/** The phan_mon clone the kit produces: authored success gain baked on. */
-const PHAN_MON_KIT: BuffDefinition = (() => {
-  const clone = structuredClone(LIVE_BUFFS.find((def) => def.id === 'phan_mon')!)
-  for (const capability of clone.capabilities ?? []) {
-    if (capability.type === 'reactive_proc') {
-      ;(capability.payload as ReactiveProcPayload).theGainOnSuccess = THE_PROC_GAIN
-    }
-  }
-  return clone
-})()
-
-const KIT_REGISTRY = makeTestBuffRegistry(
-  LIVE_BUFFS.map((def) => (def.id === 'phan_mon' ? PHAN_MON_KIT : def)),
-)
-
 /** Player defender (phan_mon + payloads) vs a faster enemy attacker. */
 function makeDuel(defenderChance = 1, defenderThe = 0): {
   battle: TurnBattle
@@ -123,11 +103,10 @@ function makeDuel(defenderChance = 1, defenderThe = 0): {
 
   const combat = new CombatSystem(new EventBus())
   const runtime = makeTurnRuntime({
-    registry: KIT_REGISTRY,
+    registry: BUFF_REGISTRY,
     participants: () => [playerP, enemyP],
     combatSystem: combat,
   })
-  runtime.applyBuff('phan_mon', playerP)
 
   return { battle: { players: [playerP], enemies: [enemyP], state: 'fighting' }, playerP, enemyP, combat, runtime }
 }
@@ -136,83 +115,66 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-describe('bach_ung burst window (spec 6.1)', () => {
-  it('freeProcs zero the attempt cost — success still credits +20', () => {
-    const { battle, playerP, combat, runtime } = makeDuel(1, 0)
-    runtime.applyBuff('bach_ung', playerP)
-    vi.spyOn(Math, 'random').mockReturnValue(0) // hit lands, proc succeeds
+describe('quan_the marker (Ung The beta)', () => {
+  it('every enemy satisfies isObserved for the holder — no Tham mark needed for Phan', () => {
+    const { battle, playerP, combat, runtime } = makeDuel(1, 100)
+    runtime.applyBuff('phan_mon', playerP)
+    runtime.applyBuff('quan_the', playerP)
+    // No thamTargetId at all - the marker alone observes the attacker.
+    vi.spyOn(Math, 'random').mockReturnValue(0)
 
-    new TurnBattleSystem(combat, 10_000, KIT_REGISTRY, undefined, runtime).resolveNextStep(battle)
+    new TurnBattleSystem(combat, 10_000, BUFF_REGISTRY, undefined, runtime).resolveNextStep(battle)
 
     expect(battle.queuedFollowUps).toHaveLength(1)
-    // 0 - 0 (free) + 20 (success) — the free proc nets the full gain.
-    expect(playerP.entity.currentThe).toBe(20)
+    expect(battle.queuedFollowUps![0]!.payloadSkillId).toBe('phan_kich')
+    expect(playerP.entity.currentThe).toBe(100 - THE_PROC_COST)
   })
 
-  it('payloadAilments rider merges into the bypass payload — counter applies choang', () => {
-    const { battle, playerP, enemyP, combat, runtime } = makeDuel(1, 50)
-    runtime.applyBuff('bach_ung', playerP)
+  it('expiry at 4 holder turns reverts observation to the Tham mark alone', () => {
+    const { battle, playerP, combat, runtime } = makeDuel(1, 100)
+    runtime.applyBuff('phan_mon', playerP)
+    runtime.applyBuff('quan_the', playerP)
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
-    const system = new TurnBattleSystem(combat, 10_000, KIT_REGISTRY, undefined, runtime)
-    // Step 1: enemy hit lands -> counter queued (free proc).
-    system.resolveNextStep(battle)
-    // Step 2: the bypass counter resolves through declare -> impact and
-    // the merged choang rider applies to the enemy.
-    system.resolveNextStep(battle)
+    // Age the marker out - 4 holder-turn boundaries.
+    for (let turn = 0; turn < 4; turn += 1) {
+      runtime.tickHolderTurnsEnd(playerP.entity.id)
+    }
+    expect(buffsOf(runtime, playerP, 'quan_the')).toHaveLength(0)
 
-    expect(buffsOf(runtime, enemyP, 'choang').length).toBeGreaterThan(0)
-    // The participant's payload map was NOT mutated by the merge.
-    expect(playerP.reactivePayloads!['phan_kich']!.appliesAilments).toBeUndefined()
+    new TurnBattleSystem(combat, 10_000, BUFF_REGISTRY, undefined, runtime).resolveNextStep(battle)
+
+    // Unmarked enemy no longer observed -> no window, no payment.
+    expect(battle.queuedFollowUps).toBeUndefined()
+    expect(playerP.entity.currentThe).toBe(100)
   })
 
-  it('payload rider is window-scoped — without bach_ung the counter applies nothing', () => {
-    const { battle, enemyP, combat, runtime } = makeDuel(1, 50)
+  it('hard CC still blocks with quan_the — and bat_tu_ba_the unblocks it', () => {
+    const { battle, playerP, combat, runtime } = makeDuel(1, 100)
+    runtime.applyBuff('phan_mon', playerP)
+    runtime.applyBuff('quan_the', playerP)
+    runtime.applyBuff('choang', playerP)
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
-    const system = new TurnBattleSystem(combat, 10_000, KIT_REGISTRY, undefined, runtime)
-    system.resolveNextStep(battle)
-    system.resolveNextStep(battle)
+    new TurnBattleSystem(combat, 10_000, BUFF_REGISTRY, undefined, runtime).resolveNextStep(battle)
 
-    expect(buffsOf(runtime, enemyP, 'choang')).toHaveLength(0)
+    expect(battle.queuedFollowUps).toBeUndefined()
+    expect(playerP.entity.currentThe).toBe(100)
+
+    // Bat Tu Ba The: the CC cannot block - window reopens on the next action.
+    runtime.applyBuff('bat_tu_ba_the', playerP)
+    new TurnBattleSystem(combat, 10_000, BUFF_REGISTRY, undefined, runtime).resolveNextStep(battle)
+
+    expect(battle.queuedFollowUps).toHaveLength(1)
+    expect(playerP.entity.currentThe).toBe(100 - THE_PROC_COST)
   })
 })
 
-describe('tu_the stance window (spec 6.1)', () => {
-  it('procCostFlatDelta -5 — an attempt costs 10, not 15', () => {
-    const { battle, playerP, combat, runtime } = makeDuel(1, 10) // below base cost, covers the delta
-    runtime.applyBuff('tu_the', playerP)
-    vi.spyOn(Math, 'random').mockReturnValue(0)
-
-    new TurnBattleSystem(combat, 10_000, KIT_REGISTRY, undefined, runtime).resolveNextStep(battle)
-
-    expect(battle.queuedFollowUps).toHaveLength(1)
-    // 10 - 10 + 20 = 20.
-    expect(playerP.entity.currentThe).toBe(20)
-  })
-
-  it('without the stance the same pool cannot pay — no roll at all', () => {
-    const { battle, playerP, combat, runtime } = makeDuel(1, 10)
-    vi.spyOn(Math, 'random').mockReturnValue(0)
-
-    new TurnBattleSystem(combat, 10_000, KIT_REGISTRY, undefined, runtime).resolveNextStep(battle)
-
-    expect(battle.queuedFollowUps).toBeUndefined()
-    expect(playerP.entity.currentThe).toBe(10)
-  })
-
-  it('expiry restores the base cost — stance worn off, 10 The no longer funds a check', () => {
-    const { battle, playerP, combat, runtime } = makeDuel(1, 10)
-    // 1-turn stance: one holder-turn-end boundary expires it.
-    runtime.applyBuff('tu_the', playerP, playerP, { durationOverride: 1 })
-    runtime.tickHolderTurnsEnd(playerP.entity.id)
-
-    expect(buffsOf(runtime, playerP, 'tu_the')).toHaveLength(0)
-
-    vi.spyOn(Math, 'random').mockReturnValue(0)
-    new TurnBattleSystem(combat, 10_000, KIT_REGISTRY, undefined, runtime).resolveNextStep(battle)
-
-    expect(battle.queuedFollowUps).toBeUndefined()
-    expect(playerP.entity.currentThe).toBe(10)
+describe('parked legacy kit (beta window)', () => {
+  it('tu_the and bach_ung buff defs stay authored but are never granted by the beta kit', () => {
+    // Parked content pins (design Part XVIII): the defs live for
+    // post-beta unlocks; nothing in the beta kit references them.
+    expect(BUFF_REGISTRY.get('tu_the')).toBeDefined()
+    expect(BUFF_REGISTRY.get('bach_ung')).toBeDefined()
   })
 })
