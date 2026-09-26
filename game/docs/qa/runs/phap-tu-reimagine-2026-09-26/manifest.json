@@ -15996,7 +15996,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8d7972b9aca2f4269d7a22626cf6c29692efd187600fd6e0f03fc7b2eaf6c7b2"
+      "hash": "aad6efb164004eeab2c1d30438c77027261a950fcb377c6f3261022bc5352952"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.turnRegen.test.ts",
@@ -16074,7 +16074,7 @@
       "path": "src/core/battle/turn/TurnSkillAction.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d68789202fc5e4330108e4905a41942f57632f135611990d306bea539e3c6957"
+      "hash": "13150fe968d978198af7fe8f80e8a00a088d2857b0574850bc476e1413073acb"
     },
     {
       "path": "src/core/battle/turn/TurnSkillExecution.test.ts",
@@ -16459,6 +16459,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "a3f74184bb1c4d12fdc27df79138348d0ceb83a3bc5d33dcf504231a2d20c986"
+    },
+    {
+      "path": "src/core/combat/CombatSystem.hoThe.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "64d7a90aea110ae7280fbd046e97f30d75c7226f49d359924c7473ea4fbc37d9"
     },
     {
       "path": "src/core/combat/CombatSystem.manaShield.test.ts",
@@ -17514,7 +17520,7 @@
       "path": "src/core/game/GameManager.deadIds.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "27f92384ac0d0ec1c35d95c1ace117ff6ccb400560f8142e7550fd7a8c9cf084"
+      "hash": "4e7ec4ff557a060ffe52263a7f78cd88af192bdafa0b66ec9b798bbf0288addb"
     },
     {
       "path": "src/core/game/GameManager.decomposeOutput.test.ts",
@@ -18564,7 +18570,7 @@
       "path": "src/core/player/CultivationPathRegistry.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "676930c9d455f831030e89f0894629c88456eea5679c7bb899d6262ffcc2b6fd"
+      "hash": "a0f7295e868474f67a9008e03aa8889717771057f8a75cc045c26bd0dba59241"
     },
     {
       "path": "src/core/player/CultivationPathRoles.test.ts",
@@ -19897,6 +19903,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "92fdc62dcbf250c39fa6f300c2c0d45069ff7a535e9cef37a3da360a8ae5c4ca"
+    },
+    {
+      "path": "src/core/skilldef/SkillExecutor.phapTuAdv.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "25c1059cfd38384c78f04202b11c987c783c8ccbdf3f6a2114d0b68aeae68410"
     },
     {
       "path": "src/core/skilldef/SkillExecutor.test.ts",
@@ -21876,7 +21888,7 @@
       "path": "src/presentation/bridges/hoTheBridge.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "48e5a4940101ef6540429f18af778ed36930b2dd008ff769b75059e7064fcf36"
+      "hash": "f3e0a1b60f4dfbc5624ba9574d9aa023eaef245fcfc77dc0a5434c0190791efb"
     },
     {
       "path": "src/presentation/bridges/kiemBarBridge.test.ts",
@@ -21900,7 +21912,7 @@
       "path": "src/presentation/bridges/theBarBridge.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "43e77a3be5d73568b1863944d49c29ac9162831ff83415d432928496515328ed"
+      "hash": "b75c0b9d8a1742254fdd78f91f6743c916b4bb68d63d14b3e5c6677e2743a922"
     },
     {
       "path": "src/presentation/clock/MainProcessClockSource.test.ts",
@@ -22386,7 +22398,7 @@
       "path": "src/services/save/saveVersion.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "18aed6887e1bfe70314398c12a2b0570d8ffd65a5fe2b8638d9f57a733138470"
+      "hash": "f694c03b405b4e74cf1d54e9693c96cbe9feeaeb887a223e7b22c39d5cb94498"
     },
     {
       "path": "src/services/supabase/SupabaseConfig.ts",
@@ -23073,5 +23085,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "a305ed3583896a70e967dcd09c9cc43ead1e648a6476f28de4b9dc2abc104225"
+  "productStateId": "d1f14a0325e2dd29d87f3436e9d269d792a33f272fb604d6f1d3aa575be84546"
 }
