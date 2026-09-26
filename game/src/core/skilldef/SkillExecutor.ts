@@ -28,6 +28,7 @@ import type {
   ResolvedCombatOperation,
 } from '../battle/contracts/operations'
 import type { CombatRng } from '../battle/contracts/rng'
+import { RESOURCE_THE } from '../combat/CombatTypes'
 import type { CombatScheduler } from '../battle/runtime/scheduler/CombatScheduler'
 
 import type { SkillCastCommitPort } from './SkillCastCommitPort'
@@ -219,7 +220,7 @@ export class SkillExecutor {
             type: 'consume_resource',
             payload: {
               targetId: plan.sourceId,
-              resourceId: 'the',
+              resourceId: RESOURCE_THE,
               amount: 'all',
             },
           }),
@@ -701,7 +702,7 @@ export class SkillExecutor {
           type: 'gain_resource',
           payload: {
             targetId: plan.sourceId,
-            resourceId: 'the',
+            resourceId: RESOURCE_THE,
             amount: plan.grants.theOnLandedCast,
           },
         }),
@@ -715,7 +716,7 @@ export class SkillExecutor {
           type: 'gain_resource',
           payload: {
             targetId: plan.sourceId,
-            resourceId: 'the',
+            resourceId: RESOURCE_THE,
             amount: plan.grants.theOnCrit,
           },
         }),

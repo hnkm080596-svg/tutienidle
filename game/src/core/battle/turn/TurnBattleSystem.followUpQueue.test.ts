@@ -87,6 +87,31 @@ function enemySkill(): TurnSkillDefinition {
   return { id: 'enemy_basic', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } }
 }
 
+describe('TurnBattleSystem — queuedFollowUps headless lane (peekNextActor)', () => {
+  it('a natural gauge pick resets followUpChainDepth — cumulative follow-ups cannot starve the queue', () => {
+    const { battle, system } = fixture()
+
+    // A battle deep in a consecutive follow-up chain: the paced loop's
+    // cap is CONSECUTIVE dequeues, so a natural turn must reset the
+    // depth before the next entry may fire (same as tickPacing's
+    // gauge-pick branch).
+    battle.followUpChainDepth = 4
+
+    const actor = system.peekNextActor(battle)
+
+    expect(actor?.id).toBe('player')
+    expect(battle.followUpChainDepth).toBe(0)
+
+    // The queue is still honored after the natural pick — an entry
+    // queued now dequeues instead of being dropped at the stale cap.
+    battle.queuedFollowUps = [
+      { actorId: 'enemy', executionKind: 'reactive_bypass', actionSource: 'follow_up' },
+    ]
+
+    expect(system.peekNextActor(battle)?.id).toBe('enemy')
+  })
+})
+
 describe('TurnBattleSystem — queuedFollowUps honored by the PRODUCTION loop (tickPacing)', () => {
   it('tickPacing() grants the queued follow-up actor a bypass turn on the NEXT call, not just peekNextActor()', () => {
     const { battle, system, enemyParticipant } = fixture()

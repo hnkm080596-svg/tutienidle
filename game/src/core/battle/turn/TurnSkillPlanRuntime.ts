@@ -74,7 +74,6 @@ export interface TurnSkillPlanOrchestration {
       The retired taken/evade income is gone -- observation is the only
       income and it lands at action end (INV-10). */
   recordHitOutcome(
-    battle: TurnBattle,
     target: TurnBattleParticipant,
     hit: { dodged: boolean; hpDamage: number },
   ): void
@@ -510,7 +509,7 @@ export class TurnSkillPlanRuntime {
         const dodged = result.damage.landed === false
         // Ung The beta -- record the outcome for the post-action Phan
         // window; the per-hit windows + per-hit income are gone (INV-10).
-        tbs.recordHitOutcome(battle, target, {
+        tbs.recordHitOutcome(target, {
           dodged,
           hpDamage: result.damage.hpDamage,
         })

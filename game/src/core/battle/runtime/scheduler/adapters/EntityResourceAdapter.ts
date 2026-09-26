@@ -29,6 +29,7 @@
 // ('all' is inherently resolve-at-execution) and faults loudly via
 // CombatSettlementFault instead of silently picking one semantic.
 
+import { RESOURCE_THE } from '../../../../combat/CombatTypes'
 import { grantThe } from '../../../../the-tu/TheEconomy'
 
 import type { CombatAuthorityExecutionContext } from '../../../contracts/context'
@@ -42,7 +43,6 @@ import { CombatSettlementFault } from '../CombatSettlementFault'
 
 import { requireEntity, type CombatEntityLookup } from './lookups'
 
-const RESOURCE_THE = 'the'
 
 /** skilldef M4 -- a wired resource pool beyond 'the'. The composition
     root owns the write path (mana -> entity.currentMp direct write,

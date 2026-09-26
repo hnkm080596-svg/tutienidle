@@ -36,6 +36,7 @@ import type { CombatScheduler } from '../battle/runtime/scheduler/CombatSchedule
 import type { BuffSystem } from '../buff2/BuffSystem'
 import type { QueuedFollowUp } from '../battle/turn/TurnBattleSystem'
 import type { ReactiveTriggerContext } from '../battle/turn/TurnBattleSystem'
+import { RESOURCE_THE } from '../combat/CombatTypes'
 import { THE_PROC_COST } from '../the-tu/TheEconomy'
 import { clampStatValue } from '../stats/StatMetadata'
 import {
@@ -75,7 +76,6 @@ export interface ReactiveProcContext {
   triggeringTargets?: readonly { id: CombatEntityId; entity: CombatEntity }[]
 }
 
-const RESOURCE_THE = 'the'
 const REFLECTION_PROFILE = 'reflection'
 
 /**

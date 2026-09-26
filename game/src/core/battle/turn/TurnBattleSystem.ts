@@ -42,6 +42,7 @@ import { recomputeEffectiveStats } from './TurnStatsRecompute'
 import type { BattleLogEntry } from './TurnOrderPreview'
 
 import type { DamageResult } from '../../combat/CombatTypes'
+import { RESOURCE_THE } from '../../combat/CombatTypes'
 import {
   DAN_THE_INCOME_MULT,
   UNG_TRE_GAUGE_PENALTY,
@@ -645,8 +646,8 @@ export class TurnBattleSystem {
           declared.execution?.rootSkillId ?? action.skillId,
         )
       },
-      recordHitOutcome: (battle, target, hit) =>
-        this.recordHitOutcome(battle, target, hit),
+      recordHitOutcome: (target, hit) =>
+        this.recordHitOutcome(target, hit),
       // resolveDeclaredHit :2136-2166 parity -- on-hit procs, then the
       // target's onImpactLanded reactive roll gated on hpDamage > 0,
       // then the queuedFollowUps FIFO push.
@@ -1362,6 +1363,13 @@ export class TurnBattleSystem {
 
     const resolved = resolveNextTurn(allParticipants)
 
+    if (resolved?.actor) {
+      // Same reset as tickPacing's gauge-pick branch: a natural turn ends
+      // the consecutive-follow-up chain, so the cap counts consecutive
+      // dequeues, not cumulative ones.
+      battle.followUpChainDepth = 0
+    }
+
     return resolved?.actor ?? null
   }
 
@@ -1991,7 +1999,7 @@ export class TurnBattleSystem {
     // one-shot mark before any hit resolves -- the tail cannot read
     // either off a corpse.
     const observedAtResolution = new Set<string>()
-    let danTheAtResolution: BuffInstanceSnapshot | null | undefined
+    let danTheAtResolution: BuffInstanceSnapshot | null = null
     if (this.runtime !== undefined && battle.enemies.includes(actor)) {
       for (const reactor of battle.players) {
         if (this.isObserved(battle, reactor, actor)) {
@@ -2119,7 +2127,14 @@ export class TurnBattleSystem {
           this.grantTheFromCast(actor, chargedSkill, chargedCrit)
         }
 
-        this.resolvePostActionWindows(battle, actor, declared, landedTargets)
+        this.resolvePostActionWindows(
+          battle,
+          actor,
+          declared,
+          landedTargets,
+          TurnBattleSystem.EMPTY_RESOLUTION_SNAPSHOT,
+          null,
+        )
 
         return { targetIds, extraImpacts }
       }
@@ -2449,7 +2464,7 @@ export class TurnBattleSystem {
     // Ung The beta -- record the outcome for the post-action Phan
     // window; the per-hit windows + per-hit income are gone (INV-10:
     // observation income lands at action end, after the windows close).
-    this.recordHitOutcome(battle, target, hitResult)
+    this.recordHitOutcome(target, hitResult)
 
     // AR-04: downstream on-hit effects, debuffs and consume triggers
     // require a landed hit -- dodged attacks bypass all of them.
@@ -2958,13 +2973,16 @@ export class TurnBattleSystem {
    */
   private readonly hitOutcomeScratch = new Map<string, 'taken' | 'evaded'>()
 
+  /** Charged-resolve legacy lane snapshot: empty by construction -- the
+      runtime===undefined lane never marks, so income can never read a
+      corpse. grantObservationIncome early-returns there anyway. */
+  private static readonly EMPTY_RESOLUTION_SNAPSHOT: ReadonlySet<string> = new Set()
+
   /** Ung The beta -- aggregate this hit into the scratch (landed wins). */
   private recordHitOutcome(
-    battle: TurnBattle,
     target: TurnBattleParticipant,
     hitResult: { dodged: boolean; hpDamage: number },
   ): void {
-    void battle
     const prior = this.hitOutcomeScratch.get(target.id)
     if (prior === 'taken') return
     this.hitOutcomeScratch.set(target.id, hitResult.dodged ? 'evaded' : 'taken')
@@ -3134,8 +3152,8 @@ export class TurnBattleSystem {
     actor: TurnBattleParticipant,
     declared: TurnDeclaredAction,
     landedTargets: TurnBattleParticipant[],
-    observedAtResolution?: ReadonlySet<string>,
-    danTheAtResolution?: BuffInstanceSnapshot | null,
+    observedAtResolution: ReadonlySet<string>,
+    danTheAtResolution: BuffInstanceSnapshot | null,
   ): void {
     this.resolvePhanWindow(battle, actor, declared)
     this.resolveAllyActionWindow(battle, actor, declared, landedTargets)
@@ -3284,8 +3302,8 @@ export class TurnBattleSystem {
     actor: TurnBattleParticipant,
     declared: TurnDeclaredAction,
     landedTargets: TurnBattleParticipant[],
-    observedAtResolution?: ReadonlySet<string>,
-    danTheAtResolution?: BuffInstanceSnapshot | null,
+    observedAtResolution: ReadonlySet<string>,
+    danTheAtResolution: BuffInstanceSnapshot | null,
   ): void {
     // ccBlocked: the enemy's turn was consumed by hard CC -- it never
     // completed an action, matching the sealed NULL_ACTION (undefined
@@ -3316,7 +3334,7 @@ export class TurnBattleSystem {
         ops.push({
           type: 'gain_resource',
           operationId: `the.basic.${battle.totalTurnsElapsed}.${actor.id}.${this.nextOccurrence()}` as CombatOperationId,
-          payload: { targetId: actor.entity.id, resourceId: 'the', amount },
+          payload: { targetId: actor.entity.id, resourceId: RESOURCE_THE, amount },
           origin: this.opOrigin(actor.entity.id, `hit.basic_income.${battle.totalTurnsElapsed}.${actor.id}`, 'the_basic_income'),
         })
       }
@@ -3326,23 +3344,14 @@ export class TurnBattleSystem {
     // OBSERVING player reactor. dan_the on the actor multiplies this
     // action's yield and is consumed on use (dies with the target). The
     // mark is judged on the resolution-time snapshot -- a ward-break or
-    // reflect kill already swept the live instance off the corpse. null
-    // = snapshot taken, no mark; undefined = legacy lane, no snapshot.
+    // reflect kill already swept the live instance off the corpse.
     if (battle.enemies.includes(actor)) {
-      const danThe =
-        danTheAtResolution === undefined
-          ? this.buffs
-              .getForTarget(actor.entity.id)
-              .find((inst) => inst.definitionId === DAN_THE_BUFF.id)
-          : danTheAtResolution ?? undefined
+      const danThe = danTheAtResolution ?? undefined
       const mult = danThe !== undefined ? DAN_THE_INCOME_MULT : 1
       let consumed = false
 
       for (const reactor of battle.players) {
-        const observed =
-          observedAtResolution !== undefined
-            ? observedAtResolution.has(reactor.id)
-            : this.isObserved(battle, reactor, actor)
+        const observed = observedAtResolution.has(reactor.id)
         if (!reactor.entity.alive || !observed) continue
         const grants = this.buffs.getCapabilities(reactor.entity.id)
         const amount = theGainOnObservedAction(grants) * mult
@@ -3350,7 +3359,7 @@ export class TurnBattleSystem {
         ops.push({
           type: 'gain_resource',
           operationId: `the.observed.${battle.totalTurnsElapsed}.${actor.id}.${reactor.id}.${this.nextOccurrence()}` as CombatOperationId,
-          payload: { targetId: reactor.entity.id, resourceId: 'the', amount },
+          payload: { targetId: reactor.entity.id, resourceId: RESOURCE_THE, amount },
           origin: this.opOrigin(reactor.entity.id, `hit.observed_income.${battle.totalTurnsElapsed}.${actor.id}`, 'the_observed_income'),
         })
         consumed = true
@@ -3798,6 +3807,12 @@ export class TurnBattleSystem {
       }
 
       wave.waveIndex += 1
+
+      // Paced parity: the wave lull resets positive tempo but never
+      // forgives an Ung Tre debt (negative gauge carries over).
+      for (const participant of [...battle.players, ...battle.enemies]) {
+        resetGaugeOnWaveLull(participant)
+      }
     }
 
     if (wave.pendingEnemySpawns.length === 0) {
