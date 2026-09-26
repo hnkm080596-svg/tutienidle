@@ -4509,7 +4509,8 @@
       "discoveredBy": "devin-c5cdbffd38d74e19b06ba4105d42ded6",
       "rootCause": "preview simulated gauge only; real order drains queues first",
       "rootClass": "divergent-preview",
-      "repair": "FIXED @e11f2c9e: preview leads with live queued actors in drain order (dead skipped; chain-depth guard not simulated \u2014 documented approximation)."
+      "repair": "FIXED @e11f2c9e: preview leads with live queued actors in drain order (dead skipped; chain-depth guard not simulated \u2014 documented approximation).",
+      "counterexample": "queued counter pending -> preview showed gauge actor first instead of the queued actor"
     },
     {
       "state": {
@@ -4551,7 +4552,8 @@
       "discoveredBy": "devin-c5cdbffd38d74e19b06ba4105d42ded6",
       "rootCause": "same root as COR-1",
       "rootClass": "stale-state-read",
-      "repair": "dan_the snapshotted at resolution top"
+      "repair": "dan_the snapshotted at resolution top",
+      "counterexample": "dan_the-marked enemy killed inside its action paid x1 instead of x3"
     }
   ],
   "evidence": [
