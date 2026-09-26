@@ -2275,7 +2275,7 @@ export class TurnBattleSystem {
           // post-cast pool, preserving legacy's gain-after-consume
           // ordering. Deliberately NOT inside the registry gate: The gain
           // is engine-native resource accrual, not buff-registry content.
-          if (payloadSkill && (targetIds.length > 0 || payloadSkill.targetScope === 'self')) {
+          if (executionCommitsCast(declared.execution) && payloadSkill && (targetIds.length > 0 || payloadSkill.targetScope === 'self')) {
             this.grantTheFromCast(actor, payloadSkill)
           }
 
