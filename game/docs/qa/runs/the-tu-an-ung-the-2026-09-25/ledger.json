@@ -4088,7 +4088,8 @@
       "discoveredBy": "devin-2bfe5caf79274f6f90f00c8049fb857f",
       "rootCause": "observation + dan_the judged at tail time; a kill inside the hit loop swept the marks first",
       "rootClass": "stale-state-read",
-      "repair": "FIXED @e11f2c9e: observedAtResolution + danTheAtResolution snapshot captured at top of applyActionImpact (post-declare, pre-hit), forwarded into resolvePostActionWindows/grantObservationIncome; null = snapshot-taken-empty skips live fallback; undefined = legacy lane live read. Pins assert +4 on ward-break corpse and x3 on dan_the corpse."
+      "repair": "FIXED @e11f2c9e: observedAtResolution + danTheAtResolution snapshot captured at top of applyActionImpact (post-declare, pre-hit), forwarded into resolvePostActionWindows/grantObservationIncome; null = snapshot-taken-empty skips live fallback; undefined = legacy lane live read. Pins assert +4 on ward-break corpse and x3 on dan_the corpse.",
+      "counterexample": "isObserved + dan_the read post-sweep: ward-break kill in the hit loop paid 0; post-sweep dan_the read paid x1 instead of x3"
     },
     {
       "state": {
@@ -4142,7 +4143,7 @@
       "discoveredBy": "devin-2bfe5caf79274f6f90f00c8049fb857f",
       "rootCause": "spec ambiguous whether flat reactive payloads participate in sudden-death scaling",
       "rootClass": "spec-ambiguity",
-      "repair": "",
+      "repair": "no repair -- rejected with proof (see rejectionReason)",
       "counterexample": "reactive bypass fires flat payload while suddenDeathMultiplier>1 -- deliberate authored contract; queued repeats scale"
     },
     {
@@ -4197,7 +4198,8 @@
       "discoveredBy": "devin-2bfe5caf79274f6f90f00c8049fb857f",
       "rootCause": "docstring predates the full-consume-only floor change",
       "rootClass": "doc-drift",
-      "repair": "FIXED @e11f2c9e: docstring corrected (fraction<1 preserves debt; full consume resets; unreachable in gameplay)."
+      "repair": "FIXED @e11f2c9e: docstring corrected (fraction<1 preserves debt; full consume resets; unreachable in gameplay).",
+      "counterexample": "docstring still claimed any drain floors"
     },
     {
       "state": {
@@ -4251,7 +4253,7 @@
       "discoveredBy": "devin-2bfe5caf79274f6f90f00c8049fb857f",
       "rootCause": "engine-unit charge path is a test-only configuration",
       "rootClass": "test-scope",
-      "repair": "",
+      "repair": "no repair -- rejected with proof (see rejectionReason)",
       "counterexample": "engine-unit charge-resolve lane exercised only by test configs; runtime-gated steps are no-ops there"
     },
     {
@@ -4307,7 +4309,8 @@
       "discoveredBy": "devin-cab028db75c04cda8fa5e298c3ab3afe",
       "rootCause": "literals where sibling code uses constants",
       "rootClass": "convention",
-      "repair": "FIXED @e11f2c9e: UNG_THE_BUFF.id / HO_MON_MARKER.id / HO_VE_BUFF.id / PHAN_MON_MARKER.id; unused import dropped."
+      "repair": "FIXED @e11f2c9e: UNG_THE_BUFF.id / HO_MON_MARKER.id / HO_VE_BUFF.id / PHAN_MON_MARKER.id; unused import dropped.",
+      "counterexample": "string literals"
     },
     {
       "state": {
@@ -4361,7 +4364,8 @@
       "discoveredBy": "devin-cab028db75c04cda8fa5e298c3ab3afe",
       "rootCause": "primitive missing for the wave-lull min(0) semantics",
       "rootClass": "ownership-bypass",
-      "repair": "FIXED @e11f2c9e: resetGaugeOnWaveLull(actor) added to ActionGauge.ts; the lull site calls it."
+      "repair": "FIXED @e11f2c9e: resetGaugeOnWaveLull(actor) added to ActionGauge.ts; the lull site calls it.",
+      "counterexample": "raw Math.min(0, gauge) inline write"
     },
     {
       "state": {
@@ -4403,7 +4407,8 @@
       "discoveredBy": "devin-cab028db75c04cda8fa5e298c3ab3afe",
       "rootCause": "same as COR-3",
       "rootClass": "doc-drift",
-      "repair": "fixed in same commit"
+      "repair": "fixed in same commit",
+      "counterexample": "as COR-3"
     },
     {
       "state": {
@@ -4457,7 +4462,8 @@
       "discoveredBy": "devin-c5cdbffd38d74e19b06ba4105d42ded6",
       "rootCause": "wave ticking lived only inside tickPacing; headless driver had no wave advance",
       "rootClass": "missing-path",
-      "repair": "FIXED @e11f2c9e: advanceHeadlessWave collapses the telegraph per step (same shouldStartNextWave predicate + slot dedupe); no-actor branch honors isStageComplete -> victory."
+      "repair": "FIXED @e11f2c9e: advanceHeadlessWave collapses the telegraph per step (same shouldStartNextWave predicate + slot dedupe); no-actor branch honors isStageComplete -> victory.",
+      "counterexample": "pending spawns never ticked; phantom survivor turns during the lull; terminal = defeat"
     },
     {
       "state": {
