@@ -369,6 +369,24 @@ describe('phan_chan reflect (Max-HP ratio, once-per-action)', () => {
     expect(f.battle.state).toBe('victory')
   })
 
+  it('double-wipe: a lethal hit whose post-mortem reflect kills the last attacker resolves as defeat', () => {
+    const tank = makeTank('tank')
+    tank.currentHp = 1 // the hostile hit is lethal to the last player
+    const attacker = makeAttacker('enemy')
+    attacker.currentHp = 10 // the queued reflect is lethal to the last enemy
+    const f = makeBattle(tank, attacker)
+    applyPhanChan(f.runtime, f.tankP)
+
+    const system = systemOf(f)
+    system.resolveNextStep(f.battle)
+    system.resolveNextStep(f.battle)
+
+    expect(tank.alive).toBe(false)
+    expect(attacker.alive).toBe(false)
+    // Player wipe is checked first - a simultaneous wipe is a defeat.
+    expect(f.battle.state).toBe('defeat')
+  })
+
   it('terminal event: attacker-side phan_chan does NOT reflect the reflection back', () => {
     const tank = makeTank('tank')
     const attacker = makeAttacker('enemy')

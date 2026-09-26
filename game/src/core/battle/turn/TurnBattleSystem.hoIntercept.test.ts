@@ -538,6 +538,35 @@ describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () =
     expect(f.enemyP.entity.currentHp).toBe(100_000 - expected)
   })
 
+  it('an intercepted hit reflects off the intercepting protector (phan_chan keyed on the protector)', () => {
+    const f = makeFixture()
+    // Protector intercepts (protectChance 1, roll pinned low) AND holds
+    // phan_chan - the reflect must queue on the protector, not the
+    // declared target, and land once on the attacker.
+    withHoMon(f, f.protectorP, 1, 100)
+    f.runtime.applyBuff(PHAN_CHAN_BUFF.id, f.protectorP)
+
+    const reflections: number[] = []
+    f.eventBus.on<EntityVitalsChangedEvent>('entity_vitals_changed', (event) => {
+      if (event.reason === 'reflection' && event.entityId === 'enemy') {
+        reflections.push(event.amount)
+      }
+    })
+
+    const sys = system(f, () => 0)
+    const declared = declaredAgainst(f, [f.squishyP])
+    const { targetIds } = sys.applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBe(true)
+    expect(targetIds).toEqual(['protector'])
+    expect(f.protectorP.entity.currentHp).toBeLessThan(100_000)
+    expect(f.squishyP.entity.currentHp).toBe(100_000)
+
+    const expected = 100_000 * PHAN_CHAN_BASE_RATIO
+    expect(reflections).toEqual([expected])
+    expect(f.enemyP.entity.currentHp).toBe(100_000 - expected)
+  })
+
   it('a charged skill carrying an ailment applies it on the landed hit', () => {
     const f = makeFixture()
     const chargedWithAilment: TurnSkillDefinition = {

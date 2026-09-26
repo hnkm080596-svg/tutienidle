@@ -10429,6 +10429,68 @@
       "exception": null,
       "status": "REJECTED_WITH_PROOF",
       "rejectionReason": "dormant unreachable; identical mods"
+    },
+    {
+      "id": "F-TT-CLNF-INT-1",
+      "round": "CLNF",
+      "severity": "Medium",
+      "lens": "INT",
+      "title": "Double-wipe precedence (players-first => defeat) unpinned",
+      "status": "FIXED_PENDING_PROOF",
+      "pinEvidenceIds": [
+        "EV-TT-CLNF-INT-FIX"
+      ],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "locations": [
+        "src/core/battle/turn/TurnBattleSystem.ts ~3404-3415"
+      ],
+      "summary": "Simultaneous wipe resolves defeat deterministically; newly reachable via post-mortem reflect; now pinned in reflection.test.ts."
+    },
+    {
+      "id": "F-TT-CLNF-INT-2",
+      "round": "CLNF",
+      "severity": "Low",
+      "lens": "INT",
+      "title": "Reflect through a Ho intercept (protector-as-holder) unpinned",
+      "status": "FIXED_PENDING_PROOF",
+      "pinEvidenceIds": [
+        "EV-TT-CLNF-INT-FIX"
+      ],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "locations": [
+        "src/core/battle/turn/TurnBattleSystem.hoIntercept.test.ts"
+      ],
+      "summary": "phan_chan on an intercepting protector queues the reflect on the protector; pinned."
+    },
+    {
+      "id": "F-TT-CLNF-INT-3",
+      "round": "CLNF",
+      "severity": "Nit",
+      "lens": "INT",
+      "title": "queuesFollowUp bare-basic bypass has zero authored producers",
+      "status": "REJECTED_WITH_PROOF",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "rejectionReason": "Latent/unreachable: zero capability defs set queuesFollowUp (grep-verified); machinery exists only via synthetic defs. Recorded as dormant-collision lesson.",
+      "locations": [],
+      "summary": "Zero producers -> unreachable lane; reject per dormant-lane precedent."
+    },
+    {
+      "id": "F-TT-CLNF-INT-4",
+      "round": "CLNF",
+      "severity": "Nit",
+      "lens": "INT",
+      "title": "isBattleFighting vs isBattleInProgress dual exports",
+      "status": "REJECTED_WITH_PROOF",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "rejectionReason": "Observation, no live defect: all current consumers correct (display uses isBattleFighting, writes use isBattleInProgress). Lesson recorded for future write-gates.",
+      "locations": [],
+      "summary": "Naming-adjacent exports, all consumers correct today."
     }
   ],
   "evidence": [
@@ -11756,6 +11818,38 @@
         "src/core/battle/turn/TurnBattleSystem.ts",
         "src/composables/useProgressionActions.ts",
         "src/components/panels/skill-path/NodeInspector.test.ts"
+      ]
+    },
+    {
+      "id": "EV-TT-CLNF-INT-FIX",
+      "state": {
+        "productStateId": "21097fb54194968a5ed0ee645a850d6f4c147e3e36937f03e38c305c21c61b06",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coordinator",
+      "startedAt": "2026-09-26T09:28:00.000Z",
+      "finishedAt": "2026-09-26T09:30:00.000Z",
+      "commandOrMethod": "npx vitest run TurnBattleSystem.reflection.test.ts TurnBattleSystem.hoIntercept.test.ts",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/clnf-int-fix.md",
+      "artifactHash": "0d330613b41a0bf22bbe31792f384214418edf18c3484b5ac15f43da3000a3f8",
+      "claims": [
+        "36/36 scoped tests PASS",
+        "double-wipe precedence pinned as defeat",
+        "intercept-reflect pinned on protector"
+      ],
+      "invariantIds": [],
+      "limitations": [],
+      "status": "CURRENT",
+      "inputEvidenceIds": [],
+      "inputPaths": [
+        "src/core/battle/turn/TurnBattleSystem.reflection.test.ts",
+        "src/core/battle/turn/TurnBattleSystem.hoIntercept.test.ts"
       ]
     }
   ],
@@ -14557,6 +14651,33 @@
       "verificationOfFindingIds": [],
       "lessons": [],
       "summary": "cleanF AUT: SEAL clean -- single authority per state (sacrifice profile owns paid-binding; procs own reflect map; isTurnBattleInProgress single ops+UI authority); no legacy reach; P15 clean."
+    },
+    {
+      "id": "REV-TT-CLNF-INT",
+      "kind": "COMPLIANCE_REVIEW",
+      "reviewerSessionId": "fb45120aa79d4c21888a0e0a10e11d4a",
+      "previousPhaseReviewId": "REV-TT-CLNF-AUT",
+      "verdict": "FINDINGS",
+      "status": "SEALED",
+      "round": 12,
+      "scope": "lens INTEGRATION/ADVERSARIAL only",
+      "recordedAt": "2026-09-26T09:30:00.000Z",
+      "evidenceIds": [
+        "EV-TT-CLNF-INT-FIX"
+      ],
+      "findingIds": [
+        "F-TT-CLNF-INT-1",
+        "F-TT-CLNF-INT-2",
+        "F-TT-CLNF-INT-3",
+        "F-TT-CLNF-INT-4"
+      ],
+      "findingPointers": [],
+      "verificationOfFindingIds": [],
+      "lessons": [
+        "L-TT-92",
+        "L-TT-93"
+      ],
+      "summary": "cleanF INT: 1 Medium (double-wipe precedence unpinned) + 1 Low (intercept-reflect unpinned) + 2 Nit (queuesFollowUp no producers; dual inBattle exports). Medium+Low pinned; Nits rejected with precedent."
     }
   ],
   "cycles": [
@@ -19000,6 +19121,24 @@
       "findingIds": [
         "F-TT-CLNE-INT-2"
       ]
+    },
+    {
+      "id": "L-TT-92",
+      "class": "coverage-pin",
+      "incident": "double-wipe + intercept-reflect reachable but unpinned",
+      "promotedTo": [
+        "detector:pin-required for precedence/intercept interactions"
+      ],
+      "status": "PROMOTED"
+    },
+    {
+      "id": "L-TT-93",
+      "class": "latent-trap",
+      "incident": "queuesFollowUp without producers; dual-flag naming",
+      "promotedTo": [
+        "reviewer-note: flag latent traps as Nit-observation"
+      ],
+      "status": "PROMOTED"
     }
   ],
   "messages": [],
