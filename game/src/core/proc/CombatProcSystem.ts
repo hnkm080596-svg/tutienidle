@@ -154,6 +154,10 @@ export class CombatProcSystem {
     for (const grant of this.deps.buffs.getCapabilities(holderId)) {
       const reactive = asReactiveTrigger(grant)
       if (reactive === undefined || reactive.trigger !== trigger) continue
+      // INV-9 applies to the whole lane: a non-natural action source
+      // (counter/follow_up/intercept) opens no reactive outcome at all --
+      // skip before the roll so excluded sources consume no RNG.
+      if (context?.reflectsEligible === false) continue
       if (!this.deps.rng.rollChance(reactive.chance)) continue
 
       if (reactive.appliesDefinitionId !== undefined) {
@@ -185,8 +189,7 @@ export class CombatProcSystem {
         (context.hpDamage ?? 0) > 0 &&
         context.attacker.alive &&
         context.attacker.id !== holderId &&
-        holder !== undefined &&
-        context.reflectsEligible !== false
+        holder !== undefined
       ) {
         // Spec: one reflect per holder per hostile action -- key on the
         // holder only so a second reflecting capability cannot emit twice.

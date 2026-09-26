@@ -1508,12 +1508,20 @@ export class TurnBattleSystem {
     // punish-on-cast áp hard-CC buff lên actor, CC-check kế tiếp đọc state
     // mới → ccBlocked đúng theo spec §4.2 ordering.
     if (this.registry && this.runtime !== undefined) {
-      this.procs.rollReactiveTrigger(
+      const { firedFollowUp } = this.procs.rollReactiveTrigger(
         actor.entity.id,
         'onCastBegin',
         undefined,
         `action.turn.${battle.totalTurnsElapsed}.${actor.id}.castbegin`,
       )
+      if (firedFollowUp) {
+        battle.queuedFollowUps = battle.queuedFollowUps ?? []
+        battle.queuedFollowUps.push({
+          actorId: actor.id,
+          executionKind: 'reactive_bypass',
+          actionSource: 'follow_up',
+        })
+      }
     }
 
     // CC check TRƯỚC tick: buff stun/freeze duration=N phải block đúng N

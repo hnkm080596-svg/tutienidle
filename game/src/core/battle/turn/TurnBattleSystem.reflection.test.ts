@@ -8,6 +8,8 @@ import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { buffs as LIVE_BUFFS } from '../../../data/buff/buffs'
 import type { BuffRegistry } from '../../buff2/BuffRegistry'
+import type { BuffDefinitionId, CombatEntityId } from '../contracts/ids'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 import {
   PHAN_CHAN_BASE_RATIO,
@@ -375,5 +377,116 @@ describe('phan_chan reflect (Max-HP ratio, once-per-action)', () => {
 
     const expected = 10_000 * (PHAN_CHAN_MARKED_RATIO + 0.02)
     expect(10_000 - attacker.currentHp).toBeCloseTo(expected)
+  })
+})
+
+
+describe('suppressed-reflect coverage pins (cleanC INT)', () => {
+  it('queued reflect skipped when the attacker is dead at flush time', () => {
+    const tank = makeTank('tank')
+    const attacker = makeAttacker('enemy')
+    const f = makeBattle(tank, attacker)
+    applyPhanChan(f.runtime, f.tankP)
+
+    // Queue the reflect the way the hit lane does, then kill the
+    // attacker before the action tail flushes.
+    f.runtime.procs.rollReactiveTrigger(
+      tank.id as CombatEntityId, 'onImpactLanded',
+      { attacker, hpDamage: 100, reflectsEligible: true }, 'root.test.1')
+    attacker.alive = false
+    f.attackerP.alive = false
+
+    f.runtime.procs.flushReflects()
+
+    expect(attacker.currentHp).toBe(10_000)
+  })
+
+  it('residue from an aborted action is discarded, never attributed to the next action', () => {
+    const tank = makeTank('tank')
+    const attacker = makeAttacker('enemy')
+    const f = makeBattle(tank, attacker)
+    applyPhanChan(f.runtime, f.tankP)
+
+    f.runtime.procs.rollReactiveTrigger(
+      tank.id as CombatEntityId, 'onImpactLanded',
+      { attacker, hpDamage: 100, reflectsEligible: true }, 'root.test.1')
+
+    // Entry discard mirrors TBS applyActionImpact pre-queue discard.
+    f.runtime.procs.discardPendingReflects()
+    f.runtime.procs.flushReflects()
+
+    expect(attacker.currentHp).toBe(10_000)
+  })
+
+  it('INV-9 hoist: reflectsEligible:false suppresses EVERY reactive outcome (buff grant + follow-up), not just reflects', () => {
+    const REACTIVE_APPLY: BuffDefinition = {
+      id: 'qa_reactive_apply' as BuffDefinitionId,
+      name: 'QA reactive apply',
+      kind: 'buff',
+      instanceScope: 'per_target',
+      stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+      lifetime: { clock: 'holder_turns', duration: 3, scaling: 'fixed' },
+      capabilities: [
+        {
+          id: 'qa_reactive_apply.cap',
+          type: 'reactive_trigger',
+          payload: { trigger: 'onImpactLanded', chance: 1, appliesDefinitionId: 'qa_marker', queuesFollowUp: true },
+        },
+      ],
+      dispellable: true,
+    }
+    const MARKER: BuffDefinition = {
+      id: 'qa_marker' as BuffDefinitionId,
+      name: 'QA marker',
+      kind: 'buff',
+      instanceScope: 'per_target',
+      stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+      lifetime: { clock: 'holder_turns', duration: 2, scaling: 'fixed' },
+      capabilities: [],
+      dispellable: true,
+    }
+    const tank = makeTank('tank')
+    const attacker = makeAttacker('enemy')
+    const registry = makeTestBuffRegistry([...LIVE_BUFFS, REACTIVE_APPLY, MARKER])
+    const f = makeBattle(tank, attacker, registry)
+    f.runtime.applyBuff('qa_reactive_apply', f.tankP)
+
+    const { firedFollowUp } = f.runtime.procs.rollReactiveTrigger(
+      tank.id as CombatEntityId, 'onImpactLanded',
+      { attacker, hpDamage: 100, reflectsEligible: false }, 'root.test.2')
+
+    expect(firedFollowUp).toBe(false)
+    expect(f.runtime.buffs.getForTarget(tank.id as CombatEntityId).some((i) => i.definitionId === 'qa_marker')).toBe(false)
+  })
+
+  it('onCastBegin queued follow-up is honored (not silently dropped)', () => {
+    const CAST_FOLLOW: BuffDefinition = {
+      id: 'qa_cast_follow' as BuffDefinitionId,
+      name: 'QA cast follow',
+      kind: 'buff',
+      instanceScope: 'per_target',
+      stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+      lifetime: { clock: 'holder_turns', duration: 3, scaling: 'fixed' },
+      capabilities: [
+        {
+          id: 'qa_cast_follow.cap',
+          type: 'reactive_trigger',
+          payload: { trigger: 'onCastBegin', chance: 1, queuesFollowUp: true },
+        },
+      ],
+      dispellable: true,
+    }
+    const tank = makeTank('tank')
+    const attacker = makeAttacker('enemy')
+    const registry = makeTestBuffRegistry([...LIVE_BUFFS, CAST_FOLLOW])
+    const f = makeBattle(tank, attacker, registry)
+    f.runtime.applyBuff('qa_cast_follow', f.tankP)
+
+    const system = systemOf(f)
+    // Tank's action (speed 10 > 9): onCastBegin fires inside its
+    // resolution and queues the holder's bypass follow-up.
+    system.resolveNextStep(f.battle)
+
+    expect(f.battle.queuedFollowUps?.map((e) => e.actorId)).toEqual(['tank'])
   })
 })

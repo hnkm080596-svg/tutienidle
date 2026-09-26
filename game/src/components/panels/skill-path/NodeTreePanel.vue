@@ -325,7 +325,7 @@ function onRespecClick() {
   pendingRespec.value = true
 }
 
-// Battle start kills any pending confirm — a stale modal's confirm
+// Battle start kills any pending confirm - a stale modal's confirm
 // would otherwise silently no-op against the ops gate (the store
 // refuses ops while a battle runs).
 watch(inBattle, (engaged) => {

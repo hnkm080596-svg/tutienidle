@@ -8933,15 +8933,20 @@
         }
       ],
       "siblingFindingIds": [],
-      "repair": "PARTIAL @2105c0d4 (verifier found 3 residual em-dashes) -> COMPLETED @dbfc888a: all glyphs stripped; flushReflects stale wording fixed. Awaiting re-verification on cleanC state.",
-      "pinEvidenceIds": [],
+      "repair": "PARTIAL @2105c0d4 (verifier found 3 residual em-dashes) -> COMPLETED @dbfc888a: all glyphs stripped; flushReflects stale wording fixed. Awaiting re-verification on cleanC state. Residual comment sites moved to F-TT-CLNC-AUT-1.",
+      "pinEvidenceIds": [
+        "EV-TT-CLNB-EMDASH-VERIFY"
+      ],
       "verificationEvidenceIds": [
         "EV-TT-CLNB-FIX"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TT-CLNC-COR",
+        "REV-TT-CLNC-AUT"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -9199,6 +9204,132 @@
       "exception": null,
       "status": "CLOSED",
       "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLNC-AUT-1",
+      "title": "Residual U+2014 em-dashes in diff-added comments (3 sites + 1 describe)",
+      "state": {
+        "productStateId": "d2e45be7f1e8e723acec32887e668869c0994079a30670b6bcb4127068cd825b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/components/panels/skill-path/NodeTreePanel.vue",
+          "symbolOrSection": ":328",
+          "revision": "dbfc888a",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/components/panels/skill-path/TheTuTreePanel.vue",
+          "symbolOrSection": ":183",
+          "revision": "dbfc888a",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/services/save/saveTheTuCrafted.qa.test.ts",
+          "symbolOrSection": ":13 + describe name",
+          "revision": "dbfc888a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-b66e7ff79bc54ee18056ef6b9bef87fd",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "4 added comment/name lines contain U+2014",
+      "expected": "diff-added comments ASCII-only",
+      "actual": "4 added comment/name lines contain U+2014",
+      "rootCause": "see locations",
+      "rootClass": "doc-drift",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "git diff origin/master -- src/ added-lines with U+2014",
+          "hitDispositions": [
+            "4 comment/describe sites fixed in pending nit commit; remaining 25+ hits are Vietnamese UI description strings and test names — P15 scope is code comments"
+          ],
+          "coverageLimits": [
+            "diff-added lines only; master-pre-existing untouched"
+          ],
+          "evidenceIds": [
+            "EV-TT-CLNB-EMDASH-VERIFY"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED pending nit commit (sites transliterated).",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLNC-AUT-2",
+      "title": "BodyBatTuSurvival module retained while unreferenced",
+      "state": {
+        "productStateId": "d2e45be7f1e8e723acec32887e668869c0994079a30670b6bcb4127068cd825b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NOT_A_DEFECT",
+      "actionable": false,
+      "reachability": "NONE",
+      "locations": [
+        {
+          "path": "src/core/the-tu/TheTuBatTuSurvival.ts",
+          "symbolOrSection": "whole file",
+          "revision": "dbfc888a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-b66e7ff79bc54ee18056ef6b9bef87fd",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "file referenced by comments only; removal site documents \"parked until that content returns\"",
+      "expected": "no unreachable modules or explicit park record",
+      "actual": "file referenced by comments only; removal site documents \"parked until that content returns\"",
+      "rootCause": "see locations",
+      "rootClass": "doc-drift",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "git diff origin/master -- src/ added-lines with U+2014",
+          "hitDispositions": [
+            "4 comment/describe sites fixed in pending nit commit; remaining 25+ hits are Vietnamese UI description strings and test names — P15 scope is code comments"
+          ],
+          "coverageLimits": [
+            "diff-added lines only; master-pre-existing untouched"
+          ],
+          "evidenceIds": [
+            "EV-TT-CLNB-EMDASH-VERIFY"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: intentional park — documented at CultivationPathRegistry:493-518, consistent with parked bat_tu_ba_the/son_nhac defs (beta convention).",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "REJECTED_WITH_PROOF",
+      "rejectionReason": "parked content documented at removal site; convention precedent for parked defs"
     }
   ],
   "evidence": [
@@ -10413,6 +10544,61 @@
         "src/composables/useTurnBattleInfo.ts",
         "src/core/proc/CombatProcSystem.ts"
       ]
+    },
+    {
+      "id": "EV-TT-PROBE-UNLOCK-FLOOR-R2",
+      "state": {
+        "productStateId": "d2e45be7f1e8e723acec32887e668869c0994079a30670b6bcb4127068cd825b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "EXECUTED_PROPERTY",
+      "producer": "coordinator",
+      "startedAt": "2026-09-26T06:14:00.000Z",
+      "finishedAt": "2026-09-26T06:15:00.000Z",
+      "commandOrMethod": "npx vitest run --config docs/qa/runs/the-tu-beta-2026-09-25/evidence/vitest.probe.config.mts (probe-unlock-floor.test.ts)",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/probe-unlock-floor-r2.log",
+      "artifactHash": "7e3f20c8430ac00bb534c629e124c300ca96dd5301330af2c790760c127724ac",
+      "claims": [
+        "2/2 probes pass on dbfc888a: post-abandon gate release; pay_hp 1HP floor pays 0 and never self-kills"
+      ],
+      "inputEvidenceIds": [],
+      "inputPaths": [],
+      "invariantIds": [],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-TT-CLNB-EMDASH-VERIFY",
+      "state": {
+        "productStateId": "d2e45be7f1e8e723acec32887e668869c0994079a30670b6bcb4127068cd825b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coordinator",
+      "startedAt": "2026-09-26T06:40:00.000Z",
+      "finishedAt": "2026-09-26T06:42:00.000Z",
+      "commandOrMethod": "grep em-dash on claimed files + git diff added-line sibling sweep",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/clnb-emdash-verify.log",
+      "artifactHash": "048a9df2ebd798f035d4ace73fe45a3ed02b9f003f98e4b82921ddfc2d865e40",
+      "claims": [
+        "claimed em-dash sites stripped at dbfc888a",
+        "sibling sweep: remaining diff-added em-dashes are strings/test names, not comments"
+      ],
+      "invariantIds": [],
+      "limitations": [],
+      "status": "CURRENT",
+      "inputEvidenceIds": [],
+      "inputPaths": []
     }
   ],
   "coverage": [],
@@ -12877,6 +13063,63 @@
       ],
       "novelAttackIds": [],
       "status": "STALE"
+    },
+    {
+      "id": "REV-TT-CLNC-COR",
+      "state": {
+        "productStateId": "d2e45be7f1e8e723acec32887e668869c0994079a30670b6bcb4127068cd825b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 41,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-c352264074444f73b43945738fdbcc35",
+      "contextId": "sealed-child-c352264074444f73b43945738fdbcc35",
+      "model": "swe-2-max",
+      "role": "CORRECTNESS",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T05:49:00.000Z",
+      "sealedAt": "2026-09-26T06:36:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLNB-COR",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TT-CLNC-AUT",
+      "state": {
+        "productStateId": "d2e45be7f1e8e723acec32887e668869c0994079a30670b6bcb4127068cd825b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 42,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-b66e7ff79bc54ee18056ef6b9bef87fd",
+      "contextId": "sealed-child-b66e7ff79bc54ee18056ef6b9bef87fd",
+      "model": "swe-2-max",
+      "role": "AUTHORITY",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T05:49:00.000Z",
+      "sealedAt": "2026-09-26T06:36:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLNB-AUT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TT-CLNC-AUT-1",
+        "F-TT-CLNC-AUT-2"
+      ],
+      "novelAttackIds": [],
+      "status": "FINDINGS"
     }
   ],
   "cycles": [
@@ -16872,6 +17115,33 @@
       "findingIds": [
         "F-TT-CLNB-AUT-1",
         "F-TT-CLNB-AUT-2"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-80",
+      "rootClass": "doc-drift",
+      "escapeReason": "em-dash class fix swept the flagged files but missed same-class comment sites in other files — sibling sweeps must enumerate the whole diff, not the cited locations",
+      "capabilityDelta": "sibling sweep = full git-diff added-line grep",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLNB-AUT-1",
+        "F-TT-CLNC-AUT-1"
       ]
     }
   ],

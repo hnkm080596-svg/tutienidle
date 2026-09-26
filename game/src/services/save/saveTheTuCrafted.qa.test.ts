@@ -10,7 +10,7 @@ import type { CultivationPathRuntimeDeps } from '../../core/player/CultivationPa
 import { getNodeLevel } from '../../core/progression/NodeSystem'
 import type { Technique } from '../../core/technique/Technique'
 
-// QA ROUND B (integration/adversarial) — crafted-save probes against the
+// QA ROUND B (integration/adversarial) - crafted-save probes against the
 // the-tu beta tree. The save boundary already audits node canonicality
 // (D9d/D9f grant<->core coherence, core level caps, mirror membership).
 // These tests pin the INVARIANTS a crafted payload could violate that the
@@ -57,7 +57,7 @@ function craftedSave(player: PlayerData): Record<string, unknown> {
   }
 }
 
-describe('crafted v85 save — the-tu node canonicality (QA round B)', () => {
+describe('crafted v85 save - the-tu node canonicality (QA round B)', () => {
   it('rejects a save owning BOTH mutex roots (cuong_chien + tran_the)', () => {
     const save = craftedSave(
       craftedPlayer({
