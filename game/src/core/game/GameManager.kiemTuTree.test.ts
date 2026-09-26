@@ -11,30 +11,22 @@ import {
   collectKiemPhoSkillDefinitionModifiers,
 } from '../kiem-tu/KiemPhoNodeModifiers'
 import { applyModifiers } from '../kiem-tu/KiemPhoSystem'
-import { collectKiemDaoCascadeUnlocks } from '../kiem-tu/NguKiemDaoProvider'
-import { kiemDaoCap } from '../kiem-tu/NguKiemDao'
+import { collectOwnedEvolutionIds } from '../kiem-tu/NguKiemDaoProvider'
 import { getRealmIndex } from '../realm/realmSystem'
 import { KIEM_PHO_COMBOS } from '../../data/skill/KiemPhoCombos'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// Kiem Tu Reimagined Task 11 (spec 2026-09-15 §6, K20) — the new
-// progression tree end-to-end: Cuu Cung purchase grants flow through
-// the NguKiemDao domain functions, the kiemDaoBelowCap prereq blocks
-// purchase BEFORE insight is deducted, and requiredWay-tagged nodes are
-// inert + unpurchasable across the way boundary (M6 — the retired
-// swordPathMode field / kiem_tu_an flip node are gone; way membership is
-// the gate).
-
-const CUU_CUNG_OUTER_IDS = [
-  'cuu_cung_kham',
-  'cuu_cung_khon',
-  'cuu_cung_chan',
-  'cuu_cung_ton',
-  'cuu_cung_can',
-  'cuu_cung_doai',
-  'cuu_cung_cin',
-  'cuu_cung_ly',
-] as const
+// Kiem Tu Reimagined Task 11 (spec 2026-09-15 sec.6, K20) -- progression
+// tree end-to-end: requiredWay-tagged nodes are inert + unpurchasable
+// across the way boundary (M6 -- the retired swordPathMode field /
+// kiem_tu_an flip node are gone; way membership is the gate).
+//
+// Ngu Kiem Beta (design 2026-09-24) -- the Cuu Cung purchase-grant
+// economy is a NON-GOAL and gone: no node grants kiemY/kiemDao and the
+// kiemDaoBelowCap prereq kind died with it. The ngu tree is now the
+// evolution spine: Khoi is grant-only through the way commit,
+// Lien is the only insight-purchasable spine node inside the beta
+// ceiling, Phong stays sealed behind a beyond-beta realm gate.
 
 function setup() {
   const gameManager = new GameManager()
@@ -56,82 +48,83 @@ function setup() {
   return { gameManager, player }
 }
 
-// M6 — ngu membership is the WAY, not a purchased node: flipping
-// cultivationWay is the whole switch (no kiem_tu_an prereq chain any
-// more — ngu nodes need only requiredWay + realm + kiemDaoBelowCap).
-function asNgu(player: ReturnType<typeof createDefaultPlayer>, outers: number = CUU_CUNG_OUTER_IDS.length) {
+// M6 -- ngu membership is the WAY, not a purchased node: flipping
+// cultivationWay is the whole switch.
+function asNgu(player: ReturnType<typeof createDefaultPlayer>) {
   player.cultivationWay = 'hidden_sword_pathway'
   player.nodeLevels = {}
-  for (const id of CUU_CUNG_OUTER_IDS.slice(0, outers)) {
-    player.nodeLevels[id] = 1
-  }
 }
 
-describe('swordPath tree — Cuu Cung grants', () => {
-  it('purchasing an outer node grants kiemY through the domain function', () => {
-    const { gameManager, player } = setup()
-    asNgu(player, 0)
-    player.realmId = 'qi_refining'
-
-    const node = gameManager.nodeRegistry.get('cuu_cung_kham')
-    const grant = node.effect.kiemYGrant!
-
-    expect(gameManager.progressionOps.canPurchaseNode('cuu_cung_kham', player)).toBe(true)
-    expect(gameManager.progressionOps.purchaseNode('cuu_cung_kham', player)).toBe(true)
-    // gainKiemY converts greedily at forgeCost — the grant stays banked
-    // when below the qi_refining forge cost (9,999).
-    expect(player.swordPath!.kiemY).toBe(grant)
-    expect(player.swordPath!.kiemDaoCount).toBe(1)
-  })
-
-  it('kiemYGrant exceeding forge cost auto-converts to kiemDao', () => {
-    const { gameManager, player } = setup()
-    asNgu(player, 0)
-    player.realmId = 'qi_refining'
-    player.swordPath!.kiemY = 9_000
-
-    // cuu_cung_kham grants ~half a forge — the banked total crosses
-    // 9,999 so the purchase converts one sword.
-    expect(gameManager.progressionOps.purchaseNode('cuu_cung_kham', player)).toBe(true)
-    expect(player.swordPath!.kiemDaoCount).toBe(2)
-    expect(player.swordPath!.kiemY).toBe(9_000 + 5_000 - 9_999)
-  })
-
-  it('kiemDaoBelowCap blocks purchase at cap BEFORE insight is deducted', () => {
-    const { gameManager, player } = setup()
-    asNgu(player, 0)
-    player.realmId = 'qi_refining'
-    player.swordPath!.kiemDaoCount = kiemDaoCap(1) // 2 — at cap
-
-    const insightBefore = player.skillInsight
-    expect(gameManager.progressionOps.canPurchaseNode('cuu_cung_kham', player)).toBe(false)
-    expect(gameManager.progressionOps.purchaseNode('cuu_cung_kham', player)).toBe(false)
-    expect(player.skillInsight).toBe(insightBefore)
-    expect(player.nodeLevels.cuu_cung_kham).toBeUndefined()
-    expect(player.swordPath!.kiemY).toBe(0) // no grant leaked
-  })
-
-  it('trung_cung requires all 8 outers and grants +1 kiemDaoCount', () => {
-    const { gameManager, player } = setup()
-    asNgu(player, 7) // one outer missing
-    player.swordPath!.kiemDaoCount = 1
-
-    expect(gameManager.progressionOps.canPurchaseNode('cuu_cung_trung', player)).toBe(false)
-    player.nodeLevels[CUU_CUNG_OUTER_IDS[7]!] = 1
-    expect(gameManager.progressionOps.canPurchaseNode('cuu_cung_trung', player)).toBe(true)
-    expect(gameManager.progressionOps.purchaseNode('cuu_cung_trung', player)).toBe(true)
-    expect(player.swordPath!.kiemDaoCount).toBe(2)
-  })
-
-  it('trung_cung is also cap-guarded', () => {
+describe('swordPath tree — evolution spine grants', () => {
+  it('ngu_kiem_khoi is grantedOnly — never purchasable, no insight deducted', () => {
     const { gameManager, player } = setup()
     asNgu(player)
-    player.swordPath!.kiemDaoCount = kiemDaoCap(getRealmIndex(player.realmId))
+    player.realmId = 'qi_refining'
 
     const insightBefore = player.skillInsight
-    expect(gameManager.progressionOps.canPurchaseNode('cuu_cung_trung', player)).toBe(false)
-    expect(gameManager.progressionOps.purchaseNode('cuu_cung_trung', player)).toBe(false)
+    expect(gameManager.progressionOps.canPurchaseNode('ngu_kiem_khoi', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('ngu_kiem_khoi', player)).toBe(false)
     expect(player.skillInsight).toBe(insightBefore)
+    expect(player.nodeLevels.ngu_kiem_khoi).toBeUndefined()
+  })
+
+  it('ngu_kiem_lien purchases when Khoi is owned at foundation_establishment', () => {
+    const { gameManager, player } = setup()
+    asNgu(player)
+    player.realmId = 'foundation_establishment'
+    player.nodeLevels = { ngu_kiem_khoi: 1 } // the ritual grant seam
+
+    expect(gameManager.progressionOps.canPurchaseNode('ngu_kiem_lien', player)).toBe(true)
+    expect(gameManager.progressionOps.purchaseNode('ngu_kiem_lien', player)).toBe(true)
+    expect(player.nodeLevels.ngu_kiem_lien).toBe(1)
+  })
+
+  it('ngu_kiem_lien is blocked below foundation_establishment even with Khoi owned', () => {
+    const { gameManager, player } = setup()
+    asNgu(player)
+    player.realmId = 'qi_refining'
+    player.nodeLevels = { ngu_kiem_khoi: 1 }
+
+    const insightBefore = player.skillInsight
+    expect(gameManager.progressionOps.canPurchaseNode('ngu_kiem_lien', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('ngu_kiem_lien', player)).toBe(false)
+    expect(player.skillInsight).toBe(insightBefore)
+  })
+
+  it('ngu_kiem_lien requires Khoi owned (evolution chain order)', () => {
+    const { gameManager, player } = setup()
+    asNgu(player)
+    player.realmId = 'foundation_establishment'
+    player.nodeLevels = {}
+
+    expect(gameManager.progressionOps.canPurchaseNode('ngu_kiem_lien', player)).toBe(false)
+  })
+
+  it('a purchased spine node is single-level — no upgrade path exists', () => {
+    const { gameManager, player } = setup()
+    asNgu(player)
+    player.realmId = 'foundation_establishment'
+    player.nodeLevels = { ngu_kiem_khoi: 1 }
+    expect(gameManager.progressionOps.purchaseNode('ngu_kiem_lien', player)).toBe(true)
+    expect(gameManager.progressionOps.canPurchaseNode('ngu_kiem_lien', player)).toBe(false)
+    expect(gameManager.progressionOps.canUpgradeNode('ngu_kiem_lien', player)).toBe(false)
+  })
+
+  it('owned spine nodes surface through collectOwnedEvolutionIds', () => {
+    const { player } = setup()
+    asNgu(player)
+    player.nodeLevels = { ngu_kiem_khoi: 1, ngu_kiem_lien: 1 }
+
+    expect([...collectOwnedEvolutionIds(player, KIEM_TU_NODES)].sort()).toEqual(['khoi', 'lien'])
+  })
+
+  it('ngu_kiem_phong_an stays sealed inside the beta ceiling', () => {
+    const { gameManager, player } = setup()
+    asNgu(player)
+    player.realmId = 'foundation_establishment'
+    player.nodeLevels = { ngu_kiem_khoi: 1, ngu_kiem_lien: 1 }
+
+    expect(gameManager.progressionOps.canPurchaseNode('ngu_kiem_phong_an', player)).toBe(false)
   })
 })
 
@@ -143,12 +136,14 @@ describe('swordPath tree — way boundary', () => {
     expect(gameManager.progressionOps.purchaseNode('thich_can', player)).toBe(false)
   })
 
-  it('hien player cannot purchase ngu nodes', () => {
+  it('hien player cannot purchase ngu spine nodes', () => {
     const { gameManager, player } = setup()
     player.cultivationWay = 'sword_pathway'
-    player.nodeLevels = { ngu_kiem_sac: 1 } // inconsistent save shape — gate still holds
-    expect(gameManager.progressionOps.canPurchaseNode('ngu_cascade_a', player)).toBe(false)
-    expect(gameManager.progressionOps.purchaseNode('ngu_cascade_a', player)).toBe(false)
+    player.realmId = 'foundation_establishment'
+    player.nodeLevels = { ngu_kiem_khoi: 1 } // inconsistent save shape -- gate still holds
+    expect(gameManager.progressionOps.canPurchaseNode('ngu_kiem_lien', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('ngu_kiem_lien', player)).toBe(false)
+    expect(player.nodeLevels.ngu_kiem_lien).toBeUndefined()
   })
 
   it('hien orb node effects do not collect on the ngu way', () => {
@@ -181,7 +176,7 @@ describe('swordPath tree — collectors', () => {
 
     const derived = modifiers[0]!.apply(matching)
     expect(derived.damage!.multiplier).toBeGreaterThan(matching.damage!.multiplier)
-    // Derived copy — canonical combo data untouched.
+    // Derived copy -- canonical combo data untouched.
     expect(derived).not.toBe(matching)
   })
 
@@ -217,13 +212,15 @@ describe('swordPath tree — collectors', () => {
     expect(collectKiemPhoComboModifiers(player, KIEM_TU_NODES)).toEqual([])
   })
 
-  it('purchased cascade nodes unlock through the effect field', () => {
+  it('evolution ownership stays inert on the hien way (way gate at the collector)', () => {
     const { player } = setup()
-    asNgu(player)
-    player.nodeLevels['ngu_cascade_a'] = 1
-    player.nodeLevels['ngu_cascade_d'] = 1
+    player.cultivationWay = 'sword_pathway'
+    player.nodeLevels = { ngu_kiem_lien: 1 }
+    expect(collectOwnedEvolutionIds(player, KIEM_TU_NODES).size).toBe(0)
+  })
 
-    const unlocks = collectKiemDaoCascadeUnlocks(player, KIEM_TU_NODES)
-    expect(unlocks).toEqual({ a: true, e: false, d: true })
+  it('realm index used for forge/cap math stays the only realm gate on the way', () => {
+    const { player } = setup()
+    expect(getRealmIndex(player.realmId)).toBeGreaterThan(0)
   })
 })

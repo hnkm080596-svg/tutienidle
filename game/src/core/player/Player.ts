@@ -365,8 +365,6 @@ export interface FormationSlotAssignment {
  * field nao fire moi duoc ghi (learnSkill tra true moi vao danh sach). */
 export interface NodeOneShotGrantRecord {
   learnedSkillIds?: string[]
-  kiemY?: number
-  kiemDao?: number
   specializationSkillId?: string
   specializationId?: string
 }

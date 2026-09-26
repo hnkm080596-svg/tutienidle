@@ -8,7 +8,7 @@ import {
   nodeWayApplies,
   purchaseNode,
 } from './NodeSystem'
-import { collectKiemDaoCascadeUnlocks } from '../kiem-tu/NguKiemDaoProvider'
+import { collectOwnedEvolutionIds } from '../kiem-tu/NguKiemDaoProvider'
 import { collectKiemPhoComboModifiers } from '../kiem-tu/KiemPhoNodeModifiers'
 import { collectBodyKitModifiers } from '../the-tu/TheTuKitModifiers'
 import { collectHiddenBodyMechanicModifiers } from '../the-tu/TheTuAnMechanicModifiers'
@@ -145,18 +145,18 @@ describe('requiredWay — domain collectors honor the same gate', () => {
     expect(collectKiemPhoComboModifiers(ngu, [node])).toHaveLength(1)
   })
 
-  it('collectKiemDaoCascadeUnlocks skips a way-mismatched node even with owned levels', () => {
+  it('collectOwnedEvolutionIds skips a way-mismatched node even with owned levels', () => {
     const node = minorNode({
-      id: 'ngu_cascade_node',
+      id: 'ngu_evolution_node',
       requiredWay: 'hidden_sword_pathway',
-      effect: { cascadeUnlock: 'a' },
+      effect: { evolutionId: 'lien' },
     })
 
-    const hien = playerWith({ cultivationPath: 'sword', cultivationWay: 'sword_pathway', nodeLevels: { ngu_cascade_node: 1 } })
-    expect(collectKiemDaoCascadeUnlocks(hien, [node])).toEqual({ a: false, e: false, d: false })
+    const hien = playerWith({ cultivationPath: 'sword', cultivationWay: 'sword_pathway', nodeLevels: { ngu_evolution_node: 1 } })
+    expect([...collectOwnedEvolutionIds(hien, [node])]).toEqual([])
 
-    const ngu = playerWith({ cultivationPath: 'sword', cultivationWay: 'hidden_sword_pathway', nodeLevels: { ngu_cascade_node: 1 } })
-    expect(collectKiemDaoCascadeUnlocks(ngu, [node])).toEqual({ a: true, e: false, d: false })
+    const ngu = playerWith({ cultivationPath: 'sword', cultivationWay: 'hidden_sword_pathway', nodeLevels: { ngu_evolution_node: 1 } })
+    expect([...collectOwnedEvolutionIds(ngu, [node])]).toEqual(['lien'])
   })
 
   it('collectBodyKitModifiers / collectHiddenBodyMechanicModifiers skip way-mismatched nodes', () => {

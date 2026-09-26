@@ -268,10 +268,13 @@ export interface TurnSkillDefinition {
    * the target dies. `perInstanceOptions` is called per (instance, live
    * target) so the provider can resolve execute/crit/armor rolls against
    * the CURRENT target state (not a declare-time snapshot).
+   * `priorLandedInstances` is the cast-local count of landed prior
+   * instances of this cast -- pure runtime state supplied by the
+   * instance loop, spanning targets (Ngu Kiem Beta: Kiem The momentum).
    */
   instances?: {
     count: number
-    perInstanceOptions?: (instanceIndex: number, target: CombatEntity) => Partial<HitResolveOptions>
+    perInstanceOptions?: (instanceIndex: number, target: CombatEntity, priorLandedInstances: number) => Partial<HitResolveOptions>
     /**
      * Skill-definition migration (M4) -- the DECLARATIVE form of
      * perInstanceOptions. Providers emit BOTH: the closure stays the
@@ -279,12 +282,16 @@ export interface TurnSkillDefinition {
      * LegacySkillAdapter -> SkillInstances.each so the plan pipeline
      * carries the same policies declaratively (hit/crit/armor policies
      * on the v1.6 contract payload, execute as a coefficient fold).
+     * `momentumPerLandedInstance` models the same Kiem The stack
+     * `priorLandedInstances` carries for the closure lane: instance N's
+     * coefficient folds (1 + rate * landed-prior-instances).
      */
     each?: {
       guaranteedHit?: boolean
       execute?: { hpPercentBelow: number; damageMultiplier: number }
       critChance?: number
       armorPierce?: { bypassChance: number; pierceFraction: number }
+      momentumPerLandedInstance?: number
     }
   }
   /**
@@ -305,9 +312,8 @@ export interface TurnSkillDefinition {
   damageBonusPerPaidHpPoint?: number
   /**
    * Emblem-occupying slot def: never selectable by
-   * selectAction/selectForcedAction, never deals damage. Two producers:
-   * - Kiem Tu Reimagined Task 9 - Ngu Kiem Dao HUD emblem markers render
-   *   on the bar as slot occupants for presentation to label.
+   * selectAction/selectForcedAction, never deals damage. Producers:
+   * - (retained contract; the Ngu Kiem redesign removed emblem markers - no current producer)
    * - The Tu Reimagined (spec 2026-09-15 section 5.2) - passive emblems;
    *   their permanent buff lands via grantsBuffsAtBuild.
    */

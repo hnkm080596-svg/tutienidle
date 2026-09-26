@@ -294,7 +294,7 @@ export class TurnSkillPlanRuntime {
   }
 
   /** Provider-returned extra impact (dynamicBasic onCastResolved --
-      Kiem Tu combo payloads / Ngu Kiem Dao cascade extras). The def
+      Kiem Tu combo payloads). The def
       resolves VERBATIM as a non-committing plan: extras are inline
       lanes of the parent cast -- no commit, no cost, no cooldown --
       and TBS owns their target collection (taunt/opposingSide reads

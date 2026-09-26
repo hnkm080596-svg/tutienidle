@@ -41,7 +41,7 @@ export interface CultivationPathRuntime {
   /**
    * Kiem Tu sword_pathway/hidden_sword_pathway dynamic-basic provider - undefined for other paths.
    * `rng` is the session battle RNG (Mission C Task 8): provider-side
-   * rolls (Ngu cascade-crit/pierce) must not fall back to Math.random.
+   * rolls must not fall back to Math.random.
    */
   buildDynamicBasic?(
     player: PlayerData,
@@ -55,7 +55,7 @@ export interface CultivationPathRuntime {
     participant: TurnBattleParticipant,
     hasActiveBuff: (definitionId: BuffDefinitionId) => boolean,
   ): SurviveLethalSource[]
-  /** Emblem/marker slot overrides (Ngu Kiem Dao special/ultimate). */
+  /** Emblem/marker slot overrides (retained contract - no current producer). */
   emblemSlots?(): { special?: TurnSkillDefinition; ultimate?: TurnSkillDefinition }
   /**
    * P7-M4 - presentation-only label for a provider-backed basic (the

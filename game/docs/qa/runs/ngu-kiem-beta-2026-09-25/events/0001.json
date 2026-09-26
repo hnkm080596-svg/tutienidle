@@ -1,0 +1,14 @@
+{
+  "phase": "INTAKE",
+  "request": {
+    "runId": "ngu-kiem-beta-2026-09-25",
+    "productRoot": ".",
+    "goal": "Ngu Kiem beta: evolution redesign — Khoi (phi-kiem instances) + Lien (cast-local momentum) + evolution spine 3-node chain + KiemY forge economy + name resolver + grantedOnly grant seam; beta ceiling foundation_establishment",
+    "requiredReadiness": true,
+    "contractPaths": [
+      "docs/qa/protocol/README.md",
+      "docs/specs/ngu-kiem-beta-spec.md"
+    ],
+    "attackModelPath": "attack-model.json"
+  }
+}

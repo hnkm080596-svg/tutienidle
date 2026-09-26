@@ -201,7 +201,6 @@
           "skillCastCount": "{count} casts",
           "skillJoin": "and",
           "skill": "Requires {skill} at {requirement}",
-          "kiemDaoCap": "Flying swords at the realm cap",
           "techniqueRank": "Requires technique rank {rank}",
           "techniqueGrade": "Requires technique grade {grade}",
           "skillUpgrade": "Upgrade the related skill"
@@ -221,6 +220,9 @@
         "aria": "Center column view",
         "tree": "Node Tree",
         "detail": "Detail"
+      },
+      "list": {
+        "evolution": "Evolution: {name}"
       },
       "detail": {
         "empty": "Select a skill to view details.",
@@ -289,7 +291,7 @@
           "hintPrefix": "Sword Cultivator specialization:",
           "hintSuffix": ".",
           "hienDescription": "Kiếm Phổ — preset up to nine sword seals; each basic attack plays the next seal, and seal chains matching the manual burst into combo strikes.",
-          "nguDescription": "Ngự Kiếm Đạo — myriad swords under one will, each flying sword an independent strike; accumulated Sword Intent forges permanent Sword Dao."
+          "nguDescription": "Ngự Kiếm — flying swords strike one at a time in order; Sword Intent forges Sword Dao, and each new realm opens the next evolution tier."
         },
         "kiemPhoPreset": {
           "title": "Kiếm Phổ — Seal Sequence",

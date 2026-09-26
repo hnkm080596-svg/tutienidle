@@ -1,20 +1,25 @@
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
-import { createDefaultPlayer, type PlayerData } from '../player/Player'
+import { createDefaultPlayer } from '../player/Player'
 import { ManualClockSource } from '../battle/turn/CombatClock'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import { freshSwordPathState } from '../kiem-tu/KiemTuState'
-import { forgeCost } from '../kiem-tu/NguKiemDao'
-import { getRealmIndex } from '../realm/realmSystem'
+import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { SKILLS } from '../../data/skill/Skills'
 import { PHAP_TU_SKILLS } from '../../data/skill/PhapTuChainSkills'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 
 // F-W-2 (v82) - respec/devReset/switchRoute thu hoi dung cac one-shot
-// grant ma node bi revoke da phat (skill unlock + core refund, kiemY/
-// kiemDao absorb, specialization), nho provenance trong
-// player.nodeOneShotGrants. Truoc v82 respec hoan 100% Insight nhung
-// bo quen grant -> exploit ren kiem/skill mien phi.
+// grant ma node bi revoke da phat (skill unlock + core refund,
+// specialization), nho provenance trong player.nodeOneShotGrants.
+// Truoc v82 respec hoan 100% Insight nhung bo quen grant -> exploit
+// ren kiem/skill mien phi.
+//
+// Ngu Kiem Beta: the kiemY/kiemDao one-shot grant channel died with
+// the Cuu Cung economy -- kiemY only ever accrues through casts
+// (provider), so no node can grant it and no clawback exists for it.
+// The evolution spine rides the RESPEC_PRESERVED list instead (design
+// sec.28: evolution is a progression layer, not a build toggle).
 
 function node(overrides: Partial<ProgressionNode> = {}): ProgressionNode {
   return {
@@ -86,31 +91,38 @@ describe('progressionOps respec one-shot clawback (F-W-2)', () => {
     expect(gameManager.skillManager.has('linh_bao')).toBe(true)
   })
 
-  it('respec claws back kiemY through loseKiemY - pool debit then sword absorb', () => {
-    const grantNode = node({ id: 'grant_y', effect: { kiemYGrant: 50 } })
-    const { gameManager, player } = setup([grantNode])
+  it('respec never revokes the evolution spine (sec.28 — not a build toggle)', () => {
+    const { gameManager, player } = setup(KIEM_TU_NODES)
 
     player.cultivationPath = 'sword'
     player.cultivationWay = 'hidden_sword_pathway'
     player.swordPath = freshSwordPathState()
-    player.realmId = 'qi_refining'
+    player.realmId = 'foundation_establishment'
+    // Grant + purchase states a real player can reach.
+    player.nodeLevels = { ngu_kiem_khoi: 1, ngu_kiem_lien: 1 }
 
-    expect(gameManager.progressionOps.purchaseNode('grant_y', player)).toBe(true)
-    expect(player.nodeOneShotGrants['grant_y']?.kiemY).toBe(50)
-    expect(player.swordPath.kiemY).toBe(50)
+    const refund = gameManager.progressionOps.respecNodeTree(player)
 
-    // Drop the pool below the recorded grant so loseKiemY owes swords:
-    // residual 40 < forgeCost(qi_refining)=9999 absorbs exactly 1 sword.
-    player.swordPath.kiemY = 10
-    player.swordPath.kiemDaoCount = 3
-    const cost = forgeCost(getRealmIndex(player.realmId))
-    expect(cost).toBe(9999)
+    // Both spine nodes survive untouched; nothing was revoked so no
+    // refund carries spine cost.
+    expect(player.nodeLevels.ngu_kiem_khoi).toBe(1)
+    expect(player.nodeLevels.ngu_kiem_lien).toBe(1)
+    expect(refund).toBe(0)
+  })
 
-    gameManager.progressionOps.respecNodeTree(player)
+  it('respec preview also preserves the spine (same preserveIds seam)', () => {
+    const { gameManager, player } = setup(KIEM_TU_NODES)
 
-    expect(player.swordPath.kiemY).toBe(0)
-    expect(player.swordPath.kiemDaoCount).toBe(2)
-    expect(player.nodeOneShotGrants['grant_y']).toBeUndefined()
+    player.cultivationPath = 'sword'
+    player.cultivationWay = 'hidden_sword_pathway'
+    player.swordPath = freshSwordPathState()
+    player.realmId = 'foundation_establishment'
+    player.nodeLevels = { ngu_kiem_khoi: 1, ngu_kiem_lien: 1 }
+
+    const preview = gameManager.progressionOps.previewNodeRespec(player)
+
+    expect(preview.resetNodeIds).not.toContain('ngu_kiem_khoi')
+    expect(preview.resetNodeIds).not.toContain('ngu_kiem_lien')
   })
 
   it('respec clears a node-applied specialization', () => {

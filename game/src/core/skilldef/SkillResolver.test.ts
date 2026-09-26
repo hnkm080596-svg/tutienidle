@@ -488,6 +488,91 @@ describe('SkillResolver -- expressions, conditions, plan IR', () => {
   })
 })
 
+describe('SkillResolver -- instances.each.momentumPerLandedInstance (Kiem The plan lane)', () => {
+  // Ngu Kiem Beta: the PRODUCTION lane (tryPlanCast -> this resolver)
+  // emits an ops_result_sum 'landed' read over prior instance opIds
+  // and folds (1 + rate*landed) as the LAST coefficient factor. The
+  // engine-unit lane pins cover the runtime===undefined fallback only.
+  const momentumDef = () =>
+    activeDef({
+      instances: { count: 3, each: { momentumPerLandedInstance: 0.15 } },
+    })
+
+  const collect = (plan: ResolvedSkillPlan) => {
+    const reads: Extract<ResolvedSkillPlanStep, { kind: 'read' }>[] = []
+    const ops: Extract<ResolvedSkillPlanStep, { kind: 'operation' }>[] = []
+    const walk = (steps: readonly ResolvedSkillPlanStep[]): void => {
+      for (const step of steps) {
+        if (step.kind === 'read') reads.push(step)
+        if (step.kind === 'operation') ops.push(step)
+        if (step.kind === 'branch') {
+          walk(step.then)
+          if (step.else !== undefined) walk(step.else)
+        }
+      }
+    }
+    walk(plan.steps)
+    return { reads, ops }
+  }
+
+  it('emits an ops_result_sum landed read per instance >= 1, scoped to prior instance opIds', () => {
+    const plan = resolve([momentumDef()])
+    const { reads, ops } = collect(plan)
+    expect(ops).toHaveLength(3)
+    const momentumReads = reads.filter((r) => r.query.query === 'ops_result_sum')
+    expect(momentumReads).toHaveLength(2)
+    for (const read of momentumReads) {
+      if (read.query.query !== 'ops_result_sum') throw new Error('unreachable')
+      expect(read.query.field).toBe('landed')
+    }
+    // Instance 1 reads exactly the first hit's opIds; instance 2 reads
+    // the first TWO hits' opIds -- cast-local accumulation, scoped to
+    // PRIORS only (a shared live array would leak this instance's own
+    // + future hit opIds into the read).
+    const hitIds = ops.map((o) => o.operation.operationId)
+    if (
+      momentumReads[0]!.query.query !== 'ops_result_sum' ||
+      momentumReads[1]!.query.query !== 'ops_result_sum'
+    ) throw new Error('unreachable')
+    expect(momentumReads[0]!.query.operationIds).toEqual([hitIds[0]])
+    expect(momentumReads[1]!.query.operationIds).toEqual([hitIds[0], hitIds[1]])
+  })
+
+  it('folds (1 + rate x landedPriorInstances) into the hit coefficient as the LAST factor via late binding', () => {
+    const plan = resolve([momentumDef()])
+    const { ops, reads } = collect(plan)
+    // Instance 0 has no priors: coefficient stays folded.
+    if (ops[0]!.operation.type !== 'deal_damage') throw new Error('unreachable')
+    expect(ops[0]!.operation.payload.coefficient).toBe(2)
+    // Instances >=1: coefficient is late-bound to a
+    // multiply(base, 1 + rate*var(kthe_N)) expression.
+    const varNames = reads.filter((r) => r.query.query === 'ops_result_sum').map((r) => r.into)
+    for (const [i, opStep] of ops.slice(1).entries()) {
+      if (opStep.operation.type !== 'deal_damage') throw new Error('unreachable')
+      expect(opStep.operation.payload.coefficient).toBe(0)
+      const late = opStep.late ?? []
+      const coeffBinding = late.find((b) => b.field === 'coefficient')
+      expect(coeffBinding, 'hit must carry a coefficient late binding').toBeDefined()
+      expect(coeffBinding!.expr).toEqual({
+        op: 'multiply',
+        values: [
+          2,
+          {
+            op: 'add',
+            values: [
+              1,
+              {
+                op: 'multiply',
+                values: [{ query: 'var', name: varNames[i] }, 0.15],
+              },
+            ],
+          },
+        ],
+      })
+    }
+  })
+})
+
 describe('SkillResolver -- instances + consume lanes', () => {
   it('expands instances.count per target and stamps each.* policies', () => {
     const def = activeDef({

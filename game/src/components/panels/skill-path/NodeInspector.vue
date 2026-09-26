@@ -134,8 +134,6 @@ function nodePrereqReason(prereq: NodePrerequisite): string {
       skill: skillName,
       requirement,
     })
-  } else if (prereq.kind === 'kiemDaoBelowCap') {
-    return t('panels.skillPath.nodeInspector.lockedReasons.kiemDaoCap')
   } else if (prereq.kind === 'techniqueRank') {
     return t('panels.skillPath.nodeInspector.lockedReasons.techniqueRank', {
       rank: prereq.rank,
@@ -266,7 +264,7 @@ function onUpgrade() {
       <div class="node-inspector__header">
         <span class="node-inspector__name">{{ node.name }}</span>
 
-        <!-- Badge `Cấp x/max` cho node nhiều cấp (plan §6.2). -->
+        <!-- Badge `Cap x/max` cho node nhieu cap (plan sec.6.2). -->
         <span v-if="maxLevel > 1" class="node-inspector__level">{{ level }}/{{ maxLevel }}</span>
 
         <span
@@ -329,8 +327,11 @@ function onUpgrade() {
           {{ t('panels.skillPath.nodeInspector.actions.unlock') }}
         </GameButton>
 
+        <!-- Ngu Kiem Beta: `level < maxLevel`, not `!isMaxed` -- a
+             single-level owned node (evolution layer, maxLevel 1) shows
+             only the purchased status, never an upgrade button. -->
         <GameButton
-          v-else-if="!isMaxed"
+          v-else-if="level < maxLevel"
           class="node-inspector__buy"
           size="sm"
           :disabled="!upgradable || inBattle"
@@ -341,8 +342,8 @@ function onUpgrade() {
       </div>
     </template>
 
-    <!-- Blocking route pick (spec §3.3 + plan Task 16: "blocking
-         choice, no dismiss") — element+route commit atomically via
+    <!-- Blocking route pick (spec sec.3.3 + plan Task 16: "blocking
+         choice, no dismiss") -- element+route commit atomically via
          selectSpellPathElement; the modal only collects input, it is not
          the guarantee. No cancel: the element root was clicked
          deliberately, the route half is mandatory. -->

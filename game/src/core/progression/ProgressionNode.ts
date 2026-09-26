@@ -34,12 +34,6 @@ export type NodePrerequisite =
   // `level` AND accumulate `count` casts (reads PlayerData.skillCastCounts,
   // the save source of truth).
   | { kind: 'skillCastCount'; skillId: string; level?: number; count?: number }
-  // Kiem Tu Reimagined (spec K20) - Cuu Cung preflight: holds only while
-  // the player is in hidden_sword_pathway mode AND kiemDaoCount < kiemDaoCap(realmIndex).
-  // Evaluated inside canPurchaseNode, so a capped sword pool blocks the
-  // purchase BEFORE insight is deducted - including the Y-grant outer
-  // nodes (no Y may accumulate past cap).
-  | { kind: 'kiemDaoBelowCap' }
   // P7-M6 - technique-gated prerequisites. `>=` threshold semantics like
   // kind:'realm' (progression gate, purchase-only - a bought node stays
   // bought even though advanceTechniqueGrade resets rank to 0). Reads
@@ -88,20 +82,12 @@ export interface NodeEffect {
   // resolveMaxThe(); maxThe is never persisted on PlayerData.
   theCapPerLevel?: number
 
-  // Kiem Tu Reimagined (spec sec.6, Cuu Cung) - lump Kiem Y granted ONCE
-  // at purchase through gainKiemY() (the domain owner - conversion and
-  // the cap rule live there; nodes never touch player.swordPath).
-  kiemYGrant?: number
-
-  // Kiem Tu Reimagined (spec sec.5.4, Trung Cung) - direct +N kiemDaoCount
-  // at purchase through grantKiemDao() (clamped at the realm cap; the
-  // kiemDaoBelowCap prereq should already have blocked a capped buy).
-  kiemDaoGrant?: number
-
-  // Kiem Tu Reimagined (spec sec.5.2 Roll Cascade) - purchasing unlocks
-  // one cascade slot; the Ngu provider reads these via
-  // collectKiemDaoCascadeUnlocks (effect-driven - node id is free).
-  cascadeUnlock?: 'a' | 'e' | 'd'
+  // Ngu Kiem Beta - DATA form of an evolution layer: a node carrying
+  // this field marks an owned evolution tier of the hidden way's single
+  // evolving skill. The Ngu provider collects these ids via
+  // collectOwnedEvolutionIds (effect-driven - node id is free); the
+  // combat layer stays node-agnostic (design sec.52).
+  evolutionId?: string
 
   // Kiem Tu Reimagined (spec sec.4.2) - DATA form of a combo capstone.
   // KiemPhoNodeModifiers converts purchased nodes carrying this field
@@ -330,6 +316,16 @@ export interface ProgressionNode {
    * TurnSkillDefinition.progressionOwnerId instead.
    */
   levelsSkillId?: string
+
+  /**
+   * Ngu Kiem Beta - ownership-by-grant flag: the node is written only by
+   * an explicit grant seam (e.g. the Initiation Ritual's
+   * `grantedNodeIds` loop via `grantSkillCore`), never by Insight
+   * purchase (`canPurchaseNode`/`canUpgradeNode` reject). Levels are
+   * authored `maxLevel` semantics as usual; nothing about the flag
+   * changes aggregation - owned is owned.
+   */
+  grantedOnly?: boolean
 }
 
 /**

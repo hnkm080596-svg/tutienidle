@@ -2225,6 +2225,11 @@ export class TurnBattleSystem {
       }
 
       if (engineUnitLane && declared.scaledDamage) {
+        // Ngu Kiem Beta (Kiem The) -- cast-local landed-instance counter
+        // fed to perInstanceOptions as its third arg. Spans targets: the
+        // stack lives for the whole cast, not per target (plan-lane
+        // parity: priorInstanceOpIds accumulates across targetIds).
+        let landedPriorInstances = 0
         for (const target of declared.affected) {
           if (!actor.entity.alive) break // mid-impact death (T3-22b)
           // Kiem Tu Reimagined Task 2 -- multi-instance defs (Ngu phi kiem):
@@ -2239,7 +2244,7 @@ export class TurnBattleSystem {
             // remaining phi kiem never swing (mission C audit regression).
             if (!actor.entity.alive || !target.entity.alive) break
 
-            const hitOptions = action.skill?.instances?.perInstanceOptions?.(instanceIndex, target.entity)
+            const hitOptions = action.skill?.instances?.perInstanceOptions?.(instanceIndex, target.entity, landedPriorInstances)
             const hitResult = this.resolveDeclaredHit(
               battle,
               actor,
@@ -2251,6 +2256,7 @@ export class TurnBattleSystem {
             )
 
             if (!hitResult.dodged) {
+              landedPriorInstances += 1
               targetLanded = true
 
               if (hitResult.critical) {
@@ -2663,6 +2669,9 @@ export class TurnBattleSystem {
           ? extraDef.damage
           : scaleActionDamage(extraDef.damage, declared.suddenDeathMultiplier)
 
+        // Kiem The parity with the main lane — each extraDef executes
+        // its own cast-local momentum stack.
+        let landedPriorInstances = 0
         for (const target of extraTargets) {
           if (!actor.entity.alive) break // mid-impact death (T3-22b)
           const count = extraDef.instances?.count ?? 1
@@ -2670,12 +2679,15 @@ export class TurnBattleSystem {
           for (let i = 0; i < count; i++) {
             if (!target.entity.alive || !actor.entity.alive) break
 
-            const opts = extraDef.instances?.perInstanceOptions?.(i, target.entity)
+            const opts = extraDef.instances?.perInstanceOptions?.(i, target.entity, landedPriorInstances)
             const result = this.resolveDeclaredHit(battle, actor, target, scaled, extraDef, declared, opts)
             hitCount += 1
 
-            if (!result.dodged && !landedIds.includes(target.id)) {
-              landedIds.push(target.id)
+            if (!result.dodged) {
+              landedPriorInstances += 1
+              if (!landedIds.includes(target.id)) {
+                landedIds.push(target.id)
+              }
             }
           }
         }

@@ -869,6 +869,7 @@ export class GameManager {
       reconcileRealmRewards: (player) =>
         this.realmAdvanceOps.reconcileCultivationPathRealmRewards(player),
       reconcileSpecClaims: (player) => this.progressionOps.reconcileSpecClaims(player),
+      reconcileWayGrants: (player) => this.realmAdvanceOps.reconcileWayGrants(player),
       tribulationDirector: this.tribulationDirector,
     })
 

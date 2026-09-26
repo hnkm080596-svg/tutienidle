@@ -8,7 +8,9 @@ import { createDefaultPlayer, type PlayerData } from '../../player/Player'
 import { CAST_LEVELING_THRESHOLDS } from '../../skill/SkillSystem'
 import { reachableKiemPhoComboIds } from '../../kiem-tu/KiemPhoProvider'
 import { SPELL_BASICS } from '../../../data/skill/TurnBasicAttacks'
+import { CORE_SKILLS } from '../../../data/skill/CoreSkills'
 import type { CultivationPathId, CultivationWayId } from '../../player/CultivationPathKit'
+import { freshSwordPathState } from '../../kiem-tu/KiemTuState'
 import type {
   SimBuildSnapshot,
   SimulationCanonicalWrite,
@@ -36,8 +38,16 @@ export interface BaselineRecipe {
   id: string
   // Gate rows vs reported-only alternates (spec names three paths).
   primary: boolean
-  ritual: { pathId: CultivationPathId; wayId: CultivationWayId }
+  // Optional: recipes starting from a committed way build (the ritual
+  // only ever runs from mortal) omit this and carry the way state in
+  // `build` instead.
+  ritual?: { pathId: CultivationPathId; wayId: CultivationWayId }
   postRitual: readonly SimulationCanonicalWrite[]
+  // Optional build override (F-NK-INT-5) - default mortalBuild();
+  // recipes whose postRitual writes carry realm prerequisites
+  // (e.g. ngu_kiem_lien at foundation_establishment) must start from
+  // an elevated realm snapshot.
+  build?: SimBuildSnapshot
   // The recipe's LIVE kit at the entry power point - `skill` origins
   // inside this set bucket as kit_skill in damageByMechanic.
   kitSkillIds: readonly string[]
@@ -64,6 +74,63 @@ export function mortalSourcePlayer(): PlayerData {
 
 function mortalBuild(): SimBuildSnapshot {
   return { player: mortalSourcePlayer(), skills: [], techniques: [] }
+}
+
+// F-NK-INT-5 - a committed hidden_sword_pathway snapshot at
+// foundation_establishment owning the whole live spine (khoi granted
+// by the ritual a player would have run at mortal L12; lien bought
+// with insight). chooseCultivationPath only ever accepts mortal
+// realmLevel>=CORE, so a realm-elevated recipe must START committed -
+// there is no canonical write that grants way state later.
+// F-NK-COR-5: kiemDaoCount=2 (a forged second sword is honest
+// mid-progress state) so every cast emits 2 ordered instances and the
+// second actually exercises the Lien momentum multiplier - count=1
+// leaves the factor pinned at 1 and the lane unmeasured.
+//
+// Reachable post-ritual shape (F-NK-COR-A4-1 / F-NK-AUT-A4-2): the
+// offerGate requires tram Lv3 - core_tram:3 is the level authority, so
+// the mortal value is inherited rather than overwritten; every leveled
+// node id must appear in purchasedNodeIds (the core_* mirror rule save
+// validation enforces), and the mortal precursor skills a real player
+// learned stay learned (P7-M4 learned-set membership).
+function hiddenNguFoundationBuild(): SimBuildSnapshot {
+  const player = mortalSourcePlayer()
+  player.realmId = 'foundation_establishment'
+  player.realmLevel = 1
+  player.cultivationPath = 'sword'
+  player.cultivationWay = 'hidden_sword_pathway'
+  player.swordPath = { ...freshSwordPathState(), kiemDaoCount: 2 }
+  player.nodeLevels = {
+    ...player.nodeLevels,
+    core_ngu_kiem_thuat: 1,
+    ngu_kiem_khoi: 1,
+    ngu_kiem_lien: 1,
+  }
+  player.purchasedNodeIds = [
+    'core_tram',
+    'core_huy_quyen',
+    'core_ngu_kiem_thuat',
+    'ngu_kiem_khoi',
+    'ngu_kiem_lien',
+  ]
+  // Mortal precursors remain learned: core_tram:3 -> tram L3, the
+  // linh_bao cast count sits at its Lv3 threshold, core_huy_quyen:3 ->
+  // huy_quyen L3. ngu_kiem_thuat itself is a kit-minted
+  // TurnSkillDefinition, not a Skill - it never enters this list.
+  const precursor = (id: string, level: number) => {
+    const def = CORE_SKILLS.find((skill) => skill.id === id)
+    if (def === undefined) {
+      throw new Error(`missing precursor skill def ${id}`)
+    }
+    return { ...def, level }
+  }
+  const skills = [
+    precursor('tram', 3),
+    // linh_bao cast count sits at its Lv3 threshold -> learned at L3.
+    precursor('linh_bao', 3),
+    precursor('huy_quyen', 3),
+  ]
+  return { player, skills, techniques: [] }
 }
 
 const NO_ECONOMY: ExpectedEconomy = {
@@ -185,7 +252,11 @@ export const ALTERNATE_RECIPES: readonly BaselineRecipe[] = [
   {
     id: 'kiem_tu_ngu',
     primary: false,
-    ritual: { pathId: 'sword', wayId: 'hidden_sword_pathway' },
+    // F-NK-INT-5 - committed build (khoi+lien owned) so the benchmark
+    // exercises the momentum lane, not just the ritual-granted khoi.
+    // The ritual itself only accepts mortal, so it cannot produce this
+    // state -- the snapshot models post-ritual foundation play.
+    build: hiddenNguFoundationBuild(),
     postRitual: [],
     kitSkillIds: ['ngu_kiem_thuat'],
     expectedEconomy: {
@@ -203,5 +274,10 @@ export const ALL_RECIPES: readonly BaselineRecipe[] = [
 ]
 
 export function recipeInputs(recipe: BaselineRecipe, seed: number) {
-  return { seed, build: mortalBuild(), ritual: recipe.ritual, postRitual: recipe.postRitual }
+  return {
+    seed,
+    build: recipe.build ?? mortalBuild(),
+    ...(recipe.ritual ? { ritual: recipe.ritual } : {}),
+    postRitual: recipe.postRitual,
+  }
 }

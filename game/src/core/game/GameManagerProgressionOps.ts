@@ -47,6 +47,7 @@ import { collectTalentEffects } from '../talent/TalentEffects'
 import { TALENT_PASSIVE_SKILLS } from '../../data/skill/TalentPassives'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
+import { NGU_KIEM_EVOLUTION_NODE_IDS } from '../../data/progression/KiemTuNodes'
 import { getActiveElement, hasStaticPathCapability } from '../player/CultivationPathSystem'
 import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import { commitSpellPathElementRoute } from '../phap-tu/PhapTuState'
@@ -69,9 +70,15 @@ import type { TemplateRegistry } from './TemplateRegistry'
 // scope: Phap Tu element roots are only ever obtained through the atomic
 // selectSpellPathElement commit (purchaseNode rejects them), so a reset
 // that removed one could never be re-invested - the committed element
-// would be stranded. The preserve list lives here with the purchase
-// rejection that creates the obligation.
-const RESPEC_PRESERVED_NODE_IDS: readonly string[] = Object.values(PHAP_TU_ELEMENT_ROOT_IDS)
+// would be stranded. Ngu Kiem Beta: the evolution spine is a realm-gated
+// PROGRESSION LAYER, not a build axis - respec clearing a layer could
+// never re-earn it (grantedOnly seals the purchase path), which would
+// turn evolution into a build toggle (design sec.28). The preserve list
+// lives here with the purchase rejection that creates the obligation.
+export const RESPEC_PRESERVED_NODE_IDS: readonly string[] = [
+  ...Object.values(PHAP_TU_ELEMENT_ROOT_IDS),
+  ...NGU_KIEM_EVOLUTION_NODE_IDS,
+]
 
 export class GameManagerProgressionOps {
   constructor(
@@ -356,35 +363,14 @@ export class GameManagerProgressionOps {
       selectsSpec !== undefined &&
       this.deps.skillSystem.selectSpecialization(selectsSpec.skillId, selectsSpec.specializationId)
 
-    // Kiem Tu Reimagined Task 11 (spec sec.5.4/sec.6) - Cuu Cung grants run
-    // through the NguKiemDao domain functions (the domain owns the cap
-    // rule; nodes never touch player.swordPath directly). The
-    // kiemDaoBelowCap prereq already blocked capped buys upstream.
-    if (node.effect.kiemYGrant) {
-      gainKiemY(player, node.effect.kiemYGrant)
-    }
-
-    if (node.effect.kiemDaoGrant) {
-      grantKiemDao(player, node.effect.kiemDaoGrant)
-    }
-
     // F-W-2 - record provenance CHI cho grant thuc su phat: learned
     // chi khi learnSkill tra true (skill hoc san tu ritual/root/way kit
     // khong ghi -> clawback khong the tuoc nham grant nguon khac);
-    // kiemY chi ghi khi pool thuc su nhan (mo phong guard cua gainKiemY);
     // grantsSkillCoreIds khong ghi - revokeNodeOwnership cascade tu lo.
     const grantRecord: NodeOneShotGrantRecord = {}
 
     if (learnedSkillIds.length > 0) {
       grantRecord.learnedSkillIds = learnedSkillIds
-    }
-
-    if (node.effect.kiemYGrant && player.swordPath && isHiddenSwordPathway(player)) {
-      grantRecord.kiemY = node.effect.kiemYGrant
-    }
-
-    if (node.effect.kiemDaoGrant && player.swordPath && isHiddenSwordPathway(player)) {
-      grantRecord.kiemDao = node.effect.kiemDaoGrant
     }
 
     if (selectsSpecApplied && selectsSpec) {
@@ -466,18 +452,6 @@ export class GameManagerProgressionOps {
 
           player.skillInsight += coreRefund
           clawbackRefund += coreRefund
-        }
-      }
-
-      if (record.kiemY) {
-        loseKiemY(player, record.kiemY)
-      }
-
-      if (record.kiemDao) {
-        const state = player.swordPath
-
-        if (state) {
-          state.kiemDaoCount = Math.max(0, state.kiemDaoCount - record.kiemDao)
         }
       }
 

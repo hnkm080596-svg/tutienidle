@@ -27,6 +27,7 @@ import {
   collectUnsupportedSkillSemantics,
 } from '../skilldef/LegacySkillAdapter'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
+import { NGU_KIEM_BASE_NAME } from '../../data/skill/NguKiemDaoSkills'
 import { SPELL_KIT_IDS } from '../../data/skill/Skills'
 import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
 import { PHAP_TU_EMPOWERED_ULTS } from '../../data/skill/PhapTuEmpoweredUlts'
@@ -66,12 +67,8 @@ import {
 } from '../kiem-tu/KiemPhoNodeModifiers'
 import {
   buildNguKiemDaoProvider,
-  collectKiemDaoCascadeUnlocks,
+  collectOwnedEvolutionIds,
 } from '../kiem-tu/NguKiemDaoProvider'
-import {
-  KIEM_DAO_CASCADE_EMBLEM,
-  TU_KIEM_Y_EMBLEM,
-} from '../../data/skill/NguKiemDaoSkills'
 
 // ---------------------------------------------------------------------------
 // Shared resolver internals (moved from GameManager)
@@ -370,20 +367,18 @@ function createSwordPathRuntime(deps: CultivationPathRuntimeDeps, hidden: boolea
     },
     resolveSpecialUltimate: () => undefined,
     buildDynamicBasic: hidden
-      ? (player, nodes, rng) =>
-          buildNguKiemDaoProvider(player, collectKiemDaoCascadeUnlocks(player, nodes), rng)
+      ? (player, nodes) =>
+          buildNguKiemDaoProvider(player, collectOwnedEvolutionIds(player, nodes))
       : (player, nodes) =>
           buildKiemPhoProvider(
             player,
             collectKiemPhoComboModifiers(player, nodes),
             collectKiemPhoSkillDefinitionModifiers(player, nodes),
           ),
-    emblemSlots: hidden
-      ? () => ({ special: TU_KIEM_Y_EMBLEM, ultimate: KIEM_DAO_CASCADE_EMBLEM })
-      : undefined,
     // P7-M4 — display label for the provider-backed basic (Kiếm Phổ orb
-    // machinery / Ngự Kiếm Đạo cascade), matching kiemBarBridge's wording.
-    describeDynamicBasic: () => ({ name: hidden ? 'Ngự Kiếm Đạo' : 'Kiếm Phổ' }),
+    // machinery / Ngự Kiếm — Ngu Kiem Beta: ONE evolving skill), matching
+    // kiemBarBridge's wording.
+    describeDynamicBasic: () => ({ name: hidden ? NGU_KIEM_BASE_NAME : 'Kiếm Phổ' }),
   }
 }
 

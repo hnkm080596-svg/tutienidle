@@ -24,6 +24,26 @@ const RETIRED_IDS = [
   'phap_tu_reaction_special',
   'phap_tu_reaction_ultimate',
   'reaction_empowerment',
+  // retired by the ngu-kiem beta redesign (legacy pre-Khoi spine ids);
+  // keep pinned so a stray re-add trips INV-12. Covers every v84-era id a
+  // live save can carry in nodeLevels/purchasedNodeIds.
+  'ngu_kiem_sac',
+  'ngu_kiem_phong',
+  'ngu_kiem_sat',
+  'cuu_cung_can',
+  'cuu_cung_chan',
+  'cuu_cung_cin',
+  'cuu_cung_doai',
+  'cuu_cung_kham',
+  'cuu_cung_khon',
+  'cuu_cung_ly',
+  'cuu_cung_ton',
+  'cuu_cung_trung',
+  'ngu_cascade_a',
+  'ngu_cascade_d',
+  'ngu_cascade_e',
+  'tu_kiem_y',
+  'kiem_dao_cascade',
 ] as const
 
 const RETIRED_ID_PATTERNS = [

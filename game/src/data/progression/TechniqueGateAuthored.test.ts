@@ -59,11 +59,13 @@ describe('authored technique gate set (M-QI-06)', () => {
     }
   })
 
-  it('every ngu_kiem minor carries an L5@rank4 level gate', () => {
-    for (const id of ['ngu_kiem_sac', 'ngu_kiem_phong', 'ngu_kiem_sat']) {
-      expect(byId(id).levelGates, `${id} levelGates`).toEqual([
-        { atLevel: 5, prerequisite: { kind: 'techniqueRank', rank: 4 } },
-      ])
+  it('the ngu_kiem evolution spine carries no technique gates (way/realm-gated only)', () => {
+    for (const node of KIEM_TU_NODES.filter((entry) => entry.id.startsWith('ngu_kiem_'))) {
+      expect(node.levelGates, `${node.id} levelGates`).toBeUndefined()
+      for (const prereq of node.prerequisites ?? []) {
+        expect(prereq.kind, `${node.id} techniqueRank prereq`).not.toBe('techniqueRank')
+        expect(prereq.kind, `${node.id} techniqueGrade prereq`).not.toBe('techniqueGrade')
+      }
     }
   })
 

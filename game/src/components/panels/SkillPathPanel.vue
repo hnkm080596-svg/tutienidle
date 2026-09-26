@@ -1,18 +1,18 @@
 <script setup lang="ts">
-// Tách khỏi LoadoutManager.vue (2026-08-20, "Kỹ năng và tâm pháp giờ
-// cần tách ra thành 2 panel mới, không phụ thuộc vào left panel nữa")
-// + redesign theo tien-hiep-idle/Plans/PhapTuPanel (header/chọn kỹ
-// năng/chi tiết/Loadout). Bố cục 3 cột ÁP DỤNG CHO MỌI PATH (kể cả
-// Phàm Nhân/Kiếm Tu, không riêng Pháp Tu) — chỉ khác NỘI DUNG cột
-// giữa vì Kiếm Tu/Phàm Nhân không có Node Tree phân nhánh:
-//   có tree   -> giữa: NodeTreePanel (cây thật của skill/branch đó)
-//   khác      -> giữa: SkillDetailView (chi tiết skill đang chọn, đọc only)
-// Cột trái dùng chung SkillPathList cho mọi path; cột phải
+// Tach khoi LoadoutManager.vue (2026-08-20, "Ky nang va tam phap gio
+// can tach ra thanh 2 panel moi, khong phu thuoc vao left panel nua")
+// + redesign theo tien-hiep-idle/Plans/PhapTuPanel (header/chon ky
+// nang/chi tiet/Loadout). Bo cuc 3 cot AP DUNG CHO MOI PATH (ke ca
+// Pham Nhan/Kiem Tu, khong rieng Phap Tu) -- chi khac NOI DUNG cot
+// giua vi Kiem Tu/Pham Nhan khong co Node Tree phan nhanh:
+//   co tree   -> giua: NodeTreePanel (cay that cua skill/branch do)
+//   khac      -> giua: SkillDetailView (chi tiet skill dang chon, doc only)
+// Cot trai dung chung SkillPathList cho moi path; cot phai
 // (SkillRoleStrip, "Active Arts") and
-// NodeInspector (bottom, CHỈ có ý nghĩa khi có node để mua) không đổi.
+// NodeInspector (bottom, CHI co y nghia khi co node de mua) khong doi.
 //
-// ElementLoadoutPicker.vue (equip Hành vào combat) đã GỠ HẲN (2026-08-20,
-// yêu cầu "dư thừa, không có tác dụng gì") — nó trùng chức năng với
+// ElementLoadoutPicker.vue (equip Hanh vao combat) da GO HAN (2026-08-20,
+// yeu cau "du thua, khong co tac dung gi") -- no trung chuc nang voi
 // SkillRoleStrip: the 3 fixed roles from getResolvedSkillRoles are what
 // actually runs in combat (see the role auto-cast scheduler in
 // TurnBattleSystem), "equipping a whole Element" adds no further meaning.
@@ -44,6 +44,7 @@ import type { SkillPathEntry, NativeSkillPathEntry } from './skill-path/SkillPat
 import { NATIVE_CORE_SKILL_IDS } from '@/data/progression/SkillCoreNodes'
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import { getSkillCoreLevel } from '@/core/progression/SkillCoreLevel'
+import { resolveNguKiemEvolutionSuffix, resolveNguKiemSkillName } from '@/core/kiem-tu/NguKiemDaoProvider'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 
 const { t } = useI18n()
@@ -55,10 +56,10 @@ const { stateVersion } = useStateVersion()
 // Kiem Tu also has a real Node Tree (KiemTuNodes.ts). purchaseNode() is
 // only reachable through NodeInspector.vue, which renders when showTree.
 //
-// The Tu Reimagined (T22) — body/hidden_body mỗi path có 1 cây thật
-// (TheTuNodes/TheTuAnNodes) dưới branchTag trùng path id: single-tag
-// pass-through view qua viewBranchTags(), toàn bộ root (mutex cho Hiện,
-// non-mutex cho Ẩn) render trong cùng một tree.
+// The Tu Reimagined (T22) -- body/hidden_body moi path co 1 cay that
+// (TheTuNodes/TheTuAnNodes) duoi branchTag trung path id: single-tag
+// pass-through view qua viewBranchTags(), toan bo root (mutex cho Hien,
+// non-mutex cho An) render trong cung mot tree.
 //
 // P1 - tree selection resolves on the WAY's declared nodeTreeTag, never
 // a concrete way predicate: kiem hien -> 'kiem_pho', ngu -> 'ngu_kiem',
@@ -86,8 +87,8 @@ const showTree = computed(
     hasElementalCasting.value || wayNodeTreeTag.value !== undefined,
 )
 
-// ---- Nhánh spell (Hành -> Node Tree) ----
-// Task 16: element tabs always visible for spell — the element-root
+// ---- Nhanh spell (Hanh -> Node Tree) ----
+// Task 16: element tabs always visible for spell -- the element-root
 // pick happens IN the tree (element+route atomic commit), so the tree
 // must render before any elemental skill is learned. Default tab = the
 // committed element once the element axis resolves one.
@@ -104,10 +105,10 @@ watch(
   },
 )
 
-// ---- Nhánh sword (Kiem Tu Reimagined spec §6) — ONE tree, two
+// ---- Nhanh sword (Kiem Tu Reimagined spec sec.6) -- ONE tree, two
 // branchTags rendered together: 'kiem_pho' (orb branches) + 'ngu_kiem'
 // (hidden root + Ngu branch). Node-level visibility is mode-filtered
-// inside NodeTreePanel — this tag only selects WHICH view; the re-
+// inside NodeTreePanel -- this tag only selects WHICH view; the re-
 // imagined tree replaces the retired kiem_tran/bat_kiem route split. ----
 
 const selectedNode = ref<ProgressionNode | null>(null)
@@ -119,13 +120,13 @@ function onSelectBranch(element: ElementType) {
   selectedNode.value = null
 }
 
-// Skill Node unlock animation (2026-08-21, Plans/SkillNode) — NodeInspector
-// emit 'unlocked' NGAY SAU khi purchaseNode() thành công (KHÔNG đổi
-// logic mua) — chỉ chuyển tiếp id + số thứ tự (seq) tăng dần xuống
-// NodeTreePanel.vue để nó tự chạy animation connection→node. `seq`
-// đảm bảo watch() ở NodeTreePanel luôn thấy giá trị MỚI kể cả khi mua
-// liên tiếp cùng 1 node id (về lý thuyết không xảy ra — mỗi node chỉ
-// mua 1 lần — nhưng giữ an toàn, rẻ).
+// Skill Node unlock animation (2026-08-21, Plans/SkillNode) -- NodeInspector
+// emit 'unlocked' NGAY SAU khi purchaseNode() thanh cong (KHONG doi
+// logic mua) -- chi chuyen tiep id + so thu tu (seq) tang dan xuong
+// NodeTreePanel.vue de no tu chay animation connection->node. `seq`
+// dam bao watch() o NodeTreePanel luon thay gia tri MOI ke ca khi mua
+// lien tiep cung 1 node id (ve ly thuyet khong xay ra -- moi node chi
+// mua 1 lan -- nhung giu an toan, re).
 const unlockTrigger = ref<{ nodeId: string; seq: number } | null>(null)
 let unlockSeq = 0
 
@@ -200,10 +201,22 @@ const skillPathEntries = computed<SkillPathEntry[]>(() => {
     const maxLevel = gameManager.progressionOps.getSkillCoreMaxLevel(skillId)
     const upgradeCost = gameManager.progressionOps.getSkillCoreUpgradeCost(skillId, player.$state)
 
+    // Ngu Kiem Beta (sec.43): the way's ONE evolving skill displays the
+    // NEWEST owned evolution's name (naming law) plus an `Evolution: X`
+    // tag carrying that layer's one-char suffix.
+    const nguKiemName =
+      skillId === 'ngu_kiem_thuat'
+        ? resolveNguKiemSkillName(player.$state, gameManager.nodeRegistry.getAll())
+        : undefined
+    const evolutionName =
+      skillId === 'ngu_kiem_thuat'
+        ? resolveNguKiemEvolutionSuffix(player.$state, gameManager.nodeRegistry.getAll())
+        : undefined
+
     entries.push({
       kind: 'native',
       id: skillId,
-      name: meta?.name ?? skillId,
+      name: nguKiemName ?? meta?.name ?? skillId,
       description: meta?.description,
       level,
       maxLevel,
@@ -211,6 +224,7 @@ const skillPathEntries = computed<SkillPathEntry[]>(() => {
       upgradeCost,
       canUpgrade: upgradeCost !== undefined && player.skillInsight >= upgradeCost,
       ...(meta ? { meta } : {}),
+      ...(evolutionName !== undefined ? { evolutionName } : {}),
     })
   }
 
@@ -244,10 +258,10 @@ function skillElement(skill: Skill): ElementType | null {
   return null
 }
 
-// Phap Tu Reimagined (Task 16) — cây Pháp Tu luôn hiển thị: element
-// root được chọn TRONG cây (element+route atomic commit), nên không
-// thể gate theo skill đang chọn (trước khi commit, player chưa có
-// skill elemental nào). Kiem Tu giữ nguyên — route chốt lúc chọn path.
+// Phap Tu Reimagined (Task 16) -- cay Phap Tu luon hien thi: element
+// root duoc chon TRONG cay (element+route atomic commit), nen khong
+// the gate theo skill dang chon (truoc khi commit, player chua co
+// skill elemental nao). Kiem Tu giu nguyen -- route chot luc chon path.
 
 // M-QI-05 (D7) - the center column has an explicit user-facing mode:
 // a visible Tree/Detail tab renders whenever showTree is true. A
@@ -302,7 +316,7 @@ function close() {
           </div>
 
           <div class="skill-path-panel__col skill-path-panel__col--center">
-            <!-- Phap Tu element tabs (Task 16) — browse all 5 branches;
+            <!-- Phap Tu element tabs (Task 16) -- browse all 5 branches;
                  the committed element is marked, others render locked. -->
             <div
               v-if="hasElementalCasting"
@@ -414,8 +428,8 @@ function close() {
   gap: 0;
 }
 
-/* Fit-refactor đợt 5 — cột tree sâu wheel-scroll ẩn thanh (theme ẩn sẵn
-   toàn cục), fade edge báo còn nội dung; ngân sách chiều cao do flex body. */
+/* Fit-refactor dot 5 -- cot tree sau wheel-scroll an thanh (theme an san
+   toan cuc), fade edge bao con noi dung; ngan sach chieu cao do flex body. */
 .skill-path-panel__col {
   min-height: 0;
   overflow-y: auto;
@@ -423,9 +437,9 @@ function close() {
   padding: 12px 14px;
 }
 
-/* Fit-refactor đợt 3 — card hẹp (< 900px theo CARD, không phải viewport)
-   thì stack 3 cột thành khối dọc: mỗi cột co giãn theo nội dung thay vì
-   ép cột trái 70px. Cột trái thành accordion ngang bằng flex-wrap chips. */
+/* Fit-refactor dot 3 -- card hep (< 900px theo CARD, khong phai viewport)
+   thi stack 3 cot thanh khoi doc: moi cot co gian theo noi dung thay vi
+   ep cot trai 70px. Cot trai thanh accordion ngang bang flex-wrap chips. */
 @container overlay-panel (max-width: 900px) {
   .skill-path-panel__body { flex-direction: column; }
   .skill-path-panel__col { flex: 1 1 auto; overflow-y: visible; border-right: 0; border-left: 0; border-bottom: 1px solid var(--ink-line); }
@@ -441,9 +455,9 @@ function close() {
   border-right: 1px solid var(--ink-line);
 }
 
-/* Cây kỹ năng KHÔNG cuộn nữa (2026-08-30, bug report) — NodeTreePanel
-   tự thu nhỏ (zoom-to-fit) vừa khung, có nút zoom thủ công riêng thay
-   vì dựa vào overflow-y:auto của cột dùng chung. */
+/* Cay ky nang KHONG cuon nua (2026-08-30, bug report) -- NodeTreePanel
+   tu thu nho (zoom-to-fit) vua khung, co nut zoom thu cong rieng thay
+   vi dua vao overflow-y:auto cua cot dung chung. */
 .skill-path-panel__col--center {
   flex: 1 1 auto;
   overflow-y: hidden;
@@ -451,7 +465,7 @@ function close() {
   flex-direction: column;
 }
 
-/* Phap Tu element tabs (Task 16) — 5 Hành chips above the tree; the
+/* Phap Tu element tabs (Task 16) -- 5 Hanh chips above the tree; the
    committed element gets a filled accent, the browsed tab an outline. */
 .skill-path-panel__element-tabs {
   flex: 0 0 auto;

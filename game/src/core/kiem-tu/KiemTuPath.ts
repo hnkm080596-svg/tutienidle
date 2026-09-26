@@ -5,33 +5,32 @@ import type {
   CultivationWayId,
 } from '../player/CultivationPathKit'
 import type { PlayerData } from '../player/Player'
-import { freshSwordPathState, KIEM_PHO_ORB_IDS } from './KiemTuState'
+import { freshSwordPathState, KIEM_PHO_ORB_IDS, kiemDaoCap } from './KiemTuState'
 import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
 import { KIEM_PHO_BUFFS } from '../../data/buff/KiemPhoBuffs'
-import {
-  KIEM_DAO_CASCADE_EMBLEM,
-  NGU_KIEM_THUAT,
-  TU_KIEM_Y_EMBLEM,
-} from '../../data/skill/NguKiemDaoSkills'
+import { NGU_KIEM_THUAT } from '../../data/skill/NguKiemDaoSkills'
+import { getRealmIndex } from '../realm/realmSystem'
+import { REALMS } from '../../data/realms/realm'
 
-// Cultivation Path Framework (spec 2026-09-16, M6) — the Kiem Tu path
+// Cultivation Path Framework (spec 2026-09-16, M6) -- the Kiem Tu path
 // module: the two way definitions + the way membership predicates.
 //
-//   sword_pathway — Kiem Pho (preset-combo): the orb preset lives on
+//   sword_pathway -- Kiem Pho (preset-combo): the orb preset lives on
 //     player.swordPath.preset; combat basics come from the KiemPho
 //     dynamicBasic provider.
-//   hidden_sword_pathway — Ngu Kiem Dao (hidden): ritual-only entry gated by tram Lv3,
-//     permanent; combat action is provider-injected (ngu_kiem_thuat +
-//     emblem slots). The Kiem Y -> Kiem Dao economy lives on the same
-//     player.swordPath slice — hidden_sword_pathway was NEVER a separate path id (the old
+//   hidden_sword_pathway -- Ngu Kiem Dao (hidden): ritual-only entry gated by tram Lv3,
+//     permanent; combat action is provider-injected (ngu_kiem_thuat,
+//     one evolving skill -- Ngu Kiem Beta). The Kiem Y -> Kiem Dao economy lives on the same
+//     player.swordPath slice -- hidden_sword_pathway was NEVER a separate path id (the old
 //     swordPath.mode discriminator retired in M6; cultivationWay is the
 //     discriminator now).
 //
-// Dependency direction: this file is a leaf — it never imports back
-// into the catalog/authority. The only runtime import is the sibling
-// SwordPathState slice factory (createInitialState below), so domain code
-// (NodeSystem/NguKiemDao) can consume the way predicates without a
-// runtime cycle.
+// Dependency direction: this file never imports back into the
+// catalog/authority layer -- runtime imports are the sibling slice
+// leaf (KiemTuState: state factory + realm-bound formulas), the realm
+// helpers, and the leaf data catalogs (REALMS / RealmPassiveLadder /
+// KIEM_PHO_BUFFS / NGU_KIEM_THUAT), so domain code (NodeSystem/
+// NguKiemDao) can consume the way predicates without a runtime cycle.
 
 /**
  * Structural read shape for the way predicates — PlayerData and the
@@ -128,12 +127,62 @@ export function validateSwordPathPersistedState(
     emit({ path: 'player.swordPath.kiemY', message: 'phải là number hữu hạn >= 0' })
   }
 
-  if (typeof swordPath.kiemDaoCount !== 'number' || !Number.isFinite(swordPath.kiemDaoCount) || swordPath.kiemDaoCount < 1) {
-    emit({ path: 'player.swordPath.kiemDaoCount', message: 'phải là number hữu hạn >= 1' })
+  // F-NK-INT-3 - integer bound on the instance count only (the plan
+  // lane floors the count while the engine-unit lane iterates raw
+  // i<count: a fractional count makes the lanes diverge). kiemDaoBase
+  // stays a float multiplier - applyBreakthroughMerge produces
+  // fractional bases (1+0.3*merged), so an integer bound here would
+  // reject every legitimate post-breakthrough save (F-NK-CLO-1).
+  if (
+    typeof swordPath.kiemDaoCount !== 'number' ||
+    !Number.isInteger(swordPath.kiemDaoCount) ||
+    swordPath.kiemDaoCount < 1
+  ) {
+    emit({ path: 'player.swordPath.kiemDaoCount', message: 'phải là số nguyên >= 1' })
   }
 
-  if (typeof swordPath.kiemDaoBase !== 'number' || !Number.isFinite(swordPath.kiemDaoBase) || swordPath.kiemDaoBase < 1) {
+  if (
+    typeof swordPath.kiemDaoBase !== 'number' ||
+    !Number.isFinite(swordPath.kiemDaoBase) ||
+    swordPath.kiemDaoBase < 1
+  ) {
     emit({ path: 'player.swordPath.kiemDaoBase', message: 'phải là number hữu hạn >= 1' })
+  }
+
+  // F-NK-INT-3 / F-NK-CLO-2 - cap bound vs the realm cap: the live
+  // instance COUNT may not exceed kiemDaoCap(realmIndex) (gainKiemY
+  // stops at cap; a crafted save exceeding it would emit more
+  // instances than authored). kiemDaoBase is NOT bounded by the cap:
+  // it is the multiplicative breakthrough-merge product
+  // (base *= 1+0.3*mergedCount, K15) which legitimately grows past
+  // the count cap after enough merges - bounding it here would mark
+  // a fully legal save corrupted. The cap is defined only from
+  // realmIndex>=1 - a mortal-realm swordPath slice is malformed on
+  // its own, so the lane emits a fault rather than letting
+  // kiemDaoCap throw inside the untrusted-input validator.
+  if (
+    typeof playerPayload.realmId === 'string' &&
+    REALMS.some((realm) => realm.id === playerPayload.realmId) &&
+    typeof swordPath.kiemDaoCount === 'number' &&
+    Number.isInteger(swordPath.kiemDaoCount) &&
+    typeof swordPath.kiemDaoBase === 'number' &&
+    Number.isFinite(swordPath.kiemDaoBase)
+  ) {
+    const realmIndex = getRealmIndex(playerPayload.realmId)
+    if (realmIndex < 1) {
+      emit({
+        path: 'player.swordPath',
+        message: 'hidden_sword_pathway economy requires realmIndex >= 1',
+      })
+    } else {
+      const cap = kiemDaoCap(realmIndex)
+      if (swordPath.kiemDaoCount > cap) {
+        emit({
+          path: 'player.swordPath',
+          message: `kiemDaoCount vượt trần theo cảnh giới (cap = ${cap})`,
+        })
+      }
+    }
   }
 }
 
@@ -154,8 +203,8 @@ export function isSwordPathway(player: SwordPathWayRead | null | undefined): boo
 
 /**
  * hidden_sword_pathway membership — the gate for the hidden way's machinery: the
- * NguKiemDao economy (gainKiemY/grantKiemDao/merge), the
- * NguKiemDaoProvider attach, the kiemDaoBelowCap prereq, and the hidden_sword_pathway
+ * NguKiemDao economy (gainKiemY/merge), the
+ * NguKiemDaoProvider attach, the evolution-spine grant chain, and the hidden_sword_pathway
  * node subtree. sword never had a hidden-variant path id, so a
  * single era exists: ('sword', 'hidden_sword_pathway') — the WAY id is the check.
  */
@@ -164,7 +213,7 @@ export function isHiddenSwordPathway(player: SwordPathWayRead | null | undefined
 }
 
 // ---------------------------------------------------------------------------
-// Way definitions — consumed by CULTIVATION_PATH_MODULES.sword.ways in
+// Way definitions -- consumed by CULTIVATION_PATH_MODULES.sword.ways in
 // CultivationPathKit (the catalog is the single aggregation point).
 // ---------------------------------------------------------------------------
 
@@ -174,9 +223,9 @@ export const SWORD_PATHWAY: PathWayDefinition = {
   name: 'Kiếm Tu — Ngự Kiếm Tâm Kinh',
   element: 'metal',
   techniqueId: 'sword_control_art',
-  // Kiem Tu Reimagined (spec 2026-09-15) — no authored skill grants:
+  // Kiem Tu Reimagined (spec 2026-09-15) -- no authored skill grants:
   // sword_pathway basics come from the Kiem Pho orb preset (KiemPhoProvider).
-  // P7-M4 — mortal precursor skills stay learned past initiation; the
+  // P7-M4 -- mortal precursor skills stay learned past initiation; the
   // ritual clears mortalBasicSkillId inside the commit block and the
   // mortal-only pick gate blocks re-selection post-path.
   // P7-M2 - canonical realm-entry passive ladder (delivered by
@@ -184,7 +233,7 @@ export const SWORD_PATHWAY: PathWayDefinition = {
   // retired ngu_kiem.innateSkillId grant.
   realmRewards: composeRealmRewards(),
   passiveSkillIds: ['passive_kiem_tam_lanh_liet'],
-  // M7 — the facet declares domain OWNERSHIP only (resolveActiveWayStatDomains
+  // M7 -- the facet declares domain OWNERSHIP only (resolveActiveWayStatDomains
   // is the authority now that the path-keyed domain map is gone); Kiem Tu
   // has no totals-driven emission channel, so collectModifiers is a no-op.
   stats: {
@@ -229,15 +278,15 @@ export const HIDDEN_SWORD_PATHWAY: PathWayDefinition = {
   // P7-M2 - canonical realm-entry passive ladder; no initiation passive
   // (myriad_swords_art carries none).
   realmRewards: composeRealmRewards(),
-  // Ritual-only entry, permanent, FREE — the exact port of the retired
+  // Ritual-only entry, permanent, FREE -- the exact port of the retired
   // kiem_tu_an node's skillCastCount {tram, 3} gate (M-QI-05: reads the
   // canonical core_tram node level). A mortal without tram Lv3 at the
-  // ritual can never enter hidden_sword_pathway — there is no
+  // ritual can never enter hidden_sword_pathway -- there is no
   // mid-progression flip any more.
   offerGate: { requiresSkillLevel: { skillId: 'tram', level: 3 } },
   // P7-M4 - same mortal-precursor contract as sword_pathway (learned
   // skills kept; pick cleared at commit; mortal-only gate).
-  // M7 — same shared-domain facet as sword_pathway: 'sword', no totals-driven
+  // M7 -- same shared-domain facet as sword_pathway: 'sword', no totals-driven
   // channel.
   stats: {
     domains: ['sword'],
@@ -245,17 +294,20 @@ export const HIDDEN_SWORD_PATHWAY: PathWayDefinition = {
   },
   // P1 - hidden_sword_pathway owns the Ngu Kiem Dao machinery: the Kiem Y -> Kiem Dao
   // economy + realm merge, the provider-injected combat action, the
-  // emblem slots, and the 'ngu_kiem' node-tree tag.
+  // evolution spine, and the 'ngu_kiem' node-tree tag.
   capabilities: {
     static: ['sword.sword_riding'],
   },
-  // P1-M2 - the provider-injected action plus the two emblem defs the
-  // combat slots carry (emblemOnly markers, never real casts).
+  // P1-M2 - the provider-injected action (Ngu Kiem Beta: no emblem
+  // defs -- the way's combat machinery is the provider alone).
   ownedContent: {
-    skillIds: [NGU_KIEM_THUAT.id, TU_KIEM_Y_EMBLEM.id, KIEM_DAO_CASCADE_EMBLEM.id],
+    skillIds: [NGU_KIEM_THUAT.id],
   },
-  // M-QI-05 - the provider action owns the way's canonical Core Node;
-  // the emblem defs are internal markers with no progression channel.
+  // M-QI-05 - the provider action owns the way's canonical Core Node.
   coreSkillIds: [NGU_KIEM_THUAT.id],
+  // Ngu Kiem Beta -- Khoi is granted at ritual completion (the first
+  // evolution layer, node id declared in KiemTuNodes; the grant loop
+  // lives in GameManagerRealmAdvanceOps.chooseCultivationPath).
+  grantedNodeIds: ['ngu_kiem_khoi'],
   nodeTreeTag: 'ngu_kiem',
 }

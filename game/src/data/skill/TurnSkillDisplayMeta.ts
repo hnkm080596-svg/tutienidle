@@ -1,5 +1,6 @@
 import type { Skill } from '../../core/skill/Skill'
 import { SKILLS } from './Skills'
+import { NGU_KIEM_BASE_NAME } from './NguKiemDaoSkills'
 
 // Bang 9.5 #5 (2026-09-07) -- mapping skillId -> display metadata cho HUD
 // turn (TurnCombatSkillBar/CombatSkillSlot). TurnSkillDefinition co y
@@ -31,7 +32,7 @@ for (const skill of SKILLS) {
   SKILLS_BY_ID.set(skill.id, skill)
 }
 
-/** Dong bo tu SKILLS: name/description lay dung bang skill that. */
+/** dong bo tu SKILLS: name/description lay dung bang skill that. */
 function fromSkills(id: string, fallback: TurnSkillDisplayMeta): TurnSkillDisplayMeta {
   const live = SKILLS_BY_ID.get(id)
 
@@ -334,19 +335,11 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     description: 'Quét ngang toàn trận — sát thương mọi mục tiêu.',
   },
 
-  // Ngu Kiem Dao (Task 9) -- the multi-instance phi kiem basic + the two
-  // emblem slots (HUD markers only, never resolvable).
+  // Ngu Kiem Beta -- ONE evolving skill; the newest owned evolution's
+  // display name is resolved by resolveNguKiemSkillName (Khoi / Lien).
   ngu_kiem_thuat: {
-    name: 'Ngự Kiếm Thuật',
-    description: 'Phi kiếm độc lập đánh chuỗi mục tiêu — mỗi kiếm một đòn.',
-  },
-  tu_kiem_y: {
-    name: 'Tụ Kiếm Ý',
-    description: 'Mỗi đòn phi kiếm tích 1 Kiếm Ý — đủ Ý luyện thêm phi kiếm.',
-  },
-  kiem_dao_cascade: {
-    name: 'Kiếm Đạo Liên Toát',
-    description: 'Mỗi phi kiếm tự quyết sát chiêu, bạo kích, phá giáp.',
+    name: NGU_KIEM_BASE_NAME,
+    description: 'Phi kiếm từng đòn độc lập theo thứ tự — mỗi kiếm giáng một đòn vào mục tiêu.',
   },
 
 }

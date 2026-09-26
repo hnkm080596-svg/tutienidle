@@ -24,6 +24,7 @@ import {
 } from './CultivationPathKit'
 import { createDefaultPlayer } from './Player'
 import { listOfferableWays } from './CultivationPathSystem'
+import { RESPEC_PRESERVED_NODE_IDS } from '../game/GameManagerProgressionOps'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
@@ -36,11 +37,7 @@ import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 import { SKILLS } from '../../data/skill/Skills'
 import { BASIC_ATTACKS_BY_BUILD, THUY_GIAP_LONG_WATER_SURGE } from '../../data/skill/TurnBasicAttacks'
 import { KIEM_PHO_ORBS } from '../../data/skill/KiemPhoOrbs'
-import {
-  KIEM_DAO_CASCADE_EMBLEM,
-  NGU_KIEM_THUAT,
-  TU_KIEM_Y_EMBLEM,
-} from '../../data/skill/NguKiemDaoSkills'
+import { NGU_KIEM_THUAT } from '../../data/skill/NguKiemDaoSkills'
 import {
   BACH_UNG,
   BAT_TU_BA_THE,
@@ -64,8 +61,6 @@ const KNOWN_SKILL_IDS: ReadonlySet<string> = new Set<string>([
   THUY_GIAP_LONG_WATER_SURGE.id,
   ...Object.values(KIEM_PHO_ORBS).map((def) => def.id),
   NGU_KIEM_THUAT.id,
-  TU_KIEM_Y_EMBLEM.id,
-  KIEM_DAO_CASCADE_EMBLEM.id,
   ...Object.values(THE_TU_KIT_BY_ROOT).flatMap((kit) => [
     kit.basic.id,
     kit.special.id,
@@ -92,6 +87,8 @@ const ALL_NODES: readonly ProgressionNode[] = [
   ...THE_TU_NODES,
   ...THE_TU_AN_NODES,
 ]
+
+const NODE_BY_ID = new Map<string, ProgressionNode>(ALL_NODES.map((node) => [node.id, node]))
 
 function expectWellFormedWay(way: PathWayDefinition, moduleId: CultivationPathId, wayKey: string) {
   expect(way.id, `${moduleId}.${wayKey}: way.id must equal its catalog key`).toBe(wayKey)
@@ -198,6 +195,34 @@ function expectWellFormedWay(way: PathWayDefinition, moduleId: CultivationPathId
       way.nodeTreeTag.trim().length,
       `${moduleId}.${wayKey}: nodeTreeTag must be a non-empty string`,
     ).toBeGreaterThan(0)
+  }
+
+  // grantedNodeIds - every member must resolve, be grant-only (or
+  // cost-0), sit on the declaring way's tag subtree (requiredWay +
+  // requiredCultivationPath stamps), and be respec-preserved;
+  // otherwise grantSkillCore grants a purchasable node and respec/
+  // devReset revokes it while refunding a cost never paid
+  // (refund-oscillation loop).
+  for (const nodeId of way.grantedNodeIds ?? []) {
+    const node = NODE_BY_ID.get(nodeId)
+    expect(
+      node,
+      `${moduleId}.${wayKey}: grantedNodeIds member '${nodeId}' not in catalog`,
+    ).toBeDefined()
+    if (node !== undefined) {
+      expect(
+        node.grantedOnly === true || node.insightCost === 0,
+        `${moduleId}.${wayKey}: grantedNodeIds member '${nodeId}' is not grant-only/cost-0`,
+      ).toBe(true)
+      expect(
+        node.requiredWay === way.id && node.requiredCultivationPath === moduleId,
+        `${moduleId}.${wayKey}: grantedNodeIds member '${nodeId}' not tagged to declaring way`,
+      ).toBe(true)
+      expect(
+        RESPEC_PRESERVED_NODE_IDS,
+        `${moduleId}.${wayKey}: grantedNodeIds member '${nodeId}' is not respec-preserved`,
+      ).toContain(nodeId)
+    }
   }
 
   if (way.realmRewards) {

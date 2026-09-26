@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { COMPANIONS } from '../companion/Companions'
 import { KIEM_PHO_COMBOS } from './KiemPhoCombos' // used below in the K11 negative assertion
 import { KIEM_PHO_ORBS } from './KiemPhoOrbs'
-import { KIEM_DAO_CASCADE_EMBLEM, NGU_KIEM_THUAT, TU_KIEM_Y_EMBLEM } from './NguKiemDaoSkills'
+import { NGU_KIEM_THUAT } from './NguKiemDaoSkills'
 import { BASIC_ATTACKS_BY_BUILD, THUY_GIAP_LONG_WATER_SURGE } from './TurnBasicAttacks'
 import { MORTAL_PRECURSOR_SKILL_IDS } from '../../core/skill/MortalPrecursors'
 import { TURN_SKILL_DISPLAY_META, turnSkillDisplayMetaOf } from './TurnSkillDisplayMeta'
@@ -21,7 +21,7 @@ import { TURN_SKILL_DISPLAY_META, turnSkillDisplayMetaOf } from './TurnSkillDisp
 // basic/special/ultimate kits (data/companion/Companions.ts).
 
 // THUY_GIAP_LONG_WATER_SURGE (TurnBasicAttacks.ts), the Kiem Pho orb
-// set + combo table + Ngu Kiem Dao defs (KiemPhoOrbs/KiemPhoCombos/
+// set + combo table + the single Ngu Kiem def (KiemPhoOrbs/KiemPhoCombos/
 // NguKiemDaoSkills), the reaction-path pool + marker
 // pair (TurnReactionPathSkills.ts), and COMPANIONS basic/special/ultimate
 // kits (data/companion/Companions.ts).
@@ -34,8 +34,6 @@ function productionTurnSkillIds(): string[] {
 
   ids.add(THUY_GIAP_LONG_WATER_SURGE.id)
   ids.add(NGU_KIEM_THUAT.id)
-  ids.add(TU_KIEM_Y_EMBLEM.id)
-  ids.add(KIEM_DAO_CASCADE_EMBLEM.id)
 
   for (const orb of Object.values(KIEM_PHO_ORBS)) {
     ids.add(orb.id)
