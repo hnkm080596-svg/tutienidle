@@ -9266,12 +9266,18 @@
       ],
       "siblingFindingIds": [],
       "repair": "FIXED pending nit commit (sites transliterated).",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "pinEvidenceIds": [
+        "EV-TT-CLNC-FIX-PINS"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLNC-FIX-PINS"
+      ],
+      "closureReviewIds": [
+        "REV-TT-CLO-26"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -9384,12 +9390,18 @@
       ],
       "siblingFindingIds": [],
       "repair": "FIXED @72822607: 4 pin tests (dead-attacker skip, residue discard, suppressed-grant no-op, onCastBegin queue).",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "pinEvidenceIds": [
+        "EV-TT-CLNC-FIX-PINS"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLNC-FIX-PINS"
+      ],
+      "closureReviewIds": [
+        "REV-TT-CLO-26"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -9439,12 +9451,18 @@
       ],
       "siblingFindingIds": [],
       "repair": "FIXED @72822607: gate hoisted before rollChance — excluded sources consume no RNG and fire no outcome.",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "pinEvidenceIds": [
+        "EV-TT-CLNC-FIX-PINS"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLNC-FIX-PINS"
+      ],
+      "closureReviewIds": [
+        "REV-TT-CLO-26"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     },
     {
@@ -9494,12 +9512,18 @@
       ],
       "siblingFindingIds": [],
       "repair": "FIXED @72822607: firedFollowUp pushes queuedFollowUps reactive_bypass entry.",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "pinEvidenceIds": [
+        "EV-TT-CLNC-FIX-PINS"
+      ],
+      "verificationEvidenceIds": [
+        "EV-TT-CLNC-FIX-PINS"
+      ],
+      "closureReviewIds": [
+        "REV-TT-CLO-26"
+      ],
       "duplicateOf": null,
       "exception": null,
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "rejectionReason": null
     }
   ],
@@ -10768,6 +10792,33 @@
       "invariantIds": [],
       "limitations": [],
       "status": "STALE",
+      "inputEvidenceIds": [],
+      "inputPaths": []
+    },
+    {
+      "id": "EV-TT-CLNC-FIX-PINS",
+      "state": {
+        "productStateId": "fea576e2d9a15cf8dab73cd31d0d8c1a2acbcdae50419aa64433704a73f35851",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coordinator",
+      "startedAt": "2026-09-26T07:19:00.000Z",
+      "finishedAt": "2026-09-26T07:20:00.000Z",
+      "commandOrMethod": "npx vitest run src/core/battle/turn/TurnBattleSystem.reflection.test.ts src/core/battle/turn/TurnBattleSystem.followUpQueue.test.ts",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/clnc-fix-pins.log",
+      "artifactHash": "3e3e829c83112696efbe2b2124e0cd0fa54d2fe1b35c343ef87177aa80eeb642",
+      "claims": [
+        "4 suppressed-reflect pins + queuedExecutions drain tests pass on 72822607"
+      ],
+      "invariantIds": [],
+      "limitations": [],
+      "status": "CURRENT",
       "inputEvidenceIds": [],
       "inputPaths": []
     }
@@ -13320,6 +13371,33 @@
         "F-TT-CLNC-INT-2",
         "F-TT-CLNC-INT-3"
       ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TT-CLO-26",
+      "state": {
+        "productStateId": "fea576e2d9a15cf8dab73cd31d0d8c1a2acbcdae50419aa64433704a73f35851",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 44,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-7ac5c4b8eeb045e5b40d6b3d1df5baed",
+      "contextId": "sealed-child-7ac5c4b8",
+      "model": "swe-2-max",
+      "role": "CLOSURE",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T07:07:00.000Z",
+      "sealedAt": "2026-09-26T07:13:00.000Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [],
       "novelAttackIds": [],
       "status": "SEALED"
     }
