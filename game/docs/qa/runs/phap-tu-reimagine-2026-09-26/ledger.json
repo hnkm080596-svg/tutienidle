@@ -3381,6 +3381,192 @@
     "F-PTR-54"
    ],
    "rejectionReason": "SPEC-PINNED structure -- GameManager.empowerment.test.ts:120-124 asserts the if-gate exists in landedConsequences; removal verified RED then reverted"
+  },
+  {
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-INTD"
+   ],
+   "exception": null,
+   "duplicateOf": null,
+   "verificationEvidenceIds": [
+    "EV-PTR-INTD"
+   ],
+   "pinEvidenceIds": [],
+   "closedAt": "2026-09-27T00:50:00Z",
+   "closeReason": "REJECTED",
+   "actionable": false,
+   "classification": "NON_ACTIONABLE",
+   "id": "F-PTR-56",
+   "title": "Non-damaging for_each_target lane lacks per-target target_alive wrap",
+   "severity": "Low",
+   "reachability": "HYPOTHETICAL",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/core/skilldef/LegacySkillAdapter.ts",
+     "symbolOrSection": ":194-211",
+     "revision": "0eb0c574",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-D INT (devin-e8b10ba8dc1b40d8838cfe9e3a4b51ef)",
+   "counterexample": "vitest repro (reviewer worktree, 5/5 pass)",
+   "expected": "n/a",
+   "actual": "n/a",
+   "status": "REJECTED_WITH_PROOF",
+   "rootCause": "missing parity wrap (latent)",
+   "rootClass": "SPEC_UNDECIDED",
+   "repair": null,
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "latent hazard recorded in lesson"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "rejectionReason": "LATENT -- declared.affected derives from collectTurnTargets `living` filter (TurnSkillAction.ts:793); no producer admits dead targets today",
+   "fixedInRevision": null
+  },
+  {
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-INTD"
+   ],
+   "exception": null,
+   "duplicateOf": null,
+   "verificationEvidenceIds": [
+    "EV-PTR-INTD"
+   ],
+   "pinEvidenceIds": [],
+   "closedAt": "2026-09-27T00:50:00Z",
+   "closeReason": "REJECTED",
+   "actionable": false,
+   "classification": "NON_ACTIONABLE",
+   "id": "F-PTR-57",
+   "title": "resolvePlanCost percentOfMax NaN fails open at PRECHECK",
+   "severity": "Low",
+   "reachability": "HYPOTHETICAL",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/core/skilldef/SkillResolver.ts",
+     "symbolOrSection": ":335-338",
+     "revision": "0eb0c574",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-D INT (devin-e8b10ba8dc1b40d8838cfe9e3a4b51ef)",
+   "counterexample": "vitest repro (reviewer worktree, 5/5 pass)",
+   "expected": "n/a",
+   "actual": "n/a",
+   "status": "REJECTED_WITH_PROOF",
+   "rootCause": "missing finite guard (crafted-only)",
+   "rootClass": "SPEC_UNDECIDED",
+   "repair": null,
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "latent hazard recorded in lesson"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "rejectionReason": "CRAFTED-ONLY -- sole percentOfMax producer is PHAP_TU_TRANG_COST_PERCENT_OF_MAX=0.3 finite literal (PhapTuSkills.ts:35); NaN needs malformed def or NaN maxMp stat",
+   "fixedInRevision": null
+  },
+  {
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-INTD"
+   ],
+   "exception": null,
+   "duplicateOf": null,
+   "verificationEvidenceIds": [
+    "EV-PTR-INTD"
+   ],
+   "pinEvidenceIds": [],
+   "closedAt": "2026-09-27T00:50:00Z",
+   "closeReason": "REJECTED",
+   "actionable": false,
+   "classification": "NON_ACTIONABLE",
+   "id": "F-PTR-58",
+   "title": "Water rider nested target_hit_landed compiles to second gate -> landed hooks double-fire",
+   "severity": "Low",
+   "reachability": "HYPOTHETICAL",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/data/skill/PhapTuSkills.ts",
+     "symbolOrSection": ":911-927",
+     "revision": "0eb0c574",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-D INT (devin-e8b10ba8dc1b40d8838cfe9e3a4b51ef)",
+   "counterexample": "vitest repro (reviewer worktree, 5/5 pass)",
+   "expected": "n/a",
+   "actual": "n/a",
+   "status": "REJECTED_WITH_PROOF",
+   "rootCause": "spec-pinned def structure; inert consumer set",
+   "rootClass": "SPEC_UNDECIDED",
+   "repair": null,
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "latent hazard recorded in lesson"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "rejectionReason": "INERT -- spec-pinned structure (empowerment test :120-124 asserts); no onImpactLanded/on_hit_proc carrier exists on any enemy target (TheTu proc buffs are player-side; enemy buffs are statModifiers-only)",
+   "fixedInRevision": null
   }
  ],
  "evidence": [
@@ -3650,6 +3836,44 @@
    "invariantIds": [],
    "limitations": [
     "scoped vitest only"
+   ]
+  },
+  {
+   "id": "EV-PTR-INTD",
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "status": "STALE",
+   "kind": "EXECUTED_INTEGRATION",
+   "producer": "devin-e8b10ba8dc1b40d8838cfe9e3a4b51ef",
+   "startedAt": "2026-09-27T00:36:00Z",
+   "finishedAt": "2026-09-27T00:36:00Z",
+   "commandOrMethod": "vitest repros SkillExecutor.intReview.test.ts 5/5 pass on pin 0eb0c574; coordinator verify-by-inspection on b1f59d72 (producer alive-filter, percentOfMax literal, carrier census)",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "records-intd.json",
+   "artifactHash": "8a6b949de0475d2dc4a2769d5acdf93c5d79649435f0d803c889d11dbc87cd02",
+   "claims": [
+    "F-PTR-56 latent: declared.affected alive-filtered at collectTurnTargets",
+    "F-PTR-57 crafted-only: percentOfMax producer is finite literal 0.3",
+    "F-PTR-58 inert: spec-pinned gate; no target-side landed-hook carrier on enemies"
+   ],
+   "inputEvidenceIds": [],
+   "inputPaths": [
+    "src/core/skilldef/LegacySkillAdapter.ts",
+    "src/core/skilldef/SkillResolver.ts",
+    "src/data/skill/PhapTuSkills.ts",
+    "src/core/battle/turn/TurnSkillAction.ts",
+    "src/data/buff/TheTuBuffs.ts",
+    "src/data/enemy/FoundationEnemies.ts"
+   ],
+   "invariantIds": [],
+   "limitations": [
+    "reviewer ran on stale pin 0eb0c574 -- verdict recorded as evidence, not a seal"
    ]
   }
  ],
@@ -4235,6 +4459,42 @@
    ],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-PTR-INT-D1",
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 5,
+   "phase": "NOVEL_SYNTHESIS",
+   "reviewerId": "devin-e8b10ba8dc1b40d8838cfe9e3a4b51ef",
+   "contextId": "ctx-e8b10ba8",
+   "model": "swe-2",
+   "role": "clean-adversarial",
+   "inputBundleHash": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only worktree",
+    "stale pin 0eb0c574 -- evidence only"
+   ],
+   "startedAt": "2026-09-26T21:06:00Z",
+   "sealedAt": "2026-09-27T00:36:00Z",
+   "previousPhaseReviewId": "REV-PTR-INT-C1",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-INTD"
+   ],
+   "findingIds": [
+    "F-PTR-56",
+    "F-PTR-57",
+    "F-PTR-58"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
   }
  ],
  "cycles": [
@@ -4820,6 +5080,44 @@
    "proposedProtection": [
     "if content ever combines empowerment+multicast or authored cap>0.75, re-review these seams first",
     "water rider if-gate is spec-pinned structure -- do not flatten"
+   ],
+   "capabilityDelta": "hazard recorded -- no behavior change"
+  },
+  {
+   "version": 1,
+   "supersedes": null,
+   "incidentEvidenceIds": [
+    "EV-PTR-INTD"
+   ],
+   "originatingRun": "phap-tu-reimagine-2026-09-26",
+   "missedInvariantIds": [],
+   "exclusions": [],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null,
+   "id": "L-PTR-INTD-REJ",
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PTR-56",
+    "F-PTR-57",
+    "F-PTR-58"
+   ],
+   "rootClass": "SPEC_UNDECIDED",
+   "escapeReason": "latent parity gaps + crafted-only inputs + inert consumer sets -- all unreachable today but are future ship-gates",
+   "applicability": [
+    "dead-target admission into declared.affected",
+    "computed/dynamic percentOfMax cost defs",
+    "enemy-side landed-hook carriers on water-basic targets"
+   ],
+   "proposedProtection": [
+    "if producers ever admit dead targets, wrap the non-damaging for_each_target lane in per-target target_alive",
+    "if percentOfMax ever becomes computed, clamp Number.isFinite in resolvePlanCost",
+    "dedupe landed-gate hooks on shared hit op ids before any enemy-side onImpactLanded/on_hit_proc carrier ships"
    ],
    "capabilityDelta": "hazard recorded -- no behavior change"
   }
