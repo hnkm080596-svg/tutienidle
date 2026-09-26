@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
@@ -6,7 +6,7 @@ import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
-import { PHAN_CHAN_BASE_RATIO, PHAN_CHAN_BUFF } from '../../../data/buff/TheTuBuffs'
+import { PHAN_CHAN_BASE_RATIO, PHAN_CHAN_BUFF, PHAN_CHAN_MARKED_RATIO } from '../../../data/buff/TheTuBuffs'
 import {
   HUYET_CUONG_CAP,
   HUYET_CUONG_PER_PERCENT,
@@ -21,6 +21,7 @@ import {
   buildTheTuKit,
 } from '../../../data/skill/TheTuSkills'
 import { collectBodyKitModifiers } from '../../the-tu/TheTuKitModifiers'
+import { THE_TU_NODES } from '../../../data/progression/TheTuNodes'
 import { createDefaultPlayer } from '../../player/Player'
 import type { EntityVitalsChangedEvent } from '../../combat/EntityVitalsSystem'
 
@@ -234,6 +235,87 @@ describe('loan_dau — sacrifice ordering, 1-HP floor, actual-paid payoff', () =
     }
   })
 
+  it('casts at exactly 1 HP pay NOTHING (op skips) and land at the base coefficient', () => {
+    // Spec 4 pin #4 zero-paid leg: paid <= 0 -> CombatOperationSkip ->
+    // __paid_hp binds 0 -> the payoff contributes nothing. The cast
+    // itself still resolves at the base multiplier.
+    const caster = createCombatant({
+      id: 'caster',
+      type: 'player',
+      stats: createBaseStats({ ...NO_MITIGATION, might: 100 }),
+      currentHp: 1,
+      maxHp: 10_000,
+    })
+    const enemy = createCombatant({
+      id: 'enemy',
+      stats: createBaseStats({ ...NO_MITIGATION }),
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+    })
+    const f = makeFixture(caster, enemy)
+    const kit = buildTheTuKit('cuong_chien', ZERO_MODS, { special: true })
+    f.casterP.basic = kit.special!
+
+    const log = vitalsLog(f.eventBus)
+    f.system.resolveNextStep(f.battle)
+
+    // No pay happened at all: the caster stays at 1 HP and stays alive.
+    expect(caster.currentHp).toBe(1)
+    expect(caster.alive).toBe(true)
+
+    // Payoff reads __paid_hp = 0: hits land at the base coefficient with
+    // only the (maximal) missing-HP scaling on top.
+    const missingFraction = 1 - 1 / 10_000
+    const basePerHit =
+      100 *
+      LOAN_DAU_MULTIPLIER *
+      (1 + Math.min(HUYET_CUONG_CAP, missingFraction * HUYET_CUONG_PER_PERCENT * 100))
+    const withPaidBonus =
+      100 *
+      (LOAN_DAU_MULTIPLIER + 1 * LOAN_DAU_PAID_HP_BONUS) *
+      (1 + Math.min(HUYET_CUONG_CAP, missingFraction * HUYET_CUONG_PER_PERCENT * 100))
+
+    const hits = log.filter(
+      (entry) => entry.entityId === enemy.id && entry.reason === 'damage',
+    )
+    expect(hits).toHaveLength(3)
+    for (const hit of hits) {
+      expect(hit.amount).toBeCloseTo(basePerHit)
+      expect(hit.amount).not.toBeCloseTo(withPaidBonus)
+    }
+  })
+
+  it('sacrifice pays THROUGH a full externalWard: the self-payment bypasses every absorption path', () => {
+    const caster = createCombatant({
+      id: 'caster',
+      type: 'player',
+      stats: createBaseStats({ ...NO_MITIGATION, might: 100 }),
+      currentHp: 10_000,
+      maxHp: 10_000,
+    })
+    const enemy = createCombatant({
+      id: 'enemy',
+      stats: createBaseStats({ ...NO_MITIGATION }),
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+    })
+    const f = makeFixture(caster, enemy)
+    const kit = buildTheTuKit('cuong_chien', ZERO_MODS, { special: true })
+    f.casterP.basic = kit.special!
+
+    // A REAL ward: the ho_ve marker binds the pool's existence, so the
+    // reconcile seam keeps it (a bare ward with no marker is reaped).
+    f.runtime.applyBuff('ho_ve', f.casterP, f.casterP)
+    caster.externalWard = { sourceId: 'caster', amount: 999_999 }
+
+    f.system.resolveNextStep(f.battle)
+
+    // vitals 'sacrifice' is unabsorbable: the full ratio leaves hp
+    // directly and the ward buffer is untouched.
+    expect(caster.currentHp).toBe(10_000 - 3_000)
+    expect(caster.externalWard?.amount).toBe(999_999)
+  })
+
   it('a hostile multi-hit action into a phan_chan holder still produces exactly ONE reflect', () => {
     const caster = createCombatant({
       id: 'caster',
@@ -260,6 +342,47 @@ describe('loan_dau — sacrifice ordering, 1-HP floor, actual-paid payoff', () =
     )
     // The self-pay never reflects (sacrifice/self-hit is not an eligible
     // action); the 3-hit hostile action merges to ONE reflect.
+    expect(reflects).toHaveLength(1)
+    expect(reflects[0]!.amount).toBeCloseTo(1_000_000 * PHAN_CHAN_BASE_RATIO)
+  })
+
+  it('a CHARGED hit queues its reflect and the action tail flushes it', () => {
+    // Pin: a reflect queued through a charged resolve flushes at the
+    // shared action tail (routed charged lane falls through to it) -
+    // the next action's discardPendingReflects must never drop it.
+    const caster = createCombatant({
+      id: 'caster',
+      type: 'player',
+      stats: createBaseStats({ ...NO_MITIGATION, might: 100 }),
+      currentHp: 10_000,
+      maxHp: 10_000,
+    })
+    const enemy = createCombatant({
+      id: 'enemy',
+      stats: createBaseStats({ ...NO_MITIGATION }),
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+    })
+    const f = makeFixture(caster, enemy)
+    const chargedSkill = {
+      id: 'charged_strike',
+      cooldownTurns: 0,
+      chargeTurns: 1,
+      damage: { kind: 'physical' as const, multiplier: 1 },
+      targeting: { shape: 'single' as const },
+    }
+    f.casterP.basic = { ...LOAN_DAU }
+    f.casterP.special = { skill: chargedSkill, remainingCooldownTurns: 0 }
+    f.casterP.chargingTurnsRemaining = 1
+    f.casterP.pendingChargedSkillId = 'charged_strike'
+    f.runtime.applyBuff(PHAN_CHAN_BUFF.id, f.enemyP)
+
+    const log = vitalsLog(f.eventBus)
+    f.system.resolveNextStep(f.battle)
+
+    const reflects = log.filter(
+      (entry) => entry.reason === 'reflection' && entry.entityId === caster.id,
+    )
     expect(reflects).toHaveLength(1)
     expect(reflects[0]!.amount).toBeCloseTo(1_000_000 * PHAN_CHAN_BASE_RATIO)
   })
@@ -359,5 +482,106 @@ describe('huyet_cuong — kit-local scope', () => {
         HUYET_CUONG_PER_PERCENT + 0.005 * 3,
       )
     }
+  })
+})
+
+describe('tran_kinh — landed-hit weaken chain (node -> clone -> stacks -> damage cut)', () => {
+  it('minor_tran_kinh L1 bakes stacks=2 onto tran_ap; the weakened enemy deals 30% less on its next action', () => {
+    const player = createDefaultPlayer()
+    player.cultivationPath = 'body'
+    player.cultivationWay = 'body_pathway'
+    player.nodeLevels = { minor_tran_kinh: 1 }
+    const mods = collectBodyKitModifiers({ getAll: () => THE_TU_NODES }, player)
+
+    const kit = buildTheTuKit('tran_the', mods, { special: true })
+    const rider = kit.basic.appliesAilments?.find((a) => a.buffDefinitionId === 'tran_kinh')
+    expect(rider).toBeDefined()
+    expect(rider!.stacks).toBe(2)
+
+    const caster = createCombatant({
+      id: 'caster',
+      type: 'player',
+      stats: createBaseStats({ ...NO_MITIGATION, might: 10 }),
+      currentHp: 100_000,
+      maxHp: 100_000,
+    })
+    const enemy = createCombatant({
+      id: 'enemy',
+      stats: createBaseStats({ ...NO_MITIGATION, might: 100 }),
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+    })
+    const f = makeFixture(caster, enemy)
+    f.casterP.basic = kit.basic
+
+    const log = vitalsLog(f.eventBus)
+    vi.spyOn(Math, 'random').mockReturnValue(0) // ailment application must land
+    f.system.resolveNextStep(f.battle) // caster AoE lands tran_kinh x2
+
+    const weaken = f.runtime.buffs
+      .getForTarget(enemy.id as never)
+      .find((instance) => instance.definitionId === 'tran_kinh')
+    expect(weaken).toBeDefined()
+    expect(weaken!.stacks).toBe(2)
+    expect(enemy.stats.finalDamagePercent).toBe(-0.3)
+
+    f.system.resolveNextStep(f.battle) // weakened enemy acts: -0.15/stack = -30% final damage
+
+    const enemyHits = log.filter(
+      (entry) => entry.reason === 'damage' && entry.entityId === caster.id,
+    )
+    const enemyHit = enemyHits[enemyHits.length - 1]
+    expect(enemyHit).toBeDefined()
+    // Base hit: might 100 x multiplier 1, no mitigation -> 100; weakened
+    // finalDamagePercent -0.30 -> 70.
+    expect(enemyHit!.amount).toBe(70)
+
+    // Clock = N+1 (TRAN_KINH_TURNS 2 covers one hostile action): the
+    // instance survives the weakened turn and expires at the holder's
+    // next status phase.
+    expect(
+      f.runtime.buffs
+        .getForTarget(enemy.id as never)
+        .some((instance) => instance.definitionId === 'tran_kinh'),
+    ).toBe(true)
+  })
+})
+
+describe('chan_an — mark-expiry reverts the amplified reflect (INT-3 pin)', () => {
+  it('the marked reflect ratio reverts to base once the chan_an mark expires', () => {
+    const caster = createCombatant({
+      id: 'caster',
+      type: 'player',
+      stats: createBaseStats({ ...NO_MITIGATION, might: 100 }),
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+    })
+    const enemy = createCombatant({
+      id: 'enemy',
+      stats: createBaseStats({ ...NO_MITIGATION }),
+      currentHp: 10_000,
+      maxHp: 10_000,
+    })
+    const f = makeFixture(caster, enemy)
+    // Enemy holds the phan_chan reflect; the mark rides the ATTACKER
+    // (markedBy presence is read on the reflected side).
+    f.runtime.applyBuff(PHAN_CHAN_BUFF.id, f.enemyP)
+    vi.spyOn(Math, 'random').mockReturnValue(0) // chan_an application must land
+    // durationOverride 2 = exactly ONE marked hostile turn (the
+    // holder's status phase decrements before its declare - same N+1
+    // clock convention as cam_cong).
+    f.runtime.applyBuff('chan_an', f.casterP, f.enemyP, { durationOverride: 2 })
+
+    const log = vitalsLog(f.eventBus)
+    f.system.resolveNextStep(f.battle) // caster turn 1: mark 2->1 active -> marked reflect
+    f.system.resolveNextStep(f.battle) // enemy turn
+    f.system.resolveNextStep(f.battle) // caster turn 2: mark 1->0 expired -> base reflect
+
+    const reflects = log.filter(
+      (entry) => entry.reason === 'reflection' && entry.entityId === caster.id,
+    )
+    expect(reflects).toHaveLength(2)
+    expect(reflects[0]!.amount).toBeCloseTo(10_000 * PHAN_CHAN_MARKED_RATIO)
+    expect(reflects[1]!.amount).toBeCloseTo(10_000 * PHAN_CHAN_BASE_RATIO)
   })
 })

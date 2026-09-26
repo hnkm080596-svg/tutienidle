@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { THE_TU_NODES } from './TheTuNodes'
 import { NodeRegistry } from '../../core/progression/NodeRegistry'
-import { canPurchaseNode, getNodeLevel, purchaseNode } from '../../core/progression/NodeSystem'
+import { canPurchaseNode, getNodeLevel, purchaseNode, respecNodeTree } from '../../core/progression/NodeSystem'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { collectBodyKitModifiers } from '../../core/the-tu/TheTuKitModifiers'
 import { buildTheTuKit } from '../skill/TheTuSkills'
@@ -61,6 +61,21 @@ describe('TheTuNodes — root mutex + realm gates (INV-2)', () => {
 
     expect(canPurchaseNode(playerA, node('tran_the'))).toBe(false)
     expect(canPurchaseNode(playerB, node('cuong_chien'))).toBe(false)
+  })
+
+  it('respec frees the mutex - buy cuong_chien -> respec -> tran_the opens', () => {
+    const registry = registryWithNodes()
+    const player = playerWith({ realmId: 'qi_refining' })
+
+    expect(purchaseNode(player, node('cuong_chien'))).toBe(true)
+    expect(canPurchaseNode(player, node('tran_the'))).toBe(false)
+
+    respecNodeTree(player, registry)
+
+    expect(getNodeLevel(player, 'cuong_chien')).toBe(0)
+    expect(canPurchaseNode(player, node('tran_the'))).toBe(true)
+    expect(purchaseNode(player, node('tran_the'))).toBe(true)
+    expect(getNodeLevel(player, 'tran_the')).toBe(1)
   })
 
   it('roots are purchasable at qi_refining; deeper nodes require foundation_establishment', () => {

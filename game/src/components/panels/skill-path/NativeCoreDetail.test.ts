@@ -32,7 +32,7 @@ function mountDetail(entry: NativeSkillPathEntry | null) {
   app.provide(BUMP_STATE_KEY, () => { version.value += 1 })
   app.mount(container)
 
-  return { container, pinia, levelUpSkill, version, unmount: () => app.unmount() }
+  return { container, pinia, levelUpSkill, version, manager, unmount: () => app.unmount() }
 }
 
 function entryOf(overrides: Partial<NativeSkillPathEntry> = {}): NativeSkillPathEntry {
@@ -97,5 +97,21 @@ describe('NativeCoreDetail (D7)', () => {
     expect(mounted.container.querySelector('.native-core-detail__name')).toBeNull()
     expect(mounted.container.querySelector('.empty-state')).not.toBeNull()
     mounted.unmount()
+  })
+})
+
+describe('NativeCoreDetail - in-battle affordance disable (cleanD INT)', () => {
+  it('inBattle disables the upgrade button even when canUpgrade is true', () => {
+    const mounted = mountDetail(entryOf({ canUpgrade: true }))
+
+    mounted.manager.getTurnBattle = () => ({ state: 'fighting' }) as ReturnType<GameManager['getTurnBattle']>
+    mounted.version.value += 1
+
+    return Promise.resolve().then(() => {
+      const button = mounted.container.querySelector<HTMLButtonElement>('.native-core-detail__upgrade')!
+      expect(button).not.toBeNull()
+      expect(button.disabled).toBe(true)
+      mounted.unmount()
+    })
   })
 })

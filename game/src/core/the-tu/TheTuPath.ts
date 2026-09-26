@@ -63,11 +63,12 @@ import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
 // — same D12 two-channel pattern as spell (assembly emitter here,
 // mid-battle deltaDeriver registered in CultivationPathSystem).
 //
-// Dependency direction: this file is a leaf — type-only imports plus
-// the tuning constants in BodyStatChannels. CultivationPathKit
-// (catalog) and CultivationPathSystem (authority) import FROM here;
-// nothing here imports back, so domain code (GameManager, NodeSystem,
-// UI bridges) can consume the way predicates without a runtime cycle.
+// Dependency direction: this file is a leaf -- it runtime-imports the
+// authored kit/buff ids from data/ (TheTuSkills, buff ids, TheTuStatChannels
+// tuning) but imports no domain authority. CultivationPathKit (catalog)
+// and CultivationPathSystem (authority) import FROM here; nothing here
+// imports back, so domain code (GameManager, NodeSystem, UI bridges) can
+// consume the way predicates without a runtime cycle.
 
 /**
  * The hidden_body-domain attribute -> reactive-chance modifier triple
@@ -237,9 +238,9 @@ export const BODY_PATHWAY: PathWayDefinition = {
   subpaths: {
     root: { state: 'player.nodeLevels' },
   },
-  // Beta — the buff list is what the beta kits + parked legacy defs
+  // Beta: the buff list is what the beta kits + parked legacy defs
   // can plant (phan_chan passive + chan_an mark + khiem_khich taunt +
-  // tran_kinh weaken; bat_tu_ba_the / son_nhac stay listed — authored
+  // tran_kinh weaken; bat_tu_ba_the / son_nhac stay listed; authored
   // defs parked for post-beta content).
   ownedContent: {
     skillIds: [

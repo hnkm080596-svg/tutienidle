@@ -1522,12 +1522,20 @@ export class TurnBattleSystem {
     // punish-on-cast áp hard-CC buff lên actor, CC-check kế tiếp đọc state
     // mới → ccBlocked đúng theo spec §4.2 ordering.
     if (this.registry && this.runtime !== undefined) {
-      this.procs.rollReactiveTrigger(
+      const { firedFollowUp } = this.procs.rollReactiveTrigger(
         actor.entity.id,
         'onCastBegin',
         undefined,
         `action.turn.${battle.totalTurnsElapsed}.${actor.id}.castbegin`,
       )
+      if (firedFollowUp) {
+        battle.queuedFollowUps = battle.queuedFollowUps ?? []
+        battle.queuedFollowUps.push({
+          actorId: actor.id,
+          executionKind: 'reactive_bypass',
+          actionSource: 'follow_up',
+        })
+      }
     }
 
     // CC check TRƯỚC tick: buff stun/freeze duration=N phải block đúng N
@@ -2064,7 +2072,7 @@ export class TurnBattleSystem {
         this.reportUnroutedCast(
           actor,
           declared.chargedSkill,
-          actor.pendingChargedSkillId ?? declared.action?.skillId,
+          declared.chargedSkill?.id,
           true,
         )
       } else {
@@ -2089,12 +2097,13 @@ export class TurnBattleSystem {
             if (!targetParticipant || !targetParticipant.entity.alive) continue
 
             // Same per-hit authority as the normal lane (resolveDeclaredHit):
-            // defender income, leech, consume effects, on-hit procs, the
-            // Reflection queue, ailments, detonate, the taken-side Phan /
-            // evade windows and both stat refreshes are all owned there -
-            // a charged hit must not bypass them. The missing-HP scalar
-            // resolves inside against the actor's live hp, so the scaled
-            // damage packet passes through raw.
+            // defender income, leech, consume effects, on-hit procs,
+            // ailments, detonate, the taken-side Phan / evade windows and
+            // both stat refreshes are all owned there - a charged hit must
+            // not bypass them. (The reflect queue is fed by the plan
+            // lane's rollReactiveTrigger, not this path.) The missing-HP
+            // scalar resolves inside against the actor's live hp, so the
+            // scaled damage packet passes through raw.
             const hitResult = this.resolveDeclaredHit(
               battle,
               actor,
@@ -2146,10 +2155,11 @@ export class TurnBattleSystem {
     // affected-gated block below: enemy-targeted charge skills collect
     // targets only at resolve time, so `affected` stays empty at declare
     // and the block below never ran for them -- their cooldown/resource
-    // were never committed (dead isChargeInit branch). On the engine-unit
-    // lane the charge-resolve turn returns early above; on the routed
-    // lane it falls through with declared.action === null and is skipped
-    // by the null-action gates below.
+    // were never committed (dead isChargeInit branch). Only the legacy
+    // (runtime === undefined) lane returns early above; routed and
+    // unrouted charge resolves intentionally fall through to the shared
+    // tail and DO reach this point (action is null there, so this block
+    // skips by shape, not by control flow).
     // skilldef M5b/M5d -- the commit rides the plan pipeline when the
     // def is adapter-covered (commitShell + consume ops through the
     // scheduler); an adapter-unsupported charge def on a live battle
@@ -2417,6 +2427,9 @@ export class TurnBattleSystem {
     // cannot recurse (a landed channel never opens for it).
     if (this.runtime !== undefined) {
       this.procs.flushReflects()
+      // A reflect kill is a death this boundary created - sweep now so the
+      // attacker's death hooks fire at this quiescent point, not the next.
+      this.sweepBuffDeaths(battle)
     }
 
     // The flush settle is itself a quiescent point: a reflect that kills
@@ -2933,10 +2946,8 @@ export class TurnBattleSystem {
    * declare -- any submitted choice would be silently discarded).
    */
   isPendingQueuedExecution(actorId: string): boolean {
-    return (
-      this.pendingQueuedExecution?.actorId === actorId ||
-      this.pendingReactiveEntry?.actorId === actorId
-    )
+    return this.pendingQueuedExecution?.actorId === actorId
+      || this.pendingReactiveEntry?.actorId === actorId
   }
 
   /**

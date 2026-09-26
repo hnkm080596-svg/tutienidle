@@ -26,12 +26,12 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch, t
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNodeMaxLevel, getEffectiveNodeMaxLevel, getNextLevelCost, previewRouteSwitch, hasPrerequisite, nodeWayApplies } from '@/core/progression/NodeSystem'
 import { getActiveRoute } from '@/core/player/CultivationPathSystem'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import { HIDDEN_BRANCH_TAGS, viewBranchTags } from '@/core/progression/NodeBranchViews'
-import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import SkillConnections from './SkillConnections.vue'
 import type { SkillConnectionEntry, SkillConnectionRect } from './SkillConnections.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
@@ -109,13 +109,7 @@ const spellPathRoute = computed<SpellPathRoute | null>(() => {
   return getActiveRoute(player) ?? null
 })
 
-const inBattle = computed(() => {
-  stateVersion.value
-
-  const battle = gameManager.getTurnBattle()
-
-  return battle !== null && isBattleInProgress(battle.state)
-})
+const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 
 const pendingRoute = ref<SpellPathRoute | null>(null)
 
@@ -142,7 +136,7 @@ function confirmRouteSwitch() {
 
   pendingRoute.value = null
 
-  if (route !== null) {
+  if (route !== null && !inBattle.value) {
     switchSpellPathRoute(route)
   }
 }
@@ -331,10 +325,22 @@ function onRespecClick() {
   pendingRespec.value = true
 }
 
+// Battle start kills any pending confirm - a stale modal's confirm
+// would otherwise silently no-op against the ops gate (the store
+// refuses ops while a battle runs).
+watch(inBattle, (engaged) => {
+  if (engaged) {
+    pendingRespec.value = false
+    pendingRoute.value = null
+  }
+})
+
 function confirmRespec() {
   pendingRespec.value = false
 
-  respecNodeTree()
+  if (!inBattle.value) {
+    respecNodeTree()
+  }
 }
 
 function cancelRespec() {

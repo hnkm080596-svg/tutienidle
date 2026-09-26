@@ -19,6 +19,7 @@
 // in the same action.
 
 import type {
+  BuffDefinitionId,
   CombatEntityId,
   CombatOperationId,
 } from '../battle/contracts/ids'
@@ -80,7 +81,7 @@ const REFLECTION_PROFILE = 'reflection'
 
 /**
  * The Tu beta (Phan Chan) -- ONE reflect per hostile ACTION: hits of the
- * same action merge into a pending entry keyed on (holder, capability),
+ * same action merge into a pending entry keyed on holderId (one reflect per holder per action),
  * then the action-end flush emits a single 'reflection' op per entry.
  * Multi-hit actions settle fully before the reflect fires; the attacker
  * identity is the action's source, so every hit of the action carries it.
@@ -90,7 +91,7 @@ interface PendingReflect {
   attackerId: CombatEntityId
   maxHpRatio: number
   markedMaxHpRatio?: number
-  markedBy?: string
+  markedBy?: BuffDefinitionId
   rootActionId: string
   grantInstanceId: string
   capabilityId: string
@@ -156,6 +157,10 @@ export class CombatProcSystem {
     for (const grant of this.deps.buffs.getCapabilities(holderId)) {
       const reactive = asReactiveTrigger(grant)
       if (reactive === undefined || reactive.trigger !== trigger) continue
+      // INV-9 applies to the whole lane: a non-natural action source
+      // (counter/follow_up/intercept) opens no reactive outcome at all --
+      // skip before the roll so excluded sources consume no RNG.
+      if (context?.reflectsEligible === false) continue
       if (!this.deps.rng.rollChance(reactive.chance)) continue
 
       if (reactive.appliesDefinitionId !== undefined) {
@@ -187,10 +192,11 @@ export class CombatProcSystem {
         (context.hpDamage ?? 0) > 0 &&
         context.attacker.alive &&
         context.attacker.id !== holderId &&
-        holder !== undefined &&
-        context.reflectsEligible !== false
+        holder !== undefined
       ) {
-        const key = `${holderId}.${grant.capability.id}`
+        // Spec: one reflect per holder per hostile action -- key on the
+        // holder only so a second reflecting capability cannot emit twice.
+        const key = holderId
         if (!this.pendingReflects.has(key)) {
           this.pendingReflects.set(key, {
             holderId,
@@ -220,7 +226,7 @@ export class CombatProcSystem {
 
   /**
    * The Tu beta -- action-end settle: emit ONE 'reflection' op per
-   * pending (holder, capability) entry. The damage authority resolves it
+   * pending holderId entry. The damage authority resolves it
    * (flat, holder-as-attacker, never a hit roll / crit / turn). The
    * caller drains once per applied action -- an empty map is a no-op, so
    * actions that damaged no reflect-holder cost nothing.
@@ -240,7 +246,7 @@ export class CombatProcSystem {
       if (holder === undefined) continue
       if (attacker === undefined || !attacker.alive) continue
 
-      // Mark check at FLUSH time (post-settle): a Chấn Ấn instance the
+      // Mark check at FLUSH time (post-settle): a chan_an instance the
       // holder sourced on the attacker upgrades the coefficient; the
       // mark itself is never consumed.
       const marked =

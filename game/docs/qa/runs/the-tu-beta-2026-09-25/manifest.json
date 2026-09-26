@@ -14250,7 +14250,7 @@
       "path": "src/components/panels/ArtifactPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "a3f860e7179ad5c6b39072a99ff991dbbdbc15ade391222c67a3aa9f611975fc"
+      "hash": "49a1a0d9b2e839f802fcfbacc110a3859fc9d39f9b79d32ea3cac37dc185515e"
     },
     {
       "path": "src/components/panels/bag-sections/BagCell.ts",
@@ -14328,7 +14328,7 @@
       "path": "src/components/panels/CharacterPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "3ec28f17a2c010f7c3b7a8b92bae762026099b14baa200c789a29f399c2e4174"
+      "hash": "96f6dc7ec7bbc01d9cb330362085b65453980ba645affd540f2348c80d3b46a7"
     },
     {
       "path": "src/components/panels/ChiHienQuan.integration.test.ts",
@@ -14496,7 +14496,7 @@
       "path": "src/components/panels/QuanKhiPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "69950b1d737221dc956890e538cdb6e92650858423c987100712b4ae2552ba53"
+      "hash": "ebd4cbb2fa68871da9e9873c97687376626e0158fa58fe2661580ab5559ae48d"
     },
     {
       "path": "src/components/panels/QuestPanel.vue",
@@ -14568,25 +14568,25 @@
       "path": "src/components/panels/skill-path/NativeCoreDetail.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f4b49a5df8b9bd5feb06d80c7a0464163e5ef676dfa49d638fc24a7d863b49da"
+      "hash": "b9275aad66e34f142c2bdfb3f7dc585a56498415db243617886b72b80f6fa2af"
     },
     {
       "path": "src/components/panels/skill-path/NativeCoreDetail.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "e1e246a62c216f19d26877e129ff4e2221842824d0693688f7bef3e9870d4fac"
+      "hash": "7d2e010e669887cc37a9eac81e7c48c6a470b30ec463a0a3f6b1779c044f95d1"
     },
     {
       "path": "src/components/panels/skill-path/NodeInspector.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "9bc297cb7fc297c9246d0b96b142f3740b7de4f5f937bdbaa815b01bfbc89a3b"
+      "hash": "455d0939177a3c4e9678547b30fdbe8e108726b96ba9387653397707531bff39"
     },
     {
       "path": "src/components/panels/skill-path/NodeInspector.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "4c2e75bd29fbc60bd18e54837842622cec143e43ea190bce6a767145df556754"
+      "hash": "dea05eade3399eb72b3a91c2706289d0af086bb203225d9b77b59294ea5e7011"
     },
     {
       "path": "src/components/panels/skill-path/NodeTreePanel.test.ts",
@@ -14598,7 +14598,7 @@
       "path": "src/components/panels/skill-path/NodeTreePanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "0e02f45971edf8d395f186a20af75cc3396b2c3311b210515717465118f139ec"
+      "hash": "5d87fd5cd74ed1bfe506d00bb18f20c9e7cf4f5aac34a57877b4908b0862151e"
     },
     {
       "path": "src/components/panels/skill-path/SkillConnections.vue",
@@ -14610,13 +14610,13 @@
       "path": "src/components/panels/skill-path/SkillDetailView.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "b5c4733193b2fbc422b8ff6d51664c04c9f3e4793f16dd90df58e227d75cdc93"
+      "hash": "ab197b3e9c19b2095ea4a7565c7695b9e855964276a1bb76e8ae15ef65d57483"
     },
     {
       "path": "src/components/panels/skill-path/SkillDetailView.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "aec6440f580377b956355275a7947acf8419478944da8aa19674430d7104af55"
+      "hash": "9e963e0722f51229859a3bc2934ea27afbfb1dcf8394f78bc51f1647b51df80c"
     },
     {
       "path": "src/components/panels/skill-path/SkillPathEntry.ts",
@@ -14634,7 +14634,7 @@
       "path": "src/components/panels/skill-path/SkillRoleStrip.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "6ff0c11610cbc1b04ba7bcbaef01d0e565331fec89c400c907f4c40744a8850a"
+      "hash": "c064e78d13aa421fbeca88a303f9111f136eadc0af3c205e367a6338243fe525"
     },
     {
       "path": "src/components/panels/skill-path/TechniqueBand.test.ts",
@@ -14655,10 +14655,16 @@
       "hash": "51a917234a400b9a44908be6f30aba9dbca685b8dc387d66b253c4c0558e5802"
     },
     {
+      "path": "src/components/panels/skill-path/TheTuTreePanel.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "923e1385ebbb94fb96d4602898e6a4433730b62b6cfd04fba64b826de1613252"
+    },
+    {
       "path": "src/components/panels/skill-path/TheTuTreePanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "36d9055e96875107fce432f7a7033ba5c6698fcac56035979b1a3032df82f470"
+      "hash": "ee40bd07abfa541c078853020d91e2c75bf6da2a6f2d536acdb6ed0455ffc07f"
     },
     {
       "path": "src/components/panels/SkillPathPanel.test.ts",
@@ -14670,7 +14676,7 @@
       "path": "src/components/panels/SkillPathPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "cedbf46808192e48e9216ed49493de1d4d10353b6d674b5c2af2c40b65505f96"
+      "hash": "8c762d7a309ee37bac5621c2e537e45228a9ebffcb493d0c0b5c2ee317702d3c"
     },
     {
       "path": "src/components/panels/StageSelectPanel.test.ts",
@@ -14922,7 +14928,7 @@
       "path": "src/composables/useProgressionActions.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "402c6e0283ea0d2dec5024648f841a8dbcad245daa3f8764a0dcc95189d224b0"
+      "hash": "73b96dce7f80960c47d003163d1972b45dc478bc741ffb4fed3b4157d871ad2f"
     },
     {
       "path": "src/composables/useRealmStatPassives.ts",
@@ -15000,7 +15006,7 @@
       "path": "src/composables/useTurnBattleInfo.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "fbf6a8854c0da5fcba51be0146076c91313d4eae4fd727337f0bb239ddf7e8f5"
+      "hash": "7e6d478da7589275f1f8b21cd59aa366f5ed9a195e0ce2cb6f2e03921579a596"
     },
     {
       "path": "src/composables/useTurnCombatManual.ts",
@@ -15780,13 +15786,13 @@
       "path": "src/core/battle/turn/TurnBattleSystem.hoIntercept.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ab9877f2fb247d329647bb763ff8f99c89a48de51036379508c826debf20ae5e"
+      "hash": "4b8c0ca4a2b70cad21bc138893e746803287bdff8a950b86488e876ac0b009a4"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.midImpactDeath.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d18ebe06630ed3c2e25b75910189d96f6bae6103b6f43adcab282ba722eb25cf"
+      "hash": "6b54ee100e2f52aa52dd6965d2cc306bcb479498dc575cb7ebff51703b010877"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.missingHp.test.ts",
@@ -15822,7 +15828,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.reflection.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "84080dcc877c40705d7887d76e6316ba808c0254f0f58323443c3ffadcb76dee"
+      "hash": "cd102e3b027ad9fceab9cb040b3952f0f65f1329945750d6510634bdd113389f"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.rngContract.test.ts",
@@ -15918,7 +15924,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.theTuBeta.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "4c30d55cf9c7ba13b57cdac8a9c5c826eff8763cda637a6a028925e5b8f1e32c"
+      "hash": "0db123c52a51779179d9261f90c4e0eed5d55179f356e7cf9252f42bb8e99332"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.troFollowUp.test.ts",
@@ -15930,7 +15936,13 @@
       "path": "src/core/battle/turn/TurnBattleSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c8d680757b7bac27e42b57fdc136d47a535bcd66e7b1cf4cc7883816dd2c4f2d"
+      "hash": "7f5df20c764abddc71505ae7f95ec6f5693426c2818982af6e3af23af3159f6a"
+    },
+    {
+      "path": "src/core/battle/turn/TurnBattleSystem.ttNovelAttack.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "b9fc321f19183cb8a0c4504f6e169b060779c80db8d3663eb5f784b8cb97f62a"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.turnRegen.test.ts",
@@ -16020,7 +16032,7 @@
       "path": "src/core/battle/turn/TurnSkillPlanRuntime.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1654a4bc82da4fffa0484d422b65e19dc9086676d9ddcb0b89224ec09290c287"
+      "hash": "9865154c8f035bc6bfeaf4784943530bbcc6a283827ab27c6516d232cd2f1cfa"
     },
     {
       "path": "src/core/battle/turn/TurnStatsRecompute.test.ts",
@@ -17697,6 +17709,12 @@
       "hash": "7966da64d56a69e6f813ab6ff2c22f92c456451a9f956ef741bbd94f00dd5022"
     },
     {
+      "path": "src/core/game/GameManager.realmAdvanceInBattle.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "9394ffd043c57e2c66e02cdf46d9fb163be92c9bfb01b4daf0aa28d610a12a6f"
+    },
+    {
       "path": "src/core/game/GameManager.realmAdvanceUnequip.test.ts",
       "kind": "file",
       "mode": 33188,
@@ -17838,7 +17856,7 @@
       "path": "src/core/game/GameManager.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "31baafd2d0a2d6bc233d0196620168695c5f89fe3de1a12fcc03d9055b0bea98"
+      "hash": "fd36e10a665fb00a78985043a9a7db1c66cce917380a42db06589776f77e788a"
     },
     {
       "path": "src/core/game/GameManager.tuLinhTran.test.ts",
@@ -17979,6 +17997,12 @@
       "hash": "8492dc7b5738fc10a461ae16da856ca6db778f20fb097847bd137a7404bd8622"
     },
     {
+      "path": "src/core/game/GameManagerProgressionOps.inBattle.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "158bd2957ab8723c15bb21a67e812a9d0385b6b90e00b72a60a535a6b5f27f63"
+    },
+    {
       "path": "src/core/game/GameManagerProgressionOps.levelGates.test.ts",
       "kind": "file",
       "mode": 33188,
@@ -17994,7 +18018,7 @@
       "path": "src/core/game/GameManagerProgressionOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6ce4de447c6b066d8a5deba0a2d8b464d182a61ed3699a959e3796ec24d4eefc"
+      "hash": "6803aef14ee8e31867e29826930830e3fe3d804acefb620dc323ab3c10113767"
     },
     {
       "path": "src/core/game/GameManagerQuestOps.ts",
@@ -18006,7 +18030,7 @@
       "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "cbb7801b6e5d5638b2550683e7f4fa26c534a28ca8444eab79a09f67c9c0b9ee"
+      "hash": "1ab0f9fad0a69a94a8c9dde72127bd9006f65021ab6c9623431802da85ec76c3"
     },
     {
       "path": "src/core/game/GameManagerRewardOps.ts",
@@ -18072,7 +18096,7 @@
       "path": "src/core/game/GameManagerTurnBattleOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "5a6d650be031236b7f029eddd7d2902d365a694d69f9d71bd2ac1d5b9c83a0a7"
+      "hash": "a37bb4eedf52ca8666ade6b006599708b92d0e29e8b2c239e7576f9e8266ea9b"
     },
     {
       "path": "src/core/game/GameManagerTurnBattleOps.turnEngine.test.ts",
@@ -18498,7 +18522,7 @@
       "path": "src/core/player/CultivationPathRegistry.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "93408a0a452c73a31ad8fbddc2fba09f744247b94528b93dc0a7371b58191739"
+      "hash": "785416765bf6f7865956006df8aafab41b20c5a61f01159fc516f91a0d231b15"
     },
     {
       "path": "src/core/player/CultivationPathRoles.test.ts",
@@ -18624,7 +18648,7 @@
       "path": "src/core/proc/CombatProcSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "160a54b5178c248822201260c7eb6c20fdb7db64b28982863d502eaf726d4eff"
+      "hash": "25f5dc7dde037422bc8ea238d53052be879e0ee82bc043ca255ef32ed16e1a94"
     },
     {
       "path": "src/core/proc/MarkerCapabilities.ts",
@@ -18636,7 +18660,7 @@
       "path": "src/core/proc/ProcCapabilities.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d3935b40a85744bb63dd577268610cf21da523adcf68564032d34d116eee784d"
+      "hash": "2fd3a972f2f3cf8347b7957b05569efdb669cca088832b26f70adce88789e99a"
     },
     {
       "path": "src/core/production/DecomposeSystem.capacity.test.ts",
@@ -20202,7 +20226,7 @@
       "path": "src/core/the-tu/TheTuPath.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a8ddf2ecbbc96f2f3ea1fef32a1e7f85ad6c882bfa7bf89fb454e78dc0e5c163"
+      "hash": "78412fbf306e643ffc7645ce91c112c89fd92ef66e7850c1980a1eb39b016f41"
     },
     {
       "path": "src/core/the-tu/TheTuPath.way.test.ts",
@@ -20466,7 +20490,7 @@
       "path": "src/data/buff/TheTuBuffs.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "7519c13bee587d8e665823844f456cdb34282e2798e6afa47ee567e51cc3d6a2"
+      "hash": "081a0dfa379cc98d1089dd1790b9fbd8ad858d3b5b189b8a7cdb88e7f9745e88"
     },
     {
       "path": "src/data/buff/ThuanHeBuffs.ts",
@@ -20730,7 +20754,7 @@
       "path": "src/data/progression/SkillCoreNodes.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e507eb91a935ac0e42cba2a85ac6914d73e3e28b646cd2b05bbab3d7b3155e35"
+      "hash": "f418a1e58ba8477cc69ba09b40aa6fb687e41e2e34e29e7498634edc0faae289"
     },
     {
       "path": "src/data/progression/SkillCoreNodes.ts",
@@ -20760,7 +20784,7 @@
       "path": "src/data/progression/TheTuNodes.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c0fccf2c79b31693e1bd127cca54fd0adb7496677e402ce21d4f8541872b1909"
+      "hash": "27e9dcf751d419f7e57e79d63ea2e32bab48983dacbe0adb56b2708845dd3a9a"
     },
     {
       "path": "src/data/progression/TheTuNodes.ts",
@@ -22224,13 +22248,13 @@
       "path": "src/services/save/saveShapeValidation.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d430f550010a854bbe56d1606f264361b3ceb844101f0d44f375fd0ff3616b02"
+      "hash": "5b3e9f70c39c6ad7bf7fb8359503fd57bdf53e856845e533b363eac0e23bf571"
     },
     {
       "path": "src/services/save/saveShapeValidation.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e683ae5df10668eaa8237ab2322634bfcf770ca3d23af34a811a5bc43cacb9a2"
+      "hash": "2cfd902b88a5bb364c7211fac95a5b1ee7b930ed74605ef84e507b56c21f79e4"
     },
     {
       "path": "src/services/save/SaveSystem.bootRestore.test.ts",
@@ -22285,6 +22309,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "f9598503964106d8123b541408ee1265366b5b168c4704eee4a9cfca2aa89847"
+    },
+    {
+      "path": "src/services/save/saveTheTuCrafted.qa.test.ts",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "682b309203417962cd025971bb114d9df769380c3a22660dc8c3c0fe9137eb7a"
     },
     {
       "path": "src/services/save/saveTypes.ts",
@@ -22566,7 +22596,7 @@
       "path": "tests/architecture/baselines/asciiComments.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "873c075ea180edf30404c6bc273e14be18e87636daba57c093d32d348aeb2523"
+      "hash": "caa6c00d1700324d747c465364937e10ece1d909e1db33cec337da8e04736b02"
     },
     {
       "path": "tests/architecture/battleLifecyclePathBoundary.test.ts",
@@ -22989,5 +23019,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "3954e88d7601834989e11f6fceb47c0bc546e04635bce6f8faec3d2994afae10"
+  "productStateId": "d9f8298db06ba573ec01a4154a89928df7c6f506ed4a801fba3342a52853df12"
 }

@@ -353,6 +353,7 @@ function onUpgrade() {
               :key="route"
               class="route-pick__option"
               variant="ghost"
+              :disabled="inBattle"
               @click="onRoutePick(route)"
             >
               <span class="route-pick__option-name">{{ t(`panels.nodeTree.routes.${route}`) }}</span>

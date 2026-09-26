@@ -8,6 +8,8 @@ import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { buffs as LIVE_BUFFS } from '../../../data/buff/buffs'
 import type { BuffRegistry } from '../../buff2/BuffRegistry'
+import type { BuffDefinitionId, CombatEntityId } from '../contracts/ids'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 import {
   PHAN_CHAN_BASE_RATIO,
@@ -227,6 +229,80 @@ describe('phan_chan reflect (Max-HP ratio, once-per-action)', () => {
     expect(10_000 - attacker.currentHp).toBeCloseTo(10_000 * PHAN_CHAN_BASE_RATIO)
   })
 
+  it('one AoE action into TWO phan_chan holders flushes exactly one reflect per holder', () => {
+    const tankA = makeTank('tank_a')
+    const tankB = makeTank('tank_b')
+    const attacker = makeAttacker('enemy')
+    const f = makeBattle(tankA, attacker, BUFF_REGISTRY, {
+      targeting: { shape: 'all_lanes' },
+    })
+
+    const tankBP = makeParticipant(tankB.id, tankB, 10, 0)
+    tankBP.basic = { ...NOOP_PLAYER_BASIC }
+    f.battle.players.push(tankBP)
+
+    applyPhanChan(f.runtime, f.tankP)
+    applyPhanChan(f.runtime, tankBP)
+
+    const system = systemOf(f)
+    system.resolveNextStep(f.battle)
+    system.resolveNextStep(f.battle)
+    // Both tanks (speed 10) act before the attacker (speed 9).
+    system.resolveNextStep(f.battle)
+
+    // Per-holder reflect: 2 x (holder maxHp x base ratio) -- the
+    // once-per-action cap binds per holder, not per action.
+    expect(10_000 - attacker.currentHp).toBeCloseTo(2 * (10_000 * PHAN_CHAN_BASE_RATIO))
+  })
+
+  it('a non-natural hostile hit (counter payload) never queues a reflect (INV-9)', () => {
+    const tank = makeTank('tank')
+    const attacker = makeAttacker('enemy')
+    const f = makeBattle(tank, attacker)
+    applyPhanChan(f.runtime, f.tankP)
+
+    f.attackerP.reactivePayloads = { enemy_hit: { ...makeAttackerBasic() } }
+    f.battle.queuedFollowUps = [
+      {
+        actorId: 'enemy',
+        executionKind: 'reactive_bypass',
+        actionSource: 'counter',
+        payloadSkillId: 'enemy_hit',
+        targetIds: ['tank'],
+      },
+    ]
+
+    const tankHpBefore = tank.currentHp
+    const system = systemOf(f)
+    system.resolveNextStep(f.battle)
+
+    // The hostile hit landed (the taken window genuinely opened)...
+    expect(tank.currentHp).toBeLessThan(tankHpBefore)
+    // ...but the bypass-source action feeds no reflect.
+    expect(attacker.currentHp).toBe(10_000)
+  })
+
+  // cleanE INT pin -- a queued repeat/multicast execution carries no
+  // actionSource (non-natural), so it lands the hit but queues no
+  // reflect. The original cast reflects exactly once.
+  it('a queued repeat execution hits but never reflects (INV-9 non-natural)', () => {
+    const tank = makeTank('tank')
+    const attacker = makeAttacker('enemy')
+    const f = makeBattle(tank, attacker, BUFF_REGISTRY, { repeatCasts: 1 })
+    applyPhanChan(f.runtime, f.tankP)
+
+    const tankHpBefore = tank.currentHp
+    const system = systemOf(f)
+    system.resolveNextStep(f.battle) // tank noop
+    system.resolveNextStep(f.battle) // attacker original -> 1 reflect
+    const afterOriginal = attacker.currentHp
+    system.resolveNextStep(f.battle) // queued repeat drains -> hit, no reflect
+
+    expect(tank.currentHp).toBeLessThan(tankHpBefore) // the repeat landed too
+    expect(10_000 - afterOriginal).toBeCloseTo(10_000 * PHAN_CHAN_BASE_RATIO)
+    expect(attacker.currentHp).toBe(afterOriginal)
+  })
+
   it('dodged hit -> no reflection', () => {
     // Hit chance floors at 5% (Accuracy.ts) - force the roll high so the
     // dodge is deterministic rather than stat-absurd.
@@ -263,6 +339,21 @@ describe('phan_chan reflect (Max-HP ratio, once-per-action)', () => {
     expect(attacker.currentHp).toBe(10_000)
   })
 
+  it('post-mortem: a holder killed by the triggering hit still reflects (queued at hit time)', () => {
+    const tank = makeTank('tank')
+    tank.currentHp = 1 // the hostile hit is lethal
+    const attacker = makeAttacker('enemy')
+    const f = makeBattle(tank, attacker)
+    applyPhanChan(f.runtime, f.tankP)
+
+    const system = systemOf(f)
+    system.resolveNextStep(f.battle)
+    system.resolveNextStep(f.battle)
+
+    expect(tank.alive).toBe(false)
+    expect(10_000 - attacker.currentHp).toBeCloseTo(10_000 * PHAN_CHAN_BASE_RATIO)
+  })
+
   it('reflect can kill through the vitals authority', () => {
     const tank = makeTank('tank')
     const attacker = makeAttacker('enemy')
@@ -276,6 +367,24 @@ describe('phan_chan reflect (Max-HP ratio, once-per-action)', () => {
 
     expect(attacker.alive).toBe(false)
     expect(f.battle.state).toBe('victory')
+  })
+
+  it('double-wipe: a lethal hit whose post-mortem reflect kills the last attacker resolves as defeat', () => {
+    const tank = makeTank('tank')
+    tank.currentHp = 1 // the hostile hit is lethal to the last player
+    const attacker = makeAttacker('enemy')
+    attacker.currentHp = 10 // the queued reflect is lethal to the last enemy
+    const f = makeBattle(tank, attacker)
+    applyPhanChan(f.runtime, f.tankP)
+
+    const system = systemOf(f)
+    system.resolveNextStep(f.battle)
+    system.resolveNextStep(f.battle)
+
+    expect(tank.alive).toBe(false)
+    expect(attacker.alive).toBe(false)
+    // Player wipe is checked first - a simultaneous wipe is a defeat.
+    expect(f.battle.state).toBe('defeat')
   })
 
   it('terminal event: attacker-side phan_chan does NOT reflect the reflection back', () => {
@@ -333,5 +442,116 @@ describe('phan_chan reflect (Max-HP ratio, once-per-action)', () => {
 
     const expected = 10_000 * (PHAN_CHAN_MARKED_RATIO + 0.02)
     expect(10_000 - attacker.currentHp).toBeCloseTo(expected)
+  })
+})
+
+
+describe('suppressed-reflect coverage pins (cleanC INT)', () => {
+  it('queued reflect skipped when the attacker is dead at flush time', () => {
+    const tank = makeTank('tank')
+    const attacker = makeAttacker('enemy')
+    const f = makeBattle(tank, attacker)
+    applyPhanChan(f.runtime, f.tankP)
+
+    // Queue the reflect the way the hit lane does, then kill the
+    // attacker before the action tail flushes.
+    f.runtime.procs.rollReactiveTrigger(
+      tank.id as CombatEntityId, 'onImpactLanded',
+      { attacker, hpDamage: 100, reflectsEligible: true }, 'root.test.1')
+    attacker.alive = false
+    f.attackerP.alive = false
+
+    f.runtime.procs.flushReflects()
+
+    expect(attacker.currentHp).toBe(10_000)
+  })
+
+  it('residue from an aborted action is discarded, never attributed to the next action', () => {
+    const tank = makeTank('tank')
+    const attacker = makeAttacker('enemy')
+    const f = makeBattle(tank, attacker)
+    applyPhanChan(f.runtime, f.tankP)
+
+    f.runtime.procs.rollReactiveTrigger(
+      tank.id as CombatEntityId, 'onImpactLanded',
+      { attacker, hpDamage: 100, reflectsEligible: true }, 'root.test.1')
+
+    // Entry discard mirrors TBS applyActionImpact pre-queue discard.
+    f.runtime.procs.discardPendingReflects()
+    f.runtime.procs.flushReflects()
+
+    expect(attacker.currentHp).toBe(10_000)
+  })
+
+  it('INV-9 hoist: reflectsEligible:false suppresses EVERY reactive outcome (buff grant + follow-up), not just reflects', () => {
+    const REACTIVE_APPLY: BuffDefinition = {
+      id: 'qa_reactive_apply' as BuffDefinitionId,
+      name: 'QA reactive apply',
+      kind: 'buff',
+      instanceScope: 'per_target',
+      stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+      lifetime: { clock: 'holder_turns', duration: 3, scaling: 'fixed' },
+      capabilities: [
+        {
+          id: 'qa_reactive_apply.cap',
+          type: 'reactive_trigger',
+          payload: { trigger: 'onImpactLanded', chance: 1, appliesDefinitionId: 'qa_marker', queuesFollowUp: true },
+        },
+      ],
+      dispellable: true,
+    }
+    const MARKER: BuffDefinition = {
+      id: 'qa_marker' as BuffDefinitionId,
+      name: 'QA marker',
+      kind: 'buff',
+      instanceScope: 'per_target',
+      stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+      lifetime: { clock: 'holder_turns', duration: 2, scaling: 'fixed' },
+      capabilities: [],
+      dispellable: true,
+    }
+    const tank = makeTank('tank')
+    const attacker = makeAttacker('enemy')
+    const registry = makeTestBuffRegistry([...LIVE_BUFFS, REACTIVE_APPLY, MARKER])
+    const f = makeBattle(tank, attacker, registry)
+    f.runtime.applyBuff('qa_reactive_apply', f.tankP)
+
+    const { firedFollowUp } = f.runtime.procs.rollReactiveTrigger(
+      tank.id as CombatEntityId, 'onImpactLanded',
+      { attacker, hpDamage: 100, reflectsEligible: false }, 'root.test.2')
+
+    expect(firedFollowUp).toBe(false)
+    expect(f.runtime.buffs.getForTarget(tank.id as CombatEntityId).some((i) => i.definitionId === 'qa_marker')).toBe(false)
+  })
+
+  it('onCastBegin queued follow-up is honored (not silently dropped)', () => {
+    const CAST_FOLLOW: BuffDefinition = {
+      id: 'qa_cast_follow' as BuffDefinitionId,
+      name: 'QA cast follow',
+      kind: 'buff',
+      instanceScope: 'per_target',
+      stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
+      lifetime: { clock: 'holder_turns', duration: 3, scaling: 'fixed' },
+      capabilities: [
+        {
+          id: 'qa_cast_follow.cap',
+          type: 'reactive_trigger',
+          payload: { trigger: 'onCastBegin', chance: 1, queuesFollowUp: true },
+        },
+      ],
+      dispellable: true,
+    }
+    const tank = makeTank('tank')
+    const attacker = makeAttacker('enemy')
+    const registry = makeTestBuffRegistry([...LIVE_BUFFS, CAST_FOLLOW])
+    const f = makeBattle(tank, attacker, registry)
+    f.runtime.applyBuff('qa_cast_follow', f.tankP)
+
+    const system = systemOf(f)
+    // Tank's action (speed 10 > 9): onCastBegin fires inside its
+    // resolution and queues the holder's bypass follow-up.
+    system.resolveNextStep(f.battle)
+
+    expect(f.battle.queuedFollowUps?.map((e) => e.actorId)).toEqual(['tank'])
   })
 })

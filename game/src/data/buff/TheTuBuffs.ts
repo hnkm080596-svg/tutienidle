@@ -19,7 +19,11 @@ export const PHAN_CHAN_BASE_RATIO = 0.03
 export const PHAN_CHAN_MARKED_RATIO = 0.06
 export const CHAN_AN_TURNS = 3
 export const TRAN_KINH_WEAKEN_RATIO = 0.15
-export const TRAN_KINH_TURNS = 1
+// One weakened hostile action needs engine clock 2: the holder's
+// status phase decrements holder_turns before its declare (same
+// convention the cam_cong override documents), so N covered actions
+// clock N+1.
+export const TRAN_KINH_TURNS = 2
 export const SON_NHAC_SELF_DR = 0.3
 export const SON_NHAC_TURNS = 3
 export const KHIEM_KHICH_TURNS = 2
@@ -103,8 +107,9 @@ export const CHAN_AN_DEBUFF: BuffDefinition = {
 /**
  * Tran Kinh - the Tran Kinh debuff: an enemy hit by Tran Ap has the
  * damage of its next hostile turn weakened by a flat
- * finalDamagePercent cut. Implemented as a one-holder-turn ailment
- * window (the design's "next hit" weakens on the enemy's next turn);
+ * finalDamagePercent cut. The holder_turns clock decrements at the
+ * holder's status phase BEFORE its declare, so the authored 2 covers
+ * exactly the enemy's next action (the design's "next hit");
  * ailment resistance legitimately shortens it.
  */
 export const TRAN_KINH_DEBUFF: BuffDefinition = {
