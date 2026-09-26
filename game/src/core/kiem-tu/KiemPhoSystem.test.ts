@@ -58,7 +58,7 @@ describe('realmComboMax', () => {
 
 describe('initKiemPhoBattle + nextOrb', () => {
   it('snapshots the persisted preset, starts cursor at 0 and log empty', () => {
-    const player = hienPlayer(['orb_dam', 'orb_chem'] as OrbId[])
+    const player = hienPlayer(['orb_dam', 'orb_chem'] as OrbId[], 'foundation_establishment')
     const state = initKiemPhoBattle(player)
 
     expect(state.preset).toEqual(['orb_dam', 'orb_chem'])

@@ -19,7 +19,6 @@ import {
 import { buildKiemPhoProvider } from './KiemPhoProvider'
 import {
   buildNguKiemDaoProvider,
-  collectKiemDaoCascadeUnlocks,
 } from './NguKiemDaoProvider'
 import {
   applyBreakthroughMerge,
@@ -187,17 +186,17 @@ function stripComments(source: string): string {
 
 describe('INV-1 — way single-owner', () => {
   it('hien provider output never depends on kiemY/kiemDao state', () => {
-    const player = hienPlayer(['orb_dam', 'orb_chem'])
+    const player = hienPlayer(['orb_dam', 'orb_chem'], 'foundation_establishment')
     const provider = buildKiemPhoProvider(player, [])
     const participant = {} as Parameters<typeof provider.resolveBasic>[0]
 
-    const before = [provider.resolveBasic(participant).id, provider.resolveBasic(participant).id]
+    const before = [provider.resolveBasic(participant)!.id, provider.resolveBasic(participant)!.id]
 
     player.swordPath!.kiemY = 777_777
     player.swordPath!.kiemDaoCount = 9
     player.swordPath!.kiemDaoBase = 42
 
-    expect(provider.resolveBasic(participant).id).toBe('orb_dam')
+    expect(provider.resolveBasic(participant)!.id).toBe('orb_dam')
     expect(before).toEqual(['orb_dam', 'orb_chem'])
   })
 
@@ -207,11 +206,11 @@ describe('INV-1 — way single-owner', () => {
     player.swordPath!.kiemDaoBase = 2
 
     const provider = buildNguKiemDaoProvider(player, { a: false, e: false, d: false })
-    const before = provider.resolveBasic({} as TurnBattleParticipant)
+    const before = provider.resolveBasic({} as TurnBattleParticipant)!
 
     player.swordPath!.preset = ['orb_quet', 'orb_hat', 'orb_bo']
 
-    const after = provider.resolveBasic({} as TurnBattleParticipant)
+    const after = provider.resolveBasic({} as TurnBattleParticipant)!
     expect(after.instances?.count).toBe(before.instances?.count)
     expect(after.damage).toEqual(before.damage)
   })
@@ -224,7 +223,7 @@ describe('INV-2 — preset shape + cursor bounds', () => {
     expect(validatePreset(['orb_quet'], 4)).toBe(false)
     expect(validatePreset(['orb_quet'], 5)).toBe(true)
 
-    const state = initKiemPhoBattle(hienPlayer(['orb_dam', 'orb_chem']))
+    const state = initKiemPhoBattle(hienPlayer(['orb_dam', 'orb_chem'], 'foundation_establishment'))
     for (let i = 0; i < 7; i++) {
       nextOrb(state)
       expect(state.cursor).toBeGreaterThanOrEqual(0)
@@ -264,7 +263,7 @@ describe('INV-3/4/6 — combo determinism + suffix-free table + realm gating', (
     const state = initKiemPhoBattle(hienPlayer(['orb_dam']))
     recordCastAndMatch(state, 'orb_dam', KIEM_PHO_COMBOS)
     recordCastAndMatch(state, 'orb_dam', KIEM_PHO_COMBOS)
-    expect(recordCastAndMatch(state, 'orb_dam', KIEM_PHO_COMBOS)?.id).toBe('tam_thich')
+    expect(recordCastAndMatch(state, 'orb_dam', KIEM_PHO_COMBOS)?.id).toBe('nhat_tuyen')
     expect(state.log).toEqual([])
     expect(recordCastAndMatch(state, 'orb_dam', KIEM_PHO_COMBOS)).toBeNull()
   })
@@ -299,9 +298,9 @@ describe('INV-5 — additive resolution: the completing orb hit still lands', ()
     const comboDamagesBefore = damages
     const result = system.applyActionImpact(battle, system.declareActorAction(battle, attackerP))
 
-    // Third cast: orb_dam lands (1) AND tam_thich fires as extraImpact (2).
+    // Third cast: orb_dam lands (1) AND nhat_tuyen fires as extraImpact (2).
     expect(damages - comboDamagesBefore).toBe(2)
-    expect(result.extraImpacts[0]?.presetId).toBe('kiem_combo_tam_thich')
+    expect(result.extraImpacts[0]?.presetId).toBe('kiem_combo_nhat_tuyen')
     vi.restoreAllMocks()
   })
 })
@@ -339,9 +338,9 @@ describe('INV-7 — hardcore discovery', () => {
     ]
     const violations: string[] = []
     // A hardcoded literal bypasses the import scan — quote-delimited
-    // matching keeps presetId strings ('kiem_combo_tam_thich', the
+    // matching keeps presetId strings ('kiem_combo_nhat_tuyen', the
     // LEGITIMATE discovery signal in VFX/impact types) distinct from
-    // the bare combo id ('tam_thich') or name, which must never leak.
+    // the bare combo id ('nhat_tuyen') or name, which must never leak.
     const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     const literalPatterns = KIEM_PHO_COMBOS.flatMap((combo) =>
       [combo.id, combo.name].map(
@@ -494,9 +493,9 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
 
     const ngu = nguPlayer('golden_core')
     ngu.skillInsight = 500
-    // orb_dam_1's realm gate passes at golden_core — only the way gate blocks.
-    expect(gameManager.progressionOps.canPurchaseNode('orb_dam_1', ngu)).toBe(false)
-    expect(gameManager.progressionOps.purchaseNode('orb_dam_1', ngu)).toBe(false)
+    // thich_can's realm gate passes at golden_core - only the way gate blocks.
+    expect(gameManager.progressionOps.canPurchaseNode('thich_can', ngu)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('thich_can', ngu)).toBe(false)
 
     // ...and the matching way buys normally — no hidden root prereq
     // chains the ngu subtree any more.
@@ -506,7 +505,7 @@ describe('INV-8 — ngu gate (ritual offer / commit / one-way / way filter)', ()
   })
 
   it('hien orb nodes stamp requiredWay hien; ngu branch nodes stamp requiredWay ngu', () => {
-    const orbNode = KIEM_TU_NODES.find(n => n.id === 'orb_dam_1')
+    const orbNode = KIEM_TU_NODES.find(n => n.id === 'thich_can')
     const nguNode = KIEM_TU_NODES.find(n => n.branchTag === 'ngu_kiem')
     expect(orbNode).toBeDefined()
     expect(nguNode).toBeDefined()
@@ -522,7 +521,7 @@ describe('INV-9 — cascade bounds', () => {
     const rng = vi.fn(() => 0)
     const player = nguPlayer()
     const provider = buildNguKiemDaoProvider(player, { a: false, e: false, d: false }, rng)
-    const def = provider.resolveBasic({} as TurnBattleParticipant)
+    const def = provider.resolveBasic({} as TurnBattleParticipant)!
 
     for (let i = 0; i < 3; i++) {
       const opts = def.instances!.perInstanceOptions!(i, { currentHp: 1, maxHp: 100 } as CombatEntity)
@@ -536,18 +535,18 @@ describe('INV-9 — cascade bounds', () => {
     const player = nguPlayer()
     const eOnly = vi.fn(() => CASCADE_CRIT_CHANCE + 0.001)
     const eProvider = buildNguKiemDaoProvider(player, { a: false, e: true, d: false }, eOnly)
-    eProvider.resolveBasic({} as TurnBattleParticipant).instances!.perInstanceOptions!(0, { currentHp: 100, maxHp: 100 } as CombatEntity)
+    eProvider.resolveBasic({} as TurnBattleParticipant)!.instances!.perInstanceOptions!(0, { currentHp: 100, maxHp: 100 } as CombatEntity)
     expect(eOnly).toHaveBeenCalledTimes(1)
 
     const dOnly = vi.fn(() => CASCADE_PIERCE_CHANCE + 0.001)
     const dProvider = buildNguKiemDaoProvider(player, { a: false, e: false, d: true }, dOnly)
-    dProvider.resolveBasic({} as TurnBattleParticipant).instances!.perInstanceOptions!(0, { currentHp: 100, maxHp: 100 } as CombatEntity)
+    dProvider.resolveBasic({} as TurnBattleParticipant)!.instances!.perInstanceOptions!(0, { currentHp: 100, maxHp: 100 } as CombatEntity)
     expect(dOnly).toHaveBeenCalledTimes(1)
 
     const both = vi.fn(() => 0.999)
     const bothProvider = buildNguKiemDaoProvider(player, { a: true, e: true, d: true }, both)
     // a is deterministic (hp check, no rng); e + d each consume one roll.
-    bothProvider.resolveBasic({} as TurnBattleParticipant).instances!.perInstanceOptions!(0, { currentHp: 100, maxHp: 100 } as CombatEntity)
+    bothProvider.resolveBasic({} as TurnBattleParticipant)!.instances!.perInstanceOptions!(0, { currentHp: 100, maxHp: 100 } as CombatEntity)
     expect(both).toHaveBeenCalledTimes(2)
   })
 
@@ -556,7 +555,7 @@ describe('INV-9 — cascade bounds', () => {
     player.swordPath!.kiemDaoCount = 5 // multi-instance required for the break-on-death half
     const rng = vi.fn(() => 0)
     const provider = buildNguKiemDaoProvider(player, { a: true, e: true, d: true }, rng)
-    const def = provider.resolveBasic({} as TurnBattleParticipant)
+    const def = provider.resolveBasic({} as TurnBattleParticipant)!
 
     const opts = def.instances!.perInstanceOptions!(0, { currentHp: 20, maxHp: 100 } as CombatEntity)
     expect(opts.damageMultiplier).toBe(EXECUTE_MULT)
@@ -656,8 +655,8 @@ describe('INV-13 — manual/auto parity', () => {
     const participant = {} as Parameters<typeof autoProvider.resolveBasic>[0]
 
     // Advance auto cursor to orb_chem (slot 2), then compare defs.
-    autoProvider.resolveBasic(participant)
-    const autoDef = autoProvider.resolveBasic(participant)
+    autoProvider.resolveBasic(participant)!
+    const autoDef = autoProvider.resolveBasic(participant)!
     const manualDef = manualProvider.resolveManualPick!('orb_chem')
 
     expect(manualDef).toBe(autoDef) // same authored def object
@@ -732,7 +731,7 @@ describe('INV-15 — precursor lock (K3)', () => {
     // identity), not a Skill-backed conversion of the precursor 'tram'.
     const runtime = resolveCultivationPathRuntime(player, PATH_RUNTIME_STUB_DEPS)
 
-    expect(runtime.resolveBasic(player)).toBe(SWORD_BASIC)
+    expect(runtime.resolveBasic(player)!).toBe(SWORD_BASIC)
     expect(unlockedOrbs(1)).toContain('orb_dam')
   })
 })

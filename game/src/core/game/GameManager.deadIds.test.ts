@@ -162,6 +162,8 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
     'tho_tran_cung',
     'tho_linh_chung',
     'tho_tram_bao',
+    'thich_can',
+    'tram_can',
   ])
 
   it('technique gates stay inside the M-QI-06 authored allowlist', () => {

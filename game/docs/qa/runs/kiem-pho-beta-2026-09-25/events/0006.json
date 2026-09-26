@@ -1,0 +1,13 @@
+{
+  "applied": [
+    "evidence:EV-KP-NOVEL-1",
+    "attack:ATK-KP-ORB-PRESET",
+    "attack:ATK-KP-NODE-CHARACTER-LEAK",
+    "attack:ATK-KP-WAY-LEAK",
+    "attack:ATK-KP-REALM-GATE",
+    "attack:ATK-KP-COMBO-ORDER",
+    "attack:ATK-KP-MODIFIER-TARGET",
+    "attack:ATK-KP-SAVE-CORRUPTION",
+    "attack:ATK-KP-STACKS-GATE"
+  ]
+}

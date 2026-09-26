@@ -1,17 +1,21 @@
 import type { ProgressionNode } from '../../core/progression/ProgressionNode'
 import type { StatModifier } from '../../core/stats/StatCalculator'
-import type { OrbId } from '../../core/kiem-tu/KiemTuState'
 import { REALMS } from '../realms/realm'
 import { ORB_UNLOCK_REALM } from '../skill/KiemPhoOrbs'
 
 // Kiem Tu Reimagined (spec 2026-09-15 §6) — the tree after the legacy
 // Kiem Tran / Bat Kiem retirement:
 //
-//   branchTag 'kiem_pho' — 5 orb branches (hien way). Each branch: 5
-//   growth nodes realm-gated to the orb's own unlock realm (spec K13)
-//   + 1 keystone capstone carrying effect.swordPathComboModifier — the
-//   ONLY channel a node may alter a combo (spec §4.2). All stamped
-//   requiredWay 'sword_pathway' — inert and unpurchasable on the ngu way.
+//   branchTag 'kiem_pho' - the KIEM PHO BETA tree (design sec.10-12,
+//   docs/specs/kiem-pho-beta-spec.md): one four-role branch per beta
+//   orb - Can (growth, skill-scoped per-level multiplier), Thuan Thuc
+//   (skill-scoped keystone), Kiem Ket (combo modifier on the
+//   completing orb), Lien Thuc (combo modifier on >=2 of that orb).
+//   All stamped requiredWay 'sword_pathway' - inert and unpurchasable
+//   on the ngu way. Design sec.16.A: NO statModifiers on this branch -
+//   nodes modify the SKILL via effect.skillDefinitionModifiers /
+//   effect.swordPathComboModifier, never the character. Bo/Hat/Quet
+//   branches stay out until their design window lands.
 //
 //   branchTag 'ngu_kiem' — the ngu way subtree (Cultivation Path
 //   Framework M6: way membership replaces the retired kiem_tu_an flip
@@ -43,168 +47,207 @@ function stat(
   }
 }
 
-// ───────────────────────── Orb branches (hien) ─────────────────────────
-
-interface OrbGrowthSpec {
-  name: string
-  description: string
-  modifier: StatModifier
-}
-
-interface OrbBranchSpec {
-  orb: OrbId
-  orbName: string
-  growth: [
-    OrbGrowthSpec, // [0] is the branch root — realm gate only
-    OrbGrowthSpec, // [1] prereq g0
-    OrbGrowthSpec, // [2] prereq g0
-    OrbGrowthSpec, // [3] prereq g1
-    OrbGrowthSpec, // [4] prereq g2
-  ]
-  capstone: {
-    name: string
-    description: string
-    modifier: NonNullable<ProgressionNode['effect']['swordPathComboModifier']>
-  }
-}
-
-function orbGrowth(orb: OrbId, spec: OrbGrowthSpec, index: number): ProgressionNode {
-  const id = `${orb}_${index + 1}`
-  const chainTo = index === 0 ? null : `${orb}_${index === 3 ? 2 : index === 4 ? 3 : 1}`
-
-  return {
-    id,
-    name: spec.name,
-    description: spec.description,
+// ------------- Kiem Pho Beta branches (hien way) -------------
+// Design sec.10-12: one four-role branch per beta orb - Can (growth,
+// per-level skill multiplier), Thuan Thuc (skill-scoped keystone),
+// Kiem Ket (combo modifier keyed on the completing orb), Lien Thuc
+// (combo modifier keyed on >=2 of that orb). Shape per branch:
+//   Can (realm gate = the orb's own unlock realm, spec K13) ->
+//   Thuan Thuc & Kiem Ket (prereq Can) ->
+//   Lien Thuc (prereq Thuan Thuc + Kiem Ket).
+// Predicate-based matching is the contract (no combo-id lists): the
+// predicates happen to reach exactly the beta combos inside the Truc
+// Co window, and stay correct when later orbs land.
+const DAM_BETA_NODES: ProgressionNode[] = [
+  {
+    id: 'thich_can',
+    name: 'Kiếm Căn · Đâm',
+    description: 'Đâm +8% sát thương mỗi cấp — nền của đường kiếm đâm.',
     type: 'minor',
     role: 'growth',
     insightCost: 1,
     maxLevel: 5,
     upgradeCost: { base: 1, perLevel: 2 },
+    // Same authored cap gate as the ngu growth nodes (M-QI-06
+    // precedent): the last mastery level needs technique rank 4.
+    levelGates: [{ atLevel: 5, prerequisite: { kind: 'techniqueRank', rank: 4 } }],
     prerequisites: [
-      { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM[orb]]!.id },
-      ...(chainTo ? [{ kind: 'node' as const, nodeId: chainTo }] : []),
+      { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM.orb_dam]!.id },
     ],
-    effect: { statModifiers: [spec.modifier] },
+    effect: {
+      skillDefinitionModifiers: [
+        { skillId: 'orb_dam', damageMultiplierPerLevel: 0.08 },
+      ],
+    },
     branchTag: 'kiem_pho',
-  }
-}
-
-const ORB_BRANCHES: OrbBranchSpec[] = [
-  {
-    orb: 'orb_dam',
-    orbName: 'Đâm',
-    growth: [
-      { name: 'Kiếm Căn · Đâm', description: '+2 Uy Lực mỗi cấp — nền của đường kiếm đâm.', modifier: stat('orb_dam_1', 'might', 2, 2) },
-      { name: 'Đâm Chuẩn', description: '+5 Chính Xác mỗi cấp.', modifier: stat('orb_dam_2', 'accuracyRating', 5, 5) },
-      { name: 'Đâm Xuyên', description: '+2% Xuyên Kháng mỗi cấp.', modifier: stat('orb_dam_3', 'chanceToIgnoreResistance', undefined, undefined, 0.02, 0.02) },
-      { name: 'Đâm Uy', description: '+3% Sát Thương Kỹ Năng mỗi cấp.', modifier: stat('orb_dam_4', 'skillDamagePercent', undefined, undefined, 0.03, 0.03) },
-      { name: 'Đâm Sát', description: '+4% Sát Thương Chí Mạng mỗi cấp.', modifier: stat('orb_dam_5', 'criticalDamage', undefined, undefined, 0.04, 0.04) },
-    ],
-    capstone: {
-      name: 'Đâm Tâm Pháp',
-      description: 'Combo chứa ít nhất 2 Đâm: +25% sát thương combo.',
-      modifier: { minOrbCount: { orb: 'orb_dam', count: 2 }, bonusDamageMultiplier: 0.25 },
-    },
   },
   {
-    orb: 'orb_chem',
-    orbName: 'Chém',
-    growth: [
-      { name: 'Kiếm Căn · Trảm', description: '+2 Uy Lực mỗi cấp — nền của đường kiếm chém.', modifier: stat('orb_chem_1', 'might', 2, 2) },
-      { name: 'Trảm Liệt', description: '+3% Hiệu Lực Dị Thường mỗi cấp — Kiếm Thương chảy mạnh hơn.', modifier: stat('orb_chem_2', 'ailmentPotencyPercent', undefined, undefined, 0.03, 0.03) },
-      { name: 'Trảm Dai', description: '+3% Thời Gian Dị Thường mỗi cấp — vết thương kéo dài hơn.', modifier: stat('orb_chem_3', 'ailmentDurationPercent', undefined, undefined, 0.03, 0.03) },
-      { name: 'Trảm Uy', description: '+3% Sát Thương Kỹ Năng mỗi cấp.', modifier: stat('orb_chem_4', 'skillDamagePercent', undefined, undefined, 0.03, 0.03) },
-      { name: 'Trảm Sát', description: '+2% Tỉ Lệ Chí Mạng mỗi cấp.', modifier: stat('orb_chem_5', 'criticalRate', undefined, undefined, 0.02, 0.02) },
+    id: 'nhat_diem',
+    name: 'Nhất Điểm',
+    description:
+      'Đâm xuyên 30% giáp trên đòn đánh của chính nó — xuyên một phần cố định, không roll xác suất.',
+    type: 'major',
+    role: 'keystone',
+    insightCost: 2,
+    prerequisites: [
+      { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM.orb_dam]!.id },
+      { kind: 'node', nodeId: 'thich_can' },
     ],
-    capstone: {
-      name: 'Trảm Tâm Pháp',
-      description: 'Combo chứa ít nhất 2 Chém: gây thêm 2 tầng Kiếm Thương.',
-      modifier: {
-        minOrbCount: { orb: 'orb_chem', count: 2 },
-        appliesBuff: { definitionId: 'kiem_thuong', target: 'target', stacks: 2 },
+    effect: {
+      skillDefinitionModifiers: [
+        { skillId: 'orb_dam', armorPierceFraction: 0.3 },
+      ],
+    },
+    branchTag: 'kiem_pho',
+  },
+  {
+    id: 'quy_tuyen',
+    name: 'Quy Tuyến',
+    description:
+      'Combo kết bằng Đâm: +20% sát thương combo.',
+    type: 'major',
+    role: 'keystone',
+    insightCost: 2,
+    prerequisites: [
+      { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM.orb_dam]!.id },
+      { kind: 'node', nodeId: 'thich_can' },
+    ],
+    effect: {
+      swordPathComboModifier: {
+        completingOrb: 'orb_dam',
+        bonusDamageMultiplier: 0.2,
       },
     },
+    branchTag: 'kiem_pho',
   },
   {
-    orb: 'orb_bo',
-    orbName: 'Bổ',
-    growth: [
-      { name: 'Kiếm Căn · Bổ', description: '+3 Uy Lực mỗi cấp — nền của đường kiếm nặng.', modifier: stat('orb_bo_1', 'might', 3, 3) },
-      { name: 'Bổ Cốt', description: '+3% Xuyên Kháng mỗi cấp — nhát bổ xé giáp.', modifier: stat('orb_bo_2', 'chanceToIgnoreResistance', undefined, undefined, 0.03, 0.03) },
-      { name: 'Bổ Uy', description: '+2% Sát Thương Cuối mỗi cấp.', modifier: stat('orb_bo_3', 'finalDamagePercent', undefined, undefined, 0.02, 0.02) },
-      { name: 'Bổ Thế', description: '+4% Sát Thương Kỹ Năng mỗi cấp.', modifier: stat('orb_bo_4', 'skillDamagePercent', undefined, undefined, 0.04, 0.04) },
-      { name: 'Bổ Sát', description: '+5% Sát Thương Chí Mạng mỗi cấp.', modifier: stat('orb_bo_5', 'criticalDamage', undefined, undefined, 0.05, 0.05) },
-    ],
-    capstone: {
-      name: 'Bổ Tâm Pháp',
-      description: 'Combo chứa Bổ: gây Suy Nhược lên mục tiêu.',
-      modifier: {
-        minOrbCount: { orb: 'orb_bo', count: 1 },
-        appliesBuff: { definitionId: 'suy_nhuoc', target: 'target' },
-      },
-    },
-  },
-  {
-    orb: 'orb_hat',
-    orbName: 'Hất',
-    growth: [
-      { name: 'Kiếm Căn · Hất', description: '+2% Tốc Độ Ra Đòn mỗi cấp — nền của đường kiếm khống chế.', modifier: stat('orb_hat_1', 'speed', undefined, undefined, 0.02, 0.02) },
-      { name: 'Hất Chưởng', description: '+4% Thời Gian Dị Thường mỗi cấp — khống chế kéo dài.', modifier: stat('orb_hat_2', 'ailmentDurationPercent', undefined, undefined, 0.04, 0.04) },
-      { name: 'Hất Uy', description: '+2% Hiệu Lực Dị Thường mỗi cấp.', modifier: stat('orb_hat_3', 'ailmentPotencyPercent', undefined, undefined, 0.02, 0.02) },
-      { name: 'Hất Thế', description: '+2% Sát Thương Kỹ Năng mỗi cấp.', modifier: stat('orb_hat_4', 'skillDamagePercent', undefined, undefined, 0.02, 0.02) },
-      { name: 'Hất Linh', description: '+2% Né Tránh mỗi cấp.', modifier: stat('orb_hat_5', 'evasionRate', undefined, undefined, 0.02, 0.02) },
-    ],
-    capstone: {
-      name: 'Hất Tâm Pháp',
-      description: 'Combo chứa Hất: gây Choáng lên mục tiêu.',
-      modifier: {
-        minOrbCount: { orb: 'orb_hat', count: 1 },
-        appliesBuff: { definitionId: 'choang', target: 'target' },
-      },
-    },
-  },
-  {
-    orb: 'orb_quet',
-    orbName: 'Quét',
-    growth: [
-      { name: 'Kiếm Căn · Quét', description: '+2 Uy Lực mỗi cấp — nền của đường kiếm quét ngang.', modifier: stat('orb_quet_1', 'might', 2, 2) },
-      { name: 'Quét Trần', description: '+2% Sát Thương Cuối mỗi cấp.', modifier: stat('orb_quet_2', 'finalDamagePercent', undefined, undefined, 0.02, 0.02) },
-      { name: 'Quét Uy', description: '+3% Sát Thương Kỹ Năng mỗi cấp.', modifier: stat('orb_quet_3', 'skillDamagePercent', undefined, undefined, 0.03, 0.03) },
-      { name: 'Quét Sát', description: '+2% Tỉ Lệ Chí Mạng mỗi cấp.', modifier: stat('orb_quet_4', 'criticalRate', undefined, undefined, 0.02, 0.02) },
-      { name: 'Quét Phong', description: '+2% Tốc Độ Ra Đòn mỗi cấp.', modifier: stat('orb_quet_5', 'speed', undefined, undefined, 0.02, 0.02) },
-    ],
-    capstone: {
-      name: 'Quét Tâm Pháp',
-      description: 'Combo chứa Quét: +35% sát thương combo.',
-      modifier: { minOrbCount: { orb: 'orb_quet', count: 1 }, bonusDamageMultiplier: 0.35 },
-    },
-  },
-]
-
-const ORB_NODES: ProgressionNode[] = ORB_BRANCHES.flatMap(branch => {
-  const growth = branch.growth.map((spec, index) => orbGrowth(branch.orb, spec, index))
-  const capstone: ProgressionNode = {
-    id: `${branch.orb}_capstone`,
-    name: branch.capstone.name,
-    description: branch.capstone.description,
+    id: 'lien_thich',
+    name: 'Liên Thích',
+    description:
+      'Combo chứa ít nhất 2 Đâm: +25% sát thương combo.',
     type: 'major',
     role: 'keystone',
     insightCost: 3,
     prerequisites: [
-      { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM[branch.orb]]!.id },
-      { kind: 'node', nodeId: `${branch.orb}_4` },
-      { kind: 'node', nodeId: `${branch.orb}_5` },
+      { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM.orb_dam]!.id },
+      { kind: 'node', nodeId: 'nhat_diem' },
+      { kind: 'node', nodeId: 'quy_tuyen' },
     ],
-    effect: { swordPathComboModifier: branch.capstone.modifier },
+    effect: {
+      swordPathComboModifier: {
+        minOrbCount: { orb: 'orb_dam', count: 2 },
+        bonusDamageMultiplier: 0.25,
+      },
+    },
     branchTag: 'kiem_pho',
-  }
+  },
+]
 
-  return [...growth, capstone]
-})
+const CHEM_BETA_NODES: ProgressionNode[] = [
+  {
+    id: 'tram_can',
+    name: 'Kiếm Căn · Trảm',
+    description: 'Chém +8% sát thương mỗi cấp — nền của đường kiếm chém.',
+    type: 'minor',
+    role: 'growth',
+    insightCost: 1,
+    maxLevel: 5,
+    upgradeCost: { base: 1, perLevel: 2 },
+    levelGates: [{ atLevel: 5, prerequisite: { kind: 'techniqueRank', rank: 4 } }],
+    prerequisites: [
+      { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM.orb_chem]!.id },
+    ],
+    effect: {
+      skillDefinitionModifiers: [
+        { skillId: 'orb_chem', damageMultiplierPerLevel: 0.08 },
+      ],
+    },
+    branchTag: 'kiem_pho',
+  },
+  {
+    id: 'thuong_tham',
+    name: 'Thương Thâm',
+    description:
+      'Kiếm Thương do Chém gây: +25% sát thương mỗi nhịp — móc khoá trên vết thương của chính đòn đó.',
+    type: 'major',
+    role: 'keystone',
+    insightCost: 2,
+    prerequisites: [
+      { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM.orb_chem]!.id },
+      { kind: 'node', nodeId: 'tram_can' },
+    ],
+    effect: {
+      skillDefinitionModifiers: [
+        {
+          skillId: 'orb_chem',
+          addAilmentInteractions: [
+            {
+              kind: 'add_modifier',
+              buffId: 'kiem_thuong',
+              modifier: {
+                id: 'thuong_tham',
+                channel: 'periodic_damage',
+                operation: 'multiply',
+                value: 1.25,
+                reapply: 'max',
+                priority: 0,
+                lifetime: { type: 'buff_lifetime' },
+              },
+            },
+          ],
+        },
+      ],
+    },
+    branchTag: 'kiem_pho',
+  },
+  {
+    id: 'luu_ngan',
+    name: 'Lưu Ngân',
+    description:
+      'Combo kết bằng Chém: Kiếm Thương cùng nguồn kéo dài thêm 1 lượt.',
+    type: 'major',
+    role: 'keystone',
+    insightCost: 2,
+    prerequisites: [
+      { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM.orb_chem]!.id },
+      { kind: 'node', nodeId: 'tram_can' },
+    ],
+    effect: {
+      swordPathComboModifier: {
+        completingOrb: 'orb_chem',
+        ailmentInteractions: [
+          { kind: 'extend_duration', buffId: 'kiem_thuong', turns: 1 },
+        ],
+      },
+    },
+    branchTag: 'kiem_pho',
+  },
+  {
+    id: 'lien_tram',
+    name: 'Liên Trảm',
+    description:
+      'Combo chứa ít nhất 2 Chém: kích hoạt một nhịp Kiếm Thương cùng nguồn ngay lập tức.',
+    type: 'major',
+    role: 'keystone',
+    insightCost: 3,
+    prerequisites: [
+      { kind: 'realm', realmId: REALMS[ORB_UNLOCK_REALM.orb_chem]!.id },
+      { kind: 'node', nodeId: 'thuong_tham' },
+      { kind: 'node', nodeId: 'luu_ngan' },
+    ],
+    effect: {
+      swordPathComboModifier: {
+        minOrbCount: { orb: 'orb_chem', count: 2 },
+        ailmentInteractions: [
+          { kind: 'trigger_periodic', buffId: 'kiem_thuong' },
+        ],
+      },
+    },
+    branchTag: 'kiem_pho',
+  },
+]
 
-// ─────────────────── Hidden-path root (Task 10 contract) ───────────────────
-
+const ORB_NODES: ProgressionNode[] = [...DAM_BETA_NODES, ...CHEM_BETA_NODES]
 
 // ───────────────────────── Ngu branch ─────────────────────────
 
