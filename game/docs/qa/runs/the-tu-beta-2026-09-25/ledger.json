@@ -10436,12 +10436,16 @@
       "severity": "Medium",
       "lens": "INT",
       "title": "Double-wipe precedence (players-first => defeat) unpinned",
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "pinEvidenceIds": [
         "EV-TT-CLNF-INT-FIX"
       ],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "verificationEvidenceIds": [
+        "EV-TT-CLNF-INT-FIX"
+      ],
+      "closureReviewIds": [
+        "REV-TT-CLO-27"
+      ],
       "locations": [
         "src/core/battle/turn/TurnBattleSystem.ts ~3404-3415"
       ],
@@ -10453,12 +10457,16 @@
       "severity": "Low",
       "lens": "INT",
       "title": "Reflect through a Ho intercept (protector-as-holder) unpinned",
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "pinEvidenceIds": [
         "EV-TT-CLNF-INT-FIX"
       ],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
+      "verificationEvidenceIds": [
+        "EV-TT-CLNF-INT-FIX"
+      ],
+      "closureReviewIds": [
+        "REV-TT-CLO-27"
+      ],
       "locations": [
         "src/core/battle/turn/TurnBattleSystem.hoIntercept.test.ts"
       ],
@@ -14678,6 +14686,28 @@
         "L-TT-93"
       ],
       "summary": "cleanF INT: 1 Medium (double-wipe precedence unpinned) + 1 Low (intercept-reflect unpinned) + 2 Nit (queuesFollowUp no producers; dual inBattle exports). Medium+Low pinned; Nits rejected with precedent."
+    },
+    {
+      "id": "REV-TT-CLO-27",
+      "kind": "CLOSURE_REVIEW",
+      "reviewerSessionId": "5437c14bf69245a78846fb9d7f8f6c8b",
+      "previousPhaseReviewId": "REV-TT-CLNF-INT",
+      "verdict": "SEALED",
+      "status": "SEALED",
+      "round": 12,
+      "scope": "verify CLNF-INT-1/2 pins",
+      "recordedAt": "2026-09-26T09:40:00.000Z",
+      "evidenceIds": [
+        "EV-TT-CLNF-INT-FIX"
+      ],
+      "findingIds": [],
+      "findingPointers": [],
+      "verificationOfFindingIds": [
+        "F-TT-CLNF-INT-1",
+        "F-TT-CLNF-INT-2"
+      ],
+      "lessons": [],
+      "summary": "CLO-27 SEALED: double-wipe->defeat pin exercises simultaneous wipe genuinely; intercept-reflect pin catches wrong-keying/no-substitution/double-fire. 36/36 PASS, type-check clean."
     }
   ],
   "cycles": [
