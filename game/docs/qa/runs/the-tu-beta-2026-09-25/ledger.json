@@ -11467,7 +11467,7 @@
       "cwd": "game/",
       "exitCode": 0,
       "result": "PASS",
-      "artifactPath": "evidence/clnd-fix-verify.log",
+      "artifactPath": "evidence/clnd-fix-verify.md",
       "artifactHash": "994c6d34599b4c4443e41be46646595fdbfc68535574a8d92918e192e1b66237",
       "claims": [
         "vue-tsc 0",
