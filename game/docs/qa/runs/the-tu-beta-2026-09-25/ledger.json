@@ -10999,6 +10999,183 @@
    "exception": null,
    "status": "REJECTED_WITH_PROOF",
    "rejectionReason": "Coverage gap for a dormant unreachable path."
+  },
+  {
+   "id": "F-TT-CLNH-COR-1",
+   "title": "Resolved flat deal_damage ops (pay_hp sacrifice) count as damage-landed \u2014 whiffed Loan Dau cast reports landed and would pay landed-gated grants",
+   "state": {
+    "productStateId": "d9f8298db06ba573ec01a4154a89928df7c6f506ed4a801fba3342a52853df12",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "game/src/core/skilldef/SkillExecutor.ts",
+     "symbolOrSection": ":490-497",
+     "revision": "996dbffd",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-1e713d7d1aeb49a89cdae772fa43d0f4",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-TT-CLNH-COR-PROBE"
+   ],
+   "counterexample": "reviewer probe/dormancy proof",
+   "expected": "contract-correct",
+   "actual": "dormant-lane discrepancy",
+   "rootCause": "latent lane with no reachable author",
+   "rootClass": "dormant-lane",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer dormancy audit + coordinator precedent",
+     "hitDispositions": [
+      "no reachable siblings"
+     ],
+     "coverageLimits": [],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "REJECTED: dormant flat-lane landed contract, zero impact at this head",
+   "pinEvidenceIds": [
+    "EV-TT-CLNH-COR-PROBE"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-CLNH-COR-PROBE"
+   ],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "DORMANT-WITH-PROOF: reviewer probe repro fails as designed, BUT zero shipped def authors grants.theOnLandedCast/theOnCrit and TBS consumes hit-gate-derived landedTargetIds (correct) \u2014 zero observable impact; contract corruption is future-author-speculative per dormant-lane precedent. Pin + lesson recorded for future flat-lane grant authors.",
+   "exception": null
+  },
+  {
+   "id": "F-TT-CLNH-COR-2",
+   "title": "Dual-root state silently resolves to Cuong Chien at kit build",
+   "state": {
+    "productStateId": "d9f8298db06ba573ec01a4154a89928df7c6f506ed4a801fba3342a52853df12",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "game/src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": ":277-289",
+     "revision": "996dbffd",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-1e713d7d1aeb49a89cdae772fa43d0f4",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-TT-CLNH-COR-PROBE"
+   ],
+   "counterexample": "reviewer probe/dormancy proof",
+   "expected": "contract-correct",
+   "actual": "dormant-lane discrepancy",
+   "rootCause": "latent lane with no reachable author",
+   "rootClass": "dormant-lane",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer dormancy audit + coordinator precedent",
+     "hitDispositions": [
+      "no reachable siblings"
+     ],
+     "coverageLimits": [],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "REJECTED: crafted-save-only unreachable",
+   "pinEvidenceIds": [
+    "EV-TT-CLNH-COR-PROBE"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-CLNH-COR-PROBE"
+   ],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "CRAFTED-SAVE-ONLY: only reachable via handcrafted save; save-shape validation replays excludesNode and flags dual ownership before load \u2014 unreachable through legal play. Silent precedence is a fail-safe, not a defect.",
+   "exception": null
+  },
+  {
+   "id": "F-TT-CLNH-COR-3",
+   "title": "Cuong/Tran participants mint a full-capacity The pool that can never fill",
+   "state": {
+    "productStateId": "d9f8298db06ba573ec01a4154a89928df7c6f506ed4a801fba3342a52853df12",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "game/src/core/phap-tu/PhapTuRoutes.ts",
+     "symbolOrSection": ":266-268",
+     "revision": "996dbffd",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-1e713d7d1aeb49a89cdae772fa43d0f4",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-TT-CLNH-COR-PROBE"
+   ],
+   "counterexample": "reviewer probe/dormancy proof",
+   "expected": "contract-correct",
+   "actual": "dormant-lane discrepancy",
+   "rootCause": "latent lane with no reachable author",
+   "rootClass": "dormant-lane",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "reviewer dormancy audit + coordinator precedent",
+     "hitDispositions": [
+      "no reachable siblings"
+     ],
+     "coverageLimits": [],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "REJECTED: inert The pool, all income marker-gated",
+   "pinEvidenceIds": [
+    "EV-TT-CLNH-COR-PROBE"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TT-CLNH-COR-PROBE"
+   ],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "INERT-LANE: all The income is ung_the-marker or authored-field gated (grantHitOutcomeIncome/grantBasicLandedIncome/theGainPerRound/grantTheFromCast audited) \u2014 pool can never fill for body-pathway; cosmetic-only, no UI reads it.",
+   "exception": null
   }
  ],
  "evidence": [
@@ -12392,6 +12569,39 @@
     "src/core/game/GameManagerProgressionOps.ts",
     "src/components/panels/CharacterPanel.vue",
     "src/components/panels/skill-path/NativeCoreDetail.vue"
+   ]
+  },
+  {
+   "id": "EV-TT-CLNH-COR-PROBE",
+   "state": {
+    "productStateId": "d9f8298db06ba573ec01a4154a89928df7c6f506ed4a801fba3342a52853df12",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "devin-1e713d7d1aeb49a89cdae772fa43d0f4",
+   "startedAt": "2026-09-26T10:15:00.000Z",
+   "finishedAt": "2026-09-26T11:00:00.000Z",
+   "commandOrMethod": "reviewer probe: vitest SkillExecutor.payHpLanded.probe.test.ts (fails as designed)",
+   "cwd": "game/",
+   "exitCode": 1,
+   "result": "FAIL",
+   "artifactPath": "evidence/clnh-cor-dormant-probe.test.ts.txt",
+   "artifactHash": "ecb8b6c6dc7b6fa661528e23fff9b9801536b45fa3b29380b7c055df90e08e35",
+   "claims": [
+    "whiffed pay_hp cast reports landed===true (expect whiffed true fails)",
+    "dormant: no shipped def authors theOnLandedCast; TBS consumes landedTargetIds (correct)"
+   ],
+   "invariantIds": [],
+   "limitations": [
+    "probe authored in reviewer worktree; intentionally uncommitted"
+   ],
+   "status": "CURRENT",
+   "inputEvidenceIds": [],
+   "inputPaths": [
+    "src/core/skilldef/SkillExecutor.ts",
+    "src/core/skilldef/SkillResolver.ts"
    ]
   }
  ],
@@ -15386,6 +15596,39 @@
    "coverageIds": [],
    "evidenceIds": [],
    "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-TT-CLNH-COR",
+   "state": {
+    "productStateId": "d9f8298db06ba573ec01a4154a89928df7c6f506ed4a801fba3342a52853df12",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 53,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-1e713d7d1aeb49a89cdae772fa43d0f4",
+   "contextId": "sealed-child-1e713d7d",
+   "model": "swe-2-max",
+   "role": "CORRECTNESS",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-26T10:15:00.000Z",
+   "sealedAt": "2026-09-26T11:00:00.000Z",
+   "previousPhaseReviewId": "REV-TT-CLO-27",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-TT-CLNH-COR-PROBE"
+   ],
+   "findingIds": [
+    "F-TT-CLNH-COR-1",
+    "F-TT-CLNH-COR-2",
+    "F-TT-CLNH-COR-3"
+   ],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -19938,6 +20181,88 @@
     "F-TT-CLNG-INT-1",
     "F-TT-CLNG-INT-2",
     "F-TT-CLNG-INT-3"
+   ]
+  },
+  {
+   "id": "L-TT-96",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "incidentEvidenceIds": [
+    "EV-TT-CLNH-COR-PROBE"
+   ],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "dormant-lane",
+   "missedInvariantIds": [],
+   "escapeReason": "flat-lane ops inflate anyDamageLanded \u2014 no shipped author of landed-gated grants",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [
+    "future def authoring grants.theOnLandedCast/theOnCrit on pay_hp/flat lanes must fix opLanded contract first"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "anyDamageLanded counts flat ops as landed; landed-grant authors need the executor contract fixed",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null,
+   "findingIds": [
+    "F-TT-CLNH-COR-1"
+   ]
+  },
+  {
+   "id": "L-TT-97",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "crafted-save-only",
+   "missedInvariantIds": [],
+   "escapeReason": "dual-root precedence only reachable via handcrafted save rejected at load",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "crafted-state latents reject without fix",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null,
+   "findingIds": [
+    "F-TT-CLNH-COR-2"
+   ]
+  },
+  {
+   "id": "L-TT-98",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "inert-lane",
+   "missedInvariantIds": [],
+   "escapeReason": "body-pathway The pool minted but all income marker/authored-field gated",
+   "applicability": [],
+   "exclusions": [],
+   "proposedProtection": [],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "inert pool presentation is cosmetic-only; no gate reached",
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null,
+   "findingIds": [
+    "F-TT-CLNH-COR-3"
    ]
   }
  ],
