@@ -11,7 +11,7 @@
   "base": "master",
   "head": "038706f7",
   "state": {
-   "productStateId": "2f3ec591c784f18101b530f8e3b92f1257457ad0e671e8b7ea7abaea83261f0a",
+   "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -2925,6 +2925,462 @@
    "counterexample": "comment references retired route key",
    "expected": "comment matches post-retirement shape",
    "actual": "comment still names route"
+  },
+  {
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [
+    "REV-PTR-CLO-6"
+   ],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "verificationEvidenceIds": [
+    "EV-PTR-AUTD-FIX"
+   ],
+   "pinEvidenceIds": [
+    "EV-PTR-AUTD-FIX"
+   ],
+   "closedAt": "2026-09-26T22:02:00Z",
+   "closeReason": "FIXED",
+   "id": "F-PTR-49",
+   "title": "Empowerment gate subcastIndex===0 alone lets TBS-queued follow-up executions re-empower (routeCast hardcodes subcastIndex 0)",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "SUPPORTED_BOUNDARY",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/core/skilldef/SkillResolver.ts",
+     "symbolOrSection": "empowerment gate :201-207",
+     "revision": "0eb0c574",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/turn/TurnSkillPlanRuntime.ts",
+     "symbolOrSection": "routeCast :267",
+     "revision": "0eb0c574",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-D AUT (devin-522196191d934b5c802756068f1f1fda)",
+   "counterexample": "follow-up execution with empowerment-carrying root re-empowers vs live pool",
+   "expected": "declared declareQueuedExecution parity: follow-ups never re-check empowerment",
+   "actual": "gate reads subcastIndex only; commitsCast (already computed false for follow-ups) ignored",
+   "status": "CLOSED",
+   "rootCause": "gate keyed on subcastIndex alone",
+   "rootClass": "GUARD_OVERREACH",
+   "repair": "gate now reads commitsCast !== false -- follow-ups can never re-empower",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep for same pattern",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "rejectionReason": "n/a -- actionable finding fixed @6ad56448",
+   "fixedInRevision": "6ad56448"
+  },
+  {
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [
+    "REV-PTR-CLO-6"
+   ],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "verificationEvidenceIds": [
+    "EV-PTR-AUTD-FIX"
+   ],
+   "pinEvidenceIds": [
+    "EV-PTR-AUTD-FIX"
+   ],
+   "closedAt": "2026-09-26T22:02:00Z",
+   "closeReason": "FIXED",
+   "id": "F-PTR-50",
+   "title": "hoTheBridge duplicates combat DR formula with wrong clamp order + reports raw stat",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "SUPPORTED_BOUNDARY",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/presentation/bridges/hoTheBridge.ts",
+     "symbolOrSection": ":46-55",
+     "revision": "0eb0c574",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/combat/CombatSystem.ts",
+     "symbolOrSection": "canonical formula :399-403",
+     "revision": "0eb0c574",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-D AUT (devin-522196191d934b5c802756068f1f1fda)",
+   "counterexample": "raw cap 0.9 x mpRatio 0.5 -> shows 0.45 vs real 0.375",
+   "expected": "clamp stat cap first, then scale by mpRatio (CombatSystem order)",
+   "actual": "bridge clamps the product cap*mpRatio and returns raw cap",
+   "status": "CLOSED",
+   "rootCause": "duplicated combat rule with inverted clamp order",
+   "rootClass": "DUPLICATED_TRUTH",
+   "repair": "bridge clamps stat first then scales; returns clamped cap",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep for same pattern",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "rejectionReason": "n/a -- actionable finding fixed @6ad56448",
+   "fixedInRevision": "6ad56448"
+  },
+  {
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [],
+   "closedAt": "2026-09-26T22:02:00Z",
+   "closeReason": "REJECTED",
+   "actionable": false,
+   "classification": "NON_ACTIONABLE",
+   "id": "F-PTR-51",
+   "title": "Triple-owned entity.maxThe ?? default fallback (TheEconomy/theBarBridge/resourceMax)",
+   "severity": "Nit",
+   "reachability": "HYPOTHETICAL",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/core/the-tu/TheEconomy.ts",
+     "symbolOrSection": ":31-33",
+     "revision": "0eb0c574",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/presentation/bridges/theBarBridge.ts",
+     "symbolOrSection": ":113",
+     "revision": "0eb0c574",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-D AUT (devin-522196191d934b5c802756068f1f1fda)",
+   "counterexample": "static analysis",
+   "expected": "n/a",
+   "actual": "n/a",
+   "status": "REJECTED_WITH_PROOF",
+   "rootCause": "latent/dead structure",
+   "rootClass": "SPEC_UNDECIDED",
+   "repair": null,
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "latent hazard recorded in lesson"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [
+    "F-PTR-52",
+    "F-PTR-53",
+    "F-PTR-54",
+    "F-PTR-55"
+   ],
+   "rejectionReason": "three copies of uninitialized-pool default; consistent today, drift hazard -- hazard lesson recorded"
+  },
+  {
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [],
+   "closedAt": "2026-09-26T22:02:00Z",
+   "closeReason": "REJECTED",
+   "actionable": false,
+   "classification": "NON_ACTIONABLE",
+   "id": "F-PTR-52",
+   "title": "landedConsequences ordering inverts between damaging (prepend) and non-damaging (append) lanes",
+   "severity": "Nit",
+   "reachability": "HYPOTHETICAL",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/core/skilldef/LegacySkillAdapter.ts",
+     "symbolOrSection": ":206-209 vs :379-388",
+     "revision": "0eb0c574",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-D AUT (devin-522196191d934b5c802756068f1f1fda)",
+   "counterexample": "static analysis",
+   "expected": "n/a",
+   "actual": "n/a",
+   "status": "REJECTED_WITH_PROOF",
+   "rootCause": "latent/dead structure",
+   "rootClass": "SPEC_UNDECIDED",
+   "repair": null,
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "latent hazard recorded in lesson"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [
+    "F-PTR-51",
+    "F-PTR-53",
+    "F-PTR-54",
+    "F-PTR-55"
+   ],
+   "rejectionReason": "consistent with legacy 'affected -> landed' parity; a consequence needing pre-apply reads on a non-damaging def would misorder -- hazard lesson recorded"
+  },
+  {
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [],
+   "closedAt": "2026-09-26T22:02:00Z",
+   "closeReason": "REJECTED",
+   "actionable": false,
+   "classification": "NON_ACTIONABLE",
+   "id": "F-PTR-53",
+   "title": "Dead consume-all machinery retained (consumesAllThe/theScaling/theBurned/cast_snapshot)",
+   "severity": "Nit",
+   "reachability": "HYPOTHETICAL",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/core/skilldef/SkillResolver.ts",
+     "symbolOrSection": ":196-199,:215-218",
+     "revision": "0eb0c574",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-D AUT (devin-522196191d934b5c802756068f1f1fda)",
+   "counterexample": "static analysis",
+   "expected": "n/a",
+   "actual": "n/a",
+   "status": "REJECTED_WITH_PROOF",
+   "rootCause": "latent/dead structure",
+   "rootClass": "SPEC_UNDECIDED",
+   "repair": null,
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "latent hazard recorded in lesson"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [
+    "F-PTR-51",
+    "F-PTR-52",
+    "F-PTR-54",
+    "F-PTR-55"
+   ],
+   "rejectionReason": "preserved plumbing with zero authored occurrences since god-ult retire -- not a violation"
+  },
+  {
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [],
+   "closedAt": "2026-09-26T22:02:00Z",
+   "closeReason": "REJECTED",
+   "actionable": false,
+   "classification": "NON_ACTIONABLE",
+   "id": "F-PTR-54",
+   "title": "Dead exports tryPayProcCost/onProcSuccess on declared gain authority",
+   "severity": "Nit",
+   "reachability": "HYPOTHETICAL",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/core/the-tu/TheEconomy.ts",
+     "symbolOrSection": ":70-80",
+     "revision": "0eb0c574",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-D AUT (devin-522196191d934b5c802756068f1f1fda)",
+   "counterexample": "static analysis",
+   "expected": "n/a",
+   "actual": "n/a",
+   "status": "REJECTED_WITH_PROOF",
+   "rootCause": "latent/dead structure",
+   "rootClass": "SPEC_UNDECIDED",
+   "repair": null,
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "latent hazard recorded in lesson"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [
+    "F-PTR-51",
+    "F-PTR-52",
+    "F-PTR-53",
+    "F-PTR-55"
+   ],
+   "rejectionReason": "no production callers (proc costs run through consume_resource ops) -- dead API, recorded"
+  },
+  {
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "exception": null,
+   "duplicateOf": null,
+   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [],
+   "closedAt": "2026-09-26T22:02:00Z",
+   "closeReason": "REJECTED",
+   "actionable": false,
+   "classification": "NON_ACTIONABLE",
+   "id": "F-PTR-55",
+   "title": "Water rider `if target_hit_landed(loop_target)` read as vacuous inside its landed gate",
+   "severity": "Nit",
+   "reachability": "HYPOTHETICAL",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/data/skill/PhapTuSkills.ts",
+     "symbolOrSection": ":913-914",
+     "revision": "0eb0c574",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-D AUT (devin-522196191d934b5c802756068f1f1fda)",
+   "counterexample": "static analysis",
+   "expected": "n/a",
+   "actual": "n/a",
+   "status": "REJECTED_WITH_PROOF",
+   "rootCause": "latent/dead structure",
+   "rootClass": "SPEC_UNDECIDED",
+   "repair": null,
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "latent hazard recorded in lesson"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [
+    "F-PTR-51",
+    "F-PTR-52",
+    "F-PTR-53",
+    "F-PTR-54"
+   ],
+   "rejectionReason": "SPEC-PINNED structure -- GameManager.empowerment.test.ts:120-124 asserts the if-gate exists in landedConsequences; removal verified RED then reverted"
   }
  ],
  "evidence": [
@@ -3135,7 +3591,7 @@
     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
    },
-   "status": "CURRENT",
+   "status": "STALE",
    "kind": "EXECUTED_INTEGRATION",
    "producer": "devin-coordinator",
    "startedAt": "2026-09-26T21:55:00Z",
@@ -3160,6 +3616,40 @@
    "invariantIds": [],
    "limitations": [
     "scoped vitest only; full suite deferred to cycle end"
+   ]
+  },
+  {
+   "id": "EV-PTR-AUTD-FIX",
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "status": "CURRENT",
+   "kind": "EXECUTED_INTEGRATION",
+   "producer": "devin-coordinator",
+   "startedAt": "2026-09-26T21:59:00Z",
+   "finishedAt": "2026-09-26T22:01:00Z",
+   "commandOrMethod": "npm run type-check (exit 0); npx vitest run empowerment+bridges+skilldef (215 passed incl. spec pin :120-124 green after NIT-5 revert)",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "records-autd.json",
+   "artifactHash": "8363bae529af6143d0fda1ffe42ac527d6c1f4bb5f9b050151edb01f95cdc6cf",
+   "claims": [
+    "F-PTR-49 fixed @6ad56448 -- follow-up executions cannot re-empower",
+    "F-PTR-50 fixed @6ad56448 -- clamp order canonical",
+    "F-PTR-51..55 rejected with proof (dead plumbing/hazard lessons/spec-pinned gate)"
+   ],
+   "inputEvidenceIds": [],
+   "inputPaths": [
+    "src/core/skilldef/SkillResolver.ts",
+    "src/presentation/bridges/hoTheBridge.ts"
+   ],
+   "invariantIds": [],
+   "limitations": [
+    "scoped vitest only"
    ]
   }
  ],
@@ -3637,7 +4127,7 @@
     "F-PTR-48"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PTR-CLO-5",
@@ -3671,6 +4161,77 @@
     "F-PTR-46",
     "F-PTR-47",
     "F-PTR-48"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PTR-AUT-D1",
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 5,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-522196191d934b5c802756068f1f1fda",
+   "contextId": "ctx-52219619",
+   "model": "swe-2",
+   "role": "clean-architecture",
+   "inputBundleHash": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-26T21:06:00Z",
+   "sealedAt": "2026-09-26T21:44:00Z",
+   "previousPhaseReviewId": "REV-PTR-AUT-C1",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PTR-49",
+    "F-PTR-50",
+    "F-PTR-51",
+    "F-PTR-52",
+    "F-PTR-53",
+    "F-PTR-54",
+    "F-PTR-55"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-PTR-CLO-6",
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 5,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-coordinator",
+   "contextId": "ctx-coord-autd",
+   "model": "swe-2",
+   "role": "closure",
+   "inputBundleHash": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+   "priorFindingsVisible": true,
+   "accessLimitations": [
+    "self-verified closure -- coordinator verify of own fix batch"
+   ],
+   "startedAt": "2026-09-26T21:59:00Z",
+   "sealedAt": "2026-09-26T22:02:00Z",
+   "previousPhaseReviewId": "REV-PTR-AUT-D1",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTD-FIX"
+   ],
+   "findingIds": [
+    "F-PTR-49",
+    "F-PTR-50"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -4194,6 +4755,73 @@
     "retirement sweeps grep the retired identifier in comments too, not only symbol references"
    ],
    "capabilityDelta": "stale route comments retired in same commit"
+  },
+  {
+   "version": 1,
+   "supersedes": null,
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-reimagine-2026-09-26",
+   "missedInvariantIds": [],
+   "exclusions": [],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null,
+   "id": "L-PTR-AUTD-FIX",
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PTR-49",
+    "F-PTR-50"
+   ],
+   "rootClass": "GUARD_OVERREACH",
+   "escapeReason": "gate keyed on subcastIndex alone; commitsCast already computed was never read; duplicated combat formula inside presentation inverted clamp order",
+   "applicability": [
+    "any parity-declaring gate must key on the authoritative flag, not a proxy index"
+   ],
+   "proposedProtection": [
+    "gates asserting declareQueuedExecution parity must read commitsCast/execution.source, not subcastIndex alone",
+    "presentation bridges must consume canonical formulas, never re-derive them"
+   ],
+   "capabilityDelta": "empowerment gate + hoThe bridge corrected"
+  },
+  {
+   "version": 1,
+   "supersedes": null,
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-reimagine-2026-09-26",
+   "missedInvariantIds": [],
+   "exclusions": [],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null,
+   "id": "L-PTR-AUTD-REJ",
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PTR-51",
+    "F-PTR-52",
+    "F-PTR-53",
+    "F-PTR-54",
+    "F-PTR-55"
+   ],
+   "rootClass": "SPEC_UNDECIDED",
+   "escapeReason": "dead plumbing + drift-prone defaults + parity ordering -- consistent today, latent hazard only",
+   "applicability": [
+    "retired machinery left as plumbing; triple-owned default fallbacks; lane-order parity"
+   ],
+   "proposedProtection": [
+    "if content ever combines empowerment+multicast or authored cap>0.75, re-review these seams first",
+    "water rider if-gate is spec-pinned structure -- do not flatten"
+   ],
+   "capabilityDelta": "hazard recorded -- no behavior change"
   }
  ],
  "messages": [],
@@ -4373,6 +5001,38 @@
    "payloadPath": "events/0011.json",
    "payloadHash": "79cf3cbe80beb47a1dab99416ed71883d1200de6bbb09848dcb58c8cb0d80f74",
    "eventHash": "d3fc9799d6e81b77e80a52a2e62a60bd4979adde7e79d5b74e67c742c4813dff"
+  },
+  {
+   "seq": 12,
+   "at": "2026-09-26T21:59:55.173Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-1021454",
+   "state": {
+    "productStateId": "2f3ec591c784f18101b530f8e3b92f1257457ad0e671e8b7ea7abaea83261f0a",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "d3fc9799d6e81b77e80a52a2e62a60bd4979adde7e79d5b74e67c742c4813dff",
+   "payloadPath": "events/0012.json",
+   "payloadHash": "79cf3cbe80beb47a1dab99416ed71883d1200de6bbb09848dcb58c8cb0d80f74",
+   "eventHash": "f2f2d11537125501096ff139fda1895b14b5f54beb3d84befaabb62e1d467900"
+  },
+  {
+   "seq": 13,
+   "at": "2026-09-26T22:01:23.029Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-1021454",
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "f2f2d11537125501096ff139fda1895b14b5f54beb3d84befaabb62e1d467900",
+   "payloadPath": "events/0013.json",
+   "payloadHash": "e9c5e4cf1aa5b48fa06e07200831508ff827b9bf4b5c07be707ab63c74eee0a3",
+   "eventHash": "ee1aac81f8bb5bb3af222cadcdca08361ae7cedbd202fbb20076b62e010c863b"
   }
  ]
 }
