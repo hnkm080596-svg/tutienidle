@@ -204,8 +204,15 @@
 // save with the-tu investment can no longer validate. Save v84 is
 // rejected (dev phase, no migration, no compat translator) - master
 // spec sec.8.4.
-// v86 (2026-09-27, PHAP TU REIMAGINE route retirement): spell_pathway
+// v86 (2026-09-25, THE TU AN - UNG THE beta redesign): the v85 the-tu
+// kit/tree is replaced - tu_the/bach_ung skills + cores removed,
+// quan_the core added, the 26-node tree collapses to the 6-node Ung
+// The tree (thau_the/phan_kinh/ho_bi/trong_phan/dan_the roots over
+// tham_the -> quan_the). A v85 save with the-tu investment can no
+// longer validate. Save v85 is rejected (dev phase, no migration,
+// no compat translator).
+// v87 (2026-09-27, PHAP TU REIMAGINE route retirement): spell_pathway
 // loses its `route` key with the retired legacy route machinery -
 // saves carrying {element, route} pairs are legacy shape and rejected
 // wholesale (dev phase, no migration, no compat translator).
-export const CURRENT_SAVE_VERSION = 86 as const
+export const CURRENT_SAVE_VERSION = 87 as const
