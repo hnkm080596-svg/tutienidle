@@ -40,7 +40,7 @@
   "findings": [
     {
       "id": "F-TTA-COR-A1-1",
-      "title": "Tro `seen` set hoisted outside the per-ally loop — later reactors suppressed",
+      "title": "Tro `seen` set hoisted outside the per-ally loop \u2014 later reactors suppressed",
       "state": {
         "productStateId": "215c6e2eee87c1c6fa3530a6a53e09640043ebd0a17db126ca2d1e9611760ea1",
         "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
@@ -62,7 +62,7 @@
       "discoveredBy": "devin-a3f1000d337c46b69645176ea98e0705",
       "invariantIds": [],
       "evidenceIds": [],
-      "counterexample": "seen.add fires on every examined candidate across ALL allies; with 2 tro_kich allies, the first ally's iteration marks the shared targets so the second ally's window never queues — violates once-per-channel-per-actor",
+      "counterexample": "seen.add fires on every examined candidate across ALL allies; with 2 tro_kich allies, the first ally's iteration marks the shared targets so the second ally's window never queues \u2014 violates once-per-channel-per-actor",
       "expected": "each ally evaluates its own seen set",
       "actual": "shared seen across allies suppresses later reactors",
       "rootCause": "seen set declared outside the per-ally loop",
@@ -99,7 +99,7 @@
     },
     {
       "id": "F-TTA-COR-A1-2",
-      "title": "Tro canonical candidates never restricted to enemy side — teammate/self actions could queue counters; applyThamMark same-side hole",
+      "title": "Tro canonical candidates never restricted to enemy side \u2014 teammate/self actions could queue counters; applyThamMark same-side hole",
       "state": {
         "productStateId": "215c6e2eee87c1c6fa3530a6a53e09640043ebd0a17db126ca2d1e9611760ea1",
         "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
@@ -180,7 +180,7 @@
       "discoveredBy": "devin-a3f1000d337c46b69645176ea98e0705",
       "invariantIds": [],
       "evidenceIds": [],
-      "counterexample": "no multi-reactor test existed — the hoisted-seen defect would have been caught by one",
+      "counterexample": "no multi-reactor test existed \u2014 the hoisted-seen defect would have been caught by one",
       "expected": "multi-reactor pin",
       "actual": "unpinned",
       "rootCause": "coverage gap",
@@ -273,7 +273,7 @@
     },
     {
       "id": "F-TTA-AUT-1",
-      "title": "SkillCoreNodes.test.ts self-contradicts the restored parked-registered cores — 3 deterministic failures at the pin",
+      "title": "SkillCoreNodes.test.ts self-contradicts the restored parked-registered cores \u2014 3 deterministic failures at the pin",
       "state": {
         "productStateId": "f071218464f202843dc21c80ea275b6e24868e31d29b889f4253687c1d315621",
         "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
@@ -295,7 +295,7 @@
       "discoveredBy": "devin-b5276122a8754266aefd10f4cd2a0313",
       "invariantIds": [],
       "evidenceIds": [],
-      "counterexample": "test whitelist 14 ids excludes tu_the/bach_ung while production NATIVE_CORE_SKILL_IDS registers core_tu_the/core_bach_ung — 'whitelist export matches' (15 vs 14), 'internal negative-list ids never have cores', 'no two nodes share levelsSkillId' all fail at 326f38b1",
+      "counterexample": "test whitelist 14 ids excludes tu_the/bach_ung while production NATIVE_CORE_SKILL_IDS registers core_tu_the/core_bach_ung \u2014 'whitelist export matches' (15 vs 14), 'internal negative-list ids never have cores', 'no two nodes share levelsSkillId' all fail at 326f38b1",
       "expected": "test contract matches PARKED-REGISTERED state (tu_the/bach_ung have authored cores, granted by nothing)",
       "actual": "test asserts the retired-cores contract; production registers the cores",
       "rootCause": "parked-cores restore commit did not revert the test contract edited for the retired-cores world",
@@ -332,7 +332,7 @@
     },
     {
       "id": "F-TTA-AUT-2",
-      "title": "actionSource mislabeled 'normal' for non-action declares (ccBlocked, charge tick) — latent provenance violation",
+      "title": "actionSource mislabeled 'normal' for non-action declares (ccBlocked, charge tick) \u2014 latent provenance violation",
       "state": {
         "productStateId": "f071218464f202843dc21c80ea275b6e24868e31d29b889f4253687c1d315621",
         "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
@@ -354,7 +354,7 @@
       "discoveredBy": "devin-b5276122a8754266aefd10f4cd2a0313",
       "invariantIds": [],
       "evidenceIds": [],
-      "counterexample": "action?.skillId === '' only catches NULL_ACTION; action === null (ccBlocked, charge tick, charge resolve) falls through to 'normal' — grantObservationIncome would grant income per enemy charge tick (unreachable today: only player-side companion charges)",
+      "counterexample": "action?.skillId === '' only catches NULL_ACTION; action === null (ccBlocked, charge tick, charge resolve) falls through to 'normal' \u2014 grantObservationIncome would grant income per enemy charge tick (unreachable today: only player-side companion charges)",
       "expected": "actionSource 'normal'/'skill' only when a natural action actually committed",
       "actual": "every null-action declare carries 'normal'",
       "rootCause": "sentinel check x === '' misses action === null",
@@ -374,7 +374,7 @@
         }
       ],
       "siblingFindingIds": [],
-      "repair": "FIXED @<new>: actionSource derived from the committed action — real cast -> slot?'skill':'normal'; chargeResolved -> 'normal' (charged skill executes); ccBlocked/charge-tick/NULL_ACTION -> undefined",
+      "repair": "FIXED @<new>: actionSource derived from the committed action \u2014 real cast -> slot?'skill':'normal'; chargeResolved -> 'normal' (charged skill executes); ccBlocked/charge-tick/NULL_ACTION -> undefined",
       "pinEvidenceIds": [
         "EV-TTA-FIX-AUT-A2"
       ],
@@ -460,7 +460,7 @@
       "discoveredBy": "devin-505cf8ef240841ae8d794236332fec6f",
       "invariantIds": [],
       "evidenceIds": [],
-      "counterexample": "finaliseBattle flips state mid-hits; tail still opens windows (spend The, RNG, queued payloads) on a finished battle — cosmetic only: queued payloads never dequeue (tickPacing/peekNextActor gate state !== 'fighting')",
+      "counterexample": "finaliseBattle flips state mid-hits; tail still opens windows (spend The, RNG, queued payloads) on a finished battle \u2014 cosmetic only: queued payloads never dequeue (tickPacing/peekNextActor gate state !== 'fighting')",
       "expected": "windows could short-circuit once battle finished",
       "actual": "windows run to completion on a finished battle",
       "rootCause": "no battle.state gate in the post-action tail",
@@ -509,13 +509,13 @@
       "subsystem": "the-tu-an-ung-the",
       "siblingSearch": [],
       "siblingFindingIds": [],
-      "repair": "REJECTED: PARKED by design: defs granted by nothing; no runtime path reads reactive_economy — retained intentionally for post-beta un-parking",
+      "repair": "REJECTED: PARKED by design: defs granted by nothing; no runtime path reads reactive_economy \u2014 retained intentionally for post-beta un-parking",
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
       "status": "REJECTED_WITH_PROOF",
       "duplicateOf": null,
-      "rejectionReason": "PARKED by design: defs granted by nothing; no runtime path reads reactive_economy — retained intentionally for post-beta un-parking",
+      "rejectionReason": "PARKED by design: defs granted by nothing; no runtime path reads reactive_economy \u2014 retained intentionally for post-beta un-parking",
       "exception": null
     },
     {
@@ -782,9 +782,9 @@
       "closureReviewIds": [],
       "status": "REJECTED_WITH_PROOF",
       "duplicateOf": null,
-      "rejectionReason": "unreachable defensive default — every call site overwrites before read.",
+      "rejectionReason": "unreachable defensive default \u2014 every call site overwrites before read.",
       "exception": null,
-      "repair": "REJECTED: unreachable defensive default — every call site overwrites before read."
+      "repair": "REJECTED: unreachable defensive default \u2014 every call site overwrites before read."
     },
     {
       "state": {
@@ -888,7 +888,7 @@
       "subsystem": "the-tu-an-ung-the",
       "status": "REJECTED_WITH_PROOF",
       "repair": "REJECTED: defs intentionally parked/ungranted (same posture as bat_tu_ba_the/son_nhac); wiring consumers now would be dead speculative paths.",
-      "rejectionReason": "dormant-by-design parked content — wiring consumers adds dead code before the grant source exists."
+      "rejectionReason": "dormant-by-design parked content \u2014 wiring consumers adds dead code before the grant source exists."
     },
     {
       "state": {
@@ -928,7 +928,7 @@
       "rootClass": "defensive-edge",
       "subsystem": "the-tu-an-ung-the",
       "status": "REJECTED_WITH_PROOF",
-      "repair": "REJECTED: unreachable in production — dequeue pairs declareActorAction with the same actor; no caller declares for a different actor while a queued exec is pending.",
+      "repair": "REJECTED: unreachable in production \u2014 dequeue pairs declareActorAction with the same actor; no caller declares for a different actor while a queued exec is pending.",
       "rejectionReason": "hypothetical edge only reachable via a non-existent mismatched caller."
     },
     {
@@ -1534,7 +1534,7 @@
     },
     {
       "id": "F-TTA-CLEAN-A3-AUT-1",
-      "title": "reactionDebt resets on a Cam-Cong-sealed NULL_ACTION turn performing no action — diverges from the adjudicated 'normal action' boundary",
+      "title": "reactionDebt resets on a Cam-Cong-sealed NULL_ACTION turn performing no action \u2014 diverges from the adjudicated 'normal action' boundary",
       "state": {
         "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
         "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
@@ -1558,7 +1558,7 @@
       "evidenceIds": [],
       "counterexample": "Static proof: reset at :1693 precedes NULL_ACTION production ~1726-1734; income gate rejects the same turn (actionSource undefined)",
       "expected": "Design sec.18: debt/Qua The clears only when a normal action is actually performed; income gate reads the actionSource boundary",
-      "actual": "Reset gate runs before selection and never consults the committed action — a fully-sealed NULL turn resets debt",
+      "actual": "Reset gate runs before selection and never consults the committed action \u2014 a fully-sealed NULL turn resets debt",
       "rootCause": "reset gate placed before action collapse and checks cc/charge only, not the actionSource boundary",
       "rootClass": "boundary-drift/duplicate-gate",
       "subsystem": "battle/turn",
@@ -1611,7 +1611,7 @@
       "closureReviewIds": [],
       "status": "REJECTED_WITH_PROOF",
       "duplicateOf": null,
-      "rejectionReason": "Deliberate design contract after the COR-1 fix: quan_the's FIXED_TURNS holder_turns clock is declare-based by design (a stunned holder still burns duration — standard buff-duration semantics); the COR-1 fix converges debt reset onto the same actionSource boundary income reads, leaving exactly two deliberately-different predicates (duration clock vs performed-action boundary), not three accidental ones.",
+      "rejectionReason": "Deliberate design contract after the COR-1 fix: quan_the's FIXED_TURNS holder_turns clock is declare-based by design (a stunned holder still burns duration \u2014 standard buff-duration semantics); the COR-1 fix converges debt reset onto the same actionSource boundary income reads, leaving exactly two deliberately-different predicates (duration clock vs performed-action boundary), not three accidental ones.",
       "exception": null
     },
     {
@@ -1652,7 +1652,7 @@
       "closureReviewIds": [],
       "status": "REJECTED_WITH_PROOF",
       "duplicateOf": null,
-      "rejectionReason": "Independent entry points: callers (battle build vs UI preview) may invoke only one resolver, so each must build its own kit. A shared memo would need invalidation on nodeLevels changes (respec/devReset) — stale-kit risk outweighs one deterministic clone build; correct-by-construction beats the micro-optimization.",
+      "rejectionReason": "Independent entry points: callers (battle build vs UI preview) may invoke only one resolver, so each must build its own kit. A shared memo would need invalidation on nodeLevels changes (respec/devReset) \u2014 stale-kit risk outweighs one deterministic clone build; correct-by-construction beats the micro-optimization.",
       "exception": null
     },
     {
@@ -1713,7 +1713,7 @@
     },
     {
       "id": "F-TTA-CLEAN-A3-INT-2",
-      "title": "thamTargetId lazy-cleared inside isObserved — HUD reads the stale field between consults",
+      "title": "thamTargetId lazy-cleared inside isObserved \u2014 HUD reads the stale field between consults",
       "state": {
         "productStateId": "ea702f616caeca383559d497b7e767c7b083d75234206820d2414165e5fa95df",
         "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
@@ -1819,7 +1819,7 @@
         }
       ],
       "siblingFindingIds": [],
-      "repair": "FIXED @7b683fd9: reactionDebt reset keyed on isNaturalActionSource(actionSource) — hoisted source computed above the reset; charge-resolve counts as normal, ccBlocked/charge-tick/sealed-NULL_ACTION/null/reactive lanes carry no source",
+      "repair": "FIXED @7b683fd9: reactionDebt reset keyed on isNaturalActionSource(actionSource) \u2014 hoisted source computed above the reset; charge-resolve counts as normal, ccBlocked/charge-tick/sealed-NULL_ACTION/null/reactive lanes carry no source",
       "pinEvidenceIds": [
         "EV-TTA-CLEANA4-FIX"
       ],
@@ -2040,7 +2040,7 @@
       "evidenceIds": [],
       "counterexample": "holder at gauge 100 commits Phan on an observed enemy hit -> actionGauge -290 after commit; next resolveNextStep drains queued phan_kich as isFollowUpBypass -> consume(actor,0) runs Math.max(0, gauge-0) clamping -290 back to 0 (repro test F1 fails deterministically)",
       "expected": "the -400 UNG_TRE_GAUGE_PENALTY persists into negative gauge (TheEconomy: may go negative) so every committed reaction delays the holder's next natural action by the authored amount",
-      "actual": "the queued bypass drain's consume(actor,0) floors gauge at 0 — the below-zero portion of the tempo cost is silently refunded; committing while holder gauge < 400 is systematically cheaper",
+      "actual": "the queued bypass drain's consume(actor,0) floors gauge at 0 \u2014 the below-zero portion of the tempo cost is silently refunded; committing while holder gauge < 400 is systematically cheaper",
       "rootCause": "Math.max(0,...) floor in consumeGaugeAfterAction erased the debt-negative state the bypass drain was supposed to pass through untouched",
       "rootClass": "clamp-erases-negative-state",
       "subsystem": "the-tu-an-ung-the",
@@ -2061,7 +2061,7 @@
         }
       ],
       "siblingFindingIds": [],
-      "repair": "FIXED @7b683fd9: consumeGaugeAfterAction floors only on full consume (fraction>=1); partial consume subtracts without flooring so debt-negative persists — pinned by ungTreR4.test.ts F1",
+      "repair": "FIXED @7b683fd9: consumeGaugeAfterAction floors only on full consume (fraction>=1); partial consume subtracts without flooring so debt-negative persists \u2014 pinned by ungTreR4.test.ts F1",
       "pinEvidenceIds": [
         "EV-TTA-CLEANA4-FIX"
       ],
@@ -2108,7 +2108,7 @@
       "evidenceIds": [],
       "counterexample": "enemy at 1 hp hits the phan_chan holder, reflect kills it at the tail; enemy.alive===false yet observer.thamTargetId==='enemy' at action end (repro test F2 fails deterministically)",
       "expected": "a dead Tham An mark clears observer focus at the action's end (cleanA3-INT-2 contract) so the HUD never reads a stale target",
-      "actual": "the flush settle is itself a quiescent point with no sweep — the killed mark's thamTargetId stays until the next declare's holder_turn_start lifecycle; HUD shows a dead mark one step, corpse keeps buff instances + deferred onEntityDeath hooks equally long",
+      "actual": "the flush settle is itself a quiescent point with no sweep \u2014 the killed mark's thamTargetId stays until the next declare's holder_turn_start lifecycle; HUD shows a dead mark one step, corpse keeps buff instances + deferred onEntityDeath hooks equally long",
       "rootCause": "sweepBuffDeaths ran per-hit only; the post-flush settle was never treated as a death-quiescent point",
       "rootClass": "missed-quiescent-point-sweep",
       "subsystem": "the-tu-an-ung-the",
@@ -2128,7 +2128,7 @@
         }
       ],
       "siblingFindingIds": [],
-      "repair": "FIXED @7b683fd9: sweepBuffDeaths runs between flushReflects and resolvePostActionWindows — pinned by ungTreR4.test.ts F2 (dead mark clears at action end)",
+      "repair": "FIXED @7b683fd9: sweepBuffDeaths runs between flushReflects and resolvePostActionWindows \u2014 pinned by ungTreR4.test.ts F2 (dead mark clears at action end)",
       "pinEvidenceIds": [
         "EV-TTA-CLEANA4-FIX"
       ],
@@ -2727,7 +2727,7 @@
       "status": "CLOSED",
       "duplicateOf": null,
       "exception": null,
-      "rejectionReason": "behavior-preserving dedup: shared predicate/authoritative route replaces two equivalent encodings; observable semantics already pinned by the existing The-economy/buff test suite (EV-TTA-CLEANA6-AUT-FIX verify) — no new behavioral contract to pin"
+      "rejectionReason": "behavior-preserving dedup: shared predicate/authoritative route replaces two equivalent encodings; observable semantics already pinned by the existing The-economy/buff test suite (EV-TTA-CLEANA6-AUT-FIX verify) \u2014 no new behavioral contract to pin"
     },
     {
       "id": "F-TTA-CLN6-AUT-2",
@@ -2794,7 +2794,7 @@
       "status": "CLOSED",
       "duplicateOf": null,
       "exception": null,
-      "rejectionReason": "behavior-preserving dedup: shared predicate/authoritative route replaces two equivalent encodings; observable semantics already pinned by the existing The-economy/buff test suite (EV-TTA-CLEANA6-AUT-FIX verify) — no new behavioral contract to pin"
+      "rejectionReason": "behavior-preserving dedup: shared predicate/authoritative route replaces two equivalent encodings; observable semantics already pinned by the existing The-economy/buff test suite (EV-TTA-CLEANA6-AUT-FIX verify) \u2014 no new behavioral contract to pin"
     },
     {
       "id": "F-TTA-CLN6-AUT-3",
@@ -2860,7 +2860,7 @@
       "status": "CLOSED",
       "duplicateOf": null,
       "exception": null,
-      "rejectionReason": "behavior-preserving dedup: shared predicate/authoritative route replaces two equivalent encodings; observable semantics already pinned by the existing The-economy/buff test suite (EV-TTA-CLEANA6-AUT-FIX verify) — no new behavioral contract to pin"
+      "rejectionReason": "behavior-preserving dedup: shared predicate/authoritative route replaces two equivalent encodings; observable semantics already pinned by the existing The-economy/buff test suite (EV-TTA-CLEANA6-AUT-FIX verify) \u2014 no new behavioral contract to pin"
     },
     {
       "id": "F-TTA-CLN6-AUT-4",
@@ -2896,7 +2896,7 @@
             "lazy-clear documented and convergent with sweepBuffDeaths; every caller tolerates the clear"
           ],
           "coverageLimits": [
-            "a future pure-read telemetry call would silently clear focus — hypothetical"
+            "a future pure-read telemetry call would silently clear focus \u2014 hypothetical"
           ],
           "evidenceIds": []
         }
@@ -2915,7 +2915,7 @@
       "status": "REJECTED_WITH_PROOF",
       "duplicateOf": null,
       "exception": null,
-      "rejectionReason": "Deliberate documented seam: the lazy-clear keeps a dead-mark focus from surviving between the mark sweep (sweepBuffDeaths) and window evaluation; it is convergent with the sweeper, commented at the site, and every current caller tolerates it. Making isObserved pure would let a stale id flow into a window check between sweeps — the mutation IS the safety. Recorded as a documented-seam precedent."
+      "rejectionReason": "Deliberate documented seam: the lazy-clear keeps a dead-mark focus from surviving between the mark sweep (sweepBuffDeaths) and window evaluation; it is convergent with the sweeper, commented at the site, and every current caller tolerates it. Making isObserved pure would let a stale id flow into a window check between sweeps \u2014 the mutation IS the safety. Recorded as a documented-seam precedent."
     },
     {
       "id": "F-TTA-CLN6-AUT-5",
@@ -2982,7 +2982,7 @@
       "status": "CLOSED",
       "duplicateOf": null,
       "exception": null,
-      "rejectionReason": "comment-only repair (PARKED markers); no behavioral contract to pin — parked status itself is asserted by the def being registered-but-ungranted (PARKED-REGISTERED pins)"
+      "rejectionReason": "comment-only repair (PARKED markers); no behavioral contract to pin \u2014 parked status itself is asserted by the def being registered-but-ungranted (PARKED-REGISTERED pins)"
     },
     {
       "id": "F-TTA-CLN6-AUT-6",
@@ -3047,11 +3047,11 @@
       "status": "CLOSED",
       "duplicateOf": null,
       "exception": null,
-      "rejectionReason": "behavior-preserving dedup: shared predicate/authoritative route replaces two equivalent encodings; observable semantics already pinned by the existing The-economy/buff test suite (EV-TTA-CLEANA6-AUT-FIX verify) — no new behavioral contract to pin"
+      "rejectionReason": "behavior-preserving dedup: shared predicate/authoritative route replaces two equivalent encodings; observable semantics already pinned by the existing The-economy/buff test suite (EV-TTA-CLEANA6-AUT-FIX verify) \u2014 no new behavioral contract to pin"
     },
     {
       "id": "F-TTA-CLN6-INT-1",
-      "title": "Observed-enemy income lane (b) pays on charge-INIT and again on charge-RESOLVE — one logical action, two income events",
+      "title": "Observed-enemy income lane (b) pays on charge-INIT and again on charge-RESOLVE \u2014 one logical action, two income events",
       "state": {
         "productStateId": "3ac4f28911801fd2513c896782e3abdb5e94cc3b3b474e2c31b6ed6f71f1e60c",
         "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
@@ -3093,7 +3093,7 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "counterexample": "after charge-init expected currentThe=4, got 8 (repro TurnBattleSystem.ungTheChargeIncome.qa.test.ts — fails as predicted)",
+      "counterexample": "after charge-init expected currentThe=4, got 8 (repro TurnBattleSystem.ungTheChargeIncome.qa.test.ts \u2014 fails as predicted)",
       "expected": "income lane (b) pays only on COMPLETED enemy normal actions per design Part II",
       "actual": "charge-init declare leaves action populated so actionSource=skill|normal and lane (b) pays; resolve pays again",
       "rootCause": "lane (b) gates on natural declare without an actually-resolved check",
@@ -3103,11 +3103,11 @@
       "status": "REJECTED_WITH_PROOF",
       "duplicateOf": null,
       "exception": null,
-      "rejectionReason": "Rejected: unreachable in the beta window — no enemy definition carries chargeTurns (verified by data grep); lane (b) is enemy-actor only. Defect activates only when the first enemy charge skill ships; recorded as L-TTA-49 with a proposed pin so the charge-skill implementer must close it. Fixing now would bump product state for zero reachable-behavior change."
+      "rejectionReason": "Rejected: unreachable in the beta window \u2014 no enemy definition carries chargeTurns (verified by data grep); lane (b) is enemy-actor only. Defect activates only when the first enemy charge skill ships; recorded as L-TTA-49 with a proposed pin so the charge-skill implementer must close it. Fixing now would bump product state for zero reachable-behavior change."
     },
     {
       "id": "F-TTA-CLN6-INT-2",
-      "title": "peekNextActor mutates queue state (dequeueFollowUpActor) — latent double-peek footgun",
+      "title": "peekNextActor mutates queue state (dequeueFollowUpActor) \u2014 latent double-peek footgun",
       "state": {
         "productStateId": "3ac4f28911801fd2513c896782e3abdb5e94cc3b3b474e2c31b6ed6f71f1e60c",
         "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
@@ -3150,7 +3150,7 @@
       "closureReviewIds": [],
       "counterexample": "a second peek before resolution would re-shift queuedFollowUps and duplicate pendingReactiveEntry bookkeeping",
       "expected": "peek should not consume",
-      "actual": "peek is a mutating dequeue; single caller resolves immediately — no reachable double-peek",
+      "actual": "peek is a mutating dequeue; single caller resolves immediately \u2014 no reachable double-peek",
       "rootCause": "naming overstates purity of a consuming helper",
       "rootClass": "latent-edge",
       "subsystem": "the-tu-an-ung-the",
@@ -3158,7 +3158,7 @@
       "status": "REJECTED_WITH_PROOF",
       "duplicateOf": null,
       "exception": null,
-      "rejectionReason": "Rejected: single caller, immediate resolution — no reachable double-peek exists. Renaming/restructuring the scheduler surface for a hypothetical second caller is out of beta scope; recorded as L-TTA-50."
+      "rejectionReason": "Rejected: single caller, immediate resolution \u2014 no reachable double-peek exists. Renaming/restructuring the scheduler surface for a hypothetical second caller is out of beta scope; recorded as L-TTA-50."
     },
     {
       "state": {
@@ -3618,20 +3618,24 @@
       "siblingFindingIds": [
         "F-TTA-CLN8-INT-1"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TTA-CLO-11"
+      ],
       "duplicateOf": null,
       "exception": null,
       "subsystem": "the-tu-an-ung-the",
       "reachability": "PRODUCTION",
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "verificationEvidenceIds": [
         "EV-TTA-CLNA8-FIX"
       ],
-      "pinEvidenceIds": [],
+      "pinEvidenceIds": [
+        "EV-TTA-CLNA8-FIX"
+      ],
       "counterexample": "enemy dies, wave lull, player at -400 -> reset to 0 erases debt; +500 recover -> 500 instead of 100",
       "rejectionReason": null,
       "id": "F-TTA-CLN8-COR-1",
-      "title": "wave-lull pacing reset erases Ứng Trệ negative gauge debt",
+      "title": "wave-lull pacing reset erases \u1ee8ng Tr\u1ec7 negative gauge debt",
       "severity": "Low",
       "classification": "SPEC_DEFECT",
       "actionable": true,
@@ -3675,16 +3679,20 @@
       "invariantIds": [],
       "evidenceIds": [],
       "siblingFindingIds": [],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TTA-CLO-11"
+      ],
       "duplicateOf": null,
       "exception": null,
       "subsystem": "the-tu-an-ung-the",
       "reachability": "PRODUCTION",
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "verificationEvidenceIds": [
         "EV-TTA-CLNA8-FIX"
       ],
-      "pinEvidenceIds": [],
+      "pinEvidenceIds": [
+        "EV-TTA-CLNA8-FIX"
+      ],
       "counterexample": "counterChance=1, phan_chan reflect lethal: enemy acts -> dies at flushReflects -> sweep clears its observation -> income sees observed=false -> +0",
       "rejectionReason": null,
       "id": "F-TTA-CLN8-COR-2",
@@ -3716,7 +3724,7 @@
           "evidenceIds": []
         }
       ],
-      "expected": "an observed enemy that COMPLETED its action grants +4 Thế (design: completing an action pays)",
+      "expected": "an observed enemy that COMPLETED its action grants +4 Th\u1ebf (design: completing an action pays)",
       "actual": "income judged post-sweep, so a reflect-killed actor pays nothing",
       "rootCause": "observation was judged at income time instead of action-resolution time",
       "rootClass": "ordering-overreach",
@@ -3734,20 +3742,24 @@
       "siblingFindingIds": [
         "F-TTA-CLN8-INT-2"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TTA-CLO-11"
+      ],
       "duplicateOf": null,
       "exception": null,
       "subsystem": "the-tu-an-ung-the",
       "reachability": "PRODUCTION",
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "verificationEvidenceIds": [
         "EV-TTA-CLNA8-FIX"
       ],
-      "pinEvidenceIds": [],
+      "pinEvidenceIds": [
+        "EV-TTA-CLNA8-FIX"
+      ],
       "counterexample": "two allies act while Tro observed -> proc resolves twice for a once-per-intent window",
       "rejectionReason": null,
       "id": "F-TTA-CLN8-AUT-1",
-      "title": "Tro (Trợ) proc fires every ally action instead of once",
+      "title": "Tro (Tr\u1ee3) proc fires every ally action instead of once",
       "severity": "Nit",
       "classification": "REAL_DEFECT",
       "actionable": true,
@@ -3791,16 +3803,20 @@
       "invariantIds": [],
       "evidenceIds": [],
       "siblingFindingIds": [],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TTA-CLO-11"
+      ],
       "duplicateOf": null,
       "exception": null,
       "subsystem": "the-tu-an-ung-the",
       "reachability": "PRODUCTION",
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "verificationEvidenceIds": [
         "EV-TTA-CLNA8-FIX"
       ],
-      "pinEvidenceIds": [],
+      "pinEvidenceIds": [
+        "EV-TTA-CLNA8-FIX"
+      ],
       "counterexample": "renaming BAT_TU_BA_THE_BUFF.id leaves hasBaTheWard silently dead",
       "rejectionReason": null,
       "id": "F-TTA-CLN8-AUT-2",
@@ -3849,16 +3865,20 @@
       "invariantIds": [],
       "evidenceIds": [],
       "siblingFindingIds": [],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-TTA-CLO-11"
+      ],
       "duplicateOf": null,
       "exception": null,
       "subsystem": "the-tu-an-ung-the",
       "reachability": "PRODUCTION",
-      "status": "FIXED_PENDING_PROOF",
+      "status": "CLOSED",
       "verificationEvidenceIds": [
         "EV-TTA-CLNA8-FIX"
       ],
-      "pinEvidenceIds": [],
+      "pinEvidenceIds": [
+        "EV-TTA-CLNA8-FIX"
+      ],
       "counterexample": "holder.actionGauge -= UNG_TRE_GAUGE_PENALTY bypasses the owner API",
       "rejectionReason": null,
       "id": "F-TTA-CLN8-AUT-3",
@@ -4325,7 +4345,7 @@
         "stale symbol/doc comments corrected"
       ],
       "limitations": [
-        "consume/burn lanes still write currentThe directly — deliberate design per adapter header"
+        "consume/burn lanes still write currentThe directly \u2014 deliberate design per adapter header"
       ],
       "status": "STALE"
     },
@@ -5537,6 +5557,35 @@
       "previousPhaseReviewId": "REV-TTA-CLEAN-A7-INT",
       "reviewedAfterPreviousFixes": true,
       "findingIds": []
+    },
+    {
+      "id": "REV-TTA-CLO-11",
+      "state": {
+        "productStateId": "51ab3bf31c441a91d9a0e54e9577304112e862831419b58948fc9f5bf47fbebe",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 39,
+      "phase": "CLOSURE",
+      "role": "CLOSURE",
+      "reviewerId": "devin-274c92189eaf4955b6713147dd8b68a2",
+      "contextId": "sealed-child-274c92189eaf4955b6713147dd8b68a2",
+      "model": "swe-2-max",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T03:32:00.000Z",
+      "sealedAt": "2026-09-26T03:44:00.000Z",
+      "previousPhaseReviewId": "REV-TTA-CLEAN-A8-INT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-TTA-CLNA8-FIX"
+      ],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
     }
   ],
   "cycles": [],
@@ -5594,7 +5643,7 @@
       "originatingRun": "the-tu-an-ung-the-2026-09-25",
       "rootClass": "contract-drift",
       "missedInvariantIds": [],
-      "escapeReason": "a restore/revert fix changed production data without reverting the test contract edited for the pre-restore world — scoped vitest missed src/data",
+      "escapeReason": "a restore/revert fix changed production data without reverting the test contract edited for the pre-restore world \u2014 scoped vitest missed src/data",
       "applicability": [],
       "exclusions": [],
       "proposedProtection": [
@@ -5630,7 +5679,7 @@
       "applicability": [],
       "exclusions": [],
       "proposedProtection": [
-        "derive provenance fields (actionSource/execution) from 'did an action commit' — not from the action-capture variable"
+        "derive provenance fields (actionSource/execution) from 'did an action commit' \u2014 not from the action-capture variable"
       ],
       "promotionEvidenceIds": [
         "EV-TTA-FIX-AUT-A2"
@@ -5665,9 +5714,9 @@
         "F-TTA-INT-1"
       ],
       "rootClass": "duplicate-link",
-      "escapeReason": "a reactive-entry nits already covered by the AUT adjudication — search sibling findings before recording new ones",
+      "escapeReason": "a reactive-entry nits already covered by the AUT adjudication \u2014 search sibling findings before recording new ones",
       "proposedProtection": [
-        "detector: duplicate-link — a reactive-entry nits already covered by the AUT adjudication — search sibling findings before recording new ones"
+        "detector: duplicate-link \u2014 a reactive-entry nits already covered by the AUT adjudication \u2014 search sibling findings before recording new ones"
       ],
       "capabilityDelta": "search sibling findings for duplicates before recording new ones",
       "policyVersion": null,
@@ -5697,9 +5746,9 @@
       "rootClass": "spec-consistent",
       "escapeReason": "inert tail-flush duplication guarded by an early return is deliberate defense, not a defect",
       "proposedProtection": [
-        "detector: spec-consistent — inert tail-flush duplication guarded by an early return is deliberate defense, not a defect"
+        "detector: spec-consistent \u2014 inert tail-flush duplication guarded by an early return is deliberate defense, not a defect"
       ],
-      "capabilityDelta": "defensive guards with early-returns are deliberate, not dead code — check for a reader before flagging",
+      "capabilityDelta": "defensive guards with early-returns are deliberate, not dead code \u2014 check for a reader before flagging",
       "policyVersion": null,
       "effectiveFromRun": null,
       "guidance": null
@@ -5727,7 +5776,7 @@
       "rootClass": "parked-content",
       "escapeReason": "parked tu_the/bach_ung defs without grants are intentional hidden-path staging, not dead code",
       "proposedProtection": [
-        "detector: parked-content — parked tu_the/bach_ung defs without grants are intentional hidden-path staging, not dead code"
+        "detector: parked-content \u2014 parked tu_the/bach_ung defs without grants are intentional hidden-path staging, not dead code"
       ],
       "capabilityDelta": "parked defs (present + ungranted) are intentional staging, not dead code",
       "policyVersion": null,
@@ -5755,11 +5804,11 @@
         "F-TTA-COR-4"
       ],
       "rootClass": "spec-ambiguity",
-      "escapeReason": "reactionDebt reset semantics on ccBlocked/charge turns resolved by impl comment — spec ambiguity is not a defect when the impl documents intent",
+      "escapeReason": "reactionDebt reset semantics on ccBlocked/charge turns resolved by impl comment \u2014 spec ambiguity is not a defect when the impl documents intent",
       "proposedProtection": [
-        "detector: spec-ambiguity — reactionDebt reset semantics on ccBlocked/charge turns resolved by impl comment — spec ambiguity is not a defect when the impl documents intent"
+        "detector: spec-ambiguity \u2014 reactionDebt reset semantics on ccBlocked/charge turns resolved by impl comment \u2014 spec ambiguity is not a defect when the impl documents intent"
       ],
-      "capabilityDelta": "impl-documented semantics resolve spec ambiguity — do not flag documented intent as defect",
+      "capabilityDelta": "impl-documented semantics resolve spec ambiguity \u2014 do not flag documented intent as defect",
       "policyVersion": null,
       "effectiveFromRun": null,
       "guidance": null
@@ -5785,11 +5834,11 @@
         "F-TTA-COR-5"
       ],
       "rootClass": "inert-code",
-      "escapeReason": "unreachable defensive defaults (hitOutcomeScratch) carry no risk — verify a reader exists before flagging",
+      "escapeReason": "unreachable defensive defaults (hitOutcomeScratch) carry no risk \u2014 verify a reader exists before flagging",
       "proposedProtection": [
-        "detector: inert-code — unreachable defensive defaults (hitOutcomeScratch) carry no risk — verify a reader exists before flagging"
+        "detector: inert-code \u2014 unreachable defensive defaults (hitOutcomeScratch) carry no risk \u2014 verify a reader exists before flagging"
       ],
-      "capabilityDelta": "unreachable defensive defaults carry no risk — verify a read path exists before flagging",
+      "capabilityDelta": "unreachable defensive defaults carry no risk \u2014 verify a read path exists before flagging",
       "policyVersion": null,
       "effectiveFromRun": null,
       "guidance": null
@@ -5944,10 +5993,10 @@
         "F-TTA-A2-COR-2"
       ],
       "rootClass": "dormant-wiring",
-      "escapeReason": "validated-but-unconsumed capability fields on parked defs are accepted debt — record the pairing so revival wires the consumer",
-      "capabilityDelta": "validated-but-unconsumed capability fields on parked defs are accepted debt — record the pairing so revival wires the consumer",
+      "escapeReason": "validated-but-unconsumed capability fields on parked defs are accepted debt \u2014 record the pairing so revival wires the consumer",
+      "capabilityDelta": "validated-but-unconsumed capability fields on parked defs are accepted debt \u2014 record the pairing so revival wires the consumer",
       "proposedProtection": [
-        "validated-but-unconsumed capability fields on parked defs are accepted debt — record the pairing so revival wires the consumer"
+        "validated-but-unconsumed capability fields on parked defs are accepted debt \u2014 record the pairing so revival wires the consumer"
       ]
     },
     {
@@ -6340,8 +6389,8 @@
         "F-TTA-CLEAN-A3-AUT-3"
       ],
       "rootClass": "correctness-over-micro-optimization",
-      "escapeReason": "path resolvers are independent API entry points (battle build vs UI preview); a shared kit memo would need invalidation on nodeLevels/respec — duplicated deterministic builds beat stale-cache risk",
-      "capabilityDelta": "path resolvers are independent API entry points (battle build vs UI preview); a shared kit memo would need invalidation on nodeLevels/respec — duplicated deterministic builds beat stale-cache risk",
+      "escapeReason": "path resolvers are independent API entry points (battle build vs UI preview); a shared kit memo would need invalidation on nodeLevels/respec \u2014 duplicated deterministic builds beat stale-cache risk",
+      "capabilityDelta": "path resolvers are independent API entry points (battle build vs UI preview); a shared kit memo would need invalidation on nodeLevels/respec \u2014 duplicated deterministic builds beat stale-cache risk",
       "proposedProtection": [
         "mark-clear lazily owned by the predicate, not the read path - bridges read raw fields; do not duplicate clear-authority into display code for transient artifacts"
       ]
@@ -6358,7 +6407,7 @@
       "originatingRun": "the-tu-an-ung-the-2026-09-25",
       "rootClass": "boundary-drift/duplicate-gate",
       "missedInvariantIds": [],
-      "escapeReason": "three independent reviewers found the same divergent boundary — the reset gate read a legacy predicate while every consumer reads actionSource",
+      "escapeReason": "three independent reviewers found the same divergent boundary \u2014 the reset gate read a legacy predicate while every consumer reads actionSource",
       "applicability": [
         "boundary predicates that gate shared state must read the same boundary the consumers read"
       ],
@@ -6399,7 +6448,7 @@
       "missedInvariantIds": [],
       "escapeReason": "reset gate read a legacy predicate (`!ccBlocked && (!isCharging || chargeResolved)`) placed BEFORE action collapse while every consumer reads the actionSource boundary AFTER; sealed/null picks fell through the gap",
       "applicability": [
-        "any state reset/decay that fires inside declareActorAction must read the same actionSource boundary its consumers read — write the reset where the boundary is decided, not before"
+        "any state reset/decay that fires inside declareActorAction must read the same actionSource boundary its consumers read \u2014 write the reset where the boundary is decided, not before"
       ],
       "exclusions": [],
       "proposedProtection": [
@@ -6533,7 +6582,7 @@
       "originatingRun": "the-tu-an-ung-the-2026-09-25",
       "rootClass": "gate-boundary-reset",
       "missedInvariantIds": [],
-      "escapeReason": "the debt reset lived below the return-object computation and fired on every lane (charge-tick, sealed NULL_ACTION, null pick) — the actionSource existed but was never used to guard the reset",
+      "escapeReason": "the debt reset lived below the return-object computation and fired on every lane (charge-tick, sealed NULL_ACTION, null pick) \u2014 the actionSource existed but was never used to guard the reset",
       "applicability": [
         "any state reset beside an action-source boundary"
       ],
@@ -6571,7 +6620,7 @@
       "originatingRun": "the-tu-an-ung-the-2026-09-25",
       "rootClass": "doc-drift-vs-owner",
       "missedInvariantIds": [],
-      "escapeReason": "three doc sites described the thamTargetId clear as lazy-read-only while the eager sweepBuffDeaths owner was added in cleanA3 — docs lagged the ownership change",
+      "escapeReason": "three doc sites described the thamTargetId clear as lazy-read-only while the eager sweepBuffDeaths owner was added in cleanA3 \u2014 docs lagged the ownership change",
       "applicability": [
         "any owner change touching documented behavior"
       ],
@@ -6609,7 +6658,7 @@
       "originatingRun": "the-tu-an-ung-the-2026-09-25",
       "rootClass": "clamp-erases-negative-state",
       "missedInvariantIds": [],
-      "escapeReason": "Math.max(0,...) in consumeGaugeAfterAction silently refunded the debt-negative gauge — the below-zero semantics were authored in TheEconomy but never pinned",
+      "escapeReason": "Math.max(0,...) in consumeGaugeAfterAction silently refunded the debt-negative gauge \u2014 the below-zero semantics were authored in TheEconomy but never pinned",
       "applicability": [
         "any resource that may go negative by design"
       ],
@@ -6647,7 +6696,7 @@
       "originatingRun": "the-tu-an-ung-the-2026-09-25",
       "rootClass": "missed-quiescent-point-sweep",
       "missedInvariantIds": [],
-      "escapeReason": "flushReflects is itself a settle point (kills can land inside it) but only per-hit sweeps existed — the post-flush corpse state was never enumerated as a quiescent point",
+      "escapeReason": "flushReflects is itself a settle point (kills can land inside it) but only per-hit sweeps existed \u2014 the post-flush corpse state was never enumerated as a quiescent point",
       "applicability": [
         "any settle/quiescent point that can produce deaths"
       ],
@@ -7083,7 +7132,7 @@
         "TurnBattleSystem.grantObservationIncome"
       ],
       "exclusions": [
-        "player-side companion charge (van_du_kiem_khach) — lane (b) is enemy-actor only"
+        "player-side companion charge (van_du_kiem_khach) \u2014 lane (b) is enemy-actor only"
       ],
       "proposedProtection": [
         "pin: charge-init of an observed enemy yields zero income; resolve yields exactly one income event (repro TurnBattleSystem.ungTheChargeIncome.qa.test.ts)"
@@ -7105,7 +7154,7 @@
         "F-TTA-CLN6-INT-1"
       ],
       "rootClass": "latent-edge",
-      "escapeReason": "income lane (b) gates on natural declare, not action resolution — charge-init pays before anything completes",
+      "escapeReason": "income lane (b) gates on natural declare, not action resolution \u2014 charge-init pays before anything completes",
       "capabilityDelta": "charge-init income double-pay classified and pinned for the first enemy charge skill"
     },
     {
@@ -7137,7 +7186,7 @@
         "F-TTA-CLN6-INT-2"
       ],
       "rootClass": "latent-edge",
-      "escapeReason": "consuming dequeue exposed under a \"peek\" name — safe only while resolveNextStep is the sole caller",
+      "escapeReason": "consuming dequeue exposed under a \"peek\" name \u2014 safe only while resolveNextStep is the sole caller",
       "capabilityDelta": "mutating-peek footgun documented; guard proposed for the day a second caller appears"
     },
     {
