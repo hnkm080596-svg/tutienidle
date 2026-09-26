@@ -259,3 +259,58 @@ describe('TurnBattleSystem — follow-up reciprocity guard', () => {
     expect(result).toBeNull()
   })
 })
+
+describe('TurnBattleSystem — declareReactiveBypass payload contract (cleanA11 COR)', () => {
+  it('a NAMED-but-unregistered payload fizzles instead of substituting the basic attack', () => {
+    const { battle, system, playerParticipant, enemyParticipant } = fixture()
+
+    // Actor owns authored payloads — a named miss must fizzle, not borrow
+    // the basic swing (the basic fallback is only for actors with no
+    // authored payloads at all / unnamed entries).
+    playerParticipant.reactivePayloads = { phan_kich: playerSkill() }
+
+    battle.queuedFollowUps = [
+      {
+        actorId: 'player',
+        executionKind: 'reactive_bypass',
+        actionSource: 'follow_up',
+        payloadSkillId: 'qa_unregistered_payload',
+        targetIds: ['enemy'],
+      },
+    ]
+
+    const actor = system.tickPacing(battle, false)
+
+    expect(actor?.id).toBe('player')
+
+    const declared = system.declareActorAction(battle, actor!)
+
+    // No-op shape: no skill payload — captured targets alone cannot mint
+    // an attack (no scaled damage, impact resolves nothing).
+    expect(declared.action).toBeNull()
+    expect(declared.scaledDamage).toBeNull()
+    system.applyActionImpact(battle, declared)
+    expect(enemyParticipant.entity.currentHp).toBe(enemyParticipant.entity.maxHp)
+    expect(system.isPendingQueuedExecution('player')).toBe(false)
+  })
+
+  it('an UNNAMED entry still defaults to the basic swing by design', () => {
+    const { battle, system, enemyParticipant } = fixture()
+
+    battle.queuedFollowUps = [
+      {
+        actorId: 'player',
+        executionKind: 'reactive_bypass',
+        actionSource: 'follow_up',
+        targetIds: ['enemy'],
+      },
+    ]
+
+    const actor = system.tickPacing(battle, false)
+    const declared = system.declareActorAction(battle, actor!)
+
+    expect(declared.action?.skillId).toBe('player_basic')
+    expect(declared.affected.map((participant) => participant.id)).toEqual(['enemy'])
+    expect(enemyParticipant.entity.currentHp).toBe(enemyParticipant.entity.maxHp) // not yet applied
+  })
+})

@@ -1,4 +1,4 @@
-// BodyCapabilities.ts -- megaplan M4 (r4 HIGH 3, BLOCKER 3): typed
+// TheTuCapabilities.ts -- megaplan M4 (r4 HIGH 3, BLOCKER 3): typed
 // payload schemas + validators for the The Tu economy capability types.
 // Path economy stays in the path module -- TheEconomy consumes these
 // grants at its existing gain seams via the narrowers below.

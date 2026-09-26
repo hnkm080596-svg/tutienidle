@@ -3197,7 +3197,12 @@ export class TurnBattleSystem {
       if (!this.isObserved(battle, reactor, actor)) continue
       if (this.isHardCcBlocked(reactor) || this.isQuaThe(reactor)) continue
 
-      const outcome = this.hitOutcomeScratch.get(reactor.id) ?? 'taken'
+      // A reactor listed in affected with no recorded hit outcome means
+      // nothing resolved ON it (non-damaging action, mid-loop skip) --
+      // treat as 'evaded', not 'taken': the Phan window still opens per
+      // spec (hit/miss/evade all qualify) but an unrecorded hit must not
+      // mint an onImpactLanded payload (or commit cost) out of thin air.
+      const outcome = this.hitOutcomeScratch.get(reactor.id) ?? 'evaded'
       this.resolveReactiveProcs(
         battle,
         reactor,
@@ -3548,10 +3553,16 @@ export class TurnBattleSystem {
     actor: TurnBattleParticipant,
     entry: QueuedFollowUp,
   ): TurnDeclaredAction {
-    const payload = entry.payloadSkillId
-      ? actor.reactivePayloads?.[entry.payloadSkillId]
-      : undefined
-    const skill = payload ?? actor.basic ?? null
+    const payloads = actor.reactivePayloads
+    const payload = entry.payloadSkillId ? payloads?.[entry.payloadSkillId] : undefined
+    const hasAuthoredPayloads = payloads !== undefined && Object.keys(payloads).length > 0
+    // A named-but-unregistered payload fizzles (null skill = no-action
+    // shape) — silently substituting the actor's basic would mint a real
+    // attack under the wrong contract. The basic fallback is reserved
+    // for UNNAMED entries and actors with NO authored payloads at all
+    // (cleanA11 COR).
+    const skill =
+      entry.payloadSkillId && hasAuthoredPayloads ? (payload ?? null) : (actor.basic ?? null)
 
     // Ung The beta -- the bach_ung payloadAilments rider merge is gone
     // (Bach Ung is parked future content; the participant-local payload
