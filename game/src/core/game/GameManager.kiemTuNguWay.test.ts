@@ -199,22 +199,22 @@ describe('sword ngu way — subtree isolation', () => {
   it('hien orb nodes are unpurchasable on the ngu way (inert trap prevented)', () => {
     const ngu = committed('hidden_sword_pathway')
 
-    // orb_dam_1's only other gate is realm qi_refining -- the ritual
+    // thich_can's only other gate is realm qi_refining - the ritual
     // leaves the player there, so requiredWay alone blocks the buy.
     expect(
-      ngu.gameManager.progressionOps.canPurchaseNode('orb_dam_1', ngu.player),
+      ngu.gameManager.progressionOps.canPurchaseNode('thich_can', ngu.player),
     ).toBe(false)
     expect(
-      ngu.gameManager.progressionOps.purchaseNode('orb_dam_1', ngu.player),
+      ngu.gameManager.progressionOps.purchaseNode('thich_can', ngu.player),
     ).toBe(false)
-    expect(ngu.player.nodeLevels['orb_dam_1']).toBeUndefined()
+    expect(ngu.player.nodeLevels['thich_can']).toBeUndefined()
 
     // ...and the same node buys normally for a hien player at the
     // same realm -- the isolation runs both directions, not a blanket
     // kiem-node lock.
     const hien = committed('sword_pathway')
     expect(
-      hien.gameManager.progressionOps.purchaseNode('orb_dam_1', hien.player),
+      hien.gameManager.progressionOps.purchaseNode('thich_can', hien.player),
     ).toBe(true)
   })
 

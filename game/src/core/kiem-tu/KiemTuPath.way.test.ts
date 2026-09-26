@@ -150,14 +150,14 @@ describe('node stamps — requiredCultivationPath + requiredWay', () => {
     const hien = swordPathPlayer('sword_pathway')
     hien.realmId = 'foundation_establishment'
     hien.nodeLevels = { ngu_kiem_khoi: 1 } // inconsistent save shape — way gate still holds
-    expect(purchaseNode(hien, nodeById('orb_dam_1'))).toBe(true)
+    expect(purchaseNode(hien, nodeById('thich_can'))).toBe(true)
     expect(purchaseNode(hien, nodeById('ngu_kiem_lien'))).toBe(false)
 
     const ngu = swordPathPlayer('hidden_sword_pathway')
     ngu.realmId = 'foundation_establishment'
     ngu.nodeLevels = { ngu_kiem_khoi: 1 }
     expect(purchaseNode(ngu, nodeById('ngu_kiem_lien'))).toBe(true)
-    expect(purchaseNode(ngu, nodeById('orb_dam_1'))).toBe(false)
+    expect(purchaseNode(ngu, nodeById('thich_can'))).toBe(false)
   })
 
   it('cross-path way bleed: a body/hien player cannot buy kiem orb nodes', () => {
@@ -167,7 +167,7 @@ describe('node stamps — requiredCultivationPath + requiredWay', () => {
     body.realmId = 'qi_refining'
     body.skillInsight = 99
 
-    expect(purchaseNode(body, nodeById('orb_dam_1'))).toBe(false)
+    expect(purchaseNode(body, nodeById('thich_can'))).toBe(false)
   })
 
   it('aggregateNodeStatModifiers ignores cross-way levels both directions', () => {
@@ -176,7 +176,7 @@ describe('node stamps — requiredCultivationPath + requiredWay', () => {
     expect(aggregateNodeStatModifiers(NODE_REGISTRY, hien)).toEqual([])
 
     const ngu = swordPathPlayer('hidden_sword_pathway')
-    ngu.nodeLevels = { orb_dam_1: 3 }
+    ngu.nodeLevels = { thich_can: 3 }
     expect(aggregateNodeStatModifiers(NODE_REGISTRY, ngu)).toEqual([])
   })
 })

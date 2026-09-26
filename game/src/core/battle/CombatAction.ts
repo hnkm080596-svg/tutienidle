@@ -115,18 +115,25 @@ export type CombatVfxPresetId =
   // Kiếm Tu (Task 8, 2026-08-28) — DATA ONLY, art/
   // animation sau (renderer chưa đăng ký diễn xuất tương ứng).
   | 'tu_luc'
+  // Kiem Pho Beta (design sec.3) - per-orb VFX identity for the two
+  // beta orbs: Dam point->line->converge (silver/cool-blue), Chem
+  // crescent->arc->scar (silver + restrained dark-red). DATA ONLY.
+  | 'kiem_orb_dam' | 'kiem_orb_chem'
   // Kiem Tu Reimagined (spec 2026-09-15 §4.3, K11) — one preset per
   // Kiem Pho combo. The fired payload is the ONLY discovery signal, so
   // every combo must render distinguishably; renderer maps each preset
   // to its length-tier base + per-combo name/color signature. DATA
   // ONLY until the presentation pass registers diễn xuất.
-  | 'kiem_combo_tam_thich' | 'kiem_combo_tam_tram' | 'kiem_combo_tam_phach'
+  // Kiem Pho Beta (design sec.7) - the six beta combos carry the
+  // design's locked ids: nhat_tuyen/liet_ngan/khai_ngan/thau_ngan/
+  // hoi_tuyen/diep_ngan.
+  | 'kiem_combo_nhat_tuyen' | 'kiem_combo_liet_ngan' | 'kiem_combo_tam_phach'
   | 'kiem_combo_tam_lieu' | 'kiem_combo_tam_tao'
-  | 'kiem_combo_nhi_thich_nhat_tram' | 'kiem_combo_nhi_thich_nhat_phach'
-  | 'kiem_combo_nhi_tram_nhat_thich' | 'kiem_combo_nhi_tram_nhat_phach'
+  | 'kiem_combo_khai_ngan' | 'kiem_combo_nhi_thich_nhat_phach'
+  | 'kiem_combo_thau_ngan' | 'kiem_combo_nhi_tram_nhat_phach'
   | 'kiem_combo_nhi_phach_nhat_thich' | 'kiem_combo_nhi_lieu_nhat_thich'
   | 'kiem_combo_nhi_tao_nhat_thich'
-  | 'kiem_combo_thich_tram_thich' | 'kiem_combo_tram_thich_tram'
+  | 'kiem_combo_hoi_tuyen' | 'kiem_combo_diep_ngan'
   | 'kiem_combo_phach_thich_phach'
   | 'kiem_combo_thich_tram_phach_thich' | 'kiem_combo_tram_phach_thich_tram'
   | 'kiem_combo_phach_tram_thich_phach' | 'kiem_combo_lieu_tram_thich_lieu'

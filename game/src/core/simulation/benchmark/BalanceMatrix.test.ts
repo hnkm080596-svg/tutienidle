@@ -13,11 +13,11 @@ import { BENCHMARKS } from './BenchmarkEncounters'
 
 // Committed per-seed fingerprint set, keyed `${recipeId}/${benchmarkId}`.
 const EXPECTED_FINGERPRINTS: Record<string, Record<number, string>> = {
-  'kiem_tu_hien/single_target': { 11: 'c4c4bedc', 22: 'b3042988', 33: '43c39254', 44: 'c47f1bf5', 55: 'd6a1bf20', 66: '3937e688', 77: 'e738cd12', 88: '8d1d7451' },
-  'kiem_tu_hien/multi_enemy': { 11: 'b9b69603', 22: '6e2baeae', 33: '6678daf4', 44: '928b2b25', 55: 'e83a0693', 66: '9bc5c398', 77: 'a02851f2', 88: '537b764c' },
-  'kiem_tu_hien/durable_target': { 11: '8dedd5b3', 22: '5ff98285', 33: 'dc14af9c', 44: 'c4f1d051', 55: '75b3efcd', 66: '25bc00c5', 77: 'b52ee5cd', 88: 'eba46e9e' },
-  'kiem_tu_hien/burst_pressure': { 11: '03c5b02b', 22: '7410c0f9', 33: '29e715f6', 44: 'd7ef38c2', 55: 'eab2b96d', 66: '149fced8', 77: 'f9062873', 88: 'bfdcddeb' },
-  'kiem_tu_hien/attrition': { 11: '67a664b1', 22: '6276cd3a', 33: '94367734', 44: 'fee73b25', 55: 'f640d1b6', 66: 'f70bd613', 77: '345d65c7', 88: '1a11eb0b' },
+  'kiem_tu_hien/single_target': { 11: 'd801623d', 22: 'de6a4790', 33: '1bbe292d', 44: '04c15c25', 55: '3aa6b3ec', 66: '46f97dba', 77: '539a600a', 88: '70befeda' },
+  'kiem_tu_hien/multi_enemy': { 11: 'a6903949', 22: 'e26c7d84', 33: '1142cf36', 44: '97a1be4c', 55: '4cc2b0de', 66: 'aa8f3f3d', 77: 'ad8bdf72', 88: '62a91328' },
+  'kiem_tu_hien/durable_target': { 11: '80638a85', 22: 'a9257b46', 33: '1d5e35b8', 44: 'fdcd0cfc', 55: 'fa28749e', 66: '241b7069', 77: '175a13b3', 88: 'da9d9005' },
+  'kiem_tu_hien/burst_pressure': { 11: 'd599640b', 22: 'ebcf3709', 33: 'c280af25', 44: '6936d4fd', 55: '731f7c86', 66: '9e2630e7', 77: '3e0fffd9', 88: '731f7c86' },
+  'kiem_tu_hien/attrition': { 11: 'f63f96b4', 22: '8f283028', 33: 'b9975720', 44: '6d94143b', 55: 'c8feceed', 66: '65e18ba8', 77: '12187c3b', 88: '247b3e54' },
   'phap_tu_ngu_hanh/single_target': { 11: 'e69c141d', 22: 'c3a65b8e', 33: '262aac9b', 44: '18c43095', 55: 'f0cebc42', 66: '415d7fac', 77: 'f6b2f9f3', 88: '7c206c73' },
   'phap_tu_ngu_hanh/multi_enemy': { 11: 'd48f70ec', 22: 'a41c8cc2', 33: '6855819b', 44: '39e135ed', 55: '5a57dad3', 66: '09a1da65', 77: '429d902f', 88: '422aea58' },
   'phap_tu_ngu_hanh/durable_target': { 11: '85b75b74', 22: '3877dbbb', 33: '9737e504', 44: '65bee5de', 55: 'f9414ccd', 66: 'ab00fd1e', 77: 'aeb991d7', 88: '99e784a2' },
@@ -88,5 +88,15 @@ describe('balance matrix regression', () => {
     // exit-4: attribution coverage is sufficient and no single non-kit
     // bucket tops EVERY primary row's pooled damage distribution.
     expect(gates.secondaryDominance).toBe('PASS')
+  })
+
+  // TEMPORARY USER EXCEPTION (expires at BETA-BALANCE): under the KIEM
+  // PHO BETA numbers the_tu_hien has no identifiable strength, so the
+  // exit-2 strengths gate is red. User ruling keeps the numbers and
+  // defers the rebalance; it.fails self-flags the moment the gate goes
+  // green again so this marker cannot linger. See
+  // docs/balance/2026-09-25-kiem-pho-beta-rebaseline.md.
+  it.fails('strengths gate - user exception pending BETA-BALANCE', () => {
+    expect(matrix.gates.strengths.pass).toBe(true)
   })
 })

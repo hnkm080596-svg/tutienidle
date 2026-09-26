@@ -150,10 +150,10 @@ export const BASELINE_RECIPES: readonly BaselineRecipe[] = [
     // qi_refining (realmIndex 1) unlocks orb_dam only; the other orbs
     // are learned into the role kit but unreachable as basics here.
     // Combo extra-impact ops carry the bare combo id as originId
-    // (tam_thich fired 178 damage under 'tam_thich', not the preset id)
+    // (nhat_tuyen fires damage under 'nhat_tuyen', not the preset id)
     // - they are the way's own mechanic and count as kit damage. Ids
     // come through the provider's derived reachability view (INV-7
-    // seals the catalog itself); at qi_refining only tam_thich [D,D,D]
+    // seals the catalog itself); at qi_refining only nhat_tuyen [D,D,D]
     // is reachable, so higher-realm combos classify as leakage.
     kitSkillIds: ['orb_dam', ...reachableKiemPhoComboIds('qi_refining')],
     expectedEconomy: {

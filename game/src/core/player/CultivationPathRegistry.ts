@@ -61,7 +61,10 @@ import { collectBodyKitModifiers } from '../the-tu/TheTuKitModifiers'
 import { collectHiddenBodyMechanicModifiers } from '../the-tu/TheTuAnMechanicModifiers'
 import { getSkillCoreLevel } from '../progression/SkillCoreLevel'
 import { buildKiemPhoProvider } from '../kiem-tu/KiemPhoProvider'
-import { collectKiemPhoComboModifiers } from '../kiem-tu/KiemPhoNodeModifiers'
+import {
+  collectKiemPhoComboModifiers,
+  collectKiemPhoSkillDefinitionModifiers,
+} from '../kiem-tu/KiemPhoNodeModifiers'
 import {
   buildNguKiemDaoProvider,
   collectOwnedEvolutionIds,
@@ -367,7 +370,11 @@ function createSwordPathRuntime(deps: CultivationPathRuntimeDeps, hidden: boolea
       ? (player, nodes) =>
           buildNguKiemDaoProvider(player, collectOwnedEvolutionIds(player, nodes))
       : (player, nodes) =>
-          buildKiemPhoProvider(player, collectKiemPhoComboModifiers(player, nodes)),
+          buildKiemPhoProvider(
+            player,
+            collectKiemPhoComboModifiers(player, nodes),
+            collectKiemPhoSkillDefinitionModifiers(player, nodes),
+          ),
     // P7-M4 — display label for the provider-backed basic (Kiếm Phổ orb
     // machinery / Ngự Kiếm — Ngu Kiem Beta: ONE evolving skill), matching
     // kiemBarBridge's wording.
