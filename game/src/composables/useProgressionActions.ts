@@ -63,8 +63,8 @@ export function useProgressionActions() {
     devResetBranch: (branchTag: string) => {
       const refund = gameManager.progressionOps.devResetBranch(branchTag, player.$state)
 
-      if (refund === 0) {
-        return 0
+      if (refund === null || refund === 0) {
+        return refund
       }
 
       bumpState()

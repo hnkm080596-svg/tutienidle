@@ -971,6 +971,13 @@ export class GameManagerTurnBattleOps {
    * fighting). The TurnBattle object is retained after victory/defeat so
    * consumers can read the terminal result -- callers that need an
    * in-combat gate must use this query, not `getTurnBattle() !== null`.
+   *
+   * Boundary convention: writes whose effect would be combat-visible on
+   * the live battle (skills, nodes, passives applied to the minted
+   * participant snapshot) REJECT on this gate, because a mid-battle grant
+   * silently fails to reach the snapshot. Writes that are battle-invisible
+   * (body-chapter investment, equipment, essence, minor breakthroughs)
+   * may persist ungated - they take effect on the next battle.
    */
   isTurnBattleInProgress(): boolean {
     return this.turnBattle !== null && isBattleInProgress(this.turnBattle.state)

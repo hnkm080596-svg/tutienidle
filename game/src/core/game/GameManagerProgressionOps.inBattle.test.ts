@@ -127,7 +127,7 @@ describe('progressionOps in-battle rejection gates', () => {
     startInProgressBattle(gameManager, player)
     const before = structuredClone(player)
 
-    expect(gameManager.progressionOps.devResetBranch('ops', player)).toBe(0)
+    expect(gameManager.progressionOps.devResetBranch('ops', player)).toBeNull()
     expect(player.nodeLevels).toEqual(before.nodeLevels)
     expect(player.purchasedNodeIds).toEqual(before.purchasedNodeIds)
   })

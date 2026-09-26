@@ -86,7 +86,7 @@ describe('realmAdvanceOps in-battle rejection gates', () => {
     expect(gameManager.materialBag.getAmount(stoneId)).toBe(1_000)
   })
 
-  it('syncRealmPassive is a no-op mid-battle (deferred to next restore)', () => {
+  it('syncRealmPassive is a no-op mid-battle (same-realm passive already owned)', () => {
     const { gameManager, player } = setup()
     gameManager.realmAdvanceOps.chooseCultivationPath('body', 'body_pathway', player)
     player.realmId = 'foundation_establishment'
@@ -99,5 +99,33 @@ describe('realmAdvanceOps in-battle rejection gates', () => {
     gameManager.realmAdvanceOps.syncRealmPassive(player)
 
     expect(gameManager.skillManager.has(fePassive!)).toBe(false)
+  })
+
+  it('syncRealmStatPassive is a no-op mid-battle (sibling gate)', () => {
+    const { gameManager, player } = setup()
+    player.realmId = 'foundation_establishment'
+    expect(player.grantedRealmPassiveIds).toEqual([])
+
+    inBattle(gameManager, player)
+    gameManager.realmAdvanceOps.syncRealmStatPassive(player)
+
+    expect(player.grantedRealmPassiveIds).toEqual([])
+    expect(player.modifiers).toEqual([])
+  })
+
+  it('resolveTalentEntitlement rejects mid-battle - record and dialog stay pending', () => {
+    const { gameManager, player } = setup()
+    player.realmId = 'foundation_establishment'
+    player.pendingTalentEntitlement = {
+      realmId: 'foundation_establishment',
+      offeredTalentIds: ['tc_dia_can'],
+    }
+
+    inBattle(gameManager, player)
+    expect(gameManager.realmAdvanceOps.resolveTalentEntitlement(player, {
+      kind: 'new',
+      talentId: 'tc_dia_can',
+    })).toBe(false)
+    expect(player.pendingTalentEntitlement).not.toBeUndefined()
   })
 })

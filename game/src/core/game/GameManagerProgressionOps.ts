@@ -617,10 +617,11 @@ export class GameManagerProgressionOps {
    * (derived from level/cost data), cascades orphan child nodes; modifiers
    * update via the aggregators (no reverse subtraction of old modifiers).
    */
-  devResetBranch(branchTag: string, player: PlayerData): number {
-    // Dev channel, same out-of-combat discipline as respecNodeTree.
+  devResetBranch(branchTag: string, player: PlayerData): number | null {
+    // Dev channel, same out-of-combat discipline as respecNodeTree:
+    // null = rejected in-battle, 0 = a legit empty refund.
     if (this.deps.isTurnBattleInProgress()) {
-      return 0
+      return null
     }
 
     const revoked = new Set<string>()
