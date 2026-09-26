@@ -1617,8 +1617,10 @@
    ],
    "discoveredBy": "cleanC AUT",
    "counterexample": "Branch claims save v85 while master already published v85 for the_tu-beta tree redesign — a pt-reim save stamped 85 would pass master's shape validation as the-tu-beta shape.",
-   "status": "FIXED_PENDING_PROOF",
-   "closureReviewIds": [],
+   "status": "CLOSED",
+   "closureReviewIds": [
+    "REV-PTR-CLO-3"
+   ],
    "invariantIds": [],
    "evidenceIds": [],
    "actual": "Branch claims save v85 while master already published v85 for the_tu-beta tree redesign — a pt-reim save stamped 85 would pass master's shape validation as the-tu-beta shape.",
@@ -1643,8 +1645,12 @@
    ],
    "siblingFindingIds": [],
    "repair": "Bumped CURRENT_SAVE_VERSION to 86; v86 comment covers only this branch's retirement (spell_pathway route key). Restored master's v85 block (was missing in branch file).",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PTR-CLO-3"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-CLO-3"
+   ],
    "duplicateOf": null,
    "exception": null,
    "classification": "REAL_DEFECT",
@@ -1672,8 +1678,10 @@
    ],
    "discoveredBy": "cleanC AUT",
    "counterexample": "Changelog comment describes retirements from sibling branches' fields that never existed — only spell_pathway.route is a real delta on this branch.",
-   "status": "FIXED_PENDING_PROOF",
-   "closureReviewIds": [],
+   "status": "CLOSED",
+   "closureReviewIds": [
+    "REV-PTR-CLO-3"
+   ],
    "invariantIds": [],
    "evidenceIds": [],
    "actual": "Changelog comment describes retirements from sibling branches' fields that never existed — only spell_pathway.route is a real delta on this branch.",
@@ -1698,8 +1706,12 @@
    ],
    "siblingFindingIds": [],
    "repair": "Rewrote the entry as v86 covering only spell_pathway route-key retirement.",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PTR-CLO-3"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-CLO-3"
+   ],
    "duplicateOf": null,
    "exception": null,
    "classification": "REAL_DEFECT",
@@ -1727,8 +1739,10 @@
    ],
    "discoveredBy": "cleanC AUT",
    "counterexample": "Tooltip computes cap*mpRatio raw, bypassing the canonical clampStatValue consumption-site contract; local HoTheStats type predates StatTypes:54 carrying linhLucHoTheCap.",
-   "status": "FIXED_PENDING_PROOF",
-   "closureReviewIds": [],
+   "status": "CLOSED",
+   "closureReviewIds": [
+    "REV-PTR-CLO-3"
+   ],
    "invariantIds": [],
    "evidenceIds": [],
    "actual": "Tooltip computes cap*mpRatio raw, bypassing the canonical clampStatValue consumption-site contract; local HoTheStats type predates StatTypes:54 carrying linhLucHoTheCap.",
@@ -1753,8 +1767,12 @@
    ],
    "siblingFindingIds": [],
    "repair": "Removed HoTheStats workaround (entity.stats.linhLucHoTheCap direct); dr now clampStatValue('linhLucHoTheCap', cap*mpRatio).",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PTR-CLO-3"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-CLO-3"
+   ],
    "duplicateOf": null,
    "exception": null,
    "classification": "REAL_DEFECT",
@@ -1782,8 +1800,10 @@
    ],
    "discoveredBy": "cleanC AUT",
    "counterexample": "HUD caps/lits at flat SPELL_PATH_MAX_THE even if participant maxThe is raised or empowerment carries a different threshold — hardcode instead of the canonical reads.",
-   "status": "FIXED_PENDING_PROOF",
-   "closureReviewIds": [],
+   "status": "CLOSED",
+   "closureReviewIds": [
+    "REV-PTR-CLO-3"
+   ],
    "invariantIds": [],
    "evidenceIds": [],
    "actual": "HUD caps/lits at flat SPELL_PATH_MAX_THE even if participant maxThe is raised or empowerment carries a different threshold — hardcode instead of the canonical reads.",
@@ -1808,8 +1828,12 @@
    ],
    "siblingFindingIds": [],
    "repair": "max/threshold now read entity cap + empowerment threshold with THE_BAR_MAX fallback.",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PTR-CLO-3"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-CLO-3"
+   ],
    "duplicateOf": null,
    "exception": null,
    "classification": "REAL_DEFECT",
@@ -1953,8 +1977,10 @@
    ],
    "discoveredBy": "cleanC AUT",
    "counterexample": "Comments describe the retired Task-10 linh_ngo node gate and assert the pool always burns at commit — Phap The variants attach via element commit and do NOT burn (spec D17).",
-   "status": "FIXED_PENDING_PROOF",
-   "closureReviewIds": [],
+   "status": "CLOSED",
+   "closureReviewIds": [
+    "REV-PTR-CLO-3"
+   ],
    "invariantIds": [],
    "evidenceIds": [],
    "actual": "Comments describe the retired Task-10 linh_ngo node gate and assert the pool always burns at commit — Phap The variants attach via element commit and do NOT burn (spec D17).",
@@ -1979,8 +2005,12 @@
    ],
    "siblingFindingIds": [],
    "repair": "Rewrote both comments: empowerment now documented as element-commit attach (spec D17); burn clarified as opt-in per-def (Phap The variants keep the pool).",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PTR-CLO-3"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-CLO-3"
+   ],
    "duplicateOf": null,
    "exception": null,
    "classification": "REAL_DEFECT",
@@ -2008,8 +2038,10 @@
    ],
    "discoveredBy": "cleanC AUT",
    "counterexample": "stamped = {...kitResolved, theGainOnLandedCast: 1} is returned even when element === undefined — a generic fallback basic would mint +1 The.",
-   "status": "FIXED_PENDING_PROOF",
-   "closureReviewIds": [],
+   "status": "CLOSED",
+   "closureReviewIds": [
+    "REV-PTR-CLO-3"
+   ],
    "invariantIds": [],
    "evidenceIds": [],
    "actual": "stamped = {...kitResolved, theGainOnLandedCast: 1} is returned even when element === undefined — a generic fallback basic would mint +1 The.",
@@ -2034,8 +2066,12 @@
    ],
    "siblingFindingIds": [],
    "repair": "Stamp narrowed to element !== undefined — generic fallback basics no longer mint The.",
-   "pinEvidenceIds": [],
-   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [
+    "EV-PTR-CLO-3"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-CLO-3"
+   ],
    "duplicateOf": null,
    "exception": null,
    "classification": "REAL_DEFECT",
@@ -2235,6 +2271,33 @@
    "limitations": [
     "env noise: 2 magick ENOENT + 34 canvas/libuuid suite fails are pre-existing VM gaps"
    ],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-PTR-CLO-3",
+   "state": {
+    "productStateId": "a305ed3583896a70e967dcd09c9cc43ead1e648a6476f28de4b9dc2abc104225",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_INTEGRATION",
+   "producer": "closure devin-398e961b834b43c1b810da09e91e57df",
+   "startedAt": "2026-09-27T00:57:00Z",
+   "finishedAt": "2026-09-27T01:06:00Z",
+   "commandOrMethod": "source verification of 6 fixes @cfbcc271 + npx vitest run src/presentation/bridges src/services/save src/core/player/CultivationPathRegistry.test.ts",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "records-clo3.json",
+   "artifactHash": "ba39ced4eddd69c7456a623056c0aff02a8408cf2c687a6a325fa4355cb96678",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "All 6 AUT-C fixes verified at cfbcc271 (SEALED); 15 files / 502 tests pass; residual note: master at v86 -> branch re-bumped to v87 @bba563b8"
+   ],
+   "limitations": [],
    "status": "CURRENT"
   }
  ],
@@ -2542,6 +2605,42 @@
    ],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-PTR-CLO-3",
+   "state": {
+    "productStateId": "a305ed3583896a70e967dcd09c9cc43ead1e648a6476f28de4b9dc2abc104225",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 4,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-398e961b834b43c1b810da09e91e57df",
+   "contextId": "ctx-398e961b",
+   "model": "swe-2",
+   "role": "closure-verifier",
+   "inputBundleHash": "a305ed3583896a70e967dcd09c9cc43ead1e648a6476f28de4b9dc2abc104225",
+   "priorFindingsVisible": true,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-27T00:57:00Z",
+   "sealedAt": "2026-09-27T01:06:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PTR-27",
+    "F-PTR-28",
+    "F-PTR-29",
+    "F-PTR-30",
+    "F-PTR-33",
+    "F-PTR-34"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [
@@ -2828,6 +2927,44 @@
    "triggerType": "FALSE_POSITIVE",
    "supersedes": null,
    "rootClass": "REJECTED"
+  },
+  {
+   "effectiveFromRun": null,
+   "version": 1,
+   "escapeReason": "Master's save version advanced during the run (85->86 the-tu-an then v87 re-bump); branch comments described sibling-branch retirements; bridges hardcoded canonical values. Detector: AUT authority lens + CLO residual note.",
+   "promotionEvidenceIds": [],
+   "exclusions": [],
+   "capabilityDelta": "save-version check against live master at merge time, not run start",
+   "id": "L-PTR-AUTC-FIX",
+   "originatingRun": "phap-tu-reimagine-2026-09-26",
+   "applicability": [
+    "save version bumps",
+    "canonical-value duplication in bridge/tooltip reads"
+   ],
+   "recurrenceFindingIds": [],
+   "guidance": null,
+   "policyVersion": null,
+   "preventionEvidenceIds": [],
+   "missedInvariantIds": [],
+   "incidentEvidenceIds": [
+    "EV-PTR-CLO-3"
+   ],
+   "qualifiedBy": [],
+   "status": "CAPTURED",
+   "proposedProtection": [
+    "bump check resolves CURRENT_SAVE_VERSION on origin/master before writing new version"
+   ],
+   "findingIds": [
+    "F-PTR-27",
+    "F-PTR-28",
+    "F-PTR-29",
+    "F-PTR-30",
+    "F-PTR-33",
+    "F-PTR-34"
+   ],
+   "triggerType": "DEFECT",
+   "supersedes": null,
+   "rootClass": "VERSION_COLLISION+DOC_DRIFT+CONVENTION_BYPASS"
   }
  ],
  "messages": [],
