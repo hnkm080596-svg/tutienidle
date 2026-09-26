@@ -5492,6 +5492,88 @@
       "exception": null,
       "status": "FIXED_PENDING_PROOF",
       "rejectionReason": null
+    },
+    {
+      "id": "F-TTA-CLN13-AUT-1",
+      "round": "CLN13",
+      "severity": "Low",
+      "lens": "AUT",
+      "title": "externalWard write in TBS-owned lanes not gated on op settle result",
+      "status": "FIXED_PENDING_PROOF",
+      "pinEvidenceIds": [
+        "EV-TTA-CLNA13-FIX"
+      ],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "locations": [
+        "src/core/battle/turn/TurnBattleSystem.ts applyDeclaredBuff + intercept ward"
+      ],
+      "summary": "emitAndSettle returns CombatTrace; both ward writes gate on apply_buff resolved (plan-lane parity)."
+    },
+    {
+      "id": "F-TTA-CLN13-AUT-2",
+      "round": "CLN13",
+      "severity": "Nit",
+      "lens": "AUT",
+      "title": "Stale comment: charge-resolve 'never reaches this point' false for routed lane",
+      "status": "FIXED_PENDING_PROOF",
+      "pinEvidenceIds": [
+        "EV-TTA-CLNA13-FIX"
+      ],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "locations": [
+        "src/core/battle/turn/TurnBattleSystem.ts:2149-2152"
+      ],
+      "summary": "Comment now describes engine-unit early return vs routed null-action fall-through."
+    },
+    {
+      "id": "F-TTA-CLN13-AUT-3",
+      "round": "CLN13",
+      "severity": "Nit",
+      "lens": "AUT",
+      "title": "'phan_chan' literal in kit builder where PHAN_CHAN_BUFF imported",
+      "status": "FIXED_PENDING_PROOF",
+      "pinEvidenceIds": [
+        "EV-TTA-CLNA13-FIX"
+      ],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "locations": [
+        "src/data/skill/TheTuSkills.ts:519"
+      ],
+      "summary": "Uses PHAN_CHAN_BUFF.id constant."
+    },
+    {
+      "id": "F-TTA-CLN13-AUT-4",
+      "round": "CLN13",
+      "severity": "Nit",
+      "lens": "AUT",
+      "title": "Raw gauge write on simulation clone bypasses ActionGauge primitive",
+      "status": "FIXED_PENDING_PROOF",
+      "pinEvidenceIds": [
+        "EV-TTA-CLNA13-FIX"
+      ],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "locations": [
+        "src/core/battle/turn/TurnOrderPreview.ts:81"
+      ],
+      "summary": "consumeGaugeAfterAction(clone, 1)."
+    },
+    {
+      "id": "F-TTA-CLN13-AUT-5",
+      "round": "CLN13",
+      "severity": "Low",
+      "lens": "AUT",
+      "title": "PRE-EXISTING: 'khiem_khich'/'bat_tu_ba_the' literals (out of diff)",
+      "status": "REJECTED_WITH_PROOF",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "rejectionReason": "Pre-existing at merge-base be1bdf8d; TheTuBatTuSurvival.ts untouched by this branch. Out-of-diff note per reviewer.",
+      "locations": [],
+      "summary": "Pre-existing literals; parked content; not this change's defect."
     }
   ],
   "evidence": [
@@ -6120,6 +6202,40 @@
         "src/core/battle/turn/TurnBattleSystem.ts",
         "src/core/battle/turn/TurnBattleSystem.followUpQueue.test.ts",
         "src/core/battle/turn/CombatAnimationRuntime.ts"
+      ]
+    },
+    {
+      "id": "EV-TTA-CLNA13-FIX",
+      "state": {
+        "productStateId": "14401a4f5efea59b40ddd43a89a5f6833867139b042a15e9a813302ec49088e2",
+        "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+        "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coordinator",
+      "startedAt": "2026-09-26T09:50:00.000Z",
+      "finishedAt": "2026-09-26T09:56:00.000Z",
+      "commandOrMethod": "npm run type-check && npx vitest run src/core/battle/turn src/core/battle/runtime",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/clna13-aut-fix.md",
+      "artifactHash": "6129a655781d17c3057e0626e4163482479c74169b2b71ca685b7b37e73d066b",
+      "claims": [
+        "type-check clean",
+        "777 scoped tests PASS",
+        "externalWard writes gated on apply_buff resolved in TBS lanes",
+        "comment/literal/primitive nits fixed"
+      ],
+      "invariantIds": [],
+      "limitations": [],
+      "status": "CURRENT",
+      "inputEvidenceIds": [],
+      "inputPaths": [
+        "src/core/battle/turn/TurnBattleSystem.ts",
+        "src/core/battle/turn/TurnOrderPreview.ts",
+        "src/data/skill/TheTuSkills.ts"
       ]
     }
   ],
@@ -7627,6 +7743,53 @@
       "findingIds": [],
       "novelAttackIds": [],
       "status": "STALE"
+    },
+    {
+      "id": "REV-TTA-CLN13-COR",
+      "kind": "COMPLIANCE_REVIEW",
+      "reviewerSessionId": "579afeed8f1448b2aae41d503e9f3547",
+      "previousPhaseReviewId": "REV-TTA-CLEAN-A12-INT",
+      "verdict": "SEAL",
+      "status": "SEALED",
+      "round": 13,
+      "scope": "lens CORRECTNESS only",
+      "recordedAt": "2026-09-26T09:56:00.000Z",
+      "evidenceIds": [
+        "EV-TTA-CLNA13-FIX"
+      ],
+      "findingIds": [],
+      "findingPointers": [],
+      "verificationOfFindingIds": [],
+      "lessons": [],
+      "summary": "cleanA13 COR: SEAL clean -- income last-locked after windows, mark plant-on-miss/death-clears, debt+1/commit, windows on hit+evade, Ho substitution, Tro ally-only, invalid windows 0 RNG, bypass non-natural."
+    },
+    {
+      "id": "REV-TTA-CLN13-AUT",
+      "kind": "COMPLIANCE_REVIEW",
+      "reviewerSessionId": "148270185cd7417c990c0e881628a73f",
+      "previousPhaseReviewId": "REV-TTA-CLN13-COR",
+      "verdict": "FINDINGS",
+      "status": "SEALED",
+      "round": 13,
+      "scope": "lens AUTHORITY/ARCHITECTURE only",
+      "recordedAt": "2026-09-26T09:56:00.000Z",
+      "evidenceIds": [
+        "EV-TTA-CLNA13-FIX"
+      ],
+      "findingIds": [
+        "F-TTA-CLN13-AUT-1",
+        "F-TTA-CLN13-AUT-2",
+        "F-TTA-CLN13-AUT-3",
+        "F-TTA-CLN13-AUT-4",
+        "F-TTA-CLN13-AUT-5"
+      ],
+      "findingPointers": [],
+      "verificationOfFindingIds": [],
+      "lessons": [
+        "L-TTA-81",
+        "L-TTA-82"
+      ],
+      "summary": "cleanA13 AUT: 1 Low (externalWard ungated contract asymmetry - FIXED), 3 Nit (stale comment, id literal, raw clone gauge - FIXED), 1 pre-existing note (khiem_khich/bat_tu_ba_the literals - REJECTED out-of-diff)."
     }
   ],
   "cycles": [],
@@ -10109,6 +10272,24 @@
       "findingIds": [
         "F-TTA-CLN12-COR-2"
       ]
+    },
+    {
+      "id": "L-TTA-81",
+      "class": "contract-asymmetry",
+      "incident": "ward write ungated on op settle vs plan lane",
+      "promotedTo": [
+        "detector: new write-behind-op sites must gate on resolved status"
+      ],
+      "status": "PROMOTED"
+    },
+    {
+      "id": "L-TTA-82",
+      "class": "nit-batch",
+      "incident": "comment/literal/primitive nits batched into one commit",
+      "promotedTo": [
+        "workflow: nit fixes batch per user rule"
+      ],
+      "status": "PROMOTED"
     }
   ],
   "messages": [],

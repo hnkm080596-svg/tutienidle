@@ -30,6 +30,7 @@ import { TurnSkillPlanRuntime, type TurnSkillPlanOrchestration } from './TurnSki
 import type { BuffDefinitionId, CombatEntityId, CombatOperationId, SkillId } from '../contracts/ids'
 import type { SkillCombatRuntimeState } from '../../skilldef/SkillCombatRuntimeState'
 import type { ResolvedCombatOperation } from '../contracts/operations'
+import type { CombatTrace } from '../runtime/scheduler/CombatTrace'
 import type { CombatOperationOrigin } from '../contracts/origin'
 import type { StatModifier } from '../../stats/StatCalculator'
 import type { StatDomain } from '../../stats/StatDomain'
@@ -808,11 +809,12 @@ export class TurnBattleSystem {
       the legacy synchronous mutation order is preserved (a buff applied
       here is visible to every later read in the same action). The
       post-drain quiescent point is the spec sec.40-41 death boundary. */
-  private emitAndSettle(ops: readonly ResolvedCombatOperation[], battle: TurnBattle): void {
-    if (ops.length === 0) return
+  private emitAndSettle(ops: readonly ResolvedCombatOperation[], battle: TurnBattle): CombatTrace | undefined {
+    if (ops.length === 0) return undefined
     this.scheduler.enqueueAuthored(ops)
-    this.scheduler.run()
+    const trace = this.scheduler.run()
     this.sweepBuffDeaths(battle)
+    return trace
   }
 
   /** A lifecycle root for buff hooks (status.turn.<n>.<actorId>) --
@@ -2144,8 +2146,10 @@ export class TurnBattleSystem {
     // affected-gated block below: enemy-targeted charge skills collect
     // targets only at resolve time, so `affected` stays empty at declare
     // and the block below never ran for them -- their cooldown/resource
-    // were never committed (dead isChargeInit branch). The charge-resolve
-    // turn returns early above and never reaches this point.
+    // were never committed (dead isChargeInit branch). On the engine-unit
+    // lane the charge-resolve turn returns early above; on the routed
+    // lane it falls through with declared.action === null and is skipped
+    // by the null-action gates below.
     // skilldef M5b/M5d -- the commit rides the plan pipeline when the
     // def is adapter-covered (commitShell + consume ops through the
     // scheduler); an adapter-unsupported charge def on a live battle
@@ -2588,29 +2592,41 @@ export class TurnBattleSystem {
     const ops: ResolvedCombatOperation[] = []
     const rootActionId = `skill.applybuff.${battle.totalTurnsElapsed}.${actor.id}.${buffSpec.definitionId}.${this.nextOccurrence()}`
 
+    const opByTarget = new Map<string, ResolvedCombatOperation>()
     for (const target of targets) {
-      ops.push(
-        this.applyBuffOp(
-          definition.id,
-          actor.entity.id,
-          target.entity.id,
-          stacks,
-          1,
-          'suppressed',
-          rootActionId,
-          `apply.${target.id}`,
-          duration,
-        ),
+      const op = this.applyBuffOp(
+        definition.id,
+        actor.entity.id,
+        target.entity.id,
+        stacks,
+        1,
+        'suppressed',
+        rootActionId,
+        `apply.${target.id}`,
+        duration,
       )
+      ops.push(op)
+      opByTarget.set(target.id, op)
     }
-    this.emitAndSettle(ops, battle)
+    const trace = this.emitAndSettle(ops, battle)
 
     for (const target of targets) {
       // The Tu Reimagined (plan Task 11, D3/INV-12) -- the grant lands a
       // source-tagged externalWard pool on the target: REPLACE, never
       // stack (recast refreshes to full; a lower recast lowers the
       // pool). sourceMaxHpRatio reads the GRANTING tank's live maxHp.
-      if (buffSpec.externalWardGrant) {
+      // Contracts (operations.ts): the ward lands only when the target's
+      // own apply_buff op settled resolved -- plan-lane parity.
+      const op = opByTarget.get(target.id)
+      const opResolved =
+        op !== undefined &&
+        trace !== undefined &&
+        trace.records.some(
+          (record) =>
+            record.operation.operationId === op.operationId &&
+            record.result.status === 'resolved',
+        )
+      if (buffSpec.externalWardGrant && opResolved) {
         this.writeExternalWardGrant(
           actor.entity,
           target.entity,
@@ -3518,23 +3534,33 @@ export class TurnBattleSystem {
         // The marker lands on the rescued ally SOURCED BY the protector --
         // sourceId must match the ward's sourceId or the existence-bound
         // reconcile clears the pool at the next refresh.
-        this.emitAndSettle([
-          this.applyBuffOp(
-            definition.id,
-            nearest.entity.id,
-            original.entity.id,
-            1,
-            1,
-            'suppressed',
-            `intercept.ward.${battle.totalTurnsElapsed}.${nearest.id}.${original.id}.${this.nextOccurrence()}`,
-            `intercept_ward.${definition.id}`,
-          ),
-        ], battle)
-        this.writeExternalWardGrant(
-          nearest.entity,
-          original.entity,
-          wardGrant.sourceMaxHpRatio,
+        const wardOp = this.applyBuffOp(
+          definition.id,
+          nearest.entity.id,
+          original.entity.id,
+          1,
+          1,
+          'suppressed',
+          `intercept.ward.${battle.totalTurnsElapsed}.${nearest.id}.${original.id}.${this.nextOccurrence()}`,
+          `intercept_ward.${definition.id}`,
         )
+        const wardTrace = this.emitAndSettle([wardOp], battle)
+        // Contracts (operations.ts): the ward pool lands only when the
+        // marker's own apply_buff op settled resolved -- plan-lane parity.
+        if (
+          wardTrace !== undefined &&
+          wardTrace.records.some(
+            (record) =>
+              record.operation.operationId === wardOp.operationId &&
+              record.result.status === 'resolved',
+          )
+        ) {
+          this.writeExternalWardGrant(
+            nearest.entity,
+            original.entity,
+            wardGrant.sourceMaxHpRatio,
+          )
+        }
       }
     }
   }

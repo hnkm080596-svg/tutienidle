@@ -516,7 +516,7 @@ export function buildTheTuKit(
     // the participant-local phan_chan buff CLONE (registry def never
     // mutates; the clone lands via grantsBuffsAtBuild).
     const passiveBuff: BuffDefinition | undefined =
-      kit.special?.grantsBuffsAtBuild?.find((def) => def.id === 'phan_chan')
+      kit.special?.grantsBuffsAtBuild?.find((def) => def.id === PHAN_CHAN_BUFF.id)
     const reflect = defPayloads<ReactiveTriggerPayload>(passiveBuff, 'reactive_trigger').find(
       (payload) => payload.reflectsDamage !== undefined,
     )

@@ -1,4 +1,5 @@
 import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
+import { consumeGaugeAfterAction } from './ActionGauge'
 import { resolveNextTurn } from './TurnQueue'
 
 // Slice 7 extension (Completion Task 11) — turn-order preview: trả N actor
@@ -77,7 +78,7 @@ export function peekUpcomingActors(
     const clone = cloned.find((actor) => actor.id === resolved.actor.id)
 
     if (clone) {
-      clone.actionGauge = 0
+      consumeGaugeAfterAction(clone, 1)
     }
   }
 
