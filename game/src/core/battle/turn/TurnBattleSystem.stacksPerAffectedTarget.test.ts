@@ -5,17 +5,45 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 import type { TurnSkillDefinition } from './TurnSkillAction'
-import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
+import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
-import { PHAP_TU_EMPOWERED_ULTS } from '../../../data/skill/PhapTuEmpoweredUlts'
-import { makeTurnRuntime } from './testing/TurnRuntimeFixtures'
+import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
 // Mission C Task 10a (audit T3-19 adjacent) -- Hau Tho Thanh Luy's
 // empowered payload authored `stacksPerAffectedTarget`: the CASTER
 // gains one thanh_luy stack per still-alive target the action hit
-// (SkillEffect.ts:113-118), capped by the buff's maxStacks. Today the
-// field is silently dropped by the converter and target:'target'
-// lands the buff on the enemies with 1 stack each.
+// (SkillEffect.ts:113-118), capped by the buff's maxStacks. The
+// empowered-ult catalog AND the thanh_luy buff def retired with the
+// chain kit (Phap Tu Reimagined); the fixtures below inline both
+// shapes verbatim so the stacksPerAffectedTarget engine semantics
+// stay pinned.
+const THANH_LUY: BuffDefinition = {
+  id: 'thanh_luy',
+  name: 'Thành Lũy',
+  description: 'Thành đất Hậu Thổ vây quanh — mỗi địch bị nhốt thêm 6% phòng thủ.',
+  kind: 'buff',
+  polarity: 'buff',
+  instanceScope: 'per_source',
+  stacking: { maxStacks: 8, onReapplyStacks: 'add', onReapplyDuration: 'refresh' },
+  lifetime: { clock: 'holder_turns', duration: 8, scaling: 'ailment_scaled' },
+  statModifiers: [{ stat: 'defense', percent: 0.06 }],
+  dispellable: false,
+}
+
+const TEST_BUFF_REGISTRY = makeTestBuffRegistry([THANH_LUY])
+
+const HAU_THO_THANH_LUY_NUKE: TurnSkillDefinition = {
+  id: 'hau_tho_thanh_luy',
+  cooldownTurns: 0,
+  consumesAllThe: true,
+  damage: {
+    kind: 'elemental',
+    components: [{ kind: 'element', element: 'earth', ratio: 1 }],
+    multiplier: 4,
+  },
+  targeting: { shape: 'all_lanes' },
+  appliesBuff: { definitionId: 'thanh_luy', target: 'self', stacksPerAffectedTarget: true },
+}
 
 function createCombatant(id: string, type: 'player' | 'enemy'): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
@@ -47,7 +75,7 @@ function harness(enemyCount: number) {
   const playerEntity = createCombatant('player', 'player')
   const playerParticipant = makeParticipant('player', playerEntity, 0)
   playerParticipant.ultimate = {
-    skill: PHAP_TU_EMPOWERED_ULTS.earth!.nuke!,
+    skill: HAU_THO_THANH_LUY_NUKE,
     remainingCooldownTurns: 0,
   }
 
@@ -64,7 +92,7 @@ function harness(enemyCount: number) {
   const combat = new CombatSystem(new EventBus())
   const rng = new FunctionCombatRng(() => 0.5) // deterministic mid rng -- hit/evasion rolls all land
   const runtime = makeTurnRuntime({
-    registry: BUFF_REGISTRY,
+    registry: TEST_BUFF_REGISTRY,
     participants: () => [playerParticipant, ...enemyParticipants],
     combatSystem: combat,
     rng,
@@ -72,7 +100,7 @@ function harness(enemyCount: number) {
   const system = new TurnBattleSystem(
     combat,
     100,
-    BUFF_REGISTRY,
+    TEST_BUFF_REGISTRY,
     undefined,
     runtime,
     vi.fn(),

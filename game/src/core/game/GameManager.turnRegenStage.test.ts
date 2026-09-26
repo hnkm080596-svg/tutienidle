@@ -160,50 +160,11 @@ describe('M8 — real stage-loop resource regen (ARCH-003)', () => {
     expect(entity.currentMp).toBeLessThanOrEqual(entity.stats.maxMp)
   })
 
-  it('Bang Giap (water special via the duong_linh_bang_giap specialization) restores Ward after the unhit delay', () => {
-    const h = buildHarness('water', 400)
-
-    // The real specialization path: Dưỡng Linh · Băng Giáp swaps the
-    // special's buff payload to bang_giap (+50 wardMax, +5 ward regen).
-    expect(
-      h.gameManager.progressionOps.selectSkillSpecialization(
-        'thanh_tuyen_duong_linh',
-        'duong_linh_bang_giap',
-        h.player,
-      ),
-    ).toBe(true)
-
-    startStage(h)
-    const entity = h.playerEntity()
-    expect(entity.stats.wardMax).toBe(0)
-
-    const sawWardRegen = h.advanceUntil(
-      () => h.regenEvents.some((e) => e.entityId === entity.id && e.wardAfter > e.wardBefore),
-      5000,
-    )
-
-    expect(sawWardRegen).toBe(true)
-    expect(h.attached.some((e) => e.dotType === 'bang_giap' && e.targetId === entity.id)).toBe(true)
-    expect(entity.currentWard).toBeGreaterThan(0)
-    expect(entity.currentWard).toBeLessThanOrEqual(entity.stats.wardMax)
-    expect(entity.stats.wardMax).toBeGreaterThanOrEqual(50)
-  })
-
-  it('Dia Tru (earth special) restores Ward after the unhit delay', () => {
-    const h = buildHarness('earth', 400)
-    startStage(h)
-    const entity = h.playerEntity()
-
-    const sawWardRegen = h.advanceUntil(
-      () => h.regenEvents.some((e) => e.entityId === entity.id && e.wardAfter > e.wardBefore),
-      5000,
-    )
-
-    expect(sawWardRegen).toBe(true)
-    expect(h.attached.some((e) => e.dotType === 'dia_tru' && e.targetId === entity.id)).toBe(true)
-    expect(entity.currentWard).toBeGreaterThan(0)
-    expect(entity.currentWard).toBeLessThanOrEqual(entity.stats.wardMax)
-    // dia_tru lifts the ward ceiling by +60 over the base-0 pool.
-    expect(entity.stats.wardMax).toBeGreaterThanOrEqual(60)
-  })
+  // Phap Tu Reimagined: the Ward-regen legs are retired by design —
+  // the reimagined specials are pure Phap Trang windows (Tam Muoi /
+  // Thanh Tuyen / Van Moc / Kim Y / Trong Nhac), none grants bang_giap
+  // or dia_tru, and the duong_linh_bang_giap specialization no longer
+  // exists. The old tests pinned `wardAfter > wardBefore` through those
+  // payloads; there is no phap tu Ward producer left to exercise them
+  // with. Thanh Tuyen's MP-regen leg above remains the live coverage.
 })

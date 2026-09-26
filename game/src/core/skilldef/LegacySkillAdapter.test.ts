@@ -452,18 +452,15 @@ describe('LegacySkillAdapter -- Skill/EffectiveSkill path', () => {
 
     const { root, unsupported } = adaptSkill(skill, effective)
     expect(root.id).toBe('tam_muoi_chan_hoa')
-    expect(root.cadence.cooldownTurns).toBe(3)
-    const hit = opsOf(root)[0]!
-    if (hit.type !== 'deal_damage') throw new Error('unreachable')
-    // Elemental fire at 1.3 multiplier, debuff bong as eligible onLanded.
-    expect(hit.components).toEqual([{ kind: 'element', element: 'fire', ratio: 1 }])
-    expect(hit.coefficient).toBeCloseTo(1.3, 5)
-    expect(hit.onLanded?.[0]).toMatchObject({
-      type: 'apply_buff',
-      definitionId: 'hoa_an',
-      reactionEligibility: 'eligible',
-      chance: 1,
-    })
+    // Phap Tu Reimagined: the special is a pure self-buff Trang window
+    // (PHAP_TU_SPECIAL_COOLDOWN_TURNS) with no baseline damage -- the
+    // plan is a single apply_buff on self.
+    expect(root.cadence.cooldownTurns).toBe(5)
+    const applyBuff = opsOf(root).find((op) => op.type === 'apply_buff')
+    expect(applyBuff).toBeDefined()
+    if (applyBuff!.type !== 'apply_buff') throw new Error('unreachable')
+    expect(applyBuff!.definitionId).toBe('tam_muoi')
+    expect(applyBuff!.target).toBe('self')
     expect(Array.isArray(unsupported)).toBe(true)
   })
 })

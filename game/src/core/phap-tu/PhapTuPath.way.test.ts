@@ -177,7 +177,7 @@ describe('PHAP_TU_NODES — requiredWay spell_pathway export stamp', () => {
 
   it('ngo_dao cannot purchase element nodes; spell_pathway can; mortal cannot', () => {
     const root = PHAP_TU_NODES.find((node) => node.id === 'hoa_linh_ngo')!
-    const growth = PHAP_TU_NODES.find((node) => node.id === 'fire_dot_chance')!
+    const growth = PHAP_TU_NODES.find((node) => node.id === 'fire_ailment_mastery')!
 
     const ngu = nguHanh({ skillInsight: 100 })
     expect(canPurchaseNode(ngu, root)).toBe(true)
@@ -190,7 +190,7 @@ describe('PHAP_TU_NODES — requiredWay spell_pathway export stamp', () => {
       expect(canPurchaseNode(ngo, growth)).toBe(false)
       expect(purchaseNode(ngo, growth)).toBe(false)
       expect(ngo.nodeLevels['hoa_linh_ngo']).toBeUndefined()
-      expect(ngo.nodeLevels['fire_dot_chance']).toBeUndefined()
+      expect(ngo.nodeLevels['fire_ailment_mastery']).toBeUndefined()
     }
 
     const mortal = createDefaultPlayer()

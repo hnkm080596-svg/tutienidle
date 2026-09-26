@@ -101,12 +101,12 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
 
     // --- Pre-Battle Upgrade: nâng cấp 1 skill bất kỳ (Kiem Tu
     // Reimagined — hien basics come from the orb preset, so the generic
-    // authored skill here is tam_muoi_chan_hoa).
-    gameManager.progressionOps.learnSkill('tam_muoi_chan_hoa', player)
+    // authored skill here is hoa_cau_thuat).
+    gameManager.progressionOps.learnSkill('hoa_cau_thuat', player)
 
-    const rawSkill = gameManager.skillManager.get('tam_muoi_chan_hoa')!
+    const rawSkill = gameManager.skillManager.get('hoa_cau_thuat')!
 
-    // Trạng thái gốc — channel tick AoE metal components.
+    // Trạng thái gốc — elemental fire damage components.
     expect(rawSkill.effects[0]?.components).toBeDefined()
 
     // --- Build Snapshot -> Combat: finalStats CUỐI CÙNG (đủ cả 3

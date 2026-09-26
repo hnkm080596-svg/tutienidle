@@ -7,10 +7,10 @@ import { SKILLS } from '../../data/skill/Skills'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { SPELL_PATH_MAX_THE } from '../phap-tu/PhapTuPath'
 import {
-  KIM_PHAP_THE_PENETRATION,
-  THUY_PHAP_THE_COEFFICIENT,
-  THO_PHAP_THE_COEFFICIENT,
-} from '../phap-tu/PhapTheVariants'
+  KIM_PHAP_THE_PENETRATION_BONUS,
+  THUY_PHAP_THE_SECONDARY_COEFFICIENT,
+  THO_PHAP_THE_SHOCKWAVE_COEFFICIENT,
+} from '../../data/skill/PhapTuSkills'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 import type { ElementType } from '../element/ElementType'
 
@@ -100,18 +100,23 @@ describe('Phap The empowerment attach (spec D1-D7)', () => {
 
   it('water variant fires one secondary hit on a DIFFERENT enemy carrying the base ailment', () => {
     const empowered = buildWith('water').empowerment!.empowered
-    const secondary = empowered.landedConsequences?.find(
-      (op) => op.type === 'deal_damage',
-    )
+    // The authored rider nests the secondary hit inside a
+    // target_hit_landed gate (data-owned payload).
+    const gate = empowered.landedConsequences?.find((op) => op.type === 'if')
 
-    expect(secondary).toBeDefined()
-    if (secondary!.type === 'deal_damage') {
-      expect(secondary!.target).toBe('other_enemy')
-      expect(secondary!.coefficient).toBe(THUY_PHAP_THE_COEFFICIENT)
-      expect(secondary!.components).toEqual([{ kind: 'element', element: 'water', ratio: 1 }])
-      // The secondary re-applies the element ailment on its own target.
-      expect(secondary!.onLanded?.every((op) => op.type === 'apply_buff')).toBe(true)
-      expect(secondary!.onLanded?.length).toBeGreaterThan(0)
+    expect(gate).toBeDefined()
+    if (gate!.type === 'if') {
+      expect(gate!.condition.kind).toBe('target_hit_landed')
+      const secondary = gate!.then.find((op) => op.type === 'deal_damage')
+      expect(secondary).toBeDefined()
+      if (secondary!.type === 'deal_damage') {
+        expect(secondary!.target).toBe('other_enemy')
+        expect(secondary!.coefficient).toBe(THUY_PHAP_THE_SECONDARY_COEFFICIENT)
+        expect(secondary!.components).toEqual([{ kind: 'element', element: 'water', ratio: 1 }])
+        // The secondary re-applies the element ailment on its own target.
+        expect(secondary!.onLanded?.every((op) => op.type === 'apply_buff')).toBe(true)
+        expect(secondary!.onLanded?.length).toBeGreaterThan(0)
+      }
     }
   })
 
@@ -124,7 +129,7 @@ describe('Phap The empowerment attach (spec D1-D7)', () => {
     expect(shockwave).toBeDefined()
     if (shockwave!.type === 'deal_damage') {
       expect(shockwave!.target).toBe('other_enemies')
-      expect(shockwave!.coefficient).toBe(THO_PHAP_THE_COEFFICIENT)
+      expect(shockwave!.coefficient).toBe(THO_PHAP_THE_SHOCKWAVE_COEFFICIENT)
       // Non-recursive by construction: no landed children.
       expect(shockwave!.onLanded).toBeUndefined()
     }
@@ -141,6 +146,6 @@ describe('Phap The empowerment attach (spec D1-D7)', () => {
   it('metal variant carries the skill-local penetration bonus', () => {
     const empowered = buildWith('metal').empowerment!.empowered
 
-    expect(empowered.elementalPenetrationBonus).toBe(KIM_PHAP_THE_PENETRATION)
+    expect(empowered.elementalPenetrationBonus).toBe(KIM_PHAP_THE_PENETRATION_BONUS)
   })
 })

@@ -15,23 +15,23 @@ import { SkillManager } from '../skill/SkillManager'
 // numeric value (A1/A2 precedent).
 
 describe('toTurnSkillDefinition', () => {
-  it('maps the fire special tam_muoi_chan_hoa: damage/debuff/cooldown fields', () => {
+  it('maps the fire basic hoa_cau_thuat: damage/debuff/cooldown fields', () => {
     const manager = new SkillManager()
     const skillSystem = new SkillSystem(manager)
-    const skill = structuredClone(SKILLS.find((s) => s.id === 'tam_muoi_chan_hoa')!)
+    const skill = structuredClone(SKILLS.find((s) => s.id === 'hoa_cau_thuat')!)
     manager.add(skill)
 
     const effective = skillSystem.getEffectiveSkill(skill)
     const turnSkill = toTurnSkillDefinition(skill, effective)
 
-    expect(turnSkill.id).toBe('tam_muoi_chan_hoa')
-    // Number-preserved cooldown (skill.cooldown = 3).
-    expect(turnSkill.cooldownTurns).toBe(3)
-    // Damage effect: elemental fire, value 1.3.
+    expect(turnSkill.id).toBe('hoa_cau_thuat')
+    // Number-preserved cooldown (skill.cooldown = 4).
+    expect(turnSkill.cooldownTurns).toBe(4)
+    // Damage effect: elemental fire, value 1.
     expect(turnSkill.damage?.kind).toBe('elemental')
     if (turnSkill.damage && turnSkill.damage.kind === 'elemental') {
       expect(turnSkill.damage.components).toEqual([{ kind: 'element', element: 'fire', ratio: 1 }])
-      expect(turnSkill.damage.multiplier).toBeCloseTo(1.3, 5)
+      expect(turnSkill.damage.multiplier).toBeCloseTo(1, 5)
     }
     // R3 re-audit (AR-03 gap) — authored manaScalingRatio/attributeScaling
     // must survive conversion (previously silently dropped).
@@ -39,8 +39,8 @@ describe('toTurnSkillDefinition', () => {
       attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
       manaScalingRatio: 0.001,
     })
-    // Debuff effect → appliesAilment (bong, chance 1).
-    expect(turnSkill.appliesAilment).toEqual({ buffDefinitionId: 'hoa_an', chance: 1 })
+    // Debuff effect → appliesAilment (hoa_an, chance 0.5).
+    expect(turnSkill.appliesAilment).toEqual({ buffDefinitionId: 'hoa_an', chance: 0.5 })
   })
 
   it('carries authored vfxPresetId to presetId; absence stays undefined for the runtime fallback', () => {
@@ -63,20 +63,22 @@ describe('toTurnSkillDefinition', () => {
   it('applies the selected specialization override through getEffectiveSkill (Tán Diễm AoE branch)', () => {
     const manager = new SkillManager()
     const skillSystem = new SkillSystem(manager)
-    const skill = structuredClone(SKILLS.find((s) => s.id === 'tam_muoi_chan_hoa')!)
+    const skill = structuredClone(SKILLS.find((s) => s.id === 'hoa_cau_thuat')!)
     manager.add(skill)
 
-    // Tán Diễm: AoE square radius 1, value 1, chance 0.7.
-    skillSystem.selectSpecialization(skill.id, 'tam_muoi_tan_diem')
+    // Phap Tu Reimagined: the chain-era tam_muoi_tan_diem spec is gone;
+    // the hoa_tan_diem basic-lane spec keeps an identical AoE override
+    // (square radius 1, value 0.9, hoa_an chance 0.45).
+    skillSystem.selectSpecialization(skill.id, 'hoa_tan_diem')
 
     const effective = skillSystem.getEffectiveSkill(manager.get(skill.id)!)
     const turnSkill = toTurnSkillDefinition(manager.get(skill.id)!, effective)
 
     expect(turnSkill.targeting).toEqual({ shape: 'square', laneRadius: 1 })
     if (turnSkill.damage && turnSkill.damage.kind === 'elemental') {
-      expect(turnSkill.damage.multiplier).toBeCloseTo(1, 5)
+      expect(turnSkill.damage.multiplier).toBeCloseTo(0.9, 5)
     }
-    expect(turnSkill.appliesAilment).toEqual({ buffDefinitionId: 'hoa_an', chance: 0.7 })
+    expect(turnSkill.appliesAilment).toEqual({ buffDefinitionId: 'hoa_an', chance: 0.45 })
   })
 
   it('maps an ultimate with consume-for-damage fields (Detonate/ward-burst)', () => {
@@ -114,9 +116,9 @@ describe('toTurnSkillDefinition', () => {
   it('maps a mana-cost skill resource fields verbatim', () => {
     const manager = new SkillManager()
     const skillSystem = new SkillSystem(manager)
-    // A chain skill with mana cost — the first non-basic chain entry with
-    // resourceType mana; fall back to the fire special if content shifts.
-    const skill = structuredClone(SKILLS.find((s) => s.id === 'hoa_ha_cuu_thien') ?? SKILLS.find((s) => s.id === 'tam_muoi_chan_hoa')!)
+    // Phap Tu Reimagined: the mana-cost specials (Phap Trang windows)
+    // are the surviving resourceType:'mana' active skills.
+    const skill = structuredClone(SKILLS.find((s) => s.id === 'tam_muoi_chan_hoa')!)
     manager.add(skill)
 
     const effective = skillSystem.getEffectiveSkill(skill)
@@ -157,40 +159,36 @@ describe('toTurnSkillDefinition', () => {
       expect(turnSkill.appliesBuffs).toEqual([{ definitionId: 'thanh_tuyen', target: 'self' }])
     })
 
-    it('converts earth self-buff special dia_tru_thua_thien: targetScope self, no fake damage, appliesBuff', () => {
+    it('converts earth self-buff special trong_nhac: targetScope self, no fake damage, appliesBuff', () => {
       const manager = new SkillManager()
       const skillSystem = new SkillSystem(manager)
-      const skill = structuredClone(SKILLS.find((s) => s.id === 'dia_tru_thua_thien')!)
+      // Phap Tu Reimagined: dia_tru_thua_thien retired with the chain
+      // kit; trong_nhac is the reimagined earth special (a pure Phap
+      // Trang window with no baseline damage).
+      const skill = structuredClone(SKILLS.find((s) => s.id === 'trong_nhac')!)
       manager.add(skill)
 
       const effective = skillSystem.getEffectiveSkill(skill)
       const turnSkill = toTurnSkillDefinition(skill, effective)
 
-      expect(turnSkill.id).toBe('dia_tru_thua_thien')
+      expect(turnSkill.id).toBe('trong_nhac')
       expect(turnSkill.targetScope).toBe('self')
       expect(turnSkill.damage).toBeUndefined()
-      expect(turnSkill.appliesBuffs).toEqual([{ definitionId: 'dia_tru', target: 'self' }])
+      expect(turnSkill.appliesBuffs).toEqual([{ definitionId: 'trong_nhac', target: 'self' }])
     })
 
-    it('converts specialization of self-buff skill (Băng Giáp)', () => {
+    it('maps multiple debuffs into appliesAilments (synthetic — the two-debuff wood special retired)', () => {
       const manager = new SkillManager()
       const skillSystem = new SkillSystem(manager)
-      const skill = structuredClone(SKILLS.find((s) => s.id === 'thanh_tuyen_duong_linh')!)
-      manager.add(skill)
-
-      skillSystem.selectSpecialization(skill.id, 'duong_linh_bang_giap')
-      const effective = skillSystem.getEffectiveSkill(manager.get(skill.id)!)
-      const turnSkill = toTurnSkillDefinition(manager.get(skill.id)!, effective)
-
-      expect(turnSkill.targetScope).toBe('self')
-      expect(turnSkill.damage).toBeUndefined()
-      expect(turnSkill.appliesBuffs).toEqual([{ definitionId: 'bang_giap', target: 'self' }])
-    })
-
-    it('maps multiple debuffs on wood special cau_mang_can_tri into appliesAilments', () => {
-      const manager = new SkillManager()
-      const skillSystem = new SkillSystem(manager)
-      const skill = structuredClone(SKILLS.find((s) => s.id === 'cau_mang_can_tri')!)
+      // Phap Tu Reimagined: cau_mang_can_tri retired; no shipped skill
+      // still authors two debuff effects, so the field-mapping is
+      // pinned on a synthetic payload.
+      const skill = structuredClone(SKILLS.find((s) => s.id === 'doc_chuong')!)
+      skill.id = 'fixture_two_debuffs'
+      skill.effects = [
+        { type: 'debuff', buffId: 'troi_chan', ailmentChance: 0.8 },
+        { type: 'debuff', buffId: 'doc_can', ailmentChance: 0.6 },
+      ]
       manager.add(skill)
 
       const effective = skillSystem.getEffectiveSkill(skill)
@@ -201,15 +199,21 @@ describe('toTurnSkillDefinition', () => {
       expect(turnSkill.appliesAilments).toContainEqual({ buffDefinitionId: 'doc_can', chance: 0.6 })
     })
 
-    it('folds add_stack effect into ailment stacks count (Tam Muội Tụ Diễm)', () => {
+    it('folds add_stack effect into ailment stacks count (synthetic)', () => {
       const manager = new SkillManager()
       const skillSystem = new SkillSystem(manager)
-      const skill = structuredClone(SKILLS.find((s) => s.id === 'tam_muoi_chan_hoa')!)
+      // Phap Tu Reimagined: tam_muoi_tu_diem retired; synthetic clone
+      // keeps the debuff + add_stack fold pinned.
+      const skill = structuredClone(SKILLS.find((s) => s.id === 'hoa_cau_thuat')!)
+      skill.id = 'fixture_add_stack'
+      skill.effects = [
+        { type: 'debuff', buffId: 'hoa_an', ailmentChance: 1 },
+        { type: 'add_stack', buffId: 'hoa_an', stacks: 1 },
+      ]
       manager.add(skill)
 
-      skillSystem.selectSpecialization(skill.id, 'tam_muoi_tu_diem')
-      const effective = skillSystem.getEffectiveSkill(manager.get(skill.id)!)
-      const turnSkill = toTurnSkillDefinition(manager.get(skill.id)!, effective)
+      const effective = skillSystem.getEffectiveSkill(skill)
+      const turnSkill = toTurnSkillDefinition(skill, effective)
 
       // Debuff 1 stack + add_stack 1 stack = 2 stacks.
       const bongAilment = turnSkill.appliesAilments?.find((a) => a.buffDefinitionId === 'hoa_an')
@@ -217,10 +221,19 @@ describe('toTurnSkillDefinition', () => {
       expect(bongAilment?.stacks).toBe(2)
     })
 
-    it('maps healPercentOfDamage on wood ultimate doc_vien_bao_can', () => {
+    it('maps healPercentOfDamage (synthetic — doc_vien_bao_can retired)', () => {
       const manager = new SkillManager()
       const skillSystem = new SkillSystem(manager)
-      const skill = structuredClone(SKILLS.find((s) => s.id === 'doc_vien_bao_can')!)
+      const skill = structuredClone(SKILLS.find((s) => s.id === 'doc_chuong')!)
+      skill.id = 'fixture_leech'
+      skill.effects = [
+        {
+          type: 'damage',
+          value: 1,
+          components: [{ kind: 'element', element: 'wood', ratio: 1 }],
+          healPercentOfDamage: 0.4,
+        },
+      ]
       manager.add(skill)
 
       const effective = skillSystem.getEffectiveSkill(skill)
@@ -229,17 +242,18 @@ describe('toTurnSkillDefinition', () => {
       expect(turnSkill.healPercentOfDamage).toBe(0.4)
     })
 
-    it('carries the authored buff duration override (duong_linh_tuyen spec: 8)', () => {
+    it('carries the authored buff duration override (synthetic — duong_linh_tuyen spec retired)', () => {
       const manager = new SkillManager()
       const skillSystem = new SkillSystem(manager)
       const skill = structuredClone(SKILLS.find((s) => s.id === 'thanh_tuyen_duong_linh')!)
+      skill.id = 'fixture_duration_override'
+      skill.effects = [{ type: 'buff', buffId: 'thanh_tuyen', duration: 8 }]
       manager.add(skill)
 
-      skillSystem.selectSpecialization(skill.id, 'duong_linh_tuyen')
       const effective = skillSystem.getEffectiveSkill(manager.get(skill.id)!)
       const turnSkill = toTurnSkillDefinition(manager.get(skill.id)!, effective)
 
-      // M10 (ARCH-008) — the spec's authored duration:8 must survive
+      // M10 (ARCH-008) — the authored duration:8 must survive
       // conversion; without it the registry default 6 silently wins.
       expect(turnSkill.appliesBuffs).toEqual([{ definitionId: 'thanh_tuyen', target: 'self', durationOverride: 8 }])
     })
@@ -282,16 +296,19 @@ describe('toTurnSkillDefinition', () => {
       const manager = new SkillManager()
       const skillSystem = new SkillSystem(manager)
 
-      // van_moc_lan_doc carries an authored scope the turn engine cannot
-      // execute (the spread fields were removed with the legacy ailment
-      // migration -- canonical seals never spread).
-      const wood = structuredClone(SKILLS.find((s) => s.id === 'van_moc_lan_doc')!)
+      // Phap Tu Reimagined: van_moc_lan_doc retired; a synthetic
+      // effects list keeps the unsupported-field report pinned (the
+      // scope field is authored on the EFFECTIVE skill, like the
+      // Mission C fixture below).
+      const wood = structuredClone(SKILLS.find((s) => s.id === 'doc_chuong')!)
       manager.add(wood)
 
-      const woodReport = collectUnsupportedSkillSemantics(
-        wood,
-        skillSystem.getEffectiveSkill(wood),
-      )
+      const woodEffective = skillSystem.getEffectiveSkill(wood)
+      woodEffective.effects = [
+        { type: 'damage', scope: 'primary_target', value: 1 },
+      ] as typeof woodEffective.effects
+
+      const woodReport = collectUnsupportedSkillSemantics(wood, woodEffective)
 
       expect(woodReport).toContain('effect.scope')
 

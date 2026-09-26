@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
-import { createDefaultPlayer, type PlayerData } from '../player/Player'
+import { createDefaultPlayer } from '../player/Player'
 import { ManualClockSource } from '../battle/turn/CombatClock'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import { forgeCost } from '../kiem-tu/NguKiemDao'
 import { getRealmIndex } from '../realm/realmSystem'
 import { SKILLS } from '../../data/skill/Skills'
-import { PHAP_TU_SKILLS } from '../../data/skill/PhapTuChainSkills'
+import { PHAP_TU_SKILLS } from '../../data/skill/PhapTuSkills'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 
 // F-W-2 (v82) - respec/devReset/switchRoute thu hoi dung cac one-shot
@@ -118,23 +118,23 @@ describe('progressionOps respec one-shot clawback (F-W-2)', () => {
       id: 'grant_spec',
       effect: {
         selectsSpecialization: {
-          skillId: 'tam_muoi_chan_hoa',
-          specializationId: 'tam_muoi_tu_diem',
+          skillId: 'hoa_cau_thuat',
+          specializationId: 'hoa_tu_diem',
         },
       },
     })
     const { gameManager, player } = setup([grantNode])
 
-    gameManager.progressionOps.learnSkill('tam_muoi_chan_hoa', player)
+    gameManager.progressionOps.learnSkill('hoa_cau_thuat', player)
     expect(gameManager.progressionOps.purchaseNode('grant_spec', player)).toBe(true)
     expect(
-      gameManager.skillManager.get('tam_muoi_chan_hoa')?.selectedSpecializationId,
-    ).toBe('tam_muoi_tu_diem')
+      gameManager.skillManager.get('hoa_cau_thuat')?.selectedSpecializationId,
+    ).toBe('hoa_tu_diem')
 
     gameManager.progressionOps.respecNodeTree(player)
 
     expect(
-      gameManager.skillManager.get('tam_muoi_chan_hoa')?.selectedSpecializationId,
+      gameManager.skillManager.get('hoa_cau_thuat')?.selectedSpecializationId,
     ).toBeUndefined()
     expect(player.nodeOneShotGrants['grant_spec']).toBeUndefined()
   })
@@ -158,14 +158,14 @@ describe('progressionOps respec one-shot clawback (F-W-2)', () => {
 
   it('a node-granted spec survives while another owned node still claims it', () => {
     const claim = {
-      skillId: 'tam_muoi_chan_hoa',
-      specializationId: 'tam_muoi_tu_diem',
+      skillId: 'hoa_cau_thuat',
+      specializationId: 'hoa_tu_diem',
     }
     const first = node({ id: 'spec_a', effect: { selectsSpecialization: claim } })
     const second = node({ id: 'spec_b', effect: { selectsSpecialization: claim } })
     const { gameManager, player } = setup([first, second])
 
-    gameManager.progressionOps.learnSkill('tam_muoi_chan_hoa', player)
+    gameManager.progressionOps.learnSkill('hoa_cau_thuat', player)
     expect(gameManager.progressionOps.purchaseNode('spec_a', player)).toBe(true)
     expect(gameManager.progressionOps.purchaseNode('spec_b', player)).toBe(true)
 
@@ -176,8 +176,8 @@ describe('progressionOps respec one-shot clawback (F-W-2)', () => {
     gameManager.progressionOps.applyOneShotClawback(player, new Set(['spec_a']))
 
     expect(
-      gameManager.skillManager.get('tam_muoi_chan_hoa')?.selectedSpecializationId,
-    ).toBe('tam_muoi_tu_diem')
+      gameManager.skillManager.get('hoa_cau_thuat')?.selectedSpecializationId,
+    ).toBe('hoa_tu_diem')
     expect(player.nodeOneShotGrants['spec_a']).toBeUndefined()
     expect(player.nodeOneShotGrants['spec_b']).toBeDefined()
 
@@ -186,7 +186,7 @@ describe('progressionOps respec one-shot clawback (F-W-2)', () => {
     gameManager.progressionOps.applyOneShotClawback(player, new Set(['spec_b']))
 
     expect(
-      gameManager.skillManager.get('tam_muoi_chan_hoa')?.selectedSpecializationId,
+      gameManager.skillManager.get('hoa_cau_thuat')?.selectedSpecializationId,
     ).toBeUndefined()
   })
 })
