@@ -11,7 +11,7 @@
     "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
     "head": "f730adc6",
     "state": {
-      "productStateId": "fea576e2d9a15cf8dab73cd31d0d8c1a2acbcdae50419aa64433704a73f35851",
+      "productStateId": "a940449f65990e1617bd9c1527219ffbf6a76ee1e85d62a243031be2ca7c901b",
       "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
       "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -11148,7 +11148,7 @@
       ],
       "invariantIds": [],
       "limitations": [],
-      "status": "CURRENT",
+      "status": "STALE",
       "inputEvidenceIds": [],
       "inputPaths": []
     }
@@ -13702,7 +13702,7 @@
         "F-TT-CLNC-INT-3"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLO-26",
@@ -13729,7 +13729,7 @@
       "evidenceIds": [],
       "findingIds": [],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLEAN-D-AUT",
@@ -13760,7 +13760,7 @@
         "F-TT-CLND-AUT-3"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLEAN-D-INT",
@@ -13791,7 +13791,7 @@
         "F-TT-CLND-INT-3"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     }
   ],
   "cycles": [
@@ -19500,6 +19500,22 @@
       "payloadPath": "events/0092.json",
       "payloadHash": "90f4e7fa2835dda2e64d56a917d11366a17399cb4d5d0054f874f8fcf74dfa37",
       "eventHash": "70e8418cd5c2db16111b039527ba71011808906725a2de313f907a8174ea0837"
+    },
+    {
+      "seq": 93,
+      "at": "2026-09-26T08:08:42.400Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "a940449f65990e1617bd9c1527219ffbf6a76ee1e85d62a243031be2ca7c901b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "70e8418cd5c2db16111b039527ba71011808906725a2de313f907a8174ea0837",
+      "payloadPath": "events/0093.json",
+      "payloadHash": "70d317772522ea566684ecebf7bb2ba2f4f34e886498846c1bbdab5650a09b0d",
+      "eventHash": "022318ced02260e4f624b38a947105c4211439c70b0bbf4f655c7d02ab1c44d6"
     }
   ]
 }
