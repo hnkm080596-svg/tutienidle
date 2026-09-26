@@ -454,14 +454,17 @@ export class CombatOperationBatchRunner {
         if (!isFiniteNumber(p.hitCount)) bad('hitCount')
         if (typeof p.canCrit !== 'boolean') bad('canCrit')
         if (typeof p.canMiss !== 'boolean') bad('canMiss')
-        // canonical-seals addendum -- the penetration bonus is a
-        // buff_periodic+legacy_dot+elemental carrier only; any other
-        // lane is a broken command graph, never silently ignored.
+        // canonical-seals addendum + spec D7 -- the penetration bonus
+        // is legal on buff_periodic+legacy_dot OR skill+skill_hit,
+        // always element-carried; any other lane is a broken command
+        // graph, never silently ignored.
         if (p.elementalPenetrationBonus !== undefined) {
+          const legalCarrier =
+            (entry.origin.kind === 'buff_periodic' && p.damageProfile === 'legacy_dot') ||
+            (entry.origin.kind === 'skill' && p.damageProfile === 'skill_hit')
           if (
             !isFiniteNumber(p.elementalPenetrationBonus) ||
-            entry.origin.kind !== 'buff_periodic' ||
-            p.damageProfile !== 'legacy_dot' ||
+            !legalCarrier ||
             p.element === undefined ||
             p.element === 'physical'
           ) {

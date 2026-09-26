@@ -16,7 +16,6 @@ import {
   getCultivationPathStatModifiers,
   resolveActiveWayStatDomains,
 } from '../player/CultivationPathSystem'
-import { getRouteStatModifiers } from '../phap-tu/PhapTuRoutes'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { aggregateNodeStatModifiers } from '../progression/NodeSystem'
 import type { ResolvedModifierChannel } from './CombatBuild'
@@ -82,10 +81,6 @@ export class GameManagerPersistentEffectOps {
       ...this.deps.skillSystem.getScaledPassiveModifiers(),
       ...(player ? this.getTechniqueTierModifiers(player) : []),
       ...(player ? getCultivationPathStatModifiers(player) : []),
-      // Phap Tu Reimagined Task 3 — route stat modifiers ride the
-      // STATIC partition in BOTH aggregators (route can't change
-      // mid-battle — never getLiveBattleModifiers).
-      ...(player ? getRouteStatModifiers(player) : []),
       // Node levels (plan §6.8) - node modifiers derived from (registry,
       // nodeLevels), scaled by current level; no longer inside
       // player.modifiers.
@@ -117,7 +112,7 @@ export class GameManagerPersistentEffectOps {
   }
 
   /**
-   * P2 - the same five calls as getBattleBaseModifiers, named for source
+   * P2 - the same calls as getBattleBaseModifiers, named for source
    * attribution (BuildStatChannel vocabulary). Flattening in declared
    * order reproduces the legacy flat list exactly.
    */
@@ -125,7 +120,6 @@ export class GameManagerPersistentEffectOps {
     return [
       { channel: 'technique_tier', partition: 'static', modifiers: this.getTechniqueTierModifiers(player) },
       { channel: 'cultivation_path', partition: 'static', modifiers: getCultivationPathStatModifiers(player) },
-      { channel: 'phap_tu_route', partition: 'static', modifiers: getRouteStatModifiers(player) },
       { channel: 'node_levels', partition: 'static', modifiers: aggregateNodeStatModifiers(this.deps.nodeRegistry, player) },
       { channel: 'technique_combat', partition: 'static', modifiers: this.getTechniqueCombatModifiers() },
     ]

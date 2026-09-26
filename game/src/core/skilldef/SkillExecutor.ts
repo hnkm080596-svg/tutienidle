@@ -15,10 +15,7 @@
 //   surface (executor requests, the SkillCombatRuntimeState owner
 //   writes); resource cost rides the canonical ConsumeResourceOperation.
 
-import type {
-  CombatEntityId,
-  CombatOperationId,
-} from '../battle/contracts/ids'
+import type { CombatOperationId } from '../battle/contracts/ids'
 import type {
   CombatOperationResult,
   CombatOperationResultStatus,
@@ -35,7 +32,6 @@ import type { SkillExecutionHooks } from './SkillExecutionHooks'
 import type { SkillQueryPorts } from './SkillQueryPorts'
 import type {
   OpResultNumberField,
-  ResolvedScalarExpression,
   ResolvedSkillPlan,
   ResolvedSkillPlanStep,
   ResolvedSkillReadContext,
@@ -675,11 +671,13 @@ export class SkillExecutor {
     }
   }
 
-  /** theGainOnLandedCast/theGainOnCrit parity -- The grants emit once
+  /** theGainOnLandedCast parity -- The grants emit once
       per cast execution (root plans AND follow-up executions; composite
       extras suppress them -- they are lanes of the parent cast, not
       executions). Post-consume ordering rides the CAST_COMMIT consume
-      op settling first; the cap lives in the resource authority. */
+      op settling first; the cap lives in the resource authority.
+      Phap Tu Reimagined: the crit channel (theGainOnCrit) is retired --
+      The income is landed-basic only. */
   private emitGrants(
     plan: ResolvedSkillPlan,
     state: PlanExecutionState,
@@ -703,20 +701,6 @@ export class SkillExecutor {
             targetId: plan.sourceId,
             resourceId: 'the',
             amount: plan.grants.theOnLandedCast,
-          },
-        }),
-        plan,
-        state,
-      )
-    }
-    if (state.critLanded && plan.grants.theOnCrit !== undefined) {
-      this.enqueueAndSettle(
-        this.mintOp(plan, state, {
-          type: 'gain_resource',
-          payload: {
-            targetId: plan.sourceId,
-            resourceId: 'the',
-            amount: plan.grants.theOnCrit,
           },
         }),
         plan,

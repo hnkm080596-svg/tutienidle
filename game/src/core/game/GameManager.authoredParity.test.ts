@@ -108,7 +108,7 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     const player = createDefaultPlayer()
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
-    player.spellPath = { element: 'wood', route: null }
+    player.spellPath = { element: 'wood' }
 
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('doc_chuong', player)
@@ -127,7 +127,7 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     const player = createDefaultPlayer()
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
-    player.spellPath = { element: 'fire', route: null }
+    player.spellPath = { element: 'fire' }
 
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('hoa_cau_thuat', player)
@@ -187,7 +187,7 @@ describe('ARCH-008 — authored buff duration rides appliesBuff.duration', () =>
     const player = createDefaultPlayer()
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
-    player.spellPath = { element: 'water', route: null }
+    player.spellPath = { element: 'water' }
 
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('thanh_tuyen_duong_linh', player)

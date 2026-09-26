@@ -12,7 +12,6 @@ import {
   getActivePath,
   getActiveWay,
   getActiveElement,
-  getActiveRoute,
   getSwordScrollPreset,
   hasPathCapability,
   hasStaticPathCapability,
@@ -475,30 +474,9 @@ describe('resolvePathCapabilities / hasPathCapability - P1 capability authority'
     ).toBe(false)
   })
 
-  it('spell.empowered_ult requires the linh_ngo node of the COMMITTED element', () => {
-    const player = mortalPlayer()
-    player.cultivationPath = 'spell'
-    player.cultivationWay = 'spell_pathway'
-    player.spellPath.element = 'fire'
-
-    expect(hasPathCapability(player, 'spell.empowered_ult', NO_DEPS)).toBe(false)
-
-    // A linh_ngo node for a different element does not empower fire's ult.
-    player.nodeLevels = { linh_ngo_bat_thu_can_quet: 1 }
-    expect(hasPathCapability(player, 'spell.empowered_ult', NO_DEPS)).toBe(false)
-
-    player.nodeLevels = { linh_ngo_tat_phuong_giang_the: 1 }
-    expect(hasPathCapability(player, 'spell.empowered_ult', NO_DEPS)).toBe(true)
-  })
-
-  it('empowered_ult stays false with no committed element', () => {
-    const player = mortalPlayer()
-    player.cultivationPath = 'spell'
-    player.cultivationWay = 'spell_pathway'
-    player.nodeLevels = { linh_ngo_tat_phuong_giang_the: 1 }
-
-    expect(hasPathCapability(player, 'spell.empowered_ult', NO_DEPS)).toBe(false)
-  })
+  // Phap Tu Reimagined: the 'spell.empowered_ult' capability and the
+  // empowerment@100 god-ult attach are retired — Phap The lives on the
+  // element basic's own empowerment channel (flat cap 5).
 
   it('hasStaticPathCapability answers from the declared static list only - conditional caps return false', () => {
     const player = mortalPlayer()
@@ -562,21 +540,6 @@ describe('canonical subpath reads (P1-M3) - module-owned axes, capability-gated'
     expect(getActiveElement(player)).toBeUndefined()
   })
 
-  it('getActiveRoute resolves only under spell_pathway', () => {
-    const player = mortalPlayer()
-    player.cultivationPath = 'spell'
-    player.cultivationWay = 'spell_pathway'
-
-    expect(getActiveRoute(player)).toBeUndefined()
-
-    player.spellPath.route = 'dot'
-    expect(getActiveRoute(player)).toBe('dot')
-
-    player.cultivationPath = 'sword'
-    player.cultivationWay = 'sword_pathway'
-    expect(getActiveRoute(player)).toBeUndefined()
-  })
-
   it('getSwordScrollPreset resolves the sword_pathway preset slice, defensive copy', () => {
     const player = mortalPlayer()
     player.cultivationPath = 'sword'
@@ -600,12 +563,11 @@ describe('canonical subpath reads (P1-M3) - module-owned axes, capability-gated'
     const bridgeState = {
       cultivationPath: 'spell' as const,
       cultivationWay: 'spell_pathway' as const,
-      spellPath: { element: 'fire' as const, route: 'no' as const },
+      spellPath: { element: 'fire' as const },
       nodeLevels: {},
     }
 
     expect(getActiveElement(bridgeState)).toBe('fire')
-    expect(getActiveRoute(bridgeState)).toBe('no')
     expect(hasStaticPathCapability(bridgeState, 'spell.elemental_casting')).toBe(true)
   })
 })

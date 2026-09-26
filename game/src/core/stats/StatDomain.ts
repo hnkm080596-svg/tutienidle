@@ -37,6 +37,9 @@ export const STAT_DOMAIN: Partial<Record<StatType, StatDomain>> = {
   maxMp: 'spell',
   manaRegenPerTurn: 'spell',
   manaShieldPercent: 'spell',
+  // Phap Tu Reimagined (D9) -- the Hộ Thể DR cap is a spell-domain
+  // resource stat like maxMp/manaShieldPercent.
+  linhLucHoTheCap: 'spell',
   reactionEffectPercent: 'spell',
 
   // The Tu Reimagined (spec 2026-09-15 section 3.3, T8) — block and

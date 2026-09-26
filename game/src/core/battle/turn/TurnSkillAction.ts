@@ -209,11 +209,35 @@ export interface TurnSkillDefinition {
    */
   theGainOnLandedCast?: number
   /**
-   * Extra The granted ONCE per cast action when any of its direct hits
-   * crits (same per-cast rule - a 5-target all-crit cast adds this
-   * once, not per target). Authored by the 'no' route profile.
+   * Phap Tu Reimagined (spec D8/F10) - mana cost expressed as a
+   * fraction of the caster's LIVE maxMp, evaluated at gate/consume
+   * time (never frozen at build). mana-only; mutually exclusive with
+   * resourceCost on the same def.
    */
-  theGainOnCrit?: number
+  resourceCostPercentOfMax?: number
+  /**
+   * Phap Tu Reimagined (spec D4/D5) - authored landed-lane ops spliced
+   * ahead of the derived ailment lanes inside the hit's consequence
+   * gate (the Phap The rider channel: the empowered element basic
+   * carries its element's rider here). Type-only import keeps the
+   * legacy def free of a skilldef module cycle.
+   */
+  landedConsequences?: import('../../skilldef/AuthoredOperation').AuthoredSkillOperation[]
+  /**
+   * Phap Tu Reimagined (spec D7) - per-hit ADDITIVE elemental
+   * penetration points (the Kim rider).
+   */
+  elementalPenetrationBonus?: number
+  /**
+   * Phap Tu Reimagined (spec D11, Kim Liet) - scale this hit's
+   * penetration by stacks of an ailment on the target: read BEFORE
+   * the hit resolves, never consuming.
+   */
+  penetrationFromStacks?: {
+    ailmentId: string
+    perStack: number
+    scope?: 'own' | 'any'
+  }
   /**
    * Phap Tu Reimagined Task 10 - ultimate empowerment. Attached at
    * battle build by the orchestrator ONLY when the owning
@@ -365,8 +389,22 @@ const RESOURCE_FIELD: Record<
  * migration") - checks the resource pool directly, no per-path
  * consumption order. Real content mapping resolves this later.
  */
+/** Live resource requirement - the percentOfMax form resolves against
+    the entity's CURRENT maxMp at call time (spec F10: never frozen at
+    participant build), so the Special's gate and its consume see the
+    same number. */
+function requiredResourceFor(
+  entity: CombatEntity,
+  skill: Pick<TurnSkillDefinition, 'resourceType' | 'resourceCost' | 'resourceCostPercentOfMax'>,
+): number {
+  return skill.resourceCostPercentOfMax !== undefined
+    ? skill.resourceCostPercentOfMax * entity.stats.maxMp
+    : (skill.resourceCost ?? 0)
+}
+
 export function hasResourceFor(entity: CombatEntity, skill: TurnSkillDefinition): boolean {
-  if (!skill.resourceType || skill.resourceType === 'none' || !skill.resourceCost) {
+  const required = requiredResourceFor(entity, skill)
+  if (!skill.resourceType || skill.resourceType === 'none' || required <= 0) {
     return true
   }
 
@@ -374,20 +412,21 @@ export function hasResourceFor(entity: CombatEntity, skill: TurnSkillDefinition)
 
   // currentThe is optional on CombatEntity - an uninitialized pool reads as
   // undefined, which correctly blocks the cast (undefined >= cost is false).
-  return (entity[field] ?? 0) >= skill.resourceCost
+  return (entity[field] ?? 0) >= required
 }
 
 export function consumeResourceFor(
   entity: CombatEntity,
-  skill: Pick<TurnSkillDefinition, 'resourceType' | 'resourceCost'>,
+  skill: Pick<TurnSkillDefinition, 'resourceType' | 'resourceCost' | 'resourceCostPercentOfMax'>,
 ): void {
-  if (!skill.resourceType || skill.resourceType === 'none' || !skill.resourceCost) {
+  const required = requiredResourceFor(entity, skill)
+  if (!skill.resourceType || skill.resourceType === 'none' || required <= 0) {
     return
   }
 
   const field = RESOURCE_FIELD[skill.resourceType]
 
-  entity[field] -= skill.resourceCost
+  entity[field] = (entity[field] ?? 0) - required
 }
 
 export interface SelectedAction {

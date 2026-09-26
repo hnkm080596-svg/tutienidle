@@ -98,23 +98,27 @@ export const BASELINE_RECIPES: readonly BaselineRecipe[] = [
     id: 'phap_tu_ngu_hanh',
     primary: true,
     ritual: { pathId: 'spell', wayId: 'spell_pathway' },
-    // Element+route commit is the atomic canonical writer; the free
+    // Element commit is the atomic canonical writer; the free
     // element root unlocks the kit basic.
     postRitual: [
-      { type: 'select_phap_tu_element', element: 'fire', route: 'dot' },
+      { type: 'select_phap_tu_element', element: 'fire' },
     ],
     // Element-basic damage ops carry the element skill id as originId.
-    // Only the recipe-resolved live set is kit: the fixed fire route
+    // Only the recipe-resolved live set is kit: the committed element
     // resolves hoa_cau_thuat at qi_refining - any other element id on
     // this row is foreign leakage and must land in other_skill.
     kitSkillIds: ['hoa_cau_thuat'],
     expectedEconomy: {
-      // +5 the per landed cast (applySpellPathEssenceGains) + mana regen.
-      mustGenerate: ['theGained', 'mpGained'],
-      // manaShieldPercent 0.25 drains mp on hits taken.
-      mustSpend: ['mpSpent'],
-      // The empowered-ultimate spender is golden_core-gated.
-      notActiveAtThisPowerPoint: ['theSpent'],
+      // +1 the per landed cast (theGainOnLandedCast). mpGained is NOT
+      // declared: the reimagined basic is free (resourceType 'none'),
+      // so MP never dips and the regen channel reads 0 — a declared
+      // dead channel. The data slice may reintroduce a cost; restore
+      // the declaration then.
+      mustGenerate: ['theGained'],
+      mustSpend: [],
+      // The spender channels: the legacy manaShieldPercent path leak is
+      // retired (no mp drain on hits) and Phap The consumes no pool.
+      notActiveAtThisPowerPoint: ['mpSpent', 'mpGained', 'theSpent'],
       mustCast: ['hoa_cau_thuat'],
     },
   },

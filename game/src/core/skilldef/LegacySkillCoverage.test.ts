@@ -4,7 +4,6 @@ import { COMPANIONS, type CompanionInstance } from '../../data/companion/Compani
 import { REALMS } from '../../data/realms/realm'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { KIEM_PHO_COMBOS } from '../../data/skill/KiemPhoCombos'
-import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
 import { SPELL_KIT_IDS, SKILLS } from '../../data/skill/Skills'
 import {
   buildTheTuAnKit,
@@ -17,12 +16,6 @@ import { isKiemPhoProviderHandle } from '../kiem-tu/KiemPhoProvider'
 import { freshSwordPathState, KIEM_PHO_ORB_IDS } from '../kiem-tu/KiemTuState'
 import { resolveCompanionSkillKit } from '../companion/CompanionProgression'
 import { TemplateRegistry } from '../game/TemplateRegistry'
-import { isSpellPathway } from '../phap-tu/PhapTuPath'
-import {
-  NEUTRAL_ROUTE_PROFILE,
-  resolveRouteProfile,
-  type RouteProfile,
-} from '../phap-tu/PhapTuRoutes'
 import {
   CULTIVATION_PATH_RUNTIME_FACTORIES,
   resolveCultivationPathRuntime,
@@ -279,30 +272,20 @@ const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
       nodes: KIEM_TU_NODES,
     })),
 
+  // Phap Tu Reimagined: routes and the empowered ultimate are retired;
+  // the committed element resolves {special} only (the basic carries
+  // the Phap The rider through the empowerment channel).
   'spell:spell_pathway': () =>
-    ELEMENT_ORDER.flatMap((element) => [
-      ...(['dot', 'no'] as const).map((route) => ({
-        label: `${element}:${route}:empowered`,
-        player: censusPlayer((p) => {
-          p.cultivationPath = 'spell'
-          p.cultivationWay = 'spell_pathway'
-          p.realmId = 'tribulation'
-          p.spellPath = { element, route }
-          p.nodeLevels = { [`linh_ngo_${PHAP_TU_ULTIMATE_IDS[element]}`]: 1 }
-        }),
-        requiredSlots: ['special', 'ultimate'] as const,
-      })),
-      {
-        label: `${element}:base`,
-        player: censusPlayer((p) => {
-          p.cultivationPath = 'spell'
-          p.cultivationWay = 'spell_pathway'
-          p.realmId = 'tribulation'
-          p.spellPath = { element, route: null }
-        }),
-        requiredSlots: ['special', 'ultimate'] as const,
-      },
-    ]),
+    ELEMENT_ORDER.map((element) => ({
+      label: `${element}:base`,
+      player: censusPlayer((p) => {
+        p.cultivationPath = 'spell'
+        p.cultivationWay = 'spell_pathway'
+        p.realmId = 'tribulation'
+        p.spellPath = { element }
+      }),
+      requiredSlots: ['special'] as const,
+    })),
 
   'spell:hidden_spell_pathway': () => [
     {
@@ -361,18 +344,6 @@ function runtimeDepsFor(
 
   const skillSystem = new SkillSystem(manager)
 
-  // Mirrors GameManager.routeProfileProvider: neutral unless the active
-  // player is spell_pathway and the skill belongs to its element kit.
-  const routeProfileProvider = (skillId: string): RouteProfile => {
-    if (!isSpellPathway(player)) return NEUTRAL_ROUTE_PROFILE
-    const element = player.spellPath.element
-    if (!element || !SPELL_KIT_IDS[element].includes(skillId)) {
-      return NEUTRAL_ROUTE_PROFILE
-    }
-    return resolveRouteProfile(player.spellPath)
-  }
-  skillSystem.setRouteProfileProvider(routeProfileProvider)
-
   const skillTemplates = new TemplateRegistry<Skill>()
   for (const skill of SKILLS) skillTemplates.register(skill.id, skill)
 
@@ -389,7 +360,6 @@ function runtimeDepsFor(
       nodeRegistry,
       getNodeLevel: (nodeId, p) => getNodeLevel(p, nodeId),
       getSpellPathElement: () => player.spellPath.element ?? undefined,
-      routeProfileProvider,
     },
   }
 }

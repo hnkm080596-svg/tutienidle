@@ -48,13 +48,13 @@ export interface CombatEntity {
   // (resetBattleScopedResources), for every path sharing the pool
   // (Phap Tu, Bat Kiem). No PlayerData persistence, no cross-cycle
   // carry. Gains are skill-authored (TurnSkillDefinition.
-  // theGainOnLandedCast/theGainOnCrit — once per cast, never per
+  // theGainOnLandedCast — once per cast, never per
   // target). Optional — readers use `?? 0`.
   currentThe?: number
   // Battle snapshot of the The cap (undefined => MAX_THE). Derived once
   // at participant build — two disjoint producers, one per path:
-  // spell via resolveMaxThe(player) (MAX_THE + truong_the_<element>
-  // node contribution); ung_the via the kit-baked MAX_THE +
+  // spell via resolveMaxThe(player) (spell_pathway cap is a flat
+  // SPELL_PATH_MAX_THE=5); ung_the via the kit-baked MAX_THE +
   // maxTheBonus (Task 20 collector). TheEconomy.theCap is the single
   // read site (`entity.maxThe ?? MAX_THE`); never persisted.
   maxThe?: number

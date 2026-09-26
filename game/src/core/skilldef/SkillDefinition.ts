@@ -79,6 +79,17 @@ export interface SkillCastCost {
   amount: number
 }
 
+/** Phap Tu Reimagined (spec D10, F10) -- authored cost may also be a
+    fraction of the caster's LIVE max resource (`percentOfMax` in (0,1],
+    mana only). The resolver folds it against statScalars.maxMp into a
+    concrete SkillCastCost on the plan, so every downstream consumer
+    (PRECHECK/CAST_COMMIT) sees the existing shape. The legacy lane
+    counterpart is TurnSkillDefinition.resourceCostPercentOfMax, which
+    evaluates against entity.stats.maxMp at read time. */
+export type AuthoredSkillCastCost =
+  | SkillCastCost
+  | { resourceType: 'mana'; percentOfMax: number }
+
 /** Replaces multicast/repeatCasts/compositePicks -- each subcast is a
     SEPARATE sequential ResolvedSkillPlan (R-S1). */
 export interface SkillSubcasts {
@@ -98,10 +109,11 @@ export interface SkillVariants {
   }
 }
 
-/** theGainOnLandedCast / theGainOnCrit parity -- The economy grants. */
+/** theGainOnLandedCast parity -- The economy grants. Phap Tu
+    Reimagined retired the crit channel (The income is landed-basic
+    only). */
 export interface SkillGrants {
   theOnLandedCast?: number
-  theOnCrit?: number
 }
 
 /** R-S8: DECLARATIVE per-instance hit options (replaces the runtime
@@ -141,7 +153,7 @@ export interface ActiveSkillDefinition {
   actionTags?: readonly string[]
   /** R8: turn units are the ONLY combat-authoritative cadence. */
   cadence: { cooldownTurns: number; chargeTurns?: number }
-  cost?: SkillCastCost
+  cost?: AuthoredSkillCastCost
   /** consumesAllThe parity (Task 13): the resolved payload burns the
       ENTIRE The pool at CAST_COMMIT, after the cost op. Lives on the
       def that carries it (the empowered form; a root-level flag burns

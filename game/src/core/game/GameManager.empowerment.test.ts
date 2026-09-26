@@ -3,18 +3,23 @@ import { ManualClockSource } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { defineEnemy } from '../enemy/Enemy'
-import type { Stage } from '../stage/Stage'
 import { SKILLS } from '../../data/skill/Skills'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
-import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
-import { SPELL_EMPOWERMENT_ESSENCE_THRESHOLD } from '../phap-tu/PhapTuRoutes'
+import { SPELL_PATH_MAX_THE } from '../phap-tu/PhapTuPath'
+import {
+  KIM_PHAP_THE_PENETRATION,
+  THUY_PHAP_THE_COEFFICIENT,
+  THO_PHAP_THE_COEFFICIENT,
+} from '../phap-tu/PhapTheVariants'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
+import type { ElementType } from '../element/ElementType'
 
-// Phap Tu Reimagined Task 10 — the empowerment ATTACH lives in
-// orchestration (A8): resolvePlayerSpecialUltimate adds `empowerment`
-// to the equipped chain-E ultimate only when the player owns
-// `linh_ngo_<godUltId>`, and the route profile picks the payload
-// variant ('dot' -> detonate, 'no' -> nuke).
+// Phap Tu Reimagined (spec D1-D7) — the empowerment channel IS Phap
+// The: the committed element basic carries
+// `empowerment{theThreshold:5, empowered:<element rider variant>}` at
+// battle build. The declare-time swap is engine machinery (checked
+// before cast, no consume, no decay). The legacy empower@100 god-ult
+// machinery is retired.
 
 function makeManager() {
   const gameManager = new GameManager()
@@ -23,85 +28,119 @@ function makeManager() {
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
   gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
 
-  const bossTemplate = defineEnemy({
-    id: 'empower_boss', name: 'Empower Boss', level: 1, realmId: 'mortal', lane: 'ground', isBoss: true,
-    statsInput: { maxHp: 1_000_000, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-    rewards: { techniqueMastery: 0, spiritStone: 0 },
-  })
-
-  const stage: Stage = {
-    id: 'empower_stage', name: 'Empower Stage', description: '',
-    floor: 10, bossEnemyId: 'empower_boss',
-    enemyPool: [{ enemyId: 'empower_boss', weight: 1 }],
-    totalEnemyCount: 1, waves: [1],
-    spawnIntervalSeconds: 0,
-  }
-
-  gameManager.catalogOps.registerEnemyTemplates([bossTemplate])
-  gameManager.catalogOps.registerStages([stage])
-
   const player = createDefaultPlayer()
   player.cultivationPath = 'spell'
   player.cultivationWay = 'spell_pathway'
-  // The realm-gated special node (golden_core) grants the kit's
-  // remaining slots — [special, chain-E ult] — so a golden_core player
-  // with insight can learn the ultimate.
-  player.realmId = 'golden_core'
-  player.skillInsight = 100
   gameManager.setActivePlayer(player)
 
-  return { gameManager, player, stage }
+  return { gameManager, player }
 }
 
-/** Learns the kit's ultimate via the realm-gated special node. */
-function learnKitUltimate(gameManager: GameManager, player: ReturnType<typeof createDefaultPlayer>, specialId: string) {
-  expect(gameManager.progressionOps.purchaseNode(`linh_ngo_${specialId}`, player)).toBe(true)
-}
+function buildWith(element: ElementType | undefined) {
+  const { gameManager, player } = makeManager()
 
-function ultimateSkillOf(gameManager: GameManager) {
-  return gameManager.getTurnBattle()!.players[0]!.ultimate?.skill
-}
+  if (element !== undefined) {
+    expect(gameManager.progressionOps.selectSpellPathElement(element, player)).toBe(true)
+  }
 
-describe('god-ult empowerment attach (Task 10)', () => {
-  it('no linh_ngo node -> the chain-E ultimate carries NO empowerment', () => {
-    const { gameManager, player, stage } = makeManager()
-
-    gameManager.progressionOps.selectSpellPathElement('fire', 'no', player)
-    learnKitUltimate(gameManager, player, 'tam_muoi_chan_hoa')
-    expect(gameManager.turnBattleOps.startStage(player, stage, true)).toBe(true)
-
-    const ult = ultimateSkillOf(gameManager)
-    expect(ult?.id).toBe('hoa_ha_cuu_thien')
-    expect(ult?.empowerment).toBeUndefined()
+  const enemy = defineEnemy({
+    id: 'phap_the_dummy',
+    name: 'Phap The Dummy',
+    level: 1,
+    realmId: 'mortal',
+    lane: 'ground',
+    statsInput: {
+      maxHp: 1_000_000,
+      might: 0,
+      attackSpeed: 1,
+      criticalRate: 0,
+      criticalDamage: 1.5,
+      armor: 0,
+      evasionRate: 0,
+    },
+    rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
 
-  it('linh_ngo owned -> empowerment attaches; route picks the variant payload', () => {
-    const { gameManager, player, stage } = makeManager()
+  gameManager.startBattleWithPlayer(player, enemy)
 
-    gameManager.progressionOps.selectSpellPathElement('fire', 'no', player)
-    learnKitUltimate(gameManager, player, 'tam_muoi_chan_hoa')
-    player.nodeLevels[`linh_ngo_${PHAP_TU_ULTIMATE_IDS.fire}`] = 1
+  return gameManager.getTurnBattle()!.players[0]!.basic!
+}
 
-    expect(gameManager.turnBattleOps.startStage(player, stage, true)).toBe(true)
+describe('Phap The empowerment attach (spec D1-D7)', () => {
+  it('pre-commit basic carries the +1 The gain but NO rider (no element, no Phap The)', () => {
+    const basic = buildWith(undefined)
 
-    const ult = ultimateSkillOf(gameManager)
-    expect(ult?.id).toBe('hoa_ha_cuu_thien')
-    expect(ult?.empowerment?.theThreshold).toBe(SPELL_EMPOWERMENT_ESSENCE_THRESHOLD)
-    expect(ult?.empowerment?.empowered.id).toBe('tat_phuong_giang_the')
-    expect(ult?.empowerment?.empowered.consumesAllThe).toBe(true)
+    expect(basic.theGainOnLandedCast).toBe(1)
+    expect(basic.empowerment).toBeUndefined()
   })
 
-  it('the empowered payload follows the route variant key (dot -> detonate entry)', () => {
-    const { gameManager, player, stage } = makeManager()
+  it('committed element basic carries empowerment at the flat cap of 5', () => {
+    const basic = buildWith('fire')
 
-    gameManager.progressionOps.selectSpellPathElement('water', 'dot', player)
-    learnKitUltimate(gameManager, player, 'thanh_tuyen_duong_linh')
-    player.nodeLevels[`linh_ngo_${PHAP_TU_ULTIMATE_IDS.water}`] = 1
+    expect(basic.empowerment?.theThreshold).toBe(SPELL_PATH_MAX_THE)
+    expect(SPELL_PATH_MAX_THE).toBe(5)
+    expect(basic.empowerment?.empowered.id).toBe(basic.id)
+    // The variant burns nothing: no consumesAllThe pool drain.
+    expect(basic.empowerment?.empowered.consumesAllThe).toBeUndefined()
+  })
 
-    expect(gameManager.turnBattleOps.startStage(player, stage, true)).toBe(true)
+  it('fire variant pulses a pre-existing own-source ailment once (no consume)', () => {
+    const empowered = buildWith('fire').empowerment!.empowered
+    const pulse = empowered.landedConsequences?.find(
+      (op) => op.type === 'trigger_buff_periodic',
+    )
 
-    const ult = ultimateSkillOf(gameManager)
-    expect(ult?.id).toBe('bac_hai_cuong_lan')
-    expect(ult?.empowerment?.empowered.id).toBe('bat_thu_can_quet')
+    expect(pulse).toBeDefined()
+    expect(pulse!.type === 'trigger_buff_periodic' && pulse!.selector.kind === 'identity').toBe(true)
+    if (pulse!.type === 'trigger_buff_periodic' && pulse!.selector.kind === 'identity') {
+      expect(pulse!.selector.source).toBe('self')
+      expect(pulse!.selector.target).toBe('loop_target')
+    }
+  })
+
+  it('water variant fires one secondary hit on a DIFFERENT enemy carrying the base ailment', () => {
+    const empowered = buildWith('water').empowerment!.empowered
+    const secondary = empowered.landedConsequences?.find(
+      (op) => op.type === 'deal_damage',
+    )
+
+    expect(secondary).toBeDefined()
+    if (secondary!.type === 'deal_damage') {
+      expect(secondary!.target).toBe('other_enemy')
+      expect(secondary!.coefficient).toBe(THUY_PHAP_THE_COEFFICIENT)
+      expect(secondary!.components).toEqual([{ kind: 'element', element: 'water', ratio: 1 }])
+      // The secondary re-applies the element ailment on its own target.
+      expect(secondary!.onLanded?.every((op) => op.type === 'apply_buff')).toBe(true)
+      expect(secondary!.onLanded?.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('earth variant fires one non-recursive shockwave on every other enemy', () => {
+    const empowered = buildWith('earth').empowerment!.empowered
+    const shockwave = empowered.landedConsequences?.find(
+      (op) => op.type === 'deal_damage',
+    )
+
+    expect(shockwave).toBeDefined()
+    if (shockwave!.type === 'deal_damage') {
+      expect(shockwave!.target).toBe('other_enemies')
+      expect(shockwave!.coefficient).toBe(THO_PHAP_THE_COEFFICIENT)
+      // Non-recursive by construction: no landed children.
+      expect(shockwave!.onLanded).toBeUndefined()
+    }
+  })
+
+  it('wood variant applies the base ailment with +1 stack', () => {
+    const basic = buildWith('wood')
+    const empowered = basic.empowerment!.empowered
+
+    const baseStacks = basic.appliesAilments?.[0]?.stacks ?? 1
+    expect(empowered.appliesAilments?.[0]?.stacks).toBe(baseStacks + 1)
+  })
+
+  it('metal variant carries the skill-local penetration bonus', () => {
+    const empowered = buildWith('metal').empowerment!.empowered
+
+    expect(empowered.elementalPenetrationBonus).toBe(KIM_PHAP_THE_PENETRATION)
   })
 })

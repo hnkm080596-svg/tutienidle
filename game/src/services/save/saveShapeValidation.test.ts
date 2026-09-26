@@ -346,17 +346,19 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v66)', () 
   })
 })
 
-describe('validateGameSaveShape — spellPath atomic (element ↔ route)', () => {
-  // Review round-2 (LOW): writers commit {element, route} atomically, so a
-  // half-set pair is corrupt. The validator must enforce the invariant,
-  // not just each field's type.
+describe('validateGameSaveShape — spellPath element-only (route retired)', () => {
+  // Phap Tu Reimagined: the persisted shape is {element} only. Any
+  // `route` key marks a legacy save — rejected wholesale (the version
+  // gate already rejects old saves; this is the defensive backstop).
   it.each([
     [{ element: null, route: 'no' }],
     [{ element: 'fire', route: null }],
-  ])('từ chối cặp lệch %j', (spellPath) => {
+    [{ element: 'fire', route: 'dot' }],
+  ])('từ chối legacy route key %j', (spellPath) => {
     const save = validSave()
 
     ;(save.player as Record<string, unknown>).cultivationPath = 'spell'
+    ;(save.player as Record<string, unknown>).cultivationWay = 'spell_pathway'
     ;(save.player as Record<string, unknown>).spellPath = spellPath
 
     const result = validateGameSaveShape(save)
@@ -365,11 +367,8 @@ describe('validateGameSaveShape — spellPath atomic (element ↔ route)', () =>
     expect(pathsOf(result)).toContain('player.spellPath')
   })
 
-  it('chấp nhận {null, null} và cặp hợp lệ trên spell', () => {
-    for (const spellPath of [
-      { element: null, route: null },
-      { element: 'fire', route: 'dot' },
-    ]) {
+  it('chấp nhận {element: null} và element hợp lệ trên spell_pathway', () => {
+    for (const spellPath of [{ element: null }, { element: 'fire' }]) {
       const save = validSave()
 
       ;(save.player as Record<string, unknown>).realmId = 'qi_refining'

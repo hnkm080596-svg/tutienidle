@@ -197,4 +197,4 @@
 // + master spec sec.8.3). Save v83 is rejected (dev phase, no
 // migration, no compat translator) - master spec sec.8.4 re-bump on
 // later merge.
-export const CURRENT_SAVE_VERSION = 84 as const
+export const CURRENT_SAVE_VERSION = 85 as const

@@ -75,18 +75,6 @@ export interface NodeEffect {
   // 2 opposing variant nodes gate each other via excludesNode prerequisites.
   selectsSpecialization?: { skillId: string; specializationId: string }
 
-  // Phap Tu Reimagined (Task 6) - The-resource lane scoped to a
-  // specific turn skill. NOT SkillResourceStatKey (that global runtime
-  // bag would lose the skillId); aggregated per authored skill by
-  // NodeSystem.aggregateTurnSkillResourceModifiers(). Values apply per
-  // node level (level L contributes value x L).
-  turnSkillResourceModifiers?: TurnSkillResourceModifier[]
-
-  // Phap Tu Reimagined (Task 6) - Truong The nodes: raise the
-  // battle-scoped The cap by this amount per node level. Consumed by
-  // resolveMaxThe(); maxThe is never persisted on PlayerData.
-  theCapPerLevel?: number
-
   // Kiem Tu Reimagined (spec sec.6, Cuu Cung) - lump Kiem Y granted ONCE
   // at purchase through gainKiemY() (the domain owner - conversion and
   // the cap rule live there; nodes never touch player.swordPath).
@@ -142,19 +130,6 @@ export interface NodeEffect {
   // granted cores revoke (with spent-Insight refund) when this node's
   // ownership is removed by any path.
   grantsSkillCoreIds?: readonly string[]
-}
-
-/**
- * The-resource modifier for ONE authored turn skill (see NodeEffect.
- * turnSkillResourceModifiers). theGainOnLandedCast = The granted once
- * per cast that lands >=1 target; theGainOnCrit = once per crit cast.
- */
-export interface TurnSkillResourceModifier {
-  skillId: string
-
-  theGainOnLandedCast?: number
-
-  theGainOnCrit?: number
 }
 
 /**
@@ -246,11 +221,6 @@ export interface ProgressionNode {
   // Display-ONLY group label (e.g. 'fire', 'kiem_tu_core') - does not affect
   // purchase/prerequisite logic, only lets the UI draw the right tree branch.
   branchTag?: string
-
-  // Phap Tu Reimagined - route membership: node only has effect while
-  // the player's spellPath.route matches (aggregators skip inactive-route
-  // nodes; INV-19 forbids shared nodes depending on route-tagged ones).
-  routeTag?: 'dot' | 'no'
 
   // Phap Tu Reimagined - element-branch membership for the normal
   // Phap Tu tree; a node with elementTag belongs to that element's

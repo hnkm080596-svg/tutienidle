@@ -10,7 +10,6 @@ import { SkillSystem } from '../skill/SkillSystem'
 import { NodeRegistry } from '../progression/NodeRegistry'
 import { TemplateRegistry } from '../game/TemplateRegistry'
 import type { Skill } from '../skill/Skill'
-import { NEUTRAL_ROUTE_PROFILE } from '../phap-tu/PhapTuRoutes'
 import { resolveCultivationPathRuntime } from './CultivationPathRegistry'
 import type { CultivationPathRuntimeDeps } from './CultivationPathRuntime'
 import { GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
@@ -31,7 +30,6 @@ function makeDeps(): CultivationPathRuntimeDeps {
     nodeRegistry: new NodeRegistry(),
     getNodeLevel: () => 0,
     getSpellPathElement: () => undefined,
-    routeProfileProvider: () => NEUTRAL_ROUTE_PROFILE,
   }
 }
 

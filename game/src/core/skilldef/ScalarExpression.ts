@@ -218,6 +218,14 @@ export function evaluateSkillCondition(
     case 'resource_at_least':
       // self-scope: the resource owner is the caster (sourceId binding).
       return ctx.resourceCurrent(ctx.resolveTarget('self'), condition.resourceId) >= condition.amount
+    case 'stacks_below':
+      return (
+        ctx.buffStacks(
+          condition.definitionId,
+          ctx.resolveTarget(condition.target),
+          undefined,
+        ) < condition.max
+      )
     case 'target_alive':
       return ctx.alive(ctx.resolveTarget(condition.target ?? 'primary_target'))
     case 'var': {

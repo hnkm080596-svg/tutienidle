@@ -237,7 +237,15 @@ export class CombatSystem {
       this.randomSource() < clampStatValue('chanceToIgnoreResistance', source.stats.chanceToIgnoreResistance)
 
     const baseDamage = damage.kind === 'elemental'
-      ? calculateSkillBaseDamage(source, target, damage.components, ignoreResistance)
+      ? calculateSkillBaseDamage(
+          source,
+          target,
+          damage.components,
+          ignoreResistance,
+          // Spec D7/D11 -- authored per-hit penetration bonus (Phap
+          // The Kim / Kim Liet) folds into the element components.
+          options.elementalPenetrationBonus ?? 0,
+        )
       : calculateBaseDamage(source, target, damage.kind, ignoreResistance, options.armorPierceFraction ?? 0)
 
     const afterCrit = applyMultiplierAndCritical(baseDamage, effectiveMultiplier, isCritical, source.stats.criticalDamage)
@@ -381,6 +389,18 @@ export class CombatSystem {
     // Floor "tối thiểu 1" áp SAU finalDamageMultiplier (xem resolveActionHit)
     // — mọi đòn trúng đích luôn gây ít nhất 1 sát thương.
     result.finalDamage = Math.max(1, result.finalDamage * this.finalDamageMultiplier(source, target))
+
+    // Phap Tu Reimagined (spec D9, F11) — Linh Luc Ho The: DR on the
+    // resolved hit scaled by the LIVE LL ratio, applied AFTER the
+    // final-damage multiplier and BEFORE every absorb layer. Reaching
+    // here at all means hostile direct damage (DoT/reaction/flat
+    // profiles never enter resolveAttack); LL = 0 => DR = 0 and the
+    // DR itself never drains LL.
+    const linhLucHoTheCap = clampStatValue('linhLucHoTheCap', target.stats.linhLucHoTheCap)
+    if (linhLucHoTheCap > 0 && target.stats.maxMp > 0 && target.currentMp > 0) {
+      const dr = linhLucHoTheCap * (target.currentMp / target.stats.maxMp)
+      result.finalDamage = Math.max(1, result.finalDamage * (1 - dr))
+    }
 
     if (critical) {
       this.eventBus.emit('critical', {

@@ -9,31 +9,26 @@
  * The factory bodies are the moved GameManager resolvers
  * (resolvePlayerBasicAttack / resolvePlayerSpecialUltimate /
  * resolveTheTuKit / resolveTheTuAnKit / authoredBasicSkillId /
- * assertNgoDaoKitLearned / applyPhapTuTheGains / applyPhapTuEmpowerment /
- * resolveAnElementBasicPool / buildTheTuBatTuSurvival) — relocated
- * verbatim modulo `this.` -> deps, per the plan's move-don't-rewrite rule.
+ * assertNgoDaoKitLearned / resolveAnElementBasicPool /
+ * buildTheTuBatTuSurvival) — relocated verbatim modulo `this.` -> deps,
+ * per the plan's move-don't-rewrite rule.
  */
 import type { PlayerData } from './Player'
 import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import type { SurviveLethalSource } from '../combat/CombatSystem'
 import type { BuffDefinitionId } from '../battle/contracts/ids'
-import type { ProgressionNode } from '../progression/ProgressionNode'
-import type { ElementType } from '../element/ElementType'
 import type { CultivationPathRuntime, CultivationPathRuntimeDeps } from './CultivationPathRuntime'
 import { hasPathCapability, resolveActiveWayStatDomains } from './CultivationPathSystem'
 import { getActiveWayDefinition } from './CultivationPathKit'
 
 import { isMortalPrecursorSkillId, MORTAL_DEFAULT_BASIC_ID } from '../skill/MortalPrecursors'
-import { aggregateTurnSkillResourceModifiers } from '../progression/NodeSystem'
 import {
   toTurnSkillDefinition,
   collectUnsupportedSkillSemantics,
 } from '../skilldef/LegacySkillAdapter'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
 import { SPELL_KIT_IDS } from '../../data/skill/Skills'
-import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
-import { PHAP_TU_EMPOWERED_ULTS } from '../../data/skill/PhapTuEmpoweredUlts'
 import {
   applyAnKitToBasic,
   applyAnKitToSpecial,
@@ -46,14 +41,11 @@ import {
 } from '../phap-tu/PhapTuPath'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
 import {
-  SPELL_EMPOWERMENT_ESSENCE_THRESHOLD,
-  SPELL_ESSENCE_GAIN_BASIC,
-  SPELL_ESSENCE_GAIN_SPECIAL,
-  applyRouteToTurnSkill,
   resolveMaxThe,
-  resolveRouteProfile,
-} from '../phap-tu/PhapTuRoutes'
-import { isHiddenSpellPathway, isSpellPathway } from '../phap-tu/PhapTuPath'
+  SPELL_PATH_MAX_THE,
+  isHiddenSpellPathway,
+} from '../phap-tu/PhapTuPath'
+import { buildPhapTheVariant } from '../phap-tu/PhapTheVariants'
 import {
   buildTheTuAnKit,
   buildTheTuKit,
@@ -63,8 +55,6 @@ import {
 import { collectBodyKitModifiers } from '../the-tu/TheTuKitModifiers'
 import { collectHiddenBodyMechanicModifiers } from '../the-tu/TheTuAnMechanicModifiers'
 import { BodyBatTuSurvival } from '../the-tu/TheTuBatTuSurvival'
-import { isBodyPathway, isHiddenBodyPathway } from '../the-tu/TheTuPath'
-import { isSwordPathway, isHiddenSwordPathway } from '../kiem-tu/KiemTuPath'
 import { buildKiemPhoProvider } from '../kiem-tu/KiemPhoProvider'
 import { collectKiemPhoComboModifiers } from '../kiem-tu/KiemPhoNodeModifiers'
 import {
@@ -126,67 +116,6 @@ function resolveAnElementBasicPool(deps: CultivationPathRuntimeDeps): TurnSkillD
 }
 
 /**
- * Task 8 — attach the authored The-gain fields to a spell kit
- * TurnSkillDefinition at battle build. Base values come from
- * SPELL_ESSENCE_GAIN_* (basic +5 / special +15 / ultimate +0); the 'no'
- * route profile contributes theGainOnCrit; tu_the_<element> nodes add
- * per-level deltas via aggregateTurnSkillResourceModifiers — all of it
- * scoped to this authored skill id. Non-spell_pathway ways (incl. hidden_spell_pathway —
- * its kit has no The loop) return the def unchanged.
- */
-function applySpellPathEssenceGains(
-  deps: CultivationPathRuntimeDeps,
-  def: TurnSkillDefinition,
-  player: PlayerData,
-  baseGainOnLandedCast: number,
-): TurnSkillDefinition {
-  if (!isSpellPathway(player)) {
-    return def
-  }
-
-  const nodeMods = aggregateTurnSkillResourceModifiers(deps.nodeRegistry, player).get(def.id)
-  const theGainOnLandedCast = baseGainOnLandedCast + (nodeMods?.theGainOnLandedCast ?? 0)
-  const theGainOnCrit =
-    (resolveRouteProfile(player.spellPath).critTheGain ?? 0) + (nodeMods?.theGainOnCrit ?? 0)
-
-  return {
-    ...def,
-    ...(theGainOnLandedCast > 0 ? { theGainOnLandedCast } : {}),
-    ...(theGainOnCrit > 0 ? { theGainOnCrit } : {}),
-  }
-}
-
-/**
- * Task 10 — attach the god-ult empowerment to the root chain-E
- * ultimate at battle build. Gated on owning `linh_ngo_<godUltId>` (the
- * engine stays dumb — the gate lives in orchestration, A8); the route
- * profile picks the payload variant ('dot' -> detonate, 'no' -> nuke,
- * none -> nuke default).
- */
-function applySpellPathEmpowerment(
-  deps: CultivationPathRuntimeDeps,
-  def: TurnSkillDefinition,
-  player: PlayerData,
-  element: ElementType,
-): TurnSkillDefinition {
-  const godUltId = PHAP_TU_ULTIMATE_IDS[element]
-
-  if ((player.nodeLevels?.[`linh_ngo_${godUltId}`] ?? 0) <= 0) {
-    return def
-  }
-
-  const variant = resolveRouteProfile(player.spellPath).empoweredUlt ?? 'nuke'
-  const empowered = PHAP_TU_EMPOWERED_ULTS[element]?.[variant]
-
-  return empowered
-    ? {
-        ...def,
-        empowerment: { theThreshold: SPELL_EMPOWERMENT_ESSENCE_THRESHOLD, empowered },
-      }
-    : def
-}
-
-/**
  * The canonical authored-Skill -> TurnSkillDefinition basic pipeline
  * (moved from GameManager.resolvePlayerBasicAttack). `strict` paths
  * (spell ways) fail loudly on a missing required basic or a converter
@@ -225,12 +154,7 @@ function resolveAuthoredBasic(
   }
 
   try {
-    // Route seam 2 (post-conversion): the converter stays generic —
-    // ailmentStackBonus lands on the built definition here.
-    const converted = applyRouteToTurnSkill(
-      toTurnSkillDefinition(skill, effective),
-      deps.routeProfileProvider(skill.id),
-    )
+    const converted = toTurnSkillDefinition(skill, effective)
 
     // Task 11 — the An basic carries its composite pick (uniform
     // element_basic pool) plus `multicast` when the player owns the
@@ -244,7 +168,7 @@ function resolveAuthoredBasic(
       : converted
 
     return {
-      ...applySpellPathEssenceGains(deps, resolved, player, SPELL_ESSENCE_GAIN_BASIC),
+      ...resolved,
       cooldownTurns: 0,
       resourceType: 'none',
       resourceCost: undefined,
@@ -314,9 +238,12 @@ function resolveHiddenBodyKit(
 // Per-path runtime factories
 // ---------------------------------------------------------------------------
 
-function sharedMembers(deps: CultivationPathRuntimeDeps) {
+function sharedMembers() {
   return {
-    resolveMaxThe: (player: PlayerData) => resolveMaxThe(deps.nodeRegistry, player),
+    // Phap Tu Reimagined -- the cap authority moved off the deleted
+    // node-cap aggregator: PhapTuPath.resolveMaxThe returns 5 for
+    // spell_pathway, MAX_THE elsewhere.
+    resolveMaxThe: (player: PlayerData) => resolveMaxThe(player),
     resolveStatDomains: (player: PlayerData) => resolveActiveWayStatDomains(player),
   }
 }
@@ -330,7 +257,7 @@ function sharedMembers(deps: CultivationPathRuntimeDeps) {
  */
 function createMortalRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
   return {
-    ...sharedMembers(deps),
+    ...sharedMembers(),
     resolveBasic(player) {
       // P7-M4 — the persisted pick is the mortal basic; the precursor
       // whitelist + learned membership guard it. Save v82 contract: a
@@ -357,7 +284,7 @@ function createMortalRuntime(deps: CultivationPathRuntimeDeps): CultivationPathR
 
 function createSwordPathRuntime(deps: CultivationPathRuntimeDeps, hidden: boolean): CultivationPathRuntime {
   return {
-    ...sharedMembers(deps),
+    ...sharedMembers(),
     resolveBasic(player) {
       // Spec 2026-09-15 K3 — tram is a MORTAL precursor: once a path is
       // chosen it is no longer the basic. Kiem Tu basics resolve through
@@ -382,12 +309,12 @@ function createSwordPathRuntime(deps: CultivationPathRuntimeDeps, hidden: boolea
 
 function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
   return {
-    ...sharedMembers(deps),
+    ...sharedMembers(),
     resolveBasic(player) {
       const element = deps.getSpellPathElement()
       const authoredBasicId = element ? SPELL_KIT_IDS[element]?.[0] : undefined
 
-      return (
+      const resolved =
         resolveAuthoredBasic(deps, player, authoredBasicId, true) ??
         // P7-M4 - way-authored starter fallback: linh_bao fights as the
         // basic until the element kit supersedes (authored-read — the
@@ -400,48 +327,41 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
         ) ??
         (player.cultivationPath ? BASIC_ATTACKS_BY_BUILD[player.cultivationPath] : undefined) ??
         GENERIC_PHYSICAL_BASIC
-      )
+
+      // Phap Tu Reimagined (spec D1/D2) — the basic's LANDED primary
+      // grants +1 The (cap 5 battle-scoped); at 5 the empowered element
+      // variant resolves (checked before cast, no consume). Hidden way
+      // basics never reach this runtime (F11).
+      return {
+        ...resolved,
+        theGainOnLandedCast: 1,
+        ...(element !== undefined
+          ? {
+              empowerment: {
+                theThreshold: SPELL_PATH_MAX_THE,
+                empowered: buildPhapTheVariant(element, resolved),
+              },
+            }
+          : {}),
+      }
     },
-    resolveSpecialUltimate(player) {
+    resolveSpecialUltimate() {
       const element = deps.getSpellPathElement()
 
       if (!element) {
         return {}
       }
 
-      const [, specialId, ultimateId] = SPELL_KIT_IDS[element]
+      // Spec D8 — kits resolve to {special} only; the legacy ultimate
+      // (empowerment@100 chain-E god-ult) is retired.
+      const [, specialId] = SPELL_KIT_IDS[element]
       const specialSkill = deps.skillManager.get(specialId)
-      const ultimateSkill = deps.skillManager.get(ultimateId)
 
       return {
         special: specialSkill
-          ? applySpellPathEssenceGains(
-              deps,
-              applyRouteToTurnSkill(
-                toTurnSkillDefinition(specialSkill, deps.skillSystem.getEffectiveSkill(specialSkill)),
-                deps.routeProfileProvider(specialSkill.id),
-              ),
-              player,
-              SPELL_ESSENCE_GAIN_SPECIAL,
-            )
-          : undefined,
-        ultimate: ultimateSkill
-          ? applySpellPathEmpowerment(
-              deps,
-              applySpellPathEssenceGains(
-                deps,
-                applyRouteToTurnSkill(
-                  toTurnSkillDefinition(
-                    ultimateSkill,
-                    deps.skillSystem.getEffectiveSkill(ultimateSkill),
-                  ),
-                  deps.routeProfileProvider(ultimateSkill.id),
-                ),
-                player,
-                0,
-              ),
-              player,
-              element,
+          ? toTurnSkillDefinition(
+              specialSkill,
+              deps.skillSystem.getEffectiveSkill(specialSkill),
             )
           : undefined,
       }
@@ -451,7 +371,7 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
 
 function createHiddenSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
   return {
-    ...sharedMembers(deps),
+    ...sharedMembers(),
     resolveBasic(player) {
       assertNgoDaoKitLearned(deps, player)
       return (
@@ -492,7 +412,7 @@ function createHiddenSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cult
 
 function createBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
   return {
-    ...sharedMembers(deps),
+    ...sharedMembers(),
     resolveBasic(player) {
       // The Tu Reimagined (spec section 5, INV-3) — root-owned kit;
       // P7-M4 way-authored starter fallback (huy_quyen) sits between the
@@ -532,7 +452,7 @@ function createBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivation
 
 function createHiddenBodyPathwayRuntime(deps: CultivationPathRuntimeDeps): CultivationPathRuntime {
   return {
-    ...sharedMembers(deps),
+    ...sharedMembers(),
     resolveBasic(player) {
       // Spec section 6.1 — fixed kit granted at path choice; the built
       // clone's grantsBuffsAtBuild plants ung_the + owned-root markers.

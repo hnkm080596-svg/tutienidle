@@ -3,8 +3,8 @@ import { createSpellPathState } from './PhapTuState'
 import { createDefaultPlayer } from '../player/Player'
 
 describe('SpellPathState', () => {
-  it('defaults: no element, null route', () => {
-    expect(createSpellPathState()).toEqual({ element: null, route: null })
+  it('defaults: no element committed', () => {
+    expect(createSpellPathState()).toEqual({ element: null })
   })
 
   it('player factory carries spellPath state', () => {

@@ -29,12 +29,15 @@ export function calculateElementComponentDamage(
   target: CombatEntity,
   element: ElementType,
   ignoreResistance = false,
+  penetrationBonus = 0,
 ): number {
   const power = elementalBasePower(source, element)
 
   const resistance = target.stats[`${element}Resistance`]
 
-  const penetration = source.stats[`${element}Penetration`]
+  // Per-hit penetration bonuses (spec D7/D11) are additive POINTS on
+  // the stat read -- never a stats mutation.
+  const penetration = source.stats[`${element}Penetration`] + penetrationBonus
 
   const mitigation = ignoreResistance ? 0 : getResistanceMitigationPercent(resistance, penetration)
 
@@ -52,6 +55,7 @@ export function calculateComponentDamage(
   target: CombatEntity,
   component: SkillDamageComponent,
   ignoreResistance = false,
+  penetrationBonus = 0,
 ): number {
   switch (component.kind) {
     case 'physical':
@@ -61,7 +65,13 @@ export function calculateComponentDamage(
       return calculateBaseDamage(source, target, 'primordial', ignoreResistance) * component.ratio
 
     case 'element':
-      return calculateElementComponentDamage(source, target, component.element, ignoreResistance) * component.ratio
+      return calculateElementComponentDamage(
+        source,
+        target,
+        component.element,
+        ignoreResistance,
+        penetrationBonus,
+      ) * component.ratio
   }
 }
 
@@ -77,11 +87,12 @@ export function calculateSkillBaseDamage(
   target: CombatEntity,
   components: SkillDamageComponent[],
   ignoreResistance = false,
+  penetrationBonus = 0,
 ): number {
   let total = 0
 
   for (const component of components) {
-    total += calculateComponentDamage(source, target, component, ignoreResistance)
+    total += calculateComponentDamage(source, target, component, ignoreResistance, penetrationBonus)
   }
 
   return total

@@ -255,6 +255,9 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     wardRegenPerTurn: input.special?.wardRegenPerTurn ?? 0,
     wardBreakDamagePercent: input.special?.wardBreakDamagePercent ?? 0,
     manaShieldPercent: input.special?.manaShieldPercent ?? 0,
+    // Phap Tu Reimagined (spec D9) — Ho The is a player-path mechanic;
+    // enemies never carry an LL-shield cap (0 = no DR contribution).
+    linhLucHoTheCap: 0,
     leechPercent: input.special?.leechPercent ?? 0,
     // The Tu Reimagined (spec 2026-09-15 T12) — generic thorns stat retired;
     // enemies never had a real source for it anyway (special input

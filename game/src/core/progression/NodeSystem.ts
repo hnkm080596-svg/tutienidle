@@ -1,11 +1,10 @@
 import type { PlayerData } from '../player/Player'
-import type { NodePrerequisite, ProgressionNode, TurnSkillResourceModifier } from './ProgressionNode'
+import type { NodePrerequisite, ProgressionNode } from './ProgressionNode'
 import { getNodeMaxLevel } from './ProgressionNode'
 
 export { getNodeMaxLevel }
 import { hasStaticPathCapability } from '../player/CultivationPathSystem'
 
-import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import { isHiddenSpellPathway } from '../phap-tu/PhapTuPath'
 import { getRealmIndex } from '../realm/realmSystem'
 import { getEffectiveTechniqueRank } from '../technique/TechniqueProgression'
@@ -22,9 +21,8 @@ import { CAST_LEVELING_THRESHOLDS } from '../skill/CastLeveling'
  * - maxLevel defaults to 1 -> all legacy nodes keep one-shot purchase behavior.
  * - Modifiers are NO LONGER pushed permanently into player.modifiers nor
  *   mutate the Skill instance on purchase - every effect is derived from
- *   (registry, nodeLevels) via aggregateNodeStatModifiers()/
- *   aggregateTurnSkillResourceModifiers() so recompute always yields the same
- *   deterministic result, never double-applied on load.
+ *   (registry, nodeLevels) via aggregateNodeStatModifiers() so recompute
+ *   always yields the same deterministic result, never double-applied on load.
  *
  * Data-driven per-level cost: node.upgradeCost = { base, perLevel }
  * with cost(level L -> L+1) = base + floor(L / perLevel). Power 10 levels
@@ -186,19 +184,10 @@ export function getEffectiveNodeMaxLevel(player: PlayerData, node: ProgressionNo
 }
 
 /**
- * Phap Tu Reimagined Task 4 - route membership: a routeTag node only
- * exists while the player's route matches (untagged nodes are always
- * active). Aggregators skip inactive-route nodes and purchase/upgrade
- * reject them, so an inactive node's levels can never take effect.
- */
-export function isNodeRouteActive(player: PlayerData, node: ProgressionNode): boolean {
-  return node.routeTag === undefined || player.spellPath.route === node.routeTag
-}
-
-/**
  * Phap Tu Reimagined Task 6 - element-branch membership: a node with
  * elementTag is active only while spellPath.element matches (untagged
- * nodes are always active). Same gate points as routeTag: aggregators
+ * nodes are always active). Same gate points as the retired routeTag:
+ * aggregators
  * skip inactive-element nodes, purchase/upgrade reject them. While
  * spellPath.element is null (pre-selection) every element node counts as
  * active so selectSpellPathElement can purchase its root - unreachable
@@ -249,7 +238,7 @@ export function canPurchaseNode(player: PlayerData, node: ProgressionNode): bool
     return false
   }
 
-  if (!isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
+  if (!isNodeElementActive(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
     return false
   }
 
@@ -280,7 +269,7 @@ export function canUpgradeNode(player: PlayerData, node: ProgressionNode): boole
     return false
   }
 
-  if (!isNodeRouteActive(player, node) || !isNodeElementActive(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
+  if (!isNodeElementActive(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
     return false
   }
 
@@ -496,7 +485,7 @@ export function aggregateNodeStatModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementEffective(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
+    if (level <= 0 || !isNodeElementEffective(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
       continue
     }
 
@@ -506,43 +495,6 @@ export function aggregateNodeStatModifiers(
   }
 
   return modifiers
-}
-
-/**
- * Phap Tu Reimagined Task 6 - aggregate the The-resource lane: for
- * each authored turn skill, sum node-level-scaled theGainOnLandedCast /
- * theGainOnCrit across all active nodes. Values contribute
- * per node level (level L adds value x L). The modifier stays scoped
- * to its authored skillId - it cannot leak to other elements, Kiem
- * Tu, or mortal skills.
- */
-export function aggregateTurnSkillResourceModifiers(
-  registry: { getAll(): ProgressionNode[] },
-
-  player: PlayerData,
-): Map<string, TurnSkillResourceModifier> {
-  const result = new Map<string, TurnSkillResourceModifier>()
-
-  for (const node of registry.getAll()) {
-    const level = getNodeLevel(player, node.id)
-
-    if (level <= 0 || !isNodeRouteActive(player, node) || !isNodeElementEffective(player, node) || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
-      continue
-    }
-
-    for (const entry of node.effect.turnSkillResourceModifiers ?? []) {
-      const existing = result.get(entry.skillId) ?? { skillId: entry.skillId }
-
-      existing.theGainOnLandedCast =
-        (existing.theGainOnLandedCast ?? 0) + (entry.theGainOnLandedCast ?? 0) * level
-      existing.theGainOnCrit =
-        (existing.theGainOnCrit ?? 0) + (entry.theGainOnCrit ?? 0) * level
-
-      result.set(entry.skillId, existing)
-    }
-  }
-
-  return result
 }
 
 /**
@@ -781,7 +733,7 @@ export interface NodeRespecScope {
 /**
  * M-F-RESPEC (ruling S14) - player-facing FREE Beta respec: revokes
  * ownership of every node inside `scope` and refunds 100% of the Insight
- * ACTUALLY paid (same paidForNodeLevels + nodeFreePurchaseRecord
+ * ACTUALLY paid (same computeNodeRefund + nodeFreePurchaseRecord
  * accounting as devResetBranch), then cascade-revokes orphaned
  * descendants. Whole-tree scope covers every non-core node - skill cores
  * (levelsSkillId) are not tree content and only revoke through
@@ -908,154 +860,4 @@ export interface NodeRespecPreview {
   }
 }
 
-/**
- * Phap Tu Reimagined Task 4 - switch the route half of the atomic
- * (element, route) commitment. Out-of-combat only (the orchestration op
- * enforces the no-active-battle rule). For every node tagged with the
- * OLD route: level -> 0, nodeLevels/purchasedNodeIds entries cleared,
- * floor(actualPaid x 0.75) refunded using nodeFreePurchaseRecord
- * exactly like devResetBranch. Nodes tagged with the NEW route are not
- * auto-bought - the player re-invests. Untagged nodes are untouched.
- * No The-pool clear is needed: currentThe is battle-scoped (INV-14)
- * and switching is out-of-combat, so banked The cannot exist at switch
- * time (INV-16 holds by construction).
- * Returns total refunded.
- */
-export function switchRoute(
-  player: PlayerData,
 
-  registry: { getAll(): ProgressionNode[] },
-
-  route: SpellPathRoute,
-  revokedOut?: Set<string>,
-): number {
-  const oldRoute = player.spellPath.route
-
-  // Review fix (HIGH-2): this is the only writer of spellPath.route besides
-  // the atomic (element, route) commit in selectSpellPathElement - it needs
-  // the same commitment gate. Without it a pre-commit call stamps route
-  // onto {element: null} and permanently poisons selectSpellPathElement's
-  // null-check invariant; a non-spell player's dirty route state would
-  // also leak universal route stats via getRouteStatModifiers.
-  if (
-    !hasStaticPathCapability(player, 'spell.elemental_casting') ||
-    player.spellPath.element === null ||
-    oldRoute === null ||
-    oldRoute === route
-  ) {
-    return 0
-  }
-
-  let refund = 0
-
-  for (const node of registry.getAll()) {
-    if (node.routeTag !== oldRoute) {
-      continue
-    }
-
-    // rewardOnly grants are realm-reward state, not route purchases -
-    // routeTag cleanup must not revoke them (same refusal as
-    // revokeNodeOwnership). No rewardOnly node carries a routeTag
-    // today; the guard seals the seam for future authoring.
-    if (node.rewardOnly) {
-      continue
-    }
-
-    const level = getNodeLevel(player, node.id)
-
-    if (level <= 0) {
-      continue
-    }
-
-    const paid = paidForNodeLevels(player, node)
-
-    if (player.nodeFreePurchaseRecord) {
-      delete player.nodeFreePurchaseRecord[node.id]
-    }
-
-    refund += Math.floor(paid * 0.75)
-
-    revokedOut?.add(node.id)
-    delete player.nodeLevels[node.id]
-
-    const index = player.purchasedNodeIds.indexOf(node.id)
-
-    if (index !== -1) {
-      player.purchasedNodeIds.splice(index, 1)
-    }
-  }
-
-  player.skillInsight += refund
-
-  player.spellPath.route = route
-
-  return refund
-}
-
-/** Insight ACTUALLY paid into a node across its levels - Van Dao waived
- * amounts are deducted (same accounting as devResetBranch/switchRoute). */
-function paidForNodeLevels(player: PlayerData, node: ProgressionNode): number {
-  return computeNodeRefund(
-    node,
-    getNodeLevel(player, node.id),
-    player.nodeFreePurchaseRecord?.[node.id],
-  )
-}
-
-export interface RouteSwitchPreview {
-  /** floor(actualPaid x 0.75) summed over the old route's nodes. */
-  refund: number
-
-  /** The 25% respec tax - paid insight that is NOT returned. */
-  forfeited: number
-
-  /** Old-route nodes that would reset to level 0. */
-  resetNodeCount: number
-
-  /** Effects the one-shot-grant clawback would apply on top of the
-   * domain revocation (filled by the orchestration layer - its legs
-   * read SkillManager and kiem-tu state the domain layer cannot reach). */
-  clawback?: NodeRespecPreview['clawback']
-}
-
-/**
- * Task 16 - read-only preview of switchRoute()'s refund math for the
- * "you regain X, lose Y" UI. Shares paidForNodeLevels with switchRoute
- * (A9 - one implementation); mutates nothing.
- */
-export function previewRouteSwitch(
-  player: PlayerData,
-
-  registry: { getAll(): ProgressionNode[] },
-): RouteSwitchPreview {
-  const oldRoute = player.spellPath.route
-
-  const preview: RouteSwitchPreview = { refund: 0, forfeited: 0, resetNodeCount: 0 }
-
-  // Same gate as switchRoute (HIGH-2) - never preview a switch the
-  // domain would reject.
-  if (
-    !hasStaticPathCapability(player, 'spell.elemental_casting') ||
-    player.spellPath.element === null ||
-    oldRoute === null
-  ) {
-    return preview
-  }
-
-  for (const node of registry.getAll()) {
-    // rewardOnly skip mirrors switchRoute - the preview must not
-    // promise a refund for grants the switch would leave intact.
-    if (node.routeTag !== oldRoute || node.rewardOnly || getNodeLevel(player, node.id) <= 0) {
-      continue
-    }
-
-    const paid = paidForNodeLevels(player, node)
-    const refund = Math.floor(paid * 0.75)
-
-    preview.refund += refund
-    preview.forfeited += paid - refund
-    preview.resetNodeCount += 1
-  }
-
-  return preview
-}

@@ -20,7 +20,6 @@ import type {
   BuffDefinitionId,
   BuffInstanceId,
   CombatEntityId,
-  CombatOperationId,
 } from '../battle/contracts/ids'
 import type { ElementalStateRegistry } from '../battle/contracts/elemental'
 import type {
@@ -57,6 +56,7 @@ import {
   attachModifier,
   removeModifiersById,
 } from './BuffModifierEngine'
+import { periodicGrowthPayloadOf } from './PeriodicGrowthCapabilities'
 import {
   computePeriodicRequest,
   type PendingUseMark,
@@ -967,6 +967,7 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
     if (instance === undefined || !this.entities.isAlive(instance.targetId)) {
       return
     }
+    this.applyPeriodicGrowth(instance, lctx)
     const computation = this.computeUnitRequest(instance, unit.periodicId)
     if (computation === undefined) return
     lctx.events.emit({
@@ -977,6 +978,50 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
     })
     this.pendingUses.set(computation.request.requestId, computation.marks)
     lctx.settle()
+  }
+
+  /** Phap Tu Reimagined spec D11 -- 'periodic_growth' capability feed:
+      a marker on the ticking instance's HOLDER grows the instance's
+      stacks BEFORE its unit computes (the bump feeds stack-scaled
+      ticks). A marker matches when its def declares periodic_growth
+      naming the ticking definitionId AND the marker's sourceId equals
+      the ticking instance's sourceId (own-source Sinh Co binding);
+      `consume: true` removes the marker in the same transaction. */
+  private applyPeriodicGrowth(
+    instance: BuffInstance,
+    lctx: BuffLifecycleContext,
+  ): void {
+    const def = this.registry.get(instance.definitionId)
+    for (const marker of this.store.forTarget(instance.targetId)) {
+      if (marker.instanceId === instance.instanceId) continue
+      if (marker.sourceId !== instance.sourceId) continue
+      const markerDef = this.registry.get(marker.definitionId)
+      if (markerDef.capabilities === undefined) continue
+      for (const capability of markerDef.capabilities) {
+        const growth = periodicGrowthPayloadOf(capability)
+        if (growth === undefined) continue
+        if (growth.definitionId !== instance.definitionId) continue
+        const stacksBefore = instance.stacks
+        instance.stacks = Math.min(
+          stacksBefore + growth.stacks,
+          def.stacking.maxStacks,
+        )
+        if (instance.stacks !== stacksBefore) {
+          lctx.events.emit({
+            type: 'buff_stacks_changed',
+            rootActionId: lctx.rootActionId,
+            instanceId: instance.instanceId,
+            stacksBefore,
+            stacksAfter: instance.stacks,
+            addedStacks: instance.stacks - stacksBefore,
+          })
+        }
+        if (growth.consume === true) {
+          this.removeInstance(marker, 'consumed', lctx.events, lctx.rootActionId)
+        }
+        break // one periodic_growth feed per marker instance
+      }
+    }
   }
 
   /** Phase B (spec sec.28 steps 3-8): liveness sweeps BEFORE any
@@ -1013,6 +1058,18 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
         !this.entities.isAlive(instance.sourceId)
       ) {
         this.removeInstance(instance, 'source_death', lctx.events, lctx.rootActionId)
+        continue
+      }
+      // Phap Tu Reimagined spec D10 -- boundToSourceBuffId: the marker
+      // dies 'expired' the moment its source no longer holds the named
+      // definition (the bound buff may already have left earlier in
+      // this same canonical-order sweep).
+      if (
+        def.boundToSourceBuffId !== undefined &&
+        this.store.findOnTarget(def.boundToSourceBuffId, instance.sourceId) ===
+          undefined
+      ) {
+        this.removeInstance(instance, 'expired', lctx.events, lctx.rootActionId)
       }
     }
 

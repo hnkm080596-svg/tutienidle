@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   aggregateNodeStatModifiers,
-  aggregateTurnSkillResourceModifiers,
   canPurchaseNode,
   canUpgradeNode,
   getNodeLevel,
@@ -12,7 +11,7 @@ import { collectKiemDaoCascadeUnlocks } from '../kiem-tu/NguKiemDaoProvider'
 import { collectKiemPhoComboModifiers } from '../kiem-tu/KiemPhoNodeModifiers'
 import { collectBodyKitModifiers } from '../the-tu/TheTuKitModifiers'
 import { collectHiddenBodyMechanicModifiers } from '../the-tu/TheTuAnMechanicModifiers'
-import { resolveMaxThe } from '../phap-tu/PhapTuRoutes'
+import { resolveMaxThe } from '../phap-tu/PhapTuPath'
 import { MAX_THE } from '../combat/CombatTypes'
 import { createDefaultPlayer } from '../player/Player'
 import type { ProgressionNode } from './ProgressionNode'
@@ -103,11 +102,10 @@ describe('nodeWayApplies — cultivation way membership gate', () => {
     expect(canUpgradeNode(mortal, node)).toBe(false)
   })
 
-  it('injected levels of a wrong-way node aggregate NOTHING (stat + turn-skill-resource aggregators)', () => {
+  it('injected levels of a wrong-way node aggregate NOTHING', () => {
     const node = ungTheNode({
       effect: {
         statModifiers: [{ id: 'ung_the_only:vit', sourceId: 'ung_the_only', sourceType: 'talent', stat: 'vitality', flat: 3 }],
-        turnSkillResourceModifiers: [{ skillId: 'cuong_quyen', theGainOnLandedCast: 4 }],
       },
     })
     const registry = { getAll: () => [node] }
@@ -116,12 +114,10 @@ describe('nodeWayApplies — cultivation way membership gate', () => {
       const player = playerWith({ cultivationWay: way, nodeLevels: { ung_the_only: 2 } })
 
       expect(aggregateNodeStatModifiers(registry, player)).toEqual([])
-      expect(aggregateTurnSkillResourceModifiers(registry, player).size).toBe(0)
     }
 
     const ungThe = playerWith({ cultivationWay: 'hidden_body_pathway', nodeLevels: { ung_the_only: 2 } })
     expect(aggregateNodeStatModifiers(registry, ungThe)).toHaveLength(1)
-    expect(aggregateTurnSkillResourceModifiers(registry, ungThe).get('cuong_quyen')?.theGainOnLandedCast).toBe(8)
   })
 })
 
@@ -181,23 +177,13 @@ describe('requiredWay — domain collectors honor the same gate', () => {
     expect(collectHiddenBodyMechanicModifiers(registry, ungThe).maxTheBonus).toBe(14)
   })
 
-  it('resolveMaxThe skips a way-mismatched node even with owned levels', () => {
-    const node = minorNode({
-      id: 'ngo_dao_the_cap',
-      requiredWay: 'hidden_spell_pathway',
-      effect: { theCapPerLevel: 5 },
-    })
-    const registry = { getAll: () => [node] }
+  it('resolveMaxThe: flat 5 for spell_pathway, MAX_THE elsewhere — the node-cap channel is retired', () => {
+    // Phap Tu Reimagined: the truong_the theCapPerLevel aggregator is
+    // gone; the cap is a pure way read (spec D1).
+    const nguHanh = playerWith({ cultivationPath: 'spell', cultivationWay: 'spell_pathway' })
+    expect(resolveMaxThe(nguHanh)).toBe(5)
 
-    // M4 (R6): resolveMaxThe is spell_pathway machinery — ngo_dao owns no
-    // The pool at all, so even a way-MATCHING the-cap node contributes
-    // nothing for a ngo_dao player (both persisted shapes). The loop's
-    // nodeWayApplies check remains for way-mismatched nodes inside the
-    // spell_pathway tree.
-    const nguHanh = playerWith({ cultivationPath: 'spell', cultivationWay: 'spell_pathway', nodeLevels: { ngo_dao_the_cap: 2 } })
-    expect(resolveMaxThe(registry, nguHanh)).toBe(MAX_THE)
-
-    const ngoDao = playerWith({ cultivationPath: 'spell', cultivationWay: 'hidden_spell_pathway', nodeLevels: { ngo_dao_the_cap: 2 } })
-    expect(resolveMaxThe(registry, ngoDao)).toBe(MAX_THE)
+    const ngoDao = playerWith({ cultivationPath: 'spell', cultivationWay: 'hidden_spell_pathway' })
+    expect(resolveMaxThe(ngoDao)).toBe(MAX_THE)
   })
 })

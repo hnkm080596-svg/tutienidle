@@ -83,7 +83,7 @@ function buildHarness(element: 'water' | 'earth', playerSpeed: number): Harness 
   const player = createDefaultPlayer()
   player.cultivationPath = 'spell'
   player.cultivationWay = 'spell_pathway'
-  player.spellPath = { element, route: null }
+  player.spellPath = { element }
   // Speed boost: the player must take >= 3 unhit turns between enemy hits
   // for the Ward delay gate to open inside the real loop.
   player.baseStats = asBaseStats({ ...player.baseStats, speed: playerSpeed })

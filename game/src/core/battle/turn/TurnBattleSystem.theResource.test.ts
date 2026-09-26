@@ -7,15 +7,14 @@ import { createBaseStats } from '../../stats/StatBlock'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import { MAX_THE, THE_GAIN_PER_LINK, THE_GAIN_PER_FINISHER } from '../../combat/CombatTypes'
 
-// Phap Tu Reimagined Task 8 (spec 2026-09-14) — the The pool is
+// Phap Tu Reimagined (spec D1) — the The pool is
 // FIELD-DRIVEN, not slot-driven: a cast grants `theGainOnLandedCast`
 // ONCE when it lands on >=1 valid target (target/hit count never
-// multiplies it — a 5-target AoE grants +5, not +25), and
-// `theGainOnCrit` ONCE when any direct hit of the cast crits (same
-// per-cast rule — INV-15). The clamp reads `entity.maxThe ?? MAX_THE`
-// (Truong The nodes raise the cap for the 'no' route). Skills that
-// author neither field generate nothing — slot position is no longer
-// a gain rule (Bat Kiem Thuat keeps its gains via authored fields).
+// multiplies it — a 5-target AoE grants +5, not +25). The clamp reads
+// `entity.maxThe ?? MAX_THE`. The legacy crit channel (theGainOnCrit)
+// is retired — crits grant no extra The. Skills that author no gain
+// field generate nothing — slot position is not a gain rule (Bat Kiem
+// Thuat keeps its gains via authored fields).
 
 function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
@@ -199,8 +198,8 @@ describe('theGainOnLandedCast — per-cast gain contract (Task 8)', () => {
   })
 })
 
-describe('theGainOnCrit — once per cast regardless of hit/target count (INV-15)', () => {
-  it('adds theGainOnCrit when the cast crits', () => {
+describe('theGainOnCrit retired — a crit grants no extra The (spec D1)', () => {
+  it('a critting cast grants ONLY theGainOnLandedCast', () => {
     const player = createCombatant('player')
     const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 1, criticalDamage: 1.5 })
     player.stats = stats
@@ -211,7 +210,6 @@ describe('theGainOnCrit — once per cast regardless of hit/target count (INV-15
       ...BASIC,
       id: 'qa_crit_basic',
       theGainOnLandedCast: 5,
-      theGainOnCrit: 3,
     }
 
     const enemyEntity = createCombatant('enemy')
@@ -229,10 +227,10 @@ describe('theGainOnCrit — once per cast regardless of hit/target count (INV-15
 
     system.resolveNextStep(battle)
 
-    expect(playerParticipant.entity.currentThe).toBe(5 + 3)
+    expect(playerParticipant.entity.currentThe).toBe(5)
   })
 
-  it('a multi-target cast where every hit crits still grants theGainOnCrit ONCE', () => {
+  it('a multi-target cast where every hit crits still grants the landed gain ONCE', () => {
     const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 1, criticalDamage: 1.5 })
     const player = createCombatant('player')
     player.stats = stats
@@ -243,7 +241,6 @@ describe('theGainOnCrit — once per cast regardless of hit/target count (INV-15
       id: 'qa_aoe_crit',
       cooldownTurns: 0,
       theGainOnLandedCast: 5,
-      theGainOnCrit: 3,
       damage: { kind: 'physical', multiplier: 1 },
       targeting: { shape: 'all_lanes' },
     }
@@ -267,8 +264,8 @@ describe('theGainOnCrit — once per cast regardless of hit/target count (INV-15
 
     system.resolveNextStep(battle)
 
-    // +5 landed-cast + +3 crit — NOT 5x3 for five critting hits.
-    expect(playerParticipant.entity.currentThe).toBe(8)
+    // +5 landed-cast only — NOT 5x5 for five landed critting hits.
+    expect(playerParticipant.entity.currentThe).toBe(5)
   })
 })
 

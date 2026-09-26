@@ -1,7 +1,6 @@
 import type { ElementType } from '../element/ElementType'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import { getNodeMaxLevel } from '../progression/ProgressionNode'
-import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import type { OrbId } from '../kiem-tu/KiemTuState'
 import {
   createDefaultArtifactProgress,
@@ -46,9 +45,9 @@ export {
 // and a foreign-domain delta never leaks stats cross-way.
 // P1 - registration is EAGER at module eval, same lifecycle as the
 // pre-P1 framework: the Kit -> SkillSystem edge that closed the
-// NodeSystem -> here -> Kit -> SkillSystem -> SpellPathRoutes ->
-// NodeSystem cycle is severed (the cast-leveling table lives in the
-// leaf core/skill/CastLeveling.ts), so the catalog is fully
+// NodeSystem -> here -> Kit -> SkillSystem -> NodeSystem cycle is
+// severed (the cast-leveling table lives in the leaf
+// core/skill/CastLeveling.ts), so the catalog is fully
 // initialized before this module body runs.
 for (const pathModule of Object.values(CULTIVATION_PATH_MODULES)) {
   for (const way of Object.values(pathModule.ways)) {
@@ -255,14 +254,6 @@ export function getActiveElement(player: PathConditionalRead): ElementType | und
     return undefined
   }
   return player.spellPath?.element ?? undefined
-}
-
-/** The committed route - spell_pathway only; undefined for any other way. */
-export function getActiveRoute(player: PathConditionalRead): SpellPathRoute | undefined {
-  if (!subpathAxisResolves(player, getActiveWayDefinition(player)?.subpaths?.route)) {
-    return undefined
-  }
-  return player.spellPath?.route ?? undefined
 }
 
 /** The persisted Kiem Pho preset - sword_pathway only (defensive copy). */

@@ -135,7 +135,6 @@ describe('progressionOps.respecNodeTree', () => {
     // Committed element: root held via selectSpellPathElement's atomic
     // grant semantics, two growth levels invested on top.
     player.spellPath.element = 'fire'
-    player.spellPath.route = 'dot'
     own(player, { [rootId]: 1, [growth.id]: 2 })
     player.skillInsight = 100
 
@@ -162,7 +161,6 @@ describe('progressionOps.respecNodeTree', () => {
     )!
 
     player.spellPath.element = 'fire'
-    player.spellPath.route = 'dot'
     own(player, { [rootId]: 1, [growth.id]: 2 })
     player.skillInsight = 100
 
@@ -195,7 +193,6 @@ describe('progressionOps.respecNodeTree', () => {
     const rootId = PHAP_TU_ELEMENT_ROOT_IDS.fire
 
     player.spellPath.element = 'fire'
-    player.spellPath.route = 'dot'
     own(player, { [rootId]: 1 })
     player.skillInsight = 100
 
@@ -218,7 +215,6 @@ describe('progressionOps.respecNodeTree', () => {
     // that is the canonical grant shape produced by
     // grantCultivationPathRealmReward.
     player.spellPath.element = 'fire'
-    player.spellPath.route = 'dot'
     player.nodeLevels[reward.id] = 2
     player.skillInsight = 100
 

@@ -42,6 +42,12 @@ export type ResolvedSkillCondition =
   // threshold already folded to a number at RESOLVE (a non-foldable
   // threshold is a structural fault at resolve time).
   | { kind: 'hp_percent_below'; targetId: CombatEntityId; threshold: number }
+  | {
+      kind: 'stacks_below'
+      targetId: CombatEntityId
+      definitionId: BuffDefinitionId
+      max: number
+    }
   // authored self-scope -> bound to sourceId.
   | {
       kind: 'resource_at_least'
@@ -448,6 +454,11 @@ export function evaluateResolvedCondition(
       )
     case 'hp_percent_below':
       return ctx.hpPercent(condition.targetId) < condition.threshold
+    case 'stacks_below':
+      return (
+        ctx.buffStacks(condition.definitionId, condition.targetId, undefined) <
+        condition.max
+      )
     case 'resource_at_least':
       return (
         ctx.resourceCurrent(condition.targetId, condition.resourceId) >=

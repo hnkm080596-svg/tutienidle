@@ -307,6 +307,13 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
       }
     }
 
+    // Spec D7/D11 -- per-hit penetration points ride the payload's
+    // folded bonus (authored elementalPenetration + penetrationFrom-
+    // Stacks late bindings resolve into this field pre-resolve).
+    if (op.elementalPenetrationBonus !== undefined) {
+      options.elementalPenetrationBonus = op.elementalPenetrationBonus
+    }
+
     return options
   }
 

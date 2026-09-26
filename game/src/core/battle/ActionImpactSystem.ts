@@ -100,6 +100,13 @@ export interface HitResolveOptions {
    * multiplied into the skill multiplier before crit.
    */
   damageMultiplier?: number
+
+  /**
+   * Phap Tu Reimagined (spec D7/D11) -- per-hit ADDITIVE elemental
+   * penetration points on top of the source's penetration stat. Only
+   * element-kind damage components consume it.
+   */
+  elementalPenetrationBonus?: number
 }
 
 export interface ScheduledBasicImpact {

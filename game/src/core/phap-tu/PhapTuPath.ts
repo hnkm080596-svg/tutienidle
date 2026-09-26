@@ -6,25 +6,25 @@ import type {
   PathWayStatFacet,
 } from '../player/CultivationPathKit'
 import type { StatModifier } from '../stats/StatCalculator'
-import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
-import { SPELL_KIT_IDS, SPELL_ROUTE_SKILL_IDS } from '../../data/skill/Skills'
+import { SPELL_KIT_IDS } from '../../data/skill/Skills'
 import { VAN_PHAP_THAN_HOA_ID } from '../../data/buff/ReactionStatusBuffs'
 import { composeRealmRewards } from '../../data/progression/RealmPassiveLadder'
-import { THE_THUC_TINH_NODE_ID, masteryGrantRecord } from '../../data/progression/PhapTuRealmRewardNodes'
+import { masteryGrantRecord } from '../../data/progression/PhapTuRealmRewardNodes'
 import { ARTIFACT_UNLOCK_REALM_ID } from '../artifact/ArtifactDomain'
 import { ELEMENT_ORDER } from '../element/ElementLabels'
+import { MAX_THE } from '../combat/CombatTypes'
 
 // Cultivation Path Framework (spec 2026-09-16, M4) — the Phap Tu path
 // module: the two way definitions + the path-domain machinery they own.
 //
 //   spell_pathway — ordinary Phap Tu (kit dai_ngu_hanh_chan_quyet): the
-//     element/route/The machinery. In-way state lives on
-//     player.spellPath { element, route } (SpellPathState stays the single
-//     authority — INV-13 atomic commit unchanged).
+//     element/The machinery. In-way state lives on
+//     player.spellPath { element } (SpellPathState stays the single
+//     authority — the atomic commit is unchanged).
 //   ngo_dao — Phap Tu An (kit ngo_dao_chan_quyet): hidden way offered
 //     only at the Initiation Ritual when linh_bao is cast-Lv3. Fixed
-//     three-skill kit (HIDDEN_SPELL_REQUIRED_SKILLS), NO element/route/
-//     The machinery.
+//     three-skill kit (HIDDEN_SPELL_REQUIRED_SKILLS), NO element/The
+//     machinery (spec: hidden basics never gain The).
 //
 // Both ways own the same 'spell' stat domain: the attunement -> MP
 // emission is identical for spell_pathway and ngo_dao, so they share one
@@ -34,7 +34,7 @@ import { ELEMENT_ORDER } from '../element/ElementLabels'
 // modules (RealmPassiveLadder, ArtifactDomain, data catalogs) plus types.
 // CultivationPathKit (catalog) and CultivationPathSystem (authority)
 // import FROM here; nothing here imports back, so domain code
-// (NodeSystem/PhapTuRoutes) can consume the way predicates without a
+// (NodeSystem) can consume the way predicates without a
 // runtime cycle.
 
 // D12 (stat-system-reimagined spec section 5): Linh Can (attunement)
@@ -106,7 +106,7 @@ export interface SpellPathWayRead {
 }
 
 /**
- * spell_pathway membership — the gate for ALL element/route/The machinery
+ * spell_pathway membership — the gate for ALL element/The machinery
  * (the R6 audit target: a bare `cultivationPath === 'spell'` check
  * would leak element machinery to hidden_spell_pathway players once the M7 collapse
  * folds phap_tu_an into the base path id).
@@ -119,6 +119,18 @@ export interface SpellPathWayRead {
  */
 export function isSpellPathway(player: SpellPathWayRead | null | undefined): boolean {
   return player?.cultivationPath === 'spell' && player?.cultivationWay === 'spell_pathway'
+}
+
+// Phap Tu Reimagined (spec D1) -- the spell_pathway The cap is a flat
+// 5: Phap The is a per-cast rider at threshold, never a bankable pool.
+// The legacy +cap-per-node machinery (truong_the, MAX_THE + bonus) is
+// retired; every other path keeps the shared MAX_THE default.
+export const SPELL_PATH_MAX_THE = 5
+
+/** Battle-scoped The-cap authority (reads onto entity.maxThe at
+    participant build via CombatBuild -> runtime.resolveMaxThe). */
+export function resolveMaxThe(player: SpellPathWayRead | null | undefined): number {
+  return isSpellPathway(player) ? SPELL_PATH_MAX_THE : MAX_THE
 }
 
 /**
@@ -137,8 +149,8 @@ export function isHiddenSpellPathway(player: SpellPathWayRead | null | undefined
 // iterates this hook generically for EVERY save; the module owns ALL
 // rules for player.spellPath: required + shaped on every save (mortal and
 // other-path saves included - a missing/garbage object crashes
-// selectSpellPathElement/resolveRouteProfile reads downstream), and the
-// element/route pair is spell_pathway-owned only. The payload is untrusted -
+// selectSpellPathElement reads downstream), and the element field is
+// spell_pathway-owned only. The payload is untrusted -
 // narrow with guards, never cast; the module reads the raw pair fields
 // itself for the ownership gate.
 // ---------------------------------------------------------------------------
@@ -168,37 +180,26 @@ export function validateSpellPathPersistedState(
     emit({ path: 'player.spellPath.element', message: 'phải là ElementType hoặc null' })
   }
 
-  if (
-    spellPath.route !== null &&
-    spellPath.route !== 'dot' &&
-    spellPath.route !== 'no'
-  ) {
-    emit({ path: 'player.spellPath.route', message: "phải là 'dot' | 'no' | null" })
+  // Phap Tu Reimagined -- the route axis is retired: a persisted
+  // `route` key belongs to the legacy {element, route} shape and is
+  // never valid on a current save (the version gate already rejects
+  // old saves; this is the defensive backstop).
+  if ('route' in spellPath) {
+    emit({ path: 'player.spellPath', message: 'không còn tồn tại' })
   }
 
-  // Atomic-pair invariant: writers commit {element, route} together
-  // (selectSpellPathElement), so a half-set pair is always corrupt - and
-  // only the spell_pathway way owns the state at all (ngo_dao, sword,
-  // mortal must stay {null, null} or route stats leak cross-path).
-  const hasElement = spellPath.element !== null
-  const hasRoute = spellPath.route !== null
-  if (hasElement !== hasRoute) {
-    emit({
-      path: 'player.spellPath',
-      message: 'element và route phải cùng null hoặc cùng đã chọn (commit nguyên tử)',
-    })
-  } else if (
-    hasElement &&
+  // Element ownership is spell_pathway-only - a ('spell','hidden_spell_pathway')
+  // pair, a way-less pair, and every foreign pair reject ownership.
+  if (
+    spellPath.element !== null &&
     !(
       playerPayload.cultivationPath === 'spell' &&
       playerPayload.cultivationWay === 'spell_pathway'
     )
   ) {
-    // Element/route ownership is spell_pathway-only - a ('spell','hidden_spell_pathway')
-    // pair, a way-less pair, and every foreign pair reject ownership.
     emit({
       path: 'player.spellPath',
-      message: "element/route chỉ thuộc way 'spell_pathway' của path 'spell'",
+      message: "element chỉ thuộc way 'spell_pathway' của path 'spell'",
     })
   }
 }
@@ -236,14 +237,9 @@ export const SPELL_PATHWAY: PathWayDefinition = {
       flat: 2,
       domain: 'spell',
     },
-    {
-      id: 'phap_tu_ho_the',
-      sourceId: 'spell',
-      sourceType: 'realm',
-      stat: 'manaShieldPercent',
-      flat: 0.25,
-      domain: 'spell',
-    },
+    // Phap Tu Reimagined spec D9 -- the path-level manaShieldPercent
+    // grant ('phap_tu_ho_the' 0.25 LQ leak) is retired: Ho The is the
+    // TC-unlocked linhLucHoTheCap DR ratio, not a static shield.
   ],
   stats: SPELL_WAY_STATS,
   // P7-M2 - canonical realm-entry passive ladder composed with the
@@ -261,57 +257,37 @@ export const SPELL_PATHWAY: PathWayDefinition = {
     },
     // Three-path design (2026-09-25, sec.4-b + ruling #19) — Truc Co
     // breakthrough: mastery per element (the element gate activates only
-    // the committed element's grant) + the The pool deepening (+1/cast,
-    // +10 cap; spend stays Kim Dan-gated). Hidden way gets the same kinds
-    // at level 2.
+    // the committed element's grant). Phap Tu Reimagined: the legacy
+    // the_thuc_tinh The-pool-deepening grant is retired (spec D1 cap
+    // is a flat 5 via resolveMaxThe, no node grants it).
+    // Hidden way gets the same kinds at level 2.
     foundation_establishment: {
       grantedNodeLevels: {
         ...masteryGrantRecord(1),
-        [THE_THUC_TINH_NODE_ID]: 1,
       },
     },
   }),
-  // P1 - spell_pathway owns the element/route machinery (elemental_casting:
-  // element commit, route switch, route profiles, MP pills, the element
-  // node-tree tabs) and the The resource pool. empowered_ult is
-  // conditional on owning the linh_ngo_<element> node of the COMMITTED
-  // element - node ownership stays in player.nodeLevels (NodeSystem);
-  // the predicate only reads it.
+  // P1 - spell_pathway owns the element machinery (elemental_casting:
+  // element commit, MP pills, the element node-tree tabs) and the The
+  // resource pool.
   capabilities: {
     static: ['spell.elemental_casting', 'spell.essence_pool'],
-    conditional: {
-      'spell.empowered_ult': (player) => {
-        const element = player.spellPath?.element
-        return (
-          element !== null &&
-          element !== undefined &&
-          (player.nodeLevels?.[`linh_ngo_${PHAP_TU_ULTIMATE_IDS[element]}`] ?? 0) > 0
-        )
-      },
-    },
   },
-  // P1-M3 - the element/route axes live on player.spellPath (the slice owns
+  // P1-M3 - the element axis lives on player.spellPath (the slice owns
   // the state; selectSpellPathElement is the atomic commit). Data-only
-  // declarations - the reads live in CultivationPathSystem and null-guard
+  // declaration - the reads live in CultivationPathSystem and null-guard
   // the slice for presentation contracts that omit it.
   subpaths: {
     element: {
       requiresCapability: 'spell.elemental_casting',
       state: 'player.spellPath.element',
     },
-    route: {
-      requiresCapability: 'spell.elemental_casting',
-      state: 'player.spellPath.route',
-    },
   },
-  // P1-M2 - every element kit tuple plus the route skills is
-  // spell_pathway-exclusive content (ngo_dao never touches element
-  // machinery). The empowered god-ult defs are node-granted variants
-  // owned by the linh_ngo nodes, not the way's base kit.
+  // P1-M2 - every element kit tuple is spell_pathway-exclusive content
+  // (ngo_dao never touches element machinery).
   ownedContent: {
     skillIds: [
       ...Object.values(SPELL_KIT_IDS).flat(),
-      ...Object.values(SPELL_ROUTE_SKILL_IDS).flat(),
     ],
   },
 }

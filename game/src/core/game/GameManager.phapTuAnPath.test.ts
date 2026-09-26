@@ -19,7 +19,7 @@ import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 // Phap Tu Reimagined (Task 7) + Cultivation Path Framework M7 — the
 // hidden Phap Tu variant is the 'hidden_spell_pathway' WAY under path 'spell',
 // offered ONLY inside the initiation ritual, gated by live linh_bao
-// cast count (>= lv3 threshold). No element, route, or The pool. The
+// cast count (>= lv3 threshold). No element or The pool. The
 // persisted record is the (cultivationPath, cultivationWay) pair.
 
 const ngoDaoOffer = (player: Parameters<typeof listOfferableWays>[0]) =>
@@ -38,7 +38,7 @@ function makeManager() {
   gameManager.catalogOps.registerProgressionNodes(PHAP_TU_AN_NODES)
   gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   // sword ritual grants the kiem_tran_luong_nghi node on the kiem_tran
-  // route — the round-4 transaction boundary requires it registered.
+  // boundary requires it registered.
   gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
   gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
   const player = createDefaultPlayer()
@@ -89,8 +89,8 @@ describe('ngo_dao way — ritual offer gate', () => {
     expect(player.cultivationPath).toBe('spell')
     expect(player.cultivationWay).toBe('hidden_spell_pathway')
 
-    // No element/route/The authority — an has none.
-    expect(player.spellPath).toEqual({ element: null, route: null })
+    // No element/The authority — an has none.
+    expect(player.spellPath).toEqual({ element: null })
 
     // P7-M4 - learn-only: kit actives enter membership; combat resolves
     // them through the way kit, not slot state.
@@ -215,7 +215,7 @@ describe('phap_tu_an — battle build resolves the canonical element pool', () =
     return { gameManager, player, combatSource }
   }
 
-  function spawnDummy(gameManager: GameManager) {
+  function spawnDummy() {
     const enemy = defineEnemy({
       id: 'an_dummy',
       name: 'An Dummy',
@@ -239,7 +239,7 @@ describe('phap_tu_an — battle build resolves the canonical element pool', () =
   it('basic composite pool = authored basics through the canonical converter (wood deals NO direct damage)', () => {
     const { gameManager, player } = anPlayerReady()
 
-    gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))
+    gameManager.startBattleWithPlayer(player, spawnDummy())
 
     const pool = gameManager.getTurnBattle()!.players[0]!.basic!.compositePicks!.pool
 
@@ -268,7 +268,7 @@ describe('phap_tu_an — battle build resolves the canonical element pool', () =
   it('special composite pool uses the same canonical basics (repeatCasts preserved)', () => {
     const { gameManager, player } = anPlayerReady()
 
-    gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))
+    gameManager.startBattleWithPlayer(player, spawnDummy())
 
     const special = gameManager.getTurnBattle()!.players[0]!.special!.skill
     expect(special.id).toBe('da_phap_lien_tuyen')
@@ -279,7 +279,7 @@ describe('phap_tu_an — battle build resolves the canonical element pool', () =
   it('a real An battle progresses past startup and lands the picked payloads', () => {
     const { gameManager, player, combatSource } = anPlayerReady()
 
-    gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))
+    gameManager.startBattleWithPlayer(player, spawnDummy())
 
     // intro + countdown to fighting, then let turns resolve.
     for (let i = 0; i < INTRO_TOTAL_TICKS + 30 + 300; i++) {
@@ -304,7 +304,7 @@ describe('phap_tu_an — battle build resolves the canonical element pool', () =
     // composite-resolution chain was never exercised headlessly.
     const { gameManager, player, combatSource } = anPlayerReady()
 
-    gameManager.catalogOps.registerEnemyTemplates([spawnDummy(gameManager)])
+    gameManager.catalogOps.registerEnemyTemplates([spawnDummy()])
     gameManager.catalogOps.registerStages([
       {
         id: 'an_stage',
@@ -348,11 +348,11 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     gameManager.setActivePlayer(player)
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
-    player.spellPath = { element: 'fire', route: 'dot' }
+    player.spellPath = { element: 'fire' }
     return { gameManager, player }
   }
 
-  function spawnDummy(gameManager: GameManager) {
+  function spawnDummy() {
     return defineEnemy({
       id: 'fallback_probe',
       name: 'Fallback Probe',
@@ -374,7 +374,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     gameManager.catalogOps.registerSkillTemplates([{ ...authored, effects: [] }])
     expect(gameManager.progressionOps.learnSkill('hoa_cau_thuat', player)).toBe(true)
 
-    expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
+    expect(() => gameManager.startBattleWithPlayer(player, spawnDummy())).toThrow()
   })
 
   it('phap_tu_an: a corrupted kit skill throws instead of degrading to generic melee', () => {
@@ -388,7 +388,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     gameManager.catalogOps.registerSkillTemplates([{ ...authored, effects: [] }])
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'hidden_spell_pathway', player)).toBe(true)
 
-    expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
+    expect(() => gameManager.startBattleWithPlayer(player, spawnDummy())).toThrow()
   })
 
   it('spell: committed element but basic NOT learned → throws instead of generic melee', () => {
@@ -398,7 +398,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     // was granted (selectSpellPathElement); absent = corrupt state.
     const { gameManager, player } = spellPathPlayerReady()
 
-    expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
+    expect(() => gameManager.startBattleWithPlayer(player, spawnDummy())).toThrow()
   })
 
   it('phap_tu_an: missing van_phap_tuy_tam → throws instead of generic melee', () => {
@@ -408,7 +408,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     player.cultivationPath = 'spell'
     player.cultivationWay = 'hidden_spell_pathway'
 
-    expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
+    expect(() => gameManager.startBattleWithPlayer(player, spawnDummy())).toThrow()
   })
 
   it('phap_tu_an: missing da_phap_lien_tuyen → throws instead of silently dropping the special', () => {
@@ -421,7 +421,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     expect(gameManager.progressionOps.learnSkill('van_phap_tuy_tam', player)).toBe(true)
     expect(gameManager.progressionOps.learnSkill('ngo_dao_hon_don', player)).toBe(true)
 
-    expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
+    expect(() => gameManager.startBattleWithPlayer(player, spawnDummy())).toThrow()
   })
 
   it('phap_tu_an: missing ngo_dao_hon_don → throws instead of silently dropping the dao multicast', () => {
@@ -432,7 +432,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     expect(gameManager.progressionOps.learnSkill('van_phap_tuy_tam', player)).toBe(true)
     expect(gameManager.progressionOps.learnSkill('da_phap_lien_tuyen', player)).toBe(true)
 
-    expect(() => gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))).toThrow()
+    expect(() => gameManager.startBattleWithPlayer(player, spawnDummy())).toThrow()
   })
 
   it('sword: missing tram still resolves its authored static basic (legitimate fallback)', () => {
@@ -440,7 +440,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     gameManager.setActivePlayer(player)
     player.cultivationPath = 'sword'
 
-    gameManager.startBattleWithPlayer(player, spawnDummy(gameManager))
+    gameManager.startBattleWithPlayer(player, spawnDummy())
 
     expect(gameManager.getTurnBattle()!.players[0]!.basic?.id).toBe('tram')
   })

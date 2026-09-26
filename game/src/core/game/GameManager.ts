@@ -143,19 +143,10 @@ import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 
 import { resolvePlayerFinalStats, type PlayerData } from '../player/Player'
 
-import { SPELL_KIT_IDS, SPELL_ROUTE_SKILL_IDS } from '../../data/skill/Skills'
-import {
-  NEUTRAL_ROUTE_PROFILE,
-  resolveRouteProfile,
-  type RouteProfile,
-} from '../phap-tu/PhapTuRoutes'
 import { resolveCultivationPathRuntime } from '../player/CultivationPathRegistry'
 import type { CultivationPathRuntime, CultivationPathRuntimeDeps } from '../player/CultivationPathRuntime'
 import {
-  getActiveElement,
-  getActiveRoute,
   hasPathCapability,
-  hasStaticPathCapability,
   resolvePathCapabilities,
 } from '../player/CultivationPathSystem'
 import { resolveCombatBuild } from './CombatBuild'
@@ -561,40 +552,6 @@ export class GameManager {
       this.activePlayer.techniqueProgress = progress ?? undefined
     })
 
-    // Phap Tu Reimagined Task 3 - ONE scoping closure for both route
-    // seams: the provider feeds getEffectiveSkill's effective-surface
-    // application AND the post-conversion applyRouteToTurnSkill call at
-    // the orchestration sites below. Neutral unless the active player
-    // is normal spell with an element and the skill is a kit member.
-    this.routeProfileProvider = (skillId) => {
-      const player = this.activePlayer
-
-      // P1 - the gate is the declared capability, not the way predicate.
-      if (player === undefined || !hasStaticPathCapability(player, 'spell.elemental_casting')) {
-        return NEUTRAL_ROUTE_PROFILE
-      }
-
-      const element = getActiveElement(player)
-
-      if (
-        !element ||
-        (!SPELL_KIT_IDS[element].includes(skillId) &&
-          !SPELL_ROUTE_SKILL_IDS[element].includes(skillId))
-      ) {
-        return NEUTRAL_ROUTE_PROFILE
-      }
-
-      const route = getActiveRoute(player)
-
-      if (!route) {
-        return NEUTRAL_ROUTE_PROFILE
-      }
-
-      return resolveRouteProfile({ element, route })
-    }
-
-    this.skillSystem.setRouteProfileProvider(this.routeProfileProvider)
-
     // Hidden beast (spec dot-pha-loi-kiep sec.4.1c) resolves its
     // template through the shared registry (registerEnemyTemplates
     // already registered Huyet Mieu via ENEMIES).
@@ -639,7 +596,6 @@ export class GameManager {
       nodeRegistry: this.nodeRegistry,
       getNodeLevel: (nodeId, p) => this.progressionOps.getNodeLevel(nodeId, p),
       getSpellPathElement: () => this.progressionOps.getSpellPathElement(),
-      routeProfileProvider: this.routeProfileProvider,
     }
     this.pathRuntimeResolver = (player) =>
       (this.pathRuntimeResolverOverride ??
@@ -982,10 +938,6 @@ export class GameManager {
   readonly zoneRegistry = new ZoneRegistry()
 
   private activePlayer?: PlayerData
-
-  /** Phap Tu Reimagined Task 3 - kit-scoped route profile lookup shared
-   * by the SkillSystem provider and the post-conversion seam below. */
-  private routeProfileProvider!: (skillId: string) => RouteProfile
 
   // P1 - stable dep binding for the path-capability facade: learned-skill
   // membership lives in SkillManager, not PlayerData, so conditional

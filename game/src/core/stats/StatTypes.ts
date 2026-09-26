@@ -46,6 +46,12 @@ export type StatType =
   // dùng THẲNG currentMp đang có (đánh đổi tài nguyên cast skill lấy
   // sinh tồn — đúng tinh thần "linh lực giảm sát thương").
   | 'manaShieldPercent'
+  // Phap Tu Reimagined (spec D9) — Linh Luc Ho The: DR CAP on hostile
+  // direct hits, scaled by the LIVE LL ratio (currentMp / maxMp) at hit
+  // resolution — LL = 0 => DR = 0; costs no extra LL. Only the
+  // hit-resolving lane (resolveAttack) reads it: DoT / reaction / flat
+  // profiles bypass by construction (F11).
+  | 'linhLucHoTheCap'
   | 'leechPercent'
   // The Tu Reimagined (spec 2026-09-15 T12) — generic thorns stat retired;
   // reflection is a body mechanic (phan_chinh), not a stat.

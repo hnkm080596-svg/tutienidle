@@ -13,15 +13,12 @@ import {
   getEffectiveNodeMaxLevel as getEffectiveNodeMaxLevelSystem,
   ownedNodeIds,
   purchaseNode as purchaseNodeSystem,
-  previewRouteSwitch as previewRouteSwitchSystem,
   respecNodeTree as respecNodeTreeSystem,
   revokeNodeOwnership,
   specializationClaimingNodes,
-  switchRoute as switchRouteSystem,
   upgradeNode as upgradeNodeSystem,
   grantSkillCore,
   type NodeRespecPreview,
-  type RouteSwitchPreview,
 } from '../progression/NodeSystem'
 import { getSkillCoreLevel, skillCoreNodeId } from '../progression/SkillCoreLevel'
 import { CAST_LEVELING_THRESHOLDS } from '../skill/CastLeveling'
@@ -49,8 +46,7 @@ import { TALENT_PASSIVE_SKILLS } from '../../data/skill/TalentPassives'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 import { getActiveElement, hasStaticPathCapability } from '../player/CultivationPathSystem'
-import type { SpellPathRoute } from '../phap-tu/PhapTuState'
-import { commitSpellPathElementRoute } from '../phap-tu/PhapTuState'
+import { commitSpellPathElement } from '../phap-tu/PhapTuState'
 import { getEffectiveMainStatCap } from '../stats/StatCap'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { TemplateRegistry } from './TemplateRegistry'
@@ -82,8 +78,8 @@ export class GameManagerProgressionOps {
       skillSystem: SkillSystem
       skillManager: SkillManager
       getActivePlayer: () => PlayerData | undefined
-      // Phap Tu Reimagined Task 4 - combat-state read for switchRoute's
-      // out-of-combat gate (route is static during battle). Owned by the
+      // Combat-state read for the node-tree ops' out-of-combat gate
+      // (respec/devReset refuse mid-battle). Owned by the
       // battle owner: a retained terminal TurnBattle does NOT count as
       // in-progress, so the gate is a state query, not object existence.
       isTurnBattleInProgress: () => boolean
@@ -270,9 +266,8 @@ export class GameManagerProgressionOps {
     }
 
     // Phap Tu Reimagined (Task 6) - element roots commit through the
-    // atomic selectSpellPathElement() only; public purchase of a root would
-    // split the element+route invariant (element != null implies route
-    // != null).
+    // atomic selectSpellPathElement() only; public purchase of a root
+    // would bypass the commit's learnable-skill preflight.
     if (
       (Object.values(PHAP_TU_ELEMENT_ROOT_IDS) as string[]).includes(nodeId)
     ) {
@@ -371,7 +366,7 @@ export class GameManagerProgressionOps {
 
   /**
    * F-W-2 - thu hoi dung cac one-shot grant ma node bi revoke da phat,
-   * chay SAU commit cua respec/devReset/switchRoute (revokedOut da phan
+   * chay SAU commit cua respec/devReset (revokedOut da phan
    * anh dung set node bi go). Pure field mutation, KHONG throw - dry-run
    * cua respecApply da validate atomicity cua node-set roi.
    *
@@ -484,14 +479,15 @@ export class GameManagerProgressionOps {
 
   /**
    * Phap Tu Reimagined (Task 6) - the ONLY public writer of
-   * player.spellPath.element. Atomic: validates eligibility + route +
+   * player.spellPath.element. Atomic: validates eligibility +
    * root purchasability FIRST, then purchases the element root through
    * the generic NodeSystem primitive, applies unlock effects, and
-   * finally commits { element, route }. Any failure leaves spellPath
-   * untouched - element != null implies route != null always.
+   * finally commits { element }. Any failure leaves spellPath
+   * untouched. (Reimagined spec: the route half of the old atomic
+   * (element, route) commitment is retired - element alone commits.)
    */
-  selectSpellPathElement(element: ElementType, route: SpellPathRoute, player: PlayerData): boolean {
-    // Cultivation Path Framework (M4, R6): element/route machinery is
+  selectSpellPathElement(element: ElementType, player: PlayerData): boolean {
+    // Cultivation Path Framework (M4, R6): element machinery is
     // spell_pathway-only - P1 - the declared 'spell.elemental_casting'
     // capability is the gate, so the post-M7 collapsed ('spell',
     // 'hidden_spell_pathway') shape cannot commit an element. The requiredWay stamp
@@ -500,11 +496,7 @@ export class GameManagerProgressionOps {
       return false
     }
 
-    if (player.spellPath.element !== null || player.spellPath.route !== null) {
-      return false
-    }
-
-    if (route !== 'dot' && route !== 'no') {
+    if (player.spellPath.element !== null) {
       return false
     }
 
@@ -522,7 +514,7 @@ export class GameManagerProgressionOps {
 
     // Transaction boundary (review round-4, atomicity hardening): every
     // skill the root unlocks must be learnable BEFORE the purchase
-    // spends insight + commits { element, route } - a missing template
+    // spends insight + commits { element } - a missing template
     // would leave the element committed without its basic. M-QI-05 -
     // the same boundary now covers levelled-skill cores and
     // grantsSkillCoreIds members.
@@ -550,7 +542,7 @@ export class GameManagerProgressionOps {
       grantSkillCore(player, this.deps.nodeRegistry.get(skillCoreNodeId(skillId)))
     }
 
-    commitSpellPathElementRoute(player, element, route)
+    commitSpellPathElement(player, element)
 
     return true
   }
@@ -615,7 +607,7 @@ export class GameManagerProgressionOps {
    * update via the aggregators (no reverse subtraction of old modifiers).
    */
   devResetBranch(branchTag: string, player: PlayerData): number | null {
-    // Same out-of-combat contract as respecNodeTree/switchRoute: node
+    // Same out-of-combat contract as respecNodeTree: node
     // investment is static during battle, so a mid-battle reset is
     // refused even though this op is dev-console only today.
     if (this.deps.isTurnBattleInProgress()) {
@@ -658,24 +650,6 @@ export class GameManagerProgressionOps {
       resetCount: resetNodeIds.length,
       clawback,
     }
-  }
-
-  /**
-   * Route-switch counterpart of previewNodeRespec: the domain preview
-   * reports refund/forfeited/reset counts; this wrapper dry-runs the
-   * same one-shot-grant clawback legs switchRoute applies, so the
-   * "you regain X, lose Y" dialog shows every loss leg.
-   */
-  previewRouteSwitch(player: PlayerData): RouteSwitchPreview {
-    const preview = previewRouteSwitchSystem(player, this.deps.nodeRegistry)
-
-    const sim = JSON.parse(JSON.stringify(player)) as PlayerData
-    const revoked = new Set<string>()
-    const route = sim.spellPath.route === 'dot' ? 'no' : 'dot'
-
-    switchRouteSystem(sim, this.deps.nodeRegistry, route, revoked)
-
-    return { ...preview, clawback: this.dryRunOneShotClawback(sim, revoked) }
   }
 
   /**
@@ -815,7 +789,7 @@ export class GameManagerProgressionOps {
   /**
    * M-F-RESPEC (ruling S14) - player-facing FREE Beta respec: revoke
    * node investment and refund 100% of actually-paid Insight. Out of
-   * combat ONLY (same guard as switchRoute). scope.rootId scopes the
+   * combat ONLY (same guard as devResetBranch). scope.rootId scopes the
    * reset to that subtree root; omitted = the whole NodeTree. Returns
    * the refunded Insight, or null when rejected in battle.
    */
@@ -831,40 +805,6 @@ export class GameManagerProgressionOps {
     }, revoked)
 
     return refund + this.applyOneShotClawback(player, revoked)
-  }
-
-  /**
-   * Phap Tu Reimagined Task 4 - switch the route commitment. Out of
-   * combat ONLY: a route is static during battle (INV-16), so this
-   * rejects while a turn battle is active. The domain function owns
-   * the 75% refund + route-tagged level cleanup.
-   */
-  switchRoute(route: 'dot' | 'no', player: PlayerData): boolean {
-    if (this.deps.isTurnBattleInProgress()) {
-      return false
-    }
-
-    // Review fix (HIGH-2): switching requires the atomic
-    // (element, route) commit on the normal spell path - otherwise
-    // there is no committed route to switch FROM. The domain function
-    // enforces the same invariant; the op must not report success for
-    // a rejected write.
-    if (
-      !hasStaticPathCapability(player, 'spell.elemental_casting') ||
-      player.spellPath.element === null ||
-      player.spellPath.route === null ||
-      // Same-route no-op: the domain early-returns without a write, and
-      // previewRouteSwitch rejects it - the op must not report success.
-      player.spellPath.route === route
-    ) {
-      return false
-    }
-
-    const revoked = new Set<string>()
-    switchRouteSystem(player, this.deps.nodeRegistry, route, revoked)
-    this.applyOneShotClawback(player, revoked)
-
-    return true
   }
 
   /**

@@ -17,7 +17,6 @@ import type { TurnSkillDefinition, TurnSkillSlot, SelectedAction, DynamicBasicPr
 import type { ActionDamageInfo, HitResolveOptions } from '../ActionImpactSystem'
 import type { BuffSystem } from '../../buff2/BuffSystem'
 import type { BuffRegistry } from '../../buff2/BuffRegistry'
-import type { BuffInstanceSnapshot } from '../../buff2/BuffInstance'
 import type { BuffLifecycleContext } from '../../buff2/BuffLifecycleContext'
 import type { CombatProcSystem } from '../../proc/CombatProcSystem'
 import type { GaugeDeltaHandler } from './GaugeDeltaHandler'
@@ -2010,7 +2009,6 @@ export class TurnBattleSystem {
         )
       } else {
         const chargedSkill = declared.chargedSkill
-        let chargedCrit = false
 
         if (chargedSkill && chargedSkill.damage) {
           const opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
@@ -2048,10 +2046,6 @@ export class TurnBattleSystem {
             if (!hitResult.dodged) {
               targetIds.push(target)
               landedTargets.push(targetParticipant)
-
-              if (hitResult.critical) {
-                chargedCrit = true
-              }
             }
           }
         }
@@ -2060,14 +2054,14 @@ export class TurnBattleSystem {
         // this branch's early return, so a charged completion fires it
         // HERE, exactly once. Task 8 -- the gain is the SKILL's authored
         // field, not slot inference: the charged def carries
-        // theGainOnLandedCast/theGainOnCrit itself. Ordering parity with
+        // theGainOnLandedCast itself. Ordering parity with
         // the normal path is preserved: the cast resource/cooldown was
         // already committed at charge-init, so the gain lands on the
         // post-consume pool -- Bat Kiem Thuat accrues currentThe at hit
         // completion and Tru Tien Kiem Tran stays reachable. Gated on
         // LANDED targets like the normal path's targetIds requirement.
         if (chargedSkill && targetIds.length > 0) {
-          this.grantTheFromCast(actor, chargedSkill, chargedCrit)
+          this.grantTheFromCast(actor, chargedSkill)
         }
 
         this.resolveAllyActionWindow(battle, actor, declared, landedTargets)
@@ -2125,11 +2119,6 @@ export class TurnBattleSystem {
       // empowered/composite payloads in Tasks 10-13). Identity reads
       // (cooldown, cast sink, charge state) stay on the ROOT action.
       const payloadSkill = declared.execution?.resolvedSkill ?? action.skill
-
-      // Task 8 -- theGainOnCrit fires once per CAST when any direct hit
-      // crits (INV-15): collect the flag across the hit loops, grant
-      // once below -- never per target.
-      let castCritLanded = false
 
       // R5 (AR-14) -- Emit authoritative gameplay 'attack' event on action commit,
       // ensuring passive listeners receive events identically in headless and presentation modes.
@@ -2198,10 +2187,6 @@ export class TurnBattleSystem {
             if (!hitResult.dodged) {
               targetIds.push(target.id)
               landedTargets.push(target)
-
-              if (hitResult.critical) {
-                castCritLanded = true
-              }
             }
           }
         }
@@ -2235,10 +2220,6 @@ export class TurnBattleSystem {
 
             if (!hitResult.dodged) {
               targetLanded = true
-
-              if (hitResult.critical) {
-                castCritLanded = true
-              }
             }
           }
 
@@ -2281,8 +2262,8 @@ export class TurnBattleSystem {
             this.commitCast(actor, declared)
           }
 
-          // Task 8 -- The gain is skill-authored (theGainOnLandedCast /
-          // theGainOnCrit), once per cast that landed >=1 valid target --
+          // Task 8 -- The gain is skill-authored (theGainOnLandedCast),
+          // once per cast that landed >=1 valid target --
           // slot position is no longer a gain rule and target/hit count
           // never multiplies it (INV-15). A self-scoped cast always lands
           // on the caster (its targetIds entry is pushed by the buff
@@ -2293,7 +2274,7 @@ export class TurnBattleSystem {
           // ordering. Deliberately NOT inside the registry gate: The gain
           // is engine-native resource accrual, not buff-registry content.
           if (payloadSkill && (targetIds.length > 0 || payloadSkill.targetScope === 'self')) {
-            this.grantTheFromCast(actor, payloadSkill, castCritLanded)
+            this.grantTheFromCast(actor, payloadSkill)
           }
 
           for (const buffSpec of payloadSkill?.appliesBuffs ??
@@ -2874,24 +2855,20 @@ export class TurnBattleSystem {
   /**
    * Phap Tu Reimagined Task 8 -- the single The-gain hook. Values are
    * authored on the resolving TurnSkillDefinition: theGainOnLandedCast
-   * applies once per landed cast; theGainOnCrit once more when any
-   * direct hit of the cast crited. The cap reads the battle-snapshotted
-   * entity.maxThe (Truong The nodes, 'no' route) with MAX_THE as the
-   * default -- never a hard-coded constant.
+   * applies once per landed cast (the spec-D1 +1/cast basic-primary
+   * income). The crit channel (theGainOnCrit) is retired -- The income
+   * is cast-landed only. The cap reads the battle-snapshotted
+   * entity.maxThe with MAX_THE as the default -- never a hard-coded
+   * constant.
    */
   private grantTheFromCast(
     actor: TurnBattleParticipant,
     skill: TurnSkillDefinition,
-    castCritLanded: boolean,
   ): void {
     const cap = actor.entity.maxThe ?? MAX_THE
 
     if (skill.theGainOnLandedCast) {
       actor.entity.currentThe = Math.min(cap, (actor.entity.currentThe ?? 0) + skill.theGainOnLandedCast)
-    }
-
-    if (castCritLanded && skill.theGainOnCrit) {
-      actor.entity.currentThe = Math.min(cap, (actor.entity.currentThe ?? 0) + skill.theGainOnCrit)
     }
   }
 

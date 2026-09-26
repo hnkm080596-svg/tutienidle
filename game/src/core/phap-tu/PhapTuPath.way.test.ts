@@ -2,39 +2,30 @@ import { describe, expect, it } from 'vitest'
 import { MAX_THE } from '../combat/CombatTypes'
 import { GameManager } from '../game/GameManager'
 import { createDefaultPlayer, resolvePlayerFinalStats, type PlayerData } from '../player/Player'
-import {
-  collectActiveWayStatModifiers,
-  hasPathCapability,
-} from '../player/CultivationPathSystem'
-import type { PathCapability } from '../player/CultivationPathKit'
+import { collectActiveWayStatModifiers } from '../player/CultivationPathSystem'
 import {
   aggregateNodeStatModifiers,
   canPurchaseNode,
-  previewRouteSwitch,
   purchaseNode,
-  switchRoute,
 } from '../progression/NodeSystem'
-import type { ProgressionNode } from '../progression/ProgressionNode'
-import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
-import { makeTheBarReader, type TheBarPlayerState } from '@/presentation/bridges/theBarBridge'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
-import { TRUONG_THE_CAP_PER_LEVEL } from '../../data/progression/PhapTuNodes.builders'
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { defineEnemy } from '../enemy/Enemy'
 import {
   isHiddenSpellPathway,
   isSpellPathway,
+  resolveMaxThe,
+  SPELL_PATH_MAX_THE,
   HIDDEN_SPELL_BASIC_ID,
   HIDDEN_SPELL_PASSIVE_ID,
   HIDDEN_SPELL_SPECIAL_ID,
 } from './PhapTuPath'
-import { getRouteStatModifiers, resolveMaxThe } from './PhapTuRoutes'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // Cultivation Path Framework (M4+M7, spec 2026-09-16, audit R6) -- way
 // identity drives ALL way-specific behavior. Every spell_pathway-only
-// mechanism (element/route/The machinery) must gate on the WAY, never
+// mechanism (element/The machinery) must gate on the WAY, never
 // the bare 'spell' path id, so the ngo_dao way cannot reach them.
 // Post-M7 there is exactly one persisted shape: ('spell','hidden_spell_pathway').
 
@@ -55,10 +46,10 @@ function ngoDao(overrides: Partial<PlayerData> = {}): PlayerData {
 
 const NGO_DAO_SHAPES = { collapsed: ngoDao } as const
 
-/** Dirty ngo_dao state -- an element/route pair that could only leak in
+/** Dirty ngo_dao state -- an element commit that could only leak in
  * through corruption (ngo_dao owns no spellPath commitment). */
 function dirtyNgoDao(make: (overrides?: Partial<PlayerData>) => PlayerData): PlayerData {
-  return make({ spellPath: { element: 'fire', route: 'dot' } })
+  return make({ spellPath: { element: 'fire' } })
 }
 
 function spellPathManager() {
@@ -119,19 +110,19 @@ describe('way predicates — isSpellPathway / isHiddenSpellPathway', () => {
 })
 
 describe('selectSpellPathElement — spell_pathway way gate', () => {
-  it('commits element+route atomically for spell_pathway; rejects BOTH ngo_dao shapes with zero mutation', () => {
+  it('commits the element for spell_pathway; rejects the ngo_dao shape with zero mutation', () => {
     const gameManager = spellPathManager()
 
     const ngu = nguHanh()
-    expect(gameManager.progressionOps.selectSpellPathElement('fire', 'dot', ngu)).toBe(true)
-    expect(ngu.spellPath).toEqual({ element: 'fire', route: 'dot' })
+    expect(gameManager.progressionOps.selectSpellPathElement('fire', ngu)).toBe(true)
+    expect(ngu.spellPath).toEqual({ element: 'fire' })
     expect(ngu.nodeLevels['hoa_linh_ngo']).toBe(1)
 
     // The collapsed shape is the real R6 leak: a bare 'spell' path
     // check would let a ngo_dao player commit an element.
     for (const ngo of [ngoDao(), ngoDao()]) {
-      expect(gameManager.progressionOps.selectSpellPathElement('fire', 'dot', ngo)).toBe(false)
-      expect(ngo.spellPath).toEqual({ element: null, route: null })
+      expect(gameManager.progressionOps.selectSpellPathElement('fire', ngo)).toBe(false)
+      expect(ngo.spellPath).toEqual({ element: null })
       expect(ngo.nodeLevels['hoa_linh_ngo']).toBeUndefined()
     }
   })
@@ -139,7 +130,7 @@ describe('selectSpellPathElement — spell_pathway way gate', () => {
   it('getSpellPathElement surfaces the committed element for spell_pathway only', () => {
     const gameManager = spellPathManager()
 
-    const ngu = nguHanh({ spellPath: { element: 'water', route: 'no' } })
+    const ngu = nguHanh({ spellPath: { element: 'water' } })
     gameManager.setActivePlayer(ngu)
     expect(gameManager.progressionOps.getSpellPathElement()).toBe('water')
 
@@ -151,137 +142,34 @@ describe('selectSpellPathElement — spell_pathway way gate', () => {
   })
 })
 
-describe('switchRoute / previewRouteSwitch — spell_pathway way gate', () => {
-  const registry = {
-    nodes: [
-      { id: 'dot_spec_1', name: 'dot_spec_1', type: 'minor', insightCost: 2, routeTag: 'dot', effect: {} } as ProgressionNode,
-      { id: 'no_spec_1', name: 'no_spec_1', type: 'minor', insightCost: 2, routeTag: 'no', effect: {} } as ProgressionNode,
-    ],
-    getAll() {
-      return this.nodes
-    },
-  }
+describe('The cap — spell_pathway way gate', () => {
+  it('resolveMaxThe is a flat 5 for spell_pathway, MAX_THE elsewhere — ngo_dao owns no The pool', () => {
+    const committed = { element: 'fire' as const }
 
-  it('domain: spell_pathway switches and refunds; ngo_dao (both shapes) is rejected without mutation', () => {
-    const ngu = nguHanh({ spellPath: { element: 'fire', route: 'dot' }, skillInsight: 100 })
-    purchaseNode(ngu, registry.nodes[0]!)
-
-    const refund = switchRoute(ngu, registry, 'no')
-    expect(refund).toBeGreaterThan(0)
-    expect(ngu.spellPath.route).toBe('no')
+    expect(resolveMaxThe(nguHanh({ spellPath: committed }))).toBe(SPELL_PATH_MAX_THE)
+    expect(SPELL_PATH_MAX_THE).toBe(5)
 
     for (const make of Object.values(NGO_DAO_SHAPES)) {
-      const ngo = dirtyNgoDao(make)
-      ngo.nodeLevels = { dot_spec_1: 1 }
-      const insightBefore = ngo.skillInsight
-
-      expect(switchRoute(ngo, registry, 'no')).toBe(0)
-      expect(ngo.spellPath.route).toBe('dot')
-      expect(ngo.nodeLevels['dot_spec_1']).toBe(1)
-      expect(ngo.skillInsight).toBe(insightBefore)
-      expect(previewRouteSwitch(ngo, registry)).toEqual({ refund: 0, forfeited: 0, resetNodeCount: 0 })
+      expect(resolveMaxThe(make({ spellPath: committed }))).toBe(MAX_THE)
     }
-  })
 
-  it('ops: progressionOps.switchRoute rejects ngo_dao even with committed-looking spellPath state', () => {
-    const gameManager = spellPathManager()
-
-    const ngu = nguHanh()
-    gameManager.setActivePlayer(ngu)
-    expect(gameManager.progressionOps.selectSpellPathElement('fire', 'dot', ngu)).toBe(true)
-    expect(gameManager.progressionOps.switchRoute('no', ngu)).toBe(true)
-    expect(ngu.spellPath.route).toBe('no')
-
-    for (const make of Object.values(NGO_DAO_SHAPES)) {
-      const ngo = dirtyNgoDao(make)
-      gameManager.setActivePlayer(ngo)
-      expect(gameManager.progressionOps.switchRoute('no', ngo)).toBe(false)
-      expect(ngo.spellPath).toEqual({ element: 'fire', route: 'dot' })
-    }
+    expect(resolveMaxThe(createDefaultPlayer())).toBe(MAX_THE)
   })
 })
 
-describe('route stats + The cap — spell_pathway way gate', () => {
-  it('getRouteStatModifiers emits for spell_pathway only — dirty ngo_dao state cannot inject universal stats', () => {
-    const ngu = nguHanh({ spellPath: { element: 'fire', route: 'dot' } })
-    expect(getRouteStatModifiers(ngu)).toHaveLength(2)
-
-    for (const ngo of [dirtyNgoDao(ngoDao), dirtyNgoDao(ngoDao)]) {
-      expect(getRouteStatModifiers(ngo)).toEqual([])
-    }
-  })
-
-  it('resolveMaxThe counts truong_the for spell_pathway only — ngo_dao owns no The pool', () => {
-    const registry = { getAll: () => PHAP_TU_NODES }
-    const committed = { element: 'fire' as const, route: 'no' as const }
-
-    const ngu = nguHanh({ spellPath: committed, nodeLevels: { truong_the_fire: 2 } })
-    expect(resolveMaxThe(registry, ngu)).toBe(MAX_THE + 2 * TRUONG_THE_CAP_PER_LEVEL)
-
-    for (const make of Object.values(NGO_DAO_SHAPES)) {
-      const ngo = make({ spellPath: committed, nodeLevels: { truong_the_fire: 2 } })
-      expect(resolveMaxThe(registry, ngo)).toBe(MAX_THE)
-    }
-  })
-})
-
-describe('the bar bridge — spell_pathway way gate', () => {
-  function fightingBattle(): TurnBattle {
-    return {
-      state: 'fighting',
-      players: [{ entity: { currentThe: 40, maxThe: MAX_THE } }],
-      enemies: [],
-    } as unknown as TurnBattle
-  }
-
-  function barPlayer(overrides: Record<string, unknown> = {}): TheBarPlayerState {
-    return {
-      cultivationPath: 'spell',
-      cultivationWay: 'spell_pathway',
-      spellPath: { element: 'fire', route: 'dot' },
-      nodeLevels: {},
-      ...overrides,
-    } as TheBarPlayerState
-  }
-
-  it('spell_pathway + committed element + fighting -> snapshot; ngo_dao (both shapes) -> null', () => {
-    // P1 - the bridge consults the bound capability facade; bind the real
-    // resolver to the same player the reader sees.
-    let barState = barPlayer()
-    const gameManager = {
-      getTurnBattle: () => fightingBattle(),
-      hasPathCapability: (cap: PathCapability) =>
-        hasPathCapability(barState, cap, { hasSkill: () => false }),
-    } as unknown as GameManager
-
-    const nguReader = makeTheBarReader(gameManager, () => barPlayer())
-    expect(nguReader()?.current).toBe(40)
-
-    for (const shape of [
-      { cultivationPath: 'spell', cultivationWay: 'hidden_spell_pathway' },
-      { cultivationPath: 'body', cultivationWay: 'hidden_body_pathway' },
-    ]) {
-      barState = barPlayer(shape)
-      const reader = makeTheBarReader(gameManager, () => barState)
-      expect(reader(), JSON.stringify(shape)).toBeNull()
-    }
-  })
-})
+// The bar-bridge leg moved out of this file: the presentation bridge
+// owns its own test (src/presentation/bridges/theBarBridge.test.ts) and
+// this surface does not depend on the bridge module.
 
 describe('PHAP_TU_NODES — requiredWay spell_pathway export stamp', () => {
   it('every node carries requiredCultivationPath spell + requiredWay spell_pathway', () => {
     for (const node of PHAP_TU_NODES) {
       expect(node.requiredCultivationPath, node.id).toBe('spell')
 
-      // Three-path design (2026-09-25, sec.4-b): realm-reward grant nodes
-      // carry no requiredWay when both spell ways should aggregate them
-      // (masteries); the_thuc_tinh is the exception - sealed to the
-      // normal way because hidden_spell_pathway owns no The pool.
-      if (node.id === 'the_thuc_tinh') {
-        expect(node.requiredWay, node.id).toBe('spell_pathway')
-      } else if (node.rewardOnly) {
-        expect(node.requiredWay, node.id).toBeUndefined()
-      } else {
+      // Three-path design (2026-09-25, sec.4-b): realm-reward grant
+      // nodes are exempt from the way requirement (they are grant-only,
+      // never purchasable) — the data slice owns their exact fields.
+      if (!node.rewardOnly) {
         expect(node.requiredWay, node.id).toBe('spell_pathway')
       }
     }
@@ -315,16 +203,15 @@ describe('PHAP_TU_NODES — requiredWay spell_pathway export stamp', () => {
     const statNode = PHAP_TU_NODES.find(
       (node) =>
         (node.effect.statModifiers?.length ?? 0) > 0 &&
-        node.elementTag === 'fire' &&
-        node.routeTag === 'dot',
+        node.elementTag === 'fire',
     )!
     const registry = { getAll: () => PHAP_TU_NODES }
 
-    const ngu = nguHanh({ spellPath: { element: 'fire', route: 'dot' }, nodeLevels: { [statNode.id]: 2 } })
+    const ngu = nguHanh({ spellPath: { element: 'fire' }, nodeLevels: { [statNode.id]: 2 } })
     expect(aggregateNodeStatModifiers(registry, ngu).length).toBeGreaterThan(0)
 
     for (const make of Object.values(NGO_DAO_SHAPES)) {
-      const ngo = make({ spellPath: { element: 'fire', route: 'dot' }, nodeLevels: { [statNode.id]: 2 } })
+      const ngo = make({ spellPath: { element: 'fire' }, nodeLevels: { [statNode.id]: 2 } })
       expect(aggregateNodeStatModifiers(registry, ngo), `${ngo.cultivationPath}/${ngo.cultivationWay}`).toEqual([])
     }
   })
@@ -399,7 +286,7 @@ describe('battle build — the way drives the kit branch', () => {
 
   it('ngo_dao resolves the An kit basic/special even with leaked element state', () => {
     const gameManager = spellPathManager()
-    const player = NGO_DAO_SHAPES.collapsed({ spellPath: { element: 'fire', route: 'no' } })
+    const player = NGO_DAO_SHAPES.collapsed({ spellPath: { element: 'fire' } })
     gameManager.setActivePlayer(player)
     learnAnKit(gameManager, player)
 
@@ -409,9 +296,10 @@ describe('battle build — the way drives the kit branch', () => {
     expect(participant.basic?.id).toBe(HIDDEN_SPELL_BASIC_ID)
     expect(participant.basic?.compositePicks?.pool).toHaveLength(5)
     expect(participant.special?.skill.id).toBe(HIDDEN_SPELL_SPECIAL_ID)
-    // The An kit carries no The loop -- no theGain fields on the basic.
+    // The An kit carries no The loop -- no theGain/empowerment fields
+    // on the basic (F11: the hidden way never gains The).
     expect(participant.basic?.theGainOnLandedCast).toBeUndefined()
-    expect(participant.basic?.theGainOnCrit).toBeUndefined()
+    expect(participant.basic?.empowerment).toBeUndefined()
   })
 
   it('a missing required kit skill throws at battle build', () => {
@@ -427,12 +315,16 @@ describe('battle build — the way drives the kit branch', () => {
     const gameManager = spellPathManager()
     const player = nguHanh()
     gameManager.setActivePlayer(player)
-    expect(gameManager.progressionOps.selectSpellPathElement('fire', 'no', player)).toBe(true)
+    expect(gameManager.progressionOps.selectSpellPathElement('fire', player)).toBe(true)
 
     gameManager.startBattleWithPlayer(player, dummyEnemy())
 
     const participant = gameManager.getTurnBattle()!.players[0]!
     expect(participant.basic?.id).toBe('hoa_cau_thuat')
-    expect(participant.basic?.theGainOnLandedCast).toBe(5)
+    // Phap Tu Reimagined: +1 The on landed cast; the Phap The element
+    // rider rides the empowerment channel at the flat cap of 5.
+    expect(participant.basic?.theGainOnLandedCast).toBe(1)
+    expect(participant.basic?.empowerment?.theThreshold).toBe(SPELL_PATH_MAX_THE)
+    expect(participant.entity.maxThe).toBe(SPELL_PATH_MAX_THE)
   })
 })

@@ -57,7 +57,11 @@ describe('GameManager — cultivation path realm rewards', () => {
     player.purchasedNodeIds = ['existing_purchase']
 
     expect(gameManager.realmAdvanceOps.grantCultivationPathRealmReward(player, player.realmId)).toBe(true)
-    expect(player.nodeLevels['the_thuc_tinh']).toBe(1)
+    // Phap Tu Reimagined: the_thuc_tinh is retired - Truc Co grants the
+    // per-element mastery record (element gate activates the committed
+    // element's grant only).
+    expect(player.nodeLevels['the_thuc_tinh']).toBeUndefined()
+    expect(player.nodeLevels['tinh_thong_hoa']).toBe(1)
     expect(player.purchasedNodeIds).toEqual(['existing_purchase'])
   })
 
@@ -99,7 +103,7 @@ describe('GameManager — cultivation path realm rewards', () => {
     // grade catch-up) so the crafted save passes the v75 holder check.
     gameManager.realmAdvanceOps.applyTechniqueRealmTransition(player, 'foundation_establishment')
     gameManager.techniqueSystem.advanceTechniqueGrade('foundation_establishment')
-    expect(player.nodeLevels['the_thuc_tinh']).toBeUndefined()
+    expect(player.nodeLevels['tinh_thong_hoa']).toBeUndefined()
 
     const save: GameSave = withMortalCreationPick({
       version: CURRENT_SAVE_VERSION,
@@ -119,8 +123,8 @@ describe('GameManager — cultivation path realm rewards', () => {
 
     gameManager.saveOps.restoreFromSave(save)
 
-    expect(player.nodeLevels['the_thuc_tinh']).toBe(1)
-    expect(player.purchasedNodeIds ?? []).not.toContain('the_thuc_tinh')
+    expect(player.nodeLevels['tinh_thong_hoa']).toBe(1)
+    expect(player.purchasedNodeIds ?? []).not.toContain('tinh_thong_hoa')
   })
 
   it('reconcile is idempotent and never grants rewards above the player realm', () => {
@@ -136,15 +140,15 @@ describe('GameManager — cultivation path realm rewards', () => {
     // qi_refining has no realmRewards record below golden-gated content -
     // nothing the player realm has not reached may be granted.
     gameManager.realmAdvanceOps.reconcileCultivationPathRealmRewards(player)
-    expect(player.nodeLevels['the_thuc_tinh']).toBeUndefined()
+    expect(player.nodeLevels['tinh_thong_hoa']).toBeUndefined()
 
     player.realmId = 'foundation_establishment'
     gameManager.realmAdvanceOps.reconcileCultivationPathRealmRewards(player)
-    expect(player.nodeLevels['the_thuc_tinh']).toBe(1)
+    expect(player.nodeLevels['tinh_thong_hoa']).toBe(1)
 
     // Replay must not disturb existing state (max-write semantics).
-    player.nodeLevels['the_thuc_tinh'] = 4
+    player.nodeLevels['tinh_thong_hoa'] = 4
     gameManager.realmAdvanceOps.reconcileCultivationPathRealmRewards(player)
-    expect(player.nodeLevels['the_thuc_tinh']).toBe(4)
+    expect(player.nodeLevels['tinh_thong_hoa']).toBe(4)
   })
 })

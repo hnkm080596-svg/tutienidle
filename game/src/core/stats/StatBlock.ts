@@ -80,6 +80,7 @@ export function createBaseStats(overrides: Partial<Stats> = {}): BaseStats {
     wardRegenPerTurn: 0,
     wardBreakDamagePercent: 0,
     manaShieldPercent: 0,
+    linhLucHoTheCap: 0,
     leechPercent: 0,
     // generic thorns stat retired (spec 2026-09-15 T12).
     healingEffectivenessPercent: 0,

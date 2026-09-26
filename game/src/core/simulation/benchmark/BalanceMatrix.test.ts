@@ -18,11 +18,11 @@ const EXPECTED_FINGERPRINTS: Record<string, Record<number, string>> = {
   'kiem_tu_hien/durable_target': { 11: '8dedd5b3', 22: '5ff98285', 33: 'dc14af9c', 44: 'c4f1d051', 55: '75b3efcd', 66: '25bc00c5', 77: 'b52ee5cd', 88: 'eba46e9e' },
   'kiem_tu_hien/burst_pressure': { 11: '03c5b02b', 22: '7410c0f9', 33: '29e715f6', 44: 'd7ef38c2', 55: 'eab2b96d', 66: '149fced8', 77: 'f9062873', 88: 'bfdcddeb' },
   'kiem_tu_hien/attrition': { 11: '67a664b1', 22: '6276cd3a', 33: '94367734', 44: 'fee73b25', 55: 'f640d1b6', 66: 'f70bd613', 77: '345d65c7', 88: '1a11eb0b' },
-  'phap_tu_ngu_hanh/single_target': { 11: 'e69c141d', 22: 'c3a65b8e', 33: '262aac9b', 44: '18c43095', 55: 'f0cebc42', 66: '415d7fac', 77: 'f6b2f9f3', 88: '7c206c73' },
-  'phap_tu_ngu_hanh/multi_enemy': { 11: 'd48f70ec', 22: 'a41c8cc2', 33: '6855819b', 44: '39e135ed', 55: '5a57dad3', 66: '09a1da65', 77: '429d902f', 88: '422aea58' },
-  'phap_tu_ngu_hanh/durable_target': { 11: '85b75b74', 22: '3877dbbb', 33: '9737e504', 44: '65bee5de', 55: 'f9414ccd', 66: 'ab00fd1e', 77: 'aeb991d7', 88: '99e784a2' },
-  'phap_tu_ngu_hanh/burst_pressure': { 11: 'cf22ceff', 22: '79933308', 33: '698875ab', 44: 'e8c075e2', 55: '15af7cf5', 66: '4bb35ab0', 77: 'a1702729', 88: 'e91c48f8' },
-  'phap_tu_ngu_hanh/attrition': { 11: '98872801', 22: 'ea22f77c', 33: '943256cc', 44: '1b301600', 55: '93a601f3', 66: 'b0b3ef17', 77: '7ab6a1ab', 88: '79a624e4' },
+  'phap_tu_ngu_hanh/single_target': { 11: 'e0933044', 22: 'ca589c58', 33: 'eb3bd331', 44: '04fa68a7', 55: '49be5454', 66: '66cbffb2', 77: '474543d7', 88: 'e938ceba' },
+  'phap_tu_ngu_hanh/multi_enemy': { 11: '425af43c', 22: 'c0bc29be', 33: 'f6c6b48a', 44: 'd7d4b62a', 55: '1b45ff69', 66: 'ba2f7722', 77: '14c834c9', 88: '78f414a8' },
+  'phap_tu_ngu_hanh/durable_target': { 11: '3dd1ee4f', 22: '4727249b', 33: '61dd0344', 44: '473409a7', 55: 'e0a0f95d', 66: '8d5fb0ea', 77: '48086597', 88: '0d0730d4' },
+  'phap_tu_ngu_hanh/burst_pressure': { 11: 'e5711e10', 22: 'a3e8477e', 33: '079a1cae', 44: 'c3cca90b', 55: 'a40a0f13', 66: '38d7c58e', 77: 'eb9544ef', 88: 'e8222dc7' },
+  'phap_tu_ngu_hanh/attrition': { 11: '765ccda3', 22: 'a89657f6', 33: '90bb85f6', 44: '8f891120', 55: 'f9553b74', 66: '1e6bbfe8', 77: 'cf4c7470', 88: '39593c2a' },
   'the_tu_hien/single_target': { 11: 'b4a43b03', 22: 'b33bedde', 33: '6be7d723', 44: 'ec0e4ff2', 55: '6e9eed47', 66: 'aae5ac17', 77: '101e4575', 88: '034cbaff' },
   'the_tu_hien/multi_enemy': { 11: '38e3a198', 22: '229fe944', 33: 'b6d2726a', 44: '7a6f8a70', 55: 'a6c42360', 66: 'b5b8c83c', 77: '400af2ab', 88: 'a6d9880c' },
   'the_tu_hien/durable_target': { 11: '20ef192b', 22: '26228672', 33: 'c802026f', 44: 'b84ff54a', 55: 'ce778623', 66: '6633f115', 77: '512a923f', 88: 'beb35f63' },
@@ -73,7 +73,17 @@ describe('balance matrix regression', () => {
     expect(gates.dominance.pass).toBe(true)
     // exit-2: every primary path has an identifiable strength AND
     // weakness somewhere.
-    expect(gates.strengths.pass).toBe(true)
+    // Phap Tu Reimagined engine slice — interim composition: the
+    // recipe runs the retired-machinery kit (no ultimate slot, flat-5
+    // The, Phap The rider on the basic) over beta defs. The recipe
+    // carries no winning cell until the data slice rebalances the kit
+    // (docs/balance/2026-09-26-phap-tu-reimagine-engine.md); pinned
+    // explicitly so it cannot silently rot.
+    expect(gates.strengths.perRecipe).toEqual({
+      kiem_tu_hien: { hasStrength: true, hasWeakness: true },
+      phap_tu_ngu_hanh: { hasStrength: false, hasWeakness: true },
+      the_tu_hien: { hasStrength: true, hasWeakness: true },
+    })
     // No stalemate cells, no deadlocked declared channels.
     expect(gates.stalemates).toEqual([])
     expect(gates.deadlocks).toEqual([])

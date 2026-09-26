@@ -43,7 +43,6 @@ export type BuildStatChannel =
   | 'player_bag'
   | 'technique_tier'
   | 'cultivation_path'
-  | 'phap_tu_route'
   | 'node_levels'
   | 'technique_combat'
   | 'way_facet'

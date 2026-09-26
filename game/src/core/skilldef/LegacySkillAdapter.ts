@@ -238,14 +238,11 @@ function adaptOne(
   // --- Def-level fields ------------------------------------------------
   const subcasts = adaptSubcasts(def, auxiliaries, catalogUnsupported, reportPrefix)
   const variants = adaptVariants(def, auxiliaries, catalogUnsupported, reportPrefix)
+  // Phap Tu Reimagined -- theOnCrit (route-profile income) is retired;
+  // theGainOnLandedCast is the only surviving grant channel.
   const grants =
-    def.theGainOnLandedCast !== undefined || def.theGainOnCrit !== undefined
-      ? {
-          ...(def.theGainOnLandedCast !== undefined
-            ? { theOnLandedCast: def.theGainOnLandedCast }
-            : {}),
-          ...(def.theGainOnCrit !== undefined ? { theOnCrit: def.theGainOnCrit } : {}),
-        }
+    def.theGainOnLandedCast !== undefined
+      ? { theOnLandedCast: def.theGainOnLandedCast }
       : undefined
   const instances = adaptInstances(def, report, reportPrefix)
 
@@ -259,12 +256,17 @@ function adaptOne(
       cooldownTurns: def.cooldownTurns,
       ...(def.chargeTurns !== undefined ? { chargeTurns: def.chargeTurns } : {}),
     },
-    ...(def.resourceType !== undefined &&
-    def.resourceType !== 'none' &&
-    def.resourceCost !== undefined &&
-    def.resourceCost > 0
-      ? { cost: { resourceType: def.resourceType, amount: def.resourceCost } }
-      : {}),
+    ...(def.resourceCostPercentOfMax !== undefined
+      ? // Spec D8/F10 -- percent-of-max cost rides the authored
+        // {percentOfMax} form (mana-only); the resolver folds it
+        // through statScalars.maxMp.
+        { cost: { resourceType: 'mana', percentOfMax: def.resourceCostPercentOfMax } }
+      : def.resourceType !== undefined &&
+          def.resourceType !== 'none' &&
+          def.resourceCost !== undefined &&
+          def.resourceCost > 0
+        ? { cost: { resourceType: def.resourceType, amount: def.resourceCost } }
+        : {}),
     ...(def.consumesAllThe === true ? { consumesAllThe: true } : {}),
     operations,
     ...(subcasts !== undefined ? { subcasts } : {}),
@@ -370,8 +372,11 @@ function adaptDamageOp(
   // Per-landed-hit consequence ops (resolveDeclaredHit parity):
   // ailments then detonate then same-source seal interactions, inside
   // the hit's landed gate (Phan Thien order: apply -> tick -> modify ->
-  // extend).
-  const onLanded: AuthoredSkillOperation[] = []
+  // extend). Spec D4/D5 -- authored landedConsequences (the Phap The
+  // rider channel on the empowered element basic) splice FIRST.
+  const onLanded: AuthoredSkillOperation[] = [
+    ...(def.landedConsequences ?? []),
+  ]
   for (const ailment of ailmentList(def)) {
     onLanded.push(adaptAilment(ailment, 'loop_target'))
   }
@@ -388,6 +393,22 @@ function adaptDamageOp(
     ...(consumeWard !== undefined ? { consumeWard } : {}),
     ...(def.healPercentOfDamage !== undefined
       ? { healPercentOfDamage: def.healPercentOfDamage as ScalarExpression }
+      : {}),
+    // Spec D7/D11 -- penetration channels: flat authored points plus
+    // the read-before-hit stack scaling (Kim Liet).
+    ...(def.elementalPenetrationBonus !== undefined
+      ? { elementalPenetration: def.elementalPenetrationBonus as ScalarExpression }
+      : {}),
+    ...(def.penetrationFromStacks !== undefined
+      ? {
+          penetrationFromStacks: {
+            definitionId: def.penetrationFromStacks.ailmentId as BuffDefinitionId,
+            perStack: def.penetrationFromStacks.perStack as ScalarExpression,
+            ...(def.penetrationFromStacks.scope !== undefined
+              ? { scope: def.penetrationFromStacks.scope }
+              : {}),
+          },
+        }
       : {}),
     ...(onLanded.length > 0 ? { onLanded } : {}),
   }
@@ -413,9 +434,9 @@ function adaptAilment(
 
 /** Hoa An spec sec.62 -- same-source seal interactions compile to
     selector-bound buff ops against the caster's OWN instance on the
-    bound target (identity selector source:'self'). `routes` was already
-    filtered at the route seam (applyRouteToTurnSkill) -- the adapter
-    emits every surviving entry verbatim.
+    bound target (identity selector source:'self'). Every entry emits
+    verbatim; `whenSourceBuff` wraps the op in a stacks_at_least gate
+    (spec D12/F9).
 
     When the same def also APPLIES the interacted seal, the op is
     result-gated (spec sec.11/36): it runs only on a successful apply
@@ -446,12 +467,32 @@ function adaptAilmentInteractions(
     const gate = appliedSealIds.has(interaction.buffId)
       ? { gateOnApplyResult: true }
       : {}
+    const emit = (op: AuthoredSkillOperation): void => {
+      // Spec D12/F9 -- `whenSourceBuff` wraps the interaction's op in
+      // `if stacks_at_least(self, <buff>, 1)` (the Tam Muoi potency
+      // gate). The gateOnApplyResult binding rides the inner op,
+      // preserved across the wrap.
+      if (interaction.whenSourceBuff !== undefined) {
+        ops.push({
+          type: 'if',
+          condition: {
+            kind: 'stacks_at_least',
+            target: 'self',
+            definitionId: interaction.whenSourceBuff,
+            stacks: 1,
+          },
+          then: [op],
+        })
+      } else {
+        ops.push(op)
+      }
+    }
     switch (interaction.kind) {
       case 'trigger_periodic':
-        ops.push({ type: 'trigger_buff_periodic', selector, ...gate })
+        emit({ type: 'trigger_buff_periodic', selector, ...gate })
         break
       case 'add_modifier':
-        ops.push({
+        emit({
           type: 'add_buff_modifier',
           selector,
           modifier: interaction.modifier,
@@ -459,7 +500,7 @@ function adaptAilmentInteractions(
         })
         break
       case 'extend_duration':
-        ops.push({
+        emit({
           type: 'extend_buff_duration',
           selector,
           turns: interaction.turns,
