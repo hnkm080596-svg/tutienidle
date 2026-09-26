@@ -11,7 +11,7 @@
     "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
     "head": "f730adc6",
     "state": {
-      "productStateId": "a940449f65990e1617bd9c1527219ffbf6a76ee1e85d62a243031be2ca7c901b",
+      "productStateId": "21097fb54194968a5ed0ee645a850d6f4c147e3e36937f03e38c305c21c61b06",
       "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
       "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -11750,7 +11750,7 @@
       ],
       "invariantIds": [],
       "limitations": [],
-      "status": "CURRENT",
+      "status": "STALE",
       "inputEvidenceIds": [],
       "inputPaths": [
         "src/core/battle/turn/TurnBattleSystem.ts",
@@ -14428,7 +14428,7 @@
         "F-TT-CLNE-COR-3"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLNE-AUT",
@@ -14458,7 +14458,7 @@
         "F-TT-CLNE-AUT-2"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLEAN-D-COR",
@@ -14485,7 +14485,7 @@
       "evidenceIds": [],
       "findingIds": [],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLNE-INT",
@@ -14518,7 +14518,45 @@
         "F-TT-CLNE-INT-5"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
+    },
+    {
+      "id": "REV-TT-CLNF-COR",
+      "kind": "COMPLIANCE_REVIEW",
+      "reviewerSessionId": "44650fc99a5743bab52bda137e9fd432",
+      "previousPhaseReviewId": "REV-TT-CLNE-INT",
+      "verdict": "SEAL",
+      "status": "SEALED",
+      "round": 12,
+      "scope": "lens CORRECTNESS only",
+      "recordedAt": "2026-09-26T09:30:00.000Z",
+      "evidenceIds": [
+        "EV-TT-CLNE-FIX"
+      ],
+      "findingIds": [],
+      "findingPointers": [],
+      "verificationOfFindingIds": [],
+      "lessons": [],
+      "summary": "cleanF COR: SEAL clean -- mutex, special gate, pay_hp floor/actual-paid, kit-local Huyet Cuong, caster-maxHp AoE, once-per-action reflect, inert The pool, ops+UI in-battle freeze, save v85 honest reject, laggy-gate exclusion confirmed legal."
+    },
+    {
+      "id": "REV-TT-CLNF-AUT",
+      "kind": "COMPLIANCE_REVIEW",
+      "reviewerSessionId": "be3a449c8a02432c97e1da81bd0bf661",
+      "previousPhaseReviewId": "REV-TT-CLNF-COR",
+      "verdict": "SEAL",
+      "status": "SEALED",
+      "round": 12,
+      "scope": "lens AUTHORITY/ARCHITECTURE only",
+      "recordedAt": "2026-09-26T09:30:00.000Z",
+      "evidenceIds": [
+        "EV-TT-CLNE-FIX"
+      ],
+      "findingIds": [],
+      "findingPointers": [],
+      "verificationOfFindingIds": [],
+      "lessons": [],
+      "summary": "cleanF AUT: SEAL clean -- single authority per state (sacrifice profile owns paid-binding; procs own reflect map; isTurnBattleInProgress single ops+UI authority); no legacy reach; P15 clean."
     }
   ],
   "cycles": [
@@ -20453,6 +20491,22 @@
       "payloadPath": "events/0093.json",
       "payloadHash": "70d317772522ea566684ecebf7bb2ba2f4f34e886498846c1bbdab5650a09b0d",
       "eventHash": "022318ced02260e4f624b38a947105c4211439c70b0bbf4f655c7d02ab1c44d6"
+    },
+    {
+      "seq": 94,
+      "at": "2026-09-26T08:51:02.018Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "21097fb54194968a5ed0ee645a850d6f4c147e3e36937f03e38c305c21c61b06",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "022318ced02260e4f624b38a947105c4211439c70b0bbf4f655c7d02ab1c44d6",
+      "payloadPath": "events/0094.json",
+      "payloadHash": "31101f8a6377bdfd7df32bde2f112df3834fde9665dee1638447e35b40d15868",
+      "eventHash": "fd2a6676c7b25abd6990bac51556c2610b380ef60c150ff13b160a80badb65ee"
     }
   ]
 }
