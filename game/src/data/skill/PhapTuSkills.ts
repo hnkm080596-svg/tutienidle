@@ -794,10 +794,9 @@ export const PHAP_TU_WINDOW_LANDED_CONSEQUENCES: Record<
   metal: [
     // Kim Y (design sec.57-59): each landed metal basic adds one Kim Liet
     // to the struck target; the primary hit's penetrationFromStacks reads
-    // the stack count present BEFORE this landed lane ran.
-    // TODO(coordinator): verify engine read ordering -- if
-    // penetrationFromStacks evaluates the pre-hit state this lane stays;
-    // if it reads post-apply, move the marker add behind a landed latch.
+    // the stack count present BEFORE this landed lane ran. Read ordering
+    // verified: SkillResolver reads stacks for penetrationFromStacks
+    // before emitting this apply lane.
     {
       type: 'if',
       condition: {

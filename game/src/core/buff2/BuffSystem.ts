@@ -997,6 +997,16 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
       if (marker.sourceId !== instance.sourceId) continue
       const markerDef = this.registry.get(marker.definitionId)
       if (markerDef.capabilities === undefined) continue
+      // A marker bound to a window its source already lost is stale --
+      // runPhaseB's bound sweep retires it, but a periodic unit ticks
+      // before Phase B, so the feed must skip it here too.
+      if (
+        markerDef.boundToSourceBuffId !== undefined &&
+        this.store.findOnTarget(markerDef.boundToSourceBuffId, marker.sourceId) ===
+          undefined
+      ) {
+        continue
+      }
       for (const capability of markerDef.capabilities) {
         const growth = periodicGrowthPayloadOf(capability)
         if (growth === undefined) continue

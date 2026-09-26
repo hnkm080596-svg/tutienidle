@@ -671,11 +671,11 @@ export class SkillExecutor {
     }
   }
 
-  /** theGainOnLandedCast parity -- The grants emit once
-      per cast execution (root plans AND follow-up executions; composite
-      extras suppress them -- they are lanes of the parent cast, not
-      executions). Post-consume ordering rides the CAST_COMMIT consume
-      op settling first; the cap lives in the resource authority.
+  /** theGainOnLandedCast parity -- The grants emit once per cast: the
+      root plan only (subcastIndex > 0 executions are lanes of the parent
+      cast and mint nothing; composite extras suppress them the same
+      way). Post-consume ordering rides the CAST_COMMIT consume op
+      settling first; the cap lives in the resource authority.
       Phap Tu Reimagined: the crit channel (theGainOnCrit) is retired --
       The income is landed-basic only. */
   private emitGrants(

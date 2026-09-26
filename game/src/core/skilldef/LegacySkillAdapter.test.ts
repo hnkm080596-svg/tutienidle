@@ -148,6 +148,36 @@ describe('LegacySkillAdapter -- ailments + detonate', () => {
     expect(lane.ops[1]).toEqual({ type: 'detonate', target: 'loop_target', amp: 2 })
   })
 
+  it('non-damaging enemy defs honor landedConsequences inside the per-target lane', () => {
+    // Phap Tu Reimagined -- the wood basic's Van Moc -> Sinh Co lane
+    // lands inside deal_damage.onLanded for damaging defs; a
+    // non-damaging basic has no hit, so its 'landed' consequences bind
+    // to the per-target apply lane instead.
+    const { root } = adaptTurnSkillDefinition(
+      turnDef({
+        damage: undefined,
+        appliesAilment: { buffDefinitionId: 'debuff.mark', chance: 1 },
+        landedConsequences: [
+          {
+            type: 'apply_buff',
+            target: 'loop_target',
+            definitionId: 'buff.guard',
+            stacks: 1,
+          },
+        ],
+      }),
+    )
+    const lane = opsOf(root)[0]!
+    if (lane.type !== 'for_each_target') throw new Error('unreachable')
+    expect(lane.ops).toHaveLength(2)
+    expect(lane.ops[1]).toEqual({
+      type: 'apply_buff',
+      target: 'loop_target',
+      definitionId: 'buff.guard',
+      stacks: 1,
+    })
+  })
+
   it('self-scope ailments report unsupported instead of emitting dead ops', () => {
     const { root, unsupported } = adaptTurnSkillDefinition(
       turnDef({

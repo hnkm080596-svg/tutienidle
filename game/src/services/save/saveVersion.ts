@@ -197,4 +197,9 @@
 // + master spec sec.8.3). Save v83 is rejected (dev phase, no
 // migration, no compat translator) - master spec sec.8.4 re-bump on
 // later merge.
+// v85 (2026-09-27, path-wave branch retirements): spell_pathway loses
+// its route slots with the retired legacy route machinery; kiem_tu's
+// killed/beasts slots retire with the legacy forged queue; the_tu_an's
+// ops pane swaps rerollBank -> diversionBank + opsHistory. Saves at
+// v84 are rejected (dev phase, no migration, no compat translator).
 export const CURRENT_SAVE_VERSION = 85 as const

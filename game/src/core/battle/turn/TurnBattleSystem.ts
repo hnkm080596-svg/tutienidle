@@ -43,6 +43,7 @@ import {
   theGainPerRound,
   isUngTheCombatant,
   theGainOnBasicHit,
+  grantThe,
 } from '../../the-tu/TheEconomy'
 import { asReactiveEconomy } from '../../the-tu/TheTuCapabilities'
 import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
@@ -2865,10 +2866,8 @@ export class TurnBattleSystem {
     actor: TurnBattleParticipant,
     skill: TurnSkillDefinition,
   ): void {
-    const cap = actor.entity.maxThe ?? MAX_THE
-
     if (skill.theGainOnLandedCast) {
-      actor.entity.currentThe = Math.min(cap, (actor.entity.currentThe ?? 0) + skill.theGainOnLandedCast)
+      grantThe(actor.entity, skill.theGainOnLandedCast)
     }
   }
 

@@ -40,8 +40,7 @@
 //     form burns when the variant swap resolves)
 //   theScaling                         -> theScaling (snapshot.theBurned
 //     folds at resolve)
-//   theGainOnLandedCast / theGainOnCrit-> grants.theOnLandedCast /
-//     .theOnCrit
+//   theGainOnLandedCast                -> grants.theOnLandedCast
 //   instances.count                    -> instances.count literal
 //   instances.each (declarative)       -> instances.each verbatim
 //   instances.perInstanceOptions       -> REPORTED when `each` absent
@@ -204,6 +203,9 @@ function adaptOne(
       inner.push({ type: 'detonate', target: 'loop_target', amp: def.detonateDoT.amp })
     }
     inner.push(...adaptAilmentInteractions(def, 'loop_target'))
+    // 'Landed' consequences for a non-damaging enemy-scope op bind to the
+    // per-target apply lane (the op landing on a target IS its landing).
+    inner.push(...(def.landedConsequences ?? []))
     if (inner.length > 0) {
       operations.push({ type: 'for_each_target', target: 'affected_targets', ops: inner })
     }
