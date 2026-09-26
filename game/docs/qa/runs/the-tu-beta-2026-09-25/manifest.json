@@ -14598,7 +14598,7 @@
       "path": "src/components/panels/skill-path/NodeTreePanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "6590cb3769c87eb644838bdf8937c60d1a3798017e606c852079ff5e4456bbdf"
+      "hash": "87c95c54398a9e54ddaf952f08739f89f51705b789f259264d293ebd38b43d0d"
     },
     {
       "path": "src/components/panels/skill-path/SkillConnections.vue",
@@ -14664,7 +14664,7 @@
       "path": "src/components/panels/skill-path/TheTuTreePanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "0dc99ba8034c53bbba3e0c29892d96d7dcdd7b468d0dde6a5720bf31bfcb9c9e"
+      "hash": "8f596fd84433fd56359eb8c6304d4c02d0afba10df84254796f50bab262ef9e4"
     },
     {
       "path": "src/components/panels/SkillPathPanel.test.ts",
@@ -15006,7 +15006,7 @@
       "path": "src/composables/useTurnBattleInfo.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "caddc1737bc727b79970a34efc29175d175aa869e2ec3cfe8d44fbf263a09528"
+      "hash": "f2819b82adc14ed813417156669ff1464d890e5415677ff09421daf536b8dac5"
     },
     {
       "path": "src/composables/useTurnCombatManual.ts",
@@ -18648,7 +18648,7 @@
       "path": "src/core/proc/CombatProcSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "7f322f11d3878f779e56e2477afe0a5e85d2b58169c1042a94a6ee47c0206abb"
+      "hash": "d2bbca6adc61fe37099adb222515f6f69dafedb290d15f4f9de3eabe3f9a17fd"
     },
     {
       "path": "src/core/proc/MarkerCapabilities.ts",
@@ -22248,13 +22248,13 @@
       "path": "src/services/save/saveShapeValidation.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d430f550010a854bbe56d1606f264361b3ceb844101f0d44f375fd0ff3616b02"
+      "hash": "8869357bc2c621b6fbd41c260ca73b7b169918b438a5b988e71fda6033546d2f"
     },
     {
       "path": "src/services/save/saveShapeValidation.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e683ae5df10668eaa8237ab2322634bfcf770ca3d23af34a811a5bc43cacb9a2"
+      "hash": "3e63f3536d2933f9c56856839155a523daca2b11f88a8dacd9559f53ae885d2d"
     },
     {
       "path": "src/services/save/SaveSystem.bootRestore.test.ts",
@@ -22309,6 +22309,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "f9598503964106d8123b541408ee1265366b5b168c4704eee4a9cfca2aa89847"
+    },
+    {
+      "path": "src/services/save/saveTheTuCrafted.qa.test.ts",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "b531a423e7e63ee60f6932b3267ba0533ed32a93ad22a2a46ff5c351edc30a13"
     },
     {
       "path": "src/services/save/saveTypes.ts",
@@ -23013,5 +23019,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "3a3d365cf93cdfe71690deb04a083c36468bed941ceee4a93920729ffdb0da2b"
+  "productStateId": "36bce8b3e3fa68015eae4efca7ba8a7864e47bcad505dbffe0fcf98fddc5a972"
 }

@@ -11,7 +11,7 @@
     "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
     "head": "f730adc6",
     "state": {
-      "productStateId": "3a3d365cf93cdfe71690deb04a083c36468bed941ceee4a93920729ffdb0da2b",
+      "productStateId": "36bce8b3e3fa68015eae4efca7ba8a7864e47bcad505dbffe0fcf98fddc5a972",
       "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
       "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -8886,6 +8886,303 @@
       "status": "REJECTED_WITH_PROOF",
       "duplicateOf": null,
       "rejectionReason": "Coverage class, not a defect: all three branches are verified by construction and reachable only through abort/unreachable content. Enumerated for the record; pinning defensive lanes is repo hygiene outside the beta surface."
+    },
+    {
+      "id": "F-TT-CLNB-AUT-1",
+      "title": "Non-ASCII em-dash in useTurnBattleInfo comment (doc convention breach)",
+      "state": {
+        "productStateId": "3a3d365cf93cdfe71690deb04a083c36468bed941ceee4a93920729ffdb0da2b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/composables/useTurnBattleInfo.ts",
+          "symbolOrSection": "header comment",
+          "revision": "5029acf2",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-af82543627f444f883fc958208b42224",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "em-dash glyph present in comment text",
+      "expected": "ASCII-only comments per repo convention",
+      "actual": "em-dash glyph present in comment text",
+      "rootCause": "see locations",
+      "rootClass": "doc-drift",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep during adjudication",
+          "hitDispositions": [
+            "no additional siblings beyond the recorded surface"
+          ],
+          "coverageLimits": [
+            "scoped to beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED @2105c0d4: em-dash replaced with ASCII.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-TT-CLNB-FIX"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLNB-AUT-2",
+      "title": "Reflect dedupe key collision surface in CombatProcSystem",
+      "state": {
+        "productStateId": "3a3d365cf93cdfe71690deb04a083c36468bed941ceee4a93920729ffdb0da2b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/proc/CombatProcSystem.ts",
+          "symbolOrSection": "pendingReflects dedupe key",
+          "revision": "5029acf2",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-af82543627f444f883fc958208b42224",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "key derivation could collide across consecutive emits",
+      "expected": "dedupe key unique per reflect emit",
+      "actual": "key derivation could collide across consecutive emits",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep during adjudication",
+          "hitDispositions": [
+            "no additional siblings beyond the recorded surface"
+          ],
+          "coverageLimits": [
+            "scoped to beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED @2105c0d4: dedupe key extended.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-TT-CLNB-FIX"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLNB-INT-1",
+      "title": "Save-boundary canonicality: mutex roots + prereq-less keystone pass validation",
+      "state": {
+        "productStateId": "3a3d365cf93cdfe71690deb04a083c36468bed941ceee4a93920729ffdb0da2b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/services/save/saveShapeValidation.ts",
+          "symbolOrSection": "nodeLevels loop",
+          "revision": "5029acf2",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-a6fa5d9dcae84d1ba12b6b6a76cbcb2a",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "cuong_chien:1+tran_the:1 and prereq-less major_loan_dau both passed validateGameSaveShape",
+      "expected": "crafted save owning both mutex roots or a prereq-less keystone must fail the load boundary",
+      "actual": "cuong_chien:1+tran_the:1 and prereq-less major_loan_dau both passed validateGameSaveShape",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep during adjudication",
+          "hitDispositions": [
+            "no additional siblings beyond the recorded surface"
+          ],
+          "coverageLimits": [
+            "scoped to beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED @2105c0d4: monotonic prereq replay (integer/maxLevel bound + node/excludesNode/nodeCount/realm) for non-core registered nodes; laggy kinds documented-skipped per NodeSystem frozen-surplus law; regression pin saveTheTuCrafted.qa.test.ts (reviewer repro) added.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-TT-CLNB-FIX"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLNB-INT-2",
+      "title": "Non-core nodeLevels not integer/maxLevel bounded (minor_trong_quyen:99 -> ~9.9 over +0.5 ceiling)",
+      "state": {
+        "productStateId": "3a3d365cf93cdfe71690deb04a083c36468bed941ceee4a93920729ffdb0da2b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/services/save/saveShapeValidation.ts",
+          "symbolOrSection": "nodeLevels loop",
+          "revision": "5029acf2",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/the-tu/TheTuKitModifiers.ts",
+          "symbolOrSection": "modifier scale :70-72",
+          "revision": "5029acf2",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-a6fa5d9dcae84d1ba12b6b6a76cbcb2a",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "crafted minor_trong_quyen:99 validated and inflated modifiers ~9.9 vs +0.5 ceiling",
+      "expected": "owned non-core node levels bounded by integer + node.maxLevel",
+      "actual": "crafted minor_trong_quyen:99 validated and inflated modifiers ~9.9 vs +0.5 ceiling",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep during adjudication",
+          "hitDispositions": [
+            "no additional siblings beyond the recorded surface"
+          ],
+          "coverageLimits": [
+            "scoped to beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED @2105c0d4: same replay block enforces Number.isInteger && level <= maxLevel.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-TT-CLNB-FIX"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLNB-INT-3",
+      "title": "Respec ConfirmModal survives battle start -> confirm silently no-ops",
+      "state": {
+        "productStateId": "3a3d365cf93cdfe71690deb04a083c36468bed941ceee4a93920729ffdb0da2b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/components/panels/skill-path/NodeTreePanel.vue",
+          "symbolOrSection": "confirmRespec/confirmRouteSwitch",
+          "revision": "5029acf2",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/components/panels/skill-path/TheTuTreePanel.vue",
+          "symbolOrSection": "confirmRespec",
+          "revision": "5029acf2",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-a6fa5d9dcae84d1ba12b6b6a76cbcb2a",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "modal stayed open; confirm ran while inBattle -> silent no-op",
+      "expected": "pending purchase confirm closes or rejects when battle engages",
+      "actual": "modal stayed open; confirm ran while inBattle -> silent no-op",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep during adjudication",
+          "hitDispositions": [
+            "no additional siblings beyond the recorded surface"
+          ],
+          "coverageLimits": [
+            "scoped to beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED @2105c0d4: both panels guard confirm on !inBattle and auto-dismiss pending modals via watch(inBattle).",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-TT-CLNB-FIX"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
     }
   ],
   "evidence": [
@@ -9968,7 +10265,7 @@
       "inputPaths": [],
       "invariantIds": [],
       "limitations": [],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-TT-PROBE-UNLOCK-FLOOR",
@@ -9995,7 +10292,7 @@
       "inputPaths": [],
       "invariantIds": [],
       "limitations": [],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-TT-CLO-24",
@@ -10033,8 +10330,38 @@
       "limitations": [
         "coordinator re-verification mirrors the reviewer run; no new surface"
       ],
-      "status": "CURRENT",
+      "status": "STALE",
       "artifactHash": "e6b69a87f12adc33b6bca128c03fd3714a2ac338c6d7da3a112b1edbd51257dd"
+    },
+    {
+      "id": "EV-TT-CLNB-FIX",
+      "state": {
+        "productStateId": "36bce8b3e3fa68015eae4efca7ba8a7864e47bcad505dbffe0fcf98fddc5a972",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coordinator",
+      "startedAt": "2026-09-26T05:30:00.000Z",
+      "finishedAt": "2026-09-26T05:35:00.000Z",
+      "commandOrMethod": "npm run type-check && npx vitest run src/services/save/ src/components/panels/ src/composables/ src/core/proc/ src/core/the-tu/",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/clnb-fix-verify.log",
+      "claims": [
+        "vue-tsc exit 0 on productState 36bce8b3",
+        "480/480 save tests + 316/316 panel/composable/proc/the-tu tests PASS incl. reviewer repro saveTheTuCrafted.qa.test.ts (5 tests)",
+        "pre-existing v73 fixture repaired to canonical realm (foundation_establishment) — was a non-canonical save"
+      ],
+      "inputEvidenceIds": [],
+      "inputPaths": [
+        "src/services/save/saveShapeValidation.ts",
+        "src/services/save/saveTheTuCrafted.qa.test.ts",
+        "src/components/panels/skill-path/NodeTreePanel.vue",
+        "src/components/panels/skill-path/TheTuTreePanel.vue"
+      ]
     }
   ],
   "coverage": [],
@@ -12289,7 +12616,7 @@
         "F-TT-CLN6-CLO-1"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLEAN-A7-COR",
@@ -12319,7 +12646,7 @@
         "F-TT-CLN7-COR-2"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLEAN-A7-AUT",
@@ -12348,7 +12675,7 @@
         "F-TT-CLN7-AUT-1"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLEAN-A7-INT",
@@ -12381,7 +12708,95 @@
         "F-TT-CLN7-INT-5"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
+    },
+    {
+      "id": "REV-TT-CLEAN-B-COR",
+      "state": {
+        "productStateId": "3a3d365cf93cdfe71690deb04a083c36468bed941ceee4a93920729ffdb0da2b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": null,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-a6e9afcb1f134f72b0b96ec019a03ce4",
+      "contextId": "sealed-child-a6e9afcb1f134f72b0b96ec019a03ce4",
+      "model": "swe-2-max",
+      "role": "CORRECTNESS",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T03:30:00.000Z",
+      "sealedAt": "2026-09-26T04:40:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-A7-COR",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "REV-TT-CLEAN-B-AUT",
+      "state": {
+        "productStateId": "3a3d365cf93cdfe71690deb04a083c36468bed941ceee4a93920729ffdb0da2b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": null,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-af82543627f444f883fc958208b42224",
+      "contextId": "sealed-child-af82543627f444f883fc958208b42224",
+      "model": "swe-2-max",
+      "role": "AUTHORITY",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T03:30:00.000Z",
+      "sealedAt": "2026-09-26T04:55:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-A7-AUT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TT-CLNB-AUT-1",
+        "F-TT-CLNB-AUT-2"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "REV-TT-CLEAN-B-INT",
+      "state": {
+        "productStateId": "3a3d365cf93cdfe71690deb04a083c36468bed941ceee4a93920729ffdb0da2b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": null,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-a6fa5d9dcae84d1ba12b6b6a76cbcb2a",
+      "contextId": "sealed-child-a6fa5d9dcae84d1ba12b6b6a76cbcb2a",
+      "model": "swe-2-max",
+      "role": "INTEGRATION",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T03:30:00.000Z",
+      "sealedAt": "2026-09-26T05:10:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-A7-INT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TT-CLNB-INT-1",
+        "F-TT-CLNB-INT-2",
+        "F-TT-CLNB-INT-3"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
     }
   ],
   "cycles": [
@@ -12403,7 +12818,7 @@
       "noveltyEvidenceIds": [],
       "startedAt": "2026-09-26T01:36:00.000Z",
       "finishedAt": "2026-09-26T03:07:00.000Z",
-      "status": "CLEAN"
+      "status": "STALE"
     }
   ],
   "mutations": [],
@@ -16298,6 +16713,86 @@
       "rootClass": "coverage-gap-construction-verified",
       "escapeReason": "defensive lanes shipped with construction proofs, not observable pins",
       "capabilityDelta": "standing enumeration of unpinned defensive reflect branches for future reviewers"
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-130",
+      "rootClass": "missing-invariant",
+      "escapeReason": "save-boundary validator trusted owned nodeLevels without replaying monotonic prereqs",
+      "capabilityDelta": "canonicality replay covers integer/maxLevel/node/excludesNode/nodeCount/realm kinds",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLNB-INT-1",
+        "F-TT-CLNB-INT-2"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-131",
+      "rootClass": "lifecycle-gap",
+      "escapeReason": "pending purchase confirm modal not torn down on battle engage",
+      "capabilityDelta": "watch(inBattle) dismiss pattern applied to both skill-path panels",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLNB-INT-3"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-132",
+      "rootClass": "doc-drift",
+      "escapeReason": "non-ASCII glyph + dedupe-key nit in beta surface",
+      "capabilityDelta": "comment charset + dedupe key hygiene pinned",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLNB-AUT-1",
+        "F-TT-CLNB-AUT-2"
+      ]
     }
   ],
   "messages": [],
@@ -17725,6 +18220,22 @@
       "payloadPath": "events/0089.json",
       "payloadHash": "199a8251ecce67cfee30b532c3ef53649a38b74ae92970fd93323daf7adaa2eb",
       "eventHash": "58663405dc348ed1b5e043190823436b1a3f4e3b408d6ff215b0fff503853b23"
+    },
+    {
+      "seq": 90,
+      "at": "2026-09-26T05:33:31.346Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "36bce8b3e3fa68015eae4efca7ba8a7864e47bcad505dbffe0fcf98fddc5a972",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "58663405dc348ed1b5e043190823436b1a3f4e3b408d6ff215b0fff503853b23",
+      "payloadPath": "events/0090.json",
+      "payloadHash": "7a07a81eb6af32c9909e39d363684ba0c569ef0ea5e344053620cb8e2a852f7b",
+      "eventHash": "63ce44b3217c6e4bdf191fde096f692b7a9dea9dc2861940296ed6e6ff8b4fbe"
     }
   ]
 }
