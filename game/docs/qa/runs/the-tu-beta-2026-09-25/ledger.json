@@ -8055,12 +8055,15 @@
     "EV-TT-CLNA6-FIX"
    ],
    "verificationEvidenceIds": [
-    "EV-TT-CLNA6-FIX"
+    "EV-TT-CLNA6-FIX",
+    "EV-TT-CLO-24"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-24"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -8120,12 +8123,15 @@
     "EV-TT-CLNA6-FIX"
    ],
    "verificationEvidenceIds": [
-    "EV-TT-CLNA6-FIX"
+    "EV-TT-CLNA6-FIX",
+    "EV-TT-CLO-24"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-24"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -8185,12 +8191,15 @@
     "EV-TT-CLNA6-FIX"
    ],
    "verificationEvidenceIds": [
-    "EV-TT-CLNA6-FIX"
+    "EV-TT-CLNA6-FIX",
+    "EV-TT-CLO-24"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-24"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -8250,12 +8259,15 @@
     "EV-TT-CLNA6-FIX"
    ],
    "verificationEvidenceIds": [
-    "EV-TT-CLNA6-FIX"
+    "EV-TT-CLNA6-FIX",
+    "EV-TT-CLO-24"
    ],
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-TT-CLO-24"
+   ],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
+   "status": "CLOSED",
    "rejectionReason": null
   },
   {
@@ -8315,13 +8327,71 @@
     "EV-TT-CLNA6-FIX"
    ],
    "verificationEvidenceIds": [
-    "EV-TT-CLNA6-FIX"
+    "EV-TT-CLNA6-FIX",
+    "EV-TT-CLO-24"
    ],
+   "closureReviewIds": [
+    "REV-TT-CLO-24"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "status": "CLOSED",
+   "rejectionReason": null
+  },
+  {
+   "id": "F-TT-CLN6-CLO-1",
+   "title": "Stale 'bump vo dieu kien' comment on devResetBranch wrapper after null-rejection propagation",
+   "state": {
+    "productStateId": "3a3d365cf93cdfe71690deb04a083c36468bed941ceee4a93920729ffdb0da2b",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/composables/useProgressionActions.ts",
+     "symbolOrSection": "devResetBranch wrapper comment :61",
+     "revision": "5029acf2",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-c67606aea472440888ab59faaf41c844",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "comment says refund bump is unconditional; wrapper now returns early on null AND 0",
+   "expected": "comment describes the early-return",
+   "actual": "stale cosmetic comment on a dev-channel wrapper; independent closure reviewer classified it 'not a claim violation, worth a ledger note'",
+   "rootCause": "comment predates the null/0 early-return added in the cleanA6 fix batch",
+   "rootClass": "doc-drift",
+   "subsystem": "the-tu-beta",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/composables/"
+     ],
+     "termsAndMethod": "closure reviewer read of the changed wrapper",
+     "hitDispositions": [
+      "single stale comment only"
+     ],
+     "coverageLimits": [
+      "dev-channel surface only"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
    "closureReviewIds": [],
    "duplicateOf": null,
    "exception": null,
-   "status": "FIXED_PENDING_PROOF",
-   "rejectionReason": null
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "cosmetic stale comment on a dev-channel-only wrapper (no production caller); comment-only churn on this file would invalidate the sealed fixed-point for zero behavioral delta - documented as lesson L-TT-116 and carried into the next product batch if one lands"
   }
  ],
  "evidence": [
@@ -9432,6 +9502,45 @@
    "invariantIds": [],
    "limitations": [],
    "status": "CURRENT"
+  },
+  {
+   "id": "EV-TT-CLO-24",
+   "state": {
+    "productStateId": "3a3d365cf93cdfe71690deb04a083c36468bed941ceee4a93920729ffdb0da2b",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-26T01:21:00.000Z",
+   "finishedAt": "2026-09-26T01:23:00.000Z",
+   "commandOrMethod": "npm run type-check && npx vitest run src/core/game/GameManager.realmAdvanceInBattle.test.ts src/core/game/GameManagerProgressionOps.inBattle.test.ts src/presentation/tribulationRouting.test.ts src/composables/cultivationRitualFlow.integration.test.ts",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/clo-24-verify.log",
+   "claims": [
+    "vue-tsc exit 0; 4 pinned files / 25 tests PASS on productState 3a3d365c",
+    "matches independent closure verdict REV-TT-CLO-24 (SEAL, devin-c67606ae)"
+   ],
+   "inputEvidenceIds": [
+    "EV-TT-CLNA6-FIX"
+   ],
+   "inputPaths": [
+    "src/core/game/GameManagerRealmAdvanceOps.ts",
+    "src/core/game/GameManagerTurnBattleOps.ts",
+    "src/core/game/GameManagerProgressionOps.ts",
+    "src/composables/useProgressionActions.ts",
+    "src/core/game/GameManager.realmAdvanceInBattle.test.ts",
+    "src/core/game/GameManagerProgressionOps.inBattle.test.ts"
+   ],
+   "invariantIds": [],
+   "limitations": [
+    "coordinator re-verification mirrors the reviewer run; no new surface"
+   ],
+   "status": "CURRENT",
+   "artifactHash": "e6b69a87f12adc33b6bca128c03fd3714a2ac338c6d7da3a112b1edbd51257dd"
   }
  ],
  "coverage": [],
@@ -11651,6 +11760,42 @@
    ],
    "novelAttackIds": [],
    "status": "STALE"
+  },
+  {
+   "id": "REV-TT-CLO-24",
+   "state": {
+    "productStateId": "3a3d365cf93cdfe71690deb04a083c36468bed941ceee4a93920729ffdb0da2b",
+    "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 34,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-c67606aea472440888ab59faaf41c844",
+   "contextId": "sealed-child-c67606aea472440888ab59faaf41c844",
+   "model": "swe-2-max",
+   "role": "CLOSURE",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-26T01:16:00.000Z",
+   "sealedAt": "2026-09-26T01:18:00.000Z",
+   "previousPhaseReviewId": "REV-TT-CLEAN-A6-AUT",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-TT-CLO-24"
+   ],
+   "findingIds": [
+    "F-TT-CLN6-COR-2",
+    "F-TT-CLN6-AUT-1",
+    "F-TT-CLN6-AUT-2",
+    "F-TT-CLN6-AUT-3",
+    "F-TT-CLN6-AUT-4",
+    "F-TT-CLN6-CLO-1"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [],
@@ -15373,6 +15518,38 @@
     "REV-TT-CLEAN-A6-AUT"
    ],
    "capabilityDelta": "rejection-signal conflation detector",
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null,
+   "preventionEvidenceIds": []
+  },
+  {
+   "id": "L-TT-116",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-TT-CLN6-CLO-1"
+   ],
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-beta-2026-09-25",
+   "rootClass": "doc-drift",
+   "missedInvariantIds": [],
+   "escapeReason": "a comment-only stale line on a dev-channel wrapper is classed non-actionable at terminal stage - rejecting with proof avoids churning the sealed product state for zero behavioral delta",
+   "applicability": [
+    "stale comments on dev-channel surfaces at terminal stage"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "comment edits ride the next product batch; no isolated comment-only bump"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [
+    "REV-TT-CLO-24"
+   ],
+   "capabilityDelta": "terminal-stage cosmetic-drift disposition",
    "recurrenceFindingIds": [],
    "status": "CLASSIFIED",
    "policyVersion": null,
