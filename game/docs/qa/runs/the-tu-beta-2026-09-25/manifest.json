@@ -15006,7 +15006,7 @@
       "path": "src/composables/useTurnBattleInfo.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f2819b82adc14ed813417156669ff1464d890e5415677ff09421daf536b8dac5"
+      "hash": "0c7305ffcb3f1b1cb3af0ce43ccaa794ef0158121fc852d1d8b0a7ccb28eedf4"
     },
     {
       "path": "src/composables/useTurnCombatManual.ts",
@@ -18648,7 +18648,7 @@
       "path": "src/core/proc/CombatProcSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d2bbca6adc61fe37099adb222515f6f69dafedb290d15f4f9de3eabe3f9a17fd"
+      "hash": "db327760f9cb6659df78a0d7b0ee1a9549f4da7afa2063eea20d10ff4191e202"
     },
     {
       "path": "src/core/proc/MarkerCapabilities.ts",
@@ -23019,5 +23019,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "36bce8b3e3fa68015eae4efca7ba8a7864e47bcad505dbffe0fcf98fddc5a972"
+  "productStateId": "d2e45be7f1e8e723acec32887e668869c0994079a30670b6bcb4127068cd825b"
 }
