@@ -11,7 +11,7 @@
     "base": "be1bdf8d5f3f95f4950e42e4b51e0c56a2b8f7df",
     "head": "f730adc6",
     "state": {
-      "productStateId": "d2e45be7f1e8e723acec32887e668869c0994079a30670b6bcb4127068cd825b",
+      "productStateId": "fea576e2d9a15cf8dab73cd31d0d8c1a2acbcdae50419aa64433704a73f35851",
       "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
       "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -9284,9 +9284,9 @@
         "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
       },
       "severity": "Nit",
-      "classification": "NOT_A_DEFECT",
+      "classification": "NON_ACTIONABLE",
       "actionable": false,
-      "reachability": "NONE",
+      "reachability": "HYPOTHETICAL",
       "locations": [
         {
           "path": "src/core/the-tu/TheTuBatTuSurvival.ts",
@@ -9330,6 +9330,177 @@
       "exception": null,
       "status": "REJECTED_WITH_PROOF",
       "rejectionReason": "parked content documented at removal site; convention precedent for parked defs"
+    },
+    {
+      "id": "F-TT-CLNC-INT-1",
+      "title": "Suppressed-reflect paths unpinned: dead-attacker flush skip + aborted-action residue discard",
+      "state": {
+        "productStateId": "d2e45be7f1e8e723acec32887e668869c0994079a30670b6bcb4127068cd825b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/proc/CombatProcSystem.ts",
+          "symbolOrSection": ":241 flushReflects !attacker.alive",
+          "revision": "dbfc888a",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": ":1964 discardPendingReflects",
+          "revision": "dbfc888a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-f9a05037ffac42e6b61e0149c8304078",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "both correct by construction but unpinned — coverage hole",
+      "expected": "defensive branches pinned by tests",
+      "actual": "both correct by construction but unpinned — coverage hole",
+      "rootCause": "see locations",
+      "rootClass": "missing-coverage",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton site"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED @72822607: 4 pin tests (dead-attacker skip, residue discard, suppressed-grant no-op, onCastBegin queue).",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLNC-INT-2",
+      "title": "reflectsEligible gate covered only reflectsDamage branch of rollReactiveTrigger",
+      "state": {
+        "productStateId": "d2e45be7f1e8e723acec32887e668869c0994079a30670b6bcb4127068cd825b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/proc/CombatProcSystem.ts",
+          "symbolOrSection": ":182-190",
+          "revision": "dbfc888a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-f9a05037ffac42e6b61e0149c8304078",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "non-reflect outcomes (appliesDefinitionId/queuesFollowUp) still fired for excluded sources",
+      "expected": "INV-9 exclusion applies to the whole reactive grant",
+      "actual": "non-reflect outcomes (appliesDefinitionId/queuesFollowUp) still fired for excluded sources",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton site"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED @72822607: gate hoisted before rollChance — excluded sources consume no RNG and fire no outcome.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLNC-INT-3",
+      "title": "onCastBegin discarded firedFollowUp return of rollReactiveTrigger",
+      "state": {
+        "productStateId": "d2e45be7f1e8e723acec32887e668869c0994079a30670b6bcb4127068cd825b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": ":1511",
+          "revision": "dbfc888a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-f9a05037ffac42e6b61e0149c8304078",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "return discarded — follow-up silently lost",
+      "expected": "a follow-up firing on onCastBegin queues the bypass entry like other windows",
+      "actual": "return discarded — follow-up silently lost",
+      "rootCause": "see locations",
+      "rootClass": "missing-invariant",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton site"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED @72822607: firedFollowUp pushes queuedFollowUps reactive_bypass entry.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
     }
   ],
   "evidence": [
@@ -10538,7 +10709,7 @@
       ],
       "invariantIds": [],
       "limitations": [],
-      "status": "CURRENT",
+      "status": "STALE",
       "inputEvidenceIds": [],
       "inputPaths": [
         "src/composables/useTurnBattleInfo.ts",
@@ -10570,7 +10741,7 @@
       "inputPaths": [],
       "invariantIds": [],
       "limitations": [],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-TT-CLNB-EMDASH-VERIFY",
@@ -10596,7 +10767,7 @@
       ],
       "invariantIds": [],
       "limitations": [],
-      "status": "CURRENT",
+      "status": "STALE",
       "inputEvidenceIds": [],
       "inputPaths": []
     }
@@ -13083,13 +13254,13 @@
       "accessLimitations": [],
       "startedAt": "2026-09-26T05:49:00.000Z",
       "sealedAt": "2026-09-26T06:36:00.000Z",
-      "previousPhaseReviewId": "REV-TT-CLNB-COR",
+      "previousPhaseReviewId": "REV-TT-CLEAN-B-COR",
       "reviewedAfterPreviousFixes": true,
       "coverageIds": [],
       "evidenceIds": [],
       "findingIds": [],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-TT-CLNC-AUT",
@@ -13110,7 +13281,7 @@
       "accessLimitations": [],
       "startedAt": "2026-09-26T05:49:00.000Z",
       "sealedAt": "2026-09-26T06:36:00.000Z",
-      "previousPhaseReviewId": "REV-TT-CLNB-AUT",
+      "previousPhaseReviewId": "REV-TT-CLEAN-B-AUT",
       "reviewedAfterPreviousFixes": true,
       "coverageIds": [],
       "evidenceIds": [],
@@ -13119,7 +13290,38 @@
         "F-TT-CLNC-AUT-2"
       ],
       "novelAttackIds": [],
-      "status": "FINDINGS"
+      "status": "STALE"
+    },
+    {
+      "id": "REV-TT-CLNC-INT",
+      "state": {
+        "productStateId": "d2e45be7f1e8e723acec32887e668869c0994079a30670b6bcb4127068cd825b",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 43,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-f9a05037ffac42e6b61e0149c8304078",
+      "contextId": "sealed-child-f9a05037",
+      "model": "swe-2-max",
+      "role": "INTEGRATION",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T06:12:00.000Z",
+      "sealedAt": "2026-09-26T06:55:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLEAN-B-INT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TT-CLNC-INT-1",
+        "F-TT-CLNC-INT-2",
+        "F-TT-CLNC-INT-3"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
     }
   ],
   "cycles": [
@@ -17143,6 +17345,60 @@
         "F-TT-CLNB-AUT-1",
         "F-TT-CLNC-AUT-1"
       ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-81",
+      "rootClass": "missing-coverage",
+      "escapeReason": "defensive reflect lanes unpinned",
+      "capabilityDelta": "proc-level unit pins via runtime.procs",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLNC-INT-1",
+        "F-TT-CLNC-INT-2",
+        "F-TT-CLNC-INT-3"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-82",
+      "rootClass": "out-of-scope",
+      "escapeReason": "parked module flagged though documented at removal site",
+      "capabilityDelta": "convention checklists diff-scoped only",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLNC-AUT-2"
+      ]
     }
   ],
   "messages": [],
@@ -18602,6 +18858,22 @@
       "payloadPath": "events/0091.json",
       "payloadHash": "d3916376196ac86332dfdc4e57b15a8898480a4373873714c8ec678a04f190f7",
       "eventHash": "e7ef4f166946614a351b8f62c49ba5325cc0db887355ec7ede917749ed8bf1d3"
+    },
+    {
+      "seq": 92,
+      "at": "2026-09-26T07:05:15.197Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "fea576e2d9a15cf8dab73cd31d0d8c1a2acbcdae50419aa64433704a73f35851",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "e7ef4f166946614a351b8f62c49ba5325cc0db887355ec7ede917749ed8bf1d3",
+      "payloadPath": "events/0092.json",
+      "payloadHash": "90f4e7fa2835dda2e64d56a917d11366a17399cb4d5d0054f874f8fcf74dfa37",
+      "eventHash": "70e8418cd5c2db16111b039527ba71011808906725a2de313f907a8174ea0837"
     }
   ]
 }
