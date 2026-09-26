@@ -108,6 +108,8 @@ export class SkillExecutorError extends Error {}
 // ---------------------------------------------------------------------------
 
 export class SkillExecutor {
+  private readonly activeLandedGateKeys = new Set<string>()
+
   constructor(
     private readonly scheduler: CombatScheduler,
     private readonly resolver: SkillResolver,
@@ -270,10 +272,28 @@ export class SkillExecutor {
             // Compiled target_hit_landed gate -- bracket the gated
             // consequence ops with the orchestration slots (TBS
             // resolveDeclaredHit: procs/reactive fire pre-ailment,
-            // taken windows/refresh/sweep post-detonate).
-            this.hooks?.onLandedGateEntered?.(step.gate, plan)
-            this.runSteps(step.then, plan, state)
-            this.hooks?.onLandedGateExited?.(step.gate, plan)
+            // taken windows/refresh/sweep post-detonate). A gate
+            // nested under an enclosing gate over the same hit ops
+            // (an authored `if target_hit_landed` inside onLanded)
+            // is the same landed gate -- run its ops but fire the
+            // orchestration hooks only at the outermost gate.
+            const gateKey =
+              step.gate.targetId +
+              '|' +
+              [...step.gate.hitOperationIds].sort().join(',')
+            const nested = this.activeLandedGateKeys.has(gateKey)
+            if (!nested) {
+              this.hooks?.onLandedGateEntered?.(step.gate, plan)
+            }
+            this.activeLandedGateKeys.add(gateKey)
+            try {
+              this.runSteps(step.then, plan, state)
+            } finally {
+              this.activeLandedGateKeys.delete(gateKey)
+            }
+            if (!nested) {
+              this.hooks?.onLandedGateExited?.(step.gate, plan)
+            }
           } else {
             this.runSteps(taken ? step.then : (step.else ?? []), plan, state)
           }
