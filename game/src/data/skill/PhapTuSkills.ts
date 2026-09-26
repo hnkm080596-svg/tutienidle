@@ -917,6 +917,7 @@ export const PHAP_TU_PHAP_THE_LANDED_CONSEQUENCES: Record<
         {
           type: 'deal_damage',
           target: 'other_enemy',
+          oncePerCast: true,
           coefficient: THUY_PHAP_THE_SECONDARY_COEFFICIENT,
           components: [{ kind: 'element', element: 'water', ratio: 1 }],
           scaling: {
@@ -943,6 +944,7 @@ export const PHAP_TU_PHAP_THE_LANDED_CONSEQUENCES: Record<
     {
       type: 'deal_damage',
       target: 'other_enemies',
+      oncePerCast: true,
       coefficient: THO_PHAP_THE_SHOCKWAVE_COEFFICIENT,
       components: [{ kind: 'element', element: 'earth', ratio: 1 }],
       scaling: {

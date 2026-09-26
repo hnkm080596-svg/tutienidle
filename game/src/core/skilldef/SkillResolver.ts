@@ -137,6 +137,11 @@ export interface SkillPreResolution {
 interface ResolveScope {
   /** for_each_target binding -- the member id `loop_target` resolves to. */
   loopTargetId?: CombatEntityId
+  /** Name of the var holding `ops_landed_any` over every earlier primary
+      hit's operation ids -- present only inside a landed lane whose
+      cast carries a `oncePerCast` secondary; the flagged op wraps
+      itself in `branch{var == 0}` (spec D4/D5 one secondary per cast). */
+  priorLandedVarName?: string
 }
 
 export class SkillResolverError extends Error {}
@@ -1080,6 +1085,13 @@ export class SkillResolver {
   ): ResolvedSkillPlanStep[] {
     const steps: ResolvedSkillPlanStep[] = []
     const targetIds = this.resolveIntentSet(op.target, ctx, scope)
+    // Hit opIds of every EARLIER primary instance across the cast --
+    // feeds the oncePerCast dedup gate (spec D4/D5: a flagged landed-
+    // gate secondary fires on the first landed instance only, so an
+    // AoE empowered cast mints one secondary hit, not one per target).
+    const priorLandedHitOpIds: CombatOperationId[] = []
+    const laneHasOncePerCast =
+      op.onLanded !== undefined && this.collectOncePerCast(op.onLanded)
     const instances = ctx.effective.instances
     const instanceCount =
       instances !== undefined
@@ -1234,9 +1246,27 @@ export class SkillResolver {
           query: { query: 'ops_landed_any', operationIds: hit.hitOpIds },
           into: consequenceVar,
         })
+        // oncePerCast dedup (spec D4/D5) -- when the lane carries a
+        // flagged secondary and earlier primary instances exist, read
+        // whether any of them landed; the flagged op compiles inside
+        // branch{var == 0} so only the first landed instance fires it.
+        let priorLandedVarName: string | undefined
+        if (laneHasOncePerCast && priorLandedHitOpIds.length > 0) {
+          priorLandedVarName = this.nextVar('opcast', ctx)
+          instanceSteps.push({
+            kind: 'read',
+            // snapshot: the accumulator keeps growing as later lanes
+            // mint hits; the read must pin THIS lane's priors.
+            query: { query: 'ops_landed_any', operationIds: [...priorLandedHitOpIds] },
+            into: priorLandedVarName,
+          })
+        }
         const consequenceThen: ResolvedSkillPlanStep[] =
           op.onLanded !== undefined && op.onLanded.length > 0
-            ? this.translateOps(op.onLanded, ctx, { loopTargetId: targetId })
+            ? this.translateOps(op.onLanded, ctx, {
+                loopTargetId: targetId,
+                priorLandedVarName,
+              })
             : []
         instanceSteps.push({
           kind: 'branch',
@@ -1260,10 +1290,46 @@ export class SkillResolver {
             },
           ],
         })
+        priorLandedHitOpIds.push(...hit.hitOpIds)
       }
       steps.push(...targetSteps)
     }
+    // oncePerCast (spec D4/D5) -- inside a landed lane carrying the
+    // dedup var, this flagged secondary compiles inside
+    // branch{var == 0}: it fires only when no earlier primary instance
+    // landed (i.e. it becomes THE cast's one secondary hit).
+    if (op.oncePerCast === true && scope.priorLandedVarName !== undefined) {
+      return [
+        {
+          kind: 'branch',
+          condition: {
+            kind: 'var',
+            name: scope.priorLandedVarName,
+            op: 'lt',
+            value: 1,
+          },
+          then: steps,
+        },
+      ]
+    }
     return steps
+  }
+
+  /** Recursive scan for a `oncePerCast`-flagged deal_damage anywhere in
+      a landed lane (flagged ops may sit inside a bounded `if`). */
+  private collectOncePerCast(
+    ops: readonly AuthoredSkillOperation[],
+  ): boolean {
+    return ops.some((o) => {
+      if (o.type === 'deal_damage') return o.oncePerCast === true
+      if (o.type === 'if') {
+        return (
+          this.collectOncePerCast(o.then) ||
+          (o.else !== undefined && this.collectOncePerCast(o.else))
+        )
+      }
+      return false
+    })
   }
 
   /** One instance hit -- the execute modifier compiles to a

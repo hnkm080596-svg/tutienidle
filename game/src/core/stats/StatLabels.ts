@@ -55,7 +55,7 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
   { key: 'enduranceThreshold', label: 'Ngưỡng Kiên Cường', description: 'Đòn có sát thương ≤ ngưỡng này bị giảm mạnh theo % Kiên Cường — đòn to hơn chỉ bị trừ 1 lượng cố định.', category: 'defense_advanced' },
   { key: 'endurancePercent', label: '% Kiên Cường', description: 'Mức giảm sát thương áp dụng cho đòn nhỏ (xem Ngưỡng Kiên Cường).', category: 'defense_advanced' },
   { key: 'wardMax', label: 'Hộ Thuẫn tối đa', description: 'Máu phụ hấp thụ sát thương trước Khí huyết — tự hồi khi không bị đánh trúng 1 lúc.', category: 'defense_advanced' },
-  // Phap Tu Reimagined (F13): 'Linh lực hộ thể' is the reimagine's
+  // Phap Tu Reimagined (F13): 'Linh luc ho the' is the reimagine's
   // DR mechanic name -- manaShieldPercent (the damage->mana shield)
   // keeps a distinct label.
   { key: 'manaShieldPercent', label: 'Khiên linh lực', description: 'Tỉ lệ sát thương được chuyển sang tiêu hao Linh lực.', category: 'defense_advanced' },

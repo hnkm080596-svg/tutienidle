@@ -180,7 +180,13 @@ describe('authored technique gate set (M-QI-06)', () => {
     expect(getEffectiveNodeMaxLevel(player, trunk)).toBe(2)
     expect(canUpgradeNode(player, trunk)).toBe(false)
 
+    // The atLevel:5 gate requires rank 4 (MINOR_TIER_GATES on the
+    // maxLevel-5 trunk) -- rank 3 still freezes, rank 4 resumes.
     player.techniqueProgress = { rank: 3, grade: 2 }
+
+    expect(canUpgradeNode(player, trunk)).toBe(false)
+
+    player.techniqueProgress = { rank: 4, grade: 2 }
 
     expect(canUpgradeNode(player, trunk)).toBe(true)
   })

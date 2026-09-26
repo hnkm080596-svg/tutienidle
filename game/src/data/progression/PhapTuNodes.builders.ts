@@ -8,7 +8,7 @@ import type { StatModifier } from '../../core/stats/StatCalculator'
 import { SPELL_KIT_IDS } from '../skill/Skills'
 import { ELEMENT_LABELS } from '../../core/element/ElementLabels'
 
-// Phap Tu Reimagine (2026-09-26 spec sec.1.4) — the branch is trimmed to
+// Phap Tu Reimagine (2026-09-26 spec sec.1.4) - the branch is trimmed to
 // skill-owned mechanics only: element root (unlocks the basic), the
 // ailment mastery growth (ailment = the basic's own channel, ruling
 // F14), and the realm-gated linh_ngo_<special> unlock (grants the Phap

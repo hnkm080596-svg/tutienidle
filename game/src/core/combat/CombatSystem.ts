@@ -29,20 +29,20 @@ const DOT_RESISTANCE_CAP = 0.75
 const DOT_RESISTANCE_FLOOR = -1
 
 /**
- * Toàn bộ combat giờ đi qua action impact (xem ActionImpactSystem/
- * BattleSystem) — resolveActionHit() là điểm vào
- * DUY NHẤT tính damage thật (attack()/attackWithElements() cũ đã bị
- * xoá, không còn nơi nào gọi từ khi combat chuyển hẳn sang action impact).
+ * Toan bo combat gio di qua action impact (xem ActionImpactSystem/
+ * BattleSystem) - resolveActionHit() la diem vao
+ * DUY NHAT tinh damage that (attack()/attackWithElements() cu da bi
+ * xoa, khong con noi nao goi tu khi combat chuyen han sang action impact).
  *
- * Pipeline đầy đủ (đúng thứ tự accuracy → dodge → block →
- * armor/resistance → endurance → ward → HP): mitigation Armor/
- * Resistance đã áp xong TRONG calculateBaseDamage()/
- * calculateSkillBaseDamage() (mỗi component tự mitigate theo đúng
- * loại của nó — không gộp chung 1 công thức được vì skill nhiều
- * component có thể mang nhiều hành khác nhau cùng lúc). Block và
- * Armor/Resistance đều là % nhân đơn thuần nên thứ tự tính giữa 2
- * bước không đổi kết quả cuối (phép nhân giao hoán) — chỉ thứ tự
- * SỰ KIỆN/emit mới theo đúng accuracy→dodge→block như yêu cầu.
+ * Pipeline day du (dung thu tu accuracy -> dodge -> block ->
+ * armor/resistance -> endurance -> ward -> HP): mitigation Armor/
+ * Resistance da ap xong TRONG calculateBaseDamage()/
+ * calculateSkillBaseDamage() (moi component tu mitigate theo dung
+ * loai cua no - khong gop chung 1 cong thuc duoc vi skill nhieu
+ * component co the mang nhieu hanh khac nhau cung luc). Block va
+ * Armor/Resistance deu la % nhan don thuan nen thu tu tinh giua 2
+ * buoc khong doi ket qua cuoi (phep nhan giao hoan) - chi thu tu
+ * SU KIEN/emit moi theo dung accuracy->dodge->block nhu yeu cau.
  */
 export interface SurviveEffectsPolicy {
   grantBuffId?: BuffDefinitionId
@@ -64,11 +64,11 @@ export interface SurviveEffectsPolicy {
 }
 
 /**
- * The Tu Reimagined (plan Task 9) — ordered survive-lethal contract.
+ * The Tu Reimagined (plan Task 9) - ordered survive-lethal contract.
  * killIfDead iterates the session's sources; the first `survived:true`
  * wins. `grantBuffId`/`grantBuffDurationOverride`/`cleanseDebuffs` are
  * applied through the session's SurviveEffectsPolicy (buffSystem +
- * registry) — the grant is OPTIONAL: a free survive (e.g. an already-
+ * registry) - the grant is OPTIONAL: a free survive (e.g. an already-
  * active Bat Tu buff) returns bare {survived:true} so repeat lethals
  * never refresh the buff (review-#6 fix).
  */
@@ -101,7 +101,7 @@ export class CombatSystem {
     guard: SurviveLethalGuard
     surviveEffects?: SurviveEffectsPolicy
     /**
-     * The Tu Reimagined (plan Task 9, D9) — ordered sources evaluated
+     * The Tu Reimagined (plan Task 9, D9) - ordered sources evaluated
      * BEFORE the talent guard: the Bat Tu ultimate is the first line of
      * survival; the talent is the extra life once the ult is spent.
      */
@@ -113,7 +113,7 @@ export class CombatSystem {
   }
 
   /**
-   * Mission C Task 8 — combat rolls read ONE random source. The battle
+   * Mission C Task 8 - combat rolls read ONE random source. The battle
    * lifecycle owner sets it per cycle (seeded session rng); anything not
    * inside a battle keeps the Math.random default. CombatSystem is
    * shared per-GameManager, so the source is SETTABLE, never
@@ -179,7 +179,7 @@ export class CombatSystem {
   }
 
   /**
-   * M8 (ARCH-003) — per-turn HP/MP/Ward regeneration entry point. The
+   * M8 (ARCH-003) - per-turn HP/MP/Ward regeneration entry point. The
    * turn engine supplies already-decided per-turn deltas; the vitals
    * authority owns clamping, the dead-entity boundary, and the single
    * 'regen' vitals event.
@@ -329,10 +329,10 @@ export class CombatSystem {
   }
 
   /**
-   * Trượt (accuracy thua evasion trong contest — xem Accuracy.ts) —
-   * không tính damage, không trừ HP, không tích rage. Chỉ emit
-   * 'dodge' (giữ nguyên tên event/trigger cũ, không đổi PassiveSystem/
-   * FormationSystem) rồi trả kết quả rỗng — KHÔNG đi qua resolveAttack().
+   * Truot (accuracy thua evasion trong contest - xem Accuracy.ts) -
+   * khong tinh damage, khong tru HP, khong tich rage. Chi emit
+   * 'dodge' (giu nguyen ten event/trigger cu, khong doi PassiveSystem/
+   * FormationSystem) roi tra ket qua rong - KHONG di qua resolveAttack().
    */
   private resolveDodge(
     source: CombatEntity,
@@ -390,7 +390,7 @@ export class CombatSystem {
     // — mọi đòn trúng đích luôn gây ít nhất 1 sát thương.
     result.finalDamage = Math.max(1, result.finalDamage * this.finalDamageMultiplier(source, target))
 
-    // Phap Tu Reimagined (spec D9, F11) — Linh Luc Ho The: DR on the
+    // Phap Tu Reimagined (spec D9, F11) - Linh Luc Ho The: DR on the
     // resolved hit scaled by the LIVE LL ratio, applied AFTER the
     // final-damage multiplier and BEFORE every absorb layer. Reaching
     // here at all means hostile direct damage (DoT/reaction/flat
@@ -398,7 +398,9 @@ export class CombatSystem {
     // DR itself never drains LL.
     const linhLucHoTheCap = clampStatValue('linhLucHoTheCap', target.stats.linhLucHoTheCap)
     if (linhLucHoTheCap > 0 && target.stats.maxMp > 0 && target.currentMp > 0) {
-      const dr = linhLucHoTheCap * (target.currentMp / target.stats.maxMp)
+      // mp can transiently exceed maxMp (buffs) -- clamp the ratio so
+      // dr never breaches the linhLucHoTheCap stat cap.
+      const dr = linhLucHoTheCap * Math.min(1, target.currentMp / target.stats.maxMp)
       result.finalDamage = Math.max(1, result.finalDamage * (1 - dr))
     }
 
@@ -559,18 +561,18 @@ export class CombatSystem {
   }
 
   /**
-   * Plans/magicpathgeneral Phase 9-12 (2026-08-21) — điểm áp dụng THẬT
-   * SỰ cho 1 tick "damage-over-time-ở-1-điểm" — dùng chung bởi
-   * AilmentSystem.update() (DoT gắn trên entity) VÀ BattleSystem.
-   * updateLavaZones() (Lava Zone — Phase 12 nói rõ "không phải DoT
-   * trên target", nhưng damage vẫn cần qua ĐÚNG pipeline DOT RES/
-   * Poison Recovery/DamageEvent, chỉ khác nguồn KÍCH HOẠT tick là 1
-   * VÙNG theo vị trí thay vì 1 Ailment instance). Đúng pipeline Phase
-   * 10 "DoT tick → DamageEvent → sourceId/targetId/effectId → DOT RES
-   * → final damage". `source` có thể undefined (nguồn đã chết/rời
-   * trận) — chỉ ảnh hưởng Kim Thế xuyên kháng + Poison Recovery (2
-   * hiệu ứng cần ĐỌC nguồn còn sống), DOT RES phía target vẫn áp bình
-   * thường vì đó là stat của TARGET.
+   * Plans/magicpathgeneral Phase 9-12 (2026-08-21) - diem ap dung THAT
+   * SU cho 1 tick "damage-over-time-o-1-diem" - dung chung boi
+   * AilmentSystem.update() (DoT gan tren entity) VA BattleSystem.
+   * updateLavaZones() (Lava Zone - Phase 12 noi ro "khong phai DoT
+   * tren target", nhung damage van can qua DUNG pipeline DOT RES/
+   * Poison Recovery/DamageEvent, chi khac nguon KICH HOAT tick la 1
+   * VUNG theo vi tri thay vi 1 Ailment instance). Dung pipeline Phase
+   * 10 "DoT tick -> DamageEvent -> sourceId/targetId/effectId -> DOT RES
+   * -> final damage". `source` co the undefined (nguon da chet/roi
+   * tran) - chi anh huong Kim The xuyen khang + Poison Recovery (2
+   * hieu ung can DOC nguon con song), DOT RES phia target van ap binh
+   * thuong vi do la stat cua TARGET.
    */
   applyDotDamage(params: {
     sourceId: string
@@ -640,9 +642,9 @@ export class CombatSystem {
   }
 
   /**
-   * Public — AilmentSystem (DoT tick) dùng chung để đảm bảo chết vì
-   * hiệu ứng theo thời gian cũng emit đúng 'death'/'kill' như chết vì
-   * đòn đánh trực tiếp, không lặp code kiểm tra HP<=0 ở 2 nơi.
+   * Public - AilmentSystem (DoT tick) dung chung de dam bao chet vi
+   * hieu ung theo thoi gian cung emit dung 'death'/'kill' nhu chet vi
+   * don danh truc tiep, khong lap code kiem tra HP<=0 o 2 noi.
    */
   killIfDead(entity: CombatEntity, killerId: string, execCtx?: CombatAuthorityExecutionContext) {
     if (entity.currentHp > 0 || !entity.alive) {

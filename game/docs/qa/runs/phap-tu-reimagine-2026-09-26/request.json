@@ -1,0 +1,12 @@
+{
+  "runId": "phap-tu-reimagine-2026-09-26",
+  "productRoot": ".",
+  "goal": "Phap Tu reimagine per design authority: The becomes live LQ resource (basic casts gain +1 on landed, max 5, spend on Phap The empowered variant); 5 element basics with Phap The variants; 5 Specials at Truc Co (tam_muoi/thanh_tuyen/van_moc/kim_y/trong_nhac) with 30% MaxLL percent cost + Phap Trang window buffs + per-element markers; Ho The DR (linhLucHoTheCap stat, CurrentLL/MaxLL live, hostile direct only); full retirement of route machinery (PhapTuRoutes, route nodes, route UI, empowered-ult kit, chain defs); SpellPathState{element} + save v85; The bar cap 5 + PHAP THE HUD indicator",
+  "requiredReadiness": true,
+  "contractPaths": [
+    "docs/qa/protocol/README.md",
+    "docs/specs/phap-tu-reimagine-spec.md",
+    "docs/design/phap-tu-reimagine-design.txt"
+  ],
+  "attackModelPath": "attack-model.json"
+}

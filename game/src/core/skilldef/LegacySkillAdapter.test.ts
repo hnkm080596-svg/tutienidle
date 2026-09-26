@@ -294,7 +294,7 @@ describe('LegacySkillAdapter -- def-level fields', () => {
       count: 2,
       multicast: { chance: 0.4, maxExtraCasts: 2 },
     })
-    // Phap Tu Reimagined: theGainOnCrit is retired — grants map the
+    // Phap Tu Reimagined: theGainOnCrit is retired - grants map the
     // landed-cast channel only.
     expect(root.grants).toEqual({ theOnLandedCast: 10 })
     expect(root.theScaling).toEqual({ coeff: 0.5 })

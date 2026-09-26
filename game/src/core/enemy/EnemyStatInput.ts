@@ -255,7 +255,7 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     wardRegenPerTurn: input.special?.wardRegenPerTurn ?? 0,
     wardBreakDamagePercent: input.special?.wardBreakDamagePercent ?? 0,
     manaShieldPercent: input.special?.manaShieldPercent ?? 0,
-    // Phap Tu Reimagined (spec D9) — Ho The is a player-path mechanic;
+    // Phap Tu Reimagined (spec D9) - Ho The is a player-path mechanic;
     // enemies never carry an LL-shield cap (0 = no DR contribution).
     linhLucHoTheCap: 0,
     leechPercent: input.special?.leechPercent ?? 0,

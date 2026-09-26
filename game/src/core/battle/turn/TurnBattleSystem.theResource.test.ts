@@ -7,13 +7,13 @@ import { createBaseStats } from '../../stats/StatBlock'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import { MAX_THE, THE_GAIN_PER_LINK, THE_GAIN_PER_FINISHER } from '../../combat/CombatTypes'
 
-// Phap Tu Reimagined (spec D1) — the The pool is
+// Phap Tu Reimagined (spec D1) - the The pool is
 // FIELD-DRIVEN, not slot-driven: a cast grants `theGainOnLandedCast`
 // ONCE when it lands on >=1 valid target (target/hit count never
-// multiplies it — a 5-target AoE grants +5, not +25). The clamp reads
+// multiplies it - a 5-target AoE grants +5, not +25). The clamp reads
 // `entity.maxThe ?? MAX_THE`. The legacy crit channel (theGainOnCrit)
-// is retired — crits grant no extra The. Skills that author no gain
-// field generate nothing — slot position is not a gain rule (Bat Kiem
+// is retired - crits grant no extra The. Skills that author no gain
+// field generate nothing - slot position is not a gain rule (Bat Kiem
 // Thuat keeps its gains via authored fields).
 
 function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {

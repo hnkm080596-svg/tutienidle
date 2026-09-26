@@ -168,7 +168,7 @@ describe('PHAP_TU_NODES — requiredWay spell_pathway export stamp', () => {
 
       // Three-path design (2026-09-25, sec.4-b): realm-reward grant
       // nodes are exempt from the way requirement (they are grant-only,
-      // never purchasable) — the data slice owns their exact fields.
+      // never purchasable) - the data slice owns their exact fields.
       if (!node.rewardOnly) {
         expect(node.requiredWay, node.id).toBe('spell_pathway')
       }

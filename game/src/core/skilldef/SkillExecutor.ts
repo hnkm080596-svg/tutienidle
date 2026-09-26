@@ -683,7 +683,7 @@ export class SkillExecutor {
     state: PlanExecutionState,
     suppress: boolean,
   ): void {
-    if (suppress || plan.grants === undefined) return
+    if (suppress || plan.grants === undefined || plan.subcastIndex > 0) return
     // TBS grantTheFromCast parity -- targetIds.length > 0: a LANDED hit
     // for damaging casts (whiffed casts grant nothing even when side
     // ops connected); an alive-targeted application for non-damaging

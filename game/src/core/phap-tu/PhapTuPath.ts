@@ -20,7 +20,7 @@ import { MAX_THE } from '../combat/CombatTypes'
 //   spell_pathway — ordinary Phap Tu (kit dai_ngu_hanh_chan_quyet): the
 //     element/The machinery. In-way state lives on
 //     player.spellPath { element } (SpellPathState stays the single
-//     authority — the atomic commit is unchanged).
+//     authority - the atomic commit is unchanged).
 //   ngo_dao — Phap Tu An (kit ngo_dao_chan_quyet): hidden way offered
 //     only at the Initiation Ritual when linh_bao is cast-Lv3. Fixed
 //     three-skill kit (HIDDEN_SPELL_REQUIRED_SKILLS), NO element/The

@@ -160,7 +160,7 @@ describe('M8 — real stage-loop resource regen (ARCH-003)', () => {
     expect(entity.currentMp).toBeLessThanOrEqual(entity.stats.maxMp)
   })
 
-  // Phap Tu Reimagined: the Ward-regen legs are retired by design —
+  // Phap Tu Reimagined: the Ward-regen legs are retired by design -
   // the reimagined specials are pure Phap Trang windows (Tam Muoi /
   // Thanh Tuyen / Van Moc / Kim Y / Trong Nhac), none grants bang_giap
   // or dia_tru, and the duong_linh_bang_giap specialization no longer

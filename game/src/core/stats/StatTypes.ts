@@ -46,9 +46,9 @@ export type StatType =
   // dùng THẲNG currentMp đang có (đánh đổi tài nguyên cast skill lấy
   // sinh tồn — đúng tinh thần "linh lực giảm sát thương").
   | 'manaShieldPercent'
-  // Phap Tu Reimagined (spec D9) — Linh Luc Ho The: DR CAP on hostile
+  // Phap Tu Reimagined (spec D9) - Linh Luc Ho The: DR CAP on hostile
   // direct hits, scaled by the LIVE LL ratio (currentMp / maxMp) at hit
-  // resolution — LL = 0 => DR = 0; costs no extra LL. Only the
+  // resolution - LL = 0 => DR = 0; costs no extra LL. Only the
   // hit-resolving lane (resolveAttack) reads it: DoT / reaction / flat
   // profiles bypass by construction (F11).
   | 'linhLucHoTheCap'

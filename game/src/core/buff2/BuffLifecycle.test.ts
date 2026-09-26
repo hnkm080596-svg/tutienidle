@@ -298,6 +298,47 @@ describe('expiry + liveness ordering (spec sec.28 barrier ordering)', () => {
     // 1 per-unit settle + 1 final barrier.
     expect(lctx.settles).toBe(2)
   })
+
+  // phap-tu-reimagine cleanA round-1 - a boundToSourceBuffId marker must
+  // die 'expired' in the SAME phase boundary that expires its window
+  // (spec D10), not lag one runPhaseB. The head-of-pass binding sweep
+  // runs before the decrement that retires the window; the post-expiry
+  // re-sweep catches markers orphaned inside this pass.
+  it('boundToSourceBuffId marker dies in the same pass its window expires', () => {
+    const w = makeBuffSystemWorld()
+    const window = def(w, {
+      lifetime: { clock: 'holder_turns', duration: 1, scaling: 'fixed' },
+    })
+    seed(w, window.id, { targetId: sourceA, sourceId: sourceA, remaining: 1 })
+    const marker = def(w, {
+      boundToSourceBuffId: window.id,
+      lifetime: { clock: 'permanent', scaling: 'fixed' },
+    })
+    const markerInst = seed(w, marker.id, { targetId: targetB, sourceId: sourceA })
+
+    w.system.onHolderTurnEnd(sourceA, w.makeLctx())
+
+    expect(w.store.get(markerInst.instanceId)).toBeUndefined()
+    expect(removedReasons(w)).toEqual(['expired', 'expired'])
+  })
+
+  it('boundToSourceBuffId marker survives while its window still holds', () => {
+    const w = makeBuffSystemWorld()
+    const window = def(w, {
+      lifetime: { clock: 'holder_turns', duration: 2, scaling: 'fixed' },
+    })
+    seed(w, window.id, { targetId: sourceA, sourceId: sourceA, remaining: 2 })
+    const marker = def(w, {
+      boundToSourceBuffId: window.id,
+      lifetime: { clock: 'permanent', scaling: 'fixed' },
+    })
+    const markerInst = seed(w, marker.id, { targetId: targetB, sourceId: sourceA })
+
+    w.system.onHolderTurnEnd(sourceA, w.makeLctx())
+
+    expect(w.store.get(markerInst.instanceId)).toBeDefined()
+    expect(removedReasons(w)).toEqual([])
+  })
 })
 
 describe('onEntityDeath / onBattleEnd', () => {

@@ -21,6 +21,7 @@ import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import type { GameManager } from '@/core/game/GameManager'
 import type { SpellPathState } from '@/core/phap-tu/PhapTuState'
 import type { CultivationPathId, CultivationWayId } from '@/core/player/CultivationPathKit'
+import { SPELL_PATH_MAX_THE } from '@/core/phap-tu/PhapTuPath'
 import {
   getActiveElement,
   hasStaticPathCapability,
@@ -31,10 +32,10 @@ import {
   type GateRegistry,
 } from '@/presentation/gate/PresentationGate'
 
-/** The reimagined pool is a flat 5 (spec D8/D17) -- the pathway's
- * resolveMaxThe() read site lives in PhapTuPath; the HUD never renders
- * a different cap. */
-export const THE_BAR_MAX = 5
+/** The reimagined pool is a flat 5 (spec D8/D17) -- the canonical
+ * cap lives in PhapTuPath (SPELL_PATH_MAX_THE, single owner); the HUD
+ * never renders a different cap. */
+export const THE_BAR_MAX = SPELL_PATH_MAX_THE
 
 export interface TheBarSnapshot {
   current: number

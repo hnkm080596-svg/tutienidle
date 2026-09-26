@@ -102,7 +102,10 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
     const masteryModifiers = () => spellModifiers().filter(
       modifier => modifier.id.startsWith('tinh_thong_'),
     )
-    expect(spellModifiers()).toHaveLength(3)
+    // Phap Tu Reimagine spec D9 -- 2 (was 3): the path-level
+    // manaShieldPercent grant ('phap_tu_ho_the') retired; Ho The is now
+    // the TC-unlocked linhLucHoTheCap DR ratio.
+    expect(spellModifiers()).toHaveLength(2)
     expect(masteryModifiers()).toHaveLength(0)
 
     // Phap Tu Reimagine (spec D5) -- element-only commit; the route arg

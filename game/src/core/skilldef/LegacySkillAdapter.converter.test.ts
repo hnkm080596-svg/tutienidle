@@ -39,7 +39,7 @@ describe('toTurnSkillDefinition', () => {
       attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
       manaScalingRatio: 0.001,
     })
-    // Debuff effect → appliesAilment (hoa_an, chance 0.5).
+    // Debuff effect -> appliesAilment (hoa_an, chance 0.5).
     expect(turnSkill.appliesAilment).toEqual({ buffDefinitionId: 'hoa_an', chance: 0.5 })
   })
 
@@ -253,7 +253,7 @@ describe('toTurnSkillDefinition', () => {
       const effective = skillSystem.getEffectiveSkill(manager.get(skill.id)!)
       const turnSkill = toTurnSkillDefinition(manager.get(skill.id)!, effective)
 
-      // M10 (ARCH-008) — the authored duration:8 must survive
+      // M10 (ARCH-008) - the authored duration:8 must survive
       // conversion; without it the registry default 6 silently wins.
       expect(turnSkill.appliesBuffs).toEqual([{ definitionId: 'thanh_tuyen', target: 'self', durationOverride: 8 }])
     })

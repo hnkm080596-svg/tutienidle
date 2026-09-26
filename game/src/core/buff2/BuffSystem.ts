@@ -1155,6 +1155,23 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
       }
     }
 
+    // (5b) boundToSourceBuffId re-sweep -- a window that expired in THIS
+    //     pass's decrement/expiry step retires its bound markers NOW
+    //     (spec D10: the marker dies the moment the source no longer
+    //     holds the definition), not at the next phase boundary. Without
+    //     this a stale marker can still feed e.g. periodic_growth reads
+    //     landing between expiry and the next runPhaseB.
+    for (const instance of this.sortedAll()) {
+      const def = this.registry.get(instance.definitionId)
+      if (
+        def.boundToSourceBuffId !== undefined &&
+        this.store.findOnTarget(def.boundToSourceBuffId, instance.sourceId) ===
+          undefined
+      ) {
+        this.removeInstance(instance, 'expired', lctx.events, lctx.rootActionId)
+      }
+    }
+
     // (6) Final barrier -- lifecycle emissions + their consequences
     //     resolve inside this root transaction.
     lctx.settle()

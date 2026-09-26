@@ -3,18 +3,21 @@ import { ManualClockSource } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { defineEnemy } from '../enemy/Enemy'
-import { SKILLS } from '../../data/skill/Skills'
+import { SKILLS, SPELL_KIT_IDS } from '../../data/skill/Skills'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { SPELL_PATH_MAX_THE } from '../phap-tu/PhapTuPath'
 import {
+  KIM_LIET_PENETRATION_PER_STACK,
   KIM_PHAP_THE_PENETRATION_BONUS,
+  PHAP_TU_TRANG_COST_PERCENT_OF_MAX,
   THUY_PHAP_THE_SECONDARY_COEFFICIENT,
   THO_PHAP_THE_SHOCKWAVE_COEFFICIENT,
 } from '../../data/skill/PhapTuSkills'
+import { hasResourceFor } from '../battle/turn/TurnSkillAction'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 import type { ElementType } from '../element/ElementType'
 
-// Phap Tu Reimagined (spec D1-D7) — the empowerment channel IS Phap
+// Phap Tu Reimagined (spec D1-D7) - the empowerment channel IS Phap
 // The: the committed element basic carries
 // `empowerment{theThreshold:5, empowered:<element rider variant>}` at
 // battle build. The declare-time swap is engine machinery (checked
@@ -36,11 +39,19 @@ function makeManager() {
   return { gameManager, player }
 }
 
-function buildWith(element: ElementType | undefined) {
+function buildParticipant(element: ElementType | undefined, opts?: { learnSpecial?: boolean }) {
   const { gameManager, player } = makeManager()
 
   if (element !== undefined) {
     expect(gameManager.progressionOps.selectSpellPathElement(element, player)).toBe(true)
+    if (opts?.learnSpecial === true) {
+      // The special is learned via the Truc Co linh_ngo node; the test
+      // shortcuts the node click and learns the template directly.
+      const specialId = SPELL_KIT_IDS[element][1]
+      const template = SKILLS.find((s) => s.id === specialId)
+      expect(template).toBeDefined()
+      gameManager.skillSystem.learn(template!)
+    }
   }
 
   const enemy = defineEnemy({
@@ -63,7 +74,11 @@ function buildWith(element: ElementType | undefined) {
 
   gameManager.startBattleWithPlayer(player, enemy)
 
-  return gameManager.getTurnBattle()!.players[0]!.basic!
+  return gameManager.getTurnBattle()!.players[0]!
+}
+
+function buildWith(element: ElementType | undefined) {
+  return buildParticipant(element).basic!
 }
 
 describe('Phap The empowerment attach (spec D1-D7)', () => {
@@ -147,5 +162,81 @@ describe('Phap The empowerment attach (spec D1-D7)', () => {
     const empowered = buildWith('metal').empowerment!.empowered
 
     expect(empowered.elementalPenetrationBonus).toBe(KIM_PHAP_THE_PENETRATION_BONUS)
+  })
+})
+
+// Resolve-seam attaches (spec D8/D10/D11) - the constants in
+// PhapTuSkills are dead data until the spell-pathway resolve seam
+// stamps them on the converted defs. These pins hold the attach sites.
+describe('resolve-seam attaches (window lane / Kim Liet pierce / Trang cost)', () => {
+  it('kit basic carries the element WINDOW landed lane; the empowered variant inherits it', () => {
+    const basic = buildWith('earth')
+    const trongGate = basic.landedConsequences?.find(
+      (op) => op.type === 'if' && op.condition.kind === 'stacks_at_least',
+    )
+    expect(trongGate).toBeDefined()
+
+    const empowered = basic.empowerment!.empowered
+    // Rider ops prepend; the window lane must still be present after them.
+    expect(
+      empowered.landedConsequences?.some(
+        (op) => op.type === 'if' && op.condition.kind === 'stacks_at_least',
+      ),
+    ).toBe(true)
+  })
+
+  it('wood kit basic carries the sinh_co window lane (latch + plant ops present)', () => {
+    const basic = buildWith('wood')
+    const vanMocGate = basic.landedConsequences?.find(
+      (op) =>
+        op.type === 'if' &&
+        op.condition.kind === 'stacks_at_least' &&
+        op.condition.definitionId === 'van_moc',
+    )
+    expect(vanMocGate).toBeDefined()
+    if (vanMocGate!.type === 'if') {
+      const latch = vanMocGate.then.find((op) => op.type === 'if')
+      expect(latch?.type === 'if' && latch.condition.kind === 'stacks_below').toBe(true)
+    }
+  })
+
+  it('metal kit basic + empowered carry the Kim Liet per-stack pierce', () => {
+    const basic = buildWith('metal')
+    expect(basic.penetrationFromStacks).toEqual({
+      ailmentId: 'kim_liet',
+      perStack: KIM_LIET_PENETRATION_PER_STACK,
+    })
+    expect(basic.empowerment!.empowered.penetrationFromStacks).toEqual({
+      ailmentId: 'kim_liet',
+      perStack: KIM_LIET_PENETRATION_PER_STACK,
+    })
+  })
+
+  it('empowered variant still mints +1 The (theGainOnLandedCast inherited)', () => {
+    const empowered = buildWith('fire').empowerment!.empowered
+    expect(empowered.theGainOnLandedCast).toBe(1)
+  })
+
+  it('special carries the live 30%-of-max Linh Luc cost and gates on it', () => {
+    const participant = buildParticipant('water', { learnSpecial: true })
+    const special = participant.special?.skill
+    expect(special).toBeDefined()
+    expect(special?.resourceCostPercentOfMax).toBe(PHAP_TU_TRANG_COST_PERCENT_OF_MAX)
+
+    const entity = participant.entity
+    entity.currentMp = entity.stats.maxMp
+    expect(hasResourceFor(entity, special!)).toBe(true)
+    entity.currentMp = 0
+    expect(hasResourceFor(entity, special!)).toBe(false)
+  })
+
+  it('starter-fallback basic (pre-commit) carries no window lane', () => {
+    const basic = buildWith(undefined)
+    expect(
+      (basic.landedConsequences ?? []).every(
+        (op) => !(op.type === 'if' && op.condition.kind === 'stacks_at_least'),
+      ),
+    ).toBe(true)
+    expect(basic.penetrationFromStacks).toBeUndefined()
   })
 })

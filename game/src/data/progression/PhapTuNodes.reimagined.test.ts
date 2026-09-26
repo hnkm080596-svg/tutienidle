@@ -8,7 +8,7 @@ import { aggregateNodeStatModifiers } from '../../core/progression/NodeSystem'
 import type { ElementType } from '../../core/element/ElementType'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// Phap Tu Reimagine (2026-09-26 spec sec.1.4) — tree shape test for the
+// Phap Tu Reimagine (2026-09-26 spec sec.1.4) - tree shape test for the
 // reworked branch: 5 mutex element roots committed atomically by
 // selectSpellPathElement(element) (no route arg, no unlocksElement),
 // per-element ailment mastery growth, and the linh_ngo_<special>

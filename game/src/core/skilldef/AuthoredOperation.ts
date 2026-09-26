@@ -215,6 +215,16 @@ export type AuthoredSkillOperation =
           secondary's own onLanded may carry non-deal_damage ops only).
           for_each_target/read_stacks are still rejected inside. */
       onLanded?: readonly AuthoredSkillOperation[]
+      /** Phap Tu Reimagined (spec D4/D5 secondary cap) -- legal ONLY on a
+          landed-gate secondary hit (a deal_damage inside another op's
+          onLanded lane): this hit may execute at most once per cast, on
+          the FIRST landed primary instance. On an AoE cast with N
+          landing targets the rider still mints only one secondary
+          resolution (Thuy/Tho Phap The 'one secondary target per cast').
+          Resolved at plan time: ops carrying this flag compile inside a
+          branch gated on `ops_landed_any` over every earlier primary
+          hit's operation ids. */
+      oncePerCast?: boolean
     }
   | {
       type: 'heal'

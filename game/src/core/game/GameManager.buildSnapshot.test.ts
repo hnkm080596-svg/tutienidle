@@ -106,7 +106,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
 
     const rawSkill = gameManager.skillManager.get('hoa_cau_thuat')!
 
-    // Trạng thái gốc — elemental fire damage components.
+    // Trang thai goc - elemental fire damage components.
     expect(rawSkill.effects[0]?.components).toBeDefined()
 
     // --- Build Snapshot -> Combat: finalStats CUỐI CÙNG (đủ cả 3

@@ -111,7 +111,7 @@ export const BASELINE_RECIPES: readonly BaselineRecipe[] = [
     expectedEconomy: {
       // +1 the per landed cast (theGainOnLandedCast). mpGained is NOT
       // declared: the reimagined basic is free (resourceType 'none'),
-      // so MP never dips and the regen channel reads 0 — a declared
+      // so MP never dips and the regen channel reads 0 - a declared
       // dead channel. The data slice may reintroduce a cost; restore
       // the declaration then.
       mustGenerate: ['theGained'],

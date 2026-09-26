@@ -4,14 +4,14 @@ import { SkillManager } from './SkillManager'
 import { SkillSystem } from './SkillSystem'
 import { targetingForSkill } from '../battle/CombatAction'
 
-// Engine 22c8007 (Task 10 follow-up, spec sec.2 variants) —
+// Engine 22c8007 (Task 10 follow-up, spec sec.2 variants) -
 // SkillSpecialization.targeting override: a specialization swaps the
 // AoE shape (single <-> square/line/all_lanes). getEffectiveSkill returns
 // `targeting` = specialization.targeting ?? skill.targeting;
 // BattleSystem.resolveSkillEffects resolves the shape via
 // targetingForSkill(effective). Both layers pinned here.
 //
-// Phap Tu Reimagined: the chain-era Thuần C/D variants retired; the
+// Phap Tu Reimagined: the chain-era Thuan C/D variants retired; the
 // surviving override surface is the basic-lane `*_tan_diem` capstone
 // specs (square radius 1) on the five element basics.
 

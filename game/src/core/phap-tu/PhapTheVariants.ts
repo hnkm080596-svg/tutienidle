@@ -1,13 +1,13 @@
 /**
- * Phap Tu Reimagined (spec D3-D7) — the Phap The element riders.
+ * Phap Tu Reimagined (spec D3-D7) - the Phap The element riders.
  *
  * At battle build the element basic carries
  * `empowerment: { theThreshold: SPELL_PATH_MAX_THE, empowered: variant }`;
  * at declare, `currentThe >= 5` swaps the resolved payload (checked
- * before cast, nothing consumed, nothing decays — the legacy
+ * before cast, nothing consumed, nothing decays - the legacy
  * consumesAllThe burn is retired, not reused). Every variant shares the
  * base def's fields and carries NO The income beyond the basic's own
- * +1 — rider hits never grant The.
+ * +1 - rider hits never grant The.
  *
  * Rider op payloads are data-owned (PHAP_TU_PHAP_THE_LANDED_CONSEQUENCES
  * in src/data/skill/PhapTuSkills.ts); this builder owns only the
@@ -38,15 +38,15 @@ function baseAilments(
  * Build the empowered (Phap The) form of a committed element basic.
  * Riders (spec D3-D7, payloads authored in the data table):
  * - fire: pulse one pre-existing own-source ailment on the primary
- *   target — riders prepend inside the landed gate, so the pulsed
+ *   target - riders prepend inside the landed gate, so the pulsed
  *   instance is the pre-cast one. No consume, no duration loss.
  * - water: one secondary hit on a DIFFERENT enemy; no The income, no
  *   chain.
  * - wood: the base ailment application resolves with +1 stack (payload
- *   edit — the table entry is empty).
+ *   edit - the table entry is empty).
  * - metal: flat elemental penetration points on the hit (skill-local).
  * - earth: one shockwave hit on every other enemy; no ailment/marker
- *   ops — non-recursive by construction.
+ *   ops - non-recursive by construction.
  */
 export function buildPhapTheVariant(
   element: ElementType,
@@ -65,7 +65,7 @@ export function buildPhapTheVariant(
   return {
     ...base,
     // Wood: the empowered application is the SAME own-source ailment
-    // bumped by one stack (spec D6) — the plural field replaces the
+    // bumped by one stack (spec D6) - the plural field replaces the
     // singular only for the wood variant.
     ...(woodStacksBump !== undefined
       ? { appliesAilment: undefined, appliesAilments: woodStacksBump }

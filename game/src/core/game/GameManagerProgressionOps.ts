@@ -487,6 +487,12 @@ export class GameManagerProgressionOps {
    * (element, route) commitment is retired - element alone commits.)
    */
   selectSpellPathElement(element: ElementType, player: PlayerData): boolean {
+    // Out-of-combat contract -- same guard as devResetBranch: the live
+    // battle loadout is snapshotted, so a mid-battle element commit
+    // would silently split party state.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
     // Cultivation Path Framework (M4, R6): element machinery is
     // spell_pathway-only - P1 - the declared 'spell.elemental_casting'
     // capability is the gate, so the post-M7 collapsed ('spell',

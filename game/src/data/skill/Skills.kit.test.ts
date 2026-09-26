@@ -7,7 +7,7 @@ import {
   PHAP_TU_SPECIAL_CAST_TIME,
 } from './PhapTuSkills'
 
-// Phap Tu Reimagine (2026-09-26 spec) — the kit is a 2-slot pair per
+// Phap Tu Reimagine (2026-09-26 spec) - the kit is a 2-slot pair per
 // element: [basic, special]. The chain C/D/E + god-ult + empowered-ult +
 // route-variant content is retired; the specials are the Phap Trang
 // self-buff windows authored in PhapTuSkills.ts.

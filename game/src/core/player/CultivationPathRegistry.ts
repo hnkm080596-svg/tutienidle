@@ -1,5 +1,5 @@
 /**
- * Mission C Task 9 (spec C4, audit T5-44) — the SINGLE dispatch site for
+ * Mission C Task 9 (spec C4, audit T5-44) - the SINGLE dispatch site for
  * cultivation-path combat integration. Every isKiemTuX / isPhapTuX /
  * isTheTuX branch that used to live in GameManager/GameManagerTurnBattleOps
  * resolves here into a CultivationPathRuntime; the battle orchestrator
@@ -10,7 +10,7 @@
  * (resolvePlayerBasicAttack / resolvePlayerSpecialUltimate /
  * resolveTheTuKit / resolveTheTuAnKit / authoredBasicSkillId /
  * assertNgoDaoKitLearned / resolveAnElementBasicPool /
- * buildTheTuBatTuSurvival) — relocated verbatim modulo `this.` -> deps,
+ * buildTheTuBatTuSurvival) - relocated verbatim modulo `this.` -> deps,
  * per the plan's move-don't-rewrite rule.
  */
 import type { PlayerData } from './Player'
@@ -46,6 +46,11 @@ import {
   isHiddenSpellPathway,
 } from '../phap-tu/PhapTuPath'
 import { buildPhapTheVariant } from '../phap-tu/PhapTheVariants'
+import {
+  KIM_LIET_PENETRATION_PER_STACK,
+  PHAP_TU_TRANG_COST_PERCENT_OF_MAX,
+  PHAP_TU_WINDOW_LANDED_CONSEQUENCES,
+} from '../../data/skill/PhapTuSkills'
 import {
   buildTheTuAnKit,
   buildTheTuKit,
@@ -332,14 +337,51 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
       // grants +1 The (cap 5 battle-scoped); at 5 the empowered element
       // variant resolves (checked before cast, no consume). Hidden way
       // basics never reach this runtime (F11).
+      //
+      // Spec D11/D8 seam attach — the KIT basic (never the starter
+      // fallback) carries its element's WINDOW landed lane (inert unless
+      // the caster holds the Trang buff) and, for metal, the Kim Liet
+      // per-stack pierce (spec D7/D11). Stamped BEFORE
+      // buildPhapTheVariant so the empowered form inherits both.
+      const isKitBasic = element !== undefined && resolved.id === authoredBasicId
+      const windowLane = isKitBasic
+        ? PHAP_TU_WINDOW_LANDED_CONSEQUENCES[element]
+        : undefined
+      const kitResolved: TurnSkillDefinition =
+        windowLane !== undefined || (isKitBasic && element === 'metal')
+          ? {
+              ...resolved,
+              ...(windowLane !== undefined && windowLane.length > 0
+                ? {
+                    landedConsequences: [
+                      ...windowLane,
+                      ...(resolved.landedConsequences ?? []),
+                    ],
+                  }
+                : {}),
+              ...(element === 'metal'
+                ? {
+                    penetrationFromStacks: {
+                      ailmentId: 'kim_liet',
+                      perStack: KIM_LIET_PENETRATION_PER_STACK,
+                    },
+                  }
+                : {}),
+            }
+          : resolved
+
+      // The +1 The gain is stamped here (not on the return wrapper) so
+      // the empowered variant inherits it through {...base} — spec D2:
+      // 'the empowered cast is the basic's cast', it still mints +1 The.
+      const stamped: TurnSkillDefinition = { ...kitResolved, theGainOnLandedCast: 1 }
+
       return {
-        ...resolved,
-        theGainOnLandedCast: 1,
+        ...stamped,
         ...(element !== undefined
           ? {
               empowerment: {
                 theThreshold: SPELL_PATH_MAX_THE,
-                empowered: buildPhapTheVariant(element, resolved),
+                empowered: buildPhapTheVariant(element, stamped),
               },
             }
           : {}),
@@ -359,10 +401,16 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
 
       return {
         special: specialSkill
-          ? toTurnSkillDefinition(
-              specialSkill,
-              deps.skillSystem.getEffectiveSkill(specialSkill),
-            )
+          ? {
+              // Spec D8/F10 — the five Trang casts pay 30% of LIVE max
+              // Linh Luc (evaluated at gate/consume time, never frozen);
+              // the authored records carry no flat cost.
+              ...toTurnSkillDefinition(
+                specialSkill,
+                deps.skillSystem.getEffectiveSkill(specialSkill),
+              ),
+              resourceCostPercentOfMax: PHAP_TU_TRANG_COST_PERCENT_OF_MAX,
+            }
           : undefined,
       }
     },

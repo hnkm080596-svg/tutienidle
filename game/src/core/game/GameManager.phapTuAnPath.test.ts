@@ -89,7 +89,7 @@ describe('ngo_dao way — ritual offer gate', () => {
     expect(player.cultivationPath).toBe('spell')
     expect(player.cultivationWay).toBe('hidden_spell_pathway')
 
-    // No element/The authority — an has none.
+    // No element/The authority - an has none.
     expect(player.spellPath).toEqual({ element: null })
 
     // P7-M4 - learn-only: kit actives enter membership; combat resolves

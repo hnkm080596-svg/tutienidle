@@ -605,6 +605,13 @@ function validateOperation(
         }
       } else {
         requireTarget(op.target)
+        if (op.oncePerCast === true) {
+          fault(
+            'invalid_field_value',
+            `${path}.oncePerCast`,
+            'oncePerCast is only legal on a landed-gate secondary hit (a deal_damage inside another op\'s onLanded lane)',
+          )
+        }
       }
       if (op.coefficient !== undefined) validateExpression(op.coefficient, `${path}.coefficient`, fault)
       if (op.damageType !== undefined && !DAMAGE_TYPES.has(op.damageType)) {

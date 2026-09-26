@@ -348,7 +348,7 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v66)', () 
 
 describe('validateGameSaveShape — spellPath element-only (route retired)', () => {
   // Phap Tu Reimagined: the persisted shape is {element} only. Any
-  // `route` key marks a legacy save — rejected wholesale (the version
+  // `route` key marks a legacy save - rejected wholesale (the version
   // gate already rejects old saves; this is the defensive backstop).
   it.each([
     [{ element: null, route: 'no' }],

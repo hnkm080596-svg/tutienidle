@@ -33,7 +33,7 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     dispellable: false,
   },
 
-  // Kim B "Thu Giap Kim Than" — tu hoa thep. Now authored only for the
+  // Kim B "Thu Giap Kim Than" - tu hoa thep. Now authored only for the
   // companion kit (Companions.ts). The Tu Reimagined (spec
   // 2026-09-15 T12): generic thorns stat retired — defense is the payload.
   {
@@ -49,7 +49,7 @@ export const THUAN_HE_BUFFS: BuffDefinition[] = [
     dispellable: false,
   },
 
-  // Tho C "Dia Tru Thua Thien" — cot dat do don. Now authored only for
+  // Tho C "Dia Tru Thua Thien" - cot dat do don. Now authored only for
   // the companion kit (Companions.ts).
   {
     id: 'dia_tru',

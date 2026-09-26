@@ -48,7 +48,7 @@ export interface CombatEntity {
   // (resetBattleScopedResources), for every path sharing the pool
   // (Phap Tu, Bat Kiem). No PlayerData persistence, no cross-cycle
   // carry. Gains are skill-authored (TurnSkillDefinition.
-  // theGainOnLandedCast — once per cast, never per
+  // theGainOnLandedCast - once per cast, never per
   // target). Optional — readers use `?? 0`.
   currentThe?: number
   // Battle snapshot of the The cap (undefined => MAX_THE). Derived once
