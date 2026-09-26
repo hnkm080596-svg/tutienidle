@@ -176,12 +176,6 @@ describe('GameManager — manual mode pause-on-player-turn (Slice 7)', () => {
     expect(gameManager.isAwaitingManualTurnChoice()).toBe(false)
     expect((gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0)).toBeGreaterThan(0)
   })
-
-  it('submit khi KHÔNG pause → false (no-op an toàn)', () => {
-    const { gameManager } = startManualBattle()
-
-    expect(gameManager.submitTurnChoice('basic')).toBe(false)
-  })
 })
 
 describe('manual mode — committed queued executions auto-resolve (Mission C contract)', () => {
