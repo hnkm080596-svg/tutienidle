@@ -3567,6 +3567,68 @@
    "siblingFindingIds": [],
    "rejectionReason": "INERT -- spec-pinned structure (empowerment test :120-124 asserts); no onImpactLanded/on_hit_proc carrier exists on any enemy target (TheTu proc buffs are player-side; enemy buffs are statModifiers-only)",
    "fixedInRevision": null
+  },
+  {
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-CORE"
+   ],
+   "exception": null,
+   "duplicateOf": null,
+   "verificationEvidenceIds": [
+    "EV-PTR-CORE"
+   ],
+   "pinEvidenceIds": [],
+   "closedAt": "2026-09-27T00:55:00Z",
+   "closeReason": "REJECTED",
+   "actionable": false,
+   "classification": "NON_ACTIONABLE",
+   "id": "F-PTR-59",
+   "title": "element === undefined disjunct mints +1 The on GENERIC fallback when linh_bao unlearned",
+   "severity": "Low",
+   "reachability": "HYPOTHETICAL",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": ":381",
+     "revision": "b1f59d72",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-E COR (devin-bd589d8374194eaab0ed5fd32075ae00)",
+   "counterexample": "vitest repro CultivationPathRuntime.corRepro.test.ts (reviewer worktree)",
+   "expected": "n/a",
+   "actual": "n/a",
+   "status": "REJECTED_WITH_PROOF",
+   "rootCause": "intentional spec-D2 starter coverage",
+   "rootClass": "SPEC_UNDECIDED",
+   "repair": null,
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "spec-pinned"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "rejectionReason": "SPEC-PINNED -- dropping the disjunct turns GameManager.empowerment.test.ts 'pre-commit basic carries the +1 The gain' RED (verified locally, reverted, 13/13 green): spec D2 mints on whatever the pre-element starter resolves to (GENERIC physical strike IS the legit pre-commit starter); the corrupt edge is crafted-save-only (linh_bao learn is fail-closed) and minted The is inert without an element",
+   "fixedInRevision": null
   }
  ],
  "evidence": [
@@ -3874,6 +3936,38 @@
    "invariantIds": [],
    "limitations": [
     "reviewer ran on stale pin 0eb0c574 -- verdict recorded as evidence, not a seal"
+   ]
+  },
+  {
+   "id": "EV-PTR-CORE",
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "status": "CURRENT",
+   "kind": "EXECUTED_INTEGRATION",
+   "producer": "devin-coordinator",
+   "startedAt": "2026-09-27T00:47:00Z",
+   "finishedAt": "2026-09-27T00:50:00Z",
+   "commandOrMethod": "local experiment: drop 'element === undefined ||' -> GameManager.empowerment 'pre-commit basic carries the +1 The gain' FAILS (1/13) -> revert -> 13/13 PASS; scoped vitest 327/328 (same pin)",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "records-core.json",
+   "artifactHash": "f447212b5b1c661fc634b657954b66267b6a4f9cf0bad50d2b3751c001e1b142",
+   "claims": [
+    "F-PTR-59 rejected with RED proof -- spec pin requires the pre-commit starter mint regardless of resolved def"
+   ],
+   "inputEvidenceIds": [],
+   "inputPaths": [
+    "src/core/player/CultivationPathRegistry.ts",
+    "src/core/game/GameManager.empowerment.test.ts"
+   ],
+   "invariantIds": [],
+   "limitations": [
+    "scoped vitest only"
    ]
   }
  ],
@@ -4495,6 +4589,39 @@
    ],
    "novelAttackIds": [],
    "status": "STALE"
+  },
+  {
+   "id": "REV-PTR-COR-E1",
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 6,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-bd589d8374194eaab0ed5fd32075ae00",
+   "contextId": "ctx-bd589d83",
+   "model": "swe-2",
+   "role": "clean-correctness",
+   "inputBundleHash": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-26T23:49:00Z",
+   "sealedAt": "2026-09-27T00:46:00Z",
+   "previousPhaseReviewId": "REV-PTR-COR-D1",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-CORE"
+   ],
+   "findingIds": [
+    "F-PTR-59"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [
@@ -5120,6 +5247,39 @@
     "dedupe landed-gate hooks on shared hit op ids before any enemy-side onImpactLanded/on_hit_proc carrier ships"
    ],
    "capabilityDelta": "hazard recorded -- no behavior change"
+  },
+  {
+   "version": 1,
+   "supersedes": null,
+   "incidentEvidenceIds": [
+    "EV-PTR-CORE"
+   ],
+   "originatingRun": "phap-tu-reimagine-2026-09-26",
+   "missedInvariantIds": [],
+   "exclusions": [],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null,
+   "id": "L-PTR-CORE-REJ",
+   "triggerType": "SPEC",
+   "findingIds": [
+    "F-PTR-59"
+   ],
+   "rootClass": "SPEC_UNDECIDED",
+   "escapeReason": "spec-D2 starter mint reads as over-broad to a correctness lens -- the condition looks like it should be post-commit only",
+   "applicability": [
+    "stamp conditions covering multiple spec phases",
+    "GENERIC_PHYSICAL_BASIC dual role (legit starter vs corrupt fallback)"
+   ],
+   "proposedProtection": [
+    "spec pin test asserts the pre-commit starter mint -- condition must stay 'element === undefined || resolved !== GENERIC_PHYSICAL_BASIC'"
+   ],
+   "capabilityDelta": "spec semantics recorded -- no behavior change"
   }
  ],
  "messages": [],
