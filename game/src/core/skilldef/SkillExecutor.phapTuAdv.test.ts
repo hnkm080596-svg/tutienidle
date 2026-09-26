@@ -60,7 +60,7 @@ const COST_DEF = makeDef({
   operations: [{ type: 'apply_buff', target: 'self', definitionId: 'buff.mark' as never }],
 })
 
-const dealDamageOps = (ops: readonly { type: string }[]) =>
+const dealDamageOps = (ops: readonly { type: string; payload?: unknown }[]) =>
   ops.filter((o) => o.type === 'deal_damage')
 
 describe('SkillExecutor - phap-tu adversarial seams (clean round B)', () => {

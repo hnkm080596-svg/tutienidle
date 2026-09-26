@@ -197,9 +197,15 @@
 // + master spec sec.8.3). Save v83 is rejected (dev phase, no
 // migration, no compat translator) - master spec sec.8.4 re-bump on
 // later merge.
-// v85 (2026-09-27, path-wave branch retirements): spell_pathway loses
-// its route slots with the retired legacy route machinery; kiem_tu's
-// killed/beasts slots retire with the legacy forged queue; the_tu_an's
-// ops pane swaps rerollBank -> diversionBank + opsHistory. Saves at
-// v84 are rejected (dev phase, no migration, no compat translator).
-export const CURRENT_SAVE_VERSION = 85 as const
+// v85 (2026-09-25, THE TU BETA node-tree redesign): the v84 the-tu
+// tree is replaced - retired node ids and re-parented core grants
+// (old cuong_chien/tran_the grant sets no longer exist; phan_chan
+// joins NATIVE_CORE_SKILL_IDS for the new reflect kit), so a v84
+// save with the-tu investment can no longer validate. Save v84 is
+// rejected (dev phase, no migration, no compat translator) - master
+// spec sec.8.4.
+// v86 (2026-09-27, PHAP TU REIMAGINE route retirement): spell_pathway
+// loses its `route` key with the retired legacy route machinery -
+// saves carrying {element, route} pairs are legacy shape and rejected
+// wholesale (dev phase, no migration, no compat translator).
+export const CURRENT_SAVE_VERSION = 86 as const

@@ -239,11 +239,12 @@ export interface TurnSkillDefinition {
     scope?: 'own' | 'any'
   }
   /**
-   * Phap Tu Reimagined Task 10 - ultimate empowerment. Attached at
-   * battle build by the orchestrator ONLY when the owning
-   * `linh_ngo_<godUltId>` node is held (the engine stays dumb - A8).
-   * At cast time, `currentThe >= theThreshold` swaps the RESOLVED
-   * payload to `empowered` while the root skill keeps cast
+   * Phap Tu Reimagined (spec D17) - Phap The empowerment. Stamped onto
+   * the resolved element basic at participant build by
+   * CultivationPathRegistry (buildPhapTheVariant) once the element is
+   * committed - no node id, the element IS the owner (A8: engine stays
+   * dumb). At cast time, `currentThe >= theThreshold` swaps the
+   * RESOLVED payload to `empowered` while the root skill keeps cast
    * count/cooldown identity (execution source 'empowered').
    */
   empowerment?: {

@@ -10,6 +10,7 @@
 
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import type { GameManager } from '@/core/game/GameManager'
+import { clampStatValue } from '@/core/stats/StatMetadata'
 import {
   readOptionalGate,
   writeGate,
@@ -28,10 +29,6 @@ export type HoTheReader = () => HoTheSnapshot | null
 
 export const HO_THE_READER_KEY = 'hoTheReader' as const
 
-/** The stat lands with the ENGINE slice -- structural read keeps this
- * file compiling before the Stats type carries `linhLucHoTheCap`. */
-type HoTheStats = { linhLucHoTheCap?: number; maxMp: number }
-
 export function makeHoTheReader(gameManager: GameManager): HoTheReader {
   return () => {
     const battle = gameManager.getTurnBattle()
@@ -46,7 +43,7 @@ export function makeHoTheReader(gameManager: GameManager): HoTheReader {
       return null
     }
 
-    const cap = (entity.stats as HoTheStats).linhLucHoTheCap ?? 0
+    const cap = entity.stats.linhLucHoTheCap ?? 0
 
     if (cap <= 0) {
       return null
@@ -55,7 +52,7 @@ export function makeHoTheReader(gameManager: GameManager): HoTheReader {
     const maxMp = entity.stats.maxMp
     const mpRatio = maxMp > 0 ? Math.min(1, Math.max(0, entity.currentMp / maxMp)) : 0
 
-    return { cap, dr: cap * mpRatio }
+    return { cap, dr: clampStatValue('linhLucHoTheCap', cap * mpRatio) }
   }
 }
 

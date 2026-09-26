@@ -110,14 +110,16 @@ export function makeTheBarReader(
     }
 
     const current = battleEntity.currentThe ?? 0
+    const max = battleEntity.maxThe ?? THE_BAR_MAX
+    const threshold = participant?.basic?.empowerment?.theThreshold ?? max
 
     // D17 -- Phap The presence is a live read of the resolved element
     // basic: buildPhapTheVariant() attaches `empowerment` onto the def the
     // participant carries. Before the element commit (or on a basic with
     // no variant) the flag can never light.
-    const phapTheActive = participant?.basic?.empowerment !== undefined && current >= THE_BAR_MAX
+    const phapTheActive = participant?.basic?.empowerment !== undefined && current >= threshold
 
-    return { current, max: THE_BAR_MAX, threshold: THE_BAR_MAX, phapTheActive, label: 'Thế' }
+    return { current, max, threshold, phapTheActive, label: 'Thế' }
   }
 }
 

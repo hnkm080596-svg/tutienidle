@@ -370,10 +370,13 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
             }
           : resolved
 
-      // The +1 The gain is stamped here (not on the return wrapper) so
-      // the empowered variant inherits it through {...base} — spec D2:
-      // 'the empowered cast is the basic's cast', it still mints +1 The.
-      const stamped: TurnSkillDefinition = { ...kitResolved, theGainOnLandedCast: 1 }
+      // The +1 The gain only applies to the element-committed basic —
+      // spec D2 mints The on the element basic's landed cast (it fuels
+      // the Phap The empowerment); a generic fallback basic never mints
+      // The. Stamped on `stamped` (not the return wrapper) so the
+      // empowered variant inherits it through {...base}.
+      const stamped: TurnSkillDefinition =
+        element !== undefined ? { ...kitResolved, theGainOnLandedCast: 1 } : kitResolved
 
       return {
         ...stamped,

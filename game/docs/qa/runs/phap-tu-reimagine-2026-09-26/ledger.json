@@ -1706,6 +1706,35 @@
     "lint residual fixed post-verdict"
    ],
    "status": "STALE"
+  },
+  {
+   "id": "EV-PTR-FLAKE-1",
+   "state": {
+    "productStateId": "a305ed3583896a70e967dcd09c9cc43ead1e648a6476f28de4b9dc2abc104225",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_INTEGRATION",
+   "producer": "coordinator",
+   "startedAt": "2026-09-26T19:51:40Z",
+   "finishedAt": "2026-09-26T20:02:00Z",
+   "commandOrMethod": "npx vitest run (full suite, 2 executions on head f7f18d43)",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "FLAKY",
+   "artifactPath": "records-cleanB.json",
+   "artifactHash": "3f1fb24863e773b6c2de5230905723f55b12345037f1b64db613897b82470f33",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "GameManager.ngoDaoReaction.test.ts S3 failed once in full-suite (tran_an absent), passed standalone and on re-run — suite-order flake, not deterministic on this state"
+   ],
+   "limitations": [
+    "env noise: 2 magick ENOENT + 34 canvas/libuuid suite fails are pre-existing VM gaps"
+   ],
+   "status": "CURRENT"
   }
  ],
  "coverage": [],

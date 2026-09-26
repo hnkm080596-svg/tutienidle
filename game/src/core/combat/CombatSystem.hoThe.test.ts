@@ -32,7 +32,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   }
 }
 
-function makePair(targetOverrides: (s: ReturnType<typeof createBaseStats>) => void) {
+function makePair(targetOverrides: (s: CombatEntity['stats']) => void) {
   const eventBus = new EventBus()
   const combat = new CombatSystem(eventBus)
   // deterministic: no miss rolls land (guaranteedHit), no stray rolls.
@@ -40,7 +40,7 @@ function makePair(targetOverrides: (s: ReturnType<typeof createBaseStats>) => vo
 
   const source = createCombatant({ id: 'attacker', type: 'player' })
   source.stats.might = 100
-  source.stats.criticalChance = 0
+  source.stats.criticalRate = 0
 
   const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
   target.stats.defense = 0
