@@ -7790,6 +7790,25 @@
         "L-TTA-82"
       ],
       "summary": "cleanA13 AUT: 1 Low (externalWard ungated contract asymmetry - FIXED), 3 Nit (stale comment, id literal, raw clone gauge - FIXED), 1 pre-existing note (khiem_khich/bat_tu_ba_the literals - REJECTED out-of-diff)."
+    },
+    {
+      "id": "REV-TTA-CLN13-INT",
+      "kind": "COMPLIANCE_REVIEW",
+      "reviewerSessionId": "df58547948244e92ae6bd0a59faf9eeb",
+      "previousPhaseReviewId": "REV-TTA-CLN13-AUT",
+      "verdict": "SEAL",
+      "status": "SEALED",
+      "round": 13,
+      "scope": "lens INTEGRATION/ADVERSARIAL only",
+      "recordedAt": "2026-09-26T10:02:00.000Z",
+      "evidenceIds": [
+        "EV-TTA-CLNA13-FIX"
+      ],
+      "findingIds": [],
+      "findingPointers": [],
+      "verificationOfFindingIds": [],
+      "lessons": [],
+      "summary": "cleanA13 INT: SEAL clean -- ordering/debt/marks/manual-mode/bypass/save-boundary/UI all defended; unreachable nits recorded (headless lull-skip test-only; non-finite progress JSON-unreachable)."
     }
   ],
   "cycles": [],
