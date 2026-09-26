@@ -11,7 +11,7 @@
   "base": "master",
   "head": "038706f7",
   "state": {
-   "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+   "productStateId": "8ecfcb37d2ec7c9c31961550fb8f2973e8ea4e7abddb8700fb74436a8061c027",
    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -3629,6 +3629,372 @@
    "siblingFindingIds": [],
    "rejectionReason": "SPEC-PINNED -- dropping the disjunct turns GameManager.empowerment.test.ts 'pre-commit basic carries the +1 The gain' RED (verified locally, reverted, 13/13 green): spec D2 mints on whatever the pre-element starter resolves to (GENERIC physical strike IS the legit pre-commit starter); the corrupt edge is crafted-save-only (linh_bao learn is fail-closed) and minted The is inert without an element",
    "fixedInRevision": null
+  },
+  {
+   "state": {
+    "productStateId": "8ecfcb37d2ec7c9c31961550fb8f2973e8ea4e7abddb8700fb74436a8061c027",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [
+    "REV-PTR-CLO-7"
+   ],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTE"
+   ],
+   "exception": null,
+   "duplicateOf": null,
+   "verificationEvidenceIds": [
+    "EV-PTR-AUTE"
+   ],
+   "pinEvidenceIds": [
+    "EV-PTR-AUTE"
+   ],
+   "closedAt": "2026-09-27T00:58:00Z",
+   "closeReason": "FIXED",
+   "actionable": true,
+   "classification": "REAL_DEFECT",
+   "id": "F-PTR-60",
+   "title": "The-grant channels lack commitsCast gate (emitGrants + grantTheFromCast engine lane)",
+   "severity": "Low",
+   "reachability": "HYPOTHETICAL",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/core/skilldef/SkillExecutor.ts",
+     "symbolOrSection": ":685 + TurnBattleSystem.ts:2278",
+     "revision": "b1f59d72",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-E AUT (devin-551656057ae84cbeb73ecd6b297d65df)",
+   "counterexample": "TBS-queued repeat/multicast executions re-enter routeCast as subcastIndex:0/commitsCast:false -> would mint per follow-up (latent: no def combines theGainOnLandedCast with repeatCasts/multicast today)",
+   "expected": "n/a",
+   "actual": "n/a",
+   "status": "CLOSED",
+   "rootCause": "missing commitsCast gate (same hole class as empowerment gate)",
+   "rootClass": "SPEC_UNDECIDED",
+   "repair": "emitGrants gate + '!plan.commitsCast' (SkillExecutor.ts:685); engine lane grantTheFromCast call site wrapped in executionCommitsCast(declared.execution) (TurnBattleSystem.ts:2278) -- both at 0b160fca",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "latent hazard recorded in lesson"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "rejectionReason": null,
+   "fixedInRevision": "0b160fca"
+  },
+  {
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTE"
+   ],
+   "exception": null,
+   "duplicateOf": "F-PTR-59",
+   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [],
+   "closedAt": "2026-09-27T00:58:00Z",
+   "closeReason": "REJECTED",
+   "actionable": false,
+   "classification": "NON_ACTIONABLE",
+   "id": "F-PTR-61",
+   "title": "Corrupt-state GENERIC mints +1 The (same as F-PTR-59)",
+   "severity": "Low",
+   "reachability": "HYPOTHETICAL",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": ":380-383",
+     "revision": "b1f59d72",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-E AUT (devin-551656057ae84cbeb73ecd6b297d65df)",
+   "counterexample": "static analysis",
+   "expected": "n/a",
+   "actual": "n/a",
+   "status": "REJECTED_WITH_PROOF",
+   "rootCause": "duplicate",
+   "rootClass": "SPEC_UNDECIDED",
+   "repair": null,
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "latent hazard recorded in lesson"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "rejectionReason": "DUPLICATE of F-PTR-59 (COR-E1) -- already adjudicated: spec pin D2 requires the pre-commit starter mint regardless of resolved def; verified by local RED when disjunct removed",
+   "fixedInRevision": null
+  },
+  {
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTE"
+   ],
+   "exception": null,
+   "duplicateOf": null,
+   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [],
+   "closedAt": "2026-09-27T00:58:00Z",
+   "closeReason": "REJECTED",
+   "actionable": false,
+   "classification": "NON_ACTIONABLE",
+   "id": "F-PTR-62",
+   "title": "hoTheBridge duplicates CombatSystem DR formula + extra lower clamp",
+   "severity": "Nit",
+   "reachability": "HYPOTHETICAL",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/presentation/bridges/hoTheBridge.ts",
+     "symbolOrSection": ":46-55",
+     "revision": "b1f59d72",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-E AUT (devin-551656057ae84cbeb73ecd6b297d65df)",
+   "counterexample": "static analysis",
+   "expected": "n/a",
+   "actual": "n/a",
+   "status": "REJECTED_WITH_PROOF",
+   "rootCause": "deliberate presentation mirror (drift risk)",
+   "rootClass": "SPEC_UNDECIDED",
+   "repair": null,
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "latent hazard recorded in lesson"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "rejectionReason": "INTENTIONAL MIRROR -- bridge is the display-side mirror of the combat authority (order aligned at 6ad56448); CombatSystem.hoThe.test.ts pins the contract; duplicating a 3-line formula beats coupling presentation to combat internals",
+   "fixedInRevision": null
+  },
+  {
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTE"
+   ],
+   "exception": null,
+   "duplicateOf": null,
+   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [],
+   "closedAt": "2026-09-27T00:58:00Z",
+   "closeReason": "REJECTED",
+   "actionable": false,
+   "classification": "NON_ACTIONABLE",
+   "id": "F-PTR-63",
+   "title": "landedConsequences lane-dependent semantics (hit-gated vs unconditional per-target)",
+   "severity": "Nit",
+   "reachability": "HYPOTHETICAL",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/core/skilldef/LegacySkillAdapter.ts",
+     "symbolOrSection": ":206-208",
+     "revision": "b1f59d72",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-E AUT (devin-551656057ae84cbeb73ecd6b297d65df)",
+   "counterexample": "static analysis",
+   "expected": "n/a",
+   "actual": "n/a",
+   "status": "REJECTED_WITH_PROOF",
+   "rootCause": "documented lane semantics (legacy parity)",
+   "rootClass": "SPEC_UNDECIDED",
+   "repair": null,
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "latent hazard recorded in lesson"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "rejectionReason": "LEGACY PARITY -- documented in adapter comment; resisted-apply-still-counts adjudicated earlier this run (same family) -- targetIds fill unconditionally on the legacy lane by design",
+   "fixedInRevision": null
+  },
+  {
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTE"
+   ],
+   "exception": null,
+   "duplicateOf": null,
+   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [],
+   "closedAt": "2026-09-27T00:58:00Z",
+   "closeReason": "REJECTED",
+   "actionable": false,
+   "classification": "NON_ACTIONABLE",
+   "id": "F-PTR-64",
+   "title": "resolvePlanCost folds percentOfMax against 'effective' scalars (composite payload w/o cost -> free cast)",
+   "severity": "Nit",
+   "reachability": "HYPOTHETICAL",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/core/skilldef/SkillResolver.ts",
+     "symbolOrSection": ":288 vs :240",
+     "revision": "b1f59d72",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-E AUT (devin-551656057ae84cbeb73ecd6b297d65df)",
+   "counterexample": "static analysis",
+   "expected": "n/a",
+   "actual": "n/a",
+   "status": "REJECTED_WITH_PROOF",
+   "rootCause": "latent",
+   "rootClass": "SPEC_UNDECIDED",
+   "repair": null,
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "latent hazard recorded in lesson"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "rejectionReason": "LATENT -- sole percentOfMax producer is finite literal 0.3; no def combines percentOfMax root + empowered/composite payload today",
+   "fixedInRevision": null
+  },
+  {
+   "state": {
+    "productStateId": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTE"
+   ],
+   "exception": null,
+   "duplicateOf": null,
+   "verificationEvidenceIds": [],
+   "pinEvidenceIds": [],
+   "closedAt": "2026-09-27T00:58:00Z",
+   "closeReason": "REJECTED",
+   "actionable": false,
+   "classification": "NON_ACTIONABLE",
+   "id": "F-PTR-65",
+   "title": "comment-only indentation churn on unrelated doc blocks",
+   "severity": "Nit",
+   "reachability": "HYPOTHETICAL",
+   "subsystem": "phap-tu aggregate",
+   "locations": [
+    {
+     "path": "src/core/battle/scenes/CombatScene.ts",
+     "symbolOrSection": ":257-276 + PresentationGate.ts:75-78",
+     "revision": "b1f59d72",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-E AUT (devin-551656057ae84cbeb73ecd6b297d65df)",
+   "counterexample": "static analysis",
+   "expected": "n/a",
+   "actual": "n/a",
+   "status": "REJECTED_WITH_PROOF",
+   "rootCause": "cosmetic",
+   "rootClass": "SPEC_UNDECIDED",
+   "repair": null,
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo grep",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "latent hazard recorded in lesson"
+     ],
+     "coverageLimits": [
+      "source-tree scan"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "rejectionReason": "COSMETIC -- comment-only indentation, zero behavior",
+   "fixedInRevision": null
   }
  ],
  "evidence": [
@@ -3874,7 +4240,7 @@
     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
    },
-   "status": "CURRENT",
+   "status": "STALE",
    "kind": "EXECUTED_INTEGRATION",
    "producer": "devin-coordinator",
    "startedAt": "2026-09-26T21:59:00Z",
@@ -3946,7 +4312,7 @@
     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
    },
-   "status": "CURRENT",
+   "status": "STALE",
    "kind": "EXECUTED_INTEGRATION",
    "producer": "devin-coordinator",
    "startedAt": "2026-09-27T00:47:00Z",
@@ -3964,6 +4330,39 @@
    "inputPaths": [
     "src/core/player/CultivationPathRegistry.ts",
     "src/core/game/GameManager.empowerment.test.ts"
+   ],
+   "invariantIds": [],
+   "limitations": [
+    "scoped vitest only"
+   ]
+  },
+  {
+   "id": "EV-PTR-AUTE",
+   "state": {
+    "productStateId": "8ecfcb37d2ec7c9c31961550fb8f2973e8ea4e7abddb8700fb74436a8061c027",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "status": "CURRENT",
+   "kind": "EXECUTED_INTEGRATION",
+   "producer": "devin-coordinator",
+   "startedAt": "2026-09-27T00:48:00Z",
+   "finishedAt": "2026-09-27T00:50:00Z",
+   "commandOrMethod": "fix @0b160fca; npm run type-check (exit 0); npx vitest run skilldef+battle+game+player (2029 passed, 4 expected-fail)",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "records-aute.json",
+   "artifactHash": "02273d111897069a4ebf485f78085777f6499a16da5cabefa89a9d78e1f8d4a7",
+   "claims": [
+    "F-PTR-60 fixed @0b160fca -- The grants gated on commitsCast in both lanes",
+    "F-PTR-61..65 rejected with proof"
+   ],
+   "inputEvidenceIds": [],
+   "inputPaths": [
+    "src/core/skilldef/SkillExecutor.ts",
+    "src/core/battle/turn/TurnBattleSystem.ts"
    ],
    "invariantIds": [],
    "limitations": [
@@ -4518,7 +4917,7 @@
     "F-PTR-55"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PTR-CLO-6",
@@ -4552,7 +4951,7 @@
     "F-PTR-50"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
   },
   {
    "id": "REV-PTR-INT-D1",
@@ -4619,6 +5018,77 @@
    ],
    "findingIds": [
     "F-PTR-59"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-PTR-AUT-E1",
+   "state": {
+    "productStateId": "8ecfcb37d2ec7c9c31961550fb8f2973e8ea4e7abddb8700fb74436a8061c027",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 6,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-551656057ae84cbeb73ecd6b297d65df",
+   "contextId": "ctx-55165605",
+   "model": "swe-2",
+   "role": "clean-architecture",
+   "inputBundleHash": "6ce5122240543736396cc8a8ceee8dd4aa7f0a47fd5a839837f64dfb6ca3c267",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-26T23:49:00Z",
+   "sealedAt": "2026-09-27T00:40:00Z",
+   "previousPhaseReviewId": "REV-PTR-AUT-D1",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTE"
+   ],
+   "findingIds": [
+    "F-PTR-60",
+    "F-PTR-61",
+    "F-PTR-62",
+    "F-PTR-63",
+    "F-PTR-64",
+    "F-PTR-65"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-PTR-CLO-7",
+   "state": {
+    "productStateId": "8ecfcb37d2ec7c9c31961550fb8f2973e8ea4e7abddb8700fb74436a8061c027",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 6,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-coordinator",
+   "contextId": "ctx-coord",
+   "model": "swe-2",
+   "role": "closure",
+   "inputBundleHash": "8ecfcb37d2ec7c9c31961550fb8f2973e8ea4e7abddb8700fb74436a8061c027",
+   "priorFindingsVisible": true,
+   "accessLimitations": [
+    "self-verified fix verification"
+   ],
+   "startedAt": "2026-09-27T00:50:00Z",
+   "sealedAt": "2026-09-27T01:00:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTE"
+   ],
+   "findingIds": [
+    "F-PTR-60"
    ],
    "novelAttackIds": [],
    "status": "SEALED"
@@ -5280,6 +5750,79 @@
     "spec pin test asserts the pre-commit starter mint -- condition must stay 'element === undefined || resolved !== GENERIC_PHYSICAL_BASIC'"
    ],
    "capabilityDelta": "spec semantics recorded -- no behavior change"
+  },
+  {
+   "version": 1,
+   "supersedes": null,
+   "incidentEvidenceIds": [
+    "EV-PTR-AUTE"
+   ],
+   "originatingRun": "phap-tu-reimagine-2026-09-26",
+   "missedInvariantIds": [],
+   "exclusions": [],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null,
+   "id": "L-PTR-AUTE-FIX",
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PTR-60"
+   ],
+   "rootClass": "AUTHORITY_GAP",
+   "escapeReason": "commitsCast gate hardened on empowerment but the twin grant lanes were missed in the same pass -- symmetric seams need symmetric audits",
+   "applicability": [
+    "any 'once per committing cast' mint/grant channel -- BOTH plan lane (emitGrants) AND engine lane (call sites beside commitCast)"
+   ],
+   "proposedProtection": [
+    "whenever a commitsCast gate is added, grep all mint/grant/consume lanes for the same hole -- empowerment AND grants AND consume share the invariant"
+   ],
+   "capabilityDelta": "commitsCast now gates The-grant mint on both lanes"
+  },
+  {
+   "version": 1,
+   "supersedes": null,
+   "incidentEvidenceIds": [
+    "EV-PTR-AUTE"
+   ],
+   "originatingRun": "phap-tu-reimagine-2026-09-26",
+   "missedInvariantIds": [],
+   "exclusions": [],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null,
+   "id": "L-PTR-AUTE-REJ",
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PTR-61",
+    "F-PTR-62",
+    "F-PTR-63",
+    "F-PTR-64",
+    "F-PTR-65"
+   ],
+   "rootClass": "SPEC_UNDECIDED",
+   "escapeReason": "dup of spec-pinned starter mint + deliberate presentation mirror + documented lane parity + latent computed-cost gap + cosmetic churn",
+   "applicability": [
+    "spec-pinned dual-role def resolution",
+    "presentation mirrors of combat authorities",
+    "legacy lane semantics",
+    "computed cost fields"
+   ],
+   "proposedProtection": [
+    "theGainOnLandedCast disjunct is spec-pinned (D2 starter) -- do not narrow",
+    "landedConsequences lane semantics are documented legacy parity -- do not unify",
+    "if percentOfMax ever becomes computed/dynamic, clamp Number.isFinite AND re-audit the scalars source"
+   ],
+   "capabilityDelta": "hazard recorded -- no behavior change"
   }
  ],
  "messages": [],
@@ -5491,6 +6034,22 @@
    "payloadPath": "events/0013.json",
    "payloadHash": "e9c5e4cf1aa5b48fa06e07200831508ff827b9bf4b5c07be707ab63c74eee0a3",
    "eventHash": "ee1aac81f8bb5bb3af222cadcdca08361ae7cedbd202fbb20076b62e010c863b"
+  },
+  {
+   "seq": 14,
+   "at": "2026-09-26T22:51:40.795Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-1021454",
+   "state": {
+    "productStateId": "8ecfcb37d2ec7c9c31961550fb8f2973e8ea4e7abddb8700fb74436a8061c027",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "ee1aac81f8bb5bb3af222cadcdca08361ae7cedbd202fbb20076b62e010c863b",
+   "payloadPath": "events/0014.json",
+   "payloadHash": "1270e367927d061bb02af0c8d2c2dd5ebe64d80080be0ea34357fe3aa8b9ba09",
+   "eventHash": "fd3e99bc54fd307b120d16b00e4aa11547355be1ff98b5dda63fbd69a542e731"
   }
  ]
 }
