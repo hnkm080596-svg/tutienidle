@@ -181,6 +181,11 @@ export interface DealDamageOperation {
         x 100)) into the multiplier -- never a snapshot value. */
     missingHpBonusPerMissingPercent?: number
     missingHpBonusCap?: number
+    /** The Tu beta (Tran Ap) -- Max-HP-derived damage: the authority
+        adds `source.stats.maxHp x sourceMaxHpRatio` into the physical
+        raw base BEFORE mitigation. Primary scaling for Tran The kit
+        hits; absent = might-only base (legacy parity). */
+    sourceMaxHpRatio?: number
   }
 }
 

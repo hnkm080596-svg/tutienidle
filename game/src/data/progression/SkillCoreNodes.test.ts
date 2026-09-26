@@ -6,7 +6,7 @@ import { NATIVE_CORE_SKILL_IDS, SKILL_CORE_NODES } from './SkillCoreNodes'
 
 // M-QI-05 / QI-D3 - the Core Node catalog IS the progression-metadata
 // source. Every levelled Skill template gets exactly one generated
-// core; the 14 eligible native top-level defs get authored cores;
+// core; the 15 eligible native top-level defs get authored cores;
 // internal chained/stance/emblem/generated ids NEVER get cores.
 
 const NATIVE_TOP_LEVEL_IDS = [
@@ -14,6 +14,7 @@ const NATIVE_TOP_LEVEL_IDS = [
   'loan_dau',
   'bat_tu_ba_the',
   'tran_ap',
+  'phan_chan',
   'son_nhac',
   'tham_the',
   'tu_the',
@@ -40,6 +41,8 @@ const NATIVE_DAMAGE_BEARING = new Set([
 ])
 
 const INTERNAL_NEGATIVE_LIST = [
+  // 'phan_chinh' is a RETIRED id pinned deliberately - it guards that the
+  // id never re-enters the core tree (retired in the the-tu beta redesign).
   'phan_chinh',
   'phan_kich',
   'tro_kich',
@@ -109,7 +112,7 @@ describe('SkillCoreNodes — template coverage', () => {
 })
 
 describe('SkillCoreNodes — native census', () => {
-  it('whitelist export matches the 14 eligible native ids exactly', () => {
+  it('whitelist export matches the 15 eligible native ids exactly', () => {
     expect([...NATIVE_CORE_SKILL_IDS].sort()).toEqual([...NATIVE_TOP_LEVEL_IDS].sort())
   })
 

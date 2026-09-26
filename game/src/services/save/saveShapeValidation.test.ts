@@ -2415,17 +2415,25 @@ describe('validateGameSaveShape — v73 core inverse ownership', () => {
     const save = validSave()
     const player = playerOf(save)
 
-    player.realmId = 'qi_refining'
+    // major_loan_dau gates on realm >= foundation_establishment --
+    // the save-boundary canonicality replay (clean-B INT-B fix) rejects
+    // owned nodes whose monotonic prereqs no longer hold, so the
+    // fixture must carry a canonical realm for the grant test.
+    player.realmId = 'foundation_establishment'
     player.cultivationPath = 'body'
     player.cultivationWay = 'body_pathway'
 
-    // A real purchase writes BOTH: nodeLevels.cuong_chien = 1 is the
+    // A real purchase writes BOTH: nodeLevels.<id> = 1 is the
     // canonical ownership; purchasedNodeIds is the mirror. The
     // forward check requires every grantsSkillCoreIds member present.
-    ;(player.nodeLevels as Record<string, number>).cuong_chien = 1
-    ;(player.purchasedNodeIds as string[]).push('cuong_chien')
+    // Beta grant seams: cuong_chien -> cuong_quyen, major_loan_dau ->
+    // loan_dau. core_bat_tu_ba_the has NO beta source (parked def).
+    for (const nodeId of ['cuong_chien', 'major_loan_dau']) {
+      ;(player.nodeLevels as Record<string, number>)[nodeId] = 1
+      ;(player.purchasedNodeIds as string[]).push(nodeId)
+    }
 
-    for (const skillId of ['cuong_quyen', 'loan_dau', 'bat_tu_ba_the']) {
+    for (const skillId of ['cuong_quyen', 'loan_dau']) {
       const coreId = skillCoreNodeId(skillId)
       ;(player.nodeLevels as Record<string, number>)[coreId] = 1
       ;(player.purchasedNodeIds as string[]).push(coreId)
@@ -2474,6 +2482,24 @@ describe('validateGameSaveShape — v73 core inverse ownership', () => {
 
     expect(result.ok).toBe(false)
     expect(pathsOf(result)).toContain('player.nodeLevels.core_cuong_quyen')
+  })
+
+  // cleanD AUT: the mirror check is symmetric -- a canonical non-core
+  // level without its purchasedNodeIds mirror is non-canonical by
+  // construction (NodeSystem mirrors every purchase).
+  it('từ chối node level canonical khi purchasedNodeIds mirror sót entry đó', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    player.realmId = 'qi_refining'
+    player.cultivationPath = 'body'
+    player.cultivationWay = 'body_pathway'
+    ;(player.nodeLevels as Record<string, number>).cuong_chien = 1
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.nodeLevels.cuong_chien')
   })
 
   it('từ chối core_cuong_quyen khi skills[] chứa entry giả id cuong_quyen (không phải learned template)', () => {

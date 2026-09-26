@@ -48,7 +48,7 @@ export type StatType =
   | 'manaShieldPercent'
   | 'leechPercent'
   // The Tu Reimagined (spec 2026-09-15 T12) — generic thorns stat retired;
-  // reflection is a body mechanic (phan_chinh), not a stat.
+  // reflection is a body mechanic (phan_chan), not a stat.
   // stat-system-reimagined Task 4 (D18) -- receiver-side amplification of
   // HP restores that are NOT damage-derived: hpRegenPerTurn ticks, direct
   // heal effects, authored recovery triggers (dotRecovery). NEVER scales

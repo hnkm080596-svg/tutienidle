@@ -13,6 +13,24 @@ import type {
 } from '../battle/contracts/capability'
 import type { CapabilityValidatorRegistry } from '../battle/runtime/capability/CapabilityValidatorRegistry'
 
+// The Tu Reimagined (spec 7.1, plan Task 16) -- provenance axis for the
+// reactive queue. 'normal'/'skill' describe natural turns; the reactive
+// sources describe bypass actions queued by a proc window. Lives here
+// (proc vocabulary leaf) so both TurnBattleSystem and TurnSkillPlanRuntime
+// read it without a runtime edge between them.
+export type ReactiveActionSource = 'normal' | 'skill' | 'counter' | 'follow_up' | 'intercept'
+
+/**
+ * INV-9 natural-turn classifier -- 'normal' and 'skill' are the only
+ * sources a player's own turn produces; queued bypass actions
+ * (counter/follow_up/intercept) never re-open proc windows.
+ */
+export function isNaturalActionSource(
+  source: ReactiveActionSource | undefined,
+): boolean {
+  return source === 'normal' || source === 'skill'
+}
+
 // The shared reactive-window name space (legacy ReactiveTriggerName).
 export type ReactiveTriggerName =
   | 'onCastBegin'
@@ -43,7 +61,17 @@ export interface ReactiveTriggerPayload {
   chance: number
   appliesDefinitionId?: BuffDefinitionId
   queuesFollowUp?: boolean
-  reflectsDamage?: { maxHpRatio: number; takenRatio: number }
+  /** The Tu beta (Phan Chan) -- once-per-hostile-action reflect: the
+      holder's pending reflect merges every hit of the action, then the
+      action-end flush emits ONE deal_damage 'reflection' op at the
+      attacker for holder.maxHp x ratio. `markedBy` names the mark
+      debuff; a marked attacker reflects at `markedMaxHpRatio`
+      (absent = base ratio). The mark is never consumed. */
+  reflectsDamage?: {
+    maxHpRatio: number
+    markedMaxHpRatio?: number
+    markedBy?: BuffDefinitionId
+  }
 }
 
 // --- reactive_proc (legacy ReactiveProcEffect) ---
@@ -140,7 +168,15 @@ export function validateReactiveTrigger(payload: unknown): asserts payload is Re
       throw new Error(`capability '${type}': reflectsDamage must be an object`)
     }
     requireFiniteNumber(reflect.maxHpRatio, 'reflectsDamage.maxHpRatio', type)
-    requireFiniteNumber(reflect.takenRatio, 'reflectsDamage.takenRatio', type)
+    if (reflect.markedMaxHpRatio !== undefined) {
+      requireFiniteNumber(reflect.markedMaxHpRatio, 'reflectsDamage.markedMaxHpRatio', type)
+      if (reflect.markedBy === undefined) {
+        throw new Error(`capability '${type}': reflectsDamage.markedMaxHpRatio requires markedBy`)
+      }
+    }
+    if (reflect.markedBy !== undefined) {
+      requireNonEmptyString(reflect.markedBy, 'reflectsDamage.markedBy', type)
+    }
   }
 }
 

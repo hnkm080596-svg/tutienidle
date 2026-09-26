@@ -4,7 +4,8 @@ import {
   BAT_TU_BA_THE,
   CUONG_QUYEN,
   LOAN_DAU,
-  PHAN_CHINH,
+  LOAN_DAU_PAID_HP_BONUS,
+  PHAN_CHAN,
   PHAN_KICH,
   SON_NHAC,
   THAM_THE,
@@ -23,33 +24,43 @@ import type { ProgressionNode } from '../../core/progression/ProgressionNode'
 import { collectBodyKitModifiers } from '../../core/the-tu/TheTuKitModifiers'
 import type { ReactiveTriggerPayload } from '../../core/proc/ProcCapabilities'
 
-// The Tu Reimagined (spec 2026-09-15 section 5, plan Task 6) — the two
+// The Tu Reimagined (spec 2026-09-15 section 5, plan Task 6) - the two
 // Hien kits are native TurnSkillDefinitions resolved by owned root;
 // node bonuses reach them ONLY through collectBodyKitModifiers applied
 // to participant-local def clones (registry defs never mutate).
 
+// The Tu beta (the-tu-body-pathway-design) - the two Hien roots resolve
+// native TurnSkillDefinition kits; node bonuses reach them ONLY through
+// collectBodyKitModifiers applied to participant-local def clones
+// (registry defs never mutate). Beta window: roots grant the Basic;
+// the Truc Co major grants the Special; NO Ultimate slot exists.
+
 describe('body kit data', () => {
-  it('cuong_quyen — physical basic carrying the missing-HP scalar fields', () => {
+  it('cuong_quyen — high-Might single-target basic; NO HP cost, NO missing-HP scaling at LQ', () => {
     expect(CUONG_QUYEN.id).toBe('cuong_quyen')
     expect(CUONG_QUYEN.cooldownTurns).toBe(0)
     expect(CUONG_QUYEN.damage?.kind).toBe('physical')
-    expect(CUONG_QUYEN.damage?.multiplier).toBe(1)
-    expect(CUONG_QUYEN.damage?.missingHpBonusPerMissingPercent).toBe(0.02)
-    expect(CUONG_QUYEN.damage?.missingHpBonusCap).toBe(2.0)
+    expect(CUONG_QUYEN.damage?.multiplier).toBeGreaterThan(1)
+    // Beta authority: missing-HP scaling arrives ONLY with the Truc Co
+    // special (Huyet Cuong bake) - never on the authored basic.
+    expect(CUONG_QUYEN.damage?.missingHpBonusPerMissingPercent).toBeUndefined()
+    expect(CUONG_QUYEN.damage?.missingHpBonusCap).toBeUndefined()
+    expect('sacrificeMaxHpRatio' in CUONG_QUYEN).toBe(false)
   })
 
-  it('loan_dau — physical x2 special, cooldown 5, same scalar, NO self-cost', () => {
-    expect(LOAN_DAU.damage?.multiplier).toBe(2)
-    expect(LOAN_DAU.damage?.missingHpBonusPerMissingPercent).toBe(0.02)
-    expect(LOAN_DAU.damage?.missingHpBonusCap).toBe(2.0)
-    // P5 tuning: 4 -> 5 so the single-target weakness is strict
-    // (previously hidden inside the comparator eps tie-band).
-    expect(LOAN_DAU.cooldownTurns).toBe(5)
-    expect(LOAN_DAU.resourceType === undefined || LOAN_DAU.resourceType === 'none').toBe(true)
-    expect(LOAN_DAU.resourceCost ?? 0).toBe(0)
+  it('loan_dau — sacrifice-then-multi-hit special: %Max HP paid first, actual-paid payoff, ordered hits', () => {
+    expect(LOAN_DAU.sacrificeMaxHpRatio).toBeGreaterThan(0)
+    expect(LOAN_DAU.sacrificeMaxHpRatio).toBeLessThan(1)
+    expect(LOAN_DAU.damageBonusPerPaidHpPoint).toBeGreaterThan(0)
+    expect(LOAN_DAU.instances?.count).toBeGreaterThan(1)
+    expect(LOAN_DAU.targeting.shape).toBe('single')
+    expect(LOAN_DAU.cooldownTurns).toBeGreaterThan(0)
+    // Legacy-authored defs carry no missing-HP scalar; Huyet Cuong is
+    // kit-local (baked onto clones by buildTheTuKit when owned).
+    expect(LOAN_DAU.damage?.missingHpBonusPerMissingPercent).toBeUndefined()
   })
 
-  it('bat_tu_ba_the — ultimate cd 8, self-applies the bat_tu_ba_the buff', () => {
+  it('bat_tu_ba_the — parked post-beta ultimate def (authored, never granted in beta)', () => {
     expect(BAT_TU_BA_THE.cooldownTurns).toBe(8)
     expect(BAT_TU_BA_THE.targetScope).toBe('self')
     expect(BAT_TU_BA_THE.appliesBuffs).toContainEqual({
@@ -58,17 +69,23 @@ describe('body kit data', () => {
     })
   })
 
-  it('tran_ap — physical x0.8 all-lanes AoE basic', () => {
-    expect(TRAN_AP.damage?.multiplier).toBe(0.8)
+  it('tran_ap — physical all-lanes AoE basic scaling from caster Max HP', () => {
     expect(TRAN_AP.targeting.shape).toBe('all_lanes')
+    expect(TRAN_AP.damage?.kind).toBe('physical')
+    expect(TRAN_AP.damage?.sourceMaxHpRatio).toBeGreaterThan(0)
   })
 
-  it('phan_chinh — emblemOnly special, never selectable, grants phan_chinh buff at build', () => {
-    expect(PHAN_CHINH.emblemOnly).toBe(true)
-    expect(PHAN_CHINH.grantsBuffsAtBuild?.map((def) => def.id)).toEqual(['phan_chinh'])
+  it('phan_chan — castable no-damage special: taunt + Chấn Ấn on all enemies, reflect passive at build', () => {
+    expect(PHAN_CHAN.emblemOnly).toBeUndefined()
+    expect(PHAN_CHAN.damage).toBeUndefined()
+    expect(PHAN_CHAN.appliesBuffs?.map((a) => `${a.definitionId}:${a.target}`)).toEqual([
+      'khiem_khich:all_enemies',
+      'chan_an:all_enemies',
+    ])
+    expect(PHAN_CHAN.grantsBuffsAtBuild?.map((def) => def.id)).toEqual(['phan_chan'])
   })
 
-  it('son_nhac — ultimate cd 6 applying self DR + ally ward markers + taunt', () => {
+  it('son_nhac — parked post-beta ultimate def (authored, never granted in beta)', () => {
     expect(SON_NHAC.cooldownTurns).toBe(6)
 
     const ids = SON_NHAC.appliesBuffs?.map((application) => `${application.definitionId}:${application.target}`)
@@ -83,16 +100,14 @@ describe('body kit data', () => {
     expect(wardGrant?.externalWardGrant?.sourceMaxHpRatio).toBeGreaterThan(0)
   })
 
-  it('THE_TU_KIT_BY_ROOT maps each root to its three slots', () => {
+  it('THE_TU_KIT_BY_ROOT maps each root to basic+special authored defs (beta slots)', () => {
     expect(THE_TU_KIT_BY_ROOT.cuong_chien).toEqual({
       basic: CUONG_QUYEN,
       special: LOAN_DAU,
-      ultimate: BAT_TU_BA_THE,
     })
     expect(THE_TU_KIT_BY_ROOT.tran_the).toEqual({
       basic: TRAN_AP,
-      special: PHAN_CHINH,
-      ultimate: SON_NHAC,
+      special: PHAN_CHAN,
     })
   })
 
@@ -105,13 +120,13 @@ describe('body kit data', () => {
   })
 
   it('every kit id has display metadata', () => {
-    for (const id of ['cuong_quyen', 'loan_dau', 'bat_tu_ba_the', 'tran_ap', 'phan_chinh', 'son_nhac']) {
+    for (const id of ['cuong_quyen', 'loan_dau', 'bat_tu_ba_the', 'tran_ap', 'phan_chan', 'son_nhac']) {
       expect(TURN_SKILL_DISPLAY_META[id], `missing display meta for ${id}`).toBeDefined()
     }
   })
 
   it('every appliesBuffs definitionId resolves in BUFF_REGISTRY', () => {
-    for (const skill of [BAT_TU_BA_THE, SON_NHAC]) {
+    for (const skill of [BAT_TU_BA_THE, PHAN_CHAN, SON_NHAC]) {
       for (const application of skill.appliesBuffs ?? []) {
         expect(() => BUFF_REGISTRY.get(application.definitionId)).not.toThrow()
       }
@@ -119,7 +134,7 @@ describe('body kit data', () => {
   })
 })
 
-describe('buildTheTuKit — node modifiers reach def clones only', () => {
+describe('buildTheTuKit — beta slot gates + node modifiers reach def clones only', () => {
   function registryWith(nodes: ProgressionNode[]) {
     return { getAll: () => nodes }
   }
@@ -130,90 +145,120 @@ describe('buildTheTuKit — node modifiers reach def clones only', () => {
 
   it('collectBodyKitModifiers sums channel values across owned node levels', () => {
     const registry = registryWith([
-      makeNode('tt_scalar_1', { missingHpBonusBonus: 0.005 }, 3),
-      makeNode('tt_battu_1', { batTuDurationBonus: 1 }),
-      makeNode('tt_taunt_1', { tauntTurnsBonus: 1 }),
+      makeNode('tt_cq_1', { cuongQuyenCoefficientBonus: 0.1 }, 3),
+      makeNode('tt_pierce_1', { cuongQuyenArmorPierce: 0.15 }),
+      makeNode('tt_marked_1', { reflectMarkedRatioBonus: 0.02 }),
     ])
     const player = createDefaultPlayer()
-    player.nodeLevels = { tt_scalar_1: 2, tt_battu_1: 1, tt_taunt_1: 1 }
+    player.nodeLevels = { tt_cq_1: 2, tt_pierce_1: 1, tt_marked_1: 1 }
 
     const mods = collectBodyKitModifiers(registry, player)
 
-    expect(mods.missingHpBonusBonus).toBeCloseTo(0.01)
-    expect(mods.batTuDurationBonus).toBe(1)
-    expect(mods.tauntTurnsBonus).toBe(1)
-    expect(mods.sonNhacWardRatioBonus).toBe(0)
+    expect(mods.cuongQuyenCoefficientBonus).toBeCloseTo(0.2)
+    expect(mods.cuongQuyenArmorPierce).toBeCloseTo(0.15)
+    expect(mods.reflectMarkedRatioBonus).toBeCloseTo(0.02)
+    expect(mods.tranApMaxHpRatioBonus).toBe(0)
   })
 
   it('unowned nodes contribute nothing', () => {
-    const registry = registryWith([makeNode('tt_scalar_1', { missingHpBonusBonus: 0.005 })])
+    const registry = registryWith([makeNode('tt_cq_1', { cuongQuyenCoefficientBonus: 0.1 })])
     const player = createDefaultPlayer()
 
     const mods = collectBodyKitModifiers(registry, player)
 
-    expect(mods.missingHpBonusBonus).toBe(0)
+    expect(mods.cuongQuyenCoefficientBonus).toBe(0)
   })
 
-  it('cuong_chien clone: scalar node raises missingHpBonusPerMissingPercent; duration node raises the buff durationOverride', () => {
-    const mods = collectBodyKitModifiers(
-      registryWith([
-        makeNode('tt_scalar_1', { missingHpBonusBonus: 0.01 }),
-        makeNode('tt_battu_1', { batTuDurationBonus: 1 }),
-      ]),
-      (() => {
-        const player = createDefaultPlayer()
-        player.nodeLevels = { tt_scalar_1: 1, tt_battu_1: 1 }
-        return player
-      })(),
-    )
+  it('owned.special=false -> special slot is empty and no Huyết Cuồng bake (Luyện Khí window)', () => {
+    const kit = buildTheTuKit('cuong_chien', collectBodyKitModifiers({ getAll: () => [] }, createDefaultPlayer()))
 
-    const kit = buildTheTuKit('cuong_chien', mods)
+    expect(kit.basic.id).toBe('cuong_quyen')
+    expect(kit.special).toBeUndefined()
+    expect(kit.ultimate).toBeUndefined()
+    expect(kit.basic.damage?.missingHpBonusPerMissingPercent).toBeUndefined()
+  })
 
-    expect(kit.basic.damage?.missingHpBonusPerMissingPercent).toBeCloseTo(0.03)
-    expect(kit.special?.damage?.missingHpBonusPerMissingPercent).toBeCloseTo(0.03)
-    expect(kit.ultimate?.appliesBuffs?.[0]?.durationOverride).toBe(4)
+  it('owned.special=true -> Loạn Đấu granted AND Huyết Cuồng bakes kit-local missing-HP onto both defs', () => {
+    const kit = buildTheTuKit('cuong_chien', collectBodyKitModifiers({ getAll: () => [] }, createDefaultPlayer()), {
+      special: true,
+    })
 
+    expect(kit.special?.id).toBe('loan_dau')
+    for (const def of [kit.basic, kit.special!]) {
+      expect(def.damage?.missingHpBonusPerMissingPercent).toBeGreaterThan(0)
+      expect(def.damage?.missingHpBonusCap).toBeGreaterThan(0)
+    }
     // Registry defs are untouched (clone-only adjustment).
-    expect(CUONG_QUYEN.damage?.missingHpBonusPerMissingPercent).toBe(0.02)
-    expect(BAT_TU_BA_THE.appliesBuffs?.[0]?.durationOverride).toBeUndefined()
+    expect(CUONG_QUYEN.damage?.missingHpBonusPerMissingPercent).toBeUndefined()
+    expect(LOAN_DAU.damage?.missingHpBonusPerMissingPercent).toBeUndefined()
   })
 
-  it('tran_the clone: reflect ratios reach the emblem buff def; ward ratio and taunt turns reach SON_NHAC applications', () => {
+  it('cuong_chien clone: Trọng Quyền + Phá Kình + Huyết Sát channels reach only the clones', () => {
     const player = createDefaultPlayer()
-    player.nodeLevels = { tt_reflect: 1, tt_ward: 1, tt_taunt: 1 }
+    player.nodeLevels = { tt_cq_1: 1, tt_pierce_1: 1, tt_hs_1: 1 }
 
     const mods = collectBodyKitModifiers(
       registryWith([
-        makeNode('tt_reflect', { reflectMaxHpRatioBonus: 0.01, reflectTakenRatioBonus: 0.05 }),
-        makeNode('tt_ward', { sonNhacWardRatioBonus: 0.1 }),
-        makeNode('tt_taunt', { tauntTurnsBonus: 1 }),
+        makeNode('tt_cq_1', { cuongQuyenCoefficientBonus: 0.1 }),
+        makeNode('tt_pierce_1', { cuongQuyenArmorPierce: 0.15 }),
+        makeNode('tt_hs_1', { loanDauPaidHpBonus: 0.002 }),
       ]),
       player,
     )
 
-    const kit = buildTheTuKit('tran_the', mods)
-    const emblemBuff = kit.special?.grantsBuffsAtBuild?.find((def) => def.id === 'phan_chinh')
+    const kit = buildTheTuKit('cuong_chien', mods, { special: true })
+
+    expect(kit.basic.damage?.multiplier).toBeCloseTo((CUONG_QUYEN.damage?.multiplier ?? 0) + 0.1)
+    expect(kit.basic.instances?.each?.armorPierce?.pierceFraction).toBeCloseTo(0.15)
+    expect(kit.special?.damageBonusPerPaidHpPoint).toBeCloseTo(
+      (LOAN_DAU.damageBonusPerPaidHpPoint ?? 0) + 0.002,
+    )
+    // Registry def untouched - the clone absorbed the node bonus alone.
+    expect(LOAN_DAU.damageBonusPerPaidHpPoint).toBe(LOAN_DAU_PAID_HP_BONUS)
+  })
+
+  it('tran_the clone: Trọng Thế raises sourceMaxHpRatio; Trấn Kình adds the weaken application; reflect ratios reach the phan_chan clone', () => {
+    const player = createDefaultPlayer()
+    player.nodeLevels = { tt_the_1: 1, tt_kinh_1: 1, tt_cot_1: 1, tt_an_1: 1 }
+
+    const mods = collectBodyKitModifiers(
+      registryWith([
+        makeNode('tt_the_1', { tranApMaxHpRatioBonus: 0.06 }),
+        makeNode('tt_kinh_1', { tranKinhWeakenRatio: 0.15 }),
+        makeNode('tt_cot_1', { reflectMaxHpRatioBonus: 0.01 }),
+        makeNode('tt_an_1', { reflectMarkedRatioBonus: 0.02 }),
+      ]),
+      player,
+    )
+
+    const kit = buildTheTuKit('tran_the', mods, { special: true })
+
+    expect(kit.basic.damage?.sourceMaxHpRatio).toBeCloseTo(
+      (TRAN_AP.damage?.sourceMaxHpRatio ?? 0) + 0.06,
+    )
+    const kinhApp = kit.basic.appliesAilments?.find((a) => a.buffDefinitionId === 'tran_kinh')
+    expect(kinhApp?.chance).toBe(1)
+    expect(kinhApp?.stacks).toBe(2)
+
+    const passiveBuff = kit.special?.grantsBuffsAtBuild?.find((def) => def.id === 'phan_chan')
     const reflectPayloadOf = (def: { capabilities?: readonly { type: string; payload: unknown }[] } | undefined) =>
       def?.capabilities
         ?.map((cap) => cap.payload as ReactiveTriggerPayload)
         .find((payload) => payload?.trigger === 'onImpactLanded' && payload.reflectsDamage !== undefined)
+    const base = reflectPayloadOf(BUFF_REGISTRY.get('phan_chan'))?.reflectsDamage
 
-    expect(reflectPayloadOf(emblemBuff)?.reflectsDamage?.takenRatio).toBeCloseTo(
-      (reflectPayloadOf(BUFF_REGISTRY.get('phan_chinh'))?.reflectsDamage?.takenRatio ?? 0) + 0.05,
+    expect(reflectPayloadOf(passiveBuff)?.reflectsDamage?.maxHpRatio).toBeCloseTo(
+      (base?.maxHpRatio ?? 0) + 0.01,
+    )
+    expect(reflectPayloadOf(passiveBuff)?.reflectsDamage?.markedMaxHpRatio).toBeCloseTo(
+      (base?.markedMaxHpRatio ?? 0) + 0.02,
     )
 
-    const wardApp = kit.ultimate?.appliesBuffs?.find((application) => application.definitionId === 'son_nhac_ho_the')
-    const baseRatio = SON_NHAC.appliesBuffs?.find(
-      (application) => application.definitionId === 'son_nhac_ho_the',
-    )?.externalWardGrant?.sourceMaxHpRatio
-    expect(wardApp?.externalWardGrant?.sourceMaxHpRatio).toBeCloseTo((baseRatio ?? 0) + 0.1)
-
-    const tauntApp = kit.ultimate?.appliesBuffs?.find((application) => application.definitionId === 'khiem_khich')
-    expect(tauntApp?.durationOverride).toBe((BUFF_REGISTRY.get('khiem_khich').lifetime.duration ?? 0) + 1)
-
-    // The embedded emblem buff is a CLONE — mutating it must not touch the registry.
-    emblemBuff!.capabilities = []
-    expect(BUFF_REGISTRY.get('phan_chinh').capabilities?.length).toBeGreaterThan(0)
+    // The embedded passive buff is a CLONE - mutating it must not touch the registry.
+    passiveBuff!.capabilities = []
+    expect(BUFF_REGISTRY.get('phan_chan').capabilities?.length).toBeGreaterThan(0)
+    // And the authored tran_ap never carries the node rider.
+    expect(TRAN_AP.appliesAilments ?? []).toHaveLength(0)
   })
 })
 
@@ -257,7 +302,7 @@ describe('the_tu_an kit data (spec section 6.1)', () => {
     expect(kit.ultimate.id).toBe('bach_ung')
     expect(kit.basic.grantsBuffsAtBuild?.map((def) => def.id)).toEqual(['ung_the', 'ho_mon', 'phan_mon'])
 
-    // Clones — mutating the kit's marker must not touch the registry def.
+    // Clones - mutating the kit's marker must not touch the registry def.
     const marker = kit.basic.grantsBuffsAtBuild!.find((def) => def.id === 'ho_mon')!
     marker.capabilities = []
     expect(BUFF_REGISTRY.get('ho_mon').capabilities?.length).toBeGreaterThan(0)

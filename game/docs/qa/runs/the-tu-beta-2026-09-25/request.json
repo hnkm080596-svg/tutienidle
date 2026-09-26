@@ -1,0 +1,11 @@
+{
+  "runId": "the-tu-beta-2026-09-25",
+  "productRoot": ".",
+  "goal": "The Tu beta body_pathway redesign: two mutually-exclusive combat roots (Cuong Chien Might single-target / Tran The MaxHP AoE), LQ = Basic only, TC major grants Special, no Ultimate; pay_hp sacrifice op floors at 1HP then ordered multi-hit; Huyet Cuong missing-HP bonus kit-local; Tran Ap AoE scales caster maxHp; Phan Chien reflects once per hostile action at holder maxHp ratio; node tree skill-local channels; TheTuTreePanel UI",
+  "requiredReadiness": true,
+  "contractPaths": [
+    "docs/qa/protocol/README.md",
+    "docs/specs/the-tu-beta-spec.md"
+  ],
+  "attackModelPath": "attack-model.json"
+}

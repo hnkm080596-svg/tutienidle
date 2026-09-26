@@ -47,7 +47,12 @@ import {
 import { asReactiveEconomy } from '../../the-tu/TheTuCapabilities'
 import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
 import { reconcileExternalWard } from '../../the-tu/TheTuExternalWard'
-import { asReactiveProc, type ReactiveTriggerName } from '../../proc/ProcCapabilities'
+import {
+  asReactiveProc,
+  isNaturalActionSource,
+  type ReactiveActionSource,
+  type ReactiveTriggerName,
+} from '../../proc/ProcCapabilities'
 import type { ReactiveProcAttempt } from '../../proc/CombatProcSystem'
 import type { BuffDefinition } from '../../buff2/BuffDefinition'
 
@@ -379,13 +384,6 @@ export interface TurnDeclaredAction {
 }
 
 /**
- * The Tu Reimagined (spec 7.1, plan Task 16) -- provenance axis for the
- * reactive queue. 'normal'/'skill' describe natural turns; the reactive
- * sources describe bypass actions queued by a proc window.
- */
-export type ReactiveActionSource = 'normal' | 'skill' | 'counter' | 'follow_up' | 'intercept'
-
-/**
  * Composite trigger context (spec 6.2.2, plan Task 16) -- each axis is
  * read independently by node payload variants: a Ho->EVA->Counter chain
  * produces {origin:'enemy_hit', intercepted:true, outcome:'evaded'}.
@@ -627,7 +625,7 @@ export class TurnBattleSystem {
       // resolveDeclaredHit :2136-2166 parity -- on-hit procs, then the
       // target's onImpactLanded reactive roll gated on hpDamage > 0,
       // then the queuedFollowUps FIFO push.
-      runLandedHitProcs: (battle, actor, target, hpDamage) => {
+      runLandedHitProcs: (battle, actor, target, hpDamage, reflectsEligible) => {
         if (this.runtime === undefined) return
         const procRoot = `hit.proc.${battle.totalTurnsElapsed}.${actor.id}.${target.id}.${this.nextOccurrence()}`
         this.procs.onHitLanded(actor.entity.id, target.entity.id, procRoot)
@@ -636,7 +634,7 @@ export class TurnBattleSystem {
             ? this.procs.rollReactiveTrigger(
                 target.entity.id,
                 'onImpactLanded',
-                { attacker: actor.entity, hpDamage },
+                { attacker: actor.entity, hpDamage, reflectsEligible },
                 procRoot,
               )
             : { firedFollowUp: false }
@@ -652,11 +650,7 @@ export class TurnBattleSystem {
       // Spec 6.2.2 taken-side window -- the same gate as the legacy
       // lane (hpDamage > 0 = "taken", natural actions only INV-9).
       resolveTakenWindow: (battle, target, actor, declared, hpDamage) => {
-        if (
-          hpDamage > 0 &&
-          (declared.actionSource === 'normal' ||
-            declared.actionSource === 'skill')
-        ) {
+        if (hpDamage > 0 && isNaturalActionSource(declared.actionSource)) {
           this.resolveReactiveProcs(battle, target, 'onImpactLanded', {
             attacker: actor,
             outcome: 'taken',
@@ -1514,12 +1508,20 @@ export class TurnBattleSystem {
     // punish-on-cast áp hard-CC buff lên actor, CC-check kế tiếp đọc state
     // mới → ccBlocked đúng theo spec §4.2 ordering.
     if (this.registry && this.runtime !== undefined) {
-      this.procs.rollReactiveTrigger(
+      const { firedFollowUp } = this.procs.rollReactiveTrigger(
         actor.entity.id,
         'onCastBegin',
         undefined,
         `action.turn.${battle.totalTurnsElapsed}.${actor.id}.castbegin`,
       )
+      if (firedFollowUp) {
+        battle.queuedFollowUps = battle.queuedFollowUps ?? []
+        battle.queuedFollowUps.push({
+          actorId: actor.id,
+          executionKind: 'reactive_bypass',
+          actionSource: 'follow_up',
+        })
+      }
     }
 
     // CC check TRƯỚC tick: buff stun/freeze duration=N phải block đúng N
@@ -1964,6 +1966,13 @@ export class TurnBattleSystem {
       return { targetIds, extraImpacts }
     }
 
+    // Phan Chan queue is action-scoped -- drop leftovers from an aborted
+    // action before this action queues its own (defensive; a mid-action
+    // throw already failed loudly upstream).
+    if (this.runtime !== undefined) {
+      this.procs.discardPendingReflects()
+    }
+
     // buff2 M-INT -- the legacy per-participant wuxing-initiation flag is
     // gone: reaction eligibility is instance metadata on the apply_buff
     // ops (every application marks 'eligible'; the elemental registry
@@ -2004,7 +2013,7 @@ export class TurnBattleSystem {
         this.reportUnroutedCast(
           actor,
           declared.chargedSkill,
-          actor.pendingChargedSkillId ?? declared.action?.skillId,
+          declared.chargedSkill?.id,
           true,
         )
       } else {
@@ -2029,12 +2038,13 @@ export class TurnBattleSystem {
             if (!targetParticipant || !targetParticipant.entity.alive) continue
 
             // Same per-hit authority as the normal lane (resolveDeclaredHit):
-            // defender income, leech, consume effects, on-hit procs, the
-            // Reflection queue, ailments, detonate, the taken-side Phan /
-            // evade windows and both stat refreshes are all owned there -
-            // a charged hit must not bypass them. The missing-HP scalar
-            // resolves inside against the actor's live hp, so the scaled
-            // damage packet passes through raw.
+            // defender income, leech, consume effects, on-hit procs,
+            // ailments, detonate, the taken-side Phan / evade windows and
+            // both stat refreshes are all owned there - a charged hit must
+            // not bypass them. (The reflect queue is fed by the plan
+            // lane's rollReactiveTrigger, not this path.) The missing-HP
+            // scalar resolves inside against the actor's live hp, so the
+            // scaled damage packet passes through raw.
             const hitResult = this.resolveDeclaredHit(
               battle,
               actor,
@@ -2069,6 +2079,11 @@ export class TurnBattleSystem {
           this.grantTheFromCast(actor, chargedSkill, chargedCrit)
         }
 
+        // No death sweep or reflect flush here: this lane only runs
+        // when runtime === undefined, so no buff/proc authority exists
+        // to sweep and no reflect lane is queued; in a wired battle the
+        // charged resolve routes through the plan lane, whose queued
+        // reflects flush at the shared action tail below.
         this.resolveAllyActionWindow(battle, actor, declared, landedTargets)
 
         return { targetIds, extraImpacts }
@@ -2079,8 +2094,11 @@ export class TurnBattleSystem {
     // affected-gated block below: enemy-targeted charge skills collect
     // targets only at resolve time, so `affected` stays empty at declare
     // and the block below never ran for them -- their cooldown/resource
-    // were never committed (dead isChargeInit branch). The charge-resolve
-    // turn returns early above and never reaches this point.
+    // were never committed (dead isChargeInit branch). Only the legacy
+    // (runtime === undefined) lane returns early above; routed and
+    // unrouted charge resolves intentionally fall through to the shared
+    // tail and DO reach this point (action is null there, so this block
+    // skips by shape, not by control flow).
     // skilldef M5b/M5d -- the commit rides the plan pipeline when the
     // def is adapter-covered (commitShell + consume ops through the
     // scheduler); an adapter-unsupported charge def on a live battle
@@ -2346,6 +2364,19 @@ export class TurnBattleSystem {
       }
     }
 
+    // The Tu beta (Phan Chan) -- once-per-hostile-action reflect settle:
+    // hits of this action queued ONE pending entry per reflect-holder;
+    // the action is fully settled here (primary cast, extras, dynamic
+    // basics), so each entry emits its single reflection op now. The
+    // reflect is a flat 'reflection' op -- it never rolls hit/crit and
+    // cannot recurse (a landed channel never opens for it).
+    if (this.runtime !== undefined) {
+      this.procs.flushReflects()
+      // A reflect kill is a death this boundary created - sweep now so the
+      // attacker's death hooks fire at this quiescent point, not the next.
+      this.sweepBuffDeaths(battle)
+    }
+
     // Spec 6.2.3 -- the Tro window: after a player-side action completes
     // (damaging or non-damaging), other player-side tro_mon carriers
     // roll their onAllyActionComplete procs.
@@ -2424,10 +2455,7 @@ export class TurnBattleSystem {
       // Reflection) rolls the defender's onImpactLanded reactiveProc
       // effects. Natural actions only (INV-9); income already landed
       // above, so this hit's +6 can fund the check.
-      if (
-        hitResult.hpDamage > 0 &&
-        (declared.actionSource === 'normal' || declared.actionSource === 'skill')
-      ) {
+      if (hitResult.hpDamage > 0 && isNaturalActionSource(declared.actionSource)) {
         this.resolveReactiveProcs(battle, target, 'onImpactLanded', {
           attacker: actor,
           outcome: 'taken',
@@ -2859,6 +2887,7 @@ export class TurnBattleSystem {
    */
   isPendingQueuedExecution(actorId: string): boolean {
     return this.pendingQueuedExecution?.actorId === actorId
+      || this.pendingReactiveEntry?.actorId === actorId
   }
 
   /**
@@ -3003,7 +3032,7 @@ export class TurnBattleSystem {
     attacker: TurnBattleParticipant,
     declared: TurnDeclaredAction,
   ): void {
-    if (declared.actionSource !== 'normal' && declared.actionSource !== 'skill') {
+    if (!isNaturalActionSource(declared.actionSource)) {
       return
     }
 
@@ -3031,7 +3060,7 @@ export class TurnBattleSystem {
   ): void {
     if (
       !battle.players.includes(actor) ||
-      (declared.actionSource !== 'normal' && declared.actionSource !== 'skill')
+      !isNaturalActionSource(declared.actionSource)
     ) {
       return
     }
@@ -3100,7 +3129,7 @@ export class TurnBattleSystem {
 
     // INV-9 -- reactive/replayed actions (counter/follow_up/intercept and
     // queued executions) never open new reactive windows.
-    if (declared.actionSource !== 'normal' && declared.actionSource !== 'skill') {
+    if (!isNaturalActionSource(declared.actionSource)) {
       return
     }
 
