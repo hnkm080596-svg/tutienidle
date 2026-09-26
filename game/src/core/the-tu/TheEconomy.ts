@@ -2,30 +2,53 @@ import { MAX_THE } from '../combat/CombatTypes'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { ActiveCapabilityGrant } from '../battle/contracts/capability'
 
-import { asReactiveEconomy, asTheEconomy } from './TheTuCapabilities'
+import { UNG_THE_BUFF } from '../../data/buff/TheTuBuffs'
 
-// The Tu Reimagined (spec 2026-09-15 section 4.1, plan Task 15) — the
-// ung_the proc-fuel economy. The is a THROUGHPUT BUDGET, not a
-// probability: pay-per-attempt on each reactive window, free income from
-// the authored table only, clamped at the participant's maxThe cap.
+import { asTheEconomy } from './TheTuCapabilities'
+
+// The Tu An -- Ung The beta (design authority
+// docs/design/the-tu-an-ung-the-design.txt) -- the ung_the proc-fuel
+// economy. The is a THROUGHPUT BUDGET funded ONLY by observation:
+// Tham The landed hits and observed enemies completing normal actions.
+// There is no passive round income, no taken/evade income, and no
+// reactive refund -- a successful reaction only ever SPENDS The.
 //
 // Boundaries (A2/A9):
-// - eligibility is the ung_the marker's presence — never cultivationPath
+// - eligibility is the ung_the marker's presence -- never cultivationPath
 //   re-reads at combat time (mechanics are participant-generic).
-// - the own-basic-lands income lives on the marker's theEconomy grant
-//   (review P1 single-channel lock — TurnSkillDefinition has no
-//   landed-cast gain field, so THAM_THE carries none).
-// - every mutation goes through grantThe's single clamp expression.
-// - buff-megaplan M4: grant reads take ActiveCapabilityGrant[]
-//   (buffs.getCapabilities(entityId)); pool-era effect iteration retired.
+// - income channels live on the marker's the_economy grant
+//   (gainOnBasicHit = Tham The landed; gainOnObservedAction = observed
+//   enemy action completion; node bonuses bake onto the participant-local
+//   clone at build).
+// - every GAIN routes through grantThe's single clamp expression; the
+//   spend/burn lanes (consume op, consumesAllThe drain) write currentThe
+//   directly through their own adapters by design.
+// - reactive cost is a flat authored per-proc `theCost` paid ONLY on a
+//   successful roll (success-only consume, design Part XI) -- the pay-
+//   before-roll + refund lane is superseded.
+// - Ung Tre / Qua The: each committed reaction adds one uniform
+//   reactionDebt on the holder PARTICIPANT (battle-scoped, not a buff,
+//   not dispellable); debt >= REACTION_DEBT_CAP is Qua The (no new
+//   windows); the holder's next natural action resets it. Gauge delay is
+//   applied as UNG_TRE_GAUGE_PENALTY per debt at commit.
 
 export const THE_PROC_COST = 15
-export const THE_PROC_GAIN = 20
-export const THE_GAIN_ON_EVADE = 8
-export const THE_GAIN_ON_HIT_TAKEN = 6
-export const THE_GAIN_PER_ROUND = 5
 
-const UNG_THE_ID = 'ung_the'
+/** Qua The cap: reaching it closes every new reactive window. */
+export const REACTION_DEBT_CAP = 3
+
+/** Single Qua The predicate — engine window gate and presentation share it. */
+export function isQuaTheDebt(reactionDebt: number | undefined): boolean {
+  return (reactionDebt ?? 0) >= REACTION_DEBT_CAP
+}
+
+/** ATB gauge subtracted per committed reaction (may go negative). */
+export const UNG_TRE_GAUGE_PENALTY = 400
+
+/** Dan The one-shot: observed-action income multiplied while it sits. */
+export const DAN_THE_INCOME_MULT = 3
+
+const UNG_THE_ID = UNG_THE_BUFF.id
 
 /** Single cap authority — entity.maxThe is baked at participant build. */
 export function theCap(entity: Pick<CombatEntity, 'maxThe'>): number {
@@ -44,56 +67,19 @@ export function isUngTheCombatant(grants: readonly ActiveCapabilityGrant[]): boo
 }
 
 /**
- * Resolve the per-attempt proc cost from the holder's reactive_economy
- * grants: bach_ung's freeProcs zeroes it; otherwise the base cost plus
- * every procCostFlatDelta (tu_the: -5), floored at 0.
- */
-export function resolveProcCost(
-  grants: readonly ActiveCapabilityGrant[],
-  baseCost = THE_PROC_COST,
-): number {
-  let delta = 0
-  for (const grant of grants) {
-    const economy = asReactiveEconomy(grant)
-    if (economy === undefined) continue
-    if (economy.freeProcs === true) return 0
-    delta += economy.procCostFlatDelta ?? 0
-  }
-  return Math.max(0, baseCost + delta)
-}
-
-/**
- * Pay-per-attempt (spec 4.1): false = the pool cannot pay and NO roll
- * happens — the mechanic is inert this window. True = cost committed;
- * the caller rolls and reports success via onProcSuccess.
- */
-export function tryPayProcCost(entity: CombatEntity, cost: number): boolean {
-  const pool = entity.currentThe ?? 0
-  if (pool < cost) return false
-  entity.currentThe = pool - cost
-  return true
-}
-
-/** A successful proc credits THE_PROC_GAIN through the capped pool. */
-export function onProcSuccess(entity: CombatEntity, gain = THE_PROC_GAIN): void {
-  grantThe(entity, gain)
-}
-
-/**
  * Own-basic-lands income — reads the authored theEconomy.gainOnBasicHit
- * field off the holder's marker clone (node-adjusted at participant
- * build; review P1: this is the ONLY basic-income channel).
+ * field off the holder's marker clone (Tham The landed; node bonuses
+ * bake at participant build).
  */
 export function theGainOnBasicHit(grants: readonly ActiveCapabilityGrant[]): number {
   return theEconomyField(grants, 'gainOnBasicHit')
 }
 
-// Task 20 — the remaining income channels read the same marker-clone
-// fields (node bonuses bake onto the participant-local def at build).
-// One read pattern per channel, same single-channel rule as basic.
+// The income channels read marker-clone fields (node bonuses bake onto
+// the participant-local def at build). One read pattern per channel.
 function theEconomyField(
   grants: readonly ActiveCapabilityGrant[],
-  field: 'gainOnEvade' | 'gainOnHitTaken' | 'gainPerRound' | 'gainOnBasicHit',
+  field: 'gainOnBasicHit' | 'gainOnObservedAction',
 ): number {
   let gain = 0
   for (const grant of grants) {
@@ -105,17 +91,7 @@ function theEconomyField(
   return gain
 }
 
-/** Free income when the holder dodges a hit. */
-export function theGainOnEvade(grants: readonly ActiveCapabilityGrant[]): number {
-  return theEconomyField(grants, 'gainOnEvade')
-}
-
-/** Free income when the holder takes real HP damage (not absorbed). */
-export function theGainOnHitTaken(grants: readonly ActiveCapabilityGrant[]): number {
-  return theEconomyField(grants, 'gainOnHitTaken')
-}
-
-/** Free income at each round boundary. */
-export function theGainPerRound(grants: readonly ActiveCapabilityGrant[]): number {
-  return theEconomyField(grants, 'gainPerRound')
+/** Observation income when an observed enemy completes a normal action. */
+export function theGainOnObservedAction(grants: readonly ActiveCapabilityGrant[]): number {
+  return theEconomyField(grants, 'gainOnObservedAction')
 }

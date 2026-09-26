@@ -112,7 +112,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   // An kit (fixed at path choice) + reactive payload defs.
   tham_the: {
     name: 'Thám Thế',
-    description: 'Dò thế địch bằng một đòn thân pháp — đánh trúng tích Thế.',
+    description: 'Dò thế địch bằng một đòn thân pháp — đánh dấu mục tiêu, đánh trúng tích Thế.',
   },
   tu_the: {
     name: 'Tú Thế',
@@ -122,6 +122,10 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     name: 'Bách Ứng',
     description: 'Bách ứng bất lao trong 3 lượt: mọi kiểm tra phản ứng miễn phí, phản kích kèm Choáng. Hồi 8 lượt.',
   },
+  quan_the: {
+    name: 'Quan Thế',
+    description: 'Mở Quan Thế trong 4 lượt của bản thân: mọi kẻ địch đều bị quan sát, tức thời tích Thế. Hồi 6 lượt.',
+  },
   phan_kich: {
     name: 'Phản Kích',
     description: 'Đòn phản kích tức thì sau khi trúng hoặc né đòn.',
@@ -129,6 +133,10 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   tro_kich: {
     name: 'Trợ Kích',
     description: 'Đòn đánh theo sau hành động của đồng đội.',
+  },
+  trong_phan_kich: {
+    name: 'Trọng Phản Kích',
+    description: 'Đòn phản nặng sau khi né tránh hoàn toàn.',
   },
 
   // ---------------------------------------------------------------------

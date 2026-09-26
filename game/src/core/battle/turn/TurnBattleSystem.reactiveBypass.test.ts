@@ -10,19 +10,17 @@ import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import { buffs as LIVE_BUFFS } from '../../../data/buff/buffs'
 import { PHAN_KICH } from '../../../data/skill/TheTuSkills'
-import { THE_PROC_GAIN } from '../../the-tu/TheEconomy'
-import type { TurnSkillDefinition } from './TurnSkillAction'
 import type { BuffDefinition } from '../../buff2/BuffDefinition'
-import type { ReactiveProcPayload } from '../../proc/ProcCapabilities'
 import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
-// The Tu Reimagined (spec 7.1, plan Task 16 / v2.4 P0.1) — the reactive
-// bypass contract: a queued entry resolves as a REAL action through
-// declare -> impact but skips the ENTIRE natural-turn lifecycle (turn
-// counter, round tracking, buff/DoT ticks, cooldowns, regen, resource
-// deltas, charge advance, CC check, gauge).
-// M4: marker instances live in the shared runtime store; phan_mon here
-// is the kit-clone shape (theGainOnSuccess baked on by buildTheTuKit).
+// Ung The beta — the reactive bypass contract (design Parts VI-XI): a
+// queued entry resolves as a REAL action through declare -> impact but
+// skips the ENTIRE natural-turn lifecycle (turn counter, round
+// tracking, buff/DoT ticks, cooldowns, regen, resource deltas, charge
+// advance, CC check, gauge) and opens NO new reactive windows (INV-9).
+// The post-action Phan window pins: an observed enemy's action that
+// resolved on the reactor rolls the marker's grant — success pays the
+// flat cost, commits +1 Ung Tre debt, queues the payload.
 
 const NO_MITIGATION = {
   evasionRate: 0,
@@ -63,12 +61,6 @@ function createCombatant(overrides: Partial<CombatEntity> = {}, speed = 10): Com
   return entity
 }
 
-const PAYLOAD: TurnSkillDefinition = {
-  id: 'phan_kich',
-  cooldownTurns: 0,
-  damage: { kind: 'physical', multiplier: 1 },
-  targeting: { shape: 'single' },
-}
 
 const TICKING_BUFF: BuffDefinition = {
   id: 'test_dot_host',
@@ -82,21 +74,7 @@ const TICKING_BUFF: BuffDefinition = {
   dispellable: true,
 }
 
-/** The phan_mon clone the kit produces: authored success gain baked on. */
-const PHAN_MON_KIT: BuffDefinition = (() => {
-  const clone = structuredClone(LIVE_BUFFS.find((def) => def.id === 'phan_mon')!)
-  for (const capability of clone.capabilities ?? []) {
-    if (capability.type === 'reactive_proc') {
-      ;(capability.payload as ReactiveProcPayload).theGainOnSuccess = THE_PROC_GAIN
-    }
-  }
-  return clone
-})()
-
-const KIT_REGISTRY = makeTestBuffRegistry([
-  TICKING_BUFF,
-  ...LIVE_BUFFS.map((def) => (def.id === 'phan_mon' ? PHAN_MON_KIT : def)),
-])
+const KIT_REGISTRY = makeTestBuffRegistry([TICKING_BUFF, ...LIVE_BUFFS])
 
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
   return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
@@ -252,7 +230,8 @@ describe('reactive bypass contract (spec 7.1)', () => {
     playerP.entity.baseStats = asBaseStats({ ...playerP.entity.baseStats, evasionRate: 1_000_000, counterChance: 1 })
     playerP.entity.stats = { ...playerP.entity.stats, evasionRate: 1_000_000, counterChance: 1 }
     runtime.applyBuff('phan_mon', playerP)
-    playerP.entity.currentThe = 15 // exactly the proc cost; no ung_the -> no evade income
+    playerP.thamTargetId = 'enemy' // the defender OBSERVES the attacker
+    playerP.entity.currentThe = 15 // exactly the proc cost
 
     // Speed lives on baseStats — refreshParticipantStats recomputes
     // entity.stats from baseStats + modifiers every pacing step.
@@ -277,8 +256,9 @@ describe('reactive bypass contract (spec 7.1)', () => {
       targetIds: ['enemy'],
       triggerContext: { origin: 'enemy_hit', outcome: 'evaded' },
     })
-    // Economy: -15 attempt cost, +20 success credit -> net +5.
-    expect(playerP.entity.currentThe).toBe(20)
+    // Success-only cost: 15 - 15 = 0, +1 Ung Tre debt.
+    expect(playerP.entity.currentThe).toBe(0)
+    expect(playerP.reactionDebt).toBe(1)
   })
 
   it('a TAKEN hit queues the counter through the onImpactLanded proc (outcome taken, not evaded)', () => {
@@ -286,6 +266,7 @@ describe('reactive bypass contract (spec 7.1)', () => {
     playerP.entity.baseStats = asBaseStats({ ...playerP.entity.baseStats, counterChance: 1 })
     playerP.entity.stats = { ...playerP.entity.stats, counterChance: 1 }
     runtime.applyBuff('phan_mon', playerP)
+    playerP.thamTargetId = 'enemy' // the defender OBSERVES the attacker
     playerP.entity.currentThe = 100
 
     // Speed lives on baseStats — refreshParticipantStats recomputes
@@ -308,8 +289,8 @@ describe('reactive bypass contract (spec 7.1)', () => {
       targetIds: ['enemy'],
       triggerContext: { origin: 'enemy_hit', outcome: 'taken' },
     })
-    // Economy: -15 attempt, +20 success — capped at the 100 default.
-    expect(playerP.entity.currentThe).toBe(100)
+    // Success-only cost: 100 - 15 = 85; no income without ung_the.
+    expect(playerP.entity.currentThe).toBe(85)
   })
 
   it('4-deep chain trips MAX_FOLLOW_UP_CHAIN_DEPTH — queue drops, the next action is a NATURAL turn', () => {

@@ -11,22 +11,23 @@ import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { buffs as LIVE_BUFFS } from '../../../data/buff/buffs'
-import { TRO_KICH } from '../../../data/skill/TheTuSkills'
-import { THE_PROC_COST, THE_PROC_GAIN } from '../../the-tu/TheEconomy'
+import { TRO_KICH, buildTheTuAnKit } from '../../../data/skill/TheTuSkills'
+import { THE_PROC_COST } from '../../the-tu/TheEconomy'
 import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import type { BuffRegistry } from '../../buff2/BuffRegistry'
-import type { ReactiveProcPayload } from '../../proc/ProcCapabilities'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import type { TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
-// The Tu Reimagined (spec 6.2.2/6.2.3, plan Task 18) — the Phan taken
-// window and the Tro ally-action window. Phan: a LANDED hit with
-// hpDamage > 0 rolls the defender's onImpactLanded proc (fully absorbed
-// is not "taken"). Tro: a player-side action that landed >=1 damaging
-// hit gives OTHER living player-side tro_mon holders one roll each,
-// queueing tro_kich against the whole landed set — never on the actor's
-// own action and never on reactive actions (INV-9).
+// Ung The beta (design Parts VI + VIII) — the Phan post-action window
+// and the Tro ally-action window. Phan: an observed enemy's natural
+// hostile action RESOLVING on the reactor opens one window — hit,
+// blocked, absorbed, missed and evaded all qualify; the taken outcome
+// rolls onImpactLanded, a fully dodged action rolls onEvade. Tro: an
+// ally's authored-DAMAGING natural action completes into an enemy the
+// reactor observes -> one window -> tro_kich at the canonical target
+// (first landed, else affected, alive + observed). Success pays The
+// and commits +1 Ung Tre debt — nothing is spent on a failed roll.
 
 const NO_MITIGATION = {
   evasionRate: 0,
@@ -78,20 +79,10 @@ function makeParticipant(id: string, entity: CombatEntity, speed: number, priori
   return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
-/** Clone a marker def with hand-baked reactive_proc economy fields —
-    the same capability-payload writes buildTheTuAnKit performs (the
-    base registry marker carries no theCost/theGainOnSuccess). */
-function markerClone(
-  base: BuffDefinition,
-  bake?: (payload: ReactiveProcPayload) => void,
-): BuffDefinition {
-  const clone = structuredClone(base)
-  for (const capability of clone.capabilities ?? []) {
-    if (capability.type === 'reactive_proc') {
-      bake?.(capability.payload as ReactiveProcPayload)
-    }
-  }
-  return clone
+interface World {
+  combat: CombatSystem
+  registry: BuffRegistry
+  runtime: TurnRuntimeFixture
 }
 
 /** Live-data registry with the given defs swapped in under their own
@@ -101,10 +92,11 @@ function registryWith(replacements: readonly BuffDefinition[]): BuffRegistry {
   return makeTestBuffRegistry(LIVE_BUFFS.map((def) => byId.get(def.id) ?? def))
 }
 
-interface World {
-  combat: CombatSystem
-  registry: BuffRegistry
-  runtime: TurnRuntimeFixture
+/** Kit-baked marker clones under their own ids — e.g. phan_mon carrying
+    the Trong Phan payload swap. */
+function bakedKitRegistry(mods: Parameters<typeof buildTheTuAnKit>[0]): BuffRegistry {
+  const kit = buildTheTuAnKit(mods, { quanThe: true, quanTheCoreLevel: 1 })
+  return registryWith(kit.basic.grantsBuffsAtBuild!)
 }
 
 function world(
@@ -171,75 +163,222 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-describe('Phan taken window (spec 6.2.2)', () => {
-  it('a fully absorbed hit (hpDamage=0, not dodged) rolls NO Phan proc', () => {
-    const enemy = createCombatant({ id: 'enemy' })
-    const defender = createCombatant({ id: 'defender', type: 'player', currentHp: 100_000, maxHp: 100_000 })
-    const enemyP = makeParticipant('enemy', enemy, 10, 100)
-    const defenderP = makeParticipant('defender', defender, 5, 0)
-    const battle: TurnBattle = { players: [defenderP], enemies: [enemyP], state: 'fighting' }
-    const w = world(() => [defenderP, enemyP])
-    withMarker(w, defenderP, 'phan_mon', 'counterChance', 1, 100)
+function makePhanWorld(): {
+  battle: TurnBattle
+  enemyP: TurnBattleParticipant
+  defenderP: TurnBattleParticipant
+  w: World
+} {
+  const enemy = createCombatant({ id: 'enemy' })
+  const defender = createCombatant({ id: 'defender', type: 'player', currentHp: 100_000, maxHp: 100_000 })
+  const enemyP = makeParticipant('enemy', enemy, 10, 100)
+  const defenderP = makeParticipant('defender', defender, 5, 0)
+  defenderP.reactivePayloads = {
+    phan_kich: { ...(buildTheTuAnKit().reactivePayloads['phan_kich']!) },
+  }
+  const battle: TurnBattle = { players: [defenderP], enemies: [enemyP], state: 'fighting' }
+  const w = world(() => [defenderP, enemyP])
+  withMarker(w, defenderP, 'phan_mon', 'counterChance', 1, 100)
+  // The defender OBSERVES the attacker — the mark is the base gate.
+  defenderP.thamTargetId = 'enemy'
+  return { battle, enemyP, defenderP, w }
+}
+
+describe('Phan post-action window (Ung The beta)', () => {
+  it('a TAKEN hit rolls onImpactLanded: forced success pays +15 cost, +1 debt, queues phan_kich at the attacker', () => {
+    const { battle, defenderP, w } = makePhanWorld()
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    systemOf(w).applyActionImpact(battle, declaredAction('enemy', BASIC, [defenderP], battle.players))
+
+    expect(battle.queuedFollowUps).toHaveLength(1)
+    expect(battle.queuedFollowUps![0]).toMatchObject({
+      actorId: 'defender',
+      actionSource: 'counter',
+      payloadSkillId: 'phan_kich',
+      targetIds: ['enemy'],
+      triggerContext: { origin: 'enemy_hit', outcome: 'taken' },
+    })
+    expect(defenderP.entity.currentThe).toBe(100 - THE_PROC_COST)
+    expect(defenderP.reactionDebt).toBe(1)
+  })
+
+  it('a fully ABSORBED hit (hpDamage=0) still qualifies — resolution, not HP loss, is the trigger', () => {
+    const { battle, defenderP, w } = makePhanWorld()
     defenderP.entity.currentWard = 100_000 // absorbs the whole hit
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     systemOf(w).applyActionImpact(battle, declaredAction('enemy', BASIC, [defenderP], battle.players))
 
-    expect(battle.queuedFollowUps).toBeUndefined()
-    expect(defenderP.entity.currentThe).toBe(100) // no attempt at all
-  })
-
-  it('taken-hit income lands BEFORE the window: 10 + 6 funds this hit\'s counter check', () => {
-    const enemy = createCombatant({ id: 'enemy' })
-    const defender = createCombatant({ id: 'defender', type: 'player', currentHp: 100_000, maxHp: 100_000 })
-    const enemyP = makeParticipant('enemy', enemy, 10, 100)
-    const defenderP = makeParticipant('defender', defender, 5, 0)
-    const battle: TurnBattle = { players: [defenderP], enemies: [enemyP], state: 'fighting' }
-    const registry = registryWith([
-      markerClone(BUFF_REGISTRY.get('phan_mon'), (payload) => {
-        payload.theCost = THE_PROC_COST
-        payload.theGainOnSuccess = THE_PROC_GAIN
-      }),
-    ])
-    const w = world(() => [defenderP, enemyP], registry)
-    // ung_the supplies the +6 taken income; phan_mon the counter proc.
-    withMarker(w, defenderP, 'ung_the', 'counterChance', 1, 10)
-    withMarker(w, defenderP, 'phan_mon', 'counterChance', 1, 10)
-    vi.spyOn(Math, 'random').mockReturnValue(0)
-
-    systemOf(w).applyActionImpact(battle, declaredAction('enemy', BASIC, [defenderP], battle.players))
-
-    // 10 + 6 (taken income) = 16 >= 15 -> paid, rolled, +20 success.
     expect(battle.queuedFollowUps).toHaveLength(1)
-    expect(defenderP.entity.currentThe).toBe(21)
+    expect(battle.queuedFollowUps![0]!.payloadSkillId).toBe('phan_kich')
+    expect(defenderP.entity.currentThe).toBe(100 - THE_PROC_COST)
   })
 
-  it('a counter on a dead attacker drops — the queue entry is never pushed', () => {
-    const enemy = createCombatant({ id: 'enemy', alive: false })
-    const defender = createCombatant({ id: 'defender', type: 'player', currentHp: 100_000, maxHp: 100_000 })
-    const enemyP = makeParticipant('enemy', enemy, 10, 100)
-    enemyP.entity = { ...enemyP.entity, alive: false }
-    enemyP.alive = false
-    const defenderP = makeParticipant('defender', defender, 5, 0)
-    const battle: TurnBattle = { players: [defenderP], enemies: [enemyP], state: 'fighting' }
-    const registry = registryWith([
-      markerClone(BUFF_REGISTRY.get('phan_mon'), (payload) => {
-        payload.theCost = THE_PROC_COST
-        payload.theGainOnSuccess = THE_PROC_GAIN
-      }),
-    ])
-    const w = world(() => [defenderP, enemyP], registry)
+  it('a dodged hit rolls the onEvade grant — still phan_kich without the Trong Phan node', () => {
+    const { battle, defenderP, w } = makePhanWorld()
+    defenderP.entity.baseStats = asBaseStats({ ...defenderP.entity.baseStats, evasionRate: 1_000_000 })
+    defenderP.entity.stats = { ...defenderP.entity.stats, evasionRate: 1_000_000 }
+    // The hit channel and the proc roll share the one rng stream:
+    // 0.999 dodges past the 5% floor, then 0 succeeds the chance cap.
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0.999).mockReturnValue(0)
+
+    systemOf(w).applyActionImpact(battle, declaredAction('enemy', BASIC, [defenderP], battle.players))
+
+    expect(battle.queuedFollowUps).toHaveLength(1)
+    expect(battle.queuedFollowUps![0]).toMatchObject({
+      payloadSkillId: 'phan_kich',
+      triggerContext: { origin: 'enemy_hit', outcome: 'evaded' },
+    })
+  })
+
+  it('Trong Phan owned: a dodged hit queues trong_phan_kich instead', () => {
+    const { battle, enemyP, defenderP } = makePhanWorld()
+    const evadeMods = {
+      observationGainBonus: 0,
+      phanKinhArmorPierce: 0,
+      interceptWardRatio: 0,
+      evadeCounterMultiplierBonus: 0.6,
+      danTheBonus: 0,
+    }
+    const w = world(() => [defenderP, enemyP], bakedKitRegistry(evadeMods))
+    // Re-seed the defender's markers + payloads against the baked registry.
     withMarker(w, defenderP, 'phan_mon', 'counterChance', 1, 100)
+    defenderP.thamTargetId = 'enemy'
+    defenderP.reactivePayloads = buildTheTuAnKit(evadeMods).reactivePayloads
+    defenderP.entity.baseStats = asBaseStats({ ...defenderP.entity.baseStats, evasionRate: 1_000_000 })
+    defenderP.entity.stats = { ...defenderP.entity.stats, evasionRate: 1_000_000 }
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0.999).mockReturnValue(0)
+
+    systemOf(w).applyActionImpact(battle, declaredAction('enemy', BASIC, [defenderP], battle.players))
+
+    expect(battle.queuedFollowUps![0]!.payloadSkillId).toBe('trong_phan_kich')
+  })
+
+  it('an unobserved attacker opens no Phan window', () => {
+    const { battle, defenderP, w } = makePhanWorld()
+    defenderP.thamTargetId = undefined
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     systemOf(w).applyActionImpact(battle, declaredAction('enemy', BASIC, [defenderP], battle.players))
 
-    // Roll succeeded but targetMode 'attacker' resolved to a dead actor.
     expect(battle.queuedFollowUps).toBeUndefined()
+    expect(defenderP.entity.currentThe).toBe(100)
+  })
+
+  it('hard CC on the defender closes the window', () => {
+    const { battle, defenderP, w } = makePhanWorld()
+    w.runtime.applyBuff('dong_bang', defenderP)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    systemOf(w).applyActionImpact(battle, declaredAction('enemy', BASIC, [defenderP], battle.players))
+
+    expect(battle.queuedFollowUps).toBeUndefined()
+    expect(defenderP.entity.currentThe).toBe(100)
+  })
+
+  it('the committed counter drops when its captured target dies before resolution — no refund', () => {
+    const { battle, enemyP, defenderP, w } = makePhanWorld()
+    const system = systemOf(w)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    // Enemy alive at commit: window pays, +1 debt, queues the counter.
+    system.applyActionImpact(battle, declaredAction('enemy', BASIC, [defenderP], battle.players))
+    expect(battle.queuedFollowUps).toHaveLength(1)
+    expect(defenderP.entity.currentThe).toBe(100 - THE_PROC_COST)
+
+    // The attacker dies BEFORE the queued payload resolves — the dead
+    // captured target filters out; payment + debt stand (no refund).
+    enemyP.entity.alive = false
+    enemyP.alive = false
+    system.resolveNextStep(battle)
+
+    expect(battle.queuedFollowUps ?? []).toHaveLength(0)
+    expect(defenderP.entity.currentThe).toBe(100 - THE_PROC_COST)
+    expect(defenderP.reactionDebt).toBe(1)
+  })
+
+  it('a reactive enemy action opens no Phan window (INV-9)', () => {
+    const { battle, defenderP, w } = makePhanWorld()
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    systemOf(w).applyActionImpact(
+      battle,
+      declaredAction('enemy', BASIC, [defenderP], battle.players, 'counter'),
+    )
+
+    expect(battle.queuedFollowUps).toBeUndefined()
+    expect(defenderP.entity.currentThe).toBe(100)
+  })
+
+  it('a multi-hit action opens ONE window per reactor — not per hit', () => {
+    const { battle, defenderP, w } = makePhanWorld()
+    const multiHit: TurnSkillDefinition = {
+      ...BASIC,
+      id: 'multi_hit',
+      instances: { count: 3 },
+    }
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    systemOf(w).applyActionImpact(battle, declaredAction('enemy', multiHit, [defenderP], battle.players))
+
+    const counters = (battle.queuedFollowUps ?? []).filter(
+      (entry) => entry.actorId === 'defender' && entry.actionSource === 'counter',
+    )
+    expect(counters).toHaveLength(1)
+    expect(defenderP.reactionDebt).toBe(1)
+  })
+
+  it('a NON-DAMAGING enemy cast resolving on the defender still opens the window (outcome evaded)', () => {
+    const { battle, defenderP, w } = makePhanWorld()
+    const mark: TurnSkillDefinition = {
+      id: 'enemy_mark',
+      cooldownTurns: 0,
+      targeting: { shape: 'single' },
+      appliesAilments: [{ buffDefinitionId: 'chan_an', chance: 1 }],
+    }
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    systemOf(w).applyActionImpact(battle, declaredAction('enemy', mark, [defenderP], battle.players))
+
+    expect(battle.queuedFollowUps).toHaveLength(1)
+    expect(battle.queuedFollowUps![0]!.payloadSkillId).toBe('phan_kich')
+  })
+
+  // cleanA12 COR pin — the adjudicated default: a reactor in affected
+  // with NO recorded hit outcome resolves 'evaded' (TBS ~:3200). Under
+  // major_trong_phan that means a non-damaging hostile cast mints the
+  // premium trong_phan_kich payload — this pins the contract so the
+  // default cannot silently regress.
+  it('trong_phan owned: a NON-DAMAGING cast on the defender queues trong_phan_kich (evaded default)', () => {
+    const { battle, enemyP, defenderP } = makePhanWorld()
+    const evadeMods = {
+      observationGainBonus: 0,
+      phanKinhArmorPierce: 0,
+      interceptWardRatio: 0,
+      evadeCounterMultiplierBonus: 0.6,
+      danTheBonus: 0,
+    }
+    const w = world(() => [defenderP, enemyP], bakedKitRegistry(evadeMods))
+    withMarker(w, defenderP, 'phan_mon', 'counterChance', 1, 100)
+    defenderP.thamTargetId = 'enemy'
+    defenderP.reactivePayloads = buildTheTuAnKit(evadeMods).reactivePayloads
+    const mark: TurnSkillDefinition = {
+      id: 'enemy_mark',
+      cooldownTurns: 0,
+      targeting: { shape: 'single' },
+      appliesAilments: [{ buffDefinitionId: 'chan_an', chance: 1 }],
+    }
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    systemOf(w).applyActionImpact(battle, declaredAction('enemy', mark, [defenderP], battle.players))
+
+    expect(battle.queuedFollowUps).toHaveLength(1)
+    expect(battle.queuedFollowUps![0]!.payloadSkillId).toBe('trong_phan_kich')
   })
 })
 
-describe('Tro ally-action window (spec 6.2.3)', () => {
+describe('Tro ally-action window (Ung The beta)', () => {
   function makeParty(): {
     battle: TurnBattle
     attackerP: TurnBattleParticipant
@@ -259,19 +398,19 @@ describe('Tro ally-action window (spec 6.2.3)', () => {
       enemies: [enemyP],
       state: 'fighting',
     }
-    const registry = registryWith([
-      markerClone(BUFF_REGISTRY.get('tro_mon'), (payload) => {
-        payload.theCost = THE_PROC_COST
-        payload.theGainOnSuccess = THE_PROC_GAIN
-      }),
-    ])
-    const w = world(() => [...battle.players, ...battle.enemies], registry)
+    const w = world(() => [...battle.players, ...battle.enemies])
     return { battle, attackerP, supporterP, enemyP, w }
   }
 
-  it('an ally\'s landed action queues tro_kich on the supporter vs the landed target', () => {
-    const { battle, attackerP, supporterP, enemyP, w } = makeParty()
-    withMarker(w, supporterP, 'tro_mon', 'followUpChance', 1, 100)
+  function withTro(w: World, p: TurnBattleParticipant, chance: number, currentThe: number, observeId = 'enemy') {
+    withMarker(w, p, 'tro_mon', 'followUpChance', chance, currentThe)
+    p.thamTargetId = observeId
+    return p
+  }
+
+  it('an ally\'s landed action queues tro_kich on the supporter vs the canonical target', () => {
+    const { battle, supporterP, enemyP, w } = makeParty()
+    withTro(w, supporterP, 1, 100)
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     systemOf(w).applyActionImpact(battle, declaredAction('attacker', BASIC, [enemyP], battle.enemies))
@@ -284,28 +423,72 @@ describe('Tro ally-action window (spec 6.2.3)', () => {
       targetIds: ['enemy'],
       triggerContext: { origin: 'ally_action' },
     })
-    expect(supporterP.entity.currentThe).toBe(100) // 100 - 15 + 20 capped
+    expect(supporterP.entity.currentThe).toBe(100 - THE_PROC_COST)
+    expect(supporterP.reactionDebt).toBe(1)
   })
 
-  it('ally AoE queues Tro against the whole landed set', () => {
-    const { battle, attackerP, supporterP, enemyP, w } = makeParty()
+  it('ally AoE queues ONE tro_kich at the canonical target (first landed observed)', () => {
+    const { battle, supporterP, enemyP, w } = makeParty()
     const enemy2 = createCombatant({ id: 'enemy2', currentHp: 100_000, maxHp: 100_000 })
     const enemy2P = makeParticipant('enemy2', enemy2, 3, 101)
     battle.enemies.push(enemy2P)
-    withMarker(w, supporterP, 'tro_mon', 'followUpChance', 1, 100)
+    withTro(w, supporterP, 1, 100)
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     const aoe: TurnSkillDefinition = { ...BASIC, id: 'aoe', targeting: { shape: 'all_lanes' } }
     systemOf(w).applyActionImpact(battle, declaredAction('attacker', aoe, [enemyP, enemy2P], battle.enemies))
 
     expect(battle.queuedFollowUps).toHaveLength(1)
-    expect(battle.queuedFollowUps![0]!.targetIds).toEqual(['enemy', 'enemy2'])
+    expect(battle.queuedFollowUps![0]!.targetIds).toEqual(['enemy'])
+  })
+
+  it('canonical target falls to the next landed entry when the first is dead or unobserved', () => {
+    const { battle, attackerP, supporterP, enemyP, w } = makeParty()
+    const enemy2 = createCombatant({ id: 'enemy2', currentHp: 100_000, maxHp: 100_000 })
+    const enemy2P = makeParticipant('enemy2', enemy2, 3, 101)
+    battle.enemies.push(enemy2P)
+    // Supporter observes ONLY enemy2 (a recast moved the mark); the
+    // first landed entry is unobserved -> canonical falls through.
+    withTro(w, supporterP, 1, 100, 'enemy2')
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const aoe: TurnSkillDefinition = { ...BASIC, id: 'aoe', targeting: { shape: 'all_lanes' } }
+    systemOf(w).applyActionImpact(battle, declaredAction('attacker', aoe, [enemyP, enemy2P], battle.enemies))
+
+    expect(battle.queuedFollowUps![0]!.targetIds).toEqual(['enemy2'])
+    void attackerP
+    void enemyP
+  })
+
+  it('a whiffed ally action still opens the window — the canonical target is observed + affected', () => {
+    const { battle, supporterP, enemyP, w } = makeParty()
+    enemyP.entity.baseStats = asBaseStats({ ...enemyP.entity.baseStats, evasionRate: 1_000_000 })
+    enemyP.entity.stats = { ...enemyP.entity.stats, evasionRate: 1_000_000 }
+    withTro(w, supporterP, 1, 100)
+    // One shared stream: 0.999 whiffs the ally's hit, 0 succeeds Tro.
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0.999).mockReturnValue(0)
+
+    systemOf(w).applyActionImpact(battle, declaredAction('attacker', BASIC, [enemyP], battle.enemies))
+
+    expect(battle.queuedFollowUps).toHaveLength(1)
+    expect(battle.queuedFollowUps![0]!.targetIds).toEqual(['enemy'])
+  })
+
+  it('no window when the canonical target is unobserved by that ally', () => {
+    const { battle, supporterP, enemyP, w } = makeParty()
+    withMarker(w, supporterP, 'tro_mon', 'followUpChance', 1, 100) // no observation
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    systemOf(w).applyActionImpact(battle, declaredAction('attacker', BASIC, [enemyP], battle.enemies))
+
+    expect(battle.queuedFollowUps).toBeUndefined()
+    expect(supporterP.entity.currentThe).toBe(100)
   })
 
   it('never triggers on the actor\'s own action — a tro_mon holder acting queues nothing', () => {
     const { battle, attackerP, supporterP, enemyP, w } = makeParty()
     // The ATTACKER carries the marker; only the supporter is other-side.
-    withMarker(w, attackerP, 'tro_mon', 'followUpChance', 1, 100)
+    withTro(w, attackerP, 1, 100)
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     systemOf(w).applyActionImpact(battle, declaredAction('attacker', BASIC, [enemyP], battle.enemies))
@@ -315,9 +498,30 @@ describe('Tro ally-action window (spec 6.2.3)', () => {
     expect(supporterP.entity.currentThe).toBeUndefined()
   })
 
+  it('a non-damaging authored ally action opens no window', () => {
+    const { battle, supporterP, enemyP, w } = makeParty()
+    withTro(w, supporterP, 1, 100)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const cheer: TurnSkillDefinition = {
+      id: 'cheer',
+      cooldownTurns: 0,
+      targeting: { shape: 'single' },
+      appliesAilments: [{ buffDefinitionId: 'chan_an', chance: 1 }],
+    }
+    const declared = declaredAction('attacker', cheer, [enemyP], battle.enemies)
+    declared.scaledDamage = null
+
+    systemOf(w).applyActionImpact(battle, declared)
+
+    expect(battle.queuedFollowUps).toBeUndefined()
+    expect(supporterP.entity.currentThe).toBe(100)
+    void enemyP
+  })
+
   it('reactive actions never open the window (INV-9) — a counter payload triggers no Tro', () => {
     const { battle, supporterP, enemyP, w } = makeParty()
-    withMarker(w, supporterP, 'tro_mon', 'followUpChance', 1, 100)
+    withTro(w, supporterP, 1, 100)
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     const counterAction = declaredAction('attacker', BASIC, [enemyP], battle.enemies, 'counter')
@@ -327,32 +531,111 @@ describe('Tro ally-action window (spec 6.2.3)', () => {
     expect(supporterP.entity.currentThe).toBe(100)
   })
 
-  it('a whiffed action (all dodged) opens no window', () => {
+  it('a failed Tro roll pays nothing and commits no debt', () => {
     const { battle, supporterP, enemyP, w } = makeParty()
-    enemyP.entity.baseStats = asBaseStats({ ...enemyP.entity.baseStats, evasionRate: 1_000_000 })
-    enemyP.entity.stats = { ...enemyP.entity.stats, evasionRate: 1_000_000 }
-    withMarker(w, supporterP, 'tro_mon', 'followUpChance', 1, 100)
-    vi.spyOn(Math, 'random').mockReturnValue(0.999) // dodge roll
+    withTro(w, supporterP, 0.5, 100)
+    vi.spyOn(Math, 'random').mockReturnValue(0.999)
 
     systemOf(w).applyActionImpact(battle, declaredAction('attacker', BASIC, [enemyP], battle.enemies))
 
     expect(battle.queuedFollowUps).toBeUndefined()
     expect(supporterP.entity.currentThe).toBe(100)
+    expect(supporterP.reactionDebt ?? 0).toBe(0)
   })
 
-  it('dead landed targets drop out of the queued target set at queue time', () => {
-    const { battle, attackerP, supporterP, enemyP, w } = makeParty()
-    const enemy2 = createCombatant({ id: 'enemy2', currentHp: 1, maxHp: 1 })
-    const enemy2P = makeParticipant('enemy2', enemy2, 3, 101)
-    battle.enemies.push(enemy2P)
-    withMarker(w, supporterP, 'tro_mon', 'followUpChance', 1, 100)
-    // enemy2 dies to the first hit (1 HP), enemy survives — queue only vs enemy.
+  it('every observing reactor opens its own window — a second reactor is not suppressed', () => {
+    // Regression: the candidate dedup `seen` set was hoisted outside
+    // the per-ally loop, so candidates consumed by the first reactor's
+    // scan were invisible to later reactors.
+    const { battle, supporterP, enemyP, w } = makeParty()
+    const supporter2 = createCombatant({ id: 'supporter2', type: 'player' })
+    const supporter2P = makeParticipant('supporter2', supporter2, 5, 2)
+    supporter2P.reactivePayloads = { tro_kich: { ...TRO_KICH } }
+    battle.players.push(supporter2P)
+    withTro(w, supporterP, 1, 100)
+    withTro(w, supporter2P, 1, 100)
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
-    const aoe: TurnSkillDefinition = { ...BASIC, id: 'aoe', targeting: { shape: 'all_lanes' } }
-    systemOf(w).applyActionImpact(battle, declaredAction('attacker', aoe, [enemyP, enemy2P], battle.enemies))
+    systemOf(w).applyActionImpact(battle, declaredAction('attacker', BASIC, [enemyP], battle.enemies))
 
-    expect(battle.queuedFollowUps![0]!.targetIds).toEqual(['enemy'])
-    expect(attackerP).toBeDefined()
+    expect(battle.queuedFollowUps).toHaveLength(2)
+    expect(battle.queuedFollowUps!.map((f) => f.actorId)).toEqual(['supporter', 'supporter2'])
+    expect(supporterP.reactionDebt).toBe(1)
+    expect(supporter2P.reactionDebt).toBe(1)
+  })
+
+  it('never counters a same-side candidate — a quan_the observer on a self-scoped action queues nothing', () => {
+    // Regression: candidates were never restricted to the enemy side,
+    // so the actor itself (self scopes land in `affected`) satisfied
+    // quan_the observation and got counter-attacked.
+    const { battle, attackerP, supporterP, w } = makeParty()
+    withMarker(w, supporterP, 'tro_mon', 'followUpChance', 1, 100)
+    w.runtime.applyBuff('quan_the', supporterP) // observes every participant
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const selfHit: TurnSkillDefinition = { ...BASIC, id: 'self_hit', targetScope: 'self' }
+    systemOf(w).applyActionImpact(
+      battle,
+      declaredAction('attacker', selfHit, [attackerP], battle.enemies),
+    )
+
+    expect(battle.queuedFollowUps).toBeUndefined()
+    expect(supporterP.entity.currentThe).toBe(100)
+    expect(supporterP.reactionDebt ?? 0).toBe(0)
+  })
+})
+
+describe('Tham An mark (Ung The beta)', () => {
+  it('a self-scoped basic never plants the mark on the caster', () => {
+    // Regression: applyThamMark marked affected[0] with no side check,
+    // so a self-targeted basic marked the caster itself.
+    const attacker = createCombatant({ id: 'attacker', type: 'player' })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 100_000, maxHp: 100_000 })
+    const attackerP = makeParticipant('attacker', attacker, 10, 0)
+    const enemyP = makeParticipant('enemy', enemy, 3, 100)
+    const battle: TurnBattle = { players: [attackerP], enemies: [enemyP], state: 'fighting' }
+    const w = world(() => [...battle.players, ...battle.enemies])
+    w.runtime.applyBuff('ung_the', attackerP)
+
+    const thamThe: TurnSkillDefinition = {
+      id: 'tham_the',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+      targetScope: 'self',
+    }
+    attackerP.basic = thamThe
+
+    systemOf(w).applyActionImpact(
+      battle,
+      declaredAction('attacker', thamThe, [attackerP], battle.enemies),
+    )
+
+    expect(attackerP.thamTargetId).toBeUndefined()
+  })
+
+  it('a basic aimed at the enemy plants the mark on it', () => {
+    const attacker = createCombatant({ id: 'attacker', type: 'player' })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 100_000, maxHp: 100_000 })
+    const attackerP = makeParticipant('attacker', attacker, 10, 0)
+    const enemyP = makeParticipant('enemy', enemy, 3, 100)
+    const battle: TurnBattle = { players: [attackerP], enemies: [enemyP], state: 'fighting' }
+    const w = world(() => [...battle.players, ...battle.enemies])
+    w.runtime.applyBuff('ung_the', attackerP)
+
+    const thamThe: TurnSkillDefinition = {
+      id: 'tham_the',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+    }
+    attackerP.basic = thamThe
+
+    systemOf(w).applyActionImpact(
+      battle,
+      declaredAction('attacker', thamThe, [enemyP], battle.enemies),
+    )
+
+    expect(attackerP.thamTargetId).toBe('enemy')
   })
 })

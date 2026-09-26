@@ -1,6 +1,5 @@
 import type { TurnSkillDefinition } from '../../core/battle/turn/TurnSkillAction'
 import type { BuffDefinition } from '../../core/buff2/BuffDefinition'
-import type { BuffDefinitionId } from '../../core/battle/contracts/ids'
 import type {
   ReactiveProcPayload,
   ReactiveTriggerPayload,
@@ -8,11 +7,12 @@ import type {
 import type { TheEconomyPayload } from '../../core/the-tu/TheTuCapabilities'
 import type { BodyKitModifierValues } from '../../core/the-tu/TheTuKitModifiers'
 import type { HiddenBodyMechanicModifierValues } from '../../core/the-tu/TheTuAnMechanicModifiers'
-import { THE_PROC_COST, THE_PROC_GAIN } from '../../core/the-tu/TheEconomy'
 import { GRID_COLUMN_COUNT } from '../../core/battle/BattleGrid'
 import { MAX_THE } from '../../core/combat/CombatTypes'
 import {
+  DAN_THE_BUFF,
   HO_MON_MARKER,
+  HO_VE_BUFF,
   PHAN_CHAN_BUFF,
   PHAN_MON_MARKER,
   TRAN_KINH_WEAKEN_RATIO,
@@ -163,9 +163,12 @@ export const SON_NHAC: TurnSkillDefinition = {
   ],
 }
 
-// --- ung_the (The Tu An) - fixed kit granted at path choice (spec 6.1) ---
-// The kit itself is NOT root-gated: roots plant the reactive-mechanic
-// markers that make the kit's proc windows live (Tasks 15-18).
+// --- ung_the (The Tu An - Ung The beta) ---
+// Kit at path choice is ONLY the basic Tham The: Phan rides it as a
+// BASELINE reactive (phan_mon marker always on). Quan The (the Truc Co
+// special) is not in the kit until the major_quan_the node grants its
+// skill core - its ownership also plants the Ho/Tro markers. No
+// Ultimate exists in beta (Bach Ung is parked post-beta content).
 
 export const THAM_THE: TurnSkillDefinition = {
   id: 'tham_the',
@@ -174,6 +177,9 @@ export const THAM_THE: TurnSkillDefinition = {
   targeting: { shape: 'single' },
 }
 
+// Tu The - LEGACY-SUPERSEDED: parked authored def. Removed from the kit
+// + way.coreSkillIds by the Ung The beta (like parked bat_tu_ba_the);
+// the def + its buff stay authored for post-beta revival.
 export const TU_THE: TurnSkillDefinition = {
   id: 'tu_the',
   cooldownTurns: 5,
@@ -182,12 +188,30 @@ export const TU_THE: TurnSkillDefinition = {
   appliesBuffs: [{ definitionId: 'tu_the', target: 'self' }],
 }
 
+// Bach Ung - LEGACY-SUPERSEDED: parked future content (ultimate slot
+// stays empty in beta); the def + its buff stay authored.
 export const BACH_UNG: TurnSkillDefinition = {
   id: 'bach_ung',
   cooldownTurns: 8,
   targetScope: 'self',
   targeting: { shape: 'single' },
   appliesBuffs: [{ definitionId: 'bach_ung', target: 'self' }],
+}
+
+/**
+ * Quan The - the Truc Co Special: self-cast, NO damage. On cast it
+ * applies the quan_the marker (every enemy satisfies isObserved while
+ * it sits; FIXED_TURNS(4) counts HOLDER turns) and grants a flat The
+ * seed via theGainOnLandedCast - the ONLY thing Core Level scales
+ * (baked per-participant at kit build).
+ */
+export const QUAN_THE: TurnSkillDefinition = {
+  id: 'quan_the',
+  cooldownTurns: 6,
+  targetScope: 'self',
+  targeting: { shape: 'single' },
+  appliesBuffs: [{ definitionId: 'quan_the', target: 'self' }],
+  theGainOnLandedCast: 25,
 }
 
 // Reactive payloads (spec 6.2) - real TurnSkillDefinitions resolved as
@@ -228,44 +252,27 @@ export const TRONG_PHAN_KICH: TurnSkillDefinition = {
   progressionOwnerId: 'tham_the',
 }
 
-export type TheTuAnRootId = 'ho_mon' | 'phan_mon' | 'tro_mon'
-
-const THE_TU_AN_ROOT_MARKERS: Record<TheTuAnRootId, BuffDefinition> = {
-  ho_mon: HO_MON_MARKER,
-  phan_mon: PHAN_MON_MARKER,
-  tro_mon: TRO_MON_MARKER,
+/**
+ * Ung The beta ownership inputs (design authority Part V/Part XIII):
+ * `quanThe` = the major_quan_the node granted the Quan The skill core
+ * (level > 0); `quanTheCoreLevel` scales ONLY the cast's initial The
+ * gain - Core Level is the sole scaling axis the node can reach.
+ */
+export interface TheTuAnKitOwnership {
+  quanThe: boolean
+  quanTheCoreLevel: number
 }
 
-/**
- * Participant-build factory for ung_the (plan Task 14): returns
- * participant-local CLONES of the fixed kit with the marker set baked
- * into basic.grantsBuffsAtBuild - ung_the always, plus one marker per
- * owned root (non-mutex, T9). The ops' existing grantsBuffsAtBuild seam
- * applies them to the participant's pool; registry defs never mutate.
- *
- * Task 20 (review P1.7): `mods` is the collectHiddenBodyMechanicModifiers
- * total - trunk economy lands on the ung_the marker's theEconomy fields
- * + every reactiveProc's theCost/theGainOnSuccess; branch riders land on
- * their marker's own fields (intercept ward, evade payload swap, Tro
- * heal/non-damaging). maxThe rides the kit for the adapter to stamp on
- * the participant's entity.
- */
 const ZERO_AN_MODS: HiddenBodyMechanicModifierValues = {
-  maxTheBonus: 0,
-  procCostDelta: 0,
-  procGainBonus: 0,
-  evadeGainBonus: 0,
-  takenGainBonus: 0,
-  basicGainBonus: 0,
-  roundGainBonus: 0,
-  interceptTheGainBonus: 0,
+  observationGainBonus: 0,
+  phanKinhArmorPierce: 0,
   interceptWardRatio: 0,
   evadeCounterMultiplierBonus: 0,
-  counterChoangChance: 0,
-  troHealTriggeringAllyRatio: 0,
-  troCostDelta: 0,
-  troAnyAction: 0,
+  danTheBonus: 0,
 }
+
+/** Core Level adds this much The to Quan The's authored base gain each level. */
+export const QUAN_THE_THE_PER_LEVEL = 10
 
 // buff2 M4 -- node adjustments bake onto the clone's capability PAYLOADS
 // (the def-level `capabilities[]` grants) -- the retired `effects[]`
@@ -283,109 +290,102 @@ function defPayloads<T>(
 }
 
 export function buildTheTuAnKit(
-  ownedRoots: readonly TheTuAnRootId[],
   mods: HiddenBodyMechanicModifierValues = ZERO_AN_MODS,
+  owned: TheTuAnKitOwnership = { quanThe: false, quanTheCoreLevel: 1 },
 ): TheTuAnKit {
   const kit: TheTuAnKit = {
     basic: structuredClone(THAM_THE),
-    special: structuredClone(TU_THE),
-    ultimate: structuredClone(BACH_UNG),
-    reactivePayloads: {},
-    maxThe: MAX_THE + mods.maxTheBonus,
+    special: owned.quanThe ? structuredClone(QUAN_THE) : undefined,
+    ultimate: undefined,
+    reactivePayloads: {
+      // Phan is BASELINE on Tham The (design Part IV): the payload
+      // clone always exists; the phan_mon marker is always planted.
+      [PHAN_KICH.id]: structuredClone(PHAN_KICH),
+    },
+    maxThe: MAX_THE,
   }
 
   kit.basic.grantsBuffsAtBuild = [
     structuredClone(UNG_THE_BUFF),
-    ...ownedRoots.map((root) => structuredClone(THE_TU_AN_ROOT_MARKERS[root])),
+    structuredClone(PHAN_MON_MARKER),
+    ...(owned.quanThe
+      ? [structuredClone(HO_MON_MARKER), structuredClone(TRO_MON_MARKER)]
+      : []),
   ]
 
-  // Trunk economy - node bonuses bake onto the marker clone's authored
-  // income fields; the engine reads these, never the constants.
-  const ungThe = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === 'ung_the')
+  // Thau The - observed-action income bonus bakes onto the marker
+  // clone's authored field; the engine reads it, never the constant.
+  const ungThe = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === UNG_THE_BUFF.id)
   for (const payload of defPayloads<TheEconomyPayload>(ungThe, 'the_economy')) {
-    payload.gainOnBasicHit = (payload.gainOnBasicHit ?? 0) + mods.basicGainBonus
-    payload.gainOnEvade = (payload.gainOnEvade ?? 0) + mods.evadeGainBonus
-    payload.gainOnHitTaken = (payload.gainOnHitTaken ?? 0) + mods.takenGainBonus
-    payload.gainPerRound = (payload.gainPerRound ?? 0) + mods.roundGainBonus
+    payload.gainOnObservedAction =
+      (payload.gainOnObservedAction ?? 0) + mods.observationGainBonus
   }
 
-  // Every reactive_proc gets the trunk cost/gain adjustments; branch
-  // riders land on their own marker's fields below.
-  for (const marker of kit.basic.grantsBuffsAtBuild ?? []) {
-    for (const payload of defPayloads<ReactiveProcPayload>(marker, 'reactive_proc')) {
-      const troDelta = marker.id === 'tro_mon' ? mods.troCostDelta : 0
-      payload.theCost = Math.max(0, (payload.theCost ?? THE_PROC_COST) + mods.procCostDelta + troDelta)
-      const interceptBonus = marker.id === 'ho_mon' ? mods.interceptTheGainBonus : 0
-      payload.theGainOnSuccess =
-        (payload.theGainOnSuccess ?? THE_PROC_GAIN) + mods.procGainBonus + interceptBonus
-    }
-  }
+  if (kit.special !== undefined) {
+    // Quan The Core Level = the ONLY scaling axis (design Part V):
+    // it raises the cast's initial The gain and nothing else.
+    kit.special.theGainOnLandedCast =
+      (kit.special.theGainOnLandedCast ?? 0) + QUAN_THE_THE_PER_LEVEL * Math.max(0, owned.quanTheCoreLevel - 1)
 
-  // Ho branch - intercept riders.
-  if (mods.interceptWardRatio > 0) {
-    const marker = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === 'ho_mon')
-    for (const payload of defPayloads<ReactiveProcPayload>(marker, 'reactive_proc')) {
-      if (payload.mechanic === 'intercept') {
-        payload.grantsWardToOriginalTarget = {
-          buffDefinitionId: 'ho_ve' as BuffDefinitionId,
-          sourceMaxHpRatio: mods.interceptWardRatio,
+    // Ho Bich - a committed intercept wards the rescued ally.
+    if (mods.interceptWardRatio > 0) {
+      const marker = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === HO_MON_MARKER.id)
+      for (const payload of defPayloads<ReactiveProcPayload>(marker, 'reactive_proc')) {
+        if (payload.mechanic === 'intercept') {
+          payload.grantsWardToOriginalTarget = {
+            buffDefinitionId: HO_VE_BUFF.id,
+            sourceMaxHpRatio: mods.interceptWardRatio,
+          }
         }
       }
     }
+
+    // Tro payload exists only while Quan The is owned.
+    const troKich = structuredClone(TRO_KICH)
+    if (mods.danTheBonus > 0) {
+      // Dan The rider - a landed Tro Kich applies the one-shot mark
+      // through the existing appliesAilments channel (landed-only).
+      troKich.appliesAilments = [
+        ...(troKich.appliesAilments ?? []),
+        { buffDefinitionId: DAN_THE_BUFF.id, chance: 1 },
+      ]
+    }
+    kit.reactivePayloads[TRO_KICH.id] = troKich
   }
 
-  // Phan branch - evade-context heavy counter payload swap.
-  if (mods.evadeCounterMultiplierBonus > 0 && ownedRoots.includes('phan_mon')) {
-    const marker = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === 'phan_mon')
+  // Trong Phan - evade-context heavy counter payload swap on the marker
+  // plus the payload clone (base phan_kich multiplier + node bonus).
+  if (mods.evadeCounterMultiplierBonus > 0) {
+    const marker = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === PHAN_MON_MARKER.id)
     for (const payload of defPayloads<ReactiveProcPayload>(marker, 'reactive_proc')) {
-      if (payload.trigger === 'onEvade' && payload.queuedAction) {
+      if (payload.trigger === 'onEvade' && payload.queuedAction !== undefined) {
         payload.queuedAction = { ...payload.queuedAction, payloadSkillId: TRONG_PHAN_KICH.id }
       }
     }
+    const heavy = structuredClone(TRONG_PHAN_KICH)
+    if (heavy.damage !== undefined) {
+      heavy.damage = {
+        ...heavy.damage,
+        multiplier: heavy.damage.multiplier + mods.evadeCounterMultiplierBonus,
+      }
+    }
+    kit.reactivePayloads[TRONG_PHAN_KICH.id] = heavy
   }
 
-  // Reactive payloads are participant-local clones resolved by the typed
-  // follow-up queue (plan Task 16). A root that isn't owned means the
-  // mechanic never checks AND no payload exists to resolve.
-  if (ownedRoots.includes('phan_mon')) {
-    kit.reactivePayloads[PHAN_KICH.id] = structuredClone(PHAN_KICH)
-
-    if (mods.evadeCounterMultiplierBonus > 0) {
-      const heavy = structuredClone(TRONG_PHAN_KICH)
-      if (heavy.damage) {
-        heavy.damage = { ...heavy.damage, multiplier: heavy.damage.multiplier + mods.evadeCounterMultiplierBonus }
-      }
-      kit.reactivePayloads[TRONG_PHAN_KICH.id] = heavy
-    }
-
-    // Break rider - the counter payload gains a choang application
-    // through the existing appliesAilments channel (same mechanism as
-    // bach_ung's payloadAilments merge).
-    if (mods.counterChoangChance > 0) {
-      for (const payload of Object.values(kit.reactivePayloads)) {
-        if (payload.id === PHAN_KICH.id || payload.id === TRONG_PHAN_KICH.id) {
-          payload.appliesAilments = [
-            ...(payload.appliesAilments ?? []),
-            { buffDefinitionId: 'choang', chance: Math.min(1, mods.counterChoangChance) },
-          ]
+  // Phan Kinh - armor-bypass rider on the counter payload clones (same
+  // instances.each.armorPierce channel the Cuong Chien Pha Kinh node
+  // uses; bypassChance 0 => never full-bypass, always partial pierce).
+  if (mods.phanKinhArmorPierce > 0) {
+    for (const payload of Object.values(kit.reactivePayloads)) {
+      if (payload.id === PHAN_KICH.id || payload.id === TRONG_PHAN_KICH.id) {
+        payload.instances = {
+          count: payload.instances?.count ?? 1,
+          each: {
+            ...(payload.instances?.each ?? {}),
+            armorPierce: { bypassChance: 0, pierceFraction: mods.phanKinhArmorPierce },
+          },
         }
       }
-    }
-  }
-  if (ownedRoots.includes('tro_mon')) {
-    kit.reactivePayloads[TRO_KICH.id] = structuredClone(TRO_KICH)
-  }
-
-  // Tro branch - marker riders (heal the triggering ally; non-damaging
-  // window opt-in). The cost delta already landed in the shared loop.
-  const troMarker = (kit.basic.grantsBuffsAtBuild ?? []).find((def) => def.id === 'tro_mon')
-  for (const payload of defPayloads<ReactiveProcPayload>(troMarker, 'reactive_proc')) {
-    if (payload.mechanic !== 'follow_up') continue
-    if (mods.troHealTriggeringAllyRatio > 0) {
-      payload.healsTriggeringAllyMaxHpRatio = mods.troHealTriggeringAllyRatio
-    }
-    if (mods.troAnyAction > 0) {
-      payload.firesOnNonDamagingAction = true
     }
   }
 
@@ -404,12 +404,15 @@ export interface TheTuKit {
 
 /** The Tu Reimagined (plan Task 16) - the An kit also carries the
  * reactive payload clones the typed follow-up queue resolves. Task 20:
- * `maxThe` is the participant's proc-fuel cap (MAX_THE + node bonus),
- * stamped onto the entity by the adapter at participant build. */
+ * `maxThe` is the participant's proc-fuel cap (flat MAX_THE — no node
+ * bonus in the beta window), stamped onto the entity by the adapter
+ * at participant build. */
 export interface TheTuAnKit {
   basic: TurnSkillDefinition
-  special: TurnSkillDefinition
-  ultimate: TurnSkillDefinition
+  /** Beta window: Quan The exists only while its skill core is owned. */
+  special?: TurnSkillDefinition
+  /** Beta window: no Ultimate exists (Bach Ung is post-beta content). */
+  ultimate?: TurnSkillDefinition
   reactivePayloads: Record<string, TurnSkillDefinition>
   maxThe: number
 }
@@ -513,7 +516,7 @@ export function buildTheTuKit(
     // the participant-local phan_chan buff CLONE (registry def never
     // mutates; the clone lands via grantsBuffsAtBuild).
     const passiveBuff: BuffDefinition | undefined =
-      kit.special?.grantsBuffsAtBuild?.find((def) => def.id === 'phan_chan')
+      kit.special?.grantsBuffsAtBuild?.find((def) => def.id === PHAN_CHAN_BUFF.id)
     const reflect = defPayloads<ReactiveTriggerPayload>(passiveBuff, 'reactive_trigger').find(
       (payload) => payload.reflectsDamage !== undefined,
     )

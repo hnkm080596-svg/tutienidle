@@ -4,15 +4,14 @@ import { NodeRegistry } from '../../core/progression/NodeRegistry'
 import { getNodeLevel, purchaseNode, upgradeNode } from '../../core/progression/NodeSystem'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { collectHiddenBodyMechanicModifiers } from '../../core/the-tu/TheTuAnMechanicModifiers'
-import { buildTheTuAnKit, PHAN_KICH } from '../skill/TheTuSkills'
-import { MAX_THE } from '../../core/combat/CombatTypes'
-import { THE_PROC_COST, THE_PROC_GAIN } from '../../core/the-tu/TheEconomy'
+import { buildTheTuAnKit, PHAN_KICH, QUAN_THE } from '../skill/TheTuSkills'
+import { THE_PROC_COST } from '../../core/the-tu/TheEconomy'
 import type { TheEconomyPayload } from '../../core/the-tu/TheTuCapabilities'
 import type { ReactiveProcPayload } from '../../core/proc/ProcCapabilities'
 import type { BuffDefinition } from '../../core/buff2/BuffDefinition'
 import type { StatType } from '../../core/stats/StatTypes'
 
-// buff2 M4 — kit clones bake node modifiers into capability payloads
+// Ung The beta — kit clones bake node modifiers into capability payloads
 // (the retired effects[] channel). These helpers read the typed payloads
 // straight off the clone defs.
 function procPayloads(def: BuffDefinition): ReactiveProcPayload[] {
@@ -26,10 +25,11 @@ function economyPayload(def: BuffDefinition): TheEconomyPayload | undefined {
   return grant?.payload as TheEconomyPayload | undefined
 }
 
-// The Tu Reimagined (plan Task 20, spec section 8.2) — the_tu_an tree
-// data: non-mutex roots (T9), trunk economy nodes feeding
-// collectHiddenBodyMechanicModifiers (review P1.7 — the ONE locked
-// channel), realm gates, INV-13 authoring ban on chance stats.
+// Ung The beta tree (design Part XIII): 6 nodes — LQ minors Thau The +
+// Phan Kinh behind tham_the; Truc Co major_quan_the grants the quan_the
+// core; ho_bi / trong_phan / dan_the gate on it. The design forbids
+// tree content touching chances, main stats, debt, proc cost, or free
+// reactions.
 
 function playerWith(overrides: Partial<ReturnType<typeof createDefaultPlayer>> = {}) {
   return { ...createDefaultPlayer(), skillInsight: 99, ...overrides }
@@ -59,71 +59,48 @@ function buy(player: ReturnType<typeof playerWith>, _registry: NodeRegistry, id:
   }
 }
 
-describe('the_tu_an node tree (spec 8.2)', () => {
-  it('ships the three non-mutex roots ho_mon/phan_mon/tro_mon at qi_refining', () => {
-    for (const rootId of ['ho_mon', 'phan_mon', 'tro_mon']) {
-      const root = node(rootId)
-      expect(root.role).toBe('root')
-      expect(root.branchTag).toBe('the_tu_an')
-      expect(root.prerequisites?.some((p) => p.kind === 'realm' && p.realmId === 'qi_refining')).toBe(true)
-      // T9 — non-mutex: no root excludes another root.
-      expect(root.prerequisites?.some((p) => p.kind === 'excludesNode')).toBe(false)
+describe('the_tu_an node tree (Ung The beta)', () => {
+  it('ships exactly the six beta nodes', () => {
+    expect(THE_TU_AN_NODES.map((candidate) => candidate.id).sort()).toEqual([
+      'major_dan_the',
+      'major_ho_bi',
+      'major_quan_the',
+      'major_trong_phan',
+      'minor_phan_kinh',
+      'minor_thau_the',
+    ])
+  })
+
+  it('LQ minors gate on qi_refining; Quan The + its majors gate on foundation_establishment', () => {
+    for (const id of ['minor_thau_the', 'minor_phan_kinh']) {
+      expect(node(id).prerequisites?.some((p) => p.kind === 'realm' && p.realmId === 'qi_refining')).toBe(true)
+    }
+    expect(
+      node('major_quan_the').prerequisites?.some(
+        (p) => p.kind === 'realm' && p.realmId === 'foundation_establishment',
+      ),
+    ).toBe(true)
+    for (const id of ['major_ho_bi', 'major_trong_phan', 'major_dan_the']) {
+      expect(node(id).prerequisites?.some((p) => p.kind === 'node' && p.nodeId === 'major_quan_the')).toBe(true)
     }
   })
 
-  it('roots are purchasable together — buying all three is legal', () => {
-    const registry = registryWithNodes()
-    const player = playerWith({
-      realmId: 'qi_refining',
-      cultivationPath: 'body',
-      cultivationWay: 'hidden_body_pathway',
-    })
-
-    buy(player, registry, 'ho_mon')
-    buy(player, registry, 'phan_mon')
-    buy(player, registry, 'tro_mon')
-
-    expect(getNodeLevel(player, 'ho_mon')).toBe(1)
-    expect(getNodeLevel(player, 'phan_mon')).toBe(1)
-    expect(getNodeLevel(player, 'tro_mon')).toBe(1)
-  })
-
-  it('deeper branch keystones gate on foundation_establishment', () => {
-    const deeper = THE_TU_AN_NODES.filter(
-      (candidate) =>
-        candidate.role === 'keystone' ||
-        (candidate.prerequisites ?? []).some((p) => p.kind === 'realm' && p.realmId === 'foundation_establishment'),
-    )
-    expect(deeper.length).toBeGreaterThan(0)
-    for (const candidate of deeper) {
-      expect(candidate.prerequisites?.some((p) => p.kind === 'realm' && p.realmId === 'foundation_establishment')).toBe(
-        true,
-      )
-    }
-  })
-
-  it('INV-13 — no node authors a reactive chance stat (attributes are the only source)', () => {
+  it('every node is hidden_body_pathway gated; no node authors a chance/stat modifier', () => {
     const banned: StatType[] = ['counterChance', 'protectChance', 'followUpChance', 'evasionRate']
     for (const candidate of THE_TU_AN_NODES) {
+      expect(candidate.requiredWay).toBe('hidden_body_pathway')
       for (const modifier of candidate.effect.statModifiers ?? []) {
         expect(banned.includes(modifier.stat), `${candidate.id} grants ${modifier.stat}`).toBe(false)
       }
+      // No main-stat channels at all on this tree.
+      expect(candidate.effect.statModifiers ?? []).toEqual([])
     }
   })
 
-  it('economy nodes live on the trunk — never gated behind a mechanic root', () => {
-    const economy = THE_TU_AN_NODES.filter((candidate) => candidate.effect.hiddenBodyMechanicModifiers !== undefined)
-    const trunkEconomy = economy.filter(
-      (candidate) =>
-        !(candidate.prerequisites ?? []).some((p) => p.kind === 'node' && ['ho_mon', 'phan_mon', 'tro_mon'].includes(p.nodeId)),
-    )
-    // At least cap + cost + gain channels exist on the trunk.
-    const channels = new Set(
-      trunkEconomy.flatMap((candidate) => Object.keys(candidate.effect.hiddenBodyMechanicModifiers ?? {})),
-    )
-    for (const channel of ['maxTheBonus', 'procCostDelta', 'procGainBonus']) {
-      expect(channels.has(channel), `trunk economy channel '${channel}'`).toBe(true)
-    }
+  it('major_quan_the grants the quan_the skill core (techniqueRank-gated)', () => {
+    const grant = node('major_quan_the')
+    expect(grant.effect.grantsSkillCoreIds).toEqual(['quan_the'])
+    expect(grant.prerequisites?.some((p) => p.kind === 'techniqueRank')).toBe(true)
   })
 })
 
@@ -136,78 +113,88 @@ describe('collectHiddenBodyMechanicModifiers', () => {
       cultivationWay: 'hidden_body_pathway',
     })
 
-    expect(collectHiddenBodyMechanicModifiers(registry, player).maxTheBonus).toBe(0)
+    expect(collectHiddenBodyMechanicModifiers(registry, player).observationGainBonus).toBe(0)
 
-    buy(player, registry, 'minor_ung_the_bi_the', 3)
+    buy(player, registry, 'minor_thau_the', 3)
     const mods = collectHiddenBodyMechanicModifiers(registry, player)
-    expect(mods.maxTheBonus).toBe(30)
-    expect(mods.procCostDelta).toBe(0)
+    expect(mods.observationGainBonus).toBe(6)
+    expect(mods.phanKinhArmorPierce).toBe(0)
   })
 })
 
 describe('buildTheTuAnKit modifier baking (participant-local clones)', () => {
   const fullMods = {
-    maxTheBonus: 20,
-    procCostDelta: -3,
-    procGainBonus: 4,
-    evadeGainBonus: 2,
-    takenGainBonus: 1,
-    basicGainBonus: 2,
-    roundGainBonus: 3,
-    interceptTheGainBonus: 8,
+    observationGainBonus: 2,
+    phanKinhArmorPierce: 0.15,
     interceptWardRatio: 0.15,
     evadeCounterMultiplierBonus: 0.6,
-    counterChoangChance: 0.25,
-    troHealTriggeringAllyRatio: 0.15,
-    troCostDelta: -5,
-    troAnyAction: 1,
+    danTheBonus: 1,
   }
+  const quanTheOwned = { quanThe: true, quanTheCoreLevel: 1 }
 
-  it('bakes the maxThe cap onto the kit for the adapter to stamp on the entity', () => {
-    const kit = buildTheTuAnKit(['ho_mon'], { ...fullMods, maxTheBonus: 0 })
-    expect(kit.maxThe).toBe(MAX_THE)
-    expect(buildTheTuAnKit(['ho_mon'], fullMods).maxThe).toBe(MAX_THE + 20)
+  it('baseline kit: only Tham The basic + ung_the/phan_mon markers, phan_kich payload', () => {
+    const kit = buildTheTuAnKit()
+    expect(kit.basic.id).toBe('tham_the')
+    expect(kit.special).toBeUndefined()
+    expect(kit.ultimate).toBeUndefined()
+    expect(Object.keys(kit.reactivePayloads)).toEqual(['phan_kich'])
+    expect(kit.basic.grantsBuffsAtBuild!.map((def) => def.id)).toEqual(['ung_the', 'phan_mon'])
   })
 
-  it('bakes economy channels into the ung_the marker theEconomy fields', () => {
-    const kit = buildTheTuAnKit([], fullMods)
+  it('owned Quan The adds the special + ho_mon/tro_mon markers + tro_kich payload', () => {
+    const kit = buildTheTuAnKit(undefined, quanTheOwned)
+    expect(kit.special?.id).toBe('quan_the')
+    expect(kit.basic.grantsBuffsAtBuild!.map((def) => def.id)).toEqual([
+      'ung_the',
+      'phan_mon',
+      'ho_mon',
+      'tro_mon',
+    ])
+    expect(Object.keys(kit.reactivePayloads).sort()).toEqual(['phan_kich', 'tro_kich'])
+  })
+
+  it('Quan The core level scales ONLY theGainOnLandedCast', () => {
+    const level1 = buildTheTuAnKit(undefined, { quanThe: true, quanTheCoreLevel: 1 })
+    const level5 = buildTheTuAnKit(undefined, { quanThe: true, quanTheCoreLevel: 5 })
+    expect(level1.special?.theGainOnLandedCast).toBe(25)
+    expect(level5.special?.theGainOnLandedCast).toBe(65)
+    expect(level5.special?.appliesBuffs).toEqual(QUAN_THE.appliesBuffs)
+    expect(level5.special?.cooldownTurns).toBe(QUAN_THE.cooldownTurns)
+  })
+
+  it('bakes Thau The onto the ung_the marker observation income', () => {
+    const kit = buildTheTuAnKit(fullMods)
     const ungThe = kit.basic.grantsBuffsAtBuild!.find((def) => def.id === 'ung_the')!
     expect(economyPayload(ungThe)).toMatchObject({
-      gainOnBasicHit: 6,
-      gainOnEvade: 10,
-      gainOnHitTaken: 7,
-      gainPerRound: 8,
+      gainOnBasicHit: 4,
+      gainOnObservedAction: 6,
     })
   })
 
-  it('bakes proc cost/gain into every reactiveProc effect; tro gets its own cost delta', () => {
-    const kit = buildTheTuAnKit(['ho_mon', 'phan_mon', 'tro_mon'], fullMods)
+  it('no marker carries a cost override — the flat THE_PROC_COST fallback is the only authority', () => {
+    const kit = buildTheTuAnKit(fullMods, quanTheOwned)
     const markers = Object.fromEntries(
       kit.basic.grantsBuffsAtBuild!.map((def) => [def.id, def]),
     )
-
-    for (const effect of procPayloads(markers['ho_mon']!)) {
-      expect(effect.theCost).toBe(THE_PROC_COST - 3)
-      expect(effect.theGainOnSuccess).toBe(THE_PROC_GAIN + 4 + 8)
+    for (const id of ['ho_mon', 'phan_mon', 'tro_mon']) {
+      for (const effect of procPayloads(markers[id]!)) {
+        // CombatProcSystem resolves `theCost ?? THE_PROC_COST` — absence
+        // of the field IS the invariant (no cost nodes exist to bake).
+        expect(effect.theCost).toBeUndefined()
+      }
     }
-    for (const effect of procPayloads(markers['phan_mon']!)) {
-      expect(effect.theCost).toBe(THE_PROC_COST - 3)
-      expect(effect.theGainOnSuccess).toBe(THE_PROC_GAIN + 4)
-    }
-    for (const effect of procPayloads(markers['tro_mon']!)) {
-      expect(effect.theCost).toBe(THE_PROC_COST - 3 - 5)
-    }
+    expect(THE_PROC_COST).toBe(15)
   })
 
-  it('bakes the intercept-ward rider onto the ho_mon marker', () => {
-    const kit = buildTheTuAnKit(['ho_mon'], fullMods)
+  it('bakes the intercept-ward rider onto the ho_mon marker (Ho Bich)', () => {
+    const kit = buildTheTuAnKit({ ...fullMods, danTheBonus: 0 }, quanTheOwned)
     const marker = kit.basic.grantsBuffsAtBuild!.find((def) => def.id === 'ho_mon')!
     const effect = procPayloads(marker)[0]!
     expect(effect.grantsWardToOriginalTarget).toEqual({ buffDefinitionId: 'ho_ve', sourceMaxHpRatio: 0.15 })
   })
 
   it('bakes the evade-context heavy counter: onEvade swaps to trong_phan_kich payload clone', () => {
-    const kit = buildTheTuAnKit(['phan_mon'], fullMods)
+    const kit = buildTheTuAnKit(fullMods)
     const marker = kit.basic.grantsBuffsAtBuild!.find((def) => def.id === 'phan_mon')!
     const evadeEffect = procPayloads(marker).find((candidate) => candidate.trigger === 'onEvade')!
     expect(evadeEffect.queuedAction?.payloadSkillId).toBe('trong_phan_kich')
@@ -219,40 +206,31 @@ describe('buildTheTuAnKit modifier baking (participant-local clones)', () => {
     expect(heavy?.damage?.multiplier).toBeCloseTo((PHAN_KICH.damage?.multiplier ?? 0) + 0.6)
   })
 
-  it('bakes the counter break rider onto the counter payload clones', () => {
-    const kit = buildTheTuAnKit(['phan_mon'], fullMods)
-    for (const payloadId of ['phan_kich', 'trong_phan_kich']) {
-      const payload = kit.reactivePayloads[payloadId]
-      expect(payload?.appliesAilments).toContainEqual({ buffDefinitionId: 'choang', chance: 0.25 })
-    }
+  it('bakes Phan Kinh armorPierce onto the counter payload clones', () => {
+    const kit = buildTheTuAnKit({ ...fullMods, evadeCounterMultiplierBonus: 0 }, quanTheOwned)
+    const payload = kit.reactivePayloads['phan_kich']
+    expect(payload?.instances?.each?.armorPierce).toEqual({ bypassChance: 0, pierceFraction: 0.15 })
+    // Trong Phan Kich only exists when the evade bonus node is owned.
+    expect(kit.reactivePayloads['trong_phan_kich']).toBeUndefined()
   })
 
-  it('bakes the tro riders: triggering-ally heal + non-damaging window', () => {
-    const kit = buildTheTuAnKit(['tro_mon'], fullMods)
-    const marker = kit.basic.grantsBuffsAtBuild!.find((def) => def.id === 'tro_mon')!
-    const effect = procPayloads(marker)[0]!
-    expect(effect.healsTriggeringAllyMaxHpRatio).toBe(0.15)
-    expect(effect.firesOnNonDamagingAction).toBe(true)
+  it('bakes Dan The: the tro_kich clone applies the one-shot mark on landed', () => {
+    const kit = buildTheTuAnKit(fullMods, quanTheOwned)
+    expect(kit.reactivePayloads['tro_kich']?.appliesAilments).toContainEqual({
+      buffDefinitionId: 'dan_the',
+      chance: 1,
+    })
   })
 
   it('zero mods keep authored base values — no phantom riders', () => {
     const zero = {
-      maxTheBonus: 0,
-      procCostDelta: 0,
-      procGainBonus: 0,
-      evadeGainBonus: 0,
-      takenGainBonus: 0,
-      basicGainBonus: 0,
-      roundGainBonus: 0,
-      interceptTheGainBonus: 0,
+      observationGainBonus: 0,
+      phanKinhArmorPierce: 0,
       interceptWardRatio: 0,
       evadeCounterMultiplierBonus: 0,
-      counterChoangChance: 0,
-      troHealTriggeringAllyRatio: 0,
-      troCostDelta: 0,
-      troAnyAction: 0,
+      danTheBonus: 0,
     }
-    const kit = buildTheTuAnKit(['ho_mon', 'phan_mon', 'tro_mon'], zero)
+    const kit = buildTheTuAnKit(zero, quanTheOwned)
 
     const hoMarker = kit.basic.grantsBuffsAtBuild!.find((def) => def.id === 'ho_mon')!
     expect(procPayloads(hoMarker)[0]!.grantsWardToOriginalTarget).toBeUndefined()
@@ -261,6 +239,7 @@ describe('buildTheTuAnKit modifier baking (participant-local clones)', () => {
     const evadeEffect = procPayloads(phanMarker).find((candidate) => candidate.trigger === 'onEvade')
     expect(evadeEffect?.queuedAction?.payloadSkillId).toBe('phan_kich')
     expect(kit.reactivePayloads['trong_phan_kich']).toBeUndefined()
-    expect(kit.reactivePayloads['phan_kich']?.appliesAilments).toBeUndefined()
+    expect(kit.reactivePayloads['phan_kich']?.instances).toBeUndefined()
+    expect(kit.reactivePayloads['tro_kich']?.appliesAilments).toBeUndefined()
   })
 })

@@ -37,7 +37,8 @@ import type { CombatScheduler } from '../battle/runtime/scheduler/CombatSchedule
 import type { BuffSystem } from '../buff2/BuffSystem'
 import type { QueuedFollowUp } from '../battle/turn/TurnBattleSystem'
 import type { ReactiveTriggerContext } from '../battle/turn/TurnBattleSystem'
-import { resolveProcCost, THE_PROC_COST } from '../the-tu/TheEconomy'
+import { RESOURCE_THE } from '../combat/CombatTypes'
+import { THE_PROC_COST } from '../the-tu/TheEconomy'
 import { clampStatValue } from '../stats/StatMetadata'
 import {
   asOnHitProc,
@@ -62,6 +63,10 @@ export interface ReactiveTriggerRollResult {
 export interface ReactiveProcAttempt {
   paid: boolean
   success: boolean
+  /** Present+true only when the grant reached the chance roll --
+      distinguishes a rolled attempt (trigger consumed) from an
+      unaffordable skip ({paid:false,success:false} without a roll). */
+  rolled?: boolean
   effect?: ReactiveProcPayload
 }
 
@@ -70,10 +75,8 @@ export interface ReactiveProcContext {
   outcome?: 'taken' | 'evaded'
   intercepted?: boolean
   triggeringTargets?: readonly { id: CombatEntityId; entity: CombatEntity }[]
-  nonDamaging?: boolean
 }
 
-const RESOURCE_THE = 'the'
 const REFLECTION_PROFILE = 'reflection'
 
 /**
@@ -280,18 +283,23 @@ export class CombatProcSystem {
   }
 
   /**
-   * reactive_proc lane (legacy resolveReactiveProcs): the holder's
-   * intercept/counter/follow-up grants at a reactive window. Per
-   * attempt: read the proc cost from the holder's reactive_economy
-   * grants, gate on the synchronous balance read, deduct through a
-   * consume_resource op (its settle result IS the paid flag), roll the
-   * authored chanceStat, and on success credit the gain through a
-   * gain_resource op, emit the authored heal, and return the queued
-   * action descriptor for the caller's bypass queue.
+   * reactive_proc lane (Ung The beta): the holder's intercept/counter/
+   * follow-up grants at a reactive window. Fail-fast order per attempt
+   * (design Part XI): gates -> roll -> pay on SUCCESS -> commit. A
+   * window the caller suppressed (dead / hard-CC / Qua The) never
+   * reaches this lane, so no RNG is consumed; an affordable-but-failed
+   * roll spends NOTHING.
    *
-   * Dead-holder guard (MED review): a participant killed by the hit
-   * that opened this window performs NO transaction -- no cost, no rng
-   * draw, no success credit, no queue.
+   * Per attempt: the flat authored `theCost` gates affordability
+   * (balance read only -- no consume op yet), the authored chanceStat
+   * rolls, and on success the consume_resource op pays (its settle
+   * result is checked), the queuedAction descriptor returns for the
+   * caller's bypass queue, and the Ho Bich ward descriptor rides the
+   * attempt for the window's substitution code.
+   *
+   * Dead-holder guard: a participant killed before this window performs
+   * NO transaction -- no cost, no rng draw, no queue (design: a dead
+   * actor's queued payload likewise never resolves, with no refund).
    */
   resolveReactiveProcs(
     holderId: CombatEntityId,
@@ -311,27 +319,15 @@ export class CombatProcSystem {
     for (const grant of grants) {
       const proc = asReactiveProc(grant)
       if (proc === undefined || proc.trigger !== trigger) continue
-      if (context.nonDamaging === true && proc.firesOnNonDamagingAction !== true) {
-        continue
-      }
-      if (opts.once === true && attempts.length > 0) {
+      // 'once' = stop after the first ROLLED attempt -- an unaffordable
+      // grant (skipped before the roll) must not consume the trigger
+      // and suppress a later affordable grant on the same holder.
+      if (opts.once === true && attempts.some((attempt) => attempt.rolled === true)) {
         return { attempts, queuedFollowUps }
       }
 
-      const cost = resolveProcCost(grants, proc.theCost ?? THE_PROC_COST)
-      const paid =
-        (holder.currentThe ?? 0) >= cost &&
-        this.settleOp(
-          this.resourceOp(
-            'consume_resource',
-            holderId,
-            cost,
-            opts.rootActionId,
-            `cost.${grant.instanceId}.${grant.capability.id}`,
-          ),
-        ) === 'resolved'
-
-      if (!paid) {
+      const cost = proc.theCost ?? THE_PROC_COST
+      if ((holder.currentThe ?? 0) < cost) {
         attempts.push({ paid: false, success: false })
         continue
       }
@@ -341,41 +337,24 @@ export class CombatProcSystem {
         holder.stats[proc.chanceStat] ?? 0,
       )
       const success = this.deps.rng.rollChance(chance)
+      let paid = false
 
       if (success) {
-        if ((proc.theGainOnSuccess ?? 0) > 0) {
-          this.emitOp(
+        // Success-only consume (design Part XI): the flat authored cost
+        // pays AFTER the roll -- a failed roll spends nothing, and no
+        // refund channel exists.
+        paid =
+          this.settleOp(
             this.resourceOp(
-              'gain_resource',
+              'consume_resource',
               holderId,
-              proc.theGainOnSuccess!,
+              cost,
               opts.rootActionId,
-              `gain.${grant.instanceId}.${grant.capability.id}`,
+              `cost.${grant.instanceId}.${grant.capability.id}`,
             ),
-          )
-        }
+          ) === 'resolved'
 
-        // Task 20 (spec 8.2) -- a successful Tro proc heals the
-        // TRIGGERING ally through the heal authority.
-        if (
-          proc.healsTriggeringAllyMaxHpRatio !== undefined &&
-          context.attacker?.entity.alive === true
-        ) {
-          this.emitOp({
-            type: 'heal',
-            operationId:
-              `proc.${opts.rootActionId}.heal.${grant.instanceId}.${grant.capability.id}` as CombatOperationId,
-            payload: {
-              targetId: context.attacker.id,
-              amount:
-                context.attacker.entity.stats.maxHp *
-                proc.healsTriggeringAllyMaxHpRatio,
-            },
-            origin: this.origin(holderId, opts.rootActionId, `heal.${grant.capability.id}`),
-          })
-        }
-
-        if (proc.queuedAction !== undefined) {
+        if (paid && proc.queuedAction !== undefined) {
           const targetIds =
             proc.queuedAction.targetMode === 'attacker'
               ? context.attacker?.entity.alive === true
@@ -391,7 +370,7 @@ export class CombatProcSystem {
               intercepted: context.intercepted,
               outcome: context.outcome,
             }
-            attempts.push({ paid: true, success, effect: proc })
+            attempts.push({ paid, success, rolled: true, effect: proc })
             queuedFollowUps.push({
               actorId: holderId,
               executionKind: 'reactive_bypass',
@@ -405,7 +384,7 @@ export class CombatProcSystem {
         }
       }
 
-      attempts.push({ paid: true, success, effect: proc })
+      attempts.push({ paid, success, rolled: true, effect: proc })
     }
 
     return { attempts, queuedFollowUps }

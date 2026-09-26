@@ -1,0 +1,11 @@
+{
+  "applied": [
+    "evidence:EV-TTA-FIX-AUT-A2",
+    "evidence:EV-TTA-VERIFY-AUT-A2",
+    "review:REV-TTA-AUT-A1",
+    "finding:F-TTA-AUT-1",
+    "finding:F-TTA-AUT-2",
+    "lesson:L-TTA-2",
+    "lesson:L-TTA-3"
+  ]
+}

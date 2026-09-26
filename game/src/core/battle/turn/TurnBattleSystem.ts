@@ -10,7 +10,13 @@ import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 import type { CombatScheduler } from '../runtime/scheduler/CombatScheduler'
 import { entityGridPosition, getChebyshevDistance } from '../BattleGrid'
 import { actionTagsOfSkill, Buff2ActionValidator, type ActionValidator } from './ActionValidator'
-import { consumeGaugeAfterAction, advanceGauge, isGaugeReady } from './ActionGauge'
+import {
+  applyDebtPenalty,
+  consumeGaugeAfterAction,
+  advanceGauge,
+  isGaugeReady,
+  resetGaugeOnWaveLull,
+} from './ActionGauge'
 import { resolveNextTurn } from './TurnQueue'
 import { tickCooldowns, selectAction, selectForcedAction, commitAction, collectTurnTargets, executionCommitsCast, pickCompositePool, MAX_MULTICAST, NULL_ACTION, type TurnSkillExecution, type TurnQueuedExecution } from './TurnSkillAction'
 import type { TurnSkillDefinition, TurnSkillSlot, SelectedAction, DynamicBasicProvider, ForcedTurnChoice, TurnSkillBuffApplication } from './TurnSkillAction'
@@ -24,6 +30,7 @@ import { TurnSkillPlanRuntime, type TurnSkillPlanOrchestration } from './TurnSki
 import type { BuffDefinitionId, CombatEntityId, CombatOperationId, SkillId } from '../contracts/ids'
 import type { SkillCombatRuntimeState } from '../../skilldef/SkillCombatRuntimeState'
 import type { ResolvedCombatOperation } from '../contracts/operations'
+import type { CombatTrace } from '../runtime/scheduler/CombatTrace'
 import type { CombatOperationOrigin } from '../contracts/origin'
 import type { StatModifier } from '../../stats/StatCalculator'
 import type { StatDomain } from '../../stats/StatDomain'
@@ -35,16 +42,18 @@ import { scaleActionDamage } from '../ActionImpactSystem'
 import { recomputeEffectiveStats } from './TurnStatsRecompute'
 import type { BattleLogEntry } from './TurnOrderPreview'
 
-import { MAX_THE } from '../../combat/CombatTypes'
 import type { DamageResult } from '../../combat/CombatTypes'
+import { RESOURCE_THE } from '../../combat/CombatTypes'
 import {
-  theGainOnEvade,
-  theGainOnHitTaken,
-  theGainPerRound,
+  DAN_THE_INCOME_MULT,
+  UNG_TRE_GAUGE_PENALTY,
+  grantThe,
+  isQuaTheDebt,
   isUngTheCombatant,
   theGainOnBasicHit,
+  theGainOnObservedAction,
 } from '../../the-tu/TheEconomy'
-import { asReactiveEconomy } from '../../the-tu/TheTuCapabilities'
+import { BAT_TU_BA_THE_BUFF, DAN_THE_BUFF, hasQuanTheMarker } from '../../../data/buff/TheTuBuffs'
 import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
 import { reconcileExternalWard } from '../../the-tu/TheTuExternalWard'
 import {
@@ -55,6 +64,7 @@ import {
 } from '../../proc/ProcCapabilities'
 import type { ReactiveProcAttempt } from '../../proc/CombatProcSystem'
 import type { BuffDefinition } from '../../buff2/BuffDefinition'
+import type { BuffInstanceSnapshot } from '../../buff2/BuffInstance'
 
 export interface TurnResourcePool {
   values: Record<string, number>
@@ -146,6 +156,25 @@ export interface TurnBattleParticipant {
    * node's payload upgrade reaches this participant's copy only.
    */
   reactivePayloads?: Record<string, TurnSkillDefinition>
+  /**
+   * Ung The beta -- Tham An (design Part IV): the participant id of this
+   * reactor's single observed target, planted by a Tham The cast BEFORE
+   * the hit resolves (a miss/dodge still marks). Recast overwrites; the
+   * marked target's death clears the focus eagerly in sweepBuffDeaths
+   * (isObserved's lazy read is the belt for a removed participant) --
+   * NEVER auto-transfers. Quan The needs no mark: its live marker
+   * instance makes every enemy satisfy isObserved.
+   */
+  thamTargetId?: string
+  /**
+   * Ung The beta -- Ung Tre reaction debt (design Part III): +1 per
+   * committed reaction, battle-scoped on the participant (not a buff,
+   * not dispellable, no node reduces it). Debt >= REACTION_DEBT_CAP is
+   * Qua The -- new reaction windows close while observation income
+   * continues; the holder's next NATURAL action resets it (a queued
+   * reactive entry is not a natural action). The pool is untouched.
+   */
+  reactionDebt?: number
 }
 
 export interface TurnBattle {
@@ -618,10 +647,8 @@ export class TurnBattleSystem {
           declared.execution?.rootSkillId ?? action.skillId,
         )
       },
-      grantHitOutcomeIncome: (battle, target, hit) =>
-        this.grantHitOutcomeIncome(battle, target, hit),
-      grantBasicLandedIncome: (battle, actor, skillId) =>
-        this.grantBasicLandedIncome(battle, actor, skillId),
+      recordHitOutcome: (target, hit) =>
+        this.recordHitOutcome(target, hit),
       // resolveDeclaredHit :2136-2166 parity -- on-hit procs, then the
       // target's onImpactLanded reactive roll gated on hpDamage > 0,
       // then the queuedFollowUps FIFO push.
@@ -647,19 +674,6 @@ export class TurnBattleSystem {
           })
         }
       },
-      // Spec 6.2.2 taken-side window -- the same gate as the legacy
-      // lane (hpDamage > 0 = "taken", natural actions only INV-9).
-      resolveTakenWindow: (battle, target, actor, declared, hpDamage) => {
-        if (hpDamage > 0 && isNaturalActionSource(declared.actionSource)) {
-          this.resolveReactiveProcs(battle, target, 'onImpactLanded', {
-            attacker: actor,
-            outcome: 'taken',
-            intercepted: declared.intercepted === true,
-          })
-        }
-      },
-      resolveEvadeWindow: (battle, target, actor, declared) =>
-        this.resolveEvadeWindow(battle, target, actor, declared),
       // The Tu Task 11 (D3/INV-12) -- the applyDeclaredBuff externalWard
       // write: source-tagged REPLACE (recast refreshes to full; a lower
       // recast lowers the pool). sourceMaxHpRatio reads the GRANTING
@@ -795,11 +809,12 @@ export class TurnBattleSystem {
       the legacy synchronous mutation order is preserved (a buff applied
       here is visible to every later read in the same action). The
       post-drain quiescent point is the spec sec.40-41 death boundary. */
-  private emitAndSettle(ops: readonly ResolvedCombatOperation[], battle: TurnBattle): void {
-    if (ops.length === 0) return
+  private emitAndSettle(ops: readonly ResolvedCombatOperation[], battle: TurnBattle): CombatTrace | undefined {
+    if (ops.length === 0) return undefined
     this.scheduler.enqueueAuthored(ops)
-    this.scheduler.run()
+    const trace = this.scheduler.run()
     this.sweepBuffDeaths(battle)
+    return trace
   }
 
   /** A lifecycle root for buff hooks (status.turn.<n>.<actorId>) --
@@ -834,6 +849,14 @@ export class TurnBattleSystem {
     if (this.runtime === undefined) return
     for (const participant of [...battle.players, ...battle.enemies]) {
       if (participant.entity.alive) continue
+      // Ung The -- a dead Tham An mark kills the observer's focus NOW:
+      // the isObserved lazy-clear only runs when a window consults it,
+      // while the HUD reads thamTargetId raw between sweeps.
+      for (const observer of [...battle.players, ...battle.enemies]) {
+        if (observer.thamTargetId === participant.id) {
+          observer.thamTargetId = undefined
+        }
+      }
       const lctx = this.lifecycleRoot(`status.death.${battle.totalTurnsElapsed}.${participant.id}`)
       this.buffs.onEntityDeath(participant.entity.id, lctx)
     }
@@ -1236,7 +1259,10 @@ export class TurnBattleSystem {
 
       if (moreComing) {
         for (const participant of [...battle.players, ...battle.enemies]) {
-          participant.actionGauge = 0
+          // Wave-lull resets tempo but never forgives an Ung Tre debt:
+          // a negative gauge (the committed-reaction penalty) carries
+          // into the next wave -- the debt's delay is still owed.
+          resetGaugeOnWaveLull(participant)
         }
 
         return null
@@ -1339,6 +1365,13 @@ export class TurnBattleSystem {
 
     const resolved = resolveNextTurn(allParticipants)
 
+    if (resolved?.actor) {
+      // Same reset as tickPacing's gauge-pick branch: a natural turn ends
+      // the consecutive-follow-up chain, so the cap counts consecutive
+      // dequeues, not cumulative ones.
+      battle.followUpChainDepth = 0
+    }
+
     return resolved?.actor ?? null
   }
 
@@ -1359,9 +1392,9 @@ export class TurnBattleSystem {
     // descriptor IS the remainder of an already-committed cast -- it only
     // re-resolves the payload (composite picks re-roll per execution).
     const queuedExec = this.pendingQueuedExecution
-    this.pendingQueuedExecution = null
 
     if (queuedExec && queuedExec.actorId === actor.id) {
+      this.pendingQueuedExecution = null
       return this.declareQueuedExecution(battle, actor, queuedExec)
     }
 
@@ -1416,25 +1449,6 @@ export class TurnBattleSystem {
     if (aliveNow.length > 0 && aliveNow.every((participant) => acted.includes(participant.id))) {
       battle.roundsElapsed = (battle.roundsElapsed ?? 0) + 1
       battle.actedThisRound = []
-
-      // The Tu Reimagined (spec 4.1) -- anti-starvation bootstrap: each
-      // ung_the participant collects its marker's authored gainPerRound
-      // per boundary (node-adjusted at participant build, Task 20).
-      // buff2 M4 -- the income amount reads the holder's the_economy
-      // grants; the credit routes through the resource op channel.
-      const roundIncomeOps: ResolvedCombatOperation[] = []
-      for (const participant of aliveNow) {
-        const grants = this.runtime?.buffs.getCapabilities(participant.entity.id) ?? []
-        const amount = isUngTheCombatant(grants) ? theGainPerRound(grants) : 0
-        if (amount <= 0) continue
-        roundIncomeOps.push({
-          type: 'gain_resource',
-          operationId: `the.round.${battle.roundsElapsed}.${participant.id}` as CombatOperationId,
-          payload: { targetId: participant.entity.id, resourceId: 'the', amount },
-          origin: this.opOrigin(participant.entity.id, `status.round.${battle.roundsElapsed}`, `the_income.${participant.id}`),
-        })
-      }
-      this.emitAndSettle(roundIncomeOps, battle)
 
       // buff2 M4 -- round boundary: rounds-clocked buffs/modifiers tick
       // here (Phase B sweeps expirations inside the lifecycle drain).
@@ -1540,30 +1554,23 @@ export class TurnBattleSystem {
 
     if (isCharging) {
       ccBlocked = false
-    } else if (this.runtime !== undefined && this.buffs.getForTarget(actor.entity.id).some((i) => i.definitionId === 'bat_tu_ba_the')) {
+    } else if (this.hasBaTheWard(actor)) {
       // Bat Tu Ba The (The Tu Reimagined plan Task 9, D10): while the
       // buff is active, hard CC cannot block the holder. The counter is
       // SUPPRESSED, not reset -- consecutiveHardCcTurns is left untouched
       // so accumulation resumes where it left off after the buff expires.
       ccBlocked = false
+    } else if (!this.hasHardCc(actor)) {
+      actor.consecutiveHardCcTurns = 0
+      ccBlocked = false
+    } else if (actor.consecutiveHardCcTurns >= 3) {
+      this.clearHardCc(actor, battle, `status.cc_clear.${battle.totalTurnsElapsed}.${actor.id}`)
+      actor.consecutiveHardCcTurns = 0
+      actor.baTheTriggeredAtTurn = battle.totalTurnsElapsed
+      ccBlocked = false
     } else {
-      const hardCcActive =
-        this.runtime !== undefined &&
-        (this.buffs.hasControl(actor.entity.id, 'stun') ||
-          this.buffs.hasControl(actor.entity.id, 'freeze'))
-
-      if (hardCcActive && actor.consecutiveHardCcTurns >= 3) {
-        this.clearHardCc(actor, battle, `status.cc_clear.${battle.totalTurnsElapsed}.${actor.id}`)
-        actor.consecutiveHardCcTurns = 0
-        actor.baTheTriggeredAtTurn = battle.totalTurnsElapsed
-        ccBlocked = false
-      } else if (hardCcActive) {
-        actor.consecutiveHardCcTurns += 1
-        ccBlocked = true
-      } else {
-        actor.consecutiveHardCcTurns = 0
-        ccBlocked = false
-      }
+      actor.consecutiveHardCcTurns += 1
+      ccBlocked = true
     }
 
     // Cooldown snapshot BEFORE the status phase: a lethal DoT tick inside
@@ -1911,6 +1918,27 @@ export class TurnBattleSystem {
         ? actor.pendingChargedSkillId ?? chargedSkillId
         : (action?.skillId ?? '')
 
+    // Provenance follows the committed action: a charge-RESOLVED declare
+    // executes the charged skill (a natural cast) while ccBlocked /
+    // charge tick / the sealed NULL_ACTION commit nothing and carry
+    // undefined.
+    const actionSource =
+      action != null && action.skillId !== ''
+        ? action.slot
+          ? 'skill'
+          : 'normal'
+        : chargeResolved
+          ? 'normal'
+          : undefined
+
+    // Ung The beta -- the holder's next NATURAL action resets Ung Tre /
+    // Qua The (design Part III). The reset reads the same provenance the
+    // declared record carries; a queued reactive entry is not a natural
+    // action and never resets. The The pool is untouched.
+    if (isNaturalActionSource(actionSource)) {
+      actor.reactionDebt = 0
+    }
+
     return {
       actorId: actor.id,
       skillId,
@@ -1934,7 +1962,7 @@ export class TurnBattleSystem {
         : suddenDeathMultiplierCaptured,
       compositePickedSkills,
       isFollowUpBypass: false,
-      actionSource: action?.skillId === '' ? undefined : action?.slot ? 'skill' : 'normal',
+      actionSource,
       // Task 9 -- every real cast records its execution identity here:
       // 'original' for now (empowered/composite/repeat/multicast arrive
       // with Tasks 10-13). Charge-resolve/CC-blocked turns carry none.
@@ -1973,6 +2001,26 @@ export class TurnBattleSystem {
       this.procs.discardPendingReflects()
     }
 
+    // Ung The observation income is judged at action-resolution time: an
+    // observed enemy that completes its action earns The even if a
+    // ward-break retaliation or the reflect flush below kills it inside
+    // this resolution (the mark dies with it, but the completed action
+    // already paid). Snapshot the observing reactors AND the dan_the
+    // one-shot mark before any hit resolves -- the tail cannot read
+    // either off a corpse.
+    const observedAtResolution = new Set<string>()
+    let danTheAtResolution: BuffInstanceSnapshot | null = null
+    if (this.runtime !== undefined && battle.enemies.includes(actor)) {
+      for (const reactor of battle.players) {
+        if (this.isObserved(battle, reactor, actor)) {
+          observedAtResolution.add(reactor.id)
+        }
+      }
+      danTheAtResolution = this.buffs
+        .getForTarget(actor.entity.id)
+        .find((inst) => inst.definitionId === DAN_THE_BUFF.id) ?? null
+    }
+
     // buff2 M-INT -- the legacy per-participant wuxing-initiation flag is
     // gone: reaction eligibility is instance metadata on the apply_buff
     // ops (every application marks 'eligible'; the elemental registry
@@ -1982,11 +2030,22 @@ export class TurnBattleSystem {
     // (battle entry, ReactionStatusBuffs.ts), and the registered
     // dispatcher consumes the committed events this lane emits.
 
+    // Ung The beta -- per-action hit-outcome scratch: every damage op
+    // (either lane) records its target's outcome; the post-action Phan
+    // window reads the aggregate (multi-hit = one check, design Part VI).
+    this.hitOutcomeScratch.clear()
+
     // Spec 6.2.1 -- the Ho window sits between declaration and impact:
     // a successful protectChance roll rewrites declared.affected before
     // the hit loop, so the substituted hit resolves fully vs the
     // protector. Presentation reads the post-substitution targetIds.
     this.resolveInterceptWindow(battle, declared, actor)
+
+    // Ung The beta -- Tham An (design Part IV): casting Tham The marks
+    // the target as observed BEFORE the hit resolves (a miss/dodge still
+    // plants the mark -- observation is not damage). One focus: the set
+    // overwrites any previous mark; death lazy-clears with no transfer.
+    this.applyThamMark(battle, actor, declared)
 
     // Charge-resolve turn: hits apply từ chargedSkill capture tại declare
     // (pendingChargedSkillId đã clear ở declare -- đọc declared.chargedSkill).
@@ -2079,12 +2138,14 @@ export class TurnBattleSystem {
           this.grantTheFromCast(actor, chargedSkill, chargedCrit)
         }
 
-        // No death sweep or reflect flush here: this lane only runs
-        // when runtime === undefined, so no buff/proc authority exists
-        // to sweep and no reflect lane is queued; in a wired battle the
-        // charged resolve routes through the plan lane, whose queued
-        // reflects flush at the shared action tail below.
-        this.resolveAllyActionWindow(battle, actor, declared, landedTargets)
+        this.resolvePostActionWindows(
+          battle,
+          actor,
+          declared,
+          landedTargets,
+          TurnBattleSystem.EMPTY_RESOLUTION_SNAPSHOT,
+          null,
+        )
 
         return { targetIds, extraImpacts }
       }
@@ -2377,10 +2438,20 @@ export class TurnBattleSystem {
       this.sweepBuffDeaths(battle)
     }
 
-    // Spec 6.2.3 -- the Tro window: after a player-side action completes
-    // (damaging or non-damaging), other player-side tro_mon carriers
-    // roll their onAllyActionComplete procs.
-    this.resolveAllyActionWindow(battle, actor, declared, landedTargets)
+    // The flush settle is itself a quiescent point: a reflect that kills
+    // its attacker inside the tail otherwise leaves the corpse's buff
+    // instances, onEntityDeath hooks, and any observer's thamTargetId
+    // unswept until the next declare (HUD reads a dead mark for a step).
+    this.sweepBuffDeaths(battle)
+
+    this.resolvePostActionWindows(
+      battle,
+      actor,
+      declared,
+      landedTargets,
+      observedAtResolution,
+      danTheAtResolution,
+    )
 
     return { targetIds, extraImpacts }
   }
@@ -2413,16 +2484,14 @@ export class TurnBattleSystem {
       hitOptions,
     )
 
-    // The Tu Reimagined (spec 4.1 ordering lock) -- defender income
-    // lands before any window this hit opens (evade/taken).
-    this.grantHitOutcomeIncome(battle, target, hitResult)
+    // Ung The beta -- record the outcome for the post-action Phan
+    // window; the per-hit windows + per-hit income are gone (INV-10:
+    // observation income lands at action end, after the windows close).
+    this.recordHitOutcome(target, hitResult)
 
     // AR-04: downstream on-hit effects, debuffs and consume triggers
     // require a landed hit -- dodged attacks bypass all of them.
     if (!hitResult.dodged) {
-      // Spec 4.1 -- the acting ung_the combatant's own basic landed: free income
-      // through the marker's authored field.
-      this.grantBasicLandedIncome(battle, actor, skill?.id)
 
       // R3 (AR-03) + Task 5 (D11) -- Leech healing: % of the HP the
       // target THẬT SỰ lost post-absorb -- a fully-warded hit feeds
@@ -2450,23 +2519,11 @@ export class TurnBattleSystem {
         }
       }
 
-      // Spec 6.2.2 -- the taken-side Phan window: a LANDED hit with
-      // hpDamage > 0 (fully absorbed is not "taken", same gate as
-      // Reflection) rolls the defender's onImpactLanded reactiveProc
-      // effects. Natural actions only (INV-9); income already landed
-      // above, so this hit's +6 can fund the check.
-      if (hitResult.hpDamage > 0 && isNaturalActionSource(declared.actionSource)) {
-        this.resolveReactiveProcs(battle, target, 'onImpactLanded', {
-          attacker: actor,
-          outcome: 'taken',
-          intercepted: declared.intercepted === true,
-        })
-      }
-    } else {
-      // Spec 6.2.2 -- the dodge branch opens the defender's onEvade
-      // window (income already landed above).
-      this.resolveEvadeWindow(battle, target, actor, declared)
     }
+    // Ung The beta -- the taken/evade Phan windows moved to the action
+    // tail (resolvePhanWindow reads hitOutcomeScratch): a hit opens NO
+    // per-hit window anymore, and this action's own reactions are funded
+    // only by prior income.
 
     // ARCH-002 (M7) -- every buff mutation above (consume-removal ops
     // settle OUTSIDE the registry gate -- on-hit procs on the actor,
@@ -2554,29 +2611,41 @@ export class TurnBattleSystem {
     const ops: ResolvedCombatOperation[] = []
     const rootActionId = `skill.applybuff.${battle.totalTurnsElapsed}.${actor.id}.${buffSpec.definitionId}.${this.nextOccurrence()}`
 
+    const opByTarget = new Map<string, ResolvedCombatOperation>()
     for (const target of targets) {
-      ops.push(
-        this.applyBuffOp(
-          definition.id,
-          actor.entity.id,
-          target.entity.id,
-          stacks,
-          1,
-          'suppressed',
-          rootActionId,
-          `apply.${target.id}`,
-          duration,
-        ),
+      const op = this.applyBuffOp(
+        definition.id,
+        actor.entity.id,
+        target.entity.id,
+        stacks,
+        1,
+        'suppressed',
+        rootActionId,
+        `apply.${target.id}`,
+        duration,
       )
+      ops.push(op)
+      opByTarget.set(target.id, op)
     }
-    this.emitAndSettle(ops, battle)
+    const trace = this.emitAndSettle(ops, battle)
 
     for (const target of targets) {
       // The Tu Reimagined (plan Task 11, D3/INV-12) -- the grant lands a
       // source-tagged externalWard pool on the target: REPLACE, never
       // stack (recast refreshes to full; a lower recast lowers the
       // pool). sourceMaxHpRatio reads the GRANTING tank's live maxHp.
-      if (buffSpec.externalWardGrant) {
+      // Contracts (operations.ts): the ward lands only when the target's
+      // own apply_buff op settled resolved -- plan-lane parity.
+      const op = opByTarget.get(target.id)
+      const opResolved =
+        op !== undefined &&
+        trace !== undefined &&
+        trace.records.some(
+          (record) =>
+            record.operation.operationId === op.operationId &&
+            record.result.status === 'resolved',
+        )
+      if (buffSpec.externalWardGrant && opResolved) {
         this.writeExternalWardGrant(
           actor.entity,
           target.entity,
@@ -2881,9 +2950,12 @@ export class TurnBattleSystem {
 
   /**
    * Task 11 -- presentation/orchestration seam: is the actor's pending
-   * turn a queued EXECUTION (repeat/multicast) rather than a real turn?
-   * Manual mode must NOT await player input for these -- the cast was
-   * already chosen; the follow-up resolves automatically.
+   * turn a queued EXECUTION rather than a real turn? Manual mode must
+   * NOT await player input for these -- the cast was already committed;
+   * the follow-up resolves automatically. Covers prepared executions
+   * (repeat/multicast) AND committed reactive follow-ups (Phan/Tro
+   * counters drain through pendingReactiveEntry with a forced bypass
+   * declare -- any submitted choice would be silently discarded).
    */
   isPendingQueuedExecution(actorId: string): boolean {
     return this.pendingQueuedExecution?.actorId === actorId
@@ -2916,61 +2988,149 @@ export class TurnBattleSystem {
    * authored on the resolving TurnSkillDefinition: theGainOnLandedCast
    * applies once per landed cast; theGainOnCrit once more when any
    * direct hit of the cast crited. The cap reads the battle-snapshotted
-   * entity.maxThe (Truong The nodes, 'no' route) with MAX_THE as the
-   * default -- never a hard-coded constant.
+   * entity.maxThe (Truong The nodes, 'no' route) via grantThe/theCap
+   * -- never a hard-coded constant.
    */
   private grantTheFromCast(
     actor: TurnBattleParticipant,
     skill: TurnSkillDefinition,
     castCritLanded: boolean,
   ): void {
-    const cap = actor.entity.maxThe ?? MAX_THE
-
     if (skill.theGainOnLandedCast) {
-      actor.entity.currentThe = Math.min(cap, (actor.entity.currentThe ?? 0) + skill.theGainOnLandedCast)
+      grantThe(actor.entity, skill.theGainOnLandedCast)
     }
 
     if (castCritLanded && skill.theGainOnCrit) {
-      actor.entity.currentThe = Math.min(cap, (actor.entity.currentThe ?? 0) + skill.theGainOnCrit)
+      grantThe(actor.entity, skill.theGainOnCrit)
     }
   }
 
   /**
-   * The Tu Reimagined (spec section 4.1, plan Task 15 ordering lock) —
-   * free income on the DEFENDER's pool per hit outcome, granted
-   * immediately at hit resolution so it is always BEFORE any reactive
-   * window this hit may open (Phan consumes it):
-   * - dodged -> +THE_GAIN_ON_EVADE
-   * - taken (!dodged && hpDamage > 0) -> +THE_GAIN_ON_HIT_TAKEN
-   * - landed but fully absorbed -> nothing (INV-16: not a "taken").
-   * Marker-gated: non-ung_the participants never see this table.
+   * Ung The beta -- per-action hit-outcome scratch: every damage op
+   * (either lane) records its target's outcome; the post-action Phan
+   * window reads the aggregate (multi-hit = one check, design Part VI).
    */
-  private grantHitOutcomeIncome(battle: TurnBattle, target: TurnBattleParticipant, hitResult: { dodged: boolean; hpDamage: number }): void {
-    if (this.runtime === undefined) return
-    const grants = this.buffs.getCapabilities(target.entity.id)
-    if (!isUngTheCombatant(grants)) return
-    const amount = hitResult.dodged
-      ? theGainOnEvade(grants)
-      : hitResult.hpDamage > 0
-        ? theGainOnHitTaken(grants)
-        : 0
-    if (amount <= 0) return
-    this.emitAndSettle([
-      {
-        type: 'gain_resource',
-        operationId: `the.outcome.${battle.totalTurnsElapsed}.${target.id}.${this.nextOccurrence()}` as CombatOperationId,
-        payload: { targetId: target.entity.id, resourceId: 'the', amount },
-        origin: this.opOrigin(target.entity.id, `hit.outcome_income.${battle.totalTurnsElapsed}.${target.id}`, 'the_outcome_income'),
-      },
-    ], battle)
+  private readonly hitOutcomeScratch = new Map<string, 'taken' | 'evaded'>()
+
+  /** Charged-resolve legacy lane snapshot: empty by construction -- the
+      runtime===undefined lane never marks, so income can never read a
+      corpse. grantObservationIncome early-returns there anyway. */
+  private static readonly EMPTY_RESOLUTION_SNAPSHOT: ReadonlySet<string> = new Set()
+
+  /** Ung The beta -- aggregate this hit into the scratch (landed wins). */
+  private recordHitOutcome(
+    target: TurnBattleParticipant,
+    hitResult: { dodged: boolean; hpDamage: number },
+  ): void {
+    const prior = this.hitOutcomeScratch.get(target.id)
+    if (prior === 'taken') return
+    this.hitOutcomeScratch.set(target.id, hitResult.dodged ? 'evaded' : 'taken')
+  }
+
+  /**
+   * Tham An (design Part IV): the cast plants the mark on the declared
+   * primary target BEFORE the hits resolve -- a whiff/dodge still marks
+   * (observation is not damage). Exactly one focus: a new set overwrites;
+   * the mark's death is cleared eagerly in sweepBuffDeaths with no
+   * transfer.
+   */
+  private applyThamMark(
+    battle: TurnBattle,
+    actor: TurnBattleParticipant,
+    declared: TurnDeclaredAction,
+  ): void {
+    if (this.runtime === undefined || !isNaturalActionSource(declared.actionSource)) return
+    const skillId = declared.execution?.rootSkillId ?? declared.action?.skillId
+    if (skillId === undefined || skillId !== actor.basic?.id) return
+    if (!isUngTheCombatant(this.buffs.getCapabilities(actor.entity.id))) return
+    // The mark only lives on the actor's opposing side -- a self-scoped
+    // basic (affected=[actor]) must not mark the caster itself.
+    const opposing = battle.players.includes(actor) ? battle.enemies : battle.players
+    const mark = declared.affected[0]
+    if (mark === undefined || !opposing.includes(mark)) return
+    actor.thamTargetId = mark.id
+  }
+
+  /**
+   * isObserved(reactor, enemy) -- the single observation predicate
+   * (design Parts IV-V): the enemy matches the reactor's live Tham An
+   * mark (cleared when the target dies -- no transfer), or the reactor's
+   * quan_the marker is live (Quan The: every enemy satisfies it,
+   * incl. later spawns).
+   */
+  private isObserved(
+    battle: TurnBattle,
+    observer: TurnBattleParticipant,
+    enemy: TurnBattleParticipant,
+  ): boolean {
+    if (this.runtime === undefined) return false
+    if (!observer.entity.alive || !enemy.entity.alive) return false
+    if (observer.thamTargetId !== undefined) {
+      // Lazy-clear: the mark dies with its target -- focus is lost, and
+      // NOTHING re-marks automatically (no transfer, design Part IV).
+      const mark =
+        battle.players.find((member) => member.id === observer.thamTargetId) ??
+        battle.enemies.find((member) => member.id === observer.thamTargetId)
+      if (mark === undefined || !mark.entity.alive) {
+        observer.thamTargetId = undefined
+      } else if (mark.id === enemy.id) {
+        return true
+      }
+    }
+    return hasQuanTheMarker(this.buffs.getForTarget(observer.entity.id))
+  }
+
+  /**
+   * Hard incapacitating CC atoms -- stun/freeze presence and the
+   * bat_tu_ba_the suppression ward. The declare-path ccBlocked
+   * computation and the Ung The window gate both compose these; do
+   * not re-derive the literal checks at either site.
+   */
+  private hasHardCc(participant: TurnBattleParticipant): boolean {
+    if (this.runtime === undefined) return false
+    return (
+      this.buffs.hasControl(participant.entity.id, 'stun') ||
+      this.buffs.hasControl(participant.entity.id, 'freeze')
+    )
+  }
+
+  private hasBaTheWard(participant: TurnBattleParticipant): boolean {
+    if (this.runtime === undefined) return false
+    return this.buffs
+      .getForTarget(participant.entity.id)
+      .some((inst) => inst.definitionId === BAT_TU_BA_THE_BUFF.id)
+  }
+
+  /**
+   * Ung The beta gate -- hard incapacitating CC (stun/freeze) blocks
+   * every reactive window; slow/taunt/root do NOT.
+   */
+  private isHardCcBlocked(participant: TurnBattleParticipant): boolean {
+    return this.hasHardCc(participant) && !this.hasBaTheWard(participant)
+  }
+
+  /** Qua The predicate: debt at cap -> no NEW windows (income continues). */
+  private isQuaThe(participant: TurnBattleParticipant): boolean {
+    return isQuaTheDebt(participant.reactionDebt)
+  }
+
+  /**
+   * Ung Tre commit (design Part III): one uniform debt per committed
+   * reaction + the authored gauge penalty pushing the holder's next
+   * natural action later. Commit is never rolled back -- focus changes,
+   * Quan The expiry, or the holder dying later cannot refund it.
+   */
+  private commitReaction(holder: TurnBattleParticipant): void {
+    holder.reactionDebt = (holder.reactionDebt ?? 0) + 1
+    applyDebtPenalty(holder, UNG_TRE_GAUGE_PENALTY)
   }
 
   /**
    * buff2 M4 -- reactive_proc windows delegate to CombatProcSystem: the
-   * holder's reactive_proc grants roll via the shared rng, the The cost/
-   * gain transaction rides resource ops, and queued follow-up descriptors
-   * return here for the TBS-owned bypass queue (ordering lock: callers
-   * keep their window position; the FIFO push order is unchanged).
+   * holder's reactive_proc grants roll via the shared rng, success-only
+   * cost pays inside, and queued follow-up descriptors return here for
+   * the TBS-owned bypass queue. A committed reaction also commits the
+   * holder's Ung Tre debt (uniform +1 + gauge penalty per success).
    */
   private resolveReactiveProcs(
     battle: TurnBattle,
@@ -2981,9 +3141,6 @@ export class TurnBattleSystem {
       outcome?: 'taken' | 'evaded'
       intercepted?: boolean
       triggeringTargets?: TurnBattleParticipant[]
-      /** Task 20 -- the ally-action window on a non-damaging action; only
-       * effects carrying firesOnNonDamagingAction may roll. */
-      nonDamaging?: boolean
     },
     opts?: { once?: boolean },
   ): ReactiveProcAttempt[] {
@@ -3003,13 +3160,18 @@ export class TurnBattleSystem {
           id: participant.id,
           entity: participant.entity,
         })),
-        nonDamaging: context.nonDamaging,
       },
       {
         once: opts?.once,
         rootActionId: `reactive.${battle.totalTurnsElapsed}.${holder.id}.${trigger}.${this.nextOccurrence()}`,
       },
     )
+
+    for (const attempt of result.attempts) {
+      if (attempt.success && attempt.paid) {
+        this.commitReaction(holder)
+      }
+    }
 
     if (result.queuedFollowUps.length > 0) {
       battle.queuedFollowUps = battle.queuedFollowUps ?? []
@@ -3020,37 +3182,88 @@ export class TurnBattleSystem {
   }
 
   /**
-   * The dodge-side window (spec 6.2.2): the defender's pool gets an
-   * onEvade pass after its +THE_GAIN_ON_EVADE income already landed —
-   * the just-earned income can fund this hit's check (ordering lock,
-   * review P1.6). Natural actions only -- reactive actions never open
-   * new windows (INV-9).
+   * Ung The beta tail seam (design Part II ordering lock): the
+   * post-action windows close BEFORE the action's observation income
+   * lands -- an action can never fund its own reactions (INV-10).
    */
-  private resolveEvadeWindow(
+  private resolvePostActionWindows(
     battle: TurnBattle,
-    target: TurnBattleParticipant,
-    attacker: TurnBattleParticipant,
+    actor: TurnBattleParticipant,
     declared: TurnDeclaredAction,
+    landedTargets: TurnBattleParticipant[],
+    observedAtResolution: ReadonlySet<string>,
+    danTheAtResolution: BuffInstanceSnapshot | null,
   ): void {
-    if (!isNaturalActionSource(declared.actionSource)) {
-      return
-    }
-
-    this.resolveReactiveProcs(battle, target, 'onEvade', {
-      attacker,
-      outcome: 'evaded',
-      intercepted: declared.intercepted === true,
-    })
+    this.resolvePhanWindow(battle, actor, declared)
+    this.resolveAllyActionWindow(battle, actor, declared, landedTargets)
+    this.grantObservationIncome(battle, actor, declared, landedTargets, observedAtResolution, danTheAtResolution)
   }
 
   /**
-   * The Tro window (spec 6.2.3, plan Task 18) -- after a player-side
-   * action lands >=1 damaging hit, every OTHER living player-side
-   * participant carrying an onAllyActionComplete reactiveProc (tro_mon
-   * marker) rolls once; success queues its payload against the whole
-   * landed set. Never fires on the actor's own window (ally !== actor)
-   * or on reactive actions (INV-9 -- a counter/follow-up hit does not
-   * open another reactive window).
+   * The Phan window (design Part VI): ONE post-action window per
+   * affected ung_the reactor observing the attacker -- hit, blocked,
+   * absorbed, missed or evaded all qualify (the action resolved ON
+   * them). Outcome picks the marker's onImpactLanded ('taken') or
+   * onEvade ('evaded') grant; the evade branch resolves Trong Phan
+   * Kich when the node owned the payload swap. Success is FORCED.
+   * Natural actions only (reactive/queued actions never open windows).
+   */
+  private resolvePhanWindow(
+    battle: TurnBattle,
+    actor: TurnBattleParticipant,
+    declared: TurnDeclaredAction,
+  ): void {
+    if (this.runtime === undefined || !isNaturalActionSource(declared.actionSource)) {
+      return
+    }
+
+    // The Phan payload's sole target is the attacker (targetMode
+    // 'attacker'): a dead attacker leaves nothing queueable, so the
+    // window never opens - matching the Tro channel's alive-canonical
+    // pre-check rather than paying commit cost for an empty queue.
+    if (!actor.entity.alive) {
+      return
+    }
+
+    const opposing = battle.players.includes(actor) ? battle.enemies : battle.players
+    const seen = new Set<string>()
+
+    for (const reactor of opposing) {
+      if (reactor === actor || seen.has(reactor.id)) continue
+      seen.add(reactor.id)
+      if (!declared.affected.includes(reactor)) continue
+      if (!reactor.entity.alive) continue
+      if (!this.isObserved(battle, reactor, actor)) continue
+      if (this.isHardCcBlocked(reactor) || this.isQuaThe(reactor)) continue
+
+      // A reactor listed in affected with no recorded hit outcome means
+      // nothing resolved ON it (non-damaging action, mid-loop skip) --
+      // treat as 'evaded', not 'taken': the Phan window still opens per
+      // spec (hit/miss/evade all qualify) but an unrecorded hit must not
+      // mint an onImpactLanded payload (or commit cost) out of thin air.
+      const outcome = this.hitOutcomeScratch.get(reactor.id) ?? 'evaded'
+      this.resolveReactiveProcs(
+        battle,
+        reactor,
+        outcome === 'evaded' ? 'onEvade' : 'onImpactLanded',
+        {
+          attacker: actor,
+          outcome,
+          intercepted: declared.intercepted === true,
+        },
+        { once: true },
+      )
+    }
+  }
+
+  /**
+   * The Tro window (design Part VIII): an ALLY's authored-DAMAGING
+   * natural action completing into an enemy the reactor observes opens
+   * ONE window per other ung_the player; on success the payload queues
+   * at the canonical target -- the first landed (else affected)
+   * participant that is alive AND observed by THAT reactor. Never fires
+   * on the actor's own window, reactive actions, or non-damaging
+   * authored actions.
    */
   private resolveAllyActionWindow(
     battle: TurnBattle,
@@ -3060,46 +3273,157 @@ export class TurnBattleSystem {
   ): void {
     if (
       !battle.players.includes(actor) ||
-      !isNaturalActionSource(declared.actionSource)
+      !isNaturalActionSource(declared.actionSource) ||
+      this.runtime === undefined
     ) {
       return
     }
 
-    // Task 20 (spec 8.2 "follow-up on ANY ally action") + review fix
-    // (MED-4) -- "dealt no damage" gates firesOnNonDamagingAction rolls
-    // (a whiffed damaging action still counts), but it is NOT a
-    // targeting fact: a whiffed action inherits its declared.affected
-    // targets. Only an action that AUTHORED no damage (self-buff, pure
-    // utility -- nothing to inherit) fans out to every living enemy.
-    const nonDamaging = landedTargets.length === 0
     const authoredDamaging =
       declared.scaledDamage !== null ||
       declared.chargedSkill?.damage != null ||
       (declared.compositePickedSkills?.some((picked) => picked.damage != null) ?? false)
-    // Review fix (MED-5) -- a composite action pushes the same target once
-    // per landed pick; dedupe by id so Tro Kich resolves once per
-    // triggering TARGET, not once per hit.
-    const landedUnique = [...new Map(landedTargets.map((p) => [p.id, p])).values()]
-    const followUpTargets = !nonDamaging
-      ? landedUnique.filter((participant) => participant.entity.alive)
-      : authoredDamaging
-        ? declared.affected.filter((participant) => participant.entity.alive)
-        : battle.enemies.filter((participant) => participant.entity.alive)
 
-    if (followUpTargets.length === 0) {
+    if (!authoredDamaging) {
       return
     }
+
+    // Canonical candidates live on the reactors' opposing side: a
+    // teammate's self-hit or the acting ally itself can land in
+    // `affected` (self scopes, AoE) and must never be countered.
+    const candidates = [...landedTargets, ...declared.affected].filter(
+      (candidate) => !battle.players.includes(candidate),
+    )
 
     for (const ally of battle.players) {
       if (ally === actor || !ally.entity.alive) {
         continue
       }
+      if (this.isHardCcBlocked(ally) || this.isQuaThe(ally)) {
+        continue
+      }
 
-      this.resolveReactiveProcs(battle, ally, 'onAllyActionComplete', {
-        attacker: actor,
-        triggeringTargets: followUpTargets,
-        nonDamaging,
-      })
+      // Per-ally dedup: each reactor scans the candidate list itself;
+      // candidates consumed by an earlier ally stay visible to later ones.
+      const seen = new Set<string>()
+      let canonical: TurnBattleParticipant | undefined
+      for (const candidate of candidates) {
+        if (seen.has(candidate.id) || !candidate.entity.alive) continue
+        seen.add(candidate.id)
+        if (this.isObserved(battle, ally, candidate)) {
+          canonical = candidate
+          break
+        }
+      }
+
+      if (canonical === undefined) {
+        continue
+      }
+
+      this.resolveReactiveProcs(
+        battle,
+        ally,
+        'onAllyActionComplete',
+        {
+          attacker: actor,
+          triggeringTargets: [canonical],
+        },
+        { once: true },
+      )
+    }
+  }
+
+  /**
+   * Observation income (design Part II) -- LAST in the action tail:
+   * (a) the acting ung_the combatant's Tham The landed -> the marker's
+   * authored gainOnBasicHit, once per action;
+   * (b) an observed enemy completing a natural action -> every player
+   * ung_the reactor observing it gains the marker's gainOnObservedAction
+   * (dan_the one-shot multiplies it and is consumed on use).
+   */
+  private grantObservationIncome(
+    battle: TurnBattle,
+    actor: TurnBattleParticipant,
+    declared: TurnDeclaredAction,
+    landedTargets: TurnBattleParticipant[],
+    observedAtResolution: ReadonlySet<string>,
+    danTheAtResolution: BuffInstanceSnapshot | null,
+  ): void {
+    // ccBlocked: the enemy's turn was consumed by hard CC -- it never
+    // completed an action, matching the sealed NULL_ACTION (undefined
+    // source) which also yields no income.
+    if (
+      this.runtime === undefined ||
+      declared.ccBlocked ||
+      !isNaturalActionSource(declared.actionSource)
+    ) {
+      return
+    }
+
+    const ops: ResolvedCombatOperation[] = []
+
+    // (a) Tham The landed -- gated on the action being the actor's own
+    // basic and at least one landed hit (multi-hit still grants once).
+    const actorGrants = this.buffs.getCapabilities(actor.entity.id)
+    const rootSkillId = declared.execution?.rootSkillId ?? declared.action?.skillId
+    if (
+      actor.entity.alive &&
+      rootSkillId !== undefined &&
+      rootSkillId === actor.basic?.id &&
+      landedTargets.length > 0 &&
+      isUngTheCombatant(actorGrants)
+    ) {
+      const amount = theGainOnBasicHit(actorGrants)
+      if (amount > 0) {
+        ops.push({
+          type: 'gain_resource',
+          operationId: `the.basic.${battle.totalTurnsElapsed}.${actor.id}.${this.nextOccurrence()}` as CombatOperationId,
+          payload: { targetId: actor.entity.id, resourceId: RESOURCE_THE, amount },
+          origin: this.opOrigin(actor.entity.id, `hit.basic_income.${battle.totalTurnsElapsed}.${actor.id}`, 'the_basic_income'),
+        })
+      }
+    }
+
+    // (b) Observed enemy completed a natural action -- income to every
+    // OBSERVING player reactor. dan_the on the actor multiplies this
+    // action's yield and is consumed on use (dies with the target). The
+    // mark is judged on the resolution-time snapshot -- a ward-break or
+    // reflect kill already swept the live instance off the corpse.
+    if (battle.enemies.includes(actor)) {
+      const danThe = danTheAtResolution ?? undefined
+      const mult = danThe !== undefined ? DAN_THE_INCOME_MULT : 1
+      let consumed = false
+
+      for (const reactor of battle.players) {
+        const observed = observedAtResolution.has(reactor.id)
+        if (!reactor.entity.alive || !observed) continue
+        const grants = this.buffs.getCapabilities(reactor.entity.id)
+        const amount = theGainOnObservedAction(grants) * mult
+        if (amount <= 0) continue
+        ops.push({
+          type: 'gain_resource',
+          operationId: `the.observed.${battle.totalTurnsElapsed}.${actor.id}.${reactor.id}.${this.nextOccurrence()}` as CombatOperationId,
+          payload: { targetId: reactor.entity.id, resourceId: RESOURCE_THE, amount },
+          origin: this.opOrigin(reactor.entity.id, `hit.observed_income.${battle.totalTurnsElapsed}.${actor.id}`, 'the_observed_income'),
+        })
+        consumed = true
+      }
+
+      if (consumed && danThe !== undefined) {
+        ops.push({
+          type: 'remove_buff',
+          operationId: `dan_the.consume.${battle.totalTurnsElapsed}.${actor.id}.${this.nextOccurrence()}` as CombatOperationId,
+          payload: {
+            selector: { kind: 'instance', instanceId: danThe.instanceId },
+            removalReason: 'consumed',
+          },
+          origin: this.opOrigin(actor.entity.id, `hit.dan_the_consume.${battle.totalTurnsElapsed}.${actor.id}`, 'dan_the_consume'),
+        })
+      }
+    }
+
+    if (ops.length > 0) {
+      this.emitAndSettle(ops, battle)
     }
   }
 
@@ -3114,9 +3438,10 @@ export class TurnBattleSystem {
    * other targets died stays AoE), and the target is a LIVING player-
    * side participant. Candidates are player-side participants carrying
    * an onAllyTargeted/intercept reactiveProc (the ho_mon marker),
-   * excluding the original target. Exactly ONE roll: the nearest
-   * protector to the attacker by Chebyshev attempts; no fallback to
-   * further candidates (D5).
+   * excluding the original target, OBSERVING the attacker (Ung The
+   * beta: isObserved), and open for reaction (alive, not hard-CC, not
+   * Qua The). Exactly ONE roll: the nearest protector to the attacker
+   * by Chebyshev attempts; no fallback to further candidates (D5).
    */
   private resolveInterceptWindow(
     battle: TurnBattle,
@@ -3158,6 +3483,9 @@ export class TurnBattleSystem {
             (participant) =>
               participant !== original &&
               participant.entity.alive &&
+              this.isObserved(battle, participant, actor) &&
+              !this.isHardCcBlocked(participant) &&
+              !this.isQuaThe(participant) &&
               this.buffs
                 .getCapabilities(participant.entity.id)
                 .some((grant) => {
@@ -3190,7 +3518,10 @@ export class TurnBattleSystem {
       { once: true },
     )
 
-    const winning = attempts.find((attempt) => attempt.success)
+    // Substitution requires the same success+paid pair commitReaction
+    // uses -- a rolled-but-unpaid attempt must never rewire the target
+    // for free.
+    const winning = attempts.find((attempt) => attempt.success && attempt.paid)
 
     if (!winning) {
       return
@@ -3226,47 +3557,35 @@ export class TurnBattleSystem {
         // The marker lands on the rescued ally SOURCED BY the protector --
         // sourceId must match the ward's sourceId or the existence-bound
         // reconcile clears the pool at the next refresh.
-        this.emitAndSettle([
-          this.applyBuffOp(
-            definition.id,
-            nearest.entity.id,
-            original.entity.id,
-            1,
-            1,
-            'suppressed',
-            `intercept.ward.${battle.totalTurnsElapsed}.${nearest.id}.${original.id}.${this.nextOccurrence()}`,
-            `intercept_ward.${definition.id}`,
-          ),
-        ], battle)
-        this.writeExternalWardGrant(
-          nearest.entity,
-          original.entity,
-          wardGrant.sourceMaxHpRatio,
+        const wardOp = this.applyBuffOp(
+          definition.id,
+          nearest.entity.id,
+          original.entity.id,
+          1,
+          1,
+          'suppressed',
+          `intercept.ward.${battle.totalTurnsElapsed}.${nearest.id}.${original.id}.${this.nextOccurrence()}`,
+          `intercept_ward.${definition.id}`,
         )
+        const wardTrace = this.emitAndSettle([wardOp], battle)
+        // Contracts (operations.ts): the ward pool lands only when the
+        // marker's own apply_buff op settled resolved -- plan-lane parity.
+        if (
+          wardTrace !== undefined &&
+          wardTrace.records.some(
+            (record) =>
+              record.operation.operationId === wardOp.operationId &&
+              record.result.status === 'resolved',
+          )
+        ) {
+          this.writeExternalWardGrant(
+            nearest.entity,
+            original.entity,
+            wardGrant.sourceMaxHpRatio,
+          )
+        }
       }
     }
-  }
-
-  /**
-   * Own-basic-lands income (spec 4.1) -- the acting participant's own
-   * basic landed a hit. Reads the authored theEconomy.gainOnBasicHit
-   * field off the ung_the marker clone (single channel, review P1).
-   */
-  private grantBasicLandedIncome(battle: TurnBattle, actor: TurnBattleParticipant, skillId: string | undefined): void {
-    if (this.runtime === undefined || skillId === undefined || skillId !== actor.basic?.id) {
-      return
-    }
-    const grants = this.buffs.getCapabilities(actor.entity.id)
-    const amount = isUngTheCombatant(grants) ? theGainOnBasicHit(grants) : 0
-    if (amount <= 0) return
-    this.emitAndSettle([
-      {
-        type: 'gain_resource',
-        operationId: `the.basic.${battle.totalTurnsElapsed}.${actor.id}.${this.nextOccurrence()}` as CombatOperationId,
-        payload: { targetId: actor.entity.id, resourceId: 'the', amount },
-        origin: this.opOrigin(actor.entity.id, `hit.basic_income.${battle.totalTurnsElapsed}.${actor.id}`, 'the_basic_income'),
-      },
-    ], battle)
   }
 
   /**
@@ -3283,29 +3602,20 @@ export class TurnBattleSystem {
     actor: TurnBattleParticipant,
     entry: QueuedFollowUp,
   ): TurnDeclaredAction {
-    const payload = entry.payloadSkillId
-      ? actor.reactivePayloads?.[entry.payloadSkillId]
-      : undefined
-    const baseSkill = payload ?? actor.basic ?? null
+    const payloads = actor.reactivePayloads
+    const payload = entry.payloadSkillId ? payloads?.[entry.payloadSkillId] : undefined
+    const hasAuthoredPayloads = payloads !== undefined && Object.keys(payloads).length > 0
+    // A named-but-unregistered payload fizzles (null skill = no-action
+    // shape) — silently substituting the actor's basic would mint a real
+    // attack under the wrong contract. The basic fallback is reserved
+    // for UNNAMED entries and actors with NO authored payloads at all
+    // (cleanA11 COR).
+    const skill =
+      entry.payloadSkillId && hasAuthoredPayloads ? (payload ?? null) : (actor.basic ?? null)
 
-    // Spec 6.1 / plan Task 19 -- bach_ung's payload upgrade rider merges
-    // its authored payloadAilments into the payload's appliesAilments at
-    // resolve time. Clone so the participant's reactivePayloads entry is
-    // never mutated across declares.
-    let skill = baseSkill
-
-    if (skill && this.runtime !== undefined) {
-      const riders = this.buffs
-        .getCapabilities(actor.entity.id)
-        .flatMap((grant) => asReactiveEconomy(grant)?.payloadAilments ?? [])
-
-      if (riders.length > 0) {
-        skill = {
-          ...skill,
-          appliesAilments: [...(skill.appliesAilments ?? []), ...riders],
-        }
-      }
-    }
+    // Ung The beta -- the bach_ung payloadAilments rider merge is gone
+    // (Bach Ung is parked future content; the participant-local payload
+    // clone from buildTheTuAnKit is the only payload source now).
 
     const opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
 
@@ -3489,14 +3799,93 @@ export class TurnBattleSystem {
       return { state: battle.state, actorId: '', skillId: '', targetIds: [], ccBlocked: false }
     }
 
+    // Headless wave lane: pending telegraphs only tick inside tickPacing
+    // (the production pacing driver) -- this lane has no pacing clock, so
+    // the telegraph collapses into the pick: in-flight spawns materialize
+    // before actor selection, else a wave lull would hand phantom turns
+    // to the survivors while the wave waits unspawned forever. The next
+    // wave only starts once the field is empty again -- sequential waves
+    // preserved; there is no lull hold (gauge keeps running).
+    this.advanceHeadlessWave(battle)
+
     const actor = this.peekNextActor(battle)
 
     if (!actor) {
+      if (battle.wave !== undefined) {
+        const livingEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
+        const pendingCount = battle.wave.pendingEnemySpawns.length
+
+        if (
+          isStageComplete(
+            battle.wave.spawnedCount,
+            battle.wave.totalEnemyCount,
+            livingEnemyCount,
+            pendingCount,
+          )
+        ) {
+          battle.state = 'victory'
+          return { state: 'victory', actorId: '', skillId: '', targetIds: [], ccBlocked: false }
+        }
+      }
+
       battle.state = 'defeat'
       return { state: 'defeat', actorId: '', skillId: '', targetIds: [], ccBlocked: false }
     }
 
     return this.resolveActorTurn(battle, actor)
+  }
+
+  /**
+   * Headless lane only (resolveNextStep/runToCompletion): collapse the
+   * pacing telegraph -- materialize every in-flight spawn, and start the
+   * next wave's pending batch when the field is empty (same predicate as
+   * the tickPacing wave block). Returns true when the field changed.
+   */
+  private advanceHeadlessWave(battle: TurnBattle): boolean {
+    const wave = battle.wave
+
+    if (wave === undefined) {
+      return false
+    }
+
+    const aliveCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
+
+    if (
+      wave.pendingEnemySpawns.length === 0 &&
+      this.spawnEnemy !== undefined &&
+      shouldStartNextWave(aliveCount, 0, wave.waveIndex, wave.waves.length)
+    ) {
+      // Same standing-slot dedupe scope as the tickPacing spawn batch.
+      const occupiedSlots = new Set<string>()
+
+      for (let index = 0; index < wave.waves[wave.waveIndex]!; index++) {
+        const participant = this.spawnEnemy(occupiedSlots)
+        const totalTicks = spawnTelegraphTicks(participant.entity)
+
+        wave.pendingEnemySpawns.push({ participant, ticksRemaining: totalTicks, totalTicks })
+        wave.spawnedCount += 1
+      }
+
+      wave.waveIndex += 1
+
+      // Paced parity: the wave lull resets positive tempo but never
+      // forgives an Ung Tre debt (negative gauge carries over).
+      for (const participant of [...battle.players, ...battle.enemies]) {
+        resetGaugeOnWaveLull(participant)
+      }
+    }
+
+    if (wave.pendingEnemySpawns.length === 0) {
+      return false
+    }
+
+    for (const pending of wave.pendingEnemySpawns) {
+      battle.enemies.push(pending.participant)
+    }
+
+    wave.pendingEnemySpawns = []
+
+    return true
   }
 
   /** Thin wrapper for tests/dev tooling -- loops resolveNextStep() to completion. */

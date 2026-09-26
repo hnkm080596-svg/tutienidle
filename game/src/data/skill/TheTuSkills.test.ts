@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import {
-  BACH_UNG,
   BAT_TU_BA_THE,
   CUONG_QUYEN,
   LOAN_DAU,
   LOAN_DAU_PAID_HP_BONUS,
   PHAN_CHAN,
   PHAN_KICH,
+  QUAN_THE,
   SON_NHAC,
   THAM_THE,
   THE_TU_KIT_BY_ROOT,
   TRAN_AP,
   TRO_KICH,
-  TU_THE,
+  TRONG_PHAN_KICH,
   buildTheTuAnKit,
   buildTheTuKit,
 } from './TheTuSkills'
@@ -262,7 +262,7 @@ describe('buildTheTuKit — beta slot gates + node modifiers reach def clones on
   })
 })
 
-describe('the_tu_an kit data (spec section 6.1)', () => {
+describe('the_tu_an kit data (Ung The beta)', () => {
   it('tham_the — physical single-target basic; carries NO Thế gain field (income lives on ung_the, single channel)', () => {
     expect(THAM_THE.id).toBe('tham_the')
     expect(THAM_THE.cooldownTurns).toBe(0)
@@ -272,35 +272,45 @@ describe('the_tu_an kit data (spec section 6.1)', () => {
     expect('theGainOnLandedCast' in THAM_THE).toBe(false)
   })
 
-  it('tu_the — special stance cast, applies the tu_the buff to self', () => {
-    expect(TU_THE.id).toBe('tu_the')
-    expect(TU_THE.targetScope).toBe('self')
-    expect(TU_THE.cooldownTurns).toBeGreaterThan(0)
-    expect(TU_THE.appliesBuffs).toContainEqual({ definitionId: 'tu_the', target: 'self' })
+  it('quan_the — self-cast marker window + flat Thế seed; the only level-scaled axis is theGainOnLandedCast', () => {
+    expect(QUAN_THE.id).toBe('quan_the')
+    expect(QUAN_THE.targetScope).toBe('self')
+    expect(QUAN_THE.cooldownTurns).toBe(6)
+    expect(QUAN_THE.damage).toBeUndefined()
+    expect(QUAN_THE.appliesBuffs).toContainEqual({ definitionId: 'quan_the', target: 'self' })
+    expect(QUAN_THE.theGainOnLandedCast).toBe(25)
   })
 
-  it('bach_ung — ultimate window cast, applies the bach_ung buff to self', () => {
-    expect(BACH_UNG.id).toBe('bach_ung')
-    expect(BACH_UNG.targetScope).toBe('self')
-    expect(BACH_UNG.cooldownTurns).toBeGreaterThan(0)
-    expect(BACH_UNG.appliesBuffs).toContainEqual({ definitionId: 'bach_ung', target: 'self' })
-  })
-
-  it('phan_kich / tro_kich — real damaging payload TurnSkillDefinitions', () => {
-    for (const def of [PHAN_KICH, TRO_KICH]) {
+  it('phan_kich / tro_kich / trong_phan_kich — real damaging payload TurnSkillDefinitions inheriting the tham_the core', () => {
+    for (const def of [PHAN_KICH, TRO_KICH, TRONG_PHAN_KICH]) {
       expect(def.damage?.kind, def.id).toBe('physical')
       expect(def.damage?.multiplier, def.id).toBeGreaterThan(0)
       expect(def.targeting.shape, def.id).toBe('single')
+      expect(def.progressionOwnerId, def.id).toBe('tham_the')
     }
   })
 
-  it('buildTheTuAnKit plants ung_the always + one marker per owned root, all participant-local clones', () => {
-    const kit = buildTheTuAnKit(['ho_mon', 'phan_mon'])
+  it('baseline kit plants ung_the + phan_mon always (Phan is baseline on Tham The), phan_kich payload clone', () => {
+    const kit = buildTheTuAnKit()
 
     expect(kit.basic.id).toBe('tham_the')
-    expect(kit.special.id).toBe('tu_the')
-    expect(kit.ultimate.id).toBe('bach_ung')
-    expect(kit.basic.grantsBuffsAtBuild?.map((def) => def.id)).toEqual(['ung_the', 'ho_mon', 'phan_mon'])
+    expect(kit.special).toBeUndefined()
+    expect(kit.ultimate).toBeUndefined()
+    expect(kit.basic.grantsBuffsAtBuild?.map((def) => def.id)).toEqual(['ung_the', 'phan_mon'])
+    expect(Object.keys(kit.reactivePayloads)).toEqual(['phan_kich'])
+  })
+
+  it('owned Quan The adds the special + ho_mon/tro_mon markers + tro_kich payload', () => {
+    const kit = buildTheTuAnKit(undefined, { quanThe: true, quanTheCoreLevel: 1 })
+
+    expect(kit.special?.id).toBe('quan_the')
+    expect(kit.basic.grantsBuffsAtBuild?.map((def) => def.id)).toEqual([
+      'ung_the',
+      'phan_mon',
+      'ho_mon',
+      'tro_mon',
+    ])
+    expect(Object.keys(kit.reactivePayloads).sort()).toEqual(['phan_kich', 'tro_kich'])
 
     // Clones - mutating the kit's marker must not touch the registry def.
     const marker = kit.basic.grantsBuffsAtBuild!.find((def) => def.id === 'ho_mon')!
@@ -308,26 +318,22 @@ describe('the_tu_an kit data (spec section 6.1)', () => {
     expect(BUFF_REGISTRY.get('ho_mon').capabilities?.length).toBeGreaterThan(0)
   })
 
-  it('buildTheTuAnKit([]) plants only ung_the — no root, no mechanic marker', () => {
-    const kit = buildTheTuAnKit([])
-
-    expect(kit.basic.grantsBuffsAtBuild?.map((def) => def.id)).toEqual(['ung_the'])
-  })
-
   it('kit registry defs are never mutated by the factory', () => {
-    buildTheTuAnKit(['tro_mon'])
+    buildTheTuAnKit(undefined, { quanThe: true, quanTheCoreLevel: 3 })
 
     expect(THAM_THE.grantsBuffsAtBuild).toBeUndefined()
+    expect(QUAN_THE.theGainOnLandedCast).toBe(25)
+    expect(TRO_KICH.appliesAilments).toBeUndefined()
   })
 
   it('every an kit/payload id has display metadata', () => {
-    for (const id of ['tham_the', 'tu_the', 'bach_ung', 'phan_kich', 'tro_kich']) {
+    for (const id of ['tham_the', 'quan_the', 'phan_kich', 'tro_kich', 'trong_phan_kich']) {
       expect(TURN_SKILL_DISPLAY_META[id], `missing display meta for ${id}`).toBeDefined()
     }
   })
 
   it('every appliesBuffs definitionId resolves in BUFF_REGISTRY', () => {
-    for (const skill of [TU_THE, BACH_UNG]) {
+    for (const skill of [QUAN_THE]) {
       for (const application of skill.appliesBuffs ?? []) {
         expect(() => BUFF_REGISTRY.get(application.definitionId)).not.toThrow()
       }

@@ -456,25 +456,49 @@ describe('tran_the battle flow', () => {
 })
 
 describe('hidden_body build wiring (Task 14)', () => {
-  it('fixed kit slots populate; ung_the + owned-root markers land on the pool at build', () => {
+  it('Ung The beta kit: tham_the basic + baseline ung_the/phan_mon; no special, no ultimate', () => {
     const { gameManager, combatSource } = makeManager()
     gameManager.catalogOps.registerProgressionNodes(THE_TU_AN_NODES)
     gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = mortalAtGate()
     player.nodeLevels.core_huy_quyen = 3
     gameManager.realmAdvanceOps.chooseCultivationPath('body', 'hidden_body_pathway', player)
-    gameManager.progressionOps.purchaseNode('phan_mon', player)
 
     const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_an'))
     const participant = battle.players[0]!
 
     expect(participant.basic?.id).toBe('tham_the')
-    expect(participant.special?.skill.id).toBe('tu_the')
-    expect(participant.ultimate?.skill.id).toBe('bach_ung')
+    // Quan The is Truc Co content - no core, no special slot; the
+    // ultimate slot stays parked (Bach Ung is retired).
+    expect(participant.special).toBeUndefined()
+    expect(participant.ultimate).toBeUndefined()
+    // Phan rides baseline on Tham The; Ho/Tro wait for Quan The.
     expect(hasBuff(gameManager, participant.entity.id, 'ung_the')).toBe(true)
     expect(hasBuff(gameManager, participant.entity.id, 'phan_mon')).toBe(true)
     expect(hasBuff(gameManager, participant.entity.id, 'ho_mon')).toBe(false)
     expect(hasBuff(gameManager, participant.entity.id, 'tro_mon')).toBe(false)
+    expect(participant.reactivePayloads?.['phan_kich']).toBeDefined()
+    expect(participant.reactivePayloads?.['tro_kich']).toBeUndefined()
+  })
+
+  it('the major_quan_the core opens the special + Ho/Tro markers at build', () => {
+    const { gameManager, combatSource } = makeManager()
+    gameManager.catalogOps.registerProgressionNodes(THE_TU_AN_NODES)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+    const player = mortalAtGate()
+    player.nodeLevels.core_huy_quyen = 3
+    gameManager.realmAdvanceOps.chooseCultivationPath('body', 'hidden_body_pathway', player)
+    // The granted core level is the sole ownership authority.
+    player.nodeLevels.core_quan_the = 1
+
+    const battle = startBattle(gameManager, combatSource, player, makeDummy('e2e_an_qt'))
+    const participant = battle.players[0]!
+
+    expect(participant.special?.skill.id).toBe('quan_the')
+    for (const marker of ['ung_the', 'phan_mon', 'ho_mon', 'tro_mon'] as const) {
+      expect(hasBuff(gameManager, participant.entity.id, marker), `marker ${marker}`).toBe(true)
+    }
+    expect(participant.reactivePayloads?.['tro_kich']).toBeDefined()
   })
 })
 

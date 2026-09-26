@@ -178,11 +178,22 @@ export class PlayerHudLayer {
    * ult resolves empowered (label marks the armed state, fill brightens
    * once the pool reaches the marker).
    */
-  updateThe(current: number, max: number, threshold: number, armed: boolean): void {
+  updateThe(
+    current: number,
+    max: number,
+    threshold: number,
+    armed: boolean,
+    ungThe?: {
+      hasThamFocus?: boolean
+      quanTheActive?: boolean
+      reactionDebt?: number
+      quaThe?: boolean
+    },
+  ): void {
     const hasPool = Number.isFinite(max) && max > 0
 
     this.setGroupVisible(this.theGroup, hasPool)
-    this.theGroup.marker.setVisible(hasPool && max > threshold)
+    this.theGroup.marker.setVisible(hasPool && threshold > 0 && max > threshold)
 
     if (!hasPool) {
       return
@@ -199,7 +210,21 @@ export class PlayerHudLayer {
 
     this.theGroup.marker.setPosition(this.theGroup.background.x + this.theGroup.width * markerRatio, this.theGroup.background.y)
 
-    this.theGroup.label.text = `Thế ${formatNumber(Math.floor(current))} / ${formatNumber(Math.max(0, Math.round(max)))}${armed ? ' ◆' : ''}`
+    // Ung The beta -- focus/Quan The/Ung Tre state suffix (design Part XV).
+    // quaThe arrives computed from the bridge (single predicate authority).
+    const quaThe = ungThe?.quaThe === true
+    const suffix =
+      ungThe === undefined
+        ? ''
+        : [
+            ungThe.hasThamFocus ? 'Thám' : '',
+            ungThe.quanTheActive ? 'Quan' : '',
+            quaThe ? 'Quá Thế' : ungThe.reactionDebt ? `Trệ ${ungThe.reactionDebt}` : '',
+          ]
+            .filter(Boolean)
+            .join(' · ')
+
+    this.theGroup.label.text = `Thế ${formatNumber(Math.floor(current))} / ${formatNumber(Math.max(0, Math.round(max)))}${armed ? ' ◆' : ''}${suffix ? ` · ${suffix}` : ''}`
   }
 
   // External ward pool — its own layer label; max is the holder's maxHp

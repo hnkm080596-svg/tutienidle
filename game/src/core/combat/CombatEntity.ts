@@ -54,8 +54,9 @@ export interface CombatEntity {
   // Battle snapshot of the The cap (undefined => MAX_THE). Derived once
   // at participant build — two disjoint producers, one per path:
   // spell via resolveMaxThe(player) (MAX_THE + truong_the_<element>
-  // node contribution); ung_the via the kit-baked MAX_THE +
-  // maxTheBonus (Task 20 collector). TheEconomy.theCap is the single
+  // node contribution); ung_the via the kit-baked flat MAX_THE
+  // (buildTheTuAnKit stamps maxThe: MAX_THE — there is no node-bonus
+  // channel in the beta window). TheEconomy.theCap is the single
   // read site (`entity.maxThe ?? MAX_THE`); never persisted.
   maxThe?: number
 
