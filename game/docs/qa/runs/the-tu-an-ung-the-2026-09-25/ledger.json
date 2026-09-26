@@ -11,7 +11,7 @@
   "base": "be1bdf8d5f3fa45cbe82318473980b7b03ec9227",
   "head": "70636f2981906a12b56686d13561977270924115",
   "state": {
-   "productStateId": "566016bc9705c871b672937b8ecbb1b474cc574b1f0ad56900be70cba939e277",
+   "productStateId": "b9ded25602b269552ff4de41041cf5d5c9844ad0f8cc0a1cd3e1841cf348dd4f",
    "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
    "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -3159,6 +3159,255 @@
    "duplicateOf": null,
    "exception": null,
    "rejectionReason": "Rejected: single caller, immediate resolution — no reachable double-peek exists. Renaming/restructuring the scheduler surface for a hypothetical second caller is out of beta scope; recorded as L-TTA-50."
+  },
+  {
+   "state": {
+    "productStateId": "566016bc9705c871b672937b8ecbb1b474cc574b1f0ad56900be70cba939e277",
+    "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+    "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "invariantIds": [],
+   "evidenceIds": [],
+   "siblingFindingIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "subsystem": "the-tu-an-ung-the",
+   "id": "F-TTA-CLN7-AUT-1",
+   "title": "Paid+success reactive proc with zero resolved targets still commits cost and +1 debt",
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/proc/CombatProcSystem.ts",
+     "symbolOrSection": "resolveReactiveProcs :351-381 empty-targetIds fallthrough",
+     "revision": "a74f2c50",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "commitReaction :3029-3032",
+     "revision": "a74f2c50",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-aa2d46225be4433d9e6158237d461457",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/battle/turn/",
+      "src/core/proc/"
+     ],
+     "termsAndMethod": "enumerate every trigger that carries queuedAction",
+     "hitDispositions": [
+      "Phan pre-gates attacker alive (TBS:3128)",
+      "Tro pre-gates canonical alive+observed (:3208-3218)",
+      "intercept carries no queuedAction"
+     ],
+     "coverageLimits": [
+      "only future trigger/grant shapes could reach the empty-commit path"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "counterexample": "an \"attacker\"-mode payload on a trigger whose context lacks a live attacker would commit cost+debt with nothing queued - no such trigger exists today",
+   "expected": "committed reaction implies a queued payload or an explicit no-payload contract",
+   "actual": "empty targetIds still records a paid+success attempt -> cost + debt commit",
+   "rootCause": "generic attempt accounting never distinguishes empty-resolution commits",
+   "rootClass": "latent-edge",
+   "repair": "REJECT_WITH_PROOF",
+   "status": "REJECTED_WITH_PROOF",
+   "rejectionReason": "unreachable by construction: all three production reaction channels pre-gate a live resolved target before commit (Phan attacker-alive :3128, Tro canonical alive+observed :3208-3218, Ho intercept carries no queuedAction). Latent robustness note recorded as L-TTA-51."
+  },
+  {
+   "state": {
+    "productStateId": "566016bc9705c871b672937b8ecbb1b474cc574b1f0ad56900be70cba939e277",
+    "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+    "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "invariantIds": [],
+   "evidenceIds": [],
+   "siblingFindingIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "subsystem": "the-tu-an-ung-the",
+   "id": "F-TTA-CLN7-AUT-2",
+   "title": "Stale 'maxTheBonus / node bonus' doc drift (collector channel does not exist)",
+   "severity": "Nit",
+   "classification": "DOCUMENTATION_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/combat/CombatEntity.ts",
+     "symbolOrSection": "maxThe comment :55-58",
+     "revision": "a74f2c50",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/data/skill/TheTuSkills.ts",
+     "symbolOrSection": "TheTuAnKit maxThe doc :407",
+     "revision": "a74f2c50",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-aa2d46225be4433d9e6158237d461457",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/"
+     ],
+     "termsAndMethod": "grep 'maxTheBonus' + MAX_THE reads",
+     "hitDispositions": [
+      "0 non-test hits for maxTheBonus; TheTuSkills.ts:305 stamps flat MAX_THE"
+     ],
+     "coverageLimits": [
+      "doc-only"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "pinEvidenceIds": [
+    "EV-TTA-CLNA7-AUT-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TTA-CLNA7-AUT-FIX"
+   ],
+   "counterexample": "grep maxTheBonus src/ -> 0 hits; buildTheTuAnKit stamps maxThe: MAX_THE literal",
+   "expected": "comments describe the flat MAX_THE cap actually stamped",
+   "actual": "comments claim a node-bonus collector channel that does not exist",
+   "rootCause": "comment outran the implemented cap channel",
+   "rootClass": "doc-drift",
+   "repair": "FIXED @d449a47b: both comments rewritten to the flat-MAX_THE semantics (no node-bonus channel in the beta window).",
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "state": {
+    "productStateId": "566016bc9705c871b672937b8ecbb1b474cc574b1f0ad56900be70cba939e277",
+    "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+    "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "invariantIds": [],
+   "evidenceIds": [],
+   "siblingFindingIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "subsystem": "the-tu-an-ung-the",
+   "id": "F-TTA-CLN7-AUT-3",
+   "title": "resolveHiddenBodyKit rebuilt twice per participant build (double structuredClone)",
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": "resolveBasic :523-526 + resolveSpecialUltimate :528-534 each invoke resolveHiddenBodyKit",
+     "revision": "a74f2c50",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-aa2d46225be4433d9e6158237d461457",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/player/"
+     ],
+     "termsAndMethod": "resolveHiddenBodyKit call sites",
+     "hitDispositions": [
+      "two call sites in createHiddenBodyPathwayRuntime; both feed the same build"
+     ],
+     "coverageLimits": [
+      "kit inputs derive solely from player.nodeLevels"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "pinEvidenceIds": [
+    "EV-TTA-CLNA7-AUT-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TTA-CLNA7-AUT-FIX"
+   ],
+   "counterexample": "resolveCombatRoleComposition calls resolveBasic then resolveSpecialUltimate on the same player -> identical kit built twice per participant",
+   "expected": "one kit resolution per participant build",
+   "actual": "two identical builds, double clone cost",
+   "rootCause": "no shared kit between the two resolve entry points",
+   "rootClass": "duplicated-work",
+   "repair": "FIXED @d449a47b: kitFor() memoizes on JSON fingerprint of player.nodeLevels (covers hidden-body mods + skill-core levels incl. quan_the gate).",
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
+  },
+  {
+   "state": {
+    "productStateId": "566016bc9705c871b672937b8ecbb1b474cc574b1f0ad56900be70cba939e277",
+    "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+    "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "invariantIds": [],
+   "evidenceIds": [],
+   "siblingFindingIds": [],
+   "closureReviewIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "subsystem": "the-tu-an-ung-the",
+   "id": "F-TTA-CLN7-AUT-4",
+   "title": "collectKitCloneBuffs scans all players incl. companions while the design assumes primary-only",
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerTurnBattleOps.ts",
+     "symbolOrSection": "collectKitCloneBuffs :1312-1324 iterates battle.players",
+     "revision": "a74f2c50",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-aa2d46225be4433d9e6158237d461457",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/battle/",
+      "src/core/game/"
+     ],
+     "termsAndMethod": "companion participant assembly + BuffRegistry duplicate-id behavior",
+     "hitDispositions": [
+      "CombatBuild.ts:288 collectClones reaches companionKit slots",
+      "BuffRegistry.ts:104 fail(id, duplicate id) - fails loudly"
+     ],
+     "coverageLimits": [
+      "no companion carries clone buffs today"
+     ],
+     "evidenceIds": []
+    }
+   ],
+   "pinEvidenceIds": [
+    "EV-TTA-CLNA7-AUT-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-TTA-CLNA7-AUT-FIX"
+   ],
+   "counterexample": "a companion def carrying a grantsBuffsAtBuild clone of a colliding definition id would register a second clone -> duplicate-id fault at battle mint",
+   "expected": "scan restricted to the primary player (players[0] convention)",
+   "actual": "scan covers every player-side participant including companion slots",
+   "rootCause": "scan scope wider than the kit-carrying surface",
+   "rootClass": "scope-overreach",
+   "repair": "FIXED @d449a47b: collectKitCloneBuffs reads battle.players[0] only, with the primary-only rationale documented.",
+   "status": "FIXED_PENDING_PROOF",
+   "rejectionReason": null
   }
  ],
  "evidence": [
@@ -3504,6 +3753,75 @@
     "comment-only delta at a74f2c50"
    ],
    "limitations": [],
+   "status": "STALE"
+  },
+  {
+   "id": "EV-TTA-CLNA7-AUT-FIX",
+   "state": {
+    "productStateId": "b9ded25602b269552ff4de41041cf5d5c9844ad0f8cc0a1cd3e1841cf348dd4f",
+    "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+    "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-26T01:35:00.000Z",
+   "finishedAt": "2026-09-26T01:37:00.000Z",
+   "commandOrMethod": "npm run type-check && npx vitest run src/core/battle/turn/ src/core/player/ src/core/the-tu/",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/cleanA7-aut-fix-verify.log",
+   "artifactHash": "33880d2c47ac4dfe76f3d37c50edac876a21d2790698444063bc64196443cc87",
+   "inputPaths": [
+    "src/core/combat/CombatEntity.ts",
+    "src/data/skill/TheTuSkills.ts",
+    "src/core/player/CultivationPathRegistry.ts",
+    "src/core/game/GameManagerTurnBattleOps.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "vue-tsc exit 0; 84 files / 761 tests PASS on productState b9ded256",
+    "kit-build memoization + primary-only clone collection + truthful maxThe docs"
+   ],
+   "limitations": [
+    "verify scope: turn-battle + player + the-tu suites"
+   ],
+   "status": "CURRENT"
+  },
+  {
+   "id": "EV-TTA-PROBE-WAVE-OBS",
+   "state": {
+    "productStateId": "b9ded25602b269552ff4de41041cf5d5c9844ad0f8cc0a1cd3e1841cf348dd4f",
+    "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+    "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coordinator",
+   "startedAt": "2026-09-26T01:13:00.000Z",
+   "finishedAt": "2026-09-26T01:38:00.000Z",
+   "commandOrMethod": "npx vitest run --config docs/qa/runs/the-tu-an-ung-the-2026-09-25/evidence/vitest.probe.config.mts",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/probe-wave-observation.log",
+   "artifactHash": "d40323d2570b399d15556808bd84b45ac31050a42e0a7fde41d0edf5d219eb4a",
+   "inputPaths": [
+    "src/core/battle/turn/TurnBattleSystem.ts",
+    "src/data/buff/TheTuBuffs.ts"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "P1: wave-spawned enemy observed under live quan_the with NO Tham mark (+4 observed income)",
+    "P2: quan_the expires at FIXED_TURNS(4) holder turns; quan_the-only observation dies with it",
+    "novel-attack seam: pendingEnemySpawns materialization -> isObserved quan_the path"
+   ],
+   "limitations": [
+    "headless TBS harness; presentation lane not covered"
+   ],
    "status": "CURRENT"
   }
  ],
@@ -4304,7 +4622,66 @@
     "F-TTA-CLN6-AUT-5"
    ],
    "novelAttackIds": [],
-   "status": "SEALED"
+   "status": "STALE"
+  },
+  {
+   "id": "REV-TTA-CLEAN-A7-COR",
+   "state": {
+    "productStateId": "566016bc9705c871b672937b8ecbb1b474cc574b1f0ad56900be70cba939e277",
+    "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+    "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 31,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-6e7dc1de680f4195bb8dfc679a22fe2a",
+   "contextId": "sealed-child-6e7dc1de680f4195bb8dfc679a22fe2a",
+   "model": "swe-2-max",
+   "role": "CORRECTNESS",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-26T00:45:00.000Z",
+   "sealedAt": "2026-09-26T01:00:00.000Z",
+   "previousPhaseReviewId": "REV-TTA-CLO-8",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-TTA-CLEAN-A7-AUT",
+   "state": {
+    "productStateId": "566016bc9705c871b672937b8ecbb1b474cc574b1f0ad56900be70cba939e277",
+    "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+    "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 32,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-aa2d46225be4433d9e6158237d461457",
+   "contextId": "sealed-child-aa2d46225be4433d9e6158237d461457",
+   "model": "swe-2-max",
+   "role": "AUTHORITY",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-26T00:58:00.000Z",
+   "sealedAt": "2026-09-26T01:20:00.000Z",
+   "previousPhaseReviewId": "REV-TTA-CLEAN-A7-COR",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-TTA-CLN7-AUT-1",
+    "F-TTA-CLN7-AUT-2",
+    "F-TTA-CLN7-AUT-3",
+    "F-TTA-CLN7-AUT-4"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
   }
  ],
  "cycles": [],
@@ -5907,6 +6284,38 @@
    "rootClass": "latent-edge",
    "escapeReason": "consuming dequeue exposed under a \"peek\" name — safe only while resolveNextStep is the sole caller",
    "capabilityDelta": "mutating-peek footgun documented; guard proposed for the day a second caller appears"
+  },
+  {
+   "id": "L-TTA-51",
+   "qualifiedBy": [
+    "REV-TTA-CLEAN-A7-AUT"
+   ],
+   "applicability": [
+    "reaction commit paths with resolvable-empty payloads"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "if a future trigger shape can resolve empty targets, either pre-gate it or emit an explicit no-payload contract marker"
+   ],
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "incidentEvidenceIds": [],
+   "originatingRun": "the-tu-an-ung-the-2026-09-25",
+   "missedInvariantIds": [],
+   "promotionEvidenceIds": [],
+   "recurrenceFindingIds": [],
+   "status": "CLASSIFIED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "guidance": null,
+   "preventionEvidenceIds": [],
+   "findingIds": [
+    "F-TTA-CLN7-AUT-1"
+   ],
+   "rootClass": "latent-edge",
+   "escapeReason": "empty-target paid commit survives because every production channel pre-gates its target - the gap only activates under a future trigger shape",
+   "capabilityDelta": "commit-side empty-payload robustness boundary"
   }
  ],
  "messages": [],
@@ -6950,6 +7359,22 @@
    "payloadPath": "events/0065.json",
    "payloadHash": "474634a7ee9889c8afe191855823ea36111aa295ad61b6344a60b162b5adc931",
    "eventHash": "62f69da709491a91f4366308c0944554a034c3e7a566e5df78a320a96540b842"
+  },
+  {
+   "seq": 66,
+   "at": "2026-09-26T01:36:36.003Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-619024",
+   "state": {
+    "productStateId": "b9ded25602b269552ff4de41041cf5d5c9844ad0f8cc0a1cd3e1841cf348dd4f",
+    "contractId": "4c561655be987e8cfc9fe34f59fff0305cfe657d69bda98e0d3fd2d21023d4c3",
+    "attackModelId": "8812807dbac1525ae64c73dba77a20da8c9e0cc1ec5600450e86f81e93bb499d",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "62f69da709491a91f4366308c0944554a034c3e7a566e5df78a320a96540b842",
+   "payloadPath": "events/0066.json",
+   "payloadHash": "f50509b2370622dbc315769366ebcf77c6d51e719507328f0c6057d8d6fbbb4b",
+   "eventHash": "3232fe8149f58b79a33bafcfbe241488f3983098e956eaa4ab06bcc4f404695e"
   }
  ]
 }
