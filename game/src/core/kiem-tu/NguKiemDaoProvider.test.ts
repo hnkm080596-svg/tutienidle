@@ -43,7 +43,7 @@ describe('NguKiemDaoProvider — resolveBasic', () => {
     player.swordPath!.kiemDaoBase = 2.2
 
     const provider = buildNguKiemDaoProvider(player, { a: false, e: false, d: false })
-    const def = provider.resolveBasic({} as TurnBattleParticipant)
+    const def = provider.resolveBasic({} as TurnBattleParticipant)!
 
     expect(def.id).toBe('ngu_kiem_thuat')
     // M-QI-05 - the provider spreads authored damage metadata and only
@@ -58,7 +58,7 @@ describe('NguKiemDaoProvider — resolveBasic', () => {
 
     player.swordPath!.kiemDaoCount = 3
 
-    expect(provider.resolveBasic({} as TurnBattleParticipant).instances?.count).toBe(3)
+    expect(provider.resolveBasic({} as TurnBattleParticipant)!.instances?.count).toBe(3)
   })
 })
 
@@ -66,7 +66,7 @@ describe('perInstanceOptions — spec §5.2 Roll Cascade', () => {
   it('guaranteedHit always; locked a/e/d → no scale, no forced crit, no armor policy', () => {
     const player = makeNguPlayer()
     const provider = buildNguKiemDaoProvider(player, { a: false, e: false, d: false })
-    const def = provider.resolveBasic({} as TurnBattleParticipant)
+    const def = provider.resolveBasic({} as TurnBattleParticipant)!
     const target = makeTarget({ currentHp: 10, maxHp: 100 }) // 10% — under any threshold
 
     const opts = def.instances!.perInstanceOptions!(0, target)
@@ -81,7 +81,7 @@ describe('perInstanceOptions — spec §5.2 Roll Cascade', () => {
   it('a unlocked: execute fires when target hp% < min(0.5, 0.1*realmIndex)', () => {
     const player = makeNguPlayer('golden_core') // realmIndex 3 → threshold 0.3
     const provider = buildNguKiemDaoProvider(player, { a: true, e: false, d: false })
-    const def = provider.resolveBasic({} as TurnBattleParticipant)
+    const def = provider.resolveBasic({} as TurnBattleParticipant)!
 
     const under = def.instances!.perInstanceOptions!(0, makeTarget({ currentHp: 29, maxHp: 100 }))
     expect(under.damageMultiplier).toBe(EXECUTE_MULT)
@@ -93,7 +93,7 @@ describe('perInstanceOptions — spec §5.2 Roll Cascade', () => {
   it('execute threshold reads LIVE hp — an earlier sword that digs the target below threshold enables the next', () => {
     const player = makeNguPlayer('golden_core')
     const provider = buildNguKiemDaoProvider(player, { a: true, e: false, d: false })
-    const def = provider.resolveBasic({} as TurnBattleParticipant)
+    const def = provider.resolveBasic({} as TurnBattleParticipant)!
     const target = makeTarget({ currentHp: 31, maxHp: 100 })
 
     expect(def.instances!.perInstanceOptions!(0, target).damageMultiplier).toBeUndefined()
@@ -110,7 +110,7 @@ describe('perInstanceOptions — spec §5.2 Roll Cascade', () => {
       { a: false, e: true, d: false },
       () => CASCADE_CRIT_CHANCE - 0.001,
     )
-    const def = provider.resolveBasic({} as TurnBattleParticipant)
+    const def = provider.resolveBasic({} as TurnBattleParticipant)!
 
     expect(def.instances!.perInstanceOptions!(0, makeTarget()).critical).toBe(true)
 
@@ -119,7 +119,7 @@ describe('perInstanceOptions — spec §5.2 Roll Cascade', () => {
       { a: false, e: true, d: false },
       () => CASCADE_CRIT_CHANCE + 0.001,
     )
-    const failDef = failing.resolveBasic({} as TurnBattleParticipant)
+    const failDef = failing.resolveBasic({} as TurnBattleParticipant)!
     expect(failDef.instances!.perInstanceOptions!(0, makeTarget()).critical).toBeUndefined()
   })
 
@@ -130,7 +130,7 @@ describe('perInstanceOptions — spec §5.2 Roll Cascade', () => {
       { a: false, e: false, d: true },
       () => CASCADE_PIERCE_CHANCE - 0.001,
     )
-    const successDef = success.resolveBasic({} as TurnBattleParticipant)
+    const successDef = success.resolveBasic({} as TurnBattleParticipant)!
     expect(successDef.instances!.perInstanceOptions!(0, makeTarget()).armorBypass).toBe(true)
 
     const fail = buildNguKiemDaoProvider(
@@ -138,7 +138,7 @@ describe('perInstanceOptions — spec §5.2 Roll Cascade', () => {
       { a: false, e: false, d: true },
       () => CASCADE_PIERCE_CHANCE + 0.001,
     )
-    const failDef = fail.resolveBasic({} as TurnBattleParticipant)
+    const failDef = fail.resolveBasic({} as TurnBattleParticipant)!
     const opts = failDef.instances!.perInstanceOptions!(0, makeTarget())
     expect(opts.armorBypass).toBeUndefined()
     expect(opts.armorPierceFraction).toBe(PIERCE_FRACTION)

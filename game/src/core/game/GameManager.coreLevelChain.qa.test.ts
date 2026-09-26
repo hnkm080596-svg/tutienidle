@@ -91,7 +91,7 @@ describe('QA-2 canonical core level reaches combat damage', () => {
     const impacts: Array<{ presetId?: string }> = []
     gameManager.eventBus.on('action_impact', (e) => impacts.push(e as { presetId?: string }))
 
-    // 4 player turns: orb casts 1-3 build the combo; tam_thich lands
+    // 4 player turns: orb casts 1-3 build the combo; nhat_tuyen lands
     // on the 3rd cast as an extra impact lane.
     for (let i = 0; i < 4 * 40 + 80; i++) {
       combatSource.advance(COMBAT_STEP_SECONDS)
@@ -101,7 +101,7 @@ describe('QA-2 canonical core level reaches combat damage', () => {
 
     return {
       hpLoss: enemy.maxHp - enemy.currentHp,
-      comboFired: impacts.some((e) => e.presetId === 'kiem_combo_tam_thich'),
+      comboFired: impacts.some((e) => e.presetId === 'kiem_combo_nhat_tuyen'),
     }
   }
 

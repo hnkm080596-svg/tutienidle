@@ -6,11 +6,14 @@ import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
-import { collectKiemPhoComboModifiers } from '../kiem-tu/KiemPhoNodeModifiers'
+import {
+  collectKiemPhoComboModifiers,
+  collectKiemPhoSkillDefinitionModifiers,
+} from '../kiem-tu/KiemPhoNodeModifiers'
+import { applyModifiers } from '../kiem-tu/KiemPhoSystem'
 import { collectKiemDaoCascadeUnlocks } from '../kiem-tu/NguKiemDaoProvider'
 import { kiemDaoCap } from '../kiem-tu/NguKiemDao'
 import { getRealmIndex } from '../realm/realmSystem'
-import { aggregateNodeStatModifiers } from '../progression/NodeSystem'
 import { KIEM_PHO_COMBOS } from '../../data/skill/KiemPhoCombos'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
@@ -136,8 +139,8 @@ describe('swordPath tree — way boundary', () => {
   it('ngu player cannot purchase hien orb nodes (inert trap prevented)', () => {
     const { gameManager, player } = setup()
     asNgu(player)
-    expect(gameManager.progressionOps.canPurchaseNode('orb_dam_1', player)).toBe(false)
-    expect(gameManager.progressionOps.purchaseNode('orb_dam_1', player)).toBe(false)
+    expect(gameManager.progressionOps.canPurchaseNode('thich_can', player)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('thich_can', player)).toBe(false)
   })
 
   it('hien player cannot purchase ngu nodes', () => {
@@ -148,30 +151,29 @@ describe('swordPath tree — way boundary', () => {
     expect(gameManager.progressionOps.purchaseNode('ngu_cascade_a', player)).toBe(false)
   })
 
-  it('hien orb node statModifiers do not aggregate on the ngu way', () => {
-    const { gameManager, player } = setup()
-    player.nodeLevels = { orb_dam_1: 5 }
+  it('hien orb node effects do not collect on the ngu way', () => {
+    const { player } = setup()
+    player.nodeLevels = { thich_can: 5 }
     player.cultivationWay = 'hidden_sword_pathway'
-    const nguMods = aggregateNodeStatModifiers(gameManager.nodeRegistry, player)
-    expect(nguMods.filter(m => m.sourceId === 'orb_dam_1')).toEqual([])
+    expect(collectKiemPhoSkillDefinitionModifiers(player, KIEM_TU_NODES)).toEqual([])
 
     player.cultivationWay = 'sword_pathway'
-    const hienMods = aggregateNodeStatModifiers(gameManager.nodeRegistry, player)
-    expect(hienMods.filter(m => m.sourceId === 'orb_dam_1').length).toBeGreaterThan(0)
+    const hienMods = collectKiemPhoSkillDefinitionModifiers(player, KIEM_TU_NODES)
+    expect(hienMods.filter(m => m.nodeId === 'thich_can' && m.skillId === 'orb_dam').length).toBeGreaterThan(0)
   })
 })
 
 describe('swordPath tree — collectors', () => {
-  it('purchased orb capstone surfaces as a combo modifier that boosts matching combos', () => {
-    const { gameManager, player } = setup()
+  it('purchased Lien Thuc surfaces as a combo modifier that boosts >=2-dam combos', () => {
+    const { player } = setup()
     player.cultivationWay = 'sword_pathway'
-    player.nodeLevels = { orb_dam_capstone: 1 }
+    player.nodeLevels = { lien_thich: 1 }
 
     const modifiers = collectKiemPhoComboModifiers(player, KIEM_TU_NODES)
     expect(modifiers.length).toBe(1)
-    expect(modifiers[0]!.nodeId).toBe('orb_dam_capstone')
+    expect(modifiers[0]!.nodeId).toBe('lien_thich')
 
-    const matching = KIEM_PHO_COMBOS.find(c => c.pattern.filter(o => o === 'orb_dam').length >= 2)!
+    const matching = KIEM_PHO_COMBOS.find(c => c.id === 'nhat_tuyen')!
     const unmatched = KIEM_PHO_COMBOS.find(c => !c.pattern.includes('orb_dam'))!
 
     expect(modifiers[0]!.matches(matching)).toBe(true)
@@ -183,40 +185,40 @@ describe('swordPath tree — collectors', () => {
     expect(derived).not.toBe(matching)
   })
 
-  it('capstones granting DIFFERENT buffs compose on one combo (no overwrite)', () => {
-    const { gameManager, player } = setup()
+  it('Kiem Ket + Lien Thuc interactions compose on one combo in phase order (design sec.8)', () => {
+    const { player } = setup()
     player.cultivationWay = 'sword_pathway'
-    player.nodeLevels = { orb_chem_capstone: 1, orb_bo_capstone: 1, orb_hat_capstone: 1 }
+    // luu_ngan appends extend_duration; lien_tram appends
+    // trigger_periodic. diep_ngan [C,D,C] matches both predicates and
+    // already carries an authored trigger_periodic - the phase pin
+    // forces extend_duration ahead of both triggers.
+    player.nodeLevels = { luu_ngan: 1, lien_tram: 1 }
 
     const modifiers = collectKiemPhoComboModifiers(player, KIEM_TU_NODES)
-    expect(modifiers.length).toBe(3)
+    expect(modifiers.length).toBe(2)
 
-    // [B,H,C,B] 'phach_lieu_tram_phach' — matches bo (>=1) + hat (>=1);
-    // chem needs >=2 and does not match.
-    const twoBuff = KIEM_PHO_COMBOS.find(c => c.id === 'phach_lieu_tram_phach')!
-    const d2 = modifiers.reduce((acc, m) => (m.matches(acc) ? m.apply(acc) : acc), twoBuff)
-    expect((d2.appliesBuffs ?? []).map(b => b.definitionId).sort()).toEqual(['choang', 'suy_nhuoc'])
+    const diepNgan = KIEM_PHO_COMBOS.find(c => c.id === 'diep_ngan')!
+    for (const m of modifiers) expect(m.matches(diepNgan)).toBe(true)
 
-    // [C,B,D,C] 'tram_phach_thich_tram' — matches chem (>=2) + bo (>=1).
-    const threeOrb = KIEM_PHO_COMBOS.find(c => c.id === 'tram_phach_thich_tram')!
-    const d3 = modifiers.reduce((acc, m) => (m.matches(acc) ? m.apply(acc) : acc), threeOrb)
-    expect((d3.appliesBuffs ?? []).map(b => b.definitionId).sort()).toEqual(['kiem_thuong', 'suy_nhuoc'])
-    expect(d3.appliesBuffs!.find(b => b.definitionId === 'kiem_thuong')!.stacks).toBe(2)
-
+    const derived = applyModifiers(diepNgan, modifiers)
+    expect(derived.ailmentInteractions!.map(i => i.kind)).toEqual([
+      'extend_duration',
+      'trigger_periodic',
+      'trigger_periodic',
+    ])
     // Canonical combo data untouched by modifier application.
-    expect(twoBuff.appliesBuffs).toBeUndefined()
-    expect(threeOrb.appliesBuffs).toBeUndefined()
+    expect(diepNgan.ailmentInteractions).toHaveLength(1)
   })
 
-  it('capstone modifiers stay inert on the ngu way', () => {
-    const { gameManager, player } = setup()
+  it('kiem_pho combo modifiers stay inert on the ngu way', () => {
+    const { player } = setup()
     player.cultivationWay = 'hidden_sword_pathway'
-    player.nodeLevels = { orb_dam_capstone: 1 }
+    player.nodeLevels = { lien_thich: 1 }
     expect(collectKiemPhoComboModifiers(player, KIEM_TU_NODES)).toEqual([])
   })
 
   it('purchased cascade nodes unlock through the effect field', () => {
-    const { gameManager, player } = setup()
+    const { player } = setup()
     asNgu(player)
     player.nodeLevels['ngu_cascade_a'] = 1
     player.nodeLevels['ngu_cascade_d'] = 1

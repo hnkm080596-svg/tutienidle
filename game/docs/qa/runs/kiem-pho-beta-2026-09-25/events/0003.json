@@ -1,0 +1,14 @@
+{
+  "applied": [
+    "review:REV-COR-A",
+    "review:REV-AUT-A",
+    "finding:F-KP-CA-01",
+    "finding:F-KP-CA-02",
+    "finding:F-KP-CA-03",
+    "finding:F-KP-CA-04",
+    "finding:F-KP-CA-05",
+    "finding:F-KP-CA-06",
+    "finding:F-KP-CA-07",
+    "finding:F-KP-CA-08"
+  ]
+}

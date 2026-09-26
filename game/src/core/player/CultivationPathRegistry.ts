@@ -60,7 +60,10 @@ import { collectBodyKitModifiers } from '../the-tu/TheTuKitModifiers'
 import { collectHiddenBodyMechanicModifiers } from '../the-tu/TheTuAnMechanicModifiers'
 import { getSkillCoreLevel } from '../progression/SkillCoreLevel'
 import { buildKiemPhoProvider } from '../kiem-tu/KiemPhoProvider'
-import { collectKiemPhoComboModifiers } from '../kiem-tu/KiemPhoNodeModifiers'
+import {
+  collectKiemPhoComboModifiers,
+  collectKiemPhoSkillDefinitionModifiers,
+} from '../kiem-tu/KiemPhoNodeModifiers'
 import {
   buildNguKiemDaoProvider,
   collectKiemDaoCascadeUnlocks,
@@ -370,7 +373,11 @@ function createSwordPathRuntime(deps: CultivationPathRuntimeDeps, hidden: boolea
       ? (player, nodes, rng) =>
           buildNguKiemDaoProvider(player, collectKiemDaoCascadeUnlocks(player, nodes), rng)
       : (player, nodes) =>
-          buildKiemPhoProvider(player, collectKiemPhoComboModifiers(player, nodes)),
+          buildKiemPhoProvider(
+            player,
+            collectKiemPhoComboModifiers(player, nodes),
+            collectKiemPhoSkillDefinitionModifiers(player, nodes),
+          ),
     emblemSlots: hidden
       ? () => ({ special: TU_KIEM_Y_EMBLEM, ultimate: KIEM_DAO_CASCADE_EMBLEM })
       : undefined,
