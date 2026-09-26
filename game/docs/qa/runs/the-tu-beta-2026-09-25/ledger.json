@@ -29,7 +29,7 @@
     "capacityLimit": 5,
     "requiredReadiness": true,
     "phase": "DECIDE",
-    "cleanRoundA": null,
+    "cleanRoundA": "CYCLE-TT-CLEANH-A",
     "cleanRoundB": null,
     "finalEvidenceIds": [
       "EV-TT-FINAL-GATES"
@@ -149,7 +149,9 @@
       "deviations": [],
       "consumedBy": [],
       "checkpoints": [],
-      "finalConformanceIds": []
+      "finalConformanceIds": [
+        "EV-TT-FINAL-GATES"
+      ]
     }
   ],
   "assignments": [],
@@ -11204,6 +11206,324 @@
       "duplicateOf": null,
       "rejectionReason": "INERT-LANE: all The income is ung_the-marker or authored-field gated (grantHitOutcomeIncome/grantBasicLandedIncome/theGainPerRound/grantTheFromCast audited) — pool can never fill for body-pathway; cosmetic-only, no UI reads it.",
       "exception": null
+    },
+    {
+      "id": "F-TT-CLNH-INT-1",
+      "title": "Uncovered invariant: phan_chan holder under hard CC still reflects — reachable but unpinned",
+      "state": {
+        "productStateId": "d9f8298db06ba573ec01a4154a89928df7c6f506ed4a801fba3342a52853df12",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "HYPOTHETICAL",
+      "locations": [
+        {
+          "path": "game/src/core/proc/CombatProcSystem.ts",
+          "symbolOrSection": "pendingReflects/flushReflects",
+          "revision": "996dbffd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-58c24697d49c4b94b3715ae7393b5f8e",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "reviewer reachability/dormancy analysis",
+      "expected": "pinned/loose",
+      "actual": "latent or intended",
+      "rootCause": "latent lane or unpinned-intended",
+      "rootClass": "dormant-lane",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "reviewer reachability audit + coordinator precedent",
+          "hitDispositions": [
+            "no reachable siblings"
+          ],
+          "coverageLimits": [],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: behavior is INTENDED and structurally correct (stun gates declare, not buff capabilities — rollReactiveTrigger correctly has no CC gate); finding names a coverage suggestion, not a defect. Pin deferred to lesson L-TT-104 (proposedProtection).",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": "REJECTED: behavior is INTENDED and structurally correct (stun gates declare, not buff capabilities — rollReactiveTrigger correctly has no CC gate); finding names a coverage suggestion, not a defect. Pin deferred to lesson L-TT-104 (proposedProtection).",
+      "exception": null
+    },
+    {
+      "id": "F-TT-CLNH-INT-2",
+      "title": "Uncovered invariant: charged-unrouted fall-through branch untested",
+      "state": {
+        "productStateId": "d9f8298db06ba573ec01a4154a89928df7c6f506ed4a801fba3342a52853df12",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "HYPOTHETICAL",
+      "locations": [
+        {
+          "path": "game/src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "~L2013",
+          "revision": "996dbffd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-58c24697d49c4b94b3715ae7393b5f8e",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "reviewer reachability/dormancy analysis",
+      "expected": "pinned/loose",
+      "actual": "latent or intended",
+      "rootCause": "latent lane or unpinned-intended",
+      "rootClass": "dormant-lane",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "reviewer reachability audit + coordinator precedent",
+          "hitDispositions": [
+            "no reachable siblings"
+          ],
+          "coverageLimits": [],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: unreachable with current data — the only chargeTurns def (companion van_du_kiem_khach_ultimate) is plain physical; branch correct by inspection; future-content-only surface.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": "REJECTED: unreachable with current data — the only chargeTurns def (companion van_du_kiem_khach_ultimate) is plain physical; branch correct by inspection; future-content-only surface.",
+      "exception": null
+    },
+    {
+      "id": "F-TT-CLNH-INT-3",
+      "title": "extraImpact/dynamicBasic hits bypass the reflect lane (latent asymmetry)",
+      "state": {
+        "productStateId": "d9f8298db06ba573ec01a4154a89928df7c6f506ed4a801fba3342a52853df12",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "HYPOTHETICAL",
+      "locations": [
+        {
+          "path": "game/src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "~L2430-2470",
+          "revision": "996dbffd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-58c24697d49c4b94b3715ae7393b5f8e",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "reviewer reachability/dormancy analysis",
+      "expected": "pinned/loose",
+      "actual": "latent or intended",
+      "rootCause": "latent lane or unpinned-intended",
+      "rootClass": "dormant-lane",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "reviewer reachability audit + coordinator precedent",
+          "hitDispositions": [
+            "no reachable siblings"
+          ],
+          "coverageLimits": [],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: unreachable in beta — dynamicBasic is player-side kiem content; enemies cannot produce extra hits on a the-tu holder and the-tu has no dynamicBasic. Dormant-lane precedent.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": "REJECTED: unreachable in beta — dynamicBasic is player-side kiem content; enemies cannot produce extra hits on a the-tu holder and the-tu has no dynamicBasic. Dormant-lane precedent.",
+      "exception": null
+    },
+    {
+      "id": "F-TT-CLNH-INT-4",
+      "title": "pendingReflects first-queued-wins silently ignores second reflectsDamage on one holder",
+      "state": {
+        "productStateId": "d9f8298db06ba573ec01a4154a89928df7c6f506ed4a801fba3342a52853df12",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "HYPOTHETICAL",
+      "locations": [
+        {
+          "path": "game/src/core/proc/CombatProcSystem.ts",
+          "symbolOrSection": "queue block",
+          "revision": "996dbffd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-58c24697d49c4b94b3715ae7393b5f8e",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "reviewer reachability/dormancy analysis",
+      "expected": "pinned/loose",
+      "actual": "latent or intended",
+      "rootCause": "latent lane or unpinned-intended",
+      "rootClass": "dormant-lane",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "reviewer reachability audit + coordinator precedent",
+          "hitDispositions": [
+            "no reachable siblings"
+          ],
+          "coverageLimits": [],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: single-grant-source invariant holds (PHAN_CHAN_BUFF via grantsBuffsAtBuild is the only source); spec documents one-reflect-per-action — semantic intentional.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": "REJECTED: single-grant-source invariant holds (PHAN_CHAN_BUFF via grantsBuffsAtBuild is the only source); spec documents one-reflect-per-action — semantic intentional.",
+      "exception": null
+    },
+    {
+      "id": "F-TT-CLNH-INT-5",
+      "title": "sourceMaxHpRatio silently drops on elemental/primordial plan ops",
+      "state": {
+        "productStateId": "d9f8298db06ba573ec01a4154a89928df7c6f506ed4a801fba3342a52853df12",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "HYPOTHETICAL",
+      "locations": [
+        {
+          "path": "game/src/core/skilldef/SkillDefinitionRegistry.ts",
+          "symbolOrSection": "~L599",
+          "revision": "996dbffd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-58c24697d49c4b94b3715ae7393b5f8e",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "reviewer reachability/dormancy analysis",
+      "expected": "pinned/loose",
+      "actual": "latent or intended",
+      "rootCause": "latent lane or unpinned-intended",
+      "rootClass": "dormant-lane",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "reviewer reachability audit + coordinator precedent",
+          "hitDispositions": [
+            "no reachable siblings"
+          ],
+          "coverageLimits": [],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: no beta def authors it (TRAN_AP is physical); reachable only via future authored content — consistency gap, not a live defect.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": "REJECTED: no beta def authors it (TRAN_AP is physical); reachable only via future authored content — consistency gap, not a live defect.",
+      "exception": null
+    },
+    {
+      "id": "F-TT-CLNH-INT-6",
+      "title": "resolveBodyKit gates special on getSkillCoreLevel alone — grantor provenance not replayed",
+      "state": {
+        "productStateId": "d9f8298db06ba573ec01a4154a89928df7c6f506ed4a801fba3342a52853df12",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "HYPOTHETICAL",
+      "locations": [
+        {
+          "path": "game/src/services/save/saveShapeValidation.ts",
+          "symbolOrSection": "~L684-707",
+          "revision": "996dbffd",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-58c24697d49c4b94b3715ae7393b5f8e",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "reviewer reachability/dormancy analysis",
+      "expected": "pinned/loose",
+      "actual": "latent or intended",
+      "rootCause": "latent lane or unpinned-intended",
+      "rootClass": "dormant-lane",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "reviewer reachability audit + coordinator precedent",
+          "hitDispositions": [
+            "no reachable siblings"
+          ],
+          "coverageLimits": [],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: crafted-save-only; pre-existing validation bound (catalog/mirror/canonicality) — intentional scope, not this run's regression.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": "REJECTED: crafted-save-only; pre-existing validation bound (catalog/mirror/canonicality) — intentional scope, not this run's regression.",
+      "exception": null
     }
   ],
   "evidence": [
@@ -15725,6 +16045,40 @@
       ],
       "novelAttackIds": [],
       "status": "SEALED"
+    },
+    {
+      "id": "REV-TT-CLNH-INT",
+      "state": {
+        "productStateId": "d9f8298db06ba573ec01a4154a89928df7c6f506ed4a801fba3342a52853df12",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 53,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-58c24697d49c4b94b3715ae7393b5f8e",
+      "contextId": "sealed-child-58c24697",
+      "model": "swe-2-max",
+      "role": "INTEGRATION",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T10:15:00.000Z",
+      "sealedAt": "2026-09-26T11:12:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLNH-AUT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TT-CLNH-INT-1",
+        "F-TT-CLNH-INT-2",
+        "F-TT-CLNH-INT-3",
+        "F-TT-CLNH-INT-4",
+        "F-TT-CLNH-INT-5",
+        "F-TT-CLNH-INT-6"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
     }
   ],
   "cycles": [
@@ -15747,6 +16101,30 @@
       "startedAt": "2026-09-26T01:36:00.000Z",
       "finishedAt": "2026-09-26T03:07:00.000Z",
       "status": "STALE"
+    },
+    {
+      "id": "CYCLE-TT-CLEANH-A",
+      "state": {
+        "productStateId": "d9f8298db06ba573ec01a4154a89928df7c6f506ed4a801fba3342a52853df12",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "reviewIds": [
+        "REV-TT-CLNH-COR",
+        "REV-TT-CLNH-AUT",
+        "REV-TT-CLNH-INT"
+      ],
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-TT-FINAL-GATES"
+      ],
+      "noveltyEvidenceIds": [
+        "EV-TT-CLNH-COR-PROBE"
+      ],
+      "startedAt": "2026-09-26T10:15:00.000Z",
+      "finishedAt": "2026-09-26T11:12:00.000Z",
+      "status": "CLEAN"
     }
   ],
   "mutations": [],
@@ -20488,6 +20866,166 @@
       "findingIds": [
         "F-TT-CLNG-AUT-2"
       ]
+    },
+    {
+      "id": "L-TT-104",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "coverage-gap",
+      "missedInvariantIds": [],
+      "escapeReason": "stunned the-tu holder reflecting is intended but unpinned",
+      "applicability": [],
+      "exclusions": [],
+      "proposedProtection": [
+        "pin: CC'd phan_chan holder still reflects (buff caps are not declare-gated)"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "CC-does-not-gate-reflect should get a regression pin when reflect lanes generalize",
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "findingIds": [
+        "F-TT-CLNH-INT-1"
+      ]
+    },
+    {
+      "id": "L-TT-105",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "coverage-gap",
+      "missedInvariantIds": [],
+      "escapeReason": "charged-unrouted fall-through branch untested",
+      "applicability": [],
+      "exclusions": [],
+      "proposedProtection": [
+        "pin: charged resolve landing on unrouted path reports loudly + still flushes reflect state"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "charged+unrouted lane needs a pin if a charged non-physical def ships",
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "findingIds": [
+        "F-TT-CLNH-INT-2"
+      ]
+    },
+    {
+      "id": "L-TT-106",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "dormant-lane",
+      "missedInvariantIds": [],
+      "escapeReason": "extra-declare hits bypass pendingReflects — unreachable in beta",
+      "applicability": [],
+      "exclusions": [],
+      "proposedProtection": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "extra-declare hits bypass pendingReflects — unreachable in beta",
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "findingIds": [
+        "F-TT-CLNH-INT-3"
+      ]
+    },
+    {
+      "id": "L-TT-107",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "single-source-invariant",
+      "missedInvariantIds": [],
+      "escapeReason": "first-queued-wins safe while one grant source exists",
+      "applicability": [],
+      "exclusions": [],
+      "proposedProtection": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "first-queued-wins safe while one grant source exists",
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "findingIds": [
+        "F-TT-CLNH-INT-4"
+      ]
+    },
+    {
+      "id": "L-TT-108",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "future-content",
+      "missedInvariantIds": [],
+      "escapeReason": "sourceMaxHpRatio drop needs authoring lint if elemental ops use it",
+      "applicability": [],
+      "exclusions": [],
+      "proposedProtection": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "sourceMaxHpRatio drop needs authoring lint if elemental ops use it",
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "findingIds": [
+        "F-TT-CLNH-INT-5"
+      ]
+    },
+    {
+      "id": "L-TT-109",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "rootClass": "crafted-save-only",
+      "missedInvariantIds": [],
+      "escapeReason": "core-grantor provenance bound is pre-existing validation scope",
+      "applicability": [],
+      "exclusions": [],
+      "proposedProtection": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "core-grantor provenance bound is pre-existing validation scope",
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "findingIds": [
+        "F-TT-CLNH-INT-6"
+      ]
     }
   ],
   "messages": [],
@@ -22027,6 +22565,22 @@
       "payloadPath": "events/0096.json",
       "payloadHash": "a552fe4573d3c4cd831c2dd59365ad5b346da579d91467efef6a63f1ba7f8995",
       "eventHash": "9a4dc0c45adc815b5c3099b6c11b7adf5c2732b467ec912d7a4c7a4522c619f6"
+    },
+    {
+      "seq": 97,
+      "at": "2026-09-26T11:16:33.943Z",
+      "kind": "DECISION",
+      "actor": "coordinator-406257",
+      "state": {
+        "productStateId": "d9f8298db06ba573ec01a4154a89928df7c6f506ed4a801fba3342a52853df12",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "9a4dc0c45adc815b5c3099b6c11b7adf5c2732b467ec912d7a4c7a4522c619f6",
+      "payloadPath": "events/0097.json",
+      "payloadHash": "ec6591a4e3922b6b1e8a73eef8abc17f3f3365a93e8e8b4e6283785366ab6707",
+      "eventHash": "848739627a27450f910c5fb2fd817e7e958a7320c29efc1cb737ad189551c11d"
     }
   ]
 }
