@@ -1,9 +1,10 @@
-# codex/skill-presentation-runtime — conformance audit + fix plan (v2, plan-gate amended)
+# codex/skill-presentation-runtime — conformance audit + fix plan (v3, plan-gate amended)
 
 Scope: delta `fee85ba0` vs parent `48962aaa` only (the Ngự Kiếm chain below is QA-closed separately).
 Design authority: `game/docs/design/skill-presentation-runtime-design.txt` (tip `b0b78088`).
 Plan discipline: this document is audit + plan only; no production edits were made.
 Revision: v2 incorporates plan-gate verdict — validator-phase-bound fix in W1, mandatory `shape` field on new cues, `getCombatVfxPreset`/`spawnActionImpactVfx` deadness, `freezeCombat('tab-hidden')` correction, resolved OQ2c/OQ4/OQ6, comment-hygiene nits (CombatScene.ts:46 import, GameManager.ts:1285, GameManagerTurnBattlePresentationOps.ts:166), 11-preset screenShake count, and scoped-down impulse claim.
+v3 folds gate-v2 nits (verdict PASS_WITH_NITS): W2.3 camera arbitration rewritten as authored-precedence (not first-open) + impact-phase gate switched from cast-disposition to the shared landed-hit predicate (resolved context has no `cast`); OQ2a recorded as resolved by W2.3+W2.5.
 
 Verification evidence (this worktree, node@22, `game/`):
 - `npm run type-check` → exit 0.
@@ -158,7 +159,7 @@ All paths relative to `game/`. Ordered so each work item lands green independent
 
 1. `SkillPresentationRecipe.ts`: add `'camera-cue'` to `SkillPrimitive` + primitive set; add `'camera'` to the shape whitelist; add `intensity?: number` (validated `0 < intensity <= 0.01`).
 2. `SkillPresentationRecipes.ts`: migrate `preset.screenShake` → impact-phase `{ primitive: 'camera-cue', anchor: 'source', shape: 'camera', offsetMs: 0, durationMs: screenShake.durationMs, intensity: screenShake.intensity }` (phase-bound: shake durations 120–140 ms < any `impactMs`, always valid).
-3. `PhaserSkillVfxDriver.ts`: `camera-cue` on open → `surface.cameraImpulse(durationMs, intensity)`, then `quietHandle`. Enforce the design cap **≤1 camera cue per action** with a per-playback latch in the runner context (first camera trigger wins — authored cue beats the generic impulse). Disposition gate identical to W1.
+3. `PhaserSkillVfxDriver.ts`: `camera-cue` on open → `surface.cameraImpulse(durationMs, intensity)`, then `quietHandle`. Enforce the design cap **≤1 camera cue per action** with **authored precedence, not first-open**: at playback start compute `hasAuthoredCameraCue` from the resolved recipe; when true, the generic landed-hit impulse (W2.5) is skipped for that action. (A first-open latch would invert the stated precedence — the generic impulse fires inside the stroke cue's `open()` at `:68-70`, so an authored cue appended after the stroke cue in `recipe.impact` would lose.) Gating: the impact-phase resolved `SkillCueContext` is built without `cast` (`SkillPresentationRunner.ts:~117`), so the cast-disposition test from W1 cannot apply here — gate on the same landed-hit predicate as W2.5 instead (a landed outcome in the primary group; blocked/empty casts produce none), which is what design §8's "khi có landed hit" requires. Threading `cast` into the resolved context is explicitly out of scope.
 4. `CombatScene.ts`: widen `cameraImpulse(durationMs, intensity)` to take cue params (currently fixed 45 ms/0.001 at `:~600`).
 5. Fix the generic camera impulse gating (`:68-70`): design fires on **landed hit** (any primary-group outcome with `landed: true`), not crit-only — and suppress entirely under `reducedMotion` (design: "Camera shake không áp ở reduced motion"; resolves former OQ2c). Scene's cameraImpulse call stays suppressed when reduced-motion.
 6. Optionally re-map `space==='screen'` presets off `ground-shape 'ring'` (a screen-space burst/flash cue, or keep ring + shake) — OQ2b stays open.
@@ -215,6 +216,7 @@ Still open — do not guess in implementation:
 
 Resolved by the plan gate (folded into plan, no longer open):
 
+- **OQ2a** — authored camera cue vs generic impulse, compose-or-replace: resolved by W2.3+W2.5 — authored cue takes precedence under the ≤1-per-action cap (generic skipped when `hasAuthoredCameraCue`), generic re-gated to landed-hit so it fires only for actions without an authored camera cue.
 - **OQ2c** — reduced-motion: suppress camera shake (design: "Camera shake không áp ở reduced motion") → W2.5.
 - **OQ3** — background-tab stall: misframed; `freezeCombat('tab-hidden')` deliberately freezes the combat clock and `isBlocking` is a coordinator hold → residual already covered by W4's bound.
 - **OQ4** — `turn_cast_start`: keep as documented observation feed (design §12; tests pin it) → W3.1.
