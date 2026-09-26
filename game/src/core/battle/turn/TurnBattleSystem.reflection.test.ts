@@ -229,6 +229,32 @@ describe('phan_chan reflect (Max-HP ratio, once-per-action)', () => {
     expect(10_000 - attacker.currentHp).toBeCloseTo(10_000 * PHAN_CHAN_BASE_RATIO)
   })
 
+  it('one AoE action into TWO phan_chan holders flushes exactly one reflect per holder', () => {
+    const tankA = makeTank('tank_a')
+    const tankB = makeTank('tank_b')
+    const attacker = makeAttacker('enemy')
+    const f = makeBattle(tankA, attacker, BUFF_REGISTRY, {
+      targeting: { shape: 'all_lanes' },
+    })
+
+    const tankBP = makeParticipant(tankB.id, tankB, 10, 0)
+    tankBP.basic = { ...NOOP_PLAYER_BASIC }
+    f.battle.players.push(tankBP)
+
+    applyPhanChan(f.runtime, f.tankP)
+    applyPhanChan(f.runtime, tankBP)
+
+    const system = systemOf(f)
+    system.resolveNextStep(f.battle)
+    system.resolveNextStep(f.battle)
+    // Both tanks (speed 10) act before the attacker (speed 9).
+    system.resolveNextStep(f.battle)
+
+    // Per-holder reflect: 2 x (holder maxHp x base ratio) — the
+    // once-per-action cap binds per holder, not per action.
+    expect(10_000 - attacker.currentHp).toBeCloseTo(2 * (10_000 * PHAN_CHAN_BASE_RATIO))
+  })
+
   it('a non-natural hostile hit (counter payload) never queues a reflect (INV-9)', () => {
     const tank = makeTank('tank')
     const attacker = makeAttacker('enemy')

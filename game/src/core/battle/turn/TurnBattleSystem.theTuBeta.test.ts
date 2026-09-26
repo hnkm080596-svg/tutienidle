@@ -285,6 +285,37 @@ describe('loan_dau — sacrifice ordering, 1-HP floor, actual-paid payoff', () =
     }
   })
 
+  it('sacrifice pays THROUGH a full externalWard: the self-payment bypasses every absorption path', () => {
+    const caster = createCombatant({
+      id: 'caster',
+      type: 'player',
+      stats: createBaseStats({ ...NO_MITIGATION, might: 100 }),
+      currentHp: 10_000,
+      maxHp: 10_000,
+    })
+    const enemy = createCombatant({
+      id: 'enemy',
+      stats: createBaseStats({ ...NO_MITIGATION }),
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+    })
+    const f = makeFixture(caster, enemy)
+    const kit = buildTheTuKit('cuong_chien', ZERO_MODS, { special: true })
+    f.casterP.basic = kit.special!
+
+    // A REAL ward: the ho_ve marker binds the pool's existence, so the
+    // reconcile seam keeps it (a bare ward with no marker is reaped).
+    f.runtime.applyBuff('ho_ve', f.casterP, f.casterP)
+    caster.externalWard = { sourceId: 'caster', amount: 999_999 }
+
+    f.system.resolveNextStep(f.battle)
+
+    // vitals 'sacrifice' is unabsorbable: the full ratio leaves hp
+    // directly and the ward buffer is untouched.
+    expect(caster.currentHp).toBe(10_000 - 3_000)
+    expect(caster.externalWard?.amount).toBe(999_999)
+  })
+
   it('a hostile multi-hit action into a phan_chan holder still produces exactly ONE reflect', () => {
     const caster = createCombatant({
       id: 'caster',

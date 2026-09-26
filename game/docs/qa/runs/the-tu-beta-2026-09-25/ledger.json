@@ -9690,6 +9690,171 @@
       "exception": null,
       "status": "REJECTED_WITH_PROOF",
       "rejectionReason": "dev-only drift signal; data-side renames pinned by census tests; presentation-only"
+    },
+    {
+      "id": "F-TT-CLND-INT-1",
+      "title": "checklist invariants unpinned: sacrifice-under-ward, multi-holder AoE reflect, per-affordance UI disables",
+      "state": {
+        "productStateId": "fea576e2d9a15cf8dab73cd31d0d8c1a2acbcdae50419aa64433704a73f35851",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.theTuBeta.test.ts",
+          "symbolOrSection": "absence",
+          "revision": "72822607",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-411e4a98d9d74e1aacf5cc2745d181c9",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "no sacrifice-under-ward, no two-holder AoE reflect, no component-level disable assertions outside TheTuTreePanel",
+      "expected": "pay_hp floor under every absorption path + one reflect per holder per action + per-button in-battle disable have test pins",
+      "actual": "no sacrifice-under-ward, no two-holder AoE reflect, no component-level disable assertions outside TheTuTreePanel",
+      "rootCause": "see locations",
+      "rootClass": "coverage",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton sites"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED uncommitted: 4 new pins — sacrifice through a real ho_ve-bound externalWard (hp drops full ratio, ward untouched); two-holder AoE reflect = 2x ratio; NodeInspector buy+upgrade and NativeCoreDetail/SkillDetailView upgrade disabled in-battle.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLND-INT-2",
+      "title": "devResetBranch skips bumpState() on zero-refund resets",
+      "state": {
+        "productStateId": "fea576e2d9a15cf8dab73cd31d0d8c1a2acbcdae50419aa64433704a73f35851",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/composables/useProgressionActions.ts",
+          "symbolOrSection": ":63-71",
+          "revision": "72822607",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-411e4a98d9d74e1aacf5cc2745d181c9",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "early return on refund===0 skips bump; stale stateVersion-keyed views (dev-channel only)",
+      "expected": "any successful mutation bumps stateVersion",
+      "actual": "early return on refund===0 skips bump; stale stateVersion-keyed views (dev-channel only)",
+      "rootCause": "see locations",
+      "rootClass": "coverage",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton sites"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "FIXED uncommitted: early return narrowed to refund===null (op rejected); bump unconditional per the function comment.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "FIXED_PENDING_PROOF",
+      "rejectionReason": null
+    },
+    {
+      "id": "F-TT-CLND-INT-3",
+      "title": "pre-existing: peekNextActor arms entries off-queue (dequeueFollowUpActor)",
+      "state": {
+        "productStateId": "fea576e2d9a15cf8dab73cd31d0d8c1a2acbcdae50419aa64433704a73f35851",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": ":1028-1095",
+          "revision": "72822607",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-411e4a98d9d74e1aacf5cc2745d181c9",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "armed entry dropped if never resolved — not reachable: peeked actor is always resolved next; TBS rebuilt per battle; latent pre-existing",
+      "expected": "peek side-effect-free or unclaimed entry re-queued",
+      "actual": "armed entry dropped if never resolved — not reachable: peeked actor is always resolved next; TBS rebuilt per battle; latent pre-existing",
+      "rootCause": "see locations",
+      "rootClass": "coverage",
+      "subsystem": "the-tu-beta",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/"
+          ],
+          "termsAndMethod": "coordinator sweep",
+          "hitDispositions": [
+            "singleton sites"
+          ],
+          "coverageLimits": [
+            "beta surface"
+          ],
+          "evidenceIds": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "REJECTED: pre-existing out-of-diff behavior; peek IS the claim mechanism — every caller resolves the armed actor next; unreachable in all traced flows.",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "exception": null,
+      "status": "REJECTED_WITH_PROOF",
+      "rejectionReason": "pre-existing latent; peek=claim by design; no reachable orphan path"
     }
   ],
   "evidence": [
@@ -13593,6 +13758,37 @@
         "F-TT-CLND-AUT-1",
         "F-TT-CLND-AUT-2",
         "F-TT-CLND-AUT-3"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-TT-CLEAN-D-INT",
+      "state": {
+        "productStateId": "fea576e2d9a15cf8dab73cd31d0d8c1a2acbcdae50419aa64433704a73f35851",
+        "contractId": "5380cc4f3581fcf5ccd72089bf8ffba041c16faba33956a81b45c4b05ffab393",
+        "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 46,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-411e4a98d9d74e1aacf5cc2745d181c9",
+      "contextId": "sealed-child-411e4a98",
+      "model": "swe-2-max",
+      "role": "INTEGRATION",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-26T07:19:00.000Z",
+      "sealedAt": "2026-09-26T07:50:00.000Z",
+      "previousPhaseReviewId": "REV-TT-CLNC-INT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-TT-CLND-INT-1",
+        "F-TT-CLND-INT-2",
+        "F-TT-CLND-INT-3"
       ],
       "novelAttackIds": [],
       "status": "SEALED"
@@ -17750,6 +17946,84 @@
       "proposedProtection": [],
       "findingIds": [
         "F-TT-CLND-AUT-3"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-81",
+      "rootClass": "coverage",
+      "escapeReason": "checklist invariants lacked deterministic pins",
+      "capabilityDelta": "payment-under-absorption, per-holder reflect, UI disable pins added",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLND-INT-1"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-82",
+      "rootClass": "missing-invariant",
+      "escapeReason": "conditional bump skipped zero-refund mutations",
+      "capabilityDelta": "bump is unconditional on successful mutation",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLND-INT-2"
+      ]
+    },
+    {
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "incidentEvidenceIds": [],
+      "originatingRun": "the-tu-beta-2026-09-25",
+      "missedInvariantIds": [],
+      "promotionEvidenceIds": [],
+      "recurrenceFindingIds": [],
+      "status": "CLASSIFIED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null,
+      "preventionEvidenceIds": [],
+      "qualifiedBy": [],
+      "exclusions": [],
+      "id": "L-TT-83",
+      "rootClass": "out-of-scope",
+      "escapeReason": "pre-existing latent arm-without-requeue flagged",
+      "capabilityDelta": "peek=claim is the designed contract; unreachable orphan",
+      "applicability": [],
+      "proposedProtection": [],
+      "findingIds": [
+        "F-TT-CLND-INT-3"
       ]
     }
   ],
