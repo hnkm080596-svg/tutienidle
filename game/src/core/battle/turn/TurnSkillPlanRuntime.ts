@@ -24,7 +24,7 @@ import type {
   SkillId,
 } from '../contracts/ids'
 import type { CombatEntity } from '../../combat/CombatEntity'
-import { MAX_THE } from '../../combat/CombatTypes'
+import { MAX_THE, RESOURCE_THE } from '../../combat/CombatTypes'
 import type { CombatRng } from '../contracts/rng'
 import type { CombatScheduler } from '../runtime/scheduler/CombatScheduler'
 import type { BuffDefinition, PeriodicDamageDefinition } from '../../buff2/BuffDefinition'
@@ -677,7 +677,7 @@ export class TurnSkillPlanRuntime {
   ): number {
     if (entity === undefined) return 0
     switch (resourceId) {
-      case 'the':
+      case RESOURCE_THE:
         return entity.currentThe ?? 0
       case 'mana':
         return entity.currentMp
@@ -696,7 +696,7 @@ export class TurnSkillPlanRuntime {
   ): number {
     if (entity === undefined) return 0
     switch (resourceId) {
-      case 'the':
+      case RESOURCE_THE:
         return entity.maxThe ?? MAX_THE
       case 'mana':
         return entity.stats.maxMp

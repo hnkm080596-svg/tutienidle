@@ -47,6 +47,7 @@ import type { TurnBattleState } from '../battle/turn/TurnBattleSystem'
 import type { EntityVitalsChangedEvent, VitalsChangeReason } from '../combat/EntityVitalsSystem'
 import type { CombatExecutionRecord } from '../battle/contracts/trace'
 import type { CombatOperationOriginKind } from '../battle/contracts/origin'
+import { RESOURCE_THE } from '../combat/CombatTypes'
 
 // P5 - the damage-bearing vitals reasons. HP loss on 'stat_refresh'
 // (a max-HP shrink clamps currentHp), regen/healing, ward_* and
@@ -500,7 +501,7 @@ export class BattleMetricsCollector {
       if (op.payload.resourceId === 'mana') {
         if (spend) ledger.mpSpent += applied
         else ledger.mpGained += applied
-      } else if (op.payload.resourceId === 'the') {
+      } else if (op.payload.resourceId === RESOURCE_THE) {
         if (spend) ledger.theSpent += applied
         else ledger.theGained += applied
       }
