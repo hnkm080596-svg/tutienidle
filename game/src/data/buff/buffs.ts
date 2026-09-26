@@ -7,6 +7,7 @@ import { BOSS_BUFFS } from './BossBuffs'
 import { THE_TU_BUFFS } from './TheTuBuffs'
 import { REACTION_STATUS_BUFFS } from './ReactionStatusBuffs'
 import { COMPANION_BUFFS } from './CompanionBuffs'
+import { PHAP_TU_TRANG_BUFFS } from './PhapTuTrangBuffs'
 
 // Đột Phá Trúc Cơ (Phase 5) — áp lên buff PERSISTENT ngoài trận
 // (GameManager.applyPersistentBuff()) khi thất bại Độ Kiếp (mục 13
@@ -145,6 +146,9 @@ export const buffs: BuffDefinition[] = [
   ...THE_TU_BUFFS,
   ...REACTION_STATUS_BUFFS,
   ...COMPANION_BUFFS,
+  // Phap Tu Reimagine (2026-09-26 spec) -- Phap Trang windows + their
+  // bound target markers.
+  ...PHAP_TU_TRANG_BUFFS,
 ]
 
 

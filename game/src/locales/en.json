@@ -103,16 +103,6 @@
         "upgradeCost": "Upgrade · {cost} Insight",
         "otherBranch": "Other"
       },
-      "routes": {
-        "aria": "Pháp Tu stance",
-        "dot": "Detonate",
-        "no": "Eruption"
-      },
-      "routeSwitch": {
-        "title": "Change Pháp Tu Stance",
-        "body": "Switch to the {route} stance? Old stance nodes reset to 0 — regain {regain} Insight, lose {lose}.{clawback}",
-        "confirm": "Switch Stance"
-      },
       "clawback": {
         "summary": " Also revoked: {detail}.",
         "skills": "lose {n} skills",
@@ -167,7 +157,6 @@
           "realm": "Unlocks at {realm}",
           "element": "Unlock the related Element",
           "elementMismatch": "Belongs to the {element} element — another element is committed",
-          "routeMismatch": "Enlightenable only in the {route} stance",
           "wayMismatch": "Belongs to a different cultivation way",
           "excludesNode": "Conflicts with: {name}",
           "nodeCount": "Enlighten {required}/{total} related nodes",
@@ -180,13 +169,7 @@
           "techniqueGrade": "Requires technique grade {grade}",
           "skillUpgrade": "Upgrade the related skill"
         },
-        "upgradeGateHeader": "Upgrade blocked:",
-        "routePick": {
-          "title": "Choose Your Pháp Tu Stance",
-          "hint": "The chosen element is permanent. The stance can be reforged out of combat — old stance nodes reset to 0 and refund 75% of the Insight paid.",
-          "dotDesc": "Detonate — relentless elemental ailments; the awakened ult ignites every remaining ailment in one burst.",
-          "noDesc": "Eruption — harder direct hits and crits; crits feed The, and the awakened ult burns the whole pool."
-        }
+        "upgradeGateHeader": "Upgrade blocked:"
       },
       "elementTabs": {
         "aria": "Choose Pháp Tu element"
@@ -1001,13 +984,13 @@
       "label": "Blood Shatter Burst",
       "description": "One-time explosive damage when Blood Shatter reaches 5 stacks."
     },
-    "theGainPerLinkBonus": {
-      "label": "The Gain per Link",
-      "description": "Bonus The gained for each completed chain link (including the finisher)."
+    "phapThe": {
+      "label": "Pháp Thế",
+      "description": "Empowerment charge — each landed Basic adds 1 Thế; at 5 the next Basic casts its Pháp Thế variant."
     },
-    "theMaxBonus": {
-      "label": "The Cap Bonus",
-      "description": "Added to the maximum The cap; the Ultimate only fires at this new cap."
+    "linhLucHoTheCap": {
+      "label": "Linh Lực Hộ Thể",
+      "description": "Caps the share of incoming damage absorbed by Linh Lực Hộ Thể."
     }
   },
   "announce": {

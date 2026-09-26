@@ -93,7 +93,6 @@ describe('SkillCoreNodes — template coverage', () => {
   it('cores carry no tags, prereqs, or effect payload', () => {
     for (const node of SKILL_CORE_NODES) {
       expect(node.branchTag, node.id).toBeUndefined()
-      expect(node.routeTag, node.id).toBeUndefined()
       expect(node.elementTag, node.id).toBeUndefined()
       expect(node.prerequisites, node.id).toBeUndefined()
       expect(node.revealWhen, node.id).toBeUndefined()

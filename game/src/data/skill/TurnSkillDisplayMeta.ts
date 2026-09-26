@@ -67,6 +67,14 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
   diem_kim_thuat: { ...fromSkills('diem_kim_thuat', { name: 'Điểm Kim Thuật', description: 'Kim hệ công kích.' }), iconKey: 'diem_kim_thuat' },
   tho_cau_thuat: { ...fromSkills('tho_cau_thuat', { name: 'Thổ Cầu Thuật', description: 'Thổ hệ công kích.' }), iconKey: 'tho_cau_thuat' },
 
+  // Phap Tu Reimagine (spec 2026-09-26) -- the 5 Phap Trang specials
+  // (self-buff windows); iconKey points at placeholder art until drawn.
+  tam_muoi_chan_hoa: { ...fromSkills('tam_muoi_chan_hoa', { name: 'Tam Muội Chân Hỏa', description: 'Trạng thái Tam Muội.' }), iconKey: 'tam_muoi_chan_hoa' },
+  thanh_tuyen_duong_linh: { ...fromSkills('thanh_tuyen_duong_linh', { name: 'Thanh Tuyền Dưỡng Linh', description: 'Trạng thái Thanh Tuyền.' }), iconKey: 'thanh_tuyen_duong_linh' },
+  van_moc_sinh_co: { ...fromSkills('van_moc_sinh_co', { name: 'Vạn Mộc Sinh Cơ', description: 'Trạng thái Sinh Cơ.' }), iconKey: 'van_moc_sinh_co' },
+  kim_y_ngung_phong: { ...fromSkills('kim_y_ngung_phong', { name: 'Kim Ý Ngưng Phong', description: 'Trạng thái Kim Ý.' }), iconKey: 'kim_y_ngung_phong' },
+  trong_nhac: { ...fromSkills('trong_nhac', { name: 'Trọng Nhạc', description: 'Trạng thái Trọng Nhạc.' }), iconKey: 'trong_nhac' },
+
   // The Tu + Pham Nhan -- generic melee (khong dung Skill object).
   generic_physical: {
     name: 'Vật Công',

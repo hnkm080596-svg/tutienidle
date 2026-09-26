@@ -16,6 +16,14 @@ export const SKILL_ICON_MANIFEST: Record<string, string> = {
   diem_kim_thuat: '/assets/skills/diem_kim_thuat.png',
   tho_cau_thuat: '/assets/skills/tho_cau_thuat.png',
 
+  // Phap Tu Reimagine (spec 2026-09-26) -- 5 Phap Trang specials
+  // (placeholder PNGs to be drawn; unknown files degrade to monogram).
+  tam_muoi_chan_hoa: '/assets/skills/tam_muoi_chan_hoa.png',
+  thanh_tuyen_duong_linh: '/assets/skills/thanh_tuyen_duong_linh.png',
+  van_moc_sinh_co: '/assets/skills/van_moc_sinh_co.png',
+  kim_y_ngung_phong: '/assets/skills/kim_y_ngung_phong.png',
+  trong_nhac: '/assets/skills/trong_nhac.png',
+
   // Phap Tu An (Ngo Dao) kit.
   van_phap_tuy_tam: '/assets/skills/van_phap_tuy_tam.png',
   da_phap_lien_tuyen: '/assets/skills/da_phap_lien_tuyen.png',

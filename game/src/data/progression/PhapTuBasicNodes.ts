@@ -8,43 +8,26 @@ import type { StatModifier } from '../../core/stats/StatCalculator'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from './PhapTuNodes.builders'
 import { SPELL_KIT_IDS } from '../skill/Skills'
 
-// 2026-09-25 three-path content design (design doc sec.1.2a, user rulings
-// #1-#8) -- the BASIC-skill lane per element. Distinct from the existing
-// special/ult/route lanes: every node here powers the element's SKILL
-// kit (skill stat keys: skillDamagePercent /
-// elementApplicationPercent / ailmentPotencyPercent / ailmentDurationPercent
-// / criticalRate / criticalDamage / finalDamagePercent -- the last is a
-// broader all-hits multiplier used by the earth lane; never character
-// stats like might/hp/armor). Stat scope is the spell domain: modifiers only
-// exist for a spell-path player, and inside the beta window (LQ/TC)
-// the basic is the only reachable spell skill, so the nodes' in-window
-// effect is exactly the basic lane; post-Kim-Dan spells share the same
-// element stats -- a per-skillId stat channel is future engine work,
-// not beta scope. Every node is leveled, and
-// a maxed node adds at most +10% of the skill's authored base in ONE
-// direction (power nodes: 5 levels x 2%, or 4 levels x 2.5%; apply-chance
-// nodes: +10% RELATIVE to the basic's base ailmentChance -- the engine
-// consumes elementApplicationPercent multiplicatively as x(1+pool), so
-// base 0.5 needs pool 0.10 -> 0.02/level, landing the roll at 0.55).
+// Phap Tu Reimagine (2026-09-26 spec sec.1.4 + openQuestion 5) -- the
+// basic lane keeps ONLY skill-owned channels: the ailment family
+// (elementApplicationPercent / ailmentPotencyPercent /
+// ailmentDurationPercent -- the element basic is the path's only
+// own-source ailment producer, so the global channel IS the skill
+// channel, ruling F14) plus the two-way capstone specializations
+// (they modify the basic itself). The generic-stat nodes
+// (skillDamagePercent / criticalRate / criticalDamage /
+// finalDamagePercent) are cut outright; a per-skillId coefficient/
+// conversion channel was considered and deferred -- no kept mechanic
+// needs it.
 //
-// Gating contract (ruling #8): the REALM decides which ring opens --
-// trunk nodes require only the element root (open at Luyen Khi), the
-// outer ring + The lanes + capstones require realm 'foundation_establishment'
-// (The economy awakens at Truc Co per ruling #5 / breakthrough reward);
-// the MINOR tier inside a realm decides the level CAP via levelGates
-// (techniqueRank = the minor-tier progression inside a realm cycle).
-// Capstones are a 2-way variance split (ruling #7): two opposing
-// selectsSpecialization nodes gating each other through excludesNode.
+// Gating contract is unchanged: trunk nodes require only the element
+// root (open at Luyen Khi); the outer ring + capstones also require
+// realm 'foundation_establishment'; the MINOR tier inside a realm caps
+// levels via levelGates (techniqueRank = the in-realm minor tier).
+// Capstones stay a mutex 2-way variance split through excludesNode;
+// each hangs off a surviving ailment node of the same element.
 //
-// Glyph shape (ruling #2): each ring node carries a 'node' prereq on a
-// trunk node of the same stat family, and each capstone hangs off one
-// ring node -- depth-1 trunk / depth-2 ring / depth-3 capstone instead
-// of a flat star (clean-A-5 nit). A ring node therefore also requires
-// owning its trunk node; purchase order follows the same stat family.
-//
-// Kim Dan+ content keeps the honesty treatment (existing realm prereq
-// renders locked + inspector shows the realm name -- ruling #16 option C).
-
+// Glyph shape: depth-1 trunk / depth-2 ring / depth-3 capstone.
 
 
 /** Per-capstone pair: specialization ids authored on the basic Skill def. */
@@ -149,16 +132,9 @@ function capstone(
 function buildFire(): ProgressionNode[] {
   return [
     powerNode(
-      'hoa_sac_nhiet',
-      'Sắc Nhiệt',
-      '+2% sát thương chiêu mỗi cấp (tối đa +10%).',
-      'fire',
-      [stat('hoa_sac_nhiet', 'skillDamagePercent', 0.02)],
-    ),
-    powerNode(
       'hoa_diem_chuan',
       'Diễm Chuẩn',
-      '+2% tỉ lệ áp dục tật trạng mỗi cấp (tối đa +10% so với gốc).',
+      '+2% tỉ lệ áp dụng tật trạng mỗi cấp (tối đa +10% so với gốc).',
       'fire',
       [stat('hoa_diem_chuan', 'elementApplicationPercent', 0.02)],
     ),
@@ -178,32 +154,9 @@ function buildFire(): ProgressionNode[] {
       { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_an_sau' },
     ),
     powerNode(
-      'hoa_sac_huyet',
-      'Sắc Huyết',
-      '+2.5% sát thương chiêu mỗi cấp (tầng Trúc Cơ).',
-      'fire',
-      [stat('hoa_sac_huyet', 'skillDamagePercent', 0.025)],
-      { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_sac_nhiet' },
-    ),
-    powerNode(
-      'hoa_diem_bao',
-      'Diễm Bạo',
-      '+2% tỉ lệ bạo kích chiêu mỗi cấp (tối đa +10%).',
-      'fire',
-      [stat('hoa_diem_bao', 'criticalRate', 0.02)],
-    ),
-    powerNode(
-      'hoa_bao_nhiet',
-      'Bạo Nhiệt',
-      '+2.5% sát thương bạo kích chiêu mỗi cấp (tầng Trúc Cơ).',
-      'fire',
-      [stat('hoa_bao_nhiet', 'criticalDamage', 0.025)],
-      { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_diem_bao' },
-    ),
-    powerNode(
       'hoa_diem_tham',
       'Diễm Thấm',
-      '+2.5% tỉ lệ áp dục tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% tỉ lệ áp dụng tật trạng mỗi cấp (tầng Trúc Cơ).',
       'fire',
       [stat('hoa_diem_tham', 'elementApplicationPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'hoa_diem_chuan' },
@@ -213,7 +166,7 @@ function buildFire(): ProgressionNode[] {
       'hoa_tu_diem',
       'Tụ Diễm',
       'Hỏa Cầu tụ một điểm — sát thương cao hơn, Thiêu Đốt dễ trúng.',
-      'hoa_sac_huyet',
+      'hoa_nhiet_keo',
     ),
     capstone(
       'fire',
@@ -228,16 +181,9 @@ function buildFire(): ProgressionNode[] {
 function buildWater(): ProgressionNode[] {
   return [
     powerNode(
-      'thuy_xuyen_lan',
-      'Xuyên Lãn',
-      '+2% sát thương chiêu mỗi cấp (tối đa +10%).',
-      'water',
-      [stat('thuy_xuyen_lan', 'skillDamagePercent', 0.02)],
-    ),
-    powerNode(
       'thuy_diem_chuan',
       'Lưu Chuẩn',
-      '+2% tỉ lệ áp dục tật trạng mỗi cấp (tối đa +10% so với gốc).',
+      '+2% tỉ lệ áp dụng tật trạng mỗi cấp (tối đa +10% so với gốc).',
       'water',
       [stat('thuy_diem_chuan', 'elementApplicationPercent', 0.02)],
     ),
@@ -249,21 +195,6 @@ function buildWater(): ProgressionNode[] {
       [stat('thuy_te_dam', 'ailmentPotencyPercent', 0.02)],
     ),
     powerNode(
-      'thuy_nhiet_tri',
-      'Nhiễm Trì',
-      '+2.5% thời gian tật trạng mỗi cấp (tầng Trúc Cơ).',
-      'water',
-      [stat('thuy_nhiet_tri', 'ailmentDurationPercent', 0.025)],
-      { foundation: true, maxLevel: 4, prereqNodeId: 'thuy_luu_tich' },
-    ),
-    powerNode(
-      'thuy_lan_diem',
-      'Lãn Điểm',
-      '+2% tỉ lệ bạo kích chiêu mỗi cấp (tối đa +10%).',
-      'water',
-      [stat('thuy_lan_diem', 'criticalRate', 0.02)],
-    ),
-    powerNode(
       'thuy_luu_tich',
       'Lưu Tích',
       '+2% thời gian tật trạng mỗi cấp (tối đa +10%).',
@@ -271,12 +202,12 @@ function buildWater(): ProgressionNode[] {
       [stat('thuy_luu_tich', 'ailmentDurationPercent', 0.02)],
     ),
     powerNode(
-      'thuy_tram_xuyen',
-      'Trầm Xuyên',
-      '+2.5% sát thương chiêu mỗi cấp (tầng Trúc Cơ).',
+      'thuy_nhiet_tri',
+      'Nhiễm Trì',
+      '+2.5% thời gian tật trạng mỗi cấp (tầng Trúc Cơ).',
       'water',
-      [stat('thuy_tram_xuyen', 'skillDamagePercent', 0.025)],
-      { foundation: true, maxLevel: 4, prereqNodeId: 'thuy_xuyen_lan' },
+      [stat('thuy_nhiet_tri', 'ailmentDurationPercent', 0.025)],
+      { foundation: true, maxLevel: 4, prereqNodeId: 'thuy_luu_tich' },
     ),
     powerNode(
       'thuy_te_tham',
@@ -291,7 +222,7 @@ function buildWater(): ProgressionNode[] {
       'thuy_ngan_lien',
       'Ngưng Liễn',
       'Thủy Tiễn ngưng một điểm — sát thương cao hơn, Tê Cóng dễ trúng.',
-      'thuy_tram_xuyen',
+      'thuy_te_tham',
     ),
     capstone(
       'water',
@@ -387,33 +318,11 @@ function buildWood(): ProgressionNode[] {
 function buildMetal(): ProgressionNode[] {
   return [
     powerNode(
-      'kim_sac_ben',
-      'Sắc Bén',
-      '+2% sát thương chiêu mỗi cấp (tối đa +10%).',
-      'metal',
-      [stat('kim_sac_ben', 'skillDamagePercent', 0.02)],
-    ),
-    powerNode(
       'kim_diem_chuan',
       'Điểm Chuẩn',
-      '+2% tỉ lệ áp dục tật trạng mỗi cấp (tối đa +10% so với gốc).',
+      '+2% tỉ lệ áp dụng tật trạng mỗi cấp (tối đa +10% so với gốc).',
       'metal',
       [stat('kim_diem_chuan', 'elementApplicationPercent', 0.02)],
-    ),
-    powerNode(
-      'kim_xuyen_nhuy',
-      'Xuyên Nhuyễn',
-      '+2% tỉ lệ bạo kích mỗi cấp (tối đa +10%).',
-      'metal',
-      [stat('kim_xuyen_nhuy', 'criticalRate', 0.02)],
-    ),
-    powerNode(
-      'kim_bao_the',
-      'Bạo Thể',
-      '+2.5% sát thương bạo kích mỗi cấp (tầng Trúc Cơ).',
-      'metal',
-      [stat('kim_bao_the', 'criticalDamage', 0.025)],
-      { foundation: true, maxLevel: 4, prereqNodeId: 'kim_xuyen_nhuy' },
     ),
     powerNode(
       'kim_liet_huyet',
@@ -425,40 +334,24 @@ function buildMetal(): ProgressionNode[] {
     powerNode(
       'kim_diem_tham',
       'Điểm Thấm',
-      '+2.5% tỉ lệ áp dục tật trạng mỗi cấp (tầng Trúc Cơ).',
+      '+2.5% tỉ lệ áp dụng tật trạng mỗi cấp (tầng Trúc Cơ).',
       'metal',
       [stat('kim_diem_tham', 'elementApplicationPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'kim_diem_chuan' },
-    ),
-    powerNode(
-      'kim_xuyen_thau',
-      'Xuyên Thấu',
-      '+2.5% sát thương chiêu mỗi cấp (tầng Trúc Cơ).',
-      'metal',
-      [stat('kim_xuyen_thau', 'skillDamagePercent', 0.025)],
-      { foundation: true, maxLevel: 4, prereqNodeId: 'kim_sac_ben' },
-    ),
-    powerNode(
-      'kim_bao_diem',
-      'Bạo Điểm',
-      '+2.5% tỉ lệ bạo kích chiêu mỗi cấp (tầng Trúc Cơ).',
-      'metal',
-      [stat('kim_bao_diem', 'criticalRate', 0.025)],
-      { foundation: true, maxLevel: 4, prereqNodeId: 'kim_xuyen_nhuy' },
     ),
     capstone(
       'metal',
       'kim_tu_phong',
       'Tụ Phong',
       'Điểm Kim tụ một điểm — đòn đánh đậm hơn, Xuất Huyết dễ trúng hơn.',
-      'kim_xuyen_thau',
+      'kim_diem_tham',
     ),
     capstone(
       'metal',
       'kim_tan_phong',
       'Tán Phong',
       'Điểm Kim tán thành mũi lưỡi — quét nhiều mục tiêu, đòn nhẹ hơn, Xuất Huyết khó trúng hơn.',
-      'kim_bao_the',
+      'kim_liet_huyet',
     ),
   ]
 }
@@ -466,41 +359,11 @@ function buildMetal(): ProgressionNode[] {
 function buildEarth(): ProgressionNode[] {
   return [
     powerNode(
-      'tho_tram_luy',
-      'Trầm Lũy',
-      '+2% sát thương chiêu mỗi cấp (tối đa +10%).',
-      'earth',
-      [stat('tho_tram_luy', 'skillDamagePercent', 0.02)],
-    ),
-    powerNode(
       'tho_tran_sau',
       'Trần Sâu',
       '+2% thời gian tật trạng mỗi cấp (tối đa +10%).',
       'earth',
       [stat('tho_tran_sau', 'ailmentDurationPercent', 0.02)],
-    ),
-    powerNode(
-      'tho_cung_gioi',
-      'Củng Giới',
-      '+2% sát thương chiêu mỗi cấp (tầng Trúc Cơ).',
-      'earth',
-      [stat('tho_cung_gioi', 'skillDamagePercent', 0.02)],
-      { foundation: true, prereqNodeId: 'tho_tram_luy' },
-    ),
-    powerNode(
-      'tho_linh_the',
-      'Lĩnh Thể',
-      '+2.5% sát thương chiêu mỗi cấp (tầng Trúc Cơ).',
-      'earth',
-      [stat('tho_linh_the', 'skillDamagePercent', 0.025)],
-      { foundation: true, maxLevel: 4, prereqNodeId: 'tho_tram_luy' },
-    ),
-    powerNode(
-      'tho_tram_diem',
-      'Trầm Điểm',
-      '+2% tỉ lệ bạo kích chiêu mỗi cấp (tối đa +10%).',
-      'earth',
-      [stat('tho_tram_diem', 'criticalRate', 0.02)],
     ),
     powerNode(
       'tho_tran_cung',
@@ -510,35 +373,19 @@ function buildEarth(): ProgressionNode[] {
       [stat('tho_tran_cung', 'ailmentDurationPercent', 0.025)],
       { foundation: true, maxLevel: 4, prereqNodeId: 'tho_tran_sau' },
     ),
-    powerNode(
-      'tho_linh_chung',
-      'Lĩnh Chung',
-      '+2.5% sát thương cuối chiêu mỗi cấp (tầng Trúc Cơ).',
-      'earth',
-      [stat('tho_linh_chung', 'finalDamagePercent', 0.025)],
-      { foundation: true, maxLevel: 4, prereqNodeId: 'tho_tram_luy' },
-    ),
-    powerNode(
-      'tho_tram_bao',
-      'Trầm Bạo',
-      '+2.5% sát thương bạo kích chiêu mỗi cấp (tầng Trúc Cơ).',
-      'earth',
-      [stat('tho_tram_bao', 'criticalDamage', 0.025)],
-      { foundation: true, maxLevel: 4, prereqNodeId: 'tho_tram_diem' },
-    ),
     capstone(
       'earth',
       'tho_tu_nhan',
       'Tụ Nhán',
       'Thổ Cầu nén một điểm — sát thương cao hơn.',
-      'tho_linh_the',
+      'tho_tran_cung',
     ),
     capstone(
       'earth',
       'tho_bang_loa',
       'Đá Loạn',
       'Thổ Cầu vỡ thành mảnh đá — quét nhiều mục tiêu, đòn nhẹ hơn, Thạch Hóa yếu hơn.',
-      'tho_linh_chung',
+      'tho_tran_sau',
     ),
   ]
 }

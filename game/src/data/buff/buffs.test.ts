@@ -70,28 +70,25 @@ describe('buffs.ts — ported definitions match original values (buff2 shape)', 
       expect(b.statModifiers).toContainEqual({ stat: 'manaRegenPerTurn', percent: 0.1, domain: 'spell' })
     })
 
-    it('bang_giap — buff 6 holder-turns refresh, wardMax +50 + wardRegenPerTurn +5', () => {
-      const b = byId('bang_giap')
-
-      expect(b.lifetime.duration).toBe(6)
-      expect(b.statModifiers).toContainEqual({ stat: 'wardMax', flat: 50 })
-      expect(b.statModifiers).toContainEqual({ stat: 'wardRegenPerTurn', flat: 5 })
-    })
-
-    it('hoi_luu — buff 4 holder-turns refresh, leechPercent +0.20', () => {
-      const b = byId('hoi_luu')
-
-      expect(b.lifetime.duration).toBe(4)
-      expect(b.statModifiers).toContainEqual({ stat: 'leechPercent', flat: 0.2 })
-    })
-
-    it('cau_mang_can — ailment root 4 holder-turns refresh (bản dài của troi_chan)', () => {
-      const b = byId('cau_mang_can')
-
-      expect(b.polarity).toBe('debuff')
-      expect(b.lifetime.duration).toBe(4)
-      expect(b.stacking).toMatchObject(REFRESH)
-      expect(b.controls).toContainEqual({ type: 'root' })
+    // Phap Tu Reimagine (2026-09-26): the chain-era defs below are
+    // retired with their skills (bang_giap, hoi_luu, cau_mang_can,
+    // thanh_luy, dia_tru_bich, dia_tru_thu, the_man_<el> x5).
+    it('retired chain-era buffs are gone', () => {
+      for (const id of [
+        'bang_giap',
+        'hoi_luu',
+        'cau_mang_can',
+        'thanh_luy',
+        'dia_tru_bich',
+        'dia_tru_thu',
+        'the_man_fire',
+        'the_man_water',
+        'the_man_wood',
+        'the_man_metal',
+        'the_man_earth',
+      ]) {
+        expect(buffs.find((b) => b.id === id), `retired ${id} còn sót`).toBeUndefined()
+      }
     })
 
     it('kim_giap — buff 6 holder-turns refresh, defense +15%', () => {
@@ -107,52 +104,43 @@ describe('buffs.ts — ported definitions match original values (buff2 shape)', 
       expect(b.statModifiers).toContainEqual({ stat: 'wardRegenPerTurn', flat: 6 })
     })
 
-    it('thanh_luy — buff 8 holder-turns stack max 8, defense +6%/tầng', () => {
-      const b = byId('thanh_luy')
-
-      expect(b.lifetime.duration).toBe(8)
-      expect(b.stacking).toMatchObject({ ...ADD, maxStacks: 8 })
-      expect(b.statModifiers).toContainEqual({ stat: 'defense', percent: 0.06 })
-    })
-
-    // Engine áp/gỡ THEO ID qua theManBuffId() — id phải khớp chính xác `the_man_<element>`.
-    it('the_man_<el> ×5 — permanent, effects theo bảng §4', () => {
-      const expected: Record<string, { stat: string; flat?: number; percent?: number; domain?: 'spell' }[]> = {
-        the_man_fire: [{ stat: 'ailmentPotencyPercent', percent: 0.15 }],
-        the_man_water: [{ stat: 'manaRegenPerTurn', flat: 6, domain: 'spell' }],
-        the_man_wood: [{ stat: 'ailmentDurationPercent', percent: 0.2 }],
-        the_man_metal: [{ stat: 'criticalRate', percent: 0.08 }],
-        the_man_earth: [{ stat: 'defense', percent: 0.1 }],
-      }
-
-      for (const [id, modifiers] of Object.entries(expected)) {
+    it('phap trang windows + markers — 3-turn holder windows, bound markers', () => {
+      for (const id of ['tam_muoi', 'van_moc', 'kim_y', 'trong_nhac']) {
         const b = byId(id)
 
-        expect(b, `thiếu buff ${id}`).toBeDefined()
-        expect(b.polarity).toBe('buff')
-        expect(b.lifetime.clock).toBe('permanent')
+        expect(b, `thiếu window ${id}`).toBeDefined()
+        expect(b.kind).toBe('buff')
+        expect(b.instanceScope).toBe('per_source')
         expect(b.stacking).toMatchObject(REFRESH)
-        expect(b.statModifiers).toEqual(modifiers)
+        expect(b.lifetime).toMatchObject({ clock: 'holder_turns', duration: 3 })
+        expect(b.dispellable).toBe(false)
       }
+
+      for (const [id, source] of [
+        ['sinh_co', 'van_moc'],
+        ['sinh_co_chu', 'van_moc'],
+        ['kim_liet', 'kim_y'],
+        ['trong_the', 'trong_nhac'],
+        ['trong_the_da_bi', 'trong_nhac'],
+      ] as const) {
+        const b = byId(id)
+
+        expect(b, `thiếu marker ${id}`).toBeDefined()
+        expect(b.kind).toBe('marker')
+        expect(b.boundToSourceBuffId).toBe(source)
+      }
+
+      expect(byId('kim_liet').stacking).toMatchObject({ maxStacks: 3, onReapplyStacks: 'add' })
+      expect(byId('trong_the').stacking).toMatchObject({ maxStacks: 3, onReapplyStacks: 'add' })
+      expect(byId('sinh_co').capabilities).toContainEqual({
+        id: 'sinh_co.growth',
+        type: 'periodic_growth',
+        payload: { definitionId: 'doc_can', stacks: 1, consume: true },
+      })
     })
 
-    it('dia_tru_bich — wardMax +100 + wardRegenPerTurn +8, no retaliate stat', () => {
-      const b = byId('dia_tru_bich')
-
-      expect(b.statModifiers).toContainEqual({ stat: 'wardMax', flat: 100 })
-      expect(b.statModifiers).toContainEqual({ stat: 'wardRegenPerTurn', flat: 8 })
-      expect(b.statModifiers!.some((m) => m.stat === 'wardBreakDamagePercent')).toBe(false)
-    })
-
-    it('dia_tru_thu — wardMax +40 + wardBreakDamagePercent +0.25', () => {
-      const b = byId('dia_tru_thu')
-
-      expect(b.statModifiers).toContainEqual({ stat: 'wardMax', flat: 40 })
-      expect(b.statModifiers).toContainEqual({ stat: 'wardBreakDamagePercent', flat: 0.25 })
-    })
-
-    it('all 66 definitions (6 inline + 16 legacy + 1 Kiem Pho + 14 thuan-he + 5 talent + 3 boss + 12 the_tu + 5 reaction + 4 companion) are present', () => {
-      expect(buffs).toHaveLength(66)
+    it('all 64 definitions (6 inline + 16 legacy + 1 Kiem Pho + 3 thuan-he + 5 talent + 3 boss + 12 the_tu + 5 reaction + 4 companion + 9 trang) are present', () => {
+      expect(buffs).toHaveLength(64)
     })
   })
 

@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { PHAP_TU_NODES } from './PhapTuNodes'
 import { SKILLS } from '../skill/Skills'
 
-// Three-path design (2026-09-25) -- contract pins for the Phap Tu
-// basic-skill lane: skill-scoped power only, <=+10% per direction per
-// maxed node, realm ring gates, minor-tier level gates, mutex capstones.
+// Phap Tu Reimagine (2026-09-26 spec sec.1.4 + openQuestion 5) -- the
+// basic lane keeps ONLY skill-owned ailment channels
+// (elementApplicationPercent / ailmentPotencyPercent /
+// ailmentDurationPercent) plus the mutex capstone pairs; generic-stat
+// nodes are cut. Kept contract pins: <=+10% per direction per maxed
+// node, realm ring gates, minor-tier level gates, capstone mutex.
 
 const BASIC_IDS = new Set([
   'hoa_cau_thuat',
@@ -26,24 +29,20 @@ const ELEMENT_BY_CAPSTONE_PREFIX = new Map(
 
 const BASIC_LANE_IDS = PHAP_TU_NODES.filter((n) =>
   [
-    'hoa_sac_nhiet', 'hoa_diem_chuan', 'hoa_an_sau', 'hoa_nhiet_keo', 'hoa_sac_huyet',
-    'hoa_diem_bao', 'hoa_bao_nhiet', 'hoa_diem_tham',
-    'thuy_xuyen_lan', 'thuy_diem_chuan', 'thuy_te_dam', 'thuy_nhiet_tri',
-    'thuy_lan_diem', 'thuy_luu_tich', 'thuy_tram_xuyen', 'thuy_te_tham',
+    'hoa_diem_chuan', 'hoa_an_sau', 'hoa_nhiet_keo', 'hoa_diem_tham',
+    'thuy_diem_chuan', 'thuy_te_dam', 'thuy_luu_tich', 'thuy_nhiet_tri', 'thuy_te_tham',
     'moc_doc_sau', 'moc_doc_dien', 'moc_doc_tham',
     'moc_doc_man', 'moc_doc_nhuan', 'moc_doc_tu', 'moc_doc_am', 'moc_doc_nhiem',
-    'kim_sac_ben', 'kim_diem_chuan', 'kim_xuyen_nhuy', 'kim_bao_the',
-    'kim_liet_huyet', 'kim_diem_tham', 'kim_xuyen_thau', 'kim_bao_diem',
-    'tho_tram_luy', 'tho_tran_sau', 'tho_cung_gioi', 'tho_linh_the',
-    'tho_tram_diem', 'tho_tran_cung', 'tho_linh_chung', 'tho_tram_bao',
+    'kim_diem_chuan', 'kim_liet_huyet', 'kim_diem_tham',
+    'tho_tran_sau', 'tho_tran_cung',
   ].includes(n.id) || BASIC_CAPSTONE_IDS.includes(n.id),
 )
 
-describe('PhapTu basic lane — ruled contract', () => {
+describe('PhapTu basic lane — reimagined contract', () => {
   it('every basic-lane node is leveled and chains to the element root', () => {
-    // Glyph shape (ruling #2): trunk nodes prereq the element root
-    // (*_linh_ngo) directly; ring/capstone nodes hang off a same-element
-    // basic-lane node, so every chain resolves to the root.
+    // Glyph shape: trunk nodes prereq the element root (*_linh_ngo)
+    // directly; ring/capstone nodes hang off a same-element basic-lane
+    // node, so every chain resolves to the root.
     const laneIds = new Set(BASIC_LANE_IDS.map((n) => n.id))
 
     for (const node of BASIC_LANE_IDS) {
@@ -72,20 +71,16 @@ describe('PhapTu basic lane — ruled contract', () => {
     }
   })
 
-  it('all basic-lane stats stay skill-scoped (no character stats)', () => {
-    const skillScoped = new Set([
-      'skillDamagePercent',
-      'finalDamagePercent',
+  it('all basic-lane stats stay on the ailment channel set (reimagine rule)', () => {
+    const ailmentChannels = new Set([
       'elementApplicationPercent',
       'ailmentPotencyPercent',
       'ailmentDurationPercent',
-      'criticalRate',
-      'criticalDamage',
     ])
 
     for (const node of BASIC_LANE_IDS) {
       for (const mod of node.effect.statModifiers ?? []) {
-        expect(skillScoped.has(mod.stat), `${node.id} ${mod.stat}`).toBe(true)
+        expect(ailmentChannels.has(mod.stat), `${node.id} ${mod.stat}`).toBe(true)
       }
     }
   })
@@ -118,11 +113,11 @@ describe('PhapTu basic lane — ruled contract', () => {
     // open (foundation gate), techniqueRank only caps levels inside an
     // open node - trunk nodes carry rank gates but never the realm gate.
     const EXPECTED_OUTER = new Set([
-      'hoa_nhiet_keo', 'hoa_sac_huyet', 'hoa_bao_nhiet', 'hoa_diem_tham',
-      'thuy_nhiet_tri', 'thuy_tram_xuyen', 'thuy_te_tham',
+      'hoa_nhiet_keo', 'hoa_diem_tham',
+      'thuy_nhiet_tri', 'thuy_te_tham',
       'moc_doc_tham', 'moc_doc_man', 'moc_doc_am', 'moc_doc_nhiem',
-      'kim_bao_the', 'kim_diem_tham', 'kim_xuyen_thau', 'kim_bao_diem',
-      'tho_cung_gioi', 'tho_linh_the', 'tho_tran_cung', 'tho_linh_chung', 'tho_tram_bao',
+      'kim_diem_tham',
+      'tho_tran_cung',
       ...BASIC_CAPSTONE_IDS,
     ])
 
@@ -171,25 +166,6 @@ describe('PhapTu basic lane — ruled contract', () => {
     }
   })
 
-  it('The-economy lanes open at foundation_establishment', () => {
-    for (const node of PHAP_TU_NODES) {
-      const isThe =
-        (node.effect.turnSkillResourceModifiers?.length ?? 0) > 0 ||
-        node.effect.theCapPerLevel !== undefined
-
-      // Realm-reward grants (the_thuc_tinh) are realm-gated by the grant
-      // record itself -- the foundation prereq only governs purchases.
-      if (isThe && !node.rewardOnly) {
-        expect(
-          node.prerequisites?.some(
-            (p) => p.kind === 'realm' && p.realmId === 'foundation_establishment',
-          ),
-          node.id,
-        ).toBe(true)
-      }
-    }
-  })
-
   it('level gates never exceed maxLevel (techniqueRank discipline)', () => {
     for (const node of BASIC_LANE_IDS) {
       for (const gate of node.levelGates ?? []) {
@@ -197,5 +173,4 @@ describe('PhapTu basic lane — ruled contract', () => {
       }
     }
   })
-
 })

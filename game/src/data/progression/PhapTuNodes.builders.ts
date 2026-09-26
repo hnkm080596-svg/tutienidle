@@ -6,14 +6,16 @@ import type {
 } from '../../core/progression/ProgressionNode'
 import type { StatModifier } from '../../core/stats/StatCalculator'
 import { SPELL_KIT_IDS } from '../skill/Skills'
-import { PHAP_TU_ULTIMATE_IDS } from '../skill/PhapTuUltimates'
 import { ELEMENT_LABELS } from '../../core/element/ElementLabels'
 
-// Phap Tu Reimagined (2026-09-15 plan, Task 6) — node builders for the
-// new tree: 5 mutex element roots (committed atomically by
-// GameManagerProgressionOps.selectSpellPathElement, NOT public purchase),
-// growth + unlock lanes, The lanes, and route-tagged specialization
-// (3 'dot' + 3 'no' + truong_the tagged 'no' per element).
+// Phap Tu Reimagine (2026-09-26 spec sec.1.4) — the branch is trimmed to
+// skill-owned mechanics only: element root (unlocks the basic), the
+// ailment mastery growth (ailment = the basic's own channel, ruling
+// F14), and the realm-gated linh_ngo_<special> unlock (grants the Phap
+// Trang special + the Linh Luc Ho The cap). Retired with the old design:
+// minor_<el>_intensity / <el>_damage_mastery generic-stat growths,
+// tu_the/truong_the The lanes, all routeTag'd dot/no specializations,
+// and linh_ngo_<godUlt> (no ultimate slot in the new kit).
 
 /** Goc hanh — id giu nguyen tu cay cu de presentation/da ton tai giu ten. */
 export const PHAP_TU_ELEMENT_ROOT_IDS: Record<ElementType, string> = {
@@ -24,7 +26,8 @@ export const PHAP_TU_ELEMENT_ROOT_IDS: Record<ElementType, string> = {
   earth: 'tho_linh_ngo',
 }
 
-export const TRUONG_THE_CAP_PER_LEVEL = 10
+/** Linh Luc Ho The cap granted by linh_ngo_<special> (spec D9; TBD). */
+export const LINH_NGO_HO_THE_CAP = 0.25
 
 function stat(
   nodeId: string,
@@ -54,7 +57,7 @@ function elementRoot(element: ElementType): ProgressionNode {
   return {
     id: rootId,
     name: `${ELEMENT_LABELS[element]} Linh Ngộ`,
-    description: `Mở hành ${ELEMENT_LABELS[element]} — chọn nguyên tố Pháp Tu (nguyên tử với hướng, qua selectSpellPathElement).`,
+    description: `Mở hành ${ELEMENT_LABELS[element]} — chọn nguyên tố Pháp Tu (nguyên tử, qua selectSpellPathElement).`,
     type: 'major',
     role: 'root',
     insightCost: 0,
@@ -70,7 +73,6 @@ function growth(
   description: string,
   element: ElementType,
   modifiers: StatModifier[],
-  options: { maxLevel?: number; upgradeCost?: { base: number; perLevel: number }; prereqs?: NodePrerequisite[]; routeTag?: 'dot' | 'no'; levelGates?: ProgressionNode['levelGates'] } = {},
 ): ProgressionNode {
   return {
     id,
@@ -79,71 +81,30 @@ function growth(
     type: 'minor',
     role: 'growth',
     insightCost: 1,
-    maxLevel: options.maxLevel ?? 5,
-    upgradeCost: options.upgradeCost ?? { base: 1, perLevel: 2 },
-    levelGates: options.levelGates,
-    prerequisites: options.prereqs ?? [
+    maxLevel: 5,
+    upgradeCost: { base: 1, perLevel: 2 },
+    prerequisites: [
       { kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS[element] },
     ],
     elementTag: element,
-    routeTag: options.routeTag,
     effect: { statModifiers: modifiers },
   }
 }
 
-function unlockNode(
-  skillId: string,
-  name: string,
-  description: string,
-  element: ElementType,
-  prereqNodeId: string,
-  grantSkillIds?: readonly string[],
-): ProgressionNode {
-  return {
-    id: `linh_ngo_${skillId}`,
-    name,
-    description,
-    type: 'major',
-    role: 'keystone',
-    insightCost: 2,
-    prerequisites: [{ kind: 'node', nodeId: prereqNodeId }],
-    elementTag: element,
-    effect: { unlocksSkillIds: [...(grantSkillIds ?? [skillId])] },
-  }
-}
-
 export function buildElementBranch(element: ElementType): ProgressionNode[] {
-  const [basicId, specialId, ultimateId] = SPELL_KIT_IDS[element]
-  const godUltId = PHAP_TU_ULTIMATE_IDS[element]
+  const specialId = SPELL_KIT_IDS[element][1]
   const label = ELEMENT_LABELS[element]
 
   return [
     elementRoot(element),
 
-    // Power growth - elementPower tuyen tinh 10 cap. M-QI-06 authored
-    // cap gates: deep mastery paces behind technique rank (mechanism-
-    // proving set, not a balance pass).
-    growth(
-      `minor_${element}_intensity`,
-      `${label} Lực`,
-      `+2 ${element}Power ${label}/cấp.`,
-      element,
-      [stat(`minor_${element}_intensity`, `${element}Power`, 2, 2)],
-      {
-        maxLevel: 10,
-        upgradeCost: { base: 1, perLevel: 3 },
-        levelGates: [
-          { atLevel: 6, prerequisite: { kind: 'techniqueRank', rank: 3 } },
-          { atLevel: 9, prerequisite: { kind: 'techniqueRank', rank: 6 } },
-        ],
-      },
-    ),
-
-    // Ailment-leaning growth (shared — ap dung bat ke route).
+    // Ailment mastery growth (kept -- ailment channels are skill-owned:
+    // the element basic is the path's only own-source ailment producer,
+    // ruling F14).
     growth(
       `${element}_ailment_mastery`,
       `${label} Chưởng`,
-      `+4% ailment potency, +3% ailment duration ${label}/cấp.`,
+      `+4% uy lực tật trạng, +3% thời gian tật trạng ${label}/cấp.`,
       element,
       [
         stat(`${element}_ailment_mastery_pot`, 'ailmentPotencyPercent', 0.04, 0.04),
@@ -151,148 +112,28 @@ export function buildElementBranch(element: ElementType): ProgressionNode[] {
       ],
     ),
 
-    // Damage-leaning growth (shared).
-    growth(
-      `${element}_damage_mastery`,
-      `${label} Sát`,
-      `+5% skill damage ${label}/cấp.`,
-      element,
-      [stat(`${element}_damage_mastery`, 'skillDamagePercent', 0.05, 0.05)],
-    ),
-
-    // Special unlock — gate realm Kim Dan. Grants the kit's remaining
-    // slots together (special + chain-E ultimate): spec §7 has only two
-    // unlock nodes per element, and the ult's BASE form must be castable
-    // without the phap-tuong node (spec §3.3), so the ult cannot ride on
-    // `linh_ngo_<godUlt>` itself.
+    // Special unlock (spec sec.1.4) — realm gate Truc Co
+    // (foundation_establishment): grants the Phap Trang special and the
+    // Linh Luc Ho The damage-reduction cap in one purchase. No god-ult
+    // node follows it; the kit ends at the special.
     {
-      ...unlockNode(
-        specialId,
-        `Linh Ngộ ${label} Đặc Biệt`,
-        `Mở khóa kỹ năng đặc biệt ${label}.`,
-        element,
-        PHAP_TU_ELEMENT_ROOT_IDS[element],
-        [specialId, ultimateId],
-      ),
-      prerequisites: [
-        { kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS[element] },
-        { kind: 'realm', realmId: 'golden_core' },
-      ],
-    },
-
-    // Phap Tuong (god-ult) unlock - sau special. M-QI-06 authored
-    // unlock gate: god-ult mastery requires technique rank 5 (the
-    // realm gate arrives transitively through linh_ngo_<special>).
-    {
-      ...unlockNode(
-        godUltId,
-        `Pháp Tướng ${label}`,
-        `Mở khóa Pháp Tướng ${label} — cổng cường hóa ultimate.`,
-        element,
-        `linh_ngo_${specialId}`,
-      ),
-      insightCost: 3,
-      prerequisites: [
-        { kind: 'node', nodeId: `linh_ngo_${specialId}` },
-        { kind: 'techniqueRank', rank: 5 },
-      ],
-    },
-
-    // Tu The — The gain lane (basic + special +1/cap).
-    {
-      id: `tu_the_${element}`,
-      name: `Tụ Thế ${label}`,
-      description: `+1 Thế mỗi lần cast trúng của basic + special ${label}/cấp.`,
-      type: 'minor',
-      role: 'growth',
-      insightCost: 1,
-      maxLevel: 5,
-      upgradeCost: { base: 1, perLevel: 2 },
-      // Three-path design ruling #5 (2026-09-25) — The nodes open at
-      // Truc Co (the pool awakens there; spend stays Kim Dan-gated), so
-      // buying Thế gain before that realm was a dead purchase.
+      id: `linh_ngo_${specialId}`,
+      name: `Linh Ngộ ${label} Đặc Biệt`,
+      description: `Mở khóa ${label} đặc biệt — Pháp Trạng ${label} và Linh Lực Hộ Thể.`,
+      type: 'major',
+      role: 'keystone',
+      insightCost: 2,
       prerequisites: [
         { kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS[element] },
         { kind: 'realm', realmId: 'foundation_establishment' },
       ],
       elementTag: element,
       effect: {
-        turnSkillResourceModifiers: [
-          { skillId: basicId, theGainOnLandedCast: 1 },
-          { skillId: specialId, theGainOnLandedCast: 1 },
+        unlocksSkillIds: [specialId],
+        statModifiers: [
+          stat(`linh_ngo_${specialId}`, 'linhLucHoTheCap', LINH_NGO_HO_THE_CAP),
         ],
       },
     },
-
-    // Truong The — route 'no', cap The +10/cap.
-    {
-      id: `truong_the_${element}`,
-      name: `Trữ Thế ${label}`,
-      description: `+${TRUONG_THE_CAP_PER_LEVEL} Thế tối đa/cấp (hướng Nộ).`,
-      type: 'minor',
-      role: 'specialization',
-      insightCost: 1,
-      maxLevel: 5,
-      upgradeCost: { base: 1, perLevel: 2 },
-      prerequisites: [
-        { kind: 'node', nodeId: PHAP_TU_ELEMENT_ROOT_IDS[element] },
-        { kind: 'realm', realmId: 'foundation_establishment' },
-      ],
-      elementTag: element,
-      routeTag: 'no',
-      effect: { theCapPerLevel: TRUONG_THE_CAP_PER_LEVEL },
-    },
-
-    // Route 'dot' specialization — 3 nodes.
-    growth(
-      `${element}_dot_potency`,
-      `Đốt Hỏa ${label}`,
-      `+6% ailment potency/cấp (hướng Đốt).`,
-      element,
-      [stat(`${element}_dot_potency`, 'ailmentPotencyPercent', 0.06, 0.06)],
-      { routeTag: 'dot' },
-    ),
-    growth(
-      `${element}_dot_duration`,
-      `Đốt Diễn ${label}`,
-      `+5% ailment duration/cấp (hướng Đốt).`,
-      element,
-      [stat(`${element}_dot_duration`, 'ailmentDurationPercent', 0.05, 0.05)],
-      { routeTag: 'dot' },
-    ),
-    growth(
-      `${element}_dot_chance`,
-      `Đốt Vân ${label}`,
-      `+4% element application/cấp (hướng Đốt).`,
-      element,
-      [stat(`${element}_dot_chance`, 'elementApplicationPercent', 0.04, 0.04)],
-      { routeTag: 'dot' },
-    ),
-
-    // Route 'no' specialization — 3 nodes (ngoai truong_the).
-    growth(
-      `${element}_no_crit`,
-      `Nộ Tâm ${label}`,
-      `+2% crit rate/cấp (hướng Nộ).`,
-      element,
-      [stat(`${element}_no_crit`, 'criticalRate', 0.02, 0.02)],
-      { routeTag: 'no' },
-    ),
-    growth(
-      `${element}_no_critdmg`,
-      `Nộ Phá ${label}`,
-      `+6% crit damage/cấp (hướng Nộ).`,
-      element,
-      [stat(`${element}_no_critdmg`, 'criticalDamage', 0.06, 0.06)],
-      { routeTag: 'no' },
-    ),
-    growth(
-      `${element}_no_damage`,
-      `Nộ Sát ${label}`,
-      `+5% skill damage/cấp (hướng Nộ).`,
-      element,
-      [stat(`${element}_no_damage`, 'skillDamagePercent', 0.05, 0.05)],
-      { routeTag: 'no' },
-    ),
   ]
 }

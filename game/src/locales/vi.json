@@ -103,16 +103,6 @@
         "upgradeCost": "Nâng cấp · {cost} Cảm Ngộ",
         "otherBranch": "Khác"
       },
-      "routes": {
-        "aria": "Hướng Pháp Tu",
-        "dot": "Đốt",
-        "no": "Nộ"
-      },
-      "routeSwitch": {
-        "title": "Đổi Hướng Pháp Tu",
-        "body": "Chuyển sang hướng {route}? Node hướng cũ về 0 — lấy lại {regain} Cảm Ngộ, mất {lose}.{clawback}",
-        "confirm": "Đổi Hướng"
-      },
       "clawback": {
         "summary": " Thu hồi thêm: {detail}.",
         "skills": "mất {n} kỹ năng",
@@ -167,7 +157,6 @@
           "realm": "Mở ở cảnh giới {realm}",
           "element": "Cần mở khoá Hành liên quan",
           "elementMismatch": "Thuộc Hành {element} — đã chọn Hành khác",
-          "routeMismatch": "Chỉ lĩnh ngộ ở hướng {route}",
           "wayMismatch": "Thuộc một hướng tu luyện khác",
           "excludesNode": "Xung khắc với: {name}",
           "nodeCount": "Cần lĩnh ngộ {required}/{total} node liên quan",
@@ -180,13 +169,7 @@
           "techniqueGrade": "Cần tâm pháp đạt phẩm {grade}",
           "skillUpgrade": "Cần nâng kỹ năng liên quan"
         },
-        "upgradeGateHeader": "Nâng cấp bị chặn:",
-        "routePick": {
-          "title": "Chọn Hướng Pháp Tu",
-          "hint": "Hành đã chọn không thể đổi. Hướng có thể đổi ngoài chiến đấu — node hướng cũ về 0, hoàn lại 75% Cảm Ngộ đã bỏ ra.",
-          "dotDesc": "Đốt — trạng thái nguyên tố dồn dập; tuyệt chiêu thức tỉnh kích nổ toàn bộ trạng thái còn lại.",
-          "noDesc": "Nộ — sát thương trực tiếp và bạo kích; bạo kích nạp Thế, tuyệt chiêu thức tỉnh đốt toàn bộ Thế."
-        }
+        "upgradeGateHeader": "Nâng cấp bị chặn:"
       },
       "elementTabs": {
         "aria": "Chọn Hành Pháp Tu"
@@ -1001,13 +984,13 @@
       "label": "Huyết Phá Bạo Phát",
       "description": "Sát thương bùng nổ 1 lần khi Huyết Phá chạm đủ 5 tầng."
     },
-    "theGainPerLinkBonus": {
-      "label": "Thế Tích Cộng/Liên Kết",
-      "description": "Cộng thêm vào lượng Thế tích mỗi liên kết chuỗi hoàn tất (kể cả kết thúc)."
+    "phapThe": {
+      "label": "Pháp Thế",
+      "description": "Mỗi công kích trúng tích 1 Thế; đạt 5 Thế, công kích tiếp theo xuất chiêu Pháp Thế."
     },
-    "theMaxBonus": {
-      "label": "Trần Thế Cộng Thêm",
-      "description": "Cộng thêm vào trần Thế tối đa; Ultimate chỉ nổ khi đạt trần mới này."
+    "linhLucHoTheCap": {
+      "label": "Linh Lực Hộ Thể",
+      "description": "Trần tỷ lệ sát thương do Linh Lực Hộ Thể gánh."
     }
   },
   "announce": {
