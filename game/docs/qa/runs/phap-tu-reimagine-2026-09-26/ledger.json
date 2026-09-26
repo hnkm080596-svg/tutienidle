@@ -102,7 +102,7 @@
     "EV-PTR-CLO-1"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "84267d47",
    "closedAt": "2026-09-26T18:58:00Z",
@@ -172,7 +172,7 @@
     "EV-PTR-CLO-1"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "84267d47",
    "closedAt": "2026-09-26T18:58:00Z",
@@ -242,7 +242,7 @@
     "EV-PTR-CLO-1"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "84267d47",
    "closedAt": "2026-09-26T18:58:00Z",
@@ -306,7 +306,7 @@
     "EV-PTR-CLO-1"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "84267d47",
    "closedAt": "2026-09-26T18:58:00Z",
@@ -370,7 +370,7 @@
     "EV-PTR-CLO-1"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "84267d47",
    "closedAt": "2026-09-26T18:58:00Z",
@@ -434,7 +434,7 @@
     "EV-PTR-CLO-1"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "84267d47",
    "closedAt": "2026-09-26T18:58:00Z",
@@ -498,7 +498,7 @@
     "EV-PTR-CLO-1"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "84267d47",
    "closedAt": "2026-09-26T18:58:00Z",
@@ -562,7 +562,7 @@
     "EV-PTR-CLO-1"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "84267d47",
    "closedAt": "2026-09-26T18:58:00Z",
@@ -626,7 +626,7 @@
     "EV-PTR-CLO-1"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "84267d47",
    "closedAt": "2026-09-26T18:58:00Z",
@@ -690,7 +690,7 @@
     "EV-PTR-CLO-1"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "84267d47",
    "closedAt": "2026-09-26T18:58:00Z",
@@ -754,7 +754,7 @@
     "EV-PTR-CLO-1"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "84267d47",
    "closedAt": "2026-09-26T18:58:00Z",
@@ -818,7 +818,7 @@
     "EV-PTR-CLO-1"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "84267d47",
    "closedAt": "2026-09-26T18:58:00Z",
@@ -888,7 +888,7 @@
     "EV-PTR-CLO-1"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "84267d47",
    "closedAt": "2026-09-26T18:58:00Z",
@@ -958,7 +958,7 @@
     "EV-PTR-CLO-2"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "cleanB batch",
    "closedAt": "2026-09-26T19:56:00Z",
@@ -1077,7 +1077,7 @@
     "EV-PTR-CLO-2"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "cleanB batch",
    "closedAt": "2026-09-26T19:56:00Z",
@@ -1141,7 +1141,7 @@
     "EV-PTR-CLO-2"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "cleanB batch",
    "closedAt": "2026-09-26T19:56:00Z",
@@ -1205,7 +1205,7 @@
     "EV-PTR-CLO-2"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "cleanB batch",
    "closedAt": "2026-09-26T19:56:00Z",
@@ -1275,7 +1275,7 @@
     "EV-PTR-CLO-2"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "cleanB batch",
    "closedAt": "2026-09-26T19:56:00Z",
@@ -1339,7 +1339,7 @@
     "EV-PTR-CLO-2"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "cleanB batch",
    "closedAt": "2026-09-26T19:56:00Z",
@@ -1403,7 +1403,7 @@
     "EV-PTR-CLO-2"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "cleanB batch",
    "closedAt": "2026-09-26T19:56:00Z",
@@ -1473,7 +1473,7 @@
     "EV-PTR-CLO-2"
    ],
    "duplicateOf": null,
-   "rejectionReason": null,
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271",
    "exception": null,
    "fixedInRevision": "cleanB batch",
    "closedAt": "2026-09-26T19:56:00Z",
@@ -1594,6 +1594,507 @@
    "verificationEvidenceIds": [],
    "duplicateOf": null,
    "exception": null
+  },
+  {
+   "id": "F-PTR-27",
+   "title": "CURRENT_SAVE_VERSION=85 collides with master's published v85 (THE TU BETA); branch must claim v86",
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/services/save/saveVersion.ts",
+     "symbolOrSection": "CURRENT_SAVE_VERSION",
+     "revision": "f7f18d43",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanC AUT",
+   "counterexample": "Branch claims save v85 while master already published v85 for the_tu-beta tree redesign — a pt-reim save stamped 85 would pass master's shape validation as the-tu-beta shape.",
+   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "actual": "Branch claims save v85 while master already published v85 for the_tu-beta tree redesign — a pt-reim save stamped 85 would pass master's shape validation as the-tu-beta shape.",
+   "expected": "Version bump above master's latest published version.",
+   "rootCause": "Branch claims save v85 while master already published v85 for the_tu-beta tree redesign — a pt-reim save stamped 85 would pass master's shape validation as the-tu-beta shape.",
+   "rootClass": "VERSION_COLLISION",
+   "subsystem": "save",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites — swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "Bumped CURRENT_SAVE_VERSION to 86; v86 comment covers only this branch's retirement (spell_pathway route key). Restored master's v85 block (was missing in branch file).",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "REAL_DEFECT",
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271"
+  },
+  {
+   "id": "F-PTR-28",
+   "title": "saveVersion v85 comment cites phantom fields (rerollBank/diversionBank/opsHistory/kiem_tu killed/beasts) that exist nowhere on branch or master",
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/services/save/saveVersion.ts",
+     "symbolOrSection": "v85 comment block",
+     "revision": "f7f18d43",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanC AUT",
+   "counterexample": "Changelog comment describes retirements from sibling branches' fields that never existed — only spell_pathway.route is a real delta on this branch.",
+   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "actual": "Changelog comment describes retirements from sibling branches' fields that never existed — only spell_pathway.route is a real delta on this branch.",
+   "expected": "Comment covers only fields this branch actually changes.",
+   "rootCause": "Changelog comment describes retirements from sibling branches' fields that never existed — only spell_pathway.route is a real delta on this branch.",
+   "rootClass": "DOC_DRIFT",
+   "subsystem": "save",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites — swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "Rewrote the entry as v86 covering only spell_pathway route-key retirement.",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "REAL_DEFECT",
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271"
+  },
+  {
+   "id": "F-PTR-29",
+   "title": "hoTheBridge re-implements DR without clampStatValue + stale HoTheStats cast workaround",
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/presentation/bridges/hoTheBridge.ts",
+     "symbolOrSection": "makeHoTheReader",
+     "revision": "f7f18d43",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanC AUT",
+   "counterexample": "Tooltip computes cap*mpRatio raw, bypassing the canonical clampStatValue consumption-site contract; local HoTheStats type predates StatTypes:54 carrying linhLucHoTheCap.",
+   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "actual": "Tooltip computes cap*mpRatio raw, bypassing the canonical clampStatValue consumption-site contract; local HoTheStats type predates StatTypes:54 carrying linhLucHoTheCap.",
+   "expected": "Canonical stat read + clamp at consumption site.",
+   "rootCause": "Tooltip computes cap*mpRatio raw, bypassing the canonical clampStatValue consumption-site contract; local HoTheStats type predates StatTypes:54 carrying linhLucHoTheCap.",
+   "rootClass": "CONVENTION_BYPASS",
+   "subsystem": "presentation",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites — swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "Removed HoTheStats workaround (entity.stats.linhLucHoTheCap direct); dr now clampStatValue('linhLucHoTheCap', cap*mpRatio).",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "REAL_DEFECT",
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271"
+  },
+  {
+   "id": "F-PTR-30",
+   "title": "theBarBridge hardcodes THE_BAR_MAX for max/threshold/lit instead of entity.maxThe + empowerment.theThreshold",
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/presentation/bridges/theBarBridge.ts",
+     "symbolOrSection": "makeTheBarReader",
+     "revision": "f7f18d43",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanC AUT",
+   "counterexample": "HUD caps/lits at flat SPELL_PATH_MAX_THE even if participant maxThe is raised or empowerment carries a different threshold — hardcode instead of the canonical reads.",
+   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "actual": "HUD caps/lits at flat SPELL_PATH_MAX_THE even if participant maxThe is raised or empowerment carries a different threshold — hardcode instead of the canonical reads.",
+   "expected": "max = battleEntity.maxThe ?? THE_BAR_MAX; threshold = empowerment.theThreshold ?? max.",
+   "rootCause": "HUD caps/lits at flat SPELL_PATH_MAX_THE even if participant maxThe is raised or empowerment carries a different threshold — hardcode instead of the canonical reads.",
+   "rootClass": "CANONICAL_READ_MISS",
+   "subsystem": "presentation",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites — swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "max/threshold now read entity cap + empowerment threshold with THE_BAR_MAX fallback.",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "REAL_DEFECT",
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271"
+  },
+  {
+   "id": "F-PTR-31",
+   "title": "LandedConsequences ordering: non-damaging lane appends LAST (post-apply) vs damaging lane splices into deal_damage.onLanded — latent authoring trap",
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "actionable": false,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/skilldef/LegacySkillAdapter.ts",
+     "symbolOrSection": "for_each_target inner ops",
+     "revision": "f7f18d43",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanC AUT",
+   "counterexample": "Non-damaging enemy-scope lane appends landedConsequences after ailments inside for_each_target; damaging lane binds them inside deal_damage.onLanded — different code shapes for the same post-landing-per-target semantics.",
+   "status": "REJECTED_WITH_PROOF",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "actual": "Non-damaging enemy-scope lane appends landedConsequences after ailments inside for_each_target; damaging lane binds them inside deal_damage.onLanded — different code shapes for the same post-landing-per-target semantics.",
+   "expected": "Consistent post-landing-per-target firing order.",
+   "rootCause": "Non-damaging enemy-scope lane appends landedConsequences after ailments inside for_each_target; damaging lane binds them inside deal_damage.onLanded — different code shapes for the same post-landing-per-target semantics.",
+   "rootClass": "AUTHORING_TRAP",
+   "subsystem": "skilldef",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites — swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "none — REJECTED: semantics are consistent (both fire per-target after application); only code shape differs. Comment already documents the binding.",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "NON_ACTIONABLE",
+   "rejectionReason": "Both lanes fire the consequence per-target after that target's application (damage hit / ailment apply). The differing mechanism is inherent to the two op shapes; the comment documents the binding. No behavioral defect."
+  },
+  {
+   "id": "F-PTR-32",
+   "title": "Dormant entity.maxThe write in TurnBattleAdapter (resolvedSpecialUltimate.maxThe) — adapter stamps a field its sole phap-tu caller omits",
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "actionable": false,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/game/TurnBattleAdapter.ts",
+     "symbolOrSection": "participant build",
+     "revision": "f7f18d43",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanC AUT",
+   "counterexample": "entity.maxThe stamped when resolvedSpecialUltimate.maxThe present; the spell-path resolver omits maxThe so the write is dormant for this path.",
+   "status": "REJECTED_WITH_PROOF",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "actual": "entity.maxThe stamped when resolvedSpecialUltimate.maxThe present; the spell-path resolver omits maxThe so the write is dormant for this path.",
+   "expected": "Remove or keep only if a live caller supplies it.",
+   "rootCause": "entity.maxThe stamped when resolvedSpecialUltimate.maxThe present; the spell-path resolver omits maxThe so the write is dormant for this path.",
+   "rootClass": "DORMANT_CODE",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites — swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "none — REJECTED: the write is LIVE for the_tu_an kit (TheTuSkills resolveSpecialUltimate produces maxThe = MAX_THE + node bonus). Not dormant.",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "NON_ACTIONABLE",
+   "rejectionReason": "TheTuSkills.ts:260 resolves specialUltimate.maxThe = MAX_THE + mods.maxTheBonus — the adapter write is live for the_tu_an. The spell-path caller omitting it is by design (flat cap)."
+  },
+  {
+   "id": "F-PTR-33",
+   "title": "Stale doc: TurnSkillAction empowerment comment still cites retired linh_ngo_<godUltId> node ownership; TBS comment claims pool burns via consumesAllThe for empowered path",
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnSkillAction.ts",
+     "symbolOrSection": "empowerment field doc",
+     "revision": "f7f18d43",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "empowerment swap comment",
+     "revision": "f7f18d43",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanC AUT",
+   "counterexample": "Comments describe the retired Task-10 linh_ngo node gate and assert the pool always burns at commit — Phap The variants attach via element commit and do NOT burn (spec D17).",
+   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "actual": "Comments describe the retired Task-10 linh_ngo node gate and assert the pool always burns at commit — Phap The variants attach via element commit and do NOT burn (spec D17).",
+   "expected": "Comments describe the element-commit attach + opt-in burn.",
+   "rootCause": "Comments describe the retired Task-10 linh_ngo node gate and assert the pool always burns at commit — Phap The variants attach via element commit and do NOT burn (spec D17).",
+   "rootClass": "DOC_DRIFT",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites — swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "Rewrote both comments: empowerment now documented as element-commit attach (spec D17); burn clarified as opt-in per-def (Phap The variants keep the pool).",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "REAL_DEFECT",
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271"
+  },
+  {
+   "id": "F-PTR-34",
+   "title": "theGainOnLandedCast +1 The stamped on EVERY kit-resolved basic including generic fallbacks — wider than spec D2 (element basic only)",
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": "resolveBasic stamp",
+     "revision": "f7f18d43",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanC AUT",
+   "counterexample": "stamped = {...kitResolved, theGainOnLandedCast: 1} is returned even when element === undefined — a generic fallback basic would mint +1 The.",
+   "status": "FIXED_PENDING_PROOF",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "actual": "stamped = {...kitResolved, theGainOnLandedCast: 1} is returned even when element === undefined — a generic fallback basic would mint +1 The.",
+   "expected": "+1 The only on the element-committed basic (spec D2).",
+   "rootCause": "stamped = {...kitResolved, theGainOnLandedCast: 1} is returned even when element === undefined — a generic fallback basic would mint +1 The.",
+   "rootClass": "SPEC_SCOPE_DRIFT",
+   "subsystem": "player",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites — swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "Stamp narrowed to element !== undefined — generic fallback basics no longer mint The.",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "REAL_DEFECT",
+   "rejectionReason": "n/a — actionable finding fixed @cfbcc271"
+  },
+  {
+   "id": "F-PTR-35",
+   "title": "Dead union member 'spell.empowered_ult' in PathCapability — no producer emits it",
+   "state": {
+    "productStateId": "d0529c93f7a1f03138b20412b55534dcc90b1f8bdecbdeeca31ab8d6a55535fa",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "actionable": false,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathKit.ts",
+     "symbolOrSection": "PathCapability union",
+     "revision": "f7f18d43",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanC AUT",
+   "counterexample": "Union member survives the empowered-ult retirement; hasStaticPathCapability test pins it false.",
+   "status": "REJECTED_WITH_PROOF",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [],
+   "actual": "Union member survives the empowered-ult retirement; hasStaticPathCapability test pins it false.",
+   "expected": "Remove dead member or keep as pinned retirement marker.",
+   "rootCause": "Union member survives the empowered-ult retirement; hasStaticPathCapability test pins it false.",
+   "rootClass": "DEAD_TYPE",
+   "subsystem": "player",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites — swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "none — REJECTED: CultivationPathSystem.test.ts:492 pins hasStaticPathCapability('spell.empowered_ult') === false — the member is a test-pinned retirement marker, not residue.",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "NON_ACTIONABLE",
+   "rejectionReason": "The union member is intentionally retained: the test asserts it is never emitted, documenting the retirement contract. Removing it would erase the guard."
   }
  ],
  "evidence": [
@@ -2002,6 +2503,45 @@
    ],
    "novelAttackIds": [],
    "status": "SEALED"
+  },
+  {
+   "id": "REV-PTR-AUT-C1",
+   "state": {
+    "productStateId": "a305ed3583896a70e967dcd09c9cc43ead1e648a6476f28de4b9dc2abc104225",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 4,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-65af5115900c4ff389533a66e427eb44",
+   "contextId": "ctx-65af5115",
+   "model": "swe-2",
+   "role": "architecture-reviewer",
+   "inputBundleHash": "a305ed3583896a70e967dcd09c9cc43ead1e648a6476f28de4b9dc2abc104225",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-27T00:40:00Z",
+   "sealedAt": "2026-09-27T00:52:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-PTR-27",
+    "F-PTR-28",
+    "F-PTR-29",
+    "F-PTR-30",
+    "F-PTR-31",
+    "F-PTR-32",
+    "F-PTR-33",
+    "F-PTR-34",
+    "F-PTR-35"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
   }
  ],
  "cycles": [
@@ -2255,6 +2795,39 @@
     "retirement sweep includes test fixtures and engine-lane duplicates of canonical helpers"
    ],
    "capabilityDelta": "residue sweep incl. test surfaces"
+  },
+  {
+   "effectiveFromRun": null,
+   "version": 1,
+   "escapeReason": "AUT-C flagged dormant-code/ordering/dead-union patterns; adjudication showed all three are intentional (test-pinned retirement, live the_tu_an path, consistent post-landing semantics).",
+   "promotionEvidenceIds": [],
+   "exclusions": [],
+   "capabilityDelta": "residue sweep incl. test surfaces",
+   "id": "L-PTR-AUTC-REJ",
+   "originatingRun": "phap-tu-reimagine-2026-09-26",
+   "applicability": [
+    "fixture deps of retired providers",
+    "clamp/cap duplication beside canonical economy helpers"
+   ],
+   "recurrenceFindingIds": [],
+   "guidance": null,
+   "policyVersion": null,
+   "preventionEvidenceIds": [],
+   "missedInvariantIds": [],
+   "incidentEvidenceIds": [],
+   "qualifiedBy": [],
+   "status": "CAPTURED",
+   "proposedProtection": [
+    "retirement sweep includes test fixtures and engine-lane duplicates of canonical helpers"
+   ],
+   "findingIds": [
+    "F-PTR-31",
+    "F-PTR-32",
+    "F-PTR-35"
+   ],
+   "triggerType": "FALSE_POSITIVE",
+   "supersedes": null,
+   "rootClass": "REJECTED"
   }
  ],
  "messages": [],
