@@ -43,7 +43,7 @@ export function makeHoTheReader(gameManager: GameManager): HoTheReader {
       return null
     }
 
-    const cap = entity.stats.linhLucHoTheCap ?? 0
+    const cap = clampStatValue('linhLucHoTheCap', entity.stats.linhLucHoTheCap)
 
     if (cap <= 0) {
       return null
@@ -52,7 +52,7 @@ export function makeHoTheReader(gameManager: GameManager): HoTheReader {
     const maxMp = entity.stats.maxMp
     const mpRatio = maxMp > 0 ? Math.min(1, Math.max(0, entity.currentMp / maxMp)) : 0
 
-    return { cap, dr: clampStatValue('linhLucHoTheCap', cap * mpRatio) }
+    return { cap, dr: cap * mpRatio }
   }
 }
 

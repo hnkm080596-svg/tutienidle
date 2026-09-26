@@ -201,6 +201,7 @@ export class SkillResolver {
       if (
         input.payloadOnly !== true &&
         input.subcastIndex === 0 &&
+        input.commitsCast !== false &&
         empowerment !== undefined &&
         input.entityQuery.currentThe(input.sourceId) >= empowerment.theThreshold
       ) {
