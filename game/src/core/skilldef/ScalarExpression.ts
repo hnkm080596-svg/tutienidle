@@ -197,6 +197,10 @@ function evaluateValueQuery(query: SkillValueQuery, ctx: SkillReadContext): numb
   }
 }
 
+// Dormant parity surface: the executor consumes the resolved-condition
+// evaluator (evaluateResolvedCondition on ResolvedSkillPlan), so this
+// entry point has no production callers -- condition arms are kept in
+// step with the resolved lane for completeness.
 export function evaluateSkillCondition(
   condition: SkillCondition,
   ctx: SkillReadContext,

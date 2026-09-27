@@ -72,9 +72,6 @@ export interface HitResolveOptions {
 
   knockbackDistance?: number
 
-  /** false = secondary target in an AOE (gets secondaryPercent). */
-  isPrimary: boolean
-
   /** Ban Menh Phap Bao - attribution for the applyActionHit dispatch milestone. */
   origin?: CombatActionOrigin
 

@@ -278,6 +278,20 @@ function adaptOne(
       ? { resourceType: 'mana' as const, percentOfMax: def.resourceCostPercentOfMax }
       : undefined
 
+  // spec D8/F10 -- the two cost forms are mutually exclusive on one def.
+  // On the mana surface the percent branch silently wins, hiding a flat
+  // authoring bug -- report it as a defect instead of picking silently.
+  if (
+    def.resourceCostPercentOfMax !== undefined &&
+    percentCostIsManaApplicable &&
+    def.resourceCost !== undefined &&
+    def.resourceCost > 0
+  ) {
+    report(
+      `${reportPrefix}.resourceCost(flat resourceCost is silently dropped when resourceCostPercentOfMax is co-authored on a mana resourceType -- the forms are mutually exclusive)`,
+    )
+  }
+
   return {
     kind: 'active',
     id: def.id as SkillId,

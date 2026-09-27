@@ -1489,7 +1489,9 @@ export class TurnBattleSystem {
             ? actor.special.skill
             : chargedId !== undefined && actor.ultimate?.skill.id === chargedId
               ? actor.ultimate.skill
-              : undefined
+              : chargedId !== undefined && actor.basic?.id === chargedId
+                ? actor.basic
+                : undefined
 
         actor.pendingChargedSkillId = undefined
 
