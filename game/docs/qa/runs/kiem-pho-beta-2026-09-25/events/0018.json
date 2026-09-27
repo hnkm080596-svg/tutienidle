@@ -1,0 +1,51 @@
+{
+  "outcome": "QA_ACCEPTED_WITH_EXCEPTIONS",
+  "detail": "human-accepted: F-KP-CB-C1",
+  "clauses": [
+    {
+      "id": "C1-identity",
+      "ok": true,
+      "reason": "all final evidence binds the declared state"
+    },
+    {
+      "id": "C2-census-coverage",
+      "ok": true,
+      "reason": "census + coverage complete"
+    },
+    {
+      "id": "C3-no-open",
+      "ok": false,
+      "reason": "exception F-KP-CB-C1"
+    },
+    {
+      "id": "C4-final-gates",
+      "ok": true,
+      "reason": "final gates green"
+    },
+    {
+      "id": "C5-sequential",
+      "ok": true,
+      "reason": "sequential phase reviews present"
+    },
+    {
+      "id": "C6-clean-pair",
+      "ok": true,
+      "reason": "Clean A/B complete and independent"
+    },
+    {
+      "id": "C7-mutation-corpus",
+      "ok": true,
+      "reason": "mutation + corpus satisfied"
+    },
+    {
+      "id": "C8-terminal-check",
+      "ok": true,
+      "reason": "independent terminal verifier sealed"
+    },
+    {
+      "id": "C9-readiness",
+      "ok": true,
+      "reason": "readiness not required for this run (v1 or opt-out)"
+    }
+  ]
+}

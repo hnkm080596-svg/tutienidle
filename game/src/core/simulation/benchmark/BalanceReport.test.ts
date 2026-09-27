@@ -417,7 +417,7 @@ describe('kit-surface declaration (real recipes)', () => {
   })
 
   it('kiem_tu_hien classifies a higher-realm combo origin as other_skill', () => {
-    // tam_tram [C,C,C] needs orb_chem (realmIndex 2) - unreachable at
+    // liet_ngan [C,C,C] needs orb_chem (realmIndex 2) - unreachable at
     // qi_refining. If kitSkillIds regressed to the full 37-combo list
     // this assertion fails (kit_skill would top instead).
     const kiemHien = BASELINE_RECIPES.find((r) => r.id === 'kiem_tu_hien')!
@@ -426,7 +426,7 @@ describe('kit-surface declaration (real recipes)', () => {
         seed: 1,
         result: fakeResult({
           outcome: 'victory', fightingSteps: 100, playerDealt: 100,
-          mechanic: { bySkillId: { tam_tram: 80, orb_dam: 20 } },
+          mechanic: { bySkillId: { liet_ngan: 80, orb_dam: 20 } },
         }),
       },
     ])

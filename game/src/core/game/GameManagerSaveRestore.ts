@@ -80,6 +80,9 @@ export interface GameManagerSaveRestoreDeps {
   reconcileRealmRewards: (player: PlayerData) => void
   // F-PT-INT-2 - stale spec-claim reconcile (claim gate pre-dates saves)
   reconcileSpecClaims: (player: PlayerData) => void
+  // F-NK-AUT-7 (2026-09-25) - way grantedNodeIds replay (logic lives on
+  // realmAdvanceOps; idempotent grant at every restore).
+  reconcileWayGrants: (player: PlayerData) => void
   // Session rng seam (F-W-7) - GameManager-owned injectable stream so
   // offline alchemy settle rolls pin in deterministic harnesses.
   sessionRng: () => number
@@ -481,6 +484,13 @@ export class GameManagerSaveRestore {
     if (bodyPlayer) {
       this.deps.reconcileRealmRewards(bodyPlayer)
       this.deps.reconcileSpecClaims(bodyPlayer)
+    }
+
+    // F-NK-AUT-7 - way grants replay BEFORE quest lifecycle so
+    // grantedNodeIds ownership exists when eligibility is evaluated;
+    // idempotent, runs on EVERY restore (not only the offline branch).
+    if (bodyPlayer) {
+      this.deps.reconcileWayGrants(bodyPlayer)
     }
 
     // R8.1 (AR-09) - activation is a lifecycle command, not a UI read:

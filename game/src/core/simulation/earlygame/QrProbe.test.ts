@@ -69,7 +69,7 @@ describe('qr probe', () => {
       })
       if (outcome === 'victory') break
       // spend insight on kiem_pho nodes + allocate all attribute points
-      for (const id of ['orb_dam_1', 'orb_dam_2', 'orb_dam_4']) {
+      for (const id of ['thich_can']) {
         s.purchaseNode(id)
       }
       while (s.player.attributePoints > 0) {

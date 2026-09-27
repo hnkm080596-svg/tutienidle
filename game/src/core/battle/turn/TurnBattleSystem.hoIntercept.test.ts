@@ -9,23 +9,22 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
-import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { buffs as LIVE_BUFFS } from '../../../data/buff/buffs'
 import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
-import { TurnSkillPlanRuntime } from './TurnSkillPlanRuntime'
-import { PHAN_KICH } from '../../../data/skill/TheTuSkills'
-import { HO_MON_MARKER, PHAN_CHINH_BUFF, PHAN_CHINH_MAXHP_RATIO, PHAN_CHINH_TAKEN_RATIO } from '../../../data/buff/TheTuBuffs'
-import { THE_PROC_GAIN } from '../../the-tu/TheEconomy'
-import type { ReactiveProcPayload } from '../../proc/ProcCapabilities'
+import { PHAN_KICH, buildTheTuAnKit } from '../../../data/skill/TheTuSkills'
+import { PHAN_CHAN_BUFF, PHAN_CHAN_BASE_RATIO } from '../../../data/buff/TheTuBuffs'
+import { THE_PROC_COST, UNG_TRE_GAUGE_PENALTY, REACTION_DEBT_CAP } from '../../the-tu/TheEconomy'
 import type { EntityVitalsChangedEvent } from '../../combat/EntityVitalsSystem'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 
-// The Tu Reimagined (spec 6.2.1, plan Task 17) — the Ho intercept window:
+// Ung The beta (design Parts V-VI + XI) - the Ho intercept window:
 // between an enemy-side declaration and impact, ONE player-side
-// protector (nearest to the attacker, carrying the ho_mon marker, able
-// to pay the proc cost) rolls protectChance; on success it replaces the
-// declared target and the hit resolves fully vs the protector.
+// protector (nearest to the attacker, carrying the ho_mon marker,
+// OBSERVING the attacker, free of hard CC, not Qua The) rolls
+// protectChance; on success ONLY it pays The + commits Ung Tre debt and
+// replaces the declared target - the hit resolves fully vs the
+// protector (Ho can kill; the rescued ally is safe regardless).
 
 const NO_MITIGATION = {
   evasionRate: 0,
@@ -78,7 +77,7 @@ const ENEMY_AOE: TurnSkillDefinition = {
   cooldownTurns: 0,
   damage: { kind: 'physical', multiplier: 1 },
   // A column band across every lane (all_lanes, default columnRadius 1)
-  // — semantically multi-target regardless of how many entries survive
+  // - semantically multi-target regardless of how many entries survive
   // in declared.affected at impact time.
   targeting: { shape: 'all_lanes' },
 }
@@ -95,12 +94,21 @@ function makeParticipant(id: string, entity: CombatEntity, speed: number, priori
   return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
-/** A protector participant carrying a live ho_mon marker. */
-function withHoMon(f: Fixture, p: TurnBattleParticipant, protectChance: number, currentThe: number): TurnBattleParticipant {
+/** A protector participant carrying a live ho_mon marker + Tham focus. */
+function withHoMon(
+  f: Fixture,
+  p: TurnBattleParticipant,
+  protectChance: number,
+  currentThe: number,
+  opts: { observed?: boolean } = {},
+): TurnBattleParticipant {
   p.entity.baseStats = asBaseStats({ ...p.entity.baseStats, protectChance })
   p.entity.stats = { ...p.entity.stats, protectChance }
   p.entity.currentThe = currentThe
   f.runtime.applyBuff('ho_mon', p)
+  if (opts.observed !== false) {
+    p.thamTargetId = 'enemy'
+  }
   return p
 }
 
@@ -117,8 +125,8 @@ interface Fixture {
   roll: () => number
 }
 
-/** Enemy at (0,0); protected ally at (0,2); protector at (5,2) — near. */
-function makeFixture(): Fixture {
+/** Enemy at (0,0); protected ally at (0,2); protector at (5,2) - near. */
+function makeFixture(opts: { interceptWardRatio?: number } = {}): Fixture {
   const enemy = createCombatant({ id: 'enemy', type: 'enemy', currentHp: 100_000, maxHp: 100_000, x: 0, row: 0 }, 10)
   const squishy = createCombatant({ id: 'squishy', type: 'player', currentHp: 100_000, maxHp: 100_000, x: 0, row: 2 }, 5)
   const protector = createCombatant({ id: 'protector', type: 'player', currentHp: 100_000, maxHp: 100_000, x: 5, row: 2 }, 5)
@@ -131,18 +139,27 @@ function makeFixture(): Fixture {
   const battle: TurnBattle = { players: [squishyP, protectorP], enemies: [enemyP], state: 'fighting' }
   const eventBus = new EventBus()
   const combat = new CombatSystem(eventBus)
-  // The kit-clone seam (buildTheTuAnKit) bakes the authored success
-  // gain onto the ho_mon marker clone -- the bare registry def carries
-  // none, so the fixture swaps in the same baked clone under its own id.
-  const hoMonKit = structuredClone(HO_MON_MARKER)
-  for (const capability of hoMonKit.capabilities ?? []) {
-    if (capability.type === 'reactive_proc') {
-      ;(capability.payload as ReactiveProcPayload).theGainOnSuccess = THE_PROC_GAIN
-    }
+  // When Ho Bich is owned, the kit-clone seam bakes
+  // grantsWardToOriginalTarget onto the ho_mon marker clone -- the test
+  // swaps in the same baked clone under its own id (registry defs never
+  // mutate).
+  const defs = LIVE_BUFFS.slice()
+  if (opts.interceptWardRatio !== undefined) {
+    const baked = buildTheTuAnKit(
+      {
+        observationGainBonus: 0,
+        phanKinhArmorPierce: 0,
+        interceptWardRatio: opts.interceptWardRatio,
+        evadeCounterMultiplierBonus: 0,
+        danTheBonus: 0,
+      },
+      { quanThe: true, quanTheCoreLevel: 1 },
+    )
+    const hoMonClone = baked.basic.grantsBuffsAtBuild!.find((def) => def.id === 'ho_mon')!
+    const index = defs.findIndex((def) => def.id === 'ho_mon')
+    defs[index] = hoMonClone
   }
-  const registry = makeTestBuffRegistry(
-    LIVE_BUFFS.map((def) => (def.id === 'ho_mon' ? hoMonKit : def)),
-  )
+  const registry = makeTestBuffRegistry(defs)
   const f: Fixture = {
     battle,
     enemyP,
@@ -162,7 +179,7 @@ function makeFixture(): Fixture {
   return f
 }
 
-/** A declared enemy action against the squishy — the pre-impact state. */
+/** A declared enemy action against the squishy - the pre-impact state. */
 function declaredAgainst(fixture: Fixture, affected: TurnBattleParticipant[]): TurnDeclaredAction {
   return {
     actorId: 'enemy',
@@ -190,7 +207,7 @@ function declaredAgainst(fixture: Fixture, affected: TurnBattleParticipant[]): T
 }
 
 function system(f: Fixture, rng?: () => number): TurnBattleSystem {
-  // The rng seam is the LAST constructor param — engine rolls draw from
+  // The rng seam is the LAST constructor param - engine rolls draw from
   // it; proc rolls draw from the runtime's rng, which reads f.roll, so
   // a scripted closure here must feed BOTH seams (same stream, same
   // consumption order as the old single-seam construction).
@@ -213,10 +230,11 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-describe('Ho intercept window (spec 6.2.1)', () => {
-  it('a successful protectChance roll substitutes the protector as the hit target', () => {
+describe('Ho intercept window (Ung The beta)', () => {
+  it('a successful protectChance roll substitutes the protector — pays on success only, +1 debt', () => {
     const f = makeFixture()
-    withHoMon(f, f.protectorP, 1, 15)
+    withHoMon(f, f.protectorP, 1, THE_PROC_COST)
+    f.protectorP.actionGauge = 500
     vi.spyOn(Math, 'random').mockReturnValue(0) // proc roll succeeds
 
     const declared = declaredAgainst(f, [f.squishyP])
@@ -228,14 +246,88 @@ describe('Ho intercept window (spec 6.2.1)', () => {
     expect(targetIds).toEqual(['protector'])
     expect(f.protectorP.entity.currentHp).toBeLessThan(100_000)
     expect(f.squishyP.entity.currentHp).toBe(100_000)
-    // Economy: -15 attempt, +20 success credit.
-    expect(f.protectorP.entity.currentThe).toBe(20)
+    // Success-only payment: -15, no income credit; +1 Ung Tre debt and
+    // the authored gauge penalty on the NEXT natural action.
+    expect(f.protectorP.entity.currentThe).toBe(0)
+    expect(f.protectorP.reactionDebt).toBe(1)
+    expect(f.protectorP.actionGauge).toBe(500 - UNG_TRE_GAUGE_PENALTY)
+  })
+
+  it('an UNOBSERVED attacker opens no window — mark or Quan The required', () => {
+    const f = makeFixture()
+    withHoMon(f, f.protectorP, 1, 100, { observed: false })
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const declared = declaredAgainst(f, [f.squishyP])
+    system(f).applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBeUndefined()
+    expect(f.squishyP.entity.currentHp).toBeLessThan(100_000)
+    expect(f.protectorP.entity.currentThe).toBe(100)
+  })
+
+  it('Quan The active: an unmarked attacker still satisfies observation', () => {
+    const f = makeFixture()
+    withHoMon(f, f.protectorP, 1, 100, { observed: false })
+    f.runtime.applyBuff('quan_the', f.protectorP)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const declared = declaredAgainst(f, [f.squishyP])
+    system(f).applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBe(true)
+    expect(f.squishyP.entity.currentHp).toBe(100_000)
+  })
+
+  it('Qua The (debt at cap) closes the window — no roll, no payment', () => {
+    const f = makeFixture()
+    withHoMon(f, f.protectorP, 1, 100)
+    f.protectorP.reactionDebt = REACTION_DEBT_CAP
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const declared = declaredAgainst(f, [f.squishyP])
+    system(f).applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBeUndefined()
+    expect(f.squishyP.entity.currentHp).toBeLessThan(100_000)
+    expect(f.protectorP.entity.currentThe).toBe(100)
+    expect(f.protectorP.reactionDebt).toBe(REACTION_DEBT_CAP)
+  })
+
+  it('hard CC (stun) closes the window — no roll, no payment', () => {
+    const f = makeFixture()
+    withHoMon(f, f.protectorP, 1, 100)
+    f.runtime.applyBuff('choang', f.protectorP)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const declared = declaredAgainst(f, [f.squishyP])
+    system(f).applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBeUndefined()
+    expect(f.squishyP.entity.currentHp).toBeLessThan(100_000)
+    expect(f.protectorP.entity.currentThe).toBe(100)
+  })
+
+  it('an invalid window consumes NO proc RNG — the gate sits before the roll lane', () => {
+    const f = makeFixture()
+    // Unaffordable + unobserved: both ride caller-side gates, so
+    // resolveReactiveProcs never runs - observable contract: no payment,
+    // no substitution, no queue.
+    withHoMon(f, f.protectorP, 1, 5, { observed: false })
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const declared = declaredAgainst(f, [f.squishyP])
+    system(f).applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBeUndefined()
+    expect(f.protectorP.entity.currentThe).toBe(5)
+    expect(f.battle.queuedFollowUps ?? []).toHaveLength(0)
   })
 
   it('only the NEAREST protector rolls — a broke near-protector means no fallback to the far one', () => {
     const f = makeFixture()
     // Near protector at (5,2) cannot pay; far protector at (9,2) is rich
-    // with guaranteed chance — spec D5: one substitution attempt only.
+    // with guaranteed chance - spec D5: one substitution attempt only.
     withHoMon(f, f.protectorP, 1, 5)
 
     const far = createCombatant({ id: 'far', type: 'player', currentHp: 100_000, maxHp: 100_000, x: 9, row: 2 }, 5)
@@ -248,13 +340,13 @@ describe('Ho intercept window (spec 6.2.1)', () => {
 
     expect(declared.intercepted).toBeUndefined()
     expect(f.squishyP.entity.currentHp).toBeLessThan(100_000)
-    // The far protector's pool was never touched — no attempt, no gain.
+    // The far protector's pool was never touched - no attempt at all.
     expect(farP.entity.currentThe).toBe(100)
   })
 
-  it('insufficient The on the nearest protector -> no roll, no substitution', () => {
+  it('insufficient The on the nearest protector -> no roll, no payment, no substitution', () => {
     const f = makeFixture()
-    withHoMon(f, f.protectorP, 1, 14) // below the 15 cost
+    withHoMon(f, f.protectorP, 1, THE_PROC_COST - 1)
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     const declared = declaredAgainst(f, [f.squishyP])
@@ -262,12 +354,12 @@ describe('Ho intercept window (spec 6.2.1)', () => {
 
     expect(declared.intercepted).toBeUndefined()
     expect(f.squishyP.entity.currentHp).toBeLessThan(100_000)
-    expect(f.protectorP.entity.currentThe).toBe(14)
+    expect(f.protectorP.entity.currentThe).toBe(THE_PROC_COST - 1)
   })
 
-  it('a failed roll still pays the cost and does not substitute', () => {
+  it('a FAILED roll pays nothing and does not substitute — success-only cost', () => {
     const f = makeFixture()
-    withHoMon(f, f.protectorP, 0.5, 15)
+    withHoMon(f, f.protectorP, 0.5, THE_PROC_COST)
     vi.spyOn(Math, 'random').mockReturnValue(0.99) // roll fails
 
     const declared = declaredAgainst(f, [f.squishyP])
@@ -275,83 +367,8 @@ describe('Ho intercept window (spec 6.2.1)', () => {
 
     expect(declared.intercepted).toBeUndefined()
     expect(f.squishyP.entity.currentHp).toBeLessThan(100_000)
-    expect(f.protectorP.entity.currentThe).toBe(0) // cost paid, no gain
-  })
-
-  it('a statically unviable cast never opens the window — no roll, no drain, no ward', () => {
-    // NOVA-1: a cast the adapter cannot route stamps castBlocked at the
-    // lane gate -- the Ho window must not charge the protector's proc
-    // cost (and mint the ward) on that phantom hit. Repeated dead casts
-    // would otherwise drain the protector pool and farm wards.
-    const f = makeFixture()
-    withHoMon(f, f.protectorP, 1, 100)
-    vi.spyOn(Math, 'random').mockReturnValue(0)
-    vi.spyOn(TurnSkillPlanRuntime.prototype, 'unsupportedFor').mockReturnValue(['unsupported op'])
-
-    const declared = declaredAgainst(f, [f.squishyP])
-    system(f).applyActionImpact(f.battle, declared)
-
-    expect(declared.intercepted).toBeUndefined()
-    expect(declared.interceptedBy).toBeUndefined()
-    expect(declared.affected).toEqual([f.squishyP])
-    expect(f.protectorP.entity.currentThe).toBe(100) // never charged
-    expect(f.squishyP.entity.currentWard).toBe(0) // no ward minted
-  })
-
-  it('a dead-payload declare (action == null) never opens the window', () => {
-    // NOVA-1: a non-chargeResolved declare with action:null is a dead
-    // cast (NULL_ACTION / cc-blocked declare) -- the window must stay
-    // closed, charging nothing and minting no ward on a phantom hit.
-    const f = makeFixture()
-    withHoMon(f, f.protectorP, 1, 100)
-    vi.spyOn(Math, 'random').mockReturnValue(0)
-
-    const declared = declaredAgainst(f, [f.squishyP])
-    declared.action = null
-    system(f).applyActionImpact(f.battle, declared)
-
-    expect(declared.intercepted).toBeUndefined()
-    expect(f.protectorP.entity.currentThe).toBe(100) // never charged
-    expect(f.squishyP.entity.currentWard).toBe(0) // no ward minted
-  })
-
-  it('a whiffed cast (empty affected) never opens the window', () => {
-    // NOVA-1: the exact class that previously paid the protector's
-    // proc cost on a phantom hit -- no surviving target means no
-    // swing, so no roll, no drain, no ward.
-    const f = makeFixture()
-    withHoMon(f, f.protectorP, 1, 100)
-    vi.spyOn(Math, 'random').mockReturnValue(0)
-
-    const declared = declaredAgainst(f, [])
-    system(f).applyActionImpact(f.battle, declared)
-
-    expect(declared.intercepted).toBeUndefined()
-    expect(f.protectorP.entity.currentThe).toBe(100) // never charged
-  })
-
-  it('a charge-init declare (chargeTurns>0, !isCharging) never opens the window', () => {
-    // NOVA-1: the charge discriminant -- a cast that only DECLARES the
-    // charge produces no swing this turn, so the window stays closed.
-    const f = makeFixture()
-    withHoMon(f, f.protectorP, 1, 100)
-    vi.spyOn(Math, 'random').mockReturnValue(0)
-
-    const declared = declaredAgainst(f, [f.squishyP])
-    declared.skillId = ENEMY_CHARGED.id
-    declared.action = {
-      skillId: ENEMY_CHARGED.id,
-      skill: ENEMY_CHARGED,
-      damage: ENEMY_CHARGED.damage,
-      targeting: ENEMY_CHARGED.targeting,
-      slot: null,
-    }
-    declared.scaledDamage = ENEMY_CHARGED.damage ?? null
-    system(f).applyActionImpact(f.battle, declared)
-
-    expect(declared.intercepted).toBeUndefined()
-    expect(f.protectorP.entity.currentThe).toBe(100) // never charged
-    expect(f.squishyP.entity.currentWard).toBe(0) // no ward minted
+    expect(f.protectorP.entity.currentThe).toBe(THE_PROC_COST) // untouched
+    expect(f.protectorP.reactionDebt ?? 0).toBe(0)
   })
 
   it('multi-target (AoE) actions never open the window', () => {
@@ -394,6 +411,41 @@ describe('Ho intercept window (spec 6.2.1)', () => {
     expect(f.squishyP.entity.currentThe).toBe(100)
   })
 
+  it('a LETHAL intercepted hit kills the protector — the rescued ally is safe regardless', () => {
+    const f = makeFixture()
+    withHoMon(f, f.protectorP, 1, 100)
+    f.protectorP.entity.currentHp = 10 // x1 hit (might 100) exceeds it
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const declared = declaredAgainst(f, [f.squishyP])
+    system(f).applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBe(true)
+    expect(f.protectorP.entity.alive).toBe(false)
+    expect(f.squishyP.entity.currentHp).toBe(100_000)
+    // Commit already happened - debt stands, no rollback on death.
+    expect(f.protectorP.reactionDebt).toBe(1)
+  })
+
+  it('Ho Bich: a committed Ho grants the rescued ally a ho_ve ward scaled on protector Max HP — it survives protector death', () => {
+    const f = makeFixture({ interceptWardRatio: 0.15 })
+    withHoMon(f, f.protectorP, 1, 100)
+    f.protectorP.entity.currentHp = 10 // the intercept is lethal
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const declared = declaredAgainst(f, [f.squishyP])
+    system(f).applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBe(true)
+    expect(f.protectorP.entity.alive).toBe(false)
+    expect(f.squishyP.entity.currentHp).toBe(100_000)
+
+    const hoVe = f.runtime.buffs.getForTarget('squishy').find((inst) => inst.definitionId === 'ho_ve')
+    expect(hoVe).toBeDefined()
+    expect(hoVe!.sourceId).toBe('protector')
+    expect(f.squishyP.entity.externalWard).toEqual({ sourceId: 'protector', amount: 100_000 * 0.15 })
+  })
+
   it('intercept -> dodge -> counter chain: composite context carries intercepted + evaded', () => {
     const f = makeFixture()
     // Protector intercepts, dodges, and its phan_mon onEvade proc queues
@@ -427,6 +479,9 @@ describe('Ho intercept window (spec 6.2.1)', () => {
       targetIds: ['enemy'],
       triggerContext: { origin: 'enemy_hit', intercepted: true, outcome: 'evaded' },
     })
+    // Two commits (Ho + Phan) - debt 2, pool -30.
+    expect(f.protectorP.reactionDebt).toBe(2)
+    expect(f.protectorP.entity.currentThe).toBe(70)
   })
 })
 
@@ -435,14 +490,14 @@ describe('Ho intercept — semantic single-target', () => {
     const f = makeFixture()
     f.enemyP.basic = ENEMY_AOE
     withHoMon(f, f.protectorP, 1, 100)
-    // Injected rng pinned low — the proc roll WOULD succeed if the
+    // Injected rng pinned low - the proc roll WOULD succeed if the
     // window opened. The hit on the squishy lands by construction
     // (accuracy 100 vs evasion 0 -> hit chance 1.0), so the global
     // Math.random needs no spy.
 
     // The AoE anchors on the squishy (column 0); the protector sits at
     // column 5 outside the columnRadius-1 band, so the declare collects
-    // a single affected entry — the degenerate case an affected-count
+    // a single affected entry - the degenerate case an affected-count
     // gate misreads as a single-target hit.
     const sys = system(f, () => 0)
     const declared = sys.declareActorAction(f.battle, f.enemyP)
@@ -456,7 +511,7 @@ describe('Ho intercept — semantic single-target', () => {
     expect(targetIds).toEqual(['squishy'])
     expect(f.squishyP.entity.currentHp).toBeLessThan(100_000)
     expect(f.protectorP.entity.currentHp).toBe(100_000)
-    expect(f.protectorP.entity.currentThe).toBe(100) // no attempt cost paid
+    expect(f.protectorP.entity.currentThe).toBe(100) // no payment
   })
 
   it('a charge-resolved single-target hit DOES open the window — the protector eats it', () => {
@@ -464,7 +519,7 @@ describe('Ho intercept — semantic single-target', () => {
     f.enemyP.special = { skill: ENEMY_CHARGED, remainingCooldownTurns: 0 }
     withHoMon(f, f.protectorP, 1, 100)
 
-    // Injected rng pinned low — the intercept proc roll succeeds. The
+    // Injected rng pinned low - the intercept proc roll succeeds. The
     // substituted hit lands on the protector by construction (hit
     // chance 1.0), so the global Math.random needs no spy.
     const sys = system(f, () => 0)
@@ -475,7 +530,7 @@ describe('Ho intercept — semantic single-target', () => {
     expect(f.enemyP.chargingTurnsRemaining).toBe(1)
 
     // Charge-resolve turn: the declared targets materialize into BOTH
-    // chargeTargetIds and affected — the intercept window and the
+    // chargeTargetIds and affected - the intercept window and the
     // charged hit lane share one consumed target list (the regression
     // this guards: affected used to stay EMPTY here, so the window
     // could never see a charged hit).
@@ -490,7 +545,7 @@ describe('Ho intercept — semantic single-target', () => {
     expect(declared.intercepted).toBe(true)
     expect(declared.interceptedBy).toBe('protector')
     expect(declared.affected).toEqual([f.protectorP])
-    // Substitution must rewrite the charged target set — that is the
+    // Substitution must rewrite the charged target set - that is the
     // array the charge-resolve hit loop iterates.
     expect(declared.chargeTargetIds).toEqual(['protector'])
     expect(targetIds).toEqual(['protector'])
@@ -501,14 +556,12 @@ describe('Ho intercept — semantic single-target', () => {
   it('a reactive enemy action (actionSource: counter) never opens the window (INV-9)', () => {
     const f = makeFixture()
     withHoMon(f, f.protectorP, 1, 100)
-    // Injected rng pinned low — the roll would succeed if the window
+    // Injected rng pinned low - the roll would succeed if the window
     // opened; INV-9 must keep it closed.
 
     // A queued enemy-side reactive entry declares through the same
-    // TurnDeclaredAction shape but carries a reactive actionSource —
-    // INV-9 bars it from opening new reactive windows. The evade /
-    // ally-action / taken windows all gate on this field; the intercept
-    // window must too.
+    // TurnDeclaredAction shape but carries a reactive actionSource -
+    // INV-9 bars it from opening new reactive windows.
     const declared: TurnDeclaredAction = {
       ...declaredAgainst(f, [f.squishyP]),
       isFollowUpBypass: true,
@@ -522,7 +575,7 @@ describe('Ho intercept — semantic single-target', () => {
     expect(targetIds).toEqual(['squishy'])
     expect(f.squishyP.entity.currentHp).toBeLessThan(100_000)
     expect(f.protectorP.entity.currentHp).toBe(100_000)
-    expect(f.protectorP.entity.currentThe).toBe(100) // no attempt cost paid
+    expect(f.protectorP.entity.currentThe).toBe(100) // no payment
   })
 })
 
@@ -530,8 +583,7 @@ describe('Ho intercept — semantic single-target', () => {
 // bare CombatSystem.resolveActionHit inside applyActionImpact, skipping
 // the shared resolveDeclaredHit() pipeline: no defender onImpactLanded
 // reactive window (Phan counter), no phan_chinh Reflection, and no
-// appliesAilments application. Evaded charged hits DID work (the lane
-// called resolveEvadeWindow itself) - the defect was taken-side only.
+// appliesAilments application.
 describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () => {
   /** Drives a charge-init + charge-resolve declare/apply pair; returns the resolve-turn declaration. */
   function driveChargedHit(f: Fixture, sys: TurnBattleSystem): TurnDeclaredAction {
@@ -550,32 +602,27 @@ describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () =
     withHoMon(f, f.protectorP, 1, 100)
 
     // phan_mon on the same protector - a taken hit rolls its
-    // onImpactLanded counter (counterChance hard-caps at
-    // REACTIVE_CHANCE_CAP = 0.6, so the pinned-0 roll succeeds).
+    // onImpactLanded counter.
     f.protectorP.entity.baseStats = asBaseStats({ ...f.protectorP.entity.baseStats, counterChance: 1 })
     f.protectorP.entity.stats = { ...f.protectorP.entity.stats, counterChance: 1 }
     f.runtime.applyBuff('phan_mon', f.protectorP)
     f.protectorP.reactivePayloads = { phan_kich: { ...PHAN_KICH } }
 
     // Injected rng pinned low: BOTH reactive-proc rolls (the intercept
-    // and the taken-side counter) draw from the rng seam and succeed
-    // (reactive chances hard-cap at REACTIVE_CHANCE_CAP = 0.6). The hit
-    // lands by construction — no Math.random spy.
+    // and the taken-side counter) draw from the rng seam and succeed.
+    // The hit lands by construction - no Math.random spy.
     const sys = system(f, () => 0)
     const declared = driveChargedHit(f, sys)
     const { targetIds } = sys.applyActionImpact(f.battle, declared)
 
     expect(declared.intercepted).toBe(true)
     expect(targetIds).toEqual(['protector'])
-    // TAKEN, not dodged - hpDamage > 0 is the window's gate.
     expect(f.protectorP.entity.currentHp).toBeLessThan(100_000)
 
     const counters = (f.battle.queuedFollowUps ?? []).filter(
       (entry) => entry.actorId === 'protector' && entry.actionSource === 'counter',
     )
 
-    // Pre-fix failure signature: no entry - the charged lane never
-    // reached resolveReactiveProcs.
     expect(counters).toHaveLength(1)
     expect(counters[0]).toMatchObject({
       payloadSkillId: 'phan_kich',
@@ -584,10 +631,10 @@ describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () =
     })
   })
 
-  it('a charged hit into a phan_chinh emblem reflects back at the attacker', () => {
+  it('a charged hit into a phan_chan passive reflects back at the attacker', () => {
     const f = makeFixture()
     f.enemyP.special = { skill: ENEMY_CHARGED, remainingCooldownTurns: 0 }
-    f.runtime.applyBuff(PHAN_CHINH_BUFF.id, f.squishyP)
+    f.runtime.applyBuff(PHAN_CHAN_BUFF.id, f.squishyP)
 
     const sys = new TurnBattleSystem(f.combat, 10_000, f.runtime.registry, undefined, f.runtime)
 
@@ -598,20 +645,43 @@ describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () =
       }
     })
 
-    // No randomness control needed — every roll in this path is
-    // deterministic by construction: the hit lands (accuracy 100 vs
-    // evasion 0 -> chance 1.0) and the reflect trigger's authored
-    // chance is 1.0 (the reflect roll itself still reads the global
-    // Math.random inside BuffSystem, but chance 1.0 always fires).
-
     const declared = driveChargedHit(f, sys)
     const { targetIds } = sys.applyActionImpact(f.battle, declared)
 
     expect(targetIds).toEqual(['squishy'])
 
-    // might 100 x multiplier 1 = 100 hpDamage taken; the emblem owes
-    // hpDamage x takenRatio + holder maxHp x maxHpRatio.
-    const expected = 100 * PHAN_CHINH_TAKEN_RATIO + 100_000 * PHAN_CHINH_MAXHP_RATIO
+    // might 100 x multiplier 1 = 100 hpDamage taken; the beta reflect
+    // owes holder maxHp x ratio (Max-HP-derived, once per action).
+    const expected = 100_000 * PHAN_CHAN_BASE_RATIO
+    expect(reflections).toEqual([expected])
+    expect(f.enemyP.entity.currentHp).toBe(100_000 - expected)
+  })
+
+  it('an intercepted hit reflects off the intercepting protector (phan_chan keyed on the protector)', () => {
+    const f = makeFixture()
+    // Protector intercepts (protectChance 1, roll pinned low) AND holds
+    // phan_chan - the reflect must queue on the protector, not the
+    // declared target, and land once on the attacker.
+    withHoMon(f, f.protectorP, 1, 100)
+    f.runtime.applyBuff(PHAN_CHAN_BUFF.id, f.protectorP)
+
+    const reflections: number[] = []
+    f.eventBus.on<EntityVitalsChangedEvent>('entity_vitals_changed', (event) => {
+      if (event.reason === 'reflection' && event.entityId === 'enemy') {
+        reflections.push(event.amount)
+      }
+    })
+
+    const sys = system(f, () => 0)
+    const declared = declaredAgainst(f, [f.squishyP])
+    const { targetIds } = sys.applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBe(true)
+    expect(targetIds).toEqual(['protector'])
+    expect(f.protectorP.entity.currentHp).toBeLessThan(100_000)
+    expect(f.squishyP.entity.currentHp).toBe(100_000)
+
+    const expected = 100_000 * PHAN_CHAN_BASE_RATIO
     expect(reflections).toEqual([expected])
     expect(f.enemyP.entity.currentHp).toBe(100_000 - expected)
   })
@@ -638,19 +708,17 @@ describe('charged hits run the declared-hit pipeline (resolveDeclaredHit)', () =
   })
 })
 
-// RNG authority guard — the reactive-proc success roll in
+// RNG authority guard - the reactive-proc success roll in
 // resolveReactiveProcs must draw from the injected this.rng, never the
-// global Math.random (pre-fix it read the global, so a spy controlled
-// the proc while a scripted rng could not). The pair below pins the
-// two sources to OPPOSITE outcomes; the injected seam must win both
-// directions. The hit roll still lands either way — accuracy 100 vs
-// evasion 0 gives hit chance exactly 1.0.
+// global Math.random. The pair below pins the two sources to OPPOSITE
+// outcomes; the injected seam must win both directions. The hit roll
+// still lands either way - accuracy 100 vs evasion 0 gives hit chance
+// exactly 1.0.
 describe('reactive proc rolls read the injected rng, not Math.random', () => {
   it('a protectChance-1.0 interceptor does NOT intercept when injected rng fails the roll (global pinned low)', () => {
     const f = makeFixture()
-    withHoMon(f, f.protectorP, 1, 15)
-    // Global pinned to a would-succeed value — pre-fix this forced the
-    // intercept through the global seam; now it must change nothing.
+    withHoMon(f, f.protectorP, 1, THE_PROC_COST)
+    // Global pinned to a would-succeed value - the proc seam ignores it.
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
     const declared = declaredAgainst(f, [f.squishyP])
@@ -658,20 +726,17 @@ describe('reactive proc rolls read the injected rng, not Math.random', () => {
 
     expect(declared.intercepted).toBeUndefined()
     expect(declared.affected).toEqual([f.squishyP])
-    // The attempt still paid the 15-The proc cost — the ROLL failed on
-    // the injected seam, not the eligibility gate.
-    expect(f.protectorP.entity.currentThe).toBe(0)
+    // Failed roll pays NOTHING (success-only cost).
+    expect(f.protectorP.entity.currentThe).toBe(THE_PROC_COST)
     expect(f.squishyP.entity.currentHp).toBeLessThan(100_000)
     expect(f.protectorP.entity.currentHp).toBe(100_000)
   })
 
   it('the interceptor DOES intercept when injected rng succeeds (global pinned high)', () => {
     const f = makeFixture()
-    withHoMon(f, f.protectorP, 1, 15)
-    // Global pinned high — pre-fix this failed the proc roll; the
-    // injected rng low must still drive the intercept. The global now
-    // only feeds the CombatSystem hit seam, where chance 1.0 lands
-    // regardless.
+    withHoMon(f, f.protectorP, 1, THE_PROC_COST)
+    // Global pinned high - the injected rng low must still drive the
+    // intercept. The global now only feeds the CombatSystem hit seam.
     vi.spyOn(Math, 'random').mockReturnValue(0.999)
 
     const declared = declaredAgainst(f, [f.squishyP])
@@ -681,7 +746,7 @@ describe('reactive proc rolls read the injected rng, not Math.random', () => {
     expect(declared.interceptedBy).toBe('protector')
     expect(f.squishyP.entity.currentHp).toBe(100_000)
     expect(f.protectorP.entity.currentHp).toBeLessThan(100_000)
-    // Economy: -15 attempt, +20 success credit.
-    expect(f.protectorP.entity.currentThe).toBe(20)
+    // Success paid the flat cost.
+    expect(f.protectorP.entity.currentThe).toBe(0)
   })
 })

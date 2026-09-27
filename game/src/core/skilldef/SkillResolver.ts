@@ -16,11 +16,7 @@
 //      reads the snapshot; live reads stay as `late` bindings /
 //      resolved query leaves on plan steps.
 
-import type {
-  CombatEntityId,
-  CombatOperationId,
-  SkillId,
-} from '../battle/contracts/ids'
+import type { CombatEntityId, CombatOperationId, SkillId } from '../battle/contracts/ids'
 import type {
   CleanseBuffOperation,
   CombatOperation,
@@ -461,6 +457,9 @@ export class SkillResolver {
             if (op.penetrationFromStacks !== undefined) {
               collectFromExpr(op.penetrationFromStacks.perStack)
             }
+            if (op.sourceMaxHpRatio !== undefined) {
+              collectFromExpr(op.sourceMaxHpRatio)
+            }
             for (const entry of op.scaling?.attributeScaling ?? []) {
               for (const attr of entry.attributes) statKeys.add(attr)
             }
@@ -484,6 +483,9 @@ export class SkillResolver {
           case 'remove_buff_stacks':
           case 'consume_buff_stacks':
             if (op.stacks !== 'all') collectFromExpr(op.stacks)
+            break
+          case 'pay_hp':
+            collectFromExpr(op.maxHpRatio)
             break
           case 'push_gauge':
             collectFromExpr(op.fractionOfMax)
@@ -1037,6 +1039,8 @@ export class SkillResolver {
         return this.translateApplyShield(op, ctx, scope)
       case 'read_stacks':
         return this.translateReadStacks(op, ctx, scope)
+      case 'pay_hp':
+        return this.translatePayHp(op, ctx, scope)
       case 'detonate':
         // per resolved target -- the executor expands the
         // consume->burst->re-seed sequence at this step position
@@ -1079,7 +1083,10 @@ export class SkillResolver {
           return [
             {
               kind: 'read',
-              query: { query: 'ops_landed_any', operationIds: hitOpIds },
+              // snapshot - the same array instance is appended to by
+              // later deal_damage ops on this target (F-NK-CLO-3, same
+              // class as F-NK-AUT-1)
+              query: { query: 'ops_landed_any', operationIds: [...hitOpIds] },
               into: landedVar,
             },
             {
@@ -1089,7 +1096,7 @@ export class SkillResolver {
               ...(op.else !== undefined
                 ? { else: this.translateOps(op.else, ctx, scope) }
                 : {}),
-              gate: { hitOperationIds: hitOpIds, targetId },
+              gate: { hitOperationIds: [...hitOpIds], targetId },
             },
           ]
         }
@@ -1125,6 +1132,50 @@ export class SkillResolver {
   }
 
   // -----------------------------------------------------------------------
+  // pay_hp -- The Tu beta self-sacrifice (Loan Dau): lowers to a
+  // 'sacrifice'-profile deal_damage on the caster + an ops_result_sum
+  // read binding the ACTUAL paid HP into `into`. The damage authority
+  // floors the paid amount at leaving the caster 1 HP, so the read is
+  // the only legal payoff source (never the nominal maxHpRatio).
+  // -----------------------------------------------------------------------
+
+  private translatePayHp(
+    op: Extract<AuthoredSkillOperation, { type: 'pay_hp' }>,
+    ctx: TranslateContext,
+    scope: ResolveScope,
+  ): ResolvedSkillPlanStep[] {
+    const late: ResolvedLateBinding[] = []
+    const coefficient = this.bindScalar(op.maxHpRatio, 1, ctx, scope, late, 'coefficient')
+    const payStep = this.operationStep(
+      {
+        type: 'deal_damage',
+        payload: {
+          targetId: ctx.input.sourceId,
+          damageProfile: 'sacrifice',
+          coefficient,
+          hitCount: 1,
+          canCrit: false,
+          canMiss: false,
+        },
+      },
+      ctx,
+      late,
+    )
+    return [
+      payStep,
+      {
+        kind: 'read',
+        query: {
+          query: 'ops_result_sum',
+          operationIds: [payStep.operation.operationId],
+          field: 'hpDamage',
+        },
+        into: op.into,
+      },
+    ]
+  }
+
+  // -----------------------------------------------------------------------
   // deal_damage -- instances expansion, declared policies (contract
   // v1.6), execute-branch fold, and the landed-gated consume/leech lanes
   // (TurnBattleSystem.ts:2059-2135 parity).
@@ -1149,6 +1200,13 @@ export class SkillResolver {
       instances !== undefined
         ? Math.max(0, Math.floor(this.foldRequired(instances.count, ctx, scope, 'instances.count')))
         : 1
+
+    // Ngu Kiem Beta (Kiem The) -- cast-local accumulator of prior hit
+    // opIds for this deal_damage op's instances. The momentum read sums
+    // 'landed' over exactly these ids: per-design "later swords in the
+    // same cast" means cast-local, and the accumulator is pure plan
+    // state (a var read at EXECUTE) -- never persisted (sec.53).
+    const priorInstanceOpIds: CombatOperationId[] = []
 
     for (const targetId of targetIds) {
       const targetSteps: ResolvedSkillPlanStep[] = []
@@ -1208,6 +1266,30 @@ export class SkillResolver {
             rateExpr: 'folded' in rateResult ? rateResult.folded : rateResult.late,
           }
         }
+        // Kiem The momentum -- read the count of landed prior instances
+        // (of THIS op's instances block) into a var, folded into the
+        // hit's coefficient as a further late-binding factor AFTER
+        // base+Core scaling (sec.55). Instance 0 has no priors.
+        let momentum: { landedVar: string; rate: number } | undefined
+        if (
+          instances?.each?.momentumPerLandedInstance !== undefined &&
+          priorInstanceOpIds.length > 0
+        ) {
+          const landedVar = this.nextVar('kthe', ctx)
+          instanceSteps.push({
+            kind: 'read',
+            query: {
+              query: 'ops_result_sum',
+              // Snapshot the accumulator - the emitted read must cover
+              // ONLY priors; sharing the live array would let later
+              // pushes leak this instance's own + future hit opIds.
+              operationIds: [...priorInstanceOpIds],
+              field: 'landed',
+            },
+            into: landedVar,
+          })
+          momentum = { landedVar, rate: instances.each.momentumPerLandedInstance }
+        }
         const hit = this.buildHitStep(
           op,
           instances,
@@ -1215,9 +1297,11 @@ export class SkillResolver {
           ctx,
           scope,
           scaleBinding,
+          momentum,
           penetrationBinding,
         )
         instanceSteps.push(hit.step)
+        priorInstanceOpIds.push(...hit.hitOpIds)
         // M4 -- register for target_hit_landed gates (per-target
         // landed-hit consequence parity).
         const registered = ctx.hitOpIdsByTarget.get(targetId) ?? []
@@ -1405,6 +1489,7 @@ export class SkillResolver {
     ctx: TranslateContext,
     scope: ResolveScope,
     scaleBinding?: { stacksVar: string; rateExpr: ResolvedScalarExpression },
+    momentum?: { landedVar: string; rate: number },
     penetrationBinding?: { stacksVar: string; rateExpr: ResolvedScalarExpression },
   ): { step: ResolvedSkillPlanStep; hitOpIds: CombatOperationId[] } {
     const each = instances?.each
@@ -1425,6 +1510,23 @@ export class SkillResolver {
       late: ResolvedLateBinding[],
     ): DealDamageOperation['payload'] => {
       const coeffResult = this.fold(op.coefficient ?? 1, ctx, scope)
+      // Kiem The -- (1 + rate * landedPriorInstances) folds into the
+      // coefficient as the LAST multiplier factor (sec.55: after base
+      // and Core scaling); the landedVar read exists only at EXECUTE,
+      // so every lane resolves to a late binding when momentum is on.
+      const momentumFactor: ResolvedScalarExpression | undefined =
+        momentum !== undefined
+          ? {
+              op: 'add',
+              values: [
+                1,
+                {
+                  op: 'multiply',
+                  values: [{ query: 'var', name: momentum.landedVar }, momentum.rate],
+                },
+              ],
+            }
+          : undefined
       let coefficient: number
       if (scaleBinding !== undefined) {
         // scaleBuff -- (authored coefficient + live stacks x rate) is
@@ -1450,18 +1552,34 @@ export class SkillResolver {
                 ],
               },
               coefficientScale * multiplier,
+              ...(momentumFactor !== undefined ? [momentumFactor] : []),
             ],
           },
         })
         coefficient = 0
       } else if ('folded' in coeffResult) {
-        coefficient = coeffResult.folded * coefficientScale * multiplier
+        if (momentumFactor !== undefined) {
+          late.push({
+            field: 'coefficient',
+            expr: {
+              op: 'multiply',
+              values: [coeffResult.folded * coefficientScale * multiplier, momentumFactor],
+            },
+          })
+          coefficient = 0
+        } else {
+          coefficient = coeffResult.folded * coefficientScale * multiplier
+        }
       } else {
         late.push({
           field: 'coefficient',
           expr: {
             op: 'multiply',
-            values: [coeffResult.late, coefficientScale * multiplier],
+            values: [
+              coeffResult.late,
+              coefficientScale * multiplier,
+              ...(momentumFactor !== undefined ? [momentumFactor] : []),
+            ],
           },
         })
         coefficient = 0
@@ -1520,6 +1638,18 @@ export class SkillResolver {
           : {}),
         ...(op.missingHpBonusCap !== undefined
           ? { missingHpBonusCap: op.missingHpBonusCap }
+          : {}),
+        ...(op.sourceMaxHpRatio !== undefined
+          ? {
+              sourceMaxHpRatio: this.bindScalar(
+                op.sourceMaxHpRatio,
+                0,
+                ctx,
+                scope,
+                late,
+                'sourceMaxHpRatio',
+              ),
+            }
           : {}),
         snapshot: ctx.snapshot.statScalars,
       }

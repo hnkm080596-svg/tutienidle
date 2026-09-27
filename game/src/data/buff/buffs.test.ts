@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { buffs } from './buffs'
 import type { BuffDefinition, PeriodicDamageDefinition } from '@/core/buff2/BuffDefinition'
 
-// M4 — parity test rewritten to the canonical buff2 shape: the same
+// M4 - parity test rewritten to the canonical buff2 shape: the same
 // numbers, asserted in their new homes (dot.dpsRatio -> periodic
 // .coefficient; stackMode -> stacking.onReapplyStacks; duration ->
 // lifetime.duration; cc -> controls; proc/trigger/economy effects ->
@@ -139,8 +139,9 @@ describe('buffs.ts — ported definitions match original values (buff2 shape)', 
       })
     })
 
-    it('all 64 definitions (6 inline + 16 legacy + 1 Kiem Pho + 3 thuan-he + 5 talent + 3 boss + 12 the_tu + 5 reaction + 4 companion + 9 trang) are present', () => {
-      expect(buffs).toHaveLength(64)
+
+    it('all 68 definitions are present (merged catalog: master ung-the set + PT trang windows)', () => {
+      expect(buffs).toHaveLength(68)
     })
   })
 

@@ -11,6 +11,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { NativeSkillPathEntry } from './SkillPathEntry'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { usePlayerStore } from '@/stores/player'
 import GameButton from '@/components/common/GameButton.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
@@ -24,6 +25,11 @@ const props = defineProps<{
 const gameManager = useGameManager()
 const player = usePlayerStore()
 const { bumpState } = useStateVersion()
+
+// parity with the node-tree panels: the upgrade writes through
+// progressionOps.levelUpSkill, which rejects mid-battle -- disable the
+// affordance rather than dead-click.
+const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 
 const isMaxLevel = computed(() => !!props.entry && props.entry.level >= props.entry.maxLevel)
 
@@ -45,6 +51,13 @@ function onUpgrade() {
     <template v-else>
       <h4 class="native-core-detail__name">{{ entry.name }}</h4>
 
+      <!-- sec.43: the ONE evolving ngu-kiem entry carries the newest
+           evolution layer's name; the suffix surfaces as the
+           `Evolution: X` state line. -->
+      <p v-if="entry.evolutionName !== undefined" class="native-core-detail__desc">
+        {{ t('panels.skillPath.list.evolution', { name: entry.evolutionName }) }}
+      </p>
+
       <p v-if="entry.description" class="native-core-detail__desc">{{ entry.description }}</p>
 
       <div class="native-core-detail__level">
@@ -55,7 +68,7 @@ function onUpgrade() {
           class="native-core-detail__upgrade"
           variant="ghost"
           size="sm"
-          :disabled="!entry.canUpgrade"
+          :disabled="!entry.canUpgrade || inBattle"
           @click="onUpgrade"
         >
           {{ t('panels.skillPath.detail.upgrade', { cost: entry.upgradeCost }) }}

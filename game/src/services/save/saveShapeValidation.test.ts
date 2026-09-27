@@ -456,6 +456,55 @@ describe('validateGameSaveShape — module-owned persisted slices (P1-M6)', () =
       expect(pathsOf(result).some((path) => path.startsWith('player.swordPath'))).toBe(true)
     },
   )
+
+  // F-NK-CLO-1 - kiemDaoBase is a float multiplier: post-breakthrough
+  // merges produce fractional bases (1 + 0.3*merged). The validator must
+  // accept them; integer bound applies to kiemDaoCount only.
+  it('chấp nhận kiemDaoBase phân số sau breakthrough-merge', () => {
+    const save = validSave()
+    const player = save.player as Record<string, unknown>
+    player.realmId = 'golden_core'
+    player.cultivationPath = 'sword'
+    player.cultivationWay = 'hidden_sword_pathway'
+    player.swordPath = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 2.2 }
+
+    const result = validateGameSaveShape(save)
+
+    expect(pathsOf(result).some((path) => path === 'player.swordPath.kiemDaoBase')).toBe(false)
+  })
+
+  // F-NK-AUT-8 - kiemDaoBase is the breakthrough-merge PRODUCT, not the
+  // live queue count: after enough merges it legitimately grows past
+  // kiemDaoCap (base *= 1+0.3*merged). The cap bound applies to
+  // kiemDaoCount only - a save with base > cap is still valid.
+  it('chấp nhận kiemDaoBase vượt trần count-cap sau nhiều merge', () => {
+    const save = validSave()
+    const player = save.player as Record<string, unknown>
+    player.realmId = 'foundation_establishment'
+    player.cultivationPath = 'sword'
+    player.cultivationWay = 'hidden_sword_pathway'
+    // cap(2)=3: qi merge x1.6 -> TC merge x1.9 = 3.04 > 3, all legal.
+    player.swordPath = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 3.04 }
+
+    const result = validateGameSaveShape(save)
+
+    expect(pathsOf(result).some((path) => path.startsWith('player.swordPath'))).toBe(false)
+  })
+
+  // F-NK-CLO-2 - the cap lane guards realmIndex>=1: a mortal-realm
+  // swordPath slice emits a fault, it never lets kiemDaoCap throw
+  // inside the untrusted-input validator.
+  it('mortal + swordPath slice emits fault thay vì throw', () => {
+    const save = validSave()
+    const player = save.player as Record<string, unknown>
+    player.realmId = 'mortal'
+    player.swordPath = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result).some((path) => path === 'player.swordPath')).toBe(true)
+  })
 })
 
 describe('validateGameSaveShape — arrays bắt buộc', () => {
@@ -2365,17 +2414,25 @@ describe('validateGameSaveShape — v73 core inverse ownership', () => {
     const save = validSave()
     const player = playerOf(save)
 
-    player.realmId = 'qi_refining'
+    // major_loan_dau gates on realm >= foundation_establishment --
+    // the save-boundary canonicality replay (clean-B INT-B fix) rejects
+    // owned nodes whose monotonic prereqs no longer hold, so the
+    // fixture must carry a canonical realm for the grant test.
+    player.realmId = 'foundation_establishment'
     player.cultivationPath = 'body'
     player.cultivationWay = 'body_pathway'
 
-    // A real purchase writes BOTH: nodeLevels.cuong_chien = 1 is the
+    // A real purchase writes BOTH: nodeLevels.<id> = 1 is the
     // canonical ownership; purchasedNodeIds is the mirror. The
     // forward check requires every grantsSkillCoreIds member present.
-    ;(player.nodeLevels as Record<string, number>).cuong_chien = 1
-    ;(player.purchasedNodeIds as string[]).push('cuong_chien')
+    // Beta grant seams: cuong_chien -> cuong_quyen, major_loan_dau ->
+    // loan_dau. core_bat_tu_ba_the has NO beta source (parked def).
+    for (const nodeId of ['cuong_chien', 'major_loan_dau']) {
+      ;(player.nodeLevels as Record<string, number>)[nodeId] = 1
+      ;(player.purchasedNodeIds as string[]).push(nodeId)
+    }
 
-    for (const skillId of ['cuong_quyen', 'loan_dau', 'bat_tu_ba_the']) {
+    for (const skillId of ['cuong_quyen', 'loan_dau']) {
       const coreId = skillCoreNodeId(skillId)
       ;(player.nodeLevels as Record<string, number>)[coreId] = 1
       ;(player.purchasedNodeIds as string[]).push(coreId)
@@ -2424,6 +2481,24 @@ describe('validateGameSaveShape — v73 core inverse ownership', () => {
 
     expect(result.ok).toBe(false)
     expect(pathsOf(result)).toContain('player.nodeLevels.core_cuong_quyen')
+  })
+
+  // cleanD AUT: the mirror check is symmetric -- a canonical non-core
+  // level without its purchasedNodeIds mirror is non-canonical by
+  // construction (NodeSystem mirrors every purchase).
+  it('từ chối node level canonical khi purchasedNodeIds mirror sót entry đó', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    player.realmId = 'qi_refining'
+    player.cultivationPath = 'body'
+    player.cultivationWay = 'body_pathway'
+    ;(player.nodeLevels as Record<string, number>).cuong_chien = 1
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.nodeLevels.cuong_chien')
   })
 
   it('từ chối core_cuong_quyen khi skills[] chứa entry giả id cuong_quyen (không phải learned template)', () => {

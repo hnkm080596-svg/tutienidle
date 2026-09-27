@@ -260,12 +260,12 @@ describe('PlayerHudLayer — in-canvas HUD (6A-T4)', () => {
     const scene = makeScene()
     const hud = new PlayerHudLayer(scene as never, { width: 800, height: 600 })
 
-    hud.updateThe(0, 0, false)
+    hud.updateThe(0, 0, 0, false)
 
     expect(hud.theGroupVisible).toBe(false)
     expect(hud.thePhapTheLabel.visible).toBe(false)
 
-    hud.updateThe(3, 5, false)
+    hud.updateThe(3, 5, 5, false)
 
     expect(hud.theGroupVisible).toBe(true)
     expect(hud.theLabel.text).toContain('3')
@@ -292,18 +292,18 @@ describe('PlayerHudLayer — in-canvas HUD (6A-T4)', () => {
     const scene = makeScene()
     const hud = new PlayerHudLayer(scene as never, { width: 800, height: 600 })
 
-    hud.updateThe(5, 5, false)
+    hud.updateThe(5, 5, 5, false)
 
     expect(hud.thePhapTheLabel.visible).toBe(false)
     expect(hud.theDots.every((dot) => dot.fillColor === PLAYER_HUD_THE_COLOR)).toBe(true)
 
-    hud.updateThe(5, 5, true)
+    hud.updateThe(5, 5, 5, true)
 
     expect(hud.thePhapTheLabel.visible).toBe(true)
     expect(hud.thePhapTheLabel.text).toBe('PHÁP THẾ')
     expect(hud.theDots.every((dot) => dot.fillColor === PLAYER_HUD_THE_ARMED_COLOR)).toBe(true)
 
-    hud.updateThe(4, 5, true)
+    hud.updateThe(4, 5, 5, true)
 
     // Active flag is bridge-side; the HUD just lights what it's told --
     // a partial pool still brightens when the flag is on.

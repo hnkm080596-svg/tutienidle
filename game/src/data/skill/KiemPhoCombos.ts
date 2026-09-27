@@ -1,4 +1,5 @@
 import type { KiemPhoCombo } from '../../core/kiem-tu/KiemPhoSystem'
+import { KIEM_PHO_BUFFS } from '../buff/KiemPhoBuffs'
 
 // Kiem Tu Reimagined Task 5 (spec 2026-09-15 §4.3) — the 37-combo
 // table, verbatim locked patterns. Shorthand in comments: Đ=orb_dam,
@@ -9,18 +10,39 @@ import type { KiemPhoCombo } from '../../core/kiem-tu/KiemPhoSystem'
 // KiemPhoCombos.test.ts. The three corrected len-4s end in H/Q because
 // any X-A-A-Y tail can only stay free when Y is a late-unlock orb.
 //
-// Effects: STUB — spec §11 (user ruling 2026-09-15) defers authored
-// combo effects to a separate content pass (same treatment as Phap Tu /
-// The Tu skill effects). Every entry carries a length-tier scaffold
-// damage multiplier (len3 2.5, len4 4.0, len5 7.0) plus its REQUIRED
-// unique presetId (K11: the payload is the only discovery signal).
-// `appliesBuffs` supports multi-buff payloads for the authored pass.
+// Effects: the KIEM PHO BETA design (docs/specs/kiem-pho-beta-spec.md,
+// design doc sec.7) authors the six beta combos inside the Truc Co
+// window (D/C patterns only; D-C-C and C-D-D are NOT combos). The
+// remaining 31 entries keep the length-tier scaffold damage
+// multipliers (len3 2.5, len4 4.0, len5 7.0) untouched until their
+// design window lands. Every entry keeps its REQUIRED unique presetId
+// (K11: the payload is the only discovery signal). `appliesBuffs`
+// supports multi-buff payloads.
+//
+// Beta combo semantics ride the adapter's canonical lanes - no
+// combo-id branching in any engine:
+//   liet_ngan CCC  direct 1.8 + add_stacks kiem_thuong to cap
+//   khai_ngan DDC  direct 1.9 + add_stacks kiem_thuong +1 (typical 2)
+//   thau_ngan CCD  direct 2.0 + 0.5/live same-source stack, no consume
+//   nhat_tuyen DDD direct 3.0 only
+//   hoi_tuyen DCD  direct 2.8 only
+//   diep_ngan CDC  direct 2.2 + one manual kiem_thuong periodic tick
 
 const D = 'orb_dam'
 const C = 'orb_chem'
 const B = 'orb_bo'
 const H = 'orb_hat'
 const Q = 'orb_quet'
+
+// The canonical kiem_thuong stack cap is read from the buff def - the
+// Buff System clamps add_stacks at this same authority, so authoring
+// `stacks: KIEM_THUONG_CAP` means "top the wound to cap" regardless
+// of how many stacks the finishing Chem apply rolled.
+const KIEM_THUONG_DEF = KIEM_PHO_BUFFS.find(buff => buff.id === 'kiem_thuong')
+if (KIEM_THUONG_DEF === undefined) {
+  throw new Error('KiemPhoCombos: kiem_thuong buff definition missing from KIEM_PHO_BUFFS')
+}
+const KIEM_THUONG_CAP = KIEM_THUONG_DEF.stacking.maxStacks
 
 function combo(
   id: string,
@@ -42,21 +64,52 @@ const L4 = 4.0
 const L5 = 7.0
 
 export const KIEM_PHO_COMBOS: KiemPhoCombo[] = [
-  // ---- Length 3 (15) ----
-  combo('tam_thich', 'Tam Thích', [D, D, D], L3),
-  combo('tam_tram', 'Tam Trảm', [C, C, C], L3),
+  // ---- Kiem Pho Beta (design sec.7): the six beta combos ----
+  // nhat_tuyen (DDD): pure direct burst only - no seal payload.
+  combo('nhat_tuyen', 'Nhất Tuyến', [D, D, D], 3.0),
+  // liet_ngan (CCC): finishing Chem's normal apply, then the
+  // same-source wound topped to the canonical cap via
+  // BuffSystem.addStacks (never re-rolls application, clamps at the
+  // def's maxStacks).
+  {
+    ...combo('liet_ngan', 'Liệt Ngân', [C, C, C], 1.8),
+    ailmentInteractions: [
+      { kind: 'add_stacks', buffId: 'kiem_thuong', stacks: KIEM_THUONG_CAP },
+    ],
+  },
+  // khai_ngan (DDC): +1 stack on the finishing wound -> typical 2.
+  {
+    ...combo('khai_ngan', 'Khai Ngân', [D, D, C], 1.9),
+    ailmentInteractions: [
+      { kind: 'add_stacks', buffId: 'kiem_thuong', stacks: 1 },
+    ],
+  },
+  // thau_ngan (CCD): direct hit scales by live same-source
+  // kiem_thuong stacks on the resolved target, no consume.
+  {
+    ...combo('thau_ngan', 'Thấu Ngân', [C, C, D], 2.0),
+    scalesWithAilmentStacks: { ailmentId: 'kiem_thuong', damagePerStack: 0.5 },
+  },
+  // hoi_tuyen (DCD): strong direct.
+  combo('hoi_tuyen', 'Hồi Tuyến', [D, C, D], 2.8),
+  // diep_ngan (CDC): one immediate periodic trigger on the caster's
+  // kiem_thuong instance via the canonical Buff System path.
+  {
+    ...combo('diep_ngan', 'Điệp Ngân', [C, D, C], 2.2),
+    ailmentInteractions: [
+      { kind: 'trigger_periodic', buffId: 'kiem_thuong' },
+    ],
+  },
+
+  // ---- Length 3 (remaining 9 - scaffold until their design window) ----
   combo('tam_phach', 'Tam Phách', [B, B, B], L3),
   combo('tam_lieu', 'Tam Liêu', [H, H, H], L3),
   combo('tam_tao', 'Tam Tảo', [Q, Q, Q], L3),
-  combo('nhi_thich_nhat_tram', 'Nhị Thích Nhất Trảm', [D, D, C], L3),
   combo('nhi_thich_nhat_phach', 'Nhị Thích Nhất Phách', [D, D, B], L3),
-  combo('nhi_tram_nhat_thich', 'Nhị Trảm Nhất Thích', [C, C, D], L3),
   combo('nhi_tram_nhat_phach', 'Nhị Trảm Nhất Phách', [C, C, B], L3),
   combo('nhi_phach_nhat_thich', 'Nhị Phách Nhất Thích', [B, B, D], L3),
   combo('nhi_lieu_nhat_thich', 'Nhị Liêu Nhất Thích', [H, H, D], L3),
   combo('nhi_tao_nhat_thich', 'Nhị Tảo Nhất Thích', [Q, Q, D], L3),
-  combo('thich_tram_thich', 'Thích Trảm Thích', [D, C, D], L3),
-  combo('tram_thich_tram', 'Trảm Thích Trảm', [C, D, C], L3),
   combo('phach_thich_phach', 'Phách Thích Phách', [B, D, B], L3),
 
   // ---- Length 4 (12) ----

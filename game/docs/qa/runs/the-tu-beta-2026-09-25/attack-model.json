@@ -1,0 +1,54 @@
+{
+ "attacks": [
+  {
+   "id": "ATK-ROOT-MUTEX",
+   "surface": "Cuong Chien / Tran The root exclusivity",
+   "probe": "choosing one root permanently locks the other (excludesNode mutex); no free switching; chosen root persists across save/load; crafted save owning both roots is rejected or deterministic winner"
+  },
+  {
+   "id": "ATK-REALM-GATE-SPECIAL",
+   "surface": "LQ Basic-only / TC Special gate",
+   "probe": "Luyen Khi cannot learn Special; TC major gate requires realm + root + techniqueRank 5; no Ultimate anywhere (bat_tu/son_nhac defs unreachable); LQ kit contains exactly Basic"
+  },
+  {
+   "id": "ATK-PAY-HP-ORDER",
+   "surface": "pay_hp sacrifice ordering",
+   "probe": "pay_hp settles FIRST (cost = % max HP, floored at leaving 1 HP, never self-kills); ops_result_sum binds ACTUAL paid amount; damage resolves AFTER on new missing-HP state; nominal-vs-actual divergence probed (high-current-low-max)"
+  },
+  {
+   "id": "ATK-SACRIFICE-SAFETY",
+   "surface": "sacrifice never self-kills / edge HP",
+   "probe": "cast at 1 HP, at exactly-cost HP, at HP < nominal cost; cost clamped so player survives with 1 HP; zero/negative pay never yields bonus"
+  },
+  {
+   "id": "ATK-HUYET-CUONG-SCOPE",
+   "surface": "Huyet Cuong kit-local scope",
+   "probe": "missing-HP bonus applies ONLY to Cuong Chien kit skills (Cuong Quyen + Loan Dau); never to normal attacks, equipment procs, companion, generic damage; requires loan_dau core owned; LQ Cuong Quyen has NO missing-HP scaling and NO HP cost"
+  },
+  {
+   "id": "ATK-TRAN-AP-AOE",
+   "surface": "Tran Ap AoE maxHp scaling",
+   "probe": "hits ALL valid enemies; damage derives from caster maxHp x ratio (maxHp is the visible authority in tooltip); dead/warded/missed targets handled; zero buff/stats-keyed-to-current-HP confusion"
+  },
+  {
+   "id": "ATK-PHAN-CHIEN",
+   "surface": "Phan Chien once-per-action reflect",
+   "probe": "exactly ONE reflect per hostile action at holder maxHp x ratio (marked targets higher); warded/miss/DoT never triggers; no recursion, no hit roll, no turn cost; AoE hostile action triggers once; settle-time check only"
+  },
+  {
+   "id": "ATK-REFLECT-RECURSION",
+   "surface": "reflect does not chain",
+   "probe": "two Phan Chien holders / reflect-vs-reflect never loops; reflect damage is not a hostile action that re-triggers; kill via reflect settles cleanly"
+  },
+  {
+   "id": "ATK-RESPEC-MUTEX",
+   "surface": "respec / devReset on root choice",
+   "probe": "respec of root-granted nodes cannot produce dual-root state; devResetBranch + reconcile cannot resurrect locked root; kit grant is idempotent"
+  },
+  {
+   "id": "ATK-SAVE-SHAPE",
+   "surface": "save shape validation",
+   "probe": "crafted root flag missing/mismatched, phantom special at LQ, negative maxHp-ratio channels rejected or inert at load; CURRENT_SAVE_VERSION unchanged unless migration exists"
+  }
+ ]
+}

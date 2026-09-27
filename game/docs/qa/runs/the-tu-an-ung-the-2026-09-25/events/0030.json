@@ -1,0 +1,19 @@
+{
+  "applied": [
+    "review:REV-TTA-CLEAN-A2-AUT",
+    "finding:F-TTA-A2-AUT-1",
+    "finding:F-TTA-A2-AUT-2",
+    "finding:F-TTA-A2-AUT-3",
+    "finding:F-TTA-A2-AUT-4",
+    "finding:F-TTA-A2-AUT-5",
+    "finding:F-TTA-A2-AUT-6",
+    "finding:F-TTA-A2-COR-1 (updated)",
+    "lesson:L-TTA-15",
+    "lesson:L-TTA-16",
+    "lesson:L-TTA-17",
+    "lesson:L-TTA-18",
+    "lesson:L-TTA-19",
+    "lesson:L-TTA-20",
+    "lesson:L-TTA-21"
+  ]
+}

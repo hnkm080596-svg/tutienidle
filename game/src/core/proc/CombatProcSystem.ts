@@ -19,15 +19,14 @@
 // in the same action.
 
 import type {
+  BuffDefinitionId,
   CombatEntityId,
   CombatOperationId,
 } from '../battle/contracts/ids'
 import type {
   ApplyBuffOperation,
   ConsumeResourceOperation,
-  DealDamageOperation,
   GainResourceOperation,
-  HealOperation,
   ResolvedCombatOperation,
 } from '../battle/contracts/operations'
 import type { CombatOperationOrigin } from '../battle/contracts/origin'
@@ -38,7 +37,8 @@ import type { CombatScheduler } from '../battle/runtime/scheduler/CombatSchedule
 import type { BuffSystem } from '../buff2/BuffSystem'
 import type { QueuedFollowUp } from '../battle/turn/TurnBattleSystem'
 import type { ReactiveTriggerContext } from '../battle/turn/TurnBattleSystem'
-import { resolveProcCost, THE_PROC_COST } from '../the-tu/TheEconomy'
+import { RESOURCE_THE } from '../combat/CombatTypes'
+import { THE_PROC_COST } from '../the-tu/TheEconomy'
 import { clampStatValue } from '../stats/StatMetadata'
 import {
   asOnHitProc,
@@ -63,6 +63,10 @@ export interface ReactiveTriggerRollResult {
 export interface ReactiveProcAttempt {
   paid: boolean
   success: boolean
+  /** Present+true only when the grant reached the chance roll --
+      distinguishes a rolled attempt (trigger consumed) from an
+      unaffordable skip ({paid:false,success:false} without a roll). */
+  rolled?: boolean
   effect?: ReactiveProcPayload
 }
 
@@ -71,13 +75,31 @@ export interface ReactiveProcContext {
   outcome?: 'taken' | 'evaded'
   intercepted?: boolean
   triggeringTargets?: readonly { id: CombatEntityId; entity: CombatEntity }[]
-  nonDamaging?: boolean
 }
 
-const RESOURCE_THE = 'the'
 const REFLECTION_PROFILE = 'reflection'
 
+/**
+ * The Tu beta (Phan Chan) -- ONE reflect per hostile ACTION: hits of the
+ * same action merge into a pending entry keyed on holderId (one reflect per holder per action),
+ * then the action-end flush emits a single 'reflection' op per entry.
+ * Multi-hit actions settle fully before the reflect fires; the attacker
+ * identity is the action's source, so every hit of the action carries it.
+ */
+interface PendingReflect {
+  holderId: CombatEntityId
+  attackerId: CombatEntityId
+  maxHpRatio: number
+  markedMaxHpRatio?: number
+  markedBy?: BuffDefinitionId
+  rootActionId: string
+  grantInstanceId: string
+  capabilityId: string
+}
+
 export class CombatProcSystem {
+  private readonly pendingReflects = new Map<string, PendingReflect>()
+
   constructor(private readonly deps: CombatProcSystemDeps) {}
 
   /**
@@ -117,7 +139,16 @@ export class CombatProcSystem {
   rollReactiveTrigger(
     holderId: CombatEntityId,
     trigger: 'onCastBegin' | 'onImpactLanded',
-    context: { attacker?: CombatEntity; hpDamage?: number } | undefined,
+    context:
+      | {
+          attacker?: CombatEntity
+          hpDamage?: number
+          /** The Tu beta -- false for non-natural action sources
+              (counter/follow_up/intercept: INV-9 parity); absent = eligible
+              (context-less calls never reach the reflect branch anyway). */
+          reflectsEligible?: boolean
+        }
+      | undefined,
     rootActionId: string,
   ): ReactiveTriggerRollResult {
     let firedFollowUp = false
@@ -126,6 +157,10 @@ export class CombatProcSystem {
     for (const grant of this.deps.buffs.getCapabilities(holderId)) {
       const reactive = asReactiveTrigger(grant)
       if (reactive === undefined || reactive.trigger !== trigger) continue
+      // INV-9 applies to the whole lane: a non-natural action source
+      // (counter/follow_up/intercept) opens no reactive outcome at all --
+      // skip before the roll so excluded sources consume no RNG.
+      if (context?.reflectsEligible === false) continue
       if (!this.deps.rng.rollChance(reactive.chance)) continue
 
       if (reactive.appliesDefinitionId !== undefined) {
@@ -143,33 +178,37 @@ export class CombatProcSystem {
         firedFollowUp = true
       }
 
-      // Reflection (phan_chinh): only a TAKEN hit reflects -- the caller
-      // gates on hpDamage > 0; the context guard keeps context-less
-      // onCastBegin calls from reflecting nothing.
+      // The Tu beta (Phan Chan) -- one reflect per hostile ACTION: queue
+      // here, emit at the action-end flushReflects(). Gates: a TAKEN hit
+      // (hpDamage>0), a living attacker, a defined holder (holder.alive
+      // is deliberately NOT gated - post-mortem reflect is spec-pinned),
+      // a natural action source (reflectsEligible), and never
+      // self-inflicted damage. AoE hits that deal hpDamage queue the
+      // same way; every later hit of the same action merges into the
+      // same pending entry.
       if (
         reactive.reflectsDamage !== undefined &&
         context?.attacker !== undefined &&
         (context.hpDamage ?? 0) > 0 &&
         context.attacker.alive &&
+        context.attacker.id !== holderId &&
         holder !== undefined
       ) {
-        const amount =
-          context.hpDamage! * reactive.reflectsDamage.takenRatio +
-          holder.stats.maxHp * reactive.reflectsDamage.maxHpRatio
-        this.emitOp({
-          type: 'deal_damage',
-          operationId:
-            `proc.${rootActionId}.reflect.${grant.instanceId}.${grant.capability.id}` as CombatOperationId,
-          payload: {
-            targetId: context.attacker.id,
-            damageProfile: REFLECTION_PROFILE,
-            coefficient: amount,
-            hitCount: 1,
-            canCrit: false,
-            canMiss: false,
-          },
-          origin: this.origin(holderId, rootActionId, `reflect.${grant.capability.id}`),
-        })
+        // Spec: one reflect per holder per hostile action -- key on the
+        // holder only so a second reflecting capability cannot emit twice.
+        const key = holderId
+        if (!this.pendingReflects.has(key)) {
+          this.pendingReflects.set(key, {
+            holderId,
+            attackerId: context.attacker.id,
+            maxHpRatio: reactive.reflectsDamage.maxHpRatio,
+            markedMaxHpRatio: reactive.reflectsDamage.markedMaxHpRatio,
+            markedBy: reactive.reflectsDamage.markedBy,
+            rootActionId,
+            grantInstanceId: grant.instanceId,
+            capabilityId: grant.capability.id,
+          })
+        }
       }
     }
 
@@ -177,18 +216,90 @@ export class CombatProcSystem {
   }
 
   /**
-   * reactive_proc lane (legacy resolveReactiveProcs): the holder's
-   * intercept/counter/follow-up grants at a reactive window. Per
-   * attempt: read the proc cost from the holder's reactive_economy
-   * grants, gate on the synchronous balance read, deduct through a
-   * consume_resource op (its settle result IS the paid flag), roll the
-   * authored chanceStat, and on success credit the gain through a
-   * gain_resource op, emit the authored heal, and return the queued
-   * action descriptor for the caller's bypass queue.
+   * Drops queued reflects without emitting. The queue is action-scoped:
+   * a throw mid-action would otherwise leak entries into the next
+   * action's dedupe map (mistimed fire + suppressed fresh entry).
+   */
+  discardPendingReflects(): void {
+    this.pendingReflects.clear()
+  }
+
+  /**
+   * The Tu beta -- action-end settle: emit ONE 'reflection' op per
+   * pending holderId entry. The damage authority resolves it
+   * (flat, holder-as-attacker, never a hit roll / crit / turn). The
+   * caller drains once per applied action -- an empty map is a no-op, so
+   * actions that damaged no reflect-holder cost nothing.
+   */
+  flushReflects(): void {
+    if (this.pendingReflects.size === 0) return
+
+    const entries = [...this.pendingReflects.values()]
+    this.pendingReflects.clear()
+
+    for (const entry of entries) {
+      const holder = this.deps.resolveEntity(entry.holderId)
+      const attacker = this.deps.resolveEntity(entry.attackerId)
+      // Post-mortem retaliation: a holder killed by the triggering hit
+      // still reflects -- the authored amount derives from maxHp, not
+      // live vitals (legacy semantics + Tran The tanking fantasy).
+      if (holder === undefined) continue
+      if (attacker === undefined || !attacker.alive) continue
+
+      // Mark check at FLUSH time (post-settle): a chan_an instance the
+      // holder sourced on the attacker upgrades the coefficient; the
+      // mark itself is never consumed.
+      const marked =
+        entry.markedBy !== undefined &&
+        this.deps.buffs
+          .getForTarget(entry.attackerId)
+          .some(
+            (inst) =>
+              inst.definitionId === entry.markedBy &&
+              inst.sourceId === entry.holderId,
+          )
+      const ratio =
+        marked && entry.markedMaxHpRatio !== undefined
+          ? entry.markedMaxHpRatio
+          : entry.maxHpRatio
+      const coefficient = holder.stats.maxHp * ratio
+      if (coefficient <= 0) continue
+
+      this.emitOp({
+        type: 'deal_damage',
+        operationId:
+          `proc.${entry.rootActionId}.reflect.${entry.grantInstanceId}.${entry.capabilityId}` as CombatOperationId,
+        payload: {
+          targetId: entry.attackerId,
+          damageProfile: REFLECTION_PROFILE,
+          coefficient,
+          hitCount: 1,
+          canCrit: false,
+          canMiss: false,
+        },
+        origin: this.origin(entry.holderId, entry.rootActionId, `reflect.${entry.capabilityId}`),
+      })
+    }
+  }
+
+  /**
+   * reactive_proc lane (Ung The beta): the holder's intercept/counter/
+   * follow-up grants at a reactive window. Fail-fast order per attempt
+   * (design Part XI): gates -> roll -> pay on SUCCESS -> commit. A
+   * window the caller suppressed (dead / hard-CC / Qua The) never
+   * reaches this lane, so no RNG is consumed; an affordable-but-failed
+   * roll spends NOTHING.
    *
-   * Dead-holder guard (MED review): a participant killed by the hit
-   * that opened this window performs NO transaction -- no cost, no rng
-   * draw, no success credit, no queue.
+   * Per attempt: the flat authored `theCost` gates affordability
+   * (balance read only -- no consume op yet), the authored chanceStat
+   * rolls, and on success the consume_resource op pays (its settle
+   * result is checked), the queuedAction descriptor returns for the
+   * caller's bypass queue, and the Ho Bich ward descriptor rides the
+   * attempt for the window's substitution code.
+   *
+   * Dead-holder guard: a participant killed before this window performs
+   * NO transaction -- no cost, no rng draw, no queue (design: a dead
+   * actor's queued payload likewise never resolves, with no refund).
    */
   resolveReactiveProcs(
     holderId: CombatEntityId,
@@ -208,29 +319,15 @@ export class CombatProcSystem {
     for (const grant of grants) {
       const proc = asReactiveProc(grant)
       if (proc === undefined || proc.trigger !== trigger) continue
-      if (context.nonDamaging === true && proc.firesOnNonDamagingAction !== true) {
-        continue
-      }
-      // once = at most one PAID roll: an unfunded grant consumes no roll,
-      // so a payable grant later in the same grant list still fires.
-      if (opts.once === true && attempts.some((a) => a.paid)) {
+      // 'once' = stop after the first ROLLED attempt -- an unaffordable
+      // grant (skipped before the roll) must not consume the trigger
+      // and suppress a later affordable grant on the same holder.
+      if (opts.once === true && attempts.some((attempt) => attempt.rolled === true)) {
         return { attempts, queuedFollowUps }
       }
 
-      const cost = resolveProcCost(grants, proc.theCost ?? THE_PROC_COST)
-      const paid =
-        (holder.currentThe ?? 0) >= cost &&
-        this.settleOp(
-          this.resourceOp(
-            'consume_resource',
-            holderId,
-            cost,
-            opts.rootActionId,
-            `cost.${grant.instanceId}.${grant.capability.id}`,
-          ),
-        ) === 'resolved'
-
-      if (!paid) {
+      const cost = proc.theCost ?? THE_PROC_COST
+      if ((holder.currentThe ?? 0) < cost) {
         attempts.push({ paid: false, success: false })
         continue
       }
@@ -240,41 +337,24 @@ export class CombatProcSystem {
         holder.stats[proc.chanceStat] ?? 0,
       )
       const success = this.deps.rng.rollChance(chance)
+      let paid = false
 
       if (success) {
-        if ((proc.theGainOnSuccess ?? 0) > 0) {
-          this.emitOp(
+        // Success-only consume (design Part XI): the flat authored cost
+        // pays AFTER the roll -- a failed roll spends nothing, and no
+        // refund channel exists.
+        paid =
+          this.settleOp(
             this.resourceOp(
-              'gain_resource',
+              'consume_resource',
               holderId,
-              proc.theGainOnSuccess!,
+              cost,
               opts.rootActionId,
-              `gain.${grant.instanceId}.${grant.capability.id}`,
+              `cost.${grant.instanceId}.${grant.capability.id}`,
             ),
-          )
-        }
+          ) === 'resolved'
 
-        // Task 20 (spec 8.2) -- a successful Tro proc heals the
-        // TRIGGERING ally through the heal authority.
-        if (
-          proc.healsTriggeringAllyMaxHpRatio !== undefined &&
-          context.attacker?.entity.alive === true
-        ) {
-          this.emitOp({
-            type: 'heal',
-            operationId:
-              `proc.${opts.rootActionId}.heal.${grant.instanceId}.${grant.capability.id}` as CombatOperationId,
-            payload: {
-              targetId: context.attacker.id,
-              amount:
-                context.attacker.entity.stats.maxHp *
-                proc.healsTriggeringAllyMaxHpRatio,
-            },
-            origin: this.origin(holderId, opts.rootActionId, `heal.${grant.capability.id}`),
-          })
-        }
-
-        if (proc.queuedAction !== undefined) {
+        if (paid && proc.queuedAction !== undefined) {
           const targetIds =
             proc.queuedAction.targetMode === 'attacker'
               ? context.attacker?.entity.alive === true
@@ -290,7 +370,7 @@ export class CombatProcSystem {
               intercepted: context.intercepted,
               outcome: context.outcome,
             }
-            attempts.push({ paid: true, success, effect: proc })
+            attempts.push({ paid, success, rolled: true, effect: proc })
             queuedFollowUps.push({
               actorId: holderId,
               executionKind: 'reactive_bypass',
@@ -304,7 +384,7 @@ export class CombatProcSystem {
         }
       }
 
-      attempts.push({ paid: true, success, effect: proc })
+      attempts.push({ paid, success, rolled: true, effect: proc })
     }
 
     return { attempts, queuedFollowUps }

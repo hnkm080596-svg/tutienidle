@@ -1966,15 +1966,33 @@ v80 (BODY-PERFECTION), v81 (BODY-HIDDEN).
   `bodyPerfection` slice is RETIRED — design sec.14/15 forbids the
   generic hidden-material perfection surface, so the m-f-body-perfection
   content pass is moot (registry stays empty by design).
-- **HIDDEN-B** open (PR #24) — Ancient Beast trial (mortal) +
+- **HIDDEN-B** merged (PR #24) — Ancient Beast trial (mortal) +
   Quán Thể diversion (qi_refining).
-- **HIDDEN-C** open (PR #25, save v83) — zhou_tian reworked to discrete
-  `completed` 0..36 (authored `zhouTianStepCost`/`zhouTianStepReward`),
-  Nghịch Chu Thiên mechanic on foundation_establishment.
+- **HIDDEN-C** merged (PR #25 + post-merge PR #26, save v83) — zhou_tian
+  reworked to discrete `completed` 0..36 (authored
+  `zhouTianStepCost`/`zhouTianStepReward`), Nghịch Chu Thiên mechanic on
+  foundation_establishment.
 - BODY-CONTENT collapsed: Chu Thiên rewards shipped in HIDDEN-C; the
   perfection-materials surface retired by design; only the 6
   `baseGains` placeholders remain — owned by the deferred
   BETA-BALANCE phase (user ruling 2026-09-24).
+
+### Path-beta wave (branch `master`, 2026-09-25)
+
+- **KIEM-PHO BETA** open (PR #30) — node tree + combo table wired to
+  gameplay; beta balance exception deferred to BETA-BALANCE per user
+  ruling (decision: QA_ACCEPTED_WITH_EXCEPTIONS).
+- **PHAP-TU BETA** open (PR #31) — basic-skill node lane (5 elements) +
+  presentation layer + honesty pass; decision QA_FIXED_POINT_REACHED.
+- **NGU-KIEM** open (PR #32) — phi-kiem ordered queue (Khoi/Lien) +
+  KiemY forge + 3-node spine + legacy removal;
+  QA_FIXED_POINT_REACHED.
+- **THE-TU BETA** in flight — mutex roots Cuong Chien/Tran The, pay_hp
+  sacrifice, phan_chien reflect, node tree; QA loop running on
+  `devin/1790308404-the-tu-beta`.
+- **THE-TU-AN (Ung The)** in flight — hidden way reactive kit
+  (Hoi interception, reactive procs, Thế facet); QA loop running on
+  `devin/1790353872-the-tu-an-ung-the`.
 
 ---
 

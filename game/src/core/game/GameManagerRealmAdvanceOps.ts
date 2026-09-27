@@ -11,6 +11,7 @@ import { issueCompanionGifts } from '../companion/CompanionGifts'
 import { CULTIVATION_PATH_MODULES, getActiveWayDefinition } from '../player/CultivationPathKit'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward, reconcileCultivationPathRealmRewards as reconcilePathRealmRewards, hasStaticPathCapability } from '../player/CultivationPathSystem'
+import { grantSkillCore } from '../progression/NodeSystem'
 import {
   computeBreakthroughGrade,
   investBodyChapterState,
@@ -114,6 +115,7 @@ export class GameManagerRealmAdvanceOps {
       breakthroughOutcomeService: BreakthroughOutcomeService
       progressionOps: GameManagerProgressionOps
       getTurnBattle: () => TurnBattle | null
+      isTurnBattleInProgress: () => boolean
       markQuestRealmTransition: () => void
       // Material-landing funnel (the essence change credit is a live
       // landing).
@@ -150,6 +152,12 @@ export class GameManagerRealmAdvanceOps {
    * absent-key write semantics as TribulationOutcomeService).
    */
   resolveTalentEntitlement(player: PlayerData, decision: TalentEntitlementDecision): boolean {
+    // Out-of-combat write: resolving mid-battle would persist the record
+    // while the combat-passive sync no-ops. Rejecting keeps the pending
+    // entitlement (and its mandatory modal) valid until the battle ends.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
     const resolved = resolveTalentEntitlementRecord(player, decision)
 
     if (resolved) {
@@ -172,6 +180,26 @@ export class GameManagerRealmAdvanceOps {
     // the slice presence check stays (corrupt saves fail closed).
     if (player.swordPath && hasStaticPathCapability(player, 'sword.sword_riding')) {
       applyBreakthroughMerge(player.swordPath)
+    }
+  }
+
+  /**
+   * Ngu Kiem Beta (F-NK-AUT-7) - replay the committed way's
+   * grantedNodeIds at restore. Saves that picked a way BEFORE its
+   * granted nodes shipped (v84 hidden_sword_pathway predates
+   * ngu_kiem_khoi) never re-run the initiation ritual, so the grant is
+   * permanently missing and the provider resolves a broken evolution
+   * chain. grantSkillCore is idempotent (level>=1 + mirror membership
+   * short-circuit) so every restore is safe; unregistered/unknown way
+   * pairs no-op (their ownsership/way validators report separately).
+   */
+  reconcileWayGrants(player: PlayerData): void {
+    const way = getActiveWayDefinition(player)
+
+    for (const nodeId of way?.grantedNodeIds ?? []) {
+      if (this.deps.nodeRegistry.has(nodeId)) {
+        grantSkillCore(player, this.deps.nodeRegistry.get(nodeId))
+      }
     }
   }
 
@@ -248,8 +276,7 @@ export class GameManagerRealmAdvanceOps {
     // cycle is live - and inside a hidden trial it also freezes the
     // lineage so the earned completion can silently never land. The
     // sibling write paths below already refuse the same states.
-    const battle = this.deps.getTurnBattle()
-    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
@@ -324,6 +351,14 @@ export class GameManagerRealmAdvanceOps {
       }
     }
 
+    // Ngu Kiem Beta -- every declared granted node must be registered
+    // (a missing id fails the whole ritual before commit).
+    for (const nodeId of way.grantedNodeIds ?? []) {
+      if (!this.deps.nodeRegistry.has(nodeId)) {
+        return false
+      }
+    }
+
     // Path/way commit - the authority validates the pair, evaluates the
     // offerGate live, and writes cultivationWay + the base
     // cultivationPath id plus the path-state slice (sword). Zero
@@ -353,6 +388,13 @@ export class GameManagerRealmAdvanceOps {
     // as node-effect grantsSkillCoreIds (level authority: nodeLevels).
     for (const skillId of way.coreSkillIds ?? []) {
       this.deps.progressionOps.grantSkillCoreBySkillId(player, skillId)
+    }
+
+    // Ngu Kiem Beta -- granted evolution nodes (Khoi at ritual) write
+    // through the same seam: nodeLevels + purchasedNodeIds (respec
+    // preserves them; devResetBranch still strips them deliberately).
+    for (const nodeId of way.grantedNodeIds ?? []) {
+      grantSkillCore(player, this.deps.nodeRegistry.get(nodeId))
     }
 
     // P7-M4 - starter learnedness pin: the way's starter basic is
@@ -460,9 +502,7 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    const battle = this.deps.getTurnBattle()
-
-    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
@@ -489,9 +529,7 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    const battle = this.deps.getTurnBattle()
-
-    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
@@ -527,9 +565,7 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    const battle = this.deps.getTurnBattle()
-
-    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
@@ -556,6 +592,17 @@ export class GameManagerRealmAdvanceOps {
    * before learn) so repeat calls are safe.
    */
   syncRealmPassive(player: PlayerData) {
+    // A mid-battle sync would reach a learnSkill that rejects the grant,
+    // silently swallowing the passive. The skip can fire on a mid-fight
+    // minor breakthrough (realmLevel only - realmId never changes
+    // mid-battle), and is harmless because the current realm's passive
+    // was already granted at realm entry and this learn is idempotent.
+    // There is no restore-time re-sync; a passive genuinely missing
+    // (corrupt save, future caller) waits for the next breakthrough.
+    if (this.deps.isTurnBattleInProgress()) {
+      return
+    }
+
     const realm = getCurrentRealm(player.realmId)
 
     const skillId = getActiveWayDefinition(player)?.realmRewards?.[realm.id]?.passiveSkillId
@@ -589,6 +636,11 @@ export class GameManagerRealmAdvanceOps {
    * useTribulation.ts's resolveVictory()).
    */
   syncRealmStatPassive(player: PlayerData) {
+    // Same battle gate as syncRealmPassive above - a mid-fight grant
+    // would write player state outside combat authority.
+    if (this.deps.isTurnBattleInProgress()) {
+      return
+    }
     grantRealmPassive(player, getCurrentRealm(player.realmId).id)
   }
 

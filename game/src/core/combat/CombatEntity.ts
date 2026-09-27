@@ -54,8 +54,9 @@ export interface CombatEntity {
   // Battle snapshot of the The cap (undefined => MAX_THE). Derived once
   // at participant build — two disjoint producers, one per path:
   // spell via resolveMaxThe(player) (spell_pathway cap is a flat
-  // SPELL_PATH_MAX_THE=5); ung_the via the kit-baked MAX_THE +
-  // maxTheBonus (Task 20 collector). TheEconomy.theCap is the engine's
+  // SPELL_PATH_MAX_THE=5); ung_the via the kit-baked flat MAX_THE
+  // (buildTheTuAnKit stamps maxThe: MAX_THE - there is no node-bonus
+  // channel in the beta window). TheEconomy.theCap is the engine's
   // single read site (`entity.maxThe ?? MAX_THE`); kiemBarBridge
   // delegates to it, while theBarBridge uses THE_BAR_MAX (the
   // spell-domain cap) as its own fallback. Never persisted.

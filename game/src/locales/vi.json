@@ -121,6 +121,32 @@
         "theTuAn": "Thể Tu Ẩn"
       }
     },
+    "theTuTree": {
+      "abandoned": "Đã bỏ con đường này",
+      "sealed": "Chưa đủ cảnh giới",
+      "sealedName": "???",
+      "sealedNext": "Phong ấn",
+      "roles": {
+        "root": "Võ Đạo",
+        "basic": "Cơ Bản",
+        "special": "Đặc Biệt"
+      },
+      "scaling": {
+        "might": "Sát Thương theo Căn Cốt",
+        "maxHp": "Sát Thương theo Sinh Mệnh Tối Đa",
+        "aoe": "Đánh Nhiều Kẻ",
+        "sacrifice": "Hiến Sinh Mệnh",
+        "huyetCuong": "Huyết Cuồng",
+        "taunt": "Khiêu Khích",
+        "mark": "Chấn Ấn",
+        "reflect": "Phản lực theo Sinh Mệnh Tối Đa"
+      },
+      "realms": {
+        "luyenKhi": "Luyện Khí",
+        "trucCo": "Trúc Cơ",
+        "kimDan": "Kim Đan"
+      }
+    },
     "skillPath": {
       "title": "Kỹ Năng",
       "mortalName": "Phàm Nhân",
@@ -164,7 +190,6 @@
           "skillCastCount": "{count} lần xuất chiêu",
           "skillJoin": "và",
           "skill": "Cần {skill} đạt {requirement}",
-          "kiemDaoCap": "Kiếm Đạo đã đạt trần của cảnh giới",
           "techniqueRank": "Cần tâm pháp đạt tầng {rank}",
           "techniqueGrade": "Cần tâm pháp đạt phẩm {grade}",
           "skillUpgrade": "Cần nâng kỹ năng liên quan"
@@ -178,6 +203,9 @@
         "aria": "Chế độ cột giữa",
         "tree": "Cây Kỹ Năng",
         "detail": "Chi Tiết"
+      },
+      "list": {
+        "evolution": "Tiến Hóa: {name}"
       },
       "detail": {
         "empty": "Chọn một kỹ năng để xem chi tiết.",
@@ -246,7 +274,7 @@
           "hintPrefix": "Chuyên tu Kiếm Tu:",
           "hintSuffix": ".",
           "hienDescription": "Kiếm Phổ — sắp sẵn tối đa chín ấn kiếm, mỗi đòn đánh thường đánh theo thứ tự ấn; chuỗi ấn khớp phổ sẽ bộc phát thành tuyệt chiêu.",
-          "nguDescription": "Ngự Kiếm Đạo — vạn kiếm ngự không, mỗi phi kiếm là một đòn độc lập; Kiếm Ý tích lũy rèn thành Kiếm Đạo vĩnh viễn."
+          "nguDescription": "Ngự Kiếm — phi kiếm từng đòn độc lập theo thứ tự; Kiếm Ý rèn Kiếm Đạo, cảnh giới mới mở tầng tiến hóa."
         },
         "kiemPhoPreset": {
           "title": "Kiếm Phổ — Thứ Tự Ấn Kiếm",

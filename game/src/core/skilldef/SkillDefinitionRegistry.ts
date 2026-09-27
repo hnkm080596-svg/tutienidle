@@ -535,6 +535,14 @@ function validateActive(
       if (each.critChance !== undefined && (each.critChance < 0 || each.critChance > 1)) {
         fault('invalid_field_value', 'instances.each.critChance', 'critChance must be in [0, 1]')
       }
+      if (
+        each.momentumPerLandedInstance !== undefined &&
+        (typeof each.momentumPerLandedInstance !== 'number' ||
+          !Number.isFinite(each.momentumPerLandedInstance) ||
+          each.momentumPerLandedInstance < 0)
+      ) {
+        fault('invalid_field_value', 'instances.each.momentumPerLandedInstance', 'momentumPerLandedInstance must be a finite number >= 0')
+      }
       if (each.armorPierce !== undefined) {
         if (each.armorPierce.bypassChance < 0 || each.armorPierce.bypassChance > 1) {
           fault('invalid_field_value', 'instances.each.armorPierce.bypassChance', 'bypassChance must be in [0, 1]')
@@ -829,6 +837,9 @@ function validateOperation(
       if (op.missingHpBonusCap !== undefined && op.missingHpBonusCap < 0) {
         fault('invalid_field_value', `${path}.missingHpBonusCap`, 'must be >= 0')
       }
+      if (op.sourceMaxHpRatio !== undefined) {
+        validateExpression(op.sourceMaxHpRatio, `${path}.sourceMaxHpRatio`, deps, insideForEach, inLane, fault)
+      }
       // Per-hit consequence lane (spec D4): flat consequence ops plus
       // bounded `if` (nesting <= LANDED_LANE_MAX_IF_DEPTH) and ONE
       // secondary `deal_damage` level whose target must exclude the
@@ -997,6 +1008,13 @@ function validateOperation(
       if (op.source !== undefined) {
         requireSingleBindingTarget(op.source, 'source')
       }
+      if (typeof op.into !== 'string' || op.into.length === 0) {
+        fault('invalid_field_value', `${path}.into`, 'into must be a non-empty var name')
+      }
+      return
+    }
+    case 'pay_hp': {
+      validateExpression(op.maxHpRatio, `${path}.maxHpRatio`, deps, insideForEach, inLane, fault)
       if (typeof op.into !== 'string' || op.into.length === 0) {
         fault('invalid_field_value', `${path}.into`, 'into must be a non-empty var name')
       }

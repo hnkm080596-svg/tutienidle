@@ -264,9 +264,9 @@ const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
         p.realmId = 'tribulation'
         p.swordPath = { ...freshSwordPathState(), kiemDaoCount: 3, kiemDaoBase: 2 }
         p.nodeLevels = {
-          ngu_cascade_a: unlocks.a ? 1 : 0,
-          ngu_cascade_e: unlocks.e ? 1 : 0,
-          ngu_cascade_d: unlocks.d ? 1 : 0,
+          ngu_kiem_khoi: unlocks.a ? 1 : 0,
+          ngu_kiem_lien: unlocks.e ? 1 : 0,
+          ngu_kiem_phong_an: unlocks.d ? 1 : 0,
         }
       }),
       nodes: KIEM_TU_NODES,
@@ -303,10 +303,14 @@ const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
 
   'body:body_pathway': () =>
     (
+      // Beta: roots produce Basic only; Special arrives via the Truc Co
+      // core grant (core_<skill>), and there is no Ultimate slot.
       [
         { label: 'no_root', nodeLevels: {} as Record<string, number>, requiredSlots: [] },
-        { label: 'cuong_chien', nodeLevels: { cuong_chien: 1 } as Record<string, number>, requiredSlots: ['special', 'ultimate'] },
-        { label: 'tran_the', nodeLevels: { tran_the: 1 } as Record<string, number>, requiredSlots: ['special', 'ultimate'] },
+        { label: 'cuong_chien', nodeLevels: { cuong_chien: 1 } as Record<string, number>, requiredSlots: [] },
+        { label: 'cuong_chien+special', nodeLevels: { cuong_chien: 1, core_loan_dau: 1 } as Record<string, number>, requiredSlots: ['special'] },
+        { label: 'tran_the', nodeLevels: { tran_the: 1 } as Record<string, number>, requiredSlots: [] },
+        { label: 'tran_the+special', nodeLevels: { tran_the: 1, core_phan_chan: 1 } as Record<string, number>, requiredSlots: ['special'] },
       ] as const
     ).map(({ label, nodeLevels, requiredSlots }) => ({
       label,
@@ -320,9 +324,12 @@ const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
 
   'body:hidden_body_pathway': () =>
     (
+      // Ung The beta: tham_the basic is unconditional; the quan_the
+      // special enters only via the major_quan_the node's skill-core
+      // grant; there is no ultimate slot and no *_mon purchasable roots.
       [
-        { label: 'no_roots', nodeLevels: {} as Record<string, number>, requiredSlots: [] },
-        { label: 'all_roots', nodeLevels: { ho_mon: 1, phan_mon: 1, tro_mon: 1 } as Record<string, number>, requiredSlots: ['special', 'ultimate'] },
+        { label: 'no_quan_the', nodeLevels: {} as Record<string, number>, requiredSlots: [] },
+        { label: 'quan_the', nodeLevels: { core_quan_the: 1 } as Record<string, number>, requiredSlots: ['special'] },
       ] as const
     ).map(({ label, nodeLevels, requiredSlots }) => ({
       label,
@@ -547,25 +554,36 @@ function collectCastableDefs(): Census {
 
   // -- Leg 4: producer-fn matrices (direct calls for shape variants) -----
   const zeroKitMods = {
+    cuongQuyenCoefficientBonus: 0,
+    cuongQuyenArmorPierce: 0,
+    loanDauPaidHpBonus: 0,
     missingHpBonusBonus: 0,
+    tranApMaxHpRatioBonus: 0,
+    tranKinhWeakenRatio: 0,
     reflectMaxHpRatioBonus: 0,
-    reflectTakenRatioBonus: 0,
-    sonNhacWardRatioBonus: 0,
-    tauntTurnsBonus: 0,
-    batTuDurationBonus: 0,
+    reflectMarkedRatioBonus: 0,
   }
   for (const root of ['cuong_chien', 'tran_the'] as const) {
-    const kit = buildTheTuKit(root, zeroKitMods)
+    const kit = buildTheTuKit(root, zeroKitMods, { special: true })
     exercisedProducerFns.add('../../data/skill/TheTuSkills.ts#buildTheTuKit')
     requireDef(`TheTuKit:${root}.basic`, kit.basic)
     requireDef(`TheTuKit:${root}.special`, kit.special)
-    requireDef(`TheTuKit:${root}.ultimate`, kit.ultimate)
   }
-  const anKit = buildTheTuAnKit(['ho_mon', 'phan_mon', 'tro_mon'])
+  // Ung The beta: mods + the Quan The ownership grant are the only two
+  // inputs; there is no ultimate slot and no marker-list argument.
+  const anKit = buildTheTuAnKit(
+    {
+      observationGainBonus: 0,
+      phanKinhArmorPierce: 0,
+      interceptWardRatio: 0,
+      evadeCounterMultiplierBonus: 0,
+      danTheBonus: 0,
+    },
+    { quanThe: true, quanTheCoreLevel: 1 },
+  )
   exercisedProducerFns.add('../../data/skill/TheTuSkills.ts#buildTheTuAnKit')
   requireDef('TheTuAnKit:basic', anKit.basic)
   requireDef('TheTuAnKit:special', anKit.special)
-  requireDef('TheTuAnKit:ultimate', anKit.ultimate)
   for (const [id, def] of Object.entries(anKit.reactivePayloads)) {
     push(`TheTuAnKit:reactive:${id}`, def)
   }

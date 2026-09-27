@@ -1,11 +1,16 @@
-// QA repro (buff2 M4 deep audit) -- the survive-effects lane mints
+// QA repro (buff2 M4 deep audit) -- the survive-effects lane used to mint
 // `survive.<battleGeneration>.<entityId>.grant` / `.cleanse` with NO
-// occurrence discriminator. Two grant-bearing survive events on the same
-// entity inside one battle (the DESIGNED Bat Tu Ba The -> talent-charge
-// pairing: "the ultimate is the first line; the talent charge is the
-// extra life once the ult is spent") re-mint an identical operationId,
-// which the scheduler rejects with a structural fault -- faulting the
-// scheduler and bricking every later buff op/lifecycle boundary.
+// occurrence discriminator, so two grant-bearing survive events on the
+// same entity inside one battle re-minted an identical operationId and
+// faulted the scheduler.
+//
+// THE TU BETA: the Bat Tu Ba The ultimate is parked (no ultimate slot),
+// so the body way can no longer reach a second grant-bearing survive
+// source -- the designed Bat Tu -> talent-charge pairing is post-beta.
+// What remains pin-able in beta: the talent charge grants tu_sinh_ngo
+// through the survive lane's `.grant` authored op (still exercising the
+// occurrence-discriminated mint), and the spent guard lets the next
+// lethal through cleanly.
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { ManualClockSource } from '../battle/turn/CombatClock'
@@ -15,7 +20,7 @@ import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
 import { CORE_REALM_LEVEL } from '../realm/realmSystem'
-import type { BuffDefinitionId, CombatEntityId, CombatOperationId } from '../battle/contracts/ids'
+
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 function makeManager() {
@@ -57,7 +62,7 @@ function makeDummy(id: string) {
 }
 
 describe('survive-effects op minting (QA deep audit)', () => {
-  it('Bat Tu grant then talent-charge grant on the same entity settles both survive events', () => {
+  it('talent-charge grant settles through the survive lane; spent guard lets the next lethal through', () => {
     const { gameManager } = makeManager()
     const player = mortalAtGate()
     player.selectedTalentIds = ['bat_tu_the']
@@ -70,57 +75,33 @@ describe('survive-effects op minting (QA deep audit)', () => {
     const battle = gameManager.getTurnBattle()
     expect(battle).not.toBeNull()
     const participant = battle!.players[0]!
-    const entityId = participant.entity.id as CombatEntityId
 
     const buffsOf = (definitionId: string) =>
       gameManager.getBattleBuffs(participant.entity.id).filter(
         (instance) => instance.definitionId === definitionId,
       )
 
-    // Lethal 1 -- the Bat Tu extraSource consumes the ult slot and grants
-    // bat_tu_ba_the through the survive lane's `.grant` authored op.
+    // Lethal 1 -- no beta extraSource exists (Bat Tu is parked), so the
+    // talent guard consumes its charge and grants tu_sinh_ngo + cleanses
+    // through the survive lane's `.grant` authored op (the mint that used
+    // to collide on repeated survive events).
     gameManager.combatSystem.applyDirectDamage(participant.entity, 999_999, 'survive_qa')
     expect(participant.entity.alive).toBe(true)
     expect(participant.entity.currentHp).toBe(1)
-    expect(buffsOf('bat_tu_ba_the')).toHaveLength(1)
-
-    // Expire the granted window so the next lethal falls through to the
-    // talent charge (the designed extra-life ordering).
-    const scheduler = gameManager.turnBattleOps.getTurnBattleSystem().combatScheduler
-    expect(scheduler).toBeDefined()
-    scheduler!.enqueueAuthored([
-      {
-        type: 'remove_buff',
-        operationId: 'qa.strip_bat_tu' as CombatOperationId,
-        payload: {
-          selector: {
-            kind: 'target_definition',
-            targetId: entityId,
-            definitionId: 'bat_tu_ba_the' as BuffDefinitionId,
-          },
-          removalReason: 'expired',
-        },
-        origin: {
-          kind: 'proc',
-          originId: 'qa.strip',
-          sourceId: entityId,
-          rootActionId: 'qa.strip',
-        },
-      },
-    ])
-    scheduler!.run()
+    expect(buffsOf('tu_sinh_ngo')).toHaveLength(1)
     expect(buffsOf('bat_tu_ba_the')).toHaveLength(0)
 
-    // Lethal 2 -- Bat Tu source declines (buff gone, slot on cooldown);
-    // the talent charge grants tu_sinh_ngo + cleanses. Its `.grant` op
-    // re-mints the operationId lethal 1 already reserved.
+    const scheduler = gameManager.turnBattleOps.getTurnBattleSystem().combatScheduler
+    expect(scheduler).toBeDefined()
+    expect(scheduler!.state).not.toBe('faulted')
+
+    // Lethal 2 -- the guard's charge is spent and no other survive source
+    // exists in beta: the hit is simply lethal.
     expect(() =>
       gameManager.combatSystem.applyDirectDamage(participant.entity, 999_999, 'survive_qa'),
     ).not.toThrow()
 
-    expect(participant.entity.alive).toBe(true)
-    expect(participant.entity.currentHp).toBe(1)
-    expect(buffsOf('tu_sinh_ngo')).toHaveLength(1)
+    expect(participant.entity.alive).toBe(false)
     expect(scheduler!.state).not.toBe('faulted')
   })
 

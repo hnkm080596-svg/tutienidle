@@ -26,6 +26,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch, t
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNodeMaxLevel, getEffectiveNodeMaxLevel, getNextLevelCost, hasPrerequisite, nodeWayApplies } from '@/core/progression/NodeSystem'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
@@ -287,15 +288,6 @@ function clawbackDetailText(clawback: GrantClawback | undefined): string {
     )
   }
 
-  if (clawback.kiemY > 0 || clawback.kiemDao > 0) {
-    parts.push(
-      t('panels.nodeTree.clawback.swords', {
-        y: clawback.kiemY,
-        d: clawback.kiemDao,
-      }),
-    )
-  }
-
   if (clawback.refund > 0) {
     parts.push(
       t('panels.nodeTree.clawback.refund', { n: clawback.refund }),
@@ -327,10 +319,21 @@ function onRespecClick() {
   pendingRespec.value = true
 }
 
+// Battle start kills any pending confirm - a stale modal's confirm
+// would otherwise silently no-op against the ops gate (the store
+// refuses ops while a battle runs).
+watch(inBattle, (engaged) => {
+  if (engaged) {
+    pendingRespec.value = false
+  }
+})
+
 function confirmRespec() {
   pendingRespec.value = false
 
-  respecNodeTree()
+  if (!inBattle.value) {
+    respecNodeTree()
+  }
 }
 
 function cancelRespec() {

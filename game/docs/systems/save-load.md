@@ -4,11 +4,11 @@
 
 ## GameSave shape
 
-`services/save/SaveSystem.ts` — `CURRENT_SAVE_VERSION = 59` (`services/save/saveVersion.ts`). `GameSave` chứa:
+`services/save/SaveSystem.ts` — `CURRENT_SAVE_VERSION = 84` (`services/save/saveVersion.ts`). `GameSave` chứa:
 
 | Trường | Nội dung |
 |---|---|
-| `version` | literal 59 — save cũ hơn = `incompatible`, không migrate |
+| `version` | literal 84 — save cũ hơn = `incompatible`, không migrate |
 | `player` | toàn bộ `PlayerData` |
 | `techniques` | `Technique[]` |
 | `skills` | `Skill[]` |
@@ -27,7 +27,7 @@
 
 ## Validate & restore order
 
-Validate diễn ra 2 lớp: **version check trước** (không khớp 59 → `incompatible`), rồi **shape validation**. Restore order chuẩn (R10):
+Validate diễn ra 2 lớp: **version check trước** (không khớp 84 → `incompatible`), rồi **shape validation**. Restore order chuẩn (R10):
 
 ```text
 1. gameManager.preflightSaveRegistryReferences(save)  — mọi id tham chiếu

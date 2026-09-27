@@ -1,18 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { KIEM_TU_NODES } from './KiemTuNodes'
-import { ORB_UNLOCK_REALM } from '../skill/KiemPhoOrbs'
-import type { OrbId } from '../../core/kiem-tu/KiemTuState'
+import { KIEM_TU_NODES, NGU_KIEM_EVOLUTION_NODE_IDS } from './KiemTuNodes'
+import { KIEM_PHO_ORBS, ORB_UNLOCK_REALM } from '../skill/KiemPhoOrbs'
+import { BUFF_REGISTRY } from '../buff/BuffRegistry'
 
-// Kiem Tu Reimagined Task 11 (spec 2026-09-15 §6) — the reimagined
-// tree: 5 orb branches (growth + combo capstone) under 'kiem_pho',
-// and the ngu branch (cascade unlocks, per-instance growth, Cuu Cung
-// 3x3) under 'ngu_kiem'. The legacy Kiem Tran / Bat Kiem node set is
-// gone (Task 12 teardown). Cultivation Path Framework M6: the
-// kiem_tu_an flip node is retired — way entry is ritual-only and every
-// node carries requiredCultivationPath 'sword' + requiredWay
-// ('sword_pathway' orbs / 'hidden_sword_pathway' subtree) stamped at export.
+// Kiem Pho Beta (docs/specs/kiem-pho-beta-spec.md) - the tree under
+// test: 8 kiem_pho nodes - one four-role branch per beta orb (Dam at
+// qi_refining, Chem at foundation_establishment): Can (growth),
+// Thuan Thuc (skill-scoped keystone), Kiem Ket (combo modifier on the
+// completing orb), Lien Thuc (combo modifier on >=2 of that orb).
+// Bo/Hat/Quet stay out of scope. The ngu branch (cascade unlocks,
+// per-instance growth, Cuu Cung 3x3) under 'ngu_kiem' is unchanged.
+// Every node carries requiredCultivationPath 'sword' + requiredWay
+// ('sword_pathway' orbs / 'hidden_sword_pathway' subtree) stamped at
+// export; beta nodes modify the SKILL via skillDefinitionModifiers /
+// swordPathComboModifier, never the character.
 
-const ORB_IDS: OrbId[] = ['orb_dam', 'orb_chem', 'orb_bo', 'orb_hat', 'orb_quet']
 const REALM_BY_INDEX = [
   'mortal',
   'qi_refining',
@@ -22,24 +24,13 @@ const REALM_BY_INDEX = [
   'soul_transformation',
 ] as const
 
-const CUU_CUNG_OUTER_IDS = [
-  'cuu_cung_kham',
-  'cuu_cung_khon',
-  'cuu_cung_chan',
-  'cuu_cung_ton',
-  'cuu_cung_can',
-  'cuu_cung_doai',
-  'cuu_cung_cin',
-  'cuu_cung_ly',
-] as const
-
 function node(id: string) {
   const found = KIEM_TU_NODES.find(n => n.id === id)
   if (!found) throw new Error(`node ${id} missing from KIEM_TU_NODES`)
   return found
 }
 
-describe('KiemTuNodes — tree shape', () => {
+describe('KiemTuNodes - tree shape', () => {
   it('unique node ids', () => {
     const ids = KIEM_TU_NODES.map(n => n.id)
     expect(new Set(ids).size).toBe(ids.length)
@@ -60,54 +51,69 @@ describe('KiemTuNodes — tree shape', () => {
   })
 })
 
-describe('KiemTuNodes — orb branches (hien)', () => {
-  it.each(ORB_IDS)('%s branch: 5 growth + 1 capstone, hien way, realm gate', orb => {
-    const short = orb.replace('orb_', '')
-    const growth = KIEM_TU_NODES.filter(
-      n => n.branchTag === 'kiem_pho' && n.id.startsWith(`orb_${short}_`) && !n.effect.swordPathComboModifier,
-    )
-    const capstone = KIEM_TU_NODES.find(
-      n => n.branchTag === 'kiem_pho' && n.id.startsWith(`orb_${short}_`) && n.effect.swordPathComboModifier,
-    )
+describe('KiemTuNodes - kiem_pho beta branches (hien)', () => {
+  // Kiem Pho Beta (design sec.10-12): exactly the 8 authored beta
+  // nodes; the legacy orb_* growth/capstone ids are retired.
+  const BETA_IDS = [
+    'thich_can', 'nhat_diem', 'quy_tuyen', 'lien_thich',
+    'tram_can', 'thuong_tham', 'luu_ngan', 'lien_tram',
+  ]
 
-    expect(growth.length).toBe(5)
-    expect(capstone, `missing capstone for ${orb}`).toBeDefined()
-
-    const gateRealm = REALM_BY_INDEX[ORB_UNLOCK_REALM[orb]]!
-    for (const g of growth) {
-      expect(g.requiredCultivationPath).toBe('sword')
-      expect(g.requiredWay).toBe('sword_pathway')
-      expect(g.prerequisites).toContainEqual({ kind: 'realm', realmId: gateRealm })
-    }
-    expect(capstone!.requiredCultivationPath).toBe('sword')
-    expect(capstone!.requiredWay).toBe('sword_pathway')
-    expect(capstone!.type).toBe('major')
+  it('the kiem_pho branch is exactly the 8 beta nodes - no legacy orb ids remain', () => {
+    const kiemPho = KIEM_TU_NODES.filter(n => n.branchTag === 'kiem_pho').map(n => n.id)
+    expect([...kiemPho].sort()).toEqual([...BETA_IDS].sort())
+    expect(
+      KIEM_TU_NODES.some(
+        n => /^orb_(dam|chem|bo|hat|quet)_\d+$/.test(n.id) || n.id.endsWith('_capstone'),
+      ),
+    ).toBe(false)
   })
 
-  it('capstones carry swordPathComboModifier targeting their own orb', () => {
-    for (const orb of ORB_IDS) {
-      const short = orb.replace('orb_', '')
-      const capstone = KIEM_TU_NODES.find(
-        n => n.id.startsWith(`orb_${short}_`) && n.effect.swordPathComboModifier,
-      )!
-      expect(capstone.effect.swordPathComboModifier!.minOrbCount.orb).toBe(orb)
-      expect(capstone.effect.swordPathComboModifier!.minOrbCount.count).toBeGreaterThanOrEqual(1)
-    }
-  })
-
-  it('orb growth nodes are prereq-chained inside their own branch (no cross-orb links)', () => {
+  it('no kiem_pho node carries statModifiers - nodes modify the SKILL, never the character (design sec.16.A)', () => {
     for (const n of KIEM_TU_NODES.filter(n => n.branchTag === 'kiem_pho')) {
-      const short = n.id.split('_')[1]
-      for (const prereq of n.prerequisites ?? []) {
-        if (prereq.kind === 'node') {
-          expect(prereq.nodeId.startsWith(`orb_${short}_`)).toBe(true)
-        }
-      }
+      expect(n.effect.statModifiers).toBeUndefined()
     }
+  })
+
+  it('branch shape per orb: Can realm-gated at the orb unlock realm, Thuan Thuc/Kiem Ket prereq Can, Lien Thuc prereq both', () => {
+    const branches = [
+      ['orb_dam', 'thich_can', 'nhat_diem', 'quy_tuyen', 'lien_thich'],
+      ['orb_chem', 'tram_can', 'thuong_tham', 'luu_ngan', 'lien_tram'],
+    ] as const
+    for (const [orb, can, thuanThuc, kiemKet, lienThuc] of branches) {
+      const gateRealm = REALM_BY_INDEX[ORB_UNLOCK_REALM[orb]]
+      const canNode = node(can)
+      expect(canNode.requiredCultivationPath).toBe('sword')
+      expect(canNode.requiredWay).toBe('sword_pathway')
+      expect(canNode.prerequisites).toContainEqual({ kind: 'realm', realmId: gateRealm })
+      expect(canNode.type).toBe('minor')
+      expect(canNode.role).toBe('growth')
+
+      for (const id of [thuanThuc, kiemKet, lienThuc]) {
+        const n = node(id)
+        expect(n.requiredCultivationPath).toBe('sword')
+        expect(n.requiredWay).toBe('sword_pathway')
+        expect(n.type).toBe('major')
+      }
+      expect(node(thuanThuc).prerequisites).toContainEqual({ kind: 'node', nodeId: can })
+      expect(node(kiemKet).prerequisites).toContainEqual({ kind: 'node', nodeId: can })
+      const lienPrereqs = node(lienThuc).prerequisites
+      expect(lienPrereqs).toContainEqual({ kind: 'node', nodeId: thuanThuc })
+      expect(lienPrereqs).toContainEqual({ kind: 'node', nodeId: kiemKet })
+    }
+  })
+
+  it('Can nodes carry per-level skillDefinitionModifiers on their own orb', () => {
+    expect(node('thich_can').effect.skillDefinitionModifiers).toContainEqual(
+      expect.objectContaining({ skillId: 'orb_dam' }),
+    )
+    expect(node('tram_can').effect.skillDefinitionModifiers).toContainEqual(
+      expect.objectContaining({ skillId: 'orb_chem' }),
+    )
   })
 })
 
-describe('KiemTuNodes — ngu branch', () => {
+describe('KiemTuNodes — ngu evolution spine', () => {
   it('no kiem_tu_an flip node exists — way entry is ritual-only (M6)', () => {
     expect(KIEM_TU_NODES.find(n => n.id === 'kiem_tu_an')).toBeUndefined()
     // The retired effect field is gone from every node.
@@ -116,60 +122,162 @@ describe('KiemTuNodes — ngu branch', () => {
     }
   })
 
-  it('cascade unlock nodes: a @ foundation, e @ golden_core, d @ nascent_soul', () => {
-    const expected: Array<[string, 'a' | 'e' | 'd', string]> = [
-      ['ngu_cascade_a', 'a', 'foundation_establishment'],
-      ['ngu_cascade_e', 'e', 'golden_core'],
-      ['ngu_cascade_d', 'd', 'nascent_soul'],
-    ]
-    for (const [id, unlock, realmId] of expected) {
+  it('exactly the three spine nodes exist (Khoi / Lien / Phong) — no Cuu Cung or Roll Cascade ids remain', () => {
+    const nguNodes = KIEM_TU_NODES.filter(n => n.branchTag === 'ngu_kiem')
+    expect(nguNodes.map(n => n.id)).toEqual([...NGU_KIEM_EVOLUTION_NODE_IDS])
+  })
+
+  it('every spine node is single-level, major and way-stamped; live layers carry evolutionId, the sealed node carries none', () => {
+    for (const id of NGU_KIEM_EVOLUTION_NODE_IDS) {
       const n = node(id)
       expect(n.branchTag).toBe('ngu_kiem')
+      expect(n.type).toBe('major')
+      expect(n.maxLevel).toBe(1)
       expect(n.requiredCultivationPath).toBe('sword')
       expect(n.requiredWay).toBe('hidden_sword_pathway')
-      expect(n.effect.cascadeUnlock).toBe(unlock)
-      expect(n.prerequisites).toContainEqual({ kind: 'realm', realmId })
+    }
+    expect(node('ngu_kiem_khoi').effect.evolutionId).toBe('khoi')
+    expect(node('ngu_kiem_lien').effect.evolutionId).toBe('lien')
+    // Sealed: no evolution layer ever activates from this node.
+    expect(node('ngu_kiem_phong_an').effect.evolutionId).toBeUndefined()
+  })
+
+  it('ngu_kiem_khoi is grant-only: free, grantedOnly, no prerequisites', () => {
+    const khoi = node('ngu_kiem_khoi')
+    expect(khoi.grantedOnly).toBe(true)
+    expect(khoi.insightCost).toBe(0)
+    expect(khoi.prerequisites ?? []).toEqual([])
+  })
+
+  it('ngu_kiem_lien requires Khoi + foundation_establishment and costs insight', () => {
+    const lien = node('ngu_kiem_lien')
+    expect(lien.grantedOnly).not.toBe(true)
+    expect(lien.insightCost).toBeGreaterThan(0)
+    expect(lien.prerequisites).toContainEqual({ kind: 'node', nodeId: 'ngu_kiem_khoi' })
+    expect(lien.prerequisites).toContainEqual({ kind: 'realm', realmId: 'foundation_establishment' })
+  })
+
+  it("ngu_kiem_phong_an is the sealed '???' placeholder beyond the beta ceiling", () => {
+    const phong = node('ngu_kiem_phong_an')
+    expect(phong.name).toBe('???')
+    expect(phong.prerequisites).toContainEqual({ kind: 'node', nodeId: 'ngu_kiem_lien' })
+    expect(phong.prerequisites).toContainEqual({ kind: 'realm', realmId: 'golden_core' })
+  })
+
+  it('spine nodes never modify character stats — no stat/kiem-economy effect fields', () => {
+    for (const id of NGU_KIEM_EVOLUTION_NODE_IDS) {
+      const n = node(id)
+      const forbidden = [
+        'kiemYGrant',
+        'kiemDaoGrant',
+        'cascadeUnlock',
+        'statBonus',
+        'damageBonus',
+        'levelsSkillId',
+      ]
+      for (const field of forbidden) {
+        expect(
+          (n.effect as Record<string, unknown>)[field],
+          `${id} carries forbidden field ${field}`,
+        ).toBeUndefined()
+      }
+      expect('levelsSkillId' in n).toBe(false)
     }
   })
 
-  it('every ngu node is way-stamped (requiredWay ngu + requiredCultivationPath sword) and never prereqs the retired flip node', () => {
-    const nguNodes = KIEM_TU_NODES.filter(n => n.branchTag === 'ngu_kiem')
-    expect(nguNodes.length).toBeGreaterThan(0)
-    for (const n of nguNodes) {
-      expect(n.requiredCultivationPath).toBe('sword')
-      expect(n.requiredWay).toBe('hidden_sword_pathway')
+  it('spine node-prereq chain is strictly linear (khoi -> lien -> phong)', () => {
+    for (const id of NGU_KIEM_EVOLUTION_NODE_IDS) {
+      const n = node(id)
       const nodePrereqs = (n.prerequisites ?? []).filter(p => p.kind === 'node')
-      // No 'node' prereq may point at the retired kiem_tu_an flip node;
-      // in-branch node links (none today) stay legal.
-      expect(nodePrereqs.every(p => p.nodeId !== 'kiem_tu_an')).toBe(true)
+      expect(nodePrereqs.length).toBeLessThanOrEqual(1)
+    }
+    expect(node('ngu_kiem_lien').prerequisites).toContainEqual({
+      kind: 'node',
+      nodeId: 'ngu_kiem_khoi',
+    })
+    expect(node('ngu_kiem_phong_an').prerequisites).toContainEqual({
+      kind: 'node',
+      nodeId: 'ngu_kiem_lien',
+    })
+  })
+})
+
+describe('KiemTuNodes - swordPathComboModifier predicate contract (DEC-6)', () => {
+  it('every authored combo modifier carries at least one predicate', () => {
+    for (const n of KIEM_TU_NODES) {
+      const m = n.effect.swordPathComboModifier
+      if (!m) continue
+      expect(
+        m.minOrbCount !== undefined || m.completingOrb !== undefined,
+        `${n.id} authors a swordPathComboModifier with no predicate - it can never match`,
+      ).toBe(true)
     }
   })
 })
 
-describe('KiemTuNodes — Cuu Cung 3x3', () => {
-  it('8 outer kiemYGrant nodes, each realm-gated, cap-guarded, way-stamped ngu', () => {
-    for (const id of CUU_CUNG_OUTER_IDS) {
-      const n = node(id)
-      expect(n.branchTag).toBe('ngu_kiem')
-      expect(n.requiredCultivationPath).toBe('sword')
-      expect(n.requiredWay).toBe('hidden_sword_pathway')
-      expect(n.effect.kiemYGrant).toBeGreaterThan(0)
-      expect(n.prerequisites).toContainEqual({ kind: 'kiemDaoBelowCap' })
-      expect((n.prerequisites ?? []).some(p => p.kind === 'realm')).toBe(true)
+
+describe('KiemTuNodes - authored-id resolution contract', () => {
+  // A typo'd skillId/buffId matches nothing at fold and the purchased
+  // node is silently inert - authored ids must resolve against the
+  // authored registries, same as the DEC-6 predicate pin's sibling.
+  it('every skillDefinitionModifiers.skillId resolves against KIEM_PHO_ORBS', () => {
+    for (const n of KIEM_TU_NODES) {
+      for (const m of n.effect.skillDefinitionModifiers ?? []) {
+        expect(
+          m.skillId in KIEM_PHO_ORBS,
+          `${n.id} targets unknown skillId ${m.skillId} - node would be silently inert`,
+        ).toBe(true)
+      }
     }
   })
 
-  it('trung_cung grants +1 kiemDaoCount, requires all 8 outers, cap-guarded', () => {
-    const trung = node('cuu_cung_trung')
-    expect(trung.branchTag).toBe('ngu_kiem')
-    expect(trung.requiredCultivationPath).toBe('sword')
-    expect(trung.requiredWay).toBe('hidden_sword_pathway')
-    expect(trung.effect.kiemDaoGrant).toBe(1)
-    expect(trung.prerequisites).toContainEqual({
-      kind: 'nodeCount',
-      nodeIds: [...CUU_CUNG_OUTER_IDS],
-      countRequired: 8,
-    })
-    expect(trung.prerequisites).toContainEqual({ kind: 'kiemDaoBelowCap' })
+  it('every swordPathComboModifier authored id resolves against the registries', () => {
+    // F-KP-9-1 - the combo channel carries the same registry-keyed ids:
+    // completingOrb/minOrbCount.orb vs KIEM_PHO_ORBS; appliesBuff
+    // .definitionId and ailmentInteractions[].buffId vs BUFF_REGISTRY
+    // (runtime resolution space - superset of KIEM_PHO_BUFFS).
+    const resolves = (id: string) => BUFF_REGISTRY.has(id)
+    for (const n of KIEM_TU_NODES) {
+      const m = n.effect.swordPathComboModifier
+      if (!m) continue
+      if (m.completingOrb !== undefined) {
+        expect(
+          m.completingOrb in KIEM_PHO_ORBS,
+          `${n.id} completingOrb ${m.completingOrb} unknown - predicate can never match`,
+        ).toBe(true)
+      }
+      if (m.minOrbCount !== undefined) {
+        expect(
+          m.minOrbCount.orb in KIEM_PHO_ORBS,
+          `${n.id} minOrbCount.orb ${m.minOrbCount.orb} unknown - predicate can never match`,
+        ).toBe(true)
+      }
+      if (m.appliesBuff !== undefined) {
+        expect(
+          resolves(m.appliesBuff.definitionId),
+          `${n.id} appliesBuff ${m.appliesBuff.definitionId} unknown - application binds no instance`,
+        ).toBe(true)
+      }
+      for (const i of m.ailmentInteractions ?? []) {
+        expect(
+          resolves(i.buffId),
+          `${n.id} interaction buffId ${i.buffId} unknown - interaction binds no instance`,
+        ).toBe(true)
+      }
+    }
+  })
+
+  it('every addAilmentInteractions buffId resolves against BUFF_REGISTRY', () => {
+    const resolves = (id: string) => BUFF_REGISTRY.has(id)
+    for (const n of KIEM_TU_NODES) {
+      for (const m of n.effect.skillDefinitionModifiers ?? []) {
+        for (const i of m.addAilmentInteractions ?? []) {
+          expect(
+            resolves(i.buffId),
+            `${n.id} targets unknown buffId ${i.buffId} - interaction would bind no instance`,
+          ).toBe(true)
+        }
+      }
+    }
   })
 })

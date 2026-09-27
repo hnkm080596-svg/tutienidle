@@ -28,11 +28,9 @@ import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
 import { type OrbId } from '../kiem-tu/KiemTuState'
 import { isMortalPrecursorSkillId } from '../skill/MortalPrecursors'
-import { forgeCost, gainKiemY, grantKiemDao, loseKiemY } from '../kiem-tu/NguKiemDao'
 import { isHiddenSwordPathway } from '../kiem-tu/KiemTuPath'
 import { validatePreset } from '../kiem-tu/KiemPhoSystem'
 import { getRealmIndex } from '../realm/realmSystem'
-import { isBattleInProgress } from '../battle/BattleTypes'
 import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
 import {
   resolveCombatSkillRoles,
@@ -45,6 +43,7 @@ import { collectTalentEffects } from '../talent/TalentEffects'
 import { TALENT_PASSIVE_SKILLS } from '../../data/skill/TalentPassives'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
+import { NGU_KIEM_EVOLUTION_NODE_IDS } from '../../data/progression/KiemTuNodes'
 import { getActiveElement, hasStaticPathCapability } from '../player/CultivationPathSystem'
 import { commitSpellPathElement } from '../phap-tu/PhapTuState'
 import { getEffectiveMainStatCap } from '../stats/StatCap'
@@ -66,9 +65,15 @@ import type { TemplateRegistry } from './TemplateRegistry'
 // scope: Phap Tu element roots are only ever obtained through the atomic
 // selectSpellPathElement commit (purchaseNode rejects them), so a reset
 // that removed one could never be re-invested - the committed element
-// would be stranded. The preserve list lives here with the purchase
-// rejection that creates the obligation.
-const RESPEC_PRESERVED_NODE_IDS: readonly string[] = Object.values(PHAP_TU_ELEMENT_ROOT_IDS)
+// would be stranded. Ngu Kiem Beta: the evolution spine is a realm-gated
+// PROGRESSION LAYER, not a build axis - respec clearing a layer could
+// never re-earn it (grantedOnly seals the purchase path), which would
+// turn evolution into a build toggle (design sec.28). The preserve list
+// lives here with the purchase rejection that creates the obligation.
+export const RESPEC_PRESERVED_NODE_IDS: readonly string[] = [
+  ...Object.values(PHAP_TU_ELEMENT_ROOT_IDS),
+  ...NGU_KIEM_EVOLUTION_NODE_IDS,
+]
 
 export class GameManagerProgressionOps {
   constructor(
@@ -109,6 +114,14 @@ export class GameManagerProgressionOps {
    * selectedTalentIds at character creation.
    */
   syncTalentCombatPassive(player: PlayerData) {
+    // A mid-battle sync would revoke the granted passives then see every
+    // re-grant rejected by learnSkill's in-battle gate, leaving the kit
+    // stripped - callers (boot/restore/creation/breakthrough) never run
+    // during combat, so the whole sync refuses the same boundary.
+    if (this.deps.isTurnBattleInProgress()) {
+      return
+    }
+
     const allTalentPassiveIds = TALENT_PASSIVE_SKILLS.map((skill) => skill.id)
 
     // Revoke every current talent passive first (granting right after is
@@ -155,6 +168,14 @@ export class GameManagerProgressionOps {
    * granted (nodeLevels[core] = 1 + mirror) via NodeSystem.
    */
   learnSkill(skillId: string, player: PlayerData): boolean {
+    // learnSkill writes nodeLevels via its own atomic grant (not the
+    // gated grantSkillCoreBySkillId wrapper) - same mid-battle contract:
+    // a running battle only reads its minted kit snapshot, so the grant
+    // rejects instead of looking applied mid-fight.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     const template = this.deps.skillTemplates.get(skillId)
 
     if (!template) {
@@ -237,6 +258,13 @@ export class GameManagerProgressionOps {
    * core - callers preflight so this never silently fails post-commit.
    */
   grantSkillCoreBySkillId(player: PlayerData, skillId: string): boolean {
+    // node investment mutates player.nodeLevels, which a running battle only
+    // ever reads through its minted kit snapshot - reject instead of
+    // letting an in-battle purchase look like it applied mid-fight.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     const core = this.resolveSkillCore(skillId)
 
     if (!core) {
@@ -261,6 +289,14 @@ export class GameManagerProgressionOps {
    * result.
    */
   purchaseNode(nodeId: string, player: PlayerData): boolean {
+    // Same out-of-combat discipline as respecNodeTree/switchRoute: node
+    // investment mutates player.nodeLevels, which a running battle only
+    // ever reads through its minted kit snapshot - reject instead of
+    // letting an in-battle purchase look like it applied mid-fight.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     if (!this.deps.nodeRegistry.has(nodeId)) {
       return false
     }
@@ -321,35 +357,14 @@ export class GameManagerProgressionOps {
       selectsSpec !== undefined &&
       this.deps.skillSystem.selectSpecialization(selectsSpec.skillId, selectsSpec.specializationId)
 
-    // Kiem Tu Reimagined Task 11 (spec sec.5.4/sec.6) - Cuu Cung grants run
-    // through the NguKiemDao domain functions (the domain owns the cap
-    // rule; nodes never touch player.swordPath directly). The
-    // kiemDaoBelowCap prereq already blocked capped buys upstream.
-    if (node.effect.kiemYGrant) {
-      gainKiemY(player, node.effect.kiemYGrant)
-    }
-
-    if (node.effect.kiemDaoGrant) {
-      grantKiemDao(player, node.effect.kiemDaoGrant)
-    }
-
     // F-W-2 - record provenance CHI cho grant thuc su phat: learned
     // chi khi learnSkill tra true (skill hoc san tu ritual/root/way kit
     // khong ghi -> clawback khong the tuoc nham grant nguon khac);
-    // kiemY chi ghi khi pool thuc su nhan (mo phong guard cua gainKiemY);
     // grantsSkillCoreIds khong ghi - revokeNodeOwnership cascade tu lo.
     const grantRecord: NodeOneShotGrantRecord = {}
 
     if (learnedSkillIds.length > 0) {
       grantRecord.learnedSkillIds = learnedSkillIds
-    }
-
-    if (node.effect.kiemYGrant && player.swordPath && isHiddenSwordPathway(player)) {
-      grantRecord.kiemY = node.effect.kiemYGrant
-    }
-
-    if (node.effect.kiemDaoGrant && player.swordPath && isHiddenSwordPathway(player)) {
-      grantRecord.kiemDao = node.effect.kiemDaoGrant
     }
 
     if (selectsSpecApplied && selectsSpec) {
@@ -431,18 +446,6 @@ export class GameManagerProgressionOps {
 
           player.skillInsight += coreRefund
           clawbackRefund += coreRefund
-        }
-      }
-
-      if (record.kiemY) {
-        loseKiemY(player, record.kiemY)
-      }
-
-      if (record.kiemDao) {
-        const state = player.swordPath
-
-        if (state) {
-          state.kiemDaoCount = Math.max(0, state.kiemDaoCount - record.kiemDao)
         }
       }
 
@@ -558,6 +561,13 @@ export class GameManagerProgressionOps {
    * per node data; cannot exceed maxLevel; failure mutates nothing.
    */
   upgradeNode(nodeId: string, player: PlayerData): boolean {
+    // Same battle gate as purchaseNode: an upgrade writes the same
+    // player.nodeLevels the running battle reads only through minted
+    // clones - reject instead of silently applying nothing mid-fight.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     if (!this.deps.nodeRegistry.has(nodeId)) {
       return false
     }
@@ -620,6 +630,7 @@ export class GameManagerProgressionOps {
       return null
     }
 
+
     const revoked = new Set<string>()
     const refund = devResetBranchSystem(player, this.deps.nodeRegistry, branchTag, revoked)
 
@@ -673,8 +684,6 @@ export class GameManagerProgressionOps {
       removedNodeIds: [],
       unlearnedSkillIds: [],
       clearedSpecializations: [],
-      kiemY: 0,
-      kiemDao: 0,
     }
 
     for (const nodeId of revoked) {
@@ -742,31 +751,6 @@ export class GameManagerProgressionOps {
         }
       }
 
-      if (record.kiemY && sim.swordPath) {
-        const debited = Math.min(sim.swordPath.kiemY, record.kiemY)
-        sim.swordPath.kiemY -= debited
-        clawback.kiemY += debited
-
-        const residual = record.kiemY - debited
-        const realmIndex = getRealmIndex(sim.realmId)
-
-        if (residual > 0 && realmIndex >= 1) {
-          const swords = Math.min(
-            sim.swordPath.kiemDaoCount,
-            Math.ceil(residual / forgeCost(realmIndex)),
-          )
-
-          sim.swordPath.kiemDaoCount -= swords
-          clawback.kiemDao += swords
-        }
-      }
-
-      if (record.kiemDao && sim.swordPath) {
-        const removed = Math.min(record.kiemDao, sim.swordPath.kiemDaoCount)
-        sim.swordPath.kiemDaoCount -= removed
-        clawback.kiemDao += removed
-      }
-
       if (record.specializationSkillId && record.specializationId) {
         const stillClaimed = specializationClaimingNodes(
           this.deps.nodeRegistry,
@@ -826,6 +810,12 @@ export class GameManagerProgressionOps {
    * injected dep so GameManager stays the notification owner.
    */
   levelUpSkill(skillId: string, player: PlayerData): boolean {
+    // Same battle gate as purchaseNode/upgradeNode - the core upgrade
+    // below writes player.nodeLevels mid-fight would never apply.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     const coreId = skillCoreNodeId(skillId)
 
     if (!this.deps.nodeRegistry.has(coreId)) {
@@ -903,6 +893,13 @@ export class GameManagerProgressionOps {
    * "Nguyen tac" sec.2).
    */
   allocateAttributePoint(player: PlayerData, stat: MainStatKey): boolean {
+    // baseStats are minted into the combat entity at battle build - a
+    // mid-battle write is invisible to the running fight, so it rejects
+    // like every other combat-shaping progression write.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     if (player.attributePoints <= 0) {
       return false
     }
@@ -927,6 +924,12 @@ export class GameManagerProgressionOps {
    * write can never produce a state restore would reject.
    */
   setMortalBasicSkill(player: PlayerData, skillId: string): boolean {
+    // the pick binds the kit at battle build - mid-battle writes are
+    // battle-invisible, so they reject like every other gated write.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     if (player.realmId !== 'mortal' || player.cultivationPath !== undefined) {
       return false
     }
@@ -1007,7 +1010,7 @@ export class GameManagerProgressionOps {
       return false
     }
 
-    if (isBattleInProgress(this.deps.getTurnBattle()?.state)) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
@@ -1043,6 +1046,12 @@ export class GameManagerProgressionOps {
   // hold the claiming node or the 3-Insight cost / realm prereq /
   // excludesNode mutex are all bypassed. Unclaimed specs switch freely.
   selectSkillSpecialization(skillId: string, specializationId: string, player: PlayerData): boolean {
+    // specialization changes the resolved kit - same mid-battle gate as
+    // the other combat-shaping writes.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     const claimants = specializationClaimingNodes(this.deps.nodeRegistry, skillId, specializationId)
 
     // F-PT-C-3 - claim gate reads the same ownership mirror as clawback:

@@ -1,0 +1,13 @@
+{
+  "phase": "INTAKE",
+  "request": {
+    "runId": "kiem-pho-beta-2026-09-25",
+    "productRoot": ".",
+    "goal": "Kiem Pho beta: 2-orb (dam/chem) tree + 6 locked combos + skill-scoped node modifiers + seal-interaction ordering + VFX identities",
+    "requiredReadiness": true,
+    "contractPaths": [
+      "docs/qa/protocol/README.md",
+      "docs/specs/kiem-pho-beta-spec.md"
+    ]
+  }
+}

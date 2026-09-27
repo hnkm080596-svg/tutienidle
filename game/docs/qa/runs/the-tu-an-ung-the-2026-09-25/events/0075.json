@@ -1,0 +1,51 @@
+{
+  "outcome": "QA_BLOCKED_SCOPE",
+  "detail": "repairs outside authorized scope: F-TTA-CLN12-COR-2,F-TTA-CLN12-AUT-1",
+  "clauses": [
+    {
+      "id": "C1-identity",
+      "ok": true,
+      "reason": "all final evidence binds the declared state"
+    },
+    {
+      "id": "C2-census-coverage",
+      "ok": true,
+      "reason": "census + coverage complete"
+    },
+    {
+      "id": "C3-no-open",
+      "ok": false,
+      "reason": "open F-TTA-CLN12-COR-2; open F-TTA-CLN12-AUT-1"
+    },
+    {
+      "id": "C4-final-gates",
+      "ok": true,
+      "reason": "final gates green"
+    },
+    {
+      "id": "C5-sequential",
+      "ok": true,
+      "reason": "sequential phase reviews present"
+    },
+    {
+      "id": "C6-clean-pair",
+      "ok": true,
+      "reason": "Clean A/B complete and independent"
+    },
+    {
+      "id": "C7-mutation-corpus",
+      "ok": true,
+      "reason": "mutation + corpus satisfied"
+    },
+    {
+      "id": "C8-terminal-check",
+      "ok": false,
+      "reason": "no sealed independent TERMINAL_CHECK on the final state"
+    },
+    {
+      "id": "C9-readiness",
+      "ok": false,
+      "reason": "requiredReadiness run has no construction brief (PU-24)"
+    }
+  ]
+}

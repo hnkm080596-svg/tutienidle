@@ -23,17 +23,11 @@ import type { ProgressionNode } from '../../core/progression/ProgressionNode'
 const ALL_NODES = [...PHAP_TU_NODES, ...KIEM_TU_NODES, ...THE_TU_NODES]
 
 const UNLOCK_IDS = [
-  'major_bat_tu_tuc_menh',
-  'major_loan_dau_sat',
-  'major_khiem_khich_dien',
-  'major_son_nhac_bao_bi',
+  'major_loan_dau',
+  'major_phan_chan',
 ] as const
 
-const CAP_IDS = [
-  'ngu_kiem_sac',
-  'ngu_kiem_phong',
-  'ngu_kiem_sat',
-] as const
+const CAP_IDS = ['thich_can', 'tram_can'] as const
 
 function byId(id: string): ProgressionNode {
   const node = ALL_NODES.find((entry) => entry.id === id)
@@ -66,6 +60,17 @@ describe('authored technique gate set (M-QI-06)', () => {
         { atLevel: 4, prerequisite: { kind: 'techniqueRank', rank: 3 } },
         { atLevel: 5, prerequisite: { kind: 'techniqueRank', rank: 4 } },
       ])
+    }
+  })
+
+
+  it('the ngu_kiem evolution spine carries no technique gates (way/realm-gated only)', () => {
+    for (const node of KIEM_TU_NODES.filter((entry) => entry.id.startsWith('ngu_kiem_'))) {
+      expect(node.levelGates, `${node.id} levelGates`).toBeUndefined()
+      for (const prereq of node.prerequisites ?? []) {
+        expect(prereq.kind, `${node.id} techniqueRank prereq`).not.toBe('techniqueRank')
+        expect(prereq.kind, `${node.id} techniqueGrade prereq`).not.toBe('techniqueGrade')
+      }
     }
   })
 

@@ -24,8 +24,7 @@ import type {
   SkillId,
 } from '../contracts/ids'
 import type { CombatEntity } from '../../combat/CombatEntity'
-import { theCap } from '../../the-tu/TheEconomy'
-import type { CombatOperationResult } from '../contracts/results'
+import { MAX_THE, RESOURCE_THE } from '../../combat/CombatTypes'
 import type { CombatRng } from '../contracts/rng'
 import type { CombatScheduler } from '../runtime/scheduler/CombatScheduler'
 import type { BuffDefinition, PeriodicDamageDefinition } from '../../buff2/BuffDefinition'
@@ -35,7 +34,6 @@ import { resolveChannel } from '../../buff2/BuffModifierEngine'
 
 import type { AdaptedSkillCatalog } from '../../skilldef/LegacySkillAdapter'
 import { adaptTurnSkillDefinition, mergeAdaptedCatalogs } from '../../skilldef/LegacySkillAdapter'
-import type { ResolvedSkillPlan } from '../../skilldef/ResolvedSkillPlan'
 import type { SkillCastCommitPort } from '../../skilldef/SkillCastCommitPort'
 import type { SkillDefinitionRegistry as SkillDefinitionRegistryType } from '../../skilldef/SkillDefinitionRegistry'
 import { SkillDefinitionRegistry } from '../../skilldef/SkillDefinitionRegistry'
@@ -52,6 +50,7 @@ import type {
   TurnBattleParticipant,
   TurnDeclaredAction,
 } from './TurnBattleSystem'
+import { isNaturalActionSource } from '../../proc/ProcCapabilities'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import { executionCommitsCast } from './TurnSkillAction'
 
@@ -70,43 +69,25 @@ export interface TurnSkillPlanOrchestration {
   /** commitAction minus the resource consume + consume-all burn (both
       ride consume_resource ops): slot cooldown + the cast sink only. */
   commitShell(actor: TurnBattleParticipant, declared: TurnDeclaredAction): void
-  /** Defender income -- fires for landed AND dodged hits. */
-  grantHitOutcomeIncome(
-    battle: TurnBattle,
+  /** Ung The beta -- record this hit's outcome into the action scratch
+      for the post-action Phan window (fires for landed AND dodged hits).
+      The retired taken/evade income is gone -- observation is the only
+      income and it lands at action end (INV-10). */
+  recordHitOutcome(
     target: TurnBattleParticipant,
     hit: { dodged: boolean; hpDamage: number },
   ): void
-  /** Actor's own basic landed income (ung_the marker field). Either the
-      resolved payload id (composite pick / empowered variant) or the
-      root authored def id may name the basic. */
-  grantBasicLandedIncome(
-    battle: TurnBattle,
-    actor: TurnBattleParticipant,
-    skillId: string | undefined,
-    rootSkillId?: string,
-  ): void
   /** procs.onHitLanded + the target's onImpactLanded reactive trigger
-      (hpDamage>0 gate lives inside) + the queuedFollowUps push. */
+      (hpDamage>0 gate lives inside) + the queuedFollowUps push.
+      `reflectsEligible` gates the once-per-action Phan Chan reflect --
+      the caller passes the INV-9 natural-source check so reactive
+      (counter/follow_up/intercept) actions never reflect. */
   runLandedHitProcs(
     battle: TurnBattle,
     actor: TurnBattleParticipant,
     target: TurnBattleParticipant,
     hpDamage: number,
-  ): void
-  /** Taken-side reactive window -- gated inside on hpDamage>0 and a
-      natural actionSource (INV-9). */
-  resolveTakenWindow(
-    battle: TurnBattle,
-    target: TurnBattleParticipant,
-    actor: TurnBattleParticipant,
-    declared: TurnDeclaredAction,
-    hpDamage: number,
-  ): void
-  resolveEvadeWindow(
-    battle: TurnBattle,
-    target: TurnBattleParticipant,
-    actor: TurnBattleParticipant,
-    declared: TurnDeclaredAction,
+    reflectsEligible: boolean,
   ): void
   /** son_nhac externalWard grant -- the source-tagged REPLACE write the
       retired applyDeclaredBuff owned (`target.externalWard =
@@ -132,7 +113,7 @@ export interface TurnSkillPlanRoutedCast {
       bookkeeping for the Tro window + the return value. */
   landedTargetIds: readonly string[]
   landedTargets: readonly TurnBattleParticipant[]
-  /** Ops of any type that resolved on affected targets -- the
+  /** apply_buff ops that resolved on affected targets -- the
       non-damaging lane's unconditional push (deduped, settle order). */
   appliedTargetIds: readonly string[]
 }
@@ -147,7 +128,7 @@ export class TurnSkillPlanRuntimeError extends Error {}
 interface PlanCastSession {
   landedTargetIds: string[]
   landedTargets: TurnBattleParticipant[]
-  /** Affected targets whose op resolved -- the non-damaging lane's
+  /** apply_buff targets whose op resolved -- the non-damaging lane's
       unconditional alive-target push (a dead target's apply op skips;
       a resolved one means the target was alive at settle). */
   appliedTargetIds: string[]
@@ -315,7 +296,7 @@ export class TurnSkillPlanRuntime {
   }
 
   /** Provider-returned extra impact (dynamicBasic onCastResolved --
-      Kiem Tu combo payloads / Ngu Kiem Dao cascade extras). The def
+      Kiem Tu combo payloads). The def
       resolves VERBATIM as a non-committing plan: extras are inline
       lanes of the parent cast -- no commit, no cost, no cooldown --
       and TBS owns their target collection (taunt/opposingSide reads
@@ -553,33 +534,25 @@ export class TurnSkillPlanRuntime {
         if (target === undefined || source === undefined) return
 
         const dodged = result.damage.landed === false
-        // Defender income lands BEFORE any window the hit opens (spec
-        // 4.1 ordering lock) -- dodged hits included.
-        tbs.grantHitOutcomeIncome(battle, target, {
+        // Ung The beta -- record the outcome for the post-action Phan
+        // window; the per-hit windows + per-hit income are gone (INV-10).
+        tbs.recordHitOutcome(target, {
           dodged,
           hpDamage: result.damage.hpDamage,
         })
 
         if (dodged) {
-          // Legacy dodge branch + the shared tail (refresh, sweep).
-          tbs.resolveEvadeWindow(battle, target, source, declared)
+          // Shared tail only -- the defender's window opens once at
+          // action end (resolvePhanWindow reads the scratch).
           tbs.refreshStats(target)
           tbs.refreshStats(source)
           tbs.sweepBuffDeaths(battle)
           return
         }
 
-        // Landed -- basic income; leech/consume ride authored ops
-        // before the gate; procs/reactive wait for gate-entered. Both
-        // ids ride in: the resolved payload (composite pick / empowered
-        // variant) AND the root authored def -- an empowered basic pays
-        // income via its root, a composite picking the basic via payload.
-        tbs.grantBasicLandedIncome(
-          battle,
-          source,
-          this.payloadId(plan),
-          plan.definitionId,
-        )
+        // Landed -- basic income moved to the action-end observation
+        // grant (INV-10); leech/consume ride authored ops before the
+        // gate; procs/reactive wait for gate-entered.
         if (!session.seenTargets.has(target.id)) {
           session.seenTargets.add(target.id)
           session.landedTargetIds.push(target.id)
@@ -592,11 +565,16 @@ export class TurnSkillPlanRuntime {
         const target = tbs.participant(battle, gate.targetId)
         if (source === undefined || target === undefined) return
         // Legacy slot: after consume ops, before authored ailments.
+        // The reflect eligibility check rides the action's provenance
+        // (INV-9 parity with resolvePhanWindow): only natural
+        // ('normal'/'skill') hostile actions can reflect -- counter/
+        // follow_up/intercept hits damage the holder without recursing.
         tbs.runLandedHitProcs(
           battle,
           source,
           target,
           sumHpDamage(gate.hitOperationIds),
+          isNaturalActionSource(declared.actionSource),
         )
       },
 
@@ -604,14 +582,8 @@ export class TurnSkillPlanRuntime {
         const source = tbs.participant(battle, plan.sourceId)
         const target = tbs.participant(battle, gate.targetId)
         if (source === undefined || target === undefined) return
-        // Legacy tail: taken-side window -> refresh -> death sweep.
-        tbs.resolveTakenWindow(
-          battle,
-          target,
-          source,
-          declared,
-          sumHpDamage(gate.hitOperationIds),
-        )
+        // Legacy tail: refresh -> death sweep (the taken-side window
+        // moved to the single post-action Phan window).
         tbs.refreshStats(target)
         tbs.refreshStats(source)
         tbs.sweepBuffDeaths(battle)
@@ -638,17 +610,6 @@ export class TurnSkillPlanRuntime {
         tbs.sweepBuffDeaths(battle)
       },
     }
-  }
-
-  /** The payload def the legacy lane would pass as `skill` (payloadSkill
-      parity): composite primary pick, else empowered variant, else
-      root. Composite extras resolve the pick itself as their root. */
-  private payloadId(plan: ResolvedSkillPlan): string {
-    return (
-      plan.snapshot.compositePicks?.[0] ??
-      plan.resolvedVariantId ??
-      plan.definitionId
-    )
   }
 
   // -----------------------------------------------------------------------
@@ -750,7 +711,7 @@ export class TurnSkillPlanRuntime {
   ): number {
     if (entity === undefined) return 0
     switch (resourceId) {
-      case 'the':
+      case RESOURCE_THE:
         return entity.currentThe ?? 0
       case 'mana':
         return entity.currentMp
@@ -769,8 +730,8 @@ export class TurnSkillPlanRuntime {
   ): number {
     if (entity === undefined) return 0
     switch (resourceId) {
-      case 'the':
-        return theCap(entity)
+      case RESOURCE_THE:
+        return entity.maxThe ?? MAX_THE
       case 'mana':
         return entity.stats.maxMp
       case 'ward':

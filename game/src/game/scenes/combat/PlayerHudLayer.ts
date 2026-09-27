@@ -193,7 +193,18 @@ export class PlayerHudLayer {
    * (element basic carries an empowerment variant AND the pool is full;
    * the empowered swap consumes nothing).
    */
-  updateThe(current: number, max: number, phapTheActive: boolean): void {
+  updateThe(
+    current: number,
+    max: number,
+    threshold: number,
+    phapTheActive: boolean,
+    ungThe?: {
+      hasThamFocus?: boolean
+      quanTheActive?: boolean
+      reactionDebt?: number
+      quaThe?: boolean
+    },
+  ): void {
     const hasPool = Number.isFinite(max) && max > 0
 
     this.setGroupVisible(this.theGroup, hasPool)
@@ -244,11 +255,24 @@ export class PlayerHudLayer {
       )
     })
 
-    this.theGroup.label.text = `Thế ${formatNumber(filled)} / ${formatNumber(dotMax)}`
+    // Ung The beta -- focus/Quan The/Ung Tre state suffix (design Part XV).
+    const quaThe = ungThe?.quaThe === true
+    const suffix =
+      ungThe === undefined
+        ? ''
+        : [
+            ungThe.hasThamFocus ? 'Thám' : '',
+            ungThe.quanTheActive ? 'Quan' : '',
+            quaThe ? 'Quá Thế' : ungThe.reactionDebt ? `Trệ ${ungThe.reactionDebt}` : '',
+          ]
+            .filter(Boolean)
+            .join(' · ')
+
+    this.theGroup.label.text = `Thế ${formatNumber(filled)} / ${formatNumber(dotMax)}${suffix ? ` · ${suffix}` : ''}`
     this.theGroup.phapTheLabel.setVisible(phapTheActive)
   }
 
-  // External ward pool — its own layer label; max is the holder's maxHp
+  // External ward pool - its own layer label; max is the holder's maxHp
   // (shield fraction of health), NOT a spendable ward cap.
   updateExternalWard(current: number, max: number): void {
     this.updateGroup(

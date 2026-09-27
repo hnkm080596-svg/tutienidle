@@ -3,9 +3,12 @@
 // (kể cả Phàm Nhân/Kiếm Tu): "chọn 1 trong các kỹ năng cố định để
 // xem chi tiết".
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { SkillPathEntry } from './SkillPathEntry'
 import { getRealmIndex } from '@/core/realm/realmSystem'
 import { REALMS } from '@/data/realms/realm'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   entries: SkillPathEntry[]
@@ -47,6 +50,12 @@ const groups = computed(() => {
       >
         <span class="skill-path-list__label">{{ entry.name }}</span>
         <span class="skill-path-list__meta">Lv. {{ entry.level }}/{{ entry.maxLevel }}</span>
+        <span
+          v-if="entry.kind === 'native' && entry.evolutionName !== undefined"
+          class="skill-path-list__meta"
+        >
+          {{ t('panels.skillPath.list.evolution', { name: entry.evolutionName }) }}
+        </span>
       </button>
     </section>
   </div>

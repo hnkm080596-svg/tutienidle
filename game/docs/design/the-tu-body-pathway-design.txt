@@ -1,0 +1,1927 @@
+THỂ TU — COMBAT PATH DESIGN AUTHORITY
+
+Path: body_pathway
+Scope chi tiết: Luyện Khí → Trúc Cơ
+Tầm nhìn: kiến trúc phải mở được tới endgame, nhưng không author content Kim Đan+ trong tài liệu này.
+Status: Design authority cho bước audit/spec tiếp theo.
+
+⸻
+
+1. Fantasy cốt lõi
+
+Thể Tu chiến đấu bằng chính thân thể.
+
+Nhưng Luyện Thể và Thể Tu combat path là hai authority khác nhau:
+
+Luyện Thể
+
+Trả lời:
+
+Thân thể của nhân vật mạnh đến đâu?
+
+Nó tăng base stats thực.
+
+Thể Tu combat
+
+Trả lời:
+
+Nhân vật sử dụng thân thể đó để chiến đấu như thế nào?
+
+Skill tree không được cạnh tranh authority với Luyện Thể bằng cách tiếp tục phát:
+
+* +Lực;
+* +Thể;
+* +HP;
+* +Defense;
+* +Block;
+* generic character damage.
+
+Skill tree chỉ sửa:
+
+chính kỹ năng của võ đạo đã chọn.
+
+⸻
+
+2. Hai võ đạo
+
+Thể Tu thường có hai root loại trừ nhau:
+
+Cuồng Chiến
+
+Lấy sức phá địch; đến Trúc Cơ bắt đầu lấy huyết đổi sức mạnh.
+
+Trấn Thể
+
+Lấy thân làm trọng; biến Max HP thành áp lực chiến trường và phản lực.
+
+Hai root là combat identity, không phải stat build.
+
+Chọn một:
+
+root còn lại bị khóa.
+
+Không chuyển qua lại tự do.
+
+⸻
+
+3. Realm progression rule
+
+Beta sử dụng một rhythm chung:
+
+Luyện Khí
+
+chỉ có Basic.
+
+Đây là lúc võ đạo thành hình.
+
+Trúc Cơ
+
+mở Special.
+
+Special không chỉ là thêm một button.
+
+Nó phải thêm một tầng mechanic làm thay đổi cách Basic được sử dụng.
+
+Sau Trúc Cơ
+
+Có thể mở Ultimate hoặc các tầng mechanic khác.
+
+Nhưng không thiết kế chi tiết trong tài liệu này.
+
+⸻
+
+4. Beta kit overview
+
+Võ đạo	Luyện Khí Basic	Trúc Cơ Special
+Cuồng Chiến	Cuồng Quyền	Loạn Đấu
+Trấn Thể	Trấn Áp	Phản Chấn
+
+Beta không có Ultimate.
+
+Các nội dung cũ như:
+
+* Bất Tử Bá Thể;
+* Sơn Nhạc;
+
+không thuộc beta kit hiện tại.
+
+Chúng có thể trở thành content realm sau, nhưng tài liệu này không khóa vị trí hoặc mechanic tương lai của chúng.
+
+⸻
+
+5. Design symmetry
+
+Hai nhánh phải khác nhau rõ rệt ngay từ Luyện Khí.
+
+Cuồng Chiến
+
+Might → single-target damage
+
+Trấn Thể
+
+Max HP → AoE damage
+
+Sang Trúc Cơ:
+
+Cuồng Chiến
+
+chủ động đưa chính mình vào nguy hiểm để tăng công.
+
+Trấn Thể
+
+chủ động kéo nguy hiểm từ đối thủ về mình để phản lại.
+
+Tóm lại:
+
+Cuồng Chiến: ta tự trả giá.
+
+Trấn Thể: ta bắt địch trả giá.
+
+⸻
+
+PART I — CUỒNG CHIẾN
+
+6. Identity
+
+Cuồng Chiến có hai giai đoạn rất rõ.
+
+Luyện Khí
+
+Chưa có huyết chiến.
+
+Đây đơn thuần là:
+
+sức mạnh thân thể cực lớn được dồn vào quyền pháp.
+
+Trúc Cơ
+
+Mới bắt đầu:
+
+lấy sinh mệnh đổi sát thương.
+
+Đây là ranh giới bắt buộc.
+
+Không được backport self-damage hoặc missing-HP mechanic xuống Luyện Khí.
+
+⸻
+
+7. Luyện Khí — Cuồng Quyền
+
+Basic:
+
+Cuồng Quyền
+
+Single-target physical attack.
+
+Không có:
+
+* HP cost;
+* self-damage;
+* missing-HP bonus;
+* rage resource;
+* low-HP passive;
+* execute;
+* special proc.
+
+Identity duy nhất:
+
+Cuồng Quyền có Might scaling cao hơn Basic thông thường.
+
+⸻
+
+8. Cuồng Quyền scaling
+
+Conceptual:
+
+Cuồng Quyền Damage
+    =
+skill coefficient
+×
+high Might conversion
+
+Exact coefficient để balance sau.
+
+Design khóa:
+
+Cuồng Quyền đặc biệt mạnh vì nó khai thác Might tốt.
+
+Không khóa:
+
+Cuồng Chiến được cộng thêm Might từ node.
+
+Đó là hai thứ hoàn toàn khác nhau.
+
+Skill tree sửa conversion, không sửa character stat.
+
+⸻
+
+9. Vì sao Luyện Khí không có self-damage
+
+Basic là skill được auto-cast liên tục.
+
+Nếu mỗi Basic tự mất HP:
+
+cast
+→ mất HP
+→ cast
+→ mất HP
+→ cast
+→ tự đẩy mình vào trạng thái chết
+
+thì Cuồng Chiến Luyện Khí biến thành path auto-farm tự sát.
+
+Không đúng progression mong muốn.
+
+Ruling:
+
+Cuồng Quyền không bao giờ phải trả HP để cast trong beta.
+
+Ngay cả sau khi vào Trúc Cơ.
+
+⸻
+
+10. Luyện Khí gameplay loop
+
+Rất đơn giản:
+
+Might cao
+   ↓
+Cuồng Quyền
+   ↓
+một quyền single-target rất nặng
+
+Đây là giai đoạn người chơi học:
+
+Cuồng Chiến trước tiên là một võ đạo dùng Lực.
+
+Không cần resource phụ.
+
+⸻
+
+11. Luyện Khí node philosophy — Cuồng Chiến
+
+Mọi node trước Trúc Cơ chỉ được sửa Cuồng Quyền.
+
+Không node nào được tạo:
+
+* HP sacrifice;
+* low-HP scaling;
+* generic player damage;
+* generic Might;
+* generic crit.
+
+Recommended beta structure:
+
+CUỒNG CHIẾN
+     │
+CUỒNG QUYỀN
+     │
+ ┌───┴───┐
+ │       │
+Trọng   Phá
+Quyền   Kình
+
+Tên node có thể đổi khi polish localization; mechanic authority quan trọng hơn tên.
+
+⸻
+
+12. Node — Trọng Quyền
+
+Skill-local.
+
+Tăng hiệu quả chuyển Might thành damage của Cuồng Quyền.
+
+Không:
+
++Might
+
+Mà:
+
+Cuồng Quyền đọc Might hiệu quả hơn.
+
+Có thể multi-level.
+
+Đây là progression damage thuần của Basic.
+
+⸻
+
+13. Node — Phá Kình
+
+Skill-local.
+
+Recommended mechanic:
+
+Cuồng Quyền bỏ qua một phần mitigation vật lý/armor của mục tiêu.
+
+Không tăng generic armor penetration của nhân vật.
+
+Chỉ:
+
+damage instance thuộc Cuồng Quyền.
+
+Mục đích:
+
+Cuồng Quyền có hai hướng đầu tư ở Luyện Khí:
+
+* tăng conversion từ thân mình;
+* tăng khả năng quyền lực xuyên qua phòng ngự mục tiêu.
+
+Không cần thêm stat node.
+
+⸻
+
+14. Trúc Cơ — Loạn Đấu
+
+Khi đạt Trúc Cơ:
+
+Special được mở:
+
+Loạn Đấu
+
+Đây là điểm Cuồng Chiến chuyển từ:
+
+dùng sức mạnh thân thể
+
+sang:
+
+dùng chính sinh mệnh để ép sức mạnh vượt giới hạn.
+
+Loạn Đấu có hai phần không thể tách rời:
+
+Active
+
+Hiến HP để tung một chuỗi công kích mạnh.
+
+Passive
+
+HP hiện tại càng thấp, kỹ năng Cuồng Chiến càng mạnh.
+
+⸻
+
+15. Loạn Đấu active
+
+Loạn Đấu là offensive Special.
+
+Recommended presentation:
+
+một chuỗi nhiều physical hits liên tục vào cùng một mục tiêu.
+
+Không phải một heavy hit giống Cuồng Quyền.
+
+Phân vai:
+
+Cuồng Quyền
+
+Một đòn nặng.
+
+Ổn định.
+
+Không self-cost.
+
+Loạn Đấu
+
+Một đợt bùng nổ.
+
+Có cooldown.
+
+Trả HP.
+
+Tạo burst window.
+
+⸻
+
+16. HP sacrifice
+
+Khi dùng Loạn Đấu:
+
+caster phải hiến một phần HP.
+
+Cost được tính dựa trên:
+
+Max HP
+
+không phải current HP.
+
+Conceptual:
+
+Nominal HP Cost
+    =
+X% Max HP
+
+Exact X để balance sau.
+
+⸻
+
+17. Vì sao dùng Max HP cho cost
+
+Nếu cost là % current HP:
+
+càng gần chết → cost càng rẻ.
+
+Đi ngược fantasy.
+
+Dùng % Max HP:
+
+mỗi lần vượt giới hạn luôn phải trả một cái giá có trọng lượng tương đương.
+
+Đồng thời tạo interaction tự nhiên với Luyện Thể:
+
+Max HP lớn:
+
+* sống khỏe hơn;
+* nhưng nominal blood cost cũng lớn hơn về absolute HP.
+
+⸻
+
+18. HP sacrifice không trực tiếp giết caster
+
+Self-cost có floor:
+
+1 HP
+
+Loạn Đấu không thể tự đưa caster từ HP > 0 xuống 0.
+
+Ví dụ:
+
+Current HP = 30
+Nominal cost = 50
+
+Actual paid:
+
+29
+
+Remaining:
+
+1 HP
+
+Không chết trực tiếp do skill cost.
+
+Nhưng enemy hoàn toàn có thể giết caster sau đó.
+
+Risk vẫn tồn tại.
+
+⸻
+
+19. Actual cost authority
+
+Nếu không đủ HP để trả full cost:
+
+mọi effect phụ thuộc “HP đã hiến” phải dùng actual HP paid.
+
+Không được dùng nominal cost.
+
+Ví dụ:
+
+Nominal = 100
+Actual paid = 20
+
+Không được nhận payoff như đã trả 100.
+
+Đây là invariant chống free damage ở 1 HP.
+
+⸻
+
+20. Ordering của Loạn Đấu
+
+Bắt buộc:
+
+cast Loạn Đấu
+      ↓
+calculate nominal HP cost
+      ↓
+pay actual HP
+      ↓
+update current HP
+      ↓
+derive missing-HP state MỚI
+      ↓
+resolve Loạn Đấu damage
+
+Không được:
+
+tính damage trước rồi mới mất HP.
+
+Lượng HP vừa hiến phải lập tức làm chính Loạn Đấu mạnh hơn.
+
+⸻
+
+21. Passive — Huyết Cuồng
+
+Lĩnh ngộ Loạn Đấu đồng thời mở passive semantic:
+
+HP càng thấp, kỹ năng Cuồng Chiến càng gây nhiều sát thương.
+
+Passive này thuộc Loạn Đấu/Special progression nhưng ảnh hưởng combat kit Cuồng Chiến.
+
+Trong beta nó áp dụng cho:
+
+* Cuồng Quyền;
+* Loạn Đấu.
+
+Không áp dụng:
+
+* normal attacks ngoài kit;
+* equipment procs;
+* companion;
+* DoT không thuộc Cuồng Chiến;
+* generic player damage.
+
+⸻
+
+22. Missing-HP scaling
+
+Conceptual:
+
+missingHpFraction
+    =
+1 - currentHp / maxHp
+
+Cuồng damage bonus:
+
+1 + f(missingHpFraction)
+
+Exact curve để balance sau.
+
+Có thể linear ban đầu.
+
+Không khóa số trong design này.
+
+⸻
+
+23. Cuồng Quyền sau Trúc Cơ
+
+Một điểm cực kỳ quan trọng:
+
+Cuồng Quyền vẫn không tự mất HP.
+
+Nhưng sau khi Huyết Cuồng được mở:
+
+Cuồng Quyền được hưởng low-HP scaling.
+
+Vậy Basic trở thành lựa chọn:
+
+tiếp tục chiến đấu mà không tự trả thêm máu.
+
+Còn Special là:
+
+chủ động đẩy HP xuống thấp để đạt power state mạnh hơn.
+
+⸻
+
+24. Trúc Cơ loop — Cuồng Chiến
+
+Ví dụ semantic:
+
+100% HP
+↓
+Cuồng Quyền
+→ strong Might hit
+enemy gây damage
+↓
+75% HP
+↓
+Huyết Cuồng bắt đầu có giá trị
+↓
+Cuồng Quyền mạnh hơn
+player dùng Loạn Đấu
+↓
+trả HP
+↓
+60% HP
+↓
+Loạn Đấu resolve với low-HP bonus mới
+↓
+Cuồng Quyền sau đó cũng mạnh hơn
+
+Player tự quyết định:
+
+khi nào nên đẩy character sâu hơn vào vùng nguy hiểm.
+
+⸻
+
+25. Cuồng Chiến risk profile
+
+Không có free power.
+
+Muốn maximum damage:
+
+phải đứng ở HP thấp.
+
+Nhưng HP thấp đồng nghĩa:
+
+dễ chết bởi attack tiếp theo.
+
+Đây là risk/reward intrinsic.
+
+Không tạo artificial resource để thay thế nguy cơ thực.
+
+⸻
+
+26. Trúc Cơ node philosophy — Cuồng Chiến
+
+Sau Loạn Đấu, node mới được phép sửa:
+
+* HP sacrifice;
+* conversion từ actual sacrificed HP;
+* missing-HP scalar;
+* ordered multi-hit behavior;
+* interaction Cuồng Quyền ↔ low-HP state.
+
+Không tăng global stats.
+
+Recommended structure:
+
+             LOẠN ĐẤU
+             Trúc Cơ
+                │
+          ┌─────┴─────┐
+          │           │
+      Huyết Sát     Cuồng Ý
+
+⸻
+
+27. Node — Huyết Sát
+
+Skill-local.
+
+Tăng lượng bonus damage của Loạn Đấu nhận được từ HP thực tế đã hiến.
+
+Authority:
+
+actualHpPaid
+
+Không nominal cost.
+
+Không sửa HP cost trừ khi node explicitly nói vậy.
+
+⸻
+
+28. Node — Cuồng Ý
+
+Kit-local nhưng chỉ trong Cuồng Chiến.
+
+Tăng hiệu quả missing-HP scaling của Huyết Cuồng.
+
+Nó có thể tăng payoff cho:
+
+* Cuồng Quyền;
+* Loạn Đấu.
+
+Không trở thành generic final damage modifier của character.
+
+⸻
+
+PART II — TRẤN THỂ
+
+29. Identity
+
+Trấn Thể không phải “Cuồng Chiến nhưng tank hơn”.
+
+Nó sử dụng một trục hoàn toàn khác:
+
+Max HP là sức nặng của thân thể.
+
+Thân càng hùng hậu:
+
+* Trấn Áp càng mạnh;
+* Phản Chấn càng mạnh;
+* khả năng chịu đòn tự nhiên càng cao.
+
+Không cần Might làm secondary requirement để damage hoạt động.
+
+⸻
+
+30. Luyện Khí — Trấn Áp
+
+Basic:
+
+Trấn Áp
+
+Physical AoE Basic.
+
+Tấn công toàn bộ enemy hợp lệ theo targeting rule.
+
+Damage chủ yếu scale từ:
+
+Max HP của caster.
+
+Đây là identity ngay từ lúc nhập đạo.
+
+⸻
+
+31. Trấn Áp damage model
+
+Conceptual:
+
+Damage per target
+    =
+Max HP × Trấn Áp coefficient
+
+Exact coefficient để balance.
+
+Không khóa generic Might scaling.
+
+Nếu implementation bắt buộc cần một base component thì Max HP vẫn phải là primary visible scaling authority.
+
+Player phải nhìn tooltip và hiểu:
+
+tăng Max HP → Trấn Áp mạnh lên.
+
+⸻
+
+32. AoE power budget
+
+Max HP vừa:
+
+* tăng survivability;
+* vừa tăng damage.
+
+Do đó per-target coefficient của Trấn Áp phải thấp hơn single-target Cuồng Quyền.
+
+Balance logic:
+
+Cuồng Quyền thắng single target.
+
+Trấn Áp thắng khi có nhiều target.
+
+Không cân bằng bằng cách bỏ Max HP scaling.
+
+Cân bằng bằng coefficient và encounter topology.
+
+⸻
+
+33. Luyện Khí loop — Trấn Thể
+
+Max HP cao
+   ↓
+Trấn Áp
+   ↓
+AoE toàn bộ enemy
+
+Không có ở Luyện Khí:
+
+* reflect;
+* taunt;
+* Chấn Ấn;
+* ward;
+* team protection;
+* passive retaliation.
+
+AoE + Max HP scaling đã đủ định hình Basic.
+
+⸻
+
+34. Luyện Khí node philosophy — Trấn Thể
+
+Mọi node trước Trúc Cơ chỉ sửa Trấn Áp.
+
+Recommended topology:
+
+TRẤN THỂ
+    │
+ TRẤN ÁP
+    │
+ ┌──┴──┐
+ │     │
+Trọng Trấn
+Thế   Kình
+
+⸻
+
+35. Node — Trọng Thế
+
+Skill-local.
+
+Tăng Max-HP conversion coefficient riêng của Trấn Áp.
+
+Không:
+
++Max HP
+
+Mà:
+
+cùng lượng Max HP hiện có tạo ra nhiều Trấn Áp damage hơn.
+
+⸻
+
+36. Node — Trấn Kình
+
+Recommended rider:
+
+Enemy bị Trấn Áp landed sẽ bị suy giảm uy lực của đòn gây damage kế tiếp.
+
+Đây là bước đầu của fantasy “trấn”.
+
+Không cần duration dài.
+
+Không tăng Defense của player.
+
+Không phải generic attack-down aura.
+
+Nó là rider phát sinh từ chính Trấn Áp.
+
+Nếu production scope cần tối giản, node này có thể được defer mà không làm hỏng identity nền.
+
+⸻
+
+37. Trúc Cơ — Phản Chấn
+
+Special:
+
+Phản Chấn
+
+Không gây direct active damage trong design beta.
+
+Đây là deliberate decision.
+
+Active của Special làm:
+
+Khiêu Khích toàn bộ enemy hợp lệ.
+
+và:
+
+đặt Chấn Ấn lên toàn bộ enemy hợp lệ.
+
+Lĩnh ngộ Special đồng thời mở passive:
+
+khi enemy thật sự đánh mất HP của Trấn Thể, nó chịu phản damage theo Max HP của Trấn Thể.
+
+⸻
+
+38. Active Phản Chấn
+
+Cast sequence:
+
+cast Phản Chấn
+       ↓
+all valid enemies
+       ↓
+apply Khiêu Khích
+       +
+apply Chấn Ấn
+
+Không direct damage.
+
+Không cần thêm một Max-HP nuke.
+
+Trấn Áp đã sở hữu offensive AoE.
+
+Special sở hữu:
+
+battlefield control + retaliation window.
+
+⸻
+
+39. Khiêu Khích
+
+Trong khi taunt còn hiệu lực:
+
+normal hostile single-target target selection ưu tiên Trấn Thể.
+
+Taunt không được biến:
+
+* AoE → single target;
+* scripted boss mechanic → normal target selection;
+* environmental effect → attack vào tank.
+
+Nó chỉ can thiệp vào target selection thích hợp.
+
+⸻
+
+40. Chấn Ấn
+
+Phản Chấn đặt:
+
+Chấn Ấn
+
+lên tất cả target bị Special tác động.
+
+Chấn Ấn không:
+
+* gây DoT;
+* giảm stat;
+* tự nổ;
+* tự gây damage;
+* làm target chịu generic vulnerability.
+
+Nó có một authority duy nhất:
+
+khuếch đại passive Phản Chấn khi chính target mang ấn đánh Trấn Thể.
+
+⸻
+
+41. Passive Phản Chấn
+
+Sau khi học Special, passive luôn tồn tại.
+
+Nếu một hostile action trực tiếp:
+
+gây hpDamage > 0 lên Trấn Thể
+
+thì sau action đó:
+
+attacker chịu một reactive damage event.
+
+Base conceptual formula:
+
+Reflect Damage
+    =
+Trấn Thể Max HP
+×
+Base Reflect Ratio
+
+Không phụ thuộc damage attacker vừa gây.
+
+⸻
+
+42. Vì sao reflect dựa trên Max HP
+
+Không dùng:
+
+damage taken × reflect ratio
+
+Vì như vậy enemy càng mạnh thì reflect càng mạnh.
+
+Design mong muốn:
+
+bản thân Trấn Thể càng hùng hậu thì phản lực càng mạnh.
+
+Power authority phải nằm ở progression của player.
+
+Do đó:
+
+Max HP là nguồn phản lực.
+
+⸻
+
+43. Chấn Ấn amplification
+
+Nếu attacker có Chấn Ấn active:
+
+Reflect Damage
+    =
+Max HP
+×
+Marked Reflect Ratio
+
+Trong đó:
+
+Marked Reflect Ratio > Base Reflect Ratio
+
+Có thể implement dưới dạng:
+
+base + mark bonus
+
+hoặc equivalent.
+
+Exact numbers deferred.
+
+⸻
+
+44. Chấn Ấn không bị consume
+
+Một lần reflect:
+
+không xóa Chấn Ấn.
+
+Nó tồn tại trong duration của Phản Chấn window.
+
+Nếu enemy tiếp tục thực hiện nhiều actions hợp lệ trong window:
+
+mỗi action có thể bị enhanced reflect.
+
+Điều này làm taunt + mark trở thành một Special window hoàn chỉnh.
+
+⸻
+
+45. One reflect per hostile action
+
+Hard beta rule:
+
+mỗi hostile action tối đa kích hoạt một Phản Chấn.
+
+Không reflect từng hit.
+
+Ví dụ:
+
+enemy skill có 5 hit.
+
+Nếu action đó cuối cùng gây HP damage:
+
+chỉ trigger một reflect event.
+
+Không:
+
+5 hits → 5 reflect.
+
+Lý do:
+
+damage của Phản Chấn không được phụ thuộc vô tình vào cách skill của enemy được chia packet.
+
+⸻
+
+46. Multi-hit semantics
+
+Action có thể:
+
+* hit nhiều lần;
+* AoE;
+* mixed result.
+
+Sau khi toàn action settle:
+
+nếu Trấn Thể nhận ít nhất một lượng HP damage hợp lệ:
+
+passive check thành công.
+
+Attacker bị phản một lần.
+
+Nếu attacker có Chấn Ấn:
+
+dùng marked coefficient.
+
+⸻
+
+47. AoE interaction
+
+Taunt không redirect AoE.
+
+Nhưng nếu enemy AoE:
+
+gây HP damage lên Trấn Thể
+
+thì Phản Chấn vẫn trigger.
+
+Điều này rất quan trọng.
+
+Trấn Thể không thể bảo vệ team hoàn toàn khỏi AoE ở Trúc Cơ.
+
+Nhưng enemy AoE vẫn phải trả giá vì đập trúng thân thể hắn.
+
+⸻
+
+48. Ward interaction
+
+Nếu hostile action:
+
+bị ward absorb hoàn toàn
+
+và:
+
+hpDamage = 0
+
+thì:
+
+không Phản Chấn.
+
+Nếu ward chỉ absorb một phần và HP vẫn mất:
+
+Phản Chấn trigger.
+
+Fantasy:
+
+lực phải thực sự truyền vào thân thể thì mới có phản lực.
+
+⸻
+
+49. Dodge / miss interaction
+
+Miss:
+
+không phản.
+
+Dodge:
+
+không phản.
+
+Immune/no-damage:
+
+không phản.
+
+Không có damage thật lên HP:
+
+không có Phản Chấn.
+
+⸻
+
+50. DoT / environment / self-damage
+
+Beta scope:
+
+Phản Chấn chỉ phản:
+
+hostile direct action.
+
+Không phản:
+
+* DoT tick;
+* environmental damage;
+* self-damage;
+* reflected damage;
+* reactive damage;
+* resource cost.
+
+Điều này tránh recursion và proc storms.
+
+⸻
+
+51. Reflect event semantics
+
+Phản Chấn damage event:
+
+* không roll accuracy;
+* không thể miss;
+* không roll crit;
+* không consume turn;
+* không phải một active cast;
+* không trigger một Phản Chấn khác;
+* không mở generic reactive chain nếu điều đó có thể recurse.
+
+Nó là:
+
+consequence của việc địch đánh trúng Trấn Thể.
+
+⸻
+
+52. Trúc Cơ gameplay loop — Trấn Thể
+
+Trấn Áp
+↓
+AoE enemy bằng Max HP
+Phản Chấn
+↓
+taunt toàn bộ
++
+Chấn Ấn toàn bộ
+↓
+enemy single-target bị kéo về Trấn Thể
+↓
+enemy gây HP damage
+↓
+passive Phản Chấn
+↓
+Max HP → reflect
+↓
+Chấn Ấn → enhanced reflect
+
+Một closed loop hoàn chỉnh.
+
+⸻
+
+53. Trúc Cơ node philosophy — Trấn Thể
+
+Sau Phản Chấn, node được phép sửa:
+
+* reflect Max-HP coefficient;
+* Chấn Ấn amplification;
+* taunt/mark duration;
+* interaction giữa Trấn Áp và marked target.
+
+Không tăng generic HP/Defense.
+
+Recommended topology:
+
+           PHẢN CHẤN
+            Trúc Cơ
+               │
+         ┌─────┴─────┐
+         │           │
+      Chấn Cốt     Trấn Ấn
+
+Tên provisional.
+
+⸻
+
+54. Node — Chấn Cốt
+
+Skill-local.
+
+tăng base reflect coefficient của Phản Chấn.
+
+Không cộng Max HP.
+
+Chỉ:
+
+cùng lượng Max HP hiện có tạo nhiều phản lực hơn.
+
+⸻
+
+55. Node — Trấn Ấn
+
+Skill-local.
+
+tăng phần amplification khi attacker mang Chấn Ấn.
+
+Có thể multi-level nếu cần.
+
+Không làm enemy nhận generic increased damage.
+
+Bonus chỉ áp vào:
+
+Phản Chấn reactive damage.
+
+⸻
+
+56. Beta tree topology tổng thể
+
+Player mới vào Thể Tu thấy hai root:
+
+                    THỂ TU
+          CUỒNG CHIẾN     TRẤN THỂ
+               ○              ○
+
+Chọn một.
+
+Root kia chuyển sang locked.
+
+⸻
+
+Cuồng Chiến
+
+              CUỒNG CHIẾN
+                    │
+             CUỒNG QUYỀN
+              Luyện Khí
+                    │
+             ┌──────┴──────┐
+             │             │
+        Trọng Quyền      Phá Kình
+             │             │
+             └──────┬──────┘
+                    │
+               ─ TRÚC CƠ ─
+                    │
+               LOẠN ĐẤU
+        Active + Huyết Cuồng
+                    │
+             ┌──────┴──────┐
+             │             │
+          Huyết Sát      Cuồng Ý
+
+⸻
+
+Trấn Thể
+
+               TRẤN THỂ
+                    │
+                TRẤN ÁP
+              Luyện Khí
+                    │
+             ┌──────┴──────┐
+             │             │
+          Trọng Thế       Trấn Kình
+             │             │
+             └──────┬──────┘
+                    │
+               ─ TRÚC CƠ ─
+                    │
+               PHẢN CHẤN
+       Taunt + Chấn Ấn + Reflect
+                    │
+             ┌──────┴──────┐
+             │             │
+          Chấn Cốt        Trấn Ấn
+
+Tree vẫn là skill tree thật.
+
+Nhưng mỗi node đều sửa kit.
+
+Không padding bằng stats.
+
+⸻
+
+57. Node leveling
+
+Core Skill Level vẫn là canonical skill-level authority.
+
+Node tree không được tạo “skill level thứ hai”.
+
+Các minor node có thể multi-level để cung cấp investment depth.
+
+Ví dụ:
+
+Trọng Quyền Lv1–N
+
+nhưng nó chỉ level modifier của node.
+
+Nó không thay thế:
+
+Cuồng Quyền Core Lv.
+
+⸻
+
+58. Technique gates
+
+Technique có thể gate depth của node theo progression architecture chung.
+
+Ví dụ:
+
+* realm mở nhóm node;
+* Technique Rank/Grade quyết định có thể đầu tư sâu đến đâu;
+* Insight trả cost.
+
+Nhưng Technique không thay đổi:
+
+realm ownership của skill.
+
+Trúc Cơ Special không thể được mua ở Luyện Khí chỉ vì Technique cao.
+
+⸻
+
+59. UI — root choice
+
+UI Thể Tu không nên dùng Evolution Spine của Ngự Kiếm.
+
+Nó dùng:
+
+Style → Skill Tree
+
+Header:
+
+THỂ TU
+Kim Cang Bất Hoại Thể
+
+Sau đó hai võ đạo:
+
+[ CUỒNG CHIẾN ]     [ TRẤN THỂ ]
+
+Trước lựa chọn:
+
+cả hai xem được.
+
+Sau lựa chọn:
+
+* selected root sáng;
+* root còn lại có trạng thái Đã bỏ con đường này;
+* không render như một purchasable branch nữa.
+
+⸻
+
+60. UI — skill headers
+
+Mỗi skill nên có một large skill node/card.
+
+Ví dụ Cuồng:
+
+CUỒNG QUYỀN
+Basic · Luyện Khí
+Might Scaling
+
+Sau Trúc Cơ:
+
+LOẠN ĐẤU
+Special · Trúc Cơ
+Hiến HP
+Huyết Cuồng
+
+Trấn:
+
+TRẤN ÁP
+Basic · Luyện Khí
+AoE · Max HP Scaling
+PHẢN CHẤN
+Special · Trúc Cơ
+Khiêu Khích
+Chấn Ấn
+Phản lực theo Max HP
+
+Người chơi phải nhìn card là hiểu skill làm gì.
+
+⸻
+
+61. Realm separator
+
+Tree cần separator rõ:
+
+──── Luyện Khí ────
+
+và:
+
+──── Trúc Cơ ────
+
+Trước khi đạt Trúc Cơ:
+
+Special card vẫn có thể xuất hiện dưới dạng sealed silhouette.
+
+Ví dụ:
+
+TRÚC CƠ
+[ ??? ]
+Chưa đủ cảnh giới
+
+hoặc reveal tên nhưng khóa mechanic tùy presentation ruling.
+
+Không render Kim Đan node thật trong beta.
+
+Có thể chỉ có:
+
+Kim Đan
+Phong ấn
+
+để cho thấy tree còn tiếp tục.
+
+⸻
+
+62. Combat presentation — Cuồng Quyền
+
+Cuồng Quyền phải cảm giác:
+
+nặng.
+
+Không combo dài.
+
+Một impact rõ.
+
+Animation emphasis:
+
+* wind-up ngắn;
+* body weight;
+* một cú quyền mạnh;
+* impact recoil.
+
+Might scaling cao phải đọc được bằng presentation.
+
+⸻
+
+63. Combat presentation — Loạn Đấu
+
+Loạn Đấu phải đọc khác Basic ngay lập tức.
+
+Cast:
+
+1. HP-cost feedback;
+2. huyết khí/blood-energy visual xuất hiện;
+3. chuỗi hits;
+4. càng low HP, presentation có thể dữ dội hơn;
+5. không cần đổi toàn bộ palette hoặc spam screen effects.
+
+HP sacrifice phải đọc được:
+
+người chơi vừa trả giá.
+
+Không để HP tự tụt im lặng.
+
+⸻
+
+64. Combat presentation — Trấn Áp
+
+Trấn Áp là AoE.
+
+Fantasy:
+
+dùng trọng lượng/thể phách ép xuống chiến trường.
+
+Presentation nên tạo:
+
+* impact mặt đất;
+* shockwave;
+* nhiều enemy cùng bị hit.
+
+Không cần projectile.
+
+⸻
+
+65. Combat presentation — Phản Chấn
+
+Cast Special:
+
+1. Trấn Thể trụ vững;
+2. chấn lực lan toàn chiến trường;
+3. enemy nhận taunt indicator;
+4. Chấn Ấn xuất hiện rõ nhưng không quá lớn.
+
+Khi enemy đánh Trấn Thể:
+
+1. attack impact;
+2. xác nhận HP damage;
+3. shockwave bật ngược về attacker;
+4. nếu có Chấn Ấn, effect mạnh hơn.
+
+Player phải hiểu:
+
+nó vừa tự đánh vào “bức tường”.
+
+⸻
+
+66. Auto-combat semantics
+
+Cuồng Quyền
+
+Safe Basic.
+
+Auto-cast bình thường.
+
+Không self-damage.
+
+Loạn Đấu
+
+Auto mode có thể cast khi off cooldown.
+
+Nó sẽ trả HP.
+
+Đây là risk identity của Cuồng Chiến từ Trúc Cơ trở đi.
+
+Self-cost không lethal nhưng có thể đẩy người chơi tới 1 HP và khiến enemy sau đó giết họ.
+
+Accepted gameplay risk.
+
+Trấn Áp
+
+Safe Basic.
+
+Phản Chấn
+
+Auto cast khi off cooldown nếu action scheduler chọn Special.
+
+Taunt + Chấn Ấn là một legitimate defensive/offensive window.
+
+Không cần target micromanagement vì nó áp dụng all enemies.
+
+⸻
+
+67. Luyện Thể interaction
+
+Hard separation:
+
+Luyện Thể
+
+Tăng raw/base stats.
+
+Cuồng Chiến
+
+Khai thác Might.
+
+Trấn Thể
+
+Khai thác Max HP.
+
+Ví dụ:
+
+người chơi đầu tư Luyện Thể làm Max HP lớn hơn.
+
+Trấn Thể:
+
+Trấn Áp và Phản Chấn hưởng lợi tự nhiên.
+
+Nhưng skill tree không cần phát thêm Max HP.
+
+Đó là emergent synergy giữa hai systems.
+
+⸻
+
+68. Equipment interaction
+
+Equipment có thể tăng stats như bình thường.
+
+Cuồng Chiến thích:
+
+các nguồn giúp Might / offense / survivability phù hợp.
+
+Trấn Thể thích:
+
+các nguồn tăng Max HP / khả năng tồn tại.
+
+Nhưng skill tree không hard-code equipment categories.
+
+Không tạo “wear heavy armor = +reflect” trừ khi một system riêng được design sau.
+
+⸻
+
+69. No artificial resource
+
+Normal Thể Tu beta không cần thêm:
+
+* Nộ;
+* Thế;
+* Rage;
+* Guard gauge;
+* Retaliation points.
+
+Cuồng Chiến dùng:
+
+HP.
+
+Trấn Thể dùng:
+
+enemy actions + Max HP.
+
+Đủ.
+
+⸻
+
+70. Save authority
+
+Persist:
+
+* chosen root;
+* Core Skill Levels qua canonical authority;
+* purchased node levels qua canonical node authority.
+
+Không persist:
+
+* temporary taunt;
+* Chấn Ấn runtime duration;
+* pending reflect;
+* current action reflect flag;
+* temporary low-HP calculation.
+
+Đây là battle state.
+
+⸻
+
+71. Required runtime seams
+
+Implementation nên có generic seams cho:
+
+Cuồng Chiến
+
+* skill-specific Might conversion;
+* HP sacrifice before resolution;
+* actual HP paid;
+* low-HP multiplier;
+* ordered multi-hit payload.
+
+Trấn Thể
+
+* Max-HP-derived skill damage;
+* all-enemy taunt application;
+* Chấn Ấn;
+* post-hostile-action retaliation;
+* once-per-action reactive guard;
+* Max-HP-derived reactive damage.
+
+Không nhét logic vào generic DamageSystem theo wayId.
+
+⸻
+
+72. Legacy content audit
+
+Current implementation có nhiều content không còn phù hợp beta authority.
+
+Phải audit ít nhất:
+
+* Cuồng Quyền hiện có missing-HP scaling từ đầu;
+* Loạn Đấu hiện có thể đã tồn tại ngay Luyện Khí;
+* Bất Tử Bá Thể đang nằm full kit;
+* Trấn Áp current scaling;
+* Phản Chấn current passive-only emblem;
+* Sơn Nhạc full kit;
+* shared stat trunk;
+* +Strength/+Vitality/+Defense/+Block nodes;
+* current root grant full three-skill kit.
+
+Những thứ này không được coi là authority chỉ vì đang chạy trong repo.
+
+⸻
+
+73. Explicit legacy conflicts
+
+Theo design mới:
+
+Cuồng Quyền Luyện Khí có missing-HP scaling
+
+Sai.
+
+Cuồng Quyền tự trả HP
+
+Sai.
+
+Root Cuồng Chiến grant Loạn Đấu + Bất Tử ngay Luyện Khí
+
+Sai.
+
+Root Trấn Thể grant Phản Chấn + Sơn Nhạc ngay Luyện Khí
+
+Sai.
+
+Phản Chấn chỉ là passive emblem
+
+Sai.
+
+Skill tree phát Strength/Vitality/Defense/Block
+
+Sai theo authority mới.
+
+Trấn Áp không scale chủ yếu từ Max HP
+
+Sai.
+
+⸻
+
+74. Beta non-goals
+
+Không design chi tiết:
+
+* Kim Đan;
+* Nguyên Anh;
+* Ultimate timing;
+* Bất Tử Bá Thể final form;
+* Sơn Nhạc final form;
+* intercept;
+* ally ward;
+* team protector sub-system;
+* additional resource;
+* stance;
+* root respec economy;
+* full endgame tree.
+
+Architecture phải mở được cho chúng.
+
+Nhưng không author placeholder mechanic.
+
+⸻
+
+75. Balance deferred
+
+Không khóa:
+
+* Cuồng Quyền Might coefficient;
+* Phá Kình armor bypass;
+* Loạn Đấu cooldown;
+* Loạn Đấu hit count;
+* HP sacrifice %;
+* Huyết Cuồng curve;
+* Huyết Sát coefficient;
+* Trấn Áp Max-HP ratio;
+* Phản Chấn reflect ratio;
+* Chấn Ấn reflect bonus;
+* taunt duration;
+* Chấn Ấn duration;
+* node costs;
+* node max levels.
+
+Balance pass xử lý sau.
+
+Design này khóa:
+
+topology + semantics + ownership.
+
+⸻
+
+76. Mandatory invariants
+
+1. Thể Tu thường có hai mutually-exclusive combat roots: Cuồng Chiến và Trấn Thể.
+2. Luyện Khí chỉ có Basic.
+3. Trúc Cơ mới mở Special.
+4. Beta không mở Ultimate.
+5. Cuồng Quyền không tự mất HP.
+6. Cuồng Quyền Luyện Khí không có missing-HP scaling.
+7. Cuồng Quyền có Might conversion cao hơn Basic thông thường.
+8. Loạn Đấu là nguồn mở self-HP-sacrifice gameplay.
+9. Loạn Đấu trả HP trước khi tính low-HP damage state.
+10. Loạn Đấu self-cost không trực tiếp giết caster.
+11. Payoff dựa trên HP sacrificed phải dùng actual HP paid.
+12. Lĩnh ngộ Loạn Đấu mở passive HP càng thấp → Cuồng Chiến càng mạnh.
+13. Huyết Cuồng chỉ áp dụng kit Cuồng Chiến.
+14. Cuồng Quyền sau Trúc Cơ hưởng Huyết Cuồng nhưng vẫn không trả HP.
+15. Trấn Áp là AoE Basic.
+16. Trấn Áp scale chủ yếu theo Max HP.
+17. Luyện Khí Trấn Thể chưa có reflect.
+18. Phản Chấn mở ở Trúc Cơ.
+19. Phản Chấn active không gây direct damage.
+20. Phản Chấn active taunt toàn bộ valid enemies.
+21. Phản Chấn active đặt Chấn Ấn lên toàn bộ valid enemies.
+22. Passive Phản Chấn reflect dựa trên Max HP của Trấn Thể.
+23. Chấn Ấn khuếch đại chính Phản Chấn, không phải generic vulnerability.
+24. Mỗi hostile action tối đa trigger một reflect.
+25. Multi-hit không trigger reflect từng hit.
+26. AoE có thể trigger reflect nếu thực sự gây HP damage lên Trấn Thể.
+27. Fully absorbed damage không trigger reflect.
+28. Miss/dodge không trigger reflect.
+29. DoT/environment/self/reactive damage không trigger reflect trong beta.
+30. Reflect không roll hit/crit và không tạo recursive reaction chain.
+31. Skill tree không grant raw/base/global character stats.
+32. Luyện Thể tiếp tục là authority tăng base stats.
+33. Core Node tiếp tục là sole skill-level authority.
+34. Node tree chỉ modify owning skill/kit behavior.
+35. Realm gate và Technique gate không được trở thành skill-level authority thứ hai.
+
+⸻
+
+77. Final beta player journey — Cuồng Chiến
+
+Player chọn:
+
+CUỒNG CHIẾN
+
+Nhận:
+
+Cuồng Quyền
+
+Ở Luyện Khí:
+
+một Basic single-target cực nặng nhờ Might.
+
+Người chơi tăng sức mạnh thân thể và đầu tư node của Cuồng Quyền.
+
+Không có self-damage.
+
+Không có low-HP gimmick.
+
+⸻
+
+Đột phá Trúc Cơ:
+
+Loạn Đấu
+
+được mở.
+
+Player bắt đầu có lựa chọn:
+
+tiếp tục dùng Cuồng Quyền an toàn
+
+hoặc:
+
+dùng Loạn Đấu, hiến HP để kéo mình vào trạng thái mạnh nhưng nguy hiểm.
+
+Từ đây:
+
+HP càng thấp → Cuồng Chiến càng mạnh.
+
+Cuồng Chiến hoàn chỉnh identity:
+
+Lấy huyết đổi công.
+
+⸻
+
+78. Final beta player journey — Trấn Thể
+
+Player chọn:
+
+TRẤN THỂ
+
+Nhận:
+
+Trấn Áp
+
+Ở Luyện Khí:
+
+Max HP càng cao → AoE Basic càng mạnh.
+
+Người chơi cảm nhận ngay:
+
+thân thể của mình vừa là phòng ngự vừa là vũ khí.
+
+⸻
+
+Đột phá Trúc Cơ:
+
+Phản Chấn
+
+được mở.
+
+Cast:
+
+toàn bộ enemy bị Khiêu Khích + Chấn Ấn.
+
+Enemy quay sang đánh Trấn Thể.
+
+Nếu chúng thật sự gây HP damage:
+
+chính Max HP của Trấn Thể biến thành phản lực đánh trả.
+
+Nếu chúng mang Chấn Ấn:
+
+phản lực càng mạnh.
+
+Trấn Thể hoàn chỉnh identity:
+
+Lấy thân trấn địch — ai đánh ta, người đó chịu phản lực.
+
+⸻
+
+79. Final design summary
+
+Beta Thể Tu không cần nhiều skill.
+
+Nó cần mỗi realm thay đổi cách võ đạo vận hành.
+
+Cuồng Chiến
+
+Luyện Khí
+
+Might → Cuồng Quyền.
+
+Trúc Cơ
+
+HP sacrifice + low HP → Loạn Đấu/Huyết Cuồng.
+
+⸻
+
+Trấn Thể
+
+Luyện Khí
+
+Max HP → Trấn Áp AoE.
+
+Trúc Cơ
+
+Taunt + Chấn Ấn → enemy đánh mình → Max HP phản sát thương.
+
+⸻
+
+Hai nhánh cùng khai thác một thân thể đã được Luyện Thể xây dựng, nhưng theo hai triết lý hoàn toàn khác:
+
+Cuồng Chiến biến sinh mệnh thành sức công.
+
+Trấn Thể biến sinh mệnh thành trọng lực và phản lực.

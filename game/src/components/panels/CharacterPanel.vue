@@ -15,6 +15,7 @@ import { isActivePath } from '@/core/player/CultivationPathSystem'
 import { MAIN_STAT_KEYS, type MainStatKey } from '@/core/stats/StatTypes'
 import { getEffectiveMainStatCap } from '@/core/stats/StatCap'
 import { useProgressionActions } from '@/composables/useProgressionActions'
+import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { getTalentDefinition } from '@/data/talent/Talents'
 import { TALENT_RARITY_LABELS, type TalentDefinition, type TalentRarity } from '@/core/talent/Talent'
 import SysStat from '../common/system/SysStat.vue'
@@ -24,6 +25,10 @@ const { t } = useI18n()
 const player = usePlayerStore()
 const ui = useUiStore()
 const { allocateAttributePoint } = useProgressionActions()
+
+// attribute allocation rejects mid-battle (ops gate) - the + button
+// disables up front so the affordance doesn't look live.
+const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 
 // Entry point Quán Khí (Task 7 review fix, Critical) — nút riêng trong
 // Character Panel này (openQuanKhi → ui.openStandalonePanel('quan_khi'))
@@ -334,6 +339,7 @@ const pillPermanentRows = computed(() => {
                   shape="circle"
                   size="sm"
                   :aria-label="stat.label"
+                  :disabled="inBattle"
                   @click="allocate(stat.key as MainStatKey)"
                 >
                   +

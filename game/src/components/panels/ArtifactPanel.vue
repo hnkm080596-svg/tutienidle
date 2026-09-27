@@ -25,7 +25,7 @@ import {
   getArtifactGradeUpgradeCost,
   getNextArtifactGrade,
 } from '@/core/artifact/ArtifactProgression'
-import { isBattleInProgress } from '@/core/battle/BattleTypes'
+import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
 import { formatStat } from '@/core/stats/StatLabels'
 
@@ -33,6 +33,7 @@ const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
+const { isBattleInProgress } = useTurnBattleInfo()
 const { t } = useI18n()
 
 const artifactId = computed(() => {
@@ -54,7 +55,7 @@ const cultivationPathLabel = computed(() => {
 const canChange = computed(() => {
   stateVersion.value
 
-  return !isBattleInProgress(gameManager.getTurnBattle()?.state)
+  return !isBattleInProgress.value
 })
 
 const stoneAmount = computed(() => {

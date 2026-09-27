@@ -1,0 +1,11 @@
+{
+ "runId": "the-tu-an-ung-the-2026-09-25",
+ "productRoot": ".",
+ "goal": "The Tu An (Ung The) beta redesign of hidden_body_pathway: Tham The sole LQ basic; Phan baseline reactive (forced success, post-action window, once per action); observation-only The income landing last in action tail (INV-10); success-only proc cost; Ung Tre debt + Qua The cap-3 window seal; Tham An mark-on-cast focus; Ho substitution + Ho Bich ward; Tro queued Tro Kich + Dan The one-shot income; kit clones payloads; Quan The special iff core owned; beta node tree re-scope (Thau The/Phan Kinh, Ho Bich/Trong Phan/Dan The, major_quan_the); save v86",
+ "requiredReadiness": true,
+ "contractPaths": [
+  "docs/qa/protocol/README.md",
+  "docs/specs/the-tu-an-ung-the-spec.md"
+ ],
+ "attackModelPath": "attack-model.json"
+}

@@ -160,7 +160,7 @@ describe('buildTurnSkillPresentation — skillName/skillDescription (9.5 #5)', (
 
     const result = buildTurnSkillPresentation(b, true)
 
-    expect(result.special.skillName).toBe('Ngự Kiếm Thuật')
+    expect(result.special.skillName).toBe('Ngự Kiếm')
   })
 
   it('id lạ (fixture không có trong map) → không set name/description (fallback nhãn role)', () => {

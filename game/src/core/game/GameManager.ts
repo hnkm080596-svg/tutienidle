@@ -637,6 +637,7 @@ export class GameManager {
       progressionOps: this.progressionOps,
       // Deferred closures - turnBattleOps/activePlayer are assigned later.
       getTurnBattle: () => this.turnBattleOps.getTurnBattle(),
+      isTurnBattleInProgress: () => this.turnBattleOps?.isTurnBattleInProgress() ?? false,
       // Deferred closure - tickOps is assigned later in this constructor.
       markQuestRealmTransition: () => this.tickOps.markQuestRealmTransition(),
       // Deferred closures - questOps is assigned later in this
@@ -824,6 +825,7 @@ export class GameManager {
       reconcileRealmRewards: (player) =>
         this.realmAdvanceOps.reconcileCultivationPathRealmRewards(player),
       reconcileSpecClaims: (player) => this.progressionOps.reconcileSpecClaims(player),
+      reconcileWayGrants: (player) => this.realmAdvanceOps.reconcileWayGrants(player),
       tribulationDirector: this.tribulationDirector,
     })
 

@@ -140,7 +140,7 @@ const QA_REFLECT: BuffDefinition = {
       payload: {
         trigger: 'onImpactLanded',
         chance: 1,
-        reflectsDamage: { maxHpRatio: 1, takenRatio: 1 },
+        reflectsDamage: { maxHpRatio: 1 },
       },
     },
   ],

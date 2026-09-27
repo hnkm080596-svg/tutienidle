@@ -70,7 +70,7 @@ export const CANONICAL_EARLY_LOOP: readonly LoopStep[] = [
   { kind: 'growth_cycle', runs: 10 },
   { kind: 'tribulation', targetRealmId: 'qi_refining' },
   { kind: 'ritual', path: 'sword', way: 'sword_pathway' },
-  { kind: 'purchase_node', nodeId: 'orb_dam_1' },
+  { kind: 'purchase_node', nodeId: 'thich_can' },
   { kind: 'stage_until_victory', stageId: 'qi_refining_forest', maxAttempts: 10 },
 ]
 

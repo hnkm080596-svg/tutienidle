@@ -2,7 +2,7 @@ import type { CombatEntity } from './CombatEntity'
 import type { EventBus } from '../events/EventBus'
 import { clampStatValue } from '../stats/StatMetadata'
 
-export type VitalsChangeReason = 'damage' | 'dot' | 'ward_break' | 'healing' | 'leech' | 'regen' | 'reaction' | 'reflection' | 'heavenly_tribulation' | 'survive_lethal' | 'ward_spend' | 'ward_grant' | 'stat_refresh'
+export type VitalsChangeReason = 'damage' | 'dot' | 'ward_break' | 'healing' | 'leech' | 'regen' | 'reaction' | 'reflection' | 'heavenly_tribulation' | 'survive_lethal' | 'ward_spend' | 'ward_grant' | 'stat_refresh' | 'sacrifice'
 
 export interface EntityVitalsChangedEvent {
   type: 'entity_vitals_changed'

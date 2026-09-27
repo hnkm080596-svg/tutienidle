@@ -17,6 +17,9 @@
 // spell_pathway (hidden_spell_pathway owns NO The pool — spec P6), or no element has
 // been committed -> CombatScene hides the bar.
 
+import { MAX_THE } from '@/core/combat/CombatTypes'
+import { isQuaTheDebt } from '@/core/the-tu/TheEconomy'
+import { hasQuanTheMarker } from '@/data/buff/TheTuBuffs'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import type { GameManager } from '@/core/game/GameManager'
 import type { SpellPathState } from '@/core/phap-tu/PhapTuState'
@@ -52,6 +55,20 @@ export interface TheBarSnapshot {
   phapTheActive: boolean
 
   label: string
+
+  /** Ung The beta - entity id of the live Tham An mark (undefined = no
+      focus). */
+  thamTargetId?: string
+
+  /** Ung The beta - quan_the marker live on the player. */
+  quanTheActive?: boolean
+
+  /** Ung The beta - current Ung Tre reaction debt. */
+  reactionDebt?: number
+
+  /** Ung The beta - Qua The (debt at cap); computed against
+      isQuaTheDebt here so views never re-derive the predicate. */
+  quaThe?: boolean
 }
 
 export type TheBarReader = () => TheBarSnapshot | null
@@ -85,33 +102,57 @@ export function makeTheBarReader(
 
     const player = getPlayer()
 
+    // Ung The beta -- the pool also belongs to hidden_body_pathway
+    // ('body.essence_economy'); element gate is spell-only.
+    const bodyEconomy = hasStaticPathCapability(player, 'body.essence_economy')
+
     // M4 (R6): the The pool is spell_pathway machinery - P1 - the declared
     // 'spell.essence_pool' capability is the gate, durable for the
     // collapsed ('spell','hidden_spell_pathway') shape.
-    if (!hasStaticPathCapability(player, 'spell.essence_pool')) {
+    if (!bodyEconomy && !hasStaticPathCapability(player, 'spell.essence_pool')) {
       return null
     }
 
-    // Canonical subpath read - the committed element under the owning
-    // way's axis (undefined for hidden_spell_pathway / uncommitted / corrupt pairs).
-    const element = getActiveElement(player)
+    if (!bodyEconomy) {
+      // Canonical subpath read - the committed element under the owning
+      // way's axis (undefined for hidden_spell_pathway / uncommitted / corrupt pairs).
+      const element = getActiveElement(player)
 
-    if (!element) {
-      return null
+      if (!element) {
+        return null
+      }
     }
 
     // TurnBattle participant shape — the human player's CombatEntity is
     // players[0].entity (The pool lives on CombatEntity, battle-scoped).
-    const participant = battle.players[0]
-    const battleEntity = participant?.entity
+    const battleParticipant = battle.players[0]
+    const battleEntity = battleParticipant?.entity
 
-    if (!battleEntity) {
+    if (!battleParticipant || !battleEntity) {
       return null
     }
 
     const current = battleEntity.currentThe ?? 0
-    const max = battleEntity.maxThe ?? THE_BAR_MAX
-    const threshold = participant?.basic?.empowerment?.theThreshold ?? max
+    const max = battleEntity.maxThe ?? (bodyEconomy ? MAX_THE : THE_BAR_MAX)
+    const threshold = battleParticipant.basic?.empowerment?.theThreshold ?? max
+
+    if (bodyEconomy) {
+      // Ung The beta HUD (design Part XV): The bar + Tham focus + Quan
+      // The state + Ung Tre/Qua The feedback. No empowerment marker --
+      // threshold 0 keeps the tick hidden.
+      return {
+        current,
+        max,
+        threshold: 0,
+        phapTheActive: false,
+        label: 'Thế',
+        thamTargetId: battleParticipant.thamTargetId,
+        quanTheActive: hasQuanTheMarker(gameManager.getBattleBuffs(battleEntity.id)),
+        reactionDebt: battleParticipant.reactionDebt ?? 0,
+        quaThe: isQuaTheDebt(battleParticipant.reactionDebt),
+      }
+    }
+
 
     // D17 -- Phap The presence is a live read of the resolved element
     // basic: buildPhapTheVariant() attaches `empowerment` onto the def the
@@ -121,7 +162,7 @@ export function makeTheBarReader(
     // (TurnBattleSystem ~1811, SkillResolver ~225) -- a display mirror
     // reading the same stamped field; drifts only if the engine gate
     // moves to a different source.
-    const phapTheActive = participant?.basic?.empowerment !== undefined && current >= threshold
+    const phapTheActive = battleParticipant.basic?.empowerment !== undefined && current >= threshold
 
     return { current, max, threshold, phapTheActive, label: 'Thế' }
   }

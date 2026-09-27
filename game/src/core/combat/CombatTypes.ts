@@ -22,6 +22,7 @@ export type DamageType = 'physical' | 'primordial' | 'elemental'
 // (+10 mỗi link chuỗi cast hoàn tất, +20 finisher E), KHÔNG decay,
 // đầy thì bắn được Ultimate nhánh (reset về 0). Số liệu khởi điểm
 // playtest theo convention.
+export const RESOURCE_THE = 'the'
 export const MAX_THE = 100
 export const THE_GAIN_PER_LINK = 10
 export const THE_GAIN_PER_FINISHER = 20

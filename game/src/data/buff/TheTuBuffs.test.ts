@@ -11,11 +11,11 @@ import type {
 } from '@/core/the-tu/TheTuCapabilities'
 import type { MarkerPayload } from '@/core/proc/MarkerCapabilities'
 
-// The Tu Reimagined (spec 2026-09-15 section 5-6, plan Task 6) — buff
+// The Tu Reimagined (spec 2026-09-15 section 5-6, plan Task 6) - buff
 // definition authoring, M4 canonical shape. Holder-turn state buffs keep
 // lifetime.scaling:'fixed' so a caster's own ailment stats can never
 // scale them; khiem_khich stays 'ailment_scaled' (real debuff ON the
-// enemy — enemy resist legitimately shortens Taunt). Effects live in
+// enemy - enemy resist legitimately shortens Taunt). Effects live in
 // capabilities[] now; payloads narrow via the owner-module types.
 
 function capPayload<T>(def: BuffDefinition, type: string): T | undefined {
@@ -39,8 +39,8 @@ describe('TheTuBuffs — registry authoring (buff2 shape)', () => {
     expect(capPayload<MarkerPayload>(def, 'marker')?.displacementImmune).toBe(true)
   })
 
-  it('phan_chinh — permanent self buff carrying a reflectsDamage reactive trigger grant', () => {
-    const def = BUFF_REGISTRY.get('phan_chinh')
+  it('phan_chan — permanent self buff: Max-HP reflect with a Chấn Ấn-scoped higher marked ratio', () => {
+    const def = BUFF_REGISTRY.get('phan_chan')
 
     expect(def.polarity).toBe('buff')
     expect(def.lifetime.clock).toBe('permanent')
@@ -49,8 +49,36 @@ describe('TheTuBuffs — registry authoring (buff2 shape)', () => {
 
     expect(trigger).toBeDefined()
     expect(trigger!.trigger).toBe('onImpactLanded')
-    expect(trigger!.reflectsDamage!.maxHpRatio).toBeGreaterThan(0)
-    expect(trigger!.reflectsDamage!.takenRatio).toBeGreaterThan(0)
+    const reflect = trigger!.reflectsDamage!
+    expect(reflect.maxHpRatio).toBeGreaterThan(0)
+    expect(reflect.markedMaxHpRatio).toBeGreaterThan(reflect.maxHpRatio)
+    expect(reflect.markedBy).toBe('chan_an')
+    // Beta design: NO taken-damage ratio - the reflect is Max-HP derived only.
+    expect('takenRatio' in reflect).toBe(false)
+  })
+
+  it('chan_an — mark-only ailment debuff: no DoT, no stat-down, dispellable', () => {
+    const def = BUFF_REGISTRY.get('chan_an')
+
+    expect(def.polarity).toBe('debuff')
+    expect(def.instanceScope).toBe('per_target')
+    expect(def.sourceOwnership).toBe('latest')
+    expect(def.lifetime.scaling).toBe('ailment_scaled')
+    expect(def.application?.resistance).toBe('ailment')
+    expect(def.statModifiers ?? []).toHaveLength(0)
+    expect(def.dispellable).toBe(true)
+  })
+
+  it('tran_kinh — short ailment weakening the next damage hit (finalDamagePercent cut)', () => {
+    const def = BUFF_REGISTRY.get('tran_kinh')
+
+    expect(def.polarity).toBe('debuff')
+    expect(def.lifetime.duration).toBeGreaterThan(0)
+    expect(def.statModifiers).toContainEqual(
+      expect.objectContaining({ stat: 'finalDamagePercent', flat: expect.any(Number) }),
+    )
+    const cut = def.statModifiers!.find((m) => m.stat === 'finalDamagePercent')!.flat!
+    expect(cut).toBeLessThan(0)
   })
 
   it('son_nhac — fixed holder-turns self DR buff (finalDamageReductionPercent)', () => {
@@ -159,7 +187,7 @@ describe('TheTuBuffs — registry authoring (buff2 shape)', () => {
 
     expect(economy).toBeDefined()
     expect(economy!.freeProcs).toBe(true)
-    // Spec-listed rider: "counter hits +break" — an ailment application on
+    // Spec-listed rider: "counter hits +break" - an ailment application on
     // the payload hit through the existing appliesAilments mechanism.
     expect(economy!.payloadAilments?.length).toBeGreaterThan(0)
     expect(def.lifetime.scaling).toBe('fixed')

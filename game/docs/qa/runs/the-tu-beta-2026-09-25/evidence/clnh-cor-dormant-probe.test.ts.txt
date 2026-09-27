@@ -1,0 +1,50 @@
+import { describe, expect, it } from 'vitest'
+
+import {
+  ENEMY_A,
+  PLAYER,
+  makeDef,
+  makeHarness,
+  makeInput,
+  spawn,
+} from './SkillExecutor.testkit'
+
+// REVIEW PROBE (CLEAN ROUND H, correctness lens) -- sealed QA evidence.
+// Hypothesis under attack: a resolved 'sacrifice'-profile pay_hp op is
+// counted as "damage landed" by SkillExecutor.collectOutcome ->
+// opLanded (flat channels never carry `landed`; `!== false` -> true).
+// If true, `emitGrants`'s `connected` gate (hasHitOps ?
+// anyDamageLanded : anyLanded) and buildOutcome.landed are corrupted on
+// a FULLY-WHIFFED pay_hp cast: the self-payment substitutes for a
+// landed hit.
+describe('pay_hp probe -- whiffed cast vs resolved sacrifice op', () => {
+  it('a pay_hp cast whose every hit dodges still reports landed + pays theOnLandedCast', () => {
+    const def = makeDef({
+      landed: 'any_damage_landed',
+      grants: { theOnLandedCast: 20 },
+      operations: [
+        { type: 'pay_hp', maxHpRatio: 0.3, into: '__paid_hp' },
+        { type: 'deal_damage', target: 'primary_target', coefficient: 1 },
+      ],
+    })
+    const harness = makeHarness({
+      defs: [def],
+      // the real adapter resolves 'sacrifice' via applyDirectDamage --
+      // the fake returns landed:true for it (non-skill_hit scripts do
+      // not apply); the enemy hit is scripted dodged.
+      damageScript: [{ landed: false }],
+    })
+    spawn(harness, PLAYER)
+    spawn(harness, ENEMY_A)
+
+    const plan = harness.resolver.resolve(makeInput(def))
+    const outcome = harness.executor.execute(plan, makeInput(def))
+
+    // Spec contract (emitGrants comment): "a LANDED hit for damaging
+    // casts (whiffed casts grant nothing even when side ops
+    // connected)". The only enemy hit dodged -> this cast whiffed.
+    expect(outcome.whiffed).toBe(true)
+    expect(outcome.landed).toBe(false)
+    expect(harness.state.resources.get(`${PLAYER}|the`)).toBeUndefined()
+  })
+})

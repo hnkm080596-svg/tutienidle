@@ -1,4 +1,5 @@
 import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
+import { consumeGaugeAfterAction } from './ActionGauge'
 import { resolveNextTurn } from './TurnQueue'
 
 // Slice 7 extension (Completion Task 11) — turn-order preview: trả N actor
@@ -26,14 +27,38 @@ export function peekUpcomingActors(
   battle: TurnBattle,
   count: number,
 ): TurnBattleParticipant[] {
+  // Queued executions/follow-ups drain BEFORE gauge order inside
+  // dequeueFollowUpActor -- lead with them or the first 'upcoming' entry
+  // is wrong while a repeat/counter is pending. Display approximation:
+  // dead actors are skipped; the chain-depth guard is not simulated.
+  const upcoming: TurnBattleParticipant[] = []
+
+  const findAlive = (actorId: string): TurnBattleParticipant | undefined => {
+    const participant =
+      battle.players.find((member) => member.id === actorId) ??
+      battle.enemies.find((enemy) => enemy.id === actorId)
+
+    return participant !== undefined && participant.entity.alive ? participant : undefined
+  }
+
+  for (const entry of battle.queuedExecutions ?? []) {
+    if (upcoming.length >= count) return upcoming
+    const actor = findAlive(entry.actorId)
+    if (actor !== undefined) upcoming.push(actor)
+  }
+
+  for (const entry of battle.queuedFollowUps ?? []) {
+    if (upcoming.length >= count) return upcoming
+    const actor = findAlive(entry.actorId)
+    if (actor !== undefined) upcoming.push(actor)
+  }
+
   const cloned: TurnBattleParticipant[] = [
     ...battle.players.map(cloneGaugeActor),
     ...battle.enemies.map(cloneGaugeActor),
   ]
 
-  const upcoming: TurnBattleParticipant[] = []
-
-  for (let i = 0; i < count; i++) {
+  for (let i = upcoming.length; i < count; i++) {
     const resolved = resolveNextTurn(cloned.filter((actor) => actor.alive))
 
     if (!resolved) {
@@ -53,7 +78,7 @@ export function peekUpcomingActors(
     const clone = cloned.find((actor) => actor.id === resolved.actor.id)
 
     if (clone) {
-      clone.actionGauge = 0
+      consumeGaugeAfterAction(clone, 1)
     }
   }
 

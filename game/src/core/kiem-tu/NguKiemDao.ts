@@ -1,53 +1,37 @@
 import type { PlayerData } from '../player/Player'
 import type { SwordPathState } from './KiemTuState'
 import { isHiddenSwordPathway } from './KiemTuPath'
+import { forgeCost, kiemDaoCap } from './KiemTuState'
 import { getRealmIndex } from '../realm/realmSystem'
 
-// Kiem Tu Reimagined Task 8 (spec 2026-09-15 K14/K15) — Ngu Kiem Dao
-// economy. THE owner of the Kiem Y → Kiem Dao conversion and the
-// breakthrough merge. All numbers come from the CURRENT realmIndex —
+// Canonical bound formulas live on the KiemTuState leaf (re-exported
+// here so existing consumers keep their import site).
+export { forgeCost, kiemDaoCap }
+
+// Kiem Tu Reimagined Task 8 (spec 2026-09-15 K14/K15) -- Ngu Kiem Dao
+// economy. THE owner of the Kiem Y -> Kiem Dao conversion and the
+// breakthrough merge. All numbers come from the CURRENT realmIndex --
 // never snapshot at state-init time.
 //
 //   +1 Kiem Y per ngu_kiem_thuat cast (Task 9 provider onCastResolved)
-//   forgeCost(realmIndex) = ceil(9999 * 1.3^(r-1)) — the Kiem Y cost of
+//   forgeCost(realmIndex) = ceil(9999 * 1.3^(r-1)) -- the Kiem Y cost of
 //     one Kiem Dao at that realm
 //   kiemDaoCap(realmIndex) = realmIndex + 1
-//   gain is a NO-OP at cap (K14b) — excess Y is not banked past the cap
-//   breakthrough merge: base *= 1 + 0.3 * mergedCount, count → 1,
+//   gain is a NO-OP at cap (K14b) -- excess Y is not banked past the cap
+//   breakthrough merge: base *= 1 + 0.3 * mergedCount, count -> 1,
 //     Kiem Y untouched (K15)
 
 export const KIEM_DAO_MERGE_BONUS = 0.3
 
-// Roll Cascade tunables (spec §11 first-pass values — the a/e/d unlock
-// nodes live in Task 11; the provider consumes these, never inlines).
-export const EXECUTE_MULT = 10
-export const CASCADE_CRIT_CHANCE = 0.25
-export const CASCADE_PIERCE_CHANCE = 0.5
-export const PIERCE_FRACTION = 0.6
-
-function assertRealmIndex(realmIndex: number): void {
-  if (realmIndex < 1) {
-    throw new RangeError(`hidden_sword_pathway economy requires realmIndex >= 1, got ${realmIndex}`)
-  }
-}
-
-/** Kiem Y cost of forging one Kiem Dao at this realm (asserts r>=1 —
- *  mortal cannot enter hidden_sword_pathway, so r=0 is a contract violation). */
-export function forgeCost(realmIndex: number): number {
-  assertRealmIndex(realmIndex)
-  return Math.ceil(9_999 * Math.pow(1.3, realmIndex - 1))
-}
-
-/** Max live flying swords at this realm (asserts r>=1). */
-export function kiemDaoCap(realmIndex: number): number {
-  assertRealmIndex(realmIndex)
-  return realmIndex + 1
-}
+// Ngu Kiem Beta (design sec.56 -- first-pass, tuning deferred): the
+// Lien evolution's Kiem The rate -- each landed prior sword of the same
+// cast multiplies the next sword's coefficient by (1 + rate * stacks).
+export const LIEN_MOMENTUM_RATE = 0.15
 
 /**
  * The ONLY Kiem Y entry point (A3). No-op entirely when the player is
- * not on the hidden_sword_pathway way (cultivationWay is the discriminator — M6) or
- * when already at the realm cap — a capped forge does not bank Y.
+ * not on the hidden_sword_pathway way (cultivationWay is the discriminator -- M6) or
+ * when already at the realm cap -- a capped forge does not bank Y.
  * Otherwise adds `amount` and converts greedily at the CURRENT realm's
  * forgeCost until under cost or at cap.
  */
@@ -74,55 +58,9 @@ export function gainKiemY(player: PlayerData, amount: number): void {
 }
 
 /**
- * Trung Cung purchase grant (spec §5.4) — +N live swords WITHOUT
- * spending Kiem Y, clamped at the current realm cap. hidden_sword_pathway-only; the
- * kiemDaoBelowCap prereq should already have rejected a capped buy —
- * this clamp is the second line of defense.
- */
-export function grantKiemDao(player: PlayerData, amount: number): void {
-  const state = player.swordPath
-  const realmIndex = getRealmIndex(player.realmId)
-
-  if (!state || !isHiddenSwordPathway(player) || amount <= 0 || realmIndex < 1) {
-    return
-  }
-
-  state.kiemDaoCount = Math.min(kiemDaoCap(realmIndex), state.kiemDaoCount + amount)
-}
-
-/**
- * F-W-2 - debit phản chiếu của gainKiemY cho clawback: trừ kiemY (sàn 0);
- * phần dư không trừ được quy về kiếm — mỗi forgeCost(realm) hiện tại một
- * thanh (pool auto-forge nên kiếm rèn từ Y được grant chính là phần tiếp
- * nối của món nợ). Dư vượt quá kiếm sống thì hấp thụ — kiếm đã merge vào
- * kiemDaoBase không thể un-merge (applyBreakthroughMerge là vĩnh viễn).
- */
-export function loseKiemY(player: PlayerData, amount: number): void {
-  const state = player.swordPath
-
-  if (!state || amount <= 0) {
-    return
-  }
-
-  const debited = Math.min(state.kiemY, amount)
-  state.kiemY -= debited
-
-  let residual = amount - debited
-
-  if (residual <= 0 || getRealmIndex(player.realmId) < 1) {
-    return
-  }
-
-  const cost = forgeCost(getRealmIndex(player.realmId))
-  const swordsToDebit = Math.min(state.kiemDaoCount, Math.ceil(residual / cost))
-  state.kiemDaoCount -= swordsToDebit
-  residual -= swordsToDebit * cost
-}
-
-/**
  * Breakthrough merge (K15): the swords forged this realm fold into the
  * permanent base multiplier, then the live count resets to 1. The
- * count snapshot MUST precede the reset — order is load-bearing.
+ * count snapshot MUST precede the reset -- order is load-bearing.
  * Banked Kiem Y carries over untouched (it converts at the NEW realm's
  * forgeCost on the next gain).
  */

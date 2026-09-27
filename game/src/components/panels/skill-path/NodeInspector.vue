@@ -127,8 +127,6 @@ function nodePrereqReason(prereq: NodePrerequisite): string {
       skill: skillName,
       requirement,
     })
-  } else if (prereq.kind === 'kiemDaoBelowCap') {
-    return t('panels.skillPath.nodeInspector.lockedReasons.kiemDaoCap')
   } else if (prereq.kind === 'techniqueRank') {
     return t('panels.skillPath.nodeInspector.lockedReasons.techniqueRank', {
       rank: prereq.rank,
