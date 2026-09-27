@@ -1,0 +1,6 @@
+{
+  "reviewer": "devin-6310639340584c3fb09aee1dc5f642c4",
+  "verdict": "SEALED -- zero findings",
+  "evidence": "isolated correctness review @de23c053: no actionable or latent defects found on the reviewed surface",
+  "findings": []
+}

@@ -1,0 +1,15 @@
+{
+  "producer": "coordinator",
+  "verdict": "clean-N fix batch @a359517e",
+  "evidence": "npm run type-check clean; npx vitest run skilldef+turn+buff2+battle/runtime+GameManagerTurnBattle = 123 files / 1143 tests PASS",
+  "fixes": [
+    "awaitStep fallback timer wrapped try/finally -- driveStepWork domain faults propagate loud on the timer thread AND done() still runs, so the step always completes (no token-claimed-forever freeze)",
+    "applyPeriodicGrowth restructured: drain-to-zero removeInstance then falls THROUGH to the consume marker retire + break -- remaining markers on the target keep feeding; drain emits no buff_stacks_changed (removeInstance carries its own event, parity)",
+    "registry faults extended: cost.resourceType 'none' invalid_field_value (runtime switch knows {the,mana,ward} only; crash would be past the decline lane); theScaling requires consumesAllThe on the same def (theBurned=0 silently otherwise)",
+    "vestigial grantBasicLandedIncome call removed at :2471 (self-gated runtime===undefined dead lane); comment states the plan-runtime hook owns the income",
+    "resolveFollowUp docblock caveat: aux-claims ids resolve the empowered VARIANT for follow-ups",
+    "isPrimary removed from adapter options -- zero engine readers",
+    "appliedTargetIds docblock corrected: ops of ANY type that resolved on affected targets",
+    "AUT-2 rejected with lane-exclusivity proof: routed charge-resolve mints The income via grants.theOnLandedCast inside the executor (deferredResolve gate); TBS grantTheFromCast sits inside the legacy else the routed branch skips -- single mint per lane"
+  ]
+}
