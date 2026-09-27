@@ -14,6 +14,7 @@ import {
   TEST_ENTITIES,
   type BuffSystemWorld,
 } from './testing/BuffTestFixtures'
+import { createDefaultCapabilityValidators } from '../battle/runtime/capability/DefaultCapabilityValidators'
 
 function def(w: BuffSystemWorld, overrides: Partial<BuffDefinition> = {}): BuffDefinition {
   const d = w.makeTestDefinition(overrides)
@@ -302,5 +303,39 @@ describe('modifier channels + pending uses', () => {
     const req2 = lastRequests(w)[0]!
     expect(req2.requestId).not.toBe(req1.requestId)
     expect(req2.coefficient).toBe(4)
+  })
+})
+
+describe('periodic growth feed (spec D11)', () => {
+  function markerDef(tickingId: string, stacks: number, consume = true): Partial<BuffDefinition> {
+    return {
+      capabilities: [
+        { id: 'g.1', type: 'periodic_growth', payload: { definitionId: tickingId, stacks, consume } },
+      ],
+    }
+  }
+
+  it('growth feed clamps at maxStacks and emits buff_stacks_changed; consume removes the marker', () => {
+    const w = makeBuffSystemWorld({ capabilityValidators: createDefaultCapabilityValidators() })
+    const d = def(w, dotDef({ stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' } }))
+    const m = def(w, markerDef(d.id, 3))
+    const ticking = apply(w, d.id, 4)
+    apply(w, m.id)
+    w.system.onHolderTurnEnd(TEST_ENTITIES.targetA, w.makeLctx())
+    expect(ticking.stacks).toBe(5)
+    const changed = w.sink.ofType('buff_stacks_changed')
+    expect(changed[changed.length - 1]).toMatchObject({ instanceId: ticking.instanceId, stacksBefore: 4, stacksAfter: 5 })
+    expect(w.store.all().some((i) => i.definitionId === m.id)).toBe(false)
+    expect(lastRequests(w)[0]!.stackCount).toBe(5)
+  })
+
+  it('negative growth draining the instance to <=0 consumes it like commitStacks', () => {
+    const w = makeBuffSystemWorld({ capabilityValidators: createDefaultCapabilityValidators() })
+    const d = def(w, dotDef())
+    const m = def(w, markerDef(d.id, -10, false))
+    apply(w, d.id, 4)
+    apply(w, m.id)
+    w.system.onHolderTurnEnd(TEST_ENTITIES.targetA, w.makeLctx())
+    expect(w.store.all().some((i) => i.definitionId === d.id)).toBe(false)
   })
 })

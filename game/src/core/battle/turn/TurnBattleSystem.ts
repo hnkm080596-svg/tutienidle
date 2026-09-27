@@ -2031,7 +2031,17 @@ export class TurnBattleSystem {
         const chargedSkill = declared.chargedSkill
 
         if (chargedSkill && chargedSkill.damage) {
-          const opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
+          // Self-scoped charged defs resolve against the actor's own side --
+          // target ids were captured from affected=[actor] at declare, so the
+          // lookup side must match targetScope or every hit whiffs.
+          const selfScoped = (chargedSkill.targetScope ?? 'enemy') === 'self'
+          const opposingSide = selfScoped
+            ? battle.players.includes(actor)
+              ? battle.players
+              : battle.enemies
+            : battle.players.includes(actor)
+              ? battle.enemies
+              : battle.players
 
           const suddenDeathMultiplier = declared.suddenDeathMultiplier
           const chargedDamage = suddenDeathMultiplier === 1
@@ -2767,13 +2777,9 @@ export class TurnBattleSystem {
                 ? payloadSkill.damage
                 : scaleActionDamage(payloadSkill.damage, suddenDeathMultiplier)
 
-            // Task 13 -- theScaling fold (same as declareActorAction).
-            if (payloadSkill.theScaling && execution.theBurned) {
-              scaledDamage = scaleActionDamage(
-                scaledDamage,
-                1 + (execution.theBurned / 100) * payloadSkill.theScaling.coeff,
-              )
-            }
+            // Queued executions carry no theBurned -- the burn is captured
+            // only on commit-cast declarations, so there is no theScaling
+            // fold on this lane.
           }
         }
       }
