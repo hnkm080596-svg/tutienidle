@@ -622,7 +622,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
             : fact.entityId === PLAYER_ID ? 1 : -1
           this.playHorizontalImpulse(sprite, direction * impulsePx, durationMs)
         },
-        cameraImpulse: () => this.cameras.main.shake(45, 0.001, false),
+        cameraImpulse: (durationMs, intensity) => this.cameras.main.shake(durationMs, intensity, false),
       }, reducedMotion ? 'low' : 'standard', reducedMotion)
       this._skillPlayback = new SkillPresentationRunner(this._skillVfxDriver, getSkillPresentationRecipe,
         error => { console.warn('[SkillPresentation]', error) })

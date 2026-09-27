@@ -1,6 +1,6 @@
 import type { CombatVfxPresetId } from '@/core/battle/CombatAction'
 import type { SkillPresentationRecipe } from '@/presentation/skills/SkillPresentationRecipe'
-import { COMBAT_VFX_PRESETS } from './CombatVfxPresets'
+import { COMBAT_VFX_PRESETS, type CombatVfxPreset } from './CombatVfxPresets'
 
 // Restored actor lunge (design section 9 "actor impulse + signature stroke"):
 // the tuned values moved here from combatConstants ATTACK_LUNGE_* (2026-09-07
@@ -21,7 +21,7 @@ export const PHI_KIEM_RECIPE: SkillPresentationRecipe = {
   recovery: [{ primitive: 'trajectory', anchor: 'source', shape: 'blade', offsetMs: 0, durationMs: 170, recall: true, bend: 74 }],
 }
 const recipes = new Map<CombatVfxPresetId, SkillPresentationRecipe>()
-for (const preset of Object.values(COMBAT_VFX_PRESETS)) {
+for (const preset of Object.values(COMBAT_VFX_PRESETS) as CombatVfxPreset[]) {
   const aura = preset.id === 'holy_radiance'
   const ground = preset.space === 'ground_projected' || preset.space === 'screen'
   const burst = preset.space === 'hybrid'
@@ -44,6 +44,11 @@ for (const preset of Object.values(COMBAT_VFX_PRESETS)) {
       { primitive: aura ? 'aura' : ground ? 'ground-shape' : burst ? 'burst' : 'stroke',
         anchor: 'targets', shape: aura || ground ? 'ring' : burst ? 'sparks' : 'slash',
         offsetMs: 0, durationMs: preset.durationMs, count: 12 },
+      // Authored shake migrates to an impact camera-cue; authored precedence in
+      // the driver suppresses the generic landed-hit impulse for that action.
+      ...(preset.screenShake ? [{ primitive: 'camera-cue' as const, anchor: 'source' as const,
+        shape: 'camera' as const, offsetMs: 0, durationMs: preset.screenShake.durationMs,
+        intensity: preset.screenShake.intensity }] : []),
     ],
     recovery: [],
   })

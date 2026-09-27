@@ -14,7 +14,7 @@ export interface SkillVfxSurface {
   ground(fact: Pick<ActorAnchorFact, 'row' | 'column'>): Point | undefined
   uprightDepth(fact: ActorAnchorFact): number
   actorImpulse?(fact: ActorAnchorFact, durationMs: number, impulsePx: number): void
-  cameraImpulse?(): void
+  cameraImpulse?(durationMs: number, intensity: number): void
 }
 export type SkillVfxQuality = 'standard' | 'low'
 export const SKILL_VFX_BUDGETS = {
@@ -27,6 +27,9 @@ const quietHandle: SkillCueHandle = { sample() {}, finish() {}, cancel() {} }
 export class PhaserSkillVfxDriver implements SkillPresentationDriver {
   private readonly pool: VfxPool<SkillVfxGraphics>
   private epoch = 0
+  // One camera impulse per action token; authored cues and the generic
+  // landed-hit impulse share the latch so the <=1/action cap holds.
+  private readonly cameraImpulseFired = new Set<string>()
   private readonly budget
   constructor(
     private readonly surface: SkillVfxSurface,
@@ -38,8 +41,13 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
       graphics => { graphics.clear(); graphics.setVisible(false) }, graphics => graphics.destroy())
   }
   get stats() { return this.pool.stats }
-  reset(): void { this.epoch++; this.pool.reset() }
-  destroy(): void { this.epoch++; this.pool.destroy() }
+  reset(): void { this.epoch++; this.cameraImpulseFired.clear(); this.pool.reset() }
+  destroy(): void { this.epoch++; this.cameraImpulseFired.clear(); this.pool.destroy() }
+  private latchCamera(token: string): boolean {
+    if (this.cameraImpulseFired.has(token)) return false
+    this.cameraImpulseFired.add(token)
+    return true
+  }
 
   open(cue: SkillCue, context: SkillCueContext): SkillCueHandle {
     const cast = context.cast
@@ -52,6 +60,14 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
     // One-shot primitives move actors/cameras directly and never lease graphics.
     if (cue.primitive === 'actor-impulse') {
       this.surface.actorImpulse?.(source, cue.durationMs, cue.impulsePx ?? 8)
+      return quietHandle
+    }
+    // Authored camera shake: a landed outcome in this cue's own group is the
+    // "khi co landed hit" gate; camera shake never fires under reduced motion.
+    if (cue.primitive === 'camera-cue') {
+      const landed = group?.outcomes.some(outcome => outcome.kind === 'hit' && outcome.landed) ?? false
+      if (!this.reducedMotion && landed && this.latchCamera(context.ref.token))
+        this.surface.cameraImpulse?.(cue.durationMs, cue.intensity ?? 0.005)
       return quietHandle
     }
     const successful = group?.outcomes.filter(outcome =>
@@ -72,9 +88,20 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
     const epoch = this.epoch
     let alive = true
     const end = () => { if (alive) { alive = false; lease.release() } }
-    if (!this.reducedMotion && cue.primitive === 'stroke' && group?.role === 'primary'
-      && group.outcomes.some(outcome => outcome.kind === 'hit' && outcome.landed && outcome.crit))
-      this.surface.cameraImpulse?.()
+    try {
+      // Generic camera impulse: landed hit on the primary group, at most once
+      // per action, and it yields entirely when a recipe authors its own cue.
+      if (!this.reducedMotion && !context.hasAuthoredCameraCue && cue.primitive === 'stroke'
+        && group?.role === 'primary'
+        && group.outcomes.some(outcome => outcome.kind === 'hit' && outcome.landed)
+        && this.latchCamera(context.ref.token))
+        this.surface.cameraImpulse?.(45, 0.001)
+    } catch (error) {
+      // A throwing surface hook must not strand the lease: the runner never
+      // receives the handle when open() throws, so release it here.
+      lease.release()
+      throw error
+    }
     return {
       sample: elapsed => {
         if (!alive || epoch !== this.epoch) return
@@ -185,8 +212,8 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
       // One-shot primitives leave open() before the graphics lease; reaching
       // this branch means the dispatch contract was bypassed - warn and draw
       // nothing rather than render the wrong ellipse.
-      if (cue.primitive === 'actor-impulse') {
-        console.warn('[SkillVfx] actor-impulse cue reached the draw path')
+      if (cue.primitive === 'actor-impulse' || cue.primitive === 'camera-cue') {
+        console.warn(`[SkillVfx] ${cue.primitive} cue reached the draw path`)
         return
       }
       const radius = 12 + t * (this.reducedMotion ? 8 : 24)

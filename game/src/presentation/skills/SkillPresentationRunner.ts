@@ -111,9 +111,18 @@ export class SkillPresentationRunner {
     active.elapsed = 0
     active.duration = 0
     active.cues = []
-    for (const group of result.groups) {
-      const recipe = this.recipe(group.presetId)
-      const context: SkillCueContext = { ref: active.ref, recipe, phase: 'resolved', group }
+    const recipes = result.groups.map(group => this.recipe(group.presetId))
+    // Authored precedence is action-wide: a camera-cue on any group (e.g. a
+    // kiem-combo extra) suppresses the generic landed-hit impulse on all of
+    // them, regardless of cue order inside a recipe.
+    const hasAuthoredCameraCue = recipes.some(recipe =>
+      recipe.impact.some(cue => cue.primitive === 'camera-cue')
+      || recipe.recovery.some(cue => cue.primitive === 'camera-cue'))
+    for (let index = 0; index < result.groups.length; index++) {
+      const group = result.groups[index]!
+      const recipe = recipes[index]!
+      const context: SkillCueContext = { ref: active.ref, recipe, phase: 'resolved', group,
+        hasAuthoredCameraCue }
       active.duration = Math.max(active.duration, recipe.impactMs + recipe.recoveryMs)
       for (const cue of recipe.impact)
         active.cues.push({ cue, context, offset: cue.offsetMs, ended: false })

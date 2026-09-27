@@ -1,14 +1,15 @@
 import type { CombatVfxPresetId } from '@/core/battle/CombatAction'
 import type { PlaybackRef, SkillCastPresentation, ResolvedPresentationGroup } from '@/core/battle/turn/SkillPresentationFacts'
 
-export type SkillPrimitive = 'trajectory' | 'stroke' | 'burst' | 'aura' | 'ground-shape' | 'actor-impulse'
+export type SkillPrimitive = 'trajectory' | 'stroke' | 'burst' | 'aura' | 'ground-shape' | 'actor-impulse' | 'camera-cue'
 export interface SkillCue {
   readonly primitive: SkillPrimitive
   readonly offsetMs: number
   readonly durationMs: number
   readonly anchor: 'source' | 'target' | 'targets'
-  readonly shape: 'blade' | 'orb' | 'slash' | 'ring' | 'sparks' | 'rune' | 'impulse'
+  readonly shape: 'blade' | 'orb' | 'slash' | 'ring' | 'sparks' | 'rune' | 'impulse' | 'camera'
   readonly impulsePx?: number
+  readonly intensity?: number
   readonly recall?: boolean
   readonly bend?: number
   readonly count?: number
@@ -33,6 +34,10 @@ export interface SkillCueContext {
   readonly phase: 'cast' | 'resolved'
   readonly cast?: SkillCastPresentation
   readonly group?: ResolvedPresentationGroup
+  // Set by the runner at resolved-playback start when any group recipe carries
+  // an authored camera-cue: the generic landed-hit camera impulse must yield
+  // (authored precedence, independent of cue ordering within a recipe).
+  readonly hasAuthoredCameraCue?: boolean
 }
 export interface SkillCueHandle {
   sample(elapsedMs: number): void
@@ -44,7 +49,7 @@ export interface SkillPresentationDriver {
 }
 export type SkillRecipeResolver = (presetId: CombatVfxPresetId) => SkillPresentationRecipe
 
-const primitives = new Set<SkillPrimitive>(['trajectory', 'stroke', 'burst', 'aura', 'ground-shape', 'actor-impulse'])
+const primitives = new Set<SkillPrimitive>(['trajectory', 'stroke', 'burst', 'aura', 'ground-shape', 'actor-impulse', 'camera-cue'])
 export function validateSkillRecipe(recipe: SkillPresentationRecipe): void {
   if (!recipe.id || recipe.version !== 1 || !Number.isInteger(recipe.color) || recipe.color < 0 || recipe.color > 0xffffff)
     throw new Error('Invalid skill recipe identity or color')
@@ -56,11 +61,14 @@ export function validateSkillRecipe(recipe: SkillPresentationRecipe): void {
       if (!primitives.has(cue.primitive) || !Number.isFinite(cue.offsetMs) || !Number.isFinite(cue.durationMs)
         || cue.offsetMs < 0 || cue.durationMs <= 0 || cue.offsetMs + cue.durationMs > duration
         || !['source', 'target', 'targets'].includes(cue.anchor)
-        || !['blade', 'orb', 'slash', 'ring', 'sparks', 'rune', 'impulse'].includes(cue.shape))
+        || !['blade', 'orb', 'slash', 'ring', 'sparks', 'rune', 'impulse', 'camera'].includes(cue.shape))
         throw new Error('Invalid skill recipe cue')
       if (cue.impulsePx !== undefined
         && (!Number.isFinite(cue.impulsePx) || cue.impulsePx <= 0 || cue.impulsePx > 64))
         throw new Error('Unbounded skill cue impulse')
+      if (cue.intensity !== undefined
+        && (!Number.isFinite(cue.intensity) || cue.intensity <= 0 || cue.intensity > 0.01))
+        throw new Error('Unbounded skill cue camera intensity')
       for (const value of [cue.bend, cue.count, cue.releaseMs, cue.cruiseMs, cue.accelerationMs])
         if (value !== undefined && !Number.isFinite(value)) throw new Error('Non-finite skill cue parameter')
       if (cue.count !== undefined && (!Number.isInteger(cue.count) || cue.count < 1 || cue.count > 256))

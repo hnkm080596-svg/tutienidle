@@ -21,6 +21,7 @@ function fixture() {
   const port = { getPendingPlaybackToken: () => ref.token, acknowledgeActionImpact: vi.fn(),
     acknowledgeActionComplete: vi.fn(), acknowledgeTurnReady: vi.fn() }
   scene.gameManagerRef = port
+  scene.cameras = { main: { shake: vi.fn() } }
   scene.add = { graphics: () => {
     const graphics: Record<string, unknown> = {}
     for (const key of ['clear', 'setVisible', 'setDepth', 'lineStyle', 'lineBetween', 'fillStyle',

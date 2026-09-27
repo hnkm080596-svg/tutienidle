@@ -27,6 +27,23 @@ describe('authored skill presentation recipes', () => {
     expect(getSkillPresentationRecipe('ngu_kiem_flight').cast.every(c => c.primitive !== 'actor-impulse')).toBe(true)
     expect(getSkillPresentationRecipe('boss_ground_slam').cast.every(c => c.primitive !== 'actor-impulse')).toBe(true)
   })
+  it('migrates authored screenShake to an impact camera-cue', () => {
+    const slam = getSkillPresentationRecipe('boss_ground_slam')
+    expect(slam.impact).toContainEqual(expect.objectContaining({
+      primitive: 'camera-cue', anchor: 'source', shape: 'camera',
+      offsetMs: 0, durationMs: 120, intensity: 0.004 }))
+    const combo = getSkillPresentationRecipe('kiem_combo_ngu_hanh_kiem')
+    expect(combo.impact).toContainEqual(expect.objectContaining({
+      primitive: 'camera-cue', durationMs: 140, intensity: 0.005 }))
+    expect(getSkillPresentationRecipe('slash').impact.every(cue => cue.primitive !== 'camera-cue')).toBe(true)
+    expect(getSkillPresentationRecipe('ngu_kiem_flight').impact.every(cue => cue.primitive !== 'camera-cue')).toBe(true)
+  })
+  it('rejects out-of-range camera intensity', () => {
+    const recipe = getSkillPresentationRecipe('slash')
+    for (const intensity of [0, -0.001, 0.011, NaN, Infinity])
+      expect(() => validateSkillRecipe({ ...recipe, impact: [{ primitive: 'camera-cue' as const,
+        anchor: 'source' as const, shape: 'camera' as const, offsetMs: 0, durationMs: 100, intensity }] })).toThrow()
+  })
   it('rejects out-of-range impulse data', () => {
     const recipe = getSkillPresentationRecipe('slash')
     for (const impulsePx of [0, -1, 65, NaN, Infinity])

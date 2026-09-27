@@ -5,7 +5,7 @@ const source = { entityId: 'player', row: 1, column: 1 }
 const target = { entityId: 'enemy', row: 1, column: 8 }
 const cue = { primitive: 'trajectory' as const, anchor: 'target' as const, shape: 'blade' as const, offsetMs: 0, durationMs: 370 }
 const recipe = { id: 'test', version: 1 as const, color: 0xffffff, castMs: 370, impactMs: 80, recoveryMs: 170, cast: [], impact: [], recovery: [] }
-function fixture(quality: 'standard' | 'low' = 'standard') {
+function fixture(quality: 'standard' | 'low' = 'standard', reducedMotion = false) {
   const draws: string[] = []
   let destroyed = 0
   const graphics = () => {
@@ -20,7 +20,7 @@ function fixture(quality: 'standard' | 'low' = 'standard') {
     ground: fact => ({ x: fact.column * 50, y: fact.row * 50 }),
     uprightDepth: () => 450, actorImpulse: vi.fn(), cameraImpulse: vi.fn(),
   }
-  const driver = new PhaserSkillVfxDriver(surface, quality)
+  const driver = new PhaserSkillVfxDriver(surface, quality, reducedMotion)
   const context: SkillCueContext = { ref: { sessionId: 1, requestId: '1', token: '1' }, recipe,
     phase: 'cast', cast: { ref: { sessionId: 1, requestId: '1', token: '1' }, rootSkillId: 'test',
       resolvedSkillId: 'test', presetId: 'metal_slash', source, declaredTargets: [target],
@@ -85,6 +85,49 @@ describe('pooled Phaser skill driver', () => {
         shape: 'impulse', offsetMs: 0, durationMs: 180, impulsePx: 8 }, context)
       expect(f.surface.actorImpulse).toHaveBeenCalledExactlyOnceWith(source, 180, 8)
     }
+  })
+  const landedContext = (f: ReturnType<typeof fixture>, overrides?: Partial<SkillCueContext>): SkillCueContext => ({
+    ...f.context, phase: 'resolved' as const, cast: undefined,
+    group: { groupId: 'g', role: 'primary' as const, resolvedSkillId: 'test', presetId: 'metal_slash',
+      source, actualTargets: [target], footprint: { kind: 'none' as const },
+      outcomes: [{ kind: 'hit' as const, outcomeId: 'h', target, landed: true, crit: false, hpDamage: 4, killed: false, hitOrdinal: 0 }] },
+    ...overrides })
+  const cameraCue = { primitive: 'camera-cue' as const, anchor: 'source' as const,
+    shape: 'camera' as const, offsetMs: 0, durationMs: 140, intensity: 0.005 }
+  it('fires an authored camera-cue once per action on a landed hit', () => {
+    const f = fixture()
+    const context = landedContext(f)
+    f.driver.open(cameraCue, context)
+    f.driver.open(cameraCue, context)
+    expect(f.surface.cameraImpulse).toHaveBeenCalledExactlyOnceWith(140, 0.005)
+  })
+  it('suppresses camera cues without a landed hit and under reduced motion', () => {
+    const f = fixture()
+    const base = landedContext(f)
+    const missed = { ...base, group: { ...base.group!,
+      outcomes: [{ kind: 'hit' as const, outcomeId: 'm', target, landed: false, crit: false, hpDamage: 0, killed: false, hitOrdinal: 0 }] } }
+    f.driver.open(cameraCue, missed)
+    expect(f.surface.cameraImpulse).not.toHaveBeenCalled()
+    const reduced = fixture('standard', true)
+    reduced.driver.open(cameraCue, landedContext(reduced))
+    expect(reduced.surface.cameraImpulse).not.toHaveBeenCalled()
+  })
+  it('gates the generic camera impulse on landed hits and yields to authored cues', () => {
+    const f = fixture()
+    const stroke = { primitive: 'stroke' as const, anchor: 'targets' as const,
+      shape: 'slash' as const, offsetMs: 0, durationMs: 100 }
+    // Landed non-crit hit fires the generic impulse.
+    f.driver.open(stroke, landedContext(f))
+    expect(f.surface.cameraImpulse).toHaveBeenCalledExactlyOnceWith(45, 0.001)
+    // Authored precedence suppresses the generic impulse action-wide.
+    const authored = fixture()
+    authored.driver.open(stroke, landedContext(authored, { hasAuthoredCameraCue: true }))
+    expect(authored.surface.cameraImpulse).not.toHaveBeenCalled()
+    // A landed hit on a non-primary group does not fire the generic impulse.
+    const combo = fixture()
+    combo.driver.open(stroke, landedContext(combo, {
+      group: { ...landedContext(combo).group!, role: 'combo' } }))
+    expect(combo.surface.cameraImpulse).not.toHaveBeenCalled()
   })
   it('releases all leases on reset and stale handles cannot release new cues', () => {
     const f = fixture()
