@@ -214,9 +214,22 @@ describe('mid-impact actor death stops the rest of the action (audit T3-22b)', (
     // The provider hook lives inside the `affected.length > 0` action
     // block, so the primary lane needs a target; a non-damaging payload
     // leaves enemy1 unharmed — the extra impact is the only damage lane.
+    // The action's skill must ROUTE (adapter-covered): an unrouted cast is
+    // a stamped castBlocked no-op and the hook never observes it. A
+    // self-buff payload referencing a real buff id routes and stays
+    // non-damaging, so the extra impact is the only damage lane.
     const declared = aoeDeclared(actor, battle)
     declared.action = {
-      skillId: 'self_ping', skill: null, targeting: { shape: 'single' }, slot: null,
+      skillId: 'self_ping',
+      skill: {
+        id: 'self_ping',
+        cooldownTurns: 0,
+        targetScope: 'self',
+        targeting: { shape: 'single' },
+        appliesBuffs: [{ definitionId: 'qa_lethal_reflect', target: 'self' }],
+      },
+      targeting: { shape: 'single' },
+      slot: null,
     }
     declared.scaledDamage = null
     declared.affected = [target1]

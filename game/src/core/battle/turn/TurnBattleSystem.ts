@@ -2125,6 +2125,12 @@ export class TurnBattleSystem {
           this.commitCast(actor, declared)
         } else {
           this.reportUnroutedCast(actor, declared.action.skill, declared.action.skillId, true)
+          // The charge armed at declare must not stand either -- an
+          // unrouted init would otherwise fizzle loudly here yet still
+          // resolve a phantom charged swing next turn.
+          declared.castBlocked = true
+          actor.pendingChargedSkillId = undefined
+          actor.chargingTurnsRemaining = undefined
         }
       } else if (routed.outcome.blocked === true) {
         // The pipeline's PRECHECK rejected the commit -- the charge armed at
@@ -2179,6 +2185,12 @@ export class TurnBattleSystem {
       const engineUnitLane = this.runtime === undefined
       if (routed === null && !engineUnitLane) {
         this.reportUnroutedCast(actor, action.skill, action.skillId, true)
+        // A runtime-wired cast the plan declined is a documented no-op:
+        // stamp it blocked so the emit/follow-up/window lanes below see
+        // the same "the swing never happened" signal a routed block
+        // produces -- otherwise a no-op cast still emits 'attack',
+        // queues repeatCasts/multicast, and opens the ally window.
+        declared.castBlocked = true
       }
       if (routed?.outcome.blocked === true) {
         declared.castBlocked = true
@@ -2189,7 +2201,7 @@ export class TurnBattleSystem {
       // headless and presentation modes. A cast that routed to 'blocked'
       // (pool drained between declare and apply) emits nothing: the swing
       // never happened, so passive listeners must not observe it.
-      if (routed?.outcome.blocked !== true) {
+      if (declared.castBlocked !== true) {
         this.combat.eventBus.emit('attack', {
           type: 'attack',
           sourceId: actor.id,
@@ -2350,7 +2362,9 @@ export class TurnBattleSystem {
         // The provider owns path rules (Kiem Y gain, combo tail-match);
         // extra defs it returns execute as additive declared impacts
         // through the SAME landed-hit pipeline (resolveDeclaredHit).
-        if (actor.dynamicBasic?.onCastResolved) {
+        // A blocked/unrouted cast performs no swing: the hook must not
+        // observe it, or extras would resolve off a no-op.
+        if (actor.dynamicBasic?.onCastResolved && declared.castBlocked !== true) {
           const extraDefs = actor.dynamicBasic.onCastResolved({
             battle,
             actor,
@@ -2380,8 +2394,11 @@ export class TurnBattleSystem {
 
     // Spec 6.2.3 -- the Tro window: after a player-side action completes
     // (damaging or non-damaging), other player-side tro_mon carriers
-    // roll their onAllyActionComplete procs.
-    this.resolveAllyActionWindow(battle, actor, declared, landedTargets)
+    // roll their onAllyActionComplete procs. A blocked/unrouted cast
+    // never completes an action -- the window must not observe it.
+    if (declared.castBlocked !== true) {
+      this.resolveAllyActionWindow(battle, actor, declared, landedTargets)
+    }
 
     return { targetIds, extraImpacts }
   }

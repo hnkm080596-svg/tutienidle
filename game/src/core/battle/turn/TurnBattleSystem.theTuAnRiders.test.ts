@@ -80,12 +80,16 @@ const ENEMY_BASIC: TurnSkillDefinition = {
   targeting: { shape: 'single' },
 }
 
-/** A non-damaging ally action (buff self) for the non-damaging Tro window. */
+/** A non-damaging ally action (buff self) for the non-damaging Tro window.
+    appliesBuffs references a real buff id so the adapter covers the def --
+    an unrouted cast is a stamped castBlocked no-op and never completes the
+    action this test pins a window on. */
 const ALLY_SELF_BUFF: TurnSkillDefinition = {
   id: 'ally_buff',
   cooldownTurns: 0,
   targetScope: 'self',
   targeting: { shape: 'single' },
+  appliesBuffs: [{ definitionId: 'tro_mon', target: 'self', duration: 2 }],
 }
 
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {

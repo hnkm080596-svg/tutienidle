@@ -1052,6 +1052,40 @@ describe('M7 contract closure -- skill whole-stack acceptance', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('perInstanceOptions'))
     warn.mockRestore()
   })
+
+  it('unrouted no-op cast leaks no cast semantics: no attack emit, no queued follow-up damage', () => {
+    const LEAK_DEF: TurnSkillDefinition = {
+      id: 'qa_leak',
+      cooldownTurns: 0,
+      repeatCasts: 2,
+      damage: { kind: 'physical', multiplier: 2 },
+      targeting: { shape: 'single' },
+      instances: {
+        count: 2,
+        perInstanceOptions: () => ({}),
+      },
+    }
+    const { battle, enemyParticipant, system, eventBus } = battleWith(LEAK_DEF)
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const leakCasts: string[] = []
+    eventBus.on('attack', (event: { skillId?: string }) => {
+      if (event.skillId === 'qa_leak') leakCasts.push('attack')
+    })
+
+    for (let i = 0; i < 8; i++) {
+      system.resolveNextStep(battle)
+    }
+
+    // The adapter declines the def (perInstanceOptions) -> the cast is a
+    // documented no-op stamped castBlocked: passive listeners see no
+    // 'attack' for the unrouted skill, and the prepared follow-up queue
+    // stays empty -- a queued 'repeat' would otherwise resolve the
+    // unresolvable payload on a later step. (Basic casts legitimately
+    // emit 'attack' in the same window -- the filter isolates the leak.)
+    expect(leakCasts).toHaveLength(0)
+    expect(enemyParticipant.entity.currentHp).toBe(enemyParticipant.entity.maxHp)
+    warn.mockRestore()
+  })
 })
 
 // ---------------------------------------------------------------------------

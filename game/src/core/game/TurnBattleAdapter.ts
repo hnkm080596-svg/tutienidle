@@ -74,6 +74,12 @@ export function toTurnBattleParticipant(
 
   // The Tu An (plan Task 16) — participant-local payload clones the
   // typed follow-up queue resolves for counter/follow-up procs.
+  // CONTRACT: these payloads are raw TurnSkillDefinitions that bypass the
+  // registry/adapter validation lane entirely. Fields the bypass lane
+  // never consumes -- consumesAllThe, repeatCasts, multicast,
+  // chargeTurns/cadence, variants -- would commit silently unvalidated;
+  // keep payloads to the fields declareReactiveBypass actually reads
+  // (damage, targeting, appliesAilments, appliesBuffs, procs).
   if (resolvedSpecialUltimate?.reactivePayloads !== undefined) {
     participant.reactivePayloads = resolvedSpecialUltimate.reactivePayloads
   }
