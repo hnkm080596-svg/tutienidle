@@ -1,0 +1,5 @@
+CLO-1 verdict @d9e7b7fc (devin-6a7a3ea864034308b5b8a1382db6b7cb)
+F-MRG-01 SEALED: 4 NOVA-1 pins at hoIntercept.test.ts:375/395/412/427 faithful to 8166233c originals; unsupportedFor prototype spy genuinely intercepts gate at TurnBattleSystem:3602-3617; vitest 28/28 green, all 4 pins shown executed.
+F-MRG-02 SEALED: docblock at TurnBattleSystem.ts:2957-2963 accurate; zero consumesAllThe producers in game/src/data/; dormant lane -> docblock-only proportional.
+F-MRG-03 SEALED: !fillLane in forEach gate :262; fill.scaleX clamped; label intact; adversarial traces (5->100->5, boundary 12/13, over-cap, pool toggle) clean; scratch vitest 7/7.
+New defects: none. Pre-existing nits: F-MRG-04 (no committed fill-lane pin), F-MRG-05 (setVisible clobbers group.visible edge).
