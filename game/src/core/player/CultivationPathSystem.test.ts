@@ -489,7 +489,6 @@ describe('resolvePathCapabilities / hasPathCapability - P1 capability authority'
 
     player.cultivationWay = 'spell_pathway'
     expect(hasStaticPathCapability(player, 'spell.elemental_casting')).toBe(true)
-    expect(hasStaticPathCapability(player, 'spell.empowered_ult')).toBe(false)
     expect(hasStaticPathCapability(player, 'sword.sword_scroll')).toBe(false)
   })
 })

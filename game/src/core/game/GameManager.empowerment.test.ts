@@ -42,6 +42,13 @@ function makeManager() {
 function buildParticipant(element: ElementType | undefined, opts?: { learnSpecial?: boolean }) {
   const { gameManager, player } = makeManager()
 
+  // Way-commit parity: the ritual learns the way starter (linh_bao), so the
+  // resolveBasic starter read lands on it (never the GENERIC fallback,
+  // which the +1 The stamp deliberately excludes).
+  const linhBao = SKILLS.find((s) => s.id === 'linh_bao')
+  expect(linhBao).toBeDefined()
+  gameManager.skillSystem.learn(linhBao!)
+
   if (element !== undefined) {
     expect(gameManager.progressionOps.selectSpellPathElement(element, player)).toBe(true)
     if (opts?.learnSpecial === true) {

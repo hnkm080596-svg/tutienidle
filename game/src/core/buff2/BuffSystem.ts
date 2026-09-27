@@ -372,7 +372,7 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
     if (instance === undefined) return { stacksBefore: 0, stacksAfter: 0 }
     const def = this.registry.get(instance.definitionId)
     const stacksBefore = instance.stacks
-    const stacksAfter = Math.min(stacksBefore + stacks, def.stacking.maxStacks)
+    const stacksAfter = Math.max(0, Math.min(stacksBefore + stacks, def.stacking.maxStacks))
     return this.commitStacks(instance, stacksBefore, stacksAfter, 'consumed', ctx)
   }
 

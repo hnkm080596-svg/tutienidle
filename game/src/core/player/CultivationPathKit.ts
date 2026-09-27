@@ -107,7 +107,6 @@ export type PathCapability =
   // spell - spell_pathway element machinery, the The pool, node-empowered ult
   | 'spell.elemental_casting'
   | 'spell.essence_pool'
-  | 'spell.empowered_ult'
   // spell - ngo_dao conditional aura (predicate: ngo_dao_hon_don learned)
   | 'spell.reaction_aura'
   // sword

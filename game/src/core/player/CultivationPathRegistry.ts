@@ -384,11 +384,11 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
 
       return {
         ...stamped,
-        ...(element !== undefined
+        ...(isKitBasic
           ? {
               empowerment: {
                 theThreshold: SPELL_PATH_MAX_THE,
-                empowered: buildPhapTheVariant(element, stamped),
+                empowered: buildPhapTheVariant(element!, stamped),
               },
             }
           : {}),

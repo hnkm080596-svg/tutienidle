@@ -126,7 +126,7 @@ export const SINH_CO_MARKER: BuffDefinition = {
 }
 
 /** Sinh Co Chu -- "already sprouted" latch on the CASTER (per_source):
-    the window seeds Sinh Co at most once per cast (spec D11). Bound to
+    the window seeds Sinh Co at most once per window (spec D11). Bound to
     the caster's own van_moc instance -- dies with the window. */
 export const SINH_CO_CHU_MARKER: BuffDefinition = {
   id: 'sinh_co_chu',

@@ -1821,7 +1821,12 @@ export class TurnBattleSystem {
       // root (source 'composite' still commits the root's cast).
       const composite = action.skill?.compositePicks
 
-      if (composite?.poolType === 'element_basic' && composite.pool.length > 0) {
+      // Registry parity: empowerment+compositePool on one def is a faulted
+      // combination (SkillDefinitionRegistry rejects it at catalog build).
+      // The engine-unit lane has no registry gate, so it must not resolve
+      // the pair silently either -- the empowerment swap above stands and
+      // the composite pick never runs.
+      if (empowerment === undefined && composite?.poolType === 'element_basic' && composite.pool.length > 0) {
         const picks = pickCompositePool(composite.pool, composite.count, () => this.rng.roll())
 
         if (picks.length > 0) {
@@ -2104,6 +2109,12 @@ export class TurnBattleSystem {
         } else {
           this.reportUnroutedCast(actor, declared.action.skill, declared.action.skillId, true)
         }
+      } else if (routed.outcome.blocked === true) {
+        // The pipeline's PRECHECK rejected the commit -- the charge armed at
+        // declare must not stand, or the blocked cast would resolve free.
+        declared.castBlocked = true
+        actor.pendingChargedSkillId = undefined
+        actor.chargingTurnsRemaining = undefined
       }
     }
 
@@ -2705,7 +2716,9 @@ export class TurnBattleSystem {
 
     // Task 13 -- same pre-burn capture as the normal declare path: a
     // queued execution of a consume-all payload burns at its own commit.
-    if (payloadSkill.consumesAllThe) {
+    // Non-committing execs (repeat/multicast) never burn -- capturing
+    // there would forward a stale pre-burn pool to their theScaling read.
+    if (payloadSkill.consumesAllThe && executionCommitsCast(execution)) {
       execution.theBurned = actor.entity.currentThe ?? 0
     }
 

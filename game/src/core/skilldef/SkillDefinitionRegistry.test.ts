@@ -68,6 +68,23 @@ describe('SkillDefinitionRegistry', () => {
     ).toThrow(/compositePool references unknown skill 'ghost_skill'/)
   })
 
+  it('constructor faults when one definition carries empowerment AND compositePool', () => {
+    expect(
+      () =>
+        new SkillDefinitionRegistry(
+          [
+            activeDef('empowered_ult'),
+            activeDef('pool_base'),
+            activeDef('a', {
+              variants: { empowerment: { theThreshold: 10, empoweredSkillId: 'empowered_ult' } },
+              subcasts: { compositePool: ['pool_base'], compositeCount: 1 },
+            }),
+          ],
+          deps,
+        ),
+    ).toThrow(/empowerment and subcasts\.compositePool are mutually exclusive/)
+  })
+
   it('accepts compositePool refs that resolve inside the registry', () => {
     const registry = new SkillDefinitionRegistry(
       [

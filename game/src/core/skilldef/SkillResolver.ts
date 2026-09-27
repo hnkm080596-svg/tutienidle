@@ -500,8 +500,15 @@ export class SkillResolver {
       }
     }
     collectFromOps(def.operations)
-    // Percent-of-max cost (F10 plan path) reads the snapshot's maxMp.
+    // Percent-of-max cost (F10 plan path) reads the snapshot's maxMp. The
+    // plan cost folds the AUTHORED ROOT def's cost (:308) -- the scalar must
+    // be keyed on that same root shape, since an empowerment/composite swap
+    // can hand a different effective def without cost.
     if (def.cost !== undefined && 'percentOfMax' in def.cost) {
+      statKeys.add('maxMp')
+    }
+    const rootCost = input.definition.cost
+    if (rootCost !== undefined && 'percentOfMax' in rootCost) {
       statKeys.add('maxMp')
     }
     if (def.instances !== undefined) {
