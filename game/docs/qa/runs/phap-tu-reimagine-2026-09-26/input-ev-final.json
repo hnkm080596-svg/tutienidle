@@ -1,0 +1,41 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "id": "EV-PTR-FINAL",
+    "state": {
+     "productStateId": "803a1e7b8327f954e9de489d3c0cc71b0b48501aaf99f01305459e149e005d6a",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+    "commandOrMethod": "npm run type-check + npx vitest run scoped reimagine suites (skilldef, battle/turn, the-tu, proc, data/skill, data/progression, buff2, tests/architecture) on head 8b19829c (state 803a1e7b)",
+    "cwd": "game",
+    "exitCode": 0,
+    "result": "PASS",
+    "startedAt": "2026-09-27T10:36:30.000Z",
+    "finishedAt": "2026-09-27T10:38:20.000Z",
+    "inputPaths": [
+     "src/core/skilldef",
+     "src/core/battle/turn",
+     "src/core/the-tu",
+     "src/core/proc",
+     "src/data/skill",
+     "src/data/progression",
+     "src/core/buff2",
+     "tests/architecture"
+    ],
+    "inputEvidenceIds": [],
+    "artifactPath": "evidence/final-gates-8b19829c.log",
+    "artifactHash": "f55b7929ff8ee3f51f53d1c7df9e195a2e1d2dea83eef1e1987ae8c0a62a7380",
+    "status": "CURRENT",
+    "limitations": [],
+    "claims": [],
+    "invariantIds": []
+   }
+  }
+ ]
+}
