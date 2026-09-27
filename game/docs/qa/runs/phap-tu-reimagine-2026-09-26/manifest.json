@@ -15456,7 +15456,7 @@
       "path": "src/core/battle/runtime/scheduler/adapters/EntityResourceAdapter.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "b922026f2dc4d5109147345e0e684c12d752e5edfa555ea5432f6531504fc3c9"
+      "hash": "4a27e6b56f2ce166b7491496f280812fd0327c00c57b2f1225d1b85ca1a05a70"
     },
     {
       "path": "src/core/battle/runtime/scheduler/adapters/lookups.ts",
@@ -15996,7 +15996,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d63eefd7d6d9478bc8fc6eef5fe77357ed1a6b41895696b2d39981f49e2b6df2"
+      "hash": "1fc02ef9469d53c46423e08d7a46682db9eefb6d039615251c8c056af6534493"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.turnRegen.test.ts",
@@ -16074,7 +16074,7 @@
       "path": "src/core/battle/turn/TurnSkillAction.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e35af012a363c3d2611b8b539523e9094aabaf53d329131ab93fef8be1f5d278"
+      "hash": "38a32d531b301a15cda379d175394dcb936d934d81bf3c7861b4e0acb319cb94"
     },
     {
       "path": "src/core/battle/turn/TurnSkillExecution.test.ts",
@@ -16086,7 +16086,7 @@
       "path": "src/core/battle/turn/TurnSkillPlanRuntime.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "10c40ec01e7b826b40186d372d71897364f006c5ab089153a6e91637c25f14e1"
+      "hash": "6f7c2a8cc0c3ae195c679ec15e0632e09fbd5d4c82082be5cb55c1260dc08676"
     },
     {
       "path": "src/core/battle/turn/TurnStatsRecompute.test.ts",
@@ -18630,7 +18630,7 @@
       "path": "src/core/player/Player.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ee819531b3ebec1edef2185d4932d2a1731f702303b1cdf64e355638dcaadff2"
+      "hash": "c55172facc58db14548150c869735034318c021f4a1c4eb67612b02c115fffa8"
     },
     {
       "path": "src/core/player/PlayerStatAssembly.test.ts",
@@ -18702,7 +18702,7 @@
       "path": "src/core/proc/CombatProcSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1b51c9d4bd0614cb977a6908d1ed74437fd63bdf4e64528b268aeedceb18baa5"
+      "hash": "4a83d983ecd3328f117af5ddf508f671df3382916ae6c0a1c26a9f817f6c48e9"
     },
     {
       "path": "src/core/proc/MarkerCapabilities.ts",
@@ -19836,7 +19836,7 @@
       "path": "src/core/skilldef/LegacySkillAdapter.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a96a1ea688884cdae3912c40ae664a0e1ad68f514381938e6fe2715078aaaef0"
+      "hash": "fcb5b5e2844e04e02c66e3c5d1302b4033b33c2776048feb38e1d49d4f0eed46"
     },
     {
       "path": "src/core/skilldef/LegacySkillCoverage.test.ts",
@@ -19848,7 +19848,7 @@
       "path": "src/core/skilldef/ResolvedSkillPlan.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "5ec8559b5429b646e0ccba39c340e2f88410b0cf2b01f365cf11e8cc601f2359"
+      "hash": "6b427e907eb3f7d19e0eaf829597b019befadf6124ffbb7a9609a7d4492fed8a"
     },
     {
       "path": "src/core/skilldef/ResolvedSkillPlan.ts",
@@ -19893,6 +19893,12 @@
       "hash": "3c1af0ff0f1a6bb6815125731767fa9e04027c31e8faf45d8913af34151e2ce2"
     },
     {
+      "path": "src/core/skilldef/SkillDefinitionRegistry.resourceClosedSet.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "8cc462285932267c27710138220c5c74bc43a8d86c289670f0b07c7edca4d31d"
+    },
+    {
       "path": "src/core/skilldef/SkillDefinitionRegistry.test.ts",
       "kind": "file",
       "mode": 33188,
@@ -19902,13 +19908,19 @@
       "path": "src/core/skilldef/SkillDefinitionRegistry.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1238462d95e1ff51ee869e9b49e04aa0d72012dad9d2b78034e3bd726ca5f3a9"
+      "hash": "2342cbff839a1b7e1f476780f9d31eb482ce9c087ac07a98f5ddb29554146c07"
     },
     {
       "path": "src/core/skilldef/SkillExecutionHooks.ts",
       "kind": "file",
       "mode": 33188,
       "hash": "92fdc62dcbf250c39fa6f300c2c0d45069ff7a535e9cef37a3da360a8ae5c4ca"
+    },
+    {
+      "path": "src/core/skilldef/SkillExecutor.compositePreCommitDecline.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c8588eed63ac05f37307ab389af9988d3ddc09c44614586e58175b4215492d03"
     },
     {
       "path": "src/core/skilldef/SkillExecutor.nestedGate.test.ts",
@@ -19938,7 +19950,7 @@
       "path": "src/core/skilldef/SkillExecutor.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d8e389176c9f593ddf3ee85852f87ca60732dcd55ae302414e79a6ee4352bc60"
+      "hash": "1b09897dff9d63ef41f0aaab86070512f046bbae1af90fcdc7370afb989e31ba"
     },
     {
       "path": "src/core/skilldef/SkillPlanReads.test.ts",
@@ -19968,7 +19980,7 @@
       "path": "src/core/skilldef/SkillResolver.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "9185ebf7631230b58c443b96fe1dd770e6be6dfa8296c4631790f6d25433e695"
+      "hash": "6f95e244bac872a843a9ad805b3cab13bb9a85415392e9f4521741340e07f9ab"
     },
     {
       "path": "src/core/skilldef/SkillResolver.ts",
@@ -20256,7 +20268,7 @@
       "path": "src/core/the-tu/TheEconomy.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "fbe4164e6de5b8970e87cca8e36223c04159f53fc186ceb64e215a28bae698c6"
+      "hash": "01e68fb664adf36b0db05b8fda466787a9dd42ad3bb3fc3126d218c6af16e3da"
     },
     {
       "path": "src/core/the-tu/TheTuAnMechanicModifiers.ts",
@@ -23103,5 +23115,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "b34064a5245c1ca43ca1f61d738d3f8c203df438df19059a4167a0bcd4ad7a0b"
+  "productStateId": "6bb65162b94cc6908bae1fa7a49754209b13d2d8e5ed6941383af1a44eb5fc24"
 }

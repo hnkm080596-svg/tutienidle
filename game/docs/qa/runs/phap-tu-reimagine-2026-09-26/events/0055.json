@@ -1,0 +1,32 @@
+{
+  "applied": [
+    "evidence:EV-PTR-CORM",
+    "evidence:EV-PTR-AUTM",
+    "evidence:EV-PTR-INTM",
+    "evidence:EV-PTR-FIXN",
+    "review:REV-PTR-COR-M1",
+    "review:REV-PTR-AUT-M1",
+    "review:REV-PTR-INT-M1",
+    "finding:F-PTR-179",
+    "finding:F-PTR-180",
+    "finding:F-PTR-181",
+    "finding:F-PTR-182",
+    "finding:F-PTR-183",
+    "finding:F-PTR-184",
+    "finding:F-PTR-185",
+    "finding:F-PTR-186",
+    "finding:F-PTR-187",
+    "finding:F-PTR-188",
+    "finding:F-PTR-189",
+    "finding:F-PTR-190",
+    "finding:F-PTR-191",
+    "finding:F-PTR-192",
+    "finding:F-PTR-193",
+    "finding:F-PTR-194",
+    "finding:F-PTR-195",
+    "finding:F-PTR-196",
+    "lesson:L-PTR-M-CLOSED-SET-ALL-SURFACES",
+    "lesson:L-PTR-M-COMMIT-AFTER-DECLINE",
+    "lesson:L-PTR-M-GATE-IDENTITY-SEMANTICS"
+  ]
+}
