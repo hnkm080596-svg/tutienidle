@@ -9,11 +9,11 @@ export const SCHEMA_VERSION_V1 = 1;
 export const TERMINAL_FINDING_STATUSES = new Set(["CLOSED", "REJECTED_WITH_PROOF", "DUPLICATE_LINKED", "HUMAN_EXCEPTION"]);
 export const EXECUTED_KINDS = new Set(["EXECUTED_RUNTIME", "EXECUTED_INTEGRATION", "EXECUTED_PROPERTY", "EXECUTED_MUTATION", "EXECUTED_UNIT_STRUCTURAL"]);
 export const ACTIONABLE_CLASSES = new Set(["REAL_DEFECT", "SPEC_DEFECT", "TEST_DEFECT", "COVERAGE_GAP", "DOCUMENTATION_DEFECT"]);
-// Platform hard cap on concurrent agents (coordinator + workers) — mechanism-level
-// ceiling, not request-configurable (agent-instructions.md §G).
+// Platform hard cap on concurrent agents (coordinator + workers) -- mechanism-level
+// ceiling, not request-configurable (agent-instructions.md section G).
 export const HARD_CAPACITY_LIMIT = 5;
 
-// Every ledger collection that carries a unique `id` — mirrors the namespaces
+// Every ledger collection that carries a unique `id` -- mirrors the namespaces
 // MC1 dedupes over (validate.mjs). Kept in state.mjs so both the record write
 // path and schedule admission enforce the same uniqueness boundary: an id
 // colliding across namespaces commits schema-clean yet bricks decide forever,
@@ -190,7 +190,7 @@ export function ledgerPath(dir) {
 
 export function loadLedger(dir) {
   const p = ledgerPath(dir);
-  if (!fs.existsSync(p)) throw new Error(`no ledger at ${p} — run \`qa:internal init\` first`);
+  if (!fs.existsSync(p)) throw new Error(`no ledger at ${p} -- run \`qa:internal init\` first`);
   return JSON.parse(fs.readFileSync(p, "utf8"));
 }
 
@@ -215,7 +215,7 @@ export function acquireLease(dir, leaseId) {
   } catch (e) {
     if (e.code === "EEXIST") {
       const held = JSON.parse(fs.readFileSync(p, "utf8"));
-      throw new Error(`lease already held by ${held.leaseId} (acquired ${held.acquiredAt}) — a second coordinator cannot take ownership; recover by explicit lease removal + state revalidation`);
+      throw new Error(`lease already held by ${held.leaseId} (acquired ${held.acquiredAt}) -- a second coordinator cannot take ownership; recover by explicit lease removal + state revalidation`);
     }
     throw e;
   }
@@ -224,7 +224,7 @@ export function acquireLease(dir, leaseId) {
 
 export function checkLease(dir, leaseId) {
   const p = path.join(dir, "lease.json");
-  if (!fs.existsSync(p)) throw new Error("no lease — init must acquire one first");
+  if (!fs.existsSync(p)) throw new Error("no lease -- init must acquire one first");
   const held = JSON.parse(fs.readFileSync(p, "utf8"));
   if (held.leaseId !== leaseId) {
     throw new Error(`lease held by ${held.leaseId}, not ${leaseId}`);
@@ -272,7 +272,7 @@ export function writeJournalLine(dir, event) {
 // The single commit path for ledger mutations: build the event (payload file),
 // CAS-check the on-disk event count against the loaded baseline, save
 // atomically, then append the journal line. Journal is derived from
-// ledger.events — a crash leaves ledger-ahead-of-journal (reconstructible),
+// ledger.events -- a crash leaves ledger-ahead-of-journal (reconstructible),
 // never journal-ahead-of-ledger (unverifiable).
 export function commitLedger(dir, ledger, spec) {
   const baseline = ledger.events.length;
@@ -281,7 +281,7 @@ export function commitLedger(dir, ledger, spec) {
     ? JSON.parse(fs.readFileSync(ledgerPath(dir), "utf8")).events.length
     : 0;
   if (onDisk !== baseline) {
-    throw new Error(`CAS reject: ledger on disk is at seq ${onDisk} but this process loaded ${baseline} — another writer committed; reload and reconcile`);
+    throw new Error(`CAS reject: ledger on disk is at seq ${onDisk} but this process loaded ${baseline} -- another writer committed; reload and reconcile`);
   }
   saveLedgerAtomic(dir, ledger);
   writeJournalLine(dir, event);
@@ -291,7 +291,7 @@ export function commitLedger(dir, ledger, spec) {
 export function appendEvent(dir, ledger, { kind, actor, state, payload, expectedSeq }) {
   const seq = ledger.events.length + 1;
   if (expectedSeq != null && expectedSeq !== seq) {
-    throw new Error(`CAS reject: expected seq ${expectedSeq} but ledger is at ${seq} — another coordinator wrote; reload and reconcile`);
+    throw new Error(`CAS reject: expected seq ${expectedSeq} but ledger is at ${seq} -- another coordinator wrote; reload and reconcile`);
   }
   const event = buildEvent(dir, ledger, { kind, actor, state, payload });
   writeJournalLine(dir, event);
@@ -306,7 +306,7 @@ export function recordMessage(ledger, msg) {
     throw new Error(`message ${msg.id}: declared runId ${msg.runId} does not match run ${ledger.run.id}`);
   }
   if (!msg.state || typeof msg.state !== "object") {
-    throw new Error(`message ${msg.id}: state tuple required — a message without state binding cannot be evaluated for staleness`);
+    throw new Error(`message ${msg.id}: state tuple required -- a message without state binding cannot be evaluated for staleness`);
   }
   const msgStale =
     msg.state.productStateId !== st.productStateId ||
@@ -320,14 +320,14 @@ export function recordMessage(ledger, msg) {
     }
     return { duplicate: true };
   }
-  // A request is created only by ASSIGN/REPAIR_ASSIGN — the pending request.
+  // A request is created only by ASSIGN/REPAIR_ASSIGN -- the pending request.
   const prior = ledger.messages.filter((m) => m.requestId === msg.requestId);
   const opener = prior.find((m) => MSG_PENDING_CREATORS.has(m.kind));
   if (MSG_PENDING_CREATORS.has(msg.kind)) {
-    if (opener) throw new Error(`request ${msg.requestId} already opened by ${opener.id} — use parentRequestId for linked work`);
+    if (opener) throw new Error(`request ${msg.requestId} already opened by ${opener.id} -- use parentRequestId for linked work`);
   } else {
     if (!opener) {
-      throw new Error(`message ${msg.id}: requestId ${msg.requestId} has no ASSIGN — traffic requires a pending request`);
+      throw new Error(`message ${msg.id}: requestId ${msg.requestId} has no ASSIGN -- traffic requires a pending request`);
     }
     // Direction binding: coordinator kinds come from the opener's sender,
     // worker kinds come from the opener's recipient.
@@ -344,7 +344,7 @@ export function recordMessage(ledger, msg) {
     }
   }
   // Terminal semantics: exactly one effective terminal per requestId. Stale
-  // messages are recorded flagged and never establish or conflict a terminal —
+  // messages are recorded flagged and never establish or conflict a terminal --
   // a stale SEALED_RESULT cannot poison the request.
   const terminals = prior.filter((m) => MSG_TERMINAL.has(m.kind) && !m.stale);
   if (MSG_TERMINAL.has(msg.kind) && !msgStale) {
@@ -353,12 +353,12 @@ export function recordMessage(ledger, msg) {
       if (priorT.kind === msg.kind && priorT.payloadHash === msg.payloadHash) {
         return { duplicate: true }; // identical terminal replay, idempotent regardless of message id
       }
-      throw new Error(`conflicting terminal ${msg.kind} for request ${msg.requestId} — requires a new linked request (parentRequestId)`);
+      throw new Error(`conflicting terminal ${msg.kind} for request ${msg.requestId} -- requires a new linked request (parentRequestId)`);
     }
   } else if (terminals.length && !msgStale) {
-    throw new Error(`message ${msg.id}: request ${msg.requestId} is closed by terminal ${terminals[0].id} — new work requires a linked request`);
+    throw new Error(`message ${msg.id}: request ${msg.requestId} is closed by terminal ${terminals[0].id} -- new work requires a linked request`);
   }
-  if (msgStale) msg.stale = true; // persisted — downstream can distinguish, audit can count
+  if (msgStale) msg.stale = true; // persisted -- downstream can distinguish, audit can count
   ledger.messages.push(msg);
   return { duplicate: false, stale: !!msgStale };
 }

@@ -10,7 +10,7 @@ export const ASSIGNMENT_ACTIVE = new Set(["RESERVED", "RUNNING", "RESULT_RECEIVE
 export const ASSIGNMENT_STATES = new Set(["QUEUED", "READY", "RESERVED", "RUNNING", "RESULT_RECEIVED", "RELEASE_PENDING", "FINISHED", "BLOCKED", "CANCELLED"]);
 export const ASSIGNMENT_TERMINAL = new Set(["FINISHED", "CANCELLED"]);
 export const TERMINAL_OBSERVED = new Set(["terminated", "finished", "exited", "cancelled", "closed"]);
-// Legal assignment transitions — the only edges the state machine may walk.
+// Legal assignment transitions -- the only edges the state machine may walk.
 // Admission creates QUEUED/READY/BLOCKED records; observe walks active ->
 // terminal. Terminal states are absorbing.
 export const ASSIGNMENT_TRANSITIONS = {
@@ -145,7 +145,7 @@ export function checkpointBrief(brief, { observedState, reason }) {
 export function admitAssignment(ledger, asg, { externalOccupied = 0, allowExisting = false } = {}) {
   if (!asg || typeof asg !== "object" || !asg.id) throw new Error("admission requires assignment.id");
   if (!Number.isInteger(externalOccupied) || externalOccupied < 0) {
-    throw new Error(`externalOccupied must be a non-negative integer, got ${JSON.stringify(externalOccupied)} — it models unmanaged live agents`);
+    throw new Error(`externalOccupied must be a non-negative integer, got ${JSON.stringify(externalOccupied)} -- it models unmanaged live agents`);
   }
   const cap = Math.min(ledger.run.capacityLimit ?? HARD_CAPACITY_LIMIT, HARD_CAPACITY_LIMIT);
   const active = ledger.assignments.filter((a) => ASSIGNMENT_ACTIVE.has(a.status)).length;
@@ -154,23 +154,23 @@ export function admitAssignment(ledger, asg, { externalOccupied = 0, allowExisti
   if (!ASSIGNMENT_STATES.has(record.status)) throw new Error(`unknown assignment status: ${record.status}`);
   const existing = ledger.assignments.find((x) => x.id === record.id);
   if (existing && !allowExisting) {
-    throw new Error(`assignment ${record.id} already registered with status ${existing.status} — re-admission cannot demote, clone, or release an existing record; use observeAssignment`);
+    throw new Error(`assignment ${record.id} already registered with status ${existing.status} -- re-admission cannot demote, clone, or release an existing record; use observeAssignment`);
   }
   if (existing && allowExisting && !["QUEUED", "READY", "BLOCKED"].includes(existing.status)) {
-    throw new Error(`assignment ${record.id} is ${existing.status} — only waiting records may be re-evaluated for admission`);
+    throw new Error(`assignment ${record.id} is ${existing.status} -- only waiting records may be re-evaluated for admission`);
   }
   // Reverse direction of F-PU31-02: a schedule-minted id colliding with any
-  // other MC1 namespace bricks decide with no recovery path — reject it too.
+  // other MC1 namespace bricks decide with no recovery path -- reject it too.
   if (!existing && ledgerIdTaken(ledger, record.id, "assignments")) {
-    throw new Error(`assignment ${record.id}: id already exists in another namespace — refusing (would brick MC1 with no recovery path)`);
+    throw new Error(`assignment ${record.id}: id already exists in another namespace -- refusing (would brick MC1 with no recovery path)`);
   }
   if (record.history.length > 0 && record.history[record.history.length - 1].to !== record.status) {
     throw new Error(`assignment ${record.id} history non-contiguous: last entry to=${record.history[record.history.length - 1].to} but status=${record.status}`);
   }
-  // A new record may only enter as waiting work — admission may not mint an
+  // A new record may only enter as waiting work -- admission may not mint an
   // active or terminal status directly.
   if (record.history.length === 0 && !["QUEUED", "READY", "BLOCKED"].includes(record.status)) {
-    throw new Error(`new assignment ${record.id} enters with status ${record.status} — only QUEUED/READY/BLOCKED are lawful entry states`);
+    throw new Error(`new assignment ${record.id} enters with status ${record.status} -- only QUEUED/READY/BLOCKED are lawful entry states`);
   }
   const push = (to, reason) => {
     if (!ASSIGNMENT_TRANSITIONS[record.status]?.includes(to)) {
@@ -180,7 +180,7 @@ export function admitAssignment(ledger, asg, { externalOccupied = 0, allowExisti
     record.status = to;
   };
   // Seed the registration entry for a brand-new record; CREATED is the
-  // conventional "from" — subsequent entries chain from the stored status.
+  // conventional "from" -- subsequent entries chain from the stored status.
   if (record.history.length === 0) {
     record.history.push({ at: utcNow(), from: "CREATED", to: record.status, reason: "registered by coordinator" });
   }
@@ -204,9 +204,9 @@ export function observeAssignment(ledger, asgId, { observedStatus, evidence, obs
   // legal only from lawful source states; terminal states are absorbing.
   const a = ledger.assignments.find((x) => x.id === asgId);
   if (!a) throw new Error(`unknown assignment ${asgId}`);
-  if (!Array.isArray(a.history)) throw new Error(`assignment ${asgId} has no history array — record malformed, reconcile before observing`);
+  if (!Array.isArray(a.history)) throw new Error(`assignment ${asgId} has no history array -- record malformed, reconcile before observing`);
   if (a.history.length > 0 && a.history[a.history.length - 1].to !== a.status) {
-    throw new Error(`assignment ${asgId} history non-contiguous: last entry to=${a.history[a.history.length - 1].to} but status=${a.status} — reconcile before observing`);
+    throw new Error(`assignment ${asgId} history non-contiguous: last entry to=${a.history[a.history.length - 1].to} but status=${a.status} -- reconcile before observing`);
   }
   const push = (to, reason) => {
     if (!ASSIGNMENT_TRANSITIONS[a.status]?.includes(to)) {
@@ -235,7 +235,7 @@ export function observeAssignment(ledger, asgId, { observedStatus, evidence, obs
   }
   if (TERMINAL_OBSERVED.has(observedStatus)) {
     if (!evidence) {
-      throw new Error(`terminal observation '${observedStatus}' requires evidence — a verified release must cite lifecycle proof`);
+      throw new Error(`terminal observation '${observedStatus}' requires evidence -- a verified release must cite lifecycle proof`);
     }
     if (a.status === "QUEUED" || a.status === "BLOCKED" || a.status === "READY") {
       // Cancelling waiting work is terminal but never held a slot.

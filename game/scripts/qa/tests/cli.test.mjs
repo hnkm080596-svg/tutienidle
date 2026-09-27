@@ -1,7 +1,7 @@
 // CLI-level regression for the counted-oracle contract (F-PU30-04 / QAI-08 /
 // L-022): a verdict must be emitted only on a positive, parsed denominator.
-// The real qualify command cannot be spawned inside a test worker — a nested
-// node --test exits silently with no output — so the parser/verdict helpers
+// The real qualify command cannot be spawned inside a test worker -- a nested
+// node --test exits silently with no output -- so the parser/verdict helpers
 // live in ../qualify.mjs and are unit-tested here on real captured output.
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -48,13 +48,13 @@ test("the real suite under the TAP reporter produces a positive denominator", { 
   if (process.env.QA_QUALIFY_RUN === "1") { t.skip("inside qualify-spawned suite"); return; }
   // Exercises the same invocation cmdQualify uses; proves the reporter emits
   // # pass/# fail counters on THIS node version (guards reporter drift).
-  // NODE_TEST_* markers make a nested node --test exit silently — strip them.
+  // NODE_TEST_* markers make a nested node --test exit silently -- strip them.
   const env = { ...process.env, QA_QUALIFY_RUN: "1" };
   delete env.NODE_TEST_CONTEXT;
   delete env.NODE_TEST_WORKER_ID;
   const out = execFileSync(process.execPath, ["--test", "--test-reporter", "tap", path.join(TESTS_DIR, "*.test.mjs")], { encoding: "utf8", env });
   const { passed, failed } = parseOrchestratorCounts(out);
-  assert.ok(passed > 0, `TAP run produced no positive denominator — reporter drifted again:\n${out.slice(-800)}`);
+  assert.ok(passed > 0, `TAP run produced no positive denominator -- reporter drifted again:\n${out.slice(-800)}`);
   assert.equal(failed, 0);
 });
 

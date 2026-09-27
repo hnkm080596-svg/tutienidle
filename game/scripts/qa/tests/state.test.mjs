@@ -117,7 +117,7 @@ test("stale message on old state is flagged, not advanced (QF-03)", () => {
   const res = recordMessage(ledger, staleMsg);
   assert.equal(res.stale, true, "result for earlier state must be flagged stale");
   assert.equal(ledger.messages.find((m) => m.id === "M9").stale, true, "stale flag persists on the record");
-  // a stale terminal does not occupy the request — the fresh result still lands
+  // a stale terminal does not occupy the request -- the fresh result still lands
   const fresh = { ...staleMsg, id: "M10", state: ledger.run.state, payloadHash: sha256hex("y") };
   assert.equal(recordMessage(ledger, fresh).duplicate, false);
 });
