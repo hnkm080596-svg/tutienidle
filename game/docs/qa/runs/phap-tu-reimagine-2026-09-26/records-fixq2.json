@@ -1,0 +1,19 @@
+{
+ "kind": "fix-batch",
+ "run": "phap-tu-reimagine-2026-09-26",
+ "state": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+ "pin": "7d837a91",
+ "fixes": [
+  "saveAcceptance: hidden_spell_pathway kit coherence (isHiddenSpellPathway -> all 3 HIDDEN_SPELL_REQUIRED_SKILLS in save.skills) + 3 pin tests",
+  "TurnBattleSystem: ordering-hazard docblock names both decline classes",
+  "TheEconomy: !Number.isFinite guards on grantThe + consumeThe",
+  "TheEconomy.test.ts: write-site guard + clamp pins (new)",
+  "TheEconomy header: three write sites one authority",
+  "hoIntercept pins: dead-payload, empty-affected, charge-discriminant",
+  "consumeThe early-return docblock"
+ ],
+ "rejects": [
+  "INT-Q-3: post-window decline already documented accepted-latent"
+ ],
+ "verify": "type-check clean; scoped vitest 508/508"
+}
