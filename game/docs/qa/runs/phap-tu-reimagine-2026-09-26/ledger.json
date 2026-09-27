@@ -11,7 +11,7 @@
     "base": "master",
     "head": "038706f7",
     "state": {
-      "productStateId": "576bf6a4fe2d3b1ac65b3bd9b0bea05cc9a59f83f77ac9e92856add87a9ab48e",
+      "productStateId": "e80fa26f12ed9686bd0f90708ef82012e8a51aeea07d5f6fff128853f7905649",
       "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
       "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -15637,7 +15637,7 @@
       "actual": "bare TypeError 'Cannot read properties of undefined'",
       "rootCause": "the coherence check indexed the kit map without guarding the undefined case -- fails closed either way but the rejection surfaced as TypeError instead of the descriptive coherence error",
       "rootClass": "CONTRACT_GAP",
-      "repair": "defensive lookup: unknown element throws 'unknown element carries no kit' @4d2ada93",
+      "repair": "defensive lookup: unknown element throws descriptive rejection @4d2ada93 + corrupt-element pin test @c02fbf50",
       "siblingSearch": [
         {
           "roots": [
@@ -17916,23 +17916,23 @@
       "kind": "EXECUTED_INTEGRATION",
       "id": "EV-PTR-FIXQ1",
       "state": {
-        "productStateId": "576bf6a4fe2d3b1ac65b3bd9b0bea05cc9a59f83f77ac9e92856add87a9ab48e",
+        "productStateId": "e80fa26f12ed9686bd0f90708ef82012e8a51aeea07d5f6fff128853f7905649",
         "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
         "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
         "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
       },
-      "status": "CURRENT",
+      "status": "STALE",
       "producer": "coordinator",
       "startedAt": "2026-09-27T12:00:00Z",
       "finishedAt": "2026-09-27T12:15:00Z",
-      "commandOrMethod": "nit fix @4d2ada93: defensive SPELL_KIT_IDS lookup in save acceptance -- descriptive rejection instead of bare TypeError on corrupt element; type-check + 480 save tests green",
+      "commandOrMethod": "nit fix @4d2ada93 + pin test @c02fbf50: defensive SPELL_KIT_IDS lookup in save acceptance -- descriptive rejection instead of bare TypeError on corrupt element; corrupt-element pin test added; type-check + 481 save tests green",
       "cwd": "game/",
       "exitCode": 0,
       "result": "PASS",
       "artifactPath": "records-cleanq-cor.json",
       "artifactHash": "d618c4c3172c191c62d8d09226c5495dbc12022bc831dcbc9318ae757081c97d",
       "claims": [
-        "COR-Q nit repaired @4d2ada93"
+        "COR-Q nit repaired @4d2ada93 + pin @c02fbf50"
       ],
       "inputEvidenceIds": [],
       "inputPaths": [],
@@ -20398,7 +20398,7 @@
         "F-PTR-245"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-PTR-CLO-19",
@@ -20416,7 +20416,7 @@
       "priorFindingsVisible": false,
       "startedAt": "2026-09-27T12:10:00Z",
       "sealedAt": "2026-09-27T12:16:00Z",
-      "status": "SEALED",
+      "status": "STALE",
       "findingIds": [],
       "model": "swe-2",
       "inputBundleHash": "68d6f324141b5ad199d28c3fa22d7613bb0afa45b751bb97c2291644b55ed283",
@@ -24847,6 +24847,70 @@
       "payloadPath": "events/0083.json",
       "payloadHash": "da0623e91c0f9ff875cecd0013de3b9e117aad693dffb60504531d3ae8ff005c",
       "eventHash": "6faab2ec254443b00f00fa05860e088211b12caf138d302da5ff0c4be30c05b1"
+    },
+    {
+      "seq": 84,
+      "at": "2026-09-27T12:16:51.876Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "e80fa26f12ed9686bd0f90708ef82012e8a51aeea07d5f6fff128853f7905649",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "6faab2ec254443b00f00fa05860e088211b12caf138d302da5ff0c4be30c05b1",
+      "payloadPath": "events/0084.json",
+      "payloadHash": "7862ad7e24ac092549d9d980690554f980f06fa6a640e8f3fc619fb57ab9801d",
+      "eventHash": "0b7121766a656980159b850663f08c8841c62a680d499c4065027bf4c5756b8b"
+    },
+    {
+      "seq": 85,
+      "at": "2026-09-27T12:16:56.772Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "e80fa26f12ed9686bd0f90708ef82012e8a51aeea07d5f6fff128853f7905649",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "0b7121766a656980159b850663f08c8841c62a680d499c4065027bf4c5756b8b",
+      "payloadPath": "events/0085.json",
+      "payloadHash": "5991836f80d3b8b93cc3d2a37b27aa528db475fbcbb210f0bba49aaa65f40cad",
+      "eventHash": "3cf87bd2ed76587c88448e64ab95b10af19ffe4e976480de794d7d6df798894f"
+    },
+    {
+      "seq": 86,
+      "at": "2026-09-27T12:16:57.536Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "e80fa26f12ed9686bd0f90708ef82012e8a51aeea07d5f6fff128853f7905649",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "3cf87bd2ed76587c88448e64ab95b10af19ffe4e976480de794d7d6df798894f",
+      "payloadPath": "events/0086.json",
+      "payloadHash": "d42e23b37228ce37eb42080a7110b869e9ed7ad9dd92ec1d918626b1d5bb4cee",
+      "eventHash": "4c3876e01432f9b060eb63db7781f3e76dc5bfc197fe3c445ed61ca6b9f6a5c9"
+    },
+    {
+      "seq": 87,
+      "at": "2026-09-27T12:17:00.483Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "e80fa26f12ed9686bd0f90708ef82012e8a51aeea07d5f6fff128853f7905649",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "4c3876e01432f9b060eb63db7781f3e76dc5bfc197fe3c445ed61ca6b9f6a5c9",
+      "payloadPath": "events/0087.json",
+      "payloadHash": "d36d8163497d71ee221a8abaddf1b1084ea31e30a3e2bf18f1676823cfe5da42",
+      "eventHash": "1d02a0ce32c3efc3e4c5801bcf9f07fe64564bf048fdb4501a44695709c0dc71"
     }
   ]
 }
