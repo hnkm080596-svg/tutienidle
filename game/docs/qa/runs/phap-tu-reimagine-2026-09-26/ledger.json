@@ -11,7 +11,7 @@
     "base": "master",
     "head": "038706f7",
     "state": {
-      "productStateId": "28b18a907dfc36fa3123639aee41afc4d543af30bc1342a59421d95bb0141db8",
+      "productStateId": "1353a680dceb90b1b312d22a71506d4b5466deba90f55aca4b27f74c41a3cef4",
       "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
       "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -18112,7 +18112,7 @@
         "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
         "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
       },
-      "status": "CURRENT",
+      "status": "STALE",
       "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
       "startedAt": "2026-09-27T15:05:00Z",
       "finishedAt": "2026-09-27T15:10:00Z",
@@ -19054,18 +19054,18 @@
       "kind": "EXECUTED_UNIT_STRUCTURAL",
       "id": "EV-PTR-FINAL",
       "state": {
-        "productStateId": "803a1e7b8327f954e9de489d3c0cc71b0b48501aaf99f01305459e149e005d6a",
+        "productStateId": "1353a680dceb90b1b312d22a71506d4b5466deba90f55aca4b27f74c41a3cef4",
         "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
         "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
         "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
       },
       "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
-      "commandOrMethod": "npm run type-check + npx vitest run scoped reimagine suites (skilldef, battle/turn, the-tu, proc, data/skill, data/progression, buff2, tests/architecture) on head 8b19829c (state 803a1e7b)",
+      "commandOrMethod": "npm run type-check + npx vitest run scoped reimagine suites (skilldef, battle/turn, the-tu, proc, data/skill, data/progression, buff2, tests/architecture) on head e3cd383d",
       "cwd": "game",
       "exitCode": 0,
       "result": "PASS",
-      "startedAt": "2026-09-27T10:36:30.000Z",
-      "finishedAt": "2026-09-27T10:38:20.000Z",
+      "startedAt": "2026-09-27T15:00:30Z",
+      "finishedAt": "2026-09-27T15:01:20Z",
       "inputPaths": [
         "src/core/skilldef",
         "src/core/battle/turn",
@@ -19077,11 +19077,16 @@
         "tests/architecture"
       ],
       "inputEvidenceIds": [],
-      "artifactPath": "evidence/final-gates-8b19829c.log",
-      "artifactHash": "f55b7929ff8ee3f51f53d1c7df9e195a2e1d2dea83eef1e1987ae8c0a62a7380",
-      "status": "STALE",
-      "limitations": [],
-      "claims": [],
+      "artifactPath": "evidence/final-gates-e3cd383d.log",
+      "artifactHash": "1885c7da207f7611f3119d97195d5c3615c9d4445169000ab4c70ab3cf4e0f0d",
+      "status": "CURRENT",
+      "limitations": [
+        "1 file suite-load fail: staticArtExtentDeclared -- canvas libuuid env noise, pre-existing on this box"
+      ],
+      "claims": [
+        "type-check clean",
+        "169 files / 1726 tests pass"
+      ],
       "invariantIds": []
     },
     {
@@ -27072,6 +27077,38 @@
       "payloadPath": "events/0099.json",
       "payloadHash": "f3896cd1dc56621f0d623f48c99a8a51a5df10acb3fe36b3af8ce66b1746ba1c",
       "eventHash": "3c76ba7ff1947f13db555a543ee5c3553af35e6c5591b5fc17e37741b20b11b0"
+    },
+    {
+      "seq": 100,
+      "at": "2026-09-27T15:00:39.540Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "1353a680dceb90b1b312d22a71506d4b5466deba90f55aca4b27f74c41a3cef4",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "3c76ba7ff1947f13db555a543ee5c3553af35e6c5591b5fc17e37741b20b11b0",
+      "payloadPath": "events/0100.json",
+      "payloadHash": "736b113b44f625442b5afc92bfcd7021991768914a52b20bac49cdc0a5b0af00",
+      "eventHash": "c7cd74b1adfe245e9e72446498f60c25fcffc17a4b9f9b3034388297c7880d89"
+    },
+    {
+      "seq": 101,
+      "at": "2026-09-27T15:02:07.468Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "1353a680dceb90b1b312d22a71506d4b5466deba90f55aca4b27f74c41a3cef4",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "c7cd74b1adfe245e9e72446498f60c25fcffc17a4b9f9b3034388297c7880d89",
+      "payloadPath": "events/0101.json",
+      "payloadHash": "21800caef66344538b8bc7d898c52caf68a14c6f109349fd9ebd901df99ef109",
+      "eventHash": "95ea92262b1cef018901c136832435417f4f7fe64c4b2f0834c4f4653d309f20"
     }
   ]
 }
