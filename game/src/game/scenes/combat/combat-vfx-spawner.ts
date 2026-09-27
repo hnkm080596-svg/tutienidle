@@ -36,6 +36,7 @@ import {
   STATUS_PLAYER_ROW_OFFSET_Y,
 } from './combatConstants'
 import { HUD_MARGIN, HUD_HP_HEIGHT, HUD_SUB_HEIGHT, HUD_GAP } from './PlayerHudLayer'
+import { applyScreenShake } from '@/presentation/vfx/screenShakePolicy'
 import { StatusTooltip } from './combat-status-tooltip'
 import type { EntitySprite } from './combatTypes'
 
@@ -155,7 +156,7 @@ export class CombatVfxSpawner {
     )
 
     if (preset.screenShake) {
-      this.scene.cameras.main.shake(preset.screenShake.durationMs, preset.screenShake.intensity)
+      applyScreenShake(this.scene.cameras.main, preset.screenShake.durationMs, preset.screenShake.intensity)
     }
 
     // affectedTargetIds chỉ phục vụ hit-flash — KHÔNG spawn effect sao.

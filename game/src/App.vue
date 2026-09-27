@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, provide, ref } from 'vue'
+import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { usePlayerStore } from './stores/player'
 import { useUiStore } from './stores/ui'
 import { GameClock, DEFAULT_MAX_OFFLINE_SECONDS } from './core/idle/GameClock'
@@ -21,6 +21,7 @@ import { GamePresentationCoordinator } from './presentation/GamePresentationCoor
 import { createGamePresentation } from './presentation/createGamePresentation'
 import { bindPresentationActive } from './presentation/bindPresentationActive'
 import { bindCombatAudio } from './presentation/audio/combatAudioBinding'
+import { setReducedShakeEnabled } from './presentation/vfx/screenShakePolicy'
 import { useAudioStore } from './stores/audio'
 import { RafClockSource } from './presentation/clock/RafClockSource'
 import { MainProcessClockSource } from './presentation/clock/MainProcessClockSource'
@@ -191,6 +192,15 @@ const unbindPresentationActive = bindPresentationActive(coordinator, gameManager
 // Audio: domain combat events -> SFX (observation only, A7). Bound at module
 // scope next to the other event-bus bindings; store handles enabled/volume.
 const unbindCombatAudio = bindCombatAudio(gameManager.eventBus)
+
+// W10: push the reducedShake flag into the presentation shake gate — scenes
+// read the module-level scale (src/game may not import stores).
+const audioStore = useAudioStore()
+watch(
+  () => audioStore.reducedShake,
+  (value) => setReducedShakeEnabled(value),
+  { immediate: true },
+)
 
 // Autoplay policy: unlock AudioContext on the first pointer gesture anywhere
 // (Phaser canvas clicks never reach GameButton). `once` keeps it one-shot.
