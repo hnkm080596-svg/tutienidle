@@ -549,12 +549,18 @@ export class GameManagerTurnBattleOps {
         // Task 11 -- a queued repeat/multicast execution is NOT a turn
         // choice: manual mode must not park it awaiting input (the cast
         // was already committed; the follow-up resolves automatically).
-        const isQueuedExecution = this.turnBattleSystem.isPendingQueuedExecution(readyActor.id)
+        // Same for a committed reactive follow-up (Phan/Tro counter): it
+        // declares through declareReactiveBypass with a forced payload,
+        // so an AWAITING_INPUT pause there would solicit a manual choice
+        // the declare then silently discards.
+        const isCommittedFollowUp =
+          this.turnBattleSystem.isPendingQueuedExecution(readyActor.id) ||
+          this.turnBattleSystem.isPendingReactiveBypass(readyActor.id)
 
         this.turnToken.claim({
           actorId: readyActor.id,
           isPlayerTeam: battle.players.includes(readyActor),
-          manualMode: isQueuedExecution ? false : this.presentationOps.runtime.isBattleManualMode(),
+          manualMode: isCommittedFollowUp ? false : this.presentationOps.runtime.isBattleManualMode(),
         })
 
         if (this.turnToken.getState() === 'AWAITING_INPUT') {
@@ -2434,6 +2440,15 @@ export class GameManagerTurnBattleOps {
     // choice the UI no longer offers. The claimed turn becomes an auto turn.
     if (stranded && this.turnToken.getState() === 'AWAITING_INPUT') {
       this.turnToken.submitChoice()
+      // The flag flip itself is boundary-queued below like every external
+      // command, but this rescue just committed the stranded turn to AUTO -
+      // a drain in the queued window would read the stale live flag and
+      // re-park the committed claim into awaitedManualActor, skipping
+      // declare/impact/complete and leaving manual-pause residue on an IDLE
+      // token. Invariant: a committed claim is never re-parked as manual,
+      // so the flag moves now; the queued replay is an idempotent no-op
+      // that only preserves command ordering.
+      this.presentationOps.runtime.setBattleManualMode(false)
       this.beginTurnPipeline(stranded, 'ready')
     }
 

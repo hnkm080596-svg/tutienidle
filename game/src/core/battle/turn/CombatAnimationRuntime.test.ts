@@ -7,6 +7,7 @@ import { createBaseStats } from '../../stats/StatBlock'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { toTurnBattleParticipant } from '../../game/TurnBattleAdapter'
 import { GENERIC_PHYSICAL_BASIC } from '../../../data/skill/TurnBasicAttacks'
+import { PHAN_KICH } from '../../../data/skill/TheTuSkills'
 
 // Combat Runtime Separation (Task 1, 2026-09-07) — CombatAnimationRuntime
 // owns the presentation-ack timing state extracted from GameManager (P17).
@@ -67,7 +68,7 @@ function fixture() {
     getTurnBattle: () => battle,
   })
 
-  return { runtime, battle, player, enemy, eventBus }
+  return { runtime, battle, player, enemy, eventBus, turnBattleSystem }
 }
 
 describe('CombatAnimationRuntime', () => {
@@ -535,7 +536,66 @@ describe('CombatAnimationRuntime', () => {
       expect(runtime.isPresentationActive()).toBe(false)
     })
 
-    it('resetPendingState clears playbackToken so late callbacks cannot match', () => {
+    it('drain gate resolves a queued execution inline under manual mode (unit pin)', () => {
+    // Unit-level pin for the drain gate (manager-level coverage lives in
+    // GameManagerTurnBattleOps.presentationReceipt.test.ts): a repeat /
+    // multicast execution is force-claimed manualMode:false, so at drain
+    // the claim owner decides - not the live flag. Parking it in
+    // awaitedManualActor would orphan the committed payload and leave
+    // residue on an IDLE token.
+    const { runtime, battle, player, enemy, turnBattleSystem } = fixture()
+
+    battle.queuedExecutions = [
+      { actorId: 'player', rootSkill: GENERIC_PHYSICAL_BASIC, source: 'repeat', multicastDepth: 0 },
+    ]
+    const actor = turnBattleSystem.tickPacing(battle, false)
+
+    expect(actor?.id).toBe('player')
+
+    runtime.setBattleManualMode(true)
+    runtime.notifyReadyActor(actor!)
+    runtime.drainPendingPlayback()
+
+    expect(runtime.isAwaitingManualTurnChoice()).toBe(false)
+    expect(runtime.getAwaitedManualActor()).toBeNull()
+    expect(runtime.isActionPlaybackWaiting()).toBe(false)
+    expect(enemy.entity.currentHp).toBeLessThan(enemy.entity.maxHp)
+    expect(battle.log?.at(-1)).toMatchObject({ actorId: 'player', skillId: 'generic_physical' })
+  })
+
+  it('drain gate resolves a committed reactive bypass inline under manual mode (unit pin)', () => {
+    // Same contract for the reactive lane: a queued Phan/Tro counter is a
+    // committed action (declareReactiveBypass carries a forced payload),
+    // so drainPendingPlayback must not re-park it into awaitedManualActor
+    // on the live manual flag alone.
+    const { runtime, battle, player, enemy, turnBattleSystem } = fixture()
+
+    player.reactivePayloads = { phan_kich: PHAN_KICH }
+    battle.queuedFollowUps = [
+      {
+        actorId: 'player',
+        executionKind: 'reactive_bypass',
+        actionSource: 'counter',
+        payloadSkillId: 'phan_kich',
+        targetIds: ['enemy'],
+      },
+    ]
+    const actor = turnBattleSystem.tickPacing(battle, false)
+
+    expect(actor?.id).toBe('player')
+
+    runtime.setBattleManualMode(true)
+    runtime.notifyReadyActor(actor!)
+    runtime.drainPendingPlayback()
+
+    expect(runtime.isAwaitingManualTurnChoice()).toBe(false)
+    expect(runtime.getAwaitedManualActor()).toBeNull()
+    expect(runtime.isActionPlaybackWaiting()).toBe(false)
+    expect(enemy.entity.currentHp).toBeLessThan(enemy.entity.maxHp)
+    expect(battle.log?.at(-1)).toMatchObject({ actorId: 'player', skillId: 'phan_kich', targetIds: ['enemy'] })
+  })
+
+  it('resetPendingState clears playbackToken so late callbacks cannot match', () => {
       const { runtime, player } = fixture()
       runtime.setPresentationActive(true)
       runtime.notifyReadyActor(player)

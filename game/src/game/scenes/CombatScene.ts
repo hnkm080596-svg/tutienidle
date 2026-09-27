@@ -1939,6 +1939,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // Same-session rebind = renderer reattach to the live battle (session
     // ids are minted per battle launch); a different session means a new
     // battle arrived over the same scene and the reset is a battle start.
+    // Latent coupling (documented, not fixed): both this sessionId check and
+    // the driver's skill-request-N camera latch key on counters monotonic
+    // only within one GameManager lifetime - a GameManager swap under a live
+    // CombatScene would restart both sequences and realign these guards.
     const isSameSessionRebind =
       context.sessionId !== undefined && context.sessionId === this.initSessionId
 
@@ -1976,6 +1980,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       const port = this.gameManagerRef
       if (port) this.skillPlayback.resumeResolved(resume.resolved, port)
     }
+    // 'manual' intentionally falls through: a parked manual choice has no
+    // renderer ack phase to replay - awaitedManualActor and the
+    // AWAITING_INPUT token still hold the turn engine-side, and the choice
+    // affordance re-derives from isAwaitingManualTurnChoice()/submitTurnChoice.
   }
 
   /**

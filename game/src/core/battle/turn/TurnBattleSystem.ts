@@ -2902,9 +2902,26 @@ export class TurnBattleSystem {
    * turn a queued EXECUTION (repeat/multicast) rather than a real turn?
    * Manual mode must NOT await player input for these -- the cast was
    * already chosen; the follow-up resolves automatically.
+   *
+   * Sibling predicate isPendingReactiveBypass covers the reactive lane;
+   * every manual-mode exemption must consult BOTH (claim site in
+   * GameManagerTurnBattleOps.stepTurnBattle, drain gate in
+   * CombatAnimationRuntime.drainPendingPlayback).
    */
   isPendingQueuedExecution(actorId: string): boolean {
     return this.pendingQueuedExecution?.actorId === actorId
+  }
+
+  /**
+   * Same contract as isPendingQueuedExecution for the REACTIVE lane: a
+   * queued Phan/Tro counter dequeued by dequeueFollowUpActor parks in
+   * pendingReactiveEntry until declareActorAction consumes it via
+   * declareReactiveBypass with a forced payload -- a committed action,
+   * never a manual choice, so manual mode must neither pause for it nor
+   * re-park it on drain.
+   */
+  isPendingReactiveBypass(actorId: string): boolean {
+    return this.pendingReactiveEntry?.actorId === actorId
   }
 
   /**

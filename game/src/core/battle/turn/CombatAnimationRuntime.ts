@@ -201,11 +201,14 @@ export class CombatAnimationRuntime {
       // declareActorAction drops or hijacks it) and leave
       // awaitedManualActor set while the token sits IDLE, where a stray
       // submitTurnChoice could still declare inline. Ask the claim owner
-      // instead: a pending queued execution is never a manual choice.
+      // instead: a pending queued execution is never a manual choice, and
+      // neither is a committed reactive entry (Phan/Tro bypass - forced
+      // payload, claim-time manualMode:false just like the repeat lane).
       const isManualActor =
         this.battleManualMode &&
         battle.players.includes(actor) &&
-        !turnBattleSystem.isPendingQueuedExecution(actor.id)
+        !turnBattleSystem.isPendingQueuedExecution(actor.id) &&
+        !turnBattleSystem.isPendingReactiveBypass(actor.id)
 
       if (isManualActor) {
         this.awaitedManualActor = actor

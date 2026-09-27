@@ -3,6 +3,7 @@ import { GameManager } from './GameManager'
 import { startAStage } from './__fixtures__/startAStage'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { ANIMATION_FALLBACK_MS } from './GameManagerTurnBattleOps'
+import { PHAN_KICH } from '../../data/skill/TheTuSkills'
 
 afterEach(() => vi.useRealTimers())
 function setup() {
@@ -215,6 +216,188 @@ describe('production presentation handshake first proof', () => {
     }
 
     expect(manager.isAwaitingManualTurnChoice()).toBe(true)
+    manager.abandonBattle()
+  })
+  it('manual mode: a queued player reactive bypass claims AUTO - no AWAITING_INPUT pause', () => {
+    // Claim-time exemption (the reactive sibling of the queued-exec lane):
+    // a Phan/Tro counter declares through declareReactiveBypass with a
+    // forced payload, so the claim must force manualMode:false - an
+    // AWAITING_INPUT pause would solicit a manual choice the declare then
+    // silently discards.
+    const { manager, clock } = setup()
+    const battle = manager.getTurnBattle()!
+    const participant = battle.players[0]!
+    const enemyId = battle.enemies[0]!.id
+    participant.reactivePayloads = { phan_kich: PHAN_KICH }
+
+    const driveParkedTurn = () => {
+      const token = manager.getPendingPlaybackToken()
+
+      if (token) {
+        manager.acknowledgeTurnReady(token)
+        manager.acknowledgeActionImpact(token)
+        manager.acknowledgeActionComplete(token)
+      }
+    }
+
+    // Finish the turn setup() left parked at 'ready', then enable manual
+    // mode - the token is IDLE, so the flag applies immediately.
+    driveParkedTurn()
+    expect(manager.getTurnTokenState()).toBe('IDLE')
+    manager.setBattleManualMode(true)
+
+    // The next fighting step dequeues the committed entry BEFORE gauge
+    // order and claims it.
+    battle.queuedFollowUps = [
+      {
+        actorId: 'player',
+        executionKind: 'reactive_bypass',
+        actionSource: 'counter',
+        payloadSkillId: 'phan_kich',
+        targetIds: [enemyId],
+      },
+    ]
+    clock.advance(COMBAT_STEP_SECONDS)
+
+    // No manual pause: it parks at 'ready' like any auto claim.
+    expect(manager.isAwaitingManualTurnChoice()).toBe(false)
+    const resume = manager.preparePresentationResume()
+    expect(resume?.phase).toBe('ready')
+    expect(resume && 'actorId' in resume && resume.actorId).toBe('player')
+
+    // The forced payload resolves through the normal handshake.
+    driveParkedTurn()
+    expect(manager.getTurnTokenState()).toBe('IDLE')
+    // skillId is the proof the forced payload ran - targetIds only lists
+    // landed targets, so an evasion dodge would make it RNG-dependent.
+    expect(battle.log?.at(-1)).toMatchObject({ actorId: 'player', skillId: 'phan_kich' })
+    manager.abandonBattle()
+  })
+  it('cap drain resolves a committed reactive bypass under manual mode - no manual-pause residue', () => {
+    // Drain-time end-to-end pin: with manual on, the reactive entry still
+    // auto-claims and parks at 'ready'; when the session stays held past
+    // the deferral cap the mechanical drain must resolve it inline rather
+    // than re-park it into awaitedManualActor on the live flag.
+    const { manager, clock } = setup()
+    const port = manager.getPresentationPort()
+    const battle = manager.getTurnBattle()!
+    const participant = battle.players[0]!
+    const enemyId = battle.enemies[0]!.id
+    participant.reactivePayloads = { phan_kich: PHAN_KICH }
+
+    const driveParkedTurn = () => {
+      const token = manager.getPendingPlaybackToken()
+
+      if (token) {
+        manager.acknowledgeTurnReady(token)
+        manager.acknowledgeActionImpact(token)
+        manager.acknowledgeActionComplete(token)
+      }
+    }
+
+    driveParkedTurn()
+    expect(manager.getTurnTokenState()).toBe('IDLE')
+    manager.setBattleManualMode(true)
+
+    battle.queuedFollowUps = [
+      {
+        actorId: 'player',
+        executionKind: 'reactive_bypass',
+        actionSource: 'counter',
+        payloadSkillId: 'phan_kich',
+        targetIds: [enemyId],
+      },
+    ]
+    clock.advance(COMBAT_STEP_SECONDS)
+    expect(manager.isAwaitingManualTurnChoice()).toBe(false)
+
+    // Renderer never acks: hold the session past the deferral cap so the
+    // parked ready step drains mechanically.
+    const hold = port.hold(port.getCurrentSession()!)!
+    vi.advanceTimersByTime(ANIMATION_FALLBACK_MS * 8)
+
+    // Token drained to IDLE with no manual-pause residue, and the
+    // committed payload actually executed rather than being orphaned.
+    expect(manager.getTurnTokenState()).toBe('IDLE')
+    expect(manager.consumeAwaitedActorId()).toBeNull()
+    expect(manager.preparePresentationResume()).toBeNull()
+    expect(battle.log?.at(-1)).toMatchObject({ actorId: 'player', skillId: 'phan_kich' })
+
+    // Reveal the session: nothing replays and the battle walks on to the
+    // player's next real manual pause.
+    expect(port.attach(hold)).toBe(true)
+    expect(port.release(hold)).toBe(true)
+    for (let i = 0; i < 400 && !manager.isAwaitingManualTurnChoice(); i++) {
+      driveParkedTurn()
+
+      if (manager.getTurnTokenState() === 'IDLE') {
+        clock.advance(COMBAT_STEP_SECONDS)
+      }
+    }
+
+    expect(manager.isAwaitingManualTurnChoice()).toBe(true)
+    manager.abandonBattle()
+  })
+  it('rescue-commit of a stranded manual turn survives a cap drain in the flag-flip window', () => {
+    // setBattleManualMode(false) rescue: the stranded turn commits to AUTO
+    // synchronously (submitChoice + beginTurnPipeline) while the flag-off
+    // itself stays boundary-queued. A drain inside that window must
+    // consult the claim, not the stale live flag - a committed claim is
+    // never re-parked as manual.
+    const { manager, clock } = setup()
+    const port = manager.getPresentationPort()
+    const battle = manager.getTurnBattle()!
+    manager.setBattleManualMode(true)
+
+    const driveParkedTurn = () => {
+      const token = manager.getPendingPlaybackToken()
+
+      if (token) {
+        manager.acknowledgeTurnReady(token)
+        manager.acknowledgeActionImpact(token)
+        manager.acknowledgeActionComplete(token)
+      }
+    }
+
+    for (let i = 0; i < 400 && !manager.isAwaitingManualTurnChoice(); i++) {
+      driveParkedTurn()
+
+      if (manager.getTurnTokenState() === 'IDLE') {
+        clock.advance(COMBAT_STEP_SECONDS)
+      }
+    }
+
+    expect(manager.isAwaitingManualTurnChoice()).toBe(true)
+    const turnsBefore = battle.totalTurnsElapsed ?? 0
+
+    // Hold the session first so the rescued pipeline parks at 'ready' and
+    // the cap drain lands inside the boundary-queued flag window.
+    const hold = port.hold(port.getCurrentSession()!)!
+    manager.setBattleManualMode(false)
+    vi.advanceTimersByTime(ANIMATION_FALLBACK_MS * 8)
+
+    expect(manager.getTurnTokenState()).toBe('IDLE')
+    expect(manager.consumeAwaitedActorId()).toBeNull()
+    expect(manager.preparePresentationResume()).toBeNull()
+    // The rescued turn actually ran to completion - not dropped.
+    expect(battle.totalTurnsElapsed).toBe(turnsBefore + 1)
+
+    // Reveal the session: nothing replays, and with manual off the
+    // battle keeps auto-resolving turns - parked steps ack, the manual
+    // pause never returns.
+    expect(port.attach(hold)).toBe(true)
+    expect(port.release(hold)).toBe(true)
+    for (let i = 0; i < 40; i++) {
+      driveParkedTurn()
+
+      if (manager.getTurnTokenState() === 'IDLE') {
+        clock.advance(COMBAT_STEP_SECONDS)
+      }
+
+      expect(manager.isAwaitingManualTurnChoice()).toBe(false)
+    }
+
+    expect(battle.totalTurnsElapsed).toBeGreaterThan(turnsBefore + 1)
     manager.abandonBattle()
   })
   it('accepts synchronous complete from impact observer without losing pipeline settlement', () => {
