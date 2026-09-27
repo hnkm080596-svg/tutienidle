@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { GameManager } from './GameManager'
 import { startAStage } from './__fixtures__/startAStage'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
+import { ANIMATION_FALLBACK_MS } from './GameManagerTurnBattleOps'
 
 afterEach(() => vi.useRealTimers())
 function setup() {
@@ -83,6 +84,44 @@ describe('production presentation handshake first proof', () => {
     expect(manager.getTurnTokenState()).toBe('IDLE')
     expect(manager.getTurnBattle()!.totalTurnsElapsed).toBe(1)
     clock.advance(COMBAT_STEP_SECONDS * 200)
+    expect(manager.getTurnTokenState()).not.toBe('IDLE')
+    manager.abandonBattle()
+  })
+  it('bounds held-session re-arms to one forced drive and drops the stale entry', () => {
+    const { manager } = setup()
+    const port = manager.getPresentationPort()
+    const hold = port.hold(port.getCurrentSession()!)!
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    // Under the cap the blocking re-arm keeps deferring without diagnostics.
+    vi.advanceTimersByTime(ANIMATION_FALLBACK_MS * 7)
+    expect(warn).not.toHaveBeenCalled()
+
+    // At the cap: one forced drive, rejected while the session is held, so
+    // the parked entry is dropped rather than left for a later turn's ACK.
+    vi.advanceTimersByTime(ANIMATION_FALLBACK_MS)
+    expect(warn).toHaveBeenCalledTimes(2)
+    const messages = warn.mock.calls.map((call) => String(call[0])).join(' ')
+    expect(messages).toContain("step 'ready'")
+    expect(messages).toContain('force-driving')
+    expect(messages).toContain('dropping the stale pending entry')
+
+    // The drive ran once: more held time does not re-arm or warn again.
+    vi.advanceTimersByTime(ANIMATION_FALLBACK_MS * 8)
+    expect(warn).toHaveBeenCalledTimes(2)
+    warn.mockRestore()
+
+    // The dropped entry cannot settle: a resumed playback's ACKs complete
+    // the action mechanically once, but the parked 'ready' step never fires
+    // its stale done() so the pipeline never drains the turn.
+    expect(port.attach(hold)).toBe(true)
+    expect(port.release(hold)).toBe(true)
+    expect(manager.preparePresentationResume()!.phase).toBe('ready')
+    const token = manager.getPendingPlaybackToken()!
+    manager.acknowledgeTurnReady(token)
+    manager.acknowledgeActionImpact(token)
+    manager.acknowledgeActionComplete(token)
+    expect(manager.getTurnBattle()!.totalTurnsElapsed).toBe(1)
     expect(manager.getTurnTokenState()).not.toBe('IDLE')
     manager.abandonBattle()
   })

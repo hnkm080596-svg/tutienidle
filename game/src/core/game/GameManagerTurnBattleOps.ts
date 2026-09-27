@@ -130,6 +130,10 @@ export { COUNTDOWN_TOTAL_TICKS, INTRO_TOTAL_TICKS }
  * frozen for the rest of the session.
  */
 export const ANIMATION_FALLBACK_MS = 4000
+// Cumulative bound on awaitStep's isBlocking re-arm loop: a renderer that
+// stays blocking past ~32 s gets one forced drive instead of deferring
+// forever.
+const AWAIT_STEP_DEFERRAL_CAP_MS = ANIMATION_FALLBACK_MS * 8
 
 /** The three renderer signals the pipeline's asynchronous steps wait on. */
 import type { TurnStepSignal } from './GameManagerTurnBattlePresentationOps'
@@ -758,14 +762,29 @@ export class GameManagerTurnBattleOps {
    * mean the turn made progress.
    */
   private awaitStep(signal: TurnStepSignal, done: () => void): void {
+    let deferredMs = 0
     const fallback = () => {
       if (this.presentationOps.session.isBlocking()) {
-        timer = setTimeout(fallback, ANIMATION_FALLBACK_MS)
-        this.pendingStepTimers.push(timer)
-        return
+        deferredMs += ANIMATION_FALLBACK_MS
+        if (deferredMs < AWAIT_STEP_DEFERRAL_CAP_MS) {
+          timer = setTimeout(fallback, ANIMATION_FALLBACK_MS)
+          this.pendingStepTimers.push(timer)
+          return
+        }
+        console.warn(
+          `[TurnBattle] step '${signal}' blocked for ${deferredMs}ms - force-driving the step`,
+        )
       }
       // Runtime acknowledgement owns settlement; rejected work cannot advance.
       this.driveStepWork(signal)
+      // A rejected drive leaves the parked entry behind; a later turn's ACK
+      // for the same signal would then fire this turn's done() - drop it.
+      if (this.pendingStepDone[signal] !== undefined) {
+        console.warn(
+          `[TurnBattle] step '${signal}' drive was rejected - dropping the stale pending entry`,
+        )
+        this.pendingStepDone[signal] = undefined
+      }
     }
     let timer = setTimeout(fallback, ANIMATION_FALLBACK_MS)
 
