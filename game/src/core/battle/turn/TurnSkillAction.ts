@@ -221,17 +221,24 @@ export interface TurnSkillDefinition {
    * gate (the Phap The rider channel: the empowered element basic
    * carries its element's rider here). Type-only import keeps the
    * legacy def free of a skilldef module cycle.
+   *
+   * CONSUMED ONLY by the routed plan-runtime lane (TurnSkillPlanRuntime);
+   * the legacy engine-unit lane (runtime === undefined) has no consumer
+   * and silently ignores it -- authored defs with this field must run a
+   * battle carrying a runtime, or the rider is lost.
    */
   landedConsequences?: import('../../skilldef/AuthoredOperation').AuthoredSkillOperation[]
   /**
    * Phap Tu Reimagined (spec D7) - per-hit ADDITIVE elemental
-   * penetration points (the Kim rider).
+   * penetration points (the Kim rider). CONSUMED ONLY by the routed
+   * plan-runtime lane; the legacy engine-unit lane ignores it.
    */
   elementalPenetrationBonus?: number
   /**
    * Phap Tu Reimagined (spec D11, Kim Liet) - scale this hit's
    * penetration by stacks of an ailment on the target: read BEFORE
-   * the hit resolves, never consuming.
+   * the hit resolves, never consuming. CONSUMED ONLY by the routed
+   * plan-runtime lane; the legacy engine-unit lane ignores it.
    */
   penetrationFromStacks?: {
     ailmentId: string
@@ -252,28 +259,29 @@ export interface TurnSkillDefinition {
     empowered: TurnSkillDefinition
   }
   /**
-   * The empowered form carries this: at commit, the caster's ENTIRE
-   * currentThe pool burns to 0 (a raised cap burns the whole pool, not
-   * just the threshold). The pre-consume amount is captured into
-   * `execution.theBurned` at DECLARE for theScaling (Task 13) - the
+   * DORMANT authored surface (route machinery retired -- spec D17): no
+   * producer can stamp this post-retirement. If reactivated: at commit,
+   * the caster's ENTIRE currentThe pool burns to 0 (a raised cap burns
+   * the whole pool, not just the threshold). The pre-consume amount is
+   * captured into `execution.theBurned` at DECLARE for theScaling - the
    * pool is already 0 by the time damage resolves post-commit.
    */
   consumesAllThe?: boolean
   /**
-   * Phap Tu Reimagined Task 13 - detonate (the 'dot' route's empowered
-   * expression, spec sec.4). After the direct component AND the normal
-   * ailment application land, consume every live ailment on each target
-   * whose BuffDefinition carries a `dot` effect (utility ailments are
-   * never touched); each pays (perTick x remainingTurns x stacks) x amp
-   * as direct damage, then re-seeds a FIXED 1 stack at the ailment's
+   * DORMANT authored surface (route machinery retired). Historical
+   * intent: after the direct component AND the normal ailment
+   * application land, consume every live ailment on each target whose
+   * BuffDefinition carries a `dot` effect (utility ailments are never
+   * touched); each pays (perTick x remainingTurns x stacks) x amp as
+   * direct damage, then re-seeds a FIXED 1 stack at the ailment's
    * AUTHORED duration with potency recomputed against the caster's
    * current stats. Re-seed is not an application event: no chance roll,
    * no ailmentStackBonus (spec O2/R2).
    */
   detonateDoT?: { amp: number }
   /**
-   * Phap Tu Reimagined Task 13 - nuke (the 'no' route's empowered
-   * expression, spec sec.4): the resolved damage packet scales by
+   * DORMANT authored surface (route machinery retired). Historical
+   * intent: the resolved damage packet scales by
    * (1 + theBurned/100 x coeff); theBurned is the pool captured at
    * declare before consumesAllThe zeroes it. Linear by design -
    * Truong The cap-raises are additive payoff, not diminishing.
@@ -470,9 +478,10 @@ export interface TurnSkillExecution {
   resolvedSkill: TurnSkillDefinition | null
   source: TurnExecutionSource
   /**
-   * Task 10 - the The pool captured pre-consume when a `consumesAllThe`
-   * payload commits. Read by theScaling (Task 13); undefined for any
-   * execution that did not burn the pool.
+   * DORMANT (route machinery retired): the The pool captured
+   * pre-consume when a `consumesAllThe` payload commits. Read by
+   * theScaling; undefined for any execution that did not burn the
+   * pool. No producer stamps this post-retirement.
    */
   theBurned?: number
   /**

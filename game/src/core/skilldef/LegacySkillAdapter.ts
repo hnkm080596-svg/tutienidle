@@ -212,12 +212,15 @@ function adaptOne(
   } else if (
     ailmentList(def).length > 0 ||
     def.detonateDoT !== undefined ||
-    (def.ailmentInteractions ?? []).length > 0
+    (def.ailmentInteractions ?? []).length > 0 ||
+    (def.landedConsequences ?? []).length > 0
   ) {
-    // Self-scope ailment/detonate/interaction payloads never fire in
-    // the legacy lane (the non-damaging block requires enemy scope) --
-    // report rather than emit never-firing ops.
-    report(`${reportPrefix}.appliesAilments(self-scope: lane never fires)`)
+    // Self-scope ailment/detonate/interaction/landed payloads never
+    // fire in the legacy lane (the non-damaging block requires enemy
+    // scope) -- report rather than emit never-firing ops.
+    report(
+      `${reportPrefix}.self-scopeUnsupported(ailments/detonateDoT/ailmentInteractions/landedConsequences: lane never fires)`,
+    )
   }
 
   // Consume fields with no primary damage compile to a consume-only

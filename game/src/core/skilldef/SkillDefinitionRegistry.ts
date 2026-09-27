@@ -456,11 +456,11 @@ function validateActive(
 
   const instances = definition.instances
   if (instances !== undefined) {
-    validateExpression(instances.count, 'instances.count', fault)
+    validateExpression(instances.count, 'instances.count', deps, false, false, fault)
     const each = instances.each
     if (each !== undefined) {
       if (each.execute !== undefined) {
-        validateExpression(each.execute.hpPercentBelow, 'instances.each.execute.hpPercentBelow', fault)
+        validateExpression(each.execute.hpPercentBelow, 'instances.each.execute.hpPercentBelow', deps, false, false, fault)
         if (typeof each.execute.damageMultiplier !== 'number') {
           fault('invalid_field_value', 'instances.each.execute.damageMultiplier', 'damageMultiplier must be a number')
         }
@@ -632,7 +632,7 @@ function validateOperation(
           )
         }
       }
-      if (op.coefficient !== undefined) validateExpression(op.coefficient, `${path}.coefficient`, fault)
+      if (op.coefficient !== undefined) validateExpression(op.coefficient, `${path}.coefficient`, deps, insideForEach, inLane, fault)
       if (op.damageType !== undefined && !DAMAGE_TYPES.has(op.damageType)) {
         fault('invalid_field_value', `${path}.damageType`, `unknown damage type '${String(op.damageType)}'`)
       }
@@ -688,26 +688,29 @@ function validateOperation(
       }
       if (op.consumeBuff !== undefined) {
         requireBuffRef(op.consumeBuff.definitionId, 'consumeBuff.definitionId')
-        validateExpression(op.consumeBuff.damagePerStack, `${path}.consumeBuff.damagePerStack`, fault)
+        validateExpression(op.consumeBuff.damagePerStack, `${path}.consumeBuff.damagePerStack`, deps, insideForEach, inLane, fault)
       }
       if (op.scaleBuff !== undefined) {
         requireBuffRef(op.scaleBuff.definitionId, 'scaleBuff.definitionId')
-        validateExpression(op.scaleBuff.damagePerStack, `${path}.scaleBuff.damagePerStack`, fault)
+        validateExpression(op.scaleBuff.damagePerStack, `${path}.scaleBuff.damagePerStack`, deps, insideForEach, inLane, fault)
       }
       if (op.consumeWard !== undefined) {
-        validateExpression(op.consumeWard.damagePerWardPoint, `${path}.consumeWard.damagePerWardPoint`, fault)
+        validateExpression(op.consumeWard.damagePerWardPoint, `${path}.consumeWard.damagePerWardPoint`, deps, insideForEach, inLane, fault)
       }
       if (op.healPercentOfDamage !== undefined) {
-        validateExpression(op.healPercentOfDamage, `${path}.healPercentOfDamage`, fault)
+        validateExpression(op.healPercentOfDamage, `${path}.healPercentOfDamage`, deps, insideForEach, inLane, fault)
       }
       if (op.elementalPenetration !== undefined) {
-        validateExpression(op.elementalPenetration, `${path}.elementalPenetration`, fault)
+        validateExpression(op.elementalPenetration, `${path}.elementalPenetration`, deps, insideForEach, inLane, fault)
       }
       if (op.penetrationFromStacks !== undefined) {
         requireBuffRef(op.penetrationFromStacks.definitionId, 'penetrationFromStacks.definitionId')
         validateExpression(
           op.penetrationFromStacks.perStack,
           `${path}.penetrationFromStacks.perStack`,
+          deps,
+          insideForEach,
+          inLane,
           fault,
         )
         if (
@@ -755,35 +758,6 @@ function validateOperation(
           )
           continue
         }
-        const landedBindingOk = (t: SkillTargetIntent | undefined): boolean =>
-          t !== undefined && LANDED_LANE_INTENTS.has(t)
-        if ('target' in landedOp && !landedBindingOk(landedOp.target)) {
-          fault(
-            'invalid_field_value',
-            `${lpath}.target`,
-            `onLanded ops must target 'loop_target', 'self', 'other_enemy', or 'other_enemies' -- got '${landedOp.target}'`,
-          )
-        }
-        if ('selector' in landedOp && landedOp.selector !== undefined) {
-          const landedSelector = landedOp.selector
-          if (!landedBindingOk(landedSelector.target)) {
-            fault(
-              'invalid_field_value',
-              `${lpath}.selector.target`,
-              `onLanded selector targets must be 'loop_target', 'self', 'other_enemy', or 'other_enemies' -- got '${landedSelector.target}'`,
-            )
-          }
-          if (
-            landedSelector.kind === 'identity' &&
-            !landedBindingOk(landedSelector.source)
-          ) {
-            fault(
-              'invalid_field_value',
-              `${lpath}.selector.source`,
-              `onLanded selector sources must be 'loop_target', 'self', 'other_enemy', or 'other_enemies' -- got '${landedSelector.source}'`,
-            )
-          }
-        }
         validateOperation(
           landedOp,
           lpath,
@@ -797,7 +771,7 @@ function validateOperation(
     }
     case 'heal': {
       requireTarget(op.target)
-      if (op.amount !== undefined) validateExpression(op.amount, `${path}.amount`, fault)
+      if (op.amount !== undefined) validateExpression(op.amount, `${path}.amount`, deps, insideForEach, inLane, fault)
       if (op.fractionOfMaxHp !== undefined && (op.fractionOfMaxHp < 0 || op.fractionOfMaxHp > 1)) {
         fault('invalid_field_value', `${path}.fractionOfMaxHp`, 'fractionOfMaxHp must be in [0, 1]')
       }
@@ -817,9 +791,9 @@ function validateOperation(
     case 'apply_buff': {
       requireTarget(op.target)
       requireBuffRef(op.definitionId)
-      if (op.stacks !== undefined) validateExpression(op.stacks, `${path}.stacks`, fault)
-      if (op.chance !== undefined) validateExpression(op.chance, `${path}.chance`, fault)
-      if (op.durationOverride !== undefined) validateExpression(op.durationOverride, `${path}.durationOverride`, fault)
+      if (op.stacks !== undefined) validateExpression(op.stacks, `${path}.stacks`, deps, insideForEach, inLane, fault)
+      if (op.chance !== undefined) validateExpression(op.chance, `${path}.chance`, deps, insideForEach, inLane, fault)
+      if (op.durationOverride !== undefined) validateExpression(op.durationOverride, `${path}.durationOverride`, deps, insideForEach, inLane, fault)
       if (op.reactionEligibility !== undefined && !REACTION_ELIGIBILITIES.has(op.reactionEligibility)) {
         fault('invalid_field_value', `${path}.reactionEligibility`, `unknown eligibility '${String(op.reactionEligibility)}'`)
       }
@@ -841,7 +815,7 @@ function validateOperation(
           fault('invalid_field_value', `${path}.stacks`, `'all' is only legal on consume_buff_stacks`)
         }
       } else {
-        validateExpression(op.stacks, `${path}.stacks`, fault)
+        validateExpression(op.stacks, `${path}.stacks`, deps, insideForEach, inLane, fault)
       }
       return
     }
@@ -885,13 +859,13 @@ function validateOperation(
     }
     case 'push_gauge': {
       requireTarget(op.target)
-      validateExpression(op.fractionOfMax, `${path}.fractionOfMax`, fault)
+      validateExpression(op.fractionOfMax, `${path}.fractionOfMax`, deps, insideForEach, inLane, fault)
       return
     }
     case 'gain_resource':
     case 'consume_resource': {
       requireTarget(op.target)
-      if (op.amount !== 'all') validateExpression(op.amount, `${path}.amount`, fault)
+      if (op.amount !== 'all') validateExpression(op.amount, `${path}.amount`, deps, insideForEach, inLane, fault)
       if (typeof op.resourceId !== 'string' || op.resourceId.length === 0) {
         fault('invalid_field_value', `${path}.resourceId`, 'resourceId must be a non-empty string')
       }
@@ -899,7 +873,7 @@ function validateOperation(
     }
     case 'apply_shield': {
       requireTarget(op.target)
-      validateExpression(op.amount, `${path}.amount`, fault)
+      validateExpression(op.amount, `${path}.amount`, deps, insideForEach, inLane, fault)
       return
     }
     case 'read_stacks': {
@@ -986,7 +960,11 @@ function validateTargetIntent(
     return
   }
   if (target === 'loop_target' && !insideForEach && !insideLandedLane) {
-    fault('loop_target_outside_for_each', path, `'loop_target' is only valid inside for_each_target`)
+    fault(
+      'loop_target_outside_for_each',
+      path,
+      `'loop_target' is only valid inside for_each_target or a deal_damage onLanded lane`,
+    )
   }
   if (LANDED_LANE_ONLY_INTENTS.has(target) && !insideLandedLane) {
     fault(
@@ -1141,6 +1119,9 @@ function validateModifier(
 function validateExpression(
   expr: ScalarExpression,
   path: string,
+  deps: SkillDefinitionValidationDeps,
+  insideForEach: boolean,
+  insideLandedLane: boolean,
   fault: (code: SkillDefinitionFaultCode, path: string, message: string) => void,
 ): void {
   if (typeof expr === 'number') {
@@ -1171,23 +1152,30 @@ function validateExpression(
         return
       }
       for (const [index, value] of expr.values.entries()) {
-        validateExpression(value, `${path}.values[${index}]`, fault)
+        validateExpression(value, `${path}.values[${index}]`, deps, insideForEach, insideLandedLane, fault)
       }
       return
     case 'subtract':
     case 'divide':
-      validateExpression(expr.left, `${path}.left`, fault)
-      validateExpression(expr.right, `${path}.right`, fault)
+      validateExpression(expr.left, `${path}.left`, deps, insideForEach, insideLandedLane, fault)
+      validateExpression(expr.right, `${path}.right`, deps, insideForEach, insideLandedLane, fault)
       return
     case 'clamp':
-      validateExpression(expr.value, `${path}.value`, fault)
-      validateExpression(expr.min, `${path}.min`, fault)
-      validateExpression(expr.max, `${path}.max`, fault)
+      validateExpression(expr.value, `${path}.value`, deps, insideForEach, insideLandedLane, fault)
+      validateExpression(expr.min, `${path}.min`, deps, insideForEach, insideLandedLane, fault)
+      validateExpression(expr.max, `${path}.max`, deps, insideForEach, insideLandedLane, fault)
       return
     case 'if':
-      validateConditionShallow(expr.condition, `${path}.condition`, fault)
-      validateExpression(expr.then, `${path}.then`, fault)
-      validateExpression(expr.else, `${path}.else`, fault)
+      validateConditionInner(
+        expr.condition,
+        `${path}.condition`,
+        deps,
+        insideForEach,
+        insideLandedLane,
+        fault,
+      )
+      validateExpression(expr.then, `${path}.then`, deps, insideForEach, insideLandedLane, fault)
+      validateExpression(expr.else, `${path}.else`, deps, insideForEach, insideLandedLane, fault)
       return
   }
 }
@@ -1201,7 +1189,6 @@ function validateValueQuery(
     fault('malformed_expression', `${path}.query`, `unknown value query '${String(query.query)}'`)
     return
   }
-  const needTarget = 'target' in query && query.target !== undefined
   if ('target' in query) {
     if (!SKILL_TARGET_INTENTS.has(query.target)) {
       fault('malformed_expression', `${path}.target`, `unknown target intent '${String(query.target)}'`)
@@ -1214,7 +1201,6 @@ function validateValueQuery(
       // accepted (the for_each binding resolves it at RESOLVE).
     }
   }
-  void needTarget
   switch (query.query) {
     case 'buff_stacks':
     case 'buff_duration':
@@ -1260,17 +1246,6 @@ function validateCondition(
   validateConditionInner(condition, path, deps, insideForEach, insideLandedLane, fault)
 }
 
-/** Expression-level conditions can't reach the loop binding flag -- they
-    inherit legality from the op that hosts them (validateExpression calls
-    this shallow variant; the op walk tracks insideForEach separately). */
-function validateConditionShallow(
-  condition: SkillCondition,
-  path: string,
-  fault: (code: SkillDefinitionFaultCode, path: string, message: string) => void,
-): void {
-  validateConditionInner(condition, path, {}, true, false, fault)
-}
-
 function validateConditionInner(
   condition: SkillCondition,
   path: string,
@@ -1300,7 +1275,7 @@ function validateConditionInner(
       return
     case 'hp_percent_below':
       validateTargetIntent(condition.target, `${path}.target`, insideForEach, insideLandedLane, fault)
-      validateExpression(condition.threshold, `${path}.threshold`, fault)
+      validateExpression(condition.threshold, `${path}.threshold`, deps, insideForEach, insideLandedLane, fault)
       return
     case 'resource_at_least':
       if (typeof condition.resourceId !== 'string' || condition.resourceId.length === 0) {

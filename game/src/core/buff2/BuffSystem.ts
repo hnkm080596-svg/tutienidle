@@ -981,6 +981,9 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
       return
     }
     this.applyPeriodicGrowth(instance, lctx)
+    // The feed can retire the instance (consume-at-zero parity); a
+    // removed instance emits nothing -- dead instances do not tick.
+    if (this.store.get(instance.instanceId) !== instance) return
     const computation = this.computeUnitRequest(instance, unit.periodicId)
     if (computation === undefined) return
     lctx.events.emit({
@@ -999,7 +1002,10 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
       ticks). A marker matches when its def declares periodic_growth
       naming the ticking definitionId AND the marker's sourceId equals
       the ticking instance's sourceId (own-source Sinh Co binding);
-      `consume: true` removes the marker in the same transaction. */
+      `consume: true` removes the marker in the same transaction.
+      This mirrors commitStacks' clamp/remove/emit shape on a lifecycle
+      ctx by design -- any change to commitStacks' zero/drain contract
+      must be re-mirrored here (drift-risk parity). */
   private applyPeriodicGrowth(
     instance: BuffInstance,
     lctx: BuffLifecycleContext,

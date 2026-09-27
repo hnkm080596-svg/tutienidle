@@ -337,5 +337,7 @@ describe('periodic growth feed (spec D11)', () => {
     apply(w, m.id)
     w.system.onHolderTurnEnd(TEST_ENTITIES.targetA, w.makeLctx())
     expect(w.store.all().some((i) => i.definitionId === d.id)).toBe(false)
+    // Dead instances do not tick: no periodic request commits post-removal.
+    expect(lastRequests(w)).toHaveLength(0)
   })
 })
