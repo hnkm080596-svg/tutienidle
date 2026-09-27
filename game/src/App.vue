@@ -21,6 +21,8 @@ import { GamePresentationCoordinator } from './presentation/GamePresentationCoor
 import { createGamePresentation } from './presentation/createGamePresentation'
 import { bindPresentationActive } from './presentation/bindPresentationActive'
 import { bindCombatAudio } from './presentation/audio/combatAudioBinding'
+import { bindUiAudio } from './presentation/audio/uiAudioBinding'
+import { bindAmbientAudio } from './presentation/audio/ambientAudioDriver'
 import { setReducedShakeEnabled } from './presentation/vfx/screenShakePolicy'
 import { useAudioStore } from './stores/audio'
 import { RafClockSource } from './presentation/clock/RafClockSource'
@@ -199,6 +201,13 @@ const unbindCombatAudio = bindCombatAudio(gameManager.eventBus, {
 // W10: push the reducedShake flag into the presentation shake gate — scenes
 // read the module-level scale (src/game may not import stores).
 const audioStore = useAudioStore()
+
+// W7: uiStore panel/wheel transitions -> ui.panel.*/ui.wheel.* cues.
+const unbindUiAudio = bindUiAudio(ui)
+
+// W8: committed route -> music slot crossfade (silent until real assets).
+const unbindAmbientAudio = bindAmbientAudio(coordinator, audioStore)
+
 watch(
   () => audioStore.reducedShake,
   (value) => setReducedShakeEnabled(value),
@@ -684,6 +693,8 @@ onUnmounted(() => {
   routeAdapter.dispose()
   unbindPresentationActive()
   unbindCombatAudio()
+  unbindUiAudio()
+  unbindAmbientAudio()
   window.removeEventListener('pointerdown', unlockAudioOnFirstGesture)
   phaserSceneAdapter.dispose()
   assetBundleManager.dispose()
