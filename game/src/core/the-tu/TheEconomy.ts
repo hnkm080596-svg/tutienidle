@@ -13,8 +13,9 @@ import { asReactiveEconomy, asTheEconomy } from './TheTuCapabilities'
 // - eligibility is the ung_the marker's presence -- never cultivationPath
 //   re-reads at combat time (mechanics are participant-generic).
 // - the own-basic-lands income lives on the marker's theEconomy grant
-//   (review P1 single-channel lock -- TurnSkillDefinition has no
-//   landed-cast gain field, so THAM_THE carries none).
+//   (review P1 single-channel lock -- the landed-cast gain channel is
+//   TurnSkillDefinition.theGainOnLandedCast on the skill def itself, so
+//   THAM_THE carries no duplicate grant field).
 // - every mutation goes through grantThe's single clamp expression.
 // - buff-megaplan M4: grant reads take ActiveCapabilityGrant[]
 //   (buffs.getCapabilities(entityId)); pool-era effect iteration retired.

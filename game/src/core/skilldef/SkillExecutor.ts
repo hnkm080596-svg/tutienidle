@@ -41,7 +41,7 @@ import {
   evaluateResolvedScalar,
 } from './ResolvedSkillPlan'
 import type { SkillResolveInput } from './SkillResolver'
-import { SkillResolver, SkillResolverError } from './SkillResolver'
+import { SkillResolver } from './SkillResolver'
 import type { ActiveSkillDefinition } from './SkillDefinition'
 import type { SkillDefinitionRegistry } from './SkillDefinitionRegistry'
 
@@ -925,7 +925,4 @@ export class SkillExecutor {
   }
 }
 
-// Re-exported for callers wiring cast requests (resolver stays the
-// plan producer; the executor drives it).
-export { SkillResolverError }
 export type { ActiveSkillDefinition }

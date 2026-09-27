@@ -205,6 +205,10 @@ function adaptOne(
     inner.push(...adaptAilmentInteractions(def, 'loop_target'))
     // 'Landed' consequences for a non-damaging enemy-scope op bind to the
     // per-target apply lane (the op landing on a target IS its landing).
+    // They compile INSIDE for_each_target, so their intents must be
+    // lane-legal: loop_target family only -- landed-lane-only intents
+    // (other_enemy/other_enemies) are a catalog fault here, unlike the
+    // same field on a damaging def where they mint a landed lane.
     inner.push(...(def.landedConsequences ?? []))
     if (inner.length > 0) {
       operations.push({ type: 'for_each_target', target: 'affected_targets', ops: inner })

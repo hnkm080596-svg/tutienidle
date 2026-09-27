@@ -9,6 +9,7 @@ import type { ActionDamageInfo, HitResolveOptions } from '../ActionImpactSystem'
 import type { ActionTargeting, CombatVfxPresetId } from '../CombatAction'
 import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
 import { areaFor } from '../ActionTargetingSystem'
+import { consumeThe } from '../../the-tu/TheEconomy'
 import { entityGridPosition, type GridPosition } from '../BattleGrid'
 import { isCellInShape, type AoeShapeSpec } from './AoeShape'
 import { isActionAllowed } from './ActionValidator'
@@ -434,12 +435,21 @@ export function consumeResourceFor(
     return
   }
 
-  const field = RESOURCE_FIELD[skill.resourceType]
+  if (skill.resourceType === 'the') {
+    // TheEconomy owns every currentThe write; clamping the amount to the
+    // pool keeps this raw-debit lane's floor-at-zero contract while the
+    // field mutation itself stays single-site.
+    consumeThe(entity, Math.min(required, entity.currentThe ?? 0))
+    return
+  }
 
   // Pool never goes negative: a drain between the affordability gate and
   // this commit must not write a negative pool (pay-or-skip lanes fault
   // instead; this raw-debit lane floors at zero).
-  entity[field] = Math.max(0, (entity[field] ?? 0) - required)
+  entity[RESOURCE_FIELD[skill.resourceType]] = Math.max(
+    0,
+    (entity[RESOURCE_FIELD[skill.resourceType]] ?? 0) - required,
+  )
 }
 
 export interface SelectedAction {

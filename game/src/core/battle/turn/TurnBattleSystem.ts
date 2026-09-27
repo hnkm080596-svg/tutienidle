@@ -2019,20 +2019,23 @@ export class TurnBattleSystem {
         // Fall through -- the shared Tro window at the tail fires once,
         // same as the legacy lane's own call below.
       } else if (this.runtime !== undefined) {
-        // M5d -- the deferred resolve splits two ways. A WHIFF: the armed
-        // id still resolves to a real def (same special/ultimate lookup
-        // the declare arm used) but captured no targets -- silent
-        // fizzle, legacy parity: no warn, no castBlocked, the tail ally
-        // window treats it like any whiffed cast. A DANGLING armed id:
-        // no def behind it -- adapter-unsupported/unresolvable, report
-        // loudly and stamp castBlocked so the window/follow-up gates
-        // reject it, parity with unrouted normal casts. `declared.skillId`
-        // carries the armed charged id on this lane.
+        // M5d -- the deferred resolve splits three ways. A WHIFF: the
+        // armed id still resolves to a real def (same special/ultimate
+        // lookup the declare arm used) but captured NO def at declare
+        // (chargedSkill == null) -- silent fizzle, legacy parity: no warn,
+        // no castBlocked, the tail ally window treats it like any whiffed
+        // cast. A DANGLING armed id has no def behind it. A DECLINE: the
+        // def captured at declare routed to null -- adapter-unsupported or
+        // a SkillResolverError the plan could not express; the cast
+        // already paid cost+cooldown at charge-init so it reports loudly
+        // and stamps castBlocked like the dangling case, never the silent
+        // whiff branch. `declared.skillId` carries the armed charged id
+        // on this lane.
         const armedCharged =
           declared.skillId !== undefined &&
           (actor.special?.skill.id === declared.skillId ||
             actor.ultimate?.skill.id === declared.skillId)
-        if (!armedCharged) {
+        if (!armedCharged || declared.chargedSkill != null) {
           declared.castBlocked = true
           this.reportUnroutedCast(
             actor,

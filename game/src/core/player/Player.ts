@@ -9,6 +9,7 @@ import {
   type CombatAiStrategy,
 } from '../battle/CombatAiStrategy'
 import { addCultivation } from '../cultivation/CultivationSystem'
+import { drainAllThe } from '../the-tu/TheEconomy'
 import type { RewardReceiver } from '../reward/RewardSystem'
 import { getRealmIndex } from '../realm/realmSystem'
 import type { FoundationType } from '../breakthrough/FoundationType'
@@ -647,7 +648,7 @@ export function playerToCombatEntity(
  * battles. Production always supplies PlayerData.
  */
 export function resetBattleScopedResources(entity: CombatEntity): void {
-  entity.currentThe = 0
+  drainAllThe(entity)
 }
 
 /**

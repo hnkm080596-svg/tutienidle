@@ -8,11 +8,9 @@
 // outcome), so it throws CombatSettlementFault rather than silently
 // no-op'ing.
 //
-// currentThe writes are direct field mutation -- matching the existing
-// TheEconomy practice (grantThe / tryPayProcCost write entity.currentThe
-// directly; the The pool has no vitals-event contract). gain routes
-// through grantThe anyway so the cap stays single-authority; consume
-// writes the clamped result directly like consumeResourceFor.
+// currentThe writes route through TheEconomy -- grant via grantThe (cap
+// stays single-authority), partial consume via consumeThe, consume-all
+// via drainAllThe; no inline entity.currentThe mutation lives here.
 //
 // Consume semantics: numeric consume is all-or-nothing -- an
 // unaffordable amount throws CombatOperationSkip('insufficient_resource')
@@ -118,6 +116,8 @@ export class EntityResourceAdapter implements ResourceAuthority {
     _ctx: CombatAuthorityExecutionContext,
   ): ConsumeResult {
     const entity = requireEntity(this.resolveEntity, targetId)
+    // The pool is engine-owned -- a wired 'the' channel is intentionally
+    // ignored; the RESOURCE_THE branch below handles it unconditionally.
     const channel =
       resourceId === RESOURCE_THE ? undefined : this.requireChannel(resourceId)
     if (amount === 'all' && valueSource === 'cast_snapshot') {

@@ -802,7 +802,7 @@ describe('SkillResolver -- structural guards + determinism', () => {
   it('throws when gain_resource authors amount all', () => {
     const def = activeDef({
       operations: [
-        { type: 'gain_resource', target: 'self', resourceId: 'mp', amount: 'all' },
+        { type: 'gain_resource', target: 'self', resourceId: 'mana', amount: 'all' },
       ],
     })
     expect(() => resolve([def])).toThrow(SkillResolverError)

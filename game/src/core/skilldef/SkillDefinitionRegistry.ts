@@ -102,9 +102,12 @@ const LANDED_LANE_INTENTS: ReadonlySet<string> = new Set<SkillTargetIntent>([
     `if` whose then/else may carry one further `if` -- the third faults. */
 const LANDED_LANE_MAX_IF_DEPTH = 2
 
-/** Closed resource set for resource_* value queries -- must mirror
-    TurnSkillPlanRuntime's resource readers ('the'/'mana'/'ward'). */
-const RESOURCE_QUERY_IDS: ReadonlySet<string> = new Set(['the', 'mana', 'ward'])
+/** Closed resource set -- every authored resourceId surface (resource_*
+    value queries, resource_at_least conditions, gain/consume_resource
+    ops) must mirror the runtime's resource readers/channels
+    ('the'/'mana'/'ward'): an out-of-set id faults at define time instead
+    of throwing mid-execute past the decline lane. */
+const RESOURCE_IDS: ReadonlySet<string> = new Set(['the', 'mana', 'ward'])
 
 /** Track state while validating inside a deal_damage onLanded lane.
     `depth` counts enclosing onLanded lists (0 = outside a lane),
@@ -896,6 +899,12 @@ function validateOperation(
       if (op.amount !== 'all') validateExpression(op.amount, `${path}.amount`, deps, insideForEach, inLane, fault)
       if (typeof op.resourceId !== 'string' || op.resourceId.length === 0) {
         fault('invalid_field_value', `${path}.resourceId`, 'resourceId must be a non-empty string')
+      } else if (!RESOURCE_IDS.has(op.resourceId)) {
+        fault(
+          'invalid_field_value',
+          `${path}.resourceId`,
+          `unknown resourceId '${op.resourceId}' -- expected one of 'the', 'mana', 'ward'`,
+        )
       }
       return
     }
@@ -994,6 +1003,11 @@ function validateTargetIntent(
       `'loop_target' is only valid inside for_each_target or a deal_damage onLanded lane`,
     )
   }
+  // Set-valued intents (other_enemies, all_enemies, ...) are accepted on
+  // condition/query targets by design: resolveIntentSingle binds member[0]
+  // -- the defined read semantics for these sites. Sites needing a true
+  // single binding (read_stacks `into`, target_hit_landed gates) run
+  // requireSingleBindingTarget instead and reject set-valued intents.
   if (LANDED_LANE_ONLY_INTENTS.has(target) && !insideLandedLane) {
     fault(
       'invalid_field_value',
@@ -1241,7 +1255,7 @@ function validateValueQuery(
       // Closed resource set -- execution (TurnSkillPlanRuntime
       // resourceCurrent/resourceMax) throws on anything else, so an
       // unknown id must fault at define time, not mid-cast.
-      if (!RESOURCE_QUERY_IDS.has(query.resourceId as string)) {
+      if (!RESOURCE_IDS.has(query.resourceId as string)) {
         fault(
           'malformed_expression',
           `${path}.resourceId`,
@@ -1314,6 +1328,12 @@ function validateConditionInner(
     case 'resource_at_least':
       if (typeof condition.resourceId !== 'string' || condition.resourceId.length === 0) {
         fault('malformed_condition', `${path}.resourceId`, 'resourceId must be a non-empty string')
+      } else if (!RESOURCE_IDS.has(condition.resourceId)) {
+        fault(
+          'malformed_condition',
+          `${path}.resourceId`,
+          `unknown resourceId '${condition.resourceId}' -- expected one of 'the', 'mana', 'ward'`,
+        )
       }
       if (typeof condition.amount !== 'number' || condition.amount < 0) {
         fault('malformed_condition', `${path}.amount`, 'amount must be a number >= 0')
