@@ -251,6 +251,26 @@ function adaptOne(
       : undefined
   const instances = adaptInstances(def, report, reportPrefix)
 
+  // percent-of-max cost is mana-pool semantics: on a non-mana authored
+  // resourceType it must not silently re-stamp mana -- report and let
+  // the flat resourceCost branch below apply instead.
+  const percentCostIsManaApplicable =
+    def.resourceType === undefined ||
+    def.resourceType === 'mana' ||
+    def.resourceType === 'none'
+  if (
+    def.resourceCostPercentOfMax !== undefined &&
+    !percentCostIsManaApplicable
+  ) {
+    report(
+      `${reportPrefix}.resourceCostPercentOfMax(non-mana resourceType: percent-of-max is mana-pool semantics -- flat resourceCost applies)`,
+    )
+  }
+  const percentCost =
+    def.resourceCostPercentOfMax !== undefined && percentCostIsManaApplicable
+      ? { resourceType: 'mana' as const, percentOfMax: def.resourceCostPercentOfMax }
+      : undefined
+
   return {
     kind: 'active',
     id: def.id as SkillId,
@@ -261,11 +281,11 @@ function adaptOne(
       cooldownTurns: def.cooldownTurns,
       ...(def.chargeTurns !== undefined ? { chargeTurns: def.chargeTurns } : {}),
     },
-    ...(def.resourceCostPercentOfMax !== undefined
+    ...(percentCost !== undefined
       ? // Spec D8/F10 -- percent-of-max cost rides the authored
         // {percentOfMax} form (mana-only); the resolver folds it
         // through statScalars.maxMp.
-        { cost: { resourceType: 'mana', percentOfMax: def.resourceCostPercentOfMax } }
+        { cost: percentCost }
       : def.resourceType !== undefined &&
           def.resourceType !== 'none' &&
           def.resourceCost !== undefined &&

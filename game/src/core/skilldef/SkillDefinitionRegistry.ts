@@ -450,6 +450,17 @@ function validateActive(
     )
   }
 
+  if (empowerment !== undefined && cadence?.chargeTurns !== undefined) {
+    // Charge-resolve replays the ROOT payload verbatim (deferredResolve
+    // runs payloadOnly -> the empowerment gate is skipped): riders and
+    // empowered damage would silently drop. Forbid the combination.
+    fault(
+      'invalid_field_value',
+      'variants.empowerment',
+      'empowerment and cadence.chargeTurns are mutually exclusive on one definition',
+    )
+  }
+
   if (definition.landed !== undefined && !LANDED_SEMANTICS.has(definition.landed)) {
     fault('invalid_field_value', 'landed', `unknown landed semantics '${String(definition.landed)}'`)
   }

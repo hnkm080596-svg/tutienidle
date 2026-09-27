@@ -2340,7 +2340,9 @@ export class TurnBattleSystem {
         // (consume_resource op), the consume-all burn, the grants and
         // the appliesBuffs ops -- none of it re-runs here.
 
-        if (payloadSkill?.targetScope === 'self') {
+        // A blocked cast records no targets -- the swing never
+        // happened, so the log/landed lanes must not see the actor.
+        if (payloadSkill?.targetScope === 'self' && declared.castBlocked !== true) {
           targetIds.push(actor.id)
         }
 
