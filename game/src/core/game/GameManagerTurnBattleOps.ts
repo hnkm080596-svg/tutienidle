@@ -546,16 +546,18 @@ export class GameManagerTurnBattleOps {
       const readyActor = this.turnBattleSystem.tickPacing(battle, false)
 
       if (readyActor !== null) {
-        // Task 11 -- a queued repeat/multicast execution is NOT a turn
-        // choice: manual mode must not park it awaiting input (the cast
-        // was already committed; the follow-up resolves automatically).
-        // Same for a committed reactive follow-up (Phan/Tro counter): it
-        // declares through declareReactiveBypass with a forced payload,
-        // so an AWAITING_INPUT pause there would solicit a manual choice
-        // the declare then silently discards.
+        // A committed claim is NOT a turn choice: manual mode must not
+        // park it awaiting input. isCommittedFollowUpClaim owns the
+        // enumeration of committed lanes on the battle system -- a
+        // queued repeat/multicast execution, a reactive follow-up
+        // (Phan/Tro counter declaring through declareReactiveBypass's
+        // forced payload), and an in-flight charge whose declare ticks
+        // or resolves the committed payload -- so every such lane is
+        // exempt automatically rather than being listed per call site.
+        // An AWAITING_INPUT pause on any of them would solicit a manual
+        // choice the declare then silently discards.
         const isCommittedFollowUp =
-          this.turnBattleSystem.isPendingQueuedExecution(readyActor.id) ||
-          this.turnBattleSystem.isPendingReactiveBypass(readyActor.id)
+          this.turnBattleSystem.isCommittedFollowUpClaim(readyActor)
 
         this.turnToken.claim({
           actorId: readyActor.id,
@@ -2448,6 +2450,13 @@ export class GameManagerTurnBattleOps {
       // token. Invariant: a committed claim is never re-parked as manual,
       // so the flag moves now; the queued replay is an idempotent no-op
       // that only preserves command ordering.
+      //
+      // Structural dependency: the flush is safe ONLY because a non-null
+      // `stranded` implies enabled === false, so the immediate write and
+      // the queued replay both move the flag the same direction. A future
+      // rescue-on-enable refactor would break that idempotency (queued
+      // value would differ from the flushed one) - revisit this ordering
+      // before adding one.
       this.presentationOps.runtime.setBattleManualMode(false)
       this.beginTurnPipeline(stranded, 'ready')
     }

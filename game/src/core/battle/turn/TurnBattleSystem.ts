@@ -520,10 +520,17 @@ export class TurnBattleSystem {
   private pendingReactiveEntry: QueuedFollowUp | null = null
 
   /**
-   * Task 11 -- same bridge pattern as pendingFollowUpBypassActorId, but
-   * the entry IS the action: dequeueQueuedExecution() sets it,
-   * declareActorAction() consumes it once and builds the declared action
-   * from the descriptor (no selectAction, no turn machinery).
+   * Task 11 -- same bridge pattern as pendingReactiveEntry, but the
+   * entry IS the action: dequeueFollowUpActor() sets it when it drains
+   * battle.queuedExecutions, and declareActorAction() consumes it once,
+   * building the declared action from the descriptor (no selectAction,
+   * no turn machinery).
+   *
+   * Consumption is NOT the reactive lane's contract though: this field
+   * is cleared unconditionally at the top of declareActorAction, before
+   * the actor-id match -- a stale entry is dropped outright rather than
+   * left parked for a later unrelated declare to trip over.
+   * pendingReactiveEntry clears only on a match (see the declare site).
    */
   private pendingQueuedExecution: TurnQueuedExecution | null = null
 
@@ -1028,9 +1035,16 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Defect-fix Task 1 -- shared bởi tickPacing() và peekNextActor():
-   * dequeue follow-up actor kế tiếp từ queue (nếu có, còn sống, dưới
-   * reciprocity cap). Bỏ qua id của actor chết không tốn chain-depth.
+   * Defect-fix Task 1 -- shared by tickPacing() and
+   * dequeueNextActorForClaim(): dequeues the next follow-up actor from
+   * the queue (if any, still alive, under the reciprocity cap). Dead
+   * actors' ids are skipped without spending chain-depth.
+   *
+   * This is a COMMITTING dequeue, not a preview: it mutates
+   * battle.queuedExecutions / battle.queuedFollowUps and parks the
+   * popped entry on pendingQueuedExecution / pendingReactiveEntry so
+   * declareActorAction() can consume it. Only call it for an actor the
+   * caller is about to resolve.
    */
   private dequeueFollowUpActor(battle: TurnBattle): TurnBattleParticipant | null {
     // Task 11 -- prepared executions (repeat/multicast) drain FIRST: they
@@ -1256,8 +1270,9 @@ export class TurnBattleSystem {
       }
     }
 
-    // Defect-fix Task 1 -- follow-up/counter queue TRƯỚC gauge order: queue
-    // là production path duy nhất đọc (peekNextActor không chạy trong loop).
+    // Defect-fix Task 1 -- follow-up/counter queue BEFORE gauge order:
+    // the queue is the only production read path (dequeueNextActorForClaim
+    // does not run inside the pacing loop).
     const followUpActor = this.dequeueFollowUpActor(battle)
 
     if (followUpActor) {
@@ -1313,14 +1328,21 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Slice 7 (Completion Task 10) -- tìm actor kế tiếp SẴN SÀNG hành động
-   * mà KHÔNG resolve gì cả. Gauge advancement chạy thật (mutation để
-   * tìm ai tới lượt là thật và GIỮ NGUYÊN), nhưng dừng trước buff tick /
-   * action resolution / turn-counter increment. GameManager manual mode
-   * gọi method này trước để biết có cần pause chờ input player không;
-   * resume sau đó bằng resolveActorTurn(battle, actor, chosenSlot).
+   * Slice 7 (Completion Task 10) -- pick the next READY actor WITHOUT
+   * resolving the turn. Despite being the "peek" half of the old
+   * peek-then-resolve split, this is a COMMITTING read, not a preview:
+   * gauge advancement runs for real (the mutation that finds whose turn
+   * it is stays), and a queued follow-up/execution is DEQUEUED -- its
+   * entry is parked on pendingQueuedExecution / pendingReactiveEntry for
+   * declareActorAction() to consume once. It stops before buff tick /
+   * action resolution / turn-counter increment only. Callers must
+   * therefore resolve the returned actor (resolveActorTurn /
+   * beginTurnPipeline), never treat the result as a discarded preview --
+   * a peek with no claim following leaves a committed pending entry
+   * parked. (The read-only turn-order preview lives in
+   * TurnOrderPreview.peekUpcomingActors, which touches none of this.)
    */
-  peekNextActor(battle: TurnBattle): TurnBattleParticipant | null {
+  dequeueNextActorForClaim(battle: TurnBattle): TurnBattleParticipant | null {
     // Countdown phase: combat chưa bắt đầu -- không ai tới lượt.
     if (battle.state !== 'fighting') {
       return null
@@ -1366,6 +1388,13 @@ export class TurnBattleSystem {
     // descriptor IS the remainder of an already-committed cast -- it only
     // re-resolves the payload (composite picks re-roll per execution).
     const queuedExec = this.pendingQueuedExecution
+    // Consumed unconditionally on entry, BEFORE the actor match: the
+    // dequeue already committed this lane to the actor it surfaced, so a
+    // mismatch means the parked entry is stale -- dropping it beats
+    // leaving it for a later unrelated declare to trip over. The
+    // reactive lane below intentionally differs: pendingReactiveEntry
+    // clears only when the declaring actor matches, so a mismatched
+    // declare leaves that entry parked.
     this.pendingQueuedExecution = null
 
     if (queuedExec && queuedExec.actorId === actor.id) {
@@ -1374,7 +1403,9 @@ export class TurnBattleSystem {
 
     // The Tu Reimagined (spec 7.1, plan v2.4 P0.1) -- a queued reactive
     // entry branches at the TOP: real action through declare -> impact,
-    // but none of the natural-turn lifecycle below runs for it.
+    // but none of the natural-turn lifecycle below runs for it. Clears
+    // ONLY on an actor-id match -- see the unconditional-consume note on
+    // pendingQueuedExecution above.
     if (this.pendingReactiveEntry?.actorId === actor.id) {
       const entry = this.pendingReactiveEntry
       this.pendingReactiveEntry = null
@@ -2903,25 +2934,60 @@ export class TurnBattleSystem {
    * Manual mode must NOT await player input for these -- the cast was
    * already chosen; the follow-up resolves automatically.
    *
-   * Sibling predicate isPendingReactiveBypass covers the reactive lane;
-   * every manual-mode exemption must consult BOTH (claim site in
-   * GameManagerTurnBattleOps.stepTurnBattle, drain gate in
-   * CombatAnimationRuntime.drainPendingPlayback).
+   * Lane-level half of isCommittedFollowUpClaim -- claim and drain
+   * sites consult that predicate, not this one.
    */
   isPendingQueuedExecution(actorId: string): boolean {
     return this.pendingQueuedExecution?.actorId === actorId
   }
 
   /**
-   * Same contract as isPendingQueuedExecution for the REACTIVE lane: a
-   * queued Phan/Tro counter dequeued by dequeueFollowUpActor parks in
+   * The reactive lane's half of isCommittedFollowUpClaim: a queued
+   * Phan/Tro counter dequeued by dequeueFollowUpActor parks in
    * pendingReactiveEntry until declareActorAction consumes it via
    * declareReactiveBypass with a forced payload -- a committed action,
    * never a manual choice, so manual mode must neither pause for it nor
    * re-park it on drain.
+   *
+   * Consumption differs from the queued-execution lane despite the
+   * shared bridge shape: pendingReactiveEntry clears only when the
+   * declaring actor matches (a mismatched declare leaves it parked),
+   * while pendingQueuedExecution is dropped unconditionally at declare
+   * entry. Claim/drain sites read isCommittedFollowUpClaim, which hides
+   * that difference.
    */
   isPendingReactiveBypass(actorId: string): boolean {
     return this.pendingReactiveEntry?.actorId === actorId
+  }
+
+  /**
+   * The committed-claim predicate: is this actor's next declare already
+   * spoken for? True when ANY committed lane carries the payload:
+   *
+   * - a parked queued execution (repeat/multicast): the descriptor IS
+   *   the remainder of a committed cast, re-resolving the payload only;
+   * - a parked reactive entry (Phan/Tro bypass): declareReactiveBypass
+   *   runs a forced payload;
+   * - an in-flight charge (participant-carried chargingTurnsRemaining):
+   *   the declare's charge block replaces action resolution entirely
+   *   (the !isCharging gate), so a submitted manual choice is never
+   *   read.
+   *
+   * Manual mode must neither pause for nor re-park such a turn: an
+   * AWAITING_INPUT claim solicits a choice the declare then discards,
+   * and a drain that re-parked it would orphan the committed payload on
+   * an IDLE token. The claim site (GameManagerTurnBattleOps
+   * .stepTurnBattle) and the drain gate (CombatAnimationRuntime
+   * .drainPendingPlayback) consult THIS predicate alone, so a new
+   * committed lane joins the exemption here rather than by being
+   * enumerated per call site.
+   */
+  isCommittedFollowUpClaim(actor: TurnBattleParticipant): boolean {
+    return (
+      this.isPendingQueuedExecution(actor.id) ||
+      this.isPendingReactiveBypass(actor.id) ||
+      (actor.chargingTurnsRemaining ?? 0) > 0
+    )
   }
 
   /**
@@ -3498,9 +3564,10 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Thin wrapper (Slice 7): peekNextActor() + resolveActorTurn() không
-   * forced slot -- giữ nguyên signature/hành vi cho mọi caller Slice 1-6
-   * (auto mode, runToCompletion(), mọi test cũ).
+   * Thin wrapper (Slice 7): dequeueNextActorForClaim() +
+   * resolveActorTurn() with no forced slot -- unchanged signature and
+   * behavior for every Slice 1-6 caller (auto mode, runToCompletion(),
+   * the old tests).
    */
   resolveNextStep(battle: TurnBattle): TurnStepResult {
     // Intro phase (2026-09-07 plan Task 4): combat has not started - safe
@@ -3516,14 +3583,15 @@ export class TurnBattleSystem {
       return { state: 'countdown', actorId: '', skillId: '', targetIds: [], ccBlocked: false }
     }
 
-    // Trận đã kết thúc (victory/defeat) -- KHÔNG ghi đè state thành defeat
-    // (code-review fix: peekNextActor trả null cho state != fighting, nhánh
-    // dưới chỉ được phép set defeat khi trận thực sự không còn ai sống).
+    // Battle already ended (victory/defeat) -- do NOT overwrite state
+    // with defeat (code-review fix: dequeueNextActorForClaim returns null
+    // for state != fighting, so the branch below may set defeat only when
+    // the battle genuinely has no one left alive).
     if (battle.state !== 'fighting') {
       return { state: battle.state, actorId: '', skillId: '', targetIds: [], ccBlocked: false }
     }
 
-    const actor = this.peekNextActor(battle)
+    const actor = this.dequeueNextActorForClaim(battle)
 
     if (!actor) {
       battle.state = 'defeat'

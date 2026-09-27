@@ -177,8 +177,8 @@ describe('CombatScene lifecycle â€” listener khÃ´ng tÃ­ch lÅ©y qua re
   })
 
   it('rebindSession phải báo rebind cho onBattleStart để camera-latch sống qua reattach cùng session', () => {
-    // Pin source-contract: cùng sessionId => rebind (giữ latch); session
-    // khác/undefined => battle start (clear latch).
+    // Pin source-contract: same sessionId => rebind (keep latch);
+    // different/undefined session => battle start (clear latch).
     expect(combatSceneSource).toMatch(/context\.sessionId !== undefined &&\s*context\.sessionId === this\.initSessionId/)
     expect(combatSceneSource).toMatch(/onBattleStart\(\{ rebind: isSameSessionRebind \}\)/)
     expect(combatSceneSource).toMatch(/_skillVfxDriver\?\.reset\(options\?\.rebind \? 'rebind' : 'battle'\)/)

@@ -1666,10 +1666,10 @@ function system_tickCountdownPassthrough(battle: TurnBattle, system: TurnBattleS
 }
 
 // ---------------------------------------------------------------------------
-// Slice 7 (Completion Task 10) â€” peekNextActor / resolveActorTurn split
+// Slice 7 (Completion Task 10) -- dequeueNextActorForClaim / resolveActorTurn split
 // ---------------------------------------------------------------------------
 
-describe('TurnBattleSystem.peekNextActor', () => {
+describe('TurnBattleSystem.dequeueNextActorForClaim', () => {
   it('returns the next ready actor WITHOUT resolving anything (no turn consumed, state unchanged)', () => {
     const player = createCombatant({
       id: 'player',
@@ -1690,7 +1690,7 @@ describe('TurnBattleSystem.peekNextActor', () => {
     }
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
-    const actor = system.peekNextActor(battle)
+    const actor = system.dequeueNextActorForClaim(battle)
 
     expect(actor?.id).toBe('player')
     expect(battle.totalTurnsElapsed ?? 0).toBe(0)
@@ -1719,8 +1719,8 @@ describe('TurnBattleSystem.peekNextActor', () => {
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    expect(system.peekNextActor(battle)?.id).toBe('player')
-    expect(system.peekNextActor(battle)?.id).toBe('player')
+    expect(system.dequeueNextActorForClaim(battle)?.id).toBe('player')
+    expect(system.dequeueNextActorForClaim(battle)?.id).toBe('player')
   })
 
   it('returns null when no living combatant remains', () => {
@@ -1744,7 +1744,7 @@ describe('TurnBattleSystem.peekNextActor', () => {
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    expect(system.peekNextActor(battle)).toBeNull()
+    expect(system.dequeueNextActorForClaim(battle)).toBeNull()
   })
 })
 
@@ -1797,7 +1797,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
     }
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
-    const actor = system.peekNextActor(battle)
+    const actor = system.dequeueNextActorForClaim(battle)
 
     expect(actor).not.toBeNull()
 
@@ -1867,7 +1867,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
     }
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
-    const actor = system.peekNextActor(battle)
+    const actor = system.dequeueNextActorForClaim(battle)
 
     expect(actor).not.toBeNull()
 
@@ -1925,7 +1925,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
     }
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
-    const actor = system.peekNextActor(battle)
+    const actor = system.dequeueNextActorForClaim(battle)
 
     const step = system.resolveActorTurn(battle, actor!, 'special')
 

@@ -595,6 +595,40 @@ describe('CombatAnimationRuntime', () => {
     expect(battle.log?.at(-1)).toMatchObject({ actorId: 'player', skillId: 'phan_kich', targetIds: ['enemy'] })
   })
 
+  it('drain gate resolves an in-flight charge tick inline under manual mode (unit pin)', () => {
+    // Same contract for the charge lane: chargingTurnsRemaining +
+    // pendingChargedSkillId on the participant are a committed claim (the
+    // cast committed at charge-init and declareActorAction's !isCharging
+    // gate never reads a manual choice mid-charge), so drainPendingPlayback
+    // must not re-park the actor into awaitedManualActor on the live flag.
+    const { runtime, battle, player, enemy } = fixture()
+
+    player.chargingTurnsRemaining = 1
+    player.pendingChargedSkillId = 'charged_ult'
+    player.ultimate = {
+      skill: {
+        id: 'charged_ult',
+        cooldownTurns: 0,
+        chargeTurns: 1,
+        damage: { kind: 'physical', multiplier: 5 },
+        targeting: { shape: 'single' },
+      },
+      remainingCooldownTurns: 0,
+    }
+
+    runtime.setBattleManualMode(true)
+    runtime.notifyReadyActor(player)
+    runtime.drainPendingPlayback()
+
+    expect(runtime.isAwaitingManualTurnChoice()).toBe(false)
+    expect(runtime.getAwaitedManualActor()).toBeNull()
+    expect(runtime.isActionPlaybackWaiting()).toBe(false)
+    expect(player.chargingTurnsRemaining).toBeUndefined()
+    expect(player.pendingChargedSkillId).toBeUndefined()
+    expect(enemy.entity.currentHp).toBeLessThan(enemy.entity.maxHp)
+    expect(battle.log?.at(-1)).toMatchObject({ actorId: 'player', skillId: 'charged_ult' })
+  })
+
   it('resetPendingState clears playbackToken so late callbacks cannot match', () => {
       const { runtime, player } = fixture()
       runtime.setPresentationActive(true)

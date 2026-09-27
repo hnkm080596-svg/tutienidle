@@ -88,7 +88,7 @@ function enemySkill(): TurnSkillDefinition {
 }
 
 describe('TurnBattleSystem — queuedFollowUps honored by the PRODUCTION loop (tickPacing)', () => {
-  it('tickPacing() grants the queued follow-up actor a bypass turn on the NEXT call, not just peekNextActor()', () => {
+  it('tickPacing() grants the queued follow-up actor a bypass turn on the NEXT call, not just dequeueNextActorForClaim()', () => {
     const { battle, system, enemyParticipant } = fixture()
 
     // Player's gauge-ready turn resolves via tickPacing (the real game-loop

@@ -308,7 +308,7 @@ describe('Task 2 — instances + dynamicBasic', () => {
     const resolveManualPick = vi.fn((defId: string) => (defId === 'orb_chem' ? orbChem : null))
     attackerP.dynamicBasic = { resolveBasic, resolveManualPick }
 
-    const actor = system.peekNextActor(battle)!
+    const actor = system.dequeueNextActorForClaim(battle)!
     const step = system.resolveActorTurn(battle, actor, { kind: 'dynamic_basic', defId: 'orb_chem' })
 
     expect(resolveManualPick).toHaveBeenCalledWith('orb_chem')
@@ -329,7 +329,7 @@ describe('Task 2 — instances + dynamicBasic', () => {
       resolveManualPick: () => null,
     }
 
-    const actor = system.peekNextActor(battle)!
+    const actor = system.dequeueNextActorForClaim(battle)!
     const step = system.resolveActorTurn(battle, actor, { kind: 'dynamic_basic', defId: 'bogus' })
 
     expect(step.skillId).toBe('orb_dam')
@@ -417,7 +417,7 @@ describe('Task 2 — instances + dynamicBasic', () => {
     }
     auto.attackerP.dynamicBasic = { resolveBasic: () => orbDef }
 
-    const manualActor = manual.system.peekNextActor(manual.battle)!
+    const manualActor = manual.system.dequeueNextActorForClaim(manual.battle)!
     const manualStep = manual.system.resolveActorTurn(manual.battle, manualActor, { kind: 'dynamic_basic', defId: 'orb_bo' })
     const autoStep = auto.system.resolveNextStep(auto.battle)
 

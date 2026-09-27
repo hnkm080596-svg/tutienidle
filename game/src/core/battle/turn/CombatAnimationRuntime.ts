@@ -193,22 +193,21 @@ export class CombatAnimationRuntime {
       // awaitedManualActor giữ choice chờ submitTurnChoice (cùng nhánh
       // với acknowledgeTurnReady()).
       //
-      // Manual-vs-auto was decided at CLAIM time, though - a queued
-      // repeat/multicast execution is force-claimed manualMode:false but
+      // Manual-vs-auto was decided at CLAIM time, though - a committed
+      // lane (queued repeat/multicast execution, committed reactive
+      // entry, in-flight charge) is force-claimed manualMode:false but
       // reaches this ready phase with a player's identity, so the live
       // battleManualMode flag alone would misroute it into a manual pause.
       // That would orphan the already-committed payload (the next
       // declareActorAction drops or hijacks it) and leave
       // awaitedManualActor set while the token sits IDLE, where a stray
       // submitTurnChoice could still declare inline. Ask the claim owner
-      // instead: a pending queued execution is never a manual choice, and
-      // neither is a committed reactive entry (Phan/Tro bypass - forced
-      // payload, claim-time manualMode:false just like the repeat lane).
+      // instead: isCommittedFollowUpClaim covers every committed lane,
+      // and a committed claim is never a manual choice.
       const isManualActor =
         this.battleManualMode &&
         battle.players.includes(actor) &&
-        !turnBattleSystem.isPendingQueuedExecution(actor.id) &&
-        !turnBattleSystem.isPendingReactiveBypass(actor.id)
+        !turnBattleSystem.isCommittedFollowUpClaim(actor)
 
       if (isManualActor) {
         this.awaitedManualActor = actor
