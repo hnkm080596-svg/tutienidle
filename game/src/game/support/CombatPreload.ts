@@ -18,7 +18,7 @@ import {
   resolveEnemyTextureKey,
   MORTAL_ENEMY_TEMPLATE_IDS,
 } from './EnemyArt'
-import { MONSTER_ART } from './MonsterArt'
+import { MONSTER_ART, reskinnedTemplateIds } from './MonsterArt'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import { peekThanhVanVariant, thanhVanLoadList } from './ThanhVanArt'
 import {
@@ -131,7 +131,15 @@ export function queueCombatAssets(scene: Phaser.Scene): void {
   // Reward gourd art - PNG th?t thay placeholder.
   queueOnce(GOURD_TEXTURE_KEY, GOURD_TEXTURE_URL)
 
+  // Reskinned template ids resolve to their variant slug - the old PNG is
+  // unreachable for them (the avatar is the fallback), so skip its load.
+  const reskinned = reskinnedTemplateIds()
+
   for (const templateId of ENEMY_TEMPLATE_IDS) {
+    if (reskinned.has(templateId)) {
+      continue
+    }
+
     const textureKey = resolveEnemyTextureKey(templateId)
 
     if (textureKey) {

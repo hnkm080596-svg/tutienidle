@@ -150,12 +150,19 @@ function frameIndex(file) {
 }
 
 function readPivot(jsonPath) {
+  // Unity serializes vectors as { m_X, m_Y }; newer dumps may use { x, y }.
+  // Pivot is normalized with y=0 at the BOTTOM of the sprite (Unity
+  // convention) - recorded as provenance in the manifest; Phaser JSON-Hash
+  // atlases have no pivot field, placement comes from extent + feet anchor.
   try {
     const meta = JSON.parse(readFileSync(jsonPath, 'utf8'))
     const p = meta?.m_Pivot
-    if (p && typeof p.x === 'number' && typeof p.y === 'number') return { x: p.x, y: p.y }
+    if (p) {
+      if (typeof p.m_X === 'number' && typeof p.m_Y === 'number') return { x: p.m_X, y: p.m_Y }
+      if (typeof p.x === 'number' && typeof p.y === 'number') return { x: p.x, y: p.y }
+    }
   } catch { /* fall through to default */ }
-  return { x: 0.5, y: 1.0 }
+  return { x: 0.5, y: 0.0 }
 }
 
 function rgbToHsl(r, g, b) {
@@ -305,20 +312,37 @@ async function emitVariant(emission) {
   const orderedClips = CLIP_ORDER.filter((c) => clips.has(c))
   const frames = [] // {clip,index,canvas,bounds,size,syntheticDeath}
   let sourceSize = null
-  let tallest = null
   for (const clip of orderedClips) {
     for (const f of clips.get(clip)) {
       const loaded = await loadFrame(f.file, sourceSize, emission.recolor, Boolean(f.syntheticDeath), emission.scale)
       if (!sourceSize) sourceSize = loaded.size
       frames.push({ clip, index: f.index, ...loaded, syntheticDeath: Boolean(f.syntheticDeath) })
-      if (!tallest || loaded.bounds.h > tallest.h) tallest = loaded.bounds
     }
   }
+  // Feet-anchor crop (2026-09-28, measured defect): the dump's 960/624 canvases
+  // carry huge authored margins - the wolf's paws end at 76% of canvas height,
+  // so a sourceSize of the WHOLE canvas under the runtime's (0.5,1) feet anchor
+  // floats every enemy ~0.8 person-heights above ground. The emitted sourceSize
+  // is therefore the UNION bbox of the idle clip (the standing pose), and every
+  // frame's spriteSourceSize is offset into that box - frames of other clips
+  // may legitimately poke outside it (a lunging attack, a falling corpse),
+  // which Phaser renders correctly. extent = the tallest IDLE frame's box,
+  // normalized to the crop - standing height is what personHeight means.
+  const idleBounds = frames.filter((f) => f.clip === 'idle').map((f) => f.bounds)
+  const union = {
+    x: Math.min(...idleBounds.map((b) => b.x)),
+    y: Math.min(...idleBounds.map((b) => b.y)),
+    r: Math.max(...idleBounds.map((b) => b.x + b.w)),
+    b: Math.max(...idleBounds.map((b) => b.y + b.h)),
+  }
+  const canvasSize = sourceSize
+  sourceSize = { w: union.r - union.x, h: union.b - union.y }
+  const idleTallest = idleBounds.reduce((a, b) => (b.h > a.h ? b : a))
   const extent = {
-    x: tallest.x / sourceSize.w,
-    y: tallest.y / sourceSize.h,
-    w: tallest.w / sourceSize.w,
-    h: tallest.h / sourceSize.h,
+    x: (idleTallest.x - union.x) / sourceSize.w,
+    y: (idleTallest.y - union.y) / sourceSize.h,
+    w: idleTallest.w / sourceSize.w,
+    h: idleTallest.h / sourceSize.h,
   }
 
   // Uniform-grid pack into sheets <= MAX_SHEET (same scheme as
@@ -358,7 +382,12 @@ async function emitVariant(emission) {
         frame: { x, y, w: f.bounds.w, h: f.bounds.h },
         rotated: false,
         trimmed: true,
-        spriteSourceSize: { ...f.bounds },
+        spriteSourceSize: {
+          x: f.bounds.x - union.x,
+          y: f.bounds.y - union.y,
+          w: f.bounds.w,
+          h: f.bounds.h,
+        },
         sourceSize: { ...sourceSize },
       }
       f.sheetName = sheet.name
@@ -458,6 +487,7 @@ async function emitVariant(emission) {
     pivot,
     extent,
     sourceSize,
+    canvasSize,
     sheets: sheets.filter((s) => s.canvas).length,
     clips: clipReport,
     avatar: avatarMode,

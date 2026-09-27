@@ -36,7 +36,7 @@ import {
   enemyTextureUrl,
   resolveEnemyTextureKey,
 } from '@/game/support/EnemyArt'
-import { MONSTER_ART } from '@/game/support/MonsterArt'
+import { MONSTER_ART, reskinnedTemplateIds } from '@/game/support/MonsterArt'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import {
   animatedCombatEntities,
@@ -205,8 +205,15 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
   // Reward Gourd art
   addImage(GOURD_TEXTURE_KEY, GOURD_TEXTURE_URL)
 
-  // Mortal enemy batch textures
+  // Mortal enemy batch textures - minus reskinned ids, whose old PNG is
+  // unreachable (the variant slug wins resolution; the avatar is fallback).
+  const reskinned = reskinnedTemplateIds()
+
   for (const templateId of ENEMY_TEMPLATE_IDS) {
+    if (reskinned.has(templateId)) {
+      continue
+    }
+
     const textureKey = resolveEnemyTextureKey(templateId)
     if (textureKey) {
       addImage(textureKey, enemyTextureUrl(textureKey))

@@ -10,14 +10,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 240,
-        "y": 290,
+        "x": -9,
+        "y": 6,
         "w": 471,
         "h": 370
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-002.png": {
@@ -30,14 +30,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 241,
-        "y": 284,
+        "x": -8,
+        "y": 0,
         "w": 473,
         "h": 376
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-003.png": {
@@ -50,14 +50,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 251,
-        "y": 263,
+        "x": 2,
+        "y": -21,
         "w": 479,
         "h": 397
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-004.png": {
@@ -70,14 +70,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 254,
-        "y": 258,
+        "x": 5,
+        "y": -26,
         "w": 481,
         "h": 402
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-005.png": {
@@ -90,14 +90,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 268,
-        "y": 248,
+        "x": 19,
+        "y": -36,
         "w": 483,
         "h": 412
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-006.png": {
@@ -110,14 +110,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 276,
-        "y": 244,
+        "x": 27,
+        "y": -40,
         "w": 487,
         "h": 416
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-007.png": {
@@ -130,14 +130,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 281,
-        "y": 242,
+        "x": 32,
+        "y": -42,
         "w": 475,
         "h": 418
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-008.png": {
@@ -150,14 +150,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 284,
-        "y": 241,
+        "x": 35,
+        "y": -43,
         "w": 464,
         "h": 419
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-009.png": {
@@ -170,14 +170,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 287,
-        "y": 239,
+        "x": 38,
+        "y": -45,
         "w": 460,
         "h": 421
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-010.png": {
@@ -190,14 +190,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 288,
-        "y": 239,
+        "x": 39,
+        "y": -45,
         "w": 459,
         "h": 421
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-011.png": {
@@ -210,14 +210,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 289,
-        "y": 239,
+        "x": 40,
+        "y": -45,
         "w": 460,
         "h": 421
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-012.png": {
@@ -230,14 +230,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 282,
-        "y": 241,
+        "x": 33,
+        "y": -43,
         "w": 465,
         "h": 417
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-013.png": {
@@ -250,14 +250,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 249,
-        "y": 263,
+        "x": 0,
+        "y": -21,
         "w": 499,
         "h": 397
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-014.png": {
@@ -270,14 +270,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 186,
-        "y": 299,
+        "x": -63,
+        "y": 15,
         "w": 557,
         "h": 382
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-015.png": {
@@ -290,14 +290,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 112,
-        "y": 301,
+        "x": -137,
+        "y": 17,
         "w": 719,
         "h": 380
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-016.png": {
@@ -310,14 +310,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 113,
-        "y": 295,
+        "x": -136,
+        "y": 11,
         "w": 719,
         "h": 386
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-017.png": {
@@ -330,14 +330,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 111,
-        "y": 290,
+        "x": -138,
+        "y": 6,
         "w": 724,
         "h": 391
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-018.png": {
@@ -350,14 +350,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 112,
-        "y": 287,
+        "x": -137,
+        "y": 3,
         "w": 723,
         "h": 394
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-019.png": {
@@ -370,14 +370,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 112,
-        "y": 285,
+        "x": -137,
+        "y": 1,
         "w": 722,
         "h": 396
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-020.png": {
@@ -390,14 +390,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 112,
-        "y": 284,
+        "x": -137,
+        "y": 0,
         "w": 722,
         "h": 397
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-021.png": {
@@ -410,14 +410,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 112,
-        "y": 284,
+        "x": -137,
+        "y": 0,
         "w": 722,
         "h": 397
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-022.png": {
@@ -430,14 +430,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 111,
-        "y": 285,
+        "x": -138,
+        "y": 1,
         "w": 724,
         "h": 396
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-023.png": {
@@ -450,14 +450,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 112,
-        "y": 286,
+        "x": -137,
+        "y": 2,
         "w": 722,
         "h": 395
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-stomp-024.png": {
@@ -470,14 +470,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 112,
-        "y": 286,
+        "x": -137,
+        "y": 2,
         "w": 723,
         "h": 395
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     }
   },

@@ -10,14 +10,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 186,
-        "y": 351,
+        "x": 12,
+        "y": 77,
         "w": 225,
         "h": 165
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 249,
+        "h": 243
       }
     },
     "spore-flower-spirit-idle-002.png": {
@@ -30,14 +30,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 203,
-        "y": 350,
+        "x": 29,
+        "y": 76,
         "w": 213,
         "h": 167
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 249,
+        "h": 243
       }
     },
     "spore-flower-spirit-idle-003.png": {
@@ -50,14 +50,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 216,
-        "y": 323,
+        "x": 42,
+        "y": 49,
         "w": 206,
         "h": 186
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 249,
+        "h": 243
       }
     },
     "spore-flower-spirit-idle-004.png": {
@@ -70,14 +70,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 235,
-        "y": 303,
+        "x": 61,
+        "y": 29,
         "w": 188,
         "h": 208
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 249,
+        "h": 243
       }
     },
     "spore-flower-spirit-idle-005.png": {
@@ -90,14 +90,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 220,
-        "y": 302,
+        "x": 46,
+        "y": 28,
         "w": 201,
         "h": 205
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 249,
+        "h": 243
       }
     },
     "spore-flower-spirit-idle-006.png": {
@@ -110,14 +110,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 218,
-        "y": 306,
+        "x": 44,
+        "y": 32,
         "w": 196,
         "h": 190
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 249,
+        "h": 243
       }
     },
     "spore-flower-spirit-idle-007.png": {
@@ -130,14 +130,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 223,
-        "y": 304,
+        "x": 49,
+        "y": 30,
         "w": 184,
         "h": 179
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 249,
+        "h": 243
       }
     },
     "spore-flower-spirit-idle-008.png": {
@@ -150,14 +150,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 224,
-        "y": 299,
+        "x": 50,
+        "y": 25,
         "w": 182,
         "h": 176
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 249,
+        "h": 243
       }
     },
     "spore-flower-spirit-idle-009.png": {
@@ -170,14 +170,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 218,
-        "y": 295,
+        "x": 44,
+        "y": 21,
         "w": 195,
         "h": 185
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 249,
+        "h": 243
       }
     },
     "spore-flower-spirit-idle-010.png": {
@@ -190,14 +190,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 220,
-        "y": 288,
+        "x": 46,
+        "y": 14,
         "w": 201,
         "h": 198
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 249,
+        "h": 243
       }
     },
     "spore-flower-spirit-idle-011.png": {
@@ -210,14 +210,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 208,
-        "y": 274,
+        "x": 34,
+        "y": 0,
         "w": 214,
         "h": 214
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 249,
+        "h": 243
       }
     },
     "spore-flower-spirit-idle-012.png": {
@@ -230,14 +230,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 190,
-        "y": 282,
+        "x": 16,
+        "y": 8,
         "w": 231,
         "h": 209
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 249,
+        "h": 243
       }
     },
     "spore-flower-spirit-idle-013.png": {
@@ -250,14 +250,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 177,
-        "y": 301,
+        "x": 3,
+        "y": 27,
         "w": 243,
         "h": 191
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 249,
+        "h": 243
       }
     },
     "spore-flower-spirit-idle-014.png": {
@@ -270,14 +270,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 174,
-        "y": 323,
+        "x": 0,
+        "y": 49,
         "w": 243,
         "h": 170
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 249,
+        "h": 243
       }
     },
     "spore-flower-spirit-idle-015.png": {
@@ -290,14 +290,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 177,
-        "y": 339,
+        "x": 3,
+        "y": 65,
         "w": 237,
         "h": 166
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 249,
+        "h": 243
       }
     },
     "spore-flower-spirit-attack-001.png": {
@@ -310,14 +310,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 186,
-        "y": 351,
+        "x": 12,
+        "y": 77,
         "w": 225,
         "h": 165
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 249,
+        "h": 243
       }
     },
     "spore-flower-spirit-attack-002.png": {
@@ -330,14 +330,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 186,
-        "y": 351,
+        "x": 12,
+        "y": 77,
         "w": 225,
         "h": 165
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 249,
+        "h": 243
       }
     },
     "spore-flower-spirit-death-001.png": {
@@ -350,14 +350,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 186,
-        "y": 351,
+        "x": 12,
+        "y": 77,
         "w": 225,
         "h": 165
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 249,
+        "h": 243
       }
     }
   },

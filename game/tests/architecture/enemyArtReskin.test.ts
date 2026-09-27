@@ -47,6 +47,19 @@ function pngSize(path: string): { w: number; h: number } {
 
 const KNOWN_ENEMY_IDS = new Set(ENEMIES.map((enemy) => enemy.id))
 
+interface ManifestVariant {
+  sourceSize: { w: number; h: number }
+  extent: { x: number; y: number; w: number; h: number }
+  clips: Record<
+    string,
+    { firstFrame: number; lastFrame: number; sheet: string | null; atlas: string | null } | undefined
+  >
+}
+
+const MANIFEST = JSON.parse(
+  readFileSync(publicPath('assets/enemies/animated/manifest.json'), 'utf8'),
+) as { variants: Record<string, ManifestVariant> }
+
 describe('enemy art reskin registry (wave 1)', () => {
   it(
     'every variant\'s sheet, atlas, avatar and sfx exist on disk where declared',
@@ -103,6 +116,57 @@ describe('enemy art reskin registry (wave 1)', () => {
               variant.sourceSize,
             )
           }
+        }
+      }
+    },
+    SCAN_TIMEOUT,
+  )
+
+  it(
+    'sourceSize/extent/clip ranges equal the manifest - the table cannot drift from the packer',
+    () => {
+      for (const variant of Object.values(MONSTER_ART)) {
+        const m = MANIFEST.variants[variant.slug]
+
+        expect(m, `${variant.slug}: missing from manifest`).toBeDefined()
+        expect(variant.sourceSize, `${variant.slug} sourceSize`).toEqual(m!.sourceSize)
+
+        // The registry rounds to 6dp; the manifest stores full float precision.
+        const round6 = (n: number) => Number(n.toFixed(6))
+        const manifestExtent = {
+          x: round6(m!.extent.x),
+          y: round6(m!.extent.y),
+          w: round6(m!.extent.w),
+          h: round6(m!.extent.h),
+        }
+
+        expect(variant.extent, `${variant.slug} extent`).toEqual(manifestExtent)
+
+        for (const name of ['idle', 'death', 'attack'] as const) {
+          const declared = variant.clips[name]
+          const emitted = m!.clips[name]
+
+          if (!declared) {
+            expect(emitted, `${variant.slug}: manifest has '${name}' the table drops`).toBeUndefined()
+            continue
+          }
+
+          expect(emitted, `${variant.slug}: manifest lacks '${name}'`).toBeDefined()
+          expect(declared.firstFrame).toBe(emitted!.firstFrame)
+          expect(declared.lastFrame).toBe(emitted!.lastFrame)
+
+          // The clip must sit on the sheet the packer emitted it on - a
+          // clip that lands on sheet-2 silently breaks a hardcoded
+          // `sheet-1` registry row (no wired variant does today; the
+          // reserved multi-sheet boss would).
+          expect(
+            declared.sheetUrl.endsWith(`/${emitted!.sheet}`),
+            `${variant.slug}/${name}: declared sheetUrl ${declared.sheetUrl} != emitted ${emitted!.sheet}`,
+          ).toBe(true)
+          expect(
+            declared.atlasUrl.endsWith(`/${emitted!.atlas}`),
+            `${variant.slug}/${name}: declared atlasUrl ${declared.atlasUrl} != emitted ${emitted!.atlas}`,
+          ).toBe(true)
         }
       }
     },

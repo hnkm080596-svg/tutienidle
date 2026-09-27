@@ -10,14 +10,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 253,
-        "y": 284,
+        "x": 4,
+        "y": 0,
         "w": 456,
         "h": 376
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-idle-002.png": {
@@ -30,14 +30,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 253,
-        "y": 284,
+        "x": 4,
+        "y": 0,
         "w": 457,
         "h": 376
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-idle-003.png": {
@@ -50,14 +50,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 251,
-        "y": 286,
+        "x": 2,
+        "y": 2,
         "w": 461,
         "h": 374
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-idle-004.png": {
@@ -70,14 +70,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 251,
-        "y": 288,
+        "x": 2,
+        "y": 4,
         "w": 460,
         "h": 372
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-idle-005.png": {
@@ -90,14 +90,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 250,
-        "y": 290,
+        "x": 1,
+        "y": 6,
         "w": 461,
         "h": 370
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-idle-006.png": {
@@ -110,14 +110,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 249,
-        "y": 291,
+        "x": 0,
+        "y": 7,
         "w": 461,
         "h": 369
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-idle-007.png": {
@@ -130,14 +130,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 250,
-        "y": 292,
+        "x": 1,
+        "y": 8,
         "w": 460,
         "h": 368
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-idle-008.png": {
@@ -150,14 +150,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 250,
-        "y": 291,
+        "x": 1,
+        "y": 7,
         "w": 459,
         "h": 369
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-idle-009.png": {
@@ -170,14 +170,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 250,
-        "y": 290,
+        "x": 1,
+        "y": 6,
         "w": 456,
         "h": 370
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-idle-010.png": {
@@ -190,14 +190,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 251,
-        "y": 288,
+        "x": 2,
+        "y": 4,
         "w": 455,
         "h": 372
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-idle-011.png": {
@@ -210,14 +210,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 252,
-        "y": 287,
+        "x": 3,
+        "y": 3,
         "w": 455,
         "h": 373
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-idle-012.png": {
@@ -230,14 +230,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 253,
-        "y": 284,
+        "x": 4,
+        "y": 0,
         "w": 455,
         "h": 376
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-idle-013.png": {
@@ -250,14 +250,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 253,
-        "y": 284,
+        "x": 4,
+        "y": 0,
         "w": 456,
         "h": 376
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     }
   },

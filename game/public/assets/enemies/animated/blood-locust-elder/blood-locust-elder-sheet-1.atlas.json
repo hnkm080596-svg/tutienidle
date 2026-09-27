@@ -10,14 +10,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 169,
-        "y": 57,
+        "x": 2,
+        "y": 8,
         "w": 623,
         "h": 849
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 626,
+        "h": 857
       }
     },
     "blood-locust-elder-idle-002.png": {
@@ -30,14 +30,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 172,
-        "y": 57,
+        "x": 5,
+        "y": 8,
         "w": 618,
         "h": 848
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 626,
+        "h": 857
       }
     },
     "blood-locust-elder-idle-003.png": {
@@ -50,14 +50,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 173,
-        "y": 53,
+        "x": 6,
+        "y": 4,
         "w": 617,
         "h": 853
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 626,
+        "h": 857
       }
     },
     "blood-locust-elder-idle-004.png": {
@@ -70,14 +70,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 175,
-        "y": 51,
+        "x": 8,
+        "y": 2,
         "w": 614,
         "h": 855
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 626,
+        "h": 857
       }
     },
     "blood-locust-elder-idle-005.png": {
@@ -90,14 +90,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 177,
-        "y": 50,
+        "x": 10,
+        "y": 1,
         "w": 611,
         "h": 856
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 626,
+        "h": 857
       }
     },
     "blood-locust-elder-idle-006.png": {
@@ -110,14 +110,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 178,
-        "y": 49,
+        "x": 11,
+        "y": 0,
         "w": 609,
         "h": 857
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 626,
+        "h": 857
       }
     },
     "blood-locust-elder-idle-007.png": {
@@ -130,14 +130,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 178,
-        "y": 49,
+        "x": 11,
+        "y": 0,
         "w": 609,
         "h": 857
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 626,
+        "h": 857
       }
     },
     "blood-locust-elder-idle-008.png": {
@@ -150,14 +150,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 174,
-        "y": 53,
+        "x": 7,
+        "y": 4,
         "w": 615,
         "h": 853
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 626,
+        "h": 857
       }
     },
     "blood-locust-elder-idle-009.png": {
@@ -170,14 +170,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 171,
-        "y": 55,
+        "x": 4,
+        "y": 6,
         "w": 620,
         "h": 851
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 626,
+        "h": 857
       }
     },
     "blood-locust-elder-idle-010.png": {
@@ -190,14 +190,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 169,
-        "y": 59,
+        "x": 2,
+        "y": 10,
         "w": 622,
         "h": 847
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 626,
+        "h": 857
       }
     },
     "blood-locust-elder-idle-011.png": {
@@ -210,14 +210,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 167,
-        "y": 59,
+        "x": 0,
+        "y": 10,
         "w": 626,
         "h": 847
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 626,
+        "h": 857
       }
     },
     "blood-locust-elder-idle-012.png": {
@@ -230,14 +230,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 167,
-        "y": 58,
+        "x": 0,
+        "y": 9,
         "w": 626,
         "h": 848
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 626,
+        "h": 857
       }
     },
     "blood-locust-elder-attack-001.png": {
@@ -250,14 +250,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 169,
-        "y": 57,
+        "x": 2,
+        "y": 8,
         "w": 623,
         "h": 849
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 626,
+        "h": 857
       }
     },
     "blood-locust-elder-death-001.png": {
@@ -270,14 +270,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 169,
-        "y": 57,
+        "x": 2,
+        "y": 8,
         "w": 623,
         "h": 849
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 626,
+        "h": 857
       }
     },
     "blood-locust-elder-bloodwood-devour-001.png": {
@@ -290,14 +290,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 169,
-        "y": 57,
+        "x": 2,
+        "y": 8,
         "w": 623,
         "h": 849
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 626,
+        "h": 857
       }
     }
   },

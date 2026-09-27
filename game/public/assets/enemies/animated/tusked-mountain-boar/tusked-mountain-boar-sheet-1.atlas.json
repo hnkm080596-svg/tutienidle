@@ -10,14 +10,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 183,
-        "y": 408,
+        "x": 0,
+        "y": 8,
         "w": 257,
         "h": 146
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 258,
+        "h": 154
       }
     },
     "tusked-mountain-boar-idle-002.png": {
@@ -30,14 +30,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 183,
-        "y": 409,
+        "x": 0,
+        "y": 9,
         "w": 257,
         "h": 145
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 258,
+        "h": 154
       }
     },
     "tusked-mountain-boar-idle-003.png": {
@@ -50,14 +50,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 183,
-        "y": 411,
+        "x": 0,
+        "y": 11,
         "w": 258,
         "h": 143
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 258,
+        "h": 154
       }
     },
     "tusked-mountain-boar-idle-004.png": {
@@ -70,14 +70,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 184,
-        "y": 413,
+        "x": 1,
+        "y": 13,
         "w": 257,
         "h": 141
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 258,
+        "h": 154
       }
     },
     "tusked-mountain-boar-idle-005.png": {
@@ -90,14 +90,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 184,
-        "y": 411,
+        "x": 1,
+        "y": 11,
         "w": 257,
         "h": 143
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 258,
+        "h": 154
       }
     },
     "tusked-mountain-boar-idle-006.png": {
@@ -110,14 +110,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 183,
-        "y": 410,
+        "x": 0,
+        "y": 10,
         "w": 257,
         "h": 144
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 258,
+        "h": 154
       }
     },
     "tusked-mountain-boar-idle-007.png": {
@@ -130,14 +130,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 184,
-        "y": 408,
+        "x": 1,
+        "y": 8,
         "w": 255,
         "h": 146
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 258,
+        "h": 154
       }
     },
     "tusked-mountain-boar-idle-008.png": {
@@ -150,14 +150,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 184,
-        "y": 406,
+        "x": 1,
+        "y": 6,
         "w": 253,
         "h": 148
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 258,
+        "h": 154
       }
     },
     "tusked-mountain-boar-idle-009.png": {
@@ -170,14 +170,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 184,
-        "y": 403,
+        "x": 1,
+        "y": 3,
         "w": 252,
         "h": 151
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 258,
+        "h": 154
       }
     },
     "tusked-mountain-boar-idle-010.png": {
@@ -190,14 +190,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 185,
-        "y": 400,
+        "x": 2,
+        "y": 0,
         "w": 249,
         "h": 154
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 258,
+        "h": 154
       }
     },
     "tusked-mountain-boar-idle-011.png": {
@@ -210,14 +210,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 185,
-        "y": 400,
+        "x": 2,
+        "y": 0,
         "w": 249,
         "h": 154
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 258,
+        "h": 154
       }
     },
     "tusked-mountain-boar-idle-012.png": {
@@ -230,14 +230,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 184,
-        "y": 402,
+        "x": 1,
+        "y": 2,
         "w": 251,
         "h": 152
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 258,
+        "h": 154
       }
     },
     "tusked-mountain-boar-idle-013.png": {
@@ -250,14 +250,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 184,
-        "y": 403,
+        "x": 1,
+        "y": 3,
         "w": 252,
         "h": 151
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 258,
+        "h": 154
       }
     },
     "tusked-mountain-boar-idle-014.png": {
@@ -270,14 +270,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 184,
-        "y": 404,
+        "x": 1,
+        "y": 4,
         "w": 253,
         "h": 150
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 258,
+        "h": 154
       }
     },
     "tusked-mountain-boar-idle-015.png": {
@@ -290,14 +290,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 184,
-        "y": 407,
+        "x": 1,
+        "y": 7,
         "w": 254,
         "h": 147
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 258,
+        "h": 154
       }
     },
     "tusked-mountain-boar-attack-001.png": {
@@ -310,14 +310,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 183,
-        "y": 408,
+        "x": 0,
+        "y": 8,
         "w": 257,
         "h": 146
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 258,
+        "h": 154
       }
     },
     "tusked-mountain-boar-attack-002.png": {
@@ -330,14 +330,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 183,
-        "y": 408,
+        "x": 0,
+        "y": 8,
         "w": 257,
         "h": 146
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 258,
+        "h": 154
       }
     },
     "tusked-mountain-boar-death-001.png": {
@@ -350,14 +350,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 183,
-        "y": 408,
+        "x": 0,
+        "y": 8,
         "w": 257,
         "h": 146
       },
       "sourceSize": {
-        "w": 624,
-        "h": 624
+        "w": 258,
+        "h": 154
       }
     }
   },

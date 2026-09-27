@@ -10,14 +10,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 285,
-        "y": 383,
+        "x": 0,
+        "y": 12,
         "w": 429,
         "h": 342
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 429,
+        "h": 355
       }
     },
     "bloodarm-ox-demon-ferocious-idle-002.png": {
@@ -30,14 +30,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 285,
-        "y": 379,
+        "x": 0,
+        "y": 8,
         "w": 428,
         "h": 347
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 429,
+        "h": 355
       }
     },
     "bloodarm-ox-demon-ferocious-idle-003.png": {
@@ -50,14 +50,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 285,
-        "y": 377,
+        "x": 0,
+        "y": 6,
         "w": 427,
         "h": 348
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 429,
+        "h": 355
       }
     },
     "bloodarm-ox-demon-ferocious-idle-004.png": {
@@ -70,14 +70,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 285,
-        "y": 373,
+        "x": 0,
+        "y": 2,
         "w": 425,
         "h": 352
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 429,
+        "h": 355
       }
     },
     "bloodarm-ox-demon-ferocious-idle-005.png": {
@@ -90,14 +90,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 285,
-        "y": 371,
+        "x": 0,
+        "y": 0,
         "w": 424,
         "h": 354
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 429,
+        "h": 355
       }
     },
     "bloodarm-ox-demon-ferocious-idle-006.png": {
@@ -110,14 +110,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 285,
-        "y": 372,
+        "x": 0,
+        "y": 1,
         "w": 425,
         "h": 354
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 429,
+        "h": 355
       }
     },
     "bloodarm-ox-demon-ferocious-idle-007.png": {
@@ -130,14 +130,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 285,
-        "y": 377,
+        "x": 0,
+        "y": 6,
         "w": 427,
         "h": 348
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 429,
+        "h": 355
       }
     },
     "bloodarm-ox-demon-ferocious-idle-008.png": {
@@ -150,14 +150,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 285,
-        "y": 381,
+        "x": 0,
+        "y": 10,
         "w": 428,
         "h": 344
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 429,
+        "h": 355
       }
     },
     "bloodarm-ox-demon-ferocious-attack-001.png": {
@@ -170,14 +170,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 285,
-        "y": 383,
+        "x": 0,
+        "y": 12,
         "w": 429,
         "h": 342
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 429,
+        "h": 355
       }
     },
     "bloodarm-ox-demon-ferocious-attack-002.png": {
@@ -190,14 +190,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 285,
-        "y": 383,
+        "x": 0,
+        "y": 12,
         "w": 429,
         "h": 342
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 429,
+        "h": 355
       }
     },
     "bloodarm-ox-demon-ferocious-death-001.png": {
@@ -210,14 +210,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 285,
-        "y": 383,
+        "x": 0,
+        "y": 12,
         "w": 429,
         "h": 342
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 429,
+        "h": 355
       }
     }
   },

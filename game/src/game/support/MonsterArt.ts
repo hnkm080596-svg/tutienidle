@@ -28,12 +28,14 @@ export interface MonsterClipRange {
 
 export interface MonsterArtVariant {
   slug: string
-  /** Authored canvas the frames were drawn in (dump: 960, forest: 624). */
+  /**
+   * The emitted box every frame is positioned in: the union bbox of the
+   * idle clip cropped out of the dump canvas (packer feet-anchor crop).
+   * (0.5,1) of this box is the feet anchor - origin needs no change.
+   */
   sourceSize: { w: number; h: number }
-  /** Alpha bbox of the tallest frame, normalized - drives display sizing. */
+  /** Alpha bbox of the tallest IDLE frame inside `sourceSize` - drives display sizing. */
   extent: ArtExtent
-  /** Unity m_Pivot of idle-1 (bottom-center anchor for ground contact). */
-  pivot: { x: number; y: number }
   /** Static fallback texture: the per-variant avatar.png. */
   avatarKey: string
   avatarUrl: string
@@ -69,13 +71,12 @@ function variant(
   sourceSize: { w: number; h: number },
   extent: ArtExtent,
   ranges: { idle: [number, number]; death: [number, number]; attack?: [number, number] },
-  opts: { attackSfx?: string; pivot?: { x: number; y: number }; avatarSize?: { w: number; h: number } } = {},
+  opts: { attackSfx?: string; avatarSize?: { w: number; h: number } } = {},
 ): MonsterArtVariant {
   return {
     slug,
     sourceSize,
     extent,
-    pivot: opts.pivot ?? { x: 0.5, y: 1 },
     avatarKey: `${slug}-avatar`,
     avatarUrl: `${ART_ROOT}/${slug}/avatar.png`,
     avatarSize: opts.avatarSize ?? { w: 150, h: 150 },
@@ -96,43 +97,43 @@ export const MONSTER_ART: Record<string, MonsterArtVariant> = {
   // --- 9 approved species ---
   'graymane-wolf': variant(
     'graymane-wolf',
-    { w: 960, h: 960 },
-    { x: 0.280208, y: 0.467708, w: 0.516667, h: 0.294792 },
+    { w: 504, h: 283 },
+    { x: 0, y: 0, w: 0.984127, h: 1 },
     { idle: [1, 9], attack: [1, 2], death: [1, 1] },
     { attackSfx: 'graymane-wolf-attack.ogg', avatarSize: { w: 147, h: 150 } },
   ),
   'tusked-mountain-boar': variant(
     'tusked-mountain-boar',
-    { w: 624, h: 624 },
-    { x: 0.296474, y: 0.641026, w: 0.399038, h: 0.246795 },
+    { w: 258, h: 154 },
+    { x: 0.007752, y: 0, w: 0.965116, h: 1 },
     { idle: [1, 15], attack: [1, 2], death: [1, 1] },
     { avatarSize: { w: 102, h: 102 } },
   ),
   'bloodarm-ox-demon': variant(
     'bloodarm-ox-demon',
-    { w: 960, h: 960 },
-    { x: 0.296875, y: 0.386458, w: 0.441667, h: 0.36875 },
+    { w: 429, h: 355 },
+    { x: 0, y: 0, w: 0.988345, h: 0.997183 },
     { idle: [1, 8], attack: [1, 2], death: [1, 1] },
     { attackSfx: 'bloodarm-ox-demon-attack.ogg', avatarSize: { w: 148, h: 150 } },
   ),
   'mudbelly-green-toad': variant(
     'mudbelly-green-toad',
-    { w: 960, h: 960 },
-    { x: 0.252083, y: 0.416667, w: 0.494792, h: 0.359375 },
+    { w: 475, h: 345 },
+    { x: 0, y: 0, w: 1, h: 1 },
     { idle: [1, 13], attack: [1, 2], death: [1, 1] },
     { attackSfx: 'mudbelly-green-toad-attack.ogg', avatarSize: { w: 512, h: 512 } },
   ),
   'whiteshell-venom-beetle': variant(
     'whiteshell-venom-beetle',
-    { w: 960, h: 960 },
-    { x: 0.215625, y: 0.544792, w: 0.611458, h: 0.228125 },
+    { w: 596, h: 221 },
+    { x: 0.010067, y: 0, w: 0.984899, h: 0.99095 },
     { idle: [1, 9], attack: [1, 2], death: [1, 1] },
     { attackSfx: 'whiteshell-venom-beetle-attack.ogg', avatarSize: { w: 512, h: 512 } },
   ),
   'witherfir-vineman': variant(
     'witherfir-vineman',
-    { w: 960, h: 960 },
-    { x: 0.335417, y: 0.192708, w: 0.341667, h: 0.595833 },
+    { w: 349, h: 572 },
+    { x: 0.040115, y: 0, w: 0.939828, h: 1 },
     { idle: [1, 10], attack: [1, 2], death: [1, 1] },
     { attackSfx: 'witherfir-vineman-attack.ogg', avatarSize: { w: 132, h: 150 } },
   ),
@@ -145,74 +146,74 @@ export const MONSTER_ART: Record<string, MonsterArtVariant> = {
   ),
   'spore-flower-spirit': variant(
     'spore-flower-spirit',
-    { w: 624, h: 624 },
-    { x: 0.333333, y: 0.439103, w: 0.342949, h: 0.342949 },
+    { w: 249, h: 243 },
+    { x: 0.136546, y: 0, w: 0.859438, h: 0.880658 },
     { idle: [1, 15], attack: [1, 2], death: [1, 1] },
     { avatarSize: { w: 102, h: 102 } },
   ),
   'streamgrudge-nymph': variant(
     'streamgrudge-nymph',
-    { w: 960, h: 960 },
-    { x: 0.251042, y: 0.148958, w: 0.48125, h: 0.565625 },
+    { w: 468, h: 546 },
+    { x: 0.012821, y: 0, w: 0.987179, h: 0.994505 },
     { idle: [1, 10], attack: [1, 2], death: [1, 1] },
     { attackSfx: 'streamgrudge-nymph-attack.ogg', avatarSize: { w: 138, h: 150 } },
   ),
   // --- boss: real boss art ---
   'blood-locust-elder': variant(
     'blood-locust-elder',
-    { w: 960, h: 960 },
-    { x: 0.185417, y: 0.051042, w: 0.634375, h: 0.892708 },
+    { w: 626, h: 857 },
+    { x: 0.017572, y: 0, w: 0.972843, h: 1 },
     { idle: [1, 12], attack: [1, 1], death: [1, 1] },
     { attackSfx: 'blood-locust-elder-attack.ogg', avatarSize: { w: 150, h: 150 } },
   ),
   // --- boss recolors ---
   'bloodflower-tree-fiend-mudboss': variant(
     'bloodflower-tree-fiend-mudboss',
-    { w: 624, h: 624 },
-    { x: 0.038462, y: 0.033654, w: 0.951923, h: 0.870192 },
+    { w: 616, h: 543 },
+    { x: 0.025974, y: 0, w: 0.964286, h: 1 },
     { idle: [1, 25], attack: [1, 2], death: [1, 1] },
     { avatarSize: { w: 81, h: 78 } },
   ),
   'streamscale-forkman-floodserpent': variant(
     'streamscale-forkman-floodserpent',
-    { w: 960, h: 960 },
-    { x: 0.182292, y: 0.292708, w: 0.525, h: 0.479167 },
+    { w: 514, h: 463 },
+    { x: 0.015564, y: 0, w: 0.980545, h: 0.993521 },
     { idle: [1, 9], attack: [1, 2], death: [1, 1] },
     { attackSfx: 'streamscale-forkman-attack.ogg', avatarSize: { w: 142, h: 150 } },
   ),
   // --- ferocious recolors of mapped species ---
   'graymane-wolf-ferocious': variant(
     'graymane-wolf-ferocious',
-    { w: 960, h: 960 },
-    { x: 0.280208, y: 0.467708, w: 0.516667, h: 0.294792 },
+    { w: 504, h: 283 },
+    { x: 0, y: 0, w: 0.984127, h: 1 },
     { idle: [1, 9], attack: [1, 2], death: [1, 1] },
     { attackSfx: 'graymane-wolf-attack.ogg', avatarSize: { w: 147, h: 150 } },
   ),
   'tusked-mountain-boar-ferocious': variant(
     'tusked-mountain-boar-ferocious',
-    { w: 624, h: 624 },
-    { x: 0.296474, y: 0.641026, w: 0.399038, h: 0.246795 },
+    { w: 258, h: 154 },
+    { x: 0.007752, y: 0, w: 0.965116, h: 1 },
     { idle: [1, 15], attack: [1, 2], death: [1, 1] },
     { avatarSize: { w: 102, h: 102 } },
   ),
   'bloodarm-ox-demon-ferocious': variant(
     'bloodarm-ox-demon-ferocious',
-    { w: 960, h: 960 },
-    { x: 0.296875, y: 0.386458, w: 0.441667, h: 0.36875 },
+    { w: 429, h: 355 },
+    { x: 0, y: 0, w: 0.988345, h: 0.997183 },
     { idle: [1, 8], attack: [1, 2], death: [1, 1] },
     { attackSfx: 'bloodarm-ox-demon-attack.ogg', avatarSize: { w: 148, h: 150 } },
   ),
   'mudbelly-green-toad-ferocious': variant(
     'mudbelly-green-toad-ferocious',
-    { w: 960, h: 960 },
-    { x: 0.252083, y: 0.416667, w: 0.494792, h: 0.359375 },
+    { w: 475, h: 345 },
+    { x: 0, y: 0, w: 1, h: 1 },
     { idle: [1, 13], attack: [1, 2], death: [1, 1] },
     { attackSfx: 'mudbelly-green-toad-attack.ogg', avatarSize: { w: 512, h: 512 } },
   ),
   'whiteshell-venom-beetle-ferocious': variant(
     'whiteshell-venom-beetle-ferocious',
-    { w: 960, h: 960 },
-    { x: 0.215625, y: 0.544792, w: 0.611458, h: 0.228125 },
+    { w: 596, h: 221 },
+    { x: 0.010067, y: 0, w: 0.984899, h: 0.99095 },
     { idle: [1, 9], attack: [1, 2], death: [1, 1] },
     { attackSfx: 'whiteshell-venom-beetle-attack.ogg', avatarSize: { w: 512, h: 512 } },
   ),
@@ -225,22 +226,22 @@ export const MONSTER_ART: Record<string, MonsterArtVariant> = {
   ),
   'spore-flower-spirit-ferocious': variant(
     'spore-flower-spirit-ferocious',
-    { w: 624, h: 624 },
-    { x: 0.333333, y: 0.439103, w: 0.342949, h: 0.342949 },
+    { w: 249, h: 243 },
+    { x: 0.136546, y: 0, w: 0.859438, h: 0.880658 },
     { idle: [1, 15], attack: [1, 2], death: [1, 1] },
     { avatarSize: { w: 102, h: 102 } },
   ),
   'bloodflower-tree-fiend-mudboss-ferocious': variant(
     'bloodflower-tree-fiend-mudboss-ferocious',
-    { w: 624, h: 624 },
-    { x: 0.038462, y: 0.033654, w: 0.951923, h: 0.870192 },
+    { w: 616, h: 543 },
+    { x: 0.025974, y: 0, w: 0.964286, h: 1 },
     { idle: [1, 25], attack: [1, 2], death: [1, 1] },
     { avatarSize: { w: 81, h: 78 } },
   ),
   'streamscale-forkman-floodserpent-ferocious': variant(
     'streamscale-forkman-floodserpent-ferocious',
-    { w: 960, h: 960 },
-    { x: 0.182292, y: 0.292708, w: 0.525, h: 0.479167 },
+    { w: 514, h: 463 },
+    { x: 0.015564, y: 0, w: 0.980545, h: 0.993521 },
     { idle: [1, 9], attack: [1, 2], death: [1, 1] },
     { attackSfx: 'streamscale-forkman-attack.ogg', avatarSize: { w: 142, h: 150 } },
   ),
@@ -286,6 +287,15 @@ export const ENEMY_RESKIN_MAP: Record<string, string> = {
 const RESKIN_KEYS = Object.keys(ENEMY_RESKIN_MAP).sort((a, b) => b.length - a.length)
 
 /** Runtime/template enemy id -> variant slug, or undefined when unmapped. */
+/**
+ * The template ids ENEMY_RESKIN_MAP intercepts - the enumeration loaders use
+ * to skip an old PNG that can no longer be reached (the variant slug wins
+ * resolution; the avatar is the fallback, never the superseded texture).
+ */
+export function reskinnedTemplateIds(): ReadonlySet<string> {
+  return new Set(Object.keys(ENEMY_RESKIN_MAP))
+}
+
 export function resolveMonsterArtSlug(enemyId: string): string | undefined {
   for (const templateId of RESKIN_KEYS) {
     if (enemyId === templateId || enemyId.startsWith(`${templateId}_`)) {

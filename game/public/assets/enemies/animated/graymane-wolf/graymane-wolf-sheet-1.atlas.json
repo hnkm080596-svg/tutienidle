@@ -10,14 +10,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 269,
-        "y": 449,
+        "x": 0,
+        "y": 0,
         "w": 496,
         "h": 283
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 504,
+        "h": 283
       }
     },
     "graymane-wolf-idle-002.png": {
@@ -30,14 +30,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 269,
-        "y": 450,
+        "x": 0,
+        "y": 1,
         "w": 496,
         "h": 281
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 504,
+        "h": 283
       }
     },
     "graymane-wolf-idle-003.png": {
@@ -50,14 +50,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 269,
-        "y": 451,
+        "x": 0,
+        "y": 2,
         "w": 499,
         "h": 280
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 504,
+        "h": 283
       }
     },
     "graymane-wolf-idle-004.png": {
@@ -70,14 +70,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 269,
-        "y": 452,
+        "x": 0,
+        "y": 3,
         "w": 501,
         "h": 279
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 504,
+        "h": 283
       }
     },
     "graymane-wolf-idle-005.png": {
@@ -90,14 +90,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 269,
-        "y": 452,
+        "x": 0,
+        "y": 3,
         "w": 503,
         "h": 279
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 504,
+        "h": 283
       }
     },
     "graymane-wolf-idle-006.png": {
@@ -110,14 +110,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 269,
-        "y": 452,
+        "x": 0,
+        "y": 3,
         "w": 504,
         "h": 279
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 504,
+        "h": 283
       }
     },
     "graymane-wolf-idle-007.png": {
@@ -130,14 +130,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 269,
-        "y": 453,
+        "x": 0,
+        "y": 4,
         "w": 502,
         "h": 278
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 504,
+        "h": 283
       }
     },
     "graymane-wolf-idle-008.png": {
@@ -150,14 +150,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 269,
-        "y": 452,
+        "x": 0,
+        "y": 3,
         "w": 499,
         "h": 279
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 504,
+        "h": 283
       }
     },
     "graymane-wolf-idle-009.png": {
@@ -170,14 +170,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 269,
-        "y": 452,
+        "x": 0,
+        "y": 3,
         "w": 497,
         "h": 279
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 504,
+        "h": 283
       }
     },
     "graymane-wolf-attack-001.png": {
@@ -190,14 +190,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 269,
-        "y": 449,
+        "x": 0,
+        "y": 0,
         "w": 496,
         "h": 283
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 504,
+        "h": 283
       }
     },
     "graymane-wolf-attack-002.png": {
@@ -210,14 +210,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 269,
-        "y": 449,
+        "x": 0,
+        "y": 0,
         "w": 496,
         "h": 283
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 504,
+        "h": 283
       }
     },
     "graymane-wolf-death-001.png": {
@@ -230,14 +230,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 269,
-        "y": 449,
+        "x": 0,
+        "y": 0,
         "w": 496,
         "h": 283
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 504,
+        "h": 283
       }
     }
   },

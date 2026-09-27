@@ -31,6 +31,7 @@ import {
   MONSTER_ART,
   MONSTER_FRAME_SUFFIX,
   MONSTER_ZERO_PAD,
+  reskinnedTemplateIds,
   resolveMonsterArtSlug,
   type MonsterClipRange,
 } from '@/game/support/MonsterArt'
@@ -453,8 +454,15 @@ function buildCatalogue(): {
   }
 
   // Enemies are still images plus a bob in 'static' mode, placeholder clips
-  // in 'animated' mode until their sheets are drawn.
+  // in 'animated' mode until their sheets are drawn. Reskinned template ids
+  // are excluded: their catalogue entry lives under the variant slug, and
+  // resolveCombatEntityKey() never reaches the old PNG for them.
+  const reskinned = reskinnedTemplateIds()
+
   for (const templateId of MORTAL_ENEMY_TEMPLATE_IDS) {
+    if (reskinned.has(templateId)) {
+      continue
+    }
     const textureKey = resolveEnemyTextureKey(templateId)
 
     if (!textureKey) {

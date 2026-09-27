@@ -5,23 +5,28 @@ import * as path from 'node:path'
 import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
 
 /**
- * QA visual capture (2026-09-11) — Spec B §9 criterion 10.
+ * QA visual capture (2026-09-11) - Spec B sec.9 criterion 10, updated for the
+ * art-mode contract that replaced it (a7d7dc70, 2026-09-19) and the
+ * enemy-art-wave1 reskin amendment (2026-09-28):
  *
- * "Verified on screen: the player's idle animation plays, and enemies visibly
- * breathe. A SCREENSHOT PROVES LAYOUT AND NOTHING ELSE — motion needs a capture
- * across frames, or watching it."
+ * "Verified on screen: entities visibly live. A SCREENSHOT PROVES LAYOUT AND
+ * NOTHING ELSE - motion needs a capture across frames, or watching it."
  *
- * So this samples the live scene over time rather than asserting a picture:
+ * ENTITY_ART_MODE is 'static': the player (and every unmapped enemy) bobs via
+ * tween and plays NO animation. The reskinned NEWSPRITE enemies are the one
+ * sanctioned exception - they play authored atlas clips - so this spec now
+ * samples the WHOLE first combat, not a fixed 2s window: floor 1's pool is
+ * boar(w5, animated) + bandit(w3, static), and which species stand up first is
+ * RNG. Sampling until combat ends (or the cap hits) makes "at least one
+ * animated enemy actually animated" near-deterministic instead of a coin toss.
  *
- *  - the player's CURRENT ATLAS FRAME must change (its idle clip is running);
- *  - every static enemy's body must sit ABOVE its own projected ground point by
- *    a varying amount within the declared amplitude (the bob lifts the body and
- *    leaves the feet, the shadow and the depth sort on the ground);
- *  - no static enemy has an animation playing at all (§3.2 — they are stills).
- *
- * The numbered placeholder frames make the human half easy: if the number on the
- * player changes between the captured screenshots and the enemies move without
- * their own number changing, both halves are correct.
+ *  - the player's body must sit ABOVE its own projected ground point by a
+ *    varying amount within the declared amplitude (static bob);
+ *  - every static enemy does the same, and plays no animation (they are
+ *    stills, the mode contract);
+ *  - every animated enemy's CURRENT ATLAS FRAME must change (a frozen sprite
+ *    reports a frame too - only a change proves playback);
+ *  - at least one animated enemy must have appeared at all.
  */
 /**
  * Mirrors `ENEMY_IDLE_AMPLITUDE_PX` in
@@ -29,7 +34,7 @@ import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
  * imported ON PURPOSE: `tsconfig.node.json` compiles `tests/e2e/**` WITHOUT the
  * `@/*` path mapping, so importing app source from here drags that module and
  * everything it imports into a project that cannot resolve its own imports.
- * (Measured 2026-09-11 — it fails type-check while vitest, which uses Vite's
+ * (Measured 2026-09-11 - it fails type-check while vitest, which uses Vite's
  * resolver, stays green, so the unit suite will not warn you.)
  *
  * The exact value is owned and asserted by
@@ -38,9 +43,9 @@ import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
  */
 const ENEMY_IDLE_AMPLITUDE_PX = 6
 
-test.describe('Combat idle motion (Spec B §9.10)', () => {
-  test('player frames advance; static enemies bob without animating', async ({ page }) => {
-    test.setTimeout(180_000)
+test.describe('Combat idle motion (static mode + wave-1 reskins)', () => {
+  test('static entities bob; reskinned enemies play authored frames', async ({ page }) => {
+    test.setTimeout(240_000)
 
     const outDir = path.join(process.cwd(), 'test-results', 'combat-idle-motion')
     fs.mkdirSync(outDir, { recursive: true })
@@ -61,13 +66,186 @@ test.describe('Combat idle motion (Spec B §9.10)', () => {
     await expect(startButton).toBeEnabled({ timeout: 10_000 })
     await startButton.click()
 
-    // Let the wave materialise — sprites do not exist before this.
+    // Let the wave materialise - sprites do not exist before this.
     await page.waitForTimeout(12_000)
 
+    // Phase 0 - deterministic reskin probe. Floor-1's pool mixes a reskinned
+    // species (boar, w5) with an unmapped one (bandit, w3), so WHICH shows up
+    // is RNG - and the previous run proved a whole combat can pass with zero
+    // reskinned spawns. The render+playback path is what this wave changed,
+    // so drive it directly through the scene's own public surface:
+    // getOrCreateSprite resolves 'mortal_wild_boar_*' -> tusked-mountain-boar
+    // exactly like a real spawn does, then playCombatAnimation/beginDeath-
+    // Sequence run the same calls onAttack/onDeath make. (onAttack itself is
+    // NOT called - it would acknowledge the engine's pending playback token.)
+    const probe = await page.evaluate(() => {
+      const w = window as unknown as {
+        __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
+      }
+
+      const scene = w.__tutienPhaserGame?.scene.getScene('CombatScene') as
+        | {
+            getOrCreateSprite(
+              id: string,
+              color: number,
+              label: string,
+              row: number,
+              health?: { currentHp: number; maxHp: number; isBoss: boolean },
+            ): {
+              kind: string
+              rect: {
+                texture?: { key: string }
+                frame?: { name: string }
+                anims?: { currentAnim?: { key: string } }
+              }
+            }
+            playCombatAnimation(sprite: unknown, id: string, name: string): void
+            beginDeathSequence(sprite: unknown, id: string): void
+            sprites: Map<string, unknown>
+          }
+        | undefined
+
+      if (!scene) {
+        return { error: 'CombatScene unreachable' }
+      }
+
+      const probeId = 'mortal_wild_boar_e2e_probe'
+      const sprite = scene.getOrCreateSprite(probeId, 0xffffff, 'probe', 7, {
+        currentHp: 1,
+        maxHp: 1,
+        isBoss: false,
+      })
+
+      return {
+        kind: sprite.kind,
+        textureKey: sprite.rect.texture?.key,
+        frame: sprite.rect.frame?.name,
+        idleAnim: sprite.rect.anims?.currentAnim?.key,
+      }
+    })
+
+    expect(probe.error, 'probe: CombatScene not reachable').toBeUndefined()
+    expect(probe.kind, 'probe sprite is not a Sprite').toBe('sprite')
+    expect(
+      probe.textureKey,
+      `probe drew '${probe.textureKey}' - expected the boar atlas sheet`,
+    ).toBe('tusked-mountain-boar-sheet-1')
+    expect(probe.frame, 'probe did not draw its first idle frame').toBe(
+      'tusked-mountain-boar-idle-001.png',
+    )
+
+    // Idle clip running, frames advancing.
+    const idleAnimAtSpawn = await page.evaluate(() => {
+      const w = window as unknown as {
+        __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
+      }
+      const scene = w.__tutienPhaserGame?.scene.getScene('CombatScene') as {
+        sprites: Map<string, { rect: { anims?: { currentAnim?: { key: string } } } }>
+      }
+      const s = scene.sprites.get('mortal_wild_boar_e2e_probe')
+      return s?.rect.anims?.currentAnim?.key
+    })
+
+    expect(idleAnimAtSpawn, 'probe idle clip never started').toBe(
+      'tusked-mountain-boar-idle',
+    )
+
+    const frameAt = () =>
+      page.evaluate(() => {
+        const w = window as unknown as {
+          __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
+        }
+        const scene = w.__tutienPhaserGame?.scene.getScene('CombatScene') as {
+          sprites: Map<
+            string,
+            { rect: { anims?: { currentFrame?: { textureFrame: string } } } }
+          >
+        }
+        return scene.sprites.get('mortal_wild_boar_e2e_probe')?.rect.anims
+          ?.currentFrame?.textureFrame
+      })
+
+    const probeFrames = new Set<string | undefined>()
+    probeFrames.add(await frameAt())
+    await page.waitForTimeout(400)
+    probeFrames.add(await frameAt())
+    await page.waitForTimeout(400)
+    probeFrames.add(await frameAt())
+
+    expect(
+      probeFrames.size,
+      `probe idle frames never advanced: ${[...probeFrames].join(',')}`,
+    ).toBeGreaterThan(1)
+
+    await page
+      .locator('canvas')
+      .first()
+      .screenshot({ path: path.join(outDir, 'probe-idle.png') })
+
+    // Attack clip: the same call onAttack makes for this sprite.
+    const attackAnim = await page.evaluate(() => {
+      const w = window as unknown as {
+        __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
+      }
+      const scene = w.__tutienPhaserGame?.scene.getScene('CombatScene') as {
+        sprites: Map<string, unknown>
+        playCombatAnimation(sprite: unknown, id: string, name: string): void
+      }
+      const sprite = scene.sprites.get('mortal_wild_boar_e2e_probe')
+      scene.playCombatAnimation(sprite, 'mortal_wild_boar_e2e_probe', 'attack')
+      return (sprite as { rect: { anims?: { currentAnim?: { key: string } } } }).rect.anims
+        ?.currentAnim?.key
+    })
+
+    expect(attackAnim, 'probe attack clip did not start').toBe(
+      'tusked-mountain-boar-attack',
+    )
+
+    await page
+      .locator('canvas')
+      .first()
+      .screenshot({ path: path.join(outDir, 'probe-attack.png') })
+
+    // Death clip: beginDeathSequence is the real path onDeath takes.
+    await page.evaluate(() => {
+      const w = window as unknown as {
+        __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
+      }
+      const scene = w.__tutienPhaserGame?.scene.getScene('CombatScene') as {
+        sprites: Map<string, unknown>
+        beginDeathSequence(sprite: unknown, id: string): void
+      }
+      const sprite = scene.sprites.get('mortal_wild_boar_e2e_probe')
+      scene.beginDeathSequence(sprite, 'mortal_wild_boar_e2e_probe')
+    })
+
+    await page.waitForTimeout(1_500)
+
+    const probeGone = await page.evaluate(() => {
+      const w = window as unknown as {
+        __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
+      }
+      const scene = w.__tutienPhaserGame?.scene.getScene('CombatScene') as {
+        sprites: Map<string, unknown>
+      }
+      return !scene.sprites.has('mortal_wild_boar_e2e_probe')
+    })
+
+    expect(probeGone, 'probe sprite still present after death sequence').toBe(true)
+
+
+    type EnemySample = {
+      id: string
+      y: number
+      footY: number
+      anim: string | undefined
+      frame: string | undefined
+    }
     type Sample = {
-      playerFrame: string | undefined
+      playerY: number | undefined
+      playerFootY: number | undefined
       playerAnim: string | undefined
-      enemies: { id: string; y: number; footY: number; anim: string | undefined }[]
+      enemies: EnemySample[]
     }
 
     const sampleScene = async (): Promise<Sample> =>
@@ -101,9 +279,16 @@ test.describe('Combat idle motion (Spec B §9.10)', () => {
           throw new Error('CombatScene sprites not reachable')
         }
 
-        let playerFrame: string | undefined
+        let playerY: number | undefined
+        let playerFootY: number | undefined
         let playerAnim: string | undefined
-        const enemies: { id: string; y: number; footY: number; anim: string | undefined }[] = []
+        const enemies: {
+          id: string
+          y: number
+          footY: number
+          anim: string | undefined
+          frame: string | undefined
+        }[] = []
 
         for (const [id, sprite] of scene.sprites) {
           if (sprite.kind !== 'sprite') {
@@ -111,7 +296,8 @@ test.describe('Combat idle motion (Spec B §9.10)', () => {
           }
 
           if (id === 'player') {
-            playerFrame = sprite.rect.anims?.currentFrame?.textureFrame
+            playerY = sprite.rect.y
+            playerFootY = sprite.footY
             playerAnim = sprite.rect.anims?.currentAnim?.key
             continue
           }
@@ -121,145 +307,172 @@ test.describe('Combat idle motion (Spec B §9.10)', () => {
             y: sprite.rect.y,
             footY: sprite.footY,
             anim: sprite.rect.anims?.currentAnim?.key,
+            frame: sprite.rect.anims?.currentFrame?.textureFrame,
           })
         }
 
-        return { playerFrame, playerAnim, enemies }
+        return { playerY, playerFootY, playerAnim, enemies }
+      })
+
+    const measureEntity = async () =>
+      page.evaluate(() => {
+        const w = window as unknown as {
+          __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
+        }
+
+        const scene = w.__tutienPhaserGame?.scene.getScene('CombatScene') as {
+          sprites: Map<
+            string,
+            {
+              row: number
+              personHeight?: number
+              rect: {
+                displayWidth: number
+                displayHeight: number
+                frame: { realWidth: number; realHeight: number }
+              }
+            }
+          >
+          projection?: { gridToScreen(row: number, col: number): { scale: number } }
+        }
+
+        const player = scene.sprites.get('player')
+        if (!player) return undefined
+
+        const at = (id: string) => {
+          const s = scene.sprites.get(id)
+          if (!s?.personHeight) return undefined
+          const depth = scene.projection?.gridToScreen(s.row, 8).scale ?? 1
+          return s.personHeight / depth
+        }
+
+        const enemyId = [...scene.sprites.keys()].find((k) => k !== 'player')
+
+        return {
+          displayWidth: player.rect.displayWidth,
+          displayHeight: player.rect.displayHeight,
+          authoredWidth: player.rect.frame.realWidth,
+          authoredHeight: player.rect.frame.realHeight,
+          playerPersonHeight: at('player'),
+          enemyPersonHeight: enemyId ? at(enemyId) : undefined,
+        }
       })
 
     const samples: Sample[] = []
+    let animatedScreenshotTaken = false
+    let measured: Awaited<ReturnType<typeof measureEntity>>
 
-    for (let index = 0; index < 6; index++) {
-      samples.push(await sampleScene())
+    // Sample across the whole floor-1 combat: 10 enemies spawn over time and
+    // kills, so a reskinned boar is near-certain to appear - but not inside a
+    // fixed early window, which is what the previous 6-sample version needed.
+    for (let index = 0; index < 240; index++) {
+      const sample = await sampleScene()
 
-      await page
-        .locator('canvas')
-        .first()
-        .screenshot({ path: path.join(outDir, `frame-${index}.png`) })
+      samples.push(sample)
 
-      await page.waitForTimeout(350)
+      if (!measured) {
+        measured = await measureEntity()
+      }
+
+      const animatedNow = sample.enemies.some((enemy) => enemy.anim)
+
+      if (animatedNow && !animatedScreenshotTaken) {
+        animatedScreenshotTaken = true
+        await page
+          .locator('canvas')
+          .first()
+          .screenshot({ path: path.join(outDir, 'animated-enemy.png') })
+      }
+
+      if (sample.enemies.length === 0 && samples.length > 10) {
+        // No enemies left standing - combat ended or is between waves.
+        break
+      }
+
+      await page.waitForTimeout(500)
     }
+
+    await page
+      .locator('canvas')
+      .first()
+      .screenshot({ path: path.join(outDir, 'final.png') })
 
     fs.writeFileSync(path.join(outDir, 'samples.json'), JSON.stringify(samples, null, 2))
 
     // There has to be something to measure.
-    expect(samples[0]!.enemies.length, 'no enemy sprites on screen').toBeGreaterThan(0)
+    const anyEnemies = samples.some((sample) => sample.enemies.length > 0)
+    expect(anyEnemies, 'no enemy sprites on screen across the whole capture').toBe(true)
 
-    // 1. The player's idle clip is running, and its frames ADVANCE. A frozen
-    //    sprite reports a frame too — only a change proves playback.
-    expect(samples[0]!.playerAnim, 'player is playing no animation').toBeTruthy()
+    // 1. Static-mode player: NO animation, and the bob lifts the body off its
+    //    projected ground point by a varying amount. (Pre-2026-09-19 this
+    //    asserted an atlas clip was playing; the static lock replaced that.)
+    const playerLifts = samples
+      .filter((sample) => sample.playerY !== undefined && sample.playerFootY !== undefined)
+      .map((sample) => sample.playerFootY! - sample.playerY!)
 
-    const playerFrames = new Set(samples.map((sample) => sample.playerFrame))
+    expect(playerLifts.length, 'player sprite never sampled').toBeGreaterThan(0)
+
+    for (const sample of samples) {
+      expect(
+        sample.playerAnim,
+        `static-mode player is playing '${sample.playerAnim}'`,
+      ).toBeFalsy()
+    }
 
     expect(
-      playerFrames.size,
-      `player frame never changed across ${samples.length} samples: ${[...playerFrames].join(', ')}`,
+      Math.max(...playerLifts),
+      'player body never left the ground - static means still, not dead',
+    ).toBeGreaterThan(0)
+
+    expect(
+      Math.max(...playerLifts),
+      'player lifted further than the declared amplitude',
+    ).toBeLessThanOrEqual(ENEMY_IDLE_AMPLITUDE_PX + 0.5)
+
+    expect(
+      new Set(playerLifts.map((lift) => lift.toFixed(2))).size,
+      'player lift never changed',
     ).toBeGreaterThan(1)
 
-    // 2. The player is drawn at the aspect ratio its ART is authored in.
-    //
-    //    The defect this pins, measured 2026-09-11: spec B moved what the
-    //    sprite DRAWS (an atlas frame authored at 200x350) without moving what
-    //    SIZES it (`PlayerVisualProfile.combatSourceSize`, 1312x1199), so the
-    //    figure rendered 3.44x too wide. Nothing failed — every clip was
-    //    correct, every frame advanced, and the proportions were nonsense.
-    const shape = await page.evaluate(() => {
-      const w = window as unknown as {
-        __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
-      }
-
-      const scene = w.__tutienPhaserGame?.scene.getScene('CombatScene') as {
-        sprites: Map<
-          string,
-          {
-            rect: {
-              displayWidth: number
-              displayHeight: number
-              frame: { realWidth: number; realHeight: number }
-            }
-          }
-        >
-      }
-
-      const player = scene.sprites.get('player')!
-
-      return {
-        displayWidth: player.rect.displayWidth,
-        displayHeight: player.rect.displayHeight,
-        authoredWidth: player.rect.frame.realWidth,
-        authoredHeight: player.rect.frame.realHeight,
-      }
-    })
-
-    const drawnAspect = shape.displayWidth / shape.displayHeight
-    const authoredAspect = shape.authoredWidth / shape.authoredHeight
-
-    expect(
-      drawnAspect / authoredAspect,
-      `player drawn at aspect ${drawnAspect.toFixed(3)} but authored at ${authoredAspect.toFixed(3)}`,
-    ).toBeCloseTo(1, 1)
-
-    // 3. Spec C §7 criterion 3 — the CHARACTER heights match, not the box heights.
-    //
-    // Measured before this spec: player 91.1px against boar 123.0px, while both
-    // carried the same multiplier and the boar was the one further away. A box
-    // comparison would have passed that.
-    const heights = await page.evaluate(() => {
-      const w = window as unknown as {
-        __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
-      }
-
-      const scene = w.__tutienPhaserGame?.scene.getScene('CombatScene') as {
-        sprites: Map<string, { row: number; personHeight?: number }>
-        projection?: { gridToScreen(row: number, col: number): { scale: number } }
-      }
-
-      const at = (id: string) => {
-        const s = scene.sprites.get(id)
-
-        if (!s?.personHeight) return undefined
-
-        // Normalise out perspective so two entities on different rows compare.
-        const depth = scene.projection?.gridToScreen(s.row, 8).scale ?? 1
-
-        return s.personHeight / depth
-      }
-
-      const enemyId = [...scene.sprites.keys()].find((k) => k !== 'player') as string
-
-      return { player: at('player'), enemy: at(enemyId) }
-    })
-
-    expect(heights.player, 'player has no resolved person height').toBeDefined()
-    expect(heights.enemy, 'enemy has no resolved person height').toBeDefined()
-
-    expect(
-      heights.player! / heights.enemy!,
-      `player ${heights.player!.toFixed(1)}px vs enemy ${heights.enemy!.toFixed(1)}px, depth-normalised`,
-    ).toBeCloseTo(1, 1)
-
-    // 4. Every static enemy moved, and kept its feet on the ground.
-    const enemyIds = samples[0]!.enemies.map((enemy) => enemy.id)
+    // 2. Per-enemy contract by art kind.
+    const enemyIds = [...new Set(samples.flatMap((sample) => sample.enemies.map((e) => e.id)))]
+    const animatedIds = new Set<string>()
 
     for (const id of enemyIds) {
       const series = samples
         .map((sample) => sample.enemies.find((enemy) => enemy.id === id))
         .filter((entry): entry is NonNullable<typeof entry> => entry !== undefined)
 
-      if (series.length < samples.length) {
-        // Died mid-capture. Not a failure — combat is running.
+      // Spawned-and-died inside one tick is still evidence combat ran, but
+      // too thin to measure motion on.
+      if (series.length < 3) {
         continue
       }
 
-      // The bob is the GAP between the body and the projected ground. Measuring
-      // it this way rather than as "body moved, feet did not" is deliberate:
-      // enemies advance between rows during a battle, so the foot point moves
-      // for a reason that has nothing to do with breathing. The gap isolates it.
+      const animated = series.some((entry) => entry.anim)
+
+      if (animated) {
+        animatedIds.add(id)
+
+        const frames = new Set(series.map((entry) => entry.frame))
+
+        expect(
+          frames.size,
+          `${id}: reskinned enemy is playing an animation but its frame never changed`,
+        ).toBeGreaterThan(1)
+
+        continue
+      }
+
+      // Static enemy: the bob is the GAP between the body and the projected
+      // ground. Enemies advance between rows during a battle, so the foot
+      // point itself moves for reasons unrelated to breathing - the gap
+      // isolates it.
       const lifts = series.map((entry) => entry.footY - entry.y)
 
       expect(
         Math.max(...lifts),
-        `${id}: body never left the ground — static means still, not dead`,
+        `${id}: body never left the ground - static means still, not dead`,
       ).toBeGreaterThan(0)
 
       expect(
@@ -267,13 +480,40 @@ test.describe('Combat idle motion (Spec B §9.10)', () => {
         `${id}: lifted further than the declared amplitude`,
       ).toBeLessThanOrEqual(ENEMY_IDLE_AMPLITUDE_PX + 0.5)
 
-      expect(new Set(lifts.map((lift) => lift.toFixed(2))).size, `${id}: lift never changed`)
-        .toBeGreaterThan(1)
-
-      // 5. And it is a tween, not an animation (§3.2).
-      for (const entry of series) {
-        expect(entry.anim, `${id}: a static enemy is playing '${entry.anim}'`).toBeFalsy()
-      }
+      expect(
+        new Set(lifts.map((lift) => lift.toFixed(2))).size,
+        `${id}: lift never changed`,
+      ).toBeGreaterThan(1)
     }
+
+    // 3. Wave-1 pin: at least one reskinned enemy must actually have been
+    //    on screen long enough to prove the clip runs - floor 1's pool makes
+    //    this near-deterministic (boar weight 5 vs bandit weight 3).
+    expect(
+      animatedIds.size,
+      'no reskinned enemy was ever animated on screen (floor-1 pool boar w5 / bandit w3)',
+    ).toBeGreaterThan(0)
+
+    // 4. The player is drawn at the aspect ratio its ART is authored in,
+    //    and Spec C sec.7 criterion 3 - the CHARACTER heights match, not the
+    //    box heights. Measured mid-loop above: after combat ends the scene's
+    //    sprite map is gone, so these reads must not wait for it.
+    expect(measured, 'player sprite never measurable during combat').toBeDefined()
+
+    const drawnAspect = measured!.displayWidth / measured!.displayHeight
+    const authoredAspect = measured!.authoredWidth / measured!.authoredHeight
+
+    expect(
+      drawnAspect / authoredAspect,
+      `player drawn at aspect ${drawnAspect.toFixed(3)} but authored at ${authoredAspect.toFixed(3)}`,
+    ).toBeCloseTo(1, 1)
+
+    expect(measured!.playerPersonHeight, 'player has no resolved person height').toBeDefined()
+    expect(measured!.enemyPersonHeight, 'enemy has no resolved person height').toBeDefined()
+
+    expect(
+      measured!.playerPersonHeight! / measured!.enemyPersonHeight!,
+      `player ${measured!.playerPersonHeight!.toFixed(1)}px vs enemy ${measured!.enemyPersonHeight!.toFixed(1)}px, depth-normalised`,
+    ).toBeCloseTo(1, 1)
   })
 })

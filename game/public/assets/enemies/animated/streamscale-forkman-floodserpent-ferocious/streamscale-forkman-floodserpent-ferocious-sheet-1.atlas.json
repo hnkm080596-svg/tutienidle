@@ -10,14 +10,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 170,
-        "y": 291,
+        "x": 3,
+        "y": 10,
         "w": 509,
         "h": 453
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 514,
+        "h": 463
       }
     },
     "streamscale-forkman-floodserpent-ferocious-idle-002.png": {
@@ -30,14 +30,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 172,
-        "y": 291,
+        "x": 5,
+        "y": 10,
         "w": 508,
         "h": 450
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 514,
+        "h": 463
       }
     },
     "streamscale-forkman-floodserpent-ferocious-idle-003.png": {
@@ -50,14 +50,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 177,
-        "y": 287,
+        "x": 10,
+        "y": 6,
         "w": 502,
         "h": 454
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 514,
+        "h": 463
       }
     },
     "streamscale-forkman-floodserpent-ferocious-idle-004.png": {
@@ -70,14 +70,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 177,
-        "y": 283,
+        "x": 10,
+        "y": 2,
         "w": 502,
         "h": 458
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 514,
+        "h": 463
       }
     },
     "streamscale-forkman-floodserpent-ferocious-idle-005.png": {
@@ -90,14 +90,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 175,
-        "y": 281,
+        "x": 8,
+        "y": 0,
         "w": 504,
         "h": 460
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 514,
+        "h": 463
       }
     },
     "streamscale-forkman-floodserpent-ferocious-idle-006.png": {
@@ -110,14 +110,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 171,
-        "y": 282,
+        "x": 4,
+        "y": 1,
         "w": 509,
         "h": 459
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 514,
+        "h": 463
       }
     },
     "streamscale-forkman-floodserpent-ferocious-idle-007.png": {
@@ -130,14 +130,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 169,
-        "y": 284,
+        "x": 2,
+        "y": 3,
         "w": 512,
         "h": 457
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 514,
+        "h": 463
       }
     },
     "streamscale-forkman-floodserpent-ferocious-idle-008.png": {
@@ -150,14 +150,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 167,
-        "y": 287,
+        "x": 0,
+        "y": 6,
         "w": 514,
         "h": 454
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 514,
+        "h": 463
       }
     },
     "streamscale-forkman-floodserpent-ferocious-idle-009.png": {
@@ -170,14 +170,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 168,
-        "y": 290,
+        "x": 1,
+        "y": 9,
         "w": 512,
         "h": 451
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 514,
+        "h": 463
       }
     },
     "streamscale-forkman-floodserpent-ferocious-attack-001.png": {
@@ -190,14 +190,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 170,
-        "y": 291,
+        "x": 3,
+        "y": 10,
         "w": 509,
         "h": 453
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 514,
+        "h": 463
       }
     },
     "streamscale-forkman-floodserpent-ferocious-attack-002.png": {
@@ -210,14 +210,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 170,
-        "y": 291,
+        "x": 3,
+        "y": 10,
         "w": 509,
         "h": 453
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 514,
+        "h": 463
       }
     },
     "streamscale-forkman-floodserpent-ferocious-death-001.png": {
@@ -230,14 +230,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 170,
-        "y": 291,
+        "x": 3,
+        "y": 10,
         "w": 509,
         "h": 453
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 514,
+        "h": 463
       }
     }
   },

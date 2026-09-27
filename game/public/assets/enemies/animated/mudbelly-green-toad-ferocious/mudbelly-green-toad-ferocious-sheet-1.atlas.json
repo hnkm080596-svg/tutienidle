@@ -10,14 +10,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 243,
-        "y": 407,
+        "x": 1,
+        "y": 7,
         "w": 474,
         "h": 338
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 475,
+        "h": 345
       }
     },
     "mudbelly-green-toad-ferocious-idle-002.png": {
@@ -30,14 +30,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 243,
-        "y": 406,
+        "x": 1,
+        "y": 6,
         "w": 474,
         "h": 339
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 475,
+        "h": 345
       }
     },
     "mudbelly-green-toad-ferocious-idle-003.png": {
@@ -50,14 +50,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 243,
-        "y": 405,
+        "x": 1,
+        "y": 5,
         "w": 474,
         "h": 340
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 475,
+        "h": 345
       }
     },
     "mudbelly-green-toad-ferocious-idle-004.png": {
@@ -70,14 +70,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 243,
-        "y": 403,
+        "x": 1,
+        "y": 3,
         "w": 474,
         "h": 342
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 475,
+        "h": 345
       }
     },
     "mudbelly-green-toad-ferocious-idle-005.png": {
@@ -90,14 +90,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 243,
-        "y": 402,
+        "x": 1,
+        "y": 2,
         "w": 474,
         "h": 343
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 475,
+        "h": 345
       }
     },
     "mudbelly-green-toad-ferocious-idle-006.png": {
@@ -110,14 +110,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 242,
-        "y": 400,
+        "x": 0,
+        "y": 0,
         "w": 475,
         "h": 345
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 475,
+        "h": 345
       }
     },
     "mudbelly-green-toad-ferocious-idle-007.png": {
@@ -130,14 +130,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 242,
-        "y": 400,
+        "x": 0,
+        "y": 0,
         "w": 475,
         "h": 345
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 475,
+        "h": 345
       }
     },
     "mudbelly-green-toad-ferocious-idle-008.png": {
@@ -150,14 +150,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 242,
-        "y": 401,
+        "x": 0,
+        "y": 1,
         "w": 475,
         "h": 343
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 475,
+        "h": 345
       }
     },
     "mudbelly-green-toad-ferocious-idle-009.png": {
@@ -170,14 +170,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 242,
-        "y": 400,
+        "x": 0,
+        "y": 0,
         "w": 475,
         "h": 345
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 475,
+        "h": 345
       }
     },
     "mudbelly-green-toad-ferocious-idle-010.png": {
@@ -190,14 +190,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 242,
-        "y": 402,
+        "x": 0,
+        "y": 2,
         "w": 475,
         "h": 343
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 475,
+        "h": 345
       }
     },
     "mudbelly-green-toad-ferocious-idle-011.png": {
@@ -210,14 +210,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 242,
-        "y": 403,
+        "x": 0,
+        "y": 3,
         "w": 475,
         "h": 342
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 475,
+        "h": 345
       }
     },
     "mudbelly-green-toad-ferocious-idle-012.png": {
@@ -230,14 +230,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 242,
-        "y": 405,
+        "x": 0,
+        "y": 5,
         "w": 475,
         "h": 340
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 475,
+        "h": 345
       }
     },
     "mudbelly-green-toad-ferocious-idle-013.png": {
@@ -250,14 +250,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 242,
-        "y": 406,
+        "x": 0,
+        "y": 6,
         "w": 475,
         "h": 339
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 475,
+        "h": 345
       }
     },
     "mudbelly-green-toad-ferocious-attack-001.png": {
@@ -270,14 +270,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 243,
-        "y": 407,
+        "x": 1,
+        "y": 7,
         "w": 474,
         "h": 338
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 475,
+        "h": 345
       }
     },
     "mudbelly-green-toad-ferocious-attack-002.png": {
@@ -290,14 +290,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 243,
-        "y": 407,
+        "x": 1,
+        "y": 7,
         "w": 474,
         "h": 338
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 475,
+        "h": 345
       }
     },
     "mudbelly-green-toad-ferocious-death-001.png": {
@@ -310,14 +310,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 243,
-        "y": 407,
+        "x": 1,
+        "y": 7,
         "w": 474,
         "h": 338
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 475,
+        "h": 345
       }
     }
   },

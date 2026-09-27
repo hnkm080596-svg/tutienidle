@@ -10,14 +10,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 235,
-        "y": 151,
+        "x": 0,
+        "y": 8,
         "w": 462,
         "h": 535
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 468,
+        "h": 546
       }
     },
     "streamgrudge-nymph-idle-002.png": {
@@ -30,14 +30,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 237,
-        "y": 151,
+        "x": 2,
+        "y": 8,
         "w": 461,
         "h": 536
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 468,
+        "h": 546
       }
     },
     "streamgrudge-nymph-idle-003.png": {
@@ -50,14 +50,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 239,
-        "y": 151,
+        "x": 4,
+        "y": 8,
         "w": 461,
         "h": 537
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 468,
+        "h": 546
       }
     },
     "streamgrudge-nymph-idle-004.png": {
@@ -70,14 +70,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 241,
-        "y": 148,
+        "x": 6,
+        "y": 5,
         "w": 461,
         "h": 541
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 468,
+        "h": 546
       }
     },
     "streamgrudge-nymph-idle-005.png": {
@@ -90,14 +90,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 242,
-        "y": 146,
+        "x": 7,
+        "y": 3,
         "w": 461,
         "h": 541
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 468,
+        "h": 546
       }
     },
     "streamgrudge-nymph-idle-006.png": {
@@ -110,14 +110,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 241,
-        "y": 143,
+        "x": 6,
+        "y": 0,
         "w": 462,
         "h": 543
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 468,
+        "h": 546
       }
     },
     "streamgrudge-nymph-idle-007.png": {
@@ -130,14 +130,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 239,
-        "y": 144,
+        "x": 4,
+        "y": 1,
         "w": 462,
         "h": 539
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 468,
+        "h": 546
       }
     },
     "streamgrudge-nymph-idle-008.png": {
@@ -150,14 +150,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 237,
-        "y": 145,
+        "x": 2,
+        "y": 2,
         "w": 461,
         "h": 537
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 468,
+        "h": 546
       }
     },
     "streamgrudge-nymph-idle-009.png": {
@@ -170,14 +170,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 235,
-        "y": 148,
+        "x": 0,
+        "y": 5,
         "w": 462,
         "h": 535
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 468,
+        "h": 546
       }
     },
     "streamgrudge-nymph-idle-010.png": {
@@ -190,14 +190,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 235,
-        "y": 150,
+        "x": 0,
+        "y": 7,
         "w": 462,
         "h": 534
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 468,
+        "h": 546
       }
     },
     "streamgrudge-nymph-attack-001.png": {
@@ -210,14 +210,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 235,
-        "y": 151,
+        "x": 0,
+        "y": 8,
         "w": 462,
         "h": 535
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 468,
+        "h": 546
       }
     },
     "streamgrudge-nymph-attack-002.png": {
@@ -230,14 +230,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 235,
-        "y": 151,
+        "x": 0,
+        "y": 8,
         "w": 462,
         "h": 535
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 468,
+        "h": 546
       }
     },
     "streamgrudge-nymph-death-001.png": {
@@ -250,14 +250,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 235,
-        "y": 151,
+        "x": 0,
+        "y": 8,
         "w": 462,
         "h": 535
       },
       "sourceSize": {
-        "w": 960,
-        "h": 960
+        "w": 468,
+        "h": 546
       }
     }
   },

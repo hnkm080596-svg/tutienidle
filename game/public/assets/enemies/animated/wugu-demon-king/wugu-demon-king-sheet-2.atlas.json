@@ -10,14 +10,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 252,
-        "y": 312,
+        "x": 3,
+        "y": 28,
         "w": 467,
         "h": 349
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-002.png": {
@@ -30,14 +30,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 212,
-        "y": 278,
+        "x": -37,
+        "y": -6,
         "w": 499,
         "h": 382
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-003.png": {
@@ -50,14 +50,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 424,
-        "y": 189,
+        "x": 175,
+        "y": -95,
         "w": 444,
         "h": 471
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-004.png": {
@@ -70,14 +70,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 439,
-        "y": 194,
+        "x": 190,
+        "y": -90,
         "w": 470,
         "h": 466
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-005.png": {
@@ -90,14 +90,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 452,
-        "y": 193,
+        "x": 203,
+        "y": -91,
         "w": 471,
         "h": 467
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-006.png": {
@@ -110,14 +110,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 452,
-        "y": 193,
+        "x": 203,
+        "y": -91,
         "w": 470,
         "h": 467
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-007.png": {
@@ -130,14 +130,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 315,
-        "y": 125,
+        "x": 66,
+        "y": -159,
         "w": 403,
         "h": 535
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-008.png": {
@@ -150,14 +150,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 158,
-        "y": 326,
+        "x": -91,
+        "y": 42,
         "w": 555,
         "h": 344
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-009.png": {
@@ -170,14 +170,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 143,
-        "y": 305,
+        "x": -106,
+        "y": 21,
         "w": 554,
         "h": 355
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-010.png": {
@@ -190,14 +190,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 371,
-        "y": 97,
+        "x": 122,
+        "y": -187,
         "w": 316,
         "h": 563
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-011.png": {
@@ -210,14 +210,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 428,
-        "y": 195,
+        "x": 179,
+        "y": -89,
         "w": 476,
         "h": 468
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-012.png": {
@@ -230,14 +230,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 441,
-        "y": 205,
+        "x": 192,
+        "y": -79,
         "w": 454,
         "h": 455
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-013.png": {
@@ -250,14 +250,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 349,
-        "y": 84,
+        "x": 100,
+        "y": -200,
         "w": 369,
         "h": 576
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-014.png": {
@@ -270,14 +270,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 139,
-        "y": 325,
+        "x": -110,
+        "y": 41,
         "w": 573,
         "h": 353
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-015.png": {
@@ -290,14 +290,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 140,
-        "y": 314,
+        "x": -109,
+        "y": 30,
         "w": 561,
         "h": 349
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-016.png": {
@@ -310,14 +310,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 415,
-        "y": 54,
+        "x": 166,
+        "y": -230,
         "w": 271,
         "h": 610
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-017.png": {
@@ -330,14 +330,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 433,
-        "y": 209,
+        "x": 184,
+        "y": -75,
         "w": 448,
         "h": 451
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-018.png": {
@@ -350,14 +350,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 442,
-        "y": 193,
+        "x": 193,
+        "y": -91,
         "w": 467,
         "h": 467
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-019.png": {
@@ -370,14 +370,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 448,
-        "y": 195,
+        "x": 199,
+        "y": -89,
         "w": 465,
         "h": 465
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-020.png": {
@@ -390,14 +390,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 195,
-        "y": 281,
+        "x": -54,
+        "y": -3,
         "w": 523,
         "h": 379
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-021.png": {
@@ -410,14 +410,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 140,
-        "y": 326,
+        "x": -109,
+        "y": 42,
         "w": 576,
         "h": 355
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-022.png": {
@@ -430,14 +430,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 169,
-        "y": 311,
+        "x": -80,
+        "y": 27,
         "w": 530,
         "h": 349
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-attack-023.png": {
@@ -450,14 +450,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 230,
-        "y": 298,
+        "x": -19,
+        "y": 14,
         "w": 470,
         "h": 362
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     },
     "wugu-demon-king-death-001.png": {
@@ -470,14 +470,14 @@
       "rotated": false,
       "trimmed": true,
       "spriteSourceSize": {
-        "x": 253,
-        "y": 284,
+        "x": 4,
+        "y": 0,
         "w": 456,
         "h": 376
       },
       "sourceSize": {
-        "w": 992,
-        "h": 932
+        "w": 463,
+        "h": 376
       }
     }
   },
