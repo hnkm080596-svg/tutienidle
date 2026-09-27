@@ -1,0 +1,23 @@
+{
+  "applied": [
+    "evidence:EV-PTR-CORL",
+    "evidence:EV-PTR-AUTL",
+    "evidence:EV-PTR-INTL",
+    "evidence:EV-PTR-FIXM",
+    "review:REV-PTR-COR-L1",
+    "review:REV-PTR-AUT-L1",
+    "review:REV-PTR-INT-L1",
+    "finding:F-PTR-170",
+    "finding:F-PTR-171",
+    "finding:F-PTR-172",
+    "finding:F-PTR-173",
+    "finding:F-PTR-174",
+    "finding:F-PTR-175",
+    "finding:F-PTR-176",
+    "finding:F-PTR-177",
+    "finding:F-PTR-178",
+    "lesson:L-PTR-L-DECLINE-NOT-CRASH",
+    "lesson:L-PTR-L-QUERY-LEAF-PARITY",
+    "lesson:L-PTR-L-MUTATION-HOME"
+  ]
+}
