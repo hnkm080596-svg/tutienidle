@@ -172,7 +172,15 @@ describe('CombatScene lifecycle â€” listener khÃ´ng tÃ­ch lÅ©y qua re
     // onBattleStart pháº£i clear statuses â€” match body method (source-contract,
     // cÃ¹ng giá»›i háº¡n vá»›i cÃ¡c case khÃ¡c trong file nÃ y).
     const onBattleStartBody =
-      combatSceneSource.match(/onBattleStart\(\) \{[\s\S]*?\n  \}/)?.[0] ?? ''
+      combatSceneSource.match(/onBattleStart\([^)]*\) \{[\s\S]*?\n  \}/)?.[0] ?? ''
     expect(onBattleStartBody).toMatch(/statuses/)
+  })
+
+  it('rebindSession phải báo rebind cho onBattleStart để camera-latch sống qua reattach cùng session', () => {
+    // Pin source-contract: cùng sessionId => rebind (giữ latch); session
+    // khác/undefined => battle start (clear latch).
+    expect(combatSceneSource).toMatch(/context\.sessionId !== undefined &&\s*context\.sessionId === this\.initSessionId/)
+    expect(combatSceneSource).toMatch(/onBattleStart\(\{ rebind: isSameSessionRebind \}\)/)
+    expect(combatSceneSource).toMatch(/_skillVfxDriver\?\.reset\(options\?\.rebind \? 'rebind' : 'battle'\)/)
   })
 })

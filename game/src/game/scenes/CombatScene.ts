@@ -1836,9 +1836,13 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // MainScene) hoÃ¡ÂºÂ·c lÃ¡ÂºÂ§n Ã„â€˜Ã¡ÂºÂ§u vÃƒÂ o Combat Scene (create() Ã„â€˜ÃƒÂ£ tÃ¡Â»Â± dÃ¡Â»Â±ng
   // player, hÃƒÂ m nÃƒÂ y reset lÃ¡ÂºÂ¡i vÃ¡Â»Â Ã„â€˜ÃƒÂºng trÃ¡ÂºÂ¡ng thÃƒÂ¡i ban Ã„â€˜Ã¡ÂºÂ§u cho chÃ¡ÂºÂ¯c,
   // no-op nÃ¡ÂºÂ¿u Ã„â€˜ÃƒÂ£ sÃ¡ÂºÂ¡ch sÃ¡ÂºÂµn).
-  onBattleStart() {
+  onBattleStart(options?: { rebind?: boolean }) {
     this._skillPlayback?.cancel()
-    this._skillVfxDriver?.reset()
+    // 'rebind' = in-place reattach to the SAME battle/session: the
+    // driver's per-action camera latch survives so a 'complete'-phase
+    // resume cannot refire an already-fired camera impulse. Anything else
+    // is a new battle and gets the full reset.
+    this._skillVfxDriver?.reset(options?.rebind ? 'rebind' : 'battle')
     this.inBattle = true
 
     // 6A-T5 — HUD hiện khi vào trận.
@@ -1932,11 +1936,17 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
    * Resets visual state, reconciles with the session's initial snapshot, and reports READY.
    */
   rebindSession(context: { transitionId: number; sessionId?: number; gameGeneration: number }): void {
+    // Same-session rebind = renderer reattach to the live battle (session
+    // ids are minted per battle launch); a different session means a new
+    // battle arrived over the same scene and the reset is a battle start.
+    const isSameSessionRebind =
+      context.sessionId !== undefined && context.sessionId === this.initSessionId
+
     this.initTransitionId = context.transitionId
     this.initSessionId = context.sessionId
     this.initGameGeneration = context.gameGeneration
 
-    this.onBattleStart()
+    this.onBattleStart({ rebind: isSameSessionRebind })
 
     const gameManager = readOptionalGate(this.registry, 'gameManager')
 

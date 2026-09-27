@@ -76,9 +76,12 @@ export class SkillPresentationRunner {
       && (active.phase === 'waiting' || active.phase === 'cast')) {
       // EventBus delivery is synchronous. Consume only after the impact ACK
       // returns. A sealed receipt that lands during cast - an impact ACK
-      // issued outside this runner, e.g. the awaitStep fallback drive or a
-      // mechanical drain - is queued and plays as soon as the cast ends
-      // instead of being silently dropped.
+      // issued outside this runner, e.g. the awaitStep fallback drive -
+      // is queued and plays as soon as the cast ends instead of being
+      // silently dropped. A mechanical drain cannot produce one: the
+      // skill_presentation_resolved emit lives inside
+      // acknowledgeActionImpact, and drainPendingPlayback applies impact
+      // on the battle system directly.
       active.inbox = result
       return
     }

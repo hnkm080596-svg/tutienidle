@@ -173,6 +173,12 @@ export class CombatAnimationRuntime {
    * deferral cap: both mean "the renderer cannot acknowledge", so the
    * runtime finishes the turn's mechanical work itself rather than leaving
    * the step parked on a report that cannot arrive.
+   *
+   * Reentrancy exposure (documented, not restructured): the mechanics run
+   * inside the caller's stack and the completion sink fires afterwards, so
+   * a subscriber that re-enters via detachPresentation('headless') from
+   * inside applyActionImpact's emit chain would run a nested drain
+   * mid-mechanics. The normal ack path carries the same exposure.
    */
   drainPendingPlayback(): void {
     const battle = this.deps.getTurnBattle()
@@ -186,7 +192,20 @@ export class CombatAnimationRuntime {
       // được auto-resolve bằng AI khi rời scene: chuyển vào
       // awaitedManualActor giữ choice chờ submitTurnChoice (cùng nhánh
       // với acknowledgeTurnReady()).
-      const isManualActor = this.battleManualMode && battle.players.includes(actor)
+      //
+      // Manual-vs-auto was decided at CLAIM time, though - a queued
+      // repeat/multicast execution is force-claimed manualMode:false but
+      // reaches this ready phase with a player's identity, so the live
+      // battleManualMode flag alone would misroute it into a manual pause.
+      // That would orphan the already-committed payload (the next
+      // declareActorAction drops or hijacks it) and leave
+      // awaitedManualActor set while the token sits IDLE, where a stray
+      // submitTurnChoice could still declare inline. Ask the claim owner
+      // instead: a pending queued execution is never a manual choice.
+      const isManualActor =
+        this.battleManualMode &&
+        battle.players.includes(actor) &&
+        !turnBattleSystem.isPendingQueuedExecution(actor.id)
 
       if (isManualActor) {
         this.awaitedManualActor = actor

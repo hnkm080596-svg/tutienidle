@@ -167,6 +167,21 @@ describe('pooled Phaser skill driver', () => {
     expect(f.surface.cameraImpulse).toHaveBeenCalledTimes(2)
     expect(f.surface.cameraImpulse).toHaveBeenLastCalledWith(45, 0.001)
   })
+  it('keeps the camera latch across a same-session rebind reset; a battle start still clears it', () => {
+    // Rebind pin: the same battle's complete-phase resume re-opens
+    // recovery cues for the same requestId after driver.reset('rebind') -
+    // the latch must survive or the camera impulse fires twice per action.
+    const f = fixture()
+    const landed = landedContext(f)
+    f.driver.open(cameraCue, landed)
+    f.driver.reset('rebind')
+    f.driver.open(cameraCue, landed)
+    expect(f.surface.cameraImpulse).toHaveBeenCalledExactlyOnceWith(140, 0.005)
+    // A real battle start is the boundary that clears it.
+    f.driver.reset('battle')
+    f.driver.open(cameraCue, landed)
+    expect(f.surface.cameraImpulse).toHaveBeenCalledTimes(2)
+  })
   it('fires an authored camera-cue once per action on a landed hit', () => {
     const f = fixture()
     const context = landedContext(f)

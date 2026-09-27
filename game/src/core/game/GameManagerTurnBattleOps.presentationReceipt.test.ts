@@ -122,6 +122,101 @@ describe('production presentation handshake first proof', () => {
     expect(manager.getTurnTokenState()).toBe('IDLE')
     manager.abandonBattle()
   })
+  it('drain resolves an auto-claimed queued execution under manual mode - no manual-pause residue', () => {
+    const { manager, clock } = setup()
+    const port = manager.getPresentationPort()
+    const battle = manager.getTurnBattle()!
+
+    // The player's committed cast earns a follow-up execution; manual mode
+    // makes every NEW player turn pause for input. repeatCasts is set on a
+    // copy - the default basic is a shared module constant.
+    const participant = battle.players[0]!
+    participant.basic = { ...participant.basic!, repeatCasts: 1 }
+    manager.setBattleManualMode(true)
+
+    // Each ack is phase-gated, so one trio completes whichever phase is
+    // parked - the renderer handshake, driven manually.
+    const driveParkedTurn = () => {
+      const token = manager.getPendingPlaybackToken()
+
+      if (token) {
+        manager.acknowledgeTurnReady(token)
+        manager.acknowledgeActionImpact(token)
+        manager.acknowledgeActionComplete(token)
+      }
+    }
+
+    // Finish the turn setup() left parked at 'ready' so the manual flag
+    // lands at the turn boundary.
+    driveParkedTurn()
+    expect(manager.getTurnTokenState()).toBe('IDLE')
+
+    // Run the clock until the player's manual pause: queued executions and
+    // enemy turns resolve through the manual handshakes in between. The
+    // manual flag itself lands at the first fighting step's boundary drain.
+    for (let i = 0; i < 400 && !manager.isAwaitingManualTurnChoice(); i++) {
+      driveParkedTurn()
+
+      if (manager.getTurnTokenState() === 'IDLE') {
+        clock.advance(COMBAT_STEP_SECONDS)
+      }
+    }
+
+    expect(manager.isAwaitingManualTurnChoice()).toBe(true)
+    expect(manager.consumeAwaitedActorId()).toBe('player')
+
+    // The committed first cast resolves through the normal handshake; its
+    // completeAction queues the repeat execution.
+    expect(manager.submitTurnChoice('basic')).toBe(true)
+    driveParkedTurn()
+    driveParkedTurn()
+    expect(manager.getTurnTokenState()).toBe('IDLE')
+
+    // The repeat claims as an AUTO turn - claim-time manualMode:false -
+    // and parks at 'ready' even with manual mode on. (A real player turn
+    // would pause at AWAITING_INPUT and never produce this phase.)
+    clock.advance(COMBAT_STEP_SECONDS)
+    const resume = manager.preparePresentationResume()
+    expect(resume?.phase).toBe('ready')
+    expect(resume && 'actorId' in resume && resume.actorId).toBe('player')
+
+    // Renderer never acks: hold the session past the deferral cap so the
+    // parked ready step drains mechanically.
+    const hold = port.hold(port.getCurrentSession()!)!
+    vi.advanceTimersByTime(ANIMATION_FALLBACK_MS * 8)
+
+    // The drain must consult the claim owner - pendingQueuedExecution -
+    // and resolve the committed payload inline. The bug misrouted it into
+    // awaitedManualActor on the live battleManualMode flag alone: token
+    // IDLE with a stale manual pause parked on it.
+    expect(manager.getTurnTokenState()).toBe('IDLE')
+    expect(manager.consumeAwaitedActorId()).toBeNull()
+    expect(manager.preparePresentationResume()).toBeNull()
+
+    // A queued repeat resolves on the parent's turn counter - the latest
+    // player pair proving the committed payload ran rather than being
+    // orphaned until a later declare drops or hijacks it.
+    const playerEntries = (battle.log ?? []).filter((entry) => entry.actorId === 'player')
+    expect(playerEntries.length).toBeGreaterThanOrEqual(2)
+    expect(playerEntries[playerEntries.length - 1]!.turn)
+      .toBe(playerEntries[playerEntries.length - 2]!.turn)
+
+    // Reveal the session: no residue means a stray submit is refused, and
+    // the battle walks on to the player's next real manual pause.
+    expect(port.attach(hold)).toBe(true)
+    expect(port.release(hold)).toBe(true)
+    expect(manager.submitTurnChoice('basic')).toBe(false)
+    for (let i = 0; i < 400 && !manager.isAwaitingManualTurnChoice(); i++) {
+      driveParkedTurn()
+
+      if (manager.getTurnTokenState() === 'IDLE') {
+        clock.advance(COMBAT_STEP_SECONDS)
+      }
+    }
+
+    expect(manager.isAwaitingManualTurnChoice()).toBe(true)
+    manager.abandonBattle()
+  })
   it('accepts synchronous complete from impact observer without losing pipeline settlement', () => {
     const { manager } = setup()
     let impacts = 0

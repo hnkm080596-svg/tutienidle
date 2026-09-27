@@ -44,7 +44,18 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
       graphics => { graphics.clear(); graphics.setVisible(false) }, graphics => graphics.destroy())
   }
   get stats() { return this.pool.stats }
-  reset(): void { this.epoch++; this.cameraImpulseFired.clear(); this.pool.reset() }
+  /**
+   * Battle-boundary reset. 'battle' (default) clears everything for a new
+   * battle. 'rebind' is an in-place reattach to the SAME battle/session:
+   * pooled vfx retire, but the camera latch must survive - a complete-phase
+   * resume re-opens recovery cues for the same requestId, and the <=1-per-
+   * action latch contract belongs to the action, not the attach.
+   */
+  reset(scope: 'battle' | 'rebind' = 'battle'): void {
+    this.epoch++
+    if (scope === 'battle') this.cameraImpulseFired.clear()
+    this.pool.reset()
+  }
   destroy(): void { this.epoch++; this.cameraImpulseFired.clear(); this.pool.destroy() }
   private latchCamera(requestId: string): boolean {
     if (this.cameraImpulseFired.has(requestId)) return false
@@ -56,6 +67,9 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
     const cast = context.cast
     const group = context.group
     const source = cast?.source ?? group?.source
+    // Ordering: a context carrying neither cast nor group has no source to
+    // anchor anything against, so every primitive no-ops here before the
+    // phase guards below can warn - silent by design for debris contexts.
     if (!source) return quietHandle
     if (cast && !['action', 'charge-release'].includes(cast.disposition)
       && (cue.primitive === 'trajectory' || cue.primitive === 'actor-impulse'))

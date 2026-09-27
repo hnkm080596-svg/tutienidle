@@ -8,6 +8,15 @@ import type { TurnSkillDefinition } from './TurnSkillAction'
 import { executionCommitsCast } from './TurnSkillAction'
 import { entityGridPosition } from '../BattleGrid'
 
+/**
+ * Playback-scoped action identity. `requestId` is the ACTION-stable key -
+ * minted once per declared action (skill-request-N) and constant across
+ * resume replays, so per-action latches (e.g. the VFX driver's camera
+ * impulse) key on it. `token` is the rotating ack identity -
+ * preparePresentationResume mints a fresh one per re-attach so stale
+ * renderer callbacks die; never key anything that must survive a resume
+ * on token.
+ */
 export type PlaybackRef = Readonly<{ sessionId: number; requestId: string; token: string }>
 export type ActorAnchorFact = Readonly<{ entityId: string; row: number; column: number }>
 export type CastDisposition =

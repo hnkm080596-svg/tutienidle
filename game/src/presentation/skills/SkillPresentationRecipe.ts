@@ -31,6 +31,12 @@ export interface SkillPresentationRecipe {
 export interface SkillCueContext {
   readonly ref: PlaybackRef
   readonly recipe: SkillPresentationRecipe
+  // Runtime context-phase vocabulary - 'cast' during cast playback,
+  // 'resolved' during resolved (impact+recovery) playback. This is NOT
+  // the recipe-section vocabulary ('cast' | 'impact' | 'recovery') used
+  // by validateSkillRecipe and primitivePhaseAllowlist below: a cue
+  // authored in the impact or recovery section runs with phase
+  // 'resolved'.
   readonly phase: 'cast' | 'resolved'
   readonly cast?: SkillCastPresentation
   readonly group?: ResolvedPresentationGroup
