@@ -42,6 +42,7 @@ import type { SkillPathEntry, NativeSkillPathEntry } from './skill-path/SkillPat
 import { NATIVE_CORE_SKILL_IDS } from '@/data/progression/SkillCoreNodes'
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import { getSkillCoreLevel } from '@/core/progression/SkillCoreLevel'
+import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 
 const { t } = useI18n()
@@ -138,6 +139,11 @@ function onSelectNode(node: ProgressionNode, purchased: boolean, purchasable: bo
   selectedNodePurchasable.value = purchasable
   centerMode.value = 'tree'
 }
+
+// In-battle the engine rejects every nodeLevels write (purchaseNode /
+// upgradeNode gate on isTurnBattleInProgress) -- disable the inspector
+// buttons instead of offering a dead click.
+const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 
 // Node vừa mua xong vẫn đang là selectedNode — refresh trạng thái
 // purchased/purchasable hiển thị ở inspector theo state mới nhất mỗi
@@ -363,6 +369,7 @@ function close() {
           :node="selectedNode"
           :purchased="selectedNodePurchased"
           :purchasable="selectedNodePurchasable"
+          :in-battle="inBattle"
           @unlocked="onNodeUnlocked"
         />
       </div>
