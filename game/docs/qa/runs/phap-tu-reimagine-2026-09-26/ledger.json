@@ -28,7 +28,7 @@
     ],
     "capacityLimit": 5,
     "requiredReadiness": true,
-    "phase": "SNAPSHOT",
+    "phase": "DECIDE",
     "cleanRoundA": null,
     "cleanRoundB": null,
     "finalEvidenceIds": [
@@ -19671,6 +19671,33 @@
       "inputPaths": [],
       "invariantIds": [],
       "limitations": []
+    },
+    {
+      "kind": "EXECUTED_INTEGRATION",
+      "id": "EV-PTR-TERMINAL",
+      "state": {
+        "productStateId": "1353a680dceb90b1b312d22a71506d4b5466deba90f55aca4b27f74c41a3cef4",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "status": "CURRENT",
+      "producer": "devin-717eeba20fb8424ba75a9346a47d4887",
+      "startedAt": "2026-09-27T15:13:00Z",
+      "finishedAt": "2026-09-27T15:20:00Z",
+      "commandOrMethod": "TERMINAL_CHECK @e3cd383d: SEALED -- wave-Q+R surface verified, sibling invariants hold, seam allowlist honest; type-check + broad scope 311 files/3169 tests PASS",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "records-terminal.json",
+      "artifactHash": "5044fdd258176f18e4c21170f45bbd3f60087a370e3ab0100d54929947f9d3e4",
+      "claims": [
+        "terminal check sealed on final state"
+      ],
+      "inputEvidenceIds": [],
+      "inputPaths": [],
+      "invariantIds": [],
+      "limitations": []
     }
   ],
   "coverage": [],
@@ -22372,6 +22399,35 @@
       "coverageIds": [],
       "evidenceIds": [
         "EV-PTR-CLO21"
+      ],
+      "novelAttackIds": []
+    },
+    {
+      "id": "REV-PTR-TERMINAL",
+      "state": {
+        "productStateId": "1353a680dceb90b1b312d22a71506d4b5466deba90f55aca4b27f74c41a3cef4",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 21,
+      "phase": "TERMINAL_CHECK",
+      "reviewerId": "devin-717eeba20fb8424ba75a9346a47d4887",
+      "contextId": "sealed-child-717eeba20fb8424ba75a9346a47d4887",
+      "role": "terminal",
+      "priorFindingsVisible": false,
+      "startedAt": "2026-09-27T15:13:00Z",
+      "sealedAt": "2026-09-27T15:20:00Z",
+      "status": "SEALED",
+      "findingIds": [],
+      "model": "swe-2",
+      "inputBundleHash": "1353a680dceb90b1b312d22a71506d4b5466deba90f55aca4b27f74c41a3cef4",
+      "accessLimitations": [],
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-PTR-TERMINAL"
       ],
       "novelAttackIds": []
     }
@@ -27209,6 +27265,38 @@
       "payloadPath": "events/0103.json",
       "payloadHash": "741b48df2f47aeace6f16a5a692abd0e6a5f460e0ad72fb858ab7c7a5ed1c015",
       "eventHash": "17d23a0dbfce650930dc720df7303674ce4be693a251e3fc745d9507c393c922"
+    },
+    {
+      "seq": 104,
+      "at": "2026-09-27T15:24:35.080Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "1353a680dceb90b1b312d22a71506d4b5466deba90f55aca4b27f74c41a3cef4",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "17d23a0dbfce650930dc720df7303674ce4be693a251e3fc745d9507c393c922",
+      "payloadPath": "events/0104.json",
+      "payloadHash": "ea616ddf1f3ce7f11fbab13367ff33141776a19cca5f72a0d1ed823c8d9bba26",
+      "eventHash": "d1dd751f3d5b666bd0f153262956285e3884e070756d9c27665cce7df7778cfe"
+    },
+    {
+      "seq": 105,
+      "at": "2026-09-27T15:24:35.381Z",
+      "kind": "DECISION",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "1353a680dceb90b1b312d22a71506d4b5466deba90f55aca4b27f74c41a3cef4",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "d1dd751f3d5b666bd0f153262956285e3884e070756d9c27665cce7df7778cfe",
+      "payloadPath": "events/0105.json",
+      "payloadHash": "e1871fcb41dbc2d1dfc39d57dbf0c9244970af458742863ce497802307e79bb5",
+      "eventHash": "c1245e6c7898c6641eb81b14df4be24a9c3a4659114068bdc495b3c5825bb64f"
     }
   ]
 }
