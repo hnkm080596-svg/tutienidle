@@ -284,7 +284,7 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
   private resolveHitOptions(
     op: DealDamageOperation['payload'],
   ): Partial<HitResolveOptions> {
-    const options: Partial<HitResolveOptions> = { isPrimary: true }
+    const options: Partial<HitResolveOptions> = {}
 
     if (op.hitPolicy?.guaranteedHit === true || op.canMiss === false) {
       options.guaranteedHit = true

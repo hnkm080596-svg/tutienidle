@@ -2466,9 +2466,9 @@ export class TurnBattleSystem {
     // AR-04: downstream on-hit effects, debuffs and consume triggers
     // require a landed hit -- dodged attacks bypass all of them.
     if (!hitResult.dodged) {
-      // Spec 4.1 -- the acting ung_the combatant's own basic landed: free income
-      // through the marker's authored field.
-      this.grantBasicLandedIncome(battle, actor, skill?.id)
+      // Spec 4.1 basic-landed income is owned by the plan-runtime hook
+      // (grantBasicLandedIncome via TurnSkillPlanRuntime) -- the
+      // engine-unit lane cannot express it: no emit lane exists here.
 
       // R3 (AR-03) + Task 5 (D11) -- Leech healing: % of the HP the
       // target THẬT SỰ lost post-absorb -- a fully-warded hit feeds

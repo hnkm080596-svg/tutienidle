@@ -132,7 +132,7 @@ export interface TurnSkillPlanRoutedCast {
       bookkeeping for the Tro window + the return value. */
   landedTargetIds: readonly string[]
   landedTargets: readonly TurnBattleParticipant[]
-  /** apply_buff ops that resolved on affected targets -- the
+  /** Ops of any type that resolved on affected targets -- the
       non-damaging lane's unconditional push (deduped, settle order). */
   appliedTargetIds: readonly string[]
 }
@@ -147,7 +147,7 @@ export class TurnSkillPlanRuntimeError extends Error {}
 interface PlanCastSession {
   landedTargetIds: string[]
   landedTargets: TurnBattleParticipant[]
-  /** apply_buff targets whose op resolved -- the non-damaging lane's
+  /** Affected targets whose op resolved -- the non-damaging lane's
       unconditional alive-target push (a dead target's apply op skips;
       a resolved one means the target was alive at settle). */
   appliedTargetIds: string[]

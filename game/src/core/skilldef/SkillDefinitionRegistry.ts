@@ -371,6 +371,17 @@ function validateActive(
         `unknown resource type '${String(definition.cost.resourceType)}'`,
       )
     }
+    if (definition.cost.resourceType === 'none') {
+      // The plan runtime's resourceCurrent/resourceMax switch only knows
+      // {the,mana,ward}: a 'none' cost crashes PRECHECK with a
+      // TurnSkillPlanRuntimeError (past the decline lane). Omit `cost`
+      // entirely for a free cast -- 'none' is never consumable.
+      fault(
+        'invalid_field_value',
+        'cost.resourceType',
+        "cost.resourceType 'none' is not consumable -- omit `cost` for a free cast",
+      )
+    }
     if ('percentOfMax' in definition.cost) {
       // Phap Tu Reimagined (F10) -- percent-of-max form: mana-only,
       // (0,1]; mutually exclusive with `amount`.
@@ -478,6 +489,16 @@ function validateActive(
       'invalid_field_value',
       'subcasts',
       'subcasts and cadence.chargeTurns are mutually exclusive on one definition',
+    )
+  }
+
+  if (definition.theScaling !== undefined && definition.consumesAllThe !== true) {
+    // theBurned populates only when consumesAllThe captures the pool --
+    // theScaling alone would read 0 at resolve (a silent dead rider).
+    fault(
+      'invalid_field_value',
+      'theScaling',
+      'theScaling requires consumesAllThe on the same definition',
     )
   }
 

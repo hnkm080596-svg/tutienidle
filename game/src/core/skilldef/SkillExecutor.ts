@@ -785,10 +785,13 @@ export class SkillExecutor {
     }
   }
 
-  /** Follow-up payload def = the plan's own definitionId -- the authored
-      root for root plans (empowerment re-checks naturally: post-consume
-      The won't refire) and composite pools re-roll per subcast (Task 11
-      parity). */
+  /** Follow-up payload def = the plan's own definitionId.
+      Caveat: `require(definitionId)` returns whatever def carries that
+      id, so a plan stamped with an aux-claims id resolves the empowered
+      VARIANT def for its follow-up -- not the plain root. Root plans
+      stamp the authored root id (empowerment re-checks naturally:
+      post-consume The won't refire) and composite pools re-roll per
+      subcast (Task 11 parity). */
   private resolveFollowUp(
     plan: ResolvedSkillPlan,
     followUps: FollowUpContext,
