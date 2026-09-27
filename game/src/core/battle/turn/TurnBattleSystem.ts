@@ -2018,22 +2018,28 @@ export class TurnBattleSystem {
         // Fall through -- the shared Tro window at the tail fires once,
         // same as the legacy lane's own call below.
       } else if (this.runtime !== undefined) {
-        // M5d -- adapter-unsupported (or unresolvable) charged def on a
-        // live battle: the deferred resolve reports loudly and fizzles
-        // (the charge state was already consumed at declare). An armed
-        // charge that resolves nothing is a blocked cast -- stamp
-        // castBlocked so the tail ally window/follow-up gates reject it,
-        // parity with unrouted normal casts and unrouted charge-inits.
-        // `declared.skillId` carries the armed charged id on this lane --
-        // the old label (pendingChargedSkillId ?? action?.skillId) was
-        // always undefined here and silenced the report.
-        declared.castBlocked = true
-        this.reportUnroutedCast(
-          actor,
-          declared.chargedSkill,
-          declared.chargedSkill?.id ?? (declared.skillId || undefined),
-          true,
-        )
+        // M5d -- the deferred resolve splits two ways. A WHIFF: the armed
+        // id still resolves to a real def (same special/ultimate lookup
+        // the declare arm used) but captured no targets -- silent
+        // fizzle, legacy parity: no warn, no castBlocked, the tail ally
+        // window treats it like any whiffed cast. A DANGLING armed id:
+        // no def behind it -- adapter-unsupported/unresolvable, report
+        // loudly and stamp castBlocked so the window/follow-up gates
+        // reject it, parity with unrouted normal casts. `declared.skillId`
+        // carries the armed charged id on this lane.
+        const armedCharged =
+          declared.skillId !== undefined &&
+          (actor.special?.skill.id === declared.skillId ||
+            actor.ultimate?.skill.id === declared.skillId)
+        if (!armedCharged) {
+          declared.castBlocked = true
+          this.reportUnroutedCast(
+            actor,
+            declared.chargedSkill,
+            declared.chargedSkill?.id ?? (declared.skillId || undefined),
+            true,
+          )
+        }
       } else {
         const chargedSkill = declared.chargedSkill
 
@@ -2158,6 +2164,17 @@ export class TurnBattleSystem {
       (declared.action.skill?.chargeTurns ?? 0) === 0
     ) {
       this.reportUnroutedCast(actor, declared.action.skill, declared.action.skillId)
+      // A zero-target unrouted cast skips the whole apply lane below, so
+      // the in-lane stamp never runs -- stamp blocked here too or the
+      // tail ally-window gate would observe a no-op cast completing.
+      if (
+        this.runtime !== undefined &&
+        declared.affected.length === 0 &&
+        declared.action.skill != null &&
+        this.planPipeline.unsupportedFor(declared.action.skill).length > 0
+      ) {
+        declared.castBlocked = true
+      }
     }
 
     // Charge-INIT casts only arm + commit (handled by the commit branch
@@ -2721,7 +2738,14 @@ export class TurnBattleSystem {
       }
     }
 
-    if (extraScope === 'self' && !landedIds.includes(actor.id)) {
+    // Only an extra that actually executed counts the actor as landed --
+    // an unrouted extra (adapter-unsupported on a live battle) reported
+    // above and did nothing, so it must not fabricate a landed entry.
+    if (
+      extraScope === 'self' &&
+      (this.runtime === undefined || routed !== null) &&
+      !landedIds.includes(actor.id)
+    ) {
       landedIds.push(actor.id)
     }
 
@@ -3062,6 +3086,16 @@ export class TurnBattleSystem {
    * landed set. Never fires on the actor's own window (ally !== actor)
    * or on reactive actions (INV-9 -- a counter/follow-up hit does not
    * open another reactive window).
+   *
+   * Latent ambiguity (documented, unresolved): charge ticks carry
+   * actionSource 'normal' with action=null, so each channel tick opens
+   * this window as a non-damaging action -- a 2-turn charge yields up
+   * to 3 window rolls per cast (init + tick + resolve). The spec's
+   * "after a player-side action completes" does not say whether
+   * channeling ticks count as completed actions. Unreachable in
+   * shipped data (tro_mon lacks firesOnNonDamagingAction so the rolls
+   * skip); if a non-damaging proc ever ships, the intent needs a spec
+   * ruling before gating ticks here.
    */
   private resolveAllyActionWindow(
     battle: TurnBattle,

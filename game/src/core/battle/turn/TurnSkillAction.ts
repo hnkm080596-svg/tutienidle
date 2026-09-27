@@ -482,9 +482,12 @@ export interface TurnSkillExecution {
   source: TurnExecutionSource
   /**
    * DORMANT (route machinery retired): the The pool captured
-   * pre-consume when a `consumesAllThe` payload commits. Read by
-   * theScaling; undefined for any execution that did not burn the
-   * pool. No producer stamps this post-retirement.
+   * pre-consume when a `consumesAllThe` payload commits -- the producer
+   * is live at TurnBattleSystem applyCast (stamped whenever the
+   * resolved payload carries the flag); dormant because no authored
+   * def carries `consumesAllThe`, not because the stamp is dead.
+   * Read by theScaling; undefined for any execution that did not
+   * burn the pool.
    */
   theBurned?: number
   /**

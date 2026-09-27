@@ -208,6 +208,15 @@ export class SkillResolver {
         resourcesConsumed.the = pre.theBurned
       }
     } else {
+      // Latent duplicated-truth (documented): empowerment is decided
+      // TWICE -- TurnBattleSystem declares it at commit time
+      // (actor.entity.currentThe vs theThreshold), and this resolver
+      // re-evaluates the same predicate here for casts that arrived
+      // without a preResolved decision. The gates diverge only if the
+      // attacker's The pool mutates between declare and resolve --
+      // unreachable today (nothing in the window writes the actor's
+      // pool; proc costs drain defender pools). Same documented
+      // hazard class as the resolveInterceptWindow ordering note.
       if (
         input.payloadOnly !== true &&
         input.subcastIndex === 0 &&

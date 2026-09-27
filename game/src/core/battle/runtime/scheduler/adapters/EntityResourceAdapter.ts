@@ -30,7 +30,7 @@
 // ('all' is inherently resolve-at-execution) and faults loudly via
 // CombatSettlementFault instead of silently picking one semantic.
 
-import { grantThe } from '../../../../the-tu/TheEconomy'
+import { drainAllThe, grantThe } from '../../../../the-tu/TheEconomy'
 
 import type { CombatAuthorityExecutionContext } from '../../../contracts/context'
 import type { CombatEntity } from '../../../../combat/CombatEntity'
@@ -144,7 +144,7 @@ export class EntityResourceAdapter implements ResourceAuthority {
     if (channel === undefined) {
       const before = entity.currentThe ?? 0
       if (amount === 'all') {
-        entity.currentThe = 0
+        drainAllThe(entity)
         return { before, requested: 'all', applied: before, after: 0 }
       }
       if (before < amount) {

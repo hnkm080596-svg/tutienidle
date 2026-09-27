@@ -665,11 +665,18 @@ export class TurnSkillPlanRuntime {
       opResults: {
         // Same trace surface the executor testkit uses -- records are
         // append-only; the latest record for the id is the result.
-        lastOpResult: (operationId) =>
-          [...scheduler.trace.records]
-            .reverse()
-            .find((record) => record.operation.operationId === operationId)
-            ?.result,
+        lastOpResult: (operationId) => {
+          // Backward scan without the reversed-copy allocation -- called
+          // per target on the settle hot path.
+          const records = scheduler.trace.records
+          for (let i = records.length - 1; i >= 0; i--) {
+            const record = records[i]
+            if (record !== undefined && record.operation.operationId === operationId) {
+              return record.result
+            }
+          }
+          return undefined
+        },
       },
     }
   }

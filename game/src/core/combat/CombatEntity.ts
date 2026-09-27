@@ -59,6 +59,11 @@ export interface CombatEntity {
   // single read site (`entity.maxThe ?? MAX_THE`); kiemBarBridge
   // delegates to it, while theBarBridge uses THE_BAR_MAX (the
   // spell-domain cap) as its own fallback. Never persisted.
+  // Divergence consequence (documented, test/dev-path only): a raw
+  // primaryEntityOverride that skips resolveMaxThe AND leaves this
+  // unset reads cap 100 in the engine (theCap) vs cap 5 on the HUD
+  // (theBarBridge) -- the override path is expected to stamp its own
+  // cap, not to rely on either fallback.
   maxThe?: number
 
   // The Tu Reimagined (spec 2026-09-15 D7/section 7.13) — momentum resource

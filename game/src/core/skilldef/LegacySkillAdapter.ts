@@ -256,8 +256,7 @@ function adaptOne(
   // the flat resourceCost branch below apply instead.
   const percentCostIsManaApplicable =
     def.resourceType === undefined ||
-    def.resourceType === 'mana' ||
-    def.resourceType === 'none'
+    def.resourceType === 'mana'
   if (
     def.resourceCostPercentOfMax !== undefined &&
     !percentCostIsManaApplicable
