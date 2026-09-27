@@ -1,0 +1,11 @@
+{
+ "verdict": "SEALED",
+ "fixesVerified": [
+  1,
+  2,
+  3,
+  4
+ ],
+ "findings": [],
+ "session": "devin-bb20deb3f71a4f0cbf10252fd6cb2bd3"
+}

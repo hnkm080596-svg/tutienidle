@@ -7452,7 +7452,9 @@
    "discoveredBy": "CLO-11 (closure residual)",
    "counterexample": "no test drives periodic_growth feed; a revert of clamp/consume keeps suite green",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-12"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-CLO11",
@@ -7516,7 +7518,9 @@
    "discoveredBy": "CLO-11 (closure residual)",
    "counterexample": "no test covers non-mana resourceType + percentOfMax",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-12"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-CLO11",
@@ -7580,7 +7584,9 @@
    "discoveredBy": "CLO-11 (closure residual)",
    "counterexample": "chargeTargetIds looked up in opposingSide; actor.id never there for self-scoped defs",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-12"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-CLO11",
@@ -7644,7 +7650,9 @@
    "discoveredBy": "CLO-11 (closure residual)",
    "counterexample": "execution.theBurned never set on queued execs after dead-capture removal",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-12"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-CLO11",
@@ -8628,6 +8636,34 @@
    "artifactHash": "c959d7ecc5a767ea8c070b4ea819e79879149e56cd4cf02f574665e54d5e3c31",
    "claims": [
     "CLO-11 residual batch verified green: selfScoped lookup, dead fold removed, 3 pin tests authored"
+   ],
+   "inputEvidenceIds": [],
+   "inputPaths": [],
+   "invariantIds": [],
+   "limitations": []
+  },
+  {
+   "kind": "EXECUTED_INTEGRATION",
+   "id": "EV-PTR-CLO12",
+   "state": {
+    "productStateId": "f5c75798ae22364e8ff6690d1f802dcff8a31c713d0c0950bbefb95365492fa4",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "status": "CURRENT",
+   "producer": "devin-bb20deb3f71a4f0cbf10252fd6cb2bd3",
+   "startedAt": "2026-09-27T02:46:43Z",
+   "finishedAt": "2026-09-27T02:48:37Z",
+   "commandOrMethod": "closure verify residual batch @c2bb6992: read sites + type-check + vitest (2 files/36 + battle+buff2 113 files/992 tests, all PASS)",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "records-clo12.json",
+   "artifactHash": "0950967274c765f2d0032251a2b150bb145963dc97f4be9c776f856b31690b42",
+   "claims": [
+    "all 4 residual fixes verified on c2bb6992",
+    "live theScaling fold remains only on commit-cast lane L1910-1915"
    ],
    "inputEvidenceIds": [],
    "inputPaths": [],
@@ -9896,6 +9932,37 @@
     "F-PTR-122",
     "F-PTR-123"
    ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-PTR-CLO-12",
+   "state": {
+    "productStateId": "f5c75798ae22364e8ff6690d1f802dcff8a31c713d0c0950bbefb95365492fa4",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 9,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-bb20deb3f71a4f0cbf10252fd6cb2bd3",
+   "contextId": "ctx-bb20deb3",
+   "model": "swe-2",
+   "role": "closure",
+   "inputBundleHash": "f5c75798ae22364e8ff6690d1f802dcff8a31c713d0c0950bbefb95365492fa4",
+   "priorFindingsVisible": true,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-27T02:46:43Z",
+   "sealedAt": "2026-09-27T02:48:37Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-CLO12"
+   ],
+   "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -11853,6 +11920,22 @@
    "payloadPath": "events/0032.json",
    "payloadHash": "80620842a4b54ced9b8845001ae26051831213e3415c24edeb0c929aaa5ba26d",
    "eventHash": "a556508aaa880b061c65bf585e31db041aad87286ae833a1ad584b3e6ba3bb86"
+  },
+  {
+   "seq": 33,
+   "at": "2026-09-27T02:48:59.134Z",
+   "kind": "REVIEW_SEALED",
+   "actor": "coordinator-1021454",
+   "state": {
+    "productStateId": "f5c75798ae22364e8ff6690d1f802dcff8a31c713d0c0950bbefb95365492fa4",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "a556508aaa880b061c65bf585e31db041aad87286ae833a1ad584b3e6ba3bb86",
+   "payloadPath": "events/0033.json",
+   "payloadHash": "841fba76aa42b8199dc1d61a5812d244533a26ae78dcda96dcafd465eec67d23",
+   "eventHash": "f1b2a0b738fff07b60003926fd732e28ec62fdde755c6b4a0d4391df59836898"
   }
  ]
 }
