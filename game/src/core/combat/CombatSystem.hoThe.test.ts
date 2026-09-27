@@ -50,7 +50,7 @@ function makePair(targetOverrides: (s: CombatEntity['stats']) => void) {
   target.stats.maxMp = 100
   targetOverrides(target.stats)
 
-  return { combat, source, target }
+  return { combat, eventBus, source, target }
 }
 
 const HIT = { kind: 'physical', multiplier: 1 } as const
@@ -149,5 +149,45 @@ describe('CombatSystem - Linh Luc Ho The DR (spec D9, adversarial)', () => {
     const applied = combat.applyModifiedDirectDamage(target, 50, source, 'reflection')
     expect(applied).toBeCloseTo(50, 5)
     expect(target.currentHp).toBeCloseTo(950, 5)
+  })
+})
+
+describe('CombatSystem — hothe_absorb observation emit (Sound System W6)', () => {
+  it('fires { targetId, absorbedAmount, dr } when DR > 0 and damage was reduced', () => {
+    const { combat, eventBus, source, target } = makePair(() => {})
+    // cap .25, mp 80/100 -> dr .20 on a 100-damage hit -> absorbed 20.
+    target.currentMp = 80
+    const seen: { targetId: string; absorbedAmount: number; dr: number }[] = []
+    eventBus.on<typeof seen[number]>('hothe_absorb', (e) => seen.push(e))
+
+    const result = combat.resolveActionHit(source, target, { ...HIT }, { ...HIT_OPTS })
+
+    expect(result.finalDamage).toBeCloseTo(80, 5)
+    expect(seen).toHaveLength(1)
+    expect(seen[0]).toMatchObject({ targetId: 'target', dr: 0.2 })
+    expect(seen[0]!.absorbedAmount).toBeCloseTo(20, 5)
+  })
+
+  it('stays silent when dr = 0 (LL empty) and on bypass channels', () => {
+    const { combat, eventBus, source, target } = makePair(() => {})
+    target.currentMp = 0 // dr = 0 -> no absorb, no event
+    const seen: unknown[] = []
+    eventBus.on('hothe_absorb', (e) => seen.push(e))
+
+    combat.resolveActionHit(source, target, { ...HIT }, { ...HIT_OPTS })
+    expect(seen).toHaveLength(0)
+
+    // Bypass lanes never reach the DR site even with a live pool.
+    target.currentMp = 100
+    combat.applyDotDamage({
+      sourceId: source.id,
+      source,
+      target,
+      rawDamage: 50,
+      element: 'fire',
+      effectId: 'hoa_an',
+    })
+    combat.applyDirectDamage(target, 50, source.id)
+    expect(seen).toHaveLength(0)
   })
 })

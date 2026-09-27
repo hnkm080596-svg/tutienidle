@@ -408,7 +408,19 @@ export class CombatSystem {
     // DR itself never drains LL.
     const { dr: linhLucHoTheDr } = resolveHoTheDamageReduction(target)
     if (linhLucHoTheDr > 0) {
+      const preAbsorbDamage = result.finalDamage
       result.finalDamage = Math.max(1, result.finalDamage * (1 - linhLucHoTheDr))
+      // Sound System W6: observation emit — Ho The absorbed a real chunk
+      // (same module already emits hit/critical; fire-and-forget).
+      const absorbed = preAbsorbDamage - result.finalDamage
+      if (absorbed > 0) {
+        this.eventBus.emit('hothe_absorb', {
+          type: 'hothe_absorb',
+          targetId: target.id,
+          absorbedAmount: absorbed,
+          dr: linhLucHoTheDr,
+        })
+      }
     }
 
     if (critical) {

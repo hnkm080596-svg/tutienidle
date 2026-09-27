@@ -169,7 +169,10 @@ export function createLootTestSetup(options: LootTestSetupOptions = {}) {
     questRegistry: {},
     questManager: {},
     notifyMaterialGained: vi.fn(),
-    hiddenBeast: { onEnemyDefeated: vi.fn() },
+    // Sound System W6: onEnemyDefeated now returns the channel ids whose
+    // threshold this kill crossed — mock returns [] by default like the
+    // equipmentBag contract above.
+    hiddenBeast: { onEnemyDefeated: vi.fn(() => [] as string[]) },
   } as unknown as BattleLootSystemDeps
 
   const loot = new BattleLootSystem(deps)

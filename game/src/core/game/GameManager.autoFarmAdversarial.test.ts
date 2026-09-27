@@ -3,6 +3,7 @@ import { GameManager } from './GameManager'
 import { GameManagerAutoFarmOps } from './GameManagerAutoFarmOps'
 import { createDefaultPlayer } from '../player/Player'
 import { defineEnemy } from '../enemy/Enemy'
+import { EventBus } from '../events/EventBus'
 
 const DUMMY = defineEnemy({
   id: 'adv_dummy', name: 'Adv Dummy', level: 1, realmId: 'mortal', lane: 'ground',
@@ -83,7 +84,10 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
 // cycle can no longer be CREATED through either entry — so these tests
 // arm a VALID farm then corrupt the cycle, exercising the tick guard as
 // the defense-in-depth layer it is.
-function buildAutoFarmOps(processDefeatedEnemies: ReturnType<typeof vi.fn>) {
+function buildAutoFarmOps(
+  processDefeatedEnemies: ReturnType<typeof vi.fn>,
+  out?: { eventBus: EventBus },
+) {
   // The slot mock reproduces real StageManager semantics: a ticking farm
   // must hold the lease OBJECT it acquired (Mission B audit — identity,
   // not stageId), so tests arm it through startAutoFarm rather than
@@ -119,6 +123,8 @@ function buildAutoFarmOps(processDefeatedEnemies: ReturnType<typeof vi.fn>) {
     stageWaves: { pickEnemyForTurnSpawn: () => null },
     enemySystem: { spawn: vi.fn() },
     buildPlayerRewardReceiver: () => ({}),
+    // Real bus, not a stub — W6 farm_cycle tests subscribe to it.
+    eventBus: (out ? (out.eventBus = new EventBus()) : new EventBus()),
   } as unknown as ConstructorParameters<typeof GameManagerAutoFarmOps>[0]
 
   return new GameManagerAutoFarmOps(deps)
@@ -200,5 +206,26 @@ describe('Adversarial — corrupt lastCheckedMs bound (C1)', () => {
 
     ops.tickAutoFarm(player)
     expect(processDefeatedEnemies.mock.calls.length).toBe(firstTickRolls)
+  })
+})
+
+describe('tickAutoFarm — farm_cycle observation emit (Sound System W6)', () => {
+  it('emits farm_cycle { stageId, cycles } once per completing tick', () => {
+    const out = {} as { eventBus: EventBus }
+    const ops = buildAutoFarmOps(vi.fn(), out)
+    const player = createDefaultPlayer()
+    player.perfectClearStageIds.push('adv_stage')
+    player.perfectClearSeconds['adv_stage'] = 100 // cycle 50s
+    armFarm(ops, player, Date.now() - 150_000) // 3 cycles
+
+    const seen: { type: string; stageId: string; cycles: number }[] = []
+    out.eventBus.on<typeof seen[number]>('farm_cycle', (e) => seen.push(e))
+
+    ops.tickAutoFarm(player)
+    expect(seen).toEqual([{ type: 'farm_cycle', stageId: 'adv_stage', cycles: 3 }])
+
+    // A tick with zero completed cycles emits nothing.
+    ops.tickAutoFarm(player)
+    expect(seen).toHaveLength(1)
   })
 })

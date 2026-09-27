@@ -827,3 +827,68 @@ describe('reactive proc rolls read the injected rng, not Math.random', () => {
     expect(f.protectorP.entity.currentThe).toBe(0)
   })
 })
+
+// Sound System W6 -- reactive_proc observation emits. One event per
+// ROLLED attempt on combat.eventBus; unaffordable skips never roll and
+// stay silent. Success flag reaches the payload verbatim.
+describe('reactive_proc observation emit (Sound System W6)', () => {
+  it('emits one event per rolled attempt with holderId/trigger/success/paid', () => {
+    const f = makeFixture()
+    const seen: { holderId: string; trigger: string; success: boolean; paid: boolean }[] = []
+    f.eventBus.on<typeof seen[number]>('reactive_proc', (e) => seen.push(e))
+
+    // Intercept (onAllyTargeted) + dodge-counter (onEvade) both roll.
+    withHoMon(f, f.protectorP, 1, 100)
+    f.protectorP.entity.baseStats = asBaseStats({
+      ...f.protectorP.entity.baseStats,
+      evasionRate: 1_000_000,
+      counterChance: 1,
+    })
+    f.protectorP.entity.stats = { ...f.protectorP.entity.stats, evasionRate: 1_000_000, counterChance: 1 }
+    f.runtime.applyBuff('phan_mon', f.protectorP)
+    f.protectorP.reactivePayloads = { phan_kich: { ...PHAN_KICH } }
+
+    vi.spyOn(Math, 'random')
+      .mockReturnValueOnce(0) // intercept roll succeeds
+      .mockReturnValueOnce(0.999)
+      .mockReturnValue(0)
+
+    const declared = declaredAgainst(f, [f.squishyP])
+    system(f).applyActionImpact(f.battle, declared)
+
+    expect(seen).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ holderId: 'protector', trigger: 'onAllyTargeted', success: true, paid: true }),
+        expect.objectContaining({ holderId: 'protector', trigger: 'onEvade', success: true, paid: true }),
+      ]),
+    )
+  })
+
+  it('an unaffordable proc never rolls — no reactive_proc emit', () => {
+    const f = makeFixture()
+    const seen: unknown[] = []
+    f.eventBus.on('reactive_proc', (e) => seen.push(e))
+
+    // ho_mon live but 0 The — the attempt is created unpaid, rolled stays undefined.
+    withHoMon(f, f.protectorP, 1, 0)
+    const declared = declaredAgainst(f, [f.squishyP])
+    system(f, () => 0).applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBeUndefined()
+    expect(seen).toHaveLength(0)
+  })
+
+  it('a failed roll still emits (success:false, paid:false)', () => {
+    const f = makeFixture()
+    const seen: { success: boolean; paid: boolean }[] = []
+    f.eventBus.on<typeof seen[number]>('reactive_proc', (e) => seen.push(e))
+
+    withHoMon(f, f.protectorP, 1, THE_PROC_COST)
+    const declared = declaredAgainst(f, [f.squishyP])
+    system(f, () => 0.999).applyActionImpact(f.battle, declared)
+
+    expect(seen).toEqual([
+      expect.objectContaining({ holderId: 'protector', trigger: 'onAllyTargeted', success: false, paid: false }),
+    ])
+  })
+})

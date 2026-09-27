@@ -200,6 +200,12 @@ export class GameManagerTurnBattleOps {
   // minted scheduler's event journal; reset by battle identity exactly
   // like the status snapshot pair.
   private reactionEventCursor = 0
+  // Sound System W6 -- second drain cursor over scheduler.trace.records
+  // (proc executions: proc.reflect.* / proc.onhit.* -> proc_reflect /
+  // proc_on_hit observation events). Resets on battle identity exactly
+  // like reactionEventCursor (procPresentationBattle is its twin).
+  private procExecutionCursor = 0
+  private procPresentationBattle: TurnBattle | null = null
   private reactionVfxBattle: TurnBattle | null = null
 
   // Wave-2 sub-splits: presentation facade owns CombatAnimationRuntime +
@@ -383,6 +389,7 @@ export class GameManagerTurnBattleOps {
       stageWaves: deps.stageWaves,
       enemySystem: deps.enemySystem,
       buildPlayerRewardReceiver: deps.buildPlayerRewardReceiver,
+      eventBus: deps.eventBus,
     })
 
     this.detachClockStep = this.combatClock.onStep((steps) => this.advanceCombat(steps))
@@ -595,8 +602,9 @@ export class GameManagerTurnBattleOps {
         // Canonical-seals S5.3 -- reaction_resolved/reaction_skipped
         // reach the UI through the same post-step boundary as the
         // status feed: drain the journal's NEW reaction events and
-        // re-emit them on the eventBus. Observational only.
-        this.drainReactionVfxEvents()
+        // re-emit them on the eventBus. Observational only. W6 extends
+        // the drain to proc executions (reflect/on-hit).
+        this.drainPresentationEvents()
       }
     }
 
@@ -658,8 +666,14 @@ export class GameManagerTurnBattleOps {
    * once per battle; the cursor resets on battle identity like the
    * status feed). Observational: the scene floats the payoff name; it
    * never feeds gameplay back.
+   *
+   * Sound System W6 -- the same drain now also re-emits NEW proc
+   * executions: `origin.kind === 'proc'` + `originId` prefix selects the
+   * family (`proc.reflect.` -> proc_reflect, `proc.onhit.` -> proc_on_hit).
+   * The op identity is authored by CombatProcSystem already; this is a
+   * pure cursor over trace.records, zero proc-system edits.
    */
-  private drainReactionVfxEvents(): void {
+  private drainPresentationEvents(): void {
     const scheduler = this.turnRuntime?.scheduler
 
     if (scheduler === undefined) {
@@ -694,6 +708,41 @@ export class GameManagerTurnBattleOps {
 
     this.reactionEventCursor = events.length
     this.reactionVfxBattle = this.turnBattle
+
+    const executions = scheduler.trace.records
+    const procStart =
+      this.procPresentationBattle === this.turnBattle ? this.procExecutionCursor : 0
+
+    for (let i = procStart; i < executions.length; i++) {
+      const operation = executions[i]!.operation
+      const origin = operation.origin
+      if (origin?.kind !== 'proc') continue
+
+      const payload = operation.payload as {
+        targetId?: string
+        definitionId?: string
+        coefficient?: number
+      }
+
+      if (origin.originId.startsWith('proc.reflect.')) {
+        this.deps.eventBus.emit('proc_reflect', {
+          type: 'proc_reflect',
+          holderId: origin.sourceId,
+          attackerId: payload.targetId,
+          coefficient: payload.coefficient,
+        })
+      } else if (origin.originId.startsWith('proc.onhit.')) {
+        this.deps.eventBus.emit('proc_on_hit', {
+          type: 'proc_on_hit',
+          attackerId: origin.sourceId,
+          targetId: payload.targetId,
+          buffId: payload.definitionId,
+        })
+      }
+    }
+
+    this.procExecutionCursor = executions.length
+    this.procPresentationBattle = this.turnBattle
   }
 
   /**
@@ -1543,6 +1592,8 @@ export class GameManagerTurnBattleOps {
     this.statusVfxBattle = null
     this.reactionEventCursor = 0
     this.reactionVfxBattle = null
+    this.procExecutionCursor = 0
+    this.procPresentationBattle = null
   }
 
   /**

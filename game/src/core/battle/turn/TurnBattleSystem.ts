@@ -3271,6 +3271,18 @@ export class TurnBattleSystem {
       if (attempt.success && attempt.paid) {
         this.commitReaction(holder)
       }
+      // Sound System W6: one observation event per ROLLED attempt —
+      // unaffordable skips never roll, so they stay silent. The wrapper
+      // is the only site where the outcome exists (ops see paid consumes).
+      if (attempt.rolled) {
+        this.combat.eventBus.emit('reactive_proc', {
+          type: 'reactive_proc',
+          holderId: holder.entity.id,
+          trigger,
+          success: attempt.success,
+          paid: attempt.paid,
+        })
+      }
     }
 
     if (result.queuedFollowUps.length > 0) {

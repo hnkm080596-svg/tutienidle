@@ -77,8 +77,16 @@ export class HiddenBeastSystem {
    * Symmetric per-channel semantics: for every channel in the defeated
    * enemy's band, killing that channel's own beast resets it; every
    * other banded enemy is an ordinary increment.
+   *
+   * Sound System W6: returns the channel ids whose kill count CROSSED
+   * `killThreshold` in this call (before < threshold <= after) so the
+   * caller (BattleLootSystem, owns deps.eventBus) can emit
+   * `hidden_window_opened`. Resets never report; this system stays
+   * eventBus-free — return value, not a dep.
    */
-  onEnemyDefeated(player: PlayerData, enemyId: string, enemyRealmId: string): void {
+  onEnemyDefeated(player: PlayerData, enemyId: string, enemyRealmId: string): string[] {
+    const opened: string[] = []
+
     for (const channel of this.channels()) {
       if (channel.bandRealmId !== enemyRealmId) {
         continue
@@ -87,8 +95,15 @@ export class HiddenBeastSystem {
       if (enemyId === channel.enemyId) {
         player.hiddenBeastKills[channel.id] = 0
       } else {
-        player.hiddenBeastKills[channel.id] = (player.hiddenBeastKills[channel.id] ?? 0) + 1
+        const killsBefore = player.hiddenBeastKills[channel.id] ?? 0
+        const killsAfter = killsBefore + 1
+        player.hiddenBeastKills[channel.id] = killsAfter
+        if (killsBefore < channel.killThreshold && killsAfter >= channel.killThreshold) {
+          opened.push(channel.id)
+        }
       }
     }
+
+    return opened
   }
 }
