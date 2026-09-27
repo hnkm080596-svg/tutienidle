@@ -1,0 +1,4 @@
+{
+  "summary": "clean-D INTEGRATION @132cbe16: SEAL zero findings. Runtime evidence: marker-restore byte-identical under save-write abort (2 new oracles); Playwright guest create->v82 save->reload restore green; poisoned save->SaveIncompatibleScreen->ConfirmModal z4100 elementFromPoint topmost->deleteSave clean boot green; pull marker consume-once; contract-violating v82 rejected at import+restore+remote self-heal; skipped boot regression clean.",
+  "refs": []
+}

@@ -1,0 +1,4 @@
+{
+  "summary": "Repairs pushed @132cbe16: AUTH-02 fixed (snapshot prior marker + restorePriorMarker on every abort path; 2 pin tests added); AUTH-03 fixed (two-writer shared-channel contract documented on saveKeys.ts, name kept for stored-key compat); AUTH-01 deferred to pre-beta ledger (pre-existing at merge-base a42e22d9, not introduced by diff); AUTH-04 rejected with proof. Clean round D must re-run on 132cbe16.",
+  "refs": []
+}

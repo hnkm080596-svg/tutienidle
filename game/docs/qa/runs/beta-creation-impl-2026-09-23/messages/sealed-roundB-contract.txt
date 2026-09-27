@@ -1,0 +1,8 @@
+REV-B-CONTRACT sealed: **FINDINGS** — 2 Medium, 1 Low, 2 Nit. Prior-findings disclosure: YES (run artifacts ship inside the reviewed diff; not consumed).
+
+- **Medium** — `tests/architecture/asciiComments.test.ts` fails on the frozen head (executed): 2 non-ASCII comment tokens (`—`, `↔`) in `SupabaseCharacterCreationService.contract.test.ts`. `npm run verify` is red.
+- **Medium** — migration `202608240001` was edited in place with no forward path: on any DB that already applied it, the v81 `p_attributes` overload + its authenticated grant survive, `mortal_basic_skill_id` column never lands, and the new client signature resolves to no function → `server_unavailable` until DB reset/forward migration (spec open Q-D).
+- **Low** — `online-login-cloud-save-plan.md` still documents the removed 5-point allocation (:44, :207, :213).
+- **Nits** — duplicated expect line in `GameManagerSaveRestore.boundary.test.ts` ~:1151; stale `pointsLeft` entry in asciiComments baseline :11121 (inert).
+
+Contract surfaces verified clean: all 4 v82 rejections run inside `preflightSaveRegistryReferences` before any owner mutation on every save ingress (localStorage, import, remote pull, EarlyGameSession); channel-3 core-ownership enforced bidirectionally at the shape layer; allocation fully removed (no residual UI/service/RPC/fixture channel); single-screen flow; sole pick writer `setMortalBasicSkill`; client RPC body matches the new migration signature exactly; 31 crafted adversarial save payloads + ~1.4k scoped vitest green, type-check clean.

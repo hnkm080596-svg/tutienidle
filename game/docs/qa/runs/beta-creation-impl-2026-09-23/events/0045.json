@@ -1,0 +1,22 @@
+{
+  "type": "SEAL_RECEIPT",
+  "round": "clean-B",
+  "lens": "CORRECTNESS",
+  "reviewerSession": "821c438c35fd4732a4ddc6ddff9f36e0",
+  "candidate": "8f53aa18",
+  "verdict": "FINDINGS",
+  "priorFindingsVisible": false,
+  "evidenceExecuted": "vue-tsc --build PASS; npm run build PASS; scoped vitest 301 PASS; full suite 7246/7252 (2 env-only magick fails); 15 authored probes PASS; Playwright boot+accessibility PASS",
+  "findings": [
+    {
+      "id": "QA-BC-01",
+      "severity": "low",
+      "disposition": "FIXED @0c434d43 - LoadOutcome.ok + CloudSaveLoadResult.ok carry raw; rejected branch reports stored bytes"
+    },
+    {
+      "id": "QA-BC-02",
+      "severity": "nit",
+      "disposition": "FIXED @0c434d43 - creating latch extended to name/talent/reroll/skill inputs"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "type": "FINDINGS_ADJUDICATION",
+  "round": "clean-B",
+  "candidate": "8f53aa18",
+  "headAfterFixes": "0c434d43",
+  "summary": "Clean-B trio sealed: 1 High + 3 Medium + 3 Low + 5 Nit. High + 2 Mediums shared one root (acceptance gates disagree across remote/import/restore). Single coherent repair: extract the boundary contract into mortalBoundaryContractViolation and apply at BOTH gates (restore preflight AND cloud remoteUsable) - bad remote heals via push path instead of wedging forever. Sibling-core channel enforced for all precursors; pathless-non-mortal pairing rejected; raw export restored on rejected-after-shape saves; creating latch closed.",
+  "deferred": [
+    {
+      "id": "F-INT-BETA-4",
+      "reason": "saveIssue in-session residue inert - renders only inside error RouteMount; clears on reload"
+    },
+    {
+      "id": "auth-nit:message-ordering",
+      "reason": "cosmetic ordering only"
+    },
+    {
+      "id": "auth-nit:p_initial_save",
+      "reason": "dead channel, harmless extra arg"
+    },
+    {
+      "id": "auth-nit:write-only-column",
+      "reason": "documented bookkeeping"
+    },
+    {
+      "id": "auth-nit:runtime-catchall",
+      "reason": "CultivationPathRegistry:584 mortal-runtime catch-all is documented defensive fallback; unreachable post-contract"
+    }
+  ],
+  "verifyEvidence": "vue-tsc --build exit 0 on 0c434d43; npm run build PASS (1849 modules); scoped vitest green: boundary+cloudSave+coordinator+lifecycle 135/135, bodyPhysique/bodyPerfection/SupabaseRemoteSave 109/109, autoFarm/onceOnlySettle/preflight/conformance 19/19; P15 ascii clean on added lines",
+  "protocolNote": "repairs invalidate B's candidate binding; fresh clean pair (A' then B') must seal on 0c434d43"
+}

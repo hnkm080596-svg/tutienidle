@@ -1,0 +1,27 @@
+{
+  "applied": [
+    "coverage:COV-I-01 (updated)",
+    "coverage:COV-I-03 (updated)",
+    "coverage:COV-I-05 (updated)",
+    "coverage:COV-I-06 (updated)",
+    "coverage:COV-I-08 (updated)",
+    "coverage:COV-I-09 (updated)",
+    "coverage:COV-I-11 (updated)",
+    "coverage:COV-I-13 (updated)",
+    "coverage:COV-I-15 (updated)",
+    "coverage:COV-I-17 (updated)",
+    "coverage:COV-I-18 (updated)",
+    "coverage:COV-I-19 (updated)",
+    "coverage:COV-I-20 (updated)",
+    "coverage:COV-I-21 (updated)",
+    "coverage:COV-I-22 (updated)",
+    "coverage:COV-I-23 (updated)",
+    "mutation:M-IMPL-1 (updated)",
+    "mutation:M-IMPL-2 (updated)",
+    "mutation:M-IMPL-3 (updated)",
+    "mutation:M-IMPL-4 (updated)",
+    "mutation:M-IMPL-5 (updated)",
+    "mutation:M-IMPL-6 (updated)",
+    "mutation:M-IMPL-7 (updated)"
+  ]
+}
