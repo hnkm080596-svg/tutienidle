@@ -15,6 +15,7 @@ import { EntityVitalsSystem, type VitalsChangeReason } from './EntityVitalsSyste
 import { clampStatValue } from '../stats/StatMetadata'
 import type { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 import { dotRecoveryTriggers } from './DotRecovery'
+import { resolveHoTheDamageReduction } from './hoTheDamageReduction'
 import type { BuffDefinitionId } from '../battle/contracts/ids'
 import type { ActiveCapabilityGrant } from '../battle/contracts/capability'
 import type { CombatAuthorityExecutionContext } from '../battle/contracts/context'
@@ -396,12 +397,9 @@ export class CombatSystem {
     // here at all means hostile direct damage (DoT/reaction/flat
     // profiles never enter resolveAttack); LL = 0 => DR = 0 and the
     // DR itself never drains LL.
-    const linhLucHoTheCap = clampStatValue('linhLucHoTheCap', target.stats.linhLucHoTheCap)
-    if (linhLucHoTheCap > 0 && target.stats.maxMp > 0 && target.currentMp > 0) {
-      // mp can transiently exceed maxMp (buffs) -- clamp the ratio so
-      // dr never breaches the linhLucHoTheCap stat cap.
-      const dr = linhLucHoTheCap * Math.min(1, target.currentMp / target.stats.maxMp)
-      result.finalDamage = Math.max(1, result.finalDamage * (1 - dr))
+    const { dr: linhLucHoTheDr } = resolveHoTheDamageReduction(target)
+    if (linhLucHoTheDr > 0) {
+      result.finalDamage = Math.max(1, result.finalDamage * (1 - linhLucHoTheDr))
     }
 
     if (critical) {

@@ -378,7 +378,7 @@ function createSpellPathwayRuntime(deps: CultivationPathRuntimeDeps): Cultivatio
       // `stamped` (not the return wrapper) so the empowered variant inherits
       // it through {...base}.
       const stamped: TurnSkillDefinition =
-        element === undefined || resolved !== GENERIC_PHYSICAL_BASIC
+        resolved !== GENERIC_PHYSICAL_BASIC
           ? { ...kitResolved, theGainOnLandedCast: 1 }
           : kitResolved
 

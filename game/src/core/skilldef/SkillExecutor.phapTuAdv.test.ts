@@ -131,6 +131,44 @@ describe('SkillExecutor - phap-tu adversarial seams (clean round B)', () => {
     expect(grants).toHaveLength(1)
   })
 
+  it('theGainOnLandedCast: deferred charge-resolve (commitsCast=false + deferredResolve) still mints', () => {
+    const harness = makeHarness({ defs: [GRANT_DEF] })
+    spawn(harness, PLAYER)
+    spawn(harness, ENEMY_A)
+
+    // Routed charge-resolve parity: the cast committed at charge-init,
+    // so the resolve plan carries commitsCast=false -- but it owns the
+    // grants where hits land (TBS grantTheFromCast on chargedSkill).
+    const input = makeInput(GRANT_DEF, {
+      commitsCast: false,
+      deferredResolve: true,
+    })
+    harness.executor.execute(harness.resolver.resolve(input), input)
+
+    const grants = harness.state.executedOps.filter(
+      (o) => o.type === 'gain_resource',
+    )
+    expect(grants).toHaveLength(1)
+    expect(harness.state.commits).toHaveLength(0)
+  })
+
+  it('theGainOnLandedCast: non-committing follow-up shape (commitsCast=false, no deferredResolve) mints NOTHING', () => {
+    const harness = makeHarness({ defs: [GRANT_DEF] })
+    spawn(harness, PLAYER)
+    spawn(harness, ENEMY_A)
+
+    // Queued repeat/multicast routed executions carry commitsCast:false
+    // at subcastIndex 0 -- they re-execute the cast but never own its
+    // grants; only the deferred charge-resolve flag lifts the gate.
+    const input = makeInput(GRANT_DEF, { commitsCast: false })
+    harness.executor.execute(harness.resolver.resolve(input), input)
+
+    expect(
+      harness.state.executedOps.filter((o) => o.type === 'gain_resource'),
+    ).toHaveLength(0)
+    expect(harness.state.commits).toHaveLength(0)
+  })
+
   it('theGainOnLandedCast: a LANDED repeat follow-up (subcastIndex 1) mints NOTHING', () => {
     const harness = makeHarness({ defs: [GRANT_DEF] })
     spawn(harness, PLAYER)
@@ -195,5 +233,48 @@ describe('SkillExecutor - phap-tu adversarial seams (clean round B)', () => {
     expect(
       harness.state.resources.get(`${PLAYER}|mana`),
     ).toBe(0)
+  })
+})
+
+describe('SkillExecutor - headless follow-up driving (F-NOV-3 pin)', () => {
+  const REPEAT_COSTLY = makeDef({
+    id: 'skill.repeat_costly' as never,
+    cost: { resourceType: 'mana', amount: 50 },
+    subcasts: { count: 2 },
+    operations: [{ type: 'deal_damage', target: 'primary_target', coefficient: 1 }],
+  })
+
+  it('blocked cast + driveFollowUps:true mints NO repeat executions', () => {
+    const harness = makeHarness({
+      defs: [REPEAT_COSTLY],
+      damageScript: [{ landed: true }, { landed: true }, { landed: true }],
+    })
+    spawn(harness, PLAYER)
+    spawn(harness, ENEMY_A)
+    setResource(harness, PLAYER, 'mana', 10)
+
+    const input = makeInput(REPEAT_COSTLY, { driveFollowUps: true })
+    const outcome = harness.executor.execute(harness.resolver.resolve(input), input)
+
+    expect(outcome.blocked).toBe(true)
+    expect(dealDamageOps(harness.state.executedOps)).toHaveLength(0)
+    expect(harness.state.commits).toHaveLength(0)
+  })
+
+  it('affordable cast + driveFollowUps:true mints root + 2 repeats (control)', () => {
+    const harness = makeHarness({
+      defs: [REPEAT_COSTLY],
+      damageScript: [{ landed: true }, { landed: true }, { landed: true }],
+    })
+    spawn(harness, PLAYER)
+    spawn(harness, ENEMY_A)
+    setResource(harness, PLAYER, 'mana', 100)
+
+    const input = makeInput(REPEAT_COSTLY, { driveFollowUps: true })
+    const outcome = harness.executor.execute(harness.resolver.resolve(input), input)
+
+    expect(outcome.blocked).not.toBe(true)
+    expect(dealDamageOps(harness.state.executedOps)).toHaveLength(3)
+    expect(harness.state.commits).toHaveLength(1)
   })
 })

@@ -112,6 +112,12 @@ export interface SkillResolveInput {
       queued executions (repeat/multicast) are fresh cast identities
       that must NOT re-commit (executionCommitsCast parity). */
   commitsCast?: boolean
+  /** Deferred charge-resolve plan (TBS chargeTurns parity): the cast
+      COMMITTED at charge-init; THIS execution owns the deferred steps
+      and grants where hits actually land. commitsCast stays false
+      (no re-commit) yet the grant lane must still mint -- unlike
+      follow-up/extra lanes which mint nothing. */
+  deferredResolve?: boolean
   /** Follow-up driving override -- defaults to true. TBS drives
       repeats/multicast through its own queuedExecutions lane (drain
       ordering, intercept windows, target re-collection parity); the
@@ -142,6 +148,10 @@ interface ResolveScope {
       cast carries a `oncePerCast` secondary; the flagged op wraps
       itself in `branch{var == 0}` (spec D4/D5 one secondary per cast). */
   priorLandedVarName?: string
+  /** Hit op ids of the CURRENT instance -- present only inside that
+      instance's onLanded lane; an authored target_hit_landed gate
+      binds this slice (never the accumulated [h0..hi] map entry). */
+  instanceHitOpIds?: readonly CombatOperationId[]
 }
 
 export class SkillResolverError extends Error {}
@@ -213,10 +223,6 @@ export class SkillResolver {
         }
         effective = empowered
         resolvedVariantId = empowered.id
-        if (empowered.consumesAllThe === true) {
-          // theBurned captures BEFORE the consume op zeroes the pool.
-          resourcesConsumed.the = input.entityQuery.currentThe(input.sourceId)
-        }
       }
 
       if (rootSubcasts?.compositePool !== undefined) {
@@ -233,6 +239,20 @@ export class SkillResolver {
           )
         }
         effective = picked
+      }
+
+      // theBurned captures BEFORE the consume op zeroes the pool -- for
+      // ANY committing root whose resolved def carries consumesAllThe,
+      // not only the empowerment swap (a root-authored or composite-
+      // picked burn resolves the same way; TBS captures
+      // payloadSkill.consumesAllThe at declare regardless of how the
+      // payload resolved).
+      if (
+        effective.consumesAllThe === true &&
+        input.commitsCast !== false &&
+        input.subcastIndex === 0
+      ) {
+        resourcesConsumed.the = input.entityQuery.currentThe(input.sourceId)
       }
     }
 
@@ -288,6 +308,7 @@ export class SkillResolver {
         ? { cost: this.resolvePlanCost(input.definition.cost, statScalars) }
         : {}),
       commitsCast: input.commitsCast ?? input.subcastIndex === 0,
+      ...(input.deferredResolve === true ? { deferredResolve: true } : {}),
       // consumesAllThe rides the EFFECTIVE def (TBS payloadSkill parity:
       // the empowered form carries the burn; a root-level flag burns on
       // its own commit -- never on follow-ups, which never commit).
@@ -1024,7 +1045,15 @@ export class SkillResolver {
               `SkillResolver: target_hit_landed on '${ctx.effective.id}' could not bind '${intent}'`,
             )
           }
-          const hitOpIds = ctx.hitOpIdsByTarget.get(targetId) ?? []
+          // Inside an instance lane's onLanded the authored gate binds
+          // THIS instance's hit ops only -- the accumulated map entry
+          // [h0..hi] would both over-satisfy (an earlier instance's
+          // landed hit opens it) and mismatches the enclosing
+          // consequence gate's [hi] dedup key.
+          const hitOpIds =
+            targetId === scope.loopTargetId && scope.instanceHitOpIds !== undefined
+              ? scope.instanceHitOpIds
+              : ctx.hitOpIdsByTarget.get(targetId) ?? []
           if (hitOpIds.length === 0) {
             throw new SkillResolverError(
               `SkillResolver: target_hit_landed on '${ctx.effective.id}' resolved zero hit ops for target '${targetId}' -- the gate must follow a deal_damage op on the same target`,
@@ -1065,7 +1094,13 @@ export class SkillResolver {
         const steps: ResolvedSkillPlanStep[] = []
         for (const targetId of this.resolveIntentSet(op.target, ctx, scope)) {
           steps.push(
-            ...this.translateOps(op.ops, ctx, { ...scope, loopTargetId: targetId }),
+            ...this.translateOps(op.ops, ctx, {
+              ...scope,
+              loopTargetId: targetId,
+              // a nested lane mints its own hit ops -- the enclosing
+              // instance's binding must not leak into it.
+              instanceHitOpIds: undefined,
+            }),
           )
         }
         return steps
@@ -1267,6 +1302,7 @@ export class SkillResolver {
             ? this.translateOps(op.onLanded, ctx, {
                 loopTargetId: targetId,
                 priorLandedVarName,
+                instanceHitOpIds: hit.hitOpIds,
               })
             : []
         instanceSteps.push({
@@ -1328,6 +1364,9 @@ export class SkillResolver {
           this.collectOncePerCast(o.then) ||
           (o.else !== undefined && this.collectOncePerCast(o.else))
         )
+      }
+      if (o.type === 'for_each_target') {
+        return this.collectOncePerCast(o.ops)
       }
       return false
     })

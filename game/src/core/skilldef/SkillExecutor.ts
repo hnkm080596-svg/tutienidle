@@ -141,7 +141,11 @@ export class SkillExecutor {
       input.driveFollowUps !== false &&
       // TBS parity (enqueueFollowUpExecutions): only a cast with a live
       // target set queues follow-ups -- a whiffed-into-empty cast
-      // commits nothing; a charge-init declare queues nothing either.
+      // commits nothing; a charge-init declare queues nothing either;
+      // a cast that BLOCKED at the resource precheck or never commits
+      // at all owns no paid payload for repeats to replay.
+      plan.commitsCast === true &&
+      outcome.blocked !== true &&
       plan.snapshot.declaredTargetIds.length > 0 &&
       !(plan.subcastIndex === 0 && (plan.cadence.chargeTurns ?? 0) > 0) &&
       this.queries.vitals.alive(plan.sourceId)
@@ -703,7 +707,16 @@ export class SkillExecutor {
     state: PlanExecutionState,
     suppress: boolean,
   ): void {
-    if (suppress || plan.grants === undefined || plan.subcastIndex > 0 || !plan.commitsCast) return
+    // commitsCast:false suppresses follow-up/extra lanes -- but NOT the
+    // deferred charge-resolve execution, which owns the cast's grants
+    // where hits actually land (SkillResolver grants stamp parity).
+    if (
+      suppress ||
+      plan.grants === undefined ||
+      plan.subcastIndex > 0 ||
+      (!plan.commitsCast && plan.deferredResolve !== true)
+    )
+      return
     // TBS grantTheFromCast parity -- targetIds.length > 0: a LANDED hit
     // for damaging casts (whiffed casts grant nothing even when side
     // ops connected); an alive-targeted application for non-damaging

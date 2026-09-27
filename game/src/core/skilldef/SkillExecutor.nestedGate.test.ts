@@ -104,4 +104,51 @@ describe('SkillExecutor -- nested landed gates fire hooks once per landed hit', 
     expect(entered).toHaveLength(2)
     expect(new Set(entered).size).toBe(2)
   })
+
+  // Pin (INT-F F2 / COR-F F-3): inside a multi-instance hit's onLanded,
+  // the authored `if target_hit_landed` must bind THIS instance's hit
+  // ops only -- the accumulated [h1..hN] key never matches the enclosing
+  // consequence gate's [hi], so hooks re-fire per instance (double
+  // procs, double counter-window rolls).
+  it('multi-instance hit: authored if inside onLanded binds its own instance ops -> one gate pair per instance', () => {
+    const entered: string[] = []
+    const def = makeDef({
+      instances: { count: 2 },
+      operations: [
+        {
+          type: 'deal_damage',
+          target: 'primary_target',
+          coefficient: 1,
+          onLanded: [
+            {
+              type: 'if',
+              condition: { kind: 'target_hit_landed', target: 'loop_target' },
+              then: [{ type: 'heal', target: 'self', amount: 1 }],
+            },
+          ],
+        },
+      ],
+    })
+    const harness = makeHarness({
+      defs: [def],
+      damageScript: [{ landed: true }, { landed: true }],
+      hooks: {
+        onLandedGateEntered: (gate: ResolvedLandedGate) => {
+          entered.push(`${gate.targetId}|${gate.hitOperationIds.join(',')}`)
+        },
+      },
+    })
+    spawn(harness, PLAYER)
+    spawn(harness, ENEMY_A)
+
+    const plan = harness.resolver.resolve(makeInput(def))
+    harness.executor.execute(plan, makeInput(def))
+
+    // Two instances => two consequence gates, each entered exactly once.
+    expect(entered).toHaveLength(2)
+    // The inner authored gate key matches its enclosing consequence
+    // gate (both bind the same single-instance op set) -- dedup fired.
+    expect(entered[0]).not.toBe(entered[1])
+    expect(harness.state.executedOps.filter((o) => o.type === 'heal')).toHaveLength(2)
+  })
 })

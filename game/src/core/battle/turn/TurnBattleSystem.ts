@@ -43,6 +43,7 @@ import {
   isUngTheCombatant,
   theGainOnBasicHit,
   grantThe,
+  drainAllThe,
 } from '../../the-tu/TheEconomy'
 import { asReactiveEconomy } from '../../the-tu/TheTuCapabilities'
 import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
@@ -324,6 +325,11 @@ export interface TurnDeclaredAction {
 
   /** Charge-resolve: skill definition capture tại declare (apply đọc từ đây -- pendingChargedSkillId đã clear). */
   chargedSkill: TurnSkillDefinition | null
+
+  /** Plan-lane resource precheck blocked the cast (no commit, no ops).
+      Stamped inside applyActionImpact -- completeAction's follow-up
+      queue must not see a blocked declared as a resolved cast. */
+  castBlocked?: boolean
 
   action: SelectedAction | null
 
@@ -2145,6 +2151,9 @@ export class TurnBattleSystem {
       if (routed === null && !engineUnitLane) {
         this.reportUnroutedCast(actor, action.skill, action.skillId, true)
       }
+      if (routed?.outcome.blocked === true) {
+        declared.castBlocked = true
+      }
 
       if (routed !== null) {
         targetIds.push(...routed.landedTargetIds)
@@ -2788,8 +2797,10 @@ export class TurnBattleSystem {
     }
 
     // Only a cast that actually resolved (had a live target set) queues
-    // follow-ups -- a whiffed-into-empty cast commits nothing.
-    if (declared.affected.length === 0) {
+    // follow-ups -- a whiffed-into-empty cast commits nothing, and a
+    // cast that blocked at the plan resource precheck commits nothing
+    // either (it never paid for the payload its repeats would replay).
+    if (declared.affected.length === 0 || declared.castBlocked === true) {
       return
     }
 
@@ -2850,7 +2861,7 @@ export class TurnBattleSystem {
     const payload = declared.execution?.resolvedSkill ?? action.skill
 
     if (payload?.consumesAllThe) {
-      actor.entity.currentThe = 0
+      drainAllThe(actor.entity)
     }
   }
 

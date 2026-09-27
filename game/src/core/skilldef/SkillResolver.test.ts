@@ -281,6 +281,23 @@ describe('SkillResolver -- variants + composite', () => {
     expect(op.payload.coefficient).toBe(9)
   })
 
+  it('captures theBurned on a ROOT-authored consumesAllThe def (not only the empowerment swap)', () => {
+    // Legacy parity: TBS stamps execution.theBurned whenever
+    // payloadSkill.consumesAllThe, regardless of how the payload
+    // resolved -- a root def carrying the burn + theScaling must
+    // resolve with the pool captured or it scales at 1 forever.
+    const def = activeDef({
+      id: 'skill.root.burn' as SkillId,
+      consumesAllThe: true,
+      theScaling: { coeff: 2 },
+      operations: [{ type: 'deal_damage', target: 'primary_target', coefficient: 1 }],
+    })
+    const plan = resolve([def], 0, {
+      entityQuery: entityQuery({ the: 80 }),
+    })
+    expect(plan.snapshot.resourcesConsumed.the).toBe(80)
+  })
+
   it('does NOT swap below threshold and leaves resourcesConsumed empty', () => {
     const base = activeDef({
       variants: {

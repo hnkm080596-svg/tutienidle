@@ -301,6 +301,11 @@ export interface ResolvedSkillPlan {
       (repeat/multicast) carry commitsCast:false so their fresh cast
       identity never re-commits (executionCommitsCast parity). */
   commitsCast: boolean
+  /** Deferred charge-resolve identity (TBS chargeTurns parity): set on
+      the routed resolve execution of a committed charge. Its
+      commitsCast stays false yet the grant lane still mints on it --
+      follow-up/extra lanes never carry this flag. */
+  deferredResolve?: boolean
 
   // Executor-consumed def-level semantics (copied from the EFFECTIVE def
   // after variant/composite resolution).

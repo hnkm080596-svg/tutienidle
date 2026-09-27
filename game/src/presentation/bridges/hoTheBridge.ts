@@ -9,8 +9,8 @@
 // line simply does not appear. No second shield bar (design sec.88).
 
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
+import { resolveHoTheDamageReduction } from '@/core/combat/hoTheDamageReduction'
 import type { GameManager } from '@/core/game/GameManager'
-import { clampStatValue } from '@/core/stats/StatMetadata'
 import {
   readOptionalGate,
   writeGate,
@@ -43,16 +43,13 @@ export function makeHoTheReader(gameManager: GameManager): HoTheReader {
       return null
     }
 
-    const cap = clampStatValue('linhLucHoTheCap', entity.stats.linhLucHoTheCap)
+    const { cap, dr } = resolveHoTheDamageReduction(entity)
 
     if (cap <= 0) {
       return null
     }
 
-    const maxMp = entity.stats.maxMp
-    const mpRatio = maxMp > 0 ? Math.min(1, Math.max(0, entity.currentMp / maxMp)) : 0
-
-    return { cap, dr: cap * mpRatio }
+    return { cap, dr }
   }
 }
 

@@ -429,6 +429,15 @@ function validateActive(
     if (typeof empowerment.empoweredSkillId !== 'string' || empowerment.empoweredSkillId.length === 0) {
       fault('invalid_field_value', 'variants.empowerment.empoweredSkillId', 'empoweredSkillId must be a non-empty skill id')
     }
+    if (definition.subcasts?.compositePool !== undefined) {
+      // The declare-side empowerment swap precedes the composite pick --
+      // a def declaring both would silently lose the empowered payload.
+      fault(
+        'invalid_field_value',
+        'variants.empowerment',
+        'empowerment and subcasts.compositePool are mutually exclusive on one definition',
+      )
+    }
   }
 
   if (definition.landed !== undefined && !LANDED_SEMANTICS.has(definition.landed)) {

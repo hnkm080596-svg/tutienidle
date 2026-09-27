@@ -874,6 +874,19 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
     )
   }
 
+  /** spec D10 bound-marker staleness: the marker dies the moment its
+      source no longer holds the named definition. Shared by the
+      per-tick feed skip, the Phase B sweep, and the (5b) re-sweep. */
+  private isBoundSourceGone(
+    def: { boundToSourceBuffId?: BuffDefinitionId },
+    sourceId: CombatEntityId,
+  ): boolean {
+    return (
+      def.boundToSourceBuffId !== undefined &&
+      this.store.findOnTarget(def.boundToSourceBuffId, sourceId) === undefined
+    )
+  }
+
   /** Boundary unit list: (instance, periodic) pairs matching the anchor
       + timing, canonical-sorted. */
   private collectBoundaryUnits(
@@ -1000,11 +1013,7 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
       // A marker bound to a window its source already lost is stale --
       // runPhaseB's bound sweep retires it, but a periodic unit ticks
       // before Phase B, so the feed must skip it here too.
-      if (
-        markerDef.boundToSourceBuffId !== undefined &&
-        this.store.findOnTarget(markerDef.boundToSourceBuffId, marker.sourceId) ===
-          undefined
-      ) {
+      if (this.isBoundSourceGone(markerDef, marker.sourceId)) {
         continue
       }
       for (const capability of markerDef.capabilities) {
@@ -1074,11 +1083,7 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
       // dies 'expired' the moment its source no longer holds the named
       // definition (the bound buff may already have left earlier in
       // this same canonical-order sweep).
-      if (
-        def.boundToSourceBuffId !== undefined &&
-        this.store.findOnTarget(def.boundToSourceBuffId, instance.sourceId) ===
-          undefined
-      ) {
+      if (this.isBoundSourceGone(def, instance.sourceId)) {
         this.removeInstance(instance, 'expired', lctx.events, lctx.rootActionId)
       }
     }
@@ -1173,11 +1178,7 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
     //     landing between expiry and the next runPhaseB.
     for (const instance of this.sortedAll()) {
       const def = this.registry.get(instance.definitionId)
-      if (
-        def.boundToSourceBuffId !== undefined &&
-        this.store.findOnTarget(def.boundToSourceBuffId, instance.sourceId) ===
-          undefined
-      ) {
+      if (this.isBoundSourceGone(def, instance.sourceId)) {
         this.removeInstance(instance, 'expired', lctx.events, lctx.rootActionId)
       }
     }

@@ -268,7 +268,9 @@ export class TurnSkillPlanRuntime {
       ...(declared.suddenDeathMultiplier !== 1
         ? { coefficientScale: declared.suddenDeathMultiplier }
         : {}),
-      ...(chargeResolveDef !== undefined ? { payloadOnly: true } : {}),
+      ...(chargeResolveDef !== undefined
+        ? { payloadOnly: true, deferredResolve: true }
+        : {}),
       ...(chargeInit ? { chargeInit: true } : {}),
       commitsCast,
       // TBS drives repeats/multicast through its own queuedExecutions
