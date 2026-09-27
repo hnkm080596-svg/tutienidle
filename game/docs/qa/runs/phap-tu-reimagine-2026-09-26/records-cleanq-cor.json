@@ -1,0 +1,33 @@
+{
+  "artifact": "cleanQ COR reviewer verdict summary",
+  "run": "phap-tu-reimagine-2026-09-26",
+  "reviewer": "devin-0f443bf4af7242d58c8cc5f391f9d512",
+  "reviewerRole": "clean-correctness",
+  "pin": "29b4719c",
+  "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+  "verdict": "FINDINGS",
+  "findings": [
+    {
+      "n": 1,
+      "severity": "Nit",
+      "file": "src/services/save/saveAcceptance.ts:243-244",
+      "claim": "SPELL_KIT_IDS[activeElement][0] throws a bare TypeError on a corrupt save carrying a non-ElementType element string",
+      "disposition": "FIXED -- defensive kit lookup throws a descriptive coherence rejection @4d2ada93"
+    },
+    {
+      "n": 2,
+      "severity": "Nit",
+      "file": "src/core/battle/turn/TurnBattleSystem.ts:3212-3215",
+      "claim": "covered defs declining at plan time still pay the Ho proc cost + mint ward/marker before castBlocked stamps",
+      "disposition": "REJECTED -- accepted-latent by construction: substitution must precede the plan run, as the gate docblock records; reviewer marked no-action-required"
+    }
+  ],
+  "verifiedClaims": [
+    "intercept gate mirrors apply-lane predicates exactly (normal 2192-2196, charge-resolve 2007-2016; unsupportedFor is the same catalog call routeCast makes)",
+    "consumeThe floor matches grantThe <=0 no-op convention; undefined-vs-0 pool distinction never read",
+    "registry faults fire correctly (compositeCount sole consumer SkillResolver:240; onLanded/oncePerCast fault before op-type switch)",
+    "saveAcceptance coherence hard-fails correctly"
+  ],
+  "testsRun": "npm ci; npm run type-check PASS; scoped vitest PASS",
+  "priorFindingsVisible": false
+}

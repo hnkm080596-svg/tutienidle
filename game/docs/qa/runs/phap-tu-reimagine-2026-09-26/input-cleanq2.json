@@ -1,0 +1,305 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_INTEGRATION",
+    "id": "EV-PTR-CORQ",
+    "state": {
+     "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "status": "STALE",
+    "producer": "devin-0f443bf4af7242d58c8cc5f391f9d512",
+    "startedAt": "2026-09-27T12:00:00Z",
+    "finishedAt": "2026-09-27T12:15:00Z",
+    "commandOrMethod": "isolated correctness review @29b4719c: FINDINGS -- 2 Nit; all four substantive wave-P fixes verified as root-cause fixes (intercept gate mirrors apply-lane predicates; consumeThe floor; registry faults; save coherence)",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "records-cleanq-cor.json",
+    "artifactHash": "d618c4c3172c191c62d8d09226c5495dbc12022bc831dcbc9318ae757081c97d",
+    "claims": [
+     "COR round-20 review on pin 29b4719c produced 2 findings"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": [],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_INTEGRATION",
+    "id": "EV-PTR-FIXQ1",
+    "state": {
+     "productStateId": "576bf6a4fe2d3b1ac65b3bd9b0bea05cc9a59f83f77ac9e92856add87a9ab48e",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "status": "CURRENT",
+    "producer": "coordinator",
+    "startedAt": "2026-09-27T12:00:00Z",
+    "finishedAt": "2026-09-27T12:15:00Z",
+    "commandOrMethod": "nit fix @4d2ada93: defensive SPELL_KIT_IDS lookup in save acceptance -- descriptive rejection instead of bare TypeError on corrupt element; type-check + 480 save tests green",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "records-cleanq-cor.json",
+    "artifactHash": "d618c4c3172c191c62d8d09226c5495dbc12022bc831dcbc9318ae757081c97d",
+    "claims": [
+     "COR-Q nit repaired @4d2ada93"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": [],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "review",
+   "id": "REV-PTR-COR-Q1",
+   "state": {
+    "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 20,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-0f443bf4af7242d58c8cc5f391f9d512",
+   "contextId": "ctx-0f443bf4",
+   "model": "swe-2",
+   "role": "clean-correctness",
+   "inputBundleHash": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-27T12:00:00Z",
+   "sealedAt": "2026-09-27T12:12:00Z",
+   "previousPhaseReviewId": "REV-PTR-COR-P1",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-CORQ"
+   ],
+   "findingIds": [
+    "F-PTR-244",
+    "F-PTR-245"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-244",
+   "title": "SPELL_KIT_IDS[activeElement][0] throws a bare TypeError on a corrupt save carrying a non-ElementType element string",
+   "state": {
+    "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "subsystem": "core",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "closedAt": "2026-09-27T12:15:00Z",
+   "severity": "Nit",
+   "locations": [
+    {
+     "path": "src/services/save/saveAcceptance.ts",
+     "symbolOrSection": ":243-253",
+     "revision": "4d2ada93",
+     "basis": "SOURCE"
+    }
+   ],
+   "pinEvidenceIds": [
+    "EV-PTR-FIXQ1"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXQ1"
+   ],
+   "evidenceIds": [
+    "EV-PTR-FIXQ1"
+   ],
+   "closureReviewIds": [],
+   "status": "CLOSED",
+   "classification": "REAL_DEFECT",
+   "reachability": "FIXTURE_INJECTED",
+   "actionable": true,
+   "discoveredBy": "cleanQ COR",
+   "expected": "descriptive rejection on corrupt element",
+   "actual": "bare TypeError 'Cannot read properties of undefined'",
+   "rootCause": "the coherence check indexed the kit map without guarding the undefined case -- fails closed either way but the rejection surfaced as TypeError instead of the descriptive coherence error",
+   "rootClass": "CONTRACT_GAP",
+   "repair": "defensive lookup: unknown element throws 'unknown element carries no kit' @4d2ada93",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "enumerate same-class sites against the repaired authority/policy",
+     "evidenceIds": [
+      "EV-PTR-FIXQ1"
+     ],
+     "hitDispositions": [
+      "sibling sites enumerated"
+     ],
+     "coverageLimits": [
+      "fixture-injected or documented-latent reachability only"
+     ]
+    }
+   ],
+   "closeReason": "fixed @4d2ada93 -- pending closure seal",
+   "counterexample": "bare TypeError 'Cannot read properties of undefined'"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-245",
+   "title": "covered defs declining at plan time still pay the Ho proc cost + mint ward/marker before castBlocked stamps",
+   "state": {
+    "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "subsystem": "core",
+   "duplicateOf": null,
+   "rejectionReason": "accepted-latent by construction and already documented at the gate: substitution must precede the plan run, so resolver-level declines can only mint the window before the apply lane stamps castBlocked -- the reviewer marked no-action-required",
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "closedAt": "2026-09-27T12:15:00Z",
+   "severity": "Nit",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": ":3203-3231",
+     "revision": "4d2ada93",
+     "basis": "SOURCE"
+    }
+   ],
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "evidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "classification": "NON_ACTIONABLE",
+   "reachability": "HYPOTHETICAL",
+   "actionable": false,
+   "discoveredBy": "cleanQ COR",
+   "expected": "only statically unviable casts skip the window",
+   "actual": "plan-time declines mint the window -- required ordering, documented",
+   "rootCause": "accepted-latent by construction and already documented at the gate: substitution must precede the plan run, so resolver-level declines can only mint the window before the apply lane stamps castBlocked -- the reviewer marked no-action-required",
+   "rootClass": "UNREACHABLE",
+   "repair": "none -- rejected with reason",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "reachability enumerated against shipped data + runtime guards",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no production-reachable path exists"
+     ],
+     "coverageLimits": [
+      "assertion relies on shapes shipped data cannot author"
+     ]
+    }
+   ],
+   "closeReason": "rejected: accepted-latent by construction and already documented at the gate: substitution must precede the plan run, so resolver-level declines can only mint the window before the apply lane stamps castBlocked -- the reviewer marked no-action-required",
+   "counterexample": "accepted-latent by construction and already documented at the gate: substitution must precede the plan run, so resolver-level declines can only mint the window before the apply lane stamps castBlocked -- the reviewer marked no-action-required"
+  },
+  {
+   "kind": "lesson",
+   "version": 1,
+   "supersedes": null,
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-reimagine-2026-09-26",
+   "missedInvariantIds": [],
+   "exclusions": [],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [
+    "EV-PTR-FIXQ1"
+   ],
+   "guidance": null,
+   "id": "L-PTR-P-CHAIN-GAP",
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PTR-240",
+    "F-PTR-244"
+   ],
+   "rootClass": "CONTRACT_GAP",
+   "escapeReason": "a discriminated resolution chain enumerated only the slot kinds shipped today; a third slot kind went silently unresolved; extends to indexed lookups that assume a closed value set the input only weakly validates",
+   "applicability": [
+    "lookup chains that enumerate shipped slot/variant kinds only",
+    "map indexes on weakly-validated save strings"
+   ],
+   "proposedProtection": [
+    "enumerate all slot kinds in discriminated resolution chains, even kinds nothing ships today",
+    "defensive lookups on save-surface indexes"
+   ],
+   "capabilityDelta": "charge-resolve chain covers basic/special/ultimate; element-kit lookup rejects descriptively"
+  },
+  {
+   "kind": "lesson",
+   "version": 1,
+   "supersedes": null,
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-reimagine-2026-09-26",
+   "missedInvariantIds": [],
+   "exclusions": [],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [
+    "EV-PTR-FIXQ1"
+   ],
+   "guidance": null,
+   "id": "L-PTR-P-DESIGNED-SEMANTICS",
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PTR-227",
+    "F-PTR-233",
+    "F-PTR-234",
+    "F-PTR-236",
+    "F-PTR-237",
+    "F-PTR-238",
+    "F-PTR-243",
+    "F-PTR-245"
+   ],
+   "rootClass": "UNREACHABLE",
+   "escapeReason": "reviewers flagged documented per-surface/lane semantics as inconsistencies; the divergence was designed and documented; extends to dead-but-correct defensive checks, intended ordering changes, and required-ordering latents the gate docblock already records",
+   "applicability": [
+    "per-surface semantics that differ by design",
+    "shared constants read as divergent literals",
+    "defensive checks unreachable by construction",
+    "intended ordering changes read as regressions",
+    "correct arithmetic on degenerate inputs",
+    "cosmetic layouts",
+    "documented required-ordering latents"
+   ],
+   "proposedProtection": [
+    "reject with the documented designed-semantics citation; record the reason"
+   ],
+   "capabilityDelta": "adjudication records designed-semantics rejects with proof"
+  }
+ ]
+}
