@@ -1,0 +1,14 @@
+{
+  "producer": "coordinator",
+  "verdict": "clean-K fix batch @42fbadd7",
+  "evidence": "npm run type-check clean; npx vitest run battle+skilldef+combat+bridges+ascii = 130 files / 1124 tests PASS",
+  "fixes": [
+    "whiff vs dangling charge-resolve split (armedCharged lookup; whiff=silent fizzle, dangling=warn+stamp)",
+    "pre-gate probe stamps castBlocked on zero-target unrouted cast",
+    "self-extra landedIds.push gated on executed lane (no fabricated landed)",
+    "percentCostIsManaApplicable drops 'none' -> contradictory def reports like non-mana siblings",
+    "EntityResourceAdapter consume-all routes via drainAllThe",
+    "SkillResolver dual-gate + CombatEntity cap-divergence + theBurned docblocks",
+    "lastOpResult backward scan without reversed-copy allocation"
+  ]
+}
