@@ -13260,7 +13260,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "severity": "Low",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -13296,7 +13298,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @b546590e/@2164df05 -- pending closure seal",
+      "closeReason": "fixed @b546590e/@2164df05 -- sealed by REV-PTR-CLO-19",
       "counterexample": "later marker wrote stacks on the detached object + emitted buff_stacks_changed (0->N)"
     },
     {
@@ -13388,7 +13390,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "severity": "Low",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -13424,7 +13428,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @b546590e/@2164df05 -- pending closure seal",
+      "closeReason": "fixed @b546590e/@2164df05 -- sealed by REV-PTR-CLO-19",
       "counterexample": "doc claimed the fields dead while the lane consumed them"
     },
     {
@@ -13453,7 +13457,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "severity": "Nit",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -13489,7 +13495,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @b546590e/@2164df05 -- pending closure seal",
+      "closeReason": "fixed @b546590e/@2164df05 -- sealed by REV-PTR-CLO-19",
       "counterexample": "a dormant sibling wrote the same field inline"
     },
     {
@@ -13518,7 +13524,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "severity": "Nit",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -13554,7 +13562,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @b546590e/@2164df05 -- pending closure seal",
+      "closeReason": "fixed @b546590e/@2164df05 -- sealed by REV-PTR-CLO-19",
       "counterexample": "comment claimed 'no clamp' while the callee floors"
     },
     {
@@ -13583,7 +13591,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "severity": "Nit",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -13625,7 +13635,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @b546590e/@2164df05 -- pending closure seal",
+      "closeReason": "fixed @b546590e/@2164df05 -- sealed by REV-PTR-CLO-19",
       "counterexample": "two copies with no tie"
     },
     {
@@ -13768,7 +13778,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "severity": "Low",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -13810,7 +13822,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @b546590e/@2164df05 -- pending closure seal",
+      "closeReason": "fixed @b546590e/@2164df05 -- sealed by REV-PTR-CLO-19",
       "counterexample": "field silently no-op'd on non-gated op types"
     },
     {
@@ -14124,7 +14136,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "severity": "Nit",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -14166,7 +14180,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @b546590e/@2164df05 -- pending closure seal",
+      "closeReason": "fixed @b546590e/@2164df05 -- sealed by REV-PTR-CLO-19",
       "counterexample": "illegal slots faulted only at resolve -> decline"
     },
     {
@@ -14437,7 +14451,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP3"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -14465,7 +14481,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @068c7360 -- pending closure seal",
+      "closeReason": "fixed @068c7360 -- sealed by REV-PTR-CLO-19",
       "counterexample": "flat cost silently dropped when percent co-authored"
     },
     {
@@ -14502,7 +14518,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP3"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -14530,7 +14548,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @068c7360 -- pending closure seal",
+      "closeReason": "fixed @068c7360 -- sealed by REV-PTR-CLO-19",
       "counterexample": "basic slot missing from the chain"
     },
     {
@@ -14567,7 +14585,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP3"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -14595,7 +14615,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @068c7360 -- pending closure seal",
+      "closeReason": "fixed @068c7360 -- sealed by REV-PTR-CLO-19",
       "counterexample": "unmarked dormant surface"
     },
     {
@@ -14632,7 +14652,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP3"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -14660,7 +14682,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @068c7360 -- pending closure seal",
+      "closeReason": "fixed @068c7360 -- sealed by REV-PTR-CLO-19",
       "counterexample": "required field dead since introduction"
     },
     {
@@ -14819,7 +14841,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP2"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -14847,7 +14871,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @29b4719c -- pending closure seal",
+      "closeReason": "fixed @29b4719c -- sealed by REV-PTR-CLO-19",
       "counterexample": "negative amount minted The; overdraft went negative"
     },
     {
@@ -14884,7 +14908,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP2"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -14912,7 +14938,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @29b4719c -- pending closure seal",
+      "closeReason": "fixed @29b4719c -- sealed by REV-PTR-CLO-19",
       "counterexample": "smuggled onLanded/oncePerCast validated clean, silently dead"
     },
     {
@@ -14949,7 +14975,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP2"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -14977,7 +15005,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @29b4719c -- pending closure seal",
+      "closeReason": "fixed @29b4719c -- sealed by REV-PTR-CLO-19",
       "counterexample": "compositeCount-without-pool validated clean"
     },
     {
@@ -15077,7 +15105,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP2"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -15105,7 +15135,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @29b4719c -- pending closure seal",
+      "closeReason": "fixed @29b4719c -- sealed by REV-PTR-CLO-19",
       "counterexample": "every dead cast paid the proc roll + minted ward/marker"
     },
     {
@@ -15142,7 +15172,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP2"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -15170,7 +15202,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @29b4719c -- pending closure seal",
+      "closeReason": "fixed @29b4719c -- sealed by REV-PTR-CLO-19",
       "counterexample": "coherent-looking save crashed on every battle entry"
     },
     {
@@ -15207,7 +15239,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP2"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -15235,7 +15269,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @29b4719c -- pending closure seal",
+      "closeReason": "fixed @29b4719c -- sealed by REV-PTR-CLO-19",
       "counterexample": "name implied cast-wide dedup; implementation is per-lane"
     },
     {
@@ -15272,7 +15306,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP2"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -15300,7 +15336,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @29b4719c -- pending closure seal",
+      "closeReason": "fixed @29b4719c -- sealed by REV-PTR-CLO-19",
       "counterexample": "edge reachable only via a future flag flip, undocumented"
     },
     {
@@ -15337,7 +15373,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP2"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -15365,7 +15403,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @29b4719c -- pending closure seal",
+      "closeReason": "fixed @29b4719c -- sealed by REV-PTR-CLO-19",
       "counterexample": "per-hit multiplication implicit"
     },
     {
@@ -15522,7 +15560,9 @@
       "evidenceIds": [
         "EV-PTR-FIXP2"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-19"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -15550,7 +15590,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @29b4719c -- pending closure seal",
+      "closeReason": "fixed @29b4719c -- sealed by REV-PTR-CLO-19",
       "counterexample": "read-only verification on dormant lane"
     },
     {
@@ -17893,6 +17933,33 @@
       "artifactHash": "d618c4c3172c191c62d8d09226c5495dbc12022bc831dcbc9318ae757081c97d",
       "claims": [
         "COR-Q nit repaired @4d2ada93"
+      ],
+      "inputEvidenceIds": [],
+      "inputPaths": [],
+      "invariantIds": [],
+      "limitations": []
+    },
+    {
+      "kind": "EXECUTED_INTEGRATION",
+      "id": "EV-PTR-CLO19",
+      "state": {
+        "productStateId": "68d6f324141b5ad199d28c3fa22d7613bb0afa45b751bb97c2291644b55ed283",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "status": "STALE",
+      "producer": "devin-987966cfb53446ffa857059c9922f451",
+      "startedAt": "2026-09-27T12:10:00Z",
+      "finishedAt": "2026-09-27T12:15:00Z",
+      "commandOrMethod": "closure review @068c7360: SEALED -- all 20 pending closure claims verified (wave-O 7/7, wave-P 9/9, COR-P 4/4); type-check exit 0; 134 files/1639 tests PASS",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "records-clo19.json",
+      "artifactHash": "65731232e2a133a3bd71cc07071d0bb818f70d9e017e039c903e08a2b811af0e",
+      "claims": [
+        "all 20 pending closure claims verified at pin 068c7360"
       ],
       "inputEvidenceIds": [],
       "inputPaths": [],
@@ -20332,6 +20399,35 @@
       ],
       "novelAttackIds": [],
       "status": "SEALED"
+    },
+    {
+      "id": "REV-PTR-CLO-19",
+      "state": {
+        "productStateId": "68d6f324141b5ad199d28c3fa22d7613bb0afa45b751bb97c2291644b55ed283",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 20,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-987966cfb53446ffa857059c9922f451",
+      "contextId": "sealed-child-987966cfb53446ffa857059c9922f451",
+      "role": "closure",
+      "priorFindingsVisible": false,
+      "startedAt": "2026-09-27T12:10:00Z",
+      "sealedAt": "2026-09-27T12:16:00Z",
+      "status": "SEALED",
+      "findingIds": [],
+      "model": "swe-2",
+      "inputBundleHash": "68d6f324141b5ad199d28c3fa22d7613bb0afa45b751bb97c2291644b55ed283",
+      "accessLimitations": [],
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-PTR-CLO19"
+      ],
+      "novelAttackIds": []
     }
   ],
   "cycles": [
@@ -24719,6 +24815,38 @@
       "payloadPath": "events/0081.json",
       "payloadHash": "f2a1654242ad186cf0be10d3a54dfecbc90fe5d3a796a2d0ed25671e88a152fd",
       "eventHash": "9eaacd45f6d83f2c8d5ffdc5adb9392fccc1245289c1718640172318c7f390b3"
+    },
+    {
+      "seq": 82,
+      "at": "2026-09-27T12:16:00.573Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "576bf6a4fe2d3b1ac65b3bd9b0bea05cc9a59f83f77ac9e92856add87a9ab48e",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "9eaacd45f6d83f2c8d5ffdc5adb9392fccc1245289c1718640172318c7f390b3",
+      "payloadPath": "events/0082.json",
+      "payloadHash": "7768e34ed4661f75ce189b9165aab748bd2e9542509afe00c59c8493896ec489",
+      "eventHash": "e6abb2e25982a29a3455c9f7e0dd6373db2461d9df819a1c8335cb7b3894cffd"
+    },
+    {
+      "seq": 83,
+      "at": "2026-09-27T12:16:07.334Z",
+      "kind": "FINDING",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "576bf6a4fe2d3b1ac65b3bd9b0bea05cc9a59f83f77ac9e92856add87a9ab48e",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "e6abb2e25982a29a3455c9f7e0dd6373db2461d9df819a1c8335cb7b3894cffd",
+      "payloadPath": "events/0083.json",
+      "payloadHash": "da0623e91c0f9ff875cecd0013de3b9e117aad693dffb60504531d3ae8ff005c",
+      "eventHash": "6faab2ec254443b00f00fa05860e088211b12caf138d302da5ff0c4be30c05b1"
     }
   ]
 }
