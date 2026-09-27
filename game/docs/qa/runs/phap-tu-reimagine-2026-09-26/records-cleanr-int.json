@@ -1,0 +1,58 @@
+{
+ "artifact": "cleanR INT reviewer verdict summary",
+ "run": "phap-tu-reimagine-2026-09-26",
+ "reviewer": "devin-f8444fda53f142078c64bcc73e3c4a37",
+ "reviewerRole": "clean-adversarial",
+ "pin": "7d837a91",
+ "productStateId": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+ "verdict": "SEALED",
+ "findings": [
+  {
+   "n": 1,
+   "severity": "Nit",
+   "file": "src/core/battle/turn/TurnBattleSystem.ts:705-714 (writeExternalWardGrant)",
+   "claim": "Ward grant is REPLACE-not-max: a new intercept ward overwrites a larger pre-existing ward. Cosmetic in current content (single protector proc family, once:true single roll).",
+   "disposition": "REJECTED_WITH_PROOF -- documented intended contract: 'source-tagged REPLACE -- a recast refreshes the pool to full and a lower recast lowers it (never stacks); existence-bound to the granting marker instance' (:696-703). Reviewer itself rated cosmetic."
+  },
+  {
+   "n": 2,
+   "severity": "Nit",
+   "file": "src/core/the-tu/TheEconomy.ts (grant path)",
+   "claim": "TheEconomy still trusts entity.maxThe: corrupt NaN/negative maxThe makes even finite grants write NaN pool; guards are amount-only.",
+   "disposition": "CLOSED_IN_BATCH -- same claim as COR-R nit 2, fixed in the pending wave-R commit (theCap falls back to MAX_THE on non-finite entity.maxThe + pin)"
+  },
+  {
+   "n": 3,
+   "severity": "Nit",
+   "file": "src/core/battle/turn/TurnBattleSystem.ts:~3192 (resolveInterceptWindow)",
+   "claim": "No declared.intercepted idempotence re-guard; relies on single-apply pending-state pipeline. Verified unreachable (QueuedFollowUp.actionSource excludes 'normal'|'skill'; queued executions produce undefined actionSource).",
+   "disposition": "REJECTED_WITH_PROOF -- verified unreachable at the type level; REPLACE re-write is idempotent anyway so worst case is a duplicate suppressed-marker event"
+  },
+  {
+   "n": 4,
+   "severity": "Nit",
+   "file": "src/core/battle/turn/TurnBattleSystem.ts (post-window decline path)",
+   "claim": "Post-window decline (routeCast->null or outcome.blocked) unreachable for enemy casts; if activated, substituted declared.affected + written ward would persist on a declined cast.",
+   "disposition": "REJECTED_WITH_PROOF -- grep-verified unreachable (no enemy def authors resourceCost/resourceCostPercentOfMax; window only opens on enemy actors); ordering-hazard docblock already documents this seam"
+  },
+  {
+   "n": 5,
+   "severity": "Nit",
+   "file": "src/services/save/saveAcceptance.ts (hidden_spell_pathway coherence)",
+   "claim": "Version-skew: saves written by builds without the kit grant will be rejected at load by the new coherence check.",
+   "disposition": "REJECTED_WITH_PROOF -- intended fail-closed: hidden way only reachable through the ritual that atomically grants the kit post-applyPathChoice commit; old saves pre-dating the feature can't carry the marker"
+  }
+ ],
+ "verifiedClaims": [
+  "element-kit false-reject: element root in RESPEC_PRESERVED_NODE_IDS -> preserveIds exempts root from revocation -> nodeOneShotGrants never reaches clawback; atomic commit guarantees basic at commit time; dual-source stillGrantedElsewhere guard (GameManagerProgressionOps.ts:71,644,810; NodeSystem.ts:715-800)",
+  "hidden-kit respec-clawback: kit ids appear in no progression unlocksSkillIds -- ritual-granted only",
+  "assertSaveAcceptable call sites all post-requireArray shape validation (saveShapeValidation.ts:1798 -> GameManagerSaveRestore.ts:122, SaveSystem.ts:740, SupabaseRemoteSave.ts:64-75,90)",
+  "TheEconomy write-site monopoly: only grant/consume/drain assign currentThe; consumeResourceFor clamps via Math.min; adapter pre-validates; drainAllThe writes 0 = recovery",
+  "intercept 'once' roll semantics = 'at most one paid roll' authored spec (CombatProcSystem.ts:214-216)",
+  "no buff-apply reactive trigger exists so marker settle can't cascade damage (ProcCapabilities.ts:17-60)",
+  "unsupportedFor/swingDead/affected.length===0 pre-gates verified in order"
+ ],
+ "testsRun": "type-check clean (exit 0); vitest on 3 touched test files -- 32 passed; no new repro tests (no confirmed defect to pin)",
+ "filesReviewed": 18,
+ "notes": "SEALED verdict; all 5 Nit findings latent (authored-data defects or unreachable re-entry). Wave-R has zero Medium+ -- final round per coordinator rule."
+}
