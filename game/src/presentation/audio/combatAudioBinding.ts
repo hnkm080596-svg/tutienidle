@@ -6,12 +6,12 @@
 // audio never influences gameplay state (A7).
 
 import type { EventBus, EventHandler } from '@/core/events/EventBus'
-import { AudioManager, type SoundId } from '@/core/audio/AudioManager'
+import { AudioManager, type SynthSoundId } from '@/core/audio/AudioManager'
 import type { SessionRef } from '@/core/presentation/PresentationSession'
 
 // One domain event -> one sound. 'damage' intentionally omitted: it fires
 // together with 'hit'/'critical' and would double-trigger the same tick.
-const COMBAT_EVENT_SOUNDS: ReadonlyArray<readonly [string, SoundId]> = [
+const COMBAT_EVENT_SOUNDS: ReadonlyArray<readonly [string, SynthSoundId]> = [
   ['attack', 'combatAttack'],
   ['hit', 'combatHit'],
   ['critical', 'combatCritical'],
