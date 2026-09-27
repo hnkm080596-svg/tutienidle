@@ -981,6 +981,23 @@ describe('M7 contract closure -- skill whole-stack acceptance', () => {
     ).toHaveLength(1)
   })
 
+  it('a charge-init declare never queues repeat/multicast follow-ups', () => {
+    // The charge-init commits the cast but its payload resolves on the
+    // deferred-resolve turn -- any follow-up exec queued off it would
+    // re-resolve as a silent no-op (chargeTurns>0 + !isCharging gate).
+    const CHARGE: TurnSkillDefinition = {
+      ...STRIKE,
+      chargeTurns: 2,
+      repeatCasts: 2,
+      multicast: { chance: 1, maxExtraCasts: 2 },
+    }
+    const { battle, system } = battleWith(CHARGE)
+
+    system.resolveNextStep(battle) // charge INIT -- the cast commits here
+
+    expect(battle.queuedExecutions ?? []).toHaveLength(0)
+  })
+
   it('a target that dies mid-charge leaves the deferred resolve safe', () => {
     const CHARGE: TurnSkillDefinition = {
       id: 'qa_charge_dead',

@@ -436,7 +436,10 @@ export function consumeResourceFor(
 
   const field = RESOURCE_FIELD[skill.resourceType]
 
-  entity[field] = (entity[field] ?? 0) - required
+  // Pool never goes negative: a drain between the affordability gate and
+  // this commit must not write a negative pool (pay-or-skip lanes fault
+  // instead; this raw-debit lane floors at zero).
+  entity[field] = Math.max(0, (entity[field] ?? 0) - required)
 }
 
 export interface SelectedAction {

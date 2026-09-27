@@ -103,6 +103,30 @@ describe('SkillDefinitionRegistry', () => {
     ).toThrow(/consumesAllThe and cadence\.chargeTurns are mutually exclusive/)
   })
 
+  it('constructor faults when one definition carries subcasts (repeat/multicast) AND chargeTurns', () => {
+    // A charge-init declare commits the cast but never carries the
+    // payload resolve -- queued repeat/multicast execs off it would
+    // resolve to silent no-ops. Dormant today; keeps the dead combos
+    // unauthorable.
+    for (const subcasts of [
+      { count: 2 },
+      { multicast: { chance: 1, maxExtraCasts: 1 } },
+    ] as const) {
+      expect(
+        () =>
+          new SkillDefinitionRegistry(
+            [
+              activeDef('a', {
+                subcasts,
+                cadence: { cooldownTurns: 2, chargeTurns: 1 },
+              }),
+            ],
+            deps,
+          ),
+      ).toThrow(/subcasts and cadence\.chargeTurns are mutually exclusive/)
+    }
+  })
+
   it('accepts compositePool refs that resolve inside the registry', () => {
     const registry = new SkillDefinitionRegistry(
       [

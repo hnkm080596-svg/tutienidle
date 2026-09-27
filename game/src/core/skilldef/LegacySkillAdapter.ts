@@ -262,8 +262,12 @@ function adaptOne(
     def.resourceCostPercentOfMax !== undefined &&
     !percentCostIsManaApplicable
   ) {
+    const hasFlatCost =
+      def.resourceCost !== undefined && def.resourceCost > 0
     report(
-      `${reportPrefix}.resourceCostPercentOfMax(non-mana resourceType: percent-of-max is mana-pool semantics -- flat resourceCost applies)`,
+      hasFlatCost
+        ? `${reportPrefix}.resourceCostPercentOfMax(non-mana resourceType: percent-of-max is mana-pool semantics -- flat resourceCost applies)`
+        : `${reportPrefix}.resourceCostPercentOfMax(non-mana resourceType and NO flat resourceCost: cast resolves FREE -- authoring defect, percent-of-max is mana-pool semantics)`,
     )
   }
   const percentCost =

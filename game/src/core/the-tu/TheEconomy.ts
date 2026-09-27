@@ -4,16 +4,16 @@ import type { ActiveCapabilityGrant } from '../battle/contracts/capability'
 
 import { asReactiveEconomy, asTheEconomy } from './TheTuCapabilities'
 
-// The Tu Reimagined (spec 2026-09-15 section 4.1, plan Task 15) — the
+// The Tu Reimagined (spec 2026-09-15 section 4.1, plan Task 15) -- the
 // ung_the proc-fuel economy. The is a THROUGHPUT BUDGET, not a
 // probability: pay-per-attempt on each reactive window, free income from
 // the authored table only, clamped at the participant's maxThe cap.
 //
 // Boundaries (A2/A9):
-// - eligibility is the ung_the marker's presence — never cultivationPath
+// - eligibility is the ung_the marker's presence -- never cultivationPath
 //   re-reads at combat time (mechanics are participant-generic).
 // - the own-basic-lands income lives on the marker's theEconomy grant
-//   (review P1 single-channel lock — TurnSkillDefinition has no
+//   (review P1 single-channel lock -- TurnSkillDefinition has no
 //   landed-cast gain field, so THAM_THE carries none).
 // - every mutation goes through grantThe's single clamp expression.
 // - buff-megaplan M4: grant reads take ActiveCapabilityGrant[]
@@ -27,12 +27,12 @@ export const THE_GAIN_PER_ROUND = 5
 
 const UNG_THE_ID = 'ung_the'
 
-/** Single cap authority — entity.maxThe is baked at participant build. */
+/** Single cap authority -- entity.maxThe is baked at participant build. */
 export function theCap(entity: Pick<CombatEntity, 'maxThe'>): number {
   return entity.maxThe ?? MAX_THE
 }
 
-/** Single mutation authority — all income/gain routes through here. */
+/** Single mutation authority -- all income/gain routes through here. */
 export function grantThe(entity: Pick<CombatEntity, 'currentThe' | 'maxThe'>, amount: number): void {
   if (amount <= 0) return
   entity.currentThe = Math.min(theCap(entity), (entity.currentThe ?? 0) + amount)
@@ -70,8 +70,15 @@ export function resolveProcCost(
 
 /**
  * Pay-per-attempt (spec 4.1): false = the pool cannot pay and NO roll
- * happens — the mechanic is inert this window. True = cost committed;
+ * happens -- the mechanic is inert this window. True = cost committed;
  * the caller rolls and reports success via onProcSuccess.
+ *
+ * DORMANT: zero production callers -- the live proc lane gates
+ * `(currentThe ?? 0) >= cost` inline and spends via
+ * settleOp(consume_resource) -> EntityResourceAdapter; proc-success gain
+ * rides gain_resource ops -> grantThe. Kept as the authored spec-4.1
+ * semantics pinned by TurnBattleSystem.theEconomy.test.ts; wire or
+ * remove when the pay-per-attempt lane lands.
  */
 export function tryPayProcCost(entity: CombatEntity, cost: number): boolean {
   const pool = entity.currentThe ?? 0
@@ -80,13 +87,16 @@ export function tryPayProcCost(entity: CombatEntity, cost: number): boolean {
   return true
 }
 
-/** A successful proc credits THE_PROC_GAIN through the capped pool. */
+/**
+ * A successful proc credits THE_PROC_GAIN through the capped pool.
+ * DORMANT: see tryPayProcCost -- zero production callers.
+ */
 export function onProcSuccess(entity: CombatEntity, gain = THE_PROC_GAIN): void {
   grantThe(entity, gain)
 }
 
 /**
- * Own-basic-lands income — reads the authored theEconomy.gainOnBasicHit
+ * Own-basic-lands income -- reads the authored theEconomy.gainOnBasicHit
  * field off the holder's marker clone (node-adjusted at participant
  * build; review P1: this is the ONLY basic-income channel).
  */
@@ -94,7 +104,7 @@ export function theGainOnBasicHit(grants: readonly ActiveCapabilityGrant[]): num
   return theEconomyField(grants, 'gainOnBasicHit')
 }
 
-// Task 20 — the remaining income channels read the same marker-clone
+// Task 20 -- the remaining income channels read the same marker-clone
 // fields (node bonuses bake onto the participant-local def at build).
 // One read pattern per channel, same single-channel rule as basic.
 function theEconomyField(

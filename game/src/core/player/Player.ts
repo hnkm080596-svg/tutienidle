@@ -135,8 +135,8 @@ export interface PlayerData {
   mortalBasicSkillId?: string
 
   // Phap Tu Reimagined (spec 2026-09-14) - persistent path-choice
-  // authority for the normal Phap Tu path: { element, route } commit
-  // atomically via selectSpellPathElement(). Present from character
+  // authority for the normal Phap Tu path: { element } commits
+  // atomically via selectSpellPathElement() (routes retired). Present from character
   // creation (both null until the ritual + atomic pick); hidden_spell_pathway
   // holders carry the same inert shape - the (path, way) pair, not
   // this state, is what matters.
@@ -428,8 +428,8 @@ export function createDefaultPlayer(): PlayerData {
     // player.$state.
     mortalBasicSkillId: undefined,
 
-    // Required (non-optional) field - present from creation; both
-    // members stay null until the ritual + atomic element/route pick.
+    // Required (non-optional) field - present from creation; stays
+    // null until the ritual + atomic element pick.
     spellPath: createSpellPathState(),
 
     // PHAI khai bao tuong minh (du `undefined`) - cung ly do

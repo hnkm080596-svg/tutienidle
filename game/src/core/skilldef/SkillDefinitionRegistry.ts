@@ -461,6 +461,20 @@ function validateActive(
     )
   }
 
+  if (subcasts !== undefined && cadence?.chargeTurns !== undefined) {
+    // A charge-init declare commits the cast but never carries the
+    // payload resolve (the charge resolve replays the root verbatim):
+    // repeat/multicast execs queued off it resolve to silent no-ops.
+    // Forbid the dead combinations.
+    if ((subcasts.count ?? 0) > 0 || subcasts.multicast !== undefined) {
+      fault(
+        'invalid_field_value',
+        'subcasts',
+        'subcasts and cadence.chargeTurns are mutually exclusive on one definition',
+      )
+    }
+  }
+
   if (definition.landed !== undefined && !LANDED_SEMANTICS.has(definition.landed)) {
     fault('invalid_field_value', 'landed', `unknown landed semantics '${String(definition.landed)}'`)
   }

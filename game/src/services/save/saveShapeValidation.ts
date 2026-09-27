@@ -817,7 +817,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   }
 
   // F-W-2 (v82) - provenance record của grant 1-lần (skill học, kiếm
-  // ý/kiếm đạo, specialization) mà respec/route-switch phải clawback.
+  // ý/kiếm đạo, specialization) mà respec phải clawback.
   // Optional per-field nhưng khi có phải đúng kiểu.
   if (!isObject(player.nodeOneShotGrants)) {
     issues.push({ path: 'player.nodeOneShotGrants', message: 'phải là object' })

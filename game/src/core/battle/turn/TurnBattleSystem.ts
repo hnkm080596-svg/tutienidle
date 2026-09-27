@@ -2018,13 +2018,20 @@ export class TurnBattleSystem {
         // Fall through -- the shared Tro window at the tail fires once,
         // same as the legacy lane's own call below.
       } else if (this.runtime !== undefined) {
-        // M5d -- adapter-unsupported charged def on a live battle: the
-        // deferred resolve reports loudly and fizzles (the charge state
-        // was already consumed at declare).
+        // M5d -- adapter-unsupported (or unresolvable) charged def on a
+        // live battle: the deferred resolve reports loudly and fizzles
+        // (the charge state was already consumed at declare). An armed
+        // charge that resolves nothing is a blocked cast -- stamp
+        // castBlocked so the tail ally window/follow-up gates reject it,
+        // parity with unrouted normal casts and unrouted charge-inits.
+        // `declared.skillId` carries the armed charged id on this lane --
+        // the old label (pendingChargedSkillId ?? action?.skillId) was
+        // always undefined here and silenced the report.
+        declared.castBlocked = true
         this.reportUnroutedCast(
           actor,
           declared.chargedSkill,
-          actor.pendingChargedSkillId ?? declared.action?.skillId,
+          declared.chargedSkill?.id ?? (declared.skillId || undefined),
           true,
         )
       } else {
@@ -2844,7 +2851,11 @@ export class TurnBattleSystem {
     const execution = declared.execution
     const rootSkill = declared.action?.skill
 
-    if (!execution || !rootSkill || declared.isCharging) {
+    // chargeTurns>0 roots never queue follow-ups: the charge-init declare
+    // carries isCharging=false (the pool arms on that same declare) but
+    // only commits the cast -- its payload resolves on the resolve turn,
+    // so any queued repeat/multicast exec would resolve to a silent no-op.
+    if (!execution || !rootSkill || declared.isCharging || (rootSkill.chargeTurns ?? 0) > 0) {
       return
     }
 
@@ -3117,6 +3128,15 @@ export class TurnBattleSystem {
    * excluding the original target. Exactly ONE roll: the nearest
    * protector to the attacker by Chebyshev attempts; no fallback to
    * further candidates (D5).
+   *
+   * Ordering hazard (latent): this window runs BEFORE the route/plan
+   * resolve below, so it can consume its once-roll and write the
+   * suppressed marker + ward grant for a cast that the pipeline then
+   * blocks (castBlocked). Unreachable today -- every cast that opens
+   * this window routes (enemy casts carry no resource cost and the plan
+   * precheck cannot decline them). If a blocker-capable cast ever
+   * reaches this lane, the roll must move behind routability or roll
+   * back its persistent writes.
    */
   private resolveInterceptWindow(
     battle: TurnBattle,
