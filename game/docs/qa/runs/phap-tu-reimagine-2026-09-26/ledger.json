@@ -11287,9 +11287,12 @@
         "EV-PTR-FIXN"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXN"
+        "EV-PTR-FIXN",
+        "EV-PTR-CLO17"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-17"
+      ],
       "severity": "Medium",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -11354,9 +11357,12 @@
         "EV-PTR-FIXN"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXN"
+        "EV-PTR-FIXN",
+        "EV-PTR-CLO17"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-17"
+      ],
       "severity": "Low",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -11421,9 +11427,12 @@
         "EV-PTR-FIXN"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXN"
+        "EV-PTR-FIXN",
+        "EV-PTR-CLO17"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-17"
+      ],
       "severity": "Nit",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -11486,9 +11495,12 @@
         "EV-PTR-FIXN"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXN"
+        "EV-PTR-FIXN",
+        "EV-PTR-CLO17"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-17"
+      ],
       "severity": "Nit",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -11551,9 +11563,12 @@
         "EV-PTR-FIXN"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXN"
+        "EV-PTR-FIXN",
+        "EV-PTR-CLO17"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-17"
+      ],
       "severity": "Low",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -11617,9 +11632,12 @@
         "EV-PTR-FIXN"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXN"
+        "EV-PTR-FIXN",
+        "EV-PTR-CLO17"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-17"
+      ],
       "severity": "Low",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -11682,9 +11700,12 @@
         "EV-PTR-FIXN"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXN"
+        "EV-PTR-FIXN",
+        "EV-PTR-CLO17"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-17"
+      ],
       "severity": "Low",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -11747,9 +11768,12 @@
         "EV-PTR-FIXN"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXN"
+        "EV-PTR-FIXN",
+        "EV-PTR-CLO17"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-17"
+      ],
       "severity": "Nit",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -11812,9 +11836,12 @@
         "EV-PTR-FIXN"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXN"
+        "EV-PTR-FIXN",
+        "EV-PTR-CLO17"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-17"
+      ],
       "severity": "Nit",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -11877,9 +11904,12 @@
         "EV-PTR-FIXN"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXN"
+        "EV-PTR-FIXN",
+        "EV-PTR-CLO17"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-17"
+      ],
       "severity": "Nit",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -11942,9 +11972,12 @@
         "EV-PTR-FIXN"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXN"
+        "EV-PTR-FIXN",
+        "EV-PTR-CLO17"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-17"
+      ],
       "severity": "Nit",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -12007,9 +12040,12 @@
         "EV-PTR-FIXN"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXN"
+        "EV-PTR-FIXN",
+        "EV-PTR-CLO17"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-17"
+      ],
       "severity": "Medium",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -12073,9 +12109,12 @@
         "EV-PTR-FIXN"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXN"
+        "EV-PTR-FIXN",
+        "EV-PTR-CLO17"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-17"
+      ],
       "severity": "Low",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -12138,9 +12177,12 @@
         "EV-PTR-FIXN"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXN"
+        "EV-PTR-FIXN",
+        "EV-PTR-CLO17"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-17"
+      ],
       "severity": "Low",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -14099,6 +14141,39 @@
       "inputPaths": [],
       "invariantIds": [],
       "limitations": []
+    },
+    {
+      "kind": "EXECUTED_INTEGRATION",
+      "id": "EV-PTR-CLO17",
+      "state": {
+        "productStateId": "6bb65162b94cc6908bae1fa7a49754209b13d2d8e5ed6941383af1a44eb5fc24",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "status": "CURRENT",
+      "producer": "devin-11fda9aebb50492ebd97c4b769120d2f",
+      "startedAt": "2026-09-27T09:30:00Z",
+      "finishedAt": "2026-09-27T09:37:25Z",
+      "commandOrMethod": "closure verify clean-M fix batches @80014517+@89f91334 (pin de23c053): code reads + type-check + vitest 90 files/744 PASS + named pins 5/5",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "records-clo17.json",
+      "artifactHash": "2a235fada4a73689222bbfb92c33b4a8e5e49bbdd42143c57e245093322ceea5",
+      "claims": [
+        "all 7 clean-M fix claims verified in code and at runtime",
+        "RESOURCE_IDS closed set holds on all three authored resourceId surfaces",
+        "composite extras resolve pre-commit verified by pin asserting commits==[] + no consume_resource + mana intact"
+      ],
+      "inputEvidenceIds": [
+        "EV-PTR-FIXN"
+      ],
+      "inputPaths": [],
+      "invariantIds": [],
+      "limitations": [
+        "F-PTR-180 DECLINE lane: no dedicated pin; mechanism confirmed by inspection"
+      ]
     }
   ],
   "coverage": [],
@@ -16069,6 +16144,37 @@
         "F-PTR-195",
         "F-PTR-196"
       ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-PTR-CLO-17",
+      "state": {
+        "productStateId": "6bb65162b94cc6908bae1fa7a49754209b13d2d8e5ed6941383af1a44eb5fc24",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 15,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-11fda9aebb50492ebd97c4b769120d2f",
+      "contextId": "ctx-11fda9ae",
+      "model": "swe-2",
+      "role": "closure",
+      "inputBundleHash": "6bb65162b94cc6908bae1fa7a49754209b13d2d8e5ed6941383af1a44eb5fc24",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "read-only worktree"
+      ],
+      "startedAt": "2026-09-27T09:30:00Z",
+      "sealedAt": "2026-09-27T09:37:25Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-PTR-CLO17"
+      ],
+      "findingIds": [],
       "novelAttackIds": [],
       "status": "SEALED"
     }
@@ -19380,6 +19486,22 @@
       "payloadPath": "events/0056.json",
       "payloadHash": "3198f2af555b2478e5fb7ecfcac4d751682a1bdf296f1cafe89ed5b9fdfab83a",
       "eventHash": "38aa4d2781875e1aadf2a2074e3809a4ac46f45a27af2d9318e230e4a533c8f4"
+    },
+    {
+      "seq": 57,
+      "at": "2026-09-27T09:37:42.938Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "6bb65162b94cc6908bae1fa7a49754209b13d2d8e5ed6941383af1a44eb5fc24",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "38aa4d2781875e1aadf2a2074e3809a4ac46f45a27af2d9318e230e4a533c8f4",
+      "payloadPath": "events/0057.json",
+      "payloadHash": "9f7adc2cf4176592598bd238ff05b5e02aceb92971d50f3ea1ff1465fe7b65f2",
+      "eventHash": "a93a70d0962a1b8313744712b4fd18508ed56b4da0891d17b9f2f4e56a187f20"
     }
   ]
 }
