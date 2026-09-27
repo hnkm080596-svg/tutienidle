@@ -175,6 +175,39 @@ export class SkillExecutor {
       opSeq: 0,
     }
 
+    // Composite extras RESOLVE before the commit: a member def the
+    // machinery cannot express must decline the whole cast pre-commit
+    // (SkillResolverError -> routeCast null -> loud decline). Resolving
+    // after the commit would leave cooldown spent + cost consumed +
+    // partial extras applied while the caller stamps castBlocked -- a
+    // partial mutation masquerading as a no-op. Extras still EXECUTE
+    // ahead of the primary steps, in declaration order.
+    const extraPlans: ResolvedSkillPlan[] = []
+    if (followUps !== undefined && plan.compositeExtraIds !== undefined) {
+      for (const extraId of plan.compositeExtraIds) {
+        const extraDef = this.skills.require(extraId)
+        if (extraDef.kind !== 'active') {
+          throw new SkillExecutorError(
+            `SkillExecutor: composite extra '${extraId}' of '${plan.definitionId}' is not active`,
+          )
+        }
+        extraPlans.push(
+          this.resolver.resolve({
+            ...followUps.input,
+            definition: extraDef,
+            subcastIndex: followUps.nextSubcast.value++,
+            // TBS parity: extras resolve VERBATIM -- the picked def never
+            // re-rolls its own pool/empowerment, the root's declare-side
+            // replay never applies, and an inline lane never re-commits
+            // (cooldown/cost/sink belong to the root cast alone).
+            preResolved: undefined,
+            commitsCast: false,
+            payloadOnly: true,
+          }),
+        )
+      }
+    }
+
     if (plan.commitsCast) {
       // PRECHECK (R-S9): insufficient cost blocks the cast -- no commit,
       // no ops, not a whiff.
@@ -231,13 +264,13 @@ export class SkillExecutor {
       }
     }
 
-    // Composite extras resolve BEFORE the primary steps (TBS parity:
+    // Composite extras execute BEFORE the primary steps (TBS parity:
     // compositePickedSkills hit ahead of scaledDamage). They are
     // payload-only inline lanes -- verbatim defs, no commit, no grants,
     // never driving their own follow-ups; their landed/crit flags fold
-    // into the root cast's outcome.
-    if (followUps !== undefined && plan.compositeExtraIds !== undefined) {
-      this.expandCompositeExtras(plan, followUps, state)
+    // into the root cast's outcome. Plans already resolved pre-commit.
+    if (followUps !== undefined && extraPlans.length > 0) {
+      this.expandCompositeExtras(plan, followUps, state, extraPlans)
     }
 
     this.runSteps(plan.steps, plan, state)
@@ -659,27 +692,10 @@ export class SkillExecutor {
     plan: ResolvedSkillPlan,
     followUps: FollowUpContext,
     state: PlanExecutionState,
+    extraPlans: ResolvedSkillPlan[],
   ): void {
-    for (const extraId of plan.compositeExtraIds ?? []) {
+    for (const extraPlan of extraPlans) {
       if (!this.queries.vitals.alive(plan.sourceId)) return
-      const extraDef = this.skills.require(extraId)
-      if (extraDef.kind !== 'active') {
-        throw new SkillExecutorError(
-          `SkillExecutor: composite extra '${extraId}' of '${plan.definitionId}' is not active`,
-        )
-      }
-      const extraPlan = this.resolver.resolve({
-        ...followUps.input,
-        definition: extraDef,
-        subcastIndex: followUps.nextSubcast.value++,
-        // TBS parity: extras resolve VERBATIM -- the picked def never
-        // re-rolls its own pool/empowerment, the root's declare-side
-        // replay never applies, and an inline lane never re-commits
-        // (cooldown/cost/sink belong to the root cast alone).
-        preResolved: undefined,
-        commitsCast: false,
-        payloadOnly: true,
-      })
       const extraOutcome = this.executePlan(extraPlan, followUps, true)
       // castCritLanded/targetIds parity: the cast's grant gate and
       // crit flag accumulate across extras + the primary lane.

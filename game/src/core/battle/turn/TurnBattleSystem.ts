@@ -628,8 +628,8 @@ export class TurnBattleSystem {
       },
       grantHitOutcomeIncome: (battle, target, hit) =>
         this.grantHitOutcomeIncome(battle, target, hit),
-      grantBasicLandedIncome: (battle, actor, skillId) =>
-        this.grantBasicLandedIncome(battle, actor, skillId),
+      grantBasicLandedIncome: (battle, actor, skillId, rootSkillId) =>
+        this.grantBasicLandedIncome(battle, actor, skillId, rootSkillId),
       // resolveDeclaredHit :2136-2166 parity -- on-hit procs, then the
       // target's onImpactLanded reactive roll gated on hpDamage > 0,
       // then the queuedFollowUps FIFO push.
@@ -3317,8 +3317,12 @@ export class TurnBattleSystem {
    * basic landed a hit. Reads the authored theEconomy.gainOnBasicHit
    * field off the ung_the marker clone (single channel, review P1).
    */
-  private grantBasicLandedIncome(battle: TurnBattle, actor: TurnBattleParticipant, skillId: string | undefined): void {
-    if (this.runtime === undefined || skillId === undefined || skillId !== actor.basic?.id) {
+  private grantBasicLandedIncome(battle: TurnBattle, actor: TurnBattleParticipant, skillId: string | undefined, rootSkillId?: string): void {
+    // "Own basic landed" -- the resolved payload (composite pick /
+    // empowered variant) OR the root authored def may name the basic;
+    // an empowered variant of the basic still IS the basic.
+    const landedBasic = skillId === actor.basic?.id || rootSkillId === actor.basic?.id
+    if (this.runtime === undefined || !landedBasic) {
       return
     }
     const grants = this.buffs.getCapabilities(actor.entity.id)

@@ -76,11 +76,14 @@ export interface TurnSkillPlanOrchestration {
     target: TurnBattleParticipant,
     hit: { dodged: boolean; hpDamage: number },
   ): void
-  /** Actor's own basic landed income (ung_the marker field). */
+  /** Actor's own basic landed income (ung_the marker field). Either the
+      resolved payload id (composite pick / empowered variant) or the
+      root authored def id may name the basic. */
   grantBasicLandedIncome(
     battle: TurnBattle,
     actor: TurnBattleParticipant,
     skillId: string | undefined,
+    rootSkillId?: string,
   ): void
   /** procs.onHitLanded + the target's onImpactLanded reactive trigger
       (hpDamage>0 gate lives inside) + the queuedFollowUps push. */
@@ -561,8 +564,16 @@ export class TurnSkillPlanRuntime {
         }
 
         // Landed -- basic income; leech/consume ride authored ops
-        // before the gate; procs/reactive wait for gate-entered.
-        tbs.grantBasicLandedIncome(battle, source, this.payloadId(plan))
+        // before the gate; procs/reactive wait for gate-entered. Both
+        // ids ride in: the resolved payload (composite pick / empowered
+        // variant) AND the root authored def -- an empowered basic pays
+        // income via its root, a composite picking the basic via payload.
+        tbs.grantBasicLandedIncome(
+          battle,
+          source,
+          this.payloadId(plan),
+          plan.definitionId,
+        )
         if (!session.seenTargets.has(target.id)) {
           session.seenTargets.add(target.id)
           session.landedTargetIds.push(target.id)

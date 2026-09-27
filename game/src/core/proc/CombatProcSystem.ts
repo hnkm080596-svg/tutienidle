@@ -211,7 +211,9 @@ export class CombatProcSystem {
       if (context.nonDamaging === true && proc.firesOnNonDamagingAction !== true) {
         continue
       }
-      if (opts.once === true && attempts.length > 0) {
+      // once = at most one PAID roll: an unfunded grant consumes no roll,
+      // so a payable grant later in the same grant list still fires.
+      if (opts.once === true && attempts.some((a) => a.paid)) {
         return { attempts, queuedFollowUps }
       }
 
