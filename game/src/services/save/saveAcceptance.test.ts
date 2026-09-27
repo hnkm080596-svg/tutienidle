@@ -81,4 +81,16 @@ describe('spell element <-> kit coherence (saveAcceptance)', () => {
 
     expect(isSaveAcceptable(save, catalogs)).toBe(true)
   })
+
+  // A corrupt save may carry a non-ElementType string that slipped past
+  // shape validation -- the lookup must reject descriptively, never a
+  // bare TypeError.
+  it('corrupt element string outside ElementType -> descriptive reject, not TypeError', () => {
+    const save = spellPathwaySave()
+    save.player.spellPath.element = 'shadow' as never
+    save.skills = []
+
+    expect(() => assertSaveAcceptable(save, catalogs)).toThrow("unknown element 'shadow'")
+    expect(isSaveAcceptable(save, catalogs)).toBe(false)
+  })
 })
