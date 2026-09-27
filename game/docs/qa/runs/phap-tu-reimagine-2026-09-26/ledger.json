@@ -11,7 +11,7 @@
     "base": "master",
     "head": "038706f7",
     "state": {
-      "productStateId": "803a1e7b8327f954e9de489d3c0cc71b0b48501aaf99f01305459e149e005d6a",
+      "productStateId": "e8711f7cf3cc1612010031a8f1bd99f2555ea50cd128eb5aa17d4970c155fc88",
       "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
       "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -28,7 +28,7 @@
     ],
     "capacityLimit": 5,
     "requiredReadiness": true,
-    "phase": "DECIDE",
+    "phase": "SNAPSHOT",
     "cleanRoundA": null,
     "cleanRoundB": null,
     "finalEvidenceIds": [
@@ -15129,7 +15129,7 @@
       "inputEvidenceIds": [],
       "artifactPath": "evidence/final-gates-8b19829c.log",
       "artifactHash": "f55b7929ff8ee3f51f53d1c7df9e195a2e1d2dea83eef1e1987ae8c0a62a7380",
-      "status": "CURRENT",
+      "status": "STALE",
       "limitations": [],
       "claims": [],
       "invariantIds": []
@@ -20950,6 +20950,38 @@
       "payloadPath": "events/0068.json",
       "payloadHash": "18e76248e9c74cda7a456a86bcb224babd68c6bc753ed02b8c89e96e6bbe3a24",
       "eventHash": "c555d7ae261371e72732830bcf46cd3cd2ca87ad5f60b11ca654b13627e41c53"
+    },
+    {
+      "seq": 69,
+      "at": "2026-09-27T11:04:47.934Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "cd82b1c04bacbdd766779e3b1be36f21b0338e33b8905bc0755a10b1b227ff3e",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "c555d7ae261371e72732830bcf46cd3cd2ca87ad5f60b11ca654b13627e41c53",
+      "payloadPath": "events/0069.json",
+      "payloadHash": "9a477ad2e5dc069db07c6e6bf1c5bcca6a9faa56354e27c394c109ca182e8a3d",
+      "eventHash": "e560b573dff5c618d7ab83733c2348eab9b97e349f9a9fc95955445aae724eb9"
+    },
+    {
+      "seq": 70,
+      "at": "2026-09-27T11:06:36.798Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "e8711f7cf3cc1612010031a8f1bd99f2555ea50cd128eb5aa17d4970c155fc88",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "e560b573dff5c618d7ab83733c2348eab9b97e349f9a9fc95955445aae724eb9",
+      "payloadPath": "events/0070.json",
+      "payloadHash": "6a5fa6bd3c017c049ffbbd641620fee479c4aaea4307f46054805b923ddeae96",
+      "eventHash": "7c362614ce96f51fe9cc0c2998f2a43fe0089e73268b37d315e2176251b4f15a"
     }
   ]
 }
