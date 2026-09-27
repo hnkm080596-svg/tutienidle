@@ -1,0 +1,33 @@
+{
+  "applied": [
+    "evidence:EV-PTR-CORO (updated)",
+    "evidence:EV-PTR-AUTO (updated)",
+    "evidence:EV-PTR-INTO (updated)",
+    "evidence:EV-PTR-FIXP (updated)",
+    "review:REV-PTR-COR-O1 (updated)",
+    "review:REV-PTR-AUT-O1 (updated)",
+    "review:REV-PTR-INT-O1 (updated)",
+    "finding:F-PTR-207 (updated)",
+    "finding:F-PTR-208 (updated)",
+    "finding:F-PTR-209 (updated)",
+    "finding:F-PTR-210 (updated)",
+    "finding:F-PTR-211 (updated)",
+    "finding:F-PTR-212 (updated)",
+    "finding:F-PTR-213 (updated)",
+    "finding:F-PTR-214 (updated)",
+    "finding:F-PTR-215 (updated)",
+    "finding:F-PTR-216 (updated)",
+    "finding:F-PTR-217 (updated)",
+    "finding:F-PTR-218 (updated)",
+    "finding:F-PTR-219 (updated)",
+    "finding:F-PTR-220 (updated)",
+    "finding:F-PTR-221 (updated)",
+    "finding:F-PTR-222 (updated)",
+    "lesson:L-PTR-O-REMOVED-INSTANCE-SILENCE (updated)",
+    "lesson:L-PTR-O-PINNED-SEMANTICS-BEFORE-FAULT (updated)",
+    "lesson:L-PTR-O-SLOT-FAULTS-AT-DEFINE-TIME (updated)",
+    "lesson:L-PTR-O-DOC-CONTRACT-DRIFT",
+    "lesson:L-PTR-O-DORMANT-REJECT-PROOF",
+    "lesson:L-PTR-O-SINGLE-SITE-INVARIANT"
+  ]
+}

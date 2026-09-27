@@ -1,0 +1,30 @@
+{
+  "applied": [
+    "evidence:EV-PTR-CORO",
+    "evidence:EV-PTR-AUTO",
+    "evidence:EV-PTR-INTO",
+    "evidence:EV-PTR-FIXP",
+    "review:REV-PTR-COR-O1",
+    "review:REV-PTR-AUT-O1",
+    "review:REV-PTR-INT-O1",
+    "finding:F-PTR-207",
+    "finding:F-PTR-208",
+    "finding:F-PTR-209",
+    "finding:F-PTR-210",
+    "finding:F-PTR-211",
+    "finding:F-PTR-212",
+    "finding:F-PTR-213",
+    "finding:F-PTR-214",
+    "finding:F-PTR-215",
+    "finding:F-PTR-216",
+    "finding:F-PTR-217",
+    "finding:F-PTR-218",
+    "finding:F-PTR-219",
+    "finding:F-PTR-220",
+    "finding:F-PTR-221",
+    "finding:F-PTR-222",
+    "lesson:L-PTR-O-REMOVED-INSTANCE-SILENCE",
+    "lesson:L-PTR-O-PINNED-SEMANTICS-BEFORE-FAULT",
+    "lesson:L-PTR-O-SLOT-FAULTS-AT-DEFINE-TIME"
+  ]
+}
