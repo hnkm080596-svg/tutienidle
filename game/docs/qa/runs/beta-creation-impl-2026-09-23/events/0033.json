@@ -1,0 +1,46 @@
+{
+  "outcome": "QA_FINDINGS_OPEN",
+  "detail": "open actionable: F-A-CORRECTNESS-1,F-A-AUTHORITY-1,F-A-AUTHORITY-2,F-A-AUTHORITY-3,F-A-INTEGRATION-1,F-A-INTEGRATION-2,F-A-INTEGRATION-3",
+  "clauses": [
+    {
+      "id": "C1-identity",
+      "ok": true,
+      "reason": "all final evidence binds the declared state"
+    },
+    {
+      "id": "C2-census-coverage",
+      "ok": true,
+      "reason": "census + coverage complete"
+    },
+    {
+      "id": "C3-no-open",
+      "ok": false,
+      "reason": "open F-A-CORRECTNESS-1; open F-A-AUTHORITY-1; open F-A-AUTHORITY-2; open F-A-AUTHORITY-3; open F-A-INTEGRATION-1; open F-A-INTEGRATION-2; open F-A-INTEGRATION-3"
+    },
+    {
+      "id": "C4-final-gates",
+      "ok": true,
+      "reason": "final gates green"
+    },
+    {
+      "id": "C5-sequential",
+      "ok": true,
+      "reason": "sequential phase reviews present"
+    },
+    {
+      "id": "C6-clean-pair",
+      "ok": false,
+      "reason": "Clean A missing/not CLEAN; Clean B missing/not CLEAN"
+    },
+    {
+      "id": "C7-mutation-corpus",
+      "ok": true,
+      "reason": "mutation + corpus satisfied"
+    },
+    {
+      "id": "C8-terminal-check",
+      "ok": false,
+      "reason": "no sealed independent TERMINAL_CHECK on the final state"
+    }
+  ]
+}

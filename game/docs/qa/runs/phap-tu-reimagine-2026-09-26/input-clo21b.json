@@ -1,0 +1,36 @@
+{
+ "records": [
+  {
+   "kind": "review",
+   "body": {
+    "id": "REV-PTR-CLO-21",
+    "state": {
+     "productStateId": "1353a680dceb90b1b312d22a71506d4b5466deba90f55aca4b27f74c41a3cef4",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "round": 21,
+    "phase": "CLOSURE",
+    "reviewerId": "devin-a2680d8639184542bcfdddadf4be5b65",
+    "contextId": "sealed-child-a2680d8639184542bcfdddadf4be5b65",
+    "role": "closure",
+    "priorFindingsVisible": false,
+    "startedAt": "2026-09-27T15:05:00Z",
+    "sealedAt": "2026-09-27T15:07:00Z",
+    "status": "SEALED",
+    "findingIds": [],
+    "model": "swe-2",
+    "inputBundleHash": "1353a680dceb90b1b312d22a71506d4b5466deba90f55aca4b27f74c41a3cef4",
+    "accessLimitations": [],
+    "previousPhaseReviewId": null,
+    "reviewedAfterPreviousFixes": true,
+    "coverageIds": [],
+    "evidenceIds": [
+     "EV-PTR-CLO21"
+    ],
+    "novelAttackIds": []
+   }
+  }
+ ]
+}

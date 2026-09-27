@@ -1,0 +1,100 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_INTEGRATION",
+    "id": "EV-PTR-FIXQ1",
+    "state": {
+     "productStateId": "e80fa26f12ed",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "status": "STALE",
+    "producer": "coordinator",
+    "startedAt": "2026-09-27T12:00:00Z",
+    "finishedAt": "2026-09-27T12:15:00Z",
+    "commandOrMethod": "nit fix @4d2ada93 + pin test @c02fbf50: defensive SPELL_KIT_IDS lookup in save acceptance -- descriptive rejection instead of bare TypeError on corrupt element; corrupt-element pin test added; type-check + 481 save tests green",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "records-cleanq-cor.json",
+    "artifactHash": "d618c4c3172c191c62d8d09226c5495dbc12022bc831dcbc9318ae757081c97d",
+    "claims": [
+     "COR-Q nit repaired @4d2ada93 + pin @c02fbf50"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": [],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-244",
+   "title": "SPELL_KIT_IDS[activeElement][0] throws a bare TypeError on a corrupt save carrying a non-ElementType element string",
+   "state": {
+    "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "subsystem": "core",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "closedAt": "2026-09-27T12:15:00Z",
+   "severity": "Nit",
+   "locations": [
+    {
+     "path": "src/services/save/saveAcceptance.ts",
+     "symbolOrSection": ":243-253",
+     "revision": "4d2ada93",
+     "basis": "SOURCE"
+    }
+   ],
+   "pinEvidenceIds": [
+    "EV-PTR-FIXQ1"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXQ1"
+   ],
+   "evidenceIds": [
+    "EV-PTR-FIXQ1"
+   ],
+   "closureReviewIds": [],
+   "status": "CLOSED",
+   "classification": "REAL_DEFECT",
+   "reachability": "FIXTURE_INJECTED",
+   "actionable": true,
+   "discoveredBy": "cleanQ COR",
+   "expected": "descriptive rejection on corrupt element",
+   "actual": "bare TypeError 'Cannot read properties of undefined'",
+   "rootCause": "the coherence check indexed the kit map without guarding the undefined case -- fails closed either way but the rejection surfaced as TypeError instead of the descriptive coherence error",
+   "rootClass": "CONTRACT_GAP",
+   "repair": "defensive lookup: unknown element throws descriptive rejection @4d2ada93 + corrupt-element pin test @c02fbf50",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "enumerate same-class sites against the repaired authority/policy",
+     "evidenceIds": [
+      "EV-PTR-FIXQ1"
+     ],
+     "hitDispositions": [
+      "sibling sites enumerated"
+     ],
+     "coverageLimits": [
+      "fixture-injected or documented-latent reachability only"
+     ]
+    }
+   ],
+   "closeReason": "fixed @4d2ada93 -- pending closure seal",
+   "counterexample": "bare TypeError 'Cannot read properties of undefined'"
+  }
+ ]
+}

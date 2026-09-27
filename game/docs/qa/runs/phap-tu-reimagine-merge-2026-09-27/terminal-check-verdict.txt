@@ -1,0 +1,4 @@
+TERMINAL_CHECK @d9e7b7fc SEALED
+type-check clean; vitest 790 files / 6977 tests: 6970 pass, 2 fail (magick ENOENT env noise only), 5 expected-fail.
+Invariants hold: THE_PROC_COST=15/REACTION_DEBT_CAP=3; charge-resolve isCharging skip does not stamp castBlocked; NodeInspector inBattle gate restored; balance fingerprints match; buff catalog 68.
+Fix batch scope: hoIntercept.test.ts +77, PlayerHudLayer.ts +28/-7, TurnBattleSystem.ts docblock only.

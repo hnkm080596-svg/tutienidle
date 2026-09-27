@@ -1,0 +1,66 @@
+{
+ "records": [
+  {
+   "kind": "review",
+   "id": "REV-PTR-CLO-10",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 8,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-98f688191a5344f188349be4a495d7f5",
+   "contextId": "ctx-98f68819",
+   "model": "swe-2",
+   "role": "closure",
+   "inputBundleHash": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+   "priorFindingsVisible": true,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-27T01:21:30Z",
+   "sealedAt": "2026-09-27T01:29:58Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-CLO10"
+   ],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_INTEGRATION",
+    "id": "EV-PTR-CLO10",
+    "state": {
+     "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "status": "CURRENT",
+    "producer": "devin-98f688191a5344f188349be4a495d7f5",
+    "startedAt": "2026-09-27T01:21:30Z",
+    "finishedAt": "2026-09-27T01:29:58Z",
+    "commandOrMethod": "closure verify @cf1655b6: read each fix site + npm run type-check + scoped vitest",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "records-clo10.json",
+    "artifactHash": "93eaadff2ae971067ee1bf413451a69f4a83cfefdd10b796e3d4497c0c3cb37d",
+    "claims": [
+     "clean-G fix batch: all 11 fixes verified present+functional; no new defect introduced"
+    ],
+    "limitations": [],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": []
+   }
+  }
+ ]
+}

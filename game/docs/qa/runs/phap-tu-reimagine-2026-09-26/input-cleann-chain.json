@@ -1,0 +1,112 @@
+{
+ "records": [
+  {
+   "kind": "review",
+   "id": "REV-PTR-COR-N1",
+   "state": {
+    "productStateId": "6bb65162b94cc6908bae1fa7a49754209b13d2d8e5ed6941383af1a44eb5fc24",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 16,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-6310639340584c3fb09aee1dc5f642c4",
+   "contextId": "ctx-63106393",
+   "model": "swe-2",
+   "role": "clean-correctness",
+   "inputBundleHash": "6bb65162b94cc6908bae1fa7a49754209b13d2d8e5ed6941383af1a44eb5fc24",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-27T09:40:00Z",
+   "sealedAt": "2026-09-27T10:05:00Z",
+   "previousPhaseReviewId": "REV-PTR-CLO-17",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-CORN"
+   ],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "review",
+   "id": "REV-PTR-AUT-N1",
+   "state": {
+    "productStateId": "6bb65162b94cc6908bae1fa7a49754209b13d2d8e5ed6941383af1a44eb5fc24",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 16,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-bb4bd202185747108adfa6ca60a27079",
+   "contextId": "ctx-bb4bd202",
+   "model": "swe-2",
+   "role": "clean-authority",
+   "inputBundleHash": "6bb65162b94cc6908bae1fa7a49754209b13d2d8e5ed6941383af1a44eb5fc24",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-27T09:40:00Z",
+   "sealedAt": "2026-09-27T10:02:00Z",
+   "previousPhaseReviewId": "REV-PTR-COR-N1",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTN"
+   ],
+   "findingIds": [
+    "F-PTR-201",
+    "F-PTR-202",
+    "F-PTR-203",
+    "F-PTR-204",
+    "F-PTR-205",
+    "F-PTR-206"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "review",
+   "id": "REV-PTR-INT-N1",
+   "state": {
+    "productStateId": "6bb65162b94cc6908bae1fa7a49754209b13d2d8e5ed6941383af1a44eb5fc24",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 16,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-f43b7c57a82b47658fc48b94921dd7d3",
+   "contextId": "ctx-f43b7c57",
+   "model": "swe-2",
+   "role": "clean-integration",
+   "inputBundleHash": "6bb65162b94cc6908bae1fa7a49754209b13d2d8e5ed6941383af1a44eb5fc24",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-27T09:40:00Z",
+   "sealedAt": "2026-09-27T10:08:00Z",
+   "previousPhaseReviewId": "REV-PTR-AUT-N1",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-INTN"
+   ],
+   "findingIds": [
+    "F-PTR-197",
+    "F-PTR-198",
+    "F-PTR-199",
+    "F-PTR-200"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  }
+ ]
+}

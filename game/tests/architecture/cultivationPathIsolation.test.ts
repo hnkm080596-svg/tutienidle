@@ -151,6 +151,12 @@ const SEAM_ALLOWLIST_FILES: readonly string[] = [
   // responsibility is registering every owner module's grant schemas,
   // including the-tu's typed payload validators (TheTuCapabilities).
   'core/battle/runtime/capability/DefaultCapabilityValidators.ts',
+  // PT-REIM - TurnSkillAction holds consumeThe, the single 'the'-pool
+  // debit call site for the cast lane (TheEconomy owns every write).
+  'core/battle/turn/TurnSkillAction.ts',
+  // PT-REIM - TurnSkillPlanRuntime reads theCap, the single 'the'-pool
+  // cap read site for plan gating (same seam class as EntityResourceAdapter).
+  'core/battle/turn/TurnSkillPlanRuntime.ts',
   // P5 - the balance recipe declares the realm-reachable kiem-pho
   // combo damage surface via the provider's derived
   // reachableKiemPhoComboIds view (the catalog itself is INV-7-sealed).
@@ -166,6 +172,11 @@ const SEAM_ALLOWLIST_FILES: readonly string[] = [
   // swordPath slice via the module's own factory (freshSwordPathState);
   // test-side seam only, never imported by production code.
   'services/save/GameSave.fixture.ts',
+  // PT-REIM - save acceptance performs the hidden_spell_pathway kit
+  // coherence check (isHiddenSpellPathway -> HIDDEN_SPELL_REQUIRED_SKILLS)
+  // via the path module's own predicates, same seam class as the
+  // battle-build mirror assertNgoDaoKitLearned.
+  'services/save/saveAcceptance.ts',
 ]
 
 // ---------------------------------------------------------------------------

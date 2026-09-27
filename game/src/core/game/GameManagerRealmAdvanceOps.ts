@@ -414,7 +414,7 @@ export class GameManagerRealmAdvanceOps {
       }
     }
     // Phap Tu Reimagined (Task 6) - no auto-Fire starter: choosing
-    // spell leaves player.spellPath { element: null, route: null } until
+    // spell leaves player.spellPath { element: null } until
     // progressionOps.selectSpellPathElement() commits the atomic choice.
 
     if (player.realmId === 'mortal') {

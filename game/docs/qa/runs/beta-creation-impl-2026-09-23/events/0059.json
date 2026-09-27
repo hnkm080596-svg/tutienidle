@@ -1,0 +1,42 @@
+{
+  "type": "FINDINGS_ADJUDICATION",
+  "cycle": "CYC-RB2-1",
+  "round": "clean-B-prime",
+  "candidate": "0e8351bd",
+  "headAfterFixes": "d8589a11",
+  "fixed": [
+    {
+      "id": "QA-AUTH-1",
+      "fix": "linh_bao fromSkills entry + precursor coverage joined into productionTurnSkillIds sweep",
+      "commit": "623b8b6f"
+    },
+    {
+      "id": "QA-AUTH-2",
+      "fix": "pull seam writes same one-shot import-handoff marker bound to stored bytes; pin: marker + one-shot loadGame consume",
+      "commit": "623b8b6f"
+    },
+    {
+      "id": "F-INT-1",
+      "fix": "generation fence re-checked BEFORE coordinator.load (loadGame consumes marker even on mismatch); pin: stopAll mid-remoteSync -> load never called",
+      "commit": "d8589a11"
+    },
+    {
+      "id": "F-PRE-2",
+      "fix": "OVERLAY_LAYERS.saveGateModal=4100 above saveGate; ConfirmModal gains layer prop; SaveIncompatibleScreen binds it - delete confirm clickable again",
+      "commit": "d8589a11"
+    }
+  ],
+  "deferred": [
+    {
+      "id": "F-PRE-1",
+      "reason": "pre-existing server-design gap (RPC non-idempotent + no adopt/delete path) - needs creation-robustness design decision, out of candidate scope per reviewer own suggestionPin"
+    }
+  ],
+  "verifyEvidence": "vue-tsc clean; scoped vitest 59/59 on touched surfaces (lifecycle fence, overlay contract, remoteSave, displayMeta, arch guards); P15 ascii green",
+  "seals": {
+    "CORRECTNESS": "SEAL (0 defects; 3 noted edges: NaN updated_at self-healing, pull discard [fixed 623b8b6f], catch-all by design)",
+    "AUTHORITY": "FINDINGS 2L -> fixed 623b8b6f",
+    "INTEGRATION": "FINDINGS 1M+1M+1L -> 2 fixed d8589a11, 1 deferred (F-PRE-1 pre-existing server design)"
+  },
+  "protocolNote": "Head moved 0e8351bd -> 623b8b6f -> d8589a11; per clean-pair rule the next round runs fresh on d8589a11 (or later final head)."
+}

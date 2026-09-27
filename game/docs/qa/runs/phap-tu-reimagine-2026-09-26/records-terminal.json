@@ -1,0 +1,23 @@
+{
+ "artifact": "TERMINAL_CHECK verdict",
+ "run": "phap-tu-reimagine-2026-09-26",
+ "reviewer": "devin-717eeba20fb8424ba75a9346a47d4887",
+ "reviewerRole": "terminal-check",
+ "pin": "e3cd383d",
+ "productStateId": "1353a680dceb90b1b312d22a71506d4b5466deba90f55aca4b27f74c41a3cef4",
+ "verdict": "SEALED",
+ "verified": [
+  "saveAcceptance hidden-kit coherence: same pair predicate gates both sides; same kit source; runs post-shape-validation; element axis cannot false-reject hidden saves",
+  "F-244 defensive element lookup: descriptive coherence error, never bare TypeError",
+  "TheEconomy non-finite guards: theCap fallback + grantThe/consumeThe reject + tryPayProcCost refuse; adapters double-gate via requireWellFormedAmount; NaN-pool injection closed at load by isFiniteNumber shape validation",
+  "consumeResourceFor isFinite early return; 'the' lane drains via consumeThe; mana floored; hasResourceFor asymmetry fail-closed",
+  "divergent maxThe fault honest: single production write site is CombatBuild; all adapter callers omit maxThe (deliberate); pins cover stamp + divergence throw",
+  "empowerment x subcasts.count mutex: unreachable on shipped data (zero variants.empowerment authors; da_phap_lien_tuyen repeatCasts never carries empowerment)",
+  "intercept window seams: enemy-only + actionSource gate + viability gate covering every dead-swing declare class; accepted-latent decline classes documented + verified unreachable",
+  "sibling-invariant cross-check: wave-Q/R diffs tightly scoped, no stray production edits",
+  "seam allowlist honesty: services/save/saveAcceptance.ts entry is REQUIRED and accurate (check 2 exempts services/save/ from identity branching, FILES entry is load-bearing)"
+ ],
+ "dormantResidual": "finite NEGATIVE entity.maxThe passes theCap isFinite check -- unreachable (resolveMaxThe returns 5 or MAX_THE; roles.maxThe = MAX_THE + nonneg bonus); recorded non-actionable",
+ "testsRun": "type-check clean; 7 touched files/92 tests PASS; broad scope 311 files/3169 tests PASS + 4 expected-fail",
+ "filesReviewed": "~30 targeted + full diff sweep of wave-Q+R batches"
+}

@@ -1,0 +1,36 @@
+{
+  "taskId": "TASK-QA-REPAIR-QUALIFY-01",
+  "title": "Post-repair qualification pass on qa-scripts-repair before merge review",
+  "applicabilityKeys": [
+    "scripts/qa/**",
+    "qa-verdict-emission",
+    "counted-oracle"
+  ],
+  "planningBaseline": {
+    "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+    "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+    "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+    "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+  },
+  "steps": [
+    "run the orchestrator suite and confirm a positive parsed denominator",
+    "validate a representative ledger under the repaired validator",
+    "report real counts only; never claim a verdict on an empty denominator"
+  ],
+  "sourceDependencyHashes": [
+    {
+      "path": "scripts/qa/cli.mjs",
+      "symbolOrSection": "cmdQualify",
+      "revision": "sha256:c7934610e398234410884131c0bdeb9e6887d8a08cef530521e9354674193028",
+      "basis": "SOURCE"
+    }
+  ],
+  "firstProofObligations": [
+    {
+      "oracle": "the orchestrator suite reports a positive parsed denominator (N>0 passed) under the pinned reporter",
+      "stage": "BEFORE_PROPAGATION",
+      "admittedSlice": "qa:internal qualify",
+      "evidenceIds": []
+    }
+  ]
+}

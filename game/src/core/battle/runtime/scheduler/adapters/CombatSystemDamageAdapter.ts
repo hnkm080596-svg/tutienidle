@@ -316,7 +316,7 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
   private resolveHitOptions(
     op: DealDamageOperation['payload'],
   ): Partial<HitResolveOptions> {
-    const options: Partial<HitResolveOptions> = { isPrimary: true }
+    const options: Partial<HitResolveOptions> = {}
 
     if (op.hitPolicy?.guaranteedHit === true || op.canMiss === false) {
       options.guaranteedHit = true
@@ -337,6 +337,13 @@ export class CombatSystemDamageAdapter implements DamageAuthority {
       } else if (op.armorPolicy.pierceFractionOnFail !== undefined) {
         options.armorPierceFraction = op.armorPolicy.pierceFractionOnFail
       }
+    }
+
+    // Spec D7/D11 -- per-hit penetration points ride the payload's
+    // folded bonus (authored elementalPenetration + penetrationFrom-
+    // Stacks late bindings resolve into this field pre-resolve).
+    if (op.elementalPenetrationBonus !== undefined) {
+      options.elementalPenetrationBonus = op.elementalPenetrationBonus
     }
 
     return options

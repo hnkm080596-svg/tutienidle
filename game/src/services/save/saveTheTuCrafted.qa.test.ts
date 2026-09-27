@@ -101,7 +101,6 @@ describe('downstream resolution of a both-roots save (documentation, actual beha
     nodeRegistry: { getAll: () => THE_TU_NODES },
     getNodeLevel: (nodeId, player) => getNodeLevel(player, nodeId),
     getSpellPathElement: () => undefined,
-    routeProfileProvider: () => ({}) as never,
   }
 
   it('resolveBodyKit silently prefers cuong_chien when both roots are owned', () => {

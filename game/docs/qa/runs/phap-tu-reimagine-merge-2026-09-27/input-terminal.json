@@ -1,0 +1,69 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MRG-TERMINAL",
+    "state": {
+     "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+     "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+     "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "status": "CURRENT",
+    "producer": "devin-36b4ed6c62314681a56819fca98046f3",
+    "startedAt": "2026-09-27T19:00:00Z",
+    "finishedAt": "2026-09-27T19:05:00Z",
+    "commandOrMethod": "TERMINAL_CHECK final-verify @d9e7b7fc: type-check clean; vitest 790 files/6977 tests \u2014 6970 pass, 2 fail (magick ENOENT env noise), 5 expected-fail; invariant spot-checks all hold (THE_PROC_COST/REACTION_DEBT_CAP, charge-resolve no castBlocked stamp, NodeInspector inBattle, balance fingerprints, buff catalog 68); fix batch touches only 3 claimed files",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "terminal-check-verdict.txt",
+    "artifactHash": "ae86a2186575e3d47e2dc5e92b28ad45fe45318e7c4175752e2fd8a8e41f35dc",
+    "claims": [
+     "merge product carries no unresolved merge-resolution defect",
+     "final gates pass on pin d9e7b7fc (env noise only)"
+    ],
+    "inputPaths": [],
+    "inputEvidenceIds": [
+     "EV-MRG-FIX1"
+    ],
+    "invariantIds": [],
+    "limitations": [
+     "canvas/libuuid suite-load noise not reproduced on reviewer VM; PlayerHudLayer.test.ts ran and passed there"
+    ],
+    "kind": "EXECUTED_UNIT_STRUCTURAL"
+   }
+  },
+  {
+   "kind": "review",
+   "id": "REV-MRG-TERMINAL",
+   "state": {
+    "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+    "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+    "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 2,
+   "phase": "TERMINAL_CHECK",
+   "reviewerId": "devin-36b4ed6c62314681a56819fca98046f3",
+   "contextId": "sealed-child-36b4ed6c62314681a56819fca98046f3",
+   "role": "terminal",
+   "model": "swe-2",
+   "inputBundleHash": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-27T18:50:00Z",
+   "sealedAt": "2026-09-27T19:05:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-MRG-TERMINAL"
+   ],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  }
+ ]
+}

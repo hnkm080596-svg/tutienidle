@@ -149,7 +149,7 @@ describe('progressionOps in-battle rejection gates', () => {
     startInProgressBattle(gameManager, player)
     const before = structuredClone(player)
 
-    expect(gameManager.progressionOps.selectSpellPathElement('fire', 'dot', player)).toBe(false)
+    expect(gameManager.progressionOps.selectSpellPathElement('fire', player)).toBe(false)
     expect(player.spellPath).toEqual(before.spellPath)
     expect(player.nodeLevels).toEqual(before.nodeLevels)
   })

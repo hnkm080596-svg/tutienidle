@@ -1,0 +1,35 @@
+{
+ "verdict": "FINDINGS",
+ "pin": "8b19829c",
+ "reviewer": "devin-202ecdf25f9948d29b8cf3712dce5280",
+ "lane": "novel-attack",
+ "findings": [
+  {
+   "n": "NOVA-1",
+   "severity": "Medium",
+   "summary": "ho_mon intercept pays out before the cast is proven to exist: unfunded (PRECHECK-blocked) or adapter-declined casts still open the window -- protector pays 15 The, squishy mints externalWard (7500) + ho_ve marker, intercepted=true, then castBlocked is stamped; repeated dead casts drain the protector pool farming wards on phantom hits (TBS:2001 window, :2221-2224 block stamp)",
+   "disposition": "fixed @29b4719c -- static viability gate before the window (dead payload / no targets / charge discriminant / adapter-unsupported); resolver-level declines stay accepted-latent"
+  },
+  {
+   "n": "NOVA-5",
+   "severity": "Medium",
+   "summary": "save v87 boundary: {spell_pathway, spellPath.element:'fire', skills:[], five_elements_art} passes shape validation AND assertSaveAcceptable, then resolveBasic throws required-basic-not-learned at EVERY battle build -- self-reproducing crash save",
+   "disposition": "fixed @29b4719c -- element<->kit coherence class in assertSaveAcceptable (getActiveElement scopes to axis-owning ways; SPELL_KIT_IDS[element][0] must be in save.skills)"
+  },
+  {
+   "n": "NOVA-4",
+   "severity": "Low",
+   "summary": "oncePerCast dedup is per-primary-op: two primaries each mint a flagged secondary (priorLandedHitOpIds lives inside translateDealDamage); def-level instances:{count:2} fans the surviving flagged resolution into 2 hits; latent, contract narrower than the name",
+   "disposition": "fixed @29b4719c -- docblock records per-primary-op granularity + fan-out semantics"
+  }
+ ],
+ "passUnreachable": [
+  "charge-resolve slot swap -> documented DECLINE (same-id object swap latent identity drift, gated out-of-combat)",
+  "pendingQueuedExecution drop-on-mismatch is the safe direction",
+  "save/load mid-mechanic has no surface (battle state never serializes)",
+  "element-switch gated by isTurnBattleInProgress",
+  "v87 partial-migration retired (not CURRENT version)"
+ ],
+ "testsRun": "10 repro tests green; type-check clean",
+ "filesReviewed": 40
+}

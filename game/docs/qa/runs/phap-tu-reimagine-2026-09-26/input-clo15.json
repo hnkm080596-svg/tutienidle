@@ -1,0 +1,832 @@
+{
+  "records": [
+    {
+      "kind": "review",
+      "id": "REV-PTR-CLO-15",
+      "state": {
+        "productStateId": "98b51bc83697d9a9a2b2b696bb8165b31ec5c5708d68808e5b2381f787f4aa4d",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 12,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-9640167b060241ffabd5b44d907e29d8",
+      "contextId": "ctx-9640167b",
+      "model": "swe-2",
+      "role": "closure",
+      "inputBundleHash": "98b51bc83697d9a9a2b2b696bb8165b31ec5c5708d68808e5b2381f787f4aa4d",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "read-only worktree"
+      ],
+      "startedAt": "2026-09-27T07:47:00Z",
+      "sealedAt": "2026-09-27T08:04:51Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-PTR-CLO15"
+      ],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "kind": "EXECUTED_INTEGRATION",
+        "id": "EV-PTR-CLO15",
+        "state": {
+          "productStateId": "98b51bc83697d9a9a2b2b696bb8165b31ec5c5708d68808e5b2381f787f4aa4d",
+          "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+          "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+          "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+        },
+        "status": "CURRENT",
+        "producer": "devin-9640167b060241ffabd5b44d907e29d8",
+        "startedAt": "2026-09-27T07:47:00Z",
+        "finishedAt": "2026-09-27T08:04:51Z",
+        "commandOrMethod": "closure verify clean-K fix batch @42fbadd7 + residual @9eb96edb (pin f7aec8eb): code reads + type-check + vitest 131 files/1129 PASS + 5 closure repro tests (qa write allowance)",
+        "cwd": "game/",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "records-clo15.md",
+        "artifactHash": "b4978fef655895e4572c5ea23dad19e7416651b4d32a9451f1da601205cbf888",
+        "claims": [
+          "all 7 clean-K fix claims + @9eb96edb residual verified in code and at runtime",
+          "whiff/dangling repro: whiff silent (no warn/no stamp), dangling warn+castBlocked",
+          "dormant observation (not a finding): whiffed charge-resolve opens tail ally window with empty landedTargets -- pre-existing asymmetry, unreachable in shipped data, documented"
+        ],
+        "inputEvidenceIds": [
+          "EV-PTR-FIXL"
+        ],
+        "inputPaths": [],
+        "invariantIds": [],
+        "limitations": []
+      }
+    },
+    {
+      "kind": "finding",
+      "id": "F-PTR-154",
+      "title": "subcasts x chargeTurns fault covered count+multicast only -- compositePool/compositeCount still authorable on charged defs (dead-combo gap)",
+      "state": {
+        "productStateId": "20f373d4864085a3be6f76be88ebd1cd4ad5c94c0bd3f8636c7654949f9cc889",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "reachability": "HYPOTHETICAL",
+      "actionable": true,
+      "subsystem": "core",
+      "locations": [
+        {
+          "path": "src/core/skilldef/SkillDefinitionRegistry.ts",
+          "symbolOrSection": "subcasts x cadence.chargeTurns fault",
+          "revision": "3f3e1ab9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "CLO-14 closure review (residual)",
+      "counterexample": "new SkillDefinitionRegistry([activeDef(a,{subcasts:{compositePool:[\"pool_base\"]},cadence:{chargeTurns:1}})]) does NOT throw; deferred resolve strips rootSubcasts wholesale so a composite shell resolves to zero ops after charging",
+      "expected": "every subcasts variant is dead authoring on a charged def -- the fault forbids the whole field",
+      "actual": "compositePool/compositeCount rows passed validation",
+      "rootCause": "fault enumerated dead members (count, multicast) instead of forbidding the dead field group (subcasts)",
+      "rootClass": "VALIDATION_GAP",
+      "repair": "fault widened to forbid any subcasts on charged defs + compositePool/compositeCount test rows @9eb96edb",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerate every subcasts member against the chargeTurns dead-combo class; sweep other member-enumerating faults for the same gap",
+          "evidenceIds": [
+            "EV-PTR-CLO14"
+          ],
+          "hitDispositions": [
+            "count/multicast/compositePool/compositeCount are the only subcasts members -- all now covered by the whole-field fault",
+            "consumesAllThe/empowerment faults already forbid the whole field (no member enumeration) -- no sibling gap"
+          ],
+          "coverageLimits": [
+            "registry-level authoring only; runtime def-literal paths (battleWith) bypass registry as documented"
+          ]
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-PTR-FIXK"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PTR-FIXK"
+      ],
+      "evidenceIds": [
+        "EV-PTR-CLO14",
+        "EV-PTR-FIXK",
+        "EV-PTR-CLO15"
+      ],
+      "status": "CLOSED",
+      "closedAt": "2026-09-27T05:21:30Z",
+      "closeReason": "fixed @9eb96edb -- whole subcasts field forbidden on charged defs; pending closure seal",
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "kind": "finding",
+      "id": "F-PTR-158",
+      "state": {
+        "productStateId": "20f373d4864085a3be6f76be88ebd1cd4ad5c94c0bd3f8636c7654949f9cc889",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "subsystem": "core",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "title": "whiffed/dangling charge-resolve conflated -- false UNROUTED_CAST warn + castBlocked stamp on whiff",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "reachability": "HYPOTHETICAL",
+      "actionable": true,
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "unrouted charge-resolve arm ~2020-2036",
+          "revision": "3f3e1ab9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "cleanK COR",
+      "counterexample": "dangling pendingChargedSkillId ('qa_ghost' repro) warns 'no skill definition' -- wrong diagnosis for a whiff; consumes dedup key and stamps castBlocked where legacy lane fires the window",
+      "expected": "distinguish whiff (def exists, empty targets -> silent, legacy parity) from dangling armed id (warn+stamp)",
+      "actual": "both paths reach reportUnroutedCast(actor, null, declared.skillId, true)",
+      "rootCause": "charge-resolve arm keys on chargedSkill==null without checking whether declared.skillId still resolves to an armed special/ultimate def",
+      "rootClass": "CONTRACT_VIOLATION",
+      "repair": "armedCharged lookup (actor.special/ultimate id === declared.skillId) splits whiff (silent fizzle, no stamp) from dangling (warn+stamp+castBlocked) @42fbadd7",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerate all reportUnroutedCast call sites; check each label carries a real def/id",
+          "evidenceIds": [
+            "EV-PTR-FIXL"
+          ],
+          "hitDispositions": [
+            "pre-gate probe passes declared.action.skill def (real)",
+            "queue-declare arm keys def?.id ?? label (real) -- no sibling conflation"
+          ],
+          "coverageLimits": [
+            "unrouted warn is best-effort telemetry"
+          ]
+        }
+      ],
+      "status": "CLOSED",
+      "closedAt": "2026-09-27T07:45:00Z",
+      "pinEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "evidenceIds": [
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
+      ],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
+      "closeReason": "fixed @42fbadd7 -- armedCharged discriminant; pending closure seal"
+    },
+    {
+      "kind": "finding",
+      "id": "F-PTR-159",
+      "state": {
+        "productStateId": "20f373d4864085a3be6f76be88ebd1cd4ad5c94c0bd3f8636c7654949f9cc889",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "subsystem": "core",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "title": "self-scoped extra reports fabricated landed entry after unrouted (loud no-op) resolve",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "reachability": "HYPOTHETICAL",
+      "actionable": true,
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "extraCast self-scope push ~2724-2750",
+          "revision": "3f3e1ab9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "cleanK COR",
+      "counterexample": "adapter-unsupported self-scope extra returns landedTargetIds:[actor] having executed nothing",
+      "expected": "landed entries only for executed lanes",
+      "actual": "unconditional landedIds.push(actor.id) runs after the unrouted branch",
+      "rootCause": "self-scope push not gated on the lane having routed/executed",
+      "rootClass": "CONTRACT_VIOLATION",
+      "repair": "push gated on (runtime undefined || routed !== null) @42fbadd7",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerate landedIds push sites",
+          "evidenceIds": [
+            "EV-PTR-FIXL"
+          ],
+          "hitDispositions": [
+            "only the self-extra site pushes unconditionally"
+          ],
+          "coverageLimits": [
+            "enemy-scope extras land via real ops"
+          ]
+        }
+      ],
+      "status": "CLOSED",
+      "closedAt": "2026-09-27T07:45:00Z",
+      "pinEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "evidenceIds": [
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
+      ],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
+      "closeReason": "fixed @42fbadd7 -- landed gated on executed lane; pending closure seal"
+    },
+    {
+      "kind": "finding",
+      "id": "F-PTR-160",
+      "state": {
+        "productStateId": "20f373d4864085a3be6f76be88ebd1cd4ad5c94c0bd3f8636c7654949f9cc889",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "subsystem": "core",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "title": "resourceType:'none' + resourceCostPercentOfMax silently binds mana on routed lane",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "reachability": "HYPOTHETICAL",
+      "actionable": true,
+      "locations": [
+        {
+          "path": "src/core/skilldef/LegacySkillAdapter.ts",
+          "symbolOrSection": "percentCostIsManaApplicable ~257-259",
+          "revision": "3f3e1ab9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "cleanK COR",
+      "counterexample": "cost:{resourceType:'mana',percentOfMax} produced for 'none' def which the legacy lane treats as always-free -- lane divergence",
+      "expected": "'none' reports like other non-mana siblings",
+      "actual": "'none' counted percent-applicable",
+      "rootCause": "applicability predicate included 'none' in the percent-applicable set",
+      "rootClass": "CONTRACT_VIOLATION",
+      "repair": "'none' removed -- only undefined/'mana' applicable; contradictory def reports @42fbadd7",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerate resourceType variants against the applicability predicate",
+          "evidenceIds": [
+            "EV-PTR-FIXL"
+          ],
+          "hitDispositions": [
+            "undefined/mana apply; 'none' and every other non-mana value now report"
+          ],
+          "coverageLimits": [
+            "no shipped def combines none+percentOfMax"
+          ]
+        }
+      ],
+      "status": "CLOSED",
+      "closedAt": "2026-09-27T07:45:00Z",
+      "pinEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "evidenceIds": [
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
+      ],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
+      "closeReason": "fixed @42fbadd7 -- 'none' reports; pending closure seal"
+    },
+    {
+      "kind": "finding",
+      "id": "F-PTR-161",
+      "state": {
+        "productStateId": "20f373d4864085a3be6f76be88ebd1cd4ad5c94c0bd3f8636c7654949f9cc889",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "subsystem": "core",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "title": "unrouted casts whiffed into zero targets never stamp castBlocked",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "reachability": "HYPOTHETICAL",
+      "actionable": true,
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "apply gate ~2156-2201 / ally window 2404",
+          "revision": "3f3e1ab9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "cleanK COR",
+      "counterexample": "zero-target unrouted cast passes castBlocked !== true ally-window gate despite stated contract",
+      "expected": "a blocked/unrouted cast never completes an action",
+      "actual": "stamp lived inside the affected.length>0 apply gate only",
+      "rootCause": "castBlocked stamped only when the apply path ran",
+      "rootClass": "CONTRACT_VIOLATION",
+      "repair": "pre-gate probe stamps castBlocked on zero-target unrouted cast (affected.length===0 && unsupportedFor non-empty) @42fbadd7",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerate castBlocked stamp sites",
+          "evidenceIds": [
+            "EV-PTR-FIXL"
+          ],
+          "hitDispositions": [
+            "apply gate + unrouted resolve arm + pre-gate probe -- all stamp now"
+          ],
+          "coverageLimits": [
+            "no observable effect today (nonDamaging gate filters shipped procs)"
+          ]
+        }
+      ],
+      "status": "CLOSED",
+      "closedAt": "2026-09-27T07:45:00Z",
+      "pinEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "evidenceIds": [
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
+      ],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
+      "closeReason": "fixed @42fbadd7 -- pre-gate probe stamps; pending closure seal"
+    },
+    {
+      "kind": "finding",
+      "id": "F-PTR-162",
+      "state": {
+        "productStateId": "20f373d4864085a3be6f76be88ebd1cd4ad5c94c0bd3f8636c7654949f9cc889",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "subsystem": "core",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "title": "charge-tick and charge-init turns open the ally window as nonDamaging actions (spec ambiguity)",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "reachability": "HYPOTHETICAL",
+      "actionable": true,
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": "resolveAllyActionWindow ~3066-3110",
+          "revision": "3f3e1ab9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "cleanK COR",
+      "counterexample": "charge ticks carry actionSource:'normal' with castBlocked unset -- up to 3 window rolls per 2-turn charge",
+      "expected": "spec ruling on whether 'after a player-side action completes' intends channel ticks",
+      "actual": "window fans out per tick; shipped procs skip via firesOnNonDamagingAction",
+      "rootCause": "window semantics for charge cadence never spec-pinned",
+      "rootClass": "SPEC_AMBIGUITY",
+      "repair": "documented latent ambiguity paragraph @42fbadd7 (mirrors F-PTR-148 intercept-window precedent); needs spec ruling before gating",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerate ally-window gates + shipped tro_mon proc flags",
+          "evidenceIds": [
+            "EV-PTR-FIXL"
+          ],
+          "hitDispositions": [
+            "tro_mon lacks firesOnNonDamagingAction -- zero shipped impact"
+          ],
+          "coverageLimits": [
+            "design ruling required before behavior change"
+          ]
+        }
+      ],
+      "status": "CLOSED",
+      "closedAt": "2026-09-27T07:45:00Z",
+      "pinEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "evidenceIds": [
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
+      ],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
+      "closeReason": "documented latent @42fbadd7 -- spec ambiguity recorded; pending closure seal"
+    },
+    {
+      "kind": "finding",
+      "id": "F-PTR-163",
+      "state": {
+        "productStateId": "20f373d4864085a3be6f76be88ebd1cd4ad5c94c0bd3f8636c7654949f9cc889",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "subsystem": "core",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "title": "empowerment decided twice -- TBS declare gate vs SkillResolver re-eval (latent duplicated truth)",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "reachability": "HYPOTHETICAL",
+      "actionable": true,
+      "locations": [
+        {
+          "path": "src/core/skilldef/SkillResolver.ts",
+          "symbolOrSection": "empowerment re-check ~212-216",
+          "revision": "3f3e1ab9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "cleanK AUT",
+      "counterexample": "gates diverge if attacker pool mutates between declare and resolve (unreachable today)",
+      "expected": "single authority or documented dual-gate",
+      "actual": "resolver re-evaluates the same predicate for casts lacking preResolved",
+      "rootCause": "two evaluation sites for one predicate by design (routed fallback)",
+      "rootClass": "DUPLICATED_TRUTH",
+      "repair": "latent duplicated-truth docblock @42fbadd7 (same class as resolveInterceptWindow note)",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerate currentThe writers inside declare->resolve window",
+          "evidenceIds": [
+            "EV-PTR-FIXL"
+          ],
+          "hitDispositions": [
+            "nothing writes the actor pool in-window; proc costs drain defender pools"
+          ],
+          "coverageLimits": [
+            "latent hazard documented, not restructured"
+          ]
+        }
+      ],
+      "status": "CLOSED",
+      "closedAt": "2026-09-27T07:45:00Z",
+      "pinEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "evidenceIds": [
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
+      ],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
+      "closeReason": "documented @42fbadd7 -- pending closure seal"
+    },
+    {
+      "kind": "finding",
+      "id": "F-PTR-164",
+      "state": {
+        "productStateId": "20f373d4864085a3be6f76be88ebd1cd4ad5c94c0bd3f8636c7654949f9cc889",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "subsystem": "core",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "title": "theBarBridge THE_BAR_MAX fallback vs theCap MAX_THE diverge on raw-override path",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "reachability": "HYPOTHETICAL",
+      "actionable": true,
+      "locations": [
+        {
+          "path": "src/core/combat/CombatEntity.ts",
+          "symbolOrSection": "maxThe field ~50-67",
+          "revision": "3f3e1ab9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "cleanK AUT",
+      "counterexample": "primaryEntityOverride skipping resolveMaxThe leaves cap unset: engine 100 vs HUD 5",
+      "expected": "one cap authority or documented consequence",
+      "actual": "divergent numeric defaults on the override path",
+      "rootCause": "deliberate split documented but consequence not flagged",
+      "rootClass": "DUPLICATED_TRUTH",
+      "repair": "divergence-consequence docblock on maxThe @42fbadd7 (override path expected to stamp its own cap)",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerate cap read sites (theCap, kiemBarBridge, theBarBridge)",
+          "evidenceIds": [
+            "EV-PTR-FIXL"
+          ],
+          "hitDispositions": [
+            "theCap is engine read site; kiemBarBridge delegates; theBarBridge fallback documented"
+          ],
+          "coverageLimits": [
+            "reachable only via devtools/test override path"
+          ]
+        }
+      ],
+      "status": "CLOSED",
+      "closedAt": "2026-09-27T07:45:00Z",
+      "pinEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "evidenceIds": [
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
+      ],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
+      "closeReason": "documented @42fbadd7 -- pending closure seal"
+    },
+    {
+      "kind": "finding",
+      "id": "F-PTR-165",
+      "state": {
+        "productStateId": "20f373d4864085a3be6f76be88ebd1cd4ad5c94c0bd3f8636c7654949f9cc889",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "subsystem": "core",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "title": "theBurned docblock claims no live producer; TBS stamps it on consumesAllThe payloads",
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "reachability": "HYPOTHETICAL",
+      "actionable": true,
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnSkillAction.ts",
+          "symbolOrSection": "theBurned docblock ~483-492",
+          "revision": "3f3e1ab9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "cleanK AUT",
+      "counterexample": "TBS:1875-1877 stamps execution.theBurned whenever payloadSkill.consumesAllThe",
+      "expected": "docblock describes producer-live/dormant-input accurately",
+      "actual": "'No producer stamps this post-retirement' is false",
+      "rootCause": "docblock conflated dormant authored input with dead producer",
+      "rootClass": "DOC_DRIFT",
+      "repair": "docblock rewritten: producer live at applyCast; dormant because no authored def carries the flag @42fbadd7",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "check other DORMANT docblocks for same conflation",
+          "evidenceIds": [
+            "EV-PTR-FIXL"
+          ],
+          "hitDispositions": [
+            "tryPayProcCost/onProcSuccess docblocks correctly attribute dormancy to the lane"
+          ],
+          "coverageLimits": [
+            "documentation only"
+          ]
+        }
+      ],
+      "status": "CLOSED",
+      "closedAt": "2026-09-27T07:45:00Z",
+      "pinEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "evidenceIds": [
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
+      ],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
+      "closeReason": "fixed @42fbadd7 -- docblock corrected; pending closure seal"
+    },
+    {
+      "kind": "finding",
+      "id": "F-PTR-166",
+      "state": {
+        "productStateId": "20f373d4864085a3be6f76be88ebd1cd4ad5c94c0bd3f8636c7654949f9cc889",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "subsystem": "core",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "title": "EntityResourceAdapter consume-all writes currentThe=0 inline vs drainAllThe owner",
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "reachability": "HYPOTHETICAL",
+      "actionable": true,
+      "locations": [
+        {
+          "path": "src/core/battle/runtime/scheduler/adapters/EntityResourceAdapter.ts",
+          "symbolOrSection": "consume 'all' lane ~145-149",
+          "revision": "3f3e1ab9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "cleanK AUT",
+      "counterexample": "second writer of the burn rule -- diverges if drainAllThe gains a side effect",
+      "expected": "burn routed through drainAllThe",
+      "actual": "entity.currentThe = 0 inline",
+      "rootCause": "adapter duplicated the burn write",
+      "rootClass": "DUPLICATED_TRUTH",
+      "repair": "routes via drainAllThe @42fbadd7",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerate currentThe=0 writers",
+          "evidenceIds": [
+            "EV-PTR-FIXL"
+          ],
+          "hitDispositions": [
+            "Player.ts:644 reset boundary (distinct semantics, battle-scoped reset) -- kept"
+          ],
+          "coverageLimits": [
+            "behavior identical today"
+          ]
+        }
+      ],
+      "status": "CLOSED",
+      "closedAt": "2026-09-27T07:45:00Z",
+      "pinEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "evidenceIds": [
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
+      ],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
+      "closeReason": "fixed @42fbadd7 -- single burn writer; pending closure seal"
+    },
+    {
+      "kind": "finding",
+      "id": "F-PTR-169",
+      "state": {
+        "productStateId": "20f373d4864085a3be6f76be88ebd1cd4ad5c94c0bd3f8636c7654949f9cc889",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "subsystem": "core",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "title": "lastOpResult reverse-scans settled-results array per call -- O(hits x results) on settle hot path",
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnSkillPlanRuntime.ts",
+          "symbolOrSection": "opResults.lastOpResult ~668",
+          "revision": "3f3e1ab9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "cleanK INT",
+      "counterexample": "[...records].reverse() allocates a copy per call inside the per-target settle loop",
+      "expected": "backward scan without copy allocation",
+      "actual": "reversed-copy find per call",
+      "rootCause": "convenience implementation on a hot path",
+      "rootClass": "PERF",
+      "repair": "backward index scan without allocation @42fbadd7",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerate trace.records consumers on hot paths",
+          "evidenceIds": [
+            "EV-PTR-FIXL"
+          ],
+          "hitDispositions": [
+            "no other reversed-copy scan on the settle path"
+          ],
+          "coverageLimits": [
+            "perf nit only"
+          ]
+        }
+      ],
+      "status": "CLOSED",
+      "closedAt": "2026-09-27T07:45:00Z",
+      "pinEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
+      "evidenceIds": [
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
+      ],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
+      "closeReason": "fixed @42fbadd7 -- allocation removed; pending closure seal"
+    }
+  ]
+}

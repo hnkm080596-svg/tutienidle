@@ -1,0 +1,14 @@
+{
+ "role": "COR",
+ "pin": "8e25a766",
+ "verdict": "FINDINGS(1)",
+ "method": "per-file mechanical 3-way re-merge (git merge-file) of all 64 merge-touched files; 34 byte-exact disjoint unions; 30 manual files inspected hunk-by-hunk; ATK-PIN-INTEGRITY + ATK-DEAD-REF clean; type-check + 134 scoped tests green",
+ "findings": [
+  {
+   "id": "M-COR-01",
+   "severity": "Low",
+   "file": "TurnBattleSystem.hoIntercept.test.ts",
+   "claim": "merged file took master verbatim, dropping ours' 4 NOVA-1 pin tests; engine gate present at TurnBattleSystem:3598-3613"
+  }
+ ]
+}

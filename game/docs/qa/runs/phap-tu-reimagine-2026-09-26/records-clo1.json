@@ -1,0 +1,54 @@
+{
+  "records": [
+    {
+      "kind": "review",
+      "id": "REV-PTR-CLO-1",
+      "state": {
+        "productStateId": "d0529c93f7a1",
+        "contractId": "f6c338574232",
+        "attackModelId": "6741d10ad40a",
+        "environmentId": "e3ca14a6b377"
+      },
+      "round": 1,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-3f5c340840444d2094c6c57e51a91f81",
+      "contextId": "sealed-child-3f5c340840444d2094c6c57e51a91f81",
+      "role": "closure",
+      "priorFindingsVisible": false,
+      "startedAt": "2026-09-26T18:59:00Z",
+      "sealedAt": "2026-09-26T19:05:52Z",
+      "verdict": "SEALED",
+      "fixesVerified": [
+        "F-PTR-01",
+        "F-PTR-02",
+        "F-PTR-03",
+        "F-PTR-04",
+        "F-PTR-05",
+        "F-PTR-06",
+        "F-PTR-07",
+        "F-PTR-08",
+        "F-PTR-09",
+        "F-PTR-10",
+        "F-PTR-11"
+      ],
+      "notes": "All 11 claimed fixes verified present + functional on f9b965d6; scoped vitest 34 files/364 tests pass; no new defect introduced by the batch."
+    },
+    {
+      "kind": "evidence",
+      "id": "EV-PTR-CLO-1",
+      "state": {
+        "productStateId": "d0529c93f7a1",
+        "contractId": "f6c338574232",
+        "attackModelId": "6741d10ad40a",
+        "environmentId": "e3ca14a6b377"
+      },
+      "kind2": "CLOSURE_VERIFY",
+      "at": "2026-09-26T19:05:52Z",
+      "summary": "closure reviewer on f9b965d6: type-check exit 0; 34 files/364 scoped tests pass; all 11 fixes verified (stamps present, ordering correct, dedup snapshot pins this-lane priors, guards/clamps/resweep/canonical-import all live).",
+      "commandRefs": [
+        "vue-tsc --build",
+        "npx vitest run SkillResolver PhapTu theBar CultivationPath BuffSystem CombatSystem GameManagerProgressionOps TechniqueGateAuthored asciiComments"
+      ]
+    }
+  ]
+}

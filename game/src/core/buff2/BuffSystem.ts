@@ -20,7 +20,6 @@ import type {
   BuffDefinitionId,
   BuffInstanceId,
   CombatEntityId,
-  CombatOperationId,
 } from '../battle/contracts/ids'
 import type { ElementalStateRegistry } from '../battle/contracts/elemental'
 import type {
@@ -57,6 +56,7 @@ import {
   attachModifier,
   removeModifiersById,
 } from './BuffModifierEngine'
+import { periodicGrowthPayloadOf } from './PeriodicGrowthCapabilities'
 import {
   computePeriodicRequest,
   type PendingUseMark,
@@ -372,7 +372,7 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
     if (instance === undefined) return { stacksBefore: 0, stacksAfter: 0 }
     const def = this.registry.get(instance.definitionId)
     const stacksBefore = instance.stacks
-    const stacksAfter = Math.min(stacksBefore + stacks, def.stacking.maxStacks)
+    const stacksAfter = Math.max(0, Math.min(stacksBefore + stacks, def.stacking.maxStacks))
     return this.commitStacks(instance, stacksBefore, stacksAfter, 'consumed', ctx)
   }
 
@@ -874,6 +874,19 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
     )
   }
 
+  /** spec D10 bound-marker staleness: the marker dies the moment its
+      source no longer holds the named definition. Shared by the
+      per-tick feed skip, the Phase B sweep, and the (5b) re-sweep. */
+  private isBoundSourceGone(
+    def: { boundToSourceBuffId?: BuffDefinitionId },
+    sourceId: CombatEntityId,
+  ): boolean {
+    return (
+      def.boundToSourceBuffId !== undefined &&
+      this.store.findOnTarget(def.boundToSourceBuffId, sourceId) === undefined
+    )
+  }
+
   /** Boundary unit list: (instance, periodic) pairs matching the anchor
       + timing, canonical-sorted. */
   private collectBoundaryUnits(
@@ -967,6 +980,10 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
     if (instance === undefined || !this.entities.isAlive(instance.targetId)) {
       return
     }
+    this.applyPeriodicGrowth(instance, lctx)
+    // The feed can retire the instance (consume-at-zero parity); a
+    // removed instance emits nothing -- dead instances do not tick.
+    if (this.store.get(instance.instanceId) !== instance) return
     const computation = this.computeUnitRequest(instance, unit.periodicId)
     if (computation === undefined) return
     lctx.events.emit({
@@ -977,6 +994,82 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
     })
     this.pendingUses.set(computation.request.requestId, computation.marks)
     lctx.settle()
+  }
+
+  /** Phap Tu Reimagined spec D11 -- 'periodic_growth' capability feed:
+      a marker on the ticking instance's HOLDER grows the instance's
+      stacks BEFORE its unit computes (the bump feeds stack-scaled
+      ticks). A marker matches when its def declares periodic_growth
+      naming the ticking definitionId AND the marker's sourceId equals
+      the ticking instance's sourceId (own-source Sinh Co binding);
+      `consume: true` removes the marker in the same transaction.
+      This mirrors commitStacks' clamp/remove/emit shape on a lifecycle
+      ctx by design -- any change to commitStacks' zero/drain contract
+      must be re-mirrored here (drift-risk parity). */
+  private applyPeriodicGrowth(
+    instance: BuffInstance,
+    lctx: BuffLifecycleContext,
+  ): void {
+    const def = this.registry.get(instance.definitionId)
+    // Each marker INSTANCE feeds once per tick (inner `break` below);
+    // two marker defs naming the same grown definitionId would each
+    // feed -- multi-feed is authored-legal (only sinh_co is shipped).
+    let grownRemoved = false
+    for (const marker of this.store.forTarget(instance.targetId)) {
+      if (marker.instanceId === instance.instanceId) continue
+      if (marker.sourceId !== instance.sourceId) continue
+      const markerDef = this.registry.get(marker.definitionId)
+      if (markerDef.capabilities === undefined) continue
+      // A marker bound to a window its source already lost is stale --
+      // runPhaseB's bound sweep retires it, but a periodic unit ticks
+      // before Phase B, so the feed must skip it here too.
+      if (this.isBoundSourceGone(markerDef, marker.sourceId)) {
+        continue
+      }
+      for (const capability of markerDef.capabilities) {
+        const growth = periodicGrowthPayloadOf(capability)
+        if (growth === undefined) continue
+        if (growth.definitionId !== instance.definitionId) continue
+        // The grown instance is detached: sibling markers stay alive
+        // (their feed never ran) but must not write on the removed
+        // object -- a feed there would resurrect-emit
+        // buff_stacks_changed (a removed instance emits nothing).
+        if (grownRemoved) break
+        const stacksBefore = instance.stacks
+        const stacksAfter = Math.max(
+          0,
+          Math.min(stacksBefore + growth.stacks, def.stacking.maxStacks),
+        )
+        instance.stacks = stacksAfter
+        if (stacksAfter <= 0) {
+          // commitStacks parity: a feed that drains the instance to zero
+          // retires it (negative payloads stay authored-legal). The
+          // marker's own consume retire still applies; the marker loop
+          // keeps running so remaining markers process/retire too --
+          // grownRemoved stops their writes on the detached instance.
+          this.removeInstance(instance, 'consumed', lctx.events, lctx.rootActionId)
+          grownRemoved = true
+          if (growth.consume === true) {
+            this.removeInstance(marker, 'consumed', lctx.events, lctx.rootActionId)
+          }
+          break // one periodic_growth feed per marker instance
+        }
+        if (stacksAfter !== stacksBefore) {
+          lctx.events.emit({
+            type: 'buff_stacks_changed',
+            rootActionId: lctx.rootActionId,
+            instanceId: instance.instanceId,
+            stacksBefore,
+            stacksAfter,
+            addedStacks: stacksAfter - stacksBefore,
+          })
+        }
+        if (growth.consume === true) {
+          this.removeInstance(marker, 'consumed', lctx.events, lctx.rootActionId)
+        }
+        break // one periodic_growth feed per marker instance
+      }
+    }
   }
 
   /** Phase B (spec sec.28 steps 3-8): liveness sweeps BEFORE any
@@ -1013,6 +1106,14 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
         !this.entities.isAlive(instance.sourceId)
       ) {
         this.removeInstance(instance, 'source_death', lctx.events, lctx.rootActionId)
+        continue
+      }
+      // Phap Tu Reimagined spec D10 -- boundToSourceBuffId: the marker
+      // dies 'expired' the moment its source no longer holds the named
+      // definition (the bound buff may already have left earlier in
+      // this same canonical-order sweep).
+      if (this.isBoundSourceGone(def, instance.sourceId)) {
+        this.removeInstance(instance, 'expired', lctx.events, lctx.rootActionId)
       }
     }
 
@@ -1094,6 +1195,19 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
     //     'expired' (dead entities already left above as 'death').
     for (const instance of this.sortedAll()) {
       if (instance.remaining !== undefined && instance.remaining <= 0) {
+        this.removeInstance(instance, 'expired', lctx.events, lctx.rootActionId)
+      }
+    }
+
+    // (5b) boundToSourceBuffId re-sweep -- a window that expired in THIS
+    //     pass's decrement/expiry step retires its bound markers NOW
+    //     (spec D10: the marker dies the moment the source no longer
+    //     holds the definition), not at the next phase boundary. Without
+    //     this a stale marker can still feed e.g. periodic_growth reads
+    //     landing between expiry and the next runPhaseB.
+    for (const instance of this.sortedAll()) {
+      const def = this.registry.get(instance.definitionId)
+      if (this.isBoundSourceGone(def, instance.sourceId)) {
         this.removeInstance(instance, 'expired', lctx.events, lctx.rootActionId)
       }
     }

@@ -1,0 +1,1160 @@
+{
+ "records": [
+  {
+   "kind": "review",
+   "id": "REV-PTR-COR-H1",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 9,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-5a78298835e44fae9ec3431e0bf06a14",
+   "contextId": "ctx-5a782988",
+   "model": "swe-2",
+   "role": "clean-correctness",
+   "inputBundleHash": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-27T01:35:00Z",
+   "sealedAt": "2026-09-27T02:22:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-CORH"
+   ],
+   "findingIds": [
+    "F-PTR-112",
+    "F-PTR-113",
+    "F-PTR-114",
+    "F-PTR-115",
+    "F-PTR-116",
+    "F-PTR-117"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "review",
+   "id": "REV-PTR-AUT-H1",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 9,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-44b628d573fe4e8ea166e9674e14a8ff",
+   "contextId": "ctx-44b628d5",
+   "model": "swe-2",
+   "role": "clean-authority",
+   "inputBundleHash": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-27T01:35:00Z",
+   "sealedAt": "2026-09-27T02:22:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTH"
+   ],
+   "findingIds": [
+    "F-PTR-105",
+    "F-PTR-106",
+    "F-PTR-107",
+    "F-PTR-108",
+    "F-PTR-109",
+    "F-PTR-110",
+    "F-PTR-111"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "review",
+   "id": "REV-PTR-INT-H1",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 9,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-7589bac8deff4704a7a802366b9298fc",
+   "contextId": "ctx-7589bac8",
+   "model": "swe-2",
+   "role": "clean-integration",
+   "inputBundleHash": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-27T01:35:00Z",
+   "sealedAt": "2026-09-27T02:22:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-INTH"
+   ],
+   "findingIds": [
+    "F-PTR-118",
+    "F-PTR-119"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PTR-CORH",
+    "kind": "EXECUTED_INTEGRATION",
+    "at": "2026-09-27T02:22:00Z",
+    "subject": "cleanH COR verdict on pin cf1655b6",
+    "detail": "0 Critical/High/Medium; 1 Low + 5 Nit findings; type-check clean; 50 touched test files pass (933 tests)",
+    "artifactPath": "docs/qa/runs/phap-tu-reimagine-2026-09-26/records-corh.json",
+    "artifactHash": "ec40bff49c6850d5e37b5e927b1d77e0b753f4db0ed24362c2e1b856d1801fe6",
+    "limitations": [
+     "reviewer self-report"
+    ]
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PTR-AUTH",
+    "kind": "EXECUTED_INTEGRATION",
+    "at": "2026-09-27T02:22:00Z",
+    "subject": "cleanH AUT verdict on pin cf1655b6",
+    "detail": "2 Medium + 2 Low + 3 Nit findings; all adjudicated by code inspection",
+    "artifactPath": "docs/qa/runs/phap-tu-reimagine-2026-09-26/records-auth.json",
+    "artifactHash": "dac76c96290ff0bf3f33d5cd978bbffcc407b15092edfb5fc95ab92eaf1f2943",
+    "limitations": [
+     "reviewer self-report"
+    ]
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PTR-INTH",
+    "kind": "EXECUTED_INTEGRATION",
+    "at": "2026-09-27T02:22:00Z",
+    "subject": "cleanH INT verdict on pin cf1655b6",
+    "detail": "2 Low findings (chargeTurns x follow-ups, spell kit assert asymmetry); repro test in reviewer worktree",
+    "artifactPath": "docs/qa/runs/phap-tu-reimagine-2026-09-26/records-inth.json",
+    "artifactHash": "285e22afe73157cc58961fe61f4cfa212dc475ee13d9d82ba0fada2dae9a9792",
+    "limitations": [
+     "reviewer self-report"
+    ]
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PTR-FIXH",
+    "kind": "EXECUTED_INTEGRATION",
+    "at": "2026-09-27T02:35:00Z",
+    "subject": "cleanH fix batch @bc43a286",
+    "detail": "9 fixes + 2 registry/engine pins; npm run type-check clean; scoped vitest 1980 pass (skilldef/turn/buff2/player/game + ascii ratchet)",
+    "artifactPath": "docs/qa/runs/phap-tu-reimagine-2026-09-26/records-fixh.json",
+    "artifactHash": "eb4b0d014be159c54fd5be1f9d7673e00615c39e3eb1d1640e9305c22d4eeac5",
+    "limitations": []
+   }
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-105",
+   "title": "applyPeriodicGrowth bypasses commitStacks contract (no maxStacks clamp, no consume-at-zero)",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/buff2/BuffSystem.ts",
+     "symbolOrSection": "applyPeriodicGrowth",
+     "revision": "cf1655b6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanH AUT (Medium-1)",
+   "counterexample": "growth.stacks>maxStacks over-stacks; growth to <=0 leaves live instance instead of consuming",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTH",
+    "EV-PTR-FIXH"
+   ],
+   "actual": "stacks grown without clamp/removal",
+   "expected": "commitStacks semantics (clamp + consume-at-zero + buff_stacks_changed)",
+   "rootCause": "growth path diverged from commitStacks contract",
+   "rootClass": "CONTRACT_BYPASS",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "mirror commitStacks: clamp to maxStacks, consume at <=0, emit buff_stacks_changed on change",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "ACTIONABLE",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T02:35:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-106",
+   "title": "landed-lane intent allowlist only enforced at depth 0 -- nested-lane ops escape to any target",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/skilldef/SkillDefinitionRegistry.ts",
+     "symbolOrSection": "validateTargetIntent",
+     "revision": "cf1655b6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanH AUT (Medium-2)",
+   "counterexample": "if(cond, then:[for_each_target(..., apply_buff{target:all_enemies})]) validated clean inside onLanded",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTH",
+    "EV-PTR-FIXH"
+   ],
+   "actual": "nested-lane members pass lane check unchecked",
+   "expected": "LANDED_LANE_INTENTS enforced at ANY depth inside the lane",
+   "rootCause": "lane-context tracking stopped at member depth",
+   "rootClass": "BOUNDARY_HOLE",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "carry insideLandedLane through nestedLane; read_stacks/for_each_target banned in-lane; intents restricted to {loop_target,self,other_enemy,other_enemies}",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "ACTIONABLE",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T02:35:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-107",
+   "title": "theCap duplicated across plan runtime + kiem bridge instead of delegating to TheEconomy",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnSkillPlanRuntime.ts",
+     "symbolOrSection": "case the",
+     "revision": "cf1655b6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanH AUT (Low-1)",
+   "counterexample": "two sites re-implement entity.maxThe ?? MAX_THE",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTH",
+    "EV-PTR-FIXH"
+   ],
+   "actual": "duplicated cap logic",
+   "expected": "theCap() single read site",
+   "rootCause": "helper introduced but consumers kept inline copies",
+   "rootClass": "DUPLICATED_AUTHORITY",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "TurnSkillPlanRuntime + kiemBarBridge delegate to TheEconomy.theCap; CombatEntity docblock rescoped",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "ACTIONABLE",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T02:35:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-108",
+   "title": "requiredResourceFor applies percentOfMax cost to any resourceType (mana-only semantics silently ignored)",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnSkillAction.ts",
+     "symbolOrSection": "requiredResourceFor",
+     "revision": "cf1655b6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanH AUT (Low-2)",
+   "counterexample": "a non-mana skill with resourceCostPercentOfMax would scale off maxMp",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTH",
+    "EV-PTR-FIXH"
+   ],
+   "actual": "percentOfMax applied regardless of resourceType",
+   "expected": "mana-pool semantics only; other resources fall back to flat resourceCost",
+   "rootCause": "resourceType never gated before applying percentOfMax",
+   "rootClass": "MISSING_GUARD",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "gate percentOfMax read on resourceType===mana with comment; pin test",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "ACTIONABLE",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T02:35:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-109",
+   "title": "dormant combo consumesAllThe+chargeTurns: theBurned cannot forward to charge-resolve, theScaling reads 0",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "actionable": true,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/skilldef/SkillDefinitionRegistry.ts",
+     "symbolOrSection": "validateActive",
+     "revision": "cf1655b6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanH AUT (Nit-5)",
+   "counterexample": "charge-resolve declares carry no execution object",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTH",
+    "EV-PTR-FIXH"
+   ],
+   "actual": "combo authorable -> silent 0-scaling at resolve",
+   "expected": "unauthorable until forwarding exists",
+   "rootCause": "no registry pin for the dormant cross-field combo",
+   "rootClass": "DORMANT_DEFECT",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "registry fault consumesAllThe x cadence.chargeTurns mutual exclusion + pin test",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "ACTIONABLE",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T02:35:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-110",
+   "title": "dead theBurned capture in declareQueuedExecution (executionCommitsCast always false on queued execs)",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "actionable": true,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "declareQueuedExecution",
+     "revision": "cf1655b6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanH AUT (Nit-6)",
+   "counterexample": "queued execs are always repeat/multicast -> gate never true",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTH",
+    "EV-PTR-FIXH"
+   ],
+   "actual": "unreachable defensive capture",
+   "expected": "no dead code",
+   "rootCause": "leftover defensive block",
+   "rootClass": "DEAD_CODE",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "removed capture block",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "ACTIONABLE",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T02:35:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-111",
+   "title": "PresentationGate SceneReadyPort JSDoc star-misalignment",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "actionable": true,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/presentation/gate/PresentationGate.ts",
+     "symbolOrSection": "SceneReadyPort",
+     "revision": "cf1655b6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanH AUT (Nit-7)",
+   "counterexample": "cosmetic only",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTH",
+    "EV-PTR-FIXH"
+   ],
+   "actual": "misaligned docblock",
+   "expected": "aligned",
+   "rootCause": "docblock drift",
+   "rootClass": "COMMENT_DRIFT",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "realigned JSDoc",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "ACTIONABLE",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T02:35:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-112",
+   "title": "'attack' event emitted BEFORE routed blocked check -- blocked casts still notify passive listeners",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "applyActionImpact",
+     "revision": "cf1655b6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanH COR (Low-1)",
+   "counterexample": "MP drained between declare and apply (earlier actor mana-burn) -> attack emitted then blocked",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-CORH",
+    "EV-PTR-FIXH"
+   ],
+   "actual": "emit precedes blocked check",
+   "expected": "no attack event for blocked casts",
+   "rootCause": "emit ordering predates the blocked outcome concept",
+   "rootClass": "ORDERING_DEFECT",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "emit moved post-route, gated on routed?.outcome.blocked !== true",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "ACTIONABLE",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T02:35:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-113",
+   "title": "stale 'empowered' source docstring describes retired god-ult payload mechanic",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "actionable": true,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnSkillAction.ts",
+     "symbolOrSection": "TurnSkillSource",
+     "revision": "cf1655b6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanH COR (Nit-2)",
+   "counterexample": "doc only",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-CORH",
+    "EV-PTR-FIXH"
+   ],
+   "actual": "describes god-ult payload",
+   "expected": "describes kit-basic empowerment",
+   "rootCause": "doc drift after mechanic retirement",
+   "rootClass": "COMMENT_DRIFT",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "docstring rewritten",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "ACTIONABLE",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T02:35:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-114",
+   "title": "sinh_co plant gated on hit+window stacks_below, not doc_can apply result (spec ambiguity)",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "actionable": true,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/data/skill/PhapTuSkills.ts",
+     "symbolOrSection": "sinh_co",
+     "revision": "cf1655b6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanH COR (Nit-3)",
+   "counterexample": "implementation matches authored D15 gate verbatim; §4 inv.12 summary ambiguous",
+   "status": "REJECTED_WITH_PROOF",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-CORH"
+   ],
+   "actual": "faithful to authored gate text",
+   "expected": "ambiguous spec-internal wording",
+   "rootCause": "spec ambiguity, not defect",
+   "rootClass": "SPEC_AMBIGUITY",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "none -- rejected with proof",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "NON_ACTIONABLE",
+   "rejectionReason": "implementation is verbatim-faithful to the authored D15 gate; the invariant summary is ambiguous spec wording, not a defect",
+   "closedAt": "2026-09-27T02:35:00Z",
+   "closeReason": "REJECTED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-115",
+   "title": "latent: future kit def with repeatCasts/multicast would silently lose Phap The riders on replays",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "actionable": true,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "declareQueuedExecution",
+     "revision": "cf1655b6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanH COR (Nit-4)",
+   "counterexample": "multicast already suppressed on empowered roots (pinned test: zero rolls, resolvedVariantId gate); repeats re-resolve un-empowered deliberately (empowerment never re-fires on follow-ups = commit-cast-only riders)",
+   "status": "REJECTED_WITH_PROOF",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-CORH"
+   ],
+   "actual": "designed semantics, both pinned by existing tests",
+   "expected": "not silent loss -- deliberate parity",
+   "rootCause": "designed behavior misread as latent",
+   "rootClass": "DESIGNED_SEMANTICS",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "none -- rejected with proof",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "NON_ACTIONABLE",
+   "rejectionReason": "the supposed latent is designed and test-pinned: empowered roots cannot multicast (SkillSubcast test), and repeats intentionally resolve un-empowered since riders are commit-cast-only",
+   "closedAt": "2026-09-27T02:35:00Z",
+   "closeReason": "REJECTED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-116",
+   "title": "CombatScene rewritten ASCII JSDoc at 2-space indent",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "actionable": true,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/game/scenes/CombatScene.ts",
+     "symbolOrSection": "class docblock",
+     "revision": "cf1655b6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanH COR (Nit-5)",
+   "counterexample": "cosmetic only",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-CORH",
+    "EV-PTR-FIXH"
+   ],
+   "actual": "misaligned",
+   "expected": "column-0 top-level docblock",
+   "rootCause": "docblock drift",
+   "rootClass": "COMMENT_DRIFT",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "realigned",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "ACTIONABLE",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T02:35:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-117",
+   "title": "theBar hidden until element commit while starter already mints +1 (cosmetic consequence)",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "actionable": true,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/presentation/bridges/theBarBridge.ts",
+     "symbolOrSection": "readTheBar",
+     "revision": "cf1655b6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanH COR (Nit-6)",
+   "counterexample": "reviewer flagged as cosmetic note, not a defect",
+   "status": "REJECTED_WITH_PROOF",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-CORH"
+   ],
+   "actual": "hidden pre-commit; phapTheActive correctly gated",
+   "expected": "consistent UX",
+   "rootCause": "intended UX consequence",
+   "rootClass": "NON_DEFECT",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "none -- rejected with proof",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "NON_ACTIONABLE",
+   "rejectionReason": "reviewer-labeled cosmetic consequence of the starter mint, not a defect",
+   "closedAt": "2026-09-27T02:35:00Z",
+   "closeReason": "REJECTED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-118",
+   "title": "chargeTurns x repeatCasts/multicast unguarded: self-scope queues repeats at init + spurious unrouted report; resolve ignores targetScope",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "actionable": true,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "applyActionImpact / charge-resolve",
+     "revision": "cf1655b6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanH INT (F1)",
+   "counterexample": "self-scoped chargeTurns:1 repeatCasts:2 queues 2 repeat execs at init (blocked or loud-noop) + spurious reportUnroutedCast; resolve targets enemies regardless of scope",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-INTH",
+    "EV-PTR-FIXH"
+   ],
+   "actual": "repeats dead on charged defs by design (pinned) but self-scope path emits spurious reports and resolve ignores targetScope",
+   "expected": "charge-init skips apply-cast lane entirely; resolve honors targetScope self",
+   "rootCause": "apply-cast lane did not discriminate charge-init vs resolve; resolve assumed enemy scope",
+   "rootClass": "BOUNDARY_HOLE",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "apply-lane gate on (chargeTurns===0 || isCharging); resolve branches targetScope self -> affected=[actor]; dead-repeat semantics left as designed (pinned); mutual-exclusion pin rejected after adjudication (designed semantics)",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXH"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "ACTIONABLE",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T02:35:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-119",
+   "title": "spell_pathway kit assert asymmetry: resolveSpecialUltimate silently returns undefined on missing kit member",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "actionable": true,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/player/CultivationPathRegistry.ts",
+     "symbolOrSection": "resolveSpecialUltimate",
+     "revision": "cf1655b6",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanH INT (F2)",
+   "counterexample": "crafted save with element committed but special missing loads clean",
+   "status": "REJECTED_WITH_PROOF",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-INTH"
+   ],
+   "actual": "missing special is a LEGITIMATE progression state -- the Trang special is learned via the realm-gated linh_ngo_<special> node AFTER element commit (PhapTuNodes.builders.ts:120), not granted atomically",
+   "expected": "loud fail only for truly corrupt state",
+   "rootCause": "grant-order misread: basic is atomic at commit, special is a later node purchase",
+   "rootClass": "DESIGNED_SEMANTICS",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "none -- rejected with proof",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "NON_ACTIONABLE",
+   "rejectionReason": "element commit grants the basic atomically (strict resolveAuthoredBasic is correct); the special is a separate linh_ngo node unlock -- a missing special is normal mid-progression, not corruption. Silent {special:undefined} is the designed degraded state.",
+   "closedAt": "2026-09-27T02:35:00Z",
+   "closeReason": "REJECTED"
+  },
+  {
+   "kind": "lesson",
+   "id": "L-PTR-H-SEMANTICS",
+   "at": "2026-09-27T02:35:00Z",
+   "summary": "Dormant-combo candidates must check pinned designed semantics first -- two of three unguarded latent combos this round (multicast-on-empowered, follow-ups-on-charge) were already deliberately suppressed/pinned by existing tests; registry pins belong only where the silent loss has no designed answer (theScaling-on-charge reads 0).",
+   "findingIds": [
+    "F-PTR-115",
+    "F-PTR-118",
+    "F-PTR-109"
+   ]
+  },
+  {
+   "kind": "lesson",
+   "id": "L-PTR-H-GRANT-ORDER",
+   "at": "2026-09-27T02:35:00Z",
+   "summary": "Kit membership is not atomic -- element commit grants the basic atomically but the special arrives via a later realm-gated linh_ngo node; a missing kit member is corrupt only when its grant is atomic with the committing event.",
+   "findingIds": [
+    "F-PTR-119"
+   ]
+  },
+  {
+   "kind": "lesson",
+   "id": "L-PTR-H-LANE-DISCRIMINANT",
+   "at": "2026-09-27T02:35:00Z",
+   "summary": "charge-init and charge-resolve share the apply path but are discriminated by declared.isCharging (false at init, true at resolve) -- apply-cast lanes that do not gate on it emit phantom attack events, unrouted reports, and misqueued follow-ups for self-scoped charged defs.",
+   "findingIds": [
+    "F-PTR-118"
+   ]
+  }
+ ]
+}

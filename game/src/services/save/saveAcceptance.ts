@@ -23,6 +23,12 @@ import {
 import { getRealmIndex } from '../../core/realm/realmSystem'
 import { ITEM_QUALITY_ORDER } from '../../core/item/ItemQuality'
 import { getActiveWayDefinition } from '../../core/player/CultivationPathKit'
+import { getActiveElement } from '../../core/player/CultivationPathSystem'
+import {
+  HIDDEN_SPELL_REQUIRED_SKILLS,
+  isHiddenSpellPathway,
+} from '../../core/phap-tu/PhapTuPath'
+import { SPELL_KIT_IDS } from '../../data/skill/Skills'
 import { mortalBoundaryContractViolation } from '../../core/skill/MortalPrecursors'
 import { assertBodyProgressionIntegrity } from '../../core/realm/body/BodyProgressionSystem'
 import { assertHiddenPerfectionIntegrity } from '../../core/realm/hidden/HiddenPerfection'
@@ -229,6 +235,47 @@ export function assertSaveAcceptable(save: GameSave, catalogs: SaveAcceptanceCat
   // core/realm/hidden/HiddenPerfection). Same hard-fail seam - reject
   // before any owner mutation.
   assertHiddenPerfectionIntegrity(save.player)
+
+  // spell element <-> kit coherence - the element commit grants the
+  // element's basic atomically (resolveAuthoredBasic throws on a
+  // missing required basic at battle build). A save carrying the axis
+  // but not the basic is corrupt progression state: it loads once then
+  // crashes on EVERY battle entry - reject at load, same hard-fail
+  // seam. getActiveElement scopes this to ways that own the element
+  // axis (spell_pathway): a stale spellPath.element on another way is
+  // fail-closed there, so it must not reject here either.
+  const activeElement = getActiveElement(save.player)
+  if (activeElement !== undefined) {
+    // A corrupt save may carry a non-ElementType string that passed shape
+    // validation -- index the kit map defensively so the rejection stays
+    // descriptive instead of surfacing a bare TypeError.
+    const requiredBasicId = SPELL_KIT_IDS[activeElement]?.[0]
+    if (requiredBasicId === undefined) {
+      throw new Error(
+        `Spell element/kit coherence violated in save: unknown element '${activeElement}' carries no kit`,
+      )
+    }
+    if (!save.skills.some((skill) => skill.id === requiredBasicId)) {
+      throw new Error(
+        `Spell element/kit coherence violated in save: element '${activeElement}' requires learned basic '${requiredBasicId}'`,
+      )
+    }
+  }
+
+  // hidden_spell_pathway kit coherence - the ngo_dao ritual grants the
+  // fixed three-skill kit atomically (assertNgoDaoKitLearned throws at
+  // battle build when a member is absent). Same corrupt-save class as
+  // the element axis above: reject at load on the same hard-fail seam.
+  if (isHiddenSpellPathway(save.player)) {
+    const missingKit = HIDDEN_SPELL_REQUIRED_SKILLS.filter(
+      (skillId) => !save.skills.some((skill) => skill.id === skillId),
+    )
+    if (missingKit.length > 0) {
+      throw new Error(
+        `hidden_spell_pathway kit coherence violated in save: missing learned skills '${missingKit.join("', '")}'`,
+      )
+    }
+  }
 }
 
 /**

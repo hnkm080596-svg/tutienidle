@@ -1,0 +1,16 @@
+{
+ "review": "REV-PTR-COR-I1",
+ "reviewer": "devin-ff30619bbb4145d1a0d45a53f3bd2485",
+ "pin": "c2bb6992",
+ "verdict": "FINDINGS",
+ "counts": {
+  "nit": 4
+ },
+ "findingIds": [
+  "F-PTR-134",
+  "F-PTR-135",
+  "F-PTR-136",
+  "F-PTR-137"
+ ],
+ "verified": "The live resource + dedup, Phap The riders, oncePerCast, TCs, DR helper, save v87, route machinery retired, +1 The mint, empowerment gate, deferredResolve, instanceHitOpIds, castBlocked, periodic-growth parity, landed-lane intents, percentOfMax, blocked emit, charge-init disarm; type-check green; 290 files/2742 pass"
+}

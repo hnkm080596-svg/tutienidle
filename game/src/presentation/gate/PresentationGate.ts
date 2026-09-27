@@ -17,6 +17,7 @@ import type { BattlefieldGeometrySnapshot } from '@/presentation/geometry/Battle
 import type { PlayerVisualProfileId } from '@/presentation/art/PlayerVisualProfiles'
 import type { KiemBarReader } from '@/presentation/bridges/kiemBarBridge'
 import type { TheBarReader } from '@/presentation/bridges/theBarBridge'
+import type { HoTheReader } from '@/presentation/bridges/hoTheBridge'
 
 /**
  * What the dynamic layer may ask of the domain. Under §3.4 this list is
@@ -109,6 +110,8 @@ export interface PresentationGateContents {
   battlefieldGeometry: BattlefieldGeometrySnapshot
   kiemBarReader: KiemBarReader
   theBarReader: TheBarReader
+  // Phap Tu Reimagine (F13) -- live Ho The DR read for status tooltips.
+  hoTheReader: HoTheReader
 }
 
 export type GateKey = keyof PresentationGateContents

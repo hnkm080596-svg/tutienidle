@@ -1,0 +1,15 @@
+{
+  "applied": [
+    "evidence:EV2-IMPL-TYPECHECK",
+    "evidence:EV2-IMPL-BUILD",
+    "evidence:EV2-IMPL-VITEST-AFFECTED",
+    "evidence:EV2-IMPL-PIN-SUITE",
+    "evidence:EV2-IMPL-VITEST-FULL",
+    "evidence:EV2-IMPL-BASE-REPRO",
+    "evidence:EV2-IMPL-LINT",
+    "evidence:EV2-IMPL-E2E",
+    "evidence:EV2-IMPL-SOURCE-SWEEP",
+    "evidence:EV2-IMPL-MUTATION-CORPUS",
+    "evidence:EV2-IMPL-RB-CLOSURE"
+  ]
+}

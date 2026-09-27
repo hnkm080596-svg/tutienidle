@@ -1,0 +1,43 @@
+{
+ "run": "phap-tu-reimagine-2026-09-26",
+ "reviewId": "REV-PTR-COR-F1",
+ "reviewer": "devin-4f16867bde554281a2c486d6c128313b",
+ "phase": "CORRECTNESS",
+ "pin": "6d0722b2",
+ "verdict": "FINDINGS -- 1 Medium + 2 Low + 1 Nit (all latent)",
+ "adjudication": [
+  {
+   "finding": "F-PTR-69 (COR F-1) / Medium",
+   "disposition": "FIXED @1a4ea837",
+   "verification": "deferredResolve flag threads SkillResolveInput -> ResolvedSkillPlan -> TSPR charge-resolve stamping -> emitGrants gate; deferred resolve mints grants, follow-up/extra lanes still mint nothing. Pin pair in SkillExecutor.phapTuAdv.test.ts (1 grant on deferredResolve, 0 on plain commitsCast:false); type-check clean; 983 scoped tests pass"
+  },
+  {
+   "finding": "F-PTR-75 (COR F-2) / Low",
+   "disposition": "FIXED @1a4ea837",
+   "verification": "CultivationPathRegistry:381 -- stamp now unconditional `resolved !== GENERIC_PHYSICAL_BASIC`; element===undefined arm no longer short-circuits the corrupt-fallback guard"
+  },
+  {
+   "finding": "F-PTR-70 (COR F-3) / Low",
+   "disposition": "FIXED @1a4ea837",
+   "verification": "scope.instanceHitOpIds binds the CURRENT instance's hit.hitOpIds at authored-if mint (~:1036) and per-instance onLanded translate (~:1290); reset inside nested for_each_target lanes (~:1086) so bindings never leak. Pin: multi-instance def, authored if inside onLanded -> entered[]==2 distinct single-instance keys, 2 heals"
+  },
+  {
+   "finding": "F-PTR-71 (COR F-4) / Nit",
+   "disposition": "FIXED (partial) @1a4ea837",
+   "verification": "collectOncePerCast recurses into for_each_target ops (~:1354). Remainder (oncePerCast outside a landed lane silently ignored) REJECTED: registry legality already faults it at SkillDefinitionRegistry.ts:608"
+  }
+ ],
+ "attackVectorsProbed": [
+  "grants on charge-resolve routed lane",
+  "GENERIC mint pre-element arm",
+  "nested-gate dedup multi-instance keys",
+  "oncePerCast container traversal"
+ ],
+ "sealedSurfaces": [
+  "grant dedup mutually exclusive routed/engine",
+  "follow-up re-empower impossible",
+  "oncePerCast snapshot semantics",
+  "save v87 strict-equality",
+  "rider order canonical"
+ ]
+}

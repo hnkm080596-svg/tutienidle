@@ -260,6 +260,53 @@ describe('TurnBattleSystem — follow-up reciprocity guard', () => {
   })
 })
 
+// Pin (NOV-F F-NOV-2): a routed cast that blocks at the plan resource
+// precheck never committed -- its queued repeat/multicast executions
+// would replay the payload for free. castBlocked stamps at impact and
+// gates the follow-up queue at completeAction.
+describe('TurnBattleSystem — a blocked cast queues NO follow-up executions', () => {
+  const unaffordableRepeatDef: TurnSkillDefinition = {
+    id: 'mana_repeat',
+    cooldownTurns: 0,
+    damage: { kind: 'physical', multiplier: 1 },
+    targeting: { shape: 'single' },
+    resourceType: 'mana',
+    resourceCost: 50,
+    repeatCasts: 2,
+  }
+
+  it('unaffordable repeatCasts cast blocks at the precheck and queues nothing', () => {
+    const { battle, system, playerParticipant } = fixture()
+
+    playerParticipant.basic = unaffordableRepeatDef
+    playerParticipant.entity.currentMp = 10
+
+    const declared = system.declareActorAction(battle, playerParticipant)
+    const { targetIds } = system.applyActionImpact(battle, declared)
+    system.completeAction(battle, playerParticipant, declared, targetIds)
+
+    expect(declared.castBlocked).toBe(true)
+    expect(battle.queuedExecutions).toBeUndefined()
+  })
+
+  it('the SAME cast affordable commits and queues both repeats (control)', () => {
+    const { battle, system, playerParticipant } = fixture()
+
+    playerParticipant.basic = unaffordableRepeatDef
+    playerParticipant.entity.currentMp = 100
+
+    const declared = system.declareActorAction(battle, playerParticipant)
+    const { targetIds } = system.applyActionImpact(battle, declared)
+    system.completeAction(battle, playerParticipant, declared, targetIds)
+
+    expect(declared.castBlocked).toBeUndefined()
+    expect(battle.queuedExecutions?.map((entry) => entry.source)).toEqual([
+      'repeat',
+      'repeat',
+    ])
+  })
+})
+
 describe('TurnBattleSystem — declareReactiveBypass payload contract (cleanA11 COR)', () => {
   it('a NAMED-but-unregistered payload fizzles instead of substituting the basic attack', () => {
     const { battle, system, playerParticipant, enemyParticipant } = fixture()

@@ -1,0 +1,13 @@
+{
+ "verdict": "cleanH AUT @cf1655b6",
+ "findings": [
+  "Medium: applyPeriodicGrowth bypasses commitStacks",
+  "Medium: landed-lane intent allowlist depth escape",
+  "Low: theCap duplication",
+  "Low: percentOfMax resourceType ungated",
+  "Nit: consumesAllThe+chargeTurns dormant",
+  "Nit: dead theBurned capture",
+  "Nit: PresentationGate JSDoc"
+ ],
+ "session": "devin-44b628d573fe4e8ea166e9674e14a8ff"
+}

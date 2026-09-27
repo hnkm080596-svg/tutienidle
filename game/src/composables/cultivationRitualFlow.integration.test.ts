@@ -102,10 +102,16 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
     const masteryModifiers = () => spellModifiers().filter(
       modifier => modifier.id.startsWith('tinh_thong_'),
     )
-    expect(spellModifiers()).toHaveLength(3)
+    // Phap Tu Reimagine spec D9 -- 2 (was 3): the path-level
+    // manaShieldPercent grant ('phap_tu_ho_the') retired; Ho The is now
+    // the TC-unlocked linhLucHoTheCap DR ratio.
+    expect(spellModifiers()).toHaveLength(2)
     expect(masteryModifiers()).toHaveLength(0)
 
-    expect(gameManager.progressionOps.selectSpellPathElement('fire', 'dot', player.$state)).toBe(true)
+    // Phap Tu Reimagine (spec D5) -- element-only commit; the route arg
+    // is retired (runtime fails against the pre-rework op signature
+    // until ENGINE lands -- sibling-caused).
+    expect(gameManager.progressionOps.selectSpellPathElement('fire', player.$state)).toBe(true)
     // Exactly one mastery wakes on commit - the fire one; the other
     // four stay dormant rather than all firing during the null window.
     expect(masteryModifiers().map((modifier) => modifier.id)).toEqual([

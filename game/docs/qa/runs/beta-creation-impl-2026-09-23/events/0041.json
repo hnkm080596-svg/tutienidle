@@ -1,0 +1,27 @@
+{
+ "type": "SEAL_RECEIPT",
+ "round": "clean-A",
+ "lens": "INTEGRATION",
+ "reviewerSession": "188cbb4962e64bdfa07e83c46263e1ca",
+ "candidate": "94f0e9f7",
+ "verdict": "FINDINGS",
+ "priorFindingsVisible": false,
+ "evidenceExecuted": "type-check exit 0 on 94f0e9f7; scoped vitest 31 files/701 tests green; authored repros SaveSystem.union.qa.test.ts + useAppLifecycle.union.qa.test.ts (uncommitted, pass)",
+ "findings": [
+  {
+   "id": "F-A1",
+   "severity": "low",
+   "title": "v82 pick contract verifies 2/3 channels - crafted pick+learned save missing core_<pick> grant restores 'ok' into dead-progression state",
+   "disposition": "FIXED @8f53aa18 - preflight now requires getSkillCoreLevel(pick) >= 1; baseSave/legacy fixtures mirror three-channel write; new boundary pin rejects missing-grant saves"
+  },
+  {
+   "id": "F-A2",
+   "severity": "medium",
+   "title": "rejected->saveIssue('corrupted') route had zero regression coverage - silent revert would reintroduce the wedge",
+   "disposition": "FIXED @8f53aa18 - committed pin in useAppLifecycle.test.ts stubs restoreGameSession->'rejected', asserts corrupted report + boot.fail + onError never called"
+  }
+ ],
+ "preExisting": "p_initial_save:{} remote-row gap predates diff (param rename only) - recorded out-of-scope",
+ "attestation": "reviewer did not read docs/qa/**; independent context",
+ "accessLimitations": "no e2e/browser runtime pass within this lens"
+}

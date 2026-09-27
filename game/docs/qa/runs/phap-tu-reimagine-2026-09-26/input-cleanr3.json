@@ -1,0 +1,70 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "id": "F-PTR-264",
+   "title": "TheEconomy trusts entity.maxThe on grant path (dup of COR-R nit)",
+   "state": {
+    "productStateId": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "subsystem": "core",
+   "duplicateOf": "F-PTR-255",
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "closedAt": "2026-09-27T15:10:00Z",
+   "severity": "Nit",
+   "locations": [
+    {
+     "path": "src/core/the-tu/TheEconomy.ts",
+     "symbolOrSection": "theCap",
+     "revision": "7d837a91",
+     "basis": "SOURCE"
+    }
+   ],
+   "pinEvidenceIds": [
+    "EV-PTR-FIXR"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXR"
+   ],
+   "evidenceIds": [
+    "EV-PTR-FIXR"
+   ],
+   "closureReviewIds": [],
+   "status": "DUPLICATE_LINKED",
+   "classification": "REAL_DEFECT",
+   "reachability": "FIXTURE_INJECTED",
+   "actionable": true,
+   "discoveredBy": "cleanR INT",
+   "expected": "cap guarded against corrupt entity.maxThe",
+   "actual": "same claim as F-PTR-255 -- independent rediscovery by INT lens",
+   "rootCause": "same as F-PTR-255",
+   "rootClass": "DUPLICATE",
+   "repair": "fixed in wave-R batch via F-PTR-255 (theCap fallback)",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "enumerate same-class sites against the repaired authority/policy",
+     "evidenceIds": [
+      "EV-PTR-FIXR"
+     ],
+     "hitDispositions": [
+      "sibling sites enumerated"
+     ],
+     "coverageLimits": [
+      "fixture-injected or documented-latent reachability only"
+     ]
+    }
+   ],
+   "closeReason": "duplicate of F-PTR-255",
+   "counterexample": "same claim as F-PTR-255 -- independent rediscovery by INT lens"
+  }
+ ]
+}

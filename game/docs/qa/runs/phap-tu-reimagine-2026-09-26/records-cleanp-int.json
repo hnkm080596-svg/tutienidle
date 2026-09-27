@@ -1,0 +1,40 @@
+{
+ "verdict": "FINDINGS",
+ "pin": "2164df05",
+ "reviewer": "devin-9c46879f63f54e0cb58f5989ae3bf4a7",
+ "findings": [
+  {
+   "n": "LOW-1",
+   "severity": "Low",
+   "summary": "SkillResolverError -> null catch wraps executor.execute, not just resolver.resolve: a post-commit in-execute re-resolve throw (roster shrank mid-cast) would masquerade as a declined cast with cost/damage already applied; dormant (driveFollowUps:false, extras resolve pre-commit)",
+   "disposition": "fixed @29b4719c -- docblock records the dormant edge and the required faulted-after-commit state if follow-ups ever go live"
+  },
+  {
+   "n": "LOW-2",
+   "severity": "Low",
+   "summary": "grantBasicLandedIncome pays per landed hit; spec-consistent per-hit semantics but an authoring trap for a future multi-target ung_the basic",
+   "disposition": "fixed @29b4719c -- docblock records per-hit is the authored unit by design"
+  },
+  {
+   "n": "NIT-1",
+   "severity": "Nit",
+   "summary": "theBarBridge:113 battleEntity.maxThe ?? THE_BAR_MAX (5) vs engine theCap MAX_THE (100) on raw primaryEntityOverride paths",
+   "disposition": "rejected -- bridge fallback IS the authored spell cap (THE_BAR_MAX = SPELL_PATH_MAX_THE shared constant, correct for its element-gated scope); engine fallback is path-agnostic by construction and only hit on dev-path entities that skipped the unconditional production stamp"
+  },
+  {
+   "n": "NIT-2",
+   "severity": "Nit",
+   "summary": "catalogFor merge: root-id collisions across accumulated per-battle catalogs drop silently (only aux mismatches fault duplicate_id)",
+   "disposition": "rejected -- documented designed semantics: a root resolves by input.definition object reference, never by id, so the auxiliary owns the slot (empowered forms, composite picks); a divergent re-adapted root is unreachable (adapted cache keyed by the def object)"
+  },
+  {
+   "n": "COV-1",
+   "severity": "Nit",
+   "summary": "coverage note: routed charge-resolve replay on an empowered/composite chargedSkill and Trang special 30%-of-max routed cost verified by read, not exercised (no shipped def combines chargeTurns with empowerment/compositePicks)",
+   "disposition": "closed -- documented coverage limit on dormant lanes; exercised when authored"
+  }
+ ],
+ "notes": "INT lens: no Critical/High/Medium; routed lane, The economy, empowerment, windows/intercepts, reactive bypass, charge lifecycle, bound-marker sweeps, respec/persistence, HUD bridges, UI diffs all check out",
+ "testsRun": "type-check pass; vitest 107 files / 972 + 23 files / 272 tests PASS; no repros written (no confirmed defect)",
+ "filesReviewed": 50
+}

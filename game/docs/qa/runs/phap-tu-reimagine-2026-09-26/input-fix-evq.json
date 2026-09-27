@@ -1,0 +1,64 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "id": "EV-PTR-AUTQ",
+    "state": {
+     "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "status": "STALE",
+    "producer": "devin-392baa89f24d47bfa55f4c0e460c5fb5",
+    "startedAt": "2026-09-27T12:19:00Z",
+    "finishedAt": "2026-09-27T12:22:00Z",
+    "commandOrMethod": "AUT-Q review @29b4719c: authority lens on wave-P state -- 4 findings (1 medium, 2 low, 1 nit)",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "records-cleanq3.json",
+    "artifactHash": "248c1bf9f3ce15c7b485fb921f953c8070e679b931322ac8de9a71158085db79",
+    "claims": [
+     "AUT-Q findings recorded"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": [],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "id": "EV-PTR-INTQ",
+    "state": {
+     "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "status": "STALE",
+    "producer": "devin-045bbafdc1e04702b9adb34c47b4fff0",
+    "startedAt": "2026-09-27T12:19:00Z",
+    "finishedAt": "2026-09-27T12:22:00Z",
+    "commandOrMethod": "INT-Q review @29b4719c: adversarial integration lens on wave-P state -- 4 findings (3 low, 1 nit)",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "records-cleanq3.json",
+    "artifactHash": "248c1bf9f3ce15c7b485fb921f953c8070e679b931322ac8de9a71158085db79",
+    "claims": [
+     "INT-Q findings recorded"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": [],
+    "limitations": []
+   }
+  }
+ ]
+}

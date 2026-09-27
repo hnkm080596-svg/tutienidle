@@ -1,0 +1,26 @@
+{
+  "applied": [
+    "evidence:EV-PTR-FIXR (updated)",
+    "evidence:EV-PTR-CORR",
+    "evidence:EV-PTR-AUTR",
+    "evidence:EV-PTR-INTR",
+    "review:REV-PTR-COR-R1",
+    "review:REV-PTR-AUT-R1",
+    "review:REV-PTR-INT-R1",
+    "finding:F-PTR-254",
+    "finding:F-PTR-255",
+    "finding:F-PTR-256",
+    "finding:F-PTR-257",
+    "finding:F-PTR-258",
+    "finding:F-PTR-259",
+    "finding:F-PTR-260",
+    "finding:F-PTR-261",
+    "finding:F-PTR-262",
+    "finding:F-PTR-263",
+    "finding:F-PTR-264",
+    "finding:F-PTR-265",
+    "finding:F-PTR-266",
+    "finding:F-PTR-267",
+    "lesson:L-PTR-R-NAN-SIBLINGS"
+  ]
+}

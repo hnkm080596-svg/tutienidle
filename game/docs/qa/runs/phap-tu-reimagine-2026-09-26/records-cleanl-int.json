@@ -1,0 +1,8 @@
+{
+  "reviewer": "devin-c97ccf77529747a0834caf515ed59450",
+  "verdict": "FINDINGS -- 1 Low (confirmed by repro); 0 Critical/High/Medium",
+  "evidence": "npm ci clean; type-check PASS; 104 files / 1256 tests green; aggregate surface held under every reachable attack",
+  "findings": [
+    "F-INTL-01 (Low): target_hit_landed on an intent no deal_damage can mint throws SkillResolverError uncaught through resolveNextStep -- crashes the tick, bypasses castBlocked bookkeeping (zero shipped usage)"
+  ]
+}

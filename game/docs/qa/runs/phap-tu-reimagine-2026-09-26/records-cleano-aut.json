@@ -1,0 +1,49 @@
+{
+ "verdict": "FINDINGS",
+ "pin": "8b19829c",
+ "reviewer": "devin-efed1afcfa0243808670ec8eabf37278",
+ "findings": [
+  {
+   "n": "LOW-1",
+   "severity": "Low",
+   "summary": "applyPeriodicGrowth stale-snapshot feed emits buff_stacks_changed for removed instanceId (BuffSystem:1032-1058)"
+  },
+  {
+   "n": "LOW-2",
+   "severity": "Low",
+   "summary": "entity.maxThe dual write sites CombatBuild:242-246 vs TurnBattleAdapter:90-92 -- disjoint by caller convention only"
+  },
+  {
+   "n": "LOW-3",
+   "severity": "Low",
+   "summary": "TurnBattleAdapter:77-82 reactivePayloads docblock overstates dead fields; several consumed-but-unvalidated"
+  },
+  {
+   "n": "NIT-1",
+   "severity": "Nit",
+   "summary": "TheEconomy consumeThe single-write-site claim falsified by dormant tryPayProcCost inline write :95"
+  },
+  {
+   "n": "NIT-2",
+   "severity": "Nit",
+   "summary": "GameManagerTurnBattleOps:1201 'raw debit, no clamp' contradicts consumeResourceFor floor"
+  },
+  {
+   "n": "NIT-3",
+   "severity": "Nit",
+   "summary": "theScaling formula duplicated TBS:1914 vs SkillResolver:1409 (equivalent, dormant)"
+  },
+  {
+   "n": "NIT-4",
+   "severity": "Nit",
+   "summary": "empowerment duplicated gate documented latent SkillResolver:211-219; unreachable divergence"
+  },
+  {
+   "n": "NIT-5",
+   "severity": "Nit",
+   "summary": "theBarBridge:113 default THE_BAR_MAX=5 vs theCap MAX_THE=100 -- unreachable"
+  }
+ ],
+ "verification": "reviewer ran type-check + scoped suites",
+ "report": "verdict via session message"
+}

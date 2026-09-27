@@ -1,0 +1,32 @@
+{
+  "applied": [
+    "review:REV-PTR-COR-F1",
+    "review:REV-PTR-AUT-F1",
+    "review:REV-PTR-INT-F1",
+    "review:REV-PTR-NOV-1",
+    "finding:F-PTR-69",
+    "finding:F-PTR-70",
+    "finding:F-PTR-71",
+    "finding:F-PTR-72",
+    "finding:F-PTR-73",
+    "finding:F-PTR-74",
+    "finding:F-PTR-75",
+    "finding:F-PTR-76",
+    "finding:F-PTR-77",
+    "finding:F-PTR-78",
+    "finding:F-PTR-79",
+    "finding:F-PTR-80",
+    "finding:F-PTR-81",
+    "finding:F-PTR-82",
+    "evidence:EV-PTR-CORF",
+    "evidence:EV-PTR-AUTF",
+    "evidence:EV-PTR-INTF",
+    "evidence:EV-PTR-NOVF",
+    "evidence:EV-PTR-FIXF",
+    "lesson:L-PTR-CORF-GATE",
+    "lesson:L-PTR-INTF-BIND",
+    "lesson:L-PTR-AUTF-AUTH",
+    "lesson:L-PTR-CORF-STAMP",
+    "lesson:L-PTR-NOVF-BLOCK"
+  ]
+}

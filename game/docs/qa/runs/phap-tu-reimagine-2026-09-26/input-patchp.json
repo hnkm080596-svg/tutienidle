@@ -1,0 +1,100 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "id": "F-PTR-223",
+   "title": "preResolved replay blind to same-id empowerment: buildPhapTheVariant keeps variant.id===base.id so payloadDef.id!==rootDef.id never fires; resolver re-evaluates the threshold on live state; execution.theBurned/resolvedVariantId never ride the replay channel",
+   "state": {
+    "productStateId": "e8711f7cf3cc1612010031a8f1bd99f2555ea50cd128eb5aa17d4970c155fc88",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "subsystem": "core",
+   "duplicateOf": "F-PTR-213",
+   "rejectionReason": "Independent discovery of the same defect; see F-PTR-213 for the fix + seal.",
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "closedAt": "2026-09-27T11:55:00Z",
+   "severity": "Low",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnSkillPlanRuntime.ts",
+     "symbolOrSection": ":227-246",
+     "revision": "29b4719c",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/phap-tu/PhapTheVariants.ts",
+     "symbolOrSection": "buildPhapTheVariant",
+     "revision": "29b4719c",
+     "basis": "SOURCE"
+    }
+   ],
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTP"
+   ],
+   "closureReviewIds": [],
+   "status": "DUPLICATE_LINKED",
+   "classification": "REAL_DEFECT",
+   "reachability": "HYPOTHETICAL",
+   "actionable": true,
+   "discoveredBy": "cleanP AUT",
+   "expected": "the declare-side swap replays for every swapped cast (preResolved present)",
+   "actual": "variant.id===base.id so preResolved stays undefined; the resolver re-evaluates the threshold on live state",
+   "rootCause": "same-id empowerment keeps the payload id equal to the root id, so the replay detector never fires",
+   "rootClass": "CONTRACT_GAP",
+   "repair": "tracked under F-PTR-213 (same documented latent defect)",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "reachability enumerated against shipped data + runtime guards",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites"
+     ],
+     "coverageLimits": [
+      "assertion relies on shapes shipped data cannot author"
+     ]
+    }
+   ],
+   "closeReason": "duplicate linked to F-PTR-213",
+   "counterexample": "preResolved replay blind to same-id empowerment: buildPhapTheVariant keeps variant.id===base.id so payloadDef.id!==rootDef.id never fires; resolver re-evaluates the threshold on live state; execution.theBurned/resolvedVariantId never ride the replay channel"
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_INTEGRATION",
+    "id": "EV-PTR-FIXP2",
+    "state": {
+     "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "status": "STALE",
+    "producer": "coordinator",
+    "startedAt": "2026-09-27T10:30:00Z",
+    "finishedAt": "2026-09-27T11:50:00Z",
+    "commandOrMethod": "fix batch @29b4719c: intercept viability gate (NOVA-1), save element-kit coherence (NOVA-5), consumeThe floor, onLanded/oncePerCast + compositeCount define-time faults, 3 docblocks; type-check + eslint + 1264 scoped tests green; P15 ascii ratchet green",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "records-fixp2.json",
+    "artifactHash": "93caff63f1071976690a1f1e527ffb379064ebcf1cfd2c647ce4d18898de7e29",
+    "claims": [
+     "all actionable wave-P defects repaired @29b4719c; verification green"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": [],
+    "limitations": []
+   }
+  }
+ ]
+}

@@ -9,6 +9,7 @@ import type { ActionDamageInfo, HitResolveOptions } from '../ActionImpactSystem'
 import type { ActionTargeting, CombatVfxPresetId } from '../CombatAction'
 import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
 import { areaFor } from '../ActionTargetingSystem'
+
 import { entityGridPosition, type GridPosition } from '../BattleGrid'
 import { isCellInShape, type AoeShapeSpec } from './AoeShape'
 import { isActionAllowed } from './ActionValidator'
@@ -216,17 +217,49 @@ export interface TurnSkillDefinition {
    */
   theGainOnLandedCast?: number
   /**
-   * Extra The granted ONCE per cast action when any of its direct hits
-   * crits (same per-cast rule - a 5-target all-crit cast adds this
-   * once, not per target). Authored by the 'no' route profile.
+   * Phap Tu Reimagined (spec D8/F10) - mana cost expressed as a
+   * fraction of the caster's LIVE maxMp, evaluated at gate/consume
+   * time (never frozen at build). mana-only; mutually exclusive with
+   * resourceCost on the same def.
    */
-  theGainOnCrit?: number
+  resourceCostPercentOfMax?: number
   /**
-   * Phap Tu Reimagined Task 10 - ultimate empowerment. Attached at
-   * battle build by the orchestrator ONLY when the owning
-   * `linh_ngo_<godUltId>` node is held (the engine stays dumb - A8).
-   * At cast time, `currentThe >= theThreshold` swaps the RESOLVED
-   * payload to `empowered` while the root skill keeps cast
+   * Phap Tu Reimagined (spec D4/D5) - authored landed-lane ops spliced
+   * ahead of the derived ailment lanes inside the hit's consequence
+   * gate (the Phap The rider channel: the empowered element basic
+   * carries its element's rider here). Type-only import keeps the
+   * legacy def free of a skilldef module cycle.
+   *
+   * CONSUMED ONLY by the routed plan-runtime lane (TurnSkillPlanRuntime);
+   * the legacy engine-unit lane (runtime === undefined) has no consumer
+   * and silently ignores it -- authored defs with this field must run a
+   * battle carrying a runtime, or the rider is lost.
+   */
+  landedConsequences?: import('../../skilldef/AuthoredOperation').AuthoredSkillOperation[]
+  /**
+   * Phap Tu Reimagined (spec D7) - per-hit ADDITIVE elemental
+   * penetration points (the Kim rider). CONSUMED ONLY by the routed
+   * plan-runtime lane; the legacy engine-unit lane ignores it.
+   */
+  elementalPenetrationBonus?: number
+  /**
+   * Phap Tu Reimagined (spec D11, Kim Liet) - scale this hit's
+   * penetration by stacks of an ailment on the target: read BEFORE
+   * the hit resolves, never consuming. CONSUMED ONLY by the routed
+   * plan-runtime lane; the legacy engine-unit lane ignores it.
+   */
+  penetrationFromStacks?: {
+    ailmentId: string
+    perStack: number
+    scope?: 'own' | 'any'
+  }
+  /**
+   * Phap Tu Reimagined (spec D17) - Phap The empowerment. Stamped onto
+   * the resolved element basic at participant build by
+   * CultivationPathRegistry (buildPhapTheVariant) once the element is
+   * committed - no node id, the element IS the owner (A8: engine stays
+   * dumb). At cast time, `currentThe >= theThreshold` swaps the
+   * RESOLVED payload to `empowered` while the root skill keeps cast
    * count/cooldown identity (execution source 'empowered').
    */
   empowerment?: {
@@ -234,28 +267,29 @@ export interface TurnSkillDefinition {
     empowered: TurnSkillDefinition
   }
   /**
-   * The empowered form carries this: at commit, the caster's ENTIRE
-   * currentThe pool burns to 0 (a raised cap burns the whole pool, not
-   * just the threshold). The pre-consume amount is captured into
-   * `execution.theBurned` at DECLARE for theScaling (Task 13) - the
+   * DORMANT authored surface (route machinery retired -- spec D17): no
+   * producer can stamp this post-retirement. If reactivated: at commit,
+   * the caster's ENTIRE currentThe pool burns to 0 (a raised cap burns
+   * the whole pool, not just the threshold). The pre-consume amount is
+   * captured into `execution.theBurned` at DECLARE for theScaling - the
    * pool is already 0 by the time damage resolves post-commit.
    */
   consumesAllThe?: boolean
   /**
-   * Phap Tu Reimagined Task 13 - detonate (the 'dot' route's empowered
-   * expression, spec sec.4). After the direct component AND the normal
-   * ailment application land, consume every live ailment on each target
-   * whose BuffDefinition carries a `dot` effect (utility ailments are
-   * never touched); each pays (perTick x remainingTurns x stacks) x amp
-   * as direct damage, then re-seeds a FIXED 1 stack at the ailment's
+   * DORMANT authored surface (route machinery retired). Historical
+   * intent: after the direct component AND the normal ailment
+   * application land, consume every live ailment on each target whose
+   * BuffDefinition carries a `dot` effect (utility ailments are never
+   * touched); each pays (perTick x remainingTurns x stacks) x amp as
+   * direct damage, then re-seeds a FIXED 1 stack at the ailment's
    * AUTHORED duration with potency recomputed against the caster's
    * current stats. Re-seed is not an application event: no chance roll,
    * no ailmentStackBonus (spec O2/R2).
    */
   detonateDoT?: { amp: number }
   /**
-   * Phap Tu Reimagined Task 13 - nuke (the 'no' route's empowered
-   * expression, spec sec.4): the resolved damage packet scales by
+   * DORMANT authored surface (route machinery retired). Historical
+   * intent: the resolved damage packet scales by
    * (1 + theBurned/100 x coeff); theBurned is the pool captured at
    * declare before consumesAllThe zeroes it. Linear by design -
    * Truong The cap-raises are additive payoff, not diminishing.
@@ -396,8 +430,23 @@ const RESOURCE_FIELD: Record<
  * migration") - checks the resource pool directly, no per-path
  * consumption order. Real content mapping resolves this later.
  */
+/** Live resource requirement - the percentOfMax form resolves against
+    the entity's CURRENT maxMp at call time (spec F10: never frozen at
+    participant build), so the Special's gate and its consume see the
+    same number. percentOfMax is mana-pool semantics: any other
+    resourceType falls back to the flat resourceCost. */
+function requiredResourceFor(
+  entity: CombatEntity,
+  skill: Pick<TurnSkillDefinition, 'resourceType' | 'resourceCost' | 'resourceCostPercentOfMax'>,
+): number {
+  return skill.resourceType === 'mana' && skill.resourceCostPercentOfMax !== undefined
+    ? skill.resourceCostPercentOfMax * entity.stats.maxMp
+    : (skill.resourceCost ?? 0)
+}
+
 export function hasResourceFor(entity: CombatEntity, skill: TurnSkillDefinition): boolean {
-  if (!skill.resourceType || skill.resourceType === 'none' || !skill.resourceCost) {
+  const required = requiredResourceFor(entity, skill)
+  if (!skill.resourceType || skill.resourceType === 'none' || required <= 0) {
     return true
   }
 
@@ -405,20 +454,35 @@ export function hasResourceFor(entity: CombatEntity, skill: TurnSkillDefinition)
 
   // currentThe is optional on CombatEntity - an uninitialized pool reads as
   // undefined, which correctly blocks the cast (undefined >= cost is false).
-  return (entity[field] ?? 0) >= skill.resourceCost
+  return (entity[field] ?? 0) >= required
 }
 
 export function consumeResourceFor(
   entity: CombatEntity,
-  skill: Pick<TurnSkillDefinition, 'resourceType' | 'resourceCost'>,
+  skill: Pick<TurnSkillDefinition, 'resourceType' | 'resourceCost' | 'resourceCostPercentOfMax'>,
 ): void {
-  if (!skill.resourceType || skill.resourceType === 'none' || !skill.resourceCost) {
+  const required = requiredResourceFor(entity, skill)
+  // Non-finite required (NaN from corrupt percentOfMax/cost data) skips the
+  // `<= 0` floor and bricks the pool on write -- same class the TheEconomy
+  // isFinite guards close for 'the'.
+  if (!skill.resourceType || skill.resourceType === 'none' || !Number.isFinite(required) || required <= 0) {
     return
   }
 
-  const field = RESOURCE_FIELD[skill.resourceType]
+  if (skill.resourceType === 'the') {
+    // Clamped to the pool: this raw-debit lane's floor-at-zero contract
+    // holds even when a concurrent drain emptied it mid-commit.
+    entity.currentThe = Math.max(0, (entity.currentThe ?? 0) - required)
+    return
+  }
 
-  entity[field] -= skill.resourceCost
+  // Pool never goes negative: a drain between the affordability gate and
+  // this commit must not write a negative pool (pay-or-skip lanes fault
+  // instead; this raw-debit lane floors at zero).
+  entity[RESOURCE_FIELD[skill.resourceType]] = Math.max(
+    0,
+    (entity[RESOURCE_FIELD[skill.resourceType]] ?? 0) - required,
+  )
 }
 
 export interface SelectedAction {
@@ -438,9 +502,10 @@ export interface SelectedAction {
  *
  * source:
  * - 'original'   - a normal slot/basic cast (root === payload)
- * - 'empowered'  - the root ult's empowered payload resolved
- *                  (root = the chain-E slot's root skill; the god-ult def
- *                  is payload only - never gains cast count/cooldown)
+ * - 'empowered'  - a kit-basic cast resolved through its Phap The
+ *                  empowered variant (variants.empowerment): the root
+ *                  basic owns cast count/cooldown; the empowered def is
+ *                  payload only
  * - 'composite'  - a composite cast whose payload was picked from a
  *                  pool (e.g. van_phap_tuy_tam); the pick never gains
  *                  its own cast count
@@ -459,9 +524,13 @@ export interface TurnSkillExecution {
   resolvedSkill: TurnSkillDefinition | null
   source: TurnExecutionSource
   /**
-   * Task 10 - the The pool captured pre-consume when a `consumesAllThe`
-   * payload commits. Read by theScaling (Task 13); undefined for any
-   * execution that did not burn the pool.
+   * DORMANT (route machinery retired): the The pool captured
+   * pre-consume when a `consumesAllThe` payload commits -- the producer
+   * is live at TurnBattleSystem applyCast (stamped whenever the
+   * resolved payload carries the flag); dormant because no authored
+   * def carries `consumesAllThe`, not because the stamp is dead.
+   * Read by theScaling; undefined for any execution that did not
+   * burn the pool.
    */
   theBurned?: number
   /**

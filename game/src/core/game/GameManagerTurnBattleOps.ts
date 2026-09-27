@@ -760,8 +760,15 @@ export class GameManagerTurnBattleOps {
   private awaitStep(signal: TurnStepSignal, done: () => void): void {
     const timer = setTimeout(() => {
       this.pendingStepDone[signal] = undefined
-      this.driveStepWork(signal)
-      done()
+      // The step must still complete when the acknowledge lane throws a
+      // domain fault -- otherwise the turn token stays claimed and
+      // advanceCombat early-returns forever (silent freeze on a timer
+      // thread). done() runs first, then the fault propagates loud.
+      try {
+        this.driveStepWork(signal)
+      } finally {
+        done()
+      }
     }, ANIMATION_FALLBACK_MS)
 
     this.pendingStepTimers.push(timer)
@@ -1199,7 +1206,7 @@ export class GameManagerTurnBattleOps {
       resource: new EntityResourceAdapter(resolveEntity, {
         // skilldef M4 -- skill costs ride consume_resource ops.
         // 'mana' -> consumeResourceFor (the mana-cost writer: raw
-        // debit, no clamp, the insufficient check gates first);
+        // debit floored at zero, the insufficient check gates first);
         // 'ward' -> EntityVitalsSystem spend/grant (the vitals
         // authority owns shield mutation, never a raw field write).
         mana: {

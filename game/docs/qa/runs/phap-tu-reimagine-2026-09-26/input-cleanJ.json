@@ -1,0 +1,972 @@
+{
+ "records": [
+  {
+   "kind": "review",
+   "id": "REV-PTR-COR-J1",
+   "state": {
+    "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 11,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-06b4d67abc3748aba7f064e6adce4be6",
+   "contextId": "ctx-06b4d67a",
+   "model": "swe-2",
+   "role": "clean-correctness",
+   "inputBundleHash": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-27T04:02:00Z",
+   "sealedAt": "2026-09-27T04:49:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-CORJ"
+   ],
+   "findingIds": [
+    "F-PTR-146",
+    "F-PTR-147",
+    "F-PTR-149"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "review",
+   "id": "REV-PTR-AUT-J1",
+   "state": {
+    "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 11,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-6758365aef89445394f8dafd8b44883a",
+   "contextId": "ctx-6758365a",
+   "model": "swe-2",
+   "role": "clean-authority",
+   "inputBundleHash": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-27T04:02:00Z",
+   "sealedAt": "2026-09-27T04:34:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTJ"
+   ],
+   "findingIds": [
+    "F-PTR-151",
+    "F-PTR-152",
+    "F-PTR-153"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "review",
+   "id": "REV-PTR-INT-J1",
+   "state": {
+    "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 11,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-1f5bce20a1244f2f88b59d2144b24d3c",
+   "contextId": "ctx-1f5bce20",
+   "model": "swe-2",
+   "role": "clean-integration",
+   "inputBundleHash": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-27T04:02:00Z",
+   "sealedAt": "2026-09-27T04:40:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-INTJ"
+   ],
+   "findingIds": [
+    "F-PTR-145",
+    "F-PTR-148",
+    "F-PTR-150"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_INTEGRATION",
+    "id": "EV-PTR-CORJ",
+    "state": {
+     "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "status": "STALE",
+    "producer": "devin-06b4d67abc3748aba7f064e6adce4be6",
+    "startedAt": "2026-09-27T04:02:00Z",
+    "finishedAt": "2026-09-27T04:49:00Z",
+    "commandOrMethod": "cleanJ COR review @0c6b72f2: read sites + type-check + scoped vitest 927 pass; 2 QA repros written in reviewer worktree",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "records-corj.json",
+    "artifactHash": "eb2604cc52606eb93b26bafdcbb44c851d830b65e84bfbbf5e00d5e287f43e2e",
+    "claims": [
+     "1 Medium + 1 Low + 1 Nit on clean-I fix state"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": [],
+    "limitations": [
+     "reviewer self-report",
+     "read-only worktree"
+    ]
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_INTEGRATION",
+    "id": "EV-PTR-AUTJ",
+    "state": {
+     "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "status": "STALE",
+    "producer": "devin-6758365aef89445394f8dafd8b44883a",
+    "startedAt": "2026-09-27T04:02:00Z",
+    "finishedAt": "2026-09-27T04:34:00Z",
+    "commandOrMethod": "cleanJ AUT review @0c6b72f2: writer/reader census + type-check + scoped vitest 464 pass",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "records-autj.json",
+    "artifactHash": "dc4274bef20fafdd7a4b601a5f9d08fd1416ec1a9435138da51ba14d68de13d4",
+    "claims": [
+     "2 Low + 1 Nit; SEAL-clean of Medium+"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": [],
+    "limitations": [
+     "reviewer self-report",
+     "source/static review only"
+    ]
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_INTEGRATION",
+    "id": "EV-PTR-INTJ",
+    "state": {
+     "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "status": "STALE",
+    "producer": "devin-1f5bce20a1244f2f88b59d2144b24d3c",
+    "startedAt": "2026-09-27T04:02:00Z",
+    "finishedAt": "2026-09-27T04:40:00Z",
+    "commandOrMethod": "cleanJ INT review @0c6b72f2: adversarial lane inspection + repro pin in reviewer worktree",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "records-intj.json",
+    "artifactHash": "a1cb8f3a9e3e68ba6e344a8029978c9e840239163224bf80fe843c87f23a3e09",
+    "claims": [
+     "1 Medium + 1 Low + 1 Nit"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": [],
+    "limitations": [
+     "reviewer self-report"
+    ]
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_INTEGRATION",
+    "id": "EV-PTR-FIXJ",
+    "state": {
+     "productStateId": "20f373d4864085a3be6f76be88ebd1cd4ad5c94c0bd3f8636c7654949f9cc889",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "status": "CURRENT",
+    "producer": "coordinator-1021454",
+    "startedAt": "2026-09-27T04:58:00Z",
+    "finishedAt": "2026-09-27T04:58:00Z",
+    "commandOrMethod": "cleanJ fix batch @11e10f2c: apply edits + npm run type-check + vitest turn/skilldef/buff2/ascii 930 pass",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "records-fixj.json",
+    "artifactHash": "884c3f17dfe8e3d1822a72343a998b0a30f99e1740942542bcc9d67d939c318e",
+    "claims": [
+     "9 clean-J findings closed: 2 Medium fixed (charge-followup dead queue + unrouted charge-resolve castBlocked), 7 Low/Nit fixed, 2 duplicate-closed"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": [],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-145",
+   "title": "queued repeat/multicast exec of a chargeTurns>0 def resolves to silent no-op (dead queue slot)",
+   "state": {
+    "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "enqueueFollowUpExecutions",
+     "revision": "0c6b72f2",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanJ INT (F1)",
+   "counterexample": "self-scoped charge-init (affected=[actor], isCharging=false, commitsCast=true) + repeatCasts>0 queues an exec that the apply gate skips (chargeTurns>0 && !isCharging)",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-INTJ",
+    "EV-PTR-FIXJ"
+   ],
+   "actual": "queued exec applies nothing -- dead queue slot",
+   "expected": "no queued execs off a charge-init declare (charge-init never carries the payload resolve)",
+   "rootCause": "queue guard keyed on isCharging only; charge-init carries isCharging=false",
+   "rootClass": "DORMANT_COMBO",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "registry fault subcasts x cadence.chargeTurns + queue gate on chargeTurns>0 + contract pin (self-scoped charge+repeat def leaves queuedExecutions empty)",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "REAL_DEFECT",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T04:58:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-146",
+   "title": "unrouted charge-RESOLVE arm never stamps castBlocked and reports with a dead label; tail ally window fans procs on a no-op",
+   "state": {
+    "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Medium",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "charge-resolve unrouted arm ~2020-2029",
+     "revision": "0c6b72f2",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanJ COR (F1)",
+   "counterexample": "adapter-unsupported charged def (or basic-slot armed def unresolvable at resolve) -> reportUnroutedCast label pendingChargedSkillId ?? action?.skillId is always undefined -> silent early-return AND resolveAllyActionWindow still opens vs stale affected",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-CORJ",
+    "EV-PTR-FIXJ"
+   ],
+   "actual": "no castBlocked stamp; window rolls on a fizzle; report silent when chargedSkill==null",
+   "expected": "parity with unrouted normal casts + unrouted charge-init: stamp castBlocked so emit/follow-up/window gates reject the fizzle; report carries the armed charged id",
+   "rootCause": "unrouted arm predates the castBlocked invariant (I2 batch stamped normal+init lanes, missed the resolve arm)",
+   "rootClass": "MISSING_BLOCK_SIGNAL",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "stamp castBlocked unconditionally in the unrouted arm; label = chargedSkill?.id ?? declared.skillId (armed charged id rides declared.skillId on resolve turns)",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "REAL_DEFECT",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T04:58:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-147",
+   "title": "registry lacks repeatCasts/multicast x chargeTurns parity fault (sibling of consumesAllThe/empowerment faults)",
+   "state": {
+    "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "actionable": true,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/skilldef/SkillDefinitionRegistry.ts",
+     "symbolOrSection": "validateSkillDefinition",
+     "revision": "0c6b72f2",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanJ COR (F2)",
+   "counterexample": "charged root with subcasts.count/multicast passes validation; its queued execs fully no-op at apply/commit/coverage/window gates",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-CORJ",
+    "EV-PTR-FIXJ"
+   ],
+   "actual": "dead authored combos authorable",
+   "expected": "parity faults exist for consumesAllThe/empowerment x chargeTurns only",
+   "rootCause": "fault added for consumesAllThe/empowerment; subcasts fields missed",
+   "rootClass": "VALIDATION_GAP",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "closed via F-PTR-145 registry fault (subcasts x chargeTurns mutual exclusion)",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "duplicateOf": "F-PTR-145",
+   "exception": null,
+   "classification": "REAL_DEFECT",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T04:58:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-148",
+   "title": "resolveInterceptWindow consumes its once-roll + writes suppressed marker/ward grant pre-route, before castBlocked is knowable",
+   "state": {
+    "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "resolveInterceptWindow ~3131",
+     "revision": "0c6b72f2",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanJ INT (F2)",
+   "counterexample": "a blocker-capable enemy cast reaching the Ho window would burn the protector once-roll and grant ward on a cast that never lands",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-INTJ",
+    "EV-PTR-FIXJ"
+   ],
+   "actual": "persistent state written for a potentially-blocked cast",
+   "expected": "unreachable today (enemy casts carry no resource cost; plan precheck cannot decline them) -- ordering hazard documented at the window",
+   "rootCause": "window ordering predates castBlocked; roll precedes routability",
+   "rootClass": "ORDERING_DEFECT",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "docblock pins the latent ordering hazard + its unreachable precondition (move roll behind routability or roll back writes when a blocker-capable cast reaches the lane)",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "REAL_DEFECT",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T04:58:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-149",
+   "title": "adapter non-mana resourceCostPercentOfMax with no flat resourceCost resolves free and reports a lying \"flat resourceCost applies\" warn",
+   "state": {
+    "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/skilldef/LegacySkillAdapter.ts",
+     "symbolOrSection": "percent cost narrow ~262",
+     "revision": "0c6b72f2",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanJ COR (F3)",
+   "counterexample": "def {resourceCostPercentOfMax>0, resourceType!=mana, no resourceCost} -> percent skipped, flat omitted -> free cast, warn claims flat applies",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-CORJ",
+    "EV-PTR-FIXJ"
+   ],
+   "actual": "silent free cast behind a misleading report",
+   "expected": "report distinguishes flat-cost fallback from true free cast",
+   "rootCause": "warn text assumed a flat cost always exists",
+   "rootClass": "MESSAGE_DRIFT",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "report now branches: flat applies vs FREE cast authoring defect (registry already faults cost.percentOfMax x non-mana for the new def shape)",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "REAL_DEFECT",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T04:58:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-150",
+   "title": "unrouted charge-resolve lane reports but does not stamp castBlocked (ally window still rolls)",
+   "state": {
+    "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "actionable": true,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": "charge-resolve unrouted arm ~2020-2029",
+     "revision": "0c6b72f2",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanJ INT (F3)",
+   "counterexample": "same site as F-PTR-146",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-INTJ",
+    "EV-PTR-FIXJ"
+   ],
+   "actual": "window fires on unrouted fizzle",
+   "expected": "castBlocked stamped, window gated",
+   "rootCause": "duplicate report of F-PTR-146",
+   "rootClass": "DUPLICATE",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "closed via F-PTR-146 fix",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "duplicateOf": "F-PTR-146",
+   "exception": null,
+   "classification": "REAL_DEFECT",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T04:58:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-151",
+   "title": "stale route-era docblocks on the spellPath persisted-state authority after route retirement",
+   "state": {
+    "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/player/Player.ts",
+     "symbolOrSection": "docblocks ~138-139, :431; CultivationPathSystem.ts:398; saveShapeValidation.ts:820",
+     "revision": "0c6b72f2",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanJ AUT (F1)",
+   "counterexample": "docblocks still claim {element,route} atomic commit / element-route-way gates / respec-route-switch clawback though commitSpellPathElement writes element only and v87 rejects route keys",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTJ",
+    "EV-PTR-FIXJ"
+   ],
+   "actual": "authority docs describe retired machinery",
+   "expected": "docs match the element-only contract",
+   "rootCause": "docblocks not updated with route retirement",
+   "rootClass": "MESSAGE_DRIFT",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "docblocks rewritten to element-only wording (4 sites)",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "REAL_DEFECT",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T04:58:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-152",
+   "title": "dead spend-authority exports tryPayProcCost/onProcSuccess in TheEconomy.ts (zero production callers; live lane gates inline + adapter consume)",
+   "state": {
+    "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/the-tu/TheEconomy.ts",
+     "symbolOrSection": "tryPayProcCost/onProcSuccess",
+     "revision": "0c6b72f2",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanJ AUT (F2)",
+   "counterexample": "only TurnBattleSystem.theEconomy.test.ts calls them; live proc lane gates (currentThe>=cost) inline and spends via settleOp(consume_resource) -> EntityResourceAdapter",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTJ",
+    "EV-PTR-FIXJ"
+   ],
+   "actual": "two spend semantics coexist unenforced",
+   "expected": "one spend authority or documented dormancy",
+   "rootCause": "spec-4.1 authored lane never wired; live lane took the adapter path",
+   "rootClass": "DEAD_CODE",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "docblocks mark the lane DORMANT (pinned by theEconomy.test.ts; wire or remove when the pay-per-attempt lane lands)",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "REAL_DEFECT",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T04:58:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-153",
+   "title": "engine-lane consumeResourceFor debits without floor or fault -- can write a negative pool (latent divergence from pay-or-skip scheduler lane)",
+   "state": {
+    "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Low",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnSkillAction.ts",
+     "symbolOrSection": "consumeResourceFor ~437",
+     "revision": "0c6b72f2",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "cleanJ AUT (F3)",
+   "counterexample": "pool shrink between affordability gate and commit (proc spend/drain) writes negative pool on the raw-debit lane",
+   "status": "CLOSED",
+   "closureReviewIds": [],
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-PTR-AUTJ",
+    "EV-PTR-FIXJ"
+   ],
+   "actual": "raw debit writes negative pool",
+   "expected": "pool floors at zero on the raw-debit lane (pay-or-skip lanes fault instead)",
+   "rootCause": "raw-debit lane predates pay-or-skip; never floored",
+   "rootClass": "CONTRACT_GAP",
+   "subsystem": "battle",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "repo-wide grep for same pattern/seam",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no live siblings outside flagged sites -- swept during adjudication"
+     ],
+     "coverageLimits": [
+      "source-tree scan only"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "entity[field] = Math.max(0, ...) + contract comment",
+   "pinEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "duplicateOf": null,
+   "exception": null,
+   "classification": "REAL_DEFECT",
+   "rejectionReason": null,
+   "closedAt": "2026-09-27T04:58:00Z",
+   "closeReason": "FIXED"
+  },
+  {
+   "kind": "lesson",
+   "version": 1,
+   "supersedes": null,
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-reimagine-2026-09-26",
+   "missedInvariantIds": [],
+   "exclusions": [],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "guidance": null,
+   "id": "L-PTR-J-DEAD-FOLLOWUP",
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PTR-145",
+    "F-PTR-147"
+   ],
+   "rootClass": "DORMANT_COMBO",
+   "escapeReason": "follow-up queue keyed on isCharging only; charge-init (isCharging=false, commitsCast) slipped repeats/multicasts into the queue as dead slots",
+   "applicability": [
+    "queue gating on composite predicates",
+    "mutual-exclusion fault parity across cadence fields"
+   ],
+   "proposedProtection": [
+    "gate follow-up queues on every no-payload carry (isCharging OR chargeTurns root)",
+    "every dormant field combo gets a registry fault or a runtime pin"
+   ],
+   "capabilityDelta": "none -- captured guidance only"
+  },
+  {
+   "kind": "lesson",
+   "version": 1,
+   "supersedes": null,
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-reimagine-2026-09-26",
+   "missedInvariantIds": [],
+   "exclusions": [],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "guidance": null,
+   "id": "L-PTR-J-FIZZLE-SIGNAL",
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PTR-146",
+    "F-PTR-150"
+   ],
+   "rootClass": "MISSING_BLOCK_SIGNAL",
+   "escapeReason": "unrouted lanes must stamp the blocked signal, not just report -- a lane that fizzles without castBlocked feeds downstream windows/queues as a live cast",
+   "applicability": [
+    "every unrouted/declined cast arm",
+    "report labels read at call time (pending ids cleared before use)"
+   ],
+   "proposedProtection": [
+    "unrouted arms always stamp castBlocked",
+    "report labels capture the armed id at arm time, not via cleared fields"
+   ],
+   "capabilityDelta": "none -- captured guidance only"
+  },
+  {
+   "kind": "lesson",
+   "version": 1,
+   "supersedes": null,
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-reimagine-2026-09-26",
+   "missedInvariantIds": [],
+   "exclusions": [],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "guidance": null,
+   "id": "L-PTR-J-LATENT-HAZARD",
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PTR-148",
+    "F-PTR-153"
+   ],
+   "rootClass": "ORDERING_DEFECT",
+   "escapeReason": "pre-route state consumption + un-floored raw debits are latent divergences only reachable via dormant lanes",
+   "applicability": [
+    "windows that consume persistent state before routability",
+    "raw-debit lanes parallel to pay-or-skip"
+   ],
+   "proposedProtection": [
+    "document the ordering hazard + its unreachable precondition at the site",
+    "raw-debit lanes floor at zero with a contract comment"
+   ],
+   "capabilityDelta": "none -- captured guidance only"
+  },
+  {
+   "kind": "lesson",
+   "version": 1,
+   "supersedes": null,
+   "incidentEvidenceIds": [],
+   "originatingRun": "phap-tu-reimagine-2026-09-26",
+   "missedInvariantIds": [],
+   "exclusions": [],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [
+    "EV-PTR-FIXJ"
+   ],
+   "guidance": null,
+   "id": "L-PTR-J-REPORT-TRUTH",
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-PTR-149",
+    "F-PTR-151",
+    "F-PTR-152"
+   ],
+   "rootClass": "MESSAGE_DRIFT",
+   "escapeReason": "warns/docblocks drifted behind the lanes they describe -- \"flat applies\" on a free cast, route-era docblocks on the element-only authority, spend exports with no callers",
+   "applicability": [
+    "loud-report convention sites",
+    "authority docblocks after retirement",
+    "dead dual-authority exports"
+   ],
+   "proposedProtection": [
+    "warn text states the true outcome (free cast = authoring defect)",
+    "docblocks rewritten when semantics change",
+    "dead exports marked DORMANT with the pinned test that keeps them"
+   ],
+   "capabilityDelta": "none -- captured guidance only"
+  }
+ ]
+}

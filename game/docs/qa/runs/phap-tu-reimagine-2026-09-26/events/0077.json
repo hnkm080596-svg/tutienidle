@@ -1,0 +1,31 @@
+{
+  "applied": [
+    "evidence:EV-PTR-NOVP",
+    "evidence:EV-PTR-AUTP",
+    "evidence:EV-PTR-INTP",
+    "evidence:EV-PTR-FIXP2",
+    "review:REV-PTR-NOV-P1",
+    "review:REV-PTR-AUT-P1",
+    "review:REV-PTR-INT-P1",
+    "finding:F-PTR-223",
+    "finding:F-PTR-224",
+    "finding:F-PTR-225",
+    "finding:F-PTR-226",
+    "finding:F-PTR-227",
+    "finding:F-PTR-228",
+    "finding:F-PTR-229",
+    "finding:F-PTR-230",
+    "finding:F-PTR-231",
+    "finding:F-PTR-232",
+    "finding:F-PTR-233",
+    "finding:F-PTR-234",
+    "finding:F-PTR-235",
+    "lesson:L-PTR-P-PHANTOM-PAYOUT",
+    "lesson:L-PTR-P-SAVE-COHERENCE",
+    "lesson:L-PTR-P-AUTHORITY-GUARD",
+    "lesson:L-PTR-P-DEAD-FIELDS (updated)",
+    "lesson:L-PTR-P-DESIGNED-SEMANTICS (updated)",
+    "lesson:L-PTR-P-NARROWER-CONTRACT (updated)",
+    "lesson:L-PTR-P-DEDUP-COVERAGE"
+  ]
+}

@@ -1,0 +1,161 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "id": "EV-MRG-CLO1",
+    "state": {
+     "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+     "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+     "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "status": "CURRENT",
+    "producer": "devin-6a7a3ea864034308b5b8a1382db6b7cb",
+    "startedAt": "2026-09-27T19:05:00Z",
+    "finishedAt": "2026-09-27T19:15:00Z",
+    "commandOrMethod": "CLO seal @d9e7b7fc: F-MRG-01 4 NOVA-1 pins exist + executed (28/28 green, spy lane fires); F-MRG-02 docblock accurate, zero consumesAllThe producers; F-MRG-03 fill lane verified incl scratch vitest 7/7 (PlayerHudLayer.test.ts runs on reviewer VM, 8/8)",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "clo-verdict.txt",
+    "artifactHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "claims": [
+     "all 3 merge-QA fixes verified real and correct on d9e7b7fc",
+     "no new defects found"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": [],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "review",
+   "id": "REV-MRG-CLO-1",
+   "state": {
+    "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+    "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+    "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 2,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-6a7a3ea864034308b5b8a1382db6b7cb",
+   "contextId": "sealed-child-6a7a3ea864034308b5b8a1382db6b7cb",
+   "role": "closure",
+   "model": "swe-2",
+   "inputBundleHash": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "startedAt": "2026-09-27T19:05:00Z",
+   "sealedAt": "2026-09-27T19:15:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-MRG-CLO1"
+   ],
+   "findingIds": [
+    "F-MRG-01",
+    "F-MRG-02",
+    "F-MRG-03"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-MRG-04",
+   "title": "no repo pin test for the fill lane (ung-the >12-pip HUD path)",
+   "state": {
+    "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+    "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+    "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "COVERAGE_GAP",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/game/scenes/combat/PlayerHudLayer.ts",
+     "symbolOrSection": "updateThe",
+     "revision": "d9e7b7fc",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-6a7a3ea864034308b5b8a1382db6b7cb",
+   "counterexample": "pre-existing: fill lane verified only by throwaway scratch vitest during CLO; PlayerHudLayer.test.ts has no >12-max case",
+   "expected": "a committed pin test covering the fill lane",
+   "actual": "no committed coverage",
+   "status": "OBSERVED",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-MRG-CLO1"
+   ],
+   "closureReviewIds": [],
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "siblingFindingIds": [],
+   "subsystem": "presentation",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "repair": null,
+   "rootCause": "pre-existing, not introduced by the merge",
+   "rootClass": "PRE_EXISTING",
+   "siblingSearch": [],
+   "closedAt": null,
+   "closeReason": null
+  },
+  {
+   "kind": "finding",
+   "id": "F-MRG-05",
+   "title": "updateThe setVisible(true) clobbers group.visible on hide->show transitions",
+   "state": {
+    "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+    "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+    "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/game/scenes/combat/PlayerHudLayer.ts",
+     "symbolOrSection": "updateThe",
+     "revision": "d9e7b7fc",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "devin-6a7a3ea864034308b5b8a1382db6b7cb",
+   "counterexample": "pre-existing: fill.setVisible on the The group can re-show a group hidden by parent visibility",
+   "expected": "visibility restore honors parent/group hide state",
+   "actual": "direct setVisible without intermediate check",
+   "status": "OBSERVED",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-MRG-CLO1"
+   ],
+   "closureReviewIds": [],
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "siblingFindingIds": [],
+   "subsystem": "presentation",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "repair": null,
+   "rootCause": "pre-existing, not introduced by the merge",
+   "rootClass": "PRE_EXISTING",
+   "siblingSearch": [],
+   "closedAt": null,
+   "closeReason": null
+  }
+ ]
+}

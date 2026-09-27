@@ -48,7 +48,6 @@ import {
   TRO_KICH,
   TRONG_PHAN_KICH,
 } from '../../data/skill/TheTuSkills'
-import { PHAP_TU_EMPOWERED_ULTS } from '../../data/skill/PhapTuEmpoweredUlts'
 
 // P1-M2 - the skill-id universe ownedContent refs resolve against: the
 // learnable template catalog (SKILLS) plus every authored
@@ -73,9 +72,7 @@ const KNOWN_SKILL_IDS: ReadonlySet<string> = new Set<string>([
   PHAN_KICH.id,
   TRO_KICH.id,
   TRONG_PHAN_KICH.id,
-  ...Object.values(PHAP_TU_EMPOWERED_ULTS).flatMap((byVariant) =>
-    Object.values(byVariant).map((def) => def.id),
-  ),
+  // Phap Tu empowered ults retired with the chain kit (Reimagined).
 ])
 
 const ALL_NODES: readonly ProgressionNode[] = [

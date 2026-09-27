@@ -1,0 +1,63 @@
+{
+  "artifact": "cleanP COR reviewer verdict summary",
+  "run": "phap-tu-reimagine-2026-09-26",
+  "reviewer": "devin-90611d3038a944379da50395345ae39f",
+  "reviewerRole": "clean-correctness",
+  "pin": "2164df05",
+  "productStateId": "e8711f7cf3cc1612010031a8f1bd99f2555ea50cd128eb5aa17d4970c155fc88",
+  "verdict": "FINDINGS",
+  "findings": [
+    {
+      "n": 1,
+      "severity": "Low",
+      "file": "src/core/skilldef/SkillExecutor.ts:189-192 + TurnSkillPlanRuntime.ts:298-302",
+      "claim": "compositePool member not kind==='active' throws SkillExecutorError escaping the SkillResolverError->null catch; crashes the tick instead of a loud decline",
+      "disposition": "REJECTED -- dead defensive code: ActiveSkillDefinition.kind is the 'active' literal and adapted catalogs hold actives only, so require(extraId) cannot return a passive; a pool ref outside the registry already fails unknown_reference at build and declines as unsupported"
+    },
+    {
+      "n": 2,
+      "severity": "Low",
+      "file": "src/core/battle/turn/TurnBattleSystem.ts:2229-2241",
+      "claim": "'attack' emit moved after tryPlanCast and gated on !castBlocked; ordering change vs legacy",
+      "disposition": "REJECTED -- verified safe by the reviewer's own consumer census (BattleMetrics.onAttack correctly excludes blocked casts; PassiveSystem 'attack' triggers are order-insensitive; presentation events read-only); the change is the intended blocked-cast fix"
+    },
+    {
+      "n": 3,
+      "severity": "Low",
+      "file": "src/core/battle/turn/TurnSkillAction.ts:402-411 + LegacySkillAdapter.ts:265-297",
+      "claim": "(a) maxMp debuffed to 0 -> required<=0 -> free percent cast; (b) resourceCostPercentOfMax mutually exclusive with resourceCost per docblock but unenforced -- both set on a mana def silently drops the flat cost",
+      "disposition": "(a) REJECTED -- percent-of-0 is arithmetically 0; hasResourceFor(required<=0)=true is the correct afford check; (b) FIXED -- adapter now reports the co-authored pair as an authoring defect @068c7360"
+    },
+    {
+      "n": 4,
+      "severity": "Nit",
+      "file": "src/core/battle/turn/TurnBattleSystem.ts:1490",
+      "claim": "armedCharged resolves chargedSkill against special/ultimate only; a hypothetical chargeTurns basic whiffs silently instead of resolving",
+      "disposition": "FIXED -- resolution chain extended to actor.basic.id @068c7360"
+    },
+    {
+      "n": 5,
+      "severity": "Nit",
+      "file": "src/core/skilldef/ScalarExpression.ts:221-227",
+      "claim": "stacks_below arm added to evaluateSkillCondition which has no production callers (executor consumes evaluateResolvedCondition)",
+      "disposition": "FIXED -- dormant-parity docblock on the entry point @068c7360"
+    },
+    {
+      "n": 6,
+      "severity": "Nit",
+      "file": "src/core/battle/ActionImpactSystem.ts:76",
+      "claim": "HitResolveOptions.isPrimary is a required field with zero readers; the secondaryPercent it references does not exist",
+      "disposition": "FIXED -- dead required field removed @068c7360"
+    },
+    {
+      "n": 7,
+      "severity": "Nit",
+      "file": "src/game/scenes/combat/PlayerHudLayer.ts:371-374",
+      "claim": "phapTheLabel positions right of the bar with no overflow guard",
+      "disposition": "REJECTED -- cosmetic only; right-of-bar placement is the designed layout; overflow requires degenerate widths"
+    }
+  ],
+  "testsRun": "npm ci; npm run type-check PASS; npx vitest run src/core/buff2 src/core/skilldef src/core/battle src/core/the-tu -- 130 files / 1224 tests PASS",
+  "filesReviewed": 91,
+  "priorFindingsVisible": false
+}

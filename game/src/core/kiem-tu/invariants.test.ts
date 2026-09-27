@@ -57,9 +57,6 @@ const PATH_RUNTIME_STUB_DEPS = {
   nodeRegistry: { getAll: () => [] },
   getNodeLevel: () => 0,
   getSpellPathElement: () => undefined,
-  routeProfileProvider: () => {
-    throw new Error('unused')
-  },
 } as unknown as CultivationPathRuntimeDeps
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
