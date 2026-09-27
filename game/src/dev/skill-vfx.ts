@@ -17,7 +17,7 @@ const presetInput = element<HTMLSelectElement>('preset')
 const outcomeInput = element<HTMLSelectElement>('outcome')
 for (const id of ['ngu_kiem_flight', 'slash', 'earth_shockwave', 'holy_radiance'])
   presetInput.add(new Option(t(id), id))
-for (const id of ['hit', 'miss', 'multi', 'combo', 'empty'])
+for (const id of ['hit', 'miss', 'intercept', 'sourceDeath', 'multi', 'combo', 'empty'])
   outcomeInput.add(new Option(t(id), id))
 for (const id of ['release', 'cruise', 'acceleration', 'impact', 'recall']) {
   const item = document.createElement('li')
@@ -41,10 +41,22 @@ let driver: PhaserSkillVfxDriver
 function snapshot() {
   return { phase: runner.snapshot.phase, impacts, completes, faults: runner.snapshot.faultCount, ...driver.stats }
 }
+// Live phase markers: the five sequence items stand in for the runner's
+// coarse phases - cast spans the flight items, waiting is the impact beat,
+// resolved/resume is the recall tail, idle lights nothing.
+const PHASE_ITEMS: Record<string, readonly number[]> = {
+  cast: [0, 1, 2],
+  waiting: [3],
+  resolved: [4],
+  resume: [4],
+}
 function paintStats() {
   if (!runner) return
   const state = snapshot()
   element('stats').textContent = `${state.phase} · impact ${impacts} · complete ${completes} · pool ${state.active}/${state.allocated} · ${quality}`
+  const lit = PHASE_ITEMS[state.phase] ?? []
+  for (const [index, item] of [...element('sequence').children].entries())
+    item.classList.toggle('is-active', lit.includes(index))
 }
 function play() {
   if (!runner) return
@@ -60,9 +72,12 @@ function play() {
   }
   const receipt: SkillPresentationResolved = { ref, sealed: true, groups: [{
     groupId: 'primary', role: 'primary', resolvedSkillId: id, presetId: id, source,
-    actualTargets: id === 'holy_radiance' ? [source] : [target],
-    footprint: { kind: 'cells', cells: [{ row: 1, column: 8 }] },
+    actualTargets: id === 'holy_radiance' || fixture === 'sourceDeath' ? [source] : [target],
+    footprint: { kind: 'cells', cells: [{ row: 1, column: fixture === 'sourceDeath' ? 1 : 8 }] },
     outcomes: fixture === 'empty' ? [{ kind: 'no-effect', outcomeId: 'none', reason: 'preview' }]
+      : fixture === 'intercept' ? [{ kind: 'skipped' as const, outcomeId: 'skipped', target, reason: 'intercepted' }]
+      : fixture === 'sourceDeath' ? [{ kind: 'hit' as const, outcomeId: 'hit-source', target: source,
+        hitOrdinal: 0, landed: true, hpDamage: 10, crit: false, killed: true }]
       : id === 'holy_radiance' ? [{ kind: 'heal', outcomeId: 'heal', target: source, healed: 20 }]
       : Array.from({ length: count }, (_, i) => ({ kind: 'hit' as const, outcomeId: 'hit-' + i,
         target, hitOrdinal: i, landed: fixture !== 'miss', hpDamage: fixture === 'miss' ? 0 : 10, crit: false, killed: false })),
@@ -108,7 +123,21 @@ class SkillLabScene extends Phaser.Scene {
       graphics: () => this.add.graphics(), anchor: point,
       ground: fact => ({ ...point(fact), y: 325 }),
       uprightDepth: () => 600,
-      cameraImpulse: () => this.cameras.main.shake(45, 0.001, false),
+      // One-shot stubs so the cast-phase actor-impulse and the impact
+      // camera-cue are exercised in preview: a marker disc slides toward
+      // the target lane (real scenes tween the source sprite's offsetX).
+      actorImpulse: (fact, durationMs, impulsePx) => {
+        const origin = point(fact)
+        const marker = this.add.graphics()
+        marker.fillStyle(0xdcc98b, 0.9).fillCircle(0, 0, 10)
+        marker.setPosition(origin.x, origin.y - 40)
+        const direction = target.column > fact.column ? 1 : -1
+        this.tweens.add({
+          targets: marker, x: origin.x + direction * impulsePx * 3,
+          duration: durationMs, yoyo: true, onComplete: () => marker.destroy(),
+        })
+      },
+      cameraImpulse: (durationMs, intensity) => this.cameras.main.shake(durationMs, intensity, false),
     }, quality, reduced)
     runner = new SkillPresentationRunner(driver, getSkillPresentationRecipe, error => console.error(error))
     element('play').onclick = play
