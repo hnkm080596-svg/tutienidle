@@ -15792,7 +15792,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.contract.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "12a263fd61d60b782e21e832a1f749079f944be9e2b2a601f3ba7efe679953a9"
+      "hash": "217a3c59c0dd8f49c51eaea6d6bb48f89e6828a1a3ff3d238f2aefea304b679b"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.determinism.test.ts",
@@ -15996,7 +15996,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "551f0fe0e303267845b77da3162396719d9a862cc1c9510a69d669bca714967c"
+      "hash": "ba5f982af36c99c4a04097d54b175117dfc76ce385a5320c114dbcda5c21acfb"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.turnRegen.test.ts",
@@ -16074,7 +16074,7 @@
       "path": "src/core/battle/turn/TurnSkillAction.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e6380081ec104981a09eb35db1c4b28b3aa674e91d3f03dc07424a07f379ddc0"
+      "hash": "f1706aac332b5739c91430dfad97a2060da6f04ee282d5a85543dd8f7a140e9f"
     },
     {
       "path": "src/core/battle/turn/TurnSkillExecution.test.ts",
@@ -18612,7 +18612,7 @@
       "path": "src/core/player/CultivationPathSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "148a146bfc12cf2dc1d84d157f30eb1905ff27c9e60195f5e0a043a77f50b437"
+      "hash": "fe97e1ce1abd62712c9790e0824e903a3a25e695472b34bf07e6e7a20a7d401a"
     },
     {
       "path": "src/core/player/PersistentTimedEffect.ts",
@@ -18630,7 +18630,7 @@
       "path": "src/core/player/Player.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "3d3929f93c1aa1778c6a2de1a95740fbc865d79f1aa18668fffb020aedf63240"
+      "hash": "fa49017775ea6aa770948fa6cf0dfa1ebd5b44ac89038bafd253a2114edf32b2"
     },
     {
       "path": "src/core/player/PlayerStatAssembly.test.ts",
@@ -19836,7 +19836,7 @@
       "path": "src/core/skilldef/LegacySkillAdapter.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "3b98164857e464783461fd0115bffce9f80f23da31336c2ccab9e24c6b6584d0"
+      "hash": "0864decc4731d048c2c3ad118b31e6dff0d6379e27a9acaf50831f0af98f8572"
     },
     {
       "path": "src/core/skilldef/LegacySkillCoverage.test.ts",
@@ -19866,7 +19866,7 @@
       "path": "src/core/skilldef/SkillCastCommit.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "88006f4778729cb06c1e312dc266d81428bcc98c969cb69b0ff5c24fc48b66c3"
+      "hash": "4e6fbca6cbf376276ebeda53a7e56a023c30811b70d0928407a243fb219d4744"
     },
     {
       "path": "src/core/skilldef/SkillCastCommitPort.ts",
@@ -19896,13 +19896,13 @@
       "path": "src/core/skilldef/SkillDefinitionRegistry.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "9ad9cada612cfc1b4f2406e2c54a7cd4d0cbd0c69f57ca37c2d51d90ef076bfa"
+      "hash": "dda707b5fb2e2f099bb3ff6ff456c99ba89a6bf86fb275638c23c1ecdc5ce40a"
     },
     {
       "path": "src/core/skilldef/SkillDefinitionRegistry.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "9f33f0325cd3364513c5ffdcb3276cc91d246cb317838e7603bb212bd0e54aaa"
+      "hash": "dd9260658dd41efc904745b5ded73724ed930f341cb1719e7f4352c46b349d93"
     },
     {
       "path": "src/core/skilldef/SkillExecutionHooks.ts",
@@ -20250,7 +20250,7 @@
       "path": "src/core/the-tu/TheEconomy.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "b04e85f2f2070cf8f28830ab707561ed05d7d8afd3bc2706b747e0179099e1b5"
+      "hash": "ff64325a671e9b1f4b4f94441372b4d0af67f6f4ba804086dc485c78ae8dd471"
     },
     {
       "path": "src/core/the-tu/TheTuAnMechanicModifiers.ts",
@@ -22338,7 +22338,7 @@
       "path": "src/services/save/saveShapeValidation.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ab12b5b0394422d6e680a0f28820e7b08f7b312f448259a0d4caa5e90d188e5f"
+      "hash": "e29cabe36e2867d32b49f02c97f6ad59d39c7ca0ea6a8985ae121fb98d2a01a5"
     },
     {
       "path": "src/services/save/SaveSystem.bootRestore.test.ts",
@@ -23097,5 +23097,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f"
+  "productStateId": "20f373d4864085a3be6f76be88ebd1cd4ad5c94c0bd3f8636c7654949f9cc889"
 }
