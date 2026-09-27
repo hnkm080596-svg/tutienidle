@@ -1,0 +1,12 @@
+{
+  "applied": [
+    "review:REV-PTR-CLO-11",
+    "evidence:EV-PTR-CLO11",
+    "evidence:EV-PTR-FIXR",
+    "finding:F-PTR-120",
+    "finding:F-PTR-121",
+    "finding:F-PTR-122",
+    "finding:F-PTR-123",
+    "lesson:L-PTR-H-CLAIM-ACCURACY"
+  ]
+}

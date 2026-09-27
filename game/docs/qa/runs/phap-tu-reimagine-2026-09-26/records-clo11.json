@@ -1,0 +1,10 @@
+{
+ "verdict": "FINDINGS",
+ "fixesVerified": 11,
+ "residuals": [
+  "pin-test gap x2",
+  "dormant legacy-lane self-scope",
+  "dead theScaling fold"
+ ],
+ "session": "devin-f534eb10afd84681a557c27cd3698fc0"
+}
