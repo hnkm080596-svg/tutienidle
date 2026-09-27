@@ -32,7 +32,7 @@ export function theCap(entity: Pick<CombatEntity, 'maxThe'>): number {
   return entity.maxThe ?? MAX_THE
 }
 
-/** Single mutation authority -- all income/gain routes through here. */
+/** Single gain authority -- all income routes through here. */
 export function grantThe(entity: Pick<CombatEntity, 'currentThe' | 'maxThe'>, amount: number): void {
   if (amount <= 0) return
   entity.currentThe = Math.min(theCap(entity), (entity.currentThe ?? 0) + amount)
@@ -42,6 +42,14 @@ export function grantThe(entity: Pick<CombatEntity, 'currentThe' | 'maxThe'>, am
     mutation authority (engine-unit lane has no resource adapter). */
 export function drainAllThe(entity: Pick<CombatEntity, 'currentThe'>): void {
   entity.currentThe = 0
+}
+
+/** Partial consume -- the all-or-nothing insufficient check stays at
+    the caller (the adapter throws its skip); this is the single write
+    site for a decreasing debit so consume does not duplicate the
+    field mutation inline. */
+export function consumeThe(entity: Pick<CombatEntity, 'currentThe'>, amount: number): void {
+  entity.currentThe = (entity.currentThe ?? 0) - amount
 }
 
 /** The holder is a reactive combatant iff the ung_the marker is live. */

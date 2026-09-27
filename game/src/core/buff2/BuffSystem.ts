@@ -1011,6 +1011,9 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
     lctx: BuffLifecycleContext,
   ): void {
     const def = this.registry.get(instance.definitionId)
+    // Each marker INSTANCE feeds once per tick (inner `break` below);
+    // two marker defs naming the same grown definitionId would each
+    // feed -- multi-feed is authored-legal (only sinh_co is shipped).
     for (const marker of this.store.forTarget(instance.targetId)) {
       if (marker.instanceId === instance.instanceId) continue
       if (marker.sourceId !== instance.sourceId) continue

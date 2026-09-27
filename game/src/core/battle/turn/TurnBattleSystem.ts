@@ -739,7 +739,8 @@ export class TurnBattleSystem {
 
   /** skilldef M5d -- a runtime-present cast that cannot route is a LOUD
       no-op, never a silent legacy fallback: the report fires once per
-      cast identity per battle with the reason (adapter-unsupported
+      skill identity per battle (dedup key is def?.id ?? label -- per
+      def/skill, not per cast instance) with the reason (adapter-unsupported
       semantics, a def-less declared action, or a covered def the plan
       runtime declined -- the last is an internal defect signal). */
   private readonly unroutedCastReported = new Set<string>()
@@ -3096,6 +3097,13 @@ export class TurnBattleSystem {
    * shipped data (tro_mon lacks firesOnNonDamagingAction so the rolls
    * skip); if a non-damaging proc ever ships, the intent needs a spec
    * ruling before gating ticks here.
+   *
+   * Sibling edge (documented, unresolved): a WHIFFED charge-resolve
+   * opens this window too, and because declared.chargedSkill is only
+   * captured when affected.length > 0 at declare, authoredDamaging
+   * reads false -- the whiffed damaging resolve is bucketed with
+   * authored-non-damaging casts and fans out to battle.enemies.
+   * Same spec ruling needed before gating; unreachable in shipped data.
    */
   private resolveAllyActionWindow(
     battle: TurnBattle,

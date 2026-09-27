@@ -636,9 +636,15 @@ export function playerToCombatEntity(
  * build AND every auto-repeat restartTurnBattleCycle zeroes it - for
  * Phap Tu, Bat Kiem, and any future path sharing the pool.
  *
- * Call sites: playerToCombatEntity (fresh build) +
- * GameManagerTurnBattleOps startStage / restartTurnBattleCycle
- * (carried-over player entities).
+ * Call site: playerToCombatEntity only -- reached transitively via
+ * resolveCombatBuild (GameManagerTurnBattleOps); every cycle RE-MINTS
+ * the participant, so startStage/restartTurnBattleCycle reset through
+ * the mint, not through carried-over entities (none exist).
+ *
+ * Leak (documented, dev/test-only): a raw primaryEntityOverride
+ * (request.playerEntity, CombatBuild.ts:214) bypasses BOTH the mint
+ * and this reset -- a reused override entity keeps currentThe across
+ * battles. Production always supplies PlayerData.
  */
 export function resetBattleScopedResources(entity: CombatEntity): void {
   entity.currentThe = 0

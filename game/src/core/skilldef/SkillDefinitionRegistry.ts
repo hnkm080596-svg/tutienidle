@@ -102,6 +102,10 @@ const LANDED_LANE_INTENTS: ReadonlySet<string> = new Set<SkillTargetIntent>([
     `if` whose then/else may carry one further `if` -- the third faults. */
 const LANDED_LANE_MAX_IF_DEPTH = 2
 
+/** Closed resource set for resource_* value queries -- must mirror
+    TurnSkillPlanRuntime's resource readers ('the'/'mana'/'ward'). */
+const RESOURCE_QUERY_IDS: ReadonlySet<string> = new Set(['the', 'mana', 'ward'])
+
 /** Track state while validating inside a deal_damage onLanded lane.
     `depth` counts enclosing onLanded lists (0 = outside a lane),
     `ifDepth` counts enclosing `if` ops within the current lane level. */
@@ -1159,7 +1163,7 @@ function validateExpression(
     return
   }
   if ('query' in expr) {
-    validateValueQuery(expr, path, fault)
+    validateValueQuery(expr, path, insideForEach, insideLandedLane, fault)
     return
   }
   if (!('op' in expr) || !EXPRESSION_OPS.has(expr.op as string)) {
@@ -1207,6 +1211,8 @@ function validateExpression(
 function validateValueQuery(
   query: SkillValueQuery,
   path: string,
+  insideForEach: boolean,
+  insideLandedLane: boolean,
   fault: (code: SkillDefinitionFaultCode, path: string, message: string) => void,
 ): void {
   if (!VALUE_QUERIES.has(query.query)) {
@@ -1214,16 +1220,13 @@ function validateValueQuery(
     return
   }
   if ('target' in query) {
-    if (!SKILL_TARGET_INTENTS.has(query.target)) {
-      fault('malformed_expression', `${path}.target`, `unknown target intent '${String(query.target)}'`)
-    } else if (query.target === 'loop_target') {
-      // loop_target inside expressions inherits the enclosing for_each
-      // legality -- the op-level walk tracks it; deep expressions inside
-      // op fields were already reached under insideForEach, but the query
-      // leaf itself cannot see the flag here. loop_target legality is
-      // enforced on op/condition targets; a query leaf carrying it is
-      // accepted (the for_each binding resolves it at RESOLVE).
-    }
+    // The query leaf gets the SAME intent policy as op/condition
+    // targets: lane-only intents reject outside the lane, lane
+    // expressions accept only the lane allowlist, and loop_target
+    // needs an enclosing for_each (or lane) binding. Query targets
+    // resolve to a member position, so an unconstrained intent would
+    // silently bind member[0] at RESOLVE.
+    validateTargetIntent(query.target, `${path}.target`, insideForEach, insideLandedLane, fault)
   }
   switch (query.query) {
     case 'buff_stacks':
@@ -1235,8 +1238,15 @@ function validateValueQuery(
     case 'resource_current':
     case 'resource_max':
     case 'resource_snapshot':
-      if (typeof query.resourceId !== 'string' || query.resourceId.length === 0) {
-        fault('malformed_expression', `${path}.resourceId`, 'resourceId must be a non-empty string')
+      // Closed resource set -- execution (TurnSkillPlanRuntime
+      // resourceCurrent/resourceMax) throws on anything else, so an
+      // unknown id must fault at define time, not mid-cast.
+      if (!RESOURCE_QUERY_IDS.has(query.resourceId as string)) {
+        fault(
+          'malformed_expression',
+          `${path}.resourceId`,
+          `unknown resourceId '${String(query.resourceId)}' -- expected one of 'the', 'mana', 'ward'`,
+        )
       }
       return
     case 'stat_scalar':

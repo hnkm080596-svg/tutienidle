@@ -116,7 +116,11 @@ export function makeTheBarReader(
     // D17 -- Phap The presence is a live read of the resolved element
     // basic: buildPhapTheVariant() attaches `empowerment` onto the def the
     // participant carries. Before the element commit (or on a basic with
-    // no variant) the flag can never light.
+    // no variant) the flag can never light. Re-evaluates the same
+    // currentThe >= theThreshold predicate the engine gates on
+    // (TurnBattleSystem ~1811, SkillResolver ~225) -- a display mirror
+    // reading the same stamped field; drifts only if the engine gate
+    // moves to a different source.
     const phapTheActive = participant?.basic?.empowerment !== undefined && current >= threshold
 
     return { current, max, threshold, phapTheActive, label: 'Thế' }

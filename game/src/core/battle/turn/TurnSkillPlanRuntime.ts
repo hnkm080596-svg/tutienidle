@@ -45,7 +45,7 @@ import { SkillExecutor } from '../../skilldef/SkillExecutor'
 import type { StatReadPort, SkillResolveEntityQuery } from '../../skilldef/CastSnapshot'
 import type { SkillBuffInstanceSummary, SkillDetonatePeriodic, SkillQueryPorts } from '../../skilldef/SkillQueryPorts'
 import type { SkillPreResolution, SkillResolveInput } from '../../skilldef/SkillResolver'
-import { SkillResolver } from '../../skilldef/SkillResolver'
+import { SkillResolver, SkillResolverError } from '../../skilldef/SkillResolver'
 
 import type {
   TurnBattle,
@@ -280,8 +280,22 @@ export class TurnSkillPlanRuntime {
       ...(preResolved !== undefined ? { preResolved } : {}),
     }
 
-    const plan = this.resolver.resolve(input)
-    const outcome = executor.execute(plan, input)
+    // A resolver throw mid-plan means the registry accepted a shape
+    // the machinery cannot express (e.g. a target_hit_landed gate on
+    // an intent no deal_damage can mint) -- convert it to the same
+    // decline every caller already handles (null -> reportUnroutedCast
+    // -> castBlocked) instead of an uncaught exception crashing the
+    // tick and skipping the blocked bookkeeping. executor.execute is
+    // inside the try because its own resolver.resolve calls (extras,
+    // composite payloads) throw the same class.
+    let outcome: SkillCastOutcome
+    try {
+      const plan = this.resolver.resolve(input)
+      outcome = executor.execute(plan, input)
+    } catch (error) {
+      if (error instanceof SkillResolverError) return null
+      throw error
+    }
 
     return {
       outcome,
@@ -337,8 +351,13 @@ export class TurnSkillPlanRuntime {
       driveFollowUps: false,
     }
 
-    const plan = this.resolver.resolve(input)
-    executor.execute(plan, input)
+    try {
+      const plan = this.resolver.resolve(input)
+      executor.execute(plan, input)
+    } catch (error) {
+      if (error instanceof SkillResolverError) return null
+      throw error
+    }
 
     return {
       landedTargetIds: session.landedTargetIds,

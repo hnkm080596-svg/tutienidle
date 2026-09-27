@@ -30,7 +30,7 @@
 // ('all' is inherently resolve-at-execution) and faults loudly via
 // CombatSettlementFault instead of silently picking one semantic.
 
-import { drainAllThe, grantThe } from '../../../../the-tu/TheEconomy'
+import { consumeThe, drainAllThe, grantThe } from '../../../../the-tu/TheEconomy'
 
 import type { CombatAuthorityExecutionContext } from '../../../contracts/context'
 import type { CombatEntity } from '../../../../combat/CombatEntity'
@@ -153,8 +153,8 @@ export class EntityResourceAdapter implements ResourceAuthority {
           `entity '${targetId}' has ${before} '${resourceId}', cannot consume ${amount}`,
         )
       }
-      entity.currentThe = before - amount
-      return { before, requested: amount, applied: amount, after: entity.currentThe }
+      consumeThe(entity, amount)
+      return { before, requested: amount, applied: amount, after: entity.currentThe ?? 0 }
     }
 
     const before = channel.read(entity)
