@@ -242,7 +242,15 @@ export function assertSaveAcceptable(save: GameSave, catalogs: SaveAcceptanceCat
   // fail-closed there, so it must not reject here either.
   const activeElement = getActiveElement(save.player)
   if (activeElement !== undefined) {
-    const requiredBasicId = SPELL_KIT_IDS[activeElement][0]
+    // A corrupt save may carry a non-ElementType string that passed shape
+    // validation -- index the kit map defensively so the rejection stays
+    // descriptive instead of surfacing a bare TypeError.
+    const requiredBasicId = SPELL_KIT_IDS[activeElement]?.[0]
+    if (requiredBasicId === undefined) {
+      throw new Error(
+        `Spell element/kit coherence violated in save: unknown element '${activeElement}' carries no kit`,
+      )
+    }
     if (!save.skills.some((skill) => skill.id === requiredBasicId)) {
       throw new Error(
         `Spell element/kit coherence violated in save: element '${activeElement}' requires learned basic '${requiredBasicId}'`,
