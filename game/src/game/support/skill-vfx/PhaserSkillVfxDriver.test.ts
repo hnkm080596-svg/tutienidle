@@ -18,7 +18,7 @@ function fixture(quality: 'standard' | 'low' = 'standard') {
   const surface: SkillVfxSurface = {
     graphics, anchor: fact => ({ x: fact.column * 50, y: fact.row * 50 }),
     ground: fact => ({ x: fact.column * 50, y: fact.row * 50 }),
-    uprightDepth: () => 450, cameraImpulse: vi.fn(),
+    uprightDepth: () => 450, actorImpulse: vi.fn(), cameraImpulse: vi.fn(),
   }
   const driver = new PhaserSkillVfxDriver(surface, quality)
   const context: SkillCueContext = { ref: { sessionId: 1, requestId: '1', token: '1' }, recipe,
@@ -55,6 +55,36 @@ describe('pooled Phaser skill driver', () => {
     expect(f.driver.stats.active).toBe(0)
     expect(f.surface.cameraImpulse).not.toHaveBeenCalled()
     handle.finish()
+  })
+  it('fires the actor impulse once for the source fact without leasing graphics', () => {
+    const f = fixture()
+    const impulseCue = { primitive: 'actor-impulse' as const, anchor: 'source' as const,
+      shape: 'impulse' as const, offsetMs: 0, durationMs: 180, impulsePx: 8 }
+    const handle = f.driver.open(impulseCue, f.context)
+    handle.sample(10)
+    handle.finish()
+    expect(f.surface.actorImpulse).toHaveBeenCalledExactlyOnceWith(source, 180, 8)
+    expect(f.driver.stats.active).toBe(0)
+    expect(f.draws).toHaveLength(0)
+  })
+  it('gates actor-impulse on the same action dispositions as trajectory', () => {
+    for (const disposition of ['blocked', 'charge-start', 'charge-tick', 'empty'] as const) {
+      const f = fixture()
+      const context: SkillCueContext = { ...f.context,
+        cast: { ...f.context.cast!, disposition } }
+      const handle = f.driver.open({ primitive: 'actor-impulse', anchor: 'source',
+        shape: 'impulse', offsetMs: 0, durationMs: 180, impulsePx: 8 }, context)
+      handle.sample(10)
+      expect(f.surface.actorImpulse).not.toHaveBeenCalled()
+    }
+    for (const disposition of ['action', 'charge-release'] as const) {
+      const f = fixture()
+      const context: SkillCueContext = { ...f.context,
+        cast: { ...f.context.cast!, disposition } }
+      f.driver.open({ primitive: 'actor-impulse', anchor: 'source',
+        shape: 'impulse', offsetMs: 0, durationMs: 180, impulsePx: 8 }, context)
+      expect(f.surface.actorImpulse).toHaveBeenCalledExactlyOnceWith(source, 180, 8)
+    }
   })
   it('releases all leases on reset and stale handles cannot release new cues', () => {
     const f = fixture()

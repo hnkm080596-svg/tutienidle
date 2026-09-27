@@ -1,6 +1,6 @@
 ﻿import Phaser from 'phaser'
 import type { ResumePlayback } from '@/core/battle/turn/CombatAnimationRuntime'
-import type { SkillCastPresentation, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
+import type { ActorAnchorFact, SkillCastPresentation, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
 import { SkillPresentationRunner } from '@/presentation/skills/SkillPresentationRunner'
 import { PhaserSkillVfxDriver } from '@/game/support/skill-vfx/PhaserSkillVfxDriver'
 import { getSkillPresentationRecipe } from '@/data/vfx/SkillPresentationRecipes'
@@ -585,21 +585,42 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
   private _skillPlayback?: SkillPresentationRunner
   private _skillVfxDriver?: PhaserSkillVfxDriver
+  // The cast currently on the runner; the actor-impulse surface hook reads it
+  // for direction (declared target vs source anchor).
+  private activeSkillCast?: SkillCastPresentation
 
   private get skillPlayback(): SkillPresentationRunner {
     if (!this._skillPlayback) {
       const reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+      const anchorPoint = (fact: ActorAnchorFact) =>
+        this.bodyAnchorScreen(fact.entityId, 'centre')
+          ?? this.lastKnownScreenPositions?.get(fact.entityId)
+          ?? this.projection?.gridToScreen(fact.row, fact.column)
       this._skillVfxDriver = new PhaserSkillVfxDriver({
         graphics: () => this.add.graphics(),
-        anchor: fact => this.bodyAnchorScreen(fact.entityId, 'centre')
-          ?? this.lastKnownScreenPositions?.get(fact.entityId)
-          ?? this.projection?.gridToScreen(fact.row, fact.column),
+        anchor: anchorPoint,
         ground: fact => this.projection?.gridToScreen(fact.row, fact.column),
         uprightDepth: fact => {
           const foot = this.projection?.gridToScreen(fact.row, fact.column)
           return this.isPerspective && foot
             ? uprightVfxDepth(foot.y, this.entityFootMinY, this.entityFootMaxY, fact.column)
             : DEPTH_UPRIGHT_VFX
+        },
+        // The impulse slides the sprite's offsetX channel so it never fights
+        // per-frame position writes; direction follows the declared anchor
+        // vector, with the scene facing convention as the no-target fallback.
+        actorImpulse: (fact, durationMs, impulsePx) => {
+          const sprite = this.spriteFor(fact.entityId)
+          if (!sprite) return
+          const cast = this.activeSkillCast
+          const origin = cast ? anchorPoint(cast.source) : undefined
+          const destination = cast?.declaredTargets[0]
+            ? anchorPoint(cast.declaredTargets[0])
+            : undefined
+          const direction = origin && destination && destination.x !== origin.x
+            ? Math.sign(destination.x - origin.x)
+            : fact.entityId === PLAYER_ID ? 1 : -1
+          this.playHorizontalImpulse(sprite, direction * impulsePx, durationMs)
         },
         cameraImpulse: () => this.cameras.main.shake(45, 0.001, false),
       }, reducedMotion ? 'low' : 'standard', reducedMotion)
@@ -616,6 +637,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   private onSkillCast(cast: SkillCastPresentation): void {
+    this.activeSkillCast = cast
     const port = this.gameManagerRef
     if (port) this.skillPlayback.start(cast, port)
   }
@@ -1420,6 +1442,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this._skillVfxDriver?.destroy()
     this._skillPlayback = undefined
     this._skillVfxDriver = undefined
+    this.activeSkillCast = undefined
     for (const status of this.statuses.values()) {
       status.icon.destroy()
       status.stackLabel.destroy()
@@ -1692,11 +1715,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.prepareThanhVanBackdropForNextBattle()
   }
 
-  // Internal (module boundary — combat-action-feedback).
-  onAttack(event: CombatScenePayload) {
-    this.actionFeedback.onAttack(event)
-  }
-
   playHorizontalImpulse(sprite: EntitySprite, distance: number, duration: number) {
     this.vfxSpawner.playHorizontalImpulse(sprite, distance, duration)
   }
@@ -1825,6 +1843,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   onBattleStart() {
     this._skillPlayback?.cancel()
     this._skillVfxDriver?.reset()
+    this.activeSkillCast = undefined
     this.inBattle = true
 
     // 6A-T5 — HUD hiện khi vào trận.

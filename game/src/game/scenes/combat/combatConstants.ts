@@ -7,8 +7,6 @@ export const PLAYER_ID = 'player'
 export { HERO_COLUMN, HERO_LANE_INDEX }
 
 export const HIT_RECOIL_PX = 6
-export const ATTACK_LUNGE_PX = 8
-export const ATTACK_LUNGE_DURATION_MS = 350 // was 75 -- too fast to observe (2026-09-07 playtest)
 export const HIT_RECOIL_DURATION_MS = 65
 
 /** DoT text flush 3 lần/giây (plan §7.2) — cửa sổ gom 333,33ms. */

@@ -10,8 +10,6 @@ import type {
 
 import type { CombatScene, CombatScenePayload } from '../CombatScene'
 import {
-  ATTACK_LUNGE_DURATION_MS,
-  ATTACK_LUNGE_PX,
   BUFF_ATTACH_COLOR,
   CRITICAL_FLASH_COLOR,
   DEBUFF_ATTACH_COLOR,
@@ -24,14 +22,6 @@ import type { StatusVfxAttachedEvent } from '@/core/battle/BattleEvents'
 
 export class CombatActionFeedback {
   constructor(private readonly scene: CombatScene) {}
-
-  /** Optional actor motion only; shared skill playback owns both action ACKs. */
-  onAttack(event: CombatScenePayload) {
-    const attacker = this.scene.spriteFor(event.sourceId)
-    if (!attacker) return
-    const dx = event.sourceId === PLAYER_ID ? ATTACK_LUNGE_PX : -ATTACK_LUNGE_PX
-    this.scene.playHorizontalImpulse(attacker, dx, ATTACK_LUNGE_DURATION_MS)
-  }
 
   onCritical(event: CombatScenePayload) {
     const scene = this.scene

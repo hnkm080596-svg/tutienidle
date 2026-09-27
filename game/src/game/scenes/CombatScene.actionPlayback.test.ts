@@ -27,7 +27,8 @@ function createScene() {
   }
   scene.entityFootMinY = 0
   scene.entityFootMaxY = 900
-  scene.tweens = { add: (config: Record<string, unknown>) => tweenConfigs.push(config) }
+  scene.tweens = { add: (config: Record<string, unknown>) => tweenConfigs.push(config),
+    killTweensOf: vi.fn() }
   scene.add = {
     graphics: () => {
       // Chainable graphics stub: má»i method váº½ (clear/lineStyle/â€¦) lÃ 
@@ -108,9 +109,19 @@ describe('legacy action feedback is non-authoritative', () => {
     ;(tweenConfigs.at(-1)?.onComplete as () => void)()
     expect(complete).toHaveBeenCalledTimes(1)
   })
-  it('legacy attack lunge cannot acknowledge impact', () => {
-    const { scene } = createScene()
-    scene.onAttack({ sourceId: 'missing' })
+  it('a cast-phase actor impulse moves the sprite but never acknowledges', () => {
+    const { scene, tweenConfigs } = createScene()
+    scene.sprites.set('player', { kind: 'rect', rect: { x: 50, y: 0 }, offsetX: 0,
+      footY: 60, personWidth: 24, personHeight: 40 } as never)
+    scene.lastKnownScreenPositions = new Map([['enemy_1', { x: 400, y: 50 }]])
+    scene.onSkillCast({
+      ref: { sessionId: 1, requestId: '1', token: 'playback-7' },
+      rootSkillId: 'tram', resolvedSkillId: 'tram', presetId: 'slash',
+      source: { entityId: 'player', row: 1, column: 1 },
+      declaredTargets: [{ entityId: 'enemy_1', row: 1, column: 8 }],
+      candidateInstanceCount: 1, disposition: 'action',
+    })
+    expect(tweenConfigs.some(cfg => cfg.offsetX === 8)).toBe(true)
     expect(scene.gameManagerRef.acknowledgeActionImpact).not.toHaveBeenCalled()
   })
 })

@@ -13,6 +13,7 @@ export interface SkillVfxSurface {
   anchor(fact: ActorAnchorFact): Point | undefined
   ground(fact: Pick<ActorAnchorFact, 'row' | 'column'>): Point | undefined
   uprightDepth(fact: ActorAnchorFact): number
+  actorImpulse?(fact: ActorAnchorFact, durationMs: number, impulsePx: number): void
   cameraImpulse?(): void
 }
 export type SkillVfxQuality = 'standard' | 'low'
@@ -45,8 +46,14 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
     const group = context.group
     const source = cast?.source ?? group?.source
     if (!source) return quietHandle
-    if (cast && !['action', 'charge-release'].includes(cast.disposition) && cue.primitive === 'trajectory')
+    if (cast && !['action', 'charge-release'].includes(cast.disposition)
+      && (cue.primitive === 'trajectory' || cue.primitive === 'actor-impulse'))
       return quietHandle
+    // One-shot primitives move actors/cameras directly and never lease graphics.
+    if (cue.primitive === 'actor-impulse') {
+      this.surface.actorImpulse?.(source, cue.durationMs, cue.impulsePx ?? 8)
+      return quietHandle
+    }
     const successful = group?.outcomes.filter(outcome =>
       outcome.kind === 'hit' ? outcome.landed :
       outcome.kind === 'heal' ? outcome.healed > 0 :
@@ -175,6 +182,13 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
         g.lineBetween(x, y, x + Math.cos(angle) * 7 * fade, y + Math.sin(angle) * 7 * fade)
       }
     } else {
+      // One-shot primitives leave open() before the graphics lease; reaching
+      // this branch means the dispatch contract was bypassed - warn and draw
+      // nothing rather than render the wrong ellipse.
+      if (cue.primitive === 'actor-impulse') {
+        console.warn('[SkillVfx] actor-impulse cue reached the draw path')
+        return
+      }
       const radius = 12 + t * (this.reducedMotion ? 8 : 24)
       g.lineStyle(2 * fade + 0.5, color, fade * 0.75)
       g.strokeEllipse(point.x, point.y, radius * 2, radius * (cue.primitive === 'ground-shape' ? 0.65 : 1.6))

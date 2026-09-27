@@ -7,7 +7,8 @@ export interface SkillCue {
   readonly offsetMs: number
   readonly durationMs: number
   readonly anchor: 'source' | 'target' | 'targets'
-  readonly shape: 'blade' | 'orb' | 'slash' | 'ring' | 'sparks' | 'rune'
+  readonly shape: 'blade' | 'orb' | 'slash' | 'ring' | 'sparks' | 'rune' | 'impulse'
+  readonly impulsePx?: number
   readonly recall?: boolean
   readonly bend?: number
   readonly count?: number
@@ -55,8 +56,11 @@ export function validateSkillRecipe(recipe: SkillPresentationRecipe): void {
       if (!primitives.has(cue.primitive) || !Number.isFinite(cue.offsetMs) || !Number.isFinite(cue.durationMs)
         || cue.offsetMs < 0 || cue.durationMs <= 0 || cue.offsetMs + cue.durationMs > duration
         || !['source', 'target', 'targets'].includes(cue.anchor)
-        || !['blade', 'orb', 'slash', 'ring', 'sparks', 'rune'].includes(cue.shape))
+        || !['blade', 'orb', 'slash', 'ring', 'sparks', 'rune', 'impulse'].includes(cue.shape))
         throw new Error('Invalid skill recipe cue')
+      if (cue.impulsePx !== undefined
+        && (!Number.isFinite(cue.impulsePx) || cue.impulsePx <= 0 || cue.impulsePx > 64))
+        throw new Error('Unbounded skill cue impulse')
       for (const value of [cue.bend, cue.count, cue.releaseMs, cue.cruiseMs, cue.accelerationMs])
         if (value !== undefined && !Number.isFinite(value)) throw new Error('Non-finite skill cue parameter')
       if (cue.count !== undefined && (!Number.isInteger(cue.count) || cue.count < 1 || cue.count > 256))

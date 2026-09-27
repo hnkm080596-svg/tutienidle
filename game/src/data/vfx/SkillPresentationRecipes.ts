@@ -2,6 +2,13 @@ import type { CombatVfxPresetId } from '@/core/battle/CombatAction'
 import type { SkillPresentationRecipe } from '@/presentation/skills/SkillPresentationRecipe'
 import { COMBAT_VFX_PRESETS } from './CombatVfxPresets'
 
+// Restored actor lunge (design section 9 "actor impulse + signature stroke"):
+// the tuned values moved here from combatConstants ATTACK_LUNGE_* (2026-09-07
+// playtest) - the recipe layer owns them now that the cue-driven impulse is
+// the only consumer.
+const ACTOR_IMPULSE_PX = 8
+const ACTOR_IMPULSE_MAX_MS = 350
+
 export const PHI_KIEM_RECIPE: SkillPresentationRecipe = {
   id: 'ngu_kiem_flight', version: 1, color: 0xaeeaff,
   castMs: 370, impactMs: 80, recoveryMs: 170,
@@ -18,12 +25,21 @@ for (const preset of Object.values(COMBAT_VFX_PRESETS)) {
   const aura = preset.id === 'holy_radiance'
   const ground = preset.space === 'ground_projected' || preset.space === 'screen'
   const burst = preset.space === 'hybrid'
+  // Scoped to upright + the arcane_impact fallback (OQ1): hybrid and ground
+  // presets keep a static cast until a melee/ranged discriminator exists.
+  const impulse = preset.space === 'upright' || preset.id === 'arcane_impact'
+  const castMs = aura ? 220 : ground || burst ? 260 : 180
   recipes.set(preset.id, {
     id: preset.id, version: 1, color: preset.color,
-    castMs: aura ? 220 : ground || burst ? 260 : 180,
+    castMs,
     impactMs: preset.durationMs, recoveryMs: 80,
-    cast: [{ primitive: 'aura', anchor: 'source', shape: 'ring', offsetMs: 0,
-      durationMs: aura ? 220 : ground || burst ? 260 : 180 }],
+    cast: [
+      ...(impulse ? [{ primitive: 'actor-impulse' as const, anchor: 'source' as const,
+        shape: 'impulse' as const, offsetMs: 0,
+        durationMs: Math.min(ACTOR_IMPULSE_MAX_MS, castMs), impulsePx: ACTOR_IMPULSE_PX }] : []),
+      { primitive: 'aura' as const, anchor: 'source' as const, shape: 'ring' as const,
+        offsetMs: 0, durationMs: castMs },
+    ],
     impact: [
       { primitive: aura ? 'aura' : ground ? 'ground-shape' : burst ? 'burst' : 'stroke',
         anchor: 'targets', shape: aura || ground ? 'ring' : burst ? 'sparks' : 'slash',
