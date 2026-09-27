@@ -12,6 +12,27 @@ export const ACTIONABLE_CLASSES = new Set(["REAL_DEFECT", "SPEC_DEFECT", "TEST_D
 // Platform hard cap on concurrent agents (coordinator + workers) — mechanism-level
 // ceiling, not request-configurable (agent-instructions.md §G).
 export const HARD_CAPACITY_LIMIT = 5;
+
+// Every ledger collection that carries a unique `id` — mirrors the namespaces
+// MC1 dedupes over (validate.mjs). Kept in state.mjs so both the record write
+// path and schedule admission enforce the same uniqueness boundary: an id
+// colliding across namespaces commits schema-clean yet bricks decide forever,
+// with no delete/rename recovery path (F-PU31-02).
+export const ID_COLLECTIONS = [
+  "invariants", "census", "findings", "evidence", "coverage", "attacks",
+  "reviews", "cycles", "mutations", "corpus", "lessons", "messages",
+  "consumptions", "briefs", "assignments",
+];
+
+export function ledgerIdTaken(ledger, id, exceptColl, { skipRequestIds = false } = {}) {
+  if (!id) return false;
+  if (ledger.run.id === id) return true;
+  for (const coll of ID_COLLECTIONS) {
+    if (coll === exceptColl) continue;
+    if (ledger[coll]?.some((r) => r.id === id)) return true;
+  }
+  return !skipRequestIds && ledger.messages.some((m) => m.requestId === id);
+}
 // Message direction binding: ASSIGN/REPAIR_ASSIGN establish the party pair
 // (coordinator -> worker). Worker replies must come from the assign recipient.
 export const MSG_FROM_COORDINATOR = new Set(["ASSIGN", "REPAIR_ASSIGN", "INVALIDATE", "CANCEL", "RESUME"]);

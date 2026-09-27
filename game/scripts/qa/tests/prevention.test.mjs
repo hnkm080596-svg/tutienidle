@@ -185,6 +185,18 @@ const mkAsg = (id, over = {}) => ({ id, parentId: null, capacityScope: "worker",
   observedRuntimeId: null, releaseEvidence: null, resultRef: null,
   timeoutState: null, history: [], ...over });
 
+test("admission refuses an id colliding with another MC1 namespace (F-PU31-02 reverse)", () => {
+  const ledger = newLedger({ runId: "x", capacityLimit: 2 });
+  ledger.findings.push({ id: "F-1" });
+  ledger.evidence.push({ id: "EV-1" });
+  ledger.messages.push({ id: "M-1", requestId: "REQ-1" });
+  assert.throws(() => admitAssignment(ledger, mkAsg("F-1")), /already exists in another namespace/);
+  assert.throws(() => admitAssignment(ledger, mkAsg("EV-1")), /already exists in another namespace/);
+  assert.throws(() => admitAssignment(ledger, mkAsg("REQ-1")), /already exists in another namespace/);
+  assert.throws(() => admitAssignment(ledger, mkAsg("x")), /already exists in another namespace/, "run.id is a namespace too");
+  assert.equal(admitAssignment(ledger, mkAsg("w-ok")).record.status, "RESERVED");
+});
+
 test("externalOccupied must be a non-negative integer (fail-closed)", () => {
   const ledger = newLedger({ runId: "x", capacityLimit: 2 });
   assert.throws(() => admitAssignment(ledger, mkAsg("w1"), { externalOccupied: "x" }), /externalOccupied/);

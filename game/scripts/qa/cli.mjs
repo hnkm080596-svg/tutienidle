@@ -21,14 +21,15 @@ import {
   newLedger, loadLedger, saveLedgerAtomic, acquireLease, checkLease, appendEvent,
   commitLedger, recordMessage, invalidateForNewState, buildManifest, hashFileSet,
   computeEnvironmentId, objectHash, runDir, SCHEMA_VERSION_V1,
-  TERMINAL_FINDING_STATUSES,
+  TERMINAL_FINDING_STATUSES, ledgerIdTaken,
 } from "./state.mjs";
 import {
   loadLessonsJsonl, routeLessons, draftBrief, preflightBrief, checkpointBrief,
   admitAssignment, observeAssignment, applyLearningAction, publishPolicy,
   loadActivePolicy, migrateLedgerV1toV2, ASSIGNMENT_ACTIVE, ASSIGNMENT_TERMINAL,
 } from "./prevention.mjs";
-import { validateLedger } from "./validate.mjs";
+import { validateLedger, validateStructure } from "./validate.mjs";
+import { parseOrchestratorCounts, qualifyGaps } from "./qualify.mjs";
 import { decide, renderReport } from "./decision.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -169,6 +170,7 @@ function cmdRecord(args) {
   const input = readJson(path.resolve(args.input));
   const records = input.records ?? [input];
   const applied = [];
+  const touched = []; // [collectionName, index] pairs written by this call
   for (const rec of records) {
     const kind = rec.kind;
     if (!RECORD_COLLECTION[kind]) throw new Error(`unknown record kind: ${kind}`);
@@ -178,6 +180,13 @@ function cmdRecord(args) {
       // declared runId is verified inside recordMessage — never silently rewritten
       body.runId = body.runId ?? ledger.run.id;
       const res = recordMessage(ledger, body);
+      if (!res.duplicate) {
+        // New (non-replay) message: its id and requestId join the MC1
+        // namespaces — collision with another namespace bricks decide.
+        if (ledgerIdTaken(ledger, body.id, "messages")) throw new Error(`message ${body.id}: id already exists in another namespace`);
+        if (ledgerIdTaken(ledger, body.requestId, null, { skipRequestIds: true })) throw new Error(`message ${body.id}: requestId collides with a record id`);
+        touched.push(["messages", ledger.messages.length - 1]);
+      }
       applied.push(`${kind}:${body.id}${res.duplicate ? " (duplicate, idempotent)" : res.stale ? " (STALE — does not advance phase)" : ""}`);
     } else {
       const coll = ledger[RECORD_COLLECTION[kind]];
@@ -185,14 +194,38 @@ function cmdRecord(args) {
       if (idx >= 0) {
         assertReplaceable(kind, coll[idx]);
         coll[idx] = body;
+        touched.push([RECORD_COLLECTION[kind], idx]);
         applied.push(`${kind}:${body.id} (updated)`);
       } else {
+        if (ledgerIdTaken(ledger, body.id, RECORD_COLLECTION[kind])) {
+          throw new Error(`record ${body.id}: id already exists in another namespace — refusing (would brick MC1 with no recovery path)`);
+        }
         coll.push(body);
+        touched.push([RECORD_COLLECTION[kind], coll.length - 1]);
         applied.push(`${kind}:${body.id}`);
       }
     }
   }
   if (applied.length) {
+    // Write-path structural validation (F-PU31-01): a record that fails the
+    // schema may not be committed — previously malformed records landed and
+    // later became unreachable through assertReplaceable. Attribution is by
+    // (collection, index) touched during this write — id-keyed attribution
+    // would miss records pushed without an id, which then become permanently
+    // uncorrectable and brick the decide gate. Pre-existing failures
+    // elsewhere in the ledger do not block this write.
+    const touchedSet = new Set(touched.map(([c, i]) => `${c}/${i}`));
+    const structural = validateStructure(ledger);
+    const fresh = structural.filter((fl) => {
+      const m = /^\/(\w+)\/(\d+)/.exec(fl.recordId);
+      return m && touchedSet.has(`${m[1]}/${m[2]}`);
+    });
+    if (fresh.length) {
+      console.error("record rejected — schema-invalid (run `validate` for details):");
+      fresh.forEach((fl) => console.error(`  ${fl.recordId}: ${fl.reason}`));
+      process.exitCode = 1;
+      return;
+    }
     const kinds = new Set(records.map((r) => r.kind));
     commitLedger(dir, ledger, {
       kind: kinds.size === 1 ? EVENT_KIND[records[0].kind] ?? "EVIDENCE" : "EVIDENCE",
@@ -277,15 +310,12 @@ function cmdQualify() {
     // TAP reporter is required: the parser reads `# pass N`/`# fail N` counters,
     // which the default spec reporter (Node >=22) does not emit — a parse miss
     // would emit a vacuous QUALIFIED verdict (F-PU30-04 / QAI-08).
-    out = execFileSync(process.execPath, ["--test", "--test-reporter", "tap", path.join(testDir, "*.test.mjs")], { cwd: GAME_ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    out = execFileSync(process.execPath, ["--test", "--test-reporter", "tap", path.join(testDir, "*.test.mjs")], { cwd: GAME_ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, QA_QUALIFY_RUN: "1" } });
   } catch (e) {
     code = e.status ?? 1;
     out = (e.stdout ?? "") + (e.stderr ?? "");
   }
-  const pass = /# pass (\d+)/.exec(out);
-  const fail = /# fail (\d+)/.exec(out);
-  const passed = pass ? Number(pass[1]) : 0;
-  const failed = fail ? Number(fail[1]) : passed === 0 && code !== 0 ? -1 : 0;
+  const { passed, failed } = parseOrchestratorCounts(out);
   console.log(out.split("\n").filter((l) => /^(ok|not ok|# )/.test(l.trim())).join("\n"));
   const corpusIdx = path.join(QA_ROOT, "corpus", "index.json");
   let corpusLine = "corpus/index.json missing";
@@ -296,13 +326,10 @@ function cmdQualify() {
     corpusLine = `corpus cases: ${JSON.stringify(counts)}`;
   }
   console.log(`\n${corpusLine}`);
-  console.log(`orchestrator tests: ${passed} passed, ${failed} failed`);
-  const gaps = [];
-  if (failed !== 0) gaps.push(`orchestrator suite: ${failed} failing`);
-  if (passed <= 0) gaps.push(`orchestrator suite: 0 tests observed (exit ${code}) — parser/reporter mismatch or empty suite; refusing vacuous verdict`);
   const sentinelDir = path.join(QA_ROOT, "runs", "adoption-2026-09-23", "reviews");
   const sentinelOk = fs.existsSync(sentinelDir) && fs.readdirSync(sentinelDir).filter((f) => /^sentinel-reviewer-[ab]/.test(f)).length >= 2;
-  if (!sentinelOk) gaps.push("reviewer-isolation sentinel: <2 sealed isolated reviewer results recorded");
+  const { gaps, failedCount } = qualifyGaps({ passed, failed, exitCode: code, sentinelOk });
+  console.log(`orchestrator tests: ${passed} passed, ${failedCount} failed`);
   if (gaps.length === 0) {
     console.log("\nPROTOCOL_ADOPTION_QUALIFIED");
   } else {
@@ -343,7 +370,9 @@ function utcNowMarker() { return new Date().toISOString(); }
 
 function cmdPreflight(args) {
   // `qa:internal preflight --brief <file>` -> readiness verdict + unmet list.
-  const brief = readJson(path.resolve(args.brief));
+  // Accepts either a raw brief or the `prepare --out` wrapper {…, brief}.
+  const raw = readJson(path.resolve(args.brief));
+  const brief = raw.brief && typeof raw.brief === "object" ? raw.brief : raw;
   const { activePolicy, policyDir } = learningPaths();
   const active = fs.existsSync(activePolicy) ? loadActivePolicy(activePolicy, policyDir) : null;
   const product = args["product-root"] ? path.resolve(args["product-root"]) : GAME_ROOT;

@@ -4,7 +4,7 @@
 // Sole write authority remains the coordinator (lease holder).
 import fs from "node:fs";
 import path from "node:path";
-import { objectHash, fileHashHex, utcNow, HARD_CAPACITY_LIMIT } from "./state.mjs";
+import { objectHash, fileHashHex, utcNow, HARD_CAPACITY_LIMIT, ledgerIdTaken } from "./state.mjs";
 
 export const ASSIGNMENT_ACTIVE = new Set(["RESERVED", "RUNNING", "RESULT_RECEIVED", "RELEASE_PENDING"]);
 export const ASSIGNMENT_STATES = new Set(["QUEUED", "READY", "RESERVED", "RUNNING", "RESULT_RECEIVED", "RELEASE_PENDING", "FINISHED", "BLOCKED", "CANCELLED"]);
@@ -100,17 +100,17 @@ export function preflightBrief(brief, { productRoot, activePolicyHash }) {
   const unmet = [];
   if (!brief.planningBaseline?.productStateId) unmet.push("planningBaseline missing");
   if (activePolicyHash && brief.policyHash !== activePolicyHash) unmet.push(`policyHash does not match active policy ${activePolicyHash.slice(0, 12)}`);
-  if (brief.unresolvedAssumptions.length) unmet.push(`unresolvedAssumptions non-empty: ${brief.unresolvedAssumptions.join("; ")}`);
-  const pending = brief.lessonRouting.filter((r) => r.decision === "NEEDS_DISCOVERY");
+  if ((brief.unresolvedAssumptions ?? []).length) unmet.push(`unresolvedAssumptions non-empty: ${(brief.unresolvedAssumptions ?? []).join("; ")}`);
+  const pending = (brief.lessonRouting ?? []).filter((r) => r.decision === "NEEDS_DISCOVERY");
   if (pending.length) unmet.push(`unresolved routing: ${pending.map((r) => r.lessonRef).join(", ")}`);
-  const stale = brief.lessonRouting.filter((r) => r.decision === "STALE");
+  const stale = (brief.lessonRouting ?? []).filter((r) => r.decision === "STALE");
   if (stale.length) unmet.push(`stale guidance not resolved: ${stale.map((r) => r.lessonRef).join(", ")}`);
-  if (!brief.firstProofObligations.length) unmet.push("no firstProofObligations - highest-cost uncertainty not named");
-  for (const fp of brief.firstProofObligations) {
+  if (!(brief.firstProofObligations ?? []).length) unmet.push("no firstProofObligations - highest-cost uncertainty not named");
+  for (const fp of brief.firstProofObligations ?? []) {
     if (!fp.oracle) unmet.push(`firstProof on slice '${fp.admittedSlice}' has no oracle`);
   }
   if (productRoot) {
-    for (const dep of brief.sourceDependencyHashes) {
+    for (const dep of brief.sourceDependencyHashes ?? []) {
       const chk = refFreshness(dep, productRoot);
       if (!chk.fresh) unmet.push(`sourceDependency ${chk.reason}`);
     }
@@ -158,6 +158,11 @@ export function admitAssignment(ledger, asg, { externalOccupied = 0, allowExisti
   }
   if (existing && allowExisting && !["QUEUED", "READY", "BLOCKED"].includes(existing.status)) {
     throw new Error(`assignment ${record.id} is ${existing.status} — only waiting records may be re-evaluated for admission`);
+  }
+  // Reverse direction of F-PU31-02: a schedule-minted id colliding with any
+  // other MC1 namespace bricks decide with no recovery path — reject it too.
+  if (!existing && ledgerIdTaken(ledger, record.id, "assignments")) {
+    throw new Error(`assignment ${record.id}: id already exists in another namespace — refusing (would brick MC1 with no recovery path)`);
   }
   if (record.history.length > 0 && record.history[record.history.length - 1].to !== record.status) {
     throw new Error(`assignment ${record.id} history non-contiguous: last entry to=${record.history[record.history.length - 1].to} but status=${record.status}`);
