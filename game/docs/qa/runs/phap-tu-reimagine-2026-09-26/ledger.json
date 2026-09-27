@@ -5186,7 +5186,9 @@
    "discoveredBy": "cleanG AUT (Low-1)",
    "counterexample": "only referenced by the union itself + one negative test assertion",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-10"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-AUTG",
@@ -5250,7 +5252,9 @@
    "discoveredBy": "cleanG AUT (Low-2)",
    "counterexample": "root percentOfMax cost + cost-less effective swap -> statScalars misses maxMp -> cost reads 0",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-10"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-AUTG",
@@ -5314,7 +5318,9 @@
    "discoveredBy": "cleanG AUT (Low-3) + INT (5) dup",
    "counterexample": "corrupt kit-missing state empowers a fallback into a Phap The variant with riders",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-10"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-AUTG",
@@ -5379,7 +5385,9 @@
    "discoveredBy": "cleanG AUT (Nit-7)",
    "counterexample": "double-encoded Vietnamese doc comment + 2/3-space indent drift",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-10"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-AUTG",
@@ -5443,7 +5451,9 @@
    "discoveredBy": "cleanG COR (F-1)",
    "counterexample": "GameManager.empowerment.test.ts:88 'expected undefined to be 1' deterministic RED",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-10"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-CORG",
@@ -5507,7 +5517,9 @@
    "discoveredBy": "cleanG COR (F-2); INT (1) dup",
    "counterexample": "routed.outcome.blocked charge-init keeps the declare-time armed charge; castBlocked never stamps on that lane",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-10"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-CORG",
@@ -5572,7 +5584,9 @@
    "discoveredBy": "cleanG COR (F-3)",
    "counterexample": "non-committing execs forward a stale pre-burn pool to their theScaling read",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-10"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-CORG",
@@ -5636,7 +5650,9 @@
    "discoveredBy": "cleanG COR (F-5)",
    "counterexample": "registry fault :425-440 has no direct test (indirect coverage only)",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-10"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-CORG",
@@ -5700,7 +5716,9 @@
    "discoveredBy": "cleanG COR (F-6)",
    "counterexample": "comment misstates latch scope",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-10"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-CORG",
@@ -5764,7 +5782,9 @@
    "discoveredBy": "cleanG INT (2)",
    "counterexample": "def with both channels: registry faults catalog -> TBS falls back engine-unit -> composite silently wins over empowerment",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-10"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-INTG",
@@ -5828,7 +5848,9 @@
    "discoveredBy": "cleanG INT (3)",
    "counterexample": "negative authored growth payload persists negative-stack instances",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-10"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-INTG",
@@ -7197,6 +7219,33 @@
    "inputPaths": [],
    "invariantIds": [],
    "limitations": []
+  },
+  {
+   "kind": "EXECUTED_INTEGRATION",
+   "id": "EV-PTR-CLO10",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "status": "CURRENT",
+   "producer": "devin-98f688191a5344f188349be4a495d7f5",
+   "startedAt": "2026-09-27T01:21:30Z",
+   "finishedAt": "2026-09-27T01:29:58Z",
+   "commandOrMethod": "closure verify @cf1655b6: read each fix site + npm run type-check + scoped vitest",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "records-clo10.json",
+   "artifactHash": "93eaadff2ae971067ee1bf413451a69f4a83cfefdd10b796e3d4497c0c3cb37d",
+   "claims": [
+    "clean-G fix batch: all 11 fixes verified present+functional; no new defect introduced"
+   ],
+   "limitations": [],
+   "inputEvidenceIds": [],
+   "inputPaths": [],
+   "invariantIds": []
   }
  ],
  "coverage": [],
@@ -8282,6 +8331,37 @@
     "F-PTR-103",
     "F-PTR-104"
    ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-PTR-CLO-10",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 8,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-98f688191a5344f188349be4a495d7f5",
+   "contextId": "ctx-98f68819",
+   "model": "swe-2",
+   "role": "closure",
+   "inputBundleHash": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+   "priorFindingsVisible": true,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-27T01:21:30Z",
+   "sealedAt": "2026-09-27T01:29:58Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-CLO10"
+   ],
+   "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
   }
@@ -9511,7 +9591,6 @@
    "capabilityDelta": "non-committing execs no longer forward a pre-burn pool"
   },
   {
-   "kind": "lesson",
    "id": "L-PTR-G-DOC",
    "version": 1,
    "supersedes": null,
@@ -9546,7 +9625,6 @@
    "capabilityDelta": "docblock mojibake removed; latch scope wording corrected"
   },
   {
-   "kind": "lesson",
    "id": "L-PTR-G-COVERAGE",
    "version": 1,
    "supersedes": null,
@@ -10012,6 +10090,22 @@
    "payloadPath": "events/0027.json",
    "payloadHash": "028745ae6513daccc0b69e55fd4ab79f508632f10d0816403a59b4edce9dff2d",
    "eventHash": "3496b1122ef7dd6487c65886b7e98e473e4414aebb3de6485e339c471ef91657"
+  },
+  {
+   "seq": 28,
+   "at": "2026-09-27T01:30:21.348Z",
+   "kind": "REVIEW_SEALED",
+   "actor": "coordinator-1021454",
+   "state": {
+    "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "previousEventHash": "3496b1122ef7dd6487c65886b7e98e473e4414aebb3de6485e339c471ef91657",
+   "payloadPath": "events/0028.json",
+   "payloadHash": "d54a2bccb75594dcd8cb983e82c0ae6e70a84966875cc11c98e83c94b6a28652",
+   "eventHash": "0a6b1d389e8d26c734c554e98ae9cee422925a622824633e568931ec0cbdeeb1"
   }
  ]
 }

@@ -1,0 +1,24 @@
+{
+ "run": "phap-tu-reimagine-2026-09-26",
+ "reviewId": "REV-PTR-CLO-10",
+ "reviewer": "devin-98f688191a5344f188349be4a495d7f5",
+ "phase": "CLOSURE",
+ "pin": "cf1655b6",
+ "verdict": {
+  "verdict": "SEALED",
+  "fixesVerified": [
+   "COR-G-F-1",
+   "COR-G-F-2/INT-1",
+   "COR-G-F-3",
+   "INT-2",
+   "INT-3",
+   "AUT-G-Low-1",
+   "AUT-G-Low-2",
+   "AUT-G-Low-3/INT-5",
+   "AUT-G-Nit-7",
+   "COR-G-F-5",
+   "COR-G-F-6"
+  ],
+  "findings": []
+ }
+}
