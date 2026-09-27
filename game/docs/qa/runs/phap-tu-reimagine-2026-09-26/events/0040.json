@@ -1,0 +1,18 @@
+{
+  "applied": [
+    "review:REV-PTR-CLO-14",
+    "evidence:EV-PTR-CLO14",
+    "finding:F-PTR-154",
+    "evidence:EV-PTR-FIXK",
+    "lesson:L-PTR-K-FAULT-WHOLE-FIELD",
+    "finding:F-PTR-145 (updated)",
+    "finding:F-PTR-146 (updated)",
+    "finding:F-PTR-147 (updated)",
+    "finding:F-PTR-148 (updated)",
+    "finding:F-PTR-149 (updated)",
+    "finding:F-PTR-150 (updated)",
+    "finding:F-PTR-151 (updated)",
+    "finding:F-PTR-152 (updated)",
+    "finding:F-PTR-153 (updated)"
+  ]
+}

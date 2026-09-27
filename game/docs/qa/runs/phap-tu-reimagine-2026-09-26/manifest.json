@@ -19896,13 +19896,13 @@
       "path": "src/core/skilldef/SkillDefinitionRegistry.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "dda707b5fb2e2f099bb3ff6ff456c99ba89a6bf86fb275638c23c1ecdc5ce40a"
+      "hash": "cb97bc3274414c431824b308f609d5eb34643d79241571a898757e4c310f008a"
     },
     {
       "path": "src/core/skilldef/SkillDefinitionRegistry.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "dd9260658dd41efc904745b5ded73724ed930f341cb1719e7f4352c46b349d93"
+      "hash": "51e42491c1ff2c2ff3a2f5362c57bfae1a5330d1c227fbd01a3658a1b83a3bd6"
     },
     {
       "path": "src/core/skilldef/SkillExecutionHooks.ts",
@@ -23097,5 +23097,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "20f373d4864085a3be6f76be88ebd1cd4ad5c94c0bd3f8636c7654949f9cc889"
+  "productStateId": "3f2198b4855d8aaa1a95d949540c85f1f5a74f8dafd18501189a29b7f73df657"
 }
