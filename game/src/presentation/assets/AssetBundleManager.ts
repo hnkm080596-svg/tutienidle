@@ -18,11 +18,46 @@ import {
   getBundlesForRoute,
   type AssetBundleId,
   type AssetResourceDescriptor,
+  type DomAudioResourceDescriptor,
   type DomImageResourceDescriptor,
 } from './AssetBundleCatalog'
 import type { AssetLoaderScene } from '@/game/scenes/AssetLoaderScene'
+import { AudioManager } from '@/core/audio/AudioManager'
 
 export type DomImageLoader = (url: string, signal?: AbortSignal) => Promise<void>
+
+/**
+ * Sound System W4: fetches the first reachable URL of an audio descriptor
+ * and returns the raw bytes; AudioManager owns decoding (the context owns
+ * decodeAudioData, not this DOM lane).
+ */
+export type DomAudioLoader = (
+  urls: readonly string[],
+  signal?: AbortSignal,
+) => Promise<ArrayBuffer>
+
+export function defaultDomAudioLoader(
+  urls: readonly string[],
+  signal?: AbortSignal,
+): Promise<ArrayBuffer> {
+  return (async () => {
+    if (typeof fetch !== 'function') {
+      throw new Error('fetch unavailable in this environment')
+    }
+    let lastError: unknown = new Error('no audio urls')
+    for (const url of urls) {
+      if (signal?.aborted) throw new Error(`Load aborted: ${url}`)
+      try {
+        const res = await fetch(url, { signal })
+        if (!res.ok) throw new Error(`Audio fetch failed ${res.status}: ${url}`)
+        return await res.arrayBuffer()
+      } catch (err) {
+        lastError = err
+      }
+    }
+    throw lastError
+  })()
+}
 
 export function defaultDomImageLoader(url: string, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -74,20 +109,28 @@ export function descriptorsMatch(a: AssetResourceDescriptor, b: AssetResourceDes
   if (a.kind === 'multiatlas' && b.kind === 'multiatlas') {
     return a.jsonUrl === b.jsonUrl && a.basePath === b.basePath
   }
+  if (a.kind === 'dom-audio' && b.kind === 'dom-audio') {
+    return a.urls.length === b.urls.length && a.urls.every((url, i) => url === b.urls[i])
+  }
   return false
 }
 
 export interface AssetBundleManagerOptions {
   loaderScene?: AssetLoaderScene | null
   domImageLoader?: DomImageLoader
+  domAudioLoader?: DomAudioLoader
 }
 
 export class AssetBundleManager implements AssetPort {
   private loaderScene: AssetLoaderScene | null = null
   private readonly domImageLoader: DomImageLoader
+  private readonly domAudioLoader: DomAudioLoader
 
   private readonly knownDescriptors = new Map<string, AssetResourceDescriptor>()
   private readonly loadedResources = new Set<string>()
+  // Optional (dom-audio) resources that failed to load: recorded so repeat
+  // requests resolve immediately without re-fetching a known-missing file.
+  private readonly missingResources = new Set<string>()
   private readonly inFlightLoads = new Map<string, Promise<void>>()
   private readonly loaderSceneResolvers = new Set<(scene: AssetLoaderScene) => void>()
   private disposed = false
@@ -103,6 +146,7 @@ export class AssetBundleManager implements AssetPort {
   constructor(options: AssetBundleManagerOptions = {}) {
     this.loaderScene = options.loaderScene ?? null
     this.domImageLoader = options.domImageLoader ?? defaultDomImageLoader
+    this.domAudioLoader = options.domAudioLoader ?? defaultDomAudioLoader
   }
 
   setLoaderScene(scene: AssetLoaderScene | null): void {
@@ -161,17 +205,27 @@ export class AssetBundleManager implements AssetPort {
       return
     }
 
-    // Split between DOM images and Phaser textures
+    // Split between DOM images, DOM audio, and Phaser textures
     const domDescriptors = needed.filter(
       (d): d is DomImageResourceDescriptor => d.kind === 'dom-image',
     )
-    const phaserDescriptors = needed.filter((d) => d.kind !== 'dom-image')
+    const domAudioDescriptors = needed.filter(
+      (d): d is DomAudioResourceDescriptor => d.kind === 'dom-audio',
+    )
+    const phaserDescriptors = needed.filter(
+      (d) => d.kind !== 'dom-image' && d.kind !== 'dom-audio',
+    )
 
     const tasks: Promise<void>[] = []
 
     // 1. Load DOM images (each deduped per key)
     for (const domDesc of domDescriptors) {
       tasks.push(this.loadSingleDomImage(domDesc, signal))
+    }
+
+    // 1b. Load DOM audio (deduped per key; fail-soft per the optional contract)
+    for (const audioDesc of domAudioDescriptors) {
+      tasks.push(this.loadSingleDomAudio(audioDesc, signal))
     }
 
     // 2. Load Phaser textures via loader scene (serialized batch)
@@ -219,6 +273,7 @@ export class AssetBundleManager implements AssetPort {
     this.loaderSceneResolvers.clear()
     this.inFlightLoads.clear()
     this.loadedResources.clear()
+    this.missingResources.clear()
     this.knownDescriptors.clear()
   }
 
@@ -274,6 +329,48 @@ export class AssetBundleManager implements AssetPort {
 
     this.inFlightLoads.set(desc.key, loadPromise)
     return this.wrapWithSignal(loadPromise, signal)
+  }
+
+  /**
+   * Optional lane (Sound System W4): identical dedupe/inFlight mechanics as
+   * loadSingleDomImage, but a load failure marks the key missing and
+   * RESOLVES — audio must never reject a route the way a missing texture
+   * does. Decoded bytes hand to AudioManager's decode cache.
+   */
+  private loadSingleDomAudio(
+    desc: DomAudioResourceDescriptor,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    if (this.isResourceLoaded(desc.key) || this.missingResources.has(desc.key)) {
+      return Promise.resolve()
+    }
+
+    const existingPromise = this.inFlightLoads.get(desc.key)
+    if (existingPromise) {
+      return this.wrapWithSignal(existingPromise, signal).catch(() => undefined)
+    }
+
+    const runLoad = async (): Promise<void> => {
+      try {
+        const bytes = await this.domAudioLoader(desc.urls, signal)
+        AudioManager.getInstance().attachEncodedBuffer(desc.key, bytes)
+        this.loadedResources.add(desc.key)
+      } catch {
+        this.missingResources.add(desc.key)
+      } finally {
+        if (this.inFlightLoads.get(desc.key) === loadPromise) {
+          this.inFlightLoads.delete(desc.key)
+        }
+      }
+    }
+
+    const loadPromise = runLoad()
+
+    this.inFlightLoads.set(desc.key, loadPromise)
+    // The promise itself never rejects (fail-soft), but wrapWithSignal can
+    // reject on caller abort — callers of an OPTIONAL lane must not see a
+    // rejection either, so swallow it.
+    return this.wrapWithSignal(loadPromise, signal).catch(() => undefined)
   }
 
   private loadPhaserBatch(

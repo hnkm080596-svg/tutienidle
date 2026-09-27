@@ -44,8 +44,11 @@ import {
   PLACEHOLDER_STATIC_TEXTURE_URL,
 } from '@/presentation/art/CombatPresentationCatalogue'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
+import { AUDIO_CUES } from '@/core/audio/AudioCueManifest'
 
-export type AssetBundleId = 'core-ui' | 'home' | 'combat' | 'tribulation'
+export type AudioBundleId = 'audio-core' | 'audio-combat' | 'audio-tribulation'
+
+export type AssetBundleId = 'core-ui' | 'home' | 'combat' | 'tribulation' | AudioBundleId
 
 export type ImageResourceDescriptor = Readonly<{
   kind: 'image'
@@ -81,12 +84,24 @@ export type DomImageResourceDescriptor = Readonly<{
   url: string
 }>
 
+// Sound System W4: DOM-side audio fetch lane. `key` is the cue id, `urls`
+// the codec/variant fallbacks tried in order. `optional` is a type-level
+// marker: a missing file marks the key missing and resolves — it never
+// rejects a bundle the way a missing texture does.
+export type DomAudioResourceDescriptor = Readonly<{
+  kind: 'dom-audio'
+  key: string
+  urls: readonly string[]
+  optional: true
+}>
+
 export type AssetResourceDescriptor =
   | ImageResourceDescriptor
   | SpritesheetResourceDescriptor
   | AtlasResourceDescriptor
   | MultiAtlasResourceDescriptor
   | DomImageResourceDescriptor
+  | DomAudioResourceDescriptor
 
 export function getCoreUiDescriptors(): readonly AssetResourceDescriptor[] {
   return [
@@ -281,6 +296,33 @@ export function getTribulationDescriptors(): readonly AssetResourceDescriptor[] 
   return descriptors
 }
 
+/**
+ * Cue-id prefixes each lazy audio bundle covers. `audio-core` carries every
+ * non-scene cue domain plus menu/home music; combat and tribulation add
+ * their own cues (tribulation keeps combat.* because ward/vitals events
+ * fire there too). While every manifest `src` is '' this yields [].
+ */
+const AUDIO_BUNDLE_PREFIXES: Record<AudioBundleId, readonly string[]> = {
+  'audio-core': ['ui.', 'stinger.', 'progress.', 'craft.', 'farm.', 'ambient.', 'music.menu', 'music.home'],
+  'audio-combat': ['combat.', 'music.combat'],
+  'audio-tribulation': ['tribulation.', 'combat.', 'music.tribulation'],
+}
+
+/** Manifest-derived audio descriptors: one row per cue with a non-empty src. */
+export function audioDescriptorsFor(
+  bundleId: AudioBundleId,
+): readonly DomAudioResourceDescriptor[] {
+  const prefixes = AUDIO_BUNDLE_PREFIXES[bundleId]
+  const out: DomAudioResourceDescriptor[] = []
+  for (const [id, def] of Object.entries(AUDIO_CUES)) {
+    if (!prefixes.some((p) => id === p || id.startsWith(p))) continue
+    const urls = typeof def.src === 'string' ? (def.src ? [def.src] : []) : [...def.src]
+    if (urls.length === 0) continue
+    out.push({ kind: 'dom-audio', key: id, urls, optional: true })
+  }
+  return out
+}
+
 export function getBundleDescriptors(bundleId: AssetBundleId): readonly AssetResourceDescriptor[] {
   switch (bundleId) {
     case 'core-ui':
@@ -291,6 +333,10 @@ export function getBundleDescriptors(bundleId: AssetBundleId): readonly AssetRes
       return getCombatDescriptors()
     case 'tribulation':
       return getTribulationDescriptors()
+    case 'audio-core':
+    case 'audio-combat':
+    case 'audio-tribulation':
+      return audioDescriptorsFor(bundleId)
   }
 }
 

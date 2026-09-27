@@ -1,13 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   AssetBundleManager,
+  type DomAudioLoader,
   type DomImageLoader,
 } from './AssetBundleManager'
 import {
   getBundleDescriptors,
   type AssetResourceDescriptor,
+  type DomAudioResourceDescriptor,
 } from './AssetBundleCatalog'
 import type { AssetLoaderScene } from '@/game/scenes/AssetLoaderScene'
+import { AudioManager } from '@/core/audio/AudioManager'
+import { AUDIO_CUES } from '@/core/audio/AudioCueManifest'
 
 function createMockLoaderScene() {
   const loadedKeys = new Set<string>()
@@ -365,5 +369,81 @@ describe('AssetBundleManager', () => {
       signal,
     )
     expect(ensureSpy).toHaveBeenCalledWith(['core-ui', 'tribulation'], signal)
+  })
+})
+
+
+describe('W4 dom-audio lane', () => {
+  let loaderScene: ReturnType<typeof createMockLoaderScene>
+  let domImageLoader: DomImageLoader
+
+  beforeEach(() => {
+    loaderScene = createMockLoaderScene()
+    domImageLoader = vi.fn(async () => undefined)
+  })
+
+  function injectCue(id: string, srcValue: string | readonly string[]) {
+    const cues = AUDIO_CUES as Record<string, (typeof AUDIO_CUES)[string]>
+    const orig = cues[id]
+    cues[id] = { ...orig!, src: srcValue }
+    return () => {
+      if (orig) cues[id] = orig
+      else delete cues[id]
+    }
+  }
+
+  it('loads optional audio, hands encoded bytes to AudioManager, dedupes', async () => {
+    const restore = injectCue('ui.click', 'assets/audio/ui/click.ogg')
+    const attach = vi
+      .spyOn(AudioManager.getInstance(), 'attachEncodedBuffer')
+      .mockImplementation(() => undefined)
+    const bytes = new ArrayBuffer(8)
+    const domAudioLoader: DomAudioLoader = vi.fn(async () => bytes)
+    try {
+      const manager = new AssetBundleManager({ loaderScene, domImageLoader, domAudioLoader })
+      await manager.ensureLoaded(['audio-core'])
+      await manager.ensureLoaded(['audio-core'])
+      expect(domAudioLoader).toHaveBeenCalledTimes(1)
+      expect(attach).toHaveBeenCalledWith('ui.click', bytes)
+      expect(manager.isResourceLoaded('ui.click')).toBe(true)
+    } finally {
+      attach.mockRestore()
+      restore()
+    }
+  })
+
+  it('a fetch failure marks the key missing and resolves (never rejects)', async () => {
+    const restore = injectCue('combat.hit', 'assets/audio/sfx/missing.ogg')
+    const domAudioLoader: DomAudioLoader = vi.fn(async () => {
+      throw new Error('404')
+    })
+    try {
+      const manager = new AssetBundleManager({ loaderScene, domImageLoader, domAudioLoader })
+      await expect(manager.ensureLoaded(['audio-combat'])).resolves.toBeUndefined()
+      expect(manager.isResourceLoaded('combat.hit')).toBe(false)
+      // missing mark: second ensure does not re-fetch
+      await manager.ensureLoaded(['audio-combat'])
+      expect(domAudioLoader).toHaveBeenCalledTimes(1)
+    } finally {
+      restore()
+    }
+  })
+
+  it('descriptor collision between conflicting dom-audio rows still throws', async () => {
+    const restore = injectCue('ui.click', 'a.ogg')
+    const domAudioLoader: DomAudioLoader = vi.fn(async () => new ArrayBuffer(4))
+    try {
+      const manager = new AssetBundleManager({ loaderScene, domImageLoader, domAudioLoader })
+      await manager.ensureLoaded(['audio-core'])
+      restore()
+      const restore2 = injectCue('ui.click', 'different.ogg')
+      try {
+        await expect(manager.ensureLoaded(['audio-core'])).rejects.toThrow('collision')
+      } finally {
+        restore2()
+      }
+    } finally {
+      restore()
+    }
   })
 })
