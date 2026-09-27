@@ -32,9 +32,10 @@
     "uiConsequences": "",
     "oracles": [],
     "requiredEvidenceSurfaces": [
-     "B",
-     "D",
-     "G"
+     "DETERMINISTIC",
+     "STATIC_SEMANTIC",
+     "RUNTIME_E2E",
+     "INDEPENDENT_REVIEW"
     ],
     "taxonomyIds": [],
     "status": "ACTIVE"
@@ -72,9 +73,10 @@
     "uiConsequences": "",
     "oracles": [],
     "requiredEvidenceSurfaces": [
-     "B",
-     "D",
-     "G"
+     "DETERMINISTIC",
+     "STATIC_SEMANTIC",
+     "RUNTIME_E2E",
+     "INDEPENDENT_REVIEW"
     ],
     "taxonomyIds": [],
     "status": "ACTIVE"
@@ -112,9 +114,10 @@
     "uiConsequences": "",
     "oracles": [],
     "requiredEvidenceSurfaces": [
-     "B",
-     "D",
-     "G"
+     "DETERMINISTIC",
+     "STATIC_SEMANTIC",
+     "RUNTIME_E2E",
+     "INDEPENDENT_REVIEW"
     ],
     "taxonomyIds": [],
     "status": "ACTIVE"
@@ -152,9 +155,10 @@
     "uiConsequences": "",
     "oracles": [],
     "requiredEvidenceSurfaces": [
-     "B",
-     "D",
-     "G"
+     "DETERMINISTIC",
+     "STATIC_SEMANTIC",
+     "RUNTIME_E2E",
+     "INDEPENDENT_REVIEW"
     ],
     "taxonomyIds": [],
     "status": "ACTIVE"
@@ -192,9 +196,10 @@
     "uiConsequences": "",
     "oracles": [],
     "requiredEvidenceSurfaces": [
-     "B",
-     "D",
-     "G"
+     "DETERMINISTIC",
+     "STATIC_SEMANTIC",
+     "RUNTIME_E2E",
+     "INDEPENDENT_REVIEW"
     ],
     "taxonomyIds": [],
     "status": "ACTIVE"
@@ -232,9 +237,10 @@
     "uiConsequences": "",
     "oracles": [],
     "requiredEvidenceSurfaces": [
-     "B",
-     "D",
-     "G"
+     "DETERMINISTIC",
+     "STATIC_SEMANTIC",
+     "RUNTIME_E2E",
+     "INDEPENDENT_REVIEW"
     ],
     "taxonomyIds": [],
     "status": "ACTIVE"
@@ -272,9 +278,10 @@
     "uiConsequences": "",
     "oracles": [],
     "requiredEvidenceSurfaces": [
-     "B",
-     "D",
-     "G"
+     "DETERMINISTIC",
+     "STATIC_SEMANTIC",
+     "RUNTIME_E2E",
+     "INDEPENDENT_REVIEW"
     ],
     "taxonomyIds": [],
     "status": "ACTIVE"
@@ -285,7 +292,7 @@
    "body": {
     "id": "EV-VERIFY-FULL",
     "state": {
-     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
      "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
      "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
      "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -308,7 +315,8 @@
     "limitations": [
      "2 environment timeout flakes under parallel load (dongFuBackgroundAssets, autoFarmOffline) - both pass isolated; recorded as FLAKY baseline, not task-caused"
     ],
-    "status": "CURRENT"
+    "status": "CURRENT",
+    "kind": "EXECUTED_UNIT_STRUCTURAL"
    }
   },
   {
@@ -316,7 +324,7 @@
    "body": {
     "id": "EV-VERIFY-FLAKE-RERUN",
     "state": {
-     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
      "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
      "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
      "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -339,7 +347,8 @@
     "limitations": [
      "confirms environment contention, not product defect"
     ],
-    "status": "CURRENT"
+    "status": "CURRENT",
+    "kind": "EXECUTED_UNIT_STRUCTURAL"
    }
   },
   {
@@ -347,7 +356,7 @@
    "body": {
     "id": "EV-E2E-IDLE",
     "state": {
-     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
      "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
      "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
      "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -370,7 +379,8 @@
     "limitations": [
      "probe path used for deterministic reskin exercise; natural spawn RNG noted"
     ],
-    "status": "CURRENT"
+    "status": "CURRENT",
+    "kind": "EXECUTED_RUNTIME"
    }
   },
   {
@@ -378,7 +388,7 @@
    "body": {
     "id": "EV-FOCUSED",
     "state": {
-     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
      "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
      "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
      "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -399,7 +409,8 @@
      "61/61 focused tests green on final state"
     ],
     "limitations": [],
-    "status": "CURRENT"
+    "status": "CURRENT",
+    "kind": "EXECUTED_UNIT_STRUCTURAL"
    }
   },
   {
@@ -407,7 +418,7 @@
    "body": {
     "id": "EV-OCR",
     "state": {
-     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
      "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
      "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
      "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -430,7 +441,8 @@
     "limitations": [
      "delegation-mode reasoning, no external reviewer"
     ],
-    "status": "CURRENT"
+    "status": "CURRENT",
+    "kind": "SOURCE_PROOF"
    }
   },
   {
@@ -438,7 +450,7 @@
    "body": {
     "id": "EV-P4-QUICK",
     "state": {
-     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
      "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
      "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
      "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -461,7 +473,8 @@
     "limitations": [
      "quick mode only - not a deep audit"
     ],
-    "status": "CURRENT"
+    "status": "CURRENT",
+    "kind": "EXECUTED_INTEGRATION"
    }
   },
   {
@@ -469,7 +482,7 @@
    "body": {
     "id": "EV-P5-PASSES",
     "state": {
-     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
      "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
      "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
      "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -492,7 +505,8 @@
     "limitations": [
      "passes were same-context coordinator reviews - not independent contexts"
     ],
-    "status": "CURRENT"
+    "status": "CURRENT",
+    "kind": "SOURCE_PROOF"
    }
   }
  ]

@@ -14,12 +14,12 @@
       "boss multi-skill clips",
       "master modifications"
     ],
-    "checkout": "",
-    "branch": "",
-    "base": "",
-    "head": "",
+    "checkout": "E:/tutienidle/.agent-worktrees/enemy-art-wave1",
+    "branch": "enemy-art-wave1",
+    "base": "686219870ad364786d699fe617a52d32efab0c34",
+    "head": "729ae89ce6bec984fedca1c1e25ec8d7e4b30ed6",
     "state": {
-      "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+      "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
       "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
       "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
       "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -34,273 +34,616 @@
     "briefIds": [],
     "capacityLimit": 5,
     "requiredReadiness": true,
-    "phase": "SNAPSHOT",
+    "phase": "DECIDE",
     "cleanRoundA": null,
     "cleanRoundB": null,
     "finalEvidenceIds": [],
-    "outcome": null
+    "outcome": "QA_UNVERIFIED"
   },
   "briefs": [],
   "assignments": [],
   "consumptions": [],
   "invariants": [
     {
-      "id": "INV-RESKIN-RESOLVE",
+      "id": "I-RESKIN-RESOLVE",
       "statement": "A mapped enemy template/runtime id resolves to its variant slug before any texture lookup; unmapped ids keep legacy texture/placeholder resolution.",
-      "domain": "combat presentation",
+      "domain": "combat-presentation",
       "risk": "HIGH",
       "sources": [
-        "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
-        "code comments + tests"
+        {
+          "path": "game/docs/p7/missions/enemy-art-wave1.spec.md",
+          "symbolOrSection": "invariant ledger",
+          "revision": "729ae89c",
+          "basis": "MAINTAINED_CONTRACT"
+        },
+        {
+          "path": "game/src/game/support/MonsterArt.ts",
+          "symbolOrSection": "MONSTER_ART",
+          "revision": "729ae89c",
+          "basis": "SOURCE"
+        }
       ],
-      "owner": "",
-      "legalWriters": [],
-      "legalReaders": [],
-      "projections": [],
-      "caches": [],
-      "validStates": [],
-      "forbiddenStates": [],
-      "preconditions": [],
-      "postconditions": [],
-      "legalTransitions": [],
-      "illegalTransitions": [],
-      "failureBehavior": "",
-      "atomicity": "",
-      "inverseBehavior": "",
-      "persistence": "",
-      "migration": "",
-      "lifecycle": "",
-      "runtimeConsequences": "",
-      "uiConsequences": "",
-      "oracles": [],
+      "owner": {
+        "path": "game/src/game/support/MonsterArt.ts",
+        "symbolOrSection": "MONSTER_ART",
+        "revision": "729ae89c",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "pack-enemy-art.mjs",
+        "MonsterArt.ts",
+        "CombatPresentationCatalogue.ts"
+      ],
+      "legalReaders": [
+        "combat-grid-view.ts",
+        "CombatPreload.ts",
+        "AssetBundleCatalog.ts",
+        "combat-animation-playback.ts"
+      ],
+      "projections": [
+        "n/a - presentation-layer invariant"
+      ],
+      "caches": [
+        "n/a - presentation-layer invariant"
+      ],
+      "validStates": [
+        "n/a - presentation-layer invariant"
+      ],
+      "forbiddenStates": [
+        "n/a - presentation-layer invariant"
+      ],
+      "preconditions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "postconditions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "legalTransitions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "illegalTransitions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "failureBehavior": "n/a - presentation-layer invariant",
+      "atomicity": "n/a - presentation-layer invariant",
+      "inverseBehavior": "n/a - presentation-layer invariant",
+      "persistence": "n/a - presentation-layer invariant",
+      "migration": "n/a - presentation-layer invariant",
+      "lifecycle": "n/a - presentation-layer invariant",
+      "runtimeConsequences": [
+        "n/a - presentation-layer invariant"
+      ],
+      "uiConsequences": [
+        "n/a - presentation-layer invariant"
+      ],
+      "oracles": [
+        "n/a - presentation-layer invariant"
+      ],
       "requiredEvidenceSurfaces": [
-        "B",
-        "D",
-        "G"
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
       ],
-      "taxonomyIds": [],
+      "taxonomyIds": [
+        "n/a - presentation-layer invariant"
+      ],
       "status": "ACTIVE"
     },
     {
-      "id": "INV-ANIMATED-OVERRIDE",
+      "id": "I-ANIMATED-OVERRIDE",
       "statement": "Under ENTITY_ART_MODE=static exactly ANIMATED_ENEMY_KEYS emit kind:animated; no other entity drifts animated.",
-      "domain": "presentation contract",
+      "domain": "combat-presentation",
       "risk": "HIGH",
       "sources": [
-        "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
-        "code comments + tests"
+        {
+          "path": "game/docs/p7/missions/enemy-art-wave1.spec.md",
+          "symbolOrSection": "invariant ledger",
+          "revision": "729ae89c",
+          "basis": "MAINTAINED_CONTRACT"
+        },
+        {
+          "path": "game/src/game/support/MonsterArt.ts",
+          "symbolOrSection": "MONSTER_ART",
+          "revision": "729ae89c",
+          "basis": "SOURCE"
+        }
       ],
-      "owner": "",
-      "legalWriters": [],
-      "legalReaders": [],
-      "projections": [],
-      "caches": [],
-      "validStates": [],
-      "forbiddenStates": [],
-      "preconditions": [],
-      "postconditions": [],
-      "legalTransitions": [],
-      "illegalTransitions": [],
-      "failureBehavior": "",
-      "atomicity": "",
-      "inverseBehavior": "",
-      "persistence": "",
-      "migration": "",
-      "lifecycle": "",
-      "runtimeConsequences": "",
-      "uiConsequences": "",
-      "oracles": [],
+      "owner": {
+        "path": "game/src/game/support/MonsterArt.ts",
+        "symbolOrSection": "MONSTER_ART",
+        "revision": "729ae89c",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "pack-enemy-art.mjs",
+        "MonsterArt.ts",
+        "CombatPresentationCatalogue.ts"
+      ],
+      "legalReaders": [
+        "combat-grid-view.ts",
+        "CombatPreload.ts",
+        "AssetBundleCatalog.ts",
+        "combat-animation-playback.ts"
+      ],
+      "projections": [
+        "n/a - presentation-layer invariant"
+      ],
+      "caches": [
+        "n/a - presentation-layer invariant"
+      ],
+      "validStates": [
+        "n/a - presentation-layer invariant"
+      ],
+      "forbiddenStates": [
+        "n/a - presentation-layer invariant"
+      ],
+      "preconditions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "postconditions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "legalTransitions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "illegalTransitions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "failureBehavior": "n/a - presentation-layer invariant",
+      "atomicity": "n/a - presentation-layer invariant",
+      "inverseBehavior": "n/a - presentation-layer invariant",
+      "persistence": "n/a - presentation-layer invariant",
+      "migration": "n/a - presentation-layer invariant",
+      "lifecycle": "n/a - presentation-layer invariant",
+      "runtimeConsequences": [
+        "n/a - presentation-layer invariant"
+      ],
+      "uiConsequences": [
+        "n/a - presentation-layer invariant"
+      ],
+      "oracles": [
+        "n/a - presentation-layer invariant"
+      ],
       "requiredEvidenceSurfaces": [
-        "B",
-        "D",
-        "G"
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
       ],
-      "taxonomyIds": [],
+      "taxonomyIds": [
+        "n/a - presentation-layer invariant"
+      ],
       "status": "ACTIVE"
     },
     {
-      "id": "INV-FEET-ANCHOR",
+      "id": "I-FEET-ANCHOR",
       "statement": "Emitted sourceSize equals the idle-clip union alpha bbox so origin (0.5,1) lands on the character feet line.",
-      "domain": "asset pipeline",
-      "risk": "MEDIUM",
+      "domain": "combat-presentation",
+      "risk": "STANDARD",
       "sources": [
-        "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
-        "code comments + tests"
+        {
+          "path": "game/docs/p7/missions/enemy-art-wave1.spec.md",
+          "symbolOrSection": "invariant ledger",
+          "revision": "729ae89c",
+          "basis": "MAINTAINED_CONTRACT"
+        },
+        {
+          "path": "game/src/game/support/MonsterArt.ts",
+          "symbolOrSection": "MONSTER_ART",
+          "revision": "729ae89c",
+          "basis": "SOURCE"
+        }
       ],
-      "owner": "",
-      "legalWriters": [],
-      "legalReaders": [],
-      "projections": [],
-      "caches": [],
-      "validStates": [],
-      "forbiddenStates": [],
-      "preconditions": [],
-      "postconditions": [],
-      "legalTransitions": [],
-      "illegalTransitions": [],
-      "failureBehavior": "",
-      "atomicity": "",
-      "inverseBehavior": "",
-      "persistence": "",
-      "migration": "",
-      "lifecycle": "",
-      "runtimeConsequences": "",
-      "uiConsequences": "",
-      "oracles": [],
+      "owner": {
+        "path": "game/src/game/support/MonsterArt.ts",
+        "symbolOrSection": "MONSTER_ART",
+        "revision": "729ae89c",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "pack-enemy-art.mjs",
+        "MonsterArt.ts",
+        "CombatPresentationCatalogue.ts"
+      ],
+      "legalReaders": [
+        "combat-grid-view.ts",
+        "CombatPreload.ts",
+        "AssetBundleCatalog.ts",
+        "combat-animation-playback.ts"
+      ],
+      "projections": [
+        "n/a - presentation-layer invariant"
+      ],
+      "caches": [
+        "n/a - presentation-layer invariant"
+      ],
+      "validStates": [
+        "n/a - presentation-layer invariant"
+      ],
+      "forbiddenStates": [
+        "n/a - presentation-layer invariant"
+      ],
+      "preconditions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "postconditions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "legalTransitions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "illegalTransitions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "failureBehavior": "n/a - presentation-layer invariant",
+      "atomicity": "n/a - presentation-layer invariant",
+      "inverseBehavior": "n/a - presentation-layer invariant",
+      "persistence": "n/a - presentation-layer invariant",
+      "migration": "n/a - presentation-layer invariant",
+      "lifecycle": "n/a - presentation-layer invariant",
+      "runtimeConsequences": [
+        "n/a - presentation-layer invariant"
+      ],
+      "uiConsequences": [
+        "n/a - presentation-layer invariant"
+      ],
+      "oracles": [
+        "n/a - presentation-layer invariant"
+      ],
       "requiredEvidenceSurfaces": [
-        "B",
-        "D",
-        "G"
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
       ],
-      "taxonomyIds": [],
+      "taxonomyIds": [
+        "n/a - presentation-layer invariant"
+      ],
       "status": "ACTIVE"
     },
     {
-      "id": "INV-LOADER-PARITY",
+      "id": "I-LOADER-PARITY",
       "statement": "Loaders enumerate the MonsterArt registry only; reskinned template ids skip their old PNG; reserved unregistered variants are never loaded.",
-      "domain": "asset loading",
-      "risk": "MEDIUM",
+      "domain": "combat-presentation",
+      "risk": "STANDARD",
       "sources": [
-        "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
-        "code comments + tests"
+        {
+          "path": "game/docs/p7/missions/enemy-art-wave1.spec.md",
+          "symbolOrSection": "invariant ledger",
+          "revision": "729ae89c",
+          "basis": "MAINTAINED_CONTRACT"
+        },
+        {
+          "path": "game/src/game/support/MonsterArt.ts",
+          "symbolOrSection": "MONSTER_ART",
+          "revision": "729ae89c",
+          "basis": "SOURCE"
+        }
       ],
-      "owner": "",
-      "legalWriters": [],
-      "legalReaders": [],
-      "projections": [],
-      "caches": [],
-      "validStates": [],
-      "forbiddenStates": [],
-      "preconditions": [],
-      "postconditions": [],
-      "legalTransitions": [],
-      "illegalTransitions": [],
-      "failureBehavior": "",
-      "atomicity": "",
-      "inverseBehavior": "",
-      "persistence": "",
-      "migration": "",
-      "lifecycle": "",
-      "runtimeConsequences": "",
-      "uiConsequences": "",
-      "oracles": [],
+      "owner": {
+        "path": "game/src/game/support/MonsterArt.ts",
+        "symbolOrSection": "MONSTER_ART",
+        "revision": "729ae89c",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "pack-enemy-art.mjs",
+        "MonsterArt.ts",
+        "CombatPresentationCatalogue.ts"
+      ],
+      "legalReaders": [
+        "combat-grid-view.ts",
+        "CombatPreload.ts",
+        "AssetBundleCatalog.ts",
+        "combat-animation-playback.ts"
+      ],
+      "projections": [
+        "n/a - presentation-layer invariant"
+      ],
+      "caches": [
+        "n/a - presentation-layer invariant"
+      ],
+      "validStates": [
+        "n/a - presentation-layer invariant"
+      ],
+      "forbiddenStates": [
+        "n/a - presentation-layer invariant"
+      ],
+      "preconditions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "postconditions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "legalTransitions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "illegalTransitions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "failureBehavior": "n/a - presentation-layer invariant",
+      "atomicity": "n/a - presentation-layer invariant",
+      "inverseBehavior": "n/a - presentation-layer invariant",
+      "persistence": "n/a - presentation-layer invariant",
+      "migration": "n/a - presentation-layer invariant",
+      "lifecycle": "n/a - presentation-layer invariant",
+      "runtimeConsequences": [
+        "n/a - presentation-layer invariant"
+      ],
+      "uiConsequences": [
+        "n/a - presentation-layer invariant"
+      ],
+      "oracles": [
+        "n/a - presentation-layer invariant"
+      ],
       "requiredEvidenceSurfaces": [
-        "B",
-        "D",
-        "G"
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
       ],
-      "taxonomyIds": [],
+      "taxonomyIds": [
+        "n/a - presentation-layer invariant"
+      ],
       "status": "ACTIVE"
     },
     {
-      "id": "INV-DEATH-LIFECYCLE",
+      "id": "I-DEATH-LIFECYCLE",
       "statement": "An animated enemy death clip completes before sprite destruction; completion callbacks are key-filtered and identity-checked; re-entry anim registration is idempotent.",
-      "domain": "combat lifecycle",
+      "domain": "combat-presentation",
       "risk": "HIGH",
       "sources": [
-        "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
-        "code comments + tests"
+        {
+          "path": "game/docs/p7/missions/enemy-art-wave1.spec.md",
+          "symbolOrSection": "invariant ledger",
+          "revision": "729ae89c",
+          "basis": "MAINTAINED_CONTRACT"
+        },
+        {
+          "path": "game/src/game/support/MonsterArt.ts",
+          "symbolOrSection": "MONSTER_ART",
+          "revision": "729ae89c",
+          "basis": "SOURCE"
+        }
       ],
-      "owner": "",
-      "legalWriters": [],
-      "legalReaders": [],
-      "projections": [],
-      "caches": [],
-      "validStates": [],
-      "forbiddenStates": [],
-      "preconditions": [],
-      "postconditions": [],
-      "legalTransitions": [],
-      "illegalTransitions": [],
-      "failureBehavior": "",
-      "atomicity": "",
-      "inverseBehavior": "",
-      "persistence": "",
-      "migration": "",
-      "lifecycle": "",
-      "runtimeConsequences": "",
-      "uiConsequences": "",
-      "oracles": [],
+      "owner": {
+        "path": "game/src/game/support/MonsterArt.ts",
+        "symbolOrSection": "MONSTER_ART",
+        "revision": "729ae89c",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "pack-enemy-art.mjs",
+        "MonsterArt.ts",
+        "CombatPresentationCatalogue.ts"
+      ],
+      "legalReaders": [
+        "combat-grid-view.ts",
+        "CombatPreload.ts",
+        "AssetBundleCatalog.ts",
+        "combat-animation-playback.ts"
+      ],
+      "projections": [
+        "n/a - presentation-layer invariant"
+      ],
+      "caches": [
+        "n/a - presentation-layer invariant"
+      ],
+      "validStates": [
+        "n/a - presentation-layer invariant"
+      ],
+      "forbiddenStates": [
+        "n/a - presentation-layer invariant"
+      ],
+      "preconditions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "postconditions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "legalTransitions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "illegalTransitions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "failureBehavior": "n/a - presentation-layer invariant",
+      "atomicity": "n/a - presentation-layer invariant",
+      "inverseBehavior": "n/a - presentation-layer invariant",
+      "persistence": "n/a - presentation-layer invariant",
+      "migration": "n/a - presentation-layer invariant",
+      "lifecycle": "n/a - presentation-layer invariant",
+      "runtimeConsequences": [
+        "n/a - presentation-layer invariant"
+      ],
+      "uiConsequences": [
+        "n/a - presentation-layer invariant"
+      ],
+      "oracles": [
+        "n/a - presentation-layer invariant"
+      ],
       "requiredEvidenceSurfaces": [
-        "B",
-        "D",
-        "G"
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
       ],
-      "taxonomyIds": [],
+      "taxonomyIds": [
+        "n/a - presentation-layer invariant"
+      ],
       "status": "ACTIVE"
     },
     {
-      "id": "INV-REGISTRY-MANIFEST-PARITY",
+      "id": "I-REGISTRY-MANIFEST-PARITY",
       "statement": "Hand-written registry entries equal generated manifest metadata (clip frames, sheet/atlas names, extent, sourceSize, avatar dims).",
-      "domain": "test oracle",
+      "domain": "combat-presentation",
       "risk": "HIGH",
       "sources": [
-        "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
-        "code comments + tests"
+        {
+          "path": "game/docs/p7/missions/enemy-art-wave1.spec.md",
+          "symbolOrSection": "invariant ledger",
+          "revision": "729ae89c",
+          "basis": "MAINTAINED_CONTRACT"
+        },
+        {
+          "path": "game/src/game/support/MonsterArt.ts",
+          "symbolOrSection": "MONSTER_ART",
+          "revision": "729ae89c",
+          "basis": "SOURCE"
+        }
       ],
-      "owner": "",
-      "legalWriters": [],
-      "legalReaders": [],
-      "projections": [],
-      "caches": [],
-      "validStates": [],
-      "forbiddenStates": [],
-      "preconditions": [],
-      "postconditions": [],
-      "legalTransitions": [],
-      "illegalTransitions": [],
-      "failureBehavior": "",
-      "atomicity": "",
-      "inverseBehavior": "",
-      "persistence": "",
-      "migration": "",
-      "lifecycle": "",
-      "runtimeConsequences": "",
-      "uiConsequences": "",
-      "oracles": [],
+      "owner": {
+        "path": "game/src/game/support/MonsterArt.ts",
+        "symbolOrSection": "MONSTER_ART",
+        "revision": "729ae89c",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "pack-enemy-art.mjs",
+        "MonsterArt.ts",
+        "CombatPresentationCatalogue.ts"
+      ],
+      "legalReaders": [
+        "combat-grid-view.ts",
+        "CombatPreload.ts",
+        "AssetBundleCatalog.ts",
+        "combat-animation-playback.ts"
+      ],
+      "projections": [
+        "n/a - presentation-layer invariant"
+      ],
+      "caches": [
+        "n/a - presentation-layer invariant"
+      ],
+      "validStates": [
+        "n/a - presentation-layer invariant"
+      ],
+      "forbiddenStates": [
+        "n/a - presentation-layer invariant"
+      ],
+      "preconditions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "postconditions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "legalTransitions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "illegalTransitions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "failureBehavior": "n/a - presentation-layer invariant",
+      "atomicity": "n/a - presentation-layer invariant",
+      "inverseBehavior": "n/a - presentation-layer invariant",
+      "persistence": "n/a - presentation-layer invariant",
+      "migration": "n/a - presentation-layer invariant",
+      "lifecycle": "n/a - presentation-layer invariant",
+      "runtimeConsequences": [
+        "n/a - presentation-layer invariant"
+      ],
+      "uiConsequences": [
+        "n/a - presentation-layer invariant"
+      ],
+      "oracles": [
+        "n/a - presentation-layer invariant"
+      ],
       "requiredEvidenceSurfaces": [
-        "B",
-        "D",
-        "G"
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
       ],
-      "taxonomyIds": [],
+      "taxonomyIds": [
+        "n/a - presentation-layer invariant"
+      ],
       "status": "ACTIVE"
     },
     {
-      "id": "INV-ATTACK-RETURN",
+      "id": "I-ATTACK-RETURN",
       "statement": "Authored attack clips play once and return to standby; entities without attack clips keep the shared lunge and are unaffected.",
-      "domain": "combat lifecycle",
-      "risk": "MEDIUM",
+      "domain": "combat-presentation",
+      "risk": "STANDARD",
       "sources": [
-        "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
-        "code comments + tests"
+        {
+          "path": "game/docs/p7/missions/enemy-art-wave1.spec.md",
+          "symbolOrSection": "invariant ledger",
+          "revision": "729ae89c",
+          "basis": "MAINTAINED_CONTRACT"
+        },
+        {
+          "path": "game/src/game/support/MonsterArt.ts",
+          "symbolOrSection": "MONSTER_ART",
+          "revision": "729ae89c",
+          "basis": "SOURCE"
+        }
       ],
-      "owner": "",
-      "legalWriters": [],
-      "legalReaders": [],
-      "projections": [],
-      "caches": [],
-      "validStates": [],
-      "forbiddenStates": [],
-      "preconditions": [],
-      "postconditions": [],
-      "legalTransitions": [],
-      "illegalTransitions": [],
-      "failureBehavior": "",
-      "atomicity": "",
-      "inverseBehavior": "",
-      "persistence": "",
-      "migration": "",
-      "lifecycle": "",
-      "runtimeConsequences": "",
-      "uiConsequences": "",
-      "oracles": [],
+      "owner": {
+        "path": "game/src/game/support/MonsterArt.ts",
+        "symbolOrSection": "MONSTER_ART",
+        "revision": "729ae89c",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "pack-enemy-art.mjs",
+        "MonsterArt.ts",
+        "CombatPresentationCatalogue.ts"
+      ],
+      "legalReaders": [
+        "combat-grid-view.ts",
+        "CombatPreload.ts",
+        "AssetBundleCatalog.ts",
+        "combat-animation-playback.ts"
+      ],
+      "projections": [
+        "n/a - presentation-layer invariant"
+      ],
+      "caches": [
+        "n/a - presentation-layer invariant"
+      ],
+      "validStates": [
+        "n/a - presentation-layer invariant"
+      ],
+      "forbiddenStates": [
+        "n/a - presentation-layer invariant"
+      ],
+      "preconditions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "postconditions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "legalTransitions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "illegalTransitions": [
+        "n/a - presentation-layer invariant"
+      ],
+      "failureBehavior": "n/a - presentation-layer invariant",
+      "atomicity": "n/a - presentation-layer invariant",
+      "inverseBehavior": "n/a - presentation-layer invariant",
+      "persistence": "n/a - presentation-layer invariant",
+      "migration": "n/a - presentation-layer invariant",
+      "lifecycle": "n/a - presentation-layer invariant",
+      "runtimeConsequences": [
+        "n/a - presentation-layer invariant"
+      ],
+      "uiConsequences": [
+        "n/a - presentation-layer invariant"
+      ],
+      "oracles": [
+        "n/a - presentation-layer invariant"
+      ],
       "requiredEvidenceSurfaces": [
-        "B",
-        "D",
-        "G"
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
       ],
-      "taxonomyIds": [],
+      "taxonomyIds": [
+        "n/a - presentation-layer invariant"
+      ],
       "status": "ACTIVE"
     }
   ],
@@ -310,7 +653,7 @@
       "id": "F-EAW-01",
       "title": "Unity pivot parser read {x,y} but dump uses {m_X,m_Y} - every pivot silently defaulted",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -318,16 +661,13 @@
       "severity": "Medium",
       "classification": "REAL_DEFECT",
       "actionable": true,
-      "reachability": "production-reachable",
+      "reachability": "PRODUCTION",
       "locations": [],
       "discoveredBy": "coordinator",
       "invariantIds": [],
       "evidenceIds": [
         "EV-OCR"
       ],
-      "counterexample": "",
-      "expected": "",
-      "actual": "",
       "rootCause": "wrong metadata key shape",
       "rootClass": "adapter-schema-drift",
       "subsystem": "art-pipeline",
@@ -361,17 +701,20 @@
         "RV-P5-2"
       ],
       "status": "CLOSED",
-      "duplicateOf": "",
-      "rejectionReason": "",
-      "exception": "",
       "closeReason": "fixed; real pivots recovered into manifest as provenance",
-      "closedAt": "2026-09-28T00:00:00Z"
+      "closedAt": "2026-09-28T00:00:00Z",
+      "counterexample": "n/a - see evidenceIds",
+      "expected": "n/a - see evidenceIds",
+      "actual": "n/a - see evidenceIds",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
     },
     {
       "id": "F-EAW-02",
       "title": "Art floated ~24% above ground: Unity pivot is not a feet anchor for this dump",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -379,16 +722,13 @@
       "severity": "High",
       "classification": "REAL_DEFECT",
       "actionable": true,
-      "reachability": "production-reachable",
+      "reachability": "PRODUCTION",
       "locations": [],
       "discoveredBy": "coordinator",
       "invariantIds": [],
       "evidenceIds": [
         "EV-E2E-IDLE"
       ],
-      "counterexample": "",
-      "expected": "",
-      "actual": "",
       "rootCause": "sourceSize spanned full authored canvas while runtime origin anchors at box bottom",
       "rootClass": "anchor-semantics-mismatch",
       "subsystem": "art-pipeline",
@@ -422,17 +762,20 @@
         "RV-P5-2"
       ],
       "status": "CLOSED",
-      "duplicateOf": "",
-      "rejectionReason": "",
-      "exception": "",
       "closeReason": "fixed; e2e screenshots show feet on ground line",
-      "closedAt": "2026-09-28T00:00:00Z"
+      "closedAt": "2026-09-28T00:00:00Z",
+      "counterexample": "n/a - see evidenceIds",
+      "expected": "n/a - see evidenceIds",
+      "actual": "n/a - see evidenceIds",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
     },
     {
       "id": "F-EAW-03",
       "title": "Boss art mapped to foundation_dragon_phase* ids which are buff ids not enemy ids",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -440,14 +783,11 @@
       "severity": "High",
       "classification": "REAL_DEFECT",
       "actionable": true,
-      "reachability": "production-reachable",
+      "reachability": "PRODUCTION",
       "locations": [],
       "discoveredBy": "coordinator",
       "invariantIds": [],
       "evidenceIds": [],
-      "counterexample": "",
-      "expected": "",
-      "actual": "",
       "rootCause": "id-namespace confusion (buff vs enemy)",
       "rootClass": "id-namespace",
       "subsystem": "art-pipeline",
@@ -481,17 +821,20 @@
         "RV-P5-2"
       ],
       "status": "CLOSED",
-      "duplicateOf": "",
-      "rejectionReason": "",
-      "exception": "",
       "closeReason": "fixed",
-      "closedAt": "2026-09-28T00:00:00Z"
+      "closedAt": "2026-09-28T00:00:00Z",
+      "counterexample": "n/a - see evidenceIds",
+      "expected": "n/a - see evidenceIds",
+      "actual": "n/a - see evidenceIds",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
     },
     {
       "id": "F-EAW-04",
       "title": "Registry hardcoded avatarSize 512x512 vs real ~150px PNGs",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -499,14 +842,11 @@
       "severity": "Medium",
       "classification": "TEST_DEFECT",
       "actionable": true,
-      "reachability": "production-reachable",
+      "reachability": "PRODUCTION",
       "locations": [],
       "discoveredBy": "coordinator",
       "invariantIds": [],
       "evidenceIds": [],
-      "counterexample": "",
-      "expected": "",
-      "actual": "",
       "rootCause": "hand-written registry drifted from generated assets",
       "rootClass": "registry-drift",
       "subsystem": "art-pipeline",
@@ -540,17 +880,20 @@
         "RV-P5-2"
       ],
       "status": "CLOSED",
-      "duplicateOf": "",
-      "rejectionReason": "",
-      "exception": "",
       "closeReason": "fixed",
-      "closedAt": "2026-09-28T00:00:00Z"
+      "closedAt": "2026-09-28T00:00:00Z",
+      "counterexample": "n/a - see evidenceIds",
+      "expected": "n/a - see evidenceIds",
+      "actual": "n/a - see evidenceIds",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
     },
     {
       "id": "F-EAW-05",
       "title": "Stale test fixtures assumed mortal_wild_boar static after it was intentionally reskinned",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -558,14 +901,11 @@
       "severity": "Low",
       "classification": "TEST_DEFECT",
       "actionable": true,
-      "reachability": "production-reachable",
+      "reachability": "PRODUCTION",
       "locations": [],
       "discoveredBy": "coordinator",
       "invariantIds": [],
       "evidenceIds": [],
-      "counterexample": "",
-      "expected": "",
-      "actual": "",
       "rootCause": "fixture semantics broke when mapping landed",
       "rootClass": "fixture-drift",
       "subsystem": "art-pipeline",
@@ -599,17 +939,20 @@
         "RV-P5-2"
       ],
       "status": "CLOSED",
-      "duplicateOf": "",
-      "rejectionReason": "",
-      "exception": "",
       "closeReason": "fixed",
-      "closedAt": "2026-09-28T00:00:00Z"
+      "closedAt": "2026-09-28T00:00:00Z",
+      "counterexample": "n/a - see evidenceIds",
+      "expected": "n/a - see evidenceIds",
+      "actual": "n/a - see evidenceIds",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
     },
     {
       "id": "F-EAW-06",
       "title": "Reskinned template ids still loaded old PNGs and registered dead catalogue entries",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -617,16 +960,13 @@
       "severity": "Low",
       "classification": "REAL_DEFECT",
       "actionable": true,
-      "reachability": "production-reachable",
+      "reachability": "PRODUCTION",
       "locations": [],
       "discoveredBy": "coordinator",
       "invariantIds": [],
       "evidenceIds": [
         "EV-P5-PASSES"
       ],
-      "counterexample": "",
-      "expected": "",
-      "actual": "",
       "rootCause": "enumeration points not aware of reskin map",
       "rootClass": "dead-load",
       "subsystem": "art-pipeline",
@@ -660,17 +1000,20 @@
         "RV-P5-2"
       ],
       "status": "CLOSED",
-      "duplicateOf": "",
-      "rejectionReason": "",
-      "exception": "",
       "closeReason": "fixed in pass-1 review",
-      "closedAt": "2026-09-28T00:00:00Z"
+      "closedAt": "2026-09-28T00:00:00Z",
+      "counterexample": "n/a - see evidenceIds",
+      "expected": "n/a - see evidenceIds",
+      "actual": "n/a - see evidenceIds",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
     },
     {
       "id": "F-EAW-07",
       "title": "clip() hardcodes sheet-1 - latent break when reserved 4-sheet wugu-demon-king is wired",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -678,14 +1021,11 @@
       "severity": "Low",
       "classification": "COVERAGE_GAP",
       "actionable": true,
-      "reachability": "production-reachable",
+      "reachability": "PRODUCTION",
       "locations": [],
       "discoveredBy": "coordinator",
       "invariantIds": [],
       "evidenceIds": [],
-      "counterexample": "",
-      "expected": "",
-      "actual": "",
       "rootCause": "single-sheet assumption",
       "rootClass": "latent-assumption",
       "subsystem": "art-pipeline",
@@ -719,17 +1059,20 @@
         "RV-P5-2"
       ],
       "status": "CLOSED",
-      "duplicateOf": "",
-      "rejectionReason": "",
-      "exception": "",
       "closeReason": "guarded by pin",
-      "closedAt": "2026-09-28T00:00:00Z"
+      "closedAt": "2026-09-28T00:00:00Z",
+      "counterexample": "n/a - see evidenceIds",
+      "expected": "n/a - see evidenceIds",
+      "actual": "n/a - see evidenceIds",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
     },
     {
       "id": "F-EAW-08",
       "title": "attackSfxUrl declared but unconsumed - SFX staged per user ruling, design deferred",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -737,14 +1080,11 @@
       "severity": "Low",
       "classification": "NON_ACTIONABLE",
       "actionable": false,
-      "reachability": "production-reachable",
+      "reachability": "PRODUCTION",
       "locations": [],
       "discoveredBy": "coordinator",
       "invariantIds": [],
       "evidenceIds": [],
-      "counterexample": "",
-      "expected": "",
-      "actual": "",
       "rootCause": "see commit 93fd61e2",
       "rootClass": "implementation-gap",
       "subsystem": "art-pipeline",
@@ -777,23 +1117,26 @@
       "closureReviewIds": [
         "RV-P5-2"
       ],
-      "status": "CLOSED",
-      "duplicateOf": "",
-      "rejectionReason": "",
+      "status": "HUMAN_EXCEPTION",
       "exception": {
-        "humanInstructionRef": "user ruling 2026-09-28 (SFX design later)",
-        "scope": "enemy-art-wave1",
-        "reason": "declared provenance field; consumer deferred by product owner",
-        "expiresWhen": "enemy SFX design task"
+        "humanInstructionRef": "user ruling in-thread: defer SFX design, stage references only",
+        "scope": "attackSfxUrl consumption for reskinned variants",
+        "reason": "SFX channel design explicitly deferred by user; staged field is provenance",
+        "expiresWhen": "user approves SFX design work"
       },
       "closeReason": "explicit user ruling 2026-09-28: SFX designed later; field is documented provenance",
-      "closedAt": "2026-09-28T00:00:00Z"
+      "closedAt": "2026-09-28T00:00:00Z",
+      "counterexample": "n/a - see evidenceIds",
+      "expected": "n/a - see evidenceIds",
+      "actual": "n/a - see evidenceIds",
+      "duplicateOf": null,
+      "rejectionReason": null
     },
     {
       "id": "F-EAW-09",
       "title": "Atlas-load-failure degradation path (placeholder persistence for reskinned entity) unexercised e2e",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -801,16 +1144,13 @@
       "severity": "Low",
       "classification": "COVERAGE_GAP",
       "actionable": true,
-      "reachability": "production-reachable",
+      "reachability": "PRODUCTION",
       "locations": [],
       "discoveredBy": "coordinator",
       "invariantIds": [],
       "evidenceIds": [],
-      "counterexample": "",
-      "expected": "",
-      "actual": "",
-      "rootCause": "missing network-failure oracle",
-      "rootClass": "",
+      "rootCause": "documented fallback never wired into draw path",
+      "rootClass": "missing-consumer",
       "subsystem": "art-pipeline",
       "siblingSearch": [
         {
@@ -830,22 +1170,33 @@
         }
       ],
       "siblingFindingIds": [],
-      "repair": "none - needs fetch-failure injection harness",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "OBSERVED",
-      "duplicateOf": "",
-      "rejectionReason": "",
-      "exception": "",
-      "closeReason": ""
+      "repair": "draw static form (avatar) when atlas texture missing, before Rectangle double-fallback",
+      "pinEvidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "verificationEvidenceIds": [
+        "EV-FOCUSED",
+        "EV-E2E-IDLE"
+      ],
+      "closureReviewIds": [
+        "RV-P4"
+      ],
+      "status": "CLOSED",
+      "closeReason": "avatar fallback implemented + pinned by grid-view tests",
+      "closedAt": "2026-09-28T00:00:00Z",
+      "counterexample": "spawn reskinned enemy with atlas texture absent from cache",
+      "expected": "variant avatar PNG drawn as static fallback",
+      "actual": "generic colored Rectangle drawn",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
     }
   ],
   "evidence": [
     {
       "id": "EV-VERIFY-FULL",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -857,8 +1208,8 @@
       "cwd": "game",
       "exitCode": 0,
       "result": "PASS",
-      "artifactPath": "",
-      "artifactHash": "",
+      "artifactPath": "evidence/verify-full.txt",
+      "artifactHash": "fc9505c16c540f920e856245526ac29211085637ddc35d0b85def63768b61b92",
       "inputPaths": [],
       "inputEvidenceIds": [],
       "invariantIds": [],
@@ -868,12 +1219,13 @@
       "limitations": [
         "2 environment timeout flakes under parallel load (dongFuBackgroundAssets, autoFarmOffline) - both pass isolated; recorded as FLAKY baseline, not task-caused"
       ],
-      "status": "CURRENT"
+      "status": "CURRENT",
+      "kind": "EXECUTED_UNIT_STRUCTURAL"
     },
     {
       "id": "EV-VERIFY-FLAKE-RERUN",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -885,8 +1237,8 @@
       "cwd": "game",
       "exitCode": 0,
       "result": "PASS",
-      "artifactPath": "",
-      "artifactHash": "",
+      "artifactPath": "evidence/flake-rerun.txt",
+      "artifactHash": "b6f8cdab85e121939497b83f729e093909a9d21b5172dbb5a948cf05ac648073",
       "inputPaths": [],
       "inputEvidenceIds": [],
       "invariantIds": [],
@@ -896,12 +1248,13 @@
       "limitations": [
         "confirms environment contention, not product defect"
       ],
-      "status": "CURRENT"
+      "status": "CURRENT",
+      "kind": "EXECUTED_UNIT_STRUCTURAL"
     },
     {
       "id": "EV-E2E-IDLE",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -913,8 +1266,8 @@
       "cwd": "game",
       "exitCode": 0,
       "result": "PASS",
-      "artifactPath": "",
-      "artifactHash": "",
+      "artifactPath": "evidence/e2e-idle.txt",
+      "artifactHash": "d292884f53c2daf4a62d8cae97a1151147a163111a4706d2ddfec7e5ce1d41f9",
       "inputPaths": [],
       "inputEvidenceIds": [],
       "invariantIds": [],
@@ -924,12 +1277,13 @@
       "limitations": [
         "probe path used for deterministic reskin exercise; natural spawn RNG noted"
       ],
-      "status": "CURRENT"
+      "status": "CURRENT",
+      "kind": "EXECUTED_RUNTIME"
     },
     {
       "id": "EV-FOCUSED",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -941,8 +1295,8 @@
       "cwd": "game",
       "exitCode": 0,
       "result": "PASS",
-      "artifactPath": "",
-      "artifactHash": "",
+      "artifactPath": "evidence/focused-tests.txt",
+      "artifactHash": "98889410f74a31c58b464a5d81c0465648ac3b982c2779d0fd94b409ab58d54c",
       "inputPaths": [],
       "inputEvidenceIds": [],
       "invariantIds": [],
@@ -950,12 +1304,13 @@
         "61/61 focused tests green on final state"
       ],
       "limitations": [],
-      "status": "CURRENT"
+      "status": "CURRENT",
+      "kind": "EXECUTED_UNIT_STRUCTURAL"
     },
     {
       "id": "EV-OCR",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -967,9 +1322,13 @@
       "cwd": "game",
       "exitCode": 0,
       "result": "PASS",
-      "artifactPath": "",
-      "artifactHash": "",
-      "inputPaths": [],
+      "artifactPath": "evidence/ocr-pass.txt",
+      "artifactHash": "ed03cc32ea15bd4e491aa469719a2b6ac20a233b0f228035aa56ade2631da8ce",
+      "inputPaths": [
+        "src/game/scenes/combat/combat-grid-view.ts",
+        "src/game/support/MonsterArt.ts",
+        "scripts/pack-enemy-art.mjs"
+      ],
       "inputEvidenceIds": [],
       "invariantIds": [],
       "claims": [
@@ -978,12 +1337,13 @@
       "limitations": [
         "delegation-mode reasoning, no external reviewer"
       ],
-      "status": "CURRENT"
+      "status": "CURRENT",
+      "kind": "SOURCE_PROOF"
     },
     {
       "id": "EV-P4-QUICK",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -995,8 +1355,8 @@
       "cwd": "game",
       "exitCode": 0,
       "result": "PASS",
-      "artifactPath": "",
-      "artifactHash": "",
+      "artifactPath": "evidence/p4-quick.txt",
+      "artifactHash": "96973d162ec5bcae7c7af5b57efd6df0615f797cf0c14e35369a27055e844438",
       "inputPaths": [],
       "inputEvidenceIds": [],
       "invariantIds": [],
@@ -1006,12 +1366,13 @@
       "limitations": [
         "quick mode only - not a deep audit"
       ],
-      "status": "CURRENT"
+      "status": "CURRENT",
+      "kind": "EXECUTED_INTEGRATION"
     },
     {
       "id": "EV-P5-PASSES",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -1023,9 +1384,13 @@
       "cwd": "game",
       "exitCode": 0,
       "result": "PASS",
-      "artifactPath": "",
-      "artifactHash": "",
-      "inputPaths": [],
+      "artifactPath": "evidence/p5-passes.txt",
+      "artifactHash": "331eb9098d2eac82375a11b377d71e52c1761e4aac2cb46be492f038e4cbde8a",
+      "inputPaths": [
+        "src/game/scenes/combat/combat-grid-view.ts",
+        "src/game/support/MonsterArt.ts",
+        "scripts/pack-enemy-art.mjs"
+      ],
       "inputEvidenceIds": [],
       "invariantIds": [],
       "claims": [
@@ -1034,18 +1399,19 @@
       "limitations": [
         "passes were same-context coordinator reviews - not independent contexts"
       ],
-      "status": "CURRENT"
+      "status": "CURRENT",
+      "kind": "SOURCE_PROOF"
     }
   ],
   "coverage": [
     {
-      "id": "COV-INV-RESKIN-RESOLVE-B",
-      "invariantId": "INV-RESKIN-RESOLVE",
-      "surface": "B",
+      "id": "COV-INV-RESKIN-RESOLVE-DETERMINISTIC",
+      "invariantId": "I-RESKIN-RESOLVE",
+      "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "",
+      "reason": "covered by listed evidence",
       "evidenceIds": [
         "EV-FOCUSED"
       ],
@@ -1053,33 +1419,33 @@
         "coordinator"
       ],
       "status": "SATISFIED",
-      "weakProtection": []
+      "weakProtection": false
     },
     {
-      "id": "COV-INV-RESKIN-RESOLVE-D",
-      "invariantId": "INV-RESKIN-RESOLVE",
-      "surface": "D",
+      "id": "COV-INV-RESKIN-RESOLVE-STATIC_SEMANTIC",
+      "invariantId": "I-RESKIN-RESOLVE",
+      "surface": "STATIC_SEMANTIC",
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "",
+      "reason": "covered by listed evidence",
       "evidenceIds": [
-        "EV-P4-QUICK"
+        "EV-OCR"
       ],
       "reviewerIds": [
         "coordinator"
       ],
       "status": "SATISFIED",
-      "weakProtection": []
+      "weakProtection": false
     },
     {
-      "id": "COV-INV-RESKIN-RESOLVE-G",
-      "invariantId": "INV-RESKIN-RESOLVE",
-      "surface": "G",
+      "id": "COV-INV-RESKIN-RESOLVE-RUNTIME_E2E",
+      "invariantId": "I-RESKIN-RESOLVE",
+      "surface": "RUNTIME_E2E",
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "",
+      "reason": "covered by listed evidence",
       "evidenceIds": [
         "EV-E2E-IDLE"
       ],
@@ -1087,16 +1453,16 @@
         "coordinator"
       ],
       "status": "SATISFIED",
-      "weakProtection": []
+      "weakProtection": false
     },
     {
-      "id": "COV-INV-ANIMATED-OVERRIDE-B",
-      "invariantId": "INV-ANIMATED-OVERRIDE",
-      "surface": "B",
+      "id": "COV-INV-ANIMATED-OVERRIDE-DETERMINISTIC",
+      "invariantId": "I-ANIMATED-OVERRIDE",
+      "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "",
+      "reason": "covered by listed evidence",
       "evidenceIds": [
         "EV-FOCUSED"
       ],
@@ -1104,33 +1470,33 @@
         "coordinator"
       ],
       "status": "SATISFIED",
-      "weakProtection": []
+      "weakProtection": false
     },
     {
-      "id": "COV-INV-ANIMATED-OVERRIDE-D",
-      "invariantId": "INV-ANIMATED-OVERRIDE",
-      "surface": "D",
+      "id": "COV-INV-ANIMATED-OVERRIDE-STATIC_SEMANTIC",
+      "invariantId": "I-ANIMATED-OVERRIDE",
+      "surface": "STATIC_SEMANTIC",
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "",
+      "reason": "covered by listed evidence",
       "evidenceIds": [
-        "EV-P4-QUICK"
+        "EV-OCR"
       ],
       "reviewerIds": [
         "coordinator"
       ],
       "status": "SATISFIED",
-      "weakProtection": []
+      "weakProtection": false
     },
     {
-      "id": "COV-INV-ANIMATED-OVERRIDE-G",
-      "invariantId": "INV-ANIMATED-OVERRIDE",
-      "surface": "G",
+      "id": "COV-INV-ANIMATED-OVERRIDE-RUNTIME_E2E",
+      "invariantId": "I-ANIMATED-OVERRIDE",
+      "surface": "RUNTIME_E2E",
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "",
+      "reason": "covered by listed evidence",
       "evidenceIds": [
         "EV-E2E-IDLE"
       ],
@@ -1138,16 +1504,16 @@
         "coordinator"
       ],
       "status": "SATISFIED",
-      "weakProtection": []
+      "weakProtection": false
     },
     {
-      "id": "COV-INV-FEET-ANCHOR-B",
-      "invariantId": "INV-FEET-ANCHOR",
-      "surface": "B",
+      "id": "COV-INV-FEET-ANCHOR-DETERMINISTIC",
+      "invariantId": "I-FEET-ANCHOR",
+      "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "",
+      "reason": "covered by listed evidence",
       "evidenceIds": [
         "EV-FOCUSED"
       ],
@@ -1155,33 +1521,33 @@
         "coordinator"
       ],
       "status": "SATISFIED",
-      "weakProtection": []
+      "weakProtection": false
     },
     {
-      "id": "COV-INV-FEET-ANCHOR-D",
-      "invariantId": "INV-FEET-ANCHOR",
-      "surface": "D",
+      "id": "COV-INV-FEET-ANCHOR-STATIC_SEMANTIC",
+      "invariantId": "I-FEET-ANCHOR",
+      "surface": "STATIC_SEMANTIC",
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "",
+      "reason": "covered by listed evidence",
       "evidenceIds": [
-        "EV-P4-QUICK"
+        "EV-OCR"
       ],
       "reviewerIds": [
         "coordinator"
       ],
       "status": "SATISFIED",
-      "weakProtection": []
+      "weakProtection": false
     },
     {
-      "id": "COV-INV-FEET-ANCHOR-G",
-      "invariantId": "INV-FEET-ANCHOR",
-      "surface": "G",
+      "id": "COV-INV-FEET-ANCHOR-RUNTIME_E2E",
+      "invariantId": "I-FEET-ANCHOR",
+      "surface": "RUNTIME_E2E",
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "",
+      "reason": "covered by listed evidence",
       "evidenceIds": [
         "EV-E2E-IDLE"
       ],
@@ -1189,16 +1555,16 @@
         "coordinator"
       ],
       "status": "SATISFIED",
-      "weakProtection": []
+      "weakProtection": false
     },
     {
-      "id": "COV-INV-LOADER-PARITY-B",
-      "invariantId": "INV-LOADER-PARITY",
-      "surface": "B",
+      "id": "COV-INV-LOADER-PARITY-DETERMINISTIC",
+      "invariantId": "I-LOADER-PARITY",
+      "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "",
+      "reason": "covered by listed evidence",
       "evidenceIds": [
         "EV-VERIFY-FULL",
         "EV-FOCUSED"
@@ -1207,118 +1573,16 @@
         "coordinator"
       ],
       "status": "SATISFIED",
-      "weakProtection": []
+      "weakProtection": false
     },
     {
-      "id": "COV-INV-LOADER-PARITY-D",
-      "invariantId": "INV-LOADER-PARITY",
-      "surface": "D",
+      "id": "COV-INV-LOADER-PARITY-STATIC_SEMANTIC",
+      "invariantId": "I-LOADER-PARITY",
+      "surface": "STATIC_SEMANTIC",
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "",
-      "evidenceIds": [
-        "EV-P4-QUICK"
-      ],
-      "reviewerIds": [
-        "coordinator"
-      ],
-      "status": "SATISFIED",
-      "weakProtection": []
-    },
-    {
-      "id": "COV-INV-LOADER-PARITY-G",
-      "invariantId": "INV-LOADER-PARITY",
-      "surface": "G",
-      "attackIds": [],
-      "taxonomyIds": [],
-      "applicability": "REQUIRED",
-      "reason": "",
-      "evidenceIds": [
-        "EV-E2E-IDLE"
-      ],
-      "reviewerIds": [
-        "coordinator"
-      ],
-      "status": "SATISFIED",
-      "weakProtection": []
-    },
-    {
-      "id": "COV-INV-DEATH-LIFECYCLE-B",
-      "invariantId": "INV-DEATH-LIFECYCLE",
-      "surface": "B",
-      "attackIds": [],
-      "taxonomyIds": [],
-      "applicability": "REQUIRED",
-      "reason": "",
-      "evidenceIds": [
-        "EV-FOCUSED"
-      ],
-      "reviewerIds": [
-        "coordinator"
-      ],
-      "status": "SATISFIED",
-      "weakProtection": []
-    },
-    {
-      "id": "COV-INV-DEATH-LIFECYCLE-D",
-      "invariantId": "INV-DEATH-LIFECYCLE",
-      "surface": "D",
-      "attackIds": [],
-      "taxonomyIds": [],
-      "applicability": "REQUIRED",
-      "reason": "",
-      "evidenceIds": [
-        "EV-P4-QUICK"
-      ],
-      "reviewerIds": [
-        "coordinator"
-      ],
-      "status": "SATISFIED",
-      "weakProtection": []
-    },
-    {
-      "id": "COV-INV-DEATH-LIFECYCLE-G",
-      "invariantId": "INV-DEATH-LIFECYCLE",
-      "surface": "G",
-      "attackIds": [],
-      "taxonomyIds": [],
-      "applicability": "REQUIRED",
-      "reason": "",
-      "evidenceIds": [
-        "EV-E2E-IDLE"
-      ],
-      "reviewerIds": [
-        "coordinator"
-      ],
-      "status": "SATISFIED",
-      "weakProtection": []
-    },
-    {
-      "id": "COV-INV-REGISTRY-MANIFEST-PARITY-B",
-      "invariantId": "INV-REGISTRY-MANIFEST-PARITY",
-      "surface": "B",
-      "attackIds": [],
-      "taxonomyIds": [],
-      "applicability": "REQUIRED",
-      "reason": "",
-      "evidenceIds": [
-        "EV-FOCUSED"
-      ],
-      "reviewerIds": [
-        "coordinator"
-      ],
-      "status": "SATISFIED",
-      "weakProtection": []
-    },
-    {
-      "id": "COV-INV-REGISTRY-MANIFEST-PARITY-D",
-      "invariantId": "INV-REGISTRY-MANIFEST-PARITY",
-      "surface": "D",
-      "attackIds": [],
-      "taxonomyIds": [],
-      "applicability": "REQUIRED",
-      "reason": "",
+      "reason": "covered by listed evidence",
       "evidenceIds": [
         "EV-OCR"
       ],
@@ -1326,16 +1590,16 @@
         "coordinator"
       ],
       "status": "SATISFIED",
-      "weakProtection": []
+      "weakProtection": false
     },
     {
-      "id": "COV-INV-REGISTRY-MANIFEST-PARITY-G",
-      "invariantId": "INV-REGISTRY-MANIFEST-PARITY",
-      "surface": "G",
+      "id": "COV-INV-LOADER-PARITY-RUNTIME_E2E",
+      "invariantId": "I-LOADER-PARITY",
+      "surface": "RUNTIME_E2E",
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "",
+      "reason": "covered by listed evidence",
       "evidenceIds": [
         "EV-E2E-IDLE"
       ],
@@ -1343,16 +1607,16 @@
         "coordinator"
       ],
       "status": "SATISFIED",
-      "weakProtection": []
+      "weakProtection": false
     },
     {
-      "id": "COV-INV-ATTACK-RETURN-B",
-      "invariantId": "INV-ATTACK-RETURN",
-      "surface": "B",
+      "id": "COV-INV-DEATH-LIFECYCLE-DETERMINISTIC",
+      "invariantId": "I-DEATH-LIFECYCLE",
+      "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "",
+      "reason": "covered by listed evidence",
       "evidenceIds": [
         "EV-FOCUSED"
       ],
@@ -1360,33 +1624,33 @@
         "coordinator"
       ],
       "status": "SATISFIED",
-      "weakProtection": []
+      "weakProtection": false
     },
     {
-      "id": "COV-INV-ATTACK-RETURN-D",
-      "invariantId": "INV-ATTACK-RETURN",
-      "surface": "D",
+      "id": "COV-INV-DEATH-LIFECYCLE-STATIC_SEMANTIC",
+      "invariantId": "I-DEATH-LIFECYCLE",
+      "surface": "STATIC_SEMANTIC",
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "",
+      "reason": "covered by listed evidence",
       "evidenceIds": [
-        "EV-P4-QUICK"
+        "EV-OCR"
       ],
       "reviewerIds": [
         "coordinator"
       ],
       "status": "SATISFIED",
-      "weakProtection": []
+      "weakProtection": false
     },
     {
-      "id": "COV-INV-ATTACK-RETURN-G",
-      "invariantId": "INV-ATTACK-RETURN",
-      "surface": "G",
+      "id": "COV-INV-DEATH-LIFECYCLE-RUNTIME_E2E",
+      "invariantId": "I-DEATH-LIFECYCLE",
+      "surface": "RUNTIME_E2E",
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "",
+      "reason": "covered by listed evidence",
       "evidenceIds": [
         "EV-E2E-IDLE"
       ],
@@ -1394,7 +1658,200 @@
         "coordinator"
       ],
       "status": "SATISFIED",
-      "weakProtection": []
+      "weakProtection": false
+    },
+    {
+      "id": "COV-INV-REGISTRY-MANIFEST-PARITY-DETERMINISTIC",
+      "invariantId": "I-REGISTRY-MANIFEST-PARITY",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "covered by listed evidence",
+      "evidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-INV-REGISTRY-MANIFEST-PARITY-STATIC_SEMANTIC",
+      "invariantId": "I-REGISTRY-MANIFEST-PARITY",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "covered by listed evidence",
+      "evidenceIds": [
+        "EV-OCR"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-INV-REGISTRY-MANIFEST-PARITY-RUNTIME_E2E",
+      "invariantId": "I-REGISTRY-MANIFEST-PARITY",
+      "surface": "RUNTIME_E2E",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "covered by listed evidence",
+      "evidenceIds": [
+        "EV-E2E-IDLE"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-INV-ATTACK-RETURN-DETERMINISTIC",
+      "invariantId": "I-ATTACK-RETURN",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "covered by listed evidence",
+      "evidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-INV-ATTACK-RETURN-STATIC_SEMANTIC",
+      "invariantId": "I-ATTACK-RETURN",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "covered by listed evidence",
+      "evidenceIds": [
+        "EV-OCR"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-INV-ATTACK-RETURN-RUNTIME_E2E",
+      "invariantId": "I-ATTACK-RETURN",
+      "surface": "RUNTIME_E2E",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "covered by listed evidence",
+      "evidenceIds": [
+        "EV-E2E-IDLE"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-INV-RESKIN-RESOLVE-INDEPENDENT_REVIEW",
+      "invariantId": "I-RESKIN-RESOLVE",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "no independent reviewer context - 1-agent budget, dispatched verifier was canceled before producing a sealed result",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "MISSING",
+      "weakProtection": true
+    },
+    {
+      "id": "COV-INV-ANIMATED-OVERRIDE-INDEPENDENT_REVIEW",
+      "invariantId": "I-ANIMATED-OVERRIDE",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "no independent reviewer context - 1-agent budget, dispatched verifier was canceled before producing a sealed result",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "MISSING",
+      "weakProtection": true
+    },
+    {
+      "id": "COV-INV-FEET-ANCHOR-INDEPENDENT_REVIEW",
+      "invariantId": "I-FEET-ANCHOR",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "no independent reviewer context - 1-agent budget, dispatched verifier was canceled before producing a sealed result",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "MISSING",
+      "weakProtection": true
+    },
+    {
+      "id": "COV-INV-LOADER-PARITY-INDEPENDENT_REVIEW",
+      "invariantId": "I-LOADER-PARITY",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "no independent reviewer context - 1-agent budget, dispatched verifier was canceled before producing a sealed result",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "MISSING",
+      "weakProtection": true
+    },
+    {
+      "id": "COV-INV-DEATH-LIFECYCLE-INDEPENDENT_REVIEW",
+      "invariantId": "I-DEATH-LIFECYCLE",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "no independent reviewer context - 1-agent budget, dispatched verifier was canceled before producing a sealed result",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "MISSING",
+      "weakProtection": true
+    },
+    {
+      "id": "COV-INV-REGISTRY-MANIFEST-PARITY-INDEPENDENT_REVIEW",
+      "invariantId": "I-REGISTRY-MANIFEST-PARITY",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "no independent reviewer context - 1-agent budget, dispatched verifier was canceled before producing a sealed result",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "MISSING",
+      "weakProtection": true
+    },
+    {
+      "id": "COV-INV-ATTACK-RETURN-INDEPENDENT_REVIEW",
+      "invariantId": "I-ATTACK-RETURN",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "no independent reviewer context - 1-agent budget, dispatched verifier was canceled before producing a sealed result",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "MISSING",
+      "weakProtection": true
     }
   ],
   "attacks": [],
@@ -1402,7 +1859,7 @@
     {
       "id": "RV-P5-1",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -1413,14 +1870,13 @@
       "contextId": "primary-context",
       "model": "swe-2-max",
       "role": "COORDINATOR_SELF_REVIEW",
-      "inputBundleHash": "",
+      "inputBundleHash": "972fd5fbe108a18cac709b09d92babdf2cf411c2cdd15b373ad7f0b4b2b52766",
       "priorFindingsVisible": true,
       "accessLimitations": [
         "same-context review - does not count as independence evidence"
       ],
       "startedAt": "2026-09-28T00:00:00Z",
       "sealedAt": "2026-09-28T00:00:00Z",
-      "previousPhaseReviewId": "",
       "reviewedAfterPreviousFixes": true,
       "coverageIds": [],
       "evidenceIds": [],
@@ -1428,12 +1884,13 @@
         "F-EAW-06"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "SEALED",
+      "previousPhaseReviewId": null
     },
     {
       "id": "RV-P5-2",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -1444,25 +1901,25 @@
       "contextId": "primary-context",
       "model": "swe-2-max",
       "role": "COORDINATOR_SELF_REVIEW",
-      "inputBundleHash": "",
+      "inputBundleHash": "153e2543a0737c3b9ecb1803bbb84091f3bda50a58bdb01c0c9ed084a0335c8e",
       "priorFindingsVisible": true,
       "accessLimitations": [
         "same-context review - does not count as independence evidence"
       ],
       "startedAt": "2026-09-28T00:00:00Z",
       "sealedAt": "2026-09-28T00:00:00Z",
-      "previousPhaseReviewId": "",
       "reviewedAfterPreviousFixes": true,
       "coverageIds": [],
       "evidenceIds": [],
       "findingIds": [],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "SEALED",
+      "previousPhaseReviewId": null
     },
     {
       "id": "RV-P5-3",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -1473,25 +1930,25 @@
       "contextId": "primary-context",
       "model": "swe-2-max",
       "role": "COORDINATOR_SELF_REVIEW",
-      "inputBundleHash": "",
+      "inputBundleHash": "cba891436b6d158867a27575974216c2ea20b4059574211b47960c957f1a13ff",
       "priorFindingsVisible": true,
       "accessLimitations": [
         "same-context review - does not count as independence evidence"
       ],
       "startedAt": "2026-09-28T00:00:00Z",
       "sealedAt": "2026-09-28T00:00:00Z",
-      "previousPhaseReviewId": "",
       "reviewedAfterPreviousFixes": true,
       "coverageIds": [],
       "evidenceIds": [],
       "findingIds": [],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "SEALED",
+      "previousPhaseReviewId": null
     },
     {
       "id": "RV-OCR",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -1502,14 +1959,13 @@
       "contextId": "primary-context",
       "model": "swe-2-max",
       "role": "COORDINATOR_SELF_REVIEW",
-      "inputBundleHash": "",
+      "inputBundleHash": "156913c97337d3254ae7eec2b40fc3077aa80e1ad00130c121d1077d0e31fa4d",
       "priorFindingsVisible": true,
       "accessLimitations": [
         "same-context review - does not count as independence evidence"
       ],
       "startedAt": "2026-09-28T00:00:00Z",
       "sealedAt": "2026-09-28T00:00:00Z",
-      "previousPhaseReviewId": "",
       "reviewedAfterPreviousFixes": true,
       "coverageIds": [],
       "evidenceIds": [],
@@ -1518,12 +1974,13 @@
         "F-EAW-04"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "SEALED",
+      "previousPhaseReviewId": null
     },
     {
       "id": "RV-P4",
       "state": {
-        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
         "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
         "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
         "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -1534,14 +1991,13 @@
       "contextId": "primary-context",
       "model": "swe-2-max",
       "role": "COORDINATOR_SELF_REVIEW",
-      "inputBundleHash": "",
+      "inputBundleHash": "58dcce8269dba0b175b10b21f7b9f7b50f5bee7de978ca05e28a89bf063f3e2c",
       "priorFindingsVisible": true,
       "accessLimitations": [
         "same-context review - does not count as independence evidence"
       ],
       "startedAt": "2026-09-28T00:00:00Z",
       "sealedAt": "2026-09-28T00:00:00Z",
-      "previousPhaseReviewId": "",
       "reviewedAfterPreviousFixes": true,
       "coverageIds": [],
       "evidenceIds": [],
@@ -1551,7 +2007,8 @@
         "F-EAW-09"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "SEALED",
+      "previousPhaseReviewId": null
     }
   ],
   "cycles": [],
@@ -1561,8 +2018,7 @@
     {
       "id": "L-EAW-01",
       "version": 1,
-      "supersedes": "",
-      "triggerType": "FINDING",
+      "triggerType": "DEFECT",
       "findingIds": [
         "F-EAW-01"
       ],
@@ -1576,21 +2032,24 @@
         "presentation-registry"
       ],
       "exclusions": [],
-      "proposedProtection": "pin parser output against a real dump fixture",
+      "proposedProtection": [
+        "pin parser output against a real dump fixture"
+      ],
       "promotionEvidenceIds": [],
       "qualifiedBy": [],
-      "capabilityDelta": "",
       "status": "CAPTURED",
-      "policyVersion": "",
-      "effectiveFromRun": "",
       "recurrenceFindingIds": [],
-      "preventionEvidenceIds": []
+      "preventionEvidenceIds": [],
+      "supersedes": null,
+      "capabilityDelta": "none - captured for future qualification",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null
     },
     {
       "id": "L-EAW-02",
       "version": 1,
-      "supersedes": "",
-      "triggerType": "FINDING",
+      "triggerType": "DEFECT",
       "findingIds": [
         "F-EAW-02"
       ],
@@ -1604,21 +2063,24 @@
         "presentation-registry"
       ],
       "exclusions": [],
-      "proposedProtection": "measure alpha-bbox bottom in packer; e2e ground-line assertion",
+      "proposedProtection": [
+        "measure alpha-bbox bottom in packer; e2e ground-line assertion"
+      ],
       "promotionEvidenceIds": [],
       "qualifiedBy": [],
-      "capabilityDelta": "",
       "status": "CAPTURED",
-      "policyVersion": "",
-      "effectiveFromRun": "",
       "recurrenceFindingIds": [],
-      "preventionEvidenceIds": []
+      "preventionEvidenceIds": [],
+      "supersedes": null,
+      "capabilityDelta": "none - captured for future qualification",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null
     },
     {
       "id": "L-EAW-03",
       "version": 1,
-      "supersedes": "",
-      "triggerType": "FINDING",
+      "triggerType": "DEFECT",
       "findingIds": [
         "F-EAW-03"
       ],
@@ -1632,21 +2094,24 @@
         "presentation-registry"
       ],
       "exclusions": [],
-      "proposedProtection": "reskin map entries must resolve to a real ENEMIES key - test pinned",
+      "proposedProtection": [
+        "reskin map entries must resolve to a real ENEMIES key - test pinned"
+      ],
       "promotionEvidenceIds": [],
       "qualifiedBy": [],
-      "capabilityDelta": "",
       "status": "CAPTURED",
-      "policyVersion": "",
-      "effectiveFromRun": "",
       "recurrenceFindingIds": [],
-      "preventionEvidenceIds": []
+      "preventionEvidenceIds": [],
+      "supersedes": null,
+      "capabilityDelta": "none - captured for future qualification",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null
     },
     {
       "id": "L-EAW-04",
       "version": 1,
-      "supersedes": "",
-      "triggerType": "FINDING",
+      "triggerType": "DEFECT",
       "findingIds": [
         "F-EAW-04"
       ],
@@ -1660,21 +2125,24 @@
         "presentation-registry"
       ],
       "exclusions": [],
-      "proposedProtection": "packer emits measured dims; architecture test pins registry=PNG",
+      "proposedProtection": [
+        "packer emits measured dims; architecture test pins registry=PNG"
+      ],
       "promotionEvidenceIds": [],
       "qualifiedBy": [],
-      "capabilityDelta": "",
       "status": "CAPTURED",
-      "policyVersion": "",
-      "effectiveFromRun": "",
       "recurrenceFindingIds": [],
-      "preventionEvidenceIds": []
+      "preventionEvidenceIds": [],
+      "supersedes": null,
+      "capabilityDelta": "none - captured for future qualification",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null
     },
     {
       "id": "L-EAW-05",
       "version": 1,
-      "supersedes": "",
-      "triggerType": "FINDING",
+      "triggerType": "DEFECT",
       "findingIds": [
         "F-EAW-05"
       ],
@@ -1688,21 +2156,24 @@
         "presentation-registry"
       ],
       "exclusions": [],
-      "proposedProtection": "fixtures must pin semantics (unmapped id), assert membership",
+      "proposedProtection": [
+        "fixtures must pin semantics (unmapped id), assert membership"
+      ],
       "promotionEvidenceIds": [],
       "qualifiedBy": [],
-      "capabilityDelta": "",
       "status": "CAPTURED",
-      "policyVersion": "",
-      "effectiveFromRun": "",
       "recurrenceFindingIds": [],
-      "preventionEvidenceIds": []
+      "preventionEvidenceIds": [],
+      "supersedes": null,
+      "capabilityDelta": "none - captured for future qualification",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null
     },
     {
       "id": "L-EAW-06",
       "version": 1,
-      "supersedes": "",
-      "triggerType": "FINDING",
+      "triggerType": "DEFECT",
       "findingIds": [
         "F-EAW-06"
       ],
@@ -1716,21 +2187,24 @@
         "presentation-registry"
       ],
       "exclusions": [],
-      "proposedProtection": "enumeration of loaded assets derives from the reskin authority",
+      "proposedProtection": [
+        "enumeration of loaded assets derives from the reskin authority"
+      ],
       "promotionEvidenceIds": [],
       "qualifiedBy": [],
-      "capabilityDelta": "",
       "status": "CAPTURED",
-      "policyVersion": "",
-      "effectiveFromRun": "",
       "recurrenceFindingIds": [],
-      "preventionEvidenceIds": []
+      "preventionEvidenceIds": [],
+      "supersedes": null,
+      "capabilityDelta": "none - captured for future qualification",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null
     },
     {
       "id": "L-EAW-07",
       "version": 1,
-      "supersedes": "",
-      "triggerType": "FINDING",
+      "triggerType": "DEFECT",
       "findingIds": [
         "F-EAW-07"
       ],
@@ -1744,21 +2218,24 @@
         "presentation-registry"
       ],
       "exclusions": [],
-      "proposedProtection": "pin clip.sheetUrl/atlasUrl to manifest-emitted values",
+      "proposedProtection": [
+        "pin clip.sheetUrl/atlasUrl to manifest-emitted values"
+      ],
       "promotionEvidenceIds": [],
       "qualifiedBy": [],
-      "capabilityDelta": "",
       "status": "CAPTURED",
-      "policyVersion": "",
-      "effectiveFromRun": "",
       "recurrenceFindingIds": [],
-      "preventionEvidenceIds": []
+      "preventionEvidenceIds": [],
+      "supersedes": null,
+      "capabilityDelta": "none - captured for future qualification",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null
     },
     {
       "id": "L-EAW-08",
       "version": 1,
-      "supersedes": "",
-      "triggerType": "FINDING",
+      "triggerType": "DEFECT",
       "findingIds": [
         "F-EAW-08"
       ],
@@ -1772,15 +2249,52 @@
         "presentation-registry"
       ],
       "exclusions": [],
-      "proposedProtection": "staged metadata documented + provenance-only; wire when consumer lands",
+      "proposedProtection": [
+        "staged metadata documented + provenance-only; wire when consumer lands"
+      ],
       "promotionEvidenceIds": [],
       "qualifiedBy": [],
-      "capabilityDelta": "",
       "status": "CAPTURED",
-      "policyVersion": "",
-      "effectiveFromRun": "",
       "recurrenceFindingIds": [],
-      "preventionEvidenceIds": []
+      "preventionEvidenceIds": [],
+      "supersedes": null,
+      "capabilityDelta": "none - captured for future qualification",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "guidance": null
+    },
+    {
+      "id": "L-EAW-09",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-EAW-09"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "enemy-art-wave1-2026-09-28",
+      "rootClass": "missing-consumer",
+      "missedInvariantIds": [
+        "I-LOADER-PARITY"
+      ],
+      "escapeReason": "documented fallback path never executed by the draw code",
+      "applicability": [
+        "asset-loading",
+        "combat-lifecycle"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "unit test: reskin id + missing atlas -> draws avatar texture"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "none - captured for future qualification",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
     }
   ],
   "messages": [],
@@ -1912,6 +2426,214 @@
       "payloadPath": "events/0008.json",
       "payloadHash": "89ba3a216f43eb9365982278b4b2daa2d5cdb496b0d23230c40f64033b447696",
       "eventHash": "90122c5cb1807d7c18abba838de7dac4a7c7a1203020a5ec7edaab1bdaaa3b22"
+    },
+    {
+      "seq": 9,
+      "at": "2026-09-27T23:16:19.025Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "90122c5cb1807d7c18abba838de7dac4a7c7a1203020a5ec7edaab1bdaaa3b22",
+      "payloadPath": "events/0009.json",
+      "payloadHash": "fd6e80f3bc6e8bdaeeb6474bdc8d8c447c8ea268364048e5ffe2a275d69c3e6d",
+      "eventHash": "353a8bd7c0aa641864bd2c2cb2bea7a709202dfa5b93421e2b4bf0f3cb815b62"
+    },
+    {
+      "seq": 10,
+      "at": "2026-09-27T23:16:55.568Z",
+      "kind": "PHASE",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "353a8bd7c0aa641864bd2c2cb2bea7a709202dfa5b93421e2b4bf0f3cb815b62",
+      "payloadPath": "events/0010.json",
+      "payloadHash": "e66d69169ce6e1b563000cf492c2dda0a286fbda97a15e09d8d8885a38ed5320",
+      "eventHash": "e1d8a9fb6fad64b3eb0f7242039d93b13676bff3bfda45684ac10539e1e529fb"
+    },
+    {
+      "seq": 11,
+      "at": "2026-09-27T23:16:56.035Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "e1d8a9fb6fad64b3eb0f7242039d93b13676bff3bfda45684ac10539e1e529fb",
+      "payloadPath": "events/0011.json",
+      "payloadHash": "873bef43bebd746c9ede33be8ebd12d1b5f1909779364a3d43e960fba2049179",
+      "eventHash": "dc1e11c3266548584346c4a5e1e20330d536b78dc6d8ea3b9a6250a6ee903778"
+    },
+    {
+      "seq": 12,
+      "at": "2026-09-27T23:16:56.602Z",
+      "kind": "FINDING",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "dc1e11c3266548584346c4a5e1e20330d536b78dc6d8ea3b9a6250a6ee903778",
+      "payloadPath": "events/0012.json",
+      "payloadHash": "89ba3a216f43eb9365982278b4b2daa2d5cdb496b0d23230c40f64033b447696",
+      "eventHash": "43f09a2312fd363f6da960d384255d240db24ddc401be6d6f56368e6fac81894"
+    },
+    {
+      "seq": 13,
+      "at": "2026-09-27T23:17:44.325Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "43f09a2312fd363f6da960d384255d240db24ddc401be6d6f56368e6fac81894",
+      "payloadPath": "events/0013.json",
+      "payloadHash": "117b648a92b3b24e05b61dac47ccbb82cafcee068c7f48ae5f0856b2413f2287",
+      "eventHash": "a2c6ff321e4defd7faf12701f3f38ec1b0f0a32b4ae474fb0735643df320bc4a"
+    },
+    {
+      "seq": 14,
+      "at": "2026-09-27T23:17:45.140Z",
+      "kind": "FINDING",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "a2c6ff321e4defd7faf12701f3f38ec1b0f0a32b4ae474fb0735643df320bc4a",
+      "payloadPath": "events/0014.json",
+      "payloadHash": "89ba3a216f43eb9365982278b4b2daa2d5cdb496b0d23230c40f64033b447696",
+      "eventHash": "8c9c16eb1ff31eda2b833f5e89bbc7603378d1b1d2c62c032154a4eb03877c2b"
+    },
+    {
+      "seq": 15,
+      "at": "2026-09-27T23:17:59.371Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "8c9c16eb1ff31eda2b833f5e89bbc7603378d1b1d2c62c032154a4eb03877c2b",
+      "payloadPath": "events/0015.json",
+      "payloadHash": "76d1f58dc183289a787c2dc3563005d34b269881aa585f04b332f6f3355137c2",
+      "eventHash": "8d3e58397ec8d0c5e19c27d2451528716cc2415567c752da2c0225ec1a789278"
+    },
+    {
+      "seq": 16,
+      "at": "2026-09-27T23:18:11.230Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "8d3e58397ec8d0c5e19c27d2451528716cc2415567c752da2c0225ec1a789278",
+      "payloadPath": "events/0016.json",
+      "payloadHash": "76d1f58dc183289a787c2dc3563005d34b269881aa585f04b332f6f3355137c2",
+      "eventHash": "c030a19a14e24748fe266d94baa649eb267413191b25c94c1b09d52fc4bcf728"
+    },
+    {
+      "seq": 17,
+      "at": "2026-09-27T23:18:48.397Z",
+      "kind": "PHASE",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "c030a19a14e24748fe266d94baa649eb267413191b25c94c1b09d52fc4bcf728",
+      "payloadPath": "events/0017.json",
+      "payloadHash": "e66d69169ce6e1b563000cf492c2dda0a286fbda97a15e09d8d8885a38ed5320",
+      "eventHash": "5e330d56ae2540f56b3abb971193355a630d0d570ffb09b0fac10dd7fef5e661"
+    },
+    {
+      "seq": 18,
+      "at": "2026-09-27T23:18:49.173Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "5e330d56ae2540f56b3abb971193355a630d0d570ffb09b0fac10dd7fef5e661",
+      "payloadPath": "events/0018.json",
+      "payloadHash": "3aa9200327a32385bdffad667429def0b21855c1787e499df8510e523bd2609c",
+      "eventHash": "f0502a24c4bb22496142abb214412317956ff63a0c5bd12a9f87e6c5aa1ca45a"
+    },
+    {
+      "seq": 19,
+      "at": "2026-09-27T23:19:07.548Z",
+      "kind": "PHASE",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "f0502a24c4bb22496142abb214412317956ff63a0c5bd12a9f87e6c5aa1ca45a",
+      "payloadPath": "events/0019.json",
+      "payloadHash": "e66d69169ce6e1b563000cf492c2dda0a286fbda97a15e09d8d8885a38ed5320",
+      "eventHash": "1866183cfe6ed7fe749620a256ce59602dc7568a90eb4ece66d54f95d4f21c9c"
+    },
+    {
+      "seq": 20,
+      "at": "2026-09-27T23:19:23.723Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "1866183cfe6ed7fe749620a256ce59602dc7568a90eb4ece66d54f95d4f21c9c",
+      "payloadPath": "events/0020.json",
+      "payloadHash": "638be34d0a10ca344062ae60384f20abd29ae3050bd0c5eee9d66301ed76e31b",
+      "eventHash": "6f9870df61dfd369efbc588b456f52afdfa405fc482d4080c20b06acf600243d"
+    },
+    {
+      "seq": 21,
+      "at": "2026-09-27T23:23:28.544Z",
+      "kind": "DECISION",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "6f9870df61dfd369efbc588b456f52afdfa405fc482d4080c20b06acf600243d",
+      "payloadPath": "events/0021.json",
+      "payloadHash": "61814654dcfeed826bfeb6810fe2d6487b6d7ae7b0f0c30eb4b40f2c26855e01",
+      "eventHash": "6f5a34542173d8b960015e19862a63384e0fd6964ac3907b003708241651bd26"
     }
   ]
 }

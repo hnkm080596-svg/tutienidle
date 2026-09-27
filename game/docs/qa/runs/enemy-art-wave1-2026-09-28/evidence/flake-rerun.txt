@@ -1,0 +1,1 @@
+Isolated reruns: dongFuBackgroundAssets.test.ts PASS, GameManager.autoFarmOffline.test.ts PASS. Classified environment flakes (5s timeout under parallel suite load); not task-caused.

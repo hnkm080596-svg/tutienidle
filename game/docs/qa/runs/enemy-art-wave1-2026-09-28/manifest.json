@@ -17265,16 +17265,64 @@
       "hash": "091811d2d6c8a8fe9004965e0d6f8420d9158e1163d1f001aed719bb83521f16"
     },
     {
+      "path": "game/docs/qa/runs/enemy-art-wave1-2026-09-28/environment.json",
+      "kind": "file",
+      "mode": 33206,
+      "hash": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    {
       "path": "game/docs/qa/runs/enemy-art-wave1-2026-09-28/events/0001.json",
       "kind": "file",
       "mode": 33206,
       "hash": "cc8e3c1349c94c784698d8cb8bcece13bda5275908e4598a8db707d43d9a2f15"
     },
     {
+      "path": "game/docs/qa/runs/enemy-art-wave1-2026-09-28/events/0002.json",
+      "kind": "file",
+      "mode": 33206,
+      "hash": "452680562b5d71d721d7b098569e5acbc2035b97d834136f489809554399cb81"
+    },
+    {
+      "path": "game/docs/qa/runs/enemy-art-wave1-2026-09-28/events/0003.json",
+      "kind": "file",
+      "mode": 33206,
+      "hash": "ae19825d6fa1f0712bf1b24c5f3c470eba7b11a029ee989c3169b1cc8816d609"
+    },
+    {
+      "path": "game/docs/qa/runs/enemy-art-wave1-2026-09-28/events/0004.json",
+      "kind": "file",
+      "mode": 33206,
+      "hash": "3439d77b39428258524a2ebec7d65f6af6fd5df405a45d220b2242b181d02246"
+    },
+    {
+      "path": "game/docs/qa/runs/enemy-art-wave1-2026-09-28/events/0005.json",
+      "kind": "file",
+      "mode": 33206,
+      "hash": "89ba3a216f43eb9365982278b4b2daa2d5cdb496b0d23230c40f64033b447696"
+    },
+    {
+      "path": "game/docs/qa/runs/enemy-art-wave1-2026-09-28/events/0006.json",
+      "kind": "file",
+      "mode": 33206,
+      "hash": "d584d75adf23dfc61f4af03b908902b06be654ec2de3acc574b0e8748f1514d2"
+    },
+    {
+      "path": "game/docs/qa/runs/enemy-art-wave1-2026-09-28/events/0007.json",
+      "kind": "file",
+      "mode": 33206,
+      "hash": "873bef43bebd746c9ede33be8ebd12d1b5f1909779364a3d43e960fba2049179"
+    },
+    {
+      "path": "game/docs/qa/runs/enemy-art-wave1-2026-09-28/events/0008.json",
+      "kind": "file",
+      "mode": 33206,
+      "hash": "89ba3a216f43eb9365982278b4b2daa2d5cdb496b0d23230c40f64033b447696"
+    },
+    {
       "path": "game/docs/qa/runs/enemy-art-wave1-2026-09-28/journal.jsonl",
       "kind": "file",
       "mode": 33206,
-      "hash": "a1b26f981dfdf515a54f0eea915bf49598ecc9c0d91a672d04d92b8ec0e31b37"
+      "hash": "0955ca9751416a94188c5f2bbed1f1a32a354aefecc4bbe37f52f2f7382ddff3"
     },
     {
       "path": "game/docs/qa/runs/enemy-art-wave1-2026-09-28/lease.json",
@@ -17286,13 +17334,31 @@
       "path": "game/docs/qa/runs/enemy-art-wave1-2026-09-28/ledger.json",
       "kind": "file",
       "mode": 33206,
-      "hash": "613025321558a3a506e3fa6d60b5724121d4520fafd6aee16c58b1c7e3752b26"
+      "hash": "dbf4fecf44f6c190b59d7c0ad08e3c470c1e48fbb2c9bea7b19539fe560baf58"
     },
     {
       "path": "game/docs/qa/runs/enemy-art-wave1-2026-09-28/manifest.json",
       "kind": "file",
       "mode": 33206,
-      "hash": "b7a2d063e16ede8b98278479473eecdc7a7ec62114ee8d508bff4db7c9ded428"
+      "hash": "0c65d5ac2021a90c1ac1eb711bf99123e805c4c77614bceab34efc3fb4848a4a"
+    },
+    {
+      "path": "game/docs/qa/runs/enemy-art-wave1-2026-09-28/records-batch1.json",
+      "kind": "file",
+      "mode": 33206,
+      "hash": "ebea19dac1250b41ef9a8b286e75593a9349a55ce30db8aed25cfe73f0dab8f0"
+    },
+    {
+      "path": "game/docs/qa/runs/enemy-art-wave1-2026-09-28/records-batch2.json",
+      "kind": "file",
+      "mode": 33206,
+      "hash": "d2826b8e94654b900ecd5921cd708d8bf817ad735e6b05333e5f9e338d37055d"
+    },
+    {
+      "path": "game/docs/qa/runs/enemy-art-wave1-2026-09-28/records-findings.json",
+      "kind": "file",
+      "mode": 33206,
+      "hash": "552f9b9d528ac7deaf558f13fad5f0c6019810a7894b671e2c36a2bfdf4a7821"
     },
     {
       "path": "game/docs/qa/runs/enemy-art-wave1-2026-09-28/request.json",
@@ -21726,7 +21792,7 @@
       "path": "game/node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
       "kind": "file",
       "mode": 33206,
-      "hash": "04f1ee1869e401a6fea37434e634b8d79c5ee8d1558f43e384f1d7f2df80dfdf"
+      "hash": "49030c3459cec0aac891589565c7365f733e0b07b76d4fc5c76134d6bab3d02c"
     },
     {
       "path": "game/node_modules/@asamuzakjp/css-color/dist/esm/index.d.ts",
@@ -194436,13 +194502,13 @@
       "path": "game/src/game/scenes/combat/combat-grid-view.test.ts",
       "kind": "file",
       "mode": 33206,
-      "hash": "26c2f6dd81da6feaca95e2e2809569f339445a8f33115eb58193640564612676"
+      "hash": "8c6da2425eda3cb4757e2fe34a0d0837cfd8779ca37d763a54d69843b63d2d93"
     },
     {
       "path": "game/src/game/scenes/combat/combat-grid-view.ts",
       "kind": "file",
       "mode": 33206,
-      "hash": "60cf5cf7f953e1093d7f4fced565a9b2bdf39720551014473d44636fac61aa98"
+      "hash": "6d0e28d61e30c17c140dc454e20a23a73181ac0f8415d3a231c4bd5f7aa1b4b7"
     },
     {
       "path": "game/src/game/scenes/combat/combat-helpers-encapsulation.qa.test.ts",
@@ -196317,5 +196383,5 @@
       "hash": "618b418b80ad6330594e1f4137d201210e4f0342d3de25d4d64667c59cb2810a"
     }
   ],
-  "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2"
+  "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04"
 }

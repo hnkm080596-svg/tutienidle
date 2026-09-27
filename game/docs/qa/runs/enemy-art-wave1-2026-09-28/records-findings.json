@@ -6,7 +6,7 @@
     "id": "F-EAW-01",
     "title": "Unity pivot parser read {x,y} but dump uses {m_X,m_Y} - every pivot silently defaulted",
     "state": {
-     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
      "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
      "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
      "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -21,9 +21,6 @@
     "evidenceIds": [
      "EV-OCR"
     ],
-    "counterexample": "",
-    "expected": "",
-    "actual": "",
     "rootCause": "wrong metadata key shape",
     "rootClass": "adapter-schema-drift",
     "subsystem": "art-pipeline",
@@ -57,9 +54,6 @@
      "RV-P5-2"
     ],
     "status": "CLOSED",
-    "duplicateOf": "",
-    "rejectionReason": "",
-    "exception": "",
     "closeReason": "fixed; real pivots recovered into manifest as provenance",
     "closedAt": "2026-09-28T00:00:00Z"
    }
@@ -70,7 +64,7 @@
     "id": "F-EAW-02",
     "title": "Art floated ~24% above ground: Unity pivot is not a feet anchor for this dump",
     "state": {
-     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
      "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
      "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
      "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -85,9 +79,6 @@
     "evidenceIds": [
      "EV-E2E-IDLE"
     ],
-    "counterexample": "",
-    "expected": "",
-    "actual": "",
     "rootCause": "sourceSize spanned full authored canvas while runtime origin anchors at box bottom",
     "rootClass": "anchor-semantics-mismatch",
     "subsystem": "art-pipeline",
@@ -121,9 +112,6 @@
      "RV-P5-2"
     ],
     "status": "CLOSED",
-    "duplicateOf": "",
-    "rejectionReason": "",
-    "exception": "",
     "closeReason": "fixed; e2e screenshots show feet on ground line",
     "closedAt": "2026-09-28T00:00:00Z"
    }
@@ -134,7 +122,7 @@
     "id": "F-EAW-03",
     "title": "Boss art mapped to foundation_dragon_phase* ids which are buff ids not enemy ids",
     "state": {
-     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
      "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
      "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
      "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -147,9 +135,6 @@
     "discoveredBy": "coordinator",
     "invariantIds": [],
     "evidenceIds": [],
-    "counterexample": "",
-    "expected": "",
-    "actual": "",
     "rootCause": "id-namespace confusion (buff vs enemy)",
     "rootClass": "id-namespace",
     "subsystem": "art-pipeline",
@@ -183,9 +168,6 @@
      "RV-P5-2"
     ],
     "status": "CLOSED",
-    "duplicateOf": "",
-    "rejectionReason": "",
-    "exception": "",
     "closeReason": "fixed",
     "closedAt": "2026-09-28T00:00:00Z"
    }
@@ -196,7 +178,7 @@
     "id": "F-EAW-04",
     "title": "Registry hardcoded avatarSize 512x512 vs real ~150px PNGs",
     "state": {
-     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
      "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
      "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
      "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -209,9 +191,6 @@
     "discoveredBy": "coordinator",
     "invariantIds": [],
     "evidenceIds": [],
-    "counterexample": "",
-    "expected": "",
-    "actual": "",
     "rootCause": "hand-written registry drifted from generated assets",
     "rootClass": "registry-drift",
     "subsystem": "art-pipeline",
@@ -245,9 +224,6 @@
      "RV-P5-2"
     ],
     "status": "CLOSED",
-    "duplicateOf": "",
-    "rejectionReason": "",
-    "exception": "",
     "closeReason": "fixed",
     "closedAt": "2026-09-28T00:00:00Z"
    }
@@ -258,7 +234,7 @@
     "id": "F-EAW-05",
     "title": "Stale test fixtures assumed mortal_wild_boar static after it was intentionally reskinned",
     "state": {
-     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
      "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
      "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
      "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -271,9 +247,6 @@
     "discoveredBy": "coordinator",
     "invariantIds": [],
     "evidenceIds": [],
-    "counterexample": "",
-    "expected": "",
-    "actual": "",
     "rootCause": "fixture semantics broke when mapping landed",
     "rootClass": "fixture-drift",
     "subsystem": "art-pipeline",
@@ -307,9 +280,6 @@
      "RV-P5-2"
     ],
     "status": "CLOSED",
-    "duplicateOf": "",
-    "rejectionReason": "",
-    "exception": "",
     "closeReason": "fixed",
     "closedAt": "2026-09-28T00:00:00Z"
    }
@@ -320,7 +290,7 @@
     "id": "F-EAW-06",
     "title": "Reskinned template ids still loaded old PNGs and registered dead catalogue entries",
     "state": {
-     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
      "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
      "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
      "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -335,9 +305,6 @@
     "evidenceIds": [
      "EV-P5-PASSES"
     ],
-    "counterexample": "",
-    "expected": "",
-    "actual": "",
     "rootCause": "enumeration points not aware of reskin map",
     "rootClass": "dead-load",
     "subsystem": "art-pipeline",
@@ -371,9 +338,6 @@
      "RV-P5-2"
     ],
     "status": "CLOSED",
-    "duplicateOf": "",
-    "rejectionReason": "",
-    "exception": "",
     "closeReason": "fixed in pass-1 review",
     "closedAt": "2026-09-28T00:00:00Z"
    }
@@ -384,7 +348,7 @@
     "id": "F-EAW-07",
     "title": "clip() hardcodes sheet-1 - latent break when reserved 4-sheet wugu-demon-king is wired",
     "state": {
-     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
      "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
      "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
      "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -397,9 +361,6 @@
     "discoveredBy": "coordinator",
     "invariantIds": [],
     "evidenceIds": [],
-    "counterexample": "",
-    "expected": "",
-    "actual": "",
     "rootCause": "single-sheet assumption",
     "rootClass": "latent-assumption",
     "subsystem": "art-pipeline",
@@ -433,9 +394,6 @@
      "RV-P5-2"
     ],
     "status": "CLOSED",
-    "duplicateOf": "",
-    "rejectionReason": "",
-    "exception": "",
     "closeReason": "guarded by pin",
     "closedAt": "2026-09-28T00:00:00Z"
    }
@@ -446,7 +404,7 @@
     "id": "F-EAW-08",
     "title": "attackSfxUrl declared but unconsumed - SFX staged per user ruling, design deferred",
     "state": {
-     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
      "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
      "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
      "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -459,9 +417,6 @@
     "discoveredBy": "coordinator",
     "invariantIds": [],
     "evidenceIds": [],
-    "counterexample": "",
-    "expected": "",
-    "actual": "",
     "rootCause": "see commit 93fd61e2",
     "rootClass": "implementation-gap",
     "subsystem": "art-pipeline",
@@ -494,9 +449,7 @@
     "closureReviewIds": [
      "RV-P5-2"
     ],
-    "status": "CLOSED",
-    "duplicateOf": "",
-    "rejectionReason": "",
+    "status": "HUMAN_EXCEPTION",
     "exception": {
      "humanInstructionRef": "user ruling 2026-09-28 (SFX design later)",
      "scope": "enemy-art-wave1",
@@ -513,7 +466,7 @@
     "id": "F-EAW-09",
     "title": "Atlas-load-failure degradation path (placeholder persistence for reskinned entity) unexercised e2e",
     "state": {
-     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
      "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
      "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
      "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
@@ -526,11 +479,8 @@
     "discoveredBy": "coordinator",
     "invariantIds": [],
     "evidenceIds": [],
-    "counterexample": "",
-    "expected": "",
-    "actual": "",
-    "rootCause": "missing network-failure oracle",
-    "rootClass": "",
+    "rootCause": "documented fallback never wired into draw path",
+    "rootClass": "missing-consumer",
     "subsystem": "art-pipeline",
     "siblingSearch": [
      {
@@ -550,15 +500,20 @@
      }
     ],
     "siblingFindingIds": [],
-    "repair": "none - needs fetch-failure injection harness",
-    "pinEvidenceIds": [],
-    "verificationEvidenceIds": [],
-    "closureReviewIds": [],
-    "status": "OBSERVED",
-    "duplicateOf": "",
-    "rejectionReason": "",
-    "exception": "",
-    "closeReason": ""
+    "repair": "draw static form (avatar) when atlas texture missing, before Rectangle double-fallback",
+    "pinEvidenceIds": [
+     "EV-FOCUSED"
+    ],
+    "verificationEvidenceIds": [
+     "EV-FOCUSED",
+     "EV-E2E-IDLE"
+    ],
+    "closureReviewIds": [
+     "RV-P4"
+    ],
+    "status": "CLOSED",
+    "closeReason": "avatar fallback implemented + pinned by grid-view tests",
+    "closedAt": "2026-09-28T00:00:00Z"
    }
   }
  ]

@@ -1,0 +1,1 @@
+playwright tests/e2e/combat-idle-motion-capture.spec.ts PASS on post-repair state: reskinned boars render NEWSPRITE atlas frames, idle frames advance, attack clip runs and returns to standby, death clip completes then sprite destroyed; static player bobs.

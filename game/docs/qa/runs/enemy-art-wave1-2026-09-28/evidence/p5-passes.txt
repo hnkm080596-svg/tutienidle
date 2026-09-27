@@ -1,0 +1,1 @@
+P5 sequential passes 1-3 over evolving states: Pass1 dead-load removal, Pass2 authority check clean, Pass3 adversarial integration incl. live runtime probe.
