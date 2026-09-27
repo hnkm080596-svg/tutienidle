@@ -176,3 +176,92 @@ test("v2 ledger validates; MC14 catches bad refs (PU-24 linkage)", () => {
   const sem = validateSemantics(ledger);
   assert.ok(sem.some((x) => x.check === "MC14" && /unresolvedAssumptions/.test(x.reason)));
 });
+
+// --- Repair regressions: admission hardening + lifecycle legal transitions ---
+
+const mkAsg = (id, over = {}) => ({ id, parentId: null, capacityScope: "worker",
+  inputBundleHash: "h".padEnd(64, "0"), dependencies: [], requiredCapabilities: [],
+  writeSurface: [], readiness: "READY", status: "QUEUED", reservedAt: null,
+  observedRuntimeId: null, releaseEvidence: null, resultRef: null,
+  timeoutState: null, history: [], ...over });
+
+test("externalOccupied must be a non-negative integer (fail-closed)", () => {
+  const ledger = newLedger({ runId: "x", capacityLimit: 2 });
+  assert.throws(() => admitAssignment(ledger, mkAsg("w1"), { externalOccupied: "x" }), /externalOccupied/);
+  assert.throws(() => admitAssignment(ledger, mkAsg("w1"), { externalOccupied: -1 }), /externalOccupied/);
+  assert.throws(() => admitAssignment(ledger, mkAsg("w1"), { externalOccupied: NaN }), /externalOccupied/);
+  assert.equal(admitAssignment(ledger, mkAsg("w1"), { externalOccupied: 1 }).record.status, "RESERVED");
+});
+
+test("capacityLimit is clamped to the hard five-slot law", () => {
+  const ledger = newLedger({ runId: "x", capacityLimit: 99 });
+  for (const id of ["a", "b", "c", "d", "e"]) {
+    ledger.assignments.push(admitAssignment(ledger, mkAsg(id)).record);
+  }
+  assert.equal(ledger.assignments.filter((a) => a.status === "RESERVED").length, 5);
+  assert.equal(admitAssignment(ledger, mkAsg("f")).record.status, "QUEUED", "6th worker must queue even when request claims 99");
+});
+
+test("admission requires id; new record cannot enter in an active/terminal status; seed anchors at CREATED", () => {
+  const ledger = newLedger({ runId: "x", capacityLimit: 2 });
+  assert.throws(() => admitAssignment(ledger, { readiness: "READY" }), /assignment\.id/);
+  assert.throws(() => admitAssignment(ledger, mkAsg("w1", { status: "RESERVED" })), /lawful entry states/);
+  assert.throws(() => admitAssignment(ledger, mkAsg("w1", { status: "FINISHED" })), /lawful entry states/);
+  const r = admitAssignment(ledger, mkAsg("w1"));
+  assert.equal(r.record.status, "RESERVED");
+  assert.equal(r.record.history[0].from, "CREATED");
+  assert.equal(r.record.history[0].to, "QUEUED");
+  assert.equal(r.record.history[1].from, "QUEUED");
+  assert.equal(r.record.history[1].to, "RESERVED");
+});
+
+test("duplicate registration rejected; re-evaluation allowed only for waiting records via allowExisting", () => {
+  const ledger = newLedger({ runId: "x", capacityLimit: 1 });
+  ledger.assignments.push(admitAssignment(ledger, mkAsg("w1")).record);
+  assert.throws(() => admitAssignment(ledger, mkAsg("w1")), /already registered/);
+  assert.throws(() => admitAssignment(ledger, mkAsg("w1"), { allowExisting: true }), /only waiting records/);
+  ledger.assignments.push(admitAssignment(ledger, mkAsg("w2")).record); // QUEUED (full)
+  // promotion path: queued record re-evaluated once a slot frees
+  const queued = ledger.assignments.find((a) => a.id === "w2");
+  const promoted = admitAssignment(ledger, { ...queued }, { allowExisting: true, externalOccupied: 0 });
+  assert.equal(promoted.record.status, "QUEUED", "still full -> stays queued");
+  observeAssignment(ledger, "w1", { observedStatus: "terminated", evidence: "exited" });
+  const promoted2 = admitAssignment(ledger, { ...ledger.assignments.find((a) => a.id === "w2") }, { allowExisting: true });
+  assert.equal(promoted2.record.status, "RESERVED");
+});
+
+test("observe: started->RUNNING; queued cancel->CANCELLED; result holds slot; timeout retains; terminated releases; FINISHED absorbing", () => {
+  const ledger = newLedger({ runId: "x", capacityLimit: 2 });
+  ledger.assignments.push(admitAssignment(ledger, mkAsg("w1")).record);
+  ledger.assignments.push(admitAssignment(ledger, mkAsg("w2")).record);
+  ledger.assignments.push(admitAssignment(ledger, mkAsg("w3")).record); // QUEUED
+  assert.equal(observeAssignment(ledger, "w1", { observedStatus: "started" }).status, "RUNNING");
+  assert.equal(observeAssignment(ledger, "w3", { observedStatus: "cancelled", evidence: "cancel" }).status, "CANCELLED");
+  observeAssignment(ledger, "w1", { observedStatus: "result", resultRef: "E1" });
+  assert.equal(ledger.assignments.find((a) => a.id === "w1").status, "RESULT_RECEIVED");
+  observeAssignment(ledger, "w1", { observedStatus: "timeout" });
+  assert.equal(ledger.assignments.find((a) => a.id === "w1").status, "RELEASE_PENDING");
+  assert.equal(observeAssignment(ledger, "w1", { observedStatus: "terminated", evidence: "exited" }).status, "FINISHED");
+  assert.throws(() => observeAssignment(ledger, "w1", { observedStatus: "result" }), /illegal assignment transition FINISHED/);
+  assert.equal(observeAssignment(ledger, "w2", { observedStatus: "blocked" }).status, "BLOCKED");
+});
+
+test("observe rejects illegal transitions, missing release evidence, corrupt history, unknown kinds", () => {
+  const ledger = newLedger({ runId: "x", capacityLimit: 1 });
+  ledger.assignments.push(admitAssignment(ledger, mkAsg("w1")).record);
+  ledger.assignments.push(admitAssignment(ledger, mkAsg("w2")).record); // QUEUED
+  // QUEUED -> RESULT_RECEIVED impossible
+  assert.throws(() => observeAssignment(ledger, "w2", { observedStatus: "result" }), /illegal assignment transition QUEUED -> RESULT_RECEIVED/);
+  // RESERVED -> RELEASE_PENDING via timeout legal (slot retained)
+  assert.equal(observeAssignment(ledger, "w1", { observedStatus: "timeout" }).status, "RELEASE_PENDING");
+  // terminal observation requires evidence
+  assert.throws(() => observeAssignment(ledger, "w1", { observedStatus: "cancelled" }), /requires evidence/);
+  assert.equal(observeAssignment(ledger, "w1", { observedStatus: "cancelled", evidence: "cancelled" }).status, "FINISHED");
+  // unknown observation kind
+  assert.throws(() => observeAssignment(ledger, "w1", { observedStatus: "bogus" }), /unhandled observedStatus/);
+  // corrupt history refuses observation
+  const l2 = newLedger({ runId: "y", capacityLimit: 1 });
+  l2.assignments.push(admitAssignment(l2, mkAsg("a1")).record);
+  l2.assignments[0].history = [{ at: "t", from: "X", to: "Y", reason: "z" }];
+  assert.throws(() => observeAssignment(l2, "a1", { observedStatus: "started" }), /non-contiguous/);
+});

@@ -7,21 +7,28 @@
 //   decide    --run <id>                evaluate terminal predicate; write DECISION event + outcome
 //   render    --run <id>                write runs/<id>/report.md
 //   qualify                            run orchestrator attack suite + corpus checks; print verdict
+//   prepare   --task <file> [--out f]   deterministic lesson routing + construction brief draft
+//   preflight --brief <file>            brief readiness verdict (READY_TO_DECLARE | BLOCKED)
+//   checkpoint --brief <f> --state <f>  brief revision on state drift
+//   learn     --run <id> --input <file> lesson facet transition / policy publication
+//   schedule  --run <id> --input <file> capacity admission (admit) / lifecycle release (observe)
+//   migrate   --run <id>                v1 -> v2 ledger migration for a RESUMED run
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 import {
   newLedger, loadLedger, saveLedgerAtomic, acquireLease, checkLease, appendEvent,
-  recordMessage, invalidateForNewState, buildManifest, hashFileSet, computeEnvironmentId,
-  objectHash, runDir, SCHEMA_VERSION_V1,
+  commitLedger, recordMessage, invalidateForNewState, buildManifest, hashFileSet,
+  computeEnvironmentId, objectHash, runDir, SCHEMA_VERSION_V1,
+  TERMINAL_FINDING_STATUSES,
 } from "./state.mjs";
 import {
   loadLessonsJsonl, routeLessons, draftBrief, preflightBrief, checkpointBrief,
   admitAssignment, observeAssignment, applyLearningAction, publishPolicy,
-  loadActivePolicy, migrateLedgerV1toV2,
+  loadActivePolicy, migrateLedgerV1toV2, ASSIGNMENT_ACTIVE, ASSIGNMENT_TERMINAL,
 } from "./prevention.mjs";
-import { validateLedger, validateStructure } from "./validate.mjs";
+import { validateLedger } from "./validate.mjs";
 import { decide, renderReport } from "./decision.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -73,7 +80,7 @@ function cmdInit(args) {
   const ledger = newLedger(request);
   const placeholder = { productStateId: objectHash("unsnapshotted"), contractId: objectHash("unsnapshotted"), attackModelId: objectHash("unsnapshotted"), environmentId: objectHash("unsnapshotted") };
   appendEvent(dir, ledger, { kind: "PHASE", actor: leaseId, state: placeholder, payload: { phase: "INTAKE", request } });
-  saveLedgerAtomic(dir, ledger);
+  saveLedgerAtomic(dir, ledger); // init: no baseline to CAS against
   console.log(`initialized run ${request.runId} at ${path.relative(GAME_ROOT, dir)} (lease ${leaseId})`);
 }
 
@@ -111,8 +118,7 @@ function cmdSnapshot(args) {
   }
   ledger.run.state = newState;
   ledger.run.phase = "SNAPSHOT";
-  appendEvent(dir, ledger, { kind: "SNAPSHOT", actor: leaseId, state: newState, payload: { state: newState, invalidated: stale } });
-  saveLedgerAtomic(dir, ledger);
+  commitLedger(dir, ledger, { kind: "SNAPSHOT", actor: leaseId, state: newState, payload: { state: newState, invalidated: stale } });
   console.log(`state product=${newState.productStateId.slice(0, 12)} contract=${newState.contractId.slice(0, 12)} attack=${newState.attackModelId.slice(0, 12)} env=${newState.environmentId.slice(0, 12)}${stale ? ` invalidated ${JSON.stringify(stale)}` : ""}`);
 }
 
@@ -130,8 +136,23 @@ const RECORD_COLLECTION = {
   invariant: "invariants", census: "census", finding: "findings", evidence: "evidence",
   coverage: "coverage", attack: "attacks", review: "reviews", cycle: "cycles",
   mutation: "mutations", corpus: "corpus", lesson: "lessons", message: "messages",
-  brief: "briefs", assignment: "assignments", consumption: "consumptions",
+  brief: "briefs", consumption: "consumptions",
+  // "assignment" is deliberately absent: assignments are the reservation
+  // authority and may only be created/mutated through `schedule` (admission +
+  // lifecycle-verified release), never via the raw record path.
 };
+
+// Records in a terminal/immutable state cannot be replaced via `record` —
+// sealing is the point; correction happens through new linked records.
+function assertReplaceable(kind, existing) {
+  if (!existing) return;
+  if (kind === "finding" && TERMINAL_FINDING_STATUSES.has(existing.status)) {
+    throw new Error(`finding ${existing.id} is terminal (${existing.status}) — immutable; record a new linked finding`);
+  }
+  if (kind === "review" && existing.status === "SEALED") {
+    throw new Error(`review ${existing.id} is SEALED — immutable; a contaminated review needs a fresh reviewer`);
+  }
+}
 
 const EVENT_KIND = {
   invariant: "PHASE", census: "PHASE", finding: "FINDING", evidence: "EVIDENCE",
@@ -154,14 +175,15 @@ function cmdRecord(args) {
     // {kind, body:{...}} or flat {kind, ...fields}; `kind` is the routing key, not a body field
     const body = rec.body && typeof rec.body === "object" ? rec.body : Object.fromEntries(Object.entries(rec).filter(([k]) => k !== "kind"));
     if (kind === "message") {
-      body.runId = ledger.run.id;
+      // declared runId is verified inside recordMessage — never silently rewritten
+      body.runId = body.runId ?? ledger.run.id;
       const res = recordMessage(ledger, body);
       applied.push(`${kind}:${body.id}${res.duplicate ? " (duplicate, idempotent)" : res.stale ? " (STALE — does not advance phase)" : ""}`);
     } else {
       const coll = ledger[RECORD_COLLECTION[kind]];
       const idx = coll.findIndex((r) => r.id === body.id);
       if (idx >= 0) {
-        // replace-in-place allowed only for non-terminal pre-decision records; findings get explicit lifecycle
+        assertReplaceable(kind, coll[idx]);
         coll[idx] = body;
         applied.push(`${kind}:${body.id} (updated)`);
       } else {
@@ -170,12 +192,17 @@ function cmdRecord(args) {
       }
     }
   }
-  appendEvent(dir, ledger, {
-    kind: EVENT_KIND[records[0].kind] ?? "EVIDENCE",
-    actor: leaseId, state: ledger.run.state,
-    payload: { applied },
-  });
-  saveLedgerAtomic(dir, ledger);
+  if (applied.length) {
+    const kinds = new Set(records.map((r) => r.kind));
+    commitLedger(dir, ledger, {
+      kind: kinds.size === 1 ? EVENT_KIND[records[0].kind] ?? "EVIDENCE" : "EVIDENCE",
+      actor: leaseId, state: ledger.run.state,
+      payload: { applied },
+    });
+  } else {
+    console.log("recorded 0: empty input — no event appended");
+    return;
+  }
   console.log(`recorded ${applied.length}: ${applied.join(", ")}`);
 }
 
@@ -197,23 +224,36 @@ function cmdValidate(args) {
   }
 }
 
+// Integrity checks that must pass before an outcome may be written — coverage
+// gaps (MC7) and open findings (MC12) are decision *inputs*, not integrity
+// failures, so they stay out of this gate.
+const DECIDE_INTEGRITY_CHECKS = new Set(["SCHEMA", "MC1", "MC2", "MC14"]);
+
 function cmdDecide(args) {
   const dir = runDir(QA_ROOT, args.run);
   const leaseId = args.lease ?? leaseFromDir(dir);
   checkLease(dir, leaseId);
   const ledger = loadLedger(dir);
-  const structural = validateStructure(ledger, SCRIPT_DIR);
-  if (structural.length) {
-    console.log("structural failures — decide refused:");
-    structural.forEach((fl) => console.log(`  ${fl.recordId}: ${fl.reason}`));
+  const failures = validateLedger(ledger, { runDir: dir, scriptDir: SCRIPT_DIR });
+  const integrity = failures.filter((fl) => DECIDE_INTEGRITY_CHECKS.has(fl.check));
+  if (integrity.length) {
+    console.log("integrity failures — decide refused (run `validate` for the full list):");
+    integrity.forEach((fl) => console.log(`  ${fl.check} ${fl.recordId}: ${fl.reason}`));
+    process.exitCode = 1;
+    return;
+  }
+  // No decision may be written while reservations are still live — final
+  // synthesis happens after all workers ended (agent-instructions §G).
+  const live = ledger.assignments.filter((a) => ASSIGNMENT_ACTIVE.has(a.status));
+  if (live.length) {
+    console.log(`decide refused: ${live.length} assignment(s) still hold live slots: ${live.map((a) => `${a.id}=${a.status}`).join(", ")}`);
     process.exitCode = 1;
     return;
   }
   const { outcome, clauses, detail } = decide(ledger);
   ledger.run.outcome = outcome;
   ledger.run.phase = "DECIDE";
-  appendEvent(dir, ledger, { kind: "DECISION", actor: leaseId, state: ledger.run.state, payload: { outcome, detail, clauses } });
-  saveLedgerAtomic(dir, ledger);
+  commitLedger(dir, ledger, { kind: "DECISION", actor: leaseId, state: ledger.run.state, payload: { outcome, detail, clauses } });
   console.log(`outcome: ${outcome}`);
   for (const c of clauses) console.log(`  ${c.ok ? "OK  " : "UNMET"} ${c.id}: ${c.reason}`);
   console.log(`detail: ${detail}`);
@@ -234,7 +274,10 @@ function cmdQualify() {
   let out = "";
   let code = 0;
   try {
-    out = execFileSync(process.execPath, ["--test", path.join(testDir, "*.test.mjs")], { cwd: GAME_ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    // TAP reporter is required: the parser reads `# pass N`/`# fail N` counters,
+    // which the default spec reporter (Node >=22) does not emit — a parse miss
+    // would emit a vacuous QUALIFIED verdict (F-PU30-04 / QAI-08).
+    out = execFileSync(process.execPath, ["--test", "--test-reporter", "tap", path.join(testDir, "*.test.mjs")], { cwd: GAME_ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
   } catch (e) {
     code = e.status ?? 1;
     out = (e.stdout ?? "") + (e.stderr ?? "");
@@ -256,6 +299,7 @@ function cmdQualify() {
   console.log(`orchestrator tests: ${passed} passed, ${failed} failed`);
   const gaps = [];
   if (failed !== 0) gaps.push(`orchestrator suite: ${failed} failing`);
+  if (passed <= 0) gaps.push(`orchestrator suite: 0 tests observed (exit ${code}) — parser/reporter mismatch or empty suite; refusing vacuous verdict`);
   const sentinelDir = path.join(QA_ROOT, "runs", "adoption-2026-09-23", "reviews");
   const sentinelOk = fs.existsSync(sentinelDir) && fs.readdirSync(sentinelDir).filter((f) => /^sentinel-reviewer-[ab]/.test(f)).length >= 2;
   if (!sentinelOk) gaps.push("reviewer-isolation sentinel: <2 sealed isolated reviewer results recorded");
@@ -339,8 +383,7 @@ function cmdLearn(args) {
     lesson.policyVersion = pub.policyHash;
     lesson.effectiveFromRun = ledger.run.id;
   }
-  appendEvent(dir, ledger, { kind: "EVIDENCE", actor: leaseId, state: ledger.run.state, payload: { learning: input.lessonRef, action: input.action.type } });
-  saveLedgerAtomic(dir, ledger);
+  commitLedger(dir, ledger, { kind: "EVIDENCE", actor: leaseId, state: ledger.run.state, payload: { learning: input.lessonRef, action: input.action.type } });
   console.log(`learn ${input.lessonRef}: ${input.action.type} applied`);
 }
 
@@ -354,18 +397,32 @@ function cmdSchedule(args) {
   const input = readJson(path.resolve(args.input));
   let note;
   if (input.action === "admit") {
-    const { record, admitted } = admitAssignment(ledger, input.assignment, { externalOccupied: input.externalOccupied ?? 0 });
+    const existing = ledger.assignments.find((a) => a.id === input.assignment?.id);
+    if (existing && (ASSIGNMENT_ACTIVE.has(existing.status) || ASSIGNMENT_TERMINAL.has(existing.status))) {
+      // Re-admission is only a path for waiting work (QUEUED/BLOCKED). An
+      // active or finished record must never be demoted/replaced — its slot is
+      // released only via observe with lifecycle proof.
+      throw new Error(`assignment ${existing.id} is ${existing.status} — re-admission refused; waiting records only. Use observe for lifecycle`);
+    }
+    // Merge onto the ledger record (ledger is the truth): keep stored fields +
+    // history, refresh the mutable admission inputs from the request.
+    const candidate = existing
+      ? { ...existing, ...Object.fromEntries(Object.entries(input.assignment).filter(([k]) => k !== "status" && k !== "history")), status: existing.status, history: [...existing.history] }
+      : input.assignment;
+    const { record, admitted } = admitAssignment(ledger, candidate, { externalOccupied: input.externalOccupied ?? 0, allowExisting: !!existing });
     const i = ledger.assignments.findIndex((a) => a.id === record.id);
     if (i >= 0) ledger.assignments[i] = record; else ledger.assignments.push(record);
     note = `admit ${record.id}: ${admitted ? "RESERVED" : record.status}`;
   } else if (input.action === "observe") {
-    const a = observeAssignment(ledger, input.assignmentId, { observedStatus: input.observedStatus, evidence: input.evidence });
+    const a = observeAssignment(ledger, input.assignmentId, {
+      observedStatus: input.observedStatus, evidence: input.evidence,
+      observedRuntimeId: input.observedRuntimeId, resultRef: input.resultRef,
+    });
     note = `observe ${a.id}: ${a.status}`;
   } else {
     throw new Error(`unknown schedule action: ${input.action}`);
   }
-  appendEvent(dir, ledger, { kind: "SCHEDULE", actor: leaseId, state: ledger.run.state, payload: input });
-  saveLedgerAtomic(dir, ledger);
+  commitLedger(dir, ledger, { kind: "SCHEDULE", actor: leaseId, state: ledger.run.state, payload: input });
   console.log(note);
 }
 
@@ -377,8 +434,7 @@ function cmdMigrate(args) {
   const ledger = loadLedger(dir);
   if (ledger.schemaVersion !== SCHEMA_VERSION_V1) throw new Error(`migrate only applies to schemaVersion 1, got ${ledger.schemaVersion}`);
   const { ledger: migrated, notes } = migrateLedgerV1toV2(ledger);
-  appendEvent(dir, migrated, { kind: "MIGRATION", actor: leaseId, state: migrated.run.state, payload: { from: 1, to: 2, notes } });
-  saveLedgerAtomic(dir, migrated);
+  commitLedger(dir, migrated, { kind: "MIGRATION", actor: leaseId, state: migrated.run.state, payload: { from: 1, to: 2, notes } });
   console.log(`migrated run ${ledger.run.id} to schemaVersion 2 (${notes.length} initializations)`);
 }
 
