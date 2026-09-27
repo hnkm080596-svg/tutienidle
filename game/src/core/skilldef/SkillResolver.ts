@@ -1406,6 +1406,9 @@ export class SkillResolver {
 
     const scale = ctx.input.coefficientScale ?? 1
     const theBurned = ctx.snapshot.resourcesConsumed.the ?? 0
+    // Mirrors TurnBattleSystem's theScaling fold on the hit packet --
+    // same `1 + theBurned/100 x coeff` on the other binding surface;
+    // keep the two equivalent if either changes.
     const theScale =
       ctx.effective.theScaling !== undefined
         ? 1 + (theBurned / 100) * ctx.effective.theScaling.coeff

@@ -92,7 +92,7 @@ export function resolveProcCost(
 export function tryPayProcCost(entity: CombatEntity, cost: number): boolean {
   const pool = entity.currentThe ?? 0
   if (pool < cost) return false
-  entity.currentThe = pool - cost
+  consumeThe(entity, cost)
   return true
 }
 

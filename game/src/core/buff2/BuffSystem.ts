@@ -1038,10 +1038,17 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
         if (stacksAfter <= 0) {
           // commitStacks parity: a feed that drains the instance to zero
           // retires it (negative payloads stay authored-legal). The
-          // marker's own consume retire still applies, and the loop
-          // keeps feeding the remaining markers on this target.
+          // marker's own consume retire still applies -- then the
+          // instance is detached, so the tick stops here: a later
+          // marker feeding the removed object would resurrect-emit
+          // buff_stacks_changed (a removed instance emits nothing).
           this.removeInstance(instance, 'consumed', lctx.events, lctx.rootActionId)
-        } else if (stacksAfter !== stacksBefore) {
+          if (growth.consume === true) {
+            this.removeInstance(marker, 'consumed', lctx.events, lctx.rootActionId)
+          }
+          return
+        }
+        if (stacksAfter !== stacksBefore) {
           lctx.events.emit({
             type: 'buff_stacks_changed',
             rootActionId: lctx.rootActionId,

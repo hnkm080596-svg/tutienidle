@@ -1911,6 +1911,8 @@ export class TurnBattleSystem {
             // Task 13 -- theScaling (nuke variant): final damage x
             // (1 + theBurned/100 x coeff) folded into the damage packet
             // once; every target's hit resolves through it uniformly.
+            // SkillResolver applies the same formula on its binding
+            // surface -- keep them equivalent if either changes.
             const theScaling = payloadSkill?.theScaling
             if (theScaling && execution.theBurned) {
               resolvedDamage = scaleActionDamage(resolvedDamage, 1 + (execution.theBurned / 100) * theScaling.coeff)

@@ -1199,7 +1199,7 @@ export class GameManagerTurnBattleOps {
       resource: new EntityResourceAdapter(resolveEntity, {
         // skilldef M4 -- skill costs ride consume_resource ops.
         // 'mana' -> consumeResourceFor (the mana-cost writer: raw
-        // debit, no clamp, the insufficient check gates first);
+        // debit floored at zero, the insufficient check gates first);
         // 'ward' -> EntityVitalsSystem spend/grant (the vitals
         // authority owns shield mutation, never a raw field write).
         mana: {

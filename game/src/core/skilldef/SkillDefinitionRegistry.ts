@@ -567,7 +567,7 @@ function validatePassive(
       fault('invalid_field_value', `${path}.procChance`, 'procChance must be in [0, 1]')
     }
     if (trigger.condition !== undefined) {
-      validateCondition(trigger.condition, `${path}.condition`, deps, false, false, fault)
+      validateCondition(trigger.condition, `${path}.condition`, deps, false, false, false, fault)
     }
   }
   validateOperationList(definition.operations, 'operations', deps, false, TOP_LEVEL_LANE, fault)
@@ -651,6 +651,25 @@ function validateOperation(
     field: string,
   ): void => {
     validateSingleBindingIntent(target, `${path}.${field}`, insideForEach, inLane, fault)
+  }
+
+  // gateOnApplyResult binds only on the three selector ops whose resolve
+  // wraps steps in on_apply_result -- carried on any other op type it is
+  // silently dead authoring (the field is type-scoped but runtime data
+  // can still smuggle it past the compiler).
+  if (
+    (op as { gateOnApplyResult?: unknown }).gateOnApplyResult === true &&
+    op.type !== 'add_buff_modifier' &&
+    op.type !== 'remove_buff_modifier' &&
+    op.type !== 'refresh_buff_duration' &&
+    op.type !== 'extend_buff_duration' &&
+    op.type !== 'trigger_buff_periodic'
+  ) {
+    fault(
+      'invalid_field_value',
+      `${path}.gateOnApplyResult`,
+      'gateOnApplyResult is only legal on buff modifier/duration/periodic ops (their resolve wraps steps in on_apply_result)',
+    )
   }
 
   switch (op.type) {
@@ -963,7 +982,7 @@ function validateOperation(
         )
         return
       }
-      validateCondition(op.condition, `${path}.condition`, deps, insideForEach, inLane, fault)
+      validateCondition(op.condition, `${path}.condition`, deps, insideForEach, inLane, true, fault)
       if (op.then.length === 0 && (op.else === undefined || op.else.length === 0)) {
         fault('invalid_field_value', path, 'if op needs a non-empty then or else branch')
       }
@@ -1235,6 +1254,7 @@ function validateExpression(
         deps,
         insideForEach,
         insideLandedLane,
+        false,
         fault,
       )
       validateExpression(expr.then, `${path}.then`, deps, insideForEach, insideLandedLane, fault)
@@ -1310,9 +1330,10 @@ function validateCondition(
   deps: SkillDefinitionValidationDeps,
   insideForEach: boolean,
   insideLandedLane: boolean,
+  hitGateLegal: boolean,
   fault: (code: SkillDefinitionFaultCode, path: string, message: string) => void,
 ): void {
-  validateConditionInner(condition, path, deps, insideForEach, insideLandedLane, fault)
+  validateConditionInner(condition, path, deps, insideForEach, insideLandedLane, hitGateLegal, fault)
 }
 
 function validateConditionInner(
@@ -1321,6 +1342,7 @@ function validateConditionInner(
   deps: SkillDefinitionValidationDeps,
   insideForEach: boolean,
   insideLandedLane: boolean,
+  hitGateLegal: boolean,
   fault: (code: SkillDefinitionFaultCode, path: string, message: string) => void,
 ): void {
   if (condition === null || typeof condition !== 'object' || !CONDITION_KINDS.has(condition.kind)) {
@@ -1380,6 +1402,16 @@ function validateConditionInner(
     case 'any_target_landed':
       return
     case 'target_hit_landed':
+      // Legal only as an authored op 'if' condition (the resolver lowers
+      // it to ops_landed_any + var branch); a trigger or expression slot
+      // would fault only at resolve -- decline lane. Define-time fault.
+      if (!hitGateLegal) {
+        fault(
+          'malformed_condition',
+          path,
+          `target_hit_landed is only legal as an authored op 'if' condition -- not on triggers, expressions, or nested positions`,
+        )
+      }
       // single-binding intents only -- 'affected_targets'/'all_enemies'
       // would bind member[0] silently (misleading); use any_target_landed
       // for the cast-scope check instead.
