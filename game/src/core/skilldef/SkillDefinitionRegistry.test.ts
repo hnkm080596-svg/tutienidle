@@ -85,6 +85,24 @@ describe('SkillDefinitionRegistry', () => {
     ).toThrow(/empowerment and subcasts\.compositePool are mutually exclusive/)
   })
 
+  it('constructor faults when one definition carries consumesAllThe AND chargeTurns', () => {
+    // Charge-resolve declares carry no execution object, so theBurned
+    // can never forward -- theScaling would read 0 at resolve. Dormant
+    // today; this pin keeps the silent-0 state unauthorable.
+    expect(
+      () =>
+        new SkillDefinitionRegistry(
+          [
+            activeDef('a', {
+              consumesAllThe: true,
+              cadence: { cooldownTurns: 2, chargeTurns: 1 },
+            }),
+          ],
+          deps,
+        ),
+    ).toThrow(/consumesAllThe and cadence\.chargeTurns are mutually exclusive/)
+  })
+
   it('accepts compositePool refs that resolve inside the registry', () => {
     const registry = new SkillDefinitionRegistry(
       [

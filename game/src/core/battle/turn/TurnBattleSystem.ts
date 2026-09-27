@@ -1497,15 +1497,22 @@ export class TurnBattleSystem {
         }
 
         if (chargedSkill) {
-          const opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
-          const primaryTarget = selectTarget(actor, opposingSide, undefined, (entityId) => this.tauntSourceId(entityId as CombatEntityId))
+          if ((chargedSkill.targetScope ?? 'enemy') === 'self') {
+            affected = [actor]
+          } else {
+            const opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
+            const primaryTarget = selectTarget(actor, opposingSide, undefined, (entityId) => this.tauntSourceId(entityId as CombatEntityId))
 
-          if (primaryTarget) {
-            affected = collectTurnTargets(primaryTarget, opposingSide, chargedSkill.targeting)
+            if (primaryTarget) {
+              affected = collectTurnTargets(primaryTarget, opposingSide, chargedSkill.targeting)
+            }
+          }
 
-            // Defect Task 8 (2026-09-05): damage tính lại ở applyActionImpact()
-            // (đọc declared.chargedSkill + roundsElapsed độc lập) -- không
-            // cần tính trùng ở đây.
+          // Defect Task 8 (2026-09-05): damage tính lại ở applyActionImpact()
+          // (đọc declared.chargedSkill + roundsElapsed độc lập) -- không
+          // cần tính trùng ở đây. A whiffed resolve (no living target)
+          // captures nothing -- same as the old primaryTarget gate.
+          if (affected.length > 0) {
             chargeTargetIds = affected.filter((target) => target.entity.alive).map((target) => target.id)
             chargedSkillCaptured = chargedSkill
           }
@@ -2130,7 +2137,17 @@ export class TurnBattleSystem {
       this.reportUnroutedCast(actor, declared.action.skill, declared.action.skillId)
     }
 
-    if (declared.action && declared.affected.length > 0) {
+    // Charge-INIT casts only arm + commit (handled by the commit branch
+    // above and declare-side state) -- they resolve no hits this turn, so
+    // the whole cast-apply lane (tryPlanCast, 'attack' emit, landed-target
+    // pushes, follow-up queueing) is skipped. The discriminant: init has
+    // chargeTurns>0 with isCharging=false; the RESOLVE turn carries
+    // isCharging=true and must run the lane to land its hits.
+    if (
+      declared.action &&
+      declared.affected.length > 0 &&
+      ((declared.action.skill?.chargeTurns ?? 0) === 0 || declared.isCharging)
+    ) {
       const action = declared.action
 
       // Task 9 -- payload reads go through the execution's resolvedSkill
@@ -2138,15 +2155,6 @@ export class TurnBattleSystem {
       // empowered/composite payloads in Tasks 10-13). Identity reads
       // (cooldown, cast sink, charge state) stay on the ROOT action.
       const payloadSkill = declared.execution?.resolvedSkill ?? action.skill
-
-      // R5 (AR-14) -- Emit authoritative gameplay 'attack' event on action commit,
-      // ensuring passive listeners receive events identically in headless and presentation modes.
-      this.combat.eventBus.emit('attack', {
-        type: 'attack',
-        sourceId: actor.id,
-        targetId: declared.affected[0]?.id ?? actor.id,
-        skillId: declared.skillId,
-      })
 
       // skilldef M4e/M5d -- the plan pipeline: adapter-covered casts
       // route LegacySkillAdapter -> SkillResolver -> SkillExecutor ->
@@ -2164,6 +2172,20 @@ export class TurnBattleSystem {
       }
       if (routed?.outcome.blocked === true) {
         declared.castBlocked = true
+      }
+
+      // R5 (AR-14) -- Emit authoritative gameplay 'attack' event on action
+      // commit, ensuring passive listeners receive events identically in
+      // headless and presentation modes. A cast that routed to 'blocked'
+      // (pool drained between declare and apply) emits nothing: the swing
+      // never happened, so passive listeners must not observe it.
+      if (routed?.outcome.blocked !== true) {
+        this.combat.eventBus.emit('attack', {
+          type: 'attack',
+          sourceId: actor.id,
+          targetId: declared.affected[0]?.id ?? actor.id,
+          skillId: declared.skillId,
+        })
       }
 
       if (routed !== null) {
@@ -2712,14 +2734,6 @@ export class TurnBattleSystem {
       resolvedSkill: payloadSkill,
       source: exec.source,
       multicastDepth: exec.multicastDepth,
-    }
-
-    // Task 13 -- same pre-burn capture as the normal declare path: a
-    // queued execution of a consume-all payload burns at its own commit.
-    // Non-committing execs (repeat/multicast) never burn -- capturing
-    // there would forward a stale pre-burn pool to their theScaling read.
-    if (payloadSkill.consumesAllThe && executionCommitsCast(execution)) {
-      execution.theBurned = actor.entity.currentThe ?? 0
     }
 
     const action: SelectedAction = {

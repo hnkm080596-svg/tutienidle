@@ -393,12 +393,13 @@ const RESOURCE_FIELD: Record<
 /** Live resource requirement - the percentOfMax form resolves against
     the entity's CURRENT maxMp at call time (spec F10: never frozen at
     participant build), so the Special's gate and its consume see the
-    same number. */
+    same number. percentOfMax is mana-pool semantics: any other
+    resourceType falls back to the flat resourceCost. */
 function requiredResourceFor(
   entity: CombatEntity,
   skill: Pick<TurnSkillDefinition, 'resourceType' | 'resourceCost' | 'resourceCostPercentOfMax'>,
 ): number {
-  return skill.resourceCostPercentOfMax !== undefined
+  return skill.resourceType === 'mana' && skill.resourceCostPercentOfMax !== undefined
     ? skill.resourceCostPercentOfMax * entity.stats.maxMp
     : (skill.resourceCost ?? 0)
 }
@@ -447,9 +448,10 @@ export interface SelectedAction {
  *
  * source:
  * - 'original'   - a normal slot/basic cast (root === payload)
- * - 'empowered'  - the root ult's empowered payload resolved
- *                  (root = the chain-E slot's root skill; the god-ult def
- *                  is payload only - never gains cast count/cooldown)
+ * - 'empowered'  - a kit-basic cast resolved through its Phap The
+ *                  empowered variant (variants.empowerment): the root
+ *                  basic owns cast count/cooldown; the empowered def is
+ *                  payload only
  * - 'composite'  - a composite cast whose payload was picked from a
  *                  pool (e.g. van_phap_tuy_tam); the pick never gains
  *                  its own cast count

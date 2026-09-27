@@ -257,20 +257,20 @@ interface CastBarSprite {
   widthPx: number
 }
 
-  /**
-   * Combat UI Redesign -- dedicated battlefield scene, fully DECOUPLED from
-   * MainScene.ts (Cave/Home). MainScene.ts calls `this.scene.start('CombatScene')`
-   * on 'battle_start' (see MainScene.ts); this scene calls
-   * `this.scene.start('MainScene')` back on 'combat_scene_exit' (the Vue emit
-   * when the player presses "Continue"/"Back to Cave" in CombatResultModal.vue
-   * -- see stores/ui.ts's exitCombatScene()). Auto-refight needs NO scene
-   * switch -- a fresh 'battle_start' arriving while this scene is still
-   * active is handled exactly like first entry (see onBattleStart()).
-   *
-   * CORE RULE -- PHASER TALKS ONLY THROUGH THE EVENTBUS -- inherited from
-   * MainScene.ts; see the note there for the technical rationale
-   * (position interpolation, discrete animation...).
-   */
+/**
+ * Combat UI Redesign -- dedicated battlefield scene, fully DECOUPLED from
+ * MainScene.ts (Cave/Home). MainScene.ts calls `this.scene.start('CombatScene')`
+ * on 'battle_start' (see MainScene.ts); this scene calls
+ * `this.scene.start('MainScene')` back on 'combat_scene_exit' (the Vue emit
+ * when the player presses "Continue"/"Back to Cave" in CombatResultModal.vue
+ * -- see stores/ui.ts's exitCombatScene()). Auto-refight needs NO scene
+ * switch -- a fresh 'battle_start' arriving while this scene is still
+ * active is handled exactly like first entry (see onBattleStart()).
+ *
+ * CORE RULE -- PHASER TALKS ONLY THROUGH THE EVENTBUS -- inherited from
+ * MainScene.ts; see the note there for the technical rationale
+ * (position interpolation, discrete animation...).
+ */
 export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // ui-discoverability-refactor-plan.md Ã‚Â§3.2 Ã¢â‚¬â€ module tÃƒÂ¡ch khÃ¡Â»Âi god-class,
   // khÃ¡Â»Å¸i tÃ¡ÂºÂ¡o LAZY (Object.create(CombatScene.prototype) trong test KHÃƒâ€NG

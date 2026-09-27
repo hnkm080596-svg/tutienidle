@@ -1021,18 +1021,25 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
         if (growth === undefined) continue
         if (growth.definitionId !== instance.definitionId) continue
         const stacksBefore = instance.stacks
-        instance.stacks = Math.min(
-          stacksBefore + growth.stacks,
-          def.stacking.maxStacks,
+        const stacksAfter = Math.max(
+          0,
+          Math.min(stacksBefore + growth.stacks, def.stacking.maxStacks),
         )
-        if (instance.stacks !== stacksBefore) {
+        instance.stacks = stacksAfter
+        if (stacksAfter <= 0) {
+          // commitStacks parity: a feed that drains the instance to zero
+          // retires it (negative payloads stay authored-legal).
+          this.removeInstance(instance, 'consumed', lctx.events, lctx.rootActionId)
+          return
+        }
+        if (stacksAfter !== stacksBefore) {
           lctx.events.emit({
             type: 'buff_stacks_changed',
             rootActionId: lctx.rootActionId,
             instanceId: instance.instanceId,
             stacksBefore,
-            stacksAfter: instance.stacks,
-            addedStacks: instance.stacks - stacksBefore,
+            stacksAfter,
+            addedStacks: stacksAfter - stacksBefore,
           })
         }
         if (growth.consume === true) {

@@ -24,7 +24,7 @@ import type {
   SkillId,
 } from '../contracts/ids'
 import type { CombatEntity } from '../../combat/CombatEntity'
-import { MAX_THE } from '../../combat/CombatTypes'
+import { theCap } from '../../the-tu/TheEconomy'
 import type { CombatOperationResult } from '../contracts/results'
 import type { CombatRng } from '../contracts/rng'
 import type { CombatScheduler } from '../runtime/scheduler/CombatScheduler'
@@ -727,7 +727,7 @@ export class TurnSkillPlanRuntime {
     if (entity === undefined) return 0
     switch (resourceId) {
       case 'the':
-        return entity.maxThe ?? MAX_THE
+        return theCap(entity)
       case 'mana':
         return entity.stats.maxMp
       case 'ward':

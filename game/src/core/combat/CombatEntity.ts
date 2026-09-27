@@ -55,8 +55,9 @@ export interface CombatEntity {
   // at participant build — two disjoint producers, one per path:
   // spell via resolveMaxThe(player) (spell_pathway cap is a flat
   // SPELL_PATH_MAX_THE=5); ung_the via the kit-baked MAX_THE +
-  // maxTheBonus (Task 20 collector). TheEconomy.theCap is the single
-  // read site (`entity.maxThe ?? MAX_THE`); never persisted.
+  // maxTheBonus (Task 20 collector). TheEconomy.theCap is the engine's
+  // single read site (`entity.maxThe ?? MAX_THE`); presentation bridges
+  // delegate to it as well. Never persisted.
   maxThe?: number
 
   // The Tu Reimagined (spec 2026-09-15 D7/section 7.13) — momentum resource

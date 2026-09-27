@@ -440,6 +440,16 @@ function validateActive(
     }
   }
 
+  if (definition.consumesAllThe === true && cadence?.chargeTurns !== undefined) {
+    // Charge-resolve declares carry no execution object, so theBurned
+    // can never be forwarded -- theScaling would read 0 at resolve.
+    fault(
+      'invalid_field_value',
+      'consumesAllThe',
+      'consumesAllThe and cadence.chargeTurns are mutually exclusive on one definition',
+    )
+  }
+
   if (definition.landed !== undefined && !LANDED_SEMANTICS.has(definition.landed)) {
     fault('invalid_field_value', 'landed', `unknown landed semantics '${String(definition.landed)}'`)
   }
@@ -893,6 +903,10 @@ function validateOperation(
       return
     }
     case 'read_stacks': {
+      if (inLane) {
+        fault('invalid_field_value', path, `onLanded does not allow 'read_stacks' ops`)
+        return
+      }
       // single-binding only: a set-valued target/source has no defined
       // `into` variable binding (resolveIntentSingle would silently take
       // member[0]).
@@ -931,6 +945,10 @@ function validateOperation(
       return
     }
     case 'for_each_target': {
+      if (inLane) {
+        fault('invalid_field_value', path, `onLanded does not allow 'for_each_target' ops`)
+        return
+      }
       requireTarget(op.target)
       if (op.target === 'loop_target') {
         fault('invalid_field_value', `${path}.target`, 'for_each_target cannot iterate loop_target')
@@ -975,6 +993,15 @@ function validateTargetIntent(
       'invalid_field_value',
       path,
       `'${target}' binds enemies other than the hit target -- only legal inside a deal_damage onLanded lane`,
+    )
+  }
+  // Lane-wide binding contract (spec D4): at ANY depth inside the lane --
+  // member or nested `if` branch -- targets bind only the lane intents.
+  if (insideLandedLane && !LANDED_LANE_INTENTS.has(target)) {
+    fault(
+      'invalid_field_value',
+      path,
+      `onLanded ops must target 'loop_target', 'self', 'other_enemy', or 'other_enemies' -- got '${target}'`,
     )
   }
 }
