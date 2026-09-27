@@ -13,7 +13,7 @@ import {
 } from './helpers'
 
 /**
- * Design-§11 mandatory e2e: the skill presentation runtime on the REAL
+ * Design-section 11 mandatory e2e: the skill presentation runtime on the REAL
  * production path (no dev lab): boot -> battle -> manual submit ->
  * skillVfxDebug shows cast -> impact ACK once -> resolved -> complete.
  *
@@ -387,7 +387,7 @@ async function abandonViaExitConfirm(page: Page): Promise<void> {
   await exitModal.getByRole('button', { name: 'Thoát Trận' }).click()
 }
 
-test.describe('skill presentation runtime - production path (design §11)', () => {
+test.describe('skill presentation runtime - production path (design section 11)', () => {
   test('melee basic + ngu_kiem_thuat: cast -> impact once -> resolved -> complete', async ({
     page,
   }) => {

@@ -120,10 +120,10 @@ export const ESSENCE_STREAM_ARRIVAL_EVENT = 'essence_stream_arrival'
 // ================= Combat Grid Rework (2026-08-24) =================
 
 /**
- * ĐÚNG MỘT event cho mỗi lần action áp damage (dù trúng 1 hay 20 enemy).
- * Renderer dùng anchorCell + presetId để đặt MỘT VFX chính tại tâm ô
- * primary target; affectedTargetIds chỉ phục vụ hit-flash/UI — KHÔNG sinh
- * bản sao effect theo target.
+ * Exactly ONE event per action's damage application (whether it lands on
+ * 1 or 20 enemies). The renderer uses anchorCell + presetId to place ONE
+ * primary VFX at the primary target's cell; affectedTargetIds only feeds
+ * hit-flash/UI - it does NOT spawn per-target effect copies.
  * Observation feed - no production subscribers (design section 12); skill
  * presentation runs on skill_presentation_cast/_resolved instead.
  */
