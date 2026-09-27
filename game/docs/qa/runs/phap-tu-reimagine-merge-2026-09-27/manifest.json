@@ -2763,6 +2763,12 @@
       "hash": "06a9962912a3872187eae76e93c6885eb69e8b19f754ab29cf076a5f68b12d0a"
     },
     {
+      "path": "docs/qa/2026-09-27-qa-scripts-repair-quick.md",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "b4f209ee83137894156acf68b67e682b031c73f1d0079ee69304e58ca03aa284"
+    },
+    {
       "path": "docs/qa/2026-10-01-md-perfection-sim-quick.md",
       "kind": "file",
       "mode": 33188,
@@ -2985,10 +2991,22 @@
       "hash": "c5c4c06ab0e09c63e4c28789871119a8bf2fdec8d898842a83a182009fca699b"
     },
     {
+      "path": "docs/qa/learning/active-policy.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "e93faa875233722cf38cf14fb02910bf4c267a33333e956f98be83e8016f3856"
+    },
+    {
       "path": "docs/qa/learning/campaigns/README.md",
       "kind": "file",
       "mode": 33188,
       "hash": "41e336619ab333d65647db5d99cf926a22ca58458f38af21abf026902dfaf912"
+    },
+    {
+      "path": "docs/qa/learning/policies/aa1b335bfe00209f4080659edcbbfd7a90f0bad8dd0c72831d715f1b67a8822d.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "1550b08251599b28ae47f9964021a796b236c3cf7040c76cf0f2a05b7804b8f3"
     },
     {
       "path": "docs/qa/protocol/agent-instructions.md",
@@ -13578,7 +13596,7 @@
       "path": "scripts/qa/cli.mjs",
       "kind": "file",
       "mode": 33188,
-      "hash": "37a21c9e8fb470bdf7801ded58dedbd240f77e3fbb1835cd6d480dc1119439ca"
+      "hash": "f920cce2b25ac37ce2eae8237947a6135fe7fc72ac0639a793179bf1263fed23"
     },
     {
       "path": "scripts/qa/decision.mjs",
@@ -13590,7 +13608,7 @@
       "path": "scripts/qa/ledger.schema.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "fee0d41bc48e2e0ce4e48002e75c6812d5c13a05f90790557584d8e907e20a6f"
+      "hash": "033cad0124c4350cb143cb336032b03a59294503cff1ee6a37f1e4251b7ea1b3"
     },
     {
       "path": "scripts/qa/ledger.schema.v1.json",
@@ -13602,13 +13620,25 @@
       "path": "scripts/qa/prevention.mjs",
       "kind": "file",
       "mode": 33188,
-      "hash": "8e842ba88170f926255be95f03038003cca686bdf2d757a300e5d6325a652092"
+      "hash": "51b4cd53d41a472a68a23f865e1ef2bb657c18b6f4ac956fc1d8bcdcdf974533"
+    },
+    {
+      "path": "scripts/qa/qualify.mjs",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "6130d01c06196e19f09d9f83585b331d93763a0cdb779f5fc2d2e6e715b42a23"
     },
     {
       "path": "scripts/qa/state.mjs",
       "kind": "file",
       "mode": 33188,
-      "hash": "67f86b84856082951fbdfa0272686120183370d4f0670b6709dcd37f01c83b6f"
+      "hash": "a10fdcfaa426016dfa6388c00838de0d8724a6cbc9e6942f37c5e44b22ae7f50"
+    },
+    {
+      "path": "scripts/qa/tests/cli.test.mjs",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "b307a3edd014ae92971a222a51aa2db1a52e70b3ffd2cd88ffc1db9709b9aa0d"
     },
     {
       "path": "scripts/qa/tests/decision.test.mjs",
@@ -13644,13 +13674,13 @@
       "path": "scripts/qa/tests/prevention.test.mjs",
       "kind": "file",
       "mode": 33188,
-      "hash": "515ff5086bfcab5385b44245b1727850e3fae8b4b13ed6c14f9ff45ee60ebce4"
+      "hash": "4268cd22e1223286bc8308c2be31114501d930d2b73e802b4093cb5413268d4a"
     },
     {
       "path": "scripts/qa/tests/state.test.mjs",
       "kind": "file",
       "mode": 33188,
-      "hash": "7a88c4a726115c995597b9fdb3b921f678e4220314895b1d951e11ed1ce81c5f"
+      "hash": "ea287cf4cf1a6d6c7f9ad70a07ad792f16cf3bd8d57e71dca2b20163d6aa5517"
     },
     {
       "path": "scripts/qa/tests/validate.test.mjs",
@@ -13662,7 +13692,7 @@
       "path": "scripts/qa/validate.mjs",
       "kind": "file",
       "mode": 33188,
-      "hash": "62a36c8fd17a62638ca0678b13de3388e9dc8d0afce5b8879b4d73db332ce7cc"
+      "hash": "2cf7e41f51595dcdf65efefdc670d39c8159f621a4e905db73f72aee6e08bf10"
     },
     {
       "path": "scripts/refine-dong-fu-sect-ground-alpha.ps1",
@@ -16014,7 +16044,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.hoIntercept.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c7c813c02d90b3ddd48ccea2252c25b22d4ac7a8f96248b4cd5b158abcaef8f6"
+      "hash": "1135f9ab4a06d56d181e655c1b8fd59964785d298fb892645ae63c9f978b2b9e"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.midImpactDeath.test.ts",
@@ -16158,7 +16188,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d102aa959708ce56dc4805d8f44d608bd84d9cab1be23d31256d3fd581bbcc7b"
+      "hash": "945efb9409e121de79062a4b804600fded90d2dfe3fb04b49bac7739ba739e5d"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.ttNovelAttack.test.ts",
@@ -21654,7 +21684,7 @@
       "path": "src/game/scenes/combat/PlayerHudLayer.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "3a14907cdafa2653455907efe27c0651c9d0066ac1d4b1787b2664bc9bebb0b5"
+      "hash": "2bf5105ac212b45d77b3a7a685701bbdcb102aa63a0d734d12488af162c5a5c8"
     },
     {
       "path": "src/game/scenes/CombatScene.actionPlayback.test.ts",
@@ -23331,5 +23361,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "ba9e38e3dbfc48c40be3cadc776e016a04171257c31d19d6f2d62ab3b2e1217d"
+  "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab"
 }

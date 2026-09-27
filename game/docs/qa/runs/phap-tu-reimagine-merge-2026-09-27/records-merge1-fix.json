@@ -1,0 +1,14 @@
+{
+ "kind": "fix-batch",
+ "run": "phap-tu-reimagine-merge-2026-09-27",
+ "state": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+ "pin": "d9e7b7fc",
+ "fixes": [
+  "M-COR-01: ported 4 NOVA-1 pin tests into merged hoIntercept suite (unviable/null-action/whiffed/charge-init casts never open the window)",
+  "M-INT-01: updateThe fill-rect lane for dotMax > THE_DOT_LANE_MAX(12) -- ung-the pool (100) no longer renders an overlapped pip smear",
+  "M-AUT-01: queued-execution theBurned lane docblock now names the repeatCasts/multicast drain-without-scale incompatibility"
+ ],
+ "rejects": [],
+ "dups": [],
+ "verify": "type-check clean; vitest hoIntercept+theBarBridge 39/39 green; PlayerHudLayer.test.ts suite-load blocked by canvas/libuuid env noise (pre-existing)"
+}
