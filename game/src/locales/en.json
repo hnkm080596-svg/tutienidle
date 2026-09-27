@@ -610,7 +610,11 @@
       "audio": {
         "on": "On",
         "off": "Off",
-        "volume": "Volume"
+        "volume": "Volume",
+        "musicVolume": "Music",
+        "sfxVolume": "Effects",
+        "uiVolume": "Interface",
+        "reducedShake": "Reduce screen shake"
       }
     },
     "quest": {
