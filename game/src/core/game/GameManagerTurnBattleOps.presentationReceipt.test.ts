@@ -87,7 +87,7 @@ describe('production presentation handshake first proof', () => {
     expect(manager.getTurnTokenState()).not.toBe('IDLE')
     manager.abandonBattle()
   })
-  it('bounds held-session re-arms to one forced drive and drops the stale entry', () => {
+  it('drains pending playback mechanically at the deferral cap so the held turn completes', () => {
     const { manager } = setup()
     const port = manager.getPresentationPort()
     const hold = port.hold(port.getCurrentSession()!)!
@@ -96,33 +96,30 @@ describe('production presentation handshake first proof', () => {
     // Under the cap the blocking re-arm keeps deferring without diagnostics.
     vi.advanceTimersByTime(ANIMATION_FALLBACK_MS * 7)
     expect(warn).not.toHaveBeenCalled()
+    expect(manager.getTurnTokenState()).not.toBe('IDLE')
 
-    // At the cap: one forced drive, rejected while the session is held, so
-    // the parked entry is dropped rather than left for a later turn's ACK.
+    // At the cap the runtime drains the pending playback inline - the same
+    // settle the deactivation path performs - so the parked 'ready' step and
+    // the rest of the pipeline complete even though the session stays held.
     vi.advanceTimersByTime(ANIMATION_FALLBACK_MS)
-    expect(warn).toHaveBeenCalledTimes(2)
+    expect(warn).toHaveBeenCalledTimes(1)
     const messages = warn.mock.calls.map((call) => String(call[0])).join(' ')
     expect(messages).toContain("step 'ready'")
-    expect(messages).toContain('force-driving')
-    expect(messages).toContain('dropping the stale pending entry')
+    expect(messages).toContain('draining pending playback')
+    expect(manager.getTurnBattle()!.totalTurnsElapsed).toBe(1)
+    expect(manager.getTurnTokenState()).toBe('IDLE')
 
-    // The drive ran once: more held time does not re-arm or warn again.
+    // The drain runs once: more held time does not re-arm or warn again.
     vi.advanceTimersByTime(ANIMATION_FALLBACK_MS * 8)
-    expect(warn).toHaveBeenCalledTimes(2)
+    expect(warn).toHaveBeenCalledTimes(1)
     warn.mockRestore()
 
-    // The dropped entry cannot settle: a resumed playback's ACKs complete
-    // the action mechanically once, but the parked 'ready' step never fires
-    // its stale done() so the pipeline never drains the turn.
+    // Unblocking later finds nothing pending: nothing replays, nothing
+    // wedges, and the battle simply continues.
     expect(port.attach(hold)).toBe(true)
     expect(port.release(hold)).toBe(true)
-    expect(manager.preparePresentationResume()!.phase).toBe('ready')
-    const token = manager.getPendingPlaybackToken()!
-    manager.acknowledgeTurnReady(token)
-    manager.acknowledgeActionImpact(token)
-    manager.acknowledgeActionComplete(token)
-    expect(manager.getTurnBattle()!.totalTurnsElapsed).toBe(1)
-    expect(manager.getTurnTokenState()).not.toBe('IDLE')
+    expect(manager.preparePresentationResume()).toBeNull()
+    expect(manager.getTurnTokenState()).toBe('IDLE')
     manager.abandonBattle()
   })
   it('accepts synchronous complete from impact observer without losing pipeline settlement', () => {

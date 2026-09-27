@@ -63,7 +63,8 @@ describe('pooled Phaser skill driver', () => {
     const handle = f.driver.open(impulseCue, f.context)
     handle.sample(10)
     handle.finish()
-    expect(f.surface.actorImpulse).toHaveBeenCalledExactlyOnceWith(source, 180, 8)
+    // The playback-scoped cast rides along so the surface can aim the slide.
+    expect(f.surface.actorImpulse).toHaveBeenCalledExactlyOnceWith(source, 180, 8, f.context.cast)
     expect(f.driver.stats.active).toBe(0)
     expect(f.draws).toHaveLength(0)
   })
@@ -83,7 +84,7 @@ describe('pooled Phaser skill driver', () => {
         cast: { ...f.context.cast!, disposition } }
       f.driver.open({ primitive: 'actor-impulse', anchor: 'source',
         shape: 'impulse', offsetMs: 0, durationMs: 180, impulsePx: 8 }, context)
-      expect(f.surface.actorImpulse).toHaveBeenCalledExactlyOnceWith(source, 180, 8)
+      expect(f.surface.actorImpulse).toHaveBeenCalledExactlyOnceWith(source, 180, 8, context.cast)
     }
   })
   it('gates trajectory one-shots on the action dispositions as well', () => {
@@ -130,6 +131,42 @@ describe('pooled Phaser skill driver', () => {
     outcomes: [{ kind: 'hit' as const, outcomeId: 'c', target, landed, crit: false, hpDamage: landed ? 4 : 0, killed: false, hitOrdinal: 0 }] })
   const cameraCue = { primitive: 'camera-cue' as const, anchor: 'source' as const,
     shape: 'camera' as const, offsetMs: 0, durationMs: 140, intensity: 0.005 }
+  it('warns and drops one-shot cues opened in a phase that cannot serve them', () => {
+    // The validator rejects these placements for recipes; the open() guards
+    // cover contexts built by callers that never validated (a misplaced cue
+    // reads facts that do not exist in that phase and could only no-op).
+    const impulse = { primitive: 'actor-impulse' as const, anchor: 'source' as const,
+      shape: 'impulse' as const, offsetMs: 0, durationMs: 180, impulsePx: 8 }
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    try {
+      const resolved = fixture()
+      resolved.driver.open(impulse, landedContext(resolved))
+      expect(resolved.surface.actorImpulse).not.toHaveBeenCalled()
+      expect(warn).toHaveBeenCalledWith('[SkillVfx] actor-impulse cue outside cast playback dropped')
+      const castPhase = fixture()
+      castPhase.driver.open(cameraCue, castPhase.context)
+      expect(castPhase.surface.cameraImpulse).not.toHaveBeenCalled()
+      expect(warn).toHaveBeenCalledWith('[SkillVfx] camera-cue cue outside resolved playback dropped')
+    } finally { warn.mockRestore() }
+  })
+  it('latches camera impulses per requestId so a rotated resume token cannot refire them', () => {
+    const f = fixture()
+    const landed = landedContext(f)
+    // preparePresentationResume rotates ref.token but keeps requestId:
+    // replaying the same action must not fire a second impulse.
+    const resumed = (ctx: SkillCueContext) => ({ ...ctx, ref: { ...ctx.ref, token: 'resumed-token' } })
+    f.driver.open(cameraCue, landed)
+    f.driver.open(cameraCue, resumed(landed))
+    expect(f.surface.cameraImpulse).toHaveBeenCalledExactlyOnceWith(140, 0.005)
+    // The generic landed-hit impulse shares the latch: same action, same cap.
+    const stroke = { primitive: 'stroke' as const, anchor: 'targets' as const,
+      shape: 'slash' as const, offsetMs: 0, durationMs: 100 }
+    const fresh = { ...landed, ref: { sessionId: 1, requestId: '2', token: 'tok-2' } }
+    f.driver.open(stroke, fresh)
+    f.driver.open(stroke, resumed(fresh))
+    expect(f.surface.cameraImpulse).toHaveBeenCalledTimes(2)
+    expect(f.surface.cameraImpulse).toHaveBeenLastCalledWith(45, 0.001)
+  })
   it('fires an authored camera-cue once per action on a landed hit', () => {
     const f = fixture()
     const context = landedContext(f)

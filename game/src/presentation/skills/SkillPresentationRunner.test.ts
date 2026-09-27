@@ -108,22 +108,27 @@ describe('shared skill presentation runner', () => {
     runner.update(150)
     expect(f.calls).toEqual(['impact', 'complete'])
   })
-  it('rejects early, duplicate and stale outcomes and duplicate cast delivery', () => {
+  it('queues a sealed outcome that lands during cast and faults on ones with nowhere to land', () => {
     const f = fixture()
     f.runner.start(cast, f.port)
+    // A sealed receipt can land before the cast ends when an impact ACK is
+    // issued outside this runner (the awaitStep fallback drive or a
+    // mechanical drain): it queues and plays as soon as the cast completes
+    // instead of being silently dropped.
     f.runner.resolve(batch())
-    f.runner.start(cast, f.port)
+    f.runner.start(cast, f.port)   // duplicate cast delivery still no-ops
     f.runner.update(370)
-    f.runner.resolve(batch('old-token'))
-    f.runner.update(500)
     expect(f.calls).toEqual(['impact'])
-    f.runner.resolve(batch())
-    f.runner.resolve(batch())
-    f.runner.update(0)
+    // A receipt for a different ref while resolved playback runs is dropped
+    // with a diagnostic fault, not silently.
+    f.runner.resolve(batch('old-token'))
     f.runner.update(250)
-    f.runner.start(cast, f.port)
-    f.runner.update(1000)
     expect(f.calls).toEqual(['impact', 'complete'])
+    expect(f.errors).toHaveLength(1)
+    // Receipts with no playback to land on fault the same way.
+    f.runner.resolve(batch())
+    f.runner.resolve({ ...batch(), sealed: false } as unknown as SkillPresentationResolved)
+    expect(f.errors).toHaveLength(3)
   })
   it.each([0, 100, 370, 400, 600])('cancels at %ims with no late complete or leaked resource', ms => {
     const f = fixture({ synchronous: true })
@@ -176,6 +181,19 @@ describe('shared skill presentation runner', () => {
     expect(f.calls).toEqual([])
     f.runner.update(1)
     expect(f.calls).toEqual(['complete'])
+  })
+  it('faults on an unsealed resume instead of tearing down playback', () => {
+    const f = fixture()
+    f.runner.start(cast, f.port)
+    f.runner.update(200)
+    const cuesBefore = f.runner.snapshot.activeCueCount
+    const unsealed = { ...batch(), sealed: false } as unknown as SkillPresentationResolved
+    f.runner.resumeResolved(unsealed, f.port)
+    expect(f.errors).toHaveLength(1)
+    expect(f.runner.snapshot.phase).toBe('cast')
+    expect(f.runner.snapshot.activeCueCount).toBe(cuesBefore)
+    f.runner.update(170)
+    expect(f.calls).toEqual(['impact'])
   })
   it('a stale-token resume leaves a healthy playback untouched', () => {
     const f = fixture()

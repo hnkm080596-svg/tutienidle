@@ -72,12 +72,30 @@ export class SkillPresentationRunner {
   }
   resolve(result: SkillPresentationResolved): void {
     const active = this.active
-    if (!active || active.phase !== 'waiting' || !result.sealed || active.inbox
-      || !sameRef(active.ref, result.ref)) return
-    // EventBus delivery is synchronous. Consume only after the impact ACK returns.
-    active.inbox = result
+    if (active && result.sealed && !active.inbox && sameRef(active.ref, result.ref)
+      && (active.phase === 'waiting' || active.phase === 'cast')) {
+      // EventBus delivery is synchronous. Consume only after the impact ACK
+      // returns. A sealed receipt that lands during cast - an impact ACK
+      // issued outside this runner, e.g. the awaitStep fallback drive or a
+      // mechanical drain - is queued and plays as soon as the cast ends
+      // instead of being silently dropped.
+      active.inbox = result
+      return
+    }
+    // Any other receipt has nowhere to land (no playback, already consumed,
+    // duplicate inbox, wrong or unsealed ref): surface it as a diagnostic
+    // fault rather than dropping it silently.
+    this.fault(new Error(
+      `skill_presentation_resolved dropped (phase=${active?.phase ?? 'idle'}, request=${result.ref.requestId})`))
   }
   resumeResolved(result: SkillPresentationResolved, port: PlaybackPort): void {
+    // Same sealed guard as resolve(): an unsealed receipt is a fabricated
+    // object, never a legitimate resume - report it rather than silently
+    // dropping or acting on it.
+    if (!result.sealed) {
+      this.fault(new Error('unsealed skill_presentation_resolved resume dropped'))
+      return
+    }
     // Token check before cancel(): a stale resume must not tear down a
     // healthy active playback.
     if (port.getPendingPlaybackToken() !== result.ref.token) return

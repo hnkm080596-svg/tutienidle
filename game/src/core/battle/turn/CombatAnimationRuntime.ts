@@ -162,6 +162,19 @@ export class CombatAnimationRuntime {
   /** Rời CombatScene giữa chừng — hoàn tất pending phases ngay lập tức
    * (headless path) để trận không bị treo. */
   handlePresentationDeactivated(): void {
+    this.drainPendingPlayback()
+  }
+
+  /**
+   * Runs the still-open playback phase to completion inline - declare ->
+   * impact -> complete for whichever stage is pending - then reports all
+   * three step signals through the completion sink so a parked pipeline
+   * drains to turn end. Shared by scene deactivation and the awaitStep
+   * deferral cap: both mean "the renderer cannot acknowledge", so the
+   * runtime finishes the turn's mechanical work itself rather than leaving
+   * the step parked on a report that cannot arrive.
+   */
+  drainPendingPlayback(): void {
     const battle = this.deps.getTurnBattle()
     const turnBattleSystem = this.deps.getTurnBattleSystem()
 

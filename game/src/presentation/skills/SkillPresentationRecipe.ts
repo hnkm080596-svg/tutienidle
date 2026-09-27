@@ -55,6 +55,16 @@ export interface SkillPresentationDriver {
 export type SkillRecipeResolver = (presetId: CombatVfxPresetId) => SkillPresentationRecipe
 
 const primitives = new Set<SkillPrimitive>(['trajectory', 'stroke', 'burst', 'aura', 'ground-shape', 'actor-impulse', 'camera-cue'])
+// One-shot primitives execute only in the playback phase whose context
+// carries the facts they read: actor-impulse needs context.cast (present
+// only during cast playback), camera-cue needs group / primaryLanded
+// (present only during resolved playback). Authored anywhere else the cue
+// could only no-op silently, so a misplaced placement is a recipe bug -
+// fail validation instead of dropping it at runtime.
+const primitivePhaseAllowlist: Partial<Record<SkillPrimitive, readonly string[]>> = {
+  'actor-impulse': ['cast'],
+  'camera-cue': ['impact', 'recovery'],
+}
 export function validateSkillRecipe(recipe: SkillPresentationRecipe): void {
   if (!recipe.id || recipe.version !== 1 || !Number.isInteger(recipe.color) || recipe.color < 0 || recipe.color > 0xffffff)
     throw new Error('Invalid skill recipe identity or color')
@@ -68,6 +78,9 @@ export function validateSkillRecipe(recipe: SkillPresentationRecipe): void {
         || !['source', 'target', 'targets'].includes(cue.anchor)
         || !['blade', 'orb', 'slash', 'ring', 'sparks', 'rune', 'impulse', 'camera'].includes(cue.shape))
         throw new Error('Invalid skill recipe cue')
+      const allowedPhases = primitivePhaseAllowlist[cue.primitive]
+      if (allowedPhases && !allowedPhases.includes(phase))
+        throw new Error('Skill recipe cue in wrong phase')
       if (cue.impulsePx !== undefined
         && (!Number.isFinite(cue.impulsePx) || cue.impulsePx <= 0 || cue.impulsePx > 64))
         throw new Error('Unbounded skill cue impulse')

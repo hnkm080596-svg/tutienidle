@@ -1,5 +1,5 @@
 import type Phaser from 'phaser'
-import type { ActorAnchorFact } from '@/core/battle/turn/SkillPresentationFacts'
+import type { ActorAnchorFact, SkillCastPresentation } from '@/core/battle/turn/SkillPresentationFacts'
 import type { SkillCue, SkillCueContext, SkillCueHandle, SkillPresentationDriver } from '@/presentation/skills/SkillPresentationRecipe'
 import { DEPTH_GROUND_VFX } from '../BattleLayers'
 import { VfxPool } from './VfxPool'
@@ -13,7 +13,7 @@ export interface SkillVfxSurface {
   anchor(fact: ActorAnchorFact): Point | undefined
   ground(fact: Pick<ActorAnchorFact, 'row' | 'column'>): Point | undefined
   uprightDepth(fact: ActorAnchorFact): number
-  actorImpulse?(fact: ActorAnchorFact, durationMs: number, impulsePx: number): void
+  actorImpulse?(fact: ActorAnchorFact, durationMs: number, impulsePx: number, cast?: SkillCastPresentation): void
   cameraImpulse?(durationMs: number, intensity: number): void
 }
 export type SkillVfxQuality = 'standard' | 'low'
@@ -27,8 +27,11 @@ const quietHandle: SkillCueHandle = { sample() {}, finish() {}, cancel() {} }
 export class PhaserSkillVfxDriver implements SkillPresentationDriver {
   private readonly pool: VfxPool<SkillVfxGraphics>
   private epoch = 0
-  // One camera impulse per action token; authored cues and the generic
-  // landed-hit impulse share the latch so the <=1/action cap holds.
+  // One camera impulse per action receipt; authored cues and the generic
+  // landed-hit impulse share the latch so the <=1/action cap holds. Keyed on
+  // requestId - stable for the action's whole lifetime - rather than
+  // ref.token, which preparePresentationResume rotates; a token key would
+  // let the cue fire a second time for the same action after a resume.
   private readonly cameraImpulseFired = new Set<string>()
   private readonly budget
   constructor(
@@ -43,9 +46,9 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
   get stats() { return this.pool.stats }
   reset(): void { this.epoch++; this.cameraImpulseFired.clear(); this.pool.reset() }
   destroy(): void { this.epoch++; this.cameraImpulseFired.clear(); this.pool.destroy() }
-  private latchCamera(token: string): boolean {
-    if (this.cameraImpulseFired.has(token)) return false
-    this.cameraImpulseFired.add(token)
+  private latchCamera(requestId: string): boolean {
+    if (this.cameraImpulseFired.has(requestId)) return false
+    this.cameraImpulseFired.add(requestId)
     return true
   }
 
@@ -57,9 +60,17 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
     if (cast && !['action', 'charge-release'].includes(cast.disposition)
       && (cue.primitive === 'trajectory' || cue.primitive === 'actor-impulse'))
       return quietHandle
-    // One-shot primitives move actors/cameras directly and never lease graphics.
+    // One-shot primitives move actors/cameras directly and never lease
+    // graphics. Phase placement is enforced by validateSkillRecipe; the
+    // guards below cover contexts built by callers that skipped validation
+    // (a misplaced cue can only no-op - the facts it reads do not exist in
+    // that phase), so it warns instead of dropping silently.
     if (cue.primitive === 'actor-impulse') {
-      this.surface.actorImpulse?.(source, cue.durationMs, cue.impulsePx ?? 8)
+      if (context.phase !== 'cast' || !cast) {
+        console.warn('[SkillVfx] actor-impulse cue outside cast playback dropped')
+        return quietHandle
+      }
+      this.surface.actorImpulse?.(source, cue.durationMs, cue.impulsePx ?? 8, cast)
       return quietHandle
     }
     // Authored camera shake: the "khi co landed hit" gate is a landed outcome
@@ -67,8 +78,12 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
     // The cue's own group may be a combo/composite lane whose outcome must
     // not decide camera feedback. Shake never fires under reduced motion.
     if (cue.primitive === 'camera-cue') {
+      if (context.phase !== 'resolved') {
+        console.warn('[SkillVfx] camera-cue cue outside resolved playback dropped')
+        return quietHandle
+      }
       const landed = context.primaryLanded ?? false
-      if (!this.reducedMotion && landed && this.latchCamera(context.ref.token))
+      if (!this.reducedMotion && landed && this.latchCamera(context.ref.requestId))
         this.surface.cameraImpulse?.(cue.durationMs, cue.intensity ?? 0.005)
       return quietHandle
     }
@@ -96,7 +111,7 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
       if (!this.reducedMotion && !context.hasAuthoredCameraCue && cue.primitive === 'stroke'
         && group?.role === 'primary'
         && group.outcomes.some(outcome => outcome.kind === 'hit' && outcome.landed)
-        && this.latchCamera(context.ref.token))
+        && this.latchCamera(context.ref.requestId))
         this.surface.cameraImpulse?.(45, 0.001)
     } catch (error) {
       // A throwing surface hook must not strand the lease: the runner never

@@ -583,9 +583,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
   private _skillPlayback?: SkillPresentationRunner
   private _skillVfxDriver?: PhaserSkillVfxDriver
-  // The cast currently on the runner; the actor-impulse surface hook reads it
-  // for direction (declared target vs source anchor).
-  private activeSkillCast?: SkillCastPresentation
 
   private get skillPlayback(): SkillPresentationRunner {
     if (!this._skillPlayback) {
@@ -607,10 +604,13 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
         // The impulse slides the sprite's offsetX channel so it never fights
         // per-frame position writes; direction follows the declared anchor
         // vector, with the scene facing convention as the no-target fallback.
-        actorImpulse: (fact, durationMs, impulsePx) => {
+        // Direction comes from the playback-scoped cast the driver passes
+        // through (context.cast) - there is deliberately no scene-level copy:
+        // 'complete'-phase resumes never re-deliver onSkillCast, so an
+        // event-scoped field could go stale next to the runner's context.
+        actorImpulse: (fact, durationMs, impulsePx, cast) => {
           const sprite = this.spriteFor(fact.entityId)
           if (!sprite) return
-          const cast = this.activeSkillCast
           const origin = cast ? anchorPoint(cast.source) : undefined
           const destination = cast?.declaredTargets[0]
             ? anchorPoint(cast.declaredTargets[0])
@@ -635,7 +635,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   private onSkillCast(cast: SkillCastPresentation): void {
-    this.activeSkillCast = cast
     const port = this.gameManagerRef
     if (port) this.skillPlayback.start(cast, port)
   }
@@ -1440,7 +1439,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this._skillVfxDriver?.destroy()
     this._skillPlayback = undefined
     this._skillVfxDriver = undefined
-    this.activeSkillCast = undefined
     for (const status of this.statuses.values()) {
       status.icon.destroy()
       status.stackLabel.destroy()
@@ -1841,7 +1839,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   onBattleStart() {
     this._skillPlayback?.cancel()
     this._skillVfxDriver?.reset()
-    this.activeSkillCast = undefined
     this.inBattle = true
 
     // 6A-T5 — HUD hiện khi vào trận.

@@ -131,8 +131,9 @@ export { COUNTDOWN_TOTAL_TICKS, INTRO_TOTAL_TICKS }
  */
 export const ANIMATION_FALLBACK_MS = 4000
 // Cumulative bound on awaitStep's isBlocking re-arm loop: a renderer that
-// stays blocking past ~32 s gets one forced drive instead of deferring
-// forever.
+// stays blocking past ~32 s drains its pending playback mechanically
+// instead of deferring forever - a forced ACK drive would only be
+// rejected on arrival while the session still blocks.
 const AWAIT_STEP_DEFERRAL_CAP_MS = ANIMATION_FALLBACK_MS * 8
 
 /** The three renderer signals the pipeline's asynchronous steps wait on. */
@@ -771,9 +772,19 @@ export class GameManagerTurnBattleOps {
           this.pendingStepTimers.push(timer)
           return
         }
+        // A force-drive cannot run while the session blocks: the runtime
+        // gates every acknowledge* on isSessionBlocking first, so the work
+        // is rejected on arrival - and dropping the parked settle entry
+        // after it leaves resume ACKs to run the mechanics while the step
+        // never completes (the turn token would wedge in RESOLVING).
+        // Drain the pending playback mechanically instead - the same
+        // inline settle the deactivation path performs - so this turn
+        // still runs its work and resolves.
         console.warn(
-          `[TurnBattle] step '${signal}' blocked for ${deferredMs}ms - force-driving the step`,
+          `[TurnBattle] step '${signal}' blocked for ${deferredMs}ms - draining pending playback mechanically`,
         )
+        this.presentationOps.runtime.drainPendingPlayback()
+        return
       }
       // Runtime acknowledgement owns settlement; rejected work cannot advance.
       this.driveStepWork(signal)

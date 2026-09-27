@@ -50,6 +50,18 @@ describe('authored skill presentation recipes', () => {
       expect(() => validateSkillRecipe({ ...recipe, cast: [{ primitive: 'actor-impulse' as const,
         anchor: 'source' as const, shape: 'impulse' as const, offsetMs: 0, durationMs: 100, impulsePx }] })).toThrow()
   })
+  it('rejects one-shot primitives placed in a phase whose context cannot serve them', () => {
+    const recipe = getSkillPresentationRecipe('slash')
+    const impulse = { primitive: 'actor-impulse' as const, anchor: 'source' as const,
+      shape: 'impulse' as const, offsetMs: 0, durationMs: 100, impulsePx: 8 }
+    // actor-impulse reads context.cast, which only exists during cast playback.
+    expect(() => validateSkillRecipe({ ...recipe, impact: [impulse] })).toThrow()
+    expect(() => validateSkillRecipe({ ...recipe, recovery: [impulse] })).toThrow()
+    const camera = { primitive: 'camera-cue' as const, anchor: 'source' as const,
+      shape: 'camera' as const, offsetMs: 0, durationMs: 100, intensity: 0.005 }
+    // camera-cue reads group/primaryLanded, which only exist during resolved playback.
+    expect(() => validateSkillRecipe({ ...recipe, cast: [camera] })).toThrow()
+  })
   it('rejects unbounded and non-finite recipe data', () => {
     const recipe = getSkillPresentationRecipe('slash')
     for (const castMs of [NaN, Infinity, -1, 1501])
