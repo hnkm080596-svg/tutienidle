@@ -1,0 +1,375 @@
+{
+  "frames": {
+    "spore-flower-spirit-ferocious-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 225,
+        "h": 165
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 186,
+        "y": 351,
+        "w": 225,
+        "h": 165
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "spore-flower-spirit-ferocious-idle-002.png": {
+      "frame": {
+        "x": 249,
+        "y": 2,
+        "w": 213,
+        "h": 167
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 203,
+        "y": 350,
+        "w": 213,
+        "h": 167
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "spore-flower-spirit-ferocious-idle-003.png": {
+      "frame": {
+        "x": 496,
+        "y": 2,
+        "w": 206,
+        "h": 186
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 216,
+        "y": 323,
+        "w": 206,
+        "h": 186
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "spore-flower-spirit-ferocious-idle-004.png": {
+      "frame": {
+        "x": 743,
+        "y": 2,
+        "w": 188,
+        "h": 208
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 235,
+        "y": 303,
+        "w": 188,
+        "h": 208
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "spore-flower-spirit-ferocious-idle-005.png": {
+      "frame": {
+        "x": 990,
+        "y": 2,
+        "w": 201,
+        "h": 205
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 220,
+        "y": 302,
+        "w": 201,
+        "h": 205
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "spore-flower-spirit-ferocious-idle-006.png": {
+      "frame": {
+        "x": 1237,
+        "y": 2,
+        "w": 196,
+        "h": 190
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 218,
+        "y": 306,
+        "w": 196,
+        "h": 190
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "spore-flower-spirit-ferocious-idle-007.png": {
+      "frame": {
+        "x": 1484,
+        "y": 2,
+        "w": 184,
+        "h": 179
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 223,
+        "y": 304,
+        "w": 184,
+        "h": 179
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "spore-flower-spirit-ferocious-idle-008.png": {
+      "frame": {
+        "x": 1731,
+        "y": 2,
+        "w": 182,
+        "h": 176
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 224,
+        "y": 299,
+        "w": 182,
+        "h": 176
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "spore-flower-spirit-ferocious-idle-009.png": {
+      "frame": {
+        "x": 1978,
+        "y": 2,
+        "w": 195,
+        "h": 185
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 218,
+        "y": 295,
+        "w": 195,
+        "h": 185
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "spore-flower-spirit-ferocious-idle-010.png": {
+      "frame": {
+        "x": 2225,
+        "y": 2,
+        "w": 201,
+        "h": 198
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 220,
+        "y": 288,
+        "w": 201,
+        "h": 198
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "spore-flower-spirit-ferocious-idle-011.png": {
+      "frame": {
+        "x": 2472,
+        "y": 2,
+        "w": 214,
+        "h": 214
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 208,
+        "y": 274,
+        "w": 214,
+        "h": 214
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "spore-flower-spirit-ferocious-idle-012.png": {
+      "frame": {
+        "x": 2719,
+        "y": 2,
+        "w": 231,
+        "h": 209
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 190,
+        "y": 282,
+        "w": 231,
+        "h": 209
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "spore-flower-spirit-ferocious-idle-013.png": {
+      "frame": {
+        "x": 2966,
+        "y": 2,
+        "w": 243,
+        "h": 191
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 177,
+        "y": 301,
+        "w": 243,
+        "h": 191
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "spore-flower-spirit-ferocious-idle-014.png": {
+      "frame": {
+        "x": 3213,
+        "y": 2,
+        "w": 243,
+        "h": 170
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 174,
+        "y": 323,
+        "w": 243,
+        "h": 170
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "spore-flower-spirit-ferocious-idle-015.png": {
+      "frame": {
+        "x": 3460,
+        "y": 2,
+        "w": 237,
+        "h": 166
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 177,
+        "y": 339,
+        "w": 237,
+        "h": 166
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "spore-flower-spirit-ferocious-attack-001.png": {
+      "frame": {
+        "x": 3707,
+        "y": 2,
+        "w": 225,
+        "h": 165
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 186,
+        "y": 351,
+        "w": 225,
+        "h": 165
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "spore-flower-spirit-ferocious-attack-002.png": {
+      "frame": {
+        "x": 2,
+        "y": 220,
+        "w": 225,
+        "h": 165
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 186,
+        "y": 351,
+        "w": 225,
+        "h": 165
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "spore-flower-spirit-ferocious-death-001.png": {
+      "frame": {
+        "x": 249,
+        "y": 220,
+        "w": 225,
+        "h": 165
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 186,
+        "y": 351,
+        "w": 225,
+        "h": 165
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-enemy-art.mjs",
+    "version": "1.0",
+    "image": "spore-flower-spirit-ferocious-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3952,
+      "h": 436
+    },
+    "scale": "1"
+  }
+}

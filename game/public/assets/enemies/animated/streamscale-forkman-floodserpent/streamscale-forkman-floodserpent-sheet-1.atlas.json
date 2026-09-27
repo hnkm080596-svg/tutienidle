@@ -1,0 +1,255 @@
+{
+  "frames": {
+    "streamscale-forkman-floodserpent-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 509,
+        "h": 453
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 170,
+        "y": 291,
+        "w": 509,
+        "h": 453
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "streamscale-forkman-floodserpent-idle-002.png": {
+      "frame": {
+        "x": 520,
+        "y": 2,
+        "w": 508,
+        "h": 450
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 172,
+        "y": 291,
+        "w": 508,
+        "h": 450
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "streamscale-forkman-floodserpent-idle-003.png": {
+      "frame": {
+        "x": 1038,
+        "y": 2,
+        "w": 502,
+        "h": 454
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 177,
+        "y": 287,
+        "w": 502,
+        "h": 454
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "streamscale-forkman-floodserpent-idle-004.png": {
+      "frame": {
+        "x": 1556,
+        "y": 2,
+        "w": 502,
+        "h": 458
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 177,
+        "y": 283,
+        "w": 502,
+        "h": 458
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "streamscale-forkman-floodserpent-idle-005.png": {
+      "frame": {
+        "x": 2074,
+        "y": 2,
+        "w": 504,
+        "h": 460
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 175,
+        "y": 281,
+        "w": 504,
+        "h": 460
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "streamscale-forkman-floodserpent-idle-006.png": {
+      "frame": {
+        "x": 2592,
+        "y": 2,
+        "w": 509,
+        "h": 459
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 171,
+        "y": 282,
+        "w": 509,
+        "h": 459
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "streamscale-forkman-floodserpent-idle-007.png": {
+      "frame": {
+        "x": 3110,
+        "y": 2,
+        "w": 512,
+        "h": 457
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 169,
+        "y": 284,
+        "w": 512,
+        "h": 457
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "streamscale-forkman-floodserpent-idle-008.png": {
+      "frame": {
+        "x": 2,
+        "y": 466,
+        "w": 514,
+        "h": 454
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 167,
+        "y": 287,
+        "w": 514,
+        "h": 454
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "streamscale-forkman-floodserpent-idle-009.png": {
+      "frame": {
+        "x": 520,
+        "y": 466,
+        "w": 512,
+        "h": 451
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 168,
+        "y": 290,
+        "w": 512,
+        "h": 451
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "streamscale-forkman-floodserpent-attack-001.png": {
+      "frame": {
+        "x": 1038,
+        "y": 466,
+        "w": 509,
+        "h": 453
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 170,
+        "y": 291,
+        "w": 509,
+        "h": 453
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "streamscale-forkman-floodserpent-attack-002.png": {
+      "frame": {
+        "x": 1556,
+        "y": 466,
+        "w": 509,
+        "h": 453
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 170,
+        "y": 291,
+        "w": 509,
+        "h": 453
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "streamscale-forkman-floodserpent-death-001.png": {
+      "frame": {
+        "x": 2074,
+        "y": 466,
+        "w": 509,
+        "h": 453
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 170,
+        "y": 291,
+        "w": 509,
+        "h": 453
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-enemy-art.mjs",
+    "version": "1.0",
+    "image": "streamscale-forkman-floodserpent-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3626,
+      "h": 928
+    },
+    "scale": "1"
+  }
+}

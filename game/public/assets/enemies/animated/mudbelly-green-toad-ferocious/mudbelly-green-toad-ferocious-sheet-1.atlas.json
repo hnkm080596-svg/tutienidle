@@ -1,0 +1,335 @@
+{
+  "frames": {
+    "mudbelly-green-toad-ferocious-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 474,
+        "h": 338
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 243,
+        "y": 407,
+        "w": 474,
+        "h": 338
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "mudbelly-green-toad-ferocious-idle-002.png": {
+      "frame": {
+        "x": 481,
+        "y": 2,
+        "w": 474,
+        "h": 339
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 243,
+        "y": 406,
+        "w": 474,
+        "h": 339
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "mudbelly-green-toad-ferocious-idle-003.png": {
+      "frame": {
+        "x": 960,
+        "y": 2,
+        "w": 474,
+        "h": 340
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 243,
+        "y": 405,
+        "w": 474,
+        "h": 340
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "mudbelly-green-toad-ferocious-idle-004.png": {
+      "frame": {
+        "x": 1439,
+        "y": 2,
+        "w": 474,
+        "h": 342
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 243,
+        "y": 403,
+        "w": 474,
+        "h": 342
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "mudbelly-green-toad-ferocious-idle-005.png": {
+      "frame": {
+        "x": 1918,
+        "y": 2,
+        "w": 474,
+        "h": 343
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 243,
+        "y": 402,
+        "w": 474,
+        "h": 343
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "mudbelly-green-toad-ferocious-idle-006.png": {
+      "frame": {
+        "x": 2397,
+        "y": 2,
+        "w": 475,
+        "h": 345
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 242,
+        "y": 400,
+        "w": 475,
+        "h": 345
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "mudbelly-green-toad-ferocious-idle-007.png": {
+      "frame": {
+        "x": 2876,
+        "y": 2,
+        "w": 475,
+        "h": 345
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 242,
+        "y": 400,
+        "w": 475,
+        "h": 345
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "mudbelly-green-toad-ferocious-idle-008.png": {
+      "frame": {
+        "x": 3355,
+        "y": 2,
+        "w": 475,
+        "h": 343
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 242,
+        "y": 401,
+        "w": 475,
+        "h": 343
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "mudbelly-green-toad-ferocious-idle-009.png": {
+      "frame": {
+        "x": 2,
+        "y": 351,
+        "w": 475,
+        "h": 345
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 242,
+        "y": 400,
+        "w": 475,
+        "h": 345
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "mudbelly-green-toad-ferocious-idle-010.png": {
+      "frame": {
+        "x": 481,
+        "y": 351,
+        "w": 475,
+        "h": 343
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 242,
+        "y": 402,
+        "w": 475,
+        "h": 343
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "mudbelly-green-toad-ferocious-idle-011.png": {
+      "frame": {
+        "x": 960,
+        "y": 351,
+        "w": 475,
+        "h": 342
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 242,
+        "y": 403,
+        "w": 475,
+        "h": 342
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "mudbelly-green-toad-ferocious-idle-012.png": {
+      "frame": {
+        "x": 1439,
+        "y": 351,
+        "w": 475,
+        "h": 340
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 242,
+        "y": 405,
+        "w": 475,
+        "h": 340
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "mudbelly-green-toad-ferocious-idle-013.png": {
+      "frame": {
+        "x": 1918,
+        "y": 351,
+        "w": 475,
+        "h": 339
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 242,
+        "y": 406,
+        "w": 475,
+        "h": 339
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "mudbelly-green-toad-ferocious-attack-001.png": {
+      "frame": {
+        "x": 2397,
+        "y": 351,
+        "w": 474,
+        "h": 338
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 243,
+        "y": 407,
+        "w": 474,
+        "h": 338
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "mudbelly-green-toad-ferocious-attack-002.png": {
+      "frame": {
+        "x": 2876,
+        "y": 351,
+        "w": 474,
+        "h": 338
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 243,
+        "y": 407,
+        "w": 474,
+        "h": 338
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "mudbelly-green-toad-ferocious-death-001.png": {
+      "frame": {
+        "x": 3355,
+        "y": 351,
+        "w": 474,
+        "h": 338
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 243,
+        "y": 407,
+        "w": 474,
+        "h": 338
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-enemy-art.mjs",
+    "version": "1.0",
+    "image": "mudbelly-green-toad-ferocious-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3832,
+      "h": 698
+    },
+    "scale": "1"
+  }
+}

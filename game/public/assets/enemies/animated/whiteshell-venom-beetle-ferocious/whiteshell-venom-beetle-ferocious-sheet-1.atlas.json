@@ -1,0 +1,255 @@
+{
+  "frames": {
+    "whiteshell-venom-beetle-ferocious-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 591,
+        "h": 217
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 205,
+        "y": 527,
+        "w": 591,
+        "h": 217
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "whiteshell-venom-beetle-ferocious-idle-002.png": {
+      "frame": {
+        "x": 602,
+        "y": 2,
+        "w": 589,
+        "h": 218
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 206,
+        "y": 525,
+        "w": 589,
+        "h": 218
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "whiteshell-venom-beetle-ferocious-idle-003.png": {
+      "frame": {
+        "x": 1202,
+        "y": 2,
+        "w": 587,
+        "h": 219
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 207,
+        "y": 523,
+        "w": 587,
+        "h": 219
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "whiteshell-venom-beetle-ferocious-idle-004.png": {
+      "frame": {
+        "x": 1802,
+        "y": 2,
+        "w": 590,
+        "h": 217
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 205,
+        "y": 524,
+        "w": 590,
+        "h": 217
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "whiteshell-venom-beetle-ferocious-idle-005.png": {
+      "frame": {
+        "x": 2402,
+        "y": 2,
+        "w": 592,
+        "h": 212
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 203,
+        "y": 529,
+        "w": 592,
+        "h": 212
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "whiteshell-venom-beetle-ferocious-idle-006.png": {
+      "frame": {
+        "x": 3002,
+        "y": 2,
+        "w": 594,
+        "h": 211
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 202,
+        "y": 531,
+        "w": 594,
+        "h": 211
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "whiteshell-venom-beetle-ferocious-idle-007.png": {
+      "frame": {
+        "x": 2,
+        "y": 225,
+        "w": 596,
+        "h": 211
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 201,
+        "y": 532,
+        "w": 596,
+        "h": 211
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "whiteshell-venom-beetle-ferocious-idle-008.png": {
+      "frame": {
+        "x": 602,
+        "y": 225,
+        "w": 593,
+        "h": 212
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 203,
+        "y": 531,
+        "w": 593,
+        "h": 212
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "whiteshell-venom-beetle-ferocious-idle-009.png": {
+      "frame": {
+        "x": 1202,
+        "y": 225,
+        "w": 591,
+        "h": 215
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 204,
+        "y": 529,
+        "w": 591,
+        "h": 215
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "whiteshell-venom-beetle-ferocious-attack-001.png": {
+      "frame": {
+        "x": 1802,
+        "y": 225,
+        "w": 591,
+        "h": 217
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 205,
+        "y": 527,
+        "w": 591,
+        "h": 217
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "whiteshell-venom-beetle-ferocious-attack-002.png": {
+      "frame": {
+        "x": 2402,
+        "y": 225,
+        "w": 591,
+        "h": 217
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 205,
+        "y": 527,
+        "w": 591,
+        "h": 217
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "whiteshell-venom-beetle-ferocious-death-001.png": {
+      "frame": {
+        "x": 3002,
+        "y": 225,
+        "w": 591,
+        "h": 217
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 205,
+        "y": 527,
+        "w": 591,
+        "h": 217
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-enemy-art.mjs",
+    "version": "1.0",
+    "image": "whiteshell-venom-beetle-ferocious-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3600,
+      "h": 446
+    },
+    "scale": "1"
+  }
+}

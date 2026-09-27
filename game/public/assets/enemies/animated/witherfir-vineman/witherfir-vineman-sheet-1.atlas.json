@@ -1,0 +1,275 @@
+{
+  "frames": {
+    "witherfir-vineman-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 348,
+        "h": 563
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 308,
+        "y": 194,
+        "w": 348,
+        "h": 563
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "witherfir-vineman-idle-002.png": {
+      "frame": {
+        "x": 354,
+        "y": 2,
+        "w": 342,
+        "h": 564
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 311,
+        "y": 193,
+        "w": 342,
+        "h": 564
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "witherfir-vineman-idle-003.png": {
+      "frame": {
+        "x": 706,
+        "y": 2,
+        "w": 336,
+        "h": 565
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 315,
+        "y": 192,
+        "w": 336,
+        "h": 565
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "witherfir-vineman-idle-004.png": {
+      "frame": {
+        "x": 1058,
+        "y": 2,
+        "w": 331,
+        "h": 569
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 319,
+        "y": 188,
+        "w": 331,
+        "h": 569
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "witherfir-vineman-idle-005.png": {
+      "frame": {
+        "x": 1410,
+        "y": 2,
+        "w": 328,
+        "h": 571
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 321,
+        "y": 186,
+        "w": 328,
+        "h": 571
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "witherfir-vineman-idle-006.png": {
+      "frame": {
+        "x": 1762,
+        "y": 2,
+        "w": 328,
+        "h": 572
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 322,
+        "y": 185,
+        "w": 328,
+        "h": 572
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "witherfir-vineman-idle-007.png": {
+      "frame": {
+        "x": 2114,
+        "y": 2,
+        "w": 331,
+        "h": 572
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 321,
+        "y": 185,
+        "w": 331,
+        "h": 572
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "witherfir-vineman-idle-008.png": {
+      "frame": {
+        "x": 2466,
+        "y": 2,
+        "w": 338,
+        "h": 570
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 317,
+        "y": 187,
+        "w": 338,
+        "h": 570
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "witherfir-vineman-idle-009.png": {
+      "frame": {
+        "x": 2818,
+        "y": 2,
+        "w": 345,
+        "h": 567
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 312,
+        "y": 190,
+        "w": 345,
+        "h": 567
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "witherfir-vineman-idle-010.png": {
+      "frame": {
+        "x": 3170,
+        "y": 2,
+        "w": 348,
+        "h": 563
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 309,
+        "y": 193,
+        "w": 348,
+        "h": 563
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "witherfir-vineman-attack-001.png": {
+      "frame": {
+        "x": 3522,
+        "y": 2,
+        "w": 348,
+        "h": 563
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 308,
+        "y": 194,
+        "w": 348,
+        "h": 563
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "witherfir-vineman-attack-002.png": {
+      "frame": {
+        "x": 2,
+        "y": 578,
+        "w": 348,
+        "h": 563
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 308,
+        "y": 194,
+        "w": 348,
+        "h": 563
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    },
+    "witherfir-vineman-death-001.png": {
+      "frame": {
+        "x": 354,
+        "y": 578,
+        "w": 348,
+        "h": 563
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 308,
+        "y": 194,
+        "w": 348,
+        "h": 563
+      },
+      "sourceSize": {
+        "w": 960,
+        "h": 960
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-enemy-art.mjs",
+    "version": "1.0",
+    "image": "witherfir-vineman-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3872,
+      "h": 1152
+    },
+    "scale": "1"
+  }
+}
