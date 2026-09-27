@@ -34,7 +34,7 @@
 
 import * as Tone from 'tone'
 
-export type SoundId =
+export type SynthSoundId =
   | 'uiClick'
   | 'uiConfirm'
   | 'uiCancel'
@@ -76,7 +76,7 @@ interface SoundRecipe {
   }
 }
 
-const SOUND_LIBRARY: Record<SoundId, SoundRecipe> = {
+export const SOUND_LIBRARY: Record<SynthSoundId, SoundRecipe> = {
   // UI — cultivation-genre gong taps: MetalSynth, low pitch, short decay.
   uiClick: {
     engine: 'metal',
@@ -300,8 +300,8 @@ class AudioManagerImpl {
   /** 'idle' | 'pending' | 'ready' — unlock() only runs while idle; unlocked ≡ (state==='ready'). */
   private unlockState: 'idle' | 'pending' | 'ready' = 'idle'
 
-  private synthCache = new Map<SoundId, AnySynth>()
-  private lastPlayAt = new Map<SoundId, number>()
+  private synthCache = new Map<SynthSoundId, AnySynth>()
+  private lastPlayAt = new Map<SynthSoundId, number>()
 
   // Tone chain: synth → reverb → lowpass → master → destination
   private master: Tone.Gain | null = null
@@ -414,7 +414,7 @@ class AudioManagerImpl {
    * Plays a sound by id. Does not throw when audio is not unlocked or Tone
    * is unavailable (SSR/test environments) — silent no-op.
    */
-  play(id: SoundId): void {
+  play(id: SynthSoundId): void {
     if (!this.enabled) return
     if (this.unlockState !== 'ready') return
 
@@ -466,7 +466,7 @@ class AudioManagerImpl {
     )
   }
 
-  private getOrCreateSynth(id: SoundId, recipe: SoundRecipe): AnySynth | null {
+  private getOrCreateSynth(id: SynthSoundId, recipe: SoundRecipe): AnySynth | null {
     const cached = this.synthCache.get(id)
     if (cached) return cached
 

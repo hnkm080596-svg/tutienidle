@@ -367,7 +367,7 @@ describe('AudioManager (Tone.js-based)', () => {
     expect(mgr.isUnlocked()).toBe(false)
   })
 
-  it('every SoundId can play without throwing', async () => {
+  it('every SynthSoundId can play without throwing', async () => {
     const mgr = await unlockedManager()
 
     const ids = [

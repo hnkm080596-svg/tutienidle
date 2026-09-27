@@ -1,0 +1,370 @@
+// Sound System W1 - the cue manifest (spec 1.2). Pure data: no Tone/Vue/
+// Phaser imports. `src: ''` marks a reserved silent slot - the file drop
+// fills it; until then the cue is a no-op (never throws).
+//
+// OQ-C FULL coverage: qualifier families are expanded into one row per
+// concrete catalog id (castable skills, reactions, VFX presets, all 38
+// Kiem Pho combos, ungthe triggers, Thanh Van times). Family anchor rows
+// remain as the qualifier-strip fallback for ids the catalogs do not know
+// yet.
+
+import type { SynthSoundId } from './AudioManager'
+import { type AudioChannelId } from './AudioChannels'
+
+export interface AudioCueDef {
+  // '' = reserved silent slot; string[] = codec/variant fallbacks tried in order.
+  readonly src: string | readonly string[]
+  readonly channel: AudioChannelId
+  readonly volume?: number
+  readonly loop?: boolean
+  // Min gap between two plays of this cue; default MIN_GAP_MS (60) in AudioManager.
+  readonly cooldownMs?: number
+  // Fraction to duck the music bus by while this cue plays (0..1, max-active).
+  readonly duckMusic?: number
+  // SOUND_LIBRARY recipe used until a real file drops. OQ-A: never set on
+  // music.*/ambient.* rows - those stay silent.
+  readonly synthFallback?: SynthSoundId
+}
+
+// --- Catalog enumerations (OQ-C) - mirrors of the data catalogs, inlined so
+// this file stays a pure data island inside core/audio. The W9 completeness
+// test cross-checks these lists against their sources of truth.
+
+// Every skillId that can appear on turn_cast_start (skill defs in
+// src/data/skill/{Skills,CoreSkills,PhapTuSkills,TheTuSkills,KiemPhoOrbs,
+// NguKiemDaoSkills,TurnAnKitSkills,TurnBasicAttacks}.ts minus passive_*,
+// plus the 'basic_attack' fallback id).
+const CAST_SKILL_IDS = [
+  'bach_ung',
+  'basic_attack',
+  'bat_tu_ba_the',
+  'cuong_quyen',
+  'da_phap_lien_tuyen',
+  'diem_kim_thuat',
+  'doc_chuong',
+  'generic_physical',
+  'hoa_cau_thuat',
+  'hoa_tan_diem',
+  'hoa_tu_diem',
+  'huy_quyen',
+  'kim_tan_phong',
+  'kim_tu_phong',
+  'kim_y_ngung_phong',
+  'linh_bao',
+  'loan_dau',
+  'moc_lan_doc',
+  'moc_tu_doc',
+  'ngo_dao_hon_don',
+  'ngu_kiem_thuat',
+  'orb_bo',
+  'orb_chem',
+  'orb_dam',
+  'orb_hat',
+  'orb_quet',
+  'phan_chan',
+  'phan_kich',
+  'quan_the',
+  'son_nhac',
+  'tam_muoi_chan_hoa',
+  'tam_muoi_potency',
+  'tham_the',
+  'thanh_tuyen_duong_linh',
+  'tho_bang_loa',
+  'tho_cau_thuat',
+  'tho_tu_nhan',
+  'thuy_dao_lan',
+  'thuy_ngan_lien',
+  'thuy_tien_thuat',
+  'tram',
+  'tran_ap',
+  'tro_kich',
+  'trong_nhac',
+  'trong_phan_kich',
+  'tu_the',
+  'van_moc_sinh_co',
+  'van_phap_tuy_tam',
+  'water_surge',
+] as const
+
+// Every reactionId in src/data/reaction/ReactionDefinitions.ts (5 sinh + 5 khac).
+const REACTION_IDS = [
+  'duong_viem',
+  'luyen_tho',
+  'duong_kim',
+  'tu_thuy',
+  'nhuan_moc',
+  'tuc_viem',
+  'dung_kim',
+  'doan_moc',
+  'xuyen_tho',
+  'tran_thuy',
+] as const
+
+// Every CombatVfxPresetId in src/core/battle/CombatAction.ts.
+const IMPACT_PRESET_IDS = [
+  'slash',
+  'claw',
+  'arcane_impact',
+  'fire_burst',
+  'water_surge',
+  'earth_shockwave',
+  'metal_slash',
+  'wood_spikes',
+  'lightning_strike',
+  'wind_blade',
+  'holy_radiance',
+  'shadow_burst',
+  'boss_ground_slam',
+  'tu_luc',
+  'kiem_orb_dam',
+  'kiem_orb_chem',
+  'kiem_combo_nhat_tuyen',
+  'kiem_combo_liet_ngan',
+  'kiem_combo_tam_phach',
+  'kiem_combo_tam_thich',
+  'kiem_combo_tam_tram',
+  'kiem_combo_tam_lieu',
+  'kiem_combo_tam_tao',
+  'kiem_combo_khai_ngan',
+  'kiem_combo_nhi_thich_nhat_phach',
+  'kiem_combo_thau_ngan',
+  'kiem_combo_nhi_tram_nhat_phach',
+  'kiem_combo_nhi_phach_nhat_thich',
+  'kiem_combo_nhi_lieu_nhat_thich',
+  'kiem_combo_nhi_tao_nhat_thich',
+  'kiem_combo_hoi_tuyen',
+  'kiem_combo_diep_ngan',
+  'kiem_combo_phach_thich_phach',
+  'kiem_combo_thich_tram_phach_thich',
+  'kiem_combo_tram_phach_thich_tram',
+  'kiem_combo_phach_tram_thich_phach',
+  'kiem_combo_lieu_tram_thich_lieu',
+  'kiem_combo_tao_tram_thich_tao',
+  'kiem_combo_thich_lieu_tram_thich',
+  'kiem_combo_thich_tao_tram_thich',
+  'kiem_combo_tram_lieu_phach_tram',
+  'kiem_combo_phach_lieu_tram_phach',
+  'kiem_combo_thich_tram_tram_lieu',
+  'kiem_combo_tram_thich_thich_lieu',
+  'kiem_combo_phach_thich_thich_tao',
+  'kiem_combo_ngu_hanh_kiem',
+  'kiem_combo_ngu_hanh_nghich_chuyen',
+  'kiem_combo_thich_tram_tram_phach_thich',
+  'kiem_combo_tram_thich_phach_tram_phach',
+  'kiem_combo_phach_tram_thich_lieu_tao',
+  'kiem_combo_thich_lieu_phach_tram_tao',
+  'kiem_combo_tao_tram_thich_phach_lieu',
+  'kiem_combo_tram_phach_lieu_tao_thich',
+  'kiem_combo_phach_lieu_tao_thich_tram',
+  'kiem_combo_lieu_tao_thich_tram_phach',
+  'hoa_cau_comet',
+  'thuy_tien_dart',
+  'doc_chuong_palm',
+  'diem_kim_point',
+  'tho_cau_boulder',
+  'tram_slash',
+  'linh_bao_burst',
+  'huy_quyen_strike',
+] as const
+
+// Every combo id in src/data/skill/KiemPhoCombos.ts (38, prefix-free form).
+const KIEM_COMBO_IDS = [
+  'nhat_tuyen',
+  'liet_ngan',
+  'tam_phach',
+  'tam_thich',
+  'tam_tram',
+  'tam_lieu',
+  'tam_tao',
+  'khai_ngan',
+  'nhi_thich_nhat_phach',
+  'thau_ngan',
+  'nhi_tram_nhat_phach',
+  'nhi_phach_nhat_thich',
+  'nhi_lieu_nhat_thich',
+  'nhi_tao_nhat_thich',
+  'hoi_tuyen',
+  'diep_ngan',
+  'phach_thich_phach',
+  'thich_tram_phach_thich',
+  'tram_phach_thich_tram',
+  'phach_tram_thich_phach',
+  'lieu_tram_thich_lieu',
+  'tao_tram_thich_tao',
+  'thich_lieu_tram_thich',
+  'thich_tao_tram_thich',
+  'tram_lieu_phach_tram',
+  'phach_lieu_tram_phach',
+  'thich_tram_tram_lieu',
+  'tram_thich_thich_lieu',
+  'phach_thich_thich_tao',
+  'ngu_hanh_kiem',
+  'ngu_hanh_nghich_chuyen',
+  'thich_tram_tram_phach_thich',
+  'tram_thich_phach_tram_phach',
+  'phach_tram_thich_lieu_tao',
+  'thich_lieu_phach_tram_tao',
+  'tao_tram_thich_phach_lieu',
+  'tram_phach_lieu_tao_thich',
+  'phach_lieu_tao_thich_tram',
+  'lieu_tao_thich_tram_phach',
+] as const
+
+// Thanh Van time variants (src/presentation/background/BackgroundVariant.ts).
+const MUSIC_HOME_TIMES = ['morning', 'noon', 'evening', 'night'] as const
+
+function sfx(overrides?: Partial<AudioCueDef>): AudioCueDef {
+  return { src: '', channel: 'sfx', ...overrides }
+}
+
+function ui(overrides?: Partial<AudioCueDef>): AudioCueDef {
+  return { src: '', channel: 'ui', ...overrides }
+}
+
+function music(overrides?: Partial<AudioCueDef>): AudioCueDef {
+  return { src: '', channel: 'music', loop: true, ...overrides }
+}
+
+// Expand one catalog id list into `prefix<id>` rows with shared options.
+function expand(
+  ids: readonly string[],
+  prefix: string,
+  row: AudioCueDef,
+): Record<string, AudioCueDef> {
+  const out: Record<string, AudioCueDef> = {}
+  for (const id of ids) out[`${prefix}${id}`] = row
+  return out
+}
+
+export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
+  // ---- UI (spec 1.2) ----
+  'ui.click': ui({ synthFallback: 'uiClick' }),
+  'ui.tab': ui({ synthFallback: 'uiClick' }),
+  'ui.toast.loot': ui({ synthFallback: 'toastLoot' }),
+  'ui.toast.craft': ui({ synthFallback: 'toastCraft' }),
+  'ui.toast.upgrade': ui({ synthFallback: 'toastUpgrade' }),
+  'ui.toast.save': ui({ synthFallback: 'toastSave' }),
+  'ui.toast.warning': ui({ synthFallback: 'toastWarning' }),
+  'ui.toast.error': ui({ synthFallback: 'toastError' }),
+  'ui.confirm': ui({ synthFallback: 'uiConfirm' }),
+  'ui.cancel': ui({ synthFallback: 'uiCancel' }),
+  'ui.modal.open': ui(),
+  'ui.modal.close': ui(),
+  'ui.panel.open': ui({ synthFallback: 'uiClick' }),
+  'ui.panel.close': ui({ synthFallback: 'uiCancel' }),
+  'ui.wheel.open': ui({ synthFallback: 'uiClick' }),
+  'ui.wheel.close': ui({ synthFallback: 'uiCancel' }),
+  'ui.wheel.select': ui({ synthFallback: 'uiConfirm' }),
+  'ui.purchase': ui({ synthFallback: 'toastLoot' }),
+  'ui.equip': ui({ synthFallback: 'uiClick' }),
+  'ui.error': ui({ synthFallback: 'toastError' }),
+
+  // ---- Combat ----
+  'combat.cast': sfx({ cooldownMs: 80, synthFallback: 'combatAttack' }),
+  ...expand(CAST_SKILL_IDS, 'combat.cast.', sfx({ cooldownMs: 80 })),
+  'combat.hit': sfx({ cooldownMs: 80, synthFallback: 'combatHit' }),
+  'combat.crit': sfx({ cooldownMs: 120, duckMusic: 0.3, synthFallback: 'combatCritical' }),
+  'combat.dodge': sfx({ synthFallback: 'combatDodge' }),
+  'combat.block': sfx({ synthFallback: 'combatBlock' }),
+  'combat.death': sfx({ synthFallback: 'combatKill' }),
+  'combat.kill': sfx({ synthFallback: 'combatKill' }),
+  'combat.hurt': sfx({ cooldownMs: 80, synthFallback: 'combatHit' }),
+  'combat.survive_lethal': sfx({ duckMusic: 0.4, synthFallback: 'combatBlock' }),
+  'combat.heal': sfx({ cooldownMs: 100, synthFallback: 'toastSave' }),
+  'combat.turn_ready': sfx({ synthFallback: 'uiConfirm' }),
+  'combat.impact': sfx({ cooldownMs: 80, synthFallback: 'combatHit' }),
+  ...expand(IMPACT_PRESET_IDS, 'combat.impact.', sfx({ cooldownMs: 80 })),
+  'combat.element.kim': sfx({ cooldownMs: 80, synthFallback: 'combatHit' }),
+  'combat.element.thuy': sfx({ cooldownMs: 80, synthFallback: 'combatHit' }),
+  'combat.element.moc': sfx({ cooldownMs: 80, synthFallback: 'combatHit' }),
+  'combat.element.hoa': sfx({ cooldownMs: 80, synthFallback: 'combatCritical' }),
+  'combat.element.tho': sfx({ cooldownMs: 80, synthFallback: 'combatBlock' }),
+  'combat.spawn': sfx({ cooldownMs: 120, synthFallback: 'toastWarning' }),
+  'combat.spawn.elite': sfx({ cooldownMs: 120, synthFallback: 'toastWarning' }),
+  'combat.spawn.boss': sfx({ duckMusic: 0.4, synthFallback: 'battleStart' }),
+  'combat.buff.apply': sfx({ cooldownMs: 120, synthFallback: 'toastSave' }),
+  'combat.debuff.apply': sfx({ cooldownMs: 120, synthFallback: 'toastWarning' }),
+  'combat.dot.apply': sfx({ cooldownMs: 120, synthFallback: 'toastWarning' }),
+  'combat.buff.expire': sfx({ cooldownMs: 120 }),
+  'combat.buff.stack': sfx({ cooldownMs: 120 }),
+  'combat.reaction': sfx({ duckMusic: 0.4, synthFallback: 'combatCritical' }),
+  ...expand(REACTION_IDS, 'combat.reaction.', sfx({ duckMusic: 0.4 })),
+  'combat.loot': sfx({ cooldownMs: 120, synthFallback: 'toastLoot' }),
+  'combat.essence': sfx({ cooldownMs: 80, synthFallback: 'toastCraft' }),
+  'combat.charge': sfx({ synthFallback: 'combatAttack' }),
+  'combat.release': sfx({ duckMusic: 0.3, synthFallback: 'combatCritical' }),
+  'combat.boss.slam': sfx({ duckMusic: 0.5, synthFallback: 'combatCritical' }),
+  'combat.kiem.combo': sfx({ cooldownMs: 80, synthFallback: 'combatHit' }),
+  ...expand(KIEM_COMBO_IDS, 'combat.kiem.combo.', sfx({ duckMusic: 0.3 })),
+  'combat.kiem.tu_luc': sfx({ cooldownMs: 120 }),
+  'combat.thetu.reflect': sfx({ synthFallback: 'combatBlock' }),
+  'combat.ungthe': sfx({ synthFallback: 'combatAttack' }),
+  'combat.ungthe.intercept': sfx({ synthFallback: 'combatDodge' }),
+  'combat.ungthe.counter': sfx({ synthFallback: 'combatHit' }),
+  'combat.phaptu.proc': sfx({ cooldownMs: 120 }),
+  'combat.hothe.absorb': sfx({ cooldownMs: 120, synthFallback: 'combatBlock' }),
+  'combat.ward': sfx({ cooldownMs: 120 }),
+  'combat.ward.grant': sfx({ synthFallback: 'toastSave' }),
+  'combat.ward.break': sfx({ synthFallback: 'combatBlock' }),
+  'combat.countdown.tick': ui({ synthFallback: 'uiClick' }),
+  'combat.turn_end': sfx(),
+  'combat.exit': ui({ synthFallback: 'uiCancel' }),
+  'combat.start': sfx({ duckMusic: 0.3, synthFallback: 'battleStart' }),
+  'combat.victory': sfx({ duckMusic: 0.7, synthFallback: 'battleVictory' }),
+  'combat.defeat': sfx({ duckMusic: 0.7, synthFallback: 'battleDefeat' }),
+  'combat.select': ui({ synthFallback: 'uiClick' }),
+
+  // ---- Progression ----
+  'progress.node_unlock': sfx({ synthFallback: 'toastUpgrade' }),
+  'progress.path_choose': sfx({ duckMusic: 0.4, synthFallback: 'uiConfirm' }),
+  'progress.breakthrough': sfx({ duckMusic: 0.7, synthFallback: 'battleVictory' }),
+  'progress.talent_pick': sfx({ synthFallback: 'uiConfirm' }),
+  'progress.reroll': ui({ synthFallback: 'uiClick' }),
+  'progress.create': sfx({ synthFallback: 'uiConfirm' }),
+  'progress.perfect': sfx({ duckMusic: 0.5, synthFallback: 'toastUpgrade' }),
+  'progress.hidden_open': sfx({ duckMusic: 0.5, synthFallback: 'toastWarning' }),
+  'progress.quan_the': sfx({ synthFallback: 'toastSave' }),
+
+  // ---- Tribulation ----
+  'tribulation.start': sfx({ duckMusic: 0.3, synthFallback: 'battleStart' }),
+  'tribulation.begin': sfx({ duckMusic: 0.5, synthFallback: 'battleStart' }),
+  'tribulation.thunder': sfx({ cooldownMs: 150, duckMusic: 0.4, synthFallback: 'combatCritical' }),
+  'tribulation.chapter': sfx({ synthFallback: 'toastWarning' }),
+  'tribulation.answer.ok': ui({ synthFallback: 'uiConfirm' }),
+  'tribulation.answer.fail': ui({ synthFallback: 'toastError' }),
+  'tribulation.victory': sfx({ duckMusic: 0.7, synthFallback: 'battleVictory' }),
+  'tribulation.fail': sfx({ duckMusic: 0.7, synthFallback: 'battleDefeat' }),
+
+  // ---- Craft / farm ----
+  'craft.start': sfx({ synthFallback: 'toastCraft' }),
+  'farm.arm': ui({ synthFallback: 'uiConfirm' }),
+  'farm.stop': ui({ synthFallback: 'uiCancel' }),
+  'farm.cycle': sfx(),
+
+  // ---- Stingers / ambient / music ----
+  'stinger.announce': sfx({ duckMusic: 0.6, synthFallback: 'battleStart' }),
+  'stinger.offline': sfx({ duckMusic: 0.6, synthFallback: 'toastSave' }),
+  'ambient.cultivate.on': music({ loop: false }),
+  'ambient.cultivate.off': music({ loop: false }),
+  'music.menu': music(),
+  'music.home': music(),
+  'music.combat': music(),
+  'music.tribulation': music(),
+  ...expand(MUSIC_HOME_TIMES, 'music.home.', music()),
+}
+
+/**
+ * exact match -> strip one trailing qualifier segment and retry -> undefined.
+ * `combat.cast.foo` lands on `combat.cast`; unknown ids return undefined.
+ */
+export function resolveAudioCue(id: string): AudioCueDef | undefined {
+  let key = id
+  while (key.length > 0) {
+    const def = AUDIO_CUES[key]
+    if (def !== undefined) return def
+    const cut = key.lastIndexOf('.')
+    if (cut < 0) return undefined
+    key = key.slice(0, cut)
+  }
+  return undefined
+}
