@@ -40,13 +40,25 @@ vi.mock('tone', () => {
       Q: { value: 1 },
       type: 'lowpass',
       rolloff: -12,
+      // Tone.Player fields (W2 one-shot + music slots).
+      start: vi.fn(function (this: unknown) { return this }),
+      stop: vi.fn(function (this: unknown) { return this }),
+      loop: false,
+      fadeIn: 0,
+      fadeOut: 0,
+      onstop: null as null | (() => void),
+      buffer: null as unknown,
     }
   }
 
   const __meta = {
     synths: [] as ReturnType<typeof createSynthFields>[],
     /** getContext() returns a lazy singleton — tests flip .state to simulate a suspended tab. */
-    ctx: null as null | { state: string; resume: ReturnType<typeof vi.fn> },
+    ctx: null as null | {
+      state: string
+      resume: ReturnType<typeof vi.fn>
+      rawContext: { decodeAudioData: ReturnType<typeof vi.fn> }
+    },
     /** makeNode() throws once this many nodes exist (simulates mid-init failure). */
     failCreateAfter: null as null | number,
     /** When set, Reverb.ready = this promise (tests hold it pending to create a race). */
@@ -81,7 +93,13 @@ vi.mock('tone', () => {
     getDestination: vi.fn(() => Destination),
     getContext: vi.fn(function () {
       if (!__meta.ctx) {
-        __meta.ctx = { state: 'running', resume: vi.fn(async () => undefined) }
+        __meta.ctx = {
+          state: 'running',
+          resume: vi.fn(async () => undefined),
+          rawContext: {
+            decodeAudioData: vi.fn(async () => ({ duration: 1.5 } as unknown as AudioBuffer)),
+          },
+        }
       }
       return __meta.ctx
     }),
@@ -95,27 +113,51 @@ vi.mock('tone', () => {
     Reverb: vi.fn(function (opts: unknown) { return new MockReverb(opts) }),
     Gain: vi.fn(function () { return makeNode() }),
     Filter: vi.fn(function () { return makeNode() }),
+    Player: vi.fn(function () { return makeNode() }),
     Destination,
     __meta,
   }
 })
 
 import { AudioManager, resetAudioManagerForTest } from './AudioManager'
+import { AUDIO_CUES } from './AudioCueManifest'
 import * as Tone from 'tone'
 
 interface MockNode {
   triggerAttackRelease: ReturnType<typeof vi.fn>
   dispose: ReturnType<typeof vi.fn>
+  gain: { value: number; rampTo: ReturnType<typeof vi.fn> }
 }
 
 const meta = (Tone as unknown as {
   __meta: {
     synths: MockNode[]
-    ctx: null | { state: string; resume: ReturnType<typeof vi.fn> }
+    ctx: null | {
+      state: string
+      resume: ReturnType<typeof vi.fn>
+      rawContext: { decodeAudioData: ReturnType<typeof vi.fn> }
+    }
     failCreateAfter: null | number
     reverbReady: null | Promise<void>
   }
 }).__meta
+
+interface MockPlayer extends MockNode {
+  start: ReturnType<typeof vi.fn>
+  stop: ReturnType<typeof vi.fn>
+  loop: boolean
+  fadeIn: number
+  fadeOut: number
+  onstop: null | (() => void)
+  connect: ReturnType<typeof vi.fn>
+  volume: { value: number }
+}
+
+function playersStarted(): MockPlayer[] {
+  return meta.synths.filter(
+    (s) => (s as MockPlayer).start?.mock.calls.length > 0,
+  ) as MockPlayer[]
+}
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -380,5 +422,157 @@ describe('AudioManager (Tone.js-based)', () => {
     for (const id of ids) {
       expect(() => mgr.play(id)).not.toThrow()
     }
+  })
+
+  // ── W2: cue playback ─────────────────────────────────────────────────
+  describe('playCue', () => {
+    it('empty slot with no synthFallback → silent, no throw, no synth built', async () => {
+      const mgr = await unlockedManager()
+      expect(() => mgr.playCue('combat.buff.expire')).not.toThrow()
+      expect(triggeredSynths().length).toBe(0)
+    })
+
+    it('unknown cue id → silent no-op + one console.debug', async () => {
+      const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {})
+      const mgr = await unlockedManager()
+      mgr.playCue('bogus.cue.id')
+      mgr.playCue('bogus.cue.id')
+      expect(debugSpy).toHaveBeenCalledTimes(1)
+      expect(triggeredSynths().length).toBe(0)
+    })
+
+    it('synthFallback cue fires the mapped recipe on its channel bus', async () => {
+      const mgr = await unlockedManager()
+      mgr.playCue('combat.hit')
+      // combat.hit -> combatHit recipe on the sfx bus.
+      expect(triggeredSynths().length).toBe(1)
+    })
+
+    it('cooldown gates a second call inside the gap', async () => {
+      const mgr = await unlockedManager()
+      mgr.playCue('combat.hit') // cooldownMs 80
+      mgr.playCue('combat.hit')
+      expect(triggeredSynths().length).toBe(1)
+    })
+
+    it('decoded buffer wins over synthFallback and spawns a Player', async () => {
+      const mgr = await unlockedManager()
+      const cues = AUDIO_CUES as Record<string, (typeof AUDIO_CUES)[string]>
+      const original = AUDIO_CUES['combat.hit']!
+      cues['combat.hit'] = { ...original, src: 'assets/audio/sfx/hit.ogg' }
+      try {
+        mgr.attachDecodedBuffer('assets/audio/sfx/hit.ogg', { duration: 0.2 } as AudioBuffer)
+        mgr.playCue('combat.hit')
+        expect(playersStarted().length).toBe(1)
+        expect(triggeredSynths().length).toBe(0)
+      } finally {
+        cues['combat.hit'] = original
+      }
+    })
+
+    it('empty src + no decoded buffer falls back to synthFallback', async () => {
+      const mgr = await unlockedManager()
+      mgr.playCue('ui.click')
+      expect(triggeredSynths().length).toBe(1)
+      expect(playersStarted().length).toBe(0)
+    })
+  })
+
+  describe('channel volumes', () => {
+    it('setChannelVolume clamps to [0,1] and ramps when unlocked', async () => {
+      const mgr = await unlockedManager()
+      mgr.setChannelVolume('sfx', 2)
+      expect(mgr.getChannelVolume('sfx')).toBe(1)
+      mgr.setChannelVolume('ui', -1)
+      expect(mgr.getChannelVolume('ui')).toBe(0)
+    })
+
+    it('setChannelVolume before unlock stores the value without ramping', () => {
+      const mgr = AudioManager.getInstance()
+      mgr.setChannelVolume('music', 0.25)
+      expect(mgr.getChannelVolume('music')).toBe(0.25)
+    })
+  })
+
+  describe('music slot', () => {
+    it('playMusic before unlock is a silent desired-slot (no Player)', () => {
+      const mgr = AudioManager.getInstance()
+      mgr.playMusic('music.home')
+      expect(playersStarted().length).toBe(0)
+    })
+
+    it('playMusic stays silent while the slot src is empty (OQ-A)', async () => {
+      const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {})
+      const mgr = await unlockedManager()
+      mgr.playMusic('music.home')
+      expect(playersStarted().length).toBe(0)
+      expect(debugSpy).toHaveBeenCalled()
+    })
+
+    it('playMusic spawns one looping Player when the buffer is attached', async () => {
+      const mgr = await unlockedManager()
+      const cues = AUDIO_CUES as Record<string, (typeof AUDIO_CUES)[string]>
+      const original = AUDIO_CUES['music.home']!
+      cues['music.home'] = { ...original, src: 'assets/audio/music/home.ogg' }
+      try {
+        mgr.attachDecodedBuffer('assets/audio/music/home.ogg', { duration: 60 } as AudioBuffer)
+        mgr.playMusic('music.home')
+        const started = playersStarted()
+        expect(started.length).toBe(1)
+        expect(started[0]!.loop).toBe(true)
+        // Same id twice = no second Player.
+        mgr.playMusic('music.home')
+        expect(playersStarted().length).toBe(1)
+        // Crossfade swaps the slot.
+        cues['music.combat'] = { ...AUDIO_CUES['music.combat']!, src: 'assets/audio/music/combat.ogg' }
+        mgr.attachDecodedBuffer('assets/audio/music/combat.ogg', { duration: 60 } as AudioBuffer)
+        mgr.crossfadeMusic('music.combat', 1500)
+        expect(playersStarted().length).toBe(2)
+      } finally {
+        cues['music.home'] = original
+        cues['music.combat'] = AUDIO_CUES['music.combat']!
+      }
+    })
+
+    it('stopMusic clears the desired slot', async () => {
+      const mgr = await unlockedManager()
+      mgr.playMusic('music.combat')
+      mgr.stopMusic()
+      expect(playersStarted().length).toBe(0)
+    })
+  })
+
+  describe('duck', () => {
+    it('applyDuck ramps the music bus down and restores after the window', async () => {
+      vi.useFakeTimers()
+      const mgr = await unlockedManager()
+      const musicGain = meta.synths[meta.synths.length - 1]! // last node = musicGain
+      mgr.applyDuck(0.5, 1000)
+      expect(musicGain.gain.rampTo).toHaveBeenCalledWith(0.5 * 0.5, 0.05)
+      vi.advanceTimersByTime(1100)
+      expect(musicGain.gain.rampTo).toHaveBeenLastCalledWith(0.5, 0.05)
+    })
+
+    it('duck is max-active not summed', async () => {
+      vi.useFakeTimers()
+      const mgr = await unlockedManager()
+      const musicGain = meta.synths[meta.synths.length - 1]!
+      mgr.applyDuck(0.3, 1000)
+      mgr.applyDuck(0.5, 500)
+      expect(musicGain.gain.rampTo).toHaveBeenLastCalledWith(0.5 * 0.5, 0.05)
+      vi.advanceTimersByTime(1100)
+      expect(musicGain.gain.rampTo).toHaveBeenLastCalledWith(0.5, 0.05)
+    })
+  })
+
+  describe('encoded buffers', () => {
+    it('attachEncodedBuffer queues while locked, decodes after unlock', async () => {
+      const mgr = AudioManager.getInstance()
+      mgr.attachEncodedBuffer('assets/audio/sfx/a.ogg', new ArrayBuffer(8))
+      mgr.unlock()
+      await vi.waitFor(() => expect(mgr.isUnlocked()).toBe(true))
+      await vi.waitFor(() => expect(meta.ctx!.rawContext.decodeAudioData).toHaveBeenCalled())
+      await vi.waitFor(() => expect(mgr.hasDecodedBuffer('assets/audio/sfx/a.ogg')).toBe(true))
+    })
   })
 })
