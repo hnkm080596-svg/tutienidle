@@ -15996,7 +15996,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c1c9158c16ff7ebec16e430a7cf470462d1377ae84c40f11acfe78efc21ce1d0"
+      "hash": "468124b26a4b8554f7d48b7d25c4beb47daab00403813ac04db22e4286f81873"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.turnRegen.test.ts",
@@ -16314,7 +16314,7 @@
       "path": "src/core/buff2/BuffSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ca8f01203a228c5a79128811c63b6e847db2f1c1dc2699691e1c47a1e6bbf63f"
+      "hash": "30cefd81eed83499d8dabd95738a1346d0c953f0d4a23d5281c91ccd5788bbc8"
     },
     {
       "path": "src/core/buff2/BuffSystemApply.test.ts",
@@ -17550,7 +17550,7 @@
       "path": "src/core/game/GameManager.empowerment.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "7c4b4949e9e352aa501d707539e32630ff0e7e511c31eae46158700fcf901e19"
+      "hash": "338732d08698741746b26efa882cc91b7d963de3434e42f9888c479fa4a99036"
     },
     {
       "path": "src/core/game/GameManager.enemyClear.test.ts",
@@ -18570,13 +18570,13 @@
       "path": "src/core/player/CultivationPathKit.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f756c0d71886978ce108ec24527211b4aa44307a17c0c42dfab4c956ec9fcac6"
+      "hash": "15bf5cbef58c61208442f56205df164274f26eca9fa129ce05813c1fce56f679"
     },
     {
       "path": "src/core/player/CultivationPathRegistry.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "29b67a94df7a1c06820f173713d2a46744d73da118b623eb0a0d34e9c0a50e34"
+      "hash": "24e22b2c01b33788c41f48e8cef48aa29975d5f557b410fef60255fe4e6cd290"
     },
     {
       "path": "src/core/player/CultivationPathRoles.test.ts",
@@ -18606,7 +18606,7 @@
       "path": "src/core/player/CultivationPathSystem.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "08f0f3e4b0fdd2cad45e412476abb15cd0ae9d5f2bd3a505e1632985228bdc3a"
+      "hash": "d99f72e0b26664173212f0eae46695fd829dc63f6849b14241d70c3dfac5944d"
     },
     {
       "path": "src/core/player/CultivationPathSystem.ts",
@@ -19896,7 +19896,7 @@
       "path": "src/core/skilldef/SkillDefinitionRegistry.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1ec6015136fec4d08ff73b1ae8f51e684739c2b10163c99fdc751a73873bc8ab"
+      "hash": "5e65f494a4fc63eb69da59f59774e4238c2d60cac7c6fe73606f5f95cc282122"
     },
     {
       "path": "src/core/skilldef/SkillDefinitionRegistry.ts",
@@ -19968,7 +19968,7 @@
       "path": "src/core/skilldef/SkillResolver.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e4c8c3b4544fbc0fd8f098bb26a8649f27ae7d573cf818acc427a0b084b2bab0"
+      "hash": "2144b8ab91f79f4f4f972ecf66640d6501a6b8602e120fa58a0aa6d698e19a0a"
     },
     {
       "path": "src/core/skilldef/SkillSubcast.test.ts",
@@ -20532,7 +20532,7 @@
       "path": "src/data/buff/PhapTuTrangBuffs.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "15fa7ddbe105520fe2eec485c4e1697184d6f4afe7d097eaa188fcd1663659ba"
+      "hash": "836861599a0bd06bde22ad93489faaadc297e9476b47dedd304ce4456c29b807"
     },
     {
       "path": "src/data/buff/ReactionStatusBuffs.ts",
@@ -21552,7 +21552,7 @@
       "path": "src/game/scenes/CombatScene.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e289726359f90bc3017784036051e80b0b6f59c1c32ce4b32f904730044807eb"
+      "hash": "a5e3bcf7e4c6ee6213febf11a2ddf38cafaa350d211325fce62f5d14bb2ee02b"
     },
     {
       "path": "src/game/scenes/CombatScene.turnCountdownSpawn.test.ts",
@@ -23097,5 +23097,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "4ed41855a5a5ba30a3d6f4825c2216b463c5af1b83602f78051b5597b1cd429f"
+  "productStateId": "422878cd6ec8fda80f20c117dc12423395cd770818d0c4b80d66f6c5b47e4c37"
 }

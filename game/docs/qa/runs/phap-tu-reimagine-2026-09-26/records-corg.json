@@ -1,0 +1,40 @@
+{
+ "run": "phap-tu-reimagine-2026-09-26",
+ "reviewId": "REV-PTR-COR-G1",
+ "reviewer": "devin-b816d5f5ed28424f9e6d2777e244a0cd",
+ "phase": "CORRECTNESS",
+ "pin": "1a4ea837",
+ "verdict": "FINDINGS -- 1 Medium + 3 Low + 2 Nit",
+ "adjudication": [
+  {
+   "finding": "F-PTR-88 (COR F-1) / Medium",
+   "disposition": "FIXED @cf1655b6",
+   "verification": "GameManager.empowerment.test.ts fixture now learns linh_bao (way-commit parity with ritual learnSkill(starterBasicSkillId)); the legitimate pre-element starter mints +1 and GENERIC exclusion stays deliberately uncovered. 24 tests green"
+  },
+  {
+   "finding": "F-PTR-89 (COR F-2) / Low",
+   "disposition": "FIXED @cf1655b6",
+   "verification": "charge-init commit block now consumes routed.outcome.blocked: stamps declared.castBlocked and un-arms pendingChargedSkillId/chargingTurnsRemaining (latent; unreachable today)"
+  },
+  {
+   "finding": "F-PTR-90 (COR F-3) / Low",
+   "disposition": "FIXED @cf1655b6",
+   "verification": "execution.theBurned capture gated on executionCommitsCast(execution) -- non-committing repeat/multicast execs no longer forward a stale pre-burn pool"
+  },
+  {
+   "finding": "COR F-4 / Low",
+   "disposition": "REJECTED_WITH_PROOF",
+   "verification": "D15: window markers sit in landed lanes -- plant attaches to the LANDED hit (miss/dodge skips lane); the doc_can ailmentChance roll is a separate ailment application inside the effect list, not the landed application D11 names"
+  },
+  {
+   "finding": "F-PTR-91 (COR F-5) / Nit",
+   "disposition": "FIXED (partial) @cf1655b6",
+   "verification": "registry pin added: constructor faults on empowerment+compositePool one-def (SkillDefinitionRegistry.test.ts)"
+  },
+  {
+   "finding": "F-PTR-92 (COR F-6) / Nit",
+   "disposition": "FIXED @cf1655b6",
+   "verification": "PhapTuTrangBuffs.ts:129 comment now reads once-per-window"
+  }
+ ]
+}
