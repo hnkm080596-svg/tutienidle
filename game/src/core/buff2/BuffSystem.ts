@@ -1014,6 +1014,7 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
     // Each marker INSTANCE feeds once per tick (inner `break` below);
     // two marker defs naming the same grown definitionId would each
     // feed -- multi-feed is authored-legal (only sinh_co is shipped).
+    let grownRemoved = false
     for (const marker of this.store.forTarget(instance.targetId)) {
       if (marker.instanceId === instance.instanceId) continue
       if (marker.sourceId !== instance.sourceId) continue
@@ -1029,6 +1030,11 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
         const growth = periodicGrowthPayloadOf(capability)
         if (growth === undefined) continue
         if (growth.definitionId !== instance.definitionId) continue
+        // The grown instance is detached: sibling markers stay alive
+        // (their feed never ran) but must not write on the removed
+        // object -- a feed there would resurrect-emit
+        // buff_stacks_changed (a removed instance emits nothing).
+        if (grownRemoved) break
         const stacksBefore = instance.stacks
         const stacksAfter = Math.max(
           0,
@@ -1038,15 +1044,15 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
         if (stacksAfter <= 0) {
           // commitStacks parity: a feed that drains the instance to zero
           // retires it (negative payloads stay authored-legal). The
-          // marker's own consume retire still applies -- then the
-          // instance is detached, so the tick stops here: a later
-          // marker feeding the removed object would resurrect-emit
-          // buff_stacks_changed (a removed instance emits nothing).
+          // marker's own consume retire still applies; the marker loop
+          // keeps running so remaining markers process/retire too --
+          // grownRemoved stops their writes on the detached instance.
           this.removeInstance(instance, 'consumed', lctx.events, lctx.rootActionId)
+          grownRemoved = true
           if (growth.consume === true) {
             this.removeInstance(marker, 'consumed', lctx.events, lctx.rootActionId)
           }
-          return
+          break // one periodic_growth feed per marker instance
         }
         if (stacksAfter !== stacksBefore) {
           lctx.events.emit({
