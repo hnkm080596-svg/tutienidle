@@ -30,6 +30,10 @@ import type { EntitySprite } from './combatTypes'
 const TRANSITION_DESTINATION: Partial<Record<CombatAnimationName, CombatAnimationName>> = {
   idle_to_standby: 'standby',
   standby_to_idle: 'idle',
+  // Authored attack clips are play-once fired from inside the standby state
+  // (a turn is always engaged when 'attack' fires) - return there, not to
+  // idle, or the sprite would drop out of its engaged loop mid-turn.
+  attack: 'standby',
 }
 
 /**

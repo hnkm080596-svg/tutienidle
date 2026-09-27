@@ -1,15 +1,15 @@
-// CombatPresentationCatalogue — what each combat entity's art actually IS.
+// CombatPresentationCatalogue - what each combat entity's art actually IS.
 //
-// Spec B §3.3/§4.4
+// Spec B sec.3.3/sec.4.4
 // (docs/superpowers/specs/2026-09-11-combat-animation-metadata-design.md).
 //
-// Hand-written TypeScript beside the profile, not a generated manifest — it
+// Hand-written TypeScript beside the profile, not a generated manifest - it
 // follows `PlayerVisualProfiles.ts`, which is already a reviewed catalogue and
 // already carries `combatSourceSize` and `NormalizedBodyAnchor`.
 //
-// The honest trade (§3.3): frame counts can drift from the art, because nothing
+// The honest trade (sec.3.3): frame counts can drift from the art, because nothing
 // here measures the file. `tests/architecture/atlasFramesExist.test.ts` exists
-// specifically to make that drift fail a test rather than a frame, and §7.1
+// specifically to make that drift fail a test rather than a frame, and sec.7.1
 // records what it cannot catch.
 //
 // ENTITY_ART_MODE (locked 2026-09-19): every entity declares BOTH forms -
@@ -26,6 +26,14 @@ import {
   resolveEnemyTextureKey,
   MORTAL_ENEMY_TEMPLATE_IDS,
 } from '@/game/support/EnemyArt'
+import {
+  ANIMATED_ENEMY_KEYS,
+  MONSTER_ART,
+  MONSTER_FRAME_SUFFIX,
+  MONSTER_ZERO_PAD,
+  resolveMonsterArtSlug,
+  type MonsterClipRange,
+} from '@/game/support/MonsterArt'
 import { ENTITY_ART_MODE } from './EntityArtMode'
 import {
   combatAnimationKey,
@@ -65,7 +73,7 @@ export const PLACEHOLDER_FRAME_HEIGHT = 350
  *
  * Checked against the atlas JSON by tests/architecture/artExtentDeclared.test.ts,
  * so regenerating the art with different margins fails a test rather than
- * silently resizing every character (Spec C §2.3).
+ * silently resizing every character (Spec C sec.2.3).
  */
 export const PLACEHOLDER_EXTENT_X = 0.28
 export const PLACEHOLDER_EXTENT_Y = 0.0943
@@ -208,6 +216,7 @@ export const REQUIRED_COMBAT_ANIMATION_NAMES = [
 
 export const COMBAT_ANIMATION_NAMES: readonly CombatAnimationName[] = [
   ...REQUIRED_COMBAT_ANIMATION_NAMES,
+  'attack',
   'idle_to_standby',
   'standby_to_idle',
   'cultivate',
@@ -255,7 +264,7 @@ function placeholderClips(entityKey: string): CombatAnimationCatalogue {
 
 /**
  * Peak bob, in SCREEN pixels. Small on purpose: this reads as breathing, not as
- * hovering. Not scaled by projection depth — see `IdleMotion.amplitudePx`.
+ * hovering. Not scaled by projection depth - see `IdleMotion.amplitudePx`.
  */
 export const ENEMY_IDLE_AMPLITUDE_PX = 6
 
@@ -312,7 +321,7 @@ function idleMotionFor(entityKey: string): IdleMotion {
 // ---------------------------------------------------------------------------
 
 /**
- * Fallback player entity key — same PNG as the mortal profile, different key.
+ * Fallback player entity key - same PNG as the mortal profile, different key.
  * Used when `combat-grid-view.ts` does not find the current profile's texture
  * loaded yet.
  *
@@ -329,9 +338,18 @@ export const FALLBACK_PLAYER_ENTITY_KEY = 'player-mortal'
  * EITHER mode).
  */
 function entityPresentation(
+  entityKey: string,
   staticArt: { texture: StaticEntityArt; idleMotion: IdleMotion },
   clips: CombatAnimationCatalogue,
 ): CombatEntityPresentation {
+  // Reskin amendment (enemy-art-wave1, 2026-09-28): entities in
+  // ANIMATED_ENEMY_KEYS emit their authored clip set regardless of the
+  // global mode. The mode stays the roster default; the set is the single
+  // enumeration of who overrides it, and the uniformity test pins both.
+  if (ANIMATED_ENEMY_KEYS.has(entityKey)) {
+    return { kind: 'animated', clips }
+  }
+
   return ENTITY_ART_MODE === 'animated'
     ? { kind: 'animated', clips }
     : { kind: 'static', texture: staticArt.texture, idleMotion: staticArt.idleMotion }
@@ -381,6 +399,58 @@ function buildCatalogue(): {
     },
     playerMortalCatalogue(FALLBACK_PLAYER_ENTITY_KEY),
   )
+
+  // Reskinned enemies (enemy-art-wave1) - authored NEWSPRITE atlases keyed
+  // by variant slug. standby shares the idle frame range (the dump has no
+  // standby art); attack is the optional authored clip; death is a real or
+  // packer-synthesized single frame. The variant's avatar.png doubles as
+  // its static fallback form so the dormant half of the contract stays real.
+  const monsterClip = (
+    entityKey: string,
+    name: CombatAnimationName,
+    range: MonsterClipRange,
+    frameRate: number,
+    repeat: number,
+    extent: ArtExtent,
+    sourceSize: { w: number; h: number },
+  ): AtlasClip => ({
+    key: combatAnimationKey(entityKey, name),
+    sheetKey: range.sheetKey,
+    sheetUrl: range.sheetUrl,
+    atlasUrl: range.atlasUrl,
+    framePrefix: range.framePrefix,
+    frameSuffix: MONSTER_FRAME_SUFFIX,
+    zeroPad: MONSTER_ZERO_PAD,
+    firstFrame: range.firstFrame,
+    lastFrame: range.lastFrame,
+    frameRate,
+    sourceSize: { ...sourceSize },
+    extent,
+    repeat,
+  })
+
+  const monsterCatalogue = (variant: (typeof MONSTER_ART)[string]): CombatAnimationCatalogue => ({
+    idle: monsterClip(variant.slug, 'idle', variant.clips.idle, 8, -1, variant.extent, variant.sourceSize),
+    // standby reuses the idle frames - no standby art exists in the dump.
+    standby: monsterClip(variant.slug, 'standby', variant.clips.idle, 8, -1, variant.extent, variant.sourceSize),
+    death: monsterClip(variant.slug, 'death', variant.clips.death, 8, 0, variant.extent, variant.sourceSize),
+    attack: variant.clips.attack
+      ? monsterClip(variant.slug, 'attack', variant.clips.attack, 8, 0, variant.extent, variant.sourceSize)
+      : undefined,
+  })
+
+  for (const variant of Object.values(MONSTER_ART)) {
+    register(
+      variant.slug,
+      {
+        textureKey: variant.avatarKey,
+        textureUrl: variant.avatarUrl,
+        sourceSize: { ...variant.avatarSize },
+        extent: UNTRIMMED_FULL_BOX_EXTENT,
+      },
+      monsterCatalogue(variant),
+    )
+  }
 
   // Enemies are still images plus a bob in 'static' mode, placeholder clips
   // in 'animated' mode until their sheets are drawn.
@@ -451,7 +521,7 @@ function buildCatalogue(): {
       continue
     }
 
-    entries.set(entityKey, entityPresentation(staticArt, clips))
+    entries.set(entityKey, entityPresentation(entityKey, staticArt, clips))
   }
 
   return { entries, animatedForms, staticForms }
@@ -533,6 +603,15 @@ export function placeholderEntityKeys(): readonly string[] {
  *    for an entity the catalogue knows
  */
 export function resolveCombatEntityKey(runtimeId: string): string {
+  // Reskin amendment (enemy-art-wave1): a mapped enemy resolves to its
+  // variant slug BEFORE the static texture lookup - the old PNG is the
+  // fallback for unmapped ids, never the skin of a reskinned one.
+  const reskinSlug = resolveMonsterArtSlug(runtimeId)
+
+  if (reskinSlug !== undefined && CATALOGUE.has(reskinSlug)) {
+    return reskinSlug
+  }
+
   const textureKey = resolveEnemyTextureKey(runtimeId)
 
   if (textureKey !== undefined) {

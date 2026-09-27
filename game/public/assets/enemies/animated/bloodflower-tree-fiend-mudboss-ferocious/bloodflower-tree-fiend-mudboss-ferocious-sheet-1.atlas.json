@@ -1,0 +1,615 @@
+{
+  "frames": {
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 580,
+        "h": 536
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 8,
+        "y": 28,
+        "w": 580,
+        "h": 536
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-002.png": {
+      "frame": {
+        "x": 604,
+        "y": 2,
+        "w": 579,
+        "h": 535
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 8,
+        "y": 29,
+        "w": 579,
+        "h": 535
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-003.png": {
+      "frame": {
+        "x": 1206,
+        "y": 2,
+        "w": 586,
+        "h": 540
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 14,
+        "y": 24,
+        "w": 586,
+        "h": 540
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-004.png": {
+      "frame": {
+        "x": 1808,
+        "y": 2,
+        "w": 589,
+        "h": 539
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 17,
+        "y": 24,
+        "w": 589,
+        "h": 539
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-005.png": {
+      "frame": {
+        "x": 2410,
+        "y": 2,
+        "w": 592,
+        "h": 542
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 22,
+        "y": 22,
+        "w": 592,
+        "h": 542
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-006.png": {
+      "frame": {
+        "x": 3012,
+        "y": 2,
+        "w": 594,
+        "h": 543
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 24,
+        "y": 21,
+        "w": 594,
+        "h": 543
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-007.png": {
+      "frame": {
+        "x": 2,
+        "y": 549,
+        "w": 596,
+        "h": 542
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 28,
+        "y": 21,
+        "w": 596,
+        "h": 542
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-008.png": {
+      "frame": {
+        "x": 604,
+        "y": 549,
+        "w": 595,
+        "h": 542
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 29,
+        "y": 21,
+        "w": 595,
+        "h": 542
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-009.png": {
+      "frame": {
+        "x": 1206,
+        "y": 549,
+        "w": 597,
+        "h": 543
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 21,
+        "w": 597,
+        "h": 543
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-010.png": {
+      "frame": {
+        "x": 1808,
+        "y": 549,
+        "w": 596,
+        "h": 543
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 25,
+        "y": 21,
+        "w": 596,
+        "h": 543
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-011.png": {
+      "frame": {
+        "x": 2410,
+        "y": 549,
+        "w": 594,
+        "h": 542
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 23,
+        "y": 22,
+        "w": 594,
+        "h": 542
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-012.png": {
+      "frame": {
+        "x": 3012,
+        "y": 549,
+        "w": 588,
+        "h": 540
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 16,
+        "y": 24,
+        "w": 588,
+        "h": 540
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-013.png": {
+      "frame": {
+        "x": 2,
+        "y": 1096,
+        "w": 582,
+        "h": 537
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 27,
+        "w": 582,
+        "h": 537
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-014.png": {
+      "frame": {
+        "x": 604,
+        "y": 1096,
+        "w": 579,
+        "h": 536
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 8,
+        "y": 28,
+        "w": 579,
+        "h": 536
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-015.png": {
+      "frame": {
+        "x": 1206,
+        "y": 1096,
+        "w": 590,
+        "h": 538
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 11,
+        "y": 26,
+        "w": 590,
+        "h": 538
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-016.png": {
+      "frame": {
+        "x": 1808,
+        "y": 1096,
+        "w": 589,
+        "h": 540
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 14,
+        "y": 24,
+        "w": 589,
+        "h": 540
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-017.png": {
+      "frame": {
+        "x": 2410,
+        "y": 1096,
+        "w": 591,
+        "h": 542
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 19,
+        "y": 22,
+        "w": 591,
+        "h": 542
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-018.png": {
+      "frame": {
+        "x": 3012,
+        "y": 1096,
+        "w": 593,
+        "h": 542
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 22,
+        "y": 22,
+        "w": 593,
+        "h": 542
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-019.png": {
+      "frame": {
+        "x": 2,
+        "y": 1643,
+        "w": 596,
+        "h": 543
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 25,
+        "y": 21,
+        "w": 596,
+        "h": 543
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-020.png": {
+      "frame": {
+        "x": 604,
+        "y": 1643,
+        "w": 598,
+        "h": 543
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 26,
+        "y": 21,
+        "w": 598,
+        "h": 543
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-021.png": {
+      "frame": {
+        "x": 1206,
+        "y": 1643,
+        "w": 595,
+        "h": 543
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 29,
+        "y": 21,
+        "w": 595,
+        "h": 543
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-022.png": {
+      "frame": {
+        "x": 1808,
+        "y": 1643,
+        "w": 598,
+        "h": 543
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 26,
+        "y": 21,
+        "w": 598,
+        "h": 543
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-023.png": {
+      "frame": {
+        "x": 2410,
+        "y": 1643,
+        "w": 597,
+        "h": 543
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 24,
+        "y": 21,
+        "w": 597,
+        "h": 543
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-024.png": {
+      "frame": {
+        "x": 3012,
+        "y": 1643,
+        "w": 594,
+        "h": 541
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 16,
+        "y": 23,
+        "w": 594,
+        "h": 541
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-idle-025.png": {
+      "frame": {
+        "x": 2,
+        "y": 2190,
+        "w": 591,
+        "h": 538
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 11,
+        "y": 26,
+        "w": 591,
+        "h": 538
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-attack-001.png": {
+      "frame": {
+        "x": 604,
+        "y": 2190,
+        "w": 579,
+        "h": 536
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 8,
+        "y": 28,
+        "w": 579,
+        "h": 536
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-attack-002.png": {
+      "frame": {
+        "x": 1206,
+        "y": 2190,
+        "w": 579,
+        "h": 536
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 8,
+        "y": 28,
+        "w": 579,
+        "h": 536
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-death-001.png": {
+      "frame": {
+        "x": 1808,
+        "y": 2190,
+        "w": 579,
+        "h": 536
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 8,
+        "y": 28,
+        "w": 579,
+        "h": 536
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-skill-001.png": {
+      "frame": {
+        "x": 2410,
+        "y": 2190,
+        "w": 579,
+        "h": 536
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 8,
+        "y": 28,
+        "w": 579,
+        "h": 536
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious-skill-002.png": {
+      "frame": {
+        "x": 3012,
+        "y": 2190,
+        "w": 579,
+        "h": 536
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 8,
+        "y": 28,
+        "w": 579,
+        "h": 536
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-enemy-art.mjs",
+    "version": "1.0",
+    "image": "bloodflower-tree-fiend-mudboss-ferocious-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3612,
+      "h": 2735
+    },
+    "scale": "1"
+  }
+}

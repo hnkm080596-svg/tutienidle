@@ -39,6 +39,12 @@ export class CombatActionFeedback {
       // split died.
       scene.playHorizontalImpulse(attacker, dx, ATTACK_LUNGE_DURATION_MS)
 
+      // Amendment (enemy-art-wave1, 2026-09-28): entities WITH an authored
+      // attack clip play it alongside the lunge - a play-once clip that
+      // returns to standby. No-op for static entities and clip-less
+      // catalogues, so the lunge remains the only attack tell there.
+      scene.playCombatAnimation(attacker, event.sourceId, 'attack')
+
       // Action Playback Task 7 (2026-09-05) / R5 (AR-20) - impact frame tai midpoint
       // lunge: damage ap dung luc don "trung" tren man hinh. Token bat tai spawn.
       const token = scene.gameManagerRef?.getPendingPlaybackToken() ?? ''

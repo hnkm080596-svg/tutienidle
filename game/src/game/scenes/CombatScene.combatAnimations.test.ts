@@ -124,7 +124,7 @@ describe('CombatScene â€” entityAnimationKeyPrefix()', () => {
   it('enemy trong batch Mortal â†’ resolveEnemyTextureKey()', () => {
     const scene = createScene()
 
-    expect(scene.entityAnimationKeyPrefix('mortal_wild_boar_ab12')).toBe('mortal-wild-boar-v1')
+    expect(scene.entityAnimationKeyPrefix('mortal_savage_tiger_ab12')).toBe('mortal-savage-tiger-v1')
   })
 
   it('enemy ngoÃ i batch â†’ shared placeholder entity key (uniformity 2026-09-19 — never undefined)', () => {
@@ -199,7 +199,7 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     scene.anims = { exists: () => true }
 
     // KhÃ´ng throw dÃ¹ rect khÃ´ng cÃ³ .play â€” guard kind !== 'sprite' cháº·n trÆ°á»›c.
-    expect(() => scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'idle_to_standby')).not.toThrow()
+    expect(() => scene.playCombatAnimation(sprite, 'mortal_savage_tiger_1', 'idle_to_standby')).not.toThrow()
   })
 
   it('actorId resolves to the STATIC placeholder entity (enemy ngoÃ i batch) â†’ khÃ´ng play', () => {
@@ -248,9 +248,9 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     const sprite = makeSprite('sprite')
 
     scene.anims = { exists: () => true }
-    scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'idle_to_standby')
-    scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'death')
-    scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'standby_to_idle')
+    scene.playCombatAnimation(sprite, 'mortal_savage_tiger_1', 'idle_to_standby')
+    scene.playCombatAnimation(sprite, 'mortal_savage_tiger_1', 'death')
+    scene.playCombatAnimation(sprite, 'mortal_savage_tiger_1', 'standby_to_idle')
 
     expect((sprite.rect as ReturnType<typeof fakeGameSprite>).playCalls).toEqual([])
   })
@@ -258,16 +258,16 @@ describe('CombatScene â€” playCombatAnimation()', () => {
   it('promoting that same enemy to animated makes it play — one data edit, no playback code (§9 criterion 7)', () => {
     // This is the criterion that protects §3.2's reversibility. The ONLY
     // difference from the test above is the catalogue entry.
-    PROMOTED.set('mortal-wild-boar-v1', 'animated')
+    PROMOTED.set('mortal-savage-tiger-v1', 'animated')
 
     const scene = createScene()
     const sprite = makeSprite('sprite')
 
     scene.anims = { exists: () => true }
-    scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'idle_to_standby')
+    scene.playCombatAnimation(sprite, 'mortal_savage_tiger_1', 'idle_to_standby')
 
     expect((sprite.rect as ReturnType<typeof fakeGameSprite>).playCalls[0]).toBe(
-      combatAnimationKey('mortal-wild-boar-v1', 'idle_to_standby'),
+      combatAnimationKey('mortal-savage-tiger-v1', 'idle_to_standby'),
     )
   })
 
@@ -403,7 +403,7 @@ describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
   })
 
   it('an ANIMATED enemy (promoted, §9 criterion 7) plays -death at once - the clip is the body visual: no fall/fade tween, destroy waits for ANIMATION_COMPLETE only', () => {
-    PROMOTED.set('mortal-wild-boar-v1', 'animated')
+    PROMOTED.set('mortal-savage-tiger-v1', 'animated')
 
     const scene = createScene()
     const { tweens, tweenConfigs } = stubTweensCapturingOnComplete()
@@ -414,12 +414,12 @@ describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
     const sprite = makeSprite('sprite')
     const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
 
-    scene.sprites.set('mortal_wild_boar_1', sprite)
+    scene.sprites.set('mortal_savage_tiger_1', sprite)
     scene._gridView = { destroyEntitySprite: vi.fn() }
 
-    scene.beginDeathSequence(sprite, 'mortal_wild_boar_1')
+    scene.beginDeathSequence(sprite, 'mortal_savage_tiger_1')
 
-    expect(gameSprite.playCalls).toEqual([combatAnimationKey('mortal-wild-boar-v1', 'death')])
+    expect(gameSprite.playCalls).toEqual([combatAnimationKey('mortal-savage-tiger-v1', 'death')])
 
     // The generic rotate/fade tween must NOT run on the body while a real
     // clip plays - it would rotate the sprite mid-clip and hide the death
@@ -427,18 +427,18 @@ describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
     // health bar), which carries no onComplete gate.
     expect(tweenConfigs.every((config) => config.onComplete === undefined)).toBe(true)
     expect(scene._gridView.destroyEntitySprite).not.toHaveBeenCalled()
-    expect(scene.sprites.has('mortal_wild_boar_1')).toBe(true)
+    expect(scene.sprites.has('mortal_savage_tiger_1')).toBe(true)
 
     // Destroy is gated by ANIMATION_COMPLETE alone.
-    gameSprite.emit('animationcomplete', { key: combatAnimationKey('mortal-wild-boar-v1', 'death') })
+    gameSprite.emit('animationcomplete', { key: combatAnimationKey('mortal-savage-tiger-v1', 'death') })
 
     expect(scene._gridView.destroyEntitySprite).toHaveBeenCalledTimes(1)
-    expect(scene.sprites.has('mortal_wild_boar_1')).toBe(false)
-    expect(scene.dyingIds.has('mortal_wild_boar_1')).toBe(false)
+    expect(scene.sprites.has('mortal_savage_tiger_1')).toBe(false)
+    expect(scene.dyingIds.has('mortal_savage_tiger_1')).toBe(false)
   })
 
   it('animationcomplete cá»§a Má»˜T clip khÃ¡c (key khÃ´ng khá»›p) khÃ´ng kÃ­ch hoáº¡t finalize', () => {
-    PROMOTED.set('mortal-wild-boar-v1', 'animated')
+    PROMOTED.set('mortal-savage-tiger-v1', 'animated')
 
     const scene = createScene()
     const { tweens } = stubTweensCapturingOnComplete()
@@ -449,10 +449,10 @@ describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
     const sprite = makeSprite('sprite')
     const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
 
-    scene.sprites.set('mortal_wild_boar_1', sprite)
+    scene.sprites.set('mortal_savage_tiger_1', sprite)
     scene._gridView = { destroyEntitySprite: vi.fn() }
 
-    scene.beginDeathSequence(sprite, 'mortal_wild_boar_1')
+    scene.beginDeathSequence(sprite, 'mortal_savage_tiger_1')
 
     gameSprite.emit('animationcomplete', { key: 'some-other-clip' })
 
@@ -534,8 +534,8 @@ describe('CombatScene.getOrCreateSprite() â€” id tÃ¡i xuáº¥t hiá»‡
     const oldSprite = makeSprite('sprite')
     const newSprite = makeSprite('sprite')
 
-    scene.sprites.set('mortal_wild_boar_1', oldSprite)
-    scene.dyingIds.add('mortal_wild_boar_1')
+    scene.sprites.set('mortal_savage_tiger_1', oldSprite)
+    scene.dyingIds.add('mortal_savage_tiger_1')
 
     const destroyEntitySprite = vi.fn((sprite: unknown) => {
       if (sprite === oldSprite) {
@@ -546,22 +546,22 @@ describe('CombatScene.getOrCreateSprite() â€” id tÃ¡i xuáº¥t hiá»‡
     scene._gridView = {
       destroyEntitySprite,
       getOrCreateSprite: vi.fn(() => {
-        scene.sprites.set('mortal_wild_boar_1', newSprite)
+        scene.sprites.set('mortal_savage_tiger_1', newSprite)
         return newSprite
       }),
     }
 
-    const result = scene.getOrCreateSprite('mortal_wild_boar_1', 0, 'Boar', 4)
+    const result = scene.getOrCreateSprite('mortal_savage_tiger_1', 0, 'Boar', 4)
 
     // Sprite cÅ© bá»‹ dá»n NGAY (khÃ´ng chá» animation/tween nÃ o) â€” khÃ´ng rÆ¡i vÃ o
     // beginDeathSequence() láº§n hai.
     expect(destroyEntitySprite).toHaveBeenCalledWith(oldSprite)
     expect((oldSprite.rect as ReturnType<typeof fakeGameSprite>).destroyed).toBe(true)
-    expect(scene.dyingIds.has('mortal_wild_boar_1')).toBe(false)
+    expect(scene.dyingIds.has('mortal_savage_tiger_1')).toBe(false)
 
     // getOrCreateSprite() tháº­t (gridView) Ä‘Æ°á»£c gá»i Ä‘á»ƒ táº¡o sprite Má»šI.
     expect(result).toBe(newSprite)
-    expect(scene.sprites.get('mortal_wild_boar_1')).toBe(newSprite)
+    expect(scene.sprites.get('mortal_savage_tiger_1')).toBe(newSprite)
   })
 
   it('id KHÃ”NG trong dyingIds â†’ khÃ´ng Ä‘á»¥ng gÃ¬ tá»›i forceFinalizeDeath, Ä‘i tháº³ng qua gridView', () => {

@@ -14,6 +14,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
+import { ANIMATED_ENEMY_KEYS } from '@/game/support/MonsterArt'
 import {
   animatedArtFormFor,
   combatPresentationEntityKeys,
@@ -25,9 +26,22 @@ import {
 } from '@/presentation/art/CombatPresentationCatalogue'
 
 describe('ENTITY_ART_MODE uniformity', () => {
-  it('every registered presentation kind matches ENTITY_ART_MODE', () => {
+  it('every registered presentation kind matches ENTITY_ART_MODE, except the enumerated reskin set', () => {
+    // enemy-art-wave1 amendment (2026-09-28): ANIMATED_ENEMY_KEYS is the ONE
+    // enumeration of entities allowed to emit 'animated' under 'static' mode.
+    // Nothing else may drift.
     for (const key of combatPresentationEntityKeys()) {
-      expect(presentationFor(key)?.kind, `entity '${key}'`).toBe(ENTITY_ART_MODE)
+      const expected = ANIMATED_ENEMY_KEYS.has(key) ? 'animated' : ENTITY_ART_MODE
+      expect(presentationFor(key)?.kind, `entity '${key}'`).toBe(expected)
+    }
+  })
+
+  it('every reskin-set entity actually emits animated - a dead override is a bug', () => {
+    for (const key of ANIMATED_ENEMY_KEYS) {
+      expect(
+        presentationFor(key)?.kind,
+        `reskinned enemy '${key}' must be animated`,
+      ).toBe('animated')
     }
   })
 

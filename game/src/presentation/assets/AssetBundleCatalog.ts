@@ -36,6 +36,7 @@ import {
   enemyTextureUrl,
   resolveEnemyTextureKey,
 } from '@/game/support/EnemyArt'
+import { MONSTER_ART } from '@/game/support/MonsterArt'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import {
   animatedCombatEntities,
@@ -212,6 +213,11 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
     }
   }
 
+  // Reskinned enemies (enemy-art-wave1): avatar PNG is the static fallback.
+  for (const variant of Object.values(MONSTER_ART)) {
+    addImage(variant.avatarKey, variant.avatarUrl)
+  }
+
   // Player profiles combat & cultivate textures
   for (const profile of Object.values(PLAYER_VISUAL_PROFILES)) {
     addImage(profile.combatTextureKey, profile.combatTextureUrl)
@@ -220,7 +226,7 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
     }
   }
 
-  // Character animation atlases (Spec B §3.1) — one entry per distinct sheet,
+  // Character animation atlases (Spec B sec.3.1) - one entry per distinct sheet,
   // however many entities and clips share it.
   for (const { clips } of animatedCombatEntities()) {
     for (const clip of Object.values(clips)) {

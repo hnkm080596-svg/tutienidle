@@ -49,12 +49,12 @@ const MAX_SHEET = 4096
 const ZERO_PAD = 3
 const FRAME_SUFFIX = '.png'
 
-// Ferocious recipe: warm shift + darker + slightly more saturated — reads
+// Ferocious recipe: warm shift + darker + slightly more saturated - reads
 // "same species, maddened". Accents still guarded.
 const FEROCIOUS = { hueShift: -25, valueScale: 0.82, satScale: 1.15 }
 
 // ---------------------------------------------------------------------------
-// Emission table — the ONLY place species→variant wiring lives.
+// Emission table - the ONLY place species->variant wiring lives.
 // `src` is relative to SRC_ROOT. `recolor` shifts hue (deg, 0-360) and scales
 // value; accents are protected by accentGuard.
 // ---------------------------------------------------------------------------
@@ -73,7 +73,7 @@ const EMISSIONS = [
   { out: 'blood-locust-elder', src: 'boss/region1-boss-blood-locust-elder' },
   // --- reserved (packed, not wired in wave 1) ---
   { out: 'wugu-demon-king', src: 'boss/trial-tower-boss-wugu-demon-king', scale: 0.6 },
-  // --- boss recolors: higher-realm art → lower-realm boss-eligible ---
+  // --- boss recolors: higher-realm art -> lower-realm boss-eligible ---
   {
     out: 'bloodflower-tree-fiend-mudboss',
     src: 'forest-region/bloodflower-tree-fiend',
@@ -92,7 +92,19 @@ const EMISSIONS = [
   { out: 'whiteshell-venom-beetle-ferocious', src: 'monster-library/09-whiteshell-venom-beetle', recolor: FEROCIOUS },
   { out: 'drybranch-treant-ferocious', src: 'forest-region/drybranch-treant', recolor: FEROCIOUS },
   { out: 'spore-flower-spirit-ferocious', src: 'forest-region/spore-flower-spirit', recolor: FEROCIOUS },
-  { out: 'streamgrudge-nymph-ferocious', src: 'monster-library/33-streamgrudge-nymph', recolor: FEROCIOUS },
+  // NOTE: no 'streamgrudge-nymph-ferocious' - the ferocious flood-dragon
+  // whelp is the chapter boss and wears blood-locust-elder art instead.
+  // ferocious versions of the two boss recolors (compounded recipes)
+  {
+    out: 'bloodflower-tree-fiend-mudboss-ferocious',
+    src: 'forest-region/bloodflower-tree-fiend',
+    recolor: { hueShift: 210, valueScale: 0.68, satScale: 1.1 },
+  },
+  {
+    out: 'streamscale-forkman-floodserpent-ferocious',
+    src: 'monster-library/25-streamscale-forkman',
+    recolor: { hueShift: 150, valueScale: 0.72, satScale: 1.1 },
+  },
 ]
 
 const CLIP_ORDER = ['idle', 'attack', 'death', 'skill', 'enrage', 'stomp', 'bloodwood-devour', 'bite']
@@ -120,7 +132,7 @@ function* walk(dir) {
 }
 
 function stripVersionSuffix(file) {
-  // dump artifact: `foo.png.png` → `foo.png`
+  // dump artifact: `foo.png.png` -> `foo.png`
   return file.endsWith('.png.png') ? file.slice(0, -4) : file
 }
 
@@ -309,7 +321,7 @@ async function emitVariant(emission) {
     h: tallest.h / sourceSize.h,
   }
 
-  // Uniform-grid pack into sheets ≤ MAX_SHEET (same scheme as
+  // Uniform-grid pack into sheets <= MAX_SHEET (same scheme as
   // pack-mortal-combat-art). A clip never splits across sheets: if the clip's
   // frames exceed the cells left in the current sheet, a fresh sheet starts.
   const cellW = Math.max(...frames.map((f) => f.bounds.w)) + PADDING * 2
@@ -364,7 +376,7 @@ async function emitVariant(emission) {
     const png = `${emission.out}-sheet-${i + 1}.png`
     const json = `${emission.out}-sheet-${i + 1}.atlas.json`
     if (!DRY_RUN) {
-      // crop the uniform-grid canvas to the rows actually used — a 4096x4096
+      // crop the uniform-grid canvas to the rows actually used - a 4096x4096
       // RGBA buffer with 10 frames wastes ~60MB GPU texture memory.
       const usedRows = Math.max(1, Math.ceil(s.used / cols))
       const finalW = cols * cellW
@@ -386,7 +398,10 @@ async function emitVariant(emission) {
   // Avatar
   const avatarSrc = discoverAvatar(speciesDir)
   let avatarMode = 'none'
+  let avatarSize = null
   if (avatarSrc) {
+    const img = await loadImage(avatarSrc)
+    avatarSize = { w: img.width, h: img.height }
     if (!DRY_RUN) cpSync(avatarSrc, path.join(outDir, 'avatar.png'))
     avatarMode = 'copied'
   } else {
@@ -400,6 +415,7 @@ async function emitVariant(emission) {
     cx.drawImage(idle1.canvas, Math.max(0, sx), Math.max(0, sy), Math.min(side, sourceSize.w - Math.max(0, sx)), Math.min(side, sourceSize.h - Math.max(0, sy)), 0, 0, sq, sq)
     if (!DRY_RUN) writeFileSync(path.join(outDir, 'avatar.png'), c.toBuffer('image/png'))
     avatarMode = 'derived'
+    avatarSize = { w: sq, h: sq }
   }
 
   // SFX stage (x1 wired later; all variants copied)
@@ -415,7 +431,7 @@ async function emitVariant(emission) {
     }
   }
 
-  // Clip descriptors — what CombatAnimationCatalogue needs per clip.
+  // Clip descriptors - what CombatAnimationCatalogue needs per clip.
   const clipReport = {}
   for (const clip of orderedClips) {
     const list = clips.get(clip)
@@ -445,6 +461,7 @@ async function emitVariant(emission) {
     sheets: sheets.filter((s) => s.canvas).length,
     clips: clipReport,
     avatar: avatarMode,
+    avatarSize,
     sfx,
   }
 }

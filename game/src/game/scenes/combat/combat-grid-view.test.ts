@@ -87,7 +87,7 @@ describe('CombatGridView.getOrCreateSprite() — Task 9.5 boss sizeMultiplier', 
   it('isBoss: true → sizeMultiplier = BOSS_DISPLAY_SCALE_MULTIPLIER (×4)', () => {
     const { gridView } = createFakeScene()
 
-    const sprite = gridView.getOrCreateSprite('mortal_wild_boar_boss', 0xd94a4a, 'Boss Boar', 4, {
+    const sprite = gridView.getOrCreateSprite('mortal_savage_tiger_boss', 0xd94a4a, 'Boss Boar', 4, {
       currentHp: 100,
       maxHp: 100,
       isBoss: true,
@@ -100,7 +100,7 @@ describe('CombatGridView.getOrCreateSprite() — Task 9.5 boss sizeMultiplier', 
   it('isBoss: false → sizeMultiplier = ENEMY_DISPLAY_SCALE_MULTIPLIER (×2)', () => {
     const { gridView } = createFakeScene()
 
-    const sprite = gridView.getOrCreateSprite('mortal_wild_boar_regular', 0xd94a4a, 'Boar', 4, {
+    const sprite = gridView.getOrCreateSprite('mortal_savage_tiger_regular', 0xd94a4a, 'Boar', 4, {
       currentHp: 100,
       maxHp: 100,
       isBoss: false,
@@ -113,7 +113,7 @@ describe('CombatGridView.getOrCreateSprite() — Task 9.5 boss sizeMultiplier', 
   it('health không truyền (undefined) → mặc định ENEMY_DISPLAY_SCALE_MULTIPLIER như enemy thường', () => {
     const { gridView } = createFakeScene()
 
-    const sprite = gridView.getOrCreateSprite('mortal_wild_boar_no_health', 0xd94a4a, 'Boar', 4)
+    const sprite = gridView.getOrCreateSprite('mortal_savage_tiger_no_health', 0xd94a4a, 'Boar', 4)
 
     expect(sprite.sizeMultiplier).toBe(ENEMY_DISPLAY_SCALE_MULTIPLIER)
   })
@@ -280,7 +280,7 @@ describe('CombatGridView — idle motion for static entities', () => {
   it('a static enemy starts a looping, phase-delayed bob on creation', () => {
     const { scene, gridView } = createFakeScene()
 
-    const sprite = gridView.getOrCreateSprite('mortal_wild_boar_1', 0xd94a4a, 'Boar', 4, {
+    const sprite = gridView.getOrCreateSprite('mortal_savage_tiger_1', 0xd94a4a, 'Boar', 4, {
       currentHp: 10,
       maxHp: 10,
       isBoss: false,
@@ -307,12 +307,12 @@ describe('CombatGridView — idle motion for static entities', () => {
     // breathe as a single organism. The delay comes from the runtime id.
     const { scene, gridView } = createFakeScene()
 
-    gridView.getOrCreateSprite('mortal_wild_boar_1', 0xd94a4a, 'A', 4, {
+    gridView.getOrCreateSprite('mortal_savage_tiger_1', 0xd94a4a, 'A', 4, {
       currentHp: 10,
       maxHp: 10,
       isBoss: false,
     })
-    gridView.getOrCreateSprite('mortal_wild_boar_2', 0xd94a4a, 'B', 4, {
+    gridView.getOrCreateSprite('mortal_savage_tiger_2', 0xd94a4a, 'B', 4, {
       currentHp: 10,
       maxHp: 10,
       isBoss: false,
@@ -331,7 +331,7 @@ describe('CombatGridView — idle motion for static entities', () => {
     scene.isPerspective = true
     scene.projection = fakeProjection()
 
-    const sprite = gridView.getOrCreateSprite('mortal_wild_boar_1', 0xd94a4a, 'Boar', 4, {
+    const sprite = gridView.getOrCreateSprite('mortal_savage_tiger_1', 0xd94a4a, 'Boar', 4, {
       currentHp: 10,
       maxHp: 10,
       isBoss: false,
@@ -378,7 +378,7 @@ describe('CombatGridView — idle motion for static entities', () => {
   it('destroying a sprite kills its bob, which outlives the GameObject otherwise', () => {
     const { scene, gridView } = createFakeScene()
 
-    const sprite = gridView.getOrCreateSprite('mortal_wild_boar_1', 0xd94a4a, 'Boar', 4, {
+    const sprite = gridView.getOrCreateSprite('mortal_savage_tiger_1', 0xd94a4a, 'Boar', 4, {
       currentHp: 10,
       maxHp: 10,
       isBoss: false,
@@ -411,7 +411,7 @@ describe('CombatGridView — size is the character, not the box (Spec C §3.2)',
   it('trimmed art gets a BIGGER box so the character lands at the same height', () => {
     const { gridView } = perspectiveHost()
 
-    const untrimmed = gridView.getOrCreateSprite('mortal_wild_boar_1', 0xd94a4a, 'Boar', 4, {
+    const untrimmed = gridView.getOrCreateSprite('mortal_savage_tiger_1', 0xd94a4a, 'Boar', 4, {
       currentHp: 10,
       maxHp: 10,
       isBoss: false,
