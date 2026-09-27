@@ -1,0 +1,26 @@
+{
+  "surfaces": [
+    "asset-pack-pipeline (pack-enemy-art.mjs)",
+    "reskin-registry (MonsterArt.ts id mapping + metadata)",
+    "presentation-contract (CombatAnimationCatalogue optional attack clip, ANIMATED_ENEMY_KEYS per-entity override)",
+    "asset-loading (CombatPreload / AssetBundleCatalog enumeration)",
+    "combat-lifecycle (sprite create/idle/attack/death/destroy, re-entry, shutdown)",
+    "display-anchoring (sourceSize/extent crop, origin (0.5,1), health bars)",
+    "test-oracles (enemyArtReskin manifest parity, artModeUniformity exception set, e2e capture)"
+  ],
+  "attacks": [
+    "runtime id '<templateId>_<uuid>' misses prefix match -> wrong art or placeholder for mapped species",
+    "boss/ferocious runtime ids resolve to base variant instead of recolored/boss art",
+    "ANIMATED_ENEMY_KEYS drift: entity marked animated but catalogue emits static, or vice versa",
+    "attack clip absent -> playCombatAnimation falls to standby destination and snaps a non-engaged entity",
+    "second CombatScene.create re-registers same anim keys (duplicate registration crash)",
+    "scene shutdown or id-reuse mid-death-clip: stale ANIMATION_COMPLETE destroys replacement sprite",
+    "atlas texture fails to load -> sprite falls back wrongly or crashes on missing frames",
+    "packer emits clip spanning sheets -> registry sheet-1 assumption yields empty frames",
+    "feet anchoring: sourceSize crop vs authored box mismatch -> sprites float/sink vs ground line",
+    "registry vs manifest drift (frame ranges, extent, avatarSize, sheet names) silently stale",
+    "reskinned template id still loads old PNG / double texture present",
+    "reserved wugu assets enumerated into combat bundle despite no wiring",
+    "sibling check: another enemy-list enumeration (panel, codex, spawn) bypasses reskin map"
+  ]
+}

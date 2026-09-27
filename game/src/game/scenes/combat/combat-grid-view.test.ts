@@ -14,6 +14,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { CombatGridView } from './combat-grid-view'
 import { BOSS_DISPLAY_SCALE_MULTIPLIER, ENEMY_DISPLAY_SCALE_MULTIPLIER } from './combatConstants'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
+import { MONSTER_ART } from '@/game/support/MonsterArt'
 import type { CombatGridViewHost } from './CombatGridViewHost'
 
 /**
@@ -54,7 +55,7 @@ function createFakeScene() {
     playerProfile: { combatTextureKey: 'player-mortal-ink-sword-concept-v2' },
     add: {
       text: () => chainable(),
-      sprite: () => chainable(),
+      sprite: vi.fn(() => chainable()),
       rectangle: () => chainable(),
       ellipse: () => chainable(),
     },
@@ -170,6 +171,43 @@ describe('CombatGridView.getOrCreateSprite() — host.fallbackSpriteTextureKey()
     scene.textures = { exists: () => false }
 
     const sprite = gridView.getOrCreateSprite('some_enemy_outside_mortal_batch', 0xd94a4a, 'Test', 0, {
+      currentHp: 10,
+      maxHp: 10,
+      isBoss: false,
+    })
+
+    expect(sprite.kind).toBe('rect')
+  })
+
+  it('reskinned enemy with a MISSING atlas still draws its avatar PNG (F-EAW-09) - never falls straight to Rectangle', () => {
+    const { scene, gridView } = createFakeScene()
+
+    // mortal_wild_boar_* resolves to tusked-mountain-boar (animated). Only
+    // the avatar texture reports loaded - the atlas sheet does not.
+    const avatarKey = MONSTER_ART['tusked-mountain-boar']?.avatarKey
+
+    expect(avatarKey).toBeDefined()
+
+    scene.textures = { exists: (key: string) => key === avatarKey }
+
+    const sprite = gridView.getOrCreateSprite('mortal_wild_boar_9f2c', 0xd94a4a, 'Boar', 0, {
+      currentHp: 10,
+      maxHp: 10,
+      isBoss: false,
+    })
+
+    expect(sprite.kind).toBe('sprite')
+
+    const spriteFactory = (scene.add as { sprite: ReturnType<typeof vi.fn> }).sprite
+    expect(spriteFactory.mock.calls[0]?.[2]).toBe(avatarKey)
+  })
+
+  it('reskinned enemy with BOTH atlas and avatar missing -> Rectangle double-fallback (same as any unloaded art)', () => {
+    const { scene, gridView } = createFakeScene()
+
+    scene.textures = { exists: () => false }
+
+    const sprite = gridView.getOrCreateSprite('mortal_wild_boar_9f2c', 0xd94a4a, 'Boar', 0, {
       currentHp: 10,
       maxHp: 10,
       isBoss: false,

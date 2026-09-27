@@ -12,6 +12,7 @@ import {
   atlasFrameName,
   presentationFor,
   resolveCombatEntityKey,
+  staticArtFormFor,
 } from '@/presentation/art/CombatPresentationCatalogue'
 import { resolveEntityDisplaySize } from '@/presentation/geometry/combatEntityScale'
 import { DEPTH_ENTITY_SHADOW, DEPTH_OVERLAY_UI, entitySpriteDepth } from '@/game/support/BattleLayers'
@@ -507,18 +508,49 @@ export class CombatGridView {
 
     // What the sprite draws: a static entity renders its PNG; an animated
     // entity renders the first frame of its idle sheet.
-    const drawKey =
+    let drawKey =
       presentation?.kind === 'static'
         ? presentation.texture.textureKey
         : presentation?.kind === 'animated'
           ? presentation.clips.idle.sheetKey
           : undefined
-    const drawFrame =
+    let drawFrame =
       presentation?.kind === 'animated'
         ? atlasFrameName(presentation.clips.idle, presentation.clips.idle.firstFrame)
         : undefined
+    let drawSourceSize =
+      presentation?.kind === 'static'
+        ? presentation.texture.sourceSize
+        : presentation?.kind === 'animated'
+          ? presentation.clips.idle.sourceSize
+          : undefined
+    let drawExtent =
+      presentation?.kind === 'static'
+        ? presentation.texture.extent
+        : presentation?.kind === 'animated'
+          ? presentation.clips.idle.extent
+          : undefined
 
-    if (drawKey && presentation && this.host.textures.exists(drawKey)) {
+    // Atlas-miss fallback (enemy-art-wave1, F-EAW-09): an animated reskin
+    // whose sheet failed to load draws its static form (the avatar PNG the
+    // preload still queues) instead of dropping straight to the Rectangle
+    // double-fallback.
+    if (
+      drawKey &&
+      presentation?.kind === 'animated' &&
+      !this.host.textures.exists(drawKey)
+    ) {
+      const staticForm = staticArtFormFor(enemyEntityKey)
+
+      if (staticForm && this.host.textures.exists(staticForm.texture.textureKey)) {
+        drawKey = staticForm.texture.textureKey
+        drawFrame = undefined
+        drawSourceSize = staticForm.texture.sourceSize
+        drawExtent = staticForm.texture.extent
+      }
+    }
+
+    if (drawKey && presentation && drawSourceSize && drawExtent && this.host.textures.exists(drawKey)) {
       const gameSprite = this.host.add.sprite(0, 0, drawKey, drawFrame)
 
       this.host.physics.add.existing(gameSprite)
@@ -559,11 +591,8 @@ export class CombatGridView {
         color,
         offsetX: 0,
         row,
-        sourceSize:
-          presentation.kind === 'static'
-            ? { ...presentation.texture.sourceSize }
-            : { ...presentation.clips.idle.sourceSize },
-        extent: artExtentFor(enemyEntityKey),
+        sourceSize: { ...drawSourceSize },
+        extent: drawExtent,
         // Enemy art x2; Boss Ã—2 quy táº¯c enemy thÆ°á»ng (2026-09-05) â€” khÃ´ng
         // cÃ²n dÃ¹ng CÃ™NG multiplier nhÆ° trÆ°á»›c (xem
         // CombatScene.enemyScale.test.ts). BÃ³ng ellipse dÆ°á»›i chÃ¢n nhÃ¢n

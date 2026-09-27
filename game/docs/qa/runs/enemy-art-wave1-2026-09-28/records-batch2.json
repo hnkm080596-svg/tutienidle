@@ -1,0 +1,842 @@
+{
+ "records": [
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-RESKIN-RESOLVE-B",
+    "invariantId": "INV-RESKIN-RESOLVE",
+    "surface": "B",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-FOCUSED"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-RESKIN-RESOLVE-D",
+    "invariantId": "INV-RESKIN-RESOLVE",
+    "surface": "D",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-P4-QUICK"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-RESKIN-RESOLVE-G",
+    "invariantId": "INV-RESKIN-RESOLVE",
+    "surface": "G",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-E2E-IDLE"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-ANIMATED-OVERRIDE-B",
+    "invariantId": "INV-ANIMATED-OVERRIDE",
+    "surface": "B",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-FOCUSED"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-ANIMATED-OVERRIDE-D",
+    "invariantId": "INV-ANIMATED-OVERRIDE",
+    "surface": "D",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-P4-QUICK"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-ANIMATED-OVERRIDE-G",
+    "invariantId": "INV-ANIMATED-OVERRIDE",
+    "surface": "G",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-E2E-IDLE"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-FEET-ANCHOR-B",
+    "invariantId": "INV-FEET-ANCHOR",
+    "surface": "B",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-FOCUSED"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-FEET-ANCHOR-D",
+    "invariantId": "INV-FEET-ANCHOR",
+    "surface": "D",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-P4-QUICK"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-FEET-ANCHOR-G",
+    "invariantId": "INV-FEET-ANCHOR",
+    "surface": "G",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-E2E-IDLE"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-LOADER-PARITY-B",
+    "invariantId": "INV-LOADER-PARITY",
+    "surface": "B",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-VERIFY-FULL",
+     "EV-FOCUSED"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-LOADER-PARITY-D",
+    "invariantId": "INV-LOADER-PARITY",
+    "surface": "D",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-P4-QUICK"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-LOADER-PARITY-G",
+    "invariantId": "INV-LOADER-PARITY",
+    "surface": "G",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-E2E-IDLE"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-DEATH-LIFECYCLE-B",
+    "invariantId": "INV-DEATH-LIFECYCLE",
+    "surface": "B",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-FOCUSED"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-DEATH-LIFECYCLE-D",
+    "invariantId": "INV-DEATH-LIFECYCLE",
+    "surface": "D",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-P4-QUICK"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-DEATH-LIFECYCLE-G",
+    "invariantId": "INV-DEATH-LIFECYCLE",
+    "surface": "G",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-E2E-IDLE"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-REGISTRY-MANIFEST-PARITY-B",
+    "invariantId": "INV-REGISTRY-MANIFEST-PARITY",
+    "surface": "B",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-FOCUSED"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-REGISTRY-MANIFEST-PARITY-D",
+    "invariantId": "INV-REGISTRY-MANIFEST-PARITY",
+    "surface": "D",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-OCR"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-REGISTRY-MANIFEST-PARITY-G",
+    "invariantId": "INV-REGISTRY-MANIFEST-PARITY",
+    "surface": "G",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-E2E-IDLE"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-ATTACK-RETURN-B",
+    "invariantId": "INV-ATTACK-RETURN",
+    "surface": "B",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-FOCUSED"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-ATTACK-RETURN-D",
+    "invariantId": "INV-ATTACK-RETURN",
+    "surface": "D",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-P4-QUICK"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-INV-ATTACK-RETURN-G",
+    "invariantId": "INV-ATTACK-RETURN",
+    "surface": "G",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "",
+    "evidenceIds": [
+     "EV-E2E-IDLE"
+    ],
+    "reviewerIds": [
+     "coordinator"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": []
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-P5-1",
+    "state": {
+     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "round": 1,
+    "phase": "CORRECTNESS",
+    "reviewerId": "coordinator",
+    "contextId": "primary-context",
+    "model": "swe-2-max",
+    "role": "COORDINATOR_SELF_REVIEW",
+    "inputBundleHash": "",
+    "priorFindingsVisible": true,
+    "accessLimitations": [
+     "same-context review - does not count as independence evidence"
+    ],
+    "startedAt": "2026-09-28T00:00:00Z",
+    "sealedAt": "2026-09-28T00:00:00Z",
+    "previousPhaseReviewId": "",
+    "reviewedAfterPreviousFixes": true,
+    "coverageIds": [],
+    "evidenceIds": [],
+    "findingIds": [
+     "F-EAW-06"
+    ],
+    "novelAttackIds": [],
+    "status": "SEALED"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-P5-2",
+    "state": {
+     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "round": 1,
+    "phase": "AUTHORITY",
+    "reviewerId": "coordinator",
+    "contextId": "primary-context",
+    "model": "swe-2-max",
+    "role": "COORDINATOR_SELF_REVIEW",
+    "inputBundleHash": "",
+    "priorFindingsVisible": true,
+    "accessLimitations": [
+     "same-context review - does not count as independence evidence"
+    ],
+    "startedAt": "2026-09-28T00:00:00Z",
+    "sealedAt": "2026-09-28T00:00:00Z",
+    "previousPhaseReviewId": "",
+    "reviewedAfterPreviousFixes": true,
+    "coverageIds": [],
+    "evidenceIds": [],
+    "findingIds": [],
+    "novelAttackIds": [],
+    "status": "SEALED"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-P5-3",
+    "state": {
+     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "round": 1,
+    "phase": "INTEGRATION",
+    "reviewerId": "coordinator",
+    "contextId": "primary-context",
+    "model": "swe-2-max",
+    "role": "COORDINATOR_SELF_REVIEW",
+    "inputBundleHash": "",
+    "priorFindingsVisible": true,
+    "accessLimitations": [
+     "same-context review - does not count as independence evidence"
+    ],
+    "startedAt": "2026-09-28T00:00:00Z",
+    "sealedAt": "2026-09-28T00:00:00Z",
+    "previousPhaseReviewId": "",
+    "reviewedAfterPreviousFixes": true,
+    "coverageIds": [],
+    "evidenceIds": [],
+    "findingIds": [],
+    "novelAttackIds": [],
+    "status": "SEALED"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-OCR",
+    "state": {
+     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "round": 1,
+    "phase": "CONTRACT",
+    "reviewerId": "coordinator",
+    "contextId": "primary-context",
+    "model": "swe-2-max",
+    "role": "COORDINATOR_SELF_REVIEW",
+    "inputBundleHash": "",
+    "priorFindingsVisible": true,
+    "accessLimitations": [
+     "same-context review - does not count as independence evidence"
+    ],
+    "startedAt": "2026-09-28T00:00:00Z",
+    "sealedAt": "2026-09-28T00:00:00Z",
+    "previousPhaseReviewId": "",
+    "reviewedAfterPreviousFixes": true,
+    "coverageIds": [],
+    "evidenceIds": [],
+    "findingIds": [
+     "F-EAW-01",
+     "F-EAW-04"
+    ],
+    "novelAttackIds": [],
+    "status": "SEALED"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-P4",
+    "state": {
+     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "round": 1,
+    "phase": "INTEGRATION",
+    "reviewerId": "coordinator",
+    "contextId": "primary-context",
+    "model": "swe-2-max",
+    "role": "COORDINATOR_SELF_REVIEW",
+    "inputBundleHash": "",
+    "priorFindingsVisible": true,
+    "accessLimitations": [
+     "same-context review - does not count as independence evidence"
+    ],
+    "startedAt": "2026-09-28T00:00:00Z",
+    "sealedAt": "2026-09-28T00:00:00Z",
+    "previousPhaseReviewId": "",
+    "reviewedAfterPreviousFixes": true,
+    "coverageIds": [],
+    "evidenceIds": [],
+    "findingIds": [
+     "F-EAW-07",
+     "F-EAW-08",
+     "F-EAW-09"
+    ],
+    "novelAttackIds": [],
+    "status": "SEALED"
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-EAW-01",
+    "version": 1,
+    "supersedes": "",
+    "triggerType": "FINDING",
+    "findingIds": [
+     "F-EAW-01"
+    ],
+    "incidentEvidenceIds": [],
+    "originatingRun": "enemy-art-wave1-2026-09-28",
+    "rootClass": "adapter-schema-drift",
+    "missedInvariantIds": [],
+    "escapeReason": "no test read the metadata file shape",
+    "applicability": [
+     "asset-pipeline",
+     "presentation-registry"
+    ],
+    "exclusions": [],
+    "proposedProtection": "pin parser output against a real dump fixture",
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "",
+    "status": "CAPTURED",
+    "policyVersion": "",
+    "effectiveFromRun": "",
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": []
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-EAW-02",
+    "version": 1,
+    "supersedes": "",
+    "triggerType": "FINDING",
+    "findingIds": [
+     "F-EAW-02"
+    ],
+    "incidentEvidenceIds": [],
+    "originatingRun": "enemy-art-wave1-2026-09-28",
+    "rootClass": "anchor-semantics-mismatch",
+    "missedInvariantIds": [],
+    "escapeReason": "assumed Unity pivot = feet anchor without measuring pixels",
+    "applicability": [
+     "asset-pipeline",
+     "presentation-registry"
+    ],
+    "exclusions": [],
+    "proposedProtection": "measure alpha-bbox bottom in packer; e2e ground-line assertion",
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "",
+    "status": "CAPTURED",
+    "policyVersion": "",
+    "effectiveFromRun": "",
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": []
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-EAW-03",
+    "version": 1,
+    "supersedes": "",
+    "triggerType": "FINDING",
+    "findingIds": [
+     "F-EAW-03"
+    ],
+    "incidentEvidenceIds": [],
+    "originatingRun": "enemy-art-wave1-2026-09-28",
+    "rootClass": "id-namespace",
+    "missedInvariantIds": [],
+    "escapeReason": "buff ids look like enemy ids in data files",
+    "applicability": [
+     "asset-pipeline",
+     "presentation-registry"
+    ],
+    "exclusions": [],
+    "proposedProtection": "reskin map entries must resolve to a real ENEMIES key - test pinned",
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "",
+    "status": "CAPTURED",
+    "policyVersion": "",
+    "effectiveFromRun": "",
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": []
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-EAW-04",
+    "version": 1,
+    "supersedes": "",
+    "triggerType": "FINDING",
+    "findingIds": [
+     "F-EAW-04"
+    ],
+    "incidentEvidenceIds": [],
+    "originatingRun": "enemy-art-wave1-2026-09-28",
+    "rootClass": "registry-drift",
+    "missedInvariantIds": [],
+    "escapeReason": "hardcoded constant not checked against the file",
+    "applicability": [
+     "asset-pipeline",
+     "presentation-registry"
+    ],
+    "exclusions": [],
+    "proposedProtection": "packer emits measured dims; architecture test pins registry=PNG",
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "",
+    "status": "CAPTURED",
+    "policyVersion": "",
+    "effectiveFromRun": "",
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": []
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-EAW-05",
+    "version": 1,
+    "supersedes": "",
+    "triggerType": "FINDING",
+    "findingIds": [
+     "F-EAW-05"
+    ],
+    "incidentEvidenceIds": [],
+    "originatingRun": "enemy-art-wave1-2026-09-28",
+    "rootClass": "fixture-drift",
+    "missedInvariantIds": [],
+    "escapeReason": "fixture id later became a mapped reskin",
+    "applicability": [
+     "asset-pipeline",
+     "presentation-registry"
+    ],
+    "exclusions": [],
+    "proposedProtection": "fixtures must pin semantics (unmapped id), assert membership",
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "",
+    "status": "CAPTURED",
+    "policyVersion": "",
+    "effectiveFromRun": "",
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": []
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-EAW-06",
+    "version": 1,
+    "supersedes": "",
+    "triggerType": "FINDING",
+    "findingIds": [
+     "F-EAW-06"
+    ],
+    "incidentEvidenceIds": [],
+    "originatingRun": "enemy-art-wave1-2026-09-28",
+    "rootClass": "dead-load",
+    "missedInvariantIds": [],
+    "escapeReason": "second enumeration path not updated for the new authority",
+    "applicability": [
+     "asset-pipeline",
+     "presentation-registry"
+    ],
+    "exclusions": [],
+    "proposedProtection": "enumeration of loaded assets derives from the reskin authority",
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "",
+    "status": "CAPTURED",
+    "policyVersion": "",
+    "effectiveFromRun": "",
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": []
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-EAW-07",
+    "version": 1,
+    "supersedes": "",
+    "triggerType": "FINDING",
+    "findingIds": [
+     "F-EAW-07"
+    ],
+    "incidentEvidenceIds": [],
+    "originatingRun": "enemy-art-wave1-2026-09-28",
+    "rootClass": "latent-assumption",
+    "missedInvariantIds": [],
+    "escapeReason": "single-sheet assumption unguarded",
+    "applicability": [
+     "asset-pipeline",
+     "presentation-registry"
+    ],
+    "exclusions": [],
+    "proposedProtection": "pin clip.sheetUrl/atlasUrl to manifest-emitted values",
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "",
+    "status": "CAPTURED",
+    "policyVersion": "",
+    "effectiveFromRun": "",
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": []
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-EAW-08",
+    "version": 1,
+    "supersedes": "",
+    "triggerType": "FINDING",
+    "findingIds": [
+     "F-EAW-08"
+    ],
+    "incidentEvidenceIds": [],
+    "originatingRun": "enemy-art-wave1-2026-09-28",
+    "rootClass": "staged-feature",
+    "missedInvariantIds": [],
+    "escapeReason": "declared-but-unconsumed field can rot silently",
+    "applicability": [
+     "asset-pipeline",
+     "presentation-registry"
+    ],
+    "exclusions": [],
+    "proposedProtection": "staged metadata documented + provenance-only; wire when consumer lands",
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "",
+    "status": "CAPTURED",
+    "policyVersion": "",
+    "effectiveFromRun": "",
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": []
+   }
+  }
+ ]
+}

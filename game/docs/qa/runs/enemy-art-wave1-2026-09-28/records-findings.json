@@ -1,0 +1,565 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-EAW-01",
+    "title": "Unity pivot parser read {x,y} but dump uses {m_X,m_Y} - every pivot silently defaulted",
+    "state": {
+     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "production-reachable",
+    "locations": [],
+    "discoveredBy": "coordinator",
+    "invariantIds": [],
+    "evidenceIds": [
+     "EV-OCR"
+    ],
+    "counterexample": "",
+    "expected": "",
+    "actual": "",
+    "rootCause": "wrong metadata key shape",
+    "rootClass": "adapter-schema-drift",
+    "subsystem": "art-pipeline",
+    "siblingSearch": [
+     {
+      "roots": [
+       "game/src",
+       "game/scripts",
+       "game/public/assets/enemies/animated"
+      ],
+      "termsAndMethod": "census performed - none found",
+      "evidenceIds": [],
+      "hitDispositions": [
+       "no actionable sibling found"
+      ],
+      "coverageLimits": [
+       "name-aliased consumers may evade literal search"
+      ]
+     }
+    ],
+    "siblingFindingIds": [],
+    "repair": "readPivot accepts both shapes",
+    "pinEvidenceIds": [
+     "EV-FOCUSED"
+    ],
+    "verificationEvidenceIds": [
+     "EV-VERIFY-FULL",
+     "EV-FOCUSED"
+    ],
+    "closureReviewIds": [
+     "RV-P5-2"
+    ],
+    "status": "CLOSED",
+    "duplicateOf": "",
+    "rejectionReason": "",
+    "exception": "",
+    "closeReason": "fixed; real pivots recovered into manifest as provenance",
+    "closedAt": "2026-09-28T00:00:00Z"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-EAW-02",
+    "title": "Art floated ~24% above ground: Unity pivot is not a feet anchor for this dump",
+    "state": {
+     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "severity": "High",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "production-reachable",
+    "locations": [],
+    "discoveredBy": "coordinator",
+    "invariantIds": [],
+    "evidenceIds": [
+     "EV-E2E-IDLE"
+    ],
+    "counterexample": "",
+    "expected": "",
+    "actual": "",
+    "rootCause": "sourceSize spanned full authored canvas while runtime origin anchors at box bottom",
+    "rootClass": "anchor-semantics-mismatch",
+    "subsystem": "art-pipeline",
+    "siblingSearch": [
+     {
+      "roots": [
+       "game/src",
+       "game/scripts",
+       "game/public/assets/enemies/animated"
+      ],
+      "termsAndMethod": "census performed - none found",
+      "evidenceIds": [],
+      "hitDispositions": [
+       "no actionable sibling found"
+      ],
+      "coverageLimits": [
+       "name-aliased consumers may evade literal search"
+      ]
+     }
+    ],
+    "siblingFindingIds": [],
+    "repair": "packer crops sourceSize to idle-clip union alpha bbox",
+    "pinEvidenceIds": [
+     "EV-FOCUSED"
+    ],
+    "verificationEvidenceIds": [
+     "EV-VERIFY-FULL",
+     "EV-FOCUSED"
+    ],
+    "closureReviewIds": [
+     "RV-P5-2"
+    ],
+    "status": "CLOSED",
+    "duplicateOf": "",
+    "rejectionReason": "",
+    "exception": "",
+    "closeReason": "fixed; e2e screenshots show feet on ground line",
+    "closedAt": "2026-09-28T00:00:00Z"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-EAW-03",
+    "title": "Boss art mapped to foundation_dragon_phase* ids which are buff ids not enemy ids",
+    "state": {
+     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "severity": "High",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "production-reachable",
+    "locations": [],
+    "discoveredBy": "coordinator",
+    "invariantIds": [],
+    "evidenceIds": [],
+    "counterexample": "",
+    "expected": "",
+    "actual": "",
+    "rootCause": "id-namespace confusion (buff vs enemy)",
+    "rootClass": "id-namespace",
+    "subsystem": "art-pipeline",
+    "siblingSearch": [
+     {
+      "roots": [
+       "game/src",
+       "game/scripts",
+       "game/public/assets/enemies/animated"
+      ],
+      "termsAndMethod": "census performed - none found",
+      "evidenceIds": [],
+      "hitDispositions": [
+       "no actionable sibling found"
+      ],
+      "coverageLimits": [
+       "name-aliased consumers may evade literal search"
+      ]
+     }
+    ],
+    "siblingFindingIds": [],
+    "repair": "rebound to foundation_ferocious_flood_dragon_whelp (verified ENEMIES entry + floor-10 boss spawn)",
+    "pinEvidenceIds": [
+     "EV-FOCUSED"
+    ],
+    "verificationEvidenceIds": [
+     "EV-VERIFY-FULL",
+     "EV-FOCUSED"
+    ],
+    "closureReviewIds": [
+     "RV-P5-2"
+    ],
+    "status": "CLOSED",
+    "duplicateOf": "",
+    "rejectionReason": "",
+    "exception": "",
+    "closeReason": "fixed",
+    "closedAt": "2026-09-28T00:00:00Z"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-EAW-04",
+    "title": "Registry hardcoded avatarSize 512x512 vs real ~150px PNGs",
+    "state": {
+     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "severity": "Medium",
+    "classification": "TEST_DEFECT",
+    "actionable": true,
+    "reachability": "production-reachable",
+    "locations": [],
+    "discoveredBy": "coordinator",
+    "invariantIds": [],
+    "evidenceIds": [],
+    "counterexample": "",
+    "expected": "",
+    "actual": "",
+    "rootCause": "hand-written registry drifted from generated assets",
+    "rootClass": "registry-drift",
+    "subsystem": "art-pipeline",
+    "siblingSearch": [
+     {
+      "roots": [
+       "game/src",
+       "game/scripts",
+       "game/public/assets/enemies/animated"
+      ],
+      "termsAndMethod": "census performed - none found",
+      "evidenceIds": [],
+      "hitDispositions": [
+       "no actionable sibling found"
+      ],
+      "coverageLimits": [
+       "name-aliased consumers may evade literal search"
+      ]
+     }
+    ],
+    "siblingFindingIds": [],
+    "repair": "packer emits real avatarSize; test pins equality with PNG dims",
+    "pinEvidenceIds": [
+     "EV-FOCUSED"
+    ],
+    "verificationEvidenceIds": [
+     "EV-VERIFY-FULL",
+     "EV-FOCUSED"
+    ],
+    "closureReviewIds": [
+     "RV-P5-2"
+    ],
+    "status": "CLOSED",
+    "duplicateOf": "",
+    "rejectionReason": "",
+    "exception": "",
+    "closeReason": "fixed",
+    "closedAt": "2026-09-28T00:00:00Z"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-EAW-05",
+    "title": "Stale test fixtures assumed mortal_wild_boar static after it was intentionally reskinned",
+    "state": {
+     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "severity": "Low",
+    "classification": "TEST_DEFECT",
+    "actionable": true,
+    "reachability": "production-reachable",
+    "locations": [],
+    "discoveredBy": "coordinator",
+    "invariantIds": [],
+    "evidenceIds": [],
+    "counterexample": "",
+    "expected": "",
+    "actual": "",
+    "rootCause": "fixture semantics broke when mapping landed",
+    "rootClass": "fixture-drift",
+    "subsystem": "art-pipeline",
+    "siblingSearch": [
+     {
+      "roots": [
+       "game/src",
+       "game/scripts",
+       "game/public/assets/enemies/animated"
+      ],
+      "termsAndMethod": "census performed - none found",
+      "evidenceIds": [],
+      "hitDispositions": [
+       "no actionable sibling found"
+      ],
+      "coverageLimits": [
+       "name-aliased consumers may evade literal search"
+      ]
+     }
+    ],
+    "siblingFindingIds": [],
+    "repair": "fixtures moved to unmapped mortal_savage_tiger",
+    "pinEvidenceIds": [
+     "EV-FOCUSED"
+    ],
+    "verificationEvidenceIds": [
+     "EV-VERIFY-FULL",
+     "EV-FOCUSED"
+    ],
+    "closureReviewIds": [
+     "RV-P5-2"
+    ],
+    "status": "CLOSED",
+    "duplicateOf": "",
+    "rejectionReason": "",
+    "exception": "",
+    "closeReason": "fixed",
+    "closedAt": "2026-09-28T00:00:00Z"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-EAW-06",
+    "title": "Reskinned template ids still loaded old PNGs and registered dead catalogue entries",
+    "state": {
+     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "production-reachable",
+    "locations": [],
+    "discoveredBy": "coordinator",
+    "invariantIds": [],
+    "evidenceIds": [
+     "EV-P5-PASSES"
+    ],
+    "counterexample": "",
+    "expected": "",
+    "actual": "",
+    "rootCause": "enumeration points not aware of reskin map",
+    "rootClass": "dead-load",
+    "subsystem": "art-pipeline",
+    "siblingSearch": [
+     {
+      "roots": [
+       "game/src",
+       "game/scripts",
+       "game/public/assets/enemies/animated"
+      ],
+      "termsAndMethod": "census performed - none found",
+      "evidenceIds": [],
+      "hitDispositions": [
+       "no actionable sibling found"
+      ],
+      "coverageLimits": [
+       "name-aliased consumers may evade literal search"
+      ]
+     }
+    ],
+    "siblingFindingIds": [],
+    "repair": "reskinnedTemplateIds() skip at preload/bundle/catalogue",
+    "pinEvidenceIds": [
+     "EV-FOCUSED"
+    ],
+    "verificationEvidenceIds": [
+     "EV-VERIFY-FULL",
+     "EV-FOCUSED"
+    ],
+    "closureReviewIds": [
+     "RV-P5-2"
+    ],
+    "status": "CLOSED",
+    "duplicateOf": "",
+    "rejectionReason": "",
+    "exception": "",
+    "closeReason": "fixed in pass-1 review",
+    "closedAt": "2026-09-28T00:00:00Z"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-EAW-07",
+    "title": "clip() hardcodes sheet-1 - latent break when reserved 4-sheet wugu-demon-king is wired",
+    "state": {
+     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "severity": "Low",
+    "classification": "COVERAGE_GAP",
+    "actionable": true,
+    "reachability": "production-reachable",
+    "locations": [],
+    "discoveredBy": "coordinator",
+    "invariantIds": [],
+    "evidenceIds": [],
+    "counterexample": "",
+    "expected": "",
+    "actual": "",
+    "rootCause": "single-sheet assumption",
+    "rootClass": "latent-assumption",
+    "subsystem": "art-pipeline",
+    "siblingSearch": [
+     {
+      "roots": [
+       "game/src",
+       "game/scripts",
+       "game/public/assets/enemies/animated"
+      ],
+      "termsAndMethod": "census performed - none found",
+      "evidenceIds": [],
+      "hitDispositions": [
+       "no actionable sibling found"
+      ],
+      "coverageLimits": [
+       "name-aliased consumers may evade literal search"
+      ]
+     }
+    ],
+    "siblingFindingIds": [],
+    "repair": "enemyArtReskin now pins sheetUrl/atlasUrl to manifest-emitted sheet per clip - future wiring fails loudly",
+    "pinEvidenceIds": [
+     "EV-FOCUSED"
+    ],
+    "verificationEvidenceIds": [
+     "EV-VERIFY-FULL",
+     "EV-FOCUSED"
+    ],
+    "closureReviewIds": [
+     "RV-P5-2"
+    ],
+    "status": "CLOSED",
+    "duplicateOf": "",
+    "rejectionReason": "",
+    "exception": "",
+    "closeReason": "guarded by pin",
+    "closedAt": "2026-09-28T00:00:00Z"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-EAW-08",
+    "title": "attackSfxUrl declared but unconsumed - SFX staged per user ruling, design deferred",
+    "state": {
+     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "severity": "Low",
+    "classification": "NON_ACTIONABLE",
+    "actionable": false,
+    "reachability": "production-reachable",
+    "locations": [],
+    "discoveredBy": "coordinator",
+    "invariantIds": [],
+    "evidenceIds": [],
+    "counterexample": "",
+    "expected": "",
+    "actual": "",
+    "rootCause": "see commit 93fd61e2",
+    "rootClass": "implementation-gap",
+    "subsystem": "art-pipeline",
+    "siblingSearch": [
+     {
+      "roots": [
+       "game/src",
+       "game/scripts",
+       "game/public/assets/enemies/animated"
+      ],
+      "termsAndMethod": "census performed - none found",
+      "evidenceIds": [],
+      "hitDispositions": [
+       "no actionable sibling found"
+      ],
+      "coverageLimits": [
+       "name-aliased consumers may evade literal search"
+      ]
+     }
+    ],
+    "siblingFindingIds": [],
+    "repair": "documented in commit message + diff",
+    "pinEvidenceIds": [
+     "EV-FOCUSED"
+    ],
+    "verificationEvidenceIds": [
+     "EV-VERIFY-FULL",
+     "EV-FOCUSED"
+    ],
+    "closureReviewIds": [
+     "RV-P5-2"
+    ],
+    "status": "CLOSED",
+    "duplicateOf": "",
+    "rejectionReason": "",
+    "exception": {
+     "humanInstructionRef": "user ruling 2026-09-28 (SFX design later)",
+     "scope": "enemy-art-wave1",
+     "reason": "declared provenance field; consumer deferred by product owner",
+     "expiresWhen": "enemy SFX design task"
+    },
+    "closeReason": "explicit user ruling 2026-09-28: SFX designed later; field is documented provenance",
+    "closedAt": "2026-09-28T00:00:00Z"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-EAW-09",
+    "title": "Atlas-load-failure degradation path (placeholder persistence for reskinned entity) unexercised e2e",
+    "state": {
+     "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "severity": "Low",
+    "classification": "COVERAGE_GAP",
+    "actionable": true,
+    "reachability": "production-reachable",
+    "locations": [],
+    "discoveredBy": "coordinator",
+    "invariantIds": [],
+    "evidenceIds": [],
+    "counterexample": "",
+    "expected": "",
+    "actual": "",
+    "rootCause": "missing network-failure oracle",
+    "rootClass": "",
+    "subsystem": "art-pipeline",
+    "siblingSearch": [
+     {
+      "roots": [
+       "game/src",
+       "game/scripts",
+       "game/public/assets/enemies/animated"
+      ],
+      "termsAndMethod": "n/a",
+      "evidenceIds": [],
+      "hitDispositions": [
+       "no actionable sibling found"
+      ],
+      "coverageLimits": [
+       "name-aliased consumers may evade literal search"
+      ]
+     }
+    ],
+    "siblingFindingIds": [],
+    "repair": "none - needs fetch-failure injection harness",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "OBSERVED",
+    "duplicateOf": "",
+    "rejectionReason": "",
+    "exception": "",
+    "closeReason": ""
+   }
+  }
+ ]
+}

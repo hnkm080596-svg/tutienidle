@@ -1,0 +1,1917 @@
+{
+  "schemaVersion": 2,
+  "run": {
+    "id": "enemy-art-wave1-2026-09-28",
+    "createdAt": "2026-09-27T22:52:53.216Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [
+      "task-owned files only: art pipeline, presentation wiring, registry, loaders, tests"
+    ],
+    "nonGoals": [
+      "new enemy roster or stats",
+      "SFX design",
+      "VFX",
+      "boss multi-skill clips",
+      "master modifications"
+    ],
+    "checkout": "",
+    "branch": "",
+    "base": "",
+    "head": "",
+    "state": {
+      "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+      "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+      "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+      "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "manifestPath": "manifest.json",
+    "environmentPath": "environment.json",
+    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "consumedLessonIds": [],
+    "aggregateParents": [],
+    "requiredDomains": [],
+    "exclusions": [],
+    "briefIds": [],
+    "capacityLimit": 5,
+    "requiredReadiness": true,
+    "phase": "SNAPSHOT",
+    "cleanRoundA": null,
+    "cleanRoundB": null,
+    "finalEvidenceIds": [],
+    "outcome": null
+  },
+  "briefs": [],
+  "assignments": [],
+  "consumptions": [],
+  "invariants": [
+    {
+      "id": "INV-RESKIN-RESOLVE",
+      "statement": "A mapped enemy template/runtime id resolves to its variant slug before any texture lookup; unmapped ids keep legacy texture/placeholder resolution.",
+      "domain": "combat presentation",
+      "risk": "HIGH",
+      "sources": [
+        "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
+        "code comments + tests"
+      ],
+      "owner": "",
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "",
+      "atomicity": "",
+      "inverseBehavior": "",
+      "persistence": "",
+      "migration": "",
+      "lifecycle": "",
+      "runtimeConsequences": "",
+      "uiConsequences": "",
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "B",
+        "D",
+        "G"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "INV-ANIMATED-OVERRIDE",
+      "statement": "Under ENTITY_ART_MODE=static exactly ANIMATED_ENEMY_KEYS emit kind:animated; no other entity drifts animated.",
+      "domain": "presentation contract",
+      "risk": "HIGH",
+      "sources": [
+        "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
+        "code comments + tests"
+      ],
+      "owner": "",
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "",
+      "atomicity": "",
+      "inverseBehavior": "",
+      "persistence": "",
+      "migration": "",
+      "lifecycle": "",
+      "runtimeConsequences": "",
+      "uiConsequences": "",
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "B",
+        "D",
+        "G"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "INV-FEET-ANCHOR",
+      "statement": "Emitted sourceSize equals the idle-clip union alpha bbox so origin (0.5,1) lands on the character feet line.",
+      "domain": "asset pipeline",
+      "risk": "MEDIUM",
+      "sources": [
+        "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
+        "code comments + tests"
+      ],
+      "owner": "",
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "",
+      "atomicity": "",
+      "inverseBehavior": "",
+      "persistence": "",
+      "migration": "",
+      "lifecycle": "",
+      "runtimeConsequences": "",
+      "uiConsequences": "",
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "B",
+        "D",
+        "G"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "INV-LOADER-PARITY",
+      "statement": "Loaders enumerate the MonsterArt registry only; reskinned template ids skip their old PNG; reserved unregistered variants are never loaded.",
+      "domain": "asset loading",
+      "risk": "MEDIUM",
+      "sources": [
+        "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
+        "code comments + tests"
+      ],
+      "owner": "",
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "",
+      "atomicity": "",
+      "inverseBehavior": "",
+      "persistence": "",
+      "migration": "",
+      "lifecycle": "",
+      "runtimeConsequences": "",
+      "uiConsequences": "",
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "B",
+        "D",
+        "G"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "INV-DEATH-LIFECYCLE",
+      "statement": "An animated enemy death clip completes before sprite destruction; completion callbacks are key-filtered and identity-checked; re-entry anim registration is idempotent.",
+      "domain": "combat lifecycle",
+      "risk": "HIGH",
+      "sources": [
+        "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
+        "code comments + tests"
+      ],
+      "owner": "",
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "",
+      "atomicity": "",
+      "inverseBehavior": "",
+      "persistence": "",
+      "migration": "",
+      "lifecycle": "",
+      "runtimeConsequences": "",
+      "uiConsequences": "",
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "B",
+        "D",
+        "G"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "INV-REGISTRY-MANIFEST-PARITY",
+      "statement": "Hand-written registry entries equal generated manifest metadata (clip frames, sheet/atlas names, extent, sourceSize, avatar dims).",
+      "domain": "test oracle",
+      "risk": "HIGH",
+      "sources": [
+        "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
+        "code comments + tests"
+      ],
+      "owner": "",
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "",
+      "atomicity": "",
+      "inverseBehavior": "",
+      "persistence": "",
+      "migration": "",
+      "lifecycle": "",
+      "runtimeConsequences": "",
+      "uiConsequences": "",
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "B",
+        "D",
+        "G"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "INV-ATTACK-RETURN",
+      "statement": "Authored attack clips play once and return to standby; entities without attack clips keep the shared lunge and are unaffected.",
+      "domain": "combat lifecycle",
+      "risk": "MEDIUM",
+      "sources": [
+        "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
+        "code comments + tests"
+      ],
+      "owner": "",
+      "legalWriters": [],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "",
+      "atomicity": "",
+      "inverseBehavior": "",
+      "persistence": "",
+      "migration": "",
+      "lifecycle": "",
+      "runtimeConsequences": "",
+      "uiConsequences": "",
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "B",
+        "D",
+        "G"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    }
+  ],
+  "census": [],
+  "findings": [
+    {
+      "id": "F-EAW-01",
+      "title": "Unity pivot parser read {x,y} but dump uses {m_X,m_Y} - every pivot silently defaulted",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "production-reachable",
+      "locations": [],
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-OCR"
+      ],
+      "counterexample": "",
+      "expected": "",
+      "actual": "",
+      "rootCause": "wrong metadata key shape",
+      "rootClass": "adapter-schema-drift",
+      "subsystem": "art-pipeline",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src",
+            "game/scripts",
+            "game/public/assets/enemies/animated"
+          ],
+          "termsAndMethod": "census performed - none found",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "no actionable sibling found"
+          ],
+          "coverageLimits": [
+            "name-aliased consumers may evade literal search"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "readPivot accepts both shapes",
+      "pinEvidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "verificationEvidenceIds": [
+        "EV-VERIFY-FULL",
+        "EV-FOCUSED"
+      ],
+      "closureReviewIds": [
+        "RV-P5-2"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": "",
+      "rejectionReason": "",
+      "exception": "",
+      "closeReason": "fixed; real pivots recovered into manifest as provenance",
+      "closedAt": "2026-09-28T00:00:00Z"
+    },
+    {
+      "id": "F-EAW-02",
+      "title": "Art floated ~24% above ground: Unity pivot is not a feet anchor for this dump",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "production-reachable",
+      "locations": [],
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-E2E-IDLE"
+      ],
+      "counterexample": "",
+      "expected": "",
+      "actual": "",
+      "rootCause": "sourceSize spanned full authored canvas while runtime origin anchors at box bottom",
+      "rootClass": "anchor-semantics-mismatch",
+      "subsystem": "art-pipeline",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src",
+            "game/scripts",
+            "game/public/assets/enemies/animated"
+          ],
+          "termsAndMethod": "census performed - none found",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "no actionable sibling found"
+          ],
+          "coverageLimits": [
+            "name-aliased consumers may evade literal search"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "packer crops sourceSize to idle-clip union alpha bbox",
+      "pinEvidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "verificationEvidenceIds": [
+        "EV-VERIFY-FULL",
+        "EV-FOCUSED"
+      ],
+      "closureReviewIds": [
+        "RV-P5-2"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": "",
+      "rejectionReason": "",
+      "exception": "",
+      "closeReason": "fixed; e2e screenshots show feet on ground line",
+      "closedAt": "2026-09-28T00:00:00Z"
+    },
+    {
+      "id": "F-EAW-03",
+      "title": "Boss art mapped to foundation_dragon_phase* ids which are buff ids not enemy ids",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "production-reachable",
+      "locations": [],
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "",
+      "expected": "",
+      "actual": "",
+      "rootCause": "id-namespace confusion (buff vs enemy)",
+      "rootClass": "id-namespace",
+      "subsystem": "art-pipeline",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src",
+            "game/scripts",
+            "game/public/assets/enemies/animated"
+          ],
+          "termsAndMethod": "census performed - none found",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "no actionable sibling found"
+          ],
+          "coverageLimits": [
+            "name-aliased consumers may evade literal search"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "rebound to foundation_ferocious_flood_dragon_whelp (verified ENEMIES entry + floor-10 boss spawn)",
+      "pinEvidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "verificationEvidenceIds": [
+        "EV-VERIFY-FULL",
+        "EV-FOCUSED"
+      ],
+      "closureReviewIds": [
+        "RV-P5-2"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": "",
+      "rejectionReason": "",
+      "exception": "",
+      "closeReason": "fixed",
+      "closedAt": "2026-09-28T00:00:00Z"
+    },
+    {
+      "id": "F-EAW-04",
+      "title": "Registry hardcoded avatarSize 512x512 vs real ~150px PNGs",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "severity": "Medium",
+      "classification": "TEST_DEFECT",
+      "actionable": true,
+      "reachability": "production-reachable",
+      "locations": [],
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "",
+      "expected": "",
+      "actual": "",
+      "rootCause": "hand-written registry drifted from generated assets",
+      "rootClass": "registry-drift",
+      "subsystem": "art-pipeline",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src",
+            "game/scripts",
+            "game/public/assets/enemies/animated"
+          ],
+          "termsAndMethod": "census performed - none found",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "no actionable sibling found"
+          ],
+          "coverageLimits": [
+            "name-aliased consumers may evade literal search"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "packer emits real avatarSize; test pins equality with PNG dims",
+      "pinEvidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "verificationEvidenceIds": [
+        "EV-VERIFY-FULL",
+        "EV-FOCUSED"
+      ],
+      "closureReviewIds": [
+        "RV-P5-2"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": "",
+      "rejectionReason": "",
+      "exception": "",
+      "closeReason": "fixed",
+      "closedAt": "2026-09-28T00:00:00Z"
+    },
+    {
+      "id": "F-EAW-05",
+      "title": "Stale test fixtures assumed mortal_wild_boar static after it was intentionally reskinned",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "severity": "Low",
+      "classification": "TEST_DEFECT",
+      "actionable": true,
+      "reachability": "production-reachable",
+      "locations": [],
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "",
+      "expected": "",
+      "actual": "",
+      "rootCause": "fixture semantics broke when mapping landed",
+      "rootClass": "fixture-drift",
+      "subsystem": "art-pipeline",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src",
+            "game/scripts",
+            "game/public/assets/enemies/animated"
+          ],
+          "termsAndMethod": "census performed - none found",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "no actionable sibling found"
+          ],
+          "coverageLimits": [
+            "name-aliased consumers may evade literal search"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "fixtures moved to unmapped mortal_savage_tiger",
+      "pinEvidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "verificationEvidenceIds": [
+        "EV-VERIFY-FULL",
+        "EV-FOCUSED"
+      ],
+      "closureReviewIds": [
+        "RV-P5-2"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": "",
+      "rejectionReason": "",
+      "exception": "",
+      "closeReason": "fixed",
+      "closedAt": "2026-09-28T00:00:00Z"
+    },
+    {
+      "id": "F-EAW-06",
+      "title": "Reskinned template ids still loaded old PNGs and registered dead catalogue entries",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "production-reachable",
+      "locations": [],
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-P5-PASSES"
+      ],
+      "counterexample": "",
+      "expected": "",
+      "actual": "",
+      "rootCause": "enumeration points not aware of reskin map",
+      "rootClass": "dead-load",
+      "subsystem": "art-pipeline",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src",
+            "game/scripts",
+            "game/public/assets/enemies/animated"
+          ],
+          "termsAndMethod": "census performed - none found",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "no actionable sibling found"
+          ],
+          "coverageLimits": [
+            "name-aliased consumers may evade literal search"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "reskinnedTemplateIds() skip at preload/bundle/catalogue",
+      "pinEvidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "verificationEvidenceIds": [
+        "EV-VERIFY-FULL",
+        "EV-FOCUSED"
+      ],
+      "closureReviewIds": [
+        "RV-P5-2"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": "",
+      "rejectionReason": "",
+      "exception": "",
+      "closeReason": "fixed in pass-1 review",
+      "closedAt": "2026-09-28T00:00:00Z"
+    },
+    {
+      "id": "F-EAW-07",
+      "title": "clip() hardcodes sheet-1 - latent break when reserved 4-sheet wugu-demon-king is wired",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "severity": "Low",
+      "classification": "COVERAGE_GAP",
+      "actionable": true,
+      "reachability": "production-reachable",
+      "locations": [],
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "",
+      "expected": "",
+      "actual": "",
+      "rootCause": "single-sheet assumption",
+      "rootClass": "latent-assumption",
+      "subsystem": "art-pipeline",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src",
+            "game/scripts",
+            "game/public/assets/enemies/animated"
+          ],
+          "termsAndMethod": "census performed - none found",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "no actionable sibling found"
+          ],
+          "coverageLimits": [
+            "name-aliased consumers may evade literal search"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "enemyArtReskin now pins sheetUrl/atlasUrl to manifest-emitted sheet per clip - future wiring fails loudly",
+      "pinEvidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "verificationEvidenceIds": [
+        "EV-VERIFY-FULL",
+        "EV-FOCUSED"
+      ],
+      "closureReviewIds": [
+        "RV-P5-2"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": "",
+      "rejectionReason": "",
+      "exception": "",
+      "closeReason": "guarded by pin",
+      "closedAt": "2026-09-28T00:00:00Z"
+    },
+    {
+      "id": "F-EAW-08",
+      "title": "attackSfxUrl declared but unconsumed - SFX staged per user ruling, design deferred",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "severity": "Low",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "production-reachable",
+      "locations": [],
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "",
+      "expected": "",
+      "actual": "",
+      "rootCause": "see commit 93fd61e2",
+      "rootClass": "implementation-gap",
+      "subsystem": "art-pipeline",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src",
+            "game/scripts",
+            "game/public/assets/enemies/animated"
+          ],
+          "termsAndMethod": "census performed - none found",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "no actionable sibling found"
+          ],
+          "coverageLimits": [
+            "name-aliased consumers may evade literal search"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "documented in commit message + diff",
+      "pinEvidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "verificationEvidenceIds": [
+        "EV-VERIFY-FULL",
+        "EV-FOCUSED"
+      ],
+      "closureReviewIds": [
+        "RV-P5-2"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": "",
+      "rejectionReason": "",
+      "exception": {
+        "humanInstructionRef": "user ruling 2026-09-28 (SFX design later)",
+        "scope": "enemy-art-wave1",
+        "reason": "declared provenance field; consumer deferred by product owner",
+        "expiresWhen": "enemy SFX design task"
+      },
+      "closeReason": "explicit user ruling 2026-09-28: SFX designed later; field is documented provenance",
+      "closedAt": "2026-09-28T00:00:00Z"
+    },
+    {
+      "id": "F-EAW-09",
+      "title": "Atlas-load-failure degradation path (placeholder persistence for reskinned entity) unexercised e2e",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "severity": "Low",
+      "classification": "COVERAGE_GAP",
+      "actionable": true,
+      "reachability": "production-reachable",
+      "locations": [],
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "",
+      "expected": "",
+      "actual": "",
+      "rootCause": "missing network-failure oracle",
+      "rootClass": "",
+      "subsystem": "art-pipeline",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src",
+            "game/scripts",
+            "game/public/assets/enemies/animated"
+          ],
+          "termsAndMethod": "n/a",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "no actionable sibling found"
+          ],
+          "coverageLimits": [
+            "name-aliased consumers may evade literal search"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "none - needs fetch-failure injection harness",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": "",
+      "rejectionReason": "",
+      "exception": "",
+      "closeReason": ""
+    }
+  ],
+  "evidence": [
+    {
+      "id": "EV-VERIFY-FULL",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-28T00:00:00Z",
+      "finishedAt": "2026-09-28T00:00:00Z",
+      "commandOrMethod": "npm run verify (type-check + vite build + vitest run)",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "",
+      "artifactHash": "",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "type-check clean; build succeeds; 6976 tests pass on final aggregate"
+      ],
+      "limitations": [
+        "2 environment timeout flakes under parallel load (dongFuBackgroundAssets, autoFarmOffline) - both pass isolated; recorded as FLAKY baseline, not task-caused"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-VERIFY-FLAKE-RERUN",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-28T00:00:00Z",
+      "finishedAt": "2026-09-28T00:00:00Z",
+      "commandOrMethod": "npx vitest run dongFuBackgroundAssets.test.ts autoFarmOffline.test.ts (isolated)",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "",
+      "artifactHash": "",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "both suite-timeout failures pass in isolation"
+      ],
+      "limitations": [
+        "confirms environment contention, not product defect"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-E2E-IDLE",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-28T00:00:00Z",
+      "finishedAt": "2026-09-28T00:00:00Z",
+      "commandOrMethod": "npx playwright test tests/e2e/combat-idle-motion-capture.spec.ts",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "",
+      "artifactHash": "",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "reskinned enemies render authored atlas frames in live combat; frames advance; authored attack plays; death completes and destroys sprite; statics bob; feet planted (screenshots)"
+      ],
+      "limitations": [
+        "probe path used for deterministic reskin exercise; natural spawn RNG noted"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-FOCUSED",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-28T00:00:00Z",
+      "finishedAt": "2026-09-28T00:00:00Z",
+      "commandOrMethod": "npx vitest run enemyArtReskin + artModeUniformity + animationCatalogue + CombatScene.combatAnimations + combat-grid-view",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "",
+      "artifactHash": "",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "61/61 focused tests green on final state"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-OCR",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-28T00:00:00Z",
+      "finishedAt": "2026-09-28T00:00:00Z",
+      "commandOrMethod": "P18 Open Code Review gate over full task diff",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "",
+      "artifactHash": "",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "review found real defect: readPivot parsed x,y while dump uses m_X,m_Y - fixed and pivots recovered as provenance"
+      ],
+      "limitations": [
+        "delegation-mode reasoning, no external reviewer"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-P4-QUICK",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-28T00:00:00Z",
+      "finishedAt": "2026-09-28T00:00:00Z",
+      "commandOrMethod": "tutienidle-adversarial-qa quick pass + report docs/qa/2026-09-27-enemy-art-wave1-quick.md",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "",
+      "artifactHash": "",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "10 attack hypotheses closed; 2 Lows deferred; 1 coverage gap recorded"
+      ],
+      "limitations": [
+        "quick mode only - not a deep audit"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-P5-PASSES",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-28T00:00:00Z",
+      "finishedAt": "2026-09-28T00:00:00Z",
+      "commandOrMethod": "P5 sequential multi-pass review (3 ordered passes over evolving states)",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "",
+      "artifactHash": "",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "pass1 found dead-load of reskinned old PNGs - fixed via reskinnedTemplateIds; pass2 architecture clean; pass3 integration re-verified with e2e rerun"
+      ],
+      "limitations": [
+        "passes were same-context coordinator reviews - not independent contexts"
+      ],
+      "status": "CURRENT"
+    }
+  ],
+  "coverage": [
+    {
+      "id": "COV-INV-RESKIN-RESOLVE-B",
+      "invariantId": "INV-RESKIN-RESOLVE",
+      "surface": "B",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-RESKIN-RESOLVE-D",
+      "invariantId": "INV-RESKIN-RESOLVE",
+      "surface": "D",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-P4-QUICK"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-RESKIN-RESOLVE-G",
+      "invariantId": "INV-RESKIN-RESOLVE",
+      "surface": "G",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-E2E-IDLE"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-ANIMATED-OVERRIDE-B",
+      "invariantId": "INV-ANIMATED-OVERRIDE",
+      "surface": "B",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-ANIMATED-OVERRIDE-D",
+      "invariantId": "INV-ANIMATED-OVERRIDE",
+      "surface": "D",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-P4-QUICK"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-ANIMATED-OVERRIDE-G",
+      "invariantId": "INV-ANIMATED-OVERRIDE",
+      "surface": "G",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-E2E-IDLE"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-FEET-ANCHOR-B",
+      "invariantId": "INV-FEET-ANCHOR",
+      "surface": "B",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-FEET-ANCHOR-D",
+      "invariantId": "INV-FEET-ANCHOR",
+      "surface": "D",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-P4-QUICK"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-FEET-ANCHOR-G",
+      "invariantId": "INV-FEET-ANCHOR",
+      "surface": "G",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-E2E-IDLE"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-LOADER-PARITY-B",
+      "invariantId": "INV-LOADER-PARITY",
+      "surface": "B",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-VERIFY-FULL",
+        "EV-FOCUSED"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-LOADER-PARITY-D",
+      "invariantId": "INV-LOADER-PARITY",
+      "surface": "D",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-P4-QUICK"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-LOADER-PARITY-G",
+      "invariantId": "INV-LOADER-PARITY",
+      "surface": "G",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-E2E-IDLE"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-DEATH-LIFECYCLE-B",
+      "invariantId": "INV-DEATH-LIFECYCLE",
+      "surface": "B",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-DEATH-LIFECYCLE-D",
+      "invariantId": "INV-DEATH-LIFECYCLE",
+      "surface": "D",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-P4-QUICK"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-DEATH-LIFECYCLE-G",
+      "invariantId": "INV-DEATH-LIFECYCLE",
+      "surface": "G",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-E2E-IDLE"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-REGISTRY-MANIFEST-PARITY-B",
+      "invariantId": "INV-REGISTRY-MANIFEST-PARITY",
+      "surface": "B",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-REGISTRY-MANIFEST-PARITY-D",
+      "invariantId": "INV-REGISTRY-MANIFEST-PARITY",
+      "surface": "D",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-OCR"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-REGISTRY-MANIFEST-PARITY-G",
+      "invariantId": "INV-REGISTRY-MANIFEST-PARITY",
+      "surface": "G",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-E2E-IDLE"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-ATTACK-RETURN-B",
+      "invariantId": "INV-ATTACK-RETURN",
+      "surface": "B",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-ATTACK-RETURN-D",
+      "invariantId": "INV-ATTACK-RETURN",
+      "surface": "D",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-P4-QUICK"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    },
+    {
+      "id": "COV-INV-ATTACK-RETURN-G",
+      "invariantId": "INV-ATTACK-RETURN",
+      "surface": "G",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "",
+      "evidenceIds": [
+        "EV-E2E-IDLE"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": []
+    }
+  ],
+  "attacks": [],
+  "reviews": [
+    {
+      "id": "RV-P5-1",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "round": 1,
+      "phase": "CORRECTNESS",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - does not count as independence evidence"
+      ],
+      "startedAt": "2026-09-28T00:00:00Z",
+      "sealedAt": "2026-09-28T00:00:00Z",
+      "previousPhaseReviewId": "",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-EAW-06"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "RV-P5-2",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "round": 1,
+      "phase": "AUTHORITY",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - does not count as independence evidence"
+      ],
+      "startedAt": "2026-09-28T00:00:00Z",
+      "sealedAt": "2026-09-28T00:00:00Z",
+      "previousPhaseReviewId": "",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "RV-P5-3",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "round": 1,
+      "phase": "INTEGRATION",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - does not count as independence evidence"
+      ],
+      "startedAt": "2026-09-28T00:00:00Z",
+      "sealedAt": "2026-09-28T00:00:00Z",
+      "previousPhaseReviewId": "",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "RV-OCR",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "round": 1,
+      "phase": "CONTRACT",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - does not count as independence evidence"
+      ],
+      "startedAt": "2026-09-28T00:00:00Z",
+      "sealedAt": "2026-09-28T00:00:00Z",
+      "previousPhaseReviewId": "",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-EAW-01",
+        "F-EAW-04"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "RV-P4",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "round": 1,
+      "phase": "INTEGRATION",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - does not count as independence evidence"
+      ],
+      "startedAt": "2026-09-28T00:00:00Z",
+      "sealedAt": "2026-09-28T00:00:00Z",
+      "previousPhaseReviewId": "",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-EAW-07",
+        "F-EAW-08",
+        "F-EAW-09"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    }
+  ],
+  "cycles": [],
+  "mutations": [],
+  "corpus": [],
+  "lessons": [
+    {
+      "id": "L-EAW-01",
+      "version": 1,
+      "supersedes": "",
+      "triggerType": "FINDING",
+      "findingIds": [
+        "F-EAW-01"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "enemy-art-wave1-2026-09-28",
+      "rootClass": "adapter-schema-drift",
+      "missedInvariantIds": [],
+      "escapeReason": "no test read the metadata file shape",
+      "applicability": [
+        "asset-pipeline",
+        "presentation-registry"
+      ],
+      "exclusions": [],
+      "proposedProtection": "pin parser output against a real dump fixture",
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "",
+      "status": "CAPTURED",
+      "policyVersion": "",
+      "effectiveFromRun": "",
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-EAW-02",
+      "version": 1,
+      "supersedes": "",
+      "triggerType": "FINDING",
+      "findingIds": [
+        "F-EAW-02"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "enemy-art-wave1-2026-09-28",
+      "rootClass": "anchor-semantics-mismatch",
+      "missedInvariantIds": [],
+      "escapeReason": "assumed Unity pivot = feet anchor without measuring pixels",
+      "applicability": [
+        "asset-pipeline",
+        "presentation-registry"
+      ],
+      "exclusions": [],
+      "proposedProtection": "measure alpha-bbox bottom in packer; e2e ground-line assertion",
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "",
+      "status": "CAPTURED",
+      "policyVersion": "",
+      "effectiveFromRun": "",
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-EAW-03",
+      "version": 1,
+      "supersedes": "",
+      "triggerType": "FINDING",
+      "findingIds": [
+        "F-EAW-03"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "enemy-art-wave1-2026-09-28",
+      "rootClass": "id-namespace",
+      "missedInvariantIds": [],
+      "escapeReason": "buff ids look like enemy ids in data files",
+      "applicability": [
+        "asset-pipeline",
+        "presentation-registry"
+      ],
+      "exclusions": [],
+      "proposedProtection": "reskin map entries must resolve to a real ENEMIES key - test pinned",
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "",
+      "status": "CAPTURED",
+      "policyVersion": "",
+      "effectiveFromRun": "",
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-EAW-04",
+      "version": 1,
+      "supersedes": "",
+      "triggerType": "FINDING",
+      "findingIds": [
+        "F-EAW-04"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "enemy-art-wave1-2026-09-28",
+      "rootClass": "registry-drift",
+      "missedInvariantIds": [],
+      "escapeReason": "hardcoded constant not checked against the file",
+      "applicability": [
+        "asset-pipeline",
+        "presentation-registry"
+      ],
+      "exclusions": [],
+      "proposedProtection": "packer emits measured dims; architecture test pins registry=PNG",
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "",
+      "status": "CAPTURED",
+      "policyVersion": "",
+      "effectiveFromRun": "",
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-EAW-05",
+      "version": 1,
+      "supersedes": "",
+      "triggerType": "FINDING",
+      "findingIds": [
+        "F-EAW-05"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "enemy-art-wave1-2026-09-28",
+      "rootClass": "fixture-drift",
+      "missedInvariantIds": [],
+      "escapeReason": "fixture id later became a mapped reskin",
+      "applicability": [
+        "asset-pipeline",
+        "presentation-registry"
+      ],
+      "exclusions": [],
+      "proposedProtection": "fixtures must pin semantics (unmapped id), assert membership",
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "",
+      "status": "CAPTURED",
+      "policyVersion": "",
+      "effectiveFromRun": "",
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-EAW-06",
+      "version": 1,
+      "supersedes": "",
+      "triggerType": "FINDING",
+      "findingIds": [
+        "F-EAW-06"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "enemy-art-wave1-2026-09-28",
+      "rootClass": "dead-load",
+      "missedInvariantIds": [],
+      "escapeReason": "second enumeration path not updated for the new authority",
+      "applicability": [
+        "asset-pipeline",
+        "presentation-registry"
+      ],
+      "exclusions": [],
+      "proposedProtection": "enumeration of loaded assets derives from the reskin authority",
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "",
+      "status": "CAPTURED",
+      "policyVersion": "",
+      "effectiveFromRun": "",
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-EAW-07",
+      "version": 1,
+      "supersedes": "",
+      "triggerType": "FINDING",
+      "findingIds": [
+        "F-EAW-07"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "enemy-art-wave1-2026-09-28",
+      "rootClass": "latent-assumption",
+      "missedInvariantIds": [],
+      "escapeReason": "single-sheet assumption unguarded",
+      "applicability": [
+        "asset-pipeline",
+        "presentation-registry"
+      ],
+      "exclusions": [],
+      "proposedProtection": "pin clip.sheetUrl/atlasUrl to manifest-emitted values",
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "",
+      "status": "CAPTURED",
+      "policyVersion": "",
+      "effectiveFromRun": "",
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": []
+    },
+    {
+      "id": "L-EAW-08",
+      "version": 1,
+      "supersedes": "",
+      "triggerType": "FINDING",
+      "findingIds": [
+        "F-EAW-08"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "enemy-art-wave1-2026-09-28",
+      "rootClass": "staged-feature",
+      "missedInvariantIds": [],
+      "escapeReason": "declared-but-unconsumed field can rot silently",
+      "applicability": [
+        "asset-pipeline",
+        "presentation-registry"
+      ],
+      "exclusions": [],
+      "proposedProtection": "staged metadata documented + provenance-only; wire when consumer lands",
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "",
+      "status": "CAPTURED",
+      "policyVersion": "",
+      "effectiveFromRun": "",
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": []
+    }
+  ],
+  "messages": [],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-09-27T22:52:53.218Z",
+      "kind": "PHASE",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "cc8e3c1349c94c784698d8cb8bcece13bda5275908e4598a8db707d43d9a2f15",
+      "eventHash": "7e9e807b59061be5eb27fa5b369f73c9ebf7323deec14434e988be7cd064e3d3"
+    },
+    {
+      "seq": 2,
+      "at": "2026-09-27T22:54:04.427Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "7e9e807b59061be5eb27fa5b369f73c9ebf7323deec14434e988be7cd064e3d3",
+      "payloadPath": "events/0002.json",
+      "payloadHash": "452680562b5d71d721d7b098569e5acbc2035b97d834136f489809554399cb81",
+      "eventHash": "224577d88e2b737a6ec4566c1101923f2175a4e7b708c8e39488dbedcbf6eda6"
+    },
+    {
+      "seq": 3,
+      "at": "2026-09-27T22:56:48.558Z",
+      "kind": "PHASE",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "224577d88e2b737a6ec4566c1101923f2175a4e7b708c8e39488dbedcbf6eda6",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "ae19825d6fa1f0712bf1b24c5f3c470eba7b11a029ee989c3169b1cc8816d609",
+      "eventHash": "8796dadfae92e8048c30e14bc9b9a41328c6febf53dd862b48694050fb5288dd"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-27T22:57:23.652Z",
+      "kind": "FINDING",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "8796dadfae92e8048c30e14bc9b9a41328c6febf53dd862b48694050fb5288dd",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "3439d77b39428258524a2ebec7d65f6af6fd5df405a45d220b2242b181d02246",
+      "eventHash": "925a2eae2678209c000c2df5719586429acecb76db0f6908fe4b7490a08a64fb"
+    },
+    {
+      "seq": 5,
+      "at": "2026-09-27T23:07:55.299Z",
+      "kind": "FINDING",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "925a2eae2678209c000c2df5719586429acecb76db0f6908fe4b7490a08a64fb",
+      "payloadPath": "events/0005.json",
+      "payloadHash": "89ba3a216f43eb9365982278b4b2daa2d5cdb496b0d23230c40f64033b447696",
+      "eventHash": "02a30567425e85e86b72da15148738e91571a376e6a68743fd52240c5b5ffe79"
+    },
+    {
+      "seq": 6,
+      "at": "2026-09-27T23:08:47.164Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "02a30567425e85e86b72da15148738e91571a376e6a68743fd52240c5b5ffe79",
+      "payloadPath": "events/0006.json",
+      "payloadHash": "d584d75adf23dfc61f4af03b908902b06be654ec2de3acc574b0e8748f1514d2",
+      "eventHash": "2affb7845e1d13dd04c854d0fac644572adbe620338875e2dc1349b96280d303"
+    },
+    {
+      "seq": 7,
+      "at": "2026-09-27T23:09:35.985Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "2affb7845e1d13dd04c854d0fac644572adbe620338875e2dc1349b96280d303",
+      "payloadPath": "events/0007.json",
+      "payloadHash": "873bef43bebd746c9ede33be8ebd12d1b5f1909779364a3d43e960fba2049179",
+      "eventHash": "a7059412ea2be2cce42b33817868da924ee2cc098f007371d78fb3ab77eea49b"
+    },
+    {
+      "seq": 8,
+      "at": "2026-09-27T23:10:02.502Z",
+      "kind": "FINDING",
+      "actor": "coordinator-20040",
+      "state": {
+        "productStateId": "b7c5f553493d59fb9c672641354a7cead44347211edd1b8e9dfdf6cd92497ab2",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "a7059412ea2be2cce42b33817868da924ee2cc098f007371d78fb3ab77eea49b",
+      "payloadPath": "events/0008.json",
+      "payloadHash": "89ba3a216f43eb9365982278b4b2daa2d5cdb496b0d23230c40f64033b447696",
+      "eventHash": "90122c5cb1807d7c18abba838de7dac4a7c7a1203020a5ec7edaab1bdaaa3b22"
+    }
+  ]
+}
