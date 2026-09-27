@@ -58,6 +58,9 @@ interface PresentationCounters {
   impacts: number
   resolved: number
   lastCastRequestId: string | null
+  impactsByRequest: Record<string, number>
+  resolvedByRequest: Record<string, number>
+  damageByRequest: Record<string, number>
 }
 
 type TestWindow = Window & {
@@ -117,13 +120,36 @@ async function installPresentationRecorder(page: Page): Promise<void> {
     const manager = game?.registry.get('gameManager') as GameManagerHandle | undefined
     const scene = game?.scene.getScene('CombatScene')
 
-    w.__sp = { phases: [], casts: 0, impacts: 0, resolved: 0, lastCastRequestId: null }
+    w.__sp = { phases: [], casts: 0, impacts: 0, resolved: 0, lastCastRequestId: null,
+      impactsByRequest: {}, resolvedByRequest: {}, damageByRequest: {} }
     manager?.eventBus.on('skill_presentation_cast', (payload) => {
       w.__sp!.casts++
       w.__sp!.lastCastRequestId = (payload as { ref: { requestId: string } }).ref.requestId
     })
-    manager?.eventBus.on('action_impact', () => w.__sp!.impacts++)
-    manager?.eventBus.on('skill_presentation_resolved', () => w.__sp!.resolved++)
+    manager?.eventBus.on('action_impact', () => {
+      w.__sp!.impacts++
+      // action_impact fires inside the owning playback's impact ACK window,
+      // while the runner still reports that requestId as active. Per-request
+      // counts make an enemy cast straddling the window unable to inflate or
+      // steal this turn's tally.
+      const requestId = scene?.skillVfxDebug?.playback.requestId
+      if (requestId) {
+        w.__sp!.impactsByRequest[requestId] = (w.__sp!.impactsByRequest[requestId] ?? 0) + 1
+      }
+    })
+    manager?.eventBus.on('skill_presentation_resolved', (payload) => {
+      w.__sp!.resolved++
+      const requestId = (payload as { ref: { requestId: string } }).ref.requestId
+      w.__sp!.resolvedByRequest[requestId] = (w.__sp!.resolvedByRequest[requestId] ?? 0) + 1
+      // hpDamage is the applied HP delta (capped at remaining HP), so the
+      // per-request sum equals the exact enemyHpTotal drop this cast caused.
+      const groups = (payload as { groups?: { outcomes?: { kind: string; hpDamage?: number }[] }[] }).groups ?? []
+      const damage = groups.reduce(
+        (sum, group) => sum + (group.outcomes ?? []).reduce((s, outcome) => s + (outcome.kind === 'hit' ? outcome.hpDamage ?? 0 : 0), 0),
+        0,
+      )
+      w.__sp!.damageByRequest[requestId] = (w.__sp!.damageByRequest[requestId] ?? 0) + damage
+    })
 
     const record = () => {
       const snapshot = scene?.skillVfxDebug?.playback
@@ -146,26 +172,48 @@ function readCounters(page: Page): Promise<PresentationCounters | undefined> {
 /**
  * Manual mode on, then poll submitTurnChoice until a player turn is
  * awaited and the pick is accepted (returns false while an enemy turn is
- * resolving - harmless no-op).
+ * resolving - harmless no-op). Returns the submitted cast's requestId.
+ *
+ * skill_presentation_cast emits synchronously inside the accepted
+ * submitTurnChoice call, so reading lastCastRequestId and the enemy HP
+ * total in the SAME evaluate captures exactly the submitted cast and the
+ * HP baseline at that instant - an accepted submit means every prior
+ * turn's pipeline already finished, so nothing in flight can still
+ * damage an enemy inside that call.
  */
-async function submitManualChoice(page: Page, choice: unknown): Promise<void> {
+async function submitManualChoice(
+  page: Page,
+  choice: unknown,
+): Promise<{ requestId: string; hpBefore: number }> {
   await page.evaluate(() => {
     const game = (window as TestWindow).__tutienPhaserGame
     const manager = game?.registry.get('gameManager') as GameManagerHandle | undefined
     manager?.setBattleManualMode(true)
   })
 
+  let submitted: { requestId: string; hpBefore: number } | null = null
   await expect
     .poll(
-      () =>
-        page.evaluate((submitted) => {
+      async () => {
+        if (submitted) return submitted
+        submitted = await page.evaluate((submittedChoice) => {
           const game = (window as TestWindow).__tutienPhaserGame
           const manager = game?.registry.get('gameManager') as GameManagerHandle | undefined
-          return manager?.submitTurnChoice(submitted) ?? false
-        }, choice),
+          const accepted = manager?.submitTurnChoice(submittedChoice) ?? false
+          if (!accepted) return null
+          const requestId = (window as TestWindow).__sp?.lastCastRequestId
+          if (!requestId) return null
+          const hpBefore = (manager?.getTurnBattle()?.enemies ?? [])
+            .filter((enemy) => enemy.entity.alive)
+            .reduce((total, enemy) => total + enemy.entity.currentHp, 0)
+          return { requestId, hpBefore }
+        }, choice)
+        return submitted
+      },
       { timeout: 120_000, message: 'a player manual turn should accept the submitted choice' },
     )
-    .toBe(true)
+    .not.toBeNull()
+  return submitted!
 }
 
 /**
@@ -173,34 +221,35 @@ async function submitManualChoice(page: Page, choice: unknown): Promise<void> {
  *  - exactly one playback ran for the requestId, ordered cast -> resolved
  *    ('waiting'/'resume' may compress out between rAF frames - not pinned)
  *  - the runner drained to idle afterwards
- *  - the action_impact observation feed fired exactly once for the turn
- *    (events arrive while the phase window is open)
- *  - enemy HP dropped exactly once, and no lease faults.
+ *  - the action_impact and skill_presentation_resolved feeds each fired
+ *    exactly once FOR THIS requestId - the counts are keyed per request,
+ *    so an enemy cast straddling the window cannot inflate them
+ *  - enemy HP dropped by exactly this request's summed hpDamage - the
+ *    baseline was captured atomically at submit-accept and the resolved
+ *    payload reports applied damage, so a dodge (hpDamage 0) expects zero
+ *    drop and no straddling cast can slip through uncounted. No lease faults.
  */
 async function assertSubmittedPlayback(
   page: Page,
-  baseline: PresentationCounters,
+  requestId: string,
   hpBefore: number,
 ): Promise<void> {
-  // The submitted turn's requestId is the first cast AFTER the baseline.
+  // Impact ACK once -> resolved -> the runner drains back to idle with
+  // every lease released. The idle + poolActive observation must be ONE
+  // evaluate: the next turn's cast may legitimately start between two
+  // separate reads and look like a stranded lease on this playback.
   await expect
     .poll(
       async () => {
-        const counters = await readCounters(page)
-        return counters && counters.casts > baseline.casts ? counters.lastCastRequestId : null
+        const snapshot = await playbackSnapshot(page)
+        return snapshot?.phase === 'idle' && snapshot.poolActive === 0 ? snapshot : null
       },
-      { timeout: 15_000, message: 'the submitted turn should publish a cast' },
+      {
+        timeout: 30_000,
+        message: `playback ${requestId} should drain back to idle with all leases released`,
+      },
     )
     .not.toBeNull()
-  const requestId = (await readCounters(page))!.lastCastRequestId!
-
-  // Impact ACK once -> resolved -> the runner drains back to idle.
-  await expect
-    .poll(async () => (await playbackSnapshot(page))?.phase, {
-      timeout: 30_000,
-      message: `playback ${requestId} should drain back to idle`,
-    })
-    .toBe('idle')
 
   const counters = (await readCounters(page))!
   const forRequest = counters.phases.filter((entry) => entry.requestId === requestId)
@@ -214,16 +263,12 @@ async function assertSubmittedPlayback(
   const lastIndex = counters.phases.lastIndexOf(forRequest[forRequest.length - 1]!)
   expect(counters.phases.slice(lastIndex).some((entry) => entry.phase === 'idle')).toBe(true)
 
-  // Turns are strictly serialized: between the baseline and this drain,
-  // the only action that could emit is this turn's.
-  expect(counters.impacts, 'impact ACK feed fired exactly once').toBe(baseline.impacts + 1)
-  expect(counters.resolved).toBe(baseline.resolved + 1)
-  expect(await enemyHpTotal(page)).toBeLessThan(hpBefore)
-  expect(await playbackSnapshot(page)).toMatchObject({
-    phase: 'idle',
-    faultCount: 0,
-    poolActive: 0,
-  })
+  expect(counters.impactsByRequest[requestId] ?? 0, 'impact ACK feed fired exactly once').toBe(1)
+  expect(counters.resolvedByRequest[requestId] ?? 0, 'resolved feed fired exactly once').toBe(1)
+  const expectedDrop = counters.damageByRequest[requestId] ?? 0
+  expect(await enemyHpTotal(page), 'enemy HP drop equals the request\'s resolved damage').toBe(hpBefore - expectedDrop)
+  // faultCount is cumulative and monotone - safe to read after the drain.
+  expect((await playbackSnapshot(page))?.faultCount ?? -1).toBe(0)
 }
 
 /** Seed fields onto the persisted player slice before reload. */
@@ -411,10 +456,8 @@ test.describe('skill presentation runtime - production path (design section 11)'
       })
       .toBeGreaterThan(0)
 
-    const meleeBaseline = (await readCounters(page))!
-    const hpBeforeMelee = await enemyHpTotal(page)
-    await submitManualChoice(page, 'basic')
-    await assertSubmittedPlayback(page, meleeBaseline, hpBeforeMelee)
+    const melee = await submitManualChoice(page, 'basic')
+    await assertSubmittedPlayback(page, melee.requestId, melee.hpBefore)
 
     // Next turn reachable: auto enemy turns keep casting through the same
     // runner while the player turn awaits input.
@@ -449,10 +492,8 @@ test.describe('skill presentation runtime - production path (design section 11)'
       })
       .toBeGreaterThan(0)
 
-    const nguBaseline = (await readCounters(page))!
-    const hpBeforeNgu = await enemyHpTotal(page)
-    await submitManualChoice(page, { kind: 'dynamic_basic', defId: 'ngu_kiem_thuat' })
-    await assertSubmittedPlayback(page, nguBaseline, hpBeforeNgu)
+    const ngu = await submitManualChoice(page, { kind: 'dynamic_basic', defId: 'ngu_kiem_thuat' })
+    await assertSubmittedPlayback(page, ngu.requestId, ngu.hpBefore)
 
     const afterNgu = (await readCounters(page))!
     await expect

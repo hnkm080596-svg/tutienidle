@@ -62,10 +62,12 @@ export class PhaserSkillVfxDriver implements SkillPresentationDriver {
       this.surface.actorImpulse?.(source, cue.durationMs, cue.impulsePx ?? 8)
       return quietHandle
     }
-    // Authored camera shake: a landed outcome in this cue's own group is the
-    // "khi co landed hit" gate; camera shake never fires under reduced motion.
+    // Authored camera shake: the "khi co landed hit" gate is a landed outcome
+    // in the receipt's PRIMARY group, plumbed by the runner as primaryLanded.
+    // The cue's own group may be a combo/composite lane whose outcome must
+    // not decide camera feedback. Shake never fires under reduced motion.
     if (cue.primitive === 'camera-cue') {
-      const landed = group?.outcomes.some(outcome => outcome.kind === 'hit' && outcome.landed) ?? false
+      const landed = context.primaryLanded ?? false
       if (!this.reducedMotion && landed && this.latchCamera(context.ref.token))
         this.surface.cameraImpulse?.(cue.durationMs, cue.intensity ?? 0.005)
       return quietHandle

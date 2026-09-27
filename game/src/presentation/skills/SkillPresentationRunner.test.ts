@@ -1,7 +1,9 @@
-import { describe, expect, it } from 'vitest'
-import type { SkillCastPresentation, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
+import { describe, expect, it, vi } from 'vitest'
+import type { CombatVfxPresetId } from '@/core/battle/CombatAction'
+import type { ResolvedPresentationGroup, SkillCastPresentation, SkillPresentationOutcome, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
 import { SkillPresentationRunner } from './SkillPresentationRunner'
-import type { SkillCue, SkillCueContext, SkillPresentationDriver, SkillPresentationRecipe } from './SkillPresentationRecipe'
+import { PhaserSkillVfxDriver, type SkillVfxGraphics, type SkillVfxSurface } from '@/game/support/skill-vfx/PhaserSkillVfxDriver'
+import type { SkillCue, SkillCueContext, SkillPresentationDriver, SkillPresentationRecipe, SkillRecipeResolver } from './SkillPresentationRecipe'
 
 const ref = { sessionId: 1, requestId: 'request-1', token: 'token-1' }
 const source = { entityId: 'player', row: 1, column: 1 }
@@ -199,5 +201,81 @@ describe('shared skill presentation runner', () => {
     expect(f.calls).toEqual(['complete'])
     // The 170 ms recall cue is truncated at the tail cap.
     expect(Math.max(...f.sampled)).toBeLessThanOrEqual(120)
+  })
+})
+
+describe('camera feedback through the real driver', () => {
+  // These tests run the REAL PhaserSkillVfxDriver: the runner owns plumbing
+  // hasAuthoredCameraCue and primaryLanded into every resolved-phase context,
+  // and only the real driver turns a dropped flag into an observable wrong
+  // (or missing) camera shake.
+  const strokeCue = { primitive: 'stroke' as const, offsetMs: 0, durationMs: 80,
+    anchor: 'target' as const, shape: 'slash' as const }
+  const authoredShake = { primitive: 'camera-cue' as const, offsetMs: 0, durationMs: 140,
+    anchor: 'source' as const, shape: 'camera' as const, intensity: 0.005 }
+  const hitOutcome = (id: string, landed: boolean): SkillPresentationOutcome => ({
+    kind: 'hit', outcomeId: id, target, hitOrdinal: 0, landed, crit: false,
+    hpDamage: landed ? 10 : 0, killed: false })
+  const group = (groupId: string, role: ResolvedPresentationGroup['role'],
+    presetId: CombatVfxPresetId, outcomes: SkillPresentationOutcome[]): ResolvedPresentationGroup => ({
+    groupId, role, resolvedSkillId: groupId, presetId, source,
+    actualTargets: [target], footprint: { kind: 'none' }, outcomes })
+  const phaserSurface = (): SkillVfxSurface => {
+    const graphics = () => {
+      const obj: Record<string, unknown> = {}
+      for (const key of ['clear', 'setVisible', 'setDepth', 'lineStyle', 'lineBetween', 'fillStyle',
+        'fillTriangle', 'strokeCircle', 'strokeEllipse']) obj[key] = () => obj
+      obj.destroy = () => undefined
+      return obj as unknown as SkillVfxGraphics
+    }
+    return {
+      graphics, anchor: fact => ({ x: fact.column * 50, y: fact.row * 50 }),
+      ground: fact => ({ x: fact.column * 50, y: fact.row * 50 }),
+      uprightDepth: () => 450, actorImpulse: vi.fn(), cameraImpulse: vi.fn(),
+    }
+  }
+  const playResolved = (recipeFor: SkillRecipeResolver, groups: ResolvedPresentationGroup[]) => {
+    const f = fixture()
+    const surface = phaserSurface()
+    const runner = new SkillPresentationRunner(new PhaserSkillVfxDriver(surface), recipeFor)
+    runner.start(cast, f.port)
+    runner.update(370)
+    runner.resolve({ ref: { ...ref }, sealed: true, groups })
+    runner.update(0)
+    return { surface, calls: f.calls }
+  }
+  it('lets an authored camera-cue suppress the generic stroke impulse end to end', () => {
+    // The authored cue sits AFTER the stroke in the recipe: without the
+    // action-wide hasAuthoredCameraCue flag the generic impulse would latch
+    // the token first and the shake would come out as (45, 0.001).
+    const authoredRecipe: SkillPresentationRecipe = {
+      id: 'authored', version: 1, color: 0xffffff, castMs: 100, impactMs: 140, recoveryMs: 0,
+      cast: [], impact: [strokeCue, authoredShake], recovery: [],
+    }
+    const { surface } = playResolved(() => authoredRecipe, [
+      group('primary', 'primary', 'metal_slash', [hitOutcome('p', true)])])
+    expect(surface.cameraImpulse).toHaveBeenCalledExactlyOnceWith(140, 0.005)
+  })
+  it('gates authored camera cues on the primary group outcome across routed groups', () => {
+    const primaryRecipe: SkillPresentationRecipe = {
+      id: 'primary', version: 1, color: 0xffffff, castMs: 100, impactMs: 80, recoveryMs: 0,
+      cast: [], impact: [strokeCue], recovery: [],
+    }
+    const comboRecipe: SkillPresentationRecipe = {
+      id: 'combo', version: 1, color: 0xff0000, castMs: 100, impactMs: 140, recoveryMs: 0,
+      cast: [], impact: [authoredShake], recovery: [],
+    }
+    const recipeFor: SkillRecipeResolver = presetId =>
+      presetId === 'kiem_combo_tam_thich' ? comboRecipe : primaryRecipe
+    // primary lands + combo whiffs -> the authored combo-lane shake fires.
+    const landed = playResolved(recipeFor, [
+      group('primary', 'primary', 'metal_slash', [hitOutcome('p', true)]),
+      group('combo', 'combo', 'kiem_combo_tam_thich', [hitOutcome('c', false)])])
+    expect(landed.surface.cameraImpulse).toHaveBeenCalledExactlyOnceWith(140, 0.005)
+    // primary whiffs + combo lands -> no camera feedback anywhere.
+    const whiffed = playResolved(recipeFor, [
+      group('primary', 'primary', 'metal_slash', [hitOutcome('p', false)]),
+      group('combo', 'combo', 'kiem_combo_tam_thich', [hitOutcome('c', true)])])
+    expect(whiffed.surface.cameraImpulse).not.toHaveBeenCalled()
   })
 })

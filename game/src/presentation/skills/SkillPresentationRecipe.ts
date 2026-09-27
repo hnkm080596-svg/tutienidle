@@ -38,6 +38,11 @@ export interface SkillCueContext {
   // an authored camera-cue: the generic landed-hit camera impulse must yield
   // (authored precedence, independent of cue ordering within a recipe).
   readonly hasAuthoredCameraCue?: boolean
+  // Set by the runner for resolved-phase cues: whether the receipt's PRIMARY
+  // group contains a landed hit (the W2.5 landed-hit predicate). Camera
+  // feedback gates on this flag, never on the cue's own group - in a routed
+  // composite the cue may ride a combo lane whose outcome is irrelevant.
+  readonly primaryLanded?: boolean
 }
 export interface SkillCueHandle {
   sample(elapsedMs: number): void

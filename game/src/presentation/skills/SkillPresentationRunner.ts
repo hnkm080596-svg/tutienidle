@@ -87,13 +87,14 @@ export class SkillPresentationRunner {
     // sees the recall motion instead of an empty wait.
     const recipes = result.groups.map(group => this.recipe(group.presetId))
     const hasAuthoredCameraCue = this.authoredCameraCue(recipes)
+    const primaryLanded = this.primaryLanded(result)
     const cues: ScheduledCue[] = []
     let duration = 0
     for (let index = 0; index < result.groups.length; index++) {
       const group = result.groups[index]!
       const recipe = recipes[index]!
       const context: SkillCueContext = { ref: result.ref, recipe, phase: 'resolved', group,
-        hasAuthoredCameraCue }
+        hasAuthoredCameraCue, primaryLanded }
       for (const cue of recipe.recovery) {
         cues.push({ cue, context, offset: cue.offsetMs, ended: false })
         duration = Math.max(duration, cue.offsetMs + cue.durationMs)
@@ -110,6 +111,13 @@ export class SkillPresentationRunner {
     return recipes.some(recipe =>
       recipe.impact.some(cue => cue.primitive === 'camera-cue')
       || recipe.recovery.some(cue => cue.primitive === 'camera-cue'))
+  }
+  // The landed-hit predicate (design "khi co landed hit") is receipt-level:
+  // a landed hit in the PRIMARY group. A combo/composite lane landing or
+  // whiffing on its own must not decide camera feedback.
+  private primaryLanded(result: SkillPresentationResolved): boolean {
+    return result.groups.some(group => group.role === 'primary'
+      && group.outcomes.some(outcome => outcome.kind === 'hit' && outcome.landed))
   }
   update(deltaMs: number): void {
     const active = this.active
@@ -144,11 +152,12 @@ export class SkillPresentationRunner {
     active.cues = []
     const recipes = result.groups.map(group => this.recipe(group.presetId))
     const hasAuthoredCameraCue = this.authoredCameraCue(recipes)
+    const primaryLanded = this.primaryLanded(result)
     for (let index = 0; index < result.groups.length; index++) {
       const group = result.groups[index]!
       const recipe = recipes[index]!
       const context: SkillCueContext = { ref: active.ref, recipe, phase: 'resolved', group,
-        hasAuthoredCameraCue }
+        hasAuthoredCameraCue, primaryLanded }
       active.duration = Math.max(active.duration, recipe.impactMs + recipe.recoveryMs)
       for (const cue of recipe.impact)
         active.cues.push({ cue, context, offset: cue.offsetMs, ended: false })

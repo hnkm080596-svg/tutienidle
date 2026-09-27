@@ -119,11 +119,15 @@ describe('pooled Phaser skill driver', () => {
     } finally { warn.mockRestore() }
   })
   const landedContext = (f: ReturnType<typeof fixture>, overrides?: Partial<SkillCueContext>): SkillCueContext => ({
-    ...f.context, phase: 'resolved' as const, cast: undefined,
+    ...f.context, phase: 'resolved' as const, cast: undefined, primaryLanded: true,
     group: { groupId: 'g', role: 'primary' as const, resolvedSkillId: 'test', presetId: 'metal_slash',
       source, actualTargets: [target], footprint: { kind: 'none' as const },
       outcomes: [{ kind: 'hit' as const, outcomeId: 'h', target, landed: true, crit: false, hpDamage: 4, killed: false, hitOrdinal: 0 }] },
     ...overrides })
+  const comboGroup = (landed: boolean) => ({
+    groupId: 'combo', role: 'combo' as const, resolvedSkillId: 'combo', presetId: 'kiem_combo_tam_thich' as const,
+    source, actualTargets: [target], footprint: { kind: 'none' as const },
+    outcomes: [{ kind: 'hit' as const, outcomeId: 'c', target, landed, crit: false, hpDamage: landed ? 4 : 0, killed: false, hitOrdinal: 0 }] })
   const cameraCue = { primitive: 'camera-cue' as const, anchor: 'source' as const,
     shape: 'camera' as const, offsetMs: 0, durationMs: 140, intensity: 0.005 }
   it('fires an authored camera-cue once per action on a landed hit', () => {
@@ -133,10 +137,23 @@ describe('pooled Phaser skill driver', () => {
     f.driver.open(cameraCue, context)
     expect(f.surface.cameraImpulse).toHaveBeenCalledExactlyOnceWith(140, 0.005)
   })
+  it('gates an authored camera-cue on the primary group outcome, not its own group', () => {
+    // Routed composite (spec W2.3/W2.5): a camera-cue riding a combo-role
+    // group must follow the receipt's PRIMARY group outcome, plumbed as
+    // primaryLanded. Its own lane's outcome is irrelevant.
+    const primaryLanded = fixture()
+    primaryLanded.driver.open(cameraCue, landedContext(primaryLanded, {
+      group: comboGroup(false), primaryLanded: true }))
+    expect(primaryLanded.surface.cameraImpulse).toHaveBeenCalledExactlyOnceWith(140, 0.005)
+    const primaryWhiffed = fixture()
+    primaryWhiffed.driver.open(cameraCue, landedContext(primaryWhiffed, {
+      group: comboGroup(true), primaryLanded: false }))
+    expect(primaryWhiffed.surface.cameraImpulse).not.toHaveBeenCalled()
+  })
   it('suppresses camera cues without a landed hit and under reduced motion', () => {
     const f = fixture()
     const base = landedContext(f)
-    const missed = { ...base, group: { ...base.group!,
+    const missed = { ...base, primaryLanded: false, group: { ...base.group!,
       outcomes: [{ kind: 'hit' as const, outcomeId: 'm', target, landed: false, crit: false, hpDamage: 0, killed: false, hitOrdinal: 0 }] } }
     f.driver.open(cameraCue, missed)
     expect(f.surface.cameraImpulse).not.toHaveBeenCalled()
