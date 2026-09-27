@@ -1,0 +1,41 @@
+{
+ "verdict": "FIX_BATCH",
+ "pin": "29b4719c",
+ "producer": "coordinator",
+ "fixes": [
+  {
+   "finding": "F-PTR-228 (NOVA-1)",
+   "change": "resolveInterceptWindow static viability gate before the Ho window: swingDead when chargeResolved&&chargedSkill==null, or !chargeResolved&&(action==null || chargeTurns>0&&isCharging!==true); plus affected.length===0 and planPipeline.unsupportedFor(swingSkill)>0 skips. Window no longer pays proc cost or mints ward/marker on phantom hits. Pin test hoIntercept unviable-cast (no roll, no drain, no ward)."
+  },
+  {
+   "finding": "F-PTR-229 (NOVA-5)",
+   "change": "assertSaveAcceptable element<->kit coherence: getActiveElement scopes to axis-owning ways; SPELL_KIT_IDS[activeElement][0] must be present in save.skills else hard reject at load. Pin matrix saveAcceptance.test.ts (4 tests: missing basic rejects, present accepts, wrong-element rejects, no element inert)."
+  },
+  {
+   "finding": "F-PTR-224 (AUT-LOW-2)",
+   "change": "consumeThe floor guard: amount<=0 no-op, pool hard-floors at 0. Pin test consumeThe floor/no-op."
+  },
+  {
+   "finding": "F-PTR-225 (AUT-LOW-3)",
+   "change": "SkillDefinitionRegistry invalid_field_value fault: onLanded/oncePerCast legal only on deal_damage ops. Pin tests heal+onLanded and apply_buff+oncePerCast reject."
+  },
+  {
+   "finding": "F-PTR-226 (AUT-NIT-1)",
+   "change": "SkillDefinitionRegistry invalid_field_value fault: compositeCount requires compositePool. Pin test rejects."
+  },
+  {
+   "finding": "F-PTR-230 (NOVA-4)",
+   "change": "SkillResolver docblock: oncePerCast dedup granularity is per primary op lane + fan-out semantics."
+  },
+  {
+   "finding": "F-PTR-231 (INT-LOW-1)",
+   "change": "TurnSkillPlanRuntime docblock: post-commit catch dormant edge + required faulted-after-commit state when driveFollowUps goes live."
+  },
+  {
+   "finding": "F-PTR-232 (INT-LOW-2)",
+   "change": "grantBasicLandedIncome docblock: per-hit is the authored unit by design."
+  }
+ ],
+ "verification": "npm run type-check clean; eslint clean; vitest scoped 1264 tests green (skilldef+save+the-tu 712, battle/turn 552); asciiComments ratchet green",
+ "commit": "29b4719c"
+}
