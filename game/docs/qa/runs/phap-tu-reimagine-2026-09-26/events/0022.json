@@ -1,0 +1,19 @@
+{
+  "applied": [
+    "review:REV-PTR-CLO-9",
+    "finding:F-PTR-83",
+    "evidence:EV-PTR-CLO9",
+    "evidence:EV-PTR-FIXCLO",
+    "finding:F-PTR-69 (updated)",
+    "finding:F-PTR-70 (updated)",
+    "finding:F-PTR-71 (updated)",
+    "finding:F-PTR-72 (updated)",
+    "finding:F-PTR-73 (updated)",
+    "finding:F-PTR-74 (updated)",
+    "finding:F-PTR-75 (updated)",
+    "finding:F-PTR-76 (updated)",
+    "finding:F-PTR-77 (updated)",
+    "finding:F-PTR-78 (updated)",
+    "finding:F-PTR-80 (updated)"
+  ]
+}

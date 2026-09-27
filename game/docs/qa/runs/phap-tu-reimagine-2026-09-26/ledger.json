@@ -11,7 +11,7 @@
     "base": "master",
     "head": "038706f7",
     "state": {
-      "productStateId": "9b269ce17dd8fab1bab2cf951b8091dda39759bdbc56b77760af11907e02c23d",
+      "productStateId": "4ed41855a5a5ba30a3d6f4825c2216b463c5af1b83602f78051b5597b1cd429f",
       "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
       "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
       "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
@@ -4211,7 +4211,9 @@
       "discoveredBy": "cleanF COR (F-1); INT F1 dup",
       "counterexample": "routed charge-resolve plans load grants that can never emit -- commitsCast gate conflates non-committing follow-up with non-committing deferred resolve",
       "status": "CLOSED",
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-9"
+      ],
       "invariantIds": [],
       "evidenceIds": [
         "EV-PTR-CORF",
@@ -4275,7 +4277,9 @@
       "discoveredBy": "cleanF COR (F-3); INT F2 dup",
       "counterexample": "every instance authored-if binds {h1..hN} vs enclosing gate {hi} -- dedup keys differ, hooks re-fire per instance (INT repro [1,2,1,2])",
       "status": "CLOSED",
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-9"
+      ],
       "invariantIds": [],
       "evidenceIds": [
         "EV-PTR-CORF",
@@ -4340,7 +4344,9 @@
       "discoveredBy": "cleanF COR (F-4)",
       "counterexample": "oncePerCast inside for_each_target compiles unwrapped -> fires per target violating D4/D5",
       "status": "CLOSED",
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-9"
+      ],
       "invariantIds": [],
       "evidenceIds": [
         "EV-PTR-CORF",
@@ -4404,7 +4410,9 @@
       "discoveredBy": "cleanF INT (F3)",
       "counterexample": "root def burn resolves theBurned=undefined -> theScale=1 while pool still drains",
       "status": "CLOSED",
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-9"
+      ],
       "invariantIds": [],
       "evidenceIds": [
         "EV-PTR-INTF",
@@ -4474,7 +4482,9 @@
       "discoveredBy": "cleanF AUT (F-AUTF-1)",
       "counterexample": "two independent spellings of cap * mpRatio",
       "status": "CLOSED",
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-9"
+      ],
       "invariantIds": [],
       "evidenceIds": [
         "EV-PTR-AUTF",
@@ -4538,7 +4548,9 @@
       "discoveredBy": "cleanF AUT (F-AUTF-2)",
       "counterexample": "identical read transcribed 3x",
       "status": "CLOSED",
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-9"
+      ],
       "invariantIds": [],
       "evidenceIds": [
         "EV-PTR-AUTF",
@@ -4602,7 +4614,9 @@
       "discoveredBy": "cleanF COR (F-2) + AUT (F-AUTF-3) + INT (Nit) + NOV (F-NOV-1) -- all reviewers independently",
       "counterexample": "element===undefined || resolved!==GENERIC stamps when starter unresolvable AND element unset (corrupt-save lane only)",
       "status": "CLOSED",
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-9"
+      ],
       "invariantIds": [],
       "evidenceIds": [
         "EV-PTR-CORF",
@@ -4669,7 +4683,9 @@
       "discoveredBy": "cleanF AUT (F-AUTF-4)",
       "counterexample": "direct pool mutation outside owning system",
       "status": "CLOSED",
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-9"
+      ],
       "invariantIds": [],
       "evidenceIds": [
         "EV-PTR-AUTF",
@@ -4733,7 +4749,9 @@
       "discoveredBy": "cleanF AUT (F-AUTF-5)",
       "counterexample": "doc drift vs deleted modules",
       "status": "CLOSED",
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-9"
+      ],
       "invariantIds": [],
       "evidenceIds": [
         "EV-PTR-AUTF",
@@ -4797,7 +4815,9 @@
       "discoveredBy": "cleanF NOV (F-NOV-2)",
       "counterexample": "craft unaffordable repeatCasts:2 declared -> queuedExecutions gets 2 repeats that never paid",
       "status": "CLOSED",
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-9"
+      ],
       "invariantIds": [],
       "evidenceIds": [
         "EV-PTR-NOVF",
@@ -4918,7 +4938,9 @@
       "discoveredBy": "cleanF NOV (F-NOV-4)",
       "counterexample": "authored both -> composite pick overwrites the swapped payload",
       "status": "CLOSED",
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-9"
+      ],
       "invariantIds": [],
       "evidenceIds": [
         "EV-PTR-NOVF",
@@ -4987,10 +5009,10 @@
       "evidenceIds": [
         "EV-PTR-INTF"
       ],
-      "actual": "",
-      "expected": "",
-      "rootCause": "",
-      "rootClass": "",
+      "actual": "independent rediscovery of F-PTR-69",
+      "expected": "see F-PTR-69",
+      "rootCause": "duplicate of F-PTR-69 -- same root cause",
+      "rootClass": "CONTRACT_BREAK",
       "subsystem": "skilldef",
       "siblingSearch": [
         {
@@ -5008,7 +5030,7 @@
         }
       ],
       "siblingFindingIds": [],
-      "repair": "",
+      "repair": "none -- sealed under F-PTR-69 fix @1a4ea837",
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "duplicateOf": "F-PTR-69",
@@ -5044,10 +5066,10 @@
       "evidenceIds": [
         "EV-PTR-INTF"
       ],
-      "actual": "",
-      "expected": "",
-      "rootCause": "",
-      "rootClass": "",
+      "actual": "independent rediscovery of F-PTR-70",
+      "expected": "see F-PTR-70",
+      "rootCause": "duplicate of F-PTR-70 -- same root cause",
+      "rootClass": "CONTRACT_BREAK",
       "subsystem": "skilldef",
       "siblingSearch": [
         {
@@ -5065,13 +5087,81 @@
         }
       ],
       "siblingFindingIds": [],
-      "repair": "",
+      "repair": "none -- sealed under F-PTR-70 fix @1a4ea837",
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "duplicateOf": "F-PTR-70",
       "exception": null,
       "classification": "REAL_DEFECT",
       "rejectionReason": "Independent discovery by INT-F with deterministic repro ([1,2,1,2] gate firings vs [1,1]); fixed @1a4ea837, sealed under F-PTR-70."
+    },
+    {
+      "id": "F-PTR-83",
+      "title": "P15 ascii ratchet fails -- em dash U+2014 in drainAllThe doc comment added by the fix batch",
+      "state": {
+        "productStateId": "4ed41855a5a5ba30a3d6f4825c2216b463c5af1b83602f78051b5597b1cd429f",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Medium",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/the-tu/TheEconomy.ts",
+          "symbolOrSection": "drainAllThe doc comment :41",
+          "revision": "1a4ea837",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "closure REV-PTR-CLO-9",
+      "counterexample": "npx vitest run asciiComments: 380 pass / 1 fail -- no comment token may carry non-ASCII beyond baseline; git blame attributes line to 1a4ea837",
+      "status": "CLOSED",
+      "closureReviewIds": [
+        "REV-PTR-CLO-9"
+      ],
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-PTR-CLO9",
+        "EV-PTR-FIXCLO"
+      ],
+      "actual": "em dash U+2014 in doc comment; suite fails",
+      "expected": "plain ASCII comments (P15); asciiComments suite green",
+      "rootCause": "fix batch authored a doc comment with an em dash; P15 ratchet not re-run before commit",
+      "rootClass": "ENVIRONMENT",
+      "subsystem": "the-tu",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "asciiComments ratchet suite (whole-source scan)",
+          "evidenceIds": [
+            "EV-PTR-FIXCLO"
+          ],
+          "hitDispositions": [
+            "suite green after fix -- no other offenders"
+          ],
+          "coverageLimits": [
+            "comment tokens only"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "em dash -> ASCII hyphen @bdd9b4b1",
+      "pinEvidenceIds": [
+        "EV-PTR-FIXCLO"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PTR-FIXCLO"
+      ],
+      "duplicateOf": null,
+      "exception": null,
+      "classification": "REAL_DEFECT",
+      "rejectionReason": null,
+      "closedAt": "2026-09-27T00:34:00Z",
+      "closeReason": "FIXED"
     }
   ],
   "evidence": [
@@ -5624,7 +5714,7 @@
         "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
         "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
       },
-      "status": "CURRENT",
+      "status": "STALE",
       "producer": "devin-coordinator",
       "startedAt": "2026-09-27T01:10:00Z",
       "finishedAt": "2026-09-27T01:40:00Z",
@@ -5656,6 +5746,67 @@
       "limitations": [
         "scoped vitest; env-noise fails excluded (canvas/magick pre-existing)"
       ]
+    },
+    {
+      "id": "EV-PTR-CLO9",
+      "state": {
+        "productStateId": "4ed41855a5a5ba30a3d6f4825c2216b463c5af1b83602f78051b5597b1cd429f",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "status": "CURRENT",
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "devin-38a9b15ddaf64feab7d4f7007a8ca5e9",
+      "startedAt": "2026-09-27T00:26:00Z",
+      "finishedAt": "2026-09-27T00:33:19Z",
+      "commandOrMethod": "closure verify of clean-F batch at 1a4ea837 -> FINDINGS (1 Medium ascii); re-verify at bdd9b4b1 -> SEALED",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "records-clo9.json",
+      "artifactHash": "302b199b62d99f0b65be425da84d1a793f4d400db0ad744d19a2d30e9cde16db",
+      "claims": [
+        "12/13 fixes verified; em-dash finding raised then resolved"
+      ],
+      "inputEvidenceIds": [],
+      "inputPaths": [
+        "src/core/the-tu/TheEconomy.ts",
+        "src/core/skilldef/SkillResolver.ts",
+        "src/core/skilldef/SkillExecutor.ts",
+        "src/core/battle/turn/TurnBattleSystem.ts"
+      ],
+      "invariantIds": [],
+      "limitations": []
+    },
+    {
+      "id": "EV-PTR-FIXCLO",
+      "state": {
+        "productStateId": "4ed41855a5a5ba30a3d6f4825c2216b463c5af1b83602f78051b5597b1cd429f",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "status": "CURRENT",
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "devin-coordinator",
+      "startedAt": "2026-09-27T00:32:00Z",
+      "finishedAt": "2026-09-27T00:33:00Z",
+      "commandOrMethod": "em dash -> hyphen @bdd9b4b1; npx vitest run asciiComments (1/1 pass); npm run type-check exit 0",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "records-clo9.json",
+      "artifactHash": "302b199b62d99f0b65be425da84d1a793f4d400db0ad744d19a2d30e9cde16db",
+      "claims": [
+        "P15 ratchet green on bdd9b4b1"
+      ],
+      "inputEvidenceIds": [],
+      "inputPaths": [
+        "src/core/the-tu/TheEconomy.ts"
+      ],
+      "invariantIds": [],
+      "limitations": []
     }
   ],
   "coverage": [],
@@ -6483,7 +6634,7 @@
         "F-PTR-75"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-PTR-AUT-F1",
@@ -6520,7 +6671,7 @@
         "F-PTR-77"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-PTR-INT-F1",
@@ -6556,7 +6707,7 @@
         "F-PTR-75"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-PTR-NOV-1",
@@ -6590,6 +6741,39 @@
         "F-PTR-78",
         "F-PTR-79",
         "F-PTR-80"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "REV-PTR-CLO-9",
+      "state": {
+        "productStateId": "4ed41855a5a5ba30a3d6f4825c2216b463c5af1b83602f78051b5597b1cd429f",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 7,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-38a9b15ddaf64feab7d4f7007a8ca5e9",
+      "contextId": "ctx-38a9b15d",
+      "model": "swe-2",
+      "role": "CLOSURE",
+      "inputBundleHash": "9b269ce17dd8fab1bab2cf951b8091dda39759bdbc56b77760af11907e02c23d",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "read-only worktree + scoped tests"
+      ],
+      "startedAt": "2026-09-27T00:26:00Z",
+      "sealedAt": "2026-09-27T00:33:19Z",
+      "previousPhaseReviewId": "REV-PTR-CLO-8",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-PTR-CLO9"
+      ],
+      "findingIds": [
+        "F-PTR-83"
       ],
       "novelAttackIds": [],
       "status": "SEALED"
@@ -7578,6 +7762,41 @@
         "pin a root-authored carrier even when no shipped def uses the field"
       ],
       "capabilityDelta": "theBurned capture is unconditional for committing roots carrying consumesAllThe"
+    },
+    {
+      "id": "L-PTR-CLO9-ASCII",
+      "version": 1,
+      "supersedes": null,
+      "incidentEvidenceIds": [
+        "EV-PTR-CLO9",
+        "EV-PTR-FIXCLO"
+      ],
+      "originatingRun": "phap-tu-reimagine-2026-09-26",
+      "missedInvariantIds": [],
+      "exclusions": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-PTR-83"
+      ],
+      "rootClass": "ENVIRONMENT",
+      "escapeReason": "fix batch authored a doc comment with a non-ASCII character (em dash) and the P15 asciiComments ratchet was not re-run before commit -- scoped verify ran skilldef/battle suites but skipped the ratchet",
+      "applicability": [
+        "any commit touching comments/doc strings",
+        "every fix batch verify sweep must include the cheap ratchet suites (asciiComments) even when changes look comment-only"
+      ],
+      "proposedProtection": [
+        "always run asciiComments in the scoped verify set",
+        "prefer ASCII hyphens over typographic dashes in new comments"
+      ],
+      "capabilityDelta": "P15 ratchet re-run is part of every fix batch verify"
     }
   ],
   "messages": [],
@@ -7901,6 +8120,54 @@
       "payloadPath": "events/0020.json",
       "payloadHash": "d8ebf847fe754c4b91a3a1bec74773655dab3f4c4bd7e4ae37b88bbb6cc6a186",
       "eventHash": "ce9ec3f30e69a6ef1fda30123a9361f3b82793d36b21f04dbc24c0958281df2b"
+    },
+    {
+      "seq": 21,
+      "at": "2026-09-27T00:32:56.393Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "4ed41855a5a5ba30a3d6f4825c2216b463c5af1b83602f78051b5597b1cd429f",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "ce9ec3f30e69a6ef1fda30123a9361f3b82793d36b21f04dbc24c0958281df2b",
+      "payloadPath": "events/0021.json",
+      "payloadHash": "b4ff674ba986af3cf9da0102ec8a2c4cbce685c84b0631b32e588c05dd771fcc",
+      "eventHash": "2737c6810ee532af835cc26d0c9b50213a52146be2d2a6ac55c0d6ebd6ab73c1"
+    },
+    {
+      "seq": 22,
+      "at": "2026-09-27T00:33:55.095Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "4ed41855a5a5ba30a3d6f4825c2216b463c5af1b83602f78051b5597b1cd429f",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "2737c6810ee532af835cc26d0c9b50213a52146be2d2a6ac55c0d6ebd6ab73c1",
+      "payloadPath": "events/0022.json",
+      "payloadHash": "c551d3dca8a9fce3433f95db350811667e4e09d1eff5f29502ea935dde3516fd",
+      "eventHash": "6d2c046b257db026a1227169c0b45a02a999b298823ad09e847f5f9f8ebfbf22"
+    },
+    {
+      "seq": 23,
+      "at": "2026-09-27T00:34:30.933Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "4ed41855a5a5ba30a3d6f4825c2216b463c5af1b83602f78051b5597b1cd429f",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "6d2c046b257db026a1227169c0b45a02a999b298823ad09e847f5f9f8ebfbf22",
+      "payloadPath": "events/0023.json",
+      "payloadHash": "7d3f003867ba789d81a4c7a0b13c55f9d6165b03d27440146c4563e76d2708f7",
+      "eventHash": "02009514bf4f719f8da91fdca1448f975d9ffaaec2993192f250687c75948a3c"
     }
   ]
 }

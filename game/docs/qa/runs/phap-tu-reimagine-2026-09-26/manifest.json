@@ -20250,7 +20250,7 @@
       "path": "src/core/the-tu/TheEconomy.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1a2bbc8221bb73dd798f870ba4c12d719684dbcb124b20893ef2121ffc83b133"
+      "hash": "b04e85f2f2070cf8f28830ab707561ed05d7d8afd3bc2706b747e0179099e1b5"
     },
     {
       "path": "src/core/the-tu/TheTuAnMechanicModifiers.ts",
@@ -23097,5 +23097,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "9b269ce17dd8fab1bab2cf951b8091dda39759bdbc56b77760af11907e02c23d"
+  "productStateId": "4ed41855a5a5ba30a3d6f4825c2216b463c5af1b83602f78051b5597b1cd429f"
 }
