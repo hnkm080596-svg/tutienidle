@@ -72,3 +72,51 @@ describe('TurnBattleSystem — charging actor is immune to the CC counter side-e
     }
   })
 })
+
+describe('TurnBattleSystem — self-scoped charge init queues no follow-up executions', () => {
+  it('a self-targeted charge skill with repeatCasts initiates the charge and queues nothing', () => {
+    // Latent-defect pin: self scope used to set affected=[actor] without
+    // the isChargeInit gate the enemy branch has, so a charge init
+    // carrying repeatCasts would queue executions that resolve the
+    // charged root instantly and uncharged. No live content combines
+    // the two; this synthetic def pins the gate.
+    const player = createCombatant({
+      id: 'player', type: 'player', row: 4,
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, might: 100 }),
+    })
+    const enemyEntity = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000 })
+
+    const playerParticipant: TurnBattleParticipant = {
+      id: 'player', entity: player, speed: 100, priority: 0, actionGauge: 0, alive: true,
+      consecutiveHardCcTurns: 0,
+      special: {
+        skill: {
+          id: 'player_self_charge', cooldownTurns: 0, chargeTurns: 2, repeatCasts: 2,
+          targetScope: 'self', targeting: { shape: 'single' },
+        },
+        remainingCooldownTurns: 0,
+      },
+      basic: { id: 'player_basic', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } },
+    }
+    const enemyParticipant: TurnBattleParticipant = {
+      id: 'enemy', entity: enemyEntity, speed: 10, priority: 1, actionGauge: 0, alive: true,
+      consecutiveHardCcTurns: 0,
+      basic: { id: 'enemy_basic', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } },
+    }
+
+    const battle: TurnBattle = { players: [playerParticipant], enemies: [enemyParticipant], state: 'fighting' }
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    const declared = system.declareActorAction(battle, playerParticipant, 'special')
+
+    // Charge INIT: the charge state commits, no target set resolves
+    // (enemy scope behaves the same -- targets materialize at resolve).
+    expect(playerParticipant.chargingTurnsRemaining).toBe(2)
+    expect(declared.affected).toEqual([])
+
+    const { targetIds } = system.applyActionImpact(battle, declared)
+    system.completeAction(battle, playerParticipant, declared, targetIds)
+
+    expect(battle.queuedExecutions).toBeUndefined()
+  })
+})

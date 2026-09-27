@@ -1044,7 +1044,9 @@ export class TurnBattleSystem {
    * battle.queuedExecutions / battle.queuedFollowUps and parks the
    * popped entry on pendingQueuedExecution / pendingReactiveEntry so
    * declareActorAction() can consume it. Only call it for an actor the
-   * caller is about to resolve.
+   * caller is about to resolve. Parking over an occupied slot throws --
+   * a second dequeue before the declare would silently overwrite the
+   * committed payload already shifted off the queue.
    */
   private dequeueFollowUpActor(battle: TurnBattle): TurnBattleParticipant | null {
     // Task 11 -- prepared executions (repeat/multicast) drain FIRST: they
@@ -1066,6 +1068,11 @@ export class TurnBattleSystem {
         battle.enemies.find((enemy) => enemy.id === entry.actorId)
 
       if (execActor?.entity.alive) {
+        if (this.pendingQueuedExecution !== null) {
+          throw new Error(
+            `TurnBattleSystem: dequeueFollowUpActor dequeued a queued execution while pendingQueuedExecution still holds actor '${this.pendingQueuedExecution.actorId}' -- a committed payload would be silently overwritten; declare must consume the park before the next dequeue`,
+          )
+        }
         this.pendingQueuedExecution = entry
         return execActor
       }
@@ -1110,6 +1117,12 @@ export class TurnBattleSystem {
     }
 
     battle.followUpChainDepth = (battle.followUpChainDepth ?? 0) + 1
+
+    if (this.pendingReactiveEntry !== null) {
+      throw new Error(
+        `TurnBattleSystem: dequeueFollowUpActor dequeued a reactive follow-up while pendingReactiveEntry still holds actor '${this.pendingReactiveEntry.actorId}' -- a committed payload would be silently overwritten; declare must consume the park before the next dequeue`,
+      )
+    }
     this.pendingReactiveEntry = entry
 
     return queued
@@ -1901,7 +1914,13 @@ export class TurnBattleSystem {
       const targetScope = payloadSkill?.targetScope ?? 'enemy'
 
       if (targetScope === 'self') {
-        affected = [actor]
+        // A charge initiation resolves no target set -- the same
+        // !isChargeInit gate the enemy branch applies, so a self-scoped
+        // charge cast never queues repeat/multicast executions off an
+        // uncharged payload.
+        if (!isChargeInit) {
+          affected = [actor]
+        }
         scaledDamage = null
       } else {
         opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
@@ -2934,7 +2953,7 @@ export class TurnBattleSystem {
    * Manual mode must NOT await player input for these -- the cast was
    * already chosen; the follow-up resolves automatically.
    *
-   * Lane-level half of isCommittedFollowUpClaim -- claim and drain
+   * Lane-level term of isCommittedFollowUpClaim -- claim and drain
    * sites consult that predicate, not this one.
    */
   isPendingQueuedExecution(actorId: string): boolean {
@@ -2942,7 +2961,7 @@ export class TurnBattleSystem {
   }
 
   /**
-   * The reactive lane's half of isCommittedFollowUpClaim: a queued
+   * The reactive lane's term of isCommittedFollowUpClaim: a queued
    * Phan/Tro counter dequeued by dequeueFollowUpActor parks in
    * pendingReactiveEntry until declareActorAction consumes it via
    * declareReactiveBypass with a forced payload -- a committed action,
@@ -2981,12 +3000,23 @@ export class TurnBattleSystem {
    * .drainPendingPlayback) consult THIS predicate alone, so a new
    * committed lane joins the exemption here rather than by being
    * enumerated per call site.
+   *
+   * Scope invariant: this predicate can only see lanes that park on the
+   * TBS pending* fields or on the participant itself -- a committed
+   * lane keyed on battle- or runtime-scoped state is invisible to it
+   * and must extend this predicate when one lands.
+   *
+   * The alive gate is not decorative: a mid-charge kill leaves
+   * chargingTurnsRemaining set on the corpse (charge fields clear only
+   * inside declareActorAction, which the dead actor never reaches), so
+   * without it a dead actor would still hold a committed claim.
    */
   isCommittedFollowUpClaim(actor: TurnBattleParticipant): boolean {
     return (
-      this.isPendingQueuedExecution(actor.id) ||
-      this.isPendingReactiveBypass(actor.id) ||
-      (actor.chargingTurnsRemaining ?? 0) > 0
+      actor.entity.alive &&
+      (this.isPendingQueuedExecution(actor.id) ||
+        this.isPendingReactiveBypass(actor.id) ||
+        (actor.chargingTurnsRemaining ?? 0) > 0)
     )
   }
 

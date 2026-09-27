@@ -167,7 +167,7 @@ actor.entity.stats = recomputeEffectiveStats(actor.entity.baseStats, actor.buffs
 
 **Interfaces:**
 - Consumes: participant shape `{ speed: number }`, `advanceGauge`, existing battle fixture helpers (reuse pattern from `TurnBattleSystem.consumeDamage.test.ts`).
-- Produces: participant.speed synced from entity.stats.speed at (a) recompute site, (b) pacing loop in tickPacing/peekNextActor.
+- Produces: participant.speed synced from entity.stats.speed at (a) recompute site, (b) pacing loop in tickPacing/dequeueNextActorForClaim.
 
 - [ ] **Step 1: Write failing tests** (fixture mirrors consumeDamage.test.ts):
 
@@ -225,7 +225,7 @@ describe('effective speed sync (AR-05)', () => {
     const ctx = battle(true)
     ctx.system.resolveNextStep(ctx.battle)
     // After first action both gauges reset (consume 1). Player speed 200 vs enemy 100 → next ready actor is player again.
-    const next = ctx.system.peekNextActor(ctx.battle)
+    const next = ctx.system.dequeueNextActorForClaim(ctx.battle)
     expect(next?.id).toBe('player')
   })
 
@@ -252,7 +252,7 @@ describe('effective speed sync (AR-05)', () => {
 actor.speed = actor.entity.stats.speed
 ```
 
-and in `tickPacing` + `peekNextActor` gauge-step loops (before `advanceGauge`):
+and in `tickPacing` + `dequeueNextActorForClaim` gauge-step loops (before `advanceGauge`):
 
 ```typescript
 // R2 (AR-05): sync cache from owner before every pacing use so buffs

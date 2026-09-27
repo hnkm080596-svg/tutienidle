@@ -210,6 +210,12 @@ export class CombatAnimationRuntime {
         !turnBattleSystem.isCommittedFollowUpClaim(actor)
 
       if (isManualActor) {
+        // Defensive net, not a production path: a manual claim parks via
+        // pauseForManualActor (awaitedManualActor), never
+        // pendingReadyActor, and manual-mode flag writes are boundary-
+        // queued to a token-IDLE drain, so the flag cannot flip while a
+        // ready-phase actor sits parked. Only tests driving
+        // runtime.setBattleManualMode directly mid-park reach this.
         this.awaitedManualActor = actor
       } else {
         const declared = turnBattleSystem.declareActorAction(battle, actor)
