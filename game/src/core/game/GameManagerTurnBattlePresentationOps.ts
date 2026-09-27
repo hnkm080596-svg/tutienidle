@@ -163,7 +163,7 @@ export class GameManagerTurnBattlePresentationOps {
     return this.runtime.isActionPlaybackWaiting()
   }
 
-  /** Phaser gọi khi ready flourish xong → declare action, phát 'attack'. */
+  /** Phaser calls when the ready flourish ends - declares the action and publishes skill_presentation_cast. */
   acknowledgeTurnReady(token?: string): void {
     this.runtime.acknowledgeTurnReady(token)
   }

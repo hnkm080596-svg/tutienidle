@@ -14,7 +14,6 @@ import type {
   BattlePositionsEvent,
   BattleEndEvent,
   BattleRewardParticleEvent,
-  ActionImpactEvent,
   StatusVfxAttachedEvent,
   StatusVfxUpdatedEvent,
   StatusVfxRemovedEvent,
@@ -43,7 +42,6 @@ import {
   getBattlefieldRenderMode,
   type BattlefieldRenderMode,
 } from '@/presentation/geometry/BattlefieldRenderMode'
-import { spawnActionImpactVfx, toVector2Points } from '@/game/support/ActionImpactVfx'
 import type { EnemySpawnVfxHandle } from '@/game/support/EnemySpawnVfx'
 
 import {
@@ -1971,26 +1969,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       const port = this.gameManagerRef
       if (port) this.skillPlayback.resumeResolved(resume.resolved, port)
     }
-  }
-
-  // ================= Combat Grid Rework Ã¢â‚¬â€ VFX 2.5D theo space =================
-
-  /**
-   * MÃ¡Â»ËœT action_impact = MÃ¡Â»ËœT VFX instance (spawnActionImpactVfx): mÃ¡Â»Âi
-   * pulse/hit sÃ¡»â€˜ng trong cÃƒÂ¹ng 1 cÃ¡ÂºÂ·p Graphics + 1 timeline, khÃƒÂ´ng bao giÃ¡»Â
-   * sinh GameObject theo hitCount/target. preset.space quyÃ¡Âº¿t Ã„â€˜Ã¡»â€¹nh khÃƒÂ´ng
-   * gian; polygon footprint CHÃ¡»ˆ trÃƒÂ¬nh bÃƒÂ y Ã¢â‚¬â€ damage do core quyÃ¡Âº¿t Ã„â€˜Ã¡»â€¹nh.
-   *
-   * Remediation Task 2 — ack engine từ completion THỰC của VFX tween qua
-   * handle, không còn delayedCall tự tính duration trùng lặp. Token
-   * CAPTURE TẠI SPAWN (plan Task 1 Step 5): callback muộn giữ token cũ —
-   * engine đã sang phase/action khác (token mới) thì ack cũ thành stale
-   * no-op ở GameManager, chặn cross-battle mutation. Không spawn được VFX
-   * (projection miss) → ack ngay để engine không treo.
-   */
-  // Internal (module boundary — combat-action-feedback).
-  private onActionImpact(event: ActionImpactEvent) {
-    this.actionFeedback.onActionImpact(event)
   }
 
   /**

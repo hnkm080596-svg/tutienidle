@@ -377,7 +377,3 @@ export const COMBAT_VFX_PRESETS = {
     screenShake: { durationMs: 140, intensity: 0.005 }
   },
 } as const satisfies Record<CombatVfxPresetId, CombatVfxPreset>
-
-export function getCombatVfxPreset(id: CombatVfxPresetId): CombatVfxPreset {
-  return COMBAT_VFX_PRESETS[id]
-}

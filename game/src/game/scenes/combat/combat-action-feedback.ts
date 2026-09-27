@@ -1,13 +1,8 @@
-// combat-action-feedback (Wave-3 large-file split) - tach tu CombatScene.ts.
-// Action visual feedback + presentation ACK pacing: shared attack lunge
-// with midpoint impact ack, hit/critical/dodge flashes and floating text,
-// action_impact VFX completion ack, turn_ready pulse ack, standby tail.
-// Token is captured AT SPAWN for every delayed ack - a late callback holds
-// a stale token the engine rejects (plan Task 1 Step 5; R5 AR-20).
-import type {
-  ActionImpactEvent,
-} from '@/core/battle/BattleEvents'
-
+// combat-action-feedback (Wave-3 large-file split) - split from CombatScene.ts.
+// Hit/critical/dodge flashes and floating text, turn_ready pulse ack, and the
+// standby tail. The actor lunge and the action_impact visual moved to the
+// shared skill presentation runner, which owns both action ACKs; the legacy
+// attack/action_impact feed keeps no production subscribers here.
 import type { CombatScene, CombatScenePayload } from '../CombatScene'
 import {
   BUFF_ATTACH_COLOR,
@@ -87,19 +82,6 @@ export class CombatActionFeedback {
     })
 
     scene.showFloatingText(dodger, 'Né!', '#8be9fd')
-  }
-
-  /**
-   * Remediation Task 2 - ack engine tu completion THUC cua VFX tween qua
-   * handle, khong con delayedCall tu tinh duration trung lap. Token
-   * CAPTURE TAI SPAWN (plan Task 1 Step 5): callback muon giu token cu -
-   * engine da sang phase/action khac (token moi) thi ack cu thanh stale
-   * no-op o GameManager, chan cross-battle mutation. Khong spawn duoc VFX
-   * (projection miss) -> ack ngay de engine khong treo.
-   */
-  onActionImpact(event: ActionImpactEvent) {
-    // Retained standalone visual API, not subscribed to production action events.
-    this.scene.vfxSpawner.onActionImpact(event)
   }
 
   /**

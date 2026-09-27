@@ -124,6 +124,8 @@ export const ESSENCE_STREAM_ARRIVAL_EVENT = 'essence_stream_arrival'
  * Renderer dùng anchorCell + presetId để đặt MỘT VFX chính tại tâm ô
  * primary target; affectedTargetIds chỉ phục vụ hit-flash/UI — KHÔNG sinh
  * bản sao effect theo target.
+ * Observation feed - no production subscribers (design section 12); skill
+ * presentation runs on skill_presentation_cast/_resolved instead.
  */
 export interface ActionImpactEvent {
   type: 'action_impact'
