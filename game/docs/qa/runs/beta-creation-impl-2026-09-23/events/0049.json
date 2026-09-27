@@ -1,0 +1,22 @@
+{
+  "type": "CYCLE_DISPATCH",
+  "cycle": "CYC-RA2-1",
+  "round": "clean-A-prime",
+  "candidate": "0c434d43",
+  "reviewers": [
+    {
+      "lens": "CORRECTNESS",
+      "session": "4d4f1028721d45a99652e66af404ccb7"
+    },
+    {
+      "lens": "AUTHORITY",
+      "session": "547e13ba53ba4582aa39a646250cb450"
+    },
+    {
+      "lens": "INTEGRATION",
+      "session": "c6cec6c3febf42ebbb837e3b40ee3e75"
+    }
+  ],
+  "challengeSet": "10 coordinator-synthesized attacks per lens on the repaired surfaces: remoteUsable gate coverage/bypass, zero-mutation-on-reject, raw-export undefined path, learned<=>core both directions, 4-corner pairing matrix, latch completeness, fixture honesty, normalization-vs-contract ordering, push-side poison propagation, wedge-heal e2e loop, import-graph cycle risk",
+  "independence": "fresh context each, priorFindingsVisible=false required, docs/qa/** forbidden"
+}

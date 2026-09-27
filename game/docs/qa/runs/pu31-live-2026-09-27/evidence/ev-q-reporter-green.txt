@@ -1,0 +1,4 @@
+command: node --test scripts/qa/tests/*.test.mjs
+result: 59/59 pass, 0 fail
+incl. qualify reporter/parser tests, write-path schema gate pins (F-PU31-01),
+cross-namespace id collision pins both directions (F-PU31-02)

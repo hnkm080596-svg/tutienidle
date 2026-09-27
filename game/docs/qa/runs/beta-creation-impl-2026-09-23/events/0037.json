@@ -1,0 +1,28 @@
+{
+ "type": "REVIEW_ASSIGNMENTS",
+ "cycle": "CYC-RA-2",
+ "candidate": "e9e5d103d9b5663b90ba8e7a510cfc17b1dda2d1",
+ "priorFindingsVisible": false,
+ "assignments": [
+  {
+   "id": "REV-A2-CORRECTNESS",
+   "reviewerId": "devin-a0b9ae8c85074daea86eaf69a4b40af6",
+   "phase": "CORRECTNESS",
+   "model": "swe-2-max"
+  },
+  {
+   "id": "REV-A2-AUTHORITY",
+   "reviewerId": "devin-13fedf7831c44e7dbab2fb2b786c70eb",
+   "phase": "AUTHORITY",
+   "model": "swe-2-max"
+  },
+  {
+   "id": "REV-A2-INTEGRATION",
+   "reviewerId": "devin-188cbb4962e64bdfa07e83c46263e1ca",
+   "phase": "INTEGRATION",
+   "model": "swe-2-max"
+  }
+ ],
+ "input": "aggregate diff origin/beta/rc...e9e5d103 in fresh clones; docs/qa/** forbidden",
+ "status": "DISPATCHED"
+}

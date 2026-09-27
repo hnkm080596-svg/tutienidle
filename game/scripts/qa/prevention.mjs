@@ -4,11 +4,27 @@
 // Sole write authority remains the coordinator (lease holder).
 import fs from "node:fs";
 import path from "node:path";
-import { objectHash, fileHashHex, utcNow } from "./state.mjs";
+import { objectHash, fileHashHex, utcNow, HARD_CAPACITY_LIMIT, ledgerIdTaken } from "./state.mjs";
 
 export const ASSIGNMENT_ACTIVE = new Set(["RESERVED", "RUNNING", "RESULT_RECEIVED", "RELEASE_PENDING"]);
 export const ASSIGNMENT_STATES = new Set(["QUEUED", "READY", "RESERVED", "RUNNING", "RESULT_RECEIVED", "RELEASE_PENDING", "FINISHED", "BLOCKED", "CANCELLED"]);
+export const ASSIGNMENT_TERMINAL = new Set(["FINISHED", "CANCELLED"]);
 export const TERMINAL_OBSERVED = new Set(["terminated", "finished", "exited", "cancelled", "closed"]);
+// Legal assignment transitions — the only edges the state machine may walk.
+// Admission creates QUEUED/READY/BLOCKED records; observe walks active ->
+// terminal. Terminal states are absorbing.
+export const ASSIGNMENT_TRANSITIONS = {
+  CREATED: ["QUEUED", "READY", "BLOCKED"],
+  QUEUED: ["QUEUED", "READY", "BLOCKED", "RESERVED", "CANCELLED"],
+  READY: ["QUEUED", "BLOCKED", "RESERVED", "CANCELLED"],
+  BLOCKED: ["QUEUED", "READY", "RESERVED", "CANCELLED"],
+  RESERVED: ["RUNNING", "RESULT_RECEIVED", "RELEASE_PENDING", "BLOCKED", "FINISHED"],
+  RUNNING: ["RESULT_RECEIVED", "RELEASE_PENDING", "BLOCKED", "FINISHED"],
+  RESULT_RECEIVED: ["RELEASE_PENDING", "FINISHED"],
+  RELEASE_PENDING: ["FINISHED"],
+  FINISHED: [],
+  CANCELLED: [],
+};
 
 // ---------- lesson index + routing ----------
 
@@ -84,17 +100,17 @@ export function preflightBrief(brief, { productRoot, activePolicyHash }) {
   const unmet = [];
   if (!brief.planningBaseline?.productStateId) unmet.push("planningBaseline missing");
   if (activePolicyHash && brief.policyHash !== activePolicyHash) unmet.push(`policyHash does not match active policy ${activePolicyHash.slice(0, 12)}`);
-  if (brief.unresolvedAssumptions.length) unmet.push(`unresolvedAssumptions non-empty: ${brief.unresolvedAssumptions.join("; ")}`);
-  const pending = brief.lessonRouting.filter((r) => r.decision === "NEEDS_DISCOVERY");
+  if ((brief.unresolvedAssumptions ?? []).length) unmet.push(`unresolvedAssumptions non-empty: ${(brief.unresolvedAssumptions ?? []).join("; ")}`);
+  const pending = (brief.lessonRouting ?? []).filter((r) => r.decision === "NEEDS_DISCOVERY");
   if (pending.length) unmet.push(`unresolved routing: ${pending.map((r) => r.lessonRef).join(", ")}`);
-  const stale = brief.lessonRouting.filter((r) => r.decision === "STALE");
+  const stale = (brief.lessonRouting ?? []).filter((r) => r.decision === "STALE");
   if (stale.length) unmet.push(`stale guidance not resolved: ${stale.map((r) => r.lessonRef).join(", ")}`);
-  if (!brief.firstProofObligations.length) unmet.push("no firstProofObligations - highest-cost uncertainty not named");
-  for (const fp of brief.firstProofObligations) {
+  if (!(brief.firstProofObligations ?? []).length) unmet.push("no firstProofObligations - highest-cost uncertainty not named");
+  for (const fp of brief.firstProofObligations ?? []) {
     if (!fp.oracle) unmet.push(`firstProof on slice '${fp.admittedSlice}' has no oracle`);
   }
   if (productRoot) {
-    for (const dep of brief.sourceDependencyHashes) {
+    for (const dep of brief.sourceDependencyHashes ?? []) {
       const chk = refFreshness(dep, productRoot);
       if (!chk.fresh) unmet.push(`sourceDependency ${chk.reason}`);
     }
@@ -126,47 +142,111 @@ export function checkpointBrief(brief, { observedState, reason }) {
 
 // ---------- capacity admission (5-slot, no watchers) ----------
 
-export function admitAssignment(ledger, asg, { externalOccupied = 0 } = {}) {
-  const cap = ledger.run.capacityLimit ?? 5;
+export function admitAssignment(ledger, asg, { externalOccupied = 0, allowExisting = false } = {}) {
+  if (!asg || typeof asg !== "object" || !asg.id) throw new Error("admission requires assignment.id");
+  if (!Number.isInteger(externalOccupied) || externalOccupied < 0) {
+    throw new Error(`externalOccupied must be a non-negative integer, got ${JSON.stringify(externalOccupied)} — it models unmanaged live agents`);
+  }
+  const cap = Math.min(ledger.run.capacityLimit ?? HARD_CAPACITY_LIMIT, HARD_CAPACITY_LIMIT);
   const active = ledger.assignments.filter((a) => ASSIGNMENT_ACTIVE.has(a.status)).length;
   const total = active + externalOccupied;
   const record = { ...asg, history: [...(asg.history ?? [])] };
-  const push = (to, reason) => record.history.push({ at: utcNow(), from: record.status, to, reason });
   if (!ASSIGNMENT_STATES.has(record.status)) throw new Error(`unknown assignment status: ${record.status}`);
+  const existing = ledger.assignments.find((x) => x.id === record.id);
+  if (existing && !allowExisting) {
+    throw new Error(`assignment ${record.id} already registered with status ${existing.status} — re-admission cannot demote, clone, or release an existing record; use observeAssignment`);
+  }
+  if (existing && allowExisting && !["QUEUED", "READY", "BLOCKED"].includes(existing.status)) {
+    throw new Error(`assignment ${record.id} is ${existing.status} — only waiting records may be re-evaluated for admission`);
+  }
+  // Reverse direction of F-PU31-02: a schedule-minted id colliding with any
+  // other MC1 namespace bricks decide with no recovery path — reject it too.
+  if (!existing && ledgerIdTaken(ledger, record.id, "assignments")) {
+    throw new Error(`assignment ${record.id}: id already exists in another namespace — refusing (would brick MC1 with no recovery path)`);
+  }
+  if (record.history.length > 0 && record.history[record.history.length - 1].to !== record.status) {
+    throw new Error(`assignment ${record.id} history non-contiguous: last entry to=${record.history[record.history.length - 1].to} but status=${record.status}`);
+  }
+  // A new record may only enter as waiting work — admission may not mint an
+  // active or terminal status directly.
+  if (record.history.length === 0 && !["QUEUED", "READY", "BLOCKED"].includes(record.status)) {
+    throw new Error(`new assignment ${record.id} enters with status ${record.status} — only QUEUED/READY/BLOCKED are lawful entry states`);
+  }
+  const push = (to, reason) => {
+    if (!ASSIGNMENT_TRANSITIONS[record.status]?.includes(to)) {
+      throw new Error(`illegal assignment transition ${record.status} -> ${to} for ${record.id}`);
+    }
+    record.history.push({ at: utcNow(), from: record.status, to, reason });
+    record.status = to;
+  };
+  // Seed the registration entry for a brand-new record; CREATED is the
+  // conventional "from" — subsequent entries chain from the stored status.
+  if (record.history.length === 0) {
+    record.history.push({ at: utcNow(), from: "CREATED", to: record.status, reason: "registered by coordinator" });
+  }
   if (asg.readiness !== "READY") {
     const to = asg.readiness === "BLOCKED" ? "BLOCKED" : "QUEUED";
-    push(to, `readiness=${asg.readiness} - waiting work holds no slot`);
-    record.status = to;
+    if (record.status !== to) push(to, `readiness=${asg.readiness} - waiting work holds no slot`);
     return { record, admitted: false };
   }
   if (total + 1 > cap) {
-    push("QUEUED", `capacity ${total}/${cap} occupied - queued, no slot consumed by queue record`);
-    record.status = "QUEUED";
+    if (record.status !== "QUEUED") push("QUEUED", `capacity ${total}/${cap} occupied - queued, no slot consumed by queue record`);
     return { record, admitted: false };
   }
   push("RESERVED", `admitted at ${total + 1}/${cap} (incl. external ${externalOccupied})`);
-  record.status = "RESERVED";
   record.reservedAt = utcNow();
   return { record, admitted: true };
 }
 
-export function observeAssignment(ledger, asgId, { observedStatus, evidence }) {
+export function observeAssignment(ledger, asgId, { observedStatus, evidence, observedRuntimeId, resultRef } = {}) {
   // Lifecycle-verified release: a result message alone never frees a slot.
-  // Timeout/lease expiry alone cannot release (PU-15/PU-16).
+  // Timeout/lease expiry alone cannot release (PU-15/PU-16). Transitions are
+  // legal only from lawful source states; terminal states are absorbing.
   const a = ledger.assignments.find((x) => x.id === asgId);
   if (!a) throw new Error(`unknown assignment ${asgId}`);
-  const push = (to, reason) => a.history.push({ at: utcNow(), from: a.status, to, reason });
-  if (observedStatus === "result") { push("RESULT_RECEIVED", "terminal result observed - slot still occupied"); a.status = "RESULT_RECEIVED"; return a; }
+  if (!Array.isArray(a.history)) throw new Error(`assignment ${asgId} has no history array — record malformed, reconcile before observing`);
+  if (a.history.length > 0 && a.history[a.history.length - 1].to !== a.status) {
+    throw new Error(`assignment ${asgId} history non-contiguous: last entry to=${a.history[a.history.length - 1].to} but status=${a.status} — reconcile before observing`);
+  }
+  const push = (to, reason) => {
+    if (!ASSIGNMENT_TRANSITIONS[a.status]?.includes(to)) {
+      throw new Error(`illegal assignment transition ${a.status} -> ${to} for ${asgId} (observed '${observedStatus}')`);
+    }
+    a.history.push({ at: utcNow(), from: a.status, to, reason });
+    a.status = to;
+  };
+  if (observedStatus === "started" || observedStatus === "running") {
+    push("RUNNING", "dispatch observed running");
+    return a;
+  }
+  if (observedStatus === "blocked") {
+    push("BLOCKED", "work blocked - holds no slot until ready");
+    return a;
+  }
+  if (observedStatus === "result") {
+    push("RESULT_RECEIVED", "terminal result observed - slot still occupied");
+    if (resultRef != null) a.resultRef = resultRef;
+    return a;
+  }
   if (observedStatus === "timeout" || observedStatus === "expired") {
     push("RELEASE_PENDING", "lease/timeout elapsed WITHOUT lifecycle proof - authority revoked, slot retained");
-    a.status = "RELEASE_PENDING";
     a.timeoutState = observedStatus;
     return a;
   }
   if (TERMINAL_OBSERVED.has(observedStatus)) {
+    if (!evidence) {
+      throw new Error(`terminal observation '${observedStatus}' requires evidence — a verified release must cite lifecycle proof`);
+    }
+    if (a.status === "QUEUED" || a.status === "BLOCKED" || a.status === "READY") {
+      // Cancelling waiting work is terminal but never held a slot.
+      push("CANCELLED", `lifecycle ended while waiting via '${observedStatus}'`);
+      a.releaseEvidence = evidence;
+      return a;
+    }
     push("FINISHED", `lifecycle verified released via '${observedStatus}'`);
-    a.status = "FINISHED";
-    a.releaseEvidence = evidence ?? null;
+    a.releaseEvidence = evidence;
+    if (observedRuntimeId != null) a.observedRuntimeId = observedRuntimeId;
+    if (resultRef != null) a.resultRef = resultRef;
     return a;
   }
   throw new Error(`unhandled observedStatus: ${observedStatus}`);

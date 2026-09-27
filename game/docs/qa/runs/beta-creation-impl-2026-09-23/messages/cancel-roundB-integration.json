@@ -1,0 +1,4 @@
+{
+  "note": "Assignment req-roundB-integration cancelled: reviewer session terminated mid-flight (~90% per status check, no SEALED_RESULT); coordinator VM (coordinator-59983) lost. Continuation coordinator devin-4df500e190cc4b9d837f408a5ed53852 cancels these stale-state assignments; fresh sealed reviewers are respawned on the final head 2d5349a6 as the clean rounds.",
+  "reviewerSession": "devin-3bc5ceee481f4c659b1aeb0f2bfcfb09"
+}

@@ -7,6 +7,7 @@ import path from "node:path";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import { EXECUTED_KINDS, ACTIONABLE_CLASSES, TERMINAL_FINDING_STATUSES, fileHashHex, objectHash, buildManifest } from "./state.mjs";
+import { ASSIGNMENT_TRANSITIONS } from "./prevention.mjs";
 
 export function loadSchema(scriptDir, version = null) {
   // v1 ledgers replay under the frozen v1 schema; v2 is canonical.
@@ -497,6 +498,15 @@ export function validateSemantics(ledger, { runDir = null, checkState = null } =
         if (i > 0 && a.history[i - 1].to !== a.history[i].from) {
           f("MC14", a.id, `assignment history discontinuity at ${i}: ${a.history[i - 1].to} -> ${a.history[i].from}`);
         }
+        const legal = ASSIGNMENT_TRANSITIONS[a.history[i].from];
+        if (!legal || !legal.includes(a.history[i].to)) {
+          f("MC14", a.id, `illegal assignment transition ${a.history[i].from} -> ${a.history[i].to} at history[${i}]`);
+        }
+      }
+      if (!a.history.length) {
+        f("MC14", a.id, "assignment has no history — registration entry (CREATED) missing");
+      } else if (a.history[0].from !== "CREATED") {
+        f("MC14", a.id, `assignment history[0].from is '${a.history[0].from}', expected 'CREATED'`);
       }
       if (a.status === "FINISHED" && !a.releaseEvidence) {
         f("MC14", a.id, "FINISHED without releaseEvidence - a result message is not slot release");

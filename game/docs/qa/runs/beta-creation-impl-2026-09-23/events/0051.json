@@ -1,0 +1,42 @@
+{
+  "type": "SEAL_RECEIPT",
+  "round": "clean-A-prime",
+  "lens": "AUTHORITY",
+  "reviewerSession": "547e13ba53ba4582aa39a646250cb450",
+  "candidate": "0c434d43",
+  "verdict": "FINDINGS",
+  "priorFindingsVisible": false,
+  "evidenceExecuted": "vue-tsc --build; scoped vitest; repro SupabaseRemoteSave.qa.test.ts (unknown-material remote pulled), GameSave.fixture.qa.test.ts (fixture drift)",
+  "findings": [
+    {
+      "id": "qa-authority-01",
+      "severity": "Medium",
+      "title": "Remote newest-wins gate not preflight-parity - non-boundary preflight classes still wedge the account",
+      "disposition": "FIXED @0e8351bd - extracted services/save/saveAcceptance.ts (full preflight class set); remote gate now applies the IDENTICAL predicate via staticSaveAcceptanceCatalogs; restore preflight delegates to the same authority"
+    },
+    {
+      "id": "qa-authority-02",
+      "severity": "Low",
+      "title": "withCommittedSwordPath omits ritual delete mortalBasicSkillId - fixture can encode illegal save",
+      "disposition": "FIXED @0e8351bd - same repair as CYC-C-1 (shared root)"
+    },
+    {
+      "id": "qa-authority-03",
+      "severity": "Nit",
+      "title": "EarlyGameBootstrap learn list literal while fail-closed check iterates MORTAL_PRECURSOR_SKILL_IDS",
+      "disposition": "FIXED @0e8351bd - learn loop now iterates MORTAL_PRECURSOR_SKILL_IDS"
+    },
+    {
+      "id": "qa-authority-04",
+      "severity": "Nit",
+      "title": "RPC create_character never cross-checks p_mortal_basic_skill_id against eventual save pick",
+      "disposition": "DEFERRED - write-only bookkeeping column, never read back; no runtime divergence possible; server-side schema tidy is out of the client diff scope"
+    },
+    {
+      "id": "qa-authority-05",
+      "severity": "Nit",
+      "title": "setMortalBasicSkill accepted a precursor never core-granted (learned=>core leg uncovered)",
+      "disposition": "FIXED @0e8351bd - guard now requires getSkillCoreLevel >= 1; 3 battle tests updated to the canonical learnSkill sequence"
+    }
+  ]
+}

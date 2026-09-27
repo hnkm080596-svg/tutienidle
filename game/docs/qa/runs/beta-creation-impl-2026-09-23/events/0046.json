@@ -1,0 +1,44 @@
+{
+  "type": "SEAL_RECEIPT",
+  "round": "clean-B",
+  "lens": "AUTHORITY",
+  "reviewerSession": "684bb4b2d6124ebb956ed0979c64f7c6",
+  "candidate": "8f53aa18",
+  "verdict": "FINDINGS",
+  "priorFindingsVisible": false,
+  "evidenceExecuted": "vue-tsc --build exit 0; scoped vitest 106 files/~1465 tests green; 2 authored QA repros green (pickWedge, siblingCore)",
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "medium",
+      "disposition": "FIXED @0c434d43 - remoteUsable gate applies shared mortalBoundaryContractViolation to normalized remote payload"
+    },
+    {
+      "id": "F2",
+      "severity": "medium",
+      "disposition": "FIXED @0c434d43 - learned=>core enforced for all MORTAL_PRECURSOR_SKILL_IDS"
+    },
+    {
+      "id": "F3",
+      "severity": "low",
+      "disposition": "FIXED @0c434d43 - SkillRoleStrip isMortal = realmId mortal + pathless"
+    },
+    {
+      "id": "F4",
+      "severity": "low",
+      "disposition": "FIXED @0c434d43 - duplicate of QA-BC-01 raw-export"
+    },
+    {
+      "id": "nit:message-ordering",
+      "disposition": "DEFERRED - cosmetic ordering only"
+    },
+    {
+      "id": "nit:p_initial_save-dead-channel",
+      "disposition": "DEFERRED - harmless extra RPC arg"
+    },
+    {
+      "id": "nit:write-only-sql-column",
+      "disposition": "DEFERRED - documented bookkeeping"
+    }
+  ]
+}

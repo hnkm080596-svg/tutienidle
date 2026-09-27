@@ -85,22 +85,41 @@ test("message correlation: duplicate idempotent, payload collision rejected (QF-
   assert.equal(ledger.messages.filter((m) => m.id === "M1").length, 1);
   // payload collision
   assert.throws(() => recordMessage(ledger, { ...base, payloadHash: sha256hex("different") }), /integrity error/);
-  // valid ACK -> FINDING -> SEALED_RESULT sequence
-  const ack = { ...base, id: "M2", kind: "ACK" };
-  const find = { ...base, id: "M3", kind: "FINDING", payloadHash: sha256hex("p3") };
-  const seal = { ...base, id: "M4", kind: "SEALED_RESULT", payloadHash: sha256hex("p4") };
+  // valid ACK -> FINDING -> SEALED_RESULT sequence (worker replies r -> c)
+  const reply = { sender: "r", recipient: "c" };
+  const ack = { ...base, ...reply, id: "M2", kind: "ACK" };
+  const find = { ...base, ...reply, id: "M3", kind: "FINDING", payloadHash: sha256hex("p3") };
+  const seal = { ...base, ...reply, id: "M4", kind: "SEALED_RESULT", payloadHash: sha256hex("p4") };
   for (const m of [ack, find, seal]) assert.equal(recordMessage(ledger, m).duplicate, false);
   // identical terminal replay is idempotent
   assert.equal(recordMessage(ledger, { ...seal }).duplicate, true);
+  // identical terminal replay under a NEW message id is still idempotent
+  assert.equal(recordMessage(ledger, { ...seal, id: "M4b" }).duplicate, true);
   // conflicting terminal result requires new request
   assert.throws(() => recordMessage(ledger, { ...seal, id: "M5", payloadHash: sha256hex("conflict") }), /conflicting terminal/);
+  // traffic on a closed request is rejected
+  assert.throws(() => recordMessage(ledger, { ...ack, id: "M6" }), /closed by terminal/);
+  // wrong direction rejected: coordinator cannot self-send a SEALED_RESULT
+  assert.throws(() => recordMessage(ledger, { ...base, id: "M7", requestId: "REQ-2", kind: "SEALED_RESULT" }), /no ASSIGN/);
+  recordMessage(ledger, { ...base, id: "M8", requestId: "REQ-2" });
+  assert.throws(() => recordMessage(ledger, { ...base, ...reply, sender: "c", id: "M9", requestId: "REQ-2", kind: "SEALED_RESULT" }), /worker-side kind/);
+  // foreign runId rejected, not rewritten
+  assert.throws(() => recordMessage(ledger, { ...base, id: "M10", requestId: "REQ-3", runId: "other-run" }), /does not match run/);
+  // missing state tuple rejected
+  assert.throws(() => recordMessage(ledger, { ...base, id: "M11", requestId: "REQ-4", state: undefined }), /state tuple required/);
 });
 
 test("stale message on old state is flagged, not advanced (QF-03)", () => {
   const { ledger } = mkHappyLedger2();
+  const assign = { id: "A1", runId: ledger.run.id, requestId: "REQ-1", parentRequestId: null, sender: "c", recipient: "r", kind: "ASSIGN", state: ledger.run.state, phase: "CORRECTNESS", bundleHash: sha256hex("b"), payloadPath: "evidence/a1.json", payloadHash: sha256hex("a"), createdAt: utcNow(), leaseId: "l1" };
+  recordMessage(ledger, assign);
   const staleMsg = { id: "M9", runId: ledger.run.id, requestId: "REQ-1", parentRequestId: null, sender: "r", recipient: "c", kind: "SEALED_RESULT", state: dummyState(), phase: "CORRECTNESS", bundleHash: sha256hex("b"), payloadPath: "evidence/x.json", payloadHash: sha256hex("x"), createdAt: utcNow(), leaseId: "l1" };
   const res = recordMessage(ledger, staleMsg);
   assert.equal(res.stale, true, "result for earlier state must be flagged stale");
+  assert.equal(ledger.messages.find((m) => m.id === "M9").stale, true, "stale flag persists on the record");
+  // a stale terminal does not occupy the request — the fresh result still lands
+  const fresh = { ...staleMsg, id: "M10", state: ledger.run.state, payloadHash: sha256hex("y") };
+  assert.equal(recordMessage(ledger, fresh).duplicate, false);
 });
 
 test("append-only journal does not change product identity (QF-24)", () => {

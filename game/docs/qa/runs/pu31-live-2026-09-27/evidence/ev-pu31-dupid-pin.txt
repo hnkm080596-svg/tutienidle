@@ -1,0 +1,5 @@
+command: node --test scripts/qa/tests/cli.test.mjs
+result: 4/4 pass
+- attack record with id === run.id refused: "id already exists in another namespace"
+- guard covers all MC1 namespaces incl. assignments + message requestIds
+- message path: new message id/requestId collision refused; replays + shared requestIds unaffected
