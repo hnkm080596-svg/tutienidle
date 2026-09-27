@@ -16,7 +16,9 @@ import { asReactiveEconomy, asTheEconomy } from './TheTuCapabilities'
 //   (review P1 single-channel lock -- the landed-cast gain channel is
 //   TurnSkillDefinition.theGainOnLandedCast on the skill def itself, so
 //   THAM_THE carries no duplicate grant field).
-// - every mutation goes through grantThe's single clamp expression.
+// - every mutation is module-owned: the three write sites below are the
+//   only currentThe writers (grant clamps to the cap, consume floors to
+//   0, drain writes 0) -- same authority, three clamp expressions.
 // - buff-megaplan M4: grant reads take ActiveCapabilityGrant[]
 //   (buffs.getCapabilities(entityId)); pool-era effect iteration retired.
 
@@ -35,7 +37,10 @@ export function theCap(entity: Pick<CombatEntity, 'maxThe'>): number {
 
 /** Single gain authority -- all income routes through here. */
 export function grantThe(entity: Pick<CombatEntity, 'currentThe' | 'maxThe'>, amount: number): void {
-  if (amount <= 0) return
+  // Non-finite amounts (NaN/Infinity) must not reach the clamp -- a NaN
+  // write bricks the pool silently (every later '>=' comparison fails).
+  // Mirrors the adapter's requireWellFormedAmount contract.
+  if (!Number.isFinite(amount) || amount <= 0) return
   entity.currentThe = Math.min(theCap(entity), (entity.currentThe ?? 0) + amount)
 }
 
@@ -52,7 +57,11 @@ export function drainAllThe(entity: Pick<CombatEntity, 'currentThe'>): void {
     caller-side check must not turn a race or an oversized direct
     debit into negative currentThe. */
 export function consumeThe(entity: Pick<CombatEntity, 'currentThe'>, amount: number): void {
-  if (amount <= 0) return
+  // amount <= 0 returns early WITHOUT touching the field -- the old
+  // normalize-on-read (undefined -> 0, negative -> 0) is gone; every
+  // writer funnels through grantThe/drainAllThe/consumeThe and every
+  // reader is '?? 0'-guarded, so no reachable state depends on it.
+  if (!Number.isFinite(amount) || amount <= 0) return
   entity.currentThe = Math.max(0, (entity.currentThe ?? 0) - amount)
 }
 

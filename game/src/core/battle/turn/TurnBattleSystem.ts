@@ -3181,11 +3181,13 @@ export class TurnBattleSystem {
    * Ordering hazard (latent): this window runs BEFORE the route/plan
    * resolve below, so it can consume its once-roll and write the
    * suppressed marker + ward grant for a cast that the pipeline then
-   * blocks (castBlocked). Unreachable today -- every cast that opens
-   * this window routes (enemy casts carry no resource cost and the plan
-   * precheck cannot decline them). If a blocker-capable cast ever
-   * reaches this lane, the roll must move behind routability or roll
-   * back its persistent writes.
+   * declines (castBlocked). Two decline classes stay accepted-latent:
+   * a resolver SkillResolverError routing to null and any plan-side
+   * decline on a blocker-capable cast. Unreachable today -- no enemy
+   * def authors a resource cost and resolver throws are authored-data
+   * defects. If a blocker-capable cast ever reaches this lane, the
+   * roll must move behind routability or roll back its persistent
+   * writes.
    */
   private resolveInterceptWindow(
     battle: TurnBattle,

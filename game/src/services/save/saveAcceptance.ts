@@ -24,6 +24,10 @@ import { getRealmIndex } from '../../core/realm/realmSystem'
 import { ITEM_QUALITY_ORDER } from '../../core/item/ItemQuality'
 import { getActiveWayDefinition } from '../../core/player/CultivationPathKit'
 import { getActiveElement } from '../../core/player/CultivationPathSystem'
+import {
+  HIDDEN_SPELL_REQUIRED_SKILLS,
+  isHiddenSpellPathway,
+} from '../../core/phap-tu/PhapTuPath'
 import { SPELL_KIT_IDS } from '../../data/skill/Skills'
 import { mortalBoundaryContractViolation } from '../../core/skill/MortalPrecursors'
 import { assertBodyProgressionIntegrity } from '../../core/realm/body/BodyProgressionSystem'
@@ -254,6 +258,21 @@ export function assertSaveAcceptable(save: GameSave, catalogs: SaveAcceptanceCat
     if (!save.skills.some((skill) => skill.id === requiredBasicId)) {
       throw new Error(
         `Spell element/kit coherence violated in save: element '${activeElement}' requires learned basic '${requiredBasicId}'`,
+      )
+    }
+  }
+
+  // hidden_spell_pathway kit coherence - the ngo_dao ritual grants the
+  // fixed three-skill kit atomically (assertNgoDaoKitLearned throws at
+  // battle build when a member is absent). Same corrupt-save class as
+  // the element axis above: reject at load on the same hard-fail seam.
+  if (isHiddenSpellPathway(save.player)) {
+    const missingKit = HIDDEN_SPELL_REQUIRED_SKILLS.filter(
+      (skillId) => !save.skills.some((skill) => skill.id === skillId),
+    )
+    if (missingKit.length > 0) {
+      throw new Error(
+        `hidden_spell_pathway kit coherence violated in save: missing learned skills '${missingKit.join("', '")}'`,
       )
     }
   }

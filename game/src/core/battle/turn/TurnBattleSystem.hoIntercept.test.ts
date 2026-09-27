@@ -298,6 +298,62 @@ describe('Ho intercept window (spec 6.2.1)', () => {
     expect(f.squishyP.entity.currentWard).toBe(0) // no ward minted
   })
 
+  it('a dead-payload declare (action == null) never opens the window', () => {
+    // NOVA-1: a non-chargeResolved declare with action:null is a dead
+    // cast (NULL_ACTION / cc-blocked declare) -- the window must stay
+    // closed, charging nothing and minting no ward on a phantom hit.
+    const f = makeFixture()
+    withHoMon(f, f.protectorP, 1, 100)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const declared = declaredAgainst(f, [f.squishyP])
+    declared.action = null
+    system(f).applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBeUndefined()
+    expect(f.protectorP.entity.currentThe).toBe(100) // never charged
+    expect(f.squishyP.entity.currentWard).toBe(0) // no ward minted
+  })
+
+  it('a whiffed cast (empty affected) never opens the window', () => {
+    // NOVA-1: the exact class that previously paid the protector's
+    // proc cost on a phantom hit -- no surviving target means no
+    // swing, so no roll, no drain, no ward.
+    const f = makeFixture()
+    withHoMon(f, f.protectorP, 1, 100)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const declared = declaredAgainst(f, [])
+    system(f).applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBeUndefined()
+    expect(f.protectorP.entity.currentThe).toBe(100) // never charged
+  })
+
+  it('a charge-init declare (chargeTurns>0, !isCharging) never opens the window', () => {
+    // NOVA-1: the charge discriminant -- a cast that only DECLARES the
+    // charge produces no swing this turn, so the window stays closed.
+    const f = makeFixture()
+    withHoMon(f, f.protectorP, 1, 100)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const declared = declaredAgainst(f, [f.squishyP])
+    declared.skillId = ENEMY_CHARGED.id
+    declared.action = {
+      skillId: ENEMY_CHARGED.id,
+      skill: ENEMY_CHARGED,
+      damage: ENEMY_CHARGED.damage,
+      targeting: ENEMY_CHARGED.targeting,
+      slot: null,
+    }
+    declared.scaledDamage = ENEMY_CHARGED.damage ?? null
+    system(f).applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBeUndefined()
+    expect(f.protectorP.entity.currentThe).toBe(100) // never charged
+    expect(f.squishyP.entity.currentWard).toBe(0) // no ward minted
+  })
+
   it('multi-target (AoE) actions never open the window', () => {
     const f = makeFixture()
     withHoMon(f, f.protectorP, 1, 100)
