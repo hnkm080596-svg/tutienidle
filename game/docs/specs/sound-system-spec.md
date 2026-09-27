@@ -1,4 +1,4 @@
-# Sound System Spec — real-asset audio slots (W1..W9)
+# Sound System Spec — real-asset audio slots (W1..W10)
 
 Scope: turn the synth-only MVP into a slot-driven audio system that accepts a
 real asset drop with **zero code edits** — every cue fires today, slots with no
@@ -44,6 +44,15 @@ Additional decisions folded into the design:
 - **`mutedChannels[]` dropped.** Channel volume `0` is the mute; one slider per channel is simpler than two control surfaces for the same state.
 - **`worldAnnouncement.show()` gains optional `cueId`.** One emit point for all big moments; callers pass their specific cue (`progress.breakthrough`, `progress.path_choose`), default `stinger.announce`. Prevents announce+specific double-fire.
 
+## 0b. User resolutions (2026-09-27 — close the remaining open questions)
+
+| # | Question | Decision |
+|---|---|---|
+| OQ-A | Music source while `music.*` rows are empty | **RESOLVED — silent until real files.** No Tone.js ambient-synthesis fallback ships; `music.*`/`ambient.*` rows carry NO `synthFallback`. The slot machinery (unlock, crossfade, duck, visibility pause) still lands fully so a file drop is the only remaining step. |
+| OQ-B | `combat.ward` discrimination | Open — unchanged: binding filters on `entity_vitals_changed` `wardBefore`/`wardAfter` delta sign (fields confirmed present in the emit). |
+| OQ-C | Per-skill / per-reaction qualifier scope | **RESOLVED — FULL coverage.** Every qualifier cue in the audit inventory is a real slot the user will fill: the manifest enumerates one row per concrete catalog id (every castable `skillId`, every `reactionId`, every `presetId`, all 38 `kiem_combo_*` combos, both `ungthe` triggers, all 4 `music.home.<time>` variants). Nothing rides "signature content only". |
+| OQ-D | Reduced screen-shake toggle | **RESOLVED — in scope as W10.** `reducedShake` flag joins the v2 settings blob; SettingsPanel toggle (i18n en+vi); the two camera-shake sites (`combat-vfx-spawner` `cameras.main.shake`, `TribulationScene.strikeLightning`) scale through a presentation policy module. |
+
 ---
 
 ## 1. AudioCueManifest
@@ -83,11 +92,22 @@ dev `console.debug` once per id). So `combat.cast.<skillId>`,
 their family row until a specific row exists. Adding a qualified row later is a
 manifest-only edit — never a code edit.
 
+**OQ-C full coverage:** those qualifier families are not wildcards — the
+manifest expands each into one row per concrete catalog id (every castable
+`skillId`, every `reactionId`, every `CombatVfxPresetId`, all 38 Kiem Pho combo
+ids, both `ungthe` triggers, all four `music.home.<time>` variants). The family
+anchor rows below stay as the fallback for ids the catalogs don't know yet;
+the expanded rows sit beside them so the user can fill one specific
+skill/reaction/preset without touching code. Every cue the bindings can emit
+has its own manifest row.
+
 ### 1.2 Slot table (every manifest row, `src: ''` unless noted)
 
 `synthFallback` = existing `SOUND_LIBRARY` recipe played until a file drops.
 `duck` = `duckMusic` value. P2 rows ship in the same table — slots are free —
-but are excluded from the "P0+P1 wired first" acceptance gate.
+but are excluded from the "P0+P1 wired first" acceptance gate. Per OQ-A, no
+`music.*`/`ambient.*` row carries a `synthFallback` — those channels stay
+silent until real files land.
 
 | cue-id | ch | loop | cooldown | duck | synthFallback | priority |
 |---|---|---|---|---|---|---|
@@ -217,17 +237,18 @@ fraction for the cue duration, then ramps back (one active duck tracked as
 max, not summed).
 
 **`src/stores/audio.ts`** — `PersistedAudioSettings` → `{enabled,
-masterVolume, musicVolume, sfxVolume, uiVolume}`; storage key bumps to
-`tutienidle.audio.v2`; `loadPersisted` falls back to the v1 key (carry
-`enabled`/`masterVolume` forward, default the rest). Device-scope
+masterVolume, musicVolume, sfxVolume, uiVolume, reducedShake}`; storage key
+bumps to `tutienidle.audio.v2`; `loadPersisted` falls back to the v1 key
+(carry `enabled`/`masterVolume` forward, default the rest). Device-scope
 localStorage — **no `saveVersion.ts` bump, no GameSave field** (same decision
 as `uiFlagsPersistence.ts:6-10`).
 
 **`SettingsPanel.vue:187-215`** — add three sliders (Music / SFX / UI) beside
-the existing master slider, same `range 0-100` + disabled-when-off pattern.
-i18n keys under `panels.settings.audio.*` in both `src/locales/en.json` and
-`vi.json` (`musicVolume`, `sfxVolume`, `uiVolume`) — parity enforced by the
-existing `i18nKeyParity.test.ts` guard.
+the existing master slider, same `range 0-100` + disabled-when-off pattern,
+plus the W10 `reducedShake` toggle (OQ-D). i18n keys under
+`panels.settings.audio.*` in both `src/locales/en.json` and `vi.json`
+(`musicVolume`, `sfxVolume`, `uiVolume`, `reducedShake`) — parity enforced by
+the existing `i18nKeyParity.test.ts` guard.
 
 ---
 
@@ -540,6 +561,32 @@ victory stinger ducks and loop continues; disabled store stops everything;
 **Acceptance:** guards fail on a fabricated violation in test fixtures;
 full `tests/architecture/` suite green.
 
+### W10 — Reduced screen-shake accessibility toggle (OQ-D)
+
+1. `src/stores/audio.ts`: `reducedShake` joins `PersistedAudioSettings` (v2,
+   default `false`) + `setReducedShake(v)` action.
+2. `SettingsPanel.vue`: toggle beside the audio sliders, i18n
+   `panels.settings.audio.reducedShake` (en "Reduce screen shake" / vi
+   "Giảm rung màn hình") — parity via `i18nKeyParity.test.ts`.
+3. `src/presentation/vfx/screenShakePolicy.ts` (new): module-level
+   `setReducedShakeEnabled(v)` / `screenShakeScale()` /
+   `applyScreenShake(camera, durationMs, intensity)` — the single choke
+   point for camera impulses. Scale `0.35` when reduced, `1` otherwise.
+   Lives in `presentation/` because `src/game/**` may import presentation
+   but never `@/stores` (frontendImportDirection guard); `App.vue` binds
+   `watch(() => audio.reducedShake, setReducedShakeEnabled, immediate)`.
+4. Honor sites — the only `cameras.main.shake` calls in the codebase:
+   `src/game/scenes/combat/combat-vfx-spawner.ts:157-158` (preset-driven
+   `screenShake`) and `src/game/scenes/TribulationScene.ts:169`
+   (`strikeLightning` rumble). Both route through `applyScreenShake`.
+   (Spec deviation noted vs OQ-D prompt: `PhaserSkillVfxDriver`/
+   `cameraImpulse` do not exist — these are the real sites.)
+5. Tests: policy scale defaults `1`, `0.35` when enabled, reset-safe;
+   `applyScreenShake` no-ops at scale 0 is NOT used — 0.35 keeps feedback.
+
+**Acceptance:** toggle persists under v2 key; scenes never read the store;
+`type-check` green.
+
 ---
 
 ## 4. Engine choice — comparison record (Q3)
@@ -624,24 +671,16 @@ full `tests/architecture/` suite green.
 
 ## Open questions — genuinely the user's call (implementation must not guess)
 
-- **OQ-A — Music source.** Manifest rows are empty until assets drop; if the
-  drop is delayed, do we ship a Tone-synthesized ambient loop as
-  `synthFallback` for `music.*` (the DESIGN_BRIEF's Đợt-2 AMSynth+LFO idea),
-  or leave music silent until real files? Synthesized ambience is a
-  meaningful authoring task, not a fallback — needs a decision.
-- **OQ-B — `combat.ward` discrimination.** `entity_vitals_changed` fires for
-  all ceiling shifts; the audit flagged payload discrimination needed to tell
-  ward-grant vs ward-break vs unrelated vitals events (`combat.ward` P2 row).
-  Spec assumes binding filters on `wardBefore`/`wardAfter` delta sign; if the
-  payload lacks the fields, the emit needs a small payload extension — flag
-  at W5 implementation time.
-- **OQ-C — Per-skill / per-reaction asset scope.** `combat.cast.<skillId>`
-  and `combat.reaction.<reactionId>` open qualifier slots for *every* skill
-  and reaction — the asset drop probably won't cover all. Convention:
-  qualifier rows are authored only for signature content (ultimates, the 6
-  beta kiếm combos, major reactions); everything else rides the family row.
-  Confirm the intended coverage so the manifest table doesn't imply 100%.
-- **OQ-D — Reduced-shake toggle.** The feel plan pairs a screen-shake
-  reduction toggle with this settings section. It's not audio; spec leaves
-  it out of scope. If the user wants it bundled, it lands in W3's panel
-  edit + its own settings key — cheap to add, but it is a separate feature.
+- **OQ-A — Music source.** RESOLVED (§0b): silent until real files — no
+  `synthFallback` on `music.*`/`ambient.*` rows. The Tone-synthesized ambient
+  loop idea may return later as authored content, never as a fallback.
+- **OQ-B — `combat.ward` discrimination.** Open — unchanged: binding filters
+  on `wardBefore`/`wardAfter` delta sign (fields confirmed present on the
+  `entity_vitals_changed` emit).
+- **OQ-C — Per-skill / per-reaction asset scope.** RESOLVED (§0b): FULL
+  coverage — every qualifier in the audit inventory gets a real manifest row
+  (all castable skills, all reactions, all VFX presets, all 38 kiem combos,
+  both ứng-thể triggers, all four Thanh Vân time variants).
+- **OQ-D — Reduced-shake toggle.** RESOLVED (§0b): in scope as W10 —
+  `reducedShake` in the v2 settings blob + SettingsPanel toggle (i18n en+vi)
+  + a presentation policy gate on every `cameras.main.shake` call.

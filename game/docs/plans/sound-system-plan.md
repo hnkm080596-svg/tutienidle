@@ -5,7 +5,7 @@ this owns the *order*, the file map, and the test plan). Implementing agent
 works the items top-down; each lands green on its own.
 
 Constraint carried from the spec: **zero behavior the player can hear until
-assets drop** — W1-W9 ship the wiring; manifest `src` fields stay `''`. The
+assets drop** — W1-W10 ship the wiring; manifest `src` fields stay `''`. The
 mission succeeds when dropping `assets/audio/**/*.ogg` into `public/` is the
 only step left.
 
@@ -24,6 +24,7 @@ only step left.
 | 7 | **W7** UI wiring (Chip/MenuButton/uiAudioBinding + call sites) | W2, W3 | Mechanical sweep; biggest file count, lowest risk |
 | 8 | **W8** ambientAudioDriver | W4, W5, W3 | Needs lazy audio bundles + music controls + route subscription |
 | 9 | **W9** seam guards + completeness test | all | Guards are authored last so they pin the final shape, not a moving target |
+| 10 | **W10** reduced-shake toggle (OQ-D) | W3 | `reducedShake` rides the same v2 store + panel pass; shake choke point is one presentation module + 2 call sites |
 
 Suggested commit granularity: one commit per W (matches how the audit commit
 + codex spec waves landed on this repo).
@@ -43,6 +44,8 @@ src/presentation/audio/uiAudioBinding.test.ts   # W7
 src/presentation/audio/ambientAudioDriver.test.ts # W8
 tests/architecture/audioBoundary.test.ts        # W9
 tests/architecture/audioManifestCompleteness.test.ts # W9
+src/presentation/vfx/screenShakePolicy.ts       # W10
+src/presentation/vfx/screenShakePolicy.test.ts  # W10
 ```
 
 **Modified files**
@@ -69,7 +72,9 @@ src/components/common/ToastContainer.vue        # W7 — toastX→ui.toast.<kind
 src/stores/worldAnnouncement.ts                 # W7 — show(cueId?)
 src/composables/useBreakthrough.ts              # W7 — pass progress.breakthrough
 + the one-line call sites listed in spec W7.5   # W7 — cue() in existing handlers
-src/App.vue                                     # W8 — bindAmbientAudio + unbind
+src/App.vue                                     # W8 — bindAmbientAudio + unbind; W10 — watch reducedShake → policy
+src/game/scenes/combat/combat-vfx-spawner.ts    # W10 — shake via applyScreenShake
+src/game/scenes/TribulationScene.ts             # W10 — shake via applyScreenShake
 ```
 
 **Explicitly untouched:** `CombatProcSystem` internals (drain reads its op
@@ -140,8 +145,10 @@ needed as a completion criterion.
 ## 5. What this plan deliberately does not do
 
 - No real audio content, no `silence.ogg`, no synthesized ambient fallback
-  (spec OQ-A).
+  (spec OQ-A — music/ambient rows stay silent until files drop).
 - No Howler.js/Phaser-sound adoption (spec §4).
-- No screen-shake toggle (spec OQ-D).
 - No GameSave/cloud persistence for audio prefs (device-scope by design).
 - No VFX/spritesheet work — that's the feel plan's separate tasks.
+
+(W10 reduced-shake toggle was promoted IN by spec OQ-D — it ships in this
+plan's W10.)
