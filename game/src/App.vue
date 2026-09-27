@@ -191,7 +191,10 @@ const unbindPresentationActive = bindPresentationActive(coordinator, gameManager
 
 // Audio: domain combat events -> SFX (observation only, A7). Bound at module
 // scope next to the other event-bus bindings; store handles enabled/volume.
-const unbindCombatAudio = bindCombatAudio(gameManager.eventBus)
+// routeProvider lets the binding suppress off-route cues (farm.cycle).
+const unbindCombatAudio = bindCombatAudio(gameManager.eventBus, {
+  routeProvider: () => coordinator.getSnapshot().currentRoute,
+})
 
 // W10: push the reducedShake flag into the presentation shake gate — scenes
 // read the module-level scale (src/game may not import stores).
