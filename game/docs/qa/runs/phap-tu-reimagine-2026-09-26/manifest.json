@@ -15792,7 +15792,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.contract.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "9cd1851e8f2a7a71ac90ed0b7fba53ea42b8201b195e1f1e72ac132409369c13"
+      "hash": "12a263fd61d60b782e21e832a1f749079f944be9e2b2a601f3ba7efe679953a9"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.determinism.test.ts",
@@ -15858,7 +15858,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.midImpactDeath.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "9af34dc2e4a29b380928d54c350df502d2d6de5aa6277bb50103573b2136d797"
+      "hash": "291eb27948ac248b412b859f8818bcf60fa8f3fb849c825e591ee4080abab98e"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.missingHp.test.ts",
@@ -15984,7 +15984,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.theTuAnRiders.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "29059dff89fce3407cfcc143e95095376ca6a0f2c0cb9b2cfb3d67cc5956c27c"
+      "hash": "84988f6203701c75f02ab595f24e74ad72dddf4335c24907110c90d15aa4989c"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.troFollowUp.test.ts",
@@ -15996,7 +15996,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1a59695915b8f22bc7a8e480dc151dfcd22acb624354f9292243c7a5ebf60c25"
+      "hash": "551f0fe0e303267845b77da3162396719d9a862cc1c9510a69d669bca714967c"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.turnRegen.test.ts",
@@ -16074,7 +16074,7 @@
       "path": "src/core/battle/turn/TurnSkillAction.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e52d5b9031bc19f4f08bbbee1da9de7a05cc1de97c33aec0a0e8a7c4ddaf8928"
+      "hash": "e6380081ec104981a09eb35db1c4b28b3aa674e91d3f03dc07424a07f379ddc0"
     },
     {
       "path": "src/core/battle/turn/TurnSkillExecution.test.ts",
@@ -16242,7 +16242,7 @@
       "path": "src/core/buff2/BuffPeriodic.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "867a1510d24c7b506d6145633673cb40daecb34deb124dde65883645329a3bd1"
+      "hash": "dc499b5bab665ba3a44abf72e2a9ae720a2f31718ad1965f01633b3ce7eec567"
     },
     {
       "path": "src/core/buff2/BuffPeriodicResolver.ts",
@@ -16314,7 +16314,7 @@
       "path": "src/core/buff2/BuffSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "9a30abc12cce3e5d51d28635ce45242f0bbc788bb45a77d88c0371600ec95d49"
+      "hash": "7cc7d59e42baf4ab0d2a7cc6b27d362189f799a5e92efc4886df737b2b3d7927"
     },
     {
       "path": "src/core/buff2/BuffSystemApply.test.ts",
@@ -16416,7 +16416,7 @@
       "path": "src/core/combat/CombatEntity.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "57121c70f7619162dda052d1aa3eab7ca25861449e21d5c6a640184c0d2a8cdc"
+      "hash": "1d4b0f3e9e24ca440f95161bed9a8eadda2100ceb7966500dbccd49f1280990e"
     },
     {
       "path": "src/core/combat/CombatEvent.ts",
@@ -18240,7 +18240,7 @@
       "path": "src/core/game/TurnBattleAdapter.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f0a775015e9a56ee93317a203bc0d08911ac40c88d8810b79bc5af9737ce69af"
+      "hash": "06b5ef91aea5697818ea6f6eb1e26bb6277fd8f4e9724f1c8ceeb8d4f52563c0"
     },
     {
       "path": "src/core/idle/GameClock.ts",
@@ -19836,7 +19836,7 @@
       "path": "src/core/skilldef/LegacySkillAdapter.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "7de48b2ccfdb2c2ad3861822f7e11d0f26685381f7f275e6657a6de1ffdfa432"
+      "hash": "3b98164857e464783461fd0115bffce9f80f23da31336c2ccab9e24c6b6584d0"
     },
     {
       "path": "src/core/skilldef/LegacySkillCoverage.test.ts",
@@ -19902,7 +19902,7 @@
       "path": "src/core/skilldef/SkillDefinitionRegistry.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1d2c26b659057f03cf5b8660b3fd023fea6ad208cb11892d84972594b2dbb360"
+      "hash": "9f33f0325cd3364513c5ffdcb3276cc91d246cb317838e7603bb212bd0e54aaa"
     },
     {
       "path": "src/core/skilldef/SkillExecutionHooks.ts",
@@ -23097,5 +23097,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "f5c75798ae22364e8ff6690d1f802dcff8a31c713d0c0950bbefb95365492fa4"
+  "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f"
 }
