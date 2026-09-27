@@ -172,6 +172,11 @@ const SEAM_ALLOWLIST_FILES: readonly string[] = [
   // swordPath slice via the module's own factory (freshSwordPathState);
   // test-side seam only, never imported by production code.
   'services/save/GameSave.fixture.ts',
+  // PT-REIM - save acceptance performs the hidden_spell_pathway kit
+  // coherence check (isHiddenSpellPathway -> HIDDEN_SPELL_REQUIRED_SKILLS)
+  // via the path module's own predicates, same seam class as the
+  // battle-build mirror assertNgoDaoKitLearned.
+  'services/save/saveAcceptance.ts',
 ]
 
 // ---------------------------------------------------------------------------
