@@ -85,6 +85,25 @@ describe('SkillDefinitionRegistry', () => {
     ).toThrow(/empowerment and subcasts\.compositePool are mutually exclusive/)
   })
 
+  it('constructor faults when one definition carries empowerment AND subcasts.count', () => {
+    // Repeat executions replay the committed resolution without
+    // re-evaluating empowerment -- they would silently run the base
+    // payload. Dormant today; this pin keeps the hole unauthorable.
+    expect(
+      () =>
+        new SkillDefinitionRegistry(
+          [
+            activeDef('empowered_ult'),
+            activeDef('a', {
+              variants: { empowerment: { theThreshold: 10, empoweredSkillId: 'empowered_ult' } },
+              subcasts: { count: 2 },
+            }),
+          ],
+          deps,
+        ),
+    ).toThrow(/empowerment and subcasts\.count are mutually exclusive/)
+  })
+
   it('constructor faults when one definition carries consumesAllThe AND chargeTurns', () => {
     // Charge-resolve declares carry no execution object, so theBurned
     // can never forward -- theScaling would read 0 at resolve. Dormant

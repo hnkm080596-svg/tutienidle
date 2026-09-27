@@ -459,6 +459,18 @@ function validateActive(
         'empowerment and subcasts.compositePool are mutually exclusive on one definition',
       )
     }
+    if ((definition.subcasts?.count ?? 0) > 0) {
+      // Repeat executions replay the committed resolution without
+      // re-evaluating empowerment -- a repeat of an empowered cast would
+      // silently run the BASE payload. (multicast is exempt: empowered
+      // and repeat sources are already excluded from the roll.) Forbid
+      // the combination.
+      fault(
+        'invalid_field_value',
+        'variants.empowerment',
+        'empowerment and subcasts.count are mutually exclusive on one definition',
+      )
+    }
   }
 
   if (definition.consumesAllThe === true && cadence?.chargeTurns !== undefined) {

@@ -431,7 +431,10 @@ export function consumeResourceFor(
   skill: Pick<TurnSkillDefinition, 'resourceType' | 'resourceCost' | 'resourceCostPercentOfMax'>,
 ): void {
   const required = requiredResourceFor(entity, skill)
-  if (!skill.resourceType || skill.resourceType === 'none' || required <= 0) {
+  // Non-finite required (NaN from corrupt percentOfMax/cost data) skips the
+  // `<= 0` floor and bricks the pool on write -- same class the TheEconomy
+  // isFinite guards close for 'the'.
+  if (!skill.resourceType || skill.resourceType === 'none' || !Number.isFinite(required) || required <= 0) {
     return
   }
 

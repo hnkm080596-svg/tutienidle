@@ -78,6 +78,14 @@ describe('consumeResourceFor', () => {
 
     expect(source.currentMp).toBe(50)
   })
+
+  it('non-finite required cost leaves the pool untouched (no NaN brick)', () => {
+    const source = entity({ currentMp: 50 })
+
+    consumeResourceFor(source, skill({ resourceType: 'mana', resourceCost: Number.NaN }))
+
+    expect(source.currentMp).toBe(50)
+  })
 })
 
 function participant(overrides: Partial<TurnBattleParticipant> = {}): TurnBattleParticipant {

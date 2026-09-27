@@ -1372,6 +1372,11 @@ export class TurnBattleSystem {
     // descriptor IS the remainder of an already-committed cast -- it only
     // re-resolves the payload (composite picks re-roll per execution).
     const queuedExec = this.pendingQueuedExecution
+    // Consumed unconditionally (unlike pendingReactiveEntry below, which
+    // survives a mismatch): a queued descriptor that arrives for the wrong
+    // actor is dropped rather than parked -- the pacing loop only declares
+    // the dequeued actor, so a mismatched entry signals an out-of-order
+    // manual declare and silently parking it would be the leakier failure.
     this.pendingQueuedExecution = null
 
     if (queuedExec && queuedExec.actorId === actor.id) {

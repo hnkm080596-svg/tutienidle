@@ -32,7 +32,9 @@ const UNG_THE_ID = 'ung_the'
 
 /** Single cap authority -- entity.maxThe is baked at participant build. */
 export function theCap(entity: Pick<CombatEntity, 'maxThe'>): number {
-  return entity.maxThe ?? MAX_THE
+  // A corrupt baked maxThe (NaN) would flow through the grant clamp and
+  // brick the pool -- fall back to the constant cap like an absent field.
+  return Number.isFinite(entity.maxThe) ? (entity.maxThe as number) : MAX_THE
 }
 
 /** Single gain authority -- all income routes through here. */
@@ -103,7 +105,8 @@ export function resolveProcCost(
  */
 export function tryPayProcCost(entity: CombatEntity, cost: number): boolean {
   const pool = entity.currentThe ?? 0
-  if (pool < cost) return false
+  // A non-finite cost must not report "paid" while paying nothing.
+  if (!Number.isFinite(cost) || pool < cost) return false
   consumeThe(entity, cost)
   return true
 }

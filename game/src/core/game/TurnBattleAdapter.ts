@@ -88,8 +88,16 @@ export function toTurnBattleParticipant(
 
   // Task 20 — participant-build cap authority: entity.maxThe persists
   // across auto-repeat resets (battle-scoped currentThe zeroes, the cap
-  // is configuration, not battle state).
+  // is configuration, not battle state). Shared-surface stamp: the build
+  // already wrote entity.maxThe for build-path callers; a non-build
+  // caller passing a divergent cap is a catalog fault, so fault loudly
+  // rather than silently re-stamp.
   if (resolvedSpecialUltimate?.maxThe !== undefined) {
+    if (entity.maxThe !== undefined && entity.maxThe !== resolvedSpecialUltimate.maxThe) {
+      throw new Error(
+        `conflicting maxThe: entity already carries ${entity.maxThe}, adapter payload declares ${resolvedSpecialUltimate.maxThe}`,
+      )
+    }
     entity.maxThe = resolvedSpecialUltimate.maxThe
   }
 

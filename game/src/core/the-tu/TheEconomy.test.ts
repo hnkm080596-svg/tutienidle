@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { consumeThe, drainAllThe, grantThe, theCap } from './TheEconomy'
+import type { CombatEntity } from '../combat/CombatEntity'
+import { consumeThe, drainAllThe, grantThe, theCap, tryPayProcCost } from './TheEconomy'
 
 // Module-level write-site guards: the adapter layer rejects non-finite
 // amounts, but these functions are also called directly (proc economy,
@@ -41,8 +42,17 @@ describe('TheEconomy write-site guards', () => {
     expect(entity.currentThe).toBe(0)
   })
 
-  it('theCap falls back to the module default when maxThe is unset', () => {
+  it('theCap falls back to the module default when maxThe is unset or non-finite', () => {
     expect(theCap({ maxThe: 42 })).toBe(42)
     expect(theCap({})).toBeGreaterThan(0)
+    expect(theCap({ maxThe: Number.NaN })).toBeGreaterThan(0)
+  })
+
+  it('tryPayProcCost refuses a non-finite cost (cannot report paid)', () => {
+    const entity = { currentThe: 10 } as CombatEntity
+    expect(tryPayProcCost(entity, Number.NaN)).toBe(false)
+    expect(entity.currentThe).toBe(10)
+    expect(tryPayProcCost(entity, Number.POSITIVE_INFINITY)).toBe(false)
+    expect(entity.currentThe).toBe(10)
   })
 })

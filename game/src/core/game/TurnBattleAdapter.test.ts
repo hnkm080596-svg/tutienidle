@@ -157,6 +157,18 @@ describe('Phase A3 — resolved special/ultimate override (Pháp Tu buildId fix)
     expect(participant.ultimate).toBeUndefined()
   })
 
+  it('maxThe payload stamps the cap; a divergent cap on an already-capped entity faults', () => {
+    const fresh = entity()
+    const participant = toTurnBattleParticipant(fresh, 0, BASIC, ['spell'], { maxThe: 120 })
+    expect(participant.entity.maxThe).toBe(120)
+
+    const capped = entity({ maxThe: 80 })
+    expect(() =>
+      toTurnBattleParticipant(capped, 0, BASIC, ['spell'], { maxThe: 120 }),
+    ).toThrow(/conflicting maxThe/)
+    expect(capped.maxThe).toBe(80)
+  })
+
   it('a Kiem Tu player gets slots only via the resolved override (ngu emblems, Task 9) — domains alone map nothing', () => {
     const combatEntity = entity()
 
