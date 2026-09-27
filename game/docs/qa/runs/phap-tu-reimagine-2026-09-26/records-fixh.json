@@ -1,0 +1,5 @@
+{
+ "commit": "bc43a286",
+ "verify": "type-check clean; scoped vitest 1980 pass",
+ "fixes": 9
+}
