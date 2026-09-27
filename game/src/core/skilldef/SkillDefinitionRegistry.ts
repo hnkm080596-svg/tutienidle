@@ -430,10 +430,13 @@ function validateActive(
           fault('invalid_field_value', 'subcasts.compositePool', 'compositePool entries must be non-empty skill ids')
         }
       }
-      if (
-        subcasts.compositeCount !== undefined &&
-        (!Number.isInteger(subcasts.compositeCount) || subcasts.compositeCount < 1)
-      ) {
+    }
+    if (subcasts.compositeCount !== undefined) {
+      if (subcasts.compositePool === undefined) {
+        // compositeCount only governs the compositePool pick -- alone it
+        // is silently dead authoring.
+        fault('invalid_field_value', 'subcasts.compositeCount', 'compositeCount requires subcasts.compositePool')
+      } else if (!Number.isInteger(subcasts.compositeCount) || subcasts.compositeCount < 1) {
         fault('invalid_field_value', 'subcasts.compositeCount', 'compositeCount must be an integer >= 1')
       }
     }
@@ -669,6 +672,22 @@ function validateOperation(
       'invalid_field_value',
       `${path}.gateOnApplyResult`,
       'gateOnApplyResult is only legal on buff modifier/duration/periodic ops (their resolve wraps steps in on_apply_result)',
+    )
+  }
+
+  // onLanded/oncePerCast exist only inside a deal_damage lane (the hit's
+  // instance gates and the landed-lane dedup compile under case
+  // 'deal_damage') -- carried on any other op type they are silently
+  // dead authoring, same smuggle shape as gateOnApplyResult.
+  if (
+    op.type !== 'deal_damage' &&
+    ((op as { onLanded?: unknown }).onLanded !== undefined ||
+      (op as { oncePerCast?: unknown }).oncePerCast !== undefined)
+  ) {
+    fault(
+      'invalid_field_value',
+      `${path}`,
+      'onLanded/oncePerCast are only legal on deal_damage ops (the landed gates compile under the deal_damage case)',
     )
   }
 

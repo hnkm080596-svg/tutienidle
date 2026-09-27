@@ -1351,6 +1351,11 @@ export class SkillResolver {
     // dedup var, this flagged secondary compiles inside
     // branch{var == 0}: it fires only when no earlier primary instance
     // landed (i.e. it becomes THE cast's one secondary hit).
+    // Dedup granularity is per primary op lane: the accumulator lives
+    // inside this translateDealDamage call, so flags authored on two
+    // different primary ops mint one secondary hit EACH -- and one
+    // flagged resolution's own instances fan-out all fires inside its
+    // single allowed branch.
     if (op.oncePerCast === true && scope.priorLandedVarName !== undefined) {
       return [
         {

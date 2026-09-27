@@ -3200,6 +3200,36 @@ export class TurnBattleSystem {
       return
     }
 
+    // A cast that cannot produce a swing must not charge the Ho
+    // window: every dead cast would still pay the protector's proc
+    // cost and mint the ward + marker on a phantom hit -- unbounded
+    // drain across repeated dead casts. The gate mirrors the apply
+    // lanes' own conditions: a live payload, live targets, the charge
+    // discriminant, and static adapter coverage. A charge-resolve
+    // declare carries action:null by contract (the charged payload
+    // lives on chargedSkill); a normal cast needs action != null and
+    // either no chargeTurns or the resolve-turn isCharging flag.
+    // Resolver-level declines (routeCast -> null, a pool drained
+    // between declare and apply) stay accepted-latent -- viability
+    // needs the plan run, and the plan needs this window's
+    // substitution first.
+    const swingSkill = declared.chargeResolved
+      ? declared.chargedSkill
+      : declared.action?.skill
+    const swingDead = declared.chargeResolved
+      ? declared.chargedSkill == null
+      : declared.action == null ||
+        ((declared.action.skill?.chargeTurns ?? 0) > 0 && declared.isCharging !== true)
+    if (
+      swingDead ||
+      swingSkill == null ||
+      declared.affected.length === 0 ||
+      (this.runtime !== undefined &&
+        this.planPipeline.unsupportedFor(swingSkill).length > 0)
+    ) {
+      return
+    }
+
     // Semantic single-target: the AUTHORED targeting shape decides, not
     // the runtime affected count. A charge-resolve action reads the
     // charged payload's shape; its targets materialize into `affected`
@@ -3318,6 +3348,9 @@ export class TurnBattleSystem {
    * Own-basic-lands income (spec 4.1) -- the acting participant's own
    * basic landed a hit. Reads the authored theEconomy.gainOnBasicHit
    * field off the ung_the marker clone (single channel, review P1).
+   * The unit is per-hit by authored name: a multi-target or
+   * multi-instance basic pays the grant once per landed hit, by
+   * design -- per-cast income would need a differently named knob.
    */
   private grantBasicLandedIncome(battle: TurnBattle, actor: TurnBattleParticipant, skillId: string | undefined, rootSkillId?: string): void {
     // "Own basic landed" -- the resolved payload (composite pick /

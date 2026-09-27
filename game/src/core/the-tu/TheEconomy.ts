@@ -48,9 +48,12 @@ export function drainAllThe(entity: Pick<CombatEntity, 'currentThe'>): void {
 /** Partial consume -- the all-or-nothing insufficient check stays at
     the caller (the adapter throws its skip); this is the single write
     site for a decreasing debit so consume does not duplicate the
-    field mutation inline. */
+    field mutation inline. The pool still hard-floors at 0 -- a
+    caller-side check must not turn a race or an oversized direct
+    debit into negative currentThe. */
 export function consumeThe(entity: Pick<CombatEntity, 'currentThe'>, amount: number): void {
-  entity.currentThe = (entity.currentThe ?? 0) - amount
+  if (amount <= 0) return
+  entity.currentThe = Math.max(0, (entity.currentThe ?? 0) - amount)
 }
 
 /** The holder is a reactive combatant iff the ung_the marker is live. */

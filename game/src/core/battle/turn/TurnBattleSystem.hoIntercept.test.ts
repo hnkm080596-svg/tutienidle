@@ -13,6 +13,7 @@ import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { buffs as LIVE_BUFFS } from '../../../data/buff/buffs'
 import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
+import { TurnSkillPlanRuntime } from './TurnSkillPlanRuntime'
 import { PHAN_KICH } from '../../../data/skill/TheTuSkills'
 import { HO_MON_MARKER, PHAN_CHINH_BUFF, PHAN_CHINH_MAXHP_RATIO, PHAN_CHINH_TAKEN_RATIO } from '../../../data/buff/TheTuBuffs'
 import { THE_PROC_GAIN } from '../../the-tu/TheEconomy'
@@ -275,6 +276,26 @@ describe('Ho intercept window (spec 6.2.1)', () => {
     expect(declared.intercepted).toBeUndefined()
     expect(f.squishyP.entity.currentHp).toBeLessThan(100_000)
     expect(f.protectorP.entity.currentThe).toBe(0) // cost paid, no gain
+  })
+
+  it('a statically unviable cast never opens the window — no roll, no drain, no ward', () => {
+    // NOVA-1: a cast the adapter cannot route stamps castBlocked at the
+    // lane gate -- the Ho window must not charge the protector's proc
+    // cost (and mint the ward) on that phantom hit. Repeated dead casts
+    // would otherwise drain the protector pool and farm wards.
+    const f = makeFixture()
+    withHoMon(f, f.protectorP, 1, 100)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    vi.spyOn(TurnSkillPlanRuntime.prototype, 'unsupportedFor').mockReturnValue(['unsupported op'])
+
+    const declared = declaredAgainst(f, [f.squishyP])
+    system(f).applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBeUndefined()
+    expect(declared.interceptedBy).toBeUndefined()
+    expect(declared.affected).toEqual([f.squishyP])
+    expect(f.protectorP.entity.currentThe).toBe(100) // never charged
+    expect(f.squishyP.entity.currentWard).toBe(0) // no ward minted
   })
 
   it('multi-target (AoE) actions never open the window', () => {

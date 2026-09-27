@@ -16,6 +16,7 @@ import {
   THE_GAIN_ON_EVADE,
   THE_GAIN_ON_HIT_TAKEN,
   THE_GAIN_PER_ROUND,
+  consumeThe,
   grantThe,
   isUngTheCombatant,
   onProcSuccess,
@@ -163,6 +164,20 @@ describe('TheEconomy — pool cap + pay-per-attempt', () => {
 
     tryPayProcCost(entity, resolveProcCost([]))
     expect(entity.currentThe).toBe(5)
+  })
+
+  it('consumeThe hard-floors at 0 -- an over-debit never produces negative currentThe', () => {
+    // AUT-P lineage: the all-or-nothing insufficient check stays at the
+    // caller, but the raw debit must not mint negative pool state from a
+    // race or an oversized direct call. amount <= 0 is a no-op.
+    const entity = createCombatant({ currentThe: 10 })
+
+    consumeThe(entity, 15)
+    expect(entity.currentThe).toBe(0)
+
+    consumeThe(entity, -5)
+    consumeThe(entity, 0)
+    expect(entity.currentThe).toBe(0)
   })
 
   it('resolveProcCost — tu_the -5; combined deltas floor at 0; bach_ung freeProcs wins', () => {

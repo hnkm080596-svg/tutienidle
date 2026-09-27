@@ -129,6 +129,60 @@ describe('SkillDefinitionRegistry', () => {
     }
   })
 
+  it('constructor faults when compositeCount is authored without compositePool', () => {
+    // compositeCount only governs the compositePool pick -- alone it is
+    // silently dead authoring and must reject like every other dead
+    // combo (gateOnApplyResult-on-deal_damage shape).
+    expect(
+      () =>
+        new SkillDefinitionRegistry(
+          [activeDef('a', { subcasts: { compositeCount: 2 } })],
+          deps,
+        ),
+    ).toThrow(/compositeCount requires subcasts\.compositePool/)
+  })
+
+  it('constructor faults when onLanded/oncePerCast ride a non-deal_damage op', () => {
+    // The landed gates compile only under the deal_damage case -- a
+    // smuggled field on any other op type is silently dead authoring.
+    expect(
+      () =>
+        new SkillDefinitionRegistry(
+          [
+            activeDef('a', {
+              operations: [
+                {
+                  type: 'heal',
+                  target: 'self',
+                  amount: 5,
+                  onLanded: [{ type: 'heal', target: 'self', amount: 1 }],
+                } as never,
+              ],
+            }),
+          ],
+          deps,
+        ),
+    ).toThrow(/onLanded\/oncePerCast are only legal on deal_damage/)
+    expect(
+      () =>
+        new SkillDefinitionRegistry(
+          [
+            activeDef('a', {
+              operations: [
+                {
+                  type: 'apply_buff',
+                  target: 'self',
+                  definitionId: 'ung_the' as BuffDefinitionId,
+                  oncePerCast: true,
+                } as never,
+              ],
+            }),
+          ],
+          deps,
+        ),
+    ).toThrow(/onLanded\/oncePerCast are only legal on deal_damage/)
+  })
+
   it('accepts compositePool refs that resolve inside the registry', () => {
     const registry = new SkillDefinitionRegistry(
       [

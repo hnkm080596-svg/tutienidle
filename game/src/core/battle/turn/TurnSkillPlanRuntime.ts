@@ -290,7 +290,13 @@ export class TurnSkillPlanRuntime {
     // -> castBlocked) instead of an uncaught exception crashing the
     // tick and skipping the blocked bookkeeping. executor.execute is
     // inside the try because its own resolver.resolve calls (extras,
-    // composite payloads) throw the same class.
+    // composite payloads) throw the same class. Dormant edge: a
+    // resolver throw AFTER commit (an in-execute re-resolve on a
+    // roster that shrank mid-cast) would also masquerade as a
+    // declined cast with cost/damage already applied -- unreachable
+    // while driveFollowUps stays false and composite extras resolve
+    // pre-commit; enabling follow-ups needs a distinct
+    // faulted-after-commit plan state, not this catch.
     let outcome: SkillCastOutcome
     try {
       const plan = this.resolver.resolve(input)
