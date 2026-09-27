@@ -9742,12 +9742,15 @@
       ],
       "evidenceIds": [
         "EV-PTR-CLO14",
-        "EV-PTR-FIXK"
+        "EV-PTR-FIXK",
+        "EV-PTR-CLO15"
       ],
       "status": "CLOSED",
       "closedAt": "2026-09-27T05:21:30Z",
       "closeReason": "fixed @9eb96edb -- whole subcasts field forbidden on charged defs; pending closure seal",
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
       "siblingFindingIds": [],
       "invariantIds": [],
       "duplicateOf": null,
@@ -9938,9 +9941,12 @@
         "EV-PTR-FIXL"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXL"
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
       "closeReason": "fixed @42fbadd7 -- armedCharged discriminant; pending closure seal"
     },
     {
@@ -10003,9 +10009,12 @@
         "EV-PTR-FIXL"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXL"
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
       "closeReason": "fixed @42fbadd7 -- landed gated on executed lane; pending closure seal"
     },
     {
@@ -10068,9 +10077,12 @@
         "EV-PTR-FIXL"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXL"
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
       "closeReason": "fixed @42fbadd7 -- 'none' reports; pending closure seal"
     },
     {
@@ -10133,9 +10145,12 @@
         "EV-PTR-FIXL"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXL"
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
       "closeReason": "fixed @42fbadd7 -- pre-gate probe stamps; pending closure seal"
     },
     {
@@ -10198,9 +10213,12 @@
         "EV-PTR-FIXL"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXL"
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
       "closeReason": "documented latent @42fbadd7 -- spec ambiguity recorded; pending closure seal"
     },
     {
@@ -10263,9 +10281,12 @@
         "EV-PTR-FIXL"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXL"
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
       "closeReason": "documented @42fbadd7 -- pending closure seal"
     },
     {
@@ -10328,9 +10349,12 @@
         "EV-PTR-FIXL"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXL"
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
       "closeReason": "documented @42fbadd7 -- pending closure seal"
     },
     {
@@ -10393,9 +10417,12 @@
         "EV-PTR-FIXL"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXL"
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
       "closeReason": "fixed @42fbadd7 -- docblock corrected; pending closure seal"
     },
     {
@@ -10458,9 +10485,12 @@
         "EV-PTR-FIXL"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXL"
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
       "closeReason": "fixed @42fbadd7 -- single burn writer; pending closure seal"
     },
     {
@@ -10607,9 +10637,12 @@
         "EV-PTR-FIXL"
       ],
       "evidenceIds": [
-        "EV-PTR-FIXL"
+        "EV-PTR-FIXL",
+        "EV-PTR-CLO15"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-15"
+      ],
       "closeReason": "fixed @42fbadd7 -- allocation removed; pending closure seal"
     }
   ],
@@ -12022,6 +12055,37 @@
         "all clean-K actionable defects repaired @42fbadd7; type-check clean; 130 files / 1124 tests PASS"
       ],
       "inputEvidenceIds": [],
+      "inputPaths": [],
+      "invariantIds": [],
+      "limitations": []
+    },
+    {
+      "kind": "EXECUTED_INTEGRATION",
+      "id": "EV-PTR-CLO15",
+      "state": {
+        "productStateId": "98b51bc83697d9a9a2b2b696bb8165b31ec5c5708d68808e5b2381f787f4aa4d",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "status": "CURRENT",
+      "producer": "devin-9640167b060241ffabd5b44d907e29d8",
+      "startedAt": "2026-09-27T07:47:00Z",
+      "finishedAt": "2026-09-27T08:04:51Z",
+      "commandOrMethod": "closure verify clean-K fix batch @42fbadd7 + residual @9eb96edb (pin f7aec8eb): code reads + type-check + vitest 131 files/1129 PASS + 5 closure repro tests (qa write allowance)",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "records-clo15.md",
+      "artifactHash": "b4978fef655895e4572c5ea23dad19e7416651b4d32a9451f1da601205cbf888",
+      "claims": [
+        "all 7 clean-K fix claims + @9eb96edb residual verified in code and at runtime",
+        "whiff/dangling repro: whiff silent (no warn/no stamp), dangling warn+castBlocked",
+        "dormant observation (not a finding): whiffed charge-resolve opens tail ally window with empty landedTargets -- pre-existing asymmetry, unreachable in shipped data, documented"
+      ],
+      "inputEvidenceIds": [
+        "EV-PTR-FIXL"
+      ],
       "inputPaths": [],
       "invariantIds": [],
       "limitations": []
@@ -13714,6 +13778,37 @@
         "F-PTR-168",
         "F-PTR-169"
       ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-PTR-CLO-15",
+      "state": {
+        "productStateId": "98b51bc83697d9a9a2b2b696bb8165b31ec5c5708d68808e5b2381f787f4aa4d",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 12,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-9640167b060241ffabd5b44d907e29d8",
+      "contextId": "ctx-9640167b",
+      "model": "swe-2",
+      "role": "closure",
+      "inputBundleHash": "98b51bc83697d9a9a2b2b696bb8165b31ec5c5708d68808e5b2381f787f4aa4d",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "read-only worktree"
+      ],
+      "startedAt": "2026-09-27T07:47:00Z",
+      "sealedAt": "2026-09-27T08:04:51Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-PTR-CLO15"
+      ],
+      "findingIds": [],
       "novelAttackIds": [],
       "status": "SEALED"
     }
@@ -16539,6 +16634,22 @@
       "payloadPath": "events/0044.json",
       "payloadHash": "00b23a6a869b391e28cd20f80a3e1a42ee4099c5b7d49388edd4ec03ff984d42",
       "eventHash": "be634bd000b24eb97175fb71cfba7b6c4266fd6c6e3c91a2ba96bf3bd17b3705"
+    },
+    {
+      "seq": 45,
+      "at": "2026-09-27T08:05:19.240Z",
+      "kind": "REVIEW_SEALED",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "98b51bc83697d9a9a2b2b696bb8165b31ec5c5708d68808e5b2381f787f4aa4d",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "be634bd000b24eb97175fb71cfba7b6c4266fd6c6e3c91a2ba96bf3bd17b3705",
+      "payloadPath": "events/0045.json",
+      "payloadHash": "e747bd0344261fcad11e00a5c1f2dd48072fe50961928082171a3eebaab324b1",
+      "eventHash": "f8c244276665e62dc8182075b525c49e35f79382d5ed0fa47d130f6f4b648329"
     }
   ]
 }
