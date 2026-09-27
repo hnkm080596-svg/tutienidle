@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 import { i18n } from '@/i18n'
 import type { CombatVfxPresetId } from '@/core/battle/CombatAction'
-import type { ActorAnchorFact, SkillCastPresentation, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
+import type { ActorAnchorFact, SkillCastPresentation, SkillPresentationOutcome, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
 import { SkillPresentationRunner } from '@/presentation/skills/SkillPresentationRunner'
 import { PhaserSkillVfxDriver } from '@/game/support/skill-vfx/PhaserSkillVfxDriver'
 import { getSkillPresentationRecipe } from '@/data/vfx/SkillPresentationRecipes'
@@ -58,6 +58,21 @@ function paintStats() {
   for (const [index, item] of [...element('sequence').children].entries())
     item.classList.toggle('is-active', lit.includes(index))
 }
+// Fixture outcomes: intercept exercises the skipped lane (no landed hit,
+// so no camera shake), sourceDeath lands a killing hit on the source
+// anchor itself, and the default mints `count` ordinary hits (misses for
+// the 'miss' fixture).
+function fixtureOutcomes(fixture: string, id: CombatVfxPresetId, count: number): SkillPresentationOutcome[] {
+  if (fixture === 'empty') return [{ kind: 'no-effect', outcomeId: 'none', reason: 'preview' }]
+  if (fixture === 'intercept')
+    return [{ kind: 'skipped', outcomeId: 'skipped', target, reason: 'intercepted' }]
+  if (fixture === 'sourceDeath')
+    return [{ kind: 'hit', outcomeId: 'hit-source', target: source,
+      hitOrdinal: 0, landed: true, hpDamage: 10, crit: false, killed: true }]
+  if (id === 'holy_radiance') return [{ kind: 'heal', outcomeId: 'heal', target: source, healed: 20 }]
+  return Array.from({ length: count }, (_, i) => ({ kind: 'hit' as const, outcomeId: 'hit-' + i,
+    target, hitOrdinal: i, landed: fixture !== 'miss', hpDamage: fixture === 'miss' ? 0 : 10, crit: false, killed: false }))
+}
 function play() {
   if (!runner) return
   runner.cancel()
@@ -74,13 +89,7 @@ function play() {
     groupId: 'primary', role: 'primary', resolvedSkillId: id, presetId: id, source,
     actualTargets: id === 'holy_radiance' || fixture === 'sourceDeath' ? [source] : [target],
     footprint: { kind: 'cells', cells: [{ row: 1, column: fixture === 'sourceDeath' ? 1 : 8 }] },
-    outcomes: fixture === 'empty' ? [{ kind: 'no-effect', outcomeId: 'none', reason: 'preview' }]
-      : fixture === 'intercept' ? [{ kind: 'skipped' as const, outcomeId: 'skipped', target, reason: 'intercepted' }]
-      : fixture === 'sourceDeath' ? [{ kind: 'hit' as const, outcomeId: 'hit-source', target: source,
-        hitOrdinal: 0, landed: true, hpDamage: 10, crit: false, killed: true }]
-      : id === 'holy_radiance' ? [{ kind: 'heal', outcomeId: 'heal', target: source, healed: 20 }]
-      : Array.from({ length: count }, (_, i) => ({ kind: 'hit' as const, outcomeId: 'hit-' + i,
-        target, hitOrdinal: i, landed: fixture !== 'miss', hpDamage: fixture === 'miss' ? 0 : 10, crit: false, killed: false })),
+    outcomes: fixtureOutcomes(fixture, id, count),
   }] }
   const result = fixture === 'combo' ? { ...receipt, groups: [...receipt.groups, {
     ...receipt.groups[0]!, groupId: 'combo', role: 'combo' as const, presetId: 'earth_shockwave' as const,

@@ -86,9 +86,7 @@ export class SkillPresentationRunner {
     // RESUME_TAIL_MS (design section 5) - a viewer rejoining after impact
     // sees the recall motion instead of an empty wait.
     const recipes = result.groups.map(group => this.recipe(group.presetId))
-    const hasAuthoredCameraCue = recipes.some(recipe =>
-      recipe.impact.some(cue => cue.primitive === 'camera-cue')
-      || recipe.recovery.some(cue => cue.primitive === 'camera-cue'))
+    const hasAuthoredCameraCue = this.authoredCameraCue(recipes)
     const cues: ScheduledCue[] = []
     let duration = 0
     for (let index = 0; index < result.groups.length; index++) {
@@ -104,6 +102,14 @@ export class SkillPresentationRunner {
     this.active = { ref: result.ref, port, phase: 'resume', elapsed: 0,
       duration: Math.min(duration, RESUME_TAIL_MS), cues }
     this.sample(this.active)
+  }
+  // Authored camera precedence is action-wide: a camera-cue on any group's
+  // impact or recovery section suppresses the generic landed-hit impulse
+  // everywhere, regardless of cue order inside a recipe.
+  private authoredCameraCue(recipes: readonly SkillPresentationRecipe[]): boolean {
+    return recipes.some(recipe =>
+      recipe.impact.some(cue => cue.primitive === 'camera-cue')
+      || recipe.recovery.some(cue => cue.primitive === 'camera-cue'))
   }
   update(deltaMs: number): void {
     const active = this.active
@@ -137,12 +143,7 @@ export class SkillPresentationRunner {
     active.duration = 0
     active.cues = []
     const recipes = result.groups.map(group => this.recipe(group.presetId))
-    // Authored precedence is action-wide: a camera-cue on any group (e.g. a
-    // kiem-combo extra) suppresses the generic landed-hit impulse on all of
-    // them, regardless of cue order inside a recipe.
-    const hasAuthoredCameraCue = recipes.some(recipe =>
-      recipe.impact.some(cue => cue.primitive === 'camera-cue')
-      || recipe.recovery.some(cue => cue.primitive === 'camera-cue'))
+    const hasAuthoredCameraCue = this.authoredCameraCue(recipes)
     for (let index = 0; index < result.groups.length; index++) {
       const group = result.groups[index]!
       const recipe = recipes[index]!
