@@ -7716,11 +7716,14 @@
    "discoveredBy": "cleanI AUT (M1)",
    "counterexample": "negative growth.stacks drains to 0 -> removeInstance consumed, then computeUnitRequest+periodic_requests_committed still fire on the dead instance",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-AUTI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "removed instance emits one periodic tick",
    "expected": "dead instances do not tick (commitStacks parity)",
@@ -7780,11 +7783,14 @@
    "discoveredBy": "cleanI AUT (L1)",
    "counterexample": "{targetScope:self, landedConsequences:[...]} compiles to zero ops with no report",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-AUTI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "silent no-op",
    "expected": "field named in never-fires report",
@@ -7844,11 +7850,14 @@
    "discoveredBy": "cleanI AUT (L2)",
    "counterexample": "docs claim live route mechanics that nothing can produce post-retirement",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-AUTI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "stale docblocks + dead execute lanes",
    "expected": "fields re-documented dormant",
@@ -7908,11 +7917,14 @@
    "discoveredBy": "cleanI AUT (L3)",
    "counterexample": "runtime===undefined battles run stamped riders silently missing",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-AUTI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "silent lane divergence",
    "expected": "documented routed-only consumption",
@@ -7972,11 +7984,14 @@
    "discoveredBy": "cleanI AUT (L4)",
    "counterexample": "coefficient:{if stacks_below(other_enemy,...)} faults \"only legal inside a deal_damage onLanded lane\" while inside one",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-AUTI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "lane-blind shallow validation",
    "expected": "lane context threaded through condition validation",
@@ -8035,11 +8050,14 @@
    ],
    "discoveredBy": "cleanI AUT (N1)",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-AUTI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "message omits landed-lane legality",
    "expected": "accurate fault text",
@@ -8099,11 +8117,14 @@
    ],
    "discoveredBy": "cleanI AUT (N2)",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-AUTI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "dead code",
    "expected": "removed",
@@ -8163,11 +8184,14 @@
    ],
    "discoveredBy": "cleanI AUT (N3)",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-AUTI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "double fault diagnostic noise",
    "expected": "single fault",
@@ -8227,11 +8251,14 @@
    ],
    "discoveredBy": "cleanI AUT (N4)",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-AUTI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "wrong doc, correct code",
    "expected": "accurate docblock",
@@ -8291,11 +8318,14 @@
    ],
    "discoveredBy": "cleanI AUT (N5)",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-AUTI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "parallel implementation",
    "expected": "documented parity contract",
@@ -8356,11 +8386,14 @@
    "discoveredBy": "cleanI COR (N1)",
    "counterexample": "pool drained between declare and apply -> blocked self-cast lands actor.id in log + window rolls",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-CORI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "castBlocked ignored at self-push/window/extras",
    "expected": "blocked cast records no targets, feeds no windows",
@@ -8419,11 +8452,14 @@
    ],
    "discoveredBy": "cleanI COR (N2)",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-CORI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "duplicate report",
    "expected": "same defect as F-PTR-124",
@@ -8484,11 +8520,14 @@
    "discoveredBy": "cleanI COR (N3)",
    "counterexample": "resourceType:'the'+pct def gates free at select but charges 30% maxMp at apply",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-CORI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "silent mana re-stamp",
    "expected": "one channel authority; non-mana pct reports + falls back to flat cost",
@@ -8548,11 +8587,14 @@
    "discoveredBy": "cleanI COR (N4)",
    "counterexample": "deferredResolve replays root payload verbatim -> empowered riders/damage silently dropped",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-CORI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "combination authorable",
    "expected": "mutual-exclusion fault",
@@ -8612,11 +8654,14 @@
    "discoveredBy": "cleanI INT (F1)",
    "counterexample": "runtime-wired adapter-declined def emits attack + queues a repeat of the unresolvable payload",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-INTI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "no-op cast still performs full cast side-effects",
    "expected": "castBlocked signal: no emit/queue/window/extras",
@@ -8676,11 +8721,14 @@
    "discoveredBy": "cleanI INT (F2)",
    "counterexample": "scalar if inside onLanded may use non-lane intents -> silent dead/wrong binding",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-INTI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "same as F-PTR-128",
    "expected": "lane context honored",
@@ -8857,11 +8905,14 @@
    ],
    "discoveredBy": "cleanI INT (F5)",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-INTI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "same as F-PTR-136",
    "expected": "non-mana pct reports + flat-cost fallback",
@@ -8922,11 +8973,14 @@
    "discoveredBy": "cleanI INT (F6)",
    "counterexample": "payload authored with consumesAllThe/repeatCasts commits side-effects unvalidated",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-INTI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "validation-free wiring",
    "expected": "documented field contract",
@@ -8985,11 +9039,14 @@
    ],
    "discoveredBy": "cleanI INT (F7)",
    "status": "CLOSED",
-   "closureReviewIds": [],
+   "closureReviewIds": [
+    "REV-PTR-CLO-13"
+   ],
    "invariantIds": [],
    "evidenceIds": [
     "EV-PTR-INTI",
-    "EV-PTR-FIXI"
+    "EV-PTR-FIXI",
+    "EV-PTR-CLO13"
    ],
    "actual": "same as F-PTR-125",
    "expected": "reported never-fires field",
@@ -10133,6 +10190,33 @@
    "limitations": [
     "reviewer self-report"
    ]
+  },
+  {
+   "kind": "EXECUTED_INTEGRATION",
+   "id": "EV-PTR-CLO13",
+   "state": {
+    "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "status": "CURRENT",
+   "producer": "devin-e7b831839efd4a2c96c169a73c45017b",
+   "startedAt": "2026-09-27T04:04:00Z",
+   "finishedAt": "2026-09-27T04:13:00Z",
+   "commandOrMethod": "closure verify clean-I fix batches @0c6b72f2: read sites + type-check + vitest 271 files/2272 pass",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "records-clo13.json",
+   "artifactHash": "f2a513e6e13502b8083154dba4802a08ed5e6b22edede8de9806ef93ebac0f25",
+   "claims": [
+    "15 fixes + 4 dup-closures + 2 rejections verified on 0c6b72f2"
+   ],
+   "inputEvidenceIds": [],
+   "inputPaths": [],
+   "invariantIds": [],
+   "limitations": []
   }
  ],
  "coverage": [],
@@ -11544,6 +11628,37 @@
     "F-PTR-143",
     "F-PTR-144"
    ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-PTR-CLO-13",
+   "state": {
+    "productStateId": "f5a6329a1c17adc65a790db10e120282a61f728a66a60c8627d480b3221ecf6f",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 10,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-e7b831839efd4a2c96c169a73c45017b",
+   "contextId": "ctx-e7b83183",
+   "model": "swe-2",
+   "role": "closure",
+   "inputBundleHash": "f5c75798ae22364e8ff6690d1f802dcff8a31c713d0c0950bbefb95365492fa4",
+   "priorFindingsVisible": true,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-27T04:04:00Z",
+   "sealedAt": "2026-09-27T04:13:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-CLO13"
+   ],
+   "findingIds": [],
    "novelAttackIds": [],
    "status": "SEALED"
   }
