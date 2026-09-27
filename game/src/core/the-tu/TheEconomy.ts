@@ -38,7 +38,7 @@ export function grantThe(entity: Pick<CombatEntity, 'currentThe' | 'maxThe'>, am
   entity.currentThe = Math.min(theCap(entity), (entity.currentThe ?? 0) + amount)
 }
 
-/** consumesAllThe burn — drains the whole pool through the same
+/** consumesAllThe burn - drains the whole pool through the same
     mutation authority (engine-unit lane has no resource adapter). */
 export function drainAllThe(entity: Pick<CombatEntity, 'currentThe'>): void {
   entity.currentThe = 0
