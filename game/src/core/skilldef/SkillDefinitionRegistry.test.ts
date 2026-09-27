@@ -103,14 +103,16 @@ describe('SkillDefinitionRegistry', () => {
     ).toThrow(/consumesAllThe and cadence\.chargeTurns are mutually exclusive/)
   })
 
-  it('constructor faults when one definition carries subcasts (repeat/multicast) AND chargeTurns', () => {
+  it('constructor faults when one definition carries any subcasts AND chargeTurns', () => {
     // A charge-init declare commits the cast but never carries the
-    // payload resolve -- queued repeat/multicast execs off it would
-    // resolve to silent no-ops. Dormant today; keeps the dead combos
-    // unauthorable.
+    // payload resolve -- subcasts are stripped wholesale at deferred
+    // resolve, so every variant is dead authoring. Dormant today;
+    // keeps the dead combos unauthorable.
     for (const subcasts of [
       { count: 2 },
       { multicast: { chance: 1, maxExtraCasts: 1 } },
+      { compositePool: ['pool_base'] },
+      { compositeCount: 2 },
     ] as const) {
       expect(
         () =>
