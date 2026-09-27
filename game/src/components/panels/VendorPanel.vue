@@ -6,6 +6,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import GameButton from '@/components/common/GameButton.vue'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { useNotificationStore } from '@/stores/notification'
+import { AudioManager } from '@/core/audio/AudioManager'
 
 // Ký Bảo Các — gp123 6G (2026-09-06): chỉ còn Hóa Bán (thu mua nguyên
 // liệu thừa lấy Linh Thạch). 2 card Đổi Phẩm (Linh Thạch 100→1, Linh
@@ -60,6 +61,10 @@ function sellAll(materialId: string, owned: number) {
 
     return
   }
+
+  // W7: a landed sale is a purchase cue (sell = spend direction inverted,
+  // same commerce affordance).
+  AudioManager.getInstance().playCue('ui.purchase')
 
   bumpState()
 }

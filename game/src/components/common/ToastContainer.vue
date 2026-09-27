@@ -3,21 +3,22 @@ import { onBeforeUnmount, onMounted, watch } from 'vue'
 import { useNotificationStore } from '@/stores/notification'
 import type { NotificationKind } from '@/core/notification/NotificationEvent'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
-import { AudioManager, type SynthSoundId } from '@/core/audio/AudioManager'
+import { AudioManager } from '@/core/audio/AudioManager'
 import { isMaxRankTone } from '@/core/profession/slotRank'
 
 const notification = useNotificationStore()
 
-// Toast kind -> SFX. Playing here (not in the store's push()) keeps the
-// notification store free of audio deps and — more importantly — plays the
-// sound at the moment the toast becomes visible, not when it is queued.
-const KIND_SOUND: Record<NotificationKind, SynthSoundId> = {
-  loot: 'toastLoot',
-  craft: 'toastCraft',
-  upgrade: 'toastUpgrade',
-  save: 'toastSave',
-  warning: 'toastWarning',
-  error: 'toastError',
+// Toast kind -> cue id (W7: manifest cue ids, not legacy SynthSoundId).
+// Playing here (not in the store's push()) keeps the notification store
+// free of audio deps and — more importantly — plays the sound at the
+// moment the toast becomes visible, not when it is queued.
+const KIND_SOUND: Record<NotificationKind, string> = {
+  loot: 'ui.toast.loot',
+  craft: 'ui.toast.craft',
+  upgrade: 'ui.toast.upgrade',
+  save: 'ui.toast.save',
+  warning: 'ui.toast.warning',
+  error: 'ui.toast.error',
 }
 
 watch(
@@ -25,7 +26,7 @@ watch(
   (ids, prevIds) => {
     const prev = new Set(prevIds)
     for (const toast of notification.toasts) {
-      if (!prev.has(toast.id)) AudioManager.getInstance().play(KIND_SOUND[toast.kind])
+      if (!prev.has(toast.id)) AudioManager.getInstance().playCue(KIND_SOUND[toast.kind])
     }
   },
 )

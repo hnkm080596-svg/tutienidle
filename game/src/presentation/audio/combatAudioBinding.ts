@@ -33,7 +33,6 @@ const STATIC_CUES: ReadonlyArray<readonly [string, string]> = [
   ['turn_ready', 'combat.turn_ready'],
   ['status_vfx_removed', 'combat.buff.expire'],
   ['essence_stream_arrival', 'combat.essence'],
-  ['combat_exit_request', 'ui.modal.open'],
   ['combat_scene_exit', 'combat.exit'],
   ['tribulation_started', 'tribulation.begin'],
   ['tribulation_lightning', 'tribulation.thunder'],

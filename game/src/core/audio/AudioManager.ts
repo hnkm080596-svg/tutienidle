@@ -14,8 +14,7 @@
 // Buffers arrive through attachDecodedBuffer/attachEncodedBuffer — keys are
 // manifest `src` strings; encoded data queues until the context exists.
 //
-// Legacy API kept during the cue-id migration: play(SynthSoundId).
-//
+
 //
 // Why Tone.js (instead of raw Web Audio API):
 //   - Strong synth engines (FMSynth, AMSynth, MetalSynth, MembraneSynth)
@@ -28,9 +27,11 @@
 // API:
 //   - getInstance()       → singleton
 //   - unlock()            → calls Tone.start() (autoplay policy); idempotent
-//   - play(id)            → plays one sound (per-id cooldown anti-spam)
+//   - playCue(id)         → plays one manifest cue (per-id cooldown anti-spam)
+//   - playMusic/stopMusic/crossfadeMusic → the single music slot
 //   - setEnabled(false)   → mutes everything
 //   - setMasterVolume(v)  → 0..1
+//   - setChannelVolume(ch,v) → per-bus volume (music/sfx/ui)
 //
 // Bug-fix pass 2026-09-06 (systematic debugging):
 //   B1  NoiseSynth.triggerAttackRelease does NOT take a note — signature is
@@ -41,8 +42,8 @@
 //       tail. Now unlock() async-chains: start → init → ready.
 //   B3  Combat events (hit/damage) fire many times per tick → same sound
 //       id stacking into a "noise wall". Now per-id 60ms cooldown.
-//   B4  Suspended tab (autoplay policy re-engaged) → play() went silent.
-//       Now play() checks ctx.state and resume()s when suspended.
+//   B4  Suspended tab (autoplay policy re-engaged) → playback went silent.
+//       Now playback checks ctx.state and resume()s when suspended.
 //   B5  initChain failing midway leaked already-created nodes; retry
 //       stacked a new chain on top. Now disposes partial chain + full
 //       dispose on reset.
@@ -318,11 +319,6 @@ function createSynth(recipe: SoundRecipe): AnySynth {
   }
 }
 
-// Legacy play(SynthSoundId) path channel guess — ui/toast recipes ride the
-// ui bus, everything else sfx. Retired with the alias at the end of W7.
-function legacyChannelFor(id: SynthSoundId): AudioChannelId {
-  return id.startsWith('ui') || id.startsWith('toast') ? 'ui' : 'sfx'
-}
 
 class AudioManagerImpl {
   private enabled = true
@@ -331,7 +327,6 @@ class AudioManagerImpl {
   private unlockState: 'idle' | 'pending' | 'ready' = 'idle'
 
   private synthCache = new Map<string, AnySynth>() // key `${channel}:${id}` — a recipe can back cues on different channels
-  private lastPlayAt = new Map<SynthSoundId, number>()
 
   // Tone chain: master → destination; lowpass → master; reverb → lowpass.
   // Channel gains: sfx/ui connect to reverb, music connects to lowpass.
@@ -501,37 +496,6 @@ class AudioManagerImpl {
     return this.masterVolume
   }
 
-  /**
-   * Plays a sound by id. Does not throw when audio is not unlocked or Tone
-   * is unavailable (SSR/test environments) — silent no-op.
-   */
-  play(id: SynthSoundId): void {
-    if (!this.enabled) return
-    if (this.unlockState !== 'ready') return
-
-    try {
-      // B4: suspended tab → resume before playing (no throw on failure).
-      const ctx = Tone.getContext()
-      if (ctx.state === 'suspended') {
-        void ctx.resume()
-      }
-
-      // B3: per-id anti-spam cooldown.
-      const now = Date.now()
-      const last = this.lastPlayAt.get(id) ?? 0
-      if (now - last < MIN_GAP_MS) return
-      this.lastPlayAt.set(id, now)
-
-      const recipe = SOUND_LIBRARY[id]
-      const synth = this.getOrCreateSynth(legacyChannelFor(id), id, recipe)
-      if (!synth) return
-
-      this.triggerSynth(synth, recipe)
-    } catch {
-      // Tone.js not ready (e.g. no AudioContext in jsdom/test) — silent no-op.
-    }
-  }
-
   // ---- W2: cue playback -------------------------------------------------
 
   /**
@@ -555,6 +519,12 @@ class AudioManagerImpl {
     if (now - last < gap) return
 
     try {
+      // B4: suspended tab → resume before playing (no throw on failure).
+      const ctx = Tone.getContext()
+      if (ctx.state === 'suspended') {
+        void ctx.resume()
+      }
+
       const src = this.pickDecodedSrc(id, def.src)
       if (src !== undefined) {
         this.cueCooldownAt.set(id, now)
@@ -881,7 +851,6 @@ class AudioManagerImpl {
       synth.dispose()
     }
     this.synthCache.clear()
-    this.lastPlayAt.clear()
 
     for (const player of this.players) {
       try { player.stop() } catch { /* not started */ }

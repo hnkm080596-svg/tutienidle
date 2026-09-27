@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { useId } from 'vue'
+import { useId, watch } from 'vue'
 import SysModalBase from './system/SysModalBase.vue'
 import GameButton from './GameButton.vue'
+import { AudioManager } from '@/core/audio/AudioManager'
 
 // Shared chrome primitive (UI/UX rework Giai đoạn A) — thay
 // window.confirm() native còn sót ở SettingsPanel.vue/QuanKhiPanel.vue.
@@ -25,6 +26,29 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{ confirm: []; cancel: [] }>()
 
+// W7: shared confirm chrome owns modal open + confirm/cancel cues for
+// every ConfirmModal consumer (QuanKhiPanel path choice, save gate, ...).
+const audio = AudioManager.getInstance()
+
+watch(
+  () => props.open,
+  (open, wasOpen) => {
+    if (open && !wasOpen) audio.playCue('ui.modal.open')
+  },
+)
+
+function onConfirm() {
+  audio.playCue('ui.confirm')
+  audio.playCue('ui.modal.close')
+  emit('confirm')
+}
+
+function onCancel() {
+  audio.playCue('ui.cancel')
+  audio.playCue('ui.modal.close')
+  emit('cancel')
+}
+
 // Remediation Task 6 (2026-09-05) — screen reader cần dialog được tham
 // chiếu tới title/description thật (aria-labelledby/describedby), không
 // chỉ aria-label. useId() đảm bảo ID per-instance — nhiều modal đồng
@@ -43,13 +67,13 @@ const messageId = useId()
     :described-by="messageId"
     :close-on-scrim="false"
     :layer="props.layer"
-    @close="emit('cancel')"
+    @close="onCancel"
   >
     <p :id="messageId" class="confirm-modal__message">{{ message }}</p>
 
     <div class="confirm-modal__actions">
-      <GameButton class="confirm-modal__cancel" variant="ghost" @click="emit('cancel')">{{ cancelLabel }}</GameButton>
-      <GameButton class="confirm-modal__confirm" :variant="danger ? 'danger' : 'primary'" @click="emit('confirm')">{{ confirmLabel }}</GameButton>
+      <GameButton class="confirm-modal__cancel" variant="ghost" :sound="false" @click="onCancel">{{ cancelLabel }}</GameButton>
+      <GameButton class="confirm-modal__confirm" :variant="danger ? 'danger' : 'primary'" :sound="false" @click="onConfirm">{{ confirmLabel }}</GameButton>
     </div>
   </SysModalBase>
 </template>

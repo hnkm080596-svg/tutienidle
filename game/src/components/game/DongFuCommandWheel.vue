@@ -16,6 +16,7 @@ import {
   type CommandWheelSlot,
 } from '@/data/ui/commandWheelCatalog'
 import { getCommandWheelOrbitDirection } from '@/data/ui/commandWheelOrbit'
+import { AudioManager } from '@/core/audio/AudioManager'
 import { resolveExpectedArtifactId } from '@/core/artifact/Artifact'
 import {
   ARTIFACT_UNLOCK_REALM_ID,
@@ -301,6 +302,9 @@ function activate(slot: CommandWheelSlot) {
     return
   }
 
+  // W7: wheel pick lands before the close cue (ui.wheel.close fires via
+  // uiAudioBinding's isCommandWheelOpen transition below).
+  AudioManager.getInstance().playCue('ui.wheel.select')
   ui.closeCommandWheel()
 
   if (slot.buildingId) {

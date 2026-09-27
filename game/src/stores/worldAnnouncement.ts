@@ -1,4 +1,6 @@
 import { defineStore } from 'pinia'
+import { AudioManager } from '@/core/audio/AudioManager'
+import type { AudioCueId } from '@/core/audio/AudioCueManifest'
 
 export interface WorldAnnouncementContent {
   title: string
@@ -21,7 +23,11 @@ export const useWorldAnnouncementStore = defineStore('worldAnnouncement', {
   }),
 
   actions: {
-    show(title: string, body: string) {
+    show(title: string, body: string, cueId: AudioCueId = 'stinger.announce') {
+      // W7: every announcement lands a stinger; callers override with a
+      // beat-specific cue (breakthrough, tribulation verdict, ...).
+      AudioManager.getInstance().playCue(cueId)
+
       if (autoCloseHandle !== undefined) {
         clearTimeout(autoCloseHandle)
 

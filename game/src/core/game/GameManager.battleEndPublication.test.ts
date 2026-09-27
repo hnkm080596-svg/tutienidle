@@ -120,7 +120,7 @@ let playSpy: ReturnType<typeof vi.spyOn>
 
 beforeEach(() => {
   resetAudioManagerForTest()
-  playSpy = vi.spyOn(AudioManager.getInstance(), 'play').mockImplementation(() => {})
+  playSpy = vi.spyOn(AudioManager.getInstance(), 'playCue').mockImplementation(() => {})
 })
 
 afterEach(() => {
@@ -129,7 +129,7 @@ afterEach(() => {
 })
 
 /** Count only terminal-sound calls — turns also emit attack/hit/death SFX. */
-function soundCalls(soundId: 'battleVictory' | 'battleDefeat' | 'battleStart'): number {
+function soundCalls(soundId: 'combat.victory' | 'combat.defeat' | 'combat.start'): number {
   return playSpy.mock.calls.filter((call: unknown[]) => call[0] === soundId).length
 }
 
@@ -179,8 +179,8 @@ describe('ARCH-014 (M12) — battle_end terminal publication, exactly once per o
 
     expect(gameManager.getTurnBattle()?.state).toBe('victory')
     expect(battleEnds).toEqual([{ type: 'battle_end', state: 'victory' }])
-    expect(soundCalls('battleVictory')).toBe(1)
-    expect(soundCalls('battleDefeat')).toBe(0)
+    expect(soundCalls('combat.victory')).toBe(1)
+    expect(soundCalls('combat.defeat')).toBe(0)
 
     // Terminal is closed: further steps never re-emit (clock stopped).
     for (let i = 0; i < 50; i++) {
@@ -188,7 +188,7 @@ describe('ARCH-014 (M12) — battle_end terminal publication, exactly once per o
     }
 
     expect(battleEnds).toHaveLength(1)
-    expect(soundCalls('battleVictory')).toBe(1)
+    expect(soundCalls('combat.victory')).toBe(1)
   })
 
   it('natural defeat publishes exactly one battle_end defeat — the path that was silent before M12', () => {
@@ -207,8 +207,8 @@ describe('ARCH-014 (M12) — battle_end terminal publication, exactly once per o
 
     expect(gameManager.getTurnBattle()?.state).toBe('defeat')
     expect(battleEnds).toEqual([{ type: 'battle_end', state: 'defeat' }])
-    expect(soundCalls('battleDefeat')).toBe(1)
-    expect(soundCalls('battleVictory')).toBe(0)
+    expect(soundCalls('combat.defeat')).toBe(1)
+    expect(soundCalls('combat.victory')).toBe(0)
   })
 
   it('explicit abandon publishes exactly one battle_end defeat through the shared guard; a repeated abandon is a no-op', () => {
@@ -228,12 +228,12 @@ describe('ARCH-014 (M12) — battle_end terminal publication, exactly once per o
 
     expect(gameManager.abandonBattle()).toBe(true)
     expect(battleEnds).toEqual([{ type: 'battle_end', state: 'defeat' }])
-    expect(soundCalls('battleDefeat')).toBe(1)
+    expect(soundCalls('combat.defeat')).toBe(1)
 
     // Second abandon: battle already terminal -> refused, no second event.
     expect(gameManager.abandonBattle()).toBe(false)
     expect(battleEnds).toHaveLength(1)
-    expect(soundCalls('battleDefeat')).toBe(1)
+    expect(soundCalls('combat.defeat')).toBe(1)
   })
 
   it('auto-repeat emits battle_end exactly once PER CYCLE — two victories produce two events, not zero and not more', () => {
@@ -254,8 +254,8 @@ describe('ARCH-014 (M12) — battle_end terminal publication, exactly once per o
       { type: 'battle_end', state: 'victory' },
       { type: 'battle_end', state: 'victory' },
     ])
-    expect(soundCalls('battleVictory')).toBe(2)
-    expect(soundCalls('battleDefeat')).toBe(0)
+    expect(soundCalls('combat.victory')).toBe(2)
+    expect(soundCalls('combat.defeat')).toBe(0)
 
     // Cleanup: abandon the running third cycle ends it once.
     expect(gameManager.abandonBattle()).toBe(true)
@@ -291,7 +291,7 @@ describe('ARCH-014 (M12) — battle_end terminal publication, exactly once per o
       { type: 'battle_end', state: 'victory' },
       { type: 'battle_end', state: 'victory' },
     ])
-    expect(soundCalls('battleVictory')).toBe(2)
+    expect(soundCalls('combat.victory')).toBe(2)
   })
 
   it('abandon on a direct startBattle() (dev spawn seam) after a terminal still publishes defeat — guard was reset', () => {
@@ -322,6 +322,6 @@ describe('ARCH-014 (M12) — battle_end terminal publication, exactly once per o
       { type: 'battle_end', state: 'victory' },
       { type: 'battle_end', state: 'defeat' },
     ])
-    expect(soundCalls('battleDefeat')).toBe(1)
+    expect(soundCalls('combat.defeat')).toBe(1)
   })
 })

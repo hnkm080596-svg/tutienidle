@@ -7,6 +7,7 @@ import { computed, inject, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore, type BattleRunMode } from '@/stores/ui'
+import { AudioManager } from '@/core/audio/AudioManager'
 import { useGameManager } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
 import { ASSET_BUNDLE_MANAGER_KEY } from '@/presentation/PresentationContracts'
@@ -90,6 +91,7 @@ const armedFarmStage = computed(() => {
 
 function stopAutoFarm() {
   gameManager.turnBattleOps.autoFarmOps.stopAutoFarm(player.$state)
+  AudioManager.getInstance().playCue('farm.stop')
 }
 
 const chapterOptions = computed(() => {
@@ -222,7 +224,10 @@ function start() {
     // running farm, missing perfect clear) keeps the panel open so the
     // failure is visible instead of silent (partial T4-38).
     if (gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player.$state, selectedStage.value.id)) {
+      AudioManager.getInstance().playCue('farm.arm')
       ui.leftPanelMode = null
+    } else {
+      AudioManager.getInstance().playCue('ui.error')
     }
     return
   }

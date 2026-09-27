@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { AudioManager } from '@/core/audio/AudioManager'
 import SlotView from '../common/SlotView.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
@@ -192,6 +193,7 @@ const badgesBySlot = computed<Record<EquipmentSlot, SlotBadge[]>>(() => {
 
 function onSlotClick(instance: EquipmentInstance | undefined) {
   if (instance) {
+    AudioManager.getInstance().playCue('ui.equip')
     unequip(instance.instanceId)
   }
 }

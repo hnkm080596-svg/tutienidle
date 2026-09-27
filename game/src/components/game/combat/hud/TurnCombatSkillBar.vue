@@ -13,6 +13,7 @@ import CombatSkillSlot from './CombatSkillSlot.vue'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
 import { useGameManager } from '@/composables/useGameState'
 import { useUiStore } from '@/stores/ui'
+import { AudioManager } from '@/core/audio/AudioManager'
 
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
@@ -126,7 +127,19 @@ function isTappable(entry: TurnSkillPresentationEntry): boolean {
 }
 
 function tapSlot(role: TurnSkillSlotRole): void {
+  // W7: landed manual picks cue combat.select (the composable's reject
+  // path owns ui.error).
+  if (isAwaitingChoice.value) {
+    AudioManager.getInstance().playCue('combat.select')
+  }
   chooseSlot(role)
+}
+
+function onDynamicBasicClick(defId: string): void {
+  if (isAwaitingChoice.value) {
+    AudioManager.getInstance().playCue('combat.select')
+  }
+  chooseDynamicBasic(defId)
 }
 </script>
 
@@ -144,7 +157,7 @@ function tapSlot(role: TurnSkillSlotRole): void {
           :class="{ 'is-tappable': isAwaitingChoice }"
           :disabled="!isAwaitingChoice"
           :aria-label="`Dùng ${orbLabel(orb)}`"
-          @click="chooseDynamicBasic(orb.id)"
+          @click="onDynamicBasicClick(orb.id)"
         >
           <CombatSkillSlot
             :empty-label="orbLabel(orb)"

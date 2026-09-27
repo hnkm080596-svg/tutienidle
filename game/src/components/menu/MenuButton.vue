@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { AudioManager } from '@/core/audio/AudioManager'
+
 interface Props {
   label: string
   variant?: 'primary' | 'secondary'
@@ -10,9 +12,18 @@ withDefaults(defineProps<Props>(), {
   disabled: false,
 })
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'click'): void
 }>()
+
+// W7: menu affordance click -> ui.click + autoplay unlock (AudioManager
+// direct — MenuButton mounts in tests without an active Pinia).
+const audio = AudioManager.getInstance()
+function onClick() {
+  audio.unlock()
+  audio.playCue('ui.click')
+  emit('click')
+}
 </script>
 
 <template>
@@ -23,7 +34,7 @@ defineEmits<{
       { 'menu-button--disabled': disabled },
     ]"
     :disabled="disabled"
-    @click="$emit('click')"
+    @click="onClick"
   >
     <span class="menu-button__label">{{ label }}</span>
   </button>

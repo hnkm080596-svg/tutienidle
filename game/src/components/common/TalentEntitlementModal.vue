@@ -12,6 +12,7 @@
 // checkTribulationOutcomeAction) waits on the same record.
 import { computed, ref, useId, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { AudioManager } from '@/core/audio/AudioManager'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 import { TALENT_RARITY_LABELS, type TalentDefinition } from '@/core/talent/Talent'
 import {
@@ -89,7 +90,10 @@ function decide(decision: TalentEntitlementDecision): void {
   // Domain owns grant/legality; a rejected decision keeps the record
   // (and the dialog) - the UI never shows an illegal choice in the
   // authored pools, so a false return needs no surfacing.
-  gameManager.realmAdvanceOps.resolveTalentEntitlement(player, decision)
+  // W7: a decided entitlement is a progression pick.
+  if (gameManager.realmAdvanceOps.resolveTalentEntitlement(player, decision)) {
+    AudioManager.getInstance().playCue('progress.talent_pick')
+  }
 }
 </script>
 

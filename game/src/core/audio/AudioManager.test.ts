@@ -2,12 +2,12 @@
 //
 // Tone.js is mocked to verify:
 //   1. unlock() calls Tone.start(), awaits Reverb.ready, then sets unlocked.
-//   2. play(id) uses the correct triggerAttackRelease signature per engine:
+//   2. playCue(id) uses the correct triggerAttackRelease signature per engine:
 //      - Monophonic (metal/fm/am/membrane): (note, duration, time?, velocity?)
 //      - NoiseSynth: (duration, time?, velocity?) — NO note!
 //   3. Per-id cooldown: playing the same id twice in quick succession fires
 //      once (anti-spam when combat events fire many times per tick).
-//   4. Suspended context → play() calls resume() (tab-switch recovery).
+//   4. Suspended context → playCue() calls resume() (tab-switch recovery).
 //   5. setEnabled(false) → mute. setMasterVolume clamps to [0,1].
 //   6. initChain failing midway disposes created nodes; retry does not leak.
 //   7. resetAudioManagerForTest() disposes every node.
@@ -246,20 +246,20 @@ describe('AudioManager (Tone.js-based)', () => {
   })
 
   // ── B1: triggerAttackRelease signature per engine ────────────────
-  it('play(uiClick) [metal] → triggerAttackRelease(note, duration, undefined, velocity)', async () => {
+  it('playCue(ui.click) [metal] → triggerAttackRelease(note, duration, undefined, velocity)', async () => {
     const mgr = await unlockedManager()
 
-    mgr.play('uiClick')
+    mgr.playCue('ui.click')
 
     const fired = triggeredSynths()
     expect(fired).toHaveLength(1)
     expect(fired[0]!.triggerAttackRelease).toHaveBeenCalledWith('A3', '16n', undefined, 0.3)
   })
 
-  it('play(toastError) [noise] → triggerAttackRelease(duration, undefined, velocity) — NO note arg', async () => {
+  it('playCue(ui.toast.error) [noise] → triggerAttackRelease(duration, undefined, velocity) — NO note arg', async () => {
     const mgr = await unlockedManager()
 
-    mgr.play('toastError')
+    mgr.playCue('ui.toast.error')
 
     const fired = triggeredSynths()
     expect(fired).toHaveLength(1)
@@ -267,19 +267,19 @@ describe('AudioManager (Tone.js-based)', () => {
     expect(fired[0]!.triggerAttackRelease).toHaveBeenCalledWith('16n', undefined, 0.3)
   })
 
-  it('play(combatAttack) [noise] → same correct noise signature', async () => {
+  it('playCue(combat.cast) [noise] → same correct noise signature', async () => {
     const mgr = await unlockedManager()
 
-    mgr.play('combatAttack')
+    mgr.playCue('combat.cast')
 
     const fired = triggeredSynths()
     expect(fired[0]!.triggerAttackRelease).toHaveBeenCalledWith('32n', undefined, 0.35)
   })
 
-  it('play(toastLoot) [fm] → triggerAttackRelease(note, duration, undefined, velocity)', async () => {
+  it('playCue(ui.toast.loot) [fm] → triggerAttackRelease(note, duration, undefined, velocity)', async () => {
     const mgr = await unlockedManager()
 
-    mgr.play('toastLoot')
+    mgr.playCue('ui.toast.loot')
 
     const fired = triggeredSynths()
     expect(fired[0]!.triggerAttackRelease).toHaveBeenCalledWith('E5', '8n', undefined, 0.4)
@@ -290,9 +290,9 @@ describe('AudioManager (Tone.js-based)', () => {
     vi.useFakeTimers()
     const mgr = await unlockedManager()
 
-    mgr.play('combatHit')
-    mgr.play('combatHit')
-    mgr.play('combatHit')
+    mgr.playCue('combat.hit')
+    mgr.playCue('combat.hit')
+    mgr.playCue('combat.hit')
 
     const fired = triggeredSynths()
     expect(fired).toHaveLength(1)
@@ -303,9 +303,9 @@ describe('AudioManager (Tone.js-based)', () => {
     vi.useFakeTimers()
     const mgr = await unlockedManager()
 
-    mgr.play('combatHit')
+    mgr.playCue('combat.hit')
     vi.advanceTimersByTime(200)
-    mgr.play('combatHit')
+    mgr.playCue('combat.hit')
 
     const fired = triggeredSynths()
     expect(fired[0]!.triggerAttackRelease).toHaveBeenCalledTimes(2)
@@ -315,8 +315,8 @@ describe('AudioManager (Tone.js-based)', () => {
     vi.useFakeTimers()
     const mgr = await unlockedManager()
 
-    mgr.play('combatHit')
-    mgr.play('combatDodge')
+    mgr.playCue('combat.hit')
+    mgr.playCue('combat.dodge')
 
     const totalCalls = meta.synths.reduce(
       (n, s) => n + s.triggerAttackRelease.mock.calls.length,
@@ -326,32 +326,32 @@ describe('AudioManager (Tone.js-based)', () => {
   })
 
   // ── B4: suspended-context recovery ────────────────────────────────
-  it('play() while AudioContext suspended → calls ctx.resume()', async () => {
+  it('playCue() while AudioContext suspended → calls ctx.resume()', async () => {
     const mgr = await unlockedManager()
     // Ensure the ctx exists (first play calls getContext).
-    mgr.play('uiClick')
+    mgr.playCue('ui.click')
     const ctx = meta.ctx!
     ctx.state = 'suspended'
     ctx.resume.mockClear()
 
     vi.useFakeTimers()
     vi.advanceTimersByTime(200) // past the cooldown
-    mgr.play('combatKill')
+    mgr.playCue('combat.kill')
     expect(ctx.resume).toHaveBeenCalled()
   })
 
   // ── mute / volume ─────────────────────────────────────────────────
-  it('play() does NOT trigger while setEnabled(false)', async () => {
+  it('playCue() does NOT trigger while setEnabled(false)', async () => {
     const mgr = await unlockedManager()
     mgr.setEnabled(false)
 
-    mgr.play('uiClick')
+    mgr.playCue('ui.click')
     expect(triggeredSynths()).toHaveLength(0)
   })
 
-  it('play() does NOT trigger before unlock', () => {
+  it('playCue() does NOT trigger before unlock', () => {
     const mgr = AudioManager.getInstance()
-    mgr.play('uiClick')
+    mgr.playCue('ui.click')
     expect(triggeredSynths()).toHaveLength(0)
   })
 
@@ -367,7 +367,7 @@ describe('AudioManager (Tone.js-based)', () => {
 
   it('resetAudioManagerForTest() disposes nodes + resets the singleton', async () => {
     const mgr = await unlockedManager()
-    mgr.play('uiClick')
+    mgr.playCue('ui.click')
     const nodes = [...meta.synths]
     expect(nodes.length).toBeGreaterThan(0)
 
@@ -409,18 +409,12 @@ describe('AudioManager (Tone.js-based)', () => {
     expect(mgr.isUnlocked()).toBe(false)
   })
 
-  it('every SynthSoundId can play without throwing', async () => {
+  it('every cue row with a synthFallback plays without throwing', async () => {
     const mgr = await unlockedManager()
 
-    const ids = [
-      'uiClick', 'uiConfirm', 'uiCancel',
-      'toastLoot', 'toastCraft', 'toastUpgrade', 'toastError', 'toastWarning', 'toastSave',
-      'combatAttack', 'combatHit', 'combatCritical', 'combatDodge', 'combatBlock', 'combatKill',
-      'battleStart', 'battleVictory', 'battleDefeat',
-    ] as const
-
-    for (const id of ids) {
-      expect(() => mgr.play(id)).not.toThrow()
+    for (const [id, def] of Object.entries(AUDIO_CUES)) {
+      if (def.synthFallback === undefined) continue
+      expect(() => mgr.playCue(id), id).not.toThrow()
     }
   })
 

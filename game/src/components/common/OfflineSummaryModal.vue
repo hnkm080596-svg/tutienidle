@@ -8,7 +8,8 @@
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { formatDuration } from '@/core/format/formatDuration'
 import { useI18n } from 'vue-i18n'
-import { ref, useId } from 'vue'
+import { onMounted, ref, useId } from 'vue'
+import { AudioManager } from '@/core/audio/AudioManager'
 import GameButton from './GameButton.vue'
 import StatRow from './primitives/StatRow.vue'
 import InkNineSlice from './primitives/InkNineSlice.vue'
@@ -29,7 +30,21 @@ const emit = defineEmits<{ close: [] }>()
 const { t } = useI18n()
 
 const panelRef = ref<HTMLElement | null>(null)
-useDialogFocus(panelRef, ref(true), { onEscape: () => emit('close') })
+
+// W7: stinger on mount (the offline report IS the reward moment) +
+// ui.confirm on the one-way Continue/Escape close.
+const audio = AudioManager.getInstance()
+onMounted(() => {
+  audio.playCue('stinger.offline')
+})
+
+function onContinue() {
+  audio.playCue('ui.confirm')
+  audio.playCue('ui.modal.close')
+  emit('close')
+}
+
+useDialogFocus(panelRef, ref(true), { onEscape: onContinue })
 
 const titleId = useId()
 </script>
@@ -60,7 +75,7 @@ const titleId = useId()
         <StatRow :label="t('combat.offline.labels.cultivation')" tone="positive">{{ formatNumber(Math.floor(props.cultivation)) }}</StatRow>
       </ul>
 
-      <GameButton class="offline-summary__continue" @click="emit('close')">{{ t('combat.offline.continue') }}</GameButton>
+      <GameButton class="offline-summary__continue" :sound="false" @click="onContinue">{{ t('combat.offline.continue') }}</GameButton>
     </section>
   </div>
 </template>
