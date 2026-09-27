@@ -5,23 +5,21 @@ import * as path from 'node:path'
 import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
 
 /**
- * QA visual capture (2026-09-11) — Spec B §9 criterion 10.
+ * QA visual capture (2026-09-11) - Spec B sec.9 criterion 10.
  *
  * "Verified on screen: the player's idle animation plays, and enemies visibly
- * breathe. A SCREENSHOT PROVES LAYOUT AND NOTHING ELSE — motion needs a capture
+ * breathe. A SCREENSHOT PROVES LAYOUT AND NOTHING ELSE - motion needs a capture
  * across frames, or watching it."
  *
  * So this samples the live scene over time rather than asserting a picture:
  *
- *  - the player's CURRENT ATLAS FRAME must change (its idle clip is running);
- *  - every static enemy's body must sit ABOVE its own projected ground point by
- *    a varying amount within the declared amplitude (the bob lifts the body and
- *    leaves the feet, the shadow and the depth sort on the ground);
- *  - no static enemy has an animation playing at all (§3.2 — they are stills).
- *
- * The numbered placeholder frames make the human half easy: if the number on the
- * player changes between the captured screenshots and the enemies move without
- * their own number changing, both halves are correct.
+ *  - ENTITY_ART_MODE is 'static' (the 2026-09-19 uniformity switch): NO
+ *    entity - player included - plays a clip. What used to be "the player's
+ *    idle clip is running" is now "the player's idle BOB is running": every
+ *    combatant's body sits ABOVE its own projected ground point by a varying
+ *    amount within the declared amplitude (the bob lifts the body and leaves
+ *    the feet, the shadow and the depth sort on the ground);
+ *  - no combatant has an animation playing at all (sec.3.2 - they are stills).
  */
 /**
  * Mirrors `ENEMY_IDLE_AMPLITUDE_PX` in
@@ -38,8 +36,11 @@ import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
  */
 const ENEMY_IDLE_AMPLITUDE_PX = 6
 
-test.describe('Combat idle motion (Spec B §9.10)', () => {
-  test('player frames advance; static enemies bob without animating', async ({ page }) => {
+// @capture: this spec also writes frame/screenshot artifacts to
+// test-results/. It stays in the default e2e run because its assertions
+// guard the real idle-motion contract, not capture-only output.
+test.describe('Combat idle motion (Spec B §9.10)', { tag: '@capture' }, () => {
+  test('player breathes via idle bob; static enemies bob without animating', async ({ page }) => {
     test.setTimeout(180_000)
 
     const outDir = path.join(process.cwd(), 'test-results', 'combat-idle-motion')
@@ -65,8 +66,10 @@ test.describe('Combat idle motion (Spec B §9.10)', () => {
     await page.waitForTimeout(12_000)
 
     type Sample = {
-      playerFrame: string | undefined
       playerAnim: string | undefined
+      playerY: number | undefined
+      playerFootY: number | undefined
+      playerIdleOffsetY: number | undefined
       enemies: { id: string; y: number; footY: number; anim: string | undefined }[]
     }
 
@@ -92,6 +95,7 @@ test.describe('Combat idle motion (Spec B §9.10)', () => {
                     }
                   }
                   footY: number
+                  idle?: { offsetY: number }
                 }
               >
             }
@@ -101,8 +105,10 @@ test.describe('Combat idle motion (Spec B §9.10)', () => {
           throw new Error('CombatScene sprites not reachable')
         }
 
-        let playerFrame: string | undefined
         let playerAnim: string | undefined
+        let playerY: number | undefined
+        let playerFootY: number | undefined
+        let playerIdleOffsetY: number | undefined
         const enemies: { id: string; y: number; footY: number; anim: string | undefined }[] = []
 
         for (const [id, sprite] of scene.sprites) {
@@ -111,8 +117,10 @@ test.describe('Combat idle motion (Spec B §9.10)', () => {
           }
 
           if (id === 'player') {
-            playerFrame = sprite.rect.anims?.currentFrame?.textureFrame
             playerAnim = sprite.rect.anims?.currentAnim?.key
+            playerY = sprite.rect.y
+            playerFootY = sprite.footY
+            playerIdleOffsetY = sprite.idle?.offsetY
             continue
           }
 
@@ -124,7 +132,7 @@ test.describe('Combat idle motion (Spec B §9.10)', () => {
           })
         }
 
-        return { playerFrame, playerAnim, enemies }
+        return { playerAnim, playerY, playerFootY, playerIdleOffsetY, enemies }
       })
 
     const samples: Sample[] = []
@@ -145,15 +153,34 @@ test.describe('Combat idle motion (Spec B §9.10)', () => {
     // There has to be something to measure.
     expect(samples[0]!.enemies.length, 'no enemy sprites on screen').toBeGreaterThan(0)
 
-    // 1. The player's idle clip is running, and its frames ADVANCE. A frozen
-    //    sprite reports a frame too — only a change proves playback.
-    expect(samples[0]!.playerAnim, 'player is playing no animation').toBeTruthy()
+    // 1. ENTITY_ART_MODE is 'static': the player is a still too, so no clip
+    //    ever plays - `currentAnim` must stay absent. Its idle is the shared
+    //    bob tween on `sprite.idle.offsetY`, which moves the body within
+    //    [-amplitude, 0] regardless of combat actions - timing-robust proof
+    //    of breathing that a one-frame screenshot cannot give.
+    expect(samples[0]!.playerY, 'player sprite missing from scene.sprites').toBeDefined()
+    expect(
+      samples[0]!.playerAnim,
+      `static mode must never play a player clip, got '${samples[0]!.playerAnim}'`,
+    ).toBeFalsy()
 
-    const playerFrames = new Set(samples.map((sample) => sample.playerFrame))
+    const playerOffsets = samples.map((sample) => sample.playerIdleOffsetY)
 
     expect(
-      playerFrames.size,
-      `player frame never changed across ${samples.length} samples: ${[...playerFrames].join(', ')}`,
+      playerOffsets[0],
+      'player has no idle bob state - static entities get sprite.idle at creation',
+    ).toBeDefined()
+
+    for (const offset of playerOffsets) {
+      expect(
+        offset! >= -(ENEMY_IDLE_AMPLITUDE_PX + 0.5) && offset! <= 0.5,
+        `player idle offset ${offset} escaped the declared bob amplitude`,
+      ).toBe(true)
+    }
+
+    expect(
+      new Set(playerOffsets.map((offset) => offset!.toFixed(2))).size,
+      `player bob never moved across ${samples.length} samples: ${playerOffsets.join(', ')}`,
     ).toBeGreaterThan(1)
 
     // 2. The player is drawn at the aspect ratio its ART is authored in.
@@ -201,42 +228,76 @@ test.describe('Combat idle motion (Spec B §9.10)', () => {
 
     // 3. Spec C §7 criterion 3 — the CHARACTER heights match, not the box heights.
     //
-    // Measured before this spec: player 91.1px against boar 123.0px, while both
-    // carried the same multiplier and the boar was the one further away. A box
-    // comparison would have passed that.
-    const heights = await page.evaluate(() => {
-      const w = window as unknown as {
-        __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
-      }
+    //    resolveEntityDisplaySize lands every entity's personHeight at
+    //    nearCellWidth x (pointScale x boost) x classFactor x
+    //    PERSON_HEIGHT_IN_CELLS, recomputed each projection pass. Dividing
+    //    back out by the live projected scale x boost x classFactor leaves
+    //    nearCellWidth x 1.84 for EVERY entity - species art, boss class and
+    //    spawn-fade/crit-pop boosts all cancel. The scale is read at
+    //    (row, columnFloat), the same point positionSprite() projects with.
+    //
+    //    Measured before this spec: player 91.1px against boar 123.0px, while
+    //    both carried the same multiplier and the boar was the one further
+    //    away. A box comparison would have passed that. Polled rather than
+    //    sampled once - personHeight and boost are written on different
+    //    seams inside a frame, so one read can catch a transient mid-tween.
+    const canonicalHeightAt = () =>
+      page.evaluate(() => {
+        const w = window as unknown as {
+          __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
+        }
 
-      const scene = w.__tutienPhaserGame?.scene.getScene('CombatScene') as {
-        sprites: Map<string, { row: number; personHeight?: number }>
-        projection?: { gridToScreen(row: number, col: number): { scale: number } }
-      }
+        const scene = w.__tutienPhaserGame?.scene.getScene('CombatScene') as {
+          sprites: Map<
+            string,
+            {
+              row: number
+              columnFloat: number
+              personHeight?: number
+              boost: { value: number }
+              sizeMultiplier: number
+            }
+          >
+          projection?: { gridToScreen(row: number, col: number): { scale: number } }
+        }
 
-      const at = (id: string) => {
-        const s = scene.sprites.get(id)
+        const at = (id: string) => {
+          const s = scene.sprites.get(id)
 
-        if (!s?.personHeight) return undefined
+          if (!s?.personHeight) return undefined
 
-        // Normalise out perspective so two entities on different rows compare.
-        const depth = scene.projection?.gridToScreen(s.row, 8).scale ?? 1
+          const pointScale = scene.projection?.gridToScreen(s.row, s.columnFloat).scale ?? 1
+          const effectiveScale = Math.max(0.05, pointScale * s.boost.value)
 
-        return s.personHeight / depth
-      }
+          return s.personHeight / effectiveScale / (s.sizeMultiplier / 2)
+        }
 
-      const enemyId = [...scene.sprites.keys()].find((k) => k !== 'player') as string
+        const enemyId = [...scene.sprites.keys()].find((k) => k !== 'player')
 
-      return { player: at('player'), enemy: at(enemyId) }
-    })
-
-    expect(heights.player, 'player has no resolved person height').toBeDefined()
-    expect(heights.enemy, 'enemy has no resolved person height').toBeDefined()
+        return { player: at('player'), enemy: enemyId === undefined ? undefined : at(enemyId) }
+      })
 
     expect(
-      heights.player! / heights.enemy!,
-      `player ${heights.player!.toFixed(1)}px vs enemy ${heights.enemy!.toFixed(1)}px, depth-normalised`,
-    ).toBeCloseTo(1, 1)
+      (await canonicalHeightAt()).player,
+      'player has no resolved person height',
+    ).toBeDefined()
+
+    // Undefined enemy (wave gap) or a frame-transient mismatch both read as
+    // NaN - the poll resamples until the ratio lands or the budget expires.
+    await expect
+      .poll(async () => {
+        const sample = await canonicalHeightAt()
+
+        if (sample.player === undefined || sample.enemy === undefined) {
+          return NaN
+        }
+
+        return sample.player / sample.enemy
+      }, {
+        timeout: 15_000,
+        message: 'player/enemy canonical heights should converge (normalisation factor cancels all classes)',
+      })
+      .toBeCloseTo(1, 1)
 
     // 4. Every static enemy moved, and kept its feet on the ground.
     const enemyIds = samples[0]!.enemies.map((enemy) => enemy.id)

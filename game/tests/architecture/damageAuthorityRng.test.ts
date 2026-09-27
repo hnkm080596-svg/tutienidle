@@ -16,11 +16,16 @@
  */
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
-import { listProductionTs, readTs } from './helpers/scanTs'
+import { listProductionTs, readTs, SCAN_TIMEOUT } from './helpers/scanTs'
 
 const SRC = join(process.cwd(), 'src')
 const ADAPTER = join(SRC, 'core/battle/runtime/scheduler/adapters/CombatSystemDamageAdapter.ts')
 const BOOTSTRAP_FILE = join(SRC, 'core/game/GameManagerTurnBattleOps.ts')
+
+/** Walked once per worker rather than once per guard -- the suite default
+    5s test budget cannot hold three full-tree scans under Windows
+    full-suite contention. */
+const productionFiles = listProductionTs(SRC)
 
 /** Replace comments with spaces -- offsets preserved, so prose tokens
     can neither satisfy nor trip a structural assertion and every index
@@ -119,9 +124,9 @@ describe('damage authority rng -- single canonical source', () => {
     expect(source.match(/new (Function|Seeded|Scripted)CombatRng/g) ?? []).toEqual([])
   })
 
-  it('every CombatSystemDamageAdapter construction binds an existing rng -- never an inline mint', () => {
+  it('every CombatSystemDamageAdapter construction binds an existing rng -- never an inline mint', { timeout: SCAN_TIMEOUT }, () => {
     const sites: string[] = []
-    for (const file of listProductionTs(SRC)) {
+    for (const file of productionFiles) {
       if (file === ADAPTER) continue
       const text = readTs(file)
       let idx = text.indexOf('new CombatSystemDamageAdapter')
@@ -158,9 +163,9 @@ describe('damage authority rng -- single canonical source', () => {
    * -- the 8th positional arg -- so a production root can never
    * silently mint its own random source onto the canonical path.
    */
-  it('every production TurnBattleSystem construction injects an explicit CombatRng', () => {
+  it('every production TurnBattleSystem construction injects an explicit CombatRng', { timeout: SCAN_TIMEOUT }, () => {
     const sites: string[] = []
-    for (const file of listProductionTs(SRC)) {
+    for (const file of productionFiles) {
       const text = readTs(file)
       let idx = text.indexOf('new TurnBattleSystem(')
       while (idx >= 0) {
@@ -195,9 +200,9 @@ describe('damage authority rng -- single canonical source', () => {
    * AND constructor-body membership -- so an unrelated future
    * runtime-less site fails even when the total count stays one.
    */
-  it('the only runtime-omitting TurnBattleSystem construction is the GameManagerTurnBattleOps bootstrap constructor', () => {
+  it('the only runtime-omitting TurnBattleSystem construction is the GameManagerTurnBattleOps bootstrap constructor', { timeout: SCAN_TIMEOUT }, () => {
     const runtimeLess: { file: string; idx: number }[] = []
-    for (const file of listProductionTs(SRC)) {
+    for (const file of productionFiles) {
       const text = readTs(file)
       let idx = text.indexOf('new TurnBattleSystem(')
       while (idx >= 0) {
