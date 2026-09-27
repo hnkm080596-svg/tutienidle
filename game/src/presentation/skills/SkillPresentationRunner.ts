@@ -22,6 +22,8 @@ interface Playback {
 }
 const sameRef = (a: PlaybackRef, b: PlaybackRef) =>
   a.sessionId === b.sessionId && a.requestId === b.requestId && a.token === b.token
+/** Post-impact resume tail cap (design section 5): at most 120 ms of recovery motion. */
+const RESUME_TAIL_MS = 120
 
 /** Presentation owns elapsed visual time only. Mechanics remain behind the captured ACK port. */
 export class SkillPresentationRunner {
@@ -76,9 +78,32 @@ export class SkillPresentationRunner {
     active.inbox = result
   }
   resumeResolved(result: SkillPresentationResolved, port: PlaybackPort): void {
-    this.cancel()
+    // Token check before cancel(): a stale resume must not tear down a
+    // healthy active playback.
     if (port.getPendingPlaybackToken() !== result.ref.token) return
-    this.active = { ref: result.ref, port, phase: 'resume', elapsed: 0, duration: 120, cues: [] }
+    this.cancel()
+    // The tail replays each group's recovery cues for at most
+    // RESUME_TAIL_MS (design section 5) - a viewer rejoining after impact
+    // sees the recall motion instead of an empty wait.
+    const recipes = result.groups.map(group => this.recipe(group.presetId))
+    const hasAuthoredCameraCue = recipes.some(recipe =>
+      recipe.impact.some(cue => cue.primitive === 'camera-cue')
+      || recipe.recovery.some(cue => cue.primitive === 'camera-cue'))
+    const cues: ScheduledCue[] = []
+    let duration = 0
+    for (let index = 0; index < result.groups.length; index++) {
+      const group = result.groups[index]!
+      const recipe = recipes[index]!
+      const context: SkillCueContext = { ref: result.ref, recipe, phase: 'resolved', group,
+        hasAuthoredCameraCue }
+      for (const cue of recipe.recovery) {
+        cues.push({ cue, context, offset: cue.offsetMs, ended: false })
+        duration = Math.max(duration, cue.offsetMs + cue.durationMs)
+      }
+    }
+    this.active = { ref: result.ref, port, phase: 'resume', elapsed: 0,
+      duration: Math.min(duration, RESUME_TAIL_MS), cues }
+    this.sample(this.active)
   }
   update(deltaMs: number): void {
     const active = this.active

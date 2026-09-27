@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { SkillCastPresentation, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
 import { SkillPresentationRunner } from './SkillPresentationRunner'
-import type { SkillPresentationDriver, SkillPresentationRecipe } from './SkillPresentationRecipe'
+import type { SkillCue, SkillCueContext, SkillPresentationDriver, SkillPresentationRecipe } from './SkillPresentationRecipe'
 
 const ref = { sessionId: 1, requestId: 'request-1', token: 'token-1' }
 const source = { entityId: 'player', row: 1, column: 1 }
@@ -34,13 +34,16 @@ function fixture(options: { synchronous?: boolean; throwVisual?: boolean } = {})
   let leased = 0
   let insideImpact = false
   const errors: unknown[] = []
+  const opened: Array<{ cue: SkillCue; phase: SkillCueContext['phase'] }> = []
+  const sampled: number[] = []
   const driver: SkillPresentationDriver = {
-    open() {
+    open(cue, context) {
       if (options.throwVisual) throw new Error('visual failure')
+      opened.push({ cue, phase: context.phase })
       leased++
       let alive = true
       const release = () => { if (alive) { alive = false; leased-- } }
-      return { sample() {}, finish: release, cancel: release }
+      return { sample: elapsed => { sampled.push(elapsed) }, finish: release, cancel: release }
     },
   }
   const port = {
@@ -58,7 +61,7 @@ function fixture(options: { synchronous?: boolean; throwVisual?: boolean } = {})
     },
   }
   const runner = new SkillPresentationRunner(driver, () => recipe, error => errors.push(error))
-  return { runner, port, calls, errors, leases: () => leased, setToken: (token: string | null) => { pendingToken = token } }
+  return { runner, port, calls, errors, opened, sampled, leases: () => leased, setToken: (token: string | null) => { pendingToken = token } }
 }
 describe('shared skill presentation runner', () => {
   it('reaches commit once and waits for a sealed result before completing', () => {
@@ -171,5 +174,30 @@ describe('shared skill presentation runner', () => {
     expect(f.calls).toEqual([])
     f.runner.update(1)
     expect(f.calls).toEqual(['complete'])
+  })
+  it('a stale-token resume leaves a healthy playback untouched', () => {
+    const f = fixture()
+    f.runner.start(cast, f.port)
+    f.runner.update(200)
+    const cuesBefore = f.runner.snapshot.activeCueCount
+    f.runner.resumeResolved(batch('stale-token'), f.port)
+    expect(f.runner.snapshot.phase).toBe('cast')
+    expect(f.runner.snapshot.activeCueCount).toBe(cuesBefore)
+    f.runner.update(170)
+    expect(f.calls).toEqual(['impact'])
+  })
+  it('the resume tail replays recovery cues and completes within 120 ms', () => {
+    const f = fixture()
+    f.runner.resumeResolved(batch(), f.port)
+    expect(f.opened).toHaveLength(1)
+    expect(f.opened[0]!.cue.primitive).toBe('trajectory')
+    expect(f.opened[0]!.phase).toBe('resolved')
+    expect(f.calls).toEqual([])
+    f.runner.update(119)
+    expect(f.calls).toEqual([])
+    f.runner.update(1)
+    expect(f.calls).toEqual(['complete'])
+    // The 170 ms recall cue is truncated at the tail cap.
+    expect(Math.max(...f.sampled)).toBeLessThanOrEqual(120)
   })
 })
