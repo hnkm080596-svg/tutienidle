@@ -1,14 +1,14 @@
-// combatAudioBinding — presentation-side adapter that maps domain events
+// combatAudioBinding - presentation-side adapter that maps domain events
 // (emitted on GameManager.eventBus) to manifest cue ids.
 //
 // Boundary: the eventBus events are already emitted by the domain for
-// presentation consumers (VFX, HUD). This binding only observes them —
+// presentation consumers (VFX, HUD). This binding only observes them -
 // audio never influences gameplay state (A7), and never joins the
 // turn_cast_start / action_impact ack protocol (observation feeds only).
 //
 // The table generalizes `eventType -> cueId | (event) => cueId | undefined`:
 // payload rows return undefined to stay silent for events that shouldn't
-// cue (e.g. 'damage' on enemies — it fires alongside hit/critical and
+// cue (e.g. 'damage' on enemies - it fires alongside hit/critical and
 // would double-trigger; only the player's own hits hurt audibly).
 
 import type { EventBus, EventHandler } from '@/core/events/EventBus'
@@ -94,7 +94,7 @@ interface ReactiveProcLike {
   success?: boolean
 }
 
-// Preset -> ngu hanh element fallback (combat.element.*). Lives here — the
+// Preset -> ngu hanh element fallback (combat.element.*). Lives here - the
 // manifest stays data-only and presets already resolve exactly; this table
 // is the middle hop for presets without their own row.
 const ELEMENT_BY_PRESET: Readonly<Record<string, string>> = {

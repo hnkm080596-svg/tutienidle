@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// W7 — uiAudioBinding maps uiStore panel/wheel transitions to cue ids
+// W7 - uiAudioBinding maps uiStore panel/wheel transitions to cue ids
 // through a $subscribe diff (zero ui.ts edits). Covers: open/close
 // transitions, panel->panel swap (close+open), wheel open/close, and
 // non-panel mutations staying silent.
@@ -56,7 +56,7 @@ describe('bindUiAudio', () => {
     ui.characterOverlayOpen = true
     expect(cues()).toEqual(['ui.panel.open'])
 
-    // Detail takes precedence over overlay — swap still reads close+open.
+    // Detail takes precedence over overlay - swap still reads close+open.
     ui.characterDetailOpen = true
     expect(cues()).toEqual(['ui.panel.open', 'ui.panel.close', 'ui.panel.open'])
 

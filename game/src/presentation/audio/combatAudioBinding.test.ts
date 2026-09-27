@@ -1,4 +1,4 @@
-// combatAudioBinding.test.ts — verifies domain events map to manifest cue
+// combatAudioBinding.test.ts - verifies domain events map to manifest cue
 // ids, discriminators gate correctly, route-suppressed rows stay silent
 // off-route, and unbind() detaches every handler.
 
@@ -7,7 +7,7 @@ import { EventBus } from '@/core/events/EventBus'
 import { bindCombatAudio } from './combatAudioBinding'
 import { AudioManager, resetAudioManagerForTest } from '@/core/audio/AudioManager'
 
-// Playback is stubbed at the manager level — Tone internals are covered by
+// Playback is stubbed at the manager level - Tone internals are covered by
 // AudioManager.test.ts; manifest resolution by AudioCueManifest.test.ts.
 let cueSpy: ReturnType<typeof vi.spyOn>
 

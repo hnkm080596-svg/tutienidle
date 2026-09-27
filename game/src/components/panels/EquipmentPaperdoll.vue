@@ -22,9 +22,9 @@ const player = usePlayerStore()
 const { stateVersion, bumpState } = useStateVersion()
 const { unequip } = useEquipmentActions()
 
-// Lưới 3 cột × 2 hàng (thay lục giác quanh sprite cũ — khối Equipment
-// giờ chỉ chiếm 30% chiều cao panel, cố định cho Hành Trang/Tứ Nghệ,
-// xem LeftPanel.vue) — không còn sprite nhân vật ở giữa.
+// Luoi 3 cot x 2 hang (thay luc giac quanh sprite cu - khoi Equipment
+// gio chi chiem 30% chieu cao panel, co inh cho Hanh Trang/Tu Nghe,
+// xem LeftPanel.vue) - khong con sprite nhan vat o giua.
 // Slot labels go through i18n (panels.bag.paperdoll.slots.*) - P16.
 const SLOT_LAYOUT: { slot: EquipmentSlot }[] = [
   { slot: 'helmet' },
@@ -47,9 +47,9 @@ const equippedBySlot = computed<Record<EquipmentSlot, EquipmentInstance | undefi
   return result
 })
 
-// MASTER SPEC Mục XVI (Phase 9) — enhanceLevel giờ thuộc SLOT, hiện
-// được NGAY CẢ KHI slot đang trống (đổi/tháo trang bị không mất cấp
-// đã cường hóa) — minh chứng trực quan cho tách Item/Slot.
+// MASTER SPEC Muc XVI (Phase 9) - enhanceLevel gio thuoc SLOT, hien
+// uoc NGAY CA KHI slot ang trong (oi/thao trang bi khong mat cap
+// a cuong hoa) - minh chung truc quan cho tach Item/Slot.
 const enhanceLevelBySlot = computed<Record<EquipmentSlot, number>>(() => {
   stateVersion.value
 
@@ -62,10 +62,10 @@ const enhanceLevelBySlot = computed<Record<EquipmentSlot, number>>(() => {
   return result
 })
 
-// Audit fix 2026-08-31 — equipmentRegistry.get() THROW với itemId lạ
-// (data edit/save lệch) từng chết cả khối trang bị qua ErrorBoundary;
-// getEquipmentTemplate() tra an toàn trả undefined (GameManager.ts) +
-// fallback hiển thị itemId thô (pattern Task 13 EquipmentBagSection).
+// Audit fix 2026-08-31 - equipmentRegistry.get() THROW voi itemId la
+// (data edit/save lech) tung chet ca khoi trang bi qua ErrorBoundary;
+// getEquipmentTemplate() tra an toan tra undefined (GameManager.ts) +
+// fallback hien thi itemId tho (pattern Task 13 EquipmentBagSection).
 function itemName(instance: EquipmentInstance): string {
   return gameManager.equipmentOps.getEquipmentTemplate(instance.itemId)?.name ?? instance.itemId
 }

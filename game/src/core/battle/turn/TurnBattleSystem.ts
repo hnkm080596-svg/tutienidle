@@ -1,7 +1,7 @@
-// TurnBattleSystem Slice 1 (spec 2026-09-04) -- engine turn-based độc lập,
-// headless, KHÔNG nối vào BattleSystem.ts/GameManager. Chứng minh ATB
-// gauge (TurnQueue) + targeting + CombatSystem.resolveActionHit chạy
-// đúng end-to-end trước khi lớp thêm skill/buff/reaction/hazard zone ở
+// TurnBattleSystem Slice 1 (spec 2026-09-04) -- engine turn-based oc lap,
+// headless, KHONG noi vao BattleSystem.ts/GameManager. Chung minh ATB
+// gauge (TurnQueue) + targeting + CombatSystem.resolveActionHit chay
+// ung end-to-end truoc khi lop them skill/buff/reaction/hazard zone o
 // slice sau.
 import type { CombatEntity } from '../../combat/CombatEntity'
 import type { CombatSystem } from '../../combat/CombatSystem'
@@ -78,16 +78,16 @@ export interface TurnBossTrigger {
 }
 
 export interface PendingEnemySpawn {
-  /** Đã build đầy đủ (roll template/elite/boss xong) -- chỉ chờ hết telegraph. */
+  /** a build ay u (roll template/elite/boss xong) -- chi cho het telegraph. */
   participant: TurnBattleParticipant
   ticksRemaining: number
   totalTicks: number
 }
 
-// Turn-Based Wave Redesign (2026-09-06) -- quy đổi TRỰC TIẾP từ
-// SPAWN_TELEGRAPH_SECONDS của legacy/BattleSystem.ts (0.75s/1.0s/1.4s)
-// sang tick (0.1s/tick, khớp BATTLE_FIXED_STEP mà GameManager gọi
-// tickPacing() mỗi lần) để giữ đúng cảm giác thời gian người chơi đã quen.
+// Turn-Based Wave Redesign (2026-09-06) -- quy oi TRUC TIEP tu
+// SPAWN_TELEGRAPH_SECONDS cua legacy/BattleSystem.ts (0.75s/1.0s/1.4s)
+// sang tick (0.1s/tick, khop BATTLE_FIXED_STEP ma GameManager goi
+// tickPacing() moi lan) e giu ung cam giac thoi gian nguoi choi a quen.
 const SPAWN_TELEGRAPH_TICKS = {
   normal: 8,
   elite: 10,
@@ -129,7 +129,7 @@ export interface TurnBattleParticipant {
    * entity gaining attunement mid-battle never emits spell MP deltas.
    */
   activeDomains?: ReadonlySet<StatDomain>
-  /** Future Systems Task 7 -- charge state (Thế→Trảm). CỐ Ý tách biệt counter CC Bá Thể. */
+  /** Future Systems Task 7 -- charge state (The->Tram). CO Y tach biet counter CC Ba The. */
   chargingTurnsRemaining?: number
   pendingChargedSkillId?: string
   /**
@@ -179,9 +179,9 @@ export interface TurnBattleParticipant {
 
 export interface TurnBattle {
   /**
-   * Future Systems Task 9 (2026-09-04) -- party: mảng player-side units,
-   * chung 1 ATB queue với enemy (TurnQueue tái dùng nguyên vẹn); thua khi
-   * TOÀN BỘ party chết (đối xứng điều kiện thắng -- spec §6).
+   * Future Systems Task 9 (2026-09-04) -- party: mang player-side units,
+   * chung 1 ATB queue voi enemy (TurnQueue tai dung nguyen ven); thua khi
+   * TOAN BO party chet (oi xung ieu kien thang -- spec 6).
    */
   players: TurnBattleParticipant[]
   enemies: TurnBattleParticipant[]
@@ -194,11 +194,11 @@ export interface TurnBattle {
   /** Participant ids that have acted in the current (incomplete) round. */
   actedThisRound?: string[]
   /**
-   * Countdown phase (flow: Countdown → Spawn → Gauge combat → Wave →
-   * Result) -- số lượt-pacing còn lại trước khi state chuyển 'fighting'.
-   * GameManager pacing loop tick giảm; engine `resolveNextStep()` KHÔNG
-   * resolve combat trong pha này (chỉ tick countdown khi được gọi qua
-   * `tickCountdown()`), enemies đã spawn đứng yên chờ.
+   * Countdown phase (flow: Countdown -> Spawn -> Gauge combat -> Wave ->
+   * Result) -- so luot-pacing con lai truoc khi state chuyen 'fighting'.
+   * GameManager pacing loop tick giam; engine `resolveNextStep()` KHONG
+   * resolve combat trong pha nay (chi tick countdown khi uoc goi qua
+   * `tickCountdown()`), enemies a spawn ung yen cho.
    */
   countdownTurnsRemaining?: number
   /**
@@ -216,29 +216,29 @@ export interface TurnBattle {
     waves: number[]
     /** 0-based index into `waves` -- which wave is currently spawning/active. */
     waveIndex: number
-    /** Quái đã spawn (dạng pending) nhưng CHƯA vào trận thật (battle.enemies). */
+    /** Quai a spawn (dang pending) nhung CHUA vao tran that (battle.enemies). */
     pendingEnemySpawns: PendingEnemySpawn[]
   }
   /**
-   * Slice 7 extension (Completion Task 11) -- battle log: 1 entry mỗi lượt
-   * resolveActorTurn (append-only, ephemeral -- không persist vào save,
-   * combat ephemeral theo nguyên tắc rework).
+   * Slice 7 extension (Completion Task 11) -- battle log: 1 entry moi luot
+   * resolveActorTurn (append-only, ephemeral -- khong persist vao save,
+   * combat ephemeral theo nguyen tac rework).
    */
   log?: BattleLogEntry[]
   /**
-   * Action Playback (2026-09-05) -- counter/follow-up (§6 spec): actors queued
+   * Action Playback (2026-09-05) -- counter/follow-up (6 spec): actors queued
    * here jump straight to 'ready' after the current turn's standby, bypassing
    * gauge. FIFO queue (not a single id) so an AOE hit that triggers multiple
-   * counters doesn't drop all but the last one. Defect-fix Task 1: đổi từ
-   * singular -- tickPacing (production loop) giờ đọc queue này.
+   * counters doesn't drop all but the last one. Defect-fix Task 1: oi tu
+   * singular -- tickPacing (production loop) gio oc queue nay.
    * The Tu Reimagined (Task 16) -- entries are typed QueuedFollowUp
    * records carrying provenance (actionSource/triggerContext) and the
    * queued payload descriptor, not bare actor ids.
    */
   queuedFollowUps?: QueuedFollowUp[]
-  /** Defect-fix Task 1 -- reciprocity guard: đếm consecutive bypass turns qua
+  /** Defect-fix Task 1 -- reciprocity guard: em consecutive bypass turns qua
    * queue, reset khi 1 normal gauge turn resolve; cap trong dequeueFollowUpActor()
-   * để 2 entity counter-buff không bounce follow-up lẫn nhau vô hạn. */
+   * e 2 entity counter-buff khong bounce follow-up lan nhau vo han. */
   followUpChainDepth?: number
   /**
    * Phap Tu An (Task 11) -- prepared follow-up EXECUTIONS (repeat /
@@ -252,9 +252,9 @@ export interface TurnBattle {
 }
 
 /**
- * Luật targeting §4: cùng hàng thì chọn gần nhất theo cột (không thể
- * nhắm xuyên qua entity đứng gần hơn cùng hàng); không có ai cùng hàng
- * thì chọn gần nhất toàn bàn cờ theo Chebyshev.
+ * Luat targeting 4: cung hang thi chon gan nhat theo cot (khong the
+ * nham xuyen qua entity ung gan hon cung hang); khong co ai cung hang
+ * thi chon gan nhat toan ban co theo Chebyshev.
  *
  * The Tu Reimagined (plan Task 10, D6/INV-11) -- Khiem Khich Taunt reads
  * the ACTOR's own debuffs BEFORE positional rules: an active khiem_khich
@@ -311,9 +311,9 @@ export function selectTarget(
 
 const DEFAULT_MAX_TURNS = 10_000
 
-/** Defect-fix Task 1 (2026-09-05) -- reciprocity cap: 2 entity cùng holding
- * counter buff không được bounce follow-up lẫn nhau quá 4 nhịp liên tiếp
- * (không có normal turn xen vào) -- chặn chain vô hạn starving turn order. */
+/** Defect-fix Task 1 (2026-09-05) -- reciprocity cap: 2 entity cung holding
+ * counter buff khong uoc bounce follow-up lan nhau qua 4 nhip lien tiep
+ * (khong co normal turn xen vao) -- chan chain vo han starving turn order. */
 const MAX_FOLLOW_UP_CHAIN_DEPTH = 4
 
 /**
@@ -338,9 +338,9 @@ export interface TurnStepResult {
 }
 
 /**
- * Action Playback Task 3 (2026-09-05) -- kết quả PHA declare: mọi thứ đã
- * quyết định cho lượt của actor (skill, target set, damage đã scale, charge
- * state) NHƯNG chưa áp damage -- applyActionImpact() đọc các field này.
+ * Action Playback Task 3 (2026-09-05) -- ket qua PHA declare: moi thu a
+ * quyet inh cho luot cua actor (skill, target set, damage a scale, charge
+ * state) NHUNG chua ap damage -- applyActionImpact() oc cac field nay.
  */
 export interface TurnDeclaredAction {
   actorId: string
@@ -353,10 +353,10 @@ export interface TurnDeclaredAction {
 
   chargeResolved: boolean
 
-  /** Charge-resolve: targetIds capture tại declare (hits áp tại apply). */
+  /** Charge-resolve: targetIds capture tai declare (hits ap tai apply). */
   chargeTargetIds: string[]
 
-  /** Charge-resolve: skill definition capture tại declare (apply đọc từ đây -- pendingChargedSkillId đã clear). */
+  /** Charge-resolve: skill definition capture tai declare (apply oc tu ay -- pendingChargedSkillId a clear). */
   chargedSkill: TurnSkillDefinition | null
 
   /** Plan-lane resource precheck blocked the cast (no commit, no ops).
@@ -372,7 +372,7 @@ export interface TurnDeclaredAction {
 
   scaledDamage: ActionDamageInfo | null
 
-  /** Sudden-death multiplier capture tại declare (Reaction Path picks scale riêng per-pick). */
+  /** Sudden-death multiplier capture tai declare (Reaction Path picks scale rieng per-pick). */
   suddenDeathMultiplier: number
 
   /**
@@ -383,9 +383,9 @@ export interface TurnDeclaredAction {
    */
   compositePickedSkills: readonly TurnSkillDefinition[] | null
 
-  /** Defect-fix Task 1 -- turn này được grant qua follow-up/counter bypass
-   * queue thay vì normal gauge readiness -- completeAction bỏ consume gauge
-   * cho các turn này (bypass không tốn progress của lượt kế tiếp). */
+  /** Defect-fix Task 1 -- turn nay uoc grant qua follow-up/counter bypass
+   * queue thay vi normal gauge readiness -- completeAction bo consume gauge
+   * cho cac turn nay (bypass khong ton progress cua luot ke tiep). */
   isFollowUpBypass: boolean
 
   /**
@@ -435,7 +435,7 @@ export interface QueuedFollowUp {
   actorId: string
   /**
    * 'reactive_bypass' declares via declareReactiveBypass (no natural-turn
-   * lifecycle); 'natural_turn' is reserved for future interrupt entries —
+   * lifecycle); 'natural_turn' is reserved for future interrupt entries -
    * no current producer emits it.
    */
   executionKind: 'natural_turn' | 'reactive_bypass'
@@ -515,7 +515,7 @@ export class TurnBattleSystem {
      * default wraps a LAZY Math.random closure so vi.spyOn(Math,
      * 'random') interception keeps working for callers that construct
      * the system before installing the spy. Downstream helpers that
-     * still take `() => number` receive `() => this.rng.roll()` —
+     * still take `() => number` receive `() => this.rng.roll()` -
      * identical consumption order.
      */
     private readonly rng: CombatRng = new FunctionCombatRng(() => Math.random()),
@@ -543,9 +543,9 @@ export class TurnBattleSystem {
     return this.runtime?.scheduler
   }
 
-  // Defect-fix Task 1 (2026-09-05) -- bridge dequeueFollowUpActor() →
-  // declareActorAction(): set ngay trước khi trả bypass actor, đọc 1 lần
-  // trong declare để populate TurnDeclaredAction.isFollowUpBypass rồi clear.
+  // Defect-fix Task 1 (2026-09-05) -- bridge dequeueFollowUpActor() ->
+  // declareActorAction(): set ngay truoc khi tra bypass actor, oc 1 lan
+  // trong declare e populate TurnDeclaredAction.isFollowUpBypass roi clear.
   // The Tu Reimagined (Task 16) -- the bridge carries the whole typed
   // entry (provenance + payload descriptor), not just the actor id.
   private pendingReactiveEntry: QueuedFollowUp | null = null

@@ -1,20 +1,20 @@
 /**
- * Manifest completeness guard (sound-system W9 / OQ-C FULL coverage) —
+ * Manifest completeness guard (sound-system W9 / OQ-C FULL coverage) -
  * every cue-id named by the spec's cue table or the audit inventory must
  * resolve to a real manifest row through `resolveAudioCue` (exact match
  * or qualifier strip). A cue that resolves to nothing means a listed
- * site can never be voiced — this test fails before the asset drop does.
+ * site can never be voiced - this test fails before the asset drop does.
  *
  * The manifest is pure data (the boundary guard pins that), so importing
  * it here is safe.
  *
  * Parsing rules:
  *  - Only backtick cells whose first segment is a manifest domain are
- *    collected — prose like `this.sound` or `tutienidle.audio.v2` is not
+ *    collected - prose like `this.sound` or `tutienidle.audio.v2` is not
  *    a cue.
  *  - `<placeholder>` qualifiers (`combat.cast.<skillId>`) name a family:
  *    after dropping the placeholder the id must resolve OR have at least
- *    one concrete row under it (prefix coverage — the spec expands every
+ *    one concrete row under it (prefix coverage - the spec expands every
  *    qualifier into a real row).
  *  - Documented spec merges (audit id folded into another cue) resolve
  *    through MERGE_MAP instead.
@@ -48,7 +48,7 @@ const MERGE_MAP: Record<string, string> = {
 }
 
 /**
- * Pulls every dotted id inside a cue-domain backtick cell — spec tables
+ * Pulls every dotted id inside a cue-domain backtick cell - spec tables
  * list bare ids and backticked ones; audit tables always backtick.
  */
 function collectCueIds(markdown: string): string[] {

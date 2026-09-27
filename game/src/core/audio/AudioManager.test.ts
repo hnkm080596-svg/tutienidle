@@ -1,20 +1,20 @@
-// AudioManager.test.ts — unit tests for AudioManager (Tone.js-based).
+// AudioManager.test.ts - unit tests for AudioManager (Tone.js-based).
 //
 // Tone.js is mocked to verify:
 //   1. unlock() calls Tone.start(), awaits Reverb.ready, then sets unlocked.
 //   2. playCue(id) uses the correct triggerAttackRelease signature per engine:
 //      - Monophonic (metal/fm/am/membrane): (note, duration, time?, velocity?)
-//      - NoiseSynth: (duration, time?, velocity?) — NO note!
+//      - NoiseSynth: (duration, time?, velocity?) - NO note!
 //   3. Per-id cooldown: playing the same id twice in quick succession fires
 //      once (anti-spam when combat events fire many times per tick).
-//   4. Suspended context → playCue() calls resume() (tab-switch recovery).
-//   5. setEnabled(false) → mute. setMasterVolume clamps to [0,1].
+//   4. Suspended context -> playCue() calls resume() (tab-switch recovery).
+//   5. setEnabled(false) -> mute. setMasterVolume clamps to [0,1].
 //   6. initChain failing midway disposes created nodes; retry does not leak.
 //   7. resetAudioManagerForTest() disposes every node.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-// ── Tone mock ────────────────────────────────────────────────────────
+// -- Tone mock --------------------------------------------------------
 vi.mock('tone', () => {
   function createSynthFields() {
     return {
@@ -53,7 +53,7 @@ vi.mock('tone', () => {
 
   const __meta = {
     synths: [] as ReturnType<typeof createSynthFields>[],
-    /** getContext() returns a lazy singleton — tests flip .state to simulate a suspended tab. */
+    /** getContext() returns a lazy singleton - tests flip .state to simulate a suspended tab. */
     ctx: null as null | {
       state: string
       resume: ReturnType<typeof vi.fn>
@@ -176,7 +176,7 @@ afterEach(() => {
 async function unlockedManager() {
   const mgr = AudioManager.getInstance()
   mgr.unlock()
-  // Drain microtasks: Tone.start().then → await reverb.ready → set unlocked.
+  // Drain microtasks: Tone.start().then -> await reverb.ready -> set unlocked.
   await vi.waitFor(() => expect(mgr.isUnlocked()).toBe(true))
   return mgr
 }
@@ -186,7 +186,7 @@ function triggeredSynths(): MockNode[] {
 }
 
 describe('AudioManager (Tone.js-based)', () => {
-  // ── unlock lifecycle ──────────────────────────────────────────────
+  // -- unlock lifecycle ----------------------------------------------
   it('unlock() calls Tone.start() and only sets unlocked after the chain is ready', async () => {
     const mgr = await unlockedManager()
     expect(mgr.isUnlocked()).toBe(true)
@@ -245,7 +245,7 @@ describe('AudioManager (Tone.js-based)', () => {
     expect(meta.synths[1]!.dispose).toHaveBeenCalled()
   })
 
-  // ── B1: triggerAttackRelease signature per engine ────────────────
+  // -- B1: triggerAttackRelease signature per engine ----------------
   it('playCue(ui.click) [metal] → triggerAttackRelease(note, duration, undefined, velocity)', async () => {
     const mgr = await unlockedManager()
 
@@ -263,7 +263,7 @@ describe('AudioManager (Tone.js-based)', () => {
 
     const fired = triggeredSynths()
     expect(fired).toHaveLength(1)
-    // NoiseSynth signature: (duration, time?, velocity?) — arg 1 is DURATION.
+    // NoiseSynth signature: (duration, time?, velocity?) - arg 1 is DURATION.
     expect(fired[0]!.triggerAttackRelease).toHaveBeenCalledWith('16n', undefined, 0.3)
   })
 
@@ -285,7 +285,7 @@ describe('AudioManager (Tone.js-based)', () => {
     expect(fired[0]!.triggerAttackRelease).toHaveBeenCalledWith('E5', '8n', undefined, 0.4)
   })
 
-  // ── B3: anti-spam cooldown ───────────────────────────────────────
+  // -- B3: anti-spam cooldown ---------------------------------------
   it('same id played twice in quick succession → fires once (cooldown)', async () => {
     vi.useFakeTimers()
     const mgr = await unlockedManager()
@@ -325,7 +325,7 @@ describe('AudioManager (Tone.js-based)', () => {
     expect(totalCalls).toBe(2)
   })
 
-  // ── B4: suspended-context recovery ────────────────────────────────
+  // -- B4: suspended-context recovery --------------------------------
   it('playCue() while AudioContext suspended → calls ctx.resume()', async () => {
     const mgr = await unlockedManager()
     // Ensure the ctx exists (first play calls getContext).
@@ -340,7 +340,7 @@ describe('AudioManager (Tone.js-based)', () => {
     expect(ctx.resume).toHaveBeenCalled()
   })
 
-  // ── mute / volume ─────────────────────────────────────────────────
+  // -- mute / volume -------------------------------------------------
   it('playCue() does NOT trigger while setEnabled(false)', async () => {
     const mgr = await unlockedManager()
     mgr.setEnabled(false)
@@ -379,9 +379,9 @@ describe('AudioManager (Tone.js-based)', () => {
     expect(AudioManager.getInstance().isUnlocked()).toBe(false)
   })
 
-  // ── Race: dispose() while unlock() is pending ───────────────
+  // -- Race: dispose() while unlock() is pending ---------------
   it('dispose() during a pending unlock() → never sets ready, partial chain is disposed', async () => {
-    // Hold Reverb.ready pending so buildChain stalls at its await —
+    // Hold Reverb.ready pending so buildChain stalls at its await -
     // simulating the window between "nodes created" and "chain ready".
     let releaseReady: () => void = () => {}
     meta.reverbReady = new Promise<void>((resolve) => {
@@ -397,7 +397,7 @@ describe('AudioManager (Tone.js-based)', () => {
     mgr.dispose()
     expect(mgr.isUnlocked()).toBe(false)
 
-    // Release ready → unlock()'s continuation resumes. Must FLUSH the
+    // Release ready -> unlock()'s continuation resumes. Must FLUSH the
     // microtask queue before asserting (otherwise the test passes on
     // timing, not on correct code).
     releaseReady()
@@ -418,7 +418,7 @@ describe('AudioManager (Tone.js-based)', () => {
     }
   })
 
-  // ── W2: cue playback ─────────────────────────────────────────────────
+  // -- W2: cue playback -------------------------------------------------
   describe('playCue', () => {
     it('empty slot with no synthFallback → silent, no throw, no synth built', async () => {
       const mgr = await unlockedManager()

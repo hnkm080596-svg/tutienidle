@@ -14,7 +14,7 @@ import { type AudioChannelId } from './AudioChannels'
 /**
  * Cue-id string (`domain.verb[.qualifier]`). Manifest rows are keyed by a
  * runtime-generated union (expand() builds qualifier rows), so the type
- * stays `string` — the convention is pinned by the architecture tests
+ * stays `string` - the convention is pinned by the architecture tests
  * (audioManifestCompleteness + i18nKeyParity's cue-id exemption), not by
  * a literal union that would need an edit per asset drop.
  */

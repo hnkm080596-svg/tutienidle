@@ -1,18 +1,18 @@
 <script setup lang="ts">
-// Tách khỏi LoadoutManager.vue (2026-08-20, "Kỹ năng và tâm pháp giờ
-// cần tách ra thành 2 panel mới, không phụ thuộc vào left panel nữa")
-// + redesign theo tien-hiep-idle/Plans/PhapTuPanel (header/chọn kỹ
-// năng/chi tiết/Loadout). Bố cục 3 cột ÁP DỤNG CHO MỌI PATH (kể cả
-// Phàm Nhân/Kiếm Tu, không riêng Pháp Tu) — chỉ khác NỘI DUNG cột
-// giữa vì Kiếm Tu/Phàm Nhân không có Node Tree phân nhánh:
-//   có tree   -> giữa: NodeTreePanel (cây thật của skill/branch đó)
-//   khác      -> giữa: SkillDetailView (chi tiết skill đang chọn, đọc only)
-// Cột trái dùng chung SkillPathList cho mọi path; cột phải
+// Tach khoi LoadoutManager.vue (2026-08-20, "Ky nang va tam phap gio
+// can tach ra thanh 2 panel moi, khong phu thuoc vao left panel nua")
+// + redesign theo tien-hiep-idle/Plans/PhapTuPanel (header/chon ky
+// nang/chi tiet/Loadout). Bo cuc 3 cot AP DUNG CHO MOI PATH (ke ca
+// Pham Nhan/Kiem Tu, khong rieng Phap Tu) - chi khac NOI DUNG cot
+// giua vi Kiem Tu/Pham Nhan khong co Node Tree phan nhanh:
+//   co tree   -> giua: NodeTreePanel (cay that cua skill/branch o)
+//   khac      -> giua: SkillDetailView (chi tiet skill ang chon, oc only)
+// Cot trai dung chung SkillPathList cho moi path; cot phai
 // (SkillRoleStrip, "Active Arts") and
-// NodeInspector (bottom, CHỈ có ý nghĩa khi có node để mua) không đổi.
+// NodeInspector (bottom, CHI co y nghia khi co node e mua) khong oi.
 //
-// ElementLoadoutPicker.vue (equip Hành vào combat) đã GỠ HẲN (2026-08-20,
-// yêu cầu "dư thừa, không có tác dụng gì") — nó trùng chức năng với
+// ElementLoadoutPicker.vue (equip Hanh vao combat) a GO HAN (2026-08-20,
+// yeu cau "du thua, khong co tac dung gi") - no trung chuc nang voi
 // SkillRoleStrip: the 3 fixed roles from getResolvedSkillRoles are what
 // actually runs in combat (see the role auto-cast scheduler in
 // TurnBattleSystem), "equipping a whole Element" adds no further meaning.
@@ -55,10 +55,10 @@ const { stateVersion } = useStateVersion()
 // Kiem Tu also has a real Node Tree (KiemTuNodes.ts). purchaseNode() is
 // only reachable through NodeInspector.vue, which renders when showTree.
 //
-// The Tu Reimagined (T22) — body/hidden_body mỗi path có 1 cây thật
-// (TheTuNodes/TheTuAnNodes) dưới branchTag trùng path id: single-tag
-// pass-through view qua viewBranchTags(), toàn bộ root (mutex cho Hiện,
-// non-mutex cho Ẩn) render trong cùng một tree.
+// The Tu Reimagined (T22) - body/hidden_body moi path co 1 cay that
+// (TheTuNodes/TheTuAnNodes) duoi branchTag trung path id: single-tag
+// pass-through view qua viewBranchTags(), toan bo root (mutex cho Hien,
+// non-mutex cho An) render trong cung mot tree.
 //
 // P1 - tree selection resolves on the WAY's declared nodeTreeTag, never
 // a concrete way predicate: kiem hien -> 'kiem_pho', ngu -> 'ngu_kiem',
@@ -86,7 +86,7 @@ const showTree = computed(
     hasElementalCasting.value || wayNodeTreeTag.value !== undefined,
 )
 
-// ---- Nhánh spell (Hành -> Node Tree) ----
+// ---- Nhanh spell (Hanh -> Node Tree) ----
 // Phap Tu Reimagine: element tabs always visible for spell -- the
 // element-root pick happens IN the tree (element-only commit), so the
 // tree must render before any elemental skill is learned. Default tab
@@ -104,10 +104,10 @@ watch(
   },
 )
 
-// ---- Nhánh sword (Kiem Tu Reimagined spec §6) — ONE tree, two
+// ---- Nhanh sword (Kiem Tu Reimagined spec 6) - ONE tree, two
 // branchTags rendered together: 'kiem_pho' (orb branches) + 'ngu_kiem'
 // (hidden root + Ngu branch). Node-level visibility is mode-filtered
-// inside NodeTreePanel — this tag only selects WHICH view; the re-
+// inside NodeTreePanel - this tag only selects WHICH view; the re-
 // imagined tree replaces the retired kiem_tran/bat_kiem route split. ----
 
 const selectedNode = ref<ProgressionNode | null>(null)
@@ -119,13 +119,13 @@ function onSelectBranch(element: ElementType) {
   selectedNode.value = null
 }
 
-// Skill Node unlock animation (2026-08-21, Plans/SkillNode) — NodeInspector
-// emit 'unlocked' NGAY SAU khi purchaseNode() thành công (KHÔNG đổi
-// logic mua) — chỉ chuyển tiếp id + số thứ tự (seq) tăng dần xuống
-// NodeTreePanel.vue để nó tự chạy animation connection→node. `seq`
-// đảm bảo watch() ở NodeTreePanel luôn thấy giá trị MỚI kể cả khi mua
-// liên tiếp cùng 1 node id (về lý thuyết không xảy ra — mỗi node chỉ
-// mua 1 lần — nhưng giữ an toàn, rẻ).
+// Skill Node unlock animation (2026-08-21, Plans/SkillNode) - NodeInspector
+// emit 'unlocked' NGAY SAU khi purchaseNode() thanh cong (KHONG oi
+// logic mua) - chi chuyen tiep id + so thu tu (seq) tang dan xuong
+// NodeTreePanel.vue e no tu chay animation connection->node. `seq`
+// am bao watch() o NodeTreePanel luon thay gia tri MOI ke ca khi mua
+// lien tiep cung 1 node id (ve ly thuyet khong xay ra - moi node chi
+// mua 1 lan - nhung giu an toan, re).
 const unlockTrigger = ref<{ nodeId: string; seq: number } | null>(null)
 let unlockSeq = 0
 
@@ -148,9 +148,9 @@ function onSelectNode(node: ProgressionNode, purchased: boolean, purchasable: bo
 // buttons instead of offering a dead click.
 const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 
-// Node vừa mua xong vẫn đang là selectedNode — refresh trạng thái
-// purchased/purchasable hiển thị ở inspector theo state mới nhất mỗi
-// khi nodeLevels/skillInsight đổi, không chờ người chơi bấm lại vào node.
+// Node vua mua xong van ang la selectedNode - refresh trang thai
+// purchased/purchasable hien thi o inspector theo state moi nhat moi
+// khi nodeLevels/skillInsight oi, khong cho nguoi choi bam lai vao node.
 watch(
   () => [Object.keys(player.nodeLevels).length, player.skillInsight] as const,
   () => {
@@ -298,7 +298,7 @@ function close() {
           </div>
 
           <div class="skill-path-panel__col skill-path-panel__col--center">
-            <!-- Phap Tu element tabs (Task 16) — browse all 5 branches;
+            <!-- Phap Tu element tabs (Task 16) - browse all 5 branches;
                  the committed element is marked, others render locked. -->
             <div
               v-if="hasElementalCasting"

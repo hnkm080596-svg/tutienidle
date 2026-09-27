@@ -86,7 +86,7 @@ export type DomImageResourceDescriptor = Readonly<{
 
 // Sound System W4: DOM-side audio fetch lane. `key` is the cue id, `urls`
 // the codec/variant fallbacks tried in order. `optional` is a type-level
-// marker: a missing file marks the key missing and resolves — it never
+// marker: a missing file marks the key missing and resolves - it never
 // rejects a bundle the way a missing texture does.
 export type DomAudioResourceDescriptor = Readonly<{
   kind: 'dom-audio'
@@ -235,7 +235,7 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
     }
   }
 
-  // Character animation atlases (Spec B §3.1) — one entry per distinct sheet,
+  // Character animation atlases (Spec B 3.1) - one entry per distinct sheet,
   // however many entities and clips share it.
   for (const { clips } of animatedCombatEntities()) {
     for (const clip of Object.values(clips)) {

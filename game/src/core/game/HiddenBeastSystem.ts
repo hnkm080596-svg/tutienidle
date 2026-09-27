@@ -82,7 +82,7 @@ export class HiddenBeastSystem {
    * `killThreshold` in this call (before < threshold <= after) so the
    * caller (BattleLootSystem, owns deps.eventBus) can emit
    * `hidden_window_opened`. Resets never report; this system stays
-   * eventBus-free — return value, not a dep.
+   * eventBus-free - return value, not a dep.
    */
   onEnemyDefeated(player: PlayerData, enemyId: string, enemyRealmId: string): string[] {
     const opened: string[] = []

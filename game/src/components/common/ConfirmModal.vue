@@ -4,8 +4,8 @@ import SysModalBase from './system/SysModalBase.vue'
 import GameButton from './GameButton.vue'
 import { AudioManager } from '@/core/audio/AudioManager'
 
-// Shared chrome primitive (UI/UX rework Giai đoạn A) — thay
-// window.confirm() native còn sót ở SettingsPanel.vue/QuanKhiPanel.vue.
+// Shared chrome primitive (UI/UX rework Giai oan A) - thay
+// window.confirm() native con sot o SettingsPanel.vue/QuanKhiPanel.vue.
 // M-UI-SYSTEM: re-rendered on SysModalBase (system chrome + focus trap +
 // Escape). Still no scrim-click close (confirm needs an explicit choice).
 const props = withDefaults(defineProps<{
@@ -49,10 +49,10 @@ function onCancel() {
   emit('cancel')
 }
 
-// Remediation Task 6 (2026-09-05) — screen reader cần dialog được tham
-// chiếu tới title/description thật (aria-labelledby/describedby), không
-// chỉ aria-label. useId() đảm bảo ID per-instance — nhiều modal đồng
-// thời không trùng ID tĩnh.
+// Remediation Task 6 (2026-09-05) - screen reader can dialog uoc tham
+// chieu toi title/description that (aria-labelledby/describedby), khong
+// chi aria-label. useId() am bao ID per-instance - nhieu modal ong
+// thoi khong trung ID tinh.
 // M-UI-SYSTEM: title id lives inside SysModalBase; the message id is
 // passed down as describedBy.
 const messageId = useId()

@@ -14,12 +14,12 @@ import StatRow from '@/components/common/primitives/StatRow.vue'
 import { PROFESSION_GRADE_NAMES, getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
 import { professionGradeRank } from '@/core/profession/slotRank'
 
-// Luyện Đan (2026-08-25, resource-professions-rework plan §8/§9.3) —
-// thay RecipeCraftingView: mỗi đan phương nhận ĐÚNG MỘT Linh Thảo
-// riêng; chọn biến thể niên đại đang có trong Túi; preview "Chắc chắn
-// N viên, X% thêm 1 viên" (không dùng cụm ">100%").
-// i18n (task 2.2 lô 1) — chuỗi UI qua t(); REASON_LABELS cũ (dead const,
-// zero consumers) trích thành alchemy.reason.* trong locales.
+// Luyen an (2026-08-25, resource-professions-rework plan 8/9.3) -
+// thay RecipeCraftingView: moi an phuong nhan UNG MOT Linh Thao
+// rieng; chon bien the nien ai ang co trong Tui; preview "Chac chan
+// N vien, X% them 1 vien" (khong dung cum ">100%").
+// i18n (task 2.2 lo 1) - chuoi UI qua t(); REASON_LABELS cu (dead const,
+// zero consumers) trich thanh alchemy.reason.* trong locales.
 const { t, te } = useI18n()
 
 const player = usePlayerStore()
@@ -47,7 +47,7 @@ onUnmounted(() => {
 const recipes = computed<AlchemyRecipe[]>(() => {
   stateVersion.value
 
-  // M10 (ARCH-008) — retired pill families (Hoi Xuan Dan) are hidden from
+  // M10 (ARCH-008) - retired pill families (Hoi Xuan Dan) are hidden from
   // the craft list entirely; startJob still rejects them defensively.
   return gameManager.alchemyOps.getAlchemyRecipes()
     .filter((recipe) => recipe.realmId === player.realmId && recipe.retired !== true)
@@ -315,7 +315,7 @@ function cancelJob(jobId: string) {
         <h3>{{ gameManager.pillRegistry.get(selectedRecipe.pillId).name }}</h3>
         <small :style="{ color: currentGradeColor }">{{ currentGradeLabel }}</small>
       </header>
-      <!-- §9.3: preview thời gian + tỷ lệ tổng + guaranteed + chance cộng -->
+      <!-- 9.3: preview thoi gian + ty le tong + guaranteed + chance cong -->
       <section v-if="preview" class="alchemy-detail__block">
         <h4>{{ t('alchemy.preview') }}</h4>
 
@@ -323,8 +323,8 @@ function cancelJob(jobId: string) {
           {{ t('alchemy.outcome', { guaranteed: preview.guaranteedPills, chance: preview.extraPillChance, extra: preview.extraPillYield }) }}
         </p>
 
-        <!-- Bỏ "— Đan Phòng cấp N" (2026-08-30, bug report: trùng lặp
-             Cấp đã hiện ở header building phía trên panel). -->
+        <!-- Bo "- an Phong cap N" (2026-08-30, bug report: trung lap
+             Cap a hien o header building phia tren panel). -->
         <p class="alchemy-detail__duration">
           {{ t('alchemy.duration', { minutes: Math.ceil(preview.durationSeconds / 60) }) }}
         </p>

@@ -1,9 +1,9 @@
-// ambientAudioDriver — route → music crossfade driver (W8).
+// ambientAudioDriver - route -> music crossfade driver (W8).
 //
 // Subscribes to the coordinator's committed route and drives the single
 // AudioManager music slot through crossfadeMusic. Per OQ-A there is NO
 // Tone.js ambient fallback: music.* rows resolve to empty slots until
-// real assets land, so driving an un-slotted cue is a silent no-op —
+// real assets land, so driving an un-slotted cue is a silent no-op -
 // dropping the files into public/assets/audio/music/ is the only step.
 //
 // Gating:
@@ -12,7 +12,7 @@
 //     captured and start on unlock.
 //   - enabled=false: stopMusic; re-enable resumes the current route's
 //     track.
-//   - visibilitychange: hidden → suspendMusic, visible → resumeMusic.
+//   - visibilitychange: hidden -> suspendMusic, visible -> resumeMusic.
 //
 // Bind once in App.vue; the returned teardown unsubscribes, removes the
 // visibility listener, and stops music.
@@ -26,7 +26,7 @@ import { watch } from 'vue'
 
 const CROSSFADE_MS = 1500
 
-/** Route → music cue. boot/auth/character/error share the menu bed. */
+/** Route -> music cue. boot/auth/character/error share the menu bed. */
 const ROUTE_MUSIC: Record<Route, AudioCueId> = {
   home: 'music.home',
   combat: 'music.combat',
@@ -52,7 +52,7 @@ export function bindAmbientAudio(
     audio.crossfadeMusic(ROUTE_MUSIC[r], CROSSFADE_MS)
   }
 
-  // subscribe() fires immediately with the current snapshot — the route
+  // subscribe() fires immediately with the current snapshot - the route
   // equals `route` there, so the listener is change-only; seed the
   // initial route explicitly so the first unlock() knows the track.
   const unsubscribe = coordinator.subscribe((snapshot) => {

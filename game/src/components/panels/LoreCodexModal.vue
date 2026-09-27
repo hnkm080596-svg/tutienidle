@@ -1,9 +1,9 @@
 <script setup lang="ts">
-// Home Hub Phase 2 — bản modal PERSISTENT-CLICK của Tooltip.vue (vốn
-// chỉ hiện khi hover, biến mất ngay khi rời chuột) — dùng cho Tàng
-// Kinh Các's Lore tab (Phase 7): người chơi bấm vào 1 lore item, đọc
-// trọn mô tả, tự đóng khi bấm ra ngoài/nút đóng, KHÔNG tự ẩn theo
-// chuột như Tooltip. Style nhất quán NavMenuOverlay.vue.
+// Home Hub Phase 2 - ban modal PERSISTENT-CLICK cua Tooltip.vue (von
+// chi hien khi hover, bien mat ngay khi roi chuot) - dung cho Tang
+// Kinh Cac's Lore tab (Phase 7): nguoi choi bam vao 1 lore item, oc
+// tron mo ta, tu ong khi bam ra ngoai/nut ong, KHONG tu an theo
+// chuot nhu Tooltip. Style nhat quan NavMenuOverlay.vue.
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'

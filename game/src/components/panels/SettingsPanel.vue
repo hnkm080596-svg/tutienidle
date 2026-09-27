@@ -24,9 +24,9 @@ const AUDIO_CHANNELS = [
 ] as const
 const { t } = useI18n()
 
-// Thay window.confirm() native — modal xác nhận đồng bộ hoá bằng
-// pending-action: mở ConfirmModal, hành động thật chỉ chạy khi
-// resolvePendingConfirm() (nút "Xác Nhận") được gọi.
+// Thay window.confirm() native - modal xac nhan ong bo hoa bang
+// pending-action: mo ConfirmModal, hanh ong that chi chay khi
+// resolvePendingConfirm() (nut "Xac Nhan") uoc goi.
 const pendingConfirm = ref<null | { title: string; message: string; danger: boolean; onConfirm: () => void }>(null)
 
 function requestConfirm(title: string, message: string, onConfirm: () => void, danger = false) {
@@ -42,7 +42,7 @@ function cancelPendingConfirm() {
   pendingConfirm.value = null
 }
 
-// WS8 — cỡ chữ giao diện (chỉ scale semantic tokens, không zoom canvas).
+// WS8 - co chu giao dien (chi scale semantic tokens, khong zoom canvas).
 const uiScale = ref<number>(loadUiScale())
 
 function handleUiScale(scale: number) {
@@ -52,9 +52,9 @@ function handleUiScale(scale: number) {
 
 const lastSavedLabel = ref('')
 
-// Lưu thủ công phải await và kiểm tra kết quả — trước đây toast
-// "Đã lưu tiến trình" hiện cả khi writeGameSave fail (quota), người
-// chơi tưởng tiến trình đã an toàn rồi đóng tab mất trắng.
+// Luu thu cong phai await va kiem tra ket qua - truoc ay toast
+// "a luu tien trinh" hien ca khi writeGameSave fail (quota), nguoi
+// choi tuong tien trinh a an toan roi ong tab mat trang.
 async function handleSave() {
   const result = await player.save(gameManager)
 
@@ -65,18 +65,18 @@ async function handleSave() {
   } else {
     lastSavedLabel.value = t('panels.settings.notifications.saveFailedShort')
 
-    // Audit fix 2026-08-31 — kind 'error' (đỏ) đồng nhất App.vue autosave
-    // fail; kind 'save' (xanh nhạt) làm người chơi bỏ qua mất nguy cơ.
+    // Audit fix 2026-08-31 - kind 'error' (o) ong nhat App.vue autosave
+    // fail; kind 'save' (xanh nhat) lam nguoi choi bo qua mat nguy co.
     notification.push('error', t('panels.settings.notifications.saveFailed'))
   }
 }
 
 function handleLoad() {
-  // GameManager.restoreFromSave() cộng dồn (materials/pills/talismans/
-  // equipment dùng .add(), không clear trước) — gọi lại giữa phiên
-  // đang chạy sẽ NHÂN ĐÔI tài nguyên thay vì thay thế. Reload tái
-  // dùng đúng luồng onMounted() (đã đúng) thay vì phải viết clear()
-  // cho từng Manager — rủi ro thấp hơn nhiều.
+  // GameManager.restoreFromSave() cong don (materials/pills/talismans/
+  // equipment dung .add(), khong clear truoc) - goi lai giua phien
+  // ang chay se NHAN OI tai nguyen thay vi thay the. Reload tai
+  // dung ung luong onMounted() (a ung) thay vi phai viet clear()
+  // cho tung Manager - rui ro thap hon nhieu.
   requestConfirm(
     t('panels.settings.confirm.reloadTitle'),
     t('panels.settings.confirm.reloadBody'),
@@ -84,12 +84,12 @@ function handleLoad() {
   )
 }
 
-// Xuất save hiện tại — save() trước để file tải về phản ánh đúng
-// tiến trình tại thời điểm bấm, không phải lần save gần nhất.
+// Xuat save hien tai - save() truoc e file tai ve phan anh ung
+// tien trinh tai thoi iem bam, khong phai lan save gan nhat.
 async function handleExport() {
-  // PHẢI await — writeGameSave chạy trong microtask (cloudSaveCoordinator
-  // → LocalCloudSaveService.save đều async); đọc localStorage ngay sau lời
-  // gọi sync sẽ lấy save 15s cũ (bug audit 2026-08-31).
+  // PHAI await - writeGameSave chay trong microtask (cloudSaveCoordinator
+  // -> LocalCloudSaveService.save eu async); oc localStorage ngay sau loi
+  // goi sync se lay save 15s cu (bug audit 2026-08-31).
   const result = await player.save(gameManager)
 
   if (result.status !== 'ok') {
@@ -126,9 +126,9 @@ function handleImportFile(event: Event) {
         if (ok) {
           window.location.reload()
         } else {
-          // UI-007 (Task 5) — window.alert native → toast store (in-game
-          // feedback, tự biến mất, không chặn luồng; giữ import input
-          // reset để retry ngay).
+          // UI-007 (Task 5) - window.alert native -> toast store (in-game
+          // feedback, tu bien mat, khong chan luong; giu import input
+          // reset e retry ngay).
           notification.push('error', t('panels.settings.errors.invalidSaveFile'))
         }
       }
@@ -142,8 +142,8 @@ function handleReset() {
   requestConfirm(
     t('panels.settings.confirm.resetTitle'),
     t('panels.settings.confirm.resetBody'),
-    // App phải dừng interval/pagehide autosave TRƯỚC khi xoá; nếu panel tự
-    // reload, pagehide ghi lại chính save vừa xoá.
+    // App phai dung interval/pagehide autosave TRUOC khi xoa; neu panel tu
+    // reload, pagehide ghi lai chinh save vua xoa.
     () => window.dispatchEvent(new Event(SAVE_RESET_REQUEST_EVENT)),
     true,
   )
@@ -173,8 +173,8 @@ function handleReset() {
       </GameButton>
     </div>
 
-    <!-- WS8 — cỡ chữ giao diện: chỉ scale typography/control tokens,
-         không đụng canvas/khung layout. Áp dụng tức thời + lưu local. -->
+    <!-- WS8 - co chu giao dien: chi scale typography/control tokens,
+         khong ung canvas/khung layout. Ap dung tuc thoi + luu local. -->
     <section class="settings-panel__ui-scale" :aria-label="t('panels.settings.sections.uiScaleAria')">
       <h4>{{ t('panels.settings.sections.uiScale') }}</h4>
 
@@ -191,7 +191,7 @@ function handleReset() {
       </div>
     </section>
 
-    <!-- Audio — on/off + master/channel volumes (0-100%) + reduced shake. Persisted via useAudioStore. -->
+    <!-- Audio - on/off + master/channel volumes (0-100%) + reduced shake. Persisted via useAudioStore. -->
     <section class="settings-panel__audio" :aria-label="t('panels.settings.sections.audioAria')">
       <h4>{{ t('panels.settings.sections.audio') }}</h4>
 

@@ -369,19 +369,23 @@ describe('i18n key parity (P16)', () => {
     () => {
       const STRING_LITERAL = /(['"`])((?:(?!\1)[^\\]|\\.)+)\1/g
       // Audio cue ids share the `combat.`/`tribulation.` locale namespaces
-      // by convention (sound-system-spec §1.2: `domain.verb[.qualifier]`,
-      // lowercase segments only — e.g. `combat.kiem.combo.nhat_tuyen`). They
+      // by convention (sound-system-spec 1.2: `domain.verb[.qualifier]`,
+      // lowercase segments only - e.g. `combat.kiem.combo.nhat_tuyen`). They
       // are data keys in the audio manifest, not i18n keys; camelCase i18n
       // typos still fail the lowercase-only shape and get reported.
       const AUDIO_CUE_ID =
         /^(combat|ui|music|ambient|stinger|progress|tribulation|craft|farm)(\.[a-z_0-9]+)+$/
+      // Cue ids also appear as template literals (`combat.cast.${skillId}`)
+      // - the interpolator builds the qualifier at runtime, never an i18n key.
+      const AUDIO_CUE_TEMPLATE =
+        /^(combat|ui|music|ambient|stinger|progress|tribulation|craft|farm)(\.[a-z_0-9]+)*\.\$\{[^}]+\}$/
       const violations: string[] = []
       for (const file of FILES) {
         for (const m of file.clean.matchAll(STRING_LITERAL)) {
           const literal = m[2]!
           if (!literal.includes('.') || !NAMESPACE_RE.test(literal.split('.')[0]!)) continue
           if (!KEY_SHAPE.test(literal)) continue
-          if (AUDIO_CUE_ID.test(literal)) continue
+          if (AUDIO_CUE_ID.test(literal) || AUDIO_CUE_TEMPLATE.test(literal)) continue
           if (!keyExists(literal, VI_PATHS) || !keyExists(literal, EN_PATHS)) {
             violations.push(`${file.fromSrc} -> ${literal}`)
           }

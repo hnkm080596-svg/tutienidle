@@ -869,7 +869,7 @@ describe('reactive_proc observation emit (Sound System W6)', () => {
     const seen: unknown[] = []
     f.eventBus.on('reactive_proc', (e) => seen.push(e))
 
-    // ho_mon live but 0 The — the attempt is created unpaid, rolled stays undefined.
+    // ho_mon live but 0 The - the attempt is created unpaid, rolled stays undefined.
     withHoMon(f, f.protectorP, 1, 0)
     const declared = declaredAgainst(f, [f.squishyP])
     system(f, () => 0).applyActionImpact(f.battle, declared)

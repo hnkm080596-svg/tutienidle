@@ -1,7 +1,7 @@
-// screenShakePolicy — W10 (OQ-D) reduced screen-shake accessibility gate.
+// screenShakePolicy - W10 (OQ-D) reduced screen-shake accessibility gate.
 //
 // Single choke point for camera impulses. `src/game/**` scenes call
-// `applyScreenShake` instead of `camera.shake` directly — the scenes may
+// `applyScreenShake` instead of `camera.shake` directly - the scenes may
 // import presentation but never `@/stores` (frontendImportDirection), so
 // the flag lives here and `App.vue` pushes it via `setReducedShakeEnabled`
 // (watch on `audio.reducedShake`, immediate).

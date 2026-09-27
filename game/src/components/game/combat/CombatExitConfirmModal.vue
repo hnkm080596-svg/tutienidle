@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// 6A-T6 (2026-09-01, spec §3) — confirm modal thoát trận, extract từ
+// 6A-T6 (2026-09-01, spec 3) - confirm modal thoat tran, extract tu
 // CombatControlBar (L173-182 + confirmExit L47-55): scene exit-zone
-// (canvas) emit 'combat_exit_request' → modal này mở; logic confirm
-// giữ NGUYÊN (abandonBattle → manual → combat_scene_exit →
+// (canvas) emit 'combat_exit_request' -> modal nay mo; logic confirm
+// giu NGUYEN (abandonBattle -> manual -> combat_scene_exit ->
 // combat_scene_exit) - now runs inside the closed curtain via
 // useBattleActions.exitCombatToHome. Gate: Stage only (Tribulation has
 // its own flow).
@@ -23,15 +23,15 @@ const { exitCombatToHome } = useBattleActions()
 const visible = ref(false)
 const cardRef = ref<HTMLElement | null>(null)
 
-// Deferred follow-up (2026-09-03) — focus trap dùng chung (QA-003):
-// Escape = HỦY thoát (Ở LẠI trận), KHÔNG BAO GIỜ exit qua Escape.
+// Deferred follow-up (2026-09-03) - focus trap dung chung (QA-003):
+// Escape = HUY thoat (O LAI tran), KHONG BAO GIO exit qua Escape.
 useDialogFocus(cardRef, visible, {
   onEscape: () => {
     dismiss()
   },
 })
 
-// W7: the modal owns its own open cue — the stage gate below can reject
+// W7: the modal owns its own open cue - the stage gate below can reject
 // the request, so the event-level static row would cue a phantom open.
 const audio = AudioManager.getInstance()
 
@@ -42,8 +42,8 @@ function dismiss() {
 }
 
 function onExitRequest() {
-  // Scene chỉ request; Stage gate giữ tại render (v-if) để Tribulation
-  // không bao giờ thấy modal dù event phát nhầm.
+  // Scene chi request; Stage gate giu tai render (v-if) e Tribulation
+  // khong bao gio thay modal du event phat nham.
   if (ui.combatOrigin === 'stage') {
     audio.playCue('ui.modal.open')
     visible.value = true

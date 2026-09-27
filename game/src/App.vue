@@ -198,7 +198,7 @@ const unbindCombatAudio = bindCombatAudio(gameManager.eventBus, {
   routeProvider: () => coordinator.getSnapshot().currentRoute,
 })
 
-// W10: push the reducedShake flag into the presentation shake gate — scenes
+// W10: push the reducedShake flag into the presentation shake gate - scenes
 // read the module-level scale (src/game may not import stores).
 const audioStore = useAudioStore()
 

@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
-// 6A-T6 (2026-09-01) — extract CombatExitConfirmModal: scene exit
-// bridge `combat_exit_request` → modal mở; confirm chạy đúng luồng cũ
+// 6A-T6 (2026-09-01) - extract CombatExitConfirmModal: scene exit
+// bridge `combat_exit_request` -> modal mo; confirm chay ung luong cu
 // (abandonBattle + battleRunMode=manual + combat_scene_exit +
-// combat_scene_exit); Tribulation KHÔNG mở modal.
-// Mount theo pattern project (createApp + h + provide, KHÔNG
-// @vue/test-utils — chưa cài).
+// combat_scene_exit); Tribulation KHONG mo modal.
+// Mount theo pattern project (createApp + h + provide, KHONG
+// @vue/test-utils - chua cai).
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
@@ -14,8 +14,8 @@ import { useUiStore } from '@/stores/ui'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
 import { i18n } from '@/i18n'
 
-// i18n (2.2 lô 2) — component dùng t() nên mount phải cài i18n; assert
-// qua i18n.global.t(key) thay vì raw vi string (pattern HomeResourceStrip).
+// i18n (2.2 lo 2) - component dung t() nen mount phai cai i18n; assert
+// qua i18n.global.t(key) thay vi raw vi string (pattern HomeResourceStrip).
 function t(key: string): string {
   return (i18n.global as unknown as { t: (k: string) => string }).t(key)
 }
@@ -41,7 +41,7 @@ function makeGameManager(): MockGameManager {
     gm.capturedRequestHandler = handler
   })
 
-  // Modal truy cập qua gameManager.eventBus.on/off/emit — mock shape.
+  // Modal truy cap qua gameManager.eventBus.on/off/emit - mock shape.
   ;(gm as unknown as { eventBus: MockGameManager }).eventBus = gm
 
   return gm
@@ -58,8 +58,8 @@ function mountModal(gm: MockGameManager, origin: 'stage' | 'tribulation' | null 
 
   app.use(pinia)
   app.use(i18n)
-  // Cast mock thành GameManager — provide typed chặt GameManager;
-  // mock đủ shape modal cần (eventBus.on/off/emit, abandonBattle).
+  // Cast mock thanh GameManager - provide typed chat GameManager;
+  // mock u shape modal can (eventBus.on/off/emit, abandonBattle).
   app.provide(GAME_MANAGER_KEY, gm as unknown as import('@/core/game/GameManager').GameManager)
   // useBattleActions (exitCombatToHome) resolves useStateVersion at setup.
   app.provide(STATE_VERSION_KEY, ref(0))

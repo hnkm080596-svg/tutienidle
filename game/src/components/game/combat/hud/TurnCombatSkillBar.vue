@@ -1,13 +1,13 @@
 <script setup lang="ts">
-// Slice 7 (2026-09-04) — 3 nút cố định basic/special/ultimate cho
-// turn-based manual cast. Entry thứ tự [basic, special, ultimate] từ
-// buildTurnSkillPresentation (slotList). Slot không sẵn sàng bị DISABLE
-// (chặn trước, spec Slice 7 §4). Targeting vẫn hoàn toàn tự động.
+// Slice 7 (2026-09-04) - 3 nut co inh basic/special/ultimate cho
+// turn-based manual cast. Entry thu tu [basic, special, ultimate] tu
+// buildTurnSkillPresentation (slotList). Slot khong san sang bi DISABLE
+// (chan truoc, spec Slice 7 4). Targeting van hoan toan tu ong.
 //
-// Bảng 9.5 #5 (2026-09-07) — tên/tooltip skill thật: entry mang
-// skillName/skillDescription từ TurnSkillDisplayMeta (mapping skillId →
-// display metadata); fallback nhãn role (Thường/Đặc Biệt/Tuyệt Kỹ) khi
-// id không có trong map. Tooltip qua tooltipOverride của CombatSkillSlot.
+// Bang 9.5 #5 (2026-09-07) - ten/tooltip skill that: entry mang
+// skillName/skillDescription tu TurnSkillDisplayMeta (mapping skillId ->
+// display metadata); fallback nhan role (Thuong/ac Biet/Tuyet Ky) khi
+// id khong co trong map. Tooltip qua tooltipOverride cua CombatSkillSlot.
 import { computed, onMounted } from 'vue'
 import CombatSkillSlot from './CombatSkillSlot.vue'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
@@ -28,9 +28,9 @@ const ROLE_LABELS: Record<TurnSkillSlotRole, string> = {
   ultimate: 'Tuyệt Kỹ',
 }
 
-// Bảng 9.5 #5 — nhãn hiển thị do CombatSkillSlot tự resolve qua
-// displayLabel prop (skillName → fallback emptyLabel). Bar chỉ truyền
-// metadata; tooltip qua tooltipFor() bên dưới.
+// Bang 9.5 #5 - nhan hien thi do CombatSkillSlot tu resolve qua
+// displayLabel prop (skillName -> fallback emptyLabel). Bar chi truyen
+// metadata; tooltip qua tooltipFor() ben duoi.
 function tooltipFor(entry: TurnSkillPresentationEntry): TooltipContent | undefined {
   if (!entry.skillName || !entry.skillDescription) {
     return undefined
@@ -39,9 +39,9 @@ function tooltipFor(entry: TurnSkillPresentationEntry): TooltipContent | undefin
   return { title: entry.skillName, description: entry.skillDescription }
 }
 
-// Slice 7 master plan Task 9 — mode toggle đọc/ghi ui.combatInputMode
-// (persist per-device), đồng bộ GameManager flag (plain class, không
-// import Pinia — UI layer gọi setter, cùng pattern battleRunMode).
+// Slice 7 master plan Task 9 - mode toggle oc/ghi ui.combatInputMode
+// (persist per-device), ong bo GameManager flag (plain class, khong
+// import Pinia - UI layer goi setter, cung pattern battleRunMode).
 const ui = useUiStore()
 const gameManager = useGameManager()
 const {
@@ -54,11 +54,11 @@ const {
   chooseDynamicBasic,
 } = useTurnCombatManual()
 
-// Phap Tu An (Task 16) — the path owns no active ultimate: the slot is
+// Phap Tu An (Task 16) - the path owns no active ultimate: the slot is
 // the always-on dao passive ngo_dao_hon_don, rendered as a passive
-// emblem (spec §3.3 — "NOT a button"; its agency lives in the
+// emblem (spec 3.3 - "NOT a button"; its agency lives in the
 // multicast storm). The emblem tooltip explains basic-slot-only
-// multicast — the one place the rule surfaces in combat.
+// multicast - the one place the rule surfaces in combat.
 // M4 (R6): the hidden way drives the emblem. P1 - the emblem IS the
 // aura indicator: it renders exactly when the 'spell.reaction_aura'
 // capability resolves (hidden_spell_pathway + the learned dao passive), via the
@@ -81,8 +81,8 @@ function setManualMode(enabled: boolean): void {
   gameManager.setBattleManualMode(enabled)
 }
 
-// Sync persisted mode → GameManager khi bar mount lần đầu (reload page:
-// ui flag persist, GameManager flag mặc định false).
+// Sync persisted mode -> GameManager khi bar mount lan au (reload page:
+// ui flag persist, GameManager flag mac inh false).
 onMounted(() => {
   gameManager.setBattleManualMode(ui.combatInputMode === 'manual')
 })
@@ -101,7 +101,7 @@ function entryAt(index: number): TurnSkillPresentationEntry {
   return slotList.value[index] ?? SLOT_EMPTY
 }
 
-// Hien owns the basic slot via the orb picker — drop it from the role
+// Hien owns the basic slot via the orb picker - drop it from the role
 // row while keeping the original slotList indices for special/ultimate.
 const visibleSlots = computed(() =>
   ROLE_ORDER.map((role, index) => ({ role, index })).filter(
@@ -109,7 +109,7 @@ const visibleSlots = computed(() =>
   ),
 )
 
-// Kiem Tu Reimagined Task 7 — orb display names come from
+// Kiem Tu Reimagined Task 7 - orb display names come from
 // TurnSkillDisplayMeta (synced to the authored table). Fallback to the
 // raw id only keeps an un-authored def visible rather than blank.
 function orbLabel(def: TurnSkillDefinition): string {
@@ -146,7 +146,7 @@ function onDynamicBasicClick(defId: string): void {
 <template>
   <div v-if="visible" class="turn-combat-skill-bar">
     <div class="turn-combat-skill-bar__slots">
-      <!-- Kiem Tu Reimagined — the sword_pathway orb picker OWNS the basic slot:
+      <!-- Kiem Tu Reimagined - the sword_pathway orb picker OWNS the basic slot:
            provider.manualOptions() are the only legal manual picks. -->
       <template v-if="hasDynamicBasic">
         <button
@@ -173,8 +173,8 @@ function onDynamicBasicClick(defId: string): void {
       </template>
 
       <template v-for="slot in visibleSlots" :key="slot.role">
-        <!-- Phap Tu An — ult slot is the dao passive emblem, never a
-             button (no dead ult control; spec §3.3). -->
+        <!-- Phap Tu An - ult slot is the dao passive emblem, never a
+             button (no dead ult control; spec 3.3). -->
         <div
           v-if="slot.role === 'ultimate' && isAnPath"
           class="turn-combat-skill-bar__emblem"

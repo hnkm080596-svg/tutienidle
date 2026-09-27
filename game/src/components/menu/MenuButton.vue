@@ -17,7 +17,7 @@ const emit = defineEmits<{
 }>()
 
 // W7: menu affordance click -> ui.click + autoplay unlock (AudioManager
-// direct — MenuButton mounts in tests without an active Pinia).
+// direct - MenuButton mounts in tests without an active Pinia).
 const audio = AudioManager.getInstance()
 function onClick() {
   audio.unlock()

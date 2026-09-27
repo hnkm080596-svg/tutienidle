@@ -1,6 +1,6 @@
-// audioAssetWiring — Sound System W4. Maps a committed route onto the lazy
+// audioAssetWiring - Sound System W4. Maps a committed route onto the lazy
 // `audio-*` bundles and ensures them through AssetBundleManager. The caller
-// (ambientAudioDriver, W8) gates on `isUnlocked() && audio.enabled` — when
+// (ambientAudioDriver, W8) gates on `isUnlocked() && audio.enabled` - when
 // either is false this is never invoked (Q5: muted = zero fetches).
 //
 // Audio bundles stay OUT of getBundlesForRoute: a missing file marks its
@@ -10,7 +10,7 @@
 import type { Route } from '../PresentationContracts'
 import type { AssetBundleId } from '../assets/AssetBundleCatalog'
 
-/** Minimal surface the wiring needs — AssetBundleManager satisfies it. */
+/** Minimal surface the wiring needs - AssetBundleManager satisfies it. */
 export interface AudioBundleLoader {
   ensureLoaded(bundleIds: readonly AssetBundleId[], signal?: AbortSignal): Promise<void>
 }

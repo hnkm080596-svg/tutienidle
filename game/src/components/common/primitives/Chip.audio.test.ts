@@ -1,6 +1,6 @@
 /* eslint-disable vue/one-component-per-file */
 // @vitest-environment jsdom
-// W7 — Chip emits ui.tab on click and nothing when disabled (the
+// W7 - Chip emits ui.tab on click and nothing when disabled (the
 // blanket tab/filter cue; AudioManager direct, no Pinia needed).
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { createApp, h } from 'vue'

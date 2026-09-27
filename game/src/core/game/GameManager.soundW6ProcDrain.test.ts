@@ -16,7 +16,7 @@ import type { CombatEntityId } from '../battle/contracts/ids'
 // scheduler.trace.records with a cursor (procExecutionCursor) reset by
 // battle identity; proc.reflect.* -> proc_reflect, proc.onhit.* ->
 // proc_on_hit, every other op ignored. Tests drive the REAL drain through
-// a ManualClockSource battle and inject synthetic execution records —
+// a ManualClockSource battle and inject synthetic execution records -
 // the trace getter returns the live array, so pushes are observable.
 // Spec sec. "Cursor contract": exactly-once per record, reset on new
 // battle identity.
@@ -82,7 +82,7 @@ function reachFighting({ gameManager, combatSource }: DrainFixture): void {
 }
 
 /** Reach the live trace record list (records is readonly-typed but
-    returns the live array — the drain scans exactly this list). */
+    returns the live array - the drain scans exactly this list). */
 function traceRecords(gameManager: GameManager): CombatExecutionRecord[] {
   const ops = gameManager.turnBattleOps as unknown as {
     turnRuntime?: { scheduler: { trace: { records: CombatExecutionRecord[] } } }

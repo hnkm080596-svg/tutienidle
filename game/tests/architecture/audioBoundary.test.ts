@@ -1,5 +1,5 @@
 /**
- * Audio seam guards (sound-system W9) — the sound system's load-bearing
+ * Audio seam guards (sound-system W9) - the sound system's load-bearing
  * ownership rules, pinned as code:
  *
  *   1. Core never imports audio. `src/core/**` outside `src/core/audio/`
@@ -7,7 +7,7 @@
  *      presentation-observation events only; bindings live in
  *      `src/presentation/audio/`.
  *   2. AudioCueManifest stays data-only. The manifest is the asset-drop
- *      contract — a Tone/Vue/Phaser import would drag synthesis or the UI
+ *      contract - a Tone/Vue/Phaser import would drag synthesis or the UI
  *      stack into a file that must stay loadable by anything.
  *   3. No .vue file imports `tone` directly. Components reach audio through
  *      AudioManager / the audio store; synthesis primitives are an
@@ -38,7 +38,7 @@ describe('audio boundary', () => {
         if (!file.fromSrc.startsWith('core/')) continue
         if (file.fromSrc.startsWith('core/audio/')) continue
         // Tests may spy on AudioManager to prove a domain event reaches
-        // the real consumer — the ban is on production coupling.
+        // the real consumer - the ban is on production coupling.
         if (file.fromSrc.endsWith('.test.ts')) continue
         for (const spec of importSpecifiers(file.text)) {
           if (spec === 'tone' || spec.includes('audio/Audio') || spec.includes('/audio/Audio')) {

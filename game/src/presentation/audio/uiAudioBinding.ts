@@ -1,4 +1,4 @@
-// uiAudioBinding — presentation adapter mapping uiStore panel/wheel state
+// uiAudioBinding - presentation adapter mapping uiStore panel/wheel state
 // transitions to manifest cue ids through a $subscribe diff. Zero edits to
 // stores/ui.ts: the seam is the store subscription, same shape as
 // combatAudioBinding's eventBus observation (audio never writes back).
@@ -6,7 +6,7 @@
 // Panel semantics: exactly one "active panel" signature derived from the
 // four panel fields in precedence order; any signature change emits
 // ui.panel.close for the outgoing panel first, then ui.panel.open for the
-// incoming one — a panel→panel swap therefore sounds close+open.
+// incoming one - a panel->panel swap therefore sounds close+open.
 
 import { AudioManager } from '@/core/audio/AudioManager'
 import { useUiStore } from '@/stores/ui'
