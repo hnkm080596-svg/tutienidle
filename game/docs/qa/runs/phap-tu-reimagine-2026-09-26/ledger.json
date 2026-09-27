@@ -15627,7 +15627,9 @@
       "evidenceIds": [
         "EV-PTR-FIXQ1"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-20"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -15755,7 +15757,9 @@
       "evidenceIds": [
         "EV-PTR-FIXQ2"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-20"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -15820,7 +15824,9 @@
       "evidenceIds": [
         "EV-PTR-FIXQ2"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-20"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -15885,10 +15891,12 @@
       "evidenceIds": [
         "EV-PTR-FIXQ2"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-20"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
-      "reachability": "FIXTURE_INJECTED",
+      "reachability": "PRODUCTION",
       "actionable": true,
       "discoveredBy": "cleanQ AUT",
       "expected": "module guards mirror adapter requireWellFormedAmount (reject non-finite)",
@@ -15950,7 +15958,9 @@
       "evidenceIds": [
         "EV-PTR-FIXQ2"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-20"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -16080,10 +16090,12 @@
       "evidenceIds": [
         "EV-PTR-FIXQ2"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-20"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
-      "reachability": "LIVE",
+      "reachability": "PRODUCTION",
       "actionable": true,
       "discoveredBy": "cleanQ INT",
       "expected": "each gate clause has a direct pin",
@@ -16202,7 +16214,9 @@
       "evidenceIds": [
         "EV-PTR-FIXQ2"
       ],
-      "closureReviewIds": [],
+      "closureReviewIds": [
+        "REV-PTR-CLO-20"
+      ],
       "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "FIXTURE_INJECTED",
@@ -18563,6 +18577,33 @@
       "artifactHash": "248c1bf9f3ce15c7b485fb921f953c8070e679b931322ac8de9a71158085db79",
       "claims": [
         "INT-Q findings recorded"
+      ],
+      "inputEvidenceIds": [],
+      "inputPaths": [],
+      "invariantIds": [],
+      "limitations": []
+    },
+    {
+      "kind": "EXECUTED_INTEGRATION",
+      "id": "EV-PTR-CLO20",
+      "state": {
+        "productStateId": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "status": "CURRENT",
+      "producer": "devin-e3460cbf2daa4d1b8956be10bb6303c3",
+      "startedAt": "2026-09-28T06:30:00Z",
+      "finishedAt": "2026-09-28T06:33:00Z",
+      "commandOrMethod": "closure review @7d837a91: SEALED -- all 7 pending claims verified; type-check exit 0; scoped vitest save+the-tu+hoIntercept PASS",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "records-clo20.json",
+      "artifactHash": "b4ad9e84a8d71d557afd550b39f74b484a56cfc622a638a94b112550bcc3225f",
+      "claims": [
+        "all 7 pending closure claims verified at pin 7d837a91"
       ],
       "inputEvidenceIds": [],
       "inputPaths": [],
@@ -21103,6 +21144,35 @@
       ],
       "novelAttackIds": [],
       "status": "STALE"
+    },
+    {
+      "id": "REV-PTR-CLO-20",
+      "state": {
+        "productStateId": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 20,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-e3460cbf2daa4d1b8956be10bb6303c3",
+      "contextId": "sealed-child-e3460cbf2daa4d1b8956be10bb6303c3",
+      "role": "closure",
+      "priorFindingsVisible": false,
+      "startedAt": "2026-09-28T06:30:00Z",
+      "sealedAt": "2026-09-28T06:33:00Z",
+      "status": "SEALED",
+      "findingIds": [],
+      "model": "swe-2",
+      "inputBundleHash": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+      "accessLimitations": [],
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-PTR-CLO20"
+      ],
+      "novelAttackIds": []
     }
   ],
   "cycles": [
@@ -25674,6 +25744,54 @@
       "payloadPath": "events/0092.json",
       "payloadHash": "ed1ce5c584c643843cf531921448f2d8233271936270f6ee3419e16e83b9e0e9",
       "eventHash": "02ccc3060470f61caee28eaed48c2f0e40d012d39afcc0dd04d363b109e44ebf"
+    },
+    {
+      "seq": 93,
+      "at": "2026-09-27T12:27:29.191Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "02ccc3060470f61caee28eaed48c2f0e40d012d39afcc0dd04d363b109e44ebf",
+      "payloadPath": "events/0093.json",
+      "payloadHash": "eb9e75c87545c63a36ce9273549567d768fbaeb81571f6cae7fe56e5d9d0bd68",
+      "eventHash": "d948e495348f9e9dcc42c858d4a153c0b1837b8970526b5b2d39cc497682a690"
+    },
+    {
+      "seq": 94,
+      "at": "2026-09-27T12:27:41.732Z",
+      "kind": "FINDING",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "d948e495348f9e9dcc42c858d4a153c0b1837b8970526b5b2d39cc497682a690",
+      "payloadPath": "events/0094.json",
+      "payloadHash": "db7ae500363d7af0e4522111de7b6f0f2787e66f6c17d7f05687ce436df76ce8",
+      "eventHash": "61b6baf03d80edbecb3cb20a06a3b54d1e09a14518d3d0696530e989dc7efe51"
+    },
+    {
+      "seq": 95,
+      "at": "2026-09-27T12:27:46.298Z",
+      "kind": "FINDING",
+      "actor": "coordinator-1021454",
+      "state": {
+        "productStateId": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+        "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+        "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "61b6baf03d80edbecb3cb20a06a3b54d1e09a14518d3d0696530e989dc7efe51",
+      "payloadPath": "events/0095.json",
+      "payloadHash": "e5baac0f7b4b099a594792d631bbb8a513023b26a7ec2f39c61b6e974709bf02",
+      "eventHash": "9ad8d3c759f1d48dfeeaaebfbb5fe4dec75e4330b8f533dafac074783df0b49f"
     }
   ]
 }

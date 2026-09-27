@@ -1,0 +1,106 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-PTR-248",
+    "title": "NaN slips the floor guards in grantThe/consumeThe",
+    "state": {
+     "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "subsystem": "core",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "closedAt": "2026-09-27T12:22:00Z",
+    "severity": "Low",
+    "locations": [
+     {
+      "path": "src/core/the-tu/TheEconomy.ts",
+      "symbolOrSection": ":39-44,59-65",
+      "revision": "7d837a91",
+      "basis": "SOURCE"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "evidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "closureReviewIds": [
+     "REV-PTR-CLO-20"
+    ],
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "reachability": "PRODUCTION",
+    "actionable": true,
+    "discoveredBy": "cleanQ AUT",
+    "expected": "module guards mirror adapter requireWellFormedAmount (reject non-finite)",
+    "actual": "NaN <= 0 is false so NaN reaches the clamp -> NaN currentThe write bricks the pool silently",
+    "rootCause": "guard written as amount <= 0 only; non-finite unenumerated",
+    "rootClass": "CONTRACT_GAP",
+    "repair": "!Number.isFinite guards on grantThe + consumeThe @7d837a91 + TheEconomy.test.ts pins",
+    "siblingSearch": [
+     {
+      "roots": [
+       "game/src"
+      ],
+      "termsAndMethod": "enumerate same-class sites against the repaired authority/policy",
+      "evidenceIds": [
+       "EV-PTR-FIXQ2"
+      ],
+      "hitDispositions": [
+       "sibling sites enumerated"
+      ],
+      "coverageLimits": [
+       "fixture-injected or documented-latent reachability only"
+      ]
+     }
+    ],
+    "closeReason": "fixed in wave-Q batch @7d837a91 -- pending closure seal",
+    "counterexample": "Math.max(0, 5 - NaN) -> NaN"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "REV-PTR-CLO-20",
+    "state": {
+     "productStateId": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "round": 20,
+    "phase": "CLOSURE",
+    "reviewerId": "devin-e3460cbf2daa4d1b8956be10bb6303c3",
+    "contextId": "sealed-child-e3460cbf2daa4d1b8956be10bb6303c3",
+    "role": "closure",
+    "priorFindingsVisible": false,
+    "startedAt": "2026-09-28T06:30:00Z",
+    "sealedAt": "2026-09-28T06:33:00Z",
+    "status": "SEALED",
+    "findingIds": [],
+    "model": "swe-2",
+    "inputBundleHash": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+    "accessLimitations": [],
+    "previousPhaseReviewId": null,
+    "reviewedAfterPreviousFixes": true,
+    "coverageIds": [],
+    "evidenceIds": [
+     "EV-PTR-CLO20"
+    ],
+    "novelAttackIds": []
+   }
+  }
+ ]
+}
