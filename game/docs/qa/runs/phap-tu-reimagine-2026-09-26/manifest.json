@@ -15840,7 +15840,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.followUpQueue.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a506c679c3379e952688af8a0a8aed5e6a4f4600de116cb32ce79b1a6c6bb6b5"
+      "hash": "21934ae6cbd944bb66bd0f0f9017dcc7608130260837d06c9a9f52494185cef8"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.hitResolution.qa.test.ts",
@@ -15996,7 +15996,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "19f90331ccfb04fcf3ec458b5b0de0c40f07d276988f7bf916e61b50b3d15175"
+      "hash": "c1c9158c16ff7ebec16e430a7cf470462d1377ae84c40f11acfe78efc21ce1d0"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.turnRegen.test.ts",
@@ -16086,7 +16086,7 @@
       "path": "src/core/battle/turn/TurnSkillPlanRuntime.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "4c5f2353dca3167f2f3eb519dc8502b809a07433c533ddf5d3f317d8f32f6e10"
+      "hash": "1130403a70a9ebd46f834b44bca34174de849189220f85a64d9c0ea7b6a29e3c"
     },
     {
       "path": "src/core/battle/turn/TurnStatsRecompute.test.ts",
@@ -16314,7 +16314,7 @@
       "path": "src/core/buff2/BuffSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a1ab915eaccae337a023fa9231ea68542a254b54471afdd8c9de6e0e60884709"
+      "hash": "ca8f01203a228c5a79128811c63b6e847db2f1c1dc2699691e1c47a1e6bbf63f"
     },
     {
       "path": "src/core/buff2/BuffSystemApply.test.ts",
@@ -16488,7 +16488,7 @@
       "path": "src/core/combat/CombatSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "9e5b3166584f9b822d7bbd1b83b44ba88e77d8d424f3430c117762e813e59ce3"
+      "hash": "db49526c89df4a7418517f86da34ba25b80a42311db0f6740a2ca1926df78fee"
     },
     {
       "path": "src/core/combat/CombatSystem.undefeatable.test.ts",
@@ -16561,6 +16561,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "9a1f0661111384918b7c659c07b02db20742b9b53313b3f1388cf99955decf17"
+    },
+    {
+      "path": "src/core/combat/hoTheDamageReduction.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "06361312ae87e54ed67677828fa4355fcca5afec1381bae838973cd1eda61a31"
     },
     {
       "path": "src/core/combat/RealmPressure.test.ts",
@@ -18570,7 +18576,7 @@
       "path": "src/core/player/CultivationPathRegistry.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d45767bfa8c51086b62e6a99971e928943ecc7ff3a0435e8fb4341de27e4297c"
+      "hash": "29b67a94df7a1c06820f173713d2a46744d73da118b623eb0a0d34e9c0a50e34"
     },
     {
       "path": "src/core/player/CultivationPathRoles.test.ts",
@@ -19656,7 +19662,7 @@
       "path": "src/core/skill/CastLeveling.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d46bcc15d88eb41060ed992d4f3eb7a934bbbd2cf7bfc276aeff6319156664c6"
+      "hash": "09eed531be3593c875b81fe1f0e3df29b649aa4c39f0a9fb305863d1bc877ba9"
     },
     {
       "path": "src/core/skill/MortalPrecursors.test.ts",
@@ -19848,7 +19854,7 @@
       "path": "src/core/skilldef/ResolvedSkillPlan.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6f198dea68dcd16dab9d00c54074d525fb00f4e1716a6bc547ff90b508ebb6a8"
+      "hash": "6b070bbfe921563a01a84750df7c470bfa67217bb45425ff7a50a0450224d4f0"
     },
     {
       "path": "src/core/skilldef/ScalarExpression.ts",
@@ -19896,7 +19902,7 @@
       "path": "src/core/skilldef/SkillDefinitionRegistry.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "7eaf52c6d0fd50f33454999e179303910a8c25e135e013bec458d9209734a968"
+      "hash": "47991789099ebe260f069334836e66f25852be88ed2bc48dd5318a8d3b7b7894"
     },
     {
       "path": "src/core/skilldef/SkillExecutionHooks.ts",
@@ -19908,13 +19914,13 @@
       "path": "src/core/skilldef/SkillExecutor.nestedGate.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "eb5d0ee59331d498f13fc43bdf702ceb08af7ca5f0523d1728f3af7a7f43c91b"
+      "hash": "c055127331f28dc720f7f337d35fc2464177dc6f8e53a6e98dcc4bd752f66489"
     },
     {
       "path": "src/core/skilldef/SkillExecutor.phapTuAdv.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "25c1059cfd38384c78f04202b11c987c783c8ccbdf3f6a2114d0b68aeae68410"
+      "hash": "dd3b2e3f87fb1621a8e53b2a799b2d6539c2006de75d24a730f46ae4f7fdee0e"
     },
     {
       "path": "src/core/skilldef/SkillExecutor.test.ts",
@@ -19932,7 +19938,7 @@
       "path": "src/core/skilldef/SkillExecutor.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f55097378ee4ce56ff0a015ab93a4071386a739a580b3fa986d31353e119408c"
+      "hash": "d8e389176c9f593ddf3ee85852f87ca60732dcd55ae302414e79a6ee4352bc60"
     },
     {
       "path": "src/core/skilldef/SkillPlanReads.test.ts",
@@ -19956,13 +19962,13 @@
       "path": "src/core/skilldef/SkillResolver.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e704ded27b9c36145312584cb24481c38c76cca3a735b2448e17c34db3298ca7"
+      "hash": "9185ebf7631230b58c443b96fe1dd770e6be6dfa8296c4631790f6d25433e695"
     },
     {
       "path": "src/core/skilldef/SkillResolver.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "595409af75cc3d9df998ef47100731df3013baae4216e3d6323a9972674ca804"
+      "hash": "e4c8c3b4544fbc0fd8f098bb26a8649f27ae7d573cf818acc427a0b084b2bab0"
     },
     {
       "path": "src/core/skilldef/SkillSubcast.test.ts",
@@ -20244,7 +20250,7 @@
       "path": "src/core/the-tu/TheEconomy.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "fba585dbc31fb52802b90e19fe3f02284f6407ba0960785c19f3bbacfffcd3b6"
+      "hash": "1a2bbc8221bb73dd798f870ba4c12d719684dbcb124b20893ef2121ffc83b133"
     },
     {
       "path": "src/core/the-tu/TheTuAnMechanicModifiers.ts",
@@ -21894,7 +21900,7 @@
       "path": "src/presentation/bridges/hoTheBridge.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "af3ee1881601f42a3b2ef5d7f1d67ed6796f003cb6b1fdbb154638890de206f4"
+      "hash": "40e7b3fefffde6b7c8c6bdce9b309ff80305f05ccb3cfb007394361bd55ea3aa"
     },
     {
       "path": "src/presentation/bridges/kiemBarBridge.test.ts",
@@ -23091,5 +23097,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "5fa4ba2a9a6062df8bc7402898db7ca74dac0722367f8a02c86aa3323c544952"
+  "productStateId": "9b269ce17dd8fab1bab2cf951b8091dda39759bdbc56b77760af11907e02c23d"
 }

@@ -1,0 +1,45 @@
+{
+ "run": "phap-tu-reimagine-2026-09-26",
+ "reviewId": "REV-PTR-INT-F1",
+ "reviewer": "devin-b999e7cc2943434a97f051050dd863a5",
+ "phase": "INTEGRATION",
+ "pin": "6d0722b2",
+ "verdict": "FINDINGS -- 2 Medium (dups) + 1 Low + 1 Nit + coverage-gap note; 3 deterministic repros",
+ "adjudication": [
+  {
+   "finding": "F-PTR-81 (INT F1) / Medium",
+   "disposition": "DUPLICATE of F-PTR-69 -- same deferred-resolve grant kill; fixed @1a4ea837"
+  },
+  {
+   "finding": "F-PTR-82 (INT F2) / Medium",
+   "disposition": "DUPLICATE of F-PTR-70 -- same multi-instance dedup key break; fixed @1a4ea837. INT repro observed [1,2,1,2] gate firings vs [1,1]"
+  },
+  {
+   "finding": "F-PTR-72 (INT F3) / Low",
+   "disposition": "FIXED @1a4ea837",
+   "verification": "resourcesConsumed.the now captures for ANY committing root whose resolved def carries consumesAllThe (SkillResolver ~:248-260), not only the empowerment swap; legacy TBS parity. Pin: root def consumesAllThe+theScaling resolves resourcesConsumed.the=80"
+  },
+  {
+   "finding": "F-PTR-75 (INT Nit)",
+   "disposition": "DUPLICATE of GENERIC stamp fix (F-PTR-75)"
+  },
+  {
+   "finding": "coverage-gap note",
+   "disposition": "FIXED -- pins added for charge+grants (deferredResolve pair), instances+authored-if (nestedGate), root consumesAllThe (resolver), headless driveFollowUps pair"
+  }
+ ],
+ "attackVectorsProbed": [
+  "two-turn charge lifecycle grants",
+  "multi-instance authored-if dedup",
+  "root-level consumesAllThe dormant path",
+  "corrupt GENERIC mint"
+ ],
+ "sealedSurfaces": [
+  "empowerment cannot re-fire on follow-ups",
+  "oncePerCast snapshot ordering",
+  "composite extras ordering",
+  "multicast empowered-skip",
+  "queuedExecutions drain bounds",
+  "save v87 hard reject"
+ ]
+}
