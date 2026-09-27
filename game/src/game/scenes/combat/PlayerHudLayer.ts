@@ -36,6 +36,10 @@ const LABEL_ABOVE_BAR = 4
 /** Phap Tu Reimagine -- one pip per The point (HUD_DOT_RADIUS ~1.5x the
  * 4px sub-bar height so the row reads clearly). */
 const THE_DOT_RADIUS = 3
+/** Pip rows stay readable only at small caps (the reimagined pool = 5);
+ * beyond this the dots overlap into a smear, so large pools (ung-the
+ * 100) ride the fill-rect lane instead. */
+const THE_DOT_LANE_MAX = 12
 
 interface HudRectGroup {
   background: Phaser.GameObjects.Rectangle
@@ -206,11 +210,14 @@ export class PlayerHudLayer {
     },
   ): void {
     const hasPool = Number.isFinite(max) && max > 0
+    const dotMax = hasPool ? Math.max(0, Math.round(max)) : 0
+    const fillLane = dotMax > THE_DOT_LANE_MAX
 
     this.setGroupVisible(this.theGroup, hasPool)
     // The reimagined readout is pips, not a fill -- the fill layer is
-    // parked permanently (background survives as the quiet track line).
-    this.theGroup.fill.setVisible(false)
+    // parked permanently for small caps, and only returns for pools
+    // too large for a readable pip row (ung-the).
+    this.theGroup.fill.setVisible(hasPool && fillLane)
 
     if (!hasPool) {
       this.theGroup.dotMax = 0
@@ -221,9 +228,17 @@ export class PlayerHudLayer {
       return
     }
 
-    const dotMax = Math.max(0, Math.round(max))
-
-    if (dotMax !== this.theGroup.dotMax) {
+    if (fillLane) {
+      // Fill-rect lane (master's ung-the shape): one scaleX bar, no pips.
+      // The label below still reads `The X / 100`.
+      this.theGroup.dotMax = dotMax
+      for (const dot of this.theGroup.dots) {
+        dot.setVisible(false)
+      }
+      const ratio = Math.min(1, Math.max(0, current / dotMax))
+      this.theGroup.fill.scaleX = ratio
+      this.theGroup.fill.setFillStyle(phapTheActive ? PLAYER_HUD_THE_ARMED_COLOR : PLAYER_HUD_THE_COLOR)
+    } else if (dotMax !== this.theGroup.dotMax) {
       this.theGroup.dotMax = dotMax
 
       while (this.theGroup.dots.length < dotMax) {
@@ -240,10 +255,11 @@ export class PlayerHudLayer {
 
     const filled = Math.min(dotMax, Math.max(0, Math.floor(current)))
 
+    // Fill lane keeps every pip hidden -- the bar carries the ratio.
     this.theGroup.dots.forEach((dot, index) => {
       const isFilled = index < filled
 
-      dot.setVisible(index < dotMax)
+      dot.setVisible(!fillLane && index < dotMax)
       dot.setFillStyle(
         isFilled
           ? (phapTheActive ? PLAYER_HUD_THE_ARMED_COLOR : PLAYER_HUD_THE_COLOR)

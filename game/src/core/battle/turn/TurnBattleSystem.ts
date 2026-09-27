@@ -2956,7 +2956,11 @@ export class TurnBattleSystem {
 
             // Queued executions carry no theBurned -- the burn is captured
             // only on commit-cast declarations, so there is no theScaling
-            // fold on this lane.
+            // fold on this lane. If a consumesAllThe def ever returns
+            // data-side WITH repeatCasts/multicast, queued executions
+            // would drain the pool at commitCast but never scale on
+            // theBurned -- restore the capture here or declare the
+            // combination unsupported in the registry.
           }
         }
       }
