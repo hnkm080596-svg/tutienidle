@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { PhaserSkillVfxDriver, type SkillVfxSurface, type SkillVfxGraphics } from './PhaserSkillVfxDriver'
-import type { SkillCueContext } from '@/presentation/skills/SkillPresentationRecipe'
+import type { SkillCue, SkillCueContext } from '@/presentation/skills/SkillPresentationRecipe'
 const source = { entityId: 'player', row: 1, column: 1 }
 const target = { entityId: 'enemy', row: 1, column: 8 }
 const cue = { primitive: 'trajectory' as const, anchor: 'target' as const, shape: 'blade' as const, offsetMs: 0, durationMs: 370 }
@@ -85,6 +85,38 @@ describe('pooled Phaser skill driver', () => {
         shape: 'impulse', offsetMs: 0, durationMs: 180, impulsePx: 8 }, context)
       expect(f.surface.actorImpulse).toHaveBeenCalledExactlyOnceWith(source, 180, 8)
     }
+  })
+  it('gates trajectory one-shots on the action dispositions as well', () => {
+    // W7 disposition pin: a blocked/charge-tick/empty cast shows the aura
+    // cast cue only - no one-shot cue may move an actor or the camera.
+    for (const disposition of ['blocked', 'charge-start', 'charge-tick', 'empty'] as const) {
+      const f = fixture()
+      const context: SkillCueContext = { ...f.context,
+        cast: { ...f.context.cast!, disposition } }
+      const handle = f.driver.open(cue, context)
+      handle.sample(10)
+      expect(f.driver.stats.active).toBe(0)
+      expect(f.draws).toHaveLength(0)
+      expect(f.surface.actorImpulse).not.toHaveBeenCalled()
+      expect(f.surface.cameraImpulse).not.toHaveBeenCalled()
+    }
+  })
+  it.each(['actor-impulse', 'camera-cue'] as const)('warns and draws nothing if a %s cue ever reaches accent', primitive => {
+    // W7 structural pin for the accent() guard: one-shot primitives must
+    // exit open() before the graphics lease; if a future dispatch change
+    // lets one through, the draw path warns loudly instead of rendering
+    // a wrong ellipse.
+    const f = fixture()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    try {
+      const drawPath = f.driver as unknown as { accent(g: SkillVfxGraphics, cue: SkillCue, color: number,
+        point: { x: number, y: number }, origin: { x: number, y: number }, elapsed: number): void }
+      const graphics = f.surface.graphics()
+      drawPath.accent(graphics, { primitive, anchor: 'source', shape: 'impulse',
+        offsetMs: 0, durationMs: 100 }, 0xffffff, { x: 1, y: 2 }, { x: 0, y: 0 }, 10)
+      expect(warn).toHaveBeenCalledExactlyOnceWith(`[SkillVfx] ${primitive} cue reached the draw path`)
+      expect(f.draws).toHaveLength(0)
+    } finally { warn.mockRestore() }
   })
   const landedContext = (f: ReturnType<typeof fixture>, overrides?: Partial<SkillCueContext>): SkillCueContext => ({
     ...f.context, phase: 'resolved' as const, cast: undefined,

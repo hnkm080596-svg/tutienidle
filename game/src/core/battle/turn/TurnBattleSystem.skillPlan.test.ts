@@ -103,6 +103,24 @@ describe('skill presentation settled facts', () => {
     expect(misses).toHaveLength(4)
     expect(misses.every(o => !o.landed && o.hpDamage === 0)).toBe(true)
   })
+  it('never synthesizes a fallback primary group when a routed primary already exists', () => {
+    // W7 structural pin (audit section 1.1 watch item): applyActionImpact
+    // unshifts a synthesized fallback (resolvedSkillId == the ROOT action
+    // skill) carrying the shared legacy `outcomes` array ONLY when no
+    // 'primary'-role group exists. The routed lane must surface its
+    // groups verbatim: exactly the routed set, one primary named after
+    // the picked payload (never the root), no extra prepended group.
+    const a: TurnSkillDefinition = { ...BASIC, id: 'pin_a', presetId: 'slash' }
+    const b: TurnSkillDefinition = { ...BASIC, id: 'pin_b', presetId: 'arcane_impact' }
+    const root: TurnSkillDefinition = { ...BASIC, id: 'pin_root', compositePicks: { poolType: 'element_basic', pool: [a, b], count: 2 } }
+    const { battle, playerParticipant, system } = battleWith(root, { rng: new FunctionCombatRng(() => 0) })
+    playerParticipant.dynamicBasic = { resolveBasic: () => BASIC, onCastResolved: () => [a, a] }
+    const declared = system.declareActorAction(battle, playerParticipant, 'special')
+    const groups = system.applyActionImpact(battle, declared).presentationGroups
+    expect(groups.map(g => g.role)).toEqual(['primary', 'composite', 'combo', 'combo'])
+    expect(groups.find(g => g.role === 'primary')!.resolvedSkillId).toBe('pin_a')
+    expect(groups.every(g => g.resolvedSkillId !== 'pin_root')).toBe(true)
+  })
   it('reports charge start as no effect and non-damaging applications as status, never dodge', () => {
     const f = battleWith({ ...STRIKE, chargeTurns: 2 })
     const declared = f.system.declareActorAction(f.battle, f.playerParticipant, 'special')
