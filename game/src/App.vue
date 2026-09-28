@@ -23,6 +23,7 @@ import { bindPresentationActive } from './presentation/bindPresentationActive'
 import { bindCombatAudio } from './presentation/audio/combatAudioBinding'
 import { bindUiAudio } from './presentation/audio/uiAudioBinding'
 import { bindAmbientAudio } from './presentation/audio/ambientAudioDriver'
+import { AudioManager } from './core/audio/AudioManager'
 import { setReducedShakeEnabled } from './presentation/vfx/screenShakePolicy'
 import { useAudioStore } from './stores/audio'
 import { RafClockSource } from './presentation/clock/RafClockSource'
@@ -220,9 +221,16 @@ watch(
 )
 
 // Autoplay policy: unlock AudioContext on the first pointer gesture anywhere
-// (Phaser canvas clicks never reach GameButton). `once` keeps it one-shot.
+// (Phaser canvas clicks never reach GameButton). Not `once`: a transiently
+// failed unlock (Tone.start() rejects) must leave the listener armed so a
+// later gesture still retries - it is disarmed when the chain reports ready.
 const unlockAudioOnFirstGesture = () => useAudioStore().unlock()
-window.addEventListener('pointerdown', unlockAudioOnFirstGesture, { once: true })
+window.addEventListener('pointerdown', unlockAudioOnFirstGesture)
+let disarmAudioUnlock: (() => void) | null = null
+disarmAudioUnlock = AudioManager.getInstance().onReady(() => {
+  window.removeEventListener('pointerdown', unlockAudioOnFirstGesture)
+  disarmAudioUnlock?.()
+})
 
 provide(PHASER_SCENE_ADAPTER_KEY, phaserSceneAdapter)
 provide(ASSET_BUNDLE_MANAGER_KEY, assetBundleManager)

@@ -543,13 +543,11 @@ class AudioManagerImpl {
       }
 
       const src = this.pickDecodedSrc(id, def.src)
-      if (src === undefined) {
-        // src requested but undecoded: if its bytes are parked (context
-        // wasn't ready or a decode failed), kick a bounded retry - the
-        // first post-failure play stays silent, later plays succeed.
-        const srcs = typeof def.src === 'string' ? (def.src === '' ? [] : [def.src]) : def.src
-        for (const s of srcs) this.retryDecode(s)
-      }
+      // Any src with parked bytes (context wasn't ready or a decode
+      // failed) gets a bounded retry kick, not only when the whole cue
+      // is undecoded - a partially-decoded variant set heals this way.
+      const srcs = typeof def.src === 'string' ? (def.src === '' ? [] : [def.src]) : def.src
+      for (const s of srcs) this.retryDecode(s)
       if (src !== undefined) {
         this.cueCooldownAt.set(id, now)
         this.spawnPlayer(src, def)
@@ -730,6 +728,10 @@ class AudioManagerImpl {
     if (def === undefined) return
     const src = this.pickDecodedSrc(id, def.src)
     if (src === undefined) {
+      // Music lane gets the same decode-retry kick as playCue - a
+      // transient decode failure must not park the track forever.
+      const srcs = typeof def.src === 'string' ? (def.src === '' ? [] : [def.src]) : def.src
+      for (const s of srcs) this.retryDecode(s)
       this.logSilent(id)
       return
     }
@@ -756,15 +758,17 @@ class AudioManagerImpl {
       this.playingMusicId = id
       playerRef.start()
       this.pendingMusicFadeSec = 0
-    } catch (err) {
-      // Same strand guard as spawnPlayer - drop the failed player.
+    } catch {
+      // Same strand guard as spawnPlayer - drop the failed player, then
+      // stay silent. No rethrow: applyDesiredMusic runs inside the
+      // coordinator's unguarded notify() loop and unlock()'s tail, so a
+      // throw here would abort a route commit or roll back all audio.
       if (player) {
         this.players.delete(player)
         try { player.dispose() } catch { /* already disposed */ }
       }
       this.musicPlayer = null
       this.playingMusicId = null
-      throw err
     }
   }
 

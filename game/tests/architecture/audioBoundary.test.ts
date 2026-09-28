@@ -84,12 +84,15 @@ describe('audio boundary', () => {
     () => {
       // Spec W7 routes audio through useAudioStore().cue. The only files
       // allowed to touch AudioManager directly are the audio internals, the
-      // dom-audio bundle lane, and the pinia-free primitives (GameButton and
-      // Chip must mount without an active pinia - see InkWashPrimitives.test).
+      // dom-audio bundle lane, the pinia-free primitives (GameButton and
+      // Chip must mount without an active pinia - see InkWashPrimitives.test),
+      // and App.vue as the composition root for the unlock-gesture listener
+      // (onReady disarm must observe the manager, not the store).
       const ALLOWLIST = new Set([
         'presentation/assets/AssetBundleManager.ts',
         'components/common/GameButton.vue',
         'components/common/primitives/Chip.vue',
+        'App.vue',
       ])
       const offenders: string[] = []
       for (const file of srcCorpus(SRC_DIR)) {

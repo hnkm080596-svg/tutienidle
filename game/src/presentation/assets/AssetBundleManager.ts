@@ -24,6 +24,11 @@ import {
 import type { AssetLoaderScene } from '@/game/scenes/AssetLoaderScene'
 import { AudioManager } from '@/core/audio/AudioManager'
 
+// Fetch attempts per dom-audio src before the missing-mark sticks for the
+// session - one transient network failure must not permanently silence a
+// cue; two failed fetches is enough evidence the file is absent.
+const DOM_AUDIO_FETCH_ATTEMPTS = 2
+
 export type DomImageLoader = (url: string, signal?: AbortSignal) => Promise<void>
 
 /**
@@ -128,9 +133,11 @@ export class AssetBundleManager implements AssetPort {
 
   private readonly knownDescriptors = new Map<string, AssetResourceDescriptor>()
   private readonly loadedResources = new Set<string>()
-  // Optional (dom-audio) resources that failed to load: recorded so repeat
-  // requests resolve immediately without re-fetching a known-missing file.
-  private readonly missingResources = new Set<string>()
+  // Optional (dom-audio) resources: failed fetch count per key. One
+  // transient failure must not silence an src forever - a later request
+  // gets one more try; past DOM_AUDIO_FETCH_ATTEMPTS the key resolves
+  // immediately without re-fetching a known-missing file.
+  private readonly missingResources = new Map<string, number>()
   private readonly inFlightLoads = new Map<string, Promise<void>>()
   private readonly loaderSceneResolvers = new Set<(scene: AssetLoaderScene) => void>()
   private disposed = false
@@ -341,7 +348,8 @@ export class AssetBundleManager implements AssetPort {
     desc: DomAudioResourceDescriptor,
     signal?: AbortSignal,
   ): Promise<void> {
-    if (this.isResourceLoaded(desc.key) || this.missingResources.has(desc.key)) {
+    const tries = this.missingResources.get(desc.key) ?? 0
+    if (this.isResourceLoaded(desc.key) || tries >= DOM_AUDIO_FETCH_ATTEMPTS) {
       return Promise.resolve()
     }
 
@@ -356,7 +364,7 @@ export class AssetBundleManager implements AssetPort {
         AudioManager.getInstance().attachEncodedBuffer(desc.key, bytes)
         this.loadedResources.add(desc.key)
       } catch {
-        this.missingResources.add(desc.key)
+        this.missingResources.set(desc.key, tries + 1)
       } finally {
         if (this.inFlightLoads.get(desc.key) === loadPromise) {
           this.inFlightLoads.delete(desc.key)

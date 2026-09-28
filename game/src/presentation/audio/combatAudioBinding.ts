@@ -34,7 +34,6 @@ const STATIC_CUES: ReadonlyArray<readonly [string, string]> = [
   ['talent_survive_lethal', 'combat.survive_lethal'],
   ['turn_ready', 'combat.turn_ready'],
   ['status_vfx_removed', 'combat.buff.expire'],
-  ['essence_stream_arrival', 'combat.essence'],
   ['combat_scene_exit', 'combat.exit'],
   ['tribulation_started', 'tribulation.begin'],
   ['tribulation_lightning', 'tribulation.thunder'],
@@ -152,6 +151,11 @@ const PAYLOAD_CUES: ReadonlyArray<readonly [string, (event: never) => string | u
   // manifest as a forward slot for a distinct kill-confirm asset; rebind
   // when that asset lands and the pair is meant to layer.
   ['kill', () => undefined],
+  // 'essence_stream_arrival' fires after every essence reward_particle
+  // (which already voices combat.essence at drop) - mapping both would
+  // double-chime past the 80ms cooldown. It is a progress signal for the
+  // Luyen The bar, not a sound trigger.
+  ['essence_stream_arrival', () => undefined],
   // 'damage' fires alongside hit/critical — audible only when the PLAYER
   // takes the hit (combat.hurt), else silent to avoid double-triggering.
   [

@@ -421,9 +421,12 @@ describe('W4 dom-audio lane', () => {
       const manager = new AssetBundleManager({ loaderScene, domImageLoader, domAudioLoader })
       await expect(manager.ensureLoaded(['audio-combat'])).resolves.toBeUndefined()
       expect(manager.isResourceLoaded('assets/audio/sfx/missing.ogg')).toBe(false)
-      // missing mark: second ensure does not re-fetch
+      // bounded retry: second ensure re-fetches once (transient failures
+      // must not silence a src forever), third+ resolves without fetching
       await manager.ensureLoaded(['audio-combat'])
-      expect(domAudioLoader).toHaveBeenCalledTimes(1)
+      expect(domAudioLoader).toHaveBeenCalledTimes(2)
+      await manager.ensureLoaded(['audio-combat'])
+      expect(domAudioLoader).toHaveBeenCalledTimes(2)
     } finally {
       restore()
     }

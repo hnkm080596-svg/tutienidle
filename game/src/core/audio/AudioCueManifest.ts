@@ -41,7 +41,8 @@ export type SynthSoundId =
 export type AudioCueId = string
 
 export interface AudioCueDef {
-  // '' = reserved silent slot; string[] = codec/variant fallbacks tried in order.
+  // '' = reserved silent slot; string[] = variant pool (round-robin over
+  // the decoded subset - every entry is fetched independently).
   readonly src: string | readonly string[]
   readonly channel: AudioChannelId
   readonly volume?: number

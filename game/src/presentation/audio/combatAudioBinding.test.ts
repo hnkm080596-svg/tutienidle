@@ -37,7 +37,6 @@ describe('bindCombatAudio', () => {
       ['talent_survive_lethal', 'combat.survive_lethal'],
       ['turn_ready', 'combat.turn_ready'],
       ['status_vfx_removed', 'combat.buff.expire'],
-      ['essence_stream_arrival', 'combat.essence'],
           ['combat_scene_exit', 'combat.exit'],
       ['tribulation_started', 'tribulation.begin'],
       ['tribulation_lightning', 'tribulation.thunder'],
@@ -61,6 +60,11 @@ describe('bindCombatAudio', () => {
     bindCombatAudio(bus)
 
     bus.emit('kill', { type: 'kill', sourceId: 'player', targetId: 'enemy-1' })
+    expect(cueSpy).not.toHaveBeenCalled()
+
+    // essence_stream_arrival is likewise silent - reward_particle(essence)
+    // already voices combat.essence at drop time.
+    bus.emit('essence_stream_arrival', { type: 'essence_stream_arrival' })
     expect(cueSpy).not.toHaveBeenCalled()
   })
 
