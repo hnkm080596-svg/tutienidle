@@ -32,7 +32,13 @@ for (const file of FILES) {
   // domain bus events - sweeping them would let a future bound audio
   // event name be falsely satisfied by an unrelated component emit.
   if (file.fromSrc.endsWith('.test.ts') || file.fromSrc.endsWith('.vue')) continue
-  for (const m of uncommented(file.text, file.fromSrc).matchAll(/\bemit\s*(?:<[^>]*>)?\(\s*['"`]([a-z_0-9]+)['"`]/g)) {
+  const cleanText = uncommented(file.text, file.fromSrc)
+  for (const m of cleanText.matchAll(/\bemit\s*(?:<[^>]*>)?\(\s*['"`]([a-z_0-9]+)['"`]/g)) {
+    // `emit('x')` inside a string literal is data, not a real emit -
+    // quote-parity on the line filters it out.
+    const lineStart = cleanText.lastIndexOf('\n', m.index ?? 0) + 1
+    const before = cleanText.slice(lineStart, m.index)
+    if (((before.match(/['"`]/g) ?? []).length) % 2 === 1) continue
     EMITTED.add(m[1]!)
   }
 }
@@ -98,7 +104,8 @@ describe('audio binding wiring', () => {
           }
           return
         }
-        if (!literal.includes('.')) return
+        // Undotted literals are never manifest ids either - `cue('bogus')`
+        // must flag just like `cue('bogus.id')`.
         if (resolveAudioCue(literal) === undefined) {
           violations.add(`${fromSrc} -> ${literal}`)
         }
@@ -125,6 +132,15 @@ describe('audio binding wiring', () => {
         // through the same literal resolution pipeline.
         const aliases: string[] = []
         for (const dm of text.matchAll(/\b(?:const|let|var)\s*\{[^}]*\}/g)) {
+          for (const am of dm[0].matchAll(/\b(?:cue|playCue)\s*:\s*([A-Za-z_]\w*)/g)) {
+            aliases.push(am[1]!)
+          }
+        }
+        // Parameter destructuring `function f({cue: q})` / `({cue: q}) =>`
+        // renames the seam inside the call - collect those aliases too.
+        // The `: { ... }` type annotation may itself carry braces and
+        // parens, so match it loosely (up to the first `)`).
+        for (const dm of text.matchAll(/\(\s*\{[^}]*\}\s*(?::[^)]*)?\)/g)) {
           for (const am of dm[0].matchAll(/\b(?:cue|playCue)\s*:\s*([A-Za-z_]\w*)/g)) {
             aliases.push(am[1]!)
           }
@@ -160,7 +176,14 @@ describe('audio binding wiring', () => {
           // `{`/`:` on the SAME line right after `)`. Allowing \n here
           // let `cue('bogus')\n{...}` skip the check as a fake shorthand.
           const afterCall = text.slice((m.index ?? 0) + m[0].length)
-          if (/^\s*$/.test(beforeOnLine) && /^[ \t]*[:{]/.test(afterCall)) continue
+          // `{` right after `)` is a method-shorthand body. `:` is only a
+          // declaration when a TYPE name follows (`cue(id): Ret {`); a
+          // same-line `cue('x') : 1` is a fake-shorthand shape and is not
+          // exempted.
+          if (
+            /^\s*$/.test(beforeOnLine) &&
+            (/^[ \t]*\{/.test(afterCall) || /^[ \t]*:\s*[A-Za-z_]/.test(afterCall))
+          ) continue
           if (prefixLen === 0 || m[0][0] !== '.') {
             const callee = /^[A-Za-z_]\w*/.exec(m[0].slice(prefixLen))![0]
             if (localNames.has(callee)) continue
@@ -185,7 +208,7 @@ describe('audio binding wiring', () => {
           // object literal. The ternary arm ends the match at the `?`
           // lookahead so the tail walk sweeps both branches.
           const decl =
-            `\\b${ident}\\s*(?::[^=\\n]+)?(?:\\?\\?=|\\|\\|=|=)\\s*` +
+            `\\b${ident}\\s*(?::[^=\\n]+)?(?:\\?\\?=|\\|\\|=|&&=|\\+=|=)\\s*` +
             `(?:\\(*\\s*(?=['"\`])|[\\[{]|[^;="'\`\\n]*?\\?\\s*(?=['"\`]))` +
             `|\\b${ident}\\s*:\\s*(?=['"\`])`
           for (const dm of text.matchAll(new RegExp(decl, 'g'))) {
@@ -266,7 +289,7 @@ describe('audio binding wiring', () => {
         // flag escapes embedded in identifier-ish text. (A `\uXXXX` inside
         // a plain string literal is not matched because a word char must
         // sit immediately before the backslash.)
-        for (const vm of text.matchAll(/[A-Za-z_$]\\u[0-9a-fA-F]{4}/g)) {
+        for (const vm of text.matchAll(/[A-Za-z_$]\\u(?:[0-9a-fA-F]{4}|\{[0-9a-fA-F]+\})/g)) {
           // `\uXXXX` inside a plain string literal ('caf\u0065') is data,
           // not an identifier escape - skip when the match sits inside
           // quotes on its line (odd quote count before the backslash).

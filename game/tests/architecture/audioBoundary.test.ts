@@ -20,13 +20,13 @@ import { uncommented } from './helpers/commentStrip'
 
 const SRC_DIR = join(process.cwd(), 'src')
 
-const IMPORT_RE = /(?:import|export)\s+(?:type\s+)?(?:[\w*{}\s,]*?\s+from\s+)?['"]([^'"]+)['"]/g
+const IMPORT_RE = /(?:import|export)\b\s*(?:type\b\s*)?(?:[\w*{}\s,]*?\s*from\s*)?['"]([^'"]+)['"]/g
 // Dynamic/lazy import lanes - `await import('tone')` and `require('tone')`
 // bypass the static regex, and a lazy audio stack is the realistic smuggle.
 // Comment spans between `(` and the specifier, and backtick specifiers,
 // must not slip past the literal-quote extractor either.
 const DYNAMIC_IMPORT_RE =
-  /(?:import|require)\s*\(\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*['"`]([^'"`]+)['"`]\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*\)/g
+  /(?:import|require)\s*\(\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*['"`]([^'"`]+)['"`]/g
 
 
 function importSpecifiers(text: string, fileName: string): string[] {

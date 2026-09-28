@@ -27,7 +27,10 @@ export function listAllTs(dir: string): string[] {
     const full = join(dir, entry)
     if (statSync(full).isDirectory()) {
       out.push(...listAllTs(full))
-    } else if (entry.endsWith('.ts') && !entry.endsWith('.d.ts')) {
+    } else if (
+      ['.ts', '.tsx', '.js', '.jsx', '.mjs'].some((ext) => entry.endsWith(ext)) &&
+      !entry.endsWith('.d.ts')
+    ) {
       out.push(full)
     }
   }
