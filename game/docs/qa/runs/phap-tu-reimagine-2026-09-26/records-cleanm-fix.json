@@ -1,0 +1,14 @@
+{
+  "producer": "coordinator",
+  "verdict": "clean-M fix batches @80014517 + @89f91334",
+  "evidence": "npm run type-check clean; npx vitest run skilldef+turn+proc+the-tu+player+runtime+adapter+ascii = 111 files / 1102 tests PASS (@80014517) and 91 files / 745 tests PASS (@89f91334); 2 new pin files",
+  "fixes": [
+    "RESOURCE_IDS closed set {the,mana,ward} extended to every authored resourceId surface: resource_at_least conditions (malformed_condition) + gain_resource/consume_resource ops (invalid_field_value) -- define-time fault replaces mid-execute crash past the decline lane; renamed from RESOURCE_QUERY_IDS, docblock covers all surfaces; pin SkillDefinitionRegistry.resourceClosedSet.test.ts (4 cases)",
+    "charge-resolve arm split three ways: WHIFF (chargedSkill==null -> silent), DANGLING (!armedCharged -> warn+castBlocked), DECLINE (chargedSkill!=null && routed===null -> warn+castBlocked)",
+    "TurnSkillAction consumeResourceFor routes 'the' through consumeThe (clamped debit); resetBattleScopedResources -> drainAllThe; stale docblocks corrected (TheEconomy gain channel, adapter write sites, wired-the-channel intent, landedConsequences lane-intent trap); dead SkillResolverError re-export removed",
+    "member[0] semantics comment at validateTargetIntent; test resourceIds mp->mana",
+    "composite extras RESOLVE before the commit inside executePlan -- a member def the machinery cannot express declines the whole cast pre-commit (no partial mutation masquerading as no-op); extras still execute ahead of primary steps in declaration order; pin SkillExecutor.compositePreCommitDecline.test.ts",
+    "CombatProcSystem once-gate counts PAID rolls only (unfunded grant no longer eats a payable grant's roll)",
+    "grantBasicLandedIncome accepts resolved-payload id OR root authored def id -- empowered variants of the basic still pay income"
+  ]
+}

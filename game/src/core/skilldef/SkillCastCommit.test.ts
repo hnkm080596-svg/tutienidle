@@ -156,19 +156,16 @@ describe('SkillCastCommit -- CAST_COMMIT seam (R-S9)', () => {
       cooldownTurns: 3,
       chargeTurns: 1,
     })
-    // charge-init declares queue NO follow-ups (TBS isCharging parity).
+    // charge-init declares queue NO follow-ups (TBS isCharging parity) --
+    // the multicast/repeat x chargeTurns combinations are forbidden at
+    // registry validation, so a queued exec can never silently no-op.
     const multicastDef = makeDef({
       cadence: { cooldownTurns: 3, chargeTurns: 1 },
       subcasts: { multicast: { chance: 1, maxExtraCasts: 2 } },
     })
-    const harness2 = makeHarness({ defs: [multicastDef], rng: spyRng() })
-    spawn(harness2, PLAYER)
-    spawn(harness2, ENEMY_A)
-    const plan2 = harness2.resolver.resolve(makeInput(multicastDef))
-    harness2.executor.execute(plan2, makeInput(multicastDef))
-    expect(
-      harness2.state.executedOps.filter((o) => o.type === 'deal_damage'),
-    ).toHaveLength(1)
+    expect(() =>
+      makeHarness({ defs: [multicastDef], rng: spyRng() }),
+    ).toThrow(/subcasts and cadence\.chargeTurns are mutually exclusive/)
   })
 
   it('settles consume_resource BEFORE gain_resource ops (gain-after-consume)', () => {

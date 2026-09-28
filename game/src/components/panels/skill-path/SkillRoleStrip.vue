@@ -11,18 +11,23 @@
 // label (Kiem Pho / Ngu Kiem Dao); special/ultimate that resolve to
 // nothing render muted.
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import SlotView from '../../common/SlotView.vue'
 import Chip from '../../common/primitives/Chip.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { usePlayerStore } from '@/stores/player'
 import { MORTAL_DEFAULT_BASIC_ID, MORTAL_PRECURSOR_SKILL_IDS } from '@/core/skill/MortalPrecursors'
+import { getNodeLevel, ownedNodeIds, specializationClaimingNodes } from '@/core/progression/NodeSystem'
 import type { Skill } from '@/core/skill/Skill'
+import type { SkillSpecialization } from '@/core/skill/SkillSpecialization'
 
 const gameManager = useGameManager()
 const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
 const { selectSkillSpecialization, setMortalBasicSkill } = useProgressionActions()
+const { t } = useI18n()
 
 type RoleKey = 'basic' | 'special' | 'ultimate'
 
@@ -53,6 +58,10 @@ const mortalChoices = computed<Skill[]>(() => {
     .map((id) => gameManager.skillManager.get(id))
     .filter((skill): skill is Skill => skill !== undefined)
 })
+
+// mortal-pick + specialization writes reject mid-battle (ops gate) - the
+// chips disable up front so the affordance doesn't look live.
+const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 
 interface RoleCard {
   key: RoleKey
@@ -127,6 +136,45 @@ function isPickedPrecursor(skillId: string): boolean {
   // is the defensive runtime default, not a creation grant.
   return (player.mortalBasicSkillId ?? MORTAL_DEFAULT_BASIC_ID) === skillId
 }
+
+// Three-path design (2026-09-25) -- capstone/variant nodes own the
+// claim on the specialization they select. A claimed-but-unowned spec
+// renders locked instead of a chip that silently no-ops (the op
+// rejects it anyway); unclaimed specs stay free-switch.
+function specLocked(skillId: string, specId: string): boolean {
+  // Reads the same ownership union as the authoritative gate
+  // (ownedNodeIds = nodeLevels + purchasedNodeIds mirror): any owned
+  // claimant unlocks the spec, not just the first registry hit.
+  const claimants = specializationClaimingNodes(gameManager.nodeRegistry, skillId, specId)
+  const owned = ownedNodeIds(player.$state)
+
+  return claimants.length > 0 && !claimants.some((claimant) => owned.includes(claimant.id))
+}
+
+function specTooltip(skill: Skill, spec: SkillSpecialization) {
+  // Same plural-claimant + ownership-union read as specLocked: the locked
+  // tooltip names an unowned claimant, and any owned claimant frees the spec.
+  const claimants = specializationClaimingNodes(gameManager.nodeRegistry, skill.id, spec.id)
+  const owned = ownedNodeIds(player.$state)
+
+  const lockedClaimant = claimants.find((node) => !owned.includes(node.id))
+  const anyOwned = claimants.some((node) => owned.includes(node.id))
+
+  if (claimants.length > 0 && !anyOwned && lockedClaimant !== undefined) {
+    const permanentlyExcluded = (lockedClaimant.prerequisites ?? []).some(
+      (prereq) =>
+        prereq.kind === 'excludesNode' && getNodeLevel(player.$state, prereq.nodeId) >= 1,
+    )
+
+    if (permanentlyExcluded) {
+      return { title: spec.name, description: t('panels.skillPath.roleStrip.lockedByRival') }
+    }
+
+    return { title: spec.name, description: t('panels.skillPath.roleStrip.unlockedByNode', { name: lockedClaimant.name }) }
+  }
+
+  return { title: spec.name, description: spec.description }
+}
 </script>
 
 <template>
@@ -152,10 +200,15 @@ function isPickedPrecursor(skillId: string): boolean {
         </template>
 
         <template v-else>
+          <!-- Phap Tu Reimagine (D17) -- the special card's tooltip must
+               carry the authored Trang lines (cost %MaxLL + duration +
+               effect + the Ho The consequence); the Skill description is
+               the authored channel, previously dropped here. -->
           <SlotView
             class="skill-role__icon"
             :item="roleCards[key].skill ?? null"
             :label="roleCards[key].name ?? ''"
+            :description="roleCards[key].skill?.description"
           />
           <span v-if="roleCards[key].skill" class="skill-role__level">
             Lv. {{ roleCards[key].skill!.level }}/{{ roleCards[key].skill!.maxLevel }}
@@ -174,6 +227,7 @@ function isPickedPrecursor(skillId: string): boolean {
         :key="skill.id"
         class="role-specializations__btn"
         :active="isPickedPrecursor(skill.id)"
+        :disabled="inBattle"
         v-tooltip="{ title: skill.name, description: skill.description }"
         @click="setMortalBasicSkill(skill.id)"
       >
@@ -191,7 +245,8 @@ function isPickedPrecursor(skillId: string): boolean {
         :key="spec.id"
         class="role-specializations__btn"
         :active="openedSkill.selectedSpecializationId === spec.id"
-        v-tooltip="{ title: spec.name, description: spec.description }"
+        :disabled="inBattle || specLocked(openedSkill.id, spec.id)"
+        v-tooltip="specTooltip(openedSkill, spec)"
         @click="selectSkillSpecialization(openedSkill.id, spec.id)"
       >
         {{ spec.name }}

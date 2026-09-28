@@ -1,0 +1,29 @@
+{
+ "verdict": "SEALED",
+ "pin": "8b19829c",
+ "reviewer": "devin-1fab36ae384c4a5dab500074f69c5ce7",
+ "findings": [
+  {
+   "n": "F1",
+   "severity": "Low",
+   "summary": "gateOnApplyResult/oncePerCast on non-invoking op types/positions silently dropped; no registry fault (SkillResolver:2055/2083/2106 vs Registry:870-1199)"
+  },
+  {
+   "n": "F2",
+   "severity": "Low",
+   "summary": "empowerment+multicast/repeatCasts legal but source 'empowered' excluded from multicast roll (TBS:2906-2911); unreachable"
+  },
+  {
+   "n": "F3",
+   "severity": "Nit",
+   "summary": "non-SkillResolverError inside composite-extra pre-commit resolve rethrows past decline lane (TurnSkillPlanRuntime:295-301); unreachable via adapter"
+  },
+  {
+   "n": "F4",
+   "severity": "coverage",
+   "summary": "reactive-bypass commitsCast=true could reach resolver empowerment re-check; unreachable (no queuedAction procs); documented"
+  }
+ ],
+ "verification": "type-check PASS; vitest 91 files / 749 tests PASS",
+ "report": "docs/qa/2026-09-27-phap-tu-reim-int-int.md (reviewer worktree, not pushed)"
+}

@@ -795,14 +795,18 @@ export class GameManagerTurnBattleOps {
         return
       }
       // Runtime acknowledgement owns settlement; rejected work cannot advance.
-      this.driveStepWork(signal)
-      // A rejected drive leaves the parked entry behind; a later turn's ACK
-      // for the same signal would then fire this turn's done() - drop it.
-      if (this.pendingStepDone[signal] !== undefined) {
-        console.warn(
-          `[TurnBattle] step '${signal}' drive was rejected - dropping the stale pending entry`,
-        )
-        this.pendingStepDone[signal] = undefined
+      // Clear the parked settle before driving: an accepted drive settles
+      // through the runtime's own stepCompletionSink, and on a silent reject
+      // or a thrown domain fault nothing stale is left for a later turn's
+      // ACK of the same signal to fire this turn's done(). The step must
+      // still complete either way -- otherwise the turn token stays claimed
+      // and advanceCombat early-returns forever (silent freeze on a timer
+      // thread). done() runs in finally, then the fault propagates loud.
+      this.pendingStepDone[signal] = undefined
+      try {
+        this.driveStepWork(signal)
+      } finally {
+        done()
       }
     }
     let timer = setTimeout(fallback, ANIMATION_FALLBACK_MS)
@@ -1014,6 +1018,13 @@ export class GameManagerTurnBattleOps {
    * fighting). The TurnBattle object is retained after victory/defeat so
    * consumers can read the terminal result -- callers that need an
    * in-combat gate must use this query, not `getTurnBattle() !== null`.
+   *
+   * Boundary convention: writes whose effect would be combat-visible on
+   * the live battle (skills, nodes, passives applied to the minted
+   * participant snapshot) REJECT on this gate, because a mid-battle grant
+   * silently fails to reach the snapshot. Writes that are battle-invisible
+   * (body-chapter investment, equipment, essence, minor breakthroughs)
+   * may persist ungated - they take effect on the next battle.
    */
   isTurnBattleInProgress(): boolean {
     return this.turnBattle !== null && isBattleInProgress(this.turnBattle.state)
@@ -1235,7 +1246,7 @@ export class GameManagerTurnBattleOps {
       resource: new EntityResourceAdapter(resolveEntity, {
         // skilldef M4 -- skill costs ride consume_resource ops.
         // 'mana' -> consumeResourceFor (the mana-cost writer: raw
-        // debit, no clamp, the insufficient check gates first);
+        // debit floored at zero, the insufficient check gates first);
         // 'ward' -> EntityVitalsSystem spend/grant (the vitals
         // authority owns shield mutation, never a raw field write).
         mana: {
@@ -1349,19 +1360,21 @@ export class GameManagerTurnBattleOps {
     return runtime
   }
 
-  /** The participant-local kit-clone defs riding each player's skill
-      slots (grantsBuffsAtBuild) -- the battle-local registry replaces
-      same-id base defs with these clones. */
+  /** The participant-local kit-clone defs riding the primary player's
+      skill slots (grantsBuffsAtBuild) -- the battle-local registry
+      replaces same-id base defs with these clones. Only the primary
+      player carries a kit (players[0] convention); scanning companions
+      would register a second clone of a colliding definition id and
+      fault at BuffRegistry.register. */
   private collectKitCloneBuffs(): BuffDefinition[] {
     const battle = this.turnBattle
-    if (battle === null) {
+    const primary = battle?.players[0]
+    if (primary === undefined) {
       return []
     }
     const clones: BuffDefinition[] = []
-    for (const participant of battle.players) {
-      for (const slot of [participant.basic, participant.special?.skill, participant.ultimate?.skill]) {
-        clones.push(...(slot?.grantsBuffsAtBuild ?? []))
-      }
+    for (const slot of [primary.basic, primary.special?.skill, primary.ultimate?.skill]) {
+      clones.push(...(slot?.grantsBuffsAtBuild ?? []))
     }
     return clones
   }

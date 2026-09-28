@@ -1,0 +1,14 @@
+{
+  "state": {
+    "productStateId": "e930eaa3ffbbf566dfdaaed858328eb902c377151961249a6038852d294ead08",
+    "contractId": "646e81317d47bc6029e7fbdff98a4672daf20091c54408ff15e606fba82228e1",
+    "attackModelId": "cd6fe5a6e0e5d07572a294cd950245f68459f0f67d0dc82adc636973fba983b2",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+  },
+  "invalidated": {
+    "evidence": 4,
+    "reviews": 6,
+    "cycles": 0,
+    "coverage": 0
+  }
+}

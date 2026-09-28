@@ -1,0 +1,40 @@
+{
+  "run": "phap-tu-reimagine-2026-09-26",
+  "reviewId": "REV-PTR-INT-D1",
+  "reviewer": "devin-e8b10ba8dc1b40d8838cfe9e3a4b51ef",
+  "phase": "NOVEL_SYNTHESIS",
+  "pin": "0eb0c574",
+  "verdict": "FINDINGS -- 3x Low, all vitest-proven; no Critical/High/Medium",
+  "reportPath": "docs/qa/runs/phap-tu-reimagine-2026-09-26/review-intd-0eb0c574.md (reviewer worktree)",
+  "repros": "src/core/skilldef/SkillExecutor.intReview.test.ts (5/5 pass, type-check clean) -- reviewer worktree only",
+  "adjudication": [
+    {
+      "finding": "F-PTR-56 / INT-01",
+      "claim": "LegacySkillAdapter.ts:194-211 non-damaging for_each_target lane lacks the damaging lane's per-target target_alive wrap -> dead declared member burns the sinh_co_chu self-latch while sinh_co skips -> van_moc window starved.",
+      "disposition": "REJECTED NON_ACTIONABLE (latent)",
+      "verification": "affected_targets resolves to input.declaredTargetIds (SkillResolver.ts:523); producers fill declared.affected from collectTurnTargets (TurnSkillAction.ts:793) which filters `living` -- dead targets cannot reach the non-damaging lane through declaration-time target collection. routeExtraCast also maps live extraTargets (TurnSkillPlanRuntime.ts:319). Reviewer itself labels reachability 'latent (all producers alive-filter)'.",
+      "lesson": "if any producer ever admits dead targets into declared.affected, the non-damaging lane needs the same per-target target_alive wrap as the damaging lane."
+    },
+    {
+      "finding": "F-PTR-57 / INT-02",
+      "claim": "resolvePlanCost percentOfMax NaN -> plan.cost.amount=NaN -> PRECHECK `current < NaN` passes -> commit + NaN consume op; production EntityResourceAdapter faults mid-commit where legacy failed closed.",
+      "disposition": "REJECTED NON_ACTIONABLE (crafted-only)",
+      "verification": "NaN requires cost.percentOfMax NaN (a malformed def literal -- data bug in authored defs, not reachable via gameplay or crafted saves) or maxMp stat NaN (deeper stat corruption). Only producer in the repo: PHAP_TU_TRANG_COST_PERCENT_OF_MAX = 0.3 finite literal (PhapTuSkills.ts:35, stamped at CultivationPathRegistry.ts:419). Math.max(0, maxMp * percentOfMax) at SkillResolver.ts:338 with finite inputs cannot yield NaN.",
+      "lesson": "if defs ever gain computed/dynamic percentOfMax costs, clamp Number.isFinite in resolvePlanCost."
+    },
+    {
+      "finding": "F-PTR-58 / INT-03",
+      "claim": "water rider's nested `if target_hit_landed` compiles to a second `gate:` -> landed-gate hooks re-fire on the same hit op ids -> runLandedHitProcs/resolveTakenWindow double-roll.",
+      "disposition": "REJECTED NON_ACTIONABLE (inert today; def shape spec-pinned)",
+      "verification": "The nested gate is spec-pinned def structure (empowerment test :120-124 asserts it; flatten verified RED and reverted earlier this run). Double-roll consumers: onImpactLanded/on_hit_proc carriers exist only on The-Tu PLAYER-side buffs (TheTuBuffs.ts:64,166,176 phan_chinh/ho_mon counters/follow-ups -- player kit). Enemy buffs are statModifiers-only (FoundationEnemies.ts phases/enrage) -- no enemy carries a target-side landed hook, and enemies never cast the Phap Tu empowered water basic (player path kit). Reviewer agrees: 'Inert today... becomes High if any onImpactLanded/on_hit_proc carrier ever reaches a water-basic target'.",
+      "lesson": "dedupe landed-gate hook registration on shared hit op ids BEFORE any enemy-side landed-hook carrier (or any proc carrier reachable on a water-basic target) ships."
+    }
+  ],
+  "sealedSurfaces": [
+    "oncePerCast dedup (priorLandedHitOpIds snapshot)",
+    "Ho The DR guards",
+    "save v87 gates (inspection only -- no crafted-save runtime harness)",
+    "retirement residue",
+    "bound-marker lifecycle"
+  ]
+}

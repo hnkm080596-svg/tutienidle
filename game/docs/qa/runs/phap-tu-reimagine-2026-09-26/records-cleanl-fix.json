@@ -1,0 +1,12 @@
+{
+  "producer": "coordinator",
+  "verdict": "clean-L fix batch @97c41d8e",
+  "evidence": "npm run type-check clean; npx vitest run battle+skilldef+buff2+the-tu+player+bridges+ascii = 138 files / 1385 tests PASS; new pin SkillResolver.hitLandedGate.test.ts 2/2",
+  "fixes": [
+    "consumeThe added to TheEconomy -- single write site for the decreasing debit; adapter routes through it",
+    "validateValueQuery delegates target to validateTargetIntent -- same lane/loop_target policy as condition targets",
+    "resource_* query resourceId constrained to closed set {the,mana,ward} mirroring runtime readers",
+    "routeCast/routeExtraCast convert SkillResolverError -> null (loud-decline lane: reportUnroutedCast + castBlocked)",
+    "docblocks: resetBattleScopedResources call path + override-path leak; ally-window whiffed-resolve sibling edge; phapTheActive mirror note; unroutedCast dedup-key wording; periodic-growth multi-feed authored-legal note"
+  ]
+}

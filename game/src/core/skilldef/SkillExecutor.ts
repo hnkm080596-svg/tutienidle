@@ -15,10 +15,7 @@
 //   surface (executor requests, the SkillCombatRuntimeState owner
 //   writes); resource cost rides the canonical ConsumeResourceOperation.
 
-import type {
-  CombatEntityId,
-  CombatOperationId,
-} from '../battle/contracts/ids'
+import type { CombatOperationId } from '../battle/contracts/ids'
 import type {
   CombatOperationResult,
   CombatOperationResultStatus,
@@ -35,7 +32,6 @@ import type { SkillExecutionHooks } from './SkillExecutionHooks'
 import type { SkillQueryPorts } from './SkillQueryPorts'
 import type {
   OpResultNumberField,
-  ResolvedScalarExpression,
   ResolvedSkillPlan,
   ResolvedSkillPlanStep,
   ResolvedSkillReadContext,
@@ -45,7 +41,7 @@ import {
   evaluateResolvedScalar,
 } from './ResolvedSkillPlan'
 import type { SkillResolveInput } from './SkillResolver'
-import { SkillResolver, SkillResolverError } from './SkillResolver'
+import { SkillResolver } from './SkillResolver'
 import type { ActiveSkillDefinition } from './SkillDefinition'
 import type { SkillDefinitionRegistry } from './SkillDefinitionRegistry'
 
@@ -112,6 +108,8 @@ export class SkillExecutorError extends Error {}
 // ---------------------------------------------------------------------------
 
 export class SkillExecutor {
+  private readonly activeLandedGateKeys = new Set<string>()
+
   constructor(
     private readonly scheduler: CombatScheduler,
     private readonly resolver: SkillResolver,
@@ -143,7 +141,11 @@ export class SkillExecutor {
       input.driveFollowUps !== false &&
       // TBS parity (enqueueFollowUpExecutions): only a cast with a live
       // target set queues follow-ups -- a whiffed-into-empty cast
-      // commits nothing; a charge-init declare queues nothing either.
+      // commits nothing; a charge-init declare queues nothing either;
+      // a cast that BLOCKED at the resource precheck or never commits
+      // at all owns no paid payload for repeats to replay.
+      plan.commitsCast === true &&
+      outcome.blocked !== true &&
       plan.snapshot.declaredTargetIds.length > 0 &&
       !(plan.subcastIndex === 0 && (plan.cadence.chargeTurns ?? 0) > 0) &&
       this.queries.vitals.alive(plan.sourceId)
@@ -171,6 +173,39 @@ export class SkillExecutor {
       hasHitOps: false,
       critLanded: false,
       opSeq: 0,
+    }
+
+    // Composite extras RESOLVE before the commit: a member def the
+    // machinery cannot express must decline the whole cast pre-commit
+    // (SkillResolverError -> routeCast null -> loud decline). Resolving
+    // after the commit would leave cooldown spent + cost consumed +
+    // partial extras applied while the caller stamps castBlocked -- a
+    // partial mutation masquerading as a no-op. Extras still EXECUTE
+    // ahead of the primary steps, in declaration order.
+    const extraPlans: ResolvedSkillPlan[] = []
+    if (followUps !== undefined && plan.compositeExtraIds !== undefined) {
+      for (const extraId of plan.compositeExtraIds) {
+        const extraDef = this.skills.require(extraId)
+        if (extraDef.kind !== 'active') {
+          throw new SkillExecutorError(
+            `SkillExecutor: composite extra '${extraId}' of '${plan.definitionId}' is not active`,
+          )
+        }
+        extraPlans.push(
+          this.resolver.resolve({
+            ...followUps.input,
+            definition: extraDef,
+            subcastIndex: followUps.nextSubcast.value++,
+            // TBS parity: extras resolve VERBATIM -- the picked def never
+            // re-rolls its own pool/empowerment, the root's declare-side
+            // replay never applies, and an inline lane never re-commits
+            // (cooldown/cost/sink belong to the root cast alone).
+            preResolved: undefined,
+            commitsCast: false,
+            payloadOnly: true,
+          }),
+        )
+      }
     }
 
     if (plan.commitsCast) {
@@ -229,13 +264,13 @@ export class SkillExecutor {
       }
     }
 
-    // Composite extras resolve BEFORE the primary steps (TBS parity:
+    // Composite extras execute BEFORE the primary steps (TBS parity:
     // compositePickedSkills hit ahead of scaledDamage). They are
     // payload-only inline lanes -- verbatim defs, no commit, no grants,
     // never driving their own follow-ups; their landed/crit flags fold
-    // into the root cast's outcome.
-    if (followUps !== undefined && plan.compositeExtraIds !== undefined) {
-      this.expandCompositeExtras(plan, followUps, state)
+    // into the root cast's outcome. Plans already resolved pre-commit.
+    if (followUps !== undefined && extraPlans.length > 0) {
+      this.expandCompositeExtras(plan, followUps, state, extraPlans)
     }
 
     this.runSteps(plan.steps, plan, state)
@@ -274,10 +309,28 @@ export class SkillExecutor {
             // Compiled target_hit_landed gate -- bracket the gated
             // consequence ops with the orchestration slots (TBS
             // resolveDeclaredHit: procs/reactive fire pre-ailment,
-            // taken windows/refresh/sweep post-detonate).
-            this.hooks?.onLandedGateEntered?.(step.gate, plan)
-            this.runSteps(step.then, plan, state)
-            this.hooks?.onLandedGateExited?.(step.gate, plan)
+            // taken windows/refresh/sweep post-detonate). A gate
+            // nested under an enclosing gate over the same hit ops
+            // (an authored `if target_hit_landed` inside onLanded)
+            // is the same landed gate -- run its ops but fire the
+            // orchestration hooks only at the outermost gate.
+            const gateKey =
+              step.gate.targetId +
+              '|' +
+              [...step.gate.hitOperationIds].sort().join(',')
+            const nested = this.activeLandedGateKeys.has(gateKey)
+            if (!nested) {
+              this.hooks?.onLandedGateEntered?.(step.gate, plan)
+            }
+            this.activeLandedGateKeys.add(gateKey)
+            try {
+              this.runSteps(step.then, plan, state)
+            } finally {
+              this.activeLandedGateKeys.delete(gateKey)
+            }
+            if (!nested) {
+              this.hooks?.onLandedGateExited?.(step.gate, plan)
+            }
           } else {
             this.runSteps(taken ? step.then : (step.else ?? []), plan, state)
           }
@@ -639,27 +692,10 @@ export class SkillExecutor {
     plan: ResolvedSkillPlan,
     followUps: FollowUpContext,
     state: PlanExecutionState,
+    extraPlans: ResolvedSkillPlan[],
   ): void {
-    for (const extraId of plan.compositeExtraIds ?? []) {
+    for (const extraPlan of extraPlans) {
       if (!this.queries.vitals.alive(plan.sourceId)) return
-      const extraDef = this.skills.require(extraId)
-      if (extraDef.kind !== 'active') {
-        throw new SkillExecutorError(
-          `SkillExecutor: composite extra '${extraId}' of '${plan.definitionId}' is not active`,
-        )
-      }
-      const extraPlan = this.resolver.resolve({
-        ...followUps.input,
-        definition: extraDef,
-        subcastIndex: followUps.nextSubcast.value++,
-        // TBS parity: extras resolve VERBATIM -- the picked def never
-        // re-rolls its own pool/empowerment, the root's declare-side
-        // replay never applies, and an inline lane never re-commits
-        // (cooldown/cost/sink belong to the root cast alone).
-        preResolved: undefined,
-        commitsCast: false,
-        payloadOnly: true,
-      })
       const extraOutcome = this.executePlan(extraPlan, followUps, true)
       // castCritLanded/targetIds parity: the cast's grant gate and
       // crit flag accumulate across extras + the primary lane.
@@ -675,17 +711,28 @@ export class SkillExecutor {
     }
   }
 
-  /** theGainOnLandedCast/theGainOnCrit parity -- The grants emit once
-      per cast execution (root plans AND follow-up executions; composite
-      extras suppress them -- they are lanes of the parent cast, not
-      executions). Post-consume ordering rides the CAST_COMMIT consume
-      op settling first; the cap lives in the resource authority. */
+  /** theGainOnLandedCast parity -- The grants emit once per cast: the
+      root plan only (subcastIndex > 0 executions are lanes of the parent
+      cast and mint nothing; composite extras suppress them the same
+      way). Post-consume ordering rides the CAST_COMMIT consume op
+      settling first; the cap lives in the resource authority.
+      Phap Tu Reimagined: the crit channel (theGainOnCrit) is retired --
+      The income is landed-basic only. */
   private emitGrants(
     plan: ResolvedSkillPlan,
     state: PlanExecutionState,
     suppress: boolean,
   ): void {
-    if (suppress || plan.grants === undefined) return
+    // commitsCast:false suppresses follow-up/extra lanes -- but NOT the
+    // deferred charge-resolve execution, which owns the cast's grants
+    // where hits actually land (SkillResolver grants stamp parity).
+    if (
+      suppress ||
+      plan.grants === undefined ||
+      plan.subcastIndex > 0 ||
+      (!plan.commitsCast && plan.deferredResolve !== true)
+    )
+      return
     // TBS grantTheFromCast parity -- targetIds.length > 0: a LANDED hit
     // for damaging casts (whiffed casts grant nothing even when side
     // ops connected); an alive-targeted application for non-damaging
@@ -703,20 +750,6 @@ export class SkillExecutor {
             targetId: plan.sourceId,
             resourceId: 'the',
             amount: plan.grants.theOnLandedCast,
-          },
-        }),
-        plan,
-        state,
-      )
-    }
-    if (state.critLanded && plan.grants.theOnCrit !== undefined) {
-      this.enqueueAndSettle(
-        this.mintOp(plan, state, {
-          type: 'gain_resource',
-          payload: {
-            targetId: plan.sourceId,
-            resourceId: 'the',
-            amount: plan.grants.theOnCrit,
           },
         }),
         plan,
@@ -752,10 +785,13 @@ export class SkillExecutor {
     }
   }
 
-  /** Follow-up payload def = the plan's own definitionId -- the authored
-      root for root plans (empowerment re-checks naturally: post-consume
-      The won't refire) and composite pools re-roll per subcast (Task 11
-      parity). */
+  /** Follow-up payload def = the plan's own definitionId.
+      Caveat: `require(definitionId)` returns whatever def carries that
+      id, so a plan stamped with an aux-claims id resolves the empowered
+      VARIANT def for its follow-up -- not the plain root. Root plans
+      stamp the authored root id (empowerment re-checks naturally:
+      post-consume The won't refire) and composite pools re-roll per
+      subcast (Task 11 parity). */
   private resolveFollowUp(
     plan: ResolvedSkillPlan,
     followUps: FollowUpContext,
@@ -908,7 +944,4 @@ export class SkillExecutor {
   }
 }
 
-// Re-exported for callers wiring cast requests (resolver stays the
-// plan producer; the executor drives it).
-export { SkillResolverError }
 export type { ActiveSkillDefinition }

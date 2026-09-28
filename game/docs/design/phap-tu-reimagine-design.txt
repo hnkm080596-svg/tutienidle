@@ -1,0 +1,1971 @@
+# PHÁP TU THƯỜNG — DESIGN AUTHORITY
+
+**Way:** `spell_pathway`  
+**Path:** `spell`  
+**Display:** Pháp Tu — Đại Ngũ Hành Chân Quyết  
+**Scope chi tiết:** Luyện Khí → Trúc Cơ  
+**Status:** design authority mới, supersede architecture `mid-combo + dot/no route` cũ.  
+**Out of scope:** Ultimate và mọi mechanic sau Trúc Cơ.
+
+---
+
+# 1. Design thesis
+
+Pháp Tu không vận hành bằng chuỗi combo cố định.
+
+Nó vận hành bằng hai trục:
+
+# **Thế**
+
+Được xây bằng Basic.
+
+Khi đạt ngưỡng:
+
+> pháp thuật bước vào trạng thái hoàn chỉnh — **Pháp Thế**.
+
+---
+
+# **Linh Lực**
+
+Là nền tảng công/thủ của Pháp Tu ở Trúc Cơ.
+
+> **Max Linh Lực** quyết định sức mạnh pháp thuật.
+
+> **Current Linh Lực** quyết định mức độ Linh Lực Hộ Thể.
+
+Special chủ động tiêu Linh Lực để đổi lấy:
+
+> **Pháp Trạng** mạnh theo từng Hành.
+
+---
+
+# 2. Core combat grammar
+
+Beta normal Pháp Tu có đúng hai active roles:
+
+## Luyện Khí
+
+# Basic
+
+```text
+Basic
+→ gây elemental effect
+→ landed primary hit: +1 Thế
+→ đạt 5 Thế
+→ Pháp Thế bật
+→ Basic mở elemental rider
+```
+
+---
+
+## Trúc Cơ
+
+# Special
+
+```text
+Special
+→ trả % Max Linh Lực
+→ Current Linh Lực giảm
+→ Linh Lực Hộ Thể yếu đi
+→ Pháp Trạng theo Hành bật
+```
+
+Special không tạo Thế.
+
+Special không tiêu Thế.
+
+Special không phải attack baseline.
+
+---
+
+# 3. Không có mid-combo
+
+Retire hoàn toàn mechanic dạng:
+
+```text
+Basic A
+→ Special B
+→ đúng thứ tự
+→ combo effect
+```
+
+Basic và Special có thể cộng hưởng.
+
+Nhưng:
+
+> không có sequencing requirement.
+
+Player có thể:
+
+```text
+Special trước
+→ rồi Basic
+```
+
+hoặc:
+
+```text
+Basic đạt 5 Thế
+→ rồi Special
+```
+
+Cả hai đều hợp lệ.
+
+Đó là timing choice, không phải combo puzzle.
+
+---
+
+# 4. Không còn `dot/no route`
+
+Normal Pháp Tu retire hoàn toàn axis:
+
+- `dot`
+- `no`
+
+Không còn:
+
+- chọn route;
+- đổi route;
+- route respec;
+- route-tagged nodes;
+- route-specific damage multiplier;
+- route-specific ailment chance;
+- route-specific crit package;
+- route-specific DoT package.
+
+Ngũ Hành tự mang specialization riêng.
+
+Normal Pháp Tu chỉ còn:
+
+1. **Element**
+2. **Thế**
+3. **Linh Lực**
+4. **Basic + Special progression**
+
+---
+
+# PART I — NGŨ HÀNH
+
+# 5. Element choice
+
+Normal Pháp Tu chọn đúng:
+
+> **một Hành.**
+
+Element choice là permanent theo authority hiện hành.
+
+Không đổi giữa combat.
+
+Không có mixed-element normal Pháp Tu trong scope này.
+
+Five elements:
+
+- Hỏa
+- Thủy
+- Mộc
+- Kim
+- Thổ
+
+---
+
+# 6. Element determines entire beta kit identity
+
+Element quyết định:
+
+- Basic;
+- Pháp Thế rider;
+- Special;
+- Pháp Trạng.
+
+Không cần thêm route để specialization tiếp.
+
+---
+
+# PART II — THẾ
+
+# 7. Thế là battle-scoped resource
+
+Trong beta:
+
+```text
+Min = 0
+Max = 5
+```
+
+Battle start:
+
+> `Thế = 0`
+
+Battle end:
+
+> discard.
+
+Không persist.
+
+---
+
+# 8. Wave transition
+
+Nếu nhiều wave thuộc cùng một battle:
+
+> giữ nguyên Thế.
+
+Không reset về 0 giữa wave.
+
+Battle mới mới reset.
+
+---
+
+# 9. Basic là canonical generator
+
+Chỉ Basic của normal Pháp Tu sinh Thế.
+
+Rule:
+
+> **primary direct hit landed → +1 Thế.**
+
+Một Basic cast tối đa:
+
+> `+1 Thế`.
+
+Không phụ thuộc:
+
+- hit count;
+- target count;
+- ailment ticks;
+- rider count.
+
+---
+
+# 10. Những thứ không sinh Thế
+
+Không sinh Thế từ:
+
+- Special;
+- secondary Thủy hit;
+- Thổ shockwave;
+- Hỏa periodic pulse;
+- ailment tick;
+- Mộc growth;
+- passive effect;
+- equipment proc;
+- reaction;
+- companion action.
+
+---
+
+# 11. Miss không sinh Thế
+
+Primary Basic miss/dodge:
+
+> không cộng Thế.
+
+Pháp Tu phải thật sự landed Basic để xây thế.
+
+---
+
+# 12. Cap = 5 trong beta
+
+Vì Ultimate chưa tồn tại trong scope:
+
+> không author capacity >5.
+
+Không tồn tại resource chết 6+.
+
+Khi đã 5:
+
+> Basic tiếp tục hoạt động nhưng không tăng Thế thêm.
+
+---
+
+# PART III — PHÁP THẾ
+
+# 13. Pháp Thế activation
+
+Khi:
+
+```text
+currentThe >= 5
+```
+
+Pháp Thế active.
+
+Trong beta:
+
+> giữ tới hết battle.
+
+Không decay.
+
+Không consume bởi Basic.
+
+Không có spender trong scope hiện tại.
+
+---
+
+# 14. Threshold snapshot
+
+Basic kiểm tra Pháp Thế:
+
+> **trước cast.**
+
+Ví dụ đang 4 Thế:
+
+```text
+cast Basic
+→ Basic thường
+→ landed
+→ +1 Thế
+→ currentThe = 5
+```
+
+Basic đó không retroactively nhận rider.
+
+Basic kế tiếp mới empowered.
+
+---
+
+# 15. Pháp Thế không tăng generic damage
+
+Không có rule:
+
+> `5 Thế = +X% all Basic damage`
+
+Pháp Thế chỉ mở:
+
+> **element-specific functionality.**
+
+---
+
+# PART IV — BASIC NGŨ HÀNH
+
+# 16. Hỏa Basic
+
+Baseline:
+
+> single-target Hỏa damage + Hỏa ailment.
+
+---
+
+# 17. Hỏa Pháp Thế
+
+Nếu primary target:
+
+> đã có **own-source Hỏa ailment trước cast**
+
+thì empowered Basic:
+
+> kích hoạt thêm một periodic pulse của Hỏa ailment đó.
+
+Hard rules:
+
+- chỉ ailment của chính caster;
+- ailment phải tồn tại trước cast;
+- không consume stack;
+- không giảm duration;
+- không trigger ailment vừa được apply trong cùng cast;
+- tối đa một bonus pulse mỗi Basic cast.
+
+Identity:
+
+> **Hỏa tích thế để ép ngọn lửa đang cháy bùng thêm một nhịp.**
+
+---
+
+# 18. Thủy Basic
+
+Baseline:
+
+> single-target Thủy damage + Thủy ailment.
+
+---
+
+# 19. Thủy Pháp Thế
+
+Sau primary hit:
+
+> tạo một secondary Thủy hit lên một enemy khác hợp lệ.
+
+Secondary hit:
+
+- damage thấp hơn primary;
+- element Thủy;
+- có thể apply Thủy ailment;
+- không sinh thêm Thế;
+- không chain tiếp.
+
+Tối đa:
+
+> một secondary target mỗi cast.
+
+Identity:
+
+> **Thủy đủ thế thì pháp lực bắt đầu lưu chuyển sang mục tiêu kế tiếp.**
+
+---
+
+# 20. Mộc Basic
+
+Baseline:
+
+> single-target Mộc damage + Mộc ailment.
+
+---
+
+# 21. Mộc Pháp Thế
+
+Empowered Basic:
+
+> application của own-source Mộc ailment tăng thêm **1 stack**.
+
+Không tăng generic ailment potency.
+
+Không buff tất cả Mộc effect.
+
+Chỉ application của owning Basic.
+
+Identity:
+
+> **Mộc đủ thế thì sinh trưởng nhanh hơn ngay từ lúc gieo.**
+
+---
+
+# 22. Kim Basic
+
+Baseline:
+
+> single-target Kim damage.
+
+Có thể giữ elemental ailment nếu canonical Kim design yêu cầu, nhưng Pháp Thế không phụ thuộc nó.
+
+---
+
+# 23. Kim Pháp Thế
+
+Empowered Basic:
+
+> chính hit đó xuyên một phần mitigation của target.
+
+Hard rule:
+
+> penetration là skill-local.
+
+Không emit generic character penetration.
+
+Không buff ally.
+
+Không buff unrelated skill.
+
+Identity:
+
+> **Kim đủ thế thì trở nên sắc bén.**
+
+---
+
+# 24. Thổ Basic
+
+Baseline:
+
+> single-target Thổ damage + Thổ ailment.
+
+---
+
+# 25. Thổ Pháp Thế
+
+Sau primary hit:
+
+> tạo một shockwave nhỏ quanh primary target.
+
+Shockwave:
+
+- reduced Thổ damage;
+- không sinh Thế;
+- không tạo Trọng Thế;
+- baseline không apply thêm Thổ ailment;
+- không recursive shockwave.
+
+Identity:
+
+> **Thổ đủ thế thì trọng lực từ một điểm va chạm lan ra xung quanh.**
+
+---
+
+# PART V — TRÚC CƠ / LINH LỰC
+
+# 26. Special unlock milestone
+
+Đến Trúc Cơ:
+
+> player lĩnh ngộ Special của Hành đã chọn.
+
+Việc lĩnh ngộ Special đồng thời mở:
+
+# **Linh Lực Hộ Thể**
+
+và active:
+
+# **Pháp Trạng**
+
+của Hành tương ứng.
+
+---
+
+# 27. Linh Lực terminology
+
+Trong design này:
+
+> MP chính là Linh Lực combat resource của Pháp Tu.
+
+Không tạo resource bar thứ ba.
+
+Các field runtime có thể tiếp tục dùng `maxMp/currentMp`, nhưng player-facing là:
+
+> Linh Lực.
+
+---
+
+# PART VI — PASSIVE LINH LỰC
+
+# 28. Hai authority riêng
+
+Passive có hai trục hoàn toàn khác:
+
+```text
+OFFENSE
+= Max Linh Lực
+
+DEFENSE
+= Current Linh Lực ratio
+```
+
+---
+
+# 29. Max Linh Lực → offensive scaling
+
+Pháp Tu damage payload có thể nhận:
+
+```text
+bonusDamage
+=
+MaxLinhLuc × authoredConversion
+```
+
+Không dùng:
+
+> generic global `% skill damage`.
+
+Mỗi payload author ratio riêng.
+
+---
+
+# 30. Scope offensive conversion
+
+Chỉ payload được explicit author mới hưởng.
+
+Trong beta có thể gồm:
+
+- Basic primary damage;
+- Thủy secondary hit;
+- Thổ shockwave;
+- Hỏa Basic-owned pulse nếu được định nghĩa là owning Basic payload.
+
+Không mặc nhiên áp dụng cho:
+
+- ailment periodic ticks;
+- equipment proc;
+- talent damage;
+- generic elemental reaction;
+- companion;
+- unrelated skill.
+
+---
+
+# 31. Max Linh Lực không đọc Current Linh Lực
+
+Damage scaling không suy giảm khi Current Linh Lực thấp.
+
+Pháp Tu bị hao Linh Lực:
+
+> mất phòng thủ,
+
+nhưng:
+
+> nền pháp lực offensive vẫn tồn tại.
+
+Điều này tránh downward snowball công + thủ cùng sụp.
+
+---
+
+# 32. Current Linh Lực → Hộ Thể
+
+Defensive passive đọc:
+
+```text
+CurrentRatio
+=
+CurrentLinhLuc / MaxLinhLuc
+```
+
+Damage reduction:
+
+```text
+DamageReduction
+=
+HộThểCap × CurrentRatio
+```
+
+Exact `HộThểCap` balance sau.
+
+---
+
+# 33. Hộ Thể không tiêu thêm Linh Lực khi bị đánh
+
+Incoming damage:
+
+> được giảm theo CurrentRatio.
+
+Nhưng bản thân damage event:
+
+> không trừ thêm Linh Lực.
+
+Không biến Linh Lực thành second HP bar.
+
+Không có conversion:
+
+> `1 MP absorbs X damage`.
+
+---
+
+# 34. Current Linh Lực bằng 0
+
+Nếu:
+
+```text
+CurrentLinhLuc = 0
+```
+
+thì:
+
+> Hộ Thể = 0.
+
+Không có floor DR miễn phí.
+
+---
+
+# 35. Damage scope của Hộ Thể
+
+Baseline beta:
+
+> áp dụng lên hostile direct damage.
+
+Không áp dụng lên:
+
+- Special Linh Lực cost;
+- self-cost;
+- environmental/system damage;
+- true-cost semantics.
+
+DoT/periodic damage:
+
+> deferred nếu engine chưa có authority chung.
+
+Khuyến nghị beta:
+
+> chỉ direct hostile damage để semantics rõ.
+
+---
+
+# PART VII — SPECIAL CONTRACT
+
+# 36. Special là active self-buff
+
+Tất cả 5 Special:
+
+- target self;
+- không direct damage baseline;
+- không sinh Thế;
+- không tiêu Thế;
+- trả Linh Lực;
+- bật Pháp Trạng.
+
+---
+
+# 37. Special cost
+
+Cost:
+
+> `% Max Linh Lực`.
+
+Tất cả Hành dùng chung cost grammar.
+
+Exact percentage balance sau.
+
+Không author flat cost làm late-game vô nghĩa.
+
+---
+
+# 38. Full-cost requirement
+
+Trước cast:
+
+```text
+requiredCost
+=
+MaxLinhLuc × costPercent
+```
+
+Nếu Current Linh Lực < full cost:
+
+> không cast được.
+
+Không overdraft.
+
+Không partial cast.
+
+---
+
+# 39. Cost ordering
+
+Order:
+
+```text
+request Special
+↓
+validate full Linh Lực cost
+↓
+subtract Linh Lực
+↓
+CurrentRatio / Hộ Thể cập nhật
+↓
+apply Pháp Trạng
+```
+
+Buff không được apply trước cost.
+
+---
+
+# 40. Special risk
+
+Cast Special luôn có tradeoff:
+
+> mạnh hơn về elemental functionality,
+
+đổi lại:
+
+> Current Linh Lực thấp hơn → Hộ Thể yếu hơn.
+
+Đây là core risk/reward của Trúc Cơ Pháp Tu.
+
+---
+
+# 41. Special không cần 5 Thế
+
+Có thể cast ở:
+
+- 0 Thế;
+- 1–4 Thế;
+- 5 Thế.
+
+Không có Pháp Thế prerequisite.
+
+Không tạo combo gate.
+
+---
+
+# 42. Pháp Trạng duration
+
+Pháp Trạng tồn tại theo:
+
+> holder normal turns.
+
+Exact duration balance sau.
+
+Baseline nên dùng cùng duration family cho 5 Hành.
+
+---
+
+# 43. Recast
+
+Pháp Trạng không stack với chính nó.
+
+Recast:
+
+> trả full cost lại.
+
+Sau đó:
+
+> refresh duration.
+
+Không có multiple simultaneous copies.
+
+---
+
+# PART VIII — HỎA SPECIAL
+
+# 44. Tam Muội Chân Hỏa
+
+Special Hỏa:
+
+# **Tam Muội Chân Hỏa**
+
+Cast:
+
+> trả Linh Lực → bật Tam Muội.
+
+Trong Pháp Trạng:
+
+> Hỏa ailment mới do Basic của caster apply có potency cao hơn.
+
+Không tạo bonus pulse riêng thứ hai.
+
+---
+
+# 45. Hỏa synergy
+
+Pháp Thế:
+
+> kích periodic pulse của Hỏa ailment đang tồn tại.
+
+Tam Muội:
+
+> làm Hỏa ailment được gieo trong window mạnh hơn.
+
+Loop:
+
+```text
+Tam Muội
+→ gieo Hỏa mạnh
+
+Pháp Thế Basic sau
+→ kích pulse của Hỏa mạnh đó
+```
+
+Synergy tự nhiên.
+
+Không sequencing requirement cứng.
+
+---
+
+# 46. Hỏa identity
+
+Hỏa là:
+
+> **pressure / offensive window cao nhất.**
+
+Đổi lại:
+
+> Special không hoàn Linh Lực.
+
+Bật Tam Muội làm Hộ Thể yếu đi thật sự.
+
+---
+
+# PART IX — THỦY SPECIAL
+
+# 47. Thanh Tuyền Dưỡng Linh
+
+Special Thủy:
+
+# **Thanh Tuyền Dưỡng Linh**
+
+Cast:
+
+> trả Linh Lực → bật Thanh Tuyền.
+
+Trong Pháp Trạng:
+
+> tăng Linh Lực regeneration.
+
+---
+
+# 48. Không instant refund
+
+Enhanced regen:
+
+> bắt đầu từ regen tick hợp lệ tiếp theo.
+
+Không hoàn Special cost ngay tại cast.
+
+---
+
+# 49. Thủy Basic không refund thêm baseline
+
+Không cần thêm:
+
+> Basic hit → +MP.
+
+Một lever regen chính là đủ.
+
+Tránh biến Special Thủy thành net-positive resource button quá dễ.
+
+---
+
+# 50. Thủy identity
+
+Thủy là:
+
+> **sustain + spread.**
+
+Pháp Thế:
+
+> damage lưu chuyển sang target phụ.
+
+Pháp Trạng:
+
+> Linh Lực lưu chuyển trở lại caster.
+
+---
+
+# PART X — MỘC SPECIAL
+
+# 51. Vạn Mộc Sinh Cơ
+
+Special Mộc:
+
+# **Vạn Mộc Sinh Cơ**
+
+Cast:
+
+> trả Linh Lực → bật Sinh Cơ.
+
+---
+
+# 52. Sinh Cơ application
+
+Trong Special window:
+
+> lần đầu mỗi target nhận own-source Mộc application hợp lệ từ Basic, target được đánh dấu `Sinh Cơ`.
+
+---
+
+# 53. Sinh Cơ payoff
+
+Tại natural ailment tick/target-turn thích hợp tiếp theo:
+
+> own-source Mộc ailment tự tăng thêm 1 stack.
+
+Sau đó:
+
+> Sinh Cơ trên target đó được consume.
+
+---
+
+# 54. Một target một lần mỗi window
+
+Hard rule:
+
+> một target chỉ được Sinh Cơ trigger tối đa một lần trong mỗi Special cast.
+
+Đánh target đó thêm nhiều lần:
+
+> không queue thêm nhiều growth events.
+
+---
+
+# 55. Mộc synergy
+
+Pháp Thế:
+
+> extra stack ngay lập tức.
+
+Pháp Trạng:
+
+> thêm một stack delayed.
+
+Mộc là Hành:
+
+> **ramp / growth.**
+
+---
+
+# PART XI — KIM SPECIAL
+
+# 56. Kim Ý Ngưng Phong
+
+Special Kim:
+
+# **Kim Ý Ngưng Phong**
+
+Cast:
+
+> trả Linh Lực → bật Kim Ý.
+
+---
+
+# 57. Kim Liệt
+
+Trong Kim Ý:
+
+> mỗi landed Basic Kim lên primary target tạo 1 `Kim Liệt`.
+
+Kim Liệt:
+
+> target-local.
+
+> caster-owned.
+
+---
+
+# 58. Kim Liệt effect
+
+Mỗi tầng:
+
+> Basic Kim tiếp theo của chính caster xuyên thêm mitigation trên target đó.
+
+Không:
+
+- giảm target Defense stat globally;
+- giúp ally;
+- buff unrelated skills;
+- buff equipment;
+- buff reactions.
+
+---
+
+# 59. Kim Liệt ordering
+
+Hit hiện tại:
+
+> đọc số Kim Liệt đã tồn tại trước impact.
+
+Sau landed hit:
+
+> mới add tầng mới.
+
+Ví dụ:
+
+```text
+0 stack
+Basic 1
+→ không hưởng Kim Liệt
+→ landed
+→ stack 1
+
+Basic 2
+→ hưởng stack 1
+→ landed
+→ stack 2
+```
+
+Không tự hưởng stack vừa tạo.
+
+---
+
+# 60. Kim Liệt cap
+
+Có low hard cap.
+
+Exact số balance sau.
+
+Conceptual:
+
+> khoảng 3 tầng.
+
+Không author vô hạn.
+
+---
+
+# 61. Kim Liệt lifetime
+
+Kim Liệt chỉ sống trong:
+
+> chính Kim Ý window đã tạo nó.
+
+Kim Ý kết thúc:
+
+> Kim Liệt của window đó bị xóa.
+
+Không persist đến hết battle.
+
+---
+
+# 62. Kim identity
+
+Kim là:
+
+> **single-target / anti-mitigation / boss pressure.**
+
+Pháp Thế:
+
+> sắc ngay.
+
+Pháp Trạng:
+
+> càng đánh cùng target càng sắc.
+
+---
+
+# PART XII — THỔ SPECIAL
+
+# 63. Trọng Nhạc
+
+Special Thổ:
+
+# **Trọng Nhạc**
+
+Cast:
+
+> trả Linh Lực → bật Trọng Nhạc.
+
+---
+
+# 64. Trọng Thế
+
+Trong Trọng Nhạc:
+
+> mỗi landed Basic Thổ lên **primary target** tạo 1 `Trọng Thế`.
+
+Secondary shockwave:
+
+> không tạo Trọng Thế.
+
+---
+
+# 65. Trọng Thế payoff
+
+Khi đạt threshold:
+
+> consume required Trọng Thế.
+
+→ delay action tiếp theo của target.
+
+Không stun.
+
+Không skip turn.
+
+Không taunt.
+
+---
+
+# 66. Anti-lock invariant
+
+Mỗi target:
+
+> chỉ có thể bị Trọng Nhạc delay tối đa **một lần trong mỗi Special cast**.
+
+Sau khi target đã bị proc:
+
+> tiếp tục Basic không build thêm một delay thứ hai trong cùng window.
+
+---
+
+# 67. Trọng Thế lifetime
+
+Trọng Thế thuộc Special window.
+
+Khi Trọng Nhạc hết:
+
+> remaining stacks biến mất.
+
+Không persist đến Special sau.
+
+---
+
+# 68. Thổ identity
+
+Thổ là:
+
+> **area pressure + tempo control.**
+
+Pháp Thế:
+
+> shockwave.
+
+Pháp Trạng:
+
+> dồn trọng áp lên một primary target.
+
+---
+
+# PART XIII — FIVE-ELEMENT SUMMARY
+
+# 69. Final beta roles
+
+| Hành | Basic | Pháp Thế @5 | Special / Pháp Trạng |
+|---|---|---|---|
+| **Hỏa** | hit + Hỏa ailment | kích pulse Hỏa đã tồn tại | **Tam Muội Chân Hỏa** — Hỏa ailment mới tăng potency |
+| **Thủy** | hit + Thủy ailment | secondary Thủy hit | **Thanh Tuyền Dưỡng Linh** — tăng Linh Lực regen |
+| **Mộc** | hit + Mộc ailment | application +1 stack | **Vạn Mộc Sinh Cơ** — một delayed growth/target/window |
+| **Kim** | ST Kim | skill-local penetration | **Kim Ý Ngưng Phong** — tích Kim Liệt, xuyên sâu dần |
+| **Thổ** | hit + Thổ ailment | shockwave | **Trọng Nhạc** — tích Trọng Thế, delay một lần/window |
+
+---
+
+# 70. Identity shorthand
+
+### Hỏa
+
+> Pressure.
+
+### Thủy
+
+> Sustain / Spread.
+
+### Mộc
+
+> Ramp.
+
+### Kim
+
+> Penetration.
+
+### Thổ
+
+> Area / Tempo.
+
+---
+
+# PART XIV — TIMING CHOICES
+
+# 71. Aggressive opening
+
+Player có thể:
+
+```text
+Special ngay
+→ mất Linh Lực
+→ Pháp Trạng active
+→ bắt đầu Basic build Thế
+```
+
+Lợi:
+
+> tận dụng Special sớm.
+
+Hại:
+
+> Hộ Thể yếu ngay từ đầu.
+
+> một phần Special window xảy ra trước khi có Pháp Thế.
+
+---
+
+# 72. Conservative opening
+
+Player có thể:
+
+```text
+Basic × đủ số landed
+→ 5 Thế
+→ Pháp Thế active
+→ cast Special
+```
+
+Lợi:
+
+> Pháp Thế + Pháp Trạng overlap tối đa.
+
+Hại:
+
+> Special bị trì hoãn.
+
+Không system nào ép một rotation duy nhất.
+
+---
+
+# PART XV — TREE PHILOSOPHY
+
+# 73. Tree chỉ modify skill-owned mechanics
+
+Node có thể modify:
+
+- Basic rider;
+- Pháp Trạng behavior;
+- skill-specific conversion;
+- skill-specific ailment behavior.
+
+---
+
+# 74. Tree không grant generic character stats
+
+Forbidden node content:
+
+- +Lực;
+- +Mẫn;
+- +Thể;
+- +Khí;
+- +Thần;
+- +Max HP;
+- +Defense;
+- +generic crit;
+- +generic damage;
+- +global penetration.
+
+Body/gear/talent/realm sở hữu các axis đó.
+
+---
+
+# 75. Tree không hồi sinh route
+
+Không có:
+
+- DoT route;
+- Nuke route;
+- routeTag;
+- 75% refund route switching;
+- route-only nodes.
+
+Element branch đã là specialization authority.
+
+---
+
+# 76. Tree không tạo mid-combo
+
+Không node nào yêu cầu:
+
+> dùng Skill A rồi Skill B để kích C.
+
+Các mechanic có thể naturally synergize nhưng không authored chain sequencing.
+
+---
+
+# PART XVI — RUNTIME ORDERING
+
+# 77. Basic resolution
+
+Canonical order:
+
+```text
+1. snapshot Pháp Thế state trước cast
+2. resolve primary Basic attack
+3. resolve Basic-owned Pháp Thế rider nếu applicable
+4. resolve ailment application theo authored ordering
+5. nếu primary landed:
+      grant +1 Thế
+6. clamp Thế ở 5
+```
+
+Element-specific exception phải explicit.
+
+---
+
+# 78. Hỏa pre-existing ailment snapshot
+
+Hỏa Pháp Thế cần snapshot:
+
+> own-source Hỏa ailment tồn tại trước cast.
+
+Không để ailment vừa apply trong cùng Basic tự kích pulse.
+
+---
+
+# 79. Thủy secondary
+
+Secondary target selection phải deterministic.
+
+Secondary hit:
+
+> không tạo additional Thế.
+
+Không recursive spread.
+
+---
+
+# 80. Mộc own-source
+
+Extra stack và Sinh Cơ chỉ thao tác:
+
+> own-source Mộc ailment.
+
+Không tăng stack của caster khác.
+
+---
+
+# 81. Kim stack ordering
+
+Kim Liệt:
+
+> read-before-hit, add-after-landed.
+
+---
+
+# 82. Thổ primary ownership
+
+Trọng Thế:
+
+> chỉ primary target.
+
+Shockwave:
+
+> không participate.
+
+---
+
+# PART XVII — SPECIAL ORDERING
+
+# 83. Special resolution
+
+Canonical:
+
+```text
+1. verify Special learned
+2. verify not blocked by normal action rules
+3. compute cost from Max Linh Lực
+4. verify Current Linh Lực >= full cost
+5. subtract cost
+6. update CurrentRatio/Hộ Thể
+7. apply/refresh Pháp Trạng
+```
+
+---
+
+# 84. No partial cost
+
+Insufficient Linh Lực:
+
+> cast rejected.
+
+Không consume cooldown/cost nếu cast không commit.
+
+---
+
+# 85. Pháp Trạng ownership
+
+Pháp Trạng là:
+
+> caster-local buff state.
+
+Target-side marks như:
+
+- Sinh Cơ;
+- Kim Liệt;
+- Trọng Thế;
+
+phải có caster ownership.
+
+---
+
+# PART XVIII — UI
+
+# 86. Thế bar
+
+HUD Luyện Khí:
+
+```text
+THẾ  ●●●○○
+```
+
+Đạt 5:
+
+```text
+THẾ  ●●●●●
+PHÁP THẾ
+```
+
+Pháp Thế cần visual rõ.
+
+---
+
+# 87. Linh Lực bar
+
+Trúc Cơ HUD:
+
+> Current / Max Linh Lực.
+
+Player phải nhìn thấy ngay:
+
+> cast Special làm bar giảm.
+
+---
+
+# 88. Hộ Thể feedback
+
+Tooltip nên cho thấy:
+
+> mức giảm damage hiện tại phụ thuộc Current Linh Lực.
+
+Không cần hiển thị một shield bar thứ hai.
+
+---
+
+# 89. Special preview
+
+Tooltip Special phải ghi rõ:
+
+- cost = % Max Linh Lực;
+- duration;
+- elemental Pháp Trạng effect;
+- consequence phòng thủ:
+
+> “Tiêu Linh Lực làm giảm hiệu quả Linh Lực Hộ Thể.”
+
+---
+
+# 90. Element-specific UI
+
+### Hỏa
+
+Hiển thị potency-enhanced Hỏa state khi Tam Muội active.
+
+### Thủy
+
+Hiển thị enhanced regeneration.
+
+### Mộc
+
+Sinh Cơ marker target-local.
+
+### Kim
+
+Kim Liệt stack count trên target.
+
+### Thổ
+
+Trọng Thế stack count + one-delay-used marker trong window.
+
+---
+
+# PART XIX — AUTO COMBAT
+
+# 91. Basic
+
+Auto combat có thể sử dụng Basic bình thường.
+
+Thế tự tích.
+
+Không cần manual management.
+
+---
+
+# 92. Special
+
+Special là tactical buff nhưng auto-combat có thể cast theo scheduler.
+
+Nếu AI cast Special khi Linh Lực đang vừa đủ:
+
+> Hộ Thể giảm mạnh sau cast.
+
+Đây là intentional risk.
+
+Không cần hidden safety rule kiểu:
+
+> HP thấp không cast.
+
+Advanced auto policy có thể thiết kế sau.
+
+---
+
+# PART XX — SAVE / BATTLE STATE
+
+# 93. Persisted state
+
+Normal Pháp Tu cần persist:
+
+- chosen element;
+- learned Basic;
+- learned Special;
+- node levels;
+- technique/progression authority hiện hành.
+
+Không persist battle Thế.
+
+Không persist Pháp Trạng runtime.
+
+---
+
+# 94. `spellPath.route` retirement
+
+State authority không còn cần route.
+
+Target direction:
+
+```text
+SpellPathState {
+  element: ElementType | null
+}
+```
+
+Không còn:
+
+```text
+route: 'dot' | 'no' | null
+```
+
+Migration phải xử lý save cũ.
+
+Route value cũ:
+
+> discard.
+
+Element giữ lại.
+
+---
+
+# 95. Battle-scoped state
+
+Battle runtime có:
+
+- current Thế;
+- Pháp Thế derived state;
+- current Linh Lực;
+- active Pháp Trạng;
+- Sinh Cơ markers;
+- Kim Liệt stacks;
+- Trọng Thế stacks;
+- per-window consumed flags.
+
+---
+
+# PART XXI — LEGACY RETIREMENT
+
+# 96. Retire mid-combo
+
+Retire:
+
+- chain position logic;
+- chain-link requirements;
+- sequence combo authority;
+- combo-only unlock assumptions;
+- chain-state presentation.
+
+---
+
+# 97. Retire route machinery
+
+Retire/supersede:
+
+- `SpellPathRoute`;
+- `dot/no`;
+- route picker;
+- route switch;
+- 75% refund route respec;
+- routeTag nodes;
+- `RouteProfile`;
+- `directMultiplier`;
+- `ailmentChanceFactor`;
+- `ailmentStackBonus`;
+- route-specific crit stat package;
+- route-specific DoT package;
+- route-gated payload behavior.
+
+---
+
+# 98. Retire old Thế values
+
+Legacy values like:
+
+> Basic +5 Thế / Special +15 Thế / cap 100
+
+không còn authority trong beta mới.
+
+New beta authority:
+
+```text
+Basic primary landed = +1
+cap = 5
+Special = 0
+```
+
+---
+
+# 99. Retire old MP shield semantics if conflicting
+
+Old path-level unconditional `manaShieldPercent` ownership must be reviewed.
+
+New authority:
+
+> Linh Lực Hộ Thể unlocks with Special at Trúc Cơ.
+
+Mortal/Luyện Khí normal Pháp Tu không được nhận Trúc-Cơ Hộ Thể sớm chỉ vì path stat modifier tồn tại.
+
+---
+
+# 100. Old skill catalog reuse
+
+Existing skill names/effects có thể reuse nếu phù hợp.
+
+Nhưng:
+
+> old chain position does not confer authority.
+
+Skill definitions phải được remapped sang:
+
+- Basic;
+- Special;
+- future/deferred.
+
+Không giữ old B/C/D/E structure chỉ để tránh churn.
+
+---
+
+# PART XXII — OUT OF SCOPE
+
+# 101. Ultimate
+
+Không thiết kế Ultimate trong tài liệu này.
+
+Không khóa:
+
+- unlock realm;
+- Thế cost;
+- Thế cap tương lai;
+- consume-all vs fixed;
+- empowered threshold;
+- ultimate payload;
+- Pháp Tướng.
+
+Chỉ reserve:
+
+> `Thế` có thể được mở rộng trong tương lai.
+
+Không author mechanics trước.
+
+---
+
+# 102. Kim Đan+
+
+Không author:
+
+- new skill;
+- new resource;
+- new route;
+- Ultimate;
+- Pháp Tướng;
+- expanded Pháp Thế capacity.
+
+Chỉ giữ architecture extensible.
+
+---
+
+# PART XXIII — MANDATORY INVARIANTS
+
+1. Normal Pháp Tu chọn đúng một Hành.
+
+2. Luyện Khí chỉ có Basic.
+
+3. Trúc Cơ mới mở Special.
+
+4. Beta không author Ultimate.
+
+5. Mid-combo bị retire.
+
+6. `dot/no route` bị retire.
+
+7. Basic là canonical Thế generator.
+
+8. Một Basic cast tối đa +1 Thế.
+
+9. Chỉ primary landed hit sinh Thế.
+
+10. Secondary hit/rider/tick không sinh Thế.
+
+11. Beta Thế cap = 5.
+
+12. Thế battle-scoped.
+
+13. Wave cùng battle giữ Thế.
+
+14. Battle mới reset Thế.
+
+15. Pháp Thế active ở 5 Thế.
+
+16. Pháp Thế check trước cast.
+
+17. Cú Basic đưa 4→5 không được hưởng rider retroactive.
+
+18. Pháp Thế không tăng generic damage.
+
+19. Hỏa Pháp Thế chỉ trigger own-source pre-existing Hỏa ailment.
+
+20. Hỏa pulse không consume stack hoặc duration.
+
+21. Thủy Pháp Thế tối đa một secondary target.
+
+22. Thủy secondary không sinh Thế.
+
+23. Mộc Pháp Thế chỉ tăng own-source Mộc application.
+
+24. Kim Pháp Thế penetration là skill-local.
+
+25. Thổ shockwave không sinh Thế.
+
+26. Thổ shockwave không tích Trọng Thế.
+
+27. Special không sinh Thế.
+
+28. Special không tiêu Thế.
+
+29. Special có thể cast dưới 5 Thế.
+
+30. Special tiêu % Max Linh Lực.
+
+31. Special yêu cầu đủ full cost.
+
+32. Special cost được trừ trước khi buff active.
+
+33. Pháp Trạng không stack với chính nó.
+
+34. Recast phải trả lại full cost.
+
+35. Max Linh Lực là offensive scaling authority.
+
+36. Current Linh Lực là defensive Hộ Thể authority.
+
+37. Offensive scaling không đọc Current Linh Lực.
+
+38. Hộ Thể không tiêu thêm Linh Lực khi bị đánh.
+
+39. Current Linh Lực = 0 → Hộ Thể = 0.
+
+40. Max Linh Lực scaling không phải generic global multiplier.
+
+41. Chỉ explicitly authored skill payload nhận Max Linh Lực conversion.
+
+42. Tam Muội chỉ tăng potency Hỏa ailment mới do Basic tạo.
+
+43. Tam Muội không tạo bonus pulse thứ hai baseline.
+
+44. Thanh Tuyền tăng regen nhưng không instant-refund cast cost.
+
+45. Sinh Cơ chỉ proc một lần/target/Special window.
+
+46. Sinh Cơ chỉ thao tác own-source Mộc ailment.
+
+47. Kim Liệt chỉ thuộc caster đã tạo.
+
+48. Kim Liệt chỉ ảnh hưởng Basic Kim của caster đó.
+
+49. Kim Liệt add sau landed hit.
+
+50. Kim Liệt biến mất khi Kim Ý hết.
+
+51. Trọng Thế chỉ đến từ primary Basic Thổ.
+
+52. Mỗi target chỉ bị Trọng Nhạc delay một lần/window.
+
+53. Trọng Thế biến mất khi Trọng Nhạc hết.
+
+54. Tree không grant generic character stats.
+
+55. Tree không resurrect route.
+
+56. Tree không resurrect combo sequence.
+
+57. `spellPath.route` không còn canonical persisted state.
+
+58. Legacy Basic +5/Special +15/100-Thế authority bị supersede.
+
+59. Trúc Cơ passive không được leak xuống Luyện Khí.
+
+60. Ultimate/future spender không được invented trong implementation của authority này.
+
+---
+
+# 103. Final Luyện Khí journey
+
+Player chọn Pháp Tu và một Hành.
+
+Nhận:
+
+> Basic của Hành đó.
+
+Battle bắt đầu:
+
+```text
+Thế = 0
+```
+
+Mỗi primary Basic landed:
+
+```text
++1 Thế
+```
+
+Tới:
+
+```text
+5 / 5
+```
+
+Pháp Thế mở.
+
+Từ đây Basic có identity riêng:
+
+- Hỏa → kích Hỏa;
+- Thủy → lan;
+- Mộc → sinh stack;
+- Kim → xuyên;
+- Thổ → chấn.
+
+Fantasy:
+
+# **Tụ đủ thế, pháp mới thành hình.**
+
+---
+
+# 104. Final Trúc Cơ journey
+
+Đột phá Trúc Cơ.
+
+Mở:
+
+> Special theo Hành.
+
+Đồng thời lĩnh ngộ:
+
+# **Linh Lực Hộ Thể**
+
+Max Linh Lực:
+
+> nuôi sức mạnh pháp thuật.
+
+Current Linh Lực:
+
+> duy trì lớp hộ thể.
+
+Khi cast Special:
+
+```text
+Linh Lực giảm
+↓
+Hộ Thể yếu đi
+↓
+Pháp Trạng mạnh bật
+```
+
+Người chơi tự quyết:
+
+> giữ Linh Lực để an toàn
+
+hay:
+
+> rút Linh Lực khỏi hộ thể để cường hóa pháp thuật.
+
+Fantasy:
+
+# **Linh Lực vừa là nền pháp, vừa là lớp hộ thân; muốn pháp mạnh hơn phải tự rút đi một phần sự an toàn của mình.**
+
+---
+
+# 105. Final normal Pháp Tu identity
+
+Normal Pháp Tu không còn là:
+
+> chuỗi combo + route DoT/Nuke.
+
+Nó trở thành:
+
+# **Ngũ Hành + Thế + Linh Lực.**
+
+**Basic**
+
+> xây Thế.
+
+**Pháp Thế**
+
+> làm Basic hiện rõ bản chất của Hành.
+
+**Special**
+
+> hy sinh Linh Lực để bước vào Pháp Trạng.
+
+**Linh Lực Hộ Thể**
+
+> biến cùng một resource thành quyết định công/thủ.
+
+Và toàn bộ beta loop có thể tóm tắt:
+
+# **Tụ Thế để thành Pháp.**
+
+# **Dùng Linh Lực để cường Pháp.**
+
+# **Mỗi lần cường Pháp là tự rút bớt hộ thể của chính mình.**

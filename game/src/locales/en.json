@@ -130,25 +130,48 @@
         "upgradeCost": "Upgrade · {cost} Insight",
         "otherBranch": "Other"
       },
-      "routes": {
-        "aria": "Pháp Tu stance",
-        "dot": "Detonate",
-        "no": "Eruption"
-      },
-      "routeSwitch": {
-        "title": "Change Pháp Tu Stance",
-        "body": "Switch to the {route} stance? Old stance nodes reset to 0 — regain {regain} Insight, lose {lose}.",
-        "confirm": "Switch Stance"
+      "clawback": {
+        "summary": " Also revoked: {detail}.",
+        "skills": "lose {n} skills",
+        "specs": "clear {n} specializations",
+        "swords": "lose {y} Sword Intent and {d} forged swords",
+        "refund": "includes {n} Insight already counted above"
       },
       "respec": {
         "button": "Respec",
         "title": "Respec Node Tree",
-        "body": "Reset all node investment? Regain {regain} Insight — {count} nodes and cores reset to 0. Free while in Beta.",
+        "body": "Reset all node investment? Regain {regain} Insight — {count} nodes and cores reset to 0. Free while in Beta.{clawback}",
         "confirm": "Respec"
       },
       "branchLabels": {
         "theTu": "Body Cultivation",
         "theTuAn": "Hidden Body"
+      }
+    },
+    "theTuTree": {
+      "abandoned": "Path abandoned",
+      "sealed": "Realm not reached",
+      "sealedName": "???",
+      "sealedNext": "Sealed",
+      "roles": {
+        "root": "Martial Way",
+        "basic": "Basic",
+        "special": "Special"
+      },
+      "scaling": {
+        "might": "Might scaling",
+        "maxHp": "Max HP scaling",
+        "aoe": "Hits all enemies",
+        "sacrifice": "Sacrifices Max HP",
+        "huyetCuong": "Huyết Cuồng",
+        "taunt": "Taunt",
+        "mark": "Chấn Ấn mark",
+        "reflect": "Reflects by Max HP"
+      },
+      "realms": {
+        "luyenKhi": "Qi Refining",
+        "trucCo": "Foundation",
+        "kimDan": "Golden Core"
       }
     },
     "skillPath": {
@@ -184,10 +207,9 @@
         "lockedReasons": {
           "cost": "Requires {cost} Insight (currently have {current} Insight)",
           "prerequisiteNode": "Enlighten first: {name}",
-          "realm": "Reach the required realm",
+          "realm": "Unlocks at {realm}",
           "element": "Unlock the related Element",
           "elementMismatch": "Belongs to the {element} element — another element is committed",
-          "routeMismatch": "Enlightenable only in the {route} stance",
           "wayMismatch": "Belongs to a different cultivation way",
           "excludesNode": "Conflicts with: {name}",
           "nodeCount": "Enlighten {required}/{total} related nodes",
@@ -199,13 +221,7 @@
           "techniqueGrade": "Requires technique grade {grade}",
           "skillUpgrade": "Upgrade the related skill"
         },
-        "upgradeGateHeader": "Upgrade blocked:",
-        "routePick": {
-          "title": "Choose Your Pháp Tu Stance",
-          "hint": "The chosen element is permanent. The stance can be reforged out of combat — old stance nodes reset to 0 and refund 75% of the Insight paid.",
-          "dotDesc": "Detonate — relentless elemental ailments; the awakened ult ignites every remaining ailment in one burst.",
-          "noDesc": "Eruption — harder direct hits and crits; crits feed The, and the awakened ult burns the whole pool."
-        }
+        "upgradeGateHeader": "Upgrade blocked:"
       },
       "elementTabs": {
         "aria": "Choose Pháp Tu element"
@@ -228,6 +244,10 @@
         "cost": "Cost",
         "type": "Type",
         "attackSpeed": "Scales with Attack Speed"
+      },
+      "roleStrip": {
+        "lockedByRival": "Locked - the rival branch is already chosen (reset the node to reopen).",
+        "unlockedByNode": "Unlock via the {name} node in Skill Path."
       }
     },
     "character": {
@@ -281,7 +301,7 @@
           "hintPrefix": "Sword Cultivator specialization:",
           "hintSuffix": ".",
           "hienDescription": "Kiếm Phổ — preset up to nine sword seals; each basic attack plays the next seal, and seal chains matching the manual burst into combo strikes.",
-          "nguDescription": "Ngự Kiếm Đạo — myriad swords under one will, each flying sword an independent strike; accumulated Sword Intent forges permanent Sword Dao."
+          "nguDescription": "Ngự Kiếm — flying swords strike one at a time in order; Sword Intent forges Sword Dao, and each new realm opens the next evolution tier."
         },
         "kiemPhoPreset": {
           "title": "Kiếm Phổ — Seal Sequence",
@@ -1019,13 +1039,13 @@
       "label": "Blood Shatter Burst",
       "description": "One-time explosive damage when Blood Shatter reaches 5 stacks."
     },
-    "theGainPerLinkBonus": {
-      "label": "The Gain per Link",
-      "description": "Bonus The gained for each completed chain link (including the finisher)."
+    "phapThe": {
+      "label": "Pháp Thế",
+      "description": "Empowerment charge — each landed Basic adds 1 Thế; at 5 the next Basic casts its Pháp Thế variant."
     },
-    "theMaxBonus": {
-      "label": "The Cap Bonus",
-      "description": "Added to the maximum The cap; the Ultimate only fires at this new cap."
+    "linhLucHoTheCap": {
+      "label": "Linh Lực Hộ Thể",
+      "description": "Caps the share of incoming damage absorbed by Linh Lực Hộ Thể."
     }
   },
   "announce": {

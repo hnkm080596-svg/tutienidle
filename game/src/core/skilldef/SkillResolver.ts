@@ -16,11 +16,7 @@
 //      reads the snapshot; live reads stay as `late` bindings /
 //      resolved query leaves on plan steps.
 
-import type {
-  CombatEntityId,
-  CombatOperationId,
-  SkillId,
-} from '../battle/contracts/ids'
+import type { CombatEntityId, CombatOperationId, SkillId } from '../battle/contracts/ids'
 import type {
   CleanseBuffOperation,
   CombatOperation,
@@ -56,6 +52,8 @@ import { evaluateResolvedScalar } from './ResolvedSkillPlan'
 import type { ScalarExpression } from './ScalarExpression'
 import type {
   ActiveSkillDefinition,
+  AuthoredSkillCastCost,
+  SkillCastCost,
   SkillInstances,
 } from './SkillDefinition'
 import type { SkillCombatRuntimeState } from './SkillCombatRuntimeState'
@@ -110,6 +108,12 @@ export interface SkillResolveInput {
       queued executions (repeat/multicast) are fresh cast identities
       that must NOT re-commit (executionCommitsCast parity). */
   commitsCast?: boolean
+  /** Deferred charge-resolve plan (TBS chargeTurns parity): the cast
+      COMMITTED at charge-init; THIS execution owns the deferred steps
+      and grants where hits actually land. commitsCast stays false
+      (no re-commit) yet the grant lane must still mint -- unlike
+      follow-up/extra lanes which mint nothing. */
+  deferredResolve?: boolean
   /** Follow-up driving override -- defaults to true. TBS drives
       repeats/multicast through its own queuedExecutions lane (drain
       ordering, intercept windows, target re-collection parity); the
@@ -135,6 +139,15 @@ export interface SkillPreResolution {
 interface ResolveScope {
   /** for_each_target binding -- the member id `loop_target` resolves to. */
   loopTargetId?: CombatEntityId
+  /** Name of the var holding `ops_landed_any` over every earlier primary
+      hit's operation ids -- present only inside a landed lane whose
+      cast carries a `oncePerCast` secondary; the flagged op wraps
+      itself in `branch{var == 0}` (spec D4/D5 one secondary per cast). */
+  priorLandedVarName?: string
+  /** Hit op ids of the CURRENT instance -- present only inside that
+      instance's onLanded lane; an authored target_hit_landed gate
+      binds this slice (never the accumulated [h0..hi] map entry). */
+  instanceHitOpIds?: readonly CombatOperationId[]
 }
 
 export class SkillResolverError extends Error {}
@@ -191,9 +204,19 @@ export class SkillResolver {
         resourcesConsumed.the = pre.theBurned
       }
     } else {
+      // Latent duplicated-truth (documented): empowerment is decided
+      // TWICE -- TurnBattleSystem declares it at commit time
+      // (actor.entity.currentThe vs theThreshold), and this resolver
+      // re-evaluates the same predicate here for casts that arrived
+      // without a preResolved decision. The gates diverge only if the
+      // attacker's The pool mutates between declare and resolve --
+      // unreachable today (nothing in the window writes the actor's
+      // pool; proc costs drain defender pools). Same documented
+      // hazard class as the resolveInterceptWindow ordering note.
       if (
         input.payloadOnly !== true &&
         input.subcastIndex === 0 &&
+        input.commitsCast !== false &&
         empowerment !== undefined &&
         input.entityQuery.currentThe(input.sourceId) >= empowerment.theThreshold
       ) {
@@ -205,10 +228,6 @@ export class SkillResolver {
         }
         effective = empowered
         resolvedVariantId = empowered.id
-        if (empowered.consumesAllThe === true) {
-          // theBurned captures BEFORE the consume op zeroes the pool.
-          resourcesConsumed.the = input.entityQuery.currentThe(input.sourceId)
-        }
       }
 
       if (rootSubcasts?.compositePool !== undefined) {
@@ -225,6 +244,20 @@ export class SkillResolver {
           )
         }
         effective = picked
+      }
+
+      // theBurned captures BEFORE the consume op zeroes the pool -- for
+      // ANY committing root whose resolved def carries consumesAllThe,
+      // not only the empowerment swap (a root-authored or composite-
+      // picked burn resolves the same way; TBS captures
+      // payloadSkill.consumesAllThe at declare regardless of how the
+      // payload resolved).
+      if (
+        effective.consumesAllThe === true &&
+        input.commitsCast !== false &&
+        input.subcastIndex === 0
+      ) {
+        resourcesConsumed.the = input.entityQuery.currentThe(input.sourceId)
       }
     }
 
@@ -277,9 +310,10 @@ export class SkillResolver {
       // def's own cadence/cost is inert in the root lane).
       cadence: input.definition.cadence,
       ...(input.definition.cost !== undefined
-        ? { cost: input.definition.cost }
+        ? { cost: this.resolvePlanCost(input.definition.cost, statScalars) }
         : {}),
       commitsCast: input.commitsCast ?? input.subcastIndex === 0,
+      ...(input.deferredResolve === true ? { deferredResolve: true } : {}),
       // consumesAllThe rides the EFFECTIVE def (TBS payloadSkill parity:
       // the empowered form carries the burn; a root-level flag burns on
       // its own commit -- never on follow-ups, which never commit).
@@ -310,6 +344,27 @@ export class SkillResolver {
         ? { counterSkillId: effective.counterSkillId }
         : {}),
     }
+  }
+
+  /** Authored cost -> plan cost: the percentOfMax form folds against the
+      snapshot's maxMp capture into the concrete {resourceType, amount}
+      shape every downstream consumer (PRECHECK/commit cost op) reads.
+      F10: the LIVE evaluation for the legacy lane lives on
+      TurnSkillDefinition.resourceCostPercentOfMax (hasResourceFor).
+      This plan-path fold is resolve-time because the snapshot already
+      pins statScalars at RESOLVE; the live-read channel is entity
+      stats, not the snapshot, only in the legacy lane. */
+  private resolvePlanCost(
+    cost: AuthoredSkillCastCost,
+    statScalars: Record<string, number>,
+  ): SkillCastCost {
+    if ('percentOfMax' in cost) {
+      return {
+        resourceType: cost.resourceType,
+        amount: Math.max(0, (statScalars['maxMp'] ?? 0) * cost.percentOfMax),
+      }
+    }
+    return cost
   }
 
   // -----------------------------------------------------------------------
@@ -396,10 +451,23 @@ export class SkillResolver {
             if (op.healPercentOfDamage !== undefined) {
               collectFromExpr(op.healPercentOfDamage)
             }
+            if (op.elementalPenetration !== undefined) {
+              collectFromExpr(op.elementalPenetration)
+            }
+            if (op.penetrationFromStacks !== undefined) {
+              collectFromExpr(op.penetrationFromStacks.perStack)
+            }
+            if (op.sourceMaxHpRatio !== undefined) {
+              collectFromExpr(op.sourceMaxHpRatio)
+            }
             for (const entry of op.scaling?.attributeScaling ?? []) {
               for (const attr of entry.attributes) statKeys.add(attr)
             }
             if (op.scaling?.manaScalingRatio !== undefined) statKeys.add('maxMp')
+            // Spec D4 -- the landed lane holds authored ops (apply_buff
+            // stack/chance exprs, lane `if` conditions, the secondary
+            // hit's coefficient) whose scalar reads still need capture.
+            if (op.onLanded !== undefined) collectFromOps(op.onLanded)
             break
           case 'heal':
             if (op.amount !== undefined) collectFromExpr(op.amount)
@@ -415,6 +483,9 @@ export class SkillResolver {
           case 'remove_buff_stacks':
           case 'consume_buff_stacks':
             if (op.stacks !== 'all') collectFromExpr(op.stacks)
+            break
+          case 'pay_hp':
+            collectFromExpr(op.maxHpRatio)
             break
           case 'push_gauge':
             collectFromExpr(op.fractionOfMax)
@@ -440,6 +511,17 @@ export class SkillResolver {
       }
     }
     collectFromOps(def.operations)
+    // Percent-of-max cost (F10 plan path) reads the snapshot's maxMp. The
+    // plan cost folds the AUTHORED ROOT def's cost (:308) -- the scalar must
+    // be keyed on that same root shape, since an empowerment/composite swap
+    // can hand a different effective def without cost.
+    if (def.cost !== undefined && 'percentOfMax' in def.cost) {
+      statKeys.add('maxMp')
+    }
+    const rootCost = input.definition.cost
+    if (rootCost !== undefined && 'percentOfMax' in rootCost) {
+      statKeys.add('maxMp')
+    }
     if (def.instances !== undefined) {
       collectFromExpr(def.instances.count)
       if (def.instances.each?.execute !== undefined) {
@@ -493,6 +575,17 @@ export class SkillResolver {
           : []
       case 'loop_target':
         return scope.loopTargetId !== undefined ? [scope.loopTargetId] : []
+      case 'other_enemy':
+        // Spec D4 -- first living enemy that is NOT the lane target
+        // (canonical order; empty when the primary was the last one).
+        return input.entityQuery
+          .enemiesOf(input.sourceId)
+          .filter((id) => id !== scope.loopTargetId)
+          .slice(0, 1)
+      case 'other_enemies':
+        return input.entityQuery
+          .enemiesOf(input.sourceId)
+          .filter((id) => id !== scope.loopTargetId)
     }
   }
 
@@ -772,6 +865,20 @@ export class SkillResolver {
           ),
         }
       }
+      case 'stacks_below': {
+        const targetId = this.resolveIntentSingle(condition.target, ctx, scope)
+        if (targetId === undefined) {
+          throw new SkillResolverError(
+            `SkillResolver: stacks_below target '${condition.target}' unresolved on '${ctx.effective.id}'`,
+          )
+        }
+        return {
+          kind: 'stacks_below',
+          targetId,
+          definitionId: condition.definitionId,
+          max: condition.max,
+        }
+      }
       case 'resource_at_least':
         // self-scope: bound to sourceId at resolve.
         return {
@@ -932,6 +1039,8 @@ export class SkillResolver {
         return this.translateApplyShield(op, ctx, scope)
       case 'read_stacks':
         return this.translateReadStacks(op, ctx, scope)
+      case 'pay_hp':
+        return this.translatePayHp(op, ctx, scope)
       case 'detonate':
         // per resolved target -- the executor expands the
         // consume->burst->re-seed sequence at this step position
@@ -956,7 +1065,15 @@ export class SkillResolver {
               `SkillResolver: target_hit_landed on '${ctx.effective.id}' could not bind '${intent}'`,
             )
           }
-          const hitOpIds = ctx.hitOpIdsByTarget.get(targetId) ?? []
+          // Inside an instance lane's onLanded the authored gate binds
+          // THIS instance's hit ops only -- the accumulated map entry
+          // [h0..hi] would both over-satisfy (an earlier instance's
+          // landed hit opens it) and mismatches the enclosing
+          // consequence gate's [hi] dedup key.
+          const hitOpIds =
+            targetId === scope.loopTargetId && scope.instanceHitOpIds !== undefined
+              ? scope.instanceHitOpIds
+              : ctx.hitOpIdsByTarget.get(targetId) ?? []
           if (hitOpIds.length === 0) {
             throw new SkillResolverError(
               `SkillResolver: target_hit_landed on '${ctx.effective.id}' resolved zero hit ops for target '${targetId}' -- the gate must follow a deal_damage op on the same target`,
@@ -1000,12 +1117,62 @@ export class SkillResolver {
         const steps: ResolvedSkillPlanStep[] = []
         for (const targetId of this.resolveIntentSet(op.target, ctx, scope)) {
           steps.push(
-            ...this.translateOps(op.ops, ctx, { ...scope, loopTargetId: targetId }),
+            ...this.translateOps(op.ops, ctx, {
+              ...scope,
+              loopTargetId: targetId,
+              // a nested lane mints its own hit ops -- the enclosing
+              // instance's binding must not leak into it.
+              instanceHitOpIds: undefined,
+            }),
           )
         }
         return steps
       }
     }
+  }
+
+  // -----------------------------------------------------------------------
+  // pay_hp -- The Tu beta self-sacrifice (Loan Dau): lowers to a
+  // 'sacrifice'-profile deal_damage on the caster + an ops_result_sum
+  // read binding the ACTUAL paid HP into `into`. The damage authority
+  // floors the paid amount at leaving the caster 1 HP, so the read is
+  // the only legal payoff source (never the nominal maxHpRatio).
+  // -----------------------------------------------------------------------
+
+  private translatePayHp(
+    op: Extract<AuthoredSkillOperation, { type: 'pay_hp' }>,
+    ctx: TranslateContext,
+    scope: ResolveScope,
+  ): ResolvedSkillPlanStep[] {
+    const late: ResolvedLateBinding[] = []
+    const coefficient = this.bindScalar(op.maxHpRatio, 1, ctx, scope, late, 'coefficient')
+    const payStep = this.operationStep(
+      {
+        type: 'deal_damage',
+        payload: {
+          targetId: ctx.input.sourceId,
+          damageProfile: 'sacrifice',
+          coefficient,
+          hitCount: 1,
+          canCrit: false,
+          canMiss: false,
+        },
+      },
+      ctx,
+      late,
+    )
+    return [
+      payStep,
+      {
+        kind: 'read',
+        query: {
+          query: 'ops_result_sum',
+          operationIds: [payStep.operation.operationId],
+          field: 'hpDamage',
+        },
+        into: op.into,
+      },
+    ]
   }
 
   // -----------------------------------------------------------------------
@@ -1021,6 +1188,13 @@ export class SkillResolver {
   ): ResolvedSkillPlanStep[] {
     const steps: ResolvedSkillPlanStep[] = []
     const targetIds = this.resolveIntentSet(op.target, ctx, scope)
+    // Hit opIds of every EARLIER primary instance across the cast --
+    // feeds the oncePerCast dedup gate (spec D4/D5: a flagged landed-
+    // gate secondary fires on the first landed instance only, so an
+    // AoE empowered cast mints one secondary hit, not one per target).
+    const priorLandedHitOpIds: CombatOperationId[] = []
+    const laneHasOncePerCast =
+      op.onLanded !== undefined && this.collectOncePerCast(op.onLanded)
     const instances = ctx.effective.instances
     const instanceCount =
       instances !== undefined
@@ -1062,6 +1236,36 @@ export class SkillResolver {
             rateExpr: 'folded' in rateResult ? rateResult.folded : rateResult.late,
           }
         }
+        // penetrationFromStacks (spec D11, Kim Liet) -- same read-
+        // before-hit pattern as scaleBuff: the live same-source stack
+        // count is captured into a var the hit's payload reads via a
+        // late binding (no consume; the Kim Liet +1 stack lands in
+        // the hit's consequence gate AFTER the hit resolves).
+        let penetrationBinding:
+          | { stacksVar: string; rateExpr: ResolvedScalarExpression }
+          | undefined
+        if (op.penetrationFromStacks !== undefined) {
+          const stacksVar = this.nextVar('pstacks', ctx)
+          const scopeSourceId =
+            op.penetrationFromStacks.scope !== 'any'
+              ? ctx.input.sourceId
+              : undefined
+          instanceSteps.push({
+            kind: 'read',
+            query: {
+              query: 'buff_stacks',
+              targetId,
+              definitionId: op.penetrationFromStacks.definitionId,
+              ...(scopeSourceId !== undefined ? { sourceId: scopeSourceId } : {}),
+            },
+            into: stacksVar,
+          })
+          const rateResult = this.fold(op.penetrationFromStacks.perStack, ctx, scope)
+          penetrationBinding = {
+            stacksVar,
+            rateExpr: 'folded' in rateResult ? rateResult.folded : rateResult.late,
+          }
+        }
         // Kiem The momentum -- read the count of landed prior instances
         // (of THIS op's instances block) into a var, folded into the
         // hit's coefficient as a further late-binding factor AFTER
@@ -1086,7 +1290,16 @@ export class SkillResolver {
           })
           momentum = { landedVar, rate: instances.each.momentumPerLandedInstance }
         }
-        const hit = this.buildHitStep(op, instances, targetId, ctx, scope, scaleBinding, momentum)
+        const hit = this.buildHitStep(
+          op,
+          instances,
+          targetId,
+          ctx,
+          scope,
+          scaleBinding,
+          momentum,
+          penetrationBinding,
+        )
         instanceSteps.push(hit.step)
         priorInstanceOpIds.push(...hit.hitOpIds)
         // M4 -- register for target_hit_landed gates (per-target
@@ -1169,9 +1382,28 @@ export class SkillResolver {
           query: { query: 'ops_landed_any', operationIds: hit.hitOpIds },
           into: consequenceVar,
         })
+        // oncePerCast dedup (spec D4/D5) -- when the lane carries a
+        // flagged secondary and earlier primary instances exist, read
+        // whether any of them landed; the flagged op compiles inside
+        // branch{var == 0} so only the first landed instance fires it.
+        let priorLandedVarName: string | undefined
+        if (laneHasOncePerCast && priorLandedHitOpIds.length > 0) {
+          priorLandedVarName = this.nextVar('opcast', ctx)
+          instanceSteps.push({
+            kind: 'read',
+            // snapshot: the accumulator keeps growing as later lanes
+            // mint hits; the read must pin THIS lane's priors.
+            query: { query: 'ops_landed_any', operationIds: [...priorLandedHitOpIds] },
+            into: priorLandedVarName,
+          })
+        }
         const consequenceThen: ResolvedSkillPlanStep[] =
           op.onLanded !== undefined && op.onLanded.length > 0
-            ? this.translateOps(op.onLanded, ctx, { loopTargetId: targetId })
+            ? this.translateOps(op.onLanded, ctx, {
+                loopTargetId: targetId,
+                priorLandedVarName,
+                instanceHitOpIds: hit.hitOpIds,
+              })
             : []
         instanceSteps.push({
           kind: 'branch',
@@ -1195,10 +1427,54 @@ export class SkillResolver {
             },
           ],
         })
+        priorLandedHitOpIds.push(...hit.hitOpIds)
       }
       steps.push(...targetSteps)
     }
+    // oncePerCast (spec D4/D5) -- inside a landed lane carrying the
+    // dedup var, this flagged secondary compiles inside
+    // branch{var == 0}: it fires only when no earlier primary instance
+    // landed (i.e. it becomes THE cast's one secondary hit).
+    // Dedup granularity is per primary op lane: the accumulator lives
+    // inside this translateDealDamage call, so flags authored on two
+    // different primary ops mint one secondary hit EACH -- and one
+    // flagged resolution's own instances fan-out all fires inside its
+    // single allowed branch.
+    if (op.oncePerCast === true && scope.priorLandedVarName !== undefined) {
+      return [
+        {
+          kind: 'branch',
+          condition: {
+            kind: 'var',
+            name: scope.priorLandedVarName,
+            op: 'lt',
+            value: 1,
+          },
+          then: steps,
+        },
+      ]
+    }
     return steps
+  }
+
+  /** Recursive scan for a `oncePerCast`-flagged deal_damage anywhere in
+      a landed lane (flagged ops may sit inside a bounded `if`). */
+  private collectOncePerCast(
+    ops: readonly AuthoredSkillOperation[],
+  ): boolean {
+    return ops.some((o) => {
+      if (o.type === 'deal_damage') return o.oncePerCast === true
+      if (o.type === 'if') {
+        return (
+          this.collectOncePerCast(o.then) ||
+          (o.else !== undefined && this.collectOncePerCast(o.else))
+        )
+      }
+      if (o.type === 'for_each_target') {
+        return this.collectOncePerCast(o.ops)
+      }
+      return false
+    })
   }
 
   /** One instance hit -- the execute modifier compiles to a
@@ -1214,11 +1490,15 @@ export class SkillResolver {
     scope: ResolveScope,
     scaleBinding?: { stacksVar: string; rateExpr: ResolvedScalarExpression },
     momentum?: { landedVar: string; rate: number },
+    penetrationBinding?: { stacksVar: string; rateExpr: ResolvedScalarExpression },
   ): { step: ResolvedSkillPlanStep; hitOpIds: CombatOperationId[] } {
     const each = instances?.each
 
     const scale = ctx.input.coefficientScale ?? 1
     const theBurned = ctx.snapshot.resourcesConsumed.the ?? 0
+    // Mirrors TurnBattleSystem's theScaling fold on the hit packet --
+    // same `1 + theBurned/100 x coeff` on the other binding surface;
+    // keep the two equivalent if either changes.
     const theScale =
       ctx.effective.theScaling !== undefined
         ? 1 + (theBurned / 100) * ctx.effective.theScaling.coeff
@@ -1304,6 +1584,34 @@ export class SkillResolver {
         })
         coefficient = 0
       }
+      // Penetration channels (spec D7/D11) -- flat elementalPenetration
+      // plus the live-stack binding sum onto the payload's
+      // elementalPenetrationBonus. A flat number stamps directly; any
+      // live part defers to a late binding (one binding per field).
+      let elementalPenetrationBonus: number | undefined
+      if (op.elementalPenetration !== undefined || penetrationBinding !== undefined) {
+        const parts: ResolvedScalarExpression[] = []
+        if (op.elementalPenetration !== undefined) {
+          const flatResult = this.fold(op.elementalPenetration, ctx, scope)
+          parts.push('folded' in flatResult ? flatResult.folded : flatResult.late)
+        }
+        if (penetrationBinding !== undefined) {
+          parts.push({
+            op: 'multiply',
+            values: [
+              { query: 'var', name: penetrationBinding.stacksVar },
+              penetrationBinding.rateExpr,
+            ],
+          })
+        }
+        const combined: ResolvedScalarExpression =
+          parts.length === 1 ? parts[0]! : { op: 'add', values: parts }
+        if (typeof combined === 'number') {
+          elementalPenetrationBonus = combined
+        } else {
+          late.push({ field: 'elementalPenetrationBonus', expr: combined })
+        }
+      }
       const hitPolicy = this.hitPolicyFor(op, each)
       const critPolicy = this.critPolicyFor(op, each)
       const armorPolicy = this.armorPolicyFor(op, each)
@@ -1314,6 +1622,9 @@ export class SkillResolver {
         ...(element !== undefined ? { element } : {}),
         damageProfile: 'skill_hit',
         coefficient,
+        ...(elementalPenetrationBonus !== undefined
+          ? { elementalPenetrationBonus }
+          : {}),
         hitCount: op.hitCount ?? 1,
         canCrit: op.canCrit ?? true,
         canMiss: op.canMiss ?? true,
@@ -1327,6 +1638,18 @@ export class SkillResolver {
           : {}),
         ...(op.missingHpBonusCap !== undefined
           ? { missingHpBonusCap: op.missingHpBonusCap }
+          : {}),
+        ...(op.sourceMaxHpRatio !== undefined
+          ? {
+              sourceMaxHpRatio: this.bindScalar(
+                op.sourceMaxHpRatio,
+                0,
+                ctx,
+                scope,
+                late,
+                'sourceMaxHpRatio',
+              ),
+            }
           : {}),
         snapshot: ctx.snapshot.statScalars,
       }

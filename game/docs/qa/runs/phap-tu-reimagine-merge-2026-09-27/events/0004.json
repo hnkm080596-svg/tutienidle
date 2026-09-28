@@ -1,0 +1,15 @@
+{
+  "applied": [
+    "evidence:EV-MRG-FIX1",
+    "evidence:EV-MRG-COR1",
+    "evidence:EV-MRG-AUT1",
+    "evidence:EV-MRG-INT1",
+    "review:REV-MRG-COR-1",
+    "review:REV-MRG-AUT-1",
+    "review:REV-MRG-INT-1",
+    "finding:F-MRG-01",
+    "finding:F-MRG-02",
+    "finding:F-MRG-03",
+    "lesson:L-MRG-VERBATIM-SIDE-DROP"
+  ]
+}

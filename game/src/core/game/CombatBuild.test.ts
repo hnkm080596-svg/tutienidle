@@ -22,7 +22,6 @@ import { SkillSystem } from '../skill/SkillSystem'
 import { NodeRegistry } from '../progression/NodeRegistry'
 import { TemplateRegistry } from './TemplateRegistry'
 import type { Skill } from '../skill/Skill'
-import { NEUTRAL_ROUTE_PROFILE } from '../phap-tu/PhapTuRoutes'
 import { SKILLS } from '../../data/skill/Skills'
 import { HIDDEN_SPELL_REQUIRED_SKILLS } from '../phap-tu/PhapTuPath'
 import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
@@ -125,7 +124,6 @@ describe('getBattleBaseChannels', () => {
     expect(channels.map((channel) => channel.channel)).toEqual([
       'technique_tier',
       'cultivation_path',
-      'phap_tu_route',
       'node_levels',
       'technique_combat',
     ])
@@ -309,7 +307,6 @@ function makeRuntimeDeps(): CultivationPathRuntimeDeps {
     nodeRegistry: new NodeRegistry(),
     getNodeLevel: () => 0,
     getSpellPathElement: () => undefined,
-    routeProfileProvider: () => NEUTRAL_ROUTE_PROFILE,
   }
 }
 

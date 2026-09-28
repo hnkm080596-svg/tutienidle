@@ -1,0 +1,14 @@
+{
+ "role": "AUT",
+ "pin": "8e25a766",
+ "verdict": "FINDINGS(1)",
+ "method": "write-site census (6 currentThe writes all owner-bound), castBlocked lane producers/consumers, null-route mapping, deferred-resolve lane, seam allowlists, UI threading",
+ "findings": [
+  {
+   "id": "M-AUT-01",
+   "severity": "Nit",
+   "file": "TurnBattleSystem.ts:2957",
+   "claim": "dormant consumesAllThe/theBurned lane diverges from master in queued executions; unreachable today (zero consumesAllThe in data)"
+  }
+ ]
+}

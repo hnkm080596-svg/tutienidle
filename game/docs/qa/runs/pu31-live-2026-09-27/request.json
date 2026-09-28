@@ -1,0 +1,13 @@
+{
+  "runId": "pu31-live-2026-09-27",
+  "checkout": "E:/tutienidle/.agent-worktrees/qa-scripts-repair",
+  "branch": "qa-scripts-repair",
+  "base": "68621987",
+  "head": "b7aaa4d6",
+  "productRoot": ".",
+  "capacityLimit": 5,
+  "attackModelPath": "attack-model.json",
+  "environmentPath": "environment.json",
+  "contractPaths": ["package.json"],
+  "requiredReadiness": false
+}

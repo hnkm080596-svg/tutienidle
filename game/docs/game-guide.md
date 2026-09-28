@@ -67,13 +67,20 @@ Effect được tiêu thụ qua getter tập trung tại `src/core/talent/Talent
 `src/core/player/CultivationPathKit.ts` hiện chỉ công khai hai lựa chọn:
 
 - **Pháp Tu** dùng Đại Ngũ Hành Chân Quyết. Đây là một path thống nhất; người chơi mở Hỏa, Mộc, Thủy, Kim, Thổ và kỹ năng qua Node Tree, rồi phối hợp nhiều hành bằng element loadout.
-- **Kiếm Tu** dùng Ngự Kiếm Tâm Kinh (spec 2026-08-29-kiem-the-kiem-y). Route chốt VĨNH VIỄN đúng lúc chọn path: Huy Kiếm (tram) đạt Lv3 (10.000 lần trảm) → Bạt Kiếm (Đơn Kiếm), chưa → Kiếm Trận (Đa Kiếm). Mỗi route ĐÚNG 1 active skill ở slot 0:
-  - **Kiếm Trận (Đa Kiếm)**: kiếm trận tiến hóa Lưỡng Nghi → Tam Tài → ... (mỗi keystone thay thế skill cũ), tích **Kiếm Thế** (pool trong trận, +số kiếm/cast, cap 100) cho ult Tru Tiên Kiếm Trận (nổ trảm AoE + kiếm trận trường tồn) + buff +1% sát thương mỗi 2 điểm. Chiều sâu qua 9 node on-hit (mở theo cấp trận 2-9 kiếm, roll 3%/cấp tối đa 15%).
-  - **Bạt Kiếm (Đơn Kiếm)**: Bạt Kiếm Thức tụ lực (channel) duy nhất — "càng treo càng mạnh": tầng **Kiếm Ý vĩnh viễn** theo boss diệt (tầng N cần tổng 10+5×(N-1) boss, mỗi tầng +10 kiếm ý nền đầu trận + 0.5% dmg/crit), pool tạm gain theo tick tụ lực + sát thương nhận vào, tiêu hao ăn tạm trước (vĩnh viễn bất khả xâm phạm). Ult Kiếm Khai Thiên Môn đốt toàn bộ kiếm ý tạm, đơn mục tiêu ưu tiên boss, overkill tràn 50%. Skill cũ (Ngự Kiếm/Thái Hư/Phiêu Vân/Phá Thiên/Vạn Kiếm...) chuyển thành passive node trong cây công pháp; hồi sinh 1 lần/trận qua node Kiếm Ý Bất Tử; Nộ (rage) đã gỡ khỏi hệ thống.
+- **Kiếm Tu** dùng Ngự Kiếm Tâm Kinh — mỗi path là một tập **ways** (`cultivationWay`), không còn route split (Kiếm Trận/Bạt Kiếm đã retire — canonical path authority P1, 2026-09-20). Hiện `sword_pathway` = **Kiếm Phổ**: preset 5 orbs (`KIEM_PHO_ORB_IDS`, `data/skill/KiemPhoOrbs.ts`) xếp thứ tự tạo combo (`KiemPhoCombos.ts`). Ẩn `hidden_sword_pathway` = **Ngự Kiếm Đạo**: entry ritual-only gate Huy Kiếm (`tram`) đạt Lv3 — chọn là vĩnh viễn; hành động combat provider-injected (`ngu_kiem_thuat`); cây node `data/progression/KiemTuNodes.ts` gồm nhánh `kiem_pho` (5 orb) + subtree `ngu_kiem` (cascade + các node cung Khảm/Khôn/...). Node `skillCastCount` prerequisite giữ vai trò gate theo số cast.
 
-Code chiến đấu có một số plumbing và test cho Thể Tu, nhưng `CultivationPathId` chưa đưa Thể Tu thành lựa chọn chơi được. Không nên mô tả nó như path đã phát hành.
+- **Thể Tu** có plumbing + test phía combat (`TheTuSkills.ts`, `data/progression/TheTuNodes.ts`/`TheTuAnNodes.ts`), nhưng trên `master` hôm nay `CultivationPathId` chưa mở nó thành lựa chọn chơi được — wave path-beta Thể Tu đang chạy trên branch riêng. Không mô tả nó như path đã phát hành.
 
 Hệ Ngũ Hành nằm trong `src/core/element/`; node Pháp Tu hiện hành nằm tại `src/data/progression/PhapTuNodes.ts`. Hai ailment khác hành cùng tồn tại có thể kích hoạt phản ứng. `ReactionManager` xử lý true damage, tiêu thụ trạng thái và các ngoại lệ data-driven như giữ một vế, tạo ailment, cấp buff hoặc giảm max HP. Các nhánh nguyên tố cũ vì vậy là nội dung của cùng một cây Pháp Tu.
+
+## Nội dung ẩn — dòng Hidden Lineage (2026-09-24)
+
+Hệ ẩn nằm trong `src/core/realm/hidden/` + `src/data/drop/HiddenMaterialChannels.ts`; spec `docs/specs/2026-09-23-hidden-perfection-lineage-master-spec.md`. Không có channel nào spoil vị trí ở stage list/hint — mọi kênh BẮT BUỘC bound worst-case (`guaranteedSpawnAfterKills`/`guaranteedAfterCycles`).
+
+- **Cổ Thú** (`data/enemy/HiddenBeasts.ts` + `core/realm/hidden/AncientBeastTrial.ts`): thử luyện cổ thú ẩn dành cho người Phàm Nhân — `HiddenBeastSystem.ts` quản lý trigger/state.
+- **Quán Thể** (`core/realm/hidden/QuanTheDiversion.ts` + `HiddenBattleReplacement.ts`): diversion ẩn ở `qi_refining` — gặp hidden battle riêng khi đủ điều kiện.
+- **Chu Thiên** (`data/realm/ZhouTian.ts` + `core/realm/body/ZhouTianChapter.ts` + `ZhouTianSection.vue`): tiến trình rời rạc `completed` 0..36, cost/reward authored (`zhouTianStepCost`/`zhouTianStepReward`); **Nghịch Chu Thiên** mở trên `foundation_establishment` (save v83).
+- **Hoàn mỹ ẩn** (`core/realm/hidden/HiddenPerfection.ts`): kênh nguyên liệu hoàn mỹ ẩn — phần `bodyPerfection` surface cũ đã RETIRE theo design (sec.14/15 cấm generic perfection surface; registry giữ trống có chủ đích).
 
 ## Nội dung Trúc Cơ (chương 3)
 

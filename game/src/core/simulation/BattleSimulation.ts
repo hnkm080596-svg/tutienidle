@@ -19,16 +19,10 @@ import type { Stage } from '../stage/Stage'
 import type { CultivationPathId, CultivationWayId } from '../player/CultivationPathKit'
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
-import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
-import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
-import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
-import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
-import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
-import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
+import { ALL_PROGRESSION_NODES } from '../../data/progression/ProgressionNodeCatalog'
 import { ENEMIES } from '../../data/enemy/Enemies'
 import { STAGES } from '../../data/stage/Stages'
 import type { ElementType } from '../element/ElementType'
-import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import { BattleMetricsCollector, type BattleMetrics } from './BattleMetrics'
 
 // Detached post-ritual build identity - PlayerData alone is NOT enough:
@@ -57,7 +51,7 @@ export type SimEncounter =
 // entry maps 1:1 onto a public GameManagerProgressionOps writer.
 // A recipe needing a new setup operation extends the union explicitly.
 export type SimulationCanonicalWrite =
-  | { type: 'select_phap_tu_element'; element: ElementType; route: SpellPathRoute }
+  | { type: 'select_phap_tu_element'; element: ElementType }
   | { type: 'purchase_node'; nodeId: string }
 
 export interface BattleSimulationInput {
@@ -123,12 +117,9 @@ export function runBattle(input: BattleSimulationInput): BattleSimulationResult 
   // Same progression-node closure production registers (App.vue) -
   // postRitual purchases (cuong_chien, element roots) resolve through
   // nodeRegistry, so a missing catalog would fail the canonical write.
-  gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
-  gameManager.catalogOps.registerProgressionNodes(PHAP_TU_AN_NODES)
-  gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
-  gameManager.catalogOps.registerProgressionNodes(THE_TU_NODES)
-  gameManager.catalogOps.registerProgressionNodes(THE_TU_AN_NODES)
-  gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+  // ALL_PROGRESSION_NODES is the same union saveShapeValidation sees -
+  // keep registration and validation on one list (no drift seam).
+  gameManager.catalogOps.registerProgressionNodes(ALL_PROGRESSION_NODES)
   gameManager.catalogOps.registerEnemyTemplates(ENEMIES)
   gameManager.catalogOps.registerStages(STAGES)
 
@@ -175,7 +166,7 @@ export function runBattle(input: BattleSimulationInput): BattleSimulationResult 
     let ok: boolean
     switch (write.type) {
       case 'select_phap_tu_element':
-        ok = gameManager.progressionOps.selectSpellPathElement(write.element, write.route, player)
+        ok = gameManager.progressionOps.selectSpellPathElement(write.element, player)
         break
       case 'purchase_node':
         ok = gameManager.progressionOps.purchaseNode(write.nodeId, player)

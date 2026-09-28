@@ -1,0 +1,46 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "id": "EV-PTR-FINAL",
+    "state": {
+     "productStateId": "1353a680dceb90b1b312d22a71506d4b5466deba90f55aca4b27f74c41a3cef4",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+    "commandOrMethod": "npm run type-check + npx vitest run scoped reimagine suites (skilldef, battle/turn, the-tu, proc, data/skill, data/progression, buff2, tests/architecture) on head e3cd383d",
+    "cwd": "game",
+    "exitCode": 0,
+    "result": "PASS",
+    "startedAt": "2026-09-27T15:00:30Z",
+    "finishedAt": "2026-09-27T15:01:20Z",
+    "inputPaths": [
+     "src/core/skilldef",
+     "src/core/battle/turn",
+     "src/core/the-tu",
+     "src/core/proc",
+     "src/data/skill",
+     "src/data/progression",
+     "src/core/buff2",
+     "tests/architecture"
+    ],
+    "inputEvidenceIds": [],
+    "artifactPath": "evidence/final-gates-e3cd383d.log",
+    "artifactHash": "1885c7da207f7611f3119d97195d5c3615c9d4445169000ab4c70ab3cf4e0f0d",
+    "status": "CURRENT",
+    "limitations": [
+     "1 file suite-load fail: staticArtExtentDeclared -- canvas libuuid env noise, pre-existing on this box"
+    ],
+    "claims": [
+     "type-check clean",
+     "169 files / 1726 tests pass"
+    ],
+    "invariantIds": []
+   }
+  }
+ ]
+}

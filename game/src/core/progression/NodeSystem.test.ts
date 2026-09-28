@@ -10,14 +10,13 @@ import {
   getNextLevelCost,
   grantSkillCore,
   hasPrerequisite,
-  previewNodeRespec,
   purchaseNode,
   respecNodeTree,
   upgradeNode,
 } from './NodeSystem'
 import { skillCoreNodeId } from './SkillCoreLevel'
 import { NodeRegistry } from './NodeRegistry'
-import { createDefaultPlayer } from '../player/Player'
+import { createDefaultPlayer, type PlayerData } from '../player/Player'
 import type { ProgressionNode } from './ProgressionNode'
 
 // combat-skill-flow-element-power-dot-plan.md §6 + §9 — hạ tầng node
@@ -842,6 +841,22 @@ describe('respecNodeTree', () => {
   })
 })
 
+// Dry-run projection of respecNodeTree on a cloned player - mirrors the
+// ops-layer preview's domain leg so these specs assert preview==commit
+// parity without reaching SkillManager state.
+function previewRespec(
+  player: PlayerData,
+  registry: NodeRegistry,
+): { refund: number; resetNodeIds: string[]; resetCount: number } {
+  const sim = JSON.parse(JSON.stringify(player)) as PlayerData
+  const refund = respecNodeTree(sim, registry)
+  const resetNodeIds = Object.keys(player.nodeLevels ?? {}).filter(
+    id => !(id in (sim.nodeLevels ?? {})),
+  )
+
+  return { refund, resetNodeIds, resetCount: resetNodeIds.length }
+}
+
 describe('previewNodeRespec', () => {
   it('reports the same refund and reset set the commit produces, without mutating', () => {
     const root = minorNode({ id: 'respec_root', insightCost: 0, effect: {} })
@@ -873,7 +888,7 @@ describe('previewNodeRespec', () => {
     expect(upgradeNode(player, child)).toBe(true)
 
     const before = structuredClone(player)
-    const preview = previewNodeRespec(player, registry)
+    const preview = previewRespec(player, registry)
 
     expect(preview.refund).toBe(7)
     expect(preview.resetNodeIds.sort()).toEqual(['respec_child', 'respec_root', 'test_power'].sort())
@@ -910,7 +925,7 @@ describe('previewNodeRespec', () => {
     expect(purchaseNode(player, granter)).toBe(true)
     grantSkillCore(player, core)
 
-    const preview = previewNodeRespec(player, registry)
+    const preview = previewRespec(player, registry)
 
     // C2C round-8 pin: the confirm count is ONE number over every
     // ownership record reset - the purchased node AND its revoked
@@ -938,7 +953,7 @@ describe('previewNodeRespec', () => {
     purchaseNode(player, root)
     purchaseNode(player, power)
 
-    const preview = previewNodeRespec(player, registry)
+    const preview = previewRespec(player, registry)
 
     expect(preview.refund).toBe(power.insightCost)
     expect(preview.resetCount).toBe(2)

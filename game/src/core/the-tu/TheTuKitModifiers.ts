@@ -2,38 +2,47 @@ import type { PlayerData } from '../player/Player'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import { getNodeLevel, nodePathApplies, nodeWayApplies } from '../progression/NodeSystem'
 
-// The Tu Reimagined (plan Task 6, review P0.2) — the ONLY node -> kit
-// channel for body. Nodes declare `effect.bodyKitModifiers` (flat,
-// per-level); this collector sums them by channel over owned node levels
-// and the participant build bakes the totals into participant-local def
-// clones (kit skills + the phan_chinh buff def). Registry/singleton defs
-// are NEVER mutated — a shared-def mutation would leak node state across
-// participants, battles, and tests.
+// The Tu beta - the ONLY node -> kit channel for body. Nodes declare
+// `effect.bodyKitModifiers` (flat, per-level); this collector sums them
+// by channel over owned node levels and the participant build bakes the
+// totals into participant-local def clones (kit skills + the phan_chan
+// buff def). Registry/singleton defs are NEVER mutated - a shared-def
+// mutation would leak node state across participants, battles, and
+// tests. Every channel is skill-local: nodes fix CONVERSION/coercion,
+// never character stats (no Might/HP/Defense/Block grants - beta spec).
 
 export interface BodyKitModifierValues {
-  /** Adds to cuong_quyen/loan_dau damage.missingHpBonusPerMissingPercent. */
+  /** Trong Quyen: adds to cuong_quyen's damage multiplier (Might-conversion). */
+  cuongQuyenCoefficientBonus: number
+  /** Pha Kinh: armor-pierce pierceFraction on cuong_quyen's hit. */
+  cuongQuyenArmorPierce: number
+  /** Huyet Sat: adds to loan_dau's damageBonusPerPaidHpPoint payoff. */
+  loanDauPaidHpBonus: number
+  /** Cuong Y: adds to the cuong kit's missingHpBonusPerMissingPercent (Huyet Cuong efficiency). */
   missingHpBonusBonus: number
-  /** Adds to the phan_chinh reflectsDamage.maxHpRatio. */
+  /** Trong The: adds to tran_ap's damage.sourceMaxHpRatio (Max-HP conversion). */
+  tranApMaxHpRatioBonus: number
+  /** Tran Kinh: adds to the tran_kinh weaken ratio per node level
+      (each TRAN_KINH_WEAKEN_RATIO of it adds one stack on the
+      tran_ap tran_kinh application). */
+  tranKinhWeakenRatio: number
+  /** Chan Cot: adds to phan_chan's reflectsDamage.maxHpRatio. */
   reflectMaxHpRatioBonus: number
-  /** Adds to the phan_chinh reflectsDamage.takenRatio. */
-  reflectTakenRatioBonus: number
-  /** Adds to son_nhac's externalWardGrant.sourceMaxHpRatio. */
-  sonNhacWardRatioBonus: number
-  /** Adds holder/enemy turns via durationOverride on the khiem_khich application. */
-  tauntTurnsBonus: number
-  /** Adds holder-turns via durationOverride on the bat_tu_ba_the application. */
-  batTuDurationBonus: number
+  /** Tran An: adds to phan_chan's reflectsDamage.markedMaxHpRatio (Chan An amplification). */
+  reflectMarkedRatioBonus: number
 }
 
 export type BodyKitModifierChannel = keyof BodyKitModifierValues
 
 const ZERO_MODIFIERS: BodyKitModifierValues = {
+  cuongQuyenCoefficientBonus: 0,
+  cuongQuyenArmorPierce: 0,
+  loanDauPaidHpBonus: 0,
   missingHpBonusBonus: 0,
+  tranApMaxHpRatioBonus: 0,
+  tranKinhWeakenRatio: 0,
   reflectMaxHpRatioBonus: 0,
-  reflectTakenRatioBonus: 0,
-  sonNhacWardRatioBonus: 0,
-  tauntTurnsBonus: 0,
-  batTuDurationBonus: 0,
+  reflectMarkedRatioBonus: 0,
 }
 
 /**
@@ -50,7 +59,7 @@ export function collectBodyKitModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    // Review fix (LOW-3) — the path-ownership authority applies here
+    // Review fix (LOW-3) - the path-ownership authority applies here
     // too, not just in the generic aggregators: a wrong-path level
     // (corrupt save, future reuse) must not leak into kit channels.
     // M3: the way-membership gate rides the same line.

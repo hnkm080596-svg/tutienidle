@@ -38,6 +38,14 @@ export type SkillTargetIntent =
   | 'all_allies'
   | 'attacker'
   | 'loop_target'
+  // Phap Tu Reimagined (spec D4) -- landed-gate secondary intents:
+  // living enemies of the source EXCLUDING the current lane target
+  // ('loop_target' at resolve). Legal ONLY inside a deal_damage
+  // onLanded lane (validation rejects them elsewhere); 'other_enemy'
+  // binds the first member (canonical order), 'other_enemies' the
+  // whole set.
+  | 'other_enemy'
+  | 'other_enemies'
 
 // ---------------------------------------------------------------------------
 // Conditions -- pure/read-only (spec sec.36: no mutation in conditions).
@@ -66,6 +74,14 @@ export type SkillCondition =
   // default 'primary_target' ('loop_target' inside for_each_target)
   | { kind: 'target_alive'; target?: SkillTargetIntent }
   | { kind: 'var'; name: string; op: 'gte' | 'lt' | 'eq'; value: number }
+  // Phap Tu Reimagined (spec D12) -- inverse of stacks_at_least:
+  // summed stacks on `target` strictly below `max`.
+  | {
+      kind: 'stacks_below'
+      target: SkillTargetIntent
+      definitionId: BuffDefinitionId
+      max: number
+    }
   | { kind: 'crit_landed' }
   | { kind: 'any_target_landed' }
   /** The plan's hit-channel ops against THIS target landed (TurnBattleSystem
@@ -169,18 +185,52 @@ export type AuthoredSkillOperation =
       }
       consumeWard?: { damagePerWardPoint: ScalarExpression }
       healPercentOfDamage?: ScalarExpression
+      /** Phap Tu Reimagined (spec D7 Kim) -- flat elemental-penetration
+          points added to this hit; forwarded onto the DealDamageOperation
+          payload's elementalPenetrationBonus (element-kind components
+          only; see operations.ts). Folded at RESOLVE when possible. */
+      elementalPenetration?: ScalarExpression
+      /** Phap Tu Reimagined (spec D11 Kim Liet) -- live-read sibling of
+          scaleBuff: penetration points = stacks(definitionId, target,
+          scope) x perStack, read BEFORE the hit resolves, never
+          consuming (Kim Liet: read-before-hit, add-after-landed). */
+      penetrationFromStacks?: {
+        definitionId: BuffDefinitionId
+        perStack: ScalarExpression
+        scope?: 'own' | 'any'
+      }
       /** Cuong Chien missing-HP scalar (ActionDamageInfo parity) --
           bonus damage proportional to the attacker's LIVE missing-HP
           fraction, resolved per hit by the damage authority. */
       missingHpBonusPerMissingPercent?: number
       missingHpBonusCap?: number
+      /** The Tu beta (Tran Ap) -- Max-HP-derived base: the damage
+          authority adds source.stats.maxHp x this ratio into the
+          physical raw base before mitigation. ScalarExpression is
+          legal (fold-or-late) so Trong The node totals can ride the
+          clone-baked coefficient. */
+      sourceMaxHpRatio?: ScalarExpression
       /** Per-landed-HIT consequence ops (TBS resolveDeclaredHit parity):
           compiled INSIDE each instance's landed gate, after the consume
           lanes -- ailments/detonate fire once per landed instance hit,
           not once per target. `target` inside binds via 'loop_target'
-          to the hit's target. Nested deal_damage/if/for_each_target are
-          rejected at validation. */
+          to the hit's target.
+          Phap Tu Reimagined (spec D4): the lane also allows `if` ops
+          (bounded nesting) and ONE secondary `deal_damage` per lane
+          whose target must be 'other_enemy'/'other_enemies' (the
+          secondary's own onLanded may carry non-deal_damage ops only).
+          for_each_target/read_stacks are still rejected inside. */
       onLanded?: readonly AuthoredSkillOperation[]
+      /** Phap Tu Reimagined (spec D4/D5 secondary cap) -- legal ONLY on a
+          landed-gate secondary hit (a deal_damage inside another op's
+          onLanded lane): this hit may execute at most once per cast, on
+          the FIRST landed primary instance. On an AoE cast with N
+          landing targets the rider still mints only one secondary
+          resolution (Thuy/Tho Phap The 'one secondary target per cast').
+          Resolved at plan time: ops carrying this flag compile inside a
+          branch gated on `ops_landed_any` over every earlier primary
+          hit's operation ids. */
+      oncePerCast?: boolean
     }
   | {
       type: 'heal'
@@ -257,6 +307,13 @@ export type AuthoredSkillOperation =
       inside a target_hit_landed gate for damaging defs (TBS fires it
       per landed hit), ungated for non-damaging ones. */
   | { type: 'detonate'; target: SkillTargetIntent; amp: number }
+  /** The Tu beta (Loan Dau) -- HP sacrifice BEFORE the authored hit
+      lane: the resolver lowers this to a 'sacrifice'-profile
+      deal_damage on the caster plus an ops_result_sum read binding the
+      ACTUAL paid HP (vitals truth; the cost floors at leaving 1 HP, so
+      nominal != actual at low HP) into `into`. Author the read variable
+      into later expressions via {query:'var'}. */
+  | { type: 'pay_hp'; maxHpRatio: ScalarExpression; into: string }
   | { type: 'push_gauge'; target: SkillTargetIntent; fractionOfMax: ScalarExpression }
   | {
       type: 'gain_resource' | 'consume_resource'

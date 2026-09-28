@@ -1,0 +1,1 @@
+{"lessonRef":"L-022@1","actor":"pu31-coord","action":{"type":"publish"},"policyPayload":{"name":"qa-runner-integrity","version":1,"publishedFrom":"learning-campaign:pu30-repair","lessons":[{"id":"L-022","version":1,"kind":"INVARIANT","rule":"counted-oracle-must-fail-closed"}]}}

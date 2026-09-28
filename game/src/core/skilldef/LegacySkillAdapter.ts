@@ -9,6 +9,11 @@
 //     elemental components             -> components + coefficient
 //     scaling                          -> scaling (verbatim)
 //     missingHpBonus*                  -> missingHpBonus* scalar fields
+//     sourceMaxHpRatio                 -> sourceMaxHpRatio scalar field
+//   sacrificeMaxHpRatio +
+//     damageBonusPerPaidHpPoint        -> pay_hp op (emitted BEFORE
+//       damage); paid-HP payoff lands on the damage coefficient via
+//       {query:'var'} (resolved post-read at EXECUTE)
 //   appliesAilment(s)                  -> apply_buff ops 'eligible':
 //     damaging def                     -> inside deal_damage.onLanded
 //                                       (per-landed-HIT parity)
@@ -40,8 +45,7 @@
 //     form burns when the variant swap resolves)
 //   theScaling                         -> theScaling (snapshot.theBurned
 //     folds at resolve)
-//   theGainOnLandedCast / theGainOnCrit-> grants.theOnLandedCast /
-//     .theOnCrit
+//   theGainOnLandedCast                -> grants.theOnLandedCast
 //   instances.count                    -> instances.count literal
 //   instances.each (declarative)       -> instances.each verbatim
 //   instances.perInstanceOptions       -> REPORTED when `each` absent
@@ -101,6 +105,12 @@ export interface AdaptedSkillCatalog {
       the adapter could not express as canonical semantics. */
   unsupported: readonly string[]
 }
+
+/** The Tu beta -- plan-var name the emitted pay_hp read binds the
+    actual sacrificed HP into; damageBonusPerPaidHpPoint expressions
+    read it via {query:'var'}. A sentinel (never author-addressed) so
+    two sacrifice defs in one cast cannot collide. */
+const SACRIFICE_PAID_HP_VAR = '__paid_hp'
 
 /** Adapt a TurnSkillDefinition (and its composite pool / empowered
     payload transitively) into SkillDefinitions. */
@@ -190,8 +200,51 @@ function adaptOne(
   const isSelfScope = def.targetScope === 'self'
 
   // --- Primary lane ---------------------------------------------------
+  // A no-damage def carrying sacrifice fields produces neither op nor
+  // payoff - surface it like every other unsupported authored field.
+  if (
+    def.damage === undefined &&
+    (def.sacrificeMaxHpRatio !== undefined ||
+      def.damageBonusPerPaidHpPoint !== undefined)
+  ) {
+    report(
+      `${reportPrefix}.sacrificeFields(no damage lane: sacrificeMaxHpRatio/damageBonusPerPaidHpPoint are never emitted)`,
+    )
+  }
   if (def.damage !== undefined) {
-    operations.push(adaptDamageOp(def))
+    // The Tu beta (Loan Dau) -- the sacrifice op settles BEFORE the hit
+    // lane: pay_hp lowers to a self-targeted 'sacrifice' profile op and
+    // an ops_result_sum read binding the ACTUAL paid HP (the authority
+    // floors the payment at leaving the caster 1 HP). The damage op's
+    // coefficient reads the bound var through damageBonusPerPaidHpPoint
+    // -- only the vitals-truth paid number feeds the payoff.
+    if (def.sacrificeMaxHpRatio !== undefined) {
+      operations.push({
+        type: 'pay_hp',
+        maxHpRatio: def.sacrificeMaxHpRatio,
+        into: SACRIFICE_PAID_HP_VAR,
+      })
+    }
+    // sourceMaxHpRatio is read on physical hits only (the damage adapter
+    // spreads it onto the two physical returns) - a non-physical def
+    // carrying it passes validation and silently produces nothing.
+    if (
+      def.damage.kind !== 'physical' &&
+      def.damage.sourceMaxHpRatio !== undefined
+    ) {
+      report(
+        `${reportPrefix}.sourceMaxHpRatio(non-physical kind ${def.damage.kind}: source-scaled ratio is never emitted)`,
+      )
+    }
+    if (
+      def.sacrificeMaxHpRatio === undefined &&
+      def.damageBonusPerPaidHpPoint !== undefined
+    ) {
+      report(
+        `${reportPrefix}.damageBonusPerPaidHpPoint(no sacrificeMaxHpRatio: the payoff var is never bound)`,
+      )
+    }
+    operations.push(adaptDamageOp(def, report, reportPrefix))
   } else if (!isSelfScope) {
     // Non-damaging enemy-scope lane (TBS :1926-1947 parity): ailments
     // then detonate then same-source seal interactions, per affected
@@ -203,19 +256,29 @@ function adaptOne(
     if (def.detonateDoT !== undefined) {
       inner.push({ type: 'detonate', target: 'loop_target', amp: def.detonateDoT.amp })
     }
-    inner.push(...adaptAilmentInteractions(def, 'loop_target'))
+    inner.push(...adaptAilmentInteractions(def, 'loop_target', report, reportPrefix))
+    // 'Landed' consequences for a non-damaging enemy-scope op bind to the
+    // per-target apply lane (the op landing on a target IS its landing).
+    // They compile INSIDE for_each_target, so their intents must be
+    // lane-legal: loop_target family only -- landed-lane-only intents
+    // (other_enemy/other_enemies) are a catalog fault here, unlike the
+    // same field on a damaging def where they mint a landed lane.
+    inner.push(...(def.landedConsequences ?? []))
     if (inner.length > 0) {
       operations.push({ type: 'for_each_target', target: 'affected_targets', ops: inner })
     }
   } else if (
     ailmentList(def).length > 0 ||
     def.detonateDoT !== undefined ||
-    (def.ailmentInteractions ?? []).length > 0
+    (def.ailmentInteractions ?? []).length > 0 ||
+    (def.landedConsequences ?? []).length > 0
   ) {
-    // Self-scope ailment/detonate/interaction payloads never fire in
-    // the legacy lane (the non-damaging block requires enemy scope) --
-    // report rather than emit never-firing ops.
-    report(`${reportPrefix}.appliesAilments(self-scope: lane never fires)`)
+    // Self-scope ailment/detonate/interaction/landed payloads never
+    // fire in the legacy lane (the non-damaging block requires enemy
+    // scope) -- report rather than emit never-firing ops.
+    report(
+      `${reportPrefix}.self-scopeUnsupported(ailments/detonateDoT/ailmentInteractions/landedConsequences: lane never fires)`,
+    )
   }
 
   // Consume fields with no primary damage compile to a consume-only
@@ -238,16 +301,50 @@ function adaptOne(
   // --- Def-level fields ------------------------------------------------
   const subcasts = adaptSubcasts(def, auxiliaries, catalogUnsupported, reportPrefix)
   const variants = adaptVariants(def, auxiliaries, catalogUnsupported, reportPrefix)
+  // Phap Tu Reimagined -- theOnCrit (route-profile income) is retired;
+  // theGainOnLandedCast is the only surviving grant channel.
   const grants =
-    def.theGainOnLandedCast !== undefined || def.theGainOnCrit !== undefined
-      ? {
-          ...(def.theGainOnLandedCast !== undefined
-            ? { theOnLandedCast: def.theGainOnLandedCast }
-            : {}),
-          ...(def.theGainOnCrit !== undefined ? { theOnCrit: def.theGainOnCrit } : {}),
-        }
+    def.theGainOnLandedCast !== undefined
+      ? { theOnLandedCast: def.theGainOnLandedCast }
       : undefined
   const instances = adaptInstances(def, report, reportPrefix)
+
+  // percent-of-max cost is mana-pool semantics: on a non-mana authored
+  // resourceType it must not silently re-stamp mana -- report and let
+  // the flat resourceCost branch below apply instead.
+  const percentCostIsManaApplicable =
+    def.resourceType === undefined ||
+    def.resourceType === 'mana'
+  if (
+    def.resourceCostPercentOfMax !== undefined &&
+    !percentCostIsManaApplicable
+  ) {
+    const hasFlatCost =
+      def.resourceCost !== undefined && def.resourceCost > 0
+    report(
+      hasFlatCost
+        ? `${reportPrefix}.resourceCostPercentOfMax(non-mana resourceType: percent-of-max is mana-pool semantics -- flat resourceCost applies)`
+        : `${reportPrefix}.resourceCostPercentOfMax(non-mana resourceType and NO flat resourceCost: cast resolves FREE -- authoring defect, percent-of-max is mana-pool semantics)`,
+    )
+  }
+  const percentCost =
+    def.resourceCostPercentOfMax !== undefined && percentCostIsManaApplicable
+      ? { resourceType: 'mana' as const, percentOfMax: def.resourceCostPercentOfMax }
+      : undefined
+
+  // spec D8/F10 -- the two cost forms are mutually exclusive on one def.
+  // On the mana surface the percent branch silently wins, hiding a flat
+  // authoring bug -- report it as a defect instead of picking silently.
+  if (
+    def.resourceCostPercentOfMax !== undefined &&
+    percentCostIsManaApplicable &&
+    def.resourceCost !== undefined &&
+    def.resourceCost > 0
+  ) {
+    report(
+      `${reportPrefix}.resourceCost(flat resourceCost is silently dropped when resourceCostPercentOfMax is co-authored on a mana resourceType -- the forms are mutually exclusive)`,
+    )
+  }
 
   return {
     kind: 'active',
@@ -259,12 +356,17 @@ function adaptOne(
       cooldownTurns: def.cooldownTurns,
       ...(def.chargeTurns !== undefined ? { chargeTurns: def.chargeTurns } : {}),
     },
-    ...(def.resourceType !== undefined &&
-    def.resourceType !== 'none' &&
-    def.resourceCost !== undefined &&
-    def.resourceCost > 0
-      ? { cost: { resourceType: def.resourceType, amount: def.resourceCost } }
-      : {}),
+    ...(percentCost !== undefined
+      ? // Spec D8/F10 -- percent-of-max cost rides the authored
+        // {percentOfMax} form (mana-only); the resolver folds it
+        // through statScalars.maxMp.
+        { cost: percentCost }
+      : def.resourceType !== undefined &&
+          def.resourceType !== 'none' &&
+          def.resourceCost !== undefined &&
+          def.resourceCost > 0
+        ? { cost: { resourceType: def.resourceType, amount: def.resourceCost } }
+        : {}),
     ...(def.consumesAllThe === true ? { consumesAllThe: true } : {}),
     operations,
     ...(subcasts !== undefined ? { subcasts } : {}),
@@ -288,6 +390,8 @@ function adaptOne(
 
 function adaptDamageOp(
   def: TurnSkillDefinition,
+  report: (message: string) => void,
+  reportPrefix: string,
 ): Extract<AuthoredSkillOperation, { type: 'deal_damage' }> {
   const info = def.damage!
   // M-QI-05 / QI-D3 — native defs carry a CONSTANT multiplier; when the
@@ -297,7 +401,7 @@ function adaptDamageOp(
   // skill_level is a first-class ScalarExpression query fed by the
   // battle's CastSnapshot.statScalars.skill_level (the canonical core
   // projection), so no def rewrites per level.
-  const coefficient: ScalarExpression =
+  const baseCoefficient: ScalarExpression =
     info.levelScaling !== undefined
       ? {
           op: 'multiply',
@@ -324,6 +428,27 @@ function adaptDamageOp(
         }
       : (info.multiplier as ScalarExpression)
 
+  // The Tu beta (Loan Dau) -- paid-HP payoff: coefficient gains
+  // actualPaidHp x damageBonusPerPaidHpPoint. The var is bound by the
+  // emitted pay_hp op's read (ACTUAL paid amount after the 1-HP floor
+  // -- the post-sacrifice missing-HP state then carries into the hit).
+  const coefficient: ScalarExpression =
+    def.damageBonusPerPaidHpPoint !== undefined
+      ? {
+          op: 'add',
+          values: [
+            baseCoefficient,
+            {
+              op: 'multiply',
+              values: [
+                { query: 'var', name: SACRIFICE_PAID_HP_VAR },
+                def.damageBonusPerPaidHpPoint,
+              ],
+            },
+          ],
+        }
+      : baseCoefficient
+
   const base = {
     type: 'deal_damage' as const,
     target: 'affected_targets' as SkillTargetIntent,
@@ -334,6 +459,13 @@ function adaptDamageOp(
       : {}),
     ...(info.missingHpBonusCap !== undefined
       ? { missingHpBonusCap: info.missingHpBonusCap }
+      : {}),
+    // Kiem Pho Beta (Nhat Diem) -- def-level armor policy lands on the
+    // primary hit op; instances.each.armorPierce overrides it per
+    // instance (SkillResolver.armorPolicyFor).
+    ...(def.armorPolicy !== undefined ? { armorPolicy: def.armorPolicy } : {}),
+    ...(info.sourceMaxHpRatio !== undefined
+      ? { sourceMaxHpRatio: info.sourceMaxHpRatio as ScalarExpression }
       : {}),
   }
   const lane =
@@ -370,15 +502,18 @@ function adaptDamageOp(
   // Per-landed-hit consequence ops (resolveDeclaredHit parity):
   // ailments then detonate then same-source seal interactions, inside
   // the hit's landed gate (Phan Thien order: apply -> tick -> modify ->
-  // extend).
-  const onLanded: AuthoredSkillOperation[] = []
+  // extend). Spec D4/D5 -- authored landedConsequences (the Phap The
+  // rider channel on the empowered element basic) splice FIRST.
+  const onLanded: AuthoredSkillOperation[] = [
+    ...(def.landedConsequences ?? []),
+  ]
   for (const ailment of ailmentList(def)) {
     onLanded.push(adaptAilment(ailment, 'loop_target'))
   }
   if (def.detonateDoT !== undefined) {
     onLanded.push({ type: 'detonate', target: 'loop_target', amp: def.detonateDoT.amp })
   }
-  onLanded.push(...adaptAilmentInteractions(def, 'loop_target'))
+  onLanded.push(...adaptAilmentInteractions(def, 'loop_target', report, reportPrefix))
 
   return {
     ...base,
@@ -388,6 +523,22 @@ function adaptDamageOp(
     ...(consumeWard !== undefined ? { consumeWard } : {}),
     ...(def.healPercentOfDamage !== undefined
       ? { healPercentOfDamage: def.healPercentOfDamage as ScalarExpression }
+      : {}),
+    // Spec D7/D11 -- penetration channels: flat authored points plus
+    // the read-before-hit stack scaling (Kim Liet).
+    ...(def.elementalPenetrationBonus !== undefined
+      ? { elementalPenetration: def.elementalPenetrationBonus as ScalarExpression }
+      : {}),
+    ...(def.penetrationFromStacks !== undefined
+      ? {
+          penetrationFromStacks: {
+            definitionId: def.penetrationFromStacks.ailmentId as BuffDefinitionId,
+            perStack: def.penetrationFromStacks.perStack as ScalarExpression,
+            ...(def.penetrationFromStacks.scope !== undefined
+              ? { scope: def.penetrationFromStacks.scope }
+              : {}),
+          },
+        }
       : {}),
     ...(onLanded.length > 0 ? { onLanded } : {}),
   }
@@ -413,9 +564,9 @@ function adaptAilment(
 
 /** Hoa An spec sec.62 -- same-source seal interactions compile to
     selector-bound buff ops against the caster's OWN instance on the
-    bound target (identity selector source:'self'). `routes` was already
-    filtered at the route seam (applyRouteToTurnSkill) -- the adapter
-    emits every surviving entry verbatim.
+    bound target (identity selector source:'self'). Every entry emits
+    verbatim; `whenSourceBuff` wraps the op in a stacks_at_least gate
+    (spec D12/F9).
 
     When the same def also APPLIES the interacted seal, the op is
     result-gated (spec sec.11/36): it runs only on a successful apply
@@ -426,6 +577,8 @@ function adaptAilment(
 function adaptAilmentInteractions(
   def: TurnSkillDefinition,
   target: SkillTargetIntent,
+  report: (message: string) => void,
+  reportPrefix: string,
 ): AuthoredSkillOperation[] {
   const appliedSealIds = new Set(
     ailmentList(def).map((ailment) => ailment.buffDefinitionId),
@@ -446,12 +599,32 @@ function adaptAilmentInteractions(
     const gate = appliedSealIds.has(interaction.buffId)
       ? { gateOnApplyResult: true }
       : {}
+    const emit = (op: AuthoredSkillOperation): void => {
+      // Spec D12/F9 -- `whenSourceBuff` wraps the interaction's op in
+      // `if stacks_at_least(self, <buff>, 1)` (the Tam Muoi potency
+      // gate). The gateOnApplyResult binding rides the inner op,
+      // preserved across the wrap.
+      if (interaction.whenSourceBuff !== undefined) {
+        ops.push({
+          type: 'if',
+          condition: {
+            kind: 'stacks_at_least',
+            target: 'self',
+            definitionId: interaction.whenSourceBuff,
+            stacks: 1,
+          },
+          then: [op],
+        })
+      } else {
+        ops.push(op)
+      }
+    }
     switch (interaction.kind) {
       case 'trigger_periodic':
-        ops.push({ type: 'trigger_buff_periodic', selector, ...gate })
+        emit({ type: 'trigger_buff_periodic', selector, ...gate })
         break
       case 'add_modifier':
-        ops.push({
+        emit({
           type: 'add_buff_modifier',
           selector,
           modifier: interaction.modifier,
@@ -459,11 +632,25 @@ function adaptAilmentInteractions(
         })
         break
       case 'extend_duration':
-        ops.push({
+        emit({
           type: 'extend_buff_duration',
           selector,
           turns: interaction.turns,
           ...gate,
+        })
+        break
+      case 'add_stacks':
+        // DEC-7: add_buff_stacks declares no apply-result lane -- stacks
+        // bind the latest instance even after a resisted apply. Emitting
+        // gateOnApplyResult here would be dead metadata masking that;
+        // report the inexpressible gate instead of emitting it.
+        if (gate.gateOnApplyResult === true) {
+          report(`${reportPrefix}.ailmentInteractions(add_stacks on self-applied seal: no apply-result lane, stacks bind latest instance)`)
+        }
+        ops.push({
+          type: 'add_buff_stacks',
+          selector,
+          stacks: interaction.stacks,
         })
         break
     }
@@ -841,6 +1028,14 @@ export function toTurnSkillDefinition(skill: Skill, effective: EffectiveSkill): 
     resourceCost: skill.cost,
     damage,
     targeting,
+  }
+
+  // Three-path design (2026-09-25, ruling #12) - the authored vfxPresetId
+  // rides the Skill -> TurnSkillDefinition seam into action_impact.
+  // Undefined stays undefined so the runtime keeps its element/default
+  // fallback for skills that author none.
+  if (skill.vfxPresetId !== undefined) {
+    turnSkill.presetId = skill.vfxPresetId
   }
 
   // Leech healing on hit (e.g. doc_vien_bao_can)

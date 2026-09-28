@@ -23,6 +23,7 @@ import {
   ARTIFACT_UNLOCK_REALM_ID,
 } from '../artifact/ArtifactProgression'
 import { grantCultivationPathRealmReward } from '../player/CultivationPathSystem'
+import { PROGRESSION_NODE_BY_ID } from '../../data/progression/ProgressionNodeCatalog'
 import { CULTIVATION_PATH_MODULES } from '../player/CultivationPathKit'
 import { NGU_HANH_CHAU_DEFINITION } from '../../data/artifact/NguHanhChau'
 import { TribulationDirector } from '../tribulation/TribulationDirector'
@@ -329,13 +330,13 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
     // (incl. golden_core+) already carries a passiveSkillId record, so a
     // grant attempt reaches the policy check, not a missing-reward miss.
     const player = spellPlayer('golden_core')
-    expect(grantCultivationPathRealmReward(player, 'golden_core')).toBe(false)
+    expect(grantCultivationPathRealmReward(player, 'golden_core', (id) => PROGRESSION_NODE_BY_ID.get(id))).toBe(false)
 
     // M-F-ARTIFACT-DEFER: the artifactId record moved to golden_core -
     // the Truc Co record is passive-only, so the grant reports true but
     // delivers NO artifact.
     const atCeiling = spellPlayer('foundation_establishment')
-    expect(grantCultivationPathRealmReward(atCeiling, 'foundation_establishment')).toBe(true)
+    expect(grantCultivationPathRealmReward(atCeiling, 'foundation_establishment', (id) => PROGRESSION_NODE_BY_ID.get(id))).toBe(true)
     expect(atCeiling.artifact).toBeUndefined()
   })
 

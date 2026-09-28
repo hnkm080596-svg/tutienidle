@@ -1,0 +1,12 @@
+{
+  "reviewer": "devin-1b1606304d12455c8a1a356c49b5c124",
+  "verdict": "FINDINGS -- 3 Low + 2 Nit; no Critical/High/Medium",
+  "evidence": "npm ci clean; type-check PASS; 128 files / 1544 tests green; full authority census verified",
+  "findings": [
+    "AUT-1 (Low): resetBattleScopedResources docblock names non-existent direct call sites; raw primaryEntityOverride path skips the reset (currentThe leaks across battles, dev/test-only)",
+    "AUT-2 (Low): whiffed charge-resolve misclassified authored-non-damaging in ally window -- declared.chargedSkill null on whiff -> authoredDamaging false -> fans to battle.enemies (unreachable, tro_mon lacks flag)",
+    "AUT-3 (Low): EntityResourceAdapter numeric consume writes entity.currentThe inline -- second write site outside TheEconomy",
+    "AUT-4 (Nit): phapTheActive re-evaluates the empowerment predicate -- third site reading the same stamped field",
+    "AUT-5 (Nit): reportUnroutedCast wording \"once per cast identity\" -- dedup key is per skill/def identity"
+  ]
+}

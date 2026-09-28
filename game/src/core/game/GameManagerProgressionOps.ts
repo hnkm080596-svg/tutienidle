@@ -6,15 +6,16 @@ import {
   canPurchaseNode as canPurchaseNodeSystem,
   canUpgradeNode as canUpgradeNodeSystem,
   devResetBranch as devResetBranchSystem,
+  computeNodeRefund as computeNodeRefundSystem,
   getNodeLevel as getNodeLevelSystem,
   getNextLevelCost as getNextLevelCostSystem,
   getNodeMaxLevel as getNodeMaxLevelSystem,
   getEffectiveNodeMaxLevel as getEffectiveNodeMaxLevelSystem,
+  ownedNodeIds,
   purchaseNode as purchaseNodeSystem,
-  previewNodeRespec as previewNodeRespecSystem,
   respecNodeTree as respecNodeTreeSystem,
   revokeNodeOwnership,
-  switchRoute as switchRouteSystem,
+  specializationClaimingNodes,
   upgradeNode as upgradeNodeSystem,
   grantSkillCore,
   type NodeRespecPreview,
@@ -27,9 +28,9 @@ import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
 import { type OrbId } from '../kiem-tu/KiemTuState'
 import { isMortalPrecursorSkillId } from '../skill/MortalPrecursors'
+import { isHiddenSwordPathway } from '../kiem-tu/KiemTuPath'
 import { validatePreset } from '../kiem-tu/KiemPhoSystem'
 import { getRealmIndex } from '../realm/realmSystem'
-import { isBattleInProgress } from '../battle/BattleTypes'
 import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
 import {
   resolveCombatSkillRoles,
@@ -44,8 +45,7 @@ import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 import { NGU_KIEM_EVOLUTION_NODE_IDS } from '../../data/progression/KiemTuNodes'
 import { getActiveElement, hasStaticPathCapability } from '../player/CultivationPathSystem'
-import type { SpellPathRoute } from '../phap-tu/PhapTuState'
-import { commitSpellPathElementRoute } from '../phap-tu/PhapTuState'
+import { commitSpellPathElement } from '../phap-tu/PhapTuState'
 import { getEffectiveMainStatCap } from '../stats/StatCap'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { TemplateRegistry } from './TemplateRegistry'
@@ -70,7 +70,7 @@ import type { TemplateRegistry } from './TemplateRegistry'
 // never re-earn it (grantedOnly seals the purchase path), which would
 // turn evolution into a build toggle (design sec.28). The preserve list
 // lives here with the purchase rejection that creates the obligation.
-const RESPEC_PRESERVED_NODE_IDS: readonly string[] = [
+export const RESPEC_PRESERVED_NODE_IDS: readonly string[] = [
   ...Object.values(PHAP_TU_ELEMENT_ROOT_IDS),
   ...NGU_KIEM_EVOLUTION_NODE_IDS,
 ]
@@ -83,8 +83,8 @@ export class GameManagerProgressionOps {
       skillSystem: SkillSystem
       skillManager: SkillManager
       getActivePlayer: () => PlayerData | undefined
-      // Phap Tu Reimagined Task 4 - combat-state read for switchRoute's
-      // out-of-combat gate (route is static during battle). Owned by the
+      // Combat-state read for the node-tree ops' out-of-combat gate
+      // (respec/devReset refuse mid-battle). Owned by the
       // battle owner: a retained terminal TurnBattle does NOT count as
       // in-progress, so the gate is a state query, not object existence.
       isTurnBattleInProgress: () => boolean
@@ -114,6 +114,14 @@ export class GameManagerProgressionOps {
    * selectedTalentIds at character creation.
    */
   syncTalentCombatPassive(player: PlayerData) {
+    // A mid-battle sync would revoke the granted passives then see every
+    // re-grant rejected by learnSkill's in-battle gate, leaving the kit
+    // stripped - callers (boot/restore/creation/breakthrough) never run
+    // during combat, so the whole sync refuses the same boundary.
+    if (this.deps.isTurnBattleInProgress()) {
+      return
+    }
+
     const allTalentPassiveIds = TALENT_PASSIVE_SKILLS.map((skill) => skill.id)
 
     // Revoke every current talent passive first (granting right after is
@@ -160,6 +168,14 @@ export class GameManagerProgressionOps {
    * granted (nodeLevels[core] = 1 + mirror) via NodeSystem.
    */
   learnSkill(skillId: string, player: PlayerData): boolean {
+    // learnSkill writes nodeLevels via its own atomic grant (not the
+    // gated grantSkillCoreBySkillId wrapper) - same mid-battle contract:
+    // a running battle only reads its minted kit snapshot, so the grant
+    // rejects instead of looking applied mid-fight.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     const template = this.deps.skillTemplates.get(skillId)
 
     if (!template) {
@@ -242,6 +258,13 @@ export class GameManagerProgressionOps {
    * core - callers preflight so this never silently fails post-commit.
    */
   grantSkillCoreBySkillId(player: PlayerData, skillId: string): boolean {
+    // node investment mutates player.nodeLevels, which a running battle only
+    // ever reads through its minted kit snapshot - reject instead of
+    // letting an in-battle purchase look like it applied mid-fight.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     const core = this.resolveSkillCore(skillId)
 
     if (!core) {
@@ -266,14 +289,21 @@ export class GameManagerProgressionOps {
    * result.
    */
   purchaseNode(nodeId: string, player: PlayerData): boolean {
+    // Same out-of-combat discipline as respecNodeTree/switchRoute: node
+    // investment mutates player.nodeLevels, which a running battle only
+    // ever reads through its minted kit snapshot - reject instead of
+    // letting an in-battle purchase look like it applied mid-fight.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     if (!this.deps.nodeRegistry.has(nodeId)) {
       return false
     }
 
     // Phap Tu Reimagined (Task 6) - element roots commit through the
-    // atomic selectSpellPathElement() only; public purchase of a root would
-    // split the element+route invariant (element != null implies route
-    // != null).
+    // atomic selectSpellPathElement() only; public purchase of a root
+    // would bypass the commit's learnable-skill preflight.
     if (
       (Object.values(PHAP_TU_ELEMENT_ROOT_IDS) as string[]).includes(nodeId)
     ) {
@@ -351,14 +381,21 @@ export class GameManagerProgressionOps {
 
   /**
    * F-W-2 - thu hoi dung cac one-shot grant ma node bi revoke da phat,
-   * chay SAU commit cua respec/devReset/switchRoute (revokedOut da phan
+   * chay SAU commit cua respec/devReset (revokedOut da phan
    * anh dung set node bi go). Pure field mutation, KHONG throw - dry-run
    * cua respecApply da validate atomicity cua node-set roi.
    *
-   * Bounds (documented): swords da merge vao kiemDaoBase khong un-merge;
-   * cast counts giu lai; grant tu nguon khac khong bao gio trong record.
+   * Bounds (documented): swords da merge vao kiemDaoBase khong un-merge
+   * (residual cua loseKiemY hap thu); cast counts giu lai; grant tu
+   * nguon khac khong bao gio trong record.
+   *
+   * Tra ve tong Insight ma cac leg da hoan lai vao player.skillInsight
+   * (hien chi core refund) - caller cong vao refund domain de bao cao
+   * dung tong, khop previewNodeRespec.
    */
-  applyOneShotClawback(player: PlayerData, revokedNodeIds: ReadonlySet<string>): void {
+  applyOneShotClawback(player: PlayerData, revokedNodeIds: ReadonlySet<string>): number {
+    let clawbackRefund = 0
+
     for (const nodeId of revokedNodeIds) {
       const record = player.nodeOneShotGrants[nodeId]
 
@@ -368,8 +405,10 @@ export class GameManagerProgressionOps {
 
       for (const skillId of record.learnedSkillIds ?? []) {
         // Dual-source guard: neu mot node con so huu khac cung unlock
-        // skill nay thi membership phai song tiep.
-        const stillGrantedElsewhere = player.purchasedNodeIds.some((ownedId) => {
+        // skill nay thi membership phai song tiep. Authority la
+        // nodeLevels (grant ghi o do); purchasedNodeIds chi la mirror
+        // nen phai doc ca hai de khong bo sot node grant-owned.
+        const stillGrantedElsewhere = ownedNodeIds(player).some((ownedId) => {
           const owned = this.deps.nodeRegistry.has(ownedId)
             ? this.deps.nodeRegistry.get(ownedId)
             : undefined
@@ -385,19 +424,47 @@ export class GameManagerProgressionOps {
 
         // Core <skill> duoc grant kem membership - revoke qua cung
         // funnel (refund Insight da do vao core levels: hop ly vi so
-        // Insight do di theo skill do node cap).
+        // Insight do di theo skill do node cap). Dual-source guard
+        // giong skill leg: mot node con so huu khac grant core nay qua
+        // grantsSkillCoreIds thi core phai song tiep - D9d save
+        // validation bat moi grantsSkillCoreIds member ton tai.
         const coreId = skillCoreNodeId(skillId)
+        const coreStillGranted = ownedNodeIds(player).some((ownedId) => {
+          const owned = this.deps.nodeRegistry.has(ownedId)
+            ? this.deps.nodeRegistry.get(ownedId)
+            : undefined
 
-        if (this.deps.nodeRegistry.has(coreId)) {
-          player.skillInsight += revokeNodeOwnership(
+          return owned?.effect.grantsSkillCoreIds?.includes(skillId) ?? false
+        })
+
+        if (!coreStillGranted && this.deps.nodeRegistry.has(coreId)) {
+          const coreRefund = revokeNodeOwnership(
             player,
             this.deps.nodeRegistry.get(coreId),
             this.deps.nodeRegistry,
           )
+
+          player.skillInsight += coreRefund
+          clawbackRefund += coreRefund
         }
       }
 
       if (record.specializationSkillId && record.specializationId) {
+        // Dual-source guard: giong chan skill leg - neu mot node con
+        // so huu khac cung claim spec nay thi spec phai song tiep. Do
+        // voi tap claimant day du (dau tien trong registry khong phai
+        // claimant duy nhat hop le).
+        const specStillClaimed = specializationClaimingNodes(
+          this.deps.nodeRegistry,
+          record.specializationSkillId,
+          record.specializationId,
+        ).some((claimant) => ownedNodeIds(player).includes(claimant.id))
+
+        if (specStillClaimed) {
+          delete player.nodeOneShotGrants[nodeId]
+          continue
+        }
+
         // selectsSpecialization viet len skill instance - chi clear khi
         // spec hien tai van la spec record do (chon spec khac sau nay
         // khong phai viec cua grant nay).
@@ -409,18 +476,27 @@ export class GameManagerProgressionOps {
 
       delete player.nodeOneShotGrants[nodeId]
     }
+
+    return clawbackRefund
   }
 
   /**
    * Phap Tu Reimagined (Task 6) - the ONLY public writer of
-   * player.spellPath.element. Atomic: validates eligibility + route +
+   * player.spellPath.element. Atomic: validates eligibility +
    * root purchasability FIRST, then purchases the element root through
    * the generic NodeSystem primitive, applies unlock effects, and
-   * finally commits { element, route }. Any failure leaves spellPath
-   * untouched - element != null implies route != null always.
+   * finally commits { element }. Any failure leaves spellPath
+   * untouched. (Reimagined spec: the route half of the old atomic
+   * (element, route) commitment is retired - element alone commits.)
    */
-  selectSpellPathElement(element: ElementType, route: SpellPathRoute, player: PlayerData): boolean {
-    // Cultivation Path Framework (M4, R6): element/route machinery is
+  selectSpellPathElement(element: ElementType, player: PlayerData): boolean {
+    // Out-of-combat contract -- same guard as devResetBranch: the live
+    // battle loadout is snapshotted, so a mid-battle element commit
+    // would silently split party state.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+    // Cultivation Path Framework (M4, R6): element machinery is
     // spell_pathway-only - P1 - the declared 'spell.elemental_casting'
     // capability is the gate, so the post-M7 collapsed ('spell',
     // 'hidden_spell_pathway') shape cannot commit an element. The requiredWay stamp
@@ -429,11 +505,7 @@ export class GameManagerProgressionOps {
       return false
     }
 
-    if (player.spellPath.element !== null || player.spellPath.route !== null) {
-      return false
-    }
-
-    if (route !== 'dot' && route !== 'no') {
+    if (player.spellPath.element !== null) {
       return false
     }
 
@@ -451,7 +523,7 @@ export class GameManagerProgressionOps {
 
     // Transaction boundary (review round-4, atomicity hardening): every
     // skill the root unlocks must be learnable BEFORE the purchase
-    // spends insight + commits { element, route } - a missing template
+    // spends insight + commits { element } - a missing template
     // would leave the element committed without its basic. M-QI-05 -
     // the same boundary now covers levelled-skill cores and
     // grantsSkillCoreIds members.
@@ -479,7 +551,7 @@ export class GameManagerProgressionOps {
       grantSkillCore(player, this.deps.nodeRegistry.get(skillCoreNodeId(skillId)))
     }
 
-    commitSpellPathElementRoute(player, element, route)
+    commitSpellPathElement(player, element)
 
     return true
   }
@@ -489,6 +561,13 @@ export class GameManagerProgressionOps {
    * per node data; cannot exceed maxLevel; failure mutates nothing.
    */
   upgradeNode(nodeId: string, player: PlayerData): boolean {
+    // Same battle gate as purchaseNode: an upgrade writes the same
+    // player.nodeLevels the running battle reads only through minted
+    // clones - reject instead of silently applying nothing mid-fight.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     if (!this.deps.nodeRegistry.has(nodeId)) {
       return false
     }
@@ -543,11 +622,19 @@ export class GameManagerProgressionOps {
    * (derived from level/cost data), cascades orphan child nodes; modifiers
    * update via the aggregators (no reverse subtraction of old modifiers).
    */
-  devResetBranch(branchTag: string, player: PlayerData): number {
+  devResetBranch(branchTag: string, player: PlayerData): number | null {
+    // Same out-of-combat contract as respecNodeTree: node
+    // investment is static during battle, so a mid-battle reset is
+    // refused even though this op is dev-console only today.
+    if (this.deps.isTurnBattleInProgress()) {
+      return null
+    }
+
+
     const revoked = new Set<string>()
     const refund = devResetBranchSystem(player, this.deps.nodeRegistry, branchTag, revoked)
-    this.applyOneShotClawback(player, revoked)
-    return refund
+
+    return refund + this.applyOneShotClawback(player, revoked)
   }
 
   /**
@@ -558,16 +645,141 @@ export class GameManagerProgressionOps {
    * respec can never strand a committed element without its root.
    */
   previewNodeRespec(player: PlayerData, scope?: { rootId?: string }): NodeRespecPreview {
-    return previewNodeRespecSystem(player, this.deps.nodeRegistry, {
+    // JSON round-trip (not structuredClone): callers hand in the Pinia
+    // reactive state; PlayerData is what the save system serializes.
+    const sim = JSON.parse(JSON.stringify(player)) as PlayerData
+
+    const revoked = new Set<string>()
+    const refund = respecNodeTreeSystem(sim, this.deps.nodeRegistry, {
       ...scope,
       preserveIds: RESPEC_PRESERVED_NODE_IDS,
-    })
+    }, revoked)
+
+    const clawback = this.dryRunOneShotClawback(sim, revoked)
+
+    const resetNodeIds = Object.keys(player.nodeLevels ?? {}).filter(
+      id => !(id in (sim.nodeLevels ?? {})),
+    )
+
+    return {
+      refund: refund + clawback.refund,
+      resetNodeIds,
+      resetCount: resetNodeIds.length,
+      clawback,
+    }
+  }
+
+  /**
+   * Dry-run the one-shot-grant clawback analytically: mirror every leg
+   * of applyOneShotClawback on the post-revocation sim without
+   * SkillSystem writes (SkillManager is a live registry, not part of
+   * PlayerData).
+   */
+  private dryRunOneShotClawback(
+    sim: PlayerData,
+    revoked: Set<string>,
+  ): NonNullable<NodeRespecPreview['clawback']> {
+    const clawback: NonNullable<NodeRespecPreview['clawback']> = {
+      refund: 0,
+      removedNodeIds: [],
+      unlearnedSkillIds: [],
+      clearedSpecializations: [],
+    }
+
+    for (const nodeId of revoked) {
+      const record = sim.nodeOneShotGrants[nodeId]
+
+      if (!record) {
+        continue
+      }
+
+      for (const skillId of record.learnedSkillIds ?? []) {
+        const stillGrantedElsewhere = ownedNodeIds(sim).some((ownedId) => {
+          const owned = this.deps.nodeRegistry.has(ownedId)
+            ? this.deps.nodeRegistry.get(ownedId)
+            : undefined
+
+          return owned?.effect.unlocksSkillIds?.includes(skillId) ?? false
+        })
+
+        if (stillGrantedElsewhere) {
+          continue
+        }
+
+        if (
+          this.deps.skillManager.has(skillId) &&
+          !clawback.unlearnedSkillIds.includes(skillId)
+        ) {
+          clawback.unlearnedSkillIds.push(skillId)
+        }
+
+        const coreId = skillCoreNodeId(skillId)
+        // Dual-source guard giong apply: core song tiep khi mot node
+        // con so huu van grant no qua grantsSkillCoreIds (D9d).
+        const coreStillGranted = ownedNodeIds(sim).some((ownedId) => {
+          const owned = this.deps.nodeRegistry.has(ownedId)
+            ? this.deps.nodeRegistry.get(ownedId)
+            : undefined
+
+          return owned?.effect.grantsSkillCoreIds?.includes(skillId) ?? false
+        })
+
+        if (!coreStillGranted && this.deps.nodeRegistry.has(coreId) && !this.deps.nodeRegistry.get(coreId).rewardOnly) {
+          const core = this.deps.nodeRegistry.get(coreId)
+          const level = getNodeLevelSystem(sim, coreId)
+          const coreRefund = computeNodeRefundSystem(
+            core,
+            level,
+            sim.nodeFreePurchaseRecord?.[coreId],
+          )
+          clawback.refund += coreRefund
+
+          if (coreId in sim.nodeLevels) {
+            delete sim.nodeLevels[coreId]
+            clawback.removedNodeIds.push(coreId)
+          }
+
+          const index = sim.purchasedNodeIds.indexOf(coreId)
+
+          if (index !== -1) {
+            sim.purchasedNodeIds.splice(index, 1)
+          }
+
+          if (sim.nodeFreePurchaseRecord) {
+            delete sim.nodeFreePurchaseRecord[coreId]
+          }
+        }
+      }
+
+      if (record.specializationSkillId && record.specializationId) {
+        const stillClaimed = specializationClaimingNodes(
+          this.deps.nodeRegistry,
+          record.specializationSkillId,
+          record.specializationId,
+        ).some((claimant) => ownedNodeIds(sim).includes(claimant.id))
+
+        if (
+          !stillClaimed &&
+          this.deps.skillManager.get(record.specializationSkillId)
+            ?.selectedSpecializationId === record.specializationId
+        ) {
+          clawback.clearedSpecializations.push({
+            skillId: record.specializationSkillId,
+            specializationId: record.specializationId,
+          })
+        }
+      }
+
+      delete sim.nodeOneShotGrants[nodeId]
+    }
+
+    return clawback
   }
 
   /**
    * M-F-RESPEC (ruling S14) - player-facing FREE Beta respec: revoke
    * node investment and refund 100% of actually-paid Insight. Out of
-   * combat ONLY (same guard as switchRoute). scope.rootId scopes the
+   * combat ONLY (same guard as devResetBranch). scope.rootId scopes the
    * reset to that subtree root; omitted = the whole NodeTree. Returns
    * the refunded Insight, or null when rejected in battle.
    */
@@ -581,39 +793,8 @@ export class GameManagerProgressionOps {
       ...scope,
       preserveIds: RESPEC_PRESERVED_NODE_IDS,
     }, revoked)
-    this.applyOneShotClawback(player, revoked)
-    return refund
-  }
 
-  /**
-   * Phap Tu Reimagined Task 4 - switch the route commitment. Out of
-   * combat ONLY: a route is static during battle (INV-16), so this
-   * rejects while a turn battle is active. The domain function owns
-   * the 75% refund + route-tagged level cleanup.
-   */
-  switchRoute(route: 'dot' | 'no', player: PlayerData): boolean {
-    if (this.deps.isTurnBattleInProgress()) {
-      return false
-    }
-
-    // Review fix (HIGH-2): switching requires the atomic
-    // (element, route) commit on the normal spell path - otherwise
-    // there is no committed route to switch FROM. The domain function
-    // enforces the same invariant; the op must not report success for
-    // a rejected write.
-    if (
-      !hasStaticPathCapability(player, 'spell.elemental_casting') ||
-      player.spellPath.element === null ||
-      player.spellPath.route === null
-    ) {
-      return false
-    }
-
-    const revoked = new Set<string>()
-    switchRouteSystem(player, this.deps.nodeRegistry, route, revoked)
-    this.applyOneShotClawback(player, revoked)
-
-    return true
+    return refund + this.applyOneShotClawback(player, revoked)
   }
 
   /**
@@ -629,6 +810,12 @@ export class GameManagerProgressionOps {
    * injected dep so GameManager stays the notification owner.
    */
   levelUpSkill(skillId: string, player: PlayerData): boolean {
+    // Same battle gate as purchaseNode/upgradeNode - the core upgrade
+    // below writes player.nodeLevels mid-fight would never apply.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     const coreId = skillCoreNodeId(skillId)
 
     if (!this.deps.nodeRegistry.has(coreId)) {
@@ -706,6 +893,13 @@ export class GameManagerProgressionOps {
    * "Nguyen tac" sec.2).
    */
   allocateAttributePoint(player: PlayerData, stat: MainStatKey): boolean {
+    // baseStats are minted into the combat entity at battle build - a
+    // mid-battle write is invisible to the running fight, so it rejects
+    // like every other combat-shaping progression write.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     if (player.attributePoints <= 0) {
       return false
     }
@@ -730,6 +924,12 @@ export class GameManagerProgressionOps {
    * write can never produce a state restore would reject.
    */
   setMortalBasicSkill(player: PlayerData, skillId: string): boolean {
+    // the pick binds the kit at battle build - mid-battle writes are
+    // battle-invisible, so they reject like every other gated write.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     if (player.realmId !== 'mortal' || player.cultivationPath !== undefined) {
       return false
     }
@@ -810,7 +1010,7 @@ export class GameManagerProgressionOps {
       return false
     }
 
-    if (isBattleInProgress(this.deps.getTurnBattle()?.state)) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
@@ -841,7 +1041,46 @@ export class GameManagerProgressionOps {
   }
 
   // Core Loop Foundation checklist (Muc SKILL) - "behavior-changing node".
-  selectSkillSpecialization(skillId: string, specializationId: string): boolean {
+  // Three-path design (2026-09-25): capstone/variant nodes OWN the claim
+  // on the specialization they select - the free-switch chip path must
+  // hold the claiming node or the 3-Insight cost / realm prereq /
+  // excludesNode mutex are all bypassed. Unclaimed specs switch freely.
+  selectSkillSpecialization(skillId: string, specializationId: string, player: PlayerData): boolean {
+    // specialization changes the resolved kit - same mid-battle gate as
+    // the other combat-shaping writes.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
+    const claimants = specializationClaimingNodes(this.deps.nodeRegistry, skillId, specializationId)
+
+    // F-PT-C-3 - claim gate reads the same ownership mirror as clawback:
+    // ownedNodeIds union (nodeLevels + purchasedNodeIds). nodeLevels-only
+    // would disagree with the clawback leg on diverged crafted saves.
+    // Any owned claimant authorizes the spec (first registry hit is not
+    // the only legitimate owner when nodes share a claim).
+    if (claimants.length > 0 && !claimants.some((claimant) => ownedNodeIds(player).includes(claimant.id))) {
+      return false
+    }
+
     return this.deps.skillSystem.selectSpecialization(skillId, specializationId)
+  }
+
+  // F-PT-INT-2 - load-time reconcile for stale spec claims: a selection
+  // made before the claim gate existed (or via a crafted save) may name
+  // a spec whose claiming node was never owned. Clear it - the spec
+  // gate above means the player can re-pick freely once the claimer is
+  // legitimately held.
+  reconcileSpecClaims(player: PlayerData): void {
+    for (const skill of this.deps.skillManager.getAll()) {
+      const specId = skill.selectedSpecializationId
+      if (specId === undefined) {
+        continue
+      }
+      const claimants = specializationClaimingNodes(this.deps.nodeRegistry, skill.id, specId)
+      if (claimants.length > 0 && !claimants.some((claimant) => ownedNodeIds(player).includes(claimant.id))) {
+        this.deps.skillSystem.clearSpecialization(skill.id, specId)
+      }
+    }
   }
 }

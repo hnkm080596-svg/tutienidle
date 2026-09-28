@@ -8,6 +8,7 @@ import { createDefaultPlayer, type PlayerData } from '../../player/Player'
 import { CAST_LEVELING_THRESHOLDS } from '../../skill/SkillSystem'
 import { reachableKiemPhoComboIds } from '../../kiem-tu/KiemPhoProvider'
 import { SPELL_BASICS } from '../../../data/skill/TurnBasicAttacks'
+import { CORE_SKILLS } from '../../../data/skill/CoreSkills'
 import type { CultivationPathId, CultivationWayId } from '../../player/CultivationPathKit'
 import { freshSwordPathState } from '../../kiem-tu/KiemTuState'
 import type {
@@ -81,15 +82,55 @@ function mortalBuild(): SimBuildSnapshot {
 // with insight). chooseCultivationPath only ever accepts mortal
 // realmLevel>=CORE, so a realm-elevated recipe must START committed -
 // there is no canonical write that grants way state later.
+// F-NK-COR-5: kiemDaoCount=2 (a forged second sword is honest
+// mid-progress state) so every cast emits 2 ordered instances and the
+// second actually exercises the Lien momentum multiplier - count=1
+// leaves the factor pinned at 1 and the lane unmeasured.
+//
+// Reachable post-ritual shape (F-NK-COR-A4-1 / F-NK-AUT-A4-2): the
+// offerGate requires tram Lv3 - core_tram:3 is the level authority, so
+// the mortal value is inherited rather than overwritten; every leveled
+// node id must appear in purchasedNodeIds (the core_* mirror rule save
+// validation enforces), and the mortal precursor skills a real player
+// learned stay learned (P7-M4 learned-set membership).
 function hiddenNguFoundationBuild(): SimBuildSnapshot {
   const player = mortalSourcePlayer()
   player.realmId = 'foundation_establishment'
   player.realmLevel = 1
   player.cultivationPath = 'sword'
   player.cultivationWay = 'hidden_sword_pathway'
-  player.swordPath = freshSwordPathState()
-  player.nodeLevels = { ...player.nodeLevels, ngu_kiem_khoi: 1, ngu_kiem_lien: 1 }
-  return { player, skills: [], techniques: [] }
+  player.swordPath = { ...freshSwordPathState(), kiemDaoCount: 2 }
+  player.nodeLevels = {
+    ...player.nodeLevels,
+    core_ngu_kiem_thuat: 1,
+    ngu_kiem_khoi: 1,
+    ngu_kiem_lien: 1,
+  }
+  player.purchasedNodeIds = [
+    'core_tram',
+    'core_huy_quyen',
+    'core_ngu_kiem_thuat',
+    'ngu_kiem_khoi',
+    'ngu_kiem_lien',
+  ]
+  // Mortal precursors remain learned: core_tram:3 -> tram L3, the
+  // linh_bao cast count sits at its Lv3 threshold, core_huy_quyen:3 ->
+  // huy_quyen L3. ngu_kiem_thuat itself is a kit-minted
+  // TurnSkillDefinition, not a Skill - it never enters this list.
+  const precursor = (id: string, level: number) => {
+    const def = CORE_SKILLS.find((skill) => skill.id === id)
+    if (def === undefined) {
+      throw new Error(`missing precursor skill def ${id}`)
+    }
+    return { ...def, level }
+  }
+  const skills = [
+    precursor('tram', 3),
+    // linh_bao cast count sits at its Lv3 threshold -> learned at L3.
+    precursor('linh_bao', 3),
+    precursor('huy_quyen', 3),
+  ]
+  return { player, skills, techniques: [] }
 }
 
 const NO_ECONOMY: ExpectedEconomy = {
@@ -109,10 +150,10 @@ export const BASELINE_RECIPES: readonly BaselineRecipe[] = [
     // qi_refining (realmIndex 1) unlocks orb_dam only; the other orbs
     // are learned into the role kit but unreachable as basics here.
     // Combo extra-impact ops carry the bare combo id as originId
-    // (tam_thich fired 178 damage under 'tam_thich', not the preset id)
+    // (nhat_tuyen fires damage under 'nhat_tuyen', not the preset id)
     // - they are the way's own mechanic and count as kit damage. Ids
     // come through the provider's derived reachability view (INV-7
-    // seals the catalog itself); at qi_refining only tam_thich [D,D,D]
+    // seals the catalog itself); at qi_refining only nhat_tuyen [D,D,D]
     // is reachable, so higher-realm combos classify as leakage.
     kitSkillIds: ['orb_dam', ...reachableKiemPhoComboIds('qi_refining')],
     expectedEconomy: {
@@ -124,23 +165,27 @@ export const BASELINE_RECIPES: readonly BaselineRecipe[] = [
     id: 'phap_tu_ngu_hanh',
     primary: true,
     ritual: { pathId: 'spell', wayId: 'spell_pathway' },
-    // Element+route commit is the atomic canonical writer; the free
+    // Element commit is the atomic canonical writer; the free
     // element root unlocks the kit basic.
     postRitual: [
-      { type: 'select_phap_tu_element', element: 'fire', route: 'dot' },
+      { type: 'select_phap_tu_element', element: 'fire' },
     ],
     // Element-basic damage ops carry the element skill id as originId.
-    // Only the recipe-resolved live set is kit: the fixed fire route
+    // Only the recipe-resolved live set is kit: the committed element
     // resolves hoa_cau_thuat at qi_refining - any other element id on
     // this row is foreign leakage and must land in other_skill.
     kitSkillIds: ['hoa_cau_thuat'],
     expectedEconomy: {
-      // +5 the per landed cast (applySpellPathEssenceGains) + mana regen.
-      mustGenerate: ['theGained', 'mpGained'],
-      // manaShieldPercent 0.25 drains mp on hits taken.
-      mustSpend: ['mpSpent'],
-      // The empowered-ultimate spender is golden_core-gated.
-      notActiveAtThisPowerPoint: ['theSpent'],
+      // +1 the per landed cast (theGainOnLandedCast). mpGained is NOT
+      // declared: the reimagined basic is free (resourceType 'none'),
+      // so MP never dips and the regen channel reads 0 - a declared
+      // dead channel. The data slice may reintroduce a cost; restore
+      // the declaration then.
+      mustGenerate: ['theGained'],
+      mustSpend: [],
+      // The spender channels: the legacy manaShieldPercent path leak is
+      // retired (no mp drain on hits) and Phap The consumes no pool.
+      notActiveAtThisPowerPoint: ['mpSpent', 'mpGained', 'theSpent'],
       mustCast: ['hoa_cau_thuat'],
     },
   },
@@ -151,7 +196,10 @@ export const BASELINE_RECIPES: readonly BaselineRecipe[] = [
     // cuong_chien root -> resolveBodyKit produces the kit at battle
     // build. Purchased via the public progressionOps writer.
     postRitual: [{ type: 'purchase_node', nodeId: 'cuong_chien' }],
-    kitSkillIds: ['cuong_quyen', 'loan_dau', 'bat_tu_ba_the'],
+    // Beta: the live kit at this entry power point is the basic ONLY -
+    // Loan Dau unlocks via the Truc Co core grant and Bat Tu Ba The is
+    // post-beta, so neither can mint an originId here.
+    kitSkillIds: ['cuong_quyen'],
     expectedEconomy: {
       // kim_cang_bat_hoai_the hp regen is the sustain channel - it
       // cycles only after the player takes damage, guaranteed in
@@ -188,15 +236,16 @@ export const ALTERNATE_RECIPES: readonly BaselineRecipe[] = [
     id: 'the_tu_ung_the',
     primary: false,
     ritual: { pathId: 'body', wayId: 'hidden_body_pathway' },
-    // Non-mutex roots plant the proc-window markers (ho/phan/tro_mon)
-    // at battle build - without them the kit is the bare ung_the marker
-    // and no reactive window ever opens (all free at qi_refining).
+    // Beta tree (sec.88): Phan is BASELINE - the kit opens its window
+    // with no node. The two LQ minors are the only purchasable writes
+    // at this power point; Ho/Tro baselines and the consequence majors
+    // sit behind major_quan_the (foundation_establishment + rank 5),
+    // unreachable at qi_refining. tu_the/bach_ung are parked defs.
     postRitual: [
-      { type: 'purchase_node', nodeId: 'ho_mon' },
-      { type: 'purchase_node', nodeId: 'phan_mon' },
-      { type: 'purchase_node', nodeId: 'tro_mon' },
+      { type: 'purchase_node', nodeId: 'minor_thau_the' },
+      { type: 'purchase_node', nodeId: 'minor_phan_kinh' },
     ],
-    kitSkillIds: ['tham_the', 'tu_the', 'bach_ung', 'phan_kich', 'tro_kich', 'trong_phan_kich'],
+    kitSkillIds: ['tham_the', 'phan_kich'],
     expectedEconomy: {
       mustGenerate: ['theGained'],
       // Reactive procs spend the pool (TheEconomy is hidden_body_pathway-owned).

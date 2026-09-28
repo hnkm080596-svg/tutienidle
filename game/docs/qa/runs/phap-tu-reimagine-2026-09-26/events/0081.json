@@ -1,0 +1,11 @@
+{
+  "applied": [
+    "evidence:EV-PTR-CORQ",
+    "evidence:EV-PTR-FIXQ1",
+    "review:REV-PTR-COR-Q1",
+    "finding:F-PTR-244",
+    "finding:F-PTR-245",
+    "lesson:L-PTR-P-CHAIN-GAP (updated)",
+    "lesson:L-PTR-P-DESIGNED-SEMANTICS (updated)"
+  ]
+}

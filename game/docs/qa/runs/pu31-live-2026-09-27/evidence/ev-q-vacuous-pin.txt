@@ -1,0 +1,5 @@
+command: node --test scripts/qa/tests/cli.test.mjs
+result: 3/3 pass
+- TAP counters parse to real counts
+- spec-reporter output yields no counters (not mistaken for a pass)
+- qualifyGaps refuses: zero denominator, nonzero-exit, missing sentinel

@@ -73,7 +73,7 @@ describe('GameManager — Kiem Pho hien wiring', () => {
     expect(participant.ultimate).toBeUndefined()
   })
 
-  it('preset [dam,dam,dam] fires tam_thich on the 3rd cast as an extra impact', () => {
+  it('preset [dam,dam,dam] fires nhat_tuyen on the 3rd cast as an extra impact', () => {
     const { gameManager, combatSource } = setup()
 
     const impacts: Array<{ presetId?: string; sourceId: string }> = []
@@ -83,7 +83,7 @@ describe('GameManager — Kiem Pho hien wiring', () => {
 
     advanceTurns(gameManager, combatSource, 3)
 
-    const comboImpacts = impacts.filter(e => e.presetId === 'kiem_combo_tam_thich')
+    const comboImpacts = impacts.filter(e => e.presetId === 'kiem_combo_nhat_tuyen')
     expect(comboImpacts.length).toBeGreaterThanOrEqual(1)
     expect(comboImpacts[0]!.sourceId).toBe('player')
   })

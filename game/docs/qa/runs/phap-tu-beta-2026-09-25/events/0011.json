@@ -1,0 +1,24 @@
+{
+  "applied": [
+    "evidence:EV-FIX-VERIFY-01 (updated)",
+    "evidence:EV-FIX-VERIFY-02 (updated)",
+    "finding:F-CA-01 (updated)",
+    "finding:F-CA-02 (updated)",
+    "finding:F-CA-03 (updated)",
+    "finding:F-CA-04 (updated)",
+    "finding:F-CA-05 (updated)",
+    "finding:F-CA-06 (updated)",
+    "finding:F-CA-07 (updated)",
+    "finding:F-CA-08 (updated)",
+    "finding:F-CA-09 (updated)",
+    "review:REV-COR-A (updated)",
+    "review:REV-AUT-A (updated)",
+    "review:REV-INT-A (updated)",
+    "lesson:L-PT-01",
+    "lesson:L-PT-02",
+    "lesson:L-PT-03",
+    "lesson:L-PT-04",
+    "lesson:L-PT-05",
+    "lesson:L-PT-06"
+  ]
+}

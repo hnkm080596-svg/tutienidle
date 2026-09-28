@@ -1,0 +1,18 @@
+{
+ "kind": "fix-batch",
+ "commit": "11e10f2c",
+ "productStateId": "20f373d4864085a3be6f76be88ebd1cd4ad5c94c0bd3f8636c7654949f9cc889",
+ "summary": "cleanJ fix batch: registry subcasts x cadence.chargeTurns mutual-exclusion fault; TBS enqueueFollowUpExecutions chargeTurns gate + contract pin; unrouted charge-resolve stamps castBlocked + label uses armed id (declared.skillId); adapter free-cast report truthfulness; resolveInterceptWindow latent ordering-hazard docblock; route-era docblocks corrected; TheEconomy dormant proc-pay documented; consumeResourceFor floors at zero.",
+ "verification": "npm run type-check clean; npx vitest run src/core/battle/turn src/core/skilldef src/core/buff2 tests/architecture/asciiComments = 930 pass",
+ "closedFindings": [
+  "F-PTR-145",
+  "F-PTR-146",
+  "F-PTR-147",
+  "F-PTR-148",
+  "F-PTR-149",
+  "F-PTR-150",
+  "F-PTR-151",
+  "F-PTR-152",
+  "F-PTR-153"
+ ]
+}

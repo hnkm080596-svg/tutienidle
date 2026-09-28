@@ -1,0 +1,22 @@
+{
+  "applied": [
+    "review:REV-PTR-CLO-9 (updated)",
+    "finding:F-PTR-83 (updated)",
+    "evidence:EV-PTR-CLO9 (updated)",
+    "evidence:EV-PTR-FIXCLO (updated)",
+    "finding:F-PTR-69 (updated)",
+    "finding:F-PTR-70 (updated)",
+    "finding:F-PTR-71 (updated)",
+    "finding:F-PTR-72 (updated)",
+    "finding:F-PTR-73 (updated)",
+    "finding:F-PTR-74 (updated)",
+    "finding:F-PTR-75 (updated)",
+    "finding:F-PTR-76 (updated)",
+    "finding:F-PTR-77 (updated)",
+    "finding:F-PTR-78 (updated)",
+    "finding:F-PTR-80 (updated)",
+    "lesson:L-PTR-CLO9-ASCII",
+    "finding:F-PTR-81 (updated)",
+    "finding:F-PTR-82 (updated)"
+  ]
+}

@@ -108,7 +108,7 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     const player = createDefaultPlayer()
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
-    player.spellPath = { element: 'wood', route: null }
+    player.spellPath = { element: 'wood' }
 
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('doc_chuong', player)
@@ -127,7 +127,7 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     const player = createDefaultPlayer()
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
-    player.spellPath = { element: 'fire', route: null }
+    player.spellPath = { element: 'fire' }
 
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('hoa_cau_thuat', player)
@@ -182,16 +182,22 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
 })
 
 describe('ARCH-008 — authored buff duration rides appliesBuff.duration', () => {
-  it('duong_linh_tuyen specialization applies thanh_tuyen for 7.984 turns, not the registry-default 5.988', () => {
+  it('an authored buff duration rides appliesBuff.duration through the real loop (7.984, not registry-default 5.988)', () => {
     const { gameManager, combatSource } = makeManager()
     const player = createDefaultPlayer()
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
-    player.spellPath = { element: 'water', route: null }
+    player.spellPath = { element: 'water' }
 
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('thanh_tuyen_duong_linh', player)
-    gameManager.progressionOps.selectSkillSpecialization('thanh_tuyen_duong_linh', 'duong_linh_tuyen')
+    // Phap Tu Reimagined: the duong_linh_tuyen specialization retired
+    // with the chain kit; no shipped skill still authors a buff
+    // duration. Stamp the override on the learned template directly so
+    // the ARCH-008 conversion seam (effects[].duration ->
+    // appliesBuffs[].durationOverride) stays covered end-to-end.
+    const learned = gameManager.skillManager.get('thanh_tuyen_duong_linh')!
+    learned.effects = [{ type: 'buff', buffId: 'thanh_tuyen', duration: 8 }]
     // Required basic for the committed element (round-3 fail-fast).
     gameManager.progressionOps.learnSkill('thuy_tien_thuat', player)
 

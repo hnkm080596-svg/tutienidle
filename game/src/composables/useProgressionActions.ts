@@ -2,7 +2,6 @@ import { useGameManager, useStateVersion } from './useGameState'
 import { usePlayerStore } from '../stores/player'
 import type { MainStatKey } from '../core/stats/StatTypes'
 import type { ElementType } from '../core/element/ElementType'
-import type { SpellPathRoute } from '../core/phap-tu/PhapTuState'
 
 /**
  * Generic progression actions (attributes, nodes, spell-path selection,
@@ -40,7 +39,7 @@ export function useProgressionActions() {
     // Core Loop Foundation checklist (Muc SKILL) - "behavior-changing
     // node".
     selectSkillSpecialization: (skillId: string, specializationId: string) =>
-      withBump(gameManager.progressionOps.selectSkillSpecialization(skillId, specializationId)),
+      withBump(gameManager.progressionOps.selectSkillSpecialization(skillId, specializationId, player.$state)),
 
     // Node Tree - GameManager method (unlocksSkillIds can skillTemplates).
     purchaseNode: (nodeId: string) => withBump(gameManager.progressionOps.purchaseNode(nodeId, player.$state)),
@@ -48,24 +47,23 @@ export function useProgressionActions() {
     // Node level (plan sec.6.2) - nang node da linh ngo len +1 cap.
     upgradeNode: (nodeId: string) => withBump(gameManager.progressionOps.upgradeNode(nodeId, player.$state)),
 
-    // Phap Tu Reimagined (Task 16) - atomic element+route commit at the
-    // element root (INV-13); the blocking modal only collects input.
-    selectSpellPathElement: (element: ElementType, route: SpellPathRoute) =>
-      withBump(gameManager.progressionOps.selectSpellPathElement(element, route, player.$state)),
-
-    // Route respec (spec P3) - out-of-combat only (op enforces), resets
-    // old-route nodes and refunds floor(actualPaid x 0.75).
-    switchSpellPathRoute: (route: SpellPathRoute) =>
-      withBump(gameManager.progressionOps.switchRoute(route, player.$state)),
+    // Phap Tu Reimagine (spec D5) -- element-only commit at the element
+    // root; routes are retired, no pick modal.
+    selectSpellPathElement: (element: ElementType) =>
+      withBump(gameManager.progressionOps.selectSpellPathElement(element, player.$state)),
 
     // Reset development mot nhanh (plan sec.6.10) - hoan Cam Ngo da tieu;
     // bump vo dieu kien (reset ve 0 level cung la thay doi state UI).
     devResetBranch: (branchTag: string) => {
-      gameManager.progressionOps.devResetBranch(branchTag, player.$state)
+      const refund = gameManager.progressionOps.devResetBranch(branchTag, player.$state)
+
+      if (refund === null) {
+        return refund
+      }
 
       bumpState()
 
-      return true
+      return refund
     },
 
     // M-F-RESPEC (ruling S14) - FREE Beta respec: reset node dau tu,

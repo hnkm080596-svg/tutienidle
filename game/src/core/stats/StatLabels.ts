@@ -39,7 +39,7 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
   { key: 'skillDamagePercent', label: 'Sát thương kỹ năng', description: 'Tăng sát thương gây ra bởi kỹ năng.', category: 'special' },
   { key: 'finalDamageReductionPercent', label: 'Giảm sát thương cuối', description: 'Giảm toàn bộ sát thương nhận vào ở bước cuối.', category: 'defense_advanced' },
   { key: 'chanceToIgnoreResistance', label: 'Xuyên kháng tuyệt đối', description: 'Xác suất 1 đòn bỏ qua HOÀN TOÀN Giáp/Kháng của đối phương.', category: 'special' },
-  { key: 'elementApplicationPercent', label: 'Tỉ lệ áp Nguyên Tố', description: 'Cộng thẳng vào tỉ lệ áp dị thường (Thiêu Đốt...) của skill khi đánh trúng.', category: 'special' },
+  { key: 'elementApplicationPercent', label: 'Tỉ lệ áp Nguyên Tố', description: 'Nhân với tỉ lệ áp dị thường (Thiêu Đốt...) của skill khi đánh trúng (vd: +10% trên gốc 15% → 16.5%).', category: 'special' },
   { key: 'reactionEffectPercent', label: 'Hiệu Ứng Phản Ứng', description: 'Tăng % sát thương khi Phản Ứng Nguyên Tố kích hoạt.', category: 'special' },
   { key: 'ailmentDurationPercent', label: 'Thời Lượng Dị Thường', description: 'Tăng % thời lượng mọi dị thường mình gây ra.', category: 'special' },
   { key: 'dotResistancePercent', label: 'Kháng DoT', description: 'Giảm thẳng % sát thương nhận từ mọi hiệu ứng DoT (Bỏng/Trúng Độc/Chảy Máu...).', category: 'defense_advanced' },
@@ -55,7 +55,11 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
   { key: 'enduranceThreshold', label: 'Ngưỡng Kiên Cường', description: 'Đòn có sát thương ≤ ngưỡng này bị giảm mạnh theo % Kiên Cường — đòn to hơn chỉ bị trừ 1 lượng cố định.', category: 'defense_advanced' },
   { key: 'endurancePercent', label: '% Kiên Cường', description: 'Mức giảm sát thương áp dụng cho đòn nhỏ (xem Ngưỡng Kiên Cường).', category: 'defense_advanced' },
   { key: 'wardMax', label: 'Hộ Thuẫn tối đa', description: 'Máu phụ hấp thụ sát thương trước Khí huyết — tự hồi khi không bị đánh trúng 1 lúc.', category: 'defense_advanced' },
-  { key: 'manaShieldPercent', label: 'Linh lực hộ thể', description: 'Tỉ lệ sát thương được chuyển sang tiêu hao Linh lực.', category: 'defense_advanced' },
+  // Phap Tu Reimagined (F13): 'Linh luc ho the' is the reimagine's
+  // DR mechanic name -- manaShieldPercent (the damage->mana shield)
+  // keeps a distinct label.
+  { key: 'manaShieldPercent', label: 'Khiên linh lực', description: 'Tỉ lệ sát thương được chuyển sang tiêu hao Linh lực.', category: 'defense_advanced' },
+  { key: 'linhLucHoTheCap', label: 'Linh lực hộ thể', description: 'Trần giảm sát thương trực tiếp, tỉ lệ theo Linh lực hiện tại — cạn Linh lực thì không còn giảm.', category: 'defense_advanced' },
   { key: 'wardRegenPerTurn', label: 'Hồi Hộ Thuẫn', description: 'Hộ Thuẫn hồi mỗi lượt (sau khi không bị đánh trúng đủ lâu).', category: 'defense_advanced' },
   { key: 'wardBreakDamagePercent', label: 'Khiên Nổ', description: 'Khi Hộ Thuẫn vừa vỡ hẳn, phản % dung lượng Hộ Thuẫn tối đa thành sát thương vào kẻ tấn công.', category: 'defense_advanced' },
   { key: 'leechPercent', label: 'Hút máu', description: 'Hồi máu theo % sát thương gây ra.', category: 'defense_advanced' },

@@ -346,17 +346,19 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v66)', () 
   })
 })
 
-describe('validateGameSaveShape — spellPath atomic (element ↔ route)', () => {
-  // Review round-2 (LOW): writers commit {element, route} atomically, so a
-  // half-set pair is corrupt. The validator must enforce the invariant,
-  // not just each field's type.
+describe('validateGameSaveShape — spellPath element-only (route retired)', () => {
+  // Phap Tu Reimagined: the persisted shape is {element} only. Any
+  // `route` key marks a legacy save - rejected wholesale (the version
+  // gate already rejects old saves; this is the defensive backstop).
   it.each([
     [{ element: null, route: 'no' }],
     [{ element: 'fire', route: null }],
-  ])('từ chối cặp lệch %j', (spellPath) => {
+    [{ element: 'fire', route: 'dot' }],
+  ])('từ chối legacy route key %j', (spellPath) => {
     const save = validSave()
 
     ;(save.player as Record<string, unknown>).cultivationPath = 'spell'
+    ;(save.player as Record<string, unknown>).cultivationWay = 'spell_pathway'
     ;(save.player as Record<string, unknown>).spellPath = spellPath
 
     const result = validateGameSaveShape(save)
@@ -365,11 +367,8 @@ describe('validateGameSaveShape — spellPath atomic (element ↔ route)', () =>
     expect(pathsOf(result)).toContain('player.spellPath')
   })
 
-  it('chấp nhận {null, null} và cặp hợp lệ trên spell', () => {
-    for (const spellPath of [
-      { element: null, route: null },
-      { element: 'fire', route: 'dot' },
-    ]) {
+  it('chấp nhận {element: null} và element hợp lệ trên spell_pathway', () => {
+    for (const spellPath of [{ element: null }, { element: 'fire' }]) {
       const save = validSave()
 
       ;(save.player as Record<string, unknown>).realmId = 'qi_refining'
@@ -2415,17 +2414,25 @@ describe('validateGameSaveShape — v73 core inverse ownership', () => {
     const save = validSave()
     const player = playerOf(save)
 
-    player.realmId = 'qi_refining'
+    // major_loan_dau gates on realm >= foundation_establishment --
+    // the save-boundary canonicality replay (clean-B INT-B fix) rejects
+    // owned nodes whose monotonic prereqs no longer hold, so the
+    // fixture must carry a canonical realm for the grant test.
+    player.realmId = 'foundation_establishment'
     player.cultivationPath = 'body'
     player.cultivationWay = 'body_pathway'
 
-    // A real purchase writes BOTH: nodeLevels.cuong_chien = 1 is the
+    // A real purchase writes BOTH: nodeLevels.<id> = 1 is the
     // canonical ownership; purchasedNodeIds is the mirror. The
     // forward check requires every grantsSkillCoreIds member present.
-    ;(player.nodeLevels as Record<string, number>).cuong_chien = 1
-    ;(player.purchasedNodeIds as string[]).push('cuong_chien')
+    // Beta grant seams: cuong_chien -> cuong_quyen, major_loan_dau ->
+    // loan_dau. core_bat_tu_ba_the has NO beta source (parked def).
+    for (const nodeId of ['cuong_chien', 'major_loan_dau']) {
+      ;(player.nodeLevels as Record<string, number>)[nodeId] = 1
+      ;(player.purchasedNodeIds as string[]).push(nodeId)
+    }
 
-    for (const skillId of ['cuong_quyen', 'loan_dau', 'bat_tu_ba_the']) {
+    for (const skillId of ['cuong_quyen', 'loan_dau']) {
       const coreId = skillCoreNodeId(skillId)
       ;(player.nodeLevels as Record<string, number>)[coreId] = 1
       ;(player.purchasedNodeIds as string[]).push(coreId)
@@ -2474,6 +2481,24 @@ describe('validateGameSaveShape — v73 core inverse ownership', () => {
 
     expect(result.ok).toBe(false)
     expect(pathsOf(result)).toContain('player.nodeLevels.core_cuong_quyen')
+  })
+
+  // cleanD AUT: the mirror check is symmetric -- a canonical non-core
+  // level without its purchasedNodeIds mirror is non-canonical by
+  // construction (NodeSystem mirrors every purchase).
+  it('từ chối node level canonical khi purchasedNodeIds mirror sót entry đó', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    player.realmId = 'qi_refining'
+    player.cultivationPath = 'body'
+    player.cultivationWay = 'body_pathway'
+    ;(player.nodeLevels as Record<string, number>).cuong_chien = 1
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.nodeLevels.cuong_chien')
   })
 
   it('từ chối core_cuong_quyen khi skills[] chứa entry giả id cuong_quyen (không phải learned template)', () => {

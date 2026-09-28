@@ -1,7 +1,12 @@
 import type { PlayerData } from '../player/Player'
 import type { SwordPathState } from './KiemTuState'
 import { isHiddenSwordPathway } from './KiemTuPath'
+import { forgeCost, kiemDaoCap } from './KiemTuState'
 import { getRealmIndex } from '../realm/realmSystem'
+
+// Canonical bound formulas live on the KiemTuState leaf (re-exported
+// here so existing consumers keep their import site).
+export { forgeCost, kiemDaoCap }
 
 // Kiem Tu Reimagined Task 8 (spec 2026-09-15 K14/K15) -- Ngu Kiem Dao
 // economy. THE owner of the Kiem Y -> Kiem Dao conversion and the
@@ -23,29 +28,10 @@ export const KIEM_DAO_MERGE_BONUS = 0.3
 // cast multiplies the next sword's coefficient by (1 + rate * stacks).
 export const LIEN_MOMENTUM_RATE = 0.15
 
-function assertRealmIndex(realmIndex: number): void {
-  if (realmIndex < 1) {
-    throw new RangeError(`hidden_sword_pathway economy requires realmIndex >= 1, got ${realmIndex}`)
-  }
-}
-
-/** Kiem Y cost of forging one Kiem Dao at this realm (asserts r>=1 --
- *  mortal cannot enter hidden_sword_pathway, so r=0 is a contract violation). */
-export function forgeCost(realmIndex: number): number {
-  assertRealmIndex(realmIndex)
-  return Math.ceil(9_999 * Math.pow(1.3, realmIndex - 1))
-}
-
-/** Max live flying swords at this realm (asserts r>=1). */
-export function kiemDaoCap(realmIndex: number): number {
-  assertRealmIndex(realmIndex)
-  return realmIndex + 1
-}
-
 /**
  * The ONLY Kiem Y entry point (A3). No-op entirely when the player is
- * not on the hidden_sword_pathway way (cultivationWay is the discriminator — M6) or
- * when already at the realm cap — a capped forge does not bank Y.
+ * not on the hidden_sword_pathway way (cultivationWay is the discriminator -- M6) or
+ * when already at the realm cap -- a capped forge does not bank Y.
  * Otherwise adds `amount` and converts greedily at the CURRENT realm's
  * forgeCost until under cost or at cap.
  */
@@ -74,7 +60,7 @@ export function gainKiemY(player: PlayerData, amount: number): void {
 /**
  * Breakthrough merge (K15): the swords forged this realm fold into the
  * permanent base multiplier, then the live count resets to 1. The
- * count snapshot MUST precede the reset — order is load-bearing.
+ * count snapshot MUST precede the reset -- order is load-bearing.
  * Banked Kiem Y carries over untouched (it converts at the NEW realm's
  * forgeCost on the next gain).
  */

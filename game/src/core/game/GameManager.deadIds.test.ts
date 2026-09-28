@@ -12,10 +12,10 @@ import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
 import { TURN_SKILL_DISPLAY_META } from '../../data/skill/TurnSkillDisplayMeta'
 import { COMPANIONS } from '../../data/companion/Companions'
 
-// Phap Tu Reimagined Task 14 (INV-12) — retired ids must not survive in
+// Phap Tu Reimagined Task 14 (INV-12) - retired ids must not survive in
 // ANY registry or content table a fresh save loads. The kill list is
-// data-level: the legacy reaction-path chain (Ngũ Hành Luân Chuyển /
-// Ngũ Hành Hợp Nhất marker pair + the reaction_empowerment self-buff),
+// data-level: the legacy reaction-path chain (Ngu Hanh Luan Chuyen /
+// Ngu Hanh Hop Nhat marker pair + the reaction_empowerment self-buff),
 // the thuan_he node family (lap_dao_thuan_*/thuan_* node ids,
 // reaction_path_unlock_* keystones), and the old element authority
 // (unlockedElements/equippedElements on PlayerData).
@@ -24,6 +24,26 @@ const RETIRED_IDS = [
   'phap_tu_reaction_special',
   'phap_tu_reaction_ultimate',
   'reaction_empowerment',
+  // retired by the ngu-kiem beta redesign (legacy pre-Khoi spine ids);
+  // keep pinned so a stray re-add trips INV-12. Covers every v84-era id a
+  // live save can carry in nodeLevels/purchasedNodeIds.
+  'ngu_kiem_sac',
+  'ngu_kiem_phong',
+  'ngu_kiem_sat',
+  'cuu_cung_can',
+  'cuu_cung_chan',
+  'cuu_cung_cin',
+  'cuu_cung_doai',
+  'cuu_cung_kham',
+  'cuu_cung_khon',
+  'cuu_cung_ly',
+  'cuu_cung_ton',
+  'cuu_cung_trung',
+  'ngu_cascade_a',
+  'ngu_cascade_d',
+  'ngu_cascade_e',
+  'tu_kiem_y',
+  'kiem_dao_cascade',
 ] as const
 
 const RETIRED_ID_PATTERNS = [
@@ -93,27 +113,78 @@ describe('INV-12 — retired ids are absent from every live registry', () => {
   })
 
   // M-QI-06 - constrained-authoring guard: the minimal proving set may
-  // carry techniqueRank gates on exactly the listed ids (9 unlock nodes
+  // carry techniqueRank gates on exactly the listed ids (12 unlock nodes
   // in `prerequisites`, 8 cap nodes in `levelGates`); techniqueGrade and
   // revealWhen technique gates remain forbidden everywhere until a later
   // content mission extends the allowlist.
+  // Three-path design (2026-09-25, ruling #8): the Phap Tu basic lane
+  // extends the cap allowlist -- the minor tier inside a realm decides
+  // the level cap, so every leveled basic node carries techniqueRank
+  // levelGates by contract.
   const TECHNIQUE_UNLOCK_ALLOWLIST = new Set([
     'linh_ngo_tat_phuong_giang_the',
     'linh_ngo_bat_thu_can_quet',
     'linh_ngo_kien_moc_thong_thien',
     'linh_ngo_kim_phat_thu_sat',
     'linh_ngo_hau_tho_thanh_luy',
+    // Beta the-tu: the retired legacy majors' techniqueRank gates carry
+    // onto the Truc Co unlock majors (the-tu-beta content mission).
+    // The ung-the mission adds its own Quan The major on the same gate.
+    'major_loan_dau',
+    'major_phan_chan',
+    'major_quan_the',
     'major_bat_tu_tuc_menh',
     'major_loan_dau_sat',
     'major_khiem_khich_dien',
     'major_son_nhac_bao_bi',
   ])
   const TECHNIQUE_CAP_ALLOWLIST = new Set([
-    'minor_fire_intensity',
-    'minor_water_intensity',
-    'minor_wood_intensity',
-    'minor_metal_intensity',
-    'minor_earth_intensity',
+    'ngu_kiem_sac',
+    'ngu_kiem_phong',
+    'ngu_kiem_sat',
+    // Phap Tu basic lane (ruling #8 minor-tier caps).
+    'hoa_sac_nhiet',
+    'hoa_diem_chuan',
+    'hoa_an_sau',
+    'hoa_nhiet_keo',
+    'hoa_sac_huyet',
+    'hoa_diem_bao',
+    'hoa_bao_nhiet',
+    'hoa_diem_tham',
+    'thuy_xuyen_lan',
+    'thuy_diem_chuan',
+    'thuy_te_dam',
+    'thuy_nhiet_tri',
+    'thuy_lan_diem',
+    'thuy_luu_tich',
+    'thuy_tram_xuyen',
+    'thuy_te_tham',
+    'moc_doc_sau',
+    'moc_doc_dien',
+    'moc_doc_tham',
+    'moc_doc_man',
+    'moc_doc_nhuan',
+    'moc_doc_tu',
+    'moc_doc_am',
+    'moc_doc_nhiem',
+    'kim_sac_ben',
+    'kim_diem_chuan',
+    'kim_xuyen_nhuy',
+    'kim_bao_the',
+    'kim_liet_huyet',
+    'kim_diem_tham',
+    'kim_xuyen_thau',
+    'kim_bao_diem',
+    'tho_tram_luy',
+    'tho_tran_sau',
+    'tho_cung_gioi',
+    'tho_linh_the',
+    'tho_tram_diem',
+    'tho_tran_cung',
+    'tho_linh_chung',
+    'tho_tram_bao',
+    'thich_can',
+    'tram_can',
   ])
 
   it('technique gates stay inside the M-QI-06 authored allowlist', () => {

@@ -62,7 +62,7 @@ describe('GameManager — turn-based status VFX feed (Phase A6)', () => {
     const player = createDefaultPlayer()
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
-    player.spellPath = { element: 'wood', route: 'dot' }
+    player.spellPath = { element: 'wood' }
 
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)

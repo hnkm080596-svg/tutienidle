@@ -1,0 +1,81 @@
+import { describe, expect, it } from 'vitest'
+import { initKiemPhoBattle, nextOrb, recordCastAndMatch, type KiemPhoBattleState } from './KiemPhoSystem'
+import { KIEM_PHO_COMBOS } from '../../data/skill/KiemPhoCombos'
+import type { PlayerData } from '../player/Player'
+
+// Novel-attack falsification probes (QA run kiem-pho-beta-2026-09-25,
+// cycle-B novelty evidence). Each test tries to break a stated
+// guarantee of the combo matcher - a PASS means the attack failed.
+
+const MIN_COMBO = { id: 'probe_combo', name: 'probe', pattern: ['orb_dam', 'orb_chem', 'orb_dam'] as const, presetId: 'phap_tu_hoa' as never }
+
+function stateWith(overrides: Partial<KiemPhoBattleState>): KiemPhoBattleState {
+  return { preset: ['orb_dam'], cursor: 0, log: [], comboMaxLength: 5, ...overrides }
+}
+
+function fakePlayer(preset: unknown[], realmId: string): PlayerData {
+  return { realmId, swordPath: { preset, kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 } } as unknown as PlayerData
+}
+
+describe('KiemPhoSystem novel attacks', () => {
+  it('ATTACK: comboMaxLength=0 cannot fire even with a matching tail', () => {
+    const s = stateWith({ comboMaxLength: 0, log: ['orb_dam', 'orb_chem'] })
+    const hit = recordCastAndMatch(s, 'orb_dam', [MIN_COMBO as never])
+    expect(hit).toBeNull()
+  })
+
+  it('ATTACK: crafted save preset holding realm-locked orbs is narrowed, never cast', () => {
+    const p = fakePlayer(['orb_quet', 'orb_dam', 'orb_hat'], 'qi_refining')
+    const s = initKiemPhoBattle(p)
+    expect(s.preset).toEqual(['orb_dam'])
+    for (let i = 0; i < 5; i++) expect(nextOrb(s)).toBe('orb_dam')
+  })
+
+  it('ATTACK: LOG_MAX trim cannot let a trimmed prefix form a phantom match', () => {
+    const s = stateWith({ comboMaxLength: 5 })
+    // push 6 orbs so the oldest is dropped - the surviving tail must not match len>5 patterns
+    for (const orb of ['orb_chem', 'orb_dam', 'orb_dam', 'orb_chem', 'orb_dam'] as const) {
+      recordCastAndMatch(s, orb, [MIN_COMBO as never])
+    }
+    expect(s.log.length).toBeLessThanOrEqual(5)
+    // now inject a full matching tail - exactly one fire, log cleared, no double fire
+    const seq = ['orb_dam', 'orb_chem', 'orb_dam'] as const
+    let fired = 0
+    for (const orb of seq) if (recordCastAndMatch(s, orb, [MIN_COMBO as never])) fired++
+    expect(fired).toBe(1)
+    expect(s.log).toEqual([])
+    // immediate repeat casts must not re-fire on stale log entries
+    expect(recordCastAndMatch(s, 'orb_dam', [MIN_COMBO as never])).toBeNull()
+  })
+
+  it('ATTACK: tail equality is exact - supersets with wrong last element miss', () => {
+    const s = stateWith({ log: ['orb_dam', 'orb_chem'] })
+    expect(recordCastAndMatch(s, 'orb_chem', [MIN_COMBO as never])).toBeNull()
+    const s2 = stateWith({ log: ['orb_chem', 'orb_dam'] })
+    expect(recordCastAndMatch(s2, 'orb_dam', [MIN_COMBO as never])).toBeNull()
+  })
+
+  it('ATTACK: a mutating modifier cannot corrupt the canonical combo entry', () => {
+    const combo = KIEM_PHO_COMBOS[0]!
+    const before = JSON.stringify(combo)
+    const modifier = {
+      nodeId: 'probe', priority: 0,
+      matches: () => true,
+      apply: (c: typeof combo) => {
+        c.pattern.push('orb_quet' as never)
+        c.name = 'corrupted'
+        return c
+      },
+    }
+    recordCastAndMatch(stateWith({ log: [...combo.pattern.slice(0, -1)] }), combo.pattern[combo.pattern.length - 1]!, [combo], [modifier])
+    expect(JSON.stringify(KIEM_PHO_COMBOS[0])).toBe(before)
+  })
+
+  it('ATTACK: two combos sharing a tail - deterministic single fire (first in table order)', () => {
+    const a = { ...MIN_COMBO, id: 'a_first', pattern: ['orb_dam', 'orb_chem', 'orb_dam'] as const }
+    const b = { ...MIN_COMBO, id: 'b_second', pattern: ['orb_chem', 'orb_dam', 'orb_dam'] as const }
+    const s = stateWith({ log: ['orb_dam', 'orb_chem'] })
+    const hit = recordCastAndMatch(s, 'orb_dam', [a as never, b as never])
+    expect(hit?.id).toBe('a_first')
+  })
+})

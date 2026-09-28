@@ -1,0 +1,381 @@
+{
+  "schema_version": "1",
+  "mode": "range",
+  "repository": "/home/ubuntu/repos/tutienidle/.agent-worktrees/phap-tu-basic",
+  "from": "origin/master",
+  "to": "HEAD",
+  "merge_base": "be1bdf8d5f3fa45cbe82318473980b7b03ec9227",
+  "total_files": 58,
+  "reviewable_count": 42,
+  "excluded_count": 16,
+  "total_insertions": 25509,
+  "total_deletions": 315,
+  "reviewable_files": [
+    {
+      "path": "game/docs/qa/runs/phap-tu-beta-2026-09-25/attack-model.json",
+      "status": "added",
+      "insertions": 54,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/qa/runs/phap-tu-beta-2026-09-25/environment.json",
+      "status": "added",
+      "insertions": 8,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/qa/runs/phap-tu-beta-2026-09-25/events/0001.json",
+      "status": "added",
+      "insertions": 10,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/qa/runs/phap-tu-beta-2026-09-25/events/0002.json",
+      "status": "added",
+      "insertions": 9,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/qa/runs/phap-tu-beta-2026-09-25/events/0003.json",
+      "status": "added",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/qa/runs/phap-tu-beta-2026-09-25/events/0004.json",
+      "status": "added",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/qa/runs/phap-tu-beta-2026-09-25/events/0005.json",
+      "status": "added",
+      "insertions": 19,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/qa/runs/phap-tu-beta-2026-09-25/events/0006.json",
+      "status": "added",
+      "insertions": 8,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/qa/runs/phap-tu-beta-2026-09-25/lease.json",
+      "status": "added",
+      "insertions": 5,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/qa/runs/phap-tu-beta-2026-09-25/ledger.json",
+      "status": "added",
+      "insertions": 697,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/qa/runs/phap-tu-beta-2026-09-25/manifest.json",
+      "status": "added",
+      "insertions": 23071,
+      "deletions": 0
+    },
+    {
+      "path": "game/docs/qa/runs/phap-tu-beta-2026-09-25/request.json",
+      "status": "added",
+      "insertions": 10,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/components/game/combat/hud/CombatSkillSlot.vue",
+      "status": "modified",
+      "insertions": 28,
+      "deletions": 23
+    },
+    {
+      "path": "game/src/components/game/combat/hud/TurnCombatSkillBar.vue",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/components/panels/skill-path/NodeInspector.test.ts",
+      "status": "modified",
+      "insertions": 5,
+      "deletions": 2
+    },
+    {
+      "path": "game/src/components/panels/skill-path/NodeInspector.vue",
+      "status": "modified",
+      "insertions": 26,
+      "deletions": 21
+    },
+    {
+      "path": "game/src/components/panels/skill-path/NodeTreePanel.vue",
+      "status": "modified",
+      "insertions": 87,
+      "deletions": 84
+    },
+    {
+      "path": "game/src/composables/cultivationRitualFlow.integration.test.ts",
+      "status": "modified",
+      "insertions": 6,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/core/battle/CombatAction.ts",
+      "status": "modified",
+      "insertions": 44,
+      "deletions": 40
+    },
+    {
+      "path": "game/src/core/combat/CombatSkillPresentation.ts",
+      "status": "modified",
+      "insertions": 29,
+      "deletions": 18
+    },
+    {
+      "path": "game/src/core/game/GameManager.deadIds.test.ts",
+      "status": "modified",
+      "insertions": 25,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/core/phap-tu/PhapTuPath.ts",
+      "status": "modified",
+      "insertions": 29,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/core/phap-tu/PhapTuPath.way.test.ts",
+      "status": "modified",
+      "insertions": 15,
+      "deletions": 7
+    },
+    {
+      "path": "game/src/core/player/CultivationPathKit.test.ts",
+      "status": "modified",
+      "insertions": 10,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/core/player/CultivationPathKit.ts",
+      "status": "modified",
+      "insertions": 7,
+      "deletions": 2
+    },
+    {
+      "path": "game/src/core/player/CultivationPathSystem.ts",
+      "status": "modified",
+      "insertions": 12,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/core/progression/NodeSystem.ts",
+      "status": "modified",
+      "insertions": 12,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/core/progression/ProgressionNode.ts",
+      "status": "modified",
+      "insertions": 12,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/data/progression/PhapTuBasicNodes.test.ts",
+      "status": "added",
+      "insertions": 147,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/data/progression/PhapTuBasicNodes.ts",
+      "status": "added",
+      "insertions": 387,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/data/progression/PhapTuNodes.builders.ts",
+      "status": "modified",
+      "insertions": 11,
+      "deletions": 2
+    },
+    {
+      "path": "game/src/data/progression/PhapTuNodes.reimagined.test.ts",
+      "status": "modified",
+      "insertions": 20,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/data/progression/PhapTuNodes.ts",
+      "status": "modified",
+      "insertions": 18,
+      "deletions": 3
+    },
+    {
+      "path": "game/src/data/progression/PhapTuRealmRewardNodes.test.ts",
+      "status": "added",
+      "insertions": 135,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/data/progression/PhapTuRealmRewardNodes.ts",
+      "status": "added",
+      "insertions": 123,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/data/skill/CoreSkills.ts",
+      "status": "modified",
+      "insertions": 181,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/data/skill/PhapTuChainSkills.ts",
+      "status": "modified",
+      "insertions": 66,
+      "deletions": 63
+    },
+    {
+      "path": "game/src/data/skill/SkillIconManifest.ts",
+      "status": "added",
+      "insertions": 30,
+      "deletions": 0
+    },
+    {
+      "path": "game/src/data/skill/TurnSkillDisplayMeta.ts",
+      "status": "modified",
+      "insertions": 47,
+      "deletions": 42
+    },
+    {
+      "path": "game/src/data/vfx/CombatVfxPresets.ts",
+      "status": "modified",
+      "insertions": 42,
+      "deletions": 3
+    },
+    {
+      "path": "game/src/locales/en.json",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "game/src/locales/vi.json",
+      "status": "modified",
+      "insertions": 1,
+      "deletions": 1
+    }
+  ],
+  "excluded_files": [
+    {
+      "path": "game/docs/qa/runs/phap-tu-beta-2026-09-25/evidence/coordinator-gates.md",
+      "status": "added",
+      "insertions": 45,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "game/docs/qa/runs/phap-tu-beta-2026-09-25/journal.jsonl",
+      "status": "added",
+      "insertions": 6,
+      "deletions": 0,
+      "exclude_reason": "unsupported_ext"
+    },
+    {
+      "path": "game/public/assets/skills/da_phap_lien_tuyen.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/skills/diem_kim_thuat.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/skills/doc_chuong.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/skills/hoa_cau_thuat.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/skills/huy_quyen.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/skills/linh_bao.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/skills/tho_cau_thuat.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/skills/thuy_tien_thuat.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/skills/tram.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/skills/van_phap_tuy_tam.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/techniques/dai_ngu_hanh_chan_quyet.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/techniques/iron_body_scripture.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/techniques/ngu_kiem.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    },
+    {
+      "path": "game/public/assets/techniques/van_kiem_quyet.png",
+      "status": "binary",
+      "insertions": 0,
+      "deletions": 0,
+      "exclude_reason": "binary"
+    }
+  ]
+}

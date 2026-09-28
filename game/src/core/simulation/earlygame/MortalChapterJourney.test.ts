@@ -211,7 +211,7 @@ describe('MortalChapterJourney', () => {
       expect(s.runTribulation('qi_refining')).toBe('victory')
       expect(s.performRitual('sword', 'sword_pathway')).toBe(true)
       const insightBefore = s.player.skillInsight
-      expect(s.purchaseNode('orb_dam_1')).toBe(true)
+      expect(s.purchaseNode('thich_can')).toBe(true)
       expect(s.player.skillInsight).toBeLessThan(insightBefore)
 
       const checkpoint: EarlyGameSnapshot = s.snapshot()

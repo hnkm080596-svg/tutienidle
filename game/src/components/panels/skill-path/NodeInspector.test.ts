@@ -45,7 +45,6 @@ function mockGameManager(): Partial<GameManager> {
       selectSpellPathElement: () => false,
       setMortalBasicSkill: () => false,
       selectSkillSpecialization: () => false,
-      switchRoute: () => 0,
       devResetBranch: () => 0,
       allocateAttributePoint: () => false,
     } as unknown as GameManager['progressionOps'],
@@ -56,12 +55,19 @@ function mountInspector(
   node: ProgressionNode,
   techniqueProgress?: { rank: number; grade: number },
   realmId = 'mortal',
+  opts: { purchasable?: boolean; inBattle?: boolean } = {},
 ) {
   const container = document.createElement('div')
   document.body.appendChild(container)
 
   const app = createApp({
-    render: () => h(NodeInspector, { node, purchased: false, purchasable: false }),
+    render: () =>
+      h(NodeInspector, {
+        node,
+        purchased: false,
+        purchasable: opts.purchasable ?? false,
+        inBattle: opts.inBattle ?? false,
+      }),
   })
 
   const pinia = createPinia()
@@ -138,9 +144,12 @@ describe('NodeInspector - technique prerequisite lock reasons (P7-M6)', () => {
 
     await nextTick()
 
-    // Only the realm gate remains unsatisfied.
+    // Only the realm gate remains unsatisfied -- the reason names the
+    // unlock realm (three-path design ruling #16C).
     expect(view.reasonTexts()).toEqual([
-      i18n.global.t('panels.skillPath.nodeInspector.lockedReasons.realm'),
+      i18n.global.t('panels.skillPath.nodeInspector.lockedReasons.realm', {
+        realm: 'Nguyên Anh',
+      }),
     ])
 
     view.unmount()
@@ -155,6 +164,7 @@ function mountOwnedInspector(
   node: ProgressionNode,
   techniqueProgress?: { rank: number; grade: number },
   realmId = 'mortal',
+  opts: { inBattle?: boolean } = {},
 ) {
   const container = document.createElement('div')
   document.body.appendChild(container)
@@ -180,14 +190,19 @@ function mountOwnedInspector(
       selectSpellPathElement: () => false,
       setMortalBasicSkill: () => false,
       selectSkillSpecialization: () => false,
-      switchRoute: () => 0,
       devResetBranch: () => 0,
       allocateAttributePoint: () => false,
     } as unknown as GameManager['progressionOps'],
   }
 
   const app = createApp({
-    render: () => h(NodeInspector, { node, purchased: true, purchasable: false }),
+    render: () =>
+      h(NodeInspector, {
+        node,
+        purchased: true,
+        purchasable: false,
+        inBattle: opts.inBattle ?? false,
+      }),
   })
 
   const pinia = createPinia()
@@ -298,6 +313,34 @@ describe('NodeInspector - technique level-gate reasons (M-QI-06)', () => {
       i18n.global.t('panels.skillPath.nodeInspector.lockedReasons.techniqueRank', { rank: 6 }),
     ])
 
+    view.unmount()
+  })
+})
+
+describe('NodeInspector - in-battle affordance disables (cleanD INT)', () => {
+  it('inBattle disables the purchase button even when the node is purchasable', () => {
+    const view = mountInspector(
+      fixtureNode({ id: 'qa_battle_node', name: 'qa' }),
+      undefined,
+      'mortal',
+      { purchasable: true, inBattle: true },
+    )
+
+    const buy = view.container.querySelector<HTMLButtonElement>('.node-inspector__buy')
+
+    expect(buy).not.toBeNull()
+    expect(buy!.disabled).toBe(true)
+    view.unmount()
+  })
+
+  it('inBattle disables the upgrade button on an owned node', () => {
+    const node = fixtureNode({ id: 'qa_owned', name: 'qa', maxLevel: 5 })
+    const view = mountOwnedInspector(node, undefined, 'mortal', { inBattle: true })
+
+    const upgrade = view.upgradeButton()
+
+    expect(upgrade).not.toBeNull()
+    expect(upgrade!.disabled).toBe(true)
     view.unmount()
   })
 })

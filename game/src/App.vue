@@ -65,12 +65,7 @@ import { buffs } from './data/buff/buffs'
 import { formations } from './data/formation/formations'
 import { alchemyRecipes } from './data/alchemy/alchemyRecipes'
 import { buildings } from './data/building/buildings'
-import { PHAP_TU_NODES } from './data/progression/PhapTuNodes'
-import { PHAP_TU_AN_NODES } from './data/progression/PhapTuAnNodes'
-import { KIEM_TU_NODES } from './data/progression/KiemTuNodes'
-import { THE_TU_NODES } from './data/progression/TheTuNodes'
-import { THE_TU_AN_NODES } from './data/progression/TheTuAnNodes'
-import { SKILL_CORE_NODES } from './data/progression/SkillCoreNodes'
+import { ALL_PROGRESSION_NODES } from './data/progression/ProgressionNodeCatalog'
 import { QUESTS } from './data/quest/quests'
 import { isCultivationPoseActive } from './core/cultivation/CultivationPose'
 import { useBootFlow } from './composables/useBootFlow'
@@ -294,12 +289,9 @@ gameManager.catalogOps.registerTalismans(talismans)
 gameManager.catalogOps.registerFormations(formations)
 gameManager.catalogOps.registerAlchemyRecipes(alchemyRecipes)
 gameManager.catalogOps.registerBuildings(buildings)
-gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
-gameManager.catalogOps.registerProgressionNodes(PHAP_TU_AN_NODES)
-gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
-gameManager.catalogOps.registerProgressionNodes(THE_TU_NODES)
-gameManager.catalogOps.registerProgressionNodes(THE_TU_AN_NODES)
-gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+// One source: the catalog union drives both runtime registration and
+// saveShapeValidation - hand-enumerating the arrays here would drift.
+gameManager.catalogOps.registerProgressionNodes(ALL_PROGRESSION_NODES)
 gameManager.catalogOps.registerQuests(QUESTS)
 
 const { breakthrough } = useBreakthrough(gameManager)

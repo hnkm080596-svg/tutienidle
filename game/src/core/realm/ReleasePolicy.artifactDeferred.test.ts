@@ -19,6 +19,7 @@
  * - the breakthrough tier advance runs exactly as before once open.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { PROGRESSION_NODE_BY_ID } from '../../data/progression/ProgressionNodeCatalog'
 import { createPinia, setActivePinia } from 'pinia'
 
 // Window opens through golden_core: realms <= golden_core are available.
@@ -185,14 +186,14 @@ describe('artifact domain under an open Kim Dan window (mocked release policy)',
   it('grantCultivationPathRealmReward delivers ngu_hanh_chau on Kim Dan entry', () => {
     const player = spellPlayerAt('golden_core')
 
-    expect(grantCultivationPathRealmReward(player, 'golden_core')).toBe(true)
+    expect(grantCultivationPathRealmReward(player, 'golden_core', (id) => PROGRESSION_NODE_BY_ID.get(id))).toBe(true)
     expect(player.artifact?.artifactId).toBe('ngu_hanh_chau')
   })
 
   it('grantCultivationPathRealmReward at Truc Co stays passive-only (no artifact)', () => {
     const player = spellPlayerAt('foundation_establishment')
 
-    expect(grantCultivationPathRealmReward(player, 'foundation_establishment')).toBe(true)
+    expect(grantCultivationPathRealmReward(player, 'foundation_establishment', (id) => PROGRESSION_NODE_BY_ID.get(id))).toBe(true)
     expect(player.artifact).toBeUndefined()
   })
 
@@ -203,7 +204,7 @@ describe('artifact domain under an open Kim Dan window (mocked release policy)',
     // record's realm being released.
     const player = spellPlayerAt('foundation_establishment')
 
-    expect(grantCultivationPathRealmReward(player, 'golden_core')).toBe(true)
+    expect(grantCultivationPathRealmReward(player, 'golden_core', (id) => PROGRESSION_NODE_BY_ID.get(id))).toBe(true)
     expect(player.artifact).toBeUndefined()
   })
 

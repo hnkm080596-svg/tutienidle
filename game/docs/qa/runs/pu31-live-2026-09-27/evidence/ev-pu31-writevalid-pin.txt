@@ -1,0 +1,5 @@
+command: node --test scripts/qa/tests/cli.test.mjs
+result: 4/4 pass incl. record write-path rejection
+- schema-invalid attack record refused with "schema-invalid" + exit 1
+- id-less schema-invalid record refused (coll/index attribution)
+- well-formed attack record accepted

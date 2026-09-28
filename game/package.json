@@ -12,6 +12,8 @@
     "type-check": "vue-tsc --build",
     "verify": "npm run type-check && npm run build && npx vitest run",
     "test": "vitest run",
+    "test:balance": "vitest run --config vitest.balance.config.mts",
+    "test:all": "npm run test && npm run test:balance",
     "lab": "vitest run --config vitest.lab.config.mts",
     "lab:watch": "vitest --config vitest.lab.config.mts",
     "test:e2e": "playwright test",

@@ -72,6 +72,13 @@ export interface CultivationPathRealmReward {
   // from CANONICAL_REALM_PASSIVE_LADDER; null is an authored directive
   // suppressing the canonical pick for this realm.
   passiveSkillId?: string | null
+  // Three-path design (2026-09-25, sec.4-b + ruling #19) - realm-entry
+  // NODE GRANTS: nodeId -> level, applied by
+  // grantCultivationPathRealmReward as `nodeLevels[id] = max(current, L)`
+  // (idempotent, never downgrades). Only targets rewardOnly-authored
+  // nodes - purchase/upgrade/tree rendering stay sealed; element and
+  // way gates still govern whether a granted level is ACTIVE.
+  grantedNodeLevels?: Record<string, number>
 }
 
 // Ritual-time offer gate, evaluated live against the player (never
@@ -100,7 +107,6 @@ export type PathCapability =
   // spell - spell_pathway element machinery, the The pool, node-empowered ult
   | 'spell.elemental_casting'
   | 'spell.essence_pool'
-  | 'spell.empowered_ult'
   // spell - ngo_dao conditional aura (predicate: ngo_dao_hon_don learned)
   | 'spell.reaction_aura'
   // sword
@@ -156,7 +162,7 @@ export interface PathCapabilityFacet {
  * `state` records the persisted field the axis owns (the ownership record);
  * `requiresCapability` names the STATIC capability authorizing the axis -
  * contract-tested to be a capability the SAME way declares. The concrete
- * reads live in CultivationPathSystem (getActiveElement/getActiveRoute/
+ * reads live in CultivationPathSystem (getActiveElement/
  * getSwordScrollPreset) - way definitions never carry executable callbacks.
  */
 export interface PathSubpathAxis {
@@ -175,8 +181,6 @@ export interface PathSubpathAxis {
 export interface PathWaySubpaths {
   /** spell_pathway: player.spellPath.element - commit via selectSpellPathElement. */
   element?: PathSubpathAxis
-  /** spell_pathway: player.spellPath.route - same atomic commit; switchRoute writes. */
-  route?: PathSubpathAxis
   /** sword_pathway: player.swordPath.preset - write via setKiemPhoPreset. */
   preset?: PathSubpathAxis
   /** body: the root node family on player.nodeLevels (mutex on body_pathway,
@@ -320,7 +324,7 @@ export interface PathWayDefinition {
 
   // P1-M3 - formalized in-way branch axes with module-owned reads.
   // Resolved by the canonical reads in CultivationPathSystem
-  // (getActiveElement / getActiveRoute / getSwordScrollPreset); consumers
+  // (getActiveElement / getSwordScrollPreset); consumers
   // never read this field directly.
   subpaths?: PathWaySubpaths
 
@@ -361,7 +365,7 @@ export interface CultivationPathModule {
    * Runs for EVERY save; the module itself decides presence/shape/pair
    * rules, e.g.:
    *   spell: player.spellPath required + shaped on every save (mortal and
-   *            other-path saves included); element/route only under the
+   *            other-path saves included); element only under the
    *            committed spell_pathway way.
    *   sword: player.swordPath optional shape; REQUIRED when the committed
    *            pair is sword - the module reads the raw pair fields
@@ -389,7 +393,7 @@ export const CULTIVATION_PATH_MODULES: Readonly<Record<CultivationPathId, Cultiv
       hidden_spell_pathway: HIDDEN_SPELL_PATHWAY,
     },
     // P1-M6 - the module owns player.spellPath validation (required shape
-    // on every save; element/route pair ownership is spell_pathway-only).
+    // on every save; element ownership is spell_pathway-only).
     validatePersistedState: validateSpellPathPersistedState,
   },
 

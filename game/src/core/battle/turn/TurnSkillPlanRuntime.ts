@@ -24,7 +24,7 @@ import type {
   SkillId,
 } from '../contracts/ids'
 import type { CombatEntity } from '../../combat/CombatEntity'
-import { MAX_THE } from '../../combat/CombatTypes'
+import { MAX_THE, RESOURCE_THE } from '../../combat/CombatTypes'
 import type { CombatRng } from '../contracts/rng'
 import type { CombatScheduler } from '../runtime/scheduler/CombatScheduler'
 import type { BuffDefinition, PeriodicDamageDefinition } from '../../buff2/BuffDefinition'
@@ -34,7 +34,6 @@ import { resolveChannel } from '../../buff2/BuffModifierEngine'
 
 import type { AdaptedSkillCatalog } from '../../skilldef/LegacySkillAdapter'
 import { adaptTurnSkillDefinition, mergeAdaptedCatalogs } from '../../skilldef/LegacySkillAdapter'
-import type { ResolvedSkillPlan } from '../../skilldef/ResolvedSkillPlan'
 import type { SkillCastCommitPort } from '../../skilldef/SkillCastCommitPort'
 import type { SkillDefinitionRegistry as SkillDefinitionRegistryType } from '../../skilldef/SkillDefinitionRegistry'
 import { SkillDefinitionRegistry } from '../../skilldef/SkillDefinitionRegistry'
@@ -44,13 +43,14 @@ import { SkillExecutor } from '../../skilldef/SkillExecutor'
 import type { StatReadPort, SkillResolveEntityQuery } from '../../skilldef/CastSnapshot'
 import type { SkillBuffInstanceSummary, SkillDetonatePeriodic, SkillQueryPorts } from '../../skilldef/SkillQueryPorts'
 import type { SkillPreResolution, SkillResolveInput } from '../../skilldef/SkillResolver'
-import { SkillResolver } from '../../skilldef/SkillResolver'
+import { SkillResolver, SkillResolverError } from '../../skilldef/SkillResolver'
 
 import type {
   TurnBattle,
   TurnBattleParticipant,
   TurnDeclaredAction,
 } from './TurnBattleSystem'
+import { isNaturalActionSource } from '../../proc/ProcCapabilities'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import { executionCommitsCast } from './TurnSkillAction'
 import { PlanPresentationCollector, type ResolvedPresentationGroup } from './SkillPresentationFacts'
@@ -70,40 +70,25 @@ export interface TurnSkillPlanOrchestration {
   /** commitAction minus the resource consume + consume-all burn (both
       ride consume_resource ops): slot cooldown + the cast sink only. */
   commitShell(actor: TurnBattleParticipant, declared: TurnDeclaredAction): void
-  /** Defender income -- fires for landed AND dodged hits. */
-  grantHitOutcomeIncome(
-    battle: TurnBattle,
+  /** Ung The beta -- record this hit's outcome into the action scratch
+      for the post-action Phan window (fires for landed AND dodged hits).
+      The retired taken/evade income is gone -- observation is the only
+      income and it lands at action end (INV-10). */
+  recordHitOutcome(
     target: TurnBattleParticipant,
     hit: { dodged: boolean; hpDamage: number },
   ): void
-  /** Actor's own basic landed income (ung_the marker field). */
-  grantBasicLandedIncome(
-    battle: TurnBattle,
-    actor: TurnBattleParticipant,
-    skillId: string | undefined,
-  ): void
   /** procs.onHitLanded + the target's onImpactLanded reactive trigger
-      (hpDamage>0 gate lives inside) + the queuedFollowUps push. */
+      (hpDamage>0 gate lives inside) + the queuedFollowUps push.
+      `reflectsEligible` gates the once-per-action Phan Chan reflect --
+      the caller passes the INV-9 natural-source check so reactive
+      (counter/follow_up/intercept) actions never reflect. */
   runLandedHitProcs(
     battle: TurnBattle,
     actor: TurnBattleParticipant,
     target: TurnBattleParticipant,
     hpDamage: number,
-  ): void
-  /** Taken-side reactive window -- gated inside on hpDamage>0 and a
-      natural actionSource (INV-9). */
-  resolveTakenWindow(
-    battle: TurnBattle,
-    target: TurnBattleParticipant,
-    actor: TurnBattleParticipant,
-    declared: TurnDeclaredAction,
-    hpDamage: number,
-  ): void
-  resolveEvadeWindow(
-    battle: TurnBattle,
-    target: TurnBattleParticipant,
-    actor: TurnBattleParticipant,
-    declared: TurnDeclaredAction,
+    reflectsEligible: boolean,
   ): void
   /** son_nhac externalWard grant -- the source-tagged REPLACE write the
       retired applyDeclaredBuff owned (`target.externalWard =
@@ -271,7 +256,9 @@ export class TurnSkillPlanRuntime {
       ...(declared.suddenDeathMultiplier !== 1
         ? { coefficientScale: declared.suddenDeathMultiplier }
         : {}),
-      ...(chargeResolveDef !== undefined ? { payloadOnly: true } : {}),
+      ...(chargeResolveDef !== undefined
+        ? { payloadOnly: true, deferredResolve: true }
+        : {}),
       ...(chargeInit ? { chargeInit: true } : {}),
       commitsCast,
       // TBS drives repeats/multicast through its own queuedExecutions
@@ -281,9 +268,29 @@ export class TurnSkillPlanRuntime {
       ...(preResolved !== undefined ? { preResolved } : {}),
     }
 
-    const plan = this.resolver.resolve(input)
-    session.presentation.register(plan)
-    const outcome = executor.execute(plan, input)
+    // A resolver throw mid-plan means the registry accepted a shape
+    // the machinery cannot express (e.g. a target_hit_landed gate on
+    // an intent no deal_damage can mint) -- convert it to the same
+    // decline every caller already handles (null -> reportUnroutedCast
+    // -> castBlocked) instead of an uncaught exception crashing the
+    // tick and skipping the blocked bookkeeping. executor.execute is
+    // inside the try because its own resolver.resolve calls (extras,
+    // composite payloads) throw the same class. Dormant edge: a
+    // resolver throw AFTER commit (an in-execute re-resolve on a
+    // roster that shrank mid-cast) would also masquerade as a
+    // declined cast with cost/damage already applied -- unreachable
+    // while driveFollowUps stays false and composite extras resolve
+    // pre-commit; enabling follow-ups needs a distinct
+    // faulted-after-commit plan state, not this catch.
+    let outcome: SkillCastOutcome
+    try {
+      const plan = this.resolver.resolve(input)
+      session.presentation.register(plan)
+      outcome = executor.execute(plan, input)
+    } catch (error) {
+      if (error instanceof SkillResolverError) return null
+      throw error
+    }
 
     return {
       presentationGroups: session.presentation.finish(outcome.blocked ? 'insufficient-resource' : chargeInit ? 'charging' : 'no-presentable-operation'),
@@ -341,9 +348,15 @@ export class TurnSkillPlanRuntime {
       driveFollowUps: false,
     }
 
-    const plan = this.resolver.resolve(input)
-    session.presentation.register(plan)
-    const outcome = executor.execute(plan, input)
+    let outcome: SkillCastOutcome
+    try {
+      const plan = this.resolver.resolve(input)
+      session.presentation.register(plan)
+      outcome = executor.execute(plan, input)
+    } catch (error) {
+      if (error instanceof SkillResolverError) return null
+      throw error
+    }
 
     return {
       presentationGroups: session.presentation.finish(outcome.blocked ? 'insufficient-resource' : 'no-presentable-operation'),
@@ -538,25 +551,25 @@ export class TurnSkillPlanRuntime {
         if (target === undefined || source === undefined) return
 
         const dodged = result.damage.landed === false
-        // Defender income lands BEFORE any window the hit opens (spec
-        // 4.1 ordering lock) -- dodged hits included.
-        tbs.grantHitOutcomeIncome(battle, target, {
+        // Ung The beta -- record the outcome for the post-action Phan
+        // window; the per-hit windows + per-hit income are gone (INV-10).
+        tbs.recordHitOutcome(target, {
           dodged,
           hpDamage: result.damage.hpDamage,
         })
 
         if (dodged) {
-          // Legacy dodge branch + the shared tail (refresh, sweep).
-          tbs.resolveEvadeWindow(battle, target, source, declared)
+          // Shared tail only -- the defender's window opens once at
+          // action end (resolvePhanWindow reads the scratch).
           tbs.refreshStats(target)
           tbs.refreshStats(source)
           tbs.sweepBuffDeaths(battle)
           return
         }
 
-        // Landed -- basic income; leech/consume ride authored ops
-        // before the gate; procs/reactive wait for gate-entered.
-        tbs.grantBasicLandedIncome(battle, source, this.payloadId(plan))
+        // Landed -- basic income moved to the action-end observation
+        // grant (INV-10); leech/consume ride authored ops before the
+        // gate; procs/reactive wait for gate-entered.
         if (!session.seenTargets.has(target.id)) {
           session.seenTargets.add(target.id)
           session.landedTargetIds.push(target.id)
@@ -569,11 +582,16 @@ export class TurnSkillPlanRuntime {
         const target = tbs.participant(battle, gate.targetId)
         if (source === undefined || target === undefined) return
         // Legacy slot: after consume ops, before authored ailments.
+        // The reflect eligibility check rides the action's provenance
+        // (INV-9 parity with resolvePhanWindow): only natural
+        // ('normal'/'skill') hostile actions can reflect -- counter/
+        // follow_up/intercept hits damage the holder without recursing.
         tbs.runLandedHitProcs(
           battle,
           source,
           target,
           sumHpDamage(gate.hitOperationIds),
+          isNaturalActionSource(declared.actionSource),
         )
       },
 
@@ -581,14 +599,8 @@ export class TurnSkillPlanRuntime {
         const source = tbs.participant(battle, plan.sourceId)
         const target = tbs.participant(battle, gate.targetId)
         if (source === undefined || target === undefined) return
-        // Legacy tail: taken-side window -> refresh -> death sweep.
-        tbs.resolveTakenWindow(
-          battle,
-          target,
-          source,
-          declared,
-          sumHpDamage(gate.hitOperationIds),
-        )
+        // Legacy tail: refresh -> death sweep (the taken-side window
+        // moved to the single post-action Phan window).
         tbs.refreshStats(target)
         tbs.refreshStats(source)
         tbs.sweepBuffDeaths(battle)
@@ -616,17 +628,6 @@ export class TurnSkillPlanRuntime {
         tbs.sweepBuffDeaths(battle)
       },
     }
-  }
-
-  /** The payload def the legacy lane would pass as `skill` (payloadSkill
-      parity): composite primary pick, else empowered variant, else
-      root. Composite extras resolve the pick itself as their root. */
-  private payloadId(plan: ResolvedSkillPlan): string {
-    return (
-      plan.snapshot.compositePicks?.[0] ??
-      plan.resolvedVariantId ??
-      plan.definitionId
-    )
   }
 
   // -----------------------------------------------------------------------
@@ -679,11 +680,18 @@ export class TurnSkillPlanRuntime {
       opResults: {
         // Same trace surface the executor testkit uses -- records are
         // append-only; the latest record for the id is the result.
-        lastOpResult: (operationId) =>
-          [...scheduler.trace.records]
-            .reverse()
-            .find((record) => record.operation.operationId === operationId)
-            ?.result,
+        lastOpResult: (operationId) => {
+          // Backward scan without the reversed-copy allocation -- called
+          // per target on the settle hot path.
+          const records = scheduler.trace.records
+          for (let i = records.length - 1; i >= 0; i--) {
+            const record = records[i]
+            if (record !== undefined && record.operation.operationId === operationId) {
+              return record.result
+            }
+          }
+          return undefined
+        },
       },
     }
   }
@@ -721,7 +729,7 @@ export class TurnSkillPlanRuntime {
   ): number {
     if (entity === undefined) return 0
     switch (resourceId) {
-      case 'the':
+      case RESOURCE_THE:
         return entity.currentThe ?? 0
       case 'mana':
         return entity.currentMp
@@ -740,7 +748,7 @@ export class TurnSkillPlanRuntime {
   ): number {
     if (entity === undefined) return 0
     switch (resourceId) {
-      case 'the':
+      case RESOURCE_THE:
         return entity.maxThe ?? MAX_THE
       case 'mana':
         return entity.stats.maxMp

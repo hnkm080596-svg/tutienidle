@@ -184,6 +184,7 @@ function tapSlot(role: TurnSkillSlotRole): void {
           <CombatSkillSlot
             :empty-label="ROLE_LABELS[slot.role]"
             :display-label="entryAt(slot.index).skillName"
+            :display-icon="entryAt(slot.index).skillIcon"
             :remaining="entryAt(slot.index).cooldownRemaining"
             :total="entryAt(slot.index).cooldownTotal"
             :is-masked="entryAt(slot.index).state === 'cooldown'"

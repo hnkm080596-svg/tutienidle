@@ -1,0 +1,44 @@
+{
+ "attacks": [
+  {
+   "id": "ATK-ORB-PRESET",
+   "surface": "KiemPho preset",
+   "probe": "preset length 1-9, valid orb ids only; stale realm-locked orb entries filtered at validate, never crash provider"
+  },
+  {
+   "id": "ATK-NODE-CHARACTER-LEAK",
+   "surface": "kiem_pho nodes",
+   "probe": "every beta node carries zero statModifiers/global effects - skillDefinitionModifiers + swordPathComboModifier only (SKILL not character)"
+  },
+  {
+   "id": "ATK-COMBO-ORDER",
+   "surface": "combo detection + ailmentInteractions",
+   "probe": "37 combo ids <-> presetIds <-> VFX map 1:1:1; ailmentInteraction phase sort deterministic; DCC/CDD correctly non-combos"
+  },
+  {
+   "id": "ATK-REALM-GATE",
+   "surface": "realmComboMax + node requiredRealmId",
+   "probe": "Dam branch purchasable at qi_refining, Chem at foundation_establishment; combos >3 unreachable in beta window; K13 gate match"
+  },
+  {
+   "id": "ATK-WAY-LEAK",
+   "surface": "requiredWay stamps",
+   "probe": "kiem_pho nodes inert/unpurchasable on hidden_sword_pathway (ngu); ngu subtree untouched"
+  },
+  {
+   "id": "ATK-MODIFIER-TARGET",
+   "surface": "skillDefinitionModifiers.skillId",
+   "probe": "modifiers only match orb def ids, never combo/generated ids; fold memoization safe per battle rebuild"
+  },
+  {
+   "id": "ATK-SAVE-CORRUPTION",
+   "surface": "save shape validation",
+   "probe": "crafted preset (empty/NaN/out-of-range orb) rejected at load; orphaned nodeLevels inert through registry-driven collection"
+  },
+  {
+   "id": "ATK-STACKS-GATE",
+   "surface": "add_stacks vs gateOnApplyResult",
+   "probe": "add_stacks intentionally ungated; add_modifier/extend_duration/trigger_periodic gated via identity selectors {definitionId, source:'self'}"
+  }
+ ]
+}

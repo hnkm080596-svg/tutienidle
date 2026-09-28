@@ -1,43 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { THE_TU_NODES } from './TheTuNodes'
 import { NodeRegistry } from '../../core/progression/NodeRegistry'
-import { canPurchaseNode, getNodeLevel, purchaseNode } from '../../core/progression/NodeSystem'
+import { canPurchaseNode, getNodeLevel, purchaseNode, respecNodeTree } from '../../core/progression/NodeSystem'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { collectBodyKitModifiers } from '../../core/the-tu/TheTuKitModifiers'
 import { buildTheTuKit } from '../skill/TheTuSkills'
-import { BAT_TU_BA_THE, BAT_TU_BA_THE_TURNS, CUONG_QUYEN, CUONG_QUYEN_MISSING_HP_PER_PERCENT, SON_NHAC_WARD_RATIO } from '../skill/TheTuSkills'
-import { BAT_TU_BA_THE_BUFF, KHIEM_KHICH_DEBUFF, KHIEM_KHICH_TURNS } from '../buff/TheTuBuffs'
-import type { CombatEntity } from '../../core/combat/CombatEntity'
-import type { CombatEntityId } from '../../core/battle/contracts/ids'
-import type { TurnBattleParticipant } from '../../core/battle/turn/TurnBattleSystem'
-import { CombatSystem } from '../../core/combat/CombatSystem'
-import { EventBus } from '../../core/events/EventBus'
-import { createBaseStats } from '../../core/stats/StatBlock'
+import { CUONG_QUYEN, LOAN_DAU } from '../skill/TheTuSkills'
+import { TRAN_KINH_DEBUFF } from '../buff/TheTuBuffs'
 import { STAT_DOMAIN } from '../../core/stats/StatDomain'
 import type { StatType } from '../../core/stats/StatTypes'
-import { makeTestBuffRegistry, makeTurnRuntime } from '../../core/battle/turn/testing/TurnRuntimeFixtures'
 
-function fixtureCombatant(id: string, statOverrides: Parameters<typeof createBaseStats>[0]): CombatEntity {
-  const stats = createBaseStats(statOverrides)
-  return {
-    id,
-    name: id,
-    type: 'enemy',
-    stats,
-    baseStats: stats,
-    currentHp: stats.maxHp,
-    maxHp: stats.maxHp,
-    currentMp: 0,
-    currentWard: 0,
-    turnsSinceLastHitLanded: Infinity,
-    realmIndex: 0,
-    x: 0,
-    row: 0,
-    alive: true,
-  } as CombatEntity
-}
-
-// The Tu Reimagined (plan Task 12, spec section 8.1) — body tree data:
+// The Tu Reimagined (plan Task 12, spec section 8.1) - body tree data:
 // mutex roots, realm gates, collector->kit delivery, INV-13 authoring ban.
 
 // Every node in this tree carries requiredCultivationPath 'body' +
@@ -90,6 +63,21 @@ describe('TheTuNodes — root mutex + realm gates (INV-2)', () => {
     expect(canPurchaseNode(playerB, node('cuong_chien'))).toBe(false)
   })
 
+  it('respec frees the mutex - buy cuong_chien -> respec -> tran_the opens', () => {
+    const registry = registryWithNodes()
+    const player = playerWith({ realmId: 'qi_refining' })
+
+    expect(purchaseNode(player, node('cuong_chien'))).toBe(true)
+    expect(canPurchaseNode(player, node('tran_the'))).toBe(false)
+
+    respecNodeTree(player, registry)
+
+    expect(getNodeLevel(player, 'cuong_chien')).toBe(0)
+    expect(canPurchaseNode(player, node('tran_the'))).toBe(true)
+    expect(purchaseNode(player, node('tran_the'))).toBe(true)
+    expect(getNodeLevel(player, 'tran_the')).toBe(1)
+  })
+
   it('roots are purchasable at qi_refining; deeper nodes require foundation_establishment', () => {
     const qiPlayer = playerWith({ realmId: 'qi_refining' })
     expect(canPurchaseNode(qiPlayer, node('cuong_chien'))).toBe(true)
@@ -118,6 +106,16 @@ describe('TheTuNodes — root mutex + realm gates (INV-2)', () => {
       owner.realmId = 'foundation_establishment'
       // M-F-TECHNIQUE (F5) - at realm index 2 the grade-1 cycle is
       // sealed: the mirror shows the caught-up in-band grade-2 cycle.
+      const hasRankGate = (gated.prerequisites ?? []).some(
+        (prerequisite) => prerequisite.kind === 'techniqueRank',
+      )
+      if (hasRankGate) {
+        owner.techniqueProgress = { rank: 4, grade: 2 }
+        expect(
+          canPurchaseNode(owner, gated),
+          `${gated.id} stays closed at foundation_establishment with techniqueRank<5`,
+        ).toBe(false)
+      }
       owner.techniqueProgress = { rank: 5, grade: 2 }
       expect(canPurchaseNode(owner, gated), `${gated.id} opens at foundation_establishment`).toBe(true)
     }
@@ -125,109 +123,70 @@ describe('TheTuNodes — root mutex + realm gates (INV-2)', () => {
 })
 
 describe('TheTuNodes — node -> collector -> kit-def delivery', () => {
-  it('missing-HP scalar node scales the built cuong_quyen/loan_dau clone, not the registry def', () => {
+  it('Trọng Quyền node levels raise the built cuong_quyen clone coefficient, not the registry def', () => {
     const registry = registryWithNodes()
     const player = playerWith({ realmId: 'qi_refining' })
 
     purchaseNode(player, node('cuong_chien'))
-    const growth = node('minor_cuong_huyet_no')
+    const growth = node('minor_trong_quyen')
     purchaseNode(player, growth)
     player.nodeLevels[growth.id] = 3
 
     const mods = collectBodyKitModifiers(registry, player)
-    expect(mods.missingHpBonusBonus).toBeCloseTo(0.005 * 3)
+    expect(mods.cuongQuyenCoefficientBonus).toBeCloseTo(0.1 * 3)
 
     const kit = buildTheTuKit('cuong_chien', mods)
-    expect(kit.basic.damage?.missingHpBonusPerMissingPercent).toBeCloseTo(CUONG_QUYEN_MISSING_HP_PER_PERCENT + 0.015)
-    expect(kit.special.damage?.missingHpBonusPerMissingPercent).toBeCloseTo(CUONG_QUYEN_MISSING_HP_PER_PERCENT + 0.015)
-    // Registry def untouched — participant clones carry the bonus.
-    expect(CUONG_QUYEN.damage?.missingHpBonusPerMissingPercent).toBeCloseTo(CUONG_QUYEN_MISSING_HP_PER_PERCENT)
+    expect(kit.basic.damage?.multiplier).toBeCloseTo((CUONG_QUYEN.damage?.multiplier ?? 0) + 0.3)
+    // Registry def untouched - participant clones carry the bonus.
+    expect(CUONG_QUYEN.damage?.multiplier).not.toBeCloseTo(kit.basic.damage!.multiplier)
   })
 
-  it('Bất Tử duration node delivers durationOverride = base + bonus (manual and lethal share one channel)', () => {
+  it('Trấn Kình node grants the tran_kinh weaken application on the tran_ap clone (stacks scale the cut)', () => {
     const registry = registryWithNodes()
-    // In-band grade-2 mirror - effective rank 5 satisfies major gates.
-    const player = playerWith({
-      realmId: 'foundation_establishment',
-      techniqueProgress: { rank: 5, grade: 2 },
-    })
+    const player = playerWith({ realmId: 'qi_refining' })
+
+    purchaseNode(player, node('tran_the'))
+    const kinh = node('minor_tran_kinh')
+    purchaseNode(player, kinh)
+    player.nodeLevels[kinh.id] = 2
+
+    const mods = collectBodyKitModifiers(registry, player)
+    expect(mods.tranKinhWeakenRatio).toBeCloseTo(0.3)
+
+    const kit = buildTheTuKit('tran_the', mods)
+    const application = kit.basic.appliesAilments?.find((entry) => entry.buffDefinitionId === 'tran_kinh')
+    expect(application?.chance).toBe(1)
+    expect(application?.stacks).toBe(3)
+    expect(TRAN_KINH_DEBUFF.statModifiers?.[0]?.flat).toBeLessThan(0)
+  })
+
+  it('without the Trấn Kình node the tran_ap clone carries no weaken rider', () => {
+    const registry = registryWithNodes()
+    const player = playerWith({ realmId: 'qi_refining' })
+    purchaseNode(player, node('tran_the'))
+
+    const kit = buildTheTuKit('tran_the', collectBodyKitModifiers(registry, player))
+    expect(kit.basic.appliesAilments ?? []).toHaveLength(0)
+  })
+
+  it('Cuồng Ý node levels feed the Huyết Cuồng channel only while Loạn Đấu is owned (kit-local scope)', () => {
+    const registry = registryWithNodes()
+    const player = playerWith({ realmId: 'foundation_establishment', techniqueProgress: { rank: 5, grade: 2 } })
 
     purchaseNode(player, node('cuong_chien'))
-    purchaseNode(player, node('major_bat_tu_tuc_menh'))
+    purchaseNode(player, node('major_loan_dau'))
+    const cuongY = node('minor_cuong_y')
+    purchaseNode(player, cuongY)
+    player.nodeLevels[cuongY.id] = 2
 
     const mods = collectBodyKitModifiers(registry, player)
-    expect(mods.batTuDurationBonus).toBe(1)
+    const kit = buildTheTuKit('cuong_chien', mods, { special: true })
 
-    const kit = buildTheTuKit('cuong_chien', mods)
-    const application = kit.ultimate.appliesBuffs?.find((entry) => entry.definitionId === 'bat_tu_ba_the')
-    expect(application?.durationOverride).toBe(BAT_TU_BA_THE_TURNS + 1)
-    // The lethal path reads the SAME slot application — no second channel.
-    expect(BAT_TU_BA_THE.appliesBuffs?.[0]?.durationOverride).toBeUndefined()
-  })
-
-  it('fixed duration scaling + node override: exactly 4 holder-turns regardless of ailment stats', () => {
-    const source = fixtureCombatant('src', { ailmentDurationPercent: 1 })
-    const target = fixtureCombatant('tgt', { ailmentResistPercent: 0.75 })
-    const sourceP: TurnBattleParticipant = {
-      id: 'src', entity: source, speed: 0, priority: 0, actionGauge: 0,
-      alive: true, consecutiveHardCcTurns: 0,
+    for (const def of [kit.basic, kit.special!]) {
+      expect(def.damage?.missingHpBonusPerMissingPercent).toBeGreaterThan(0)
     }
-    const targetP: TurnBattleParticipant = {
-      id: 'tgt', entity: target, speed: 0, priority: 0, actionGauge: 0,
-      alive: true, consecutiveHardCcTurns: 0,
-    }
-    const registry = makeTestBuffRegistry([BAT_TU_BA_THE_BUFF])
-    const runtime = makeTurnRuntime({
-      registry,
-      participants: () => [sourceP, targetP],
-      combatSystem: new CombatSystem(new EventBus()),
-    })
-
-    runtime.applyBuff('bat_tu_ba_the', targetP, sourceP, {
-      durationOverride: BAT_TU_BA_THE_TURNS + 1,
-    })
-
-    expect(BAT_TU_BA_THE_BUFF.lifetime.scaling).toBe('fixed')
-    const instance = runtime.buffs
-      .getForTarget(target.id as CombatEntityId)
-      .find((entry) => entry.definitionId === 'bat_tu_ba_the')
-    expect(instance?.remaining).toBe(4)
-  })
-
-  it('taunt duration node delivers +1 enemy turns through the same override channel', () => {
-    const registry = registryWithNodes()
-    const player = playerWith({
-      realmId: 'foundation_establishment',
-      techniqueProgress: { rank: 5, grade: 2 },
-    })
-
-    purchaseNode(player, node('tran_the'))
-    purchaseNode(player, node('major_khiem_khich_dien'))
-
-    const mods = collectBodyKitModifiers(registry, player)
-    const kit = buildTheTuKit('tran_the', mods)
-    const taunt = kit.ultimate.appliesBuffs?.find((entry) => entry.definitionId === 'khiem_khich')
-
-    expect(taunt?.durationOverride).toBe(KHIEM_KHICH_TURNS + 1)
-    // Khiem Khich stays ailment_scaled — enemy resist may shorten Taunt.
-    expect(KHIEM_KHICH_DEBUFF.lifetime.scaling).toBe('ailment_scaled')
-  })
-
-  it('son_nhac ward ratio node feeds the externalWardGrant channel', () => {
-    const registry = registryWithNodes()
-    const player = playerWith({
-      realmId: 'foundation_establishment',
-      techniqueProgress: { rank: 5, grade: 2 },
-    })
-
-    purchaseNode(player, node('tran_the'))
-    purchaseNode(player, node('major_son_nhac_bao_bi'))
-
-    const mods = collectBodyKitModifiers(registry, player)
-    const kit = buildTheTuKit('tran_the', mods)
-    const ward = kit.ultimate.appliesBuffs?.find((entry) => entry.definitionId === 'son_nhac_ho_the')
-
-    expect(ward?.externalWardGrant?.sourceMaxHpRatio).toBeCloseTo(SON_NHAC_WARD_RATIO + 0.05)
+    // Authored defs stay clean - the scalar is clone-local.
+    expect(LOAN_DAU.damage?.missingHpBonusPerMissingPercent).toBeUndefined()
   })
 })
 

@@ -1,0 +1,34 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_INTEGRATION",
+    "id": "EV-PTR-FIXQ1",
+    "state": {
+     "productStateId": "e80fa26f12ed9686bd0f90708ef82012e8a51aeea07d5f6fff128853f7905649",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "status": "STALE",
+    "producer": "coordinator",
+    "startedAt": "2026-09-27T12:00:00Z",
+    "finishedAt": "2026-09-27T12:15:00Z",
+    "commandOrMethod": "nit fix @4d2ada93 + pin test @c02fbf50: defensive SPELL_KIT_IDS lookup in save acceptance -- descriptive rejection instead of bare TypeError on corrupt element; corrupt-element pin test added; type-check + 481 save tests green",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "records-cleanq-cor.json",
+    "artifactHash": "d618c4c3172c191c62d8d09226c5495dbc12022bc831dcbc9318ae757081c97d",
+    "claims": [
+     "COR-Q nit repaired @4d2ada93 + pin @c02fbf50"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": [],
+    "limitations": []
+   }
+  }
+ ]
+}

@@ -4,7 +4,7 @@ import type { StatType } from '../stats/StatTypes'
 import type { EffectScope } from '../battle/CombatAction'
 import type { ElementType } from '../element/ElementType'
 import type { BuffModifierPayload } from '../battle/contracts/operations'
-import type { SpellPathRoute } from '../phap-tu/PhapTuState'
+import type { BuffDefinitionId } from '../battle/contracts/ids'
 
 // Phap Tu Hoa An (spec 2026-09-17 sec.62) -- a generic post-landing
 // interaction with the caster's SAME-SOURCE instance of `buffId` on the
@@ -12,14 +12,15 @@ import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 // instance). Each entry compiles to one authored op inside the landed
 // gate, AFTER the skill's ailment applications, in authored order
 // (Phan Thien: apply -> manual tick -> potency modifier -> extend).
-// `routes` gates the entry to the listed Phap Tu routes -- the route
-// seam (applyRouteToTurnSkill) strips non-matching entries; undefined
-// = all routes.
+// Phap Tu Reimagined (spec D12/F9) -- `whenSourceBuff` gates the entry
+// on the SOURCE holding >=1 stack of the named buff (the adapter wraps
+// the emitted op in `if stacks_at_least(self, whenSourceBuff, 1)`); the
+// retired `routes` field died with route machinery.
 export type SkillAilmentInteraction =
   | {
       kind: 'trigger_periodic'
       buffId: string
-      routes?: readonly SpellPathRoute[]
+      whenSourceBuff?: BuffDefinitionId
     }
   | {
       kind: 'add_modifier'
@@ -27,14 +28,44 @@ export type SkillAilmentInteraction =
       // Keyed modifier -- spec sec.27: identity = id + appliedBy source
       // (the executor stamps appliedBy); same-key default 'replace'.
       modifier: Omit<BuffModifierPayload, 'appliedBy'>
-      routes?: readonly SpellPathRoute[]
+      whenSourceBuff?: BuffDefinitionId
     }
   | {
       kind: 'extend_duration'
       buffId: string
       turns: number
-      routes?: readonly SpellPathRoute[]
+      whenSourceBuff?: BuffDefinitionId
     }
+  // Kiem Pho Beta (design sec.7) -- add stacks to the caster's
+  // same-source instance through BuffSystem.addStacks (canonical cap
+  // clamp; never creates an instance, never re-rolls application).
+  // Compiled to add_buff_stacks; that op has no gateOnApplyResult lane,
+  // so an entry meant to ride a self-applied seal must be authored as
+  // add_modifier/extend_duration/trigger_periodic instead.
+  | {
+      kind: 'add_stacks'
+      buffId: string
+      stacks: number
+      whenSourceBuff?: BuffDefinitionId
+    }
+
+/** Execution-phase rank of a SkillAilmentInteraction (Kiem Pho Beta
+    ordering pin, design sec.8): stack application first, duration and
+    instance-local modifiers next, manual periodic triggers last.
+    Consumers that APPEND interactions to a derived def (KiemPho combo
+    modifiers, node skill-definition modifiers) stable-sort on this so
+    authored/append order can never reorder the phases. */
+export function ailmentInteractionPhase(interaction: SkillAilmentInteraction): number {
+  switch (interaction.kind) {
+    case 'add_stacks':
+      return 0
+    case 'add_modifier':
+    case 'extend_duration':
+      return 1
+    case 'trigger_periodic':
+      return 2
+  }
+}
 
 export interface SkillEffect {
   type: SkillEffectType

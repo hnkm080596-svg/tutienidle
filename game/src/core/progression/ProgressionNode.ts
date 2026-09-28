@@ -1,6 +1,7 @@
 import type { ElementType } from '../element/ElementType'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { OrbId } from '../kiem-tu/KiemTuState'
+import type { SkillAilmentInteraction } from '../skill/SkillEffect'
 import type { BodyKitModifierValues } from '../the-tu/TheTuKitModifiers'
 import type { HiddenBodyMechanicModifierValues } from '../the-tu/TheTuAnMechanicModifiers'
 import type { CultivationPathId, CultivationWayId } from '../player/CultivationPathKit'
@@ -69,17 +70,20 @@ export interface NodeEffect {
   // 2 opposing variant nodes gate each other via excludesNode prerequisites.
   selectsSpecialization?: { skillId: string; specializationId: string }
 
-  // Phap Tu Reimagined (Task 6) - The-resource lane scoped to a
-  // specific turn skill. NOT SkillResourceStatKey (that global runtime
-  // bag would lose the skillId); aggregated per authored skill by
-  // NodeSystem.aggregateTurnSkillResourceModifiers(). Values apply per
-  // node level (level L contributes value x L).
-  turnSkillResourceModifiers?: TurnSkillResourceModifier[]
+  // Kiem Tu Reimagined (spec sec.6, Cuu Cung) - lump Kiem Y granted ONCE
+  // at purchase through gainKiemY() (the domain owner - conversion and
+  // the cap rule live there; nodes never touch player.swordPath).
+  kiemYGrant?: number
 
-  // Phap Tu Reimagined (Task 6) - Truong The nodes: raise the
-  // battle-scoped The cap by this amount per node level. Consumed by
-  // resolveMaxThe(); maxThe is never persisted on PlayerData.
-  theCapPerLevel?: number
+  // Kiem Tu Reimagined (spec sec.5.4, Trung Cung) - direct +N kiemDaoCount
+  // at purchase through grantKiemDao() (clamped at the realm cap; the
+  // kiemDaoBelowCap prereq should already have blocked a capped buy).
+  kiemDaoGrant?: number
+
+  // Kiem Tu Reimagined (spec sec.5.2 Roll Cascade) - purchasing unlocks
+  // one cascade slot; the Ngu provider reads these via
+  // collectKiemDaoCascadeUnlocks (effect-driven - node id is free).
+  cascadeUnlock?: 'a' | 'e' | 'd'
 
   // Ngu Kiem Beta - DATA form of an evolution layer: a node carrying
   // this field marks an owned evolution tier of the hidden way's single
@@ -94,7 +98,12 @@ export interface NodeEffect {
   // ONLY channel through which a node may alter a combo.
   swordPathComboModifier?: {
     // matches(combo): combo pattern contains >= count of `orb`.
-    minOrbCount: { orb: OrbId; count: number }
+    // Kiem Pho Beta: OPTIONAL - at least one predicate (this or
+    // completingOrb) must be authored on each entry.
+    minOrbCount?: { orb: OrbId; count: number }
+    // Kiem Pho Beta (design sec.10 Kiem Ket) - matches(combo): the
+    // combo's COMPLETING orb (last pattern entry) equals `orb`.
+    completingOrb?: OrbId
     // Multiplies the combo's bonus damage by (1 + x) - no-op on
     // damage-less combos.
     bonusDamageMultiplier?: number
@@ -104,9 +113,22 @@ export interface NodeEffect {
     appliesBuff?: { definitionId: string; target: 'self' | 'target'; stacks?: number }
     // Adds stacks to every buff the combo carries (no-op when empty).
     bonusAilmentStacks?: number
+    // Kiem Pho Beta (design sec.10-12) - appends same-source seal
+    // interactions to the derived combo; the collector keeps authored
+    // order, applyModifiers re-sorts on ailmentInteractionPhase so the
+    // sec.8 ordering pin (stacks -> modifiers -> triggers) holds.
+    ailmentInteractions?: readonly SkillAilmentInteraction[]
     // Deterministic apply order - ascending, nodeId tiebreak. Default 0.
     priority?: number
   }
+
+  // Kiem Pho Beta (design sec.10/15) - the ONLY node -> authored
+  // TurnSkillDefinition channel: skill-scoped def adjustments applied
+  // when the provider emits the def (derived copies - canonical data
+  // is never mutated). SKILL-scoped, never character-scoped: this
+  // channel may not touch statModifiers (design sec.16.A invariant -
+  // nodes modify the SKILL, never the character).
+  skillDefinitionModifiers?: SkillDefinitionModifierSpec[]
 
   // The Tu Reimagined (plan Task 6) - the ONLY node -> body kit
   // channel. Each channel value is the PER-LEVEL contribution;
@@ -131,16 +153,32 @@ export interface NodeEffect {
 }
 
 /**
- * The-resource modifier for ONE authored turn skill (see NodeEffect.
- * turnSkillResourceModifiers). theGainOnLandedCast = The granted once
- * per cast that lands >=1 target; theGainOnCrit = once per crit cast.
+ * Kiem Pho Beta (design sec.10) - DATA form of a skill-scoped node
+ * adjustment (see NodeEffect.skillDefinitionModifiers). All numeric
+ * channels are PER-LEVEL contributions of the owning node's level;
+ * `skillId` targets the authored TurnSkillDefinition id (an orb id for
+ * Kiem Pho - never a generated/internal action id). Values are folded
+ * into DERIVED def copies at provider emit; the node itself stores no
+ * runtime state.
  */
-export interface TurnSkillResourceModifier {
+export interface SkillDefinitionModifierSpec {
   skillId: string
 
-  theGainOnLandedCast?: number
+  /** def.damage.multiplier *= (1 + value x nodeLevel) - no-op on
+      damage-less defs. */
+  damageMultiplierPerLevel?: number
 
-  theGainOnCrit?: number
+  /** Adds to def.armorPolicy.pierceFractionOnFail (sum over nodes,
+      clamped to [0,1] at fold; bypassChance untouched). No-op on
+      damage-less defs. */
+  armorPierceFraction?: number
+
+  /** Appends same-source seal interactions to the def's
+      ailmentInteractions (phase-sorted at fold). */
+  addAilmentInteractions?: readonly SkillAilmentInteraction[]
+
+  /** Deterministic fold order - ascending, nodeId tiebreak. Default 0. */
+  priority?: number
 }
 
 /**
@@ -233,15 +271,22 @@ export interface ProgressionNode {
   // purchase/prerequisite logic, only lets the UI draw the right tree branch.
   branchTag?: string
 
-  // Phap Tu Reimagined - route membership: node only has effect while
-  // the player's spellPath.route matches (aggregators skip inactive-route
-  // nodes; INV-19 forbids shared nodes depending on route-tagged ones).
-  routeTag?: 'dot' | 'no'
-
   // Phap Tu Reimagined - element-branch membership for the normal
   // Phap Tu tree; a node with elementTag belongs to that element's
   // branch and is purchasable only while spellPath.element matches.
   elementTag?: ElementType
+
+  /**
+   * Three-path design (2026-09-25, realm-reward grants) - marks this node
+   * as a REALM-REWARD node: levels arrive only via a way's
+   * realmRewards.grantedNodeLevels record at breakthrough - never
+   * purchased (`canPurchaseNode` rejects), never upgraded with Insight
+   * (`canUpgradeNode` rejects), never tree-rendered. Effects still
+   * aggregate through the standard element/route/way gates exactly like
+   * a purchased node (an uncommitted element's mastery grant simply
+   * stays dormant).
+   */
+  rewardOnly?: boolean
 
   /**
    * M-QI-05 / QI-D3 - marks this node as a SKILL CORE NODE: the
@@ -266,4 +311,13 @@ export interface ProgressionNode {
    * changes aggregation - owned is owned.
    */
   grantedOnly?: boolean
+}
+
+/**
+ * Effective authored level ceiling (tier nodes can exceed 1 - every
+ * level costs insightCost for EVERY purchase/upgrade; single-level
+ * root/keystone defaults to 1).
+ */
+export function getNodeMaxLevel(node: ProgressionNode): number {
+  return Math.max(1, node.maxLevel ?? 1)
 }

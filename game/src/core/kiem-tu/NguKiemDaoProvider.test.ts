@@ -57,7 +57,7 @@ describe('NguKiemDaoProvider — resolveBasic', () => {
     player.swordPath!.kiemDaoBase = 2.2
 
     const provider = buildNguKiemDaoProvider(player, NO_EVOLUTIONS)
-    const def = provider.resolveBasic({} as TurnBattleParticipant)
+    const def = provider.resolveBasic({} as TurnBattleParticipant)!
 
     expect(def.id).toBe('ngu_kiem_thuat')
     // M-QI-05 - the provider spreads authored damage metadata and only
@@ -72,7 +72,7 @@ describe('NguKiemDaoProvider — resolveBasic', () => {
 
     player.swordPath!.kiemDaoCount = 3
 
-    expect(provider.resolveBasic({} as TurnBattleParticipant).instances?.count).toBe(3)
+    expect(provider.resolveBasic({} as TurnBattleParticipant)!.instances?.count).toBe(3)
   })
 })
 
@@ -80,7 +80,7 @@ describe('Khoi layer — standard pipeline, no privileges', () => {
   it('a Khoi-only def carries no each-instance block and no perInstanceOptions', () => {
     const player = makeNguPlayer()
     const provider = buildNguKiemDaoProvider(player, new Set<string>(['khoi']))
-    const def = provider.resolveBasic({} as TurnBattleParticipant)
+    const def = provider.resolveBasic({} as TurnBattleParticipant)!
 
     expect(def.instances?.perInstanceOptions).toBeUndefined()
     expect(def.instances?.each).toBeUndefined()
@@ -98,7 +98,7 @@ describe('Lien layer — Kiem The cast-local momentum', () => {
   it('declares each.momentumPerLandedInstance for the plan lane', () => {
     const player = makeNguPlayer()
     const provider = buildNguKiemDaoProvider(player, LIEN)
-    const def = provider.resolveBasic({} as TurnBattleParticipant)
+    const def = provider.resolveBasic({} as TurnBattleParticipant)!
 
     expect(def.instances?.each?.momentumPerLandedInstance).toBe(LIEN_MOMENTUM_RATE)
   })
@@ -106,7 +106,7 @@ describe('Lien layer — Kiem The cast-local momentum', () => {
   it('perInstanceOptions multiplies later swords by (1 + rate * landed prior swords)', () => {
     const player = makeNguPlayer()
     const provider = buildNguKiemDaoProvider(player, LIEN)
-    const def = provider.resolveBasic({} as TurnBattleParticipant)
+    const def = provider.resolveBasic({} as TurnBattleParticipant)!
     const target = makeTarget()
 
     // First sword: nothing landed yet -> plain instance.
@@ -125,7 +125,7 @@ describe('Lien layer — Kiem The cast-local momentum', () => {
   it('still no privileges under Lien (no guaranteedHit/execute/crit/armor fields)', () => {
     const player = makeNguPlayer()
     const provider = buildNguKiemDaoProvider(player, LIEN)
-    const def = provider.resolveBasic({} as TurnBattleParticipant)
+    const def = provider.resolveBasic({} as TurnBattleParticipant)!
     const opts = def.instances!.perInstanceOptions!(1, makeTarget(), 2)
 
     expect(opts.guaranteedHit).toBeUndefined()

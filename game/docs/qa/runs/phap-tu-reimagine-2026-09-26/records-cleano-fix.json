@@ -1,0 +1,11 @@
+{
+ "commits": {
+  "b546590e": "adjudication batch 1: drain-to-zero feed stop (return); gateOnApplyResult type fault; hitGateLegal slot fault; tryPayProcCost->consumeThe; mana comment; reactivePayloads docblock; theScaling cross-refs",
+  "2164df05": "corrected semantics: grownRemoved guard -- sibling markers keep processing after drain (F-PTR-201 invariant) but feeds skip detached instance (no resurrect emits)"
+ },
+ "verification": {
+  "typeCheck": "vue-tsc --build exit 0",
+  "vitest": "skilldef+data/skill+buff2+data/buff+the-tu: 47 files / 519 tests PASS; buff suites: 22 files / 228 PASS",
+  "extra": "SkillSubcast 'an empowered root resolution never rolls multicast' pin test confirms empowered/multicast exclusion is designed -> INT-A F2 rejected"
+ }
+}

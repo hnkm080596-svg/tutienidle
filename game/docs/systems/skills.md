@@ -4,7 +4,7 @@
 
 **Execution lane (turn combat):** mọi cast active đi qua pipeline `core/skilldef` — `SkillDefinition` (immutable authored data) → `SkillResolver` → `ResolvedSkillPlan` → `SkillExecutor` → `CombatScheduler`. `LegacySkillAdapter` bridge legacy `Skill`/`TurnSkillDefinition` vào `ActiveSkillDefinition`; def nào adapter không biểu diễn được sẽ warn một lần và no-op (không âm thầm fallback). Progression state tách khỏi authored def: `SkillSystem.progressionOf()` → `SkillProgressionState`, `SkillSystem.getResolvedSkill()` → `{definition, progression}`; combat-scoped state (cooldown/charge) qua `TurnBattleSystem` combat-runtime projection → `SkillCombatRuntimeState`. Skill content hiện tại dự kiến redesign trên `SkillDefinition` — phần dưới mô tả content/progression surface legacy.
 
-Core: `core/skill/Skill.ts`, `SkillSystem.ts`, `SkillManager.ts`, `SkillEffectSystem.ts`, `SkillActionRegistry.ts`, `PassiveSystem.ts`, `SkillRuntimeStats.ts`, `SkillLoadoutSlots.ts`. Data: `data/skill/Skills.ts`, `TurnBasicAttacks.ts`, `TurnReactionPathSkills.ts`, `TalentPassives.ts`. Trigger/action guide: `docs/skill-trigger-action-usage-guide.md`.
+Core: `core/skill/Skill.ts`, `SkillSystem.ts`, `SkillManager.ts`, `SkillEffectSystem.ts`, `SkillActionRegistry.ts`, `PassiveSystem.ts`, `SkillRuntimeStats.ts`, `SkillLoadoutSlots.ts`. Data: `data/skill/Skills.ts`, `TurnBasicAttacks.ts`, `PhapTuRouteSkills.ts` (Hỏa Ấn route kit), `PhapTuChainSkills.ts`, `PhapTuUltimates.ts`/`PhapTuEmpoweredUlts.ts`, `KiemPhoOrbs.ts`/`KiemPhoCombos.ts`, `NguKiemDaoSkills.ts`, `TheTuSkills.ts`, `TalentPassives.ts`. Trigger/action guide: `docs/skill-trigger-action-usage-guide.md`.
 
 ## Model `Skill`
 
@@ -20,7 +20,7 @@ Timing DUY NHẤT của auto-cast — runtime chỉ đọc field này:
 | `cooldown` | resolve tức thời, timer = `cooldown`, chịu CDR |
 | `cast_time` | niệm trước khi thi triển; cooldown commit lúc bắt đầu niệm, chịu CDR |
 | `attack_speed_cast` | niệm + nhịp tái dùng theo attack speed; không CDR |
-| `channel` | tụ lực liên tục (Bạt Kiếm); mỗi `tickSeconds` gây 1 phát; không CD/cast time |
+| `channel` | tụ lực liên tục; mỗi `tickSeconds` gây 1 phát; không CD/cast time |
 
 ## Skill Loadout
 
@@ -30,7 +30,7 @@ Timing DUY NHẤT của auto-cast — runtime chỉ đọc field này:
 
 `type`: `damage | heal | buff | debuff | add_stack | remove_buff` (+ `ailment` qua `ailmentChance`).
 
-- `damage`: `value` (multiplier), `damageType: physical|primordial` hoặc `components: SkillDamageComponent[]` (pha trộn vd 20% physical + 80% fire), `swordIntentDamageRatio` cho kiếm trận.
+- `damage`: `value` (multiplier), `damageType: physical|primordial` hoặc `components: SkillDamageComponent[]` (pha trộn vd 20% physical + 80% fire), `(đã gỡ `swordIntentDamageRatio` cùng kit Kiếm Trận)`.
 - `buff`/`debuff`: `buffId` + `duration` + `stacks`; `ailmentChance` = roll riêng sau khi hit trúng.
 - `add_stack`/`remove_buff`: thao tác buff đang chạy (`refresh`, `polarity`, `count` — Pháp Tu Thuần Hệ).
 - `healPercentOfDamage`, `consumesAilmentId`+`damagePerStack` (detonate), `consumesWardForDamage` — cơ chế detonate/khiên-nổ.
@@ -40,7 +40,7 @@ Timing DUY NHẤT của auto-cast — runtime chỉ đọc field này:
 ## Cast count & Huy Kiếm
 
 - `skillCastCounts`/`skillLevels` trên PlayerData — nguồn sự thật save.
-- **Huy Kiếm** (tram): `getHuyKiemFlatDamageBonus` — mỗi 10 cast +1 flat damage, không trần. `getHuyKiemLevelForCasts`: Lv2 @1.000, Lv3 @10.000 cast (`HUY_KIEM_L3_CASTS`) — gate route Bạt Kiếm.
+- **Huy Kiếm** (tram): `getHuyKiemFlatDamageBonus` — mỗi 10 cast +1 flat damage, không trần. `getHuyKiemLevelForCasts`: Lv2 @1.000, Lv3 @10.000 cast (`HUY_KIEM_L3_CASTS`) — gate Ngự Kiếm Đạo entry ritual (`hidden_sword_pathway`).
 - Skill khác lên level bằng Cảm ngộ Kỹ năng (`getSkillUpgradeInsightCost`).
 
 ## Passive & trigger
@@ -51,9 +51,9 @@ Timing DUY NHẤT của auto-cast — runtime chỉ đọc field này:
 
 Field số trên instance skill, node tree cộng qua `skillModifiers`/`aggregateNodeSkillModifiers` — gồm resource path Pháp Tu (`hoaTheGainPerCast`, `thuyThePercent`, `thoTheGainPerCast`, `kimTheGainPerProc`, `huyetPhaGainPerProc`…), hình học (`earthAoeRadius`, `earthKnockbackDistance`), `maxStacksBonusByBuffId`, `theGainPerLinkBonus`/`theMaxBonus` (Thế chain).
 
-## Reaction path (composite)
+## Pháp Tu route skills (Hỏa Ấn)
 
-`compositePicks: { poolType: 'reaction_path', count: 2 }` — Pháp Tu major path chọn 2 skill từ pool `REACTION_PATH_POOL` (`TurnReactionPathSkills.ts`) mỗi lượt; mỗi pick scale riêng (`suddenDeathMultiplier`).
+`PHAP_TU_ROUTE_SKILLS` (`PhapTuRouteSkills.ts`) — kit ấn: mỗi skill áp seal `hoa_an`, interaction SAME-SOURCE (chỉ đụng instance của mình), react khi caster giữ aura `van_phap_than_hoa` (Ngộ Đạo seam). Route mechanics đi qua seam generic: `SPELL_ROUTE_SKILL_IDS` membership → `applyRouteToEffectiveSkill`/`applyRouteToTurnSkill` (x1.25/+1 stack, route yếu x0.50), payload route-gated qua per-interaction `routes`. (Pool `reaction_path`/compositePicks cũ đã gỡ — xem [roadmap](../roadmap.md) phase DoT/Hỏa Ấn.)
 
 ## Liên quan
 

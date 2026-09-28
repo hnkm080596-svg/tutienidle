@@ -1,0 +1,34 @@
+{
+ "kind": "closure-evidence",
+ "review": "REV-PTR-CLO-13",
+ "pin": "0c6b72f2",
+ "fixesVerified": [
+  "F-PTR-124",
+  "F-PTR-125",
+  "F-PTR-126",
+  "F-PTR-127",
+  "F-PTR-128",
+  "F-PTR-129",
+  "F-PTR-130",
+  "F-PTR-131",
+  "F-PTR-132",
+  "F-PTR-133",
+  "F-PTR-134",
+  "F-PTR-136",
+  "F-PTR-137",
+  "F-PTR-138",
+  "F-PTR-143"
+ ],
+ "dupClosures": [
+  "F-PTR-135 via 124",
+  "F-PTR-139 via 128",
+  "F-PTR-142 via 136",
+  "F-PTR-144 via 125"
+ ],
+ "rejectionsConfirmed": [
+  "F-PTR-140",
+  "F-PTR-141"
+ ],
+ "typecheck": "clean",
+ "vitest": "271 files / 2272 pass"
+}

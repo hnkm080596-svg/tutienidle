@@ -1,0 +1,18 @@
+{
+  "applied": [
+    "evidence:EV-FIX-VERIFY-01",
+    "evidence:EV-FIX-VERIFY-02",
+    "finding:F-CA-01",
+    "finding:F-CA-02",
+    "finding:F-CA-03",
+    "finding:F-CA-04",
+    "finding:F-CA-05",
+    "finding:F-CA-06",
+    "finding:F-CA-07",
+    "finding:F-CA-08",
+    "finding:F-CA-09",
+    "review:REV-COR-A",
+    "review:REV-AUT-A",
+    "review:REV-INT-A"
+  ]
+}

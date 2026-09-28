@@ -1,0 +1,26 @@
+{
+  "record": "AUT-D adjudication batch",
+  "head": "6ad56448",
+  "fixes": [
+    {
+      "finding": "AUT-D LOW-1",
+      "edit": "SkillResolver.ts:201-207 empowerment gate now also reads commitsCast -- follow-up executions (commitsCast=false, routeCast hardcodes subcastIndex 0 for every routed cast) can never re-empower; declared declareQueuedExecution parity enforced",
+      "verify": "type-check exit 0; empowerment + bridges + skilldef scoped vitest 215 passed"
+    },
+    {
+      "finding": "AUT-D LOW-2",
+      "edit": "hoTheBridge.ts:46-55 clamps the stat cap FIRST (clampStatValue) then scales by mpRatio -- matches CombatSystem.ts:399-403 canonical order; returns clamped cap",
+      "verify": "type-check exit 0; scoped vitest 215 passed"
+    }
+  ],
+  "rejects": [
+    {
+      "finding": "AUT-D NIT-5",
+      "reason": "water rider `if target_hit_landed` is spec-pinned structure -- GameManager.empowerment.test.ts:120-124 asserts the gate exists in landedConsequences; removing it breaks the authored landed-gate shape (verified: revert restored green)"
+    },
+    {
+      "finding": "AUT-D NIT-1/2/3/4",
+      "reason": "dead plumbing (consume-all/consumeAllThe/cast_snapshot/theOnLandedCast), triple-owned ?? default cap, dead exports tryPayProcCost/onProcSuccess, non-damaging lane consequence ordering -- recorded as hazard lessons; consistent today"
+    }
+  ]
+}

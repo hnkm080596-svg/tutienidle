@@ -1,0 +1,10 @@
+{
+  "reviewer": "devin-a6eb6c1da1394884b157dc90798988d5",
+  "verdict": "FINDINGS -- 1 Low + 2 Nit",
+  "evidence": "adversarial integration review; contracts hold on every shipped-data path",
+  "findings": [
+    "F-INT-K-1 (Low): compositePool x chargeTurns fault gap -> zero-step cast after cost commit",
+    "Nit: theBarBridge reads entity.maxThe ?? THE_BAR_MAX directly (forks theCap read site)",
+    "Nit: TurnSkillPlanRuntime.lastOpResult reverse-scans settled array per call O(hits x results)"
+  ]
+}

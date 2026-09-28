@@ -2,12 +2,27 @@ import type { CombatVfxPresetId } from '@/core/battle/CombatAction'
 
 export type CombatVfxSpace = 'ground_projected' | 'upright' | 'attached' | 'screen' | 'hybrid'
 
+// Kiem Pho Beta (design sec.3/13) - authored stroke tokens describing
+// a preset's VFX identity for the presentation pass. DATA ONLY until
+// the renderer registers choreography for them.
+export type VfxStroke =
+  | 'point'
+  | 'line'
+  | 'converge'
+  | 'crescent'
+  | 'arc'
+  | 'scar'
+  | 'pulse'
+  | 'ring'
+  | 'wave'
+
 export interface CombatVfxPreset {
   id: CombatVfxPresetId
   color: number
   space: CombatVfxSpace
   areaScale: number
   durationMs: number
+  signature?: readonly VfxStroke[]
   screenShake?: { durationMs: number; intensity: number }
 }
 
@@ -93,7 +108,7 @@ export const COMBAT_VFX_PRESETS = {
     durationMs: 340,
     screenShake: { durationMs: 120, intensity: 0.004 },
   },
-  // Kiếm Tu Bạt Kiếm channel tick (Task 8, 2026-08-28) — full-screen AoE
+  // Kiem Tu Bat Kiem channel tick (Task 8, 2026-08-28) -- full-screen AoE
   // per design spec, art sau.
   tu_luc: {
     id: 'tu_luc',
@@ -102,11 +117,51 @@ export const COMBAT_VFX_PRESETS = {
     areaScale: 1.2,
     durationMs: 260,
   },
+  // Kiem Pho Beta (design sec.3) - the two beta orbs carry authored
+  // stroke signatures: Dam = point -> straight line -> convergence
+  // (silver/cool-blue); Chem = crescent -> arc -> scar (silver with a
+  // restrained dark-red accent). DATA ONLY, art pass later.
+  kiem_orb_dam: {
+    id: 'kiem_orb_dam',
+    color: 0xcfe6ff,
+    space: 'upright',
+    areaScale: 1,
+    durationMs: 230,
+    signature: ['point', 'line', 'converge']
+  },
+  kiem_orb_chem: {
+    id: 'kiem_orb_chem',
+    color: 0xb0787e,
+    space: 'upright',
+    areaScale: 1,
+    durationMs: 230,
+    signature: ['crescent', 'arc', 'scar']
+  },
   // Kiem Tu Reimagined (spec 2026-09-15 §4.3, K11) — one entry per
   // Kiem Pho combo: tier-scaled shape (len3 hybrid 1.15 / len4 hybrid
   // 1.3 / len5 screen 1.5 + shake) plus a golden-angle distinct color
-  // signature per combo — the fired payload is the only discovery
+  // signature per combo -- the fired payload is the only discovery
   // signal, no two combos may render identically.
+  // Kiem Pho Beta (design sec.7/13) - the six beta combos keep the
+  // locked ids and carry stroke signatures composed from their orb
+  // mix in the silver/cool-blue family (dark-red accent on the
+  // Chem-heavy entries).
+  kiem_combo_nhat_tuyen: {
+    id: 'kiem_combo_nhat_tuyen',
+    color: 0xbfe3ff,
+    space: 'hybrid',
+    areaScale: 1.15,
+    durationMs: 280,
+    signature: ['point', 'line', 'converge']
+  },
+  kiem_combo_liet_ngan: {
+    id: 'kiem_combo_liet_ngan',
+    color: 0xa25a5e,
+    space: 'hybrid',
+    areaScale: 1.15,
+    durationMs: 280,
+    signature: ['crescent', 'arc', 'scar']
+  },
   kiem_combo_tam_thich: {
     id: 'kiem_combo_tam_thich',
     color: 0xcb4d4d,
@@ -142,12 +197,13 @@ export const COMBAT_VFX_PRESETS = {
     areaScale: 1.15,
     durationMs: 280
   },
-  kiem_combo_nhi_thich_nhat_tram: {
-    id: 'kiem_combo_nhi_thich_nhat_tram',
-    color: 0xcb4d90,
+  kiem_combo_khai_ngan: {
+    id: 'kiem_combo_khai_ngan',
+    color: 0x8fc4e8,
     space: 'hybrid',
     areaScale: 1.15,
-    durationMs: 280
+    durationMs: 280,
+    signature: ['point', 'line', 'crescent']
   },
   kiem_combo_nhi_thich_nhat_phach: {
     id: 'kiem_combo_nhi_thich_nhat_phach',
@@ -156,12 +212,13 @@ export const COMBAT_VFX_PRESETS = {
     areaScale: 1.15,
     durationMs: 280
   },
-  kiem_combo_nhi_tram_nhat_thich: {
-    id: 'kiem_combo_nhi_tram_nhat_thich',
-    color: 0x534dcb,
+  kiem_combo_thau_ngan: {
+    id: 'kiem_combo_thau_ngan',
+    color: 0x7fa8d8,
     space: 'hybrid',
     areaScale: 1.15,
-    durationMs: 280
+    durationMs: 280,
+    signature: ['crescent', 'arc', 'point']
   },
   kiem_combo_nhi_tram_nhat_phach: {
     id: 'kiem_combo_nhi_tram_nhat_phach',
@@ -191,19 +248,21 @@ export const COMBAT_VFX_PRESETS = {
     areaScale: 1.15,
     durationMs: 280
   },
-  kiem_combo_thich_tram_thich: {
-    id: 'kiem_combo_thich_tram_thich',
-    color: 0x4d8ccb,
+  kiem_combo_hoi_tuyen: {
+    id: 'kiem_combo_hoi_tuyen',
+    color: 0x9fd2f0,
     space: 'hybrid',
     areaScale: 1.15,
-    durationMs: 280
+    durationMs: 280,
+    signature: ['point', 'arc', 'line', 'converge']
   },
-  kiem_combo_tram_thich_tram: {
-    id: 'kiem_combo_tram_thich_tram',
-    color: 0xcb4d66,
+  kiem_combo_diep_ngan: {
+    id: 'kiem_combo_diep_ngan',
+    color: 0x8a6a70,
     space: 'hybrid',
     areaScale: 1.15,
-    durationMs: 280
+    durationMs: 280,
+    signature: ['crescent', 'point', 'crescent', 'scar']
   },
   kiem_combo_phach_thich_phach: {
     id: 'kiem_combo_phach_thich_phach',
@@ -375,5 +434,67 @@ export const COMBAT_VFX_PRESETS = {
     areaScale: 1.5,
     durationMs: 400,
     screenShake: { durationMs: 140, intensity: 0.005 }
+  },
+  // Three-path design (2026-09-25, ruling #12) -- one preset per Phap Tu
+  // element basic (distinct signature, no two basics render alike).
+  hoa_cau_comet: {
+    id: 'hoa_cau_comet',
+    color: 0xff8c42,
+    space: 'hybrid',
+    areaScale: 1.05,
+    durationMs: 260,
+    screenShake: { durationMs: 110, intensity: 0.003 },
+  },
+  thuy_tien_dart: {
+    id: 'thuy_tien_dart',
+    color: 0x63d8ff,
+    space: 'upright',
+    areaScale: 0.95,
+    durationMs: 240,
+  },
+  doc_chuong_palm: {
+    id: 'doc_chuong_palm',
+    color: 0x6ee86a,
+    space: 'attached',
+    areaScale: 1,
+    durationMs: 240,
+  },
+  diem_kim_point: {
+    id: 'diem_kim_point',
+    color: 0xfff3b0,
+    space: 'upright',
+    areaScale: 0.9,
+    durationMs: 200,
+  },
+  tho_cau_boulder: {
+    id: 'tho_cau_boulder',
+    color: 0xd9a05b,
+    space: 'ground_projected',
+    areaScale: 1.15,
+    durationMs: 280,
+    screenShake: { durationMs: 130, intensity: 0.004 },
+  },
+  // Mortal precursors - distinct from the arcane_impact fallback.
+  tram_slash: {
+    id: 'tram_slash',
+    color: 0xd8e8f8,
+    space: 'upright',
+    areaScale: 1,
+    durationMs: 220,
+  },
+  linh_bao_burst: {
+    id: 'linh_bao_burst',
+    color: 0xbef0ff,
+    space: 'hybrid',
+    areaScale: 1.15,
+    durationMs: 270,
+    screenShake: { durationMs: 90, intensity: 0.003 },
+  },
+  huy_quyen_strike: {
+    id: 'huy_quyen_strike',
+    color: 0xffc890,
+    space: 'upright',
+    areaScale: 0.9,
+    durationMs: 210,
   },
 } as const satisfies Record<CombatVfxPresetId, CombatVfxPreset>

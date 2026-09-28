@@ -1,0 +1,15 @@
+{
+ "verdict": "SEAL",
+ "closedIds": [
+  "F-KP-3A-1",
+  "F-KP-3A-2",
+  "F-KP-C4-2"
+ ],
+ "failedIds": [],
+ "verification": "type-check exit 0; scoped vitest 34 files / 452 tests pass",
+ "details": {
+  "F-KP-3A-1": "LegacySkillAdapter.ts:477-490 add_stacks emits no gate spread; report() threads into adaptDamageOp + adaptAilmentInteractions",
+  "F-KP-3A-2": "KiemTuNodes.ts grep 'Hidden-path|Task 10' -> zero; NGU export header intact",
+  "F-KP-C4-2": "KiemPhoProvider.ts:71-77 pattern.length <= realmComboMax(realmIndex); pin test KiemPhoProvider.test.ts:198-206"
+ }
+}

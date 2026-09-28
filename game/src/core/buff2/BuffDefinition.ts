@@ -115,6 +115,10 @@ export interface BuffDefinition {
   forbiddenActionTags?: readonly string[] // contract sec.6 -- Cam Cong channel
   dispellable: boolean // spec sec.42 -- cleanse() gate
   tags?: readonly string[]
+  // Phap Tu Reimagined (spec D10) -- window-bound markers: when the
+  // SOURCE entity no longer holds an instance of this definition, the
+  // instance dies at the next runPhaseB liveness sweep ('expired').
+  boundToSourceBuffId?: BuffDefinitionId
   // legacy-parity lifecycle fields (not in spec sec.6 -- documented deviations)
   clearsCcOnApply?: boolean // strips target's control instances before own apply commits
   convertsToId?: BuffDefinitionId

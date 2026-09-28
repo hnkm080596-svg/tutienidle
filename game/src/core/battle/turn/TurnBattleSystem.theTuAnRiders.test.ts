@@ -13,9 +13,8 @@ import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { buffs as LIVE_BUFFS } from '../../../data/buff/buffs'
 import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
 import type { CombatRng } from '../contracts/rng'
-import { HO_MON_MARKER, TRO_MON_MARKER } from '../../../data/buff/TheTuBuffs'
-import { BAT_TU_BA_THE, TRO_KICH } from '../../../data/skill/TheTuSkills'
-import { THE_PROC_GAIN } from '../../the-tu/TheEconomy'
+import { HO_MON_MARKER } from '../../../data/buff/TheTuBuffs'
+import { BAT_TU_BA_THE, buildTheTuAnKit } from '../../../data/skill/TheTuSkills'
 import { BodyBatTuSurvival } from '../../the-tu/TheTuBatTuSurvival'
 import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
 import type { TurnSkillDefinition } from './TurnSkillAction'
@@ -27,12 +26,12 @@ import type { ResolvedCombatOperation } from '../contracts/operations'
 import type { BuffDefinitionId, CombatEntityId, CombatOperationId } from '../contracts/ids'
 import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
-// The Tu Reimagined (plan Task 20, spec 8.2) — node-rider mechanics on
-// the *_mon marker clones: intercept->ally ward, Tro triggering-ally
-// heal, Tro non-damaging window. The riders are baked onto marker
-// clones at participant build; these tests register hand-baked clones
-// under the same def id (the production kit-clone seam) to exercise
-// the engine read sites.
+// Ung The beta (design Parts V-VIII) - node-rider mechanics on the
+// *_mon marker clones: the Ho Bich intercept->ally ward and the Dan
+// The one-shot mark (tro_kich clone carrying appliesAilments). Riders
+// are baked onto clones at participant build; these tests register
+// kit-baked clones under the same def ids (the production seam) to
+// exercise the engine read sites.
 
 const NO_MITIGATION = {
   evasionRate: 0,
@@ -77,14 +76,6 @@ const ENEMY_BASIC: TurnSkillDefinition = {
   id: 'enemy_hit',
   cooldownTurns: 0,
   damage: { kind: 'physical', multiplier: 1 },
-  targeting: { shape: 'single' },
-}
-
-/** A non-damaging ally action (buff self) for the non-damaging Tro window. */
-const ALLY_SELF_BUFF: TurnSkillDefinition = {
-  id: 'ally_buff',
-  cooldownTurns: 0,
-  targetScope: 'self',
   targeting: { shape: 'single' },
 }
 
@@ -208,7 +199,7 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-describe('intercept -> ally ward rider (spec 8.2)', () => {
+describe('intercept -> ally ward rider (Ho Bich)', () => {
   function fixture() {
     const enemy = createCombatant({ id: 'enemy', type: 'enemy', currentHp: 100_000, maxHp: 100_000, x: 0, row: 0 }, 10)
     const squishy = createCombatant({ id: 'squishy', type: 'player', currentHp: 100_000, maxHp: 100_000, x: 0, row: 2 }, 5)
@@ -218,6 +209,7 @@ describe('intercept -> ally ward rider (spec 8.2)', () => {
     enemyP.basic = ENEMY_BASIC
     const squishyP = makeParticipant('squishy', squishy, 5, 0)
     const protectorP = makeParticipant('protector', protector, 5, 1)
+    protectorP.thamTargetId = 'enemy' // observation gate
 
     const battle: TurnBattle = { players: [squishyP, protectorP], enemies: [enemyP], state: 'fighting' }
     const roster = [squishyP, protectorP, enemyP]
@@ -290,7 +282,7 @@ describe('intercept -> ally ward rider (spec 8.2)', () => {
   })
 })
 
-describe('tro riders (spec 8.2)', () => {
+describe('Dan The one-shot mark (Ung The beta node)', () => {
   function fixture() {
     const enemy = createCombatant({ id: 'enemy', type: 'enemy', currentHp: 100_000, maxHp: 100_000, x: 0, row: 0 }, 10)
     const striker = createCombatant({ id: 'striker', type: 'player', currentHp: 60_000, maxHp: 60_000, x: 0, row: 2 }, 5)
@@ -301,140 +293,54 @@ describe('tro riders (spec 8.2)', () => {
     const strikerP = makeParticipant('striker', striker, 5, 0)
     strikerP.basic = { id: 'ally_hit', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } }
     const supporterP = makeParticipant('supporter', supporter, 5, 1)
+    supporterP.thamTargetId = 'enemy' // observation gate
 
     const battle: TurnBattle = { players: [strikerP, supporterP], enemies: [enemyP], state: 'fighting' }
     const roster = [strikerP, supporterP, enemyP]
     return { battle, enemyP, strikerP, supporterP, roster }
   }
 
-  function withTroMon(
-    p: TurnBattleParticipant,
-    bake?: (payload: ReactiveProcPayload) => void,
-  ): BuffDefinition {
-    p.entity.baseStats = asBaseStats({ ...p.entity.baseStats, followUpChance: 1 })
-    p.entity.stats = { ...p.entity.stats, followUpChance: 1 }
-    p.entity.currentThe = 15
-    p.reactivePayloads = { tro_kich: { ...TRO_KICH } }
-    // The kit always bakes the authored success gain onto marker clones
-    // (THE_PROC_GAIN + node bonus); a bare marker carries none.
-    return markerClone(TRO_MON_MARKER, (payload) => {
-      payload.theGainOnSuccess = THE_PROC_GAIN
-      bake?.(payload)
-    })
-  }
-
-  it('tro proc heals the triggering ally by ratio x its maxHp', () => {
+  it('tro_kich landed applies the dan_the mark; the marked enemy\'s observed action yields boosted income, then the mark is consumed', () => {
     const f = fixture()
-    f.strikerP.entity.currentHp = 30_000 // half of 60k
-    const w = world(() => f.roster, {
-      registry: registryWith([withTroMon(f.supporterP, (payload) => {
-        payload.healsTriggeringAllyMaxHpRatio = 0.15
-      })]),
-    })
-    w.runtime.applyBuff('tro_mon', f.supporterP)
-    vi.spyOn(Math, 'random').mockReturnValue(0)
-
-    const declared = declaredAllyAction(f.strikerP, f.strikerP.basic!, f.battle.enemies, [f.enemyP])
-    systemOf(w).applyActionImpact(f.battle, declared)
-
-    // 0.15 x 60k = 9000 healed on the triggering ally.
-    expect(f.strikerP.entity.currentHp).toBe(39_000)
-    expect(f.battle.queuedFollowUps).toHaveLength(1)
-    expect(f.battle.queuedFollowUps![0]).toMatchObject({ actorId: 'supporter', actionSource: 'follow_up' })
-  })
-
-  it('non-damaging ally action opens no window without the flag — and opens one with it', () => {
-    // Without the flag: a self-buff action never triggers Tro.
-    let f = fixture()
-    let w = world(() => f.roster, {
-      registry: registryWith([withTroMon(f.supporterP)]),
-    })
-    w.runtime.applyBuff('tro_mon', f.supporterP)
-    vi.spyOn(Math, 'random').mockReturnValue(0)
-
-    let declared = declaredAllyAction(f.strikerP, ALLY_SELF_BUFF, f.battle.enemies, [f.strikerP])
-    systemOf(w).applyActionImpact(f.battle, declared)
-
-    expect(f.battle.queuedFollowUps ?? []).toHaveLength(0)
-    expect(f.supporterP.entity.currentThe).toBe(15) // no attempt was paid
-    vi.restoreAllMocks()
-
-    // With firesOnNonDamagingAction: the same action queues tro_kich
-    // against all living enemies.
-    f = fixture()
-    w = world(() => f.roster, {
-      registry: registryWith([withTroMon(f.supporterP, (payload) => {
-        payload.firesOnNonDamagingAction = true
-      })]),
-    })
-    w.runtime.applyBuff('tro_mon', f.supporterP)
-    vi.spyOn(Math, 'random').mockReturnValue(0)
-
-    declared = declaredAllyAction(f.strikerP, ALLY_SELF_BUFF, f.battle.enemies, [f.strikerP])
-    systemOf(w).applyActionImpact(f.battle, declared)
-
-    expect(f.battle.queuedFollowUps).toHaveLength(1)
-    expect(f.battle.queuedFollowUps![0]).toMatchObject({
-      actorId: 'supporter',
-      actionSource: 'follow_up',
-      payloadSkillId: 'tro_kich',
-      targetIds: ['enemy'],
-      triggerContext: { origin: 'ally_action' },
-    })
-    expect(f.supporterP.entity.currentThe).toBe(20)
-  })
-
-  it('a DODGED damaging ally action keeps the follow-up on the intended target — no all-enemies fan-out', () => {
-    // Regression guard — resolveAllyActionWindow once treated
-    // landedTargets === 0 as "non-damaging" and fanned the follow-up out
-    // to every living enemy. A dodged DAMAGING action is not authored
-    // non-damaging: it must inherit declared.affected instead.
-    const f = fixture()
-    const enemy2 = createCombatant(
-      { id: 'enemy2', type: 'enemy', currentHp: 100_000, maxHp: 100_000, x: 9, row: 0 },
-      3,
+    // The Dan The node bakes the one-shot ailment onto the tro_kich
+    // payload clone - register the baked kit clones under their ids.
+    const kit = buildTheTuAnKit(
+      {
+        observationGainBonus: 0,
+        phanKinhArmorPierce: 0,
+        interceptWardRatio: 0,
+        evadeCounterMultiplierBonus: 0,
+        danTheBonus: 1,
+      },
+      { quanThe: true, quanTheCoreLevel: 1 },
     )
-    const enemy2P = makeParticipant('enemy2', enemy2, 3, 101)
-    f.battle.enemies.push(enemy2P)
-    f.roster.push(enemy2P)
-
-    // Force the dodge: hit chance floors at 5% (Accuracy.ts), so a
-    // 0.999 roll misses even through the floor.
-    f.enemyP.entity.baseStats = asBaseStats({
-      ...f.enemyP.entity.baseStats,
-      evasionRate: 1_000_000,
-    })
-    f.enemyP.entity.stats = { ...f.enemyP.entity.stats, evasionRate: 1_000_000 }
-
-    const w = world(() => f.roster, {
-      registry: registryWith([withTroMon(f.supporterP, (payload) => {
-        payload.firesOnNonDamagingAction = true
-      })]),
-      // Two seams, two mechanisms: the HIT check still reads the global
-      // Math.random inside CombatSystem — pin it high so the roll misses
-      // even the 5% floor (forced dodge). The Tro PROC roll reads the
-      // runtime rng — pin that low so the supporter's proc succeeds
-      // through its own authority (followUpChance hard-caps at
-      // REACTIVE_CHANCE_CAP = 0.6, so it needs < 0.6 on its own seam).
-      rng: () => 0,
-    })
+    const w = world(() => f.roster, { registry: registryWith([...kit.basic.grantsBuffsAtBuild!]) })
+    f.supporterP.reactivePayloads = kit.reactivePayloads
+    f.supporterP.entity.baseStats = asBaseStats({ ...f.supporterP.entity.baseStats, followUpChance: 1 })
+    f.supporterP.entity.stats = { ...f.supporterP.entity.stats, followUpChance: 1 }
+    f.supporterP.entity.currentThe = 100
     w.runtime.applyBuff('tro_mon', f.supporterP)
-    vi.spyOn(Math, 'random').mockReturnValue(0.999)
+    w.runtime.applyBuff('ung_the', f.supporterP)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
 
+    const system = systemOf(w)
+    // Ally action -> Tro window -> queued tro_kich at the canonical target.
     const declared = declaredAllyAction(f.strikerP, f.strikerP.basic!, f.battle.enemies, [f.enemyP])
-    systemOf(w).applyActionImpact(f.battle, declared)
-
-    // The striker's single-target hit whiffed on the ONLY declared
-    // target; the supporter's tro_kich must queue against that one
-    // intended enemy — not ['enemy', 'enemy2'].
+    system.applyActionImpact(f.battle, declared)
     expect(f.battle.queuedFollowUps).toHaveLength(1)
-    expect(f.battle.queuedFollowUps![0]).toMatchObject({
-      actorId: 'supporter',
-      actionSource: 'follow_up',
-      payloadSkillId: 'tro_kich',
-      triggerContext: { origin: 'ally_action' },
-    })
-    expect(f.battle.queuedFollowUps![0]!.targetIds).toEqual(['enemy'])
+
+    // The queued payload resolves: tro_kich lands, applying dan_the.
+    system.resolveNextStep(f.battle)
+    expect(buffsOf(w.runtime, f.enemyP, 'dan_the')).toHaveLength(1)
+
+    // The marked enemy's next OBSERVED action yields x3 income and
+    // consumes the mark.
+    f.supporterP.entity.currentThe = 0
+    const enemyAction = declaredEnemyAction(f, [f.strikerP])
+    system.applyActionImpact(f.battle, enemyAction)
+
+    expect(f.supporterP.entity.currentThe).toBe(4 * 3) // gainOnObservedAction x DAN_THE_INCOME_MULT
+    expect(buffsOf(w.runtime, f.enemyP, 'dan_the')).toHaveLength(0)
   })
 })
 
@@ -445,6 +351,7 @@ describe('dead holder performs no reactive transaction (review MED)', () => {
     defenderP.entity.baseStats = asBaseStats({ ...defenderP.entity.baseStats, counterChance: 1 })
     defenderP.entity.stats = { ...defenderP.entity.stats, counterChance: 1 }
     defenderP.entity.currentThe = 50
+    defenderP.thamTargetId = 'enemy'
 
     const enemy = createCombatant(
       {
@@ -487,9 +394,9 @@ describe('dead holder performs no reactive transaction (review MED)', () => {
     )
 
     expect(f.defenderP.entity.alive).toBe(false)
-    // The window never opened: no cost paid, no success credit, and the
-    // proc's chance draw (rollChance) never happened -- the hit's own
-    // roll()s are a separate, legitimate channel.
+    // The window never opened: no cost paid, no commit, and the proc's
+    // chance draw (rollChance) never happened -- the hit's own roll()s
+    // are a separate, legitimate channel.
     expect(f.defenderP.entity.currentThe).toBe(50)
     expect(rollChance).not.toHaveBeenCalled()
     expect(f.battle.queuedFollowUps ?? []).toHaveLength(0)

@@ -1,0 +1,35 @@
+{
+  "artifact": "wave-P COR-P fix batch verification",
+  "run": "phap-tu-reimagine-2026-09-26",
+  "commit": "068c7360",
+  "productStateId": "68d6f324141b5ad199d28c3fa22d7613bb0afa45b751bb97c2291644b55ed283",
+  "fixes": [
+    {
+      "finding": "COR-3b",
+      "file": "src/core/skilldef/LegacySkillAdapter.ts",
+      "fix": "adapter reports flat resourceCost + resourceCostPercentOfMax co-authored on a mana surface as an authoring defect (percent branch silently wins otherwise; the forms are mutually exclusive per D8/F10)"
+    },
+    {
+      "finding": "COR-4",
+      "file": "src/core/battle/turn/TurnBattleSystem.ts",
+      "fix": "charge-resolve chain looks up actor.basic.id so a hypothetical charged basic resolves instead of silent-whiffing"
+    },
+    {
+      "finding": "COR-5",
+      "file": "src/core/skilldef/ScalarExpression.ts",
+      "fix": "dormant-parity docblock on evaluateSkillCondition (no production callers; executor consumes evaluateResolvedCondition)"
+    },
+    {
+      "finding": "COR-6",
+      "file": "src/core/battle/ActionImpactSystem.ts",
+      "fix": "removed dead required HitResolveOptions.isPrimary field (zero readers; referenced secondaryPercent does not exist)"
+    }
+  ],
+  "rejects": [
+    "COR-1: composite-extra kind check is dead defensive code (ActiveSkillDefinition.kind literal 'active'; unknown refs already fault unknown_reference)",
+    "COR-2: 'attack' emit after castBlocked verified safe by consumer census; intended behavior",
+    "COR-3a: percent-of-zero is correct arithmetic",
+    "COR-7: HUD label overflow cosmetic-only"
+  ],
+  "verification": "npm run type-check PASS; npx vitest run src/core/battle/turn src/core/skilldef ActionImpactSystem tests/architecture -- 133 files / 1328 tests PASS (1 suite fail = canvas/libuuid env noise, pre-existing)"
+}

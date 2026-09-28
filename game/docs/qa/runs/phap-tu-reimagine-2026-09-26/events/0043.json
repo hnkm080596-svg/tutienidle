@@ -1,0 +1,28 @@
+{
+  "applied": [
+    "review:REV-PTR-COR-K1",
+    "review:REV-PTR-AUT-K1",
+    "review:REV-PTR-INT-K1",
+    "evidence:EV-PTR-CORK",
+    "evidence:EV-PTR-AUTK",
+    "evidence:EV-PTR-INTK",
+    "evidence:EV-PTR-FIXL",
+    "finding:F-PTR-155",
+    "finding:F-PTR-156",
+    "finding:F-PTR-157",
+    "finding:F-PTR-158",
+    "finding:F-PTR-159",
+    "finding:F-PTR-160",
+    "finding:F-PTR-161",
+    "finding:F-PTR-162",
+    "finding:F-PTR-163",
+    "finding:F-PTR-164",
+    "finding:F-PTR-165",
+    "finding:F-PTR-166",
+    "finding:F-PTR-167",
+    "finding:F-PTR-168",
+    "finding:F-PTR-169",
+    "lesson:L-PTR-L-WHIFF-DANGLING",
+    "lesson:L-PTR-L-PIN-FRESHNESS"
+  ]
+}

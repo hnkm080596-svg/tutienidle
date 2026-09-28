@@ -1,0 +1,14 @@
+{
+ "role": "INT",
+ "pin": "8e25a766",
+ "verdict": "FINDINGS(1)",
+ "method": "adversarial runtime cross-domain attacks on charge-resolve lane, empowered swap ordering, save/load union, fingerprint staleness, consumeResourceFor floor contract",
+ "findings": [
+  {
+   "id": "M-INT-01",
+   "severity": "Low",
+   "file": "PlayerHudLayer.ts:224",
+   "claim": "ung-the pool maxThe=100 renders ~100 overlapping pips (1.4px spacing in 140px bar) instead of master fill-rect; label still correct; blast radius hidden_body_pathway only"
+  }
+ ]
+}

@@ -4,7 +4,6 @@ import { COMPANIONS, type CompanionInstance } from '../../data/companion/Compani
 import { REALMS } from '../../data/realms/realm'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { KIEM_PHO_COMBOS } from '../../data/skill/KiemPhoCombos'
-import { PHAP_TU_ULTIMATE_IDS } from '../../data/skill/PhapTuUltimates'
 import { SPELL_KIT_IDS, SKILLS } from '../../data/skill/Skills'
 import {
   buildTheTuAnKit,
@@ -17,12 +16,6 @@ import { isKiemPhoProviderHandle } from '../kiem-tu/KiemPhoProvider'
 import { freshSwordPathState, KIEM_PHO_ORB_IDS } from '../kiem-tu/KiemTuState'
 import { resolveCompanionSkillKit } from '../companion/CompanionProgression'
 import { TemplateRegistry } from '../game/TemplateRegistry'
-import { isSpellPathway } from '../phap-tu/PhapTuPath'
-import {
-  NEUTRAL_ROUTE_PROFILE,
-  resolveRouteProfile,
-  type RouteProfile,
-} from '../phap-tu/PhapTuRoutes'
 import {
   CULTIVATION_PATH_RUNTIME_FACTORIES,
   resolveCultivationPathRuntime,
@@ -279,30 +272,20 @@ const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
       nodes: KIEM_TU_NODES,
     })),
 
+  // Phap Tu Reimagined: routes and the empowered ultimate are retired;
+  // the committed element resolves {special} only (the basic carries
+  // the Phap The rider through the empowerment channel).
   'spell:spell_pathway': () =>
-    ELEMENT_ORDER.flatMap((element) => [
-      ...(['dot', 'no'] as const).map((route) => ({
-        label: `${element}:${route}:empowered`,
-        player: censusPlayer((p) => {
-          p.cultivationPath = 'spell'
-          p.cultivationWay = 'spell_pathway'
-          p.realmId = 'tribulation'
-          p.spellPath = { element, route }
-          p.nodeLevels = { [`linh_ngo_${PHAP_TU_ULTIMATE_IDS[element]}`]: 1 }
-        }),
-        requiredSlots: ['special', 'ultimate'] as const,
-      })),
-      {
-        label: `${element}:base`,
-        player: censusPlayer((p) => {
-          p.cultivationPath = 'spell'
-          p.cultivationWay = 'spell_pathway'
-          p.realmId = 'tribulation'
-          p.spellPath = { element, route: null }
-        }),
-        requiredSlots: ['special', 'ultimate'] as const,
-      },
-    ]),
+    ELEMENT_ORDER.map((element) => ({
+      label: `${element}:base`,
+      player: censusPlayer((p) => {
+        p.cultivationPath = 'spell'
+        p.cultivationWay = 'spell_pathway'
+        p.realmId = 'tribulation'
+        p.spellPath = { element }
+      }),
+      requiredSlots: ['special'] as const,
+    })),
 
   'spell:hidden_spell_pathway': () => [
     {
@@ -320,10 +303,14 @@ const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
 
   'body:body_pathway': () =>
     (
+      // Beta: roots produce Basic only; Special arrives via the Truc Co
+      // core grant (core_<skill>), and there is no Ultimate slot.
       [
         { label: 'no_root', nodeLevels: {} as Record<string, number>, requiredSlots: [] },
-        { label: 'cuong_chien', nodeLevels: { cuong_chien: 1 } as Record<string, number>, requiredSlots: ['special', 'ultimate'] },
-        { label: 'tran_the', nodeLevels: { tran_the: 1 } as Record<string, number>, requiredSlots: ['special', 'ultimate'] },
+        { label: 'cuong_chien', nodeLevels: { cuong_chien: 1 } as Record<string, number>, requiredSlots: [] },
+        { label: 'cuong_chien+special', nodeLevels: { cuong_chien: 1, core_loan_dau: 1 } as Record<string, number>, requiredSlots: ['special'] },
+        { label: 'tran_the', nodeLevels: { tran_the: 1 } as Record<string, number>, requiredSlots: [] },
+        { label: 'tran_the+special', nodeLevels: { tran_the: 1, core_phan_chan: 1 } as Record<string, number>, requiredSlots: ['special'] },
       ] as const
     ).map(({ label, nodeLevels, requiredSlots }) => ({
       label,
@@ -337,9 +324,12 @@ const RUNTIME_FIXTURES: Record<string, () => RuntimeFixtureState[]> = {
 
   'body:hidden_body_pathway': () =>
     (
+      // Ung The beta: tham_the basic is unconditional; the quan_the
+      // special enters only via the major_quan_the node's skill-core
+      // grant; there is no ultimate slot and no *_mon purchasable roots.
       [
-        { label: 'no_roots', nodeLevels: {} as Record<string, number>, requiredSlots: [] },
-        { label: 'all_roots', nodeLevels: { ho_mon: 1, phan_mon: 1, tro_mon: 1 } as Record<string, number>, requiredSlots: ['special', 'ultimate'] },
+        { label: 'no_quan_the', nodeLevels: {} as Record<string, number>, requiredSlots: [] },
+        { label: 'quan_the', nodeLevels: { core_quan_the: 1 } as Record<string, number>, requiredSlots: ['special'] },
       ] as const
     ).map(({ label, nodeLevels, requiredSlots }) => ({
       label,
@@ -361,18 +351,6 @@ function runtimeDepsFor(
 
   const skillSystem = new SkillSystem(manager)
 
-  // Mirrors GameManager.routeProfileProvider: neutral unless the active
-  // player is spell_pathway and the skill belongs to its element kit.
-  const routeProfileProvider = (skillId: string): RouteProfile => {
-    if (!isSpellPathway(player)) return NEUTRAL_ROUTE_PROFILE
-    const element = player.spellPath.element
-    if (!element || !SPELL_KIT_IDS[element].includes(skillId)) {
-      return NEUTRAL_ROUTE_PROFILE
-    }
-    return resolveRouteProfile(player.spellPath)
-  }
-  skillSystem.setRouteProfileProvider(routeProfileProvider)
-
   const skillTemplates = new TemplateRegistry<Skill>()
   for (const skill of SKILLS) skillTemplates.register(skill.id, skill)
 
@@ -389,7 +367,6 @@ function runtimeDepsFor(
       nodeRegistry,
       getNodeLevel: (nodeId, p) => getNodeLevel(p, nodeId),
       getSpellPathElement: () => player.spellPath.element ?? undefined,
-      routeProfileProvider,
     },
   }
 }
@@ -577,25 +554,36 @@ function collectCastableDefs(): Census {
 
   // -- Leg 4: producer-fn matrices (direct calls for shape variants) -----
   const zeroKitMods = {
+    cuongQuyenCoefficientBonus: 0,
+    cuongQuyenArmorPierce: 0,
+    loanDauPaidHpBonus: 0,
     missingHpBonusBonus: 0,
+    tranApMaxHpRatioBonus: 0,
+    tranKinhWeakenRatio: 0,
     reflectMaxHpRatioBonus: 0,
-    reflectTakenRatioBonus: 0,
-    sonNhacWardRatioBonus: 0,
-    tauntTurnsBonus: 0,
-    batTuDurationBonus: 0,
+    reflectMarkedRatioBonus: 0,
   }
   for (const root of ['cuong_chien', 'tran_the'] as const) {
-    const kit = buildTheTuKit(root, zeroKitMods)
+    const kit = buildTheTuKit(root, zeroKitMods, { special: true })
     exercisedProducerFns.add('../../data/skill/TheTuSkills.ts#buildTheTuKit')
     requireDef(`TheTuKit:${root}.basic`, kit.basic)
     requireDef(`TheTuKit:${root}.special`, kit.special)
-    requireDef(`TheTuKit:${root}.ultimate`, kit.ultimate)
   }
-  const anKit = buildTheTuAnKit(['ho_mon', 'phan_mon', 'tro_mon'])
+  // Ung The beta: mods + the Quan The ownership grant are the only two
+  // inputs; there is no ultimate slot and no marker-list argument.
+  const anKit = buildTheTuAnKit(
+    {
+      observationGainBonus: 0,
+      phanKinhArmorPierce: 0,
+      interceptWardRatio: 0,
+      evadeCounterMultiplierBonus: 0,
+      danTheBonus: 0,
+    },
+    { quanThe: true, quanTheCoreLevel: 1 },
+  )
   exercisedProducerFns.add('../../data/skill/TheTuSkills.ts#buildTheTuAnKit')
   requireDef('TheTuAnKit:basic', anKit.basic)
   requireDef('TheTuAnKit:special', anKit.special)
-  requireDef('TheTuAnKit:ultimate', anKit.ultimate)
   for (const [id, def] of Object.entries(anKit.reactivePayloads)) {
     push(`TheTuAnKit:reactive:${id}`, def)
   }
@@ -862,24 +850,44 @@ describe('LegacySkillAdapter -- production coverage census (M5/INV-S2)', () => {
     // pool members, same-id mutated clones). A genuine same-id/different-
     // shape conflict must fault HERE, not at cast time.
     //
-    // Reachability partition: specialization variants and empowered-ult
-    // route variants are MUTUALLY EXCLUSIVE inside one battle (a player
-    // equips one spec variant and locks one route). Their same-id/
-    // different-shape collisions can never co-register, so each surface
-    // is merged separately -- every variant still proves coexistence
-    // against the whole rest of the surface exactly once.
+    // Reachability partition: specialization variants (sources carry '#')
+    // are MUTUALLY EXCLUSIVE inside one battle -- a player equips one
+    // spec variant -- so they never co-register and stay skipped.
+    //
+    // Phap Tu Reimagined: the route axis (dot/no) is gone; the remaining
+    // same-id/different-shape pairs are:
+    //   a) raw `Skill:` converter output vs the SAME skill re-derived by
+    //      a `runtime:` leg (resolveBasic/resolveSpecialUltimate attach
+    //      the in-battle fields -- theGainOnLandedCast, empowerment,
+    //      resourceCostPercentOfMax, landedConsequences). In a real
+    //      battle only the runtime-resolved payload registers, so the
+    //      raw twin is skipped while every other surface co-registers.
+    //   b) the committed-pathway EMPOWERED aux (the Phap The variant,
+    //      same id as the element basic) vs the hidden-pathway An-kit
+    //      composite-pool aux (raw pool member, same id). A player is
+    //      on exactly ONE spell way, so committed legs and hidden/AnKit
+    //      legs never co-register -- the merge runs once per group.
     const failures: string[] = []
 
-    for (const route of ['dot', 'no'] as const) {
+    const runtimeIds = new Set(
+      census.defs
+        .filter(({ source }) => source.startsWith('runtime:'))
+        .map(({ def }) => def.id),
+    )
+    const isHiddenWayLeg = (source: string): boolean =>
+      source.startsWith('runtime:spell:hidden_spell_pathway:') ||
+      source.startsWith('AnKit:')
+    const isCommittedWayLeg = (source: string): boolean =>
+      source.startsWith('runtime:spell:spell_pathway:')
+
+    for (const way of ['committed', 'hidden'] as const) {
       const catalogs = []
 
       for (const { source, def } of census.defs) {
         if (source.includes('#')) continue
-        // Skip the OTHER route's empowered-ult states: the aux payloads
-        // of both variants share their base ult id with different shapes
-        // and are route-locked -- unreachable in one registry.
-        const otherRoute = route === 'dot' ? 'no' : 'dot'
-        if (source.includes(`:${otherRoute}:empowered`)) continue
+        if (source.startsWith('Skill:') && runtimeIds.has(def.id)) continue
+        if (way === 'committed' && isHiddenWayLeg(source)) continue
+        if (way === 'hidden' && isCommittedWayLeg(source)) continue
 
         const catalog = adaptTurnSkillDefinition(def)
         if (catalog.unsupported.length > 0) {
@@ -895,7 +903,7 @@ describe('LegacySkillAdapter -- production coverage census (M5/INV-S2)', () => {
         })
       } catch (error) {
         failures.push(
-          `route '${route}' surface: merged registry rejected -- ${(error as Error).message.slice(0, 400)}`,
+          `'${way}' spell surface: merged registry rejected -- ${(error as Error).message.slice(0, 400)}`,
         )
       }
     }

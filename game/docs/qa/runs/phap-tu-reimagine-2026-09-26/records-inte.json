@@ -1,0 +1,39 @@
+{
+ "run": "phap-tu-reimagine-2026-09-26",
+ "reviewId": "REV-PTR-INT-E1",
+ "reviewer": "devin-797d9de269d44b76bf81d0e63bbca57c",
+ "phase": "INTEGRATION",
+ "pin": "b1f59d72",
+ "verdict": "FINDINGS -- 1 High + 2 Low",
+ "adjudication": [
+  {
+   "finding": "F-PTR-66 / HIGH",
+   "disposition": "FIXED @c6b33645",
+   "verification": "SkillExecutor.runSteps: nested gate over same hit-op key (targetId + sorted hitOperationIds) runs ops without re-firing hooks; active-key set + try/finally. Pin test SkillExecutor.nestedGate.test.ts 2/2 pass; type-check clean; scoped vitest 248 files / 2031 pass / 4 expected-fail"
+  },
+  {
+   "finding": "F-PTR-67 / LOW-1",
+   "disposition": "DUPLICATE of F-PTR-60 -- fixed @0b160fca"
+  },
+  {
+   "finding": "F-PTR-68 / LOW-2",
+   "disposition": "REJECTED -- crafted-save only; strict v87 equality seals the older-shape class"
+  }
+ ],
+ "attackVectorsProbed": [
+  "oncePerCast dedup vs chained casts / multi-target splits",
+  "landedConsequences on non-damaging defs",
+  "Ho The DR ratio edges",
+  "crafted save v87",
+  "retirement residue",
+  "bound-marker lifecycle",
+  "empowerment commitsCast gate",
+  "GENERIC mint paths"
+ ],
+ "sealedSurfaces": [
+  "oncePerCast dedup across subcasts",
+  "save-version strict equality",
+  "hidden-way repeat/multicast carriers never gain The",
+  "authored else-branches under failed gates still skip"
+ ]
+}

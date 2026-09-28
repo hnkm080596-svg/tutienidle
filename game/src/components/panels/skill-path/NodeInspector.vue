@@ -1,10 +1,10 @@
 <script setup lang="ts">
 // SpellPathPanel plan muc 10/17/29 + node level (combat-skill-flow-element-
-// power-dot-plan.md sec.6.2) -- bottom panel: chi tiet node ?ang CHON + nut
+// power-dot-plan.md 6.2) -- bottom panel: chi tiet node dang CHON + nut
 // mua/nang cap. Node nhieu cap hien thi `Cap x/max`, Power nhan moi cap
-// + tong ?ang nhan, chi phi cap ke; nut "Linh Ngo" o level 0, "Nang
-// Cap" tu level 1, trang thai "Toi ?a" khi ?at maxLevel.
-import { computed, ref } from 'vue'
+// + tong dang nhan, chi phi cap ke; nut "Linh Ngo" o level 0, "Nang
+// Cap" tu level 1, trang thai "Toi da" khi dat maxLevel.
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -19,13 +19,11 @@ import {
   hasPrerequisite,
   canUpgradeNode,
   isNodeElementActive,
-  isNodeRouteActive,
   nodeWayApplies,
 } from '@/core/progression/NodeSystem'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '@/data/progression/PhapTuNodes.builders'
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
-import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
-import type { SpellPathRoute } from '@/core/phap-tu/PhapTuState'
+import { REALMS } from '@/data/realms/realm'
 import type { NodePrerequisite, ProgressionNode } from '@/core/progression/ProgressionNode'
 
 const { t } = useI18n()
@@ -34,6 +32,7 @@ const props = defineProps<{
   node: ProgressionNode | null
   purchased: boolean
   purchasable: boolean
+  inBattle?: boolean
 }>()
 
 const emit = defineEmits<{ unlocked: [node: ProgressionNode] }>()
@@ -44,17 +43,14 @@ const { stateVersion } = useStateVersion()
 const { purchaseNode, upgradeNode, selectSpellPathElement } = useProgressionActions()
 
 const ELEMENT_ROOT_ID_SET = new Set<string>(Object.values(PHAP_TU_ELEMENT_ROOT_IDS))
-const SPELL_PATH_ROUTE_IDS: readonly SpellPathRoute[] = ['dot', 'no']
 
-// Task 16 -- element roots are NOT purchasable through purchaseNode()
-// (the op rejects them): clicking one opens the blocking route pick,
-// and the atomic selectSpellPathElement() transaction commits
-// element+route together (INV-13 -- no element-without-route state).
+// Phap Tu Reimagine (spec D5) -- element roots are NOT purchasable
+// through purchaseNode() (the op rejects them): clicking one commits
+// the element directly via selectSpellPathElement() -- routes are
+// retired, no pick modal.
 const isElementRoot = computed(() => props.node !== null && ELEMENT_ROOT_ID_SET.has(props.node.id))
 
-const routePickOpen = ref(false)
-
-// Level hien tai / max / cost cap ke cua node ?ang chon.
+// Level hien tai / max / cost cap ke cua node dang chon.
 const level = computed(() => {
   stateVersion.value
 
@@ -100,7 +96,13 @@ function nodePrereqReason(prereq: NodePrerequisite): string {
       name: gameManager.nodeRegistry.get(prereq.nodeId).name,
     })
   } else if (prereq.kind === 'realm') {
-    return t('panels.skillPath.nodeInspector.lockedReasons.realm')
+    // Three-path design (2026-09-25, ruling #16C) -- name the realm so a
+    // dimmed node previews exactly where it opens ("mo o Kim Dan"). A stale
+    // or unknown realm id falls back to the raw id instead of throwing.
+    const realmName = REALMS.find((realm) => realm.id === prereq.realmId)?.name ?? prereq.realmId
+    return t('panels.skillPath.nodeInspector.lockedReasons.realm', {
+      realm: realmName,
+    })
   } else if (prereq.kind === 'excludesNode') {
     return t('panels.skillPath.nodeInspector.lockedReasons.excludesNode', {
       name: gameManager.nodeRegistry.get(prereq.nodeId).name,
@@ -139,8 +141,8 @@ function nodePrereqReason(prereq: NodePrerequisite): string {
   return t('panels.skillPath.nodeInspector.lockedReasons.skillUpgrade')
 }
 
-// Ly do khoa -- thuan suy ra tu hasPrerequisite() ?a co (khong ?ung
-// core), chi ?e hien goi y, KHONG phai nguon su that.
+// Ly do khoa -- thuan suy ra tu hasPrerequisite() da co (khong dung
+// core), chi de hien goi y, KHONG phai nguon su that.
 const lockedReasons = computed(() => {
   if (!props.node || props.purchased || props.purchasable || level.value >= 1) {
     return []
@@ -148,18 +150,12 @@ const lockedReasons = computed(() => {
 
   const reasons: string[] = []
 
-  // Task 16 -- element/route membership gates (isNodeElementActive /
-  // isNodeRouteActive) are not prerequisites, so hasPrerequisite()
-  // cannot explain them; surface the real lock reason here.
+  // Phap Tu Reimagine -- element membership (isNodeElementActive) is
+  // not a prerequisite, so hasPrerequisite() cannot explain it;
+  // surface the real lock reason here. Route membership is retired.
   if (!isNodeElementActive(player.$state, props.node) && props.node.elementTag) {
     reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.elementMismatch', {
       element: ELEMENT_LABELS[props.node.elementTag],
-    }))
-  }
-
-  if (!isNodeRouteActive(player.$state, props.node) && props.node.routeTag) {
-    reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.routeMismatch', {
-      route: t(`panels.nodeTree.routes.${props.node.routeTag}`),
     }))
   }
 
@@ -211,30 +207,18 @@ function onPurchase() {
     return
   }
 
-  // Element root -> the blocking route pick collects the second half of
-  // the atomic commit (spec sec.3.3: "blocking choice, no dismiss").
+  const node = props.node
+
+  // Element root -> element-only commit (spec D5); purchaseNode() does
+  // not accept roots.
   if (isElementRoot.value) {
-    routePickOpen.value = true
+    if (node.elementTag && selectSpellPathElement(node.elementTag)) {
+      emit('unlocked', node)
+    }
     return
   }
-
-  const node = props.node
 
   if (purchaseNode(node.id)) {
-    emit('unlocked', node)
-  }
-}
-
-function onRoutePick(route: SpellPathRoute) {
-  const node = props.node
-
-  routePickOpen.value = false
-
-  if (!node?.elementTag) {
-    return
-  }
-
-  if (selectSpellPathElement(node.elementTag, route)) {
     emit('unlocked', node)
   }
 }
@@ -256,7 +240,7 @@ function onUpgrade() {
       <div class="node-inspector__header">
         <span class="node-inspector__name">{{ node.name }}</span>
 
-        <!-- Badge `Cap x/max` cho node nhieu cap (plan sec.6.2). -->
+        <!-- Badge `Cấp x/max` cho node nhiều cấp (plan §6.2). -->
         <span v-if="maxLevel > 1" class="node-inspector__level">{{ level }}/{{ maxLevel }}</span>
 
         <span
@@ -313,20 +297,17 @@ function onUpgrade() {
           v-if="level === 0"
           class="node-inspector__buy"
           size="sm"
-          :disabled="!purchasable"
+          :disabled="!purchasable || inBattle"
           @click="onPurchase"
         >
           {{ t('panels.skillPath.nodeInspector.actions.unlock') }}
         </GameButton>
 
-        <!-- Ngu Kiem Beta: `level < maxLevel`, not `!isMaxed` -- a
-             single-level owned node (evolution layer, maxLevel 1) shows
-             only the purchased status, never an upgrade button. -->
         <GameButton
-          v-else-if="level < maxLevel"
+          v-else-if="!isMaxed"
           class="node-inspector__buy"
           size="sm"
-          :disabled="!upgradable"
+          :disabled="!upgradable || inBattle"
           @click="onUpgrade"
         >
           {{ t('panels.skillPath.nodeInspector.actions.upgrade') }}
@@ -334,32 +315,6 @@ function onUpgrade() {
       </div>
     </template>
 
-    <!-- Blocking route pick (spec sec.3.3 + plan Task 16: "blocking
-         choice, no dismiss") -- element+route commit atomically via
-         selectSpellPathElement; the modal only collects input, it is not
-         the guarantee. No cancel: the element root was clicked
-         deliberately, the route half is mandatory. -->
-    <Teleport to="body">
-      <div v-if="routePickOpen" class="route-pick" :style="{ zIndex: OVERLAY_LAYERS.modal }">
-        <section class="route-pick__card" role="alertdialog" aria-modal="true">
-          <h3 class="route-pick__title">{{ t('panels.skillPath.nodeInspector.routePick.title') }}</h3>
-          <p class="route-pick__hint">{{ t('panels.skillPath.nodeInspector.routePick.hint') }}</p>
-
-          <div class="route-pick__options">
-            <GameButton
-              v-for="route in SPELL_PATH_ROUTE_IDS"
-              :key="route"
-              class="route-pick__option"
-              variant="ghost"
-              @click="onRoutePick(route)"
-            >
-              <span class="route-pick__option-name">{{ t(`panels.nodeTree.routes.${route}`) }}</span>
-              <span class="route-pick__option-desc">{{ t(`panels.skillPath.nodeInspector.routePick.${route}Desc`) }}</span>
-            </GameButton>
-          </div>
-        </section>
-      </div>
-    </Teleport>
   </div>
 </template>
 
@@ -384,7 +339,7 @@ function onUpgrade() {
   gap: 8px;
 }
 
-/* Ten node la "hero" cua khoi inspector -- truoc ?ay chi 14px, gan nhu
+/* Ten node la "hero" cua khoi inspector -- truoc day chi 14px, gan nhu
    cung co mo ta ben duoi (2026-08-30 frontend-design pass). */
 .node-inspector__name {
   font-size: var(--text-lg);
@@ -392,7 +347,7 @@ function onUpgrade() {
   color: var(--chrome-100);
 }
 
-/* Badge `Cap x/max` -- node nhieu cap (plan sec.6.2). */
+/* Badge `Cap x/max` -- node nhieu cap (plan 6.2). */
 .node-inspector__level {
   padding: 1px 8px;
   border-radius: 999px;
@@ -435,7 +390,7 @@ function onUpgrade() {
   margin-top: 6px;
 }
 
-/* Dong chi phi ?ung ngay canh nut hanh ?ong -- nang co ?e dan mat toi
+/* Dong chi phi dung ngay canh nut hanh dong -- nang co de dan mat toi
    quyet dinh thay vi chim cung co voi mo ta (2026-08-30 pass). */
 .node-inspector__cost {
   font-size: var(--text-md);
@@ -453,65 +408,4 @@ function onUpgrade() {
   cursor: not-allowed;
 }
 
-/* Blocking route pick -- no dismiss affordance by design (spec sec.3.3);
-   the card itself is a plain overlay since ConfirmModal always renders
-   a cancel action. */
-.route-pick {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, #000 62%, transparent);
-}
-
-.route-pick__card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: min(420px, 88vw);
-  padding: 20px 24px;
-  background: var(--ink-800);
-  border: 1px solid var(--chrome-500);
-  border-radius: var(--radius-md);
-}
-
-.route-pick__title {
-  margin: 0;
-  font-size: var(--text-lg);
-  font-weight: 700;
-  color: var(--chrome-100);
-}
-
-.route-pick__hint {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-}
-
-.route-pick__options {
-  display: flex;
-  gap: 10px;
-}
-
-.route-pick__option {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px;
-  text-align: left;
-}
-
-.route-pick__option-name {
-  font-size: var(--text-md);
-  font-weight: 700;
-  color: var(--gold-700);
-}
-
-.route-pick__option-desc {
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-  line-height: 1.4;
-}
 </style>

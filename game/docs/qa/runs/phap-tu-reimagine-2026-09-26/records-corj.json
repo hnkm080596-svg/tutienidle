@@ -1,0 +1,16 @@
+{
+ "kind": "reviewer-verdict",
+ "reviewer": "cleanJ COR",
+ "session": "devin-06b4d67abc3748aba7f064e6adce4be6",
+ "pin": "0c6b72f2dcdab3f9337d559f981fbb5896a275b5",
+ "verdict": "FINDINGS (1 Medium, 1 Low, 1 Nit)",
+ "verification": "type-check clean; scoped vitest src/core/battle/turn + skilldef + buff2 = 927 pass; 2 intentional QA repros failing in reviewer worktree",
+ "findings": [
+  "F1 Medium: unrouted charge-RESOLVE arm never stamps castBlocked + report label always undefined (silent) -> tail ally window fans tro procs on a no-op",
+  "F2 Low: registry faults consumesAllThe/empowerment x chargeTurns but not repeatCasts/multicast x chargeTurns (parity gap)",
+  "F3 Nit: adapter non-mana resourceCostPercentOfMax with no flat resourceCost -> free cast, only console.warn"
+ ],
+ "rejected": [
+  "unrouted non-charge affected===0 no-stamp -- unreachable (selectTarget null iff zero living enemies)"
+ ]
+}

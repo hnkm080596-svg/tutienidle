@@ -1,52 +1,50 @@
 <script setup lang="ts">
-// Pháp Tu Redesign (magicpath) — Node Tree UI: liệt kê MỌI
-// ProgressionNode đã đăng ký (gameManager.nodeRegistry), nhóm theo
-// branchTag (thuần hiển thị, xem ProgressionNode.ts).
+// Phap Tu Redesign (magicpath) -- Node Tree UI: liet ke MOI
+// ProgressionNode da dang ky (gameManager.nodeRegistry), nhom theo
+// branchTag (thuan hien thi, xem ProgressionNode.ts).
 //
-// SkillPathPanel.vue redesign (2026-08-20, PhapTuPanel plan mục 6/10)
-// — trước đây click node MUA THẲNG, hiện MỌI branch cùng lúc. Giờ:
-// (1) prop `branchTag` optional lọc còn ĐÚNG 1 branch (SkillPathPanel
-// truyền vào theo skill/branch đang chọn — không truyền
-// gì = hiện tất cả, giữ nguyên hành vi cũ cho caller khác nếu có);
-// (2) click CHỈ emit 'select' (kể cả node đã mua/còn khoá — plan mục
-// 29 "Node locked → hiện điều kiện" nghĩa là vẫn xem được), mua thật
-// dời xuống nút "Lĩnh Ngộ" ở NodeInspector.vue (bottom panel) — tách
-// XEM khỏi MUA đúng UX plan mục 10.
+// SkillPathPanel.vue redesign (2026-08-20, PhapTuPanel plan muc 6/10)
+// -- truoc day click node MUA THANG, hien MOI branch cung luc. Gio:
+// (1) prop `branchTag` optional loc con DUNG 1 branch (SkillPathPanel
+// truyen vao theo skill/branch dang chon -- khong truyen
+// gi = hien tat ca, giu nguyen hanh vi cu cho caller khac neu co);
+// (2) click CHI emit 'select' (ke ca node da mua/con khoa -- plan muc
+// 29 "Node locked -> hien dieu kien" nghia la van xem duoc), mua that
+// doi xuong nut "Linh Ngo" o NodeInspector.vue (bottom panel) -- tach
+// XEM khoi MUA dung UX plan muc 10.
 //
-// Phân tầng THẬT + SVG connections (2026-08-21, Plans/SkillNode) —
-// trước đây chỉ 2 tầng cứng (roots/children, xem git history) không
-// đủ cho cây sâu hơn 2 cấp (root -> Luyện Khí/Trúc Cơ Major -> Trúc Cơ
-// Minor, xem data/progression/PhapTuNodes.ts). Giờ tính depth THẬT
-// bằng cách đi ngược prerequisite kind:'node' trong CÙNG branch tới
-// gốc (0 prereq node = depth 0), nhóm theo depth thành N tầng thay vì
-// 2 bucket cứng — mỗi node vẫn CHỈ CÓ ĐÚNG 1 parent trong toàn bộ data
-// hiện có (không có node nào yêu cầu 2 node khác cùng lúc), nên model
-// single-parent này khớp 100% dữ liệu thật.
+// Phan tang THAT + SVG connections (2026-08-21, Plans/SkillNode) --
+// truoc day chi 2 tang cung (roots/children, xem git history) khong
+// du cho cay sau hon 2 cap (root -> Luyen Khi/Truc Co Major -> Truc Co
+// Minor, xem data/progression/PhapTuNodes.ts). Gio tinh depth THAT
+// bang cach di nguoc prerequisite kind:'node' trong CUNG branch toi
+// goc (0 prereq node = depth 0), nhom theo depth thanh N tang thay vi
+// 2 bucket cung -- moi node van CHI CO DUNG 1 parent trong toan bo data
+// hien co (khong co node nao yeu cau 2 node khac cung luc), nen model
+// single-parent nay khop 100% du lieu that.
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch, type ComponentPublicInstance } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
-import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNodeMaxLevel, getEffectiveNodeMaxLevel, getNextLevelCost, previewRouteSwitch, hasPrerequisite, nodeWayApplies } from '@/core/progression/NodeSystem'
-import { getActiveRoute } from '@/core/player/CultivationPathSystem'
+import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNodeMaxLevel, getEffectiveNodeMaxLevel, getNextLevelCost, hasPrerequisite, nodeWayApplies } from '@/core/progression/NodeSystem'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import { HIDDEN_BRANCH_TAGS, viewBranchTags } from '@/core/progression/NodeBranchViews'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import SkillConnections from './SkillConnections.vue'
 import type { SkillConnectionEntry, SkillConnectionRect } from './SkillConnections.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
-import SysTag from '@/components/common/system/SysTag.vue'
 import type { ElementType } from '@/core/element/ElementType'
-import type { SpellPathRoute } from '@/core/phap-tu/PhapTuState'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 
 const props = defineProps<{
   branchTag?: string
   selectedNodeId?: string | null
-  // Skill Node unlock animation — node vừa purchaseNode() THÀNH CÔNG
-  // (xem NodeInspector.vue/SkillPathPanel.vue). `seq` tăng dần để
-  // watch() luôn bắt được lần mua MỚI, kể cả trường hợp lý thuyết mua
-  // liên tiếp cùng nodeId.
+  // Skill Node unlock animation -- node vua purchaseNode() THANH CONG
+  // (xem NodeInspector.vue/SkillPathPanel.vue). `seq` tang dan de
+  // watch() luon bat duoc lan mua MOI, ke ca truong hop ly thuyet mua
+  // lien tiep cung nodeId.
   unlockTrigger?: { nodeId: string; seq: number } | null
 }>()
 
@@ -58,14 +56,14 @@ const { t } = useI18n()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
-const { switchSpellPathRoute, respecNodeTree } = useProgressionActions()
+const { respecNodeTree } = useProgressionActions()
 
 function branchLabel(branchTag: string | undefined): string {
   if (!branchTag) {
     return t('panels.nodeTree.labels.otherBranch')
   }
 
-  // The Tu Reimagined (T22) — path-id tree tags get i18n labels instead
+  // The Tu Reimagined (T22) -- path-id tree tags get i18n labels instead
   // of the raw branchTag fallback ('the_tu'/'the_tu_an' are not elements).
   if (branchTag === 'the_tu') {
     return t('panels.nodeTree.branchLabels.theTu')
@@ -79,7 +77,7 @@ function branchLabel(branchTag: string | undefined): string {
 }
 
 function branchColor(branchTag: string | undefined): string {
-  // The Tu Reimagined (T22) — The Tu Hien kit declares element 'metal';
+  // The Tu Reimagined (T22) -- The Tu Hien kit declares element 'metal';
   // the hidden path falls back to the paper-text neutral.
   if (branchTag === 'the_tu') {
     return ELEMENT_COLOR_VARS.metal
@@ -87,27 +85,6 @@ function branchColor(branchTag: string | undefined): string {
 
   return ELEMENT_COLOR_VARS[branchTag as ElementType] ?? 'var(--paper-text)'
 }
-
-// Phap Tu Reimagined (Task 16) — route respec toggle (P3). A route is a
-// stance, not a node: the toggle lives in the tree header and only
-// shows for normal Phap Tu once the atomic element+route commit exists.
-const SPELL_PATH_ROUTE_IDS: readonly SpellPathRoute[] = ['dot', 'no']
-
-// M-UI-SYSTEM - route tags become SysTag chips; glyph shape + label text
-// carry the route (hue only reinforces, spec 7.3).
-const NODE_ROUTE_TONE: Record<SpellPathRoute, 'warn' | 'violet'> = {
-  dot: 'warn',
-  no: 'violet',
-}
-
-const spellPathRoute = computed<SpellPathRoute | null>(() => {
-  stateVersion.value
-
-  // P1 - the canonical route read carries the way gate: the axis is
-  // declared on spell_pathway and gated by 'spell.elemental_casting', so a
-  // collapsed ('spell','hidden_spell_pathway') player resolves nothing.
-  return getActiveRoute(player) ?? null
-})
 
 const inBattle = computed(() => {
   stateVersion.value
@@ -117,45 +94,12 @@ const inBattle = computed(() => {
   return battle !== null && isBattleInProgress(battle.state)
 })
 
-const pendingRoute = ref<SpellPathRoute | null>(null)
-
-const routePreview = computed(() => {
-  stateVersion.value
-
-  if (pendingRoute.value === null) {
-    return null
-  }
-
-  return previewRouteSwitch(player.$state, gameManager.nodeRegistry)
-})
-
-function onRouteClick(route: SpellPathRoute) {
-  if (route === spellPathRoute.value || inBattle.value) {
-    return
-  }
-
-  pendingRoute.value = route
-}
-
-function confirmRouteSwitch() {
-  const route = pendingRoute.value
-
-  pendingRoute.value = null
-
-  if (route !== null) {
-    switchSpellPathRoute(route)
-  }
-}
-
-function cancelRouteSwitch() {
-  pendingRoute.value = null
-}
 interface TreeEntry {
   node: ProgressionNode
   purchased: boolean
   purchasable: boolean
 
-  // Node level (plan §6.1) — badge `level/max` cho node nhiều cấp.
+  // Node level (plan 6.1) -- badge `level/max` cho node nhieu cap.
   level: number
 
   maxLevel: number
@@ -174,10 +118,10 @@ const branches = computed(() => {
 
   const allNodes = gameManager.nodeRegistry.getAll()
 
-  // Phap Tu Reimagined (Task 16) — a node belongs to a view when either
+  // Phap Tu Reimagined (Task 16) -- a node belongs to a view when either
   // its elementTag (reworked Phap Tu tree) or branchTag (Kiem Tu
   // routes) is in the view's tag set; unfiltered views hide
-  // HIDDEN_BRANCH_TAGS (the future An tree surface — Task 7's path owns
+  // HIDDEN_BRANCH_TAGS (the future An tree surface -- Task 7's path owns
   // no normal tree). Tag mapping owned by NodeBranchViews (single
   // source for the coverage guard tests/architecture/
   // nodeBranchCoverage.test.ts).
@@ -191,16 +135,19 @@ const branches = computed(() => {
     ? coreFiltered.filter(node => nodeViewTag(node) !== undefined && visibleTags.has(nodeViewTag(node)!))
     : coreFiltered.filter(node => !(nodeViewTag(node) !== undefined && (HIDDEN_BRANCH_TAGS as readonly string[]).includes(nodeViewTag(node)!)))
 
-  // Kiem Tu Reimagined — revealWhen hides the node until the prereq
+  // Kiem Tu Reimagined -- revealWhen hides the node until the prereq
   // holds against the live player (the hidden-path root never renders
   // early; canPurchaseNode re-checks the same gate). Mode-tagged nodes
   // only render in their own mode's view: sword_pathway sees the orb branches +
-  // the (unrevealed) hidden root, hidden_sword_pathway sees the hidden branch — the
+  // the (unrevealed) hidden root, hidden_sword_pathway sees the hidden branch -- the
   // abandoned mode's nodes vanish entirely.
-  // M3 — way-tagged nodes follow the same display rule as mode-tagged
+  // M3 -- way-tagged nodes follow the same display rule as mode-tagged
   // ones: a node authored for another way does not render at all.
   const nodes = tagFiltered.filter(
     node =>
+      // Three-path design (2026-09-25) -- realm-reward grants are not tree
+      // content: never rendered, only granted (effect still aggregates).
+      !node.rewardOnly &&
       (!node.revealWhen || hasPrerequisite(player.$state, node.revealWhen)) &&
       nodeWayApplies(player.$state, node),
   )
@@ -252,9 +199,9 @@ const branches = computed(() => {
       })
     }
 
-    // Không kỳ vọng chu trình (data hand-authored, luôn là cây thật),
-    // nhưng vẫn chặn bằng `guard` cho chắc — 1 node lặp lại trong
-    // guard thì coi như depth 0 tại đó thay vì đệ quy vô hạn.
+    // Khong ky vong chu trinh (data hand-authored, luon la cay that),
+    // nhung van chan bang `guard` cho chac -- 1 node lap lai trong
+    // guard thi coi nhu depth 0 tai do thay vi de quy vo han.
     const depthOf = (id: string, guard: Set<string>): number => {
       const entry = entryById.get(id)
 
@@ -298,9 +245,9 @@ const branches = computed(() => {
 
 // M-F-RESPEC (ruling S14) - FREE Beta respec: whole-tree node reset at
 // 100% actually-paid Insight, out of combat only (the op rejects during
-// battle; the button mirrors the route options' disabled state). The
-// preview goes through the ops layer so commit-marker exemptions
-// (Phap Tu element roots) match the real transaction exactly.
+// battle; the button mirrors that gate). The preview goes through the
+// ops layer so commit-marker exemptions (Phap Tu element roots) match
+// the real transaction exactly.
 const pendingRespec = ref(false)
 
 const respecPreview = computed(() => {
@@ -312,6 +259,47 @@ const respecPreview = computed(() => {
 
   return gameManager.progressionOps.previewNodeRespec(player.$state)
 })
+
+// Clawback legs the plain {regain}/{count}/{lose} lines do not cover:
+// skills and specialization picks revoked by grant clawback, plus kiem-tu
+// residual losses. Rendered only when the preview reports at least one leg.
+type GrantClawback = NonNullable<import('@/core/progression/NodeSystem').NodeRespecPreview['clawback']>
+
+function clawbackDetailText(clawback: GrantClawback | undefined): string {
+  if (clawback === undefined) {
+    return ''
+  }
+
+  const parts: string[] = []
+
+  if (clawback.unlearnedSkillIds.length > 0) {
+    parts.push(
+      t('panels.nodeTree.clawback.skills', {
+        n: clawback.unlearnedSkillIds.length,
+      }),
+    )
+  }
+
+  if (clawback.clearedSpecializations.length > 0) {
+    parts.push(
+      t('panels.nodeTree.clawback.specs', {
+        n: clawback.clearedSpecializations.length,
+      }),
+    )
+  }
+
+  if (clawback.refund > 0) {
+    parts.push(
+      t('panels.nodeTree.clawback.refund', { n: clawback.refund }),
+    )
+  }
+
+  return parts.length === 0
+    ? ''
+    : t('panels.nodeTree.clawback.summary', { detail: parts.join(', ') })
+}
+
+const respecClawbackText = computed(() => clawbackDetailText(respecPreview.value?.clawback))
 
 // Any purchased node in the rendered view makes respec meaningful; the
 // branch computation already resolved ownership per entry.
@@ -331,10 +319,21 @@ function onRespecClick() {
   pendingRespec.value = true
 }
 
+// Battle start kills any pending confirm - a stale modal's confirm
+// would otherwise silently no-op against the ops gate (the store
+// refuses ops while a battle runs).
+watch(inBattle, (engaged) => {
+  if (engaged) {
+    pendingRespec.value = false
+  }
+})
+
 function confirmRespec() {
   pendingRespec.value = false
 
-  respecNodeTree()
+  if (!inBattle.value) {
+    respecNodeTree()
+  }
 }
 
 function cancelRespec() {
@@ -345,7 +344,7 @@ function onClick(node: ProgressionNode, purchased: boolean, purchasable: boolean
   emit('select', node, purchased, purchasable)
 }
 
-/** Nhãn cost theo level (plan §6.2/§6.7): Lĩnh Ngộ / Nâng cấp / Tối đa. */
+/** Nhan cost theo level (plan 6.2/6.7): Linh Ngo / Nang cap / Toi da. */
 function costLabel(entry: TreeEntry): string {
   if (entry.level === 0) {
     return t('panels.nodeTree.labels.unpurchasedCost', { cost: entry.nextCost ?? entry.node.insightCost })
@@ -366,12 +365,12 @@ function costLabel(entry: TreeEntry): string {
 }
 
 // ---- Skill Node unlock animation (2026-08-21, Plans/SkillNode) ----
-// State máy: locked/available (suy thẳng từ purchased/purchasable có
-// sẵn, KHÔNG cần state riêng) -> unlocking (connection sáng chạy ->
-// node pulse/glow, tuần tự BẮT BUỘC theo mục 2 của plan) -> unlocked
-// (chính là `purchased` reactive, đã đúng NGAY khi purchaseNode()
-// return true — animation chỉ là lớp trang trí chạy THÊM, không giữ
-// hay trì hoãn trạng thái thật).
+// State may: locked/available (suy thang tu purchased/purchasable co
+// san, KHONG can state rieng) -> unlocking (connection sang chay ->
+// node pulse/glow, tuan tu BAT BUOC theo muc 2 cua plan) -> unlocked
+// (chinh la `purchased` reactive, da dung NGAY khi purchaseNode()
+// return true -- animation chi la lop trang tri chay THEM, khong giu
+// hay tri hoan trang thai that).
 const CONNECTION_ANIM_MS = 750
 const NODE_ANIM_MS = 500
 
@@ -407,17 +406,17 @@ onBeforeUnmount(() => {
   clearTimeout(nodeTimer)
 })
 
-// ---- Đo vị trí node THẬT cho SkillConnections.vue (SVG layer) ----
-// Mỗi branch có 1 container riêng (position:relative) + 1 SVG overlay
-// — đo getBoundingClientRect() của từng node button TƯƠNG ĐỐI với
-// container đó, đủ cho cả 2 trường hợp: props.branchTag set (1
-// container) hoặc không set (nhiều container, mỗi branch 1 cái).
+// ---- Do vi tri node THAT cho SkillConnections.vue (SVG layer) ----
+// Moi branch co 1 container rieng (position:relative) + 1 SVG overlay
+// -- do getBoundingClientRect() cua tung node button TUONG DOI voi
+// container do, du cho ca 2 truong hop: props.branchTag set (1
+// container) hoac khong set (nhieu container, moi branch 1 cai).
 const containerRefs = new Map<string, HTMLElement>()
 const nodeRefs = new Map<string, HTMLElement>()
 
-// Template ref callback (Vue 3) truyền Element | ComponentPublicInstance
-// | null — 2 hàm này CHỈ gắn cho <div>/<button> thuần (không phải
-// component), luôn là Element thật, nên narrow bằng instanceof.
+// Template ref callback (Vue 3) truyen Element | ComponentPublicInstance
+// | null -- 2 ham nay CHI gan cho <div>/<button> thuan (khong phai
+// component), luon la Element that, nen narrow bang instanceof.
 function setContainerRef(branchKey: string, el: Element | ComponentPublicInstance | null) {
   if (el instanceof HTMLElement) {
     containerRefs.set(branchKey, el)
@@ -502,8 +501,8 @@ watch(branches, () => {
   nextTick(() => {
     measure()
 
-    // Container mới dựng (đổi branch) chưa được observe — resizeObserver
-    // đã tồn tại từ onMounted() thì gắn thêm cho container mới.
+    // Container moi dung (doi branch) chua duoc observe -- resizeObserver
+    // da ton tai tu onMounted() thi gan them cho container moi.
     if (resizeObserver) {
       for (const el of containerRefs.values()) {
         resizeObserver.observe(el)
@@ -514,14 +513,14 @@ watch(branches, () => {
   })
 })
 
-// ---- Zoom-to-fit thay cho cuộn (2026-08-30, bug report) ----
-// Cây kỹ năng nhiều tầng dễ cao hơn khung panel — trước đây cuộn dọc để
-// xem hết, giờ TỰ CO co giãn (CSS `zoom`, không phải transform:scale —
-// `zoom` đổi layout box thật nên getBoundingClientRect() dùng bởi
-// measure() ở trên vẫn đúng, ResizeObserver container vẫn tự bắn lại
-// khi zoom đổi, không cần patch riêng cho SkillConnections.vue) để vừa
-// khung theo mặc định. Người chơi có thể zoom tay để xem chi tiết hơn —
-// khi đó (và chỉ khi đó) viewport mới cho cuộn/pan.
+// ---- Zoom-to-fit thay cho cuon (2026-08-30, bug report) ----
+// Cay ky nang nhieu tang de cao hon khung panel -- truoc day cuon doc de
+// xem het, gio TU CO co gian (CSS `zoom`, khong phai transform:scale --
+// `zoom` doi layout box that nen getBoundingClientRect() dung boi
+// measure() o tren van dung, ResizeObserver container van tu ban lai
+// khi zoom doi, khong can patch rieng cho SkillConnections.vue) de vua
+// khung theo mac dinh. Nguoi choi co the zoom tay de xem chi tiet hon --
+// khi do (va chi khi do) viewport moi cho cuon/pan.
 const ZOOM_MIN = 0.4
 const ZOOM_MAX = 1.5
 const ZOOM_STEP = 0.15
@@ -545,10 +544,10 @@ function recomputeFit() {
     return
   }
 
-  // CSS `zoom` (khác transform:scale) đổi LUÔN layout box của chính nó
-  // — scrollHeight đo được đã PHẢN ÁNH zoom hiện tại, nên phải quy đổi
-  // ngược về "chiều cao tự nhiên" (zoom=1) trước khi tính fit mới,
-  // không thì fit sẽ trôi dần mỗi lần recompute.
+  // CSS `zoom` (khac transform:scale) doi LUON layout box cua chinh no
+  // -- scrollHeight do duoc da PHAN ANH zoom hien tai, nen phai quy doi
+  // nguoc ve "chieu cao tu nhien" (zoom=1) truoc khi tinh fit moi,
+  // khong thi fit se troi dan moi lan recompute.
   const currentZoom = zoom.value || 1
   const naturalHeight = content.scrollHeight / currentZoom
 
@@ -580,9 +579,9 @@ function zoomToFit() {
 
 const isPannable = computed(() => zoom.value > fitZoom.value + 0.01)
 
-// Zoom đổi vị trí render thật của từng node — vẽ lại đường nối SVG theo
-// toạ độ mới. Không chỉ dựa vào ResizeObserver (đủ tin cậy với `zoom`
-// vì nó đổi layout box thật, nhưng canh chắc để không lệch đường nối).
+// Zoom doi vi tri render that cua tung node -- ve lai duong noi SVG theo
+// toa do moi. Khong chi dua vao ResizeObserver (du tin cay voi `zoom`
+// vi no doi layout box that, nhung canh chac de khong lech duong noi).
 watch(zoom, () => {
   nextTick(measure)
 })
@@ -608,22 +607,6 @@ onBeforeUnmount(() => {
   <div class="node-tree sys-surface sys-corners">
     <div class="node-tree__header">
       <span class="node-tree__title sys-eyebrow">{{ t('panels.nodeTree.title') }}</span>
-
-      <!-- Route respec toggle (P3) — Phap Tu only, once element+route
-           committed; switching refunds 75% of old-route investment. -->
-      <div v-if="spellPathRoute" class="node-tree__route" role="group" :aria-label="t('panels.nodeTree.routes.aria')">
-        <button
-          v-for="route in SPELL_PATH_ROUTE_IDS"
-          :key="route"
-          type="button"
-          class="node-tree__route-option"
-          :class="{ 'is-active': route === spellPathRoute }"
-          :disabled="inBattle"
-          @click="onRouteClick(route)"
-        >
-          {{ t(`panels.nodeTree.routes.${route}`) }}
-        </button>
-      </div>
 
       <!-- M-F-RESPEC (S14) - whole-tree respec entry: FREE Beta reset,
            confirm dialog shows the exact refund + reset count first. -->
@@ -686,9 +669,6 @@ onBeforeUnmount(() => {
                   <!-- Badge cấp cho node nhiều cấp (plan §6.2): `3/10`. -->
                   <span v-if="entry.maxLevel > 1" class="node-tree__node-level">{{ entry.level }}/{{ entry.maxLevel }}</span>
 
-                  <!-- Badge hướng Dot/No — node routeTag chỉ mua/hiệu
-                       lực khi route đang chọn khớp (query-time gate). -->
-                  <SysTag v-if="entry.node.routeTag" :tone="NODE_ROUTE_TONE[entry.node.routeTag]" class="node-tree__node-route">{{ t(`panels.nodeTree.routes.${entry.node.routeTag}`) }}</SysTag>
                 </span>
                 <span v-if="entry.node.description" class="node-tree__node-desc">{{ entry.node.description }}</span>
                 <span class="node-tree__node-cost">
@@ -701,23 +681,6 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <!-- Route respec confirm — preview shows actual-paid refund math
-         ("regain X, lose Y", spec §11). -->
-    <ConfirmModal
-      v-if="pendingRoute !== null && routePreview !== null"
-      :open="true"
-      :title="t('panels.nodeTree.routeSwitch.title')"
-      :message="t('panels.nodeTree.routeSwitch.body', {
-        route: t(`panels.nodeTree.routes.${pendingRoute}`),
-        regain: routePreview.refund,
-        lose: routePreview.forfeited,
-      })"
-      :confirm-label="t('panels.nodeTree.routeSwitch.confirm')"
-      danger
-      @confirm="confirmRouteSwitch"
-      @cancel="cancelRouteSwitch"
-    />
-
     <!-- M-F-RESPEC confirm - the ops preview reports the exact Insight
          refund and how many nodes (targets + cascade) reset to 0. -->
     <ConfirmModal
@@ -727,6 +690,7 @@ onBeforeUnmount(() => {
       :message="t('panels.nodeTree.respec.body', {
         regain: respecPreview.refund,
         count: respecPreview.resetCount,
+        clawback: respecClawbackText,
       })"
       :confirm-label="t('panels.nodeTree.respec.confirm')"
       danger
@@ -755,36 +719,6 @@ onBeforeUnmount(() => {
   align-items: baseline;
   gap: 10px;
   font-family: var(--font-body);
-}
-
-.node-tree__route {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.node-tree__route-option {
-  min-height: 22px;
-  padding: 1px 10px;
-  background: var(--sys-bg-0, var(--ink-800));
-  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
-  border-radius: 999px;
-  color: var(--sys-text-muted, var(--text-secondary));
-  font-family: var(--sys-font-display, var(--font-body));
-  font-size: var(--text-xs);
-  line-height: 1;
-  cursor: pointer;
-}
-
-.node-tree__route-option.is-active {
-  border-color: var(--sys-cyan, var(--gold-700));
-  color: var(--sys-cyan, var(--gold-700));
-  font-weight: 600;
-}
-
-.node-tree__route-option:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 .node-tree__respec {
@@ -840,9 +774,9 @@ onBeforeUnmount(() => {
   font-variant-numeric: tabular-nums;
 }
 
-/* Zoom-to-fit thay cuộn (2026-08-30) — mặc định overflow:hidden (nội
-   dung đã co vừa khung qua CSS `zoom`), chỉ cho cuộn/pan khi người chơi
-   tự zoom tay vượt mức fit (is-pannable). */
+/* Zoom-to-fit thay cuon (2026-08-30) -- mac dinh overflow:hidden (noi
+   dung da co vua khung qua CSS `zoom`), chi cho cuon/pan khi nguoi choi
+   tu zoom tay vuot muc fit (is-pannable). */
 .node-tree__viewport {
   flex: 1;
   min-height: 0;
@@ -875,10 +809,10 @@ onBeforeUnmount(() => {
   margin: 0 0 4px;
 }
 
-/* Cây thật, N tầng (Skill Node phân tầng, 2026-08-21) — mỗi .node-tree__row
-   là 1 tầng depth, đường nối THẬT vẽ bởi SkillConnections.vue (SVG,
-   position:absolute bên trong container position:relative này) thay vì
-   connector CSS giả trước đây. */
+/* Cay that, N tang (Skill Node phan tang, 2026-08-21) -- moi .node-tree__row
+   la 1 tang depth, duong noi THAT ve boi SkillConnections.vue (SVG,
+   position:absolute ben trong container position:relative nay) thay vi
+   connector CSS gia truoc day. */
 .node-tree__branch-tree {
   position: relative;
   display: flex;
@@ -926,9 +860,9 @@ onBeforeUnmount(() => {
   border-color: color-mix(in srgb, var(--sys-success, var(--branch-color, var(--chrome-300))) 55%, transparent);
 }
 
-/* Locked node vẫn CLICK ĐƯỢC (để xem điều kiện ở NodeInspector.vue,
-   plan mục 29 "Node locked → hiện điều kiện") — chỉ mờ đi để phân biệt,
-   không còn cursor:not-allowed/disabled như bản mua-thẳng cũ. */
+/* Locked node van CLICK DUOC (de xem dieu kien o NodeInspector.vue,
+   plan muc 29 "Node locked -> hien dieu kien") -- chi mo di de phan biet,
+   khong con cursor:not-allowed/disabled nhu ban mua-thang cu. */
 .node-tree__node.is-locked {
   opacity: 0.5;
 }
@@ -938,10 +872,10 @@ onBeforeUnmount(() => {
   outline-offset: -2px;
 }
 
-/* Skill Node unlock animation mục 2 — pulse 0.85->1.08->1.0 + glow mạnh
-   ngắn hạn rồi trở về bình thường, ~500ms. Vòng sáng mở rộng qua
-   ::after (radial-gradient scale 0->1.6 + fade), tách khỏi transform
-   của chính node để không làm lệch layout xung quanh. */
+/* Skill Node unlock animation muc 2 -- pulse 0.85->1.08->1.0 + glow manh
+   ngan han roi tro ve binh thuong, ~500ms. Vong sang mo rong qua
+   ::after (radial-gradient scale 0->1.6 + fade), tach khoi transform
+   cua chinh node de khong lam lech layout xung quanh. */
 .node-tree__node.is-unlocking {
   position: relative;
   animation: skill-node-pulse 500ms ease-out;
@@ -994,7 +928,7 @@ onBeforeUnmount(() => {
   gap: 4px;
 }
 
-/* Badge cấp `3/10` — node nhiều cấp (plan §6.2). */
+/* Badge cap `3/10` -- node nhieu cap (plan 6.2). */
 .node-tree__node-level {
   padding: 0 4px;
   border-radius: 999px;
@@ -1002,14 +936,6 @@ onBeforeUnmount(() => {
   font-size: var(--text-xs);
   line-height: 1.4;
   color: var(--chrome-100);
-}
-
-/* Route badge - node routeTag (Phap Tu Reimagined Task 16). M-UI-SYSTEM:
-   the chip is a SysTag; the .sys-tag anchor re-maps its border line so it
-   stays quiet on the node card. */
-.node-tree__node-route.sys-tag {
-  --sys-tag-line: var(--sys-line-soft, color-mix(in srgb, var(--gold-700) 60%, transparent));
-  font-size: var(--text-xs);
 }
 
 .node-tree__node-desc {

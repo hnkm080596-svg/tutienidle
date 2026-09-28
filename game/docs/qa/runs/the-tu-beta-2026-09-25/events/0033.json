@@ -1,0 +1,20 @@
+{
+  "applied": [
+    "evidence:EV-TT-FIX-A12",
+    "evidence:EV-TT-VERIFY-A12",
+    "review:REV-TT-INT-A12",
+    "review:REV-TT-COR-A12",
+    "finding:F-TT-INT-A12-1",
+    "finding:F-TT-INT-A12-2",
+    "finding:F-TT-INT-A12-3",
+    "finding:F-TT-COR-A12-1",
+    "finding:F-TT-COR-A12-2",
+    "finding:F-TT-COR-A12-3",
+    "finding:F-TT-COR-A12-4",
+    "finding:F-TT-COR-A12-5",
+    "finding:F-TT-COR-A12-6",
+    "lesson:L-TT-67",
+    "lesson:L-TT-68",
+    "lesson:L-TT-69"
+  ]
+}

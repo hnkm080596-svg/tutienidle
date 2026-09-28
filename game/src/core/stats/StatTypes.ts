@@ -46,9 +46,15 @@ export type StatType =
   // dùng THẲNG currentMp đang có (đánh đổi tài nguyên cast skill lấy
   // sinh tồn — đúng tinh thần "linh lực giảm sát thương").
   | 'manaShieldPercent'
+  // Phap Tu Reimagined (spec D9) - Linh Luc Ho The: DR CAP on hostile
+  // direct hits, scaled by the LIVE LL ratio (currentMp / maxMp) at hit
+  // resolution - LL = 0 => DR = 0; costs no extra LL. Only the
+  // hit-resolving lane (resolveAttack) reads it: DoT / reaction / flat
+  // profiles bypass by construction (F11).
+  | 'linhLucHoTheCap'
   | 'leechPercent'
   // The Tu Reimagined (spec 2026-09-15 T12) — generic thorns stat retired;
-  // reflection is a body mechanic (phan_chinh), not a stat.
+  // reflection is a body mechanic (phan_chan), not a stat.
   // stat-system-reimagined Task 4 (D18) -- receiver-side amplification of
   // HP restores that are NOT damage-derived: hpRegenPerTurn ticks, direct
   // heal effects, authored recovery triggers (dotRecovery). NEVER scales
@@ -77,14 +83,15 @@ export type StatType =
   | 'skillDamagePercent'
   // Hỏa Tu (Plans/FirePath, "Tật Hỏa" minor, 2026-08-21) — % cộng
   // thêm vào tốc độ đạn bay (MissileSystem cũ đã xóa; combat hiện dùng
-  // ActionImpactSystem). Nền 0, không ảnh
-  // hưởng path/hành nào chưa có nguồn cấp.
-  // Hỏa Tu Trúc Cơ (Plans/FirePath mục 6/8, 2026-08-21) — cộng THẲNG
-  // vào effect.ailmentChance lúc roll áp ailment (xem
-  // resolveAilmentApplicationChance), clamped to 1 max.
-  // Nền 0 — Hỏa Cầu Thuật Luyện Khí có ailmentChance gốc < 1 (KHÔNG
-  // còn luôn luôn áp Thiêu Đốt), node "Dẫn Hỏa"/"Hỏa Nguyên" cộng
-  // thêm % này.
+  // ActionImpactSystem). Baseline 0; does not affect
+  // paths/elements without an authored source.
+  // Fire-pathway Truc Co (Plans/FirePath items 6/8, 2026-08-21): multiplied
+  // into effect.ailmentChance at ailment roll: chance = baseChance x
+  // (1 + elementApplicationPercent) in ApplicationResolver.resolve,
+  // clamped to 1 max. Baseline 0 -- Hoa Cau Thuat at Luyen Khi has raw
+  // ailmentChance < 1 (Thieu Dot is NOT always applied); the diem_chuan
+  // node of the basic lane and the old "Dan Hoa"/"Hoa Nguyen" nodes all
+  // feed through this channel.
   | 'elementApplicationPercent'
   // Hỏa Tu Trúc Cơ (Plans/FirePath mục 8, "Cộng Minh" minor) — %
   // khuếch đại burst damage lúc Reaction kích hoạt. Nền 0.

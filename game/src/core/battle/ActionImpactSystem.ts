@@ -30,6 +30,17 @@ interface ActionDamageMissingHpScalar {
 }
 
 /**
+ * The Tu beta (Tran Ap) - Max-HP-derived damage: the source's
+ * stats.maxHp x sourceMaxHpRatio is added into the physical raw base
+ * BEFORE mitigation (CombatSystem.resolveActionHit ->
+ * calculateBaseDamage). Primary scaling for the Tran The kit; absent
+ * = might-only base.
+ */
+interface ActionDamageSourceMaxHp {
+  sourceMaxHpRatio?: number
+}
+
+/**
  * M-QI-05 / QI-D3 - adapter-only metadata: when present,
  * LegacySkillAdapter wraps the authored coefficient as
  * `multiplier x (1 + (max(1, skill_level) - 1) x levelScaling)` so a
@@ -42,16 +53,17 @@ interface ActionDamageLevelScaling {
 }
 
 export type ActionDamageInfo =
-  | ({ kind: 'physical' | 'primordial'; multiplier: number; scaling?: DamageScalingConfig } & ActionDamageMissingHpScalar & ActionDamageLevelScaling)
-  | ({ kind: 'elemental'; components: SkillDamageComponent[]; multiplier: number; scaling?: DamageScalingConfig } & ActionDamageMissingHpScalar & ActionDamageLevelScaling)
+  | ({ kind: 'physical' | 'primordial'; multiplier: number; scaling?: DamageScalingConfig } & ActionDamageMissingHpScalar & ActionDamageSourceMaxHp & ActionDamageLevelScaling)
+  | ({ kind: 'elemental'; components: SkillDamageComponent[]; multiplier: number; scaling?: DamageScalingConfig } & ActionDamageMissingHpScalar & ActionDamageSourceMaxHp & ActionDamageLevelScaling)
 
 export function scaleActionDamage(
   info: ActionDamageInfo,
   percent: number,
 ): ActionDamageInfo {
-  const scalar: ActionDamageMissingHpScalar & ActionDamageLevelScaling = {
+  const scalar: ActionDamageMissingHpScalar & ActionDamageSourceMaxHp & ActionDamageLevelScaling = {
     missingHpBonusPerMissingPercent: info.missingHpBonusPerMissingPercent,
     missingHpBonusCap: info.missingHpBonusCap,
+    sourceMaxHpRatio: info.sourceMaxHpRatio,
     // M-QI-05 - preserve the level-scaling contract through the
     // node-scale reconstruction (multiplier scales; metadata carries).
     levelScaling: info.levelScaling,
@@ -71,9 +83,6 @@ export interface HitResolveOptions {
   skillId?: string
 
   knockbackDistance?: number
-
-  /** false = secondary target in an AOE (gets secondaryPercent). */
-  isPrimary: boolean
 
   /** Ban Menh Phap Bao - attribution for the applyActionHit dispatch milestone. */
   origin?: CombatActionOrigin
@@ -100,6 +109,13 @@ export interface HitResolveOptions {
    * multiplied into the skill multiplier before crit.
    */
   damageMultiplier?: number
+
+  /**
+   * Phap Tu Reimagined (spec D7/D11) -- per-hit ADDITIVE elemental
+   * penetration points on top of the source's penetration stat. Only
+   * element-kind damage components consume it.
+   */
+  elementalPenetrationBonus?: number
 }
 
 export interface ScheduledBasicImpact {

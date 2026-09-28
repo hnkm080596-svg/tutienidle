@@ -39,6 +39,29 @@ export interface SwordPathState {
   kiemDaoBase: number
 }
 
+// Ngu economy bounds -- the slice's own realm-indexed formulas, kept
+// at leaf level so BOTH the persisted-state validator (KiemTuPath)
+// and the economy module (NguKiemDao) consume them without a runtime
+// cycle. mortal cannot enter hidden_sword_pathway, so r<1 is a
+// contract violation everywhere the formulas run.
+function assertRealmIndex(realmIndex: number): void {
+  if (realmIndex < 1) {
+    throw new RangeError(`hidden_sword_pathway economy requires realmIndex >= 1, got ${realmIndex}`)
+  }
+}
+
+/** Max live flying swords at this realm (asserts r>=1). */
+export function kiemDaoCap(realmIndex: number): number {
+  assertRealmIndex(realmIndex)
+  return realmIndex + 1
+}
+
+/** Kiem Y cost of forging one Kiem Dao at this realm (asserts r>=1). */
+export function forgeCost(realmIndex: number): number {
+  assertRealmIndex(realmIndex)
+  return Math.ceil(9_999 * Math.pow(1.3, realmIndex - 1))
+}
+
 /** Spec-locked fresh state at path choice (K1). Way-agnostic: the
  *  same defaults serve sword_pathway (preset) and hidden_sword_pathway (economy zeros). */
 export function freshSwordPathState(): SwordPathState {

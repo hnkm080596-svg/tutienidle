@@ -97,7 +97,7 @@ describe('M7.5a -- production journey: authored ailment skill through the canoni
     // action is a doc_chuong cast, so ALL enemy HP loss is DoT.
     player.cultivationPath = 'spell'
     player.cultivationWay = 'spell_pathway'
-    player.spellPath = { element: 'wood', route: 'dot' }
+    player.spellPath = { element: 'wood' }
     player.baseStats = {
       ...player.baseStats,
       might: 1_500,

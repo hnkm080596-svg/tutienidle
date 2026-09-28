@@ -1,0 +1,32 @@
+{
+ "type": "SEAL_RECEIPT",
+ "round": "clean-A",
+ "lens": "CORRECTNESS",
+ "reviewerSession": "a0b9ae8c85074daea86eaf69a4b40af6",
+ "candidate": "94f0e9f7",
+ "verdict": "FINDINGS",
+ "priorFindingsVisible": false,
+ "evidenceExecuted": "type-check PASS on 94f0e9f7; scoped vitest green (1260+ incl earlygame 48/48, asciiComments green post-repair); executed repro ReviewerShadow.qa.test.ts proving SEAL-A1 shadow",
+ "findings": [
+  {
+   "id": "SEAL-A1",
+   "severity": "low",
+   "title": "TrucCoJourney save-integrity fixture shadowed: post-mortal pick check rejects before zhou_tian coherence check",
+   "disposition": "FIXED in worktree (delete pick post-realmId-flip so zhou_tian check owns rejection); pin verified green"
+  },
+  {
+   "id": "SEAL-A2",
+   "severity": "nit",
+   "title": "Rejected-save routing drops restored.message diagnostic",
+   "disposition": "FIXED in worktree (console.warn diagnostics channel carries restored.message; recovery surface stays generic by design)"
+  },
+  {
+   "id": "SEAL-A3",
+   "severity": "nit",
+   "title": "Migration comment describes nonexistent dropped DEFAULT",
+   "disposition": "FIXED in worktree (comment now describes nullable + backfill + NOT NULL mechanism)"
+  }
+ ],
+ "attestation": "reviewer did not read docs/qa/**; independent context",
+ "accessLimitations": "no local Postgres applied; e2e diffs not executed; guest/cloud flows not exercised live"
+}

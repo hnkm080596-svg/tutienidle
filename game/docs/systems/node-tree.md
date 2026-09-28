@@ -6,7 +6,7 @@ Core: `core/progression/ProgressionNode.ts`, `NodeSystem.ts`, `NodeRegistry.ts`.
 
 ## Mô hình node
 
-`ProgressionNode`: `id`, `type` (`minor` | `major`; major còn gọi keystone/root), `insightCost`, `prerequisites`, `effect`, `maxLevel`, `upgradeCost`, `branchTag` (vd `kiem_tran`, `bat_kiem`).
+`ProgressionNode`: `id`, `type` (`minor` | `major`; major còn gọi keystone/root), `insightCost`, `prerequisites`, `effect`, `maxLevel`, `upgradeCost`, `branchTag` (vd `kiem_pho`, `ngu_kiem`).
 
 **State nguồn sự thật: `player.nodeLevels`** — `nodeLevels[nodeId]` = 0 nghĩa là chưa lĩnh ngộ; ≥1 là đã mua. `player.purchasedNodeIds` giữ tương thích hiển thị. Modifier **không** push vĩnh viễn vào `player.modifiers` nữa — suy ra lúc recompute qua `aggregateNodeStatModifiers()`/`aggregateNodeSkillModifiers()` → restore không bị cộng đôi.
 
@@ -25,7 +25,7 @@ Core: `core/progression/ProgressionNode.ts`, `NodeSystem.ts`, `NodeRegistry.ts`.
 | `node` | node `nodeId` đã mua (level ≥ 1) |
 | `nodeCount` | ≥ `countRequired` node trong `nodeIds` đã mua (any-N-of-M) |
 | `excludesNode` | node `nodeId` **chưa** mua — XOR giữa 2 major (vd Dẫn Hỏa / Tụ Hỏa) |
-| `skillCastCount` | skill đạt `level` và/hoặc `count` cast (`skillCastCounts`) — gate Bạt Kiếm |
+| `skillCastCount` | skill đạt `level` và/hoặc `count` cast (`skillCastCounts`) — vd gate theo số lần trảm |
 
 ## Effect (`NodeEffect`)
 
@@ -41,7 +41,7 @@ Core: `core/progression/ProgressionNode.ts`, `NodeSystem.ts`, `NodeRegistry.ts`.
 
 ## Cây Kiếm Tu
 
-`KiemTuNodes.ts`: nhánh `kiem_tran` — `TRAN_SEQUENCE` 9 keystone mỗi cái unlock 1 skill trận (`kiem_tran_*`); nhánh `bat_kiem` — root `bat_kiem_an` gate bởi cast Huy Kiếm, rồi minor cộng `skillDamagePercent`, Kiếm Ý, hồi sinh… Các node skill cũ của Kiếm Tu đã chuyển thành passive trong cây.
+`KiemTuNodes.ts` (sau khi route Kiếm Trận/Bạt Kiếm retire): nhánh `kiem_pho` — 5 orb branches của way `sword_pathway` (Kiếm Phổ), mỗi branch ~5 node + 1 capstone; subtree `ngu_kiem` — cascade + các node cung (Khảm/Khôn/Chấn/Tốn/Càn/Đoài...) của way `hidden_sword_pathway` (Ngự Kiếm Đạo), gate realm + `kiemYGrant`. Data cây Thể Tu (`TheTuNodes.ts`/`TheTuAnNodes.ts`) đã có mặt nhưng path chưa mở trên master — xem `roadmap.md` mục path-beta wave.
 
 ## Animation mua node
 

@@ -90,8 +90,32 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
     // P7-M3 - the Truc Co variant folded into gradeEffects[2]: the
     // holder keeps five_elements_art and advances grade via Nang Canh.
     expect(gameManager.techniqueManager.getActive()?.id).toBe('five_elements_art')
-    expect(gameManager.effectOps.getAggregatedModifiers(player.$state).filter(
+    // Three-path design (2026-09-25, sec.4-b): the Truc Co realm reward
+    // also grants the five tinh_thong_<e> mastery nodes. This fixture
+    // never commits an element (spellPath.element === null): a null
+    // element on spell_pathway means 'not yet committed', so the grants
+    // stay DORMANT - only ngo_dao activates all five at once. Committing
+    // an element then activates exactly that element's mastery.
+    const spellModifiers = () => gameManager.effectOps.getAggregatedModifiers(player.$state).filter(
       modifier => modifier.sourceId === 'spell',
-    )).toHaveLength(3)
+    )
+    const masteryModifiers = () => spellModifiers().filter(
+      modifier => modifier.id.startsWith('tinh_thong_'),
+    )
+    // Phap Tu Reimagine spec D9 -- 2 (was 3): the path-level
+    // manaShieldPercent grant ('phap_tu_ho_the') retired; Ho The is now
+    // the TC-unlocked linhLucHoTheCap DR ratio.
+    expect(spellModifiers()).toHaveLength(2)
+    expect(masteryModifiers()).toHaveLength(0)
+
+    // Phap Tu Reimagine (spec D5) -- element-only commit; the route arg
+    // is retired (runtime fails against the pre-rework op signature
+    // until ENGINE lands -- sibling-caused).
+    expect(gameManager.progressionOps.selectSpellPathElement('fire', player.$state)).toBe(true)
+    // Exactly one mastery wakes on commit - the fire one; the other
+    // four stay dormant rather than all firing during the null window.
+    expect(masteryModifiers().map((modifier) => modifier.id)).toEqual([
+      'tinh_thong_hoa_ailmentPotencyPercent',
+    ])
   })
 })

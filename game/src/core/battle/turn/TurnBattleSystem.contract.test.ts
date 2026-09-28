@@ -140,7 +140,7 @@ const QA_REFLECT: BuffDefinition = {
       payload: {
         trigger: 'onImpactLanded',
         chance: 1,
-        reflectsDamage: { maxHpRatio: 1, takenRatio: 1 },
+        reflectsDamage: { maxHpRatio: 1 },
       },
     },
   ],
@@ -981,6 +981,23 @@ describe('M7 contract closure -- skill whole-stack acceptance', () => {
     ).toHaveLength(1)
   })
 
+  it('a charge-init declare never queues repeat/multicast follow-ups', () => {
+    // The charge-init commits the cast but its payload resolves on the
+    // deferred-resolve turn -- any follow-up exec queued off it would
+    // re-resolve as a silent no-op (chargeTurns>0 + !isCharging gate).
+    const CHARGE: TurnSkillDefinition = {
+      ...STRIKE,
+      chargeTurns: 2,
+      repeatCasts: 2,
+      multicast: { chance: 1, maxExtraCasts: 2 },
+    }
+    const { battle, system } = battleWith(CHARGE)
+
+    system.resolveNextStep(battle) // charge INIT -- the cast commits here
+
+    expect(battle.queuedExecutions ?? []).toHaveLength(0)
+  })
+
   it('a target that dies mid-charge leaves the deferred resolve safe', () => {
     const CHARGE: TurnSkillDefinition = {
       id: 'qa_charge_dead',
@@ -1050,6 +1067,40 @@ describe('M7 contract closure -- skill whole-stack acceptance', () => {
     expect(playerHits(runtime)).toHaveLength(0)
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("'qa_closure'"))
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('perInstanceOptions'))
+    warn.mockRestore()
+  })
+
+  it('unrouted no-op cast leaks no cast semantics: no attack emit, no queued follow-up damage', () => {
+    const LEAK_DEF: TurnSkillDefinition = {
+      id: 'qa_leak',
+      cooldownTurns: 0,
+      repeatCasts: 2,
+      damage: { kind: 'physical', multiplier: 2 },
+      targeting: { shape: 'single' },
+      instances: {
+        count: 2,
+        perInstanceOptions: () => ({}),
+      },
+    }
+    const { battle, enemyParticipant, system, eventBus } = battleWith(LEAK_DEF)
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const leakCasts: string[] = []
+    eventBus.on('attack', (event: { skillId?: string }) => {
+      if (event.skillId === 'qa_leak') leakCasts.push('attack')
+    })
+
+    for (let i = 0; i < 8; i++) {
+      system.resolveNextStep(battle)
+    }
+
+    // The adapter declines the def (perInstanceOptions) -> the cast is a
+    // documented no-op stamped castBlocked: passive listeners see no
+    // 'attack' for the unrouted skill, and the prepared follow-up queue
+    // stays empty -- a queued 'repeat' would otherwise resolve the
+    // unresolvable payload on a later step. (Basic casts legitimately
+    // emit 'attack' in the same window -- the filter isolates the leak.)
+    expect(leakCasts).toHaveLength(0)
+    expect(enemyParticipant.entity.currentHp).toBe(enemyParticipant.entity.maxHp)
     warn.mockRestore()
   })
 })

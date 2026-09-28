@@ -10,7 +10,7 @@ import { applyBreakthroughMerge } from '../kiem-tu/NguKiemDao'
 import { issueCompanionGifts } from '../companion/CompanionGifts'
 import { CULTIVATION_PATH_MODULES, getActiveWayDefinition } from '../player/CultivationPathKit'
 import type { NodeRegistry } from '../progression/NodeRegistry'
-import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward, hasStaticPathCapability } from '../player/CultivationPathSystem'
+import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward, reconcileCultivationPathRealmRewards as reconcilePathRealmRewards, hasStaticPathCapability } from '../player/CultivationPathSystem'
 import { grantSkillCore } from '../progression/NodeSystem'
 import {
   computeBreakthroughGrade,
@@ -115,6 +115,7 @@ export class GameManagerRealmAdvanceOps {
       breakthroughOutcomeService: BreakthroughOutcomeService
       progressionOps: GameManagerProgressionOps
       getTurnBattle: () => TurnBattle | null
+      isTurnBattleInProgress: () => boolean
       markQuestRealmTransition: () => void
       // Material-landing funnel (the essence change credit is a live
       // landing).
@@ -124,9 +125,21 @@ export class GameManagerRealmAdvanceOps {
     this.techniqueManager = deps.techniqueManager
   }
 
-  /** Grants the major-realm reward of the cultivation path data kit (P7-M3: artifact-only). */
+  /** Grants the major-realm reward of the cultivation path data kit (artifact + grantedNodeLevels). */
   grantCultivationPathRealmReward(player: PlayerData, realmId: string): boolean {
-    return grantPathRealmReward(player, realmId)
+    return grantPathRealmReward(player, realmId, (nodeId) =>
+      this.deps.nodeRegistry.has(nodeId) ? this.deps.nodeRegistry.get(nodeId) : undefined,
+    )
+  }
+
+  /**
+   * Load-time reconcile (F-PT-A9-1): replays realm-entry grants the player
+   * already passed -- safe to run on every restore (idempotent max-write).
+   */
+  reconcileCultivationPathRealmRewards(player: PlayerData): boolean {
+    return reconcilePathRealmRewards(player, (nodeId) =>
+      this.deps.nodeRegistry.has(nodeId) ? this.deps.nodeRegistry.get(nodeId) : undefined,
+    )
   }
 
   /**
@@ -139,6 +152,12 @@ export class GameManagerRealmAdvanceOps {
    * absent-key write semantics as TribulationOutcomeService).
    */
   resolveTalentEntitlement(player: PlayerData, decision: TalentEntitlementDecision): boolean {
+    // Out-of-combat write: resolving mid-battle would persist the record
+    // while the combat-passive sync no-ops. Rejecting keeps the pending
+    // entitlement (and its mandatory modal) valid until the battle ends.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
     const resolved = resolveTalentEntitlementRecord(player, decision)
 
     if (resolved) {
@@ -257,8 +276,7 @@ export class GameManagerRealmAdvanceOps {
     // cycle is live - and inside a hidden trial it also freezes the
     // lineage so the earned completion can silently never land. The
     // sibling write paths below already refuse the same states.
-    const battle = this.deps.getTurnBattle()
-    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
@@ -396,7 +414,7 @@ export class GameManagerRealmAdvanceOps {
       }
     }
     // Phap Tu Reimagined (Task 6) - no auto-Fire starter: choosing
-    // spell leaves player.spellPath { element: null, route: null } until
+    // spell leaves player.spellPath { element: null } until
     // progressionOps.selectSpellPathElement() commits the atomic choice.
 
     if (player.realmId === 'mortal') {
@@ -438,6 +456,13 @@ export class GameManagerRealmAdvanceOps {
 
       this.syncRealmPassive(player)
       this.syncRealmStatPassive(player)
+
+      // Uniform funnel: every major-realm entry runs the way-authored
+      // realm-reward grant (qi_refining authors none today - no-op).
+      grantPathRealmReward(player, 'qi_refining', (nodeId) =>
+        this.deps.nodeRegistry.has(nodeId) ? this.deps.nodeRegistry.get(nodeId) : undefined,
+      )
+
       // M6 - NO applySwordPathRealmTransition here: hidden_sword_pathway can now be picked at
       // this very ritual, so the pre-M6 "hidden_sword_pathway cannot exist at mortal"
       // assumption is false. The slice was JUST created (kiemDaoCount 1 -
@@ -477,9 +502,7 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    const battle = this.deps.getTurnBattle()
-
-    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
@@ -506,9 +529,7 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    const battle = this.deps.getTurnBattle()
-
-    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
@@ -544,9 +565,7 @@ export class GameManagerRealmAdvanceOps {
       return false
     }
 
-    const battle = this.deps.getTurnBattle()
-
-    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
+    if (this.deps.isTurnBattleInProgress()) {
       return false
     }
 
@@ -573,6 +592,17 @@ export class GameManagerRealmAdvanceOps {
    * before learn) so repeat calls are safe.
    */
   syncRealmPassive(player: PlayerData) {
+    // A mid-battle sync would reach a learnSkill that rejects the grant,
+    // silently swallowing the passive. The skip can fire on a mid-fight
+    // minor breakthrough (realmLevel only - realmId never changes
+    // mid-battle), and is harmless because the current realm's passive
+    // was already granted at realm entry and this learn is idempotent.
+    // There is no restore-time re-sync; a passive genuinely missing
+    // (corrupt save, future caller) waits for the next breakthrough.
+    if (this.deps.isTurnBattleInProgress()) {
+      return
+    }
+
     const realm = getCurrentRealm(player.realmId)
 
     const skillId = getActiveWayDefinition(player)?.realmRewards?.[realm.id]?.passiveSkillId
@@ -606,6 +636,11 @@ export class GameManagerRealmAdvanceOps {
    * useTribulation.ts's resolveVictory()).
    */
   syncRealmStatPassive(player: PlayerData) {
+    // Same battle gate as syncRealmPassive above - a mid-fight grant
+    // would write player state outside combat authority.
+    if (this.deps.isTurnBattleInProgress()) {
+      return
+    }
     grantRealmPassive(player, getCurrentRealm(player.realmId).id)
   }
 

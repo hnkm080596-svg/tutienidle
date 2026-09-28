@@ -1,0 +1,7 @@
+{
+ "type": "CANDIDATE_AMENDMENT",
+ "note": "head e9e5d103 -> 94f0e9f7: comment-only P15 ASCII repair (em-dash -> semicolon) in useAppLifecycle.ts; zero behavior change but frozen candidate is now 94f0e9f7",
+ "cleanRoundA": "all 3 reviewers redirected mid-run to 94f0e9f7 (message at dispatch+~1min; all were still in clone/setup)",
+ "fullVitest": "7010/7017 green on e9e5d103; 3 failed = 2x magick ENOENT + canvas libuuid env noise identical to master + 1 P15 em-dash (fixed in 94f0e9f7); 34 scene suites import-fail on missing canvas binding (env limitation, matches master baseline)",
+ "finalVerifyNote": "FINAL_FULL_VERIFY must still re-run on the exact merged candidate later"
+}

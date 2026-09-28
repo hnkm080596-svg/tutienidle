@@ -1,0 +1,14 @@
+{
+  "type": "FINDINGS_ADJUDICATION",
+  "round": "clean-A-prime",
+  "candidate": "0c434d43",
+  "headAfterFixes": "0e8351bd",
+  "summary": "Clean-A-prime trio sealed: 1 High + 3 Medium + 3 Low + 3 Nit actionable. Two shared roots: (a) the acceptance predicate existed only inside restore preflight, so the remote gate and the import write seam each ran narrower checks - fixed by extracting services/save/saveAcceptance.ts as the single authority applied at all three gates (restore delegate, remoteUsable + symmetric local gate, importSaveRaw); (b) fixture + contract drift on the three-channel pick contract - fixed via pick-clear in withCommittedSwordPath, constant-driven bootstrap learn list, learned=>core write guard, and self-contained mortal+path pairing rejection. Isolation allowlists registered for the new fixture seam. Deferred: F-INT-04 (pre-existing v81 server-side wedge), F-INT-06 (unreachable latch), qa-authority-04 (write-only column).",
+  "deferred": [
+    "F-INT-04",
+    "F-INT-06",
+    "qa-authority-04"
+  ],
+  "verifyEvidence": "npm run verify on head 0e8351bd: type-check clean, build 1850 modules clean, vitest - all task-affected suites green (45 files / 717 tests scoped incl. new acceptance pins + isolation suite red-to-green); remaining failures are the known canvas/magick environment noise identical on master",
+  "protocolNote": "Per clean-pair rule the fixes invalidate A-prime evidence for the repaired surfaces; clean-B-prime must re-review head 0e8351bd with fresh reviewers and no prior findings visible."
+}

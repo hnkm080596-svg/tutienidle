@@ -1,0 +1,54 @@
+{
+ "attacks": [
+  {
+   "id": "ATK-OBSERVE-INCOME-ORDER",
+   "surface": "observation-only The income ordering (INV-10)",
+   "probe": "observed income lands LAST in the action tail \u2014 never before the triggering reaction resolves; income mutates state only after observation; reactive income cannot fund its own cost in the same window"
+  },
+  {
+   "id": "ATK-PHAN-REACTIVE",
+   "surface": "Phan baseline reactive",
+   "probe": "fires once per hostile action only on landed natural hits; forced success (no roll cost); post-action window ordering \u2014 cannot pre-empt the triggering hit; never fires on counter/follow_up/intercept/non-damaging"
+  },
+  {
+   "id": "ATK-SUCCESS-ONLY-COST",
+   "surface": "success-only proc cost",
+   "probe": "reaction cost charged only on SUCCESS; failed reactions refund nothing and charge nothing; no passive income; no refund path"
+  },
+  {
+   "id": "ATK-UNG-TRE-DEBT",
+   "surface": "Ung Tre debt + Qua The cap",
+   "probe": "each committed reaction adds +1 debt + 400 gauge penalty; at debt 3 (Qua The) new reaction windows are SEALED; the next natural action resets debt/windows; debt persists only within the battle"
+  },
+  {
+   "id": "ATK-THAM-AN-FOCUS",
+   "surface": "Tham An focus mark",
+   "probe": "mark applied on cast even on miss; only ONE focus at a time (new mark replaces); death lazy-clears the mark with NO transfer to another entity; mark affects only Tham An-related reads"
+  },
+  {
+   "id": "ATK-HO-SUBSTITUTION",
+   "surface": "Ho substitution + Ho Bich ward",
+   "probe": "only when an OBSERVED enemy's single-target action targets an ally does the protector substitute; full resolve runs vs the protector; Ho Bich ward applies to the substituted hit; multi-target/AoE never triggers substitution"
+  },
+  {
+   "id": "ATK-TRO-QUEUED",
+   "surface": "Tro queued counter + Dan The income",
+   "probe": "an ally's damaging natural action queues ONE Tro Kich at the canonical target; queued entries flush once per action (no stacking duplicates); Dan The grants a one-shot income boost only \u2014 not repeatable in the same action"
+  },
+  {
+   "id": "ATK-KIT-CLONE-SCOPE",
+   "surface": "kit clone payload isolation",
+   "probe": "buildTheTuAnKit clones payloads per participant \u2014 shared kit mutations never leak to registry defs or other participants; Quan The special present iff its core is owned"
+  },
+  {
+   "id": "ATK-TREE-SCOPE",
+   "surface": "beta node tree re-scope",
+   "probe": "tree exposes only Thau The/Phan Kinh, Ho Bich/Trong Phan/Dan The, major_quan_the in beta; LQ minors gate correctly; no stat grants outside spec"
+  },
+  {
+   "id": "ATK-SAVE-V86",
+   "surface": "save v86 migration",
+   "probe": "v86 loads with the new hidden_body kit/tree fields; v85 saves migrate or fail loudly with version gate (never silent corrupt); crafted save with inconsistent reaction state is rejected deterministically"
+  }
+ ]
+}

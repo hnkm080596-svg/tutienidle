@@ -1,0 +1,13 @@
+{
+  "reviewer": "devin-864833e5c07641f190c402c5f05ad9cb",
+  "verdict": "FINDINGS -- 1 Medium + 5 Low + 1 Nit; all latent/shape-gated or documented",
+  "evidence": "npm run type-check clean; 105 files/967 tests green (skilldef+turn+proc+the-tu+buff2); report game/docs/qa/2026-09-27-phap-tu-reimagine-int.md",
+  "findings": [
+    "F1 (Medium): executePlan commits (commitShell cooldown+cast count, cost consume) BEFORE expandCompositeExtras resolves extras -- a resolver throw inside an extra leaves cooldown spent/mana consumed/partial extras applied while TBS stamps castBlocked as no-op (latent: no shipped composite member resolve-throws)",
+    "F2 (Low): CombatProcSystem once:true exits after ANY recorded attempt incl. paid:false -- unfunded first grant eats the roll for a payable second grant on same holder",
+    "F3 (Low): payloadId returns variant/composite-pick id -> grantBasicLandedIncome skillId!==actor.basic.id zeroes basic income on empowered/composite basics (latent: disjoint domains today)",
+    "F4 (Low): charge-resolve routed decline classified as silent whiff via armedCharged slot-id match (dup of COR F2, same fix)",
+    "F5/F6 (Low, documented): intercept once-roll + ward markers consumed pre-blocked-check (dup F-PTR-148); whiffed damaging cast -> authoredDamaging false -> ally window fans to all living enemies (dup F-PTR-162/174 documented latent)",
+    "F7 (Nit): pending queued-execution slot drops entries on double-peek/actor-id mismatch; unreachable in production (turn-token clock freeze)"
+  ]
+}

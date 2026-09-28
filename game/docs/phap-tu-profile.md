@@ -1,5 +1,7 @@
 # Hồ sơ PHÁP TU — hiện trạng code (2026-09-02)
 
+> **⚠️ STALE SNAPSHOT (cập nhật 2026-09-25):** đây là inventory đóng băng ngày 2026-09-02 tại `3e2d944` — KHÔNG phải trạng thái hiện tại. Layout đã đổi: `Skills.ts` nguyên khối nay là barrel re-export qua per-family files (`PhapTuChainSkills.ts`, `PhapTuRouteSkills.ts`, `PhapTuUltimates.ts`, `PhapTuEmpoweredUlts.ts`, `CoreSkills.ts`...); kit canonical = `SPELL_KIT_IDS` [basic, special, ultimate] per element + `SPELL_ROUTE_SKILL_IDS` cho route skills (hiện chỉ Hỏa); spec Đạo Sắc + Hỏa Ấn spec 2026-09-17 đã định hình lại reaction/seal surface; wave path-beta: PHAP-TU basic-skill node lane 5 hành + presentation layer (PR #31), và reimagine Pháp Tu đang xếp hàng chờ. Body dưới giữ nguyên làm lịch sử — tra cứu giá trị hiện tại thì đọc code trực tiếp.
+
 > Nguồn: quét toàn bộ `game/src` + `game/docs`, commit master `3e2d944`. Mọi giá trị trích file + dòng.
 > Tài liệu song song: `phap-tu-profile.md` ↔ `kiem-tu-profile.md`.
 

@@ -74,14 +74,30 @@ export function toTurnBattleParticipant(
 
   // The Tu An (plan Task 16) — participant-local payload clones the
   // typed follow-up queue resolves for counter/follow-up procs.
+  // CONTRACT: these payloads are raw TurnSkillDefinitions that bypass the
+  // registry/adapter validation lane entirely. Several authored fields
+  // ARE consumed on this lane -- consumesAllThe drains via commitCast /
+  // the plan consume-all op, chargeTurns mints a chargeInit plan (shell +
+  // cost commit), resourceType/resourceCost pay through consume ops --
+  // but none of it is registry-validated: the live hazard is "consumed
+  // but unvalidated". Keep payloads to the fields declareReactiveBypass
+  // actually reads (damage, targeting, appliesAilments, appliesBuffs, procs).
   if (resolvedSpecialUltimate?.reactivePayloads !== undefined) {
     participant.reactivePayloads = resolvedSpecialUltimate.reactivePayloads
   }
 
   // Task 20 — participant-build cap authority: entity.maxThe persists
   // across auto-repeat resets (battle-scoped currentThe zeroes, the cap
-  // is configuration, not battle state).
+  // is configuration, not battle state). Shared-surface stamp: the build
+  // already wrote entity.maxThe for build-path callers; a non-build
+  // caller passing a divergent cap is a catalog fault, so fault loudly
+  // rather than silently re-stamp.
   if (resolvedSpecialUltimate?.maxThe !== undefined) {
+    if (entity.maxThe !== undefined && entity.maxThe !== resolvedSpecialUltimate.maxThe) {
+      throw new Error(
+        `conflicting maxThe: entity already carries ${entity.maxThe}, adapter payload declares ${resolvedSpecialUltimate.maxThe}`,
+      )
+    }
     entity.maxThe = resolvedSpecialUltimate.maxThe
   }
 

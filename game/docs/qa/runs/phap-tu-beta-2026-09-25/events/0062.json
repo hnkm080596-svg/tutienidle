@@ -1,0 +1,12 @@
+{
+  "applied": [
+    "review:REV-PT-CLO-13",
+    "finding:F-PT-AUT-A6-1 (updated)",
+    "finding:F-PT-AUT-A6-2 (updated)",
+    "finding:F-PT-AUT-A6-4 (updated)",
+    "finding:F-PT-AUT-A6-5 (updated)",
+    "finding:F-PT-AUT-A6-6 (updated)",
+    "finding:F-PT-INT-A6-1 (updated)",
+    "finding:F-PT-INT-A6-2 (updated)"
+  ]
+}

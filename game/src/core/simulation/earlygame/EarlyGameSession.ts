@@ -37,12 +37,7 @@ import {
 } from '../../game/EarlyGameBootstrap'
 import { SKILLS } from '../../../data/skill/Skills'
 import { TECHNIQUES } from '../../../data/technique/Techniques'
-import { PHAP_TU_NODES } from '../../../data/progression/PhapTuNodes'
-import { PHAP_TU_AN_NODES } from '../../../data/progression/PhapTuAnNodes'
-import { KIEM_TU_NODES } from '../../../data/progression/KiemTuNodes'
-import { THE_TU_NODES } from '../../../data/progression/TheTuNodes'
-import { THE_TU_AN_NODES } from '../../../data/progression/TheTuAnNodes'
-import { SKILL_CORE_NODES } from '../../../data/progression/SkillCoreNodes'
+import { ALL_PROGRESSION_NODES } from '../../../data/progression/ProgressionNodeCatalog'
 import { ENEMIES } from '../../../data/enemy/Enemies'
 import { STAGES } from '../../../data/stage/Stages'
 import { materials } from '../../../data/materials/materials'
@@ -233,12 +228,9 @@ export class EarlyGameSession {
     catalog.registerFormations(formations)
     catalog.registerAlchemyRecipes(alchemyRecipes)
     catalog.registerBuildings(buildings)
-    catalog.registerProgressionNodes(PHAP_TU_NODES)
-    catalog.registerProgressionNodes(PHAP_TU_AN_NODES)
-    catalog.registerProgressionNodes(KIEM_TU_NODES)
-    catalog.registerProgressionNodes(THE_TU_NODES)
-    catalog.registerProgressionNodes(THE_TU_AN_NODES)
-    catalog.registerProgressionNodes(SKILL_CORE_NODES)
+    // Same single union as App.vue / BattleSimulation - registration
+    // and save validation share one catalog (no drift seam).
+    catalog.registerProgressionNodes(ALL_PROGRESSION_NODES)
     catalog.registerQuests(QUESTS)
 
     this.playerOwner = options.playerOwner

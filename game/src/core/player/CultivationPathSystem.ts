@@ -1,5 +1,6 @@
 import type { ElementType } from '../element/ElementType'
-import type { SpellPathRoute } from '../phap-tu/PhapTuState'
+import type { ProgressionNode } from '../progression/ProgressionNode'
+import { getNodeMaxLevel } from '../progression/ProgressionNode'
 import type { OrbId } from '../kiem-tu/KiemTuState'
 import {
   createDefaultArtifactProgress,
@@ -21,11 +22,12 @@ import {
 } from './CultivationPathKit'
 import { registerDomainDeltaDeriver, type StatModifier } from '../stats/StatCalculator'
 import { isRealmAvailable } from '../realm/ReleasePolicy'
+import { getRealmTier } from '../realm/RealmTierMap'
 import { type StatDomain } from '../stats/StatDomain'
 import type { MainStatKey } from '../stats/StatTypes'
 import type { Stats } from '../stats/StatBlock'
 // D12 (stat-system-reimagined spec section 5): Linh Can (attunement)
-// feeds MP through the spell domain gate. M4 — the emitter and its
+// feeds MP through the spell domain gate. M4 -- the emitter and its
 // tuning constants moved to the Phap Tu path module
 // (core/phap-tu/PhapTuPath.ts) where the way definitions live; the
 // constants are re-exported here so existing consumers keep working.
@@ -34,18 +36,18 @@ export {
   SPELL_ATTUNEMENT_MAX_MP_PER_POINT,
 } from '../phap-tu/PhapTuPath'
 
-// M8 — mid-battle domain delta derivers are MODULE-DECLARED on each
+// M8 -- mid-battle domain delta derivers are MODULE-DECLARED on each
 // way's PathWayStatFacet (deltaDerivers); the framework registers them
 // generically from the catalog. The derivers see attribute
 // deltas for entities whose activeDomains already resolved the way's
-// domain (resolveActiveWayStatDomains), never the base — INV-10 holds:
+// domain (resolveActiveWayStatDomains), never the base -- INV-10 holds:
 // a stacked attribute buff cannot double-count the assembly emission,
 // and a foreign-domain delta never leaks stats cross-way.
 // P1 - registration is EAGER at module eval, same lifecycle as the
 // pre-P1 framework: the Kit -> SkillSystem edge that closed the
-// NodeSystem -> here -> Kit -> SkillSystem -> SpellPathRoutes ->
-// NodeSystem cycle is severed (the cast-leveling table lives in the
-// leaf core/skill/CastLeveling.ts), so the catalog is fully
+// NodeSystem -> here -> Kit -> SkillSystem -> NodeSystem cycle is
+// severed (the cast-leveling table lives in the leaf
+// core/skill/CastLeveling.ts), so the catalog is fully
 // initialized before this module body runs.
 for (const pathModule of Object.values(CULTIVATION_PATH_MODULES)) {
   for (const way of Object.values(pathModule.ways)) {
@@ -58,7 +60,7 @@ for (const pathModule of Object.values(CULTIVATION_PATH_MODULES)) {
 }
 
 // ---------------------------------------------------------------------------
-// Cultivation Path Framework (spec 2026-09-16, M2) — path/way authority.
+// Cultivation Path Framework (spec 2026-09-16, M2) -- path/way authority.
 // CultivationPathSystem is the sole writer of player.cultivationPath /
 // player.cultivationWay and owns ritual offer evaluation + choice commit.
 // ---------------------------------------------------------------------------
@@ -67,7 +69,7 @@ for (const pathModule of Object.values(CULTIVATION_PATH_MODULES)) {
 export interface PathWayOffer {
   pathId: CultivationPathId
   wayId: CultivationWayId
-  /** Live offerGate evaluation at THIS moment — never stored. */
+  /** Live offerGate evaluation at THIS moment -- never stored. */
   eligible: boolean
   /** Why an ineligible way cannot be picked (display/debug text). */
   reason?: string
@@ -75,7 +77,7 @@ export interface PathWayOffer {
 
 export type PathChoiceResult = { ok: true } | { ok: false; reason: string }
 
-// Offer order — preserves the pre-framework ritual list: the three base
+// Offer order -- preserves the pre-framework ritual list: the three base
 // ways first (spell/sword/body), then the gated hidden ways in the same
 // path order (hidden_spell_pathway before hidden_body_pathway), so the sealed cards stay last.
 const RITUAL_PATH_ORDER: readonly CultivationPathId[] = ['spell', 'sword', 'body']
@@ -96,7 +98,7 @@ function offerGateReason(way: PathWayDefinition): string | undefined {
 
 /**
  * Every (path, way) pair the ritual may show, with a live `eligible`
- * flag — gated ways stay listed so the UI can render locked cards.
+ * flag -- gated ways stay listed so the UI can render locked cards.
  * Order: base ways in RITUAL_PATH_ORDER, then gated ways same order.
  */
 export function listOfferableWays(player: PlayerData): readonly PathWayOffer[] {
@@ -126,7 +128,7 @@ export function listOfferableWays(player: PlayerData): readonly PathWayOffer[] {
 
 /**
  * The active path id, or undefined before the ritual / for a corrupt
- * (path, way) pair — the read fails closed through the same catalog
+ * (path, way) pair -- the read fails closed through the same catalog
  * resolution as getActiveWayDefinition.
  */
 export function getActivePath(player: PathWayRead): CultivationPathId | undefined {
@@ -254,14 +256,6 @@ export function getActiveElement(player: PathConditionalRead): ElementType | und
   return player.spellPath?.element ?? undefined
 }
 
-/** The committed route - spell_pathway only; undefined for any other way. */
-export function getActiveRoute(player: PathConditionalRead): SpellPathRoute | undefined {
-  if (!subpathAxisResolves(player, getActiveWayDefinition(player)?.subpaths?.route)) {
-    return undefined
-  }
-  return player.spellPath?.route ?? undefined
-}
-
 /** The persisted Kiem Pho preset - sword_pathway only (defensive copy). */
 export function getSwordScrollPreset(player: PathConditionalRead): readonly OrbId[] | undefined {
   if (!subpathAxisResolves(player, getActiveWayDefinition(player)?.subpaths?.preset)) {
@@ -272,9 +266,9 @@ export function getSwordScrollPreset(player: PathConditionalRead): readonly OrbI
 }
 
 /**
- * M4 — generic active-way stat collection (the D12 assembly channel).
- * Resolves the player's active way — cultivationWay authoritative once
- * written; a way-less or mismatched pair is corrupt and emits nothing —
+ * M4 -- generic active-way stat collection (the D12 assembly channel).
+ * Resolves the player's active way -- cultivationWay authoritative once
+ * written; a way-less or mismatched pair is corrupt and emits nothing --
  * and delegates to the way's PathWayStatFacet. resolvePlayerFinalStats
  * calls this before calculateStats so facet emissions are gated by
  * their own domain tags. Ways with no totals-driven channel (sword)
@@ -290,12 +284,12 @@ export function collectActiveWayStatModifiers(
 }
 
 /**
- * M5 — the active way's OWNED stat domains, resolved from the way's
- * stat facet — the single authority post-M7 (body_pathway -> 'body', hidden_body_pathway
+ * M5 -- the active way's OWNED stat domains, resolved from the way's
+ * stat facet -- the single authority post-M7 (body_pathway -> 'body', hidden_body_pathway
  * -> 'hidden_body', both spell ways -> 'spell', both sword ways ->
  * 'sword'). Consumed by GameManagerTurnBattleOps when stamping
- * participant.activeDomains — the mid-battle domain deltaDerivers gate
- * on it, so the WAY — never the raw path id — decides the domain (a
+ * participant.activeDomains -- the mid-battle domain deltaDerivers gate
+ * on it, so the WAY -- never the raw path id -- decides the domain (a
  * path-level lookup would give 'body' for ('body','hidden_body_pathway')).
  * Corrupt/way-less pairs resolve nothing.
  */
@@ -304,14 +298,14 @@ export function resolveActiveWayStatDomains(player: PathWayRead): readonly StatD
 }
 
 /**
- * THE path/way write authority — invoked by RealmAdvanceOps inside the
+ * THE path/way write authority -- invoked by RealmAdvanceOps inside the
  * ritual transaction. Validates: the path exists in the catalog, the
  * way belongs to that path, the player has no existing choice, and the
  * way is currently offerable (live offerGate eval). ZERO mutation on
  * any failure.
  *
  * On success writes cultivationWay AND cultivationPath (the BASE path
- * id directly — M7 removed the legacy-id adapter), then creates the
+ * id directly -- M7 removed the legacy-id adapter), then creates the
  * path-state slice where the path declares one (today only sword ->
  * freshSwordPathState()).
  */
@@ -343,7 +337,7 @@ export function applyPathChoice(
   player.cultivationWay = wayId
   player.cultivationPath = pathId
 
-  // State-slice lifecycle — created at commit by the authority through
+  // State-slice lifecycle -- created at commit by the authority through
   // the module contract. Only sword declares createInitialState
   // today: the canonical fresh player.swordPath is way-agnostic (the Kiem
   // Y fields start at hidden_sword_pathway's defaults; sword_pathway simply never reads them).
@@ -366,6 +360,7 @@ export function getCultivationPathStatModifiers(player: PlayerData) {
 export function grantCultivationPathRealmReward(
   player: PlayerData,
   realmId: string,
+  resolveNode: (nodeId: string) => ProgressionNode | undefined,
 ): boolean {
   if (!player.cultivationPath) {
     return false
@@ -397,5 +392,100 @@ export function grantCultivationPathRealmReward(
     player.artifact = createDefaultArtifactProgress(reward.artifactId)
   }
 
+  // Three-path design (2026-09-25, sec.4-b) - realm-entry node grants:
+  // idempotent max-write (a re-entry or a deeper earlier grant never
+  // downgrades). Effect activation stays behind the standard
+  // element/way gates in NodeSystem.
+  // Ownership: only rewardOnly-authored registry members may receive a
+  // grant, clamped to getNodeMaxLevel - anything else is refused and
+  // warned (a record entry naming a purchasable/core node would
+  // otherwise hand out gated power for free or corrupt the
+  // purchasedNodeIds mirror).
+  if (reward.grantedNodeLevels) {
+    player.nodeLevels ??= {}
+
+    for (const [nodeId, level] of Object.entries(reward.grantedNodeLevels)) {
+      const node = resolveNode(nodeId)
+
+      if (!node || node.rewardOnly !== true) {
+        console.warn(
+          `grantedNodeLevels entry '${nodeId}' is not a rewardOnly-authored node - grant skipped`,
+        )
+        continue
+      }
+
+      // core_ ids need the purchasedNodeIds mirror per save validation;
+      // a grant writes nodeLevels only, so one would corrupt the save.
+      // grantsSkillCoreIds is the same save-corruption class: its cores
+      // fire at purchase time only, so a levels-only grant would leave
+      // the node owned while its declared cores are missing (D9d fails
+      // the next save load).
+      if (nodeId.startsWith('core_') || node.effect.grantsSkillCoreIds !== undefined) {
+        console.warn(
+          `grantedNodeLevels entry '${nodeId}' needs purchase-time effects a levels-only grant cannot fire - grant skipped`,
+        )
+        continue
+      }
+
+      // Transactional effects (one-shot grants, spec claims, purchases)
+      // are dead on a levels-only grant - skip the write, same contract as
+      // the purchase-time effect reject above.
+      if (
+        node.effect.unlocksSkillIds !== undefined ||
+        node.effect.selectsSpecialization !== undefined
+      ) {
+        console.warn(
+          `grantedNodeLevels entry '${nodeId}' carries transactional effects that node-level grants do not fire - grant skipped`,
+        )
+        continue
+      }
+
+      // Levels outside [1, maxLevel] would write a value saveShapeValidation
+      // rejects on the next load - refuse the grant rather than corrupt.
+      if (!Number.isInteger(level) || level < 1) {
+        console.warn(
+          `grantedNodeLevels entry '${nodeId}' has invalid level ${level} - grant skipped`,
+        )
+        continue
+      }
+
+      const clamped = Math.min(level, getNodeMaxLevel(node))
+      player.nodeLevels[nodeId] = Math.max(player.nodeLevels[nodeId] ?? 0, clamped)
+    }
+  }
+
   return true
+}
+
+/**
+ * Load-time reconcile for realm-entry rewards (2026-09-25, F-PT-A9-1):
+ * grants fire only at the breakthrough transition, so a save that already
+ * PASSED a reward realm before the content existed would permanently miss
+ * rewardOnly nodeLevels (no purchase path exists). Grants are idempotent
+ * max-writes, so replaying them on every restore is safe -- same rehydrate
+ * seam as reconcileQuestLifecycle / applyAllBodyModifiers.
+ */
+export function reconcileCultivationPathRealmRewards(
+  player: PlayerData,
+  resolveNode: (nodeId: string) => ProgressionNode | undefined,
+): boolean {
+  if (!player.cultivationPath) {
+    return false
+  }
+
+  const rewards = getActiveWayDefinition(player)?.realmRewards
+  if (!rewards) {
+    return false
+  }
+
+  const playerTier = getRealmTier(player.realmId)
+  let granted = false
+
+  for (const realmId of Object.keys(rewards)) {
+    if (getRealmTier(realmId) <= playerTier && grantCultivationPathRealmReward(player, realmId, resolveNode)) {
+      granted = true
+    }
+  }
+
+  return granted
 }
