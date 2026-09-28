@@ -22614,7 +22614,7 @@
       "path": "src/presentation/assets/AssetBundleManager.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "48ef2778a8cc433370303ce7b5fb716e98f38d0061423dcf88fe104545b5f6a7"
+      "hash": "3ed5766e725d87f92bf8c546dbb754a6a40d03357d24327a8446c6f4c9f2feec"
     },
     {
       "path": "src/presentation/audio/ambientAudioDriver.test.ts",
@@ -22644,7 +22644,7 @@
       "path": "src/presentation/audio/combatAudioBinding.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6f27a04efdb2d4832bf11f71e02d08e661e45e331e55d8369be9d330816b42dd"
+      "hash": "04576e2d89b343b6918cbaf7796128fb3dadd40881624d02961eefd1552a6963"
     },
     {
       "path": "src/presentation/audio/uiAudioBinding.test.ts",
@@ -23532,13 +23532,13 @@
       "path": "tests/architecture/audioBindingWiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "38ccb86c09098c1cc43e00417e849aa194ebb7c59899df127e63b27789a31400"
+      "hash": "82eb1b9046b60375724b97aa497851923ad03ddd78581d66c8827b8b9e00287b"
     },
     {
       "path": "tests/architecture/audioBoundary.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8d10210fcf02fe8d78bf7cd8d1e72e0cfbd3b028456e948a4b2bca7b0c947d9a"
+      "hash": "6bf10d3c08aed27c7abcfdea6c37fb7ba371ff2184864162484e6039781de63d"
     },
     {
       "path": "tests/architecture/audioManifestCompleteness.test.ts",
@@ -23658,7 +23658,7 @@
       "path": "tests/architecture/helpers/commentStrip.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "cac7bdf1fe9d642ca6644ae6c7345ae23263d579edc6ffa19e65939d4d760c2b"
+      "hash": "5afb315ed45d3576bb94c3885b1ee89e02131efd2745f5527864c4be10aaca8c"
     },
     {
       "path": "tests/architecture/helpers/scanTs.ts",
@@ -23736,7 +23736,7 @@
       "path": "tests/architecture/screenShakeAuthority.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d6f2e08dec7c3de24b5c2f61ad151b53d10f03ac582a2056f34c85a8007e1017"
+      "hash": "17c431d807d9a41009c7a64ef7a07d4e5ca91422b1f70e6e91179b2aff1e8f53"
     },
     {
       "path": "tests/architecture/skillDefProducerSources.test.ts",
@@ -24027,5 +24027,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a"
+  "productStateId": "53bceb6a627ba89f20dd70ff1f79e76fd7d09726d28a12e1ec7771ce3d825878"
 }

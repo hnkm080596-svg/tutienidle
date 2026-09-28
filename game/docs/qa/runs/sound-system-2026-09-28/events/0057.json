@@ -1,0 +1,28 @@
+{
+  "applied": [
+    "finding:F-SND-323",
+    "finding:F-SND-324",
+    "finding:F-SND-325",
+    "finding:F-SND-326",
+    "finding:F-SND-327",
+    "finding:F-SND-328",
+    "finding:F-SND-329",
+    "finding:F-SND-330",
+    "finding:F-SND-331",
+    "finding:F-SND-332",
+    "finding:F-SND-333",
+    "finding:F-SND-334",
+    "finding:F-SND-335",
+    "finding:F-SND-336",
+    "finding:F-SND-337",
+    "finding:F-SND-338",
+    "finding:F-SND-339",
+    "finding:F-SND-340",
+    "finding:F-SND-341",
+    "review:REV-SND-COR-14",
+    "review:REV-SND-AUT-14",
+    "review:REV-SND-INT-14",
+    "cycle:CYC-SND-14",
+    "evidence:EV-SND-FIX21"
+  ]
+}
