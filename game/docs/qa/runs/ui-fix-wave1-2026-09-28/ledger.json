@@ -26,11 +26,13 @@
     "briefIds": [],
     "capacityLimit": 5,
     "requiredReadiness": false,
-    "phase": "SNAPSHOT",
+    "phase": "DECIDE",
     "cleanRoundA": null,
     "cleanRoundB": null,
-    "finalEvidenceIds": [],
-    "outcome": null
+    "finalEvidenceIds": [
+      "EV-UIW1-FIX2"
+    ],
+    "outcome": "QA_UNVERIFIED"
   },
   "briefs": [],
   "assignments": [],
@@ -53,7 +55,7 @@
       "exception": null,
       "siblingFindingIds": [],
       "invariantIds": [],
-      "closedAt": null,
+      "closedAt": "2026-09-28T04:50:00Z",
       "severity": "Medium",
       "locations": [
         {
@@ -64,16 +66,21 @@
         }
       ],
       "pinEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "verificationEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "evidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "SUPPORTED_BOUNDARY",
       "actionable": true,
@@ -100,7 +107,7 @@
           ]
         }
       ],
-      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal",
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
       "counterexample": "qty*unitPrice (ha-equivalent units) labeled with realm-tier stone name; actual grant = floor(qty*unitPrice/conversionFactor) -- 100x/30000x overstated at tier>=4/7; unreachable at beta ceiling (tier<=3) but latent"
     },
     {
@@ -118,7 +125,7 @@
       "exception": null,
       "siblingFindingIds": [],
       "invariantIds": [],
-      "closedAt": null,
+      "closedAt": "2026-09-28T04:50:00Z",
       "severity": "Medium",
       "locations": [
         {
@@ -129,16 +136,21 @@
         }
       ],
       "pinEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "verificationEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "evidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "PRODUCTION",
       "actionable": true,
@@ -165,7 +177,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @28a82e78 + f609209d -- pending closure seal",
+      "closeReason": "fixed @28a82e78 + f609209d -- pending closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
       "counterexample": "divergent --paper-text* redeclarations in 4 components + 1 sys-variant sibling"
     },
     {
@@ -183,7 +195,7 @@
       "exception": null,
       "siblingFindingIds": [],
       "invariantIds": [],
-      "closedAt": null,
+      "closedAt": "2026-09-28T04:50:00Z",
       "severity": "Low",
       "locations": [
         {
@@ -194,16 +206,21 @@
         }
       ],
       "pinEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "verificationEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "evidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "PRODUCTION",
       "actionable": true,
@@ -230,7 +247,7 @@
           ]
         }
       ],
-      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal",
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
       "counterexample": "first floor of zones 2+ showed generic locked.progress instead of 'clear previous zone final floor'"
     },
     {
@@ -248,7 +265,7 @@
       "exception": null,
       "siblingFindingIds": [],
       "invariantIds": [],
-      "closedAt": null,
+      "closedAt": "2026-09-28T04:50:00Z",
       "severity": "Low",
       "locations": [
         {
@@ -259,16 +276,21 @@
         }
       ],
       "pinEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "verificationEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "evidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "PRODUCTION",
       "actionable": true,
@@ -295,7 +317,7 @@
           ]
         }
       ],
-      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal",
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
       "counterexample": "visible cleared only by user actions; battle ending while open left the confirm stacked over the result panel"
     },
     {
@@ -313,7 +335,7 @@
       "exception": null,
       "siblingFindingIds": [],
       "invariantIds": [],
-      "closedAt": null,
+      "closedAt": "2026-09-28T04:50:00Z",
       "severity": "Nit",
       "locations": [
         {
@@ -324,16 +346,21 @@
         }
       ],
       "pinEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "verificationEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "evidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "PRODUCTION",
       "actionable": true,
@@ -360,7 +387,7 @@
           ]
         }
       ],
-      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal",
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
       "counterexample": "Math.ceil(currentHp) over Math.round(maxHp) could show 112/111"
     },
     {
@@ -378,7 +405,7 @@
       "exception": null,
       "siblingFindingIds": [],
       "invariantIds": [],
-      "closedAt": null,
+      "closedAt": "2026-09-28T04:50:00Z",
       "severity": "Nit",
       "locations": [
         {
@@ -389,16 +416,21 @@
         }
       ],
       "pinEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "verificationEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "evidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "PRODUCTION",
       "actionable": true,
@@ -425,7 +457,7 @@
           ]
         }
       ],
-      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal",
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
       "counterexample": "wheel toggled beneath an open modal because focus-trap preventDefaulted but did not stopPropagation"
     },
     {
@@ -443,7 +475,7 @@
       "exception": null,
       "siblingFindingIds": [],
       "invariantIds": [],
-      "closedAt": null,
+      "closedAt": "2026-09-28T04:50:00Z",
       "severity": "Nit",
       "locations": [
         {
@@ -454,16 +486,21 @@
         }
       ],
       "pinEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "verificationEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "evidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "PRODUCTION",
       "actionable": true,
@@ -490,7 +527,7 @@
           ]
         }
       ],
-      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal",
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
       "counterexample": "SysModalBase.vue deleted but its rules remained"
     },
     {
@@ -508,7 +545,7 @@
       "exception": null,
       "siblingFindingIds": [],
       "invariantIds": [],
-      "closedAt": null,
+      "closedAt": "2026-09-28T04:50:00Z",
       "severity": "Nit",
       "locations": [
         {
@@ -519,16 +556,21 @@
         }
       ],
       "pinEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "verificationEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "evidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "PRODUCTION",
       "actionable": true,
@@ -537,7 +579,7 @@
       "actual": "exit wiring goes through eventBus + modal; the composable method is uncalled",
       "rootCause": "intentional seam kept for future non-abandon exit paths -- undocumented",
       "rootClass": "DOC_DRIFT",
-      "repair": "wave-2 fixer to docblock the seam or delete it",
+      "repair": "fixed @28a82e78; CLO re-deliver @94589083 (seam note moved out of the baseline-pinned Vietnamese docblock into a standalone ASCII comment)",
       "siblingSearch": [
         {
           "roots": [
@@ -555,7 +597,7 @@
           ]
         }
       ],
-      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal",
+      "closeReason": "fixed @28a82e78; CLO re-deliver @94589083 (seam note moved out of the baseline-pinned Vietnamese docblock into a standalone ASCII comment) - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
       "counterexample": "exit wiring goes through eventBus + modal; the composable method is uncalled"
     },
     {
@@ -573,7 +615,7 @@
       "exception": null,
       "siblingFindingIds": [],
       "invariantIds": [],
-      "closedAt": null,
+      "closedAt": "2026-09-28T04:50:00Z",
       "severity": "Low",
       "locations": [
         {
@@ -584,16 +626,21 @@
         }
       ],
       "pinEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "verificationEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "evidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "PRODUCTION",
       "actionable": true,
@@ -620,7 +667,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @5400c882 -- pending closure seal",
+      "closeReason": "fixed @5400c882 -- pending closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
       "counterexample": "confirm modal could promise '+N stones' for a sale sellMaterial then rejects as sole_recipe_ingredient"
     },
     {
@@ -638,7 +685,7 @@
       "exception": null,
       "siblingFindingIds": [],
       "invariantIds": [],
-      "closedAt": null,
+      "closedAt": "2026-09-28T04:50:00Z",
       "severity": "Low",
       "locations": [
         {
@@ -649,16 +696,21 @@
         }
       ],
       "pinEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "verificationEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "evidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "PRODUCTION",
       "actionable": true,
@@ -685,7 +737,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @5400c882 -- pending closure seal",
+      "closeReason": "fixed @5400c882 -- pending closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
       "counterexample": "state==='fighting' gate rejected clicks during intro+countdown (~3s) with no feedback"
     },
     {
@@ -703,7 +755,7 @@
       "exception": null,
       "siblingFindingIds": [],
       "invariantIds": [],
-      "closedAt": null,
+      "closedAt": "2026-09-28T04:50:00Z",
       "severity": "Low",
       "locations": [
         {
@@ -714,16 +766,21 @@
         }
       ],
       "pinEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "verificationEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "evidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "PRODUCTION",
       "actionable": true,
@@ -732,7 +789,7 @@
       "actual": "6-token --paper-* redeclaration targeting the --sys-* palette lived inside scoped styles (unmigrated sibling of F-UIW1-02's class)",
       "rootCause": "sys-palette variant was added after .paper-on-dark existed; nobody extracted a second utility",
       "rootClass": "DUPLICATED_AUTHORITY",
-      "repair": ".paper-on-sys utility in system-theme.css; RealmPanel uses the class @f609209d",
+      "repair": "fixed @f609209d; CLO re-deliver @94589083 (.paper-on-sys lives in theme.css - systemThemeBoundary forbids --paper-* LHS there)",
       "siblingSearch": [
         {
           "roots": [
@@ -750,7 +807,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @f609209d -- pending closure seal",
+      "closeReason": "fixed @f609209d; CLO re-deliver @94589083 (.paper-on-sys lives in theme.css - systemThemeBoundary forbids --paper-* LHS there) - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
       "counterexample": "6-token --paper-* redeclaration targeting the --sys-* palette lived inside scoped styles (unmigrated sibling of F-UIW1-02's class)"
     },
     {
@@ -768,7 +825,7 @@
       "exception": null,
       "siblingFindingIds": [],
       "invariantIds": [],
-      "closedAt": null,
+      "closedAt": "2026-09-28T04:50:00Z",
       "severity": "Low",
       "locations": [
         {
@@ -779,16 +836,21 @@
         }
       ],
       "pinEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "verificationEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "evidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "PRODUCTION",
       "actionable": true,
@@ -815,7 +877,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @f609209d -- pending closure seal",
+      "closeReason": "fixed @f609209d -- pending closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
       "counterexample": "panel re-encoded realm gate + zone topology; no parity test pins the mirror so a new domain gate would silently misreport"
     },
     {
@@ -833,7 +895,7 @@
       "exception": null,
       "siblingFindingIds": [],
       "invariantIds": [],
-      "closedAt": null,
+      "closedAt": "2026-09-28T04:50:00Z",
       "severity": "Nit",
       "locations": [
         {
@@ -844,16 +906,21 @@
         }
       ],
       "pinEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "verificationEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "evidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "PRODUCTION",
       "actionable": true,
@@ -880,7 +947,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @f609209d -- pending closure seal",
+      "closeReason": "fixed @f609209d -- pending closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
       "counterexample": "getSpiritStoneMaterialIdForRealmTier(getRealmTier(realmId)) recomputed for notify + preview-name because sellMaterial omitted it"
     },
     {
@@ -898,7 +965,7 @@
       "exception": null,
       "siblingFindingIds": [],
       "invariantIds": [],
-      "closedAt": null,
+      "closedAt": "2026-09-28T04:50:00Z",
       "severity": "Nit",
       "locations": [
         {
@@ -909,16 +976,21 @@
         }
       ],
       "pinEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "verificationEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "evidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "PRODUCTION",
       "actionable": true,
@@ -927,7 +999,7 @@
       "actual": "two selector-scoped copies of the same 8 tokens inside theme.css",
       "rootCause": "utility extracted but the drawer's own copy was left inline",
       "rootClass": "DUPLICATED_AUTHORITY",
-      "repair": "combined rule .ink-drawer,.paper-on-dark holds the single map @f609209d",
+      "repair": "dedup reverted @94589083: inkDrawerSurface pin requires .ink-drawer defined exactly once (line-starting comment mentions count) so a combined selector is unlawful; duplication retained as pin-mandated, documented",
       "siblingSearch": [
         {
           "roots": [
@@ -945,7 +1017,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @f609209d -- pending closure seal",
+      "closeReason": "dedup reverted @94589083: inkDrawerSurface pin requires .ink-drawer defined exactly once (line-starting comment mentions count) so a combined selector is unlawful; duplication retained as pin-mandated, documented - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
       "counterexample": "two selector-scoped copies of the same 8 tokens inside theme.css"
     },
     {
@@ -963,7 +1035,7 @@
       "exception": null,
       "siblingFindingIds": [],
       "invariantIds": [],
-      "closedAt": null,
+      "closedAt": "2026-09-28T04:50:00Z",
       "severity": "Low",
       "locations": [
         {
@@ -974,16 +1046,21 @@
         }
       ],
       "pinEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "verificationEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "evidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "PRODUCTION",
       "actionable": true,
@@ -1010,7 +1087,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @059eb751/8bb544ce -- pending closure seal",
+      "closeReason": "fixed @059eb751/8bb544ce -- pending closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
       "counterexample": "docblock claimed 'same gates + math' but omitted sole_ingredient/owned/bag_full/registry gates (repro on pin showed sole_ingredient divergence)"
     },
     {
@@ -1028,7 +1105,7 @@
       "exception": null,
       "siblingFindingIds": [],
       "invariantIds": [],
-      "closedAt": null,
+      "closedAt": "2026-09-28T04:50:00Z",
       "severity": "Nit",
       "locations": [
         {
@@ -1039,16 +1116,21 @@
         }
       ],
       "pinEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "verificationEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "evidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "PRODUCTION",
       "actionable": true,
@@ -1057,7 +1139,7 @@
       "actual": "wave-2 .paper-on-dark remap repainted --paper-100/--paper-50 wells dark",
       "rootCause": "remap widened from wave-1's 4-text-var scope to all 9 paper tokens",
       "rootClass": "UNHANDLED_EDGE",
-      "repair": "well backgrounds now literal cream tokens, immune to the remap @059eb751",
+      "repair": "fixed @059eb751; CLO re-deliver @94589083 (em-dash removed)",
       "siblingSearch": [
         {
           "roots": [
@@ -1075,7 +1157,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @059eb751/8bb544ce -- pending closure seal",
+      "closeReason": "fixed @059eb751; CLO re-deliver @94589083 (em-dash removed) - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
       "counterexample": "wave-2 .paper-on-dark remap repainted --paper-100/--paper-50 wells dark"
     },
     {
@@ -1093,7 +1175,7 @@
       "exception": null,
       "siblingFindingIds": [],
       "invariantIds": [],
-      "closedAt": null,
+      "closedAt": "2026-09-28T04:50:00Z",
       "severity": "Nit",
       "locations": [
         {
@@ -1104,16 +1186,21 @@
         }
       ],
       "pinEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "verificationEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "evidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "PRODUCTION",
       "actionable": true,
@@ -1140,7 +1227,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @059eb751/8bb544ce -- pending closure seal",
+      "closeReason": "fixed @059eb751/8bb544ce -- pending closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
       "counterexample": "quote captured at click; queued auto-breakthrough while modal open shifts conversion factor (self-correcting: confirm toast shows real grant)"
     },
     {
@@ -1158,7 +1245,7 @@
       "exception": null,
       "siblingFindingIds": [],
       "invariantIds": [],
-      "closedAt": null,
+      "closedAt": "2026-09-28T04:50:00Z",
       "severity": "Nit",
       "locations": [
         {
@@ -1169,16 +1256,21 @@
         }
       ],
       "pinEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "verificationEvidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
       "evidenceIds": [
-        "EV-UIW1-FIX1"
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
       "classification": "REAL_DEFECT",
       "reachability": "PRODUCTION",
       "actionable": true,
@@ -1205,7 +1297,7 @@
           ]
         }
       ],
-      "closeReason": "fixed @059eb751/8bb544ce -- pending closure seal",
+      "closeReason": "fixed @059eb751/8bb544ce -- pending closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
       "counterexample": "hpPercent had zero callers (pre-existing; sibling of F-UIW1-05's edited logic)"
     }
   ],
@@ -1254,6 +1346,47 @@
       "limitations": [
         "staticArtExtentDeclared cannot load (libuuid missing on VM, pre-existing env)",
         "wave-2 fixes verified by inspection+type-check, not browser runtime"
+      ],
+      "kind": "EXECUTED_UNIT_STRUCTURAL"
+    },
+    {
+      "id": "EV-UIW1-FIX2",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "status": "CURRENT",
+      "producer": "coordinator",
+      "startedAt": "2026-09-28T04:43:00Z",
+      "finishedAt": "2026-09-28T04:44:10Z",
+      "commandOrMethod": "npm run type-check && npx vitest run tests/architecture src/components src/core",
+      "cwd": "/tmp/ui-fix-merge/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/EV-UIW1-FIX2.log",
+      "artifactHash": "296ea3443f17acc5468b8e2e27648406011556b26397dcea3523a5d7e1b82e94",
+      "inputPaths": [
+        "src/assets/theme.css",
+        "src/assets/system-theme.css",
+        "src/components/common/Tooltip.vue",
+        "src/game/scenes/CombatScene.ts",
+        "src/components/panels/VendorPanel.vue",
+        "src/components/game/combat/TurnOrderStrip.vue",
+        "src/core/economy/VendorSystem.ts"
+      ],
+      "inputEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "invariantIds": [],
+      "claims": [
+        "type-check clean at head",
+        "1472 vitest pass, 4 expected-fail; only file fail = staticArtExtentDeclared (libuuid missing on VM, pre-existing env)"
+      ],
+      "limitations": [
+        "canvas-native test file cannot run without libuuid on this VM",
+        "e2e/visual not re-run at final pin"
       ],
       "kind": "EXECUTED_UNIT_STRUCTURAL"
     }
@@ -1315,8 +1448,8 @@
       ],
       "startedAt": "2026-09-28T03:05:00Z",
       "sealedAt": "2026-09-28T03:40:00Z",
-      "previousPhaseReviewId": null,
-      "reviewedAfterPreviousFixes": false,
+      "previousPhaseReviewId": "REV-UIW1-COR-1",
+      "reviewedAfterPreviousFixes": true,
       "coverageIds": [],
       "evidenceIds": [],
       "findingIds": [
@@ -1350,8 +1483,8 @@
       ],
       "startedAt": "2026-09-28T03:05:00Z",
       "sealedAt": "2026-09-28T03:40:00Z",
-      "previousPhaseReviewId": null,
-      "reviewedAfterPreviousFixes": false,
+      "previousPhaseReviewId": "REV-UIW1-AUT-1",
+      "reviewedAfterPreviousFixes": true,
       "coverageIds": [],
       "evidenceIds": [],
       "findingIds": [
@@ -1364,12 +1497,465 @@
       ],
       "novelAttackIds": [],
       "status": "SEALED"
+    },
+    {
+      "id": "REV-UIW1-COR-2",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "round": 2,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-1dc3984f0c2a4b85a91be7708ebc6891",
+      "contextId": "ctx-devin-",
+      "model": "swe-2",
+      "role": "correctness-reviewer",
+      "inputBundleHash": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "read-only worktree",
+        "reviewed pin d848bfd3/0dcb9eac; coordinator fixes landed concurrently"
+      ],
+      "startedAt": "2026-09-28T04:00:00Z",
+      "sealedAt": "2026-09-28T04:40:00Z",
+      "previousPhaseReviewId": "REV-UIW1-INT-1",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "findingIds": [
+        "F-UIW1-09",
+        "F-UIW1-10"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-UIW1-AUT-2",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "round": 2,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-8149b6609fb0460b9a05e4c81b1bea72",
+      "contextId": "ctx-devin-",
+      "model": "swe-2",
+      "role": "authority-reviewer",
+      "inputBundleHash": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "read-only worktree",
+        "reviewed pin d848bfd3/0dcb9eac; coordinator fixes landed concurrently"
+      ],
+      "startedAt": "2026-09-28T04:00:00Z",
+      "sealedAt": "2026-09-28T04:40:00Z",
+      "previousPhaseReviewId": "REV-UIW1-COR-2",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "findingIds": [
+        "F-UIW1-11",
+        "F-UIW1-12",
+        "F-UIW1-13",
+        "F-UIW1-14"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-UIW1-INT-2",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "round": 2,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-6760b2cf15044279b622e1dabb5a4822",
+      "contextId": "ctx-devin-",
+      "model": "swe-2",
+      "role": "integration-reviewer",
+      "inputBundleHash": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "read-only worktree",
+        "reviewed pin d848bfd3/0dcb9eac; coordinator fixes landed concurrently"
+      ],
+      "startedAt": "2026-09-28T04:00:00Z",
+      "sealedAt": "2026-09-28T04:40:00Z",
+      "previousPhaseReviewId": "REV-UIW1-AUT-2",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "findingIds": [
+        "F-UIW1-15",
+        "F-UIW1-16",
+        "F-UIW1-17",
+        "F-UIW1-18"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-UIW1-CLO-1",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "round": 3,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-7d4915c503f34ea8a6dd46f61005f586",
+      "contextId": "ctx-devin-",
+      "model": "swe-2",
+      "role": "closure-reviewer",
+      "inputBundleHash": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "read-only worktree",
+        "reviewed pin d848bfd3/0dcb9eac; coordinator fixes landed concurrently"
+      ],
+      "startedAt": "2026-09-28T04:00:00Z",
+      "sealedAt": "2026-09-28T04:40:00Z",
+      "previousPhaseReviewId": "REV-UIW1-INT-2",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "findingIds": [
+        "F-UIW1-01",
+        "F-UIW1-02",
+        "F-UIW1-03",
+        "F-UIW1-04",
+        "F-UIW1-05",
+        "F-UIW1-06",
+        "F-UIW1-07",
+        "F-UIW1-08",
+        "F-UIW1-09",
+        "F-UIW1-10",
+        "F-UIW1-11",
+        "F-UIW1-12",
+        "F-UIW1-13",
+        "F-UIW1-14",
+        "F-UIW1-15",
+        "F-UIW1-16",
+        "F-UIW1-17",
+        "F-UIW1-18"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-UIW1-TC-1",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "round": 3,
+      "phase": "TERMINAL_CHECK",
+      "reviewerId": "devin-c5664517d9b04c8cb95f35837fff1dd3",
+      "contextId": "ctx-devin-",
+      "model": "swe-2",
+      "role": "terminal_check-reviewer",
+      "inputBundleHash": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "read-only worktree",
+        "reviewed pin d848bfd3/0dcb9eac; coordinator fixes landed concurrently"
+      ],
+      "startedAt": "2026-09-28T04:00:00Z",
+      "sealedAt": "2026-09-28T04:40:00Z",
+      "previousPhaseReviewId": "REV-UIW1-CLO-1",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
     }
   ],
-  "cycles": [],
+  "cycles": [
+    {
+      "id": "CYC-UIW1-1",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "reviewIds": [
+        "REV-UIW1-COR-1",
+        "REV-UIW1-AUT-1",
+        "REV-UIW1-INT-1"
+      ],
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "noveltyEvidenceIds": [],
+      "startedAt": "2026-09-28T03:05:00Z",
+      "finishedAt": "2026-09-28T03:55:00Z",
+      "status": "FINDINGS"
+    },
+    {
+      "id": "CYC-UIW1-2",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "reviewIds": [
+        "REV-UIW1-COR-2",
+        "REV-UIW1-AUT-2",
+        "REV-UIW1-INT-2"
+      ],
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-UIW1-FIX2"
+      ],
+      "noveltyEvidenceIds": [],
+      "startedAt": "2026-09-28T04:00:00Z",
+      "finishedAt": "2026-09-28T04:25:00Z",
+      "status": "FINDINGS"
+    }
+  ],
   "mutations": [],
   "corpus": [],
-  "lessons": [],
+  "lessons": [
+    {
+      "id": "L-UIW1-01",
+      "version": 1,
+      "supersedes": null,
+      "incidentEvidenceIds": [
+        "EV-UIW1-FIX2"
+      ],
+      "originatingRun": "ui-fix-wave1-2026-09-28",
+      "missedInvariantIds": [],
+      "exclusions": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-UIW1-01",
+        "F-UIW1-09",
+        "F-UIW1-15"
+      ],
+      "rootClass": "DUPLICATED_AUTHORITY",
+      "escapeReason": "vendor preview math re-implemented sell-side logic; each fix round found another omitted gate",
+      "applicability": [
+        "any read-model that mirrors a mutation path",
+        "quote/preview surfaces beside sell/commit authorities"
+      ],
+      "proposedProtection": [
+        "preview APIs must delegate to the same gate+math authority as the mutation they preview; docblock enumerates covered vs omitted gates"
+      ],
+      "capabilityDelta": "quoteStoneGrant is sole sell->stone authority; previewSellGrant documents gate coverage explicitly"
+    },
+    {
+      "id": "L-UIW1-02",
+      "version": 1,
+      "supersedes": null,
+      "incidentEvidenceIds": [
+        "EV-UIW1-FIX2"
+      ],
+      "originatingRun": "ui-fix-wave1-2026-09-28",
+      "missedInvariantIds": [],
+      "exclusions": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-UIW1-02",
+        "F-UIW1-11",
+        "F-UIW1-14"
+      ],
+      "rootClass": "GUARD_OVERREACH",
+      "escapeReason": "token-map dedup via combined selector broke inkDrawerSurface (requires .ink-drawer exactly once) and .paper-on-sys in system-theme.css broke systemThemeBoundary",
+      "applicability": [
+        "any CSS dedup touching pinned utility classes",
+        "token maps crossing file boundaries (theme vs system-theme)"
+      ],
+      "proposedProtection": [
+        "run the pinned guard suite for every file a repair touches BEFORE pushing; some duplication is pin-mandated"
+      ],
+      "capabilityDelta": "pinned guards can require duplication; the pin comment now states the constraint"
+    },
+    {
+      "id": "L-UIW1-03",
+      "version": 1,
+      "supersedes": null,
+      "incidentEvidenceIds": [
+        "EV-UIW1-FIX2"
+      ],
+      "originatingRun": "ui-fix-wave1-2026-09-28",
+      "missedInvariantIds": [],
+      "exclusions": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-UIW1-08",
+        "F-UIW1-16"
+      ],
+      "rootClass": "VALIDATION_GAP",
+      "escapeReason": "editing inside a baseline-pinned non-ASCII comment re-flags the whole token; em-dashes in new comments fail asciiComments",
+      "applicability": [
+        "any commit touching comments/doc strings",
+        "every fix batch verify sweep must include the cheap ratchet suites (asciiComments) even when changes look comment-only"
+      ],
+      "proposedProtection": [
+        "seam notes go in standalone ASCII comments, never appended inside baseline-pinned non-ASCII docblocks"
+      ],
+      "capabilityDelta": "repair-side ratchet sweep is part of fix verification, not an afterthought"
+    },
+    {
+      "id": "L-UIW1-04",
+      "version": 1,
+      "supersedes": null,
+      "incidentEvidenceIds": [
+        "EV-UIW1-FIX2"
+      ],
+      "originatingRun": "ui-fix-wave1-2026-09-28",
+      "missedInvariantIds": [],
+      "exclusions": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-UIW1-04",
+        "F-UIW1-10",
+        "F-UIW1-17"
+      ],
+      "rootClass": "UNHANDLED_EDGE",
+      "escapeReason": "modals bound to snapshots don't react to async state transitions (battle end, breakthrough) that invalidate the modal's premise",
+      "applicability": [
+        "any modal whose premise is runtime state",
+        "watch on the live predicate, not just user events"
+      ],
+      "proposedProtection": [
+        "modals over live battle/economy state must close on terminal transitions via a watcher on the domain state, not on user action"
+      ],
+      "capabilityDelta": "battleLive watcher pattern: modal closes itself when the underlying non-terminal state leaves"
+    },
+    {
+      "id": "L-UIW1-05",
+      "version": 1,
+      "supersedes": null,
+      "incidentEvidenceIds": [
+        "EV-UIW1-FIX2"
+      ],
+      "originatingRun": "ui-fix-wave1-2026-09-28",
+      "missedInvariantIds": [],
+      "exclusions": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-UIW1-03",
+        "F-UIW1-12"
+      ],
+      "rootClass": "DUPLICATED_AUTHORITY",
+      "escapeReason": "UI re-encoded domain lock logic; domain rule changes would silently misreport",
+      "applicability": [
+        "any UI-side mirror of a domain predicate",
+        "reason/label derivations that re-encode gates"
+      ],
+      "proposedProtection": [
+        "expose domain read models (e.g. stageLockReasonCode) so panels map codes->i18n instead of re-encoding rules"
+      ],
+      "capabilityDelta": "domain-owned reason codes: panel consumes kind, never re-derives the gate"
+    },
+    {
+      "id": "L-UIW1-06",
+      "version": 1,
+      "supersedes": null,
+      "incidentEvidenceIds": [
+        "EV-UIW1-FIX2"
+      ],
+      "originatingRun": "ui-fix-wave1-2026-09-28",
+      "missedInvariantIds": [],
+      "exclusions": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-UIW1-05",
+        "F-UIW1-06",
+        "F-UIW1-07",
+        "F-UIW1-13",
+        "F-UIW1-18"
+      ],
+      "rootClass": "DEAD_CODE",
+      "escapeReason": "dead helpers/selectors/derivations accumulate beside edited logic; reviewers find them in sibling sweeps",
+      "applicability": [
+        "dead exports, dead selectors, dead helpers near touched files",
+        "re-derived values when the result already carries the field"
+      ],
+      "proposedProtection": [
+        "sibling search includes dead-code census of touched files; delete dead members in the same fix"
+      ],
+      "capabilityDelta": "dead members in touched files are in-scope cleanup"
+    }
+  ],
   "messages": [],
   "events": [
     {
@@ -1499,6 +2085,70 @@
       "payloadPath": "events/0008.json",
       "payloadHash": "4d2ee0f6d3d4e8bdfb34badef9a31c9e0612c82a79fef7f0b3354d89745b8537",
       "eventHash": "8e439400475faccb1e54de0aadf3a24f58ebe02216ff643764de0d6cd8dae47c"
+    },
+    {
+      "seq": 9,
+      "at": "2026-09-28T04:46:26.175Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "8e439400475faccb1e54de0aadf3a24f58ebe02216ff643764de0d6cd8dae47c",
+      "payloadPath": "events/0009.json",
+      "payloadHash": "2970283b34f978a4b21243db47922ecb0569a193ec27e95bb2a281fca31ba5bf",
+      "eventHash": "9570a432de3d888c4d5687f944bb1e292f650272ca205c229c9e5943aaa3e353"
+    },
+    {
+      "seq": 10,
+      "at": "2026-09-28T04:47:47.964Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "9570a432de3d888c4d5687f944bb1e292f650272ca205c229c9e5943aaa3e353",
+      "payloadPath": "events/0010.json",
+      "payloadHash": "900b0d5b869ea00b2ad9b4be1dbe0625a8d949a6181ed80c61668c6afa772294",
+      "eventHash": "c9799b434a0fff5ebc0b1dd66e424b3701d02ccdff2532550f17806f7bac8fa5"
+    },
+    {
+      "seq": 11,
+      "at": "2026-09-28T04:47:53.948Z",
+      "kind": "DECISION",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "c9799b434a0fff5ebc0b1dd66e424b3701d02ccdff2532550f17806f7bac8fa5",
+      "payloadPath": "events/0011.json",
+      "payloadHash": "5db0e05f212c3b9a856d0329f9400b4f6c06908541384bcd7abef246af2f8197",
+      "eventHash": "ad38110a8d46e1b254c0ff507aa9b13e978e32d9482615262adbc608e93a16dd"
+    },
+    {
+      "seq": 12,
+      "at": "2026-09-28T04:48:46.129Z",
+      "kind": "DECISION",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "ad38110a8d46e1b254c0ff507aa9b13e978e32d9482615262adbc608e93a16dd",
+      "payloadPath": "events/0012.json",
+      "payloadHash": "9ba28f26771d63da3c93690ef45554f0031de47591f8de76a863271559206572",
+      "eventHash": "d603508195cbfda3b8d5870989fc9cc02cf28c25ead00a4e8b62ba5b7e654bd1"
     }
   ]
 }

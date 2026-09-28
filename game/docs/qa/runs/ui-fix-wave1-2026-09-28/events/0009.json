@@ -1,0 +1,10 @@
+{
+  "applied": [
+    "review:REV-UIW1-COR-2",
+    "review:REV-UIW1-AUT-2",
+    "review:REV-UIW1-INT-2",
+    "review:REV-UIW1-CLO-1",
+    "review:REV-UIW1-TC-1",
+    "evidence:EV-UIW1-FIX2"
+  ]
+}
