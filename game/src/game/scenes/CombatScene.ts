@@ -1,5 +1,9 @@
 ﻿import Phaser from 'phaser'
 import type { ResumePlayback } from '@/core/battle/turn/CombatAnimationRuntime'
+import type { ActorAnchorFact, SkillCastPresentation, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
+import { SkillPresentationRunner } from '@/presentation/skills/SkillPresentationRunner'
+import { PhaserSkillVfxDriver } from '@/game/support/skill-vfx/PhaserSkillVfxDriver'
+import { getSkillPresentationRecipe } from '@/data/vfx/SkillPresentationRecipes'
 import type { EventBus, EventHandler } from '@/core/events/EventBus'
 import {
   readOptionalGate,
@@ -10,7 +14,6 @@ import type {
   BattlePositionsEvent,
   BattleEndEvent,
   BattleRewardParticleEvent,
-  ActionImpactEvent,
   StatusVfxAttachedEvent,
   StatusVfxUpdatedEvent,
   StatusVfxRemovedEvent,
@@ -39,7 +42,6 @@ import {
   getBattlefieldRenderMode,
   type BattlefieldRenderMode,
 } from '@/presentation/geometry/BattlefieldRenderMode'
-import { spawnActionImpactVfx, toVector2Points } from '@/game/support/ActionImpactVfx'
 import type { EnemySpawnVfxHandle } from '@/game/support/EnemySpawnVfx'
 
 import {
@@ -258,18 +260,18 @@ interface CastBarSprite {
 }
 
 /**
- * Combat UI Redesign Ã¢â‚¬â€ battlefield riÃƒÂªng, TÃƒÂCH KHÃ¡Â»Å½I MainScene.ts (Ã„ÂÃ¡Â»â„¢ng
- * PhÃ¡Â»Â§/Home) hoÃƒÂ n toÃƒÂ n. MainScene.ts gÃ¡Â»Âi `this.scene.start('CombatScene')`
- * khi nhÃ¡ÂºÂ­n 'battle_start' (xem MainScene.ts); scene nÃƒÂ y tÃ¡Â»Â± gÃ¡Â»Âi
- * `this.scene.start('MainScene')` lÃ¡ÂºÂ¡i khi nhÃ¡ÂºÂ­n 'combat_scene_exit' (Vue
- * emit khi ngÃ†Â°Ã¡Â»Âi chÃ†Â¡i bÃ¡ÂºÂ¥m "TiÃ¡ÂºÂ¿p TÃ¡Â»Â¥c"/"VÃ¡Â»Â Ã„ÂÃ¡Â»â„¢ng PhÃ¡Â»Â§" Ã¡Â»Å¸ CombatResultModal.vue
- * Ã¢â‚¬â€ xem stores/ui.ts's exitCombatScene()). Auto-refight KHÃƒâ€NG cÃ¡ÂºÂ§n
- * switch scene Ã¢â‚¬â€ chÃ¡Â»â€° 1 'battle_start' mÃ¡Â»â€ºi tÃ¡Â»â€ºi trong lÃƒÂºc scene nÃƒÂ y vÃ¡ÂºÂ«n
- * Ã„â€˜ang active, xÃ¡Â»Â­ lÃƒÂ½ y hÃ¡Â»â€¡t lÃƒÂºc mÃ¡Â»â€ºi vÃƒÂ o (xem onBattleStart()).
+ * Combat UI Redesign -- dedicated battlefield scene, fully DECOUPLED from
+ * MainScene.ts (Cave/Home). MainScene.ts calls `this.scene.start('CombatScene')`
+ * on 'battle_start' (see MainScene.ts); this scene calls
+ * `this.scene.start('MainScene')` back on 'combat_scene_exit' (the Vue emit
+ * when the player presses "Continue"/"Back to Cave" in CombatResultModal.vue
+ * -- see stores/ui.ts's exitCombatScene()). Auto-refight needs NO scene
+ * switch -- a fresh 'battle_start' arriving while this scene is still
+ * active is handled exactly like first entry (see onBattleStart()).
  *
- * CORE Ã¢â€ â€ PHASER CHÃ¡Â»Ë† GIAO TIÃ¡ÂºÂ¾P QUA EVENTBUS Ã¢â‚¬â€ kÃ¡ÂºÂ¿ thÃ¡Â»Â«a nguyÃƒÂªn tÃ¡ÂºÂ¯c tÃ¡Â»Â«
- * MainScene.ts, xem ghi chÃƒÂº Ã¡Â»Å¸ Ã„â€˜ÃƒÂ³ cho lÃƒÂ½ do kÃ¡Â»Â¹ thuÃ¡ÂºÂ­t (nÃ¡Â»â„¢i suy vÃ¡Â»â€¹ trÃƒÂ­,
- * animation rÃ¡Â»Âi rÃ¡ÂºÂ¡c...).
+ * CORE RULE -- PHASER TALKS ONLY THROUGH THE EVENTBUS -- inherited from
+ * MainScene.ts; see the note there for the technical rationale
+ * (position interpolation, discrete animation...).
  */
 export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // ui-discoverability-refactor-plan.md Ã‚Â§3.2 Ã¢â‚¬â€ module tÃƒÂ¡ch khÃ¡Â»Âi god-class,
@@ -579,9 +581,79 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // Internal (module boundary — combat-action-feedback paces engine acks).
   gameManagerRef?: DomainCommandPort
 
+  private _skillPlayback?: SkillPresentationRunner
+  private _skillVfxDriver?: PhaserSkillVfxDriver
+
+  private get skillPlayback(): SkillPresentationRunner {
+    if (!this._skillPlayback) {
+      const reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+      const anchorPoint = (fact: ActorAnchorFact) =>
+        this.bodyAnchorScreen(fact.entityId, 'centre')
+          ?? this.lastKnownScreenPositions?.get(fact.entityId)
+          ?? this.projection?.gridToScreen(fact.row, fact.column)
+      this._skillVfxDriver = new PhaserSkillVfxDriver({
+        graphics: () => this.add.graphics(),
+        anchor: anchorPoint,
+        ground: fact => this.projection?.gridToScreen(fact.row, fact.column),
+        uprightDepth: fact => {
+          const foot = this.projection?.gridToScreen(fact.row, fact.column)
+          return this.isPerspective && foot
+            ? uprightVfxDepth(foot.y, this.entityFootMinY, this.entityFootMaxY, fact.column)
+            : DEPTH_UPRIGHT_VFX
+        },
+        // The impulse slides the sprite's offsetX channel so it never fights
+        // per-frame position writes; direction follows the declared anchor
+        // vector, with the scene facing convention as the no-target fallback.
+        // Direction comes from the playback-scoped cast the driver passes
+        // through (context.cast) - there is deliberately no scene-level copy:
+        // 'complete'-phase resumes never re-deliver onSkillCast, so an
+        // event-scoped field could go stale next to the runner's context.
+        actorImpulse: (fact, durationMs, impulsePx, cast) => {
+          const sprite = this.spriteFor(fact.entityId)
+          if (!sprite) return
+          const origin = cast ? anchorPoint(cast.source) : undefined
+          const destination = cast?.declaredTargets[0]
+            ? anchorPoint(cast.declaredTargets[0])
+            : undefined
+          const direction = origin && destination && destination.x !== origin.x
+            ? Math.sign(destination.x - origin.x)
+            : fact.entityId === PLAYER_ID ? 1 : -1
+          this.playHorizontalImpulse(sprite, direction * impulsePx, durationMs)
+        },
+        cameraImpulse: (durationMs, intensity) => this.cameras.main.shake(durationMs, intensity, false),
+      }, reducedMotion ? 'low' : 'standard', reducedMotion)
+      this._skillPlayback = new SkillPresentationRunner(this._skillVfxDriver, getSkillPresentationRecipe,
+        error => { console.warn('[SkillPresentation]', error) })
+    }
+    return this._skillPlayback
+  }
+
+  /** Read-only diagnostics; never used to control combat. */
+  get skillVfxDebug() {
+    return { playback: this._skillPlayback?.snapshot,
+      pool: this._skillVfxDriver?.stats ?? { allocated: 0, active: 0, capacity: 24 } }
+  }
+
+  private onSkillCast(cast: SkillCastPresentation): void {
+    const port = this.gameManagerRef
+    if (port) this.skillPlayback.start(cast, port)
+  }
+
+  private onSkillResolved(resolved: SkillPresentationResolved): void {
+    this._skillPlayback?.resolve(resolved)
+  }
+
   private getCombatEventBindings(): Array<[string, EventHandler<never>]> {
     return [
-      ['turn_cast_start', (event: CombatScenePayload) => this.onAttack(event)],
+      ['skill_presentation_cast', (event: SkillCastPresentation) => this.onSkillCast(event)],
+      ['skill_presentation_resolved', (event: SkillPresentationResolved) => this.onSkillResolved(event)],
+      // Enemy-art-wave1 (2026-09-28): authored 'attack' clip fires at cast
+      // start - clip-only, the lunge and both action ACKs belong to the skill
+      // presentation runner. No-op for entities without an authored clip.
+      ['turn_cast_start', (event: CombatScenePayload) => {
+        const sprite = this.spriteFor(event.sourceId)
+        if (sprite) this.playCombatAnimation(sprite, event.sourceId, 'attack')
+      }],
       ['critical', (event: CombatScenePayload) => this.onCritical(event)],
       ['hit', (event: CombatScenePayload) => this.onHit(event)],
       ['dodge', (event: CombatScenePayload) => this.onDodge(event)],
@@ -642,7 +714,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
           }
         },
       ],
-      ['action_impact', (event: ActionImpactEvent) => this.onActionImpact(event)],
       ['turn_ready', (event: { actorId: string }) => this.onTurnReady(event)],
       ['turn_standby_complete', (event: { actorId: string }) => this.onTurnStandbyComplete(event)],
       ['status_vfx_attached', (event: StatusVfxAttachedEvent) => this.onStatusAttached(event)],
@@ -837,6 +908,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   update(_time: number, delta: number) {
+    this._skillPlayback?.update(delta)
     for (const [id, sprite] of this.sprites) {
       const visualX = this.getInterpolatedX(id)
 
@@ -928,7 +1000,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     const the = this.registry ? readTheBar(this.registry) : null
 
     if (the) {
-      this.playerHud?.updateThe(the.current, the.max, the.threshold, the.empowered, {
+      this.playerHud?.updateThe(the.current, the.max, the.threshold, the.phapTheActive, {
         hasThamFocus: the.thamTargetId !== undefined,
         quanTheActive: the.quanTheActive,
         reactionDebt: the.reactionDebt,
@@ -1375,6 +1447,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   private clearSceneState() {
+    this._skillPlayback?.cancel()
+    this._skillVfxDriver?.destroy()
+    this._skillPlayback = undefined
+    this._skillVfxDriver = undefined
     for (const status of this.statuses.values()) {
       status.icon.destroy()
       status.stackLabel.destroy()
@@ -1647,11 +1723,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.prepareThanhVanBackdropForNextBattle()
   }
 
-  // Internal (module boundary — combat-action-feedback).
-  onAttack(event: CombatScenePayload) {
-    this.actionFeedback.onAttack(event)
-  }
-
   playHorizontalImpulse(sprite: EntitySprite, distance: number, duration: number) {
     this.vfxSpawner.playHorizontalImpulse(sprite, distance, duration)
   }
@@ -1700,6 +1771,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
    * 6A-T5 — exit zone trong canvas click → bridge sang DOM confirm
    * modal (T6) qua eventBus. KHÔNG mở modal trực tiếp từ scene.
    */
+  // NOTE (2026-09-28): intentional seam - no production caller wires a
+  // canvas exit-zone click today; the DOM CombatTopBar exit button emits
+  // the same 'combat_exit_request' event directly. Keep for a future
+  // in-canvas exit affordance; do not call from production UI code.
   requestCombatExit() {
     this.eventBus?.emit('combat_exit_request', undefined)
   }
@@ -1777,7 +1852,13 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // MainScene) hoÃ¡ÂºÂ·c lÃ¡ÂºÂ§n Ã„â€˜Ã¡ÂºÂ§u vÃƒÂ o Combat Scene (create() Ã„â€˜ÃƒÂ£ tÃ¡Â»Â± dÃ¡Â»Â±ng
   // player, hÃƒÂ m nÃƒÂ y reset lÃ¡ÂºÂ¡i vÃ¡Â»Â Ã„â€˜ÃƒÂºng trÃ¡ÂºÂ¡ng thÃƒÂ¡i ban Ã„â€˜Ã¡ÂºÂ§u cho chÃ¡ÂºÂ¯c,
   // no-op nÃ¡ÂºÂ¿u Ã„â€˜ÃƒÂ£ sÃ¡ÂºÂ¡ch sÃ¡ÂºÂµn).
-  onBattleStart() {
+  onBattleStart(options?: { rebind?: boolean }) {
+    this._skillPlayback?.cancel()
+    // 'rebind' = in-place reattach to the SAME battle/session: the
+    // driver's per-action camera latch survives so a 'complete'-phase
+    // resume cannot refire an already-fired camera impulse. Anything else
+    // is a new battle and gets the full reset.
+    this._skillVfxDriver?.reset(options?.rebind ? 'rebind' : 'battle')
     this.inBattle = true
 
     // 6A-T5 — HUD hiện khi vào trận.
@@ -1871,11 +1952,21 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
    * Resets visual state, reconciles with the session's initial snapshot, and reports READY.
    */
   rebindSession(context: { transitionId: number; sessionId?: number; gameGeneration: number }): void {
+    // Same-session rebind = renderer reattach to the live battle (session
+    // ids are minted per battle launch); a different session means a new
+    // battle arrived over the same scene and the reset is a battle start.
+    // Latent coupling (documented, not fixed): both this sessionId check and
+    // the driver's skill-request-N camera latch key on counters monotonic
+    // only within one GameManager lifetime - a GameManager swap under a live
+    // CombatScene would restart both sequences and realign these guards.
+    const isSameSessionRebind =
+      context.sessionId !== undefined && context.sessionId === this.initSessionId
+
     this.initTransitionId = context.transitionId
     this.initSessionId = context.sessionId
     this.initGameGeneration = context.gameGeneration
 
-    this.onBattleStart()
+    this.onBattleStart({ rebind: isSameSessionRebind })
 
     const gameManager = readOptionalGate(this.registry, 'gameManager')
 
@@ -1900,37 +1991,15 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     if (resume.phase === 'ready') {
       this.onTurnReady({ actorId: resume.actorId })
     } else if (resume.phase === 'cast') {
-      this.onAttack({
-        sourceId: resume.actorId,
-        skillId: resume.skillId,
-        targetId: resume.targetIds[0],
-      })
+      this.onSkillCast(resume.cast)
     } else if (resume.phase === 'complete') {
-      const token = resume.token
-      this.time.delayedCall(50, () => {
-        this.gameManagerRef?.acknowledgeActionComplete(token)
-      })
+      const port = this.gameManagerRef
+      if (port) this.skillPlayback.resumeResolved(resume.resolved, port)
     }
-  }
-
-  // ================= Combat Grid Rework Ã¢â‚¬â€ VFX 2.5D theo space =================
-
-  /**
-   * MÃ¡Â»ËœT action_impact = MÃ¡Â»ËœT VFX instance (spawnActionImpactVfx): mÃ¡Â»Âi
-   * pulse/hit sÃ¡»â€˜ng trong cÃƒÂ¹ng 1 cÃ¡ÂºÂ·p Graphics + 1 timeline, khÃƒÂ´ng bao giÃ¡»Â
-   * sinh GameObject theo hitCount/target. preset.space quyÃ¡Âº¿t Ã„â€˜Ã¡»â€¹nh khÃƒÂ´ng
-   * gian; polygon footprint CHÃ¡»ˆ trÃƒÂ¬nh bÃƒÂ y Ã¢â‚¬â€ damage do core quyÃ¡Âº¿t Ã„â€˜Ã¡»â€¹nh.
-   *
-   * Remediation Task 2 — ack engine từ completion THỰC của VFX tween qua
-   * handle, không còn delayedCall tự tính duration trùng lặp. Token
-   * CAPTURE TẠI SPAWN (plan Task 1 Step 5): callback muộn giữ token cũ —
-   * engine đã sang phase/action khác (token mới) thì ack cũ thành stale
-   * no-op ở GameManager, chặn cross-battle mutation. Không spawn được VFX
-   * (projection miss) → ack ngay để engine không treo.
-   */
-  // Internal (module boundary — combat-action-feedback).
-  private onActionImpact(event: ActionImpactEvent) {
-    this.actionFeedback.onActionImpact(event)
+    // 'manual' intentionally falls through: a parked manual choice has no
+    // renderer ack phase to replay - awaitedManualActor and the
+    // AWAITING_INPUT token still hold the turn engine-side, and the choice
+    // affordance re-derives from isAwaitingManualTurnChoice()/submitTurnChoice.
   }
 
   /**

@@ -1,0 +1,19 @@
+{
+  "applied": [
+    "evidence:EV-PTR-FIXQ2 (updated)",
+    "evidence:EV-PTR-AUTQ (updated)",
+    "evidence:EV-PTR-INTQ (updated)",
+    "review:REV-PTR-AUT-Q1 (updated)",
+    "review:REV-PTR-INT-Q1 (updated)",
+    "finding:F-PTR-246 (updated)",
+    "finding:F-PTR-247 (updated)",
+    "finding:F-PTR-248 (updated)",
+    "finding:F-PTR-249 (updated)",
+    "finding:F-PTR-250 (updated)",
+    "finding:F-PTR-251 (updated)",
+    "finding:F-PTR-252 (updated)",
+    "finding:F-PTR-253 (updated)",
+    "lesson:L-PTR-M-DOCUMENTED-LATENT-SIBLINGS (updated)",
+    "lesson:L-PTR-P-CHAIN-GAP (updated)"
+  ]
+}

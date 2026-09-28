@@ -1,0 +1,18 @@
+{
+ "artifact": "CLO-21 closure verification verdict",
+ "run": "phap-tu-reimagine-2026-09-26",
+ "reviewer": "devin-a2680d8639184542bcfdddadf4be5b65",
+ "reviewerRole": "closure",
+ "pin": "e3cd383d",
+ "verdict": "SEALED",
+ "claims": [
+  {"id": "F-PTR-254", "sealed": true, "note": "consumeResourceFor !Number.isFinite(required) guard at TurnSkillAction.ts:434; pin 'non-finite required cost leaves the pool untouched' (TurnSkillAction.test.ts:82) passes"},
+  {"id": "F-PTR-255", "sealed": true, "note": "theCap Number.isFinite(entity.maxThe) ? entity.maxThe : MAX_THE at TheEconomy.ts:35-38; pin covers NaN maxThe"},
+  {"id": "F-PTR-256", "sealed": true, "note": "tryPayProcCost refuses non-finite cost before consume (TheEconomy.ts:107-110); pin asserts false + pool intact for NaN and +Inf. Naming imprecision noted: function lives in TheEconomy.ts not CombatProcSystem; dormant lane, substance holds"},
+  {"id": "F-PTR-257", "sealed": true, "note": "toTurnBattleParticipant throws 'conflicting maxThe' on divergence (TurnBattleAdapter.ts:97-102); pin asserts throw + cap unchanged"},
+  {"id": "F-PTR-259", "sealed": true, "note": "registry faults 'empowerment and subcasts.count are mutually exclusive' when count>0 (SkillDefinitionRegistry.ts:462-472); multicast exempt via source roll gate (TurnBattleSystem.ts:2917-2920); pin passes"},
+  {"id": "F-PTR-261", "sealed": true, "note": "docblock TurnBattleSystem.ts:1375-1380 records drop-vs-park asymmetry; code confirms pendingQueuedExecution nulled unconditionally (:1380) while pendingReactiveEntry survives mismatch (:1388)"}
+ ],
+ "testsRun": "type-check clean; scoped vitest touched suites pass",
+ "notes": "6/6 claims SEALED on pin e3cd383d"
+}

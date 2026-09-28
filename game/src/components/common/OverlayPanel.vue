@@ -2,6 +2,7 @@
 import { computed, ref, useId, type ComponentPublicInstance } from 'vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useDialogFocus } from '@/composables/useDialogFocus'
+import { i18n } from '@/i18n'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 import SysPanel from './system/SysPanel.vue'
 
@@ -36,6 +37,11 @@ useDialogFocus(cardEl, computed(() => props.open), { onEscape: () => emit('close
 // Remediation Task 6 (2026-09-05) — aria-labelledby tham chiếu heading
 // thật (per-instance useId) thay vì aria-label duplicate.
 const headingId = useId()
+
+// i18n.global.t (not useI18n): dialog tests mount OverlayPanel through a
+// bare createApp without installing the plugin; the module-level composer
+// still resolves and stays locale-reactive.
+const closeLabel = computed(() => i18n.global.t('panels.common.close'))
 </script>
 
 <template>
@@ -65,6 +71,17 @@ const headingId = useId()
           <slot name="header-actions" />
         </header>
         <div class="overlay-panel__body"><slot /></div>
+        <!-- Visible close affordance (ui-audit creation-meta): scrim click
+             + Escape existed but nothing on the panel told the player it
+             could be closed. Kept LAST in DOM order (absolute-positioned
+             visually) so focus-on-open still lands on slotted content,
+             not on this button. -->
+        <button
+          type="button"
+          class="overlay-panel__close"
+          :aria-label="closeLabel"
+          @click="emit('close')"
+        >✕</button>
       </component>
     </div>
   </Transition>
@@ -76,6 +93,12 @@ const headingId = useId()
 .overlay-panel__header { position: relative; z-index: 3; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: clamp(32px, 4vw, 48px) clamp(30px, 4vw, 48px) 14px; border-bottom: 1px solid var(--surface-line); }
 .overlay-panel__heading { min-width: 0; margin-right: auto; }
 .overlay-panel__heading h3 { margin: 0; color: var(--surface-text); font: 700 var(--text-title) var(--font-display); letter-spacing: .06em; }
+/* currentColor-based border so the same button reads on ink (light text)
+   and system variants without a variant-specific token. Absolute in the
+   card's top-right corner (DOM order stays last for focus-on-open). */
+.overlay-panel__close { position: absolute; top: clamp(20px, 3vw, 40px); right: clamp(20px, 3vw, 40px); z-index: 4; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; padding: 0; background: transparent; border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: var(--radius-sm); color: inherit; opacity: .75; font-size: 15px; line-height: 1; cursor: pointer; transition: opacity .15s, border-color .15s, color .15s; }
+.overlay-panel__close:hover { opacity: 1; border-color: var(--mineral-gold); color: var(--mineral-gold); }
+.overlay-panel__close:focus-visible { outline: 2px solid var(--mineral-gold); outline-offset: 2px; opacity: 1; }
 /* Fit-engine (2026-08-29) — body là ngân sách flex cho nội dung: con chiếm
    flex thay vì scroll. Con tự paginate khi vượt ngân sách (pattern BagGrid).
    overflow hidden là rào chặn cuối — panel con KHÔNG được dựa vào nó. */

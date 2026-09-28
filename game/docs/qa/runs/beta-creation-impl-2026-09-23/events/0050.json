@@ -1,0 +1,18 @@
+{
+  "type": "SEAL_RECEIPT",
+  "round": "clean-A-prime",
+  "lens": "CORRECTNESS",
+  "reviewerSession": "4d4f1028721d45a99652e66af404ccb7",
+  "candidate": "0c434d43",
+  "verdict": "FINDINGS",
+  "priorFindingsVisible": false,
+  "evidenceExecuted": "vue-tsc --build; scoped vitest; deterministic repro BetaCreationBoundary.qa.test.ts (fixture composition emits contract-illegal pick+path save)",
+  "findings": [
+    {
+      "id": "CYC-C-1",
+      "severity": "Low",
+      "title": "withCommittedSwordPath fixture emits unproducible pick+path save when composed after withMortalCreationPick",
+      "disposition": "FIXED @0e8351bd - withCommittedSwordPath now deletes player.mortalBasicSkillId, mirroring the ritual commit block (GameManagerRealmAdvanceOps:316)"
+    }
+  ]
+}

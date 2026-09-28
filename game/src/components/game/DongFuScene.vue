@@ -14,6 +14,7 @@
 // while season and time reuse the shared ThanhVanVariant selected by combat.
 // DOM remains the sole background renderer to avoid competing pipelines.
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useStageActive } from '@/composables/useStageActive'
 import {
   dongFuLayerList,
@@ -45,6 +46,7 @@ const previousStack = ref<DongFuRenderStack | null>(null)
 const transitionActive = ref(false)
 const stageActive = useStageActive()
 const ui = useUiStore()
+const { t } = useI18n()
 
 let reducedMotionQuery: MediaQueryList | undefined
 let transitionTimer: ReturnType<typeof setTimeout> | undefined
@@ -250,11 +252,15 @@ onBeforeUnmount(() => {
         type="button"
         class="home-player__trigger"
         :class="{ 'is-wheel-open': ui.isCommandWheelOpen }"
-        aria-label="Mở bảng lệnh Động Phủ"
+        :aria-label="t('home.commandWheel.openAria')"
         :aria-expanded="ui.isCommandWheelOpen"
         @click.stop="ui.toggleCommandWheel()"
       >
         <PlayerPortrait variant="cultivate" :animated="true" height="clamp(160px, 26vh, 239px)" />
+        <!-- Persistent nav affordance (ui-audit creation-meta): the only
+             wheel entries were this unlabeled portrait and the hidden Tab
+             key - caption names the action + shortcut. -->
+        <span class="home-player__hint">{{ t('home.commandWheel.hint') }}</span>
       </button>
     </div>
 
@@ -476,6 +482,34 @@ onBeforeUnmount(() => {
   outline: 2px solid var(--chrome-300);
   outline-offset: 4px;
   border-radius: var(--radius-md);
+}
+
+/* Caption pill under the character - persistent nav affordance. Hidden
+   while the wheel is open so it doesn't overlap the orbiting slots. */
+.home-player__hint {
+  display: block;
+  margin: 10px auto 0;
+  padding: 4px 14px;
+  width: fit-content;
+  border: 1px solid color-mix(in srgb, var(--chrome-300) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink-950) 72%, transparent);
+  color: var(--chrome-300);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: opacity 0.24s ease;
+}
+
+.home-player__trigger:hover .home-player__hint,
+.home-player__trigger:focus-visible .home-player__hint {
+  color: var(--mineral-gold);
+  border-color: var(--mineral-gold);
+}
+
+.home-player__trigger.is-wheel-open .home-player__hint {
+  opacity: 0;
 }
 
 /* Khi wheel mở — aura tăng nhẹ (presentation-only). */

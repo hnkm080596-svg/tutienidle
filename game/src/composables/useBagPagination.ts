@@ -15,7 +15,7 @@ import type { BagCell } from '@/components/panels/bag-sections/BagCell'
  * totalPages bên dưới tự lùi currentPage nếu trang hiện tại vượt quá
  * số trang mới, không mất/lệch item.
  */
-export function useBagPagination(cells: ComputedRef<BagCell[]>, pageSize: ComputedRef<number>) {
+export function useBagPagination<T extends BagCell>(cells: ComputedRef<T[]>, pageSize: ComputedRef<number>) {
   const currentPage = ref(0)
 
   const totalPages = computed(() => Math.max(1, Math.ceil(cells.value.length / pageSize.value)))
@@ -39,7 +39,7 @@ export function useBagPagination(cells: ComputedRef<BagCell[]>, pageSize: Comput
   }
 
   // Luôn đủ pageSize ô — ô thừa hiển thị rỗng.
-  const gridCells = computed<(BagCell | null)[]>(() => {
+  const gridCells = computed<(T | null)[]>(() => {
     const size = pageSize.value
     const start = currentPage.value * size
 

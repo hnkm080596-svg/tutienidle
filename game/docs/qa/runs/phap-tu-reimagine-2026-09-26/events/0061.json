@@ -1,0 +1,26 @@
+{
+  "applied": [
+    "evidence:EV-PTR-CORN (updated)",
+    "evidence:EV-PTR-AUTN (updated)",
+    "evidence:EV-PTR-INTN (updated)",
+    "evidence:EV-PTR-FIXO (updated)",
+    "review:REV-PTR-COR-N1 (updated)",
+    "review:REV-PTR-AUT-N1 (updated)",
+    "review:REV-PTR-INT-N1 (updated)",
+    "finding:F-PTR-197 (updated)",
+    "finding:F-PTR-198 (updated)",
+    "finding:F-PTR-199 (updated)",
+    "finding:F-PTR-200 (updated)",
+    "finding:F-PTR-201 (updated)",
+    "finding:F-PTR-202 (updated)",
+    "finding:F-PTR-203 (updated)",
+    "finding:F-PTR-204 (updated)",
+    "finding:F-PTR-205 (updated)",
+    "finding:F-PTR-206 (updated)",
+    "lesson:L-PTR-N-FAULT-LANES-MUST-COMPLETE (updated)",
+    "lesson:L-PTR-N-EARLY-RETURN-KILLS-SIBLINGS (updated)",
+    "lesson:L-PTR-N-VALIDATOR-CLOSED-SURFACES (updated)",
+    "lesson:L-PTR-N-DEAD-STAMPS-AND-VESTIGIAL (updated)",
+    "lesson:L-PTR-N-DEDUP-AT-ADJUDICATION (updated)"
+  ]
+}

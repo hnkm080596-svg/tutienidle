@@ -79,6 +79,14 @@ describe('consumeResourceFor', () => {
 
     expect(source.currentMp).toBe(50)
   })
+
+  it('non-finite required cost leaves the pool untouched (no NaN brick)', () => {
+    const source = entity({ currentMp: 50 })
+
+    consumeResourceFor(source, skill({ resourceType: 'mana', resourceCost: Number.NaN }))
+
+    expect(source.currentMp).toBe(50)
+  })
 })
 
 function participant(overrides: Partial<TurnBattleParticipant> = {}): TurnBattleParticipant {
@@ -281,5 +289,27 @@ describe('the resource type (Phase A3)', () => {
     consumeResourceFor(theEntity, theSkill)
 
     expect(theEntity.currentThe).toBe(0)
+  })
+
+  it('resourceCostPercentOfMax is mana-pool semantics: non-mana resourceType falls back to flat resourceCost', () => {
+    // resourceType 'the' + percentOfMax must NOT scale off maxMp -- the flat
+    // resourceCost governs the gate. Discriminant: currentThe 40 passes the
+    // flat cost 40, while a percent read would demand 0.5 * maxMp = 500.
+    const poolEntity = entity()
+    poolEntity.stats.maxMp = 1000
+    poolEntity.currentThe = 40
+    const percentSkill = skill({ resourceType: 'the', resourceCost: 40, resourceCostPercentOfMax: 0.5 })
+
+    expect(hasResourceFor(poolEntity, percentSkill)).toBe(true)
+
+    // Positive control: the mana branch still resolves percentOfMax against
+    // maxMp (0.5 * 1000 = 500 gates 499 but passes at 500).
+    const manaEntity = entity({ currentMp: 499 })
+    manaEntity.stats.maxMp = 1000
+    const manaSkill = skill({ resourceType: 'mana', resourceCost: 40, resourceCostPercentOfMax: 0.5 })
+
+    expect(hasResourceFor(manaEntity, manaSkill)).toBe(false)
+    manaEntity.currentMp = 500
+    expect(hasResourceFor(manaEntity, manaSkill)).toBe(true)
   })
 })

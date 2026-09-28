@@ -1,0 +1,45 @@
+{
+ "run": "phap-tu-reimagine-2026-09-26",
+ "reviewId": "REV-PTR-AUT-G1",
+ "reviewer": "devin-0de56d724576419295f3c5d3f2bc0f39",
+ "phase": "AUTHORITY",
+ "pin": "1a4ea837",
+ "verdict": "FINDINGS -- 3 Low + 4 Nit",
+ "adjudication": [
+  {
+   "finding": "F-PTR-84 (AUT Low-1) / Low",
+   "disposition": "FIXED @cf1655b6",
+   "verification": "dead 'spell.empowered_ult' union member removed; sole consumer was a negative test assertion (line dropped)"
+  },
+  {
+   "finding": "F-PTR-85 (AUT Low-2) / Low",
+   "disposition": "FIXED @cf1655b6",
+   "verification": "collectStatScalars now also collects maxMp when the AUTHORED ROOT def cost carries percentOfMax (plan cost folds root cost at :308)"
+  },
+  {
+   "finding": "F-PTR-86 (AUT Low-3) / Low",
+   "disposition": "FIXED @cf1655b6",
+   "verification": "empowerment stamp gated on isKitBasic -- non-kit GENERIC/basic fallbacks never carry Phap The riders (INT-5 dup)"
+  },
+  {
+   "finding": "AUT Nit-4",
+   "disposition": "REJECTED_WITH_PROOF",
+   "verification": "collectOncePerCast's for_each_target recursion is unreachable-but-defensive (COR-F4 fix stands as guard)"
+  },
+  {
+   "finding": "AUT Nit-5",
+   "disposition": "REJECTED_WITH_PROOF",
+   "verification": "deferred-resolve plans never populate declare-time affected by construction"
+  },
+  {
+   "finding": "AUT Nit-6",
+   "disposition": "REJECTED_WITH_PROOF",
+   "verification": "consumeResourceFor raw subtraction is pre-existing (guarded by callers' castBlocked precheck)"
+  },
+  {
+   "finding": "F-PTR-87 (AUT Nit-7) / Nit",
+   "disposition": "FIXED @cf1655b6",
+   "verification": "CombatScene.ts docblock rewritten ASCII English (mojibake + indent drift removed)"
+  }
+ ]
+}

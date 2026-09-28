@@ -87,7 +87,7 @@ function enemySkill(): TurnSkillDefinition {
   return { id: 'enemy_basic', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } }
 }
 
-describe('TurnBattleSystem — queuedFollowUps headless lane (peekNextActor)', () => {
+describe('TurnBattleSystem — queuedFollowUps headless lane (dequeueNextActorForClaim)', () => {
   it('a natural gauge pick resets followUpChainDepth — cumulative follow-ups cannot starve the queue', () => {
     const { battle, system } = fixture()
 
@@ -97,7 +97,7 @@ describe('TurnBattleSystem — queuedFollowUps headless lane (peekNextActor)', (
     // gauge-pick branch).
     battle.followUpChainDepth = 4
 
-    const actor = system.peekNextActor(battle)
+    const actor = system.dequeueNextActorForClaim(battle)
 
     expect(actor?.id).toBe('player')
     expect(battle.followUpChainDepth).toBe(0)
@@ -108,12 +108,12 @@ describe('TurnBattleSystem — queuedFollowUps headless lane (peekNextActor)', (
       { actorId: 'enemy', executionKind: 'reactive_bypass', actionSource: 'follow_up' },
     ]
 
-    expect(system.peekNextActor(battle)?.id).toBe('enemy')
+    expect(system.dequeueNextActorForClaim(battle)?.id).toBe('enemy')
   })
 })
 
 describe('TurnBattleSystem — queuedFollowUps honored by the PRODUCTION loop (tickPacing)', () => {
-  it('tickPacing() grants the queued follow-up actor a bypass turn on the NEXT call, not just peekNextActor()', () => {
+  it('tickPacing() grants the queued follow-up actor a bypass turn on the NEXT call, not just dequeueNextActorForClaim()', () => {
     const { battle, system, enemyParticipant } = fixture()
 
     // Player's gauge-ready turn resolves via tickPacing (the real game-loop
@@ -257,6 +257,53 @@ describe('TurnBattleSystem — follow-up reciprocity guard', () => {
     expect(battle.queuedFollowUps).toBeUndefined()
     expect(battle.followUpChainDepth).toBe(0)
     expect(result).toBeNull()
+  })
+})
+
+// Pin (NOV-F F-NOV-2): a routed cast that blocks at the plan resource
+// precheck never committed -- its queued repeat/multicast executions
+// would replay the payload for free. castBlocked stamps at impact and
+// gates the follow-up queue at completeAction.
+describe('TurnBattleSystem — a blocked cast queues NO follow-up executions', () => {
+  const unaffordableRepeatDef: TurnSkillDefinition = {
+    id: 'mana_repeat',
+    cooldownTurns: 0,
+    damage: { kind: 'physical', multiplier: 1 },
+    targeting: { shape: 'single' },
+    resourceType: 'mana',
+    resourceCost: 50,
+    repeatCasts: 2,
+  }
+
+  it('unaffordable repeatCasts cast blocks at the precheck and queues nothing', () => {
+    const { battle, system, playerParticipant } = fixture()
+
+    playerParticipant.basic = unaffordableRepeatDef
+    playerParticipant.entity.currentMp = 10
+
+    const declared = system.declareActorAction(battle, playerParticipant)
+    const { targetIds } = system.applyActionImpact(battle, declared)
+    system.completeAction(battle, playerParticipant, declared, targetIds)
+
+    expect(declared.castBlocked).toBe(true)
+    expect(battle.queuedExecutions).toBeUndefined()
+  })
+
+  it('the SAME cast affordable commits and queues both repeats (control)', () => {
+    const { battle, system, playerParticipant } = fixture()
+
+    playerParticipant.basic = unaffordableRepeatDef
+    playerParticipant.entity.currentMp = 100
+
+    const declared = system.declareActorAction(battle, playerParticipant)
+    const { targetIds } = system.applyActionImpact(battle, declared)
+    system.completeAction(battle, playerParticipant, declared, targetIds)
+
+    expect(declared.castBlocked).toBeUndefined()
+    expect(battle.queuedExecutions?.map((entry) => entry.source)).toEqual([
+      'repeat',
+      'repeat',
+    ])
   })
 })
 

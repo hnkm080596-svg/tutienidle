@@ -1,0 +1,11 @@
+{
+  "reviewer": "devin-f88f41783fdf4c6ab24ac7c2b328d248",
+  "verdict": "FINDINGS -- 1 Medium + 1 Low + 2 Nit",
+  "evidence": "npm run type-check clean; 333 files / 3173 tests pass (touched scopes); repro file SkillDefinitionRegistry.resourceClosedSet.repro.test.ts (QA allowance) -- 3 assertions failed as evidence",
+  "findings": [
+    "F1 (Medium): unknown resourceIds slip past the closed set on non-query surfaces -- resource_at_least conditions + gain_resource/consume_resource ops validate clean, then throw TurnSkillPlanRuntimeError/CombatSettlementFault mid-execute (not SkillResolverError -> no decline lane, no castBlocked); registry comment at 1241 states the invariant but it held only for queries",
+    "F2 (Low): a declined charge-resolve on an armed def is misclassified as a silent whiff -- armedCharged tests only whether the armed id still resolves to a def, not whether the captured def routed to null at deferred resolve",
+    "F3 (Nit): member[0] set-valued binding semantics undocumented vs requireSingleBindingTarget sites",
+    "F4 (Nit): ResolvedSkillPlan.test.ts resourceIds authored as 'mp' -- outside the closed set the registry itself enforces"
+  ]
+}

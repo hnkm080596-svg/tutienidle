@@ -3,7 +3,7 @@
 // tests/architecture/nodeBranchCoverage.test.ts (guard).
 //
 // Phap Tu Reimagined (Task 16) — the reworked Phap Tu tree tags nodes
-// by `elementTag`/`routeTag` (see PhapTuNodes.builders.ts); the retired
+// by `elementTag` (see PhapTuNodes.builders.ts); the retired
 // `thuan_<element>`/`lap_dao` branchTag family is gone. A node now
 // belongs to a view when EITHER tag equals the view tag, so element
 // views (fire/water/...) are all single-tag views and this mapping is

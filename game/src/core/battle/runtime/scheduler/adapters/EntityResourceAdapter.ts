@@ -117,6 +117,8 @@ export class EntityResourceAdapter implements ResourceAuthority {
     _ctx: CombatAuthorityExecutionContext,
   ): ConsumeResult {
     const entity = requireEntity(this.resolveEntity, targetId)
+    // The pool is engine-owned -- a wired 'the' channel is intentionally
+    // ignored; the RESOURCE_THE branch below handles it unconditionally.
     const channel =
       resourceId === RESOURCE_THE ? undefined : this.requireChannel(resourceId)
     if (amount === 'all' && valueSource === 'cast_snapshot') {

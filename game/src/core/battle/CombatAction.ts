@@ -106,6 +106,7 @@ export type CombatVfxPresetId =
   | 'water_surge'
   | 'earth_shockwave'
   | 'metal_slash'
+  | 'ngu_kiem_flight'
   | 'wood_spikes'
   | 'lightning_strike'
   | 'wind_blade'

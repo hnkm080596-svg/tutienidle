@@ -1,0 +1,12 @@
+{
+  "applied": [
+    "message:MSG-ASSIGN-RB-CONTRACT (STALE — does not advance phase)",
+    "message:MSG-ASSIGN-RB-CORRECTNESS (STALE — does not advance phase)",
+    "message:MSG-ASSIGN-RB-AUTHORITY (STALE — does not advance phase)",
+    "message:MSG-ASSIGN-RB-INTEGRATION (STALE — does not advance phase)",
+    "message:MSG-SEALED-RB-CONTRACT (STALE — does not advance phase)",
+    "message:MSG-SEALED-RB-CORRECTNESS (STALE — does not advance phase)",
+    "message:MSG-CANCEL-RB-AUTHORITY",
+    "message:MSG-CANCEL-RB-INTEGRATION"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+ "run": "phap-tu-reimagine-2026-09-26",
+ "evidenceId": "EV-PTR-FIXG",
+ "pin": "cf1655b6",
+ "changes": [
+  "TurnBattleSystem: blocked charge-init -> castBlocked + un-arm pendingCharge/chargingTurnsRemaining",
+  "TurnBattleSystem: theBurned capture gated on executionCommitsCast(execution)",
+  "TurnBattleSystem: composite pick gated on empowerment===undefined (registry parity)",
+  "SkillResolver: collectStatScalars also collects maxMp from root def percentOfMax cost",
+  "CultivationPathRegistry: empowerment stamp gated on isKitBasic",
+  "CultivationPathKit: dead 'spell.empowered_ult' union member removed",
+  "BuffSystem: addStacks floors at 0",
+  "GameManager.empowerment.test: fixture learns linh_bao (starter mint coverage)",
+  "SkillDefinitionRegistry.test: pin for empowerment+compositePool mutual-exclusion fault",
+  "CombatScene: docblock rewritten ASCII; PhapTuTrangBuffs: once-per-window comment"
+ ],
+ "verification": "npm run type-check clean; vitest 270 files / 2266 pass (4 expected-fail); asciiComments ratchet green"
+}

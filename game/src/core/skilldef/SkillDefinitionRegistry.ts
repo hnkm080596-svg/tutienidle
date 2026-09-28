@@ -63,6 +63,8 @@ const SET_VALUED_TARGET_INTENTS: ReadonlySet<string> = new Set<SkillTargetIntent
   'all_enemies',
   'all_allies',
   'allies_except_self',
+  // Phap Tu Reimagined (spec D4) -- landed-gate set intent.
+  'other_enemies',
 ])
 
 const SKILL_TARGET_INTENTS: ReadonlySet<string> = new Set<SkillTargetIntent>([
@@ -74,7 +76,48 @@ const SKILL_TARGET_INTENTS: ReadonlySet<string> = new Set<SkillTargetIntent>([
   'all_allies',
   'attacker',
   'loop_target',
+  'other_enemy',
+  'other_enemies',
 ])
+
+/** Intents legal ONLY inside a deal_damage onLanded lane -- every other
+    position (top-level ops, for_each members, expression conditions)
+    rejects them. */
+const LANDED_LANE_ONLY_INTENTS: ReadonlySet<string> = new Set<SkillTargetIntent>([
+  'other_enemy',
+  'other_enemies',
+])
+
+/** Intents a landed-lane member may bind: the primary's hit target
+    ('loop_target'), the caster ('self'), or the lane-only other-enemy
+    intents. */
+const LANDED_LANE_INTENTS: ReadonlySet<string> = new Set<SkillTargetIntent>([
+  'loop_target',
+  'self',
+  'other_enemy',
+  'other_enemies',
+])
+
+/** Landed-lane `if` nesting bound (spec D4): lane members may carry an
+    `if` whose then/else may carry one further `if` -- the third faults. */
+const LANDED_LANE_MAX_IF_DEPTH = 2
+
+/** Closed resource set -- every authored resourceId surface (resource_*
+    value queries, resource_at_least conditions, gain/consume_resource
+    ops) must mirror the runtime's resource readers/channels
+    ('the'/'mana'/'ward'): an out-of-set id faults at define time instead
+    of throwing mid-execute past the decline lane. */
+const RESOURCE_IDS: ReadonlySet<string> = new Set(['the', 'mana', 'ward'])
+
+/** Track state while validating inside a deal_damage onLanded lane.
+    `depth` counts enclosing onLanded lists (0 = outside a lane),
+    `ifDepth` counts enclosing `if` ops within the current lane level. */
+interface LandedLaneContext {
+  depth: number
+  ifDepth: number
+}
+
+const TOP_LEVEL_LANE: LandedLaneContext = { depth: 0, ifDepth: 0 }
 
 const CLEANSE_KINDS: ReadonlySet<string> = new Set(['buff', 'debuff', 'ailment', 'marker'])
 const CLEANSE_POLARITIES: ReadonlySet<string> = new Set(['buff', 'debuff'])
@@ -139,6 +182,7 @@ const EXPRESSION_OPS: ReadonlySet<string> = new Set([
 ])
 const CONDITION_KINDS: ReadonlySet<string> = new Set([
   'stacks_at_least',
+  'stacks_below',
   'hp_percent_below',
   'resource_at_least',
   'target_alive',
@@ -327,7 +371,38 @@ function validateActive(
         `unknown resource type '${String(definition.cost.resourceType)}'`,
       )
     }
-    if (typeof definition.cost.amount !== 'number' || definition.cost.amount < 0) {
+    if (definition.cost.resourceType === 'none') {
+      // The plan runtime's resourceCurrent/resourceMax switch only knows
+      // {the,mana,ward}: a 'none' cost crashes PRECHECK with a
+      // TurnSkillPlanRuntimeError (past the decline lane). Omit `cost`
+      // entirely for a free cast -- 'none' is never consumable.
+      fault(
+        'invalid_field_value',
+        'cost.resourceType',
+        "cost.resourceType 'none' is not consumable -- omit `cost` for a free cast",
+      )
+    }
+    if ('percentOfMax' in definition.cost) {
+      // Phap Tu Reimagined (F10) -- percent-of-max form: mana-only,
+      // (0,1]; mutually exclusive with `amount`.
+      if (definition.cost.resourceType !== 'mana') {
+        fault('invalid_field_value', 'cost.percentOfMax', 'percentOfMax requires resourceType \'mana\'')
+      }
+      if (
+        typeof definition.cost.percentOfMax !== 'number' ||
+        !Number.isFinite(definition.cost.percentOfMax) ||
+        definition.cost.percentOfMax <= 0 ||
+        definition.cost.percentOfMax > 1
+      ) {
+        fault('invalid_field_value', 'cost.percentOfMax', 'cost.percentOfMax must be a finite number in (0, 1]')
+      }
+      if ('amount' in definition.cost) {
+        fault('invalid_field_value', 'cost', 'cost carries either amount or percentOfMax -- never both')
+      }
+    } else if (
+      typeof (definition.cost as { amount?: unknown }).amount !== 'number' ||
+      (definition.cost as { amount: number }).amount < 0
+    ) {
       fault('invalid_field_value', 'cost.amount', 'cost.amount must be a number >= 0')
     }
   }
@@ -355,10 +430,13 @@ function validateActive(
           fault('invalid_field_value', 'subcasts.compositePool', 'compositePool entries must be non-empty skill ids')
         }
       }
-      if (
-        subcasts.compositeCount !== undefined &&
-        (!Number.isInteger(subcasts.compositeCount) || subcasts.compositeCount < 1)
-      ) {
+    }
+    if (subcasts.compositeCount !== undefined) {
+      if (subcasts.compositePool === undefined) {
+        // compositeCount only governs the compositePool pick -- alone it
+        // is silently dead authoring.
+        fault('invalid_field_value', 'subcasts.compositeCount', 'compositeCount requires subcasts.compositePool')
+      } else if (!Number.isInteger(subcasts.compositeCount) || subcasts.compositeCount < 1) {
         fault('invalid_field_value', 'subcasts.compositeCount', 'compositeCount must be an integer >= 1')
       }
     }
@@ -372,6 +450,71 @@ function validateActive(
     if (typeof empowerment.empoweredSkillId !== 'string' || empowerment.empoweredSkillId.length === 0) {
       fault('invalid_field_value', 'variants.empowerment.empoweredSkillId', 'empoweredSkillId must be a non-empty skill id')
     }
+    if (definition.subcasts?.compositePool !== undefined) {
+      // The declare-side empowerment swap precedes the composite pick --
+      // a def declaring both would silently lose the empowered payload.
+      fault(
+        'invalid_field_value',
+        'variants.empowerment',
+        'empowerment and subcasts.compositePool are mutually exclusive on one definition',
+      )
+    }
+    if ((definition.subcasts?.count ?? 0) > 0) {
+      // Repeat executions replay the committed resolution without
+      // re-evaluating empowerment -- a repeat of an empowered cast would
+      // silently run the BASE payload. (multicast is exempt: empowered
+      // and repeat sources are already excluded from the roll.) Forbid
+      // the combination.
+      fault(
+        'invalid_field_value',
+        'variants.empowerment',
+        'empowerment and subcasts.count are mutually exclusive on one definition',
+      )
+    }
+  }
+
+  if (definition.consumesAllThe === true && cadence?.chargeTurns !== undefined) {
+    // Charge-resolve declares carry no execution object, so theBurned
+    // can never be forwarded -- theScaling would read 0 at resolve.
+    fault(
+      'invalid_field_value',
+      'consumesAllThe',
+      'consumesAllThe and cadence.chargeTurns are mutually exclusive on one definition',
+    )
+  }
+
+  if (empowerment !== undefined && cadence?.chargeTurns !== undefined) {
+    // Charge-resolve replays the ROOT payload verbatim (deferredResolve
+    // runs payloadOnly -> the empowerment gate is skipped): riders and
+    // empowered damage would silently drop. Forbid the combination.
+    fault(
+      'invalid_field_value',
+      'variants.empowerment',
+      'empowerment and cadence.chargeTurns are mutually exclusive on one definition',
+    )
+  }
+
+  if (subcasts !== undefined && cadence?.chargeTurns !== undefined) {
+    // A charge-init declare commits the cast but never carries the
+    // payload resolve (the charge resolve replays the root verbatim
+    // with rootSubcasts stripped): every subcasts entry -- count,
+    // multicast, compositePool/compositeCount -- is dead authoring on
+    // a charged def. Forbid the whole combination.
+    fault(
+      'invalid_field_value',
+      'subcasts',
+      'subcasts and cadence.chargeTurns are mutually exclusive on one definition',
+    )
+  }
+
+  if (definition.theScaling !== undefined && definition.consumesAllThe !== true) {
+    // theBurned populates only when consumesAllThe captures the pool --
+    // theScaling alone would read 0 at resolve (a silent dead rider).
+    fault(
+      'invalid_field_value',
+      'theScaling',
+      'theScaling requires consumesAllThe on the same definition',
+    )
   }
 
   if (definition.landed !== undefined && !LANDED_SEMANTICS.has(definition.landed)) {
@@ -380,11 +523,11 @@ function validateActive(
 
   const instances = definition.instances
   if (instances !== undefined) {
-    validateExpression(instances.count, 'instances.count', fault)
+    validateExpression(instances.count, 'instances.count', deps, false, false, fault)
     const each = instances.each
     if (each !== undefined) {
       if (each.execute !== undefined) {
-        validateExpression(each.execute.hpPercentBelow, 'instances.each.execute.hpPercentBelow', fault)
+        validateExpression(each.execute.hpPercentBelow, 'instances.each.execute.hpPercentBelow', deps, false, false, fault)
         if (typeof each.execute.damageMultiplier !== 'number') {
           fault('invalid_field_value', 'instances.each.execute.damageMultiplier', 'damageMultiplier must be a number')
         }
@@ -422,7 +565,7 @@ function validateActive(
   ) {
     fault('invalid_field_value', 'operations', 'active definitions need at least one operation (or a compositePool shell)')
   }
-  validateOperationList(definition.operations, 'operations', deps, false, fault)
+  validateOperationList(definition.operations, 'operations', deps, false, TOP_LEVEL_LANE, fault)
 }
 
 function validatePassive(
@@ -447,10 +590,10 @@ function validatePassive(
       fault('invalid_field_value', `${path}.procChance`, 'procChance must be in [0, 1]')
     }
     if (trigger.condition !== undefined) {
-      validateCondition(trigger.condition, `${path}.condition`, deps, false, fault)
+      validateCondition(trigger.condition, `${path}.condition`, deps, false, false, false, fault)
     }
   }
-  validateOperationList(definition.operations, 'operations', deps, false, fault)
+  validateOperationList(definition.operations, 'operations', deps, false, TOP_LEVEL_LANE, fault)
 }
 
 function validateSharedFields(
@@ -503,10 +646,11 @@ function validateOperationList(
   path: string,
   deps: SkillDefinitionValidationDeps,
   insideForEach: boolean,
+  lane: LandedLaneContext,
   fault: (code: SkillDefinitionFaultCode, path: string, message: string) => void,
 ): void {
   for (const [index, op] of ops.entries()) {
-    validateOperation(op, `${path}[${index}]`, deps, insideForEach, fault)
+    validateOperation(op, `${path}[${index}]`, deps, insideForEach, lane, fault)
   }
 }
 
@@ -515,10 +659,12 @@ function validateOperation(
   path: string,
   deps: SkillDefinitionValidationDeps,
   insideForEach: boolean,
+  lane: LandedLaneContext,
   fault: (code: SkillDefinitionFaultCode, path: string, message: string) => void,
 ): void {
+  const inLane = lane.depth > 0
   const requireTarget = (target: SkillTargetIntent | undefined, field = 'target'): void => {
-    validateTargetIntent(target, `${path}.${field}`, insideForEach, fault)
+    validateTargetIntent(target, `${path}.${field}`, insideForEach, inLane, fault)
   }
   const requireBuffRef = (id: BuffDefinitionId | undefined, field = 'definitionId'): void => {
     validateBuffRef(id, `${path}.${field}`, deps, fault)
@@ -527,13 +673,76 @@ function validateOperation(
     target: SkillTargetIntent | undefined,
     field: string,
   ): void => {
-    validateSingleBindingIntent(target, `${path}.${field}`, insideForEach, fault)
+    validateSingleBindingIntent(target, `${path}.${field}`, insideForEach, inLane, fault)
+  }
+
+  // gateOnApplyResult binds only on the three selector ops whose resolve
+  // wraps steps in on_apply_result -- carried on any other op type it is
+  // silently dead authoring (the field is type-scoped but runtime data
+  // can still smuggle it past the compiler).
+  if (
+    (op as { gateOnApplyResult?: unknown }).gateOnApplyResult === true &&
+    op.type !== 'add_buff_modifier' &&
+    op.type !== 'remove_buff_modifier' &&
+    op.type !== 'refresh_buff_duration' &&
+    op.type !== 'extend_buff_duration' &&
+    op.type !== 'trigger_buff_periodic'
+  ) {
+    fault(
+      'invalid_field_value',
+      `${path}.gateOnApplyResult`,
+      'gateOnApplyResult is only legal on buff modifier/duration/periodic ops (their resolve wraps steps in on_apply_result)',
+    )
+  }
+
+  // onLanded/oncePerCast exist only inside a deal_damage lane (the hit's
+  // instance gates and the landed-lane dedup compile under case
+  // 'deal_damage') -- carried on any other op type they are silently
+  // dead authoring, same smuggle shape as gateOnApplyResult.
+  if (
+    op.type !== 'deal_damage' &&
+    ((op as { onLanded?: unknown }).onLanded !== undefined ||
+      (op as { oncePerCast?: unknown }).oncePerCast !== undefined)
+  ) {
+    fault(
+      'invalid_field_value',
+      `${path}`,
+      'onLanded/oncePerCast are only legal on deal_damage ops (the landed gates compile under the deal_damage case)',
+    )
   }
 
   switch (op.type) {
     case 'deal_damage': {
-      requireTarget(op.target)
-      if (op.coefficient !== undefined) validateExpression(op.coefficient, `${path}.coefficient`, fault)
+      if (inLane) {
+        // Phap Tu Reimagined (spec D4) -- the landed lane permits ONE
+        // level of secondary hit whose target excludes the primary's
+        // (`other_enemy`/`other_enemies`); deeper nests are rejected.
+        if (lane.depth !== 1) {
+          fault(
+            'invalid_field_value',
+            path,
+            'onLanded allows a deal_damage only at the immediate lane level (secondary hits are non-recursive)',
+          )
+          return
+        }
+        if (op.target !== 'other_enemy' && op.target !== 'other_enemies') {
+          fault(
+            'invalid_field_value',
+            `${path}.target`,
+            `a landed-gate secondary hit must target 'other_enemy' or 'other_enemies' -- got '${op.target}'`,
+          )
+        }
+      } else {
+        requireTarget(op.target)
+        if (op.oncePerCast === true) {
+          fault(
+            'invalid_field_value',
+            `${path}.oncePerCast`,
+            'oncePerCast is only legal on a landed-gate secondary hit (a deal_damage inside another op\'s onLanded lane)',
+          )
+        }
+      }
+      if (op.coefficient !== undefined) validateExpression(op.coefficient, `${path}.coefficient`, deps, insideForEach, inLane, fault)
       if (op.damageType !== undefined && !DAMAGE_TYPES.has(op.damageType)) {
         fault('invalid_field_value', `${path}.damageType`, `unknown damage type '${String(op.damageType)}'`)
       }
@@ -589,17 +798,38 @@ function validateOperation(
       }
       if (op.consumeBuff !== undefined) {
         requireBuffRef(op.consumeBuff.definitionId, 'consumeBuff.definitionId')
-        validateExpression(op.consumeBuff.damagePerStack, `${path}.consumeBuff.damagePerStack`, fault)
+        validateExpression(op.consumeBuff.damagePerStack, `${path}.consumeBuff.damagePerStack`, deps, insideForEach, inLane, fault)
       }
       if (op.scaleBuff !== undefined) {
         requireBuffRef(op.scaleBuff.definitionId, 'scaleBuff.definitionId')
-        validateExpression(op.scaleBuff.damagePerStack, `${path}.scaleBuff.damagePerStack`, fault)
+        validateExpression(op.scaleBuff.damagePerStack, `${path}.scaleBuff.damagePerStack`, deps, insideForEach, inLane, fault)
       }
       if (op.consumeWard !== undefined) {
-        validateExpression(op.consumeWard.damagePerWardPoint, `${path}.consumeWard.damagePerWardPoint`, fault)
+        validateExpression(op.consumeWard.damagePerWardPoint, `${path}.consumeWard.damagePerWardPoint`, deps, insideForEach, inLane, fault)
       }
       if (op.healPercentOfDamage !== undefined) {
-        validateExpression(op.healPercentOfDamage, `${path}.healPercentOfDamage`, fault)
+        validateExpression(op.healPercentOfDamage, `${path}.healPercentOfDamage`, deps, insideForEach, inLane, fault)
+      }
+      if (op.elementalPenetration !== undefined) {
+        validateExpression(op.elementalPenetration, `${path}.elementalPenetration`, deps, insideForEach, inLane, fault)
+      }
+      if (op.penetrationFromStacks !== undefined) {
+        requireBuffRef(op.penetrationFromStacks.definitionId, 'penetrationFromStacks.definitionId')
+        validateExpression(
+          op.penetrationFromStacks.perStack,
+          `${path}.penetrationFromStacks.perStack`,
+          deps,
+          insideForEach,
+          inLane,
+          fault,
+        )
+        if (
+          op.penetrationFromStacks.scope !== undefined &&
+          op.penetrationFromStacks.scope !== 'own' &&
+          op.penetrationFromStacks.scope !== 'any'
+        ) {
+          fault('invalid_field_value', `${path}.penetrationFromStacks.scope`, 'scope must be own|any')
+        }
       }
       if (op.missingHpBonusPerMissingPercent !== undefined && op.missingHpBonusPerMissingPercent < 0) {
         fault('invalid_field_value', `${path}.missingHpBonusPerMissingPercent`, 'must be >= 0')
@@ -608,62 +838,53 @@ function validateOperation(
         fault('invalid_field_value', `${path}.missingHpBonusCap`, 'must be >= 0')
       }
       if (op.sourceMaxHpRatio !== undefined) {
-        validateExpression(op.sourceMaxHpRatio, `${path}.sourceMaxHpRatio`, fault)
+        validateExpression(op.sourceMaxHpRatio, `${path}.sourceMaxHpRatio`, deps, insideForEach, inLane, fault)
       }
+      // Per-hit consequence lane (spec D4): flat consequence ops plus
+      // bounded `if` (nesting <= LANDED_LANE_MAX_IF_DEPTH) and ONE
+      // secondary `deal_damage` level whose target must exclude the
+      // primary ('other_enemy'/'other_enemies'). for_each_target and
+      // read_stacks stay banned inside the lane.
+      const laneDepth = lane.depth + 1
       for (const [index, landedOp] of (op.onLanded ?? []).entries()) {
         const lpath = `${path}.onLanded[${index}]`
-        // Per-hit consequence ops: flat lanes only -- no nested damage
-        // hits, control flow, or loops; targets bind via loop_target
-        // (the hit's target) or self (the caster).
         if (
-          landedOp.type === 'deal_damage' ||
-          landedOp.type === 'if' ||
           landedOp.type === 'for_each_target' ||
           landedOp.type === 'read_stacks'
         ) {
           fault(
             'invalid_field_value',
             lpath,
-            `onLanded does not allow '${landedOp.type}' ops (flat consequence lanes only)`,
+            `onLanded does not allow '${landedOp.type}' ops`,
           )
           continue
         }
-        const landedBindingOk = (t: SkillTargetIntent | undefined): boolean =>
-          t === 'loop_target' || t === 'self'
-        if ('target' in landedOp && !landedBindingOk(landedOp.target)) {
+        if (
+          landedOp.type === 'deal_damage' &&
+          landedOp.target !== 'other_enemy' &&
+          landedOp.target !== 'other_enemies'
+        ) {
           fault(
             'invalid_field_value',
             `${lpath}.target`,
-            `onLanded ops must target 'loop_target' or 'self' -- got '${landedOp.target}'`,
+            `a landed-gate secondary hit must target 'other_enemy' or 'other_enemies' -- got '${landedOp.target}'`,
           )
+          continue
         }
-        if ('selector' in landedOp && landedOp.selector !== undefined) {
-          const landedSelector = landedOp.selector
-          if (!landedBindingOk(landedSelector.target)) {
-            fault(
-              'invalid_field_value',
-              `${lpath}.selector.target`,
-              `onLanded selector targets must be 'loop_target' or 'self' -- got '${landedSelector.target}'`,
-            )
-          }
-          if (
-            landedSelector.kind === 'identity' &&
-            !landedBindingOk(landedSelector.source)
-          ) {
-            fault(
-              'invalid_field_value',
-              `${lpath}.selector.source`,
-              `onLanded selector sources must be 'loop_target' or 'self' -- got '${landedSelector.source}'`,
-            )
-          }
-        }
-        validateOperation(landedOp, lpath, deps, true, fault)
+        validateOperation(
+          landedOp,
+          lpath,
+          deps,
+          true,
+          { depth: laneDepth, ifDepth: 0 },
+          fault,
+        )
       }
       return
     }
     case 'heal': {
       requireTarget(op.target)
-      if (op.amount !== undefined) validateExpression(op.amount, `${path}.amount`, fault)
+      if (op.amount !== undefined) validateExpression(op.amount, `${path}.amount`, deps, insideForEach, inLane, fault)
       if (op.fractionOfMaxHp !== undefined && (op.fractionOfMaxHp < 0 || op.fractionOfMaxHp > 1)) {
         fault('invalid_field_value', `${path}.fractionOfMaxHp`, 'fractionOfMaxHp must be in [0, 1]')
       }
@@ -683,9 +904,9 @@ function validateOperation(
     case 'apply_buff': {
       requireTarget(op.target)
       requireBuffRef(op.definitionId)
-      if (op.stacks !== undefined) validateExpression(op.stacks, `${path}.stacks`, fault)
-      if (op.chance !== undefined) validateExpression(op.chance, `${path}.chance`, fault)
-      if (op.durationOverride !== undefined) validateExpression(op.durationOverride, `${path}.durationOverride`, fault)
+      if (op.stacks !== undefined) validateExpression(op.stacks, `${path}.stacks`, deps, insideForEach, inLane, fault)
+      if (op.chance !== undefined) validateExpression(op.chance, `${path}.chance`, deps, insideForEach, inLane, fault)
+      if (op.durationOverride !== undefined) validateExpression(op.durationOverride, `${path}.durationOverride`, deps, insideForEach, inLane, fault)
       if (op.reactionEligibility !== undefined && !REACTION_ELIGIBILITIES.has(op.reactionEligibility)) {
         fault('invalid_field_value', `${path}.reactionEligibility`, `unknown eligibility '${String(op.reactionEligibility)}'`)
       }
@@ -701,37 +922,37 @@ function validateOperation(
     case 'add_buff_stacks':
     case 'remove_buff_stacks':
     case 'consume_buff_stacks': {
-      validateSelector(op.selector, `${path}.selector`, deps, insideForEach, fault)
+      validateSelector(op.selector, `${path}.selector`, deps, insideForEach, inLane, fault)
       if (op.stacks === 'all') {
         if (op.type !== 'consume_buff_stacks') {
           fault('invalid_field_value', `${path}.stacks`, `'all' is only legal on consume_buff_stacks`)
         }
       } else {
-        validateExpression(op.stacks, `${path}.stacks`, fault)
+        validateExpression(op.stacks, `${path}.stacks`, deps, insideForEach, inLane, fault)
       }
       return
     }
     case 'add_buff_modifier':
     case 'remove_buff_modifier': {
-      validateSelector(op.selector, `${path}.selector`, deps, insideForEach, fault)
+      validateSelector(op.selector, `${path}.selector`, deps, insideForEach, inLane, fault)
       validateModifier(op.modifier, `${path}.modifier`, fault)
       return
     }
     case 'refresh_buff_duration':
     case 'extend_buff_duration': {
-      validateSelector(op.selector, `${path}.selector`, deps, insideForEach, fault)
+      validateSelector(op.selector, `${path}.selector`, deps, insideForEach, inLane, fault)
       if (op.turns !== undefined && (!Number.isInteger(op.turns) || op.turns < 0)) {
         fault('invalid_field_value', `${path}.turns`, 'turns must be an integer >= 0')
       }
       return
     }
     case 'trigger_buff_periodic': {
-      validateSelector(op.selector, `${path}.selector`, deps, insideForEach, fault)
+      validateSelector(op.selector, `${path}.selector`, deps, insideForEach, inLane, fault)
       return
     }
     case 'remove_buff': {
       requireTarget(op.target)
-      validateSelector(op.selector, `${path}.selector`, deps, insideForEach, fault)
+      validateSelector(op.selector, `${path}.selector`, deps, insideForEach, inLane, fault)
       if (op.reason !== undefined && !BUFF_REMOVAL_REASONS.has(op.reason)) {
         fault('invalid_field_value', `${path}.reason`, `unknown removal reason '${String(op.reason)}'`)
       }
@@ -751,24 +972,34 @@ function validateOperation(
     }
     case 'push_gauge': {
       requireTarget(op.target)
-      validateExpression(op.fractionOfMax, `${path}.fractionOfMax`, fault)
+      validateExpression(op.fractionOfMax, `${path}.fractionOfMax`, deps, insideForEach, inLane, fault)
       return
     }
     case 'gain_resource':
     case 'consume_resource': {
       requireTarget(op.target)
-      if (op.amount !== 'all') validateExpression(op.amount, `${path}.amount`, fault)
+      if (op.amount !== 'all') validateExpression(op.amount, `${path}.amount`, deps, insideForEach, inLane, fault)
       if (typeof op.resourceId !== 'string' || op.resourceId.length === 0) {
         fault('invalid_field_value', `${path}.resourceId`, 'resourceId must be a non-empty string')
+      } else if (!RESOURCE_IDS.has(op.resourceId)) {
+        fault(
+          'invalid_field_value',
+          `${path}.resourceId`,
+          `unknown resourceId '${op.resourceId}' -- expected one of 'the', 'mana', 'ward'`,
+        )
       }
       return
     }
     case 'apply_shield': {
       requireTarget(op.target)
-      validateExpression(op.amount, `${path}.amount`, fault)
+      validateExpression(op.amount, `${path}.amount`, deps, insideForEach, inLane, fault)
       return
     }
     case 'read_stacks': {
+      if (inLane) {
+        fault('invalid_field_value', path, `onLanded does not allow 'read_stacks' ops`)
+        return
+      }
       // single-binding only: a set-valued target/source has no defined
       // `into` variable binding (resolveIntentSingle would silently take
       // member[0]).
@@ -783,24 +1014,41 @@ function validateOperation(
       return
     }
     case 'pay_hp': {
-      validateExpression(op.maxHpRatio, `${path}.maxHpRatio`, fault)
+      validateExpression(op.maxHpRatio, `${path}.maxHpRatio`, deps, insideForEach, inLane, fault)
       if (typeof op.into !== 'string' || op.into.length === 0) {
         fault('invalid_field_value', `${path}.into`, 'into must be a non-empty var name')
       }
       return
     }
     case 'if': {
-      validateCondition(op.condition, `${path}.condition`, deps, insideForEach, fault)
+      // Spec D4 -- `if` is legal inside a landed lane but bounded: a
+      // third nested `if` within the same lane level faults.
+      if (inLane && lane.ifDepth >= LANDED_LANE_MAX_IF_DEPTH) {
+        fault(
+          'invalid_field_value',
+          path,
+          `onLanded lanes bound 'if' nesting at ${LANDED_LANE_MAX_IF_DEPTH} levels`,
+        )
+        return
+      }
+      validateCondition(op.condition, `${path}.condition`, deps, insideForEach, inLane, true, fault)
       if (op.then.length === 0 && (op.else === undefined || op.else.length === 0)) {
         fault('invalid_field_value', path, 'if op needs a non-empty then or else branch')
       }
-      validateOperationList(op.then, `${path}.then`, deps, insideForEach, fault)
+      const nestedLane: LandedLaneContext = inLane
+        ? { depth: lane.depth, ifDepth: lane.ifDepth + 1 }
+        : lane
+      validateOperationList(op.then, `${path}.then`, deps, insideForEach, nestedLane, fault)
       if (op.else !== undefined) {
-        validateOperationList(op.else, `${path}.else`, deps, insideForEach, fault)
+        validateOperationList(op.else, `${path}.else`, deps, insideForEach, nestedLane, fault)
       }
       return
     }
     case 'for_each_target': {
+      if (inLane) {
+        fault('invalid_field_value', path, `onLanded does not allow 'for_each_target' ops`)
+        return
+      }
       requireTarget(op.target)
       if (op.target === 'loop_target') {
         fault('invalid_field_value', `${path}.target`, 'for_each_target cannot iterate loop_target')
@@ -808,7 +1056,7 @@ function validateOperation(
       if (op.ops.length === 0) {
         fault('invalid_field_value', `${path}.ops`, 'for_each_target needs at least one nested op')
       }
-      validateOperationList(op.ops, `${path}.ops`, deps, true, fault)
+      validateOperationList(op.ops, `${path}.ops`, deps, true, lane, fault)
       return
     }
     default: {
@@ -830,14 +1078,40 @@ function validateTargetIntent(
   target: SkillTargetIntent | undefined,
   path: string,
   insideForEach: boolean,
+  insideLandedLane: boolean,
   fault: (code: SkillDefinitionFaultCode, path: string, message: string) => void,
 ): void {
   if (target === undefined || !SKILL_TARGET_INTENTS.has(target)) {
     fault('invalid_field_value', path, `unknown target intent '${String(target)}'`)
     return
   }
-  if (target === 'loop_target' && !insideForEach) {
-    fault('loop_target_outside_for_each', path, `'loop_target' is only valid inside for_each_target`)
+  if (target === 'loop_target' && !insideForEach && !insideLandedLane) {
+    fault(
+      'loop_target_outside_for_each',
+      path,
+      `'loop_target' is only valid inside for_each_target or a deal_damage onLanded lane`,
+    )
+  }
+  // Set-valued intents (other_enemies, all_enemies, ...) are accepted on
+  // condition/query targets by design: resolveIntentSingle binds member[0]
+  // -- the defined read semantics for these sites. Sites needing a true
+  // single binding (read_stacks `into`, target_hit_landed gates) run
+  // requireSingleBindingTarget instead and reject set-valued intents.
+  if (LANDED_LANE_ONLY_INTENTS.has(target) && !insideLandedLane) {
+    fault(
+      'invalid_field_value',
+      path,
+      `'${target}' binds enemies other than the hit target -- only legal inside a deal_damage onLanded lane`,
+    )
+  }
+  // Lane-wide binding contract (spec D4): at ANY depth inside the lane --
+  // member or nested `if` branch -- targets bind only the lane intents.
+  if (insideLandedLane && !LANDED_LANE_INTENTS.has(target)) {
+    fault(
+      'invalid_field_value',
+      path,
+      `onLanded ops must target 'loop_target', 'self', 'other_enemy', or 'other_enemies' -- got '${target}'`,
+    )
   }
 }
 
@@ -847,9 +1121,10 @@ function validateSingleBindingIntent(
   target: SkillTargetIntent | undefined,
   path: string,
   insideForEach: boolean,
+  insideLandedLane: boolean,
   fault: (code: SkillDefinitionFaultCode, path: string, message: string) => void,
 ): void {
-  validateTargetIntent(target, path, insideForEach, fault)
+  validateTargetIntent(target, path, insideForEach, insideLandedLane, fault)
   if (target !== undefined && SET_VALUED_TARGET_INTENTS.has(target)) {
     fault(
       'invalid_field_value',
@@ -910,6 +1185,7 @@ function validateSelector(
   path: string,
   deps: SkillDefinitionValidationDeps,
   insideForEach: boolean,
+  insideLandedLane: boolean,
   fault: (code: SkillDefinitionFaultCode, path: string, message: string) => void,
 ): void {
   if (selector === undefined || typeof selector !== 'object') {
@@ -918,7 +1194,7 @@ function validateSelector(
   }
   switch (selector.kind) {
     case 'target_definition':
-      validateTargetIntent(selector.target, `${path}.target`, insideForEach, fault)
+      validateTargetIntent(selector.target, `${path}.target`, insideForEach, insideLandedLane, fault)
       validateBuffRef(selector.definitionId, `${path}.definitionId`, deps, fault)
       return
     case 'identity':
@@ -929,9 +1205,10 @@ function validateSelector(
         selector.source,
         `${path}.source`,
         insideForEach,
+        insideLandedLane,
         fault,
       )
-      validateTargetIntent(selector.target, `${path}.target`, insideForEach, fault)
+      validateTargetIntent(selector.target, `${path}.target`, insideForEach, insideLandedLane, fault)
       return
     default:
       fault('invalid_field_value', `${path}.kind`, `unknown selector kind '${String((selector as { kind?: unknown }).kind)}'`)
@@ -973,6 +1250,9 @@ function validateModifier(
 function validateExpression(
   expr: ScalarExpression,
   path: string,
+  deps: SkillDefinitionValidationDeps,
+  insideForEach: boolean,
+  insideLandedLane: boolean,
   fault: (code: SkillDefinitionFaultCode, path: string, message: string) => void,
 ): void {
   if (typeof expr === 'number') {
@@ -986,7 +1266,7 @@ function validateExpression(
     return
   }
   if ('query' in expr) {
-    validateValueQuery(expr, path, fault)
+    validateValueQuery(expr, path, insideForEach, insideLandedLane, fault)
     return
   }
   if (!('op' in expr) || !EXPRESSION_OPS.has(expr.op as string)) {
@@ -1003,23 +1283,31 @@ function validateExpression(
         return
       }
       for (const [index, value] of expr.values.entries()) {
-        validateExpression(value, `${path}.values[${index}]`, fault)
+        validateExpression(value, `${path}.values[${index}]`, deps, insideForEach, insideLandedLane, fault)
       }
       return
     case 'subtract':
     case 'divide':
-      validateExpression(expr.left, `${path}.left`, fault)
-      validateExpression(expr.right, `${path}.right`, fault)
+      validateExpression(expr.left, `${path}.left`, deps, insideForEach, insideLandedLane, fault)
+      validateExpression(expr.right, `${path}.right`, deps, insideForEach, insideLandedLane, fault)
       return
     case 'clamp':
-      validateExpression(expr.value, `${path}.value`, fault)
-      validateExpression(expr.min, `${path}.min`, fault)
-      validateExpression(expr.max, `${path}.max`, fault)
+      validateExpression(expr.value, `${path}.value`, deps, insideForEach, insideLandedLane, fault)
+      validateExpression(expr.min, `${path}.min`, deps, insideForEach, insideLandedLane, fault)
+      validateExpression(expr.max, `${path}.max`, deps, insideForEach, insideLandedLane, fault)
       return
     case 'if':
-      validateConditionShallow(expr.condition, `${path}.condition`, fault)
-      validateExpression(expr.then, `${path}.then`, fault)
-      validateExpression(expr.else, `${path}.else`, fault)
+      validateConditionInner(
+        expr.condition,
+        `${path}.condition`,
+        deps,
+        insideForEach,
+        insideLandedLane,
+        false,
+        fault,
+      )
+      validateExpression(expr.then, `${path}.then`, deps, insideForEach, insideLandedLane, fault)
+      validateExpression(expr.else, `${path}.else`, deps, insideForEach, insideLandedLane, fault)
       return
   }
 }
@@ -1027,26 +1315,23 @@ function validateExpression(
 function validateValueQuery(
   query: SkillValueQuery,
   path: string,
+  insideForEach: boolean,
+  insideLandedLane: boolean,
   fault: (code: SkillDefinitionFaultCode, path: string, message: string) => void,
 ): void {
   if (!VALUE_QUERIES.has(query.query)) {
     fault('malformed_expression', `${path}.query`, `unknown value query '${String(query.query)}'`)
     return
   }
-  const needTarget = 'target' in query && query.target !== undefined
   if ('target' in query) {
-    if (!SKILL_TARGET_INTENTS.has(query.target)) {
-      fault('malformed_expression', `${path}.target`, `unknown target intent '${String(query.target)}'`)
-    } else if (query.target === 'loop_target') {
-      // loop_target inside expressions inherits the enclosing for_each
-      // legality -- the op-level walk tracks it; deep expressions inside
-      // op fields were already reached under insideForEach, but the query
-      // leaf itself cannot see the flag here. loop_target legality is
-      // enforced on op/condition targets; a query leaf carrying it is
-      // accepted (the for_each binding resolves it at RESOLVE).
-    }
+    // The query leaf gets the SAME intent policy as op/condition
+    // targets: lane-only intents reject outside the lane, lane
+    // expressions accept only the lane allowlist, and loop_target
+    // needs an enclosing for_each (or lane) binding. Query targets
+    // resolve to a member position, so an unconstrained intent would
+    // silently bind member[0] at RESOLVE.
+    validateTargetIntent(query.target, `${path}.target`, insideForEach, insideLandedLane, fault)
   }
-  void needTarget
   switch (query.query) {
     case 'buff_stacks':
     case 'buff_duration':
@@ -1057,8 +1342,15 @@ function validateValueQuery(
     case 'resource_current':
     case 'resource_max':
     case 'resource_snapshot':
-      if (typeof query.resourceId !== 'string' || query.resourceId.length === 0) {
-        fault('malformed_expression', `${path}.resourceId`, 'resourceId must be a non-empty string')
+      // Closed resource set -- execution (TurnSkillPlanRuntime
+      // resourceCurrent/resourceMax) throws on anything else, so an
+      // unknown id must fault at define time, not mid-cast.
+      if (!RESOURCE_IDS.has(query.resourceId as string)) {
+        fault(
+          'malformed_expression',
+          `${path}.resourceId`,
+          `unknown resourceId '${String(query.resourceId)}' -- expected one of 'the', 'mana', 'ward'`,
+        )
       }
       return
     case 'stat_scalar':
@@ -1086,20 +1378,11 @@ function validateCondition(
   path: string,
   deps: SkillDefinitionValidationDeps,
   insideForEach: boolean,
+  insideLandedLane: boolean,
+  hitGateLegal: boolean,
   fault: (code: SkillDefinitionFaultCode, path: string, message: string) => void,
 ): void {
-  validateConditionInner(condition, path, deps, insideForEach, fault)
-}
-
-/** Expression-level conditions can't reach the loop binding flag -- they
-    inherit legality from the op that hosts them (validateExpression calls
-    this shallow variant; the op walk tracks insideForEach separately). */
-function validateConditionShallow(
-  condition: SkillCondition,
-  path: string,
-  fault: (code: SkillDefinitionFaultCode, path: string, message: string) => void,
-): void {
-  validateConditionInner(condition, path, {}, true, fault)
+  validateConditionInner(condition, path, deps, insideForEach, insideLandedLane, hitGateLegal, fault)
 }
 
 function validateConditionInner(
@@ -1107,6 +1390,8 @@ function validateConditionInner(
   path: string,
   deps: SkillDefinitionValidationDeps,
   insideForEach: boolean,
+  insideLandedLane: boolean,
+  hitGateLegal: boolean,
   fault: (code: SkillDefinitionFaultCode, path: string, message: string) => void,
 ): void {
   if (condition === null || typeof condition !== 'object' || !CONDITION_KINDS.has(condition.kind)) {
@@ -1115,19 +1400,32 @@ function validateConditionInner(
   }
   switch (condition.kind) {
     case 'stacks_at_least':
-      validateTargetIntent(condition.target, `${path}.target`, insideForEach, fault)
+      validateTargetIntent(condition.target, `${path}.target`, insideForEach, insideLandedLane, fault)
       validateBuffRef(condition.definitionId, `${path}.definitionId`, deps, fault)
       if (typeof condition.stacks !== 'number' || condition.stacks < 0) {
         fault('malformed_condition', `${path}.stacks`, 'stacks must be a number >= 0')
       }
       return
+    case 'stacks_below':
+      validateTargetIntent(condition.target, `${path}.target`, insideForEach, insideLandedLane, fault)
+      validateBuffRef(condition.definitionId, `${path}.definitionId`, deps, fault)
+      if (typeof condition.max !== 'number' || condition.max < 0) {
+        fault('malformed_condition', `${path}.max`, 'max must be a number >= 0')
+      }
+      return
     case 'hp_percent_below':
-      validateTargetIntent(condition.target, `${path}.target`, insideForEach, fault)
-      validateExpression(condition.threshold, `${path}.threshold`, fault)
+      validateTargetIntent(condition.target, `${path}.target`, insideForEach, insideLandedLane, fault)
+      validateExpression(condition.threshold, `${path}.threshold`, deps, insideForEach, insideLandedLane, fault)
       return
     case 'resource_at_least':
       if (typeof condition.resourceId !== 'string' || condition.resourceId.length === 0) {
         fault('malformed_condition', `${path}.resourceId`, 'resourceId must be a non-empty string')
+      } else if (!RESOURCE_IDS.has(condition.resourceId)) {
+        fault(
+          'malformed_condition',
+          `${path}.resourceId`,
+          `unknown resourceId '${condition.resourceId}' -- expected one of 'the', 'mana', 'ward'`,
+        )
       }
       if (typeof condition.amount !== 'number' || condition.amount < 0) {
         fault('malformed_condition', `${path}.amount`, 'amount must be a number >= 0')
@@ -1135,7 +1433,7 @@ function validateConditionInner(
       return
     case 'target_alive':
       if (condition.target !== undefined) {
-        validateTargetIntent(condition.target, `${path}.target`, insideForEach, fault)
+        validateTargetIntent(condition.target, `${path}.target`, insideForEach, insideLandedLane, fault)
       }
       return
     case 'var':
@@ -1153,6 +1451,16 @@ function validateConditionInner(
     case 'any_target_landed':
       return
     case 'target_hit_landed':
+      // Legal only as an authored op 'if' condition (the resolver lowers
+      // it to ops_landed_any + var branch); a trigger or expression slot
+      // would fault only at resolve -- decline lane. Define-time fault.
+      if (!hitGateLegal) {
+        fault(
+          'malformed_condition',
+          path,
+          `target_hit_landed is only legal as an authored op 'if' condition -- not on triggers, expressions, or nested positions`,
+        )
+      }
       // single-binding intents only -- 'affected_targets'/'all_enemies'
       // would bind member[0] silently (misleading); use any_target_landed
       // for the cast-scope check instead.
@@ -1164,7 +1472,7 @@ function validateConditionInner(
             `target_hit_landed requires a single-binding intent (loop_target/primary_target/self/attacker), got '${condition.target}' -- use any_target_landed for the cast-scope check`,
           )
         }
-        validateTargetIntent(condition.target, `${path}.target`, insideForEach, fault)
+        validateTargetIntent(condition.target, `${path}.target`, insideForEach, insideLandedLane, fault)
       }
       return
   }

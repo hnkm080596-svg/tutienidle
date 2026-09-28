@@ -10,7 +10,11 @@ import type { Quest } from '../../core/quest/Quest'
 export const QUESTS: Quest[] = [
   {
     id: 'collect_tu_linh_thao_1',
-    name: 'Thu Thập Tụ Linh Thảo',
+    // ui-audit economy M6: the once quest and the daily quest used to
+    // share the name "Thu Thap Tu Linh Thao" verbatim - two quests
+    // reading identically in the same panel. The once quest now reads
+    // as the one-off stockpile task.
+    name: 'Dự Trữ Tụ Linh Thảo',
     description: 'Nộp 5 Tụ Linh Thảo để nhận thưởng.',
     condition: { kind: 'collect', materialId: 'tu_linh_thao_qi_refining_decade', amount: 5 },
     reward: { reward: { spiritStone: 20 } },

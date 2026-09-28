@@ -43,7 +43,10 @@ import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
  */
 const ENEMY_IDLE_AMPLITUDE_PX = 6
 
-test.describe('Combat idle motion (static mode + wave-1 reskins)', () => {
+// @capture: this spec also writes frame/screenshot artifacts to
+// test-results/. It stays in the default e2e run because its assertions
+// guard the real idle-motion contract, not capture-only output.
+test.describe('Combat idle motion (static mode + wave-1 reskins)', { tag: '@capture' }, () => {
   test('static entities bob; reskinned enemies play authored frames', async ({ page }) => {
     test.setTimeout(240_000)
 

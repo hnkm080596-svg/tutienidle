@@ -23,7 +23,6 @@ import { ALL_PROGRESSION_NODES } from '../../data/progression/ProgressionNodeCat
 import { ENEMIES } from '../../data/enemy/Enemies'
 import { STAGES } from '../../data/stage/Stages'
 import type { ElementType } from '../element/ElementType'
-import type { SpellPathRoute } from '../phap-tu/PhapTuState'
 import { BattleMetricsCollector, type BattleMetrics } from './BattleMetrics'
 
 // Detached post-ritual build identity - PlayerData alone is NOT enough:
@@ -52,7 +51,7 @@ export type SimEncounter =
 // entry maps 1:1 onto a public GameManagerProgressionOps writer.
 // A recipe needing a new setup operation extends the union explicitly.
 export type SimulationCanonicalWrite =
-  | { type: 'select_phap_tu_element'; element: ElementType; route: SpellPathRoute }
+  | { type: 'select_phap_tu_element'; element: ElementType }
   | { type: 'purchase_node'; nodeId: string }
 
 export interface BattleSimulationInput {
@@ -167,7 +166,7 @@ export function runBattle(input: BattleSimulationInput): BattleSimulationResult 
     let ok: boolean
     switch (write.type) {
       case 'select_phap_tu_element':
-        ok = gameManager.progressionOps.selectSpellPathElement(write.element, write.route, player)
+        ok = gameManager.progressionOps.selectSpellPathElement(write.element, player)
         break
       case 'purchase_node':
         ok = gameManager.progressionOps.purchaseNode(write.nodeId, player)

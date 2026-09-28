@@ -1,0 +1,46 @@
+{
+ "records": [
+  {
+   "kind": "lesson",
+   "body": {
+    "version": 1,
+    "supersedes": null,
+    "incidentEvidenceIds": [
+     "EV-MRG-COR1",
+     "EV-MRG-INT1"
+    ],
+    "originatingRun": "phap-tu-reimagine-merge-2026-09-27",
+    "missedInvariantIds": [],
+    "exclusions": [],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [
+     "EV-MRG-FIX1"
+    ],
+    "guidance": null,
+    "id": "L-MRG-VERBATIM-SIDE-DROP",
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-MRG-01",
+     "F-MRG-02",
+     "F-MRG-03"
+    ],
+    "rootClass": "MERGE_RESOLUTION_LOSS",
+    "escapeReason": "union policy covered source files but a test file resolved verbatim-THEIRS dropped pin-only blocks; a UI file resolved ours carried an unbounded rendering assumption master had guarded",
+    "applicability": [
+     "any merge resolution that takes one side verbatim (tests especially -- they carry pins, not just coverage)",
+     "renderers whose layout math assumes a small fixed cap"
+    ],
+    "proposedProtection": [
+     "merge resolution policy: for files with pin/regression blocks, diff-block level instead of whole-file side choice",
+     "bounding assertion when a renderer's element count is data-driven"
+    ],
+    "capabilityDelta": "merge-resolution audits must enumerate dropped blocks, not only conflicted hunks"
+   }
+  }
+ ]
+}

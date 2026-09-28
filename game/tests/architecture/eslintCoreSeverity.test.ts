@@ -46,8 +46,9 @@ const ANY_PROBE = 'export function probe(): any {\n  return null\n}\n'
 
 describe('R14.1a — AR-33: declared core lint severity is the effective one', () => {
   // ESLint + vue-tsc plugin resolution is heavyweight (~2-4s standalone,
-  // more under full-suite load); the suite default 5s is not enough.
-  const LINT_GUARD_TIMEOUT = 60_000
+  // more under full-suite load); the suite default 5s is not enough, and
+  // Windows full-suite contention was observed starving this past 60s.
+  const LINT_GUARD_TIMEOUT = 120_000
 
   it('no-explicit-any is an ERROR (severity 2) for src/core files', { timeout: LINT_GUARD_TIMEOUT }, async () => {
     const results = await lintProbe(ANY_PROBE, 'src/core/probe.ts')

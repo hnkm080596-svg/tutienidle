@@ -8,6 +8,7 @@
 // >1 player unit; polish đầy đủ là Party UI spec riêng sau).
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { formatNumber } from '@/core/format/NumberFormatter'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useStateVersion } from '@/composables/useGameState'
 import { buffDisplayName } from '@/core/buff2/BuffNames'
@@ -63,14 +64,6 @@ const isRoundOverLimit = computed(
   () => perfectClearLimit.value !== undefined && roundsElapsed.value >= perfectClearLimit.value,
 )
 
-function hpPercent(entity: { currentHp: number; maxHp: number }): number {
-  if (entity.maxHp <= 0) {
-    return 0
-  }
-
-  return Math.max(0, Math.min(100, (entity.currentHp / entity.maxHp) * 100))
-}
-
 function label(index: number): string {
   const actor = upcomingActors.value[index]
 
@@ -125,7 +118,7 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
         :class="{ 'is-dead': !member.entity.alive }"
       >
         {{ member.entity.name || member.id }}
-        <span class="turn-order-strip__member-hp">{{ Math.max(0, Math.ceil(member.entity.currentHp)) }}/{{ member.entity.maxHp }}</span>
+        <span class="turn-order-strip__member-hp">{{ formatNumber(Math.max(0, Math.ceil(member.entity.currentHp))) }}/{{ formatNumber(Math.max(0, Math.ceil(member.entity.maxHp))) }}</span>
         <span v-if="!member.entity.alive" class="turn-order-strip__member-dead">†</span>
         <span
           v-for="buff in visibleBuffs(member)"

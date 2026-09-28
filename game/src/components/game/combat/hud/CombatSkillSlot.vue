@@ -14,6 +14,7 @@
 // lieu core, KHONG duoc hop nhat lai thanh 1 semantic o day. Moi call
 // site tu map state CUA MINH sang prop trung lap ben duoi.
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import SlotView from '@/components/common/SlotView.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
 import type { Skill } from '@/core/skill/Skill'
@@ -74,13 +75,15 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{ click: [] }>()
 
+const { t } = useI18n()
+
 function onClick() {
   if (props.isTappable) {
     emit('click')
   }
 }
 
-const label = computed(() => props.displayLabel ?? props.skill?.name ?? props.emptyLabel ?? 'Trống')
+const label = computed(() => props.displayLabel ?? props.skill?.name ?? props.emptyLabel ?? t('combat.overlay.skillBar.empty'))
 
 const slotState = computed<SlotPresentationState>(() => {
   if (props.isLocked) {
@@ -165,7 +168,7 @@ const tooltip = computed<TooltipContent | undefined>(() => {
       {{ resourceCost }}
     </span>
 
-    <span v-if="isUnreleased" class="combat-skill-slot__unreleased">Chưa Ra Mắt</span>
+    <span v-if="isUnreleased" class="combat-skill-slot__unreleased">{{ t('combat.overlay.skillBar.unreleased') }}</span>
   </div>
 </template>
 
@@ -261,5 +264,13 @@ const tooltip = computed<TooltipContent | undefined>(() => {
 .combat-skill-slot.is-out-of-range :deep(.slot-view) {
   filter: grayscale(0.6);
   opacity: 0.7;
+}
+
+/* Cast-blocked cause cue: the resource cost flips to crimson so a
+   greyed slot also shows WHY it cannot be cast. */
+.combat-skill-slot.is-insufficient .combat-skill-slot__resource-cost,
+.combat-skill-slot.is-out-of-range .combat-skill-slot__resource-cost {
+  color: var(--crimson);
+  font-weight: 700;
 }
 </style>

@@ -1,0 +1,11 @@
+{
+  "reviewer": "devin-f43b7c57a82b47658fc48b94921dd7d3",
+  "verdict": "FINDINGS -- 1 Low + 3 Nit; all latent/dormant or documented",
+  "evidence": "isolated adversarial integration review @de23c053: awaitStep mechanics, marker-loop semantics, deferred-resolve surfaces, stamp census",
+  "findings": [
+    "INT-1 (Low): awaitStep ANIMATION_FALLBACK_MS timer callback throws domain faults from driveStepWork WITHOUT calling done() -- the step never completes, turn token stays claimed forever, advanceCombat early-returns = silent freeze on a timer thread",
+    "INT-2 (Nit): appliedTargetIds docblock claims apply_buff-only semantics -- impl at :508-514 pushes ANY resolved op on an affected target",
+    "INT-3 (Nit, dup): intercept once-roll consumed pre-route -- documented latent F-PTR-148/F-PTR-194 lineage",
+    "INT-4 (Nit): CombatSystemDamageAdapter stamps isPrimary:true on every hit -- zero engine readers, inert drift"
+  ]
+}

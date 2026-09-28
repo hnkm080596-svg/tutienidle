@@ -21,6 +21,7 @@ export const STAT_METADATA: Partial<Record<StatType, StatMetadata>> = {
   blockEffectiveness: { unit: 'percent', min: 0, max: 0.75 },
   endurancePercent: { unit: 'percent', min: 0, max: 0.75 },
   manaShieldPercent: { unit: 'percent', min: 0, max: 0.8 },
+  linhLucHoTheCap: { unit: 'percent', min: 0, max: 0.75 },
   leechPercent: { unit: 'percent', min: 0, max: 0.25 },
   finalDamagePercent: { unit: 'percent', min: -1 },
   finalDamageReductionPercent: { unit: 'percent', min: 0, max: 0.75 },

@@ -1,0 +1,62 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "id": "F-PTR-252",
+   "title": "post-window decline leaves paid cost + ward on a never-landed cast",
+   "state": {
+    "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "subsystem": "core",
+   "duplicateOf": null,
+   "rejectionReason": "documented accepted-latent already recorded at TurnBattleSystem.ts:3181-3190 and gate comment 3214-3217; reviewer itself flags it documented",
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "closedAt": "2026-09-27T12:22:00Z",
+   "severity": "Low",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": ":3181-3190",
+     "revision": "29b4719c",
+     "basis": "SOURCE"
+    }
+   ],
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "evidenceIds": [],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "classification": "NON_ACTIONABLE",
+   "reachability": "FIXTURE_INJECTED",
+   "actionable": false,
+   "discoveredBy": "cleanQ INT",
+   "expected": "no persistent writes for declined casts",
+   "actual": "unreachable today -- already recorded as accepted-latent",
+   "rootCause": "re-derivation of the documented ordering hazard",
+   "rootClass": "DOCUMENTED_LATENT",
+   "repair": "none -- documented accepted-latent",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "enumerate same-class sites against the repaired authority/policy",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "sibling sites enumerated"
+     ],
+     "coverageLimits": [
+      "fixture-injected or documented-latent reachability only"
+     ]
+    }
+   ],
+   "closeReason": "rejected: documented accepted-latent",
+   "counterexample": "none reachable: no enemy resourceCost, resolver throws are authored-data defects"
+  }
+ ]
+}

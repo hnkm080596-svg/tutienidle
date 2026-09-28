@@ -1,0 +1,46 @@
+{
+ "run": "phap-tu-reimagine-2026-09-26",
+ "reviewId": "REV-PTR-AUT-F1",
+ "reviewer": "devin-42b954089c61405cadb7264acf3078c2",
+ "phase": "AUTHORITY",
+ "pin": "6d0722b2",
+ "verdict": "FINDINGS -- 1 Low + 4 Nit",
+ "adjudication": [
+  {
+   "finding": "F-PTR-73 (F-AUTF-1) / Low",
+   "disposition": "FIXED @1a4ea837",
+   "verification": "shared helper src/core/combat/hoTheDamageReduction.ts owns {cap, dr} for both CombatSystem consumer and presentation bridge (bridge returns null when cap<=0)"
+  },
+  {
+   "finding": "F-PTR-74 (F-AUTF-2) / Nit",
+   "disposition": "FIXED @1a4ea837",
+   "verification": "BuffSystem.isBoundSourceGone helper owns the bound-marker staleness predicate at all 3 sites"
+  },
+  {
+   "finding": "F-PTR-75 (F-AUTF-3) / Nit",
+   "disposition": "FIXED @1a4ea837 -- same stamp fix as COR F-2 (unconditional GENERIC exclusion)"
+  },
+  {
+   "finding": "F-PTR-76 (F-AUTF-4) / Nit",
+   "disposition": "FIXED @1a4ea837",
+   "verification": "TheEconomy.drainAllThe(entity) is the pool-drain authority; TBS commitCast calls it instead of the direct write"
+  },
+  {
+   "finding": "F-PTR-77 (F-AUTF-5) / Nit",
+   "disposition": "FIXED @1a4ea837 -- CastLeveling comment rewritten to current module names"
+  }
+ ],
+ "attackVectorsProbed": [
+  "The pool write authority census",
+  "commitsCast dedup across every mint lane",
+  "route retirement residue",
+  "bound-marker lifecycle",
+  "cap ownership"
+ ],
+ "sealedSurfaces": [
+  "one landedConsequences consumer each lane",
+  "unrouted casts report + no-op",
+  "SPELL_PATH_MAX_THE single owner",
+  "atomic element commit"
+ ]
+}

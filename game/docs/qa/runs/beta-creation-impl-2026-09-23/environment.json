@@ -1,8 +1,17 @@
 {
   "tools": {
-    "node": "v22.23.2"
+    "node": "v22.23.2",
+    "npm": "10.9.8",
+    "vitest": "4.1.11",
+    "vue-tsc": "6.0.3",
+    "eslint": "10.9.1",
+    "playwright": "1.62.1"
   },
   "os": "linux",
-  "profile": "unprofiled",
-  "note": "declare real environment profile; 'unprofiled' cannot satisfy a runtime-dependent cell"
+  "kernel": "6.8.0-1061-aws",
+  "profile": "devin-cloud-linux",
+  "browser": "chromium (playwright 1.62.1 bundled; no MS Edge on Linux per repo knowledge)",
+  "rngClockPolicy": "seeded/injected CombatRng; real wall clock for creation flow",
+  "serverIdentity": "candidate served from worktree checkout of frozen head 2d5349a6",
+  "note": "Continuation environment: fresh Devin VM (2026-09-24) replacing interrupted coordinator VM; same tool versions as prior environment where measured (node v22.23.2 identical)."
 }

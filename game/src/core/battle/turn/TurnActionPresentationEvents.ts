@@ -5,19 +5,17 @@ import type { CombatVfxPresetId, ActionTargetingShape, EnemySpawnVfxPresetId } f
 import type { TurnBattle, TurnBattleParticipant, PendingEnemySpawn, TurnBattleState } from './TurnBattleSystem'
 import { COUNTDOWN_TOTAL_TICKS } from './TurnBattleConstants'
 
-// Action Playback Task 4 (2026-09-05) — presentation event emitter cho
-// turn-based combat. GameManager là SOLE caller (Task 6), CombatScene là
-// SOLE listener (Task 7). Tái dùng 'attack'/'action_impact' event names +
-// payload shapes để CombatScene handlers hiện có hoạt động KHÔNG SỬA.
+// Turn-based combat presentation event emitter; GameManager is the sole
+// caller. Action ACK authority lives in SkillPresentationRunner via
+// skill_presentation_cast / skill_presentation_resolved - not in these events.
 //
-// 4 signals (spec §4):
-//   turn_ready             — actor tới lượt, scene chơi ready flourish rồi
-//                            acknowledgeTurnReady()
-//   attack                 — cast bắt đầu (lunge tween) → acknowledge-
-//                            ActionImpact() tại impact frame
-//   action_impact          — VFX preset spawn → acknowledgeActionComplete()
-//                            khi tween xong
-//   turn_standby_complete  — tail event, presentation-only bookkeeping
+// Signals:
+//   turn_ready             - actor's turn; scene plays the ready flourish
+//                            then acknowledgeTurnReady()
+//   turn_cast_start        - CombatScene plays the authored 'attack' clip
+//                            (art-wave1; clip-only, ACKs live in the runner)
+//   action_impact          - observation feed - no production subscribers
+//   turn_standby_complete  - tail event, presentation-only bookkeeping
 
 /** Fallback preset khi TurnSkillDefinition.presetId undefined (generic magic hit). */
 const DEFAULT_PRESET_ID: CombatVfxPresetId = 'arcane_impact'

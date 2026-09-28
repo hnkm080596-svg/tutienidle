@@ -1,0 +1,44 @@
+{
+  "attacks": [
+    {
+      "id": "ATK-MERGE-SIDE",
+      "surface": "per-file resolution ownership",
+      "probe": "every conflicted file resolved to the policy side: the-tu files carry master's ung-the beta verbatim; phap-tu files carry ours' sealed state; no file accidentally picked the wrong side wholesale"
+    },
+    {
+      "id": "ATK-UNION-ENGINE",
+      "surface": "shared engine hunks (TurnBattleSystem, TurnSkillAction, SkillEffect, SkillDefinitionRegistry, TheEconomy)",
+      "probe": "union preserved BOTH: ours' castBlocked/deferredResolve/SkillResolverError machinery AND master's ung-the reflect/Phan/Ho/Tro lanes; no hunk that silently dropped one side's guard, stamp, or window call"
+    },
+    {
+      "id": "ATK-DEAD-REF",
+      "surface": "symbols dropped at merge",
+      "probe": "drainAllThe/consumeThe/SpellPathRoute/routes/routeProfileProvider/kiemDaoBelowCap/SPELL_EMPOWERMENT_ESSENCE_THRESHOLD have zero live callers AND zero stale type imports; conversely every master export ours replaced still has all ITS consumers satisfied"
+    },
+    {
+      "id": "ATK-ECONOMY-MERGE",
+      "surface": "TheEconomy merged guards + write sites",
+      "probe": "master's economy set (theCap/grantThe/isUngTheCombatant/theGainOnBasicHit/theGainOnObservedAction/THE_PROC_COST/REACTION_DEBT_CAP/isQuaTheDebt/UNG_TRE_GAUGE_PENALTY/DAN_THE_INCOME_MULT) + ours' non-finite guards applied; every currentThe write is the canonical =0 drain or economy-mediated; no NaN path reopened"
+    },
+    {
+      "id": "ATK-CHARGE-RESOLVE-LANE",
+      "surface": "charge-resolve vs castBlocked",
+      "probe": "tryPlanCast isCharging skip is lane ownership not decline; a deferred-resolved cast emits 'attack', queues follow-ups, and flushes reflects exactly like master; a REAL decline of the charged def still stamps castBlocked at the deferred lane"
+    },
+    {
+      "id": "ATK-UI-MERGE",
+      "surface": "inBattle + updateThe merged signatures",
+      "probe": "inBattle prop threaded NodeTreePanel computes -> SkillPathPanel binds -> NodeInspector consumes (buy/upgrade/route all disabled); updateThe(current,max,threshold,phapTheActive,ungThe?) callers all on the union signature; theBarBridge produces max via maxThe ?? (bodyEconomy ? MAX_THE : THE_BAR_MAX)"
+    },
+    {
+      "id": "ATK-PIN-INTEGRITY",
+      "surface": "regenerated fingerprints + merged catalogs",
+      "probe": "BalanceMatrix pins were regenerated from the MERGED engine (kiem_tu_hien rows = master's, phap_tu_ngu_hanh rows = ours', perRecipe s/w split); buff census = 68 (master ung-the 13 + ours trang); TechniqueGate UNLOCK/CAP ids unioned correctly"
+    },
+    {
+      "id": "ATK-MERGE-SILENT",
+      "surface": "auto-merged the-tu files (git auto-unioned, never flagged conflict)",
+      "probe": "files git auto-merged in the the-tu/shared area contain no silent mismerge: duplicated blocks, both-sides edits collapsed wrong, dead imports, or master's tests referencing ours-only machinery (or vice versa)"
+    }
+  ]
+}

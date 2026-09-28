@@ -1,0 +1,25 @@
+{
+  "type": "SEAL_RECEIPT",
+  "cycle": "CYC-RB2-1",
+  "round": "clean-B-prime",
+  "candidate": "0e8351bd",
+  "lens": "AUTHORITY",
+  "reviewerSession": "94d25515c80c46129fd6c5c5df7a07d2",
+  "verdict": "FINDINGS",
+  "priorFindingsVisible": false,
+  "findings": [
+    {
+      "id": "QA-AUTH-1",
+      "severity": "Low",
+      "title": "linh_bao missing TURN_SKILL_DISPLAY_META entry (precursor literal drift)",
+      "disposition": "fixed @623b8b6f: linh_bao fromSkills entry added + precursor coverage joined into the productionTurnSkillIds sweep"
+    },
+    {
+      "id": "QA-AUTH-2",
+      "severity": "Low",
+      "title": "remote pull loses discardedEquipmentCount handoff (observability asymmetry vs import)",
+      "disposition": "fixed @623b8b6f: pull seam writes the same one-shot handoff marker bound to stored bytes; pin asserts marker + one-shot loadGame consume"
+    }
+  ],
+  "evidenceSummary": "vue-tsc clean; scoped vitest 26 files/681 tests pass; 1 deterministic failing repro (QA-AUTH-1). Authority proven single; live-vs-static catalogs proven equivalent for production."
+}

@@ -58,6 +58,12 @@ function disabledReason(slot: CommandWheelSlot): string | null {
   return slot.disabledReason?.(disabledContext.value) ?? null
 }
 
+// Catalog stores labelKey (no VI string) - resolves via t() so the wheel
+// follows the selected locale.
+function slotLabel(slot: CommandWheelSlot): string {
+  return t(slot.labelKey)
+}
+
 /** Future slot (available=false) tồn tại trong catalog nhưng KHÔNG render. */
 const renderedSlots = computed(() => COMMAND_WHEEL_SLOTS.filter((slot) => slot.available()))
 
@@ -88,7 +94,11 @@ function outerOrbitRadius(): number {
   // chừa mép màn hình; khoảng trống tâm phải đủ để không che sprite nhân vật.
   // Sàn 168px KHÔNG được vượt bottomFit — cửa sổ thấp thà vòng nhỏ còn hơn
   // slot tràn khỏi mép dưới viewport.
-  const bottomFit = height * 0.34 - 32
+  // margin must cover HALF the slot height (~34-44px) plus edge clearance
+  // - before, subtracting only 32px clipped the last orbit slot at the
+  // bottom viewport edge.
+  // (ui-audit creation-meta).
+  const bottomFit = height * 0.34 - 56
   const ideal = Math.max(168, Math.min(340, shortSide * 0.34))
   return Math.max(96, Math.min(ideal, bottomFit))
 }
@@ -280,20 +290,9 @@ function hasBreakthroughBadge(slot: CommandWheelSlot): boolean {
   return slot.id === 'character' && player.cultivationProgress >= 1
 }
 
-// Icon riêng từng slot (2026-09-06, user muốn mỗi nút wheel 1 icon khác
-// nhau) — path suy thẳng từ slot.id, KHÔNG cần thêm field `icon` vào
-// catalog (catalog vẫn thuần data tối giản). Asset chưa có thì @error
-// ẩn <img> đi, chỉ còn label chữ như hiện tại — không vỡ layout khi
-// art chưa được thả vào (xem asset-drop/README.md để biết tên file cần thả).
-function wheelIconPath(slot: CommandWheelSlot): string {
-  return `/assets/ui/wheel/${slot.id}.png`
-}
-
-function onIconError(event: Event) {
-  const img = event.target as HTMLImageElement
-
-  img.style.display = 'none'
-}
+// Icon pipeline removed (ui-audit creation-meta): public/assets/ui/wheel/
+// never had assets so every <img> 404'd. When the art drop lands (manifest
+// in asset-drop/README.md) restore it from git history.
 
 // Chọn shortcut: đóng wheel TRƯỚC rồi mới mở panel/overlay tương ứng.
 function activate(slot: CommandWheelSlot) {
@@ -364,22 +363,13 @@ function activate(slot: CommandWheelSlot) {
         ]"
         :style="slotStyle(slot, index, renderedSlots.length)"
         :data-wheel-orbit="index % ORBIT_COUNT"
-        :aria-label="slot.label"
+        :aria-label="slotLabel(slot)"
         :data-wheel-slot="slot.id"
         :aria-disabled="Boolean(disabledReason(slot))"
         v-tooltip="disabledReason(slot) ?? undefined"
         @click="activate(slot)"
       >
-        <img
-          class="command-wheel__icon"
-          :src="wheelIconPath(slot)"
-          alt=""
-          aria-hidden="true"
-          draggable="false"
-          @error="onIconError"
-        >
-
-        <span class="command-wheel__label">{{ slot.label }}</span>
+        <span class="command-wheel__label">{{ slotLabel(slot) }}</span>
 
         <span v-if="isUpgradeable(slot)" class="command-wheel__upgrade-dot" aria-hidden="true" />
 
@@ -500,13 +490,6 @@ function activate(slot: CommandWheelSlot) {
   opacity: 1;
   transform: rotate(var(--end-angle)) translateY(calc(-1 * var(--orbit-radius)))
     rotate(var(--end-counter-angle)) translate(-50%, -50%);
-}
-
-.command-wheel__icon {
-  width: 22px;
-  height: 22px;
-  object-fit: contain;
-  pointer-events: none;
 }
 
 .command-wheel__slot:hover,

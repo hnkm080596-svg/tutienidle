@@ -1,0 +1,63 @@
+{
+ "artifact": "cleanR AUT reviewer verdict summary",
+ "run": "phap-tu-reimagine-2026-09-26",
+ "reviewer": "devin-91ceab249fc84cc7841b7f75c673030c",
+ "reviewerRole": "clean-architecture",
+ "pin": "7d837a91",
+ "productStateId": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+ "verdict": "FINDINGS",
+ "findings": [
+  {
+   "n": 1,
+   "severity": "Low",
+   "file": "src/core/game/TurnBattleAdapter.ts:92-93 vs src/core/combat/CombatBuild.ts:242-245",
+   "claim": "Dormant second write site on entity.maxThe: adapter stamps resolvedSpecialUltimate.maxThe while CombatBuild also writes it; same upstream today so values cannot diverge, but a divergent caller would silently get a second write.",
+   "disposition": "FIXED -- adapter stamp now faults on divergence ('conflicting maxThe') instead of silently overwriting + pin 'a divergent cap on an already-capped entity faults'"
+  },
+  {
+   "n": 2,
+   "severity": "Low",
+   "file": "src/core/battle/turn/TurnBattleSystem.ts:1812-1825, SkillResolver.ts:220-235, theBarBridge.ts",
+   "claim": "Empowerment predicate evaluated at three sites (declare swap / resolver re-eval / HUD mirror).",
+   "disposition": "REJECTED_WITH_PROOF -- duplication is structurally forced (buildPhapTheVariant keeps base def id -> no preResolved); divergence window verified unreachable (intercept window only drains the protector's pool, not the attacker's); documented at SkillResolver.ts:211-219, claim verified truthful"
+  },
+  {
+   "n": 3,
+   "severity": "Low",
+   "file": "src/core/battle/turn/TurnBattleSystem.ts:2780-2863 vs SkillDefinitionRegistry.ts:453-461",
+   "claim": "Latent repeat-of-empowered hole: declareQueuedExecution re-picks composite per execution but never re-evaluates empowerment, so a repeat of an empowered cast replays the BASE payload; registry faults empowerment+compositePool but not empowerment+repeatCasts. Unreachable today (kit basics carry no repeatCasts).",
+   "disposition": "FIXED -- new registry fault 'empowerment and subcasts.count are mutually exclusive' (subcasts.count > 0 only; multicast exempt since empowered/repeat sources are already excluded from the roll) + pin"
+  },
+  {
+   "n": 4,
+   "severity": "Nit",
+   "file": "TurnSkillAction.ts:533 vs SkillExecutor.ts:49; TurnBattleSystem.ts:1918-1921 vs SkillResolver; TurnSkillAction.ts:407-414 vs SkillResolver.ts:361-372",
+   "claim": "Duplicated constants with parity comments but no enforcement (MAX_MULTICAST=3; theScaling formula; percentOfMax fold).",
+   "disposition": "REJECTED_WITH_PROOF -- parity verified equivalent by inspection; percentOfMax resolvePlanCost captures statScalars['maxMp'] at :516-517 so no zero-cost path; duplication already acknowledged by parity comments"
+  },
+  {
+   "n": 5,
+   "severity": "Nit",
+   "file": "src/core/battle/turn/TurnBattleSystem.ts:1374-1384",
+   "claim": "pendingQueuedExecution consumed unconditionally at declareActorAction and silently dropped on actorId mismatch, while pendingReactiveEntry survives a mismatch -- asymmetric but reachable only via out-of-order manual declares.",
+   "disposition": "FIXED -- docblock records the asymmetry (drop-on-mismatch is the safer failure)"
+  },
+  {
+   "n": 6,
+   "severity": "Nit",
+   "file": "src/core/battle/turn/TurnSkillPlanRuntime.ts:239-241",
+   "claim": "resolvedVariantId in routeCast's preResolved is unreachable: empowered source implies payloadDef.id === rootDef.id which skips the preResolved branch. Harmless latent coverage.",
+   "disposition": "REJECTED_WITH_PROOF -- harmless latent coverage for a hypothetical distinct-id empowered producer; no behavior defect"
+  }
+ ],
+ "verifiedClaims": [
+  "currentThe single-owner census: every write funnels into grantThe/consumeThe/drainAllThe; EntityResourceAdapter routes 'the' unconditionally through them and faults amount:'all'+cast_snapshot",
+  "externalWard triple-writer split documented and consistent",
+  "intercept-window ordering-hazard docblock verified: only enemy actors trigger it; enemy defs are GENERIC_PHYSICAL_BASIC (no resourceType) + damage-multiplier specialAttacks, so PRECHECK-decline unreachable",
+  "catalogFor isolates rejected catalogs correctly; WeakMap def-identity keying handles same-id different-shape defs",
+  "resolvePlanCost maxMp capture confirmed",
+  "saveAcceptance SPELL_KIT_IDS lookup verified"
+ ],
+ "testsRun": "write-site censuses verified by grep + read-through of every producer; no Critical/High/Medium",
+ "notes": "Reviewer's own proofs used for REJECTED_WITH_PROOF dispositions where the claim documented its own unreachability."
+}

@@ -1,0 +1,17 @@
+{
+ "runId": "phap-tu-reimagine-merge-2026-09-27",
+ "productRoot": ".",
+ "goal": "Verify the master-merge resolution on PR #40 (merge af364e7c + fixup 8e25a766, base ours 8166233c + master 68621987). Policy: the-tu domain -> master's side, phap-tu domain -> ours, shared engine -> per-hunk union preserving both sides' QA hardening. The seal covers pin e3cd383d; this run covers ONLY the merge product on top of it.",
+ "requiredReadiness": false,
+ "contractPaths": [
+  "docs/qa/protocol/README.md",
+  "docs/specs/phap-tu-reimagine-spec.md"
+ ],
+ "attackModelPath": "attack-model.json",
+ "checkout": "/home/ubuntu/repos/tutienidle/.agent-worktrees/phap-tu-reimagine/game",
+ "branch": "devin/1790423750-phap-tu-reimagine",
+ "base": "68621987",
+ "head": "8e25a766",
+ "capacityLimit": 5,
+ "environmentPath": "environment.json"
+}

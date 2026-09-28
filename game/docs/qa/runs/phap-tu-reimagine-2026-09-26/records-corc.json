@@ -1,0 +1,9 @@
+{
+ "closure": "REV-PTR-CLO-4",
+ "sealed": [
+  "F-PTR-36",
+  "F-PTR-37"
+ ],
+ "gate": "npx vue-tsc --build exit 0 at d1f14a03",
+ "test": "deadIds 5/5 pass"
+}

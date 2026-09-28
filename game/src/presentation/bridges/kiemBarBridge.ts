@@ -18,7 +18,7 @@
 // the current realm's forgeCost, plus live sword count/base multiplier.
 
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
-import { MAX_THE } from '@/core/combat/CombatTypes'
+import { theCap } from '@/core/the-tu/TheEconomy'
 import type { OrbId, SwordPathState } from '@/core/kiem-tu/KiemTuState'
 import { isKiemPhoProviderHandle } from '@/core/kiem-tu/KiemPhoProvider'
 import { forgeCost } from '@/core/kiem-tu/NguKiemDao'
@@ -107,7 +107,7 @@ export function makeKiemBarReader(
     if (hasStaticPathCapability(player, 'body.essence_economy')) {
       return {
         current: battleEntity?.currentThe ?? 0,
-        max: battleEntity?.maxThe ?? MAX_THE,
+        max: battleEntity === undefined ? theCap({}) : theCap(battleEntity),
         label: 'Thế',
         externalWard,
       }

@@ -1,0 +1,25 @@
+{
+  "record": "COR-D adjudication batch",
+  "head": "c71b8d1f",
+  "fixes": [
+    {
+      "finding": "F-PTR-44",
+      "severity": "Medium",
+      "edit": "CultivationPathRegistry.ts:373-382 stamp widened to `element === undefined || resolved !== GENERIC_PHYSICAL_BASIC`",
+      "verify": "npx vitest run src/core/game/GameManager.empowerment.test.ts src/core/player/CultivationPathRegistry.test.ts -> 13 passed (spec pin :88 green); type-check exit 0"
+    },
+    {
+      "finding": "F-PTR-46/47/48",
+      "severity": "Nit",
+      "edit": "stale route comments retired (GameManagerRealmAdvanceOps.ts:375, CultivationPathKit.ts:79,:389)",
+      "verify": "npx vitest run CultivationPathKit + RealmAdvanceOps + saveShapeValidation -> 381 passed; type-check exit 0"
+    }
+  ],
+  "rejects": [
+    {
+      "finding": "F-PTR-45",
+      "severity": "Low",
+      "reason": "deliberate legacy-parity connected semantics (authored comment SkillExecutor.ts:88-90 + TBS parity); spec ambiguous on resist-vs-landed for damageless basics; hazard lesson L-PTR-CORD-REJ"
+    }
+  ]
+}

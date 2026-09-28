@@ -36,6 +36,13 @@ const techniqueCompletionWarning = computed(() => {
     : undefined
 })
 
+// The equipment warning is only real when something is actually worn -
+// an always-on subtitle read as a lie on a gear-less save (ui-audit).
+const hasEquippedGear = computed(() => {
+  stateVersion.value
+  return gameManager.equipmentBag.getEquipped().length > 0
+})
+
 function onConfirm() {
   store.close()
   triggerBreakthrough()
@@ -54,7 +61,7 @@ function onCancel() {
     @close="onCancel"
   >
     <div class="breakthrough-confirm">
-      <p class="breakthrough-confirm__warning">{{ t('tribulation.stillEquipped.subtitle') }}</p>
+      <p v-if="hasEquippedGear" class="breakthrough-confirm__warning">{{ t('tribulation.stillEquipped.subtitle') }}</p>
 
       <p v-if="techniqueCompletionWarning" class="breakthrough-confirm__warning">
         {{

@@ -1,0 +1,100 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "id": "F-PTR-244",
+   "title": "SPELL_KIT_IDS[activeElement][0] throws a bare TypeError on a corrupt save carrying a non-ElementType element string",
+   "state": {
+    "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "subsystem": "core",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "closedAt": "2026-09-27T12:15:00Z",
+   "severity": "Nit",
+   "locations": [
+    {
+     "path": "src/services/save/saveAcceptance.ts",
+     "symbolOrSection": ":243-253",
+     "revision": "4d2ada93",
+     "basis": "SOURCE"
+    }
+   ],
+   "pinEvidenceIds": [
+    "EV-PTR-FIXQ1"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXQ1"
+   ],
+   "evidenceIds": [
+    "EV-PTR-FIXQ1"
+   ],
+   "closureReviewIds": [],
+   "status": "CLOSED",
+   "classification": "REAL_DEFECT",
+   "reachability": "FIXTURE_INJECTED",
+   "actionable": true,
+   "discoveredBy": "cleanQ COR",
+   "expected": "descriptive rejection on corrupt element",
+   "actual": "bare TypeError 'Cannot read properties of undefined'",
+   "rootCause": "the coherence check indexed the kit map without guarding the undefined case -- fails closed either way but the rejection surfaced as TypeError instead of the descriptive coherence error",
+   "rootClass": "CONTRACT_GAP",
+   "repair": "defensive lookup: unknown element throws 'unknown element carries no kit' @4d2ada93",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "enumerate same-class sites against the repaired authority/policy",
+     "evidenceIds": [
+      "EV-PTR-FIXQ1"
+     ],
+     "hitDispositions": [
+      "sibling sites enumerated"
+     ],
+     "coverageLimits": [
+      "fixture-injected or documented-latent reachability only"
+     ]
+    }
+   ],
+   "closeReason": "fixed @4d2ada93 -- pending closure seal",
+   "counterexample": "bare TypeError 'Cannot read properties of undefined'"
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_INTEGRATION",
+    "id": "EV-PTR-CLO19",
+    "state": {
+     "productStateId": "68d6f324141b5ad199d28c3fa22d7613bb0afa45b751bb97c2291644b55ed283",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "status": "STALE",
+    "producer": "devin-987966cfb53446ffa857059c9922f451",
+    "startedAt": "2026-09-27T12:10:00Z",
+    "finishedAt": "2026-09-27T12:15:00Z",
+    "commandOrMethod": "closure review @068c7360: SEALED -- all 20 pending closure claims verified (wave-O 7/7, wave-P 9/9, COR-P 4/4); type-check exit 0; 134 files/1639 tests PASS",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "records-clo19.json",
+    "artifactHash": "65731232e2a133a3bd71cc07071d0bb818f70d9e017e039c903e08a2b811af0e",
+    "claims": [
+     "all 20 pending closure claims verified at pin 068c7360"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": [],
+    "limitations": []
+   }
+  }
+ ]
+}

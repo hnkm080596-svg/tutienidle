@@ -9,7 +9,7 @@ import { getSkillCoreUpgradeCost } from '../progression/SkillCoreLevel'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 import { SKILLS } from '../../data/skill/Skills'
-import { PHAP_TU_SKILLS } from '../../data/skill/PhapTuChainSkills'
+import { PHAP_TU_SKILLS } from '../../data/skill/PhapTuSkills'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 
 // M-F-RESPEC (ruling S14) - ops-level contract for the player respec:
@@ -135,7 +135,6 @@ describe('progressionOps.respecNodeTree', () => {
     // Committed element: root held via selectSpellPathElement's atomic
     // grant semantics, two growth levels invested on top.
     player.spellPath.element = 'fire'
-    player.spellPath.route = 'dot'
     own(player, { [rootId]: 1, [growth.id]: 2 })
     player.skillInsight = 100
 
@@ -162,7 +161,6 @@ describe('progressionOps.respecNodeTree', () => {
     )!
 
     player.spellPath.element = 'fire'
-    player.spellPath.route = 'dot'
     own(player, { [rootId]: 1, [growth.id]: 2 })
     player.skillInsight = 100
 
@@ -195,7 +193,6 @@ describe('progressionOps.respecNodeTree', () => {
     const rootId = PHAP_TU_ELEMENT_ROOT_IDS.fire
 
     player.spellPath.element = 'fire'
-    player.spellPath.route = 'dot'
     own(player, { [rootId]: 1 })
     player.skillInsight = 100
 
@@ -218,7 +215,6 @@ describe('progressionOps.respecNodeTree', () => {
     // that is the canonical grant shape produced by
     // grantCultivationPathRealmReward.
     player.spellPath.element = 'fire'
-    player.spellPath.route = 'dot'
     player.nodeLevels[reward.id] = 2
     player.skillInsight = 100
 
@@ -280,8 +276,8 @@ describe('progressionOps.respecNodeTree', () => {
         prerequisites: [{ kind: 'node', nodeId: 'ops_root' }],
         effect: {
           selectsSpecialization: {
-            skillId: 'tam_muoi_chan_hoa',
-            specializationId: 'tam_muoi_tu_diem',
+            skillId: 'hoa_cau_thuat',
+            specializationId: 'hoa_tu_diem',
           },
         },
       }),
@@ -292,7 +288,7 @@ describe('progressionOps.respecNodeTree', () => {
     player.skillInsight = 100
     gameManager.setActivePlayer(player)
 
-    gameManager.progressionOps.learnSkill('tam_muoi_chan_hoa', player)
+    gameManager.progressionOps.learnSkill('hoa_cau_thuat', player)
     own(player, { ops_root: 1, core_linh_bao: 3 })
     expect(gameManager.progressionOps.purchaseNode('grant_skill', player)).toBe(true)
     expect(gameManager.progressionOps.purchaseNode('grant_spec', player)).toBe(true)
@@ -320,7 +316,7 @@ describe('progressionOps.respecNodeTree', () => {
     const whole = gameManager.progressionOps.previewNodeRespec(player)
 
     expect(whole.clawback?.clearedSpecializations).toEqual([
-      { skillId: 'tam_muoi_chan_hoa', specializationId: 'tam_muoi_tu_diem' },
+      { skillId: 'hoa_cau_thuat', specializationId: 'hoa_tu_diem' },
     ])
 
     // The dry-run mutated nothing.

@@ -73,7 +73,7 @@ describe('TurnBattleSystem — declareActorAction/applyActionImpact/completeActi
     const { battle, enemyEntity } = battleFixture()
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    const actor = system.peekNextActor(battle)
+    const actor = system.dequeueNextActorForClaim(battle)
 
     expect(actor).not.toBeNull()
 
@@ -87,7 +87,7 @@ describe('TurnBattleSystem — declareActorAction/applyActionImpact/completeActi
     const { battle, enemyEntity } = battleFixture()
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    const actor = system.peekNextActor(battle)!
+    const actor = system.dequeueNextActorForClaim(battle)!
     const declared = system.declareActorAction(battle, actor)
 
     const hpBefore = enemyEntity.currentHp
@@ -102,7 +102,7 @@ describe('TurnBattleSystem — declareActorAction/applyActionImpact/completeActi
     const { battle } = battleFixture()
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    const actor = system.peekNextActor(battle)!
+    const actor = system.dequeueNextActorForClaim(battle)!
     const declared = system.declareActorAction(battle, actor)
     const { targetIds } = system.applyActionImpact(battle, declared)
 
@@ -153,7 +153,7 @@ describe('TurnBattleSystem — playback edge cases (Remediation Task 7)', () => 
     const { battle, enemyEntity } = battleFixture()
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    const actor = system.peekNextActor(battle)!
+    const actor = system.dequeueNextActorForClaim(battle)!
     const declared = system.declareActorAction(battle, actor)
 
     // Target chết NGAY TRƯỚC impact (ví dụ DoT/respawn giữa chừng).
@@ -186,7 +186,7 @@ describe('TurnBattleSystem — playback edge cases (Remediation Task 7)', () => 
     }
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
-    const actor = system.peekNextActor(battle)!
+    const actor = system.dequeueNextActorForClaim(battle)!
     const declared = system.declareActorAction(battle, actor)
 
     // Miss deterministic: đè rollHit qua prototype của CombatSystem —
@@ -225,7 +225,7 @@ describe('TurnBattleSystem — playback edge cases (Remediation Task 7)', () => 
     const { battle } = battleFixture()
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    const actor = system.peekNextActor(battle)!
+    const actor = system.dequeueNextActorForClaim(battle)!
     const declared = system.declareActorAction(battle, actor)
     const { targetIds } = system.applyActionImpact(battle, declared)
 

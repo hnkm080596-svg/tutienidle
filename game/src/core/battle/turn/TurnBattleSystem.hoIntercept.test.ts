@@ -12,6 +12,7 @@ import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import { buffs as LIVE_BUFFS } from '../../../data/buff/buffs'
 import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
+import { TurnSkillPlanRuntime } from './TurnSkillPlanRuntime'
 import { PHAN_KICH, buildTheTuAnKit } from '../../../data/skill/TheTuSkills'
 import { PHAN_CHAN_BUFF, PHAN_CHAN_BASE_RATIO } from '../../../data/buff/TheTuBuffs'
 import { THE_PROC_COST, UNG_TRE_GAUGE_PENALTY, REACTION_DEBT_CAP } from '../../the-tu/TheEconomy'
@@ -231,6 +232,20 @@ afterEach(() => {
 })
 
 describe('Ho intercept window (Ung The beta)', () => {
+  it('keeps intended anchor detached while receipt points at actual protector', () => {
+    const f = makeFixture()
+    withHoMon(f, f.protectorP, 1, 15)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const declared = declaredAgainst(f, [f.squishyP])
+    const intended = declared.affected.map(p => ({ entityId: p.id, row: p.entity.row, column: p.entity.x }))
+    const result = system(f).applyActionImpact(f.battle, declared)
+    expect(intended[0]!.entityId).toBe(f.squishyP.id)
+    const hits = result.presentationGroups.flatMap(g => g.outcomes).filter(o => o.kind === 'hit')
+    expect(hits).toHaveLength(1)
+    expect(hits[0]!.target.entityId).toBe('protector')
+    expect(hits[0]!.operationId).toBeDefined()
+    expect(result.presentationGroups[0]!.actualTargets.map(t => t.entityId)).toEqual(['protector'])
+  })
   it('a successful protectChance roll substitutes the protector — pays on success only, +1 debt', () => {
     const f = makeFixture()
     withHoMon(f, f.protectorP, 1, THE_PROC_COST)
@@ -369,6 +384,82 @@ describe('Ho intercept window (Ung The beta)', () => {
     expect(f.squishyP.entity.currentHp).toBeLessThan(100_000)
     expect(f.protectorP.entity.currentThe).toBe(THE_PROC_COST) // untouched
     expect(f.protectorP.reactionDebt ?? 0).toBe(0)
+  })
+
+  it('a statically unviable cast never opens the window — no roll, no drain, no ward', () => {
+    // NOVA-1: a cast the adapter cannot route stamps castBlocked at the
+    // lane gate -- the Ho window must not charge the protector's proc
+    // cost (and mint the ward) on that phantom hit. Repeated dead casts
+    // would otherwise drain the protector pool and farm wards.
+    const f = makeFixture()
+    withHoMon(f, f.protectorP, 1, 100)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    vi.spyOn(TurnSkillPlanRuntime.prototype, 'unsupportedFor').mockReturnValue(['unsupported op'])
+
+    const declared = declaredAgainst(f, [f.squishyP])
+    system(f).applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBeUndefined()
+    expect(declared.interceptedBy).toBeUndefined()
+    expect(declared.affected).toEqual([f.squishyP])
+    expect(f.protectorP.entity.currentThe).toBe(100) // never charged
+    expect(f.squishyP.entity.currentWard).toBe(0) // no ward minted
+  })
+
+  it('a dead-payload declare (action == null) never opens the window', () => {
+    // NOVA-1: a non-chargeResolved declare with action:null is a dead
+    // cast (NULL_ACTION / cc-blocked declare) -- the window must stay
+    // closed, charging nothing and minting no ward on a phantom hit.
+    const f = makeFixture()
+    withHoMon(f, f.protectorP, 1, 100)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const declared = declaredAgainst(f, [f.squishyP])
+    declared.action = null
+    system(f).applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBeUndefined()
+    expect(f.protectorP.entity.currentThe).toBe(100) // never charged
+    expect(f.squishyP.entity.currentWard).toBe(0) // no ward minted
+  })
+
+  it('a whiffed cast (empty affected) never opens the window', () => {
+    // NOVA-1: the exact class that previously paid the protector's
+    // proc cost on a phantom hit -- no surviving target means no
+    // swing, so no roll, no drain, no ward.
+    const f = makeFixture()
+    withHoMon(f, f.protectorP, 1, 100)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const declared = declaredAgainst(f, [])
+    system(f).applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBeUndefined()
+    expect(f.protectorP.entity.currentThe).toBe(100) // never charged
+  })
+
+  it('a charge-init declare (chargeTurns>0, !isCharging) never opens the window', () => {
+    // NOVA-1: the charge discriminant -- a cast that only DECLARES the
+    // charge produces no swing this turn, so the window stays closed.
+    const f = makeFixture()
+    withHoMon(f, f.protectorP, 1, 100)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const declared = declaredAgainst(f, [f.squishyP])
+    declared.skillId = ENEMY_CHARGED.id
+    declared.action = {
+      skillId: ENEMY_CHARGED.id,
+      skill: ENEMY_CHARGED,
+      damage: ENEMY_CHARGED.damage,
+      targeting: ENEMY_CHARGED.targeting,
+      slot: null,
+    }
+    declared.scaledDamage = ENEMY_CHARGED.damage ?? null
+    system(f).applyActionImpact(f.battle, declared)
+
+    expect(declared.intercepted).toBeUndefined()
+    expect(f.protectorP.entity.currentThe).toBe(100) // never charged
+    expect(f.squishyP.entity.currentWard).toBe(0) // no ward minted
   })
 
   it('multi-target (AoE) actions never open the window', () => {

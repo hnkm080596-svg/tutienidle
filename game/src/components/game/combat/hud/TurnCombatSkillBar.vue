@@ -9,6 +9,7 @@
 // display metadata); fallback nhãn role (Thường/Đặc Biệt/Tuyệt Kỹ) khi
 // id không có trong map. Tooltip qua tooltipOverride của CombatSkillSlot.
 import { computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import CombatSkillSlot from './CombatSkillSlot.vue'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
 import { useGameManager } from '@/composables/useGameState'
@@ -21,10 +22,10 @@ import type { TooltipContent } from '@/composables/useTooltip'
 
 const ROLE_ORDER: readonly TurnSkillSlotRole[] = ['basic', 'special', 'ultimate']
 
-const ROLE_LABELS: Record<TurnSkillSlotRole, string> = {
-  basic: 'Thường',
-  special: 'Đặc Biệt',
-  ultimate: 'Tuyệt Kỹ',
+const { t } = useI18n()
+
+function roleLabel(role: TurnSkillSlotRole): string {
+  return t(`combat.overlay.skillBar.roles.${role}`)
 }
 
 // Bảng 9.5 #5 — nhãn hiển thị do CombatSkillSlot tự resolve qua
@@ -143,7 +144,7 @@ function tapSlot(role: TurnSkillSlotRole): void {
           class="turn-combat-skill-bar__slot-button turn-combat-skill-bar__slot-button--orb"
           :class="{ 'is-tappable': isAwaitingChoice }"
           :disabled="!isAwaitingChoice"
-          :aria-label="`Dùng ${orbLabel(orb)}`"
+          :aria-label="t('combat.overlay.skillBar.use', { name: orbLabel(orb) })"
           @click="chooseDynamicBasic(orb.id)"
         >
           <CombatSkillSlot
@@ -169,7 +170,7 @@ function tapSlot(role: TurnSkillSlotRole): void {
           v-tooltip="anEmblemTooltip"
         >
           <span class="turn-combat-skill-bar__emblem-name">{{ anEmblemMeta?.name ?? 'Ngộ Đạo Hỗn Độn' }}</span>
-          <span class="turn-combat-skill-bar__emblem-tag">Bị Động</span>
+          <span class="turn-combat-skill-bar__emblem-tag">{{ t('combat.overlay.skillBar.passiveTag') }}</span>
         </div>
 
         <button
@@ -178,11 +179,11 @@ function tapSlot(role: TurnSkillSlotRole): void {
           class="turn-combat-skill-bar__slot-button"
           :class="{ 'is-tappable': isTappable(entryAt(slot.index)) }"
           :disabled="!isTappable(entryAt(slot.index))"
-          :aria-label="`Dùng ${ROLE_LABELS[slot.role]}`"
+          :aria-label="t('combat.overlay.skillBar.use', { name: roleLabel(slot.role) })"
           @click="tapSlot(slot.role)"
         >
           <CombatSkillSlot
-            :empty-label="ROLE_LABELS[slot.role]"
+            :empty-label="roleLabel(slot.role)"
             :display-label="entryAt(slot.index).skillName"
             :display-icon="entryAt(slot.index).skillIcon"
             :remaining="entryAt(slot.index).cooldownRemaining"
@@ -202,28 +203,35 @@ function tapSlot(role: TurnSkillSlotRole): void {
         :checked="isManualMode"
         @change="setManualMode(($event.target as HTMLInputElement).checked)"
       />
-      <span>Thủ công</span>
+      <span>{{ t('combat.overlay.skillBar.manualToggle') }}</span>
     </label>
 
-    <span v-if="isAwaitingChoice" class="turn-combat-skill-bar__awaiting">Đến lượt bạn — chọn kỹ năng</span>
+    <span v-if="isAwaitingChoice" class="turn-combat-skill-bar__awaiting">{{ t('combat.overlay.skillBar.awaitingChoice') }}</span>
   </div>
 </template>
 
 <style scoped>
 .turn-combat-skill-bar {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   pointer-events: auto;
 }
 
 .turn-combat-skill-bar__slots {
   display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
+/* The button owns the slot's footprint: SlotView inside is
+   width:100%+aspect-ratio:1 of a shrink-to-fit parent, so without an
+   explicit size here the whole control collapses to ~2x2px. */
 .turn-combat-skill-bar__slot-button {
   position: relative;
+  flex: none;
+  width: var(--combat-skill-slot-size, 64px);
   padding: 0;
   border: none;
   background: none;
@@ -248,8 +256,8 @@ function tapSlot(role: TurnSkillSlotRole): void {
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-width: 56px;
-  min-height: 56px;
+  min-width: var(--combat-skill-slot-size, 64px);
+  min-height: var(--combat-skill-slot-size, 64px);
   padding: 4px 6px;
   border: 1px solid var(--gold-700, #d4a72c);
   border-radius: 8px;
@@ -283,5 +291,6 @@ function tapSlot(role: TurnSkillSlotRole): void {
 .turn-combat-skill-bar__awaiting {
   font-size: var(--text-xs, 12px);
   color: var(--jade, #4caf50);
+  text-align: center;
 }
 </style>

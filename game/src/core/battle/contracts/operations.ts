@@ -152,12 +152,16 @@ export interface DealDamageOperation {
         resolves power/mitigation vs THIS entity while origin.sourceId
         keeps vitals/event attribution. Absent = origin.sourceId. */
     statSourceId?: CombatEntityId
-    /** Instance-local penetration bonus (canonical-seals addendum):
-        ADDITIVE points on top of the source's elemental penetration
-        stat at damage resolution -- never a stats mutation. Legal iff
-        origin.kind === 'buff_periodic' AND damageProfile ===
-        'legacy_dot' AND element is an ElementType (never 'physical' /
-        undefined); structural validation faults any other carrier. */
+    /** Instance-local penetration bonus (canonical-seals addendum +
+        spec D7): ADDITIVE points on top of the source's elemental
+        penetration stat at damage resolution -- never a stats
+        mutation. Legal iff element is an ElementType (never
+        'physical' / undefined) AND the carrier is EITHER
+        (origin.kind === 'buff_periodic' AND damageProfile ===
+        'legacy_dot') OR (origin.kind === 'skill' AND damageProfile ===
+        'skill_hit' -- the authored elementalPenetration /
+        penetrationFromStacks channels fold here); structural
+        validation faults any other carrier. */
     elementalPenetrationBonus?: number
     /** Contract v1.6 -- DECLARED hit/crit/armor intent. The producer
         declares, DamageAuthority consumes CombatRng and performs every

@@ -39,6 +39,7 @@ import type { ActiveSkillDefinition } from './SkillDefinition'
 import { SkillDefinitionRegistry } from './SkillDefinitionRegistry'
 import { SkillResolver } from './SkillResolver'
 import { SkillExecutor } from './SkillExecutor'
+import type { SkillExecutionHooks } from './SkillExecutionHooks'
 
 // ---------------------------------------------------------------------------
 // Fake state
@@ -87,6 +88,9 @@ interface HarnessOptions {
   applyHook?: (
     req: Parameters<BuffAuthority['apply']>[0],
   ) => 'resist' | undefined
+  /** execution hooks wired into the built executor (orchestration-slot
+      spies: landed gates, plan boundary, op settle). */
+  hooks?: SkillExecutionHooks
   rng?: CombatRng
 }
 
@@ -408,6 +412,7 @@ export function makeHarness(options: HarnessOptions = {}): SkillExecutorHarness 
     queries,
     commitPort,
     rng,
+    options.hooks,
   )
 
   return {

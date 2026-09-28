@@ -322,6 +322,10 @@
      action bar: --top-bar-h/--bottom-bar-h đã xoá vì hết consumer.
      ============================================================ */
   --combat-topbar-h: clamp(46px, 4.8vh, 72px);
+  /* UI audit 2026-09-28 — intrinsic size for one HUD skill slot. The
+     slot-view inside scales to fill its button, so the button must own
+     the size (shrink-to-fit collapse regression). */
+  --combat-skill-slot-size: 64px;
 
   /* ============================================================
      WS2 Typography & interaction tokens (2026-08-24)
@@ -452,6 +456,11 @@
    internals) render legibly on the dark art with zero per-component
    edits — ONE owner for the drawer surface contract (roadmap R11).
    Guard: tests/architecture/inkDrawerSurface.test.ts. */
+/* The paper->surface token map is duplicated across the drawer rule and
+   .paper-on-dark below on purpose: the inkDrawerSurface pin requires the
+   drawer class to be defined exactly once (any selector position counts,
+   even line-starting comment mentions), so the two rules cannot share a
+   combined selector. Keep both copies identical. */
 .ink-drawer {
   --ink-drawer-frame: 14px;
   border: var(--ink-drawer-frame) solid transparent;
@@ -460,8 +469,6 @@
     url('/assets/ui/panel-drawer-bg.png') var(--ink-drawer-bg-pos, left center) / cover no-repeat,
     var(--surface-950);
   color: var(--surface-text);
-
-  /* Paper family -> dark surface equivalents (descendants unchanged). */
   --paper-50: var(--surface-600);
   --paper-100: var(--surface-700);
   --paper-200: var(--surface-800);
@@ -472,6 +479,47 @@
   --paper-line: var(--surface-line);
   --paper-line-soft: var(--surface-line-soft);
   --paper-grain: var(--surface-grain);
+}
+
+.paper-on-dark {
+  color: var(--surface-text);
+  --paper-50: var(--surface-600);
+  --paper-100: var(--surface-700);
+  --paper-200: var(--surface-800);
+  --paper-text: var(--surface-text);
+  --paper-text-soft: var(--surface-text-soft);
+  --paper-text-muted: var(--surface-text-muted);
+  --paper-eyebrow: var(--surface-eyebrow);
+  --paper-line: var(--surface-line);
+  --paper-line-soft: var(--surface-line-soft);
+  --paper-grain: var(--surface-grain);
+}
+
+/* PAPER-TO-SURFACE TOKEN MAP - remaps the paper token family onto the
+   dark surface palette for containers painted by dark InkNineSlice art
+   (auth card, creation panel, tutorial/offline/save-error/confirm modals,
+   SettingsPanel inside the dark OverlayPanel). Same contract .ink-drawer
+   owns for the HUD drawers, extracted without the drawer PNG art so
+   non-drawer dark surfaces share ONE owner instead of duplicating the
+   per-token override (TalentEntitlementModal kept an inline copy before
+   this utility existed). */
+/* `.paper-on-dark` sets `color` directly (not only --paper-text) because
+   descendants relying on INHERITED color (bare h1/h2/p) never
+   re-evaluate --paper-text for inheritance, so the remap alone left them
+   dark-on-dark (ui-audit creation-meta High). */
+
+/* PAPER-TO-SYS TOKEN MAP - panels inside the system modal chrome remap
+   the paper family onto the sys palette (NOT --surface-*). Lives here
+   (not system-theme.css): the systemThemeBoundary pin forbids --paper-*
+   LHS and non-.sys- selectors in that file. Components opt in via the
+   class instead of re-declaring the map in scoped styles (RealmPanel). */
+.paper-on-sys {
+  --paper-text: var(--sys-text, var(--text-primary));
+  --paper-text-soft: var(--sys-text-muted, var(--text-secondary));
+  --paper-text-muted: var(--sys-text-dim, var(--text-muted));
+  --paper-eyebrow: var(--sys-cyan, var(--chrome-300));
+  --paper-line: var(--sys-line, var(--ink-line));
+  --paper-line-soft: var(--sys-line-soft, var(--ink-line-soft));
 }
 
 /* INK DIVIDER (user art pass 2026-09) — shared section separator: a

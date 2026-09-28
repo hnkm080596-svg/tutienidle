@@ -1,0 +1,983 @@
+{
+  "schemaVersion": 2,
+  "run": {
+    "id": "pu31-live-2026-09-27",
+    "createdAt": "2026-09-27T17:10:36.792Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [],
+    "nonGoals": [],
+    "checkout": "E:/tutienidle/.agent-worktrees/qa-scripts-repair",
+    "branch": "qa-scripts-repair",
+    "base": "68621987",
+    "head": "b7aaa4d6",
+    "state": {
+      "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+      "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+      "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+      "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "manifestPath": "manifest.json",
+    "environmentPath": "environment.json",
+    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "consumedLessonIds": [
+      "L-022@1"
+    ],
+    "aggregateParents": [],
+    "requiredDomains": [],
+    "exclusions": [],
+    "briefIds": [],
+    "capacityLimit": 5,
+    "requiredReadiness": false,
+    "phase": "DECIDE",
+    "cleanRoundA": null,
+    "cleanRoundB": null,
+    "finalEvidenceIds": [],
+    "outcome": "QA_UNVERIFIED"
+  },
+  "briefs": [
+    {
+      "id": "BRIEF-TASK-QA-REPAIR-QUALIFY-01",
+      "taskId": "TASK-QA-REPAIR-QUALIFY-01",
+      "revision": 1,
+      "planningBaseline": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "policyHash": "aa1b335bfe00209f4080659edcbbfd7a90f0bad8dd0c72831d715f1b67a8822d",
+      "requirementRefs": [],
+      "invariantIds": [],
+      "dependencyRefs": [],
+      "sourceDependencyHashes": [
+        {
+          "path": "scripts/qa/cli.mjs",
+          "symbolOrSection": "cmdQualify",
+          "revision": "sha256:c7934610e398234410884131c0bdeb9e6887d8a08cef530521e9354674193028",
+          "basis": "SOURCE"
+        }
+      ],
+      "expectedChangeSet": [],
+      "lessonRouting": [
+        {
+          "lessonRef": "L-016@1",
+          "decision": "NOT_APPLICABLE",
+          "reason": "no semantic trigger matched"
+        },
+        {
+          "lessonRef": "L-017@1",
+          "decision": "NOT_APPLICABLE",
+          "reason": "no semantic trigger matched"
+        },
+        {
+          "lessonRef": "L-018@1",
+          "decision": "NOT_APPLICABLE",
+          "reason": "no semantic trigger matched"
+        },
+        {
+          "lessonRef": "L-019@1",
+          "decision": "NOT_APPLICABLE",
+          "reason": "no semantic trigger matched"
+        },
+        {
+          "lessonRef": "L-020@1",
+          "decision": "NOT_APPLICABLE",
+          "reason": "no semantic trigger matched"
+        },
+        {
+          "lessonRef": "L-021@1",
+          "decision": "NOT_APPLICABLE",
+          "reason": "no semantic trigger matched"
+        },
+        {
+          "lessonRef": "L-022@1",
+          "decision": "STALE",
+          "reason": "content drift on scripts/qa/cli.mjs"
+        }
+      ],
+      "slices": [],
+      "firstProofObligations": [
+        {
+          "oracle": "the orchestrator suite reports a positive parsed denominator (N>0 passed) under the pinned reporter",
+          "stage": "BEFORE_PROPAGATION",
+          "admittedSlice": "qa:internal qualify",
+          "evidenceIds": []
+        }
+      ],
+      "unresolvedAssumptions": [],
+      "readiness": "DRAFT",
+      "preflightEvidenceIds": [],
+      "deviations": [],
+      "consumedBy": [],
+      "checkpoints": [],
+      "finalConformanceIds": []
+    }
+  ],
+  "assignments": [],
+  "consumptions": [
+    {
+      "id": "CONS-TASK-QA-REPAIR-QUALIFY-01",
+      "lessonRef": "L-022@1",
+      "briefId": "BRIEF-TASK-QA-REPAIR-QUALIFY-01",
+      "policyHash": "aa1b335bfe00209f4080659edcbbfd7a90f0bad8dd0c72831d715f1b67a8822d",
+      "taskState": "COMPLETED",
+      "actionTaken": "APPLIED",
+      "observedOutcome": "APPLIED_NO_DEFECT",
+      "evidenceIds": [
+        "EV-Q-REPORTER-GREEN",
+        "EV-Q-VACUOUS-PIN"
+      ],
+      "at": "2026-09-27T17:32:54.672Z"
+    }
+  ],
+  "invariants": [],
+  "census": [],
+  "findings": [
+    {
+      "id": "F-PU31-01",
+      "title": "record path commits schema-invalid records; validation is post-hoc only",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "scripts/qa/cli.mjs",
+          "symbolOrSection": "cmdRecord",
+          "revision": "working-tree",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "pu31-coord",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-REVIEW-L022"
+      ],
+      "counterexample": "REV-L022 committed with phase:\"LEARNING\" (invalid enum) — schema rejected it only at validate time",
+      "expected": "write path rejects schema-invalid records",
+      "actual": "invalid record committed and became immutable via assertReplaceable",
+      "rootCause": "no structural validation on the record write path",
+      "rootClass": "QAI-write-validation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [
+        {
+          "roots": [
+            "scripts/qa/cli.mjs"
+          ],
+          "termsAndMethod": "read each mutating cmd (schedule/learn/prepare/migrate/record) for shared structural-validation gap",
+          "evidenceIds": [
+            "EV-REVIEW-L022"
+          ],
+          "hitDispositions": [
+            "scripts/qa/cli.mjs:cmdSchedule/cmdLearn/cmdPreflight — same-class gap suspected (inputs trusted without structural check)"
+          ],
+          "coverageLimits": [
+            "read-level review only; no dedicated probe input per command"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "cli.mjs cmdRecord: (collection,index)-attributed structural validation before commitLedger; malformed records incl. id-less shapes now refused",
+      "pinEvidenceIds": [
+        "EV-PU31-WRITEVALID-PIN"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PU31-SUITE-GREEN"
+      ],
+      "closureReviewIds": [
+        "REV-PU31-01-C"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU31-02",
+      "title": "cross-collection duplicate id commits schema-clean then bricks decide (no delete/rename path)",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "scripts/qa/cli.mjs",
+          "symbolOrSection": "cmdRecord",
+          "revision": "working-tree",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "INDEP-PU31-01-PASS2",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-PU31-WRITEVALID-PIN"
+      ],
+      "counterexample": "record an attack with id equal to an existing finding id — schema-valid at write gate, MC1 dup-id blocks decide forever; record has no delete/rename path so the brick is uncorrectable",
+      "expected": "write gate rejects cross-collection duplicate ids, or a recovery path exists",
+      "actual": "dup commits clean then permanently fails MC1",
+      "rootCause": "write gate is schema-only; uniqueness is an MC check deferred past the point of no recovery",
+      "rootClass": "QAI-write-validation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [
+        {
+          "roots": [
+            "scripts/qa/cli.mjs"
+          ],
+          "termsAndMethod": "check other mutation paths (schedule/learn/migrate) for id-collision surfaces",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "not yet traced per-command"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "state.mjs ledgerIdTaken over ID_COLLECTIONS (all 15 id namespaces + run.id + requestIds); cmdRecord push + message id/requestId guarded; admitAssignment guards reverse direction for new ids",
+      "pinEvidenceIds": [
+        "EV-PU31-DUPID-PIN"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PU31-SUITE-GREEN"
+      ],
+      "closureReviewIds": [
+        "REV-PU31-02-C"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "closedAt": "2026-09-27T17:58:20.023Z",
+      "closeReason": "fixed and verified — both directions of cross-namespace id collision refused at write/admission gates; residuals (migrate pre-existing corruption, same-id update on pre-existing dup) are pre-existing state, detectable via validate/decide"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "EV-QUALIFY-PARSE",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "pu31-coord",
+      "startedAt": "2026-09-27T17:27:13.235Z",
+      "finishedAt": "2026-09-27T17:27:13.235Z",
+      "commandOrMethod": "documented live repro from run pu30-live-2026-09-27",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/ev-qualify-parse.md",
+      "artifactHash": "eedd809e777fb675758a04d50e6c3af4a48097d8955817a86d46c78a056ac795",
+      "inputPaths": [
+        "run:pu30-live-2026-09-27#EV-QUALIFY-PARSE",
+        "run:pu30-live-2026-09-27#F-PU30-04"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "the counted-oracle defect was real and directly observed"
+      ],
+      "limitations": [
+        "incident evidence recorded in the pu30 run ledger; cited here by reference"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-Q-REPORTER-GREEN",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "pu31-coord",
+      "startedAt": "2026-09-27T17:27:13.235Z",
+      "finishedAt": "2026-09-27T17:27:13.235Z",
+      "commandOrMethod": "node scripts/qa/cli.mjs qualify",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/ev-q-reporter-green.txt",
+      "artifactHash": "10cae37c91d7a92b7d7a1f47a58efd5cd02acbe56d83b614d426ec9c7bf51489",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "full suite green: 59/59 incl. qualify refactor, record gate, both-direction namespace pins",
+        "orchestrator qualify emits real TAP denominator"
+      ],
+      "limitations": [
+        "single live run on this branch"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-Q-VACUOUS-PIN",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "pu31-coord",
+      "startedAt": "2026-09-27T17:27:13.235Z",
+      "finishedAt": "2026-09-27T17:27:13.235Z",
+      "commandOrMethod": "node --test scripts/qa/tests/cli.test.mjs",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/ev-q-vacuous-pin.txt",
+      "artifactHash": "5195a9d7f105518948b5b9cc36bdba715ffff77f40443701e7d4340408dd433a",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "zero/unparsed denominator is refused, never passed"
+      ],
+      "limitations": [
+        "unit-level oracle checks; the live qualify path verified separately"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-REVIEW-L022",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "pu31-coord",
+      "startedAt": "2026-09-27T17:27:13.235Z",
+      "finishedAt": "2026-09-27T17:27:13.235Z",
+      "commandOrMethod": "independent verifier review (subagent verifier-explore-7d3a9)",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/rev-l022.md",
+      "artifactHash": "8a33514902455feab319b874e805987fb5b4ddc03d4bf11a54a37b7301200dc8",
+      "inputPaths": [
+        "docs/qa/learning/history/lessons.jsonl",
+        "scripts/qa/qualify.mjs",
+        "scripts/qa/tests/cli.test.mjs"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "an independent context verified the lesson against the actual files"
+      ],
+      "limitations": [
+        "verifier had read-only tools; sha recomputation deferred to coordinator — rechecked during pin refresh"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-PU31-WRITEVALID-PIN",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "pu31-coord",
+      "startedAt": "2026-09-27T17:45:55.306Z",
+      "finishedAt": "2026-09-27T17:45:55.306Z",
+      "commandOrMethod": "node --test scripts/qa/tests/cli.test.mjs",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/ev-pu31-writevalid-pin.txt",
+      "artifactHash": "ad3a3952df567b66681098269273b6c470761832457db6cd8b65247572ad411f",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "write path refuses schema-invalid records incl. the id-less uncorrectable shape",
+        "(collection,index) attribution covers update/push/message writes"
+      ],
+      "limitations": [
+        "single-node verification; semantic MC checks still deferred to validate/decide"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-PU31-SUITE-GREEN",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "pu31-coord",
+      "startedAt": "2026-09-27T17:45:55.306Z",
+      "finishedAt": "2026-09-27T17:58:20.023Z",
+      "commandOrMethod": "node --test scripts/qa/tests/*.test.mjs",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/ev-q-reporter-green.txt",
+      "artifactHash": "10cae37c91d7a92b7d7a1f47a58efd5cd02acbe56d83b614d426ec9c7bf51489",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "full suite green after write-path + id-collision fixes: 59/59 (incl. qualify refactor, record gate, both-direction namespace pins)"
+      ],
+      "limitations": [
+        "suite count at time of capture"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-PU31-DUPID-PIN",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "pu31-coord",
+      "startedAt": "2026-09-27T17:49:19.469Z",
+      "finishedAt": "2026-09-27T17:49:19.469Z",
+      "commandOrMethod": "node --test scripts/qa/tests/cli.test.mjs",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/ev-pu31-dupid-pin.txt",
+      "artifactHash": "957e9c4f294f7d97a530c6e8f36a2f517f6e52231e2a5439c32199e8b992bea2",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "write gate refuses cross-namespace id collisions incl. run.id, record collections, assignments, and message requestIds"
+      ],
+      "limitations": [
+        "semantic MC checks still deferred to validate/decide"
+      ],
+      "status": "CURRENT"
+    }
+  ],
+  "coverage": [],
+  "attacks": [],
+  "reviews": [
+    {
+      "id": "REV-L022",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "round": 1,
+      "phase": "CLOSURE",
+      "reviewerId": "verifier-explore-7d3a9",
+      "contextId": "subagent-explore-6c007f1d",
+      "model": "SWE-2-explore",
+      "role": "INDEPENDENT",
+      "inputBundleHash": "f2461e909a6e1a7f9a6ac7af1326bf889d7fa7b9f10208e73b13ea9ee068b771",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "read-only tools; could not execute commands"
+      ],
+      "startedAt": "2026-09-27T17:27:13.235Z",
+      "sealedAt": "2026-09-27T17:27:13.235Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-QUALIFY-PARSE",
+        "EV-Q-VACUOUS-PIN"
+      ],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-L022-B",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "round": 1,
+      "phase": "CLOSURE",
+      "reviewerId": "verifier-explore-7d3a9",
+      "contextId": "subagent-explore-6c007f1d",
+      "model": "SWE-2-explore",
+      "role": "INDEPENDENT",
+      "inputBundleHash": "f2461e909a6e1a7f9a6ac7af1326bf889d7fa7b9f10208e73b13ea9ee068b771",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-27T17:30:03.561Z",
+      "sealedAt": "2026-09-27T17:30:03.561Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-QUALIFY-PARSE",
+        "EV-Q-VACUOUS-PIN",
+        "EV-REVIEW-L022"
+      ],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-PU31-01-C",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "round": 2,
+      "phase": "CLOSURE",
+      "reviewerId": "INDEP-PU31-01-PASS2",
+      "contextId": "subagent-explore-044f775e",
+      "model": "SWE-2-explore",
+      "role": "INDEPENDENT",
+      "inputBundleHash": "9a6cd5de925599dccae26fc0c7f2582114a278c968727ac8fb9b8ff6b375844e",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-27T17:45:55.306Z",
+      "sealedAt": "2026-09-27T17:45:55.306Z",
+      "previousPhaseReviewId": "REV-L022-B",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-PU31-WRITEVALID-PIN",
+        "EV-PU31-SUITE-GREEN"
+      ],
+      "findingIds": [
+        "F-PU31-01"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-PU31-02-C",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "round": 3,
+      "phase": "CLOSURE",
+      "reviewerId": "closure-fpu31-02-r3",
+      "contextId": "subagent-explore-8d826f34",
+      "model": "SWE-2-explore",
+      "role": "INDEPENDENT",
+      "inputBundleHash": "2e870731210f04794dede053934875b81734e962a010eb8ab13fb2e79d1028c5",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-27T17:58:20.023Z",
+      "sealedAt": "2026-09-27T17:58:20.023Z",
+      "previousPhaseReviewId": "REV-PU31-01-C",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-PU31-DUPID-PIN",
+        "EV-PU31-SUITE-GREEN"
+      ],
+      "findingIds": [
+        "F-PU31-02"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    }
+  ],
+  "cycles": [],
+  "mutations": [],
+  "corpus": [],
+  "lessons": [
+    {
+      "id": "L-022",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [],
+      "incidentEvidenceIds": [
+        "EV-QUALIFY-PARSE"
+      ],
+      "originatingRun": "pu30-live-2026-09-27",
+      "rootClass": "QAI-08-wrong-denominator",
+      "missedInvariantIds": [],
+      "escapeReason": "runner parsed TAP counters (# pass/# fail) while Node>=22 emits the spec reporter; zero-parse fell through to QUALIFIED because no positive-count guard existed",
+      "applicability": [
+        "scripts/qa/**",
+        "qa-verdict-emission",
+        "counted-oracle"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "pin the reporter a parser consumes (--test-reporter tap)",
+        "treat zero/empty parsed denominators as failure, never success",
+        "regression-test verdict emission against real runner output"
+      ],
+      "promotionEvidenceIds": [
+        "EV-Q-REPORTER-GREEN",
+        "EV-Q-VACUOUS-PIN"
+      ],
+      "qualifiedBy": [
+        "REV-L022-B"
+      ],
+      "capabilityDelta": "proposed - not promoted",
+      "status": "PROMOTED",
+      "policyVersion": "aa1b335bfe00209f4080659edcbbfd7a90f0bad8dd0c72831d715f1b67a8822d",
+      "effectiveFromRun": "pu31-live-2026-09-27",
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": {
+        "guidanceRevision": 1,
+        "kind": "INVARIANT",
+        "authorityRefs": [
+          {
+            "path": "docs/qa/protocol/qualification.md",
+            "symbolOrSection": "verdict-requires-positive-denominator",
+            "revision": "sha256:6abb499d53137e6d4b4258e178d2a6cc7b8fb45d6d19879c60d8e9540174dfbf",
+            "basis": "MAINTAINED_CONTRACT"
+          }
+        ],
+        "sourceDependencies": [
+          {
+            "path": "scripts/qa/cli.mjs",
+            "symbolOrSection": "cmdQualify",
+            "revision": "sha256:db82c8c2662a116699c65f86a7bcbbfceda275f1dcb4e138a41e5dd6ac12dbd4",
+            "basis": "SOURCE"
+          },
+          {
+            "path": "scripts/qa/qualify.mjs",
+            "symbolOrSection": "parseOrchestratorCounts + qualifyGaps",
+            "revision": "sha256:bb51485435382fdffd8b576dabec08eef6d531c46e66529e8d7d098eefc621b4",
+            "basis": "SOURCE"
+          },
+          {
+            "path": "scripts/qa/tests/cli.test.mjs",
+            "symbolOrSection": "counted-oracle regression tests",
+            "revision": "sha256:5319e6408eacb29e9a950b6c3a72f80169144ce665610d8606e5b4c4df4b30e6",
+            "basis": "SOURCE"
+          }
+        ],
+        "applicability": [
+          "scripts/qa/**",
+          "qa-verdict-emission",
+          "counted-oracle"
+        ],
+        "exclusions": [],
+        "ownerRoute": [
+          "qa-runner"
+        ],
+        "preconditions": [
+          "the component emits or consumes a counted verdict (tests passed/failed, coverage satisfied, denominators)"
+        ],
+        "steps": [
+          "before emitting a counted verdict, pin the exact reporter/format the parser consumes (e.g. --test-reporter tap)",
+          "treat a zero or unparsed denominator as a failure signal: refuse the verdict, never pass vacuously",
+          "keep a regression test that runs the real command and asserts a positive count is parsed"
+        ],
+        "failureAndInverse": [
+          "a silently empty denominator is a false-green amplifier: every subsequent approval built on it is fabricated"
+        ],
+        "firstProof": {
+          "oracle": "a qualification verdict is emitted only when the parsed denominator is positive AND the reporter was explicitly pinned",
+          "stage": "BEFORE_PROPAGATION",
+          "admittedSlice": "qa:internal qualify run",
+          "evidenceIds": [
+            "EV-QUALIFY-PARSE"
+          ]
+        },
+        "detectorRefs": [
+          "cmdQualify"
+        ],
+        "originAnalysis": {
+          "category": "NOT_APPLIED",
+          "incidentEvidenceIds": [
+            "EV-QUALIFY-PARSE"
+          ],
+          "uncertainty": "root cause verified live: spec-reporter output parsed as TAP -> 0/0 -> vacuous QUALIFIED"
+        },
+        "status": "QUALIFIED",
+        "qualificationEvidence": [
+          "EV-QUALIFY-PARSE",
+          "EV-Q-REPORTER-GREEN",
+          "EV-Q-VACUOUS-PIN",
+          "EV-REVIEW-L022"
+        ],
+        "qualifiedBy": [
+          "verifier-explore-7d3a9"
+        ],
+        "adoptionEvidence": [],
+        "causalPrevention": "NOT_ESTABLISHED",
+        "policyRef": "aa1b335bfe00209f4080659edcbbfd7a90f0bad8dd0c72831d715f1b67a8822d",
+        "supersedes": null,
+        "limits": [
+          "applies to counted/parsed oracles; boolean non-counted checks need their own fail-closed proof"
+        ]
+      }
+    },
+    {
+      "id": "L-023",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-PU31-01"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "pu31-live-2026-09-27",
+      "rootClass": "QAI-write-validation",
+      "missedInvariantIds": [],
+      "escapeReason": "record path committed schema-invalid records; a malformed record became unreachable through assertReplaceable and bricked the decide gate",
+      "applicability": [
+        "scripts/qa/**",
+        "ledger-write-path"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "validate structure at the write gate before commitLedger",
+        "attribute validation failures by (collection,index), never by record id — id-less records must still be refused"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "proposed - not promoted",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
+    },
+    {
+      "id": "L-024",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-PU31-02"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "pu31-live-2026-09-27",
+      "rootClass": "QAI-write-validation",
+      "missedInvariantIds": [],
+      "escapeReason": "write gate was schema-only; a schema-valid record could collide with an id in another MC1 namespace, commit clean, then brick decide with no delete/rename recovery",
+      "applicability": [
+        "scripts/qa/**",
+        "ledger-write-path"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "check id uniqueness across ALL MC1 namespaces at the write gate (incl. run.id, assignments, message requestIds)",
+        "namespace checks must enumerate the dedupe set explicitly — a record-kind routing table is not an id namespace table"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "proposed - not promoted",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
+    }
+  ],
+  "messages": [],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-09-27T17:10:36.795Z",
+      "kind": "PHASE",
+      "actor": "pu31-coord",
+      "state": {
+        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "6a16591f65faa7fb42ba5f9a462390e67d58ea86fd837a335c54ef11a29f6137",
+      "eventHash": "0ebd1486c6d020038c2f79b3c2a3b56c478543f2382d9a1daa92da05a117ff01"
+    },
+    {
+      "seq": 2,
+      "at": "2026-09-27T17:10:41.061Z",
+      "kind": "SNAPSHOT",
+      "actor": "pu31-coord",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "0ebd1486c6d020038c2f79b3c2a3b56c478543f2382d9a1daa92da05a117ff01",
+      "payloadPath": "events/0002.json",
+      "payloadHash": "4202cabc4843057175d87039bb9019347e8898db3f875fa34a7e783710a63d06",
+      "eventHash": "2da41223a7bab34e29ce21accbb1051588921d328a58a684e3958628a898532c"
+    },
+    {
+      "seq": 3,
+      "at": "2026-09-27T17:10:47.350Z",
+      "kind": "EVIDENCE",
+      "actor": "pu31-coord",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "2da41223a7bab34e29ce21accbb1051588921d328a58a684e3958628a898532c",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "57a95d81b3de5f820c4650ebacc05ac0839f1d5c134be73181a3fc41237fe516",
+      "eventHash": "6ecc29a203d0adc585f3249b73c35cf81716fa0a71a4980503b3d22db8128b61"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-27T17:24:25.044Z",
+      "kind": "EVIDENCE",
+      "actor": "pu31-coord",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "6ecc29a203d0adc585f3249b73c35cf81716fa0a71a4980503b3d22db8128b61",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "33bfa73ffa4184098185651de9d617d385e0995c8554d2ca21258bb6bb12eb7f",
+      "eventHash": "3a0963e723f4f61510508a64b096016667daaa06fd1c24aa0f7e723df2cd3235"
+    },
+    {
+      "seq": 5,
+      "at": "2026-09-27T17:24:25.203Z",
+      "kind": "EVIDENCE",
+      "actor": "pu31-coord",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "3a0963e723f4f61510508a64b096016667daaa06fd1c24aa0f7e723df2cd3235",
+      "payloadPath": "events/0005.json",
+      "payloadHash": "13759db5c6decae7645167d1a19d1984b03cbd159b6a632ca11c4bb2e84f0db9",
+      "eventHash": "f84b9d5eb4101cd4dd8e96bd6e538470639b48cbac1bc2d63c083dace126bd44"
+    },
+    {
+      "seq": 6,
+      "at": "2026-09-27T17:24:34.561Z",
+      "kind": "EVIDENCE",
+      "actor": "pu31-coord",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "f84b9d5eb4101cd4dd8e96bd6e538470639b48cbac1bc2d63c083dace126bd44",
+      "payloadPath": "events/0006.json",
+      "payloadHash": "b452ec6c36544714754c9cc3ddd3b75a8d8fc502c27b39d138bb01a696f23e20",
+      "eventHash": "bcf0ebdb03dfa98d271bc82fa741c1b1c60df7ad9b661d8c2a6139f596f02b14"
+    },
+    {
+      "seq": 7,
+      "at": "2026-09-27T17:27:13.394Z",
+      "kind": "EVIDENCE",
+      "actor": "pu31-coord",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "bcf0ebdb03dfa98d271bc82fa741c1b1c60df7ad9b661d8c2a6139f596f02b14",
+      "payloadPath": "events/0007.json",
+      "payloadHash": "9034ef36a4dadb749dd719b075f1a8efd7291f2579fee60430f11aaf69a668d5",
+      "eventHash": "7c2de8e3d9efa0ec8c15ed638e56b6f194173f96bb16c738afa7e94e18e8a101"
+    },
+    {
+      "seq": 8,
+      "at": "2026-09-27T17:30:03.734Z",
+      "kind": "EVIDENCE",
+      "actor": "pu31-coord",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "7c2de8e3d9efa0ec8c15ed638e56b6f194173f96bb16c738afa7e94e18e8a101",
+      "payloadPath": "events/0008.json",
+      "payloadHash": "368c4ed451438780252d5b30a985512faa6abf156feb612b8d5ddbd55619509c",
+      "eventHash": "12f3153395e0f5e724fff1fe8e0f8707b1d32d60c67ef7b99f13dbdf4016846f"
+    },
+    {
+      "seq": 9,
+      "at": "2026-09-27T17:32:14.754Z",
+      "kind": "EVIDENCE",
+      "actor": "pu31-coord",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "12f3153395e0f5e724fff1fe8e0f8707b1d32d60c67ef7b99f13dbdf4016846f",
+      "payloadPath": "events/0009.json",
+      "payloadHash": "b88f26162d5901f686a44a896702fc07078b38bffadb8fb6754d38730e73b98f",
+      "eventHash": "438ac71b651dfd1a5ed42832744f4e789640e4c7fddbda593e8876e9895fbb1d"
+    },
+    {
+      "seq": 10,
+      "at": "2026-09-27T17:32:55.008Z",
+      "kind": "EVIDENCE",
+      "actor": "pu31-coord",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "438ac71b651dfd1a5ed42832744f4e789640e4c7fddbda593e8876e9895fbb1d",
+      "payloadPath": "events/0010.json",
+      "payloadHash": "3ea2450a3907d2c69837cb5511a16b78c37058da1d18b57d941b2243c7e0ec4f",
+      "eventHash": "50f679e16a7b09762eec4405b10e2809b64dbea74d6373ee09b1b96356526057"
+    },
+    {
+      "seq": 11,
+      "at": "2026-09-27T17:58:48.470Z",
+      "kind": "DECISION",
+      "actor": "pu31-coord",
+      "state": {
+        "productStateId": "84cd999ee56a6613befc4bbe4fcb6ddad3c6ec70011a9bc34a8b9d33c88d1189",
+        "contractId": "5061ae8f4ff06c72494c841cb09e05da9525bf0bd8d9a0d3fda93fab8883e69b",
+        "attackModelId": "5964c10cb844f9a081310d24a0dc8ad50a201184e5c540127105af3126a56b31",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "50f679e16a7b09762eec4405b10e2809b64dbea74d6373ee09b1b96356526057",
+      "payloadPath": "events/0011.json",
+      "payloadHash": "5db0e05f212c3b9a856d0329f9400b4f6c06908541384bcd7abef246af2f8197",
+      "eventHash": "0af15c032de6c75813c4fa612857cb3c6b6cec8372438e716fa3efb99c15ebc6"
+    }
+  ]
+}

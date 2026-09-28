@@ -9,6 +9,7 @@ import type { ActiveSkillDefinition } from './SkillDefinition'
 import { SkillDefinitionRegistry } from './SkillDefinitionRegistry'
 import { SkillResolver, SkillResolverError } from './SkillResolver'
 import type {
+  ResolvedSkillCondition,
   ResolvedSkillPlan,
   ResolvedSkillPlanStep,
 } from './ResolvedSkillPlan'
@@ -278,6 +279,23 @@ describe('SkillResolver -- variants + composite', () => {
     expect(op.origin.originId).toBe('skill.ult.empowered')
     if (op.type !== 'deal_damage') throw new Error('unreachable')
     expect(op.payload.coefficient).toBe(9)
+  })
+
+  it('captures theBurned on a ROOT-authored consumesAllThe def (not only the empowerment swap)', () => {
+    // Legacy parity: TBS stamps execution.theBurned whenever
+    // payloadSkill.consumesAllThe, regardless of how the payload
+    // resolved -- a root def carrying the burn + theScaling must
+    // resolve with the pool captured or it scales at 1 forever.
+    const def = activeDef({
+      id: 'skill.root.burn' as SkillId,
+      consumesAllThe: true,
+      theScaling: { coeff: 2 },
+      operations: [{ type: 'deal_damage', target: 'primary_target', coefficient: 1 }],
+    })
+    const plan = resolve([def], 0, {
+      entityQuery: entityQuery({ the: 80 }),
+    })
+    expect(plan.snapshot.resourcesConsumed.the).toBe(80)
   })
 
   it('does NOT swap below threshold and leaves resourcesConsumed empty', () => {
@@ -734,6 +752,109 @@ describe('SkillResolver -- instances + consume lanes', () => {
       amount: 'all',
     })
   })
+
+  it('oncePerCast: AoE empowered secondary fires on the first landed instance only (spec D4/D5)', () => {
+    const def = activeDef({
+      operations: [
+        {
+          type: 'deal_damage',
+          target: 'all_enemies',
+          coefficient: 1,
+          onLanded: [
+            {
+              type: 'if',
+              condition: { kind: 'target_hit_landed', target: 'loop_target' },
+              then: [
+                {
+                  type: 'deal_damage',
+                  target: 'other_enemy',
+                  oncePerCast: true,
+                  coefficient: 0.6,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+    const plan = resolve([def])
+
+    // Collect ops_landed_any reads keyed by output var, and every
+    // deal_damage op with its ancestor branch conditions.
+    const reads = new Map<string, string[]>()
+    interface Collected {
+      targetId: string
+      operationId: string
+      conds: readonly ResolvedSkillCondition[]
+    }
+    const primaries: Collected[] = []
+    const secondaries: Collected[] = []
+    const walk = (
+      steps: readonly ResolvedSkillPlanStep[],
+      conds: readonly ResolvedSkillCondition[],
+    ): void => {
+      for (const step of steps) {
+        if (step.kind === 'read' && step.query.query === 'ops_landed_any') {
+          reads.set(step.into, [...step.query.operationIds])
+        }
+        if (step.kind === 'operation' && step.operation.type === 'deal_damage') {
+          const entry: Collected = {
+            targetId: step.operation.payload.targetId,
+            operationId: step.operation.operationId,
+            conds,
+          }
+          if (step.operation.payload.coefficient === 0.6) secondaries.push(entry)
+          else primaries.push(entry)
+        }
+        if (step.kind === 'branch') {
+          const next = [...conds, step.condition]
+          walk(step.then, next)
+          if (step.else !== undefined) walk(step.else, next)
+        }
+      }
+    }
+    walk(plan.steps, [])
+
+    // 2 enemies -> 2 primary hits; the flagged secondary mints 2 lanes.
+    expect(primaries).toHaveLength(2)
+    expect(secondaries).toHaveLength(2)
+
+    // Exactly one secondary lane sits inside branch{var <opcast> lt 1}
+    // (the dedup gate); the other carries no such gate.
+    const hasDedupGate = (e: Collected) =>
+      e.conds.some(
+        (c) => c.kind === 'var' && 'value' in c && c.op === 'lt' && c.value === 1,
+      )
+    const gated = secondaries.filter(hasDedupGate)
+    const ungated = secondaries.filter((s) => !hasDedupGate(s))
+    expect(gated).toHaveLength(1)
+    expect(ungated).toHaveLength(1)
+
+    const opcastVar = gated[0]!.conds.find(
+      (c): c is Extract<ResolvedSkillCondition, { kind: 'var' }> =>
+        c.kind === 'var' && c.op === 'lt' && c.value === 1,
+    )!.name
+
+    // The dedup read feeds <opcast> and covers ONLY the earlier lane's
+    // primary hit ids -- never the gated lane's own hit. Lane identity
+    // = the outer target_alive target (the enemy this instance hits).
+    const laneTargetOf = (e: Collected) => {
+      const c = e.conds.find(
+        (c): c is Extract<ResolvedSkillCondition, { kind: 'target_alive' }> =>
+          c.kind === 'target_alive' && c.targetId !== PLAYER,
+      )
+      return c?.targetId
+    }
+    const gatedLaneTarget = laneTargetOf(gated[0]!)
+    const gatedLanePrimary = primaries.find(
+      (p) => laneTargetOf(p) === gatedLaneTarget,
+    )!
+    const otherPrimaryIds = primaries
+      .filter((p) => p.operationId !== gatedLanePrimary.operationId)
+      .map((p) => p.operationId)
+    expect(otherPrimaryIds).toHaveLength(1)
+    expect(reads.get(opcastVar)).toEqual(otherPrimaryIds)
+  })
 })
 
 describe('SkillResolver -- structural guards + determinism', () => {
@@ -766,7 +887,7 @@ describe('SkillResolver -- structural guards + determinism', () => {
   it('throws when gain_resource authors amount all', () => {
     const def = activeDef({
       operations: [
-        { type: 'gain_resource', target: 'self', resourceId: 'mp', amount: 'all' },
+        { type: 'gain_resource', target: 'self', resourceId: 'mana', amount: 'all' },
       ],
     })
     expect(() => resolve([def])).toThrow(SkillResolverError)

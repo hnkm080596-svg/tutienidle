@@ -1,0 +1,10 @@
+{
+ "commit": "c2bb6992",
+ "verify": "type-check clean; vitest 271 files/2271 pass/4 expected-fail",
+ "fixes": [
+  "legacy-lane charge-resolve selfScoped lookup",
+  "dead theScaling fold removed",
+  "periodic-growth pin tests x2",
+  "percentOfMax mana-gate pin test"
+ ]
+}

@@ -1,0 +1,50 @@
+{
+ "run": "phap-tu-reimagine-2026-09-26",
+ "reviewId": "REV-PTR-INT-G1",
+ "reviewer": "devin-f486fb7f494f4e0781baa0513019c36d",
+ "phase": "INTEGRATION",
+ "pin": "1a4ea837",
+ "verdict": "FINDINGS -- all Low/Nit, zero confirmed Medium+",
+ "adjudication": [
+  {
+   "finding": "F-PTR-93 (INT-1) / Low",
+   "disposition": "DUPLICATE_LINKED -> F-PTR-89",
+   "verification": "same blocked charge-init defect as COR F-2"
+  },
+  {
+   "finding": "F-PTR-94 (INT-2) / Low",
+   "disposition": "FIXED @cf1655b6",
+   "verification": "composite pick gated on empowerment===undefined -- engine-unit lane mirrors registry mutual-exclusion"
+  },
+  {
+   "finding": "F-PTR-95 (INT-3) / Low",
+   "disposition": "FIXED @cf1655b6",
+   "verification": "addStacks floors at 0 (Math.max) matching setStacks"
+  },
+  {
+   "finding": "INT-4 / Nit",
+   "disposition": "REJECTED_WITH_PROOF",
+   "verification": "resolveFollowUp empowered-variant resolve is doubly unreachable (driveFollowUps always false in production; kit basics carry no repeatCasts/multicast)"
+  },
+  {
+   "finding": "F-PTR-96 (INT-5) / Nit",
+   "disposition": "DUPLICATE_LINKED -> F-PTR-86",
+   "verification": "same empowerment-on-non-kit claim as AUT Low-3"
+  },
+  {
+   "finding": "INT-6 / Nit",
+   "disposition": "REJECTED_WITH_PROOF",
+   "verification": "'attack' event emit ordering unchanged vs merge-base; blocked unreachable"
+  },
+  {
+   "finding": "INT-7 / Nit",
+   "disposition": "REJECTED_WITH_PROOF",
+   "verification": "PER_TARGET marker latest-wins is authored ownership semantics; requires two same-element casters (latent); growth feed no-ops safely on sourceId mismatch"
+  },
+  {
+   "finding": "INT-8 / Nit",
+   "disposition": "REJECTED_WITH_PROOF",
+   "verification": "maxMp=0 free-cast is degenerate unreachable state; required<=0 readiness is the generic rule"
+  }
+ ]
+}

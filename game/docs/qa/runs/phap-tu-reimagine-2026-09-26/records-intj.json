@@ -1,0 +1,13 @@
+{
+ "kind": "reviewer-verdict",
+ "reviewer": "cleanJ INT",
+ "session": "devin-1f5bce20a1244f2f88b59d2144b24d3c",
+ "pin": "0c6b72f2dcdab3f9337d559f981fbb5896a275b5",
+ "verdict": "FINDINGS (1 Medium, 1 Low, 1 Nit)",
+ "verification": "repro pin written in reviewer worktree pt-reim-rev-intj (TurnBattleSystem.contract.test.ts); static + scoped vitest",
+ "findings": [
+  "F1 Medium: queued repeat/multicast of a chargeTurns>0 def resolves to silent no-op -- dead queue slot (self-scoped charge-init carries affected=[actor], isCharging:false)",
+  "F2 Low: resolveInterceptWindow fires pre-route -- consumes once-roll + writes suppressed marker/ward grant before castBlocked is knowable (unreachable today)",
+  "F3 Nit: unrouted charge-resolve lane (~2020-2029) reports but does not stamp castBlocked -- falls through to tail ally window"
+ ]
+}

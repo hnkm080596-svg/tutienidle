@@ -95,8 +95,8 @@ test.describe('system UI skin - rim authority', () => {
     await createCharacterThroughUi(page, 'Hệ Thống')
     await enterHome(page)
 
-    // Settings (ink OverlayPanel) -> reload opens a nested SysModalBase
-    // confirm inside the settings card subtree. Clicking the modal scrim
+    // Settings (ink OverlayPanel) -> reload opens a nested ink ConfirmModal
+    // inside the settings card subtree. Clicking the modal scrim
     // must not move focus to the background card: Escape then closes only
     // the confirm, and the settings overlay stays open (QA regression -
     // useDialogFocus pointer containment).
@@ -105,7 +105,7 @@ test.describe('system UI skin - rim authority', () => {
     const settingsCard = page.locator('.overlay-panel__card').first()
     await expect(settingsCard).toBeVisible({ timeout: 10_000 })
     await page.getByRole('button', { name: /Tải Lại|reload/i }).first().click()
-    const confirmModal = page.locator('.sys-modal')
+    const confirmModal = page.locator('.confirm-modal')
     await expect(confirmModal).toBeVisible({ timeout: 10_000 })
 
     await page.mouse.click(40, 400)

@@ -1,0 +1,109 @@
+{
+ "records": [
+  {
+   "kind": "brief",
+   "id": "BRIEF-phap-tu-reimagine",
+   "taskId": "phap-tu-reimagine",
+   "revision": 1,
+   "planningBaseline": {
+    "productStateId": "9242a14e9c8c9b855dc14a632f5b459c0ff0c41d7e30409faf6cff0ac4c895cd",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "policyHash": "60ff569d5cbba6d6db8b6a34e9fecc72a87aeba60ff0cd6422455368c58b6a4b",
+   "requirementRefs": [
+    {
+     "path": "docs/design/phap-tu-reimagine-design.txt",
+     "symbolOrSection": "full reimagine scope",
+     "revision": "a359517e",
+     "basis": "USER"
+    }
+   ],
+   "invariantIds": [],
+   "dependencyRefs": [],
+   "sourceDependencyHashes": [],
+   "expectedChangeSet": [
+    "src/core/**",
+    "src/data/skill/**",
+    "src/data/progression/**",
+    "src/ui/**",
+    "src/save/**"
+   ],
+   "lessonRouting": [
+    {
+     "lessonRef": "L-016@1",
+     "decision": "NOT_APPLICABLE",
+     "reason": "no semantic trigger matched"
+    },
+    {
+     "lessonRef": "L-017@1",
+     "decision": "NOT_APPLICABLE",
+     "reason": "no semantic trigger matched"
+    },
+    {
+     "lessonRef": "L-018@1",
+     "decision": "NOT_APPLICABLE",
+     "reason": "no semantic trigger matched"
+    },
+    {
+     "lessonRef": "L-019@1",
+     "decision": "NOT_APPLICABLE",
+     "reason": "no semantic trigger matched"
+    },
+    {
+     "lessonRef": "L-020@1",
+     "decision": "NOT_APPLICABLE",
+     "reason": "no semantic trigger matched"
+    },
+    {
+     "lessonRef": "L-021@1",
+     "decision": "NOT_APPLICABLE",
+     "reason": "no semantic trigger matched"
+    }
+   ],
+   "slices": [
+    "S1 engine core (The economy, riders, charge/deferredResolve)",
+    "S2 data (defs, tree, locales)",
+    "S3 UI (panels, HUD)"
+   ],
+   "firstProofObligations": [
+    {
+     "oracle": "type-check + scoped vitest green",
+     "stage": "BEFORE_WRITE",
+     "admittedSlice": "S1",
+     "evidenceIds": [
+      "EV-PTR-FIXO"
+     ]
+    },
+    {
+     "oracle": "type-check + scoped vitest green",
+     "stage": "BEFORE_PROPAGATION",
+     "admittedSlice": "S2",
+     "evidenceIds": [
+      "EV-PTR-FIXO"
+     ]
+    },
+    {
+     "oracle": "type-check + scoped vitest green",
+     "stage": "BEFORE_PROPAGATION",
+     "admittedSlice": "S3",
+     "evidenceIds": [
+      "EV-PTR-FIXO"
+     ]
+    }
+   ],
+   "unresolvedAssumptions": [],
+   "readiness": "IMPLEMENTATION_READY",
+   "preflightEvidenceIds": [
+    "EV-PTR-FIXO"
+   ],
+   "deviations": [],
+   "consumedBy": [],
+   "checkpoints": [],
+   "finalConformanceIds": [
+    "EV-PTR-FINAL"
+   ]
+  }
+ ]
+}

@@ -30,7 +30,15 @@ const rolling = ref(false)
 const error = ref('')
 const creating = ref(false)
 
-const { t } = useI18n()
+const { t, te } = useI18n()
+
+// ui-audit creation-meta - talent tag chips rendered raw enum values
+// ('combat', 'risk_reward'); route through locale keys, fall back to the
+// raw tag only when a future tag ships without a label.
+function talentTagLabel(tag: string): string {
+  const key = `onboarding.creation.talentStep.tags.${tag}`
+  return te(key) ? t(key) : tag
+}
 
 const precursorSkills = computed<Skill[]>(() =>
   MORTAL_PRECURSOR_SKILL_IDS.map((id) => {
@@ -106,7 +114,7 @@ onMounted(() => { void reroll() })
       <div><p>{{ t('onboarding.creation.headerKicker') }}</p><h1>{{ t('onboarding.creation.headerTitle') }}</h1></div>
     </header>
 
-    <section class="creation-panel">
+    <section class="creation-panel paper-on-dark">
       <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
       <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
 
@@ -123,7 +131,7 @@ onMounted(() => { void reroll() })
         <p v-else-if="error && talents.length === 0" class="loading-roll">{{ error }}</p>
         <div v-else class="talent-grid" :class="{ 'is-rolling': rolling }" :aria-busy="rolling">
           <button v-for="talent in talents" :key="talent.id" type="button" class="talent-card" :data-testid="`creation-talent-${talent.id}`" :class="[`talent-tier-${talent.rarity}`, { selected: selectedTalentIds.includes(talent.id) }]" :disabled="rolling || creating" @click="toggleTalent(talent)">
-            <span class="talent-card__rarity">{{ TALENT_RARITY_LABELS[talent.rarity] }}</span><h3>{{ talent.name }}</h3><p>{{ talent.description }}</p><small>{{ talent.tags[0] }}</small>
+            <span class="talent-card__rarity">{{ TALENT_RARITY_LABELS[talent.rarity] }}</span><h3>{{ talent.name }}</h3><p>{{ talent.description }}</p><small>{{ talentTagLabel(talent.tags[0] ?? '') }}</small>
           </button>
         </div>
         <div class="section-actions"><GameButton variant="secondary" :disabled="rolling || creating" @click="reroll">{{ t('onboarding.creation.talentStep.reroll') }}</GameButton></div>

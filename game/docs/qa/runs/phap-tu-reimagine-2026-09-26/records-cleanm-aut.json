@@ -1,0 +1,11 @@
+{
+  "reviewer": "devin-f67987e5a7874827aef893b9a4344446",
+  "verdict": "FINDINGS -- 3 Low + 4 Nit; SEAL-clean of Medium+",
+  "evidence": "npm run type-check clean; source/static review incl. full currentThe write census + authored-data census",
+  "findings": [
+    "AUT-1 (Low): duplicated debit authority -- consumeResourceFor floors+writes currentThe via RESOURCE_FIELD vs consumeThe caller-checks-first; authored cost{resourceType:'the'} floors on commit lane but skip-faults on plan lane (dormant)",
+    "AUT-2 (Low): Player.ts resetBattleScopedResources writes entity.currentThe=0 outside TheEconomy -- same out-of-module write class the previous batch removed from the adapter",
+    "AUT-3 (Low): landedConsequences on a NON-damaging def compiles inside for_each_target where lane-only intents other_enemy/other_enemies become a catalog fault -- field vocabulary depends on def.damage; undocumented authoring trap",
+    "AUT-4/5/6/7 (Nits): stale docblocks TheEconomy.ts:15-17 (theGainOnLandedCast exists), EntityResourceAdapter.ts:11-15 (now routes consumeThe); silent channels['the'] shadowing :121-122; dead re-export SkillExecutor.ts:930 SkillResolverError"
+  ]
+}

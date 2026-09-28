@@ -1,0 +1,8 @@
+{
+  "tools": {
+    "node": "v24.19.0"
+  },
+  "os": "win32",
+  "profile": "unprofiled",
+  "note": "declare real environment profile; 'unprofiled' cannot satisfy a runtime-dependent cell"
+}
