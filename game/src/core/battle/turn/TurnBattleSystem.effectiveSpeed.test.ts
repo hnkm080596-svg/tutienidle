@@ -130,7 +130,7 @@ describe('effective speed sync (AR-05)', () => {
     let playerReadyTurns = 0
 
     for (let step = 0; step < 10; step++) {
-      const actor = system.peekNextActor(battle)
+      const actor = system.dequeueNextActorForClaim(battle)
 
       if (actor?.id === 'player') {
         playerReadyTurns = step

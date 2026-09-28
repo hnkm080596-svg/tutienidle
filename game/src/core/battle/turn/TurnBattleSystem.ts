@@ -4,6 +4,7 @@
 // đúng end-to-end trước khi lớp thêm skill/buff/reaction/hazard zone ở
 // slice sau.
 import type { CombatEntity } from '../../combat/CombatEntity'
+import { actorAnchor, castDisposition, declaredPresentationSkill, freezePresentation, presentationGroup, withGroupOutcomes, type ResolvedPresentationGroup, type SkillPresentationOutcome } from './SkillPresentationFacts'
 import type { CombatSystem } from '../../combat/CombatSystem'
 import type { CombatRng } from '../contracts/rng'
 import { FunctionCombatRng } from '../runtime/rng/FunctionCombatRng'
@@ -551,10 +552,17 @@ export class TurnBattleSystem {
   private pendingReactiveEntry: QueuedFollowUp | null = null
 
   /**
-   * Task 11 -- same bridge pattern as pendingFollowUpBypassActorId, but
-   * the entry IS the action: dequeueQueuedExecution() sets it,
-   * declareActorAction() consumes it once and builds the declared action
-   * from the descriptor (no selectAction, no turn machinery).
+   * Task 11 -- same bridge pattern as pendingReactiveEntry, but the
+   * entry IS the action: dequeueFollowUpActor() sets it when it drains
+   * battle.queuedExecutions, and declareActorAction() consumes it once,
+   * building the declared action from the descriptor (no selectAction,
+   * no turn machinery).
+   *
+   * Consumption is NOT the reactive lane's contract though: this field
+   * is cleared unconditionally at the top of declareActorAction, before
+   * the actor-id match -- a stale entry is dropped outright rather than
+   * left parked for a later unrelated declare to trip over.
+   * pendingReactiveEntry clears only on a match (see the declare site).
    */
   private pendingQueuedExecution: TurnQueuedExecution | null = null
 
@@ -1050,9 +1058,18 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Defect-fix Task 1 -- shared bởi tickPacing() và peekNextActor():
-   * dequeue follow-up actor kế tiếp từ queue (nếu có, còn sống, dưới
-   * reciprocity cap). Bỏ qua id của actor chết không tốn chain-depth.
+   * Defect-fix Task 1 -- shared by tickPacing() and
+   * dequeueNextActorForClaim(): dequeues the next follow-up actor from
+   * the queue (if any, still alive, under the reciprocity cap). Dead
+   * actors' ids are skipped without spending chain-depth.
+   *
+   * This is a COMMITTING dequeue, not a preview: it mutates
+   * battle.queuedExecutions / battle.queuedFollowUps and parks the
+   * popped entry on pendingQueuedExecution / pendingReactiveEntry so
+   * declareActorAction() can consume it. Only call it for an actor the
+   * caller is about to resolve. Parking over an occupied slot throws --
+   * a second dequeue before the declare would silently overwrite the
+   * committed payload already shifted off the queue.
    */
   private dequeueFollowUpActor(battle: TurnBattle): TurnBattleParticipant | null {
     // Task 11 -- prepared executions (repeat/multicast) drain FIRST: they
@@ -1074,6 +1091,11 @@ export class TurnBattleSystem {
         battle.enemies.find((enemy) => enemy.id === entry.actorId)
 
       if (execActor?.entity.alive) {
+        if (this.pendingQueuedExecution !== null) {
+          throw new Error(
+            `TurnBattleSystem: dequeueFollowUpActor dequeued a queued execution while pendingQueuedExecution still holds actor '${this.pendingQueuedExecution.actorId}' -- a committed payload would be silently overwritten; declare must consume the park before the next dequeue`,
+          )
+        }
         this.pendingQueuedExecution = entry
         return execActor
       }
@@ -1118,6 +1140,12 @@ export class TurnBattleSystem {
     }
 
     battle.followUpChainDepth = (battle.followUpChainDepth ?? 0) + 1
+
+    if (this.pendingReactiveEntry !== null) {
+      throw new Error(
+        `TurnBattleSystem: dequeueFollowUpActor dequeued a reactive follow-up while pendingReactiveEntry still holds actor '${this.pendingReactiveEntry.actorId}' -- a committed payload would be silently overwritten; declare must consume the park before the next dequeue`,
+      )
+    }
     this.pendingReactiveEntry = entry
 
     return queued
@@ -1281,8 +1309,9 @@ export class TurnBattleSystem {
       }
     }
 
-    // Defect-fix Task 1 -- follow-up/counter queue TRƯỚC gauge order: queue
-    // là production path duy nhất đọc (peekNextActor không chạy trong loop).
+    // Defect-fix Task 1 -- follow-up/counter queue BEFORE gauge order:
+    // the queue is the only production read path (dequeueNextActorForClaim
+    // does not run inside the pacing loop).
     const followUpActor = this.dequeueFollowUpActor(battle)
 
     if (followUpActor) {
@@ -1338,14 +1367,21 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Slice 7 (Completion Task 10) -- tìm actor kế tiếp SẴN SÀNG hành động
-   * mà KHÔNG resolve gì cả. Gauge advancement chạy thật (mutation để
-   * tìm ai tới lượt là thật và GIỮ NGUYÊN), nhưng dừng trước buff tick /
-   * action resolution / turn-counter increment. GameManager manual mode
-   * gọi method này trước để biết có cần pause chờ input player không;
-   * resume sau đó bằng resolveActorTurn(battle, actor, chosenSlot).
+   * Slice 7 (Completion Task 10) -- pick the next READY actor WITHOUT
+   * resolving the turn. Despite being the "peek" half of the old
+   * peek-then-resolve split, this is a COMMITTING read, not a preview:
+   * gauge advancement runs for real (the mutation that finds whose turn
+   * it is stays), and a queued follow-up/execution is DEQUEUED -- its
+   * entry is parked on pendingQueuedExecution / pendingReactiveEntry for
+   * declareActorAction() to consume once. It stops before buff tick /
+   * action resolution / turn-counter increment only. Callers must
+   * therefore resolve the returned actor (resolveActorTurn /
+   * beginTurnPipeline), never treat the result as a discarded preview --
+   * a peek with no claim following leaves a committed pending entry
+   * parked. (The read-only turn-order preview lives in
+   * TurnOrderPreview.peekUpcomingActors, which touches none of this.)
    */
-  peekNextActor(battle: TurnBattle): TurnBattleParticipant | null {
+  dequeueNextActorForClaim(battle: TurnBattle): TurnBattleParticipant | null {
     // Countdown phase: combat chưa bắt đầu -- không ai tới lượt.
     if (battle.state !== 'fighting') {
       return null
@@ -1398,11 +1434,13 @@ export class TurnBattleSystem {
     // descriptor IS the remainder of an already-committed cast -- it only
     // re-resolves the payload (composite picks re-roll per execution).
     const queuedExec = this.pendingQueuedExecution
-    // Consumed unconditionally (unlike pendingReactiveEntry below, which
-    // survives a mismatch): a queued descriptor that arrives for the wrong
-    // actor is dropped rather than parked -- the pacing loop only declares
-    // the dequeued actor, so a mismatched entry signals an out-of-order
-    // manual declare and silently parking it would be the leakier failure.
+    // Consumed unconditionally on entry, BEFORE the actor match: the
+    // dequeue already committed this lane to the actor it surfaced, so a
+    // mismatch means the parked entry is stale -- dropping it beats
+    // leaving it for a later unrelated declare to trip over. The
+    // reactive lane below intentionally differs: pendingReactiveEntry
+    // clears only when the declaring actor matches, so a mismatched
+    // declare leaves that entry parked.
     this.pendingQueuedExecution = null
 
     if (queuedExec && queuedExec.actorId === actor.id) {
@@ -1412,7 +1450,9 @@ export class TurnBattleSystem {
 
     // The Tu Reimagined (spec 7.1, plan v2.4 P0.1) -- a queued reactive
     // entry branches at the TOP: real action through declare -> impact,
-    // but none of the natural-turn lifecycle below runs for it.
+    // but none of the natural-turn lifecycle below runs for it. Clears
+    // ONLY on an actor-id match -- see the unconditional-consume note on
+    // pendingQueuedExecution above.
     if (this.pendingReactiveEntry?.actorId === actor.id) {
       const entry = this.pendingReactiveEntry
       this.pendingReactiveEntry = null
@@ -1906,7 +1946,13 @@ export class TurnBattleSystem {
       const targetScope = payloadSkill?.targetScope ?? 'enemy'
 
       if (targetScope === 'self') {
-        affected = [actor]
+        // A charge initiation resolves no target set -- the same
+        // !isChargeInit gate the enemy branch applies, so a self-scoped
+        // charge cast never queues repeat/multicast executions off an
+        // uncharged payload.
+        if (!isChargeInit) {
+          affected = [actor]
+        }
         scaledDamage = null
       } else {
         opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
@@ -2009,6 +2055,30 @@ export class TurnBattleSystem {
   applyActionImpact(
     battle: TurnBattle,
     declared: TurnDeclaredAction,
+  ): { targetIds: string[]; extraImpacts: TurnActionExtraImpact[]; presentationGroups: readonly ResolvedPresentationGroup[] } {
+    const groups: ResolvedPresentationGroup[] = []
+    const outcomes: SkillPresentationOutcome[] = []
+    const actor = [...battle.players, ...battle.enemies].find(p => p.id === declared.actorId)
+    const skill = declaredPresentationSkill(declared)
+    const primary = actor ? presentationGroup(actor, skill) : {
+      groupId: '', role: 'primary' as const, resolvedSkillId: skill?.id ?? declared.skillId,
+      presetId: skill?.presetId ?? 'arcane_impact' as const,
+      source: { entityId: declared.actorId, row: 0, column: 0 }, actualTargets: [], footprint: { kind: 'none' as const }, outcomes: [],
+    }
+    const result = this.applyActionImpactCollected(battle, declared, groups, outcomes)
+    if (!groups.some(g => g.role === 'primary')) {
+      const disposition = castDisposition(declared)
+      const reason = !actor ? 'missing-source' : disposition !== 'action' && disposition !== 'charge-release' ? disposition : this.runtime ? 'unsupported' : 'engine-unit-no-effect'
+      groups.unshift(withGroupOutcomes(primary, outcomes.length ? outcomes : [{ outcomeId: '', kind: 'no-effect', reason }]))
+    }
+    return { ...result, presentationGroups: freezePresentation(groups) }
+  }
+
+  private applyActionImpactCollected(
+    battle: TurnBattle,
+    declared: TurnDeclaredAction,
+    groups: ResolvedPresentationGroup[],
+    outcomes: SkillPresentationOutcome[],
   ): { targetIds: string[]; extraImpacts: TurnActionExtraImpact[] } {
     const targetIds: string[] = []
     const extraImpacts: TurnActionExtraImpact[] = []
@@ -2091,6 +2161,7 @@ export class TurnBattleSystem {
           : null
 
       if (routed !== null) {
+        groups.push(...routed.presentationGroups)
         targetIds.push(...routed.landedTargetIds)
         landedTargets.push(...routed.landedTargets)
         // Fall through -- the shared Tro window at the tail fires once,
@@ -2166,6 +2237,8 @@ export class TurnBattleSystem {
               chargedDamage,
               chargedSkill,
               declared,
+              undefined,
+              outcomes,
             )
 
             if (!hitResult.dodged) {
@@ -2243,6 +2316,8 @@ export class TurnBattleSystem {
         declared.castBlocked = true
         actor.pendingChargedSkillId = undefined
         actor.chargingTurnsRemaining = undefined
+      } else {
+        groups.push(...routed.presentationGroups)
       }
     }
 
@@ -2332,6 +2407,7 @@ export class TurnBattleSystem {
       }
 
       if (routed !== null) {
+        groups.push(...routed.presentationGroups)
         targetIds.push(...routed.landedTargetIds)
         landedTargets.push(...routed.landedTargets)
         // Non-damaging lane parity (the else-branch below): every
@@ -2353,6 +2429,7 @@ export class TurnBattleSystem {
       if (engineUnitLane && declared.compositePickedSkills?.length) {
         for (const pickedSkill of declared.compositePickedSkills) {
           if (!pickedSkill.damage) continue
+          const pickedOutcomes: SkillPresentationOutcome[] = []
 
           const pickedDamage = declared.suddenDeathMultiplier === 1
             ? pickedSkill.damage
@@ -2369,6 +2446,8 @@ export class TurnBattleSystem {
               pickedDamage,
               pickedSkill,
               declared,
+              undefined,
+              pickedOutcomes,
             )
 
             if (!hitResult.dodged) {
@@ -2376,6 +2455,7 @@ export class TurnBattleSystem {
               landedTargets.push(target)
             }
           }
+          groups.push(withGroupOutcomes(presentationGroup(actor, pickedSkill, 'composite'), pickedOutcomes.length ? pickedOutcomes : [{ outcomeId: '', kind: 'no-effect', reason: 'no-executed-hit' }]))
         }
       }
 
@@ -2408,6 +2488,7 @@ export class TurnBattleSystem {
               payloadSkill ?? null,
               declared,
               hitOptions,
+              outcomes,
             )
 
             if (!hitResult.dodged) {
@@ -2513,7 +2594,7 @@ export class TurnBattleSystem {
           })
 
           for (const extraDef of extraDefs) {
-            extraImpacts.push(this.applyExtraImpact(battle, actor, declared, extraDef))
+            extraImpacts.push(this.applyExtraImpact(battle, actor, declared, extraDef, groups))
           }
         }
       }
@@ -2570,6 +2651,7 @@ export class TurnBattleSystem {
     skill: TurnSkillDefinition | null,
     declared: TurnDeclaredAction,
     hitOptions?: Partial<HitResolveOptions>,
+    presentationOutcomes?: SkillPresentationOutcome[],
   ): DamageResult {
     // The Tu Reimagined (spec section 3.4, plan Task 7) -- the missing-HP
     // scalar resolves PER HIT against the actor's LIVE hp: a
@@ -2581,6 +2663,7 @@ export class TurnBattleSystem {
       this.applyMissingHpScalar(damage, actor.entity),
       hitOptions,
     )
+    presentationOutcomes?.push({ outcomeId: '', kind: 'hit', target: actorAnchor(target), hitOrdinal: presentationOutcomes.filter(o => o.kind === 'hit').length, landed: !hitResult.dodged, crit: hitResult.critical, hpDamage: hitResult.hpDamage, killed: !target.entity.alive })
 
     // Ung The beta -- record the outcome for the post-action Phan
     // window; the per-hit windows + per-hit income are gone (INV-10:
@@ -2594,12 +2677,13 @@ export class TurnBattleSystem {
       // target THẬT SỰ lost post-absorb -- a fully-warded hit feeds
       // nothing (damage-proportional = taken-only trigger).
       if (skill?.healPercentOfDamage && hitResult.hpDamage > 0) {
-        this.combat.applyHealing(
+        const healed = this.combat.applyHealing(
           actor.entity,
           hitResult.hpDamage * skill.healPercentOfDamage,
           actor.entity.id,
           'leech',
         )
+        presentationOutcomes?.push({ outcomeId: '', kind: 'heal', target: actorAnchor(actor), healed })
       }
 
       // consume-for-ward (Tho Tu ward burst) -- the only consume
@@ -2611,7 +2695,8 @@ export class TurnBattleSystem {
         const ward = actor.entity.currentWard
 
         if (ward > 0) {
-          this.combat.applyDirectDamage(target.entity, ward * skill.damagePerWardPoint, actor.entity.id)
+          const hpDamage = this.combat.applyDirectDamage(target.entity, ward * skill.damagePerWardPoint, actor.entity.id)
+          presentationOutcomes?.push({ outcomeId: '', kind: 'hit', target: actorAnchor(target), hitOrdinal: presentationOutcomes.filter(o => o.kind === 'hit').length, landed: true, crit: false, hpDamage, killed: !target.entity.alive })
           this.combat.spendWard(actor.entity, ward, 'ward_spend', actor.entity.id)
         }
       }
@@ -2798,7 +2883,9 @@ export class TurnBattleSystem {
     actor: TurnBattleParticipant,
     declared: TurnDeclaredAction,
     extraDef: TurnSkillDefinition,
+    presentationGroups: ResolvedPresentationGroup[],
   ): TurnActionExtraImpact {
+    const outcomes: SkillPresentationOutcome[] = []
     const extraScope = extraDef.targetScope ?? 'enemy'
 
     const extraTargets: TurnBattleParticipant[] =
@@ -2823,6 +2910,7 @@ export class TurnBattleSystem {
         : null
 
     if (routed !== null) {
+      presentationGroups.push(...routed.presentationGroups)
       landedIds.push(...routed.landedTargetIds)
       hitCount = routed.hitCount
     } else if (this.runtime !== undefined) {
@@ -2846,7 +2934,7 @@ export class TurnBattleSystem {
             if (!target.entity.alive || !actor.entity.alive) break
 
             const opts = extraDef.instances?.perInstanceOptions?.(i, target.entity, landedPriorInstances)
-            const result = this.resolveDeclaredHit(battle, actor, target, scaled, extraDef, declared, opts)
+            const result = this.resolveDeclaredHit(battle, actor, target, scaled, extraDef, declared, opts, outcomes)
             hitCount += 1
 
             if (!result.dodged) {
@@ -2874,6 +2962,9 @@ export class TurnBattleSystem {
       !landedIds.includes(actor.id)
     ) {
       landedIds.push(actor.id)
+    }
+    if (routed === null) {
+      presentationGroups.push(withGroupOutcomes(presentationGroup(actor, extraDef, 'combo'), outcomes.length ? outcomes : [{ outcomeId: '', kind: 'no-effect', reason: this.runtime ? 'unsupported' : 'engine-unit-no-effect' }]))
     }
 
     return {
@@ -3060,10 +3151,73 @@ export class TurnBattleSystem {
    * (repeat/multicast) AND committed reactive follow-ups (Phan/Tro
    * counters drain through pendingReactiveEntry with a forced bypass
    * declare -- any submitted choice would be silently discarded).
+   *
+   * Lane-level terms of isCommittedFollowUpClaim -- claim and drain
+   * sites consult that predicate, not this one.
    */
   isPendingQueuedExecution(actorId: string): boolean {
     return this.pendingQueuedExecution?.actorId === actorId
       || this.pendingReactiveEntry?.actorId === actorId
+  }
+
+  /**
+   * The reactive lane's term of isCommittedFollowUpClaim: a queued
+   * Phan/Tro counter dequeued by dequeueFollowUpActor parks in
+   * pendingReactiveEntry until declareActorAction consumes it via
+   * declareReactiveBypass with a forced payload -- a committed action,
+   * never a manual choice, so manual mode must neither pause for it nor
+   * re-park it on drain.
+   *
+   * Consumption differs from the queued-execution lane despite the
+   * shared bridge shape: pendingReactiveEntry clears only when the
+   * declaring actor matches (a mismatched declare leaves it parked),
+   * while pendingQueuedExecution is dropped unconditionally at declare
+   * entry. Claim/drain sites read isCommittedFollowUpClaim, which hides
+   * that difference.
+   */
+  isPendingReactiveBypass(actorId: string): boolean {
+    return this.pendingReactiveEntry?.actorId === actorId
+  }
+
+  /**
+   * The committed-claim predicate: is this actor's next declare already
+   * spoken for? True when ANY committed lane carries the payload:
+   *
+   * - a parked queued execution (repeat/multicast): the descriptor IS
+   *   the remainder of a committed cast, re-resolving the payload only;
+   * - a parked reactive entry (Phan/Tro bypass): declareReactiveBypass
+   *   runs a forced payload;
+   * - an in-flight charge (participant-carried chargingTurnsRemaining):
+   *   the declare's charge block replaces action resolution entirely
+   *   (the !isCharging gate), so a submitted manual choice is never
+   *   read.
+   *
+   * Manual mode must neither pause for nor re-park such a turn: an
+   * AWAITING_INPUT claim solicits a choice the declare then discards,
+   * and a drain that re-parked it would orphan the committed payload on
+   * an IDLE token. The claim site (GameManagerTurnBattleOps
+   * .stepTurnBattle) and the drain gate (CombatAnimationRuntime
+   * .drainPendingPlayback) consult THIS predicate alone, so a new
+   * committed lane joins the exemption here rather than by being
+   * enumerated per call site.
+   *
+   * Scope invariant: this predicate can only see lanes that park on the
+   * TBS pending* fields or on the participant itself -- a committed
+   * lane keyed on battle- or runtime-scoped state is invisible to it
+   * and must extend this predicate when one lands.
+   *
+   * The alive gate is not decorative: a mid-charge kill leaves
+   * chargingTurnsRemaining set on the corpse (charge fields clear only
+   * inside declareActorAction, which the dead actor never reaches), so
+   * without it a dead actor would still hold a committed claim.
+   */
+  isCommittedFollowUpClaim(actor: TurnBattleParticipant): boolean {
+    return (
+      actor.entity.alive &&
+      (this.isPendingQueuedExecution(actor.id) ||
+        this.isPendingReactiveBypass(actor.id) ||
+        (actor.chargingTurnsRemaining ?? 0) > 0)
+    )
   }
 
   /**
@@ -3932,9 +4086,10 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Thin wrapper (Slice 7): peekNextActor() + resolveActorTurn() không
-   * forced slot -- giữ nguyên signature/hành vi cho mọi caller Slice 1-6
-   * (auto mode, runToCompletion(), mọi test cũ).
+   * Thin wrapper (Slice 7): dequeueNextActorForClaim() +
+   * resolveActorTurn() with no forced slot -- unchanged signature and
+   * behavior for every Slice 1-6 caller (auto mode, runToCompletion(),
+   * the old tests).
    */
   resolveNextStep(battle: TurnBattle): TurnStepResult {
     // Intro phase (2026-09-07 plan Task 4): combat has not started - safe
@@ -3950,9 +4105,10 @@ export class TurnBattleSystem {
       return { state: 'countdown', actorId: '', skillId: '', targetIds: [], ccBlocked: false }
     }
 
-    // Trận đã kết thúc (victory/defeat) -- KHÔNG ghi đè state thành defeat
-    // (code-review fix: peekNextActor trả null cho state != fighting, nhánh
-    // dưới chỉ được phép set defeat khi trận thực sự không còn ai sống).
+    // Battle already ended (victory/defeat) -- do NOT overwrite state
+    // with defeat (code-review fix: dequeueNextActorForClaim returns null
+    // for state != fighting, so the branch below may set defeat only when
+    // the battle genuinely has no one left alive).
     if (battle.state !== 'fighting') {
       return { state: battle.state, actorId: '', skillId: '', targetIds: [], ccBlocked: false }
     }
@@ -3966,7 +4122,7 @@ export class TurnBattleSystem {
     // preserved; there is no lull hold (gauge keeps running).
     this.advanceHeadlessWave(battle)
 
-    const actor = this.peekNextActor(battle)
+    const actor = this.dequeueNextActorForClaim(battle)
 
     if (!actor) {
       if (battle.wave !== undefined) {

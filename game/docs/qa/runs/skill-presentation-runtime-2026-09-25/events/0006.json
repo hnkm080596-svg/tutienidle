@@ -1,0 +1,9 @@
+{
+  "action": "observe",
+  "assignmentId": "ASG-CORE",
+  "observedStatus": "finished",
+  "evidence": {
+    "kind": "EXECUTED_RUNTIME",
+    "ref": "collaboration.list_agents 2026-09-25T03:40Z /root/core_runtime completed"
+  }
+}
