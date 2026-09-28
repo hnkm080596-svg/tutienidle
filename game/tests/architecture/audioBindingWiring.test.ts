@@ -98,7 +98,15 @@ describe('audio binding wiring', () => {
       for (const file of FILES) {
         // Tests legitimately feed bogus ids - only production files bind.
         if (file.fromSrc.endsWith('.test.ts')) continue
-        const text = uncommented(file.text, file.fromSrc)
+        // For .vue, sweep template text too: event handlers like
+        // @click="cue('x')" are real call sites (none in-tree today -
+        // enforced anyway so a future template call cannot escape).
+        const templateText = file.fromSrc.endsWith('.vue')
+          ? file.text
+              .replace(/<script[\s\S]*?<\/script>/gi, '')
+              .replace(/<!--[\s\S]*?-->/g, '')
+          : ''
+        const text = uncommented(file.text, file.fromSrc) + '\n' + templateText
         // Names declared locally in this file (`function cue`, `const cue
         // =`) are not the store seam - bare calls to them are exempt.
         const localNames = new Set<string>()
@@ -107,10 +115,15 @@ describe('audio binding wiring', () => {
         // `q('id')`) rename the seam - collect them and check their calls
         // through the same literal resolution pipeline.
         const aliases: string[] = []
-        for (const dm of text.matchAll(/\bconst\s*\{[^}]*\}/g)) {
+        for (const dm of text.matchAll(/\b(?:const|let|var)\s*\{[^}]*\}/g)) {
           for (const am of dm[0].matchAll(/\b(?:cue|playCue)\s*:\s*([A-Za-z_]\w*)/g)) {
             aliases.push(am[1]!)
           }
+        }
+        // `import { cue as q }` from the store module renames the seam
+        // without a destructure - collect those aliases too.
+        for (const am of text.matchAll(/\b(?:cue|playCue)\s+as\s+([A-Za-z_]\w*)/g)) {
+          aliases.push(am[1]!)
         }
         const callRe =
           aliases.length === 0
@@ -182,17 +195,32 @@ describe('audio binding wiring', () => {
                 // Concat initializers (`const X = 'a' + 'bogus.id'`)
                 // bind more than the first literal - sweep the rest of
                 // the statement when a `+` connector follows.
-                const stmtEnd = tail.search(/[;\n]/)
-                const stmt = stmtEnd === -1 ? tail : tail.slice(0, stmtEnd)
-                if (/\+/.test(stmt)) {
-                  for (const lit of stmt.matchAll(LITERAL)) {
-                    if (lit.index === first.index) continue
-                    checkLiteral(violations, file.fromSrc, lit[2]!)
-                  }
+                // Walk 'lit' + 'lit' + ... chains across line breaks:
+                // after each literal, if the next token is +, the next
+                // literal also binds. Stops before unrelated statements.
+                let cursor = first.index + first[0].length
+                for (;;) {
+                  const plus = /^\s*\+\s*/.exec(tail.slice(cursor))
+                  if (!plus) break
+                  cursor += plus[0].length
+                  const nxt = /^(['"`])([^'"`\n]*)\1/.exec(tail.slice(cursor))
+                  if (!nxt) break
+                  checkLiteral(violations, file.fromSrc, nxt[2]!)
+                  cursor += nxt[0].length
                 }
               }
             }
           }
+        }
+        // `.cue`/`.playCue` on an audio-seam receiver referenced as a
+        // VALUE (callback passing like arr.forEach(store.cue), alias
+        // RHS) is not a call shape and would escape CALL entirely - flag
+        // it. Receiver names are restricted to audio-seam idiom so the
+        // VFX domain's own `cue` property (SkillCue) is not flagged.
+        for (const vm of text.matchAll(
+          /\b(?:audioStore|store|audioMgr|audioManager|audio|am)\s*\.\s*(cue|playCue)\b(?!\s*!?\s*(?:<[^>\n]*>)?\s*!?\s*(?:\?\.\s*)?\()/g,
+        )) {
+          violations.push(`${file.fromSrc} -> value-ref .${vm[1]} at offset ${vm.index}`)
         }
       }
       expect(violations).toEqual([])

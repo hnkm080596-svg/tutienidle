@@ -97,7 +97,7 @@ describe('audio boundary', () => {
         if (file.fromSrc.endsWith('.test.ts')) continue
         if (file.fromSrc.startsWith('core/audio/')) continue
         for (const spec of importSpecifiers(file.text, file.fromSrc)) {
-          if (spec === 'tone' || spec.startsWith('tone/')) {
+          if (/^tone([/?#.]|$)/.test(spec)) {
             offenders.push(`${file.fromSrc} -> ${spec}`)
           }
         }
@@ -160,7 +160,11 @@ describe('audio boundary', () => {
         if (!file.fromSrc.endsWith('.test.ts')) continue
         if (!file.text.includes('@vitest-environment jsdom')) continue
         if (!/AudioManager|playCue/.test(file.text)) continue
-        if (!file.text.includes("visibilityState")) {
+        if (
+          !/Object\.defineProperty\(\s*document\s*,\s*['"]visibilityState['"]|document\.visibilityState\s*=|stubGlobal\(\s*['"]document['"]/.test(
+            file.text,
+          )
+        ) {
           offenders.push(file.fromSrc)
         }
       }
