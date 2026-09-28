@@ -1,1771 +1,2631 @@
 {
-  "schemaVersion": 2,
-  "run": {
-    "id": "sound-system-2026-09-28",
-    "createdAt": "2026-09-28T05:31:45.607Z",
-    "scope": "AGGREGATE_REPOSITORY",
-    "authorizedRepairs": [],
-    "nonGoals": [],
-    "checkout": "/tmp/sound-merge/game",
-    "branch": "devin/1790536865-sound-system-audit",
-    "base": "21a5f8c5",
-    "head": "791a7903",
-    "state": {
-      "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
-      "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-      "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-      "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-    },
-    "manifestPath": "manifest.json",
-    "environmentPath": "environment.json",
-    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
-    "consumedLessonIds": [],
-    "aggregateParents": [],
-    "requiredDomains": [],
-    "exclusions": [],
-    "briefIds": [],
-    "capacityLimit": 5,
-    "requiredReadiness": false,
-    "phase": "SNAPSHOT",
-    "cleanRoundA": null,
-    "cleanRoundB": null,
-    "finalEvidenceIds": [],
-    "outcome": null
+ "schemaVersion": 2,
+ "run": {
+  "id": "sound-system-2026-09-28",
+  "createdAt": "2026-09-28T05:31:45.607Z",
+  "scope": "AGGREGATE_REPOSITORY",
+  "authorizedRepairs": [],
+  "nonGoals": [],
+  "checkout": "/tmp/sound-merge/game",
+  "branch": "devin/1790536865-sound-system-audit",
+  "base": "21a5f8c5",
+  "head": "791a7903",
+  "state": {
+   "productStateId": "a988c99af84e5a8046cc6747d78a71442eeb747203da0df0d2ce206a70e5e4ec",
+   "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+   "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+   "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
   },
-  "briefs": [],
-  "assignments": [],
-  "consumptions": [],
-  "invariants": [],
-  "census": [],
-  "findings": [
+  "manifestPath": "manifest.json",
+  "environmentPath": "environment.json",
+  "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "consumedLessonIds": [],
+  "aggregateParents": [],
+  "requiredDomains": [],
+  "exclusions": [],
+  "briefIds": [],
+  "capacityLimit": 5,
+  "requiredReadiness": false,
+  "phase": "SNAPSHOT",
+  "cleanRoundA": null,
+  "cleanRoundB": null,
+  "finalEvidenceIds": [],
+  "outcome": null
+ },
+ "briefs": [],
+ "assignments": [],
+ "consumptions": [],
+ "invariants": [],
+ "census": [],
+ "findings": [
+  {
+   "id": "F-SND-01",
+   "title": "ConfirmModal stray duplicate </template> breaks app boot",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "ui",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Critical",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "INT-1 (probe: build fails, e2e step1 crash)",
+   "expected": "template parses once",
+   "actual": "duplicate </template> merge artifact from 5e5318a1 crashes boot",
+   "rootCause": "merge-resolution artifact not caught by conflict markers",
+   "rootClass": "MERGE_ARTIFACT",
+   "counterexample": "none found",
+   "locations": [
     {
-      "id": "F-SND-01",
-      "title": "ConfirmModal stray duplicate </template> breaks app boot",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "ui",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Critical",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "INT-1 (probe: build fails, e2e step1 crash)",
-      "expected": "template parses once",
-      "actual": "duplicate </template> merge artifact from 5e5318a1 crashes boot",
-      "rootCause": "merge-resolution artifact not caught by conflict markers",
-      "rootClass": "MERGE_ARTIFACT",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/components/common/ConfirmModal.vue",
-          "symbolOrSection": ":106",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "remove stray tag; verified npm build + ConfirmModal consumers + e2e boot",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "PROVEN",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": [
-        "EV-SND-INT1-PROBES"
-      ]
-    },
-    {
-      "id": "F-SND-02",
-      "title": "dom-audio lane stores decoded buffers under cue id; playback looks up manifest src",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "audio-pipeline",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "High",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "COR-1 + AUT-1 + INT-1 (independent, INT proven live)",
-      "expected": "ensureLoaded decodes file -> hasDecodedBuffer(src) true -> cue plays",
-      "actual": "descriptors keyed by cue id; pickDecodedSrc reads buffers by src -> decoded audio unreachable, loadedResources reports success",
-      "rootCause": "two half-contracts (descriptor key vs playback key) never reconciled; masked by src:'' rows",
-      "rootClass": "KEYSPACE_CONTRACT",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/presentation/assets/AssetBundleCatalog.ts",
-          "symbolOrSection": ":321",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        },
-        {
-          "path": "src/presentation/assets/AssetBundleManager.ts",
-          "symbolOrSection": ":356",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        },
-        {
-          "path": "src/core/audio/AudioManager.ts",
-          "symbolOrSection": ":589",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "one descriptor per src keyed by src path; attach under src; pins updated to assert src key",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "PROVEN",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": [
-        "EV-SND-COR1-SUITE",
-        "EV-SND-AUT1-SUITE",
-        "EV-SND-INT1-PROBES"
-      ]
-    },
-    {
-      "id": "F-SND-03",
-      "title": "reactive_proc discriminator dead: trigger carries window name, mechanic absent from payload",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "combat-binding",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Medium",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "COR-1",
-      "expected": "intercept/counter procs cue combat.ungthe.intercept|counter",
-      "actual": "payload emits trigger=ReactiveTriggerName; mechanic never leaves attempt.effect -> rows unreachable",
-      "rootCause": "discriminator read a field the producer never set",
-      "rootClass": "DEAD_CONTRACT",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/presentation/audio/combatAudioBinding.ts",
-          "symbolOrSection": ":201",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        },
-        {
-          "path": "src/core/battle/turn/TurnBattleSystem.ts",
-          "symbolOrSection": ":3431",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "payload gains mechanic from attempt.effect.mechanic; binding reads event.mechanic; pin emits real shape",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "PROVEN",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": []
-    },
-    {
-      "id": "F-SND-04",
-      "title": "status_vfx_attached always cues combat.dot.apply; buff/debuff branches unreachable",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "combat-binding",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Medium",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "COR-1",
-      "expected": "buff->combat.buff.apply, debuff->combat.debuff.apply, DoT->combat.dot.apply",
-      "actual": "dotType=definitionId always truthy -> first branch always wins",
-      "rootCause": "dotType conflates definitionId with DoT-ness",
-      "rootClass": "DEAD_CONTRACT",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/presentation/audio/combatAudioBinding.ts",
-          "symbolOrSection": ":162",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        },
-        {
-          "path": "src/core/battle/turn/TurnStatusPresentationEvents.ts",
-          "symbolOrSection": ":45",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "payload gains periodicDamage flag; binding maps dot only when true; pins emit flag",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "PROVEN",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": []
-    },
-    {
-      "id": "F-SND-05",
-      "title": "play/crossfade/stopMusic unconditionally clear musicSuspended -> hidden tab resumes audio",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "audio-core",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Medium",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "COR-1",
-      "expected": "suspend stays until visibilitychange to visible",
-      "actual": "route change while hidden -> crossfade clears suspension -> track starts in hidden tab; initial hidden load never suspends",
-      "rootCause": "musicSuspended had multiple writers",
-      "rootClass": "OWNERSHIP_MULTIPLE_WRITERS",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/core/audio/AudioManager.ts",
-          "symbolOrSection": ":629",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        },
-        {
-          "path": "src/presentation/audio/ambientAudioDriver.ts",
-          "symbolOrSection": ":62",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "musicSuspended owned solely by suspendMusic/resumeMusic; driver seeds via onVisibilityChange at startup",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "PROVEN",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": []
-    },
-    {
-      "id": "F-SND-06",
-      "title": "loadPersisted corrupt-v2 JSON skips promised v1 fallback",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "audio-store",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Low",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "COR-1 + INT-1",
-      "expected": "corrupt v2 falls through to v1 blob per comment",
-      "actual": "catch{return{}} abandons v1",
-      "rootCause": "catch swallowed fallback",
-      "rootClass": "EDGE_CASE",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/stores/audio.ts",
-          "symbolOrSection": ":41",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "catch->continue",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "TRIAGED",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": []
-    },
-    {
-      "id": "F-SND-07",
-      "title": "Player leaks on start()/stop() throw + suspended-context fade paths",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "audio-core",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Low",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "COR-1",
-      "expected": "failed/fading players self-remove",
-      "actual": "players.add before start(); onstop never fires when suspended",
-      "rootCause": "cleanup relied on onstop only",
-      "rootClass": "LIFECYCLE_LEAK",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/core/audio/AudioManager.ts",
-          "symbolOrSection": ":616",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "try/catch deletes+disposes on throw; reaper setTimeout force-detaches after fade window",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "TRIAGED",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": []
-    },
-    {
-      "id": "F-SND-08",
-      "title": "variant cursor off-by-one: first play never serves index 0",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "audio-core",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Nit",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "COR-1 + AUT-1",
-      "expected": "first variant = index 0",
-      "actual": "cursor (??0)+1 -> serves index1 first",
-      "rootCause": "cursor init",
-      "rootClass": "OFF_BY_ONE",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/core/audio/AudioManager.ts",
-          "symbolOrSection": ":596",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "cursor ?? -1",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "TRIAGED",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": []
-    },
-    {
-      "id": "F-SND-09",
-      "title": "fade-in dropped for music requested before unlock",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "audio-core",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Nit",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "COR-1",
-      "expected": "pre-unlock crossfade still fades on first start",
-      "actual": "unlock calls applyDesiredMusic() w/o arg -> fade 0 pops in",
-      "rootCause": "fadeSec lost across early-return",
-      "rootClass": "STATE_LOSS",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/core/audio/AudioManager.ts",
-          "symbolOrSection": ":412",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "pendingMusicFadeSec field consumed by applyDesiredMusic",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "TRIAGED",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": []
-    },
-    {
-      "id": "F-SND-10",
-      "title": "i18nKeyParity cue-id exemption is shape-only; real i18n keys under combat.*/tribulation.* skipped",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "guards",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Low",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "COR-1 + AUT-1",
-      "expected": "exemption only for true audio cue ids",
-      "actual": "21 real i18n literals (combat.victory.title etc.) silently skipped by regex shape",
-      "rootCause": "shape regex approximated membership in cue manifest",
-      "rootClass": "GUARD_TOO_BROAD",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "tests/architecture/i18nKeyParity.test.ts",
-          "symbolOrSection": ":376",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "isAudioCue() consults resolveAudioCue + AUDIO_CUES prefix coverage",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "TRIAGED",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": []
-    },
-    {
-      "id": "F-SND-11",
-      "title": "battle-ending proc records may never drain (cosmetic)",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "combat-pipeline",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Nit",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "COR-1",
-      "expected": "all proc records drain",
-      "actual": "records minted by lethal final action strand when turnBattle nulled same tick",
-      "rootCause": "drain gated on this.turnBattle",
-      "rootClass": "KNOWN_SHAPE",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/core/game/GameManagerTurnBattleOps.ts",
-          "symbolOrSection": ":620",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "deferred: same shape as pre-existing reaction drain; cosmetic",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "TRIAGED",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": []
-    },
-    {
-      "id": "F-SND-12",
-      "title": "EquipmentPaperdoll plays ui.equip on unequip direction",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "ui-audio",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Nit",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "COR-1",
-      "expected": "distinct unequip cue or none",
-      "actual": "same ui.equip both directions",
-      "rootCause": "no asymmetric cue exists",
-      "rootClass": "MISSING_ASSET",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/components/panels/EquipmentPaperdoll.vue",
-          "symbolOrSection": ":193",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "deferred: spec has no unequip row; semantic-only",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "TRIAGED",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": []
-    },
-    {
-      "id": "F-SND-13",
-      "title": "tribulation cues double-sourced: tribulation_started + presentation_session_started same tick",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "combat-binding",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Medium",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "AUT-1",
-      "expected": "one begin cue",
-      "actual": "tribulation.begin + tribulation.start stack; outcome can play verdict then replay at drain",
-      "rootCause": "two emit sites both mapped",
-      "rootClass": "DOUBLE_SOURCE",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/presentation/audio/combatAudioBinding.ts",
-          "symbolOrSection": "session_started branch",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "presentation_session_started tribulation branch returns undefined (tribulation_started owns begin)",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "PROVEN",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": []
-    },
-    {
-      "id": "F-SND-14",
-      "title": "persisted enabled/volumes only pushed via store.unlock() on pointerdown; keyboard unlock bypasses mute",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "audio-store",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Medium",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "AUT-1 + INT-1 (INT proven live: ui.click fired under persisted mute)",
-      "expected": "persisted enabled=false gates every unlock path",
-      "actual": "GameButton/Chip call mgr.unlock() directly -> defaults applied",
-      "rootCause": "single push site bound to pointerdown",
-      "rootClass": "OWNERSHIP_GAP",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/stores/audio.ts",
-          "symbolOrSection": "unlock",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        },
-        {
-          "path": "src/App.vue",
-          "symbolOrSection": ":207",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "hydrateManager() action pushes settings at App.vue setup; unlock() calls it post-unlock",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "PROVEN",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": [
-        "EV-SND-INT1-PROBES"
-      ]
-    },
-    {
-      "id": "F-SND-15",
-      "title": "spec W7 single-cue-path violated: cue() had zero callers, ~17 components used playCue directly",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "audio-boundary",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Medium",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "AUT-1",
-      "expected": "all audio through useAudioStore().cue",
-      "actual": "~17 .vue + helpers bypassed store seam",
-      "rootCause": "spec/guard/impl disagreement",
-      "rootClass": "BOUNDARY_VIOLATION",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/stores/audio.ts",
-          "symbolOrSection": ":132",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        },
-        {
-          "path": "src/components/common/GameButton.vue",
-          "symbolOrSection": ":44",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "all migrated to store cue; GameButton/Chip documented pinia-free exception (tests mount w/o pinia)",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "PROVEN",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": []
-    },
-    {
-      "id": "F-SND-16",
-      "title": "emit-name<->binding coupling stringly and unguarded; literal cue ids unvalidated",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "guards",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Medium",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "AUT-1",
-      "expected": "typo in either side caught by guard",
-      "actual": "~40 hardcoded event names + literal cue ids silently dead on typo",
-      "rootCause": "no registry/cross-check existed",
-      "rootClass": "MISSING_GUARD",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/presentation/audio/combatAudioBinding.ts",
-          "symbolOrSection": "STATIC_CUES/PAYLOAD_CUES",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "audioBindingWiring.test.ts: bound event names subset of real emit sites; literal cue ids resolve via manifest",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "PROVEN",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": []
-    },
-    {
-      "id": "F-SND-17",
-      "title": "dev/skill-vfx.ts cameraImpulse bypasses applyScreenShake policy",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "vfx-dev",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Low",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "AUT-1",
-      "expected": "all shake via screenShakePolicy",
-      "actual": "dev lab calls cameras.main.shake directly",
-      "rootCause": "dev surface skipped policy",
-      "rootClass": "POLICY_BYPASS",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/dev/skill-vfx.ts",
-          "symbolOrSection": ":149",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "cameraImpulse routed through applyScreenShake",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "TRIAGED",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": []
-    },
-    {
-      "id": "F-SND-18",
-      "title": "playCue on loop:true/music rows mints untracked music-bus player unreachable by stop/suspend",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "audio-core",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Low",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "AUT-1",
-      "expected": "looping music only via music slot",
-      "actual": "spawnPlayer accepts loop:true defs -> orphan player",
-      "rootCause": "no lane guard",
-      "rootClass": "LIFECYCLE_ORPHAN",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/core/audio/AudioManager.ts",
-          "symbolOrSection": ":601",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "playCue early-returns on def.loop===true||channel==='music'",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "TRIAGED",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": []
-    },
-    {
-      "id": "F-SND-19",
-      "title": "player-taken hit double-fires combat.hit + combat.hurt (same recipe)",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "combat-binding",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Low",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "AUT-1 + INT-1 (proven: ['combat.hit','combat.hurt'] per hit)",
-      "expected": "one voice per impact",
-      "actual": "hit unconditional + damage(PLAYER) map to same synth recipe; distinct ids dodge cooldown",
-      "rootCause": "hit fired regardless of target",
-      "rootClass": "DOUBLE_CUE",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/presentation/audio/combatAudioBinding.ts",
-          "symbolOrSection": "hit/damage branches",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "hit moved to PAYLOAD_CUES returning undefined when targetId===PLAYER_ID (hurt owns player-hit)",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "TRIAGED",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": [
-        "EV-SND-INT1-PROBES"
-      ]
-    },
-    {
-      "id": "F-SND-20",
-      "title": "unwired manifest rows (countdown.tick, spawn.*, charge/release, boss.slam, buff.stack, turn_end)",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "manifest",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Low",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "AUT-1",
-      "expected": "every row wired or marked forward-slot",
-      "actual": "9 rows have zero producers",
-      "rootCause": "forward asset slots by design",
-      "rootClass": "FORWARD_SLOT",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/core/audio/AudioCueManifest.ts",
-          "symbolOrSection": "unwired rows",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "deferred: intentional empty slots pending emit mechanisms",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "TRIAGED",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": []
-    },
-    {
-      "id": "F-SND-21",
-      "title": "inverted dep: manifest type-imports SynthSoundId from AudioManager; spec refs MenuButton.vue",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "audio-core",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Nit",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "AUT-1",
-      "expected": "data module does not import engine",
-      "actual": "type-only import inverts direction",
-      "rootCause": "type placement",
-      "rootClass": "DEP_DIRECTION",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/core/audio/AudioCueManifest.ts",
-          "symbolOrSection": ":11",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "SynthSoundId union moved into AudioCueManifest; AudioManager re-exports; spec MenuButton row annotated",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "TRIAGED",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": []
-    },
-    {
-      "id": "F-SND-22",
-      "title": "ConfirmModal Escape bypasses onCancel -> no cancel/modal-close cues",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "subsystem": "ui-audio",
-      "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null,
-      "siblingFindingIds": [],
-      "invariantIds": [],
-      "severity": "Low",
-      "classification": "REAL_DEFECT",
-      "reachability": "SUPPORTED_BOUNDARY",
-      "actionable": true,
-      "discoveredBy": "INT-1",
-      "expected": "Escape emits cancel path cues",
-      "actual": "Escape emitted cancel directly bypassing cue wrapper",
-      "rootCause": "seam missed handler",
-      "rootClass": "SEAM_MISS",
-      "counterexample": "none found",
-      "locations": [
-        {
-          "path": "src/components/common/ConfirmModal.vue",
-          "symbolOrSection": "onEscape",
-          "revision": "791a7903",
-          "basis": "SOURCE"
-        }
-      ],
-      "siblingSearch": [
-        {
-          "roots": [
-            "src/core/audio",
-            "src/presentation/audio",
-            "src/presentation/assets",
-            "src/stores",
-            "src/components"
-          ],
-          "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
-          "evidenceIds": [],
-          "hitDispositions": [],
-          "coverageLimits": [
-            "sweep limited to the diff-touched seam families"
-          ]
-        }
-      ],
-      "repair": "onEscape bound to onCancel",
-      "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
-      "closureReviewIds": [],
-      "status": "TRIAGED",
-      "closedAt": null,
-      "fixedInRevision": null,
-      "evidenceIds": []
+     "path": "src/components/common/ConfirmModal.vue",
+     "symbolOrSection": ":106",
+     "revision": "791a7903",
+     "basis": "SOURCE"
     }
-  ],
-  "evidence": [
+   ],
+   "siblingSearch": [
     {
-      "id": "EV-SND-COR1-SUITE",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "producer": "devin-aa974f57a477442ca6b99c75ffbda5e9",
-      "startedAt": "2026-09-28T05:31:00Z",
-      "finishedAt": "2026-09-28T05:58:00Z",
-      "commandOrMethod": "npx vitest run (audio+core+architecture scoped)",
-      "cwd": "game",
-      "exitCode": 0,
-      "result": "PASS",
-      "artifactPath": "docs/qa/runs/sound-system-2026-09-28/evidence/EV-SND-COR1-SUITE.log",
-      "artifactHash": "c26de83abdc9496cd1301470918ec39ecca1cf389ef0ae1c6504da1800d1c431",
-      "inputPaths": [
-        "src/core/audio",
-        "src/presentation/audio",
-        "tests/architecture"
-      ],
-      "inputEvidenceIds": [],
-      "invariantIds": [],
-      "claims": [
-        "scoped audio/architecture suite green at 791a7903"
-      ],
-      "limitations": [
-        "self-confirming pins hide F-SND-02/03/04"
-      ],
-      "status": "STALE",
-      "kind": "EXECUTED_UNIT_STRUCTURAL"
-    },
-    {
-      "id": "EV-SND-AUT1-SUITE",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "producer": "devin-45dbcebac1404a23b8a987a75901ebe9",
-      "startedAt": "2026-09-28T05:31:00Z",
-      "finishedAt": "2026-09-28T05:58:00Z",
-      "commandOrMethod": "vue-tsc + vitest (124 audio/arch tests) + emit-site census",
-      "cwd": "game",
-      "exitCode": 0,
-      "result": "PASS",
-      "artifactPath": "docs/qa/runs/sound-system-2026-09-28/evidence/EV-SND-AUT1-SUITE.log",
-      "artifactHash": "c26de83abdc9496cd1301470918ec39ecca1cf389ef0ae1c6504da1800d1c431",
-      "inputPaths": [],
-      "inputEvidenceIds": [],
-      "invariantIds": [],
-      "claims": [
-        "payload contracts match spec",
-        "single write path except A1-04 gap"
-      ],
-      "limitations": [],
-      "status": "STALE",
-      "kind": "EXECUTED_INTEGRATION"
-    },
-    {
-      "id": "EV-SND-INT1-PROBES",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "producer": "devin-bed7023739e54053b0e0c3e0fc852655",
-      "startedAt": "2026-09-28T05:31:00Z",
-      "finishedAt": "2026-09-28T05:58:00Z",
-      "commandOrMethod": "adversarial probe harness int1Adversarial.test.ts + live build/e2e",
-      "cwd": "game",
-      "exitCode": 1,
-      "result": "FAIL",
-      "artifactPath": "docs/qa/runs/sound-system-2026-09-28/evidence/EV-SND-INT1-PROBES.log",
-      "artifactHash": "4f8e9e45f8a9e1843b81eaf3bdf52a6b778d415d23bf985774a9d34a43f69bd5",
-      "inputPaths": [],
-      "inputEvidenceIds": [],
-      "invariantIds": [],
-      "claims": [
-        "F-SND-22 build-breaking",
-        "F-SND-02 proven unreachable",
-        "F-SND-14 proven bypass"
-      ],
-      "limitations": [
-        "attack-model.json absent at pin"
-      ],
-      "status": "STALE",
-      "kind": "EXECUTED_INTEGRATION"
-    },
-    {
-      "id": "EV-SND-FIX1",
-      "state": {
-        "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "kind": "EXECUTED_INTEGRATION",
-      "producer": "coordinator",
-      "startedAt": "2026-09-28T06:23:00Z",
-      "finishedAt": "2026-09-28T06:32:00Z",
-      "commandOrMethod": "vue-tsc --build; vitest run (audio scope + migrated components + architecture guards); master worktree cross-check for pre-existing failures",
-      "cwd": "game",
-      "exitCode": 0,
-      "result": "PASS",
-      "artifactPath": "docs/qa/runs/sound-system-2026-09-28/evidence/EV-SND-FIX1.log",
-      "artifactHash": "f8a3df62ae052f5ad4b4141fce81654ad382fab0ec6c396d6acc3ed033f98b40",
-      "inputPaths": [
-        "src/core/audio",
-        "src/presentation/audio",
-        "src/presentation/assets",
-        "src/stores",
-        "src/components",
-        "tests/architecture"
-      ],
-      "inputEvidenceIds": [],
-      "invariantIds": [],
-      "claims": [
-        "all wave-1 fixes verified on resulting tree",
-        "type-check clean",
-        "619 scoped tests green",
-        "new audioBindingWiring + manifest-verified i18n guard pass",
-        "3 remaining suite failures proven pre-existing on master (combatContract R14.4, dynamicRegionHost, staticArtExtentDeclared/libuuid)"
-      ],
-      "limitations": [
-        "e2e not rerun post-fix (same pin-scope as wave-1)",
-        "PRE_EXISTING failures listed are master-side, not from this diff"
-      ],
-      "status": "CURRENT"
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
     }
-  ],
-  "coverage": [],
-  "attacks": [],
-  "reviews": [
+   ],
+   "repair": "remove stray tag; verified npm build + ConfirmModal consumers + e2e boot",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "PROVEN",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": [
+    "EV-SND-INT1-PROBES"
+   ]
+  },
+  {
+   "id": "F-SND-02",
+   "title": "dom-audio lane stores decoded buffers under cue id; playback looks up manifest src",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio-pipeline",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "High",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "COR-1 + AUT-1 + INT-1 (independent, INT proven live)",
+   "expected": "ensureLoaded decodes file -> hasDecodedBuffer(src) true -> cue plays",
+   "actual": "descriptors keyed by cue id; pickDecodedSrc reads buffers by src -> decoded audio unreachable, loadedResources reports success",
+   "rootCause": "two half-contracts (descriptor key vs playback key) never reconciled; masked by src:'' rows",
+   "rootClass": "KEYSPACE_CONTRACT",
+   "counterexample": "none found",
+   "locations": [
     {
-      "id": "REV-SND-COR-1",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "round": 1,
-      "phase": "CORRECTNESS",
-      "reviewerId": "devin-aa974f57a477442ca6b99c75ffbda5e9",
-      "contextId": "ctx-aa974f57",
-      "model": "swe-2",
-      "role": "clean-correctness",
-      "inputBundleHash": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-      "priorFindingsVisible": false,
-      "accessLimitations": [
-        "detached checkout of pinned head 791a7903",
-        "e2e spec not run by reviewers"
-      ],
-      "startedAt": "2026-09-28T05:33:00Z",
-      "sealedAt": "2026-09-28T05:58:30Z",
-      "previousPhaseReviewId": null,
-      "reviewedAfterPreviousFixes": false,
-      "coverageIds": [],
-      "evidenceIds": [
-        "EV-SND-COR1-SUITE"
-      ],
-      "findingIds": [
-        "F-SND-01",
-        "F-SND-02",
-        "F-SND-03",
-        "F-SND-04",
-        "F-SND-05",
-        "F-SND-06",
-        "F-SND-07",
-        "F-SND-08",
-        "F-SND-09",
-        "F-SND-10",
-        "F-SND-11",
-        "F-SND-12"
-      ],
-      "novelAttackIds": [],
-      "status": "STALE"
+     "path": "src/presentation/assets/AssetBundleCatalog.ts",
+     "symbolOrSection": ":321",
+     "revision": "791a7903",
+     "basis": "SOURCE"
     },
     {
-      "id": "REV-SND-AUT-1",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "round": 1,
-      "phase": "AUTHORITY",
-      "reviewerId": "devin-45dbcebac1404a23b8a987a75901ebe9",
-      "contextId": "ctx-45dbceba",
-      "model": "swe-2",
-      "role": "clean-authority",
-      "inputBundleHash": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-      "priorFindingsVisible": false,
-      "accessLimitations": [
-        "detached checkout of pinned head 791a7903",
-        "e2e spec not run by reviewers"
-      ],
-      "startedAt": "2026-09-28T05:33:57Z",
-      "sealedAt": "2026-09-28T05:58:28Z",
-      "previousPhaseReviewId": null,
-      "reviewedAfterPreviousFixes": false,
-      "coverageIds": [],
-      "evidenceIds": [
-        "EV-SND-AUT1-SUITE"
-      ],
-      "findingIds": [
-        "F-SND-02",
-        "F-SND-10",
-        "F-SND-13",
-        "F-SND-14",
-        "F-SND-15",
-        "F-SND-16",
-        "F-SND-17",
-        "F-SND-18",
-        "F-SND-19",
-        "F-SND-20",
-        "F-SND-21"
-      ],
-      "novelAttackIds": [],
-      "status": "STALE"
+     "path": "src/presentation/assets/AssetBundleManager.ts",
+     "symbolOrSection": ":356",
+     "revision": "791a7903",
+     "basis": "SOURCE"
     },
     {
-      "id": "REV-SND-INT-1",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "round": 1,
-      "phase": "INTEGRATION",
-      "reviewerId": "devin-bed7023739e54053b0e0c3e0fc852655",
-      "contextId": "ctx-bed70237",
-      "model": "swe-2",
-      "role": "adversarial-integration",
-      "inputBundleHash": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-      "priorFindingsVisible": false,
-      "accessLimitations": [
-        "detached checkout of pinned head 791a7903",
-        "e2e spec not run by reviewers"
-      ],
-      "startedAt": "2026-09-28T05:33:52Z",
-      "sealedAt": "2026-09-28T05:58:13Z",
-      "previousPhaseReviewId": null,
-      "reviewedAfterPreviousFixes": false,
-      "coverageIds": [],
-      "evidenceIds": [
-        "EV-SND-INT1-PROBES"
-      ],
-      "findingIds": [
-        "F-SND-22",
-        "F-SND-02",
-        "F-SND-14",
-        "F-SND-19",
-        "F-SND-06",
-        "F-SND-23"
-      ],
-      "novelAttackIds": [],
-      "status": "STALE"
+     "path": "src/core/audio/AudioManager.ts",
+     "symbolOrSection": ":589",
+     "revision": "791a7903",
+     "basis": "SOURCE"
     }
-  ],
-  "cycles": [
+   ],
+   "siblingSearch": [
     {
-      "id": "CYC-SND-1",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "reviewIds": [
-        "REV-SND-COR-1",
-        "REV-SND-AUT-1",
-        "REV-SND-INT-1"
-      ],
-      "coverageIds": [],
-      "evidenceIds": [
-        "EV-SND-COR1-SUITE",
-        "EV-SND-AUT1-SUITE",
-        "EV-SND-INT1-PROBES"
-      ],
-      "noveltyEvidenceIds": [],
-      "startedAt": "2026-09-28T05:31:00Z",
-      "finishedAt": "2026-09-28T06:00:00Z",
-      "status": "STALE"
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
     }
-  ],
-  "mutations": [],
-  "corpus": [],
-  "lessons": [],
-  "messages": [],
-  "events": [
+   ],
+   "repair": "one descriptor per src keyed by src path; attach under src; pins updated to assert src key",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "PROVEN",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": [
+    "EV-SND-COR1-SUITE",
+    "EV-SND-AUT1-SUITE",
+    "EV-SND-INT1-PROBES"
+   ]
+  },
+  {
+   "id": "F-SND-03",
+   "title": "reactive_proc discriminator dead: trigger carries window name, mechanic absent from payload",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "combat-binding",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "COR-1",
+   "expected": "intercept/counter procs cue combat.ungthe.intercept|counter",
+   "actual": "payload emits trigger=ReactiveTriggerName; mechanic never leaves attempt.effect -> rows unreachable",
+   "rootCause": "discriminator read a field the producer never set",
+   "rootClass": "DEAD_CONTRACT",
+   "counterexample": "none found",
+   "locations": [
     {
-      "seq": 1,
-      "at": "2026-09-28T05:31:45.607Z",
-      "kind": "PHASE",
-      "actor": "coordinator-56995",
-      "state": {
-        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
-        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
-        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
-        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
-      },
-      "previousEventHash": null,
-      "payloadPath": "events/0001.json",
-      "payloadHash": "39ba7003aa987def8280f09f2d576c03b829ed7e369d1dd646a9b6ac9c9ea526",
-      "eventHash": "c5f8fe1f30b696e0cb9a5cf593e84ad4e96ab2c88d177f2e105c2ec812f487d6"
+     "path": "src/presentation/audio/combatAudioBinding.ts",
+     "symbolOrSection": ":201",
+     "revision": "791a7903",
+     "basis": "SOURCE"
     },
     {
-      "seq": 2,
-      "at": "2026-09-28T06:38:13.418Z",
-      "kind": "SNAPSHOT",
-      "actor": "coordinator-56995",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "previousEventHash": "c5f8fe1f30b696e0cb9a5cf593e84ad4e96ab2c88d177f2e105c2ec812f487d6",
-      "payloadPath": "events/0002.json",
-      "payloadHash": "a0aec2bd5ec08d973817dd49cc0a3313a9722af1eada6c99179afd4219787711",
-      "eventHash": "65929931872c0bf4d8c82c91339c7a5028f90668beae6f86413e2d8b7bc61869"
-    },
-    {
-      "seq": 3,
-      "at": "2026-09-28T06:40:53.619Z",
-      "kind": "EVIDENCE",
-      "actor": "coordinator-56995",
-      "state": {
-        "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "previousEventHash": "65929931872c0bf4d8c82c91339c7a5028f90668beae6f86413e2d8b7bc61869",
-      "payloadPath": "events/0003.json",
-      "payloadHash": "3c8ddbcc6406dd345e75bb5395a5d212392733fa6476670cbf94944d39163655",
-      "eventHash": "75c6afaaf9042f82b5fe5f633a8a74aff7773ff335a1c9f4931af82d46520f0d"
-    },
-    {
-      "seq": 4,
-      "at": "2026-09-28T06:41:41.859Z",
-      "kind": "SNAPSHOT",
-      "actor": "coordinator-56995",
-      "state": {
-        "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "previousEventHash": "75c6afaaf9042f82b5fe5f633a8a74aff7773ff335a1c9f4931af82d46520f0d",
-      "payloadPath": "events/0004.json",
-      "payloadHash": "92ec1511f86acc4d00d09f699a7599b0525b54800f64a840f8ab4684694c2915",
-      "eventHash": "ee78353180184c752e6de2a1aeb74ad017dd8e216c598b6e2c793659111137c0"
-    },
-    {
-      "seq": 5,
-      "at": "2026-09-28T06:42:08.172Z",
-      "kind": "EVIDENCE",
-      "actor": "coordinator-56995",
-      "state": {
-        "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
-        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
-        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
-        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
-      },
-      "previousEventHash": "ee78353180184c752e6de2a1aeb74ad017dd8e216c598b6e2c793659111137c0",
-      "payloadPath": "events/0005.json",
-      "payloadHash": "e00530f59ef9a010ab91a6944b02e9afa593c71b93683f7dcac5a13c777559d8",
-      "eventHash": "bbc695a750f4b97da6e19e3ab8e458a4864d573799b93050b8e85125dc8056bc"
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": ":3431",
+     "revision": "791a7903",
+     "basis": "SOURCE"
     }
-  ]
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "payload gains mechanic from attempt.effect.mechanic; binding reads event.mechanic; pin emits real shape",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "PROVEN",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-04",
+   "title": "status_vfx_attached always cues combat.dot.apply; buff/debuff branches unreachable",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "combat-binding",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "COR-1",
+   "expected": "buff->combat.buff.apply, debuff->combat.debuff.apply, DoT->combat.dot.apply",
+   "actual": "dotType=definitionId always truthy -> first branch always wins",
+   "rootCause": "dotType conflates definitionId with DoT-ness",
+   "rootClass": "DEAD_CONTRACT",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/presentation/audio/combatAudioBinding.ts",
+     "symbolOrSection": ":162",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/core/battle/turn/TurnStatusPresentationEvents.ts",
+     "symbolOrSection": ":45",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "payload gains periodicDamage flag; binding maps dot only when true; pins emit flag",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "PROVEN",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-05",
+   "title": "play/crossfade/stopMusic unconditionally clear musicSuspended -> hidden tab resumes audio",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio-core",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "COR-1",
+   "expected": "suspend stays until visibilitychange to visible",
+   "actual": "route change while hidden -> crossfade clears suspension -> track starts in hidden tab; initial hidden load never suspends",
+   "rootCause": "musicSuspended had multiple writers",
+   "rootClass": "OWNERSHIP_MULTIPLE_WRITERS",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/core/audio/AudioManager.ts",
+     "symbolOrSection": ":629",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/presentation/audio/ambientAudioDriver.ts",
+     "symbolOrSection": ":62",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "musicSuspended owned solely by suspendMusic/resumeMusic; driver seeds via onVisibilityChange at startup",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "PROVEN",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-06",
+   "title": "loadPersisted corrupt-v2 JSON skips promised v1 fallback",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio-store",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "COR-1 + INT-1",
+   "expected": "corrupt v2 falls through to v1 blob per comment",
+   "actual": "catch{return{}} abandons v1",
+   "rootCause": "catch swallowed fallback",
+   "rootClass": "EDGE_CASE",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/stores/audio.ts",
+     "symbolOrSection": ":41",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "catch->continue",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "TRIAGED",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-07",
+   "title": "Player leaks on start()/stop() throw + suspended-context fade paths",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio-core",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "COR-1",
+   "expected": "failed/fading players self-remove",
+   "actual": "players.add before start(); onstop never fires when suspended",
+   "rootCause": "cleanup relied on onstop only",
+   "rootClass": "LIFECYCLE_LEAK",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/core/audio/AudioManager.ts",
+     "symbolOrSection": ":616",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "try/catch deletes+disposes on throw; reaper setTimeout force-detaches after fade window",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "TRIAGED",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-08",
+   "title": "variant cursor off-by-one: first play never serves index 0",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio-core",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "COR-1 + AUT-1",
+   "expected": "first variant = index 0",
+   "actual": "cursor (??0)+1 -> serves index1 first",
+   "rootCause": "cursor init",
+   "rootClass": "OFF_BY_ONE",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/core/audio/AudioManager.ts",
+     "symbolOrSection": ":596",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "cursor ?? -1",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "TRIAGED",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-09",
+   "title": "fade-in dropped for music requested before unlock",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio-core",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "COR-1",
+   "expected": "pre-unlock crossfade still fades on first start",
+   "actual": "unlock calls applyDesiredMusic() w/o arg -> fade 0 pops in",
+   "rootCause": "fadeSec lost across early-return",
+   "rootClass": "STATE_LOSS",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/core/audio/AudioManager.ts",
+     "symbolOrSection": ":412",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "pendingMusicFadeSec field consumed by applyDesiredMusic",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "TRIAGED",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-10",
+   "title": "i18nKeyParity cue-id exemption is shape-only; real i18n keys under combat.*/tribulation.* skipped",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "guards",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "COR-1 + AUT-1",
+   "expected": "exemption only for true audio cue ids",
+   "actual": "21 real i18n literals (combat.victory.title etc.) silently skipped by regex shape",
+   "rootCause": "shape regex approximated membership in cue manifest",
+   "rootClass": "GUARD_TOO_BROAD",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "tests/architecture/i18nKeyParity.test.ts",
+     "symbolOrSection": ":376",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "isAudioCue() consults resolveAudioCue + AUDIO_CUES prefix coverage",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "TRIAGED",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-11",
+   "title": "battle-ending proc records may never drain (cosmetic)",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "combat-pipeline",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "COR-1",
+   "expected": "all proc records drain",
+   "actual": "records minted by lethal final action strand when turnBattle nulled same tick",
+   "rootCause": "drain gated on this.turnBattle",
+   "rootClass": "KNOWN_SHAPE",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerTurnBattleOps.ts",
+     "symbolOrSection": ":620",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "deferred: same shape as pre-existing reaction drain; cosmetic",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "TRIAGED",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-12",
+   "title": "EquipmentPaperdoll plays ui.equip on unequip direction",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "ui-audio",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "COR-1",
+   "expected": "distinct unequip cue or none",
+   "actual": "same ui.equip both directions",
+   "rootCause": "no asymmetric cue exists",
+   "rootClass": "MISSING_ASSET",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/components/panels/EquipmentPaperdoll.vue",
+     "symbolOrSection": ":193",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "deferred: spec has no unequip row; semantic-only",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "TRIAGED",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-13",
+   "title": "tribulation cues double-sourced: tribulation_started + presentation_session_started same tick",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "combat-binding",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "AUT-1",
+   "expected": "one begin cue",
+   "actual": "tribulation.begin + tribulation.start stack; outcome can play verdict then replay at drain",
+   "rootCause": "two emit sites both mapped",
+   "rootClass": "DOUBLE_SOURCE",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/presentation/audio/combatAudioBinding.ts",
+     "symbolOrSection": "session_started branch",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "presentation_session_started tribulation branch returns undefined (tribulation_started owns begin)",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "PROVEN",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-14",
+   "title": "persisted enabled/volumes only pushed via store.unlock() on pointerdown; keyboard unlock bypasses mute",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio-store",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "AUT-1 + INT-1 (INT proven live: ui.click fired under persisted mute)",
+   "expected": "persisted enabled=false gates every unlock path",
+   "actual": "GameButton/Chip call mgr.unlock() directly -> defaults applied",
+   "rootCause": "single push site bound to pointerdown",
+   "rootClass": "OWNERSHIP_GAP",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/stores/audio.ts",
+     "symbolOrSection": "unlock",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/App.vue",
+     "symbolOrSection": ":207",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "hydrateManager() action pushes settings at App.vue setup; unlock() calls it post-unlock",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "PROVEN",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": [
+    "EV-SND-INT1-PROBES"
+   ]
+  },
+  {
+   "id": "F-SND-15",
+   "title": "spec W7 single-cue-path violated: cue() had zero callers, ~17 components used playCue directly",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio-boundary",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "AUT-1",
+   "expected": "all audio through useAudioStore().cue",
+   "actual": "~17 .vue + helpers bypassed store seam",
+   "rootCause": "spec/guard/impl disagreement",
+   "rootClass": "BOUNDARY_VIOLATION",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/stores/audio.ts",
+     "symbolOrSection": ":132",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "src/components/common/GameButton.vue",
+     "symbolOrSection": ":44",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "all migrated to store cue; GameButton/Chip documented pinia-free exception (tests mount w/o pinia)",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "PROVEN",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-16",
+   "title": "emit-name<->binding coupling stringly and unguarded; literal cue ids unvalidated",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "guards",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "AUT-1",
+   "expected": "typo in either side caught by guard",
+   "actual": "~40 hardcoded event names + literal cue ids silently dead on typo",
+   "rootCause": "no registry/cross-check existed",
+   "rootClass": "MISSING_GUARD",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/presentation/audio/combatAudioBinding.ts",
+     "symbolOrSection": "STATIC_CUES/PAYLOAD_CUES",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "audioBindingWiring.test.ts: bound event names subset of real emit sites; literal cue ids resolve via manifest",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "PROVEN",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-17",
+   "title": "dev/skill-vfx.ts cameraImpulse bypasses applyScreenShake policy",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "vfx-dev",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "AUT-1",
+   "expected": "all shake via screenShakePolicy",
+   "actual": "dev lab calls cameras.main.shake directly",
+   "rootCause": "dev surface skipped policy",
+   "rootClass": "POLICY_BYPASS",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/dev/skill-vfx.ts",
+     "symbolOrSection": ":149",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "cameraImpulse routed through applyScreenShake",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "TRIAGED",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-18",
+   "title": "playCue on loop:true/music rows mints untracked music-bus player unreachable by stop/suspend",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio-core",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "AUT-1",
+   "expected": "looping music only via music slot",
+   "actual": "spawnPlayer accepts loop:true defs -> orphan player",
+   "rootCause": "no lane guard",
+   "rootClass": "LIFECYCLE_ORPHAN",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/core/audio/AudioManager.ts",
+     "symbolOrSection": ":601",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "playCue early-returns on def.loop===true||channel==='music'",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "TRIAGED",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-19",
+   "title": "player-taken hit double-fires combat.hit + combat.hurt (same recipe)",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "combat-binding",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "AUT-1 + INT-1 (proven: ['combat.hit','combat.hurt'] per hit)",
+   "expected": "one voice per impact",
+   "actual": "hit unconditional + damage(PLAYER) map to same synth recipe; distinct ids dodge cooldown",
+   "rootCause": "hit fired regardless of target",
+   "rootClass": "DOUBLE_CUE",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/presentation/audio/combatAudioBinding.ts",
+     "symbolOrSection": "hit/damage branches",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "hit moved to PAYLOAD_CUES returning undefined when targetId===PLAYER_ID (hurt owns player-hit)",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "TRIAGED",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": [
+    "EV-SND-INT1-PROBES"
+   ]
+  },
+  {
+   "id": "F-SND-20",
+   "title": "unwired manifest rows (countdown.tick, spawn.*, charge/release, boss.slam, buff.stack, turn_end)",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "manifest",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "AUT-1",
+   "expected": "every row wired or marked forward-slot",
+   "actual": "9 rows have zero producers",
+   "rootCause": "forward asset slots by design",
+   "rootClass": "FORWARD_SLOT",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/core/audio/AudioCueManifest.ts",
+     "symbolOrSection": "unwired rows",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "deferred: intentional empty slots pending emit mechanisms",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "TRIAGED",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-21",
+   "title": "inverted dep: manifest type-imports SynthSoundId from AudioManager; spec refs MenuButton.vue",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio-core",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "AUT-1",
+   "expected": "data module does not import engine",
+   "actual": "type-only import inverts direction",
+   "rootCause": "type placement",
+   "rootClass": "DEP_DIRECTION",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/core/audio/AudioCueManifest.ts",
+     "symbolOrSection": ":11",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "SynthSoundId union moved into AudioCueManifest; AudioManager re-exports; spec MenuButton row annotated",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "TRIAGED",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-22",
+   "title": "ConfirmModal Escape bypasses onCancel -> no cancel/modal-close cues",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "ui-audio",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "reachability": "SUPPORTED_BOUNDARY",
+   "actionable": true,
+   "discoveredBy": "INT-1",
+   "expected": "Escape emits cancel path cues",
+   "actual": "Escape emitted cancel directly bypassing cue wrapper",
+   "rootCause": "seam missed handler",
+   "rootClass": "SEAM_MISS",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/components/common/ConfirmModal.vue",
+     "symbolOrSection": "onEscape",
+     "revision": "791a7903",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components"
+     ],
+     "termsAndMethod": "sibling sweep: same contract shape (key naming, discriminator fields, writer sets, emit names) grepped across touched modules",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to the diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "onEscape bound to onCancel",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "TRIAGED",
+   "closedAt": null,
+   "fixedInRevision": null,
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-23",
+   "title": "AssetBundleCatalog.test still asserts pre-fix cue-id descriptor contract",
+   "state": {
+    "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio",
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "SUPPORTED_BOUNDARY",
+   "discoveredBy": "COR-2",
+   "expected": "per-src descriptor assertions matching the wave-1 contract",
+   "actual": "test asserts old cue-id keying; RED at pin (2 tests)",
+   "rootCause": "wave-1 migrated AssetBundleManager.test but not the catalog test",
+   "rootClass": "MIGRATION_INCOMPLETE",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/presentation/assets/AssetBundleCatalog.test.ts",
+     "symbolOrSection": ":161-177",
+     "revision": "5708a76e",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components",
+      "tests/architecture"
+     ],
+     "termsAndMethod": "sibling sweep over touched seam families; same contract family swept",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "migrated assertions to per-src key contract; renamed array-src test; 27/27 green",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-SND-FIX2"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-24",
+   "title": "ambient.cultivate.on/off unwirable - music channel but playCue rejects loop:false music rows",
+   "state": {
+    "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio",
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "SUPPORTED_BOUNDARY",
+   "discoveredBy": "COR-2 + AUT-2 (independent)",
+   "expected": "one-shot transition stingers playable via cue path",
+   "actual": "channel music hits playCue early-return; applyDesiredMusic hard-codes loop=true",
+   "rootCause": "manifest authored music({loop:false}) for one-shot stingers",
+   "rootClass": "DATA_CONTRACT_MISUSE",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/core/audio/AudioCueManifest.ts",
+     "symbolOrSection": ":376-377",
+     "revision": "5708a76e",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components",
+      "tests/architecture"
+     ],
+     "termsAndMethod": "sibling sweep over touched seam families; same contract family swept",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "re-channeled to sfx({duckMusic:0.5}); stingers duck the music bus instead of joining it",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-SND-FIX2"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-25",
+   "title": "audioBindingWiring guard blind spots - test emitters counted, weak regexes, missed arg forms",
+   "state": {
+    "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio",
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "SUPPORTED_BOUNDARY",
+   "discoveredBy": "COR-2 (C2-03) + AUT-2 (A2-04/A2-05)",
+   "expected": "guard fails on prod-dead bound names, digit names, block comments, emit<T>, map/ternary/param-default cue args",
+   "actual": "corpus included *.test.ts emitters; bound-name regex [a-z_]+ excluded digits; cue-literal sweep only literal-first-arg",
+   "rootCause": "guard regex written narrower than the real emit/call grammar",
+   "rootClass": "GUARD_UNDERPRECISE",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "tests/architecture/audioBindingWiring.test.ts",
+     "symbolOrSection": "whole file",
+     "revision": "5708a76e",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components",
+      "tests/architecture"
+     ],
+     "termsAndMethod": "sibling sweep over touched seam families; same contract family swept",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "test emitters excluded from EMITTED; bound-name regex widened to [a-z_0-9]+; block comments stripped; emit<T> covered; cue args sweep ternary branches, flat-map values, param defaults via same-file ident resolution",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-SND-FIX2"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-26",
+   "title": "releaseMusicPlayer reaper double-disposes and leaks pending timers on dispose",
+   "state": {
+    "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "SUPPORTED_BOUNDARY",
+   "discoveredBy": "COR-2",
+   "expected": "reaper is redundant-but-harmless OR single-shot; dispose clears pending timers",
+   "actual": "onstop already deletes+disposes then reaper fires anyway; dispose() never cleared reaper timers",
+   "rootCause": "reaper setTimeout untracked; no players.has guard",
+   "rootClass": "LIFECYCLE_LEAK",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/core/audio/AudioManager.ts",
+     "symbolOrSection": "releaseMusicPlayer/dispose",
+     "revision": "5708a76e",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components",
+      "tests/architecture"
+     ],
+     "termsAndMethod": "sibling sweep over touched seam families; same contract family swept",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "pendingReapers Set tracked; reaper deletes itself + no-ops when entry gone; dispose() clears all",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-SND-FIX2"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-27",
+   "title": "LoreCodexModal is a third undocumented direct AudioManager consumer; importer allowlist unpinned",
+   "state": {
+    "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio",
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "SUPPORTED_BOUNDARY",
+   "discoveredBy": "AUT-2",
+   "expected": "all component audio routed via useAudioStore().cue; only documented pinia-free exceptions touch the manager",
+   "actual": "LoreCodexModal.vue called AudioManager.getInstance().playCue directly; no guard pinned the exception set",
+   "rootCause": "wave-1 migration list missed the modal; audioBoundary had no allowlist check",
+   "rootClass": "BOUNDARY_UNPINNED",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/components/panels/LoreCodexModal.vue",
+     "symbolOrSection": ":21-25",
+     "revision": "5708a76e",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components",
+      "tests/architecture"
+     ],
+     "termsAndMethod": "sibling sweep over touched seam families; same contract family swept",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "migrated to store cue; new audioBoundary check pins direct-consumer allowlist {AssetBundleManager, GameButton, Chip}",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-SND-FIX2"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-28",
+   "title": "i18nKeyParity cue exemption swallows real i18n keys under cue namespaces",
+   "state": {
+    "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio",
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "SUPPORTED_BOUNDARY",
+   "discoveredBy": "AUT-2",
+   "expected": "a missing i18n key like combat.victory.title is still reported",
+   "actual": "resolveAudioCue qualifier-strip resolves combat.victory.title -> combat.victory row -> exempted from parity check",
+   "rootCause": "exemption used full resolver instead of exact manifest membership",
+   "rootClass": "GUARD_UNDERPRECISE",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "tests/architecture/i18nKeyParity.test.ts",
+     "symbolOrSection": ":380-396",
+     "revision": "5708a76e",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components",
+      "tests/architecture"
+     ],
+     "termsAndMethod": "sibling sweep over touched seam families; same contract family swept",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "exemption now exact AUDIO_CUES membership (+template prefix coverage); *.test.ts keeps resolveAudioCue for deliberate unknown-qualifier probes",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-SND-FIX2"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-29",
+   "title": "reactive_proc consumer declares mechanic/trigger as bare string - rename silently degrades to combat.ungthe",
+   "state": {
+    "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "SUPPORTED_BOUNDARY",
+   "discoveredBy": "AUT-2",
+   "expected": "consumer fields typed against producer unions",
+   "actual": "ReactiveProcLike guessed mechanic?: string; a producer rename would compile and mis-cue",
+   "rootCause": "consumer-side structural guess instead of imported producer types",
+   "rootClass": "TYPE_GAP",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/presentation/audio/combatAudioBinding.ts",
+     "symbolOrSection": ":98-103",
+     "revision": "5708a76e",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components",
+      "tests/architecture"
+     ],
+     "termsAndMethod": "sibling sweep over touched seam families; same contract family swept",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "trigger/mechanic typed ReactiveTriggerName/ReactiveProcMechanic (import type; boundary-clean)",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-SND-FIX2"
+   ],
+   "closureReviewIds": [],
+   "status": "FIXED_PENDING_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-30",
+   "title": "two cast-cue producers co-fire per cast (attack->combat.cast + turn_cast_start->combat.cast.<id>)",
+   "state": {
+    "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "SUPPORTED_BOUNDARY",
+   "discoveredBy": "AUT-2",
+   "expected": "single audible per cast by design",
+   "actual": "single-audible relies on CAST_SKILL_IDS coverage that nothing pins",
+   "rootCause": "specd layering; coverage pin proposed but deferred",
+   "rootClass": "SPEC_GAP",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/presentation/audio/combatAudioBinding.ts",
+     "symbolOrSection": "cast rows",
+     "revision": "5708a76e",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components",
+      "tests/architecture"
+     ],
+     "termsAndMethod": "sibling sweep over touched seam families; same contract family swept",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "deferred-visible: keep layering; candidate pin = CAST_SKILL_IDS subset-of-coverage guard",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-SND-FIX2"
+   ],
+   "closureReviewIds": [],
+   "status": "TRIAGED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "evidenceIds": []
+  },
+  {
+   "id": "F-SND-31",
+   "title": "orphaned manifest rows (tribulation.start, music.home.* variants) + dead isLoaded()",
+   "state": {
+    "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "subsystem": "audio",
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "SUPPORTED_BOUNDARY",
+   "discoveredBy": "AUT-2",
+   "expected": "every manifest row reachable or a deliberate forward slot",
+   "actual": "forward slots coexist with genuinely dead rows",
+   "rootCause": "asset-drop slots intentionally unwired pre-asset; some rows lost their emitters in wave-1",
+   "rootClass": "FORWARD_SLOT",
+   "counterexample": "none found",
+   "locations": [
+    {
+     "path": "src/core/audio/AudioCueManifest.ts",
+     "symbolOrSection": "orphaned rows",
+     "revision": "5708a76e",
+     "basis": "SOURCE"
+    }
+   ],
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/audio",
+      "src/presentation/audio",
+      "src/presentation/assets",
+      "src/stores",
+      "src/components",
+      "tests/architecture"
+     ],
+     "termsAndMethod": "sibling sweep over touched seam families; same contract family swept",
+     "evidenceIds": [],
+     "hitDispositions": [],
+     "coverageLimits": [
+      "sweep limited to diff-touched seam families"
+     ]
+    }
+   ],
+   "repair": "deferred-visible: forward slots by design (F-SND-20 set); removal deferred to asset-drop wave",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-SND-FIX2"
+   ],
+   "closureReviewIds": [],
+   "status": "TRIAGED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "evidenceIds": []
+  }
+ ],
+ "evidence": [
+  {
+   "id": "EV-SND-COR1-SUITE",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "producer": "devin-aa974f57a477442ca6b99c75ffbda5e9",
+   "startedAt": "2026-09-28T05:31:00Z",
+   "finishedAt": "2026-09-28T05:58:00Z",
+   "commandOrMethod": "npx vitest run (audio+core+architecture scoped)",
+   "cwd": "game",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/EV-SND-COR1-SUITE.log",
+   "artifactHash": "c26de83abdc9496cd1301470918ec39ecca1cf389ef0ae1c6504da1800d1c431",
+   "inputPaths": [
+    "src/core/audio",
+    "src/presentation/audio",
+    "tests/architecture"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "scoped audio/architecture suite green at 791a7903"
+   ],
+   "limitations": [
+    "self-confirming pins hide F-SND-02/03/04"
+   ],
+   "status": "STALE",
+   "kind": "EXECUTED_UNIT_STRUCTURAL"
+  },
+  {
+   "id": "EV-SND-AUT1-SUITE",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "producer": "devin-45dbcebac1404a23b8a987a75901ebe9",
+   "startedAt": "2026-09-28T05:31:00Z",
+   "finishedAt": "2026-09-28T05:58:00Z",
+   "commandOrMethod": "vue-tsc + vitest (124 audio/arch tests) + emit-site census",
+   "cwd": "game",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/EV-SND-AUT1-SUITE.log",
+   "artifactHash": "c26de83abdc9496cd1301470918ec39ecca1cf389ef0ae1c6504da1800d1c431",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "payload contracts match spec",
+    "single write path except A1-04 gap"
+   ],
+   "limitations": [],
+   "status": "STALE",
+   "kind": "EXECUTED_INTEGRATION"
+  },
+  {
+   "id": "EV-SND-INT1-PROBES",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "producer": "devin-bed7023739e54053b0e0c3e0fc852655",
+   "startedAt": "2026-09-28T05:31:00Z",
+   "finishedAt": "2026-09-28T05:58:00Z",
+   "commandOrMethod": "adversarial probe harness int1Adversarial.test.ts + live build/e2e",
+   "cwd": "game",
+   "exitCode": 1,
+   "result": "FAIL",
+   "artifactPath": "evidence/EV-SND-INT1-PROBES.log",
+   "artifactHash": "4f8e9e45f8a9e1843b81eaf3bdf52a6b778d415d23bf985774a9d34a43f69bd5",
+   "inputPaths": [],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "F-SND-22 build-breaking",
+    "F-SND-02 proven unreachable",
+    "F-SND-14 proven bypass"
+   ],
+   "limitations": [
+    "attack-model.json absent at pin"
+   ],
+   "status": "STALE",
+   "kind": "EXECUTED_INTEGRATION"
+  },
+  {
+   "id": "EV-SND-FIX1",
+   "state": {
+    "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "kind": "EXECUTED_INTEGRATION",
+   "producer": "coordinator",
+   "startedAt": "2026-09-28T06:23:00Z",
+   "finishedAt": "2026-09-28T06:32:00Z",
+   "commandOrMethod": "vue-tsc --build; vitest run (audio scope + migrated components + architecture guards); master worktree cross-check for pre-existing failures",
+   "cwd": "game",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/EV-SND-FIX1.log",
+   "artifactHash": "f8a3df62ae052f5ad4b4141fce81654ad382fab0ec6c396d6acc3ed033f98b40",
+   "inputPaths": [
+    "src/core/audio",
+    "src/presentation/audio",
+    "src/presentation/assets",
+    "src/stores",
+    "src/components",
+    "tests/architecture"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "all wave-1 fixes verified on resulting tree",
+    "type-check clean",
+    "619 scoped tests green",
+    "new audioBindingWiring + manifest-verified i18n guard pass",
+    "3 remaining suite failures proven pre-existing on master (combatContract R14.4, dynamicRegionHost, staticArtExtentDeclared/libuuid)"
+   ],
+   "limitations": [
+    "e2e not rerun post-fix (same pin-scope as wave-1)",
+    "PRE_EXISTING failures listed are master-side, not from this diff"
+   ],
+   "status": "STALE"
+  },
+  {
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "id": "EV-SND-FIX2",
+   "state": {
+    "productStateId": "a988c99af84e5a8046cc6747d78a71442eeb747203da0df0d2ce206a70e5e4ec",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "producer": "coordinator-56995",
+   "startedAt": "2026-09-28T07:20:00Z",
+   "finishedAt": "2026-09-28T07:34:00Z",
+   "commandOrMethod": "npm run type-check + npx vitest run tests/architecture/ src/core/audio/ src/components/common/ src/components/panels/ tests/e2e/ + KIND_SOUND bogus-literal mutation probe",
+   "cwd": "game",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/EV-SND-FIX2.log",
+   "artifactHash": "cf573e3b8dee2923b4bceca18707ea5979e4c3df3f5294d411a1ddd924c48fe1",
+   "inputPaths": [
+    "src/core/audio",
+    "src/presentation/audio",
+    "src/presentation/assets",
+    "src/components/panels/LoreCodexModal.vue",
+    "tests/architecture"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [],
+   "claims": [
+    "type-check clean at e8fe6079",
+    "502 scoped tests pass; only pre-existing master failures (combatContract R14.4, dynamicRegionHost, staticArtExtentDeclared libuuid)",
+    "mutation probe: bogus map cue literal flagged by extended sweep",
+    "mutation probe: test-file emitters no longer satisfy bound names"
+   ],
+   "limitations": [
+    "full suite not rerun at pin",
+    "e2e not run"
+   ],
+   "status": "CURRENT"
+  }
+ ],
+ "coverage": [],
+ "attacks": [],
+ "reviews": [
+  {
+   "id": "REV-SND-COR-1",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "round": 1,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-aa974f57a477442ca6b99c75ffbda5e9",
+   "contextId": "ctx-aa974f57",
+   "model": "swe-2",
+   "role": "clean-correctness",
+   "inputBundleHash": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "detached checkout of pinned head 791a7903",
+    "e2e spec not run by reviewers"
+   ],
+   "startedAt": "2026-09-28T05:33:00Z",
+   "sealedAt": "2026-09-28T05:58:30Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": false,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-SND-COR1-SUITE"
+   ],
+   "findingIds": [
+    "F-SND-01",
+    "F-SND-02",
+    "F-SND-03",
+    "F-SND-04",
+    "F-SND-05",
+    "F-SND-06",
+    "F-SND-07",
+    "F-SND-08",
+    "F-SND-09",
+    "F-SND-10",
+    "F-SND-11",
+    "F-SND-12"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-SND-AUT-1",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "round": 1,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-45dbcebac1404a23b8a987a75901ebe9",
+   "contextId": "ctx-45dbceba",
+   "model": "swe-2",
+   "role": "clean-authority",
+   "inputBundleHash": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "detached checkout of pinned head 791a7903",
+    "e2e spec not run by reviewers"
+   ],
+   "startedAt": "2026-09-28T05:33:57Z",
+   "sealedAt": "2026-09-28T05:58:28Z",
+   "previousPhaseReviewId": "REV-SND-COR-1",
+   "reviewedAfterPreviousFixes": false,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-SND-AUT1-SUITE"
+   ],
+   "findingIds": [
+    "F-SND-02",
+    "F-SND-10",
+    "F-SND-13",
+    "F-SND-14",
+    "F-SND-15",
+    "F-SND-16",
+    "F-SND-17",
+    "F-SND-18",
+    "F-SND-19",
+    "F-SND-20",
+    "F-SND-21"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-SND-INT-1",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "round": 1,
+   "phase": "INTEGRATION",
+   "reviewerId": "devin-bed7023739e54053b0e0c3e0fc852655",
+   "contextId": "ctx-bed70237",
+   "model": "swe-2",
+   "role": "adversarial-integration",
+   "inputBundleHash": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "detached checkout of pinned head 791a7903",
+    "e2e spec not run by reviewers"
+   ],
+   "startedAt": "2026-09-28T05:33:52Z",
+   "sealedAt": "2026-09-28T05:58:13Z",
+   "previousPhaseReviewId": "REV-SND-AUT-1",
+   "reviewedAfterPreviousFixes": false,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-SND-INT1-PROBES"
+   ],
+   "findingIds": [
+    "F-SND-22",
+    "F-SND-02",
+    "F-SND-14",
+    "F-SND-19",
+    "F-SND-06",
+    "F-SND-23"
+   ],
+   "novelAttackIds": [],
+   "status": "STALE"
+  },
+  {
+   "id": "REV-SND-AUT-2",
+   "state": {
+    "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "round": 2,
+   "phase": "AUTHORITY",
+   "reviewerId": "devin-f2cfbc703a5b4123a65937b51d0fd380",
+   "contextId": "ctx-aut-2",
+   "model": "swe-2",
+   "role": "clean-authority",
+   "inputBundleHash": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "detached checkout of pinned head 5708a76e",
+    "e2e spec not run by reviewers"
+   ],
+   "startedAt": "2026-09-28T06:45:00Z",
+   "sealedAt": "2026-09-28T07:10:00Z",
+   "previousPhaseReviewId": "REV-SND-COR-2",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-SND-24",
+    "F-SND-27",
+    "F-SND-28",
+    "F-SND-25",
+    "F-SND-30",
+    "F-SND-29",
+    "F-SND-31"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "id": "REV-SND-COR-2",
+   "state": {
+    "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "round": 2,
+   "phase": "CORRECTNESS",
+   "reviewerId": "devin-0e47d61f9e2943058d6606f22ff05670",
+   "contextId": "ctx-cor-2",
+   "model": "swe-2",
+   "role": "clean-correctness",
+   "inputBundleHash": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "detached checkout of pinned head 5708a76e",
+    "e2e spec not run by reviewers"
+   ],
+   "startedAt": "2026-09-28T06:45:00Z",
+   "sealedAt": "2026-09-28T07:10:00Z",
+   "previousPhaseReviewId": "REV-SND-INT-1",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-SND-23",
+    "F-SND-24",
+    "F-SND-25",
+    "F-SND-26"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  }
+ ],
+ "cycles": [
+  {
+   "id": "CYC-SND-1",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "reviewIds": [
+    "REV-SND-COR-1",
+    "REV-SND-AUT-1",
+    "REV-SND-INT-1"
+   ],
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-SND-COR1-SUITE",
+    "EV-SND-AUT1-SUITE",
+    "EV-SND-INT1-PROBES"
+   ],
+   "noveltyEvidenceIds": [],
+   "startedAt": "2026-09-28T05:31:00Z",
+   "finishedAt": "2026-09-28T06:00:00Z",
+   "status": "STALE"
+  }
+ ],
+ "mutations": [],
+ "corpus": [],
+ "lessons": [],
+ "messages": [],
+ "events": [
+  {
+   "seq": 1,
+   "at": "2026-09-28T05:31:45.607Z",
+   "kind": "PHASE",
+   "actor": "coordinator-56995",
+   "state": {
+    "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+    "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+    "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+    "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+   },
+   "previousEventHash": null,
+   "payloadPath": "events/0001.json",
+   "payloadHash": "39ba7003aa987def8280f09f2d576c03b829ed7e369d1dd646a9b6ac9c9ea526",
+   "eventHash": "c5f8fe1f30b696e0cb9a5cf593e84ad4e96ab2c88d177f2e105c2ec812f487d6"
+  },
+  {
+   "seq": 2,
+   "at": "2026-09-28T06:38:13.418Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-56995",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "previousEventHash": "c5f8fe1f30b696e0cb9a5cf593e84ad4e96ab2c88d177f2e105c2ec812f487d6",
+   "payloadPath": "events/0002.json",
+   "payloadHash": "a0aec2bd5ec08d973817dd49cc0a3313a9722af1eada6c99179afd4219787711",
+   "eventHash": "65929931872c0bf4d8c82c91339c7a5028f90668beae6f86413e2d8b7bc61869"
+  },
+  {
+   "seq": 3,
+   "at": "2026-09-28T06:40:53.619Z",
+   "kind": "EVIDENCE",
+   "actor": "coordinator-56995",
+   "state": {
+    "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "previousEventHash": "65929931872c0bf4d8c82c91339c7a5028f90668beae6f86413e2d8b7bc61869",
+   "payloadPath": "events/0003.json",
+   "payloadHash": "3c8ddbcc6406dd345e75bb5395a5d212392733fa6476670cbf94944d39163655",
+   "eventHash": "75c6afaaf9042f82b5fe5f633a8a74aff7773ff335a1c9f4931af82d46520f0d"
+  },
+  {
+   "seq": 4,
+   "at": "2026-09-28T06:41:41.859Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-56995",
+   "state": {
+    "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "previousEventHash": "75c6afaaf9042f82b5fe5f633a8a74aff7773ff335a1c9f4931af82d46520f0d",
+   "payloadPath": "events/0004.json",
+   "payloadHash": "92ec1511f86acc4d00d09f699a7599b0525b54800f64a840f8ab4684694c2915",
+   "eventHash": "ee78353180184c752e6de2a1aeb74ad017dd8e216c598b6e2c793659111137c0"
+  },
+  {
+   "seq": 5,
+   "at": "2026-09-28T06:42:08.172Z",
+   "kind": "EVIDENCE",
+   "actor": "coordinator-56995",
+   "state": {
+    "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "previousEventHash": "ee78353180184c752e6de2a1aeb74ad017dd8e216c598b6e2c793659111137c0",
+   "payloadPath": "events/0005.json",
+   "payloadHash": "e00530f59ef9a010ab91a6944b02e9afa593c71b93683f7dcac5a13c777559d8",
+   "eventHash": "bbc695a750f4b97da6e19e3ab8e458a4864d573799b93050b8e85125dc8056bc"
+  },
+  {
+   "seq": 6,
+   "at": "2026-09-28T07:35:26.561Z",
+   "kind": "SNAPSHOT",
+   "actor": "coordinator-56995",
+   "state": {
+    "productStateId": "a988c99af84e5a8046cc6747d78a71442eeb747203da0df0d2ce206a70e5e4ec",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "previousEventHash": "bbc695a750f4b97da6e19e3ab8e458a4864d573799b93050b8e85125dc8056bc",
+   "payloadPath": "events/0006.json",
+   "payloadHash": "806d6f0571106c52ab610c24f03c9521cd9e415ffa144df4988a51330304794b",
+   "eventHash": "3099280414617d34753882d5339470733aab12aaf9c55125789f12b53e0f0315"
+  },
+  {
+   "seq": 7,
+   "at": "2026-09-28T07:43:27.961Z",
+   "kind": "FINDING",
+   "actor": "coordinator-56995",
+   "state": {
+    "productStateId": "a988c99af84e5a8046cc6747d78a71442eeb747203da0df0d2ce206a70e5e4ec",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "previousEventHash": "3099280414617d34753882d5339470733aab12aaf9c55125789f12b53e0f0315",
+   "payloadPath": "events/0007.json",
+   "payloadHash": "14adcfb953951c2f746f770faac5a726f4a81c321cf01aec5003396d47d43085",
+   "eventHash": "473ab6ac2a46e0719e27bcc786d78b0594dd5b4ee795fe89c723a667ef287a06"
+  },
+  {
+   "seq": 8,
+   "at": "2026-09-28T07:43:28.201Z",
+   "kind": "FINDING",
+   "actor": "coordinator-56995",
+   "state": {
+    "productStateId": "a988c99af84e5a8046cc6747d78a71442eeb747203da0df0d2ce206a70e5e4ec",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "previousEventHash": "473ab6ac2a46e0719e27bcc786d78b0594dd5b4ee795fe89c723a667ef287a06",
+   "payloadPath": "events/0008.json",
+   "payloadHash": "dbef8db6b7aa0cbdb2a3dffa9423925917102513f9ce856da3b9de2b0892c32c",
+   "eventHash": "10ee9bdd6c240a941ecb1e485173f6c2ea3421c07ac90f4d14f57961b843d128"
+  },
+  {
+   "seq": 9,
+   "at": "2026-09-28T07:43:28.438Z",
+   "kind": "FINDING",
+   "actor": "coordinator-56995",
+   "state": {
+    "productStateId": "a988c99af84e5a8046cc6747d78a71442eeb747203da0df0d2ce206a70e5e4ec",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "previousEventHash": "10ee9bdd6c240a941ecb1e485173f6c2ea3421c07ac90f4d14f57961b843d128",
+   "payloadPath": "events/0009.json",
+   "payloadHash": "82219bd638fa94759cea9ab3645cae6c956bcdcade4dbdf6dc568bdb530a765d",
+   "eventHash": "249b7fe459f800530e3f10c329d2c0d8c757e6eb7ebdb29461987f578a2e900e"
+  },
+  {
+   "seq": 10,
+   "at": "2026-09-28T07:43:28.672Z",
+   "kind": "FINDING",
+   "actor": "coordinator-56995",
+   "state": {
+    "productStateId": "a988c99af84e5a8046cc6747d78a71442eeb747203da0df0d2ce206a70e5e4ec",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "previousEventHash": "249b7fe459f800530e3f10c329d2c0d8c757e6eb7ebdb29461987f578a2e900e",
+   "payloadPath": "events/0010.json",
+   "payloadHash": "da0fda2083b68bb42313a6cff65cb16a63b7d25692f2528045dee4a6e966b886",
+   "eventHash": "2e3eb30fea76a47a1e25425d25f6085af20a38ca85db4097582a110b18ae3628"
+  },
+  {
+   "seq": 11,
+   "at": "2026-09-28T07:43:28.908Z",
+   "kind": "FINDING",
+   "actor": "coordinator-56995",
+   "state": {
+    "productStateId": "a988c99af84e5a8046cc6747d78a71442eeb747203da0df0d2ce206a70e5e4ec",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "previousEventHash": "2e3eb30fea76a47a1e25425d25f6085af20a38ca85db4097582a110b18ae3628",
+   "payloadPath": "events/0011.json",
+   "payloadHash": "76fd2b1c6a099282d7664a60c1a765ddc6a78c0daaec5e8477491c28341ff39b",
+   "eventHash": "ece6a968da718689121b1968dc556c6e671e36051dbedc26cd045e2803be7bb4"
+  },
+  {
+   "seq": 12,
+   "at": "2026-09-28T07:43:29.166Z",
+   "kind": "FINDING",
+   "actor": "coordinator-56995",
+   "state": {
+    "productStateId": "a988c99af84e5a8046cc6747d78a71442eeb747203da0df0d2ce206a70e5e4ec",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "previousEventHash": "ece6a968da718689121b1968dc556c6e671e36051dbedc26cd045e2803be7bb4",
+   "payloadPath": "events/0012.json",
+   "payloadHash": "931292de5487e4ef2d979bc415a03d2de6522c4a76c365f1c9513ce796f9e0e2",
+   "eventHash": "791692229237ed4e728cad6f15068b6d2e3963d4a05ca072f49e89ad296b9a7f"
+  },
+  {
+   "seq": 13,
+   "at": "2026-09-28T07:43:29.408Z",
+   "kind": "FINDING",
+   "actor": "coordinator-56995",
+   "state": {
+    "productStateId": "a988c99af84e5a8046cc6747d78a71442eeb747203da0df0d2ce206a70e5e4ec",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "previousEventHash": "791692229237ed4e728cad6f15068b6d2e3963d4a05ca072f49e89ad296b9a7f",
+   "payloadPath": "events/0013.json",
+   "payloadHash": "45e10458a081b930f683fdc56edab29fc2ab611d56e99eb8ebece3a0f445e7fd",
+   "eventHash": "6bbac17d177b33600dc8b93a4ae61c48d6b4d75f007186159c26abcdef977212"
+  },
+  {
+   "seq": 14,
+   "at": "2026-09-28T07:43:29.642Z",
+   "kind": "FINDING",
+   "actor": "coordinator-56995",
+   "state": {
+    "productStateId": "a988c99af84e5a8046cc6747d78a71442eeb747203da0df0d2ce206a70e5e4ec",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "previousEventHash": "6bbac17d177b33600dc8b93a4ae61c48d6b4d75f007186159c26abcdef977212",
+   "payloadPath": "events/0014.json",
+   "payloadHash": "a1c5dd1c783e17a42b2c46ef8e996a3d50302741fa45eb62329543b04420fd86",
+   "eventHash": "2cfb5f091d683b2253683594bdda210f28c1bb69ecbfd06fd6a44770ffdd6f22"
+  },
+  {
+   "seq": 15,
+   "at": "2026-09-28T07:43:29.877Z",
+   "kind": "FINDING",
+   "actor": "coordinator-56995",
+   "state": {
+    "productStateId": "a988c99af84e5a8046cc6747d78a71442eeb747203da0df0d2ce206a70e5e4ec",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "previousEventHash": "2cfb5f091d683b2253683594bdda210f28c1bb69ecbfd06fd6a44770ffdd6f22",
+   "payloadPath": "events/0015.json",
+   "payloadHash": "eed6da3604e48a78cffd384ea2d05a1da99a6576225dc674506bab2529b030f5",
+   "eventHash": "bdbeca3b99048e3528a69f81bff6d39de3a638e4bca50881fb15176861e1de21"
+  },
+  {
+   "seq": 16,
+   "at": "2026-09-28T07:44:03.308Z",
+   "kind": "EVIDENCE",
+   "actor": "coordinator-56995",
+   "state": {
+    "productStateId": "a988c99af84e5a8046cc6747d78a71442eeb747203da0df0d2ce206a70e5e4ec",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "previousEventHash": "bdbeca3b99048e3528a69f81bff6d39de3a638e4bca50881fb15176861e1de21",
+   "payloadPath": "events/0016.json",
+   "payloadHash": "c96baa9a6d23798259a0dc7b707dc2c8ce112bbe9175da6efba4f20423a4def9",
+   "eventHash": "3692f58b749b74c513595e2d52c439967299e6910b929075bd1b138134b2da52"
+  },
+  {
+   "seq": 17,
+   "at": "2026-09-28T07:44:41.899Z",
+   "kind": "REVIEW_SEALED",
+   "actor": "coordinator-56995",
+   "state": {
+    "productStateId": "a988c99af84e5a8046cc6747d78a71442eeb747203da0df0d2ce206a70e5e4ec",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "previousEventHash": "3692f58b749b74c513595e2d52c439967299e6910b929075bd1b138134b2da52",
+   "payloadPath": "events/0017.json",
+   "payloadHash": "18b04a5f190e28dbb317b4316d4dd66df1f444ebd5c78ca53c800f90699067c8",
+   "eventHash": "f959a95c0d7462864e0386aa17a423119e4e450ad7c2b9525b2c65b2dc7bde79"
+  },
+  {
+   "seq": 18,
+   "at": "2026-09-28T07:44:42.135Z",
+   "kind": "REVIEW_SEALED",
+   "actor": "coordinator-56995",
+   "state": {
+    "productStateId": "a988c99af84e5a8046cc6747d78a71442eeb747203da0df0d2ce206a70e5e4ec",
+    "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+    "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+    "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+   },
+   "previousEventHash": "f959a95c0d7462864e0386aa17a423119e4e450ad7c2b9525b2c65b2dc7bde79",
+   "payloadPath": "events/0018.json",
+   "payloadHash": "f1584245cd01ca332047b6f3b06b9a4c36820cbe34b504d840c710fcf0043b8a",
+   "eventHash": "a3f3b8831a2a4992a11033dc17fc4e8b009f619d1116ca1bff38c3586076e582"
+  }
+ ]
 }
