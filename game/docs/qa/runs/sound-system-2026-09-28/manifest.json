@@ -23532,19 +23532,19 @@
       "path": "tests/architecture/audioBindingWiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "35b1b2de6579b3cf223c8dcfd23ba3175180be6930040e04b9b0e02b812d396c"
+      "hash": "c13abf997108169838cf44a49fab0601c31f58dab199f5c203c1c2db4cb759e5"
     },
     {
       "path": "tests/architecture/audioBoundary.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "bf7bd18254f9e1df8f7b4b5286f9f024b7ad1f8357991e36b612409e6a6ada70"
+      "hash": "8d0c75b7edc65c84956b70a698622d342148792253f57fb08cf95aab1a162789"
     },
     {
       "path": "tests/architecture/audioManifestCompleteness.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "b6ce081e608f1e833f50cb27f5fc3b6d112081e31067694ed71553fa24af161d"
+      "hash": "9146d063067963f42d3a843f8bb7681ec65fa6d144810109e7508f47cd61f908"
     },
     {
       "path": "tests/architecture/baselines/asciiComments.json",
@@ -23592,13 +23592,13 @@
       "path": "tests/architecture/coreImportDirection.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8954f28988d036174f78294defa5a9f3ce4127f94814960758e7c8816a12d30c"
+      "hash": "1dbf402e86d4da55186af1c9944184e4a0268c4560c97d7fa4e929e925bbdd3f"
     },
     {
       "path": "tests/architecture/cultivationPathIsolation.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a34fa672caa3480f85ec8a421fb01dbd245418b7fc6fae666637da8a0a93c0b7"
+      "hash": "73719832e32ee68062d8244a2b6db37cb084a477ef8cb8f9549e80482faf712d"
     },
     {
       "path": "tests/architecture/damageAuthorityRng.test.ts",
@@ -23610,7 +23610,7 @@
       "path": "tests/architecture/dynamicRegionHost.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "848ef08aeb241e21f0a222d2300cffb14647f17b82ee51c0052c2dfa233cedcc"
+      "hash": "0ae043e2fad87362582720a1b3f3d5391c3fd4fd6707beb42b056cec15aa501e"
     },
     {
       "path": "tests/architecture/eagerGlobTestExclusion.test.ts",
@@ -23646,7 +23646,7 @@
       "path": "tests/architecture/frontendImportDirection.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "2226d43f86bf5366fdbadc4a7d0373778a4075fe22bdbea8c703c1941b6b8454"
+      "hash": "580620fc20cf3aa7215c2d612b2a339b6fadd3b098cc9e9d06699fd46291f388"
     },
     {
       "path": "tests/architecture/helpers/asciiComments.ts",
@@ -23658,19 +23658,19 @@
       "path": "tests/architecture/helpers/commentStrip.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f32de2ed90638729a7c54355ed683270f0cbc96d4800cf19c181f8c16a384caf"
+      "hash": "e31bf505e0f860e9196af86483e91af0224d6366dc905ac222f5e02e8752e4e8"
     },
     {
       "path": "tests/architecture/helpers/scanTs.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "75f35b8b4396b84180a48f1c776145bcee20d286040dd697d8815fb6a3f5bb5e"
+      "hash": "6bf34e4f8f033da52af165003aacbf023969f2a0c5b3a022e04aaaec68e1b861"
     },
     {
       "path": "tests/architecture/i18nKeyParity.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8ec6fac2748809a0d3aaeda2e5811808342a41e4ef60ba54dac60f1090ce8422"
+      "hash": "9bb666f0382060283c0026f5a2fbf8e4f8f84e08b7f6d2fac6ed4153b79fc72b"
     },
     {
       "path": "tests/architecture/inkDrawerSurface.test.ts",
@@ -23688,37 +23688,37 @@
       "path": "tests/architecture/overlayLayers.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "760c1f27ff48101e52b9e5373d86ea637cabef0b1f628f545bcae4c15bcb33ab"
+      "hash": "c418847f48d605952df3cb0ade746717bfa03c4f06c2aba9fbb2f8e0e0ee6880"
     },
     {
       "path": "tests/architecture/paidRandomContract.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "44c153c15473354bf1aa0759b754b8b23f60301ad91183dd2cafe3f98375d608"
+      "hash": "8e0a8e8b8849940ce4a50fba4be7d5ecbc6c8e09158aa23bb4163b97dd6bb47b"
     },
     {
       "path": "tests/architecture/pointerOwnership.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1075689d0eff8bdb4eb94b2da21f345d09a757b56298c98130f7f33ba96fa54e"
+      "hash": "273f43ca5147943f5e57bbe51745e26f9c6da3eebb55a9d8078bc917d7a2840c"
     },
     {
       "path": "tests/architecture/presentationGate.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "cdb6f7443531ced68b1f0762b2590f7eeb614d88edb4935dbd7cb685781cd321"
+      "hash": "227bd9f416a8f041a7e54488e2d790aa5e778981ee02e8155811d0a9e9a5575d"
     },
     {
       "path": "tests/architecture/progressionOutcomeOwnership.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "32e5c913f4fd69be7e3f552585c676667638b0701c0f2c81f8464fa5f86cebf0"
+      "hash": "58320edfbae5da3ce8e380034c37796deb88c52d7c0e453ef0f4d6cc6529d4de"
     },
     {
       "path": "tests/architecture/projectionLocation.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1791220812d74afb9b52b52eb87a77feeb543625fa53c28d66e23a7500824009"
+      "hash": "e1c4de209f0eca1f4c59fa18868adaedeabf1eac2dcf2610277e62d7f235b063"
     },
     {
       "path": "tests/architecture/qiHallLayoutOwnership.test.ts",
@@ -23742,7 +23742,7 @@
       "path": "tests/architecture/statDomainWhitelist.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "2d4b9cd895286c39b18a6db89738c6b28ea078700553f43a0b69d93464252dff"
+      "hash": "525768344c857b86ac6f864087fc62d9981a36f5be39ff56cbc73d45f319c0ec"
     },
     {
       "path": "tests/architecture/staticArtExtentDeclared.test.ts",
@@ -24021,5 +24021,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "96d992c92528869989edc56c4ab0405aa7c004a785d45ff4e3444707fab2e336"
+  "productStateId": "01208c6174edbf529e256ac9810683855b0ae82b61b9d2affb7f0f22af429498"
 }
