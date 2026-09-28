@@ -89,7 +89,7 @@
       }
     },
     "nodeTree": {
-      "title": "Node Tree",
+      "title": "Cây Kỹ Năng",
       "aria": {
         "zoomGroup": "Zoom cây kỹ năng"
       },
@@ -112,7 +112,7 @@
       },
       "respec": {
         "button": "Đặt Lại",
-        "title": "Đặt Lại Cây Node",
+        "title": "Đặt Lại Cây Kỹ Năng",
         "body": "Đặt lại toàn bộ đầu tư node? Lấy lại {regain} Cảm Ngộ — {count} node và core về 0. Miễn phí trong thời gian Beta.{clawback}",
         "confirm": "Đặt Lại"
       },
@@ -264,7 +264,8 @@
       },
       "sections": {
         "pathSelection": {
-          "hint": "Chọn con đường tu luyện — quyết định này KHÔNG thể đổi lại."
+          "hint": "Chọn con đường tu luyện — quyết định này KHÔNG thể đổi lại.",
+          "kit": "Bộ kỹ năng nhập môn: {kit}"
         },
         "hiddenPath": {
           "description": "Linh Bạo đã đạt cực hạn — con đường ẩn hiện ra. Bộ kỹ năng: {kit}. Không Hành, không Hướng, không Thế — sức mạnh nằm ở phản ứng ngũ hành.",
@@ -284,6 +285,11 @@
           "appendAria": "Thêm {name} vào phổ",
           "removeAria": "Gỡ {name} khỏi phổ"
         }
+      },
+      "pathDescriptions": {
+        "spell_pathway": "Con đường pháp thuật Ngũ Hành — khai mở cây Hành và Hướng; sát thương tăng theo phản ứng nguyên tố.",
+        "sword_pathway": "Con đường kiếm — đòn đánh thường đánh theo thứ tự ấn trong Kiếm Phổ; chuỗi ấn khớp phổ bộc phát thành tuyệt chiêu.",
+        "body_pathway": "Con đường luyện thể — cây Thể Tu hai gốc Cương Chiến / Trấn Thế; cận chiến, chịu đòn và phản kích."
       },
       "actions": {
         "enterPath": "Bước Vào {name}"
@@ -319,6 +325,11 @@
       "empty": {
         "noStages": "Khu vực này chưa có tầng chiến đấu.",
         "selectStage": "Chọn một tầng để xem đội hình."
+      },
+      "locked": {
+        "requireRealm": "Cần {realm} tầng {level}",
+        "clearFloor": "Hoàn thành Tầng {floor} trước",
+        "progress": "Hoàn thành tầng trước để mở khóa"
       },
       "modes": {
         "manual": "Thủ Công",
@@ -502,6 +513,7 @@
       "title": "Cảnh Giới",
       "tierLine": "{realm} · Tầng {level}",
       "cultivationUnit": "Tu Vi",
+      "rateEta": "+{rate} {unit}/giây · còn ~{eta}",
       "labels": {
         "quanKhi": "Quán Khí",
         "foundation": "Trúc Cơ",
@@ -510,7 +522,8 @@
       "nodes": {
         "aria": "Tiến trình chín cảnh giới",
         "comingSoon": "Sắp ra mắt",
-        "unlocked": "Đã lĩnh ngộ",
+        "current": "Đang tu hành",
+        "unlocked": "Đã đạt",
         "locked": "Chưa mở"
       },
       "requirements": {

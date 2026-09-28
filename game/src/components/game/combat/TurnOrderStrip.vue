@@ -8,6 +8,7 @@
 // >1 player unit; polish đầy đủ là Party UI spec riêng sau).
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { formatNumber } from '@/core/format/NumberFormatter'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useStateVersion } from '@/composables/useGameState'
 import { buffDisplayName } from '@/core/buff2/BuffNames'
@@ -125,7 +126,7 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
         :class="{ 'is-dead': !member.entity.alive }"
       >
         {{ member.entity.name || member.id }}
-        <span class="turn-order-strip__member-hp">{{ Math.max(0, Math.ceil(member.entity.currentHp)) }}/{{ member.entity.maxHp }}</span>
+        <span class="turn-order-strip__member-hp">{{ formatNumber(Math.max(0, Math.ceil(member.entity.currentHp))) }}/{{ formatNumber(Math.max(0, Math.round(member.entity.maxHp))) }}</span>
         <span v-if="!member.entity.alive" class="turn-order-strip__member-dead">†</span>
         <span
           v-for="buff in visibleBuffs(member)"

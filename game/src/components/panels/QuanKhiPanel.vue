@@ -35,7 +35,7 @@ import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import { getRealmIndex } from '@/core/realm/realmSystem'
 import { REALMS } from '@/data/realms/realm'
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -79,6 +79,22 @@ const availableWays = computed(() => {
 function sealedKitSkillNames(way: PathWayDefinition): string[] {
   const skillIds = [...(way.skillIds ?? []), ...(way.passiveSkillIds ?? [])]
   return skillIds.map(id => gameManager.skillManager.get(id)?.name ?? id)
+}
+
+// Ritual choice cards (ui-audit progression fix) — a permanent path pick
+// cannot be a row of identical buttons: each offered way carries an
+// authored per-way description (locale key by way id) plus its initiation
+// kit names so the player decides with information.
+function wayDescription(wayId: CultivationWayId): string {
+  const key = `panels.quanKhi.pathDescriptions.${wayId}`
+  return te(key) ? t(key) : ''
+}
+
+function choiceKitLine(way: PathWayDefinition): string {
+  const kit = sealedKitSkillNames(way)
+  return kit.length > 0
+    ? t('panels.quanKhi.sections.pathSelection.kit', { kit: kit.join(' · ') })
+    : ''
 }
 
 // Thay window.confirm() native — modal xác nhận đồng bộ hoá qua state
@@ -259,7 +275,11 @@ function removeOrbAt(index: number) {
             :disabled="cooldownSeconds > 0"
             @click="choosePath(kit.pathId, kit.wayId)"
           >
-            {{ t('panels.quanKhi.actions.enterPath', { name: kit.way.name }) }}
+            <span class="quan-khi-panel__choice-body">
+              <span class="quan-khi-panel__choice-name">{{ t('panels.quanKhi.actions.enterPath', { name: kit.way.name }) }}</span>
+              <span v-if="wayDescription(kit.wayId)" class="quan-khi-panel__choice-desc">{{ wayDescription(kit.wayId) }}</span>
+              <span v-if="choiceKitLine(kit.way)" class="quan-khi-panel__choice-kit">{{ choiceKitLine(kit.way) }}</span>
+            </span>
           </GameButton>
         </template>
       </div>
@@ -390,6 +410,28 @@ function removeOrbAt(index: number) {
   background: linear-gradient(180deg, var(--crimson), var(--ink-800));
   border: 1px solid var(--chrome-500);
   color: var(--text-primary);
+}
+
+/* Choice cards carry the way's description + initiation kit under the
+   name — stacked lines inside the GameButton label. */
+.quan-khi-panel__choice-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
+
+.quan-khi-panel__choice-desc {
+  font-size: var(--text-xs);
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.quan-khi-panel__choice-kit {
+  font-size: var(--text-2xs, 10px);
+  font-weight: 400;
+  color: var(--text-muted);
 }
 
 .quan-khi-panel__choice.is-selected {
