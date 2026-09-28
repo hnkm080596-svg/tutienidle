@@ -285,10 +285,10 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   'combat.debuff.apply': sfx({ cooldownMs: 120, synthFallback: 'toastWarning' }),
   'combat.dot.apply': sfx({ cooldownMs: 120, synthFallback: 'toastWarning' }),
   'combat.buff.expire': sfx({ cooldownMs: 120 }),
-  // Armed-reserved: status_vfx_updated emits live on attach/refresh/stack
-  // change (TurnStatusPresentationEvents); the VFX scene subscribes but
-  // the audio binding does not - whether
-  // stack ticks should voice is a sound-design call deferred to asset time.
+  // Armed-reserved: status_vfx_updated emits on stack/refresh change
+  // (TurnStatusPresentationEvents); the VFX scene consumes it but the
+  // audio binding does not - whether stack ticks should voice is a
+  // sound-design call deferred to asset time.
   'combat.buff.stack': sfx({ cooldownMs: 120 }),
   'combat.reaction': sfx({ duckMusic: 0.4, synthFallback: 'combatCritical' }),
   ...expand(REACTION_IDS, 'combat.reaction.', sfx({ duckMusic: 0.4 })),

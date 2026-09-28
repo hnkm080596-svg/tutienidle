@@ -569,4 +569,22 @@ describe('AudioManager (Tone.js-based)', () => {
       await vi.waitFor(() => expect(mgr.hasDecodedBuffer('assets/audio/sfx/a.ogg')).toBe(true))
     })
   })
+
+  describe('visibility gate', () => {
+    it('playCue drops cues while the document is not visible, before resolving', async () => {
+      const mgr = await unlockedManager()
+      const spy = vi.spyOn(console, 'debug').mockImplementation(() => {})
+      try {
+        vi.stubGlobal('document', { visibilityState: 'hidden' })
+        mgr.playCue('definitely.not.a.cue')
+        expect(spy).not.toHaveBeenCalled()
+        vi.unstubAllGlobals()
+        mgr.playCue('definitely.not.a.cue')
+        expect(spy).toHaveBeenCalled()
+      } finally {
+        vi.unstubAllGlobals()
+        spy.mockRestore()
+      }
+    })
+  })
 })

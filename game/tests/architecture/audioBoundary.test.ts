@@ -89,7 +89,7 @@ function importSpecifiers(text: string): string[] {
 // `audio/` directory - matching on the directory (not on an 'Audio' filename
 // prefix) keeps a future core/audio/util.ts inside the ban. The `($)` tail
 // also catches a directory import (`@/core/audio` resolving to index.ts).
-const AUDIO_SPEC_RE = /(^|\/)audio(\/|$)/
+const AUDIO_SPEC_RE = /(^|\/)audio([/?#]|$)/
 
 describe('audio boundary', () => {
   it(

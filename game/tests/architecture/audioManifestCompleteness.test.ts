@@ -5,8 +5,11 @@
  * or qualifier strip). A cue that resolves to nothing means a listed
  * site can never be voiced - this test fails before the asset drop does.
  *
- * The manifest is pure data (the boundary guard pins that), so importing
- * it here is safe.
+ * The manifest is pure data (the boundary guard pins that). This file
+ * additionally imports cueForActionImpact to DERIVE the expected impact
+ * rows - it pulls combatAudioBinding -> AudioManager -> tone into the
+ * test process, which is safe under the node env (tone imports cleanly)
+ * but couples this guard to tone's node-compat import.
  *
  * Parsing rules:
  *  - Only backtick cells whose first segment is a manifest domain are
