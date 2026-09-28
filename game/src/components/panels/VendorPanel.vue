@@ -10,14 +10,14 @@ import { useNotificationStore } from '@/stores/notification'
 import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
 
-// Ký Bảo Các — gp123 6G (2026-09-06): chỉ còn Hóa Bán (thu mua nguyên
-// liệu thừa lấy Linh Thạch). 2 card Đổi Phẩm (Linh Thạch 100→1, Linh
-// Mộc/Khoáng 10→1 theo cảnh giới) đã XÓA cùng API quy đổi
-// (GameManager.convertSpiritStonesUp/convertMaterialTier). Thu mua chỉ
-// liệt kê material phẩm NGHỀ thấp hơn cảnh giới người chơi (gate
-// sell-by-grade trong VendorSystem) — danh sách rỗng ở cảnh phàm nhân
-// là hành vi đúng, không phải lỗi hiển thị. Tab "Cửa hàng" ẩn theo
-// quyết định user (không render).
+// Ky Bao Cac -- gp123 6G (2026-09-06): chi con Hoa Ban (thu mua nguyen
+// lieu thua lay Linh Thach). 2 card Doi Pham (Linh Thach 100->1, Linh
+// Moc/Khoang 10->1 theo canh gioi) da XOA cung API quy doi
+// (GameManager.convertSpiritStonesUp/convertMaterialTier). Thu mua chi
+// liet ke material pham NGHE thap hon canh gioi nguoi choi (gate
+// sell-by-grade trong VendorSystem) -- danh sach rong o canh pham nhan
+// la hanh vi dung, khong phai loi hien thi. Tab "Cua hang" an theo
+// quyet dinh user (khong render).
 const BUILDING_ID = 'vendor'
 
 const player = usePlayerStore()
@@ -43,10 +43,10 @@ const sellableRows = computed(() => {
     .sort((a, b) => a.name.localeCompare(b.name))
 })
 
-// ui-audit economy H2 (2026-09-28) — "Bán hết" used to burn the whole
+// ui-audit economy H2 (2026-09-28) -- "Ban het" used to burn the whole
 // stack on one click with no quantity, no total preview, no confirm and
 // no success feedback. Rows now carry a quantity input (defaults to the
-// full stack) + an inline "+N Linh Thạch" total; selling the ENTIRE
+// full stack) + an inline "+N Linh Thach" total; selling the ENTIRE
 // stack routes through ConfirmModal (the irreversible case), partial
 // sells commit directly, and success pushes a loot toast.
 const sellQuantities = reactive<Record<string, number>>({})
@@ -65,9 +65,9 @@ function onQtyInput(materialId: string, owned: number, event: Event) {
     : owned
 }
 
-// Sell price lands in the player's realm-tier spirit stone — name it so
-// the preview/toast read "+N Hạ phẩm Linh Thạch" instead of a bare
-// "hạ/đơn vị" fragment (audit N2).
+// Sell price lands in the player's realm-tier spirit stone -- name it so
+// the preview/toast read "+N Ha pham Linh Thach" instead of a bare
+// "ha/don vi" fragment (audit N2).
 const sellStoneName = computed(() => {
   const materialId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId))
 
@@ -86,9 +86,9 @@ function sell(materialId: string, amount: number, name: string) {
 
   const result = gameManager.economyOps.sellMaterialToVendor(materialId, amount, player.$state)
 
-  // gp123 6G fix round 1 — gate message CHỈ khi reason là grade_not_below;
-  // reason khác (sole_recipe_ingredient, bag_full, ...) nhận message
-  // generic để không nói sai sự thật.
+  // gp123 6G fix round 1 -- gate message CHI khi reason la grade_not_below;
+  // reason khac (sole_recipe_ingredient, bag_full, ...) nhan message
+  // generic de khong noi sai su that.
   if (!result.ok) {
     useNotificationStore().push(
       'warning',

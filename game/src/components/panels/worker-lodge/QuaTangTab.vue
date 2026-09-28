@@ -34,7 +34,7 @@ interface GiftRow {
 }
 
 // ui-audit economy Low (Qua Tang row context): a pending row showed
-// just the companion name + a Nhận button - nothing about WHY the gift
+// just the companion name + a Nhan button - nothing about WHY the gift
 // exists. Record ids double as CompanionGiftMoments ids (provenance by
 // design), so the trigger that issued it resolves straight to copy.
 function giftContext(recordId: string): string | null {

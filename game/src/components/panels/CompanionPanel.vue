@@ -322,7 +322,7 @@ function close() {
     @close="close"
   >
     <!-- ui-audit economy M7: standalone panels relied on backdrop/Escape
-         alone - an explicit Đóng affordance matches QuestPanel. -->
+         alone - an explicit Dong affordance matches QuestPanel. -->
     <template #header-actions>
       <GameButton variant="ghost" size="sm" @click="close">
         {{ t('panels.common.close') }}

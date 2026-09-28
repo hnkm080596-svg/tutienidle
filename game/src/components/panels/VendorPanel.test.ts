@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-// gp123 6G fix round 1 (2026-09-06) — gate toast CHỈ cho reason
-// 'grade_not_below'; reason khác (sole_recipe_ingredient, bag_full...)
-// phải nhận message generic thay vì message gate (sai sự thật: herb phẩm
-// thấp hơn bị chặn vì là thảo DUY NHẤT của đan phương không phải do phẩm).
+// gp123 6G fix round 1 (2026-09-06) -- gate toast CHI cho reason
+// 'grade_not_below'; reason khac (sole_recipe_ingredient, bag_full...)
+// phai nhan message generic thay vi message gate (sai su that: herb pham
+// thap hon bi chan vi la thao DUY NHAT cua dan phuong khong phai do pham).
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
@@ -90,8 +90,8 @@ function mountVendorPanel(recipes: AlchemyRecipe[] = []) {
   return {
     container,
     gameManager,
-    // Panel chỉ đọc stateVersion (bridge duy nhất) — mutate bag xong phải
-    // bump như production làm qua BUMP_STATE_KEY.
+    // Panel chi doc stateVersion (bridge duy nhat) -- mutate bag xong phai
+    // bump nhu production lam qua BUMP_STATE_KEY.
     bumpState: () => {
       stateVersion.value += 1
     },
@@ -110,7 +110,7 @@ function sellButtons(mounted: ReturnType<typeof mountVendorPanel>) {
   )
 }
 
-// ui-audit economy H2 — selling the whole stack (the qty default) now
+// ui-audit economy H2 -- selling the whole stack (the qty default) now
 // routes through ConfirmModal; the helper walks that extra step so the
 // toast-reason assertions below keep exercising the same domain path.
 async function confirmSellAll() {
@@ -137,7 +137,7 @@ describe('VendorPanel — toast lý do từ chối (gp123 6G fix round 1)', () =
     mounted.bumpState()
     await nextTick()
 
-    // Row render được (phẩm thấp hơn) nhưng bán HẾT stack chạm sole-ingredient.
+    // Row render duoc (pham thap hon) nhung ban HET stack cham sole-ingredient.
     expect(sellButtons(mounted).length).toBe(1)
 
     sellButtons(mounted)[0]!.click()
@@ -147,7 +147,7 @@ describe('VendorPanel — toast lý do từ chối (gp123 6G fix round 1)', () =
 
     expect(messages).toContain('Không bán được vật phẩm này.')
     expect(messages).not.toContain('Chỉ thu mua vật phẩm có phẩm thấp hơn cảnh giới hiện tại')
-    // Nguyên liệu không mất — sole guard chặn.
+    // Nguyen lieu khong mat -- sole guard chan.
     expect(mounted.gameManager.materialBag.getAmount(VENDOR_HERB.id)).toBe(10)
     mounted.unmount()
   })

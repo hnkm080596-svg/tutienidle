@@ -12,28 +12,28 @@ import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
 import RewardList from './RewardList.vue'
 
-// Combat UI Redesign mục 18/23, mở rộng 2026-08-22 — trước đây CHỈ 1
-// nút "Về Động Phủ" (không đánh lại). Giờ thêm "Tái Chiến" (LUÔN đánh
-// lại ĐÚNG stage vừa thua — KHÔNG advance sang Màn kế tiếp như
-// CombatVictoryPanel.vue lúc thắng, vì thua thì không có lý do "tiến
-// bộ" sang stage mới):
-//   - ui.isAuto && explorationMode==='repeat' (Lặp Lại Khiêu Chiến) →
-//     tự đếm 3s rồi Tái Chiến, y hệt cơ chế Auto-refight của
+// Combat UI Redesign muc 18/23, mo rong 2026-08-22 -- truoc day CHI 1
+// nut "Ve Dong Phu" (khong danh lai). Gio them "Tai Chien" (LUON danh
+// lai DUNG stage vua thua -- KHONG advance sang Man ke tiep nhu
+// CombatVictoryPanel.vue luc thang, vi thua thi khong co ly do "tien
+// bo" sang stage moi):
+//   - ui.isAuto && explorationMode==='repeat' (Lap Lai Khieu Chien) ->
+//     tu dem 3s roi Tai Chien, y het co che Auto-refight cua
 //     CombatVictoryPanel.vue.
-//   - ui.isAuto && explorationMode==='auto' (Tự Động Thám Hiểm) →
-//     KHÔNG tự đếm 3s (tránh auto-thua-lặp-lại mà người chơi không để
-//     ý) — chỉ hiện 2 lựa chọn, chờ bấm tay.
-//   - Cả 2 trường hợp trên đều có fallback: 10 giây không bấm gì thì
-//     tự về Động Phủ (khác 3s auto-refight — dùng setTimeout riêng,
-//     chỉ chạy khi nhánh 3s KHÔNG chạy).
-// Nút "Về Động Phủ" LUÔN hiện (khác Victory panel ẩn "Tiếp Tục" khi
-// isAuto) — người chơi phải huỷ được auto-countdown bất cứ lúc nào.
-// 9.6 — fallback 10s (đã hứa trong comment trên nhưng CHƯA BAO GIỜ được
-// implement trước 2026-09-03): 10 giây không bấm gì thì tự về Động Phủ,
-// bất kể nhánh 3s có chạy hay không (repeat → refight ở 3s sẽ unmount
-// panel; manual → chỉ mình 10s chạy). Chạy song song nhánh 3s qua
-// useAutoRetryCountdown thay vì setTimeout riêng để dùng chung cơ chế
-// deadline thực + stop() dọn interval (xem useAutoRetryCountdown.ts).
+//   - ui.isAuto && explorationMode==='auto' (Tu Dong Tham Hiem) ->
+//     KHONG tu dem 3s (tranh auto-thua-lap-lai ma nguoi choi khong de
+//     y) -- chi hien 2 lua chon, cho bam tay.
+//   - Ca 2 truong hop tren deu co fallback: 10 giay khong bam gi thi
+//     tu ve Dong Phu (khac 3s auto-refight -- dung setTimeout rieng,
+//     chi chay khi nhanh 3s KHONG chay).
+// Nut "Ve Dong Phu" LUON hien (khac Victory panel an "Tiep Tuc" khi
+// isAuto) -- nguoi choi phai huy duoc auto-countdown bat cu luc nao.
+// 9.6 -- fallback 10s (da hua trong comment tren nhung CHUA BAO GIO duoc
+// implement truoc 2026-09-03): 10 giay khong bam gi thi tu ve Dong Phu,
+// bat ke nhanh 3s co chay hay khong (repeat -> refight o 3s se unmount
+// panel; manual -> chi minh 10s chay). Chay song song nhanh 3s qua
+// useAutoRetryCountdown thay vi setTimeout rieng de dung chung co che
+// deadline thuc + stop() don interval (xem useAutoRetryCountdown.ts).
 const RETRY_COUNTDOWN_SECONDS = 3
 const RETURN_COUNTDOWN_SECONDS = 10
 
@@ -43,7 +43,7 @@ const player = usePlayerStore()
 const { t } = useI18n()
 const { startBattle, exitCombatToHome } = useBattleActions()
 
-// ARCH-005 (M12): same in-place-mutated summary object every call — the
+// ARCH-005 (M12): same in-place-mutated summary object every call -- the
 // version signal is the only invalidation channel for it.
 const { stateVersion } = useStateVersion()
 
@@ -54,7 +54,7 @@ const summary = computed(() => {
 })
 
 // B2-1 ruling (2026-09-14): floor 1 stays un-winnable on first entry by
-// design — the hint tells the player WHY. At/below the stage's realm
+// design -- the hint tells the player WHY. At/below the stage's realm
 // gate the answer is "cultivate more levels"; above it, gear/pills/
 // insight are the gap.
 const isCultivationGap = computed(() => {
@@ -97,7 +97,7 @@ async function refight(): Promise<void> {
 
 const { remaining: retryCountdown, start: startAutoRetryCountdown, stop: stopAutoRetryCountdown } = useAutoRetryCountdown(RETRY_COUNTDOWN_SECONDS, refight)
 
-// 9.6 — countdown fallback 10s về Động Phủ; clear chung với nhánh 3s.
+// 9.6 -- countdown fallback 10s ve Dong Phu; clear chung voi nhanh 3s.
 const { remaining: returnCountdown, start: startReturnCountdown, stop: stopReturnCountdown } = useAutoRetryCountdown(RETURN_COUNTDOWN_SECONDS, returnHome)
 
 function clearTimers() {
@@ -161,7 +161,7 @@ onMounted(() => {
 
 <style scoped>
 .combat-defeat-panel {
-  /* surface-xl-paper-scroll renders dark since the dark-mode pass —
+  /* surface-xl-paper-scroll renders dark since the dark-mode pass --
      remap the paper text family onto the surface palette so RewardList
      items stay legible (same contract as .ink-drawer). */
   --paper-text: var(--surface-text);

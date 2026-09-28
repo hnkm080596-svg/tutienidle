@@ -13,13 +13,13 @@ import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
 import RewardList from './RewardList.vue'
 
-// Combat UI Redesign mục 14-19 — thắng thì hiện reward tích luỹ cả
-// trận (xem GameManager.getBattleRewardSummary()). Auto Battle OFF:
-// "Đánh Lại"/"Tiếp Tục" bấm tay. Auto Battle ON: "Đánh Lại" tối màu +
-// đếm ngược 3s rồi TỰ bắt đầu trận mới — thắng + explorationMode
-// 'auto' thì leo lên Màn kế tiếp trong Địa Giới (y hệt logic
-// Auto-refight cũ của App.vue's tick(), chỉ dời trigger từ "ngay tick
-// đó" sang "hết đếm ngược" — xem plan mục 15/19).
+// Combat UI Redesign muc 14-19 -- thang thi hien reward tich luy ca
+// tran (xem GameManager.getBattleRewardSummary()). Auto Battle OFF:
+// "Danh Lai"/"Tiep Tuc" bam tay. Auto Battle ON: "Danh Lai" toi mau +
+// dem nguoc 3s roi TU bat dau tran moi -- thang + explorationMode
+// 'auto' thi leo len Man ke tiep trong Dia Gioi (y het logic
+// Auto-refight cu cua App.vue's tick(), chi doi trigger tu "ngay tick
+// do" sang "het dem nguoc" -- xem plan muc 15/19).
 const COUNTDOWN_SECONDS = 3
 
 const gameManager = useGameManager()
@@ -29,7 +29,7 @@ const { t } = useI18n()
 const { startBattle, exitCombatToHome } = useBattleActions()
 
 // ARCH-005 (M12): getBattleRewardSummary() returns the same in-place-
-// mutated summary object every call — without a direct version read this
+// mutated summary object every call -- without a direct version read this
 // computed evaluates once and caches forever.
 const { stateVersion } = useStateVersion()
 
@@ -64,9 +64,9 @@ function continueToStageSelect() {
 }
 
 const { remaining: countdown, start: startAutoRefightCountdown } = useAutoRetryCountdown(COUNTDOWN_SECONDS, async () => {
-  // Tự Động Thám Hiểm — chỉ tiến khi resolver xác nhận màn kế đã mở. Màn
-  // tồn tại nhưng bị gate bởi tu vi là trạng thái dừng auto hợp lệ, không
-  // được gọi startStage() mù rồi để modal victory kẹt ở 0s.
+  // Tu Dong Tham Hiem -- chi tien khi resolver xac nhan man ke da mo. Man
+  // ton tai nhung bi gate boi tu vi la trang thai dung auto hop le, khong
+  // duoc goi startStage() mu roi de modal victory ket o 0s.
   if (ui.battleRunMode === 'progress' && ui.selectedZoneId && ui.selectedStageId) {
     const resolution = resolveNextProgressStage(
       gameManager,
@@ -79,9 +79,9 @@ const { remaining: countdown, start: startAutoRefightCountdown } = useAutoRetryC
       const nextStageId = resolution.stage.id
 
       if (!gameManager.catalogOps.isStageUnlocked(nextStageId, player.$state)) {
-        // Có màn kế tiếp nhưng progression hiện tại chưa mở nó (vd thắng 1.5
-        // khi mới ở cảnh giới tầng 5). Kết thúc auto bằng UI thủ công thay vì
-        // gọi startStage() thất bại rồi kẹt modal victory ở countdown 0s.
+        // Co man ke tiep nhung progression hien tai chua mo no (vd thang 1.5
+        // khi moi o canh gioi tang 5). Ket thuc auto bang UI thu cong thay vi
+        // goi startStage() that bai roi ket modal victory o countdown 0s.
         ui.battleRunMode = 'manual'
 
         return
@@ -97,9 +97,9 @@ const { remaining: countdown, start: startAutoRefightCountdown } = useAutoRetryC
 
       return
     } else {
-      // Đã hoàn tất tuyến hiện tại: progress phải dừng, không được âm thầm
-      // biến thành repeat ở tầng cuối. Cùng nhánh này xử lý stage kế bị khóa
-      // hoặc dữ liệu đích không hợp lệ để modal trở lại tương tác được.
+      // Da hoan tat tuyen hien tai: progress phai dung, khong duoc am tham
+      // bien thanh repeat o tang cuoi. Cung nhanh nay xu ly stage ke bi khoa
+      // hoac du lieu dich khong hop le de modal tro lai tuong tac duoc.
       ui.battleRunMode = 'manual'
 
       return
@@ -146,7 +146,7 @@ onMounted(() => {
 
 <style scoped>
 .combat-victory-panel {
-  /* surface-xl-paper-scroll renders dark since the dark-mode pass —
+  /* surface-xl-paper-scroll renders dark since the dark-mode pass --
      remap the paper text family onto the surface palette so the title
      and RewardList items stay legible (same contract as .ink-drawer). */
   --paper-text: var(--surface-text);

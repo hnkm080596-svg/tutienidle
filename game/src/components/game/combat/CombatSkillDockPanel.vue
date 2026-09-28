@@ -1,24 +1,24 @@
 <script setup lang="ts">
-// Combat Art Pipeline (2026-09-05, spec §7.5) — skill UI moved out of the
+// Combat Art Pipeline (2026-09-05, spec S7.5) -- skill UI moved out of the
 // bottom-center battlefield slot into a right-edge dock, styled like
-// RightPanel.vue's Động Phủ drawer but as a SEPARATE component (RightPanel
-// is gated to !isCombatSceneActive, mutually exclusive with combat —
+// RightPanel.vue's Dong Phu drawer but as a SEPARATE component (RightPanel
+// is gated to !isCombatSceneActive, mutually exclusive with combat --
 // GameRoot.vue:65). Unconditionally visible while fighting, no toggle.
 //
-// Insets: dock chỉ publish `right` (publishSkillDockWidth — giữ nguyên
-// `top` của CombatSceneOverlay), cùng pattern đo-DOM-thật + ResizeObserver
-// với overlay. Unmount: clear `right` về 0 nhưng giữ `top`.
+// Insets: dock chi publish `right` (publishSkillDockWidth -- giu nguyen
+// `top` cua CombatSceneOverlay), cung pattern do-DOM-that + ResizeObserver
+// voi overlay. Unmount: clear `right` ve 0 nhung giu `top`.
 //
-// Layout fix (2026-09-06) — dock trước đó `top: 0` nên full-height, đè lên
-// enemy counter mép phải của TopBar (TopBar và dock là 2 sibling absolute
-// riêng, dock không nằm trong luồng flex của overlay). Đổi `top` sang
-// `var(--combat-topbar-h)` — ĐÚNG token TopBar dùng để set height của nó
-// (CombatSceneOverlay.vue, theme.css) — để dock bắt đầu ngay dưới TopBar
-// thay vì đè lên. Không hardcode 60px dù TurnOrderStrip từng dùng số đó —
-// token thật là clamp(46px, 4.8vh, 72px), 60px chỉ là xấp xỉ giữa dải.
-// `bottom: 0` giữ nguyên nên height tự co theo top mới, không cần khai
-// báo height tường minh. Không đổi `width`/measuring logic — publishWidth
-// đo `offsetWidth` (chiều ngang), không phụ thuộc `top`.
+// Layout fix (2026-09-06) -- dock truoc do `top: 0` nen full-height, de len
+// enemy counter mep phai cua TopBar (TopBar va dock la 2 sibling absolute
+// rieng, dock khong nam trong luong flex cua overlay). Doi `top` sang
+// `var(--combat-topbar-h)` -- DUNG token TopBar dung de set height cua no
+// (CombatSceneOverlay.vue, theme.css) -- de dock bat dau ngay duoi TopBar
+// thay vi de len. Khong hardcode 60px du TurnOrderStrip tung dung so do --
+// token that la clamp(46px, 4.8vh, 72px), 60px chi la xap xi giua dai.
+// `bottom: 0` giu nguyen nen height tu co theo top moi, khong can khai
+// bao height tuong minh. Khong doi `width`/measuring logic -- publishWidth
+// do `offsetWidth` (chieu ngang), khong phu thuoc `top`.
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import TurnCombatSkillBar from './hud/TurnCombatSkillBar.vue'
 import { clearSkillDockWidth, publishSkillDockWidth } from '@/presentation/geometry/combatInsets'
@@ -58,7 +58,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* UI-audit fix (2026-09-28) — the dock hugs its content instead of
+/* UI-audit fix (2026-09-28) -- the dock hugs its content instead of
    reserving a fixed 27-44vw column: the skill bar stacks vertically,
    so the panel is a compact top-right rail (auto width/height) and the
    overlay mounts it only while the battle is fighting. The ResizeObserver

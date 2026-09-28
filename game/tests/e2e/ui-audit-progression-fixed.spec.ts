@@ -13,7 +13,7 @@ import {
   waitForPresentationIdle,
 } from './helpers'
 
-// Ui-audit progression fix evidence — re-shoots every screen the slice
+// Ui-audit progression fix evidence -- re-shoots every screen the slice
 // report flagged, against the FIXED build. Output lands in
 // docs/ui-audit/progression/fixed/ next to the report's shots/.
 const SHOTS_DIR = join(

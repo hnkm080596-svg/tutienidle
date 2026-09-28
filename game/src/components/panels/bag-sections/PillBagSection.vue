@@ -36,8 +36,8 @@ const gameManager = useGameManager()
 const player = usePlayerStore()
 const { stateVersion, bumpState } = useStateVersion()
 
-// Đồng hồ 1 giây — deadline timed effect hiển thị theo thời gian thực
-// (Date.now), không phụ thuộc game pause (plan §5.4).
+// Dong ho 1 giay -- deadline timed effect hien thi theo thoi gian thuc
+// (Date.now), khong phu thuoc game pause (plan S5.4).
 const nowMs = ref(Date.now())
 
 let effectTimer: ReturnType<typeof setInterval> | undefined
@@ -54,15 +54,15 @@ onUnmounted(() => {
   }
 })
 
-// Grid responsive theo chiều rộng thật — xem ghi chú đầy đủ ở
-// useBagGridLayout.ts/MaterialBagSection.vue (cùng pattern áp cho cả
+// Grid responsive theo chieu rong that -- xem ghi chu day du o
+// useBagGridLayout.ts/MaterialBagSection.vue (cung pattern ap cho ca
 // 5 bag-sections).
 const { gridRef, pageSize, gridStyle } = useBagGridLayout()
 
-// Tooltip có cấu trúc (2026-08-15, cùng khuôn GradedItemTooltipContent
-// dùng chung Pill/Talisman/Formation, xem useTooltip.ts) — build TỪ
-// ĐÚNG PillEffect[] thật, không bịa số. Thêm 4 effect nghề (2026-08-24,
-// resource-professions-rework §5).
+// Tooltip co cau truc (2026-08-15, cung khuon GradedItemTooltipContent
+// dung chung Pill/Talisman/Formation, xem useTooltip.ts) -- build TU
+// DUNG PillEffect[] that, khong bia so. Them 4 effect nghe (2026-08-24,
+// resource-professions-rework S5).
 function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
   const rows = pill.effects.map((effect) => {
     switch (effect.type) {
@@ -126,7 +126,7 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
   const sections: TooltipSection[] = rows.length > 0 ? [{ label: 'Hiệu Ứng', rows }] : []
 
   // audit M2: drinkable pills consume on a TWO-click confirm, so the
-  // tooltip must advertise the gesture — a {label, rows: []} section
+  // tooltip must advertise the gesture -- a {label, rows: []} section
   // renders as one caption line. Material pills stay inert.
   if (pill.type !== 'material') {
     sections.push({ label: t('bag.pill.useHint'), rows: [] })
@@ -483,8 +483,8 @@ const activeTimedEffects = computed(() => {
 
 <template>
   <div class="bag-section">
-    <!-- Buff regen đang hoạt động (plan §8) — deadline thực, cùng nguồn
-         với combat (player.persistentTimedEffects), không tạo timer thứ hai. -->
+    <!-- Buff regen dang hoat dong (plan S8) -- deadline thuc, cung nguon
+         voi combat (player.persistentTimedEffects), khong tao timer thu hai. -->
     <div v-if="activeTimedEffects.length > 0" class="pill-active">
       <div v-for="effect in activeTimedEffects" :key="effect.id" class="pill-active__row">
         <span class="pill-active__name">{{ effect.label }}</span>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// 6A-T6 (2026-09-01, spec §3) — confirm modal thoát trận, extract từ
+// 6A-T6 (2026-09-01, spec S3) -- confirm modal thoat tran, extract tu
 // CombatControlBar (L173-182 + confirmExit L47-55): scene exit-zone
-// (canvas) emit 'combat_exit_request' → modal này mở; logic confirm
-// giữ NGUYÊN (abandonBattle → manual → combat_scene_exit →
+// (canvas) emit 'combat_exit_request' -> modal nay mo; logic confirm
+// giu NGUYEN (abandonBattle -> manual -> combat_scene_exit ->
 // combat_scene_exit) - now runs inside the closed curtain via
 // useBattleActions.exitCombatToHome. Gate: Stage only (Tribulation has
 // its own flow).
@@ -22,8 +22,8 @@ const { exitCombatToHome } = useBattleActions()
 const visible = ref(false)
 const cardRef = ref<HTMLElement | null>(null)
 
-// Deferred follow-up (2026-09-03) — focus trap dùng chung (QA-003):
-// Escape = HỦY thoát (Ở LẠI trận), KHÔNG BAO GIỜ exit qua Escape.
+// Deferred follow-up (2026-09-03) -- focus trap dung chung (QA-003):
+// Escape = HUY thoat (O LAI tran), KHONG BAO GIO exit qua Escape.
 useDialogFocus(cardRef, visible, {
   onEscape: () => {
     visible.value = false
@@ -33,7 +33,7 @@ useDialogFocus(cardRef, visible, {
 function onExitRequest() {
   // Scene/topbar only request; the Stage gate stays at render so
   // Tribulation never sees the modal on a stray emit. UI audit
-  // 2026-09-28: also require a live battle — a request fired after
+  // 2026-09-28: also require a live battle -- a request fired after
   // victory/defeat must not stack the abandon-confirm over the result
   // panel (the result panels own their exit actions).
   if (ui.combatOrigin !== 'stage') {

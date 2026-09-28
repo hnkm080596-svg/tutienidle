@@ -1,12 +1,12 @@
 ﻿<script setup lang="ts">
-// Task 14-UI (rework P4, 2026-09-01, spec §5.6) — Tab Phân Giải:
-// settings phân giải Linh Khoáng → Luyện Khí Tinh Hoa.
-// - gradeFilter / ageFilter / worker slider → DecomposeSystem
-// - Output estimate: base(grade all→Cửu 1.0) × tuổi × workers (ước lượng
-//   hiển thị — system tính chính xác theo tồn kho lúc tick)
-// gp123 6E (task C2): filter "chất" cũ (hoang..tien) đổi thành filter
-// TUỔI (decade..thuong_co) theo trục tuổi thống nhất.
-// Flexible rule (AGENTS.md): grid auto-fit, không hardcode px.
+// Task 14-UI (rework P4, 2026-09-01, spec S5.6) -- Tab Phan Giai:
+// settings phan giai Linh Khoang -> Luyen Khi Tinh Hoa.
+// - gradeFilter / ageFilter / worker slider -> DecomposeSystem
+// - Output estimate: base(grade all->Cuu 1.0) x tuoi x workers (uoc luong
+//   hien thi -- system tinh chinh xac theo ton kho luc tick)
+// gp123 6E (task C2): filter "chat" cu (hoang..tien) doi thanh filter
+// TUOI (decade..thuong_co) theo truc tuoi thong nhat.
+// Flexible rule (AGENTS.md): grid auto-fit, khong hardcode px.
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -26,9 +26,9 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 const { t } = useI18n()
 const gameManager = useGameManager()
 
-// DecomposeSystem nằm trên GameManager (Task 14 wiring). System thuần TS
-// KHÔNG reactive — local mirror ref đồng bộ sau mỗi setSetting để Vue
-// re-render (không chờ stateVersion bump từ tick loop).
+// DecomposeSystem nam tren GameManager (Task 14 wiring). System thuan TS
+// KHONG reactive -- local mirror ref dong bo sau moi setSetting de Vue
+// re-render (khong cho stateVersion bump tu tick loop).
 const system = gameManager.decomposeSystem
 
 const settingsMirror = ref<DecomposeSettings>(system.getSettings())
@@ -41,10 +41,10 @@ const { stateVersion } = useStateVersion()
 
 const capacityMirror = ref(system.getCapacity())
 
-// ui-audit economy M5: which bag ores the CURRENT filters match —
+// ui-audit economy M5: which bag ores the CURRENT filters match --
 // the tab used to render three controls and nothing else, so an
 // unstaffed/failed-match state read as a dead, unexplained widget.
-// listMatchingOres() is the domain query (reuses oreMatchesFilter —
+// listMatchingOres() is the domain query (reuses oreMatchesFilter --
 // the UI never re-derives the predicate).
 const matchingOres = ref(system.listMatchingOres())
 
@@ -69,8 +69,8 @@ function oreLabel(materialId: string): string {
   return materialLabel(materialId, gameManager.materialRegistry)
 }
 
-// Empty-state priority: no capacity (Chiêu Hiền Quán not built yet) →
-// no workers assigned → no ore in the bag matching the filters. Only
+// Empty-state priority: no capacity (Chieu Hien Quan not built yet) ->
+// no workers assigned -> no ore in the bag matching the filters. Only
 // one guidance line renders at a time.
 const emptyHintKey = computed(() => {
   if (capacityMirror.value <= 0) return 'panels.decompose.hint.noCapacity'
@@ -80,7 +80,7 @@ const emptyHintKey = computed(() => {
   return null
 })
 
-// Ước lượng output/lượt cho PREVIEW (grade 'all' → Cửu 1.0 làm đại diện).
+// Uoc luong output/luot cho PREVIEW (grade 'all' -> Cuu 1.0 lam dai dien).
 const PREVIEW_BASE_BY_ALL = 1
 
 const estimate = computed(() => {

@@ -5,9 +5,9 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useUiStore } from '@/stores/ui'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
 
-// Combat UI Redesign mục 5 — tên Địa Giới/Màn + tiến độ quái. UI audit
-// 2026-09-28: the mục-23 "no retreat" call predates the exit-confirm
-// modal (6A-T6) — the modal exists and works, so the top bar now carries
+// Combat UI Redesign muc 5 -- ten Dia Gioi/Man + tien do quai. UI audit
+// 2026-09-28: the muc-23 "no retreat" call predates the exit-confirm
+// modal (6A-T6) -- the modal exists and works, so the top bar now carries
 // the visible exit affordance. The button only emits the bridge event
 // `combat_exit_request`; CombatExitConfirmModal owns confirm/abandon.
 // Still no Settings button (no sane home for SettingsPanel while Combat
@@ -43,7 +43,7 @@ const hiddenTrial = computed(() => {
   return gameManager.turnBattleOps.getActiveHiddenTrial()
 })
 
-// Stage battles only — Tribulation runs its own flow and the modal gates
+// Stage battles only -- Tribulation runs its own flow and the modal gates
 // on combatOrigin anyway. Hidden while the battle is not actually fighting
 // (intro/results own their screens).
 const canExit = computed(() => ui.combatOrigin === 'stage' && isBattleFighting.value)
@@ -78,11 +78,11 @@ function requestExit(): void {
 
 <style scoped>
 .combat-top-bar {
-  /* Layout fix (2026-09-07, plan Task 13) — box-sizing border-box: trước
-     đây height:100% (46px token) + border-bottom 1px = 47px tổng (content-
-     box mặc định) → tràn 1px đè lên bởi skill dock (top: 46px), fail
-     combat-overlay-layout e2e cả 3 viewport. Border-box đưa tổng về đúng
-     token, dock và TopBar khớp mép tuyệt đối. */
+  /* Layout fix (2026-09-07, plan Task 13) -- box-sizing border-box: truoc
+     day height:100% (46px token) + border-bottom 1px = 47px tong (content-
+     box mac dinh) -> tran 1px de len boi skill dock (top: 46px), fail
+     combat-overlay-layout e2e ca 3 viewport. Border-box dua tong ve dung
+     token, dock va TopBar khop mep tuyet doi. */
   box-sizing: border-box;
   height: 100%;
   display: flex;

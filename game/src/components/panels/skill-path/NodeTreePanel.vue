@@ -638,9 +638,9 @@ onBeforeUnmount(() => {
       <span class="node-tree__points">{{ t('panels.nodeTree.labels.insight') }}: {{ player.skillInsight }}</span>
     </div>
 
-    <!-- Zoom-to-fit thay cuộn (2026-08-30) — mặc định co vừa khung nhưng
-         không dưới sàn đọc được (FIT_ZOOM_MIN); nội dung tràn khung cho
-         cuộn/pan (is-pannable). -->
+    <!-- Zoom-to-fit thay cuon (2026-08-30) -- mac dinh co vua khung nhung
+         khong duoi san doc duoc (FIT_ZOOM_MIN); noi dung tran khung cho
+         cuon/pan (is-pannable). -->
     <div ref="viewportEl" class="node-tree__viewport" :class="{ 'is-pannable': isPannable }">
       <div ref="contentEl" class="node-tree__scale-content" :style="{ zoom: `${zoom}` }">
         <div v-for="branch in branches" :key="branch.branchTag ?? 'other'" class="node-tree__branch">
@@ -677,7 +677,7 @@ onBeforeUnmount(() => {
                 <span class="node-tree__node-name">
                   {{ entry.node.name }}
 
-                  <!-- Badge cấp cho node nhiều cấp (plan §6.2): `3/10`. -->
+                  <!-- Badge cap cho node nhieu cap (plan S6.2): `3/10`. -->
                   <span v-if="entry.maxLevel > 1" class="node-tree__node-level">{{ entry.level }}/{{ entry.maxLevel }}</span>
 
                 </span>
