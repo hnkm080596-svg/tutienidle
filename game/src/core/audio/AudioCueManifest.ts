@@ -3,7 +3,7 @@
 // fills it; until then the cue is a no-op (never throws).
 //
 // OQ-C FULL coverage: qualifier families are expanded into one row per
-// concrete catalog id (castable skills, reactions, VFX presets, all 38
+// concrete catalog id (castable skills, reactions, VFX presets, all 37
 // Kiem Pho combos, ungthe triggers, Thanh Van times). Family anchor rows
 // remain as the qualifier-strip fallback for ids the catalogs do not know
 // yet.
@@ -195,7 +195,7 @@ const IMPACT_PRESET_IDS = [
   'huy_quyen_strike',
 ] as const
 
-// Every combo id in src/data/skill/KiemPhoCombos.ts (38, prefix-free form).
+// Every combo id in src/data/skill/KiemPhoCombos.ts (37, prefix-free form).
 const KIEM_COMBO_IDS = [
   'nhat_tuyen',
   'liet_ngan',

@@ -364,7 +364,11 @@ export class AssetBundleManager implements AssetPort {
         AudioManager.getInstance().attachEncodedBuffer(desc.key, bytes)
         this.loadedResources.add(desc.key)
       } catch {
-        this.missingResources.set(desc.key, tries + 1)
+        // An aborted load is not evidence of a missing file - only real
+        // fetch failures count against the attempt bound.
+        if (!signal?.aborted) {
+          this.missingResources.set(desc.key, tries + 1)
+        }
       } finally {
         if (this.inFlightLoads.get(desc.key) === loadPromise) {
           this.inFlightLoads.delete(desc.key)

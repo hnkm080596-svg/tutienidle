@@ -517,6 +517,10 @@ class AudioManagerImpl {
   playCue(id: string): void {
     if (!this.enabled) return
     if (this.unlockState !== 'ready') return
+    // Hidden tab: drop one-shots rather than sounding or queueing on a
+    // suspended context - the ambient driver owns the visibility policy,
+    // and deferred starts would burst-fire on tab return.
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return
 
     const def = resolveAudioCue(id)
     if (def === undefined) {
@@ -727,11 +731,11 @@ class AudioManagerImpl {
     const def = resolveAudioCue(id)
     if (def === undefined) return
     const src = this.pickDecodedSrc(id, def.src)
+    // Same retry contract as playCue: kick every parked src, not only
+    // when nothing decoded - a partially-decoded variant pool heals.
+    const srcs = typeof def.src === 'string' ? (def.src === '' ? [] : [def.src]) : def.src
+    for (const s of srcs) this.retryDecode(s)
     if (src === undefined) {
-      // Music lane gets the same decode-retry kick as playCue - a
-      // transient decode failure must not park the track forever.
-      const srcs = typeof def.src === 'string' ? (def.src === '' ? [] : [def.src]) : def.src
-      for (const s of srcs) this.retryDecode(s)
       this.logSilent(id)
       return
     }
@@ -817,6 +821,11 @@ class AudioManagerImpl {
 
   /** Decoded AudioBuffer for a manifest src key (asset lane hands it over). */
   attachDecodedBuffer(key: string, buffer: AudioBuffer): void {
+    // A decoded attach supersedes any parked or in-flight encoded payload
+    // for the same key - same generation contract as attachEncodedBuffer.
+    this.attachSeq.set(key, (this.attachSeq.get(key) ?? 0) + 1)
+    this.pendingEncoded.delete(key)
+    this.decodeAttempts.delete(key)
     this.buffers.set(key, buffer)
   }
 
@@ -835,6 +844,10 @@ class AudioManagerImpl {
   private readonly attachSeq = new Map<string, number>()
 
   attachEncodedBuffer(key: string, data: ArrayBuffer): void {
+    // A fresh attach supersedes any parked payload for the key - without
+    // this, retryDecode could decode the OLD bytes under the NEW seq and
+    // install the stale payload last.
+    this.pendingEncoded.delete(key)
     const seq = (this.attachSeq.get(key) ?? 0) + 1
     this.attachSeq.set(key, seq)
     // Fresh bytes get a fresh retry budget - an exhausted counter must

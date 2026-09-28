@@ -223,14 +223,17 @@ watch(
 // Autoplay policy: unlock AudioContext on the first pointer gesture anywhere
 // (Phaser canvas clicks never reach GameButton). Not `once`: a transiently
 // failed unlock (Tone.start() rejects) must leave the listener armed so a
-// later gesture still retries - it is disarmed when the chain reports ready.
+// later gesture still retries. The listener is disarmed when the chain
+// reports ready; a mount with the chain already ready skips arming at all
+// (onReady would fire synchronously before any disarm handle exists).
 const unlockAudioOnFirstGesture = () => useAudioStore().unlock()
-window.addEventListener('pointerdown', unlockAudioOnFirstGesture)
-let disarmAudioUnlock: (() => void) | null = null
-disarmAudioUnlock = AudioManager.getInstance().onReady(() => {
-  window.removeEventListener('pointerdown', unlockAudioOnFirstGesture)
-  disarmAudioUnlock?.()
-})
+const audioManager = AudioManager.getInstance()
+if (!audioManager.isUnlocked()) {
+  window.addEventListener('pointerdown', unlockAudioOnFirstGesture)
+  audioManager.onReady(() => {
+    window.removeEventListener('pointerdown', unlockAudioOnFirstGesture)
+  })
+}
 
 provide(PHASER_SCENE_ADAPTER_KEY, phaserSceneAdapter)
 provide(ASSET_BUNDLE_MANAGER_KEY, assetBundleManager)
