@@ -23532,19 +23532,19 @@
       "path": "tests/architecture/audioBindingWiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "7134a49e6ab393e79214250db1ec550fabef1ddf39c4db13ff6aab666f411dec"
+      "hash": "2147c34ad7a4702c5dbffa875d3f2f412e18239f927c8097b559bbc1763b0756"
     },
     {
       "path": "tests/architecture/audioBoundary.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "348704949ffe889d0bd00a1d80110f6f49d8b5a03d1e9d9fe4a92580f34a9ead"
+      "hash": "879dcae2811e8f7eae4b9c59dc421ef27e59b23cff1988863efd60634fdc7147"
     },
     {
       "path": "tests/architecture/audioManifestCompleteness.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8df1ebeb83e6ce1b01f668e356a4f2acae014714d52631cf952ea63abcf2cf0e"
+      "hash": "b6ce081e608f1e833f50cb27f5fc3b6d112081e31067694ed71553fa24af161d"
     },
     {
       "path": "tests/architecture/baselines/asciiComments.json",
@@ -23653,6 +23653,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "aa026472ca5f5d3db8d7fa6800ed3d235ebf442530fd704b64279f51a497fb7a"
+    },
+    {
+      "path": "tests/architecture/helpers/commentStrip.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "237435b46befb4bd559efe33f373ec258659c5eac28eea4ac0fd0f2ae845b35d"
     },
     {
       "path": "tests/architecture/helpers/scanTs.ts",
@@ -24015,5 +24021,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "f5f8657a7e06cfd1994600f0328603002cf7a45acfcadc9fe1737c90eea13a14"
+  "productStateId": "9802f6a24ddd40dd2bb8a1b68cc07a566f5a02227534acb5574f914eb382fe02"
 }
